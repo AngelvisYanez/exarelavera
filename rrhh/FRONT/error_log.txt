@@ -1,0 +1,68 @@
+[23-Feb-2026 16:27:08 America/Lima] PHP Notice:  Undefined index: Are_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 512
+[23-Feb-2026 16:27:08 America/Lima] PHP Notice:  Undefined index: Are_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 515
+[23-Feb-2026 16:27:08 America/Lima] PHP Notice:  Undefined index: dateRolini in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 517
+[23-Feb-2026 16:27:08 America/Lima] PHP Notice:  Undefined index: dateRolfin in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 518
+[23-Feb-2026 16:27:08 America/Lima] PHP Notice:  Undefined index: Month in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 519
+[23-Feb-2026 16:27:08 America/Lima] PHP Notice:  Undefined index: Map_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 551
+[23-Feb-2026 16:27:33 America/Lima] PHP Notice:  Undefined index: Are_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 512
+[23-Feb-2026 16:27:33 America/Lima] PHP Notice:  Undefined index: Are_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 515
+[23-Feb-2026 16:27:33 America/Lima] PHP Notice:  Undefined index: dateRolini in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 517
+[23-Feb-2026 16:27:33 America/Lima] PHP Notice:  Undefined index: dateRolfin in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 518
+[23-Feb-2026 16:27:33 America/Lima] PHP Notice:  Undefined index: Month in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 519
+[23-Feb-2026 16:27:33 America/Lima] PHP Notice:  Undefined index: Map_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 551
+[23-Feb-2026 16:28:39 America/Lima] PHP Notice:  Undefined index: Are_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 512
+[23-Feb-2026 16:28:39 America/Lima] PHP Notice:  Undefined index: Are_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 515
+[23-Feb-2026 16:28:39 America/Lima] PHP Notice:  Undefined index: dateRolini in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 517
+[23-Feb-2026 16:28:39 America/Lima] PHP Notice:  Undefined index: dateRolfin in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 518
+[23-Feb-2026 16:28:39 America/Lima] PHP Notice:  Undefined index: Month in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 519
+[23-Feb-2026 16:28:39 America/Lima] PHP Notice:  Undefined index: Map_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 551
+[23-Feb-2026 16:29:06 America/Lima] PHP Notice:  Undefined index: Are_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 512
+[23-Feb-2026 16:29:06 America/Lima] PHP Notice:  Undefined index: Are_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 515
+[23-Feb-2026 16:29:06 America/Lima] PHP Notice:  Undefined index: dateRolini in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 517
+[23-Feb-2026 16:29:06 America/Lima] PHP Notice:  Undefined index: dateRolfin in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 518
+[23-Feb-2026 16:29:06 America/Lima] PHP Notice:  Undefined index: Month in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 519
+[23-Feb-2026 16:29:06 America/Lima] PHP Notice:  Undefined index: Map_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 551
+[23-Feb-2026 16:30:33 America/Lima] PHP Notice:  Undefined index: Are_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 512
+[23-Feb-2026 16:30:33 America/Lima] PHP Notice:  Undefined index: Are_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 515
+[23-Feb-2026 16:30:33 America/Lima] PHP Notice:  Undefined index: dateRolini in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 517
+[23-Feb-2026 16:30:33 America/Lima] PHP Notice:  Undefined index: dateRolfin in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 518
+[23-Feb-2026 16:30:33 America/Lima] PHP Notice:  Undefined index: Month in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 519
+[23-Feb-2026 16:30:33 America/Lima] PHP Notice:  Undefined index: Map_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 551
+[23-Feb-2026 16:34:39 America/Lima] PHP Notice:  Undefined index: Are_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 512
+[23-Feb-2026 16:34:39 America/Lima] PHP Notice:  Undefined index: Are_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 515
+[23-Feb-2026 16:34:39 America/Lima] PHP Notice:  Undefined index: dateRolini in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 517
+[23-Feb-2026 16:34:39 America/Lima] PHP Notice:  Undefined index: dateRolfin in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 518
+[23-Feb-2026 16:34:39 America/Lima] PHP Notice:  Undefined index: Month in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 519
+[23-Feb-2026 16:34:39 America/Lima] PHP Notice:  Undefined index: Map_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 551
+[23-Feb-2026 16:35:09 America/Lima] PHP Notice:  Undefined index: Are_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 512
+[23-Feb-2026 16:35:09 America/Lima] PHP Notice:  Undefined index: Are_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 515
+[23-Feb-2026 16:35:09 America/Lima] PHP Notice:  Undefined index: dateRolini in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 517
+[23-Feb-2026 16:35:09 America/Lima] PHP Notice:  Undefined index: dateRolfin in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 518
+[23-Feb-2026 16:35:09 America/Lima] PHP Notice:  Undefined index: Month in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 519
+[23-Feb-2026 16:35:09 America/Lima] PHP Notice:  Undefined index: Map_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 551
+[26-Feb-2026 10:46:39 America/Lima] PHP Notice:  Undefined index: Are_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 512
+[26-Feb-2026 10:46:39 America/Lima] PHP Notice:  Undefined index: Are_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 515
+[26-Feb-2026 10:46:39 America/Lima] PHP Notice:  Undefined index: dateRolini in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 517
+[26-Feb-2026 10:46:39 America/Lima] PHP Notice:  Undefined index: dateRolfin in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 518
+[26-Feb-2026 10:46:39 America/Lima] PHP Notice:  Undefined index: Month in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 519
+[26-Feb-2026 10:46:39 America/Lima] PHP Notice:  Undefined index: Map_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 551
+[26-Feb-2026 11:57:18 America/Lima] PHP Notice:  Undefined index: Are_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 512
+[26-Feb-2026 11:57:18 America/Lima] PHP Notice:  Undefined index: Are_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 515
+[26-Feb-2026 11:57:18 America/Lima] PHP Notice:  Undefined index: dateRolini in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 517
+[26-Feb-2026 11:57:18 America/Lima] PHP Notice:  Undefined index: dateRolfin in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 518
+[26-Feb-2026 11:57:18 America/Lima] PHP Notice:  Undefined index: Month in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 519
+[26-Feb-2026 11:57:18 America/Lima] PHP Notice:  Undefined index: Map_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 551
+[26-Feb-2026 12:06:09 America/Lima] PHP Notice:  Undefined index: Are_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 512
+[26-Feb-2026 12:06:09 America/Lima] PHP Notice:  Undefined index: Are_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 515
+[26-Feb-2026 12:06:09 America/Lima] PHP Notice:  Undefined index: dateRolini in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 517
+[26-Feb-2026 12:06:09 America/Lima] PHP Notice:  Undefined index: dateRolfin in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 518
+[26-Feb-2026 12:06:09 America/Lima] PHP Notice:  Undefined index: Month in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 519
+[26-Feb-2026 12:06:09 America/Lima] PHP Notice:  Undefined index: Map_Cod in /var/www/vhosts/ofsercont.com/httpdocs/exa/rrhh/LOGICA/rhu_sql_roles.php on line 551
+[31-Mar-2026 09:19:07 America/Lima] PHP Warning:  is_dir(): open_basedir restriction in effect. File(/var/www/vhosts/.git) is not within the allowed path(s): (/var/www/vhosts/erpexa.com/:/tmp/) in /var/www/vhosts/erpexa.com/relavera.erpexa.com/Librerias/debugbar/src/DebugBar/DataCollector/FilesCollector.php on line 163
+[31-Mar-2026 09:19:07 America/Lima] PHP Warning:  is_dir(): open_basedir restriction in effect. File(/var/www/.git) is not within the allowed path(s): (/var/www/vhosts/erpexa.com/:/tmp/) in /var/www/vhosts/erpexa.com/relavera.erpexa.com/Librerias/debugbar/src/DebugBar/DataCollector/FilesCollector.php on line 163
+[31-Mar-2026 09:19:07 America/Lima] PHP Warning:  is_dir(): open_basedir restriction in effect. File(/var/.git) is not within the allowed path(s): (/var/www/vhosts/erpexa.com/:/tmp/) in /var/www/vhosts/erpexa.com/relavera.erpexa.com/Librerias/debugbar/src/DebugBar/DataCollector/FilesCollector.php on line 163
+[31-Mar-2026 09:19:07 America/Lima] PHP Warning:  is_dir(): open_basedir restriction in effect. File(//.git) is not within the allowed path(s): (/var/www/vhosts/erpexa.com/:/tmp/) in /var/www/vhosts/erpexa.com/relavera.erpexa.com/Librerias/debugbar/src/DebugBar/DataCollector/FilesCollector.php on line 163
+[31-Mar-2026 09:19:08 America/Lima] PHP Warning:  is_dir(): open_basedir restriction in effect. File(/var/www/vhosts/.git) is not within the allowed path(s): (/var/www/vhosts/erpexa.com/:/tmp/) in /var/www/vhosts/erpexa.com/relavera.erpexa.com/Librerias/debugbar/src/DebugBar/DataCollector/FilesCollector.php on line 163
+[31-Mar-2026 09:19:08 America/Lima] PHP Warning:  is_dir(): open_basedir restriction in effect. File(/var/www/.git) is not within the allowed path(s): (/var/www/vhosts/erpexa.com/:/tmp/) in /var/www/vhosts/erpexa.com/relavera.erpexa.com/Librerias/debugbar/src/DebugBar/DataCollector/FilesCollector.php on line 163
+[31-Mar-2026 09:19:08 America/Lima] PHP Warning:  is_dir(): open_basedir restriction in effect. File(/var/.git) is not within the allowed path(s): (/var/www/vhosts/erpexa.com/:/tmp/) in /var/www/vhosts/erpexa.com/relavera.erpexa.com/Librerias/debugbar/src/DebugBar/DataCollector/FilesCollector.php on line 163
+[31-Mar-2026 09:19:08 America/Lima] PHP Warning:  is_dir(): open_basedir restriction in effect. File(//.git) is not within the allowed path(s): (/var/www/vhosts/erpexa.com/:/tmp/) in /var/www/vhosts/erpexa.com/relavera.erpexa.com/Librerias/debugbar/src/DebugBar/DataCollector/FilesCollector.php on line 163

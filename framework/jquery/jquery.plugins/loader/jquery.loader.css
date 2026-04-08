@@ -1,0 +1,16 @@
+/* CSS Document */
+	#loader{	
+		position:fixed;/*agregamos una posición absoluta para que nos permita mover la capa en el espacio del navegador :absolute*/
+		top:0;/*posicionamiento en Y */
+		left:0;/*pocisionamiento en X*/
+		z-index:9999; /* Le asignamos la pocisión más alta en el DOM */
+		background-color:#ffffff; /* le asignamos un color de fondo */
+		background-image:url(cargando.gif); /* imagen de fondo */
+		background-repeat:no-repeat;/* no repite la imagen de fondo */
+		background-position:center; /* centra la imagen de fondo */
+		width:100%; /* maximo ancho de la pantalla */
+		height:100%; /* maxima altura de la pantalla */
+		display:block; /* mostramos el layer */
+		opacity:0.6;
+		filter:alpha(opacity=60);
+	}

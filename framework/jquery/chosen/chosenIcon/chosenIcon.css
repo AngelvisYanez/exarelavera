@@ -1,0 +1,16 @@
+.chosenIcon-container .chosen-single span {padding-left : 26px;}
+.chosenIcon-container .chosen-single span:before,
+.chosenIcon-container .chosen-results li:before{position:absolute;content:attr(data-icon);margin-left:-25px;}
+.chosenIcon-container .chosen-results li {padding-left : 32px;}
+.chosenIcon-container .chosen-single span.fa-ico:before,
+.chosenIcon-container .chosen-results li.fa-ico:before{font-family:'FontAwesome';font-size: 16px;}
+.chosenIcon-container .chosen-single span.glyph-ico:before,
+.chosenIcon-container .chosen-results li.glyph-ico:before{font-family:'Glyphicons Halflings'}
+.chosenIcon-container .chosen-single span.font-extra:before,
+.chosenIcon-container .chosen-results li.font-extra:before{font-family: "fontello";font-size: 18px;}
+.chosenIcon-container .chosen-single span.font-extra:before {margin-top:-5px;}
+
+.chosenIcon-container .input-sm.chosen-single span.glyph-ico:before/*,
+.chosenIcon-container .chosen-results li.glyph-ico:before*/{font-size: 17px; margin-top: -4px;}
+.chosenIcon-container .input-sm.chosen-single span.fa-ico:before/*,
+.chosenIcon-container .chosen-results li.fa-ico:before*/{font-size: 18px; margin-top: -4px;}

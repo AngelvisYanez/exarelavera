@@ -1,0 +1,90 @@
+<table id="tableControl" style="width:100%;font-size:11px;/*table-layout:fixed;*/border:2px solid grey; border-collapse:collapse" cellpadding="2">
+	
+    	
+        <tr style="font-weight: bold" align="center">        
+            <td rowspan="3" style="border:1px solid grey;font-size:13px;border-right:2px solid grey;">MESES</td>            
+            <td colspan="29" style="border:1px solid grey;font-size:13px;border-right:2px solid grey;">FORMULARIO 104</td>
+            <td colspan="{header103Max}" style="border:1px solid grey;font-size:13px;border-right:2px solid grey;">FORMULARIO 103</td>
+        </tr>
+    	<tr style="font-weight: bold" align="center">
+            <td colspan="10" style="border:1px solid grey;font-size:12px">VENTAS</td>
+            <td rowspan="2" style="border:1px solid grey;font-size:12px;border-right:2px solid grey;"><u>TOTAL</u></td>
+            <td colspan="9" style="border:1px solid grey;font-size:12px">COMPRAS</td>
+            <td rowspan="2" style="border:1px solid grey;font-size:12px;border-right:2px solid grey;"><u>TOTAL</u></td>
+            <td rowspan="2" style="border:1px solid grey;font-size:12px;border-right:2px solid grey;"><u>V - C</u></td>
+            <td colspan="6" style="border:1px solid grey;font-size:12px">RETENCIONES IVA</td>
+            <td rowspan="2" style="border:1px solid grey;font-size:12px;border-right:2px solid grey;"><u>TOTAL</u></td>
+
+            {header103}
+            <td rowspan="2" style="border:1px solid grey;font-size:12px;border-right:2px solid grey;"><u>TOTAL</u></td>
+        </tr>
+        <tr style="font-weight: bold" align="center">	            
+            <td style="border:1px solid grey;">BI 15%</td>
+            <td style="border:1px solid grey;">BI 12%</td>
+            <td style="border:1px solid grey;">BI 8%</td>
+            <td style="border:1px solid grey;">BI 5%</td>
+            <td style="border:1px solid grey;">BI 0%</td>            
+            <td style="border:1px solid grey;">N/D</td>  
+            <td style="border:1px solid grey;">N/C</td>  
+            <td style="border:1px solid grey;">I.V.A.</td>
+            <td style="border:1px solid grey;">I. RENTA</td>
+            <td style="border:1px solid grey;">RET. IVA</td>
+            <td style="border:1px solid grey;">BI 15%</td>
+            <td style="border:1px solid grey;">BI 12%</td>
+            <td style="border:1px solid grey;">BI 8%</td>
+            <td style="border:1px solid grey;">BI 5%</td>
+            <td style="border:1px solid grey;">BI 0%</td> 
+            <td style="border:1px solid grey;">N/D</td> 
+            <td style="border:1px solid grey;">N/C</td> 
+            <td style="border:1px solid grey;">IMPOR.</td> 
+            <td style="border:1px solid grey;">I.V.A.</td>
+            <td style="border:1px solid grey;">10%</td> 
+            <td style="border:1px solid grey;">20%</td> 
+            <td style="border:1px solid grey;">30%</td>
+            <td style="border:1px solid grey;">50%</td>
+            <td style="border:1px solid grey;">70%</td>
+            <td style="border:1px solid grey;">100%</td>
+        </tr>
+    
+    <tbody>
+	<tr><td colspan="{colspanMax}" style="border-top:2px solid grey;height:0px;padding:0"></td></tr>
+        {data}
+        <tr><td colspan="{colspanMax}" style="border-top:2px solid grey;height:0px;padding:0"></td></tr> 
+        <tr align="right" style="font-weight: bold;font-size: 12px;">
+	    <td style="border:1px solid grey;border-right:2px solid grey;" align="left">TOTALES</td>
+            
+            <td style="border:1px solid grey;">{totVent15}</td>
+            <td style="border:1px solid grey;">{totVent12}</td>
+            <td style="border:1px solid grey;">{totVent8}</td>
+            <td style="border:1px solid grey;">{totVent5}</td>
+            <td style="border:1px solid grey;">{totVent0}</td>
+            <td style="border:1px solid grey;">{totVentND}</td>
+            <td style="border:1px solid grey;">{totVentNC}</td>            
+            <td style="border:1px solid grey;">{totVentIva}</td>
+            <td style="border:1px solid grey;">{totven_fuen}</td>
+            <td style="border:1px solid grey;">{tot609}</td>            
+            <td style="border:1px solid grey;">{totVentas}</td>
+            <td style="border:1px solid grey;">{totComp15}</td>
+            <td style="border:1px solid grey;">{totComp12}</td>
+            <td style="border:1px solid grey;">{totComp8}</td>
+            <td style="border:1px solid grey;">{totComp5}</td>
+            <td style="border:1px solid grey;">{totComp0}</td>
+            <td style="border:1px solid grey;">{totCompND}</td>
+            <td style="border:1px solid grey;">{totCompNC}</td>
+            <td style="border:1px solid grey;">{totImport}</td>
+            <td style="border:1px solid grey;">{totCompIva}</td> 
+            <td style="border:1px solid grey;">{totCompras}</td>
+            <td style="border:1px solid grey;"></td>
+            <td style="border:1px solid grey;">{tot721}</td> 
+            <td style="border:1px solid grey;">{tot723}</td> 
+            <td style="border:1px solid grey;">{tot725}</td> 
+            <td style="border:1px solid grey;">{tot727}</td> 
+            <td style="border:1px solid grey;">{tot729}</td> 
+            <td style="border:1px solid grey;">{tot731}</td>
+            <td style="border:1px solid grey;border-right:2px solid grey;">{tot799}</td> 
+            
+            {totalArray103}
+            <td style="border:1px solid grey;border-right:2px solid grey;">{total103}</td>
+        </tr>
+    </tbody>
+</table>

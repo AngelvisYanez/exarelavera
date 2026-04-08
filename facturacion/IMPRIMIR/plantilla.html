@@ -1,0 +1,84 @@
+<html>
+<head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <script type="text/ecmascript" src="../../framework/jquery/jquery.min/jquery-2.1.4.min.js"></script> 
+    <script type="text/ecmascript" src="../../framework/jquery/jquery.ui/jquery-ui-1.11.4/jquery-ui.min.js"></script> 
+    <style type="text/css">
+        body{width:830px; border:1px solid black;padding:0;margin:0; min-height:1000px;}
+        body > div { position:absolute; width:100%; }
+        <!--
+        .style2 {color: #000099}
+        .Estilo1 {font-size: 12px}
+        -->
+        .flota{position: absolute;font-size: 10px;font-weight: normal;font: 9pt Arial, Helvetica, sans-serif; background-color:yellow;}
+        .flota.truncate{white-space:nowrap;overflow:hidden;}
+        .flota.number{text-align:right;}
+        .detalle{position: absolute;font-size: 10px;font-weight: normal;font: 9pt Verdana, Geneva, sans-serif;}
+    </style>
+    <script type="text/ecmascript">
+        $( function() {
+            //$(document).tooltip({track: true});
+        });        
+        function getDatos(id){ return $('#'+id).data(); }
+        function updateAll(item){
+            updateXY(item);
+        }
+        function updateXY(item){
+            item.data('width',item.width());
+            item.data('x',item.offset().left);
+            item.data('y',item.offset().top);            
+        }
+        function setDato(item,key,val){
+            item.data(key,val);
+        }
+        function updatePos(data){ 
+            var item=$('#'+data['id']);
+            item.css('width',data['width']+'px');
+            item.css('left',data['x']+'px');
+            item.css('top',data['y']+'px');
+            updateXY(item);
+        }
+        function setImaGuia(res,data){           
+            $('body div').css({'background-image':'url("'+res+'")','background-repeat':'no-repeat'});
+            updatePosIma(data);
+        }
+        function updatePosIma(data){ 
+            $('body div').css({
+                'height':data['ima_height']+'px',
+                'background-position':data['ima_x']+'px '+data['ima_y']+'px',
+                'background-size': data['ima_width']+'px '+data['ima_height']+'px',
+                '-ms-transform': 'rotate('+data['ima_rotate']+'deg)',
+                '-webkit-transform': 'rotate('+data['ima_rotate']+'deg)',
+                'transform': 'rotate('+data['ima_rotate']+'deg)'
+            });
+        }
+        function setPlantilla(plantilla){ 
+           $('body').html('<div />'+plantilla);
+           setEvents();
+        }
+        function setEvents(){ 
+            $( ".flota" ).on('click',function(){
+                updateAll($(this));
+                parent.setField($(this).data('id'));
+            });
+            $( ".flota" ).draggable({            
+              stop: function(){
+                updateXY($(this));
+                parent.setField($(this).data('id'));
+              }
+            });
+        }
+        function getAllFields(){ 
+            var data={}, fields=$('body').find('span.flota');
+            fields.each(function(){
+                var aux=$.extend(true,{},$(this).data());
+                delete aux['ui-draggable'];
+                data[$(this).attr('id')]=aux;
+            });           
+           return data;
+        }
+    </script>
+</head>
+<body></body>
+</html>    

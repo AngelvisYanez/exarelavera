@@ -1,0 +1,30 @@
+/* CSS Document */
+/* Letra del index del sitio */
+.Letra_index {
+	color: #006699;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 11px;
+}
+
+/* Boton de acceso */
+.Boton_Login {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	text-align: center;
+	background-image: url(../imagenes/32x32/login.png);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #FCFFFF;
+	cursor:pointer;
+	border: thin solid #006699;
+}
+
+.banner_index {
+	color: #006699;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 50px;
+}

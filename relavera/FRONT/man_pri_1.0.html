@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manifiesto de Desechos Peligrosos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+       
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 210mm;
+            margin: 0 auto;
+            background: white;
+            padding: 15px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .header h1 {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .header h2 {
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        
+        .header h3 {
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        .section {
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+        
+        .section-title {
+            font-weight: bold;
+            font-size: 11px;
+            background-color: #e0e0e0;
+            padding: 5px;
+            margin: -10px -10px 10px -10px;
+            border-bottom: 1px solid #ccc;
+        }
+        
+        .form-group {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .form-group label {
+            font-weight: bold;
+            min-width: 200px;
+            margin-right: 10px;
+            font-size: 9px;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            flex: 1;
+            border: none;
+            border-bottom: 1px solid #000;
+            padding: 2px 5px;
+            font-size: 9px;
+            background: transparent;
+        }
+        
+        .form-group textarea {
+            min-height: 40px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 8px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        .form-row .form-group label {
+            min-width: auto;
+        }
+        
+        .table-section {
+            margin-top: 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9px;
+            margin-top: 5px;
+        }
+        
+        table th,
+        table td {
+            border: 1px solid #000;
+            padding: 5px;
+            text-align: left;
+        }
+        
+        table th {
+            background-color: #e0e0e0;
+            font-weight: bold;
+        }
+        
+        .signature-box {
+            border: 1px solid #000;
+            min-height: 60px;
+            margin-top: 5px;
+        }
+        
+        .date-group {
+            display: inline-flex;
+            gap: 10px;
+            align-items: center;
+            margin-left: 10px;
+            flex-wrap: nowrap;
+        }
+        
+        .date-group label {
+            min-width: auto;
+            margin-right: 5px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        
+        .date-group input {
+            width: 60px;
+            text-align: center;
+            border-bottom: 1px solid #000;
+            padding: 2px 5px;
+            flex-shrink: 0;
+        }
+        
+        .form-group.date-reception {
+            margin-top: 15px;
+            padding-top: 10px;
+        }
+        
+        .instructions {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            font-size: 8px;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 5px;
+        }
+        
+        .empty-field {
+            border-bottom: 1px dashed #999;
+            min-height: 15px;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>MINISTERIO DEL AMBIENTE</h1>
+            <h2>SUBSECRETARIA DE CALIDAD AMBIENTAL</h2>
+            <h2>SUBSECRETARIA DE GESTIÓN AMBIENTAL COSTERA</h2>
+            <h3>CLAVE DEL MANIFIESTO</h3>
+            <h2>INFORME DE MANIFIESTO DE DESECHOS PELIGROSOS</h2>
+        </div>
+
+        <!-- SECCIÓN GENERADOR -->
+        <div class="section">
+            <div class="section-title">GENERADOR</div>
+            
+            <div class="form-group">
+                <label>1. NÚM. DE REGISTRO COMO GENERADOR DE DESECHOS:</label>
+                <input type="text" class="empty-field" id="" value="123"/>
+            </div>
+            
+            <div class="form-group">
+                <label>2. NÚM. DE LICENCIA AMBIENTAL:</label>
+                <input type="text" class="empty-field" />
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>3. GENERACIÓN DEL MANIFIESTO:</label>
+                    <div class="date-group">
+                        <label>Fecha:</label>
+                        <input type="text" class="empty-field" value="{Man_Fec}"/>
+                        <label>Hora:</label>
+                        <input type="text" class="empty-field" value="{Man_Hor}" />
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>3.1 No. DE MANIFIESTO:</label>
+                <input type="text" class="empty-field" value="{Man_Num}" />
+            </div>                       
+            
+            <div class="form-group">
+                <label>5. NOMBRE DE LA EMPRESA GENERADORA:</label>
+                <input type="text" class="empty-field" value="{cliente}" />
+            </div>
+            
+            <div class="form-group">
+                <label>6. REGISTRO ÚNICO DE CONTRIBUYENTES:</label>
+                <input type="text" class="empty-field" value="{Prs_Ced}" />
+            </div>
+            
+            <!--<div class="form-group">
+                <label>7. NOMBRE DE LA INSTALACIÓN GENERADORA:</label>
+                <input type="text" class="empty-field" />
+            </div>-->
+            
+            <div class="form-group">
+                <label>DIRECCION :</label>
+                <input type="text" class="empty-field" value="{Prs_Dir}"/>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>CANTÓN:</label>
+                    <input type="text" class="empty-field" value="{Ciu_Des}" />
+                </div>
+                <div class="form-group">
+                    <label>PROV.:</label>
+                    <input type="text" class="empty-field" value="{Pro_Nom}"/>
+                </div>
+                <div class="form-group">
+                    <label>PARROQUIA:</label>
+                    <input type="text" class="empty-field" value="{Ciu_Des}" />
+                </div>
+            </div>
+            
+            <!--<div class="form-row">
+                <div class="form-group">
+                    <label>No ONU:</label>
+                    <input type="text" class="empty-field" />
+                </div>
+                <div class="form-group">
+                    <label>TEL:</label>
+                    <input type="text" class="empty-field" />
+                </div>
+            </div>-->
+            
+            <div class="form-group">
+                <label>8. DESCRIPCIÓN (Nombre del desecho de acuerdo al Listado Nacional e indicar CRTIB):</label>                
+            </div>
+            <div class="form-group">                
+                <textarea class="empty-field">{Tde_Des}</textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Código del Desecho:</label>
+                    <input type="text" class="empty-field" value="{Tde_Cde}"/>
+                </div>
+                <div class="form-group">
+                    <label>CONTENEDOR TIPO:</label>
+                    <input type="text" class="empty-field" value="{Veh_Tit}" />
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>CAPACIDAD:</label>
+                    <input type="text" class="empty-field" value="{Veh_Cap}" />
+                </div>
+                <div class="form-group">
+                    <label>CANTIDAD TOTAL DEL DESECHO:</label>
+                    <input type="text" class="empty-field" value="{Man_Pes}" />
+                </div>
+                <div class="form-group">
+                    <label>UNIDAD VOLUMEN/PESO:</label>
+                    <input type="text" class="empty-field" value="Tonelada" />
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>9. PESO DEL VEHÍCULO:</label>
+            </div>
+            
+           <!-- <div class="form-row">
+                <div class="form-group">
+                    <label>PESO BRUTO:</label>
+                    <input type="text" class="empty-field" />
+                </div>
+                <div class="form-group">
+                    <label>PESO TARA:</label>
+                    <input type="text" class="empty-field" />
+                </div>
+                <div class="form-group">
+                    <label>PESO NETO DEL DESECHO:</label>
+                    <input type="text" class="empty-field" />
+                </div>
+            </div> -->
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>FECHA DE LLEGADA A LA RELAVERA:</label>
+                    <input type="text" class="empty-field"  value="{Man_Fea}" />
+                </div>
+                <div class="form-group">
+                    <label>HORA DE LLEGADA A LA RELAVERA:</label>
+                    <input type="text" class="empty-field" value="{Man_Fea_Hor}" />
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>FECHA DE SALIDA A LA RELAVERA:</label>
+                    <input type="text" class="empty-field" value="{Man_Fes}"/>
+                </div>
+                <div class="form-group">
+                    <label>HORA DE SALIDA A LA RELAVERA:</label>
+                    <input type="text" class="empty-field" value="{Man_Fes_Hor}" />
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>10. INSTRUCCIONES ESPECIALES E INFORMACIÓN ADICIONAL PARA EL MANEJO SEGURO (INDICAR INCOMPATIBILIDAD):</label>                
+            </div>
+            <div class="form-group">                
+                <textarea class="empty-field">{Man_Obe}</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>11. CERTIFICACIÓN DEL GENERADOR:</label>
+                <div style="margin-top: 5px; font-size: 8px; font-style: italic;">
+                    Declaro que la información proporcionada es correcta, que el desecho está debidamente descrito, envasado, marcado y etiquetado, y que está en condiciones de ser transportado de manera segura.
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>NOMBRE, CARGO Y FIRMA DEL RESPONSABLE:</label>
+                <input type="text" class="empty-field" />
+            </div>
+            
+            <div class="signature-box"></div>
+            
+            <div class="form-group">
+                <label>TELÉFONO Y/O CORREO ELECTRÓNICO DE RESPONSABLE:</label>
+                <input type="text" class="empty-field" />
+            </div>
+            
+            <div class="form-group">
+                <label>FECHA:</label>
+                <input type="text" class="empty-field" />
+            </div>
+            
+            <div class="form-group">
+                <label>NO. DE RESOLUTIVO DE NO REUSO/RECICLAJE EN LA INSTALACIÓN:</label>
+                <input type="text" class="empty-field" />
+            </div>
+        </div>
+
+        <!-- SECCIÓN TRANSPORTE -->
+        <div class="section">
+            <div class="section-title">TRANSPORTE</div>
+            
+            <div class="form-group">
+                <label>12. NOMBRE DE LA EMPRESA TRANSPORTISTA:</label>
+                <input type="text" class="empty-field" value="{Mat_Des}" />
+            </div>
+            
+            <div class="form-group">
+                <label>DOMICILIO:</label>
+                <input type="text" class="empty-field" value="Mat_Dir" />
+            </div>
+            
+            <div class="form-group">
+                <label>TEL.:</label>
+                <input type="text" class="empty-field" value="{Mat_Tel}" />
+            </div>
+            
+            <div class="form-group">
+                <label>NO. DE LICENCIA AMBIENTAL DEL MAE:</label>
+                <input type="text" class="empty-field" value="{Mat_Mae}" />
+            </div>
+            
+            <div class="form-group">
+                <label>NO. DE LICENCIA DE POLICÍA NACIONAL:</label>
+                <input type="text" class="empty-field" value="{Cho_Tli}" />
+            </div>
+            
+            <div class="form-group">
+                <label>NO. DE PLAN DE CONTINGENCIAS APROBADO:</label>
+                <input type="text" class="empty-field" value="{Mat_Pco}" />
+            </div>
+            
+            <div class="form-group">
+                <label>13. RECIBÍ LOS DESECHOS DESCRITOS EN EL MANIFIESTO PARA SU TRANSPORTE.</label>
+            </div>
+            
+            <div class="form-group">
+                <label>NOMBRE CHOFER:</label>
+                <input type="text" class="empty-field" value="{chofer}"/>
+            </div>
+            
+            <div class="form-group">
+                <label>CARGO:</label>
+                <input type="text" class="empty-field" value="CHOFER" />
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>TIPO DE SANGRE:</label>
+                    <input type="text" class="empty-field" value="{Cho_Tsa}" />
+                </div>
+                <div class="form-group">
+                    <label>TELF:</label>
+                    <input type="text" class="empty-field" value="{Cho_Cel}" />
+                </div>
+            </div>
+            
+            <div class="signature-box"></div>
+            
+            <!--<div class="form-row">
+                <div class="form-group">
+                    <label>FECHA DE EMBARQUE:</label>
+                    <input type="text" class="empty-field" />
+                </div>
+                <div class="form-group">
+                    <label>HORA DE EMBARQUE:</label>
+                    <input type="text" class="empty-field" />
+                </div>
+            </div>-->
+            
+            <div class="form-group">
+                <label>CORREO:</label>
+                <input type="text" class="empty-field" />
+            </div>
+            
+            <div class="form-group">
+                <label>OBSERVACIONES:</label>
+                <textarea class="empty-field"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>13. RUTA DE LA EMPRESA GENERADORA HASTA SU ENTREGA.</label>
+            </div>
+            
+            <div class="form-group">
+                <label>PROVINCIA, CANTÓN Y PARROQUIAS INTERMEDIAS:</label>
+                <input type="text" class="empty-field" />
+            </div>
+            
+            <div class="form-group">
+                <label>CARRETERAS O CAMINOS UTILIZADOS:</label>
+                <input type="text" class="empty-field" />
+            </div>
+            
+            <div class="form-group">
+                <label>14. IDENTIFICIÓN DE BASCULA DE PESAJE:</label>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>NRO. DE BASCULA:</label>
+                    <input type="text" class="empty-field" />
+                </div>
+                <div class="form-group">
+                    <label>UBICACIÓN GEOGRAFICA:</label>
+                    <input type="text" class="empty-field" />
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>CAPACIDAD DE CARGA:</label>
+                <input type="text" class="empty-field" />
+            </div>
+            
+            <div class="form-group">
+                <label>14.1 TÉCNICO DE BASCULA:</label>
+            </div>
+            
+            <div class="form-group">
+                <label>NOMBRE:</label>
+                <input type="text" class="empty-field" />
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>CARGO:</label>
+                    <input type="text" class="empty-field" />
+                </div>
+                <div class="form-group">
+                    <label>TELEFONO:</label>
+                    <input type="text" class="empty-field" />
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>CORREO:</label>
+                <input type="text" class="empty-field" />
+            </div>
+            
+            <div class="form-group">
+                <label>15. TIPO DE VEHÍCULO:</label>
+                <input type="text" class="empty-field" />
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>MARCA:</label>
+                    <input type="text" class="empty-field" />
+                </div>
+                <div class="form-group">
+                    <label>No. DE PLACA:</label>
+                    <input type="text" class="empty-field" />
+                </div>
+                <div class="form-group">
+                    <label>MODELO:</label>
+                    <input type="text" class="empty-field" />
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN DESTINATARIO -->
+        <div class="section">
+            <div class="section-title">DESTINATARIO</div>
+            
+            <div class="form-group">
+                <label>16. NOMBRE DE LA EMPRESA DESTINATARIA:</label>
+                <input type="text" class="empty-field" />
+            </div>
+            
+            <div class="form-group">
+                <label>16.1 NÚMERO DE LICENCIA AMBIENTAL:</label>
+                <input type="text" class="empty-field" />
+            </div>
+            
+            <div class="form-group">
+                <label>DOMICILIO:</label>
+                <input type="text" class="empty-field" />
+            </div>
+            
+            <div class="form-group">
+                <label>16.2 DIFERENCIAS EN LA VERIFICACIÓN DE ENTREGA:</label>
+            </div>
+            
+            <div class="table-section">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>OBSERVACIONES TIPO:</th>
+                            <th>SOBRE CARGA</th>
+                            <th>RIESGO</th>
+                            <th>ALTO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <label>TIPO DE DESECHO NO APROBADO:</label>
+                                <input type="text" class="empty-field" style="width: 100%;" />
+                            </td>
+                            <td class="empty-field"></td>
+                            <td class="empty-field"></td>
+                            <td class="empty-field"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="form-group">
+                <label>16.3 GESTIÓN DE DESECHOS:</label>
+            </div>
+            
+            <div class="form-group">
+                <label>DESCRIPCIÓN DEL TRATAMIENTO:</label>
+                <textarea class="empty-field"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>DISPOSICIÓN FINAL:</label>
+                <textarea class="empty-field"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>17. VERIFICACIÓN DE DESCARGA - TÉCNICO RESPONSABLE:</label>
+            </div>
+            
+            <div class="form-group">
+                <label>NOMBRE:</label>
+                <input type="text" class="empty-field" />
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>CARGO:</label>
+                    <input type="text" class="empty-field" />
+                </div>
+                <div class="form-group">
+                    <label>JORNADA:</label>
+                    <input type="text" class="empty-field" />
+                </div>
+            </div>
+            
+            <div class="signature-box"></div>
+            
+            <div class="form-group date-reception">
+                <label>FECHA DE DEPÓSITO EN EL VASO DEL DIQUE:</label>
+                <div class="date-group">
+                    <label>DÍA:</label>
+                    <input type="text" class="empty-field" />
+                    <label>MES:</label>
+                    <input type="text" class="empty-field" />
+                    <label>AÑO:</label>
+                    <input type="text" class="empty-field" />
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>HORA DE DEPÓSITO EN EL VASO DEL DIQUE:</label>
+                <input type="text" class="empty-field" />
+            </div>
+            
+            <div class="form-group">
+                <label>OBSERVACIONES:</label>
+                <textarea class="empty-field"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>HUMEDAD DEL DESECHO:</label>
+                <input type="text" class="empty-field" />
+            </div>
+            
+            <div class="form-group">
+                <label>RIESGO:</label>
+                <input type="text" class="empty-field" />
+            </div>
+            
+            <div class="form-group">
+                <label>18. DEPÓSITO DE DESECHOS:</label>
+            </div>
+            
+            <div class="form-group">
+                <label>NRO. CELDA DE DEPOSITO:</label>
+                <input type="text" class="empty-field" />
+            </div>
+            
+            <div class="form-group">
+                <label>NOMBRE DE CELDA DE DEPOSITO:</label>
+                <input type="text" class="empty-field" />
+            </div>
+            
+            <div class="form-group">
+                <label>CÓDIGO DE CELDA:</label>
+                <input type="text" class="empty-field" />
+            </div>
+            
+            <div class="form-group">
+                <label>DESCRIPCIÓN DE CELDA:</label>
+                <textarea class="empty-field"></textarea>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>ESTADO DE LA RECEPCIÓN:</label>
+                    <input type="text" class="empty-field" />
+                </div>
+                <div class="form-group">
+                    <label>ESTADO DE ACEPTACIÓN:</label>
+                    <input type="text" class="empty-field" />
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>19. CERTIFICACIÓN DE RECEPCIÓN:</label>
+            </div>
+            
+            <div class="form-group">
+                <label>OBSERVACIONES:</label>
+                <textarea class="empty-field"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>NOMBRE:</label>
+                <input type="text" class="empty-field" />
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>CARGO:</label>
+                    <input type="text" class="empty-field" />
+                </div>
+            </div>
+            
+            <div class="signature-box"></div>
+            
+            <div class="form-group date-reception">
+                <label>FECHA DE RECEPCIÓN:</label>
+                <div class="date-group">
+                    <label>DÍA:</label>
+                    <input type="text" class="empty-field" />
+                    <label>MES:</label>
+                    <input type="text" class="empty-field" />
+                    <label>AÑO:</label>
+                    <input type="text" class="empty-field" />
+                </div>
+            </div>
+        </div>
+
+        <!-- INSTRUCCIONES -->
+        <div class="instructions">
+            <strong>INSTRUCCIONES:</strong>
+            <ol>
+                <li>El generador debe estar registrado como generador de desechos peligrosos y contar con licencia ambiental vigente.</li>
+                <li>El transportista debe contar con licencia ambiental del MAE y licencia de la Policía Nacional para el transporte de desechos peligrosos.</li>
+                <li>El destinatario debe contar con licencia ambiental del MAE para la gestión de desechos peligrosos.</li>
+                <li>El generador debe entregar al transportista el original y dos copias del manifiesto.</li>
+                <li>El transportista debe entregar al destinatario el original y una copia del manifiesto.</li>
+                <li>El destinatario debe retener el original y enviar una copia al MAE dentro de los 30 días siguientes a la recepción.</li>
+                <li>El formulario debe ser llenado con letra de molde, máquina o computadora.</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>
+

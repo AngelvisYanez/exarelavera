@@ -1,0 +1,16 @@
+.bgtransparent{
+	position:fixed;
+	left:0;
+	top:0;
+ 	background-color:#000;
+ 	opacity:0.6;
+ 	filter:alpha(opacity=60);
+}
+
+.bgmodal{
+	position:fixed; 
+	font-family:arial;
+	font-size:1em;
+	overflow:auto;
+	background:#FFFFFF
+}

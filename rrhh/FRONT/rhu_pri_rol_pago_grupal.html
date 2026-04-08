@@ -1,0 +1,52 @@
+<table id="tableControl" style="width:100%;font-size:11px;/*table-layout:fixed;*/border-collapse:collapse" cellpadding="2">
+    {header_empresa}
+    <tbody style="border:2px solid grey;">
+        <tr style="font-weight: bold" align="center">        
+            <td rowspan="2" style="{rol_border} font-size:13px;">No.</td>            
+            <td rowspan="2" style="{rol_border} font-size:13px;">CÉDULA</td>
+            <td colspan="2" style="{rol_border} font-size:13px;">PERSONAL</td>
+            <td rowspan="2" style="{rol_border} font-size:13px;">CARGO</td>
+            <td rowspan="2" style="{rol_border} font-size:13px;">DIAS</td>
+            <td colspan="{ingSpan}" style="{rol_border} font-size:13px;">INGRESOS</td>
+            <td rowspan="2" style="{rol_border} font-size:13px;">TOT. INGR.</td>
+            <td colspan="{egrSpan}" style="{rol_border} font-size:13px;">EGRESOS</td>
+            <td rowspan="2" style="{rol_border} font-size:13px;">TOT. EGRE.</td>
+            <td rowspan="2" style="{rol_border} font-size:13px;">TOTAL</td>
+			<td rowspan="2" style="{rol_border} font-size:13px;">FIRMA</td>
+        </tr>    	
+        <tr style="font-weight: bold" align="center">	
+            <td style="{rol_border} ">Apellidos</td>
+            <td style="{rol_border} ">Nombres</td>            
+            {ingHeader}
+            {egrHeader}
+        </tr>
+    </tbody>    
+    <tbody style="border:2px solid grey;">
+        {data}
+    </tbody>
+    <tbody>
+	<tr><td colspan="{maxSpan}">&nbsp;</td></tr>
+        <tr><td colspan="{maxSpan}">&nbsp;</td></tr>
+
+
+    <tr><td colspan="10">&nbsp;</td></tr>
+    <tr><td colspan="10">&nbsp;</td></tr>
+    <tr><td colspan="10">&nbsp;</td></tr>
+    <tr><td colspan="10">&nbsp;</td></tr>
+    <tr><td colspan="10">&nbsp;</td></tr>
+    <tr> 
+        <td></td>
+        <td colspan="3" style="font-weight: bold;border-top:1px solid gray;" align="center">EMITIDO POR </td>
+        <td></td><td></td>
+        <td colspan="3" style="font-weight: bold;border-top:1px solid gray;" align="center">DEPARTMENTO CONTABLE </td>
+        <td></td><td></td>
+        <td colspan="3" style="font-weight: bold;border-top:1px solid gray;" align="center">APROBADO POR  </td>
+        <td></td><td></td>
+        <td colspan="3" style="font-weight: bold;border-top:1px solid gray;" align="center">RECIBI CONFORME </td>
+        <td></td>
+    </tr>
+
+
+    </tbody>
+</table>   
+    

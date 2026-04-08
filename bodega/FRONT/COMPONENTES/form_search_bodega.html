@@ -1,0 +1,32 @@
+<div class="row">
+	<form name="searchBodega" id="searchBodega" class="form-horizontal normal" action="javascript:$('#searchGrid').Search('#searchBodega','searchBodegas');">
+		<div class="col-xs-10">
+			<fieldset class="exa-fieldset">
+				<legend class="Titulos2">B&uacute;squeda</legend>
+				<div class="form-group">
+					<label class="col-xs-2 control-label label-xs">Filtrar Por:</label>  
+					<div class="col-xs-7 radioset opt_search">
+						<input id="radsc1" name="op_opciones" type="radio" value="n" checked="" onclick="setfocus(this.form.search)" alt="" /><label for="radsc1">&nbsp;&nbsp;&nbsp;Nombre&nbsp;&nbsp;&nbsp;</label>
+						<input id="radsc2" name="op_opciones" type="radio" value="r" onclick="setfocus(this.form.search)" alt="" /><label for="radsc2">&nbsp;&nbsp;&nbsp;Responsable&nbsp;&nbsp;&nbsp;</label>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-xs-2 control-label">B&uacute;squeda:</label>  
+					<div class="col-xs-7" >
+						<div class="input-group">                        
+							<input name="search" onkeydown="if (event.keyCode === 13)
+							this.form.submit()" type="text" size="50" maxlength="50" placeholder="Ingrese b&uacute;squeda..." autofocus  class="form-control input-sm clearable submit"/>
+							<span class="input-group-btn"><button type="button" onclick="this.form.submit()" class="btn btn-success btn-sm" title="Buscar Documento"  tabindex="-1"><span class="glyphicon glyphicon-search"></span> <span>Buscar</span></button></span>
+						</div><!-- /input-group --> 
+					</div><input type="text" tabindex="-1" style="display:none;" />                    
+				</div>
+			</fieldset>
+		</div>
+	</form>
+	<div class="col-xs-12" style="min-height: 360px;">
+		<table id="searchGrid" name="searchGrid"></table>
+		<table id="searchGridPager"></table>
+		<div class="Titulos2">
+		</div>
+	</div>
+</div>

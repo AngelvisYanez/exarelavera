@@ -1,0 +1,84 @@
+.user-info {max-width: 150px;min-width: 100px;} .chat-message .profile-picture,.user-list .profile-picture{border:0;background-color:transparent;box-shadow:none;padding: 0;}
+.navbar {background-color: #890000;background-image: url("../../skins/img/Banner-Rojo-Hoy.png");background-repeat: repeat;}
+.ace-nav > li.light-blue > a{background-color: #1d354d;}
+.no-skin .nav-list > li:hover > a,.no-skin .nav-list .open > a, .no-skin .nav-list .open > a:hover, .no-skin .nav-list .open > a:focus {background-color: #1d354d;color:white;}
+.no-skin .nav-list:not(.submenu) .open > a{background-color: #1d354d;color:white;}
+.no-skin .nav-list .submenu > .open > a, .no-skin .nav-list .submenu > .open > a:hover, .no-skin .nav-list .submenu > .open > a:focus{background-color: #762023;color:white !important;}
+.no-skin .nav-list .submenu .submenu > .open > a, .no-skin .nav-list .submenu .submenu > .open > a:hover, .no-skin .nav-list .submenu .submenu > .open > a:focus { background-color: #998d8d !important; color: white !important; }
+.no-skin:not(.skin-3) .nav-list .submenu.nav-show.highlight:after { display: block; content: ""; position: absolute; right: 0px; top: -1px; bottom: 0; z-index: 1; border: 2px solid; border-width: 0 2px 0 0; border-color: #2b7dbc; }
+.no-skin:not(.skin-3) .nav-list li.active > a:after{ right: 2px; }
+.no-skin .nav-list > li .submenu > li.active > a > .menu-text{ color: #c86139; }
+.no-skin .nav-list > li .submenu > li.active > a{ cursor: default; }
+
+.nav-list > li:before{background-color: #961412;}
+.no-skin .sidebar.menu-min .nav-list > li > a > .menu-text{background-color: #762023; color: white;}
+.ace-nav > li.red-social{ /*width: 30px;*/ -webkit-transition: width 0.5s; transition: width 0.5s;}
+.ace-nav > li.red-social:hover{width: 50px;}
+.ace-nav > li.red-social a .ace-icon{font-size: 30px;width: 30px;}
+.ace-nav > li.red-social a,.ace-nav > li.user-links a{padding-top: 5px !important;}
+
+
+/* .ace-nav > li.red-social:not(.r1) > a{ background-color: #bdbdbd; color: black; } color anterior*/
+.ace-nav > li.red-social:not(.r1) > a{ background-color: transparent; color: black; } /* nuevo color 03-06-25*/
+/* .ace-nav > li.red-social:not(.r1) > a:hover, .ace-nav > li > a:focus{ background-color: #2c5976; color: #FFF; } color anterior*/
+.ace-nav > li.red-social:not(.r1) > a:hover, .ace-nav > li > a:focus{ background-color: #579ec8; color: #FFF; } /* nuevo color */
+
+/*
+.ace-nav > li.red-social.r2 a{background:  -webkit-linear-gradient(top, rgba(67,142,247,1) 0%, rgba(3,151,188,1) 100%);}
+.ace-nav > li.red-social.r2 a{background:  -webkit-linear-gradient(top, rgba(67,142,247,1) 0%, rgba(3,151,188,1) 100%);}
+.ace-nav > li.red-social.r3 a{background: -webkit-linear-gradient(top, rgba(184,0,0,1) 0%, rgba(238,27,27,1) 100%); }
+.ace-nav > li.red-social.r4 a{background-color: #ffffff;}
+.ace-nav > li.red-social.r4 a .ace-icon{ background:  -webkit-linear-gradient(45deg, rgba(247,202,0,1) 0%, rgba(125,57,176,1) 100%); -webkit-background-clip: text;-webkit-text-fill-color: transparent}*/
+.ace-nav > li:first-child { border-left-width: 1px; }
+a.empresa{font-size: 14px; font-weight: bold; color: black; padding-top: 20px;}
+/* a.empresa:hover, a.empresa:focus { color: white;  } color anterior */
+a.empresa:hover, a.empresa:focus { color: black;  }
+.dropdown-submenu {position: relative;}
+.dropdown-submenu .dropdown-menu {top: 0;left: 100%;margin-top: -1px;}
+#msgAlert .alert{ padding: 8px 15px; }
+
+.skin-1 .navbar {background-image: url("../../skins/img/Banner-Azul-Hoy.png");}
+/* .skin-3 .navbar {background-image: url("../../skins/img/Banner-Plomo-Hoy.png");} reemplazo de banner plomo por el blanco*/
+.skin-3 .navbar {background-image: url("../../skins/img/Banner-Blanco-Hoy.png");} /* nuevo banner*/
+.skin-2 .navbar {background: #136436;background-image: url("../../skins/img/Banner-Verde-Hoy.png");}
+.skin-2 .ace-nav > li > a > .ace-icon{color:#fff !important;}
+.skin-2 .ace-nav > li.grey a{ background-color: #555555;}
+.skin-2 .ace-nav > li.grey a:hover{ background-color: #555555;}
+
+@media only screen and (min-width: 540px), (max-width: 479px) and (min-width: 360px){
+.ace-nav > li.user-links a span.user-info{ /*margin-top: -5px !important;*/}
+}
+@media only screen and (max-width: 767px){
+	.red-social{display:none !important;}
+	.navbar-brand small span{display:inline-block; max-width:100px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 10px;}
+}
+@media only screen and (max-width: 480px){
+	.navbar-brand small{display:none;}
+}
+
+@media only screen and (max-width: 478px){
+.navbar-fixed-top + .main-container {
+    padding-top: 45px;
+}
+.navbar:not(.navbar-collapse) .navbar-header {
+    float: right !important;
+    display: block;
+}
+.navbar:not(.navbar-collapse) .navbar-header.pull-left {
+    float: left !important;
+    display: block;
+}
+.pull-right {
+    float: right !important;
+}
+.navbar .navbar-header, .navbar .navbar-collapse {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+.ace-nav > li.notificaciones a{ padding-top: 5px !important }
+}
+.notificaciones .dropdown-navbar > li > a .badge{ padding: 3px 7px 3px 7px !important; margin-right: -5px; margin-left: 5px; }
+.notificaciones .dropdown-navbar > li > a { cursor:pointer; }
+.notificaciones .dropdown-navbar > li > a .btn-xs, .btn-group-xs>.btn { line-height: 0.90; }
+.notificaciones .dropdown-navbar > li > a > div > span > i{ /*position: absolute;*/ margin-left: -33px; }
+.notificaciones .dropdown-navbar > li > a > div { padding-left: 28px; }

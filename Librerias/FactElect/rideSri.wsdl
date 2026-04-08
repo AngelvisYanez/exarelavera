@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<definitions xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tns="urn:ridesri" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns="http://schemas.xmlsoap.org/wsdl/" targetNamespace="urn:ridesri">
+<types>
+<xsd:schema targetNamespace="urn:ridesri"
+>
+ <xsd:import namespace="http://schemas.xmlsoap.org/soap/encoding/" />
+ <xsd:import namespace="http://schemas.xmlsoap.org/wsdl/" />
+ <xsd:complexType name="Result">
+  <xsd:all>
+   <xsd:element name="success" type="xsd:boolean"/>
+   <xsd:element name="message" type="xsd:string"/>
+   <xsd:element name="pdf" type="xsd:string"/>
+  </xsd:all>
+ </xsd:complexType>
+</xsd:schema>
+</types>
+<message name="getRideRequest">
+  <part name="file" type="xsd:string" />
+  <part name="logo" type="xsd:string" />
+  <part name="ext" type="xsd:string" /></message>
+<message name="getRideResponse">
+  <part name="return" type="tns:Result" /></message>
+<portType name="ridesriPortType">
+  <operation name="getRide">
+    <documentation>Nos da un pdf desde un xml.</documentation>
+    <input message="tns:getRideRequest"/>
+    <output message="tns:getRideResponse"/>
+  </operation>
+</portType>
+<binding name="ridesriBinding" type="tns:ridesriPortType">
+  <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+  <operation name="getRide">
+    <soap:operation soapAction="urn:ridesri#getRide" style="rpc"/>
+    <input><soap:body use="encoded" namespace="urn:ridesri" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/></input>
+    <output><soap:body use="encoded" namespace="urn:ridesri" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/></output>
+  </operation>
+</binding>
+<service name="ridesri">
+  <port name="ridesriPort" binding="tns:ridesriBinding">
+    <soap:address location="http://exa.ofsercont.com/Librerias/FactElect/rideSri.php"/>
+  </port>
+</service>
+</definitions>

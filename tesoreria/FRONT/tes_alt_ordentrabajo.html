@@ -1,0 +1,197 @@
+        <div id="datosPrf" class="box-container">
+                    <table style="width: 100%; padding: 0px; font-family: Arial;">
+                        <tr>
+                            <td class='bold' style="text-align: left; ">
+                                    <img width="100px" height="100px" src="{logo}">
+                            </td>
+                            <td class='bold' style="font-size: 15px; text-align: left;">
+                                <strong>ORDEN DE TRABAJO</strong>
+                            </td>
+                            <td class='bold'  style="font-size: 15px; text-align: left; ">
+                                <strong>OT-0000{ordNum}</strong>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class='bold' style="font-size: 14px; text-align: left;">
+                                <strong>Empresa: </strong> {empresa}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class='bold' style="font-size: 14px; text-align: left;">
+                                <strong>RUC: </strong> {ruc}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class='bold' style="font-size: 14px; text-align: left;">
+                                <strong>Telf: </strong> {tel_suc}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class='bold' style="font-size: 14px; text-align: left;">
+                                <strong>Direcci&oacute;n: </strong> {dir_suc}
+                            </td>
+                        </tr>
+
+                    </table>
+                    
+                    </br>
+                    <fieldset class="exa-fieldset">
+                        <table border="0" cellpadding="0" cellspacing="0" id="cabeceraCliente" style="width: 100%;border-collapse: collapse; font-family:Verdana, Geneva, sans-serif; font-size:10px "
+                         class="rep">
+                            <tr style="height: 0;">
+                                <td style="width: 10%;"></td>
+                                <td style="width: 40%;">&nbsp;</td>
+                                <td style="width: 10%;"></td>
+                                <td style="width: 40%;">&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td class='bold' style="font-size: 12px;">
+                                    <strong>CLIENTE: </strong> 
+                                </td>
+                                <td colspan="1">
+                                    <span name="cliente" id="cliente"style="font-size: 12px;" class="form-control input-xs databind datatitle">{cliente}
+                                </td>
+                                <td class='bold' style="font-size: 12px;">
+                                    <strong>RUC/C.I.: </strong>
+                                </td>
+                                <td colspan="1">
+                                    <span name="Ord_Fec" style="font-size: 12px;" class="form-control input-xs databind datatitle">{cedula}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class='bold' style="font-size: 12px;">
+                                    <strong>DIRECCION:</strong>
+                                </td>
+                                <td colspan="1">
+                                    <span name="Prs_Dir" id="Prs_Dir" style="font-size: 11px;" class="form-control input-xs databind datatitle">{direccion}</span>
+                                </td>
+                                <td class='bold' style="font-size: 12px;">
+                                    <strong>CORREO: </strong>
+                                </td>
+                                <td>
+                                    <span name="Ord_Num" style="font-size: 12px;" class="form-control input-xs databind datatitle"> {correo}</span>
+                                </td>
+                            </tr>
+
+                        </table>
+                    </fieldset>
+                <br/>
+
+                <fieldset class="exa-fieldset">
+                        <table border="0" cellpadding="0" cellspacing="0" id="cabeceraServicios" style="width: 100%;border-collapse: collapse; font-family:Verdana, Geneva, sans-serif; font-size:10px "
+                         class="rep">
+                            <tr style="height: 0;">
+                                <td style="width: 10%;"></td>
+                                <td style="width: 40%;">&nbsp;</td>
+                                <td style="width: 10%;"></td>
+                                <td style="width: 40%;">&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td class='bold' style="font-size: 12px;">
+                                    <strong>FECHA RECEPCION: </strong> 
+                                </td>
+                                <td colspan="1">
+                                    <span name="cliente" id="cliente"style="font-size: 12px;" class="form-control input-xs databind datatitle">{fechaRecepcion}
+                                </td>
+                                <td class='bold' style="font-size: 12px;">
+                                    <strong>FECHA ENTREGA: </strong>
+                                </td>
+                                <td colspan="1">
+                                    <span name="Ord_Fec" style="font-size: 12px;" class="form-control input-xs databind datatitle">{fechaEntrega}</span>
+                                </td>
+                                
+                            </tr>
+                            <tr>
+                            	<td class='bold' style="font-size: 12px;">
+                                    <strong>SERVICIO: </strong>
+                                </td>
+                                <td>
+                                    <span name="Ord_Num" style="font-size: 12px;" class="form-control input-xs databind datatitle"> {servicio}</span>
+                                </td>
+                                <td class='bold' style="font-size: 12px;">
+                                    <strong>MOTOR/MARCA:</strong>
+                                </td>
+                                <td colspan="1">
+                                    <span name="Prs_Dir" id="Prs_Dir" style="font-size: 11px;" class="form-control input-xs databind datatitle">{motor}</span>
+                                </td>
+                            </tr>
+
+                        </table>
+                    </fieldset>
+                <br/>
+
+            
+            <br/>
+
+            <table style=" width: 100%;font-size: 12px;border-collapse: collapse;" border="1">
+                <tr>
+                    <td class='bold' style="font: 10pt Verdana;">
+                        <strong>Partes de Recepcion:</strong>
+                    </td>
+                </tr>
+                <tr>
+                    <td class='bold' style="word-wrap: break-word; padding: 5px; font-size: 12px; font: 12pt Verdana;">
+                        <span name="Ord_Obs" id="Ord_Obs" style="font-size: 12px;" class="form-control input-xs databind datatitle">{partes}</span>
+                    </td>
+                </tr>
+
+                 <tr>
+                    <td class='bold' style="font: 10pt Verdana;">
+                        <strong>Descripcion:</strong>
+                    </td>
+                </tr>
+                <tr>
+                    <td class='bold' style="word-wrap: break-word; padding: 5px; font-size: 12px; font: 12pt Verdana;">
+                        <span name="Ord_Obs" id="Ord_Obs" style="font-size: 12px;" class="form-control input-xs databind datatitle">{descripcion}</span>
+                    </td>
+                </tr>
+
+                 <tr>
+                    <td class='bold' style="font: 10pt Verdana;">
+                        <strong>Repuestos:</strong>
+                    </td>
+                </tr>
+                <tr>
+                    <td class='bold' style="word-wrap: break-word; padding: 5px; font-size: 12px; font: 12pt Verdana;">
+                        <span name="Ord_Obs" id="Ord_Obs" style="font-size: 12px;" class="form-control input-xs databind datatitle">{repuestos}</span>
+                    </td>
+                </tr>
+
+                 <tr>
+                    <td class='bold' style="font: 10pt Verdana;">
+                        <strong>Observaciones:</strong>
+                    </td>
+                </tr>
+                <tr>
+                    <td class='bold' style="word-wrap: break-word; padding: 5px; font-size: 12px; font: 12pt Verdana;">
+                        <span name="Ord_Obs" id="Ord_Obs" style="font-size: 12px;" class="form-control input-xs databind datatitle">{observaciones}</span>
+                    </td>
+                </tr>
+            </table>
+             <br/>
+            <table style=" width: 100%;font-size: 12px;border-collapse: collapse;" border="1">
+            <tr>
+                	<td class='bold' style="font: 10pt Verdana;">
+                        <strong>Total:</strong>
+                    </td>
+                    <td class='bold' style="word-wrap: break-word; padding: 5px; font-size: 12px; font: 12pt Verdana;">
+                        <span name="Ord_Obs" id="Ord_Obs" style="font-size: 12px;" class="form-control input-xs databind datatitle">{total}</span>
+                    </td>
+                    <td class='bold' style="font: 10pt Verdana;">
+                        <strong>Abono:</strong>
+                    </td>
+                    <td class='bold' style="word-wrap: break-word; padding: 5px; font-size: 12px; font: 12pt Verdana;">
+                        <span name="Ord_Obs" id="Ord_Obs" style="font-size: 12px;" class="form-control input-xs databind datatitle">{abono}</span>
+                    </td>
+                    <td class='bold' style="font: 10pt Verdana;">
+                        <strong>Saldo:</strong>
+                    </td>
+                    <td class='bold' style="word-wrap: break-word; padding: 5px; font-size: 12px; font: 12pt Verdana;">
+                        <span name="Ord_Obs" id="Ord_Obs" style="font-size: 12px;" class="form-control input-xs databind datatitle">{saldo}</span>
+                    </td>
+                </tr>
+            </table>    
+            <br/>
+
+
+    </div>

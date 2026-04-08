@@ -1,0 +1,34 @@
+.loadmask {
+    z-index: 100; position: absolute;
+    top:0; left:0;
+    -moz-opacity: 0.5;  opacity: .50;
+    filter: alpha(opacity=50);
+    background-color: #CCC;
+    width: 100%; height: 100%; zoom: 1;
+    cursor:wait;
+    }
+    .loadmask-msg {z-index: 20001; position: absolute; top: 0; left: 0; padding:2px;font-weight:bold;
+    }
+    .loadmask-msg div {
+        padding:10px 10px 10px 60px;
+        line-height: 18px;
+        font:normal 18px tahoma, arial, helvetica, sans-serif;
+        cursor:wait;
+        font-weight:bold;
+    }
+    
+    .loadmask-msg .msgalert { color:#A09; border: 1px solid #eac572; background: #ffe9ad url(../images/notifications.png) no-repeat 0 -56px; }
+    .loadmask-msg .msginfo {  color:#009;border: 1px solid #99c4ea; background: #d1e4f3 url(../images/notifications.png) no-repeat 0 -160px; }
+    .loadmask-msg .msgsuccess  { color:#090; border: 1px solid #c1d779; background: #effeb9 url(../images/notifications.png) no-repeat 0 -108px; }
+    .loadmask-msg .msgerror {  color:#900; border: 1px solid #e18b7c; background: #fad5cf url(../images/notifications.png) no-repeat 0 -4px; }
+	.loadmask-msg .loaders {  color:#009;border: 1px solid #99c4ea; background: #d1e4f3 url(../images/loaders/ajax-loader.gif) no-repeat  5px 5px; }
+    
+    .masked {
+        overflow: hidden !important;
+    }
+    .masked-relative {
+        position: relative !important;
+    }
+    .masked-hidden {
+        visibility: hidden !important;
+    }

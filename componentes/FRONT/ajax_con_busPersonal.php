@@ -1,0 +1,71 @@
+<?
+/**
+* Ajax que permite buscar una persona para el semestre
+* Fecha de actulización:  2014-Abr-19
+*/
+
+require_once('../../componentes/LOGICA/logica.php');
+
+if (isset($ajax_perDocente))
+{		
+	if($opc=='d')
+	{
+		/*** Consultar por Apellido ********/
+		$rs_buscarPers = $obBD_con1->consulta(sentencias_com(206,$obBD_con1->parametros(trim($ref))), $obBD_conexion->conexion);
+		$row_rs_buscarPers = $obBD_con1->registros();
+		$total_rs_buscarPers = $obBD_con1->numregistros();
+	}else{		
+		/*** Consultar por Cedula ********/
+		$rs_buscarPers = $obBD_con1->consulta(sentencias_com(205,$obBD_con1->parametros(trim($ref))), $obBD_conexion->conexion);
+		$row_rs_buscarPers = $obBD_con1->registros();
+		$total_rs_buscarPers = $obBD_con1->numregistros();
+	}//Fin del if($opc=='d')
+	
+?>
+	&nbsp;
+	<FIELDSET>
+    <LEGEND>
+    <label class="Titulos2">Resultados de la busqueda</label>
+    </LEGEND>
+    <table width="100%" border="1" cellpadding="0" cellspacing="0">
+      <tr class="Cabecera1">
+        <td align="center" width="2%">C&oacute;d. Int.</td>
+        <td align="center" width="6%">C&eacute;dula/R.U.C.</td>
+        <td align="center" width="41%">Personal</td>                
+		<td width="2%">&nbsp;</td>
+      </tr>
+   <? if($total_rs_buscarPers!=0)
+	  {
+	  do{?>
+      <tr <? echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo");?> class="Fondo">
+        <td height="25" align="center"><? echo $row_rs_buscarPers['Per_Cod']?></td>        
+        <td align="left">&nbsp;<? echo $row_rs_buscarPers['Prs_Ced']?></td>
+        <td align="left">&nbsp;<? echo $row_rs_buscarPers['Prs_Ape'].' '.$row_rs_buscarPers['Prs_Nom']?></td>		
+        <td align="center">
+		<img src="../../mascaras/model1/imagenes/32x32/forward.png" name="imgBusca" id="imgBusca" style="cursor:pointer" width="18" height="18" onclick="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_uploadDocente=1&cad=<? echo $row_rs_buscarPers['Per_Cod'].'*'.$row_rs_buscarPers['Prs_Ape'].' '.$row_rs_buscarPers['Prs_Nom'];?>','div_respSem')" title="Elegir">		
+		</td>
+      </tr>  
+	  <? } while ($row_rs_buscarPers = $obBD_con1->fetch_assoc($rs_buscarPers));
+	  }else{?>
+	  <tr class="Fondo">
+        <td colspan="4" height="25" align="center"><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>        
+	  </tr>
+	  <? }?>    
+    </table>
+</FIELDSET>	
+<?
+@$obBD_con1->free_result($rs_buscarPers);
+exit();
+}
+
+if (isset($ajax_uploadDocente))
+{	
+	$inf= explode("*",$cad);
+?>	
+	<input name="Resp" type="text" id="Resp" size="50" maxlength="50" value="<? echo $inf[1];?>" readonly="">
+	<input type="hidden" id="Per_Doc" name="Per_Doc" value="<? echo $inf[0];?>">
+    <img src="../../mascaras/model1/imagenes/32x32/eliminar.jpg" width="16" height="16" style="cursor:pointer" onClick="document.getElementById('Resp').value=''; document.getElementById('Per_Doc').value='';" title="Quitar docente">
+<?
+exit();
+}
+?>

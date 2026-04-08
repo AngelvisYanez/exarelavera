@@ -1,0 +1,168 @@
+<table id="tableControl" style="width:100%;font-size:11px;/*table-layout:fixed;*/border-collapse:collapse"
+    cellpadding="2">
+    <style>
+        @media print {
+            tr {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+
+    <thead style="border:2px solid grey;">
+        <tr><th style='border:0' colspan='{colspan}' class='TITULO_REPORTE_2' align='center'>{LOGO}<div align='center'><strong>{titulo_empresa}</strong></div></th></tr>
+        <tr><th style='border:0' colspan='{colspan}' align='center' class='Texto_Reporte'><div align='center'>{empresa_nombre}</div></th></tr>
+        <tr><th style='border:0' colspan='{colspan}' align='center' class='Texto_Reporte'><div align='center'><strong>R.U.C.:</strong>&nbsp;{empresa_ruc}&nbsp;-&nbsp;<strong>TELEFONO:</strong>&nbsp;{suc_te1}</div></th></tr>
+        <!--tr><th style='border:0' colspan='{colspan}' align='center' class='Texto_Reporte'><div align='center'><strong>DIRECCION:</strong>&nbsp;{suc_dir}</div></th></tr>
+        <tr><th style='border:0' colspan='{colspan}' align='center' class='Texto_Reporte'><div align='center'><strong>E-MAIL:</strong> &nbsp;{Suc_Cor}</div></th></tr-->
+        <tr><th style='border:0' colspan='{colspan}' align='center' class='Texto_Reporte'><div align='center'>{Ciu_Des} {CIUDAD}</div></th></tr>
+        <tr><th style='border:0' colspan='{colspan}' align='center'><hr></th></tr>
+        <tr><th style='border:0' colspan='{colspan}' align='center' class='TITULO_REPORTE' style='font-size:12px;'><strong class='titleReporte'>{titulo}</strong></th></tr>
+        <tr><th style='border:0' colspan='{colspan}' align='center' class='TITULO_REPORTE subTitleReporte' style='font-size: 12px;'>{semana}</th></tr>
+        <tr><th style='border:0' colspan='{colspan}' align='center' class='TITULO_REPORTE subTitleReporte' style='font-size: 12px;'>{subtitulo}</th></tr>
+        <tr style="font-weight: bold" align="center">
+            <td rowspan="2" style="{rol_border} font-size:13px;">No.</td>
+            <td rowspan="2" style="{rol_border} font-size:13px;">CÉDULA</td>
+            <td colspan="1" rowspan="2" style="{rol_border} font-size:13px;">NOMBRES</td>
+            {mostrarColumnCargo}
+            <td rowspan="2" style="{rol_border} font-size:13px;">DIAS</td>
+            <td colspan="{ingSpan}" style="{rol_border} font-size:13px;">INGRESOS</td>
+            <td rowspan="2" style="{rol_border} font-size:13px;">TOT. INGR.</td>
+
+            <!-- {mostrarColumnEgresos} -->
+            <td colspan="{egrSpan}" style="{rol_border} font-size:13px;">EGRESOS</td>
+           
+            <td rowspan="2" style="{rol_border} font-size:13px;">TOT. EGRE.</td>
+            <td rowspan="2" style="{rol_border} font-size:13px;">TOTAL</td>
+            <td rowspan="2" style="{rol_border} font-size:13px;">FIRMA</td>
+
+
+        </tr>
+        <tr style="font-weight: bold" align="center">
+            {ingHeader}
+            {egrHeader}
+        </tr>
+    </thead>
+    <tbody style="border:2px solid grey;">
+        {data}
+    </tbody>
+    <table style="width:100%;font-size:11px;border-collapse:collapse" cellpadding="2">
+        <tbody>
+            <tr>
+                <td colspan="{maxSpan}">&nbsp;</td>
+            </tr>
+            <tr>
+                <td colspan="{maxSpan}">&nbsp;</td>
+            </tr>
+            <tr>
+                <td colspan="10">&nbsp;</td>
+            </tr>
+            <tr>
+                <td colspan="10">&nbsp;</td>
+            </tr>
+            <tr>
+                <td colspan="10">&nbsp;</td>
+            </tr>
+            <tr>
+                <td colspan="10">&nbsp;</td>
+            </tr>
+            <tr>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td colspan="2" style="font-weight: bold;border-top:1px solid gray;" align="center">EMITIDO POR </td>
+                <td></td>
+                <td></td>
+                <td colspan="2" style="font-weight: bold;border-top:1px solid gray;" align="center">DEPARTAMENTO
+                    CONTABLE
+                </td>
+                <td></td>
+                <td></td>
+                <td colspan="2" style="font-weight: bold;border-top:1px solid gray;" align="center">APROBADO POR </td>
+                <td></td>
+                <td></td>
+                <td colspan="2" style="font-weight: bold;border-top:1px solid gray;" align="center">RECIBÍ CONFORME
+                </td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+</table>
+
+
+<!--table> 
+    <tr>
+        <td>
+            <table id="tableControl" style="width:100%;font-size:11px;border-collapse:collapse" cellpadding="2">
+               
+                <thead style="border:2px solid grey;"> 
+                    <tr style="font-weight: bold" align="center">
+                        <td rowspan="2" style="{rol_border} font-size:13px;">No.</td>
+                        <td rowspan="2" style="{rol_border} font-size:13px;">CÉDULA</td>
+                        <td colspan="1" rowspan="2" style="{rol_border} font-size:13px;">PERSONAL</td>
+                        {mostrarColumnCargo}
+                        <td rowspan="2" style="{rol_border} font-size:13px;">DIAS</td>
+                        <td colspan="{ingSpan}" style="{rol_border} font-size:13px;">INGRESOS</td>
+                        <td rowspan="2" style="{rol_border} font-size:13px;">TOT. INGR.</td>
+                        <td colspan="{egrSpan}" style="{rol_border} font-size:13px;">EGRESOS</td>
+                        <td rowspan="2" style="{rol_border} font-size:13px;">TOT. EGRE.</td>
+                        <td rowspan="2" style="{rol_border} font-size:13px;">TOTAL</td>
+                        <td rowspan="2" style="{rol_border} font-size:13px;">FIRMA</td>
+                    </tr>
+                    <tr style="font-weight: bold" align="center">
+                        {ingHeader}
+                        {egrHeader}
+                    </tr>
+                </thead>
+
+                <tbody style="border:2px solid grey;">
+                    {data}
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <table style="width:100%;font-size:11px;border-collapse:collapse" cellpadding="2">
+                <tbody>
+                    <tr>
+                        <td colspan="{maxSpan}">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td colspan="{maxSpan}">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td colspan="10">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td colspan="10">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td colspan="10">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td colspan="10">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td colspan="2" style="font-weight: bold;border-top:1px solid gray;" align="center">EMITIDO POR </td>
+                        <td></td>
+                        <td></td>
+                        <td colspan="2" style="font-weight: bold;border-top:1px solid gray;" align="center">DEPARTAMENTO CONTABLE
+                        </td>
+                        <td></td>
+                        <td></td>
+                        <td colspan="2" style="font-weight: bold;border-top:1px solid gray;" align="center">APROBADO POR </td>
+                        <td></td>
+                        <td></td>
+                        <td colspan="2" style="font-weight: bold;border-top:1px solid gray;" align="center">RECIBÍ CONFORME </td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+</table-->

@@ -1,0 +1,185 @@
+<?php
+/**
+* @abstract Reporte de retención para la impresión 
+* @author Lewis Chimarro
+* @version 1.0
+* Fecha de actualización  2012-10-01
+* @author Lewis Chimarro
+*/
+require_once('../../administrador/LOGICA/seguridad.php');
+require_once('../LOGICA/fac_log_retencion.php');
+require_once('../../Librerias/procedimientos/almacenados_standar.php');		  
+
+/*
+*  Creacion del Objeto de conexion 
+*/
+$obBD_conexion = new Class_Log_Conexion_Ret($Ses_Dat_Dis);
+/* 
+* Cracion del objeto mysql para las consultas 
+*/
+$obBD_con1 =  new Class_Log_Datos_Ret;	 	 	 
+	 
+if (isset($Ret_Cod))
+{   
+   $row_rs_renta=$obBD_con1->getRowConsulta(167,$Ret_Cod, $obBD_conexion);
+   	  
+   if ($row_rs_renta['Aut_Cod'] != "") 
+   {
+	   $rs_prin_renta = $obBD_con1->getArrayConsulta(166,$Ret_Cod, $obBD_conexion);	   
+   }
+   else
+   {
+	   $rs_prin_renta = $obBD_con1->getArrayConsulta(553,$Ret_Cod, $obBD_conexion);  
+   } 
+   $row_prin_renta = current($rs_prin_renta);
+}	
+?>				
+<html>
+<head>
+<title><?Php echo $Ses_Sys_Nom; ?></title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<?Php //require_once("../../mascaras/model1/estilos/print.php"); ?>
+<style type="text/css">
+.Letra_punto_venta_2 {				
+	font-family: Verdana;
+	font-size: 11px;	
+}
+</style></head>
+<body>
+<table width="853"   border="0" align="left">
+      <td width="847" height="147" colspan="4" valign="top"><table width="849" height="138" border="0" align="left" cellpadding="0" cellspacing="0">
+        <tr>
+          <td height="21" colspan="3" >&nbsp;</td>
+        </tr>
+        <tr>
+          <td height="17" colspan="3" >&nbsp;</td>
+        </tr>
+        <tr >
+          <td height="13" colspan="2" valign="middle" class="Letra_punto_venta_2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<? echo $row_prin_renta['Prs_Ape'].' '.$row_prin_renta['Prs_Nom']; ?></td>
+          <td height="13" align="right" valign="bottom" class="Letra_punto_venta_2"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tr>
+              <td width="97%" align="right" valign="top" class="Letra_punto_venta_2">&nbsp;</td>
+              </tr>
+          </table></td>
+        </tr>
+        <tr >
+          <td width="298" height="13" valign="middle" class="Letra_punto_venta_2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<? echo $row_prin_renta['Prs_Ced']; ?></td>
+          <td valign="bottom" class="Letra_punto_venta_2">&nbsp;</td>
+          <td valign="middle" class="Letra_punto_venta_2"><? echo $row_prin_renta['Cop_Fec']; ?></td>
+        </tr>
+        <tr >
+          <td height="13" colspan="2" valign="middle" class="Letra_punto_venta_2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<? echo $row_prin_renta['Prs_Dir']; ?></td>
+          <td align="right" valign="top" class="Letra_punto_venta_2"><table width="80%" border="0" cellspacing="0" cellpadding="0">
+            <tr>
+              <td width="85%" align="right" class="Letra_punto_venta_2"><?Php $Fec_Emi=explode('-',$row_prin_renta['Ret_Fec']); ?>
+                <span><? echo $Fec_Emi[2].'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$Fec_Emi[1].'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$Fec_Emi[0].'&nbsp;&nbsp&nbsp;&nbsp;'; ?></span></td>
+              <td width="15%">&nbsp;</td>
+            </tr>
+          </table></td>
+        </tr>
+        <tr>
+          <td height="13" valign="top" class="Letra_punto_venta_2" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<? echo $row_prin_renta['Tic_Des']; ?></td>
+          <td width="183" colspan="-2" align="right" valign="bottom" class="Letra_punto_venta_2" ><? 
+		if ($row_rs_renta['Aut_Cod'] != "") 
+		{ 
+			echo "001-001-000".$row_prin_renta['Cop_Num']; 
+		} 
+		else 
+		{  
+			echo $row_prin_renta['Cop_Num'];
+		}?></td>
+          <td width="368" colspan="-2" align="left" valign="bottom" class="Letra_punto_venta_2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+        </tr>
+        <tr >
+          <td height="25" class="Letra_punto_venta_2" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          <? 
+		if ($row_rs_renta['Aut_Cod'] != "") 
+		{ 
+			echo $row_prin_renta['Aut_Sri']; 
+		} 
+		else 
+		{
+			echo $row_prin_renta['Cop_Aut']; 
+		}
+		?>            &nbsp;</td>
+          <td colspan="-2" align="right" valign="bottom" class="Letra_punto_venta_2"><? 
+			if ($row_rs_renta['Aut_Cod'] != "") 
+			{ 
+				//echo $row_prin_renta['Aut_Fci']; 
+			} 
+			else 
+			{
+				//echo $row_prin_renta['Cop_Imf']; 
+			}?></td>
+          <td colspan="-2" align="right" valign="bottom" class="Letra_punto_venta_2"><? 
+			if ($row_rs_renta['Aut_Cod'] != "")  
+			{  
+				//echo $row_prin_renta['Aut_Cad']; 
+			} 
+			else 
+			{ 
+				//echo $row_prin_renta['Cop_Cad']; 
+			}?>            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+        </tr>
+      </table>
+  <tr valign="top">
+    <td  valign="top"><table width="771" border="0" align="left" cellpadding="2" cellspacing="0" bordercolor="#000000">
+	<tr>
+	  <td height="79" colspan="5" align="right" valign="top" class="Letra_punto_venta_2">
+	  <?Php 
+	 $tarifa_0 = 0;
+	 $tarifa_12 = 0;
+	 $Cop_Des = $row_prin_renta['Cop_Des'];		
+	 $observacion=$row_prin_renta['Cop_Obs'];	
+     $Eje_Fis=explode('-',$row_prin_renta['Ret_Fec']); ?>
+
+    <table width="752" border="0" class="Letra_punto_venta_2" >
+	 <tr align="center">
+            <td colspan="6"></td>
+          <tr align="center">
+            <td colspan="6" height="15">&nbsp;</td>
+            </tr> 
+		  <?Php $Total_Ret=0; 
+		  foreach($rs_prin_renta as $row)
+		  { ?>
+          <tr align="center" >
+            <td width="97"  ><?Php $Ejerci=$Eje_Fis[0]; echo $Ejerci; unset($Ejerci);  ?></td>
+            <td width="100"   ><?Php $Sri_Cod=$row['Ren_Sri']; echo $obBD_con1->codAir($Sri_Cod); //"&nbsp"  ?></td>
+            <td width="176"    ><?Php $Sri_Imp=$row['Ret_Imp']; echo $Sri_Imp;  ?></td>
+            <td width="143"  ><?Php $Ren_Bas = number_format($row['Ret_Bas'], 2,'.',','); echo $Ren_Bas; ?></td>
+            <td width="93" align="right">	<?Php $Ren_Por= $row['Ren_Por'].'%'; echo $Ren_Por; ?></td>
+            <td width="117" align="right" >
+             
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?Php $Val_Ret=($row['Ret_Bas']*$row['Ren_Por'])/100; 
+			       $Val_Ret=number_format($Val_Ret,2,'.',''); 
+				   echo $Val_Ret;
+				  $Total_Ret=$Total_Ret+$Val_Ret;  ?>
+             </td></tr>
+<?Php }//Fin del foreach ?>
+		</table>		
+        </td>
+	  </tr>
+	
+	<tr>
+	  <td height="2" colspan="5" class="Letra_punto_venta_2"></td>
+	  </tr>
+	<tr>
+	  <td width="177" height="23" class="Letra_punto_venta_2">&nbsp;</td>
+	  <td width="361" height="23" align="right">&nbsp;</td>
+  	  <td width="87" height="23" class="Letra_punto_venta_2" align="center">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </td>	  
+	  <td width="1" class="Letra_punto_venta_2" align="right">&nbsp;</td>
+	  <td width="125" class="Letra_punto_venta_2" align="right"><?Php echo number_format ($Total_Ret, 2,'.',''); ?>&nbsp; </td>
+	</tr>
+	</table>	  
+</table>
+  </tr>
+</table>
+</body>
+</html>
+<?Php
+/**
+* Cierre de las conexiones
+*/
+$obBD_con1->liberar();
+$obBD_conexion->cerrar();
+?>

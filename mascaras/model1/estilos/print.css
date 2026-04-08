@@ -1,0 +1,307 @@
+/* CSS Document */
+.Titulos3 {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: bold;
+	color: #000099;
+	text-transform: uppercase;
+}
+
+.Letra_punto_venta_2 {
+				
+	font-family: Arial;
+	font-size: 8px;
+	font-style: normal;	
+}
+.Letra_punto_venta {
+font: 7pt Arial, Helvetica, sans-serif;
+margin: 0 auto; 
+padding: 4%;
+}
+.TITULO_REPORTE {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: bold;
+	color: #000000;
+	text-transform: uppercase;
+	text-align: center;
+}
+
+.Texto_Reporte {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: normal;
+	color: #000000;
+	text-align: justify;
+}
+
+.Encabezado_reporte {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: bold;
+	text-transform: uppercase;
+	color: #000000;
+}
+
+.Texto_Reporte_Rojo {
+
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: normal;
+	color: #FF0000;
+	text-align: justify;
+}
+
+.Texto_Listados {
+
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	font-weight: normal;
+	color: #000000;
+	text-align: justify;
+}
+
+.LetraPlan {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 14px;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	color: #000000;
+	text-decoration: none;
+}
+
+/**
+* Reporte de ventas 
+*/
+.Texto_bloques {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	color: #000000;
+	border:none;
+	border-style:none;
+}
+
+.TablaRepCompr {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	font-weight: bold;
+	color: #000000;
+	text-transform: capitalize;
+	border: 1px inset #000000;
+}
+
+.TablaRepCompr_b {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: bold;
+	color: #000099;
+	text-transform: uppercase;
+}
+
+.Tabla_Cab_Print {
+	font-family: Arial;
+	font-size: 12px;
+	font-weight: bold;
+	color: #000000;
+	text-align: center;
+	border-top-width: 1px;
+	border-left-width: 1px;
+	border-top-style: solid;
+	border-right-style: outset;
+	border-left-style: solid;
+	border-top-color: #000000;
+	border-right-color: #B7B7B7;
+	border-left-color: #000000;
+	border-right-width: 1px;
+	background-color: #A6A6A6;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+	border-bottom-color: #000000;
+}
+
+/**
+* Utilizado en UESMA
+*/
+.Fondo_logo {
+	background-attachment: scroll;
+	background-image: url(../../../imagenes/uesma/logo_fondo.JPG);
+	background-repeat: no-repeat;	
+	background-position: center;
+}
+
+.barra_izq {
+	background-attachment: scroll;
+	background-image:url(../../../imagenes/uesma/barra_izq.jpg);
+	background-repeat: repeat-y;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: none;
+	border-right-style: none;
+	border-bottom-style: none;
+	border-left-style: none;
+}
+.barra_der {
+	background-attachment: scroll;
+	background-image: url(../../../imagenes/uesma/barra_der.jpg);
+	background-repeat: repeat-y;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: none;
+	border-right-style: none;
+	border-bottom-style: none;
+	border-left-style: none;
+	background-position: right;
+}
+.barra_sup {
+	background-attachment: scroll;
+	background-repeat: repeat-x;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: none;
+	border-right-style: none;
+	border-bottom-style: none;
+	border-left-style: none;
+	background-image: url(../../../imagenes/uesma/barra_sup.jpg);
+	background-position: top;
+}
+.barra_inf {
+	background-attachment: scroll;
+	background-repeat: repeat-x;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: none;
+	border-right-style: none;
+	border-bottom-style: none;
+	border-left-style: none;
+	background-image: url(../../../imagenes/uesma/barra_inf.jpg);
+	background-position: right bottom;
+}
+/**
+* Fin UESMA
+*/
+
+
+/**
+* ventas 
+*/
+.Texto_normal_9 {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 9px;
+	font-weight: normal;
+	color: #000000;
+	text-align: justify;
+}
+
+/**
+* Compr 
+*/
+.TITULO_REPORTE_2 {
+
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 20px;
+	font-weight: bolder;
+	color: #000000;
+	text-transform: uppercase;
+	text-align: center;
+}
+
+/**
+* Listados 
+*/
+.Texto_normal_10 {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	color: #000000;
+	text-align: justify;
+}
+
+
+.Texto_normal_10_N_S {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	font-weight: bold;
+	color: #000000;
+	text-align: justify;
+	text-decoration: underline;
+}
+
+.paginado { page-break-after: always; }
+
+.TablaRepComprLeft {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	/*font-weight: bold;*/
+	color: #000000;
+	border-left-width: 1px;
+	border-left-style: inset;
+	border-left-color: #000000;
+}
+
+.TablaRepComprRight {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	/*font-weight: bold;*/
+	color: #000000;
+	border-right-width: 1px;
+	border-right-style: inset;
+	border-right-color: #000000;
+}
+
+.TablaRepComprBottom {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	/*font-weight: bold;*/
+	color: #000000;
+	border-bottom-width: 1px;
+	border-bottom-color: #000000;
+	border-bottom-style: inset;
+}
+
+.TEXTO_NORMAL_UPPER_22 {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 22px;
+	/*font-weight: bold;*/
+	text-transform: uppercase;
+	color: #000000;
+}
+
+.TEXTO_NORMAL_UPPER_18 {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 18px;
+	/*font-weight: bold;*/
+	text-transform: uppercase;
+	color: #000000;
+}
+
+.Fila {
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;
+	background-color: #F0F0F0;
+	color: #5B6F88;
+	text-align: left;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: none;
+	border-right-style: none;
+	border-bottom-style: none;
+	border-left-style: none;
+}
+
+.tabla {
+border: thin outset #000099;
+}

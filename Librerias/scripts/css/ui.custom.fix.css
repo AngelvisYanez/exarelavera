@@ -1,0 +1,72 @@
+.ui-jqgrid .ui-jqgrid-htable .jqg-first-row-header th{padding: 0px 2px 0px 2px;}
+.ui-jqgrid .myAltRowClass { background-color: #d6e0ef;
+  background-image: -moz-linear-gradient(
+ top,
+ rgba(255,255,255,0.4) 0%,
+ rgba(255,255,255,0.2) 50%,
+ rgba(255,255,255,0.1) 51%,
+ rgba(255,255,255,0.0) 100%);
+  background-image: -webkit-gradient(
+ linear, left top, left bottom,
+ color-stop(0%,rgba(255,255,255,0.4)),
+ color-stop(50%,rgba(255,255,255,0.2)),
+ color-stop(51%,rgba(255,255,255,0.1)),
+ color-stop(100%,rgba(255,255,255,0.0))); } 
+.ui-jqgrid .columnHighlight1{background-color: ivory;font-weight: bold !important;}
+.ui-jqgrid .columnHighlight2{background-color: azure;font-weight: bold !important;}
+.ui-jqgrid .columnHighlight3{background-color: beige;font-weight: bold !important;}
+.ui-jqgrid .columnHighlight4{background-color: burlywood;font-weight: bold !important;}
+.ui-jqgrid .columnHighlight5{background-color: black;color: white;font-weight: bold !important;}
+.ui-jqgrid .jqgroup td{  padding: 3px !important; background-color: seashell; font-size: 15px; text-align: center !important;}
+.ui-jqgrid .footrow td,.jqfoot td {font-size: 14px; background-color: seashell;}
+.ui-jqgrid .ui-th-column i{/*margin-left:6px;*/}
+.condensed .ui-jqgrid-hdiv .ui-jqgrid-htable thead th{padding: 0px 2px 0px 2px !important;}                    
+.condensed .ui-jqgrid-titlebar{padding:0px 0px 0px 10px !important;}
+.condensed .ui-jqgrid tr.jqgrow td{padding: 0px 2px 0px 2px !important;;}
+.ui-jqgrid td input[type=checkbox]{margin: 0px 4px 0px 4px;vertical-align: middle; -ms-transform: scale(1.6); /* IE */  -moz-transform: scale(1.6); /* FF */ -webkit-transform: scale(1.6); /* Safari and Chrome */ -o-transform: scale(1.6); /* Opera */ }
+/* Varios */
+.ui-tabs .ui-tabs-nav .ui-tabs-anchor{outline:0px;}
+.ui-tooltip {font-weight:bold;text-align:center;max-width:400px;opacity:0.9;}
+.ui-selectmenu-button span.ui-selectmenu-text{text-shadow: 0 1px 1px #e8ebee;/*background-color:#DFE9F6;*/}
+.ui-widget-header{text-shadow: 0 1px 1px #000000;}
+.ui-tabs .ui-widget-header{text-shadow: 0 0px 0px #000000;}
+.ui-widget-overlay {background: #000;opacity: .6;}
+.noTitleStuff .ui-dialog-titlebar {display:none}
+div.ui-dialog {position:fixed;}
+.ui-dialog .ui-tabs.ui-widget-content{border:0px;}
+.ui-dialog .ui-tabs .ui-tabs-nav .ui-tabs-anchor{padding: 3px 1em;}
+.ui-dialog .ui-tabs ul{padding-left:20px;background:transparent;border-radius: 0px;border-top:0px;border-right:0px;border-left:0px;}
+.ui-dialog .ui-tabs {margin:-10px;}
+.ui-dialog .ui-tabs .ui-tabs-panel{background: #eef2f9;padding: 10px 10px;border: 1px solid #4297d7;;border-top:0px;}
+.ui-button-text-only .ui-button-text {padding: 5px 4px;}
+a:-webkit-any-link {  text-decoration: none;}
+/* Fin Varios */
+/* solo un form */
+.disabled input{background:#999 !important;color:gray !important;}
+.disabled select{background:#999 !important;color:gray !important;}
+.readOnly input{background:#eee !important;color:black !important;}
+.segmento{width: 27%;text-align: right;height:23px;font-size:11px;display: inline-table;}                    
+.datasegmento{width: 65%;margin-left: 15px;height:23px;display:inline-table;}
+.datasegmento input:read-only {background:#eee !important;color:black; !important}
+.datasegmento input:-moz-read-only {background:#eee;color:black;}
+.datasegmento input:disabled  {background:#999 !important;color:gray !important;}
+.datasegmento select:disabled  {background:#999 !important;color:gray !important;}
+.datasegmento .label,.datasegmento .text{width: 98%;font-weight: bold;padding:2px;margin: 1px;font-size:11px;padding-top:3px;padding-bottom:3px;}
+.text.medium,.label.medium{width: 45%;}
+.text.small,.label.small{width: 30%;}
+.datasegmento .search{width: 69.2%;font-weight: bold;padding:2px;margin: 1px;font-size:11px;padding-top:4px;padding-bottom:4px;}
+.datasegmento a{margin-top: -2px;margin-left:5px;}
+.row{min-width:220px;}
+.row {clear: both;display: block;padding-top:1px;}
+.row .segmento{height: auto;display: inline;float: left;}
+.row .datasegmento{height: auto;display: inline;float: left;}
+.clear {clear: both;display: block;overflow: hidden;visibility: hidden;width: 0;height: 0;}
+.required:before{content:"*";color:#0C3;font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;font-size:16px;font-style:normal;font-weight:bold;font-variant:normal;padding-right:3px;}
+input.clearable{background: #fff url(data:image/gif;base64,R0lGODlhBwAHAIAAAP///5KSkiH5BAAAAAAALAAAAAAHAAcAAAIMTICmsGrIXnLxuDMLADs=) no-repeat right -10px center;padding: 3px 18px 3px 4px;/* Use the same right padding (18) in jQ! */transition: background 0.4s;}
+input.clearable.x  { background-position: right 5px center; }
+input.clearable.onX{ cursor: pointer; }
+input.clearable:focus,input.search:focus ,select:active,/*select:hover,*/.text:focus,.focus:focus,input.editable:focus  { background-color:#FF9 !important; border-color:#333;color: #333;}
+.lblMsg{font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;color:red;padding-left: 5px;}
+.imgMsg{position: relative; top: 4px;width:15px;}
+body{margin-top:5px;}
+/* fin solo un form */

@@ -1,0 +1,20 @@
+{
+	"fecha":{"ejemplo":"2016\/12\/01","type":"","bold":"","width":"120","y":"196","x":"413","id":"fecha"},
+	"cliente":{"ejemplo":"CLIENTE EMPRESA NOMBRE APELLIDO","type":"text","bold":"","width":"440","y":"178","x":"92","id":"cliente"},
+	"direccion":{"ejemplo":"DIRECCION DEL CLIENTE XXXX No XXXX","type":"text","bold":"","width":"240","y":"208","x":"92","id":"direccion"},
+	"cedu_ruc":{"ejemplo":"9999999999001","type":"","bold":"","width":"150","y":"245","x":"140","id":"cedu_ruc"},
+	"ciudad":{"width":"100","x":"360","y":"1035","id":"ciudad","ejemplo":"MACHALA","type":"text","bold":""},
+	"pago":{"ejemplo":"X","type":"","bold":"","width":"20","y":"722","x":"316","id":"pago"},
+	"item_cant":{"ejemplo":"2","type":"number","bold":"","width":"60","y":"298","x":"23","id":"item_cant"},
+	"item_desc":{"ejemplo":"PRODUCTO 1 - DESC","type":"text","bold":"","width":"250","y":"298","x":"101","id":"item_desc"},
+	"item_prun":{"ejemplo":"1.20","type":"number","bold":"","width":"60","y":"296","x":"377","id":"item_prun"},
+	"item_impo":{"ejemplo":"2.40","type":"number","bold":"","width":"70","y":"295","x":"462","id":"item_impo"},
+	"subtot":{"width":"70","x":"471","y":"674","id":"subtot","ejemplo":"2.40","type":"number","bold":""},
+	"descue":{"width":"70","x":"471","y":"702","id":"descue","ejemplo":"0.00","type":"number","bold":""},
+	"subt_0":{"width":"70","x":"472","y":"730","id":"subt_0","ejemplo":"0.00","type":"number","bold":""},
+	"subt_i":{"width":"70","x":"500","y":"1037","id":"subt_i","ejemplo":"2.40","type":"number","bold":""},
+	"iva":{"width":"70","x":"471","y":"756","id":"iva","ejemplo":"0.29","type":"number","bold":""},
+	"total":{"ejemplo":"2.69","type":"number","bold":"","width":"70","y":"784","x":"470","id":"total"},
+	"total_letras":{"ejemplo":"PROBANDO EN DOLARES XX\/100","type":"","bold":"","width":"200","y":"735","x":"148","id":"total_letras"},
+	"item":{"y":"298"}
+}

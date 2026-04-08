@@ -1,0 +1,1393 @@
+/* CSS Document */
+.Texto_normal_9 {
+	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+	font-size: 9px;
+	font-weight: normal;
+	color: #000000;
+	text-align: justify;
+}
+
+.Texto_grande {
+	font-family: Tahoma, Geneva, sans-serif ;
+	font-size: 60px;
+	font-weight: bold;
+	color: #CE0000;
+	text-align: justify; 
+	
+}
+
+/* Barra de titulo 1*/
+.BarraTitulo {
+  text-transform: capitalize;
+
+  padding-top: 13px;
+  padding-bottom: 13px;
+
+  background-color: #e6e6e6;
+  background-image: -moz-linear-gradient(top, #eeeeee, #dadada);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#eeeeee), to(#dadada));
+  background-image: -webkit-linear-gradient(top, #eeeeee, #dadada);
+  background-image: -o-linear-gradient(top, #eeeeee, #dadada);
+  background-image: linear-gradient(to bottom, #eeeeee, #dadada);
+  background-repeat: repeat-x;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffeeeeee', endColorstr='#ffdadada', GradientType=0);
+
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+  border-left: 1px solid #F1F1F1;
+  border-right: 1px solid #CCC;
+  -webkit-box-shadow: inset 0 1px 0 #ffffff;
+  -moz-box-shadow: inset 0 1px 0 #ffffff;
+  box-shadow: inset 0 1px 0 #ffffff;
+
+  border-left-color: #CCC;
+
+  border-right: none;
+
+  border-top-color: #CCC;
+
+  border-left: 1px solid #FFF;
+  border-right: 1px solid #DDD;
+
+  border-left-color: #DDD;
+
+  border-right: none;
+
+  background: #EEE;
+  background: -moz-linear-gradient(top, #eeeeee 0%, #dadada 100%);
+  /* FF3.6+ */
+
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #eeeeee), color-stop(100%, #dadada));
+  /* Chrome,Safari4+ */
+
+  background: -webkit-linear-gradient(top, #eeeeee 0%, #dadada 100%);
+  /* Chrome10+,Safari5.1+ */
+
+  background: -o-linear-gradient(top, #eeeeee 0%, #dadada 100%);
+  /* Opera11.10+ */
+
+  background: -ms-linear-gradient(top, #eeeeee 0%, #dadada 100%);
+  /* IE10+ */
+
+  background: linear-gradient(top, #eeeeee 0%, #dadada 100%);
+  /* W3C */
+
+  -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#EEEEEE', endColorstr='#DADADA')";
+  filter: progid:dximagetransform.microsoft.gradient(startColorstr='#EEEEEE', endColorstr='#DADADA');
+
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-size: 13px;
+  font-weight: 400;
+  color: #444;
+  border-left: 1px solid #F1F1F1;
+  border-right: 1px solid #CCC;
+  -moz-box-shadow: inset 0 1px 0 #ffffff;
+  -webkit-box-shadow: inset 0 1px 0 #ffffff;
+  box-shadow: inset 0 1px 0 #ffffff;
+
+  border-left-color: #CCC;
+
+  border-right: none;
+
+  border-left: 1px solid #FFF;
+  border-right: 1px solid #DDD;
+
+  border-left-color: #DDD;
+
+  border-right: none;
+
+  background-color: #254463;
+  background-image: -moz-linear-gradient(top, #2b4e72, #1d354d);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#2b4e72), to(#1d354d));
+  background-image: -webkit-linear-gradient(top, #2b4e72, #1d354d);
+  background-image: -o-linear-gradient(top, #2b4e72, #1d354d);
+  background-image: linear-gradient(to bottom, #2b4e72, #1d354d);
+  background-repeat: repeat-x;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff2b4e72', endColorstr='#ff1d354d', GradientType=0);
+  
+  color:#FFF;
+  font: 16px/1.7em 'Open Sans', arial, sans-serif;
+}
+
+/* Titulos generales */
+.Titulos2 {
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;	
+	font-style: normal;
+	color: #5B6F88/*#95BA2E*/;
+}
+
+/* Etiquetas */
+.Etiqueta1{
+	font-style: normal;
+	color:/*#0C7AC7*/#626061;
+	text-align: right;
+	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	font-weight: normal;
+	font-variant: normal;
+}
+
+/* barra de Busqueda */
+.BarraBusqueda {
+  padding-top: 13px;
+  padding-bottom: 13px;
+
+  background-color: #e6e6e6;
+  background-image: -moz-linear-gradient(top, #eeeeee, #dadada);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#eeeeee), to(#dadada));
+  background-image: -webkit-linear-gradient(top, #eeeeee, #dadada);
+  background-image: -o-linear-gradient(top, #eeeeee, #dadada);
+  background-image: linear-gradient(to bottom, #eeeeee, #dadada);
+  background-repeat: repeat-x;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffeeeeee', endColorstr='#ffdadada', GradientType=0);
+
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+  border-left: 1px solid #F1F1F1;
+  border-right: 1px solid #CCC;
+  -webkit-box-shadow: inset 0 1px 0 #ffffff;
+  -moz-box-shadow: inset 0 1px 0 #ffffff;
+  box-shadow: inset 0 1px 0 #ffffff;
+
+  border-left-color: #CCC;
+
+  border-right: none;
+
+  border-top-color: #CCC;
+
+  border-left: 1px solid #FFF;
+  border-right: 1px solid #DDD;
+
+  border-left-color: #DDD;
+
+  border-right: none;
+
+  background: #EEE;
+  background: -moz-linear-gradient(top, #eeeeee 0%, #dadada 100%);
+  /* FF3.6+ */
+
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #eeeeee), color-stop(100%, #dadada));
+  /* Chrome,Safari4+ */
+
+  background: -webkit-linear-gradient(top, #eeeeee 0%, #dadada 100%);
+  /* Chrome10+,Safari5.1+ */
+
+  background: -o-linear-gradient(top, #eeeeee 0%, #dadada 100%);
+  /* Opera11.10+ */
+
+  background: -ms-linear-gradient(top, #eeeeee 0%, #dadada 100%);
+  /* IE10+ */
+
+  background: linear-gradient(top, #eeeeee 0%, #dadada 100%);
+  /* W3C */
+
+  -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#EEEEEE', endColorstr='#DADADA')";
+  filter: progid:dximagetransform.microsoft.gradient(startColorstr='#EEEEEE', endColorstr='#DADADA');
+
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-size: 13px;
+  font-weight: 400;
+  color: #444;
+  border-left: 1px solid #F1F1F1;
+  border-right: 1px solid #CCC;
+  -moz-box-shadow: inset 0 1px 0 #ffffff;
+  -webkit-box-shadow: inset 0 1px 0 #ffffff;
+  box-shadow: inset 0 1px 0 #ffffff;
+
+  border-left-color: #CCC;
+
+  border-right: none;
+
+  border-left: 1px solid #FFF;
+  border-right: 1px solid #DDD;
+
+  border-left-color: #DDD;
+
+  border-right: none;
+
+  background-color: #254463;
+  background-image: -moz-linear-gradient(top, #2b4e72, #1d354d);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#2b4e72), to(#1d354d));
+  background-image: -webkit-linear-gradient(top, #2b4e72, #1d354d);
+  background-image: -o-linear-gradient(top, #2b4e72, #1d354d);
+  background-image: linear-gradient(to bottom, #2b4e72, #1d354d);
+  background-repeat: repeat-x;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff2b4e72', endColorstr='#ff1d354d', GradientType=0);
+
+  color: #FFF;
+  border-right: 1px solid #16283a;
+  border-left: 1px solid #396797;
+  -webkit-box-shadow: inset 0 1px 0 #4981ba;
+  -moz-box-shadow: inset 0 1px 0 #4981ba;
+  box-shadow: inset 0 1px 0 #4981ba;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  background-color: #F0F3F7;
+  border-top: 1px solid #1C2B37;
+}
+
+/* Texto general del sitio */
+.LetraNegra {
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;	
+	color: #000000 /*#A4AFBD*/;
+}
+
+/* Cabecera de las tablas*/
+.Cabecera1 {
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;
+	/* appearance */
+	background-color: #8ca9cf;
+	background-image: -moz-linear-gradient(
+		top,
+		rgba(255,255,255,0.4) 0%,
+		rgba(255,255,255,0.2) 50%,
+		rgba(255,255,255,0.1) 51%,
+		rgba(255,255,255,0.0) 100%);
+	
+	background-image: -webkit-gradient(
+		linear, left top, left bottom,
+		color-stop(0%,rgba(255,255,255,0.4)),
+		color-stop(50%,rgba(255,255,255,0.2)),
+		color-stop(51%,rgba(255,255,255,0.1)),
+		color-stop(100%,rgba(255,255,255,0.0)));
+		
+	/* text */
+	color: #121517;
+	font-size: 12px;
+	font-weight: bold;
+	text-shadow: 0 1px 1px #e8ebee;
+	text-align: center;
+}
+
+/* Cueropo de las tablas */
+.Fondo {
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;
+	background-color: #F0F0F0;
+	color: #5B6F88;
+	text-align: left;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: none;
+	border-right-style: none;
+	border-bottom-style: none;
+	border-left-style: none;
+}
+
+/* Mensajes de alerta */
+.Alertas {
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;
+	color: #0C7AC7;
+}
+/* Mensajes de alerta color azul */
+.Alertas2 {
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;
+	color: #003366;
+}
+/* Mensajes de alerta color rojo */
+.Alertas3 {
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;
+	color: #FF0000;
+}
+/* Campos requeridos */
+.Asterisco {
+	color: #0C3;
+	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+	font-size: 16px;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+}
+
+/* Fielset de los buscadores ajax */
+.Busqueda_ajax {
+	background-color: #CCCCCC;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: none;
+	border-right-style: none;
+	border-bottom-style: none;
+	border-left-style: none;
+	/*background-color: transparent;*/
+}
+
+.Busqueda_contenido_ajax {
+	background-color: #CCCCCC;
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;
+	color: #3B495A;
+}
+
+/* Cabecera de la tabla del buscador ajax */
+.Cabecera_ajax {
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;
+	background-color: #0797D8;
+	color: #FFFFFF;
+	text-align: center;
+}
+
+/* Cuerpo de la busqueda del ajax */
+.Cuerpo_ajax {
+	background-color: #FFFFFF;
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;	
+	color: #000000;
+}
+
+/* Paginas en construcción */
+.Construccion {
+	background-attachment: fixed;
+	background-image: url(../imagenes/construccion1.jpg);
+	background-repeat: no-repeat;
+	background-position: center center;
+}
+
+/* Botones generados con javascript */
+.BotonEliminar {
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;
+	height: 20px;
+	width: 25px;
+	border: thin solid #000;
+	text-align: center;
+}
+
+.oculta {
+ display:none;
+}
+
+.muestra {
+
+}
+
+/* ojojojojo */
+#eta_niv{
+	position:relative;
+	display:none;
+}
+#busren
+{
+	 position:relative;
+}
+#buspor
+{
+    position:relative;
+	display:none;
+}
+
+.Titulos1 {
+	background-color: #6A7B8F;
+	font: normal 14px "Trebuchet MS", Arial, Helvetica, sans-serif;	
+	font-size: 14px;
+	text-transform: uppercase;
+	color: #FFFFFF;
+	font-weight: bold;
+}
+
+/* Estilos de Tabs */
+body {
+  font: 12px/1.7em 'Open Sans', arial, sans-serif;
+  background: #FFF;
+}
+
+#ContTabul {
+      border-left: 1px solid #CCC;
+      border-right: 1px solid #CCC;
+      border-bottom: 1px solid #CCC;
+      padding: 10px 5px 6px 5px;
+}
+
+ul#tabnav {
+      list-style-type: none;
+      margin: 0;
+      padding-left: 40px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #CCC;
+      font: 11px verdana, arial, sans-serif;
+}
+ul#tabnav li {
+      float: left;
+      height: 21px;
+      background-color: #E4E4E4;
+      color: #666;
+      margin: 2px 10px 0 2px;
+      border: 1px solid #CCC;
+}
+ul#tabnav a:link, ul#tabnav a:visited {
+      display: block;
+      color: #666;
+      text-decoration: none;
+      padding: 4px;
+}
+ul#tabnav a:hover {
+      background-color: #CCC;
+      color: #666;
+}
+#tabnav .activo {
+      /*border-bottom: 1px solid #fff;*/
+      color:  #000000;
+      background-color: #DFE9F6 /*#FFFFFF*/;     
+}
+#tabnav .inactivo {}
+
+
+/* Estilos de Botones */
+.Boton_Guardar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	text-align: center;
+	background-image: url(../imagenes/32x32/guardar.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	cursor:pointer;
+	background-color: #F1F1ED;
+}
+
+.Boton_Buscar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/buscar.jpg);
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #83BBCC;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	background-repeat: no-repeat;
+	cursor:pointer;
+}
+
+.Boton_Aceptar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/aceptar.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #65CB65;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Actualizar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/actualizar.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #006BA8;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Siguiente {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/siguiente.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #006BA8;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Habilitar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/habilitar.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #A7E390;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Deshabilitar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/deshabilitar.gif);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #555555;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Inscribir {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/inscribir.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #6EAF57;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+
+
+.Boton_Dinero {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/dinero.png);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #A5D78A;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Nuevo {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/nuevo2.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #BDC7D1;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Agregar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/nuevo.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #B0CFB3;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Calcular {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #FFFFFF;
+	text-align: center;
+	background-image: url(../imagenes/32x32/calcular.png);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #85BBC9;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Imprimir {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/fileprint.png);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #066DA4;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Imprimir_All {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/frameprint.png);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #066DA4;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Eliminar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/editdelete.png);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #E96868;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Libros {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F6F6FA;
+	text-align: center;
+	background-image: url(../imagenes/32x32/libros.png);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #659BDE;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Buscar_Agregar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/buscar_agregar.png);
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #ACCAD8;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	background-repeat: no-repeat;
+	cursor:pointer;
+}
+
+.Boton_Cambiar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F6F6FA;
+	text-align: center;
+	background-image: url(../imagenes/32x32/cambiar.png);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #B15479;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Debe {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #FFFFFF;
+	text-align: center;
+	background-image: url(../imagenes/32x32/Debe.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 50px;
+	background-position: center center;
+	font-size: 1px;
+	color: #FFFFFF;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Haber {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #FFFFFF;
+	text-align: center;
+	background-image: url(../imagenes/32x32/Haber.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 50px;
+	background-position: center center;
+	font-size: 1px;
+	color: #FFFFFF;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Limpiar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F4F4F4;
+	text-align: center;
+	background-image: url(../imagenes/32x32/limpiar.jpg);
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #FCBE74;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	background-repeat: no-repeat;
+	cursor:pointer;
+}
+
+.Boton_Atras {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/atras.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #98B282;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Adelante {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/adelante.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #98B282;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Devolver {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/devolver.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #98B282;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_volver {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/anterior.jpg);
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #83BBCC;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	background-repeat: no-repeat;
+	cursor:pointer;
+}
+
+.Boton_VistaPrevia {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	text-align: center;	
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #94B8E8;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	background-repeat: no-repeat;
+	cursor:pointer;
+	background-attachment: scroll;
+	background-image: url(../imagenes/32x32/vista.jpg);
+	background-color: #FFFFFF;
+}
+
+.Boton_Excel {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/excel.png);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #E96868;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Distribuir {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	text-align: center;
+	background-attachment: fixed;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #94B8E8;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	background-repeat: no-repeat;
+	cursor:pointer;
+	background-attachment: fixed;
+	display: block;
+	background-image: url(../imagenes/32x32/view_choose.png);
+	background-color: #FFFFFF;
+}
+
+.Boton_Dinero2 {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/anticipo.png);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #E2B87E;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+/* Color del texto resaltado */
+.resaltar_text{	
+    color: #FFFFFF; 
+    cursor: pointer;
+}
+
+/* Color del fondo resaltado */
+.resaltar_back {
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;
+	cursor: pointer;
+	background-color: #CCCCCC;
+}
+
+/* Color para deshacer el texto resaltado */
+.undo_resaltar_text {
+    color: #000000;
+    cursor: pointer;
+}
+
+/* Color para deshacer el fondo resaltado */
+.undo_resaltar_back {
+	cursor: pointer;
+	background-color: #CCCCCC;
+}
+
+.BordeTabla {
+	border: 1px solid #000033;
+}
+.Boton_EliminarSmall {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #FF7A26;
+	text-align: center;
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	background-position: center center;
+	font-size: 11px;
+	cursor:pointer;
+	border-top-style: none;
+	border-right-style: none;
+	border-bottom-style: none;
+	border-left-style: none;
+}
+.Boton_Registrar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/insertar.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #0587E7;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+.Boton_Persona {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/personal.png);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #89CCFF;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+.Boton_Cancelar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/retornar.png);
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #83BBCC;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	background-repeat: no-repeat;
+	cursor:pointer;
+}
+
+body {
+	margin-left: 3px;
+	margin-top: 5px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+}
+
+input {
+   border:1px solid #686868;
+}
+
+textarea {
+   border:1px solid #686868;
+}
+
+/* Define el color del menu */
+.menu {
+	background-repeat: repeat-y;
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #4C4A4B;
+	background-attachment: scroll;
+	background-color: #C0BEBE;
+	font-weight: bold;
+}
+
+.Boton_Departamento {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/departamento.png);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #78B7A3;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Persona_Formal {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/persona.gif);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #C6D0FF;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+.Boton_Directorio {
+
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/folder.png);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #78B7A3;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+.Boton_Proceso {
+
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/proceso.png);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #C6D0FF;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+/* -------------------------------------------- */
+/* ------------- Pagination: Clean ------------ */
+/* -------------------------------------------- */
+
+#pagination-clean li          
+{ border:0; margin:0; padding:0; font-size:11px; list-style:none; /* savers */ float:left; }
+/* savers #pagination-clean li,*/
+#pagination-clean a           
+{ border-right:solid 1px #DEDEDE; margin-right:2px; }
+#pagination-clean .previous-off,
+#pagination-clean .next-off   
+{ color:#888888; display:block; float:left; font-weight:bold; padding:3px 4px; }
+#pagination-clean .next a,
+#pagination-clean previous a  
+{ border:none; font-weight:bold; }
+#pagination-clean .active    
+{ color:#333; font-weight:bold; display:block; float:left; padding:4px 6px; /* savers */ border-right:solid 1px #DEDEDE; }
+#pagination-clean a:link,
+#pagination-clean a:visited   
+{ color:#0e509e; display:block; float:left; padding:3px 6px; text-decoration:underline; }
+#pagination-clean a:hover     
+{ text-decoration:none; }

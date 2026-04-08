@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Certificado de Gesti&oacute;n de Desechos</title>
+
+
+<style>
+    body{ font-family:"Times New Roman", serif; font-size:12px; margin:0; padding:0; color:#000; }
+    /* PAGINA A4 */
+    .page{ width:210mm; height:297mm; padding:22mm 20mm; margin:0 auto; box-sizing:border-box; position:relative; }
+    /* MARCA DE AGUA */
+    .watermark{ position:absolute; top:52%; left:50%; transform:translate(-50%,-50%); opacity:0.045; z-index:0; }
+    .watermark img{ width:460px; }
+    /* CONTENIDO */
+    .content{ position:relative; z-index:1; }
+    /* LOGOS */
+    .header-logos{ display:table; width:100%; margin-bottom:18px; }
+    .header-logos div{ display:table-cell; vertical-align:middle; }
+    .header-logos .left{text-align:left}
+    .header-logos .center{text-align:center}
+    .header-logos .right{text-align:right}
+    .header-logos img{max-height:70px}
+    /* TITULO */
+    .title{ text-align:center; font-size:18px; font-weight:bold; margin:18px 0 18px; line-height:1.35; }
+    /* TEXTOS */
+    .info-line{ margin-bottom:8px; }
+    .info-line span{ font-weight:bold; min-width:130px; display:inline-block; }
+    .info-line .hour-label{ min-width:60px !important; margin-left:80px; }
+    .text-block{ text-align:justify; margin:16px 0 18px; line-height:1.35; }
+    /* SECCIONES */
+    .subtitle{ font-weight:bold; margin:18px 0 8px; }
+    /* TABLAS */
+    table{ width:100%; border-collapse:collapse; margin-bottom:16px; }
+    th, td{ border:1px solid #000; padding:8px; vertical-align:top; }
+    th{ text-align:center; font-weight:bold; }
+    /* MARCA DE AGUA BORRADOR */
+    .draft-watermark{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) rotate(-45deg); font-size:120px; font-weight:bold; color:rgba(200,0,0,0.1); z-index:0; pointer-events:none; white-space:nowrap; border:15px solid rgba(200,0,0,0.1); padding:20px; border-radius:30px; text-transform:uppercase; }
+    
+    /* CAJA DE FIRMA PREMIUM - ESTILO SOLICITADO */
+    .signature-box{ display:inline-block; text-align:left; min-width:350px; background:#fff; position:relative; }
+    .signature-box-content{ display:flex; align-items:center; margin-bottom:5px; padding-right:15px; }
+    .signature-qr{ width:85px; height:85px; margin-right:12px; }
+    .signature-details{ font-size:11px; line-height:1.2; font-family: Arial, sans-serif; }
+    .signature-details .label{ font-size:10px; color:#1a1a1a; display:block; margin-bottom:1px; }
+    .signature-details .name{ font-size:15px; font-weight:bold; color:#000; display:block; margin:2px 0 3px 0; }
+    .signature-details .check{ font-size:10px; color:#1a1a1a; display:block; }
+    
+    .signature-line-bottom{ border-top:1.5px solid #000; width:100%; margin:4px 0 10px 0; }
+    .signature-company{ font-size:18px; font-weight:bold; text-align:center; text-transform:uppercase; width:100%; letter-spacing:1px; }
+    
+    /* IMPRESION */
+    @media print{ body{margin:0} .signature-box{ border:none; box-shadow:none; } }
+    </style>
+    
+</head>
+
+<body>
+
+<div class="page">
+
+  <div class="watermark">
+    <img src="{watermark}">
+  </div>
+
+  <div class="content">
+    <!-- LOGOS -->
+    <div class="header-logos">
+      <div class="left"><img src="{logo_prefectura}"></div>
+      <div class="center"><img src="{logo_relavera}" style="max-height:75px"></div>
+      <div class="right"><img src="{logo_completo}"></div>
+    </div>
+
+    <!-- TITULO -->
+    <div class="title">
+      CERTIFICADO DE GESTI&Oacute;N DE DESECHOS PELIGROSOS
+    </div>
+
+    <!-- INFO -->
+    <div class="info-line"><span>CERTIFICADO N&deg;:</span> {Man_Num}-{Man_Fec_Ano}</div>
+    <div class="info-line"><span>FECHA:</span> {Man_Fec} <span class="hour-label">HORA:</span> {Man_Hor}</div>
+    <div class="info-line"><span>UBICACI&Oacute;N:</span> {Suc_Dir}</div>
+    <div class="info-line"><span>MANIFIESTO:</span> {Man_Num}</div>
+
+    <div class="text-block">
+      Se extiende el presente como comprobante de disposici&oacute;n final de los
+      desechos peligrosos de acuerdo con la licencia ambiental Resoluci&oacute;n
+      N&deg; {Des_Lic} del Ministerio de Ambiente y Energ&iacute;a (MAE).
+    </div>
+
+    <!-- GENERADOR -->
+    <div class="subtitle">GENERADOR:</div>
+    <table>
+      <tr>
+        <th>RAZ&Oacute;N SOCIAL</th>
+        <th>N&deg; REGISTRO DE GENERADOR DE DESECHOS</th>
+        <th>RESPONSABLE T&Eacute;CNICO</th>
+        <th>DIRECCI&Oacute;N / TEL&Eacute;FONO</th>
+      </tr>
+      <tr>
+        <td>{cliente}</td>
+        <td class="center" style="text-align: center;">{Pla_Car}</td>
+        <!--td>{Tec_Nom_Completo}</td-->  
+        <td>{usuario}</td>
+        <td>{Prs_Dir} / {Prs_Tel}</td>
+      </tr>
+    </table>
+
+    <!-- TRANSPORTISTA -->
+    <div class="subtitle">TRANSPORTISTA:</div>
+    <table>
+      <tr>
+        <th>RAZ&Oacute;N SOCIAL</th>
+        <th>LICENCIA AMBIENTAL </th>
+        <th>CONDUCTOR</th>
+        <th>CONTACTO</th>
+      </tr>
+      <tr>
+        <td>{Mat_Des}</td>
+        <td style="text-align: center;">{Mat_Mae}</td>
+        <td>{chofer}</td>
+        <td>{Cho_Cor}</td>
+      </tr>
+    </table>
+
+    <!-- DISPOSICION -->
+    <div class="subtitle">DISPOSICI&Oacute;N FINAL:</div>
+    <table>
+      <tr>
+        <th>RAZ&Oacute;N SOCIAL</th>
+        <th>LICENCIA AMBIENTAL</th>
+        <th>RESPONSABLE TECNICO</th>
+        <th>CONTACTO</th>
+      </tr>
+      <tr>
+        <td style="text-align: center;">GAD Provincial de El Oro</td>
+        <td style="text-align: center;">N&deg; 1278</td>
+        <td style="text-align: center;">GAD Provincial de El Oro</td>
+        <!-- <td style="text-align: center;">{Bas_Cor}</td> -->
+        <td style="text-align: center;"></td>
+      </tr>
+    </table>
+
+    <!-- DETALLE -->
+    <div class="subtitle">DETALLE DE LOS DESECHOS:</div>
+    <table>
+      <tr>
+        <th>FECHA DE RECEPCION</th>
+        <th>DESCRIPCI&Oacute;N DEL DESECHO PELIGROSO</th>
+        <th>C&Oacute;DIGO DE DESECHO</th>
+        <th>CANTIDAD KG</th>
+        <th>TRATAMIENTO APLICADO</th>
+      </tr>
+      <tr>
+        <td style="text-align:center">{Man_Fec}</td>
+        <td>{Tde_Des}</td>
+        <td style="text-align:center">{Tde_Cde}</td>
+        <td style="text-align:center">{Man_Pes}</td>
+        <td style="text-align:center">Disposicion Final</td>
+      </tr>
+    </table>
+
+    <!-- TEXTO FINAL -->
+    <div class="text-block">
+      Estos residuos son recibidos en el Proyecto Relavera Comunitaria
+      &quot;El Tabl&oacute;n&quot;, ubicado en la v&iacute;a Salado - Pindo, Cant&oacute;n Portovelo,
+      cumpliendo la normativa ambiental vigente.
+    </div>
+
+    <!-- FIRMA / MARCA DE AGUA -->
+    {draft_watermark}
+    
+    <div class="signature-container" style="margin-top: 50px; text-align: center;">
+      {signature_section}
+    </div>
+
+  </div>
+</div>
+
+<script>
+  window.onload = function() {
+    // Un pequeño respiro tras el load para asegurar el render pintura de Base64
+    setTimeout(function() {
+      window.focus();
+      if (typeof window.print === 'function') {
+        window.print();
+      }
+    }, 400);
+  };
+</script>
+
+</body>
+</html>

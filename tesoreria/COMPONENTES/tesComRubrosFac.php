@@ -1,0 +1,60 @@
+<?
+/* Alias: [--]
+   Descripción: Componente que muestra el cuadro de texto para la busqueda de Rubros.
+   Fecha de actualización: 2010-06-29.
+   Desarrollador: José Cumbicos.
+*/
+//Variables de ingreso del modulo ($hoy,$codigo,$car)
+
+	//if ($car > 0)
+	//{
+	/* Cargado de los resultados de la busqueda de producto */
+	$rs_semestre = $obBD_con1->consulta(sentencias_tes(63, $obBD_con1->parametros($hoy.'*'.$codigo.'*'.$car)),$obBD_conexion->conexion);	
+	$row_rs_semestre = $obBD_con1->registros();
+	$total_rs_semestre = $obBD_con1->numregistros();
+	
+	/* Inicializa en "no" para que no bloque la cantidad del rubro */
+	$bloc_cant = "no";
+	if ($total_rs_semestre > 0) {
+	//$bloc_cant = "si";	
+	?>
+	<table width="550" border="0" class="Busqueda_contenido_ajax">
+	<tr>
+	   <td width="65" align="right"><strong>Periodo:</strong></td>
+	   <td width="473"><?php echo $row_rs_semestre['Mes_Ini']."/".$row_rs_semestre[	'Ann_Ini']." - ".
+										$row_rs_semestre['Mes_Fin']."/".$row_rs_semestre['Ann_Fin'];?></td>
+	</tr>
+	<tr>
+	   <td align="right"><strong>Curso:</strong></td><input name="Sem_Cod" type="hidden" value="<?php echo $row_rs_semestre['Sem_Cod']; ?>">
+	   <td><?Php echo $row_rs_semestre['Sem_Nom']; ?></td>
+	</tr>
+	  <?php
+	  }//Fin del if ($total_rs_semestre > 0)
+	  else
+	  {
+	  ?>
+	  <tr>
+		<td colspan="3"><?Php echo error_alerta("¡El estudiante no posee una Matrícula Activa!", 1); ?></td>
+	  </tr>	
+	  <?Php
+	  }
+	  ?>
+  	</table>
+	<table width="100%" height="36" border="0" cellpadding="0" cellspacing="0" class="Busqueda_contenido_ajax">
+		<tbody id="tbusqueda">
+		  <tr>
+			<td width="140" height="28" align="right"><strong>Descripci&oacute;n:</strong></td>
+			<td width="669">
+			<input name="buscta" type="text" id="buscta" size="50" maxlength="50" style="text-transform:uppercase" onKeyUp="parametro_injection(this)" onKeyPress="Ent_Sub(); if (trim(document.getElementById('buscta').value) != ''){ enter_ajax('<?Php echo $_SERVER['PHP_SELF']; ?>?buscod&busqueda=' + buscta.value + '&Car_Nom=<?php echo trim(cortar_cadena_param(' ', $row_rs_semestre['Car_Nom'])); ?>&Sem_Nom=<?Php echo $row_rs_semestre['Niv_Des']." &#8220;".$row_rs_semestre['Sem_Par']."&#8221; ".$row_rs_semestre['Sem_Sec']; ?>&Sem_Cod=<?Php echo $row_rs_semestre['Sem_Cod']; ?>&codigo=<?Php echo $codigo; ?>&Per_Fea=<?Php echo $row_rs_semestre['Per_Fea']?>&Per_Fef=<?Php echo $row_rs_semestre['Per_Fef']?>&codigonota=<?Php echo $row_rs_semestre['Nge_Cod']?>&bloc_cant=<?Php echo $bloc_cant; ?>', 'rubros') } ">
+			</td>			
+			<td width="74" align="center"><input name="btn_buscar" type="button" title="Buscar" class="Boton_Buscar" id="btn_buscar" onClick="if (trim(document.getElementById('buscta').value) != ''){  ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?buscod&busqueda=' + buscta.value + '&Car_Nom=<?php echo trim(cortar_cadena_param(' ', $row_rs_semestre['Car_Nom'])); ?>&Sem_Nom=<?Php echo $row_rs_semestre['Niv_Des']." &#8220;".$row_rs_semestre['Sem_Par']."&#8221; ".$row_rs_semestre['Sem_Sec']; ?>&Sem_Cod=<?Php echo $row_rs_semestre['Sem_Cod']; ?>&codigo=<?Php echo $codigo; ?>&Per_Fea=<?Php echo $row_rs_semestre['Per_Fea']?>&Per_Fef=<?Php echo $row_rs_semestre['Per_Fef']?>&codigonota=<?Php echo $row_rs_semestre['Nge_Cod']?>&bloc_cant=<?Php echo $bloc_cant; ?>', 'rubros') } " value="Buscar">
+			</td>
+<td width="74" align="center">
+						
+<input name="agregar" type="button" class="Boton_Agregar" id="agregar" title="Agregar item vacio" onClick=" nueva_fila('c_contenido','','','','','','','<?Php echo $row_rs_semestre['Nge_Cod']?>','','<?Php echo $_SERVER['PHP_SELF']; ?>','','<?Php echo $bloc_cant; ?>','si',0)" value="Rubros">															
+        </td>
+      </tr>	  
+	</tbody>
+    </table>
+	<div id="rubros"></div>	   
+<? 	@$obBD_con1->free_result($rs_semestre);?>

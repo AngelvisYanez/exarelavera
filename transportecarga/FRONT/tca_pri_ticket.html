@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Ticket de Cantera</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            margin: 0;
+            padding: 5px;
+        }
+
+        .ticket-container {
+            width: 100%;
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+        }
+
+        .ticket-header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+        }
+
+        .ticket-header h1 {
+            margin: 3px 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .ticket-header h2 {
+            margin: 3px 0;
+            font-size: 16px;
+            font-weight: normal;
+        }
+
+        .ticket-info {
+            margin-bottom: 10px;
+        }
+
+        .ticket-info table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .ticket-info td {
+            padding: 3px;
+            border: 1px solid #ddd;
+        }
+
+        .ticket-info td.label {
+            font-weight: bold;
+            background-color: #ffffff;
+            width: 30%;
+        }
+
+        .ticket-details {
+            margin-top: 10px;
+        }
+
+        .ticket-details table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+        }
+
+        .ticket-details th {
+            background-color: #ffffff;
+            color: #000;
+            padding: 5px;
+            text-align: left;
+            border: 1px solid #ddd;
+            font-weight: bold;
+        }
+
+        .ticket-details td {
+            padding: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .ticket-totals {
+            margin-top: 10px;
+            text-align: right;
+        }
+
+        .ticket-totals table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .ticket-totals td {
+            padding: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .ticket-totals td.label {
+            font-weight: bold;
+            text-align: right;
+            width: 80%;
+        }
+
+        .ticket-totals td.value {
+            text-align: right;
+            width: 20%;
+        }
+
+        .ticket-footer {
+            margin-top: 10px;
+            text-align: center;
+            border-top: 2px solid #000;
+            padding-top: 8px;
+        }
+
+        .ticket-separator {
+            border-top: 2px dashed #000;
+            margin: 15px 0;
+            text-align: center;
+            padding: 5px 0;
+            font-size: 10px;
+        }
+
+        @media print {
+            body {
+                padding: 5px;
+            }
+
+            .no-print {
+                display: none;
+            }
+
+            .ticket-container {
+                margin-bottom: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Primera copia (Administración) -->
+    <div class="ticket-container">
+        <div class="ticket-header">
+            <!--h1>{Emp_Nom}</h1-->
+            <h2>Ticket Cantera</h2>
+            <span>Número: {Tck_Num}</span>
+        </div>
+
+        <div class="ticket-info">
+            <table>
+                <tr>
+                    <td class="label">Fecha y Hora:</td>
+                    <td>{Tck_Fec}</td>
+
+                </tr>
+                <tr>
+                    <td class="label">Cliente:</td>
+                    <td>{cliente_nombre}</td>
+                </tr>
+                <tr>
+                    <td class="label">RUC/Cédula:</td>
+                    <td>{Prs_Ced}</td>
+                </tr>
+                <tr>
+                    <td class="label">Dirección:</td>
+                    <td>{Prs_Dir}</td>
+                </tr>
+                <!--tr>
+                    <td class="label">Email:</td>
+                    <td>{Prs_Cor}</td>
+                </tr-->
+                <tr>
+                    <td class="label">Vehículo:</td>
+                    <td>{Veh_Pla}</td>
+                </tr>
+                <tr>
+                    <td class="label">Tip. Vehículo:</td>
+                    <td>{Veh_Tip}</td>
+                </tr>
+                <tr>
+                    <td class="label">Capacidad:</td>
+                    <td>{Veh_Cap}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="ticket-details">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Detalle</th>
+                        <th style="text-align: right;">Cant.</th>
+                        <th style="text-align: right;">P.Unit</th>
+                        <th style="text-align: right;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {detalle_ticket}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="ticket-totals">
+            <table>
+                <tr>
+                    <td class="label">Valor Neto:</td>
+                    <td class="value">{Tck_Val}</td>
+                </tr>
+                <tr>
+                    <td class="label">IVA:</td>
+                    <td class="value">{Tck_IvA}</td>
+                </tr>
+                <tr>
+                    <td class="label" style="font-size: 13px; font-weight: bold;">TOTAL:</td>
+                    <td class="value" style="font-size: 13px; font-weight: bold;">{Tck_Tot}</td>
+                </tr>
+            </table>
+        </div>
+    </div>

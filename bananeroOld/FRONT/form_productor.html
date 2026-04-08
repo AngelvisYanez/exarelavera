@@ -1,0 +1,158 @@
+
+	
+	<div class="row">
+		<form class="form-horizontal normal" id="ProductorForm">
+			<div class="col-sm-6 col-sm-offset-3">
+				<fieldset class="exa-fieldset" id="provFormTemp">
+					<legend class="Titulos2">Datos del Proveedor</legend>
+					<div class="form-group">
+						<label class="col-xs-3 control-label label-xs">Cédula/RUC:</label>  
+						<div class="col-xs-6" >
+							<input name="Prs_Cod" type="text" style="display:none;" />  
+							<input name="Prs_Cor" type="text" style="display:none;" />  
+							<input name="Prv_Cod" type="text" style="display:none;" />
+							<input name="op_opciones" type="text" value="c" style="display: none;">  
+							<div class="input-group input-group-xs">                                          
+								<input name="Prs_Ced" onkeydown="if (event.keyCode === 13){ $.SearchOrDialog('#provDialog',selectProvee); }" type="text" placeholder="Ingrese Proveedor..."  class="form-control input-xs clearable dialogSearch" tabindex="1" required=""/>
+								<span class="input-group-btn">
+									<button id="Prv_Btn" type="button" onclick="$('#provDialog').dialog('open');" class="btn btn-success btn-xs" title="Buscar Proveedor"  tabindex="2"><span class="glyphicon glyphicon-search"></span></button>
+									<button type="button" onclick="$('#provCreateForm').setData({Prv_Esp:'N',Prv_Con:'N'}).find('.validate').find('i').removeAttr('class'); $('#provCreateDialog').dialog('open'); $('#reset').val(1); " class="btn btn-success btn-xs" title="Registrar Proveedor"  tabindex="2"><span class="glyphicon glyphicon-plus"></span></button>    
+								</span>
+							</div>
+						</div>                                      
+						<label class="col-xs-3 control-label label-xs">Oblig.Contab:&nbsp;<i id="Prv_Con" class="blue glyphicon glyphicon-remove" style="font-size: 12px;"></i></label>
+					</div>
+					<div class="form-group">
+						<label class="col-xs-3 control-label label-xs required">Proveedor:</label>  
+						<div class="col-xs-6" >
+							<input name="proveedor" class="form-control input-xs " required="" /> 
+						</div>                                        
+						<label class="col-xs-3 control-label label-xs">Contr.Especial:&nbsp;<i  id="Prv_Esp" class="blue glyphicon glyphicon-remove" style="font-size: 12px;"></i></label> 
+					</div>
+					<div class="form-group">
+						<label class="col-xs-3 control-label label-xs">Dirección:</label>  
+						<div class="col-xs-9" ><span name="Prs_Dir" type="text" class="form-control input-xs datatitle"></span></div>                    
+					</div>
+				</fieldset> 
+			</div>
+			<div class="col-sm-6 col-sm-offset-3">
+				<fieldset class="exa-fieldset" id="provFormTemp">
+					<legend class="Titulos2">Datos del Productor</legend>
+					<div class="form-group">
+						<label class="col-xs-3 control-label label-xs required">C&oacute;digo MAG:</label>  
+						<div class="col-xs-6" >
+							<input name="Prd_Mag" type="text" class="form-control input-xs datatitle" required=""/>
+						</div>                    
+					</div>
+					<div class="form-group">
+						<label class="col-xs-3 control-label label-xs required">Nombre MAG:</label>  
+						<div class="col-xs-6" >
+							<input name="Prd_Nom" type="text" class="form-control input-xs datatitle " required=""/>
+						</div>                    
+					</div>
+				</fieldset> 
+			</div>
+			<div class="col-sm-6 col-sm-offset-3">
+				
+				<div class="center">
+					<button type="button"  class="btn btn-inverse fileinput-button btn-sm"><span class="fa fa-times"></span> Cancelar </button>
+					<button type="button" onclick="$(this.form).formSubmit();" class="btn btn-sm btn-primary no"><i class="glyphicon glyphicon-floppy-disk"></i> Guardar</button>
+
+				</div>
+				<div class="Titulos2"><hr><b>NOTA:</b> Los campos marcados con un asterisco (  <span class="required"></span>) son campos obligatorios.</div>
+
+
+			</div>
+		</form>
+	</div>
+
+	<div id="provDialog" title="B&uacute;squeda de Proveedor"></div>
+	<div id="provCreateDialog" title="Registrar Proveedor" style="display:none;">        
+		<input id="reset" name="reset" type="hidden" class="text" />
+		<form class="form-horizontal normal" id="provCreateForm" action="javascript:if(validaNoIdentif($('#Prs_Ced').val())['success']){ guardaProvee(); }else{ $('#Prs_Ced').flyout('show').focus() }">
+			<input name="Prs_Cod" type="text" class="hidden" />            
+			<fieldset class="exa-fieldset" >
+				<legend class="Titulos2">Datos del Proveedor</legend>
+				<div class="form-group">
+					<label class="col-xs-3 control-label label-xs required">Cédula/RUC:</label>  
+					<div class="col-xs-5" >
+						<div class="input-group input-group-xs">                                          
+							<input id="Prs_Ced" name="Prs_Ced" type="text" class="form-control input-xs" onchange="if(validaNoIdentif(this.value)['success']){ $('#Ide_Cod').val(this.value.length===10?2:1); $('#Prv_Tic').val(validaNoIdentif(this.value)['tipo_abrev']==='NA'?'N':'J').trigger('change'); $(this).fieldValid(true); searchProvee(this.value); }else{ $('#Ide_Cod').val(''); $('#Prv_Tic').val(''); $(this).fieldValid(false,validaNoIdentif(this.value)['message']); };" required="" />
+							<span class="input-group-addon validate" ><i></i></span>
+						</div>
+					</div>                     
+					<div class="col-xs-4">
+						<div class="checkbox check-big" style="position:absolute;">
+							<label><input type="checkbox" name="Prv_Esp" value="S" offval="N">Contrib. Especial</label>
+							<label><input type="checkbox" name="Prv_Con" value="S" offval="N">Obligado Contab.</label>
+						</div>
+					</div>
+				</div> 
+				<div class="form-group">
+					<label class="col-xs-3 control-label label-xs">Documento:</label>  
+					<div class="col-xs-5" >
+						<select name="Ide_Cod" id="Ide_Cod" class="form-control input-xs readOnly" disabled="">
+						</select>
+					</div>
+				</div> 
+				<div class="form-group">
+					<label class="col-xs-3 control-label label-xs required">Contribuyente:</label>  
+					<div class="col-xs-4" >
+						<select id="Prv_Tic" name="Prv_Tic" class="form-control input-xs" required="" onchange="if(this.value==='N'){ $('.juridico').hide();$('.natural').show(); }else{ $('.natural').hide();$('.juridico').show(); }">
+							<option value = "N" >NATURAL</option>
+							<option value = "J" >JURIDICO</option>
+						</select>
+					</div>
+				</div>                
+				<div class="form-group">
+					<label class="col-xs-3 control-label label-xs required"><span class='natural'>Apellidos:</span><span class='juridico' style="display: none;">Razón Social:</span></label>  
+					<div class="col-xs-9" ><input name="Prs_Ape" type="text" class="form-control input-xs" required="" /></div>
+				</div>
+				<div class="form-group natural">
+					<label class="col-xs-3 control-label label-xs">Nombres:</label>  
+					<div class="col-xs-9" ><input name="Prs_Nom" type="text" class="form-control input-xs" /></div>
+				</div>
+				<div class="form-group natural">
+					<label class="col-xs-3 control-label label-xs required">Genero:</label>  
+					<div class="col-xs-4" >
+						<select name="Prs_Sex" class="form-control input-xs">
+							<option value = "M" >MASCULINO</option>
+							<option value = "F" >FEMENINO</option>
+						</select>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-xs-3 control-label label-xs required">Nomb.Comerc.:</label>  
+					<div class="col-xs-9" ><input name="Prv_Com" type="text" class="form-control input-xs" required="" /></div>
+				</div>
+			</fieldset>
+			<fieldset class="exa-fieldset" >
+				<legend class="Titulos2">Datos de Ubicación</legend>
+				<div class="form-group">
+					<label class="col-xs-3 control-label label-xs required">Ciudad:</label>  
+					<div class="col-xs-4" >
+						<select name="Ciu_Cod" class="form-control input-xs" required="" >
+							<option value=""></option>
+						</select>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-xs-3 control-label label-xs required">Dirección:</label>  
+					<div class="col-xs-9" ><input name="Prs_Dir" type="text" class="form-control input-xs" required="" /></div>
+				</div>
+				<div class="form-group">
+					<label class="col-xs-3 control-label label-xs required">Teléfono:</label>  
+					<div class="col-xs-4" ><input name="Prs_Tel" type="text" class="form-control input-xs" required="" pattern="\d*" /></div>
+				</div>
+				<div class="form-group">
+					<label class="col-xs-3 control-label label-xs required">Mail:</label>  
+					<div class="col-xs-5" ><input name="Prs_Cor" type="mail" class="form-control input-xs" required="" /></div>
+				</div>
+			</fieldset>
+			<div class="center">
+				<button type="submit" class="btn btn-sm btn-success no"><i class="glyphicon glyphicon-floppy-disk"></i> Guardar</button>
+			</div>
+			<div class="Titulos2"><hr><b>NOTA:</b> Los campos marcados con un asterisco (  <span class="required"></span>) son campos obligatorios.</div>
+		</form>
+		
+	</div> 

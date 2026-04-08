@@ -1,0 +1,83 @@
+{header_empresa}
+<tbody data-name="{Prs_Abr}">
+    <tr>  
+        <td width="10"></td>
+        <td width="10"></td>
+        <td width="10"></td>
+        <td width="10"></td>
+        <td width="10"></td>
+        <td width="10"></td>
+        <td width="10"></td>
+        <td width="10"></td>
+        <td width="10"></td>
+        <td width="10"></td>
+    </tr>
+    {header_excel}    
+    <tr>  
+        <td style="font-weight: bold;" colspan="1">NOMBRE:</td><td colspan="9">{Prs_Ape} {Prs_Nom}</td>           
+    </tr>
+    <tr>  
+        <td style="font-weight: bold;">C.I.:</td><td colspan="4"  data-formatcode="@"> {Prs_Ced} </td>
+        <td style="font-weight: bold;">Ingreso</td><td>{Con_Ini}</td>                     
+    </tr> 
+    <tr>  
+        <td style="font-weight: bold;">Cargo:</td><td colspan="4"  data-formatcode="@"> {Tic_Des} </td>
+        <!--td style="font-weight: bold;">Dias:</td><td>{dias}</td-->             
+    </tr>
+    <tr>  
+        <td colspan="4" style="font-weight: bold;border-left:1px solid gray;border-top:1px solid gray;" align="center">1</td>
+        <td colspan="4" style="font-weight: bold;border-top:1px solid gray;border-right:1px solid gray;border-left:1px solid gray;" align="center">2</td>
+        <td colspan="2" style="font-weight: bold; border-right:1px solid gray;border-top:1px solid gray;" align="center">1-2</td>            
+    </tr>
+    <tr>  
+        <td colspan="4" style="font-weight: bold; border-left:1px solid gray;border-bottom:1px solid gray;" align="center">INGRESOS</td>
+        <td colspan="4" style="font-weight: bold;border-bottom:1px solid gray;border-right:1px solid gray;border-left:1px solid gray;" align="center">DESCUENTOS</td>
+        <td colspan="2" style="font-weight: bold; border-right:1px solid gray;border-bottom:1px solid gray;" align="center">A RECIBIR</td>            
+    </tr>
+    {filas}
+    <tr>  
+        <td colspan="2" style="font-weight: bold;">TOTAL INGRESOS:</td>
+        <td colspan="2" style=" border:1px solid gray;" align="right" data-formatcode="0.00">{total_ingr}</td>        
+        <td colspan="2" style="font-weight: bold;">TOTAL DESCUENTOS:</td>
+        <td colspan="2" style=" border:1px solid gray;" align="right" data-formatcode="0.00">{total_egr}</td>        
+        <td colspan="2"  style="font-weight: bold; border:1px solid gray;" align="right" data-formatcode="0.00">$ {total_rol}</td>
+    </tr>
+    <tr><td colspan="10"></td></tr>
+    <tr><td colspan="10"></td></tr>
+    <tr><td colspan="10"><b>SON:</b> {total_letras}</td></tr>
+    <tr><td colspan="10"></td></tr>
+    <tr><td colspan="10" style="font-weight: bold;">PAGO POR:</td></tr>
+    <tr>
+        <td colspan="2" style="font-weight: bold;" align="right">EFECTIVO</td><td style=" border:1px solid gray;font-weight: bold;" align="center">{efectivo}</td>
+        <td colspan="2" style="font-weight: bold;" align="right">CHEQUE</td><td style=" border:1px solid gray;font-weight: bold;" align="center">{cheque}</td>
+        <td colspan="2" style="font-weight: bold;" align="right">OTROS</td><td style=" border:1px solid gray;font-weight: bold;" align="center">{otros}</td>
+        <td></td>
+    </tr>    
+    <tr><td colspan="10">&nbsp;</td></tr>
+    <tr><td colspan="10">&nbsp;</td></tr>
+    <tr><td colspan="10">&nbsp;</td></tr>
+    <tr> 
+        <td></td>
+        <td colspan="3" style="font-weight: bold;border-top:1px solid gray;" align="center">REPRESENTANTE</td>
+        <td></td><td></td>
+        <td colspan="3" style="font-weight: bold;border-top:1px solid gray;" align="center">CONTADOR</td>
+        <td></td>
+    </tr>
+    <tr>        
+        <td colspan="5" align="center">{representante}</td>       
+        <td colspan="5" align="center">{contador}</td>       
+    </tr>
+    <tr><td colspan="10">&nbsp;</td></tr>
+    <tr><td colspan="10">&nbsp;</td></tr>
+    <tr><td colspan="4">&nbsp;</td><td colspan="6" align="center" style="border-top:1px solid gray;border-left:1px solid gray;border-right:1px solid gray;">Certifico que he recibido a entera satisfacci&oacute;n los valores contenidos en el</td></tr>
+    <tr> 
+        <td></td>
+        <td colspan="3" style="font-weight: bold;border-top:1px solid gray;" align="center">RECIBI CONFORME</td>        
+        <td colspan="6" align="center" style="border-left:1px solid gray;border-right:1px solid gray;">presente comprobante por cancelaci&oacute;n de mi remuneraci&oacute;n, por lo cual no</td>
+    </tr>
+    <tr> 
+        <td></td>
+        <td colspan="3" align="center">{Prs_Ape} {Prs_Nom}</td>        
+        <td colspan="6" align="center" style="border-bottom:1px solid gray;border-left:1px solid gray;border-right:1px solid gray;">tengo ning&uacute;n cargo o reclamo posterior que efectuar a mi empleador.</td>        
+    </tr>
+</tbody>   

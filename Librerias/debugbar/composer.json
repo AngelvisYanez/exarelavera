@@ -1,0 +1,63 @@
+{
+    "name": "php-debugbar/php-debugbar",
+    "description": "Debug bar in the browser for php application",
+    "keywords": ["debug", "debugbar", "debug bar", "dev"],
+    "homepage": "https://github.com/php-debugbar/php-debugbar",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Maxime Bouroumeau-Fuseau",
+            "email": "maxime.bouroumeau@gmail.com",
+            "homepage": "http://maximebf.com"
+        },
+        {
+            "name": "Barry vd. Heuvel",
+            "email": "barryvdh@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.3",
+        "symfony/var-dumper": "^2|^3|^4|^5|^6|^7"
+    },
+    "require-dev": {
+        
+    },
+    "autoload": {
+        "psr-4": {
+            "DebugBar\\": "src/DebugBar/"
+        }
+    },
+    "config": {
+        "platform":{
+            "php": "5.3.8"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "DebugBar\\Tests\\": "tests/DebugBar/Tests"
+        }
+    },
+    "scripts": {
+        "demo": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php -S localhost:8000"
+        ],
+        "unit-test": "@php vendor/bin/phpunit --testsuite=Unit",
+        "browser-test": "@php vendor/bin/phpunit --testsuite=Browser",
+        "browser-debug": [
+            "@putenv PANTHER_NO_HEADLESS=1",
+            "@php vendor/bin/phpunit --testsuite=Browser --debug"
+        ]
+    },
+    "suggest": {
+        "kriswallsmith/assetic": "The best way to manage assets",
+        "monolog/monolog": "Log using Monolog",
+        "predis/predis": "Redis storage"
+    },
+     "extra": {
+        "branch-alias": {
+            "dev-master": "2.0-dev"
+        }
+    }
+}

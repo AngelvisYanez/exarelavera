@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<style>
+    th, td {
+        padding: 2px !important;
+        font-size: 11px;
+    }
+    tr:nth-child(even) {
+      background-color: #e1dfdf;
+    }
+    tr:hover {
+      background-color: #cac7c7; /* Cambia este color como prefieras */
+      cursor: pointer; /* Opcional: cambia el cursor */
+    }
+</style>
+
+<body>
+  <table
+    style="width:100%;min-width:700px;font-size:11px;table-layout:fixed;border:0px solid grey;background: #0c4597;color: #ffffff;">
+    <!--<tr><td width="50%"></td><td width="4%"></td><td width="12%"></td><td width="4%"></td><td width="12%"></td><td width="4%"></td><td width="12%"></td></tr-->
+    <tr style="font-size:12px" ;>
+      <td colspan="8" align="center" style="color:#ffffff;">{201} - {202}</td>
+    </tr>
+    <tr style="font-weight:bold;font-size:15px; color: #000000;">
+      <td colspan="2" style="border-bottom: 0px solid black;">FORMULARIO 104 </td>
+      <td colspan="6" align="right" style="border-bottom: 0px solid black;">{101}/{102}</td>
+    </tr>
+
+    <table style="width:100%;min-width:700px;font-size:10px;table-layout:fixed;border:0px solid grey;border-top:0;">
+      <tr>
+        <td width="50%"></td>
+        <td width="5%"></td>
+        <td width="12%"></td>
+        <td width="5%"></td>
+        <td width="12%"></td>
+        <td width="5%"></td>
+        <td width="12%"></td>
+      </tr>
+      <tr style="font-weight:bold;font-size:12px;background: #0c4597;color: #ffffff;">
+        <td style="border-bottom:1px solid black;">RESUMEN DE VENTAS Y OTRAS OPERACIONES DEL PERIODO</td>
+        <td style="border-bottom:1px solid black;" colspan="2" align="center">V. BRUTO</td>
+        <td style="border-bottom:1px solid black;" colspan="2" align="center">V. NETO (V.B - NC)</td>
+        <td style="border-bottom:1px solid black;" colspan="4" align="center">IMPUESTO</td>
+      </tr>
+      <tr>
+        <td style="white-space: nowrap; overflow: hidden;">VENTAS LOCALES (EXCLUYE ACTIVOS FIJOS) GRAVADAS TARIFA
+          DIFERENTE A CERO</td>
+        <td align="right">401</td>
+        <td align="right" style="border: 1px solid #000000;">{401}</td>
+        <td align="right">411</td>
+        <td align="right" style="border: 1px solid #000000;">{411}</td>
+        <td align="right">421</td>
+        <td align="right" style="border: 1px solid #000000;">{421}</td>
+      </tr>
+      <tr>
+        <td>VENTAS DE ACTIVOS FIJOS GRAVADAS TARIFA DIFERENTE A CERO</td>
+        <td align="right">402</td>
+        <td align="right" style="border: 1px solid #000000;">{402}</td>
+        <td align="right">412</td>
+        <td align="right" style="border: 1px solid #000000;">{412}</td>
+        <td align="right">422</td>
+        <td align="right" style="border: 1px solid #000000;">{422}</td>
+      </tr>
+      <tr>
+        <td>VENTAS (EXCLUYE ACTIVOS FIJOS) GRAVADAS TARIFA VARIABLE DIF. DE CERO</td>
+        <td align="right">410</td>
+        <td align="right" style="border: 1px solid #000000;">{410}</td>
+        <td align="right">420</td>
+        <td align="right" style="border: 1px solid #000000;">{420}</td>
+        <td align="right">430</td>
+        <td align="right" style="border: 1px solid #000000;">{430}</td>
+      </tr>
+      <!-- TARIFA 5% -->
+      <tr>
+        <td>VENTAS LOCALES (EXCLUYE ACTIVOS FIJOS) GRABADOS TARIFA 5%</td>
+        <td align="right">425</td>
+        <td align="right" style="border: 1px solid #000000;">{425}</td>
+        <td align="right">435</td>
+        <td align="right" style="border: 1px solid #000000;">{435}</td>
+        <td align="right">445</td>
+        <td align="right" style="border: 1px solid #000000;">{445}</td>
+      </tr>
+      <!--FIN TARIFA 5%-->
+      <tr>
+        <td style="white-space: nowrap; overflow: hidden;">IVA GENERADO EN LA DIFERENCIA ENTRE VENTAS Y NOTAS DE CREDITO
+          CON DIFERENTE TARIFA (AJUSTE A PAGAR)</td>
+        <td colspan="4"></td>
+        <td align="right">423</td>
+        <td align="right" style="border: 1px solid #000000;">{423}</td>
+      </tr>
+
+      <tr>
+        <td style="white-space: nowrap; overflow: hidden;">IVA GENERADO EN LA DIFERENCIA ENTRE VENTAS Y NOTAS DE CREDITO
+          CON DIFERENTE TARIFA (AJUSTE A FAVOR)</td>
+        <td colspan="4"></td>
+        <td align="right">424</td>
+        <td align="right" style="border: 1px solid #000000;">{424}</td>
+      </tr>
+
+      <tr>
+        <td style="white-space: nowrap; overflow: hidden;">VENTAS LOCALES (EXCLUYE ACTIVOS FIJOS) GRAVADAS TARIFA 0% SIN
+          DERECHO A CRED.TRIB.</td>
+        <td align="right">403</td>
+        <td align="right" style="border: 1px solid #000000;">{403}</td>
+        <td align="right">413</td>
+        <td align="right" style="border: 1px solid #000000;">{413}</td>
+        <td align></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td style="white-space: nowrap; overflow: hidden;">VENTAS DE ACTIVOS FIJOS GRAVADAS TARIFA 0% SIN DERECHO A
+          CRED.TRIB.</td>
+        <td align="right">404</td>
+        <td align="right" style="border: 1px solid #000000;">{404}</td>
+        <td align="right">414</td>
+        <td align="right" style="border: 1px solid #000000;">{414}</td>
+        <td align></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td style="white-space: nowrap; overflow: hidden;">VENTAS LOCALES (EXCLUYE ACTIVOS FIJOS) GRAVADAS TARIFA 0% CON
+          DERECHO A CRED.TRIB.</td>
+        <td align="right">405</td>
+        <td align="right" style="border: 1px solid #000000;">{405}</td>
+        <td align="right">415</td>
+        <td align="right" style="border: 1px solid #000000;">{415}</td>
+        <td align></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>VENTAS DE ACTIVOS FIJOS GRAVADAS TARIFA 0% CON DERECHO A CRED.TRIB.</td>
+        <td align="right">406</td>
+        <td align="right" style="border: 1px solid #000000;">{406}</td>
+        <td align="right">416</td>
+        <td align="right" style="border: 1px solid #000000;">{416}</td>
+        <td align></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>EXPORTACIONES DE BIENES</td>
+        <td align="right">407</td>
+        <td align="right" style="border: 1px solid #000000;">{407}</td>
+        <td align="right">417</td>
+        <td align="right" style="border: 1px solid #000000;">{417}</td>
+        <td align></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>EXPORTACIONES DE SERVICIOS Y/O SERVICIOS</td>
+        <td align="right">408</td>
+        <td align="right" style="border: 1px solid #000000;">{408}</td>
+        <td align="right">418</td>
+        <td align="right" style="border: 1px solid #000000;">{418}</td>
+        <td align></td>
+        <td></td>
+      </tr>
+
+      <tr style="background: #FFCC66;color: #000000;">
+        <td><u>TOTAL VENTAS Y OTRAS OPERACIONES</u></td>
+        <td align="right">409</td>
+        <td align="right" style="font-weight:bold; border: 1px solid black;">{409}</td>
+        <td align="right">419</td>
+        <td align="right" style="font-weight:bold;border: 1px solid black;">{419}</td>
+        <td align="right">429</td>
+        <td align="right" style="font-weight:bold;border: 1px solid black;">{429}</td>
+      </tr>
+      <tr>
+        <td>TRANSFERENCIAS NO OBJETO O EXENTAS DE IVA</td>
+        <td align="right">431</td>
+        <td align="right" style="border: 1px solid #000000;">{431}</td>
+        <td align="right">441</td>
+        <td align="right" style="border: 1px solid #000000;">{441}</td>
+        <td align="right"></td>
+        <td align="right" style=""></td>
+        <td align="right"></td>
+        <td align="right" style=""></td>
+      </tr>
+      <tr>
+        <td>NOTAS DE CREDITO TARIFA 0% POR COMPENSAR PROXIMO MES</td>
+        <td align="right"></td>
+        <td align="right" style=""></td>
+        <td align="right">442</td>
+        <td align="right" style="border: 1px solid #000000;">{442}</td>
+        <td align="right"></td>
+        <td align="right" style=""></td>
+        <td align="right"></td>
+        <td align="right" style=""></td>
+      </tr>
+      <tr>
+        <td>NOTAS DE CREDITO TARIFA DIFERENTE DE CERO POR COMPENSAR PROXIMO MES</td>
+        <td align="right"></td>
+        <td align="right" style=""></td>
+        <td align="right">443</td>
+        <td align="right" style="border: 1px solid #000000;">{443}</td>
+        <td align="right">453</td>
+        <td align="right" style="border: 1px solid #000000;">{453}</td>
+      </tr>
+      <tr>
+        <td>INGRESOS POR REEMBOLSO COMO INTERMEDIARIO (INFORMATIVO)</td>
+        <td align="right">434</td>
+        <td align="right" style="border: 1px solid #000000;">{434}</td>
+        <td align="right">444</td>
+        <td align="right" style="border: 1px solid #000000;">{444}</td>
+        <td align="right">454</td>
+        <td align="right" style="border: 1px solid #000000;">{454}</td>
+      </tr>
+      <tr>
+        <td colspan="7">&nbsp;</td>
+      </tr>
+
+    </table>
+
+    <table style="width:100%;min-width:700px;font-size:10px;table-layout:fixed;border:0px solid grey;border-top:0;">
+      <tr>
+        <td width="50%"></td>
+        <td width="5%"></td>
+        <td width="12%"></td>
+        <td width="5%"></td>
+        <td width="12%"></td>
+        <td width="5%"></td>
+        <td width="12%"></td>
+      </tr>
+
+      <tr style="font-weight:bold;font-size:12px;background: #0c4597;color: #ffffff;">
+        <td colspan="7" style="border-bottom:1px solid black;border-top: 0 px solid black;">LIQUIDACION DEL IVA EN EL
+          MES
+        </td>
+      </tr>
+
+      <tr>
+        <td colspan="5">TRANSFERENCIAS TARIFA DIFERENTE A CERO AL CONTADO ESTE MES</td>
+        <td align="right">480</td>
+        <td align="right" style="border: 1px solid #000000;">{480}</td>
+      </tr>
+
+      <tr>
+        <td colspan="5">TRANSFERENCIAS TARIFA DIFERENTE A CERO A CREDITO ESTE MES</td>
+        <td align="right">481</td>
+        <td align="right" style="border: 1px solid #000000;">{481}</td>
+      </tr>
+
+      <tr>
+        <td colspan="5">TOTAL IMPUESTO GENERADO</td>
+        <td align="right">482</td>
+        <td align="right" style="border: 1px solid #000000;">{482}</td>
+      </tr>
+
+      <tr>
+        <td colspan="5">IMPUESTO A LIQUIDAR DEL MES ANTERIOR</td>
+        <td align="right">483</td>
+        <td align="right" style="border: 1px solid #000000;">{483}</td>
+      </tr>
+
+      <tr>
+        <td colspan="5">IMPUESTO A LIQUIDAR ESTE MES</td>
+        <td align="right">484</td>
+        <td align="right" style="border: 1px solid #000000;">{484}</td>
+      </tr>
+
+      <tr>
+        <td colspan="5">IMPUESTO A LIQUIDAR EN EL PROXIMO MES</td>
+        <td align="right">485</td>
+        <td align="right" style="border: 1px solid #000000;">{485}</td>
+      </tr>
+
+      <tr>
+        <td colspan="5">MES A PAGAR EL MONTO DE IVA DIFERENTE DE CERO POR VENTAS A CREDITO ESTE MES</td>
+        <td align="right">486</td>
+        <td align="right" style="border: 1px solid #000000;">{486}</td>
+      </tr>
+
+      <tr>
+        <td colspan="5">TAMA&Ntilde;O COPCI</td>
+        <td align="right">487</td>
+        <td align="right" style="border: 1px solid #000000;">{487}</td>
+      </tr>
+
+
+      <tr style="background: #FFCC66;color: #000000;">
+        <td colspan="5">TOTAL IMPUESTO A LIQUIDAR EN ESTE MES</td>
+        <td align="right">499</td>
+        <td align="right" style="font-weight:bold;border: 1px solid black;">{499}</td>
+      </tr>
+
+      <tr>
+        <td colspan="3">TOTAL COMPROBANTES DE VENTA EMITIDOS</td>
+        <td align="right">111</td>
+        <td align="right" style="border: 1px solid #000000;">{111}</td>
+        <td align></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="3">TOTAL COMPROBANTES DE VENTA ANULADOS</td>
+        <td align="right">113</td>
+        <td align="right" style="border: 1px solid #000000;">{113}</td>
+        <td align></td>
+        <td></td>
+      </tr>
+
+      <tr>
+        <td colspan="7">&nbsp;</td>
+      </tr>
+
+    </table>
+
+    <table style="width:100%;min-width:700px;font-size:10px;table-layout:fixed;border:0px solid grey;border-top:0;">
+      <tr>
+        <td width="50%"></td>
+        <td width="5%"></td>
+        <td width="12%"></td>
+        <td width="5%"></td>
+        <td width="12%"></td>
+        <td width="5%"></td>
+        <td width="12%"></td>
+      </tr>
+      <tr style="font-weight:bold;font-size:12px;background: #0c4597;color: #ffffff;">
+        <td style="border-bottom:1px solid black;">RESUMEN DE ADQUISICIONES Y PAGOS DEL PERIODO</td>
+        <td style="border-bottom:1px solid black;" colspan="2" align="center">V. BRUTO</td>
+        <td style="border-bottom:1px solid black;" colspan="2" align="center">V. NETO (V.B - NC)</td>
+        <td style="border-bottom:1px solid black;" colspan="2" align="center">IMPUESTO</td>
+      </tr>
+      <tr>
+        <td style="white-space: nowrap; overflow: hidden;">ADQUISICIONES Y PAGOS(EXCLUYE ACTIVOS FIJOS) TARIFA DIFERENTE
+          A CERO</td>
+        <td align="right">500</td>
+        <td align="right" style="border: 1px solid #000000;">{500}</td>
+        <td align="right">510</td>
+        <td align="right" style="border: 1px solid #000000;">{510}</td>
+        <td align="right">520</td>
+        <td align="right" style="border: 1px solid #000000;">{520}</td>
+      </tr>
+
+      <tr>
+        <td style="white-space: nowrap; overflow: hidden;">ADQUISICIONES LOCALES DE ACT. FIJOS TARIFA DIFERENTE A CERO
+          CON DERECHO A CRED. TRIB.</td>
+        <td align="right">501</td>
+        <td align="right" style="border: 1px solid #000000;">{501}</td>
+        <td align="right">511</td>
+        <td align="right" style="border: 1px solid #000000;">{511}</td>
+        <td align="right">521</td>
+        <td align="right" style="border: 1px solid #000000;">{521}</td>
+      </tr>
+      <tr>
+        <td style="white-space: nowrap; overflow: hidden;">ADQUISICIONES Y PAGOS (EXCLUYE ACTIVOS FIJOS) TARIFA VAR. (CON CRED. TRIB.)</td>
+        <td align="right">530</td>
+        <td align="right" style="border: 1px solid #000000;">{530}</td>
+        <td align="right">533</td>
+        <td align="right" style="border: 1px solid #000000;">{533}</td>
+        <td align="right">534</td>
+        <td align="right" style="border: 1px solid #000000;">{534}</td>
+      </tr>
+      
+      <tr>
+        <td style="white-space: nowrap; overflow: hidden;">ADQUISICIONES Y PAGOS LOCALES (EXCLUYE ACTIVOS FIJOS)
+          GRABADOS CON TARIFA 5%(CON DERECHO A CR&Eacute;DITO TRIBUTARIO)</td>
+        <td align="right">540</td>
+        <td align="right" style="border: 1px solid #000000;">{540}</td>
+        <td align="right">550</td>
+        <td align="right" style="border: 1px solid #000000;">{550}</td>
+        <td align="right">560</td>
+        <td align="right" style="border: 1px solid #000000;">{560}</td>
+      </tr>
+
+      <tr>
+        <td>OTRAS ADQUISICIONES Y PAGOS TARIFA DIFERENTE A CERO SIN DERECHO A CRED. TRIB.</td>
+        <td align="right">502</td>
+        <td align="right" style="border: 1px solid #000000;">{502}</td>
+        <td align="right">512</td>
+        <td align="right" style="border: 1px solid #000000;">{512}</td>
+        <td align="right">522</td>
+        <td align="right" style="border: 1px solid #000000;">{522}</td>
+      </tr>
+      <tr>
+        <td>IMPORTACIONES DE SERVICIOS TARIFA DIFERENTE A CERO</td>
+        <td align="right">503</td>
+        <td align="right" style="border: 1px solid #000000;">{503}</td>
+        <td align="right">513</td>
+        <td align="right" style="border: 1px solid #000000;">{513}</td>
+        <td align="right">523</td>
+        <td align="right" style="border: 1px solid #000000;">{523}</td>
+      </tr>
+      <tr>
+        <td>IMPORTACIONES DE BIENES (EXCLUYE ACT. FIJOS) TARIFA DIFERENTE A CERO</td>
+        <td align="right">504</td>
+        <td align="right" style="border: 1px solid #000000;">{504}</td>
+        <td align="right">514</td>
+        <td align="right" style="border: 1px solid #000000;">{514}</td>
+        <td align="right">524</td>
+        <td align="right" style="border: 1px solid #000000;">{524}</td>
+      </tr>
+      <tr>
+        <td>IMPORTACIONES DE ACT. FIJOS TARIFA DIFERENTE A CERO</td>
+        <td align="right">505</td>
+        <td align="right" style="border: 1px solid #000000;">{505}</td>
+        <td align="right">515</td>
+        <td align="right" style="border: 1px solid #000000;">{515}</td>
+        <td align="right">525</td>
+        <td align="right" style="border: 1px solid #000000;">{525}</td>
+      </tr>
+      <tr>
+        <td style="white-space: nowrap; overflow: hidden;">IVA GENERADO EN LA DIFERENCIA ENTRE ADQUICISIONES Y NOTAS DE
+          CREDITO CON DISTINTA TARIFA(AJUSTE EN POSITIVO)</td>
+        <td colspan="4"></td>
+        <td align="right">526</td>
+        <td align="right" style="border: 1px solid #000000;">{526}</td>
+      </tr>
+      <tr>
+        <td style="white-space: nowrap; overflow: hidden;">IVA GENERADO EN LA DIFERENCIA ENTRE ADQUICISIONES Y NOTAS DE
+          CREDITO CON DISTINTA TARIFA(AJUSTE EN NEGATIVO)</td>
+        <td colspan="4"></td>
+        <td align="right">527</td>
+        <td align="right" style="border: 1px solid #000000;">{527}</td>
+      </tr>
+      <tr>
+        <td>IMPORTACIONES DE BIENES (INCLUYE ACT. FIJOS) 0%</td>
+        <td align="right">506</td>
+        <td align="right" style="border: 1px solid #000000;">{506}</td>
+        <td align="right">516</td>
+        <td align="right" style="border: 1px solid #000000;">{516}</td>
+        <td align></td>
+        <td></td>        
+      </tr>
+      <tr>
+        <td>ADQUISICIONES Y PAGOS (INCLUYE ACT. FIJOS) 0%</td>
+        <td align="right">507</td>
+        <td align="right" style="border: 1px solid #000000;">{507}</td>
+        <td align="right">517</td>
+        <td align="right" style="border: 1px solid #000000;">{517}</td>
+        <td align></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>ADQUISICIONES REALIZADAS A CONTRIBUYENTES RISE (HASTA DICIEMBRE 2021), NEGOCIOS POPULARES (DESDE ENERO 2022)
+        </td>
+        <td align="right">508</td>
+        <td align="right" style="border: 1px solid #000000;">{508}</td>
+        <td align="right">518</td>
+        <td align="right" style="border: 1px solid #000000;">{518}</td>
+        <td align></td>
+        <td></td>
+      </tr>
+      <tr style="background: #ffcc66;color: #000000;">
+        <td><u>TOTAL ADQUISICIONES Y PAGOS</u></td>
+        <td align="right">509</td>
+        <td align="right" style="font-weight:bold; border: 1px solid black;">{509}</td>
+        <td align="right">519</td>
+        <td align="right" style="font-weight:bold;border: 1px solid black;">{519}</td>
+        <td align="right">529</td>
+        <td align="right" style="font-weight:bold;border: 1px solid black;">{529}</td>
+      </tr>
+
+      <tr>
+        <td>ADQUISICIONES NO OBJETO DE IVA</td>
+        <td align="right">531</td>
+        <td align="right" style="border: 1px solid #000000;">{531}</td>
+        <td align="right">541</td>
+        <td align="right" style="border: 1px solid #000000;">{541}</td>
+        <td align></td>
+        <td></td>
+      </tr>
+
+      <tr>
+        <td>ADQUISICIONES EXENTAS DEL PAGO DE IVA</td>
+        <td align="right">532</td>
+        <td align="right" style="border: 1px solid #000000;">{532}</td>
+        <td align="right">542</td>
+        <td align="right" style="border: 1px solid #000000;">{542}</td>
+        <td align></td>
+        <td></td>
+      </tr>
+
+      <tr>
+        <td>NOTAS DE CREDITO TARIFA 0% POR COMPENSAR PROXIMO MES</td>
+        <td align="right"></td>
+        <td align="right"></td>
+        <td align="right">543</td>
+        <td align="right" style="border: 1px solid #000000;">{543}</td>
+        <td align></td>
+        <td></td>
+      </tr>
+
+      <tr>
+        <td>NOTAS DE CREDITO TARIFA DIFERENTE DE CERO POR COMPENSAR PROXIMO MES</td>
+        <td align="right"></td>
+        <td align="right"></td>
+        <td align="right">544</td>
+        <td align="right" style="border: 1px solid #000000;">{544}</td>
+        <td align="right">554</td>
+        <td align="right" style="border: 1px solid #000000;">{554}</td>
+      </tr>
+
+      <tr>
+        <td>PAGOS NETOS POR REEMBOLSO COMO INTERMEDIARIOO / VALORES...<!-- FACTURADOS POR SOCIOS A OPERADORAS DE
+          TRANSPORTE/PAGOS<br>
+          REALIZADOS POR PARTE DE LAS SOCIEDADES DE GESTION COLECTIVA COMO INTERMEDIARIOS (INFORMATIVO) --></td>
+        <td align="right">535</td>
+        <td align="right" style="border: 1px solid #000000;">{535}</td>
+        <td align="right">545</td>
+        <td align="right" style="border: 1px solid #000000;">{545}</td>
+        <td align="right">555</td>
+        <td align="right" style="border: 1px solid #000000;">{555}</td>
+      </tr>
+
+     
+      <tr>
+        <td colspan="5" style="border-top:0px solid black;">FACTOR DE PROPORCIONALIDAD DE CR&Eacute;DITO TRIBUTARIO (411+412+420+435+415+416+417+418) / 419</td>
+        <td align="right" style="border-top:0px solid black;">563</td>
+        <td align="right" style="border: 1px solid #000000;">{563}</td>
+      </tr>
+      <tr>
+        <td colspan="5">CR&Eacute;DITO TRIBUTARIO APLICABLE EN ESTE PERIODO (520+521+534+560+523+524+525+526-527) x 563</td>
+        <td align="right">564</td>
+        <td align="right" style="border: 1px solid #000000;">{564}</td>
+      </tr>
+      <tr>
+        <td colspan="7">&nbsp;</td>
+      </tr>
+
+      <tr>
+        <td colspan="5">TOTAL COMPROBANTES DE VENTA RECIBIDOS POR ADQUISICIONES Y PAGOS (EXCEPTO NOTA DE VENTA)</td>
+        <td align="right">115</td>
+        <td align="right" style="border: 1px solid #000000;">{115}</td>
+      </tr>
+      <tr>
+        <td colspan="5">TOTAL NOTA DE VENTA RECIBIDAS</td>
+        <td align="right">117</td>
+        <td align="right" style="border: 1px solid #000000;">{117}</td>
+      </tr>
+      <tr>
+        <td colspan="5">TOTAL LIQUIDACIONES DE COMPRA EMITIDAS (POR PAGOS TARIFA 0% DE IVA, O POR REEMBOLSO EN REALCION
+          DE
+          DEPENDENCIA)</td>
+        <td align="right">119</td>
+        <td align="right" style="border: 1px solid #000000;">{119}</td>
+      </tr>
+
+      <tr>
+        <td colspan="7">&nbsp;</td>
+      </tr>
+
+      <tr style="font-weight:bold;font-size:12px;background: #0c4597;color: #ffffff;">
+        <td colspan="7" style="border-bottom:0px solid black;border-top: 0px solid black;">RESUMEN IMPOSITIVO: AGENTE DE
+          PERCEPCI&Oacute;N DEL IMPUESTO AL VALOR AGREGADO</td>
+      </tr>
+      <tr>
+        <td colspan="5">IMPUESTO CAUSADO (Si diferencia campo 499-564 es mayor que 0)</td>
+        <td align="right">601</td>
+        <td align="right" style="border: 1px solid #000000;">{601}</td>
+      </tr>
+      <tr>
+        <td colspan="5">CREDITO TRIBUTARIO APLICABLE EN ESTE PERIODO (Si diferencia campo 499-564 es menor que 0)</td>
+        <td align="right">602</td>
+        <td align="right" style="border: 1px solid #000000;">{602}</td>
+      </tr>
+
+      <tr>
+        <td colspan="5">(-)COMPENSACION DE IVA POR VENTAS EFECTUADAS CON MEDIO ELECTRONICO Y/O IVA DEVUELTO O DESCONTADO
+          POR TRANSACCIONES REALIZADAS CON PERSONAS ADULTAS MAYORES O PERSONAS CON DISCAPACIDAD</td>
+        <td align="right">603</td>
+        <td align="right" style="border: 1px solid #000000;">{603}</td>        
+      </tr>
+
+      <tr>
+        <td colspan="7">(-)SALDO CR&Eacute;DITO TRIBUTARIO DEL MES ANTERIOR</td>
+      </tr>
+
+      <tr>
+        <td colspan="5"><span style="margin-left:30px;">POR ADQUISICIONES E IMPORTACIONES</span></td>
+        <td align="right">605</td>
+        <td align="right" style="border: 1px solid #000000;">{605}</td>
+      </tr>
+      <tr>
+        <td colspan="5"><span style="margin-left:30px;">POR RETENCIONES FUENTE QUE LE HAN SIDO EFECTUADAS</span></td>
+        <td align="right">606</td>
+        <td align="right" style="border: 1px solid #000000;">{606}</td>
+      </tr>
+
+      <tr>
+        <td colspan="5"><span style="margin-left:30px;">POR COMPENSACIONES DE IVA POR VENTAS EFECTUADAS CON MEDIO
+            ELECTRONICO</span></td>
+        <td align="right">607</td>
+        <td align="right" style="border: 1px solid #000000;">{607}</td>
+      </tr>
+
+      <tr>
+        <td colspan="5"><span style="margin-left:30px;">POR COMPENSACIONES DE IVA POR VENTAS EFECTUADAS EN ZONAS
+            AFECTADAS
+            - LEY DE SOLIDADRIDAD, RESTITUCION DE CREDITO TRIBUTARIO EN RESOLUCIONES ADMINISTRATIVA</span></td>
+        <td align="right">608</td>
+        <td align="right" style="border: 1px solid #000000;">{608}</td>
+      </tr>
+
+      <tr>
+        <td colspan="5">(-)RETENCIONES EN LA FUENTE DE IVA QUE LE HAN SIDO EFECTUADAS EN ESTE PERIODO</td>
+        <td align="right">609</td>
+        <td align="right" style="border: 1px solid #000000;">{609}</td>
+      </tr>
+      <tr>
+        <td colspan="5">(+)AJUSTE DE IVA DEVUELTO O DESCONTADO POR ADQUISICIONES EFECTUADAS CON MEDIO ELECTRONICO</td>
+        <td align="right">610</td>
+        <td align="right" style="border: 1px solid #000000;">{610}</td>
+      </tr>
+      <tr>
+        <td colspan="5">(+)AJUSTE POR IVA DEVUELTO E IVA RECHAZADO IMPUTABLE AL CRED. TRIB. EN EL MES (DEV. IVA)</td>
+        <td align="right">612</td>
+        <td align="right" style="border: 1px solid #000000;">{612}</td>
+      </tr>
+      <tr>
+        <td colspan="5">(+)AJUSTE POR IVA DEVUELTO E IVA RECHAZADO IMPUTABLE AL CRED. TRIB. EN EL MES (RF. IVA)</td>
+        <td align="right">613</td>
+        <td align="right" style="border: 1px solid #000000;">{613}</td>
+      </tr>
+      <tr>
+        <td colspan="5">(+)AJUSTE POR IVA DEVUELTO POR OTRAS INST. ESTADO IMPUTABLE CRED. TRIB. EN EL MES </td>
+        <td align="right">614</td>
+        <td align="right" style="border: 1px solid #000000;">{614}</td>
+      </tr>
+      <tr>
+        <td colspan="7">SALDO CR&Eacute;DITO TRIBUTARIO PARA EL PROXIMO MES</td>
+      </tr>
+
+      <tr>
+        <td colspan="5"><span style="margin-left:30px;">POR ADQUISICIONES E IMPORTACIONES</span></td>
+        <td align="right">615</td>
+        <td align="right" style="border: 1px solid #000000;">{615}</td>
+      </tr>
+      <tr>
+        <td colspan="5"><span style="margin-left:30px;">POR RETENCIONES FUENTE QUE LE HAN SIDO EFECTUADAS</span></td>
+        <td align="right">617</td>
+        <td align="right" style="border: 1px solid #000000;">{617}</td>
+      </tr>
+
+      <tr>
+        <td colspan="5"><span style="margin-left:30px;">POR COMPENSACIONES DE IVA POR VENTAS EFECTUADAS CON MEDIO
+            ELECTRONICO</span></td>
+        <td align="right">618</td>
+        <td align="right" style="border: 1px solid #000000;">{618}</td>
+      </tr>
+
+      <tr>
+        <td colspan="5"><span style="margin-left:30px;">POR COMPENSACIONES DE IVA POR VENTAS EFECTUADAS EN ZONAS
+            AFECTADAS
+            - LEY DE SOLIDADRIDAD, RESTITUCION DE CREDITO TRIBUTARIO EN RESOLUCIONES ADMINISTRATIVA</span></td>
+        <td align="right">619</td>
+        <td align="right" style="border: 1px solid #000000;">{619}</td>
+      </tr>
+
+      <tr>
+        <td colspan="5">SUBTOTAL A PAGAR( 601-602-603-604-605-607-608-609+610+611+612+613+614) > 0</td>
+        <td align="right">620</td>
+        <td align="right" style="border: 1px solid #000000;">{620}</td>
+      </tr>
+      <!--tr>
+      <td colspan="5">IVA PRESUNTIVO DE SALAS DE JUEGO (BINGO MECÁNICO) Y OTROS JUEGOS DE AZAR</td>      
+      <td align="right">621</td><td align="right">{621}</td>
+     </tr-->
+      <tr style="background: #FFCC66;color: #000000;">
+        <td colspan="5"><u>TOTAL IMPUESTO A PAGAR POR PERCEPCION (620+621)</u></td>
+        <td align="right">699</td>
+        <td align="right" style="font-weight:bold;border: 1px solid black;">{699}</td>
+      </tr>
+      <tr>
+        <td colspan="7">&nbsp;</td>
+      </tr>
+
+      <tr style="font-weight:bold;font-size:12px;background: #0c4597;color: #ffffff;">
+        <td style="border-bottom:1px solid black;" colspan="3">IMPUESTO A LA SALIDA DE DIVISAS A EFECTOS DE DEVOLUCION A
+          EXPORTADORES HABITUALES DE BIENES</td>
+        <!--td style="border-bottom:1px solid black;" colspan="2" align="center">VALOR BRUTO</td-->
+        <td style="border-bottom:1px solid black;" colspan="2" align="center">VALOR</td>
+        <td style="border-bottom:1px solid black;" colspan="2" align="center">ISD PAGADO</td>
+      </tr>
+      <tr>
+        <td>IMPORTACIONES DE MATERIAS PRIMAS, INSUMOS Y BIENES DE CAPITAL QUE SEAN INCORPORADAS EN PROCESOS PRODUCTIVOS
+          DE
+          BIENES QUE SE EXPORTEN</td>
+        <td align="right"></td>
+        <td align="right"></td>
+        <td align="right">700</td>
+        <td align="right" style="border: 1px solid #000000;">{700}</td>
+        <td align="right">701</td>
+        <td align="right" style="border: 1px solid #000000;">{701}</td>
+      </tr>
+      <tr>
+        <td colspan="3"></td>
+        <!--td style="border-bottom:1px solid black;" colspan="2" align="center">VALOR BRUTO</td-->
+        <td colspan="2" align="center"></td>
+        <td style="font-weight:bold;font-size:12px;background: #0c4597;color: #ffffff;" colspan="2" align="center">
+          PORCENTAJE</td>
+      </tr>
+
+      <tr>
+        <td colspan="5">PROPORCION DEL INGRESO NETO DE DIVISAS DESDE EL EXTERIOR AL ECUADOR, RESPECTO DEL TOTAL DE LAS EXPORTACIONES NETAS DE BIENES</td>
+        <td align="right">702</td>
+        <td align="right" style="border: 1px solid #000000;">{702}</td>
+      </tr>
+      <tr>
+        <td colspan="7">&nbsp;</td>
+      </tr>
+
+      <tr style="font-weight:bold;font-size:12px;background: #0c4597;color: #ffffff;">
+        <td colspan="7" style="border-bottom:0px solid black;border-top: 0px solid black;">AGENTE DE RETENCI&Oacute;N  DEL IMPUESTO AL VALOR AGREGADO</td>
+      </tr>
+      <tr>
+        <td colspan="3">RETENCI&Oacute;N DEL 10%</td>
+        <td align="right">721</td>
+        <td align="right" style="border: 1px solid #000000;">{721}</td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="3">RETENCI&Oacute;N DEL 20%</td>
+        <td align="right">723</td>
+        <td align="right" style="border: 1px solid #000000;">{723}</td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="3">RETENCI&Oacute;N DEL 30%</td>
+        <td align="right">725</td>
+        <td align="right" style="border: 1px solid #000000;">{725}</td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="3">RETENCI&Oacute;N DEL 50%</td>
+        <td align="right">727</td>
+        <td align="right" style="border: 1px solid #000000;">{727}</td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="3">RETENCI&Oacute;N DEL 70%</td>
+        <td align="right">729</td>
+        <td align="right" style="border: 1px solid #000000;">{729}</td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="3"> RETENCI&Oacute;N DEL 100%</td>
+        <td align="right">731</td>
+        <td align="right" style="border: 1px solid #000000;">{731}</td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="3"><u>TOTAL IMPUESTO A PAGAR POR RETENCI&Oacute;N (721+723+725+727+729+731)</u></td>
+        <td align="right">799</td>
+        <td align="right" style="font-weight:bold;border-top: 1px solid black;">{799}</td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr style="background: #FFCC66;color: #000000;">
+        <td colspan="5"><u>TOTAL CONSOLIDADO DE IMPUESTO AL VALOR AGREGADO (699+799)</u></td>
+        <td align="right">859</td>
+        <td align="right" style="font-weight:bold;border: 1px solid black;">{859}</td>
+      </tr>
+      <tr>
+        <td colspan="7" align="right"><br /><b>Generado por EXA Software Contable</b></td>
+      </tr>
+    </table>
+  </table>
+</body>
+</html>

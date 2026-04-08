@@ -1,0 +1,932 @@
+/* CSS Document */
+/* Barra de titulo 1*/
+.BarraTitulo {
+	background-color:#0797D8;	
+	text-transform: capitalize;
+	color: #FFFFFF;
+	font-weight: bold;
+	font: normal 18px "Trebuchet MS", Arial, Helvetica, sans-serif;	
+	font-variant: normal;
+}
+
+/* Titulos generales */
+.Titulos2 {
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;	
+	font-style: normal;
+	color: #5B6F88/*#95BA2E*/;
+}
+
+/* Etiquetas */
+.Etiqueta1{
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;	
+	font-style: normal;
+	color:/*#0C7AC7*/#95BA2E;
+	text-align: right;
+}
+
+/* barra de Busqueda */
+.BarraBusqueda {
+	background-color:#95BA2E;
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;	
+	color: #3B495A;
+/*	font-size: 12px;*/
+}
+
+/* Texto general del sitio */
+.LetraNegra {
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;	
+	color: #A4AFBD;
+}
+
+/* Cabecera de las tablas*/
+.Cabecera1 {
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;	
+	background-color: #0797D8;
+	color: #FFFFFF;
+	text-align: center;
+}
+
+/* Cueropo de las tablas */
+.Fondo {
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;
+	background-color: #FFFFFF;
+	color: #5B6F88;
+	text-align: left;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: none;
+	border-right-style: none;
+	border-bottom-style: none;
+	border-left-style: none;
+}
+
+/* Mensajes de alerta */
+.Alertas {
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;
+	color: #0C7AC7;
+}
+/* Mensajes de alerta color azul */
+.Alertas2 {
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;
+	color: #003366;
+}
+/* Mensajes de alerta color rojo */
+.Alertas3 {
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;
+	color: #FF0000;
+}
+/* Campos requeridos */
+.Asterisco {
+    font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;
+	color: #0C7AC7;
+}
+
+/* Fielset de los buscadores ajax */
+.Busqueda_ajax {
+	background-color: #CCCCCC;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: none;
+	border-right-style: none;
+	border-bottom-style: none;
+	border-left-style: none;
+	/*background-color: transparent;*/
+}
+
+.Busqueda_contenido_ajax {
+	background-color: #CCCCCC;
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;
+	color: #3B495A;
+}
+
+/* Cabecera de la tabla del buscador ajax */
+.Cabecera_ajax {
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;
+	background-color: #0797D8;
+	color: #FFFFFF;
+	text-align: center;
+}
+
+/* Cuerpo de la busqueda del ajax */
+.Cuerpo_ajax {
+	background-color: #FFFFFF;
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;	
+	color: #000000;
+}
+
+/* Paginas en construcción */
+.Construccion {
+	background-attachment: fixed;
+	background-image: url(../imagenes/construccion1.jpg);
+	background-repeat: no-repeat;
+	background-position: center center;
+}
+
+/* Botones generados con javascript */
+.BotonEliminar {
+	text-align: center;
+	border: 1px inset #000000;
+	height: 20px;
+	width: 15px;
+	background-position: left top;
+	vertical-align: middle;
+	background-color: #0797D8;
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;	
+}
+
+.oculta {
+ display:none;
+}
+
+.muestra {
+
+}
+
+/* ojojojojo */
+#eta_niv{
+	position:relative;
+	display:none;
+}
+#busren
+{
+	 position:relative;
+}
+#buspor
+{
+    position:relative;
+	display:none;
+}
+
+.Titulos1 {
+	background-color: #6A7B8F;
+	font: normal 14px "Trebuchet MS", Arial, Helvetica, sans-serif;	
+	font-size: 14px;
+	text-transform: uppercase;
+	color: #FFFFFF;
+	font-weight: bold;
+}
+
+/* Estilos de Tabs */
+body {
+      font-family: Verdana, Arial, Helvetica, sans-serif;
+      font-size: 10px;
+      background-color: #FFFFFF;
+}
+
+#ContTabul {
+      border-left: 1px solid #CCC;
+      border-right: 1px solid #CCC;
+      border-bottom: 1px solid #CCC;
+      padding: 10px 5px 6px 5px;
+}
+
+ul#tabnav {
+      list-style-type: none;
+      margin: 0;
+      padding-left: 40px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #CCC;
+      font: 11px verdana, arial, sans-serif;
+}
+ul#tabnav li {
+      float: left;
+      height: 21px;
+      background-color: #E4E4E4;
+      color: #666;
+      margin: 2px 10px 0 2px;
+      border: 1px solid #CCC;
+}
+
+ul#tabnav a:link, ul#tabnav a:visited {
+      display: block;
+      color: #666;
+      text-decoration: none;
+      padding: 4px;
+}
+ul#tabnav a:hover {
+      background-color: #CCC;
+      color: #666;
+}
+#tabnav .activo {
+      border-bottom: 1px solid #fff;
+      color: #000000;
+      background-color: #FFFFFF;
+}
+#tabnav .inactivo {}
+
+
+/* Estilos de Botones */
+.Boton_Guardar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/guardar.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #D0EFEF;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Buscar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/buscar.jpg);
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #83BBCC;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	background-repeat: no-repeat;
+	cursor:pointer;
+}
+
+.Boton_Aceptar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/aceptar.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #65CB65;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Actualizar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/actualizar.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #006BA8;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Siguiente {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/siguiente.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #006BA8;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Habilitar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/habilitar.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #A7E390;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Deshabilitar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/deshabilitar.gif);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #555555;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Inscribir {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/inscribir.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #6EAF57;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+
+
+.Boton_Dinero {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/dinero.png);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #A5D78A;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Nuevo {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/nuevo2.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #BDC7D1;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Agregar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/nuevo.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #B0CFB3;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Calcular {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #FFFFFF;
+	text-align: center;
+	background-image: url(../imagenes/32x32/calcular.png);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #85BBC9;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Imprimir {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/fileprint.png);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #066DA4;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Eliminar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/editdelete.png);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #E96868;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Libros {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F6F6FA;
+	text-align: center;
+	background-image: url(../imagenes/32x32/libros.png);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #659BDE;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Buscar_Agregar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/buscar_agregar.png);
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #ACCAD8;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	background-repeat: no-repeat;
+	cursor:pointer;
+}
+
+.Boton_Cambiar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F6F6FA;
+	text-align: center;
+	background-image: url(../imagenes/32x32/cambiar.png);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #B15479;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Debe {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #FFFFFF;
+	text-align: center;
+	background-image: url(../imagenes/32x32/Debe.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 50px;
+	background-position: center center;
+	font-size: 1px;
+	color: #FFFFFF;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Haber {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #FFFFFF;
+	text-align: center;
+	background-image: url(../imagenes/32x32/Haber.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 50px;
+	background-position: center center;
+	font-size: 1px;
+	color: #FFFFFF;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Limpiar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F4F4F4;
+	text-align: center;
+	background-image: url(../imagenes/32x32/limpiar.jpg);
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #FCBE74;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	background-repeat: no-repeat;
+	cursor:pointer;
+}
+
+.Boton_Atras {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/atras.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #98B282;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Adelante {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/adelante.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #98B282;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Devolver {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/devolver.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #98B282;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_volver {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/anterior.jpg);
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #83BBCC;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	background-repeat: no-repeat;
+	cursor:pointer;
+}
+
+.Boton_VistaPrevia {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	text-align: center;
+	background-attachment: fixed;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #94B8E8;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	background-repeat: no-repeat;
+	cursor:pointer;
+	background-attachment: fixed;
+	display: block;
+	background-image: url(../imagenes/32x32/vista.jpg);
+	background-color: #FFFFFF;
+}
+
+.Boton_Excel {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/excel.png);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #E96868;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+.Boton_Distribuir {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	text-align: center;
+	background-attachment: fixed;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #94B8E8;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	background-repeat: no-repeat;
+	cursor:pointer;
+	background-attachment: fixed;
+	display: block;
+	background-image: url(../imagenes/32x32/view_choose.png);
+	background-color: #FFFFFF;
+}
+
+.Boton_Dinero2 {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	background-color: #F1F1ED;
+	text-align: center;
+	background-image: url(../imagenes/32x32/anticipo.png);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	font-size: 1px;
+	color: #E2B87E;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	cursor:pointer;
+}
+
+/* Azul #0C7AC7 
+   Blanco brillante #A4AFBD
+   Blanco obscuro #5B6F88
+*/ 
+
+
+
+
+
+
+
+
+
+/* Titulo para cabecera */
+
+/*.TitulosMayus {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: bold;
+	color:#333333;
+	text-transform: uppercase;
+}*/
+
+/* Pie de pagina */
+
+/*.pie_de_pagina1{
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #FFFFFF;
+	background-color:#003366;
+	text-align: center;
+}*/

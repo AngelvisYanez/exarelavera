@@ -1,0 +1,77 @@
+<!-- 
+*  Simple HTML websocket Client
+*  original source: https://github.com/ghedipunk/PHP-WebSockets
+*  this modified source: http://www.abrandao.com  
+*  
+*/
+
+-->
+<html>
+<head>
+<title>PHP Websocket Client</title>
+<style>
+ html,body{font:normal 0.9em arial,helvetica;}
+ #log {width:440px; height:200px; border:1px solid #7F9DB9; overflow:auto;}
+ #msg {width:330px;}
+ .alert-box { width:75%;   color:#555;  border-radius:5px;   font-family:Tahoma,Geneva,Arial,sans-serif;font-size:11px;
+    padding:5px 5px 5px 10px;    margin:10px;}
+.alert-box span {    font-weight:bold;    text-transform:uppercase;}
+.error {   background:#ffecec  ;  border:1px solid #f5aca6;}
+.success {  background:#e9ffd9 ;   border:1px solid #a6ca8a; }
+.warning { background:#fff8c4 ;	border:1px solid #f2c779;	}
+.notice { background:#e3f7fc ;border:1px solid #8ed9f6;	}
+</style>
+</head>
+<body onload="connect();">
+ <h3>HTML5 WebSocket Client connecting to <span id="surl"> </span> </h3>
+ <script>
+  if ("WebSocket" in window)
+  {
+    document.write("<div class='alert-box success'><span>WebSockets supported!</span> Your browser can do websockets </div>");
+  }
+  else
+  {
+   // the browser doesn't support WebSockets
+   document.write("<div class='alert-box error'><span>Error: No Websockets supported</span> Your Browser: "+ navigator.userAgent +" does not support websockets. Upgrade to modern browser </div>");
+  }
+  $.isUnd=function(v){ return v===undefined; };
+    $.varValid=$.vv=function(v){return (v!==null && !$.isUnd(v));};
+    $.isBoolean=$.isBool=function(v){return typeof v==='boolean';};
+    $.isString=$.isText=function(v){return typeof v==='string';};
+    $.isNum=$.isNumeric; $.isFunc=$.isFunction;
+    $.toNum=function(s){ return $.isNum(s)?("0"+s)*1:0; };
+    $.isObject=$.isObj=function(v){return $.vv(v)&&!$.isArray(v)&&typeof v==='object';};
+  $.getCookie=function(cname){ var na=cname+"=",dc=decodeURIComponent(document.cookie),ca=dc.split(';');for(var i=0;i<ca.length;i++){ var c=ca[i]; while(c.charAt(0)===' '){c=c.substring(1);} if(c.indexOf(na)===0){return c.substring(na.length, c.length);} } return ""; };
+  $.jsonParser=function(v){ try{return JSON.parse(v);}catch(e){return v;}};
+  // Utilities
+    function $(id){ return document.getElementById(id); }
+    function onkey(event){ if(event.keyCode==13){ sendMsg(); } }
+  function sendMsg(){
+    var txt,msg;
+    txt = $("msg");
+    msg = txt.value;
+    if(!msg){ alert("Message can not be empty"); return; }
+    txt.value="";
+    txt.focus();
+    send(msg);
+  }
+  </script>
+ 
+ <div id="log"></div>
+ <input id="msg" type="textbox" onkeypress="onkey(event)"/>
+ 
+ <button onclick="sendMsg()">Send</button>
+ <button onclick="quit()">Quit</button><bR>
+ <hr>
+ <div>Commands:  hello,name,temp, age, date, time, thanks,id,users, bye</div>
+ <hr>
+ <div class='alert-box notice'><span>Update to your server</span> Change values below to match your server</div>
+ Host:<input id="host" type="textbox" size="35" value="127.0.0.1"/>
+ Port:<input id="port" type="textbox" size="4" value="8082"/>
+ <button onclick="connect()">Re-connect</button>
+<Hr>
+ More details at:<a href="http://www.abrandao.com/2013/06/25/websockets-html5-php/">websockets abrandao.com</a>
+ <!-- <script type="text/javascript" src="./socketExaVentanas.js" /> -->
+</script>
+ </body>
+</html>

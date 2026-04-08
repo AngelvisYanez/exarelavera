@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="UTF-8">
+    <title>Manifiesto de Desechos Peligrosos - MAE</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 9px;
+            color: #000
+        }
+
+        .page {
+            width: 210mm;
+            min-height: auto;
+            margin: auto;
+            padding: 0;
+        }
+
+        .page-break {
+            page-break-after: always
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        th,
+        td {
+            border: 1px solid #000;
+            padding: 3px;
+            vertical-align: top
+        }
+
+        .center {
+            text-align: center
+        }
+
+        .right {
+            text-align: right
+        }
+
+        .bold {
+            font-weight: bold
+        }
+
+        .small {
+            font-size: 8px
+        }
+
+        .xsmall {
+            font-size: 7px
+        }
+
+        .value {
+            min-height: 14px
+        }
+
+        .value input,
+        .value textarea {
+            width: 100%;
+            border: none;
+            font-size: 9px;
+            font-family: Arial
+        }
+
+        .value textarea {
+            resize: none
+        }
+
+        .signature {
+            height: 35px
+        }
+
+        .h40 {
+            height: 40px
+        }
+
+        .h60 {
+            height: 60px
+        }
+
+        @media print {
+            body {
+                margin: 0
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ENCABEZADO INSTITUCIONAL -->
+    <table style="width:210mm; margin:0 auto 6px auto; border-collapse:collapse;">
+        <tr>
+            <td style="width:20%; border:none; vertical-align:middle; text-align:center;">
+                <img src="/imagenes/620/minis_ambi.png" alt="Ministerio del Ambiente"
+                    style="max-width:100%; height:auto;">
+            </td>
+            <td class="center bold" style="border:none; vertical-align:middle;">
+                <div>MINISTERIO DEL AMBIENTE</div>
+                <div>SUBSECRETARIA DE CALIDAD AMBIENTAL</div>
+                <div>SUBSECRETARIA DE GESTION AMBIENTAL COSTERA</div>
+                <div>CLAVE DEL MANIFIESTO</div>
+                <div>INFORME DE MANIFIESTO DE DESECHOS PELIGROSOS</div>
+            </td>
+            <td style="width:20%; border:none; vertical-align:middle; text-align:center;">
+                <img src="/imagenes/620/prefectua.png" alt="Prefectura" style="max-width:100%; height:auto;">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3" style="border:none; padding:0">
+                <div style="width:100%; border-bottom:2px solid #000"></div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="page">
+
+        <table>
+            <tr>
+                <td rowspan="120" class="center bold"
+                    style="writing-mode: vertical-rl; transform: rotate(180deg); width:18px;">GENERADOR</td>
+                <td style="padding:0;">
+
+                    <!-- ENCABEZADO SUPERIOR -->
+                    <table style="width:100%; border-collapse:collapse; margin:0;">
+                        <tr>
+                            <td class="bold">1. NUM. DE REGISTRO COMO GENERADOR DE DESECHOS</td>
+                            <td class="bold">2. NUM. DE LICENCIA AMBIENTAL</td>
+                            <td class="bold">3 No. DE MANIFIESTO</td>
+                            <td class="bold">4. PAGINA</td>
+                        </tr>
+                        <tr>
+                            <td>{Pla_Crd}</td>
+                            <td>{Man_Lac}</td>
+                            <td>{Man_Num}</td>
+                            <td id="numero-pagina-placeholder"></td>
+                        </tr>
+                    </table>
+
+                    <!-- DATOS EMPRESA GENERADORA -->
+                    <table style="width:100%; border-collapse:collapse; margin:0;">
+                        <tr>
+                            <td width="31%" class="bold">5. NOMBRE DE LA EMPRESA GENERADORA</td>
+                            <td colspan="5">{cliente}</td>
+                        </tr>
+                        <tr>
+                            <td class="bold">6. REGISTRO UNICO DE CONTRIBUYENTES</td>
+                            <td colspan="5">{Cli_Prs_Ced}</td>
+                        </tr>
+                        <tr>
+                            <td class="bold">7. NOMBRE DE LA INSTALACION GENERADORA</td>
+                            <td colspan="5">{Pla_Nom}</td>
+                        </tr>
+                        <tr>
+                            <td class="bold">DOMICILIO (CALLE Y No.)</td>
+                            <td colspan="3">{Prs_Dir}</td>
+                            <td width="7%" class="bold">PROV.</td>
+                            <td width="29%">{Pro_Nom}</td>
+                        </tr>
+                        <tr>
+                            <td class="bold">CANTON</td>
+                            <td colspan="2">{Ciu_Des}</td>
+                            <td width="14%" class="bold">PARROQUIA</td>
+                            <td colspan="2">{Ciu_Des}</td>
+                        </tr>
+                        <tr>
+                            <td class="bold">No ONU</td>
+                            <td width="8%">&nbsp;</td>
+                            <td width="11%" class="bold">TEL</td>
+                            <td colspan="3">{Prs_Tel}</td>
+                        </tr>
+                    </table>
+
+                    <!-- DESCRIPCION DEL DESECHO -->
+                    <table style="width:100%; border-collapse:collapse; margin:0;">
+                        <tr>
+                            <td class="bold" colspan="2">8. DESCRIPCION (Nombre del desecho de acuerdo al Listado
+                                Nacional e indicar CRTIB)</td>
+                            <td class="bold center">Codigo del Desecho</td>
+                            <td class="bold center" colspan="2">CONTENEDOR</td>
+                            <td class="bold center">CANTIDAD TOTAL DEL DESECHO</td>
+                            <td class="bold center">UNIDAD VOLUMEN/PESO</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">{Tde_Des}</td>
+                            <td class="center">{Tde_Cde}</td>
+                            <td class="center"><b>TIPO</b><br>{Veh_Tit}</td>
+                            <td class="center"><b>CAPACIDAD</b><br>{Veh_Cap}</td>
+                            <td class="center">{Man_Pes}</td>
+                            <td class="center">KG</td>
+                        </tr>
+                    </table>
+
+                    <!-- PESO DEL VEHICULO -->
+                    <!-- INSTRUCCIONES -->
+                    <table style="width:100%; border-collapse:collapse; margin:0;">
+
+                        <tr>
+                            <td class="bold">9. INSTRUCCIONES ESPECIALES E INFORMACION ADICIONAL PARA EL MANEJO SEGURO
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>{Man_Obe}</td>
+                        </tr>
+                    </table>
+
+                    <!-- CERTIFICACION -->
+                    <table style="width:100%; border-collapse:collapse; margin:0;">
+                        <tr>
+                            <td colspan="3" class="bold">10. CERTIFICACION DEL GENERADOR</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="small">
+                                <div align="justify">DECLARO QUE EL CONTENIDO DE ESTE LOTE ESTA TOTAL Y CORRECTAMENTE
+                                    DESCRITO MEDIANTE EL NOMBRE DEL DESECHO, CARACTERISTICAS, CRIB, BIEN EMPACADO,
+                                    ENVASADO, MARCADO Y ROTULADO, NO ESTA MEZCLADO CON DESECHOS O MATERIALES
+                                    INCOMPATIBLES, SE HAN PREVISTO LAS CONDICIONES DE SEGURIDAD PARA SU TRANSPORTE POR
+                                    VIA TERRESTRE DE ACUERDO A LA LEGISLACION NACIONAL VIGENTE</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td width="27%" height="41" class="bold">NOMBRE, CARGO Y FIRMA DEL RESPONSABLE</td>
+                            <td colspan="2">{usuario_nombre}</td>
+                        </tr>
+
+                        <tr>
+                            <td class="bold">TELEFONO Y/O CORREO ELECTRONICO </td>
+                            <td colspan="2">{usuario_correo} / {usuario_telefono} </td>
+                        </tr>
+                        <tr>
+                            <td class="bold">No RESOLUTIVO DE NO REUSO/RECICLAJE EN LA INSTALACION </td>
+                            <td width="48%">&nbsp;</td>
+                            <td width="25%"><span class="right">FECHA: {Man_Fec_Let}</span></td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="right">&nbsp;</td>
+                        </tr>
+                    </table>
+
+                </td>
+            </tr>
+        </table>
+
+
+
+
+        <!-- ===================== PAGINA 2 / TRANSPORTE ===================== -->
+
+        <!-- ETIQUETA LATERAL TRANSPORTE -->
+
+        <table>
+            <tr>
+                <td rowspan="20" class="center bold"
+                    style="writing-mode: vertical-rl; transform: rotate(180deg); width:18px;">TRANSPORTE</td>
+                <td>
+
+                    <!-- DATOS TRANSPORTE -->
+                    <table style="width:100%; border-collapse:collapse; margin:0;">
+                        <tr>
+                            <td width="26%" class="bold">11. NOMBRE EMPRESA TRANSPORTISTA</td>
+                            <td colspan="5">{Mat_Des}</td>
+                        </tr>
+                        <tr>
+                            <td class="bold">DOMICILIO</td>
+                            <td colspan="5">{Mat_Dir}</td>
+                        </tr>
+                        <tr>
+                            <td class="bold">TEL</td>
+                            <td width="15%">{Mat_Tel}</td>
+                            <td width="17%" class="bold">LICENCIA AMBIENTAL MAE</td>
+                            <td width="13%">{Mat_Mae}</td>
+                            <td width="18%" class="bold">LICENCIA POLICIA NACIONAL</td>
+                            <td width="11%">{Cho_Tli}</td>
+                        </tr>
+                        <tr>
+                            <td class="bold">PLAN DE CONTINGENCIAS</td>
+                            <td colspan="5">{Mat_Pco}</td>
+                        </tr>
+                    </table>
+
+                    <!-- RECEPCION DE DESECHOS -->
+                    <table style="width:100%; border-collapse:collapse; margin:0;">
+                        <tr>
+                            <td class="bold" colspan="6">12. RECIBI LOS DESECHOS DESCRITOS EN EL MANIFIESTO PARA SU
+                                TRANSPORTE</td>
+                        </tr>
+                        <tr>
+                            <td width="16%" class="bold">NOMBRE</td>
+                            <td colspan="3">{chofer}</td>
+                            <td width="16%" class="bold">FIRMA</td>
+                            <td width="12%" class="signature"></td>
+                        </tr>
+                        <tr>
+                            <td class="bold">CARGO</td>
+                            <td colspan="3">CONDUCTOR</td>
+                            <td class="bold">FECHA EMBARQUE</td>
+                            <td>{Man_Fec}</td>
+                        </tr>
+                    </table>
+
+                    <!-- RUTA -->
+                    <table style="width:100%; border-collapse:collapse; margin:0;">
+                        <tr>
+                            <td class="bold" colspan="6">13 RUTA DE LA EMPRESA GENERADORA HASTA SU ENTREGA</td>
+                        </tr>
+
+                        <tr>
+                            <td width="25%" class="bold">PROVINCIA / CANTON / PARROQUIAS</td>
+                            <td colspan="3">{cho_ciu_prov}</td>
+                            <td width="30%" class="bold">CARRETERAS O CAMINOS UTILIZADOS</td>
+                            <td colspan="3">{Pla_Rut}</td>
+                        </tr>
+                    </table>
+
+                    <!-- VEHICULO -->
+                    <table style="width:100%; border-collapse:collapse; margin:0;">
+                        <tr>
+                            <td width="25%" class="bold">14. TIPO DE VEHICULO</td>
+                            <td width="40%">{Veh_Tit}</td>
+                            <td width="10%" class="bold">PLACA</td>
+                            <td colspan="3">{Veh_Pla}</td>
+                        </tr>
+                    </table>
+
+                </td>
+            </tr>
+        </table>
+
+
+
+        <!-- ===================== DESTINATARIO ===================== -->
+        <table width="100%" style="width:210mm; border-collapse:collapse; margin:0 auto;">
+            <tr>
+                <td rowspan="120" class="center bold"
+                    style="writing-mode: vertical-rl; transform: rotate(180deg); width:18px;">DESTINATARIO</td>
+                <td style="padding:0;">
+
+                    <table style="width:100%; border-collapse:collapse; margin:0;">
+                        <!-- 15 -->
+                        <tr>
+                            <td width="37%" class="bold">15. NOMBRE DE LA EMPRESA DESTINATARIA</td>
+                            <td colspan="5">GOBIERNO AUTONOMO DESCENTRALIZADO DE LA PROVINCIA DE EL ORO</td>
+                        </tr>
+                        <tr>
+                            <td class="bold">15.1 NUMERO DE LICENCIA AMBIENTAL</td>
+                            <td colspan="5">1278</td>
+                        </tr>
+                        <tr>
+                            <td class="bold">DOMICILIO</td>
+                            <td colspan="6">PORTOVELO</td>
+                        </tr>
+
+                        <!-- 15.2 -->
+                        <tr>
+                            <td class="bold" colspan="6">15.2 EN CASO DE EXISTIR DIFERENCIAS EN LA VERIFICACION DE
+                                ENTREGA (MARCAR CON UNA X)</td>
+                        </tr>
+                        <tr>
+                            <td colspan="6" style="padding:0;">
+                                <table style="width:100%; border-collapse:collapse; margin:0; table-layout:fixed;">
+                                    <tr>
+                                        <td class="bold center"
+                                            style="width:12%; border-top:0; border-bottom:0; border-left:0;">CANTIDAD
+                                        </td>
+                                        <td class="center" style="width:3%; border-top:0; border-bottom:0;">&nbsp;</td>
+                                        <td class="bold center" style="width:12%; border-top:0; border-bottom:0;">TIPO
+                                        </td>
+                                        <td class="center" style="width:3%; border-top:0; border-bottom:0;">&nbsp;</td>
+                                        <td class="bold center" style="width:12%; border-top:0; border-bottom:0;">
+                                            DESECHO</td>
+                                        <td class="center" style="width:3%; border-top:0; border-bottom:0;">&nbsp;</td>
+                                        <td class="bold center" style="width:25%; border-top:0; border-bottom:0;">
+                                            RECHAZO PARCIAL</td>
+                                        <td class="center" style="width:3%; border-top:0; border-bottom:0;">&nbsp;</td>
+                                        <td class="bold center" style="width:24%; border-top:0; border-bottom:0;">
+                                            RECHAZO TOTAL</td>
+                                        <td class="center"
+                                            style="width:3%; border-top:0; border-bottom:0; border-right:0;">&nbsp;</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                        <!-- 15.3 -->
+                        <tr>
+                            <td class="bold" colspan="6">15.3 DESTINATARIO ALTERNO</td>
+                        </tr>
+                        <tr>
+                            <td class="bold" width="30%">NOMBRE</td>
+                            <td colspan="6">{Tec_Nom}</td>
+                        </tr>
+
+                        <tr>
+                            <td class="bold" width="30%">TELEFONO</td>
+                            <td width="30%">{Tec_Car}</td>
+                            <td class="bold">No. DE LICENCIA AMBIENTAL</td>
+                            <td colspan="3">&nbsp;</td>
+                        </tr>
+
+                        <!-- 15.4 -->
+                        <tr>
+                            <td class="bold" width="30%">15.4 NOMBRE Y FIRMA DEL RESPONSABLE DEL DESTINATARIO ALTERNO
+                            </td>
+                            <td width="50%">&nbsp;</td>
+                            <td class="bold" width="30%">FECHA</td>
+                            <td colspan="3">&nbsp;</td>
+                        </tr>
+
+                        <tr>
+                            <td class="bold" width="30%">TELEFONO</td>
+                            <td width="30%">{Tec_Car}</td>
+                            <td class="bold">No. DE LICENCIA AMBIENTAL</td>
+                            <td colspan="3">&nbsp;</td>
+                        </tr>
+
+
+                        <!-- 15.5 -->
+                        <tr>
+                            <td class="bold" colspan="6">15.5 MANEJO QUE SE DARA AL DESECHO (INDICAR CON X O
+                                ESPECIFICAR)</td>
+                        </tr>
+                        <tr>
+                            <td colspan="6" style="padding:0;">
+                                <table style="width:100%; border-collapse:collapse; margin:0; table-layout:fixed;">
+                                    <tr>
+                                        <td class="bold"
+                                            style="width:12%; border-top:0; border-bottom:0; border-left:0;">
+                                            REUSO/RECICLAJE</td>
+                                        <td style="width:2%; border-top:0; border-bottom:0;" class="center">&nbsp;</td>
+                                        <td class="bold" style="width:12%; border-top:0; border-bottom:0;">TRATAMIENTO
+                                        </td>
+                                        <td style="width:2%; border-top:0; border-bottom:0;" class="center">&nbsp;</td>
+                                        <td class="bold" style="width:14%; border-top:0; border-bottom:0;">
+                                            CO-PROCESAMIENTO</td>
+                                        <td style="width:2%; border-top:0; border-bottom:0;" class="center">&nbsp;</td>
+                                        <td class="bold" style="width:12%; border-top:0; border-bottom:0;">INCINERACION
+                                        </td>
+                                        <td style="width:2%; border-top:0; border-bottom:0;" class="center">&nbsp;</td>
+                                        <td class="bold" style="width:24%; border-top:0; border-bottom:0;">RELLENO DE
+                                            SEGURIDAD</td>
+                                        <td style="width:2%; border-top:0; border-bottom:0;" class="center">&nbsp;</td>
+                                        <td class="bold" style="width:14%; border-top:0; border-bottom:0;">OTROS</td>
+                                        <td class="center"
+                                            style="width:2%; border-top:0; border-bottom:0; border-right:0;">X</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                        <!-- 16 -->
+                        <tr>
+                            <td class="bold" colspan="6">16. CERTIFICACION DE LA RECEPCION DE LOS DESECHOS DESCRITOS EN
+                                EL MANIFIESTO INDICADOS EN EL MANIFIESTO EXCEPTO LO INDICADO EN EL PUNTO 12.</td>
+                        </tr>
+                        <tr>
+                            <td class="bold">OBSERVACIONES</td>
+                            <td colspan="5">{Rec_Obs}</td>
+                        </tr>
+                        <tr>
+                            <td class="bold">NOMBRE</td>
+                            <td width="50%">Gobierno Autonomo Decentralizado de la Provincia de El Oro</td>
+                            <td class="bold">FIRMA</td>
+                            <td colspan="3"></td>
+                        </tr>
+                        <tr>
+
+                            <td class="bold">CARGO</td>
+                            <td width="50%">Gestor de Disposici&oacute;n Final</td>
+                            <td class="bold">FECHA DE RECEPCION</td>
+                            <td class="center"><b>DIA</b><br>{Rec_Dia}</td>
+                            <td class="center"><b>MES</b><br>{Rec_Mes}</td>
+                            <td class="center"><b>A&Ntilde;O</b><br>{Rec_Ano}</td>
+                        </tr>
+
+                        <!-- INSTRUCCIONES -->
+                        <tr>
+                            <td class="bold" colspan="6">INSTRUCCIONES:</td>
+                        </tr>
+                        <tr>
+                            <td colspan="6" class="small">1. Una vez que el generador obtenga el No. de registro y de
+                                Licencia Ambiental como generador de desechos peligroso debera obtener del Ministerio
+                                del Ambiente el presente formato.</td>
+                        </tr>
+                        <tr>
+                            <td colspan="6" class="small">2. Para cada embarque o volumen de transporte, el generador
+                                debera entregar al transportista un manifiesto en original, debidamente firmado, y dos
+                                copias del mismo.</td>
+                        </tr>
+                        <tr>
+                            <td colspan="6" class="small">3. El transportista conservara una de las copias que le
+                                entregue el generador, para su archivo, y firmara el original del manifiesto, mismo que
+                                entregara al destinatario.</td>
+                        </tr>
+                        <tr>
+                            <td colspan="6" class="small">4. El destinatario conservara la copia del manifiesto que le
+                                entregue el transportista, para su archivo, y firmara el original, mismo que debera
+                                remitir de inmediato al generador.</td>
+                        </tr>
+                        <tr>
+                            <td colspan="6" class="small">5. El original del manifiesto y las copias del mismo deberan
+                                ser conservadas por el generador, el transportista y el destinatario.</td>
+                        </tr>
+                        <tr>
+                            <td colspan="6" class="small">6. Una vez que los desechos peligrosos y el manifiesto se
+                                hayan entregado al transportista, el generador podra enviar via correo electronico o fax
+                                el manifiesto al Ministerio del Ambiente.</td>
+                        </tr>
+                        <tr>
+                            <td colspan="6" class="small">7. Llenar con letra de molde, maquina o computadora.</td>
+                        </tr>
+                    </table>
+
+                </td>
+            </tr>
+        </table>
+
+        <script>
+            // Funcion para calcular el numero de paginas
+            function calcularNumeroPaginas() {
+                var placeholder = document.getElementById('numero-pagina-placeholder');
+                if (!placeholder) {
+                    // Si no existe el placeholder, intentar de nuevo despues de un breve delay
+                    setTimeout(calcularNumeroPaginas, 50);
+                    return;
+                }
+
+                try {
+                    // Obtener la altura total del contenido del body
+                    var alturaTotal = Math.max(
+                        document.body.scrollHeight,
+                        document.body.offsetHeight,
+                        document.documentElement.clientHeight,
+                        document.documentElement.scrollHeight,
+                        document.documentElement.offsetHeight
+                    );
+
+                    // Altura de una pagina A4 en pixeles (297mm)
+                    // En impresion, el navegador usa 96 DPI: 297mm ≈ 1123px
+                    var alturaPagina = 1123;
+
+                    // Calcular numero de paginas
+                    var numPaginas = Math.ceil(alturaTotal / alturaPagina);
+
+                    // Asegurar que sea al menos 1
+                    if (numPaginas < 1) numPaginas = 1;
+
+                    // Actualizar el placeholder
+                    placeholder.textContent = numPaginas;
+
+                } catch (e) {
+                    console.error('Error al calcular numero de paginas:', e);
+                    // En caso de error, mostrar 1 como valor por defecto
+                    if (placeholder) placeholder.textContent = '1';
+                }
+            }
+
+            // Funcion para recalcular antes de imprimir
+            function recalcularAntesImprimir() {
+                var placeholder = document.getElementById('numero-pagina-placeholder');
+                if (!placeholder) return;
+
+                try {
+                    var alturaTotal = Math.max(
+                        document.body.scrollHeight,
+                        document.body.offsetHeight,
+                        document.documentElement.clientHeight,
+                        document.documentElement.scrollHeight,
+                        document.documentElement.offsetHeight
+                    );
+                    var alturaPagina = 1123;
+                    var numPaginas = Math.ceil(alturaTotal / alturaPagina);
+                    if (numPaginas < 1) numPaginas = 1;
+                    placeholder.textContent = numPaginas;
+                } catch (e) {
+                    if (placeholder) placeholder.textContent = '1';
+                }
+            }
+
+            // Ejecutar cuando el documento este completamente cargado
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function () {
+                    // Esperar un poco mas para que todo se renderice
+                    setTimeout(calcularNumeroPaginas, 200);
+                });
+            } else {
+                // El documento ya esta cargado
+                setTimeout(calcularNumeroPaginas, 200);
+            }
+
+            // Tambien calcular cuando la ventana termine de cargar
+            window.addEventListener('load', function () {
+                setTimeout(calcularNumeroPaginas, 300);
+            });
+
+            // Recalcular antes de imprimir
+            window.addEventListener('beforeprint', recalcularAntesImprimir);
+        </script>
+
+</body>

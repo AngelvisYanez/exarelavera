@@ -1,0 +1,186 @@
+<html>
+<head>
+<!-- <title>ACERCA DE EXA</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body bgcolor="#FFFFFF" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" style="text-align:center"> -->
+<!-- Save for Web Slices (ACERCA DE EXA) -->
+<!-- <img src="./ACERCA-DE-EXA2.png" width="80%" alt=""> -->
+<!-- End Save for Web Slices -->
+<!-- </body>
+</html> -->
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+            background-color: #FFFFFF;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .header-image {
+            width: 100%;
+            height: 150px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            padding-bottom: 10px;
+            margin: 0;
+        }
+        
+        h2 {
+            color: #000000;
+            margin: 0;
+        }
+        
+        .divider {
+            border-top: 1px solid #eee;
+            margin: 10px 0;
+        }
+        
+        /* [contenteditable="true"] {
+            border: 1px dashed #ccc;
+            padding: 8px;
+            min-height: 20px;
+            background-color: #f9f9f9;
+        }
+        
+        [contenteditable="true"]:focus {
+            background-color: #fff;
+            outline: none;
+            border: 1px dashed #3498db;
+        } */
+        
+        .image-placeholder {
+            width: 100%;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 15px 0;
+        }
+        
+        .two-columns {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .column {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Encabezado con imagen -->
+        <div class="header-image">
+            <img style="height:80px; display: inline;" src="../../skins/img/newlogo.png" data-tooltip="tooltip" data-placement="right" title="EXA - Software Contable" />
+        </div>
+        
+        <!-- Sección ¿Por qué EXA? -->
+        <div class="section">
+            <h1 >¿Por qué EXA?</h1>
+            <!-- <div class="image-placeholder">
+                [Imagen descriptiva - Reemplazar con &lt;img src="url-imagen-seccion1.jpg" alt=""&gt;]
+            </div> -->
+            <!-- <-- contenteditable="true"> -->
+            <p style="text-align: justify;"></p>
+                EXA es una plataforma integral en línea para empresas de servicios, con más de 10 años de experiencia.<br><br>
+                Incluye módulos de facturación, contabilidad, inventario, tributación, cuentas por cobrar y pagar, reportes y RR.HH., todos integrados. Desarrollado en tecnología LAMP, es seguro, personalizable y cumple con la normativa ecuatoriana. Ofrece automatización, acceso desde cualquier dispositivo, soporte técnico cercano y respaldo en la nube 24/7.
+            </p>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <!-- Sección Misión y Visión en dos columnas -->
+        <div class="two-columns">
+            <div class="column">
+                <div class="section">
+                    <!-- <h2 contenteditable="true">Misión</h2> -->
+                    <h2>Misión</h2>
+                    <div class="image-placeholder" style="height: 120px;">
+                        <span style="font-size: 70px; z-index: 2; display: inline-block; line-height: 1; text-align: center;">🚀</span>
+                    </div>
+                    <!-- <p contenteditable="true"> -->
+                    <p style="text-align: justify;">
+                        Ser el sistema contable y financiero más confiable del Ecuador, brindando soluciones ágiles, seguras y adaptadas a empresas de servicios.<br><br>
+                        Acompañamos su crecimiento con tecnología de alto rendimiento, priorizando la calidad, el cumplimiento normativo y un soporte técnico de excelencia.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="column">
+                <div class="section">
+                    <!-- <h2 contenteditable="true">Visión</h2> -->
+                    <h2>Visión</h2>
+                    <div class="image-placeholder" style="height: 120px;">
+                        <span style="font-size: 70px; z-index: 2; display: inline-block; line-height: 1; text-align: center;">💡</span>
+                    </div>
+                    <!-- <p contenteditable="true"> -->
+                    <p style="text-align: justify;">
+                        Liderar el desarrollo de soluciones digitales contables y administrativas, facilitando decisiones estratégicas mediante información precisa en tiempo real.<br><br>
+                        Nos proyectamos como una plataforma robusta, segura y fácil de usar, respaldando a empresas locales e internacionales.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pie de página con imagen -->
+        <div class="image-placeholder" style="height: 100px; margin-top: 30px;">
+            Tu negocio no se detiene, y nosotros tampoco. EXA te acompaña 24/7.
+        </div>
+    </div>
+
+    <!-- <script>
+        // Función para manejar la edición del contenido
+        document.addEventListener('DOMContentLoaded', function() {
+            const editableElements = document.querySelectorAll('[contenteditable="true"]');
+            
+            // Guardar estado original
+            editableElements.forEach(element => {
+                element.dataset.original = element.innerHTML;
+                
+                element.addEventListener('blur', function() {
+                    if (element.innerHTML !== element.dataset.original) {
+                        console.log('Cambios detectados en:', element);
+                        // Aquí puedes agregar lógica para guardar en el servidor
+                        element.dataset.original = element.innerHTML;
+                    }
+                });
+            });
+            
+            // Manejo de imágenes (ejemplo básico)
+            const imagePlaceholders = document.querySelectorAll('.image-placeholder');
+            imagePlaceholders.forEach(placeholder => {
+                placeholder.addEventListener('click', function() {
+                    const imgUrl = prompt('Ingrese la URL de la imagen:');
+                    if (imgUrl) {
+                        this.innerHTML = `<img src="${imgUrl}" alt="" style="max-width:100%; max-height:100%;">`;
+                    }
+                });
+            });
+        });
+    </script> -->
+</body>
+</html>

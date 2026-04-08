@@ -1,0 +1,193 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JQuery Flyout Plugin Examples</title>
+<link href="http://www.jqueryscript.net/css/jquerysctipttop.css" rel="stylesheet" type="text/css">
+<link rel="stylesheet" href="jquery.flyout.min.css">
+<script src="http://code.jquery.com/jquery-1.12.0.min.js"></script>
+<script src="jquery.flyout.min.js"></script>
+<style type="text/css">
+.viewport {
+	margin: 30px auto;
+  max-width:960px;
+}
+h1 { margin:150px auto 50px auto; text-align:center;}
+.triggers {
+	margin-bottom: 20px;
+	position: relative;
+}
+.triggers .trigger {
+	margin-left: 30px;
+}
+.triggers > .target_anchor {
+	margin-left: 30px;
+}
+.triggers > .trigger:first-child,
+.triggers > .target_anchor:first-child {
+	margin-left: 0;
+}
+
+.examples {
+	margin-top: 40px;
+	overflow: auto;
+}
+.examples .instance {
+	float: left;
+	margin: 20px;
+	position: relative;
+	overflow: visible;
+}
+.examples .instance .swlFlyout {
+	position: relative;
+	float: left;
+	display: block;
+	z-index: 1;
+}
+</style>
+</head>
+<body>
+<div id="jquery-script-menu">
+<div class="jquery-script-center">
+<ul>
+<li><a href="http://www.jqueryscript.net/tooltip/Simple-Customizable-Tooltip-Popover-Plugin-Flyout.html">Download This Plugin</a></li>
+<li><a href="http://www.jqueryscript.net/">Back To jQueryScript.Net</a></li>
+</ul>
+
+<div class="jquery-script-clear"></div>
+</div>
+</div>
+<h1>JQuery Flyout Plugin Examples</h1>
+<div class="viewport">
+	<div class="triggers">
+		<input type="button" value="trigger top" id="trigger_top" class="trigger"/>
+		<input type="button" value="trigger right" id="trigger_right" class="trigger"/>
+		<input type="button" value="trigger bottom" id="trigger_bottom" class="trigger"/>
+		<input type="button" value="trigger left" id="trigger_left" class="trigger"/>
+		<input type="button" value="no animation and no title" id="trigger_noanim" class="trigger"/>
+		<input type="button" value="dismissible" id="trigger_dismiss" class="trigger"/>
+	</div>
+	<div class="triggers">
+		<a id="target_anchor" href="#" class="target_anchor">Sample Link 1: triggered by button</a>
+		<input type="button" value="manual trigger" id="trigger_manual" class="trigger"/>
+		<a id="target_anchor2" href="#" class="target_anchor">Sample Link 2: works like a tooltip</a>
+		<a id="target_anchor3" href="#" class="target_anchor">Sample Link 3: dynamic title and contents</a>
+	</div>
+	<div class="examples">
+		<div class="instance">
+			<div class="swlFlyout top">
+				<div class="arrow"></div>
+				<div class="swlFlyout_title">Flyout Top</div>
+				<div class="swlFlyout_content">HTML5 is not based on SGML, and therefore does not require a reference to a DTD.</div>
+			</div>
+		</div>
+		<div class="instance">
+			<div class="swlFlyout bottom">
+				<div class="arrow"></div>
+				<div class="swlFlyout_title">Flyout Bottom</div>
+				<div class="swlFlyout_content">HTML5 is not based on SGML, and therefore does not require a reference to a DTD.</div>
+			</div>
+		</div>
+		<div class="instance">
+			<div class="swlFlyout left">
+				<div class="arrow"></div>
+				<div class="swlFlyout_title">Flyout Left</div>
+				<div class="swlFlyout_content">HTML5 is not based on SGML, and therefore does not require a reference to a DTD.</div>
+			</div>
+		</div>
+		<div class="instance">
+			<div class="swlFlyout right">
+				<div class="arrow"></div>
+				<div class="swlFlyout_title">Flyout Right</div>
+				<div class="swlFlyout_content">HTML5 is not based on SGML, and therefore does not require a reference to a DTD.</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+$(function() {
+	$('#trigger_top').flyout({
+		title: 'My Flyout Top',
+		content: '<i>My flyout contents!</i> It works! kljsdkfljkls dfks djfkl sjdkfj skd fksdfjks d',
+		html: true,
+                show:true
+	});
+	$('#trigger_right').flyout({
+		title: 'My Flyout Right',
+		content: '<i>My flyout contents!</i> It works! kljsdkfljkls dfks djfkl sjdkfj skd fksdfjks d',
+		html: true,
+		placement: 'right'
+	});
+	$('#trigger_bottom').flyout({
+		title: 'My Flyout Bottom',
+		content: '<i>My flyout contents!</i> It works! kljsdkfljkls dfks djfkl sjdkfj skd fksdfjks d',
+		html: true,
+		placement: 'bottom'
+	});
+	$('#trigger_left').flyout({
+		title: 'My Flyout Left',
+		content: '<i>My flyout contents!</i> It works! kljsdkfljkls dfks djfkl sjdkfj skd fksdfjks d',
+		html: true,
+		placement: 'left'
+	});
+	$('#trigger_noanim').flyout({
+		//title: 'My Flyout without animation',
+		title: '',
+		content: '<i>My flyout contents!</i> It works! kljsdkfljkls dfks djfkl sjdkfj skd fksdfjks d',
+		html: true,
+		animation: false
+	});
+	$('#trigger_dismiss').flyout({
+		title: 'My Dismissible Flyout',
+		content: '<i>My flyout contents!</i> It works! kljsdkfljkls dfks djfkl sjdkfj skd fksdfjks d',
+		html: true,
+		dismissible: true
+	});
+
+	$('#target_anchor').flyout({
+		title: 'My Manual Flyout',
+		content: '<i>My flyout contents!</i> It works! kljsdkfljkls dfks djfkl sjdkfj skd fksdfjks d',
+		html: true,
+		trigger: 'manual'
+	});
+	var timeHandle = null;
+	$('#trigger_manual').click(function() {
+		if (timeHandle) {
+			clearTimeout(timeHandle);
+			timeHandle = null;
+		}
+		$('#target_anchor').flyout('toggle');
+
+		timeHandle = setTimeout(function() {
+			$('#target_anchor').flyout('hide');
+		}, 2000);
+	});
+
+	$('#target_anchor2').flyout({
+		title: 'My Manual Flyout',
+		content: '<i>My flyout contents!</i> It works! kljsdkfljkls dfks djfkl sjdkfj skd fksdfjks d',
+		html: true,
+		trigger: 'manual'
+	}).mouseover(function() {
+		$(this).flyout('show');
+	}).mouseout(function() {
+		$(this).flyout('hide');
+	});
+        
+	$('#target_anchor3').flyout({
+		title: function() {
+			return 'My Flyout at ' + (new Date()).toString()
+		},
+		content: function() {
+			return '<i>My flyout contents!</i> It works at ' + (new Date()).toString();
+		},
+		html: true,
+	})
+
+});
+</script>
+</body>
+</html>

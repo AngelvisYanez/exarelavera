@@ -1,0 +1,54 @@
+<div class="row">
+	<form class="form-horizontal normal" id="BodegaForm">
+		<div class="col-sm-6 col-sm-offset-3">
+			<fieldset class="exa-fieldset" >
+				<legend class="Titulos2">Datos de la Bodega</legend>
+				<div class="form-group">
+					<label class="col-sm-4 control-label label-sm required">Nombre:</label>
+					<div class="col-sm-6" >
+						<input name="Bod_Nom" type="text" id="Bod_Nom" size="10" class="form-control input-sm" required="" />
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-4 control-label label-sm required">Responsable:</label>
+					<div class="col-sm-6" >
+						<input name="Bod_Res" type="text" id="Bod_Res" size="10" class="form-control input-sm" required="" />
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-4 control-label label-sm required">Direcci&oacute;n:</label>
+					<div class="col-sm-6" >
+						<input name="Bod_Dir" type="text" id="Bod_Dir" size="10" class="form-control input-sm" required="" />
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-4 control-label label-sm ">Productor:</label>
+					<div class="col-sm-6" >
+						<select name="Prd_Cod" id="Prd_Cod" class="form-control input-sm">
+							<option value=''>--------</option>
+						</select>
+					</div>
+				</div>
+			</fieldset>
+		</div>
+		<div class="col-sm-6 col-sm-offset-3">
+			<fieldset class="exa-fieldset" >
+				<legend class="Titulos2">Usuarios Asignados</legend>
+				<!--usuarios de sucursal -->
+				<div class="form-group">
+					<label class="col-xs-4 control-label label-xs required">Usuarios:</label>  
+					<div class="col-xs-6" >
+						<select multiple id="Usu_Cod" name="Usu_Cod" class="form-control input-xs" data-placeholder="Usuarios de sucursal" >
+						</select>
+					</div>
+				</div>
+				</fieldset>
+					<div class="center">
+						<button type="submit" class="btn btn-sm btn-success no"><i class="glyphicon glyphicon-floppy-disk"></i> Guardar</button>
+					</div>
+					<div class="Titulos2" align="center"><hr><b>NOTA:</b> Los campos marcados con un asterisco (  <span class="required"></span>) son campos obligatorios.</div>
+				
+			
+		</div>
+	</form>
+</div>

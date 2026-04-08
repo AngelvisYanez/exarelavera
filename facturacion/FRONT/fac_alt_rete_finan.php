@@ -1,0 +1,158 @@
+<?php
+/**
+ * @abstract Permite realizar el registro de productores de fruta
+ * @author Erik Niebla
+ * @version 1.0
+ * Fecha de creación  2018-05-18
+ */
+require_once('../../administrador/LOGICA/seguridad.php');
+require_once('../LOGICA/fac_log_retencion.php');
+require_once('../../Librerias/procedimientos/almacenados_standar.php');
+
+/* Creacion del Objeto de conexion */
+$obBD_conexion = new Class_Log_Conexion_Global($Ses_Dat_Dis);
+/* Creacion del objeto mysql para las consultas */
+$obBD_con1 = new Class_Log_Datos_Ret;
+
+$hoy = date("Y-m-d");
+
+/*require_once('../LOGICA/fac_log_electronica.php');
+$obBD_elect =  new Class_Log_Datos_Retencion_Elect(); 
+$responce['xml'] = $obBD_elect->createXmlRetencion('178', '13', '0102201907070365586000110010010000000081234567811', $obBD_conexion);
+header("Content-type: text/xml");
+echo $responce['xml']; exit();*/
+
+if(isset($provAjax)){    
+    $obBD_con1->getPageGridJson('proveedore.selectWhere', array_merge($_GET,array()), $obBD_conexion);
+}
+if(isset($codiAjax)){    
+    $resp=$obBD_con1->getPageGrid('renta_iva.selectWhere', array_merge($_GET,array('where'=>array("Ren_Sri LIKE '323%' OR Ren_Sri LIKE '504%'"),'setWhere'=>'isActive')), $obBD_conexion);
+    $obBD_con1->echoJson($resp);
+}
+$vendedor = $obBD_con1->getRowConsulta('vendedor.selectWhere',array('unsetCols'=>true, 'addCols'=>array('vendedor'=>array('Vnd_Cod','Pun_Cod')),'setWhere'=>array('setSucCod','setPrsCod','isActive')),$obBD_conexion);    
+$cof=$obBD_con1->getRowConsulta('confi_fact.selectWhere',array('clean'=>true,'unsetCols'=>true,'addCols'=>array(''=>array('Cof_Con')), 'where'=>array('Emp_Cod'=>$Ses_Emp_Cod)), $obBD_conexion);
+if(isset($saveDocument)){
+    $resp=array('success'=>false);
+    //$obBD_con1->debug(true);    
+    if($Aut_Tem=='E'){ //es electronica
+        require_once('../LOGICA/fac_log_electronica.php');
+        $obBD_elect =  new Class_Log_Datos_Retencion_Elect();        
+        $claveAcceso = $obBD_elect->getClaveAcceso($Aut_Cod, $Ret_Fec, $Ret_Num, $obBD_conexion);
+        if(empty($claveAcceso)) $responce['message']="Error al generar <u>Clave de Acceso</u> del <i>Comprobante Electrónico</i>!";
+    }
+    
+    if(empty($vendedor['Vnd_Cod'])){ $resp['message']="No tiene permisos de Vendedor!";  }
+    $num_existe=$obBD_con1->getRowConsulta('retencion.selectCountWhere',array('where'=>array('Aut_Sri'=>$autoriz['Aut_Sri'], 'Ret_Num'=>$Ret_Num),'setWhere'=>array('setSucCod')), $obBD_conexion); //Consulto si ya existe un codigo generado en las retenciones basado en una autorizacion otorgada por el SRI 
+    if(isset($num_existe['total']) && $num_existe['total']*1>0) $resp['message']="La <b class='green'>Retencion</b> Numero <u class='red'>$Ret_Num</u> ya existe en el sistema!";
+    if(isset($resp['message'])) $obBD_con1->echoJson($resp);
+    
+    $obBD_ins1 =  new Class_Log_Datos_Ret;
+    $obBD_conexionIns = new Class_Log_Conexion_Global($Ses_Dat_Dis);
+    //$obBD_ins1->debug(true);
+    $obBD_con1->validaCierrePeriodo('retencion','Ret_Fec','Ret_Cod',$Cop_Fec,null,$obBD_conexion);
+	$obBD_ins1->inicio_transaccion($obBD_conexionIns);  
+    try{
+        $obBD_ins1->operacionobBD('compras.insert', array('Ciu_Cod'=>3, 'Tic_Cod'=>$Tic_Cod_Sus, 'Cop_Num'=>$Cop_Num, 'Cop_Fec'=>$Cop_Fec, 'Prv_Cod'=>$Prv_Cod, 'Cop_Est'=>'E'), $obBD_conexionIns);
+        $rete=array(
+            'Cop_Cod'=>$obBD_ins1->insercionid($obBD_conexionIns),
+            'Vnd_Cod'=>$vendedor['Vnd_Cod'],
+            'Aut_Cod'=>$Aut_Cod,
+            'Tic_Cod'=>$Tic_Cod,
+            'Ret_Num'=>$Ret_Num,
+            'Ret_Fec'=>$Ret_Fec,
+            'Ret_Con'=>$Ret_Con,            
+            'Ret_Xml'=>isset($claveAcceso)?$claveAcceso:null,
+            'Ret_Est'=>'A',
+        );
+        $obBD_ins1->operacionobBD('retencion.insert', $rete, $obBD_conexionIns);
+        $Ret_Cod=$obBD_ins1->insercionid($obBD_conexionIns);
+        foreach ($detalle as $i=>$det) {
+            $item=array(
+                'Ret_Int'=>($i+1),
+                'Ret_Cod'=> $Ret_Cod,
+                'Ren_Cod'=> $det['Ren_Cod'],
+                'Ret_Bas'=> $det['Ret_Bas'],
+                'Ret_Imp'=> $det['Ren_Ret']                
+            );
+            $obBD_ins1->operacionobBD('det_retenc.insert', $item, $obBD_conexionIns);
+        }
+        if($cof['Cof_Con']=='S'){
+            
+        }
+        //throw new Exception("Todo Ok");
+    } catch(Exception $e){ $obBD_ins1->rollBack_nomsn($obBD_conexionIns,$e->getMessage()); $resp['message']=$e->getMessage(); $obBD_con1->echoJson($resp); }    
+    $resp['success']=$obBD_ins1->fin_transaccion_nomsn($obBD_conexionIns); // finalizo la transaccion y compruebo errores
+    if($resp['success']){
+        $resp['Ret_Cod']=$Ret_Cod;
+        $reportes = $obBD_con1->reportes('fac_alt_fac_com__._.php', $Ses_Emp_Cod, $obBD_conexion); 
+        $resp['Ret_Link']="".(isset($reportes[2])?$reportes[2]:'')."?Ret_Cod=$Ret_Cod";
+        if($Aut_Tem=='E'){
+            $resp['xml'] = $obBD_elect->createXmlRetencion($Ret_Cod, $Aut_Cod, $claveAcceso, $obBD_conexion);
+            $resp['Ret_Xmls']=baseUrl("../FRONT/$Ses_Emp_Cod/$claveAcceso.xml");
+            //$resp['mail'] = $obBD_elect->sendMailDoc($Ret_Cod,$Prs_Cor,NULL,$obBD_conexion);
+        }
+    }else $resp['error']=$obBD_ins1->MsgError;
+    $obBD_con1->echoJson($resp);
+}
+
+/* Valida numero de retención */	
+if(isset($validaRetNum)){   
+    $autoriz = $Aut_Data;
+    $electronica=(isset($autoriz['Aut_Tem']) && $autoriz['Aut_Tem']=='E');
+    
+    $row_max_codig=$obBD_con1->getRowConsulta('retencion.nextNum',$autoriz, $obBD_conexion); 
+    $Ret_Id_Man = ($row_max_codig['next']);
+    if(empty($vendedor['Pun_Cod'])||empty($autoriz['Aut_Cod'])) $resp=array('success'=>false, 'message'=>"No tiene autorizacion para generar Retenciones!",'Ret_Num_Old'=>0,'Ret_Num'=>'');
+    else{    
+        $resp=array_merge(array('success'=>true,'Ret_Num'=>$Ret_Id_Man,'Ret_Num_Old'=>$Ret_Num),$autoriz);
+        if(!empty($Ret_Num)){
+            $num_existe_gencod=$obBD_con1->getRowConsulta('retencion.selectCountWhere',array('where'=>array('Aut_Sri'=>$autoriz['Aut_Sri'], 'Ret_Num'=>$Ret_Num),'setWhere'=>array('setSucCod')), $obBD_conexion); //Consulto si ya existe un codigo generado en las retenciones basado en una autorizacion otorgada por el SRI 
+            if($num_existe_gencod['total']*1>0){                
+                $resp['success']=false; $resp['message']="La Retención Número $Ret_Num ya Existe en el Sistema!";
+            }
+        }else{            
+            $resp['success']=true; 
+        }
+        $resp['Aut_Sri']=($electronica?'Electronica':$autoriz['Aut_Sri']);
+    }
+    $obBD_con1->echoJson($resp);
+}
+$row_rs_autorizaci = $obBD_con1->getArrayConsulta('autorizacion.selectWhere', array('where'=>array('Tic_Sri'=>7),'setWhere'=>array('setEmpCod','setPrsCod','isActive',"isActiveToday")), $obBD_conexion);
+$rs_periodo = $obBD_con1->getArrayConsulta('perio_cont.selectWhere', array('setWhere'=>array('order',"setEmpCod")), $obBD_conexion); 
+?>
+<!DOCTYPE html>
+<HTML>
+<HEAD>		
+    <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
+    <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
+    <script>var Cof_Con='<?php echo $cof['Cof_Con']; ?>', hoy='<?php echo $hoy; ?>';</script>      
+    <style></style>
+    <script language="javascript" src="../VALIDACIONES/fac_val_rete_finan.js"></script> 
+</HEAD>
+<BODY>
+    <div class="panel panel-main">
+        <div class="panel-heading exa-header"><h3 class="panel-title">&raquo;  Registrar Retención Financiera</h3></div>
+        <div class="panel-body ui-widget-content ui-corner-bottom exa-body">
+            <?php if(count($row_rs_autorizaci)==0){?>
+            <link rel="stylesheet" href="../../framework/jquery/bootstrap/info.tabs.css" />
+            <div class="vcenter center" style="height:300px;margin-bottom: 25px;">
+                <?php echo error_alerta("Usted no tiene Autorizaciones activas para los documentos de retención", 2, true);?>
+            </div>    
+            <?php }else{ ?>             
+            <div class="row">
+                <?php include '../COMPONENTES/factFormReteFinan.php'; ?>
+            </div> 
+            <script type="text/javascript">  
+                setAutoriza(<?php echo json_encode($row_rs_autorizaci[0]); ?>);
+                $(function(){
+                    validaRetNum();
+                });
+            </script>
+            <script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput/jquery.maskedinput.1.4.1.min.js"></script> 
+            <script type="text/javascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=1"></script>
+            <?php } ?> 
+        </div>
+    </div>
+        
+</BODY>
+</HTML>

@@ -1,0 +1,62 @@
+<div class="row">
+	<form class="form-horizontal normal" id="MovimientoForm">
+		<div class="col-sm-6 col-sm-offset-3">
+			<fieldset class="exa-fieldset" >
+				<legend class="Titulos2">Datos de Movimiento</legend>
+
+				<div class="form-group">
+					<label class="col-sm-4 control-label label-sm">Movimiento por:</label>
+					<div class="col-sm-6">
+						<select name="Tia_Cod" id="Tia_Cod" class="form-control input-sm" required=""></select>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-4 control-label label-sm">Origen:</label>
+					<div class="col-sm-6" >
+						<select name="Bod_Ori" id="Bod_Ori" class="bodega form-control input-sm" required=""></select>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label class="col-sm-4 control-label label-sm">Destino:</label>
+					<div class="col-sm-6" >
+						<select name="Bod_Des" id="Bod_Des"  class="bodega form-control input-sm" required=""></select>
+					</div>
+				</div>
+
+
+				<div class="form-group">
+					<label class="col-sm-4 control-label label-sm">Fecha:</label>
+					<div class="col-sm-6" >
+						<input name="Aju_Fec" type="text" id="Aju_Fec" size="10" class="form-control input-sm datepicker" align="center" required="" />
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label class="col-sm-4 control-label label-sm">Observaci&oacute;n:</label>
+					<div class="col-sm-6" >
+						<textarea name="Mov_Obs" type="text" id="Mov_Obs" class="form-control input-sm"></textarea> 
+					</div>
+				</div>
+			</fieldset>
+		</div>
+		<div class="col-sm-6 col-sm-offset-3">
+			<div class="col-xs-12">
+				<table id="items"></table>
+				<div id="itemsPager"></div>
+			</div>
+			<div class="center">
+				<button type="submit" class="btn btn-sm btn-success no"><i class="glyphicon glyphicon-floppy-disk"></i> Guardar</button>
+			</div>
+			<div class="Titulos2" align="center"><hr><b>NOTA:</b> Los campos marcados con un asterisco (  <span class="required"></span>) son campos obligatorios.</div>
+		</div>
+	</form>
+</div>
+
+
+<!-- Inicio de diálogo para buscar un producto -->
+<div id="proDialog" title="B&uacute;squeda de Productos">
+    <form class="form-horizontal normal">
+        <input type="text" name="Bod_Cod" style="display: none;" />
+    </form>
+</div>

@@ -1,0 +1,85 @@
+#Edit to Erick
+*.log
+*.xml
+*.zip
+*.rar
+*.csv
+*.tgz
+*.p12
+*.pdf
+.env
+
+
+cgi-bin/*
+cgi-bin/*.*
+respaldo/*
+facturacion/FRONT/[0-9]*
+facturacion/FRONT/[0-9]*/*
+facturacion/FRONT/[0-9]/*
+/facturacion/FRONT/[0-9]*
+tesoreria/FRONT/SRI/[0-9]*
+/tesoreria/FRONT/SRI/[0-9]*
+imagenes/[0-9]*
+/imagenes/[0-9]*
+/imagenes/*
+imagenes2/*
+imagenes2/[0-9]*
+/ofsercont-backend
+
+DATA/
+#DATA/MysqlConexion.php
+!DATA/TablesStructure
+!DATA/EstructureExport.php
+
+administrador/tareas
+administrador/tareasRealizadas
+administrador/tickets
+
+activosfijos_viejo
+rrhh2
+*[oO]ld.*
+*[oO]ld[0-9].*
+
+*/_notes/*
+*/_notes
+#*.htaccess
+#.htaccess
+
+# Created by https://www.gitignore.io/api/windows,netbeans
+
+### NetBeans ###
+nbproject/
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+### Windows ###
+# Windows thumbnail cache files
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Windows shortcuts
+*.lnk
+#IntelIdea
+.idea/
+
+# End of https://www.gitignore.io/api/windows,netbeans
+!/facturacion/FRONT/tes_alt_orden_1.0.php
+.vscode/
+!/facturacion/FRONT/*

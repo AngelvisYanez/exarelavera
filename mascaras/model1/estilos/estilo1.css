@@ -1,0 +1,624 @@
+/*.href {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-style: normal;
+	line-height: normal;
+	font-weight: bold;
+	font-variant: normal;
+	text-transform: capitalize;
+	color: #617D99;
+	text-decoration: none;
+}
+
+.href_2 {
+	color: #333333;
+	border: none;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-style: normal;
+	font-weight: normal;	
+}*/
+
+
+
+
+/*
+
+
+.Boton_Login {
+	font-family: Arial, Helvetica, sans-serif;
+	background-color: #252122;
+	background-image: url(../imagenes/logeo.jpg);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	cursor:pointer;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: none;
+	border-right-style: none;
+	border-bottom-style: none;
+	border-left-style: none;
+}
+
+.banner_extend {
+	background-repeat: repeat-x;
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #FFFFFF;
+	background-color: #000000;
+}
+
+.menu {
+	background-image: url(../imagenes/menu.jpg);
+	background-repeat: repeat-y;
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #000000;
+	text-decoration: none;
+}
+
+.banda{
+	background-image: url(../imagenes/banda_name.jpg);
+	background-repeat: no-repeat;
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #FFFFFF;
+	background-position: top;
+}
+.banda_extend {
+	background-repeat: repeat-x;
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #FFFFFF;
+	background-color: #000000;
+}
+.banner {
+	background-repeat: no-repeat;
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	background-color: #000000;
+}
+.contenido {
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	background-position: left top;
+}*/
+
+/* Mensajes de alerta del buscador ajax */
+/*.Alerta_ajax {
+	font: normal 11px "Trebuchet MS", Arial, Helvetica, sans-serif;	
+	font-size: 14px;
+	font-style: normal;
+	color: #006699;
+}
+.href_4 {
+	color:#000000;
+	border: none;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-style: normal;
+	font-weight: bold;
+	text-decoration: underline;
+} */
+
+/* CORREGIDOS */
+
+
+
+
+
+
+/*
+*
+*
+*
+*
+*
+*/
+/* Estilos Viejos */
+
+/*.Etiquetas {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-style: normal;
+	line-height: normal;
+	font-weight: bold;
+	font-variant: normal;
+	text-transform: none;
+	color: #33348E;
+	text-align: right;
+}
+
+.Busqueda {
+	background-color: #617D99;
+	font-family: Arial, Helvetica, sans-serif;
+	color: #FFFFFF;
+	font-size: 12px;
+}
+
+.Cabecera {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-style: normal;
+	line-height: normal;
+	font-weight: normal;
+	color: #FFFFFF;
+	background-color: #617D99;
+	text-align: center;
+}
+
+.Alertas {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 14px;
+	font-style: italic;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	color: #FF0000;
+}
+
+.Mayusculas {
+	text-transform: uppercase;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: normal;
+	color: #000000;
+}
+
+.Lectura {
+	background-color: #CCD8E6;
+}
+
+.Pop {
+	background-color: #B6D6E7;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	color: #000000;
+	text-decoration: none;
+}
+
+.href {
+	color: #333333;
+	border: none;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-style: normal;
+	font-weight: normal;	
+}
+
+.pie_de_pagina {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #FFFFFF;
+	background-color: #6A7B8F;
+	text-align: center;
+}
+
+.Label2 {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 8px;
+	font-weight: bold;
+	color: #000033;
+}
+
+.Cuerpo {
+	margin-top: 2px;
+	margin-left: 2px; 
+	margin-right: 2px;
+	margin-bottom: 2px;
+}
+
+.Boton {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: normal;
+	color: #000000;
+	background-color: #F1F1ED;
+	text-align: center;
+	border: thin solid #333333;
+}
+.Usuario {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 14px;
+	font-weight: normal;
+	text-transform: capitalize;
+	color: #FFFFFF;
+	background-color: #6A7B8F;
+}
+
+.Boton_Pequeño {
+	text-decoration: none;
+	background-attachment: fixed;
+	background-image: url(../imagenes/siguiente.gif);
+	background-repeat: no-repeat;
+}
+.Letras {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-style: normal;
+	font-weight: bold;
+	text-transform: uppercase;
+	color: #016CB4;
+	text-decoration: underline;
+}
+
+.Carnets_back {
+	background-image: url(../imagenes/carnet_back.jpg);
+	background-attachment: fixed;
+	background-repeat: no-repeat;
+	background-position: center center;
+	position: static;
+}
+.Texto_carnet {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 8px;
+	font-style: normal;
+	line-height: normal;
+	font-weight: bold;
+	font-variant: normal;
+	color: #000000;
+}
+.Texto_carnet_det {
+	font-family: Geneva, Arial, Helvetica, sans-serif;
+	font-size: 8px;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	color: #000000;
+}
+.Texto_carnet_año {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 18px;
+	font-style: normal;
+	font-weight: 800;
+	font-variant: normal;
+	color: #000000;
+}
+.Texto_carnet_per {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-style: normal;
+	font-weight: bold;
+	font-variant: normal;
+	color: #999999;
+}*/
+
+.Calendario_grahp {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	font-style: normal;
+	line-height: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: capitalize;
+	color: #000000;
+	background-color: #BBCADE;
+}
+
+.Texto_cabeval {
+
+	font-family: Geneva, Arial, Helvetica, sans-serif;
+	font-size: 8px;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	color: #000000;
+}
+.Indicadores {
+	background-color:#99FFCC;
+	font-family: Arial, Helvetica, sans-serif;
+	color:#000000;
+	font-size: 12px;
+	border:#000000;
+	border:thin;
+}
+.BotonMostrar {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size:12px;
+	font-weight: normal;
+	color: #000000;
+	background-color:#00FFFF;
+	text-align: center;
+	border: 1px inset #000000;
+}
+.LetraEval {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	color: #000000;
+	text-decoration: none;
+}
+
+
+.BotonIr {
+	color: #000000;
+	background-color:#00FFFF;
+	text-align: center;
+	border: 1px inset #000000;
+}
+
+/* 
+.BotonCuentas {
+	font-size:14px;
+	color: #000000;
+	background-color:#00FFFF;
+	text-align: center;
+	border: 1px inset #000000;
+	width:60px;
+}	
+
+
+.Objetos_color {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	color: #000000;
+	background-color: #99CCFF;
+	border:none;	
+}
+
+.Fondo_pagina {
+	background-attachment: scroll;
+	background-image: url(../imagenes/vacia.jpg);
+	background-repeat: repeat-x;
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+}
+
+.Margen_pagina {
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+}
+.Carnets_front {
+	background-attachment: fixed;
+	background-image: url(../imagenes/carnet_front.jpg);
+	background-repeat: no-repeat;
+	background-position: center center;
+}
+
+.Alertas2 {
+
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 14px;
+	font-style: italic;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	color: #003366;
+}
+
+.cab_text_reten {
+	font-family: Arial;
+	font-size: 12px;
+	font-weight: bold;
+	background-color: #617B98;
+	color: #FFFFFF;
+	text-transform: uppercase;
+}
+
+.reten_gen {
+	font-family: Arial;
+	font-size: 12px;
+	font-style: normal;
+	text-decoration: none;
+	border: 1px solid #D2DBE3;
+	background-color: #F7F9FB;
+}
+.Text_Subt {
+	font-family: Arial;
+	font-size: 12px;
+	font-weight: bold;
+	color: #333333;
+	text-decoration: none;
+	text-align: right;
+}
+
+
+.Text_Total {
+	font-family: Arial;
+	font-size: 15px;
+	font-weight: bold;
+	color: #4A4A4A;
+	text-align: right;
+	letter-spacing: 1px;
+}
+
+.Text_Obs{
+	font-family: Arial;
+	font-size: 14px;
+	font-weight: bold;
+	color: #333333;
+	text-decoration: none;
+	text-align: right;
+}
+
+.Nro_Fac_Com {
+	font-family: Arial;
+	font-size: 16px;
+	font-weight: bold;
+	text-align: right;
+}
+
+
+.Tabla_Item_Print {
+	font-family: Arial;
+	font-size: 11px;
+	font-weight: normal;
+	color: #000000;
+	text-align: center;
+	border-top-width: 1px;
+	border-left-width: 1px;
+	border-top-style: none;
+	border-right-style: outset;
+	border-left-style: solid;
+	border-top-color: #000000;
+	border-right-color: #B7B7B7;
+	border-left-color: #000000;
+	border-right-width: 1px;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+	border-bottom-color: #000000;
+}
+.Tabla_Cab_Print_Izq {
+	font-family: Arial;
+	font-size: 12px;
+	font-weight: bold;
+	color: #000000;
+	text-align: center;
+	border-top-width: 1px;
+	border-left-width: 1px;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-left-style: solid;
+	border-top-color: #000000;
+	border-right-color: #000000;
+	border-left-color: #000000;
+	border-right-width: 1px;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+	border-bottom-color: #000000;
+	background-color: #A6A6A6;
+}
+.conteno {
+	font-family: Arial;
+	font-size: 12px;
+	font-weight: normal;
+	color: #FF3300;
+	text-decoration: none;
+	background-color: #F7F7F7;
+	border: 1px solid #ECE9D8;
+}
+.tabla {
+border: thin outset #000099;
+}
+
+
+
+.Fondo_2 {
+
+	background-color: #0099CC;
+	text-align: left;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-style: normal;
+	line-height: normal;
+	font-weight: normal;
+	font-variant: normal;
+	color: #000000;
+}
+.href_3 {
+	color: #FFFFFF;
+	border: none;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-style: normal;
+	font-weight: normal;
+	text-decoration: underline;
+}
+.Fondo_3 {
+
+
+	background-color: #00CC99;
+	text-align: left;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-style: normal;
+	line-height: normal;
+	font-weight: normal;
+	font-variant: normal;
+	color: #000000;
+}
+
+
+.Texto_normal_11 {
+
+
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	font-weight: normal;
+	color: #000000;
+	text-align: justify;
+}
+
+#trcre {
+
+}*/
+
+
+
+
+
+
+
+/*******ESTILOS ETAPAS FREDDY*******/
+
+
+/*******FIN ESTILOS ETAPAS FREDDY*******/
+
+
+
+
+
+
+/*#lista_tbla
+{
+	position:relative;
+	display:none;
+}
+
+
+.Alertas3 {
+
+
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 14px;
+	font-style: italic;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	color: #FF0000;
+}
+
+.Barra_1 {
+
+	background-color: #33FF00;
+	display: table-footer-group;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-style: normal;
+	color: #000066;
+	text-align: center;
+}*/

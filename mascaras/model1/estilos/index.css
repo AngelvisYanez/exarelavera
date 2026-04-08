@@ -1,0 +1,257 @@
+/* CSS Document */
+/* Define el banner del index.php */
+.banner_index {
+	background-attachment: scroll;
+	background-repeat: repeat-x;
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	background-image: url(../imagenes/system/banner_extend.jpg);
+	background-color: #3D689B;
+	/*#5E8800*/
+}
+/* Define el tipo de letra del index.php */ 
+.letra_index {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-style: normal;
+	line-height: normal;
+	color: #4C4A4A;
+	text-decoration: none;
+}
+/* Define el estilo del boton de logeo */
+.Boton_Login {
+	font-family: Arial, Helvetica, sans-serif;
+	background-image: url(../imagenes/system/logeo.png);
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	width: 70px;
+	height: 35px;
+	background-position: center center;
+	cursor:pointer;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: none;
+	border-right-style: none;
+	border-bottom-style: none;
+	border-left-style: none;
+	background-color: #E7E8E9;
+}
+
+/* Define el color de letra del error cuando no se ha logeado el usuario */
+.Error {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-style: italic;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	color: #5E8800;
+}
+
+/* Banner principal del sistema informático */
+.banner {
+	background-repeat: no-repeat;
+	background-image: url(../imagenes/system/banner.jpg);
+	margin: 0px;
+}
+
+/* Extiende el color del banner */
+.banner_extend {
+	background-repeat: repeat-x;
+	background-image: url(../imagenes/system/pie.jpg);
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #FFFFFF;
+	background-attachment: scroll;
+}
+
+/* Define el color del menu */
+.menu {
+	background-repeat: repeat-y;
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #4C4A4B;
+	background-attachment: scroll;
+	background-color: #C0BEBE;
+	font-weight: bold;
+}
+
+/* Define los colores del menu */
+a:link{
+	color:#FFF;
+	text-decoration:none
+}
+a:hover{
+	color:#5E8800}
+a:active{color:yellow;background:black;textdecoration:
+overline} a:visited{
+	color:#3D689B;
+	font-style:italic;
+	text-decoration: none;
+	font-weight: bold;
+}
+
+.letra_sub_index {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	font-style: normal;
+	line-height: normal;
+	color: #FFFFFF;
+	text-decoration: none;
+}
+
+.fondos {
+	background-attachment: fixed;
+	background-repeat: no-repeat;
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	background-position: center center;
+	background-color: #FFFFFF;
+}
+.banner_logeo {
+	background-attachment: scroll;
+	background-image:url(../imagenes/system/barra_logeo.png);
+	background-repeat: no-repeat;
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	background-position: center center;
+	color: #FFFFFF;
+}
+
+body {
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+}
+
+.borde_up {
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 9px;
+	border-top-width: 0.1px;
+	border-right-width: 0.1px;
+	border-bottom-width: 0.1px;
+	border-left-width: 0.1px;
+	border-top-style: none;
+	border-right-style: none;
+	border-bottom-style: none;
+	border-left-style: none;
+	background-image: url(../imagenes/system/barra_up.jpg);
+}
+
+input {
+   width:100px; border:1px solid #686868;
+}
+
+.pie_extend {
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #FFFFFF;
+	background-image: url(../imagenes/system/pie.jpg);
+	background-repeat: repeat-x;
+	border-left-color: #FFFFFF;
+	border-top-color: #FFFFFF;
+	border-right-color: #FFFFFF;
+	border-bottom-color: #FFFFFF;
+}
+.borde_down {
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 9px;
+	border-top-width: 0.1px;
+	border-right-width: 0.1px;
+	border-bottom-width: 0.1px;
+	border-left-width: 0.1px;
+	border-top-style: none;
+	border-right-style: none;
+	border-bottom-style: none;
+	border-left-style: none;
+	background-image: url(../imagenes/system/barra_down.jpg);
+}
+.banner_logeo_cuerpo {
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	color: #4C4A4A;
+	background-color: #C0BEBE;
+}
+
+.banner_logeo_pie {
+	background-attachment: scroll;
+	background-image:url(../imagenes/system/barra_logeo_pie.png);
+	background-repeat: no-repeat;
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	border-left:1px solid #FFFFFF;
+
+}
+
+.bordes_laterales{
+	height:auto;
+	background-color:#FFFFFF;
+	color:#4D4747;
+	margin:auto;
+	border-right-width: 1px;
+	border-left-width: 1px;
+	border-right-style: solid;
+	border-left-style: solid;
+	border-right-color: #3D689B;
+	border-left-color: #3D689B;
+}
+.banner_extend_small {
+
+	background-repeat: repeat-x;
+	background-image: url(../imagenes/system/barra.JPG);
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #FFFFFF;
+	background-attachment: scroll;
+}
+.contenido {
+	border-top-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	border-top-color: #3D689B;
+	border-bottom-color: #3D689B;
+	border-left-color: #3D689B;
+}
+.borde_pagina {
+	border: thin solid #3D689B;
+}

@@ -1,0 +1,81 @@
+<?
+/**
+* Descripci�n: Componente listado de productos
+* Fecha de actualizaci�n:	11-08-12
+* Desarrollador:	Lewis Chimarro
+*/	
+require_once('../LOGICA/tes_log_compras.php');
+require_once('../../Librerias/procedimientos/almacenados_standar.php');	
+
+/**
+* Creacion del Objeto de conexion 
+*/
+$obBD_conexion2 = new Class_Log_Conexion_Comt;
+/**
+* Creacion del objeto mysql para las consultas 
+*/
+$obBD_con2 =  new Class_Log_Datos_Comt; 	  
+
+/**
+* Cargado de los resultados de la busqueda de producto sin precio
+*/
+$rs_buscta =  $obBD_con2->getArrayConsulta(52, $buscador.'*'.$Ses_Suc_Cod,$obBD_conexion2);	
+?>
+<br>
+<?Php 
+$iva_cod=stripslashes($iva_cod);
+$iva_por=stripslashes($iva_por);
+$ice_cod=stripslashes($ice_cod);
+$ice_por=stripslashes($ice_por);
+?>
+<table width="100%" border="0" class="fixedHeader01" id="tbl_resultados">
+<thead>
+	<tr>
+        <th width="11%" align="center"><strong>C�d. Int.</strong></th>
+        <th width="31%"><strong>Descripci&oacute;n</strong></th>
+        <th width="20%"><strong>Marca</strong></th>
+        <th width="24%"><strong>Tipo</strong></th>
+        <th width="11%"><strong>Pvp.</strong></th>		
+        <th width="3%">&nbsp;</th>
+    </tr>					
+</thead>
+<tbody>
+    <?Php 
+	if (count($rs_buscta) > 0) 
+	{ 
+		foreach($rs_buscta as $row_rs_buscta)
+		{ 
+		$Pro_Cod = $row_rs_buscta['Pro_Cod'];		
+	?>
+        <tr>
+            <td align="center"><? echo $row_rs_buscta['Pro_Cod']; ?></td>
+            <td><?Php echo marcarCadenaColor($buscador, $row_rs_buscta['Ite_Lar'],'#FFFF00', '#000', 1); ?>
+			</td>
+            <td><? echo $row_rs_buscta['Mar_Des']; ?></td>
+            <td><? echo $row_rs_buscta['Adq_Des']; ?></td>
+            <td align="right"><? echo formato_numero($row_rs_buscta['Pre_Pvp'],2,2); ?></td>	
+            <td align="center">
+            <button type="button" class="btn btn-success btn-mini" title="Elegir" onclick="nueva_fila_com_ice('c_contenido',<?Php echo $row_rs_buscta['Iva_Por']//echo $iva_cod; ?>,<?Php echo $row_rs_buscta['Iva_Cod'];//echo $iva_por; ?>,<?Php echo $ice_cod; ?>, <?Php echo $ice_por; ?>,'<? echo $row_rs_buscta['Adq_Cor']; ?>',<? echo $row_rs_buscta['Adq_Cod']; ?>,'<?Php echo $_SERVER['PHP_SELF']; ?>?Pec_Cod=<?Php echo $Pec_Cod; ?>', '','<? echo $row_rs_buscta['Ite_Lar']; ?>',<? echo $row_rs_buscta['Pro_Cod']; ?>);">
+        	<i class=" icon-arrow-right icon-white"></i>
+        	</button>
+            </td>
+        </tr>
+		<? 
+		}
+	} 
+	else 
+	{ ?>
+        <tr>
+            <td>&nbsp;</td>
+            <td><?php echo error_alerta(" No hay resultados que mostrar", 1)?></td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+        </tr>
+<? }?>
+</tbody>
+</table>
+<?Php echo barra_estado(count($rs_buscta)); 
+@$obBD_conexion2->cerrar();
+?>

@@ -1,0 +1,31 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Facturacion Electronica</title>
+<!-- EN Systems Apps - ep_niebla@hotmail.com, ep.niebla@gmail.com -->
+</head>
+<body>
+<center>
+
+<table cellpadding="0" cellspacing="0">
+	<tr>
+	<td width="10"><div style="line-height: 0px; font-size: 1px; position: absolute;">&nbsp;</div></td>
+	<td width="600" style="padding-right:5px; font-family:Trebuchet MS, Verdana, Arial; font-size:12px;" valign="top">
+	<span style="font-family:Trebuchet MS, Verdana, Arial; font-size:17px; font-weight:bold;">{razonSocial}</span><br />
+	<p>Se ha generado el siguente comprobante electr&oacute;nico a <b>{to_name}</b>, con C&eacute;dula/RUC <b>{destinatario_doc}</b>.</p><br />
+	<div style="padding-left:10px; padding-bottom:5px;"><img src="https://dl.dropboxusercontent.com/s/9xg7epbneczjhij/spade.gif?dl=0" alt=""/>&nbsp;&nbsp;&nbsp;<b>TIPO:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#e51616;">{Documento}</span></b></div>
+	<div style="padding-left:10px; padding-bottom:5px;"><img src="https://dl.dropboxusercontent.com/s/9xg7epbneczjhij/spade.gif?dl=0" alt=""/>&nbsp;&nbsp;&nbsp;<b>EMISIÓN:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#e51616;">{Fecha}</span></b></div>
+	<div style="padding-left:10px; padding-bottom:5px;"><img src="https://dl.dropboxusercontent.com/s/9xg7epbneczjhij/spade.gif?dl=0" alt=""/>&nbsp;&nbsp;&nbsp;<b>SECUENCIA:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#e51616;">{estab}-{ptoEmi}-{secuencial}</span></b></div>
+	<div style="padding-left:10px; padding-bottom:3px;"><img src="https://dl.dropboxusercontent.com/s/9xg7epbneczjhij/spade.gif?dl=0" alt=""/>&nbsp;&nbsp;&nbsp;<b>CLAVE ACCESO:&nbsp;<span style="color:#e51616;">{claveAcceso}</span></b></div>
+	<br />
+	<p>Tambien puedes revisar todos tus documentos electronicos anteriores generados en <b>Sistema Facturacion Electronica</b> mediante el link: <a href="http://www.google.com.ec"><b>Documentos Electronicos Anteriores</b></a>.</p>
+
+   Atentamente,<br/><b>{razonSocial}</b><br/>
+   <div style="font-size:10px;"><b>RUC:</b> {ruc}<br/><b>Direc.:</b> {dirMatriz}<br/></div><br/><br/><br/>
+   Este E-Mail fue enviado automaticamente a traves del sistema <a href="http://www.google.com.ec"><b>Sistema Facturacion Electronica</b></a>, por favor no responder.
+	</td>
+	</tr>
+</table>
+
+</center>
+</body>
+</html>

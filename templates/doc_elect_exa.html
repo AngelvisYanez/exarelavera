@@ -1,0 +1,141 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>EXA Facturacion Electronica</title>
+<style type="text/css">
+		.texto_encabezado{
+            font-family:Arial, Helvetica, sans-serif;
+            font-size:20px;
+            font-style: normal;			
+            font-weight: bold;
+        }
+        .texto_negrita{
+            font-family: Verdana, Geneva, sans-serif;
+            font-size:30px;
+            font-weight: bold;
+            font-style: normal;
+            font-variant:normal;
+        }
+		.dos a { 
+            font-family: Tahoma, Geneva, sans-serif;
+            font-size: 14px;
+            background-color: #060;
+            text-decoration: none;
+            color: #FFF;
+            border: 1px solid #0F0;	
+        }
+        .dos a:hover {
+            font-family: Tahoma, Geneva, sans-serif;
+            font-size: 14px;
+            background-color: #090;
+            text-decoration: none;
+            color: #FFF;
+            border: 1px solid #0F0;
+        }
+</style>
+</head>
+<body>
+<center>
+<table width="600" background="#f8f8f8" style="text-align:left;background-color: #f8f8f8;" cellpadding="0" cellspacing="0">
+<tr>
+	<td height="0" width="31" style="border-bottom:1px solid #e4e4e4;"><div style="line-height: 0px; font-size: 1px; position: absolute;">&nbsp;</div></td>
+	<td height="0" width="131"><div style="line-height: 0px; font-size: 1px; position: absolute;">&nbsp;</div></td>
+	<td height="0" width="466" style="border-bottom:1px solid #e4e4e4;"><div style="line-height: 0px; font-size: 1px; position: absolute;">&nbsp;</div></td>
+</tr>
+<tr>
+	<td height="2" width="31" style="border-bottom:1px solid #e4e4e4;"><div style="line-height: 0px; font-size: 1px; position: absolute;">&nbsp;</div></td>
+	<td height="2" width="131"><div style="line-height: 0px; font-size: 1px; position: absolute;">&nbsp;</div></td>
+	<td height="2" width="466" style="border-bottom:1px solid #e4e4e4;"><div style="line-height: 0px; font-size: 1px; position: absolute;">&nbsp;</div></td>
+</tr>
+<!--RED STRIPE-->
+<tr>
+	<td background="http://exa.ofsercont.com/templates/images/redback.gif" width="31" bgcolor="#ba2222" style="border-top:1px solid #FFF; border-bottom:1px solid #FFF;" height="113"><div style="line-height: 0px; font-size: 1px; position: absolute;">&nbsp;</div></td>	
+	<!--WHITE IMG AREA-->
+	<td width="131" bgcolor="#f8f8f8" style="border-top:1px solid #FFF; text-align:center;" height="113" valign="middle"><span style="font-size:25px; font-family:Trebuchet MS, Verdana, Arial; color:#2e8a3b;"><img src="http://exa.ofsercont.com/templates/images/logo2.png" /></span></td>	
+	<!--RED TEXT AREA-->
+	<td background="http://exa.ofsercont.com/templates/images/redback.gif" bgcolor="#ba2222" style="border-top:1px solid #FFF; border-bottom:1px solid #FFF; padding-left:15px;" height="113">
+	<span style="color:#FFFFFF; font-size:18px; font-family:Trebuchet MS, Verdana, Arial;"><span class="texto_negrita">F</span><span class="texto_encabezado">acturación</span> <span class="texto_negrita">E</span><span class="texto_encabezado">lectrónica</span></span>
+	</td>
+</tr>
+
+<!--DOUBLE BORDERS BOTTOM-->
+<tr>
+	<td height="3" width="31" style="border-top:1px solid #e4e4e4; border-bottom:1px solid #e4e4e4;"><div style="line-height: 0px; font-size: 1px; position: absolute;">&nbsp;</div></td>
+	<td height="3" width="131"><div style="line-height: 0px; font-size: 1px; position: absolute;">&nbsp;</div></td>
+	<td height="3" style="border-top:1px solid #e4e4e4; border-bottom:1px solid #e4e4e4;"><div style="line-height: 0px; font-size: 1px; position: absolute;">&nbsp;</div></td>
+</tr>
+<tr>
+	<td colspan="3"><br />	
+	<!--CONTENT STARTS HERE-->
+	<table cellpadding="0" cellspacing="0">
+	<tr>
+	<td width="10"><div style="line-height: 0px; font-size: 1px; position: absolute;">&nbsp;</div></td>
+	<td width="325" style="padding-right:5px; font-family:Trebuchet MS, Verdana, Arial; font-size:12px;" valign="top">
+	<span style="font-family:Trebuchet MS, Verdana, Arial; font-size:17px; font-weight:bold;">{Emp_Nom}</span><br />
+	<p>Se ha generado el siguente comprobante electr&oacute;nico a <b>{Destinatario}</b>, con c&eacute;dula <b>{Prs_Ced}</b>.</p><br />
+	<div style="padding-left:10px; padding-bottom:5px;"><img src="http://exa.ofsercont.com/templates/images/spade.gif" alt=""/>&nbsp;&nbsp;&nbsp;<b>TIPO:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#e51616;">{Documento}</span></b></div>
+	<div style="padding-left:10px; padding-bottom:5px;"><img src="http://exa.ofsercont.com/templates/images/spade.gif" alt=""/>&nbsp;&nbsp;&nbsp;<b>EMISIÓN:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#e51616;">{Fecha}</span></b></div>
+	<div style="padding-left:10px; padding-bottom:5px;"><img src="http://exa.ofsercont.com/templates/images/spade.gif" alt=""/>&nbsp;&nbsp;&nbsp;<b>SECUENCIA:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#e51616;">{Secuencia}</span></b></div>
+	<div style="padding-left:10px; padding-bottom:3px;"><img src="http://exa.ofsercont.com/templates/images/spade.gif" alt=""/>&nbsp;&nbsp;&nbsp;<b>CLAVE ACCESO: </b></div>
+	<div style="padding-left:10px; padding-bottom:10px;"><span style="color:#e51616;font-size:11px;"><b>{claveAcceso}</b></span></div><br />
+	<div class="dos" style="text-align:center;">
+		<a target="_new" href="http://exa.ofsercont.com/facturacion/FRONT/electronica.php?Emp_Cod={Emp_Cod}&Prs_Cod={Prs_Cod}&type={type}&Doc_Cod={Doc_Cod}">&nbsp;Ver PDF&nbsp;</a> 
+		<a target="_new" href="http://exa.ofsercont.com/facturacion/FRONT/{Emp_Cod}/{claveAcceso}_A.xml">&nbsp;Ver XML&nbsp;</a>
+	</div><br />
+	<p>Tambien puedes revisar todos tus documentos electronicos anteriores generados en <b>EXA [Software Contable]</b> mediante el link: <a href="http://exa.ofsercont.com/facturacion/FRONT/electronica.php?Emp_Cod={Emp_Cod}&Prs_Cod={Prs_Cod}"><b>Documentos Electronicos EXA</b></a>.</p>
+
+   Atentamente,<br/><b>{Emp_Nom}</b><br/>
+   <div style="font-size:10px;"><b>RUC:</b> {Emp_Ruc}<br/><b>Teléf.:</b> {Suc_Te1}   {Suc_Te2}<br/><b>Direc.:</b> {Suc_Dir}<br/></div><br/><br/><br/>
+   Este E-Mail fue enviado automaticamente a traves del sistema <a href="http://exa.ofsercont.com"><b>Exa [Software Contable]</b></a>, por favor no responder.
+	</td>
+	<td style="border-left:1px solid #e4e4e4; padding-left:7px;padding-right:5px;" valign="top">
+	
+	<!--RIGHT COLUMN FIRST BOX-->
+	<table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px solid #e4e4e4; font-family:Trebuchet MS, Verdana, Arial; font-size:12px;">
+	<tr><td>
+	<div style="font-family:Trebuchet MS, Verdana, Arial; font-size:17px; font-weight:bold; padding-bottom:5px;">Añadenos a tus Contactos</div>
+	<img src="http://exa.ofsercont.com/templates/images/addressbook.gif" align="right" style="padding-left:10px; padding-top:5px; padding-bottom:5px;" alt=""/>
+	<p style="margin-top: 5px;">Para ayudar a que puedas recibir nuestros mails en tu <b><i>Bandeja de Entrada</i></b> por favor añade esta dirección a tu lista de contactos:<br /><br /><strong>facturacion.electronica@ofsercont.com</strong></p><br />
+	</td></tr>
+	</table>
+	
+	<!--RIGHT COLUMN SECOND BOX-->
+	<br />
+	<table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px solid #e4e4e4; font-family:Trebuchet MS, Verdana, Arial; font-size:12px;">
+	<tr><td>
+	<div style="font-family:Trebuchet MS, Verdana, Arial; font-size:17px; font-weight:bold; padding-bottom:5px;">¿Por qué recibí este mail?</div>
+	<img src="http://exa.ofsercont.com/templates/images/penpaper.gif" align="right" style="padding-left:10px; padding-top:5px; padding-bottom:5px;" alt=""/>
+	<p style="margin-top: 5px;">La empresa <b>{Emp_Nom}</b> ha generado un documento electrónico, este e-mail tiene la finalidad de enviar los links de descarga RIDE(Pdf) y documento electronico (XML).</p><br />
+	</td></tr>
+	</table>
+	
+	<!--RIGHT COLUMN THIRD BOX-->
+	<br />
+	<table cellpadding="0" width="100%" cellspacing="0" style="font-family:Trebuchet MS, Verdana, Arial; font-size:12px;">
+	<tr><td>
+	<div style="font-family:Trebuchet MS, Verdana, Arial; font-size:17px; font-weight:bold; padding-bottom:5px;">¿Puedo adquirir EXA?</div>
+	<img src="http://exa.ofsercont.com/templates/images/lightbulb.gif" align="right" style="padding-left:10px; padding-top:5px; padding-bottom:5px;" alt=""/>
+	<p style="margin-top: 5px;">Contactanos. Estamos deseosos de asesorarte, somos <a href="http://www.ofsercontsa.com" target="_BLANCK"><b>Ofsercont S.A.</b></a>, nuestros datos estan al final de este e-mail.</p><br />
+	</td></tr>
+	</table>
+	
+	</td>
+	</tr>
+	</table>
+	</td>
+</tr>
+</table>
+
+<table cellpadding="0" style="border-top:1px solid #e4e4e4; text-align:center; font-family:Trebuchet MS, Verdana, Arial; font-size:12px;" cellspacing="0" width="600">
+<tr><td height="10" ></td></tr>
+	<td style="font-family:Trebuchet MS, Verdana, Arial; font-size:10px;">
+	<strong>Ofsercont S.A. - CorproInfo S.A.</strong><br />
+	<strong>E-Mail:</strong> administracion@ofsercont.com<br />
+	<strong>Telf:</strong> 2980779 &nbsp;&nbsp;&nbsp;&nbsp;<strong>Cel:</strong> 0993814444<br />
+	<strong>Direccion:</strong> Cdla. La Aurora calle ceibos e./3era y 4ta este<br />
+	<strong>Machala-El Oro</strong>
+	</td>
+</tr>
+</table>
+</center>
+</body>
+</html>

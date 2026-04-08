@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" type="image/x-icon" href="../../imagenes/ingresar/favicon.png" /> <!-- Nuevo Logo -->
+    <title>Planes EXA CONTABLE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap');
+
+        :root {
+            /* --vino: #9e0000; */
+            --vino: #800020;
+            --vino-suave: #0f0606;
+            --blanco: #ffffff;
+            --gris-claro: #f9f9f9;
+            --gris-lineas-suave: #e5e5e5;
+            --gris-texto: #0c0b0b;
+            --gris-medio: #0c0c0c;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--gris-claro);
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--gris-texto);
+        }
+
+        .titulo-principal {
+            font-size: 2.2em;
+            font-weight: 800;
+            color: var(--gris-texto);
+            text-align: center;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        .subtitulo {
+            font-size: 1em;
+            color: var(--gris-medio);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .titulo-principal::after {
+            content: '';
+            display: block;
+            width: 160px;
+            height: 3px;
+            background-color: var(--vino);
+            margin: 8px auto 0;
+            border-radius: 2px;
+        }
+
+        #tabs { width: 100%; max-width: 1000px; }
+        .tab-buttons {
+            display: flex; flex-wrap: wrap; margin-bottom: 0; justify-content: center;
+        }
+        .tab-button {
+            padding: 12px 25px; cursor: pointer; background-color: var(--gris-lineas-suave);
+            color: var(--gris-medio); font-weight: 600; border: 1px solid var(--gris-lineas-suave);
+            border-bottom: none; border-radius: 10px 10px 0 0; transition: all 0.25s ease; margin: 3px;
+        }
+        .tab-button i { margin-right: 8px; color: var(--vino-suave); }
+        .tab-button:hover { background-color: var(--blanco); }
+        .tab-button.active {
+            background-color: var(--blanco); color: var(--vino);
+            border-top: 3px solid var(--vino); box-shadow: 0 -2px 5px rgba(0,0,0,0.08);
+        }
+        .tab-content {
+            border-radius: 0 12px 12px 12px; background-color: var(--blanco);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05); border: 1px solid var(--gris-lineas-suave);
+        }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+
+        .tabla-exa { width: 100%; border-collapse: collapse; border-spacing: 0; }
+        .tabla-exa th, .tabla-exa td {
+            padding: 14px 16px; text-align: center; border: 1px solid var(--gris-lineas-suave);
+            transition: background-color 0.3s ease; font-size: 0.95em;
+        }
+        .tabla-exa th {
+            background-color: var(--vino); color: var(--blanco); font-weight: 700; white-space: nowrap;
+        }
+        .tabla-exa th i { margin-right: 6px; }
+        .tabla-exa td:first-child {
+            text-align: left; font-weight: 600; color: var(--gris-texto);
+        }
+        .tabla-exa tbody tr:nth-child(even) { background-color: #fcfcfc; }
+        .tabla-exa tbody tr:hover { background-color: #f5f5f5; }
+        .tabla-exa td i { margin-right: 6px; color: var(--vino-suave); }
+
+        .nota-destacada {
+            max-width: 1000px; width: 100%; padding: 20px; margin-top: 30px;
+            border: 1px solid var(--gris-lineas-suave); border-left: 6px solid var(--vino);
+            background-color: #fff; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        }
+        .nota-destacada p {
+            margin: 8px 0; display: flex; align-items: flex-start; color: var(--gris-medio);
+        }
+        .nota-destacada .icon-note { color: var(--vino); font-size: 1.1em; margin-right: 10px; margin-top: 2px; }
+        .nota-destacada hr { border: 0; border-top: 1px dashed var(--gris-lineas-suave); margin: 15px 0; }
+        .text-success { color: #198754; }
+    </style>
+</head>
+<body>
+
+    <div class="titulo-principal"><i class="fa-solid fa-chart-pie"></i> Planes EXA CONTABLE</div>
+    <div class="subtitulo">Encuentra el plan perfecto para tu empresa o tu despacho contable</div>
+
+    <div id="tabs">
+        <div class="tab-buttons">
+            <div class="tab-button active" data-tab="modulos"><i class="fa-solid fa-box"></i>Planes y Módulos</div>
+            <div class="tab-button" data-tab="mensual"><i class="fa-solid fa-calendar-day"></i>Plan Mensual</div>
+            <div class="tab-button" data-tab="anual"><i class="fa-solid fa-calendar-alt"></i>Plan Anual</div>
+            <div class="tab-button" data-tab="contador"><i class="fa-solid fa-user-tie"></i>Plan Facturación</div>
+        </div>
+
+        <div class="tab-content">
+
+            <!-- TAB 1: PLANES Y MÓDULOS -->
+            <div id="modulos" class="tab-pane active">
+                <table class="tabla-exa">
+                    <thead>
+                        <tr>
+                            <th>Planes</th>
+                            <th><i class="fa-solid fa-rocket"></i>Emprendedor</th>
+                            <th><i class="fa-solid fa-user"></i>Starter</th>
+                            <th><i class="fa-solid fa-briefcase"></i>Ejecutivo</th>
+                            <th><i class="fa-solid fa-building"></i>Empresarial</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><i class="fa-solid fa-users"></i>Usuarios</td><td>1 Usuario</td><td>1 Usuario + 1 Contador</td><td>2 Usuarios + 1 Contador</td><td>3 Usuarios + 1 Contador</td></tr>
+                        <tr><td><i class="fa-solid fa-boxes-stacked"></i>Inventario</td><td>✔️</td><td>✔️</td><td>✔️</td><td>✔️</td></tr>
+                        <tr><td><i class="fa-solid fa-cart-shopping"></i>Ventas y Compras</td><td>✔️</td><td>✔️</td><td>✔️</td><td>✔️</td></tr>
+                        <tr><td><i class="fa-solid fa-scale-balanced"></i>Costo de Venta</td><td>—</td><td>—</td><td>✔️</td><td>✔️</td></tr>
+                        <tr><td><i class="fa-solid fa-file-invoice-dollar"></i>Facturación Electrónica</td><td>✔️</td><td>✔️</td><td>✔️</td><td>✔️</td></tr>
+                        <tr><td><i class="fa-solid fa-calculator"></i>Tributación</td><td>✔️</td><td>✔️</td><td>✔️</td><td>✔️</td></tr>
+                        <tr><td><i class="fa-solid fa-book"></i>Contabilidad</td><td>—</td><td>✔️</td><td>✔️</td><td>✔️</td></tr>
+                        <tr><td><i class="fa-solid fa-hand-holding-dollar"></i>Cuentas por Cobrar</td><td>✔️</td><td>✔️</td><td>✔️</td><td>✔️</td></tr>
+                        <tr><td><i class="fa-solid fa-money-check-dollar"></i>Cuentas por Pagar</td><td>✔️</td><td>✔️</td><td>✔️</td><td>✔️</td></tr>
+                        <tr><td><i class="fa-solid fa-building-columns"></i>Bancos</td><td>—</td><td>—</td><td>✔️</td><td>✔️</td></tr>
+                        <tr><td><i class="fa-solid fa-users-gear"></i>Nómina</td><td>—</td><td>—</td><td>5 empleados</td><td>100 empleados</td></tr>
+                        <tr><td><i class="fa-solid fa-file-lines"></i>Documentos Electrónicos</td><td>1200 Anuales</td><td>1200 Anuales</td><td>2400 Anuales</td><td>Ilimitado</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- TAB 2: PLAN MENSUAL -->
+            <div id="mensual" class="tab-pane">
+                <table class="tabla-exa">
+                    <thead>
+                        <tr>
+                            <th colspan="2"></th>
+                            <th><i class="fa-solid fa-rocket"></i>Emprendedor</th>
+                            <th><i class="fa-solid fa-user"></i>Starter</th>
+                            <th><i class="fa-solid fa-briefcase"></i>Ejecutivo</th>
+                            <th><i class="fa-solid fa-building"></i>Empresarial</th>
+                        </tr>
+                        <tr>
+                            <th colspan="2"><i class="fa-solid fa-dollar-sign"></i>Comisiones</th>
+                            <th>$18.50</th>
+                            <th>$25.00</th>
+                            <th>$35.00</th>
+                            <th>$55.00</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>1-5 Emp</td><td>20%</td><td>$3.70</td><td>$5.00</td><td>$7.00</td><td>$11.00</td></tr>
+                        <tr><td>6-10 Emp</td><td>30%</td><td>$5.55</td><td>$7.50</td><td>$10.50</td><td>$16.50</td></tr>
+                        <tr><td>>10 Emp</td><td>40%</td><td>$7.40</td><td>$10.00</td><td>$14.00</td><td>$22.00</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- TAB 3: PLAN ANUAL -->
+            <div id="anual" class="tab-pane">
+                <table class="tabla-exa">
+                    <thead>
+                        <tr>
+                            <th colspan="2"></th>
+                            <th><i class="fa-solid fa-rocket"></i>Emprendedor</th>
+                            <th><i class="fa-solid fa-user"></i>Starter</th>
+                            <th><i class="fa-solid fa-briefcase"></i>Ejecutivo</th>
+                            <th><i class="fa-solid fa-building"></i>Empresarial</th>
+                        </tr>
+                        <tr>
+                            <th colspan="2"><i class="fa-solid fa-coins"></i>Comisiones</th>
+                            <th>$176.00</th>
+                            <th>$275.00</th>
+                            <th>$378.00</th>
+                            <th>$594.00</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>1-5 Emp</td><td>20%</td><td>$35.20</td><td>$55.00</td><td>$75.60</td><td>$118.80</td></tr>
+                        <tr><td>6-10 Emp</td><td>30%</td><td>$52.80</td><td>$82.50</td><td>$113.40</td><td>$178.20</td></tr>
+                        <tr><td>>10 Emp</td><td>40%</td><td>$70.40</td><td>$110.00</td><td>$151.20</td><td>$237.60</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- TAB 4: PLAN CONTADOR -->
+            <div id="contador" class="tab-pane">
+                <table class="tabla-exa">
+                    <thead>
+                        <tr>
+                            <th colspan="2"></th>
+                            <th><i class="fa-solid fa-layer-group"></i>Básico I</th>
+                            <th><i class="fa-solid fa-cubes"></i>Básico II</th>
+                            <th><i class="fa-solid fa-gem"></i>Ideal</th>
+                            <th><i class="fa-solid fa-infinity"></i>Ilimitado</th>
+                        </tr>
+                        <tr>
+                            <th colspan="2"><i class="fa-solid fa-file-invoice"></i>Planes Facturación Electrónica</th>
+                            <th>100 Dcts</th>
+                            <th>600 Dctos</th>
+                            <th>1200 Dctos</th>
+                            <th>Ilimitado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><i class="fa-solid fa-calendar"></i>Anualidad</td><td></td><td>$15.00</td><td>$50.00</td><td>$70.00</td><td>$100.00</td></tr>
+                        <tr><td><i class="fa-solid fa-hand-holding-usd"></i>Comisión 30%</td><td>30%</td><td>$4.50</td><td>$15.00</td><td>$21.00</td><td>$30.00</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="nota-destacada">
+        <p><span class="icon-note"><i class="fas fa-lightbulb"></i></span><b>Plan Mensual: </b> Incluye $100 de apertura, capacitación y actualizaciones SRI a partir del plan Starter.</p>
+        <!-- <hr> -->
+        <p><span class="icon-note"><i class="fas fa-scroll"></i></span><b>Plan Anual: </b> Incluye apertura, capacitación y actualizaciones SRI. Plan Starter solo para persona natural.</p>
+        <!-- <hr> -->
+        <p><span class="icon-note"><i class="fas fa-user-check"></i></span><b>Plan Starter: </b> Exclusivo para personas naturales.</p>
+        <!-- <hr> -->
+        <p><span class="icon-note"><i class="fas fa-briefcase"></i></span><b>Plan Facturación: </b> Desde la primera empresa comisión exclusiva del 30% por activación de empresas y facturación electrónica.</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetTab = button.getAttribute('data-tab');
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabPanes.forEach(pane => pane.classList.remove('active'));
+                    button.classList.add('active');
+                    document.getElementById(targetTab).classList.add('active');
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>

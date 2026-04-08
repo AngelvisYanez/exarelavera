@@ -1,0 +1,65 @@
+1.- Insertar estas variables dentro de la logica de datos
+
+/**
+ * Guardara las sql concatenadas con *
+ * de Insert, Update, Delete
+ * @var string
+ */
+var $sentencias = '';
+	
+/**
+ * guarda los codigos de autoincrementos en los insert
+ * concatenados con *
+ * @var string
+ */
+var $codigos = '';
+
+2.- Insertar esta linea antes del grabar_registros en la funcion operacionesbd
+$this->sentencias .= $Query.'*';
+
+3.- crear una variable auxiliar que reciba el resultado de ejecutar el grabar_registros
+$result = $this->grabarv_registros($Query, $obBD->conexion);
+
+4.- Insertar esta ;inea luego de grabar_registros	
+$this->codigos .= $this->insercionid($obBD->conexion).'*';
+
+5.- Retornar la variable auxiliar
+return $result;
+
+6.- Insertar el metodo de grabarAuditoria
+/**
+ * graba en la base de datos auditoria
+ * @param string $Request_Uri pagina donde se estan modificando valores
+ * @param number $Ses_Usu_Cod codigo del usuario
+ * @param Class_Log_Conexion $obBD_conexion
+ * @return number codigo de error my sql si lo hubiese [0 = 'Sin errores']
+ */
+function grabarAuditoria($Request_Uri, $Ses_Usu_Cod, $obBD_conexion){
+	if($this->Error == 0){
+		$objAud = new Class_Log_Datos_Aud;
+			
+		$aux = explode('*', $objAud->grabarAuditoria($Request_Uri, $Ses_Usu_Cod, $this, $obBD_conexion));
+		
+		foreach ($aux as $row){
+			$this->grabarv_registros($row,$obBD_conexion->conexion);
+			if($this->Error > 0){
+				return $this->Error;
+			}
+		}
+	}else{
+		return $this->Error;
+	}
+}
+
+7.- Insertar la logica de auditoria
+require_once ('../../auditoria/LOGICA/aud_log_auditoria.php');
+
+8.- en el codigo de guardado antes de cerrar la transaccion
+
+/**
+ * grabar auditoria
+ */
+$obBD_con1->grabarAuditoria($_SERVER['PHP_SELF'], $Ses_Usu_Cod, $obBD_conexion);
+
+9.- eliminar la función de la logica
+function insertUpdateDelete($sen_sql,$param, $obBD);

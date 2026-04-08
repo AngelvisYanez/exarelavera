@@ -1,0 +1,1035 @@
+2026-02-18 17:31:59 - Processing searchAnticipos...
+2026-02-18 17:31:59 - Params: {"fini":"2026-01-19","ffin":"2026-02-18","search":"","Ant_Est":"A"}
+2026-02-18 17:31:59 - Ses_Emp_Cod: 503
+2026-02-18 17:31:59 - Rows returned: 0
+2026-02-18 17:31:59 - JSON Response Length: 57
+2026-02-18 17:32:09 - Processing searchAnticipos...
+2026-02-18 17:32:09 - Params: {"fini":"2026-01-19","ffin":"2026-02-18","search":"","Ant_Est":"A"}
+2026-02-18 17:32:09 - Ses_Emp_Cod: 503
+2026-02-18 17:32:09 - Rows returned: 0
+2026-02-18 17:32:09 - JSON Response Length: 57
+2026-02-18 17:32:28 - Processing searchAnticipos...
+2026-02-18 17:32:28 - Params: {"fini":"2026-01-19","ffin":"2026-02-18","search":"","Ant_Est":"A"}
+2026-02-18 17:32:28 - Ses_Emp_Cod: 569
+2026-02-18 17:32:28 - Rows returned: 4
+2026-02-18 17:32:28 - JSON Response Length: 726
+2026-02-19 11:13:46 - Processing searchAnticipos...
+2026-02-19 11:13:46 - Params: {"fini":"2026-01-20","ffin":"2026-02-19","search":"","Ant_Est":"A"}
+2026-02-19 11:13:46 - Ses_Emp_Cod: 195
+2026-02-19 11:13:46 - Rows returned: 0
+2026-02-19 11:13:46 - JSON Response Length: 57
+2026-02-19 11:17:44 - Processing searchAnticipos...
+2026-02-19 11:17:44 - Params: {"fini":"2026-01-20","ffin":"2026-02-19","search":"","Ant_Est":"A"}
+2026-02-19 11:17:44 - Ses_Emp_Cod: 429
+2026-02-19 11:17:45 - Rows returned: 770
+2026-02-19 11:17:45 - JSON Response Length: 128448
+2026-02-19 11:23:34 - Processing searchAnticipos...
+2026-02-19 11:23:34 - Params: {"fini":"2026-01-20","ffin":"2026-02-28","search":"","Ant_Est":"A"}
+2026-02-19 11:23:34 - Ses_Emp_Cod: 429
+2026-02-19 11:23:34 - Rows returned: 770
+2026-02-19 11:23:34 - JSON Response Length: 128448
+2026-02-19 11:23:44 - Processing searchAnticipos...
+2026-02-19 11:23:44 - Params: {"fini":"2017-01-01","ffin":"2026-02-28","search":"","Ant_Est":"A"}
+2026-02-19 11:23:44 - Ses_Emp_Cod: 429
+2026-02-19 11:23:46 - Rows returned: 21002
+2026-02-19 11:23:46 - JSON Response Length: 3471717
+2026-02-19 14:15:56 - Processing searchAnticipos...
+2026-02-19 14:15:56 - Params: {"fini":"2026-01-20","ffin":"2026-02-19","search":"","Ant_Est":"A"}
+2026-02-19 14:15:56 - Ses_Emp_Cod: 569
+2026-02-19 14:15:56 - Rows returned: 4
+2026-02-19 14:15:56 - JSON Response Length: 726
+2026-02-23 09:46:10 - Processing searchAnticipos...
+2026-02-23 09:46:10 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"","Ant_Est":"A"}
+2026-02-23 09:46:10 - Ses_Emp_Cod: 429
+2026-02-23 09:46:10 - Rows returned: 619
+2026-02-23 09:46:10 - JSON Response Length: 103258
+2026-02-23 09:46:50 - Processing searchAnticipos...
+2026-02-23 09:46:50 - Params: {"fini":"2026-01-08","ffin":"2026-01-09","search":"VILLACRES","Ant_Est":"A"}
+2026-02-23 09:46:50 - Ses_Emp_Cod: 429
+2026-02-23 09:46:50 - Rows returned: 0
+2026-02-23 09:46:50 - JSON Response Length: 57
+2026-02-23 09:46:57 - Processing searchAnticipos...
+2026-02-23 09:46:57 - Params: {"fini":"2026-01-02","ffin":"2026-01-09","search":"VILLACRES","Ant_Est":"A"}
+2026-02-23 09:46:57 - Ses_Emp_Cod: 429
+2026-02-23 09:46:57 - Rows returned: 0
+2026-02-23 09:46:57 - JSON Response Length: 57
+2026-02-23 09:47:00 - Processing searchAnticipos...
+2026-02-23 09:47:00 - Params: {"fini":"2026-01-02","ffin":"2026-01-16","search":"VILLACRES","Ant_Est":"A"}
+2026-02-23 09:47:00 - Ses_Emp_Cod: 429
+2026-02-23 09:47:01 - Rows returned: 0
+2026-02-23 09:47:01 - JSON Response Length: 57
+2026-02-23 09:47:01 - Processing searchAnticipos...
+2026-02-23 09:47:01 - Params: {"fini":"2026-01-02","ffin":"2026-01-16","search":"VILLACRES","Ant_Est":"A"}
+2026-02-23 09:47:01 - Ses_Emp_Cod: 429
+2026-02-23 09:47:02 - Rows returned: 0
+2026-02-23 09:47:02 - JSON Response Length: 57
+2026-02-23 09:47:08 - Processing searchAnticipos...
+2026-02-23 09:47:08 - Params: {"fini":"2026-01-02","ffin":"2026-01-16","search":"ADMINISTRATIVO","Ant_Est":"A"}
+2026-02-23 09:47:08 - Ses_Emp_Cod: 429
+2026-02-23 09:47:08 - Rows returned: 0
+2026-02-23 09:47:08 - JSON Response Length: 57
+2026-02-23 09:47:11 - Processing searchAnticipos...
+2026-02-23 09:47:11 - Params: {"fini":"2026-01-02","ffin":"2026-01-16","search":"","Ant_Est":"A"}
+2026-02-23 09:47:11 - Ses_Emp_Cod: 429
+2026-02-23 09:47:11 - Rows returned: 305
+2026-02-23 09:47:11 - JSON Response Length: 50866
+2026-02-23 09:47:32 - Processing searchAnticipos...
+2026-02-23 09:47:32 - Params: {"fini":"2026-01-02","ffin":"2026-01-23","search":"","Ant_Est":"A"}
+2026-02-23 09:47:32 - Ses_Emp_Cod: 429
+2026-02-23 09:47:32 - Rows returned: 457
+2026-02-23 09:47:32 - JSON Response Length: 76227
+2026-02-23 09:47:41 - Processing searchAnticipos...
+2026-02-23 09:47:41 - Params: {"fini":"2026-01-02","ffin":"2026-01-23","search":"","Ant_Est":"A"}
+2026-02-23 09:47:41 - Ses_Emp_Cod: 429
+2026-02-23 09:47:41 - Rows returned: 457
+2026-02-23 09:47:41 - JSON Response Length: 76227
+2026-02-23 09:47:51 - Processing searchAnticipos...
+2026-02-23 09:47:51 - Params: {"fini":"2026-01-05","ffin":"2026-01-11","search":"","Ant_Est":"A"}
+2026-02-23 09:47:51 - Ses_Emp_Cod: 429
+2026-02-23 09:47:51 - Rows returned: 156
+2026-02-23 09:47:51 - JSON Response Length: 26012
+2026-02-23 09:48:24 - Processing searchAnticipos...
+2026-02-23 09:48:24 - Params: {"fini":"2026-01-05","ffin":"2026-01-11","search":"GUAMAN","Ant_Est":"A"}
+2026-02-23 09:48:24 - Ses_Emp_Cod: 429
+2026-02-23 09:48:24 - Rows returned: 3
+2026-02-23 09:48:24 - JSON Response Length: 548
+2026-02-23 09:48:24 - Processing searchAnticipos...
+2026-02-23 09:48:24 - Params: {"fini":"2026-01-05","ffin":"2026-01-11","search":"GUAMAN","Ant_Est":"A"}
+2026-02-23 09:48:24 - Ses_Emp_Cod: 429
+2026-02-23 09:48:25 - Rows returned: 3
+2026-02-23 09:48:25 - JSON Response Length: 548
+2026-02-23 09:48:35 - Processing searchAnticipos...
+2026-02-23 09:48:35 - Params: {"fini":"2026-01-05","ffin":"2026-01-11","search":"VILLACRES","Ant_Est":"A"}
+2026-02-23 09:48:35 - Ses_Emp_Cod: 429
+2026-02-23 09:48:35 - Rows returned: 0
+2026-02-23 09:48:35 - JSON Response Length: 57
+2026-02-23 09:48:40 - Processing searchAnticipos...
+2026-02-23 09:48:40 - Params: {"fini":"2026-01-05","ffin":"2026-01-31","search":"","Ant_Est":"A"}
+2026-02-23 09:48:40 - Ses_Emp_Cod: 429
+2026-02-23 09:48:40 - Rows returned: 614
+2026-02-23 09:48:40 - JSON Response Length: 102433
+2026-02-23 09:48:43 - Processing searchAnticipos...
+2026-02-23 09:48:43 - Params: {"fini":"2026-01-05","ffin":"2026-01-31","search":"VILLACRES","Ant_Est":"A"}
+2026-02-23 09:48:43 - Ses_Emp_Cod: 429
+2026-02-23 09:48:44 - Rows returned: 2
+2026-02-23 09:48:44 - JSON Response Length: 394
+2026-02-23 16:18:30 - Processing searchAnticipos...
+2026-02-23 16:18:30 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"","Ant_Est":"A"}
+2026-02-23 16:18:30 - Ses_Emp_Cod: 537
+2026-02-23 16:18:30 - Rows returned: 4
+2026-02-23 16:18:30 - JSON Response Length: 871
+2026-02-23 16:27:09 - Processing searchAnticipos...
+2026-02-23 16:27:09 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"","Ant_Est":"A"}
+2026-02-23 16:27:09 - Ses_Emp_Cod: 537
+2026-02-23 16:27:09 - Rows returned: 4
+2026-02-23 16:27:09 - JSON Response Length: 871
+2026-02-23 16:27:15 - Processing searchAnticipos...
+2026-02-23 16:27:15 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"","Ant_Est":"A"}
+2026-02-23 16:27:15 - Ses_Emp_Cod: 537
+2026-02-23 16:27:15 - Rows returned: 4
+2026-02-23 16:27:15 - JSON Response Length: 871
+2026-02-23 16:27:17 - Processing searchAnticipos...
+2026-02-23 16:27:17 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"","Ant_Est":"A"}
+2026-02-23 16:27:17 - Ses_Emp_Cod: 537
+2026-02-23 16:27:17 - Rows returned: 4
+2026-02-23 16:27:17 - JSON Response Length: 871
+2026-02-23 16:27:19 - Processing searchAnticipos...
+2026-02-23 16:27:19 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"","Ant_Est":"A"}
+2026-02-23 16:27:19 - Ses_Emp_Cod: 537
+2026-02-23 16:27:19 - Rows returned: 4
+2026-02-23 16:27:19 - JSON Response Length: 871
+2026-02-23 16:27:20 - Processing searchAnticipos...
+2026-02-23 16:27:20 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"","Ant_Est":"A"}
+2026-02-23 16:27:20 - Ses_Emp_Cod: 537
+2026-02-23 16:27:20 - Rows returned: 4
+2026-02-23 16:27:20 - JSON Response Length: 871
+2026-02-23 16:27:21 - Processing searchAnticipos...
+2026-02-23 16:27:21 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"","Ant_Est":"A"}
+2026-02-23 16:27:21 - Ses_Emp_Cod: 537
+2026-02-23 16:27:21 - Rows returned: 4
+2026-02-23 16:27:21 - JSON Response Length: 871
+2026-02-23 16:27:22 - Processing searchAnticipos...
+2026-02-23 16:27:22 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"","Ant_Est":"A"}
+2026-02-23 16:27:22 - Ses_Emp_Cod: 537
+2026-02-23 16:27:22 - Rows returned: 4
+2026-02-23 16:27:22 - JSON Response Length: 871
+2026-02-23 16:27:26 - Processing searchAnticipos...
+2026-02-23 16:27:26 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"","Ant_Est":"A"}
+2026-02-23 16:27:26 - Ses_Emp_Cod: 537
+2026-02-23 16:27:26 - Rows returned: 4
+2026-02-23 16:27:26 - JSON Response Length: 871
+2026-02-23 16:27:34 - Processing searchAnticipos...
+2026-02-23 16:27:34 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"","Ant_Est":"A"}
+2026-02-23 16:27:34 - Ses_Emp_Cod: 537
+2026-02-23 16:27:34 - Rows returned: 4
+2026-02-23 16:27:34 - JSON Response Length: 871
+2026-02-23 16:28:24 - Processing searchAnticipos...
+2026-02-23 16:28:24 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"","Ant_Est":"A"}
+2026-02-23 16:28:24 - Ses_Emp_Cod: 537
+2026-02-23 16:28:24 - Rows returned: 4
+2026-02-23 16:28:24 - JSON Response Length: 871
+2026-02-23 16:28:26 - Processing searchAnticipos...
+2026-02-23 16:28:26 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"","Ant_Est":"A"}
+2026-02-23 16:28:26 - Ses_Emp_Cod: 537
+2026-02-23 16:28:26 - Rows returned: 4
+2026-02-23 16:28:26 - JSON Response Length: 871
+2026-02-23 16:28:34 - Processing searchAnticipos...
+2026-02-23 16:28:34 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"mi\u00f1o","Ant_Est":"A"}
+2026-02-23 16:28:34 - Ses_Emp_Cod: 537
+2026-02-23 16:28:34 - Rows returned: 3
+2026-02-23 16:28:34 - JSON Response Length: 677
+2026-02-23 16:28:40 - Processing searchAnticipos...
+2026-02-23 16:28:40 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"mi\u00f1o","Ant_Est":"A"}
+2026-02-23 16:28:40 - Ses_Emp_Cod: 537
+2026-02-23 16:28:40 - Rows returned: 3
+2026-02-23 16:28:40 - JSON Response Length: 677
+2026-02-23 16:28:58 - Processing searchAnticipos...
+2026-02-23 16:28:58 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"mi\u00f1o","Ant_Est":"A"}
+2026-02-23 16:28:58 - Ses_Emp_Cod: 537
+2026-02-23 16:28:58 - Rows returned: 3
+2026-02-23 16:28:58 - JSON Response Length: 677
+2026-02-23 16:29:07 - Processing searchAnticipos...
+2026-02-23 16:29:07 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"mi\u00f1o","Ant_Est":"A"}
+2026-02-23 16:29:07 - Ses_Emp_Cod: 537
+2026-02-23 16:29:07 - Rows returned: 3
+2026-02-23 16:29:07 - JSON Response Length: 677
+2026-02-23 16:30:21 - Processing searchAnticipos...
+2026-02-23 16:30:21 - Params: {"fini":"2026-02-15","ffin":"2026-02-23","search":"mi\u00f1o","Ant_Est":"A"}
+2026-02-23 16:30:21 - Ses_Emp_Cod: 537
+2026-02-23 16:30:21 - Rows returned: 1
+2026-02-23 16:30:21 - JSON Response Length: 270
+2026-02-23 16:30:34 - Processing searchAnticipos...
+2026-02-23 16:30:34 - Params: {"fini":"2026-02-15","ffin":"2026-02-23","search":"mi\u00f1o","Ant_Est":"A"}
+2026-02-23 16:30:34 - Ses_Emp_Cod: 537
+2026-02-23 16:30:34 - Rows returned: 1
+2026-02-23 16:30:34 - JSON Response Length: 270
+2026-02-23 16:33:19 - Processing searchAnticipos...
+2026-02-23 16:33:19 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"","Ant_Est":"A"}
+2026-02-23 16:33:19 - Ses_Emp_Cod: 537
+2026-02-23 16:33:19 - Rows returned: 4
+2026-02-23 16:33:19 - JSON Response Length: 871
+2026-02-23 16:34:35 - Processing searchAnticipos...
+2026-02-23 16:34:35 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"","Ant_Est":"A"}
+2026-02-23 16:34:35 - Ses_Emp_Cod: 537
+2026-02-23 16:34:35 - Rows returned: 4
+2026-02-23 16:34:35 - JSON Response Length: 871
+2026-02-23 16:34:37 - Processing searchAnticipos...
+2026-02-23 16:34:37 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"","Ant_Est":"A"}
+2026-02-23 16:34:37 - Ses_Emp_Cod: 537
+2026-02-23 16:34:37 - Rows returned: 4
+2026-02-23 16:34:37 - JSON Response Length: 871
+2026-02-23 16:34:42 - Processing searchAnticipos...
+2026-02-23 16:34:42 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"","Ant_Est":"A"}
+2026-02-23 16:34:42 - Ses_Emp_Cod: 537
+2026-02-23 16:34:42 - Rows returned: 4
+2026-02-23 16:34:42 - JSON Response Length: 871
+2026-02-23 16:34:59 - Processing searchAnticipos...
+2026-02-23 16:34:59 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"","Ant_Est":"A"}
+2026-02-23 16:34:59 - Ses_Emp_Cod: 537
+2026-02-23 16:34:59 - Rows returned: 4
+2026-02-23 16:34:59 - JSON Response Length: 871
+2026-02-23 16:35:05 - Processing searchAnticipos...
+2026-02-23 16:35:05 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"","Ant_Est":"A"}
+2026-02-23 16:35:05 - Ses_Emp_Cod: 537
+2026-02-23 16:35:05 - Rows returned: 4
+2026-02-23 16:35:05 - JSON Response Length: 871
+2026-02-23 16:35:10 - Processing searchAnticipos...
+2026-02-23 16:35:10 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"","Ant_Est":"A"}
+2026-02-23 16:35:10 - Ses_Emp_Cod: 537
+2026-02-23 16:35:10 - Rows returned: 4
+2026-02-23 16:35:10 - JSON Response Length: 871
+2026-02-23 16:35:30 - Processing searchAnticipos...
+2026-02-23 16:35:30 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"","Ant_Est":"A"}
+2026-02-23 16:35:30 - Ses_Emp_Cod: 537
+2026-02-23 16:35:30 - Rows returned: 3
+2026-02-23 16:35:30 - JSON Response Length: 657
+2026-02-23 16:35:37 - Processing searchAnticipos...
+2026-02-23 16:35:37 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"","Ant_Est":"T"}
+2026-02-23 16:35:37 - Ses_Emp_Cod: 537
+2026-02-23 16:35:37 - Rows returned: 4
+2026-02-23 16:35:37 - JSON Response Length: 871
+2026-02-23 16:57:13 - Processing searchAnticipos...
+2026-02-23 16:57:13 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"","Ant_Est":"A"}
+2026-02-23 16:57:13 - Ses_Emp_Cod: 537
+2026-02-23 16:57:13 - Rows returned: 3
+2026-02-23 16:57:13 - JSON Response Length: 657
+2026-02-23 16:58:30 - Processing searchAnticipos...
+2026-02-23 16:58:30 - Params: {"fini":"2026-01-24","ffin":"2026-02-23","search":"","Ant_Est":"A"}
+2026-02-23 16:58:30 - Ses_Emp_Cod: 537
+2026-02-23 16:58:30 - Rows returned: 3
+2026-02-23 16:58:30 - JSON Response Length: 657
+2026-02-23 16:58:34 - Processing searchAnticipos...
+2026-02-23 16:58:34 - Params: {"fini":"2026-01-01","ffin":"2026-02-23","search":"","Ant_Est":"A"}
+2026-02-23 16:58:34 - Ses_Emp_Cod: 537
+2026-02-23 16:58:34 - Rows returned: 5
+2026-02-23 16:58:34 - JSON Response Length: 1049
+2026-02-23 16:58:38 - Processing searchAnticipos...
+2026-02-23 16:58:38 - Params: {"fini":"2026-01-01","ffin":"2026-02-23","search":"","Ant_Est":"I"}
+2026-02-23 16:58:38 - Ses_Emp_Cod: 537
+2026-02-23 16:58:38 - Rows returned: 3
+2026-02-23 16:58:38 - JSON Response Length: 670
+2026-02-23 17:07:42 - Processing searchAnticipos...
+2026-02-23 17:07:42 - Params: {"fini":"2026-01-01","ffin":"2026-02-23","search":"","Ant_Est":"T"}
+2026-02-23 17:07:42 - Ses_Emp_Cod: 537
+2026-02-23 17:07:42 - Rows returned: 8
+2026-02-23 17:07:42 - JSON Response Length: 1663
+2026-02-26 10:42:02 - Processing searchAnticipos...
+2026-02-26 10:42:02 - Params: {"fini":"2026-01-27","ffin":"2026-02-26","search":"","Ant_Est":"A"}
+2026-02-26 10:42:02 - Ses_Emp_Cod: 429
+2026-02-26 10:42:02 - Rows returned: 777
+2026-02-26 10:42:02 - JSON Response Length: 129667
+2026-02-26 10:42:08 - Processing searchAnticipos...
+2026-02-26 10:42:08 - Params: {"fini":"2026-01-27","ffin":"2026-02-26","search":"oyola","Ant_Est":"A"}
+2026-02-26 10:42:08 - Ses_Emp_Cod: 429
+2026-02-26 10:42:08 - Rows returned: 5
+2026-02-26 10:42:08 - JSON Response Length: 889
+2026-02-26 10:46:39 - Processing searchAnticipos...
+2026-02-26 10:46:39 - Params: {"fini":"2026-01-27","ffin":"2026-02-26","search":"oyola","Ant_Est":"A"}
+2026-02-26 10:46:39 - Ses_Emp_Cod: 429
+2026-02-26 10:46:40 - Rows returned: 5
+2026-02-26 10:46:40 - JSON Response Length: 889
+2026-02-26 11:57:08 - Processing searchAnticipos...
+2026-02-26 11:57:08 - Params: {"fini":"2026-01-27","ffin":"2026-02-26","search":"","Ant_Est":"A"}
+2026-02-26 11:57:08 - Ses_Emp_Cod: 429
+2026-02-26 11:57:08 - Rows returned: 778
+2026-02-26 11:57:08 - JSON Response Length: 129833
+2026-02-26 11:57:12 - Processing searchAnticipos...
+2026-02-26 11:57:12 - Params: {"fini":"2026-01-27","ffin":"2026-02-26","search":"CAICE","Ant_Est":"A"}
+2026-02-26 11:57:12 - Ses_Emp_Cod: 429
+2026-02-26 11:57:12 - Rows returned: 7
+2026-02-26 11:57:12 - JSON Response Length: 1208
+2026-02-26 11:57:18 - Processing searchAnticipos...
+2026-02-26 11:57:18 - Params: {"fini":"2026-01-27","ffin":"2026-02-26","search":"CAICE","Ant_Est":"A"}
+2026-02-26 11:57:18 - Ses_Emp_Cod: 429
+2026-02-26 11:57:18 - Rows returned: 7
+2026-02-26 11:57:18 - JSON Response Length: 1208
+2026-02-26 12:04:22 - Processing searchAnticipos...
+2026-02-26 12:04:22 - Params: {"fini":"2026-01-27","ffin":"2026-02-26","search":"","Ant_Est":"A"}
+2026-02-26 12:04:22 - Ses_Emp_Cod: 503
+2026-02-26 12:04:22 - Rows returned: 0
+2026-02-26 12:04:22 - JSON Response Length: 57
+2026-02-26 12:04:32 - Processing searchAnticipos...
+2026-02-26 12:04:32 - Params: {"fini":"2026-01-01","ffin":"2026-02-26","search":"","Ant_Est":"A"}
+2026-02-26 12:04:32 - Ses_Emp_Cod: 503
+2026-02-26 12:04:32 - Rows returned: 0
+2026-02-26 12:04:32 - JSON Response Length: 57
+2026-02-26 12:04:39 - Processing searchAnticipos...
+2026-02-26 12:04:39 - Params: {"fini":"2026-01-01","ffin":"2026-02-26","search":"","Ant_Est":"T"}
+2026-02-26 12:04:39 - Ses_Emp_Cod: 503
+2026-02-26 12:04:39 - Rows returned: 0
+2026-02-26 12:04:39 - JSON Response Length: 57
+2026-02-26 12:05:07 - Processing searchAnticipos...
+2026-02-26 12:05:07 - Params: {"fini":"2026-01-01","ffin":"2026-02-26","search":"","Ant_Est":"T"}
+2026-02-26 12:05:07 - Ses_Emp_Cod: 429
+2026-02-26 12:05:07 - Rows returned: 1235
+2026-02-26 12:05:07 - JSON Response Length: 206003
+2026-02-26 12:05:14 - Processing searchAnticipos...
+2026-02-26 12:05:14 - Params: {"fini":"2026-01-01","ffin":"2026-02-26","search":"bravo","Ant_Est":"T"}
+2026-02-26 12:05:14 - Ses_Emp_Cod: 429
+2026-02-26 12:05:14 - Rows returned: 15
+2026-02-26 12:05:14 - JSON Response Length: 2543
+2026-02-26 12:05:43 - Processing searchAnticipos...
+2026-02-26 12:05:43 - Params: {"fini":"2026-01-01","ffin":"2026-02-26","search":"CAICEDO BRAVO DARWIN ABEL","Ant_Est":"T"}
+2026-02-26 12:05:43 - Ses_Emp_Cod: 429
+2026-02-26 12:05:43 - Rows returned: 0
+2026-02-26 12:05:43 - JSON Response Length: 57
+2026-02-26 12:05:53 - Processing searchAnticipos...
+2026-02-26 12:05:53 - Params: {"fini":"2026-01-01","ffin":"2026-02-26","search":"CAICEDO BRAVO DARWIN ABEL","Ant_Est":"T"}
+2026-02-26 12:05:53 - Ses_Emp_Cod: 429
+2026-02-26 12:05:53 - Rows returned: 0
+2026-02-26 12:05:53 - JSON Response Length: 57
+2026-02-26 12:05:59 - Processing searchAnticipos...
+2026-02-26 12:05:59 - Params: {"fini":"2026-01-01","ffin":"2026-02-26","search":"DARWIN ABEL","Ant_Est":"T"}
+2026-02-26 12:05:59 - Ses_Emp_Cod: 429
+2026-02-26 12:05:59 - Rows returned: 7
+2026-02-26 12:05:59 - JSON Response Length: 1200
+2026-02-26 12:06:10 - Processing searchAnticipos...
+2026-02-26 12:06:10 - Params: {"fini":"2026-01-01","ffin":"2026-02-26","search":"DARWIN ABEL","Ant_Est":"T"}
+2026-02-26 12:06:10 - Ses_Emp_Cod: 429
+2026-02-26 12:06:10 - Rows returned: 7
+2026-02-26 12:06:10 - JSON Response Length: 1200
+2026-02-26 13:58:01 - Processing searchAnticipos...
+2026-02-26 13:58:01 - Params: {"fini":"2026-01-27","ffin":"2026-02-26","search":"","Ant_Est":"A"}
+2026-02-26 13:58:01 - Ses_Emp_Cod: 429
+2026-02-26 13:58:01 - Rows returned: 778
+2026-02-26 13:58:01 - JSON Response Length: 129833
+2026-02-26 13:58:32 - Processing searchAnticipos...
+2026-02-26 13:58:32 - Params: {"fini":"2026-01-27","ffin":"2026-02-26","search":"bravo","Ant_Est":"A"}
+2026-02-26 13:58:32 - Ses_Emp_Cod: 429
+2026-02-26 13:58:32 - Rows returned: 9
+2026-02-26 13:58:32 - JSON Response Length: 1549
+2026-02-26 13:58:39 - Processing searchAnticipos...
+2026-02-26 13:58:39 - Params: {"fini":"2026-01-27","ffin":"2026-02-26","search":"bravo","Ant_Est":"A"}
+2026-02-26 13:58:39 - Ses_Emp_Cod: 429
+2026-02-26 13:58:39 - Rows returned: 8
+2026-02-26 13:58:39 - JSON Response Length: 1386
+2026-02-26 16:34:03 - Processing searchAnticipos...
+2026-02-26 16:34:03 - Params: {"fini":"2026-01-27","ffin":"2026-02-26","search":"","Ant_Est":"A"}
+2026-02-26 16:34:03 - Ses_Emp_Cod: 429
+2026-02-26 16:34:03 - Rows returned: 777
+2026-02-26 16:34:03 - JSON Response Length: 129670
+2026-02-26 16:34:07 - Processing searchAnticipos...
+2026-02-26 16:34:07 - Params: {"fini":"2026-01-27","ffin":"2026-02-26","search":"bravo","Ant_Est":"T"}
+2026-02-26 16:34:07 - Ses_Emp_Cod: 429
+2026-02-26 16:34:07 - Rows returned: 9
+2026-02-26 16:34:07 - JSON Response Length: 1549
+2026-02-27 15:08:21 - Processing searchAnticipos...
+2026-02-27 15:08:21 - Params: {"fini":"2026-01-28","ffin":"2026-02-27","search":"","Ant_Est":"A"}
+2026-02-27 15:08:21 - Ses_Emp_Cod: 429
+2026-02-27 15:08:21 - Rows returned: 777
+2026-02-27 15:08:21 - JSON Response Length: 129670
+2026-02-27 15:08:27 - Processing searchAnticipos...
+2026-02-27 15:08:27 - Params: {"fini":"2026-01-28","ffin":"2026-02-27","search":"VILLACRES","Ant_Est":"A"}
+2026-02-27 15:08:27 - Ses_Emp_Cod: 429
+2026-02-27 15:08:28 - Rows returned: 5
+2026-02-27 15:08:28 - JSON Response Length: 900
+2026-02-27 15:08:46 - Processing searchAnticipos...
+2026-02-27 15:08:46 - Params: {"fini":"2026-01-01","ffin":"2026-02-27","search":"VILLACRES","Ant_Est":"A"}
+2026-02-27 15:08:46 - Ses_Emp_Cod: 429
+2026-02-27 15:08:46 - Rows returned: 6
+2026-02-27 15:08:46 - JSON Response Length: 1069
+2026-02-27 15:12:12 - Processing searchAnticipos...
+2026-02-27 15:12:12 - Params: {"fini":"2025-12-01","ffin":"2025-12-31","search":"VILLACRES","Ant_Est":"A"}
+2026-02-27 15:12:12 - Ses_Emp_Cod: 429
+2026-02-27 15:12:12 - Rows returned: 1
+2026-02-27 15:12:12 - JSON Response Length: 225
+2026-02-27 15:12:28 - Processing searchAnticipos...
+2026-02-27 15:12:28 - Params: {"fini":"2025-12-01","ffin":"2025-12-31","search":"VILLACRES","Ant_Est":"A"}
+2026-02-27 15:12:28 - Ses_Emp_Cod: 429
+2026-02-27 15:12:29 - Rows returned: 0
+2026-02-27 15:12:29 - JSON Response Length: 57
+2026-02-27 15:13:08 - Processing searchAnticipos...
+2026-02-27 15:13:08 - Params: {"fini":"2025-12-01","ffin":"2025-12-31","search":"VILLACRES","Ant_Est":"A"}
+2026-02-27 15:13:08 - Ses_Emp_Cod: 429
+2026-02-27 15:13:08 - Rows returned: 0
+2026-02-27 15:13:08 - JSON Response Length: 57
+2026-02-27 15:13:09 - Processing searchAnticipos...
+2026-02-27 15:13:09 - Params: {"fini":"2025-12-01","ffin":"2025-12-31","search":"VILLACRES","Ant_Est":"A"}
+2026-02-27 15:13:09 - Ses_Emp_Cod: 429
+2026-02-27 15:13:09 - Rows returned: 0
+2026-02-27 15:13:09 - JSON Response Length: 57
+2026-02-27 15:13:10 - Processing searchAnticipos...
+2026-02-27 15:13:10 - Params: {"fini":"2025-12-01","ffin":"2025-12-31","search":"VILLACRES","Ant_Est":"A"}
+2026-02-27 15:13:10 - Ses_Emp_Cod: 429
+2026-02-27 15:13:10 - Rows returned: 0
+2026-02-27 15:13:10 - JSON Response Length: 57
+2026-02-27 15:13:11 - Processing searchAnticipos...
+2026-02-27 15:13:11 - Params: {"fini":"2025-12-01","ffin":"2025-12-31","search":"VILLACRES","Ant_Est":"A"}
+2026-02-27 15:13:11 - Ses_Emp_Cod: 429
+2026-02-27 15:13:11 - Rows returned: 0
+2026-02-27 15:13:11 - JSON Response Length: 57
+2026-02-27 15:13:11 - Processing searchAnticipos...
+2026-02-27 15:13:11 - Params: {"fini":"2025-12-01","ffin":"2025-12-31","search":"VILLACRES","Ant_Est":"A"}
+2026-02-27 15:13:11 - Ses_Emp_Cod: 429
+2026-02-27 15:13:11 - Rows returned: 0
+2026-02-27 15:13:11 - JSON Response Length: 57
+2026-02-27 15:13:12 - Processing searchAnticipos...
+2026-02-27 15:13:12 - Params: {"fini":"2025-12-01","ffin":"2025-12-31","search":"VILLACRES","Ant_Est":"A"}
+2026-02-27 15:13:12 - Ses_Emp_Cod: 429
+2026-02-27 15:13:12 - Rows returned: 0
+2026-02-27 15:13:12 - JSON Response Length: 57
+2026-02-27 15:19:00 - Processing searchAnticipos...
+2026-02-27 15:19:00 - Params: {"fini":"2026-01-28","ffin":"2026-02-27","search":"","Ant_Est":"A"}
+2026-02-27 15:19:00 - Ses_Emp_Cod: 429
+2026-02-27 15:19:00 - Rows returned: 777
+2026-02-27 15:19:00 - JSON Response Length: 129670
+2026-02-27 15:19:10 - Processing searchAnticipos...
+2026-02-27 15:19:10 - Params: {"fini":"2025-01-01","ffin":"2026-02-27","search":"","Ant_Est":"I"}
+2026-02-27 15:19:10 - Ses_Emp_Cod: 429
+2026-02-27 15:19:10 - Rows returned: 44
+2026-02-27 15:19:10 - JSON Response Length: 7381
+2026-02-27 15:21:40 - Processing searchAnticipos...
+2026-02-27 15:21:40 - Params: {"fini":"2025-01-01","ffin":"2026-02-27","search":"","Ant_Est":"I"}
+2026-02-27 15:21:40 - Ses_Emp_Cod: 429
+2026-02-27 15:21:40 - Rows returned: 44
+2026-02-27 15:21:40 - JSON Response Length: 7381
+2026-02-27 15:22:17 - Processing searchAnticipos...
+2026-02-27 15:22:17 - Params: {"fini":"2025-12-01","ffin":"2025-12-31","search":"VILLACRES","Ant_Est":"A"}
+2026-02-27 15:22:17 - Ses_Emp_Cod: 429
+2026-02-27 15:22:17 - Rows returned: 0
+2026-02-27 15:22:17 - JSON Response Length: 57
+2026-02-28 10:20:23 - Processing searchAnticipos...
+2026-02-28 10:20:23 - Params: {"fini":"2026-01-29","ffin":"2026-02-28","search":"","Ant_Est":"A"}
+2026-02-28 10:20:23 - Ses_Emp_Cod: 503
+2026-02-28 10:20:23 - Rows returned: 0
+2026-02-28 10:20:23 - JSON Response Length: 57
+2026-02-28 10:20:33 - Processing searchAnticipos...
+2026-02-28 10:20:33 - Params: {"fini":"2025-01-01","ffin":"2026-02-28","search":"","Ant_Est":"T"}
+2026-02-28 10:20:33 - Ses_Emp_Cod: 503
+2026-02-28 10:20:33 - Rows returned: 5
+2026-02-28 10:20:33 - JSON Response Length: 895
+2026-02-28 10:22:21 - Processing searchAnticipos...
+2026-02-28 10:22:21 - Params: {"fini":"2025-01-01","ffin":"2026-02-28","search":"","Ant_Est":"T"}
+2026-02-28 10:22:21 - Ses_Emp_Cod: 503
+2026-02-28 10:22:21 - Rows returned: 5
+2026-02-28 10:22:21 - JSON Response Length: 895
+2026-02-28 10:49:59 - Processing searchAnticipos...
+2026-02-28 10:49:59 - Params: {"fini":"2026-01-29","ffin":"2026-02-28","search":"","Ant_Est":"A"}
+2026-02-28 10:49:59 - Ses_Emp_Cod: 503
+2026-02-28 10:49:59 - Rows returned: 0
+2026-02-28 10:49:59 - JSON Response Length: 57
+2026-02-28 10:50:05 - Processing searchAnticipos...
+2026-02-28 10:50:05 - Params: {"fini":"2025-01-01","ffin":"2026-02-28","search":"","Ant_Est":"T"}
+2026-02-28 10:50:05 - Ses_Emp_Cod: 503
+2026-02-28 10:50:05 - Rows returned: 5
+2026-02-28 10:50:05 - JSON Response Length: 895
+2026-02-28 10:51:26 - Processing searchAnticipos...
+2026-02-28 10:51:26 - Params: {"fini":"2025-01-01","ffin":"2026-02-28","search":"","Ant_Est":"T"}
+2026-02-28 10:51:26 - Ses_Emp_Cod: 503
+2026-02-28 10:51:26 - Rows returned: 5
+2026-02-28 10:51:26 - JSON Response Length: 895
+2026-03-01 01:03:24 - Processing searchAnticipos...
+2026-03-01 01:03:24 - Params: {"fini":"2026-01-30","ffin":"2026-03-01","search":"","Ant_Est":"A"}
+2026-03-01 01:03:24 - Ses_Emp_Cod: 534
+2026-03-01 01:03:24 - Rows returned: 0
+2026-03-01 01:03:24 - JSON Response Length: 57
+2026-03-01 01:03:28 - Processing searchAnticipos...
+2026-03-01 01:03:28 - Params: {"fini":"2026-01-30","ffin":"2026-03-01","search":"","Ant_Est":"T"}
+2026-03-01 01:03:28 - Ses_Emp_Cod: 534
+2026-03-01 01:03:28 - Rows returned: 0
+2026-03-01 01:03:28 - JSON Response Length: 57
+2026-03-02 14:22:01 - Processing searchAnticipos...
+2026-03-02 14:22:01 - Params: {"fini":"2026-01-31","ffin":"2026-03-02","search":"","Ant_Est":"A"}
+2026-03-02 14:22:01 - Ses_Emp_Cod: 383
+2026-03-02 14:22:01 - Rows returned: 29
+2026-03-02 14:22:01 - JSON Response Length: 5588
+2026-03-02 14:22:15 - Processing searchAnticipos...
+2026-03-02 14:22:15 - Params: {"fini":"2026-02-01","ffin":"2026-03-31","search":"","Ant_Est":"A"}
+2026-03-02 14:22:15 - Ses_Emp_Cod: 383
+2026-03-02 14:22:15 - Rows returned: 29
+2026-03-02 14:22:15 - JSON Response Length: 5588
+2026-03-02 14:23:02 - Processing searchAnticipos...
+2026-03-02 14:23:02 - Params: {"fini":"2026-02-01","ffin":"2026-03-31","search":"","Ant_Est":"A"}
+2026-03-02 14:23:02 - Ses_Emp_Cod: 383
+2026-03-02 14:23:02 - Rows returned: 28
+2026-03-02 14:23:02 - JSON Response Length: 5398
+2026-03-02 14:23:07 - Processing searchAnticipos...
+2026-03-02 14:23:07 - Params: {"fini":"2026-02-01","ffin":"2026-03-31","search":"","Ant_Est":"A"}
+2026-03-02 14:23:07 - Ses_Emp_Cod: 383
+2026-03-02 14:23:07 - Rows returned: 27
+2026-03-02 14:23:07 - JSON Response Length: 5204
+2026-03-02 14:23:11 - Processing searchAnticipos...
+2026-03-02 14:23:11 - Params: {"fini":"2026-02-01","ffin":"2026-03-31","search":"","Ant_Est":"A"}
+2026-03-02 14:23:11 - Ses_Emp_Cod: 383
+2026-03-02 14:23:11 - Rows returned: 26
+2026-03-02 14:23:11 - JSON Response Length: 5022
+2026-03-02 14:23:18 - Processing searchAnticipos...
+2026-03-02 14:23:18 - Params: {"fini":"2026-02-01","ffin":"2026-03-31","search":"","Ant_Est":"I"}
+2026-03-02 14:23:18 - Ses_Emp_Cod: 383
+2026-03-02 14:23:18 - Rows returned: 3
+2026-03-02 14:23:18 - JSON Response Length: 622
+2026-03-02 14:24:29 - Processing searchAnticipos...
+2026-03-02 14:24:29 - Params: {"fini":"2026-02-01","ffin":"2026-03-31","search":"","Ant_Est":"A"}
+2026-03-02 14:24:29 - Ses_Emp_Cod: 383
+2026-03-02 14:24:29 - Rows returned: 26
+2026-03-02 14:24:29 - JSON Response Length: 5022
+2026-03-02 14:24:33 - Processing searchAnticipos...
+2026-03-02 14:24:33 - Params: {"fini":"2026-02-01","ffin":"2026-03-31","search":"","Ant_Est":"A"}
+2026-03-02 14:24:33 - Ses_Emp_Cod: 383
+2026-03-02 14:24:33 - Rows returned: 25
+2026-03-02 14:24:33 - JSON Response Length: 4820
+2026-03-02 14:24:36 - Processing searchAnticipos...
+2026-03-02 14:24:36 - Params: {"fini":"2026-02-01","ffin":"2026-03-31","search":"","Ant_Est":"A"}
+2026-03-02 14:24:36 - Ses_Emp_Cod: 383
+2026-03-02 14:24:36 - Rows returned: 24
+2026-03-02 14:24:36 - JSON Response Length: 4624
+2026-03-02 14:24:41 - Processing searchAnticipos...
+2026-03-02 14:24:41 - Params: {"fini":"2026-02-01","ffin":"2026-03-31","search":"","Ant_Est":"A"}
+2026-03-02 14:24:41 - Ses_Emp_Cod: 383
+2026-03-02 14:24:41 - Rows returned: 23
+2026-03-02 14:24:41 - JSON Response Length: 4434
+2026-03-02 14:24:43 - Processing searchAnticipos...
+2026-03-02 14:24:43 - Params: {"fini":"2026-02-01","ffin":"2026-03-31","search":"","Ant_Est":"A"}
+2026-03-02 14:24:43 - Ses_Emp_Cod: 383
+2026-03-02 14:24:43 - Rows returned: 22
+2026-03-02 14:24:43 - JSON Response Length: 4240
+2026-03-02 14:24:47 - Processing searchAnticipos...
+2026-03-02 14:24:47 - Params: {"fini":"2026-02-01","ffin":"2026-03-31","search":"","Ant_Est":"A"}
+2026-03-02 14:24:47 - Ses_Emp_Cod: 383
+2026-03-02 14:24:47 - Rows returned: 21
+2026-03-02 14:24:47 - JSON Response Length: 4058
+2026-03-02 14:24:55 - Processing searchAnticipos...
+2026-03-02 14:24:55 - Params: {"fini":"2026-02-01","ffin":"2026-03-31","search":"","Ant_Est":"A"}
+2026-03-02 14:24:55 - Ses_Emp_Cod: 383
+2026-03-02 14:24:55 - Rows returned: 20
+2026-03-02 14:24:55 - JSON Response Length: 3866
+2026-03-02 14:25:00 - Processing searchAnticipos...
+2026-03-02 14:25:00 - Params: {"fini":"2026-02-01","ffin":"2026-03-31","search":"","Ant_Est":"A"}
+2026-03-02 14:25:00 - Ses_Emp_Cod: 383
+2026-03-02 14:25:00 - Rows returned: 19
+2026-03-02 14:25:00 - JSON Response Length: 3664
+2026-03-02 14:25:05 - Processing searchAnticipos...
+2026-03-02 14:25:05 - Params: {"fini":"2026-02-01","ffin":"2026-03-31","search":"","Ant_Est":"A"}
+2026-03-02 14:25:05 - Ses_Emp_Cod: 383
+2026-03-02 14:25:05 - Rows returned: 18
+2026-03-02 14:25:05 - JSON Response Length: 3477
+2026-03-02 14:25:14 - Processing searchAnticipos...
+2026-03-02 14:25:14 - Params: {"fini":"2026-02-01","ffin":"2026-03-31","search":"","Ant_Est":"A"}
+2026-03-02 14:25:14 - Ses_Emp_Cod: 383
+2026-03-02 14:25:14 - Rows returned: 17
+2026-03-02 14:25:14 - JSON Response Length: 3281
+2026-03-02 14:25:16 - Processing searchAnticipos...
+2026-03-02 14:25:16 - Params: {"fini":"2026-02-01","ffin":"2026-03-31","search":"","Ant_Est":"A"}
+2026-03-02 14:25:16 - Ses_Emp_Cod: 383
+2026-03-02 14:25:16 - Rows returned: 17
+2026-03-02 14:25:16 - JSON Response Length: 3281
+2026-03-02 14:25:17 - Processing searchAnticipos...
+2026-03-02 14:25:17 - Params: {"fini":"2026-02-01","ffin":"2026-03-31","search":"","Ant_Est":"A"}
+2026-03-02 14:25:17 - Ses_Emp_Cod: 383
+2026-03-02 14:25:17 - Rows returned: 17
+2026-03-02 14:25:17 - JSON Response Length: 3281
+2026-03-02 14:25:17 - Processing searchAnticipos...
+2026-03-02 14:25:17 - Params: {"fini":"2026-02-01","ffin":"2026-03-31","search":"","Ant_Est":"A"}
+2026-03-02 14:25:17 - Ses_Emp_Cod: 383
+2026-03-02 14:25:17 - Rows returned: 17
+2026-03-02 14:25:17 - JSON Response Length: 3281
+2026-03-02 14:25:18 - Processing searchAnticipos...
+2026-03-02 14:25:18 - Params: {"fini":"2026-02-01","ffin":"2026-03-31","search":"","Ant_Est":"A"}
+2026-03-02 14:25:18 - Ses_Emp_Cod: 383
+2026-03-02 14:25:18 - Rows returned: 17
+2026-03-02 14:25:18 - JSON Response Length: 3281
+2026-03-02 14:25:21 - Processing searchAnticipos...
+2026-03-02 14:25:21 - Params: {"fini":"2026-02-01","ffin":"2026-03-31","search":"","Ant_Est":"I"}
+2026-03-02 14:25:21 - Ses_Emp_Cod: 383
+2026-03-02 14:25:21 - Rows returned: 12
+2026-03-02 14:25:21 - JSON Response Length: 2364
+2026-03-04 17:19:07 - Processing searchAnticipos...
+2026-03-04 17:19:07 - Params: {"fini":"2026-02-02","ffin":"2026-03-04","search":"","Ant_Est":"A"}
+2026-03-04 17:19:07 - Ses_Emp_Cod: 559
+2026-03-04 17:19:07 - Rows returned: 5
+2026-03-04 17:19:07 - JSON Response Length: 926
+2026-03-04 17:19:33 - Processing searchAnticipos...
+2026-03-04 17:19:33 - Params: {"fini":"2026-01-02","ffin":"2026-03-04","search":"","Ant_Est":"T"}
+2026-03-04 17:19:33 - Ses_Emp_Cod: 559
+2026-03-04 17:19:33 - Rows returned: 5
+2026-03-04 17:19:33 - JSON Response Length: 926
+2026-03-05 09:53:51 - Processing searchAnticipos...
+2026-03-05 09:53:51 - Params: {"fini":"2026-02-03","ffin":"2026-03-05","search":"","Ant_Est":"A"}
+2026-03-05 09:53:51 - Ses_Emp_Cod: 559
+2026-03-05 09:53:51 - Rows returned: 5
+2026-03-05 09:53:51 - JSON Response Length: 926
+2026-03-05 09:54:18 - Processing searchAnticipos...
+2026-03-05 09:54:18 - Params: {"fini":"2025-11-01","ffin":"2025-11-30","search":"","Ant_Est":"A"}
+2026-03-05 09:54:18 - Ses_Emp_Cod: 559
+2026-03-05 09:54:18 - Rows returned: 0
+2026-03-05 09:54:18 - JSON Response Length: 57
+2026-03-05 09:54:25 - Processing searchAnticipos...
+2026-03-05 09:54:25 - Params: {"fini":"2025-11-01","ffin":"2025-11-30","search":"","Ant_Est":"A"}
+2026-03-05 09:54:25 - Ses_Emp_Cod: 559
+2026-03-05 09:54:25 - Rows returned: 0
+2026-03-05 09:54:25 - JSON Response Length: 57
+2026-03-05 09:55:17 - Processing searchAnticipos...
+2026-03-05 09:55:17 - Params: {"fini":"2026-11-01","ffin":"2026-11-30","search":"","Ant_Est":"A"}
+2026-03-05 09:55:17 - Ses_Emp_Cod: 559
+2026-03-05 09:55:17 - Rows returned: 0
+2026-03-05 09:55:17 - JSON Response Length: 57
+2026-03-05 09:56:55 - Processing searchAnticipos...
+2026-03-05 09:56:55 - Params: {"fini":"2026-11-01","ffin":"2026-11-30","search":"","Ant_Est":"A"}
+2026-03-05 09:56:55 - Ses_Emp_Cod: 559
+2026-03-05 09:56:55 - Rows returned: 0
+2026-03-05 09:56:55 - JSON Response Length: 57
+2026-03-05 09:57:06 - Processing searchAnticipos...
+2026-03-05 09:57:06 - Params: {"fini":"2026-03-01","ffin":"2026-05-31","search":"","Ant_Est":"A"}
+2026-03-05 09:57:06 - Ses_Emp_Cod: 559
+2026-03-05 09:57:06 - Rows returned: 5
+2026-03-05 09:57:06 - JSON Response Length: 926
+2026-03-05 09:57:21 - Processing searchAnticipos...
+2026-03-05 09:57:21 - Params: {"fini":"2026-03-01","ffin":"2026-05-31","search":"","Ant_Est":"A"}
+2026-03-05 09:57:21 - Ses_Emp_Cod: 559
+2026-03-05 09:57:21 - Rows returned: 4
+2026-03-05 09:57:21 - JSON Response Length: 764
+2026-03-06 09:44:33 - Processing searchAnticipos...
+2026-03-06 09:44:33 - Params: {"fini":"2026-02-04","ffin":"2026-03-06","search":"","Ant_Est":"A"}
+2026-03-06 09:44:33 - Ses_Emp_Cod: 537
+2026-03-06 09:44:33 - Rows returned: 4
+2026-03-06 09:44:33 - JSON Response Length: 874
+2026-03-06 09:54:05 - Processing searchAnticipos...
+2026-03-06 09:54:05 - Params: {"fini":"2026-01-01","ffin":"2026-03-06","search":"","Ant_Est":"A"}
+2026-03-06 09:54:05 - Ses_Emp_Cod: 537
+2026-03-06 09:54:05 - Rows returned: 7
+2026-03-06 09:54:05 - JSON Response Length: 1464
+2026-03-06 10:02:42 - Processing searchAnticipos...
+2026-03-06 10:02:42 - Params: {"fini":"2026-01-01","ffin":"2026-03-06","search":"","Ant_Est":"A"}
+2026-03-06 10:02:42 - Ses_Emp_Cod: 537
+2026-03-06 10:02:42 - Rows returned: 7
+2026-03-06 10:02:42 - JSON Response Length: 1464
+2026-03-06 10:03:16 - Processing searchAnticipos...
+2026-03-06 10:03:16 - Params: {"fini":"2026-01-01","ffin":"2026-02-28","search":"","Ant_Est":"A"}
+2026-03-06 10:03:16 - Ses_Emp_Cod: 537
+2026-03-06 10:03:16 - Rows returned: 6
+2026-03-06 10:03:16 - JSON Response Length: 1264
+2026-03-06 10:04:32 - Processing searchAnticipos...
+2026-03-06 10:04:32 - Params: {"fini":"2026-02-04","ffin":"2026-03-06","search":"","Ant_Est":"A"}
+2026-03-06 10:04:32 - Ses_Emp_Cod: 537
+2026-03-06 10:04:32 - Rows returned: 4
+2026-03-06 10:04:32 - JSON Response Length: 874
+2026-03-06 10:04:40 - Processing searchAnticipos...
+2026-03-06 10:04:40 - Params: {"fini":"2026-01-01","ffin":"2026-02-28","search":"","Ant_Est":"A"}
+2026-03-06 10:04:40 - Ses_Emp_Cod: 537
+2026-03-06 10:04:40 - Rows returned: 6
+2026-03-06 10:04:40 - JSON Response Length: 1264
+2026-03-06 10:07:03 - Processing searchAnticipos...
+2026-03-06 10:07:03 - Params: {"fini":"2026-02-04","ffin":"2026-03-06","search":"","Ant_Est":"A"}
+2026-03-06 10:07:03 - Ses_Emp_Cod: 535
+2026-03-06 10:07:03 - Rows returned: 4
+2026-03-06 10:07:03 - JSON Response Length: 840
+2026-03-06 10:07:10 - Processing searchAnticipos...
+2026-03-06 10:07:10 - Params: {"fini":"2026-01-01","ffin":"2026-02-28","search":"","Ant_Est":"A"}
+2026-03-06 10:07:10 - Ses_Emp_Cod: 535
+2026-03-06 10:07:10 - Rows returned: 8
+2026-03-06 10:07:10 - JSON Response Length: 1616
+2026-03-06 10:07:33 - Processing searchAnticipos...
+2026-03-06 10:07:33 - Params: {"fini":"2026-01-01","ffin":"2026-02-28","search":"Maritza Katherine Fierro Benites","Ant_Est":"A"}
+2026-03-06 10:07:33 - Ses_Emp_Cod: 535
+2026-03-06 10:07:33 - Rows returned: 0
+2026-03-06 10:07:33 - JSON Response Length: 57
+2026-03-06 10:07:36 - Processing searchAnticipos...
+2026-03-06 10:07:36 - Params: {"fini":"2026-01-01","ffin":"2026-02-28","search":"Fierro Benites","Ant_Est":"A"}
+2026-03-06 10:07:36 - Ses_Emp_Cod: 535
+2026-03-06 10:07:36 - Rows returned: 4
+2026-03-06 10:07:36 - JSON Response Length: 845
+2026-03-06 10:07:46 - Processing searchAnticipos...
+2026-03-06 10:07:46 - Params: {"fini":"2026-01-01","ffin":"2026-02-28","search":"Fierro Benites","Ant_Est":"A"}
+2026-03-06 10:07:46 - Ses_Emp_Cod: 535
+2026-03-06 10:07:46 - Rows returned: 3
+2026-03-06 10:07:46 - JSON Response Length: 648
+2026-03-06 10:08:05 - Processing searchAnticipos...
+2026-03-06 10:08:05 - Params: {"fini":"2026-01-01","ffin":"2026-02-28","search":"Fierro Benites","Ant_Est":"A"}
+2026-03-06 10:08:05 - Ses_Emp_Cod: 535
+2026-03-06 10:08:05 - Rows returned: 2
+2026-03-06 10:08:05 - JSON Response Length: 453
+2026-03-06 10:08:11 - Processing searchAnticipos...
+2026-03-06 10:08:11 - Params: {"fini":"2026-01-01","ffin":"2026-02-28","search":"Fierro Benites","Ant_Est":"A"}
+2026-03-06 10:08:11 - Ses_Emp_Cod: 535
+2026-03-06 10:08:11 - Rows returned: 1
+2026-03-06 10:08:12 - JSON Response Length: 254
+2026-03-06 10:08:18 - Processing searchAnticipos...
+2026-03-06 10:08:18 - Params: {"fini":"2026-01-01","ffin":"2026-02-28","search":"Fierro Benites","Ant_Est":"A"}
+2026-03-06 10:08:18 - Ses_Emp_Cod: 535
+2026-03-06 10:08:18 - Rows returned: 0
+2026-03-06 10:08:18 - JSON Response Length: 57
+2026-03-06 10:08:23 - Processing searchAnticipos...
+2026-03-06 10:08:23 - Params: {"fini":"2026-01-01","ffin":"2026-02-28","search":"Fierro Benites","Ant_Est":"I"}
+2026-03-06 10:08:23 - Ses_Emp_Cod: 535
+2026-03-06 10:08:23 - Rows returned: 4
+2026-03-06 10:08:23 - JSON Response Length: 845
+2026-03-06 10:09:39 - Processing searchAnticipos...
+2026-03-06 10:09:39 - Params: {"fini":"2026-02-04","ffin":"2026-03-06","search":"","Ant_Est":"A"}
+2026-03-06 10:09:39 - Ses_Emp_Cod: 537
+2026-03-06 10:09:39 - Rows returned: 4
+2026-03-06 10:09:39 - JSON Response Length: 874
+2026-03-06 10:10:10 - Processing searchAnticipos...
+2026-03-06 10:10:10 - Params: {"fini":"2026-01-01","ffin":"2026-02-28","search":"Mi\u00f1o Medina","Ant_Est":"A"}
+2026-03-06 10:10:10 - Ses_Emp_Cod: 537
+2026-03-06 10:10:10 - Rows returned: 4
+2026-03-06 10:10:10 - JSON Response Length: 879
+2026-03-06 10:10:17 - Processing searchAnticipos...
+2026-03-06 10:10:17 - Params: {"fini":"2026-01-01","ffin":"2026-02-28","search":"Mi\u00f1o Medina","Ant_Est":"A"}
+2026-03-06 10:10:17 - Ses_Emp_Cod: 537
+2026-03-06 10:10:17 - Rows returned: 3
+2026-03-06 10:10:17 - JSON Response Length: 678
+2026-03-06 10:10:32 - Processing searchAnticipos...
+2026-03-06 10:10:32 - Params: {"fini":"2026-01-01","ffin":"2026-02-28","search":"Mi\u00f1o Medina","Ant_Est":"A"}
+2026-03-06 10:10:32 - Ses_Emp_Cod: 537
+2026-03-06 10:10:32 - Rows returned: 2
+2026-03-06 10:10:32 - JSON Response Length: 480
+2026-03-06 10:10:36 - Processing searchAnticipos...
+2026-03-06 10:10:36 - Params: {"fini":"2026-01-01","ffin":"2026-02-28","search":"Mi\u00f1o Medina","Ant_Est":"A"}
+2026-03-06 10:10:36 - Ses_Emp_Cod: 537
+2026-03-06 10:10:36 - Rows returned: 1
+2026-03-06 10:10:36 - JSON Response Length: 271
+2026-03-06 10:10:41 - Processing searchAnticipos...
+2026-03-06 10:10:41 - Params: {"fini":"2026-01-01","ffin":"2026-02-28","search":"Mi\u00f1o Medina","Ant_Est":"A"}
+2026-03-06 10:10:41 - Ses_Emp_Cod: 537
+2026-03-06 10:10:41 - Rows returned: 0
+2026-03-06 10:10:41 - JSON Response Length: 57
+2026-03-06 10:10:50 - Processing searchAnticipos...
+2026-03-06 10:10:50 - Params: {"fini":"2026-01-01","ffin":"2026-02-28","search":"Pe\u00f1afiel \u00c1vila","Ant_Est":"A"}
+2026-03-06 10:10:50 - Ses_Emp_Cod: 537
+2026-03-06 10:10:50 - Rows returned: 2
+2026-03-06 10:10:50 - JSON Response Length: 441
+2026-03-06 10:10:58 - Processing searchAnticipos...
+2026-03-06 10:10:58 - Params: {"fini":"2026-01-01","ffin":"2026-02-28","search":"Pe\u00f1afiel \u00c1vila","Ant_Est":"A"}
+2026-03-06 10:10:58 - Ses_Emp_Cod: 537
+2026-03-06 10:10:58 - Rows returned: 1
+2026-03-06 10:10:58 - JSON Response Length: 250
+2026-03-06 10:11:03 - Processing searchAnticipos...
+2026-03-06 10:11:03 - Params: {"fini":"2026-01-01","ffin":"2026-02-28","search":"Pe\u00f1afiel \u00c1vila","Ant_Est":"A"}
+2026-03-06 10:11:03 - Ses_Emp_Cod: 537
+2026-03-06 10:11:03 - Rows returned: 0
+2026-03-06 10:11:03 - JSON Response Length: 57
+2026-03-10 15:46:11 - Processing searchAnticipos...
+2026-03-10 15:46:11 - Params: {"fini":"2026-02-08","ffin":"2026-03-10","search":"","Ant_Est":"A"}
+2026-03-10 15:46:11 - Ses_Emp_Cod: 537
+2026-03-10 15:46:11 - Rows returned: 2
+2026-03-10 15:46:11 - JSON Response Length: 463
+2026-03-10 15:46:25 - Processing searchAnticipos...
+2026-03-10 15:46:25 - Params: {"fini":"2026-01-01","ffin":"2026-01-31","search":"","Ant_Est":"A"}
+2026-03-10 15:46:25 - Ses_Emp_Cod: 537
+2026-03-10 15:46:25 - Rows returned: 0
+2026-03-10 15:46:25 - JSON Response Length: 57
+2026-03-10 15:46:27 - Processing searchAnticipos...
+2026-03-10 15:46:27 - Params: {"fini":"2026-01-01","ffin":"2026-01-31","search":"","Ant_Est":"A"}
+2026-03-10 15:46:27 - Ses_Emp_Cod: 537
+2026-03-10 15:46:27 - Rows returned: 0
+2026-03-10 15:46:27 - JSON Response Length: 57
+2026-03-10 15:46:35 - Processing searchAnticipos...
+2026-03-10 15:46:35 - Params: {"fini":"2026-01-01","ffin":"2026-01-31","search":"","Ant_Est":"T"}
+2026-03-10 15:46:35 - Ses_Emp_Cod: 537
+2026-03-10 15:46:35 - Rows returned: 5
+2026-03-10 15:46:35 - JSON Response Length: 1046
+2026-03-11 16:03:20 - Processing searchAnticipos...
+2026-03-11 16:03:21 - Params: {"fini":"2026-02-09","ffin":"2026-03-11","search":"","Ant_Est":"A"}
+2026-03-11 16:03:21 - Ses_Emp_Cod: 96
+2026-03-11 16:03:21 - Rows returned: 4
+2026-03-11 16:03:21 - JSON Response Length: 770
+2026-03-11 16:03:32 - Processing searchAnticipos...
+2026-03-11 16:03:32 - Params: {"fini":"2026-01-01","ffin":"2026-03-11","search":"","Ant_Est":"A"}
+2026-03-11 16:03:32 - Ses_Emp_Cod: 96
+2026-03-11 16:03:32 - Rows returned: 24
+2026-03-11 16:03:32 - JSON Response Length: 4334
+2026-03-11 16:05:56 - Processing searchAnticipos...
+2026-03-11 16:05:56 - Params: {"fini":"2026-01-01","ffin":"2026-03-11","search":"","Ant_Est":"A"}
+2026-03-11 16:05:56 - Ses_Emp_Cod: 96
+2026-03-11 16:05:56 - Rows returned: 23
+2026-03-11 16:05:56 - JSON Response Length: 4161
+2026-03-11 16:06:04 - Processing searchAnticipos...
+2026-03-11 16:06:04 - Params: {"fini":"2026-01-01","ffin":"2026-03-11","search":"","Ant_Est":"A"}
+2026-03-11 16:06:04 - Ses_Emp_Cod: 96
+2026-03-11 16:06:04 - Rows returned: 22
+2026-03-11 16:06:04 - JSON Response Length: 3984
+2026-03-11 16:06:12 - Processing searchAnticipos...
+2026-03-11 16:06:12 - Params: {"fini":"2026-01-01","ffin":"2026-03-11","search":"","Ant_Est":"A"}
+2026-03-11 16:06:12 - Ses_Emp_Cod: 96
+2026-03-11 16:06:12 - Rows returned: 21
+2026-03-11 16:06:12 - JSON Response Length: 3818
+2026-03-11 16:06:17 - Processing searchAnticipos...
+2026-03-11 16:06:17 - Params: {"fini":"2026-01-01","ffin":"2026-03-11","search":"","Ant_Est":"I"}
+2026-03-11 16:06:17 - Ses_Emp_Cod: 96
+2026-03-11 16:06:17 - Rows returned: 4
+2026-03-11 16:06:17 - JSON Response Length: 750
+2026-03-11 16:06:33 - Processing searchAnticipos...
+2026-03-11 16:06:33 - Params: {"fini":"2026-01-01","ffin":"2026-03-11","search":"","Ant_Est":"A"}
+2026-03-11 16:06:33 - Ses_Emp_Cod: 96
+2026-03-11 16:06:33 - Rows returned: 21
+2026-03-11 16:06:33 - JSON Response Length: 3818
+2026-03-11 16:06:39 - Processing searchAnticipos...
+2026-03-11 16:06:39 - Params: {"fini":"2026-01-01","ffin":"2026-03-11","search":"","Ant_Est":"A"}
+2026-03-11 16:06:39 - Ses_Emp_Cod: 96
+2026-03-11 16:06:39 - Rows returned: 20
+2026-03-11 16:06:39 - JSON Response Length: 3640
+2026-03-11 16:06:45 - Processing searchAnticipos...
+2026-03-11 16:06:45 - Params: {"fini":"2026-01-01","ffin":"2026-03-11","search":"","Ant_Est":"I"}
+2026-03-11 16:06:45 - Ses_Emp_Cod: 96
+2026-03-11 16:06:45 - Rows returned: 5
+2026-03-11 16:06:45 - JSON Response Length: 928
+2026-03-11 16:07:00 - Processing searchAnticipos...
+2026-03-11 16:07:00 - Params: {"fini":"2026-01-01","ffin":"2026-03-11","search":"","Ant_Est":"A"}
+2026-03-11 16:07:00 - Ses_Emp_Cod: 96
+2026-03-11 16:07:00 - Rows returned: 20
+2026-03-11 16:07:00 - JSON Response Length: 3640
+2026-03-11 16:07:12 - Processing searchAnticipos...
+2026-03-11 16:07:12 - Params: {"fini":"2026-01-01","ffin":"2026-03-11","search":"","Ant_Est":"I"}
+2026-03-11 16:07:12 - Ses_Emp_Cod: 96
+2026-03-11 16:07:12 - Rows returned: 5
+2026-03-11 16:07:12 - JSON Response Length: 928
+2026-03-11 16:07:52 - Processing searchAnticipos...
+2026-03-11 16:07:52 - Params: {"fini":"2026-01-01","ffin":"2026-03-11","search":"","Ant_Est":"A"}
+2026-03-11 16:07:52 - Ses_Emp_Cod: 96
+2026-03-11 16:07:52 - Rows returned: 20
+2026-03-11 16:07:52 - JSON Response Length: 3640
+2026-03-11 16:07:56 - Processing searchAnticipos...
+2026-03-11 16:07:56 - Params: {"fini":"2026-01-01","ffin":"2026-03-11","search":"","Ant_Est":"A"}
+2026-03-11 16:07:56 - Ses_Emp_Cod: 96
+2026-03-11 16:07:56 - Rows returned: 19
+2026-03-11 16:07:56 - JSON Response Length: 3486
+2026-03-11 16:12:53 - Processing searchAnticipos...
+2026-03-11 16:12:53 - Params: {"fini":"2026-01-01","ffin":"2026-03-11","search":"","Ant_Est":"I"}
+2026-03-11 16:12:53 - Ses_Emp_Cod: 96
+2026-03-11 16:12:53 - Rows returned: 6
+2026-03-11 16:12:53 - JSON Response Length: 1082
+2026-03-11 16:50:32 - Processing searchAnticipos...
+2026-03-11 16:50:32 - Params: {"fini":"2026-01-01","ffin":"2026-03-11","search":"","Ant_Est":"A"}
+2026-03-11 16:50:32 - Ses_Emp_Cod: 96
+2026-03-11 16:50:32 - Rows returned: 19
+2026-03-11 16:50:32 - JSON Response Length: 3486
+2026-03-11 16:50:57 - Processing searchAnticipos...
+2026-03-11 16:50:57 - Params: {"fini":"2026-02-09","ffin":"2026-03-11","search":"","Ant_Est":"A"}
+2026-03-11 16:50:57 - Ses_Emp_Cod: 96
+2026-03-11 16:50:57 - Rows returned: 4
+2026-03-11 16:50:57 - JSON Response Length: 770
+2026-03-12 09:06:55 - Processing searchAnticipos...
+2026-03-12 09:06:55 - Params: {"fini":"2026-02-10","ffin":"2026-03-12","search":"","Ant_Est":"A"}
+2026-03-12 09:06:55 - Ses_Emp_Cod: 429
+2026-03-12 09:06:55 - Rows returned: 758
+2026-03-12 09:06:55 - JSON Response Length: 126546
+2026-03-12 09:07:07 - Processing searchAnticipos...
+2026-03-12 09:07:07 - Params: {"fini":"2026-03-09","ffin":"2026-03-12","search":"","Ant_Est":"A"}
+2026-03-12 09:07:07 - Ses_Emp_Cod: 429
+2026-03-12 09:07:07 - Rows returned: 140
+2026-03-12 09:07:07 - JSON Response Length: 23425
+2026-03-12 09:07:14 - Processing searchAnticipos...
+2026-03-12 09:07:14 - Params: {"fini":"2026-03-09","ffin":"2026-03-12","search":"guaman malla","Ant_Est":"A"}
+2026-03-12 09:07:14 - Ses_Emp_Cod: 429
+2026-03-12 09:07:14 - Rows returned: 3
+2026-03-12 09:07:14 - JSON Response Length: 548
+2026-03-12 09:08:35 - Processing searchAnticipos...
+2026-03-12 09:08:35 - Params: {"fini":"2026-03-09","ffin":"2026-03-12","search":"guaman malla","Ant_Est":"A"}
+2026-03-12 09:08:35 - Ses_Emp_Cod: 429
+2026-03-12 09:08:35 - Rows returned: 2
+2026-03-12 09:08:35 - JSON Response Length: 382
+2026-03-12 10:48:40 - Processing searchAnticipos...
+2026-03-12 10:48:40 - Params: {"fini":"2026-02-10","ffin":"2026-03-12","search":"","Ant_Est":"A"}
+2026-03-12 10:48:40 - Ses_Emp_Cod: 537
+2026-03-12 10:48:40 - Rows returned: 2
+2026-03-12 10:48:40 - JSON Response Length: 463
+2026-03-12 10:49:00 - Processing searchAnticipos...
+2026-03-12 10:49:00 - Params: {"fini":"2026-01-01","ffin":"2026-03-12","search":"","Ant_Est":"A"}
+2026-03-12 10:49:00 - Ses_Emp_Cod: 537
+2026-03-12 10:49:00 - Rows returned: 2
+2026-03-12 10:49:00 - JSON Response Length: 463
+2026-03-12 10:49:10 - Processing searchAnticipos...
+2026-03-12 10:49:10 - Params: {"fini":"2026-01-01","ffin":"2026-01-31","search":"","Ant_Est":"A"}
+2026-03-12 10:49:10 - Ses_Emp_Cod: 537
+2026-03-12 10:49:10 - Rows returned: 0
+2026-03-12 10:49:10 - JSON Response Length: 57
+2026-03-12 10:49:43 - Processing searchAnticipos...
+2026-03-12 10:49:43 - Params: {"fini":"2026-01-01","ffin":"2026-02-28","search":"","Ant_Est":"A"}
+2026-03-12 10:49:43 - Ses_Emp_Cod: 537
+2026-03-12 10:49:43 - Rows returned: 0
+2026-03-12 10:49:43 - JSON Response Length: 57
+2026-03-12 10:49:48 - Processing searchAnticipos...
+2026-03-12 10:49:48 - Params: {"fini":"2026-01-01","ffin":"2026-02-28","search":"","Ant_Est":"T"}
+2026-03-12 10:49:48 - Ses_Emp_Cod: 537
+2026-03-12 10:49:48 - Rows returned: 9
+2026-03-12 10:49:48 - JSON Response Length: 1878
+2026-03-12 10:51:05 - Processing searchAnticipos...
+2026-03-12 10:51:05 - Params: {"fini":"2026-01-01","ffin":"2026-02-28","search":"FARIAS ARMIJOS MARIA DANIELA","Ant_Est":"T"}
+2026-03-12 10:51:05 - Ses_Emp_Cod: 537
+2026-03-12 10:51:05 - Rows returned: 0
+2026-03-12 10:51:05 - JSON Response Length: 57
+2026-03-12 10:51:12 - Processing searchAnticipos...
+2026-03-12 10:51:12 - Params: {"fini":"2026-01-01","ffin":"2026-03-31","search":"FARIAS ARMIJOS MARIA DANIELA","Ant_Est":"T"}
+2026-03-12 10:51:12 - Ses_Emp_Cod: 537
+2026-03-12 10:51:12 - Rows returned: 0
+2026-03-12 10:51:12 - JSON Response Length: 57
+2026-03-12 10:51:21 - Processing searchAnticipos...
+2026-03-12 10:51:21 - Params: {"fini":"2025-01-01","ffin":"2026-03-31","search":"FARIAS ARMIJOS MARIA DANIELA","Ant_Est":"T"}
+2026-03-12 10:51:21 - Ses_Emp_Cod: 537
+2026-03-12 10:51:21 - Rows returned: 0
+2026-03-12 10:51:21 - JSON Response Length: 57
+2026-03-12 10:51:24 - Processing searchAnticipos...
+2026-03-12 10:51:24 - Params: {"fini":"2025-01-01","ffin":"2026-03-31","search":"FARIAS ARMIJOS MARIA DANIELA","Ant_Est":"T"}
+2026-03-12 10:51:24 - Ses_Emp_Cod: 537
+2026-03-12 10:51:24 - Rows returned: 0
+2026-03-12 10:51:24 - JSON Response Length: 57
+2026-03-12 10:53:15 - Processing searchAnticipos...
+2026-03-12 10:53:15 - Params: {"fini":"2025-01-01","ffin":"2026-03-31","search":"","Ant_Est":"T"}
+2026-03-12 10:53:15 - Ses_Emp_Cod: 537
+2026-03-12 10:53:15 - Rows returned: 53
+2026-03-12 10:53:15 - JSON Response Length: 10170
+2026-03-12 10:53:48 - Processing searchAnticipos...
+2026-03-12 10:53:48 - Params: {"fini":"2025-01-01","ffin":"2026-02-28","search":"","Ant_Est":"T"}
+2026-03-12 10:53:48 - Ses_Emp_Cod: 537
+2026-03-12 10:53:48 - Rows returned: 51
+2026-03-12 10:53:48 - JSON Response Length: 9763
+2026-03-12 10:54:01 - Processing searchAnticipos...
+2026-03-12 10:54:01 - Params: {"fini":"2026-01-01","ffin":"2026-02-28","search":"","Ant_Est":"T"}
+2026-03-12 10:54:01 - Ses_Emp_Cod: 537
+2026-03-12 10:54:01 - Rows returned: 9
+2026-03-12 10:54:01 - JSON Response Length: 1878
+2026-03-12 10:54:23 - Processing searchAnticipos...
+2026-03-12 10:54:23 - Params: {"fini":"2026-01-01","ffin":"2026-03-31","search":"","Ant_Est":"T"}
+2026-03-12 10:54:23 - Ses_Emp_Cod: 537
+2026-03-12 10:54:23 - Rows returned: 11
+2026-03-12 10:54:23 - JSON Response Length: 2286
+2026-03-12 10:55:13 - Processing searchAnticipos...
+2026-03-12 10:55:13 - Params: {"fini":"2026-01-01","ffin":"2026-03-31","search":"","Ant_Est":"T"}
+2026-03-12 10:55:13 - Ses_Emp_Cod: 537
+2026-03-12 10:55:13 - Rows returned: 11
+2026-03-12 10:55:13 - JSON Response Length: 2286
+2026-03-17 10:46:34 - Processing searchAnticipos...
+2026-03-17 10:46:34 - Params: {"fini":"2026-02-15","ffin":"2026-03-17","search":"","Ant_Est":"A"}
+2026-03-17 10:46:34 - Ses_Emp_Cod: 535
+2026-03-17 10:46:34 - Rows returned: 3
+2026-03-17 10:46:34 - JSON Response Length: 642
+2026-03-17 10:47:03 - Processing searchAnticipos...
+2026-03-17 10:47:03 - Params: {"fini":"2026-02-15","ffin":"2026-03-17","search":"","Ant_Est":"A"}
+2026-03-17 10:47:03 - Ses_Emp_Cod: 535
+2026-03-17 10:47:03 - Rows returned: 2
+2026-03-17 10:47:03 - JSON Response Length: 448
+2026-03-19 11:58:14 - Processing searchAnticipos...
+2026-03-19 11:58:14 - Params: {"fini":"2026-02-17","ffin":"2026-03-19","search":"","Ant_Est":"A"}
+2026-03-19 11:58:14 - Ses_Emp_Cod: 429
+2026-03-19 11:58:14 - Rows returned: 762
+2026-03-19 11:58:14 - JSON Response Length: 127205
+2026-03-19 11:58:23 - Processing searchAnticipos...
+2026-03-19 11:58:23 - Params: {"fini":"2026-03-19","ffin":"2026-03-19","search":"DURAN P","Ant_Est":"A"}
+2026-03-19 11:58:23 - Ses_Emp_Cod: 429
+2026-03-19 11:58:23 - Rows returned: 1
+2026-03-19 11:58:23 - JSON Response Length: 223
+2026-03-19 11:58:27 - Processing searchAnticipos...
+2026-03-19 11:58:27 - Params: {"fini":"2026-03-19","ffin":"2026-03-19","search":"DURAN P","Ant_Est":"A"}
+2026-03-19 11:58:27 - Ses_Emp_Cod: 429
+2026-03-19 11:58:27 - Rows returned: 0
+2026-03-19 11:58:27 - JSON Response Length: 57
+2026-03-19 11:58:30 - Processing searchAnticipos...
+2026-03-19 11:58:30 - Params: {"fini":"2026-03-19","ffin":"2026-03-19","search":"DURAN P","Ant_Est":"A"}
+2026-03-19 11:58:30 - Ses_Emp_Cod: 429
+2026-03-19 11:58:30 - Rows returned: 0
+2026-03-19 11:58:30 - JSON Response Length: 57
+2026-03-25 14:44:54 - Processing searchAnticipos...
+2026-03-25 14:44:54 - Params: {"fini":"2026-02-23","ffin":"2026-03-25","search":"","Ant_Est":"A"}
+2026-03-25 14:44:54 - Ses_Emp_Cod: 537
+2026-03-25 14:44:55 - Rows returned: 3
+2026-03-25 14:44:55 - JSON Response Length: 655
+2026-03-25 14:44:58 - Processing searchAnticipos...
+2026-03-25 14:44:58 - Params: {"fini":"2026-02-23","ffin":"2026-03-25","search":"","Ant_Est":"I"}
+2026-03-25 14:44:58 - Ses_Emp_Cod: 537
+2026-03-25 14:44:58 - Rows returned: 1
+2026-03-25 14:44:58 - JSON Response Length: 256
+2026-03-25 14:45:07 - Processing searchAnticipos...
+2026-03-25 14:45:07 - Params: {"fini":"2026-01-01","ffin":"2026-03-25","search":"","Ant_Est":"I"}
+2026-03-25 14:45:07 - Ses_Emp_Cod: 537
+2026-03-25 14:45:07 - Rows returned: 10
+2026-03-25 14:45:07 - JSON Response Length: 2079
+2026-03-25 14:46:03 - Processing searchAnticipos...
+2026-03-25 14:46:03 - Params: {"fini":"2026-01-01","ffin":"2026-03-25","search":"","Ant_Est":"I"}
+2026-03-25 14:46:03 - Ses_Emp_Cod: 537
+2026-03-25 14:46:03 - Rows returned: 10
+2026-03-25 14:46:03 - JSON Response Length: 2079
+2026-03-25 14:46:07 - Processing searchAnticipos...
+2026-03-25 14:46:07 - Params: {"fini":"2026-01-01","ffin":"2026-03-25","search":"","Ant_Est":"I"}
+2026-03-25 14:46:07 - Ses_Emp_Cod: 537
+2026-03-25 14:46:07 - Rows returned: 10
+2026-03-25 14:46:07 - JSON Response Length: 2079
+2026-03-25 14:46:14 - Processing searchAnticipos...
+2026-03-25 14:46:14 - Params: {"fini":"2026-01-01","ffin":"2026-03-25","search":"","Ant_Est":"I"}
+2026-03-25 14:46:14 - Ses_Emp_Cod: 537
+2026-03-25 14:46:14 - Rows returned: 10
+2026-03-25 14:46:14 - JSON Response Length: 2079
+2026-03-26 11:21:29 - Processing searchAnticipos...
+2026-03-26 11:21:29 - Params: {"fini":"2026-02-24","ffin":"2026-03-26","search":"","Ant_Est":"A"}
+2026-03-26 11:21:29 - Ses_Emp_Cod: 535
+2026-03-26 11:21:29 - Rows returned: 3
+2026-03-26 11:21:29 - JSON Response Length: 642
+2026-03-26 11:21:59 - Processing searchAnticipos...
+2026-03-26 11:21:59 - Params: {"fini":"2026-02-24","ffin":"2026-03-26","search":"","Ant_Est":"A"}
+2026-03-26 11:21:59 - Ses_Emp_Cod: 535
+2026-03-26 11:21:59 - Rows returned: 3
+2026-03-26 11:21:59 - JSON Response Length: 642
+2026-03-27 10:32:03 - Processing searchAnticipos...
+2026-03-27 10:32:03 - Params: {"fini":"2026-02-25","ffin":"2026-03-27","search":"","Ant_Est":"A"}
+2026-03-27 10:32:03 - Ses_Emp_Cod: 559
+2026-03-27 10:32:03 - Rows returned: 17
+2026-03-27 10:32:03 - JSON Response Length: 3067
+2026-03-27 10:32:28 - Processing searchAnticipos...
+2026-03-27 10:32:28 - Params: {"fini":"2026-02-25","ffin":"2026-03-27","search":"","Ant_Est":"A"}
+2026-03-27 10:32:28 - Ses_Emp_Cod: 559
+2026-03-27 10:32:28 - Rows returned: 16
+2026-03-27 10:32:28 - JSON Response Length: 2877
+2026-03-31 09:19:08 - Processing searchAnticipos...
+2026-03-31 09:19:08 - Params: {"fini":"2026-03-01","ffin":"2026-03-31","search":"","Ant_Est":"A"}
+2026-03-31 09:19:08 - Ses_Emp_Cod: 620
+2026-03-31 09:19:08 - Rows returned: 0
+2026-03-31 09:19:08 - JSON Response Length: 57
