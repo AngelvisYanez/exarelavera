@@ -348,8 +348,7 @@ function enviarMensajeWhatsappImagenLista(array $numeros, $imagePayload, $captio
 }
 
 /** Envía el mismo mensaje a varios números — delega en relavera_enviar_whatsapp_notif. */
-function enviarMensajeWhatsappLista($mensaje, array $numeros)
-{
+function enviarMensajeWhatsappLista($mensaje, array $numeros) {
     $resultados = array();
     foreach ($numeros as $numero) {
         $numero = trim((string) $numero);
