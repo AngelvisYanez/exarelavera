@@ -119,8 +119,12 @@ class manifiesto_sanciones extends AbstractModel
         $sel->joinLeft(array('persona_ch' => 'persona'), "persona_ch.Prs_Cod = chofer.Prs_Cod", array());
         $sel->joinLeft('manifiesto_plantas', "manifiesto_plantas.Pla_Cod = $nm.Pla_Cod AND $nm.Msa_Tip = 'PL'", array());
         $sel->joinLeft('cliente', "cliente.Cli_Cod = manifiesto_plantas.Cli_Cod", array());
+        $sel->joinLeft('manifiesto_sanciones_lista', "manifiesto_sanciones_lista.Tsa_Cod = $nm.Tsa_Cod", array('Tsa_Des'));
         $sel->joinLeft(array('persona_pl' => 'persona'), "persona_pl.Prs_Cod = cliente.Prs_Cod", array());
         $sel->where("$nm.Msa_Est = ?", 'A');
+
+
+        
 
         if (is_array($cond)) {
             $filtroTipo = null;
@@ -222,6 +226,7 @@ class manifiesto_sanciones extends AbstractModel
                         FROM manifiesto_sanciones 
                             LEFT JOIN vehiculo ON (manifiesto_sanciones.Veh_Cod = vehiculo.Veh_Cod)
                             LEFT JOIN chofer ON (manifiesto_sanciones.Cho_Cod = chofer.Cho_Cod)
+                            LEFT JOIN manifiesto_sanciones_lista ON (manifiesto_sanciones.Tsa_Cod = manifiesto_sanciones_lista.Tsa_Cod)
                             LEFT JOIN persona as prs_cho ON (chofer.Prs_Cod = prs_cho.Prs_Cod)
                             LEFT JOIN manifiesto_plantas ON (manifiesto_sanciones.Pla_Cod = manifiesto_plantas.Pla_Cod)
                             LEFT JOIN cliente ON (manifiesto_plantas.Cli_Cod = cliente.Cli_Cod)
@@ -237,11 +242,12 @@ class manifiesto_sanciones extends AbstractModel
                             if(Msa_Tip='CH',concat(prs_cho.Prs_Ape,' ',prs_cho.Prs_Nom),
                             if(Msa_Tip='PL',concat(prs_pla.Prs_Ape,' ',prs_pla.Prs_Nom), CONCAT(if(Veh_Tit='V','VOLQUETA',if(Veh_Tit='B','BUS','CAMIONETA')),' ',vehiculo.Veh_Mar)))as nombre,  
                             manifiesto_sanciones.Msa_Fei,
-                            manifiesto_sanciones.Msa_Fef,  
+                            manifiesto_sanciones.Msa_Fef,
                             manifiesto_sanciones.Msa_Obs 
                             FROM manifiesto_sanciones 
                                 LEFT JOIN vehiculo ON (manifiesto_sanciones.Veh_Cod = vehiculo.Veh_Cod)
                                 LEFT JOIN chofer ON (manifiesto_sanciones.Cho_Cod = chofer.Cho_Cod)
+                                LEFT JOIN manifiesto_sanciones_lista ON (manifiesto_sanciones.Tsa_Cod = manifiesto_sanciones_lista.Tsa_Cod)
                                 LEFT JOIN persona as prs_cho ON (chofer.Prs_Cod = prs_cho.Prs_Cod)
                                 LEFT JOIN manifiesto_plantas ON (manifiesto_sanciones.Pla_Cod = manifiesto_plantas.Pla_Cod)
                                 LEFT JOIN cliente ON (manifiesto_plantas.Cli_Cod = cliente.Cli_Cod)

@@ -14,11 +14,6 @@ require_once('../../Librerias/procedimientos/almacenados_standar.php');
 $obBD_conexion = new Class_Log_Conexion_Global($Ses_Dat_Dis);
 $obBD_con1 = new Class_Log_Datos_Mani;
 
-/** Tabla catálogo de tipos de sanción (filtro Emp_Cod). Si en su BD el nombre difiere, cámbielo aquí. */
-if (!defined('MAN_CFG_TBL_TIPO_SANC_LISTA')) {
-    define('MAN_CFG_TBL_TIPO_SANC_LISTA', 'manifiesto_sanciones_lista');
-}
-
 $cliente_manifiesto = $obBD_con1->getRowConsulta('manifiesto_usuario.selectWhere', array('where' => array('manifiesto_usuario.Usu_Cod' => $Ses_Usu_Cod)), $obBD_conexion);
 
 /* ==================== AJAX HANDLERS ==================== */
@@ -83,53 +78,6 @@ function obtenerOCrearPersona($obBD_con1, $obBD_conexion, $Prs_Ced, $datosPerson
         $obBD_con1->operacionobBD('persona.insert', $datosPersona, $obBD_conexion);
         return $obBD_con1->insercionid($obBD_conexion);
     }
-}
-
-function man_adm_cfg_tabla_tipo_sanc_lista_existe($obBD_con1, $obBD_conexion)
-{
-    static $v = null;
-    if ($v !== null) {
-        return $v;
-    }
-    $tbl = MAN_CFG_TBL_TIPO_SANC_LISTA;
-    $obBD_con1->setError(0, '');
-    @$obBD_con1->getRowConsultaSql("SELECT 1 FROM `" . $tbl . "` LIMIT 1", $obBD_conexion);
-    $v = ($obBD_con1->Error == 0);
-    return $v;
-}
-
-function man_adm_sanciones_tiene_columna_tsa_cod($obBD_con1, $obBD_conexion)
-{
-    static $v = null;
-    if ($v !== null) {
-        return $v;
-    }
-    $obBD_con1->setError(0, '');
-    $row = @$obBD_con1->getRowConsultaSql("SHOW COLUMNS FROM manifiesto_sanciones LIKE 'Tsa_Cod'", $obBD_conexion);
-    $v = !empty($row);
-    return $v;
-}
-
-/** Valida Tsa_Cod contra catálogo y lo agrega a $datos si aplica. */
-function man_adm_sanciones_aplicar_tsa_cod_guardado($obBD_con1, $obBD_conexion, $Ses_Emp_Cod, &$datos)
-{
-    if (!man_adm_sanciones_tiene_columna_tsa_cod($obBD_con1, $obBD_conexion)) {
-        return;
-    }
-    if (!man_adm_cfg_tabla_tipo_sanc_lista_existe($obBD_con1, $obBD_conexion)) {
-        return;
-    }
-    $Tsa_Cod = isset($_POST['Tsa_Cod']) ? (int)$_POST['Tsa_Cod'] : 0;
-    if ($Tsa_Cod <= 0) {
-        throw new Exception('Seleccione el tipo de sanción.');
-    }
-    $tbl = MAN_CFG_TBL_TIPO_SANC_LISTA;
-    $emp = (int)$Ses_Emp_Cod;
-    $ok = $obBD_con1->getRowConsultaSql("SELECT Tsa_Cod FROM `" . $tbl . "` WHERE Tsa_Cod = " . (int)$Tsa_Cod . " AND Emp_Cod = $emp LIMIT 1", $obBD_conexion);
-    if (empty($ok)) {
-        throw new Exception('Tipo de sanción no válido para esta empresa.');
-    }
-    $datos['Tsa_Cod'] = $Tsa_Cod;
 }
 
 // Función auxiliar para guardar personal de planta
@@ -772,36 +720,6 @@ if (isset($getCountSancionesPlantaAjax)) {
     exit;
 }
 
-// Catálogo: tipos de sanción por empresa (tabla MAN_CFG_TBL_TIPO_SANC_LISTA)
-if (isset($_REQUEST['listTipoSancionListaAjax']) || isset($listTipoSancionListaAjax)) {
-    $resp = array('success' => true, 'rows' => array(), 'requiereSeleccion' => false);
-    $tieneCol = man_adm_sanciones_tiene_columna_tsa_cod($obBD_con1, $obBD_conexion);
-    $tablaOk = man_adm_cfg_tabla_tipo_sanc_lista_existe($obBD_con1, $obBD_conexion);
-    $resp['requiereSeleccion'] = ($tieneCol && $tablaOk);
-    if (!$tablaOk) {
-        $obBD_con1->echoJson($resp);
-        exit;
-    }
-    $tbl = MAN_CFG_TBL_TIPO_SANC_LISTA;
-    $emp = (int)$Ses_Emp_Cod;
-    $sql = "SELECT Tsa_Cod, Tsa_Des AS Tsa_Nom FROM `" . $tbl . "` WHERE Emp_Cod = $emp";
-    $obBD_con1->setError(0, '');
-    $estRow = @$obBD_con1->getRowConsultaSql("SHOW COLUMNS FROM `" . $tbl . "` LIKE 'Tsa_Est'", $obBD_conexion);
-    if (!empty($estRow)) {
-        $sql .= " AND Tsa_Est = 'A'";
-    }
-    $sql .= " ORDER BY Tsa_Des";
-    $rows = $obBD_con1->getArrayConsultaSql($sql, $obBD_conexion);
-    if (is_array($rows)) {
-        $obBD_con1->utf8_change_param($rows);
-        $resp['rows'] = $rows;
-    } else {
-        $resp['rows'] = array();
-    }
-    $obBD_con1->echoJson($resp);
-    exit;
-}
-
 // Listar Sanciones (unificado: VE, CH, PL) — SQL directo. Tipo "Todos" + filtro_nombres vacío = todos los registros activos.
 if (isset($_REQUEST['listSancionesGridAjax']) || isset($listSancionesGridAjax)) {
     $req = array_merge($_GET, $_POST);
@@ -879,15 +797,7 @@ if (isset($_REQUEST['listSancionesGridAjax']) || isset($listSancionesGridAjax)) 
     }
     $whereSql = count($where) > 0 ? implode(' AND ', $where) : '1=1';
 
-    $extraSel = '';
-    $extraJoin = '';
-    if (man_adm_sanciones_tiene_columna_tsa_cod($obBD_con1, $obBD_conexion) && man_adm_cfg_tabla_tipo_sanc_lista_existe($obBD_con1, $obBD_conexion)) {
-        // Exponer Tsa_Cod de la sanción (la descripción sigue viniendo del JOIN a manifiesto_sanciones_lista)
-        $extraSel = ", $nm.Tsa_Cod";
-        $extraJoin = '';
-    }
-
-    $sel = "SELECT $nm.Msa_Cod, $nm.Msa_Tip, $nm.Veh_Cod, $nm.Cho_Cod, $nm.Pla_Cod, $nm.Msa_Fei, $nm.Msa_Fef, $nm.Msa_Obs$extraSel,IFNULL(manifiesto_sanciones_lista.Tsa_Des, '') AS Tsa_Des,IF(manifiesto_sanciones_lista.Tsa_Niv='M', 'MEDIO', IF(manifiesto_sanciones_lista.Tsa_Niv='A', 'ALTO',IF(manifiesto_sanciones_lista.Tsa_Niv='B', 'BAJO', 'MEDIO'))) AS Tsa_Niv,
+    $sel = "SELECT $nm.Msa_Cod, $nm.Msa_Tip, $nm.Veh_Cod, $nm.Cho_Cod, $nm.Pla_Cod, $nm.Msa_Fei, $nm.Msa_Fef, $nm.Msa_Obs,
         COALESCE(concat(vehiculo.Veh_Pla,' ',vehiculo.Veh_Mar), manifiesto_plantas.Pla_Nom, CONCAT(IFNULL(persona_ch.Prs_Nom,''),' ',IFNULL(persona_ch.Prs_Ape,''))) AS Identificador,
         COALESCE(persona_ch.Prs_Ced, persona_pl.Prs_Ced, vehiculo.Veh_Pla) AS Prs_Ced,
         COALESCE(CONCAT(IFNULL(persona_ch.Prs_Nom,''),' ',IFNULL(persona_ch.Prs_Ape,'')), CONCAT(IFNULL(persona_pl.Prs_Nom,''),' ',IFNULL(persona_pl.Prs_Ape,''))) AS Prs_Nom
@@ -896,10 +806,8 @@ if (isset($_REQUEST['listSancionesGridAjax']) || isset($listSancionesGridAjax)) 
         LEFT JOIN chofer ON chofer.Cho_Cod = $nm.Cho_Cod AND $nm.Msa_Tip = 'CH'
         LEFT JOIN persona AS persona_ch ON persona_ch.Prs_Cod = chofer.Prs_Cod
         LEFT JOIN manifiesto_plantas ON manifiesto_plantas.Pla_Cod = $nm.Pla_Cod AND $nm.Msa_Tip = 'PL'
-        LEFT JOIN manifiesto_sanciones_lista ON manifiesto_sanciones_lista.Tsa_Cod = $nm.Tsa_Cod
         LEFT JOIN cliente ON cliente.Cli_Cod = manifiesto_plantas.Cli_Cod
         LEFT JOIN persona AS persona_pl ON persona_pl.Prs_Cod = cliente.Prs_Cod
-        $extraJoin
         WHERE $whereSql";
 
     $countSql = "SELECT COUNT(*) AS total FROM ($sel) AS _cnt";
@@ -947,7 +855,6 @@ if (isset($saveSancionVehiculoAjax)) {
             'Msa_Fef' => $Msa_Fef,
             'Msa_Obs' => $Msa_Obs
         );
-        man_adm_sanciones_aplicar_tsa_cod_guardado($obBD_con1, $obBD_conexion, $Ses_Emp_Cod, $datos);
         if (!empty($Msa_Cod)) {
             $datos['where'] = array('Msa_Cod' => $Msa_Cod);
             $obBD_con1->operacionobBD('manifiesto_sanciones.update', $datos, $obBD_conexion);
@@ -986,7 +893,6 @@ if (isset($saveSancionChoferAjax)) {
             'Msa_Fef' => $Msa_Fef,
             'Msa_Obs' => $Msa_Obs
         );
-        man_adm_sanciones_aplicar_tsa_cod_guardado($obBD_con1, $obBD_conexion, $Ses_Emp_Cod, $datos);
         if (!empty($Msa_Cod)) {
             $datos['where'] = array('Msa_Cod' => $Msa_Cod);
             $obBD_con1->operacionobBD('manifiesto_sanciones.update', $datos, $obBD_conexion);
@@ -1025,7 +931,6 @@ if (isset($saveSancionPlantaAjax)) {
             'Msa_Fef' => $Msa_Fef,
             'Msa_Obs' => $Msa_Obs
         );
-        man_adm_sanciones_aplicar_tsa_cod_guardado($obBD_con1, $obBD_conexion, $Ses_Emp_Cod, $datos);
         if (!empty($Msa_Cod)) {
             $datos['where'] = array('Msa_Cod' => $Msa_Cod);
             $obBD_con1->operacionobBD('manifiesto_sanciones.update', $datos, $obBD_conexion);
@@ -1061,29 +966,6 @@ if (isset($anularSancionAjax)) {
     }
     $resp['success'] = $obBD_con1->fin_transaccion_nomsn($obBD_conexion);
     $obBD_con1->echoJson($resp);
-}
-
-// Suspender sanción (Msa_Est = 'S'), mismo patrón que anular (Msa_Est = 'I')
-if (isset($_REQUEST['suspenderSancionAjax']) || isset($suspenderSancionAjax)) {
-    $resp = array('success' => false);
-    $Msa_Cod = isset($_POST['Msa_Cod']) ? trim($_POST['Msa_Cod']) : '';
-    if (empty($Msa_Cod)) {
-        $resp['message'] = 'Código de sanción no válido.';
-        $obBD_con1->echoJson($resp);
-        exit;
-    }
-    $obBD_con1->inicio_transaccion($obBD_conexion);
-    try {
-        $obBD_con1->operacionobBD('manifiesto_sanciones.update', array('Msa_Est' => 'S', 'where' => array('Msa_Cod' => $Msa_Cod)), $obBD_conexion);
-    } catch (Exception $e) {
-        $obBD_con1->rollBack_nomsn($obBD_conexion);
-        $resp['message'] = $e->getMessage();
-        $obBD_con1->echoJson($resp);
-        exit;
-    }
-    $resp['success'] = $obBD_con1->fin_transaccion_nomsn($obBD_conexion);
-    $obBD_con1->echoJson($resp);
-    exit;
 }
 
 // Listar Transportes
@@ -1301,44 +1183,6 @@ if (isset($saveCeldaAjax)) {
         $obBD_con1->echoJson($resp);
     }
     $resp['success'] = $obBD_con1->fin_transaccion_nomsn($obBD_conexion);
-    $obBD_con1->echoJson($resp);
-}
-
-// Guardar nuevo tipo de sanción (catálogo manifiesto_sanciones_lista)
-if (isset($saveNuevoTipoSancionAjax)) {
-    $obBD_con1->inicio_transaccion($obBD_conexion);
-    $resp = array('success' => false);
-    try {
-        $Tsa_Des = isset($_POST['Tsa_Des']) ? trim($_POST['Tsa_Des']) : '';
-        $Tsa_Niv = isset($_POST['Tsa_Niv']) ? trim($_POST['Tsa_Niv']) : '';
-        $Emp_Cod_Post = $Ses_Emp_Cod;
-
-        if ($Tsa_Des === '') {
-            throw new Exception('La descripción del tipo de sanción es obligatoria.');
-        }
-        if ($Tsa_Niv === '' || !in_array($Tsa_Niv, array('M', 'A', 'B'))) {
-            throw new Exception('Nivel de riesgo inválido (use M, A o B).');
-        }       
-
-        $datosNuevo = array(
-            'Emp_Cod' => $Emp_Cod_Post,
-            'Tsa_Des' => $Tsa_Des,
-            'Tsa_Niv' => $Tsa_Niv,
-            'Tsa_Est' => 'A'
-        );
-
-        $obBD_con1->operacionobBD('manifiesto_sanciones_lista.insert', $datosNuevo, $obBD_conexion);
-        $Tsa_Cod_New = $obBD_con1->insercionid($obBD_conexion);
-        $resp['success'] = true;
-        $resp['Tsa_Cod'] = $Tsa_Cod_New;
-        $resp['Tsa_Des'] = $Tsa_Des;
-        $resp['Tsa_Niv'] = $Tsa_Niv;
-
-        $obBD_con1->fin_transaccion_nomsn($obBD_conexion);
-    } catch (Exception $e) {
-        $obBD_con1->rollBack_nomsn($obBD_conexion);
-        $resp['message'] = $e->getMessage();
-    }
     $obBD_con1->echoJson($resp);
 }
 
@@ -1831,8 +1675,14 @@ $obBD_con1->utf8_change_param($transportes);
                     <!-- Tab Sanciones -->
                     <div role="tabpanel" class="tab-pane" id="tabSanciones">
                         <div class="btn-toolbar">
-                            <button class="btn btn-success" onclick="abrirModalSancionUnificada();" title="Registrar sanción a vehículo, chofer o planta">
-                                <i class="glyphicon glyphicon-plus"></i> Nueva sanción
+                            <button class="btn btn-success" onclick="abrirModalSancionVehiculo();">
+                                <i class="glyphicon glyphicon-plus"></i> Nueva Sanción Vehículo
+                            </button>
+                            <button class="btn btn-success" onclick="abrirModalSancionChofer();">
+                                <i class="glyphicon glyphicon-plus"></i> Nueva Sanción Chofer
+                            </button>
+                            <button class="btn btn-success" onclick="abrirModalSancionPlanta();">
+                                <i class="glyphicon glyphicon-plus"></i> Nueva Sanción Planta
                             </button>
                             <button class="btn btn-default" onclick="actualizarGridSanciones();">
                                 <i class="glyphicon glyphicon-refresh"></i> Actualizar
@@ -2054,7 +1904,7 @@ $obBD_con1->utf8_change_param($transportes);
             <div class="tab-pane fade" id="tabAdminPlanta">
                 <form id="adminPlantaForm" class="form-horizontal normal">
                     <input type="hidden" id="Prs_Cod_Admin" name="Prs_Cod">
-                    <div class="form-group" id="grupo_tipo_sancion">
+                    <div class="form-group">
                         <input type="hidden" id="Pep_Tip" name="Pep_Tip" value="AP">
                         <label class="col-xs-4 control-label label-xs">Identificacion Admin:</label>
                         <div class="col-xs-8">
@@ -2681,211 +2531,146 @@ $obBD_con1->utf8_change_param($transportes);
     <div id="choferSancionDialog" title="Buscar Chofer"></div>
     <div id="plantaSancionDialog" title="Buscar Planta"></div>
 
-    <!-- Modal unificado: Sanción (Vehículo / Chofer / Planta) -->
-    <div id="sancionUnificadaDialog" title="Sanción" style="display: none;">
-        <ul class="nav nav-tabs" role="tablist" id="tabsSancionUnificada">
-            <li class="active"><a href="#tabPaneSancionVeh" role="tab" data-toggle="tab"><i class="fa fa-car"></i> Vehículo</a></li>
-            <li><a href="#tabPaneSancionCho" role="tab" data-toggle="tab"><i class="fa fa-user"></i> Chofer</a></li>
-            <li><a href="#tabPaneSancionPla" role="tab" data-toggle="tab"><i class="fa fa-industry"></i> Planta</a></li>
-        </ul>
-        <div class="tab-content" style="margin-top: 10px;">
-            <!-- Tipo sanción común a Vehículo / Chofer / Planta (un solo #Tsa_Cod) -->
-            <?php $listaTiposSancion = $obBD_con1->getArrayConsultaSql("SELECT Tsa_Cod, Tsa_Des, if(Tsa_Niv='M', 'MEDIO', if(Tsa_Niv='A', 'ALTO', 'BAJO')) as Tsa_Niv FROM manifiesto_sanciones_lista WHERE Emp_Cod = $Ses_Emp_Cod AND Tsa_Est = 'A' ORDER BY Tsa_Des", $obBD_conexion); ?>
-            <div class="form-horizontal normal" style="margin-bottom: 10px;">
-                <div class="form-group" style="margin-bottom: 8px;">
-                    <label class="col-xs-4 control-label label-xs required">Tipo Sanción:</label>
-                    <div class="col-xs-8">
-                        <div class="input-group input-group-xs">
-                            <select id="Tsa_Cod" name="Tsa_Cod" class="form-control input-xs" required>
-                                <option value="">— Seleccione —</option>
-                                <?php foreach ($listaTiposSancion as $row) { ?>
-                                    <option value="<?php echo $row['Tsa_Cod']; ?>" data-nivel="<?php echo $row['Tsa_Niv']; ?>"><?php echo $row['Tsa_Des']; ?></option>
-                                <?php } ?>
-                            </select>
-                            <span class="input-group-addon" id="nivel_tipo_sancion"></span>
-                            <span class="input-group-btn">
-                                <button type="button" class="btn btn-success btn-xs" title="Agregar tipo de sanción" onclick="abrirNuevoTipoSancion();">
-                                    <span class="glyphicon glyphicon-plus"></span>
-                                </button>
-                            </span>
-                        </div>
+    <!-- Modal Sanción Vehículo -->
+    <div id="sancionVehiculoDialog" title="Sanción - Vehículo" style="display: none;">
+        <form id="sancionVehiculoForm" class="form-horizontal normal">
+            <input type="hidden" id="sancionVeh_Msa_Cod" name="Msa_Cod">
+            <div class="form-group">
+                <label class="col-xs-4 control-label label-xs required">Placa Vehículo:</label>
+                <div class="col-xs-8">
+                    <div class="input-group input-group-xs">
+                        <input name="Veh_Pla" id="search_veh_sancion" type="text" placeholder="Ingrese placa (ej: ABC-1234)" class="form-control input-xs" maxlength="8" onkeydown="if (event.keyCode === 13) { event.preventDefault(); buscarVehiculoPorPlacaSancion(); }" onkeyup="this.value = this.value.toUpperCase();" />
+                        <span class="input-group-btn">
+                            <button type="button" onclick="buscarVehiculoPorPlacaSancion();" class="btn btn-success btn-xs" title="Buscar por placa"><span class="glyphicon glyphicon-search"></span></button>
+                        </span>
                     </div>
+                    <input type="hidden" id="sancionVeh_Veh_Cod" name="Veh_Cod" />
+                </div>
+                <label class="col-xs-4 control-label label-xs required">Vehículo:</label>
+                <div class="col-xs-8">
+                    <span id="sancionVeh_Veh_Pla" class="form-control input-xs databind help-block" style="margin: 2px 0 0 0; font-size: 11px;"></span>
+                    <span id="sancionVeh_sancionesAnio" class="help-block" style="margin: 2px 0 0 0; font-size: 11px;"></span>
                 </div>
             </div>
-            <div role="tabpanel" class="tab-pane fade in active" id="tabPaneSancionVeh">
-                <form id="sancionVehiculoForm" class="form-horizontal normal">
-                    <input type="hidden" id="sancionVeh_Msa_Cod" name="Msa_Cod">
-                    <div class="form-group">
-                        <label class="col-xs-4 control-label label-xs required">Placa Vehículo:</label>
-                        <div class="col-xs-8">
-                            <div class="input-group input-group-xs">
-                                <input name="Veh_Pla" id="search_veh_sancion" type="text" placeholder="Ingrese placa (ej: ABC-1234)" class="form-control input-xs" maxlength="8" onkeydown="if (event.keyCode === 13) { event.preventDefault(); buscarVehiculoPorPlacaSancion(); }" onkeyup="this.value = this.value.toUpperCase();" />
-                                <span class="input-group-btn">
-                                    <button type="button" onclick="buscarVehiculoPorPlacaSancion();" class="btn btn-success btn-xs" title="Buscar por placa"><span class="glyphicon glyphicon-search"></span></button>
-                                </span>
-                            </div>
-                            <input type="hidden" id="sancionVeh_Veh_Cod" name="Veh_Cod" />
-                        </div>
-                        <label class="col-xs-4 control-label label-xs required">Vehículo:</label>
-                        <div class="col-xs-8">
-                            <span id="sancionVeh_Veh_Pla" class="form-control input-xs databind help-block" style="margin: 2px 0 0 0; font-size: 11px;"></span>
-                            <span id="sancionVeh_sancionesAnio" class="help-block" style="margin: 2px 0 0 0; font-size: 11px;"></span>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-xs-4 control-label label-xs required">Chofer:</label>
-                        <div class="col-xs-8">
-                            <input type="text" id="sancionMsa_Cho" name="Msa_Cho" class="form-control input-xs" required placeholder="Chofer del Vehiculo" />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-xs-4 control-label label-xs required">Fecha/Hora Inicio:</label>
-                        <div class="col-xs-8">
-                            <input type="datetime-local" id="sancionVeh_Msa_Fei" name="Msa_Fei" class="form-control input-xs" required />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-xs-4 control-label label-xs required">Fecha/Hora Fin:</label>
-                        <div class="col-xs-8">
-                            <input type="datetime-local" id="sancionVeh_Msa_Fef" name="Msa_Fef" class="form-control input-xs" required />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-xs-4 control-label label-xs">Observación:</label>
-                        <div class="col-xs-8">
-                            <textarea id="sancionVeh_Msa_Obs" name="Msa_Obs" class="form-control input-xs" rows="2" maxlength="500" placeholder="Observación"></textarea>
-                        </div>
-                    </div>
-                </form>
-                <div style="text-align: center; margin-top: 15px;">
-                    <button class="btn btn-sm btn-primary" type="button" onclick="preGuardarSancionVehiculo();"><i class="glyphicon glyphicon-floppy-disk"></i> Guardar</button>
-                    <button class="btn btn-sm btn-default" type="button" onclick="cerrarModalSancionUnificada();"><i class="glyphicon glyphicon-remove"></i> Cancelar</button>
+            <div class="form-group">
+                <label class="col-xs-4 control-label label-xs required">Fecha/Hora Inicio:</label>
+                <div class="col-xs-8">
+                    <input type="datetime-local" id="sancionVeh_Msa_Fei" name="Msa_Fei" class="form-control input-xs" required />
                 </div>
             </div>
-            <div role="tabpanel" class="tab-pane fade" id="tabPaneSancionCho">
-                <form id="sancionChoferForm" class="form-horizontal normal">
-                    <input type="hidden" id="sancionCho_Msa_Cod" name="Msa_Cod">
-                    <div class="form-group">
-                        <label class="col-xs-4 control-label label-xs required">Chofer:</label>
-                        <div class="col-xs-8">
-                            <div class="input-group input-group-xs">
-                                <input name="search_cho" id="search_cho_sancion" type="text" placeholder="Buscar chofer..." class="form-control input-xs" readonly />
-                                <span class="input-group-btn">
-                                    <button type="button" onclick="abrirBusquedaChoferSancion();" class="btn btn-success btn-xs" title="Buscar Chofer"><span class="glyphicon glyphicon-search"></span></button>
-                                </span>
-                            </div>
-                            <input type="hidden" id="sancionCho_Cho_Cod" name="Cho_Cod" />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-xs-4 control-label label-xs">Cédula:</label>
-                        <div class="col-xs-8">
-                            <span id="sancionCho_Prs_Ced" class="form-control input-xs databind"></span>
-                            <span id="sancionCho_sancionesAnio" class="help-block" style="margin: 2px 0 0 0; font-size: 11px;"></span>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="col-xs-4 control-label label-xs required">Fecha/Hora Inicio:</label>
-                        <div class="col-xs-8">
-                            <input type="datetime-local" id="sancionCho_Msa_Fei" name="Msa_Fei" class="form-control input-xs" required />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-xs-4 control-label label-xs required">Fecha/Hora Fin:</label>
-                        <div class="col-xs-8">
-                            <input type="datetime-local" id="sancionCho_Msa_Fef" name="Msa_Fef" class="form-control input-xs" required />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-xs-4 control-label label-xs">Observación:</label>
-                        <div class="col-xs-8">
-                            <textarea id="sancionCho_Msa_Obs" name="Msa_Obs" class="form-control input-xs" rows="2" maxlength="500" placeholder="Observación"></textarea>
-                        </div>
-                    </div>
-                </form>
-                <div style="text-align: center; margin-top: 15px;">
-                    <button class="btn btn-sm btn-primary" type="button" onclick="guardarSancionChofer();"><i class="glyphicon glyphicon-floppy-disk"></i> Guardar</button>
-                    <button class="btn btn-sm btn-default" type="button" onclick="cerrarModalSancionUnificada();"><i class="glyphicon glyphicon-remove"></i> Cancelar</button>
+            <div class="form-group">
+                <label class="col-xs-4 control-label label-xs required">Fecha/Hora Fin:</label>
+                <div class="col-xs-8">
+                    <input type="datetime-local" id="sancionVeh_Msa_Fef" name="Msa_Fef" class="form-control input-xs" required />
                 </div>
             </div>
-            <div role="tabpanel" class="tab-pane fade" id="tabPaneSancionPla">
-                <form id="sancionPlantaForm" class="form-horizontal normal">
-                    <input type="hidden" id="sancionPla_Msa_Cod" name="Msa_Cod">
-                    <div class="form-group">
-                        <label class="col-xs-4 control-label label-xs required">Planta:</label>
-                        <div class="col-xs-8">
-                            <div class="input-group input-group-xs">
-                                <input name="search_pla" id="search_pla_sancion" type="text" placeholder="Buscar planta..." class="form-control input-xs" readonly />
-                                <span class="input-group-btn">
-                                    <button type="button" onclick="abrirBusquedaPlantaSancion();" class="btn btn-success btn-xs" title="Buscar Planta"><span class="glyphicon glyphicon-search"></span></button>
-                                </span>
-                            </div>
-                            <input type="hidden" id="sancionPla_Pla_Cod" name="Pla_Cod" />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-xs-4 control-label label-xs">Cédula cliente:</label>
-                        <div class="col-xs-8">
-                            <span id="sancionPla_Prs_Ced" class="form-control input-xs databind"></span>
-                            <span id="sancionPla_sancionesAnio" class="help-block" style="margin: 2px 0 0 0; font-size: 11px;"></span>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-xs-4 control-label label-xs required">Fecha/Hora Inicio:</label>
-                        <div class="col-xs-8">
-                            <input type="datetime-local" id="sancionPla_Msa_Fei" name="Msa_Fei" class="form-control input-xs" required />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-xs-4 control-label label-xs required">Fecha/Hora Fin:</label>
-                        <div class="col-xs-8">
-                            <input type="datetime-local" id="sancionPla_Msa_Fef" name="Msa_Fef" class="form-control input-xs" required />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-xs-4 control-label label-xs">Observación:</label>
-                        <div class="col-xs-8">
-                            <textarea id="sancionPla_Msa_Obs" name="Msa_Obs" class="form-control input-xs" rows="2" maxlength="500" placeholder="Observación"></textarea>
-                        </div>
-                    </div>
-                </form>
-                <div style="text-align: center; margin-top: 15px;">
-                    <button class="btn btn-sm btn-primary" type="button" onclick="guardarSancionPlanta();"><i class="glyphicon glyphicon-floppy-disk"></i> Guardar</button>
-                    <button class="btn btn-sm btn-default" type="button" onclick="cerrarModalSancionUnificada();"><i class="glyphicon glyphicon-remove"></i> Cancelar</button>
+            <div class="form-group">
+                <label class="col-xs-4 control-label label-xs">Observación:</label>
+                <div class="col-xs-8">
+                    <textarea id="sancionVeh_Msa_Obs" name="Msa_Obs" class="form-control input-xs" rows="2" maxlength="500" placeholder="Observación"></textarea>
                 </div>
             </div>
+        </form>
+        <div style="text-align: center; margin-top: 15px;">
+            <button class="btn btn-sm btn-primary" type="button" onclick="guardarSancionVehiculo();"><i class="glyphicon glyphicon-floppy-disk"></i> Guardar</button>
+            <button class="btn btn-sm btn-default" type="button" onclick="$('#sancionVehiculoDialog').dialog('close');"><i class="glyphicon glyphicon-remove"></i> Cancelar</button>
         </div>
     </div>
 
-    <!-- Modal: Nuevo Tipo de Sanción -->
-    <div id="nuevoTipoSancionDialog" title="Nuevo Tipo de Sanción" style="display: none;">
-        <form id="nuevoTipoSancionForm" class="form-horizontal normal">
+    <!-- Modal Sanción Chofer -->
+    <div id="sancionChoferDialog" title="Sanción - Chofer" style="display: none;">
+        <form id="sancionChoferForm" class="form-horizontal normal">
+            <input type="hidden" id="sancionCho_Msa_Cod" name="Msa_Cod">
             <div class="form-group">
-                <label class="col-xs-4 control-label label-xs required">Descripción:</label>
+                <label class="col-xs-4 control-label label-xs required">Chofer:</label>
                 <div class="col-xs-8">
-                    <input type="text" id="nuevoTsa_Des" name="Tsa_Des" class="form-control input-xs" required maxlength="100" placeholder="Descripción del tipo de sanción" />
+                    <div class="input-group input-group-xs">
+                        <input name="search_cho" id="search_cho_sancion" type="text" placeholder="Buscar chofer..." class="form-control input-xs" readonly />
+                        <span class="input-group-btn">
+                            <button type="button" onclick="abrirBusquedaChoferSancion();" class="btn btn-success btn-xs" title="Buscar Chofer"><span class="glyphicon glyphicon-search"></span></button>
+                        </span>
+                    </div>
+                    <input type="hidden" id="sancionCho_Cho_Cod" name="Cho_Cod" />
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-xs-4 control-label label-xs required">Nivel Riesgo:</label>
+                <label class="col-xs-4 control-label label-xs">Cédula:</label>
                 <div class="col-xs-8">
-                    <select id="nuevoTsa_Niv" name="Tsa_Niv" class="form-control input-xs" required>
-                        <option value="">— Seleccione —</option>                       
-                        <option value="A">ALTO</option>
-                        <option value="B">BAJO</option>
-                        <option value="M">MEDIO</option>
-                    </select>
+                    <span id="sancionCho_Prs_Ced" class="form-control input-xs databind"></span>
+                    <span id="sancionCho_sancionesAnio" class="help-block" style="margin: 2px 0 0 0; font-size: 11px;"></span>
                 </div>
-            </div>            
+            </div>
+
+            <div class="form-group">
+                <label class="col-xs-4 control-label label-xs required">Fecha/Hora Inicio:</label>
+                <div class="col-xs-8">
+                    <input type="datetime-local" id="sancionCho_Msa_Fei" name="Msa_Fei" class="form-control input-xs" required />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-xs-4 control-label label-xs required">Fecha/Hora Fin:</label>
+                <div class="col-xs-8">
+                    <input type="datetime-local" id="sancionCho_Msa_Fef" name="Msa_Fef" class="form-control input-xs" required />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-xs-4 control-label label-xs">Observación:</label>
+                <div class="col-xs-8">
+                    <textarea id="sancionCho_Msa_Obs" name="Msa_Obs" class="form-control input-xs" rows="2" maxlength="500" placeholder="Observación"></textarea>
+                </div>
+            </div>
         </form>
         <div style="text-align: center; margin-top: 15px;">
-            <button class="btn btn-sm btn-primary" type="button" onclick="guardarNuevoTipoSancion();">
-                <i class="glyphicon glyphicon-floppy-disk"></i> Guardar
-            </button>
-            <button class="btn btn-sm btn-default" type="button" onclick="$('#nuevoTipoSancionDialog').dialog('close');">
-                <i class="glyphicon glyphicon-remove"></i> Cancelar
-            </button>
+            <button class="btn btn-sm btn-primary" type="button" onclick="guardarSancionChofer();"><i class="glyphicon glyphicon-floppy-disk"></i> Guardar</button>
+            <button class="btn btn-sm btn-default" type="button" onclick="$('#sancionChoferDialog').dialog('close');"><i class="glyphicon glyphicon-remove"></i> Cancelar</button>
+        </div>
+    </div>
+
+    <!-- Modal Sanción Planta -->
+    <div id="sancionPlantaDialog" title="Sanción - Planta" style="display: none;">
+        <form id="sancionPlantaForm" class="form-horizontal normal">
+            <input type="hidden" id="sancionPla_Msa_Cod" name="Msa_Cod">
+            <div class="form-group">
+                <label class="col-xs-4 control-label label-xs required">Planta:</label>
+                <div class="col-xs-8">
+                    <div class="input-group input-group-xs">
+                        <input name="search_pla" id="search_pla_sancion" type="text" placeholder="Buscar planta..." class="form-control input-xs" readonly />
+                        <span class="input-group-btn">
+                            <button type="button" onclick="abrirBusquedaPlantaSancion();" class="btn btn-success btn-xs" title="Buscar Planta"><span class="glyphicon glyphicon-search"></span></button>
+                        </span>
+                    </div>
+                    <input type="hidden" id="sancionPla_Pla_Cod" name="Pla_Cod" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-xs-4 control-label label-xs">Cédula cliente:</label>
+                <div class="col-xs-8">
+                    <span id="sancionPla_Prs_Ced" class="form-control input-xs databind"></span>
+                    <span id="sancionPla_sancionesAnio" class="help-block" style="margin: 2px 0 0 0; font-size: 11px;"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-xs-4 control-label label-xs required">Fecha/Hora Inicio:</label>
+                <div class="col-xs-8">
+                    <input type="datetime-local" id="sancionPla_Msa_Fei" name="Msa_Fei" class="form-control input-xs" required />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-xs-4 control-label label-xs required">Fecha/Hora Fin:</label>
+                <div class="col-xs-8">
+                    <input type="datetime-local" id="sancionPla_Msa_Fef" name="Msa_Fef" class="form-control input-xs" required />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-xs-4 control-label label-xs">Observación:</label>
+                <div class="col-xs-8">
+                    <textarea id="sancionPla_Msa_Obs" name="Msa_Obs" class="form-control input-xs" rows="2" maxlength="500" placeholder="Observación"></textarea>
+                </div>
+            </div>
+        </form>
+        <div style="text-align: center; margin-top: 15px;">
+            <button class="btn btn-sm btn-primary" type="button" onclick="guardarSancionPlanta();"><i class="glyphicon glyphicon-floppy-disk"></i> Guardar</button>
+            <button class="btn btn-sm btn-default" type="button" onclick="$('#sancionPlantaDialog').dialog('close');"><i class="glyphicon glyphicon-remove"></i> Cancelar</button>
         </div>
     </div>
 
@@ -2937,152 +2722,8 @@ $obBD_con1->utf8_change_param($transportes);
         </div>
     </div>
 
-    <!-- Modal para mostrar QR del vehículo -->
-    <div id="qrVehiculoDialog" title="Código QR del Vehículo" style="display: none;">
-
-        <div id="qrPrintArea" class="qr-print-container">
-            <div class="qr-title">CÓDIGO QR - VEHÍCULO</div>
-            <div class="qr-code-box">
-                <div id="qrCodeContainer"></div>
-            </div>
-        </div>
-
-        <!-- Botón de imprimir centrado abajo -->
-        <div class="qr-print-button-bottom no-print">
-            <button type="button" class="btn btn-primary btn-sm" onclick="imprimirQRVehiculo()">
-                <i class="glyphicon glyphicon-print"></i> Imprimir
-            </button>
-        </div>
-
-        <!-- Campos ocultos para mantener la funcionalidad del JS -->
-        <span id="qrVehiculoPlaca" style="display:none;"></span>
-        <span id="qrVehiculoCodigo" style="display:none;"></span>
-        <span id="qrVehiculoMarca" style="display:none;"></span>
-    </div>
-
-
-
-    <style>
-        /* Estilos para el modal del QR - Vista compacta */
-        #qrVehiculoDialog {
-            text-align: center;
-        }
-
-        /* Botón de imprimir centrado abajo */
-        .qr-print-button-bottom {
-            text-align: center;
-            padding: 10px 0 5px 0;
-            margin-top: 5px;
-        }
-
-        .qr-print-container {
-            padding: 10px 15px 15px 15px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: auto;
-        }
-
-        .qr-title {
-            font-size: 13px;
-            font-weight: normal;
-            margin-bottom: 10px;
-            margin-top: 5px;
-            color: #000;
-            letter-spacing: 1px;
-        }
-
-        .qr-code-box {
-            margin: 5px auto;
-            padding: 8px;
-            border: 2px solid #000;
-            display: inline-block;
-            background: white;
-            max-width: 95%;
-        }
-
-        #qrCodeContainer {
-            display: inline-block;
-            line-height: 0;
-        }
-
-        #qrCodeContainer img {
-            display: block;
-            margin: 0 auto;
-            max-width: 100%;
-            height: auto;
-        }
-
-        /* Estilos para impresión en A4 - QR GRANDE */
-        @media print {
-            * {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-
-            .no-print {
-                display: none !important;
-            }
-
-            @page {
-                size: A4 portrait;
-                margin: 1cm;
-            }
-
-            body {
-                margin: 0;
-                padding: 0;
-                background: white;
-            }
-
-            .qr-print-container {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                min-height: 100vh;
-                padding: 0;
-                margin: 0;
-                page-break-after: avoid;
-            }
-
-            .qr-title {
-                font-size: 16px;
-                font-weight: normal;
-                margin-bottom: 30px;
-                margin-top: 0;
-                letter-spacing: 2px;
-                color: #000;
-            }
-
-            .qr-code-box {
-                margin: 0 auto;
-                padding: 15px;
-                border: 5px solid #000;
-                display: inline-block;
-                background: white;
-                /* El QR de 650x650px + padding + border ocupará aprox 680px */
-                max-width: 95%;
-            }
-
-            #qrCodeContainer {
-                display: block;
-                line-height: 0;
-            }
-
-            #qrCodeContainer img {
-                display: block;
-                margin: 0 auto;
-                width: 650px !important;
-                height: 650px !important;
-                max-width: none !important;
-            }
-        }
-    </style>
-
 </body>
-<script type="text/javascript" src="../VALIDACIONES/man_adm_configuracion.js?x=43"></script>
+<script type="text/javascript" src="../VALIDACIONES/man_adm_configuracion_1.0.js?x=26"></script>
 
 </script>
 

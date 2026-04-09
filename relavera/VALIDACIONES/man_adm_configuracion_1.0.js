@@ -17,7 +17,7 @@ function selectCliente(cliente) {
 
 
 $(function () {
-    // console.log("DOM Ready - Iniciando configuración");
+    console.log("DOM Ready - Iniciando configuración");
 
     ///alert("DOM Ready - Iniciando configuración");
 
@@ -61,10 +61,8 @@ $(function () {
         ]
     }, {
         title: 'cliente'
-    });    
-    $('#sancionVeh_Msa_Cho').on('input', function() {
-        this.value = this.value.toUpperCase();
     });
+
 
 
 
@@ -101,87 +99,20 @@ $(function () {
         height: 280,
         icon: 'th-large'
     });
-    $("#sancionUnificadaDialog").createDialog({
-        width: 520,
-        height: 420,
+    $("#sancionVehiculoDialog").createDialog({
+        width: 480,
+        height: 300,
         icon: 'ban-circle'
     });
-
-    $("#nuevoTipoSancionDialog").createDialog({
-        width: 420,
-        height: 200,
-        icon: 'plus-sign'
+    $("#sancionChoferDialog").createDialog({
+        width: 500,
+        height: 300,
+        icon: 'ban-circle'
     });
-
-    // Actualizar nivel de tipo de sanción cuando cambia el select
-    $('#Tsa_Cod').on('change', function () {
-        var nivel = $(this).find('option:selected').data('nivel');
-        $('#nivel_tipo_sancion').text(nivel || '');
-    });
-
-    // Botón "+" para abrir modal de nuevo tipo de sanción
-    window.abrirNuevoTipoSancion = function () {
-        $('#nuevoTipoSancionForm')[0].reset();
-        var emp = $('#nuevoEmp_Cod').val();
-        if (!emp) {
-            $('#nuevoEmp_Cod').val($('#Emp_Cod').val() || '');
-        }
-        $('#nuevoTipoSancionDialog').dialog('open');
-    };
-
-    // Guardar nuevo tipo de sanción vía AJAX
-    window.guardarNuevoTipoSancion = function () {
-        var des = $.trim($('#nuevoTsa_Des').val());
-        var niv = $.trim($('#nuevoTsa_Niv').val());
-        if (!des) {
-            $.alert('Ingrese la descripción del tipo de sanción.');
-            return;
-        }
-        if (!niv) {
-            $.alert('Seleccione el nivel de riesgo (M, A o B).');
-            return;
-        }
-        $.post('', {
-            saveNuevoTipoSancionAjax: true,
-            Tsa_Des: des,
-            Tsa_Niv: niv
-        }, function (r) {
-            if (r && r.success) {
-                $('#nuevoTipoSancionDialog').dialog('close');
-
-                // 1) Agregar inmediatamente al select Tsa_Cod del modal de sanción
-                var $sel = $('#Tsa_Cod');
-                if ($sel.length && r.Tsa_Cod) {
-                    // Crear opción si no existe
-                    if ($sel.find('option[value="' + r.Tsa_Cod + '"]').length === 0) {
-                        var $opt = $('<option></option>')
-                            .attr('value', r.Tsa_Cod)
-                            .attr('data-nivel', r.Tsa_Niv || '')
-                            .text(r.Tsa_Des || des);
-                        $sel.append($opt);
-                    }
-                    // Seleccionar el nuevo tipo y disparar cambio para actualizar el nivel
-                    $sel.val(r.Tsa_Cod).trigger('change');
-                }
-
-                // 2) Actualizar también el catálogo general si aplica
-                var pre = r.Tsa_Cod || '';
-                cargarSelectTiposSancionLista(pre);
-            } else {
-                $.alert((r && r.message) || 'Error al guardar el tipo de sanción.');
-            }
-        }, 'json').fail(function () {
-            $.alert('Error al guardar el tipo de sanción.');
-        });
-    };
-
-    // Diálogo para mostrar QR del vehículo - sin botones
-    $("#qrVehiculoDialog").dialog({
-        autoOpen: false,
-        width: 420,
-        height: 'auto',
-        modal: true,
-        closeOnEscape: true
+    $("#sancionPlantaDialog").createDialog({
+        width: 500,
+        height: 300,
+        icon: 'ban-circle'
     });
 
     // Inicializar datepickers
@@ -197,9 +128,9 @@ $(function () {
     });
 
     // Crear grids
-    // console.log("Antes de llamar createGridPlantas");
+    console.log("Antes de llamar createGridPlantas");
     createGridPlantas();
-    // console.log("Después de llamar createGridPlantas");
+    console.log("Después de llamar createGridPlantas");
     createGridEmpresasTransporte();
     createGridChoferes();
     createGridVehiculos();
@@ -558,7 +489,7 @@ function seleccionarClientePlanta(cliente) {
 
 // ==================== GRID PLANTAS ====================
 function createGridPlantas() {
-    // console.log("Creando grid de plantas");
+    console.log("Creando grid de plantas");
     $('#gridPlantas').createGrid({
         caption: 'Listado de Plantas',
         url: window.location.href,
@@ -1286,14 +1217,17 @@ function buscarPersonaPorCedula(cedula) {
     }, function (r) {
         if (r.choferExiste) {
             // El chofer ya existe en esta planta
-            // console.log('Datos recibidos:', r);
+            console.log('Datos recibidos:', r);
             $('#Cho_Cod').val(r.chofer.Cho_Cod);
             $('#Prs_Cod').val(r.chofer.Prs_Cod || r.persona.Prs_Cod);
+
 
             var prsNom = r.chofer.Prs_Nom || r.persona.Prs_Nom || '';
             var prsApe = r.chofer.Prs_Ape || r.persona.Prs_Ape || '';
             $('#choferForm  #Prs_Nom').val(prsNom).prop('readonly', true).css('background-color', '#eee');
             $('#choferForm #Prs_Ape').val(prsApe).prop('readonly', true).css('background-color', '#eee');
+
+
 
             if (r.chofer.Cho_Tel) $('#Cho_Tel').val(r.chofer.Cho_Tel);
             else if (r.persona.Prs_Tel) $('#Cho_Tel').val(r.persona.Prs_Tel);
@@ -2011,7 +1945,7 @@ function createGridSanciones() {
             { label: 'Cód. Int.', name: 'Msa_Cod', key: true, width: 20, align: 'center' },
             { label: 'Tipo', name: 'Msa_Tip', width: 40, align: 'center',
                 formatter: formatterIconoTipoSancion
-            },            
+            },
             { label: 'Identificacion', name: 'Prs_Ced', width: 80 },
             { label: 'Sancionado', name: 'Identificador', width: 160 },
             { label: 'Veh_Cod', name: 'Veh_Cod', width: 60, hidden: true },
@@ -2019,15 +1953,12 @@ function createGridSanciones() {
             { label: 'Pla_Cod', name: 'Pla_Cod', width: 60, hidden: true },
             { label: 'Prs_Ced', name: 'Prs_Ced', width: 60, hidden: true },
             { label: 'Prs_Nom', name: 'Prs_Nom', width: 100, hidden: true },
-            { label: 'Tipo Sanción', name: 'Tsa_Des', width: 80 },
-            { label: 'Nivel', name: 'Tsa_Niv', width: 50, align: 'center' },
-            { label: 'Fecha/Hora Inicio', name: 'Msa_Fei', width: 70, align: 'center' },
-            { label: 'Fecha/Hora Fin', name: 'Msa_Fef', width: 70, align: 'center' },
-            { label: 'Observación', name: 'Msa_Obs', width: 150 },
+            { label: 'Fecha/Hora Inicio', name: 'Msa_Fei', width: 60, align: 'center' },
+            { label: 'Fecha/Hora Fin', name: 'Msa_Fef', width: 60, align: 'center' },
+            { label: 'Observación', name: 'Msa_Obs', width: 200 },
             { label: 'Acciones', name: 'act', width: 90, align: 'center', sortable: false,
                 formatter: function (cellvalue, options, o) {
-                    return $.getGridButton('editarSancionPorTipo', o,'Editar','pencil','','success') +'&nbsp;' +
-                        $.getGridButton('suspenderSancionGrid',o.Msa_Cod,'Suspender Sancion','minus-sign','','info') + '&nbsp;' +
+                    return $.getGridButton('editarSancionPorTipo', o, 'Editar', 'pencil', '', 'success') + '&nbsp;' +
                         $.getGridButton('anularSancionGrid', o.Msa_Cod, 'Anular', 'trash', '', 'danger');
                 }
             }
@@ -2164,104 +2095,34 @@ function abrirModalSancion() {
     }
 }
 
-function resetFormSancionVehiculoCampos() {
+function abrirModalSancionVehiculo() {
     $('#sancionVehiculoForm')[0].reset();
     $('#sancionVeh_Msa_Cod').val('');
     $('#sancionVeh_Veh_Cod').val('');
     $('#search_veh_sancion').val('');
     $('#sancionVeh_Veh_Pla').text('');
     $('#sancionVeh_sancionesAnio').text('');
+    $('#sancionVehiculoDialog').dialog('open');
 }
-function resetFormSancionChoferCampos() {
+function abrirModalSancionChofer() {
     $('#sancionChoferForm')[0].reset();
     $('#sancionCho_Msa_Cod').val('');
     $('#sancionCho_Cho_Cod').val('');
     $('#sancionCho_Prs_Ced').text('');
+    $('#sancionCho_Prs_Nom').text('');
     $('#search_cho_sancion').val('');
     $('#sancionCho_sancionesAnio').text('');
+    $('#sancionChoferDialog').dialog('open');
 }
-function resetFormSancionPlantaCampos() {
+function abrirModalSancionPlanta() {
     $('#sancionPlantaForm')[0].reset();
     $('#sancionPla_Msa_Cod').val('');
     $('#sancionPla_Pla_Cod').val('');
     $('#sancionPla_Prs_Ced').text('');
+    $('#sancionPla_Prs_Nom').text('');
     $('#search_pla_sancion').val('');
     $('#sancionPla_sancionesAnio').text('');
-}
-
-/** Catálogo manifiesto_sansiones_lista (por Emp_Cod): obligatorio si BD tiene Tsa_Cod + tabla lista. */
-var _sancionRequiereTipoCatalogo = false;
-
-function cargarSelectTiposSancionLista(preselect, onDone) {
-    var pre = (preselect != null && preselect !== undefined) ? String(preselect) : '';
-    var $sel = $('#Tsa_Cod');
-    if (!$sel.length) {
-        if (typeof onDone === 'function') {
-            onDone();
-        }
-        return;
-    }
-    $sel.prop('disabled', true).html('<option value="">Cargando...</option>');
-    $.post('', { listTipoSancionListaAjax: true }, function (r) {
-        _sancionRequiereTipoCatalogo = !!(r && r.requiereSeleccion && r.rows && r.rows.length);
-        $sel.prop('disabled', false).empty().append('<option value="">— Seleccione —</option>');
-        if (r && r.rows && r.rows.length) {
-            $.each(r.rows, function (i, row) {
-                var cod = row.Tsa_Cod != null ? String(row.Tsa_Cod) : '';
-                var nom = (row.Tsa_Nom != null && String(row.Tsa_Nom) !== '') ? String(row.Tsa_Nom) : cod;
-                $sel.append($('<option></option>').attr('value', cod).text(nom));
-            });
-        }
-        if (pre) {
-            $sel.val(pre);
-        }
-        if (typeof onDone === 'function') {
-            onDone();
-        }
-    }, 'json').fail(function () {
-        _sancionRequiereTipoCatalogo = false;
-        $sel.prop('disabled', false).html('<option value="">— Error al cargar —</option>');
-        if (typeof onDone === 'function') {
-            onDone();
-        }
-    });
-}
-
-function validarTipoSancionSiAplica() {
-    var $tsa = $('#Tsa_Cod');
-    if (!$tsa.length) {
-        return true;
-    }
-    var v = $.trim($tsa.val());
-    if (!v) {
-        $.alert('Seleccione el tipo de sanción.');
-        return false;
-    }
-    return true;
-}
-
-/** Nueva sanción: modal único con pestañas Vehículo / Chofer / Planta. tipo: VE | CH | PL */
-function abrirModalSancionUnificada(tipo) {
-    tipo = (tipo || 'VE').toString().toUpperCase();
-    resetFormSancionVehiculoCampos();
-    resetFormSancionChoferCampos();
-    resetFormSancionPlantaCampos();
-    var $tsa = $('#Tsa_Cod');
-    if ($tsa.length) {
-        $tsa.val('').trigger('change');
-    }
-    if (tipo === 'CH' || tipo === 'CHO' || tipo === 'CHOFER') {
-        $('a[href="#tabPaneSancionCho"]').tab('show');
-    } else if (tipo === 'PL' || tipo === 'PLANTA') {
-        $('a[href="#tabPaneSancionPla"]').tab('show');
-    } else {
-        $('a[href="#tabPaneSancionVeh"]').tab('show');
-    }
-    $('#sancionUnificadaDialog').dialog('open');
-}
-
-function cerrarModalSancionUnificada() {
-    $('#sancionUnificadaDialog').dialog('close');
+    $('#sancionPlantaDialog').dialog('open');
 }
 
 function toDatetimeLocal(val) {
@@ -2283,8 +2144,6 @@ function editarSancionPorTipo(o) {
 }
 
 function editarSancionVehiculo(o) {
-    resetFormSancionChoferCampos();
-    resetFormSancionPlantaCampos();
     var placa = o.Veh_Pla || o.Prs_Ced || o.Identificador || '';
     var marca = o.Veh_Mar || o.Identificador || '';
     var placaMar = placa + (marca && marca !== placa ? ' - ' + marca : '');
@@ -2295,95 +2154,68 @@ function editarSancionVehiculo(o) {
     $('#sancionVeh_Msa_Fei').val(toDatetimeLocal(o.Msa_Fei));
     $('#sancionVeh_Msa_Fef').val(toDatetimeLocal(o.Msa_Fef));
     $('#sancionVeh_Msa_Obs').val(o.Msa_Obs || '');
-    $('a[href="#tabPaneSancionVeh"]').tab('show');
-    var tsaPre = (o.Tsa_Cod != null && o.Tsa_Cod !== '') ? o.Tsa_Cod : '';
-    cargarSelectTiposSancionLista(tsaPre, function () {
-        $('#sancionUnificadaDialog').dialog('open');
-        if (o.Veh_Cod) {
-            $.post('', { getCountSancionesVehiculoAjax: true, Veh_Cod: o.Veh_Cod }, function (r) {
-                if (r.success && r.SancionesAnio > 0) {
-                    $('#sancionVeh_sancionesAnio').text(r.SancionesAnio + ' sanci\u00f3n' + (r.SancionesAnio !== 1 ? 'es' : '') + ' en ' + r.Anio).css('color', '#666');
-                } else {
-                    $('#sancionVeh_sancionesAnio').text('');
-                }
-            }, 'json');
-        } else {
-            $('#sancionVeh_sancionesAnio').text('');
-        }
-    });
+    $('#sancionVehiculoDialog').dialog('open');
+    // Obtener cantidad de sanciones históricas del vehículo en el año actual
+    if (o.Veh_Cod) {
+        $.post('', { getCountSancionesVehiculoAjax: true, Veh_Cod: o.Veh_Cod }, function (r) {
+            if (r.success && r.SancionesAnio > 0) {
+                $('#sancionVeh_sancionesAnio').text(r.SancionesAnio + ' sanci\u00f3n' + (r.SancionesAnio !== 1 ? 'es' : '') + ' en ' + r.Anio).css('color', '#666');
+            } else {
+                $('#sancionVeh_sancionesAnio').text('');
+            }
+        }, 'json');
+    } else {
+        $('#sancionVeh_sancionesAnio').text('');
+    }
 }
 function editarSancionChofer(o) {
-    resetFormSancionVehiculoCampos();
-    resetFormSancionPlantaCampos();
     $('#sancionCho_Msa_Cod').val(o.Msa_Cod || '');
     $('#sancionCho_Cho_Cod').val(o.Cho_Cod || '');
     $('#sancionCho_Prs_Ced').text(o.Prs_Ced || '');
+    $('#sancionCho_Prs_Nom').text(o.Prs_Nom || o.Identificador || (o.nombre || ''));
     $('#search_cho_sancion').val(o.Prs_Nom || o.Identificador || (o.nombre || ''));
     $('#sancionCho_Msa_Fei').val(toDatetimeLocal(o.Msa_Fei));
     $('#sancionCho_Msa_Fef').val(toDatetimeLocal(o.Msa_Fef));
     $('#sancionCho_Msa_Obs').val(o.Msa_Obs || '');
     $('#sancionCho_sancionesAnio').text('');
-    $('a[href="#tabPaneSancionCho"]').tab('show');
-    var tsaPreCho = (o.Tsa_Cod != null && o.Tsa_Cod !== '') ? o.Tsa_Cod : '';
-    cargarSelectTiposSancionLista(tsaPreCho, function () {
-        $('#sancionUnificadaDialog').dialog('open');
-        if (o.Cho_Cod) {
-            $.post('', { getCountSancionesChoferAjax: true, Cho_Cod: o.Cho_Cod }, function (r) {
-                if (r.success && r.SancionesAnio > 0) {
-                    $('#sancionCho_sancionesAnio').text(r.SancionesAnio + ' sanci\u00f3n' + (r.SancionesAnio !== 1 ? 'es' : '') + ' en ' + r.Anio).css('color', '#666');
-                }
-            }, 'json');
-        }
-    });
+    $('#sancionChoferDialog').dialog('open');
+    if (o.Cho_Cod) {
+        $.post('', { getCountSancionesChoferAjax: true, Cho_Cod: o.Cho_Cod }, function (r) {
+            if (r.success && r.SancionesAnio > 0) {
+                $('#sancionCho_sancionesAnio').text(r.SancionesAnio + ' sanci\u00f3n' + (r.SancionesAnio !== 1 ? 'es' : '') + ' en ' + r.Anio).css('color', '#666');
+            }
+        }, 'json');
+    }
 }
 function editarSancionPlanta(o) {
-    resetFormSancionVehiculoCampos();
-    resetFormSancionChoferCampos();
     $('#sancionPla_Msa_Cod').val(o.Msa_Cod || '');
     $('#sancionPla_Pla_Cod').val(o.Pla_Cod || '');
     $('#sancionPla_Prs_Ced').text(o.Prs_Ced || '');
+    $('#sancionPla_Prs_Nom').text(o.Prs_Nom || o.Identificador || '');
     $('#search_pla_sancion').val(o.Prs_Nom || o.Identificador || '');
     $('#sancionPla_Msa_Fei').val(toDatetimeLocal(o.Msa_Fei));
     $('#sancionPla_Msa_Fef').val(toDatetimeLocal(o.Msa_Fef));
     $('#sancionPla_Msa_Obs').val(o.Msa_Obs || '');
     $('#sancionPla_sancionesAnio').text('');
-    $('a[href="#tabPaneSancionPla"]').tab('show');
-    var tsaPrePla = (o.Tsa_Cod != null && o.Tsa_Cod !== '') ? o.Tsa_Cod : '';
-    cargarSelectTiposSancionLista(tsaPrePla, function () {
-        $('#sancionUnificadaDialog').dialog('open');
-        if (o.Pla_Cod) {
-            $.post('', { getCountSancionesPlantaAjax: true, Pla_Cod: o.Pla_Cod }, function (r) {
-                if (r.success && r.SancionesAnio > 0) {
-                    $('#sancionPla_sancionesAnio').text(r.SancionesAnio + ' sanci\u00f3n' + (r.SancionesAnio !== 1 ? 'es' : '') + ' en ' + r.Anio).css('color', '#666');
-                }
-            }, 'json');
+    $('#sancionPlantaDialog').dialog('open');
+    if (o.Pla_Cod) {
+        $.post('', { getCountSancionesPlantaAjax: true, Pla_Cod: o.Pla_Cod }, function (r) {
+            if (r.success && r.SancionesAnio > 0) {
+                $('#sancionPla_sancionesAnio').text(r.SancionesAnio + ' sanci\u00f3n' + (r.SancionesAnio !== 1 ? 'es' : '') + ' en ' + r.Anio).css('color', '#666');
+            }
+        }, 'json');
+    }
+}
+
+function anularSancionGrid(Msa_Cod) {
+    if (!$.confirm('¿Desea anular esta sanción?')) return;
+    $.post('', { anularSancionAjax: true, Msa_Cod: Msa_Cod }, function (r) {
+        if (r.success) {
+            actualizarGridSanciones();
+        } else {
+            $.alert(r.message || 'Error al anular');
         }
-    });
-}
-
-function anularSancionGrid(Msa_Cod) {   
-    $.createDialogConfirm('¿Desea anular esta sanción?', { anularSancionAjax: true, Msa_Cod: Msa_Cod }, function(d) {
-        $.post('', { anularSancionAjax: true, Msa_Cod: d.Msa_Cod }, function (r) {
-            if (r.success) {
-                actualizarGridSanciones();
-            } else {
-                $.alert(r.message || 'Error al anular');
-            }
-        }, 'json');
-    });
-}
-
-/** Marca la sanción como suspendida (Msa_Est = S) en manifiesto_sanciones. */
-function suspenderSancionGrid(Msa_Cod) {
-    $.createDialogConfirm('¿Desea <b>suspender</b> esta sanci&oacute;n?', { suspenderSancionAjax: true, Msa_Cod: Msa_Cod }, function (d) {
-        $.post('', { suspenderSancionAjax: true, Msa_Cod: d.Msa_Cod }, function (r) {
-            if (r.success) {
-                actualizarGridSanciones();
-            } else {
-                $.alert(r.message || 'Error al suspender la sanción');
-            }
-        }, 'json');
-    });
+    }, 'json');
 }
 
 function abrirBusquedaChoferSancion() {
@@ -2393,31 +2225,23 @@ function abrirBusquedaPlantaSancion() {
     $('#plantaSancionDialog').dialog('open');
 }
 
-function preGuardarSancionVehiculo() {
-    if (!validarTipoSancionSiAplica()) {
-        return;
-    }
+function guardarSancionVehiculo() {
     var Veh_Cod = $.trim($('#sancionVeh_Veh_Cod').val());
     if (!Veh_Cod || Veh_Cod === '0') {
         $.alert('Debe seleccionar un vehículo. Ingrese la placa y pulse Buscar.');
         return;
-    }    
+    }
     var data = {
         saveSancionVehiculoAjax: true,
         Msa_Cod: $('#sancionVeh_Msa_Cod').val(),
         Veh_Cod: Veh_Cod,
-        Msa_Cho: $('#sancionMsa_Cho').val(),
         Msa_Fei: $('#sancionVeh_Msa_Fei').val(),
         Msa_Fef: $('#sancionVeh_Msa_Fef').val(),
-        Msa_Obs: $('#sancionVeh_Msa_Obs').val(),
-        Tsa_Cod: $.trim($('#Tsa_Cod').val())
+        Msa_Obs: $('#sancionVeh_Msa_Obs').val()
     };
-    $.createDialogConfirm('Est&aacute; seguro que desea guardar los datos?', data, saveSancionVehiculo);
-}
-function saveSancionVehiculo(data){   
     $.post('', data, function (r) {
         if (r.success) {
-            cerrarModalSancionUnificada();
+            $('#sancionVehiculoDialog').dialog('close');
             actualizarGridSanciones();
         } else {
             $.alert(r.message || 'Error al guardar');
@@ -2425,9 +2249,6 @@ function saveSancionVehiculo(data){
     }, 'json');
 }
 function guardarSancionChofer() {
-    if (!validarTipoSancionSiAplica()) {
-        return;
-    }
     var Cho_Cod = $.trim($('#sancionCho_Cho_Cod').val());
     if (!Cho_Cod || Cho_Cod === '0') {
         $.alert('Debe seleccionar un chofer. Utilice el botón de búsqueda para elegir un chofer.');
@@ -2439,12 +2260,11 @@ function guardarSancionChofer() {
         Cho_Cod: Cho_Cod,
         Msa_Fei: $('#sancionCho_Msa_Fei').val(),
         Msa_Fef: $('#sancionCho_Msa_Fef').val(),
-        Msa_Obs: $('#sancionCho_Msa_Obs').val(),
-        Tsa_Cod: $.trim($('#Tsa_Cod').val())
+        Msa_Obs: $('#sancionCho_Msa_Obs').val()
     };
     $.post('', data, function (r) {
         if (r.success) {
-            cerrarModalSancionUnificada();
+            $('#sancionChoferDialog').dialog('close');
             actualizarGridSanciones();
         } else {
             $.alert(r.message || 'Error al guardar');
@@ -2452,9 +2272,6 @@ function guardarSancionChofer() {
     }, 'json');
 }
 function guardarSancionPlanta() {
-    if (!validarTipoSancionSiAplica()) {
-        return;
-    }
     var Pla_Cod = $.trim($('#sancionPla_Pla_Cod').val());
     if (!Pla_Cod || Pla_Cod === '0') {
         $.alert('Debe seleccionar una planta. Utilice el botón de búsqueda para elegir una planta.');
@@ -2466,12 +2283,11 @@ function guardarSancionPlanta() {
         Pla_Cod: Pla_Cod,
         Msa_Fei: $('#sancionPla_Msa_Fei').val(),
         Msa_Fef: $('#sancionPla_Msa_Fef').val(),
-        Msa_Obs: $('#sancionPla_Msa_Obs').val(),
-        Tsa_Cod: $.trim($('#Tsa_Cod').val())
+        Msa_Obs: $('#sancionPla_Msa_Obs').val()
     };
     $.post('', data, function (r) {
         if (r.success) {
-            cerrarModalSancionUnificada();
+            $('#sancionPlantaDialog').dialog('close');
             actualizarGridSanciones();
         } else {
             $.alert(r.message || 'Error al guardar');
