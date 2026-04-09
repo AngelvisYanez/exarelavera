@@ -609,7 +609,7 @@ if ($total > 0) {
                 .home-body {
                     background-position: center center;
                     background-attachment: scroll;
-                    background-size: 100% 100% !important;
+                    background-size: cover !important;
                 }
             }
             .home-welcome-title {

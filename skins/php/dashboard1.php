@@ -379,12 +379,12 @@ if ($total > 0) {
                 margin: 0;
             }
             @media (max-width: 768px) {
-                .home-body {
-                    background-position: center center;
-                    background-attachment: scroll;
-                    background-size: 100% 100% !important;
-                }
-            }
+                 .home-body {
+                     background-position: center center;
+                     background-attachment: scroll;
+                     background-size: cover !important;
+                 }
+             }
             .custom-btn {
                 display: flex;
                 align-items: center;

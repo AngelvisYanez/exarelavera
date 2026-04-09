@@ -75,7 +75,7 @@ if (isset($_SESSION['Ses_Per_Des']) && isset($_SESSION['Ses_Emp_Cod'])) {
             .home-body {
                 background-position: center center;
                 background-attachment: scroll;
-                background-size: 100% 100% !important;
+                background-size: cover !important;
             }
         }
         /* Título: sans geométrica en negrita (estilo similar a piezas promocionales) + azul #1766af */

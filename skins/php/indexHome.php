@@ -129,7 +129,7 @@ if ($total > 0) {
                 .home-body {
                     background-position: center center;
                     background-attachment: scroll;
-                    background-size: 100% 100% !important; /* Forzar que se adapte a la resolución sin mantener el aspecto original si el usuario lo prefiere */
+                    background-size: cover !important;
                 }
             }
             .home-welcome-title {
