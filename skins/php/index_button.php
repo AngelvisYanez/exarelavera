@@ -73,14 +73,19 @@ if (isset($_SESSION['Ses_Per_Des']) && isset($_SESSION['Ses_Emp_Cod'])) {
         }
         @media (max-width: 768px) {
             .home-body {
-                background-position: center 20% !important;
+                background-position: center 15% !important;
                 background-attachment: scroll;
-                background-size: contain !important;
+                background-size: cover !important;
                 background-repeat: no-repeat !important;
-                background-color: #f0f4f8;
+            }
+            .home-welcome-header {
+                margin-top: 15px !important;
+            }
+            .container-fluid {
+                margin-top: 180px !important;
             }
             .custom-btn {
-                width: 80% !important;
+                width: 85% !important;
                 margin: 0 auto 12px auto !important;
             }
         }

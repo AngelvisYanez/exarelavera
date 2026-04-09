@@ -379,18 +379,23 @@ if ($total > 0) {
                 margin: 0;
             }
             @media (max-width: 768px) {
-                  .home-body {
-                      background-position: center 20% !important;
-                      background-attachment: scroll;
-                      background-size: contain !important;
-                      background-repeat: no-repeat !important;
-                      background-color: #f0f4f8;
-                  }
-                  .custom-btn {
-                      width: 80% !important;
-                      margin: 0 auto 12px auto !important;
-                  }
-              }
+                   .home-body {
+                       background-position: center 15% !important;
+                       background-attachment: scroll;
+                       background-size: cover !important;
+                       background-repeat: no-repeat !important;
+                   }
+                   .home-welcome-header {
+                       margin-top: 15px !important;
+                   }
+                   .container-fluid {
+                       margin-top: 180px !important;
+                   }
+                   .custom-btn {
+                       width: 85% !important;
+                       margin: 0 auto 12px auto !important;
+                   }
+               }
             .custom-btn {
                 display: flex;
                 align-items: center;

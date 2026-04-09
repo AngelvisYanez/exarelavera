@@ -127,14 +127,19 @@ if ($total > 0) {
             }
             @media (max-width: 768px) {
                 .home-body {
-                    background-position: center 20% !important;
+                    background-position: center 15% !important;
                     background-attachment: scroll;
-                    background-size: contain !important;
+                    background-size: cover !important;
                     background-repeat: no-repeat !important;
-                    background-color: #f0f4f8; /* Color suave para los bordes */
+                }
+                .home-welcome-header {
+                    margin-top: 15px !important;
+                }
+                .container-fluid {
+                    margin-top: 180px !important; /* Desplaza los botones hacia abajo para dejar ver el logo */
                 }
                 .custom-btn {
-                    width: 80% !important;
+                    width: 85% !important;
                     margin: 0 auto 12px auto !important;
                 }
             }
