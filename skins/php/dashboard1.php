@@ -356,7 +356,7 @@ if ($total > 0) {
         </script><!-- <![endif]-->
     </head>
     <!-- <body bgcolor="#FFFFFF" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" style="text-align:center; background: url('../img/Fondo-Exa-1.gif') no-repeat;background-size: cover;"> -->
-    <body bgcolor="#FFFFFF" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" style="text-align:center; background: url('../../mascaras/model1/img/logo/backgroundHome.png') no-repeat; background-size: cover; position: relative; overflow-y: auto; min-height: 100vh;">
+    <body bgcolor="#FFFFFF" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" class="home-body">
         <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4 text-center" style="color: white; display: flex; align-items: center; justify-content: center; margin-top: 35px; flex-wrap: wrap;">
             <!-- <img src="../../imagenes/ingresar/favicon.png" alt="" class="img-fluid" width="50" style="margin-top: -15px; margin-right: 12px;"> -->
             <h1 class="text-white mb-3" style="margin: 0; font-family: 'Cooper Black', 'Trebuchet MS', 'Arial', sans-serif; font-size: 40px; font-weight: 600; letter-spacing: 1px;">
@@ -365,6 +365,26 @@ if ($total > 0) {
         </div>
 
         <style>
+            .home-body {
+                text-align: center;
+                background: url('../../mascaras/model1/img/logo/backgroundHome.png') no-repeat;
+                background-size: cover;
+                background-position: center top;
+                background-attachment: fixed;
+                position: relative;
+                overflow-y: auto;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                margin: 0;
+            }
+            @media (max-width: 768px) {
+                .home-body {
+                    background-position: center center;
+                    background-attachment: scroll;
+                    background-size: 100% 100% !important;
+                }
+            }
             .custom-btn {
                 display: flex;
                 align-items: center;

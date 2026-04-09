@@ -103,7 +103,7 @@ if ($total > 0) {
         </script><!-- <![endif]-->
     </head>
     <!-- <body bgcolor="#FFFFFF" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" style="text-align:center; background: url('../img/Fondo-Exa-1.gif') no-repeat;background-size: cover;"> -->
-    <body bgcolor="#FFFFFF" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" style="text-align:center; background: url('../../mascaras/model1/img/logo/backgroundHome.png') no-repeat; background-size: cover; background-position: center top; position: relative; overflow-y: auto; min-height: 100vh; display: flex; flex-direction: column;">
+    <body bgcolor="#FFFFFF" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" class="home-body">
         <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4 text-center home-welcome-header" style="color: white; display: flex; align-items: center; justify-content: center; margin-top: 35px; flex-wrap: wrap; flex-shrink: 0;">
             <img src="../../imagenes/ingresar/favicon.png" alt="" class="img-fluid" width="50" style="margin-top: -15px; margin-right: 12px;">
             <h1 class="mb-3 home-welcome-title" style="margin: 0; font-size: clamp(1.25rem, 4vw, 2.5rem); line-height: 1.2;">
@@ -112,6 +112,26 @@ if ($total > 0) {
         </div>
 
         <style>
+            .home-body {
+                text-align: center;
+                background: url('../../mascaras/model1/img/logo/backgroundHome.png') no-repeat;
+                background-size: cover;
+                background-position: center top;
+                background-attachment: fixed;
+                position: relative;
+                overflow-y: auto;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                margin: 0;
+            }
+            @media (max-width: 768px) {
+                .home-body {
+                    background-position: center center;
+                    background-attachment: scroll;
+                    background-size: 100% 100% !important; /* Forzar que se adapte a la resolución sin mantener el aspecto original si el usuario lo prefiere */
+                }
+            }
             .home-welcome-title {
                 color: #1766af !important;
                 font-family: 'Montserrat', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif !important;
