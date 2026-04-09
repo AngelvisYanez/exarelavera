@@ -50,7 +50,7 @@ if (isset($_SESSION['Ses_Per_Des']) && isset($_SESSION['Ses_Emp_Cod'])) {
 </script><!-- <![endif]-->
 </head>
 <!-- <body bgcolor="#FFFFFF" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" style="text-align:center; background: url('../img/Fondo-Exa-1.gif') no-repeat;background-size: cover;"> -->
-    <body bgcolor="#FFFFFF" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" class="home-body">
+    <body bgcolor="#FFFFFF" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" style="text-align:center; background: url('../../mascaras/model1/img/logo/backgroundHome.png') no-repeat; background-size: cover; position: relative;">
     <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4 text-center home-welcome-header" style="display: flex; align-items: center; justify-content: center; margin-top: 40px;">
         <img src="../../imagenes/ingresar/favicon.png" alt="" class="img-fluid" width="50" style="margin-top: -12px; margin-right: 12px;">
         <h1 class="mb-3 home-welcome-title" style="margin: 0; font-size: clamp(1.25rem, 4vw, 2.5rem); line-height: 1.2;">
@@ -59,36 +59,6 @@ if (isset($_SESSION['Ses_Per_Des']) && isset($_SESSION['Ses_Emp_Cod'])) {
     </div>
 
     <style>
-        .home-body {
-            text-align: center;
-            background: url('../../mascaras/model1/img/logo/backgroundHome.png') no-repeat;
-            background-size: cover;
-            background-position: center top;
-            background-attachment: fixed;
-            position: relative;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            margin: 0;
-        }
-        @media (max-width: 768px) {
-            .home-body {
-                background-position: center 15% !important;
-                background-attachment: scroll;
-                background-size: cover !important;
-                background-repeat: no-repeat !important;
-            }
-            .home-welcome-header {
-                margin-top: 15px !important;
-            }
-            .container-fluid {
-                margin-top: 180px !important;
-            }
-            .custom-btn {
-                width: 85% !important;
-                margin: 0 auto 12px auto !important;
-            }
-        }
         /* Título: sans geométrica en negrita (estilo similar a piezas promocionales) + azul #1766af */
         .home-welcome-title {
             color: #1766af !important;
