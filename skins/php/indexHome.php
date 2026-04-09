@@ -127,9 +127,15 @@ if ($total > 0) {
             }
             @media (max-width: 768px) {
                 .home-body {
-                    background-position: center center;
+                    background-position: center 20% !important;
                     background-attachment: scroll;
-                    background-size: cover !important;
+                    background-size: contain !important;
+                    background-repeat: no-repeat !important;
+                    background-color: #f0f4f8; /* Color suave para los bordes */
+                }
+                .custom-btn {
+                    width: 80% !important;
+                    margin: 0 auto 12px auto !important;
                 }
             }
             .home-welcome-title {
