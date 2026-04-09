@@ -1,0 +1,129 @@
+<?php
+
+/** Inicializa la Sesion en las paginas **/
+if (session_id() === '') @session_start();
+
+/*****************************************/
+/*     Clase para conexion con MySql     */
+/*****************************************/
+class MysqlConexion
+{
+    /* P R O P I E D A D E S */
+    /*************************/
+    /*  Parametros de conexión Master */
+    var $BaseDatos;
+    var $Servidor;
+    var $Usuario;
+    var $Clave;
+    /* Constantes de conexion bases de datos */
+    const bd = "exa_master"; //base de datos master
+    const bdc = ""; //base de datos corporativa
+    /*  Constantes de conexion */
+
+
+    /*const host = "localhost";
+    const user = "root";
+    const pass = "";*/
+
+    
+    const host = "localhost";
+    const user = "userExa";
+    const pass = "lynxsc7";
+
+
+    var $conexion = 0;
+    /* Número de error y texto error */
+    var $Errno = 0;
+    var $Error = "";
+    /* M E T O D O S */
+    /*****************/
+    /* Método Constructor: Cada vez que creemos una variable de esta clase, se ejecutará esta función */
+    function __construct()
+    {
+        $args = func_get_args(); // Captura los argumentos
+        $nargs = func_num_args(); // Número de argumentos
+        if ($nargs > 0 && $args[0] == "master") { // Determina si la base de datos es corporativa
+            $nargs = -1;
+        }
+        switch ($nargs) {
+            case 0:  //Constructor por defecto
+                self::__construct1();
+                break;
+            case 1:  //Constructor común (personalizado)
+                self::__construct2($args[0]);
+                break;
+            default: //Constructor por defecto corporativo
+                self::__construct3();
+                break;
+        }
+    }
+    /* Constructor por defecto */
+    function __construct1()
+    {
+        $this->BaseDatos = self::bd;
+        $this->Servidor = self::host;
+        $this->Usuario = self::user;
+        $this->Clave = self::pass;
+        $this->conectar();
+    }
+    /* Constructor común (personalizado) */
+    function __construct2($bd)
+    {
+        $this->BaseDatos = $bd;
+        $this->Servidor = self::host;
+        $this->Usuario = self::user;
+        $this->Clave = self::pass;
+        $this->conectar();
+    }
+    /* Constructor por defecto (corporativo)  @ param $master="master" */
+    function __construct3()
+    {
+        $this->BaseDatos = self::bdc;
+        $this->Servidor = self::host;
+        $this->Usuario = self::user;
+        $this->Clave = self::pass;
+        $this->conectar();
+    }
+    /* Conexión a la base de datos y selección de la base de datos */
+    function conectar()
+    {
+        if (!!$this->link()) $this->selectDb(); /* Conectamos al servidor, y seleccionamos la base de datos */
+        return $this->conexion; /* Si hemos tenido éxito conectando devuelve el identificador de la conexión, sino devuelve 0 */
+    }
+    /* Conexión UNICAMENTE a la base de datos */
+    function link()
+    {
+        /* Conectamos al servidor */
+        @$this->conexion = mysqli_connect($this->Servidor, $this->Usuario, $this->Clave);
+        if (!$this->conexion) {
+            $this->Error = "Ha fallado la conexión. " . mysqli_connect_error();
+            DebugBar::addTransactionEvent('Open Connection', $this->getDB() + array('is_success' => false, 'error_message' => $this->Error));
+        }
+        return $this->conexion; /* Si hemos tenido éxito conectando devuelve el identificador de la conexión, sino devuelve 0 */
+    }
+    /* Selecciona la base de datos */
+    function selectDb($db = null)
+    {
+        /* Seleccionamos la base de datos */
+        $dbs = empty($db) ? $this->BaseDatos : $db;
+        if (!$this->conexion || !@mysqli_select_db($this->conexion, $dbs)) {
+            $this->Error = "Imposible abrir " . $dbs;
+            DebugBar::addTransactionEvent('Open Connection', $this->getDB() + array('is_success' => false, 'error_message' => $this->Error));
+            return false;
+        }
+        DebugBar::addTransactionEvent('Open Connection', $this->getDB());
+        return $this->conexion;
+    }
+    /* Cierra la conexion */
+    function cerrar()
+    {
+        DebugBar::addTransactionEvent('Close Connection', $this->getDB());
+        return (!$this->conexion) ? NULL : @mysqli_close($this->conexion);
+    }
+    function getDB()
+    {
+        return array('db' => $this->BaseDatos);
+    }
+} //Fin de clase Class_Conexion
+class Class_Log_Conexion_Global extends MysqlConexion {}
+class MyGlobalConexion extends MysqlConexion {}
