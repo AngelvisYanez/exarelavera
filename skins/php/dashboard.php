@@ -571,6 +571,9 @@ if ($total > 0) {
         <link rel="stylesheet" href="../../skins/fonts/fontelo/fontello.css?x=0" />
         <link rel="stylesheet" href="../../skins/css/estilo-index.css"/>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
         <!-- text fonts -->
         <link rel="stylesheet" href="../../skins/css/ace-fonts.css" />
         <!-- exa styles -->
@@ -583,12 +586,19 @@ if ($total > 0) {
     <body bgcolor="#FFFFFF" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" style="text-align:center; background: url('../../mascaras/model1/img/logo/backgroundHome.png') no-repeat; background-size: cover; position: relative; overflow-y: auto; min-height: 100vh;">
         <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4 text-center" style="color: white; display: flex; align-items: center; justify-content: center; margin-top: 35px; flex-wrap: wrap;">
             <img src="../../imagenes/ingresar/favicon.png" alt="" class="img-fluid" width="50" style="margin-top: -15px; margin-right: 12px;">
-            <h1 class="text-white mb-3" style="margin: 0; font-family: 'Cooper Black', 'Trebuchet MS', 'Arial', sans-serif; font-size: 40px; font-weight: 600; letter-spacing: 1px;">
-                Bienvenidos a EXA Software Contable
+            <h1 class="mb-3 home-welcome-title" style="margin: 0; font-size: clamp(1.25rem, 4vw, 2.5rem); line-height: 1.2;">
+                Sistema Integral de Gesti&oacute;n Operativa y Contable
             </h1>
         </div>
 
         <style>
+            .home-welcome-title {
+                color: #1766af !important;
+                font-family: 'Montserrat', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif !important;
+                font-weight: 800 !important;
+                letter-spacing: 0.03em;
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.14);
+            }
             .custom-btn {
                 display: flex;
                 align-items: center;

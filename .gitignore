@@ -10,8 +10,8 @@
 .env
 
 
-cgi-bin/*
-cgi-bin/*.*
+# cgi-bin/*
+# cgi-bin/*.*
 respaldo/*
 facturacion/FRONT/[0-9]*
 facturacion/FRONT/[0-9]*/*
@@ -19,14 +19,14 @@ facturacion/FRONT/[0-9]/*
 /facturacion/FRONT/[0-9]*
 tesoreria/FRONT/SRI/[0-9]*
 /tesoreria/FRONT/SRI/[0-9]*
-imagenes/[0-9]*
-/imagenes/[0-9]*
-/imagenes/*
-imagenes2/*
-imagenes2/[0-9]*
+# imagenes/[0-9]*
+# /imagenes/[0-9]*
+# /imagenes/*
+# imagenes2/*
+# imagenes2/[0-9]*
 /ofsercont-backend
 
-DATA/
+# DATA/
 #DATA/MysqlConexion.php
 !DATA/TablesStructure
 !DATA/EstructureExport.php
@@ -35,8 +35,8 @@ administrador/tareas
 administrador/tareasRealizadas
 administrador/tickets
 
-activosfijos_viejo
-rrhh2
+# activosfijos_viejo
+# rrhh2
 *[oO]ld.*
 *[oO]ld[0-9].*
 

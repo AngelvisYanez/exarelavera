@@ -91,6 +91,9 @@ if ($total > 0) {
         <link rel="stylesheet" href="../../skins/fonts/fontelo/fontello.css?x=0" />
         <link rel="stylesheet" href="../../skins/css/estilo-index.css"/>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
         <!-- text fonts -->
         <link rel="stylesheet" href="../../skins/css/ace-fonts.css" />
         <!-- exa styles -->
@@ -100,15 +103,22 @@ if ($total > 0) {
         </script><!-- <![endif]-->
     </head>
     <!-- <body bgcolor="#FFFFFF" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" style="text-align:center; background: url('../img/Fondo-Exa-1.gif') no-repeat;background-size: cover;"> -->
-    <body bgcolor="#FFFFFF" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" style="text-align:center; background: url('../../mascaras/model1/img/logo/backgroundHome.png') no-repeat; background-size: cover; position: relative; overflow-y: auto; min-height: 100vh;">
-        <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4 text-center" style="color: white; display: flex; align-items: center; justify-content: center; margin-top: 35px; flex-wrap: wrap;">
+    <body bgcolor="#FFFFFF" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" style="text-align:center; background: url('../../mascaras/model1/img/logo/backgroundHome.png') no-repeat; background-size: cover; background-position: center top; position: relative; overflow-y: auto; min-height: 100vh; display: flex; flex-direction: column;">
+        <div class="col-xl-12 col-sm-12 mb-xl-0 mb-4 text-center home-welcome-header" style="color: white; display: flex; align-items: center; justify-content: center; margin-top: 35px; flex-wrap: wrap; flex-shrink: 0;">
             <img src="../../imagenes/ingresar/favicon.png" alt="" class="img-fluid" width="50" style="margin-top: -15px; margin-right: 12px;">
-            <h1 class="text-white mb-3" style="margin: 0; font-family: 'Cooper Black', 'Trebuchet MS', 'Arial', sans-serif; font-size: 40px; font-weight: 600; letter-spacing: 1px;">
-                Bienvenidos a EXA Software Contable
+            <h1 class="mb-3 home-welcome-title" style="margin: 0; font-size: clamp(1.25rem, 4vw, 2.5rem); line-height: 1.2;">
+                Sistema Integral de Gesti&oacute;n Operativa y Contable
             </h1>
         </div>
 
         <style>
+            .home-welcome-title {
+                color: #1766af !important;
+                font-family: 'Montserrat', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif !important;
+                font-weight: 800 !important;
+                letter-spacing: 0.03em;
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.14);
+            }
             .custom-btn {
                 display: flex;
                 align-items: center;
@@ -185,10 +195,11 @@ if ($total > 0) {
             }
         </style>
 
+        <div class="home-shortcuts-middle" style="flex: 1; display: flex; flex-direction: column; justify-content: center; min-height: 0; width: 100%;">
         <fieldset class="scheduler-border">
             <legend class="scheduler-border" style="color: white; font-size: 1.2rem; font-weight: 600; margin-left: 130px; margin-bottom: 20px; text-align: left;">Mis Accesos Directos</legend>
             <div class="container-fluid">
-                <div class="row menu-btns justify-center" style="display: flex; justify-content: center; margin-top: 40px; flex-wrap: wrap;">
+                <div class="row menu-btns justify-center" style="display: flex; justify-content: center; margin-top: 0; flex-wrap: wrap;">
                     <div class="col-xl-3 col-sm-5 col-12 mb-xl-0 mb-4" style="display: flex; justify-content: center;">
                         <a class="custom-btn btn bg-white me-2 text-secondary shadow w-100 fs-6" href="<?php echo htmlspecialchars($hrefRuta); ?>" id="ventas-link">
                             <i class="fa fa-credit-card text-primary"></i> Registrar Ventas
@@ -253,6 +264,7 @@ if ($total > 0) {
                 </div>
             </div>
         </fieldset>
+        </div>
 
         <!-- Modal para seleccionar acceso directo -->
         <div class="modal" tabindex="-1" id="shortcutModal" style="display:none;position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);align-items:center;justify-content:center;">
@@ -402,7 +414,7 @@ if ($total > 0) {
             })();
         </script>
         
-        <div class="container-fluid" style="margin-top: 30px;">
+        <div class="container-fluid home-bottom-cards" style="margin-top: 30px; flex-shrink: 0;">
             <div class="row justify-center" style="display: flex; justify-content: center; align-items: flex-start; gap: 32px; margin-bottom: 32px;">
                 <!-- Contenedor 1 -->
                 <div class="col-md-6 col-12" style="display: flex; align-items: stretch; justify-content: flex-end; min-width: 260px; max-width: 480px;">

@@ -38,14 +38,12 @@ if (isset($ajax_empresas2)) {
         if ($conteo > 1) {
             $html = $html . "<option value=''></option>";
             foreach ($rs_empresas as $row_rs_empresas) {
-                $html = $html . "<option value='" . $row_rs_empresas['Emp_Cod'] . "' data-Emp_Nom='" . ($row_rs_empresas['Emp_Nom']) . "' data--suc_-cod='$row_rs_empresas[Suc_Cod]'> " .  ($row_rs_empresas['Emp_Cor']) . ' (' . ($row_rs_empresas['Suc_Des']) . ") </option>";
-                // $html = $html . "<option value='" . $row_rs_empresas['Emp_Cod'] . "' data-Emp_Nom='" . ($row_rs_empresas['Emp_Nom']) . "' data--suc_-cod='$row_rs_empresas[Suc_Cod]'>" . ($row_rs_empresas['Emp_Cor']) . ' (' . ($row_rs_empresas['Suc_Des']) . ")</option>";
+                $sucBr = isset($row_rs_empresas['Suc_Cod']) ? (int) $row_rs_empresas['Suc_Cod'] : 0;
+                $html = $html . "<option value='" . (int) $row_rs_empresas['Emp_Cod'] . "' data-Emp_Nom='" . ($row_rs_empresas['Emp_Nom']) . "' data-suc-cod='" . $sucBr . "'> " . ($row_rs_empresas['Emp_Cor']) . ' (' . ($row_rs_empresas['Suc_Des']) . ") </option>";
             }
         } else {
-            //var_dump($rs_empresas);
-            // $html = $html . "<option value='" . $rs_empresas[0]['Emp_Cod'] . "' selected='selected'  data-Emp_Nom='" . $rs_empresas[0]['Emp_Nom'] . "' data--suc_-cod='$row_rs_empresas[Suc_Cod]'>" . $rs_empresas[0]['Emp_Cor'] . "</option>";
-
-            $html = $html . "<option value='" . $rs_empresas[0]['Emp_Cod'] . "' selected='selected'  data-Emp_Nom='" . $rs_empresas[0]['Emp_Nom'] . "' data--suc_-cod='$row_rs_empresas[Suc_Cod]'>" . $rs_empresas[0]['Emp_Cor'] . "</option>";
+            $sucBr0 = isset($rs_empresas[0]['Suc_Cod']) ? (int) $rs_empresas[0]['Suc_Cod'] : 0;
+            $html = $html . "<option value='" . (int) $rs_empresas[0]['Emp_Cod'] . "' selected='selected' data-Emp_Nom='" . ($rs_empresas[0]['Emp_Nom']) . "' data-suc-cod='" . $sucBr0 . "'>" . $rs_empresas[0]['Emp_Cor'] . "</option>";
         } //Fin del if ($total_rs_empresas > 1)
     }
     $obBD_conexion->cerrar();
@@ -54,6 +52,21 @@ if (isset($ajax_empresas2)) {
     exit();
 } //Fin del if (isset($ajax_empresas))
 if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['Ses_Emp_Cod']) || !isset($_SESSION['Ses_Usu_Ced']))) header('Location: ' . './administrador/FRONT/home.php');
+
+$http_host = isset($_SERVER['HTTP_HOST']) ? strtolower($_SERVER['HTTP_HOST']) : '';
+$host_base = preg_replace('/:\d+$/', '', $http_host);
+$es_localhost = in_array($host_base, array('localhost', '127.0.0.1', '::1'), true);
+$relavera_por_host = (strpos($http_host, 'relavera.erpexa') !== false) || $es_localhost;
+if (isset($_GET['portal']) && $_GET['portal'] === 'exa') {
+    $es_portal_relavera = false;
+} elseif (isset($_GET['portal']) && $_GET['portal'] === 'relavera') {
+    $es_portal_relavera = true;
+} else {
+    $es_portal_relavera = $relavera_por_host;
+}
+
+$path_logo_rcet = __DIR__ . DIRECTORY_SEPARATOR . 'imagenes' . DIRECTORY_SEPARATOR . 'ingresar' . DIRECTORY_SEPARATOR . 'logo-rcet.png';
+$tiene_logo_rcet = is_file($path_logo_rcet);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -61,7 +74,7 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EXA [Software Contable] - Iniciar Sesión</title>
+    <title><?php echo $es_portal_relavera ? 'RCET · Portal Relavera · Acceso' : 'EXA [Software Contable] - Iniciar Sesión'; ?></title>
     <link rel="shortcut icon" type="image/x-icon" href="imagenes/ingresar/favicon.png" />
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Saira:wght@400;600&display=swap" rel="stylesheet">
@@ -74,6 +87,12 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
     <link rel="stylesheet" type="text/css" media="screen" href="framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
 
     <style>
+        :root {
+            --login-accent: <?php echo $es_portal_relavera ? '#1b7a4a' : '#A02525'; ?>;
+            --login-accent-hover: <?php echo $es_portal_relavera ? '#145a36' : '#161616'; ?>;
+            --login-footer-bg: <?php echo $es_portal_relavera ? '#0d1f14' : '#161616'; ?>;
+        }
+
         body {
             color: #ffffff;
             margin: 0;
@@ -82,6 +101,19 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
             background: url('/imagenes/ingresar/bg.png') no-repeat center center fixed;
             background-size: cover;
             background-color: #161616;
+        }
+
+        body.theme-relavera {
+            background: linear-gradient(118deg, rgba(10, 42, 28, 0.60) 0%, rgba(6, 28, 18, 0.58) 45%, rgba(8, 35, 22, 0.59) 100%),
+                url('/imagenes/ingresar/bg.png') no-repeat center center fixed;
+            background-size: cover;
+            overflow-x: hidden;
+        }
+
+        /* Evita scroll vertical: 100vh + padding del contenedor > ventana */
+        body.theme-relavera .container.px-3.py-3.position-relative {
+            padding-top: 0.65rem;
+            padding-bottom: 0.65rem;
         }
 
         h1,
@@ -98,12 +130,35 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
         }
 
         .carousel-item {
-            height: 100vh;
+            height: calc(100vh - 3.35rem);
             min-height: 300px;
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             transition: transform 0.6s ease-in-out, opacity 0.6s ease-in-out;
+        }
+
+        @supports (height: 100svh) {
+            .carousel-item {
+                height: calc(100svh - 3.35rem);
+            }
+        }
+
+        .theme-relavera .carousel-item {
+            height: calc(100vh - 3.65rem);
+            min-height: 280px;
+        }
+
+        @supports (height: 100svh) {
+            .theme-relavera .carousel-item {
+                height: calc(100svh - 3.65rem);
+            }
+        }
+
+        @media (min-width: 769px) {
+            body.theme-relavera .login-area-col.pb-5 {
+                padding-bottom: 1rem !important;
+            }
         }
 
         option {
@@ -130,26 +185,56 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
         }
 
         .carousel-indicators button.active {
-            background-color: #A02525;
+            background-color: var(--login-accent);
         }
 
         .login-section {
-            width: 380px;
+            width: 100%;
+            max-width: 328px;
             background: #ffffff;
-            border-radius: 20px;
-            padding: 20px;
+            border-radius: 16px;
+            padding: 0;
             color: #161616;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0 18px rgba(0, 0, 0, 0.09);
+            overflow: visible;
+        }
+
+        .login-section.card .card-body {
+            padding: 1.15rem 1rem 1.3rem;
+            overflow: visible;
+        }
+
+        .theme-relavera .login-section.card .card-body {
+            padding-top: 1.28rem;
+            padding-bottom: 1.45rem;
+        }
+
+        .theme-relavera .login-section .mb-3 {
+            margin-bottom: 0.72rem !important;
+        }
+
+        /* Select2 abierto en body: la tarjeta no debe mostrar scroll interno */
+        #div_empresas {
+            overflow: visible !important;
+        }
+
+        .select2-container--default.select2-container--open {
+            z-index: 2050 !important;
+        }
+
+        .login-area-col {
+            overflow: visible;
         }
 
         .login-section .form-control,
         .login-section .btn {
-            border-radius: 10px !important;
-            height: 45px !important;
+            border-radius: 9px !important;
+            height: 40px !important;
+            font-size: 0.9rem;
         }
 
         .login-section .form-control {
-            padding-left: 45px !important;
+            padding-left: 38px !important;
             display: flex;
             align-items: center;
             /* border: 1px solid #A02525 !important;*/
@@ -157,10 +242,38 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
 
         .login-section .form-control-icon {
             position: absolute;
-            left: 15px;
+            left: 12px;
             top: 50%;
             transform: translateY(-50%);
-            color: #A02525;
+            color: var(--login-accent);
+            font-size: 0.95rem;
+        }
+
+        .login-section h4 {
+            font-size: 1.1rem;
+        }
+
+        .theme-relavera .login-section h4 {
+            font-size: 1.32rem;
+            font-weight: 700;
+        }
+
+        .login-section .mb-4 {
+            margin-bottom: 0.75rem !important;
+        }
+
+        .login-section .mb-3 {
+            margin-bottom: 0.6rem !important;
+        }
+
+        .login-section .small.text-secondary {
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .theme-relavera .login-section .small.text-secondary {
+            font-size: 0.9rem;
+            line-height: 1.4;
         }
 
         /* .over {
@@ -173,15 +286,17 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
         }
 
         .logo img {
-            width: 220px;
+            width: 178px;
+            max-width: 100%;
         }
 
         .homepage-btn {
             position: absolute;
             top: 20px;
-            left: 20px;
+            left: 0;
+            margin-left: -2rem;
             z-index: 10;
-            background-color: #A02525;
+            background-color: var(--login-accent);
             border: none;
             border-radius: 50px;
             padding: 10px 15px;
@@ -190,18 +305,144 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
         }
 
         .homepage-btn:hover {
-            background-color: #161616;
+            background-color: var(--login-accent-hover);
+        }
+
+        .theme-relavera .homepage-btn {
+            padding: 6px 11px;
+            font-size: 13px;
+        }
+
+        .theme-relavera .homepage-btn .bi {
+            font-size: 0.95em;
+        }
+
+        .theme-relavera .homepage-dropdown .dropdown-menu {
+            min-width: 10.5rem;
+            padding: 0.3rem 0;
+        }
+
+        .theme-relavera .homepage-dropdown .dropdown-item {
+            padding: 0.45rem 0.85rem;
+            font-size: 0.82rem;
+        }
+
+        .homepage-btn-right {
+            left: auto;
+            right: 20px;
+        }
+
+        .homepage-dropdown {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            margin-left: -2rem;
+            z-index: 1050;
+        }
+
+        .homepage-dropdown .homepage-btn {
+            position: static;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .homepage-dropdown .homepage-btn.dropdown-toggle::after {
+            margin-left: 0.35rem;
+        }
+
+        .homepage-dropdown .dropdown-menu.homepage-fan-menu {
+            border-radius: 14px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            min-width: 12.5rem;
+            padding: 0.45rem 0;
+            overflow: visible;
+            transform-origin: top left;
+        }
+
+        .homepage-fan-menu li {
+            list-style: none;
+            transform-origin: 20% 0;
+        }
+
+        .homepage-fan-menu:not(.show) li .dropdown-item {
+            opacity: 0;
+            transform: rotate(-14deg) translate(-10px, -6px);
+        }
+
+        .homepage-fan-menu.show li .dropdown-item {
+            opacity: 0;
+            animation-duration: 0.48s;
+            animation-timing-function: cubic-bezier(0.22, 1.1, 0.36, 1);
+            animation-fill-mode: forwards;
+        }
+
+        .homepage-fan-menu.show li:nth-child(1) .dropdown-item {
+            animation-name: homepageFanIn1;
+            animation-delay: 0.02s;
+        }
+
+        .homepage-fan-menu.show li:nth-child(2) .dropdown-item {
+            animation-name: homepageFanIn2;
+            animation-delay: 0.1s;
+        }
+
+        @keyframes homepageFanIn1 {
+            0% {
+                opacity: 0;
+                transform: rotate(-28deg) translate(-18px, -14px) scale(0.94);
+            }
+            100% {
+                opacity: 1;
+                transform: rotate(-4deg) translate(0, 0) scale(1);
+            }
+        }
+
+        @keyframes homepageFanIn2 {
+            0% {
+                opacity: 0;
+                transform: rotate(28deg) translate(18px, -14px) scale(0.94);
+            }
+            100% {
+                opacity: 1;
+                transform: rotate(4deg) translate(0, 0) scale(1);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .homepage-fan-menu:not(.show) li .dropdown-item,
+            .homepage-fan-menu.show li .dropdown-item {
+                animation: none !important;
+                opacity: 1;
+                transform: none;
+                transition: none;
+            }
+        }
+
+        .homepage-dropdown .dropdown-item {
+            font-weight: 600;
+            color: #1766af;
+            padding: 0.55rem 1rem;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .homepage-dropdown .dropdown-item:hover,
+        .homepage-dropdown .dropdown-item:focus {
+            background-color: rgba(23, 102, 175, 0.1);
+            color: #145a94;
         }
 
         .btn-primary {
-            background-color: #A02525;
+            background-color: var(--login-accent);
             border: none;
-            height: 45px;
+            height: 40px;
+            font-size: 0.9rem;
             transition: background-color 0.3s ease-in-out;
         }
 
         .btn-primary:hover {
-            background-color: #161616;
+            background-color: var(--login-accent-hover);
         }
 
         .carousel-indicators {
@@ -210,10 +451,11 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
 
         footer {
             text-align: center;
-            padding: 8px 0;
-            background-color: #161616;
+            padding: 4px 10px;
+            line-height: 1.25;
+            background-color: var(--login-footer-bg);
             color: #ffffff;
-            font-size: 14px;
+            font-size: 12px;
             position: fixed;
             bottom: 0;
             width: 100%;
@@ -221,7 +463,133 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
         }
 
         .text-rojo {
-            color: #A02525;
+            color: var(--login-accent);
+        }
+
+        .theme-relavera .carousel-caption-relavera {
+            max-width: 420px;
+            margin: 0 auto;
+            bottom: 9.75rem;
+        }
+
+        .theme-relavera #loginCarousel .carousel-indicators {
+            bottom: 2rem;
+        }
+
+        .theme-relavera .carousel-caption-relavera h2 {
+            font-family: 'Saira', sans-serif;
+            font-weight: 700;
+            font-size: clamp(1.1rem, 2.4vw, 1.65rem);
+            line-height: 1.2;
+            color: #fff;
+            text-shadow: 0 0 1px #0a2a1c, 0 2px 0 #0d3d28, 0 0 24px rgba(46, 204, 113, 0.35);
+            margin-bottom: 0.75rem;
+        }
+
+        .theme-relavera .carousel-caption-relavera p {
+            font-size: clamp(0.82rem, 1.5vw, 0.95rem);
+            color: rgba(255, 255, 255, 0.92);
+            margin: 0;
+            line-height: 1.45;
+        }
+
+        .theme-relavera .login-section {
+            border: 1px solid rgba(27, 122, 74, 0.25);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+        }
+
+        .theme-relavera .portal-relavera-badge {
+            font-size: 0.82rem;
+            letter-spacing: 0.11em;
+            text-transform: uppercase;
+            color: var(--login-accent);
+            font-weight: 700;
+            margin-bottom: 0.35rem;
+        }
+
+        .theme-relavera .portal-relavera-title {
+            font-family: 'Saira', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #1a3326;
+            line-height: 1.3;
+            margin-bottom: 0.25rem;
+        }
+
+        .theme-relavera .portal-relavera-sub {
+            font-size: 0.8rem;
+            color: #5c6b63;
+            margin-bottom: 1rem;
+        }
+
+        .theme-relavera .logo-relavera-stack {
+            margin-bottom: 0.65rem !important;
+        }
+
+        .theme-relavera .logo-relavera-principal {
+            max-width: min(100%, 236px);
+            width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto 0.25rem;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            transform: translateZ(0);
+        }
+
+        .theme-relavera .logo-rcet-fallback {
+            max-width: min(100%, 236px);
+            margin: 0 auto 0.35rem;
+            padding: 1rem 1.1rem 1.15rem;
+            border-radius: 14px;
+            background: linear-gradient(145deg, #1b7a4a 0%, #145a36 55%, #0f4a2d 100%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+            color: #fff;
+            text-align: center;
+        }
+
+        .theme-relavera .logo-rcet-fallback strong {
+            font-family: 'Saira', sans-serif;
+            font-size: 1.12rem;
+            letter-spacing: 0.06em;
+            display: block;
+            line-height: 1.2;
+        }
+
+        .theme-relavera .logo-rcet-fallback span {
+            font-size: 0.72rem;
+            opacity: 0.95;
+            display: block;
+            margin-top: 0.35rem;
+            line-height: 1.35;
+        }
+
+        .theme-relavera .login-exa-fuera {
+            margin-top: 0.7rem;
+            padding: 0.4rem 0.75rem 0.5rem;
+            max-width: 328px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.94);
+            border-radius: 14px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .theme-relavera .logo-exa-label {
+            font-size: 0.62rem;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: #8a9a91;
+            display: block;
+            margin-bottom: 0.35rem;
+        }
+
+        .theme-relavera .logo-exa-secundario {
+            max-width: 92px;
+            width: 100%;
+            height: auto;
+            opacity: 0.95;
         }
 
         .aviso-flotante {
@@ -300,6 +668,18 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
                 width: fit-content;
             }
 
+            .homepage-dropdown {
+                position: static;
+                display: block;
+                margin: 0 auto 20px;
+                width: fit-content;
+            }
+
+            .homepage-dropdown .homepage-btn {
+                margin-left: auto;
+                margin-right: auto;
+            }
+
             .aviso-flotante img {
                 width: 325px;
             }
@@ -307,9 +687,9 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
 
         /* Estilos para personalizar Select2 */
         .select2-container--default .select2-selection--single {
-            padding-left: 45px !important;
-            border-radius: 10px !important;
-            height: 45px !important;
+            padding-left: 38px !important;
+            border-radius: 9px !important;
+            height: 40px !important;
             border: 1px solid #ccc;
             display: flex;
             align-items: center;
@@ -327,46 +707,132 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
 
         .select2-container--open .select2-dropdown--below {
             background-color: #ffffff;
-            color: var(--bs-body-color);
+            color: #161616;
         }
 
         .select2-container--default .select2-selection--single .select2-selection__rendered {
-            line-height: 36px;
-            padding-top: 8px;
-            padding-left: 8px;
+            line-height: 32px;
+            padding-top: 4px;
+            padding-left: 6px;
+            font-size: 0.9rem;
+            color: #161616 !important;
         }
 
         .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 36px;
+            height: 32px;
         }
 
         .select2-container--default .select2-results__option--highlighted {
-            background-color:lightblue;
-            /* color: white; */
-            color: var(--bs-body-color);
+            background-color: #0d6efd;
+            color: #fff !important;
+        }
+
+        /* Dropdown en body: no heredar color blanco del body */
+        .select2-dropdown.select2-rcet-empresa {
+            z-index: 2051 !important;
+            color: #161616;
+            background-color: #fff;
+        }
+
+        /* Lista de empresas al buscar (dropdown en body, clase select2-rcet-empresa) */
+        .select2-dropdown.select2-rcet-empresa .select2-search__field {
+            font-size: 0.85rem !important;
+            color: #161616 !important;
+        }
+
+        .select2-dropdown.select2-rcet-empresa .select2-results__option {
+            padding: 0.4rem 0.65rem;
+            font-size: 0.8rem;
+            line-height: 1.3;
+            color: #161616 !important;
+        }
+
+        .select2-dropdown.select2-rcet-empresa .select2-option-title {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            line-height: 1.25;
+            text-transform: none;
+            letter-spacing: normal;
+            color: #161616 !important;
+        }
+
+        .select2-dropdown.select2-rcet-empresa .select2-results__option--highlighted {
+            background-color: #0d6efd !important;
+            color: #fff !important;
+        }
+
+        .select2-dropdown.select2-rcet-empresa .select2-results__option--highlighted .select2-option-title {
+            color: #fff !important;
+        }
+
+        .select2-dropdown.select2-rcet-empresa .select2-results__option--highlighted .text-muted {
+            color: rgba(255, 255, 255, 0.9) !important;
         }
 
         /* Estilo para la descripción de las opciones */
         .select2-results__option .text-muted {
-            font-size: 0.8em;
-            color:rgb(99, 99, 99);
+            font-size: 0.7rem;
+            color: rgb(99, 99, 99);
             display: block;
             margin-top: 2px;
+            line-height: 1.2;
+            font-weight: 400;
         }
 
     </style>
 </head>
 
-<body>
-    <div class="container px-3 py-3">
-        <a href="https://exacontable.com" target="_blank" class="btn homepage-btn text-white">
+<body class="<?php echo $es_portal_relavera ? 'theme-relavera' : ''; ?>">
+    <div class="container px-3 py-3 position-relative">
+        <?php if ($es_portal_relavera) { ?>
+        <div class="dropdown homepage-dropdown">
+            <button class="btn homepage-btn text-white dropdown-toggle" type="button" id="homepagePortalDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">
+                <i class="bi bi-house-door-fill" aria-hidden="true"></i> Home Page
+            </button>
+            <ul class="dropdown-menu homepage-fan-menu" aria-labelledby="homepagePortalDropdown" data-bs-popper="static">
+                <li>
+                    <a class="dropdown-item" href="https://exacontable.com" target="_blank" rel="noopener noreferrer">
+                        <i class="bi bi-house-door-fill me-2" aria-hidden="true"></i>EXA Contable
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="https://rcet.ec" target="_blank" rel="noopener noreferrer">
+                        <i class="bi bi-house-door-fill me-2" aria-hidden="true"></i>Sitio RCET
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <?php } else { ?>
+        <a href="https://exacontable.com" target="_blank" rel="noopener noreferrer" class="btn homepage-btn text-white">
             <i class="bi bi-house-door-fill"></i> Homepage
         </a>
+        <?php } ?>
         <div class="row">
             <!-- Carousel Section -->
             <div class="col-md-6 col-lg-7 d-flex align-items-center justify-content-center order-md-1 order-2 p-0">
                 <div id="loginCarousel" class="carousel slide w-100" data-bs-ride="carousel">
                     <div class="carousel-inner">
+                        <?php if ($es_portal_relavera) { ?>
+                        <div class="carousel-item active">
+                            <div class="carousel-caption carousel-caption-relavera d-flex flex-column align-items-center justify-content-center text-center" style="height:60%;">
+                                <h2>Disposici&oacute;n final autorizada</h2>
+                                <p>Gesti&oacute;n de relaves alineada con la normativa ambiental y el control de las autoridades.</p>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <div class="carousel-caption carousel-caption-relavera d-flex flex-column align-items-center justify-content-center text-center" style="height:60%;">
+                                <h2>Certificados y trazabilidad</h2>
+                                <p>Portal para clientes: consulte documentaci&oacute;n y el seguimiento de sus entregas de forma segura.</p>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <div class="carousel-caption carousel-caption-relavera d-flex flex-column align-items-center justify-content-center text-center" style="height:60%;">
+                                <h2>Relavera Comunitaria El Tabl&oacute;n</h2>
+                                <p>Soluci&oacute;n autorizada para el distrito minero Zaruma &ndash; Portovelo. Operaci&oacute;n bajo licencia ambiental.</p>
+                            </div>
+                        </div>
+                        <?php } else { ?>
                         <div class="carousel-item active">
                             <div class="carousel-caption d-flex flex-column align-items-center justify-content-center" style="height:60%;">
                                 <img src="imagenes/ingresar/1.png" alt="" class="img-fluid" style="max-width: 100%; max-height: 400px; display: block; margin: 0 auto;">
@@ -382,6 +848,7 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
                                 <img src="imagenes/ingresar/3.png" alt="" class="img-fluid" style="max-width: 100%; max-height: 400px; display: block; margin: 0 auto;">
                             </div>
                         </div>
+                        <?php } ?>
                     </div>
                     <button class="carousel-control-prev" type="button" data-bs-target="#loginCarousel" data-bs-slide="prev">
                         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
@@ -401,14 +868,28 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
 
             <!-- Login Section -->
             <!--div class="col-md-6 col-lg-5 d-flex align-items-center justify-content-center order-md-2 order-1"-->
-            <div class="col-md-6 col-lg-5 d-flex align-items-center justify-content-center order-md-2 order-1">
+            <div class="col-md-6 col-lg-5 d-flex flex-column align-items-center justify-content-center order-md-2 order-1 pb-5 login-area-col">
                 <div class="login-section card">
                     <div class="card-body">
+                        <?php if ($es_portal_relavera) { ?>
+                        <div class="logo-relavera-stack text-center mb-4">
+                            <div class="portal-relavera-badge mb-2">Portal operativo</div>
+                            <?php if ($tiene_logo_rcet) { ?>
+                            <img src="imagenes/ingresar/logo-rcet.png" alt="RCET &middot; Relavera Comunitaria El Tabl&oacute;n" class="logo-relavera-principal img-fluid">
+                            <?php } else { ?>
+                            <div class="logo-rcet-fallback" aria-hidden="true">
+                                <strong>RCET</strong>
+                                <span>Relavera Comunitaria El Tabl&oacute;n<br>Proyecto ambiental asociativo</span>
+                            </div>
+                            <?php } ?>
+                        </div>
+                        <?php } else { ?>
                         <div class="text-center logo mb-4">
                             <img src="imagenes/ingresar/logo.png" alt="EXA Logo" class="img-fluid">
                         </div>
-                        <h4 class="text-center mb-4 fw-bold">Iniciar Sesión</h4>
-                        <p>Inicie sesi&oacute;n con su cuenta registrada</p>
+                        <?php } ?>
+                        <h4 class="text-center mb-4 fw-bold">Iniciar sesi&oacute;n</h4>
+                        <p class="small text-secondary">Inicie sesi&oacute;n con su cuenta registrada.</p>
                         <form action="administrador/FRONT/adm_con_control_1.2.php" method="post" name="acceso" id="acceso">
                             <div class="login-fields">
                                 <!--div class="form-group position-relative mb-3">
@@ -424,7 +905,7 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
 
                                 <div class="form-group position-relative mb-3">
                                     <input class="form-control" type="password" id="password" name="password" value="" placeholder="Contraseña" class="login password-field" oncontextmenu="return false"
-                                        onKeyPress="if (event.keyCode===13){document.getElementById('encryptor').value = md5(document.getElementById('password').value); this.form.submit();}else{return  validar_injections(event);}" />
+                                        onKeyPress="if (event.keyCode===13){ var o=document.querySelector('#Emp_Cod option:checked'); document.getElementById('Suc_Cod').value=o? (o.getAttribute('data-suc-cod')||''):''; document.getElementById('encryptor').value = md5(document.getElementById('password').value); this.form.submit();}else{return  validar_injections(event);}" />
                                     <i class="bi bi-lock-fill form-control-icon"></i>
                                 </div>
                                 <div class="form-group position-relative mb-3" id="div_empresas" style="display: none;">
@@ -446,7 +927,7 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
                                 <input type="hidden" name="encryptor" id="encryptor" />
                                 <input type="hidden" name="Suc_Cod" id="Suc_Cod" />
                                 <button class="btn btn-primary w-100" type="button"
-                                    onClick="document.getElementById('Suc_Cod').value=$('#Emp_Cod option:selected').data('Suc_Cod'); document.getElementById('encryptor').value = md5(document.getElementById('password').value); this.form.submit();">
+                                    onClick="var o=document.querySelector('#Emp_Cod option:checked'); document.getElementById('Suc_Cod').value=o? (o.getAttribute('data-suc-cod')||''):''; document.getElementById('encryptor').value = md5(document.getElementById('password').value); this.form.submit();">
                                     Entrar <i class="bi bi-box-arrow-in-right"></i>
                                 </button>
                             </div>
@@ -458,6 +939,12 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
                     </div>
 
                 </div>
+                <?php if ($es_portal_relavera) { ?>
+                <div class="login-exa-fuera text-center">
+                    <span class="logo-exa-label">Plataforma</span>
+                    <img src="imagenes/ingresar/logo.png" alt="EXA" class="logo-exa-secundario img-fluid mx-auto d-block">
+                </div>
+                <?php } ?>
             </div>
         </div>
     </div>
@@ -465,7 +952,7 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
     <!-- Footer -->
     <footer>
         <div align="center" style="text-align:center" class=""><span class="span6"> &copy; <?php date_default_timezone_set('UTC');
-                                                                                            echo date("Y"); ?>. EXA Sistema Contable - Todos los derechos reservados.</span></div>
+                                                                                            echo date("Y"); ?>. <?php echo $es_portal_relavera ? 'RCET · Relavera Comunitaria El Tabl&oacute;n · Plataforma EXA' : 'EXA Sistema Contable - Todos los derechos reservados'; ?>.</span></div>
     </footer>
 
     <!-- Bootstrap & jQuery JS -->
@@ -530,8 +1017,8 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
             templateSelection: formatSelection,
             escapeMarkup: function(m) { return m; },
             minimumInputLength: 0,
-            dropdownParent: $('#div_empresas'),
-            dropdownCssClass: 'select2-dropdown-below'
+            dropdownParent: $('body'),
+            dropdownCssClass: 'select2-dropdown-below select2-rcet-empresa'
             });
 
             // 2. Sobrescribir posición del dropdown (siempre abajo)
@@ -568,12 +1055,13 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
                 $search.parent().find('.search-icon').remove();
 
                 // Agrega el icono de lupa dentro del input, pegado a la derecha
+                var accentColor = (getComputedStyle(document.documentElement).getPropertyValue('--login-accent') || '#A02525').trim();
                 var icon = $('<i class="bi bi-search search-icon"></i>').css({
                     position: 'absolute',
                     right: '10px',
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    color: '#A02525',
+                    color: accentColor,
                     'pointer-events': 'none',
                     'font-size': '1.2em'
                 });
@@ -604,10 +1092,11 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
             if (!data.id) return data.text;
             
             var $option = $(data.element);
+            var empNom = $option.data('empNom') || $option.data('emp_nom') || $option.attr('data-emp-nom') || '';
             return $(
-                '<div>' + 
-                '<strong>' + data.text + '</strong>' +
-                '<div class="text-muted">' + $option.data('emp_nom') + '</div>' +
+                '<div class="select2-option-wrap">' +
+                '<span class="select2-option-title">' + data.text + '</span>' +
+                (empNom ? '<div class="text-muted">' + empNom + '</div>' : '') +
                 '</div>'
             );
         }
@@ -735,9 +1224,9 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
             };
         })(jQuery);
     </script>
-<!--div class="aviso-flotante" id="avisoFlotante">
+    <!-- <div class="aviso-flotante" id="avisoFlotante">
         <span class="cerrar-aviso" onclick="cerrarAviso()">&times;</span>
-        <img src="mascaras\model1\img\logo\Norm_Trib.jpeg" alt="Aviso" id="imagenAviso">
+        <img src="mascaras\model1\img\logo\CARGA PAG.png" alt="Aviso" id="imagenAviso">
     </div>
 
 
@@ -752,8 +1241,8 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
             var avisoFlotante = document.getElementById('avisoFlotante');
             avisoFlotante.style.display = 'none'; // Ocultar el aviso flotante al hacer clic en el botón de cerrar
         }
-    </script>
-    </div-->
+    </script> -->
+    </div>
 </body>
 
-</html>
+</html> 
