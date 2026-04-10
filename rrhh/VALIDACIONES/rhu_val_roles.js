@@ -1,5 +1,5 @@
 
-var personal = [], fields = [], defaults = {}, $grid, $tipo, gridComp, gridExtras, proviDialog, detallesDialog = {},
+var personal = [], fields = [], rolOmitirColsPersist = [], rolOmitirColCeroPersist = false, defaults = {}, $grid, $tipo, gridComp, gridExtras, proviDialog, detallesDialog = {},
     groupAnioArea = {
         groupField: ["Anio", "Are_Des"], groupColumnShow: [false, false],
         groupText: ["<div><span style='float:left;'><b> &nbsp;-&nbsp; Periodo {0} &nbsp;-&nbsp; </b></span><span style='float:right;'> {1} Area(s)</span></div>", "<div><span style='float:left;'> <b> &nbsp;&nbsp;Area: {0} &nbsp;&nbsp; </b> </span><span style='float:right;'> {1} Rol(es)</span></div>"],
@@ -20,26 +20,26 @@ var formulas_base_rol = {
         //fond_reser: { "operator": "", "operand1": { "type": "item", "value": "1", "text": "{fond_reser_val_dias}", "variable": "fond_reser_val_dias" }, "operand2": { "operator": "/", "operand1": { "operator": "", "operand1": { "operator": "+", "operand1": { "value": 0, "type": "item", "variable": "sueldo_dias", "text": "{sueldo_dias}" }, "operand2": { "value": 0, "type": "item", "variable": "aporte_extras_rol_p", "text": "{aporte_extras_rol_p}" } }, "operand2": { "value": 0, "type": "item", "variable": "fond_porc", "text": "{fond_porc}" } }, "operand2": { "value": "100", "type": "unit" } } },
         fond_reser: { "operator": "/","operand1": {"operator": "*","operand1": {"operator": "+","operand1": {"value": 0,"type": "item","variable": "sueldo_dias","text": "{sueldo_dias}"}, "operand2": {"value": 0,"type": "item","variable": "aporte_extras_rol_p","text": "{aporte_extras_rol_p}"}}, "operand2": {"value": 0, "type": "item", "variable": "fond_porc", "text": "{fond_porc}" } }, "operand2": { "value": "100", "type": "unit" } },
         deci_terc: { 
-			"operator": "/", 
-				"operand1": { 
-					"operator": "+", 
-						"operand1": { 
-							"value": 0, 
-							"type": "item", 
-							"variable": "sueldo_dias", 
-							"text": "{sueldo_dias}" 
-						}, 
-						"operand2": { 
-							"value": 0, 
-							"type": "item", 
-							"variable": "aporte_extras_rol_p", 
-							"text": "{aporte_extras_rol_p}" 
-						} 
-					}, 
-				"operand2": { 
-					"value": "12", "type": "unit" 
-				}
-			},
+            "operator": "/", 
+            "operand1": { 
+                "operator": "+", 
+                "operand1": { 
+                    "value": 0, 
+                    "type": "item", 
+                    "variable": "sueldo_dias", 
+                    "text": "{sueldo_dias}" }, 
+                "operand2": { 
+                    "value": 0, 
+                    "type": "item", 
+                    "variable": "aporte_extras_rol_p", 
+                    "text": "{aporte_extras_rol_p}" 
+                } 
+            }, 
+            "operand2": { 
+                "value": "12", 
+                "type": "unit" 
+            } 
+        },
         total_rol: { operator: '-', operand1: { type: 'item', value: 0, text: '(total_ing)', variable: 'total_ingr' }, operand2: { type: 'item', value: 0, text: '(total_egr)', variable: 'total_egr' } },
         anti_util: { "operator": "=", "operand1": { "type": "item", "value": "1", "text": "{dias}", "variable": "dias" }, "operand2": { "operator": "?", "operand1": { "operator": "-", "operand1": { "operator": "-", "operand1": { "operator": "-", "operand1": { "operator": "-", "operand1": { "operator": "-", "operand1": { "operator": "-", "operand1": { "operator": "-", "operand1": { "type": "item", "value": "0", "text": "{sueldo_neto_calc}", "variable": "sueldo_neto_calc" }, "operand2": { "type": "item", "value": "0", "text": "{fond_reser_provi}", "variable": "fond_reser_provi" } }, "operand2": { "type": "item", "value": "0", "text": "{deci_cuar_provi}", "variable": "deci_cuar_provi" } }, "operand2": { "type": "item", "value": "0", "text": "{deci_terc_provi}", "variable": "deci_terc_provi" } }, "operand2": { "type": "item", "value": "0", "text": "{sueldo_dias}", "variable": "sueldo_dias" } }, "operand2": { "type": "item", "value": "0", "text": "{deci_terc}", "variable": "deci_terc" } }, "operand2": { "type": "item", "value": "0", "text": "{deci_cuar}", "variable": "deci_cuar" } }, "operand2": { "type": "item", "value": "0", "text": "{fond_reser}", "variable": "fond_reser" } }, "operand2": { "type": "unit", "value": "0" } } },
         desc_util: { "operator": "=", "operand1": { "type": "item", "value": "1", "text": "{dias}", "variable": "dias" }, "operand2": { "operator": "?", "operand1": { "operator": "+", "operand1": { "operator": "+", "operand1": { "operator": "+", "operand1": { "operator": "+", "operand1": { "operator": "+", "operand1": { "operator": "+", "operand1": { "operator": "+", "operand1": { "operator": "*", "operand1": { "type": "item", "value": "0", "text": "{sueldo_neto_calc}", "variable": "sueldo_neto_calc" }, "operand2": { "type": "unit", "value": "-1" } }, "operand2": { "type": "item", "value": "0", "text": "{fond_reser_provi}", "variable": "fond_reser_provi" } }, "operand2": { "type": "item", "value": "0", "text": "{deci_cuar_provi}", "variable": "deci_cuar_provi" } }, "operand2": { "type": "item", "value": "0", "text": "{deci_terc_provi}", "variable": "deci_terc_provi" } }, "operand2": { "type": "item", "value": "0", "text": "{sueldo_dias}", "variable": "sueldo_dias" } }, "operand2": { "type": "item", "value": "0", "text": "{deci_terc}", "variable": "deci_terc" } }, "operand2": { "type": "item", "value": "0", "text": "{deci_cuar}", "variable": "deci_cuar" } }, "operand2": { "type": "item", "value": "0", "text": "{fond_reser}", "variable": "fond_reser" } }, "operand2": { "type": "unit", "value": "0" } } },
@@ -599,8 +599,8 @@ function calcCampo(rol) {
     });
     $.each(fields, function (i, v) { 
         if (v['Cam_Cal'] === 'S' && v['Cam_Tip'] !== 'T' && v['Cam_Req'] === 'N') { 
-            if(v['Cam_Des']==='TIEMPO PARCIAL') if(rol['Con_Tpa']=="0") return; // control para evitar que se haga el calculo TIEMPO PARCIAL a contratos tipo Tiempo Completo           
-			var val = calcVal(rol, v['Cam_For']); 
+            if(v['Cam_Des']==='TIEMPO PARCIAL') if(rol['Con_Tpa']=="0") return; // control para evitar que se haga el calculo TIEMPO PARCIAL a contratos tipo Tiempo Completo
+            var val = calcVal(rol, v['Cam_For']); 
             if ($.varValid(val)) 
                 rol[v['Cam_Var']] = $.round(val); 
             else 
@@ -617,7 +617,7 @@ function calcCampo(rol) {
 }
 function setToCero(val) { return ($.isNum(val) && val * 1 < 0) ? 0 : val; }
 function calcVal(rol, formula) { return setToCero(calcFormul(rol, formula)); }
-function calcFormul(data, formula) {	
+function calcFormul(data, formula) {
     if (formula['operator'] === '=') {
         if ($.toBool(data[formula['operand1']['variable']]) === $.toBool(formula['operand1']['value'])) 
             formula = formula['operand2']['operand1'];
@@ -858,6 +858,7 @@ function detallarRoles(data, edit) {
     var semanas = semanas = ($.vv(data['anio']) ? isoWeeks(data['anio']).isoWeeks() : 52);
     data['semanas'] = semanas;
     $.getDataJson("", $.extend(data, { getRolDetail: true }), function (response) {
+        $('#listaVariablesRol').empty();
         createGrid(response['grid'], response['header']);
         $grid.setRows(response['personal']);
         fields = response['rol'];
@@ -876,6 +877,130 @@ function detallarRoles(data, edit) {
     });
 }
 
+/** Lista en modal todas las columnas del grid #rol, sombreadas por bloque INGRESOS / EGRESOS (según `fields` y misma lógica que PHP). */
+function abrirModalVariablesRol() {
+    var $g = $('#rol');
+    if (!$g.length || !$g[0].grid) {
+        $.alert('Abra primero el detalle de un rol para cargar el grid.');
+        return;
+    }
+    var colModel = $g.jqGrid('getGridParam', 'colModel') || [];
+    var fieldByName = {};
+    if (fields && fields.length) {
+        $.each(fields, function (i, f) {
+            var n = f.Cam_Var || f.name;
+            if (n) fieldByName[n] = f;
+        });
+    }
+    var esc = function (s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    };
+    var tipLabel = { I: 'Ingreso', E: 'Egreso', D: 'Defecto', T: 'Total', P: 'Parámetro' };
+    var personalNames = { Prs_Cod: 1, Per_Cod: 1, Con_Tpa: 1, Con_Cod: 1, Prs_Ced: 1, Prs_Ape: 1, Prs_Nom: 1, Tic_Des: 1 };
+    function stripLabel(html) {
+        if (!html) return '';
+        var t = $('<div>').html(html).text();
+        return $.trim(t) || String(html).replace(/<[^>]+>/g, '');
+    }
+    /** Alineado a rhu_log_roles.php: T con Cam_Ord 1 -> ingr; resto T y P -> egr. */
+    function grupoBloque(name, f) {
+        if (!f) {
+            if (name === 'anticipos_ant' || name === 'act1' || name === 'act2') return 'acciones';
+            if (personalNames[name]) return 'personal';
+            return 'neutro';
+        }
+        var tip = f.Cam_Tip || '';
+        if (tip === 'D') return 'defecto';
+        if (tip === 'I') return 'ingreso';
+        if (tip === 'E') return 'egreso';
+        if (tip === 'T') return (f.Cam_Ord * 1 === 1) ? 'ingreso' : 'egreso';
+        if (tip === 'P') return 'egreso';
+        return 'neutro';
+    }
+    function rowStyle(bloque) {
+        if (bloque === 'ingreso') return 'background:#d9efd9;';
+        if (bloque === 'egreso') return 'background:#f8dede;';
+        if (bloque === 'defecto') return 'background:#e8eef5;';
+        if (bloque === 'personal') return 'background:#f5f5f5;';
+        if (bloque === 'acciones') return 'background:#f0f0f0;';
+        return 'background:#fafafa;';
+    }
+    function grupoTexto(bloque) {
+        if (bloque === 'ingreso') return 'INGRESOS';
+        if (bloque === 'egreso') return 'EGRESOS';
+        if (bloque === 'defecto') return 'Defecto';
+        if (bloque === 'personal') return 'Personal';
+        if (bloque === 'acciones') return 'Acciones';
+        return '';
+    }
+    var rows = [];
+    $.each(colModel, function (i, col) {
+        var varName = col.name;
+        if (!varName || varName === 'cb' || varName === 'subgrid') return;
+        var f = fieldByName[varName];
+        var bloque = grupoBloque(varName, f);
+        var desc = f ? (f.Cam_Des || f.labelLong || f.Cam_Dec || f.label || '') : stripLabel(col.label);
+        if (col.hidden) desc = (desc ? desc + ' ' : '') + '(oculta)';
+        var tip = f && f.Cam_Tip ? tipLabel[f.Cam_Tip] || f.Cam_Tip : '';
+        var chk = rolOmitirColsPersist.indexOf(varName) >= 0 ? ' checked' : '';
+        rows.push(
+            '<tr style="' + rowStyle(bloque) + '"><td style="width:36px;text-align:center"><input type="checkbox" class="chk-var-rol" name="rol_var_sel[]" value="' + esc(varName) + '"' + chk + '/></td>' +
+            '<td><code>' + esc(varName) + '</code></td><td>' + esc(desc) + '</td><td>' + esc(grupoTexto(bloque)) + '</td><td>' + esc(tip) + '</td></tr>'
+        );
+    });
+    var html = '<table class="table table-condensed table-bordered" style="margin:0;font-size:12px"><thead><tr><th></th><th>ID (name)</th><th>Descripción</th><th>Bloque</th><th>Tipo campo</th></tr></thead><tbody>' + rows.join('') + '</tbody></table>';
+    $('#listaVariablesRol').html(html);
+    var $chkCero = $('#modalOmitirColCero');
+    if ($chkCero.length) {
+        $chkCero.prop('checked', rolOmitirColCeroPersist);
+    }
+    $('#listaVariablesRol').off('change.rolomit').on('change.rolomit', 'input.chk-var-rol', function () {
+        var v = this.value, i = rolOmitirColsPersist.indexOf(v);
+        if (this.checked) {
+            if (i < 0) rolOmitirColsPersist.push(v);
+        } else if (i >= 0) {
+            rolOmitirColsPersist.splice(i, 1);
+        }
+    });
+    var $dlg = $('#modalVariablesRol');
+    if (!$dlg.length) {
+        $.alert('No se encontró el contenedor del modal (#modalVariablesRol).');
+        return;
+    }
+    if (!$dlg.data('ui-dialog')) {
+        $dlg.dialog({
+            modal: true,
+            width: Math.min(820, $(window).width() - 48),
+            maxHeight: $(window).height() - 48,
+            open: function () {
+                $('#listaVariablesRol').css({ maxHeight: Math.min(380, $(window).height() - 220), overflowY: 'auto' });
+            },
+            buttons: { Cerrar: function () { $(this).dialog('close'); } }
+        });
+        $(document).off('change.rolomitcero', '#modalOmitirColCero').on('change.rolomitcero', '#modalOmitirColCero', function () {
+            rolOmitirColCeroPersist = this.checked;
+        });
+        $('#modalVariablesRolTodos').on('click', function (e) {
+            e.preventDefault();
+            $('#listaVariablesRol input.chk-var-rol').each(function () {
+                this.checked = true;
+                var v = this.value;
+                if (rolOmitirColsPersist.indexOf(v) < 0) rolOmitirColsPersist.push(v);
+            });
+        });
+        $('#modalVariablesRolNinguno').on('click', function (e) {
+            e.preventDefault();
+            $('#listaVariablesRol input.chk-var-rol').each(function () {
+                this.checked = false;
+                var v = this.value, i = rolOmitirColsPersist.indexOf(v);
+                if (i >= 0) rolOmitirColsPersist.splice(i, 1);
+            });
+        });
+    }
+    $dlg.dialog('option', 'title', 'Variables del grid Rol');
+    $dlg.dialog('open');
+}
+
 function detallarRolesFilter(data, edit) {
     var rubros = []; // Array para almacenar los valores de los checkboxes marcados
     var checkboxes = document.getElementsByName("opciones[]");
@@ -890,6 +1015,7 @@ function detallarRolesFilter(data, edit) {
     //console.log(data);
     var semanas = semanas = ($.vv(data['anio']) ? isoWeeks(data['anio']).isoWeeks() : 52);
     $.getDataJson("", $.extend(data, { getRolDetailFilter: true, Rubros: rubros }), function (response) {
+        $('#listaVariablesRol').empty();
         createGrid(response['grid'], response['header']);
         $grid.setRows(response['personal']);
         fields = response['rol'];
@@ -1161,24 +1287,28 @@ function saveAportes(data) {
 }
 
 
-function printRoles(data) {
+/** Columnas a omitir en Rol Grupal (persistente hasta desmarcar en el modal). */
+function getOmitirColsRolModal() {
+    return rolOmitirColsPersist.slice();
+}
 
+/** Opciones comunes informe Rol grupal / individual (pantalla + modal Variables). */
+function dataInformeRolComun(base) {
+    var data = $.extend(true, {}, base || {});
     var checkboxCargo = document.getElementById('check_box_cargo');
-    var estaMarcado = checkboxCargo.checked;
+    data.estaMarcado = checkboxCargo ? checkboxCargo.checked : false;
     var imprimi_col_cero = document.getElementById('imprimi_col_cero');
-    var imprimirAll = imprimi_col_cero.checked;
+    data.imprimirAll = (imprimi_col_cero && imprimi_col_cero.checked) || rolOmitirColCeroPersist;
     var is_col_hs = document.getElementById('check_col_hs');
-    var check_col_hs = is_col_hs.checked;
+    data.check_col_hs = is_col_hs ? is_col_hs.checked : false;
     var is_col_jorn = document.getElementById('check_col_jorn');
-    var check_col_jorn = is_col_jorn.checked;
+    data.check_col_jorn = is_col_jorn ? is_col_jorn.checked : false;
+    data.omitirColsRol = JSON.stringify(getOmitirColsRolModal());
+    return data;
+}
 
-
-    data.estaMarcado = estaMarcado;
-    data.imprimirAll = imprimirAll;
-    data.check_col_hs = check_col_hs;
-    data.check_col_jorn = check_col_jorn;
-
-    $.getDataJson('', $.extend(true, {}, data, {
+function printRoles(data) {
+    $.getDataJson('', $.extend(true, {}, dataInformeRolComun(data), {
         printAjax: true, print: true
     }), function (r) {
         $('#imprimirRoles').html(r['tabla']).printElement({ pageTitle: 'EXA - Sofware Contable', printMode: 'iframe', leaveOpen: true });
@@ -1188,22 +1318,7 @@ function printRoles(data) {
 
 
 function exportRoles(data) {
-    var checkboxCargo = document.getElementById('check_box_cargo');
-    var estaMarcado = checkboxCargo.checked;
-    var imprimi_col_cero = document.getElementById('imprimi_col_cero');
-    var imprimirAll = imprimi_col_cero.checked;
-
-    var is_col_hs = document.getElementById('check_col_hs');
-    var check_col_hs = is_col_hs.checked;
-    var is_col_jorn = document.getElementById('check_col_jorn');
-    var check_col_jorn = is_col_jorn.checked;
-
-    data.estaMarcado = estaMarcado;
-    data.imprimirAll = imprimirAll;
-    data.check_col_hs = check_col_hs;
-    data.check_col_jorn = check_col_jorn;
-
-    $.getDataJson('', $.extend(true, {}, data, {
+    $.getDataJson('', $.extend(true, {}, dataInformeRolComun(data), {
         printAjax: true
     }), function (r) {
 
@@ -1215,9 +1330,9 @@ function exportRoles(data) {
 
 
 
-function printRolDetailIndiv(data) { $.getDataJson('', $.extend(true, {}, data, { printRolIndAjax: true, print: true }), function (r) { $('#imprimirRoles').html(r['tabla']).printElement({ pageTitle: 'EXA - Sofware Contable' }); }); }
-function exportRolDetailIndiv(data) { $.getDataJson('', $.extend(true, {}, data, { printRolIndAjax: true }), function (r) { $.exportBooksExcel($(r['tabla']).tableToXlsWorksheetsArray({ nombre: 'ROL_IND' })); }); }
-function exportRolesIndiv(data) { $.getDataJson('', $.extend(true, {}, data, { printRolIndAjax: true }), function (r) { $.exportBooksExcel($(r['tabla']).tableToXlsWorksheetsArray({ nombre: 'ROLES_IND' })); }); }
+function printRolDetailIndiv(data) { $.getDataJson('', $.extend(true, {}, dataInformeRolComun(data), { printRolIndAjax: true, print: true }), function (r) { $('#imprimirRoles').html(r['tabla']).printElement({ pageTitle: 'EXA - Sofware Contable' }); }); }
+function exportRolDetailIndiv(data) { $.getDataJson('', $.extend(true, {}, dataInformeRolComun(data), { printRolIndAjax: true }), function (r) { $.exportBooksExcel($(r['tabla']).tableToXlsWorksheetsArray({ nombre: 'ROL_IND' })); }); }
+function exportRolesIndiv(data) { $.getDataJson('', $.extend(true, {}, dataInformeRolComun(data), { printRolIndAjax: true }), function (r) { $.exportBooksExcel($(r['tabla']).tableToXlsWorksheetsArray({ nombre: 'ROLES_IND' })); }); }
 $.fn.fmatter.printRolIndFormater = function (cellvalue, options, rowObject) {
     return $.getGridButton(printRolDetailIndiv, { Con_Cod: rowObject.Con_Cod, Rol_Cod: rowObject.Rol_Cod }, 'Imprimir Rol Ind.', 'print', null, 'info');
 };

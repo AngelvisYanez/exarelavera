@@ -29,67 +29,45 @@ if (isset($getDefaults)) {
 
 if (isset($printAjax)) {
     $datos = $_GET;
+    $omitCols = array();
+    if (!empty($datos['omitirColsRol'])) {
+        if (is_string($datos['omitirColsRol'])) {
+            $dec = json_decode($datos['omitirColsRol'], true);
+            if (is_array($dec)) {
+                foreach ($dec as $cn) {
+                    if ($cn !== '' && $cn !== null) {
+                        $omitCols[$cn] = true;
+                    }
+                }
+            }
+        } elseif (is_array($datos['omitirColsRol'])) {
+            foreach ($datos['omitirColsRol'] as $cn) {
+                if ($cn !== '' && $cn !== null) {
+                    $omitCols[$cn] = true;
+                }
+            }
+        }
+    }
+    $rolOmit = function ($name) use ($omitCols) {
+        return !empty($omitCols[$name]);
+    };
+    $omitNombres = !empty($omitCols['Prs_Ape']) || !empty($omitCols['Prs_Nom']);
+
     $rol_pago = $obBD_con1->getRowConsulta(16, $datos, $obBD_conexion);
     $grid = $obBD_con1->getGridRolMayorCero($rol_pago['Map_Cod'], $datos['Rol_Cod'], $datos['imprimirAll'], $datos['check_col_hs'], $datos['check_col_jorn'], $obBD_conexion, false);
     //$grid=$obBD_con1->getGridRol($rol_pago['Map_Cod'],$obBD_conexion,false);
     $obBD_con1->utf8_change_param($grid);
     $roles = $obBD_con1->getListRoles($datos, $obBD_conexion);
     $obBD_con1->utf8_change_param($roles);
-    $t = array('{Emp_Nom}' => $Ses_Emp_Nom, '{Rol_Con}' => $rol_pago['Rol_Con'], '{Rol_Range}' => "Desde $rol_pago[Rol_Fei] Hasta $rol_pago[Rol_Fef] ", '{ingHeader}' => '', '{egrHeader}' => '', '{ingSpan}' => 0, '{egrSpan}' => 0, '{data}' => '', '{rol_border}' => 'border:' . (isset($print) ? '1px solid gray;' : '0.1pt solid black;'), '{Rol_Campos_Ingreso}' => '', '{Rol_Campos_Egreso}' => '');
+    $t = array('{Emp_Nom}' => $Ses_Emp_Nom, '{Rol_Con}' => $rol_pago['Rol_Con'], '{Rol_Range}' => "Desde $rol_pago[Rol_Fei] Hasta $rol_pago[Rol_Fef] ", '{ingHeader}' => '', '{egrHeader}' => '', '{ingSpan}' => 0, '{egrSpan}' => 0, '{data}' => '', '{rol_border}' => 'border:' . (isset($print) ? '1px solid gray;' : '0.1pt solid black;'), '{Rol_Campos_Ingreso}' => '', '{Rol_Campos_Egreso}' => '', '{theadRolRows}' => '');
     $aux = array('{Rol_i}' => '', '{Prs_Ced}' => '', '{Prs_Ape}' => '', '{Prs_Nom}' => '', '{dias}' => '', '{Tic_Des}' => '');
-    // Determinar si el checkbox está marcado o no
     $estaMarcado = isset($datos['estaMarcado']) ? filter_var($datos['estaMarcado'], FILTER_VALIDATE_BOOLEAN) : false;
-    // Generar el código HTML de la tabla con la columna oculta o visible según el estado del checkbox
-    $filas = '<tr>	
-                    <td style="{rol_border} " align="center">{Rol_i}</td>
-                    <td style="{rol_border} mso-number-format:&#39;@&#39;;">{Prs_Ced}</td>
-                    <td style="{rol_border} ">{Prs_Ape} {Prs_Nom}</td>';
-    // <td style="{rol_border} ">{Prs_Nom}</td>';
-
-    // Agregar la columna Tic_Des con su estilo y control de visibilidad
-    if (!$estaMarcado) {
-        $filas .= '<td  style="{rol_border} ">{Tic_Des}</td>';
-    }
-
-
-
-   /* $filas .= '<td style="{rol_border} " align="center">{dias}</td>
-                    {Rol_Campos_Ingreso}
-                    <td style="{rol_border} " align="right">{total_ingr}</td>
-                    {Rol_Campos_Egreso}';
-
-
-    /*  <td style="{rol_border} " align="right">{total_egr}</td>
-                    <td style="{rol_border} " align="right">{total_rol}</td>
-                    <td style="{rol_border} " align="right" height="40" width="100"></td>
-                </tr>';*/
-
-   /* if ($grid['Cam_Tip'] == "E" || empty($grid['Cam_Tip']) || !$datos['imprimirAll']) {
-        $filas .= '<td style="{rol_border}" align="right"> {total_egr} </td>';
-    }
-
-
-    $filas .= '<td style="{rol_border}" align="right">  {total_rol}  </td>
-                    <td style="  {rol_border} " align="right" height="40" width="100"></td>
-                </tr>';*/
-
-
-$filas .= '<td style="{rol_border} " align="center">{dias}</td>
-                    {Rol_Campos_Ingreso}
-                    <td style="{rol_border} " align="right">{total_ingr}</td>
-                    {Rol_Campos_Egreso}
-                    <td style="{rol_border} " align="right">{total_egr}</td>
-                    <td style="{rol_border} " align="right">{total_rol}</td>
-                    <td style="{rol_border} " align="right" height="40" width="100"></td>
-                </tr>';
-
-
-
-
-    //verifica si se imprime la columna cargo
-    $t['{mostrarColumnCargo}'] =   ($estaMarcado ? '' : '<td rowspan="2" style="border:0.1pt solid; font-size:13px">CARGO </td>');
+    $mostrarCargoCol = !$estaMarcado && !$rolOmit('Tic_Des');
 
     foreach ($grid['rol'] as $f) {
+        if ($rolOmit($f['Cam_Var'])) {
+            continue;
+        }
         if (($f['Cam_Tip'] === 'I') && $f['Cam_Vis'] === 'S') {
             $t['{ingHeader}'] .= "<td  style='{rol_border};'> $f[Cam_Dec] </td>";
             $t['{ingSpan}']++;
@@ -100,19 +78,122 @@ $filas .= '<td style="{rol_border} " align="center">{dias}</td>
             $t['{egrSpan}']++;
             $t['{Rol_Campos_Egreso}'] .= '<td style="{rol_border} " align="right">{' . $f['Cam_Var'] . '}</td>';
         }
-        if ($f['Cam_Vis'] === 'S') $aux['{' . $f['Cam_Var'] . '}'] = 0;
+        if ($f['Cam_Vis'] === 'S') {
+            $aux['{' . $f['Cam_Var'] . '}'] = 0;
+        }
     }
+
+    $filas = '<tr>';
+    if (!$rolOmit('Rol_i')) {
+        $filas .= '<td style="{rol_border} " align="center">{Rol_i}</td>';
+    }
+    if (!$rolOmit('Prs_Ced')) {
+        $filas .= '<td style="{rol_border} mso-number-format:&#39;@&#39;;">{Prs_Ced}</td>';
+    }
+    if (!$omitNombres) {
+        $filas .= '<td style="{rol_border} ">{Prs_Ape} {Prs_Nom}</td>';
+    }
+    if ($mostrarCargoCol) {
+        $filas .= '<td  style="{rol_border} ">{Tic_Des}</td>';
+    }
+    if (!$rolOmit('dias')) {
+        $filas .= '<td style="{rol_border} " align="center">{dias}</td>';
+    }
+    $filas .= '{Rol_Campos_Ingreso}';
+    if (!$rolOmit('total_ingr')) {
+        $filas .= '<td style="{rol_border} " align="right">{total_ingr}</td>';
+    }
+    $filas .= '{Rol_Campos_Egreso}';
+    if (!$rolOmit('total_egr')) {
+        $filas .= '<td style="{rol_border} " align="right">{total_egr}</td>';
+    }
+    if (!$rolOmit('total_rol')) {
+        $filas .= '<td style="{rol_border} " align="right">{total_rol}</td>';
+    }
+    $filas .= '<td style="{rol_border} " align="right" height="40" width="100"></td></tr>';
+
+    $t['{mostrarColumnCargo}'] = $mostrarCargoCol ? '<td rowspan="2" style="border:0.1pt solid; font-size:13px">CARGO </td>' : '';
+
+    $rbHead = 'border:' . (isset($print) ? '1px solid gray;' : '0.1pt solid black;');
+    $tr1 = '<tr style="font-weight: bold" align="center">';
+    if (!$rolOmit('Rol_i')) {
+        $tr1 .= '<td rowspan="2" style="' . $rbHead . ' font-size:13px;">No.</td>';
+    }
+    if (!$rolOmit('Prs_Ced')) {
+        $tr1 .= '<td rowspan="2" style="' . $rbHead . ' font-size:13px;">CÉDULA</td>';
+    }
+    if (!$omitNombres) {
+        $tr1 .= '<td colspan="1" rowspan="2" style="' . $rbHead . ' font-size:13px;">NOMBRES</td>';
+    }
+    if ($mostrarCargoCol) {
+        $tr1 .= '<td rowspan="2" style="border:0.1pt solid; font-size:13px">CARGO </td>';
+    }
+    if (!$rolOmit('dias')) {
+        $tr1 .= '<td rowspan="2" style="' . $rbHead . ' font-size:13px;">DIAS</td>';
+    }
+    if ($t['{ingSpan}'] > 0) {
+        $tr1 .= '<td colspan="' . (int)$t['{ingSpan}'] . '" style="' . $rbHead . ' font-size:13px;">INGRESOS</td>';
+    }
+    if (!$rolOmit('total_ingr')) {
+        $tr1 .= '<td rowspan="2" style="' . $rbHead . ' font-size:13px;">TOT. INGR.</td>';
+    }
+    if ($t['{egrSpan}'] > 0) {
+        $tr1 .= '<td colspan="' . (int)$t['{egrSpan}'] . '" style="' . $rbHead . ' font-size:13px;">EGRESOS</td>';
+    }
+    if (!$rolOmit('total_egr')) {
+        $tr1 .= '<td rowspan="2" style="' . $rbHead . ' font-size:13px;">TOT. EGRE.</td>';
+    }
+    if (!$rolOmit('total_rol')) {
+        $tr1 .= '<td rowspan="2" style="' . $rbHead . ' font-size:13px;">TOTAL</td>';
+    }
+    $tr1 .= '<td rowspan="2" style="' . $rbHead . ' font-size:13px;">FIRMA</td></tr>';
+    $tr2 = '<tr style="font-weight: bold" align="center">' . $t['{ingHeader}'] . $t['{egrHeader}'] . '</tr>';
+    $t['{theadRolRows}'] = $tr1 . $tr2;
+
     $f = reporteArray($t, $filas);
 
     foreach ($roles as $r) {
         $t['{data}'] .= reporteArray($r, $f);
-        foreach ($grid['rol'] as $fd) if ($fd['Cam_Vis'] === 'S') $aux['{' . $fd['Cam_Var'] . '}'] += ($r['{' . $fd['Cam_Var'] . '}'] * 1);
+        foreach ($grid['rol'] as $fd) {
+            if ($fd['Cam_Vis'] === 'S' && !$rolOmit($fd['Cam_Var'])) {
+                $aux['{' . $fd['Cam_Var'] . '}'] += ($r['{' . $fd['Cam_Var'] . '}'] * 1);
+            }
+        }
     }
-    foreach ($grid['rol'] as $fd) if ($fd['Cam_Vis'] === 'S') $aux['{' . $fd['Cam_Var'] . '}'] = formato_numero($aux['{' . $fd['Cam_Var'] . '}'], 2, 1);
+    foreach ($grid['rol'] as $fd) {
+        if ($fd['Cam_Vis'] === 'S' && !$rolOmit($fd['Cam_Var'])) {
+            $aux['{' . $fd['Cam_Var'] . '}'] = formato_numero($aux['{' . $fd['Cam_Var'] . '}'], 2, 1);
+        }
+    }
     $aux['{dias}'] = '';
     $t['{data}'] .= reporteArray($aux, $f);
     //var_dump($rol['roles']);
-    $t['{maxSpan}'] = $t['{ingSpan}'] + $t['{egrSpan}'] + 10;
+    $fixedCols = 1;
+    if (!$rolOmit('Rol_i')) {
+        $fixedCols++;
+    }
+    if (!$rolOmit('Prs_Ced')) {
+        $fixedCols++;
+    }
+    if (!$omitNombres) {
+        $fixedCols++;
+    }
+    if ($mostrarCargoCol) {
+        $fixedCols++;
+    }
+    if (!$rolOmit('dias')) {
+        $fixedCols++;
+    }
+    if (!$rolOmit('total_ingr')) {
+        $fixedCols++;
+    }
+    if (!$rolOmit('total_egr')) {
+        $fixedCols++;
+    }
+    if (!$rolOmit('total_rol')) {
+        $fixedCols++;
+    }
+    $t['{maxSpan}'] = $t['{ingSpan}'] + $t['{egrSpan}'] + $fixedCols;
     $t['{header_empresa}'] = $obBD_con1->getReportHeader($Ses_Suc_Cod, 'ROL DE PAGOS  - ' . "$rol_pago[Are_Des]", "Desde $rol_pago[Rol_Fei] Hasta $rol_pago[Rol_Fef] ", $obBD_conexion, false, $t['{maxSpan}'], isset($print), true);
 
     //Obtener los campos para realizar el encabezado pdf y excel
@@ -153,48 +234,44 @@ $filas .= '<td style="{rol_border} " align="center">{dias}</td>
 
 if (isset($printRolIndAjax)) {
     $datos = $_GET;
+    $omitCols = array();
+    if (!empty($datos['omitirColsRol'])) {
+        if (is_string($datos['omitirColsRol'])) {
+            $dec = json_decode($datos['omitirColsRol'], true);
+            if (is_array($dec)) {
+                foreach ($dec as $cn) {
+                    if ($cn !== '' && $cn !== null) {
+                        $omitCols[$cn] = true;
+                    }
+                }
+            }
+        } elseif (is_array($datos['omitirColsRol'])) {
+            foreach ($datos['omitirColsRol'] as $cn) {
+                if ($cn !== '' && $cn !== null) {
+                    $omitCols[$cn] = true;
+                }
+            }
+        }
+    }
+    $rolOmit = function ($name) use ($omitCols) {
+        return !empty($omitCols[$name]);
+    };
+    $omitCeroFila = isset($datos['imprimirAll']) ? filter_var($datos['imprimirAll'], FILTER_VALIDATE_BOOLEAN) : false;
+    $rol_cod_abonos = !empty($datos['Rol_Cod']) ? $datos['Rol_Cod'] : (isset($Rol_Cod) ? $Rol_Cod : 0);
+
     $rol_pago = $obBD_con1->getRowConsulta(16, $datos, $obBD_conexion);
     $grid = $obBD_con1->getGridRol($rol_pago['Map_Cod'], $obBD_conexion, false);
     $empresa = $obBD_con1->getRowConsulta('empresas.selectWhere', array('where' => "empresas.Emp_Cod=$Ses_Emp_Cod"), $obBD_conexion);
     $obBD_con1->utf8_change_param($grid);
     $t = array('{representante}' => $empresa['Emp_Rep'], '{contador}' => $empresa['Emp_Con'], '{Emp_Nom}' => $Ses_Emp_Nom, '{Rol_Con}' => $rol_pago['Rol_Con'], '{Rol_Range}' => "Desde $rol_pago[Rol_Fei] Hasta $rol_pago[Rol_Fef]", '{Rol_Type}' => 'Rol ' . ($rol_pago['Rol_Tip'] == 'M' ? 'Mensual' : ($rol_pago['Rol_Tip'] == 'Q' ? 'Quincenal' : ($rol_pago['Rol_Tip'] == 'BS' ? 'BiSemanal' : 'Semanal'))), '{data}' => '', '{efectivo}' => '', '{cheque}' => '', '{otros}' => '');
-    $filas = array('ingreso' => array(), 'egreso' => array());
-    $obBD_con1->utf8_change_param($filas);
-    foreach ($grid['rol'] as $f) {
-        if (($f['Cam_Tip'] === 'I') && $f['Cam_Vis'] === 'S') {
-            array_push($filas['ingreso'], $f);
-        }
-        if (($f['Cam_Tip'] === 'E') && $f['Cam_Vis'] === 'S') {
-            array_push($filas['egreso'], $f);
-        }
-    }
-    $max = (count($filas['ingreso']) > count($filas['egreso']) ? count($filas['ingreso']) : count($filas['egreso']));
-    $html = '';
-    for ($i = 0; $i < $max; $i++) {
-        if (isset($filas['ingreso'][$i])) {
-            $html .= '<tr><td colspan="3">&nbsp;' . $filas['ingreso'][$i]['Cam_Des'] . '</td><td align="right" data-formatcode="0.00">{' . $filas['ingreso'][$i]['Cam_Var'] . '}</td>';
-        } else {
-            $html .= '<tr><td colspan="4"></td>';
-        }
-        if (isset($filas['egreso'][$i])) {
-            $html .= '<td colspan="3">&nbsp;' . $filas['egreso'][$i]['Cam_Des'] . '</td><td align="right" data-formatcode="0.00">{' . $filas['egreso'][$i]['Cam_Var'] . '}</td></tr>';
-        } else {
-            $html .= '<td colspan="4"></td><td colspan="2"></td></tr>';
-        }
-    }
 
-    $fil_plan = array('{filas}' => $html, '{header_empresa}' => '', '{header_excel}' => '');
-
+    $fil_plan_headers = array('{header_empresa}' => '', '{header_excel}' => '');
     if (isset($print)) {
-        // Calculate the week number based on the start and end dates
         $startDate = new DateTime($rol_pago['Rol_Fei']);
         $endDate = new DateTime($rol_pago['Rol_Fef']);
         $weekNumber = ceil(($startDate->format('z') / 7) + 1);
-        //$weekNumber = ceil(($startDate->format('z') + 1) / 7); // Calculate the week number (1-based)
-        // Include "Semana #" only if Rol_Tip is equal to 'S'
         $weekText = ($rol_pago['Rol_Tip'] === 'S') ? "Semana #" . $weekNumber . "<br>" : "";
-
-        $fil_plan['{header_empresa}'] = $obBD_con1->getReportHeader(
+        $fil_plan_headers['{header_empresa}'] = $obBD_con1->getReportHeader(
             $Ses_Suc_Cod,
             'ROL DE PAGOS',
             $weekText . "Desde $rol_pago[Rol_Fei] Hasta $rol_pago[Rol_Fef]",
@@ -204,12 +281,12 @@ if (isset($printRolIndAjax)) {
             isset($print),
             true
         );
-    } else
-        $fil_plan['{header_excel}'] = '<tr><td colspan="10" align="center" style=" font-weight: bold;font-size:16px;">{Emp_Nom}</td></tr>
+    } else {
+        $fil_plan_headers['{header_excel}'] = '<tr><td colspan="10" align="center" style=" font-weight: bold;font-size:16px;">{Emp_Nom}</td></tr>
         <tr><td colspan="10" align="center" style="font-weight: bold;font-size:14px;">{Rol_Type}</td></tr>
         <tr><td colspan="10" align="center" style="font-weight: bold;font-size:12px;">{Rol_Range}</td></tr>
         <tr><td colspan="10"></td></tr>';
-    $plantilla = reporteHtml($fil_plan, 'rhu_pri_rol_ind.html');
+    }
 
     $roles = $obBD_con1->getListRoles($datos, $obBD_conexion);
     $obBD_con1->utf8_change_param($roles);
@@ -217,20 +294,66 @@ if (isset($printRolIndAjax)) {
     $responce['tabla'] = '<style> @media all { div.saltopagina{ display: none; } } @media print{ div.saltopagina{ display:block; page-break-before:always; } } </style>';
     $long = count($roles);
     foreach ($roles as $i => $r) {
-        $abonos = $obBD_con1->getArrayConsulta('det_an_rol.selectWhere', array('clean' => true, 'where' => array('Con_Cod' => $r['Con_Cod'], 'Rol_Cod' => $Rol_Cod, 'Ant_Tip' => 'B'), 'join' => array('antici_rol' => array('on' => 'det_an_rol.Ant_Cod=antici_rol.Ant_Cod', 'cols' => array()))), $obBD_conexion);
-        //$obBD_con1->echoLog($r['Con_Cod']);
-        //$obBD_con1->echoLog($abonos);
-        if (count($abonos) > 0) foreach ($abonos as $ab) {
-            switch ($ab['Pag_Cod']) {
-                case 1:
-                    $r['{efectivo}'] = 'X';
-                    break;
-                case 3:
-                    $r['{cheque}'] = 'X';
-                    break;
-                default:
-                    $r['{otros}'] = 'X';
-                    break;
+        $filas = array('ingreso' => array(), 'egreso' => array());
+        foreach ($grid['rol'] as $f) {
+            if ($rolOmit($f['Cam_Var'])) {
+                continue;
+            }
+            if ($omitCeroFila && ($f['Cam_Tip'] === 'I' || $f['Cam_Tip'] === 'E') && $f['Cam_Vis'] === 'S') {
+                $vk = '{' . $f['Cam_Var'] . '}';
+                if (!isset($r[$vk])) {
+                    continue;
+                }
+                $rawV = $r[$vk];
+                if (is_numeric($rawV)) {
+                    if (abs((float) $rawV) < 1e-9) {
+                        continue;
+                    }
+                } else {
+                    $n = floatval(preg_replace('/[^\d\.\-]/', '', (string) $rawV));
+                    if (abs($n) < 1e-9) {
+                        continue;
+                    }
+                }
+            }
+            if (($f['Cam_Tip'] === 'I') && $f['Cam_Vis'] === 'S') {
+                array_push($filas['ingreso'], $f);
+            }
+            if (($f['Cam_Tip'] === 'E') && $f['Cam_Vis'] === 'S') {
+                array_push($filas['egreso'], $f);
+            }
+        }
+        $max = (count($filas['ingreso']) > count($filas['egreso']) ? count($filas['ingreso']) : count($filas['egreso']));
+        $html = '';
+        for ($j = 0; $j < $max; $j++) {
+            if (isset($filas['ingreso'][$j])) {
+                $html .= '<tr><td colspan="3">&nbsp;' . $filas['ingreso'][$j]['Cam_Des'] . '</td><td align="right" data-formatcode="0.00">{' . $filas['ingreso'][$j]['Cam_Var'] . '}</td>';
+            } else {
+                $html .= '<tr><td colspan="4"></td>';
+            }
+            if (isset($filas['egreso'][$j])) {
+                $html .= '<td colspan="3">&nbsp;' . $filas['egreso'][$j]['Cam_Des'] . '</td><td align="right" data-formatcode="0.00">{' . $filas['egreso'][$j]['Cam_Var'] . '}</td></tr>';
+            } else {
+                $html .= '<td colspan="4"></td><td colspan="2"></td></tr>';
+            }
+        }
+        $fil_plan = array_merge($fil_plan_headers, array('{filas}' => $html));
+        $plantilla = reporteHtml($fil_plan, 'rhu_pri_rol_ind.html');
+
+        $abonos = $obBD_con1->getArrayConsulta('det_an_rol.selectWhere', array('clean' => true, 'where' => array('Con_Cod' => $r['Con_Cod'], 'Rol_Cod' => $rol_cod_abonos, 'Ant_Tip' => 'B'), 'join' => array('antici_rol' => array('on' => 'det_an_rol.Ant_Cod=antici_rol.Ant_Cod', 'cols' => array()))), $obBD_conexion);
+        if (count($abonos) > 0) {
+            foreach ($abonos as $ab) {
+                switch ($ab['Pag_Cod']) {
+                    case 1:
+                        $r['{efectivo}'] = 'X';
+                        break;
+                    case 3:
+                        $r['{cheque}'] = 'X';
+                        break;
+                    default:
+                        $r['{otros}'] = 'X';
+                        break;
+                }
             }
         }
         $r['{total_letras}'] = num2letras($r['{total_rol}']) . ' DOLARES AMERICANOS';
@@ -238,9 +361,9 @@ if (isset($printRolIndAjax)) {
     }
 
     $responce['success'] = true;
-    if (!isset($echo))
+    if (!isset($echo)) {
         $obBD_con1->echoJson($responce);
-    else {
+    } else {
         echo $responce['tabla'];
         exit();
     }
@@ -293,7 +416,7 @@ if (isset($cargarReportes)) {
     <meta charset="UTF-8">
     <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php"); ?>
     <script type="text/javascript" src="../../framework/plugins/moment.min.js"></script>
-    <script type="text/ecmascript" src="../VALIDACIONES/rhu_val_roles.js?x=501"></script>
+    <script type="text/ecmascript" src="../VALIDACIONES/rhu_val_roles.js?x=510"></script>
     <style></style>
 </HEAD>
 
@@ -426,7 +549,7 @@ if (isset($cargarReportes)) {
                         </fieldset>
                     </div>
 
-                    <div class="col-xs-3 detalle">
+                   <!-- <div class="col-xs-3 detalle">
                         <fieldset class="exa-fieldset">
                             <legend class="Titulos2">Seleccionar columnas para generar el reporte en Excel</legend>
                             <span class="control-label label-xs" style="display: flex;align-items:center">
@@ -443,7 +566,7 @@ if (isset($cargarReportes)) {
                                 <input style="margin:0" type="checkbox" id="check_col_jorn" name="check_col_jorn"> <span style="margin-left: 4px;font-size:12px"> Ocultar columnas de Jornada.</span>
                             </span>
                         </fieldset>
-                    </div>
+                    </div>-->
 
 
 
@@ -490,6 +613,7 @@ if (isset($cargarReportes)) {
 
 
                     <div class="col-xs-12">
+                        <button type="button" class="btn btn-sm btn-info" onclick="abrirModalVariablesRol();" title="Listado de variables (Cam_Var) de la plantilla del rol"><i class="glyphicon glyphicon-list-alt"></i> Omitir columnas</button>
                         <button class="btn btn-sm btn-inverse" onclick="$('#rol-sdetail').moveComp('#main-search').updateGridsSizes();"><i class="glyphicon glyphicon-arrow-left"></i> Atr&aacute;s</button>
                         <button class="btn btn-sm btn-success exportRoles" onclick="printRoles($(this).data('originaldata'))"><i class="glyphicon glyphicon-print"></i> Rol Grupal</button>
                         <button class="btn btn-sm btn-success exportRoles" onclick="printRolDetailIndiv($(this).data('originaldata'))"><i class="glyphicon glyphicon-print"></i> Rol Individual</button>
@@ -607,6 +731,21 @@ if (isset($cargarReportes)) {
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/xmljs.js"></script>
     <div id="proviDetaDialog" title="Provisiones"></div>
+    <div id="modalVariablesRol" style="display:none;">
+        <p class="text-muted small" style="margin-bottom:8px;">Columnas del grid (<code>name</code>) en orden. Verde: ingresos; rojo: egresos. <strong>Marque el check en las columnas que no deben incluirse</strong> al imprimir o exportar Excel &laquo;Rol Grupal&raquo; o al usar Rol individual / Excel individual. Las omisiones y la opci&oacute;n &laquo;columnas en cero&raquo; se conservan hasta que las cambie.</p>
+        <p class="small" style="margin-bottom:8px;">
+            <a href="javascript:void(0)" id="modalVariablesRolTodos">Marcar todos</a>
+            &nbsp;|&nbsp;
+            <a href="javascript:void(0)" id="modalVariablesRolNinguno">Desmarcar todos</a>
+        </p>
+        <div class="checkbox" style="margin-bottom:10px;padding:6px 8px;background:#f9f9f9;border:1px solid #e0e0e0;border-radius:3px;">
+            <label style="margin:0;font-weight:normal;cursor:pointer;display:flex;align-items:flex-start;">
+                <input type="checkbox" id="modalOmitirColCero" name="modalOmitirColCero" value="1" style="margin:2px 8px 0 0;flex-shrink:0;">
+                <span>Omitir columnas en cero <span class="text-muted small">(no incluir en Rol Grupal los rubros cuyo total del rol sea 0)</span></span>
+            </label>
+        </div>
+        <div id="listaVariablesRol"></div>
+    </div>
 </BODY>
 
 </HTML>
