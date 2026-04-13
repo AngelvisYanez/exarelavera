@@ -1047,54 +1047,67 @@ if (isset($ajaxDetalleVentas)) {
                                 pago['Forma_Cod'] = (pago['For_Cod'] == 1) ? 'Contado' : 'Credito';
                                 pago['Tipo_Cod'] = pago['Pag_Des'];
                                 // Para el Banco - CAMBIAR POR UNA CONSULTA QUE LO HAGA MEJOR
-                                if (pago['Tipo_Cod'] != 'Cheque' || pago['Tipo_Cod'] != 'Transferencia' || pago['Tipo_Cod'] != 'Deposito') {
-                                    if (pago['Bak_Cod'] == 1)
-                                        pago['Bak_Cod'] = 'Ninguno';
-                                }
-
-                                if (pago['Tipo_Cod'] === 'Cheque') {
-                                    if (pago['Bak_Cod'] == 1) {
-                                        pago['Bak_Cod'] = 'Ninguno';
-                                    } else if (pago['Bak_Cod'] == 2) {
-                                        pago['Bak_Cod'] = 'Banco Internacional';
-                                    } else if (pago['Bak_Cod'] == 3) {
-                                        pago['Bak_Cod'] = 'Banco de Machala';
-                                    } else if (pago['Bak_Cod'] == 4) {
-                                        pago['Bak_Cod'] = 'Banco de Guayaquil';
-                                    } else if (pago['Bak_Cod'] == 5) {
-                                        pago['Bak_Cod'] = 'Banco del Pacifico';
-                                    } else if (pago['Bak_Cod'] == 6) {
-                                        pago['Bak_Cod'] = 'Banco del Pichincha';
-                                    } else if (pago['Bak_Cod'] == 7) {
-                                        pago['Bak_Cod'] = 'Banco de Loja';
-                                    } else if (pago['Bak_Cod'] == 8) {
-                                        pago['Bak_Cod'] = 'Banco de Rumiñahui';
-                                    } else if (pago['Bak_Cod'] == 9) {
-                                        pago['Bak_Cod'] = 'Banco Bolivariano';
-                                    } else if (pago['Bak_Cod'] == 10) {
-                                        pago['Bak_Cod'] = 'Banco Produbanco';
-                                    } else if (pago['Bak_Cod'] == 11) {
-                                        pago['Bak_Cod'] = 'BanEcuador';
-                                    } else if (pago['Bak_Cod'] == 12) {
-                                        pago['Bak_Cod'] = 'ProCredit';
-                                    } else if (pago['Bak_Cod'] == 13) {
-                                        pago['Bak_Cod'] = 'Banco del Austro';
-                                    } else if (pago['Bak_Cod'] == 14) {
-                                        pago['Bak_Cod'] = 'Cooperativa de Ahorro y Credito Santa Rosa Ltda';
-                                    } else if (pago['Bak_Cod'] == 15) {
-                                        pago['Bak_Cod'] = 'Cooperativa de Ahorro y Credito Juventud Ecuatori';
-                                    } else {
-                                        pago['Bak_Cod'] = 'Desconocido';
+                                var banText = null;
+                                var banIdStr = (pago['Ban_Cod'] !== undefined && pago['Ban_Cod'] !== null && pago['Ban_Cod'].toString().length > 0) ? 'Ban_Cod' : ((pago['Bak_Cod'] !== undefined && pago['Bak_Cod'] !== null && pago['Bak_Cod'].toString().length > 0) ? 'Bak_Cod' : null);
+                                if (banIdStr) {
+                                    var elem = $('#' + banIdStr + ' option[value="' + pago[banIdStr] + '"]');
+                                    if (elem.length > 0) {
+                                        banText = elem.text();
                                     }
                                 }
 
-                                if (pago['Tipo_Cod'] === 'Transferencia' || pago['Tipo_Cod'] === 'Deposito') {
-                                    if (pago['Bak_Cod'] == 1) {
-                                        pago['Bak_Cod'] = 'Banco Pichincha Cta.Ahorro XXX';
-                                    } else if (pago['Bak_Cod'] == 2) {
-                                        pago['Bak_Cod'] = 'Banco de Guayaquil 123456';
-                                    } else {
-                                        pago['Bak_Cod'] = 'Desconocido';
+                                if (banText) {
+                                    pago['Bak_Cod'] = banText;
+                                } else {
+                                    if (pago['Tipo_Cod'] != 'Cheque' && pago['Tipo_Cod'] != 'Transferencia' && pago['Tipo_Cod'] != 'Deposito') {
+                                        if (pago['Bak_Cod'] == 1)
+                                            pago['Bak_Cod'] = 'Ninguno';
+                                    }
+
+                                    if (pago['Tipo_Cod'] === 'Cheque') {
+                                        if (pago['Bak_Cod'] == 1) {
+                                            pago['Bak_Cod'] = 'Ninguno';
+                                        } else if (pago['Bak_Cod'] == 2) {
+                                            pago['Bak_Cod'] = 'Banco Internacional';
+                                        } else if (pago['Bak_Cod'] == 3) {
+                                            pago['Bak_Cod'] = 'Banco de Machala';
+                                        } else if (pago['Bak_Cod'] == 4) {
+                                            pago['Bak_Cod'] = 'Banco de Guayaquil';
+                                        } else if (pago['Bak_Cod'] == 5) {
+                                            pago['Bak_Cod'] = 'Banco del Pacifico';
+                                        } else if (pago['Bak_Cod'] == 6) {
+                                            pago['Bak_Cod'] = 'Banco del Pichincha';
+                                        } else if (pago['Bak_Cod'] == 7) {
+                                            pago['Bak_Cod'] = 'Banco de Loja';
+                                        } else if (pago['Bak_Cod'] == 8) {
+                                            pago['Bak_Cod'] = 'Banco de Rumiñahui';
+                                        } else if (pago['Bak_Cod'] == 9) {
+                                            pago['Bak_Cod'] = 'Banco Bolivariano';
+                                        } else if (pago['Bak_Cod'] == 10) {
+                                            pago['Bak_Cod'] = 'Banco Produbanco';
+                                        } else if (pago['Bak_Cod'] == 11) {
+                                            pago['Bak_Cod'] = 'BanEcuador';
+                                        } else if (pago['Bak_Cod'] == 12) {
+                                            pago['Bak_Cod'] = 'ProCredit';
+                                        } else if (pago['Bak_Cod'] == 13) {
+                                            pago['Bak_Cod'] = 'Banco del Austro';
+                                        } else if (pago['Bak_Cod'] == 14) {
+                                            pago['Bak_Cod'] = 'Cooperativa de Ahorro y Credito Santa Rosa Ltda';
+                                        } else if (pago['Bak_Cod'] == 15) {
+                                            pago['Bak_Cod'] = 'Cooperativa de Ahorro y Credito Juventud Ecuatori';
+                                        } else {
+                                            pago['Bak_Cod'] = 'Desconocido';
+                                        }
+                                    }
+
+                                    if (pago['Tipo_Cod'] === 'Transferencia' || pago['Tipo_Cod'] === 'Deposito') {
+                                        if (pago['Bak_Cod'] == 1) {
+                                            pago['Bak_Cod'] = 'Banco Pichincha Cta.Ahorro XXX';
+                                        } else if (pago['Bak_Cod'] == 2) {
+                                            pago['Bak_Cod'] = 'Banco de Guayaquil 123456';
+                                        } else {
+                                            pago['Bak_Cod'] = 'Desconocido';
+                                        }
                                     }
                                 }
 
@@ -1282,8 +1295,8 @@ if (isset($ajaxDetalleVentas)) {
                                     $('#Tic_Cod').html(html);
                                     $('#Tic_Cod').val(doc['Tic_Cod']).trigger('change');
                                     $('#Vet_Des').val(doc['Vet_Des']).trigger('change');
-                                    validarNum(doc['Secuencia']);
-                                    $('#Vet_Num').val(doc['Secuencia']).trigger('change'); // visualiza la secuencia
+                                    validarNum(doc['Vet_Num']);
+                                    $('#Vet_Num').val(doc['Vet_Num']).trigger('change'); // visualiza la secuencia
 
                                     $('#t_descuento').val($('#t_subtotal').val() * $('#Vet_Des').val() * 1 / 100).trigger('change');
                                     $('#Ret_Num').val(doc['Ret_Num']);
