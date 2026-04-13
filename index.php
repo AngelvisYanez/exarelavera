@@ -78,9 +78,11 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
     <link rel="shortcut icon" type="image/x-icon" href="imagenes/ingresar/favicon.png" />
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Saira:wght@400;600&display=swap" rel="stylesheet">
-    <!-- Bootstrap CSS & Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap CSS & Icons with Local Fallback -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" 
+          onerror="this.onerror=null;this.href='framework/jquery/bootstrap/bootstrap-3.3.5/css/bootstrap.min.css';">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="framework/plugins/fonts/font-awesome/font-awesome-4.4.0/css/font-awesome.min.css" />
     <!--Agregar items-->
     <link type="text/css" rel="stylesheet" href="./framework/plugins/animate/animate-3.4.0.min.css" />
     <link rel="stylesheet" href="./Librerias/tooltip/jquery.tooltip.css" />
@@ -955,14 +957,19 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
                                                                                             echo date("Y"); ?>. <?php echo $es_portal_relavera ? 'RCET · Relavera Comunitaria El Tabl&oacute;n · Plataforma EXA' : 'EXA Sistema Contable - Todos los derechos reservados'; ?>.</span></div>
     </footer>
 
-    <!-- Bootstrap & jQuery JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap & jQuery JS with Local Fallback -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script>window.jQuery || document.write('<script src="skins/js/jquery.js"><\/script>')</script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>window.bootstrap || document.write('<script src="mascaras/model1/js/bootstrap.min.js"><\/script>')</script>
+
     <script src="mascaras/model1/js/libs/modernizr-2.5.3.min.js"></script>
     <script src="framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script src="mascaras/model2/js/signin.js"></script>
     <script language="javascript" src="Librerias/validaciones/validacion.js"></script>
-    <!-- Select2 CSS -->
+    
+    <!-- Select2 CSS & JS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
