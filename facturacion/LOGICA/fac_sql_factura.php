@@ -822,22 +822,27 @@ function sentencias_facturaVenta($id, $Par_Sql)
                   where ventas.Vet_Cod=$Par_Sql[0] ";
             break;
         case 92:
-            $sql = "SELECT pago_venta.Vet_Cod,pago_venta.Bak_Cod,Ban_Cod,pago_venta.Pag_Cod,
-                            Vet_Cue, Vet_Che, Vet_Mon, Vet_Cam, Vet_Tot, Vet_Num, Mon_Cod, pago_venta.Vet_Plz,
+            $sql = "SELECT pago_venta.Vet_Cod,pago_venta.Bak_Cod,pago_venta.Ban_Cod,pago_venta.Pag_Cod,
+                            pago_venta.Vet_Cue, pago_venta.Vet_Che, pago_venta.Vet_Mon, pago_venta.Vet_Cam, pago_venta.Vet_Tot, pago_venta.Vet_Num, Mon_Cod, pago_venta.Vet_Plz,
                             tipos_pago.For_Cod, tipos_pago.Pag_Des,
-                            if(pago_venta.Pld_Cod>0,pago_venta.Pld_Cod,(select asientos.Pld_Cod
-                                                                        from pago_venta
-                                                                            inner join tipos_pago on pago_venta.Pag_Cod = tipos_pago.Pag_Cod 
-                                                                            left join ventas_compr on pago_venta.Vet_Cod = ventas_compr.Vet_Cod 
-                                                                            left join asientos on ventas_compr.Com_Cod = asientos.Com_Cod and asientos.Asi_Val=pago_venta.Vet_Tot  and asientos.Asi_Deh='D'
+                            if(pago_venta.Pld_Cod>0,pago_venta.Pld_Cod,(select as2.Pld_Cod
+                                                                        from pago_venta pv2
+                                                                            inner join tipos_pago tp2 on pv2.Pag_Cod = tp2.Pag_Cod 
+                                                                            left join ventas_compr vc2 on pv2.Vet_Cod = vc2.Vet_Cod 
+                                                                            left join asientos as2 on vc2.Com_Cod = as2.Com_Cod and as2.Asi_Val=pv2.Vet_Tot  and as2.Asi_Deh='D'
                                                                         where
-                                                                        pago_venta.Vet_Cod=$Par_Sql[0] LIMIT 1)) as Pag_Pld,
-                            cheques_ext.Che_Fec as Fec_che
+                                                                        pv2.Vet_Cod=pago_venta.Vet_Cod LIMIT 1)) as Pag_Pld,
+                            cheques_ext.Che_Fec as Fec_che,
+                            bancos.Bak_Des as Bak_Name,
+                            det_plan.Pld_Des as Ban_Name
                     FROM pago_venta
                         inner join tipos_pago on pago_venta.Pag_Cod = tipos_pago.Pag_Cod 
                         left join ventas_compr on pago_venta.Vet_Cod = ventas_compr.Vet_Cod
                         left join cheq_det_ventas on pago_venta.Vet_Cod = cheq_det_ventas.Vet_Cod
                         left join cheques_ext on cheq_det_ventas.Che_Cod = cheques_ext.Che_Cod
+                        left join bancos on pago_venta.Bak_Cod = bancos.Bak_Cod
+                        left join banco on pago_venta.Ban_Cod = banco.Ban_Cod
+                        left join det_plan on banco.Pld_Cod = det_plan.Pld_Cod
                     WHERE 
                         pago_venta.Vet_Cod=$Par_Sql[0]";
             break;

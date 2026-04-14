@@ -791,35 +791,39 @@ if (isset($ajaxDetalleVentas)) {
                                 var totalRubros = tot['t_rubros'] * 1;
                                 
                                 // Función para establecer el valor del select
-                                function establecerTpcCod(valor) {
+                                function establecerTpcCod(sriCode) {
                                     if (tpcCodSelect.length > 0) {
-                                        var option = tpcCodSelect.find('option[value="' + valor + '"]');
-                                        if (option.length > 0) {
-                                            // Remover selección de todas las opciones
-                                            tpcCodSelect.find('option').prop('selected', false);
-                                            // Seleccionar la opción deseada
-                                            option.prop('selected', true);
-                                            // Establecer el valor del select
-                                            tpcCodSelect.val(valor);
-                                            // Forzar el cambio si es necesario
-                                            if (tpcCodSelect.val() != valor) {
-                                                tpcCodSelect.val(valor);
+                                        var targetValue = "";
+                                        tpcCodSelect.find('option').each(function() {
+                                            var texto = $(this).text().trim();
+                                            if (texto.indexOf(sriCode + " -") === 0) {
+                                                targetValue = $(this).val();
+                                                return false;
                                             }
-                                            // Disparar el evento change
-                                            tpcCodSelect.trigger('change');
+                                        });
+
+                                        if (targetValue !== "" && tpcCodSelect.val() != targetValue) {
+                                            tpcCodSelect.val(targetValue).trigger('change');
                                         }
                                     }
                                 }
                                 
                                 // Usar setTimeout para asegurar que el DOM esté listo
                                 setTimeout(function() {
-                                    if (totalRubros >= 500) {
+                                    var usesFinSys = false;
+                                    var rowsP = $('#pagosGrid').jqGrid('getRowData');
+                                    $.each(rowsP, function(i, r) {
+                                        var t = (r.Tipo_Cod || "").toUpperCase();
+                                        if (t.indexOf('TRANSFERENCIA') >= 0 || t.indexOf('DEPOSITO') >= 0 || t.indexOf('CHEQUE') >= 0) {
+                                            usesFinSys = true; return false;
+                                        }
+                                    });
+
+                                    if (totalRubros >= 500 || usesFinSys) {
                                         $("#Tpc_Cod option:contains('" + opcionDeshabilitar + "')").prop("disabled", true);
-                                        // Seleccionar automáticamente la opción 20 si el total es >= 500
                                         establecerTpcCod('20');
                                     } else {
                                         $("#Tpc_Cod option:contains('" + opcionDeshabilitar + "')").prop("disabled", false);
-                                        // Seleccionar automáticamente la opción 1 si el total es < 500
                                         establecerTpcCod('1');
                                     }
                                 }, 100);
@@ -1040,79 +1044,41 @@ if (isset($ajaxDetalleVentas)) {
                             }
 
                             // Añade un item al documento
+                            // Añade un item al documento
                             function addPago(pago, carga_inicial = false) {
                                 var next = $('#pagosGrid').jqGrid('getCol', 'Vet_Num', false, 'max');
                                 var text = $('#Pag_Cod').find('option:selected').text().toUpperCase();
                                 pago['Vet_Num'] = (isNaN(next) ? 1 : next + 1);
                                 pago['Forma_Cod'] = (pago['For_Cod'] == 1) ? 'Contado' : 'Credito';
                                 pago['Tipo_Cod'] = pago['Pag_Des'];
-                                // Para el Banco - CAMBIAR POR UNA CONSULTA QUE LO HAGA MEJOR
-                                var banText = null;
-                                var banIdStr = (pago['Ban_Cod'] !== undefined && pago['Ban_Cod'] !== null && pago['Ban_Cod'].toString().length > 0) ? 'Ban_Cod' : ((pago['Bak_Cod'] !== undefined && pago['Bak_Cod'] !== null && pago['Bak_Cod'].toString().length > 0) ? 'Bak_Cod' : null);
-                                if (banIdStr) {
-                                    var elem = $('#' + banIdStr + ' option[value="' + pago[banIdStr] + '"]');
-                                    if (elem.length > 0) {
-                                        banText = elem.text();
-                                    }
+
+                                // Resolución dinámica del Banco y Cuenta
+                                var bancoReal = "";
+                                if (pago['Ban_Name'] && pago['Ban_Name'].toString().trim().length > 0) {
+                                    bancoReal = pago['Ban_Name'];
+                                } else if (pago['Bak_Name'] && pago['Bak_Name'].toString().trim().length > 0) {
+                                    bancoReal = pago['Bak_Name'];
                                 }
 
-                                if (banText) {
-                                    pago['Bak_Cod'] = banText;
+                                if (bancoReal !== "") {
+                                    pago['Bak_Cod'] = bancoReal;
                                 } else {
-                                    if (pago['Tipo_Cod'] != 'Cheque' && pago['Tipo_Cod'] != 'Transferencia' && pago['Tipo_Cod'] != 'Deposito') {
-                                        if (pago['Bak_Cod'] == 1)
-                                            pago['Bak_Cod'] = 'Ninguno';
-                                    }
-
-                                    if (pago['Tipo_Cod'] === 'Cheque') {
-                                        if (pago['Bak_Cod'] == 1) {
-                                            pago['Bak_Cod'] = 'Ninguno';
-                                        } else if (pago['Bak_Cod'] == 2) {
-                                            pago['Bak_Cod'] = 'Banco Internacional';
-                                        } else if (pago['Bak_Cod'] == 3) {
-                                            pago['Bak_Cod'] = 'Banco de Machala';
-                                        } else if (pago['Bak_Cod'] == 4) {
-                                            pago['Bak_Cod'] = 'Banco de Guayaquil';
-                                        } else if (pago['Bak_Cod'] == 5) {
-                                            pago['Bak_Cod'] = 'Banco del Pacifico';
-                                        } else if (pago['Bak_Cod'] == 6) {
-                                            pago['Bak_Cod'] = 'Banco del Pichincha';
-                                        } else if (pago['Bak_Cod'] == 7) {
-                                            pago['Bak_Cod'] = 'Banco de Loja';
-                                        } else if (pago['Bak_Cod'] == 8) {
-                                            pago['Bak_Cod'] = 'Banco de Rumiñahui';
-                                        } else if (pago['Bak_Cod'] == 9) {
-                                            pago['Bak_Cod'] = 'Banco Bolivariano';
-                                        } else if (pago['Bak_Cod'] == 10) {
-                                            pago['Bak_Cod'] = 'Banco Produbanco';
-                                        } else if (pago['Bak_Cod'] == 11) {
-                                            pago['Bak_Cod'] = 'BanEcuador';
-                                        } else if (pago['Bak_Cod'] == 12) {
-                                            pago['Bak_Cod'] = 'ProCredit';
-                                        } else if (pago['Bak_Cod'] == 13) {
-                                            pago['Bak_Cod'] = 'Banco del Austro';
-                                        } else if (pago['Bak_Cod'] == 14) {
-                                            pago['Bak_Cod'] = 'Cooperativa de Ahorro y Credito Santa Rosa Ltda';
-                                        } else if (pago['Bak_Cod'] == 15) {
-                                            pago['Bak_Cod'] = 'Cooperativa de Ahorro y Credito Juventud Ecuatori';
-                                        } else {
-                                            pago['Bak_Cod'] = 'Desconocido';
-                                        }
-                                    }
-
-                                    if (pago['Tipo_Cod'] === 'Transferencia' || pago['Tipo_Cod'] === 'Deposito') {
-                                        if (pago['Bak_Cod'] == 1) {
-                                            pago['Bak_Cod'] = 'Banco Pichincha Cta.Ahorro XXX';
-                                        } else if (pago['Bak_Cod'] == 2) {
-                                            pago['Bak_Cod'] = 'Banco de Guayaquil 123456';
-                                        } else {
-                                            pago['Bak_Cod'] = 'Desconocido';
-                                        }
+                                    // Fallback a selects locales si no vino en el objeto (parche de compatibilidad)
+                                    var banIdStr = (pago['Ban_Cod'] !== undefined && pago['Ban_Cod'] !== null && pago['Ban_Cod'].toString().length > 0) ? 'Ban_Cod' : ((pago['Bak_Cod'] !== undefined && pago['Bak_Cod'] !== null && pago['Bak_Cod'].toString().length > 0) ? 'Bak_Cod' : null);
+                                    if (banIdStr) {
+                                        var elem = $('#' + banIdStr + ' option[value="' + pago[banIdStr] + '"]');
+                                        if (elem.length > 0) pago['Bak_Cod'] = elem.text();
                                     }
                                 }
 
-
-
+                                // Limpieza de nombres genéricos si aplica
+                                if (!pago['Bak_Cod'] || pago['Bak_Cod'] == 1) {
+                                    if (pago['Tipo_Cod'] != 'Cheque' && pago['Tipo_Cod'] != 'Transferencia' && pago['Tipo_Cod'] != 'Deposito') {
+                                        pago['Bak_Cod'] = 'Ninguno';
+                                    } else {
+                                        pago['Bak_Cod'] = 'Desconocido';
+                                    }
+                                }
 
 
                                 // if (text === 'TRANSFERENCIA' || text === 'DEPOSITO') {
