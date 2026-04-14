@@ -498,10 +498,12 @@ if (isset($ajaxDetalleVentas)) {
         // Variable para identificar que estamos en fac_con_fac_ven_3.0.php
         var es_fac_con_fac_ven = true;
     </script>
-     <script>
+    <script>
         var Ses_Emp_Cod = "<?php echo $Ses_Emp_Cod; ?>";
+        var init_load = false;
+        var tic_cod_ant, vet_num_ant;
     </script>
-    <script type="text/ecmascript" src="../VALIDACIONES/fac_val_factura.js?x=0"></script>
+    <script type="text/ecmascript" src="../VALIDACIONES/fac_val_factura.js?x=1"></script>
     <style></style>
 </HEAD>
 
@@ -533,7 +535,7 @@ if (isset($ajaxDetalleVentas)) {
                     <div id="documentoSearch">
                         <form id="serachDocDorm" class="form-horizontal normal" action="javascript:$('#searchGrid').Search('#serachDocDorm','searchDocument');">
                             <div class="row">
-                                <input name="order" type="hidden" value="" />
+                                <input name="order" type="hidden" value=" order by ventas.Vet_Cod DESC" />
                                 <input name="fecha_inicio" type="hidden" value="" />
                                 <input name="fecha_fin" type="hidden" value="" />
 
@@ -792,6 +794,7 @@ if (isset($ajaxDetalleVentas)) {
                                 
                                 // Función para establecer el valor del select
                                 function establecerTpcCod(sriCode) {
+                                    if (init_load) return; // No sobrescribir durante la carga inicial
                                     if (tpcCodSelect.length > 0) {
                                         var targetValue = "";
                                         tpcCodSelect.find('option').each(function() {
@@ -1044,29 +1047,36 @@ if (isset($ajaxDetalleVentas)) {
                             }
 
                             // Añade un item al documento
-                            // Añade un item al documento
                             function addPago(pago, carga_inicial = false) {
                                 var next = $('#pagosGrid').jqGrid('getCol', 'Vet_Num', false, 'max');
                                 var text = $('#Pag_Cod').find('option:selected').text().toUpperCase();
                                 pago['Vet_Num'] = (isNaN(next) ? 1 : next + 1);
                                 pago['Forma_Cod'] = (pago['For_Cod'] == 1) ? 'Contado' : 'Credito';
                                 pago['Tipo_Cod'] = pago['Pag_Des'];
-
+                                
                                 // Resolución dinámica del Banco y Cuenta
                                 var bancoReal = "";
-                                if (pago['Ban_Name'] && pago['Ban_Name'].toString().trim().length > 0) {
+                                if (pago['Ban_Name'] && pago['Ban_Name'].toString().trim().length > 0 && pago['Ban_Name'] !== 'null') {
                                     bancoReal = pago['Ban_Name'];
-                                } else if (pago['Bak_Name'] && pago['Bak_Name'].toString().trim().length > 0) {
+                                } else if (pago['Bak_Name'] && pago['Bak_Name'].toString().trim().length > 0 && pago['Bak_Name'] !== 'null') {
                                     bancoReal = pago['Bak_Name'];
                                 }
 
                                 if (bancoReal !== "") {
                                     pago['Bak_Cod'] = bancoReal;
                                 } else {
-                                    // Fallback a selects locales si no vino en el objeto (parche de compatibilidad)
+                                    // Fallback a selects
                                     var banIdStr = (pago['Ban_Cod'] !== undefined && pago['Ban_Cod'] !== null && pago['Ban_Cod'].toString().length > 0) ? 'Ban_Cod' : ((pago['Bak_Cod'] !== undefined && pago['Bak_Cod'] !== null && pago['Bak_Cod'].toString().length > 0) ? 'Bak_Cod' : null);
+                                    if (!banIdStr) {
+                                        banIdStr = (pago['ban_cod'] !== undefined && pago['ban_cod'] !== null && pago['ban_cod'].toString().length > 0) ? 'ban_cod' : ((pago['bak_cod'] !== undefined && pago['bak_cod'] !== null && pago['bak_cod'].toString().length > 0) ? 'bak_cod' : null);
+                                    }
+                                    
                                     if (banIdStr) {
                                         var elem = $('#' + banIdStr + ' option[value="' + pago[banIdStr] + '"]');
+                                        if (elem.length === 0) {
+                                            // Probar con el ID en minúsculas si falló el CamelCase
+                                            elem = $('#' + banIdStr.toLowerCase() + ' option[value="' + pago[banIdStr] + '"]');
+                                        }
                                         if (elem.length > 0) pago['Bak_Cod'] = elem.text();
                                     }
                                 }
@@ -1247,9 +1257,9 @@ if (isset($ajaxDetalleVentas)) {
                                         $("#Bod_Cod").val(resp['Bod_Cod'].Bod_Cod);
                                     }
 
-                                    $("#Ret_Ren_Tot").val(parseFloat(doc['Tot_Renta']) + parseFloat(doc['Tot_Iva']));
-                                    $("#Iva_Ren_Tot").val(doc['Tot_Iva']);
-                                    $("#Ren_Tot").val(parseFloat(doc['Tot_Renta']) + parseFloat(doc['Tot_Iva']));
+                                    $("#Ret_Ren_Tot").val(parseFloat(doc['Tot_Renta'] || 0) + parseFloat(doc['Tot_Iva'] || 0));
+                                    $("#Iva_Ren_Tot").val(doc['Tot_Iva'] || 0);
+                                    $("#Ren_Tot").val(parseFloat(doc['Tot_Renta'] || 0) + parseFloat(doc['Tot_Iva'] || 0));
 
                                     var ch_prop = document.getElementById('ch_prop');
                                     if (doc.Vet_Prop && doc.Vet_Prop != "0.00") {
@@ -1280,7 +1290,7 @@ if (isset($ajaxDetalleVentas)) {
                                     $('#documentos').find('tbody tr:last').hide();
                                     addItem({});
 
-
+                                    init_load = false; // Finalizar carga inicial
                                 });
                             }
 
@@ -1289,7 +1299,7 @@ if (isset($ajaxDetalleVentas)) {
                                 caption: 'Resultado de la Búsqueda',
                                 height: 270,
                                 datatype: "local",
-                                caption: 'Resultados <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy"><option value="">No ordenar</option><option value="order by caja_aper.Caj_Fec DESC ">Fecha Venta</option><option value="order by Vet_Num DESC ">Num. Documento</option></select>&nbsp;</div>',
+                                caption: 'Resultados <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy"><option value=" order by ventas.Vet_Cod DESC" selected="selected">No ordenar</option><option value=" order by caja_aper.Caj_Fec DESC">Fecha Venta DESC</option><option value=" order by caja_aper.Caj_Fec ASC">Fecha Venta ASC</option><option value=" order by Vet_Num DESC">Num. Documento</option><option value=" order by cliente_ven.Prs_Ape DESC, cliente_ven.Prs_Nom DESC">Cliente DESC</option><option value=" order by cliente_ven.Prs_Ape ASC, cliente_ven.Prs_Nom ASC">Cliente ASC</option></select>&nbsp;</div>',
                                 colModel: [
                                     { label: 'Cód. Int.', name: 'Vet_Cod', width: 30, align: "center", key: true },
                                     { label: 'Compr.', name: 'Com_Exi', width: 20, align: "center", formatter: 'truefalse',
