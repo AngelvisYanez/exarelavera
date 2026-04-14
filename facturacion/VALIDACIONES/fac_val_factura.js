@@ -76,11 +76,8 @@ function inicializarDocVenta(nuevo_doc = true) {
 		// });
 
 		$(document).on('change', '#OrderBy', function () {
-            if (typeof es_fac_con_fac_ven !== 'undefined' && es_fac_con_fac_ven === true) {
-                var val = $(this).val();
-                $('#serachDocDorm input[name=order]').val(val);
-                $('#searchGrid').Search('#serachDocDorm', 'searchDocument');
-            }
+			$('#serachDocDorm input[name="order"]').val($(this).val());
+			$('#searchGrid').Search('#serachDocDorm', 'searchDocument');
 		});
 
 		if (Mod_Nota_CreDeb) {

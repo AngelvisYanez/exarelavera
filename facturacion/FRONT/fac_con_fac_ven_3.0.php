@@ -503,7 +503,7 @@ if (isset($ajaxDetalleVentas)) {
         var init_load = false;
         var tic_cod_ant, vet_num_ant;
     </script>
-    <script type="text/ecmascript" src="../VALIDACIONES/fac_val_factura.js?x=1"></script>
+    <script type="text/ecmascript" src="../VALIDACIONES/fac_val_factura.js?x=2"></script>
     <style></style>
 </HEAD>
 
@@ -533,9 +533,9 @@ if (isset($ajaxDetalleVentas)) {
                 </ul>
                 <div id="tab1" class="ui-tabs-panel">
                     <div id="documentoSearch">
-                        <form id="serachDocDorm" class="form-horizontal normal" action="javascript:$('#searchGrid').Search('#serachDocDorm','searchDocument');">
+                        <form id="serachDocDorm" class="form-horizontal normal" action="javascript:$('#serachDocDorm input[name=order]').val($('#OrderBy').val()); $('#searchGrid').Search('#serachDocDorm','searchDocument');">
                             <div class="row">
-                                <input name="order" type="hidden" value=" order by ventas.Vet_Cod DESC" />
+                                <input name="order" type="hidden" value="" />
                                 <input name="fecha_inicio" type="hidden" value="" />
                                 <input name="fecha_fin" type="hidden" value="" />
 
