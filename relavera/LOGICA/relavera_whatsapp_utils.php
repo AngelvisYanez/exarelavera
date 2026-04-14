@@ -14,7 +14,7 @@ if (!function_exists('relavera_telefono_planta_fila')) {
      */
     function relavera_telefono_planta_fila($f)
     {
-        $cols = array('Pla_Wat', 'Pep_Tel_Admin', 'Prs_Tel_Admin', 'Prs_Te2_Admin');
+        $cols = array('Pep_Tel_Admin', 'Prs_Tel_Admin', 'Prs_Te2_Admin');
         foreach ($cols as $c) {
             if (isset($f[$c]) && trim((string) $f[$c]) !== '') {
                 return trim((string) $f[$c]);
