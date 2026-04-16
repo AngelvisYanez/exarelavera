@@ -732,6 +732,7 @@ if (isset($generarFacturasAjax)) {
                     if ($monto_pendiente <= 0) {
                         break;
                     }
+                    $anticipo_tuvo_movimiento = false;
                     // Ahora recorro los movimientos PAG_ANTICIPO_CLI para consumir uno por uno el saldo
                     foreach ($ctsCli as &$ctsc) {
                         // Saltar consumidos
@@ -767,23 +768,10 @@ if (isset($generarFacturasAjax)) {
                                 $nuevoEstado = 'C';
                             }
                             $obBD_conIns->operacionobBD('pag_anticipo_cli.update', array('Pac_Cod' => $ctsc['Pac_Cod'], 'Ant_Cod' => $ctsc['Ant_Cod'], 'Pac_Est' => $nuevoEstado), $obBD_conexionIns);
+                            // Mantener el estado en memoria consistente (evita decisiones con datos viejos)
+                            $ctsc['Pac_Est'] = $nuevoEstado;
+                            $anticipo_tuvo_movimiento = true;
                             $monto_pendiente -= $valor_a_utilizar;
-                            // Si el movimiento se consumió completamente, revisar si debo cambiar el estado ANT_COD completo
-                            if ($nuevoEstado == 'C') {
-                                // Verifico si todos los movimientos del Anticipo han sido consumidos. Si sí, Anticipo queda 'C'
-                                $todos_consumidos = true;
-                                foreach ($ctsCli as $_ctstmp) {
-                                    if ($_ctstmp['Pac_Est'] != 'C' && $_ctstmp['Pac_Cod'] != $ctsc['Pac_Cod']) {
-                                        $todos_consumidos = false;
-                                        break;
-                                    }
-                                }
-                                if ($todos_consumidos) {
-                                    $obBD_conIns->operacionobBD(54, array('Ant_Cod' => $pagoAnt['Ant_Cod'], 'Ant_Est' => "C"), $obBD_conexionIns);
-                                }
-                            } else if ($nuevoEstado == 'U') {
-                                $obBD_conIns->operacionobBD(54, array('Ant_Cod' => $pagoAnt['Ant_Cod'], 'Ant_Est' => "U"), $obBD_conexionIns);
-                            }
                         }
                         // Si ya pagué todo lo necesario salgo
                         if ($monto_pendiente <= 0) {
@@ -791,6 +779,39 @@ if (isset($generarFacturasAjax)) {
                         }
                     }
                     unset($ctsc);
+
+                    // Recalcular estado real del anticipo en BD (caso: múltiples filas en pag_anticipo_cli)
+                    // - Si ya no queda saldo en ningún movimiento -> Ant_Est = 'C'
+                    // - Si queda saldo en algún movimiento -> Ant_Est = 'U' (si se usó algo), o mantener si no hubo movimiento
+                    if ($anticipo_tuvo_movimiento) {
+                        // IMPORTANTE: leer con la MISMA conexión transaccional para ver det_ant_cccc recién insertado
+                        $movs_actuales = $obBD_conIns->getArrayConsulta(
+                            'pag_anticipo_cli.selectWhere',
+                            array('where' => array('Ant_Cod' => $pagoAnt['Ant_Cod'])),
+                            $obBD_conexionIns
+                        );
+                        $tiene_saldo_pendiente = false;
+                        foreach ($movs_actuales as $mov_act) {
+                            $consumos_act = $obBD_conIns->getRowConsulta(56, array('Pac_Cod' => $mov_act['Pac_Cod']), $obBD_conexionIns);
+                            $consumido_act = isset($consumos_act['total_consumido']) ? (float)$consumos_act['total_consumido'] : 0;
+                            $saldo_act = round(((float)$mov_act['Pac_Val'] - $consumido_act), 2);
+
+                            // Normalizar estado del movimiento según su saldo real
+                            if ($saldo_act <= 0.00 && $mov_act['Pac_Est'] != 'C') {
+                                $obBD_conIns->operacionobBD(
+                                    'pag_anticipo_cli.update',
+                                    array('Pac_Cod' => $mov_act['Pac_Cod'], 'Ant_Cod' => $mov_act['Ant_Cod'], 'Pac_Est' => 'C'),
+                                    $obBD_conexionIns
+                                );
+                            }
+                            if ($saldo_act > 0.00) {
+                                $tiene_saldo_pendiente = true;
+                                break;
+                            }
+                        }
+                        $estado_ant = $tiene_saldo_pendiente ? 'U' : 'C';
+                        $obBD_conIns->operacionobBD(54, array('Ant_Cod' => $pagoAnt['Ant_Cod'], 'Ant_Est' => $estado_ant), $obBD_conexionIns);
+                    }
                 }
                 // El campo 'Haber' debe tomar el valor de 'Debe' para el asiento en el haber
                 $obBD_conIns->operacionobBD(52, array('Com_Cod' => $ultimo_comprobante, 'Asi_Deh' => 'H',  'Asi_Con' => $pago['concepto'], 'Asi_Glo' => $pago['Glosa'],  'Asi_Val' =>  $pago['Haber'], 'Pld_Cod' => $pago['Pld_Cod']), $obBD_conexionIns);

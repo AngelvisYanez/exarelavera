@@ -1965,6 +1965,11 @@ function sentencias_facturaVenta($id, $Par_Sql)
             $sql = "SELECT * FROM manifiesto WHERE Man_Est = 'A' AND  Man_Tip = 'F' AND Vet_Cod = $Par_Sql[0] LIMIT 1";
             break;
 
+        /* Obtener anticipo ocupado por Vet_Cod (U/C) */
+        case 1845:
+            $sql = "SELECT Ant_Cod, Ant_Est FROM anticipos_clientes WHERE Vet_Cod = " . (int)$Par_Sql[0] . " AND Ant_Est IN ('U','C') LIMIT 1";
+            break;
+
         case 1855:
             $sql = "SELECT * FROM tipo_asien WHERE  Tia_Est='A' AND Tia_Abr='IN'";
             break;

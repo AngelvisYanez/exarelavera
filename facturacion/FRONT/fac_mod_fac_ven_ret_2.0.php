@@ -389,6 +389,23 @@ if (isset($saveDocument)) {
             exit();
         }
 
+         /* BLOQUEO (solo si la venta está ligada a un manifiesto):
+         * si el anticipo de esta retención ya está usado/consumido, no permitir crear otra retención */
+        $venta_tiene_manifiesto = false;
+        if (!empty($Vet_Cod) && ($Vet_Cod * 1) > 0) {
+            $manifiesto_chk = $obBD_con1->getRowConsulta(1844, $Vet_Cod, $obBD_conexion);
+            $venta_tiene_manifiesto = (!empty($manifiesto_chk) && !empty($manifiesto_chk['Man_Cod']));
+        }
+        if ($venta_tiene_manifiesto) {
+            $row_ant_ocupado = $obBD_conIns->getRowConsulta(1845, $Vet_Cod, $obBD_conexionIns);
+            if (!empty($row_ant_ocupado) && !empty($row_ant_ocupado['Ant_Cod'])) {
+                $responce['message'] = "El anticipo " . $row_ant_ocupado['Ant_Cod'] . " que se generó con el valor de esta retención ya está ocupado, Para mas información comuníquese con el soporte.";
+                echo json_encode($responce);
+                exit();
+           
+            }
+        }
+
         /* ANULAR TODO PRIMERO: antes de cualquier registro, anular todo lo relacionado con esta retención (anticipo, pagos con ese anticipo, manifiesto_anticipo). Después se volverá a registrar. */
         $acabamos_de_anular_anticipos = false;
         if ($configs['Cof_Con'] == 'S') {
