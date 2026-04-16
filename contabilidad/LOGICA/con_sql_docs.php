@@ -563,12 +563,12 @@ function sentencias_doc($id, $Par_Sql)
                     FROM comprobantes 
                         INNER JOIN asientos ON comprobantes.Com_Cod = asientos.Com_Cod
                         INNER JOIN cliente ON comprobantes.Cli_Cod = cliente.Cli_Cod
-                        INNER JOIN det_plan ON asientos.Pld_Cod = det_plan.Pld_Cod
-                        INNER JOIN reniva_pla ON det_plan.Pld_Cod = reniva_pla.Pld_Cod
-                        INNER JOIN renta_iva ON reniva_pla.Ren_Cod = renta_iva.Ren_Cod
-                    WHERE cliente.Emp_Cod = '$_SESSION[Ses_Emp_Cod]' and Ren_Ret='I' and Com_Fec between '$Par_Sql[0]' and '$Par_Sql[1]' and Com_Est='A'
+                        INNER JOIN det_plan ON asientos.Pld_Cod = det_plan.Pld_Cod                        
+                    WHERE cliente.Emp_Cod = '$_SESSION[Ses_Emp_Cod]' and Com_Fec between '$Par_Sql[ini]' and '$Par_Sql[fin]' and Com_Est='A' and det_plan.Pld_Cod in ($Par_Sql[Pld_Cods])
                     group by det_plan.Pld_Cod";
+             //echo $sql;
              break;        
+             //echo $sql;
     }
     //echo $sql."<br/>";
     return $sql;

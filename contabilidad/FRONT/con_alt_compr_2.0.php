@@ -108,9 +108,17 @@ if (isset($ajaxLiquidacionForm104)) {
     $diario=array();
     $ctas=$obBD_con1->getArrayConsulta(40,array("Tpa_Abr"=>"'FRM485','FRM615','FRM617','FRM618','FRM619','FRM529'"), $obBD_conexion,true);
     $iva_cobrado=$obBD_con1->getRowConsulta(41,'',$obBD_conexion);
-    $ret_iva_venta=$obBD_con1->getArrayConsulta(42,$ini.'*'.$fin,$obBD_conexion);
-
-    $index=0;    
+    $PldIvas=$obBD_con1->getArrayConsultaSql('select distinct det_plan.Pld_Cod
+                FROM det_plan 
+                INNER JOIN plan_cuenta ON det_plan.Pla_Cod = plan_cuenta.Pla_Cod
+                INNER JOIN reniva_pla ON det_plan.Pld_Cod = reniva_pla.Pld_Cod
+                INNER JOIN renta_iva ON reniva_pla.Ren_Cod = renta_iva.Ren_Cod
+                where plan_cuenta.Emp_Cod ='.$Ses_Emp_Cod.' and Ren_Ret="I" and reniva_pla.Ren_Tip="V" ',$obBD_conexion);    
+    $PldId=array_map(function($item) { return $item['Pld_Cod'];}, $PldIvas);
+    $PldIvas=implode(',', $PldId);    
+    $ret_iva_venta=$obBD_con1->getArrayConsulta(42,array('ini'=>$ini,'fin'=>$fin,'Pld_Cods'=>$PldIvas),$obBD_conexion);
+    
+    $index=0;
     if(isset($_615) && $_615*1>0){
         $row=reset(array_filter($ctas,function($e){if($e['Tpa_Abr']=='FRM615')return $e;}));        
         $diario[]=array_merge($row,array('Debe'=>$_615*1,'Det_Tip'=>'D','Haber'=>null,'Index'=>$index++));
