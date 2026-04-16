@@ -1,16 +1,10 @@
 <?php
 
-/**
- * Anexo transaacional
- */
+/* Anexo transaacional */
 
-
-function sentencias_anx($id, $Par_Sql)
-{
+function sentencias_anx($id, $Par_Sql) {
 	switch ($id) {
-			/**
-		 * Consulta la provicia y pais de la ciudad de la sucursal
-		 */
+		/* Consulta la provicia y pais de la ciudad de la sucursal */
 		case 21:
 			$sql = "SELECT
 				provincia.Pro_Nom,
@@ -1066,7 +1060,7 @@ function sentencias_anx($id, $Par_Sql)
 			plan_cuenta
 			INNER JOIN perio_cont ON (plan_cuenta.Pla_Cod = perio_cont.Pla_Cod)
 		  WHERE
-			plan_cuenta.Emp_Cod = '$Par_Sql[0]' order by Pec_Fei desc";
+			plan_cuenta.Emp_Cod = '$Par_Sql[0]'";
 			return $sql;
 			break;
 
@@ -1696,7 +1690,6 @@ CAST( SUM((((Cop_Pru * Cop_Can)-(Cop_Pru * Cop_Can)*(compras.Cop_Des/100))+((Cop
 					INNER JOIN persona ON (proveedore.Prs_Cod = persona.Prs_Cod)
 					INNER JOIN identifica ON (persona.Ide_Cod = identifica.Ide_Cod)
 					WHERE proveedore.Emp_Cod = '$Par_Sql[0]' AND Ret_Dep>0 AND Cop_Est='E' AND Ret_Est='A' AND Ret_Fec between '$Par_Sql[1]' AND '$Par_Sql[2]'";
-			//echo $sql."<br>";
 			return $sql;
 
 			/*Consultamos detalle retenciones Rendimientos financieros */
@@ -1709,29 +1702,700 @@ CAST( SUM((((Cop_Pru * Cop_Can)-(Cop_Pru * Cop_Can)*(compras.Cop_Des/100))+((Cop
 					INNER JOIN puntos_imp ON (autorizaci.Pun_Cod = puntos_imp.Pun_Cod)
 					INNER JOIN sucursal ON (puntos_imp.Suc_Cod = sucursal.Suc_Cod)
 					WHERE compras.Prv_Cod = '$Par_Sql[0]' AND Ret_Dep>0 AND Cop_Est='E' AND Ret_Est='A'";
-			//echo $sql."<br>";
 			return $sql;
 
 		case 894:
 			$sql = "SELECT Tic_Des FROM tipo_compr WHERE Tic_Sri = '$Par_Sql[Tic_Sri]' AND Tic_Est='A'";
 			return $sql;
-		case 895:
-			$sql='SELECT concat(sucursal.Suc_Sri,"-",autorizaci.Pun_Sri,"-",LPAD(Vet_Num,9,0)) as Vet_Num FROM ventas 
-            inner join caja_aper ON ventas.Caj_Cod = caja_aper.Caj_Cod 
-            inner join cliente ON ventas.Cli_Cod = cliente.Cli_Cod
-			inner join autorizaci ON ventas.Aut_Cod = autorizaci.Aut_Cod
-			inner join puntos_imp ON autorizaci.Pun_Cod = puntos_imp.Pun_Cod
-			inner join sucursal ON puntos_imp.Suc_Cod = sucursal.Suc_Cod
-            WHERE Vet_Est="A" AND ventas.Vet_Aut = "N" AND caja_aper.Caj_Fec BETWEEN "'.$Par_Sql['ini'].'" AND "'.$Par_Sql['fin'].'" AND cliente.Emp_Cod = '.$Par_Sql['Emp_Cod'];
+
+		case 1000:
+			/**
+			 * Consulta agrupada por cuenta contable para el anexo
+			 * Par_Sql[0] = Emp_Cod
+			 * Par_Sql[1] = Fecha Inicio
+			 * Par_Sql[2] = Fecha Fin
+			 */
+			$sql = "SELECT 
+						det_plan.Pld_Cdc, 
+						det_plan.Pld_Des, 
+						tipo_compr.Tic_Sri,
+						tipo_compr.Tic_Des,
+						COUNT(DISTINCT compras.Cop_Cod) as NumReg,
+						SUM(IF(COALESCE(iva_info.Iva_Por, doc_info.DocIva, 0) = 0, asientos.Asi_Val, 0) * (IF(tipo_compr.Tic_Sri='04',-1,1))) as Base0,
+						SUM(IF(COALESCE(iva_info.Iva_Por, doc_info.DocIva, 0) > 0, asientos.Asi_Val, 0) * (IF(tipo_compr.Tic_Sri='04',-1,1))) as BaseIva,
+						CAST(SUM(IF(COALESCE(iva_info.Iva_Por, doc_info.DocIva, 0) > 0, asientos.Asi_Val, 0) * (IF(tipo_compr.Tic_Sri='04',-1,1))) * (COALESCE(iva_info.Iva_Por, doc_info.DocIva, 15) / 100) AS decimal(20,2)) as ValIva,
+						SUM(IF(COALESCE(iva_info.Iva_Por, doc_info.DocIva, 0) = 0 AND COALESCE(iva_info.Adq_Cod, doc_info.DocAdq, 0) = 3, asientos.Asi_Val, 0) * (IF(tipo_compr.Tic_Sri='04',-1,1))) as NoObjeto
+					FROM asientos
+					INNER JOIN comprobantes ON asientos.Com_Cod = comprobantes.Com_Cod
+					INNER JOIN compr_auto   ON comprobantes.Com_Cod = compr_auto.Com_Cod
+					INNER JOIN compras      ON compr_auto.Cop_Cod = compras.Cop_Cod
+					INNER JOIN det_plan     ON asientos.Pld_Cod = det_plan.Pld_Cod
+					INNER JOIN proveedore   ON compras.Prv_Cod = proveedore.Prv_Cod
+					INNER JOIN tipo_compr   ON compras.Tic_Cod = tipo_compr.Tic_Cod
+					LEFT JOIN (
+						SELECT dc.Cop_Cod, dc.Pld_Cod, MAX(i.Iva_Por) as Iva_Por, MAX(dc.Adq_Cod) as Adq_Cod
+						FROM det_compra dc
+						INNER JOIN iva i ON dc.Iva_Cod = i.Iva_Cod
+						INNER JOIN compras c ON dc.Cop_Cod = c.Cop_Cod
+						INNER JOIN proveedore p ON c.Prv_Cod = p.Prv_Cod
+						WHERE p.Emp_Cod = '$Par_Sql[0]'
+						  AND c.Cop_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+						GROUP BY dc.Cop_Cod, dc.Pld_Cod
+					) as iva_info ON (compras.Cop_Cod = iva_info.Cop_Cod AND det_plan.Pld_Cod = iva_info.Pld_Cod)
+					LEFT JOIN (
+						SELECT dc2.Cop_Cod, MAX(i2.Iva_Por) as DocIva, MAX(dc2.Adq_Cod) as DocAdq
+						FROM det_compra dc2
+						INNER JOIN iva i2 ON dc2.Iva_Cod = i2.Iva_Cod
+						GROUP BY dc2.Cop_Cod
+					) as doc_info ON (compras.Cop_Cod = doc_info.Cop_Cod)
+					WHERE proveedore.Emp_Cod = '$Par_Sql[0]' 
+					  AND compras.Cop_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+					  AND compras.Cop_Est = 'A'
+					  AND tipo_compr.Tic_Sri <> '0'
+					  AND (
+						(tipo_compr.Tic_Sri <> '04' AND asientos.Asi_Deh = 'D') OR
+						(tipo_compr.Tic_Sri = '04' AND asientos.Asi_Deh = 'H')
+					  )
+					  AND det_plan.Pld_Cod NOT IN (SELECT Pld_Cod FROM iva_pagado)
+					GROUP BY det_plan.Pld_Cod, tipo_compr.Tic_Sri
+					ORDER BY det_plan.Pld_Cdc, tipo_compr.Tic_Sri";
 			return $sql;
-		case 896:
-			$sql='SELECT concat(sucursal.Suc_Sri,"-",autorizaci.Pun_Sri,"-",LPAD(Ret_Num,9,0)) as Ret_Num FROM retencion 
-            inner join compras ON retencion.Cop_Cod = compras.Cop_Cod 
-            inner join proveedore ON compras.Prv_Cod = proveedore.Prv_Cod
-			inner join autorizaci ON retencion.Aut_Cod = autorizaci.Aut_Cod
-			inner join puntos_imp ON autorizaci.Pun_Cod = puntos_imp.Pun_Cod
-			inner join sucursal ON puntos_imp.Suc_Cod = sucursal.Suc_Cod
-            WHERE Ret_Est="A" AND Ret_Aut = "N" AND Cop_Fec BETWEEN "'.$Par_Sql['ini'].'" AND "'.$Par_Sql['fin'].'" AND proveedore.Emp_Cod = '.$Par_Sql['Emp_Cod'];
+
+		case 1001:
+			/**
+			 * Consulta VENTAS agrupadas por cuenta contable para el anexo
+			 */
+			$sql = "SELECT
+					det_plan.Pld_Cdc,
+					det_plan.Pld_Des,
+					tipo_compr.Tic_Sri,
+					tipo_compr.Tic_Des,
+					COUNT(DISTINCT ventas.Vet_Cod) as NumReg,
+					SUM(IF(COALESCE(iva_info.Iva_Por, doc_info.DocIva, 0) = 0, asientos.Asi_Val, 0) * (IF(tipo_compr.Tic_Sri='04',-1,1))) as Base0,
+					SUM(IF(COALESCE(iva_info.Iva_Por, doc_info.DocIva, 0) > 0, asientos.Asi_Val, 0) * (IF(tipo_compr.Tic_Sri='04',-1,1))) as BaseIva,
+					CAST(SUM(IF(COALESCE(iva_info.Iva_Por, doc_info.DocIva, 0) > 0, asientos.Asi_Val, 0) * (IF(tipo_compr.Tic_Sri='04',-1,1))) * (COALESCE(iva_info.Iva_Por, doc_info.DocIva, 15) / 100) AS decimal(20,2)) as ValIva,
+					0 as NoObjeto
+				FROM asientos
+				INNER JOIN comprobantes  ON asientos.Com_Cod = comprobantes.Com_Cod
+				INNER JOIN ventas_compr  ON comprobantes.Com_Cod = ventas_compr.Com_Cod
+				INNER JOIN ventas        ON ventas_compr.Vet_Cod = ventas.Vet_Cod
+				INNER JOIN caja_aper     ON ventas.Caj_Cod       = caja_aper.Caj_Cod
+				INNER JOIN det_plan      ON asientos.Pld_Cod     = det_plan.Pld_Cod
+				INNER JOIN cliente       ON ventas.Cli_Cod       = cliente.Cli_Cod
+				INNER JOIN tipo_compr    ON ventas.Tic_Cod       = tipo_compr.Tic_Cod
+				LEFT JOIN (
+					SELECT vd.Vet_Cod, pp.Pld_Cod, MAX(i.Iva_Por) as Iva_Por
+					FROM ventas_det vd
+					INNER JOIN iva i ON vd.Iva_Cod = i.Iva_Cod
+					INNER JOIN produ_plan pp ON vd.Pro_Cod = pp.Pro_Cod AND pp.Tip_Pld = 'V'
+					INNER JOIN ventas v ON vd.Vet_Cod = v.Vet_Cod
+					INNER JOIN caja_aper ca ON v.Caj_Cod = ca.Caj_Cod
+					INNER JOIN cliente cl ON v.Cli_Cod = cl.Cli_Cod
+					WHERE cl.Emp_Cod = '$Par_Sql[0]'
+					  AND ca.Caj_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+					GROUP BY vd.Vet_Cod, pp.Pld_Cod
+				) as iva_info ON (ventas.Vet_Cod = iva_info.Vet_Cod AND det_plan.Pld_Cod = iva_info.Pld_Cod)
+				LEFT JOIN (
+					SELECT vd2.Vet_Cod, MAX(i2.Iva_Por) as DocIva
+					FROM ventas_det vd2
+					INNER JOIN iva i2 ON vd2.Iva_Cod = i2.Iva_Cod
+					GROUP BY vd2.Vet_Cod
+				) as doc_info ON (ventas.Vet_Cod = doc_info.Vet_Cod)
+				WHERE cliente.Emp_Cod = '$Par_Sql[0]'
+				  AND caja_aper.Caj_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+				  AND ventas.Vet_Est = 'A'
+				  AND tipo_compr.Tic_Sri <> '0'
+				  AND (
+					(tipo_compr.Tic_Sri <> '04' AND asientos.Asi_Deh = 'H') OR
+					(tipo_compr.Tic_Sri = '04' AND asientos.Asi_Deh = 'D')
+				  )
+				  AND det_plan.Pld_Cod NOT IN (SELECT Pld_Cod FROM iva_cobrad)
+				  AND ventas.Vet_Cod not in(select expo.Vet_Cod from exporta_vent as expo)
+				  AND ventas.Vet_Cod not in(select reemb.Vet_Cod from venta_reembolsos as reemb)
+				GROUP BY det_plan.Pld_Cod, tipo_compr.Tic_Sri
+				ORDER BY det_plan.Pld_Cdc, tipo_compr.Tic_Sri";
+			return $sql;
+
+		case 1006:
+			/* Contracuentas COMPRAS (Haber en facturas, Debe en NC) + IVA */
+			$sql = "SELECT 
+						det_plan.Pld_Cdc, 
+						det_plan.Pld_Des, 
+						tipo_compr.Tic_Sri,
+						tipo_compr.Tic_Des,
+						COUNT(DISTINCT compras.Cop_Cod) as NumReg,
+						SUM(asientos.Asi_Val * (IF(tipo_compr.Tic_Sri='04',-1,1))) as Total
+					FROM asientos
+					INNER JOIN comprobantes ON asientos.Com_Cod = comprobantes.Com_Cod
+					INNER JOIN compr_auto   ON comprobantes.Com_Cod = compr_auto.Com_Cod
+					INNER JOIN compras      ON compr_auto.Cop_Cod = compras.Cop_Cod
+					INNER JOIN det_plan     ON asientos.Pld_Cod = det_plan.Pld_Cod
+					INNER JOIN proveedore   ON compras.Prv_Cod = proveedore.Prv_Cod
+					INNER JOIN tipo_compr   ON compras.Tic_Cod = tipo_compr.Tic_Cod
+					LEFT JOIN (
+						SELECT dc.Cop_Cod, dc.Pld_Cod, MAX(i.Iva_Por) as Iva_Por, MAX(dc.Adq_Cod) as Adq_Cod
+						FROM det_compra dc
+						INNER JOIN iva i ON dc.Iva_Cod = i.Iva_Cod
+						INNER JOIN compras c ON dc.Cop_Cod = c.Cop_Cod
+						INNER JOIN proveedore p ON c.Prv_Cod = p.Prv_Cod
+						WHERE p.Emp_Cod = '$Par_Sql[0]'
+						  AND c.Cop_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+						GROUP BY dc.Cop_Cod, dc.Pld_Cod
+					) as iva_info ON (compras.Cop_Cod = iva_info.Cop_Cod AND det_plan.Pld_Cod = iva_info.Pld_Cod)
+					LEFT JOIN (
+						SELECT dc2.Cop_Cod, MAX(i2.Iva_Por) as DocIva, MAX(dc2.Adq_Cod) as DocAdq
+						FROM det_compra dc2
+						INNER JOIN iva i2 ON dc2.Iva_Cod = i2.Iva_Cod
+						GROUP BY dc2.Cop_Cod
+					) as doc_info ON (compras.Cop_Cod = doc_info.Cop_Cod)
+					WHERE proveedore.Emp_Cod = '$Par_Sql[0]' 
+					  AND compras.Cop_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+					  AND compras.Cop_Est = 'A'
+					  AND tipo_compr.Tic_Sri <> '0'
+					  AND (
+						(tipo_compr.Tic_Sri <> '04' AND asientos.Asi_Deh = 'H') OR
+						(tipo_compr.Tic_Sri = '04' AND asientos.Asi_Deh = 'D') OR
+						(det_plan.Pld_Cod IN (SELECT Pld_Cod FROM iva_pagado))
+					  )
+					GROUP BY det_plan.Pld_Cod, tipo_compr.Tic_Sri
+					ORDER BY det_plan.Pld_Cdc, tipo_compr.Tic_Sri";
+			return $sql;
+
+		case 1007:
+			/* Contracuentas VENTAS (Debe en facturas, Haber en NC) + IVA */
+			$sql = "SELECT
+					det_plan.Pld_Cdc,
+					det_plan.Pld_Des,
+					tipo_compr.Tic_Sri,
+					tipo_compr.Tic_Des,
+					COUNT(DISTINCT ventas.Vet_Cod) as NumReg,
+					SUM(asientos.Asi_Val * (IF(tipo_compr.Tic_Sri='04',-1,1))) as Total
+				FROM asientos
+				INNER JOIN comprobantes  ON asientos.Com_Cod = comprobantes.Com_Cod
+				INNER JOIN ventas_compr  ON comprobantes.Com_Cod = ventas_compr.Com_Cod
+				INNER JOIN ventas        ON ventas_compr.Vet_Cod = ventas.Vet_Cod
+				INNER JOIN caja_aper     ON ventas.Caj_Cod       = caja_aper.Caj_Cod
+				INNER JOIN det_plan      ON asientos.Pld_Cod     = det_plan.Pld_Cod
+				INNER JOIN cliente       ON ventas.Cli_Cod       = cliente.Cli_Cod
+				INNER JOIN tipo_compr    ON ventas.Tic_Cod       = tipo_compr.Tic_Cod
+				LEFT JOIN (
+					SELECT vd.Vet_Cod, pp.Pld_Cod, MAX(i.Iva_Por) as Iva_Por
+					FROM ventas_det vd
+					INNER JOIN iva i ON vd.Iva_Cod = i.Iva_Cod
+					LEFT JOIN produ_plan pp ON vd.Pro_Cod = pp.Pro_Cod AND pp.Tip_Pld = 'V'
+					INNER JOIN ventas v ON vd.Vet_Cod = v.Vet_Cod
+					INNER JOIN caja_aper ca ON v.Caj_Cod = ca.Caj_Cod
+					INNER JOIN cliente cl ON v.Cli_Cod = cl.Cli_Cod
+					WHERE cl.Emp_Cod = '$Par_Sql[0]'
+					  AND ca.Caj_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+					GROUP BY vd.Vet_Cod, pp.Pld_Cod
+				) as iva_info ON (ventas.Vet_Cod = iva_info.Vet_Cod AND det_plan.Pld_Cod = iva_info.Pld_Cod)
+				LEFT JOIN (
+					SELECT vd2.Vet_Cod, MAX(i2.Iva_Por) as DocIva
+					FROM ventas_det vd2
+					INNER JOIN iva i2 ON vd2.Iva_Cod = i2.Iva_Cod
+					GROUP BY vd2.Vet_Cod
+				) as doc_info ON (ventas.Vet_Cod = doc_info.Vet_Cod)
+				WHERE cliente.Emp_Cod = '$Par_Sql[0]'
+				  AND caja_aper.Caj_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+				  AND ventas.Vet_Est = 'A'
+				  AND tipo_compr.Tic_Sri <> '0'
+				  AND (
+					(tipo_compr.Tic_Sri <> '04' AND asientos.Asi_Deh = 'D') OR
+					(tipo_compr.Tic_Sri = '04' AND asientos.Asi_Deh = 'H') OR
+					(det_plan.Pld_Cod IN (SELECT Pld_Cod FROM iva_cobrad))
+				  )
+				  AND ventas.Vet_Cod not in(select expo.Vet_Cod from exporta_vent as expo)
+				  AND ventas.Vet_Cod not in(select reemb.Vet_Cod from venta_reembolsos as reemb)
+				GROUP BY det_plan.Pld_Cod, tipo_compr.Tic_Sri
+				ORDER BY det_plan.Pld_Cdc, tipo_compr.Tic_Sri";
+			return $sql;
+
+		case 3000:
+			/* ============================================================
+			 * OPTIMIZADO: UNION de 1000 + 1006 en UN SOLO viaje a la BD.
+			 * Columna 'Tipo':  M = cuenta principal | C = contracuenta
+			 * PHP solo separa por Tipo, sin recalcular lógica alguna.
+			 * ============================================================ */
+			$sql = "
+			/* ---- Cuentas PRINCIPALES de Compras (case 1000) ---- */
+			SELECT 'M' as Tipo,
+				det_plan.Pld_Cdc, det_plan.Pld_Des,
+				tipo_compr.Tic_Sri, tipo_compr.Tic_Des,
+				COUNT(DISTINCT compras.Cop_Cod) as NumReg,
+				SUM(IF(COALESCE(iva_info.Iva_Por, doc_info.DocIva, 0) = 0, asientos.Asi_Val, 0) * (IF(tipo_compr.Tic_Sri='04',-1,1))) as Base0,
+				SUM(IF(COALESCE(iva_info.Iva_Por, doc_info.DocIva, 0) > 0, asientos.Asi_Val, 0) * (IF(tipo_compr.Tic_Sri='04',-1,1))) as BaseIva,
+				CAST(SUM(IF(COALESCE(iva_info.Iva_Por, doc_info.DocIva, 0) > 0, asientos.Asi_Val, 0) * (IF(tipo_compr.Tic_Sri='04',-1,1))) * (COALESCE(iva_info.Iva_Por, doc_info.DocIva, 15) / 100) AS decimal(20,2)) as ValIva,
+				SUM(IF(COALESCE(iva_info.Iva_Por, doc_info.DocIva, 0) = 0 AND COALESCE(iva_info.Adq_Cod, doc_info.DocAdq, 0) = 3, asientos.Asi_Val, 0) * (IF(tipo_compr.Tic_Sri='04',-1,1))) as NoObjeto,
+				0 as Total
+			FROM asientos
+			INNER JOIN comprobantes ON asientos.Com_Cod = comprobantes.Com_Cod
+			INNER JOIN compr_auto   ON comprobantes.Com_Cod = compr_auto.Com_Cod
+			INNER JOIN compras      ON compr_auto.Cop_Cod = compras.Cop_Cod
+			INNER JOIN det_plan     ON asientos.Pld_Cod = det_plan.Pld_Cod
+			INNER JOIN proveedore   ON compras.Prv_Cod = proveedore.Prv_Cod
+			INNER JOIN tipo_compr   ON compras.Tic_Cod = tipo_compr.Tic_Cod
+			LEFT JOIN (
+				SELECT dc.Cop_Cod, dc.Pld_Cod, MAX(i.Iva_Por) as Iva_Por, MAX(dc.Adq_Cod) as Adq_Cod
+				FROM det_compra dc
+				INNER JOIN iva i ON dc.Iva_Cod = i.Iva_Cod
+				INNER JOIN compras c ON dc.Cop_Cod = c.Cop_Cod
+				INNER JOIN proveedore p ON c.Prv_Cod = p.Prv_Cod
+				WHERE p.Emp_Cod = '$Par_Sql[0]'
+				  AND c.Cop_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+				GROUP BY dc.Cop_Cod, dc.Pld_Cod
+			) as iva_info ON (compras.Cop_Cod = iva_info.Cop_Cod AND det_plan.Pld_Cod = iva_info.Pld_Cod)
+			LEFT JOIN (
+				SELECT dc2.Cop_Cod, MAX(i2.Iva_Por) as DocIva, MAX(dc2.Adq_Cod) as DocAdq
+				FROM det_compra dc2
+				INNER JOIN iva i2 ON dc2.Iva_Cod = i2.Iva_Cod
+				GROUP BY dc2.Cop_Cod
+			) as doc_info ON (compras.Cop_Cod = doc_info.Cop_Cod)
+			WHERE proveedore.Emp_Cod = '$Par_Sql[0]'
+			  AND compras.Cop_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+			  AND compras.Cop_Est = 'A'
+			  AND tipo_compr.Tic_Sri <> '0'
+			  AND (
+				(tipo_compr.Tic_Sri <> '04' AND asientos.Asi_Deh = 'D') OR
+				(tipo_compr.Tic_Sri = '04' AND asientos.Asi_Deh = 'H')
+			  )
+			  AND det_plan.Pld_Cod NOT IN (SELECT Pld_Cod FROM iva_pagado)
+			GROUP BY det_plan.Pld_Cod, tipo_compr.Tic_Sri
+
+			UNION ALL
+
+			/* ---- CONTRACUENTAS de Compras (case 1006) ---- */
+			SELECT 'C' as Tipo,
+				det_plan.Pld_Cdc, det_plan.Pld_Des,
+				tipo_compr.Tic_Sri, tipo_compr.Tic_Des,
+				COUNT(DISTINCT compras.Cop_Cod) as NumReg,
+				0 as Base0, 0 as BaseIva, 0 as ValIva, 0 as NoObjeto,
+				SUM(asientos.Asi_Val * (IF(tipo_compr.Tic_Sri='04',-1,1))) as Total
+			FROM asientos
+			INNER JOIN comprobantes ON asientos.Com_Cod = comprobantes.Com_Cod
+			INNER JOIN compr_auto   ON comprobantes.Com_Cod = compr_auto.Com_Cod
+			INNER JOIN compras      ON compr_auto.Cop_Cod = compras.Cop_Cod
+			INNER JOIN det_plan     ON asientos.Pld_Cod = det_plan.Pld_Cod
+			INNER JOIN proveedore   ON compras.Prv_Cod = proveedore.Prv_Cod
+			INNER JOIN tipo_compr   ON compras.Tic_Cod = tipo_compr.Tic_Cod
+			WHERE proveedore.Emp_Cod = '$Par_Sql[0]'
+			  AND compras.Cop_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+			  AND compras.Cop_Est = 'A'
+			  AND tipo_compr.Tic_Sri <> '0'
+			  AND (
+				(tipo_compr.Tic_Sri <> '04' AND asientos.Asi_Deh = 'H') OR
+				(tipo_compr.Tic_Sri = '04' AND asientos.Asi_Deh = 'D') OR
+				(det_plan.Pld_Cod IN (SELECT Pld_Cod FROM iva_pagado))
+			  )
+			GROUP BY det_plan.Pld_Cod, tipo_compr.Tic_Sri
+
+			ORDER BY Tipo DESC, Pld_Cdc, Tic_Sri";
+			return $sql;
+
+		case 3001:
+			/* ============================================================
+			 * OPTIMIZADO: UNION de 1001 + 1007 en UN SOLO viaje a la BD.
+			 * ============================================================ */
+			$sql = "
+			/* ---- Cuentas PRINCIPALES de Ventas (case 1001) ---- */
+			SELECT 'M' as Tipo,
+				det_plan.Pld_Cdc, det_plan.Pld_Des,
+				tipo_compr.Tic_Sri, tipo_compr.Tic_Des,
+				COUNT(DISTINCT ventas.Vet_Cod) as NumReg,
+				SUM(IF(COALESCE(iva_info.Iva_Por, doc_info.DocIva, 0) = 0, asientos.Asi_Val, 0) * (IF(tipo_compr.Tic_Sri='04',-1,1))) as Base0,
+				SUM(IF(COALESCE(iva_info.Iva_Por, doc_info.DocIva, 0) > 0, asientos.Asi_Val, 0) * (IF(tipo_compr.Tic_Sri='04',-1,1))) as BaseIva,
+				CAST(SUM(IF(COALESCE(iva_info.Iva_Por, doc_info.DocIva, 0) > 0, asientos.Asi_Val, 0) * (IF(tipo_compr.Tic_Sri='04',-1,1))) * (COALESCE(iva_info.Iva_Por, doc_info.DocIva, 15) / 100) AS decimal(20,2)) as ValIva,
+				0 as NoObjeto,
+				0 as Total
+			FROM asientos
+			INNER JOIN comprobantes  ON asientos.Com_Cod = comprobantes.Com_Cod
+			INNER JOIN ventas_compr  ON comprobantes.Com_Cod = ventas_compr.Com_Cod
+			INNER JOIN ventas        ON ventas_compr.Vet_Cod = ventas.Vet_Cod
+			INNER JOIN caja_aper     ON ventas.Caj_Cod       = caja_aper.Caj_Cod
+			INNER JOIN det_plan      ON asientos.Pld_Cod     = det_plan.Pld_Cod
+			INNER JOIN cliente       ON ventas.Cli_Cod       = cliente.Cli_Cod
+			INNER JOIN tipo_compr    ON ventas.Tic_Cod       = tipo_compr.Tic_Cod
+			LEFT JOIN (
+				SELECT vd.Vet_Cod, pp.Pld_Cod, MAX(i.Iva_Por) as Iva_Por
+				FROM ventas_det vd
+				INNER JOIN iva i ON vd.Iva_Cod = i.Iva_Cod
+				INNER JOIN produ_plan pp ON vd.Pro_Cod = pp.Pro_Cod AND pp.Tip_Pld = 'V'
+				INNER JOIN ventas v ON vd.Vet_Cod = v.Vet_Cod
+				INNER JOIN caja_aper ca ON v.Caj_Cod = ca.Caj_Cod
+				INNER JOIN cliente cl ON v.Cli_Cod = cl.Cli_Cod
+				WHERE cl.Emp_Cod = '$Par_Sql[0]'
+				  AND ca.Caj_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+				GROUP BY vd.Vet_Cod, pp.Pld_Cod
+			) as iva_info ON (ventas.Vet_Cod = iva_info.Vet_Cod AND det_plan.Pld_Cod = iva_info.Pld_Cod)
+			LEFT JOIN (
+				SELECT vd2.Vet_Cod, MAX(i2.Iva_Por) as DocIva
+				FROM ventas_det vd2
+				INNER JOIN iva i2 ON vd2.Iva_Cod = i2.Iva_Cod
+				GROUP BY vd2.Vet_Cod
+			) as doc_info ON (ventas.Vet_Cod = doc_info.Vet_Cod)
+			WHERE cliente.Emp_Cod = '$Par_Sql[0]'
+			  AND caja_aper.Caj_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+			  AND ventas.Vet_Est = 'A'
+			  AND tipo_compr.Tic_Sri <> '0'
+			  AND (
+				(tipo_compr.Tic_Sri <> '04' AND asientos.Asi_Deh = 'H') OR
+				(tipo_compr.Tic_Sri = '04' AND asientos.Asi_Deh = 'D')
+			  )
+			  AND det_plan.Pld_Cod NOT IN (SELECT Pld_Cod FROM iva_cobrad)
+			  AND ventas.Vet_Cod not in(select expo.Vet_Cod from exporta_vent as expo)
+			  AND ventas.Vet_Cod not in(select reemb.Vet_Cod from venta_reembolsos as reemb)
+			GROUP BY det_plan.Pld_Cod, tipo_compr.Tic_Sri
+
+			UNION ALL
+
+			/* ---- CONTRACUENTAS de Ventas (case 1007) ---- */
+			SELECT 'C' as Tipo,
+				det_plan.Pld_Cdc, det_plan.Pld_Des,
+				tipo_compr.Tic_Sri, tipo_compr.Tic_Des,
+				COUNT(DISTINCT ventas.Vet_Cod) as NumReg,
+				0 as Base0, 0 as BaseIva, 0 as ValIva, 0 as NoObjeto,
+				SUM(asientos.Asi_Val * (IF(tipo_compr.Tic_Sri='04',-1,1))) as Total
+			FROM asientos
+			INNER JOIN comprobantes  ON asientos.Com_Cod = comprobantes.Com_Cod
+			INNER JOIN ventas_compr  ON comprobantes.Com_Cod = ventas_compr.Com_Cod
+			INNER JOIN ventas        ON ventas_compr.Vet_Cod = ventas.Vet_Cod
+			INNER JOIN caja_aper     ON ventas.Caj_Cod       = caja_aper.Caj_Cod
+			INNER JOIN det_plan      ON asientos.Pld_Cod     = det_plan.Pld_Cod
+			INNER JOIN cliente       ON ventas.Cli_Cod       = cliente.Cli_Cod
+			INNER JOIN tipo_compr    ON ventas.Tic_Cod       = tipo_compr.Tic_Cod
+			WHERE cliente.Emp_Cod = '$Par_Sql[0]'
+			  AND caja_aper.Caj_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+			  AND ventas.Vet_Est = 'A'
+			  AND tipo_compr.Tic_Sri <> '0'
+			  AND (
+				(tipo_compr.Tic_Sri <> '04' AND asientos.Asi_Deh = 'D') OR
+				(tipo_compr.Tic_Sri = '04' AND asientos.Asi_Deh = 'H') OR
+				(det_plan.Pld_Cod IN (SELECT Pld_Cod FROM iva_cobrad))
+			  )
+			  AND ventas.Vet_Cod not in(select expo.Vet_Cod from exporta_vent as expo)
+			  AND ventas.Vet_Cod not in(select reemb.Vet_Cod from venta_reembolsos as reemb)
+			GROUP BY det_plan.Pld_Cod, tipo_compr.Tic_Sri
+
+			ORDER BY Tipo DESC, Pld_Cdc, Tic_Sri";
+			return $sql;
+
+		case 2000:
+			/* ============================================================
+			 * MASTER OPTIMIZED QUERY — COMPRAS
+			 * Retorna todos los asientos de compras en UN SOLO viaje a la BD.
+			 * PHP separa en memoria: Debe = cuentas de gasto, Haber = contracuentas.
+			 * Elimina las consultas separadas 1000 y 1006.
+			 * ============================================================ */
+			$sql = "SELECT 
+						det_plan.Pld_Cdc, 
+						det_plan.Pld_Des,
+						det_plan.Pld_Cod,
+						tipo_compr.Tic_Sri,
+						tipo_compr.Tic_Des,
+						asientos.Asi_Deh,
+						COUNT(DISTINCT compras.Cop_Cod) as NumReg,
+						SUM(asientos.Asi_Val * (IF(tipo_compr.Tic_Sri='04',-1,1))) as Valor,
+						COALESCE(iva_info.Iva_Por, doc_info.DocIva, 0) as Iva_Por,
+						COALESCE(iva_info.Adq_Cod, doc_info.DocAdq, 0) as Adq_Cod
+					FROM asientos
+					INNER JOIN comprobantes ON asientos.Com_Cod = comprobantes.Com_Cod
+					INNER JOIN compr_auto   ON comprobantes.Com_Cod = compr_auto.Com_Cod
+					INNER JOIN compras      ON compr_auto.Cop_Cod = compras.Cop_Cod
+					INNER JOIN det_plan     ON asientos.Pld_Cod = det_plan.Pld_Cod
+					INNER JOIN proveedore   ON compras.Prv_Cod = proveedore.Prv_Cod
+					INNER JOIN tipo_compr   ON compras.Tic_Cod = tipo_compr.Tic_Cod
+					LEFT JOIN (
+						SELECT dc.Cop_Cod, dc.Pld_Cod, MAX(i.Iva_Por) as Iva_Por, MAX(dc.Adq_Cod) as Adq_Cod
+						FROM det_compra dc
+						INNER JOIN iva i ON dc.Iva_Cod = i.Iva_Cod
+						WHERE dc.Cop_Cod IN (
+							SELECT ca2.Cop_Cod FROM compr_auto ca2
+							INNER JOIN comprobantes co2 ON ca2.Com_Cod = co2.Com_Cod
+							INNER JOIN compras cp2 ON ca2.Cop_Cod = cp2.Cop_Cod
+							INNER JOIN proveedore pv2 ON cp2.Prv_Cod = pv2.Prv_Cod
+							WHERE pv2.Emp_Cod = '$Par_Sql[0]'
+							  AND cp2.Cop_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+						)
+						GROUP BY dc.Cop_Cod, dc.Pld_Cod
+					) as iva_info ON (compras.Cop_Cod = iva_info.Cop_Cod AND det_plan.Pld_Cod = iva_info.Pld_Cod)
+					LEFT JOIN (
+						SELECT dc2.Cop_Cod, MAX(i2.Iva_Por) as DocIva, MAX(dc2.Adq_Cod) as DocAdq
+						FROM det_compra dc2
+						INNER JOIN iva i2 ON dc2.Iva_Cod = i2.Iva_Cod
+						WHERE dc2.Cop_Cod IN (
+							SELECT ca3.Cop_Cod FROM compr_auto ca3
+							INNER JOIN comprobantes co3 ON ca3.Com_Cod = co3.Com_Cod
+							INNER JOIN compras cp3 ON ca3.Cop_Cod = cp3.Cop_Cod
+							INNER JOIN proveedore pv3 ON cp3.Prv_Cod = pv3.Prv_Cod
+							WHERE pv3.Emp_Cod = '$Par_Sql[0]'
+							  AND cp3.Cop_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+						)
+						GROUP BY dc2.Cop_Cod
+					) as doc_info ON (compras.Cop_Cod = doc_info.Cop_Cod)
+					WHERE proveedore.Emp_Cod = '$Par_Sql[0]' 
+					  AND compras.Cop_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+					  AND compras.Cop_Est = 'A'
+					  AND tipo_compr.Tic_Sri <> '0'
+					GROUP BY det_plan.Pld_Cod, tipo_compr.Tic_Sri, asientos.Asi_Deh
+					ORDER BY det_plan.Pld_Cdc, tipo_compr.Tic_Sri, asientos.Asi_Deh";
+			return $sql;
+
+		case 2001:
+			/* ============================================================
+			 * MASTER OPTIMIZED QUERY — VENTAS
+			 * Retorna todos los asientos de ventas en UN SOLO viaje a la BD.
+			 * PHP separa en memoria: Haber = cuentas de ingreso, Debe = contracuentas.
+			 * Elimina las consultas separadas 1001 y 1007.
+			 * ============================================================ */
+			$sql = "SELECT
+					det_plan.Pld_Cdc,
+					det_plan.Pld_Des,
+					det_plan.Pld_Cod,
+					tipo_compr.Tic_Sri,
+					tipo_compr.Tic_Des,
+					asientos.Asi_Deh,
+					COUNT(DISTINCT ventas.Vet_Cod) as NumReg,
+					SUM(asientos.Asi_Val * (IF(tipo_compr.Tic_Sri='04',-1,1))) as Valor,
+					COALESCE(iva_info.Iva_Por, doc_info.DocIva, 0) as Iva_Por
+				FROM asientos
+				INNER JOIN comprobantes  ON asientos.Com_Cod = comprobantes.Com_Cod
+				INNER JOIN ventas_compr  ON comprobantes.Com_Cod = ventas_compr.Com_Cod
+				INNER JOIN ventas        ON ventas_compr.Vet_Cod = ventas.Vet_Cod
+				INNER JOIN caja_aper     ON ventas.Caj_Cod       = caja_aper.Caj_Cod
+				INNER JOIN det_plan      ON asientos.Pld_Cod     = det_plan.Pld_Cod
+				INNER JOIN cliente       ON ventas.Cli_Cod       = cliente.Cli_Cod
+				INNER JOIN tipo_compr    ON ventas.Tic_Cod       = tipo_compr.Tic_Cod
+				LEFT JOIN (
+					SELECT vd.Vet_Cod, pp.Pld_Cod, MAX(i.Iva_Por) as Iva_Por
+					FROM ventas_det vd
+					INNER JOIN iva i ON vd.Iva_Cod = i.Iva_Cod
+					LEFT JOIN produ_plan pp ON vd.Pro_Cod = pp.Pro_Cod AND pp.Tip_Pld = 'V'
+					WHERE vd.Vet_Cod IN (
+						SELECT vc2.Vet_Cod FROM ventas_compr vc2
+						INNER JOIN comprobantes co2 ON vc2.Com_Cod = co2.Com_Cod
+						INNER JOIN ventas v2 ON vc2.Vet_Cod = v2.Vet_Cod
+						INNER JOIN caja_aper ca2 ON v2.Caj_Cod = ca2.Caj_Cod
+						INNER JOIN cliente cl2 ON v2.Cli_Cod = cl2.Cli_Cod
+						WHERE cl2.Emp_Cod = '$Par_Sql[0]'
+						  AND ca2.Caj_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+					)
+					GROUP BY vd.Vet_Cod, pp.Pld_Cod
+				) as iva_info ON (ventas.Vet_Cod = iva_info.Vet_Cod AND det_plan.Pld_Cod = iva_info.Pld_Cod)
+				LEFT JOIN (
+					SELECT vd2.Vet_Cod, MAX(i2.Iva_Por) as DocIva
+					FROM ventas_det vd2
+					INNER JOIN iva i2 ON vd2.Iva_Cod = i2.Iva_Cod
+					WHERE vd2.Vet_Cod IN (
+						SELECT vc3.Vet_Cod FROM ventas_compr vc3
+						INNER JOIN comprobantes co3 ON vc3.Com_Cod = co3.Com_Cod
+						INNER JOIN ventas v3 ON vc3.Vet_Cod = v3.Vet_Cod
+						INNER JOIN caja_aper ca3 ON v3.Caj_Cod = ca3.Caj_Cod
+						INNER JOIN cliente cl3 ON v3.Cli_Cod = cl3.Cli_Cod
+						WHERE cl3.Emp_Cod = '$Par_Sql[0]'
+						  AND ca3.Caj_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+					)
+					GROUP BY vd2.Vet_Cod
+				) as doc_info ON (ventas.Vet_Cod = doc_info.Vet_Cod)
+				WHERE cliente.Emp_Cod = '$Par_Sql[0]'
+				  AND caja_aper.Caj_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+				  AND ventas.Vet_Est = 'A'
+				  AND tipo_compr.Tic_Sri <> '0'
+				  AND ventas.Vet_Cod not in(select expo.Vet_Cod from exporta_vent as expo)
+				  AND ventas.Vet_Cod not in(select reemb.Vet_Cod from venta_reembolsos as reemb)
+				GROUP BY det_plan.Pld_Cod, tipo_compr.Tic_Sri, asientos.Asi_Deh
+				ORDER BY det_plan.Pld_Cdc, tipo_compr.Tic_Sri, asientos.Asi_Deh";
+			return $sql;
+
+		case 1002:
+			/**
+			 * Retenciones de COMPRAS (Renta) por cuenta contable
+			 */
+			$sql = "SELECT 
+						COALESCE(det_plan.Pld_Cdc, 'S/C') as Pld_Cdc, 
+						COALESCE(det_plan.Pld_Des, 'SIN CUENTA CONFIGURADA') as Pld_Des, 
+						renta_iva.Ren_Sri, 
+						MAX(renta_iva.Ren_Con) as Ren_Con,
+						COUNT(DISTINCT det_retenc.Ren_Cod, retencion.Ret_Cod) as NumReg,
+						SUM(det_retenc.Ret_Bas) as BaseImp,
+						SUM((det_retenc.Ret_Bas * renta_iva.Ren_Por / 100)) as ValRet
+					FROM det_retenc
+					INNER JOIN retencion ON det_retenc.Ret_Cod = retencion.Ret_Cod
+					INNER JOIN compras ON retencion.Cop_Cod = compras.Cop_Cod
+					INNER JOIN renta_iva ON (det_retenc.Ren_Cod = renta_iva.Ren_Cod)
+					INNER JOIN autorizaci ON (retencion.Aut_Cod = autorizaci.Aut_Cod)
+					INNER JOIN puntos_imp ON (autorizaci.Pun_Cod = puntos_imp.Pun_Cod)
+					INNER JOIN sucursal ON (puntos_imp.Suc_Cod = sucursal.Suc_Cod)
+					LEFT  JOIN (
+						SELECT Ren_Cod, MIN(Pld_Cod) as Pld_Cod 
+						FROM reniva_pla 
+						WHERE Ren_Tip = 'C' 
+						GROUP BY Ren_Cod
+					) as r_mapping ON renta_iva.Ren_Cod = r_mapping.Ren_Cod
+					LEFT  JOIN det_plan ON r_mapping.Pld_Cod = det_plan.Pld_Cod
+					WHERE sucursal.Emp_Cod = '$Par_Sql[0]'
+					  AND compras.Cop_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+					  AND retencion.Ret_Est = 'A'
+					  AND compras.Cop_Est = 'A'
+					  AND renta_iva.Ren_Ret = 'R'
+					GROUP BY det_plan.Pld_Cdc, renta_iva.Ren_Sri
+					ORDER BY det_plan.Pld_Cdc, renta_iva.Ren_Sri";
+			return $sql;
+
+		case 1003:
+			/**
+			 * Retenciones de COMPRAS (IVA) por cuenta contable
+			 */
+			$sql = "SELECT 
+						COALESCE(det_plan.Pld_Cdc, 'S/C') as Pld_Cdc, 
+						COALESCE(det_plan.Pld_Des, 'SIN CUENTA CONFIGURADA') as Pld_Des, 
+						renta_iva.Ren_Sri, 
+						MAX(renta_iva.Ren_Con) as Ren_Con,
+						COUNT(DISTINCT det_retenc.Ren_Cod, retencion.Ret_Cod) as NumReg,
+						SUM(det_retenc.Ret_Bas) as BaseImp,
+						SUM((det_retenc.Ret_Bas * renta_iva.Ren_Por / 100)) as ValRet
+					FROM det_retenc
+					INNER JOIN retencion ON det_retenc.Ret_Cod = retencion.Ret_Cod
+					INNER JOIN compras ON retencion.Cop_Cod = compras.Cop_Cod
+					INNER JOIN renta_iva ON (det_retenc.Ren_Cod = renta_iva.Ren_Cod)
+					INNER JOIN autorizaci ON (retencion.Aut_Cod = autorizaci.Aut_Cod)
+					INNER JOIN puntos_imp ON (autorizaci.Pun_Cod = puntos_imp.Pun_Cod)
+					INNER JOIN sucursal ON (puntos_imp.Suc_Cod = sucursal.Suc_Cod)
+					LEFT  JOIN (
+						SELECT Ren_Cod, MIN(Pld_Cod) as Pld_Cod 
+						FROM reniva_pla 
+						WHERE Ren_Tip = 'C' 
+						GROUP BY Ren_Cod
+					) as r_mapping ON renta_iva.Ren_Cod = r_mapping.Ren_Cod
+					LEFT  JOIN det_plan ON r_mapping.Pld_Cod = det_plan.Pld_Cod
+					WHERE sucursal.Emp_Cod = '$Par_Sql[0]'
+					  AND compras.Cop_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+					  AND retencion.Ret_Est = 'A'
+					  AND compras.Cop_Est = 'A'
+					  AND renta_iva.Ren_Ret = 'I'
+					GROUP BY det_plan.Pld_Cdc, renta_iva.Ren_Sri
+					ORDER BY det_plan.Pld_Cdc, renta_iva.Ren_Sri";
+			return $sql;
+
+		case 1004:
+			/**
+			 * Retenciones de VENTAS (Renta) por cuenta contable
+			 */
+			$importe_v   = "((ventas_det.Vet_Pru * ventas_det.Vet_Can) - ((ventas_det.Vet_Pru * ventas_det.Vet_Can) * ventas_det.Vet_Dec / 100))";
+			$imp_con_des = "($importe_v * (1 - ventas.Vet_Des / 100))";
+
+			$sql = "SELECT 
+						COALESCE(det_plan.Pld_Cdc, 'S/C') as Pld_Cdc, 
+						COALESCE(MAX(det_plan.Pld_Des), 'SIN CUENTA CONFIGURADA') as Pld_Des, 
+						renta_iva.Ren_Sri, 
+						MAX(renta_iva.Ren_Con) as Ren_Con,
+						COALESCE(SUM(data.NumReg), 0) as NumReg,
+						COALESCE(SUM(data.BaseImp), 0) as BaseImp,
+						COALESCE(SUM(data.ValRet), 0) as ValRet
+					FROM (
+						SELECT 
+							ventas_det.Ren_Cod,
+							COUNT(*) as NumReg,
+							CAST(SUM($imp_con_des) AS decimal(20,2)) as BaseImp,
+							CAST(SUM($imp_con_des * (r_iva.Ren_Por / 100)) AS decimal(20,2)) as ValRet
+						FROM ventas_det
+						INNER JOIN ventas ON ventas_det.Vet_Cod = ventas.Vet_Cod
+						INNER JOIN cliente ON ventas.Cli_Cod = cliente.Cli_Cod
+						INNER JOIN caja_aper ON ventas.Caj_Cod = caja_aper.Caj_Cod
+						LEFT  JOIN renta_iva as r_iva ON (ventas_det.Ren_Cod = r_iva.Ren_Cod)
+						WHERE cliente.Emp_Cod = '$Par_Sql[0]'
+						  AND caja_aper.Caj_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+						  AND ventas.Vet_Est = 'A'
+						  AND (ventas_det.Ren_Cod IS NOT NULL AND ventas_det.Ren_Cod <> 0)
+						GROUP BY ventas_det.Ren_Cod
+						
+						UNION ALL
+						
+						SELECT 
+							rv_det.Ren_Cod,
+							COUNT(*) as NumReg,
+							SUM(rv_det.Rvt_Bas) as BaseImp,
+							CAST(SUM(rv_det.Rvt_Bas * (r_iva2.Ren_Por / 100)) AS decimal(20,2)) as ValRet
+						FROM retcre_vta as rv
+						INNER JOIN retcrevta_det as rv_det ON rv.Rvt_Cod = rv_det.Rvt_Cod
+						INNER JOIN cliente ON rv.Cli_Cod = cliente.Cli_Cod
+						LEFT  JOIN renta_iva as r_iva2 ON (rv_det.Ren_Cod = r_iva2.Ren_Cod)
+						WHERE cliente.Emp_Cod = '$Par_Sql[0]'
+						  AND rv.Rvt_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+						  AND rv.Rvt_Est = 'A'
+						GROUP BY rv_det.Ren_Cod
+					) as data
+					LEFT  JOIN renta_iva ON (data.Ren_Cod = renta_iva.Ren_Cod)
+					LEFT  JOIN (
+						SELECT Ren_Cod, MIN(Pld_Cod) as Pld_Cod 
+						FROM reniva_pla 
+						WHERE Ren_Tip = 'V' 
+						GROUP BY Ren_Cod
+					) as r_mapping ON data.Ren_Cod = r_mapping.Ren_Cod
+					LEFT  JOIN det_plan ON r_mapping.Pld_Cod = det_plan.Pld_Cod
+					WHERE (renta_iva.Ren_Ret = 'R' OR renta_iva.Ren_Ret IS NULL)
+					GROUP BY det_plan.Pld_Cdc, renta_iva.Ren_Sri
+					ORDER BY det_plan.Pld_Cdc, renta_iva.Ren_Sri";
+			return $sql;
+
+		case 1005:
+			/**
+			 * Retenciones de VENTAS (IVA) por cuenta contable
+			 */
+			$importe_v   = "((ventas_det.Vet_Pru * ventas_det.Vet_Can) - ((ventas_det.Vet_Pru * ventas_det.Vet_Can) * ventas_det.Vet_Dec / 100))";
+			$imp_con_des = "($importe_v * (1 - ventas.Vet_Des / 100))";
+
+			$sql = "SELECT 
+						COALESCE(det_plan.Pld_Cdc, 'S/C') as Pld_Cdc, 
+						COALESCE(MAX(det_plan.Pld_Des), 'SIN CUENTA CONFIGURADA') as Pld_Des, 
+						renta_iva.Ren_Sri, 
+						MAX(renta_iva.Ren_Con) as Ren_Con,
+						COALESCE(SUM(data.NumReg), 0) as NumReg,
+						COALESCE(SUM(data.BaseImp), 0) as BaseImp,
+						COALESCE(SUM(data.ValRet), 0) as ValRet
+					FROM (
+						SELECT 
+							ventas_det.Ren_Iva as Ren_Cod,
+							COUNT(*) as NumReg,
+							CAST(SUM($imp_con_des) AS decimal(20,2)) as BaseImp,
+							CAST(SUM($imp_con_des * 0.15 * (r_iva.Ren_Por / 100)) AS decimal(20,2)) as ValRet
+						FROM ventas_det
+						INNER JOIN ventas ON ventas_det.Vet_Cod = ventas.Vet_Cod
+						INNER JOIN cliente ON ventas.Cli_Cod = cliente.Cli_Cod
+						INNER JOIN caja_aper ON ventas.Caj_Cod = caja_aper.Caj_Cod
+						LEFT  JOIN renta_iva as r_iva ON (ventas_det.Ren_Iva = r_iva.Ren_Cod)
+						WHERE cliente.Emp_Cod = '$Par_Sql[0]'
+						  AND caja_aper.Caj_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+						  AND ventas.Vet_Est = 'A'
+						  AND (ventas_det.Ren_Iva IS NOT NULL AND ventas_det.Ren_Iva <> 0)
+						GROUP BY ventas_det.Ren_Iva
+						
+						UNION ALL
+						
+						SELECT 
+							rv_det.Ren_Cod,
+							COUNT(*) as NumReg,
+							SUM(rv_det.Rvt_Bas) as BaseImp,
+							CAST(SUM(rv_det.Rvt_Bas * (r_iva2.Ren_Por / 100)) AS decimal(20,2)) as ValRet
+						FROM retcre_vta as rv
+						INNER JOIN retcrevta_det as rv_det ON rv.Rvt_Cod = rv_det.Rvt_Cod
+						INNER JOIN cliente ON rv.Cli_Cod = cliente.Cli_Cod
+						LEFT  JOIN renta_iva as r_iva2 ON (rv_det.Ren_Cod = r_iva2.Ren_Cod)
+						WHERE cliente.Emp_Cod = '$Par_Sql[0]'
+						  AND rv.Rvt_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+						  AND rv.Rvt_Est = 'A'
+						GROUP BY rv_det.Ren_Cod
+					) as data
+					LEFT  JOIN renta_iva ON (data.Ren_Cod = renta_iva.Ren_Cod)
+					LEFT  JOIN (
+						SELECT Ren_Cod, MIN(Pld_Cod) as Pld_Cod 
+						FROM reniva_pla 
+						WHERE Ren_Tip = 'V' 
+						GROUP BY Ren_Cod
+					) as r_mapping ON data.Ren_Cod = r_mapping.Ren_Cod
+					LEFT  JOIN det_plan ON r_mapping.Pld_Cod = det_plan.Pld_Cod
+					WHERE (renta_iva.Ren_Ret = 'I' OR renta_iva.Ren_Ret IS NULL)
+					GROUP BY det_plan.Pld_Cdc, renta_iva.Ren_Sri
+					ORDER BY det_plan.Pld_Cdc, renta_iva.Ren_Sri";
 			return $sql;
 	}
 }

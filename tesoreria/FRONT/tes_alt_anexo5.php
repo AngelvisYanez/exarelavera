@@ -651,10 +651,13 @@ if (isset($bt_save)) {
             }
             $ingextgravotropas = ($datos['Eve_Ren'] > 0) ? 'SI' : 'NO';
             $xmlExportacion[] = '<paisEfecExp>' . $datos['Pas_Sri'] . '</paisEfecExp>' .
-                '<exportacionDe>' . $datos['Ref_Cod'] . '</exportacionDe>' .
-                '<tipIngExt>' . $datos['Ein_Sri'] . '</tipIngExt>' .
-                '<ingExtGravOtroPais>' . $ingextgravotropas . '</ingExtGravOtroPais>' .
-                '<tipoComprobante>' . $datos['Tic_Sri'] . '</tipoComprobante>';
+                '<exportacionDe>' . $datos['Ref_Cod'] . '</exportacionDe>';
+            if ($datos['Ref_Cod'] == '03') {
+                    $xmlExportacion[] ='<tipIngExt>' . $datos['Ein_Sri'] . '</tipIngExt>' .
+                    '<ingExtGravOtroPais>' . $ingextgravotropas . '</ingExtGravOtroPais>' ;
+            }        
+                    $xmlExportacion[] ='<tipoComprobante>' . $datos['Tic_Sri'] . '</tipoComprobante>';
+            
             if ($datos['Ref_Cod'] == '01') {
                 $xmlExportacion[] = '<distAduanero>' . $datos['Edi_Sri'] . '</distAduanero>' .
                     '<anio>' . $datos['Eve_Ano'] . '</anio>' .
@@ -1150,6 +1153,14 @@ if (isset($bt_save)) {
         background: linear-gradient(135deg, #2f855a 0%, #276749 100%);
         color: #fff !important;
     }
+    #set1 .ats-download-btn-contable {
+        background: linear-gradient(135deg, #6b46c1 0%, #553c9a 100%);
+        color: #fff !important;
+    }
+    #set1 .ats-download-btn-contable:hover {
+        background: linear-gradient(135deg, #553c9a 0%, #44337a 100%);
+        color: #fff !important;
+    }
     #set1 .ats-download-list a:not(.ats-download-btn) {
         color: var(--ats-accent);
         text-decoration: none;
@@ -1344,19 +1355,25 @@ if (isset($bt_save)) {
                             fwrite($file, $buffer);
                             fclose($file);
                             $urlXml = $archivo . '?X=' . rand(1, 100);
-                            $urlResumen = 'tes_pri_ats_resumen_2.0.php?ini=' . urlencode($ini) . '&fin=' . urlencode($fin) . '&aCom=' . urlencode($valAuxCom) . '&bVen=' . urlencode($valAuxVen) . '&Exp=' . urlencode($valAuxExp) . '&cNul=' . urlencode($valAuxAnu) . '&url=' . urlencode($archivo);
-                            $mesLabel = mes($mes, 1);
-                            $titleXml = 'Descargar XML · ' . $mesLabel . ' ' . $anio;
-                            $titleResumen = 'Talón de Resumen · ' . $mesLabel . ' ' . $anio;
-                            $nombreXml = 'ATS' . $mes . $anio . '.xml';
+                            $urlAts     = 'tes_pri_ats_resumen_2.0.php?ini=' . urlencode($ini) . '&fin=' . urlencode($fin) . '&aCom=' . urlencode($valAuxCom) . '&bVen=' . urlencode($valAuxVen) . '&Exp=' . urlencode($valAuxExp) . '&cNul=' . urlencode($valAuxAnu) . '&url=' . urlencode($archivo);
+                            $urlContable = 'tes_pri_ats_resumen_contable.php?ini=' . urlencode($ini) . '&fin=' . urlencode($fin) . '&aCom=' . urlencode($valAuxCom) . '&bVen=' . urlencode($valAuxVen) . '&Exp=' . urlencode($valAuxExp) . '&cNul=' . urlencode($valAuxAnu) . '&url=' . urlencode($archivo);
+                            $mesLabel   = mes($mes, 1);
+                            $nombreXml  = 'ATS' . $mes . $anio . '.xml';
                             echo '<div class="ats-download-btns">';
-                            echo '<a href="' . htmlspecialchars($urlXml) . '" class="ats-download-btn ats-download-btn-xml" download="' . htmlspecialchars($nombreXml) . '" title="' . htmlspecialchars($titleXml) . '">';
+                            // Botón 1: Descargar XML
+                            echo '<a href="' . htmlspecialchars($urlXml) . '" class="ats-download-btn ats-download-btn-xml" download="' . htmlspecialchars($nombreXml) . '" title="Descargar XML · ' . htmlspecialchars($mesLabel) . ' ' . $anio . '">';
                             echo '<i class="icon-download-alt icon-white ats-download-icon"></i>';
                             echo '<span class="ats-download-label">Archivo XML</span>';
                             echo '</a>';
-                            echo '<a href="javascript:void(0)" class="ats-download-btn ats-download-btn-resumen" data-url="' . htmlspecialchars($urlResumen) . '" title="' . htmlspecialchars($titleResumen) . '" onclick="atsImprimirResumen(this); return false;">';
-                            echo '<i class="icon-print icon-white ats-download-icon"></i>';
-                            echo '<span class="ats-download-label">Talon Resumen</span>';
+                            // Botón 2: Ver ATS (Talón Resumen original)
+                            echo '<a href="' . htmlspecialchars($urlAts) . '" class="ats-download-btn ats-download-btn-resumen" target="_blank" title="Talón de Resumen · ' . htmlspecialchars($mesLabel) . ' ' . $anio . '">';
+                            echo '<i class="icon-eye-open icon-white ats-download-icon"></i>';
+                            echo '<span class="ats-download-label">Tal&oacute;n de Resumen</span>';
+                            echo '</a>';
+                            // Botón 3: Resumen Contable por cuenta
+                            echo '<a href="' . htmlspecialchars($urlContable) . '" class="ats-download-btn ats-download-btn-contable" target="_blank" title="Resumen Contable por Cuenta · ' . htmlspecialchars($mesLabel) . ' ' . $anio . '">';
+                            echo '<i class="icon-list-alt icon-white ats-download-icon"></i>';
+                            echo '<span class="ats-download-label">Resumen Contable</span>';
                             echo '</a>';
                             echo '</div>';
                             // echo "&raquo;&nbsp;&nbsp;IVA 5%, 15% (desde Abril 2024)  Tal&oacute;n de Resumen correspondiente a <strong>' . mes($mes, 1) . '</strong> del <strong>' . $anio . '</strong> <a href='tes_pri_ats_resumen_2.1.php?ini=" . $ini . "&fin=" . $fin . "&aCom=" . $valAuxCom . "&bVen=" . $valAuxVen . "&Exp=" . $valAuxExp . "&cNul=" . $valAuxAnu . "&url=" . $archivo . "' target='_blank'><img src='../../mascaras/model1/imagenes/32x32/download.gif' title='Imprimir Tal&oacute;n de Resumen'></a>';
