@@ -130,17 +130,17 @@ if(isset($ajaxCompr)){
                                         { label: 'Cod.Int.', name: 'Com_Cod', key: true, hidden:false,viewable:true , width: 25,align:'center' }, 
                                         { label: 'Asiento', name: 'Com_Codigo', width: 40,align:'center'  }, 
                                         { label: 'Tipo', name: 'Tipo', width: 20,align:'center'  }, 
-                                        
+                                        { label: 'Sucursal', name: 'Suc_Des', width: 30,align:'center'  },
                                         { label: 'Doc.', name: 'Doc', width: 25, align:"center" },
                                         { label: 'Doc.Num.', name: 'Doc_Num', width: 60, align:"center" },
                                         
                                         { label: 'Fecha', name: 'Com_Fec', width: 40,align:'center'  }, 
                                         { label: 'Concepto', name: 'Com_Con', width: 90  }, 
-                                        { label: 'Observaci�n', name: 'Com_Obs', width: 80  },                                                                              
+                                        { label: 'Observación', name: 'Com_Obs', width: 80  },                                                                              
                                        
-                                        { label: 'Debe',name: 'Debe', width: 40, align:"right",formatter:'number',classes:'columnHighlight2'},
-                                        { label: 'Haber',name: 'Haber', width: 40, align:"right",formatter:'number',classes:'columnHighlight2'},
-                                        { label: 'Dif.',name: 'Diferencia', width: 40, align:"right",formatter:'number',classes:'columnHighlight2'}
+                                        { label: 'Debe',name: 'Debe', width: 30, align:"right",formatter:'number',classes:'columnHighlight2'},
+                                        { label: 'Haber',name: 'Haber', width: 30, align:"right",formatter:'number',classes:'columnHighlight2'},
+                                        { label: 'Dif.',name: 'Diferencia', width: 30, align:"right",formatter:'number',classes:'columnHighlight2'}
                                                                                 
                                        
                                     ],       
