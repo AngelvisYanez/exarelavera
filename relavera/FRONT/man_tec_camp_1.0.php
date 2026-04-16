@@ -481,24 +481,31 @@ if (isset($saveManiTecAjax)) {
         //Enviar mensaje mediante whatsapp a los choferes y plantas
         $datos_ge = $obBD_con1->getRowConsulta(15, array('Man_Cod' => $_POST['Man_Cod']), $obBD_conexion);
         $pla_wat = isset($datos_ge['Pla_Wat']) ? $datos_ge['Pla_Wat'] : '';
-        if ($pla_wat == 'S' /*&& $esEdicion == 1*/) {
+        if ($pla_wat == 'S' /*&& $esEdicion == 1*/ ) {
             $fecha_actual = date('Y-m-d H:i:s'); //Fecha y hora actaul
-            $fecha_entrada = isset($datos_ge['fecha_ge']) ? $datos_ge['fecha_ge'] : '';
-            $chofer_nombre = isset($datos_ge['chofer_nombre']) ? $datos_ge['chofer_nombre'] : '';
-            $tel_chofer = ltrim(isset($datos_ge['tel_chofer']) ? $datos_ge['tel_chofer'] : '', "0");
-            $pla_nom = isset($datos_ge['Pla_Nom']) ? $datos_ge['Pla_Nom'] : '';
-            $tel_planta = ltrim(isset($datos_ge['tel_admin_planta']) ? $datos_ge['tel_admin_planta'] : '', "0");
-            $tiempo_dentro_relavera =  date_diff(new DateTime($fecha_entrada), new DateTime($fecha_actual))->format('%H:%I:%S');
-            $icono_notificacion = html_entity_decode('&#128227;', ENT_QUOTES, 'UTF-8');
-            $icono_tiempo = html_entity_decode('&#9200;', ENT_QUOTES, 'UTF-8');
-            $mensaje = $icono_notificacion . ' Sr. *' . $chofer_nombre . '* su tiempo dentro de la RELAVERA es el siguiente:\n'.
-                  '- Entrada: *' . $fecha_entrada . '*\n'.
-                  '- Salida: *' . $fecha_actual . '*\n'.
-                   '- Planta: *' . $pla_nom . '*\n'.
-                $icono_tiempo . ' Tiempo total *' .  $tiempo_dentro_relavera . '*';
-            $tel_chofer = '+593' . $tel_chofer;
-            $tel_planta = '';// '+593' . $tel_planta;
-            enviarMensajeWhatsapp($mensaje, $tel_chofer, $tel_planta);
+            $fecha_entrada = trim(isset($datos_ge['fecha_ge']) ? $datos_ge['fecha_ge'] : '');
+            $chofer_nombre = trim(isset($datos_ge['chofer_nombre']) ? $datos_ge['chofer_nombre'] : '');
+            $tel_chofer_raw = trim(isset($datos_ge['tel_chofer']) ? $datos_ge['tel_chofer'] : '');
+            $pla_nom = trim(isset($datos_ge['Pla_Nom']) ? $datos_ge['Pla_Nom'] : '');
+            $tel_planta_raw = trim(isset($datos_ge['tel_admin_planta']) ? $datos_ge['tel_admin_planta'] : '');
+            $tel_chofer_sin0 = ltrim($tel_chofer_raw, "0");
+            $tel_planta = ltrim($tel_planta_raw, "0");
+            // Validación: si falta algún campo usado en el mensaje, no enviar.
+            $dt_entrada = !empty($fecha_entrada) ? date_create($fecha_entrada) : false;
+            if ($dt_entrada && $chofer_nombre !== '' && $pla_nom !== '' && $tel_chofer_sin0 !== '') {
+                $tiempo_dentro_relavera = $dt_entrada->diff(new DateTime($fecha_actual))->format('%H:%I:%S');
+                $icono_notificacion = html_entity_decode('&#128227;', ENT_QUOTES, 'UTF-8');
+                $icono_tiempo = html_entity_decode('&#9200;', ENT_QUOTES, 'UTF-8');
+                $mensaje = $icono_notificacion . ' Sr. *' . $chofer_nombre . '* su tiempo dentro de la RELAVERA es el siguiente:\n' .
+                    '- Entrada: *' . $fecha_entrada . '*\n' .
+                    '- Salida: *' . $fecha_actual . '*\n' .
+                    '- Planta: *' . $pla_nom . '*\n' .
+                    $icono_tiempo . ' Tiempo total *' . $tiempo_dentro_relavera . '*';
+
+                $tel_chofer = '+593' . $tel_chofer_sin0;
+                $tel_planta = '';// '+593' . $tel_planta;
+                enviarMensajeWhatsapp($mensaje, $tel_chofer, $tel_planta);
+            }
         }
     } catch (Exception $e) {
         $obBD_con1->rollBack_nomsn($obBD_conexion);
