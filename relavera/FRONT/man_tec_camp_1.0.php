@@ -481,7 +481,7 @@ if (isset($saveManiTecAjax)) {
         //Enviar mensaje mediante whatsapp a los choferes y plantas
         $datos_ge = $obBD_con1->getRowConsulta(15, array('Man_Cod' => $_POST['Man_Cod']), $obBD_conexion);
         $pla_wat = isset($datos_ge['Pla_Wat']) ? $datos_ge['Pla_Wat'] : '';
-        if ($pla_wat == 'S' /*&& $esEdicion == 1*/ ) {
+        if ($pla_wat == 'S' /*&& $esEdicion == 1*/) {
             $fecha_actual = date('Y-m-d H:i:s'); //Fecha y hora actaul
             $fecha_entrada = trim(isset($datos_ge['fecha_ge']) ? $datos_ge['fecha_ge'] : '');
             $chofer_nombre = trim(isset($datos_ge['chofer_nombre']) ? $datos_ge['chofer_nombre'] : '');
@@ -503,8 +503,11 @@ if (isset($saveManiTecAjax)) {
                     $icono_tiempo . ' Tiempo total *' . $tiempo_dentro_relavera . '*';
 
                 $tel_chofer = '+593' . $tel_chofer_sin0;
-                $tel_planta = '';// '+593' . $tel_planta;
-                enviarMensajeWhatsapp($mensaje, $tel_chofer, $tel_planta);
+                $tel_planta = ''; // '+593' . $tel_planta;
+
+                if (!is_null($mensaje) && $mensaje !== '' && strtolower(trim($mensaje)) !== 'null') {
+                    enviarMensajeWhatsapp($mensaje, $tel_chofer, $tel_planta);
+                }
             }
         }
     } catch (Exception $e) {
