@@ -40,6 +40,7 @@ if (function_exists('utf8_encode_deep')) {
 // Validar si el usuario tiene permiso para ver el botón de certificado
 $perfiles_permitidos = array('Administrador de Sistemas', 'Gerente', 'Admin_Oper', 'Contador', 'Auditor');
 $mostrarBotonCertificado = false;
+$mostrarBotonSelectorPlantaSaldos = false;
 $firmar_solo_si = false;
 
 if (is_array($perfil)) {
@@ -47,6 +48,9 @@ if (is_array($perfil)) {
         $per_desc = trim($p['Per_Des']);
         if (in_array($per_desc, $perfiles_permitidos)) {
             $mostrarBotonCertificado = true;
+        }
+        if ($per_desc == 'Administrador de Sistemas') {
+            $mostrarBotonSelectorPlantaSaldos = true;
         }
         if ($per_desc == 'Gerente' || $per_desc == 'Contador') {
             $firmar_solo_si = true;
@@ -99,6 +103,24 @@ if (!empty($cliente_manifiesto['Cli_Cod']) && !empty($cliente_manifiesto['Pla_Co
 $saldo_anticipo_val = isset($anticipo['saldo']) ? floatval($anticipo['saldo']) : 0;
 $saldo_sin_factura_val = isset($saldo_sin_factura['saldo']) ? floatval($saldo_sin_factura['saldo']) : 0;
 $saldo_total = $saldo_anticipo_val - $saldo_sin_factura_val;
+
+$plantas_saldos_modal = array();
+$sql_plantas_saldos_modal = "SELECT mp.Pla_Cod, mp.Pla_Nom, mp.Pla_Dis, mp.Pla_Dir, mp.Cli_Cod,
+									CONCAT(pr.Prs_Nom, ' ', pr.Prs_Ape) AS Cli_Nom, pr.Prs_Ced
+							  FROM manifiesto_plantas mp
+							  INNER JOIN cliente cl ON cl.Cli_Cod = mp.Cli_Cod
+							  INNER JOIN persona pr ON pr.Prs_Cod = cl.Prs_Cod
+							  WHERE mp.Pla_Est = 'A'
+							  ORDER BY mp.Pla_Nom ASC";
+$res_plantas_saldos = $obBD_con1->consulta($sql_plantas_saldos_modal, $obBD_conexion->conexion);
+if ($res_plantas_saldos) {
+	while ($row_planta = $obBD_con1->fetch_assoc($res_plantas_saldos)) {
+		$plantas_saldos_modal[] = $row_planta;
+	}
+}
+if (function_exists('utf8_encode_deep')) {
+	utf8_encode_deep($plantas_saldos_modal);
+}
 
 /* Tipo Asiento */
 //$rows_tipo_asiento = $obBD_con1->getArrayConsulta('tipo_asien.selectWhere', array('where' => array('Tia_Abr' => 'EG'), 'setWhere' => array('isActive'), 'order' => 'tipo_asien.Tia_Abr'), $obBD_conexion);
@@ -988,14 +1010,46 @@ if (isset($saveManifiestoAjax)) {
 if (isset($getSaldosAjax)) {
 	$resp = array('success' => true);
 	$cliente_manifiesto = $obBD_con1->getRowConsulta('manifiesto_usuario.selectWhere', array('where' => array('manifiesto_usuario.Usu_Cod' => $Ses_Usu_Cod)), $obBD_conexion);
-	$anticipo = !empty($cliente_manifiesto['Pla_Cod']) ? $obBD_con1->getRowConsulta('manifiesto_anticipo.1', array('Pla_Cod' => $cliente_manifiesto['Pla_Cod']), $obBD_conexion) : array('saldo' => 0);
+	$pla_calc = !empty($cliente_manifiesto['Pla_Cod']) ? intval($cliente_manifiesto['Pla_Cod']) : 0;
+	$cli_calc = !empty($cliente_manifiesto['Cli_Cod']) ? intval($cliente_manifiesto['Cli_Cod']) : 0;
+
+	if (isset($_POST['getSaldosPla_Cod'])) {
+		$pla_req = intval($_POST['getSaldosPla_Cod']);
+		if ($pla_req > 0) {
+			$pla_calc = $pla_req;
+		}
+	}
+	if (isset($_POST['getSaldosCli_Cod'])) {
+		$cli_req = intval($_POST['getSaldosCli_Cod']);
+		if ($cli_req > 0) {
+			$cli_calc = $cli_req;
+		}
+	}
+
+	// Validar que la combinación cliente/planta exista y esté activa para evitar cruces incorrectos.
+	if ($cli_calc > 0 && $pla_calc > 0) {
+		$planta_cli_valida = $obBD_con1->getRowConsulta(
+			'manifiesto_plantas.selectWhere',
+			array('where' => array('Cli_Cod' => $cli_calc, 'Pla_Cod' => $pla_calc, 'Pla_Est' => 'A')),
+			$obBD_conexion
+		);
+		if (empty($planta_cli_valida['Pla_Cod'])) {
+			$pla_calc = 0;
+		}
+	}
+
+	$anticipo_params = array('Pla_Cod' => $pla_calc);
+	if ($cli_calc > 0) {
+		$anticipo_params['Cli_Cod'] = $cli_calc;
+	}
+	$anticipo = ($pla_calc > 0) ? $obBD_con1->getRowConsulta('manifiesto_anticipo.1', $anticipo_params, $obBD_conexion) : array('saldo' => 0);
 
 	$saldo_sin_factura = array('saldo' => 0);
-	if (!empty($cliente_manifiesto['Cli_Cod']) && !empty($cliente_manifiesto['Pla_Cod'])) {
+	if ($cli_calc > 0 && $pla_calc > 0) {
 		try {
-			$Cli_Cod = intval($cliente_manifiesto['Cli_Cod']);
+			$Cli_Cod = $cli_calc;
 			$Emp_Cod = intval($Ses_Emp_Cod);
-			$Pla_Cod = intval($cliente_manifiesto['Pla_Cod']);
+			$Pla_Cod = $pla_calc;
 			$sql_saldo_sin_factura = "SELECT COALESCE(SUM(cast(manifiesto.Man_Pes*(manifiesto.Man_Pun/1000) as decimal(10,2))), 0) as saldo
 									  FROM manifiesto
 									  INNER JOIN cliente ON cliente.Cli_Cod = manifiesto.Cli_Cod
@@ -1565,6 +1619,7 @@ if (isset($anularAnticipo)) {
 		var Cli_Cod_Man = '<?php echo $cliente_manifiesto['Cli_Cod']; ?>';
 		var peridodo = <?php echo json_encode($periodos) ?>,
 			prf = <?php echo json_encode($perfil) ?>;
+		var plantasSaldosModal = <?php echo json_encode($plantas_saldos_modal); ?>;
 		var hoy= <?php echo json_encode($hoy); ?>;	
 	</script>
 	<style>
@@ -1602,6 +1657,90 @@ if (isset($anularAnticipo)) {
 
 		.chosen-single span {
 			padding-left: 5px;
+		}
+
+		/* Barra compacta de control de saldos por planta */
+		.saldos-toolbar {
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
+			flex-wrap: wrap;
+			padding: 3px 6px;
+			border: 1px solid #d9e2ef;
+			border-radius: 6px;
+			background: #f8fbff;
+		}
+
+		.saldos-toolbar .btn {
+			height: 24px;
+			padding: 2px 7px;
+			font-size: 11px;
+			line-height: 1.2;
+		}
+
+		#lblPlantaSaldosActiva {
+			max-width: 280px;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+			font-size: 10px;
+			padding: 4px 6px;
+			border-radius: 4px;
+			background: #3aa3cf;
+		}
+
+		/* Filtro compacto del modal de plantas para saldos */
+		.planta-filtro-wrap {
+			margin: 6px 0 10px 0;
+			padding: 8px 10px;
+			border: 1px solid #d5e0ee;
+			border-radius: 6px;
+			background: #f7faff;
+		}
+
+		.planta-filtro-label {
+			display: block;
+			margin: 0 0 4px 0;
+			font-size: 11px;
+			font-weight: 600;
+			color: #3a5876;
+			letter-spacing: 0.2px;
+		}
+
+		.planta-filtro-wrap .input-group-addon {
+			padding: 4px 8px;
+			background: #eef4fb;
+			border-color: #c9d7e8;
+			color: #4d6b8a;
+		}
+
+		#txtBuscarPlantaSaldos {
+			height: 28px;
+			font-size: 12px;
+			border-color: #c9d7e8;
+		}
+
+		/* Compactar jqGrid del modal de saldos */
+		#gview_tablaPlantasSaldos .ui-jqgrid-htable th,
+		#gview_tablaPlantasSaldos .ui-jqgrid-btable tr.jqgrow td {
+			font-size: 11px;
+			padding: 2px 4px;
+			height: 22px;
+		}
+
+		#gview_tablaPlantasSaldos .ui-jqgrid-title {
+			font-size: 12px;
+		}
+
+		#gview_tablaPlantasSaldos .btn.btn-xs {
+			padding: 1px 5px;
+			font-size: 10px;
+			line-height: 1.1;
+		}
+
+		#wrapGridPlantasSaldos .ui-jqgrid,
+		#wrapGridPlantasSaldos .ui-jqgrid-view {
+			box-sizing: border-box;
 		}
 
 		/* Estilos para modal de turnos */
@@ -2033,6 +2172,17 @@ if (isset($anularAnticipo)) {
 							<div id="saldo_total_container" class="form-group" style="margin-right: 10px; margin-bottom: 10px;">
 								<div class="col-sm-12" style="display: flex; align-items: center; justify-content: flex-end; gap: 15px;">
 									<div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+										<?php if ($mostrarBotonSelectorPlantaSaldos) { ?>
+											<div class="saldos-toolbar">
+												<button class="btn btn-xs btn-primary" type="button" onclick="abrirModalSelectorPlantaSaldos();" title="Mostrar listado de plantas">
+													<i class="glyphicon glyphicon-list-alt"></i> Plantas
+												</button>
+												<button class="btn btn-xs btn-default" id="btnCerrarSaldosPlanta" type="button" onclick="cerrarSaldosPlantaSeleccionada();" title="Quitar planta seleccionada para saldos" style="display: none;">
+													<i class="glyphicon glyphicon-remove-circle"></i> Cerrar
+												</button>
+												<span id="lblPlantaSaldosActiva" class="label label-info" style="display:none;"></span>
+											</div>
+										<?php } ?>
 										<div style="display: flex; align-items: right; gap: 6px; padding: 5px 12px; background: linear-gradient(135deg, #e7f3ff 0%, #cfe2ff 100%); border: 2px solid #0d6efd; border-radius: 8px; box-shadow: 0 2px 5px rgba(13, 110, 253, 0.2);">
 											<div style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.2;">
 												<label class="control-label" style="margin: 0; font-size: 10px; font-weight: 600; color: #0a58ca; text-transform: uppercase; letter-spacing: 0.3px;">Anticipos (A)</label>
@@ -3085,7 +3235,22 @@ if (isset($anularAnticipo)) {
 		</div>
 	</div>
 
-	<script src="../VALIDACIONES/man_val_manifiesto.js?a=233"></script>
+	<div id="modalSelectorPlantaSaldos" title="Seleccionar Planta para visualizar saldos" style="display:none;">
+		<div class="planta-filtro-wrap">
+			<label class="planta-filtro-label">Filtro de plantas</label>
+			<div class="input-group input-group-sm">
+				<span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span>
+				<input type="text" id="txtBuscarPlantaSaldos" class="form-control input-sm" placeholder="Buscar por planta, ciudad o dirección...">
+			</div>
+		</div>
+		<div id="wrapGridPlantasSaldos" style="min-height: 320px; width: 100%; overflow-x: hidden;">
+			<table id="tablaPlantasSaldos"></table>
+			<div id="tablaPlantasSaldosPager"></div>
+		</div>
+		
+	</div>
+
+	<script src="../VALIDACIONES/man_val_manifiesto.js?a=304"></script>
 	<script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>
 	<script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=2"></script>
 	<script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>

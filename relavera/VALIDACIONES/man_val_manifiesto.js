@@ -8,6 +8,7 @@ var arrayAsiento = [],
 var perCodAct = 0,
     existeCheq = false;
 var turnoSeleccionado = null;
+var plantaSaldosSeleccionada = null;
 
 $(function () {
     $("#successDialog").createDialog({ width: 500, height: 200, icon: 'print' });
@@ -20,6 +21,10 @@ $(function () {
     $("#modalModificarTiempoLlegada").createDialog({ width: 450, height: 250, icon: 'time' });
     $("#infoManifiestoDialog").createDialog({ width: 380, height: 400, icon: 'info-sign' });
     $("#sancionPlantaDialog").createDialog({ width: 480, height: 380, icon: 'alert' });
+    $("#modalSelectorPlantaSaldos").createDialog({ width: 900, height: 520, icon: 'home', autoOpen: false, modal: true });
+    $("#modalSelectorPlantaSaldos").on("dialogopen", function () {
+        setTimeout(ajustarAnchoGridPlantasSaldos, 120);
+    });
     $('.datepicker').createDatePickers({ checkAvailability: true, hideMsg: false }).mask('9999-99-99', { placeholder: '_' });
     $('.pagination').find('li a').click(function () {
         $('.pagination').find('li').removeClass('active');
@@ -732,6 +737,138 @@ function cargarPlantasCliente(Cli_Cod){
     }, 'json');
 }
 
+function abrirModalSelectorPlantaSaldos() {
+    inicializarGridPlantasSaldos();
+    cargarListadoPlantasSaldos('');
+    $('#txtBuscarPlantaSaldos').val('');
+    $('#modalSelectorPlantaSaldos').dialog('open');
+    setTimeout(function () {
+        $('#txtBuscarPlantaSaldos').focus();
+        ajustarAnchoGridPlantasSaldos();
+    }, 200);
+}
+
+/** Ajusta el jqGrid al ancho útil del modal (el grid se crea con el modal oculto y el ancho inicial suele fallar). */
+function ajustarAnchoGridPlantasSaldos() {
+    var $grid = $('#tablaPlantasSaldos');
+    if (!$grid.length || !$grid[0].grid) return;
+    var $root = $('#modalSelectorPlantaSaldos');
+    var w = $root.innerWidth();
+    if (!w || w < 80) {
+        w = $('#wrapGridPlantasSaldos').innerWidth();
+    }
+    if (!w || w < 80) {
+        var $dlg = $root.closest('.ui-dialog');
+        w = $dlg.length ? $dlg.find('.ui-dialog-content').first().innerWidth() : 0;
+    }
+    if (w && w > 80) {
+        $grid.jqGrid('setGridWidth', Math.floor(w - 6), true);
+    }
+}
+
+function inicializarGridPlantasSaldos() {
+    if ($('#tablaPlantasSaldos')[0] && $('#tablaPlantasSaldos')[0].grid) return;
+    $('#tablaPlantasSaldos').createGrid({
+        caption: 'Plantas disponibles',
+        height: 260,
+        rowNum: 10000,
+        autowidth: true,
+        //shrinkToFit: true,
+        data: [],
+        colModel: [
+            { label: 'Cod', name: 'Pla_Cod', key: true, width: 7, align: 'center' },
+            { label: 'RUC', name: 'Prs_Ced', width: 13, align: 'center' },
+            { label: 'Planta', name: 'Pla_Nom', width: 32 },
+            { label: 'Cliente', name: 'Cli_Nom', width: 30 },           
+            { label: 'Cli_Cod', name: 'Cli_Cod', hidden: true },
+            {
+                label: '', name: 'act1', width: 8, align: 'center', viewable: false, title: false,
+                formatter: function (_, __, rowObject) {
+                    var plaCod = rowObject.Pla_Cod || '';
+                    var cliCod = rowObject.Cli_Cod || '';
+                    var plaNom = String(rowObject.Pla_Nom || '').replace(/'/g, "\\'");
+                    return '<button type="button" class="btn btn-success btn-xs" onclick="seleccionarPlantaSaldos(' + plaCod + ', ' + cliCod + ', \'' + plaNom + '\');"><i class="glyphicon glyphicon-arrow-right"></i></button>';
+                }
+            }
+        ],
+        ondblClickRow: function (id) {
+            var row = $('#tablaPlantasSaldos').jqGrid('getRowData', id);
+            if (row && row.Pla_Cod) {
+                seleccionarPlantaSaldos(row.Pla_Cod, row.Cli_Cod, row.Pla_Nom);
+            }
+        }
+    }, true, '#tablaPlantasSaldosPager', { refresh: false, view: false, add: false, del: false, search: false });
+}
+
+function cargarListadoPlantasSaldos(filtroTexto) {
+    var plantas = Array.isArray(plantasSaldosModal) ? plantasSaldosModal : [];
+    var txt = (filtroTexto || '').toLowerCase().trim();
+    var rows = [];
+
+    $.each(plantas, function (_, p) {
+        var contenido = [
+            p.Pla_Cod || '',
+            p.Pla_Nom || '',
+            p.Cli_Nom || '',
+            p.Prs_Ced || ''
+        ].join(' ').toLowerCase();
+
+        if (txt === '' || contenido.indexOf(txt) !== -1) {
+            rows.push(p);
+        }
+    });
+    $('#tablaPlantasSaldos').setRows(rows);
+    setTimeout(function () {
+        ajustarAnchoGridPlantasSaldos();
+    }, 50);
+}
+
+function seleccionarPlantaSaldos(plaCod, cliCod, plaNom) {
+    if ($.isEmpty(plaCod)) {
+        $.alert('No se pudo identificar la planta seleccionada.');
+        return;
+    }
+
+    $('#Pla_Cod').val(plaCod);
+    if ($('#Pla_Nom').length > 0 && plaNom) {
+        $('#Pla_Nom').text(plaNom).attr('title', plaNom);
+    }
+
+    plantaSaldosSeleccionada = {
+        plaCod: plaCod,
+        cliCod: cliCod || '',
+        plaNom: plaNom || ''
+    };
+    actualizarEstadoPlantaSaldos();
+    obtenerSaldos(plaCod, cliCod);
+    $('#modalSelectorPlantaSaldos').dialog('close');
+}
+
+function cerrarSaldosPlantaSeleccionada() {
+    plantaSaldosSeleccionada = null;
+    actualizarEstadoPlantaSaldos();
+    obtenerSaldos();
+}
+
+function actualizarEstadoPlantaSaldos() {
+    var $btnCerrar = $('#btnCerrarSaldosPlanta');
+    var $lblPlanta = $('#lblPlantaSaldosActiva');
+    if (plantaSaldosSeleccionada && plantaSaldosSeleccionada.plaCod) {
+        if ($btnCerrar.length > 0) $btnCerrar.show();
+        if ($lblPlanta.length > 0) {
+            var texto = 'Saldos: ' + (plantaSaldosSeleccionada.plaNom || ('Planta #' + plantaSaldosSeleccionada.plaCod));
+            $lblPlanta.text(texto).attr('title', texto).show();
+        }
+    } else {
+        if ($btnCerrar.length > 0) $btnCerrar.hide();
+        if ($lblPlanta.length > 0) $lblPlanta.hide().text('');
+    }
+}
+
+$(document).on('keyup', '#txtBuscarPlantaSaldos', function () {
+    cargarListadoPlantasSaldos($(this).val());
+});
+
 /**
  * cargar clientes
  * @param  {object} cliente row seleccionada del dialogo de proveedores
@@ -990,8 +1127,15 @@ function actualizarSaldos(saldos) {
 }
 
 // Función para obtener los saldos del servidor
-function obtenerSaldos() {
-    $.post('', { getSaldosAjax: true }, function(resp) {
+function obtenerSaldos(plaCod, cliCod) {
+    var data = { getSaldosAjax: true };
+    if (!$.isEmpty(plaCod)) {
+        data.getSaldosPla_Cod = plaCod;
+    }
+    if (!$.isEmpty(cliCod)) {
+        data.getSaldosCli_Cod = cliCod;
+    }
+    $.post('', data, function(resp) {
         if (resp['success'] && resp['saldos']) {
             actualizarSaldos(resp['saldos']);
         }
