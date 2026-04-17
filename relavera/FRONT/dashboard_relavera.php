@@ -298,8 +298,11 @@ if (isset($_GET['getDashboardRelaveraAjax'])) {
         $res26 = $obBD_con1->consulta($sql26, $con);
         $facturacion_summary = array();
         while ($row = $obBD_con1->fetch_assoc($res26)) {
+            $obBD_con1->utf8_change_param($row);
             $facturacion_summary[] = array(
                 'modo' => $row['modo'],
+                'planta' => $row['planta'],
+                'cliente' => $row['cliente'],
                 'cantidad' => intval($row['cantidad'])
             );
         }
