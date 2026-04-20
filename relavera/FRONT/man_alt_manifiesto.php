@@ -38,7 +38,7 @@ if (function_exists('utf8_encode_deep')) {
 }
 
 // Validar si el usuario tiene permiso para ver el botón de certificado
-$perfiles_permitidos = array('Administrador de Sistemas', 'Gerente', 'Admin_Oper', 'Contador', 'Auditor');
+$perfiles_permitidos = array('Administrador de Sistemas', 'Gerente', 'Admin_Oper', 'Contador', 'Auditor', 'Plantas');
 $mostrarBotonCertificado = false;
 $mostrarBotonSelectorPlantaSaldos = false;
 $firmar_solo_si = false;
@@ -52,7 +52,7 @@ if (is_array($perfil)) {
         if ($per_desc == 'Administrador de Sistemas') {
             $mostrarBotonSelectorPlantaSaldos = true;
         }
-        if ($per_desc == 'Gerente' || $per_desc == 'Contador') {
+        if ($per_desc == 'Gerente' || $per_desc == 'Contador' || $per_desc == 'Plantas') {
             $firmar_solo_si = true;
         }
     }
