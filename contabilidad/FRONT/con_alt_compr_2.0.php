@@ -104,76 +104,59 @@ if (isset($generar_asiento_ret)) {
 } 
 // CARGAR DATOS (JOSE CUMBICOS)
 if (isset($ajaxLiquidacionForm104)) {
-    if (isset($ajaxLiquidacionForm104)) {
-        $responce['success'] = true;
-        $diario=array();
-        $ctas=$obBD_con1->getArrayConsulta(40,array("Tpa_Abr"=>"'FRM485','FRM615','FRM617','FRM618','FRM619','FRM529','FRM859'"), $obBD_conexion,true);
-        $iva_cobrado=$obBD_con1->getRowConsulta(41,'',$obBD_conexion);
-        $PldIvas=$obBD_con1->getArrayConsultaSql('select distinct det_plan.Pld_Cod
-                    FROM det_plan 
-                    INNER JOIN plan_cuenta ON det_plan.Pla_Cod = plan_cuenta.Pla_Cod
-                    INNER JOIN reniva_pla ON det_plan.Pld_Cod = reniva_pla.Pld_Cod
-                    INNER JOIN renta_iva ON reniva_pla.Ren_Cod = renta_iva.Ren_Cod
-                    where plan_cuenta.Emp_Cod ='.$Ses_Emp_Cod.' and Ren_Ret="I" and reniva_pla.Ren_Tip="V" ',$obBD_conexion);    
-        $PldId=array_map(function($item) { return $item['Pld_Cod'];}, $PldIvas);
-        $PldIvas=implode(',', $PldId);    
-        $ret_iva_venta=$obBD_con1->getArrayConsulta(42,array('ini'=>$ini,'fin'=>$fin,'Pld_Cods'=>$PldIvas,'tipo'=>'H'),$obBD_conexion);
-        
-        $PldIvas=$obBD_con1->getArrayConsultaSql('select distinct det_plan.Pld_Cod
-                    FROM det_plan 
-                    INNER JOIN plan_cuenta ON det_plan.Pla_Cod = plan_cuenta.Pla_Cod
-                    INNER JOIN reniva_pla ON det_plan.Pld_Cod = reniva_pla.Pld_Cod
-                    INNER JOIN renta_iva ON reniva_pla.Ren_Cod = renta_iva.Ren_Cod
-                    where plan_cuenta.Emp_Cod ='.$Ses_Emp_Cod.' and Ren_Ret="I" and reniva_pla.Ren_Tip="C" ',$obBD_conexion);    
-        $PldId=array_map(function($item) { return $item['Pld_Cod'];}, $PldIvas);
-        $PldIvas=implode(',', $PldId);    
-        $ret_iva_compra=$obBD_con1->getArrayConsulta(42,array('ini'=>$ini,'fin'=>$fin,'Pld_Cods'=>$PldIvas,'tipo'=>'D'),$obBD_conexion);
+    $responce['success'] = true;
+    $diario=array();
+    $ctas=$obBD_con1->getArrayConsulta(40,array("Tpa_Abr"=>"'FRM485','FRM615','FRM617','FRM618','FRM619','FRM529'"), $obBD_conexion,true);
+    $iva_cobrado=$obBD_con1->getRowConsulta(41,'',$obBD_conexion);
+    $PldIvas=$obBD_con1->getArrayConsultaSql('select distinct det_plan.Pld_Cod
+                FROM det_plan 
+                INNER JOIN plan_cuenta ON det_plan.Pla_Cod = plan_cuenta.Pla_Cod
+                INNER JOIN reniva_pla ON det_plan.Pld_Cod = reniva_pla.Pld_Cod
+                INNER JOIN renta_iva ON reniva_pla.Ren_Cod = renta_iva.Ren_Cod
+                where plan_cuenta.Emp_Cod ='.$Ses_Emp_Cod.' and Ren_Ret="I" and reniva_pla.Ren_Tip="V" ',$obBD_conexion);    
+    $PldId=array_map(function($item) { return $item['Pld_Cod'];}, $PldIvas);
+    $PldIvas=implode(',', $PldId);    
+    $ret_iva_venta=$obBD_con1->getArrayConsulta(42,array('ini'=>$ini,'fin'=>$fin,'Pld_Cods'=>$PldIvas),$obBD_conexion);
     
-        $index=0;
-        if(isset($_615) && $_615*1>0){
-            $row=reset(array_filter($ctas,function($e){if($e['Tpa_Abr']=='FRM615')return $e;}));        
-            $diario[]=array_merge($row,array('Debe'=>$_615*1,'Det_Tip'=>'D','Haber'=>null,'Index'=>$index++));
+    $index=0;
+    if(isset($_615) && $_615*1>0){
+        $row=reset(array_filter($ctas,function($e){if($e['Tpa_Abr']=='FRM615')return $e;}));        
+        $diario[]=array_merge($row,array('Debe'=>$_615*1,'Det_Tip'=>'D','Haber'=>null,'Index'=>$index++));
+    }
+    if(isset($_617) && $_617*1>0){
+       $row=reset(array_filter($ctas,function($e){if($e['Tpa_Abr']=='FRM617')return $e;}));
+       $diario[]=array_merge($row,array('Debe'=>$_617*1,'Det_Tip'=>'D','Haber'=>'','Index'=>$index++));               
+    }
+    if(isset($_429) && $_429*1>0){        
+        $diario[]=array_merge($iva_cobrado,array('Debe'=>$_429,'Det_Tip'=>'D','Haber'=>null,'Index'=>$index++));
+    }
+    if(isset($_606) && $_606*1>0){
+        $row=reset(array_filter($ctas,function($e){if($e['Tpa_Abr']=='FRM615')return $e;}));
+        $diario[]=array_merge($row,array('Debe'=>null,'Det_Tip'=>'H','Haber'=>$_606,'Index'=>$index++));
+    }
+    if(isset($_605) && $_605*1>0){
+        $row=reset(array_filter($ctas,function($e){if($e['Tpa_Abr']=='FRM617')return $e;}));
+        $diario[]=array_merge($row,array('Debe'=>null,'Det_Tip'=>'H','Haber'=>$_605,'Index'=>$index++));
+    }
+    if(isset($_609) && $_609*1>0){
+        //$row=reset(array_filter($ctas,function($e){if($e['Tpa_Abr']=='FRM609')return $e;}));
+        //array_merge($row,array('Debe'=>null,'Det_Tip'=>'H','Haber'=>$_609,'Index'=>$index++));   
+        foreach($ret_iva_venta as $row){
+            $diario[] = $row; 
         }
-        if(isset($_617) && $_617*1>0){
-           $row=reset(array_filter($ctas,function($e){if($e['Tpa_Abr']=='FRM617')return $e;}));
-           $diario[]=array_merge($row,array('Debe'=>$_617*1,'Det_Tip'=>'D','Haber'=>'','Index'=>$index++));               
-        }
-        if(isset($_429) && $_429*1>0){        
-            $diario[]=array_merge($iva_cobrado,array('Debe'=>$_429,'Det_Tip'=>'D','Haber'=>null,'Index'=>$index++));
-        }
-        if(isset($_606) && $_606*1>0){
-            $row=reset(array_filter($ctas,function($e){if($e['Tpa_Abr']=='FRM615')return $e;}));
-            $diario[]=array_merge($row,array('Debe'=>null,'Det_Tip'=>'H','Haber'=>$_606,'Index'=>$index++));
-        }
-        if(isset($_605) && $_605*1>0){
-            $row=reset(array_filter($ctas,function($e){if($e['Tpa_Abr']=='FRM617')return $e;}));
-            $diario[]=array_merge($row,array('Debe'=>null,'Det_Tip'=>'H','Haber'=>$_605,'Index'=>$index++));
-        }
-        if(isset($_609) && $_609*1>0){
-            //$row=reset(array_filter($ctas,function($e){if($e['Tpa_Abr']=='FRM609')return $e;}));
-            //array_merge($row,array('Debe'=>null,'Det_Tip'=>'H','Haber'=>$_609,'Index'=>$index++));   
-            foreach($ret_iva_venta as $row){
-                $diario[] = $row; 
-            }
-            
-        }
-        if(isset($ret_iva_compra))
-        {
-            foreach($ret_iva_compra as $row){
-                $diario[] = $row; 
-            }
-        }
-        if(isset($_529) && $_529*1>0){
-            $row=reset(array_filter($ctas,function($e){if($e['Tpa_Abr']=='FRM529')return $e;}));
-            $diario[]=array_merge($row,array('Debe'=>null,'Det_Tip'=>'H','Haber'=>$_529*1,'Index'=>$index++));
-        } 
-        //var_dump($diario);
-        $responce['diario']=$diario;
-        $responce['compro']['anio'] = $anio;
-        $responce['compro']['mes'] = $_mes;
-        utf8_encode_deep($responce);
-        echo json_encode($responce);
-        exit();
+        
+    }
+    if(isset($_529) && $_529*1>0){
+        $row=reset(array_filter($ctas,function($e){if($e['Tpa_Abr']=='FRM529')return $e;}));
+        $diario[]=array_merge($row,array('Debe'=>null,'Det_Tip'=>'H','Haber'=>$_529*1,'Index'=>$index++));
+    } 
+    //var_dump($diario);
+    $responce['diario']=$diario;
+    $responce['compro']['anio'] = $anio;
+    $responce['compro']['mes'] = $_mes;
+    utf8_encode_deep($responce);
+    echo json_encode($responce);
+    exit();
 } 
 
 

@@ -558,16 +558,16 @@ function sentencias_doc($id, $Par_Sql)
                     WHERE plan_cuenta.Emp_Cod = '$_SESSION[Ses_Emp_Cod]'";
             break;
             /*Retencion de IVA en ventas */  
-        case 42:
-            $sql = "SELECT comprobantes.Com_Cod,det_plan.Pld_Cod, Pld_Cdc,Pld_Des, SUM(Asi_Val)as $Par_Sql[tipo]=='H'?'Haber':'Debe', null as ($Par_Sql[tipo]=='H' ? 'Debe' : 'Haber'), $Par_Sql[tipo] as Det_Tip
-                    FROM comprobantes 
-                        INNER JOIN asientos ON comprobantes.Com_Cod = asientos.Com_Cod
-                        INNER JOIN cliente ON comprobantes.Cli_Cod = cliente.Cli_Cod
-                        INNER JOIN det_plan ON asientos.Pld_Cod = det_plan.Pld_Cod                        
-                    WHERE cliente.Emp_Cod = '$_SESSION[Ses_Emp_Cod]' and Com_Fec between '$Par_Sql[ini]' and '$Par_Sql[fin]' and Com_Est='A' and det_plan.Pld_Cod in ($Par_Sql[Pld_Cods])
-                    group by det_plan.Pld_Cod";
-                //echo $sql;
-                break;        
+            case 42:
+                $sql = "SELECT comprobantes.Com_Cod,det_plan.Pld_Cod, Pld_Cdc,Pld_Des, SUM(Asi_Val)as Haber, null as Debe,'H' as Det_Tip
+                        FROM comprobantes 
+                            INNER JOIN asientos ON comprobantes.Com_Cod = asientos.Com_Cod
+                            INNER JOIN cliente ON comprobantes.Cli_Cod = cliente.Cli_Cod
+                            INNER JOIN det_plan ON asientos.Pld_Cod = det_plan.Pld_Cod                        
+                        WHERE cliente.Emp_Cod = '$_SESSION[Ses_Emp_Cod]' and Com_Fec between '$Par_Sql[ini]' and '$Par_Sql[fin]' and Com_Est='A' and det_plan.Pld_Cod in ($Par_Sql[Pld_Cods])
+                        group by det_plan.Pld_Cod";
+                 //echo $sql;
+                 break;           
                 //echo $sql;
     }
     //echo $sql."<br/>";
