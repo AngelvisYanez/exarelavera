@@ -151,10 +151,15 @@ if ($total_rs_control !=0)
 	* Verificaci�n para saber si el usuario cambio de clave
 	*/
         //echo trim($password)."==".trim($_SESSION['Ses_Usu_Ced']);
-	if (trim($password)==trim($_SESSION['Ses_Usu_Ced']))
+	// if (trim($password)==trim($_SESSION['Ses_Usu_Ced']))
+	if (trim($password)==trim($_SESSION['Ses_Usu_Ced']) || trim($password) == '123456')
 	{
 		$_SESSION['Ses_Sys_Sit']="outside"; //Indica si esta dentro o fuera del sitio
-		header ("Location: adm_pas_usuarios_1.0.php");
+		// header ("Location: adm_pas_usuarios_1.0.php");
+		if (isset($_POST['ajax_check'])) {
+            echo json_encode(array('success' => true, 'insecure' => true));
+            exit();
+        }
 		exit();
 	}
 

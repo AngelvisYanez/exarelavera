@@ -51,7 +51,50 @@ if (isset($ajax_empresas2)) {
     echo json_encode($res);
     exit();
 } //Fin del if (isset($ajax_empresas))
-if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['Ses_Emp_Cod']) || !isset($_SESSION['Ses_Usu_Ced']))) header('Location: ' . './administrador/FRONT/home.php');
+// if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['Ses_Emp_Cod']) || !isset($_SESSION['Ses_Usu_Ced']))) header('Location: ' . './administrador/FRONT/home.php');
+
+/* AJAX para cambio de contraseña obligatorio */
+if (isset($ajax_change_pass)) {
+    $obBD_conexion = new Class_Log_Conexion_Log($_SESSION['Ses_Dat_Dis']);
+    $obBD_con1 = new Class_Log_Datos_Log;
+    $res = array('success' => false);
+    
+    // Validar clave actual
+    $check = $obBD_con1->getRowConsultaSql("SELECT COUNT(Usu_Cod) as contador FROM usuarios WHERE Usu_Pal = MD5('$old_pass') AND Usu_Cod = " . $_SESSION['Ses_Usu_Cod'], $obBD_conexion);
+    
+    if ($check['contador'] > 0) {
+        $obBD_con1->inicio_transaccion($obBD_conexion);
+        $obBD_con1->consulta("UPDATE usuarios SET Usu_Pal = MD5('$new_pass') WHERE Usu_Cod = " . $_SESSION['Ses_Usu_Cod'], $obBD_conexion);
+        if ($obBD_con1->fin_transaccion_nomsn($obBD_conexion)) {
+            $res['success'] = true;
+            $res['message'] = "¡Contraseña actualizada! Por favor, inicie sesión con su nueva clave.";
+            @session_destroy();
+        } else {
+            $res['message'] = "Error interno al guardar los cambios.";
+        }
+    } else {
+        $res['message'] = "La clave actual no es correcta.";
+    }
+    echo json_encode($res);
+    exit();
+}
+$isDefaultPass = false;
+if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['Ses_Emp_Cod']) || !isset($_SESSION['Ses_Usu_Ced']))) {
+    // Verificación de seguridad: contraseña por defecto "123456"
+    if (isset($_SESSION['Ses_Usu_Cod']) && isset($_SESSION['Ses_Dat_Dis'])) {
+        $obBD_conexion_check = new Class_Log_Conexion_Log($_SESSION['Ses_Dat_Dis']);
+        $obBD_con_check = new Class_Log_Datos_Log;
+        $checkPass = $obBD_con_check->getRowConsultaSql("SELECT Usu_Cod FROM usuarios WHERE Usu_Cod = " . $_SESSION['Ses_Usu_Cod'] . " AND Usu_Pal = MD5('123456')", $obBD_conexion_check);
+        if ($checkPass) {
+            $isDefaultPass = true;
+        }
+    }
+    
+    if (!$isDefaultPass) {
+        header('Location: ' . './administrador/FRONT/home.php');
+        exit();
+    }
+}
 
 $http_host = isset($_SERVER['HTTP_HOST']) ? strtolower($_SERVER['HTTP_HOST']) : '';
 $host_base = preg_replace('/:\d+$/', '', $http_host);
@@ -890,7 +933,8 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
                             <img src="imagenes/ingresar/logo.png" alt="EXA Logo" class="img-fluid">
                         </div>
                         <?php } ?>
-                        <h4 class="text-center mb-4 fw-bold">Iniciar sesi&oacute;n</h4>
+                        <!-- <h4 class="text-center mb-4 fw-bold">Iniciar sesi&oacute;n</h4> -->
+                        <h4 class="text-center mb-4 fw-bold"><?php echo $es_portal_relavera ? 'Iniciar sesi&oacute;n' : 'Iniciar Sesión'; ?></h4>
                         <p class="small text-secondary">Inicie sesi&oacute;n con su cuenta registrada.</p>
                         <form action="administrador/FRONT/adm_con_control_1.2.php" method="post" name="acceso" id="acceso">
                             <div class="login-fields">
@@ -928,17 +972,58 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
                             <div class="form-group login-actions">
                                 <input type="hidden" name="encryptor" id="encryptor" />
                                 <input type="hidden" name="Suc_Cod" id="Suc_Cod" />
+                                <!-- <button class="btn btn-primary w-100" type="button"
+                                    onClick="var o=document.querySelector('#Emp_Cod option:checked'); document.getElementById('Suc_Cod').value=o? (o.getAttribute('data-suc-cod')||''):''; document.getElementById('encryptor').value = md5(document.getElementById('password').value); this.form.submit();"> -->
                                 <button class="btn btn-primary w-100" type="button"
-                                    onClick="var o=document.querySelector('#Emp_Cod option:checked'); document.getElementById('Suc_Cod').value=o? (o.getAttribute('data-suc-cod')||''):''; document.getElementById('encryptor').value = md5(document.getElementById('password').value); this.form.submit();">
+                                    onClick="handleLogin();">
                                     Entrar <i class="bi bi-box-arrow-in-right"></i>
                                 </button>
                             </div>
                             <?php if ((isset($_GET["errorusuario"]) && $_GET["errorusuario"] == "si") || (isset($_GET["errorsistema"]) && $_GET["errorsistema"] == "si")) {
-                                echo '<div class="alert alert-error"><span>' . (isset($_GET["errorusuario"]) ? 'Datos incorrectos' : 'Error del Sistema') . '</span></div>';
+                                // echo '<div class="alert alert-error"><span>' . (isset($_GET["errorusuario"]) ? 'Datos incorrectos' : 'Error del Sistema') . '</span></div>';
+                                echo '<div class="alert alert-danger mt-3 py-2 small text-center" style="border-radius: 8px;"><span>' . (isset($_GET["errorusuario"]) ? 'Datos incorrectos' : 'Error del Sistema') . '</span></div>';
                             } ?>
                             <!-- .actions -->
                         </form>
+                    </div> <!-- ojo aqui -->
+                </div>
+
+                <!-- Segundo Ambiente: Cambio de Contraseña -->
+                <div class="login-section card animate__animated animate__fadeIn" id="change-pass-section" style="display: none;">
+                    <div class="card-body">
+                        <div class="logo-relavera-stack text-center mb-4">
+                            <div class="portal-relavera-badge mb-2">Seguridad de cuenta</div>
+                            <h4 class="fw-bold" style="color: var(--login-accent);">Nueva Contraseña</h4>
+                        </div>
+                        <p class="small text-secondary mb-4">Por favor, actualice sus credenciales para continuar de forma segura.</p>
+                        
+                        <div id="change-pass-alert"></div>
+
+                        <form id="form-change-pass">
+                            <div class="form-group position-relative mb-3">
+                                <input class="form-control" type="password" id="old_pass" placeholder="Clave Actual" required />
+                                <i class="bi bi-key-fill form-control-icon"></i>
+                            </div>
+                            <div class="form-group position-relative mb-3">
+                                <input class="form-control" type="password" id="new_pass" placeholder="Nueva Clave" required />
+                                <i class="bi bi-shield-lock-fill form-control-icon"></i>
+                            </div>
+                            <div class="form-group position-relative mb-3">
+                                <input class="form-control" type="password" id="conf_pass" placeholder="Confirmar Clave" required />
+                                <i class="bi bi-check-circle-fill form-control-icon"></i>
+                            </div>
+                            
+                            <div class="login-actions mt-4">
+                                <button class="btn btn-primary w-100" type="button" id="btnSavePass" onclick="saveNewPass()">
+                                    Actualizar Contraseña <i class="bi bi-save-fill ms-1"></i>
+                                </button>
+                                <button class="btn btn-link w-100 mt-2 text-decoration-none small" type="button" onclick="location.href='administrador/LOGICA/logout.php'" style="color: #666;">
+                                    Cancelar y Salir
+                                </button>
+                            </div>
+                        </form>
                     </div>
+                </div>
 
                 </div>
                 <?php if ($es_portal_relavera) { ?>
@@ -1249,7 +1334,166 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
             avisoFlotante.style.display = 'none'; // Ocultar el aviso flotante al hacer clic en el botón de cerrar
         }
     </script> -->
+    <!-- Modal de cambio de contraseña obligatorio -->
+    <div class="modal fade" id="modalDefaultPass" tabindex="-1" role="dialog" aria-labelledby="modalLabel" data-bs-backdrop="static" data-bs-keyboard="false" style="z-index: 9999;">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content" style="border-radius: 16px; box-shadow: 0 15px 50px rgba(0,0,0,0.3); border: none; overflow: hidden;">
+                <div class="modal-header" style="background: var(--login-accent); color: #fff; border: none; padding: 20px 25px;">
+                    <h5 class="modal-title fw-bold" id="modalLabel" style="font-family: 'Saira', sans-serif;">
+                        <i class="bi bi-shield-lock-fill me-2"></i> ALERTA DE SEGURIDAD
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body text-center" style="padding: 45px 35px; background: #fff;">
+                    <div class="mb-4">
+                        <i class="bi bi-key-fill" style="font-size: 64px; color: var(--login-accent); opacity: 0.9;"></i>
+                    </div>
+                    <p class="mb-4" style="font-size: 1.1rem; color: #444; line-height: 1.6;">
+                        Su cuenta est&aacute; usando una contrase&ntilde;a gen&eacute;rica.<br>
+                        <strong style="color: var(--login-accent);">Se le recomienda cambiar su contrase&ntilde;a</strong> para continuar.
+                    </p>
+                    <div class="py-3">
+                        <a href="javascript:void(0)" 
+                           class="fs-5 fw-bold"
+                           style="color: var(--login-accent); text-decoration: underline; transition: all 0.2s;"
+                           onclick="switchToChangePass()">
+                            Cambiar Contrase&ntilde;a
+                        </a>
+                    </div>
+                    <p class="text-secondary small mt-3">
+                        De lo contrario,no podr&aacute; acceder al sistema.
+                    </p>
+                </div>
+                <div class="modal-footer justify-content-center" style="background: #fdfdfd; border-top: 1px solid #f0f0f0; padding: 15px;">
+                    <small class="text-muted"><i class="bi bi-info-circle me-1"></i> Esta es una pol&iacute;tica de seguridad obligatoria.</small>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <script type="text/javascript">
+        function handleLogin() {
+            var user = $('#user_name').val();
+            var pass = $('#password').val();
+            var o = document.querySelector('#Emp_Cod option:checked');
+            var emp = $('#Emp_Cod').val();
+            var suc = o ? (o.getAttribute('data-suc-cod') || '') : '';
+            
+            if (!user || !pass || !emp) {
+                // Dejar que la validación nativa del form o el controlador maneje campos vacíos
+                document.getElementById('acceso').submit();
+                return;
+            }
+
+            // Preparar encriptación para el controlador
+            document.getElementById('encryptor').value = md5(pass);
+            document.getElementById('Suc_Cod').value = suc;
+            
+            // Verificación silenciosa
+            var formData = $('#acceso').serialize() + '&ajax_check=1';
+            
+            $.post('administrador/FRONT/adm_con_control_1.2.php', formData, function(r) {
+                if (r.success) {
+                    if (r.insecure) {
+                        // Deniega el acceso al dashboard y muestra el modal inmediatamente
+                        $('#modalDefaultPass').modal('show');
+                    } else {
+                        // Login seguro, proceder al dashboard
+                        document.getElementById('acceso').submit();
+                    }
+                } else {
+                    // Datos incorrectos, recargar con error
+                    window.location.href = 'index.php?errorusuario=si';
+                }
+            }, 'json').fail(function() {
+                // Fallback a login tradicional
+                document.getElementById('acceso').submit();
+            });
+        }
+
+        function switchToChangePass() {
+            // El modal se cierra y pasamos al formulario de cambio de clave
+            // La sesión ya fue creada por el silent check de handleLogin()
+            $('#modalDefaultPass').modal('hide');
+            $('.login-section:not(#change-pass-section)').fadeOut(300, function() {
+                $('#change-pass-section').fadeIn(400);
+            });
+            $('.login-exa-fuera').fadeOut(300);
+        }
+
+        function saveNewPass() {
+            var oldP = $('#old_pass').val();
+            var newP = $('#new_pass').val();
+            var confP = $('#conf_pass').val();
+
+            if (!oldP || !newP || !confP) {
+                showAlert('Todos los campos son obligatorios.', 'danger');
+                return;
+            }
+
+            if (newP !== confP) {
+                showAlert('La nueva clave y su confirmación no coinciden.', 'danger');
+                return;
+            }
+
+            if (newP.length < 6) {
+                showAlert('La nueva clave debe tener al menos 6 caracteres.', 'warning');
+                return;
+            }
+
+            // Validación alfanumérica
+            var alphaRegex = /^[a-z0-9]+$/i;
+            if (!alphaRegex.test(newP)) {
+                showAlert('La nueva clave solo debe contener letras y números (sin espacios ni caracteres especiales).', 'warning');
+                return;
+            }
+
+            $('#btnSavePass').prop('disabled', true).html('Guardando... <span class="spinner-border spinner-border-sm"></span>');
+
+            $.post('index.php', {
+                ajax_change_pass: true,
+                old_pass: oldP,
+                new_pass: newP
+            }, function(r) {
+                if (r.success) {
+                    showAlert(r.message, 'success');
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2500);
+                } else {
+                    showAlert(r.message, 'danger');
+                    $('#btnSavePass').prop('disabled', false).html('Actualizar Contraseña <i class="bi bi-save-fill ms-1"></i>');
+                }
+            }, 'json').fail(function() {
+                showAlert('Error de conexión con el servidor.', 'danger');
+                $('#btnSavePass').prop('disabled', false).html('Actualizar Contraseña <i class="bi bi-save-fill ms-1"></i>');
+            });
+        }
+
+        function showAlert(msg, type) {
+            var html = '<div class="alert alert-' + type + ' py-2 small animate__animated animate__shakeX">' + msg + '</div>';
+            $('#change-pass-alert').html(html);
+        }
+
+        function soloAlfanumerico(e) {
+            // Esta función ya no se usa en tiempo real por petición del usuario, 
+            // la validación se realiza al pulsar "Guardar".
+            return true; 
+        }
+    </script>
+    <style>
+        body.modal-open .container {
+            filter: blur(4px);
+            transition: filter 0.3s ease;
+        }
+        #change-pass-section .form-control {
+            border: 1px solid #ddd;
+        }
+        #change-pass-section .form-control:focus {
+            border-color: var(--login-accent);
+            box-shadow: 0 0 0 0.25rem rgba(27, 122, 74, 0.15);
+        }
+    </style>
 </body>
 
 </html> 
