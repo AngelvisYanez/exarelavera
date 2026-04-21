@@ -2059,6 +2059,25 @@ function abrirCertificadoModal() {
     $('#Cert_Fec_Des').val(firstDay);
     $('#Cert_Fec_Has').val(lastDay);
 
+    // Auto-completar si es perfil de Plantas
+    if (typeof esPerfilPlanta !== 'undefined' && esPerfilPlanta && typeof infoPlantaCertificado !== 'undefined' && infoPlantaCertificado) {
+        $('#Cert_Cli_Ced').val(infoPlantaCertificado.Prs_Ced);
+        $('#Cert_Cli_Ced_Span').text(infoPlantaCertificado.Prs_Ced);
+        $('#Cert_Cli_Nom').val(infoPlantaCertificado.Representante);
+        $('#Cert_Cli_Cod').val(infoPlantaCertificado.Cli_Cod);
+        $('#Cert_Prs_Cod').val(infoPlantaCertificado.Prs_Cod);
+        
+        // Cargar y seleccionar la planta asignada
+        $('#Cert_Pla_Cod').empty().append('<option value="' + infoPlantaCertificado.Pla_Cod + '">' + infoPlantaCertificado.Pla_Nom + '</option>');
+        $('#Cert_Pla_Cod').val(infoPlantaCertificado.Pla_Cod);
+        
+        // Ocultar el botón de búsqueda verde para el cliente
+        $('#Cert_Cli_Nom').next('.input-group-btn').hide();
+    } else {
+        // Asegurar que el botón de búsqueda sea visible para otros perfiles
+        $('#Cert_Cli_Nom').next('.input-group-btn').show();
+    }
+
     volverAmbienteCertificado(); // Asegurar que inicie en el ambiente de formulario
     $('#certificadoDialog').dialog('open');
 }

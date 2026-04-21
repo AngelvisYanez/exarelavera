@@ -42,6 +42,7 @@ $perfiles_permitidos = array('Administrador de Sistemas', 'Gerente', 'Admin_Oper
 $mostrarBotonCertificado = false;
 $mostrarBotonSelectorPlantaSaldos = false;
 $firmar_solo_si = false;
+$firmar_solo_no = false;
 
 if (is_array($perfil)) {
     foreach ($perfil as $p) {
@@ -52,8 +53,34 @@ if (is_array($perfil)) {
         if ($per_desc == 'Administrador de Sistemas') {
             $mostrarBotonSelectorPlantaSaldos = true;
         }
-        if ($per_desc == 'Gerente' || $per_desc == 'Contador' || $per_desc == 'Plantas') {
+        if ($per_desc == 'Gerente' || $per_desc == 'Contador') {
             $firmar_solo_si = true;
+        }
+		if ($per_desc == 'Plantas' || $per_desc == 'Admin_Oper') {
+            $firmar_solo_no = true;
+        }
+    }
+}
+
+/* Identificar perfil de Plantas y obtener datos para el certificado */
+$esPerfilPlanta = false;
+$infoPlantaCertificado = null;
+if (is_array($perfil)) {
+    foreach ($perfil as $p) {
+        if (trim($p['Per_Des']) == 'Plantas') {
+            $esPerfilPlanta = true;
+            break;
+        }
+    }
+}
+
+if ($esPerfilPlanta && !empty($cliente_manifiesto['Cli_Cod']) && !empty($cliente_manifiesto['Pla_Cod'])) {
+    $infoPlantaCertificado = $obBD_con1->getRowConsulta(8, array('Cli_Cod' => $cliente_manifiesto['Cli_Cod'], 'Pla_Cod' => $cliente_manifiesto['Pla_Cod']), $obBD_conexion);
+    if ($infoPlantaCertificado) {
+        $infoPlantaCertificado['Cli_Cod'] = $cliente_manifiesto['Cli_Cod'];
+        $infoPlantaCertificado['Pla_Cod'] = $cliente_manifiesto['Pla_Cod'];
+        if (function_exists('utf8_encode_deep')) {
+            utf8_encode_deep($infoPlantaCertificado);
         }
     }
 }
@@ -1620,7 +1647,9 @@ if (isset($anularAnticipo)) {
 		var peridodo = <?php echo json_encode($periodos) ?>,
 			prf = <?php echo json_encode($perfil) ?>;
 		var plantasSaldosModal = <?php echo json_encode($plantas_saldos_modal); ?>;
-		var hoy= <?php echo json_encode($hoy); ?>;	
+		var hoy= <?php echo json_encode($hoy); ?>;
+		var esPerfilPlanta = <?php echo json_encode($esPerfilPlanta); ?>;
+		var infoPlantaCertificado = <?php echo json_encode($infoPlantaCertificado); ?>;
 	</script>
 	<style>
 		.pagination>li>a,
@@ -3250,7 +3279,7 @@ if (isset($anularAnticipo)) {
 		
 	</div>
 
-	<script src="../VALIDACIONES/man_val_manifiesto.js?a=304"></script>
+	<script src="../VALIDACIONES/man_val_manifiesto.js?a=305"></script>
 	<script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>
 	<script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=2"></script>
 	<script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>

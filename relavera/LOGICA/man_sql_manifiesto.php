@@ -306,7 +306,7 @@ function sentencias_manifiesto_cli($id, $Par_Sql)
 					$limits";
 			return $sql;
 		case 8: // Datos de cabecera para el certificado
-			$sql = "SELECT persona.Prs_Ced, IF(persona.Prs_Nom=persona.Prs_Ape, persona.Prs_Nom, CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape)) AS Representante,
+			$sql = "SELECT persona.Prs_Cod, persona.Prs_Ced, IF(persona.Prs_Nom=persona.Prs_Ape, persona.Prs_Nom, CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape)) AS Representante,
 					mp.Pla_Nom, mp.Pla_Car
 					FROM manifiesto_plantas mp
 					INNER JOIN cliente ON mp.Cli_Cod = cliente.Cli_Cod
