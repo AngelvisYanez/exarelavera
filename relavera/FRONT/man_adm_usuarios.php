@@ -31,6 +31,11 @@ if(isset($usrAjax)){
         $setWhere[] = 'notHasPlantasProfile';
     }
     // $data = array_merge($_GET, array('order' => $order, 'setWhere'=>$setWhere));
+    // Solo mostramos visibles si no se ha marcado "Ver Ocultos"
+    if(!isset($ver_ocultos) || $ver_ocultos !== 'on'){
+        $setWhere[] = 'setVisibles';
+    }
+
     $data = array_merge($_GET, array('order' => $order, 'setWhere' => $setWhere));
     if(isset($tabType) && $tabType === 'plantas'){
         $data['group'] = 'usuarios.Usu_Cod';
@@ -47,6 +52,16 @@ if(isset($updateUsuario)){
     $obBD_con1->inicioTransaccion();
     try{
         $obBD_con1->operacionobBD('usuarios.update',array('Usu_Est'=>$Usu_Est,'where'=>array('Usu_Cod'=>$Usu_Cod)));
+    }catch(Exception $e){ $obBD_con1->rollBackNomsn($e->getMessage(),$resp);  }
+    $obBD_con1->finTransaccionNoMsn($resp);   
+    $obBD_con1->echoJson($resp);
+}
+
+// Actualizar visibilidad de usuario
+if(isset($updateUsuVis)){
+    $obBD_con1->inicioTransaccion();
+    try{
+        $obBD_con1->operacionobBD('usuarios.update', array('Usu_Vis'=>$Usu_Vis, 'where'=>array('Usu_Cod'=>$Usu_Cod)));
     }catch(Exception $e){ $obBD_con1->rollBackNomsn($e->getMessage(),$resp);  }
     $obBD_con1->finTransaccionNoMsn($resp);   
     $obBD_con1->echoJson($resp);
@@ -123,7 +138,14 @@ if(isset($updateUsuario)){
                                             <input  id="search" name="search" onkeydown="if(event.keyCode === 13) this.form.submit()" type="text" size="50" maxlength="50" placeholder="Ingrese b&uacute;squeda..." autofocus  class="form-control input-xs clearable submit"/>
                                             <span class="input-group-btn"><button type="button" onclick="this.form.submit()" class="btn btn-success btn-xs" title="Buscar Usuario"  tabindex="-1"><span class="glyphicon glyphicon-search"></span> <span>Buscar</span></button></span>
                                         </div>
-                                    </div><input type="text" tabindex="-1" style="display:none;" />
+                                    </div>
+                                    <div class="col-xs-3" style="padding-top: 4px;">
+                                        <label style="cursor:pointer; font-weight: normal; color: #337ab7;">
+                                            <input type="checkbox" name="ver_ocultos" id="ver_ocultos" onchange="$('#searchUsr').submit()"> 
+                                            <strong>Ver Ocultos</strong>
+                                        </label>
+                                    </div>
+                                    <input type="text" tabindex="-1" style="display:none;" />
                                     </div>
                                 </fieldset>
                         </form>

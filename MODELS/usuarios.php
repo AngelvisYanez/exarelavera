@@ -85,6 +85,9 @@ class usuarios extends AbstractModel{
             case "setOnlyPlantas":
                 $sql->where("perfiles.Per_Des = 'Plantas'");
                 break;
+            case "setVisibles":
+                $sql->where("usuarios.Usu_Vis = 'S'");
+                break;
             default: $this->sqlByParams($id,$sql,array(
                 'isActive'=>"$this->_name.$this->_state='A'",
                 'isNotCliente'=>"$this->_name.Usu_Tip!='C'",

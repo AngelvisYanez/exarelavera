@@ -26,18 +26,29 @@ $(function () {
                 },
                 caseFalse:function(){ return ''; }
             } },
-            { label:$.createIcon('cog'), name:'actReg', width:2, formatter:'gridButton', formatoptions:{ 
-                action:'changeUsuario', data:['Usu_Cod','Usuario',{Usu_Est:'I'}], icon:'ban-circle', type:'danger', title:'<u class="red">Desactivar</u> Usuario', 
-                conditional:function(o){ 
-                    var isAdmin = $.grep(o.Perfiles || [], function(p){ return p.Per_Des === 'Administrador de Sistemas'; }).length > 0;
-                    return o.Usu_Est==='A' && !isAdmin; 
-                }, 
-                caseFalse:function(o){ 
-                    var isAdmin = $.grep(o.Perfiles || [], function(p){ return p.Per_Des === 'Administrador de Sistemas'; }).length > 0;
-                    if(isAdmin && o.Usu_Est === 'A') return '';
-                    return $.getGridButton('changeUsuario',$.newObj(['Usu_Cod','Usuario',{Usu_Est:'A'}],o),'<u class="green">Activar</u> Usuario','ok'); 
-                } 
-            } }
+            { label:$.createIcon('cog'), name:'actReg', width:2, formatter:'gridButton',
+                formatoptions:{ 
+                    action:'changeUsuario', data:['Usu_Cod','Usuario',{Usu_Est:'I'}], icon:'ban-circle', type:'danger', title:'<u class="red">Desactivar</u> Usuario', 
+                    conditional:function(o){ 
+                        var isAdmin = $.grep(o.Perfiles || [], function(p){ return p.Per_Des === 'Administrador de Sistemas'; }).length > 0;
+                        return o.Usu_Est==='A' && !isAdmin; 
+                    }, 
+                    caseFalse:function(o){ 
+                        var isAdmin = $.grep(o.Perfiles || [], function(p){ return p.Per_Des === 'Administrador de Sistemas'; }).length > 0;
+                        if(isAdmin && o.Usu_Est === 'A') return '';
+                        return $.getGridButton('changeUsuario',$.newObj(['Usu_Cod','Usuario',{Usu_Est:'A'}],o),'<u class="green">Activar</u> Usuario','ok'); 
+                    } 
+                }
+            },
+            { label:$.createIcon('eye-open'), name:'Usu_Vis', align: "center", width:2, 
+                formatter:function(cv,o,r){
+                    if(r.Usu_Est === 'I'){
+                        var chk = (cv === 'S') ? 'checked' : '';
+                        return '<input type="checkbox" '+chk+' onchange="updateUsuVis('+r.Usu_Cod+', this.checked)">';
+                    }
+                    return '';
+                }
+            }
         ]
     }, true, "#containerPager", { view: false, refresh: true }).gridButtonsAdd([null, 
         { caption: "Exportar Excel&nbsp;", buttonicon: "download-alt", onClickButton: function () {
@@ -87,6 +98,19 @@ function changeUsuario(usu){
             container.changeRowData(usu.Usu_Cod,usu);
             return false;
         });
+    });
+}
+
+function updateUsuVis(usuCod, isChecked) {
+    var val = isChecked ? 'S' : 'N';
+    $.saveDataJson("", { updateUsuVis: true, Usu_Cod: usuCod, Usu_Vis: val }, function(r) {
+        if (r.success) {
+            // Recargar el grid después de que el usuario cierre el mensaje de éxito
+            $.alert(r.message, function(){
+                container.trigger("reloadGrid");
+            }, 'ok');
+            return false; // Evitar que $.saveDataJson muestre su propio alert
+        }
     });
 }
 
