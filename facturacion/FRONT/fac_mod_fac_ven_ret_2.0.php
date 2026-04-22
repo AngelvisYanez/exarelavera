@@ -2566,6 +2566,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
         $(function() {
             $('#documentoMain').css('visibility', '').hide();
             $('#documentoResult').css('visibility', '').hide();
+            
         });
     </script>
 

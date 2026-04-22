@@ -76,6 +76,26 @@ function obtenerOCrearPersona($obBD_con1, $obBD_conexion, $Prs_Ced, $datosPerson
 
     if (!empty($persona)) {
         // Si existe, retornar su código
+        // Si existe, actualizar datos (ej. Prs_Tel) si vienen informados
+        $up = array();
+        $camposPermitidos = array('Prs_Nom', 'Prs_Ape', 'Prs_Sex', 'Prs_Esc', 'Prs_Fec', 'Prs_Tel', 'Ciu_Cod', 'Prs_Dir', 'Prs_Cor');
+        foreach ($camposPermitidos as $k) {
+            if (!array_key_exists($k, $datosPersona)) {
+                continue;
+            }
+            // No sobreescribir con NULL o vacío (permite enviar "0" si aplicara)
+            if ($datosPersona[$k] === null) {
+                continue;
+            }
+            if (is_string($datosPersona[$k]) && trim($datosPersona[$k]) === '') {
+                continue;
+            }
+            $up[$k] = $datosPersona[$k];
+        }
+        if (!empty($up) && !empty($persona['Prs_Cod'])) {
+            $obBD_con1->operacionobBD('persona.update', array_merge($up, array('where' => array('Prs_Cod' => $persona['Prs_Cod']))), $obBD_conexion);
+        }
+
         return $persona['Prs_Cod'];
     } else {
         // Si no existe, crear nueva persona
@@ -161,6 +181,9 @@ function guardarPersonalPlanta($obBD_con1, $obBD_conexion, $Pla_Cod, $Prs_Ced, $
     }
     if (isset($datosPersonal['Pep_Cor']) && !empty($datosPersonal['Pep_Cor'])) {
         $datosManifiestoPersonal['Pep_Cor'] = $datosPersonal['Pep_Cor'];
+    }
+    if (isset($datosPersonal['Prs_Tel'])) {
+        $datosManifiestoPersonal['Prs_Tel'] = $datosPersonal['Prs_Tel'];
     }
     if (isset($datosPersonal['Pep_Tel'])) {
         $datosManifiestoPersonal['Pep_Tel'] = $datosPersonal['Pep_Tel'];
@@ -1318,7 +1341,7 @@ if (isset($saveNuevoTipoSancionAjax)) {
         }
         if ($Tsa_Niv === '' || !in_array($Tsa_Niv, array('M', 'A', 'B'))) {
             throw new Exception('Nivel de riesgo inválido (use M, A o B).');
-        }       
+        }
 
         $datosNuevo = array(
             'Emp_Cod' => $Emp_Cod_Post,
@@ -2871,13 +2894,13 @@ $obBD_con1->utf8_change_param($transportes);
                 <label class="col-xs-4 control-label label-xs required">Nivel Riesgo:</label>
                 <div class="col-xs-8">
                     <select id="nuevoTsa_Niv" name="Tsa_Niv" class="form-control input-xs" required>
-                        <option value="">— Seleccione —</option>                       
+                        <option value="">— Seleccione —</option>
                         <option value="A">ALTO</option>
                         <option value="B">BAJO</option>
                         <option value="M">MEDIO</option>
                     </select>
                 </div>
-            </div>            
+            </div>
         </form>
         <div style="text-align: center; margin-top: 15px;">
             <button class="btn btn-sm btn-primary" type="button" onclick="guardarNuevoTipoSancion();">
