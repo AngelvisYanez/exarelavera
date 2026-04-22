@@ -152,6 +152,22 @@ $Cantidad_tickets = $obBD_con1->getRowConsulta(225, $Ses_Emp_Cod, $obBD_conexion
 //Traer documentos sin autorizar
 $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_Cod, $obBD_conexion1);
 
+// Verificar si el usuario tiene una planta asignada en manifiesto_usuario
+$isPlanta = false;
+$plantName = "";
+if (isset($_SESSION['Ses_Usu_Cod'])) {
+    // Consulta para obtener el nombre de la planta asignada al usuario
+    $sqlPlanta = "SELECT mp.Pla_Nom 
+                  FROM manifiesto_usuario mu 
+                  INNER JOIN manifiesto_plantas mp ON mu.Pla_Cod = mp.Pla_Cod 
+                  WHERE mu.Usu_Cod = " . $_SESSION['Ses_Usu_Cod'];
+    $resPlanta = $obBD_con1->consulta($sqlPlanta, $obBD_conexion->conexion);
+    if ($rowPlanta = $obBD_con1->fetch_assoc($resPlanta)) {
+        $plantName = $rowPlanta['Pla_Nom'];
+        $isPlanta = true;
+    }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -261,9 +277,16 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
                     <!--Ace Admin-->
                     <small id="Empr" style="font-size: 16px; color: #000; text-align: center;">
                         <i id="icoEmp" class="fa fa-building" style="color: #000;"></i>
-                        <?php echo '<span style="margin-top: 10px;">' . ucwords(strtolower($Ses_Emp_Nom)) . '</span>' . (count($rs_sucursales) == 1 ? ' <b>[' . strtoupper($Ses_Suc_Nom) . ']</b>' : ''); ?>
+                        <!-- <?php echo '<span style="margin-top: 10px;">' . ucwords(strtolower($Ses_Emp_Nom)) . '</span>' . (count($rs_sucursales) == 1 ? ' <b>[' . strtoupper($Ses_Suc_Nom) . ']</b>' : ''); ?> -->
+                        <?php 
+                            if ($isPlanta && !empty($plantName)) {
+                                echo '<span style="align-content: center;margin-top: 2px;height: 20px;">' . strtoupper($plantName) . '</span>';
+                            } else {
+                                echo '<span style="align-content: center;margin-top: 2px;height: 20px;">' . ucwords(strtolower($Ses_Emp_Nom)) . '</span>' . (count($rs_sucursales) == 1 ? ' <b>[' . strtoupper($Ses_Suc_Nom) . ']</b>' : ''); 
+                            }
+                        ?>
                     </small>
-                    <?php if (count($rs_sucursales) > 1) { ?>
+                    <?php if (count($rs_sucursales) > 1 && !$isPlanta) { ?>
                         <div class="dropdown" style="display: inline">
                             <a id="dLabel" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="empresa"><?php echo ' [' . strtoupper($Ses_Suc_Nom) . ']'; ?><span class="caret"></span></a>
                             <ul id="Sucur" class="dropdown-menu" aria-labelledby="dLabel">
