@@ -557,18 +557,30 @@ function sentencias_doc($id, $Par_Sql)
                     INNER JOIN iva_cobrad ON det_plan.Pld_Cod = iva_cobrad.Pld_Cod                    
                     WHERE plan_cuenta.Emp_Cod = '$_SESSION[Ses_Emp_Cod]'";
             break;
-            /*Retencion de IVA en ventas */  
-            case 42:
-                $sql = "SELECT comprobantes.Com_Cod,det_plan.Pld_Cod, Pld_Cdc,Pld_Des, SUM(Asi_Val)as Haber, null as Debe,'H' as Det_Tip
-                        FROM comprobantes 
-                            INNER JOIN asientos ON comprobantes.Com_Cod = asientos.Com_Cod
-                            INNER JOIN cliente ON comprobantes.Cli_Cod = cliente.Cli_Cod
-                            INNER JOIN det_plan ON asientos.Pld_Cod = det_plan.Pld_Cod                        
-                        WHERE cliente.Emp_Cod = '$_SESSION[Ses_Emp_Cod]' and Com_Fec between '$Par_Sql[ini]' and '$Par_Sql[fin]' and Com_Est='A' and det_plan.Pld_Cod in ($Par_Sql[Pld_Cods])
-                        group by det_plan.Pld_Cod";
-                 //echo $sql;
-                 break;           
-                //echo $sql;
+          /*Retencion de IVA en ventas */  
+        case 42:
+            $sql = "SELECT comprobantes.Com_Cod,det_plan.Pld_Cod, Pld_Cdc,Pld_Des, SUM(Asi_Val)as Haber, null as Debe,'H' as Det_Tip
+                    FROM comprobantes 
+                        INNER JOIN asientos ON comprobantes.Com_Cod = asientos.Com_Cod
+                        INNER JOIN cliente ON comprobantes.Cli_Cod = cliente.Cli_Cod
+                        INNER JOIN det_plan ON asientos.Pld_Cod = det_plan.Pld_Cod                        
+                    WHERE cliente.Emp_Cod = '$_SESSION[Ses_Emp_Cod]' and Com_Fec between '$Par_Sql[ini]' and '$Par_Sql[fin]' and Com_Est='A' and det_plan.Pld_Cod in ($Par_Sql[Pld_Cods])
+                    group by det_plan.Pld_Cod";
+             //echo $sql;
+             break;    
+        /** Retencion de IVA en compras */
+        case 43:
+            $sql = "SELECT comprobantes.Com_Cod,det_plan.Pld_Cod, Pld_Cdc, Pld_Des, SUM(Asi_Val)as Debe, null as Haber, 'D' as Det_Tip
+                from  comprobantes
+                INNER JOIN asientos ON (comprobantes.Com_Cod = asientos.Com_Cod)
+                INNER JOIN det_plan ON (asientos.Pld_Cod = det_plan.Pld_Cod)
+                INNER JOIN reniva_pla ON (det_plan.Pld_Cod = reniva_pla.Pld_Cod)
+                INNER JOIN renta_iva ON (reniva_pla.Ren_Cod = renta_iva.Ren_Cod)
+                INNER JOIN plan_cuenta ON (det_plan.Pla_Cod = plan_cuenta.Pla_Cod)
+                where plan_cuenta.Emp_Cod = '$_SESSION[Ses_Emp_Cod]' and Ren_Ret = 'I' and Ren_Est='A' and Com_Est='A' and reniva_pla.Ren_Tip = 'C' and 
+                Com_Fec between '$Par_Sql[ini]' and '$Par_Sql[fin]' group by det_plan.Pld_Cod";
+            break;
+            //echo $sql;
     }
     //echo $sql."<br/>";
     return $sql;

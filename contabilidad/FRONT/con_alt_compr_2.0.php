@@ -106,7 +106,7 @@ if (isset($generar_asiento_ret)) {
 if (isset($ajaxLiquidacionForm104)) {
     $responce['success'] = true;
     $diario=array();
-    $ctas=$obBD_con1->getArrayConsulta(40,array("Tpa_Abr"=>"'FRM485','FRM615','FRM617','FRM618','FRM619','FRM529'"), $obBD_conexion,true);
+    $ctas=$obBD_con1->getArrayConsulta(40,array("Tpa_Abr"=>"'FRM485','FRM615','FRM617','FRM618','FRM619','FRM529','FRM859'"), $obBD_conexion,true);
     $iva_cobrado=$obBD_con1->getRowConsulta(41,'',$obBD_conexion);
     $PldIvas=$obBD_con1->getArrayConsultaSql('select distinct det_plan.Pld_Cod
                 FROM det_plan 
@@ -129,6 +129,16 @@ if (isset($ajaxLiquidacionForm104)) {
     }
     if(isset($_429) && $_429*1>0){        
         $diario[]=array_merge($iva_cobrado,array('Debe'=>$_429,'Det_Tip'=>'D','Haber'=>null,'Index'=>$index++));
+    }
+
+    $ret_iva_compra=$obBD_con1->getArrayConsulta(43,array('ini'=>$ini,'fin'=>$fin),$obBD_conexion);
+    foreach($ret_iva_compra as $row){
+        $diario[] = $row; 
+        $total+=$row['Debe'];
+    }
+    if(!empty($ret_iva_compra)){
+        $row=reset(array_filter($ctas,function($e){if($e['Tpa_Abr']=='FRM859')return $e;}));        
+        $diario[]=array_merge($row,array('Haber'=>$total,'Det_Tip'=>'H','Debe'=>null,'Index'=>$index++));
     }
     if(isset($_606) && $_606*1>0){
         $row=reset(array_filter($ctas,function($e){if($e['Tpa_Abr']=='FRM615')return $e;}));
