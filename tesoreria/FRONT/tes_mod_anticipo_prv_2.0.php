@@ -143,6 +143,11 @@ if (isset($saveConsumoAjax)) {
 
 			//creamos un registro en det_ant_ccpp
 			$obBD_ins1->operacionobBD('det_ant_ccpp.insert', array('Atp_Cod' => $ant['Atp_Cod'], 'Pap_Cod' => $Pap_Cod, 'Dac_Val' => $ant['Acl_Cru'], 'Com_Cod' => $Com_Cod), $obBD_conexionIns, true);
+			$Dac_Cod = $obBD_ins1->insercionid($obBD_conexionIns);
+			if(isset($Dac_Cod)){
+				/** Actualiza el estado del anticipo(Atp_Est) según el total de abonos */
+				$obBD_ins1->operacionobBD('anticipos_proveedores.4', array('Atp_Cod' => $ant['Atp_Cod']), $obBD_conexionIns);
+			}
 		}
 		$resp['link'] = "../../contabilidad/FRONT/con_pri_compr_2.1.php?codigo=" . $Com_Cod;
 	} catch (Exception $e) {

@@ -311,6 +311,24 @@ class anticipos_proveedores extends AbstractModel{
                     WHERE anticipos_proveedores.Prv_Cod = '$Par_Sql[Prv_Cod]' and Atp_Est != 'I' 
                     GROUP BY anticipos_proveedores.Atp_Cod";                    
                 return $sql;
+            case 4:
+                /** Actualiza el estado del anticipo según el total de abonos */
+                $sql="UPDATE anticipos_proveedores a
+                LEFT JOIN (
+                    SELECT a.Atp_Cod,a.Atp_Val,CAST(COALESCE(SUM(d.Dac_Val), 0) as decimal(10,2)) AS TotalAbonado
+                    FROM det_ant_ccpp d 
+                        LEFT JOIN anticipos_proveedores a ON d.Atp_Cod  = a.Atp_Cod
+                        LEFT JOIN comprobantes on d.Com_Cod = comprobantes.Com_Cod 
+                    WHERE a.Atp_Cod = $Par_Sql[Atp_Cod] AND comprobantes.Com_Est = 'A'
+                    GROUP BY a.Atp_Cod, a.Atp_Val
+                ) t ON a.Atp_Cod = t.Atp_Cod
+                SET a.Atp_Est = CASE
+                    WHEN COALESCE(t.TotalAbonado, 0) = 0 THEN 'A'
+                    WHEN COALESCE(t.TotalAbonado, 0) < a.Atp_Val THEN 'U'
+                    ELSE 'C'
+                END
+                WHERE a.Atp_Cod = $Par_Sql[Atp_Cod]";
+                return $sql;
             default: throw new Exception ("No existe la sql numero $id!");
         }
         //echo $this->getSqlString($sql)."<br/>";
