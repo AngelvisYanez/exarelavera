@@ -54,13 +54,13 @@ class manifiesto_transporte extends AbstractModel{
             case 1:
                 $sql="select coalesce((select count(manifiesto.Veh_Cod)as total from manifiesto 
                             inner join vehiculo v on manifiesto.Veh_Cod = v.Veh_Cod 	
-                        where v.Veh_Pla=vehiculo.Veh_Pla and Man_Tes not like '%GS%' and Man_Est = 'A' group by v.Veh_Pla
+                        where v.Veh_Pla=vehiculo.Veh_Pla and Man_Tes not like '%GS%' And Veh_Est='A' and Man_Est = 'A' group by v.Veh_Pla
                         ),0)as total,
                         manifiesto_transporte.*, vehiculo.*, manifiesto_vehiculo.*
                     from manifiesto_transporte
                         inner join vehiculo on vehiculo.Mat_Cod = manifiesto_transporte.Mat_Cod
                     inner join manifiesto_vehiculo on manifiesto_vehiculo.Veh_Cod = vehiculo.Veh_Cod
-                    where (`Mat_Est` = 'A' and `manifiesto_vehiculo`.`Pla_Cod` = $Par_Sql[Pla_Cod])";
+                    where (`Mat_Est` = 'A' And Veh_Est='A' and `manifiesto_vehiculo`.`Pla_Cod` = $Par_Sql[Pla_Cod])";
                 //echo $this->getSqlString($sql)."<br/>";
                 break;
             default: throw new Exception ("No existe la sql numero $id!");
