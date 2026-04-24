@@ -16,6 +16,9 @@ $obBD_con1 = new Class_Log_Datos_manifiesto;
 $pla_asignada = $obBD_con1->getArrayConsulta(75, array('Usu_Cod' => $Ses_Usu_Cod), $obBD_conexion);
 $Pla_Cod_Asignada = (is_array($pla_asignada) && count($pla_asignada) > 0) ? intval($pla_asignada[0]['Pla_Cod']) : 0;
 
+/** Nombre de empresa en cabecera del reporte PDF/imprimir manifiestos */
+$man_fac_empresa_encabezado = 'Ecoparkmining';
+
 /* Listado de plantas con cliente para modal (búsqueda por cédula y nombre) - formato simple para carga local */
 if (isset($_GET['listadoPlantasModal'])) {
     $data = array(
@@ -44,16 +47,38 @@ if (isset($_REQUEST['plaAjax'])) {
 if (isset($_GET['gridFacturasManifiestos'])) {
     $data = $_GET;
     $data['Emp_Cod'] = $Ses_Emp_Cod;
-    
+
     // Si el usuario tiene una planta asignada, forzamos ese filtro
     if ($Pla_Cod_Asignada > 0) {
         $data['Pla_Cod_Usuario'] = $Pla_Cod_Asignada;
     } else if (!empty($_GET['Pla_Cod_Usuario']) && intval($_GET['Pla_Cod_Usuario']) > 0) {
         $data['Pla_Cod_Usuario'] = intval($_GET['Pla_Cod_Usuario']);
     }
-    
+
     $responce = $obBD_con1->getPageGrid(73, $data, $obBD_conexion);
     $obBD_con1->echoJson($responce);
+    exit;
+}
+
+/* Totales para footer del grid de facturas (sin paginación) */
+if (isset($_GET['totalesGridFacturasManifiestos'])) {
+    $data = $_GET;
+    $data['Emp_Cod'] = $Ses_Emp_Cod;
+
+    if ($Pla_Cod_Asignada > 0) {
+        $data['Pla_Cod_Usuario'] = $Pla_Cod_Asignada;
+    } else if (!empty($_GET['Pla_Cod_Usuario']) && intval($_GET['Pla_Cod_Usuario']) > 0) {
+        $data['Pla_Cod_Usuario'] = intval($_GET['Pla_Cod_Usuario']);
+    }
+
+    $rows = $obBD_con1->getArrayConsulta(82, $data, $obBD_conexion);
+    $row = (is_array($rows) && count($rows) > 0) ? $rows[0] : array();
+    $obBD_con1->echoJson(array(
+        'sum_cant_manifiestos' => isset($row['sum_cant_manifiestos']) ? (int)$row['sum_cant_manifiestos'] : 0,
+        'sum_subtotal_factura' => isset($row['sum_subtotal_factura']) ? (float)$row['sum_subtotal_factura'] : 0,
+        'sum_iva_factura' => isset($row['sum_iva_factura']) ? (float)$row['sum_iva_factura'] : 0,
+        'sum_total_factura' => isset($row['sum_total_factura']) ? (float)$row['sum_total_factura'] : 0
+    ));
     exit;
 }
 
@@ -61,46 +86,91 @@ if (isset($_GET['gridFacturasManifiestos'])) {
 if (isset($_GET['reporte'])) {
     $data = $_GET;
     $data['Emp_Cod'] = $Ses_Emp_Cod;
-    
+
     // Si el usuario tiene una planta asignada, forzamos ese filtro
     if ($Pla_Cod_Asignada > 0) {
         $data['Pla_Cod_Usuario'] = $Pla_Cod_Asignada;
     } else if (!empty($_GET['Pla_Cod_Usuario']) && intval($_GET['Pla_Cod_Usuario']) > 0) {
         $data['Pla_Cod_Usuario'] = intval($_GET['Pla_Cod_Usuario']);
     }
-    
+
     $data['rows'] = 10000;
     $data['page'] = 1;
     $data['limits'] = 'LIMIT 10000';
     $responce = $obBD_con1->getPageGrid(73, $data, $obBD_conexion);
     $rows = isset($responce['rows']) ? $responce['rows'] : array();
     header('Content-Type: text/html; charset=UTF-8');
+    $empresa = htmlspecialchars($man_fac_empresa_encabezado);
+    $logo = isset($Ses_Emp_Log) ? trim($Ses_Emp_Log) : '';
+    $logoHtml = ($logo !== '') ? ('<div class="logo"><img src="' . htmlspecialchars($logo) . '" alt="' . $empresa . '"></div>') : '';
+
     echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Reporte Facturas y Manifiestos</title>';
     echo '<style type="text/css">
-        body { font-family: Arial, sans-serif; margin: 15px; }
-        h2 { margin-bottom: 10px; }
+        *{box-sizing:border-box;}
+        body { font-family: Arial, sans-serif; margin: 15px; color:#111; font-size: 11px; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+        /* En pantalla no mostrar el HTML (solo impresión) */
+        #printArea{display:none;}
+        @media print { #printArea{display:block;} }
+        .rep-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #ddd;}
+        .rep-head .tit{font-size:14px;font-weight:700;line-height:1.2;}
+        .rep-head .sub{font-size:10px;color:#444;margin-top:4px;}
+        .rep-head .logo img{max-height:58px;max-width:240px;object-fit:contain;display:block;}
         table.reporte { border-collapse: collapse; width: 100%; margin-top: 10px; }
-        table.reporte th, table.reporte td { border: 1px solid #333; padding: 6px 8px; text-align: left; font-size: 12px; }
+        table.reporte th, table.reporte td { border: 1px solid #333; padding: 3px 5px; text-align: left; font-size: 10px; }
         table.reporte th { background: #eee; }
         table.reporte td.numeric { text-align: right; }
-        .no-print { margin-bottom: 10px; }
-        @media print { .no-print { display: none; } }
-    </style></head><body>';
-    echo '<div class="no-print"><button type="button" onclick="window.print()">Imprimir</button> <button type="button" onclick="window.close()">Cerrar</button></div>';
-    echo '<h2>Reporte: Facturas con Manifiestos</h2>';
+        @page { margin: 10mm; }
+        @media print { }
+    </style>
+    <script>
+      window.onload = function () {
+        try { window.focus(); } catch(e) {}
+        // Pequeño defer para que el navegador termine de renderizar antes de imprimir
+        setTimeout(function(){ window.print(); }, 50);
+      };
+    </script>
+    </head><body>';
+
+    echo '<div id="printArea">';
+    echo '<div class="rep-head">';
+    echo '<div class="txt"><div class="tit">' . $empresa . '</div><div class="sub">Reporte: Facturas con Manifiestos</div></div>';
+    echo $logoHtml;
+    echo '</div>';
     echo '<table class="reporte"><thead><tr>';
-    echo '<th>Nº Factura</th><th>Planta</th><th>Cliente</th><th>Cédula/RUC</th><th>Fecha</th><th>Total factura</th><th>Cant. Manifiestos</th></tr></thead><tbody>';
+    echo '<th>#</th><th>Nº.Fac</th><th>Ced/RUC</th><th>Planta</th><th>Cliente</th><th>Fecha</th><th>Tot.Fac</th><th>Cant. Man</th></tr></thead><tbody>';
+    $i = 0;
+    $sumSubtotal = 0.0;
+    $sumIva = 0.0;
+    $sumTotal = 0.0;
+    $sumCant = 0;
     foreach ($rows as $r) {
+        $i++;
         $num = htmlspecialchars(isset($r['Vet_Num_Completo']) ? $r['Vet_Num_Completo'] : '');
         $pla = htmlspecialchars(isset($r['Pla_Nom']) && $r['Pla_Nom'] !== '' ? $r['Pla_Nom'] : (isset($r['pla_nom']) ? $r['pla_nom'] : ''));
         $cli = htmlspecialchars(isset($r['cliente']) ? $r['cliente'] : '');
         $ced = htmlspecialchars(isset($r['Prs_Ced']) ? $r['Prs_Ced'] : '');
         $fec = htmlspecialchars(isset($r['Vet_Fec']) ? $r['Vet_Fec'] : '');
-        $tot = isset($r['total_factura']) ? number_format((float)$r['total_factura'], 2) : '0.00';
+        $subtotalVal = isset($r['subtotal_factura']) ? (float)$r['subtotal_factura'] : 0.0;
+        $ivaVal = isset($r['iva_factura']) ? (float)$r['iva_factura'] : 0.0;
+        $totalVal = isset($r['total_factura']) ? (float)$r['total_factura'] : 0.0;
+        $tot = number_format($totalVal, 2);
         $cant = isset($r['cant_manifiestos']) ? (int)$r['cant_manifiestos'] : 0;
-        echo "<tr><td>{$num}</td><td>{$pla}</td><td>{$cli}</td><td>{$ced}</td><td>{$fec}</td><td class=\"numeric\">{$tot}</td><td class=\"numeric\">{$cant}</td></tr>";
+
+        $sumSubtotal += $subtotalVal;
+        $sumIva += $ivaVal;
+        $sumTotal += $totalVal;
+        $sumCant += $cant;
+
+        echo "<tr><td style=\"text-align:center;\">{$i}</td><td>{$num}</td><td>{$ced}</td><td>{$pla}</td><td>{$cli}</td><td>{$fec}</td><td class=\"numeric\">{$tot}</td><td class=\"numeric\">{$cant}</td></tr>";
     }
-    echo '</tbody></table></body></html>';
+    // Fila de totales (Subtotal, IVA, Total, Cant.Manif)
+    $totTotal = number_format($sumTotal, 2);
+    echo "<tr>
+            <td colspan=\"6\" style=\"text-align:right;font-weight:bold;background:#f3f4f6;\">TOTALES</td>
+            <td class=\"numeric\" style=\"font-weight:bold;background:#f3f4f6;\">{$totTotal}</td>
+            <td class=\"numeric\" style=\"font-weight:bold;background:#f3f4f6;\">{$sumCant}</td>
+          </tr>";
+    echo '</tbody></table></div></body></html>';
     exit;
 }
 
@@ -108,52 +178,102 @@ if (isset($_GET['reporte'])) {
 if (isset($_GET['excel'])) {
     $data = $_GET;
     $data['Emp_Cod'] = $Ses_Emp_Cod;
-    
+
     if ($Pla_Cod_Asignada > 0) {
         $data['Pla_Cod_Usuario'] = $Pla_Cod_Asignada;
     } else if (!empty($_GET['Pla_Cod_Usuario']) && intval($_GET['Pla_Cod_Usuario']) > 0) {
         $data['Pla_Cod_Usuario'] = intval($_GET['Pla_Cod_Usuario']);
     }
-    
+
     $data['rows'] = 10000;
     $data['page'] = 1;
     $data['limits'] = 'LIMIT 10000';
     $responce = $obBD_con1->getPageGrid(73, $data, $obBD_conexion);
     $rows = isset($responce['rows']) ? $responce['rows'] : array();
-    
+
     header('Content-Type: application/vnd.ms-excel; charset=utf-8');
     header('Content-Disposition: attachment; filename=Facturas_Manifiestos_' . date('Ymd_His') . '.xls');
     header('Pragma: no-cache');
     header('Expires: 0');
 
+    $empresa = htmlspecialchars($man_fac_empresa_encabezado);
+    $logo = isset($Ses_Emp_Log) ? trim($Ses_Emp_Log) : '';
+
     echo '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
-    echo '<head><meta http-equiv="Content-type" content="text/html;charset=utf-8" /></head><body>';
+    echo '<head><meta http-equiv="Content-type" content="text/html;charset=utf-8" />
+        <style>
+          table td,table th{padding:3px 6px;font-size:11px;line-height:1.35;}
+          .xl-head td{border:1px solid #ddd;}
+          .xl-title{font-size:16px;font-weight:bold;}
+        </style>
+      </head><body>';
+
+    // Encabezado (empresa + logo)
+    echo '<table class="xl-head" border="1" style="border-collapse:collapse; width:100%;">';
+    echo '<tr>';
+    echo '<td colspan="7" class="xl-title">' . $empresa . '</td>';
+    if ($logo !== '') {
+        echo '<td colspan="3" align="right"><img src="' . htmlspecialchars($logo) . '" style="max-height:60px; max-width:220px;" /></td>';
+    } else {
+        echo '<td colspan="3"></td>';
+    }
+    echo '</tr>';
+    echo '<tr><td colspan="10">Reporte: Facturas con Manifiestos</td></tr>';
+    echo '</table><br />';
+
     echo '<table border="1">';
     echo '<tr>';
-    echo '<th style="background-color: #eee;">Nº Factura</th>';
+    echo '<th style="background-color: #eee;">#</th>';
+    echo '<th style="background-color: #eee;">Nº Fact.</th>';
+    echo '<th style="background-color: #eee;">Ced/RUC</th>';
     echo '<th style="background-color: #eee;">Planta</th>';
     echo '<th style="background-color: #eee;">Cliente</th>';
-    echo '<th style="background-color: #eee;">Cédula/RUC</th>';
     echo '<th style="background-color: #eee;">Fecha</th>';
     echo '<th style="background-color: #eee;">Subtotal</th>';
     echo '<th style="background-color: #eee;">IVA</th>';
-    echo '<th style="background-color: #eee;">Total Factura</th>';
-    echo '<th style="background-color: #eee;">Cant. Manifiestos</th>';
+    echo '<th style="background-color: #eee;">Total</th>';
+    echo '<th style="background-color: #eee;">Cant.Man.</th>';
     echo '</tr>';
-    
+
+    $i = 0;
+    $sumSubtotal = 0.0;
+    $sumIva = 0.0;
+    $sumTotal = 0.0;
+    $sumCant = 0;
     foreach ($rows as $r) {
+        $i++;
         echo '<tr>';
+        echo '<td align="center">' . $i . '</td>';
         echo '<td>' . (isset($r['Vet_Num_Completo']) ? $r['Vet_Num_Completo'] : '') . '</td>';
+        // Forzar texto para que Excel no quite ceros ni use notación científica
+        $ced = (isset($r['Prs_Ced']) ? $r['Prs_Ced'] : '');
+        echo '<td style="mso-number-format:\'\\@\';">' . htmlspecialchars($ced) . '</td>';
         echo '<td>' . (isset($r['Pla_Nom']) && $r['Pla_Nom'] !== '' ? $r['Pla_Nom'] : (isset($r['pla_nom']) ? $r['pla_nom'] : '')) . '</td>';
         echo '<td>' . (isset($r['cliente']) ? $r['cliente'] : '') . '</td>';
-        echo '<td>' . (isset($r['Prs_Ced']) ? $r['Prs_Ced'] : '') . '</td>';
         echo '<td>' . (isset($r['Vet_Fec']) ? $r['Vet_Fec'] : '') . '</td>';
-        echo '<td>' . (isset($r['subtotal_factura']) ? number_format((float)$r['subtotal_factura'], 2, '.', '') : '0.00') . '</td>';
-        echo '<td>' . (isset($r['iva_factura']) ? number_format((float)$r['iva_factura'], 2, '.', '') : '0.00') . '</td>';
-        echo '<td>' . (isset($r['total_factura']) ? number_format((float)$r['total_factura'], 2, '.', '') : '0.00') . '</td>';
-        echo '<td>' . (isset($r['cant_manifiestos']) ? (int)$r['cant_manifiestos'] : 0) . '</td>';
+        $subtotalVal = isset($r['subtotal_factura']) ? (float)$r['subtotal_factura'] : 0.0;
+        $ivaVal = isset($r['iva_factura']) ? (float)$r['iva_factura'] : 0.0;
+        $totalVal = isset($r['total_factura']) ? (float)$r['total_factura'] : 0.0;
+        $cantVal = isset($r['cant_manifiestos']) ? (int)$r['cant_manifiestos'] : 0;
+        $sumSubtotal += $subtotalVal;
+        $sumIva += $ivaVal;
+        $sumTotal += $totalVal;
+        $sumCant += $cantVal;
+
+        echo '<td>' . number_format($subtotalVal, 2, '.', '') . '</td>';
+        echo '<td>' . number_format($ivaVal, 2, '.', '') . '</td>';
+        echo '<td>' . number_format($totalVal, 2, '.', '') . '</td>';
+        echo '<td>' . $cantVal . '</td>';
         echo '</tr>';
     }
+    // Fila de totales
+    echo '<tr>';
+    echo '<td colspan="6" style="background-color:#f3f4f6;font-weight:bold;text-align:right;">TOTALES</td>';
+    echo '<td style="background-color:#f3f4f6;font-weight:bold;">' . number_format($sumSubtotal, 2, '.', '') . '</td>';
+    echo '<td style="background-color:#f3f4f6;font-weight:bold;">' . number_format($sumIva, 2, '.', '') . '</td>';
+    echo '<td style="background-color:#f3f4f6;font-weight:bold;">' . number_format($sumTotal, 2, '.', '') . '</td>';
+    echo '<td style="background-color:#f3f4f6;font-weight:bold;">' . $sumCant . '</td>';
+    echo '</tr>';
     echo '</table></body></html>';
     exit;
 }
@@ -166,14 +286,14 @@ if (isset($_GET['manifiestosFactura'])) {
         exit;
     }
     $params = array('Vet_Cod' => $Vet_Cod);
-    
+
     // Si el usuario tiene una planta asignada, forzamos ese filtro
     if ($Pla_Cod_Asignada > 0) {
         $params['Pla_Cod_Usuario'] = $Pla_Cod_Asignada;
     } else if (!empty($_GET['Pla_Cod_Usuario']) && intval($_GET['Pla_Cod_Usuario']) > 0) {
         $params['Pla_Cod_Usuario'] = intval($_GET['Pla_Cod_Usuario']);
     }
-    
+
     $rows = $obBD_con1->getArrayConsulta(74, $params, $obBD_conexion);
     if (!is_array($rows)) {
         $rows = array();
@@ -181,6 +301,10 @@ if (isset($_GET['manifiestosFactura'])) {
     $obBD_con1->echoJson(array('rows' => $rows));
     exit;
 }
+
+
+//echo $Ses_Emp_Log;
+
 
 ?>
 <!DOCTYPE html>
@@ -288,19 +412,21 @@ if (isset($_GET['manifiestosFactura'])) {
     </div>
 
     <script>
+        var MAN_FAC_EMPRESA = '<?php echo ($man_fac_empresa_encabezado); ?>';
+        var MAN_FAC_LOGO = '<?php echo (isset($Ses_Emp_Log) ? $Ses_Emp_Log : ''); ?>';
         $(function() {
-            // Rango por defecto: un mes (desde día 1 al último del mes actual)
+            // Rango por defecto: desde enero (año actual) hasta hoy
             var hoy = new Date();
             var y = hoy.getFullYear(),
                 m = ('0' + (hoy.getMonth() + 1)).slice(-2);
-            var fecIni = y + '-' + m + '-01';
-            var ultimoDia = new Date(y, hoy.getMonth() + 1, 0).getDate();
-            var fecFin = y + '-' + m + '-' + ('0' + ultimoDia).slice(-2);
+            var fecIni = y + '-01-01';
+            var d = ('0' + hoy.getDate()).slice(-2);
+            var fecFin = y + '-' + m + '-' + d;
             $('#Fec_Ini').val(fecIni);
             $('#Fec_Fin').val(fecFin);
 
             var $grid = $('#gridFacturas');
-            
+
             // Si el usuario tiene una planta asignada (desde PHP), ocultamos el filtro manual
             var plaAsignada = <?php echo $Pla_Cod_Asignada; ?>;
             if (plaAsignada > 0) {
@@ -321,6 +447,8 @@ if (isset($_GET['manifiestosFactura'])) {
                 mtype: 'GET',
                 datatype: 'json',
                 postData: initialPostData, // Use the pre-built object for initial load
+                rownumbers: true,
+                rownumWidth: 40,
                 colModel: [{
                         name: 'Vet_Cod',
                         index: 'Vet_Cod',
@@ -453,7 +581,7 @@ if (isset($_GET['manifiestosFactura'])) {
                     }
                 ],
                 pager: '#gridFacturasPager',
-                rowNum: 100,
+                rowNum: 1000,
                 rowList: [100, 500, 1000, 2000],
                 sortname: 'Vet_Fec',
                 sortorder: 'desc',
@@ -463,8 +591,32 @@ if (isset($_GET['manifiestosFactura'])) {
                 width: null,
 
                 autowidth: true,
+                footerrow: true,
+                userDataOnFooter: true,
                 loadComplete: function() {
                     var $g = $(this);
+
+                    // Totales GLOBAL (sin paginación) con los filtros actuales
+                    (function setFooterTotalsAll() {
+                        var pd = $g.jqGrid('getGridParam', 'postData') || {};
+                        var req = $.extend({}, pd, {
+                            totalesGridFacturasManifiestos: 1
+                        });
+                        // IMPORTANT: no enviar el flag del grid, caso contrario el PHP responde el JSON paginado del grid
+                        // y no los totales.
+                        if (req.gridFacturasManifiestos) delete req.gridFacturasManifiestos;
+                        $.getJSON('man_fac_man.php', req, function(resp) {
+                            resp = resp || {};
+                            $g.jqGrid('footerData', 'set', {
+                                Vet_Num_Completo: 'TOTALES',
+                                cant_manifiestos: resp.sum_cant_manifiestos || 0,
+                                subtotal_factura: (resp.sum_subtotal_factura != null ? Number(resp.sum_subtotal_factura).toFixed(2) : '0.00'),
+                                iva_factura: (resp.sum_iva_factura != null ? Number(resp.sum_iva_factura).toFixed(2) : '0.00'),
+                                total_factura: (resp.sum_total_factura != null ? Number(resp.sum_total_factura).toFixed(2) : '0.00')
+                            });
+                        });
+                    })();
+
                     $g.find('.ver-manifiestos').off('click').on('click', function(e) {
                         e.preventDefault();
                         var vetCod = $(this).data('vet-cod');
@@ -543,10 +695,20 @@ if (isset($_GET['manifiestosFactura'])) {
                         }, function(r) {
                             var rows = (r && r.rows) ? r.rows : [];
                             var byDate = {};
+                            var byDateTur = {};
                             rows.forEach(function(row) {
                                 var f = row.Man_Fes || row.man_fes || '';
                                 var d = f.toString().substring(0, 10);
                                 byDate[d] = (byDate[d] || 0) + 1;
+                                var tur = row.Tur_Cod != null ? row.Tur_Cod : (row.tur_cod != null ? row.tur_cod : '');
+                                tur = (tur === undefined || tur === null) ? '' : String(tur).trim();
+                                if (tur !== '') {
+                                    if (!byDateTur.hasOwnProperty(d)) {
+                                        byDateTur[d] = tur;
+                                    } else if (byDateTur[d] !== tur) {
+                                        byDateTur[d] = 'MIX';
+                                    }
+                                }
                             });
                             var labels = Object.keys(byDate).sort();
                             var data = labels.map(function(k) {
@@ -567,9 +729,44 @@ if (isset($_GET['manifiestosFactura'])) {
                                     maximumFractionDigits: 2
                                 });
                             }
+
+                            function colorForTurCod(turCod) {
+                                var t = String(turCod == null ? '' : turCod).trim();
+                                // Colores más oscuros y menos intensos
+                                if (t === '' || t === '0') return '#475569'; // slate-600
+                                if (t === 'MIX') return '#52525b'; // zinc-600
+                                var palette = ['#3b82f6', '#22c55e', '#f43f5e', '#a855f7', '#f97316', '#06b6d4', '#ec4899', '#84cc16', '#14b8a6'];
+                                var n = 0;
+                                for (var i = 0; i < t.length; i++) n = (n * 31 + t.charCodeAt(i)) >>> 0;
+                                return palette[n % palette.length];
+                            }
+
                             labels.forEach(function(label, i) {
                                 var h = (data[i] / maxVal) * chartH;
-                                barsHtml += '<div class="fm-bar-cell"><div class="fm-bar-val">' + data[i] + '</div><div class="fm-bar" style="height:' + h + 'px"></div><div class="fm-bar-label">' + escHtml(label) + '</div></div>';
+                                var tur = byDateTur.hasOwnProperty(label) ? byDateTur[label] : '';
+                                var col = colorForTurCod(tur);
+                                var turTxt = (tur && tur !== 'MIX') ? ('T' + tur) : (tur === 'MIX' ? 'MIX' : '');
+                                barsHtml += '<div class="fm-bar-cell" title="' + (turTxt ? ('Turno: ' + escHtml(turTxt)) : '') + '"><div class="fm-bar-val" style="color:#0f172a;">' + data[i] + '</div><div class="fm-bar" style="height:' + h + 'px;background:' + col + ';"></div><div class="fm-bar-label">' + escHtml(label) + '</div></div>';
+                            });
+
+                            // Leyenda por color: TURN 1, TURN 2, ...
+                            var turSet = {};
+                            labels.forEach(function(label) {
+                                var t = byDateTur.hasOwnProperty(label) ? byDateTur[label] : '';
+                                t = String(t == null ? '' : t).trim();
+                                if (t === '' || t === '0') return;
+                                turSet[t] = true;
+                            });
+                            var turList = Object.keys(turSet).sort(function(a, b) {
+                                var na = parseInt(a, 10), nb = parseInt(b, 10);
+                                if (!isNaN(na) && !isNaN(nb)) return na - nb;
+                                return String(a).localeCompare(String(b));
+                            });
+                            var legendHtml = '';
+                            turList.forEach(function(t) {
+                                var col = colorForTurCod(t);
+                                var txt = (t === 'MIX') ? 'Turn. mix' : ('Turn. ' + t);
+                                legendHtml += '<span class="fm-turn-key-item"><span class="fm-turn-key-swatch" style="background:' + col + ';"></span><span class="fm-turn-key-text">' + escHtml(txt) + '</span></span>';
                             });
                             var doc = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Factura ' + escHtml(vetNum) + ' - Gráfico manifiestos</title><style>' +
                                 'body{font-family:Arial,sans-serif;margin:20px;}' +
@@ -587,12 +784,16 @@ if (isset($_GET['manifiestosFactura'])) {
                                 '.fm-header .info-totals div{margin: 2px 0; font-size: 13px;}' +
                                 '.fm-header .info-totals .total-val{font-size: 16px; color: #337ab7; margin-top: 5px; border-top: 1px solid #ddd; padding-top: 5px;}' +
                                 '.fm-chart-title{font-size:14px;margin:15px 0 10px;color:#333;}' +
+                                '.fm-turn-key{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin:0 0 10px 0;}' +
+                                '.fm-turn-key-item{display:inline-flex;align-items:center;gap:6px;}' +
+                                '.fm-turn-key-swatch{width:12px;height:12px;border-radius:3px;border:1px solid rgba(15,23,42,.15);opacity:.55;filter:saturate(.65) brightness(.85);-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
+                                '.fm-turn-key-text{font-size:10px;font-weight:800;letter-spacing:.02em;color:#0f172a;}' +
                                 '.fm-chart-area{display:flex;align-items:stretch;gap:8px; border: 1px solid #eee; padding: 10px; border-radius: 4px; background: #fff;}' +
                                 '.fm-y-label{font-size:11px;color:#666;writing-mode:vertical-rl;transform:rotate(180deg);align-self:center;margin-right:5px; font-weight: bold;}' +
                                 '.fm-chart-wrap{display:flex;align-items:flex-end;justify-content:flex-start;gap:2px;min-height:260px;padding:10px 0 85px; border-bottom:1px solid #ccc; flex:1; overflow-x: auto; scroll-behavior: smooth;}' +
                                 '.fm-bar-cell{display:flex;flex-direction:column;align-items:center;flex:0 0 28px; position: relative;}' +
-                                '.fm-bar-val{font-size:11px;font-weight:bold;color:#337ab7;margin-bottom:4px;}' +
-                                '.fm-bar{width:24px;background:#337ab7;border-radius:3px 3px 0 0;min-height:2px;-webkit-print-color-adjust:exact;print-color-adjust:exact; transition: height 0.3s ease;}' +
+                                '.fm-bar-val{font-size:11px;font-weight:bold;margin-bottom:4px;}' +
+                                '.fm-bar{width:24px;border-radius:3px 3px 0 0;min-height:2px;opacity:.55;filter:saturate(.65) brightness(.85);-webkit-print-color-adjust:exact;print-color-adjust:exact; transition: height 0.3s ease;}' +
                                 '.fm-bar-label{font-size:10px; position: absolute; top: 100%; margin-top: 8px; left: 50%; transform: rotate(90deg); transform-origin: left center; white-space: nowrap; color: #666; font-weight: bold;}' +
                                 '</style></head><body>' +
                                 '<div class="no-print"><button type="button" onclick="window.print()">Imprimir</button> <button type="button" onclick="window.close()">Cerrar</button></div>' +
@@ -611,11 +812,12 @@ if (isset($_GET['manifiestosFactura'])) {
                                 '</div>' +
                                 '</div>' +
                                 '<div class="fm-chart-title">Gráfico estadístico: cantidad de manifiestos por fecha (eje Y: cantidad, eje X: fecha)</div>' +
+                                (legendHtml ? ('<div class="fm-turn-key">' + legendHtml + '</div>') : '') +
                                 '<div class="fm-chart-area"><span class="fm-y-label">Cant. manifiestos</span><div class="fm-chart-wrap">' + (barsHtml || '<p>No hay datos de manifiestos.</p>') + '</div></div>' +
                                 '</body></html>';
-                           // var w = window.open('', 'ChartFactura' + vetCod, 'width=800,height=500,scrollbars=yes,resizable=yes');
+                            // var w = window.open('', 'ChartFactura' + vetCod, 'width=800,height=500,scrollbars=yes,resizable=yes');
                             var w = window.open('', 'ChartFactura' + vetCod, 'left=0,top=0,width=' + (screen.availWidth || screen.width) + ',height=' + (screen.availHeight || screen.height) + ',scrollbars=yes,resizable=yes');
-                            
+
                             if (w) {
                                 w.document.write(doc);
                                 w.document.close();
@@ -637,6 +839,10 @@ if (isset($_GET['manifiestosFactura'])) {
             });
 
             $('#btnImprimirReporte').on('click', function() {
+                var $btn = $(this);
+                if ($btn.data('printing')) return;
+                $btn.data('printing', true).prop('disabled', true).addClass('disabled');
+
                 var q = $.param({
                     reporte: 1,
                     Pla_Cod_Usuario: $('#Pla_Cod_Usuario').val() || '',
@@ -644,7 +850,40 @@ if (isset($_GET['manifiestosFactura'])) {
                     Fec_Ini: $('#Fec_Ini').val() || '',
                     Fec_Fin: $('#Fec_Fin').val() || ''
                 });
-                window.open('man_fac_man.php?' + q, 'ReporteFacturasManifiestos', 'width=900,height=600,scrollbars=yes,resizable=yes');
+                // Sin abrir otra ventana: iframe oculto + impresión (Guardar como PDF / imprimir)
+                var iframe = document.createElement('iframe');
+                iframe.style.position = 'fixed';
+                iframe.style.right = '0';
+                iframe.style.bottom = '0';
+                iframe.style.width = '0';
+                iframe.style.height = '0';
+                iframe.style.border = '0';
+                iframe.style.visibility = 'hidden';
+                document.body.appendChild(iframe);
+
+                var unlock = function() {
+                    $btn.data('printing', false).prop('disabled', false).removeClass('disabled');
+                };
+
+                var cleanup = function() {
+                    try { document.body.removeChild(iframe); } catch (e) {}
+                    unlock();
+                };
+
+                iframe.onload = function() {
+                    try { iframe.contentWindow.onafterprint = cleanup; } catch (e) {}
+                    setTimeout(function() {
+                        try { iframe.contentWindow.focus(); } catch (e) {}
+                        try { iframe.contentWindow.print(); } catch (e) {}
+                        setTimeout(cleanup, 1500);
+                    }, 150);
+                };
+
+                iframe.onerror = function() {
+                    cleanup();
+                };
+
+                iframe.src = 'man_fac_man.php?' + q;
             });
 
             $('#btnExportarExcel').on('click', function() {
@@ -732,9 +971,14 @@ if (isset($_GET['manifiestosFactura'])) {
             }, {
                 title: 'Planta',
                 text: 'search',
-                options: [
-                    { label: '&nbsp;&nbsp;Nombre planta / Cliente&nbsp;&nbsp;', value: 'd' },
-                    { label: '&nbsp;&nbsp;Cédula/R.U.C&nbsp;&nbsp;', value: 'c' }
+                options: [{
+                        label: '&nbsp;&nbsp;Nombre planta / Cliente&nbsp;&nbsp;',
+                        value: 'd'
+                    },
+                    {
+                        label: '&nbsp;&nbsp;Cédula/R.U.C&nbsp;&nbsp;',
+                        value: 'c'
+                    }
                 ]
             });
 
@@ -774,6 +1018,19 @@ if (isset($_GET['manifiestosFactura'])) {
                         hidden: true
                     },
                     {
+                        name: 'num',
+                        label: 'Nro',
+                        hidden: false,
+                        width: 40,
+                        align: 'center',
+                        formatter: function(cellvalue, options, rowObject) {
+                            // options.rowId starts from 1 with local data, so display as is.
+                            // If you want to show 1-based index regardless of sort/filter:
+                            return options.rowId;
+                        }
+                    },
+
+                    {
                         name: 'Man_Num',
                         label: 'Nº Man',
                         width: 50,
@@ -809,7 +1066,9 @@ if (isset($_GET['manifiestosFactura'])) {
                         width: 70,
                         align: 'right',
                         formatter: 'number',
-                        formatoptions: { decimalPlaces: 2 }
+                        formatoptions: {
+                            decimalPlaces: 2
+                        }
                     },
                     {
                         name: 'Man_Pun',
@@ -849,15 +1108,15 @@ if (isset($_GET['manifiestosFactura'])) {
             $('#btnExportarExcelMan').on('click', function() {
                 var rows = window.currentManifestRows;
                 if (!rows || rows.length === 0) return alert('No hay datos para exportar');
-                
+
                 var vetNum = window.currentVetNum;
                 var cliente = window.currentCliente;
                 var planta = window.currentPlanta;
                 var fecha = window.currentFecha;
-                
+
                 var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
-                html += '<head><meta http-equiv="Content-type" content="text/html;charset=utf-8" /></head><body>';
-                
+                html += '<head><meta http-equiv="Content-type" content="text/html;charset=utf-8" /><style>table td,table th{padding:3px 6px;font-size:11px;line-height:1.35;}</style></head><body>';
+
                 // Tabla de resumen/encabezado
                 html += '<table>';
                 html += '<tr><td colspan="2"><strong>Reporte de Manifiestos</strong></td></tr>';
@@ -868,10 +1127,11 @@ if (isset($_GET['manifiestosFactura'])) {
                 html += '<tr><td><strong>Cant. Manifiestos:</strong></td><td>' + rows.length + '</td></tr>';
                 html += '<tr><td></td></tr>';
                 html += '</table>';
-                
+
                 // Tabla de detalles con bordes
                 html += '<table border="1">';
                 html += '<tr>';
+                html += '<th style="background-color: #eee;">#</th>';
                 html += '<th style="background-color: #eee;">Nº Manifiesto</th>';
                 html += '<th style="background-color: #eee;">Fecha</th>';
                 html += '<th style="background-color: #eee;">Planta</th>';
@@ -880,11 +1140,17 @@ if (isset($_GET['manifiestosFactura'])) {
                 html += '<th style="background-color: #eee;">P.Unit.</th>';
                 html += '<th style="background-color: #eee;">Total</th>';
                 html += '</tr>';
-                
-                var sPes = 0, sTot = 0;
-                rows.forEach(function(r) {
+
+                var sPes = 0,
+                    sTot = 0;
+                rows.forEach(function(r, i) {
                     html += '<tr>';
-                    var manNumDisplay = (r.Pla_Cod && r.Man_Num !== undefined && r.Man_Num !== '') ? (function() { var n = String(r.Man_Num); while (n.length < 4) n = '0' + n; return 'M' + r.Pla_Cod + '-' + n; })() : (r.Man_Num || '');
+                    var manNumDisplay = (r.Pla_Cod && r.Man_Num !== undefined && r.Man_Num !== '') ? (function() {
+                        var n = String(r.Man_Num);
+                        while (n.length < 4) n = '0' + n;
+                        return 'M' + r.Pla_Cod + '-' + n;
+                    })() : (r.Man_Num || '');
+                    html += '<td align="center">' + (i + 1) + '</td>';
                     html += '<td>' + manNumDisplay + '</td>';
                     html += '<td>' + r.Man_Fes + '</td>';
                     html += '<td>' + (r.Pla_Nom || '') + '</td>';
@@ -896,16 +1162,16 @@ if (isset($_GET['manifiestosFactura'])) {
                     sPes += parseFloat(r.Man_Pes) || 0;
                     sTot += parseFloat(r.total) || 0;
                 });
-                
+
                 // Fila de totales (sPes ya en toneladas)
                 html += '<tr>';
-                html += '<td colspan="4" style="background-color: #f9f9f9;"><strong>TOTALES</strong></td>';
+                html += '<td colspan="5" style="background-color: #f9f9f9;"><strong>TOTALES</strong></td>';
                 html += '<td align="right" style="background-color: #f9f9f9;"><strong>' + sPes.toFixed(2) + '</strong></td>';
                 html += '<td style="background-color: #f9f9f9;"></td>';
                 html += '<td align="right" style="background-color: #f9f9f9;"><strong>' + sTot.toFixed(2) + '</strong></td>';
                 html += '</tr>';
                 html += '</table></body></html>';
-                
+
                 var blob = new Blob([html], {
                     type: 'application/vnd.ms-excel;charset=utf-8;'
                 });
@@ -920,36 +1186,148 @@ if (isset($_GET['manifiestosFactura'])) {
             });
 
             $('#btnExportarPDFMan').on('click', function() {
+                var $btn = $(this);
+                if ($btn.data('printing')) return;
                 var rows = window.currentManifestRows;
                 if (!rows || rows.length === 0) return alert('No hay datos para imprimir');
+                $btn.data('printing', true).prop('disabled', true).addClass('disabled');
                 var vetNum = window.currentVetNum;
                 var cliente = window.currentCliente;
                 var planta = window.currentPlanta;
                 var fecha = window.currentFecha;
-                var win = window.open('', '_blank');
-                var html = '<html><head><title>Manifiestos - ' + vetNum + '</title>';
-                html += '<style>body{font-family:sans-serif;padding:20px;} table{width:100%;border-collapse:collapse;margin-top:20px;} th,td{border:1px solid #ccc;padding:8px;text-align:left;font-size:12px;} th{background:#eee;} .header{margin-bottom:20px;} .total{font-weight:bold;}</style></head><body>';
-                html += '<div class="header"><h3>Reporte de Manifiestos</h3>';
-                html += '<div><strong>Factura:</strong> ' + vetNum + '</div>';
-                html += '<div><strong>Fecha Factura:</strong> ' + fecha + '</div>';
-                html += '<div><strong>Cliente:</strong> ' + cliente + '</div>';
-                html += '<div><strong>Planta:</strong> ' + planta + '</div>';
-                html += '<div><strong>Cant. Manifiestos:</strong> ' + rows.length + '</div></div>';
-                html += '<table><thead><tr><th>Nº Man</th><th>Fecha</th><th>Planta</th><th>Peso(Tn)</th><th>P.Unit</th><th>Total</th></tr></thead><tbody>';
+
+                function escPdf(s) {
+                    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                }
+
+                var empresa = (typeof MAN_FAC_EMPRESA !== 'undefined' && MAN_FAC_EMPRESA) ? String(MAN_FAC_EMPRESA) : 'Ecoparmining';
+                var logoSrc = (typeof MAN_FAC_LOGO !== 'undefined' && MAN_FAC_LOGO) ? String(MAN_FAC_LOGO) : '';
+
+                var html = '<html><head><meta charset="UTF-8"><title>' + escPdf(empresa) + ' — Manifiestos ' + escPdf(vetNum) + '</title>';
+                html += '<style>';
+                html += '*{box-sizing:border-box;}';
+                html += 'body{margin:0;padding:14px 18px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:13px;color:#1e293b;background:#f1f5f9;line-height:1.45;-webkit-print-color-adjust:exact;print-color-adjust:exact;}';
+                html += '.report-wrap{max-width:100%;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 1px 3px rgba(15,23,42,.06);overflow:hidden;}';
+                // Encabezado más compacto (menos alto)
+                html += '.report-header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;padding:10px 12px;background:#fff;border-bottom:1px solid #e2e8f0;}';
+                html += '.report-header .brand{flex:1;min-width:200px;padding-left:10px;border-left:3px solid #0f766e;}';
+                html += '.report-header .brand h1{margin:0;font-size:1.1rem;font-weight:750;letter-spacing:-0.01em;color:#0f172a;line-height:1.1;}';
+                html += '.report-header .brand .doc-type{margin:4px 0 0;font-size:0.62rem;font-weight:650;text-transform:uppercase;letter-spacing:0.12em;color:#64748b;}';
+                html += '.report-header .logo-wrap{flex-shrink:0;display:flex;align-items:center;justify-content:flex-end;min-width:140px;}';
+                // Logo sin marco y un poco más grande
+                html += '.report-header .logo-frame{display:inline-flex;align-items:center;justify-content:center;padding:0;background:transparent;border:none;border-radius:0;box-shadow:none;}';
+                html += '.report-header .logo-frame img{display:block;max-height:72px;max-width:200px;width:auto;height:auto;object-fit:contain;}';
+                html += '.doc-meta{padding:16px 22px 8px;background:#fff;}';
+                html += '.section-title{margin:0 0 10px;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#64748b;}';
+                html += 'table.meta-table{width:100%;border-collapse:collapse;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;font-size:12.5px;}';
+                html += 'table.meta-table th,table.meta-table td{padding:3px 5px;border:1px solid #e2e8f0;vertical-align:top;}';
+                html += 'table.meta-table th{width:22%;background:#f8fafc;color:#475569;font-weight:600;text-align:left;white-space:nowrap;}';
+                html += 'table.meta-table td{background:#fff;color:#0f172a;font-weight:500;}';
+                html += 'table.meta-table tr:nth-child(even) th{background:#f1f5f9;}';
+                html += 'table.meta-table tr:nth-child(even) td{background:#fafbfc;}';
+                html += '.table-block{padding:8px 22px 20px;background:#fff;}';
+                // Forzar que los anchos definidos por columna se respeten
+                html += 'table.data-table{width:100%;border-collapse:collapse;margin:0;font-size:11.5px;table-layout:fixed;}';
+                html += 'table.data-table caption{caption-side:top;text-align:left;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;padding:14px 0 8px;}';
+                html += 'table.data-table th,table.data-table td{border:1px solid #e2e8f0;padding:2px 4px;text-align:left;vertical-align:middle;overflow:hidden;text-overflow:ellipsis;}';
+                html += 'table.data-table thead th{background:#fff;color:#0f172a;font-weight:700;font-size:11px;border-color:#e2e8f0;text-align:center;}';
+                // Evitar que el encabezado se vea como "Pes..." / "P.u..." / "T..."
+                html += 'table.data-table thead th{overflow:visible;text-overflow:clip;white-space:nowrap;font-size:10.5px;padding:2px 2px;}';
+                html += 'table.data-table tbody tr:nth-child(even){background:#f8fafc;}';
+                html += 'table.data-table tbody td.numeric{text-align:right;font-variant-numeric:tabular-nums;}';
+                // Centrar valores en columnas: Peso (Tn), P. unit., Total (sobrescribe .numeric)
+                html += 'table.data-table tbody td:nth-child(5),table.data-table tbody td:nth-child(6),table.data-table tbody td:nth-child(7){text-align:center !important;}';
+                // Columnas de identificación más angostas: Nº Man, Fecha
+                html += 'table.data-table th:nth-child(1),table.data-table td:nth-child(1){width:45px;white-space:nowrap;}';  // #
+                html += 'table.data-table th:nth-child(2),table.data-table td:nth-child(2){width:70px;white-space:nowrap;}';  // Nº Man
+                html += 'table.data-table th:nth-child(3),table.data-table td:nth-child(3){width:120px;white-space:nowrap;}';  // Fecha
+                // Columnas numéricas más angostas: Peso(Tn), P.Unit, Total
+                // (Los anchos muy pequeños hacían que el encabezado se corte)
+                html += 'table.data-table th:nth-child(5),table.data-table td:nth-child(5){width:70px;white-space:nowrap;}';  // Peso (Tn)
+                html += 'table.data-table th:nth-child(6),table.data-table td:nth-child(6){width:70px;white-space:nowrap;}';  // P. unit.
+                // Hacer más ancha la columna Total para que no se corte la suma
+                html += 'table.data-table th:nth-child(7),table.data-table td:nth-child(7){width:70px;white-space:nowrap;}';  // Total
+                html += 'table.data-table tr.total-row td{background:#f1f5f9;font-weight:700;border-color:#cbd5e1;color:#0f172a;overflow:visible;text-overflow:clip;}';
+                html += 'table.data-table tr.total-row td.numeric{text-align:right !important;}';
+                // Márgenes de impresión más reducidos (PDF)
+                // @page ayuda a reducir el margen real al “Guardar como PDF”.
+                // Dejar margen suficiente para que el navegador dibuje su pie (numeración).
+                // Evitamos márgenes “ultra mínimos” que pueden recortar el footer del navegador.
+                // En pantalla ocultar HTML (solo impresión)
+                html += '#printArea{display:none;}@media print{#printArea{display:block;}body{background:#fff;padding:0;}.report-wrap{border:none;box-shadow:none;border-radius:0;}.report-header{box-shadow:none;-webkit-print-color-adjust:exact;print-color-adjust:exact;}table.data-table thead th{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}@page{margin:10mm;}';
+                html += '</style></head><body>';
+
+                html += '<div id="printArea"><div class="report-wrap">';
+                html += '<header class="report-header">';
+                html += '<div class="brand"><h1>' + escPdf(empresa) + '</h1><p class="doc-type">Reporte de manifiestos</p></div>';
+                if (logoSrc) {
+                    html += '<div class="logo-wrap"><div class="logo-frame"><img src="' + escPdf(logoSrc) + '" alt="' + escPdf(empresa) + '"></div></div>';
+                }
+                html += '</header>';
+
+                html += '<section class="doc-meta">';
+                html += '<h2 class="section-title">Datos del documento</h2>';
+                html += '<table class="meta-table" role="presentation">';
+                html += '<tr><th>No. factura</th><td>' + escPdf(vetNum) + '</td></tr>';
+                html += '<tr><th>Fecha factura</th><td>' + escPdf(fecha) + '</td></tr>';
+                html += '<tr><th>Cliente</th><td>' + escPdf(cliente) + '</td></tr>';
+                html += '<tr><th>Planta</th><td>' + escPdf(planta) + '</td></tr>';
+                html += '<tr><th>Cant. manifiestos</th><td>' + escPdf(String(rows.length)) + '</td></tr>';
+                html += '</table></section>';
+
+                html += '<div class="table-block">';
+                html += '<table class="data-table"><caption>Detalle de manifiestos</caption><thead><tr><th>#</th><th>Nº Man</th><th>Fecha</th><th>Planta</th><th>Peso (Tn)</th><th>P. unit.</th><th>Total</th></tr></thead><tbody>';
                 var sPes = 0,
                     sTot = 0;
-                rows.forEach(function(r) {
-                    var manNumD = (r.Pla_Cod && r.Man_Num !== undefined && r.Man_Num !== '') ? (function() { var n = String(r.Man_Num); while (n.length < 4) n = '0' + n; return 'M' + r.Pla_Cod + '-' + n; })() : (r.Man_Num || '');
-                    html += '<tr><td>' + manNumD + '</td><td>' + r.Man_Fes + '</td><td>' + (r.Pla_Nom || '') + '</td><td align="right">' + (parseFloat(r.Man_Pes).toFixed(2)) + '</td><td align="right">' + r.Man_Pun + '</td><td align="right">' + r.total + '</td></tr>';
+                rows.forEach(function(r, i) {
+                    var manNumD = (r.Pla_Cod && r.Man_Num !== undefined && r.Man_Num !== '') ? (function() {
+                        var n = String(r.Man_Num);
+                        while (n.length < 4) n = '0' + n;
+                        return 'M' + r.Pla_Cod + '-' + n;
+                    })() : (r.Man_Num || '');
+                    html += '<tr><td>' + escPdf(String(i + 1)) + '</td><td>' + escPdf(manNumD) + '</td><td>' + escPdf(r.Man_Fes) + '</td><td>' + escPdf(r.Pla_Nom || '') + '</td><td class="numeric">' + (parseFloat(r.Man_Pes).toFixed(2)) + '</td><td class="numeric">' + escPdf(String(r.Man_Pun != null ? r.Man_Pun : '')) + '</td><td class="numeric">' + escPdf(String(r.total != null ? r.total : '')) + '</td></tr>';
                     sPes += parseFloat(r.Man_Pes) || 0;
                     sTot += parseFloat(r.total) || 0;
                 });
-                html += '<tr class="total"><td colspan="3">TOTALES</td><td align="right">' + sPes.toFixed(2) + '</td><td></td><td align="right">' + sTot.toFixed(2) + '</td></tr>';
-                html += '</tbody></table>';
-                html += '<' + 'script>window.onload = function() { window.print(); window.close(); };<' + '/script></body></html>';
-                win.document.write(html);
-                win.document.close();
+                html += '<tr class="total-row"><td colspan="4">TOTALES</td><td class="numeric">' + sPes.toFixed(2) + '</td><td></td><td class="numeric">' + sTot.toFixed(2) + '</td></tr>';
+                html += '</tbody></table></div></div>';
+                html += '</div>'; // #printArea
+                html += '</body></html>';
+
+                // Imprimir sin abrir otra ventana/pestaña: usar iframe oculto
+                var iframe = document.createElement('iframe');
+                iframe.style.position = 'fixed';
+                iframe.style.right = '0';
+                iframe.style.bottom = '0';
+                iframe.style.width = '0';
+                iframe.style.height = '0';
+                iframe.style.border = '0';
+                iframe.style.visibility = 'hidden';
+                document.body.appendChild(iframe);
+
+                var unlock = function() {
+                    $btn.data('printing', false).prop('disabled', false).removeClass('disabled');
+                };
+
+                var doc = iframe.contentWindow.document;
+                doc.open();
+                doc.write(html);
+                doc.close();
+
+                var cleanup = function() {
+                    try { document.body.removeChild(iframe); } catch (e) {}
+                    unlock();
+                };
+
+                // afterprint no siempre dispara en iframe según navegador; dejar fallback
+                try { iframe.contentWindow.onafterprint = cleanup; } catch (e) {}
+                setTimeout(function() {
+                    try { iframe.contentWindow.focus(); } catch (e) {}
+                    try { iframe.contentWindow.print(); } catch (e) {}
+                    setTimeout(cleanup, 1500);
+                }, 150);
             });
+
         });
     </script>
 </body>
