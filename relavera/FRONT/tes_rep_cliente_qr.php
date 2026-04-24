@@ -21,6 +21,7 @@ $manifiesto = null;
 if ($Man_Cod != '') {
     // Consulta 11: obtiene datos de cliente-persona por Man_Cod
     $manifiesto = $obBD_con1->getRowConsulta('manifiesto.selectWhere', array('where' => array('manifiesto.Man_Cod' => $Man_Cod)), $obBD_conexion, true);
+    $obBD_con1->utf8_change_param($manifiesto);
     $grupo_celda = $obBD_con1->getRowConsulta('manifiesto_celdas.selectWhere', array('where' => array('Cel_Tip' => 'G','Cel_Cod' => $manifiesto['Cel_Rec'])), $obBD_conexion);
 }
 
