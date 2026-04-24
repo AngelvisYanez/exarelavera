@@ -114,6 +114,7 @@ function sentencias_estado_cuenta($id, $Par_Sql) {
                         '' as Estado,
                         '' as Responsable,
                         CONCAT('SALDO AL ', DATE_FORMAT(DATE_SUB('$Fec_Ini', INTERVAL 1 DAY), '%d'), ', de ', ELT(MONTH(DATE_SUB('$Fec_Ini', INTERVAL 1 DAY)), 'Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'), ', ', DATE_FORMAT(DATE_SUB('$Fec_Ini', INTERVAL 1 DAY), '%Y')) as Detalle,
+                        0 as CantViajes,
                         DATE_SUB('$Fec_Ini', INTERVAL 1 SECOND) as FechaOrden,
                         '' as codigoAnti,
                         (
@@ -148,6 +149,7 @@ function sentencias_estado_cuenta($id, $Par_Sql) {
                         ma.Ama_Tip as Estado,
                         CONCAT(pu.Prs_Nom, ' ', pu.Prs_Ape) as Responsable,
                         CONCAT('Anticipo - ', IFNULL(ma.Ama_Obs, '')) as Detalle,
+                        0 as CantViajes,
                         ma.Ama_Fec as FechaOrden,
                         CONCAT(ta.Tia_Abr, '-', MONTH(c.Com_Fec), '-', c.Com_Num) as codigoAnti,
                         0 as Saldo_Inicial_Hidden
@@ -177,6 +179,7 @@ function sentencias_estado_cuenta($id, $Par_Sql) {
                         m.Man_Tip as Estado,
                         '' as Responsable,
                         CONCAT('Factura Nº ', IFNULL(v.Vet_Num, ''), ' - Fec: ', IFNULL(ca.Caj_Fec, '')) as Detalle,
+                        0 as CantViajes,
                         m.Man_Fec as FechaOrden,
                         '' as codigoAnti,
                         0 as Saldo_Inicial_Hidden
@@ -189,6 +192,117 @@ function sentencias_estado_cuenta($id, $Par_Sql) {
                         $wherefecha_m
                         $where_pla_m)
 
+                    ORDER BY FechaOrden ASC;";
+            return $sql;
+
+        case 18:
+            // Detalle optimizado para Consolidado (agrupa consumos por comprobante/factura)
+            $Cli_Cod = addslashes($Par_Sql['Cli_Cod']);
+            $Pla_Cod = isset($Par_Sql['Pla_Cod']) ? addslashes($Par_Sql['Pla_Cod']) : '';
+            $Fec_Ini = isset($Par_Sql['Fec_Ini']) ? addslashes($Par_Sql['Fec_Ini']) : '';
+            $Fec_Fin = isset($Par_Sql['Fec_Fin']) ? addslashes($Par_Sql['Fec_Fin']) : '';
+
+            $wherefecha_ma = '';
+            $wherefecha_m = '';
+            if ($Fec_Ini !== '' && $Fec_Fin !== '') {
+                $wherefecha_ma = " AND ma.Ama_Fec BETWEEN '$Fec_Ini' AND '$Fec_Fin'";
+                $wherefecha_m = " AND m.Man_Fec BETWEEN '$Fec_Ini' AND '$Fec_Fin'";
+            }
+
+            $where_pla_ma = '';
+            $where_pla_m = '';
+            if ($Pla_Cod !== '') {
+                $where_pla_ma = " AND ma.Pla_Cod = '$Pla_Cod'";
+                $where_pla_m = " AND m.Pla_Cod = '$Pla_Cod'";
+            }
+
+            $where_pla_ma_prev = $where_pla_ma;
+            $where_pla_m_prev = $where_pla_m;
+
+            $sql = "(SELECT
+                        0 as Ama_Cod,
+                        '$Fec_Ini' as Fecha,
+                        '' as Documento,
+                        'Saldo Inicial' as FormaPago,
+                        '' as CuentaBancaria,
+                        0 as Valor,
+                        0 as Abono,
+                        '' as Estado,
+                        '' as Responsable,
+                        CONCAT('SALDO AL ', DATE_FORMAT(DATE_SUB('$Fec_Ini', INTERVAL 1 DAY), '%d'), ', de ', ELT(MONTH(DATE_SUB('$Fec_Ini', INTERVAL 1 DAY)), 'Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'), ', ', DATE_FORMAT(DATE_SUB('$Fec_Ini', INTERVAL 1 DAY), '%Y')) as Detalle,
+                        0 as CantViajes,
+                        DATE_SUB('$Fec_Ini', INTERVAL 1 SECOND) as FechaOrden,
+                        '' as codigoAnti,
+                        (
+                            COALESCE((SELECT SUM(ma.Ama_Val)
+                                      FROM manifiesto_anticipo ma
+                                      WHERE ma.Cli_Cod = '$Cli_Cod'
+                                        AND ma.Ama_Est = 'A'
+                                        AND ma.Ama_Fec < '$Fec_Ini'
+                                        $where_pla_ma_prev), 0)
+                            -
+                            COALESCE((SELECT SUM((m.Man_Pes / 1000) * IFNULL(m.Man_Pun, 0))
+                                      FROM manifiesto m
+                                      WHERE m.Cli_Cod = '$Cli_Cod'
+                                        AND m.Man_Est = 'A'
+                                        AND m.Man_Tes NOT IN ('R')
+                                        AND m.Man_Fec < '$Fec_Ini'
+                                        $where_pla_m_prev), 0)
+                        ) as Saldo_Inicial_Hidden
+                    FROM DUAL)
+                    UNION ALL
+                    (SELECT
+                        ma.Ama_Cod,
+                        ma.Ama_Fec as Fecha,
+                        ma.Ama_Doc as Documento,
+                        tp.Pag_Des as FormaPago,
+                        b.Ban_Cue as CuentaBancaria,
+                        ma.Ama_Val as Valor,
+                        0 as Abono,
+                        ma.Ama_Tip as Estado,
+                        CONCAT(pu.Prs_Nom, ' ', pu.Prs_Ape) as Responsable,
+                        CONCAT('Anticipo - ', IFNULL(ma.Ama_Obs, '')) as Detalle,
+                        0 as CantViajes,
+                        ma.Ama_Fec as FechaOrden,
+                        CONCAT(ta.Tia_Abr, '-', MONTH(c.Com_Fec), '-', c.Com_Num) as codigoAnti,
+                        0 as Saldo_Inicial_Hidden
+                    FROM manifiesto_anticipo ma
+                        LEFT JOIN banco b ON ma.Ban_Cod = b.Ban_Cod
+                        LEFT JOIN tipos_pago tp ON ma.Ama_Tde = tp.Pag_Cod
+                        LEFT JOIN usuarios u ON ma.Usu_Cod = u.Usu_Cod
+                        LEFT JOIN persona AS pu ON u.Prs_Cod = pu.Prs_Cod
+                        LEFT JOIN anticipos_clientes ac ON ac.Ama_Cod = ma.Ama_Cod AND ac.Ant_Est = 'A'
+                        LEFT JOIN comprobantes c ON c.Com_Cod = ac.Com_Cod
+                        LEFT JOIN tipo_asien ta ON ta.Tia_Cod = c.Tia_Cod
+                    WHERE ma.Cli_Cod = '$Cli_Cod'
+                      AND ma.Ama_Est = 'A'
+                      $wherefecha_ma
+                      $where_pla_ma)
+                    UNION ALL
+                    (SELECT
+                        MIN(m.Man_Cod) as Ama_Cod,
+                        MAX(m.Man_Fec) as Fecha,
+                        IFNULL(v.Vet_Num, 'S/N') as Documento,
+                        'Comprobante' as FormaPago,
+                        CONCAT('ABONO FACTS. /', IFNULL(v.Vet_Num, 'S/N')) as CuentaBancaria,
+                        0 as Valor,
+                        SUM((m.Man_Pes / 1000) * IFNULL(m.Man_Pun, 0)) as Abono,
+                        'C' as Estado,
+                        '' as Responsable,
+                        CONCAT('Comprobante: ', IFNULL(v.Vet_Num, 'S/N')) as Detalle,
+                        COUNT(*) as CantViajes,
+                        MAX(m.Man_Fec) as FechaOrden,
+                        '' as codigoAnti,
+                        0 as Saldo_Inicial_Hidden
+                    FROM manifiesto m
+                        LEFT JOIN ventas v ON m.Vet_Cod = v.Vet_Cod
+                    WHERE m.Cli_Cod = '$Cli_Cod'
+                      AND m.Man_Est = 'A'
+                      AND m.Man_Tes NOT IN ('R')
+                      AND m.Man_Tip = 'F'
+                      $wherefecha_m
+                      $where_pla_m
+                    GROUP BY IFNULL(v.Vet_Num, 'S/N'))
                     ORDER BY FechaOrden ASC;";
             return $sql;
 
@@ -251,44 +365,32 @@ function sentencias_estado_cuenta($id, $Par_Sql) {
                 $where_pla_m = " AND m.Pla_Cod = '$Pla_Cod'";
             }
 
-            // Subqueries for Saldo Inicial
-            // Ingresos < Fec_Ini
-            $sql_ing_ini = "SELECT COALESCE(SUM(ma.Ama_Val), 0) FROM manifiesto_anticipo ma WHERE ma.Cli_Cod = '$Cli_Cod' AND ma.Ama_Est = 'A' AND ma.Ama_Fec < '$Fec_Ini' $where_pla_ma";
-            // Egresos < Fec_Ini
-            $sql_egr_ini = "SELECT COALESCE(SUM((m.Man_Pes / 1000) * IFNULL(m.Man_Pun, 0)), 0) FROM manifiesto m WHERE m.Cli_Cod = '$Cli_Cod' AND m.Man_Est = 'A' AND m.Man_Tes NOT IN ('R') AND m.Man_Fec < '$Fec_Ini' $where_pla_m";
-
-            // Current Period Ranges
-            $where_date_ma = " AND ma.Ama_Fec BETWEEN '$Fec_Ini' AND '$Fec_Fin'";
-            $where_date_m = " AND m.Man_Fec BETWEEN '$Fec_Ini' AND '$Fec_Fin'";
-
-            $sql = "SELECT 
-                        (($sql_ing_ini) - ($sql_egr_ini)) as SaldoInicial,
-                        
-                        (SELECT COALESCE(SUM(ma.Ama_Val), 0)
+            $sql = "SELECT
+                        (IFNULL(maAgg.IngAntes, 0) - IFNULL(mAgg.EgrAntes, 0)) AS SaldoInicial,
+                        IFNULL(maAgg.Depositos, 0) AS Depositos,
+                        IFNULL(maAgg.Retenciones, 0) AS Retenciones,
+                        IFNULL(mAgg.ManifiestosFact, 0) AS ManifiestosFact,
+                        IFNULL(mAgg.ManifiestosPend, 0) AS ManifiestosPend
+                    FROM
+                        (SELECT
+                            SUM(CASE WHEN ma.Ama_Fec < '$Fec_Ini' THEN ma.Ama_Val ELSE 0 END) AS IngAntes,
+                            SUM(CASE WHEN ma.Ama_Fec BETWEEN '$Fec_Ini' AND '$Fec_Fin' AND (tp.Pag_Abr IN ('DEP','TRF') OR tp.Pag_Abr IS NULL) THEN ma.Ama_Val ELSE 0 END) AS Depositos,
+                            SUM(CASE WHEN ma.Ama_Fec BETWEEN '$Fec_Ini' AND '$Fec_Fin' AND tp.Pag_Abr = 'RET' THEN ma.Ama_Val ELSE 0 END) AS Retenciones
                         FROM manifiesto_anticipo ma
                         LEFT JOIN tipos_pago tp ON ma.Pag_Cod = tp.Pag_Cod
-                        WHERE ma.Cli_Cod = '$Cli_Cod' AND ma.Ama_Est = 'A'
-                            AND (tp.Pag_Abr IN ('DEP', 'TRF') OR tp.Pag_Abr IS NULL)
-                            $where_pla_ma $where_date_ma) as Depositos,
-                            
-                        (SELECT COALESCE(SUM(ma.Ama_Val), 0)
-                        FROM manifiesto_anticipo ma
-                        LEFT JOIN tipos_pago tp ON ma.Pag_Cod = tp.Pag_Cod
-                        WHERE ma.Cli_Cod = '$Cli_Cod' AND ma.Ama_Est = 'A'
-                            AND tp.Pag_Abr = 'RET'
-                            $where_pla_ma $where_date_ma) as Retenciones,
-                            
-                        (SELECT COALESCE(SUM((m.Man_Pes / 1000) * IFNULL(m.Man_Pun, 0)), 0)
+                        WHERE ma.Cli_Cod = '$Cli_Cod'
+                            AND ma.Ama_Est = 'A'
+                            $where_pla_ma) maAgg
+                    CROSS JOIN
+                        (SELECT
+                            SUM(CASE WHEN m.Man_Fec < '$Fec_Ini' THEN ((m.Man_Pes / 1000) * IFNULL(m.Man_Pun, 0)) ELSE 0 END) AS EgrAntes,
+                            SUM(CASE WHEN m.Man_Fec BETWEEN '$Fec_Ini' AND '$Fec_Fin' AND m.Man_Tip = 'F' THEN ((m.Man_Pes / 1000) * IFNULL(m.Man_Pun, 0)) ELSE 0 END) AS ManifiestosFact,
+                            SUM(CASE WHEN m.Man_Fec BETWEEN '$Fec_Ini' AND '$Fec_Fin' AND m.Man_Tip != 'F' THEN ((m.Man_Pes / 1000) * IFNULL(m.Man_Pun, 0)) ELSE 0 END) AS ManifiestosPend
                         FROM manifiesto m
-                        WHERE m.Cli_Cod = '$Cli_Cod' AND m.Man_Est = 'A' AND m.Man_Tes NOT IN ('R')
-                            AND m.Man_Tip = 'F'
-                            $where_pla_m $where_date_m) as ManifiestosFact,
-                            
-                        (SELECT COALESCE(SUM((m.Man_Pes / 1000) * IFNULL(m.Man_Pun, 0)), 0)
-                        FROM manifiesto m
-                        WHERE m.Cli_Cod = '$Cli_Cod' AND m.Man_Est = 'A' AND m.Man_Tes NOT IN ('R')
-                            AND m.Man_Tip != 'F'
-                            $where_pla_m $where_date_m) as ManifiestosPend;";
+                        WHERE m.Cli_Cod = '$Cli_Cod'
+                            AND m.Man_Est = 'A'
+                            AND m.Man_Tes NOT IN ('R')
+                            $where_pla_m) mAgg;";
             return $sql;
 
         case 6:
@@ -415,6 +517,147 @@ function sentencias_estado_cuenta($id, $Par_Sql) {
                     WHERE mp.Pla_Est = 'A'
                     GROUP BY mp.Pla_Cod, mp.Pla_Nom
                     ORDER BY mp.Pla_Nom;";
+            return $sql;
+
+        case 10:
+            // Misma lógica que el reporte grupal (caso 9), una sola planta
+            $Pla_Cod = isset($Par_Sql['Pla_Cod']) ? addslashes($Par_Sql['Pla_Cod']) : '';
+            $Fec_Ini = isset($Par_Sql['Fec_IniM']) && $Par_Sql['Fec_IniM'] != '' ? addslashes($Par_Sql['Fec_IniM']) : '2000-01-01';
+            $Fec_Fin = isset($Par_Sql['Fec_FinM']) && $Par_Sql['Fec_FinM'] != '' ? addslashes($Par_Sql['Fec_FinM']) : '2099-12-31';
+
+            $sql = "SELECT 
+                        mp.Pla_Cod,
+                        mp.Pla_Nom as Planta,
+                        (
+                            COALESCE((SELECT SUM(ma.Ama_Val) 
+                                        FROM manifiesto_anticipo ma 
+                                        WHERE ma.Pla_Cod = mp.Pla_Cod 
+                                        AND ma.Ama_Est = 'A' 
+                                        AND ma.Ama_Fec < '$Fec_Ini'), 0)
+                            -
+                            COALESCE((SELECT SUM((m.Man_Pes / 1000) * IFNULL(m.Man_Pun, 0)) 
+                                        FROM manifiesto m 
+                                        WHERE m.Pla_Cod = mp.Pla_Cod 
+                                        AND m.Man_Est = 'A' 
+                                        AND m.Man_Tes NOT IN ('R') 
+                                        AND m.Man_Fec < '$Fec_Ini'), 0)
+                        ) as Saldo_Inicial,
+                        COALESCE((SELECT SUM(ma.Ama_Val)
+                                    FROM manifiesto_anticipo ma
+                                    LEFT JOIN tipos_pago tp ON ma.Pag_Cod = tp.Pag_Cod
+                                    WHERE ma.Pla_Cod = mp.Pla_Cod 
+                                    AND ma.Ama_Est = 'A'
+                                    AND (tp.Pag_Abr IN ('DEP', 'TRF') OR tp.Pag_Abr IS NULL)
+                                    AND ma.Ama_Fec BETWEEN '$Fec_Ini' AND '$Fec_Fin'), 0) as Depositos,
+                        COALESCE((SELECT SUM(ma.Ama_Val)
+                                    FROM manifiesto_anticipo ma
+                                    LEFT JOIN tipos_pago tp ON ma.Pag_Cod = tp.Pag_Cod
+                                    WHERE ma.Pla_Cod = mp.Pla_Cod 
+                                    AND ma.Ama_Est = 'A'
+                                    AND tp.Pag_Abr = 'RET'
+                                    AND ma.Ama_Fec BETWEEN '$Fec_Ini' AND '$Fec_Fin'), 0) as Retenciones,
+                        COALESCE((SELECT SUM((m.Man_Pes / 1000) * IFNULL(m.Man_Pun, 0))
+                                    FROM manifiesto m
+                                    WHERE m.Pla_Cod = mp.Pla_Cod 
+                                    AND m.Man_Est = 'A' 
+                                    AND m.Man_Tes NOT IN ('R')
+                                    AND m.Man_Tip = 'F'
+                                    AND m.Man_Fec BETWEEN '$Fec_Ini' AND '$Fec_Fin'), 0) as Manifiestos_Fact,
+                        COALESCE((SELECT SUM((m.Man_Pes / 1000) * IFNULL(m.Man_Pun, 0))
+                                    FROM manifiesto m
+                                    WHERE m.Pla_Cod = mp.Pla_Cod 
+                                    AND m.Man_Est = 'A' 
+                                    AND m.Man_Tes NOT IN ('R')
+                                    AND m.Man_Tip != 'F'
+                                    AND m.Man_Fec BETWEEN '$Fec_Ini' AND '$Fec_Fin'), 0) as Manifiestos_Pend
+                    FROM manifiesto_plantas mp
+                    WHERE mp.Pla_Est = 'A'
+                        AND mp.Pla_Cod = '$Pla_Cod'
+                    LIMIT 1;";
+            return $sql;
+
+        case 11:
+            // Saldo "Anticipos (A)" como en Gestión de Manifiesto (MODELS/manifiesto_anticipo sqlByNumero 1)
+            $Pla_Cod = isset($Par_Sql['Pla_Cod']) ? addslashes($Par_Sql['Pla_Cod']) : '';
+            $sql = "SELECT 
+                            CAST(SUM(saldo) AS DECIMAL(10,2)) AS saldo
+                        FROM (
+                            SELECT
+                                CAST(
+                                    SUM(Ant_Val) 
+                                    - COALESCE((
+                                        SELECT SUM(Ddc_Val)
+                                        FROM det_ant_cccc 
+                                        WHERE det_ant_cccc.Ant_Cod = anticipos_clientes.Ant_Cod
+                                    ), 0)
+                                AS DECIMAL(10,2)) AS saldo
+                            FROM manifiesto_anticipo
+                            INNER JOIN anticipos_clientes 
+                                ON manifiesto_anticipo.Ama_Cod = anticipos_clientes.Ama_Cod
+                            WHERE manifiesto_anticipo.Pla_Cod = '$Pla_Cod'
+                            AND anticipos_clientes.Ant_Est IN ('A','U')
+                            GROUP BY anticipos_clientes.Ant_Cod
+                        ) AS tabla_saldos";
+            return $sql;
+
+        case 13:
+            // "Sin facturar (B)" como en man_alt_manifiesto (manifiestos activos sin Vet_Cod)
+            $Cli_Cod = isset($Par_Sql['Cli_Cod']) ? addslashes($Par_Sql['Cli_Cod']) : '';
+            $Pla_Cod = isset($Par_Sql['Pla_Cod']) ? addslashes($Par_Sql['Pla_Cod']) : '';
+            $Emp_Cod = isset($Par_Sql['Emp_Cod']) ? addslashes($Par_Sql['Emp_Cod']) : '';
+            $sql = "SELECT COALESCE(SUM(CAST(manifiesto.Man_Pes * (manifiesto.Man_Pun / 1000) AS DECIMAL(10,2))), 0) AS saldo
+                    FROM manifiesto
+                    INNER JOIN cliente ON cliente.Cli_Cod = manifiesto.Cli_Cod
+                    WHERE manifiesto.Cli_Cod = '$Cli_Cod'
+                    AND manifiesto.Man_Est = 'A'
+                    AND cliente.Emp_Cod = '$Emp_Cod'
+                    AND manifiesto.Pla_Cod = '$Pla_Cod'
+                    AND (manifiesto.Vet_Cod IS NULL OR manifiesto.Vet_Cod = 0)";
+            return $sql;
+
+        case 14:
+            // Perfiles con derecho a la pestaña Comparación (administradores / roles elevados)
+            $Usu_Cod = addslashes($Par_Sql['Usu_Cod']);
+            $sql = "SELECT COUNT(*) AS count
+                    FROM usuarperfi up
+                        INNER JOIN perfiles p ON up.Per_Cod = p.Per_Cod
+                    WHERE up.Usu_Cod = '$Usu_Cod'
+                    AND p.Per_Des IN ('Administrador de Sistemas', 'Admin_Oper', 'Gerente')";
+            return $sql;
+
+        case 15:
+            // Validar planta de la empresa (para comparación admin)
+            $Pla_Cod = isset($Par_Sql['Pla_Cod']) ? addslashes($Par_Sql['Pla_Cod']) : '';
+            $Emp_Cod = isset($Par_Sql['Emp_Cod']) ? addslashes($Par_Sql['Emp_Cod']) : '';
+            $sql = "SELECT mp.Pla_Cod, mp.Pla_Nom, mp.Cli_Cod
+                    FROM manifiesto_plantas mp
+                        INNER JOIN cliente c ON c.Cli_Cod = mp.Cli_Cod
+                    WHERE mp.Pla_Est = 'A'
+                        AND mp.Pla_Cod = '$Pla_Cod'
+                        AND c.Emp_Cod = '$Emp_Cod'
+                    LIMIT 1;";
+            return $sql;
+
+        case 17:
+            // Cantidad de manifiestos pendientes de facturar en el período (mismo criterio que ManifiestosPend, caso 5)
+            $Cli_Cod = isset($Par_Sql['Cli_Cod']) ? addslashes($Par_Sql['Cli_Cod']) : '';
+            $Pla_Cod = isset($Par_Sql['Pla_Cod']) ? addslashes($Par_Sql['Pla_Cod']) : '';
+            $Fec_Ini = isset($Par_Sql['Fec_Ini']) && $Par_Sql['Fec_Ini'] != '' ? addslashes($Par_Sql['Fec_Ini']) : '2000-01-01';
+            $Fec_Fin = isset($Par_Sql['Fec_Fin']) && $Par_Sql['Fec_Fin'] != '' ? addslashes($Par_Sql['Fec_Fin']) : '2099-12-31';
+            $where_pla_m = '';
+            if ($Pla_Cod !== '') {
+                $where_pla_m = " AND m.Pla_Cod = '$Pla_Cod'";
+            }
+            $sql = "SELECT 
+                        COUNT(CASE WHEN m.Man_Tip != 'F' THEN 1 END) AS ManifiestosPendCnt,
+                        MAX(CASE WHEN m.Man_Tip = 'F' THEN DATE(m.Man_Fec) END) AS UltFecFact,
+                        MAX(DATE(m.Man_Fec)) AS UltFecManGen
+                    FROM manifiesto m
+                    WHERE m.Cli_Cod = '$Cli_Cod'
+                        AND m.Man_Est = 'A'
+                        AND m.Man_Tes NOT IN ('R')
+                        AND m.Man_Fec BETWEEN '$Fec_Ini' AND '$Fec_Fin'
+                        $where_pla_m";
             return $sql;
     }
 }
