@@ -442,6 +442,17 @@ if (isset($_GET['manifiestosFactura'])) {
             });
             initialPostData.gridFacturasManifiestos = 1;
 
+             // Mismo endpoint que viewPdfVenta en fac_val_factura2.js (PDF desde XML / electrónico)
+            var FACT_PDF_URL = '../../facturacion/COMPONENTES/tesPdfElectronicos.php';
+
+            function escAttr(s) {
+                return String(s == null ? '' : s)
+                    .replace(/&/g, '&amp;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+            }
+
             $grid.jqGrid({
                 url: 'man_fac_man.php',
                 mtype: 'GET',
@@ -460,12 +471,18 @@ if (isset($_GET['manifiestosFactura'])) {
                         index: 'Vet_Num',
                         hidden: true
                     },
-                    {
+                     {
                         name: 'Vet_Num_Completo',
                         label: 'Nº Factura',
                         index: 'Vet_Num_Completo',
                         width: 120,
-                        align: 'center'
+                        align: 'center',
+                        formatter: function(cellvalue, options, rowObject) {
+                            var txt = (rowObject.Vet_Num_Completo != null && rowObject.Vet_Num_Completo !== '') ? String(rowObject.Vet_Num_Completo) : String(rowObject.Vet_Num || '');
+                            var cod = rowObject.Vet_Cod;
+                            if (!cod) return escAttr(txt);
+                            return '<span class="fact-pdf-link" style="color:#337ab7;cursor:pointer;text-decoration:underline;" title="Ver / imprimir PDF de la factura" data-vet-cod="' + escAttr(cod) + '">' + escAttr(txt) + '</span>';
+                        }
                     },
                     {
                         name: 'Pla_Nom',
@@ -595,6 +612,17 @@ if (isset($_GET['manifiestosFactura'])) {
                 userDataOnFooter: true,
                 loadComplete: function() {
                     var $g = $(this);
+                    // Click en Nº Factura: abrir PDF (mismo flujo que fac_mod_fac_ven_3.2.php / viewPdfVenta)
+                    $g.find('.fact-pdf-link').off('click').on('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        var vetCod = $(this).data('vet-cod');
+                        if (!vetCod) return;
+                        var url = FACT_PDF_URL + '?type=VENTAS&Doc_Cod=' + encodeURIComponent(vetCod);
+                        // Abrir en nueva pestaña (el visor PDF del navegador permite imprimir/guardar como PDF)
+                        window.open(url, '_blank');
+                    });
+
 
                     // Totales GLOBAL (sin paginación) con los filtros actuales
                     (function setFooterTotalsAll() {
