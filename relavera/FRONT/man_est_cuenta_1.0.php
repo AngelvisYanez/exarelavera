@@ -27,6 +27,8 @@ $cliente_manifiesto = $obBD_con1->getRowConsulta(7, array('Usu_Cod' => $Ses_Usu_
 /* Verificar perfil de usuario */
 $row_perfil = $obBD_con1->getRowConsulta(8, array('Usu_Cod' => $Ses_Usu_Cod), $obBD_conexion);
 $es_perfil_plantas = (isset($row_perfil['count']) && $row_perfil['count'] > 0);
+$row_admin_comp = $obBD_con1->getRowConsulta(14, array('Usu_Cod' => $Ses_Usu_Cod), $obBD_conexion);
+$puede_comparar_saldos = (isset($row_admin_comp['count']) && (int) $row_admin_comp['count'] > 0);
 
 
 // Cargar datos del grid principal
@@ -109,6 +111,63 @@ if(isset($_REQUEST['loadDetalleAjax'])){
     exit();
 }
 
+// Consolidado: manifiestos técnicos (misma consulta que man_tec_1.0) + resumen manifiestos pendientes (estado de cuenta)
+if (isset($_REQUEST['loadConsolidadoTecAjax'])) {
+    $cli = isset($_REQUEST['Cli_Cod']) ? trim((string) $_REQUEST['Cli_Cod']) : '';
+    $pla = isset($_REQUEST['Pla_Cod']) ? trim((string) $_REQUEST['Pla_Cod']) : '';
+    $fi = isset($_REQUEST['Fec_IniM']) ? trim((string) $_REQUEST['Fec_IniM']) : '';
+    $ff = isset($_REQUEST['Fec_FinM']) ? trim((string) $_REQUEST['Fec_FinM']) : '';
+
+    $resp = array('success' => false, 'rows' => array(), 'message' => '');
+    if ($cli === '') {
+        $resp['message'] = 'Seleccione una planta con cliente asociado.';
+        $obBD_con1->echoJson($resp);
+        exit();
+    }
+
+    $header_info = $obBD_con1->getRowConsulta(12, array('Cli_Cod' => $cli), $obBD_conexion);
+    $resumen = $obBD_con1->getRowConsulta(5, array(
+        'Cli_Cod' => $cli,
+        'Pla_Cod' => $pla,
+        'Fec_Ini' => $fi,
+        'Fec_Fin' => $ff,
+    ), $obBD_conexion);
+    $detalleEc = $obBD_con1->getArrayConsulta(18, array(
+        'Cli_Cod' => $cli,
+        'Pla_Cod' => $pla,
+        'Fec_Ini' => $fi,
+        'Fec_Fin' => $ff,
+        'Mes_Cod' => '00',
+    ), $obBD_conexion);
+    $rowC = $obBD_con1->getRowConsulta(17, array(
+        'Cli_Cod' => $cli,
+        'Pla_Cod' => $pla,
+        'Fec_Ini' => $fi,
+        'Fec_Fin' => $ff,
+    ), $obBD_conexion);
+
+    $resp['success'] = true;
+    $resp['rows'] = array(); // ya no se usa en render consolidado
+    $resp['detalle_ec'] = is_array($detalleEc) ? $detalleEc : array();
+    $resp['cliente'] = isset($header_info['Cliente']) ? $header_info['Cliente'] : '';
+    $resp['cliente_ruc'] = isset($header_info['Prs_Ced']) ? $header_info['Prs_Ced'] : '';
+    $resp['resumen'] = is_array($resumen) ? $resumen : array();
+    $resp['manif_pend_cnt'] = (is_array($rowC) && isset($rowC['ManifiestosPendCnt'])) ? (int) $rowC['ManifiestosPendCnt'] : 0;
+    $resp['ult_fec_fact'] = (is_array($rowC) && !empty($rowC['UltFecFact'])) ? $rowC['UltFecFact'] : '';
+    $resp['ult_fec_man_gen'] = (is_array($rowC) && !empty($rowC['UltFecManGen'])) ? $rowC['UltFecManGen'] : '';
+    $resp['manif_pend_monto'] = (is_array($resumen) && isset($resumen['ManifiestosPend'])) ? floatval($resumen['ManifiestosPend']) : 0;
+    $saldoInicial = (is_array($resumen) && isset($resumen['SaldoInicial'])) ? floatval($resumen['SaldoInicial']) : 0;
+    if (is_array($detalleEc) && count($detalleEc) > 0 && isset($detalleEc[0]['Saldo_Inicial_Hidden'])) {
+        $saldoInicial = floatval($detalleEc[0]['Saldo_Inicial_Hidden']);
+    }
+    $resp['saldo_inicial'] = $saldoInicial;
+    $resp['filtro'] = isset($_REQUEST['filtro']) ? trim((string)$_REQUEST['filtro']) : '';
+    $resp['search'] = isset($_REQUEST['search']) ? trim((string)$_REQUEST['search']) : '';
+    $resp['message'] = 'OK';
+    $obBD_con1->echoJson($resp);
+    exit();
+}
+
 // Buscar plantas
 if(isset($_REQUEST['loadPlantasAjax'])){
     $parms = array(
@@ -164,9 +223,149 @@ if (isset($_REQUEST['loadEstadoCuentaGrupalAjax'])) {
     exit();
 }
 
+// Comparación: saldo reporte grupal (período) vs saldo cabecera manifiesto (A - B) — solo administradores
+if (isset($_REQUEST['loadComparacionSaldosAjax'])) {
+    $resp = array('success' => false, 'message' => 'No autorizado.');
+    if (!$puede_comparar_saldos) {
+        $obBD_con1->echoJson($resp);
+        exit();
+    }
+    $empCod = isset($_SESSION['Ses_Emp_Cod']) ? $_SESSION['Ses_Emp_Cod'] : '';
+    $fecIni = isset($_REQUEST['Fec_IniM']) ? $_REQUEST['Fec_IniM'] : '';
+    $fecFin = isset($_REQUEST['Fec_FinM']) ? $_REQUEST['Fec_FinM'] : '';
+    $compararTodas = isset($_REQUEST['comparar_todas']) && (string) $_REQUEST['comparar_todas'] === '1';
+
+    if ($empCod === '') {
+        $resp['message'] = 'Falta empresa en sesión.';
+        $obBD_con1->echoJson($resp);
+        exit();
+    }
+
+    $filaComparacionPlanta = function ($plaCod, $cliCod) use ($obBD_con1, $obBD_conexion, $empCod, $fecIni, $fecFin) {
+        $parmsEc = array(
+            'Fec_IniM' => $fecIni,
+            'Fec_FinM' => $fecFin,
+            'Pla_Cod' => $plaCod,
+        );
+        $rowEc = $obBD_con1->getRowConsulta(10, $parmsEc, $obBD_conexion);
+        if (!$rowEc || !isset($rowEc['Pla_Cod'])) {
+            return null;
+        }
+
+        $rowAnt = $obBD_con1->getRowConsulta(11, array('Pla_Cod' => $plaCod), $obBD_conexion);
+        $rowSf = $obBD_con1->getRowConsulta(13, array(
+            'Cli_Cod' => $cliCod,
+            'Pla_Cod' => $plaCod,
+            'Emp_Cod' => $empCod,
+        ), $obBD_conexion);
+
+        $si = isset($rowEc['Saldo_Inicial']) ? floatval($rowEc['Saldo_Inicial']) : 0;
+        $dep = isset($rowEc['Depositos']) ? floatval($rowEc['Depositos']) : 0;
+        $ret = isset($rowEc['Retenciones']) ? floatval($rowEc['Retenciones']) : 0;
+        $mf = isset($rowEc['Manifiestos_Fact']) ? floatval($rowEc['Manifiestos_Fact']) : 0;
+        $mp = isset($rowEc['Manifiestos_Pend']) ? floatval($rowEc['Manifiestos_Pend']) : 0;
+        $saldo_ec = $si + $dep + $ret - $mf - $mp;
+
+        $anticipo = isset($rowAnt['saldo']) ? floatval($rowAnt['saldo']) : 0;
+        $sinFact = isset($rowSf['saldo']) ? floatval($rowSf['saldo']) : 0;
+        $saldo_cab = $anticipo - $sinFact;
+        $diferencia = $saldo_ec - $saldo_cab;
+
+        return array(
+            'pla_cod' => $plaCod,
+            'planta' => isset($rowEc['Planta']) ? $rowEc['Planta'] : '',
+            'saldo_estado_cuenta' => $saldo_ec,
+            'anticipo' => $anticipo,
+            'sin_facturar' => $sinFact,
+            'saldo_cabecera_manifiesto' => $saldo_cab,
+            'diferencia' => $diferencia,
+            'detalle_ec' => array(
+                'saldo_inicial' => $si,
+                'depositos' => $dep,
+                'retenciones' => $ret,
+                'manifiestos_fact' => $mf,
+                'manifiestos_pend' => $mp,
+            ),
+        );
+    };
+
+    if ($compararTodas) {
+        $lista = $obBD_con1->getArrayConsulta(6, array('search' => ''), $obBD_conexion);
+        if (!is_array($lista)) {
+            $lista = array();
+        }
+        $filas = array();
+        $plaYa = array();
+        foreach ($lista as $p) {
+            if (empty($p['Pla_Cod'])) {
+                continue;
+            }
+            $pcKey = (string) $p['Pla_Cod'];
+            if (isset($plaYa[$pcKey])) {
+                continue;
+            }
+            $plaYa[$pcKey] = true;
+            $rowPla = $obBD_con1->getRowConsulta(15, array('Pla_Cod' => $p['Pla_Cod'], 'Emp_Cod' => $empCod), $obBD_conexion);
+            if (!$rowPla || empty($rowPla['Cli_Cod'])) {
+                continue;
+            }
+            $una = $filaComparacionPlanta($rowPla['Pla_Cod'], $rowPla['Cli_Cod']);
+            if ($una !== null) {
+                $filas[] = $una;
+            }
+        }
+        usort($filas, function ($a, $b) {
+            return strcasecmp(isset($a['planta']) ? $a['planta'] : '', isset($b['planta']) ? $b['planta'] : '');
+        });
+        $resp = array(
+            'success' => true,
+            'modo' => 'todas',
+            'rows' => $filas,
+            'total' => count($filas),
+            'fec_ini' => $fecIni,
+            'fec_fin' => $fecFin,
+        );
+        $obBD_con1->echoJson($resp);
+        exit();
+    }
+
+    $plaReq = isset($_REQUEST['Pla_Cod']) ? trim($_REQUEST['Pla_Cod']) : '';
+    if ($plaReq === '') {
+        $resp['message'] = 'Seleccione una planta o use la opción “Todas las plantas”.';
+        $obBD_con1->echoJson($resp);
+        exit();
+    }
+
+    $rowPla = $obBD_con1->getRowConsulta(15, array('Pla_Cod' => $plaReq, 'Emp_Cod' => $empCod), $obBD_conexion);
+    if (!$rowPla || !isset($rowPla['Pla_Cod']) || !isset($rowPla['Cli_Cod']) || $rowPla['Cli_Cod'] === '' || $rowPla['Cli_Cod'] === null) {
+        $resp['message'] = 'Planta no válida o sin cliente asociado en esta empresa.';
+        $obBD_con1->echoJson($resp);
+        exit();
+    }
+
+    $una = $filaComparacionPlanta($rowPla['Pla_Cod'], $rowPla['Cli_Cod']);
+    if ($una === null) {
+        $resp['message'] = 'No se encontraron datos de estado de cuenta para la planta.';
+        $obBD_con1->echoJson($resp);
+        exit();
+    }
+
+    $resp = array_merge(array('success' => true, 'modo' => 'una'), $una);
+    $obBD_con1->echoJson($resp);
+    exit();
+}
+
 /* Periodos */
 $periodos = $obBD_con1->getArrayConsulta('perio_cont.selectWhere', array('perio_cont.Pec_Est' => 'A', 'setWhere' => array('setEmpCod'), 'order' => 'perio_cont.Pec_Fei DESC'), $obBD_conexion);
 utf8_encode_deep($periodos);
+
+$plantas_comparacion = array();
+if ($puede_comparar_saldos) {
+    $plantas_comparacion = $obBD_con1->getArrayConsulta(6, array('search' => ''), $obBD_conexion);
+    if (!is_array($plantas_comparacion)) {
+        $plantas_comparacion = array();
+    }
+}
 
 ?>
 
@@ -213,6 +412,9 @@ utf8_encode_deep($periodos);
             .nav-tabs > li.active > a:hover, 
             .nav-tabs > li.active > a:focus { background: #fff; /* White background */ color: #d35400; /* Orange/Rust text */ border: 1px solid #5c9ccc; border-bottom-color: transparent; /* Remove bottom border to merge with container */ cursor: default; }
             .nav-tabs > li > a > i { margin-right: 5px; }
+            /* Chosen: planta comparación — ancho y caja de búsqueda legible */
+            #tabComparacion .chosen-container { font-size: 13px; max-width: 100%; }
+            #tabComparacion .chosen-container .chosen-search input { font-size: 13px !important; padding: 4px 8px !important; }
         </style>
     </HEAD>
 
@@ -225,8 +427,12 @@ utf8_encode_deep($periodos);
                 <!-- TABS -->
                 <ul class="nav nav-tabs" role="tablist" style="margin-bottom: 15px;">
                     <li role="presentation" class="active"><a href="#tabPlantas" aria-controls="tabPlantas" role="tab" data-toggle="tab">Individual</a></li>
+                    <li role="presentation"><a href="#tabConsolidado" aria-controls="tabConsolidado" role="tab" data-toggle="tab">Consolidado</a></li>
                     <?php if (!$es_perfil_plantas) { ?>
                         <li role="presentation"><a href="#tabPlantero" aria-controls="tabPlantero" role="tab" data-toggle="tab">Grupal</a></li>
+                    <?php } ?>
+                    <?php if ($puede_comparar_saldos) { ?>
+                        <li role="presentation"><a href="#tabComparacion" aria-controls="tabComparacion" role="tab" data-toggle="tab">Saldos Auditados</a></li>
                     <?php } ?>
                 </ul>
 
@@ -356,6 +562,113 @@ utf8_encode_deep($periodos);
                     </div>
                 </div>
                 </div>
+
+                <!-- TAB: Consolidado (reporte tipo Manifiesto de Anticipos + línea manifiestos pendientes) -->
+                <div role="tabpanel" class="tab-pane" id="tabConsolidado">
+                    <div id="documentoSearchConsolidado">
+                        <div class="row">
+                            <form name="searchEstadoCuentaConsolidado" id="searchEstadoCuentaConsolidado" class="form-horizontal normal">
+                                <div class="col-sm-12">
+                                    <fieldset class="exa-fieldset filtros-section">
+                                        <legend class="Titulos2">Filtros de Búsqueda</legend>
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-xs-12 col-sm-2 control-label">Planta:</label>
+                                                    <div class="col-xs-12 col-sm-10">
+                                                        <div class="input-group" style="width: 100%;">
+                                                            <input type="hidden" id="Pla_Cod_Cons" name="Pla_Cod_Cons" />
+                                                            <input type="hidden" id="Cli_Cod_Cons" name="Cli_Cod_Cons" />
+                                                            <input type="text" id="Pla_Nom_Cons" name="Pla_Nom_Cons" class="form-control input-xs" placeholder="Seleccione una planta..." readonly style="height: auto" />
+                                                            <span class="input-group-btn">
+                                                                <button type="button" id="btnBuscarPlantaCons" class="btn btn-info btn-xs" title="Buscar Planta">
+                                                                    <span class="glyphicon glyphicon-search"></span>
+                                                                </button>
+                                                                <button type="button" id="btnLimpiarPlantaCons" class="btn btn-danger btn-xs" title="Limpiar Planta">
+                                                                    <span class="glyphicon glyphicon-remove"></span>
+                                                                </button>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-xs-12 col-sm-2 control-label">Cliente:</label>
+                                                    <div class="col-xs-12 col-sm-10">
+                                                        <input type="text" id="Cli_Nom_Cons" name="Cli_Nom_Cons" class="form-control input-xs" readonly style="height: auto" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-xs-12 col-sm-3 control-label label-xs">Período:</label>
+                                                    <div class="col-xs-12 col-sm-3">
+                                                        <select name="Pec_Cod_Cons" id="Pec_Cod_Cons" class="form-control input-xs" style="height: auto; width: 100%; text-align: center;" onchange="cambiarPeriodoCons()">
+                                                            <option value="T"><< TODOS >></option>
+                                                            <option value="PF"><< Por Fechas >></option>
+                                                            <?php
+                                                            $currentYearCons = date("Y");
+                                                            foreach ($periodos as $p) {
+                                                                $year = substr($p['Pec_Fei'], 0, 4);
+                                                                $selectedCons = ($year == $currentYearCons) ? 'selected' : '';
+                                                                echo "<option data-inicio='$p[Pec_Fei]' data-fin='$p[Pec_Fef]' value='$p[Pec_Cod]' $selectedCons>$year</option>";
+                                                            }
+                                                            ?>
+                                                        </select>
+                                                    </div>
+                                                    <label class="col-xs-12 col-sm-1 control-label label-xs">Mes:</label>
+                                                    <div class="col-xs-12 col-sm-3">
+                                                        <select name="Mes_Cod_Cons" id="Mes_Cod_Cons" class="form-control input-xs" style="height: auto; width: 100%; text-align: center;" onchange="cambiarPeriodoCons()">
+                                                            <option value="00" selected><< TODOS >></option>
+                                                            <option value="01">Enero</option>
+                                                            <option value="02">Febrero</option>
+                                                            <option value="03">Marzo</option>
+                                                            <option value="04">Abril</option>
+                                                            <option value="05">Mayo</option>
+                                                            <option value="06">Junio</option>
+                                                            <option value="07">Julio</option>
+                                                            <option value="08">Agosto</option>
+                                                            <option value="09">Septiembre</option>
+                                                            <option value="10">Octubre</option>
+                                                            <option value="11">Noviembre</option>
+                                                            <option value="12">Diciembre</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-xs-12 col-sm-3 control-label label-xs">Fecha:</label>
+                                                    <div class="col-xs-12 col-sm-9">
+                                                        <div class="input-group input-group-xs" style="width: 100%;">
+                                                            <span class="input-group-addon alert-info">Desde</span>
+                                                            <input type="text" id="Fec_IniM_Cons" name="Fec_IniM_Cons" class="form-control datepicker-cons" style="text-align: center;" disabled />
+                                                            <span class="input-group-addon" title="Intercambiar fechas" style="cursor: pointer;" onclick="intercambiarFechasCons()">
+                                                                <i class="glyphicon glyphicon-transfer"></i>
+                                                            </span>
+                                                            <span class="input-group-addon alert-info">Hasta</span>
+                                                            <input type="text" id="Fec_FinM_Cons" name="Fec_FinM_Cons" class="form-control datepicker-cons" style="text-align: center;" disabled />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <div class="col-xs-12 text-right">
+                                                        <button type="button" id="btnBuscarConsolidado" class="btn btn-success btn-xs" onclick="buscarEstadoCuentaConsolidado()">
+                                                            <span class="glyphicon glyphicon-search"></span> Buscar
+                                                        </button>
+                                                        <button type="button" class="btn btn-default btn-xs btn-danger" onclick="limpiarFiltrosConsolidado()">
+                                                            <span class="glyphicon glyphicon-trash"></span> Limpiar
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </fieldset>
+                                </div>
+                                <div class="col-sm-12" style="padding-top: 5px;">
+                                    <div id="detalle_consolidado_container"></div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
                 
                 <!-- TAB 2: Grupal -->
                 <?php if (!$es_perfil_plantas) { ?>
@@ -455,6 +768,107 @@ utf8_encode_deep($periodos);
                         </div>
                     </div>
                 <?php } ?>
+
+                <?php if ($puede_comparar_saldos) { ?>
+                <!-- TAB 3: Comparación (solo administradores) -->
+                <div role="tabpanel" class="tab-pane" id="tabComparacion">
+                    <div id="documentoSearchComparacion">
+                        <div class="row">
+                            <form name="searchComparacion" id="searchComparacion" class="form-horizontal normal">
+                                <div class="col-sm-10 col-sm-offset-1">
+                                    <fieldset class="exa-fieldset filtros-section">
+                                        <legend class="Titulos2">Comparación de saldos</legend>
+                                        <p class="text-muted" style="font-size: 12px; margin-bottom: 12px;">
+                                            <strong>Saldo estado de cuenta:</strong> mismo criterio que el reporte <em>Grupal</em> para el período elegido y la planta seleccionada.
+                                            <strong>Saldo manifiesto:</strong> Anticipos (A) menos Sin facturar (B), igual que en Gestión de Manifiesto (sin filtro de fechas).
+                                        </p>
+                                        <div class="checkbox" style="margin-bottom: 10px;">
+                                            <label>
+                                                <input type="checkbox" id="comp_todas_plantas" name="comp_todas_plantas" value="1" />
+                                                <strong>Todas las plantas</strong> — tabla con una fila por planta (misma comparación que abajo, en bloque).
+                                            </label>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom: 12px;">
+                                            <label class="col-xs-12 col-sm-2 control-label label-xs">Planta:</label>
+                                            <div class="col-xs-12 col-sm-10">
+                                                <select name="Pla_Cod_Comp" id="Pla_Cod_Comp" class="form-control input-sm pla-cod-comp-chosen" title="Escriba para filtrar la lista">
+                                                    <option value="">— Escriba para buscar planta —</option>
+                                                    <?php
+                                                    foreach ($plantas_comparacion as $pc) {
+                                                        if (empty($pc['Pla_Cod'])) {
+                                                            continue;
+                                                        }
+                                                        $pn = isset($pc['Pla_Nom']) ? htmlspecialchars($pc['Pla_Nom'], ENT_QUOTES, 'UTF-8') : '';
+                                                        $pv = htmlspecialchars($pc['Pla_Cod'], ENT_QUOTES, 'UTF-8');
+                                                        echo "<option value=\"$pv\">$pn</option>";
+                                                    }
+                                                    ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="row" style="font-size: 14px;">
+                                            <div class="col-xs-12 col-sm-3" style="padding-right: 8px; width: 200px;">
+                                                <label class="control-label label-xs" style="display: inline-block; width: auto; margin-right: 5px; vertical-align: middle; font-size: 14px;">Período:</label>
+                                                <select name="Pec_Cod_Comp" id="Pec_Cod_Comp" class="form-control input-xs" style="display: inline-block; height: auto; width: 100px; text-align: center; vertical-align: middle; font-size: 14px;" onchange="cambiarPeriodoComp()">
+                                                    <option value="T">&lt;&lt; TODOS &gt;&gt;</option>
+                                                    <option value="PF">&lt;&lt; Por Fechas &gt;&gt;</option>
+                                                    <?php
+                                                    $currentYearC = date("Y");
+                                                    foreach ($periodos as $p) {
+                                                        $year = substr($p['Pec_Fei'], 0, 4);
+                                                        $selected = ($year == $currentYearC) ? 'selected' : '';
+                                                        echo "<option data-inicio='$p[Pec_Fei]' data-fin='$p[Pec_Fef]' value='$p[Pec_Cod]' $selected>$year</option>";
+                                                    }
+                                                    ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-xs-12 col-sm-2" style="padding-left: 8px; padding-right: 8px; width: 300px;">
+                                                <label class="control-label label-xs" style="display: inline-block; width: auto; margin-right: 5px; vertical-align: middle; font-size: 14px;">Mes:</label>
+                                                <select name="Mes_Cod_Comp" id="Mes_Cod_Comp" class="form-control input-xs" style="display: inline-block; height: auto; width: 100px; text-align: center; vertical-align: middle; font-size: 14px;" onchange="cambiarPeriodoComp()">
+                                                    <option value="00">&lt;&lt; TODOS &gt;&gt;</option>
+                                                    <option value="01" <?php if ($mes == '01') echo 'selected'; ?>>Enero</option>
+                                                    <option value="02" <?php if ($mes == '02') echo 'selected'; ?>>Febrero</option>
+                                                    <option value="03" <?php if ($mes == '03') echo 'selected'; ?>>Marzo</option>
+                                                    <option value="04" <?php if ($mes == '04') echo 'selected'; ?>>Abril</option>
+                                                    <option value="05" <?php if ($mes == '05') echo 'selected'; ?>>Mayo</option>
+                                                    <option value="06" <?php if ($mes == '06') echo 'selected'; ?>>Junio</option>
+                                                    <option value="07" <?php if ($mes == '07') echo 'selected'; ?>>Julio</option>
+                                                    <option value="08" <?php if ($mes == '08') echo 'selected'; ?>>Agosto</option>
+                                                    <option value="09" <?php if ($mes == '09') echo 'selected'; ?>>Septiembre</option>
+                                                    <option value="10" <?php if ($mes == '10') echo 'selected'; ?>>Octubre</option>
+                                                    <option value="11" <?php if ($mes == '11') echo 'selected'; ?>>Noviembre</option>
+                                                    <option value="12" <?php if ($mes == '12') echo 'selected'; ?>>Diciembre</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-xs-12 col-sm-1"></div>
+                                            <div class="col-xs-12 col-sm-6" style="padding-left: 8px; white-space: nowrap;">
+                                                <label class="control-label label-xs" style="display: inline-block; width: auto; margin-right: 5px; font-size: 14px;">Fecha:</label>
+                                                <span class="input-group-addon alert-info" style="display: inline-block; font-size: 14px; vertical-align: middle; border-radius: 4px 0 0 4px; margin-bottom: 0; width: 65px;">Desde</span>
+                                                <input type="text" id="Fec_IniM_Comp" name="Fec_IniM_Comp" class="form-control datepicker-comp" style="display: inline-block; text-align: center; width: 120px; font-size: 14px; vertical-align: middle; margin-left: -1px; border-radius: 0; margin-bottom: 0;" disabled />
+                                                <span class="input-group-addon" title="Intercambiar fechas" style="display: inline-block; cursor: pointer; font-size: 14px; vertical-align: middle; margin-left: -1px; border-radius: 0; margin-bottom: 0; width: auto;" onclick="intercambiarFechasComp()">
+                                                    <i class="glyphicon glyphicon-transfer"></i>
+                                                </span>
+                                                <span class="input-group-addon alert-info" style="display: inline-block; font-size: 14px; vertical-align: middle; margin-left: -1px; border-radius: 0; margin-bottom: 0; width: 65px;">Hasta</span>
+                                                <input type="text" id="Fec_FinM_Comp" name="Fec_FinM_Comp" class="form-control datepicker-comp" style="display: inline-block; text-align: center; width: 120px; font-size: 14px; vertical-align: middle; margin-left: -1px; border-radius: 0 4px 4px 0; margin-bottom: 0;" disabled />
+                                            </div>
+                                        </div>
+                                        <div class="row" style="margin-top: 15px;">
+                                            <div class="col-xs-12 text-right">
+                                                <button type="button" class="btn btn-success btn-sm" onclick="buscarComparacionSaldos()">
+                                                    <span class="glyphicon glyphicon-search"></span> Comparar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </fieldset>
+                                </div>
+                                <div class="col-sm-12" style="margin-top: 10px;">
+                                    <div id="detalle_comparacion_container"></div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <?php } ?>
                 
                 </div> <!-- Fin tab-content -->
             </div>
@@ -488,7 +902,7 @@ utf8_encode_deep($periodos);
             </form>
         </div>
 
-        <script src="../VALIDACIONES/man_est_cuenta_1.0.js?e=4"></script>
+        <script src="../VALIDACIONES/man_est_cuenta_1.0.js?e=24"></script>
         <script type="text/javascript" src="../../framework/jquery/jquery.plugins/MaskedInput/jquery.maskedinput.1.4.1.min.js"></script>
         <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=1"></script>
         <script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>
@@ -505,17 +919,57 @@ utf8_encode_deep($periodos);
                     $("#Pla_Nom").val(<?php echo json_encode($cliente_manifiesto['Pla_Nom']); ?>);
                     $("#Cli_Cod").val(<?php echo json_encode($cliente_manifiesto['Cli_Cod']); ?>);
                     $("#Cli_Nom").val(<?php echo json_encode($cliente_manifiesto['nombre']); ?>);
+                    $("#Pla_Cod_Cons").val(<?php echo json_encode($cliente_manifiesto['Pla_Cod']); ?>);
+                    $("#Pla_Nom_Cons").val(<?php echo json_encode($cliente_manifiesto['Pla_Nom']); ?>);
+                    $("#Cli_Cod_Cons").val(<?php echo json_encode($cliente_manifiesto['Cli_Cod']); ?>);
+                    $("#Cli_Nom_Cons").val(<?php echo json_encode($cliente_manifiesto['nombre']); ?>);
                     
                     // Ocultar botones de búsqueda de planta
                     $("#btnBuscarPlanta").hide();
                     $("#btnLimpiarPlanta").hide();
                     // Ocultar el contenedor de botones para que el input ocupe todo el ancho
                     $("#btnBuscarPlanta").closest(".input-group-btn").hide();
+                    $("#btnBuscarPlantaCons").hide();
+                    $("#btnLimpiarPlantaCons").hide();
+                    $("#btnBuscarPlantaCons").closest(".input-group-btn").hide();
                 <?php } ?>
                 
                 // Inicializar fechas según periodo/mes seleccionado
                 cambiarPeriodo();
-                cambiarPeriodoGrupal();
+                cambiarPeriodoCons();
+                if ($("#Pec_Cod_Grupal").length) {
+                    cambiarPeriodoGrupal();
+                }
+                if ($("#Pec_Cod_Comp").length) {
+                    cambiarPeriodoComp();
+                }
+
+                // Planta (Comparación): listado largo — Chosen con búsqueda al escribir (inicializar al mostrar la pestaña por ancho correcto)
+                var plaCompChosenListo = false;
+                function inicializarChosenPlantaComparacion() {
+                    if (plaCompChosenListo || !$("#Pla_Cod_Comp").length) {
+                        return;
+                    }
+                    plaCompChosenListo = true;
+                    $("#Pla_Cod_Comp").chosen({
+                        width: "100%",
+                        search_contains: true,
+                        no_results_text: "No se encontró:",
+                        allow_single_deselect: true
+                    });
+                }
+                $('a[href="#tabComparacion"]').on("shown.bs.tab", function() {
+                    inicializarChosenPlantaComparacion();
+                });
+
+                $(document).on("change", "#comp_todas_plantas", function() {
+                    var on = $(this).is(":checked");
+                    var $s = $("#Pla_Cod_Comp");
+                    $s.prop("disabled", on);
+                    if ($s.next(".chosen-container").length) {
+                        $s.trigger("chosen:updated");
+                    }
+                });
             });
         </script>
 
