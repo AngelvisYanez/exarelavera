@@ -41,7 +41,7 @@
     }
 
     function telPlanta(r) {
-        var k = ['Pla_Wat', 'Pep_Tel_Admin', 'Prs_Tel_Admin', 'Prs_Te2_Admin'];
+        var k = ['Pep_Tel_Admin'/*, 'Prs_Tel_Admin', 'Prs_Te2_Admin'*/];
         for (var i = 0; i < k.length; i++) {
             if (r[k[i]] != null && String(r[k[i]]).trim() !== '') return String(r[k[i]]).trim();
         }
