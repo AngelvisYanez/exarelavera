@@ -354,7 +354,7 @@ function sentencias_manif_tec_camp($id, $Par_Sql)
 					SUBSTRING_INDEX(manifiesto.Man_Usu,\'"Man_Tip":"GE","Fecha":"\',-1),\'"\',1	)
 			ELSE NULL
 			END AS fecha_ge, manifiesto_plantas.Pla_Nom,
-            CONCAT(persona_cho.Prs_Nom," ",persona_cho.Prs_Ape) AS chofer_nombre , chofer.Cho_Tel /*persona_cho.Prs_Tel*/ AS tel_chofer , persona_pla.Prs_Tel AS tel_admin_planta,Pla_Wat
+            CONCAT(persona_cho.Prs_Nom," ",persona_cho.Prs_Ape) AS chofer_nombre , chofer.Cho_Tel /*persona_cho.Prs_Tel*/ AS tel_chofer , /*persona_pla.Prs_Tel*/ mpp.Pep_Tel AS tel_admin_planta, Pla_Wat
 			FROM manifiesto
 			LEFT JOIN chofer ON manifiesto.Cho_Cod = chofer.Cho_Cod
 			LEFT JOIN persona AS persona_cho ON chofer.Prs_Cod = persona_cho.Prs_Cod		
