@@ -26,6 +26,18 @@ $(function () {
         setTimeout(ajustarAnchoGridPlantasSaldos, 120);
     });
     $('.datepicker').createDatePickers({ checkAvailability: true, hideMsg: false }).mask('9999-99-99', { placeholder: '_' });
+    $('#Man_Gui').mask('999-999-999999999', { placeholder: '_' });
+    $('#Man_Gui').on('keyup change blur', function () {
+        validarManGui($(this).val());
+    });
+    $(document).on('click', '#btnRecargarChoferes', function () {
+        var $btn = $(this);
+        if ($btn.prop('disabled')) { return; }
+        $btn.prop('disabled', true).addClass('is-loading');
+        recargarVehiculosYChoferes(true).always(function () {
+            $btn.prop('disabled', false).removeClass('is-loading');
+        });
+    });
     $('.pagination').find('li a').click(function () {
         $('.pagination').find('li').removeClass('active');
         $(this).parent().addClass('active');
@@ -261,8 +273,8 @@ function createGrid() {
                     });
                 }
             }
-        }, footerrow: true, userDataOnFooter: true, headertitles: true, rowNum: 10000, gridview: true, viewrecords: true
-    }, true, '#searchGridPager', { refresh: true, view: false }).gridButtonsAdd([
+        }, footerrow: true, userDataOnFooter: true, headertitles: true, rowNum: 30, rowList: [30, 50, 100, 200], gridview: true, viewrecords: true
+    }, false, '#searchGridPager', { refresh: true, view: false }).gridButtonsAdd([
         { caption: 'Exportar Excel', buttonicon: 'glyphicon glyphicon-download',
             onClickButton: function () {
                 grid.jqGrid('exportGridExcel', {
@@ -934,6 +946,33 @@ function numeroManifiesto(num) {
         });
 }
 
+function validarManGui(manGui) {
+    var $estado = $("#Man_Gui_Est");
+    var gui = $.trim(manGui || '');
+    var guiClean = gui.replace(/\D/g, '');
+    var plaCod = $('#Pla_Cod').val();
+    var manCod = $('#Man_Cod').val() || 0;
+
+    if (!gui || guiClean.length < 15) {
+        $estado.removeClass("fa fa-check").addClass("fa fa-close").css("color", "red").attr('title', 'Complete la guía para validar');
+        return false;
+    }
+    if ($.isEmpty(plaCod)) {
+        $estado.removeClass("fa fa-check").addClass("fa fa-close").css("color", "red").attr('title', 'No se encontró la planta para validar');
+        return false;
+    }
+
+    $.post('', { validarManGuiAjax: true, Pla_Cod: plaCod, Man_Cod: manCod, Man_Gui: gui }, function (r) {
+        if (r && r.success === true && r.valido === true) {
+            $estado.removeClass("fa fa-close").addClass("fa fa-check").css("color", "green").attr('title', r.message || 'Guía disponible');
+        } else {
+            $estado.removeClass("fa fa-check").addClass("fa fa-close").css("color", "red").attr('title', (r && r.message) ? r.message : 'Guía no válida');
+        }
+    }, 'json').fail(function () {
+        $estado.removeClass("fa fa-check").addClass("fa fa-close").css("color", "red").attr('title', 'No se pudo validar la guía');
+    });
+}
+
 function preSaveManifiesto() {
     // // Validar que las horas estén completas antes de guardar
     // let Man_Fea_Hor = $('#Man_Fea_Hor').val();
@@ -949,27 +988,49 @@ function preSaveManifiesto() {
     //     return false;
     // }
 
-    let Man_Gui = $('#Man_Gui').val();
+    var Man_Gui = $('#Man_Gui').val();
+    var guiTrim = $.trim(Man_Gui || '');
+    var guiClean = guiTrim.replace(/\D/g, '');
+    var $estadoGui = $("#Man_Gui_Est");
+    var plaCod = $('#Pla_Cod').val();
+    var manCod = $('#Man_Cod').val() || 0;
 
-    if (!Man_Gui || Man_Gui.trim() === '') {
+    if (!guiTrim) {
         $.alert('Error: El número de <b>Guía de Remisión</b> es requerido.');
         $('#Man_Gui').focus();
         return false;
     }
+    if (guiClean.length < 15) {
+        $.alert('Error: Complete la <b>Guía de Remisión</b> (15 dígitos) antes de guardar.');
+        $('#Man_Gui').focus();
+        validarManGui(guiTrim);
+        return false;
+    }
+    if ($.isEmpty(plaCod)) {
+        $.alert('Error: No se encontró la planta para validar la guía.');
+        return false;
+    }
 
-    let data = $('#manifiestoForm').getData();
-    data.saveManifiestoAjax = true;
-    data.Cli_Cod = $('#Cli_Cod').val();
-    data.Mat_Cod = $('#Veh_Cod option:selected').data('mat_cod');
-    // console.log(data);
-    // Asegurar que las horas se incluyan en los datos
-    // data.Man_Fea_Hor = Man_Fea_Hor;
-    // data.Man_Fes_Hor = Man_Fes_Hor;
-
-    // console.log('Datos a guardar:', data);
-    // console.log('Hora de llegada:', Man_Fea_Hor);
-    // console.log('Hora de salida:', Man_Fes_Hor);
-    $.createDialogConfirm('Est&aacute; seguro que desea guardar los datos?', data, saveManifiesto);
+    // Validar siempre en servidor antes de confirmar (evita guardar con guía repetida si el ícono quedó desactualizado o la petición anterior no terminó).
+    $.post('', { validarManGuiAjax: true, Pla_Cod: plaCod, Man_Cod: manCod, Man_Gui: guiTrim }, function (r) {
+        if (r && r.success === true && r.valido === true) {
+            $estadoGui.removeClass("fa fa-close").addClass("fa fa-check").css("color", "green").attr('title', r.message || 'Guía disponible');
+            var data = $('#manifiestoForm').getData();
+            data.saveManifiestoAjax = true;
+            data.Cli_Cod = $('#Cli_Cod').val();
+            data.Mat_Cod = $('#Veh_Cod option:selected').data('mat_cod');
+            $.createDialogConfirm('Est&aacute; seguro que desea guardar los datos?', data, saveManifiesto);
+        } else {
+            var msgGui = (r && r.message) ? r.message : 'La guía no es válida o ya existe para esta planta.';
+            $estadoGui.removeClass("fa fa-check").addClass("fa fa-close").css("color", "red").attr('title', msgGui);
+            $.alert('Error: ' + msgGui);
+            $('#Man_Gui').focus();
+        }
+    }, 'json').fail(function () {
+        $estadoGui.removeClass("fa fa-check").addClass("fa fa-close").css("color", "red").attr('title', 'No se pudo validar la guía');
+        $.alert('No se pudo verificar la guía. Intente de nuevo.');
+        $('#Man_Gui').focus();
+    });
 }
 //Guardar Manifiesto
 function saveManifiesto(data) {
@@ -1878,6 +1939,25 @@ function renderizarTurnos(turnos, fecha, horaActual){
     $('#turnosContainer').html(resumen + listaTurnos);
 }
 
+function autocompletarPrefijoManGui() {
+    var $manGui = $('#Man_Gui');
+    if ($manGui.length === 0 || $.trim($manGui.val()) !== '') {
+        return;
+    }
+
+    var plaCod = parseInt($('#Pla_Cod').val(), 10) || 0;
+    if (plaCod <= 0) {
+        return;
+    }
+
+    $.post('', { getPrefijoManGuiAjax: true, Pla_Cod: plaCod }, function (resp) {
+        if (!resp || resp.success !== true || $.isEmpty(resp.prefijo)) {
+            return;
+        }
+        $manGui.val(resp.prefijo + '-').trigger('input');
+    }, 'json');
+}
+
 // Seleccionar un turno y continuar al formulario
 function seleccionarTurno(id, horaInicio, horaFin, fecha, disponibles, tudCod, horaActual, celCod){
     turnoSeleccionado = {
@@ -1925,6 +2005,7 @@ function seleccionarTurno(id, horaInicio, horaFin, fecha, disponibles, tudCod, h
 
     // Ir al formulario de nuevo manifiesto
     $('#documentoSearch').moveComp('#documentoUpdate');
+    autocompletarPrefijoManGui();
 
     // Mostrar mensaje de turno seleccionado
     $.alert('<i class="glyphicon glyphicon-ok-circle" style="color: #28a745;"></i> <strong>Turno seleccionado:</strong><br>' +
@@ -1933,18 +2014,39 @@ function seleccionarTurno(id, horaInicio, horaFin, fecha, disponibles, tudCod, h
             'Cupos disponibles: ' + disponibles);
 }
 
+/** Opciones con texto &lt;&lt; En Ruta &gt;&gt; al final del &lt;select&gt; (misma regla que en PHP). */
+function ordenarOpcionesEnRutaAlFinal(lista) {
+    if (!lista || !lista.length) {
+        return lista;
+    }
+    var arriba = [];
+    var abajo = [];
+    $.each(lista, function (i, it) {
+        var t = (it.texto != null) ? String(it.texto) : '';
+        if (t.indexOf('En Ruta') >= 0) {
+            abajo.push(it);
+        } else {
+            arriba.push(it);
+        }
+    });
+    return arriba.concat(abajo);
+}
+
 // Función para recargar vehículos y choferes con estado de bloqueo actualizado
-function recargarVehiculosYChoferes() {
-    $.post('', { recargarVehiculosChoferesAjax: true }, function(resp) {
+// limpiarSeleccion: si es true, no restaura la selección ni datos derivados (uso: botón refrescar listas)
+function recargarVehiculosYChoferes(limpiarSeleccion) {
+    limpiarSeleccion = !!limpiarSeleccion;
+    return $.post('', { recargarVehiculosChoferesAjax: true }, function(resp) {
         if (resp['success']) {
             // Recargar select de vehículos
             var $selectVehiculo = $('#Veh_Cod');
-            var valorSeleccionado = $selectVehiculo.val(); // Guardar valor actual
+            var valorSeleccionado = limpiarSeleccion ? '' : $selectVehiculo.val();
             $selectVehiculo.empty();
             $selectVehiculo.append('<option value="">Seleccione...</option>');
             
             if (resp['vehiculos'] && resp['vehiculos'].length > 0) {
-                $.each(resp['vehiculos'], function(i, vehiculo) {
+                var vehiculosOrden = ordenarOpcionesEnRutaAlFinal(resp['vehiculos']);
+                $.each(vehiculosOrden, function(i, vehiculo) {
                     var disabled = vehiculo.bloqueado ? 'disabled' : '';
                     var option = $('<option>', {
                         value: vehiculo.Veh_Cod,
@@ -1964,15 +2066,21 @@ function recargarVehiculosYChoferes() {
             if (valorSeleccionado) {
                 $selectVehiculo.val(valorSeleccionado);
             }
+            if (limpiarSeleccion) {
+                $selectVehiculo.val('');
+                $('#Man_Des_Inf').empty();
+                $('#Man_Pes').val('');
+            }
 
             // Recargar select de choferes
             var $selectChofer = $('#Cho_Cod');
-            var valorSeleccionadoChofer = $selectChofer.val(); // Guardar valor actual
+            var valorSeleccionadoChofer = limpiarSeleccion ? '' : $selectChofer.val();
             $selectChofer.empty();
             $selectChofer.append('<option value="">Seleccione...</option>');
 
             if (resp['choferes'] && resp['choferes'].length > 0) {
-                $.each(resp['choferes'], function(i, chofer) {
+                var choferesOrden = ordenarOpcionesEnRutaAlFinal(resp['choferes']);
+                $.each(choferesOrden, function(i, chofer) {
                     var disabled = chofer.bloqueado ? 'disabled' : '';
                     var option = $('<option>', {
                         value: chofer.Cho_Cod,
@@ -1994,6 +2102,11 @@ function recargarVehiculosYChoferes() {
                 var $optionSeleccionada = $selectChofer.find(':selected');
                 $('#Prs_Ced_Cho').html($optionSeleccionada.data('ced') || ' - ');
                 $('#lic_cho').val('TIPO ' + ($optionSeleccionada.data('lic') || ''));
+            }
+            if (limpiarSeleccion) {
+                $selectChofer.val('');
+                $('#Prs_Ced_Cho').html(' - ');
+                $('#lic_cho').val('');
             }
         }
     }, 'json').fail(function() {
@@ -2058,25 +2171,6 @@ function abrirCertificadoModal() {
     var lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString().split('T')[0];
     $('#Cert_Fec_Des').val(firstDay);
     $('#Cert_Fec_Has').val(lastDay);
-
-    // Auto-completar si es perfil de Plantas
-    if (typeof esPerfilPlanta !== 'undefined' && esPerfilPlanta && typeof infoPlantaCertificado !== 'undefined' && infoPlantaCertificado) {
-        $('#Cert_Cli_Ced').val(infoPlantaCertificado.Prs_Ced);
-        $('#Cert_Cli_Ced_Span').text(infoPlantaCertificado.Prs_Ced);
-        $('#Cert_Cli_Nom').val(infoPlantaCertificado.Representante);
-        $('#Cert_Cli_Cod').val(infoPlantaCertificado.Cli_Cod);
-        $('#Cert_Prs_Cod').val(infoPlantaCertificado.Prs_Cod);
-        
-        // Cargar y seleccionar la planta asignada
-        $('#Cert_Pla_Cod').empty().append('<option value="' + infoPlantaCertificado.Pla_Cod + '">' + infoPlantaCertificado.Pla_Nom + '</option>');
-        $('#Cert_Pla_Cod').val(infoPlantaCertificado.Pla_Cod);
-        
-        // Ocultar el botón de búsqueda verde para el cliente
-        $('#Cert_Cli_Nom').next('.input-group-btn').hide();
-    } else {
-        // Asegurar que el botón de búsqueda sea visible para otros perfiles
-        $('#Cert_Cli_Nom').next('.input-group-btn').show();
-    }
 
     volverAmbienteCertificado(); // Asegurar que inicie en el ambiente de formulario
     $('#certificadoDialog').dialog('open');

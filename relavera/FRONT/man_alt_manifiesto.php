@@ -38,11 +38,10 @@ if (function_exists('utf8_encode_deep')) {
 }
 
 // Validar si el usuario tiene permiso para ver el botón de certificado
-$perfiles_permitidos = array('Administrador de Sistemas', 'Gerente', 'Admin_Oper', 'Contador', 'Auditor', 'Plantas');
+$perfiles_permitidos = array('Administrador de Sistemas', 'Gerente', 'Admin_Oper', 'Contador', 'Auditor');
 $mostrarBotonCertificado = false;
 $mostrarBotonSelectorPlantaSaldos = false;
 $firmar_solo_si = false;
-$firmar_solo_no = false;
 
 if (is_array($perfil)) {
     foreach ($perfil as $p) {
@@ -55,32 +54,6 @@ if (is_array($perfil)) {
         }
         if ($per_desc == 'Gerente' || $per_desc == 'Contador') {
             $firmar_solo_si = true;
-        }
-		if ($per_desc == 'Plantas' || $per_desc == 'Admin_Oper') {
-            $firmar_solo_no = true;
-        }
-    }
-}
-
-/* Identificar perfil de Plantas y obtener datos para el certificado */
-$esPerfilPlanta = false;
-$infoPlantaCertificado = null;
-if (is_array($perfil)) {
-    foreach ($perfil as $p) {
-        if (trim($p['Per_Des']) == 'Plantas') {
-            $esPerfilPlanta = true;
-            break;
-        }
-    }
-}
-
-if ($esPerfilPlanta && !empty($cliente_manifiesto['Cli_Cod']) && !empty($cliente_manifiesto['Pla_Cod'])) {
-    $infoPlantaCertificado = $obBD_con1->getRowConsulta(8, array('Cli_Cod' => $cliente_manifiesto['Cli_Cod'], 'Pla_Cod' => $cliente_manifiesto['Pla_Cod']), $obBD_conexion);
-    if ($infoPlantaCertificado) {
-        $infoPlantaCertificado['Cli_Cod'] = $cliente_manifiesto['Cli_Cod'];
-        $infoPlantaCertificado['Pla_Cod'] = $cliente_manifiesto['Pla_Cod'];
-        if (function_exists('utf8_encode_deep')) {
-            utf8_encode_deep($infoPlantaCertificado);
         }
     }
 }
@@ -389,6 +362,8 @@ if (isset($recargarVehiculosChoferesAjax)) {
 	$resul['vehiculos'] = array();
 	$emp_cod_ctx = isset($Ses_Emp_Cod) ? $Ses_Emp_Cod : '';
 	if (count($vehiculos) > 0) {
+		$vehiculos_json_arriba = array();
+		$vehiculos_json_abajo = array();
 		foreach ($vehiculos as $row) {
 			$clave_veh = (isset($row['Veh_Pla']) ? $row['Veh_Pla'] : '') . '|' . $emp_cod_ctx;
 			$esta_bloqueado = in_array($clave_veh, $vehiculos_bloqueados);
@@ -397,14 +372,15 @@ if (isset($recargarVehiculosChoferesAjax)) {
 				$esta_bloqueado = true;
 			}
 			$texto_vehiculo = $row['Veh_Pla'] . ' - ' . $row['Veh_Mar'];
-			if (/*$esta_bloqueado*/ $row['total']*1 > 0) {
+			$en_ruta = $row['total'] * 1 > 0;
+			if (/*$esta_bloqueado*/ $en_ruta) {
 				$texto_vehiculo .= ' << En Ruta >>';
 				$esta_bloqueado = true;
 			}
 			if ($esta_sancionado) {
 				$texto_vehiculo .= ' << Sancionado >>';
 			}
-			$resul['vehiculos'][] = array(
+			$item_veh = array(
 				'Veh_Cod' => $row['Veh_Cod'],
 				'Veh_Pla' => $row['Veh_Pla'],
 				'Veh_Mar' => $row['Veh_Mar'],
@@ -414,13 +390,23 @@ if (isset($recargarVehiculosChoferesAjax)) {
 				'texto' => $texto_vehiculo,
 				'bloqueado' => $esta_bloqueado
 			);
+			if ($en_ruta) {
+				$vehiculos_json_abajo[] = $item_veh;
+			} else {
+				$vehiculos_json_arriba[] = $item_veh;
+			}
 		}
+		$resul['vehiculos'] = array_merge($vehiculos_json_arriba, $vehiculos_json_abajo);
 	}
 	
-	// Obtener choferes
+	// Obtener choferes (con total "en ruta" por Cho_Cod, misma lógica que manifiesto_transporte.1)
 	$datos = array();
-	if (!empty($cliente_manifiesto['Cli_Cod'])) {
+	if (!empty($cliente_manifiesto['Cli_Cod']) && !empty($cliente_manifiesto['Pla_Cod'])) {
+		$datos = $obBD_con1->getArrayConsulta('manifiesto_chofer.1', array('Pla_Cod' => $cliente_manifiesto['Pla_Cod'], 'Cli_Cod' => $cliente_manifiesto['Cli_Cod']), $obBD_conexion, true);
+	} elseif (!empty($cliente_manifiesto['Cli_Cod'])) {
 		$datos = $obBD_con1->getArrayConsulta('manifiesto_chofer.selectWhere', array('where' => array('Cho_Est' => 'A', 'Cli_Cod' => $cliente_manifiesto['Cli_Cod'])), $obBD_conexion, true);
+	}
+	if (!empty($datos) && is_array($datos)) {
 		$obBD_con1->utf8_change_param($datos);
 	}
 	
@@ -432,24 +418,28 @@ if (isset($recargarVehiculosChoferesAjax)) {
 			$choferes_sancionados[] = $s['Prs_Ced'];
 		}
 	}
-	// Preparar choferes con estado de bloqueo (en ruta + sancionados)
+	// Preparar choferes con estado de bloqueo (en ruta + sancionados); "En Ruta" al final del listado
 	$resul['choferes'] = array();
 	if (count($datos) > 0) {
+		$choferes_json_arriba = array();
+		$choferes_json_abajo = array();
 		foreach ($datos as $row) {
 			$cho_cod = isset($row['Cho_Cod']) ? $row['Cho_Cod'] : 0;
-			$esta_bloqueado = in_array($cho_cod, $choferes_bloqueados);
-			$esta_sancionado = in_array( $row['Prs_Ced'], $choferes_sancionados);
-			if ($esta_sancionado) {
-				$esta_bloqueado = true;
+			$esta_sancionado = in_array($row['Prs_Ced'], $choferes_sancionados);
+			$total_ruta = isset($row['total']) ? (int) $row['total'] : 0;
+			$en_ruta_cho = $total_ruta > 0;
+			if (!$en_ruta_cho && in_array($cho_cod, $choferes_bloqueados)) {
+				$en_ruta_cho = true;
 			}
+			$esta_bloqueado = $en_ruta_cho || $esta_sancionado;
 			$texto_chofer = $row['nombre'];
-			if ($esta_bloqueado) {
-				$texto_chofer .= ' << En ruta >>';
+			if ($en_ruta_cho) {
+				$texto_chofer .= ' << En Ruta >>';
 			}
 			if ($esta_sancionado) {
 				$texto_chofer .= ' << Sancionado >>';
 			}
-			$resul['choferes'][] = array(
+			$item_cho = array(
 				'Cho_Cod' => $row['Cho_Cod'],
 				'nombre' => $row['nombre'],
 				'Cho_Tli' => $row['Cho_Tli'],
@@ -457,7 +447,13 @@ if (isset($recargarVehiculosChoferesAjax)) {
 				'texto' => $texto_chofer,
 				'bloqueado' => $esta_bloqueado
 			);
+			if ($en_ruta_cho) {
+				$choferes_json_abajo[] = $item_cho;
+			} else {
+				$choferes_json_arriba[] = $item_cho;
+			}
 		}
+		$resul['choferes'] = array_merge($choferes_json_arriba, $choferes_json_abajo);
 	}
 	
 	$obBD_con1->echoJson($resul);
@@ -896,6 +892,75 @@ if (isset($numeroManiAjax)) {
 	$obBD_con1->echoJson($resultado);
 }
 
+if (isset($validarManGuiAjax)) {
+	$resp = array('success' => true, 'valido' => true, 'message' => '');
+	try {
+		$pla_cod_gui = isset($_POST['Pla_Cod']) ? intval($_POST['Pla_Cod']) : 0;
+		$man_cod_gui = isset($_POST['Man_Cod']) ? intval($_POST['Man_Cod']) : 0;
+		$man_gui_raw = isset($_POST['Man_Gui']) ? trim($_POST['Man_Gui']) : '';
+		$man_gui_norm = preg_replace('/\D+/', '', $man_gui_raw);
+
+		if ($pla_cod_gui <= 0 || $man_gui_norm === '') {
+			$resp['valido'] = false;
+			$resp['message'] = 'Ingrese una guía válida para verificar.';
+			$obBD_con1->echoJson($resp);
+		}
+
+		$sql_dup_guia = "SELECT COUNT(*) AS total
+						FROM manifiesto
+						WHERE Pla_Cod = $pla_cod_gui
+						  AND IFNULL(TRIM(Man_Gui), '') <> ''
+						  AND REPLACE(REPLACE(TRIM(Man_Gui), '-', ''), ' ', '') = '$man_gui_norm'";
+		if ($man_cod_gui > 0) {
+			$sql_dup_guia .= " AND Man_Cod <> $man_cod_gui";
+		}
+
+		$row_dup_guia = $obBD_con1->fetch_assoc($obBD_con1->consulta($sql_dup_guia, $obBD_conexion->conexion));
+		$total_dup_guia = isset($row_dup_guia['total']) ? intval($row_dup_guia['total']) : 0;
+		if ($total_dup_guia > 0) {
+			$resp['valido'] = false;
+			$resp['message'] = 'La guía ya existe para esta planta.';
+		} else {
+			$resp['message'] = 'Guía disponible.';
+		}
+	} catch (Exception $e) {
+		$resp['success'] = false;
+		$resp['valido'] = false;
+		$resp['message'] = $e->getMessage();
+	}
+	$obBD_con1->echoJson($resp);
+}
+
+/* Obtener prefijo de Guia (6 primeros digitos) desde ultimo manifiesto de la planta */
+if (isset($getPrefijoManGuiAjax)) {
+	$resp = array('success' => true, 'prefijo' => '');
+	try {
+		$pla_cod_prefijo = isset($_POST['Pla_Cod']) ? intval($_POST['Pla_Cod']) : 0;
+		if ($pla_cod_prefijo <= 0 && !empty($cliente_manifiesto['Pla_Cod'])) {
+			$pla_cod_prefijo = intval($cliente_manifiesto['Pla_Cod']);
+		}
+
+		if ($pla_cod_prefijo > 0) {
+			$sql_ult_guia = "SELECT Man_Gui
+							FROM manifiesto
+							WHERE Pla_Cod = $pla_cod_prefijo
+							  AND IFNULL(TRIM(Man_Gui), '') <> ''
+							ORDER BY Man_Cod DESC
+							LIMIT 1";
+			$row_ult_guia = $obBD_con1->fetch_assoc($obBD_con1->consulta($sql_ult_guia, $obBD_conexion->conexion));
+			$man_gui_ult = isset($row_ult_guia['Man_Gui']) ? trim($row_ult_guia['Man_Gui']) : '';
+			$solo_numeros = preg_replace('/\D+/', '', $man_gui_ult);
+			if (strlen($solo_numeros) >= 6) {
+				$resp['prefijo'] = substr($solo_numeros, 0, 3) . '-' . substr($solo_numeros, 3, 3).'000000000';
+			}
+		}
+	} catch (Exception $e) {
+		$resp['success'] = false;
+		$resp['message'] = $e->getMessage();
+	}
+	$obBD_con1->echoJson($resp);
+}
+
 if (isset($saveManifiestoAjax)) {
 	$datos = $_POST;
 	$resp = array('success' => false);
@@ -932,6 +997,27 @@ if (isset($saveManifiestoAjax)) {
 		}
 
         if (empty($Man_Gui)) throw new Exception('El número de Guía de Remisión es requerido');
+
+		// Validar que la guía no se repita dentro de la misma planta.
+		$man_gui_norm = preg_replace('/\D+/', '', (string)$Man_Gui);
+		if ($man_gui_norm === '') {
+			throw new Exception('El número de Guía de Remisión es inválido');
+		}
+		$pla_cod_gui = intval($Pla_Cod);
+		$man_cod_gui = !empty($Man_Cod) ? intval($Man_Cod) : 0;
+		$sql_dup_guia = "SELECT COUNT(*) AS total
+						FROM manifiesto
+						WHERE Pla_Cod = $pla_cod_gui
+						  AND IFNULL(TRIM(Man_Gui), '') <> ''
+						  AND REPLACE(REPLACE(TRIM(Man_Gui), '-', ''), ' ', '') = '$man_gui_norm'";
+		if ($man_cod_gui > 0) {
+			$sql_dup_guia .= " AND Man_Cod <> $man_cod_gui";
+		}
+		$row_dup_guia = $obBD_con1->fetch_assoc($obBD_con1->consulta($sql_dup_guia, $obBD_conexion->conexion));
+		$total_dup_guia = isset($row_dup_guia['total']) ? intval($row_dup_guia['total']) : 0;
+		if ($total_dup_guia > 0) {
+			throw new Exception('La Guía de Remisión ya existe para esta planta. Verifique el número ingresado.');
+		}
 		
 		$datos = array(
 			'Veh_Cod' => $Veh_Cod,
@@ -1647,9 +1733,7 @@ if (isset($anularAnticipo)) {
 		var peridodo = <?php echo json_encode($periodos) ?>,
 			prf = <?php echo json_encode($perfil) ?>;
 		var plantasSaldosModal = <?php echo json_encode($plantas_saldos_modal); ?>;
-		var hoy= <?php echo json_encode($hoy); ?>;
-		var esPerfilPlanta = <?php echo json_encode($esPerfilPlanta); ?>;
-		var infoPlantaCertificado = <?php echo json_encode($infoPlantaCertificado); ?>;
+		var hoy= <?php echo json_encode($hoy); ?>;	
 	</script>
 	<style>
 		.pagination>li>a,
@@ -1671,6 +1755,20 @@ if (isset($anularAnticipo)) {
 		@keyframes newFieldPulse {
 			0%, 100% { transform: scale(1); opacity: 0.85; }
 			50% { transform: scale(1.2); opacity: 1; }
+		}
+
+		/* Recarga listas chofer/vehículo: icono girando mientras espera al servidor */
+		#btnRecargarChoferes.is-loading {
+			cursor: wait;
+			opacity: 0.9;
+		}
+		#btnRecargarChoferes.is-loading .glyphicon-refresh {
+			display: inline-block;
+			animation: exaReloadSpin 0.65s linear infinite;
+		}
+		@keyframes exaReloadSpin {
+			from { transform: rotate(0deg); }
+			to { transform: rotate(360deg); }
 		}
 
 		.pagination {
@@ -2438,17 +2536,18 @@ if (isset($anularAnticipo)) {
 											<legend class="Titulos2">Datos Chofer y Vehiculo</legend>
 											<div class="form-group">
 												<label class="col-sm-2 control-label label-sm required">
-													Guia Remisión:
-													<span class="glyphicon glyphicon-exclamation-sign text-warning new-field-indicator" title="Campo nuevo por completar" aria-hidden="true"></span>
+													Guia Remisión:													
 												</label>
 												<div class="col-sm-3">
-													<input type="text" class="form-control input-xs required" id="Man_Gui" name="Man_Gui" value="" required>
+													<div class="input-group input-group-xs">
+														<input type="text" class="form-control input-xs required" id="Man_Gui" name="Man_Gui" value="" placeholder="000-000-000000000" maxlength="17" autocomplete="off" required>
+														<span class="input-group-addon validate"><i id="Man_Gui_Est"></i></span>
+													</div>
 												</div>
 											</div>
 											<div class="form-group">
 												<label class="col-sm-2 control-label label-sm required">Vehiculo:</label>
 												<div class="col-sm-8">
-
 													<?php
 													/*$man_pendiente = $obBD_con1->getArrayConsulta("manifiesto.2", array('Pla_Cod' => $cliente_manifiesto['Pla_Cod'],'Emp_Cod' => $Ses_Emp_Cod), $obBD_conexion);
 													$obBD_con1->utf8_change_param($man_pendiente);
@@ -2503,7 +2602,17 @@ if (isset($anularAnticipo)) {
 																		}
 																	}
 																}
-																$emp_cod_ctx = isset($Ses_Emp_Cod) ? $Ses_Emp_Cod : '';																
+																$emp_cod_ctx = isset($Ses_Emp_Cod) ? $Ses_Emp_Cod : '';
+																// Disponibles arriba, << En Ruta >> abajo
+																$vehiculos_orden = array('arriba' => array(), 'abajo' => array());
+																foreach ($vehiculos as $vrow) {
+																	if (isset($vrow['total']) && $vrow['total'] * 1 > 0) {
+																		$vehiculos_orden['abajo'][] = $vrow;
+																	} else {
+																		$vehiculos_orden['arriba'][] = $vrow;
+																	}
+																}
+																$vehiculos = array_merge($vehiculos_orden['arriba'], $vehiculos_orden['abajo']);
 																foreach ($vehiculos as $row) {
 																	$esta_sancionado = in_array($row['Veh_Pla'], $vehiculos_sancionados);
 																	//$clave_veh = (isset($row['Veh_Pla']) ? $row['Veh_Pla'] : '') . '|' . $emp_cod_ctx;
@@ -2539,7 +2648,12 @@ if (isset($anularAnticipo)) {
 												<div class="col-sm-5">
 													<div class="input-group input-group-xs">
 														<span id="Prs_Ced_Cho" name="Prs_Ced_Cho" class="input-group-addon bold alert-info"> - </span>
-														<?php $datos = $obBD_con1->getArrayConsulta('manifiesto_chofer.selectWhere', array('where' => array('Cho_Est' => 'A', 'Cli_Cod' => $cliente_manifiesto['Cli_Cod'])), $obBD_conexion, true);
+														<?php
+														if (!empty($cliente_manifiesto['Cli_Cod'])) {
+															$datos = $obBD_con1->getArrayConsulta('manifiesto_chofer.1', array('Cli_Cod' => $cliente_manifiesto['Cli_Cod']), $obBD_conexion, true);
+														} else {
+															$datos = array();
+														}
 														$obBD_con1->utf8_change_param($datos);
 														// Crear array de Prs_Ced bloqueados (en ruta)
 														$choferes_bloqueados = array();
@@ -2591,19 +2705,38 @@ if (isset($anularAnticipo)) {
 																}
 															}
 														}
+														// Disponibles arriba, << En Ruta >> abajo
+														$chofer_orden = array('arriba' => array(), 'abajo' => array());
+														foreach ($datos as $drow) {
+															$tr = isset($drow['total']) ? (int) $drow['total'] : 0;
+															$er_cho = $tr > 0;
+															if (!$er_cho && !empty($drow['Prs_Ced']) && in_array($drow['Prs_Ced'], $choferes_bloqueados)) {
+																$er_cho = true;
+															}
+															if ($er_cho) {
+																$chofer_orden['abajo'][] = $drow;
+															} else {
+																$chofer_orden['arriba'][] = $drow;
+															}
+														}
+														$datos = array_merge($chofer_orden['arriba'], $chofer_orden['abajo']);
 														?>
 														<select id="Cho_Cod" name="Cho_Cod" class="form-control input-xs readOnly" required="" onchange="$('#Prs_Ced_Cho').html($(this).find(':selected').data('ced'));  $('#lic_cho').val('TIPO ' + $(this).find(':selected').data('lic'))">
 															<option value=''>Seleccione...</option>
 															<?php
 															if (count($datos) > 0) {
 																foreach ($datos as $row) {
-																	$cho_ced = isset($row['Prs_Ced']) ? $row['Prs_Ced'] : 0;
-																	$esta_bloqueado = in_array($cho_ced, $choferes_bloqueados);
+																	$total_ruta_cho = isset($row['total']) ? (int) $row['total'] : 0;
+																	$en_ruta_cho = $total_ruta_cho > 0;
+																	if (!$en_ruta_cho && isset($row['Prs_Ced']) && in_array($row['Prs_Ced'], $choferes_bloqueados)) {
+																		$en_ruta_cho = true;
+																	}
 																	$esta_sancionado = in_array($row['Prs_Ced'], $choferes_sancionados);
-																	$disabled = ($esta_bloqueado || $esta_sancionado) ? 'disabled' : '';
+																	$disabled = $esta_sancionado ? 'disabled' : '';
 																	$texto_chofer = $row['nombre'];
-																	if ($esta_bloqueado) {
-																		$texto_chofer .= ' << En ruta >>';
+																	if ($en_ruta_cho) {
+																		$texto_chofer .= ' << En Ruta >>';
+																		$disabled = 'disabled';
 																	}
 																	if ($esta_sancionado) {
 																		$texto_chofer .= ' << Sancionado >>';
@@ -2613,6 +2746,11 @@ if (isset($anularAnticipo)) {
 															}
 															?>
 														</select>
+														<span class="input-group-btn">
+															<button type="button" id="btnRecargarChoferes" class="btn btn-default btn-xs" title="Actualizar estados de Vehiculos y Choferes">
+																<span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
+															</button>
+														</span>
 														<?php if (!empty($listado_choferes_sancionados_modal)) { ?>
 														<span class="input-group-btn">
 															<button type="button" id="btnVerChoferesSancionados" class="btn btn-warning btn-xs" title="Ver choferes sancionados del listado" data-toggle="modal" data-target="#modalChoferesSancionados">
@@ -3279,7 +3417,7 @@ if (isset($anularAnticipo)) {
 		
 	</div>
 
-	<script src="../VALIDACIONES/man_val_manifiesto.js?a=305"></script>
+	<script src="../VALIDACIONES/man_val_manifiesto.js?a=307"></script>
 	<script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>
 	<script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=2"></script>
 	<script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>

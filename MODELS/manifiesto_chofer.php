@@ -49,6 +49,25 @@ class manifiesto_chofer extends AbstractModel{
                 $sql="";
                 //echo $this->getSqlString($sql)."<br/>";
                 break;
+            /* Igual que manifiesto_transporte.1: subconsulta "total" = manifiestos activos en ruta (no cerrados con GS) por Cho_Cod. */
+            case 1:
+                /* Mismo alcance que selectWhere(Cli_Cod, Cho_Est): no filtrar por una sola Pla_Cod (si no, el select puede quedar vacío). */
+                $cli = isset($Par_Sql['Cli_Cod']) ? intval($Par_Sql['Cli_Cod']) : 0;
+                $sql = "SELECT COALESCE((
+                    SELECT COUNT(*) FROM manifiesto m
+                    WHERE m.Cho_Cod = chofer.Cho_Cod
+                      AND m.Man_Tes NOT LIKE '%GS%'
+                      AND m.Man_Est = 'A'
+                ), 0) AS total,
+                manifiesto_chofer.*, chofer.*, manifiesto_plantas.Cli_Cod,
+                CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) AS nombre, persona.Prs_Ced
+                FROM manifiesto_chofer
+                INNER JOIN manifiesto_plantas ON manifiesto_plantas.Pla_Cod = manifiesto_chofer.Pla_Cod
+                INNER JOIN chofer ON chofer.Cho_Cod = manifiesto_chofer.Cho_Cod
+                INNER JOIN persona ON persona.Prs_Cod = chofer.Prs_Cod
+                WHERE chofer.Cho_Est = 'A'
+                  AND manifiesto_plantas.Cli_Cod = $cli";
+                break;
             default: throw new Exception ("No existe la sql numero $id!");
         }
         //echo $this->getSqlString($sql)."<br/>";
