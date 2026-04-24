@@ -2137,14 +2137,14 @@ $obBD_con1->utf8_change_param($transportes);
                             </select>
                         </div>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" hidden>
                         <label class="col-sm-4 control-label label-sm" for="Prs_Tel">Tel&eacute;fono 1:</label>
                         <div class="col-sm-4">
                             <input id="Prs_Tel" name="Prs_Tel" class="form-control input-xs" placeholder="" type="text" onkeypress="return validar_numeric(event);" />
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-xs-4 control-label label-xs" for="Pep_Tel">Tel&eacute;fono 2:</label>
+                        <label class="col-xs-4 control-label label-xs" for="Pep_Tel">Tel&eacute;fono:</label>
                         <div class="col-xs-8">
                             <input type="text" id="Pep_Tel" name="Pep_Tel" class="form-control input-xs" placeholder="Teléfono del administrador" maxlength="20">
                         </div>
