@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Envío de mensaje general (WhatsApp) a plantas o choferes
+ * Envío masivo a plantas, choferes o personal Relavera por WhatsApp o correo electrónico (SMTP).
  */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/log_man_notificacion.php');
@@ -87,11 +87,16 @@ function relavera_notif_leer_imagen_subida(&$error)
         $error = 'No se pudo leer la imagen.';
         return false;
     }
-    return base64_encode($data);
+    $name = isset($_FILES['imagen_notif']['name']) ? basename((string) $_FILES['imagen_notif']['name']) : 'imagen';
+    return array(
+        'base64' => base64_encode($data),
+        'mime' => $mime,
+        'name' => $name,
+    );
 }
 
 /**
- * Parámetros GET de filtros para listados AJAX (plantas / choferes).
+ * Parámetros GET de filtros para listados AJAX (plantas / choferes / personal).
  *
  * @return array
  */
@@ -104,10 +109,131 @@ function relavera_notif_params_filtros_listado()
     );
 }
 
+/**
+ * @param string $email
+ * @return string correo válido o cadena vacía
+ */
+function relavera_notif_email_valido($email)
+{
+    $email = trim((string) $email);
+    if ($email === '' || strcasecmp($email, '-') === 0) {
+        return '';
+    }
+    if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return $email;
+    }
+    return '';
+}
+
+/**
+ * Correo para fila planta: primero Pep_Cor (manifiesto_personal_planta), luego persona admin y cliente.
+ *
+ * @param array $f
+ * @return string
+ */
+function relavera_notif_correo_fila_planta(array $f)
+{
+    foreach (array('Pep_Cor', 'Prs_Cor_Admin', 'Prs_Cor_Cliente') as $k) {
+        $v = isset($f[$k]) ? relavera_notif_email_valido($f[$k]) : '';
+        if ($v !== '') {
+            return $v;
+        }
+    }
+    return '';
+}
+
+/**
+ * @param string $para
+ * @param string $nombreDestinatario
+ * @param string $asunto
+ * @param string $mensajePlano
+ * @return bool
+ */
+function relavera_notif_enviar_correo_notif($para, $nombreDestinatario, $asunto, $mensajePlano, $imagenAdj = null)
+{
+    $asuntoLinea = trim(str_replace(array("\r", "\n"), ' ', $asunto));
+    $html = '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5;color:#222;">'
+        . '<p style="margin:0 0 12px;"><strong>' . htmlspecialchars($asuntoLinea, ENT_QUOTES, 'UTF-8') . '</strong></p>'
+        . '<div style="white-space:pre-wrap;">' . nl2br(htmlspecialchars($mensajePlano, ENT_QUOTES, 'UTF-8')) . '</div>'
+        . '</div>';
+    $nombre = $nombreDestinatario !== '' ? $nombreDestinatario : 'Destinatario';
+
+    // SMTP exclusivo de Relavera (si está habilitado en el config del módulo)
+    $cfgPath = __DIR__ . '/../LOGICA/relavera_notif_mail_config.php';
+    if (is_file($cfgPath)) {
+        require_once $cfgPath;
+    }
+    if (defined('RELAVERA_NOTIF_SMTP_ENABLED') && RELAVERA_NOTIF_SMTP_ENABLED) {
+        require_once __DIR__ . '/../../Librerias/PHPMailer/PHPMailer.php';
+        require_once __DIR__ . '/../../Librerias/PHPMailer/SMTP.php';
+        require_once __DIR__ . '/../../Librerias/PHPMailer/Exception.php';
+
+        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+        $mail->CharSet = 'UTF-8';
+        $mail->isSMTP();
+        $mail->Host = RELAVERA_NOTIF_SMTP_HOST;
+        $mail->SMTPAuth = RELAVERA_NOTIF_SMTP_AUTH;
+        $mail->Username = RELAVERA_NOTIF_SMTP_USERNAME;
+        $mail->Password = RELAVERA_NOTIF_SMTP_PASSWORD;
+        $mail->SMTPSecure = RELAVERA_NOTIF_SMTP_SECURE;
+        $mail->Port = RELAVERA_NOTIF_SMTP_PORT;
+        $mail->Timeout = RELAVERA_NOTIF_SMTP_TIMEOUT;
+
+        $mail->From = RELAVERA_NOTIF_SMTP_FROM;
+        $mail->Sender = RELAVERA_NOTIF_SMTP_SENDER;
+        $mail->FromName = RELAVERA_NOTIF_SMTP_FROMNAME;
+
+        $mail->addAddress(trim((string) $para), strtoupper($nombre));
+        $mail->isHTML(true);
+        $mail->Subject = ($asuntoLinea !== '') ? $asuntoLinea : (defined('RELAVERA_NOTIF_SMTP_SUBJECT_DEFAULT') ? RELAVERA_NOTIF_SMTP_SUBJECT_DEFAULT : 'Notificación Relavera');
+        $mail->Body = $html;
+
+        if (is_array($imagenAdj) && !empty($imagenAdj['base64'])) {
+            $bin = base64_decode((string) $imagenAdj['base64'], true);
+            if ($bin !== false && $bin !== '') {
+                $fname = !empty($imagenAdj['name']) ? (string) $imagenAdj['name'] : 'imagen';
+                $mime = !empty($imagenAdj['mime']) ? (string) $imagenAdj['mime'] : 'application/octet-stream';
+                $mail->addStringAttachment($bin, $fname, 'base64', $mime);
+            }
+        }
+
+        try {
+            $mail->send();
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    // Fallback: SMTP general del sistema (enviar_correo/config_correo.php)
+    require_once __DIR__ . '/../../enviar_correo/ClaseEnviarCorreo.php';
+    $mailer = new ClaseEnviarCorreo();
+    $adjuntos = array();
+    $tmpFile = null;
+    if (is_array($imagenAdj) && !empty($imagenAdj['base64'])) {
+        $bin = base64_decode((string) $imagenAdj['base64'], true);
+        if ($bin !== false && $bin !== '') {
+            $tmpFile = tempnam(sys_get_temp_dir(), 'rel_notif_');
+            if ($tmpFile) {
+                @file_put_contents($tmpFile, $bin);
+                $adjuntos[] = array(
+                    'ruta' => $tmpFile,
+                    'nombre' => (!empty($imagenAdj['name']) ? (string) $imagenAdj['name'] : 'imagen'),
+                );
+            }
+        }
+    }
+    $ok = $mailer->enviarComprobante($para, $nombre, $html, 'Relavera', $adjuntos, $asuntoLinea);
+    if ($tmpFile && is_file($tmpFile)) {
+        @unlink($tmpFile);
+    }
+    return $ok;
+}
+
 /* ——— AJAX: listado según grupo ——— */
 if (isset($cargarListaNotifAjax)) {
     $grupo = isset($_GET['grupo']) ? $_GET['grupo'] : 'plantas';
-    if (!in_array($grupo, array('plantas', 'choferes'), true)) {
+    if (!in_array($grupo, array('plantas', 'choferes', 'personal'), true)) {
         $grupo = 'plantas';
     }
     $filtros = relavera_notif_params_filtros_listado();
@@ -119,6 +245,9 @@ if (isset($cargarListaNotifAjax)) {
         case 'choferes':
             $rows = $obBD_con1->getArrayConsulta(2, array_merge(array('Emp_Cod' => $Ses_Emp_Cod, 'ids' => ''), $filtros), $obBD_conexion);
             break;
+        case 'personal':
+            $rows = $obBD_con1->getArrayConsulta(7, array_merge(array('Emp_Cod' => $Ses_Emp_Cod, 'ids' => ''), $filtros), $obBD_conexion);
+            break;
     }
     $obBD_con1->utf8_change_param($rows);
     $obBD_con1->echoJson(array('success' => true, 'grupo' => $grupo, 'rows' => $rows));
@@ -129,7 +258,7 @@ if (isset($enviarNotifMasivaAjax)) {
     $resp = array('success' => false, 'message' => '', 'enviados' => 0, 'omitidos' => 0, 'fallidos' => 0);
 
     $grupo = isset($_POST['grupo']) ? $_POST['grupo'] : 'plantas';
-    if (!in_array($grupo, array('plantas', 'choferes'), true)) {
+    if (!in_array($grupo, array('plantas', 'choferes', 'personal'), true)) {
         $grupo = 'plantas';
     }
 
@@ -147,15 +276,22 @@ if (isset($enviarNotifMasivaAjax)) {
         $obBD_con1->echoJson($resp);
     }
 
+    $canal = isset($_POST['canal_envio']) ? trim((string) $_POST['canal_envio']) : 'whatsapp';
+    if (!in_array($canal, array('whatsapp', 'email'), true)) {
+        $canal = 'whatsapp';
+    }
+
+    $imagenInfo = null;
     $errImg = '';
-    $imagenBase64 = relavera_notif_leer_imagen_subida($errImg);
-    if ($imagenBase64 === false) {
+    $imagenInfo = relavera_notif_leer_imagen_subida($errImg);
+    if ($imagenInfo === false) {
         $resp['message'] = $errImg !== '' ? $errImg : 'Imagen no válida.';
         $obBD_con1->echoJson($resp);
     }
 
     $titulo_esc = str_replace('*', '', $titulo);
-    $cuerpo_envio = '*' . $titulo_esc . "*\n\n" . $mensaje;
+    $cuerpo_wa = '*' . $titulo_esc . "*\n\n" . $mensaje;
+    $imagenBase64 = (is_array($imagenInfo) && isset($imagenInfo['base64'])) ? $imagenInfo['base64'] : null;
 
     $ids = array();
     foreach ($idsPost as $u) {
@@ -181,15 +317,29 @@ if (isset($enviarNotifMasivaAjax)) {
                 $obBD_con1->echoJson($resp);
             }
             foreach ($filas as $f) {
-                $tel = relavera_telefono_planta_fila($f);
-                if ($tel === '') {
-                    $resp['omitidos']++;
-                    continue;
-                }
-                if (relavera_enviar_whatsapp_notif_con_imagen($tel, $cuerpo_envio, $imagenBase64)) {
-                    $resp['enviados']++;
+                if ($canal === 'whatsapp') {
+                    $tel = relavera_telefono_planta_fila($f);
+                    if ($tel === '') {
+                        $resp['omitidos']++;
+                        continue;
+                    }
+                    if (relavera_enviar_whatsapp_notif_con_imagen($tel, $cuerpo_wa, $imagenBase64)) {
+                        $resp['enviados']++;
+                    } else {
+                        $resp['fallidos']++;
+                    }
                 } else {
-                    $resp['fallidos']++;
+                    $correo = relavera_notif_correo_fila_planta($f);
+                    if ($correo === '') {
+                        $resp['omitidos']++;
+                        continue;
+                    }
+                    $nom = isset($f['Pla_Nom']) ? trim((string) $f['Pla_Nom']) : '';
+                    if (relavera_notif_enviar_correo_notif($correo, $nom, $titulo_esc, $mensaje, $imagenInfo)) {
+                        $resp['enviados']++;
+                    } else {
+                        $resp['fallidos']++;
+                    }
                 }
             }
             break;
@@ -201,15 +351,75 @@ if (isset($enviarNotifMasivaAjax)) {
                 $obBD_con1->echoJson($resp);
             }
             foreach ($filas as $f) {
-                $tel = isset($f['Telefono']) ? trim((string) $f['Telefono']) : '';
-                if ($tel === '') {
-                    $resp['omitidos']++;
-                    continue;
-                }
-                if (relavera_enviar_whatsapp_notif_con_imagen($tel, $cuerpo_envio, $imagenBase64)) {
-                    $resp['enviados']++;
+                if ($canal === 'whatsapp') {
+                    $tel = isset($f['Telefono']) ? trim((string) $f['Telefono']) : '';
+                    if ($tel === '') {
+                        $resp['omitidos']++;
+                        continue;
+                    }
+                    if (relavera_enviar_whatsapp_notif_con_imagen($tel, $cuerpo_wa, $imagenBase64)) {
+                        $resp['enviados']++;
+                    } else {
+                        $resp['fallidos']++;
+                    }
                 } else {
-                    $resp['fallidos']++;
+                    $correo = '';
+                    if (isset($f['Cho_Cor'])) {
+                        $correo = relavera_notif_email_valido($f['Cho_Cor']);
+                    }
+                    if ($correo === '' && isset($f['Prs_Cor'])) {
+                        $correo = relavera_notif_email_valido($f['Prs_Cor']);
+                    }
+                    if ($correo === '') {
+                        $resp['omitidos']++;
+                        continue;
+                    }
+                    $nom = isset($f['Chofer']) ? trim((string) $f['Chofer']) : '';
+                    if (relavera_notif_enviar_correo_notif($correo, $nom, $titulo_esc, $mensaje, $imagenInfo)) {
+                        $resp['enviados']++;
+                    } else {
+                        $resp['fallidos']++;
+                    }
+                }
+            }
+            break;
+
+        case 'personal':
+            $filas = $obBD_con1->getArrayConsulta(7, array('Emp_Cod' => $Ses_Emp_Cod, 'ids' => $idsStr), $obBD_conexion);
+            if (empty($filas)) {
+                $resp['message'] = 'No se encontraron usuarios de personal válidos (sin planta y sin perfil Plantas).';
+                $obBD_con1->echoJson($resp);
+            }
+            foreach ($filas as $f) {
+                if ($canal === 'whatsapp') {
+                    $tel = isset($f['Telefono']) ? trim((string) $f['Telefono']) : '';
+                    if ($tel === '') {
+                        $resp['omitidos']++;
+                        continue;
+                    }
+                    if (relavera_enviar_whatsapp_notif_con_imagen($tel, $cuerpo_wa, $imagenBase64)) {
+                        $resp['enviados']++;
+                    } else {
+                        $resp['fallidos']++;
+                    }
+                } else {
+                    $correo = '';
+                    if (isset($f['Usu_Cor'])) {
+                        $correo = relavera_notif_email_valido($f['Usu_Cor']);
+                    }
+                    if ($correo === '' && isset($f['Prs_Cor'])) {
+                        $correo = relavera_notif_email_valido($f['Prs_Cor']);
+                    }
+                    if ($correo === '') {
+                        $resp['omitidos']++;
+                        continue;
+                    }
+                    $nom = isset($f['Usuario']) ? trim((string) $f['Usuario']) : '';
+                    if (relavera_notif_enviar_correo_notif($correo, $nom, $titulo_esc, $mensaje, $imagenInfo)) {
+                        $resp['enviados']++;
+                    } else {
+                        $resp['fallidos']++;
+                    }
                 }
             }
             break;
@@ -217,18 +427,29 @@ if (isset($enviarNotifMasivaAjax)) {
 
     $resp['success'] = ($resp['enviados'] > 0);
     if ($resp['enviados'] > 0) {
-        $resp['message'] = 'Mensajes enviados: ' . $resp['enviados'] . '.';
-        if ($resp['omitidos'] > 0) {
-            $resp['message'] .= ' Sin teléfono: ' . $resp['omitidos'] . '.';
+        if ($canal === 'email') {
+            $resp['message'] = 'Correos enviados: ' . $resp['enviados'] . '.';
+            if ($resp['omitidos'] > 0) {
+                $resp['message'] .= ' Sin correo válido: ' . $resp['omitidos'] . '.';
+            }
+        } else {
+            $resp['message'] = 'Mensajes enviados: ' . $resp['enviados'] . '.';
+            if ($resp['omitidos'] > 0) {
+                $resp['message'] .= ' Sin teléfono: ' . $resp['omitidos'] . '.';
+            }
         }
         if ($resp['fallidos'] > 0) {
             $resp['message'] .= ' Fallidos: ' . $resp['fallidos'] . '.';
         }
     } else {
         if ($resp['omitidos'] > 0 && $resp['fallidos'] === 0) {
-            $resp['message'] = 'Los destinatarios seleccionados no tienen teléfono registrado.';
+            $resp['message'] = ($canal === 'email')
+                ? 'Los destinatarios seleccionados no tienen correo electrónico válido.'
+                : 'Los destinatarios seleccionados no tienen teléfono registrado.';
         } elseif ($resp['fallidos'] > 0) {
-            $resp['message'] = 'No se pudo completar el envío (error de API o red).';
+            $resp['message'] = ($canal === 'email')
+                ? 'No se pudo completar el envío por correo (SMTP o red).'
+                : 'No se pudo completar el envío (error de API o red).';
         } else {
             $resp['message'] = 'No se pudo enviar el mensaje.';
         }
@@ -448,7 +669,21 @@ if (isset($enviarNotifMasivaAjax)) {
                             <select id="grupo_notif" name="grupo_notif" class="form-control input-sm">
                                 <option value="plantas">Plantas</option>
                                 <option value="choferes">Choferes</option>
+                                <option value="personal">Personal Relavera</option>
                             </select>
+                        </div>
+
+                        <div class="form-group" id="wrap_canal_envio">
+                            <label>Canal de env&iacute;o</label>
+                            <div style="margin-top:4px;">
+                                <label class="checkbox-inline" style="font-weight:normal;margin-right:14px;">
+                                    <input type="radio" name="canal_envio" id="canal_wa" value="whatsapp" checked="checked" /> WhatsApp
+                                </label>
+                                <label class="checkbox-inline" style="font-weight:normal;">
+                                    <input type="radio" name="canal_envio" id="canal_email" value="email" /> Correo electr&oacute;nico
+                                </label>
+                            </div>
+                            <p class="text-muted" style="font-size:11px;margin:6px 0 0;" id="hint_canal_envio">La imagen adjunta solo aplica si env&iacute;a por WhatsApp.</p>
                         </div>
 
                         <div class="form-group">
@@ -461,7 +696,7 @@ if (isset($enviarNotifMasivaAjax)) {
                             <textarea id="mensaje_notif" name="mensaje_notif" class="form-control input-sm" maxlength="4000" placeholder="Texto que ver&aacute;n los destinatarios en WhatsApp&hellip;"></textarea>
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group" id="wrap_imagen_notif_grp">
                             <label for="imagen_notif">Imagen (opcional)</label>
                             <input type="file" id="imagen_notif" name="imagen_notif" class="form-control input-sm" accept="image/jpeg,image/png,image/gif,image/webp,image/bmp,.jpg,.jpeg,.png,.gif,.webp,.bmp" />
                             <p class="notif-imagen-hint">Formatos: JPG, PNG, GIF, WEBP o BMP; m&aacute;x. 16&nbsp;MB. Si el texto supera 1024 caracteres, se env&iacute;a primero el chat completo y despu&eacute;s la imagen.</p>
@@ -519,6 +754,23 @@ if (isset($enviarNotifMasivaAjax)) {
                                     </div>
                                 </div>
                             </fieldset>
+
+                            <fieldset class="exa-fieldset" id="wrap_filtros_personal" style="display:none;">
+                                <legend class="Titulos2">B&uacute;squeda (personal Relavera)</legend>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <label class="label-xs">Nombre o apellido</label>
+                                        <input type="text" id="filtro_per_nombre" class="form-control input-xs" maxlength="120" placeholder="Nombre o apellido&hellip;" />
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label class="label-xs">C&eacute;dula</label>
+                                        <input type="text" id="filtro_per_cedula" class="form-control input-xs" maxlength="20" placeholder="C&eacute;dula&hellip;" />
+                                    </div>
+                                    <div class="col-sm-4" style="padding-top:20px;">
+                                        <button type="button" id="btn_filtrar_notif_per" class="btn btn-success btn-sm"><span class="glyphicon glyphicon-search"></span> Buscar</button>
+                                    </div>
+                                </div>
+                            </fieldset>
                         </div>
 
                         <div class="tabla-notif-wrap" style="margin-top:12px;">
@@ -526,7 +778,7 @@ if (isset($enviarNotifMasivaAjax)) {
                                 <thead id="thead_notif"></thead>
                                 <tbody id="tbody_notif">
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted">Cargando lista&hellip;</td>
+                                        <td colspan="7" class="text-center text-muted">Cargando lista&hellip;</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -537,7 +789,7 @@ if (isset($enviarNotifMasivaAjax)) {
         </div>
     </div>
 
-    <script src="../VALIDACIONES/man_adm_notificacion.js?x=8"></script>
+    <script src="../VALIDACIONES/man_adm_notificacion.js?x=15"></script>
 </body>
 
 </html>

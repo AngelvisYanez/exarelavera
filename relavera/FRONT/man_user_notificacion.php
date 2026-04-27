@@ -26,6 +26,8 @@ if (isset($guardarUsuarioNotifModalAjax)) {
     $Prs_Cod = isset($_POST['Prs_Cod']) ? (int) $_POST['Prs_Cod'] : 0;
     $telefono = isset($_POST['Prs_Tel']) ? trim($_POST['Prs_Tel']) : '';
     $telefono = preg_replace('/\D/', '', $telefono);
+    $Usu_Cor = isset($_POST['Usu_Cor']) ? trim((string) $_POST['Usu_Cor']) : '';
+    $Usu_Cor = str_replace(array("\r", "\n"), '', $Usu_Cor);
     $Usu_Ntf = isset($_POST['Usu_Ntf']) ? trim((string) $_POST['Usu_Ntf']) : '';
 
     if ($Usu_Cod <= 0 || $Prs_Cod <= 0) {
@@ -34,6 +36,14 @@ if (isset($guardarUsuarioNotifModalAjax)) {
     }
     if (strlen($telefono) > 30) {
         $resp['message'] = 'El teléfono no puede superar 30 dígitos.';
+        $obBD_con1->echoJson($resp);
+    }
+    if (strlen($Usu_Cor) > 200) {
+        $resp['message'] = 'El correo no puede superar 200 caracteres.';
+        $obBD_con1->echoJson($resp);
+    }
+    if ($Usu_Cor !== '' && !filter_var($Usu_Cor, FILTER_VALIDATE_EMAIL)) {
+        $resp['message'] = 'Ingrese un correo válido.';
         $obBD_con1->echoJson($resp);
     }
     $Usu_Ntf = strtoupper($Usu_Ntf);
@@ -61,6 +71,7 @@ if (isset($guardarUsuarioNotifModalAjax)) {
         ), $obBD_conexion);
         $obBD_con1->operacionobBD('usuarios.update', array(
             'Usu_Ntf' => $Usu_Ntf,
+            'Usu_Cor' => ($Usu_Cor !== '' ? $Usu_Cor : null),
             'where' => array('Usu_Cod' => $Usu_Cod),
         ), $obBD_conexion);
     } catch (Exception $e) {
@@ -151,7 +162,7 @@ if (isset($guardarUsuarioNotifModalAjax)) {
     </div>
     <div class="panel-body ui-widget-content ui-corner-bottom exa-body">
         <div class="alert alert-info user-notif-intro" role="alert">
-            <p>Activar usuarios para que les llegue <strong>notificaciones de anticipos</strong>. <span>Puedes editar el número de telefono y activar si el modo para recibir notificaciones.</span>
+            <p>Activar usuarios para que les llegue <strong>notificaciones de anticipos</strong>. <span>Puedes editar el número de telefono, email y activar si el modo para recibir notificaciones.</span>
         </div>
         <div class="user-notif-card">
             <fieldset class="exa-fieldset" style="margin:0; border:none; padding:0;">
@@ -179,6 +190,7 @@ if (isset($guardarUsuarioNotifModalAjax)) {
                         <th style="width:46px;" class="text-center">N&deg;</th>
                         <th>Usuario</th>
                         <th>C&eacute;dula / RUC</th>
+                        <th>Correo</th>
                         <th>Sucursal</th>
                         <th class="text-center" style="width:120px;">Recibe notificaci&oacute;n</th>
                         <th style="min-width:140px;">Tel&eacute;fono</th>
@@ -186,7 +198,7 @@ if (isset($guardarUsuarioNotifModalAjax)) {
                     </tr>
                 </thead>
                 <tbody id="tbody_usu_notif">
-                    <tr><td colspan="7" class="text-center text-muted">Cargando&hellip;</td></tr>
+                    <tr><td colspan="8" class="text-center text-muted">Cargando&hellip;</td></tr>
                 </tbody>
             </table>
         </div>
@@ -209,6 +221,10 @@ if (isset($guardarUsuarioNotifModalAjax)) {
                     <input type="text" id="modal_prs_tel" class="form-control input-sm" maxlength="30" inputmode="numeric" pattern="[0-9]*" autocomplete="tel" placeholder="Solo n&uacute;meros; puede empezar con 0" />
                     <small class="text-muted">Solo d&iacute;gitos; sin letras ni s&iacute;mbolos.</small>
                 </div>
+                <div class="form-group">
+                    <label for="modal_usu_cor">Correo electr&oacute;nico</label>
+                    <input type="email" id="modal_usu_cor" class="form-control input-sm" maxlength="200" autocomplete="email" placeholder="usuario@dominio.com" />
+                </div>
                 <div class="form-group" style="margin-bottom:0;">
                     <label for="modal_usu_ntf">Notificaciones de anticipos</label>
                     <select id="modal_usu_ntf" class="form-control input-sm" style="max-width:100%;">
@@ -225,6 +241,6 @@ if (isset($guardarUsuarioNotifModalAjax)) {
     </div>
 </div>
 
-<script src="../VALIDACIONES/man_user_notificacion.js?x=8"></script>
+<script src="../VALIDACIONES/man_user_notificacion.js?x=10"></script>
 </body>
 </html>

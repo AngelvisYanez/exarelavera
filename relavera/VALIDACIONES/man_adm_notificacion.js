@@ -1,5 +1,5 @@
 /**
- * Notificaciones masivas WhatsApp — man_adm_notificacion.php (plantas / choferes)
+ * Notificaciones masivas WhatsApp — man_adm_notificacion.php (plantas / choferes / personal)
  */
 (function () {
     var grupoSel = document.getElementById('grupo_notif');
@@ -12,8 +12,34 @@
     var txtAyuda = document.getElementById('txt_ayuda_grupo');
     var imgInput = document.getElementById('imagen_notif');
     var imgPreview = document.getElementById('preview_imagen_notif');
+    var wrapImgGrp = document.getElementById('wrap_imagen_notif_grp');
+    var hintCanal = document.getElementById('hint_canal_envio');
 
     var MAX_IMG_BYTES = 16 * 1024 * 1024;
+
+    function canalSeleccionado() {
+        var el = document.querySelector('input[name="canal_envio"]:checked');
+        return el ? el.value : 'whatsapp';
+    }
+
+    function actualizarCanalUi() {
+        var c = canalSeleccionado();
+        if (wrapImgGrp) wrapImgGrp.style.display = 'block';
+        if (hintCanal) {
+            hintCanal.style.display = 'block';
+            hintCanal.textContent = c === 'whatsapp'
+                ? 'La imagen adjunta solo aplica si envía por WhatsApp.'
+                : 'Si adjunta una imagen, se enviará como adjunto en el correo.';
+        }
+    }
+
+    (function bindCambioCanal() {
+        var radios = document.querySelectorAll('input[name="canal_envio"]');
+        for (var ri = 0; ri < radios.length; ri++) {
+            radios[ri].addEventListener('change', actualizarCanalUi);
+        }
+    })();
+    actualizarCanalUi();
 
     function bindImagenPreview() {
         if (!imgInput || !imgPreview) return;
@@ -49,25 +75,28 @@
     }
 
     function actualizarAyuda(grupo) {
-        if (!txtAyuda) return;
+       /* if (!txtAyuda) return;
         if (grupo === 'plantas') {
             txtAyuda.textContent = 'Plantas: se usa el primer teléfono disponible (WhatsApp de planta, luego administrador).';
+        } else if (grupo === 'choferes') {
+            txtAyuda.textContent = 'Choferes: correo Prs_Cor y teléfono en la ficha de persona (o chofer).';
         } else {
-            txtAyuda.textContent = 'Choferes: teléfono en chofer o en la ficha de persona.';
-        }
+            txtAyuda.textContent = 'Personal Relavera: sin planta y sin perfil Plantas; correo Usu_Cor (si existe) o Prs_Cor, y teléfono en persona.';
+        }*/
     }
 
     function numColumnas(grupo) {
-        if (grupo === 'plantas') return 5;
-        return 6;
+        return grupo === 'plantas' ? 6 : 7;
     }
 
     function actualizarFiltrosVisibles() {
         var g = grupoSel ? grupoSel.value : 'plantas';
         var wp = document.getElementById('wrap_filtros_plantas');
         var wc = document.getElementById('wrap_filtros_choferes');
+        var wper = document.getElementById('wrap_filtros_personal');
         if (wp) wp.style.display = g === 'plantas' ? 'block' : 'none';
         if (wc) wc.style.display = g === 'choferes' ? 'block' : 'none';
+        if (wper) wper.style.display = g === 'personal' ? 'block' : 'none';
     }
 
     /** Query string con filtros según grupo (nombres GET que espera PHP). */
@@ -79,13 +108,18 @@
             var elC = document.getElementById('filtro_pla_cedula');
             if (elN && elN.value.trim()) parts.push('filtro_nombre=' + encodeURIComponent(elN.value.trim()));
             if (elC && elC.value.trim()) parts.push('filtro_cedula=' + encodeURIComponent(elC.value.trim()));
-        } else {
+        } else if (g === 'choferes') {
             var elP = document.getElementById('filtro_cho_planta');
             var elN2 = document.getElementById('filtro_cho_nombre');
             var elC2 = document.getElementById('filtro_cho_cedula');
             if (elP && elP.value.trim()) parts.push('filtro_planta=' + encodeURIComponent(elP.value.trim()));
             if (elN2 && elN2.value.trim()) parts.push('filtro_nombre=' + encodeURIComponent(elN2.value.trim()));
             if (elC2 && elC2.value.trim()) parts.push('filtro_cedula=' + encodeURIComponent(elC2.value.trim()));
+        } else {
+            var elN3 = document.getElementById('filtro_per_nombre');
+            var elC3 = document.getElementById('filtro_per_cedula');
+            if (elN3 && elN3.value.trim()) parts.push('filtro_nombre=' + encodeURIComponent(elN3.value.trim()));
+            if (elC3 && elC3.value.trim()) parts.push('filtro_cedula=' + encodeURIComponent(elC3.value.trim()));
         }
         return parts.length ? '&' + parts.join('&') : '';
     }
@@ -93,9 +127,11 @@
     function renderThead(grupo) {
         var h = '';
         if (grupo === 'plantas') {
-            h = '<tr><th style="width:40px;"><input type="checkbox" id="chk_maestro" title="Seleccionar / quitar todos" /></th><th style="width:46px;" class="text-center">N°</th><th>Planta</th><th>Cliente</th><th>Teléfono (envío)</th></tr>';
+            h = '<tr><th style="width:40px;"><input type="checkbox" id="chk_maestro" title="Seleccionar / quitar todos" /></th><th style="width:46px;" class="text-center">N°</th><th>Planta</th><th>Cliente</th><th>Correo </th><th>Teléfono (envío)</th></tr>';
+        } else if (grupo === 'choferes') {
+            h = '<tr><th style="width:40px;"><input type="checkbox" id="chk_maestro" title="Seleccionar / quitar todos" /></th><th style="width:46px;" class="text-center">N°</th><th>Chofer</th><th>Cédula / RUC</th><th>Correo</th><th>Planta</th><th>Teléfono</th></tr>';
         } else {
-            h = '<tr><th style="width:40px;"><input type="checkbox" id="chk_maestro" title="Seleccionar / quitar todos" /></th><th style="width:46px;" class="text-center">N°</th><th>Chofer</th><th>Cédula / RUC</th><th>Planta</th><th>Teléfono</th></tr>';
+            h = '<tr><th style="width:40px;"><input type="checkbox" id="chk_maestro" title="Seleccionar / quitar todos" /></th><th style="width:46px;" class="text-center">N°</th><th>Usuario</th><th>Cédula</th><th>Correo</th><th>Sucursal</th><th>Teléfono</th></tr>';
         }
         thead.innerHTML = h;
     }
@@ -116,25 +152,48 @@
 
                 var idp = parseInt(p.Pla_Cod, 10) || 0;
                 var tp = telPlanta(p);
+                var em = (p.Pep_Cor != null) ? String(p.Pep_Cor).trim() : '';
                 html += '<tr><td class="text-center"><input type="checkbox" class="chk-destino" value="' + idp + '" /></td>';
                 html += '<td class="text-center text-muted">' + (j + 1) + '</td>';
                 html += '<td>' + escapeHtml(p.Pla_Nom || '') + '</td>';
                 html += '<td>' + escapeHtml((p.Cliente || '').trim()) + '</td>';
+                html += '<td>' + (em ? escapeHtml(em) : '<span class="text-muted">—</span>') + '</td>';
                 html += '<td>' + (tp ? escapeHtml(tp) : '<span class="sin-tel">Sin teléfono</span>') + '</td></tr>';
             }
-        } else {
+        } else if (grupo === 'choferes') {
             for (var k = 0; k < rows.length; k++) {
                 var c = rows[k];
                 console.log(c);
                 var idc = parseInt(c.Cho_Cod, 10) || 0;
                 var tc = (c.Telefono != null) ? String(c.Telefono).trim() : '';
                 var plnom = (c.Pla_Nom != null) ? String(c.Pla_Nom).trim() : '';
+                var cor = (c.Cho_Cor != null && String(c.Cho_Cor).trim() !== '')
+                    ? String(c.Cho_Cor).trim()
+                    : ((c.Prs_Cor != null) ? String(c.Prs_Cor).trim() : '');
                 html += '<tr><td class="text-center"><input type="checkbox" class="chk-destino" value="' + idc + '" /></td>';
                 html += '<td class="text-center text-muted">' + (k + 1) + '</td>';
                 html += '<td>' + escapeHtml(c.Chofer || '') + '</td>';
                 html += '<td>' + escapeHtml(c.Cho_Ced || '') + '</td>';
+                html += '<td>' + (cor ? escapeHtml(cor) : '<span class="text-muted">—</span>') + '</td>';
                 html += '<td>' + (plnom ? escapeHtml(plnom) : '<span class="text-muted">—</span>') + '</td>';
                 html += '<td>' + (tc ? escapeHtml(tc) : '<span class="sin-tel">Sin teléfono</span>') + '</td></tr>';
+            }
+        } else {
+            for (var u = 0; u < rows.length; u++) {
+                var pe = rows[u];
+                var idu = parseInt(pe.Usu_Cod, 10) || 0;
+                var tpe = (pe.Telefono != null) ? String(pe.Telefono).trim() : '';
+                var suc = (pe.Sucursal != null) ? String(pe.Sucursal).trim() : '';
+                var corp = (pe.Usu_Cor != null && String(pe.Usu_Cor).trim() !== '')
+                    ? String(pe.Usu_Cor).trim()
+                    : ((pe.Prs_Cor != null) ? String(pe.Prs_Cor).trim() : '');
+                html += '<tr><td class="text-center"><input type="checkbox" class="chk-destino" value="' + idu + '" /></td>';
+                html += '<td class="text-center text-muted">' + (u + 1) + '</td>';
+                html += '<td>' + escapeHtml(pe.Usuario || '') + '</td>';
+                html += '<td>' + escapeHtml(pe.Prs_Ced || '') + '</td>';
+                html += '<td>' + (corp ? escapeHtml(corp) : '<span class="text-muted">—</span>') + '</td>';
+                html += '<td>' + (suc ? escapeHtml(suc) : '<span class="text-muted">—</span>') + '</td>';
+                html += '<td>' + (tpe ? escapeHtml(tpe) : '<span class="sin-tel">Sin teléfono</span>') + '</td></tr>';
             }
         }
         tbody.innerHTML = html;
@@ -194,8 +253,10 @@
 
     var btnFilPla = document.getElementById('btn_filtrar_notif');
     var btnFilCho = document.getElementById('btn_filtrar_notif_cho');
+    var btnFilPer = document.getElementById('btn_filtrar_notif_per');
     if (btnFilPla) btnFilPla.addEventListener('click', cargarLista);
     if (btnFilCho) btnFilCho.addEventListener('click', cargarLista);
+    if (btnFilPer) btnFilPer.addEventListener('click', cargarLista);
 
     function bindEnterBuscar(ids) {
         for (var i = 0; i < ids.length; i++) {
@@ -211,7 +272,7 @@
             })(ids[i]);
         }
     }
-    bindEnterBuscar(['filtro_pla_nombre', 'filtro_pla_cedula', 'filtro_cho_planta', 'filtro_cho_nombre', 'filtro_cho_cedula']);
+    bindEnterBuscar(['filtro_pla_nombre', 'filtro_pla_cedula', 'filtro_cho_planta', 'filtro_cho_nombre', 'filtro_cho_cedula', 'filtro_per_nombre', 'filtro_per_cedula']);
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', cargarLista);
@@ -240,7 +301,8 @@
                 alert('Seleccione al menos un destinatario.');
                 return;
             }
-            if (imgInput && imgInput.files && imgInput.files[0] && imgInput.files[0].size > MAX_IMG_BYTES) {
+            var canal = canalSeleccionado();
+            if (canal === 'whatsapp' && imgInput && imgInput.files && imgInput.files[0] && imgInput.files[0].size > MAX_IMG_BYTES) {
                 alert('La imagen no puede superar 16 MB.');
                 return;
             }
@@ -250,6 +312,7 @@
             var fd = new FormData();
             fd.append('enviarNotifMasivaAjax', '1');
             fd.append('grupo', grupoSel ? grupoSel.value : 'plantas');
+            fd.append('canal_envio', canal);
             fd.append('titulo', titulo);
             fd.append('mensaje', mensaje);
             if (imgInput && imgInput.files && imgInput.files[0]) {

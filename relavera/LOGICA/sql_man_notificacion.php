@@ -3,7 +3,8 @@
 /**
  * Notificaciones masivas WhatsApp — man_adm_notificacion.php, man_user_notificacion.php
  * Casos: 1 plantas, 2 choferes, 3 usuarios Relavera activos sin planta (Usu_Adm='N'); 4 Prs_Cod; 5 Usu_Cod; 6 Usu_Cod+Prs_Cod (modal)
- * Filtros vía Par_Sql: filtro_nombre, filtro_cedula (1, 2, 3); filtro_planta (solo 2)
+ *        7 personal Relavera: activos sin planta asignada y SIN perfil "Plantas" (usuarperfi/perfiles)
+ * Filtros vía Par_Sql: filtro_nombre, filtro_cedula (1, 2, 3, 7); filtro_planta (solo 2)
  */
 
 function sentencias_man_notificacion($id, $Par_Sql)
@@ -31,8 +32,11 @@ function sentencias_man_notificacion($id, $Par_Sql)
                            mp.Pla_Nom,
                            mp.Pla_Wat,
                            mpp.Pep_Tel AS Pep_Tel_Admin,
+                           NULLIF(TRIM(mpp.Pep_Cor),'') AS Pep_Cor,
+                           NULLIF(TRIM(adm.Prs_Cor),'') AS Prs_Cor_Admin,
                            adm.Prs_Tel AS Prs_Tel_Admin,
                            adm.Prs_Te2 AS Prs_Te2_Admin,
+                           CASE WHEN persona_cli.Prs_Cor IS NULL OR TRIM(persona_cli.Prs_Cor) IN ('','-') THEN NULL ELSE TRIM(persona_cli.Prs_Cor) END AS Prs_Cor_Cliente,
                            TRIM(CONCAT(IFNULL(persona_cli.Prs_Nom,''),' ',IFNULL(persona_cli.Prs_Ape,''))) AS Cliente
                     FROM manifiesto_plantas mp
                     LEFT JOIN cliente ON cliente.Cli_Cod = mp.Cli_Cod
@@ -74,6 +78,8 @@ function sentencias_man_notificacion($id, $Par_Sql)
             $sql = "SELECT chofer.Cho_Cod,
                            CONCAT(persona.Prs_Nom,' ',persona.Prs_Ape) AS Chofer,
                            persona.Prs_Ced AS Cho_Ced,
+                           NULLIF(TRIM(chofer.Cho_Cor),'') AS Cho_Cor,
+                           NULLIF(TRIM(persona.Prs_Cor),'') AS Prs_Cor,
                            COALESCE(NULLIF(TRIM(chofer.Cho_Tel),''), NULLIF(TRIM(persona.Prs_Tel),''), persona.Prs_Tel) AS Telefono,
                            (SELECT GROUP_CONCAT(DISTINCT mp2.Pla_Nom ORDER BY mp2.Pla_Nom SEPARATOR ', ')
                             FROM manifiesto_chofer mc2
@@ -113,6 +119,8 @@ function sentencias_man_notificacion($id, $Par_Sql)
                            CONCAT(p.Prs_Nom,' ',p.Prs_Ape) AS Usuario,
                            u.Usu_Ntf AS Usu_Ntf,
                            TRIM(IFNULL(p.Prs_Tel,'')) AS Prs_Tel,
+                           NULLIF(TRIM(u.Usu_Cor),'') AS Usu_Cor,
+                           NULLIF(TRIM(p.Prs_Cor),'') AS Prs_Cor,
                            COALESCE(NULLIF(TRIM(p.Prs_Tel),''), NULLIF(TRIM(p.Prs_Te2),'')) AS Telefono,
                            s.Suc_Des AS Sucursal
                     FROM usuarios u
@@ -127,6 +135,64 @@ function sentencias_man_notificacion($id, $Par_Sql)
                           INNER JOIN manifiesto_plantas mpl ON mpl.Pla_Cod = mu.Pla_Cod AND mpl.Pla_Est = 'A'
                           WHERE mu.Usu_Cod = u.Usu_Cod
                             AND mu.Pla_Cod IS NOT NULL AND mu.Pla_Cod > 0
+                      )
+                      AND NOT EXISTS (
+                          SELECT 1 FROM usuarperfi up
+                          INNER JOIN perfiles pf ON pf.Per_Cod = up.Per_Cod
+                          WHERE up.Usu_Cod = u.Usu_Cod
+                            AND pf.Per_Des = 'Plantas'
+                      )
+                      $filtro_usu
+                      $extra
+                    ORDER BY p.Prs_Ape, p.Prs_Nom, u.Usu_Cod";
+            break;
+
+        case 7:
+            // Personal Relavera (notificaciones masivas): igual que caso 3 pero excluye usuarios con perfil "Plantas"
+            $Emp_Cod = isset($Par_Sql['Emp_Cod']) ? intval($Par_Sql['Emp_Cod']) : 0;
+            $ids = isset($Par_Sql['ids']) ? trim($Par_Sql['ids']) : '';
+            $filtro_usu = ($ids !== '') ? " AND u.Usu_Cod IN ($ids)" : '';
+
+            $f_nombre = isset($Par_Sql['filtro_nombre']) ? trim($Par_Sql['filtro_nombre']) : '';
+            $f_cedula = isset($Par_Sql['filtro_cedula']) ? trim($Par_Sql['filtro_cedula']) : '';
+            $extra = '';
+            if ($f_nombre !== '') {
+                $fn = addslashes($f_nombre);
+                $extra .= " AND (CONCAT(p.Prs_Nom,' ',p.Prs_Ape) LIKE '%$fn%' OR p.Prs_Nom LIKE '%$fn%' OR p.Prs_Ape LIKE '%$fn%')";
+            }
+            if ($f_cedula !== '') {
+                $fc = addslashes($f_cedula);
+                $extra .= " AND (p.Prs_Ced LIKE '%$fc%' OR u.Usu_Ced LIKE '%$fc%')";
+            }
+
+            $sql = "SELECT u.Usu_Cod,
+                           p.Prs_Cod,
+                           p.Prs_Ced AS Prs_Ced,
+                           CONCAT(p.Prs_Nom,' ',p.Prs_Ape) AS Usuario,
+                           u.Usu_Ntf AS Usu_Ntf,
+                           TRIM(IFNULL(p.Prs_Tel,'')) AS Prs_Tel,
+                           NULLIF(TRIM(u.Usu_Cor),'') AS Usu_Cor,
+                           NULLIF(TRIM(p.Prs_Cor),'') AS Prs_Cor,
+                           COALESCE(NULLIF(TRIM(p.Prs_Tel),''), NULLIF(TRIM(p.Prs_Te2),'')) AS Telefono,
+                           s.Suc_Des AS Sucursal
+                    FROM usuarios u
+                    INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
+                    INNER JOIN sucursal s ON s.Suc_Cod = u.Suc_Cod AND s.Emp_Cod = $Emp_Cod
+                    WHERE u.Usu_Est = 'A'
+                      AND s.Suc_Est = 'A'
+                      AND u.Usu_Adm = 'N'
+                      AND NOT EXISTS (
+                          SELECT 1 FROM manifiesto_usuario mu
+                          INNER JOIN cliente c_mu ON c_mu.Cli_Cod = mu.Cli_Cod AND c_mu.Emp_Cod = $Emp_Cod
+                          INNER JOIN manifiesto_plantas mpl ON mpl.Pla_Cod = mu.Pla_Cod AND mpl.Pla_Est = 'A'
+                          WHERE mu.Usu_Cod = u.Usu_Cod
+                            AND mu.Pla_Cod IS NOT NULL AND mu.Pla_Cod > 0
+                      )
+                      AND NOT EXISTS (
+                          SELECT 1 FROM usuarperfi up
+                          INNER JOIN perfiles pf ON pf.Per_Cod = up.Per_Cod
+                          WHERE up.Usu_Cod = u.Usu_Cod
+                            AND pf.Per_Des = 'Plantas'
                       )
                       $filtro_usu
                       $extra

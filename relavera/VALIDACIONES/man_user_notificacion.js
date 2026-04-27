@@ -54,12 +54,14 @@
         var prs = btnEl.getAttribute('data-prs-cod') || '';
         var nom = btnEl.getAttribute('data-usuario') || '';
         var tel = btnEl.getAttribute('data-prs-tel') || '';
+        var cor = btnEl.getAttribute('data-usu-cor') || '';
         var ntf = (btnEl.getAttribute('data-usu-ntf') || 'N').toUpperCase();
         if (ntf !== 'S' && ntf !== 'N') ntf = 'N';
 
         document.getElementById('modal_usu_cod').value = usu;
         document.getElementById('modal_prs_cod').value = prs;
         document.getElementById('modal_prs_tel').value = soloDigitosTel(tel);
+        document.getElementById('modal_usu_cor').value = String(cor || '').trim();
         document.getElementById('modal_usu_ntf').value = ntf;
         document.getElementById('modal_usuario_lbl').innerHTML = '<strong>' + escapeHtml(nom) + '</strong>';
         window.jQuery('#modal_edit_usu_notif').modal('show');
@@ -70,6 +72,7 @@
         var usu = document.getElementById('modal_usu_cod').value;
         var prs = document.getElementById('modal_prs_cod').value;
         var tel = soloDigitosTel(document.getElementById('modal_prs_tel').value);
+        var cor = (document.getElementById('modal_usu_cor').value || '').trim();
         var ntf = document.getElementById('modal_usu_ntf').value;
 
         var fd = new FormData();
@@ -77,6 +80,7 @@
         fd.append('Usu_Cod', usu);
         fd.append('Prs_Cod', prs);
         fd.append('Prs_Tel', tel);
+        fd.append('Usu_Cor', cor);
         fd.append('Usu_Ntf', ntf);
 
         var $btn = window.jQuery('#btn_modal_guardar_usu_notif');
@@ -102,14 +106,14 @@
 
     function cargarLista() {
         if (!tbody) return;
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Cargando…</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Cargando…</td></tr>';
         var q = buildQuery();
         fetch('man_user_notificacion.php?cargarListaUserNotifAjax=1' + q, { credentials: 'same-origin' })
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 var rows = (data && data.rows) ? data.rows : [];
                 if (!rows.length) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No hay registros para mostrar.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No hay registros para mostrar.</td></tr>';
                     return;
                 }
                 var html = '';
@@ -120,6 +124,7 @@
                     var prsTel = (u.Prs_Tel != null) ? String(u.Prs_Tel).trim() : '';
                     var telOtro = (u.Telefono != null) ? String(u.Telefono).trim() : '';
                     var usuCod = u.Usu_Cod != null ? String(u.Usu_Cod) : '';
+                    var usuCor = (u.Usu_Cor != null) ? String(u.Usu_Cor).trim() : '';
                     var usuNtf = u.Usu_Ntf != null ? String(u.Usu_Ntf).trim().toUpperCase() : 'N';
                     if (usuNtf !== 'S' && usuNtf !== 'N') usuNtf = 'N';
                     var nom = u.Usuario != null ? String(u.Usuario) : '';
@@ -141,6 +146,7 @@
                     html += '<td class="text-center text-muted">' + (j + 1) + '</td>';
                     html += '<td>' + escapeHtml(u.Usuario || '') + '</td>';
                     html += '<td>' + escapeHtml(u.Prs_Ced || '') + '</td>';
+                    html += '<td>' + (usuCor ? escapeHtml(usuCor) : '<span class="text-muted">—</span>') + '</td>';
                     html += '<td>' + (suc ? escapeHtml(suc) : '<span class="text-muted">—</span>') + '</td>';
                     html += '<td class="text-center">' + ntfCell + '</td>';
                     html += '<td>' + telCell + '</td>';
@@ -149,6 +155,7 @@
                     html += ' data-usu-cod="' + escapeAttr(usuCod) + '"';
                     html += ' data-prs-cod="' + escapeAttr(prsCod) + '"';
                     html += ' data-prs-tel="' + escapeAttr(prsTel) + '"';
+                    html += ' data-usu-cor="' + escapeAttr(usuCor) + '"';
                     html += ' data-usu-ntf="' + escapeAttr(usuNtf) + '"';
                     html += ' data-usuario="' + escapeAttr(nom) + '"';
                     html += ' title="Editar tel&eacute;fono y notificaci&oacute;n">';
@@ -160,7 +167,7 @@
                 tbody.innerHTML = html;
             })
             .catch(function () {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error al cargar la lista.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error al cargar la lista.</td></tr>';
             });
     }
 
