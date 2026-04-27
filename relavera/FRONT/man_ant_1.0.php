@@ -1544,8 +1544,8 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
                                     <label class="col-sm-2 control-label label-xs">Periodo:</label>
                                     <div class="col-sm-3">
                                         <select id="Pec_Cod" name="Pec_Cod" class="form-control input-xs" onchange="desbloquear();">
-                                            <option value="T"> << Todos>> </option>
-                                            <option value="PF" selected>Mes actual</option>
+                                            <option value="T" selected> << Todos>> </option>
+                                            <option value="PF">Mes actual</option>
                                             <?php
                                             foreach ($periodos as $i => $p) {
                                                 echo "<option data-year='$p[Year]' data-inicio='$p[Pec_Fei]' data-fin='$p[Pec_Fef]' data-pec-cod='$p[Pec_Cod]' value='$p[Pec_Cod]'>Periodo $p[Year]</option>";
