@@ -281,6 +281,175 @@ function verDetallesAnticipo(rowObject) {
     });
 }
 
+function calManSumFooter() {
+    var $g = $('#manShowPagosAsi');
+    if (!$g.length || !$g.data('jqGrid')) return;
+    var ids = $g.jqGrid('getDataIDs');
+    var valorDebe = 0, valorHaber = 0, i, reg;
+    for (i = 0; i < ids.length; i++) {
+        reg = $g.jqGrid('getRowData', ids[i]);
+        valorDebe += (parseFloat(reg.Debe, 10) || 0);
+        valorHaber += (parseFloat(reg.Haber, 10) || 0);
+    }
+    $g.jqGrid('footerData', 'set', { Asi_Glo: "<div style='text-align:right;'>TOTALES:</div>" });
+    $g.jqGrid('footerData', 'set', { Debe: '' + valorDebe });
+    $g.jqGrid('footerData', 'set', { Haber: '' + valorHaber });
+}
+
+function initVerComprobanteConsumoGrids() {
+    if ($('#manShowPagosAsi').length && !$('#manShowPagosAsi').data('jqGrid')) {
+        $('#manShowPagosAsi').createGrid({
+            viewrecords: false,
+            caption: '<center>Detalle del anticipo</center>',
+            data: [],
+            rowNum: 100,
+            height: 120,
+            width: 650,
+            footerrow: true,
+            responsive: false,
+            onSelectRow: function () { $(this).resetSelection(); },
+            colModel: [
+                { label: 'index', name: 'index', hidden: true, classes: 'bgNoRight' },
+                { label: '', name: 'Pap_Est', hidden: true },
+                { label: 'Codigo', name: 'Pld_Cdc', width: 10, align: 'left' },
+                { label: 'Cuenta', name: 'Pld_Des', width: 30, align: 'left' },
+                { label: 'Glosa', name: 'Asi_Glo', width: 25, align: 'left' },
+                { label: 'Debe', name: 'Debe', width: 10, align: 'right', formatter: 'currency', editable: true, formatoptions: { prefix: '$ ', thousandsSeparator: ',', decimalSeparator: '.', defaultValue: '' } },
+                { label: 'Haber', name: 'Haber', width: 10, align: 'right', formatter: 'currency', editable: true, formatoptions: { prefix: '$ ', thousandsSeparator: ',', decimalSeparator: '.', defaultValue: '' } }
+            ]
+        }, true, '', { view: false });
+    }
+    if ($('#manShowAntConsumos').length && !$('#manShowAntConsumos').data('jqGrid')) {
+        $('#manShowAntConsumos').createGrid({
+            viewrecords: false,
+            caption: '<center>Consumos aplicados al anticipo</center>',
+            data: [],
+            rowNum: 100,
+            height: 120,
+            width: 650,
+            footerrow: false,
+            responsive: false,
+            onSelectRow: function () { $(this).resetSelection(); },
+            colModel: [
+                { label: 'No. Compr. anticipo', name: 'codigo_consumo', width: 28, align: 'left' },
+                { label: 'Fecha', name: 'fecha_consumo', width: 15, align: 'left' },
+                { label: 'Concepto / obs.', name: 'glosa_consumo', width: 40, align: 'left' },
+                { label: 'Valor', name: 'valor_anticipo', width: 20, align: 'right', formatter: 'currency', formatoptions: { prefix: '$ ', thousandsSeparator: ',', decimalSeparator: '.', defaultValue: '$ 0.00' } },
+                { label: 'Consumido', name: 'valor_consumo', width: 20, align: 'right', formatter: 'currency', formatoptions: { prefix: '$ ', thousandsSeparator: ',', decimalSeparator: '.', defaultValue: '$ 0.00' } },
+                { label: 'Saldo', name: 'saldo_linea', width: 20, align: 'right', formatter: 'currency', formatoptions: { prefix: '$ ', thousandsSeparator: ',', decimalSeparator: '.', defaultValue: '$ 0.00' } }
+            ]
+        }, true, '', { view: false });
+    }
+}
+
+/** Imprimir comprobante contable del consumo (mismo reporte que anticipo acreditado) */
+function imprimirComprobanteConsumoMan() {
+    var cod = manConsComCodActual ? String(manConsComCodActual).trim() : '';
+    if (!cod) {
+        $.alert('No hay comprobante para imprimir.');
+        return;
+    }
+    $.getDataJson('', { cargarReportes: true }, function (res) {
+        var reportes = res['reportes'];
+        if ($.varValid(reportes[2])) {
+            $.imprimirUrl(reportes[2] + '?codigo=' + cod);
+        } else {
+            $.alert('Sin reportes asociados');
+        }
+    }, function (err) {
+        $.alert('Error al cargar los reportes: ' + (err && err.message ? err.message : 'Error desconocido'));
+    });
+}
+
+/** Ver comprobante de consumo: cabecera + pestañas Asientos / Consumos (estilo tesorería) */
+function verAsientosConsumoCom(rowObject) {
+    var row = Array.isArray(rowObject) ? rowObject[0] : rowObject;
+    var comCod = (row && (row.Com_Cod_Consumo || row.Com_Cod)) ? String(row.Com_Cod_Consumo || row.Com_Cod).trim() : '';
+    if (!comCod) {
+        $.alert('No hay comprobante asociado a este consumo.');
+        return;
+    }
+    if ($('#verComprobanteConsumoDialog').length === 0) {
+        $.alert('No se encontró el diálogo de comprobante en la página.');
+        return;
+    }
+    manConsComCodActual = comCod;
+    initVerComprobanteConsumoGrids();
+
+    $('#man_cons_cli_show').val('');
+    $('#man_cons_ruc_show').val('');
+    $('#man_cons_compr_show').val('');
+    $('#man_cons_fec_show').val('');
+    $('#man_cons_obs_show').val('');
+    $('#man_cons_usuario').html('');
+    $('#man_cons_com_sys').html('');
+
+    $('#manShowPagosAsi').clearGrid(true);
+    $('#manShowAntConsumos').clearGrid(true);
+    $('#man_cons_detcons').show();
+
+    $('#verComprobanteConsumoDialog').dialog('option', 'title', 'Pago');
+    $('#verComprobanteConsumoDialog').dialog('open');
+
+    var ajaxOpt = { url: '../FRONT/man_ant_1.0.php', method: 'GET', dataType: 'json' };
+
+    $.when(
+        $.ajax($.extend({}, ajaxOpt, { data: { getComprobanteConsumoMeta: true, Com_Cod: comCod } })),
+        $.ajax($.extend({}, ajaxOpt, { data: { getAsientosComAjax: true, Com_Cod: comCod } })),
+        $.ajax($.extend({}, ajaxOpt, { data: { getConsumosPorComprobanteAjax: true, Com_Cod: comCod } }))
+    ).done(function (a1, a2, a3) {
+        var rMeta = a1[0], rAsi = a2[0], rCons = a3[0];
+        if (rMeta && rMeta.success && rMeta.data) {
+            var d = rMeta.data;
+            $('#man_cons_cli_show').val(d.nombre || '');
+            $('#man_cons_ruc_show').val(d.Prs_Ced || '');
+            $('#man_cons_compr_show').val(d.codigoCompra || '');
+            $('#man_cons_fec_show').val(d.Com_Fec || '');
+            $('#man_cons_obs_show').val($.trim((d.Com_Con || '') + (d.Com_Obs ? (' ' + d.Com_Obs) : '')));
+            $('#man_cons_usuario').html((d.usuario || '') + (d.usuario ? ' ' : ''));
+            $('#man_cons_com_sys').html(d.Com_Sys || '');
+        } else {
+            $('#man_cons_obs_show').val((rMeta && rMeta.message) ? rMeta.message : '');
+        }
+
+        var rowsAsi = (rAsi && rAsi.success && $.isArray(rAsi.rows)) ? rAsi.rows : [];
+        var mappedAsi = $.map(rowsAsi, function (r, idx) {
+            return $.extend({}, r, {
+                index: idx + 1,
+                Asi_Glo: r.Glosa != null ? r.Glosa : (r.Asi_Glo != null ? r.Asi_Glo : '')
+            });
+        });
+        $('#manShowPagosAsi').setRows(mappedAsi);
+        calManSumFooter();
+
+        var rowsC = (rCons && rCons.success && $.isArray(rCons.rows)) ? rCons.rows : [];
+        /* Saldo por línea: viene del servidor (saldo_momento), acumulado global mezcla varios Ant_Cod y arruina el cálculo */
+        rowsC = $.map(rowsC, function (rw) {
+            var sm = rw.saldo_momento != null ? rw.saldo_momento : rw.SALDO_MOMENTO;
+            if (sm === '' || sm === undefined || sm === null) {
+                sm = rw.saldo_anticipo != null ? rw.saldo_anticipo : rw.SALDO_ANTICIPO;
+            }
+            return $.extend({}, rw, { saldo_linea: sm });
+        });
+        if (rowsC.length > 0) {
+            $('#man_cons_detcons').show();
+            $('#manShowAntConsumos').setRows(rowsC);
+        } else {
+            $('#man_cons_detcons').hide();
+            $('#manShowAntConsumos').clearGrid(true);
+        }
+
+        $('#man_tabs_com_cons').tabs('refresh');
+        $('#man_cons_detasi').children('a').trigger('click');
+        try {
+            $('#manShowPagosAsi').updateGridsSizes();
+            $('#manShowAntConsumos').updateGridsSizes();
+        } catch (e1) { /* opcional */ }
+    }).fail(function () {
+        $.alert('Error al comunicarse con el servidor al cargar el comprobante.');
+    });
+}
+
 // Función auxiliar para ver imagen desde el modal de detalles
 function verImagenVoucherDesdeDetalle(imagenData) {
     if ($("#imagenVoucherDialog").length === 0) {
@@ -318,8 +487,44 @@ function verImagenVoucherDesdeDetalle(imagenData) {
             zoomImagenVoucher(0.9);
         }
     });
-}// Declaracion de variables globales para asignacion de grids
+}
+
+/** Orden cronológico kardex (igual criterio que PHP usort) para recalcular saldos con filas en pantalla descendente */
+function manAntChronoRankTipo(t) {
+    t = String(t || '').toUpperCase();
+    if (t === 'S') return 0;
+    if (t === 'A') return 1;
+    if (t === 'C') return 2;
+    return 9;
+}
+function manAntCompareRowsChrono(a, b) {
+    var fa = String(a._fec_mov != null && a._fec_mov !== '' ? a._fec_mov : (a.Ama_Fec || ''));
+    var fb = String(b._fec_mov != null && b._fec_mov !== '' ? b._fec_mov : (b.Ama_Fec || ''));
+    if (fa < fb) return -1;
+    if (fa > fb) return 1;
+    var ra = manAntChronoRankTipo(a._tipo_linea);
+    var rb = manAntChronoRankTipo(b._tipo_linea);
+    if (ra !== rb) return ra - rb;
+    var ca = parseInt(String(a.Ama_Cod || '').replace(/\D/g, ''), 10);
+    var cb = parseInt(String(b.Ama_Cod || '').replace(/\D/g, ''), 10);
+    if (isNaN(ca)) ca = 0;
+    if (isNaN(cb)) cb = 0;
+    if (ca !== cb) return ca - cb;
+    var ta = String(a._tipo_linea || '').toUpperCase();
+    var tb = String(b._tipo_linea || '').toUpperCase();
+    if (ta === 'C' && tb === 'C') {
+        var cca = parseInt(String(a.Com_Cod_Consumo || a.Com_Cod || 0), 10) || 0;
+        var ccb = parseInt(String(b.Com_Cod_Consumo || b.Com_Cod || 0), 10) || 0;
+        return cca - ccb;
+    }
+    return 0;
+}
+
+// Declaracion de variables globales para asignacion de grids
 var id_pagos = 0;
+
+/** Comprobante de consumo abierto en el modal (para Imprimir) */
+var manConsComCodActual = null;
 
 var man_ant = $('#man_antGrid');
 // var pagosMan = $('#pagosManGrid');
@@ -327,6 +532,9 @@ var client = $('#clientGrid')
 
 
 $(function () {
+    if ($('#loader').length) {
+        $('#loader').addClass('relavera-soft-loader');
+    }
     // rango de fechas
     // $.createDateRange('#Fec_IniM', '#Fec_IniM');
     $.createDateRange('#Fec_IniM', '#Fec_FinM');
@@ -339,12 +547,15 @@ $(function () {
     // grid de anticipos del manifiesto AMBIENTE PRINCIPAL
     man_ant.createGrid({
         // data:[], 
-        caption: 'Anticipos del Manifiesto <div class="pull-right"><b>FILTRADO POR:</b>&nbsp;<select id="FilterBy" onchange="cargarSelect();"><option value="">No filtrar</option><option value="P">Pendiente</option><option value="A">Acreditado</option><option value="R">Rechazado</option></select>&nbsp;</div>',
+        caption: 'Anticipos del Manifiesto <div class="pull-right" style="font-weight:normal;font-size:12px;line-height:22px;white-space:nowrap;"><span style="font-weight:600;margin-right:6px;">Ordenar:</span><select id="man_ant_orden_sel" class="form-control input-xs" style="display:inline-block;width:auto;min-width:118px;vertical-align:middle;padding:2px 6px;height:22px;"><option value="desc" selected>Descendente</option><option value="asc">Ascendente</option></select></div>',
+        sortname: 'Ama_Fec',
+        sortorder: 'desc',
         rowNum: 1000,
         height: 332,
         footerrow: true,
         colModel: [
-            { label: 'Cod. Int.', name: 'Ama_Cod', key: true, width: 15, align: "center" },
+            { label: 'row_id', name: 'row_id', key: true, hidden: true },
+            { label: 'Cod. Int.', name: 'Ama_Cod', width: 15, align: "center" },
             { label: 'No. Compr.', name: 'Com_Cod', width: 30, align: "left", hidden: true },
             { label: 'Fecha', name: 'Ama_Fec', width: 35, align: "center" },
             { label: 'Usu_Cod.', name: 'Usu_Cod', width: 25, align: "center", hidden: true },
@@ -356,11 +567,11 @@ $(function () {
             { label: 'Cuenta Acr.', name: 'Pld_Des', width: 55, align: "center" },
             { label: 'Nº de Trfs.', name: 'Ama_Doc', width: 45, align: "center" },
             {
-                label: 'Valor', name: 'Ama_Val', width: 40, align: 'right', formatter: 'currency',
+                label: 'Anticipo', name: 'Ama_Val', width: 40, align: 'right', formatter: 'currency',
                 formatoptions: { prefix: '$ ', thousandsSeparator: ',', decimalSeparator: '.', defaultValue: '0.00' }
             },
             {
-                label: 'Abono', name: 'Abono', width: 40, align: 'right', formatter: 'currency',
+                label: 'Consumo', name: 'Abono', width: 40, align: 'right', formatter: 'currency',
                 formatoptions: { prefix: '$ ', thousandsSeparator: ',', decimalSeparator: '.', defaultValue: '0.00' }
             },
             {
@@ -375,6 +586,8 @@ $(function () {
                     if (cellvalue === 'A') return 'Acreditado';
                     if (cellvalue === 'R') return 'Rechazado';
                     if (cellvalue === 'I') return 'Anulado';
+                    if (cellvalue === 'C') return 'Consumo';
+                    if (cellvalue === 'S') return 'Saldo inicial';
                     if (cellvalue === null) return '';
                     return cellvalue;
                 }
@@ -384,6 +597,18 @@ $(function () {
             {
                 label: '<center><i class="ui-icon ui-icon-gear"></i></center>', name: 'btns_anti', width: 60, align: 'center', viewable: false,
                 formatter: function (cellvalue, options, rowObject) {
+                    if (String(rowObject.row_id || '') === 'SALDO_INI' || String(rowObject._tipo_linea || '').toUpperCase() === 'S') {
+                        return '';
+                    }
+                    // Fila de consumo: solo ver asiento contable del comprobante
+                    if (String(rowObject._tipo_linea || '').toUpperCase() === 'C') {
+                        var comC = (rowObject.Com_Cod_Consumo || rowObject.Com_Cod || '').toString().trim();
+                        if (!comC) {
+                            return '';
+                        }
+                        var parmAsi = [rowObject, '' + man_antGrid.table_id];
+                        return $.getGridButton(verAsientosConsumoCom, parmAsi, 'Ver comprobante de consumo', 'eye-open', '', 'primary');
+                    }
                     // Si el registro está anulado, no mostrar ningún botón
                     if (rowObject.Ama_Est && String(rowObject.Ama_Est).toUpperCase() === 'I') {
                         return '';
@@ -432,28 +657,51 @@ $(function () {
             }
         ],
         loadComplete: function () {
+            function parseMonto(v) {
+                var s = String(v == null ? '' : v).trim();
+                if (s === '') return 0;
+                s = s.replace(/[^\d,.\-]/g, '');
+                var hasComma = s.indexOf(',') !== -1;
+                var hasDot = s.indexOf('.') !== -1;
+                if (hasComma && hasDot) {
+                    // 1.234,56 -> 1234.56 | 1,234.56 -> 1234.56
+                    if (s.lastIndexOf(',') > s.lastIndexOf('.')) {
+                        s = s.replace(/\./g, '').replace(',', '.');
+                    } else {
+                        s = s.replace(/,/g, '');
+                    }
+                } else if (hasComma) {
+                    s = s.replace(',', '.');
+                }
+                var n = parseFloat(s);
+                return isNaN(n) ? 0 : n;
+            }
+
             var ids = man_ant.jqGrid('getDataIDs');
-            var totalVal = 0, totalAbono = 0, totalSaldo = 0;
-            ids.forEach(function (id) {
-                var r = man_ant.jqGrid('getRowData', id);
-                var val = parseFloat(String(r.Ama_Val).replace(/[^\d.-]/g, '')) || 0;
-                var abono = parseFloat(String(r.Abono).replace(/[^\d.-]/g, '')) || 0;
-                var saldo = parseFloat((val - abono).toFixed(2));
+            var totalVal = 0, totalAbono = 0, saldoFinal = 0;
+            var rowsChrono = ids.map(function (id) {
+                return { id: id, r: man_ant.jqGrid('getRowData', id) };
+            }).sort(function (x, y) {
+                return manAntCompareRowsChrono(x.r, y.r);
+            });
 
-                totalVal += val;
-                totalAbono += abono;
-                totalSaldo += saldo;
+            rowsChrono.forEach(function (item) {
+                var id = item.id;
+                var r = item.r;
+                var tipoL = String(r._tipo_linea || '').toUpperCase();
 
-                // seteamos saldo con 2 decimales
-                man_ant.jqGrid('setCell', id, 'Saldo', saldo);
-
-                if ($.trim(r.Ama_Tip).toUpperCase() === 'R') {
-                    man_ant.jqGrid('setRowData', id, false, {
-                        background: '#FADDDD'
-                    });
+                if (String(r.row_id || '') === 'SALDO_INI' || tipoL === 'S') {
+                    man_ant.jqGrid('setRowData', id, false, { background: '#E8E8E8' });
                 }
 
-                // Resaltar en rojo las filas con Ama_Est = 'I' (Inactivo/Anulado)
+                totalVal += parseMonto(r.Ama_Val);
+                totalAbono += parseMonto(r.Abono);
+                saldoFinal = parseMonto(r.Saldo);
+
+                if ($.trim(r.Ama_Tip).toUpperCase() === 'R') {
+                    man_ant.jqGrid('setRowData', id, false, { background: '#FADDDD' });
+                }
+
                 if ($.trim(r.Ama_Est).toUpperCase() === 'I') {
                     man_ant.jqGrid('setRowData', id, false, { background: '#FFCCCC' });
                 }
@@ -463,13 +711,35 @@ $(function () {
                 Ama_Doc: '<div class="txtRight">TOTAL:</div>',
                 Ama_Val: totalVal,
                 Abono: totalAbono,
-                Saldo: parseFloat(totalSaldo.toFixed(2))
+                Saldo: saldoFinal
             }, true);
+
+            $('#man_ant_ec_pend_line').remove();
+            var ud = man_ant.jqGrid('getGridParam', 'userData') || {};
+            if (Object.prototype.hasOwnProperty.call(ud, 'ec_manif_pend')) {
+                var pend = parseFloat(ud.ec_manif_pend) || 0;
+                var cnt = parseInt(ud.ec_manif_pend_cnt, 10) || 0;
+                var txt = 'Manifiestos pendientes de facturar en el período';
+                if (cnt > 0) {
+                    txt += ' (' + cnt + ' manifiesto' + (cnt === 1 ? '' : 's') + ')';
+                }
+                txt += ': $ ' + pend.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                var $row = $('<div id="man_ant_ec_pend_line" class="alert alert-warning" style="margin:10px 0 0 0;padding:10px 14px;font-weight:600;color:#856404;background-color:#fff3cd;border:1px solid #ffc107;border-radius:4px;"></div>');
+                $row.text(txt);
+                man_ant.closest('.col-sm-12').append($row);
+            }
         },
 
         userDataOnFooter: false
 
     }, true, 'man_antGridPager', { view: false, refresh: true });
+
+    $(document).on('change', '#man_ant_orden_sel', function () {
+        var v = $(this).val() === 'asc' ? 'asc' : 'desc';
+        $('#man_ant_kardex_orden').val(v);
+        man_ant.jqGrid('setGridParam', { sortorder: v === 'asc' ? 'asc' : 'desc' });
+        $('#man_antGrid').Search('#searchManifesto', 'LoadManifAjax');
+    });
 
     // Definición de botones del grid
     var gridButtons = [
@@ -578,8 +848,36 @@ $(function () {
     if ($('#pagosDialog').length === 1)
         $('#pagosDialog').createDialog({ height: 400, width: 600, icon: 'usd' });
 
+    if ($('#verComprobanteConsumoDialog').length === 1) {
+        $('#verComprobanteConsumoDialog').createDialog({ width: 720, height: 520, icon: 'info-sign' });
+        $('#man_tabs_com_cons').tabs();
+        initVerComprobanteConsumoGrids();
+    }
+
     // Mostrar/ocultar botones según si hay cliente manifiesto
     toggleBotonesCliente();
+    $(document).on('input', '#searchTxt', function () {
+        cargarSugerenciasBusqueda();
+    });
+    $(document).on('change', 'input[name="op_opciones"]', function () {
+        $('#searchSuggestions').empty().hide();
+        cargarSugerenciasBusqueda();
+    });
+    $(document).on('mousedown', '#searchSuggestions .item', function () {
+        var label = $(this).data('label') || $(this).text() || '';
+        $('#searchTxt').val(label);
+        $('#searchSuggestions').empty().hide();
+    });
+    $(document).on('blur', '#searchTxt', function () {
+        setTimeout(function () {
+            $('#searchSuggestions').hide();
+        }, 150);
+    });
+    $(document).on('focus', '#searchTxt', function () {
+        if ($('#searchSuggestions').children().length > 0) {
+            $('#searchSuggestions').show();
+        }
+    });
 
     // Ocultar botón "Nuevo Anticipo" para el perfil "Contralor"
     if (prf && prf.length > 0 && prf[0]['Per_Des'] === 'Contralor') {
@@ -597,6 +895,42 @@ function cargarSelect() {
     }
     // Recargar el grid con el nuevo filtro
     $('#man_antGrid').Search('#searchManifesto', 'LoadManifAjax');
+}
+
+function cargarSugerenciasBusqueda() {
+    var $txt = $('#searchTxt');
+    var $list = $('#searchSuggestions');
+    if (!$txt.length || !$list.length) return;
+    var term = String($txt.val() || '').trim();
+    var filtro = String($('input[name="op_opciones"]:checked').val() || '').trim();
+    if (term.length < 2 || (filtro !== 'cl' && filtro !== 'p' && filtro !== 'c')) {
+        $list.empty().hide();
+        return;
+    }
+    $.getDataJson('', { getSearchSuggestionsAjax: true, filtro: filtro, term: term }, function (res) {
+        var rows = (res && $.isArray(res.rows)) ? res.rows : [];
+        var html = '';
+        for (var i = 0; i < rows.length; i++) {
+            var label = rows[i].label || rows[i].LABEL || '';
+            var ruc = rows[i].ruc || rows[i].RUC || '';
+            if (!label) continue;
+            if (filtro === 'c') {
+                var rucEsc = $('<div/>').text(ruc).html();
+                var nomEsc = $('<div/>').text(label).html();
+                var valorBusqueda = rucEsc !== '' ? rucEsc : nomEsc;
+                html += '<div class="item two-col" data-label="' + valorBusqueda + '"><span class="col-ruc">' + rucEsc + '</span><span class="col-nom">' + nomEsc + '</span></div>';
+            } else {
+                html += '<div class="item" data-label="' + $('<div/>').text(label).html() + '">' + $('<div/>').text(label).html() + '</div>';
+            }
+        }
+        if (html === '') {
+            $list.empty().hide();
+        } else {
+            $list.html(html).show();
+        }
+    }, function () {
+        $list.empty().hide();
+    });
 }
 
 /**
@@ -715,16 +1049,19 @@ function desbloquear() {
         return;
     }
 
-    // Caso "PF": rango del mes actual pero editable (opción para cambiarlo)
+    // Caso "PF": mes actual (rango editable)
     if (valor === 'PF') {
         const now = new Date();
         const year = now.getFullYear();
-        const month = now.getMonth(); // 0-based
+        const month = now.getMonth();
         const first = new Date(year, month, 1);
         const last = new Date(year, month + 1, 0);
-        const fmt = d => d.toISOString().split('T')[0];
-        $('#Fec_IniM').val(fmt(first)).prop('disabled', false);
-        $('#Fec_FinM').val(fmt(last)).prop('disabled', false);
+        const pad = function (n) { return n < 10 ? '0' + n : '' + n; };
+        const fmtLocal = function (d) {
+            return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+        };
+        $('#Fec_IniM').val(fmtLocal(first)).prop('disabled', false);
+        $('#Fec_FinM').val(fmtLocal(last)).prop('disabled', false);
         return;
     }
 
@@ -755,13 +1092,11 @@ function desbloquear() {
 $(function () {
     $('#Pec_Cod').on('change', function () {
         desbloquear();
-        // Actualizar el grid cuando cambie el periodo
         if (man_ant && man_ant.length) {
             man_ant.gridUpdate();
         }
     });
-    // Ejecutar una vez al inicio para reflejar el valor por defecto (por ejemplo 'T')
-    // desbloquear();
+    desbloquear();
 
     // Actualizar el grid cuando cambien las fechas
     $('#Fec_IniM, #Fec_FinM').on('change', function () {
@@ -1044,7 +1379,7 @@ function AgregarPago() {
         Bak_Cod: $("#pagosForm #Bak_Cod").val(),
         Cli_Cod: $("#pagosForm #Cli_Cod").val(),
         Pla_Cod: $("#pagosForm #Pla_Cod").val(),
-        // Pla_Nom: $("#pagosForm #Pla_Nom").val(),
+        Pla_Nom: $("#pagosForm #Pla_Nom").val(),
         // Pla_Lic: $("#pagosForm #Pla_Lic").val(),
         Ama_Val: $("#pagosForm #Pac_Val").val(),
         Pag_Cod: $("#pagosForm #Pag_Cod").val(),

@@ -24,12 +24,36 @@ ini_set('max_execution_time', 9600);
 
 /* DECLARACION DE AJAX */
 
+$embed_ec_consolidado = isset($_GET['embed_ec_consolidado']) && (string) $_GET['embed_ec_consolidado'] === '1';
+
 /* Obtiene el cliente del usuario logueado */
 $cliente_manifiesto = $obBD_con1->getRowConsulta('manifiesto_usuario.selectWhere', array('where' => array('manifiesto_usuario.Usu_Cod' => $Ses_Usu_Cod)), $obBD_conexion);
 
 // carga el cliente para el usuario logueado
 if (isset($loadCliAjax)) {
     $resp = $obBD_con1->getArrayConsulta(1, $Ses_Usu_Cod, $obBD_conexion);
+    $obBD_con1->echoJson($resp);
+    exit();
+}
+
+/* Sugerencias rápidas de búsqueda (cliente/planta) */
+if (isset($getSearchSuggestionsAjax)) {
+    $resp = array('success' => true, 'rows' => array());
+    $filtro = isset($_GET['filtro']) ? trim((string) $_GET['filtro']) : '';
+    $term = isset($_GET['term']) ? trim((string) $_GET['term']) : '';
+    if ($term === '') {
+        $obBD_con1->echoJson($resp);
+        exit();
+    }
+    if ($filtro === 'p') {
+        $rows = $obBD_con1->getArrayConsulta(41, array('term' => $term), $obBD_conexion);
+    } else {
+        $rows = $obBD_con1->getArrayConsulta(42, array('term' => $term), $obBD_conexion);
+    }
+    if (!is_array($rows)) $rows = array();
+    if (method_exists($obBD_con1, 'utf8_change_param')) $obBD_con1->utf8_change_param($rows);
+    else utf8_encode_deep($rows);
+    $resp['rows'] = $rows;
     $obBD_con1->echoJson($resp);
     exit();
 }
@@ -373,11 +397,43 @@ function enviarMensajeWhatsapp($mensaje, $tel_admin, $tel_planta)
     return enviarMensajeWhatsappLista($mensaje, $numeros);
 }
 
+/**
+ * Convierte montos con formato mixto (1,234.56 o 1.234,56) a float confiable.
+ */
+function relavera_parse_monto($raw)
+{
+    $s = trim((string) $raw);
+    if ($s === '') {
+        return 0.0;
+    }
+    $s = preg_replace('/[^\d,\.\-]/', '', $s);
+    $hasComma = strpos($s, ',') !== false;
+    $hasDot = strpos($s, '.') !== false;
+    if ($hasComma && $hasDot) {
+        if (strrpos($s, ',') > strrpos($s, '.')) {
+            $s = str_replace('.', '', $s);
+            $s = str_replace(',', '.', $s);
+        } else {
+            $s = str_replace(',', '', $s);
+        }
+    } elseif ($hasComma) {
+        $s = str_replace(',', '.', $s);
+    }
+    return floatval($s);
+}
+
 
 
 
 /* Carga de datos para el grid principal */
 if (isset($LoadManifAjax)) {
+
+    $plaCodReq = '';
+    if (isset($_GET['Pla_Cod']) && $_GET['Pla_Cod'] !== '' && $_GET['Pla_Cod'] !== null) {
+        $plaCodReq = $_GET['Pla_Cod'];
+    } elseif (isset($cliente_manifiesto['Pla_Cod']) && $cliente_manifiesto['Pla_Cod'] !== '') {
+        $plaCodReq = $cliente_manifiesto['Pla_Cod'];
+    }
 
     $parms = array(
         'Fec_IniM' => $_GET['Fec_IniM'],
@@ -386,39 +442,307 @@ if (isset($LoadManifAjax)) {
         'estado' => $_GET['op_opciones2'],
         'search' => $_GET['search'],
         'Cli_Cod' => $_GET['Cli_Cod'],
-        'Pla_Cod' => isset($cliente_manifiesto['Pla_Cod']) ? $cliente_manifiesto['Pla_Cod'] : '',
+        'Pla_Cod' => $plaCodReq,
         'filtroAnt' => isset($_GET['filtroAnt']) ? $_GET['filtroAnt'] : ''
     );
     $resp = $obBD_con1->getArrayConsulta(11, $parms, $obBD_conexion);
 
-    // Calcular Saldo para cada registro (Ama_Val - Abono)
+    // Separar movimientos en filas tipo kardex: una fila de Anticipo y otra de Consumo (si aplica)
+    // Soporta respuesta con estructura jqGrid (rows) o arreglo plano.
+    $origenRows = array();
+    $respuestaConRows = false;
     if (isset($resp['rows']) && is_array($resp['rows'])) {
-        foreach ($resp['rows'] as &$row) {
-            // Asegurar que Abono sea numérico
-            $abono = isset($row['Abono']) ? floatval($row['Abono']) : 0;
-            $ama_val = isset($row['Ama_Val']) ? floatval($row['Ama_Val']) : 0;
-            
-            // Asegurar que Abono esté presente y sea numérico
-            if (!isset($row['Abono']) || $row['Abono'] === null || $row['Abono'] === '') {
-                $row['Abono'] = 0;
-            } else {
-                $row['Abono'] = floatval($row['Abono']);
-            }
-            
-            // Calcular Saldo
-            $saldo = $ama_val - $abono;
-            $row['Saldo'] = floatval($saldo); // Enviar como número, el grid lo formateará con currency
-            
-            // Asegurar que Ama_Val esté en formato numérico para el grid
-            if (isset($row['Ama_Val'])) {
-                $row['Ama_Val'] = floatval($row['Ama_Val']);
-            } else {
-                $row['Ama_Val'] = 0;
-            }
-        }
-        unset($row); // Liberar referencia
+        $origenRows = $resp['rows'];
+        $respuestaConRows = true;
+    } elseif (is_array($resp)) {
+        $origenRows = $resp;
+    }
+    if (!is_array($origenRows)) {
+        $origenRows = array();
     }
 
+    $rowsKardex = array();
+    $rowPlantilla = null;
+    if (count($origenRows) > 0) {
+        $rowPlantilla = $origenRows[0];
+        foreach ($origenRows as $row) {
+            $amaValRaw = isset($row['Ama_Val']) ? (string)$row['Ama_Val'] : '0';
+            $amaVal = relavera_parse_monto($amaValRaw);
+            $amaCod = isset($row['Ama_Cod']) ? (string)$row['Ama_Cod'] : '';
+
+            $rowBase = $row;
+            $rowBase['Ama_Val'] = $amaVal;
+            $rowBase['Abono'] = 0;
+            $rowBase['Saldo'] = 0;
+            $rowBase['_tipo_linea'] = 'A';
+            $rowBase['_fec_mov'] = isset($row['Ama_Fec']) ? $row['Ama_Fec'] : '';
+            $rowBase['row_id'] = 'A_' . $amaCod;
+            $rowsKardex[] = $rowBase;
+        }
+    }
+
+    /* Consumos: una fila por comprobante de PAGO/CONSUMO (pago.Com_Cod), total = suma de todas las líneas det_ant de ese pago.
+       No usar case 37 por cada Ama_Cod (solo traía la parte aplicada a ese anticipo, p.ej. 6.53). */
+    $consumosGlob = $obBD_con1->getArrayConsulta(44, $parms, $obBD_conexion);
+    if (!is_array($consumosGlob)) {
+        $consumosGlob = array();
+    }
+    foreach ($consumosGlob as $c) {
+        $tcRaw = isset($c['total_consumo']) ? (string) $c['total_consumo'] : '0';
+        $tc = relavera_parse_monto($tcRaw);
+        if ($tc <= 0) {
+            continue;
+        }
+        $comCodC = isset($c['Com_Cod_Consumo']) ? (string) $c['Com_Cod_Consumo'] : '';
+        if ($comCodC === '') {
+            continue;
+        }
+        $fecCons = isset($c['Com_Fec_Consumo']) ? trim((string) $c['Com_Fec_Consumo']) : '';
+        $tpl = ($rowPlantilla !== null) ? $rowPlantilla : array();
+        $rowConsumo = $tpl;
+        $rowConsumo['Ama_Val'] = 0;
+        $rowConsumo['Abono'] = $tc;
+        $rowConsumo['Saldo'] = 0;
+        $rowConsumo['_tipo_linea'] = 'C';
+        $rowConsumo['row_id'] = 'C_PAG_' . $comCodC;
+        $rowConsumo['Ama_Tip'] = 'C';
+        $rowConsumo['Ama_Cod'] = '—';
+        $rowConsumo['_fec_mov'] = ($fecCons !== '' ? $fecCons : '');
+        if ($rowConsumo['_fec_mov'] !== '') {
+            $rowConsumo['Ama_Fec'] = $rowConsumo['_fec_mov'];
+        }
+        $rowConsumo['Com_Cod'] = $comCodC;
+        $rowConsumo['Com_Cod_Consumo'] = $comCodC;
+        if (isset($c['cliente']) && trim((string) $c['cliente']) !== '') {
+            $rowConsumo['cliente'] = (string) $c['cliente'];
+        }
+        $rowConsumo['Ama_Est'] = 'A';
+        $rowConsumo['Pag_Des'] = 'Comprobante';
+        $codigoCompr = '';
+        if (isset($c['Codigo_Compr_Consumo']) && trim((string) $c['Codigo_Compr_Consumo']) !== '') {
+            $codigoCompr = trim((string) $c['Codigo_Compr_Consumo']);
+        } elseif (isset($c['codigo_compr_consumo']) && trim((string) $c['codigo_compr_consumo']) !== '') {
+            $codigoCompr = trim((string) $c['codigo_compr_consumo']);
+        }
+        $numComp = isset($c['Com_Num_Consumo']) ? trim((string) $c['Com_Num_Consumo']) : '';
+        $rowConsumo['Ama_Doc'] = ($codigoCompr !== '' ? $codigoCompr : ($numComp !== '' ? $numComp : $comCodC));
+        $conGlosa = isset($c['Com_Con_Consumo']) ? trim((string) $c['Com_Con_Consumo']) : '';
+        $rowConsumo['Pld_Des'] = ($conGlosa !== '' ? $conGlosa : 'Consumo');
+        $rowsKardex[] = $rowConsumo;
+    }
+
+    $saldoIniDb = $obBD_con1->getRowConsulta(40, $parms, $obBD_conexion);
+    $saldoIniVal = 0;
+    if (is_array($saldoIniDb) && isset($saldoIniDb['saldo_ini'])) {
+        $saldoIniVal = relavera_parse_monto($saldoIniDb['saldo_ini']);
+    }
+    $cliSaldoIni = '';
+    if (count($rowsKardex) > 0 && isset($rowsKardex[0]['cliente'])) {
+        $cliSaldoIni = (string) $rowsKardex[0]['cliente'];
+    }
+    $rowsKardex[] = array(
+        'row_id' => 'SALDO_INI',
+        'Ama_Cod' => '—',
+        'Ama_Fec' => $parms['Fec_IniM'],
+        '_fec_mov' => $parms['Fec_IniM'],
+        '_tipo_linea' => 'S',
+        '_saldo_inicial' => $saldoIniVal,
+        'Ama_Val' => 0,
+        'Abono' => 0,
+        'Saldo' => number_format($saldoIniVal, 2, '.', ''),
+        'cliente' => $cliSaldoIni,
+        'usuario' => '',
+        'Pag_Des' => '',
+        'Pld_Des' => 'Saldo inicial',
+        'Ama_Doc' => '',
+        'Ama_Tip' => 'S',
+        'Ama_Est' => '',
+        'Com_Cod' => '',
+    );
+
+    usort($rowsKardex, function ($a, $b) {
+        $fa = isset($a['_fec_mov']) ? $a['_fec_mov'] : '';
+        $fb = isset($b['_fec_mov']) ? $b['_fec_mov'] : '';
+        $cmpF = strcmp($fa, $fb);
+        if ($cmpF !== 0) {
+            return $cmpF;
+        }
+        $ta = strtoupper(trim((string) (isset($a['_tipo_linea']) ? $a['_tipo_linea'] : '')));
+        $tb = strtoupper(trim((string) (isset($b['_tipo_linea']) ? $b['_tipo_linea'] : '')));
+        $rank = function ($t) {
+            if ($t === 'S') {
+                return 0;
+            }
+            if ($t === 'A') {
+                return 1;
+            }
+            if ($t === 'C') {
+                return 2;
+            }
+            return 9;
+        };
+        $ra = $rank($ta);
+        $rb = $rank($tb);
+        if ($ra !== $rb) {
+            return $ra - $rb;
+        }
+        $ca = isset($a['Ama_Cod']) ? intval($a['Ama_Cod']) : 0;
+        $cb = isset($b['Ama_Cod']) ? intval($b['Ama_Cod']) : 0;
+        if ($ca !== $cb) {
+            return $ca - $cb;
+        }
+        if ($ta === 'C' && $tb === 'C') {
+            $cca = isset($a['Com_Cod_Consumo']) ? intval($a['Com_Cod_Consumo']) : (isset($a['Com_Cod']) ? intval($a['Com_Cod']) : 0);
+            $ccb = isset($b['Com_Cod_Consumo']) ? intval($b['Com_Cod_Consumo']) : (isset($b['Com_Cod']) ? intval($b['Com_Cod']) : 0);
+            return $cca - $ccb;
+        }
+        return 0;
+    });
+
+    $saldoAcumulado = 0;
+    foreach ($rowsKardex as &$rk) {
+        $tipoLin = strtoupper(trim((string) (isset($rk['_tipo_linea']) ? $rk['_tipo_linea'] : '')));
+        if ($tipoLin === 'S') {
+            $saldoAcumulado = isset($rk['_saldo_inicial']) ? floatval($rk['_saldo_inicial']) : floatval($rk['Saldo']);
+            $rk['Saldo'] = number_format($saldoAcumulado, 2, '.', '');
+            continue;
+        }
+        $valFila = isset($rk['Ama_Val']) ? floatval($rk['Ama_Val']) : 0;
+        $conFila = isset($rk['Abono']) ? floatval($rk['Abono']) : 0;
+        $saldoAcumulado = $saldoAcumulado + $valFila - $conFila;
+        $rk['Saldo'] = number_format($saldoAcumulado, 2, '.', '');
+    }
+    unset($rk);
+
+    /* Vista: descendente = más reciente primero (default); ascendente = cronológico */
+    $kardexOrden = 'desc';
+    if (isset($_GET['kardex_orden']) && is_string($_GET['kardex_orden']) && strtolower(trim($_GET['kardex_orden'])) === 'asc') {
+        $kardexOrden = 'asc';
+    }
+    if ($kardexOrden === 'desc') {
+        $rowsKardex = array_reverse($rowsKardex);
+    }
+
+    if ($respuestaConRows) {
+        $resp['rows'] = $rowsKardex;
+        $resp['records'] = count($rowsKardex);
+    } else {
+        $resp = $rowsKardex;
+    }
+
+    if (!empty($_GET['ec_consolidado']) && (string) $_GET['ec_consolidado'] === '1') {
+        $extraUserData = array(
+            'ec_manif_pend' => 0,
+            'ec_manif_pend_cnt' => 0,
+        );
+        $cliPend = isset($_GET['Cli_Cod']) ? trim((string) $_GET['Cli_Cod']) : '';
+        if ($cliPend !== '') {
+            require_once(__DIR__ . '/../LOGICA/log_man_est_cuenta_1.0.php');
+            $obEcConn = new Class_Log_Conexion_Estado_Cuenta($Ses_Dat_Dis);
+            $obEc = new Class_Log_Datos_Estado_Cuenta();
+            $parmsR = array(
+                'Cli_Cod' => $cliPend,
+                'Pla_Cod' => isset($_GET['Pla_Cod']) ? trim((string) $_GET['Pla_Cod']) : '',
+                'Fec_Ini' => isset($_GET['Fec_IniM']) ? $_GET['Fec_IniM'] : '',
+                'Fec_Fin' => isset($_GET['Fec_FinM']) ? $_GET['Fec_FinM'] : '',
+            );
+            $rowR = $obEc->getRowConsulta(5, $parmsR, $obEcConn);
+            $rowC = $obEc->getRowConsulta(17, $parmsR, $obEcConn);
+            if (method_exists($obEcConn, 'cerrar')) {
+                $obEcConn->cerrar();
+            }
+            $extraUserData['ec_manif_pend'] = isset($rowR['ManifiestosPend']) ? floatval($rowR['ManifiestosPend']) : 0;
+            $extraUserData['ec_manif_pend_cnt'] = isset($rowC['ManifiestosPendCnt']) ? intval($rowC['ManifiestosPendCnt']) : 0;
+        }
+        if (is_array($resp) && !isset($resp['rows'])) {
+            $resp = array(
+                'rows' => $resp,
+                'records' => count($resp),
+                'page' => 1,
+                'total' => 1,
+            );
+        }
+        if (isset($resp['rows']) && is_array($resp)) {
+            $resp['userdata'] = isset($resp['userdata']) && is_array($resp['userdata'])
+                ? array_merge($resp['userdata'], $extraUserData)
+                : $extraUserData;
+        }
+    }
+
+    $obBD_con1->echoJson($resp);
+    exit();
+}
+
+/* Asientos contables de un comprobante (consumo) */
+if (isset($getAsientosComAjax)) {
+    $resp = array('success' => false, 'rows' => array(), 'message' => '');
+    $comCod = isset($_GET['Com_Cod']) ? trim((string) $_GET['Com_Cod']) : '';
+    if ($comCod === '' || !ctype_digit($comCod)) {
+        $resp['message'] = 'Código de comprobante no válido';
+        $obBD_con1->echoJson($resp);
+        exit();
+    }
+    $rowsAsi = $obBD_con1->getArrayConsulta(23, array($comCod), $obBD_conexion);
+    if (!is_array($rowsAsi)) {
+        $rowsAsi = array();
+    }
+    if (method_exists($obBD_con1, 'utf8_change_param')) {
+        $obBD_con1->utf8_change_param($rowsAsi);
+    } else {
+        utf8_encode_deep($rowsAsi);
+    }
+    $resp['success'] = true;
+    $resp['rows'] = $rowsAsi;
+    $obBD_con1->echoJson($resp);
+    exit();
+}
+
+/* Cabecera del comprobante (modal ver comprobante de consumo, estilo tesorería) */
+if (isset($getComprobanteConsumoMeta)) {
+    $resp = array('success' => false, 'data' => null, 'message' => '');
+    $comCod = isset($_GET['Com_Cod']) ? trim((string) $_GET['Com_Cod']) : '';
+    if ($comCod === '' || !ctype_digit($comCod)) {
+        $resp['message'] = 'Código de comprobante no válido';
+        $obBD_con1->echoJson($resp);
+        exit();
+    }
+    $meta = $obBD_con1->getRowConsulta(38, array('Com_Cod' => intval($comCod)), $obBD_conexion);
+    if (!is_array($meta) || empty($meta) || empty($meta['Com_Cod'])) {
+        $resp['message'] = 'No se encontró el comprobante';
+        $obBD_con1->echoJson($resp);
+        exit();
+    }
+    if (method_exists($obBD_con1, 'utf8_change_param')) {
+        $obBD_con1->utf8_change_param($meta);
+    } else {
+        utf8_encode_deep($meta);
+    }
+    $resp['success'] = true;
+    $resp['data'] = $meta;
+    $obBD_con1->echoJson($resp);
+    exit();
+}
+
+/* Detalle consumos aplicados por Com_Cod (misma grilla que tesorería) */
+if (isset($getConsumosPorComprobanteAjax)) {
+    $resp = array('success' => false, 'rows' => array(), 'message' => '');
+    $comCod = isset($_GET['Com_Cod']) ? trim((string) $_GET['Com_Cod']) : '';
+    if ($comCod === '' || !ctype_digit($comCod)) {
+        $resp['message'] = 'Código de comprobante no válido';
+        $obBD_con1->echoJson($resp);
+        exit();
+    }
+    $rowsCons = $obBD_con1->getArrayConsulta(39, array('Com_Cod' => intval($comCod)), $obBD_conexion);
+    if (!is_array($rowsCons)) {
+        $rowsCons = array();
+    }
+    if (method_exists($obBD_con1, 'utf8_change_param')) {
+        $obBD_con1->utf8_change_param($rowsCons);
+    } else {
+        utf8_encode_deep($rowsCons);
+    }
+    $resp['success'] = true;
+    $resp['rows'] = $rowsCons;
     $obBD_con1->echoJson($resp);
     exit();
 }
@@ -1012,9 +1336,112 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
         var hoy = <?php echo json_encode($hoy); ?>;
         var Ses_Emp_Nom = <?php echo json_encode($_SESSION['Ses_Emp_Nom']); ?>;
     </script>
+    <style>
+        .relavera-ant-filtros .form-group {
+            margin-bottom: 8px;
+        }
+        .relavera-ant-filtros .input-group-addon {
+            padding: 2px 7px;
+        }
+        .relavera-ant-filtros .radioset label {
+            margin-right: 6px;
+        }
+        .relavera-ant-toolbar {
+            margin-top: 8px;
+            margin-bottom: 4px;
+        }
+        .relavera-search-wrap {
+            position: relative;
+        }
+        .relavera-search-suggest {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: calc(100% + 2px);
+            z-index: 1200;
+            background: #ffffff;
+            border: 1px solid #cfd8e3;
+            border-radius: 3px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+            max-height: 220px;
+            overflow-y: auto;
+            display: none;
+        }
+        .relavera-search-suggest .item {
+            padding: 6px 8px;
+            font-size: 11px;
+            color: #2f3b52;
+            border-bottom: 1px solid #eef2f7;
+            cursor: pointer;
+            background: #fff;
+        }
+        .relavera-search-suggest .item:last-child {
+            border-bottom: 0;
+        }
+        .relavera-search-suggest .item:hover,
+        .relavera-search-suggest .item.active {
+            background: #f3f7fc;
+            color: #1f2d4d;
+        }
+        .relavera-search-suggest .item.two-col {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .relavera-search-suggest .item .col-ruc {
+            min-width: 120px;
+            max-width: 140px;
+            color: #3c4f6e;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border-right: 1px solid #e7edf5;
+            padding-right: 8px;
+        }
+        .relavera-search-suggest .item .col-nom {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        /* Loader más natural para este módulo: sin bloquear toda la pantalla */
+        #loader.relavera-soft-loader {
+            background: transparent !important;
+            background-image: none !important;
+            opacity: 1 !important;
+            filter: none !important;
+            width: 0 !important;
+            height: 0 !important;
+            pointer-events: none;
+        }
+        #loader.relavera-soft-loader::after {
+            content: '';
+            position: fixed;
+            top: 86px;
+            right: 18px;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #c9d8ea;
+            border-top-color: #3f7fb9;
+            border-radius: 50%;
+            animation: relaveraSpin .7s linear infinite;
+            box-shadow: 0 0 0 1px rgba(255,255,255,.8);
+        }
+        @keyframes relaveraSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        /* Vista incrustada desde Estado de Cuenta > Consolidado */
+        body.man-ant-embed-ec .panel-heading.exa-header { display: none; }
+        body.man-ant-embed-ec #documentoSearch > .row > form > .col-xs-5,
+        body.man-ant-embed-ec #documentoSearch > .row > form > .col-sm-7 { display: none; }
+        body.man-ant-embed-ec .panel.panel-main { border: 0; box-shadow: none; }
+        body.man-ant-embed-ec .panel-body.exa-body { padding-top: 0; }
+    </style>
 </HEAD>
 
-<BODY>
+<BODY<?php echo $embed_ec_consolidado ? ' class="man-ant-embed-ec"' : ''; ?>>
     <div class="panel panel-main">
         <div class="panel-heading exa-header">
             <h3 class="panel-title">&raquo;Manifiesto de Anticipos</h3>
@@ -1024,6 +1451,8 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
             <div id="documentoSearch">
                 <div class="row">
                     <form name="searchManifesto" id="searchManifesto" class="form-horizontal normal" action="javascript:$('#man_antGrid').Search('#searchManifesto','LoadManifAjax');">
+                        <input type="hidden" name="ec_consolidado" id="ec_consolidado_flag" value="<?php echo $embed_ec_consolidado ? '1' : ''; ?>" />
+                        <input type="hidden" name="Pla_Cod" id="Pla_Cod_busq_manif" value="" />
                         <div class="col-xs-5">
                             <fieldset class="exa-fieldset">
                                 <legend class="Titulos2">B&uacute;squeda</legend>
@@ -1032,6 +1461,8 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
                                     <div class="col-xs-10 radioset opt_search">
                                         <input id="radsf1" name="op_opciones" type="radio" value="cl" checked="" onclick="setfocus(this.form.search)" alt="" />
                                         <label for="radsf1">Cliente</label>
+                                        <input id="radsf4" name="op_opciones" type="radio" value="p" onclick="setfocus(this.form.search)" alt="" />
+                                        <label for="radsf4">Planta</label>
                                         <input id="radsf2" name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" alt="" />
                                         <label for="radsf2">C&eacute;dula/RUC</label>
                                         <input id="radsf3" name="op_opciones" type="radio" value="m" onclick="setfocus(this.form.search)" alt="" />
@@ -1042,11 +1473,13 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
                                 <div class="form-group">
                                     <label class="col-xs-2 control-label">B&uacute;squeda:</label>
                                     <div class="col-xs-8">
-                                        <div class="input-group">
-                                            <input name="search" onkeydown="if (event.keyCode === 13)
+                                        <div class="input-group relavera-search-wrap">
+                                            <input name="search" id="searchTxt" autocomplete="off" onkeydown="if (event.keyCode === 13)
                                                     this.form.submit()" type="text" size="50" maxlength="50" placeholder="Ingrese b&uacute;squeda..." autofocus class="form-control input-xs clearable submit" />
+                                            <div id="searchSuggestions" class="relavera-search-suggest"></div>
                                             <input name="Cli_Cod" id="Cli_Cod" type="hidden" value="<?php echo isset($cliente_manifiesto['Cli_Cod']) ? $cliente_manifiesto['Cli_Cod'] : ''; ?>" />
                                             <input name="filtroAnt" id="filtroAnt" type="hidden" value="" />
+                                            <input name="kardex_orden" id="man_ant_kardex_orden" type="hidden" value="desc" />
                                             <span class="input-group-btn">
                                                 <button type="button" id="btnSearch" onclick="this.form.submit()" class="btn btn-success btn-xs" title="Buscar Documento" tabindex="-1">
                                                     <span class="glyphicon glyphicon-search"></span>
@@ -1059,49 +1492,57 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
                                 </div>
                             </fieldset>
                         </div>
-                        <div class="col-sm-7">
+                        <div class="col-sm-7 relavera-ant-filtros">
                             <fieldset class="exa-fieldset">
                                 <legend class="Titulos2">Filtros</legend>
                                 <div class="form-group">
-                                    <label class="col-xs-1 control-label label-xs" style="margin-left: 25px;">Estado:</label>
+                                    <label class="col-xs-2 control-label label-xs">Estado:</label>
                                     <div class="col-sm-4 radioset opt_search">
                                         <!-- <input id="radsc1" name="op_opciones2" type="radio" value="T" /><label for="radsc1">Todos&nbsp;</label> -->
                                         <input id="radsc2" name="op_opciones2" type="radio" value="A" alt="" checked/><label for="radsc2">Activos</label>
                                         <input id="radsc3" name="op_opciones2" type="radio" value="I" alt="" /><label for="radsc3">Anulados</label>
                                     </div>
+                                    <label class="col-sm-2 control-label label-xs">Filtrado:</label>
+                                    <div class="col-sm-4">
+                                        <select id="FilterBy" class="form-control input-xs" onchange="cargarSelect();">
+                                            <option value="">No filtrar</option>
+                                            <option value="P">Pendiente</option>
+                                            <option value="A">Acreditado</option>
+                                            <option value="R">Rechazado</option>
+                                        </select>
+                                    </div>
                                 </div>
 
-                                <div class="form-group" style="margin-top: 10px; margin-left: 10px;">
-                                    <label class="col-sm-1 control-label label-xs">Periodo:</label>
-                                    <div class="col-sm-2" style="margin-right: 10px;">
-                                        <select id="Pec_Cod" name="Pec_Cod" class="form-control input-xs" style="text-align: center; width: 125px;" onchange="desbloquear();">
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label label-xs">Periodo:</label>
+                                    <div class="col-sm-3">
+                                        <select id="Pec_Cod" name="Pec_Cod" class="form-control input-xs" onchange="desbloquear();">
                                             <option value="T"> << Todos>> </option>
-                                            <option value="PF">-- Por Fecha --</option>
+                                            <option value="PF" selected>Mes actual</option>
                                             <?php
-                                            // foreach ($periodos as $p) {
-                                            //     echo "<option data-year='$p[Year]' data-inicio='$p[Pec_Fei]' data-fin='$p[Pec_Fef]' data-pec-cod='$p[Pec_Cod]' value='$p[Pec_Cod]'>Periodo $p[Year]</option>";
-                                            // }
                                             foreach ($periodos as $i => $p) {
-                                                $selected = ($i === 0) ? 'selected' : '';
-                                                echo "<option data-year='$p[Year]' data-inicio='$p[Pec_Fei]' data-fin='$p[Pec_Fef]' data-pec-cod='$p[Pec_Cod]' value='$p[Pec_Cod]' $selected>Periodo $p[Year]</option>";
+                                                echo "<option data-year='$p[Year]' data-inicio='$p[Pec_Fei]' data-fin='$p[Pec_Fef]' data-pec-cod='$p[Pec_Cod]' value='$p[Pec_Cod]'>Periodo $p[Year]</option>";
                                             }
                                             ?>
                                         </select>
                                     </div>
-                                    <div class="col-sm-4 rango-fecha" style="display:flex; align-items:center;">
-                                        <div class="input-group input-group-xs por_fecha" style="width:100%; justify-content: flex-start;">
+                                    <div class="col-sm-7 rango-fecha">
+                                        <div class="input-group input-group-xs por_fecha" style="width:100%;">
                                             <span class="input-group-addon alert-info">Desde</span>
-                                            <input type="text" id="Fec_IniM" name="Fec_IniM" class="form-control" style="text-align: center; width: 120px;" disabled="disabled" />
+                                            <input type="text" id="Fec_IniM" name="Fec_IniM" class="form-control" style="text-align: center;" disabled="disabled" />
                                             <span class="input-group-addon" title="Intercambiar fechas"><i class="glyphicon glyphicon-transfer"></i></span>
                                             <span class="input-group-addon alert-info">Hasta</span>
-                                            <input type="text" id="Fec_FinM" name="Fec_FinM" class="form-control" style="text-align: center; width: 120px; margin-right: 10px;" disabled="disabled" />
+                                            <input type="text" id="Fec_FinM" name="Fec_FinM" class="form-control" style="text-align: center;" disabled="disabled" />
                                         </div>
                                     </div>
                                 </div>
                             </fieldset>
-                            <div class="form-group">
-                                <div class="col-sm-12">
-                                    <button type="button" id="btnNuevoAnticipo" class="btn btn-success btn-xs pull-right" title="Nuevo Anticipo" style="margin-top:10px;" onclick="abrirModalPagos();">
+                            <div class="form-group relavera-ant-toolbar">
+                                <div class="col-sm-12 text-right">
+                                    <button type="button" id="btnSearch2" onclick="document.getElementById('searchManifesto').submit();" class="btn btn-primary btn-xs" title="Aplicar filtros">
+                                        <span class="glyphicon glyphicon-search"></span> Buscar
+                                    </button>
+                                    <button type="button" id="btnNuevoAnticipo" class="btn btn-success btn-xs" title="Nuevo Anticipo" onclick="abrirModalPagos();">
                                         <span class="glyphicon glyphicon-plus"></span>
                                         Nuevo Anticipo
                                     </button>
@@ -1340,7 +1781,7 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
         // Esta variable será utilizada por la función toggleBotonesCliente() en man_ant_1.0.js
         var tieneClienteManifiesto = <?php echo (isset($cliente_manifiesto) && !empty($cliente_manifiesto) && isset($cliente_manifiesto['Cli_Cod'])) ? 'true' : 'false'; ?>;
     </script>
-    <script src="../VALIDACIONES/man_ant_1.0.js?x=26"></script>
+    <script src="../VALIDACIONES/man_ant_1.0.js?x=42"></script>
     <script type="text/javascript" src="../../framework/jquery/jquery.plugins/MaskedInput/jquery.maskedinput.1.4.1.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=1"></script>
     <script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>
@@ -1360,6 +1801,97 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
             </div>
             <div style="margin-top: 5px; font-size: 11px; color: #666;">
                 <span id="zoomLevel">100%</span> | Usa la rueda del mouse para hacer zoom
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: comprobante de consumo (asientos + consumos, estilo tesorería «Pago») -->
+    <div id="verComprobanteConsumoDialog" title="Pago" style="display: none;">
+        <div class="row">
+            <div class="col-sm-12">
+                <fieldset class="exa-fieldset">
+                    <legend class="Titulos2">Datos del Anticipo</legend>
+                    <form id="verComprobanteConsumoForm" class="form-horizontal normal">
+                        <div class="row">
+                            <div class="col-sm-7">
+                                <div class="form-group">
+                                    <label class="col-xs-4 control-label label-xs">Cliente:</label>
+                                    <div class="col-xs-8">
+                                        <input type="text" id="man_cons_cli_show" class="form-control input-xs" readonly>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-xs-4 control-label label-xs">No. Compr.:</label>
+                                    <div class="col-xs-8">
+                                        <input type="text" id="man_cons_compr_show" class="form-control input-xs" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-5">
+                                <div class="form-group">
+                                    <label class="col-xs-4 control-label label-xs">C&eacute;dula/R.U.C.:</label>
+                                    <div class="col-xs-8">
+                                        <input type="text" id="man_cons_ruc_show" class="form-control input-xs" readonly>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-xs-4 control-label label-xs">Fecha:</label>
+                                    <div class="col-xs-8">
+                                        <input type="text" id="man_cons_fec_show" class="form-control input-xs" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group condensed">
+                            <div class="col-xs-12" style="text-align: right;font-size: 8px;padding-top: 2px;">
+                                <b>USUARIO:</b>
+                                <span id="man_cons_usuario" class="databind"></span>
+                                <b>CREACI&Oacute;N:</b>
+                                <span id="man_cons_com_sys" class="databind"></span>
+                            </div>
+                        </div>
+                    </form>
+                </fieldset>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <fieldset class="exa-fieldset">
+                    <legend class="Titulos2">Observaci&oacute;n</legend>
+                    <div class="form-group">
+                        <div class="col-xs-12">
+                            <textarea id="man_cons_obs_show" class="form-control input-xs" readonly></textarea>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+        </div>
+        <br>
+        <div class="row">
+            <div class="col-sm-12">
+                <div style="text-align:right;margin:0 12px 6px 0;">
+                    <button type="button" class="btn btn-xs btn-primary" onclick="imprimirComprobanteConsumoMan();" style="display:inline-block;"><i class="glyphicon glyphicon-print"></i> Imprimir</button>
+                </div>
+                <div id="man_tabs_com_cons" class="ui-tab-fix">
+                    <ul style="font-size: 12px;" role="tablist">
+                        <li id="man_cons_detasi"><a href="#man_cons_det_asi">Asientos</a></li>
+                        <li id="man_cons_detcons"><a href="#man_cons_det_cons">Consumos</a></li>
+                    </ul>
+                    <div id="man_cons_det_asi">
+                        <div class="row">
+                            <div class="col-sm-12" style="padding-top: 10px;">
+                                <table id="manShowPagosAsi" name="manShowPagosAsi"></table>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="man_cons_det_cons">
+                        <div class="row">
+                            <div class="col-sm-12" style="padding-top: 10px;">
+                                <table id="manShowAntConsumos" name="manShowAntConsumos"></table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1436,6 +1968,41 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
             </div>
         </div>
     </div>
+
+    <?php if ($embed_ec_consolidado) { ?>
+    <script type="text/javascript">
+    $(function () {
+        var q = <?php echo json_encode(array(
+            'Cli_Cod' => isset($_GET['Cli_Cod']) ? (string) $_GET['Cli_Cod'] : '',
+            'Pla_Cod' => isset($_GET['Pla_Cod']) ? (string) $_GET['Pla_Cod'] : '',
+            'Fec_IniM' => isset($_GET['Fec_IniM']) ? (string) $_GET['Fec_IniM'] : '',
+            'Fec_FinM' => isset($_GET['Fec_FinM']) ? (string) $_GET['Fec_FinM'] : '',
+        ), JSON_UNESCAPED_UNICODE); ?>;
+        $('#ec_consolidado_flag').val('1');
+        if (q.Cli_Cod) {
+            $('#Cli_Cod').val(q.Cli_Cod);
+        }
+        if (q.Pla_Cod) {
+            $('#Pla_Cod_busq_manif').val(q.Pla_Cod);
+        }
+        $('input[name="op_opciones"][value="cl"]').prop('checked', true);
+        if (typeof desbloquear === 'function') {
+            $('#Pec_Cod').val('PF');
+            desbloquear();
+        }
+        if (q.Fec_IniM) {
+            $('#Fec_IniM').val(q.Fec_IniM);
+        }
+        if (q.Fec_FinM) {
+            $('#Fec_FinM').val(q.Fec_FinM);
+        }
+        $('#Fec_IniM, #Fec_FinM').prop('disabled', false);
+        if ($('#man_antGrid').length && typeof $('#man_antGrid').Search === 'function') {
+            $('#man_antGrid').Search('#searchManifesto', 'LoadManifAjax');
+        }
+    });
+    </script>
+    <?php } ?>
 
     <?php
     // Cerrado y liberacion de las conexiones

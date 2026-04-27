@@ -143,13 +143,16 @@ function sentencias_manifiesto($id, $Par_Sql)
                 $val = addslashes($Par_Sql['search']);
                 switch ($Par_Sql['filtro']) {
                     case 'cl': // Por Cliente
-                        $wherefiltro = " AND CONCAT(persona_cli.Prs_Nom LIKE '%$val%' OR persona_cli.Prs_Ape LIKE '%$val%')";
+                        $wherefiltro = " AND (persona_cli.Prs_Nom LIKE '%$val%' OR persona_cli.Prs_Ape LIKE '%$val%')";
                         break;
                     case 'c': // Por Cedula/RUC
                         $wherefiltro = " AND persona_cli.Prs_Ced LIKE '%$val%'";
                         break;
                     case 'm': // Por Manifiesto (Ant_Cod)
-                        $wherefiltro = " AND manifiesto_anticipo.Ant_Cod LIKE '%$val%'";
+                        $wherefiltro = " AND manifiesto_anticipo.Ama_Cod LIKE '%$val%'";
+                        break;
+                    case 'p': // Por Planta
+                        $wherefiltro = " AND (IFNULL(manifiesto_plantas.Pla_Nom,'') LIKE '%$val%' OR IFNULL(manifiesto_plantas.Pla_Lic,'') LIKE '%$val%')";
                         break;
                 }
             }
@@ -232,7 +235,9 @@ function sentencias_manifiesto($id, $Par_Sql)
                                 INNER JOIN anticipos_clientes ac ON dacc.Ant_Cod = ac.Ant_Cod
                                 INNER JOIN comprobantes com ON dacc.Com_Cod = com.Com_Cod
                                 WHERE ac.Ama_Cod = manifiesto_anticipo.Ama_Cod
-                                AND com.Com_Est = 'A'
+                                AND ac.Ant_Est IN ('A','U','C')
+                                AND IFNULL(com.Com_Est,'A') <> 'I'
+                                AND dacc.Com_Cod <> ac.Com_Cod
                             ), 0) AS Abono
 
                         FROM manifiesto_anticipo
@@ -244,12 +249,13 @@ function sentencias_manifiesto($id, $Par_Sql)
                             INNER JOIN cliente ON manifiesto_anticipo.Cli_Cod = cliente.Cli_Cod
                             INNER JOIN persona AS persona_cli ON cliente.Prs_Cod = persona_cli.Prs_Cod
                             INNER JOIN tipos_pago ON manifiesto_anticipo.Pag_Cod = tipos_pago.Pag_Cod
+                            LEFT JOIN manifiesto_plantas ON manifiesto_anticipo.Pla_Cod = manifiesto_plantas.Pla_Cod
                             LEFT JOIN anticipos_clientes 
                                 ON anticipos_clientes.Ama_Cod = manifiesto_anticipo.Ama_Cod 
-                                AND anticipos_clientes.Ant_Est = 'A'
+                                AND anticipos_clientes.Ant_Est IN ('A','U','C')
                         WHERE
                             $wherefecha $whereestado $wherefiltro $wherecliente $wheretipopago
-                        ORDER BY manifiesto_anticipo.Ama_Cod DESC;";
+                        ORDER BY manifiesto_anticipo.Ama_Fec ASC, manifiesto_anticipo.Ama_Cod ASC;";
             return $sql;
             // break;
 
@@ -492,5 +498,338 @@ function sentencias_manifiesto($id, $Par_Sql)
                     LIMIT 1";
             return $sql;
             // break;
+
+        case 37:
+            /* Consumos agrupados por comprobante (misma lógica que estado cuenta anticipo clientes: Ant A/U/C, Com <> I, excluye comprobante de ingreso del anticipo) */
+            $ama = isset($Par_Sql['Ama_Cod']) ? addslashes((string) $Par_Sql['Ama_Cod']) : '';
+            $whereFechaCons = '';
+            if (!empty($Par_Sql['Fec_IniM']) && !empty($Par_Sql['Fec_FinM'])) {
+                $fi = addslashes((string) $Par_Sql['Fec_IniM']);
+                $ff = addslashes((string) $Par_Sql['Fec_FinM']);
+                $whereFechaCons = " AND DATE(pago.Com_Fec) BETWEEN DATE('$fi') AND DATE('$ff') ";
+            }
+            /* Agrupar por comprobante del PAGO (dacc.Com_Cod): un mismo pago puede tener varias líneas det_ant (varios anticipos);
+               el modal muestra esas líneas; el manifiesto debe mostrar la SUMA por ese comprobante de pago. */
+            $sql = "SELECT pago.Com_Cod AS Com_Cod_Consumo,
+                           MAX(pago.Com_Fec) AS Com_Fec_Consumo,
+                           MAX(pago.Com_Num) AS Com_Num_Consumo,
+                           MAX(CONCAT(tp.Tia_Abr,'-',IF(CHAR_LENGTH(MONTH(pago.Com_Fec))=1,CONCAT('0',CAST(MONTH(pago.Com_Fec) AS CHAR)),CAST(MONTH(pago.Com_Fec) AS CHAR)),'-',CAST(pago.Com_Num AS CHAR))) AS Codigo_Compr_Consumo,
+                           MAX(pago.Com_Con) AS Com_Con_Consumo,
+                           SUM(dacc.Ddc_Val) AS total_consumo
+                    FROM det_ant_cccc dacc
+                    INNER JOIN anticipos_clientes ac ON dacc.Ant_Cod = ac.Ant_Cod
+                    INNER JOIN comprobantes pago ON pago.Com_Cod = dacc.Com_Cod
+                    INNER JOIN tipo_asien tp ON tp.Tia_Cod = pago.Tia_Cod
+                    WHERE ac.Ama_Cod = '$ama'
+                      AND ac.Ant_Est IN ('A','U','C')
+                      AND IFNULL(pago.Com_Est,'A') <> 'I'
+                      AND dacc.Com_Cod <> ac.Com_Cod
+                      $whereFechaCons
+                    GROUP BY pago.Com_Cod
+                    ORDER BY MAX(pago.Com_Fec) ASC, pago.Com_Cod ASC";
+            return $sql;
+            // break;
+
+        case 38:
+            /* Cabecera de un comprobante (consumo u otro) con cliente y usuario creador */
+            $comCod = isset($Par_Sql['Com_Cod']) ? intval($Par_Sql['Com_Cod']) : 0;
+            if ($comCod <= 0) {
+                return "SELECT NULL AS Com_Cod, NULL AS Com_Fec, '' AS codigoCompra, '' AS nombre, '' AS Prs_Ced, '' AS Com_Con, '' AS Com_Obs, '' AS usuario, '' AS Com_Sys LIMIT 0";
+            }
+            $sql = "SELECT
+                        c.Com_Cod,
+                        DATE(c.Com_Fec) AS Com_Fec,
+                        CONCAT(tp.Tia_Abr,'-',IF(CHAR_LENGTH(MONTH(c.Com_Fec))=1,CONCAT('0',CAST(MONTH(c.Com_Fec) AS CHAR)),CAST(MONTH(c.Com_Fec) AS CHAR)),'-',CAST(c.Com_Num AS CHAR)) AS codigoCompra,
+                        TRIM(CONCAT(IFNULL(prs.Prs_Nom,''),' ',IFNULL(prs.Prs_Ape,''))) AS nombre,
+                        IFNULL(prs.Prs_Ced,'') AS Prs_Ced,
+                        IFNULL(c.Com_Con,'') AS Com_Con,
+                        IFNULL(c.Com_Obs,'') AS Com_Obs,
+                        IFNULL(TRIM(CONCAT(IFNULL(up.Prs_Nom,''),' ',IFNULL(up.Prs_Ape,''))),'') AS usuario,
+                        IFNULL(c.Com_Sys,'') AS Com_Sys
+                    FROM comprobantes c
+                    LEFT JOIN cliente cli ON cli.Cli_Cod = c.Cli_Cod
+                    LEFT JOIN persona prs ON prs.Prs_Cod = cli.Prs_Cod
+                    LEFT JOIN tipo_asien tp ON tp.Tia_Cod = c.Tia_Cod
+                    LEFT JOIN usuarios u ON u.Usu_Cod = c.Usu_Cod
+                    LEFT JOIN persona up ON up.Prs_Cod = u.Prs_Cod
+                    WHERE c.Com_Cod = " . $comCod . "
+                    LIMIT 1";
+            return $sql;
+
+        case 39:
+            /* Líneas det_ant_cccc de un comprobante de consumo; saldo_momento = saldo del anticipo tras consumos previos (otros comprobantes y líneas anteriores del mismo Com_Cod por Ddc_Cod) */
+            $comCod = isset($Par_Sql['Com_Cod']) ? intval($Par_Sql['Com_Cod']) : 0;
+            if ($comCod <= 0) {
+                return "SELECT '' AS codigo_consumo, '' AS fecha_consumo, '' AS glosa_consumo, 0 AS valor_anticipo, 0 AS valor_consumo, 0 AS saldo_anticipo, 0 AS saldo_momento LIMIT 0";
+            }
+            $sql = "SELECT
+                        CONCAT(tp_ant.Tia_Abr,'-',IF(CHAR_LENGTH(MONTH(cant.Com_Fec))=1,CONCAT('0',CAST(MONTH(cant.Com_Fec) AS CHAR)),CAST(MONTH(cant.Com_Fec) AS CHAR)),'-',CAST(cant.Com_Num AS CHAR)) AS codigo_consumo,
+                        DATE(c.Com_Fec) AS fecha_consumo,
+                        IFNULL(c.Com_Con,'') AS glosa_consumo,
+                        CAST(ant.Ant_Val AS DECIMAL(14,4)) AS valor_anticipo,
+                        CAST(ddc.Ddc_Val AS DECIMAL(14,4)) AS valor_consumo,
+                        CAST((ant.Ant_Val - IFNULL((SELECT SUM(d2.Ddc_Val) FROM det_ant_cccc d2 INNER JOIN comprobantes cx ON cx.Com_Cod = d2.Com_Cod WHERE d2.Ant_Cod = ant.Ant_Cod AND IFNULL(cx.Com_Est,'A') <> 'I'),0)) AS DECIMAL(14,4)) AS saldo_anticipo,
+                        CAST((ant.Ant_Val - IFNULL((
+                            SELECT SUM(d2.Ddc_Val)
+                            FROM det_ant_cccc d2
+                            INNER JOIN comprobantes c2 ON c2.Com_Cod = d2.Com_Cod
+                            WHERE d2.Ant_Cod = ant.Ant_Cod
+                              AND IFNULL(c2.Com_Est,'A') <> 'I'
+                              AND (
+                                  c2.Com_Fec < c.Com_Fec
+                                  OR (c2.Com_Fec = c.Com_Fec AND CAST(c2.Com_Cod AS UNSIGNED) < CAST(c.Com_Cod AS UNSIGNED))
+                                  OR (c2.Com_Cod = c.Com_Cod AND d2.Ddc_Cod <= ddc.Ddc_Cod)
+                              )
+                        ), 0)) AS DECIMAL(14,4)) AS saldo_momento
+                    FROM det_ant_cccc AS ddc
+                    INNER JOIN anticipos_clientes AS ant ON ant.Ant_Cod = ddc.Ant_Cod
+                    INNER JOIN comprobantes AS c ON c.Com_Cod = ddc.Com_Cod
+                    INNER JOIN comprobantes AS cant ON cant.Com_Cod = ant.Com_Cod
+                    INNER JOIN tipo_asien AS tp_ant ON tp_ant.Tia_Cod = cant.Tia_Cod
+                    WHERE ddc.Com_Cod = " . $comCod . "
+                        AND IFNULL(c.Com_Est,'A') <> 'I'
+                    ORDER BY ddc.Ddc_Cod ASC";
+            return $sql;
+
+        case 40:
+            /* Saldo inicial manifiesto antes de Fec_IniM: anticipos acreditados (Ama_Tip=A) - consumos det_ant con fecha comprobante anterior */
+            $fecIni = isset($Par_Sql['Fec_IniM']) ? addslashes(trim((string) $Par_Sql['Fec_IniM'])) : '1970-01-01';
+            $wherefiltro = '';
+            if (isset($Par_Sql['filtro']) && isset($Par_Sql['search']) && $Par_Sql['search'] !== '') {
+                $val = addslashes($Par_Sql['search']);
+                switch ($Par_Sql['filtro']) {
+                    case 'cl':
+                        $wherefiltro = " AND (persona_cli.Prs_Nom LIKE '%$val%' OR persona_cli.Prs_Ape LIKE '%$val%')";
+                        break;
+                    case 'c':
+                        $wherefiltro = " AND persona_cli.Prs_Ced LIKE '%$val%'";
+                        break;
+                    case 'm':
+                        $wherefiltro = " AND ma.Ama_Cod LIKE '%$val%'";
+                        break;
+                    case 'p':
+                        $wherefiltro = " AND ma.Pla_Cod IN (SELECT mp2.Pla_Cod FROM manifiesto_plantas mp2 WHERE IFNULL(mp2.Pla_Nom,'') LIKE '%$val%' OR IFNULL(mp2.Pla_Lic,'') LIKE '%$val%')";
+                        break;
+                }
+            }
+            $whereestado = '';
+            if (isset($Par_Sql['estado']) && $Par_Sql['estado'] !== '' && $Par_Sql['estado'] !== 'T') {
+                $whereestado = " AND ma.Ama_Est = '" . addslashes($Par_Sql['estado']) . "'";
+            }
+            $wherePlaCod = '';
+            if (isset($Par_Sql['Pla_Cod']) && $Par_Sql['Pla_Cod'] != '') {
+                $wherePlaCod = ' AND ma.Pla_Cod = ' . addslashes($Par_Sql['Pla_Cod']);
+            }
+            $wherecliente = '';
+            if (isset($Par_Sql['Cli_Cod']) && $Par_Sql['Cli_Cod'] !== '') {
+                $wherecliente = " AND ma.Cli_Cod = '" . addslashes($Par_Sql['Cli_Cod']) . "'";
+            }
+            $sql = "SELECT (
+                COALESCE((
+                    SELECT SUM(ma.Ama_Val)
+                    FROM manifiesto_anticipo ma
+                    INNER JOIN cliente ON ma.Cli_Cod = cliente.Cli_Cod
+                    INNER JOIN persona AS persona_cli ON cliente.Prs_Cod = persona_cli.Prs_Cod
+                    INNER JOIN tipos_pago ON ma.Pag_Cod = tipos_pago.Pag_Cod
+                    WHERE ma.Ama_Fec < '" . $fecIni . "'
+                      AND ma.Ama_Tip = 'A'
+                      $whereestado
+                      $wherecliente
+                      $wherePlaCod
+                      $wherefiltro
+                ), 0) - COALESCE((
+                    SELECT SUM(dacc.Ddc_Val)
+                    FROM det_ant_cccc dacc
+                    INNER JOIN anticipos_clientes ac ON dacc.Ant_Cod = ac.Ant_Cod
+                    INNER JOIN comprobantes com ON dacc.Com_Cod = com.Com_Cod
+                    INNER JOIN manifiesto_anticipo ma ON ma.Ama_Cod = ac.Ama_Cod
+                    INNER JOIN cliente ON ma.Cli_Cod = cliente.Cli_Cod
+                    INNER JOIN persona AS persona_cli ON cliente.Prs_Cod = persona_cli.Prs_Cod
+                    INNER JOIN tipos_pago ON ma.Pag_Cod = tipos_pago.Pag_Cod
+                    WHERE DATE(com.Com_Fec) < DATE('" . $fecIni . "')
+                      AND ac.Ant_Est IN ('A','U','C')
+                      AND IFNULL(com.Com_Est,'A') <> 'I'
+                      AND dacc.Com_Cod <> ac.Com_Cod
+                      AND ma.Ama_Tip = 'A'
+                      $whereestado
+                      $wherecliente
+                      $wherePlaCod
+                      $wherefiltro
+                ), 0)
+            ) AS saldo_ini";
+            return $sql;
+
+        case 41:
+            $term = isset($Par_Sql['term']) ? addslashes(trim((string) $Par_Sql['term'])) : '';
+            if ($term === '') return "SELECT '' AS value, '' AS label LIMIT 0";
+            $sql = "SELECT DISTINCT
+                        ma.Pla_Cod AS value,
+                        TRIM(CONCAT(IFNULL(mp.Pla_Nom,''), IF(IFNULL(mp.Pla_Lic,'')<>'', CONCAT(' (', mp.Pla_Lic, ')'), ''))) AS label
+                    FROM manifiesto_anticipo ma
+                    INNER JOIN manifiesto_plantas mp ON mp.Pla_Cod = ma.Pla_Cod
+                    WHERE (IFNULL(mp.Pla_Nom,'') LIKE '%$term%' OR IFNULL(mp.Pla_Lic,'') LIKE '%$term%')
+                    ORDER BY mp.Pla_Nom DESC
+                    LIMIT 15";
+            return $sql;
+
+        case 42:
+            $term = isset($Par_Sql['term']) ? addslashes(trim((string) $Par_Sql['term'])) : '';
+            if ($term === '') return "SELECT '' AS value, '' AS label LIMIT 0";
+            $sql = "SELECT DISTINCT
+                        c.Cli_Cod AS value,
+                        IFNULL(p.Prs_Ced,'') AS ruc,
+                        TRIM(CONCAT(IFNULL(p.Prs_Nom,''), ' ', IFNULL(p.Prs_Ape,''))) AS label
+                    FROM cliente c
+                    INNER JOIN persona p ON p.Prs_Cod = c.Prs_Cod
+                    INNER JOIN manifiesto_anticipo ma ON ma.Cli_Cod = c.Cli_Cod
+                    WHERE c.Emp_Cod = '$_SESSION[Ses_Emp_Cod]'
+                      AND (TRIM(CONCAT(IFNULL(p.Prs_Nom,''), ' ', IFNULL(p.Prs_Ape,'')) ) LIKE '%$term%'
+                           OR IFNULL(p.Prs_Ced,'') LIKE '%$term%')
+                    ORDER BY p.Prs_Ced DESC, p.Prs_Nom DESC, p.Prs_Ape DESC
+                    LIMIT 15";
+            return $sql;
+
+        case 43:
+            /* Consumos del rango por fecha de comprobante, aunque el anticipo sea de meses anteriores */
+            $fi = isset($Par_Sql['Fec_IniM']) ? addslashes(trim((string) $Par_Sql['Fec_IniM'])) : '';
+            $ff = isset($Par_Sql['Fec_FinM']) ? addslashes(trim((string) $Par_Sql['Fec_FinM'])) : '';
+            if ($fi === '' || $ff === '') {
+                return "SELECT '' AS Com_Cod_Consumo, '' AS Com_Fec_Consumo, '' AS Com_Num_Consumo, '' AS Codigo_Compr_Consumo, '' AS Com_Con_Consumo, 0 AS total_consumo, '' AS Ama_Cod, '' AS cliente LIMIT 0";
+            }
+
+            $wherecliente = '';
+            if (isset($Par_Sql['Cli_Cod']) && $Par_Sql['Cli_Cod'] !== '') {
+                $wherecliente = " AND ma.Cli_Cod = '" . addslashes($Par_Sql['Cli_Cod']) . "'";
+            }
+            $wherePlaCod = '';
+            if (isset($Par_Sql['Pla_Cod']) && $Par_Sql['Pla_Cod'] !== '') {
+                $wherePlaCod = " AND ma.Pla_Cod = " . addslashes($Par_Sql['Pla_Cod']);
+            }
+            $whereestado = '';
+            if (isset($Par_Sql['estado']) && $Par_Sql['estado'] !== '' && $Par_Sql['estado'] !== 'T') {
+                $whereestado = " AND ma.Ama_Est = '" . addslashes($Par_Sql['estado']) . "'";
+            }
+            $wherefiltro = '';
+            if (isset($Par_Sql['filtro']) && isset($Par_Sql['search']) && $Par_Sql['search'] !== '') {
+                $val = addslashes($Par_Sql['search']);
+                switch ($Par_Sql['filtro']) {
+                    case 'cl': // Por Cliente
+                        $wherefiltro = " AND (persona_cli.Prs_Nom LIKE '%$val%' OR persona_cli.Prs_Ape LIKE '%$val%')";
+                        break;
+                    case 'c': // Por Cédula/RUC
+                        $wherefiltro = " AND persona_cli.Prs_Ced LIKE '%$val%'";
+                        break;
+                    case 'm': // Por manifiesto/anticipo interno
+                        $wherefiltro = " AND ma.Ama_Cod LIKE '%$val%'";
+                        break;
+                    case 'p': // Por Planta
+                        $wherefiltro = " AND ma.Pla_Cod IN (SELECT mp2.Pla_Cod FROM manifiesto_plantas mp2 WHERE IFNULL(mp2.Pla_Nom,'') LIKE '%$val%' OR IFNULL(mp2.Pla_Lic,'') LIKE '%$val%')";
+                        break;
+                }
+            }
+            $wheretipopago = '';
+            if (isset($Par_Sql['filtroAnt']) && $Par_Sql['filtroAnt'] !== '') {
+                $wheretipopago = " AND ma.Ama_Tip = '" . addslashes($Par_Sql['filtroAnt']) . "'";
+            }
+
+            $sql = "SELECT
+                        pago.Com_Cod AS Com_Cod_Consumo,
+                        MAX(pago.Com_Fec) AS Com_Fec_Consumo,
+                        MAX(pago.Com_Num) AS Com_Num_Consumo,
+                        MAX(CONCAT(tp.Tia_Abr,'-',IF(CHAR_LENGTH(MONTH(pago.Com_Fec))=1,CONCAT('0',CAST(MONTH(pago.Com_Fec) AS CHAR)),CAST(MONTH(pago.Com_Fec) AS CHAR)),'-',CAST(pago.Com_Num AS CHAR))) AS Codigo_Compr_Consumo,
+                        MAX(pago.Com_Con) AS Com_Con_Consumo,
+                        SUM(dacc.Ddc_Val) AS total_consumo,
+                        MIN(ac.Ama_Cod) AS Ama_Cod,
+                        MAX(CONCAT(persona_cli.Prs_Nom, ' ', persona_cli.Prs_Ape)) AS cliente
+                    FROM det_ant_cccc dacc
+                    INNER JOIN anticipos_clientes ac ON dacc.Ant_Cod = ac.Ant_Cod
+                    INNER JOIN comprobantes pago ON pago.Com_Cod = dacc.Com_Cod
+                    INNER JOIN tipo_asien tp ON tp.Tia_Cod = pago.Tia_Cod
+                    INNER JOIN manifiesto_anticipo ma ON ma.Ama_Cod = ac.Ama_Cod
+                    INNER JOIN cliente cli ON ma.Cli_Cod = cli.Cli_Cod
+                    INNER JOIN persona AS persona_cli ON cli.Prs_Cod = persona_cli.Prs_Cod
+                    WHERE DATE(pago.Com_Fec) BETWEEN DATE('$fi') AND DATE('$ff')
+                      AND ac.Ant_Est IN ('A','U','C')
+                      AND IFNULL(pago.Com_Est,'A') <> 'I'
+                      AND dacc.Com_Cod <> ac.Com_Cod
+                      $wherecliente
+                      $wherePlaCod
+                      $whereestado
+                      $wherefiltro
+                      $wheretipopago
+                    GROUP BY pago.Com_Cod
+                    ORDER BY MAX(pago.Com_Fec) ASC, pago.Com_Cod ASC";
+            return $sql;
+
+        case 44:
+            /* Todos los comprobantes de CONSUMO/PAGO del cliente (filtros), una fila por comprobante con total aplicado.
+               No filtrar por un solo Ama_Cod: un mismo pago reparte varias líneas det_ant a varios anticipos. */
+            $wherecliente = '';
+            if (isset($Par_Sql['Cli_Cod']) && $Par_Sql['Cli_Cod'] !== '') {
+                $wherecliente = " AND ma.Cli_Cod = '" . addslashes($Par_Sql['Cli_Cod']) . "'";
+            }
+            $wherePlaCod = '';
+            if (isset($Par_Sql['Pla_Cod']) && $Par_Sql['Pla_Cod'] !== '') {
+                $wherePlaCod = " AND ma.Pla_Cod = " . addslashes($Par_Sql['Pla_Cod']);
+            }
+            $whereestado = '';
+            if (isset($Par_Sql['estado']) && $Par_Sql['estado'] !== '' && $Par_Sql['estado'] !== 'T') {
+                $whereestado = " AND ma.Ama_Est = '" . addslashes($Par_Sql['estado']) . "'";
+            }
+            $wherefiltro = '';
+            if (isset($Par_Sql['filtro']) && isset($Par_Sql['search']) && $Par_Sql['search'] !== '') {
+                $val = addslashes($Par_Sql['search']);
+                switch ($Par_Sql['filtro']) {
+                    case 'cl':
+                        $wherefiltro = " AND (persona_cli.Prs_Nom LIKE '%$val%' OR persona_cli.Prs_Ape LIKE '%$val%')";
+                        break;
+                    case 'c':
+                        $wherefiltro = " AND persona_cli.Prs_Ced LIKE '%$val%'";
+                        break;
+                    case 'm':
+                        $wherefiltro = " AND ma.Ama_Cod LIKE '%$val%'";
+                        break;
+                    case 'p':
+                        $wherefiltro = " AND ma.Pla_Cod IN (SELECT mp2.Pla_Cod FROM manifiesto_plantas mp2 WHERE IFNULL(mp2.Pla_Nom,'') LIKE '%$val%' OR IFNULL(mp2.Pla_Lic,'') LIKE '%$val%')";
+                        break;
+                }
+            }
+            $wheretipopago = '';
+            if (isset($Par_Sql['filtroAnt']) && $Par_Sql['filtroAnt'] !== '') {
+                $wheretipopago = " AND ma.Ama_Tip = '" . addslashes($Par_Sql['filtroAnt']) . "'";
+            }
+            $whereFechaPago = '';
+            if (!empty($Par_Sql['Fec_IniM']) && !empty($Par_Sql['Fec_FinM'])) {
+                $fi = addslashes(trim((string) $Par_Sql['Fec_IniM']));
+                $ff = addslashes(trim((string) $Par_Sql['Fec_FinM']));
+                $whereFechaPago = " AND DATE(pago.Com_Fec) BETWEEN DATE('$fi') AND DATE('$ff') ";
+            }
+            $sql = "SELECT
+                        pago.Com_Cod AS Com_Cod_Consumo,
+                        MAX(pago.Com_Fec) AS Com_Fec_Consumo,
+                        MAX(pago.Com_Num) AS Com_Num_Consumo,
+                        MAX(CONCAT(tp.Tia_Abr,'-',IF(CHAR_LENGTH(MONTH(pago.Com_Fec))=1,CONCAT('0',CAST(MONTH(pago.Com_Fec) AS CHAR)),CAST(MONTH(pago.Com_Fec) AS CHAR)),'-',CAST(pago.Com_Num AS CHAR))) AS Codigo_Compr_Consumo,
+                        MAX(pago.Com_Con) AS Com_Con_Consumo,
+                        SUM(dacc.Ddc_Val) AS total_consumo,
+                        MAX(CONCAT(persona_cli.Prs_Nom, ' ', persona_cli.Prs_Ape)) AS cliente
+                    FROM det_ant_cccc dacc
+                    INNER JOIN anticipos_clientes ac ON dacc.Ant_Cod = ac.Ant_Cod
+                    INNER JOIN comprobantes pago ON pago.Com_Cod = dacc.Com_Cod
+                    INNER JOIN tipo_asien tp ON tp.Tia_Cod = pago.Tia_Cod
+                    INNER JOIN manifiesto_anticipo ma ON ma.Ama_Cod = ac.Ama_Cod
+                    INNER JOIN cliente cli ON ma.Cli_Cod = cli.Cli_Cod
+                    INNER JOIN persona AS persona_cli ON cli.Prs_Cod = persona_cli.Prs_Cod
+                    WHERE ac.Ant_Est IN ('A','U','C')
+                      AND IFNULL(pago.Com_Est,'A') <> 'I'
+                      AND dacc.Com_Cod <> ac.Com_Cod
+                      $whereFechaPago
+                      $wherecliente
+                      $wherePlaCod
+                      $whereestado
+                      $wherefiltro
+                      $wheretipopago
+                    GROUP BY pago.Com_Cod
+                    ORDER BY MAX(pago.Com_Fec) ASC, pago.Com_Cod ASC";
+            return $sql;
     }
 }
