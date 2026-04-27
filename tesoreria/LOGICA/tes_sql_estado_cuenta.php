@@ -94,13 +94,11 @@ if (!function_exists('sentencias_estado_cuenta_proveedor')) {
                     "INNER JOIN tipo_asien ON (comprobantes.Tia_Cod = tipo_asien.Tia_Cod) " .
                     "INNER JOIN ccpp_pagar ON (det_ccpp_p.Cpp_Cod = ccpp_pagar.Cpp_Cod) " .
                     "INNER JOIN compras ON (ccpp_pagar.Cop_Cod = compras.Cop_Cod) " .
-                    // "INNER JOIN proveedore ON (compras.Prv_Cod = proveedore.Prv_Cod) " .
-                    // "WHERE proveedore.Prv_Cod = " . $Prv_Cod . " AND proveedore.Emp_Cod = '" . $Emp_Cod . "' " .
+                    "INNER JOIN proveedore ON (compras.Prv_Cod = proveedore.Prv_Cod) " .
                     "INNER JOIN persona ON (proveedore.Prs_Cod = persona.Prs_Cod) " .
                     "WHERE proveedore.Emp_Cod = '" . $Emp_Cod . "' " . $filter_prv . " " .
                     "AND comprobantes.Com_Est = 'A' " .
                     "AND comprobantes.Com_Fec BETWEEN '" . $fec_ini . "' AND '" . $fec_fin . "' " .
-                    // "GROUP BY comprobantes.Com_Cod, comprobantes.Com_Fec, comprobantes.Com_Num, comprobantes.Com_Obs, tipo_asien.Tia_Abr";
                     "GROUP BY comprobantes.Com_Cod, comprobantes.Com_Fec, comprobantes.Com_Num, comprobantes.Com_Obs, tipo_asien.Tia_Abr, proveedore.Prv_Cod, persona.Prs_Nom, persona.Prs_Ape";
 
                 return "($sql_facturas) UNION ALL ($sql_pagos) ORDER BY Fecha_Emision ASC, Orden_Tipo ASC";
