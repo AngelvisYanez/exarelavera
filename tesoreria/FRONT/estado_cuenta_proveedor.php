@@ -31,11 +31,11 @@ if (isset($_REQUEST['getEstadoCuentaProveedor'])) {
 
     $response = array('success' => false, 'rows' => array(), 'records' => 0, 'totals' => array('TOTAL' => 0, 'ABONO' => 0, 'SALDO' => 0), 'resumen' => array('Saldo_Total' => 0, 'Saldo_Vencido' => 0, 'Saldo_Por_Vencer' => 0));
 
-    if ($Prv_Cod <= 0) {
-        $response['message'] = 'Seleccione un proveedor.';
-        $obBD_con1->echoJson($response);
-        exit;
-    }
+    // if ($Prv_Cod <= 0) {
+    //     $response['message'] = 'Seleccione un proveedor.';
+    //     $obBD_con1->echoJson($response);
+    //     exit;
+    // }
 
     $params = array(
         'Prv_Cod'      => $Prv_Cod,
@@ -111,6 +111,7 @@ if (isset($_REQUEST['getEstadoCuentaProveedor'])) {
         'Dias_Vencimiento' => '',
         'Tipo' => 'Saldo Inicial',
         'Documento' => 'SALDO ACUMULADO AL ' . $txt_fec_ini,
+        'Proveedor' => ($Prv_Cod <= 0 ? 'TODOS LOS PROVEEDORES' : ''),
         'Cuenta_Bancaria' => '',
         'Fecha_Cheque' => '',
         'TOTAL' => 0.00,
@@ -148,11 +149,11 @@ if (isset($_REQUEST['exportExcelEstadoCuenta'])) {
 
     $response = array('success' => false, 'html' => '');
 
-    if ($Prv_Cod <= 0) {
-        $response['message'] = 'Seleccione un proveedor.';
-        $obBD_con1->echoJson($response);
-        exit;
-    }
+    // if ($Prv_Cod <= 0) {
+    //     $response['message'] = 'Seleccione un proveedor.';
+    //     $obBD_con1->echoJson($response);
+    //     exit;
+    // }
 
     $params = array('Prv_Cod' => $Prv_Cod, 'txt_fec_ini' => $txt_fec_ini, 'txt_fec_fin' => $txt_fec_fin);
     $rows = $obBD_con1->getArrayConsulta(2, $params, $obBD_conexion);
@@ -170,8 +171,9 @@ if (isset($_REQUEST['exportExcelEstadoCuenta'])) {
     $sum_total = 0.0;
     $sum_abono = 0.0;
 
-    $body = '<tr><td></td><td>' . $txt_fec_ini . '</td><td></td><td>Saldo Inicial</td><td>SALDO ACUMULADO AL ' . $txt_fec_ini . '</td><td></td><td></td><td style="text-align:right">0.00</td><td style="text-align:right">0.00</td><td style="text-align:right">' . number_format(round($saldo_inicial, 2), 2, '.', ',') . '</td></tr>';
-    
+    // $body = '<tr><td></td><td>' . $txt_fec_ini . '</td><td></td><td>Saldo Inicial</td><td>SALDO ACUMULADO AL ' . $txt_fec_ini . '</td><td></td><td></td><td style="text-align:right">0.00</td><td style="text-align:right">0.00</td><td style="text-align:right">' . number_format(round($saldo_inicial, 2), 2, '.', ',') . '</td></tr>';
+    $body = '<tr>' . ($Prv_Cod <= 0 ? '<td></td>' : '') . '<td></td><td>' . $txt_fec_ini . '</td><td></td><td>Saldo Inicial</td><td>SALDO ACUMULADO AL ' . $txt_fec_ini . '</td><td></td><td></td><td style="text-align:right">0.00</td><td style="text-align:right">0.00</td><td style="text-align:right">' . number_format(round($saldo_inicial, 2), 2, '.', ',') . '</td></tr>';
+
     foreach ($rows as $r) {
         $total = isset($r['TOTAL']) ? floatval($r['TOTAL']) : 0;
         $abono = isset($r['ABONO']) ? floatval($r['ABONO']) : 0;
@@ -185,7 +187,12 @@ if (isset($_REQUEST['exportExcelEstadoCuenta'])) {
             $sum_abono += $abono;
         }
         $fec_cheque = isset($r['Fecha_Cheque']) && $r['Fecha_Cheque'] !== null && $r['Fecha_Cheque'] !== '' ? $r['Fecha_Cheque'] : '';
-        $body .= '<tr><td>' . htmlspecialchars(isset($r['Com_Codigo']) ? $r['Com_Codigo'] : '') . '</td>';
+        // $body .= '<tr><td>' . htmlspecialchars(isset($r['Com_Codigo']) ? $r['Com_Codigo'] : '') . '</td>';
+        $body .= '<tr>';
+        if ($Prv_Cod <= 0) {
+            $body .= '<td>' . htmlspecialchars(isset($r['Proveedor']) ? $r['Proveedor'] : '') . '</td>';
+        }
+        $body .= '<td>' . htmlspecialchars(isset($r['Com_Codigo']) ? $r['Com_Codigo'] : '') . '</td>';
         $body .= '<td>' . htmlspecialchars(isset($r['Fecha_Emision']) ? $r['Fecha_Emision'] : '') . '</td>';
         $body .= '<td>' . htmlspecialchars(isset($r['Fecha_Venc']) ? $r['Fecha_Venc'] : '') . '</td>';
         $body .= '<td>' . htmlspecialchars($tipo) . '</td>';
@@ -196,7 +203,8 @@ if (isset($_REQUEST['exportExcelEstadoCuenta'])) {
         $body .= '<td style="text-align:right">' . number_format($abono, 2, '.', ',') . '</td>';
         $body .= '<td style="text-align:right">' . number_format(round($saldo, 2), 2, '.', ',') . '</td></tr>';
     }
-    $body .= '<tr style="font-weight:bold;border-top:2px solid #000"><td colspan="7" style="text-align:right">TOTALES:</td>';
+    // $body .= '<tr style="font-weight:bold;border-top:2px solid #000"><td colspan="7" style="text-align:right">TOTALES:</td>';
+    $body .= '<tr style="font-weight:bold;border-top:2px solid #000"><td colspan="' . ($Prv_Cod <= 0 ? '8' : '7') . '" style="text-align:right">TOTALES:</td>';
     $body .= '<td style="text-align:right">' . number_format(round($sum_total, 2), 2, '.', ',') . '</td>';
     $body .= '<td style="text-align:right">' . number_format(round($sum_abono, 2), 2, '.', ',') . '</td>';
     $body .= '<td style="text-align:right">' . number_format(round($saldo, 2), 2, '.', ',') . '</td></tr>';
@@ -222,7 +230,7 @@ $Ses_Suc_Cod = isset($_SESSION['Ses_Suc_Cod']) ? $_SESSION['Ses_Suc_Cod'] : '';
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js"></script>
     <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
     <script type="text/javascript" src="../../framework/jquery/jquery.plugins/MaskedInput/jquery.maskedinput.1.4.1.min.js"></script>
-    <script src="../VALIDACIONES/tes_val_estado_cuenta.js?e=1"></script>
+    <script src="../VALIDACIONES/tes_val_estado_cuenta.js?e=2"></script>
     <style>
         .exa-fieldset { border: 1px solid #ddd; padding: 10px; margin-bottom: 5px; }
         .form-group-compact { margin-bottom: 8px !important; }
@@ -341,6 +349,9 @@ $Ses_Suc_Cod = isset($_SESSION['Ses_Suc_Cod']) ? $_SESSION['Ses_Suc_Cod'] : '';
         <table class="tablaReporte" cellspacing="0" cellpadding="2" border="1" style="width:100%; border-collapse:collapse; font-size:11px;">
             <thead>
                 <tr>
+                    <?php if (isset($_POST['Prv_Cod']) && intval($_POST['Prv_Cod']) <= 0): ?>
+                    <th>Proveedor</th>
+                    <?php endif; ?>
                     <th># Compr.</th>
                     <th>Fecha Emisión</th>
                     <th>Fecha Venc.</th>

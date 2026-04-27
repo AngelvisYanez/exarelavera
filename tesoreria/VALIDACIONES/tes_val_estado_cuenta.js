@@ -32,6 +32,7 @@ function cargarGrid() {
         responsive: false,
         colModel: [
             { label: '# Compr.', name: 'Com_Codigo', width: 28, align: 'center' },
+            { label: 'Proveedor', name: 'Proveedor', width: 55, align: 'left' },
             { label: 'Fecha Emisión', name: 'Fecha_Emision', width: 22, align: 'center' },
             { label: 'Fecha Venc.', name: 'Fecha_Venc', width: 22, align: 'center' },
             { label: 'Días venc.', name: 'Dias_Vencimiento', width: 22, align: 'center',
@@ -66,6 +67,7 @@ function cargarGrid() {
                 var color = (row.Estado_Color || '').toString().trim();
                 if (color) $(this).addClass('cell-' + color);
             });
+            ajustarAnchoGrid();
         },
         rowNum: 10000,
         gridview: true,
@@ -88,6 +90,17 @@ function cargarGrid() {
         },
         position: 'last'
     });
+
+    $(window).on('resize', function () {
+        ajustarAnchoGrid();
+    });
+}
+
+function ajustarAnchoGrid() {
+    var w = $('#searchGrid').closest('.ui-jqgrid').parent().width();
+    if (w > 0) {
+        $('#searchGrid').jqGrid('setGridWidth', w, true);
+    }
 }
 
 function actualizarTotalesFooter(data) {
@@ -119,10 +132,14 @@ function limpiarResumenCard() {
 }
 
 function buscarEstadoCuenta() {
-    if (!$('#Prv_Cod').val() || $('#Prv_Cod').val() === '') {
-        $.alert && $.alert('Seleccione un proveedor.');
-        return;
+    var conPrv = $('#Prv_Cod').val() && $('#Prv_Cod').val() !== '';
+    if (conPrv) {
+        $('#searchGrid').jqGrid('hideCol', 'Proveedor');
+    } else {
+        $('#searchGrid').jqGrid('showCol', 'Proveedor');
     }
+    ajustarAnchoGrid();
+
     $('#searchGrid').jqGrid('setGridParam', {
         postData: $('#formEstadoCuenta').getData('getEstadoCuentaProveedor'),
         datatype: 'json',
@@ -146,19 +163,17 @@ function limpiarProveedor() {
     $('#Prs_Dir').val('');
     $('#searchGrid').jqGrid('clearGridData');
     limpiarResumenCard();
+    buscarEstadoCuenta();
 }
 
 function exportarExcel() {
-    if (!$('#Prv_Cod').val() || $('#Prv_Cod').val() === '') {
-        $.alert && $.alert('Seleccione un proveedor.');
-        return;
-    }
+    var conPrv = $('#Prv_Cod').val() && $('#Prv_Cod').val() !== '';
     var postData = {
         exportExcelEstadoCuenta: true,
-        Prv_Cod: $('#Prv_Cod').val(),
+        Prv_Cod: $('#Prv_Cod').val() || '0',
         txt_fec_ini: $('#txt_fec_ini').val(),
         txt_fec_fin: $('#txt_fec_fin').val(),
-        nombre_proveedor: $('#nombre').val() || ''
+        nombre_proveedor: conPrv ? ($('#nombre').val() || '') : 'Todos los proveedores'
     };
     $.post('', postData, function (response) {
         if (response.success && response.html) {
