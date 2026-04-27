@@ -12,6 +12,36 @@ require_once('../../Librerias/procedimientos/almacenados_standar.php');
 $obBD_conexion = new Class_Log_Conexion_Global($Ses_Dat_Dis);
 $obBD_con1 = new Class_Log_Datos_Mani; 
 
+// Planta asignada al usuario (perfil plantero u operador restringido por planta)
+$pla_asignada = $obBD_con1->getArrayConsulta(75, array('Usu_Cod' => $Ses_Usu_Cod), $obBD_conexion);
+$Pla_Cod_Asignada = (is_array($pla_asignada) && count($pla_asignada) > 0) ? intval($pla_asignada[0]['Pla_Cod']) : 0;
+$Pla_Nom_Asignada = '';
+if ($Pla_Cod_Asignada <= 0) {
+    $row_usuario_manifiesto = $obBD_con1->getRowConsulta(
+        'manifiesto_usuario.selectWhere',
+        array('where' => array('manifiesto_usuario.Usu_Cod' => $Ses_Usu_Cod)),
+        $obBD_conexion
+    );
+    if (is_array($row_usuario_manifiesto) && isset($row_usuario_manifiesto['Pla_Cod'])) {
+        $Pla_Cod_Asignada = intval($row_usuario_manifiesto['Pla_Cod']);
+    }
+}
+// Perfil de plantas/plantero (misma validación usada en otros módulos)
+$row_perfil_plantas = $obBD_con1->getRowConsulta(8, array('Usu_Cod' => $Ses_Usu_Cod), $obBD_conexion);
+$es_perfil_plantas = (isset($row_perfil_plantas['count']) && intval($row_perfil_plantas['count']) > 0);
+$soloTabChoferPlaca = ($Pla_Cod_Asignada > 0 || $es_perfil_plantas);
+if ($Pla_Cod_Asignada > 0) {
+    $sqlPlaAsignada = "SELECT Pla_Nom FROM manifiesto_plantas WHERE Pla_Cod = $Pla_Cod_Asignada LIMIT 1";
+    $resPlaAsignada = $obBD_con1->consulta($sqlPlaAsignada, $obBD_conexion->conexion);
+    if ($resPlaAsignada) {
+        $rowPlaAsignada = $obBD_con1->fetch_assoc($resPlaAsignada);
+        if ($rowPlaAsignada && isset($rowPlaAsignada['Pla_Nom'])) {
+            $obBD_con1->utf8_change_param($rowPlaAsignada);
+            $Pla_Nom_Asignada = $rowPlaAsignada['Pla_Nom'];
+        }
+    }
+}
+
 /* ==================== AJAX HANDLERS ==================== */
 
 // Obtener lista de configuraciones disponibles
@@ -770,6 +800,7 @@ if (isset($getPlantasRankingAjax)) {
     $fecha_inicio_esc = mysqli_real_escape_string($obBD_conexion->conexion, $fecha_inicio);
     $fecha_fin_esc = mysqli_real_escape_string($obBD_conexion->conexion, $fecha_fin);
     // $sql = "SELECT manifiesto.Pla_Cod, manifiesto_plantas.Pla_Nom, COUNT(*) as total
+    $condPlaUsuario = ($Pla_Cod_Asignada > 0) ? " AND manifiesto.Pla_Cod = $Pla_Cod_Asignada " : "";
     $sql = "SELECT manifiesto.Pla_Cod, manifiesto_plantas.Pla_Nom, manifiesto.Man_Usu
             FROM manifiesto
             INNER JOIN manifiesto_turnos_det ON manifiesto_turnos_det.Tud_Cod = manifiesto.Tud_Cod
@@ -781,6 +812,7 @@ if (isset($getPlantasRankingAjax)) {
             AND (manifiesto_turnos_det.Tud_Est = 'A' OR (manifiesto_turnos_det.Tud_Est = 'S' AND EXISTS (SELECT 1 FROM manifiesto m2 WHERE m2.Tud_Cod = manifiesto_turnos_det.Tud_Cod AND m2.Man_Est = 'A')))
             AND manifiesto.Man_Est = 'A' AND (manifiesto.Man_Tes IS NULL OR LOCATE('R', manifiesto.Man_Tes) = 0)
             AND cliente.Emp_Cod = $Ses_Emp_Cod
+            $condPlaUsuario
             GROUP BY manifiesto.Pla_Cod, manifiesto_plantas.Pla_Nom
             ORDER BY total DESC";
     $result = $obBD_con1->consulta($sql, $obBD_conexion->conexion);
@@ -854,6 +886,7 @@ if (isset($getDashboardManifiestosAjax)) {
     }
     $fecha_inicio_esc = mysqli_real_escape_string($obBD_conexion->conexion, $fecha_inicio);
     $fecha_fin_esc = mysqli_real_escape_string($obBD_conexion->conexion, $fecha_fin);
+    $condPlaUsuario = ($Pla_Cod_Asignada > 0) ? " AND manifiesto.Pla_Cod = $Pla_Cod_Asignada " : "";
     $sql = "SELECT manifiesto.Man_Cod, manifiesto.Man_Num, manifiesto.Cho_Cod, manifiesto.Veh_Cod, manifiesto.Pla_Cod, manifiesto.Man_Usu, manifiesto.Man_Tes,
                 DATE(manifiesto.Man_Fec) as Man_Fec, COALESCE(DATE_FORMAT(manifiesto.Man_Fea, '%H:%i'), DATE_FORMAT(manifiesto.Man_Fes, '%H:%i'), DATE_FORMAT(manifiesto.Man_Sys, '%H:%i'), DATE_FORMAT(manifiesto.Man_Fec, '%H:%i')) as Man_Hor,
                 CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, 4, 0)) as ManNum,
@@ -879,6 +912,7 @@ if (isset($getDashboardManifiestosAjax)) {
             AND (manifiesto_turnos_det.Tud_Est = 'A' OR (manifiesto_turnos_det.Tud_Est = 'S' AND EXISTS (SELECT 1 FROM manifiesto m2 WHERE m2.Tud_Cod = manifiesto_turnos_det.Tud_Cod AND m2.Man_Est = 'A')))
             AND manifiesto.Man_Est = 'A' AND (manifiesto.Man_Tes IS NULL OR LOCATE('R', manifiesto.Man_Tes) = 0)
             AND cliente.Emp_Cod = $Ses_Emp_Cod
+            $condPlaUsuario
             ORDER BY " . ($tipo_vista === 'chofer' ? "chofer_nombre ASC, manifiesto.Man_Fec ASC" : ($tipo_vista === 'placa' ? "Veh_Pla ASC, manifiesto.Man_Fec ASC" : "manifiesto_plantas.Pla_Nom ASC, manifiesto.Man_Fec ASC"));
     $result = $obBD_con1->consulta($sql, $obBD_conexion->conexion);
     $filas = array();
@@ -958,10 +992,16 @@ if (isset($getDashboardManifiestosAjax)) {
             }
         }
         // Conteo de plantas distintas por chofer
-            foreach ($agrupado as $k => $grupo) {
-                $agrupado[$k]['tiempo_promedio'] = ($grupo['conteo_tiempos'] > 0) ? ($grupo['total_minutos'] / $grupo['conteo_tiempos']) : 0;
+        foreach ($agrupado as $k => $grupo) {
+            $plantas_unicas = array();
+            foreach ($grupo['manifiestos'] as $m) {
+                $pk = isset($m['Pla_Cod']) ? $m['Pla_Cod'] : (isset($m['Pla_Nom']) ? $m['Pla_Nom'] : '');
+                if ($pk !== '' && $pk !== null) $plantas_unicas[$pk] = true;
             }
-            $resultado['agrupado'] = array_values($agrupado);
+            $agrupado[$k]['total_plantas'] = count($plantas_unicas);
+            $agrupado[$k]['tiempo_promedio'] = ($grupo['conteo_tiempos'] > 0) ? ($grupo['total_minutos'] / $grupo['conteo_tiempos']) : 0;
+        }
+        $resultado['agrupado'] = array_values($agrupado);
     } elseif ($tipo_vista === 'placa') {
         $agrupado = array();
         foreach ($filas as $f) {
@@ -2750,36 +2790,48 @@ if (isset($_GET['getInactivosDetallePlantaAjax']) || isset($getInactivosDetalleP
 <BODY>
 	<div class="panel panel-default panel-main">
 		<div class="exa-header">
-			<h3><i class="fa fa-dashboard"></i> Reporte de Manifiestos</h3>
+			<h3>
+                <i class="fa fa-dashboard"></i> Reporte de Manifiestos
+                <?php if (!empty($Pla_Nom_Asignada)) { ?>
+                    <small style="margin-left: 10px; color: #d7ebff;">| Planta: <?php echo htmlspecialchars($Pla_Nom_Asignada); ?></small>
+                <?php } ?>
+            </h3>
 		</div>
 		<div class="panel-body">
             
             <!-- Tabs -->
             <ul class="nav nav-tabs" role="tablist" style="margin-bottom: 15px; border-bottom: 2px solid #2C5D94;">
+                <?php if (!$soloTabChoferPlaca) { ?>
                 <li role="presentation" class="active">
                     <a href="#tab_configuracion" aria-controls="tab_configuracion" role="tab" data-toggle="tab">
                         <i class="fa fa-cog"></i> Por Configuración
                     </a>
                 </li>
+                <?php } ?>
+                <?php if (!$soloTabChoferPlaca) { ?>
                 <li role="presentation">
                     <a href="#tab_rango" aria-controls="tab_rango" role="tab" data-toggle="tab">
                         <i class="fa fa-calendar"></i> Por Rango de Fechas
                     </a>
                 </li>
-                <li role="presentation">
+                <?php } ?>
+                <li role="presentation" class="<?php echo $soloTabChoferPlaca ? 'active' : ''; ?>">
                     <a href="#tab_chofer_placa" aria-controls="tab_chofer_placa" role="tab" data-toggle="tab">
                         <i class="fa fa-users"></i> Por Chofer / Placa
                     </a>
                 </li>
+                <?php if (!$soloTabChoferPlaca) { ?>
                 <li role="presentation">
                     <a href="#tab_ejecutivo" aria-controls="tab_ejecutivo" role="tab" data-toggle="tab">
                         <i class="fa fa-line-chart"></i> Vista Ejecutiva Global
                     </a>
                 </li>
+                <?php } ?>
             </ul>
             
             <div class="tab-content">
                 <!-- Tab 1: Por Configuración -->
+                <?php if (!$soloTabChoferPlaca) { ?>
                 <div role="tabpanel" class="tab-pane active" id="tab_configuracion">
                     <div class="filtros-container">
                         <div class="form-group">
@@ -2819,8 +2871,10 @@ if (isset($_GET['getInactivosDetallePlantaAjax']) || isset($getInactivosDetalleP
                         </div>
                     </div>
                 </div>
+                <?php } ?>
                 
                 <!-- Tab 2: Por Rango de Fechas -->
+                <?php if (!$soloTabChoferPlaca) { ?>
                 <div role="tabpanel" class="tab-pane" id="tab_rango">
                     <div class="filtros-container">
                         <div class="form-group">
@@ -2869,9 +2923,10 @@ if (isset($_GET['getInactivosDetallePlantaAjax']) || isset($getInactivosDetalleP
                         </div>
                     </div>
                 </div>
+                <?php } ?>
                 
                 <!-- Tab 3: Por Chofer / Placa -->
-                <div role="tabpanel" class="tab-pane" id="tab_chofer_placa">
+                <div role="tabpanel" class="tab-pane <?php echo $soloTabChoferPlaca ? 'active' : ''; ?>" id="tab_chofer_placa">
                     <div class="filtros-container">
                         <div class="form-group">
                             <label class="control-label">Mes:</label>
@@ -2890,7 +2945,9 @@ if (isset($_GET['getInactivosDetallePlantaAjax']) || isset($getInactivosDetalleP
                             <select id="tipo_vista_chofer_placa" class="form-control" style="width: 180px; display: inline-block;">
                                 <option value="chofer">Por chofer</option>
                                 <option value="placa">Por placa</option>
+                                <?php if (!$soloTabChoferPlaca) { ?>
                                 <option value="planta">Por planta</option>
+                                <?php } ?>
                             </select>
                         </div>
                         <div class="form-group">
@@ -2915,6 +2972,7 @@ if (isset($_GET['getInactivosDetallePlantaAjax']) || isset($getInactivosDetalleP
                 </div>
 
                 <!-- Tab 4: Vista Ejecutiva Global (CEO) -->
+                <?php if (!$soloTabChoferPlaca) { ?>
                 <div role="tabpanel" class="tab-pane" id="tab_ejecutivo">
                     <div class="filtros-container">
                         <div class="form-group">
@@ -2946,6 +3004,7 @@ if (isset($_GET['getInactivosDetallePlantaAjax']) || isset($getInactivosDetalleP
                         </div>
                     </div>
                 </div>
+                <?php } ?>
             </div>
         </div>
     </div>
@@ -2971,6 +3030,13 @@ if (isset($_GET['getInactivosDetallePlantaAjax']) || isset($getInactivosDetalleP
     </div>
     
 	<script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js"></script>
-	<script src="../VALIDACIONES/man_val_dashboard_turnos.js?a=32"></script>
+    <script>
+        window.dashboardTurnosContext = {
+            plaCodAsignada: <?php echo intval($Pla_Cod_Asignada); ?>,
+            plaNomAsignada: <?php echo json_encode($Pla_Nom_Asignada); ?>,
+            soloTabChoferPlaca: <?php echo $soloTabChoferPlaca ? 'true' : 'false'; ?>
+        };
+    </script>
+	<script src="../VALIDACIONES/man_val_dashboard_turnos.js?a=34"></script>
 </BODY>
 </HTML>

@@ -12,13 +12,16 @@ var datosModalManifiestosChoferPlaca = null; // { manifiestos, turnoInfo, tipoVi
 var datosRankingPlantasChoferPlaca = null; // [ { Pla_Cod, Pla_Nom, total } ] para imprimir/Excel
 var fechaInicioChoferPlaca = '';
 var fechaFinChoferPlaca = '';
+var contextoDashboardTurnos = window.dashboardTurnosContext || { plaCodAsignada: 0, plaNomAsignada: '' };
 var datosDashboardEjecutivo = null; // Datos del tab Vista Ejecutiva (CEO) para imprimir informe gerencial
 var datosTurnosPorDia = {}; // { fechaId: turnosFecha[] } para gráfico tendencia por día
 var modoVistaConfig = 'tabla'; // 'tabla' | 'barras' | 'tendencia' - aplica a todos los días
 var primeraCargaConfig = true; // true = solo día actual expandido; false = al hacer clic en Tabla/Barras/Tendencia se expande todo
 
 $(function () {
+    aplicarRestriccionTabsPlantero();
     cargarConfiguraciones();
+    inicializarFechasChoferPlacaSiAplica();
     
     // Cargar plantas cuando se muestra el tab de rango; inicializar mes actual si no hay fechas
     $('a[href="#tab_rango"]').on('shown.bs.tab', function() {
@@ -66,6 +69,7 @@ $(function () {
             $('#mes_chofer_placa').val(mesVal);
         }
         sincronizarFechasDesdeMesChoferPlaca(mesVal);
+        mostrarAvisoPlantaPlanteroChoferPlaca();
     });
     
     // Mes Chofer/Placa: al elegir mes, autocompletar Desde y Hasta (1º al último día del mes)
@@ -94,6 +98,46 @@ $(function () {
     // Botón Buscar del tab Por Chofer/Placa (delegación para evitar dependencia del onclick global)
     $(document).on('click', '#btnBuscarChoferPlaca', function() { cargarDashboardChoferPlaca(); });
 });
+
+function inicializarFechasChoferPlacaSiAplica() {
+    var $tabChoferPlaca = $('#tab_chofer_placa');
+    if (!$tabChoferPlaca.length) return;
+    var tabActiva = $tabChoferPlaca.hasClass('active') || $tabChoferPlaca.hasClass('in');
+    if (!tabActiva) return;
+    if ($('#fecha_inicio_chofer_placa').val() && $('#fecha_fin_chofer_placa').val()) return;
+    var mesVal = $('#mes_chofer_placa').val();
+    if (!mesVal) {
+        var now = new Date();
+        mesVal = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+        $('#mes_chofer_placa').val(mesVal);
+    }
+    sincronizarFechasDesdeMesChoferPlaca(mesVal);
+}
+
+function aplicarRestriccionTabsPlantero() {
+    if (!contextoDashboardTurnos || !contextoDashboardTurnos.soloTabChoferPlaca) return;
+    var $tabs = $('ul.nav.nav-tabs[role="tablist"]');
+    if (!$tabs.length) return;
+
+    $tabs.find('li').removeClass('active');
+    $tabs.find('a[href="#tab_configuracion"]').closest('li').hide();
+    $tabs.find('a[href="#tab_rango"]').closest('li').hide();
+    $tabs.find('a[href="#tab_ejecutivo"]').closest('li').hide();
+    $tabs.find('a[href="#tab_chofer_placa"]').closest('li').show().addClass('active');
+
+    $('#tab_configuracion, #tab_rango, #tab_ejecutivo').removeClass('active in').hide();
+    $('#tab_chofer_placa').show().addClass('active in');
+    $('#tipo_vista_chofer_placa option[value="planta"]').remove();
+    if ($('#tipo_vista_chofer_placa').val() === 'planta') {
+        $('#tipo_vista_chofer_placa').val('chofer');
+    }
+}
+
+function limpiarOpcionesPlanteroEnModales() {
+    if (!contextoDashboardTurnos || !contextoDashboardTurnos.soloTabChoferPlaca) return;
+    $('#ordenManifiestosDetalle option[value="plantero"]').remove();
+    $('#ordenManifiestosCPDetalle option[value="plantero"]').remove();
+}
 
 function sincronizarFechasDesdeMesEjecutivo(mesVal) {
     if (!mesVal) return;
@@ -1267,6 +1311,7 @@ function aplicarOrdenManifiestosDetalle(tipo) {
 }
 
 function mostrarManifiestosModal(manifiestos, Tud_Cod, turnoInfo) {
+    var esPlanteroRestringido = !!(contextoDashboardTurnos && contextoDashboardTurnos.soloTabChoferPlaca);
     var titulo;
     if (turnoInfo && turnoInfo.horario === 'Acumulado de la configuración') {
         titulo = '<i class="fa fa-calendar-check-o"></i> Manifiestos - Configuración completa (' + (turnoInfo.fecha || '') + ')';
@@ -1299,9 +1344,11 @@ function mostrarManifiestosModal(manifiestos, Tud_Cod, turnoInfo) {
         html += '<li role="presentation" class="active">';
         html += '<a href="#tabManifiestosDetalle" aria-controls="tabManifiestosDetalle" role="tab" data-toggle="tab">';
         html += '<i class="fa fa-list-alt"></i> Detallado</a></li>';
-        html += '<li role="presentation">';
-        html += '<a href="#tabManifiestosPlanta" aria-controls="tabManifiestosPlanta" role="tab" data-toggle="tab">';
-        html += '<i class="fa fa-industry"></i> Por Planta</a></li>';
+        if (!esPlanteroRestringido) {
+            html += '<li role="presentation">';
+            html += '<a href="#tabManifiestosPlanta" aria-controls="tabManifiestosPlanta" role="tab" data-toggle="tab">';
+            html += '<i class="fa fa-industry"></i> Por Planta</a></li>';
+        }
         html += '</ul>';
         
         html += '<div class="tab-content">';
@@ -1313,7 +1360,9 @@ function mostrarManifiestosModal(manifiestos, Tud_Cod, turnoInfo) {
         html += '<label style="margin: 0; font-weight: normal;">Ordenar por:</label>';
         html += '<select id="ordenManifiestosDetalle" class="form-control input-sm" style="width: auto; display: inline-block;" onchange="aplicarOrdenManifiestosDetalle(this.value);">';
         html += '<option value="fecha" selected>Por fecha</option>';
-        html += '<option value="plantero">Por plantero</option>';
+        if (!contextoDashboardTurnos || !contextoDashboardTurnos.soloTabChoferPlaca) {
+            html += '<option value="plantero">Por plantero</option>';
+        }
         html += '</select>';
         html += '</div>';
         html += '<div>';
@@ -1367,63 +1416,65 @@ function mostrarManifiestosModal(manifiestos, Tud_Cod, turnoInfo) {
         html += '</table>';
         html += '</div>';
         
-        // Tab 2: Por Planta (agrupado por Planta + Cliente)
-        html += '<div role="tabpanel" class="tab-pane" id="tabManifiestosPlanta">';
-        html += '<div class="no-print" style="margin-bottom: 10px; text-align: right;">';
-        html += '<button type="button" class="btn btn-primary btn-sm" onclick="imprimirModalManifiestos();" style="margin-right: 5px;"><i class="fa fa-print"></i> Imprimir</button>';
-        html += '<button type="button" class="btn btn-success btn-sm" onclick="exportModalManifiestosExcel(\'planta\');" style="margin-right: 5px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); border-color: #1e7e34;">';
-        html += '<i class="fa fa-file-excel-o"></i> Excel</button>';
-        html += '<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cerrar</button>';
-        html += '</div>';
-        
-        var porPlantaCliente = {};
-        manifiestos.forEach(function(man) {
-            var planta = man.Pla_Nom || '(Sin planta)';
-            var cliente = man.Cliente || '(Sin cliente)';
-            var key = planta + '\u0001' + cliente;
-            if (!porPlantaCliente[key]) {
-                porPlantaCliente[key] = { planta: planta, cliente: cliente, cantidad: 0 };
-            }
-            porPlantaCliente[key].cantidad++;
-        });
-        
-        var filas = Object.keys(porPlantaCliente).map(function(k) { return porPlantaCliente[k]; });
-        filas.sort(function(a, b) { return (b.cantidad || 0) - (a.cantidad || 0); });
-        
-        html += '<table class="table table-bordered table-striped table-condensed tabla-modal-planta" style="font-size: 11px;">';
-        html += '<thead>';
-        html += '<tr>';
-        html += '<th style="width: 40px;">#</th>';
-        html += '<th>Planta</th>';
-        html += '<th>Cliente</th>';
-        html += '<th style="width: 120px; text-align: center;">Cantidad Manifiestos</th>';
-        html += '<th style="width: 100px; text-align: center;"><span style="display: block;">%</span><span style="display: block;">Participación</span></th>';
-        html += '</tr>';
-        html += '</thead>';
-        html += '<tbody>';
-        
-        var totalManifiestos = filas.reduce(function(s, f) { return s + (f.cantidad || 0); }, 0);
-        filas.forEach(function(item, index) {
-            var pct = totalManifiestos > 0 ? ((item.cantidad / totalManifiestos) * 100).toFixed(2) : '0.00';
+        if (!esPlanteroRestringido) {
+            // Tab 2: Por Planta (agrupado por Planta + Cliente)
+            html += '<div role="tabpanel" class="tab-pane" id="tabManifiestosPlanta">';
+            html += '<div class="no-print" style="margin-bottom: 10px; text-align: right;">';
+            html += '<button type="button" class="btn btn-primary btn-sm" onclick="imprimirModalManifiestos();" style="margin-right: 5px;"><i class="fa fa-print"></i> Imprimir</button>';
+            html += '<button type="button" class="btn btn-success btn-sm" onclick="exportModalManifiestosExcel(\'planta\');" style="margin-right: 5px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); border-color: #1e7e34;">';
+            html += '<i class="fa fa-file-excel-o"></i> Excel</button>';
+            html += '<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cerrar</button>';
+            html += '</div>';
+            
+            var porPlantaCliente = {};
+            manifiestos.forEach(function(man) {
+                var planta = man.Pla_Nom || '(Sin planta)';
+                var cliente = man.Cliente || '(Sin cliente)';
+                var key = planta + '\u0001' + cliente;
+                if (!porPlantaCliente[key]) {
+                    porPlantaCliente[key] = { planta: planta, cliente: cliente, cantidad: 0 };
+                }
+                porPlantaCliente[key].cantidad++;
+            });
+            
+            var filas = Object.keys(porPlantaCliente).map(function(k) { return porPlantaCliente[k]; });
+            filas.sort(function(a, b) { return (b.cantidad || 0) - (a.cantidad || 0); });
+            
+            html += '<table class="table table-bordered table-striped table-condensed tabla-modal-planta" style="font-size: 11px;">';
+            html += '<thead>';
             html += '<tr>';
-            html += '<td style="text-align: center; font-weight: bold;">' + (index + 1) + '</td>';
-            html += '<td>' + item.planta + '</td>';
-            html += '<td>' + item.cliente + '</td>';
-            html += '<td style="text-align: center;"><strong>' + item.cantidad + '</strong></td>';
-            html += '<td style="text-align: center;">' + pct + '%</td>';
+            html += '<th style="width: 40px;">#</th>';
+            html += '<th>Planta</th>';
+            html += '<th>Cliente</th>';
+            html += '<th style="width: 120px; text-align: center;">Cantidad Manifiestos</th>';
+            html += '<th style="width: 100px; text-align: center;"><span style="display: block;">%</span><span style="display: block;">Participación</span></th>';
             html += '</tr>';
-        });
-        
-        html += '</tbody>';
-        html += '<tfoot>';
-        html += '<tr style="background-color: #2C5D94; color: white; font-weight: bold;">';
-        html += '<td colspan="3" style="text-align: right; padding-right: 15px;">TOTAL:</td>';
-        html += '<td style="text-align: center;">' + totalManifiestos + '</td>';
-        html += '<td style="text-align: center;">100%</td>';
-        html += '</tr>';
-        html += '</tfoot>';
-        html += '</table>';
-        html += '</div>';
+            html += '</thead>';
+            html += '<tbody>';
+            
+            var totalManifiestos = filas.reduce(function(s, f) { return s + (f.cantidad || 0); }, 0);
+            filas.forEach(function(item, index) {
+                var pct = totalManifiestos > 0 ? ((item.cantidad / totalManifiestos) * 100).toFixed(2) : '0.00';
+                html += '<tr>';
+                html += '<td style="text-align: center; font-weight: bold;">' + (index + 1) + '</td>';
+                html += '<td>' + item.planta + '</td>';
+                html += '<td>' + item.cliente + '</td>';
+                html += '<td style="text-align: center;"><strong>' + item.cantidad + '</strong></td>';
+                html += '<td style="text-align: center;">' + pct + '%</td>';
+                html += '</tr>';
+            });
+            
+            html += '</tbody>';
+            html += '<tfoot>';
+            html += '<tr style="background-color: #2C5D94; color: white; font-weight: bold;">';
+            html += '<td colspan="3" style="text-align: right; padding-right: 15px;">TOTAL:</td>';
+            html += '<td style="text-align: center;">' + totalManifiestos + '</td>';
+            html += '<td style="text-align: center;">100%</td>';
+            html += '</tr>';
+            html += '</tfoot>';
+            html += '</table>';
+            html += '</div>';
+        }
         
         html += '</div>';
     }
@@ -1443,6 +1494,7 @@ function mostrarManifiestosModal(manifiestos, Tud_Cod, turnoInfo) {
     
     // Mostrar modal
     $('#modalManifiestos').modal('show');
+    limpiarOpcionesPlanteroEnModales();
     
     // Limpiar modal al cerrar
     $('#modalManifiestos').on('hidden.bs.modal', function() {
@@ -1452,6 +1504,7 @@ function mostrarManifiestosModal(manifiestos, Tud_Cod, turnoInfo) {
 }
 
 function abrirModalManifiestosChoferPlaca(manifiestos, turnoInfo, tipoVista) {
+    var esPlanteroRestringido = !!(contextoDashboardTurnos && contextoDashboardTurnos.soloTabChoferPlaca);
     var titulo = '<i class="fa fa-list"></i> Manifiestos - ' + (turnoInfo.horario || '') + ' (' + (turnoInfo.fecha || '') + ')';
     datosModalManifiestosChoferPlaca = { manifiestos: manifiestos || [], turnoInfo: turnoInfo || {}, tipoVista: tipoVista || 'chofer' };
     var html = '<div class="modal fade" id="modalManifiestosChoferPlaca" tabindex="-1" role="dialog">';
@@ -1471,7 +1524,7 @@ function abrirModalManifiestosChoferPlaca(manifiestos, turnoInfo, tipoVista) {
         if (tipoVista === 'planta') {
             html += '<li role="presentation"><a href="#tabManifiestosCPChofer" aria-controls="tabManifiestosCPChofer" role="tab" data-toggle="tab"><i class="fa fa-user"></i> Por Chofer</a></li>';
             html += '<li role="presentation"><a href="#tabManifiestosCPPlaca" aria-controls="tabManifiestosCPPlaca" role="tab" data-toggle="tab"><i class="fa fa-car"></i> Por Placa</a></li>';
-        } else {
+        } else if (!esPlanteroRestringido) {
             html += '<li role="presentation"><a href="#tabManifiestosCPPlanta" aria-controls="tabManifiestosCPPlanta" role="tab" data-toggle="tab"><i class="fa fa-industry"></i> Por Planta</a></li>';
         }
         html += '</ul>';
@@ -1482,7 +1535,9 @@ function abrirModalManifiestosChoferPlaca(manifiestos, turnoInfo, tipoVista) {
         html += '<label style="margin: 0; font-weight: normal;">Ordenar por:</label>';
         html += '<select id="ordenManifiestosCPDetalle" class="form-control input-sm" style="width: auto;" onchange="aplicarOrdenManifiestosChoferPlaca(this.value);">';
         html += '<option value="fecha" selected>Por fecha</option>';
-        html += '<option value="plantero">Por plantero</option>';
+        if (!contextoDashboardTurnos || !contextoDashboardTurnos.soloTabChoferPlaca) {
+            html += '<option value="plantero">Por plantero</option>';
+        }
         html += '</select>';
         html += '</div>';
         html += '<div>';
@@ -1575,7 +1630,7 @@ function abrirModalManifiestosChoferPlaca(manifiestos, turnoInfo, tipoVista) {
             html += '</tbody><tfoot><tr style="background-color: #2C5D94; color: white; font-weight: bold;">';
             html += '<td colspan="3" style="text-align: right; padding-right: 15px;">TOTAL:</td><td style="text-align: center;">' + totalManPlaca + '</td><td style="text-align: center;">100%</td></tr></tfoot></table>';
             html += '</div>';
-        } else {
+        } else if (!esPlanteroRestringido) {
             var porPlanta = {};
             manifiestos.forEach(function(man) {
                 var planta = man.Pla_Nom || '(Sin planta)';
@@ -1607,6 +1662,7 @@ function abrirModalManifiestosChoferPlaca(manifiestos, turnoInfo, tipoVista) {
     $('#modalManifiestosChoferPlaca').remove();
     $('body').append(html);
     $('#modalManifiestosChoferPlaca').modal('show');
+    limpiarOpcionesPlanteroEnModales();
     $('#modalManifiestosChoferPlaca').on('hidden.bs.modal', function() {
         datosModalManifiestosChoferPlaca = null;
         $(this).remove();
@@ -3118,6 +3174,7 @@ function cargarDashboardChoferPlaca() {
     fechaFinChoferPlaca = ff;
     $('#dashboardContentChoferPlaca').html('<div class="loading"><i class="fa fa-spinner fa-spin"></i><p>Cargando...</p></div>');
     var params = { getPlantasRankingAjax: true, fecha_inicio: fi, fecha_fin: ff };
+    if (contextoDashboardTurnos.plaCodAsignada > 0) params.Pla_Cod = contextoDashboardTurnos.plaCodAsignada;
     $.get('', params, function(resPlantas) {
         if (!resPlantas.success) {
             $('#dashboardContentChoferPlaca').html('<div class="alert alert-danger">' + (resPlantas.message || 'Error al cargar ranking de plantas') + '</div>');
@@ -3125,6 +3182,7 @@ function cargarDashboardChoferPlaca() {
         }
         datosRankingPlantasChoferPlaca = resPlantas.plantas || [];
         var paramsMan = { getDashboardManifiestosAjax: true, fecha_inicio: fi, fecha_fin: ff, tipo_vista: tipoVista };
+        if (contextoDashboardTurnos.plaCodAsignada > 0) paramsMan.Pla_Cod = contextoDashboardTurnos.plaCodAsignada;
         $.ajax({ url: '', type: 'GET', data: paramsMan, dataType: 'json', cache: false,
             success: function(resMan) {
                 if (!resMan.success) {
@@ -3143,6 +3201,18 @@ function cargarDashboardChoferPlaca() {
     }, 'json').fail(function() {
         $('#dashboardContentChoferPlaca').html('<div class="alert alert-danger">Error al cargar ranking de plantas.</div>');
     });
+}
+
+function mostrarAvisoPlantaPlanteroChoferPlaca() {
+    $('#avisoPlantaPlanteroChoferPlaca').remove();
+    if (!(contextoDashboardTurnos.plaCodAsignada > 0)) return;
+    var nombrePlanta = (contextoDashboardTurnos.plaNomAsignada || '').trim();
+    var textoPlanta = nombrePlanta !== '' ? nombrePlanta : ('Código ' + contextoDashboardTurnos.plaCodAsignada);
+    var html = ''
+        + '<div id="avisoPlantaPlanteroChoferPlaca" class="alert alert-info" style="margin-top:10px; margin-bottom:0;">'
+        + '<i class="fa fa-building-o"></i> Vista restringida a la planta del usuario logueado: <strong>' + textoPlanta + '</strong>.'
+        + '</div>';
+    $('#tab_chofer_placa .filtros-container').append(html);
 }
 
 function renderDashboardChoferPlaca(plantas, agrupado, tipoVista) {
