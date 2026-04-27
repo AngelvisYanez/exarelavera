@@ -1229,7 +1229,9 @@ function editarChofer(o) {
         Cho_Cli: o.Cho_Cli || '', // Caducidad (fecha)
         Cho_Tel: o.Cho_Tel || '', // Teléfono
         Cho_Tsa: o.Cho_Tsa || '', // Tipo de sangre
-        Cho_Mae: '' // Campo oculto, siempre vacío
+        Cho_Mae: '', // Campo oculto, siempre vacío
+        Cho_Cor: o.Cho_Cor || ''// Correo electrónico
+
     };
     $('#choferForm').setData(formData);
     // Cargar plantas y luego seleccionar la planta
