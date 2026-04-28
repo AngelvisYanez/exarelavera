@@ -1012,7 +1012,7 @@ if (isset($generarFacturasAjax)) {
     </script>
 
     <script language="javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
-    <script type="text/ecmascript" src="../VALIDACIONES/man_fac_mas.js?x=3"></script>
+    <script type="text/ecmascript" src="../VALIDACIONES/man_fac_mas.js?x=4"></script>
     </script>
 
     <style>
