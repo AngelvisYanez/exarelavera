@@ -532,9 +532,9 @@ var client = $('#clientGrid')
 
 
 $(function () {
-    if ($('#loader').length) {
-        $('#loader').addClass('relavera-soft-loader');
-    }
+    // if ($('#loader').length) {
+    //     $('#loader').addClass('relavera-soft-loader');
+    // }
     // rango de fechas
     // $.createDateRange('#Fec_IniM', '#Fec_IniM');
     $.createDateRange('#Fec_IniM', '#Fec_FinM');
@@ -1468,6 +1468,8 @@ function subirVoucher(inputFile) {
     $('#Ama_Img_Status').show().text('Subiendo imagen...').css('color', '#337ab7');
     $('#Ama_Img_Link').hide();
 
+    $("#loader").show();
+
     // Crear FormData para enviar el archivo
     var formData = new FormData();
     formData.append('uploadVoucherAjax', true);
@@ -1484,6 +1486,7 @@ function subirVoucher(inputFile) {
         contentType: false,
         dataType: 'json',
         success: function (response) {
+            $("#loader").hide();
             if (response.success && response.url) {
                 // Guardar el enlace en el campo oculto
                 var $formImg = $('#pagosForm #Ama_Img');
@@ -1507,6 +1510,7 @@ function subirVoucher(inputFile) {
             }
         },
         error: function (xhr, status, error) {
+            $("#loader").hide();
             $('#Ama_Img_Status').text('Error al comunicarse con el servidor').css('color', '#d9534f');
             $('#Ama_Img').val('');
             $('#Ama_Img_Link').hide();
@@ -1801,7 +1805,7 @@ function generarComprobanteAnticipo(rowObject) {
     }
 
     // Mostrar indicador de carga
-    $('#loader').show();
+    $("#loader").show();
 
     $.ajax({
         url: '../FRONT/man_ant_1.0.php',
@@ -1812,7 +1816,7 @@ function generarComprobanteAnticipo(rowObject) {
         },
         dataType: 'json',
         success: function (response) {
-            $('#loader').fadeOut("slow");
+            $("#loader").hide();
 
             if (response.success) {
                 $.alert('¡Comprobante generado correctamente!');
@@ -1825,7 +1829,7 @@ function generarComprobanteAnticipo(rowObject) {
             }
         },
         error: function (xhr, status, error) {
-            $('#loader').fadeOut("slow");
+            $("#loader").hide();
             $.alert('Error al comunicarse con el servidor: ' + error);
         }
     });
