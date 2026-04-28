@@ -1024,8 +1024,6 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
                         </form>
                     </div>
                 </div>
-
-                </div>
                 <?php if ($es_portal_relavera) { ?>
                 <div class="login-exa-fuera text-center">
                     <span class="logo-exa-label">Plataforma</span>
