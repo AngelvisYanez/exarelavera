@@ -619,16 +619,14 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
         }
 
         .theme-relavera .login-exa-fuera {
-            margin-top: 1rem;
-            padding: 0.6rem 1rem;
-            max-width: 360px;
+            margin-top: 0.7rem;
+            padding: 0.4rem 0.75rem 0.5rem;
+            max-width: 328px;
             width: 100%;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.94);
+            border-radius: 14px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.5);
         }
 
         .theme-relavera .logo-exa-label {
