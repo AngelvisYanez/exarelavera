@@ -1331,7 +1331,7 @@ function AgregarPago() {
     }
 
     // Validar Voucher (imagen)
-    var amaImg = $("#pagosForm #Ama_Img").val();
+    var amaImg = $("#pagosForm #Ama_Img_File").val();
     if (!amaImg || amaImg.trim() === '') {
         errores.push('Debe subir un Voucher (imagen)');
         $("#pagosForm #Ama_Img_File").css('border-color', '#d9534f');
