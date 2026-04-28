@@ -6,23 +6,26 @@ if (!isset($_SESSION)) {
 
 // Verificar si el usuario tiene el perfil "Tecnico" y está en la empresa 620
 $mostrarBotonTecnico = false;
+$esPlantas = false;
 
-if (isset($_SESSION['Ses_Per_Des']) && isset($_SESSION['Ses_Emp_Cod'])) {
-    // Verificar si alguno de los perfiles del usuario contiene "Tecnico"
+if (isset($_SESSION['Ses_Per_Des'])) {
     $perfiles = $_SESSION['Ses_Per_Des'];
     $esTecnico = false;
     
-    if (is_array($perfiles)) {
-        foreach ($perfiles as $perfil) {
-            if (stripos($perfil, 'Tecnico') !== false) {
-                $esTecnico = true;
-                break;
-            }
+    // Asegurar que perfiles sea un array para recorrerlo
+    $perfilesArray = is_array($perfiles) ? $perfiles : array($perfiles);
+    
+    foreach ($perfilesArray as $perfil) {
+        if (stripos($perfil, 'Tecnico') !== false) {
+            $esTecnico = true;
+        }
+        if (stripos($perfil, 'Plantas') !== false) {
+            $esPlantas = true;
         }
     }
     
     // Verificar si la empresa es 620
-    $esEmpresa620 = ($_SESSION['Ses_Emp_Cod'] == 620);
+    $esEmpresa620 = (isset($_SESSION['Ses_Emp_Cod']) && $_SESSION['Ses_Emp_Cod'] == 620);
     
     // Mostrar botón técnico solo si cumple ambas condiciones
     $mostrarBotonTecnico = $esTecnico && $esEmpresa620;
@@ -186,35 +189,37 @@ if (isset($_SESSION['Ses_Per_Des']) && isset($_SESSION['Ses_Emp_Cod'])) {
                 }
             </script>
 
-            <?php if ($mostrarBotonTecnico): ?>
-                <!-- Botón para Técnico de Campo -->
-                <div class="col-xl-3 col-sm-6 col-12 mb-xl-0 mb-4" style="display: flex; justify-content: center;">
-                    <a class="custom-btn btn bg-white me-2 text-secondary shadow w-100 fs-6" href="/relavera/FRONT/man_tec_camp_1.0.php">
-                        <i class="fa fa-user text-primary"></i> Tecnico Campo
-                    </a>
-                </div>
-            <?php else: ?>
-                <!-- Botones estándar -->
-                <div class="col-xl-3 col-sm-5 col-12 mb-xl-0 mb-4" style="display: flex; justify-content: center;">
-                    <a class="custom-btn btn bg-white me-2 text-secondary shadow w-100 fs-6" href="/facturacion/FRONT/fac_alt_fac_ven_3.2.php" id="ventas-link">
-                        <i class="fa fa-credit-card text-primary"></i> Registrar Ventas
-                    </a>
-                </div>
-                <div class="col-xl-3 col-sm-6 col-12 mb-xl-0 mb-4" style="display: flex; justify-content: center;">
-                    <a class="custom-btn btn bg-white me-2 text-secondary shadow w-100 fs-6" href="/tesoreria/FRONT/tes_alt_cliente_1.0.php">
-                        <i class="fa fa-user text-primary"></i> Registrar Clientes
-                    </a>
-                </div>
-                <div class="col-xl-3 col-sm-6 col-12 mb-xl-0 mb-4" style="display: flex; justify-content: center;">
-                    <a class="custom-btn btn bg-white me-2 text-secondary shadow w-100 fs-6" href="/contabilidad/FRONT/con_alt_autorizaciusu_2.0.php">
-                        <i class="fa fa-archive text-primary"></i> Registrar Autorizaciones
-                    </a>
-                </div>
-                <div class="col-xl-3 col-sm-6 col-12 mb-xl-0 mb-4" style="display: flex; justify-content: center;">
-                    <a class="custom-btn btn bg-white me-2 text-secondary shadow w-100 fs-6" href="../../facturacion/FRONT/fac_alt_aut_sri_1.php">
-                        <i class="fa fa-send text-primary"></i>  Documentos Autorizados
-                    </a>
-                </div>
+            <?php if (!$esPlantas): ?>
+                <?php if ($mostrarBotonTecnico): ?>
+                    <!-- Botón para Técnico de Campo -->
+                    <div class="col-xl-3 col-sm-6 col-12 mb-xl-0 mb-4" style="display: flex; justify-content: center;">
+                        <a class="custom-btn btn bg-white me-2 text-secondary shadow w-100 fs-6" href="/relavera/FRONT/man_tec_camp_1.0.php">
+                            <i class="fa fa-user text-primary"></i> Tecnico Campo
+                        </a>
+                    </div>
+                <?php else: ?>
+                    <!-- Botones estándar -->
+                    <div class="col-xl-3 col-sm-5 col-12 mb-xl-0 mb-4" style="display: flex; justify-content: center;">
+                        <a class="custom-btn btn bg-white me-2 text-secondary shadow w-100 fs-6" href="/facturacion/FRONT/fac_alt_fac_ven_3.2.php" id="ventas-link">
+                            <i class="fa fa-credit-card text-primary"></i> Registrar Ventas
+                        </a>
+                    </div>
+                    <div class="col-xl-3 col-sm-6 col-12 mb-xl-0 mb-4" style="display: flex; justify-content: center;">
+                        <a class="custom-btn btn bg-white me-2 text-secondary shadow w-100 fs-6" href="/tesoreria/FRONT/tes_alt_cliente_1.0.php">
+                            <i class="fa fa-user text-primary"></i> Registrar Clientes
+                        </a>
+                    </div>
+                    <div class="col-xl-3 col-sm-6 col-12 mb-xl-0 mb-4" style="display: flex; justify-content: center;">
+                        <a class="custom-btn btn bg-white me-2 text-secondary shadow w-100 fs-6" href="/contabilidad/FRONT/con_alt_autorizaciusu_2.0.php">
+                            <i class="fa fa-archive text-primary"></i> Registrar Autorizaciones
+                        </a>
+                    </div>
+                    <div class="col-xl-3 col-sm-6 col-12 mb-xl-0 mb-4" style="display: flex; justify-content: center;">
+                        <a class="custom-btn btn bg-white me-2 text-secondary shadow w-100 fs-6" href="../../facturacion/FRONT/fac_alt_aut_sri_1.php">
+                            <i class="fa fa-send text-primary"></i>  Documentos Autorizados
+                        </a>
+                    </div>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
     </div>
