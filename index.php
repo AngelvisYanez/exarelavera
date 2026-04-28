@@ -936,7 +936,7 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
                         <!-- <h4 class="text-center mb-4 fw-bold">Iniciar sesi&oacute;n</h4> -->
                         <h4 class="text-center mb-4 fw-bold"><?php echo $es_portal_relavera ? 'Iniciar sesi&oacute;n' : 'Iniciar Sesión'; ?></h4>
                         <p class="small text-secondary">Inicie sesi&oacute;n con su cuenta registrada.</p>
-                        <form action="administrador/FRONT/adm_con_control_1.2.php" method="post" name="acceso" id="acceso">
+                        <form action="administrador/FRONT/adm_con_control_1.2.php" method="post" name="acceso" id="acceso" onsubmit="handleLogin(); return false;">
                             <div class="login-fields">
                                 <!--div class="form-group position-relative mb-3">
                                     <input class="form-control" type="text" id="user_name" name="user_name" value="" placeholder="Usuario" class="login username-field"
@@ -951,7 +951,7 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
 
                                 <div class="form-group position-relative mb-3">
                                     <input class="form-control" type="password" id="password" name="password" value="" placeholder="Contraseña" class="login password-field" oncontextmenu="return false"
-                                        onKeyPress="if (event.keyCode===13){ handleLogin(); }else{return validar_injections(event);}" />
+                                        onKeyPress="if ((event.keyCode || event.which) === 13){ handleLogin(); return false; }else{return validar_injections(event);}" />
                                     <i class="bi bi-lock-fill form-control-icon"></i>
                                 </div>
                                 <div class="form-group position-relative mb-3" id="div_empresas" style="display: none;">
