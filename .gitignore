@@ -83,3 +83,6 @@ $RECYCLE.BIN/
 !/facturacion/FRONT/tes_alt_orden_1.0.php
 .vscode/
 !/facturacion/FRONT/*
+
+# imagenes de vouchers de relavera evitan que se suban al repositorio
+relavera/FRONT/620/
