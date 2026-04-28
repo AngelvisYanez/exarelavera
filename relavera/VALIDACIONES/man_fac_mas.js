@@ -457,7 +457,9 @@ function generarFacturas() {
                     generarFacturasAjax: true, 
                     manifiestos: [m],
                     fac_group: (fac_group || fac_individual), // Enviar el flag de agrupación (true si fac_group O fac_individual está marcado)
-                    input_autorizacion: data.input_autorizacion || '' // Enviar la clave de acceso
+                    input_autorizacion: data.input_autorizacion || '', // Enviar la clave de acceso
+                    Fec_Ini: ($('#Fec_Ini').val() || $('#sf_fec_ini').val() || ''),
+                    Fec_Fin: ($('#Fec_Fin').val() || $('#sf_fec_fin').val() || '')
                 },
                 dataType: 'json',
                 success: function (resp) {

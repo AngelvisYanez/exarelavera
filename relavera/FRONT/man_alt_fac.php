@@ -108,7 +108,7 @@ if (isset($_GET['getSinFacturarAgrupado'])) {
     $Fec_Ini = isset($_GET['Fec_Ini']) ? trim($_GET['Fec_Ini']) : '';
     $Fec_Fin = isset($_GET['Fec_Fin']) ? trim($_GET['Fec_Fin']) : '';
     $Pla_Cod = isset($_GET['Pla_Cod']) && $_GET['Pla_Cod'] !== '' ? intval($_GET['Pla_Cod']) : 0;
-    $rows = $obBD_con1->getArrayConsulta( 80, array('Emp_Cod' => $Ses_Emp_Cod, 'Fec_Ini' => $Fec_Ini, 'Fec_Fin' => $Fec_Fin, 'Pla_Cod' => $Pla_Cod ),  $obBD_conexion );
+    $rows = $obBD_con1->getArrayConsulta(80, array('Emp_Cod' => $Ses_Emp_Cod, 'Fec_Ini' => $Fec_Ini, 'Fec_Fin' => $Fec_Fin, 'Pla_Cod' => $Pla_Cod),  $obBD_conexion);
     $obBD_con1->echoJson($rows);
     exit;
 }
@@ -167,6 +167,10 @@ if (isset($generarFacturasAjax)) {
     $Tic_Cod = 1; //Tipo de Comprobante Factura
     $input_autorizacion = isset($_POST['input_autorizacion']) ? trim($_POST['input_autorizacion']) : '';
     $Tic_Sri = 1; //FACTURA
+    // Rango de facturación (viene de los inputs Fec_Ini / Fec_Fin)
+    $Fec_Ini = isset($_POST['Fec_Ini']) ? trim((string) $_POST['Fec_Ini']) : (isset($_GET['Fec_Ini']) ? trim((string) $_GET['Fec_Ini']) : '');
+    $Fec_Fin = isset($_POST['Fec_Fin']) ? trim((string) $_POST['Fec_Fin']) : (isset($_GET['Fec_Fin']) ? trim((string) $_GET['Fec_Fin']) : '');
+   
     // Verificar si está agrupado desde el parámetro fac_group
     $fac_group = isset($_POST['fac_group']) && (
         $_POST['fac_group'] === true ||
@@ -318,9 +322,9 @@ if (isset($generarFacturasAjax)) {
                     $cant_agrupado = (is_array($manifiestos_originales) && count($manifiestos_originales) > 0)
                         ? count($manifiestos_originales)
                         : $cantidad_manifiestos;
-                    $Vet_Obs = 'Planta: ' . $man['Pla_Nom'] . ' - ' . 'Cant.Viajes: ' . $cant_agrupado;
+                    $Vet_Obs = 'Planta: ' . $man['Pla_Nom'] . ' - Cant.Viajes: ' . $cant_agrupado . ' - Rango Manifiest.: ' . ($Fec_Ini !== '' ? $Fec_Ini : '—') . ' a ' . ($Fec_Fin !== '' ? $Fec_Fin : '—');
                 } else {
-                    $Vet_Obs =  'Planta: ' . $man['Pla_Nom'] . ' - ' . 'Manifiesto Nro. ' . $man_num_display /*$man['Man_Num']*/;
+                    $Vet_Obs = 'Planta: ' . $man['Pla_Nom'] . ' - Manifiesto Nro. ' . $man_num_display  . ' - Rango Manifiest: ' . ($Fec_Ini !== '' ? $Fec_Ini : '—') . ' a ' . ($Fec_Fin !== '' ? $Fec_Fin : '—');
                 }
 
                 $Vet_Des = 0;
