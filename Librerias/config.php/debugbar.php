@@ -3,7 +3,8 @@
 require_once(__DIR__ . '/../../DATA/libs/Env.php');
 if(!isset($_SESSION)) @session_start();
 
-if(isset($_SESSION['Ses_Prs_Cod']) && $_SESSION['Ses_Prs_Cod']==1 && \Env::get('DEBUGBAR_ENABLED', false)) {
+// if(isset($_SESSION['Ses_Prs_Cod']) && $_SESSION['Ses_Prs_Cod']==1 && \Env::get('DEBUGBAR_ENABLED', false)) {
+if(false && isset($_SESSION['Ses_Prs_Cod']) && $_SESSION['Ses_Prs_Cod']==1 && \Env::get('DEBUGBAR_ENABLED', false)) {
     include __DIR__ . '/../debugbar/vendor/autoload.php';
     include __DIR__ . '/../whoops/vendor/autoload.php';
     class DebugBar extends \DebugBar\DebugHelper{}

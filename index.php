@@ -108,7 +108,7 @@ if (isset($_GET['portal']) && $_GET['portal'] === 'exa') {
     $es_portal_relavera = $relavera_por_host;
 }
 
-$path_logo_rcet = __DIR__ . DIRECTORY_SEPARATOR . 'imagenes' . DIRECTORY_SEPARATOR . 'ingresar' . DIRECTORY_SEPARATOR . 'logo-rcet.png';
+$path_logo_rcet = __DIR__ . DIRECTORY_SEPARATOR . 'mascaras' . DIRECTORY_SEPARATOR . 'model1' . DIRECTORY_SEPARATOR . 'img' . DIRECTORY_SEPARATOR . 'logo' . DIRECTORY_SEPARATOR . 'logo2.png';
 $tiene_logo_rcet = is_file($path_logo_rcet);
 ?>
 <!DOCTYPE html>
@@ -143,7 +143,7 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
             margin: 0;
             padding: 0;
             font-family: 'Poppins', sans-serif;
-            background: url('/imagenes/ingresar/bg.png') no-repeat center center fixed;
+            background: #0f172a url('mascaras/model1/imagenes/system/bg.png') no-repeat center center fixed;
             background-size: cover;
             background-color: #161616;
         }
@@ -920,7 +920,7 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
                         <div class="logo-relavera-stack text-center mb-4">
                             <div class="portal-relavera-badge mb-2">Portal operativo</div>
                             <?php if ($tiene_logo_rcet) { ?>
-                            <img src="imagenes/ingresar/logo-rcet.png" alt="RCET &middot; Relavera Comunitaria El Tabl&oacute;n" class="logo-relavera-principal img-fluid">
+                            <img src="mascaras/model1/img/logo/logo2.png" alt="RCET &middot; Relavera Comunitaria El Tabl&oacute;n" class="logo-relavera-principal img-fluid">
                             <?php } else { ?>
                             <div class="logo-rcet-fallback" aria-hidden="true">
                                 <strong>RCET</strong>
@@ -930,7 +930,7 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
                         </div>
                         <?php } else { ?>
                         <div class="text-center logo mb-4">
-                            <img src="imagenes/ingresar/logo.png" alt="EXA Logo" class="img-fluid">
+                            <img src="mascaras/model1/img/logo/logo.png" alt="EXA Logo" class="img-fluid">
                         </div>
                         <?php } ?>
                         <!-- <h4 class="text-center mb-4 fw-bold">Iniciar sesi&oacute;n</h4> -->
@@ -1027,7 +1027,7 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
                 <?php if ($es_portal_relavera) { ?>
                 <div class="login-exa-fuera text-center">
                     <span class="logo-exa-label">Plataforma</span>
-                    <img src="imagenes/ingresar/logo.png" alt="EXA" class="logo-exa-secundario img-fluid mx-auto d-block">
+                    <img src="mascaras/model1/img/logo/logo.png" alt="EXA" class="logo-exa-secundario img-fluid mx-auto d-block">
                 </div>
                 <?php } ?>
             </div>
