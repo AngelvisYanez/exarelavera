@@ -143,14 +143,14 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
             margin: 0;
             padding: 0;
             font-family: 'Poppins', sans-serif;
-            background: url('/imagenes/ingresar/bg.png') no-repeat center center fixed;
+            background: url('imagenes/ingresar/bg.png') no-repeat center center fixed;
             background-size: cover;
             background-color: #161616;
         }
 
         body.theme-relavera {
             background: linear-gradient(118deg, rgba(10, 42, 28, 0.60) 0%, rgba(6, 28, 18, 0.58) 45%, rgba(8, 35, 22, 0.59) 100%),
-                url('/imagenes/ingresar/bg.png') no-repeat center center fixed;
+                url('imagenes/ingresar/bg.png') no-repeat center center fixed;
             background-size: cover;
             overflow-x: hidden;
         }
@@ -235,13 +235,19 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
 
         .login-section {
             width: 100%;
-            max-width: 328px;
+            max-width: 360px;
             background: #ffffff;
-            border-radius: 16px;
+            border-radius: 20px;
             padding: 0;
             color: #161616;
-            box-shadow: 0 0 18px rgba(0, 0, 0, 0.09);
-            overflow: visible;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            border: none;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .login-section:hover {
+            transform: translateY(-5px);
         }
 
         .login-section.card .card-body {
@@ -331,8 +337,10 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
         }
 
         .logo img {
-            width: 178px;
-            max-width: 100%;
+            width: 220px;
+            max-width: 90%;
+            height: auto;
+            margin: 0 auto;
         }
 
         .homepage-btn {
@@ -611,14 +619,16 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
         }
 
         .theme-relavera .login-exa-fuera {
-            margin-top: 0.7rem;
-            padding: 0.4rem 0.75rem 0.5rem;
-            max-width: 328px;
+            margin-top: 1rem;
+            padding: 0.6rem 1rem;
+            max-width: 360px;
             width: 100%;
-            background: rgba(255, 255, 255, 0.94);
-            border-radius: 14px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .theme-relavera .logo-exa-label {
@@ -853,9 +863,9 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
             <i class="bi bi-house-door-fill"></i> Homepage
         </a>
         <?php } ?>
-        <div class="row">
+        <div class="row min-vh-100">
             <!-- Carousel Section -->
-            <div class="col-md-6 col-lg-7 d-flex align-items-center justify-content-center order-md-1 order-2 p-0">
+            <div class="col-md-7 col-lg-8 d-flex align-items-center justify-content-center order-md-1 order-2 p-0">
                 <div id="loginCarousel" class="carousel slide w-100" data-bs-ride="carousel">
                     <div class="carousel-inner">
                         <?php if ($es_portal_relavera) { ?>
@@ -912,8 +922,7 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
             </div>
 
             <!-- Login Section -->
-            <!--div class="col-md-6 col-lg-5 d-flex align-items-center justify-content-center order-md-2 order-1"-->
-            <div class="col-md-6 col-lg-5 d-flex flex-column align-items-center justify-content-center order-md-2 order-1 pb-5 login-area-col">
+            <div class="col-md-5 col-lg-4 d-flex flex-column align-items-center justify-content-center order-md-2 order-1 login-area-col">
                 <div class="login-section card">
                     <div class="card-body">
                         <?php if ($es_portal_relavera) { ?>
