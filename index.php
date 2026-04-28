@@ -951,7 +951,7 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
 
                                 <div class="form-group position-relative mb-3">
                                     <input class="form-control" type="password" id="password" name="password" value="" placeholder="Contraseña" class="login password-field" oncontextmenu="return false"
-                                        onKeyPress="if (event.keyCode===13){ var o=document.querySelector('#Emp_Cod option:checked'); document.getElementById('Suc_Cod').value=o? (o.getAttribute('data-suc-cod')||''):''; document.getElementById('encryptor').value = md5(document.getElementById('password').value); this.form.submit();}else{return  validar_injections(event);}" />
+                                        onKeyPress="if (event.keyCode===13){ handleLogin(); }else{return validar_injections(event);}" />
                                     <i class="bi bi-lock-fill form-control-icon"></i>
                                 </div>
                                 <div class="form-group position-relative mb-3" id="div_empresas" style="display: none;">

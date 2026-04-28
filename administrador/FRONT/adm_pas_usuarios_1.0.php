@@ -84,7 +84,7 @@ if ($thisPost->postBlock($_POST['postID'])) {
 	</HEAD>
 <BODY>
 <div id="set1">
-<? 
+<?php 
 /**
 * Utiliza el index de la pagina inicial del sitio index.php 
 */
@@ -96,18 +96,18 @@ if ($thisPost->postBlock($_POST['postID'])) {
 	</tr>
 	<tr>	  	
       <td valign="top" height="400"><form action="<?Php echo $_SERVER['PHP_SELF']?>" method="post" name="form2" id="form2">
-		<? //Creacion del campo REPOST
+		<?php //Creacion del campo REPOST
 		$thisPost->startPost();?>	
 		<FIELDSET>
 		<LEGEND>
 		<label class="Titulos2">Datos a modificar </label>
 		</LEGEND>
-		<? mensaje_requerido(); ?>
+		<?php mensaje_requerido(); ?>
 		  <table width="100%" border="0" cellpadding="0" cellspacing="0">		  
 		  <tr>
 			<td width="17%" class="Etiqueta1">Usuario: </td>
 			<td colspan="2" class="LetraNegra">&nbsp;<?Php echo $Ses_Usu_Ced; ?>
-			<input name="Usu_Ced2" type="hidden" value="<? echo $Ses_Usu_Ced; ?>"></td>
+			<input name="Usu_Ced2" type="hidden" value="<?php echo $Ses_Usu_Ced; ?>"></td>
 		  </tr>
 		  <tr>
 			<td class="Etiqueta1">Apellidos y Nombres: </td>
@@ -143,7 +143,7 @@ if ($thisPost->postBlock($_POST['postID'])) {
 <table width="300" border="0" cellpadding="0" cellspacing="0">
   <tr>
 	<td>
-	<? 
+	<?php 
 	//Antes if ($host[2] == "http://localhost/".strtolower($Ses_Sys_Sitio)."/") 
 	if ($Ses_Sys_Sit=="outside") {?>
 <button type="button" class="btn btn-primary start" title="Guardar" onClick= "validar_usuarios_inicio()">
@@ -152,7 +152,7 @@ if ($thisPost->postBlock($_POST['postID'])) {
 		</button>
         
 		<input name="hdd_save" type="hidden" id="hdd_save" value="outside">
-	<? 
+	<?php 
 	}else { ?>        
        <button type="button" class="btn btn-primary start" title="Guardar" onClick= "validar_usuarios()">
 		           <i class="icon-book icon-white"></i>
@@ -160,7 +160,7 @@ if ($thisPost->postBlock($_POST['postID'])) {
 		</button> 
         
 		<input name="hdd_save" type="hidden" id="hdd_save" value="inside">
-  <? } ?>
+  <?php } ?>
 	</td>
   </tr>
 </table>
