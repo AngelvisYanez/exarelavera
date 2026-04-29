@@ -1,11 +1,11 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<?
+<?php
 /**
  * Permite registrar un nuevo Cliente ya sea Nacional(Cedula o Ruc) o Extranjero(Pasaporte)
  * 
  * @author car.87cod :)
  * @version 2.0
- * Fecha de actualización:	2012-04-16
+ * Fecha de actualizaciï¿½n:	2012-04-16
  * 
  * @package tesoreria.FRONT
  */
@@ -75,7 +75,7 @@
 	  			$obBD_con1->operacionobBD(4, $_POST['Prs_Cod'].'*'.$Param_Proveedor, $obBD_conexion);
 				//$obBD_con1->grabarAuditoria($_SERVER['PHP_SELF'], $Ses_Usu_Cod, $obBD_conexion);
 				/**
-				* Finaliza la transacción
+				* Finaliza la transacciï¿½n
 				*/
 				$obBD_con1->fin_transaccion($obBD_conexion->conexion);
 				
@@ -123,15 +123,15 @@
 	else
 	{
 		/**
-		 * Valor que toma por defecto al iniciar la página
+		 * Valor que toma por defecto al iniciar la pï¿½gina
 		 */
 		$event = -1;
 	}
 ?>
 <HTML>
 	<HEAD>
-		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
-		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
+		<TITLE><?php echo $Ses_Sys_Nom; ?></TITLE>
+		<?php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
 		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
 		<script language="javascript" src="../VALIDACIONES/adq_val_proveedor.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
@@ -174,16 +174,16 @@
     <td height="10">&raquo; registrar proveedor 
     </td>
    </tr> 
- <?php 
+ <?php
 	if(!($event > 0) or isset($_POST['hdd_volver']))
 	{
 	?>
     <tr>
-       <td><?Php echo mensaje_requerido(); ?></td>
+       <td><?php echo mensaje_requerido(); ?></td>
     </tr>
    <tr>
     <td height="400" valign="top">
-     <form method="post" name= "form" action="<? echo $_SERVER['PHP_SELF'];?>">        
+     <form method="post" name= "form" action="<?php echo $_SERVER['PHP_SELF'];?>">        
       <table width="100%" border="0" cellpadding="0" cellspacing="0">
          <tr>
           <td width="11%"  align="right" class="LetraNegra">
@@ -211,7 +211,7 @@
           <td width="15%"  class="LetraNegra">
                  	<input name="Prs_Ced" type="text" id="Prs_Ced" 
                     onBlur="if(document.getElementById('opiden').value == 'N'){ validarDocumento(this.form.Prs_Ced)}" 
-                    value="<?Php if(isset($_POST['Prs_Ced']))echo $_POST['Prs_Ced']; ?>" size="17" maxlength="13">
+                    value="<?php if(isset($_POST['Prs_Ced']))echo $_POST['Prs_Ced']; ?>" size="17" maxlength="13">
                  </td>
           <td width="74%" align="left">
           <button type="button" class="btn btn-success fileinput-button" title="Comprobar" onclick="validar_requeridos(this.form, 'Prs_Ced', 0)">
@@ -219,7 +219,7 @@
                     <span>Comprobar</span>
                 </button>
            <span class="Texto_Reporte_Rojo">&nbsp;&nbsp;&nbsp;&nbsp;
-            <?Php
+            <?php
 		   /**
 		    * Funcion que evitar en submit con el enter
 		    */
@@ -241,10 +241,10 @@
      </form>
     </td>
    </tr> 
-   <? } ?>
+   <?php } ?>
 <tr>
 <td>
-<?php 
+<?php
   if($event > 0 && !isset($_POST['hdd_volver']))
   {
   ?>
@@ -252,12 +252,12 @@
 <LEGEND>
 <label class='Titulos2'>Datos a registrar</label>
 </LEGEND>
-	<form method="post" name="form" action="<? echo $_SERVER['PHP_SELF'];?>">
-	<? $thisPost->startPost();?>
-    <input type="hidden" value="<? echo $event;?>" name="event" id="event" >
+	<form method="post" name="form" action="<?php echo $_SERVER['PHP_SELF'];?>">
+	<?php $thisPost->startPost();?>
+    <input type="hidden" value="<?php echo $event;?>" name="event" id="event" >
   <table width="100%" border="0">
   <tr>
-       <td><?Php echo mensaje_requerido(); ?></td>
+    <td><?php echo mensaje_requerido(); ?></td>
   </tr>
   </table>
   
@@ -272,7 +272,7 @@
          R.U.C.:
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
-	     <?Php echo $_POST['Prs_Ced']; ?>
+	     <?php echo $_POST['Prs_Ced']; ?>
 			<input name="Prs_Ced" type="hidden" id="Prs_Ced" value="<?php echo $_POST['Prs_Ced']; ?>">
        </td>       
       </tr>
@@ -280,7 +280,7 @@
       <tr>
         <td class="Etiqueta1"><span class="Asterisco">*</span> Tipo de documento:</td>
 	    <td class="LetraNegra">&nbsp;
-		<?
+		<?php
 			/**
 			 * Total de caracteres
 			 * @var int
@@ -293,8 +293,8 @@
 			 */
 			$Identifica = $obBD_con1->getRowConsulta(6,$Ide_Max,$obBD_conexion);
 		?>
-		<input type="hidden" id="Ide_Cod" name="Ide_Cod" value="<? echo $Identifica['Ide_Cod'];?>">
-			<? echo $Identifica['Ide_Des'];?>			
+		<input type="hidden" id="Ide_Cod" name="Ide_Cod" value="<?php echo $Identifica['Ide_Cod'];?>">
+			<?php echo $Identifica['Ide_Des'];?>			
 		</td>
 	    </tr>
 	    
@@ -318,7 +318,7 @@
          <span class="Asterisco">*</span> 
          Nombre (Raz&oacute;n Social): </td>
        <td  class="LetraNegra">&nbsp;
-        <?Php 
+        <?php 
 	       			if(isset($row_rs_persona))
 	       			{
 	       				echo $row_rs_persona['Prs_Nom'];
@@ -327,7 +327,7 @@
 	       			{
        			?> 
        					<input name="Prs_Nom" id="Prs_Nom" type="text" size="66" maxlength="50" style="text-transform:uppercase" value="">
-       			<?php 
+       			<?php
        				}
        			?>
        </td>
@@ -341,16 +341,14 @@
         
        </td>
        <td  class="LetraNegra">&nbsp;
-		<?Php 
+		<?php 
         			if(isset($row_rs_persona))
         			{
         				echo $row_rs_persona['Prs_Ape'];
-        			} 
-        			else
-        			{
+        			} else {
         		?>  
         			<input name="Prs_Ape" id="Prs_Ape" type="text" style="text-transform:uppercase" value="" size="66" maxlength="50" >
-        		<?php 
+        		<?php
         			}
         		?>
        </td>
@@ -359,7 +357,7 @@
       <tr id="sexo">
         <td class="Etiqueta1"><span class="Asterisco">*</span> Genero: </td>
         <td class="LetraNegra">&nbsp;
-		<?Php 
+		<?php 
 			if(isset($row_rs_persona))
 			{
 				echo $row_rs_persona['sexo'];
@@ -371,7 +369,7 @@
             		<option value="M">MASCULINO</option>
             		<option value="F">FEMENINO</option>
         		</select>
-        <?php 
+        <?php
 			} 
 		?>
         </td>
@@ -533,7 +531,7 @@
       </tr>
       <tr>
 	   <td class="Etiqueta1">
-        Fecha de Actualización Actividades:
+        Fecha de Actualizaciï¿½n Actividades:
        </td>
        <td class="LetraNegra">&nbsp;
        <input name="Prv_Fac" type="text" id="Prv_Fac" value="" size="8" onKeyUp="mascara(this,'-',patron,true)" onBlur="validar_fecha2(this);"/>
@@ -552,7 +550,7 @@
         <span class="Asterisco">*</span> Ciudad:
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
-       <?Php 
+       <?php 
 			if(isset($row_rs_persona))
 			{
 				echo $row_rs_persona['Ciu_Des'];
@@ -562,7 +560,7 @@
 		?>
 				<select name="Ciu_Cod" id="Ciu_Cod">
 				<option value="">Seleccione...</option>
-        		<?php 
+        		<?php
 					$arr_Ciudad = $obBD_con1->getArrayConsulta(3, '', $obBD_conexion);
 					foreach($arr_Ciudad as $row)
 					{
@@ -574,7 +572,7 @@
 					}
 				?>
         		</select>
-        <?php 
+        <?php
 			} 
 		?>
        </td>
@@ -585,13 +583,11 @@
         Direcci&oacute;n:
        </td>
        <td class="LetraNegra">&nbsp;
-       <?Php 
+       <?php 
 			if(isset($row_rs_persona))
 			{
 				echo $row_rs_persona['Prs_Dir'];
-			}
-			else 
-			{
+			} else {
 		?>
 				<input name="Prs_Dir" type="text" id="Prs_Dir" style="text-transform:uppercase" value="" size="66" maxlength="80" />
 		<?php
@@ -605,16 +601,14 @@
          Tel&eacute;fono:
        </td>
        <td class="LetraNegra">&nbsp;
-        <?Php 
+        <?php 
 			if(isset($row_rs_persona))
 			{
 				echo $row_rs_persona['Prs_Tel'];
-			}
-			else 
-			{
+			} else {
 		?>
 				<input name="Prs_Tel" type="text" id="Prs_Tel" style="text-transform:uppercase" value="" size="15" maxlength="15" onBlur="numerico(this)"/>
-		<?
+		<?php
 			}
 		?>
        </td>    
@@ -626,16 +620,14 @@
        
        </td>
        <td class="LetraNegra">&nbsp;
-       <?Php 
+       <?php 
 			if(isset($row_rs_persona))
 			{
 				echo $row_rs_persona['Prs_Te2'];
-			}
-			else 
-			{
+			} else {
 		?>
 				<input name="Prs_Te2" type="text" id="Prs_Te2" style="text-transform:uppercase" value="" size="15" maxlength="15" onBlur="numerico(this)"/>
-		<?
+		<?php
 			}
 		?>
        </td>    
@@ -645,16 +637,14 @@
          Celular:
        </td>
        <td class="LetraNegra">&nbsp;
-       <?Php 
+       <?php 
 			if(isset($row_rs_persona))
 			{
 				echo $row_rs_persona['Prs_Cel'];
-			}
-			else 
-			{
+			} else {
 		?>
 				<input name="Prs_Cel" type="text" id="Prs_Cel" style="text-transform:uppercase" value="" size="15" maxlength="15" onBlur="numerico(this)"/>
-		<?
+		<?php
 			}
 		?>
        </td>    
@@ -672,16 +662,14 @@
        E-mail:
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
-       <?Php 
+       <?php 
 			if(isset($row_rs_persona))
 			{
 				echo $row_rs_persona['Prs_Cor'];
-			}
-			else 
-			{
+			} else {
 		?>
 				<input name="Prs_Cor" type="text" id="Prs_Cor" value="" size="30" onblur="correo(this);"/>
-		<?
+		<?php
 			}
 		?>
        </td>
@@ -722,30 +710,28 @@
     </FIELDSET>
 	 
   <br>
-  <?php 
+  <?php
 		if(isset($row_rs_persona))
 		{
 	?>
 			<input type="hidden" name="Prs_Cod" value="<?php echo $row_rs_persona['Prs_Cod']?>">
-	<?php 
+	<?php
 		}
 	?>
     <table border="0" cellpadding="0" cellspacing="0">
       <tr> 
       	<td width="113">
-      		 <button type="button" class="btn btn-inverse fileinput-button" title="Atras" onClick="campos_hide(this.form, 'hdd_volver', '<?Php echo '1'; ?>')">
+      		 <button type="button" class="btn btn-inverse fileinput-button" title="Atras" onClick="campos_hide(this.form, 'hdd_volver', '<?php echo '1'; ?>')">
                <i class=" icon-arrow-left icon-white"></i>
                <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
        		 </button>&nbsp;
       	</td>
         <td width="187">
-          <button type="button" class="btn btn-primary start" title="Guardar" onclick="<?php 
+          <button type="button" class="btn btn-primary start" title="Guardar" onclick="<?php
           if(!isset($row_rs_persona))
           {
           	echo "validar_persona(this.form);";
-          }
-          else
-          {
+          } else {
           	echo "validar_proveedor(this.form);";
           }
           ?>">
@@ -758,7 +744,7 @@
 	  <input name="hdd_save" type="hidden" id="hdd_save" value="insertar">
   </form>
   </FIELDSET>
-  <?php 
+  <?php
   }
   ?>
   </td>
@@ -769,7 +755,7 @@
   <script type="text/javascript" src="../../Librerias/textbox/main.js"></script>
 </BODY>
 </HTML>
-<?php 
+<?php
 $obBD_con1->liberar();
 $obBD_conexion->cerrar();
 ?>

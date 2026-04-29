@@ -1,10 +1,10 @@
-<?
+<?php
 /**
  * Logica de las paginas que tienen que ver con proveedor
  *
  * @author car.87cod :)
  * @version 2.0
- * Fecha de actualización:	2012-04-30
+ * Fecha de actualizaciï¿½n:	2012-04-30
  *
  * @package tesoreria.LOGICA
  */
@@ -169,7 +169,7 @@ class Class_Log_Datos_Prv extends MysqlDatos{
 		$total_rs_persona = $this->numregistros();
 	
 		/**
-		 * Código de la persona
+		 * Cï¿½digo de la persona
 		 * @var number
 		 */
 		$Prs_Cod = $row_rs_persona['Prs_Cod'];
@@ -273,8 +273,8 @@ class Class_Log_Datos_Prv extends MysqlDatos{
 	
 	/**
 	* Formato standar para reportes
-	* @param int $sucursal Código de la sucursal
-	* @param string $titulo Título del reporte
+	* @param int $sucursal Cï¿½digo de la sucursal
+	* @param string $titulo Tï¿½tulo del reporte
 	* @param string $subtitulo Subtitulo del reporte
 	*/
 	function cabeceraReporteStandar($sucursal, $titulo, $subtitulo,$obBD)
@@ -325,8 +325,8 @@ class Class_Log_Datos_Prv extends MysqlDatos{
 			} 
 			/**
 			 * Formato standar para reportes
-			 * @param int $sucursal Código de la sucursal
-			 * @param string $usuario Código del usuario 
+			 * @param int $sucursal Cï¿½digo de la sucursal
+			 * @param string $usuario Cï¿½digo del usuario 
 			 */	
 			function pieReporteStandar($sucursal, $usuario, $obBD)
 			{ 
