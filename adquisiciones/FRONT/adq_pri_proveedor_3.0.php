@@ -31,8 +31,8 @@ $obBD_con1 =  new Class_Log_Datos_Prv;
 <html>
 
 <head>
-  <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
-  <?Php require_once("../../mascaras/model1/estilos/print.php"); ?>
+  <TITLE><?php echo $Ses_Sys_Nom; ?></TITLE>
+  <?php require_once("../../mascaras/model1/estilos/print.php"); ?>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 </head>
 
@@ -57,21 +57,21 @@ $obBD_con1 =  new Class_Log_Datos_Prv;
             <td bgcolor="#CCCCCC"><strong>Emial</strong></td>
           </tr>
 
-          <?
+          <?php
           $Arr_Proveedor = $obBD_con1->getArrayConsulta(9, '' . '*' . $Ses_Emp_Cod, $obBD_conexion);
           foreach ($Arr_Proveedor as $row) {
           ?>
             <tr class="Texto_Reporte">
-              <td>&nbsp;<?Php echo $row['Prs_Ced']; ?></td>
-              <td>&nbsp;<?Php echo $row['Prs_Ape'] . ' ' . $row['Prs_Nom']; ?></td>
-              <td><?Php echo $row['Prv_Com']; ?></td>
-              <td>&nbsp;<?Php echo $row['Ciu_Des']; ?></td>
-              <td>&nbsp;<?Php echo $row['Prs_Dir']; ?></td>
-              <td>&nbsp;<?Php echo $row['Prs_Tel']; ?></td>
-              <td>&nbsp;<?Php echo $row['Prs_Te2']; ?></td>
-              <td>&nbsp;<?Php echo $row['Prs_Cor']; ?></td>
+              <td>&nbsp;<?php echo $row['Prs_Ced']; ?></td>
+              <td>&nbsp;<?php echo $row['Prs_Ape'] . ' ' . $row['Prs_Nom']; ?></td>
+              <td><?php echo $row['Prv_Com']; ?></td>
+              <td>&nbsp;<?php echo $row['Ciu_Des']; ?></td>
+              <td>&nbsp;<?php echo $row['Prs_Dir']; ?></td>
+              <td>&nbsp;<?php echo $row['Prs_Tel']; ?></td>
+              <td>&nbsp;<?php echo $row['Prs_Te2']; ?></td>
+              <td>&nbsp;<?php echo $row['Prs_Cor']; ?></td>
             </tr>
-          <?
+          <?php
           }
           ?>
         </table>
@@ -86,7 +86,7 @@ $obBD_con1 =  new Class_Log_Datos_Prv;
             <td>&nbsp;</td>
           </tr>
           <tr>
-            <td colspan="4"><?Php $obBD_con1->pieReporteStandar($Ses_Suc_Cod, $Ses_Usu_Cod, $obBD_conexion); ?></td>
+            <td colspan="4"><?php $obBD_con1->pieReporteStandar($Ses_Suc_Cod, $Ses_Usu_Cod, $obBD_conexion); ?></td>
           </tr>
         </table>
       </td>
