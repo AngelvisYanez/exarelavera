@@ -409,6 +409,6 @@ $logo_empresa = utf8_encode($Ses_Emp_Log);
     </div>
 </div>
 
-<script type="text/javascript" src="../VALIDACIONES/man_val_vehiculos_choferes.js?a=10"></script>
+<script type="text/javascript" src="../VALIDACIONES/man_val_vehiculos_choferes.js?a=11"></script>
 </body>
 </html>

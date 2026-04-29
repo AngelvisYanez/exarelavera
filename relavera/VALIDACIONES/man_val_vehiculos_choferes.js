@@ -24,17 +24,17 @@ $(function () {
 
 function createGridChoferesPlanta() {
     $('#gridChoferes').createGrid({
-        caption: 'Choferes por Planta',
+        caption: '',
         url: window.location.href,
         postData: { listChoferesPlantaGridAjax: 1 },
         height: 350,
         rowNum: 50,
         rowList: [10, 25, 50, 100, -1],
         colModel: [
-            { label: 'Código', name: 'Cho_Cod', key: true, width: 50, align: 'center' },
-            { label: 'Cédula', name: 'Prs_Ced', width: 90, align: 'center' },
-            { label: 'Nombre', name: 'nombre', width: 150 },
-            { label: 'Planta', name: 'planta', width: 120 },
+            { label: 'Código', name: 'Cho_Cod', key: true, hidden: true, width: 50, align: 'center' },
+            { label: 'Cédula', name: 'Prs_Ced', width: 60, align: 'center' },
+            { label: 'Nombre', name: 'nombre', width: 100 },
+            { label: 'Planta', name: 'planta', width: 100 },
             {
                 label: 'Sanciones',
                 name: 'cant_sanciones',
