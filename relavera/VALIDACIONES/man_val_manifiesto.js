@@ -9,6 +9,7 @@ var perCodAct = 0,
     existeCheq = false;
 var turnoSeleccionado = null;
 var plantaSaldosSeleccionada = null;
+var gridManifiestoInicializado = false;
 
 $(function () {
     $("#successDialog").createDialog({ width: 500, height: 200, icon: 'print' });
@@ -162,16 +163,16 @@ $(function () {
                 var dia = String(fechaFin.getDate()).padStart(2, '0');
                 $("#txt_fec_fin").val(año + '-' + mes + '-' + dia);
             }
+            buscarYActualizarSaldos();
         }, 100);
     }, 500);
-    createGrid();
 
 });
 
 function createGrid() {
     grid.createGrid({
         caption: 'Manifiestos Generados <div class="pull-right"><b>Ordenar por:</b>&nbsp;<select id="ordenar_por" onchange="cargarSelect();"><option value="">Por defecto</option><option value="manifiesto">Nº Manif</option><option value="cliente">Cliente</option><option value="fecha">Fecha</option><option value="placa">Placa</option></select>&nbsp;</div>',
-        height: 350,
+        height: 350,datatype: 'local',
         jsonReader: { root: "rows", id: "Man_Cod" },
         colModel: [
             { label: 'Cod. Int.', name: 'Man_Cod', key: true, width: 25, align: "center" },
@@ -181,7 +182,7 @@ function createGrid() {
             { label: 'Man_Sys', name: 'Man_Sys_Formatted', hidden: true },
             { label: 'Usuario Creador', name: 'usuario_creador', hidden: true },
             { label: 'No Manif.', name: 'ManNum', width: 30, align: "center" },
-            { label: 'Guia', name: 'Man_Gui', width: 30, align: "center" },
+           // { label: 'Guia', name: 'Man_Gui', width: 30, align: "center" },
             { label: 'C&eacute;dula', name: 'Prs_Ced', width: 40, align: "center", cellattr: function () { return 'style="' + excelFormats.text + '"'; } },
             { label: 'Cliente', name: 'cliente', width: 100, align: "left" },
             { label: 'Planta', name: 'Pla_Nom', width: 70, align: "left" },
@@ -1048,6 +1049,14 @@ function saveManifiesto(data) {
 // Función para actualizar los saldos en la interfaz
 function actualizarSaldos(saldos) {
     if (saldos && typeof saldos === 'object') {
+        var saldoMinPla = parseFloat(saldos.pla_smi);
+        if (isNaN(saldoMinPla)) {
+            saldoMinPla = parseFloat($('#pla_smi_saldo_min').val()) || 0;
+        } else {
+            $('#pla_smi_saldo_min').val(saldoMinPla.toFixed(2));
+        }
+        var minTxt = saldoMinPla.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
         // Actualizar saldo de anticipos
         var saldoAnticipo = parseFloat(saldos.anticipo || 0);
         var anticipoElement = $('#anticipo_saldo');
@@ -1074,7 +1083,7 @@ function actualizarSaldos(saldos) {
             // Actualizar estilos según el saldo total
             var saldoTotalContainer = saldoTotalElement.closest('div[style*="background"]');
             if (saldoTotalContainer.length > 0) {
-                var isInsufficient = saldoTotal < 60;
+                var isInsufficient = (saldoMinPla > 0 && saldoTotal < saldoMinPla);
 
                 // Actualizar fondo y borde del contenedor
                 if (isInsufficient) {
@@ -1133,7 +1142,7 @@ function actualizarSaldos(saldos) {
                     if (badgeInsufficient.length === 0) {
                         // Crear badge si no existe (dentro del contenedor, después del div del saldo)
                         var parentDiv = saldoTotalElement.parent();
-                        var newBadge = $('<span class="label label-danger" title="Saldo total insuficiente para crear un nuevo manifiesto (Mínimo requerido: $60.00)" style="display: inline-flex; align-items: center; gap: 4px; font-size: 10px; padding: 3px 8px; margin-left: 6px; border-radius: 10px; background-color: #dc3545; border: 1px solid #b02a37;"><i class="glyphicon glyphicon-exclamation-sign" style="font-size: 11px;"></i> Insuficiente</span>');
+                        var newBadge = $('<span class="label label-danger" title="Saldo total insuficiente (mínimo según planta Pla_Smi: $' + minTxt + ')" style="display: inline-flex; align-items: center; gap: 4px; font-size: 10px; padding: 3px 8px; margin-left: 6px; border-radius: 10px; background-color: #dc3545; border: 1px solid #b02a37;"><i class="glyphicon glyphicon-exclamation-sign" style="font-size: 11px;"></i> Insuficiente</span>');
                         parentDiv.after(newBadge);
                     } else {
                         badgeInsufficient.show();
@@ -1153,21 +1162,22 @@ function actualizarSaldos(saldos) {
                 }
             } else {
                 // Si no encuentra el contenedor con estilo inline, aplicar estilo directo
-                saldoTotalElement.css('color', saldoTotal < 60 ? '#dc3545' : '#198754');
+                saldoTotalElement.css('color', (saldoMinPla > 0 && saldoTotal < saldoMinPla) ? '#dc3545' : '#198754');
             }
         }
 
+        var insufPorMin = (saldoMinPla > 0 && saldoTotal < saldoMinPla);
         // Actualizar el input #saldo con el mismo valor que saldo_total (sin comas para formato numérico)
         if (saldoInputElement.length > 0) {
             saldoInputElement.val(saldoTotal.toFixed(2));
-            saldoInputElement.css('color', saldoTotal < 60 ? '#dc3545' : '');
-            saldoInputElement.attr('title', saldoTotal < 60 ? 'Saldo Insuficiente (Mínimo requerido: $60.00)' : '');
+            saldoInputElement.css('color', insufPorMin ? '#dc3545' : '');
+            saldoInputElement.attr('title', insufPorMin ? ('Saldo insuficiente (mínimo Pla_Smi: $' + minTxt + ')') : '');
         }
 
         // Actualizar estado del botón Nuevo
         if (btnNuevoElement.length > 0) {
-            if (saldoTotal < 60) {
-                btnNuevoElement.prop('disabled', true).attr('title', 'Saldo total insuficiente para crear un nuevo manifiesto (Mínimo: 60.00)');
+            if (insufPorMin) {
+                btnNuevoElement.prop('disabled', true).attr('title', 'Saldo total insuficiente (mínimo Pla_Smi: ' + minTxt + ')');
                 btnNuevoElement.removeAttr('onclick');
             } else {
                 btnNuevoElement.prop('disabled', false).removeAttr('title');
@@ -1178,7 +1188,7 @@ function actualizarSaldos(saldos) {
         // Si existe btnGuardar, también actualizarlo
         var btnGuardarElement = $('#btnGuardar');
         if (btnGuardarElement.length > 0) {
-            if (saldoTotal < 60) {
+            if (insufPorMin) {
                 btnGuardarElement.prop('disabled', true).attr('title', 'Saldo total insuficiente para guardar el manifiesto');
             } else {
                 btnGuardarElement.prop('disabled', false).removeAttr('title');
@@ -1623,6 +1633,10 @@ function imprimirAsiento(params) {
 
 
 function busquedaAjax() {
+    if (!gridManifiestoInicializado) {
+        createGrid();
+        gridManifiestoInicializado = true;
+    }
     //manifiestoAjax
     //searchGrid
     $('#searchGrid').Search('#searchManifiesto', 'manifiestoAjax');

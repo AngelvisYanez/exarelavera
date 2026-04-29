@@ -23,6 +23,31 @@ if (!class_exists('QRcode')) {
 $obBD_conexion = new Class_Log_Conexion_Global($Ses_Dat_Dis);
 /* Creacion del objeto mysql para las consultas */
 $obBD_con1 = new  Class_Log_Datos_Mani;
+if (!function_exists('man_alt_pla_smi_saldo_min')) {
+	/** Mínimo de saldo total (A-B) para permitir manifiesto según manifiesto_plantas.Pla_Smi; 0 = sin exigencia. */
+	function man_alt_pla_smi_saldo_min($obBD_con1, $obBD_conexion, $pla_cod) {
+		$pla_cod = (int) $pla_cod;
+		if ($pla_cod <= 0) {
+			return 0.0;
+		}
+		try {
+			// Evitar que un error de columna faltante (Pla_Smi) deje el objeto en estado de error
+			// y afecte consultas posteriores (ej. carga del grid).
+			$obBD_con1->setError(0, '');
+			$sql = "SELECT COALESCE(Pla_Smi, 0) AS Pla_Smi FROM manifiesto_plantas WHERE Pla_Cod = $pla_cod LIMIT 1";
+			$row = $obBD_con1->fetch_assoc($obBD_con1->consulta($sql, $obBD_conexion->conexion));
+			if ((int)$obBD_con1->Error !== 0) {
+				$obBD_con1->setError(0, '');
+				return 0.0;
+			}
+			$obBD_con1->setError(0, '');
+			return ($row && array_key_exists('Pla_Smi', $row)) ? (float) $row['Pla_Smi'] : 0.0;
+		} catch (Exception $e) {
+			$obBD_con1->setError(0, '');
+			return 0.0;
+		}
+	}
+}
 $hoy = date("Y-m-d");
 $fecha_hora_actual = date("Y-m-d H:i:s");
 
@@ -103,6 +128,8 @@ if (!empty($cliente_manifiesto['Cli_Cod']) && !empty($cliente_manifiesto['Pla_Co
 $saldo_anticipo_val = isset($anticipo['saldo']) ? floatval($anticipo['saldo']) : 0;
 $saldo_sin_factura_val = isset($saldo_sin_factura['saldo']) ? floatval($saldo_sin_factura['saldo']) : 0;
 $saldo_total = $saldo_anticipo_val - $saldo_sin_factura_val;
+$pla_smi_saldo_min = man_alt_pla_smi_saldo_min($obBD_con1, $obBD_conexion, isset($cliente_manifiesto['Pla_Cod']) ? $cliente_manifiesto['Pla_Cod'] : 0);
+$saldo_total_insuficiente = ($pla_smi_saldo_min > 0 && $saldo_total < $pla_smi_saldo_min);
 
 $plantas_saldos_modal = array();
 $sql_plantas_saldos_modal = "SELECT mp.Pla_Cod, mp.Pla_Nom, mp.Pla_Dis, mp.Pla_Dir, mp.Cli_Cod,
@@ -129,15 +156,23 @@ if (function_exists('utf8_encode_deep')) {
 if (isset($manifiestoAjax)) {
 	//$obBD_con1->debugLogs(false);
 	$data = $_GET;
-	//$obBD_con1->echoLog(trim($data['letra']));
-	if (trim($data['letra']) == 'Activos') {
-		$datos = array_merge($_GET, array('setWhere' => array('isActive')));
+	$datos = $_GET;
+	$letra = isset($data['letra']) ? trim($data['letra']) : '';
+	//$obBD_con1->echoLog($letra);
+	if ($letra == 'Activos') {
+		$datos = array_merge($datos, array('setWhere' => array('isActive')));
+	} else if ($letra == 'Anulados') {
+		$datos = array_merge($datos, array('setWhere' => array('isInactive')));
+	} else {
+		// Primera carga: usar activos por defecto para evitar $datos/setWhere indefinidos.
+		$datos = array_merge($datos, array('setWhere' => array('isActive')));
 	}
-	if (trim($data['letra']) == 'Anulados') {
-		$datos = array_merge($_GET, array('setWhere' => array('isInactive')));
-	}
-	if(!empty($cliente_manifiesto)){
-		$datos['where'][] = 'manifiesto.Pla_Cod = ' . $cliente_manifiesto['Pla_Cod'];
+	$plaCodFiltro = (!empty($cliente_manifiesto['Pla_Cod']) ? (int)$cliente_manifiesto['Pla_Cod'] : 0);
+	if ($plaCodFiltro > 0) {
+		if (!isset($datos['where']) || !is_array($datos['where'])) {
+			$datos['where'] = array();
+		}
+		$datos['where'][] = 'manifiesto.Pla_Cod = ' . $plaCodFiltro;
 	}
 	// Filtro por factura
 	$filtroFactura = isset($data['filtro_factura']) ? trim($data['filtro_factura']) : '';
@@ -146,7 +181,7 @@ if (isset($manifiestoAjax)) {
 			$datos['setWhere'] = array();
 		}
 		// Si no hay filtro de estado, aplicar isActive por defecto
-		if (trim($data['letra']) == 'Activos' || empty($data['letra'])) {
+		if ($letra == 'Activos' || $letra == '') {
 			if (!in_array('isActive', $datos['setWhere'])) {
 				$datos['setWhere'][] = 'isActive';
 			}
@@ -1018,7 +1053,33 @@ if (isset($saveManifiestoAjax)) {
 		if ($total_dup_guia > 0) {
 			throw new Exception('La Guía de Remisión ya existe para esta planta. Verifique el número ingresado.');
 		}
-		
+
+		// Saldo total (A-B) mínimo según manifiesto_plantas.Pla_Smi — solo registro nuevo
+		if (empty($Man_Cod)) {
+			$cli_ins = isset($Cli_Cod) ? (int) $Cli_Cod : 0;
+			$pla_ins = isset($Pla_Cod) ? (int) $Pla_Cod : 0;
+			$smi_req = man_alt_pla_smi_saldo_min($obBD_con1, $obBD_conexion, $pla_ins);
+			if ($smi_req > 0 && $cli_ins > 0 && $pla_ins > 0) {
+				$anticipo_ins = $obBD_con1->getRowConsulta('manifiesto_anticipo.1', array('Pla_Cod' => $pla_ins, 'Cli_Cod' => $cli_ins), $obBD_conexion);
+				$saldo_ant_ins = isset($anticipo_ins['saldo']) ? floatval($anticipo_ins['saldo']) : 0;
+				$Emp_Cod_ins = (int) $Ses_Emp_Cod;
+				$sql_sf_ins = "SELECT COALESCE(SUM(cast(manifiesto.Man_Pes*(manifiesto.Man_Pun/1000) as decimal(10,2))), 0) as saldo
+					FROM manifiesto
+					INNER JOIN cliente ON cliente.Cli_Cod = manifiesto.Cli_Cod
+					WHERE manifiesto.Cli_Cod = $cli_ins
+					AND manifiesto.Man_Est = 'A'
+					AND cliente.Emp_Cod = $Emp_Cod_ins
+					AND manifiesto.Pla_Cod = $pla_ins
+					AND (manifiesto.Vet_Cod IS NULL OR manifiesto.Vet_Cod = 0)";
+				$row_sf = $obBD_con1->fetch_assoc($obBD_con1->consulta($sql_sf_ins, $obBD_conexion->conexion));
+				$saldo_sf_ins = ($row_sf && isset($row_sf['saldo'])) ? floatval($row_sf['saldo']) : 0;
+				$saldo_tot_ins = $saldo_ant_ins - $saldo_sf_ins;
+				if ($saldo_tot_ins < $smi_req) {
+					throw new Exception('El saldo total de anticipos (A menos B) no alcanza el mínimo de la planta (Pla_Smi = ' . number_format($smi_req, 2, '.', ',') . '). Saldo actual: ' . number_format($saldo_tot_ins, 2, '.', ',') . '.');
+				}
+			}
+		}
+
 		$datos = array(
 			'Veh_Cod' => $Veh_Cod,
 			'Cho_Cod' => $Cho_Cod,
@@ -1103,11 +1164,13 @@ if (isset($saveManifiestoAjax)) {
 		$saldo_anticipo_val = isset($anticipo['saldo']) ? floatval($anticipo['saldo']) : 0;
 		$saldo_sin_factura_val = isset($saldo_sin_factura['saldo']) ? floatval($saldo_sin_factura['saldo']) : 0;
 		$saldo_total = $saldo_anticipo_val - $saldo_sin_factura_val;
+		$pla_smi_post = man_alt_pla_smi_saldo_min($obBD_con1, $obBD_conexion, isset($cliente_manifiesto['Pla_Cod']) ? $cliente_manifiesto['Pla_Cod'] : 0);
 
 		$resp['saldos'] = array(
 			'anticipo' => $saldo_anticipo_val,
 			'sin_factura' => $saldo_sin_factura_val,
-			'total' => $saldo_total
+			'total' => $saldo_total,
+			'pla_smi' => $pla_smi_post
 		);
 	} catch (Exception $e) {
 		$obBD_con1->rollBack_nomsn($obBD_conexion);
@@ -1183,11 +1246,13 @@ if (isset($getSaldosAjax)) {
 	$saldo_anticipo_val = isset($anticipo['saldo']) ? floatval($anticipo['saldo']) : 0;
 	$saldo_sin_factura_val = isset($saldo_sin_factura['saldo']) ? floatval($saldo_sin_factura['saldo']) : 0;
 	$saldo_total = $saldo_anticipo_val - $saldo_sin_factura_val;
+	$pla_smi_ajax = man_alt_pla_smi_saldo_min($obBD_con1, $obBD_conexion, $pla_calc);
 
 	$resp['saldos'] = array(
 		'anticipo' => $saldo_anticipo_val,
 		'sin_factura' => $saldo_sin_factura_val,
-		'total' => $saldo_total
+		'total' => $saldo_total,
+		'pla_smi' => $pla_smi_ajax
 	);
 
 	$obBD_con1->echoJson($resp);
@@ -1239,11 +1304,13 @@ if (isset($anularManifiestoAjax)) {
 		$saldo_anticipo_val = isset($anticipo['saldo']) ? floatval($anticipo['saldo']) : 0;
 		$saldo_sin_factura_val = isset($saldo_sin_factura['saldo']) ? floatval($saldo_sin_factura['saldo']) : 0;
 		$saldo_total = $saldo_anticipo_val - $saldo_sin_factura_val;
+		$pla_smi_anul = man_alt_pla_smi_saldo_min($obBD_con1, $obBD_conexion, isset($cliente_manifiesto['Pla_Cod']) ? $cliente_manifiesto['Pla_Cod'] : 0);
 
 		$resp['saldos'] = array(
 			'anticipo' => $saldo_anticipo_val,
 			'sin_factura' => $saldo_sin_factura_val,
-			'total' => $saldo_total
+			'total' => $saldo_total,
+			'pla_smi' => $pla_smi_anul
 		);
 	} catch (Exception $e) {
 		$obBD_con1->rollBack_nomsn($obBD_conexionIns);
@@ -1663,17 +1730,17 @@ $tPagos = $obBD_con1->getArrayConsulta('tipos_pago.selectWhere', array('where' =
 // }
 
 // // Configuración de firma según perfil
-// $firmar_solo_si = false;
-// $firmar_solo_no = false;
-// foreach ($perfil as $p) {
-//     $per_desc = trim($p['Per_Des']);
-//     if ($per_desc == 'Gerente' || $per_desc == 'Contador') {
-//         $firmar_solo_si = true;
-//     }
-//     if ($per_desc == 'Admin_Oper') {
-//         $firmar_solo_no = true;
-//     }
-// }
+$firmar_solo_si = false;
+$firmar_solo_no = false;
+foreach ($perfil as $p) {
+    $per_desc = trim($p['Per_Des']);
+    if ($per_desc == 'Gerente' || $per_desc == 'Contador') {
+        $firmar_solo_si = true;
+    }
+    if ($per_desc == 'Admin_Oper') {
+        $firmar_solo_no = true;
+    }
+}
 
 /**
  * Anular Anticipo
@@ -2297,6 +2364,7 @@ if (isset($anularAnticipo)) {
 								</div>
 							</fieldset>
 							<div id="saldo_total_container" class="form-group" style="margin-right: 10px; margin-bottom: 10px;">
+								<input type="hidden" id="pla_smi_saldo_min" value="<?php echo htmlspecialchars(number_format($pla_smi_saldo_min, 2, '.', ''), ENT_QUOTES, 'UTF-8'); ?>" />
 								<div class="col-sm-12" style="display: flex; align-items: center; justify-content: flex-end; gap: 15px;">
 									<div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
 										<?php if ($mostrarBotonSelectorPlantaSaldos) { ?>
@@ -2332,22 +2400,22 @@ if (isset($anularAnticipo)) {
 												</span>
 											</div>
 										</div>
-										<div style="display: flex; align-items: center; gap: 6px; padding: 5px 12px; background: linear-gradient(135deg, <?php echo $saldo_total < 60 ? '#f8d7da 0%, #f5c6cb 100%' : '#d1e7dd 0%, #badbcc 100%'; ?>); border: 2px solid <?php echo $saldo_total < 60 ? '#dc3545' : '#198754'; ?>; border-radius: 8px; box-shadow: 0 2px 5px rgba(<?php echo $saldo_total < 60 ? '220, 53, 69' : '25, 135, 84'; ?>, 0.25);">
+										<div style="display: flex; align-items: center; gap: 6px; padding: 5px 12px; background: linear-gradient(135deg, <?php echo $saldo_total_insuficiente ? '#f8d7da 0%, #f5c6cb 100%' : '#d1e7dd 0%, #badbcc 100%'; ?>); border: 2px solid <?php echo $saldo_total_insuficiente ? '#dc3545' : '#198754'; ?>; border-radius: 8px; box-shadow: 0 2px 5px rgba(<?php echo $saldo_total_insuficiente ? '220, 53, 69' : '25, 135, 84'; ?>, 0.25);">
 											<div style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.2;">
-												<label class="control-label" style="margin: 0; font-size: 10px; font-weight: 600; color: <?php echo $saldo_total < 60 ? '#721c24' : '#0f5132'; ?>; text-transform: uppercase; letter-spacing: 0.3px;">Saldo Total (A-B)</label>
+												<label class="control-label" style="margin: 0; font-size: 10px; font-weight: 600; color: <?php echo $saldo_total_insuficiente ? '#721c24' : '#0f5132'; ?>; text-transform: uppercase; letter-spacing: 0.3px;">Saldo Total (A-B)</label>
 											</div>
 											<div style="display: flex; align-items: baseline; gap: 3px;">
-												<span style="font-size: 11px; font-weight: 600; color: <?php echo $saldo_total < 60 ? '#dc3545' : '#198754'; ?>;">$</span>
-												<span id="saldo_total" style="font-size: 18px; font-weight: 800; color: <?php echo $saldo_total < 60 ? '#dc3545' : '#198754'; ?>; letter-spacing: -0.3px;">
+												<span style="font-size: 11px; font-weight: 600; color: <?php echo $saldo_total_insuficiente ? '#dc3545' : '#198754'; ?>;">$</span>
+												<span id="saldo_total" style="font-size: 18px; font-weight: 800; color: <?php echo $saldo_total_insuficiente ? '#dc3545' : '#198754'; ?>; letter-spacing: -0.3px;">
 													<?php echo number_format($saldo_total, 2, '.', ','); ?>
 												</span>
 											</div>
-											<?php if ($saldo_total < 60) { ?>
-												<span class="label label-danger" title="Saldo total insuficiente para crear un nuevo manifiesto (Mínimo requerido: $120.00)" style="display: inline-flex; align-items: center; gap: 4px; font-size: 10px; padding: 3px 8px; margin-left: 6px; border-radius: 10px; background-color: #dc3545; border: 1px solid #b02a37;">
+											<?php if ($saldo_total_insuficiente) { ?>
+												<span class="label label-danger" title="Saldo total insuficiente (m&iacute;nimo seg&uacute;n planta: $<?php echo number_format($pla_smi_saldo_min, 2, '.', ','); ?>)" style="display: inline-flex; align-items: center; gap: 4px; font-size: 10px; padding: 3px 8px; margin-left: 6px; border-radius: 10px; background-color: #dc3545; border: 1px solid #b02a37;">
 													<i class="glyphicon glyphicon-exclamation-sign" style="font-size: 11px;"></i> Insuficiente
 												</span>
 											<?php } else { ?>
-												<span style="font-size: 9px; color: <?php echo $saldo_total < 60 ? '#721c24' : '#0f5132'; ?>; font-weight: 600; margin-left: 6px; padding: 2px 6px; background: rgba(255,255,255,0.5); border-radius: 6px;">
+												<span style="font-size: 9px; color: <?php echo $saldo_total_insuficiente ? '#721c24' : '#0f5132'; ?>; font-weight: 600; margin-left: 6px; padding: 2px 6px; background: rgba(255,255,255,0.5); border-radius: 6px;">
 													✓ Disponible
 												</span>
 											<?php } ?>
@@ -2373,7 +2441,7 @@ if (isset($anularAnticipo)) {
 				<br>
 				<div>
 					<?php if( empty($plaSanciones[0]['Msa_Cod']) ) { ?>
-						<button class="btn btn-sm btn-success" id="btnNuevo" type="button" onclick="<?php echo ($saldo_total >= 60) ? 'abrirModalTurno();' : ''; ?>" <?php echo ($saldo_total < 60) ? 'disabled title="Saldo total insuficiente para crear un nuevo manifiesto (Mínimo: 120.00)"' : ''; ?>><i class="glyphicon glyphicon-plus"></i> Nuevo</button>
+						<button class="btn btn-sm btn-success" id="btnNuevo" type="button" onclick="<?php echo !$saldo_total_insuficiente ? 'abrirModalTurno();' : ''; ?>" <?php echo $saldo_total_insuficiente ? 'disabled title="Saldo total insuficiente (m&iacute;nimo: ' . number_format($pla_smi_saldo_min, 2, '.', ',') . ')"' : ''; ?>><i class="glyphicon glyphicon-plus"></i> Nuevo</button>
 					<?php } else { ?>
 						<button class="btn btn-sm btn-warning" id="btnNuevoSancion" type="button" onclick="$('#sancionPlantaDialog').dialog('open');" title="La planta tiene una sanción activa"><i class="glyphicon glyphicon-alert"></i> Nuevo</button>
 					<?php } ?>
@@ -2415,7 +2483,7 @@ if (isset($anularAnticipo)) {
 												<label class="col-sm-1 control-label label-sm required"><b>SALDO:</b></label>
 												<div class="col-sm-2">
 													<div class="input-group input-group-xs">
-														<input name="saldo" id="saldo" type="text" title="<?php echo $saldo_total < 60 ? 'Saldo Insuficiente (Mínimo requerido: $120.00)' : ''; ?>" style="font-size: 18px; font-weight:bold; text-align: right; <?php echo $saldo_total < 60 ? 'color:#dc3545' : ''; ?>" class="form-control input-sm" value="<?php echo number_format($saldo_total, 2, '.', ''); ?>" readonly />
+														<input name="saldo" id="saldo" type="text" title="<?php echo $saldo_total_insuficiente ? 'Saldo insuficiente (m&iacute;nimo Pla_Smi: $' . number_format($pla_smi_saldo_min, 2, '.', ',') . ')' : ''; ?>" style="font-size: 18px; font-weight:bold; text-align: right; <?php echo $saldo_total_insuficiente ? 'color:#dc3545' : ''; ?>" class="form-control input-sm" value="<?php echo number_format($saldo_total, 2, '.', ''); ?>" readonly />
 														<span class="input-group-addon validate"><i id="saldo_inf"></i></span>
 													</div>
 												</div>
@@ -2556,9 +2624,12 @@ if (isset($anularAnticipo)) {
 													else
 														$vehiculos = $obBD_con1->getArrayConsulta('manifiesto_transporte.selectWhere', array('setWhere' => array('getVehiculoByPla'), 'where' => array('Mat_Est' => 'A', 'manifiesto_vehiculo.Pla_Cod' => $cliente_manifiesto['Pla_Cod'])), $obBD_conexion);
 													$obBD_con1->utf8_change_param($vehiculos);*/
-													$vehiculos = $obBD_con1->getArrayConsulta('manifiesto_transporte.1', array('Pla_Cod' => $cliente_manifiesto['Pla_Cod']), $obBD_conexion);
-													$obBD_con1->utf8_change_param($vehiculos);
-
+													if(isset($cliente_manifiesto['Pla_Cod'])){
+														$vehiculos = $obBD_con1->getArrayConsulta('manifiesto_transporte.1', array('Pla_Cod' => $cliente_manifiesto['Pla_Cod']), $obBD_conexion);
+														$obBD_con1->utf8_change_param($vehiculos);
+													} else {
+														$vehiculos = array();
+													}
 													?>
 													<div class="input-group input-group-xs">
 														<select id="Veh_Cod" name="Veh_Cod" style="width: 100%;" class="form-control input-xs readOnly" required="" onchange="$('#Man_Des_Inf').html($(this).find(':selected').data('mat_des')); $('#Man_Pes').val($(this).find(':selected').data('veh_cap'));">
@@ -2617,7 +2688,7 @@ if (isset($anularAnticipo)) {
 																	$esta_sancionado = in_array($row['Veh_Pla'], $vehiculos_sancionados);
 																	//$clave_veh = (isset($row['Veh_Pla']) ? $row['Veh_Pla'] : '') . '|' . $emp_cod_ctx;
 																	//$esta_bloqueado = in_array($clave_veh, $vehiculos_bloqueados);
-																	$disabled = ($esta_bloqueado || $esta_sancionado) ? 'disabled' : '';
+																	$disabled = (/*$esta_bloqueado ||*/ $esta_sancionado) ? 'disabled' : '';
 																	$texto_vehiculo = $row['Veh_Pla'] . ' - ' . $row['Veh_Mar'];
 																	if ($row['total']*1 > 0) { //if ($esta_bloqueado)
 																		$texto_vehiculo .= ' << En Ruta >>';
@@ -2626,7 +2697,8 @@ if (isset($anularAnticipo)) {
 																	if ($esta_sancionado) {
 																		$texto_vehiculo .= ' << Sancionado >>';
 																	}
-																	echo "<option value='$row[Veh_Cod]' data-veh_cap='$row[Veh_Cap]' data-mat_cod='$row[Mat_Cod]' data-mat_des='$row[Mat_Des]' $disabled>$texto_vehiculo</option>";
+																	$style_ruta_veh = ($row['total']*1 > 0) ? "style='background:#f8d7da;color:#a00000;font-weight:700;'" : '';
+																	echo "<option value='$row[Veh_Cod]' data-veh_cap='$row[Veh_Cap]' data-mat_cod='$row[Mat_Cod]' data-mat_des='$row[Mat_Des]' $disabled $style_ruta_veh>$texto_vehiculo</option>";
 																}
 															}
 															?>
@@ -2741,7 +2813,8 @@ if (isset($anularAnticipo)) {
 																	if ($esta_sancionado) {
 																		$texto_chofer .= ' << Sancionado >>';
 																	}
-																	echo "<option value='$row[Cho_Cod]' data-lic='$row[Cho_Tli]' data-ced='$row[Prs_Ced]' $disabled>$texto_chofer</option>";
+																	$style_ruta_cho = $en_ruta_cho ? "style='background:#f8d7da;color:#a00000;font-weight:700;'" : '';
+																	echo "<option value='$row[Cho_Cod]' data-lic='$row[Cho_Tli]' data-ced='$row[Prs_Ced]' $disabled $style_ruta_cho>$texto_chofer</option>";
 																}
 															}
 															?>
@@ -2787,7 +2860,7 @@ if (isset($anularAnticipo)) {
 						<div class="row">
 							<div class="col-sm-12">
 								<button class="btn btn-sm btn-inverse no" onclick="moveToMain()"><i class="glyphicon glyphicon-arrow-left"></i> Atras</button>
-								<?php if ($saldo_total >= 60) { ?>
+								<?php if (!$saldo_total_insuficiente) { ?>
 									<button class="btn btn-sm btn-primary no" onclick="$('#manifiestoForm').formSubmit();"><i class="glyphicon glyphicon-floppy-disk"></i> Guardar</button>
 								<?php } ?>
 							</div>
@@ -3417,7 +3490,7 @@ if (isset($anularAnticipo)) {
 		
 	</div>
 
-	<script src="../VALIDACIONES/man_val_manifiesto.js?a=307"></script>
+	<script src="../VALIDACIONES/man_val_manifiesto.js?a=316"></script>
 	<script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>
 	<script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=2"></script>
 	<script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>
