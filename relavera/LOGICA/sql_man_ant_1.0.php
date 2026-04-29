@@ -143,7 +143,7 @@ function sentencias_manifiesto($id, $Par_Sql)
                 $val = addslashes($Par_Sql['search']);
                 switch ($Par_Sql['filtro']) {
                     case 'cl': // Por Cliente
-                        $wherefiltro = " AND (persona_cli.Prs_Nom LIKE '%$val%' OR persona_cli.Prs_Ape LIKE '%$val%')";
+                        $wherefiltro = " AND (CONCAT(IFNULL(persona_cli.Prs_Nom,''), ' ', IFNULL(persona_cli.Prs_Ape,'')) LIKE '%$val%')";
                         break;
                     case 'c': // Por Cedula/RUC
                         $wherefiltro = " AND persona_cli.Prs_Ced LIKE '%$val%'";
@@ -599,7 +599,7 @@ function sentencias_manifiesto($id, $Par_Sql)
                 $val = addslashes($Par_Sql['search']);
                 switch ($Par_Sql['filtro']) {
                     case 'cl':
-                        $wherefiltro = " AND (persona_cli.Prs_Nom LIKE '%$val%' OR persona_cli.Prs_Ape LIKE '%$val%')";
+                        $wherefiltro = " AND (CONCAT(IFNULL(persona_cli.Prs_Nom,''), ' ', IFNULL(persona_cli.Prs_Ape,'')) LIKE '%$val%')";
                         break;
                     case 'c':
                         $wherefiltro = " AND persona_cli.Prs_Ced LIKE '%$val%'";
@@ -714,7 +714,7 @@ function sentencias_manifiesto($id, $Par_Sql)
                 $val = addslashes($Par_Sql['search']);
                 switch ($Par_Sql['filtro']) {
                     case 'cl': // Por Cliente
-                        $wherefiltro = " AND (persona_cli.Prs_Nom LIKE '%$val%' OR persona_cli.Prs_Ape LIKE '%$val%')";
+                        $wherefiltro = " AND (CONCAT(IFNULL(persona_cli.Prs_Nom,''), ' ', IFNULL(persona_cli.Prs_Ape,'')) LIKE '%$val%')";
                         break;
                     case 'c': // Por Cédula/RUC
                         $wherefiltro = " AND persona_cli.Prs_Ced LIKE '%$val%'";
@@ -781,7 +781,7 @@ function sentencias_manifiesto($id, $Par_Sql)
                 $val = addslashes($Par_Sql['search']);
                 switch ($Par_Sql['filtro']) {
                     case 'cl':
-                        $wherefiltro = " AND (persona_cli.Prs_Nom LIKE '%$val%' OR persona_cli.Prs_Ape LIKE '%$val%')";
+                        $wherefiltro = " AND (CONCAT(IFNULL(persona_cli.Prs_Nom,''), ' ', IFNULL(persona_cli.Prs_Ape,'')) LIKE '%$val%')";
                         break;
                     case 'c':
                         $wherefiltro = " AND persona_cli.Prs_Ced LIKE '%$val%'";
