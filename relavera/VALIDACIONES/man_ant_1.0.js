@@ -863,21 +863,31 @@ $(function () {
         $('#searchSuggestions').empty().hide();
         cargarSugerenciasBusqueda();
     });
-    $(document).on('mousedown', '#searchSuggestions .item', function () {
-        var label = $(this).data('label') || $(this).text() || '';
-        // $('#searchTxt').val(label);
+    $(document).on('pointerdown click', '#searchSuggestions .item', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
         var $txt = $('#searchTxt');
+        $txt.data('bloqueo', true);
+        
+        var label = $(this).data('label') || $(this).text() || '';
         $txt.val(label);
+        
         $('#searchSuggestions').empty().hide();
-
-        // Disparar la búsqueda automáticamente al seleccionar una sugerencia
+        
         $txt.closest('form').submit();
-        $txt.blur(); // Quitar el foco para cerrar cualquier cosa pendiente
+        $txt.blur(); 
+        
+        setTimeout(function() { $txt.data('bloqueo', false); }, 800);
+        return false;
     });
     $(document).on('blur', '#searchTxt', function () {
+        // Aumentamos el tiempo para que el clic en la sugerencia tenga prioridad
         setTimeout(function () {
-            $('#searchSuggestions').hide();
-        }, 150);
+            if (!$('#searchTxt').data('bloqueo')) {
+                $('#searchSuggestions').hide();
+            }
+        }, 300);
     });
     $(document).on('focus', '#searchTxt', function () {
         var $this = $(this);
