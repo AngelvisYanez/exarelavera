@@ -60,7 +60,7 @@ function createGridChoferesPlanta() {
                     hoja: 'HOJA 1',
                     footer: true,
                     removeHiddens: true,
-                    removeCols: [4]
+                    removeCols: [5]
                 });
             }
         }
@@ -79,8 +79,12 @@ function createGridChoferesPlanta() {
             hoja: 'HOJA 1',
             footer: true,
             removeHiddens: true,
-            removeCols: [4]
+            removeCols: [5]
         });
+    });
+
+    $('#btnImprimirChoferes').on('click', function () {
+        imprimirChoferes();
     });
 }
 
@@ -124,7 +128,7 @@ function createGridVehiculosPlanta() {
                     hoja: 'HOJA 1',
                     footer: true,
                     removeHiddens: true,
-                    removeCols: [6]
+                    removeCols: [7]
                 });
             }
         }
@@ -142,8 +146,12 @@ function createGridVehiculosPlanta() {
             hoja: 'HOJA 1',
             footer: true,
             removeHiddens: true,
-            removeCols: [6]
+            removeCols: [7]
         });
+    });
+
+    $('#btnImprimirVehiculos').on('click', function () {
+        imprimirVehiculos();
     });
 }
 
@@ -171,6 +179,51 @@ function actualizarGridVehiculosPlanta() {
         },
         page: 1
     }).trigger('reloadGrid');
+}
+
+function imprimirChoferes() {
+    var plantaTxt = (typeof planta_nombre !== 'undefined' && planta_nombre) ? planta_nombre : 'Sin planta asignada';
+    var tablaHtml = $('#gridChoferes').jqGrid('exportGridInnerHTML', {
+        footer: true,
+        generated: false,
+        removeHiddens: true,
+        removeCols: [5] // Ocultar columna Sanciones
+    });
+    var cabPlanta = '<tr><td colspan="10" style="font-weight:bold; padding:6px 8px; text-align:left;">PLANTA: ' + $('<div>').text(plantaTxt).html() + '</td></tr>';
+    $('#tablaReporteChoferes').html(cabPlanta + tablaHtml);
+    normalizarRutasImagenesReporte($('#imprimirChoferes'));
+    $('#imprimirChoferes').printElement();
+} 
+
+function imprimirVehiculos() {
+    var plantaTxt = (typeof planta_nombre !== 'undefined' && planta_nombre) ? planta_nombre : 'Sin planta asignada';
+    var tablaHtml = $('#gridVehiculos').jqGrid('exportGridInnerHTML', {
+        footer: true,
+        generated: false,
+        removeHiddens: true,
+        removeCols: [7] // Ocultar columna Sanciones
+    });
+    var cabPlanta = '<tr><td colspan="10" style="font-weight:bold; padding:6px 8px; text-align:left;">PLANTA: ' + $('<div>').text(plantaTxt).html() + '</td></tr>';
+    $('#tablaReporteVehiculos').html(cabPlanta + tablaHtml);
+    normalizarRutasImagenesReporte($('#imprimirVehiculos'));
+    $('#imprimirVehiculos').printElement();
+}
+
+// printElement puede perder rutas relativas de imágenes (logo); convertirlas a absolutas.
+function normalizarRutasImagenesReporte($contenedor) {
+    if (!$contenedor || !$contenedor.length) return;
+    $contenedor.find('img').each(function () {
+        var src = $(this).attr('src');
+        if (!src) return;
+        // Saltar data URI y rutas ya absolutas
+        if (/^(data:|https?:|\/\/)/i.test(src)) return;
+        try {
+            var abs = new URL(src, window.location.href).href;
+            $(this).attr('src', abs);
+        } catch (e) {
+            // no-op
+        }
+    });
 }
 
 function formatearFechaSancion(f) {

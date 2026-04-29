@@ -121,6 +121,9 @@ if (!empty($cliente_manifiesto['Pla_Cod'])) {
         $planta_nombre = isset($pla['Pla_Nom']) ? $pla['Pla_Nom'] : '';
     }
 }
+
+// Logo para cabecera de impresión (ruta directa, sin getReportHeader/getReportFooter)
+$logo_empresa = utf8_encode($Ses_Emp_Log);
 ?>
 <!DOCTYPE html>
 <html>
@@ -292,6 +295,7 @@ if (!empty($cliente_manifiesto['Pla_Cod'])) {
                 <input type="text" name="searchChofer" id="searchChofer" class="form-control input-sm" placeholder="Buscar..." style="margin-left:5px;">
                 <button type="button" class="btn btn-sm btn-primary" id="btnBuscarChofer"><i class="fa fa-search"></i> Buscar</button>
                 <button type="button" class="btn btn-sm btn-success" id="btnExcelChoferes"><i class="fa fa-file-excel-o"></i> Excel</button>
+                <button type="button" class="btn btn-sm btn-info" id="btnImprimirChoferes"><i class="fa fa-print"></i> Imprimir</button>
             </div>
             <table id="gridChoferes"></table>
             <div id="pagerChoferes"></div>
@@ -306,11 +310,60 @@ if (!empty($cliente_manifiesto['Pla_Cod'])) {
                 <input type="text" name="searchVehiculo" id="searchVehiculo" class="form-control input-sm" placeholder="Buscar por placa..." style="margin-left:5px;">
                 <button type="button" class="btn btn-sm btn-primary" id="btnBuscarVehiculo"><i class="fa fa-search"></i> Buscar</button>
                 <button type="button" class="btn btn-sm btn-success" id="btnExcelVehiculos"><i class="fa fa-file-excel-o"></i> Excel</button>
+                <button type="button" class="btn btn-sm btn-info" id="btnImprimirVehiculos"><i class="fa fa-print"></i> Imprimir</button>
             </div>
             <table id="gridVehiculos"></table>
             <div id="pagerVehiculos"></div>
         </div>
         </div>
+    </div>
+</div>
+
+<div id="imprimirVehiculos" style="display: none;">
+    <div style="width: 1030px;">
+        <table style="width:100%; border-collapse:collapse; margin-bottom:8px;">
+            <tr>
+                <td style="width:140px; text-align:left; vertical-align:middle;">
+                    <img src="<?php echo htmlspecialchars($logo_empresa); ?>" alt="Logo" style="max-height:65px; max-width:130px;" onerror="this.style.display='none'">
+                </td>
+                <td style="text-align:center; vertical-align:middle;">
+                    <div style="font-size:18px; font-weight:bold;">REPORTE DE VEHICULOS</div>
+                    <div style="font-size:12px; margin-top:2px;">PLANTA: <?php echo htmlspecialchars($planta_nombre ? $planta_nombre : 'Sin planta asignada'); ?></div>
+                </td>
+                <td style="width:180px; text-align:right; vertical-align:middle; font-size:11px;">
+                    Generado: <?php echo date('d-m-Y H:i'); ?>
+                </td>
+            </tr>
+        </table>
+        <div style="border-top:1px solid #222; margin:4px 0 10px 0;"></div>
+        <div style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">
+            Total de registros
+        </div>
+        <table id="tablaReporteVehiculos" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; table-layout: auto; font-size: 12px;"></table>
+    </div>
+</div>
+
+<div id="imprimirChoferes" style="display: none;">
+    <div style="width: 1030px;">
+        <table style="width:100%; border-collapse:collapse; margin-bottom:8px;">
+            <tr>
+                <td style="width:140px; text-align:left; vertical-align:middle;">
+                    <img src="<?php echo htmlspecialchars($logo_empresa); ?>" alt="Logo" style="max-height:65px; max-width:130px;" onerror="this.style.display='none'">
+                </td>
+                <td style="text-align:center; vertical-align:middle;">
+                    <div style="font-size:18px; font-weight:bold;">REPORTE DE CHOFERES</div>
+                    <div style="font-size:12px; margin-top:2px;">PLANTA: <?php echo htmlspecialchars($planta_nombre ? $planta_nombre : 'Sin planta asignada'); ?></div>
+                </td>
+                <td style="width:180px; text-align:right; vertical-align:middle; font-size:11px;">
+                    Generado: <?php echo date('d-m-Y H:i'); ?>
+                </td>
+            </tr>
+        </table>
+        <div style="border-top:1px solid #222; margin:4px 0 10px 0;"></div>
+        <div style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">
+            Total de registros
+        </div>
+        <table id="tablaReporteChoferes" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; table-layout: auto; font-size: 12px;"></table>
     </div>
 </div>
 
@@ -341,6 +394,6 @@ if (!empty($cliente_manifiesto['Pla_Cod'])) {
     </div>
 </div>
 
-<script type="text/javascript" src="../VALIDACIONES/man_val_vehiculos_choferes.js"></script>
+<script type="text/javascript" src="../VALIDACIONES/man_val_vehiculos_choferes.js?a=5"></script>
 </body>
 </html>

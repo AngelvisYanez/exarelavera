@@ -20,10 +20,72 @@ if (!defined('MAN_CFG_TBL_TIPO_SANC_LISTA')) {
 }
 
 $cliente_manifiesto = $obBD_con1->getRowConsulta('manifiesto_usuario.selectWhere', array('where' => array('manifiesto_usuario.Usu_Cod' => $Ses_Usu_Cod)), $obBD_conexion);
-
+$sqlValorMinimo = "SELECT COALESCE(Pla_Smi, 0) AS valor_minimo FROM manifiesto_plantas WHERE Pla_Est = 'A' LIMIT 1";
+$rowValorMinimo = $obBD_con1->fetch_assoc($obBD_con1->consulta($sqlValorMinimo, $obBD_conexion->conexion));
+$valorMinimo = isset($rowValorMinimo['valor_minimo']) ? (float)$rowValorMinimo['valor_minimo'] : 0.0;
 /* ==================== AJAX HANDLERS ==================== */
 if (isset($cliAjax)) {
     $obBD_con1->getPageGridJson('cliente.selectWhere', $_GET, $obBD_conexion);
+}
+
+// Tab GENERAL: saldo mínimo de anticipo (manifiesto_plantas.Pla_Smi) para crear manifiestos
+if (isset($_POST['getGeneralManifiestoAjax'])) {
+	$resp = array('success' => true, 'pla_smi_sugerido' => 0, 'plantas_activas' => 0);
+	$emp = (int) $Ses_Emp_Cod;
+	try {
+		$row = $obBD_con1->fetch_assoc($obBD_con1->consulta(
+			"SELECT COUNT(*) AS n, COALESCE(AVG(COALESCE(mp.Pla_Smi, 0)), 0) AS prom
+			 FROM manifiesto_plantas mp
+			 LEFT JOIN cliente c ON c.Cli_Cod = mp.Cli_Cod
+			 WHERE mp.Pla_Est = 'A'
+			 AND (c.Emp_Cod = $emp OR mp.Cli_Cod IS NULL)
+			 AND (c.Cli_Est = 'A' OR mp.Cli_Cod IS NULL)",
+			$obBD_conexion->conexion
+		));
+		$resp['plantas_activas'] = isset($row['n']) ? (int) $row['n'] : 0;
+		$resp['pla_smi_sugerido'] = isset($row['prom']) ? round((float) $row['prom'], 2) : 0;
+	} catch (Exception $e) {
+		$resp['success'] = false;
+		$resp['message'] = $e->getMessage();
+	}
+	$obBD_con1->echoJson($resp);
+}
+
+if (isset($_POST['saveGeneralManifiestoAjax'])) {
+	$resp = array('success' => false);
+	try {
+		// grabarv_registros (operacionobBD) no ejecuta si Error != 0; consulta() no siempre resetea Error.
+		$obBD_con1->setError(0, '');
+		$raw = isset($_POST['Pla_Smi_general']) ? trim((string) $_POST['Pla_Smi_general']) : '0';
+		if ($raw === '' || $raw === 'true' || $raw === 'false') {
+			$raw = '0';
+		}
+		$val = floatval(str_replace(',', '.', preg_replace('/[^\d.,\-]/', '', $raw)));
+		if ($val < 0) {
+			throw new Exception('El valor no puede ser negativo.');
+		}
+		$emp = (int) $Ses_Emp_Cod;
+		$valSql = number_format($val, 2, '.', '');
+		// Aplicar con una sola sentencia SQL.
+		$sqlUpd = "UPDATE manifiesto_plantas mp
+			LEFT JOIN cliente c ON c.Cli_Cod = mp.Cli_Cod
+			SET mp.Pla_Smi = $valSql
+			WHERE mp.Pla_Est = 'A'
+			AND (c.Emp_Cod = $emp OR mp.Cli_Cod IS NULL)
+			AND (c.Cli_Est = 'A' OR mp.Cli_Cod IS NULL)";
+		$obBD_con1->consulta($sqlUpd, $obBD_conexion);
+		if ((int) $obBD_con1->Error !== 0) {
+			throw new Exception($obBD_con1->MsgError ? $obBD_con1->MsgError : 'Error al actualizar Pla_Smi (¿existe la columna en manifiesto_plantas?).');
+		}
+		$con = $obBD_con1->getMyCon($obBD_conexion);
+		$cnt = ($con ? (int)mysqli_affected_rows($con) : 0);
+		$resp['success'] = true;
+		$resp['filas_afectadas'] = $cnt;
+		$resp['message'] = 'Se guardo correctamente.';
+	} catch (Exception $e) {
+		$resp['message'] = $e->getMessage();
+	}
+	$obBD_con1->echoJson($resp);
 }
 
 
@@ -70,26 +132,6 @@ function obtenerOCrearPersona($obBD_con1, $obBD_conexion, $Prs_Ced, $datosPerson
 
     if (!empty($persona)) {
         // Si existe, retornar su código
-        // Si existe, actualizar datos (ej. Prs_Tel) si vienen informados
-        $up = array();
-        $camposPermitidos = array('Prs_Nom', 'Prs_Ape', 'Prs_Sex', 'Prs_Esc', 'Prs_Fec', 'Prs_Tel', 'Ciu_Cod', 'Prs_Dir', 'Prs_Cor');
-        foreach ($camposPermitidos as $k) {
-            if (!array_key_exists($k, $datosPersona)) {
-                continue;
-            }
-            // No sobreescribir con NULL o vacío (permite enviar "0" si aplicara)
-            if ($datosPersona[$k] === null) {
-                continue;
-            }
-            if (is_string($datosPersona[$k]) && trim($datosPersona[$k]) === '') {
-                continue;
-            }
-            $up[$k] = $datosPersona[$k];
-        }
-        if (!empty($up) && !empty($persona['Prs_Cod'])) {
-            $obBD_con1->operacionobBD('persona.update', array_merge($up, array('where' => array('Prs_Cod' => $persona['Prs_Cod']))), $obBD_conexion);
-        }
-
         return $persona['Prs_Cod'];
     } else {
         // Si no existe, crear nueva persona
@@ -175,9 +217,6 @@ function guardarPersonalPlanta($obBD_con1, $obBD_conexion, $Pla_Cod, $Prs_Ced, $
     }
     if (isset($datosPersonal['Pep_Cor']) && !empty($datosPersonal['Pep_Cor'])) {
         $datosManifiestoPersonal['Pep_Cor'] = $datosPersonal['Pep_Cor'];
-    }
-    if (isset($datosPersonal['Prs_Tel'])) {
-        $datosManifiestoPersonal['Prs_Tel'] = $datosPersonal['Prs_Tel'];
     }
     if (isset($datosPersonal['Pep_Tel'])) {
         $datosManifiestoPersonal['Pep_Tel'] = $datosPersonal['Pep_Tel'];
@@ -1336,7 +1375,7 @@ if (isset($saveNuevoTipoSancionAjax)) {
         }
         if ($Tsa_Niv === '' || !in_array($Tsa_Niv, array('M', 'A', 'B'))) {
             throw new Exception('Nivel de riesgo inválido (use M, A o B).');
-        }
+        }       
 
         $datosNuevo = array(
             'Emp_Cod' => $Emp_Cod_Post,
@@ -1574,7 +1613,7 @@ $obBD_con1->utf8_change_param($transportes);
 
             <!-- Pestañas -->
             <div class="nav-tabs-custom">
-                <ul class="nav nav-tabs" role="tablist">
+                <ul class="nav nav-tabs" role="tablist">                    
                     <li role="presentation" class="active">
                         <a href="#tabPlantas" aria-controls="tabPlantas" role="tab" data-toggle="tab">
                             <i class="glyphicon glyphicon-home icon-tab"></i>Plantas
@@ -1603,6 +1642,11 @@ $obBD_con1->utf8_change_param($transportes);
                     <li role="presentation">
                         <a href="#tabSanciones" aria-controls="tabSanciones" role="tab" data-toggle="tab">
                             <i class="glyphicon glyphicon-ban-circle icon-tab"></i>Sanciones
+                        </a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#tabGeneral" aria-controls="tabGeneral" role="tab" data-toggle="tab">
+                            <i class="glyphicon glyphicon-cog icon-tab"></i>General
                         </a>
                     </li>
                 </ul>
@@ -1905,6 +1949,29 @@ $obBD_con1->utf8_change_param($transportes);
                         <table id="gridSanciones"></table>
                         <div id="gridSancionesPager"></div>
                     </div>
+                    <!-- Tab General: saldo mínimo anticipo (Pla_Smi) -->
+                    <div role="tabpanel" class="tab-pane" id="tabGeneral">
+                        <div class="row">
+                            <div class="col-sm-10 col-sm-offset-1">
+                                <fieldset class="exa-fieldset">
+                                    <legend class="Titulos2">Saldo mínimo para crear manifiestos</legend>                                    
+                                    <form id="formGeneralManifiesto" class="form-horizontal normal" onsubmit="return false;">
+                                        <div class="form-group">
+                                            <label class="col-sm-4 control-label label-sm" for="cfg_pla_smi_general">Valor mínimo (USD)</label>
+                                            <div class="col-sm-3">
+                                                <input type="text" class="form-control input-sm" id="cfg_pla_smi_general" name="cfg_pla_smi_general" value="<?php echo $valorMinimo; ?>" placeholder="0.00" autocomplete="off" />
+                                            </div>                                            
+                                            <div class=" col-sm-4">
+                                                <button type="button" class="btn btn-primary btn-sm" onclick="guardarGeneralManifiesto();">
+                                                    <i class="glyphicon glyphicon-floppy-disk"></i> Guardar 
+                                                </button>                                                
+                                            </div>
+                                        </div>                                        
+                                    </form>
+                                </fieldset>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -2065,6 +2132,13 @@ $obBD_con1->utf8_change_param($transportes);
                                 </select>
                             </div>
                         </div>
+                        <div class="form-group">
+                            <label class="col-xs-4 control-label label-xs" for="Pla_Smi">Saldo mín. anticipo (A&minus;B) manifiesto:</label>
+                            <div class="col-xs-8">
+                                <input type="text" id="Pla_Smi" name="Pla_Smi" class="form-control input-xs" placeholder="0 = sin mínimo" maxlength="14" title="Valor mínimo del saldo total para permitir crear manifiestos en esta planta (Pla_Smi)" />
+                                <span class="help-block" style="font-size:11px;">Mismo criterio que en pestaña General; aquí solo esta planta.</span>
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -2132,14 +2206,14 @@ $obBD_con1->utf8_change_param($transportes);
                             </select>
                         </div>
                     </div>
-                    <div class="form-group" hidden>
+                    <div class="form-group">
                         <label class="col-sm-4 control-label label-sm" for="Prs_Tel">Tel&eacute;fono 1:</label>
                         <div class="col-sm-4">
                             <input id="Prs_Tel" name="Prs_Tel" class="form-control input-xs" placeholder="" type="text" onkeypress="return validar_numeric(event);" />
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-xs-4 control-label label-xs" for="Pep_Tel">Tel&eacute;fono:</label>
+                        <label class="col-xs-4 control-label label-xs" for="Pep_Tel">Tel&eacute;fono 2:</label>
                         <div class="col-xs-8">
                             <input type="text" id="Pep_Tel" name="Pep_Tel" class="form-control input-xs" placeholder="Teléfono del administrador" maxlength="20">
                         </div>
@@ -2229,14 +2303,14 @@ $obBD_con1->utf8_change_param($transportes);
                             </select>
                         </div>
                     </div>
-                    <div class="form-group" hidden>
+                    <div class="form-group">
                         <label class="col-sm-4 control-label label-sm" for="Trb_Prs_Tel">Tel&eacute;fono 1:</label>
                         <div class="col-sm-4">
                             <input id="Trb_Prs_Tel" name="Trb_Prs_Tel" class="form-control input-xs" placeholder="" type="text" onkeypress="return validar_numeric(event);" />
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-xs-4 control-label label-xs">Teléfono:</label>
+                        <label class="col-xs-4 control-label label-xs">Teléfono 2:</label>
                         <div class="col-xs-8">
                             <input type="text" id="Trb_Pep_Tel" name="Trb_Pep_Tel" class="form-control input-xs" placeholder="Teléfono del administrador" maxlength="20">
                         </div>
@@ -2326,14 +2400,14 @@ $obBD_con1->utf8_change_param($transportes);
                             </select>
                         </div>
                     </div>
-                    <div class="form-group" hidden>
+                    <div class="form-group">
                         <label class="col-sm-4 control-label label-sm" for="Amb_Prs_Tel">Tel&eacute;fono 1:</label>
                         <div class="col-sm-4">
                             <input id="Amb_Prs_Tel" name="Amb_Prs_Tel" class="form-control input-xs" placeholder="" type="text" onkeypress="return validar_numeric(event);" />
                         </div>
                     </div>
-                    <div class="form-group" >
-                        <label class="col-xs-4 control-label label-xs">Teléfono:</label>
+                    <div class="form-group">
+                        <label class="col-xs-4 control-label label-xs">Teléfono 2:</label>
                         <div class="col-xs-8">
                             <input type="text" id="Amb_Pep_Tel" name="Amb_Pep_Tel" class="form-control input-xs" placeholder="Teléfono del administrador" maxlength="20">
                         </div>
@@ -2897,13 +2971,13 @@ $obBD_con1->utf8_change_param($transportes);
                 <label class="col-xs-4 control-label label-xs required">Nivel Riesgo:</label>
                 <div class="col-xs-8">
                     <select id="nuevoTsa_Niv" name="Tsa_Niv" class="form-control input-xs" required>
-                        <option value="">— Seleccione —</option>
+                        <option value="">— Seleccione —</option>                       
                         <option value="A">ALTO</option>
                         <option value="B">BAJO</option>
                         <option value="M">MEDIO</option>
                     </select>
                 </div>
-            </div>
+            </div>            
         </form>
         <div style="text-align: center; margin-top: 15px;">
             <button class="btn btn-sm btn-primary" type="button" onclick="guardarNuevoTipoSancion();">
@@ -3108,7 +3182,7 @@ $obBD_con1->utf8_change_param($transportes);
     </style>
 
 </body>
-<script type="text/javascript" src="../VALIDACIONES/man_adm_configuracion.js?x=43"></script>
+<script type="text/javascript" src="../VALIDACIONES/man_adm_configuracion.js?x=46"></script>
 
 </script>
 

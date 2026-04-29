@@ -209,6 +209,11 @@ $(function () {
     // Diálogos de búsqueda para Sanciones
     initSearchDialogsSanciones();
 
+    cargarGeneralManifiesto();
+    $('a[href="#tabGeneral"]').on('shown.bs.tab', function () {
+        cargarGeneralManifiesto();
+    });
+
     // Función para ajustar el ancho de todos los grids
     function ajustarAnchoGrids() {
         var grids = [
@@ -556,6 +561,53 @@ function seleccionarClientePlanta(cliente) {
     $('#clientePlantaDialog').dialog('close');
 }
 
+// ==================== TAB GENERAL (Pla_Smi) ====================
+function cargarGeneralManifiesto() {
+    var postUrl = (window.location.href || '').split('#')[0];
+    $.post(postUrl, { getGeneralManifiestoAjax: 1 }, function (r) {
+        if (r && r.success) {
+            var sug = parseFloat(r.pla_smi_sugerido);
+            if (isNaN(sug)) {
+                sug = 0;
+            }            
+        } else {
+            $.alert((r && r.message) ? r.message : 'No se pudo cargar la configuración general.');
+        }
+    }, 'json').fail(function () {
+        $.alert('Error de comunicación al cargar la configuración general.');
+    });
+}
+
+function guardarGeneralManifiesto() {
+    var raw = String($('#cfg_pla_smi_general').val() || '').replace(',', '.');
+    var v = parseFloat(raw);
+    if (isNaN(v) || v < 0) {
+        $.alert('Ingrese un valor numérico mayor o igual a 0.');
+        return;
+    }
+    var msg = 'Se modificara el valor minimo de Anticipos para crear Manifiestos. ¿Desea continuar?';
+    $.createDialogConfirm(msg, {
+        saveGeneralManifiestoAjax: 1,
+        Pla_Smi_general: v.toFixed(2)
+    }, function (data) {
+        var postUrl = (window.location.href || '').split('#')[0];
+        var payload = $.extend({}, data);
+        $.post(postUrl, payload, function (r) {
+            if (r && r.success) {
+                $.alert(r.message || 'Guardado correctamente.');
+                if ($('#gridPlantas').length && $('#gridPlantas').data('jqGrid')) {
+                    $('#gridPlantas').trigger('reloadGrid');
+                }
+                cargarGeneralManifiesto();
+            } else {
+                $.alert((r && r.message) ? r.message : 'No se pudo guardar.');
+            }
+        }, 'json').fail(function () {
+            $.alert('Error de comunicación al guardar.');
+        });
+    });
+}
+
 // ==================== GRID PLANTAS ====================
 function createGridPlantas() {
     // console.log("Creando grid de plantas");
@@ -575,6 +627,16 @@ function createGridPlantas() {
             { label: 'Cod.Desecho', name: 'Pla_Crd', width: 100, align: "center" },
             { label: 'Cod.Arcon', name: 'Pla_Car', width: 100, align: "center" },
             { label: 'Dirección', name: 'Pla_Dir', width: 150 },
+            {
+                label: 'Mín. anticipo',
+                name: 'Pla_Smi',
+                width: 88,
+                align: 'right',
+                formatter: function (v) {
+                    var n = parseFloat(v);
+                    return isNaN(n) ? '0.00' : n.toFixed(2);
+                }
+            },
             {
                 label: 'Estado',
                 name: 'Pla_Est',
@@ -615,7 +677,7 @@ function createGridPlantas() {
                     hoja: 'HOJA 1',
                     footer: true,
                     removeHiddens: true,
-                    removeCols: [1, 11] // Ocultar Cod_Cli (índice 1) y acciones (índice 11)
+                    removeCols: [1, 12] // Ocultar Cod_Cli (índice 1) y acciones
                 });
             }
         },
@@ -634,7 +696,7 @@ function imprimirPlantas() {
         footer: true,
         generated: false,
         removeHiddens: true,
-        removeCols: [1, 11] // Ocultar Cod_Cli (índice 1) y acciones (índice 11)
+        removeCols: [1, 12] // Ocultar Cod_Cli y acciones
     }));
     $('#imprimirPlantas').printElement();
 }
