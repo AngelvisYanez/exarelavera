@@ -907,7 +907,14 @@ function cargarSugerenciasBusqueda() {
         $list.empty().hide();
         return;
     }
-    $.getDataJson('', { getSearchSuggestionsAjax: true, filtro: filtro, term: term }, function (res) {
+    // $.getDataJson('', { getSearchSuggestionsAjax: true, filtro: filtro, term: term }, function (res) {
+    $.ajax({
+        url: '',
+        method: 'GET',
+        data: { getSearchSuggestionsAjax: true, filtro: filtro, term: term },
+        dataType: 'json',
+        global: false, // Esta es la clave para que NO salga el loader
+        success: function (res) {
         var rows = (res && $.isArray(res.rows)) ? res.rows : [];
         var html = '';
         for (var i = 0; i < rows.length; i++) {
@@ -928,8 +935,11 @@ function cargarSugerenciasBusqueda() {
         } else {
             $list.html(html).show();
         }
-    }, function () {
-        $list.empty().hide();
+    // }, function () {
+    //     $list.empty().hide();
+        }, error: function () {
+            $list.empty().hide();
+        }
     });
 }
 

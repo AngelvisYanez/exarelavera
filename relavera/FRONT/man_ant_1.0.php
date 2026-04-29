@@ -1781,7 +1781,7 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
         // Esta variable será utilizada por la función toggleBotonesCliente() en man_ant_1.0.js
         var tieneClienteManifiesto = <?php echo (isset($cliente_manifiesto) && !empty($cliente_manifiesto) && isset($cliente_manifiesto['Cli_Cod'])) ? 'true' : 'false'; ?>;
     </script>
-    <script src="../VALIDACIONES/man_ant_1.0.js?x=44"></script>
+    <script src="../VALIDACIONES/man_ant_1.0.js?x=45"></script>
     <script type="text/javascript" src="../../framework/jquery/jquery.plugins/MaskedInput/jquery.maskedinput.1.4.1.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=1"></script>
     <script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>

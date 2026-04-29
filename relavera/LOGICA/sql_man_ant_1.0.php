@@ -152,7 +152,7 @@ function sentencias_manifiesto($id, $Par_Sql)
                         $wherefiltro = " AND manifiesto_anticipo.Ama_Cod LIKE '%$val%'";
                         break;
                     case 'p': // Por Planta
-                        $wherefiltro = " AND (IFNULL(manifiesto_plantas.Pla_Nom,'') LIKE '%$val%' OR IFNULL(manifiesto_plantas.Pla_Lic,'') LIKE '%$val%')";
+                        $wherefiltro = " AND (IFNULL(manifiesto_plantas.Pla_Nom,'') LIKE '%$val%' OR IFNULL(manifiesto_plantas.Pla_Lic,'') LIKE '%$val%' OR TRIM(CONCAT(IFNULL(manifiesto_plantas.Pla_Nom,''), IF(IFNULL(manifiesto_plantas.Pla_Lic,'')<>'', CONCAT(' (', manifiesto_plantas.Pla_Lic, ')'), ''))) LIKE '%$val%')";
                         break;
                 }
             }
@@ -608,7 +608,7 @@ function sentencias_manifiesto($id, $Par_Sql)
                         $wherefiltro = " AND ma.Ama_Cod LIKE '%$val%'";
                         break;
                     case 'p':
-                        $wherefiltro = " AND ma.Pla_Cod IN (SELECT mp2.Pla_Cod FROM manifiesto_plantas mp2 WHERE IFNULL(mp2.Pla_Nom,'') LIKE '%$val%' OR IFNULL(mp2.Pla_Lic,'') LIKE '%$val%')";
+                        $wherefiltro = " AND ma.Pla_Cod IN (SELECT mp2.Pla_Cod FROM manifiesto_plantas mp2 WHERE IFNULL(mp2.Pla_Nom,'') LIKE '%$val%' OR IFNULL(mp2.Pla_Lic,'') LIKE '%$val%' OR TRIM(CONCAT(IFNULL(mp2.Pla_Nom,''), IF(IFNULL(mp2.Pla_Lic,'')<>'', CONCAT(' (', mp2.Pla_Lic, ')'), ''))) LIKE '%$val%')";
                         break;
                 }
             }
@@ -723,7 +723,7 @@ function sentencias_manifiesto($id, $Par_Sql)
                         $wherefiltro = " AND ma.Ama_Cod LIKE '%$val%'";
                         break;
                     case 'p': // Por Planta
-                        $wherefiltro = " AND ma.Pla_Cod IN (SELECT mp2.Pla_Cod FROM manifiesto_plantas mp2 WHERE IFNULL(mp2.Pla_Nom,'') LIKE '%$val%' OR IFNULL(mp2.Pla_Lic,'') LIKE '%$val%')";
+                        $wherefiltro = " AND ma.Pla_Cod IN (SELECT mp2.Pla_Cod FROM manifiesto_plantas mp2 WHERE IFNULL(mp2.Pla_Nom,'') LIKE '%$val%' OR IFNULL(mp2.Pla_Lic,'') LIKE '%$val%' OR TRIM(CONCAT(IFNULL(mp2.Pla_Nom,''), IF(IFNULL(mp2.Pla_Lic,'')<>'', CONCAT(' (', mp2.Pla_Lic, ')'), ''))) LIKE '%$val%')";
                         break;
                 }
             }
@@ -790,7 +790,7 @@ function sentencias_manifiesto($id, $Par_Sql)
                         $wherefiltro = " AND ma.Ama_Cod LIKE '%$val%'";
                         break;
                     case 'p':
-                        $wherefiltro = " AND ma.Pla_Cod IN (SELECT mp2.Pla_Cod FROM manifiesto_plantas mp2 WHERE IFNULL(mp2.Pla_Nom,'') LIKE '%$val%' OR IFNULL(mp2.Pla_Lic,'') LIKE '%$val%')";
+                        $wherefiltro = " AND ma.Pla_Cod IN (SELECT mp2.Pla_Cod FROM manifiesto_plantas mp2 WHERE IFNULL(mp2.Pla_Nom,'') LIKE '%$val%' OR IFNULL(mp2.Pla_Lic,'') LIKE '%$val%' OR TRIM(CONCAT(IFNULL(mp2.Pla_Nom,''), IF(IFNULL(mp2.Pla_Lic,'')<>'', CONCAT(' (', mp2.Pla_Lic, ')'), ''))) LIKE '%$val%')";
                         break;
                 }
             }
