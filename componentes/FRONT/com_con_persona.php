@@ -1,4 +1,4 @@
-<?Php
+<?php
 /* Componente para la busqueda de personas:estudiante, cliente, proveedor, etc */
 ?>
 <FIELDSET>
@@ -6,7 +6,7 @@
 	<label class="Titulos2">Buscar por:</label>
 </LEGEND>
 
-<?Php
+<?php
 /*Muestra el mensaje de requerido*/
 mensaje_requerido(); 
 ?>

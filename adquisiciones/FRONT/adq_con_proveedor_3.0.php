@@ -14,34 +14,33 @@
 * @package tesoreria
 */								 
 	
- require_once('../../administrador/LOGICA/seguridad.php');
- require_once('../LOGICA/adq_log_proveedor.php');
- require_once('../../Librerias/procedimientos/almacenados_standar.php');
+require_once('../../administrador/LOGICA/seguridad.php');
+require_once('../LOGICA/adq_log_proveedor.php');
+require_once('../../Librerias/procedimientos/almacenados_standar.php');
   
- /**
+/**
   * objeto para la conexion
   * @var Class_Log_Conexion_Tes
   */
- $obBD_conexion = new Class_Log_Conexion_Prv($Ses_Dat_Dis);
- 
- /**
+$obBD_conexion = new Class_Log_Conexion_Prv($Ses_Dat_Dis);
+
+/**
   * objeto para consultas
   * @var Class_Log_Datos_Tes
   */
- $obBD_con1 =  new Class_Log_Datos_Prv;
- 
- if(isset($_POST['hdd_volver']))
- {
- 	unset($_POST['hdd_save']);
- 	unset($_POST['Cli_Cod']);
- }	  
+$obBD_con1 =  new Class_Log_Datos_Prv;
+
+if(isset($_POST['hdd_volver'])) {
+  unset($_POST['hdd_save']);
+  unset($_POST['Cli_Cod']);
+}	  
 ?>
 <HTML>
   <HEAD>		
-	<title><?Php echo $Ses_Sys_Nom; ?></title>    
+	<title><?php echo $Ses_Sys_Nom; ?></title>    
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-	<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
+	<?php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
     
 	<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
 	<script language="javascript" src="../VALIDACIONES/adq_val_proveedor.js"></script>
@@ -103,7 +102,7 @@
    </tr>
    <tr>
     <td>
-   <?
+   <?php
   switch($op)
   {
 	  case 1:
@@ -113,12 +112,12 @@
    <tr>
     <td valign="top">
 
-    <form action="<?Php echo $_SERVER['PHP_SELF']  ?>" method="post" name="form1" id="form1">
-    <?Php require_once("../../componentes/FRONT/com_con_persona.php"); ?>
+    <form action="<?php echo $_SERVER['PHP_SELF']  ?>" method="post" name="form1" id="form1">
+    <?php require_once("../../componentes/FRONT/com_con_persona.php"); ?>
     </form>
     </td>
    </tr>
-  <?Php
+  <?php
   if(isset($_POST['txt_busqueda']) && !isset($_POST['Prv_Cod']))
   {
   ?>
@@ -139,12 +138,12 @@
     </tr>
     </thead>
     <tbody>
-    <?
+    <?php
 	
 	/*
 	 * Array de Proveedores resultante de la busqueda en la base de datos
 	*/
-	$Arr_Proveedor = $obBD_con1->getArrayConsulta($op_opciones == "d"? 9 : 10,$txt_busqueda.'*'.$Ses_Emp_Cod, $obBD_conexion);
+	$Arr_Proveedor = $obBD_con1->getArrayConsulta($op_opciones == "d"? 9 : 10, $txt_busqueda.'*'.$Ses_Emp_Cod, $obBD_conexion);
 	
 	/*
 	 * Numero de filas resultantes
@@ -158,33 +157,33 @@
 	?>
 	
     <tr>
-      <td align="center"><?Php echo '&nbsp;'.$row['Prv_Cod']; ?></td>
-      <td><?Php echo '&nbsp;'.$row['Prs_Ced']; ?></td>
-      <td><?Php echo marcar_cadena($txt_busqueda, ($row['Prv_Tic']=='N')?$row['Prs_Ape']." ".$row['Prs_Nom']:$row['Prs_Ape'], '#FFFF00', 1); ?></td>
-      <td align="center"><form name='form' method='post'  action='<? echo $_SERVER['PHP_SELF'];?>'>
+      <td align="center"><?php echo '&nbsp;'.$row['Prv_Cod']; ?></td>
+      <td><?php echo '&nbsp;'.$row['Prs_Ced']; ?></td>
+      <td><?php echo marcar_cadena($txt_busqueda, ($row['Prv_Tic']=='N')?$row['Prs_Ape']." ".$row['Prs_Nom']:$row['Prs_Ape'], '#FFFF00', 1); ?></td>
+      <td align="center"><form name='form' method='post'  action='<?php echo $_SERVER['PHP_SELF'];?>'>
         <button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="this.form.submit()"> <i class=" icon-arrow-right icon-white"></i> </button>
-        <input name="Prv_Cod" id="Prv_Cod" type="hidden" value="<?Php echo $row['Prv_Cod']; ?>">
-        <input name="txt_busqueda2" value="<? echo $txt_busqueda;?>" type="hidden">
-        <input name="op_opciones2" value="<? echo $op_opciones;?>" type="hidden">
+        <input name="Prv_Cod" id="Prv_Cod" type="hidden" value="<?php echo $row['Prv_Cod']; ?>">
+        <input name="txt_busqueda2" value="<?php echo $txt_busqueda;?>" type="hidden">
+        <input name="op_opciones2" value="<?php echo $op_opciones;?>" type="hidden">
       </form></td>
     </tr>
-    <? }}else{?>
+    <?php }}else{?>
     <tr>
 	 <td width="7%" align="center">&nbsp;</td>
 	 <td align="center">&nbsp;</td>
-	 <td align="center"><?Php echo error_alerta(" ¡No hay resultados que mostrar!", 1);?></td>
+	 <td align="center"><?php echo error_alerta(" ¡No hay resultados que mostrar!", 1);?></td>
 	 <td align="center" width="3%">&nbsp;</td>		
    </tr> 
-    <? }?>	
+    <?php }?>	
     </tbody>
   </table>
-  <?
+  <?php
    echo barra_estado($filas);
   ?>
   </FIELDSET>
   </td>
  </tr>
-  <?Php 
+  <?php 
   }
   if(isset($Prv_Cod) && !isset($hdd_volver))
   {
@@ -195,8 +194,8 @@
 	<label class="Titulos2">Datos del Proveedor</label>
    </LEGEND>
    
-   <form method="post" name= "form" id="form" action="<? echo $_SERVER['PHP_SELF'];?>">
-   <?
+   <form method="post" name= "form" id="form" action="<?php echo $_SERVER['PHP_SELF'];?>">
+   <?php
    	$Row_Persona = $obBD_con1->getRowConsulta(11, $Prv_Cod, $obBD_conexion);
    ?>
    
@@ -213,7 +212,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-	     <?Php echo $Row_Persona['Prs_Ced']; ?>
+	     <?php echo $Row_Persona['Prs_Ced']; ?>
         
        </td>       
       </tr>
@@ -225,12 +224,12 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-        <?
+        <?php
 		$Ide_Max = strlen($Row_Persona['Prs_Ced']);
 		$Ide_Max = ($Ide_Max != 10 && $Ide_Max != 13)?-1:$Ide_Max;
 		$Identifica = $obBD_con1->getRowConsulta(6, $Ide_Max, $obBD_conexion);
 		?>
-		<? echo $Identifica['Ide_Des'];?>
+		<?php echo $Identifica['Ide_Des'];?>
        
         </td>
        </tr>
@@ -242,7 +241,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-	     <?Php 
+	     <?php 
 		 $opiden = $Row_Persona['Prv_Tic'] == ""?"N":$Row_Persona['Prv_Tic'];
 		 if($opiden == "N")
 		 {
@@ -258,7 +257,7 @@
        </td>
        </tr>
        
-      <?
+      <?php
 	  
       switch($opiden)
 	  {
@@ -272,7 +271,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-        <? echo $Row_Persona['Prs_Nom'];?>
+        <?php echo $Row_Persona['Prs_Nom'];?>
         
        </td>
       </tr>
@@ -284,11 +283,11 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-		<? echo $Row_Persona['Prs_Ape'];?>
+		<?php echo $Row_Persona['Prs_Ape'];?>
         
        </td>
       </tr>
-      <?
+      <?php
 		  break;
 		  case "J":
 	  ?>
@@ -298,11 +297,11 @@
          Raz&oacute;n Social: </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-		<? echo $Row_Persona['Prs_Ape'];?>
+		<?php echo $Row_Persona['Prs_Ape'];?>
         
        </td>
       </tr>
-	  <?
+	  <?php
 		  break;
 	  }
 	  ?>
@@ -314,7 +313,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-	     <? echo $Row_Persona['Prv_Com'];?>
+	     <?php echo $Row_Persona['Prv_Com'];?>
         
        </td>
       </tr>
@@ -326,7 +325,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-        <? echo($Row_Persona['Prv_Esp']=='S')? "SI":"NO";?>
+        <?php echo($Row_Persona['Prv_Esp']=='S')? "SI":"NO";?>
         
        </td>
       </tr>
@@ -338,13 +337,13 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-	     <? echo($Row_Persona['Prv_Con']=='S')? "SI":"NO";?>
+	     <?php echo($Row_Persona['Prv_Con']=='S')? "SI":"NO";?>
         
        </td>
       </tr>
       <tr>
         <td class="Etiqueta1">Representante Legal: </td>
-        <td class="LetraNegra">&nbsp;<? echo $Row_Persona['Prs_Rep'];?></td>
+        <td class="LetraNegra">&nbsp;<?php echo $Row_Persona['Prs_Rep'];?></td>
       </tr>
      </table>
     </FIELDSET>
@@ -362,7 +361,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-	     <?Php echo $Row_Persona['Prv_Nge']; ?>
+	     <?php echo $Row_Persona['Prv_Nge']; ?>
        
        </td>       
       </tr>
@@ -374,7 +373,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-	     <?Php echo $Row_Persona['Prv_Apg']; ?>
+	     <?php echo $Row_Persona['Prv_Apg']; ?>
        
        </td>       
       </tr>
@@ -386,7 +385,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-	     <?Php echo $Row_Persona['Prv_Tlg']; ?>
+	     <?php echo $Row_Persona['Prv_Tlg']; ?>
         
        </td>       
       </tr>
@@ -398,7 +397,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-	     <?Php echo $Row_Persona['Prv_Ceg']; ?>
+	     <?php echo $Row_Persona['Prv_Ceg']; ?>
         
        </td>       
       </tr>
@@ -410,7 +409,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-	     <?Php echo $Row_Persona['Prv_Cog']; ?>
+	     <?php echo $Row_Persona['Prv_Cog']; ?>
        
        </td>       
       </tr>
@@ -428,7 +427,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-	     <?Php echo $Row_Persona['Prv_Ace']; ?>
+	     <?php echo $Row_Persona['Prv_Ace']; ?>
         
        </td>
       </tr>
@@ -440,7 +439,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-	     <?Php echo $Row_Persona['Prv_Fin']; ?>
+	     <?php echo $Row_Persona['Prv_Fin']; ?>
         
        </td>
       </tr>
@@ -450,7 +449,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
        
-	     <?Php echo $Row_Persona['Prv_Fce']; ?>
+	     <?php echo $Row_Persona['Prv_Fce']; ?>
         
        </td>
       </tr>
@@ -460,7 +459,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-	    <?Php echo $Row_Persona['Prv_Fre']; ?>
+	    <?php echo $Row_Persona['Prv_Fre']; ?>
         
        </td>
       </tr>
@@ -470,7 +469,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-	     <?Php echo $Row_Persona['Prv_Fac']; ?>
+	     <?php echo $Row_Persona['Prv_Fac']; ?>
         
        </td>
       </tr>
@@ -501,7 +500,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
        
-		<?Php echo $Row_Persona['Prs_Dir']; ?>
+		<?php echo $Row_Persona['Prs_Dir']; ?>
         
        </td>
       </tr>
@@ -513,7 +512,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-		<?Php echo $Row_Persona['Prs_Tel']; ?>
+		<?php echo $Row_Persona['Prs_Tel']; ?>
         
        </td>    
       </tr>
@@ -525,7 +524,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-		<?Php echo $Row_Persona['Prs_Te2']; ?>
+		<?php echo $Row_Persona['Prs_Te2']; ?>
         
        </td>    
       </tr>
@@ -537,7 +536,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-		<?Php echo $Row_Persona['Prs_Cel']; ?>
+		<?php echo $Row_Persona['Prs_Cel']; ?>
         
        </td>    
       </tr>
@@ -547,7 +546,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-	    <?Php echo $Row_Persona['Prv_Fax']; ?>
+	    <?php echo $Row_Persona['Prv_Fax']; ?>
         
        </td>
       </tr>
@@ -557,7 +556,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-		 <?Php echo $Row_Persona['Prs_Cor']; ?>
+		 <?php echo $Row_Persona['Prs_Cor']; ?>
         
        </td>
       </tr>
@@ -575,7 +574,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
        
-	    <?Php echo $Row_Persona['Prv_Act']; ?>
+	    <?php echo $Row_Persona['Prv_Act']; ?>
         
        </td>
       </tr>
@@ -585,7 +584,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-	    <?Php echo $Row_Persona['Prv_Nct']; ?>
+	    <?php echo $Row_Persona['Prv_Nct']; ?>
         
        </td>
       </tr>
@@ -595,7 +594,7 @@
             </td>
             <td width="78%" class="LetraNegra">&nbsp;
               
-	          <?Php echo $Row_Persona['Prv_Ect']; ?>
+	          <?php echo $Row_Persona['Prv_Ect']; ?>
               
             </td>  
           </tr>     
@@ -608,7 +607,7 @@
     </tr>
      <tr>        	 
 	  <td width="5%">
-       <button type="button" class="btn btn-inverse fileinput-button" title="Atras" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*hdd_volver', '<? echo $_POST['txt_busqueda'].'*'.$_POST['op_opciones'].'*'.'1';?>')">
+       <button type="button" class="btn btn-inverse fileinput-button" title="Atras" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*hdd_volver', '<?php echo $_POST['txt_busqueda'].'*'.$_POST['op_opciones'].'*'.'1';?>')">
                <i class=" icon-arrow-left icon-white"></i>
                <span>&nbsp;&nbsp;Atras&nbsp;&nbsp;</span>
        		 </button>&nbsp;&nbsp;
@@ -618,12 +617,12 @@
    </form>
    </FIELDSET>
    </td></tr>
-  <?
+  <?php
    }
   ?> 
  </table>
  </div> 
-<?
+<?php
 	  break;
 	  case 2:
 	  $Arr_Proveedor = $obBD_con1->getArrayConsulta( 9,''.'*'.$Ses_Emp_Cod, $obBD_conexion);
@@ -646,32 +645,32 @@
         </tr>
         </thead>
         <tbody>
-   <?  if(count($Arr_Proveedor))
+   <?php  if(count($Arr_Proveedor))
        {
 		foreach($Arr_Proveedor as $row)
 		{
 		?>
         <tr >
-          <td ><?Php echo $row['Prs_Ced']; ?></td>
-          <td ><?Php echo $row['Prs_Ape'].' '.$row['Prs_Nom']; ?></td>
-          <td ><?Php echo $row['Prv_Com']; ?></td>
-          <td ><?Php echo $row['Ciu_Des']; ?></td>
-          <td ><?Php echo $row['Prs_Dir']; ?></td>
-          <td ><?Php echo $row['Prs_Tel']; ?></td>
-          <td ><?Php echo $row['Prs_Te2']; ?></td>
-          <td ><?Php echo $row['Prs_Cor']; ?></td>
+          <td ><?php echo $row['Prs_Ced']; ?></td>
+          <td ><?php echo $row['Prs_Ape'].' '.$row['Prs_Nom']; ?></td>
+          <td ><?php echo $row['Prv_Com']; ?></td>
+          <td ><?php echo $row['Ciu_Des']; ?></td>
+          <td ><?php echo $row['Prs_Dir']; ?></td>
+          <td ><?php echo $row['Prs_Tel']; ?></td>
+          <td ><?php echo $row['Prs_Te2']; ?></td>
+          <td ><?php echo $row['Prs_Cor']; ?></td>
         </tr>
-        <? }}else{?>
+        <?php }}else{?>
         <tr >
     	<td >&nbsp;</td>
     	<td >&nbsp;</td>
-    	<td align="center" ><?Php echo error_alerta(" ¡No hay resultados que mostrar!", 1);?></td>
+    	<td align="center" ><?php echo error_alerta(" ¡No hay resultados que mostrar!", 1);?></td>
 		<td >&nbsp;</td>
     	<td >&nbsp;</td>
     	<td >&nbsp;</td>
     	<td >&nbsp;</td>
     	</tr>     
-	<? }?>	
+	<?php }?>	
     </tbody>
         </table>
 </fieldset>
@@ -698,7 +697,7 @@
    </tr>
    </table>
 </div>
-<?
+<?php
 	  break;
   }
   ?>
