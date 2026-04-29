@@ -23,6 +23,9 @@ if (empty($cliente_manifiesto) || !is_array($cliente_manifiesto)) {
 if (isset($listChoferesPlantaGridAjax)) {
     $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
     $rows = isset($_GET['rows']) ? (int)$_GET['rows'] : 20;
+    if ($rows === -1) {
+        $rows = 1000000; // "Ver todos"
+    }
     $op_opciones = isset($_GET['op_opciones']) ? $_GET['op_opciones'] : 'd';
     $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
@@ -56,7 +59,12 @@ if (isset($listChoferesPlantaGridAjax)) {
 
 // Listar vehículos filtrado por Pla_Cod del manifiesto_usuario (consulta 11)
 if (isset($listVehiculosPlantaGridAjax)) {
-    $data = array_merge($_GET, array('where' => array()));
+    $request = $_GET;
+    if (isset($request['rows']) && (int)$request['rows'] === -1) {
+        $request['rows'] = 1000000; // "Ver todos"
+        $request['page'] = 1;
+    }
+    $data = array_merge($request, array('where' => array()));
     if (!empty($cliente_manifiesto['Pla_Cod'])) {
         $data['where']['manifiesto_vehiculo.Pla_Cod'] = (int) $cliente_manifiesto['Pla_Cod'];
     }
@@ -394,6 +402,6 @@ $logo_empresa = utf8_encode($Ses_Emp_Log);
     </div>
 </div>
 
-<script type="text/javascript" src="../VALIDACIONES/man_val_vehiculos_choferes.js?a=5"></script>
+<script type="text/javascript" src="../VALIDACIONES/man_val_vehiculos_choferes.js?a=7"></script>
 </body>
 </html>

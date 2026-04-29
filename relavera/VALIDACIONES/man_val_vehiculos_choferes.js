@@ -28,6 +28,8 @@ function createGridChoferesPlanta() {
         url: window.location.href,
         postData: { listChoferesPlantaGridAjax: 1 },
         height: 350,
+        rowNum: 50,
+        rowList: [10, 25, 50, 100, -1],
         colModel: [
             { label: 'Código', name: 'Cho_Cod', key: true, width: 50, align: 'center' },
             { label: 'Cédula', name: 'Prs_Ced', width: 90, align: 'center' },
@@ -47,9 +49,11 @@ function createGridChoferesPlanta() {
                 }
             }
         ],
-        rowNum: 50,
         viewrecords: true,
-        jsonReader: { root: "rows", page: "page", total: "total", records: "records", repeatitems: false }
+        jsonReader: { root: "rows", page: "page", total: "total", records: "records", repeatitems: false },
+        loadComplete: function () {
+            customizarTextoVerTodos('#pagerChoferes');
+        }
     }, false, '#pagerChoferes', { refresh: true, view: false }).gridButtonsAdd([
         {
             caption: 'Exportar Excel',
@@ -94,6 +98,8 @@ function createGridVehiculosPlanta() {
         url: window.location.href,
         postData: { listVehiculosPlantaGridAjax: 1 },
         height: 350,
+        rowNum: 50,
+        rowList: [10, 25, 50, 100, -1],
         colModel: [
             { label: 'Código', name: 'Veh_Cod', key: true, width: 50, align: 'center' },
             { label: 'Placa', name: 'Veh_Pla', width: 80, align: 'center' },
@@ -115,9 +121,11 @@ function createGridVehiculosPlanta() {
                 }
             }
         ],
-        rowNum: 50,
         viewrecords: true,
-        jsonReader: { root: "rows", page: "page", total: "total", records: "records", repeatitems: false }
+        jsonReader: { root: "rows", page: "page", total: "total", records: "records", repeatitems: false },
+        loadComplete: function () {
+            customizarTextoVerTodos('#pagerVehiculos');
+        }
     }, false, '#pagerVehiculos', { refresh: true, view: false }).gridButtonsAdd([
         {
             caption: 'Exportar Excel',
@@ -224,6 +232,12 @@ function normalizarRutasImagenesReporte($contenedor) {
             // no-op
         }
     });
+}
+
+function customizarTextoVerTodos(pagerId) {
+    var $select = $(pagerId).find('.ui-pg-selbox');
+    if (!$select.length) return;
+    $select.find('option[value="-1"]').text('Todos');
 }
 
 function formatearFechaSancion(f) {
