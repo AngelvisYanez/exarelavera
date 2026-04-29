@@ -94,19 +94,19 @@ function createGridChoferesPlanta() {
 
 function createGridVehiculosPlanta() {
     $('#gridVehiculos').createGrid({
-        caption: 'Vehículos por Planta',
+        caption: '',
         url: window.location.href,
         postData: { listVehiculosPlantaGridAjax: 1 },
         height: 350,
         rowNum: 50,
         rowList: [10, 25, 50, 100, -1],
         colModel: [
-            { label: 'Código', name: 'Veh_Cod', key: true, width: 50, align: 'center' },
-            { label: 'Placa', name: 'Veh_Pla', width: 80, align: 'center' },
+            { label: 'Código', name: 'Veh_Cod', key: true, hidden: true, width: 50, align: 'center' },
+            { label: 'Placa', name: 'Veh_Pla', width: 50, align: 'center' },
             { label: 'Marca', name: 'Veh_Mar', width: 100 },
             { label: 'Color', name: 'Veh_Col', width: 70, align: 'center' },
-            { label: 'Capacidad (Kg)', name: 'Veh_Cap', width: 90, align: 'right' },
-            { label: 'Planta', name: 'Pla_Nom', width: 120 },
+            { label: 'Capacidad (Kg)', name: 'Veh_Cap', width: 60, align: 'right' },
+            { label: 'Planta', name: 'Pla_Nom', width: 140 },
             {
                 label: 'Sanciones',
                 name: 'cant_sanciones',
@@ -190,29 +190,25 @@ function actualizarGridVehiculosPlanta() {
 }
 
 function imprimirChoferes() {
-    var plantaTxt = (typeof planta_nombre !== 'undefined' && planta_nombre) ? planta_nombre : 'Sin planta asignada';
-    var tablaHtml = $('#gridChoferes').jqGrid('exportGridInnerHTML', {
+    var tablaHtml = $('#gridChoferes').jqGrid('exportGridHTML', {
         footer: true,
         generated: false,
         removeHiddens: true,
         removeCols: [5] // Ocultar columna Sanciones
     });
-    var cabPlanta = '<tr><td colspan="10" style="font-weight:bold; padding:6px 8px; text-align:left;">PLANTA: ' + $('<div>').text(plantaTxt).html() + '</td></tr>';
-    $('#tablaReporteChoferes').html(cabPlanta + tablaHtml);
+    $('#tablaReporteChoferes').html(tablaHtml);
     normalizarRutasImagenesReporte($('#imprimirChoferes'));
     $('#imprimirChoferes').printElement();
 } 
 
 function imprimirVehiculos() {
-    var plantaTxt = (typeof planta_nombre !== 'undefined' && planta_nombre) ? planta_nombre : 'Sin planta asignada';
-    var tablaHtml = $('#gridVehiculos').jqGrid('exportGridInnerHTML', {
+    var tablaHtml = $('#gridVehiculos').jqGrid('exportGridHTML', {
         footer: true,
         generated: false,
         removeHiddens: true,
         removeCols: [7] // Ocultar columna Sanciones
     });
-    var cabPlanta = '<tr><td colspan="10" style="font-weight:bold; padding:6px 8px; text-align:left;">PLANTA: ' + $('<div>').text(plantaTxt).html() + '</td></tr>';
-    $('#tablaReporteVehiculos').html(cabPlanta + tablaHtml);
+    $('#tablaReporteVehiculos').html(tablaHtml);
     normalizarRutasImagenesReporte($('#imprimirVehiculos'));
     $('#imprimirVehiculos').printElement();
 }

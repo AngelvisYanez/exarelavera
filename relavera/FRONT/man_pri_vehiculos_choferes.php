@@ -129,6 +129,7 @@ if (!empty($cliente_manifiesto['Pla_Cod'])) {
         $planta_nombre = isset($pla['Pla_Nom']) ? $pla['Pla_Nom'] : '';
     }
 }
+$sin_planta_asignada = empty($cliente_manifiesto['Pla_Cod']);
 
 // Logo para cabecera de impresión (ruta directa, sin getReportHeader/getReportFooter)
 $logo_empresa = utf8_encode($Ses_Emp_Log);
@@ -299,6 +300,9 @@ $logo_empresa = utf8_encode($Ses_Emp_Log);
                 <select name="op_opciones" id="opChofer" class="form-control input-sm">
                     <option value="d">Nombre</option>
                     <option value="c">Cédula</option>
+                    <?php if ($sin_planta_asignada) { ?>
+                        <option value="pn">Planta</option>
+                    <?php } ?>
                 </select>
                 <input type="text" name="searchChofer" id="searchChofer" class="form-control input-sm" placeholder="Buscar..." style="margin-left:5px;">
                 <button type="button" class="btn btn-sm btn-primary" id="btnBuscarChofer"><i class="fa fa-search"></i> Buscar</button>
@@ -314,6 +318,9 @@ $logo_empresa = utf8_encode($Ses_Emp_Log);
                 <label class="control-label">Filtrar por:</label>
                 <select name="op_opciones" id="opVehiculo" class="form-control input-sm">
                     <option value="p">Placa</option>
+                    <?php if ($sin_planta_asignada) { ?>
+                        <option value="pn">Planta</option>
+                    <?php } ?>
                 </select>
                 <input type="text" name="searchVehiculo" id="searchVehiculo" class="form-control input-sm" placeholder="Buscar por placa..." style="margin-left:5px;">
                 <button type="button" class="btn btn-sm btn-primary" id="btnBuscarVehiculo"><i class="fa fa-search"></i> Buscar</button>
@@ -347,7 +354,7 @@ $logo_empresa = utf8_encode($Ses_Emp_Log);
         <div style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">
             Total de registros
         </div>
-        <table id="tablaReporteVehiculos" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; table-layout: auto; font-size: 12px;"></table>
+        <div id="tablaReporteVehiculos" style="width: 100%; font-size: 12px;"></div>
     </div>
 </div>
 
@@ -371,7 +378,7 @@ $logo_empresa = utf8_encode($Ses_Emp_Log);
         <div style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">
             Total de registros
         </div>
-        <table id="tablaReporteChoferes" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; table-layout: auto; font-size: 12px;"></table>
+        <div id="tablaReporteChoferes" style="width: 100%; font-size: 12px;"></div>
     </div>
 </div>
 
@@ -402,6 +409,6 @@ $logo_empresa = utf8_encode($Ses_Emp_Log);
     </div>
 </div>
 
-<script type="text/javascript" src="../VALIDACIONES/man_val_vehiculos_choferes.js?a=7"></script>
+<script type="text/javascript" src="../VALIDACIONES/man_val_vehiculos_choferes.js?a=10"></script>
 </body>
 </html>
