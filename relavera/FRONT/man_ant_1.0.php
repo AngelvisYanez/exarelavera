@@ -1450,7 +1450,8 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
             <!-- AMBIENTE PRINCIPAL -->
             <div id="documentoSearch">
                 <div class="row">
-                    <form name="searchManifesto" id="searchManifesto" class="form-horizontal normal" action="javascript:$('#man_antGrid').Search('#searchManifesto','LoadManifAjax');">
+                    <!-- <form name="searchManifesto" id="searchManifesto" class="form-horizontal normal" action="javascript:$('#man_antGrid').Search('#searchManifesto','LoadManifAjax');"> -->
+                    <form name="searchManifesto" id="searchManifesto" autocomplete="off" class="form-horizontal normal" action="javascript:$('#man_antGrid').Search('#searchManifesto','LoadManifAjax');">
                         <input type="hidden" name="ec_consolidado" id="ec_consolidado_flag" value="<?php echo $embed_ec_consolidado ? '1' : ''; ?>" />
                         <input type="hidden" name="Pla_Cod" id="Pla_Cod_busq_manif" value="" />
                         <div class="col-xs-5">
@@ -1781,7 +1782,7 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
         // Esta variable será utilizada por la función toggleBotonesCliente() en man_ant_1.0.js
         var tieneClienteManifiesto = <?php echo (isset($cliente_manifiesto) && !empty($cliente_manifiesto) && isset($cliente_manifiesto['Cli_Cod'])) ? 'true' : 'false'; ?>;
     </script>
-    <script src="../VALIDACIONES/man_ant_1.0.js?x=45"></script>
+    <script src="../VALIDACIONES/man_ant_1.0.js?x=46"></script>
     <script type="text/javascript" src="../../framework/jquery/jquery.plugins/MaskedInput/jquery.maskedinput.1.4.1.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=1"></script>
     <script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>

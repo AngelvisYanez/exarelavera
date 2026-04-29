@@ -865,8 +865,14 @@ $(function () {
     });
     $(document).on('mousedown', '#searchSuggestions .item', function () {
         var label = $(this).data('label') || $(this).text() || '';
-        $('#searchTxt').val(label);
+        // $('#searchTxt').val(label);
+        var $txt = $('#searchTxt');
+        $txt.val(label);
         $('#searchSuggestions').empty().hide();
+
+        // Disparar la búsqueda automáticamente al seleccionar una sugerencia
+        $txt.closest('form').submit();
+        $txt.blur(); // Quitar el foco para cerrar cualquier cosa pendiente
     });
     $(document).on('blur', '#searchTxt', function () {
         setTimeout(function () {
@@ -874,6 +880,8 @@ $(function () {
         }, 150);
     });
     $(document).on('focus', '#searchTxt', function () {
+        // Forzar al navegador a no mostrar su historial nativo
+        $(this).attr('autocomplete', 'off');
         if ($('#searchSuggestions').children().length > 0) {
             $('#searchSuggestions').show();
         }
