@@ -1438,6 +1438,16 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
         body.man-ant-embed-ec #documentoSearch > .row > form > .col-sm-7 { display: none; }
         body.man-ant-embed-ec .panel.panel-main { border: 0; box-shadow: none; }
         body.man-ant-embed-ec .panel-body.exa-body { padding-top: 0; }
+        
+        /* Eliminar color amarillo de autocompletado del navegador */
+        #searchTxt:-webkit-autofill,
+        #searchTxt:-webkit-autofill:hover, 
+        #searchTxt:-webkit-autofill:focus, 
+        #searchTxt:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px white inset !important;
+            -webkit-text-fill-color: #555 !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
     </style>
 </HEAD>
 
@@ -1782,7 +1792,7 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
         // Esta variable será utilizada por la función toggleBotonesCliente() en man_ant_1.0.js
         var tieneClienteManifiesto = <?php echo (isset($cliente_manifiesto) && !empty($cliente_manifiesto) && isset($cliente_manifiesto['Cli_Cod'])) ? 'true' : 'false'; ?>;
     </script>
-    <script src="../VALIDACIONES/man_ant_1.0.js?x=46"></script>
+    <script src="../VALIDACIONES/man_ant_1.0.js?x=47"></script>
     <script type="text/javascript" src="../../framework/jquery/jquery.plugins/MaskedInput/jquery.maskedinput.1.4.1.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=1"></script>
     <script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>

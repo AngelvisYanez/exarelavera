@@ -880,10 +880,16 @@ $(function () {
         }, 150);
     });
     $(document).on('focus', '#searchTxt', function () {
+        var $this = $(this);
         // Forzar al navegador a no mostrar su historial nativo
-        $(this).attr('autocomplete', 'off');
-        if ($('#searchSuggestions').children().length > 0) {
+        $this.attr('autocomplete', 'new-password');
+        
+        // SOLO mostrar las sugerencias si hay al menos 2 caracteres
+        var term = String($this.val() || '').trim();
+        if (term.length >= 2 && $('#searchSuggestions').children().length > 0) {
             $('#searchSuggestions').show();
+        } else {
+            $('#searchSuggestions').hide();
         }
     });
 
