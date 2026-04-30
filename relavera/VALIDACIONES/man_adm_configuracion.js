@@ -1291,9 +1291,7 @@ function editarChofer(o) {
         Cho_Cli: o.Cho_Cli || '', // Caducidad (fecha)
         Cho_Tel: o.Cho_Tel || '', // Teléfono
         Cho_Tsa: o.Cho_Tsa || '', // Tipo de sangre
-        Cho_Mae: '', // Campo oculto, siempre vacío
-        Cho_Cor: o.Cho_Cor || ''// Correo electrónico
-
+        Cho_Mae: '' // Campo oculto, siempre vacío
     };
     $('#choferForm').setData(formData);
     // Cargar plantas y luego seleccionar la planta
@@ -1577,7 +1575,21 @@ function guardarVehiculo() {
         return false;
     }
 
+    var capacidadRaw = String($('#Veh_Cap').val() || '').trim().replace(',', '.');
+    var capacidadNum = parseFloat(capacidadRaw);
+    if (isNaN(capacidadNum)) {
+        $.alert('Ingrese una capacidad válida en Kg.');
+        $('#Veh_Cap').focus();
+        return false;
+    }
+    if (capacidadNum > 20000) {
+        $.alert('La capacidad del vehículo no puede superar los 20000 Kg.');
+        $('#Veh_Cap').focus();
+        return false;
+    }
+
     let data = $('#vehiculoForm').getData();
+    data.Veh_Cap = capacidadNum;
     data.saveVehiculoAjax = true;
     data.Cli_Cod = Cli_Cod;
     $.createDialogConfirm('¿Está seguro que desea guardar los datos?', data, function (d) {

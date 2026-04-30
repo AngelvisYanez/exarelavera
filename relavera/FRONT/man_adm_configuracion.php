@@ -92,21 +92,27 @@ if (isset($_POST['saveGeneralManifiestoAjax'])) {
 // Listar Plantas
 if (isset($listPlantasGridAjax)) {
     // require_once('../../Librerias/procedimientos/almacenados_standar.php');
+    ChromePhp::log("listPlantasGridAjax ejecutándose");
     $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
     $rows = isset($_GET['rows']) ? (int)$_GET['rows'] : 20;
     // Obtener parámetros de filtro
     $op_opciones = isset($_GET['op_opciones']) ? $_GET['op_opciones'] : 'd';
     $search = isset($_GET['search']) ? $_GET['search'] : '';
-   // Preparar datos para la consulta
+    ChromePhp::log("page: " . $page . ", rows: " . $rows . ", op_opciones: " . $op_opciones . ", search: " . $search);
+    // Preparar datos para la consulta
     $data = array('limits' => '', 'op_opciones' => $op_opciones, 'search' => $search);
+    ChromePhp::log("Llamando getRowConsulta con id=3, data: ", $data);
     // Contar total de registros (sin limits)
     $contar = $obBD_con1->getRowConsulta(3, $data, $obBD_conexion);
+    ChromePhp::log("Resultado contar: ", $contar);
     $pagination = pages($contar['total'], $page, $rows);
     $response = $pagination['data'];
     if ($contar['total'] > 0) {
         // Obtener registros con paginación (con limits)
         $data['limits'] = $pagination['limits'];
+        ChromePhp::log("Llamando getArrayConsulta con id=3, data: ", $data);
         $response['rows'] = $obBD_con1->getArrayConsulta(3, $data, $obBD_conexion);
+        ChromePhp::log("Registros obtenidos: " . count($response['rows']));
         $obBD_con1->utf8_change_param($response['rows']);
     } else {
         $response['rows'] = array();
@@ -666,8 +672,7 @@ if (isset($saveChoferAjax)) {
             'Cho_Cli' => $Cho_Cli,
             'Cho_Tel' => $Cho_Tel,
             'Cho_Tsa' => $Cho_Tsa,
-            'Cho_Mae' => '', // Campo oculto, siempre se guarda vacío
-            'Cho_Cor' => $Cho_Cor // Campo oculto, siempre se guarda vacío
+            'Cho_Mae' => '' // Campo oculto, siempre se guarda vacío
         );
 
         if (!empty($Cho_Cod)) {
@@ -1163,11 +1168,16 @@ if (isset($saveVehiculoAjax)) {
     $obBD_con1->inicio_transaccion($obBD_conexion);
     $resp = array('success' => false);
     try {
+        $veh_cap_val = is_numeric($Veh_Cap) ? floatval($Veh_Cap) : 0;
+        if ($veh_cap_val > 20000) {
+            throw new Exception('La capacidad del vehículo no puede superar los 20000 Kg.');
+        }
+
         $datos = array(
             'Veh_Mar' => $Veh_Mar,
             'Veh_Pla' => $Veh_Pla,
             'Veh_Col' => $Veh_Col,
-            'Veh_Cap' => $Veh_Cap,
+            'Veh_Cap' => $veh_cap_val,
             'Veh_Tit' => $Veh_Tit,
             'Emp_Cod' => $Ses_Emp_Cod,
             'Veh_Tip' => 'VM',
@@ -2576,14 +2586,6 @@ $obBD_con1->utf8_change_param($transportes);
                     <input type="text" id="Prs_Ape" name="Prs_Ape" class="form-control input-xs" required placeholder="Apellidos del chofer">
                 </div>
             </div>
-
-            <div class="form-group">
-                <label class="col-xs-4 control-label label-xs required">Email:</label>
-                <div class="col-xs-8">
-                    <input type="text" id="Cho_Cor" name="Cho_Cor" class="form-control input-xs" required placeholder="Email del chofer">
-                </div>
-            </div>
-
             <div class="form-group">
                 <label class="col-xs-4 control-label label-xs required">Tipo Licencia:</label>
                 <div class="col-xs-8">
@@ -2691,7 +2693,7 @@ $obBD_con1->utf8_change_param($transportes);
                 <label class="col-xs-4 control-label label-xs required">Capacidad:</label>
                 <div class="col-xs-5">
                     <div class="input-group input-group-xs">
-                        <input name="Veh_Cap" id="Veh_Cap" type="text" class="form-control input-xs" required placeholder="Capacidad">
+                        <input name="Veh_Cap" id="Veh_Cap" type="number" class="form-control input-xs" required placeholder="Capacidad" min="0" max="20000" step="0.01">
                         <span class="input-group-addon validate">Kg</span>
                     </div>
                 </div>
@@ -3182,7 +3184,7 @@ $obBD_con1->utf8_change_param($transportes);
     </style>
 
 </body>
-<script type="text/javascript" src="../VALIDACIONES/man_adm_configuracion.js?x=46"></script>
+<script type="text/javascript" src="../VALIDACIONES/man_adm_configuracion.js?x=47"></script>
 
 </script>
 
