@@ -129,7 +129,8 @@ $saldo_anticipo_val = isset($anticipo['saldo']) ? floatval($anticipo['saldo']) :
 $saldo_sin_factura_val = isset($saldo_sin_factura['saldo']) ? floatval($saldo_sin_factura['saldo']) : 0;
 $saldo_total = $saldo_anticipo_val - $saldo_sin_factura_val;
 $pla_smi_saldo_min = man_alt_pla_smi_saldo_min($obBD_con1, $obBD_conexion, isset($cliente_manifiesto['Pla_Cod']) ? $cliente_manifiesto['Pla_Cod'] : 0);
-$saldo_total_insuficiente = ($pla_smi_saldo_min > 0 && $saldo_total < $pla_smi_saldo_min);
+$saldo_total_en_cero = (abs($saldo_total) < 0.00001);
+$saldo_total_insuficiente = ($pla_smi_saldo_min > 0 && $saldo_total < $pla_smi_saldo_min) || $saldo_total_en_cero;
 
 $plantas_saldos_modal = array();
 $sql_plantas_saldos_modal = "SELECT mp.Pla_Cod, mp.Pla_Nom, mp.Pla_Dis, mp.Pla_Dir, mp.Cli_Cod,
@@ -1054,12 +1055,12 @@ if (isset($saveManifiestoAjax)) {
 			throw new Exception('La Guía de Remisión ya existe para esta planta. Verifique el número ingresado.');
 		}
 
-		// Saldo total (A-B) mínimo según manifiesto_plantas.Pla_Smi — solo registro nuevo
+		// Saldo total (A-B) bloqueado si es cero o si no alcanza el mínimo de la planta.
 		if (empty($Man_Cod)) {
 			$cli_ins = isset($Cli_Cod) ? (int) $Cli_Cod : 0;
 			$pla_ins = isset($Pla_Cod) ? (int) $Pla_Cod : 0;
-			$smi_req = man_alt_pla_smi_saldo_min($obBD_con1, $obBD_conexion, $pla_ins);
-			if ($smi_req > 0 && $cli_ins > 0 && $pla_ins > 0) {
+			$smi_req = ($pla_ins > 0) ? man_alt_pla_smi_saldo_min($obBD_con1, $obBD_conexion, $pla_ins) : 0;
+			if ($cli_ins > 0 && $pla_ins > 0) {
 				$anticipo_ins = $obBD_con1->getRowConsulta('manifiesto_anticipo.1', array('Pla_Cod' => $pla_ins, 'Cli_Cod' => $cli_ins), $obBD_conexion);
 				$saldo_ant_ins = isset($anticipo_ins['saldo']) ? floatval($anticipo_ins['saldo']) : 0;
 				$Emp_Cod_ins = (int) $Ses_Emp_Cod;
@@ -1074,7 +1075,10 @@ if (isset($saveManifiestoAjax)) {
 				$row_sf = $obBD_con1->fetch_assoc($obBD_con1->consulta($sql_sf_ins, $obBD_conexion->conexion));
 				$saldo_sf_ins = ($row_sf && isset($row_sf['saldo'])) ? floatval($row_sf['saldo']) : 0;
 				$saldo_tot_ins = $saldo_ant_ins - $saldo_sf_ins;
-				if ($saldo_tot_ins < $smi_req) {
+				if (abs($saldo_tot_ins) < 0.00001) {
+					throw new Exception('No se puede generar el manifiesto porque el saldo total (A menos B) es 0.00.');
+				}
+				if ($smi_req > 0 && $saldo_tot_ins < $smi_req) {
 					throw new Exception('El saldo total de anticipos (A menos B) no alcanza el mínimo de la planta (Pla_Smi = ' . number_format($smi_req, 2, '.', ',') . '). Saldo actual: ' . number_format($saldo_tot_ins, 2, '.', ',') . '.');
 				}
 			}
@@ -2400,7 +2404,7 @@ if (isset($anularAnticipo)) {
 												</span>
 											</div>
 										</div>
-										<div style="display: flex; align-items: center; gap: 6px; padding: 5px 12px; background: linear-gradient(135deg, <?php echo $saldo_total_insuficiente ? '#f8d7da 0%, #f5c6cb 100%' : '#d1e7dd 0%, #badbcc 100%'; ?>); border: 2px solid <?php echo $saldo_total_insuficiente ? '#dc3545' : '#198754'; ?>; border-radius: 8px; box-shadow: 0 2px 5px rgba(<?php echo $saldo_total_insuficiente ? '220, 53, 69' : '25, 135, 84'; ?>, 0.25);">
+										<div id="saldo_total_panel" style="display: flex; align-items: center; gap: 6px; padding: 5px 12px; background: linear-gradient(135deg, <?php echo $saldo_total_insuficiente ? '#f8d7da 0%, #f5c6cb 100%' : '#d1e7dd 0%, #badbcc 100%'; ?>); border: 2px solid <?php echo $saldo_total_insuficiente ? '#dc3545' : '#198754'; ?>; border-radius: 8px; box-shadow: 0 2px 5px rgba(<?php echo $saldo_total_insuficiente ? '220, 53, 69' : '25, 135, 84'; ?>, 0.25);">
 											<div style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.2;">
 												<label class="control-label" style="margin: 0; font-size: 10px; font-weight: 600; color: <?php echo $saldo_total_insuficiente ? '#721c24' : '#0f5132'; ?>; text-transform: uppercase; letter-spacing: 0.3px;">Saldo Total (A-B)</label>
 											</div>
@@ -2441,7 +2445,7 @@ if (isset($anularAnticipo)) {
 				<br>
 				<div>
 					<?php if( empty($plaSanciones[0]['Msa_Cod']) ) { ?>
-						<button class="btn btn-sm btn-success" id="btnNuevo" type="button" onclick="<?php echo !$saldo_total_insuficiente ? 'abrirModalTurno();' : ''; ?>" <?php echo $saldo_total_insuficiente ? 'disabled title="Saldo total insuficiente (m&iacute;nimo: ' . number_format($pla_smi_saldo_min, 2, '.', ',') . ')"' : ''; ?>><i class="glyphicon glyphicon-plus"></i> Nuevo</button>
+						<button class="btn btn-sm btn-success" id="btnNuevo" type="button" onclick="<?php echo !$saldo_total_insuficiente ? 'abrirModalTurno();' : ''; ?>" <?php echo $saldo_total_insuficiente ? 'disabled title="No se puede generar manifiesto: saldo total en cero o insuficiente (m&iacute;nimo: ' . number_format($pla_smi_saldo_min, 2, '.', ',') . ')"' : ''; ?>><i class="glyphicon glyphicon-plus"></i> Nuevo</button>
 					<?php } else { ?>
 						<button class="btn btn-sm btn-warning" id="btnNuevoSancion" type="button" onclick="$('#sancionPlantaDialog').dialog('open');" title="La planta tiene una sanción activa"><i class="glyphicon glyphicon-alert"></i> Nuevo</button>
 					<?php } ?>

@@ -167,6 +167,9 @@ $(function () {
         }, 100);
     }, 500);
 
+    aplicarEstiloOpcionesEnRuta($('#Veh_Cod'));
+    aplicarEstiloOpcionesEnRuta($('#Cho_Cod'));
+
 });
 
 function createGrid() {
@@ -1081,9 +1084,13 @@ function actualizarSaldos(saldos) {
             saldoTotalElement.text(saldoTotal.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','));
 
             // Actualizar estilos según el saldo total
-            var saldoTotalContainer = saldoTotalElement.closest('div[style*="background"]');
+            var saldoTotalContainer = $('#saldo_total_panel');
+            if (saldoTotalContainer.length === 0) {
+                saldoTotalContainer = saldoTotalElement.closest('div[style*="background"]');
+            }
             if (saldoTotalContainer.length > 0) {
-                var isInsufficient = (saldoMinPla > 0 && saldoTotal < saldoMinPla);
+                var saldoEnCero = (Math.abs(saldoTotal) < 0.00001);
+                var isInsufficient = saldoEnCero || (saldoMinPla > 0 && saldoTotal < saldoMinPla);
 
                 // Actualizar fondo y borde del contenedor
                 if (isInsufficient) {
@@ -1166,7 +1173,8 @@ function actualizarSaldos(saldos) {
             }
         }
 
-        var insufPorMin = (saldoMinPla > 0 && saldoTotal < saldoMinPla);
+        var saldoEnCeroGlobal = (Math.abs(saldoTotal) < 0.00001);
+        var insufPorMin = saldoEnCeroGlobal || (saldoMinPla > 0 && saldoTotal < saldoMinPla);
         // Actualizar el input #saldo con el mismo valor que saldo_total (sin comas para formato numérico)
         if (saldoInputElement.length > 0) {
             saldoInputElement.val(saldoTotal.toFixed(2));
@@ -1177,7 +1185,7 @@ function actualizarSaldos(saldos) {
         // Actualizar estado del botón Nuevo
         if (btnNuevoElement.length > 0) {
             if (insufPorMin) {
-                btnNuevoElement.prop('disabled', true).attr('title', 'Saldo total insuficiente (mínimo Pla_Smi: ' + minTxt + ')');
+                btnNuevoElement.prop('disabled', true).attr('title', 'No se puede generar manifiesto: saldo total en cero o insuficiente (mínimo Pla_Smi: ' + minTxt + ')');
                 btnNuevoElement.removeAttr('onclick');
             } else {
                 btnNuevoElement.prop('disabled', false).removeAttr('title');
@@ -2046,6 +2054,23 @@ function ordenarOpcionesEnRutaAlFinal(lista) {
     return arriba.concat(abajo);
 }
 
+/** Pinta de rojo las opciones cuyo texto contiene "<< En Ruta >>". */
+function aplicarEstiloOpcionesEnRuta($select) {
+    if (!$select || !$select.length) {
+        return;
+    }
+    $select.find('option').each(function () {
+        var t = String($(this).text() || '');
+        if (t.indexOf('En Ruta') >= 0) {
+            $(this).css({
+                'background-color': '#f8d7da',
+                'color': '#a00000',
+                'font-weight': '700'
+            });
+        }
+    });
+}
+
 // Función para recargar vehículos y choferes con estado de bloqueo actualizado
 // limpiarSeleccion: si es true, no restaura la selección ni datos derivados (uso: botón refrescar listas)
 function recargarVehiculosYChoferes(limpiarSeleccion) {
@@ -2074,6 +2099,7 @@ function recargarVehiculosYChoferes(limpiarSeleccion) {
                     }
                     $selectVehiculo.append(option);
                 });
+                aplicarEstiloOpcionesEnRuta($selectVehiculo);
             }
             
             // Restaurar valor seleccionado si aún existe
@@ -2107,6 +2133,7 @@ function recargarVehiculosYChoferes(limpiarSeleccion) {
                     }
                     $selectChofer.append(option);
                 });
+                aplicarEstiloOpcionesEnRuta($selectChofer);
             }
 
             // Restaurar valor seleccionado si aún existe
