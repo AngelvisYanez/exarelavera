@@ -627,7 +627,7 @@ function createGridPlantas() {
             { label: 'Cod.Desecho', name: 'Pla_Crd', width: 100, align: "center" },
             { label: 'Cod.Arcon', name: 'Pla_Car', width: 100, align: "center" },
             { label: 'Dirección', name: 'Pla_Dir', width: 150 },
-            {
+            /*{
                 label: 'Mín. anticipo',
                 name: 'Pla_Smi',
                 width: 88,
@@ -636,7 +636,7 @@ function createGridPlantas() {
                     var n = parseFloat(v);
                     return isNaN(n) ? '0.00' : n.toFixed(2);
                 }
-            },
+            },*/
             {
                 label: 'Estado',
                 name: 'Pla_Est',

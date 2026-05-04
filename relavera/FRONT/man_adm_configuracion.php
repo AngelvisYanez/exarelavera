@@ -266,6 +266,7 @@ if (isset($savePlantaAjax)) {
             $obBD_con1->operacionobBD('manifiesto_plantas.update', $datosPlanta, $obBD_conexion);
             $Pla_Cod_New = $Pla_Cod;
         } else {
+            $datosPlanta['Pla_Smi'] = $valorMinimo;
             $obBD_con1->operacionobBD('manifiesto_plantas.insert', $datosPlanta, $obBD_conexion);
             $Pla_Cod_New = $obBD_con1->insercionid($obBD_conexion);
             $resp['Pla_Cod_New'] = $Pla_Cod_New;
@@ -2142,13 +2143,13 @@ $obBD_con1->utf8_change_param($transportes);
                                 </select>
                             </div>
                         </div>
-                        <div class="form-group">
+                        <!--<div class="form-group">
                             <label class="col-xs-4 control-label label-xs" for="Pla_Smi">Saldo mín. anticipo (A&minus;B) manifiesto:</label>
                             <div class="col-xs-8">
                                 <input type="text" id="Pla_Smi" name="Pla_Smi" class="form-control input-xs" placeholder="0 = sin mínimo" maxlength="14" title="Valor mínimo del saldo total para permitir crear manifiestos en esta planta (Pla_Smi)" />
                                 <span class="help-block" style="font-size:11px;">Mismo criterio que en pestaña General; aquí solo esta planta.</span>
                             </div>
-                        </div>
+                        </div>-->
                     </form>
                 </div>
             </div>
@@ -3184,7 +3185,7 @@ $obBD_con1->utf8_change_param($transportes);
     </style>
 
 </body>
-<script type="text/javascript" src="../VALIDACIONES/man_adm_configuracion.js?x=47"></script>
+<script type="text/javascript" src="../VALIDACIONES/man_adm_configuracion.js?x=48"></script>
 
 </script>
 
