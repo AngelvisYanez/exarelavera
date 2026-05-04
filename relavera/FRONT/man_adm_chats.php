@@ -29,7 +29,7 @@ function relavera_ultramsg_api_texto_error_respuesta($json)
  */
 function relavera_ultramsg_api_get_chats()
 {
-    $cfg = __DIR__ . '/../LOGICA/relavera_ultramsg_config.php';
+    $cfg = __DIR__ . '/../LOGICA/log_ultramsg_config.php';
     if (is_file($cfg)) {
         require_once $cfg;
     }
@@ -41,7 +41,7 @@ function relavera_ultramsg_api_get_chats()
             'http_code' => 0,
             'body' => '',
             'json' => null,
-            'error' => 'Configure INSTANCE_ID y TOKEN en relavera/LOGICA/relavera_ultramsg_config.php',
+            'error' => 'Configure INSTANCE_ID y TOKEN en relavera/LOGICA/log_ultramsg_config.php',
         );
     }
     $params = array('token' => $token);
@@ -95,7 +95,7 @@ function relavera_ultramsg_api_get_chats()
  */
 function relavera_ultramsg_api_get_chat_messages($chatId = '', $limit = 50)
 {
-    $cfg = __DIR__ . '/../LOGICA/relavera_ultramsg_config.php';
+    $cfg = __DIR__ . '/../LOGICA/log_ultramsg_config.php';
     if (is_file($cfg)) {
         require_once $cfg;
     }
@@ -107,7 +107,7 @@ function relavera_ultramsg_api_get_chat_messages($chatId = '', $limit = 50)
             'http_code' => 0,
             'body' => '',
             'json' => null,
-            'error' => 'Configure INSTANCE_ID y TOKEN en relavera/LOGICA/relavera_ultramsg_config.php',
+            'error' => 'Configure INSTANCE_ID y TOKEN en relavera/LOGICA/log_ultramsg_config.php',
         );
     }
     $chatId = trim((string) $chatId);
@@ -179,7 +179,7 @@ function relavera_ultramsg_api_get_chat_messages($chatId = '', $limit = 50)
  */
 function relavera_ultramsg_api_get_messages($page = 1, $limit = 10, $status = '')
 {
-    $cfg = __DIR__ . '/../LOGICA/relavera_ultramsg_config.php';
+    $cfg = __DIR__ . '/../LOGICA/log_ultramsg_config.php';
     if (is_file($cfg)) {
         require_once $cfg;
     }
@@ -191,7 +191,7 @@ function relavera_ultramsg_api_get_messages($page = 1, $limit = 10, $status = ''
             'http_code' => 0,
             'body' => '',
             'json' => null,
-            'error' => 'Configure INSTANCE_ID y TOKEN en relavera/LOGICA/relavera_ultramsg_config.php',
+            'error' => 'Configure INSTANCE_ID y TOKEN en relavera/LOGICA/log_ultramsg_config.php',
         );
     }
 
@@ -293,7 +293,7 @@ function relavera_ultramsg_messages_total_desde_respuesta($json)
  */
 function relavera_ultramsg_api_get_messages_statistics()
 {
-    $cfg = __DIR__ . '/../LOGICA/relavera_ultramsg_config.php';
+    $cfg = __DIR__ . '/../LOGICA/log_ultramsg_config.php';
     if (is_file($cfg)) {
         require_once $cfg;
     }
@@ -305,7 +305,7 @@ function relavera_ultramsg_api_get_messages_statistics()
             'http_code' => 0,
             'body' => '',
             'json' => null,
-            'error' => 'Configure INSTANCE_ID y TOKEN en relavera/LOGICA/relavera_ultramsg_config.php',
+            'error' => 'Configure INSTANCE_ID y TOKEN en relavera/LOGICA/log_ultramsg_config.php',
         );
     }
     $url = 'https://api.ultramsg.com/' . rawurlencode($instance) . '/messages/statistics?' . http_build_query(array('token' => $token));
