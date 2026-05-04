@@ -97,6 +97,11 @@ function cargarUsuarios() {
         
         // Inicializar o refrescar Select2
         if ($.fn.select2) {
+            // Destruir instancia previa si existe para asegurar una carga limpia
+            if ($('#cmb_usuario').data('select2')) {
+                $('#cmb_usuario').select2('destroy');
+            }
+            
             $('#cmb_usuario').select2({
                 placeholder: "[Seleccione Usuario]",
                 allowClear: true,

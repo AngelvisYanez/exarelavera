@@ -368,7 +368,7 @@ require_once('../../administrador/LOGICA/seguridad.php');
 
     <!-- Scripts -->
     <script type="text/javascript" src="../VALIDACIONES/inventario_dispositivos.js?e=3"></script>
-    <script type="text/javascript" src="../VALIDACIONES/asignacion_dispositivos.js?e=3"></script>
+    <script type="text/javascript" src="../VALIDACIONES/asignacion_dispositivos.js?e=4"></script>
     
     <script>
         $(document).ready(function() {
@@ -379,9 +379,18 @@ require_once('../../administrador/LOGICA/seguridad.php');
                     $("#grid_dispositivos").setGridWidth($("#tabInventario").width());
                 } else if (target === "#tabAsignacion") {
                     $("#grid_asignados").setGridWidth($("#div_grid_asignados").width());
-                    // Refrescar Select2 al mostrar la pestaña
+                    // Re-inicializar Select2 con configuración completa para asegurar el buscador al mostrar la pestaña
                     if ($.fn.select2) {
-                        $('#cmb_usuario').select2();
+                        $('#cmb_usuario').select2({
+                            placeholder: "[Seleccione Usuario]",
+                            allowClear: true,
+                            minimumResultsForSearch: 0,
+                            width: '100%',
+                            language: {
+                                noResults: function() { return "No se encontraron resultados"; },
+                                searching: function() { return "Buscando..."; }
+                            }
+                        });
                     }
                 }
             });
