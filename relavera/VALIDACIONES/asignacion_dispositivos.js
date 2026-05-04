@@ -88,23 +88,30 @@ function cargarUsuarios() {
         let html = '<option value="">[Seleccione Usuario]</option>';
         if (data && data.length > 0) {
             $.each(data, function (i, v) {
-                html += '<option value="' + v.id + '">' + (v.nombre || v.Usu_Usr || 'Usuario ' + v.id) + '</option>';
+                html += '<option value="' + v.id + '">' + (v.nombre || 'Usuario ' + v.id) + '</option>';
             });
         }
-        $('#cmb_usuario').html(html);
         
-        // Inicializar Select2 con buscador
+        // Limpiar y cargar opciones
+        $('#cmb_usuario').html(html).val('').trigger('change');
+        
+        // Inicializar o refrescar Select2
         if ($.fn.select2) {
             $('#cmb_usuario').select2({
                 placeholder: "[Seleccione Usuario]",
                 allowClear: true,
+                minimumResultsForSearch: 0, // Siempre mostrar buscador
+                width: '100%',
+                dropdownParent: $('#tabAsignacion'), // Ayuda a que se visualice bien en pestañas
                 language: {
                     noResults: function() { return "No se encontraron resultados"; },
                     searching: function() { return "Buscando..."; }
                 }
             });
         }
-    }, 'json');
+    }, 'json').fail(function() {
+        console.error("Error al cargar usuarios");
+    });
 }
 
 function cargarDispositivosDisponibles(usuario_id) {

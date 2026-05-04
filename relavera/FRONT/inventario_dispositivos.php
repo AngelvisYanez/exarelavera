@@ -29,6 +29,12 @@ require_once('../../administrador/LOGICA/seguridad.php');
             border-top-left-radius: 5px;
             border-top-right-radius: 5px;
         }
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            border: 1px solid #aaa !important;
+        }
+        .select2-dropdown {
+            z-index: 9999 !important;
+        }
         .exa-body { 
             padding: 10px 20px; 
         }
@@ -361,8 +367,8 @@ require_once('../../administrador/LOGICA/seguridad.php');
     </div>
 
     <!-- Scripts -->
-    <script type="text/javascript" src="../VALIDACIONES/inventario_dispositivos.js?e=<?php echo time(); ?>"></script>
-    <script type="text/javascript" src="../VALIDACIONES/asignacion_dispositivos.js?e=<?php echo time(); ?>"></script>
+    <script type="text/javascript" src="../VALIDACIONES/inventario_dispositivos.js?e=3"></script>
+    <script type="text/javascript" src="../VALIDACIONES/asignacion_dispositivos.js?e=3"></script>
     
     <script>
         $(document).ready(function() {
