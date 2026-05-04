@@ -102,7 +102,6 @@ function cargarUsuarios() {
                 allowClear: true,
                 minimumResultsForSearch: 0, // Siempre mostrar buscador
                 width: '100%',
-                dropdownParent: $('#tabAsignacion'), // Ayuda a que se visualice bien en pestañas
                 language: {
                     noResults: function() { return "No se encontraron resultados"; },
                     searching: function() { return "Buscando..."; }

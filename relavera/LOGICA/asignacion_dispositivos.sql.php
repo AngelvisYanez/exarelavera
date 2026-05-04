@@ -27,11 +27,14 @@ function sentencias_asignacion_dispositivos($id, $Par_Sql) {
                     ORDER BY InvDis_Nom ASC";
             return $sql;
 
-        case 3: // Listado de usuarios activos
-            $sql = "SELECT u.Usu_Cod as id, CONCAT(IFNULL(p.Prs_Ape,''), ' ', IFNULL(p.Prs_Nom, '')) as nombre 
+        case 3: // Listado de usuarios activos con perfiles específicos
+            $sql = "SELECT DISTINCT u.Usu_Cod as id, CONCAT(IFNULL(p.Prs_Ape,''), ' ', IFNULL(p.Prs_Nom, '')) as nombre 
                     FROM usuarios u 
-                    LEFT JOIN persona p ON u.Prs_Cod = p.Prs_Cod
+                    INNER JOIN persona p ON u.Prs_Cod = p.Prs_Cod
+                    INNER JOIN usuarperfi up ON u.Usu_Cod = up.Usu_Cod
+                    INNER JOIN perfiles pf ON up.Per_Cod = pf.Per_Cod
                     WHERE u.Usu_Est = 'A' 
+                    AND pf.Per_Des IN ('Gerente', 'Tecnico', 'Contador', 'Auxiliar', 'Guardia', 'RRHH', 'Plantas', 'Admin_Oper', 'Contralor', 'Aux_contable')
                     ORDER BY p.Prs_Ape ASC";
             return $sql;
 

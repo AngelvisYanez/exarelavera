@@ -379,7 +379,21 @@ require_once('../../administrador/LOGICA/seguridad.php');
                     $("#grid_dispositivos").setGridWidth($("#tabInventario").width());
                 } else if (target === "#tabAsignacion") {
                     $("#grid_asignados").setGridWidth($("#div_grid_asignados").width());
+                    // Refrescar Select2 al mostrar la pestaña
+                    if ($.fn.select2) {
+                        $('#cmb_usuario').select2();
+                    }
                 }
+            });
+
+            // Fix para que el buscador de Select2 se enfoque automáticamente (especialmente útil en modales/tabs)
+            $(document).on('select2:open', function() {
+                setTimeout(function() {
+                    var searchField = document.querySelector('.select2-search__field');
+                    if (searchField) {
+                        searchField.focus();
+                    }
+                }, 10);
             });
         });
     </script>
