@@ -16,9 +16,9 @@ require_once('../../administrador/LOGICA/seguridad.php');
     <!-- Carga de estilos y scripts de jqGrid del sistema -->
     <?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
     
-    <!-- Librería Select2 para buscadores en combos -->
-    <link rel="stylesheet" type="text/css" href="../../framework/plugins/select2/select2.min.css" />
-    <script type="text/javascript" src="../../framework/plugins/select2/select2.min.js"></script>
+    <!-- Librería Select2 (Carga desde CDN para evitar errores 404 locales) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     
     <style>
         .exa-header { 
@@ -103,6 +103,13 @@ require_once('../../administrador/LOGICA/seguridad.php');
         }
         .select2-container--default .select2-selection--single .select2-selection__arrow {
             height: 28px !important;
+        }
+        /* Quitar fondo amarillo de autocompletado en Chrome */
+        select:-webkit-autofill,
+        select:-webkit-autofill:hover, 
+        select:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+            transition: background-color 5000s ease-in-out 0s;
         }
     </style>
 </head>
@@ -379,30 +386,28 @@ require_once('../../administrador/LOGICA/seguridad.php');
                     $("#grid_dispositivos").setGridWidth($("#tabInventario").width());
                 } else if (target === "#tabAsignacion") {
                     $("#grid_asignados").setGridWidth($("#div_grid_asignados").width());
-                    // Re-inicializar Select2 con configuración completa para asegurar el buscador al mostrar la pestaña
-                    if ($.fn.select2) {
-                        $('#cmb_usuario').select2({
-                            placeholder: "[Seleccione Usuario]",
-                            allowClear: true,
-                            minimumResultsForSearch: 0,
-                            width: '100%',
-                            language: {
-                                noResults: function() { return "No se encontraron resultados"; },
-                                searching: function() { return "Buscando..."; }
-                            }
-                        });
-                    }
+                    // Re-inicializar Select2 con un pequeño delay para asegurar visibilidad en pestañas
+                    setTimeout(function() {
+                        if ($.fn.select2) {
+                            $('#cmb_usuario').select2({
+                                placeholder: "[Seleccione Usuario]",
+                                allowClear: true,
+                                minimumResultsForSearch: 0,
+                                width: '100%'
+                            });
+                        }
+                    }, 100);
                 }
             });
 
-            // Fix para que el buscador de Select2 se enfoque automáticamente (especialmente útil en modales/tabs)
+            // Fix para que el buscador de Select2 se enfoque automáticamente
             $(document).on('select2:open', function() {
                 setTimeout(function() {
                     var searchField = document.querySelector('.select2-search__field');
                     if (searchField) {
                         searchField.focus();
                     }
-                }, 10);
+                }, 50);
             });
         });
     </script>
