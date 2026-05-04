@@ -18,7 +18,9 @@ $(function () {
                 action:'editarClientePlanta', data:['Usu_Cod','Usuario','Usu_Ced'], icon:'pencil', type:'warning', title:'Editar Cliente/Planta',
                 conditional:function(o){
                     // Aparece para todos los registros si estamos en la pestaña de Plantas
-                    return $('#tabType').val() === 'plantas';
+                    // return $('#tabType').val() === 'plantas';
+                    // El botón aparece en ambas pestañas pero SOLO para usuarios activos
+                    return o.Usu_Est === 'A';
                 },
                 caseFalse:function(){ return ''; }
             } },
@@ -134,19 +136,37 @@ function editarClientePlanta(usu) {
     // Manejo dinámico de Tabs basado en perfiles del usuario
     // Obtenemos el HTML directamente de la celda del grid para mayor seguridad
     var $gridCell = container.find('tr#' + rowId + ' td[aria-describedby$="_Perfiles"]');
-    var totalPerfiles = $gridCell.find('span, label, div[class*="label"]').length;
-    var textoPrimerPerfil = $gridCell.find('span, label, div[class*="label"]').first().text().trim();
-    
-    var soloPlantas = (totalPerfiles === 1 && textoPrimerPerfil === 'Plantas');
+    // var totalPerfiles = $gridCell.find('span, label, div[class*="label"]').length;
 
-    if (soloPlantas) {
-        // Solo tiene perfil Plantas: ocultamos tab de planta y activamos el de contraseña
-        $('#modalEpTabs a[href="#epTabPlanta"]').parent().hide();
-        $('#modalEpTabs a[href="#epTabPass"]').tab('show');
-    } else {
-        // Tiene más perfiles: mostramos ambos tabs y activamos el de Planta por defecto
+    var perfilesArray = [];
+    $gridCell.find('span, label, div[class*="label"]').each(function(){
+        perfilesArray.push($(this).text().trim());
+    });
+
+    // var textoPrimerPerfil = $gridCell.find('span, label, div[class*="label"]').first().text().trim();
+    
+    // var soloPlantas = (totalPerfiles === 1 && textoPrimerPerfil === 'Plantas');
+
+    // if (soloPlantas) {
+    //     // Solo tiene perfil Plantas: ocultamos tab de planta y activamos el de contraseña
+    //     $('#modalEpTabs a[href="#epTabPlanta"]').parent().hide();
+    //     $('#modalEpTabs a[href="#epTabPass"]').tab('show');
+    // } else {
+    //     // Tiene más perfiles: mostramos ambos tabs y activamos el de Planta por defecto
+    //     $('#modalEpTabs a[href="#epTabPlanta"]').parent().show();
+    //     $('#modalEpTabs a[href="#epTabPlanta"]').tab('show');
+    var tienePlantas = perfilesArray.indexOf('Plantas') !== -1;
+    var tieneMas = perfilesArray.length > 1;
+
+    // REGLA: Mostrar Cambiar Planta solo si tiene el perfil "Plantas" Y tiene otros perfiles adicionales (como Pruebas)
+    if (tienePlantas && tieneMas) {
+        // Tiene perfil Plantas y otros: mostramos ambos tabs
         $('#modalEpTabs a[href="#epTabPlanta"]').parent().show();
         $('#modalEpTabs a[href="#epTabPlanta"]').tab('show');
+    } else {
+        // Solo tiene Plantas, o es Administrativo puro: ocultamos tab de planta y activamos el de contraseña
+        $('#modalEpTabs a[href="#epTabPlanta"]').parent().hide();
+        $('#modalEpTabs a[href="#epTabPass"]').tab('show');
     }
 
     $('#epNewPass, #epConfPass').val('');

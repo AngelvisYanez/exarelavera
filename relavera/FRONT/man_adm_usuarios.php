@@ -355,7 +355,7 @@ if(isset($updateUsuVis)){
         </div>
 
         <script src="../../Librerias/validaciones/validacion.js"></script>
-        <script src="../VALIDACIONES/man_adm_usuario.js?x=10"></script>
+        <script src="../VALIDACIONES/man_adm_usuario.js?x=11"></script>
         <script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>
         <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=1"></script>
         <script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>
