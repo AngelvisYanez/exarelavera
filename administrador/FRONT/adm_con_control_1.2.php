@@ -1,4 +1,4 @@
-<?Php
+<?php
 /**
 * Descripci�n: Permite generar la sesion correspondiente para el usuario con bases de datos distribuidas
 * Fecha de actualizaci�n:	2010-08-30
@@ -47,6 +47,19 @@ if (!empty($row_data)) {
 */
 if ($total_rs_control !=0)
 {
+    /**
+     * Validar acceso por dispositivo
+     */
+    $res_dispositivo = $obBD_con1->validarDispositivo($row_rs_control['Usu_Cod'], $obBD_conexion);
+    if (!$res_dispositivo['success']) {
+        if (isset($_POST['ajax_check'])) {
+            echo json_encode(array('success' => false, 'message' => $res_dispositivo['message'], 'error_type' => 'device'));
+            exit();
+        }
+        header("Location: ../../index.php?errordispositivo=si");
+        exit();
+    }
+
 	/**
 	* Control para la informacion del systema
 	*/
@@ -148,20 +161,24 @@ if ($total_rs_control !=0)
 	$Browser =  detectar_acceso();
 
 	/**
-	* Verificaci�n para saber si el usuario cambio de clave
+	* Verificacion para saber si el usuario cambio de clave
 	*/
         //echo trim($password)."==".trim($_SESSION['Ses_Usu_Ced']);
-	// if (trim($password)==trim($_SESSION['Ses_Usu_Ced']))
 	if (trim($password)==trim($_SESSION['Ses_Usu_Ced']) || trim($password) == '123456')
 	{
 		$_SESSION['Ses_Sys_Sit']="outside"; //Indica si esta dentro o fuera del sitio
-		header ("Location: adm_pas_usuarios_1.0.php");
-		if (isset($_POST['ajax_check'])) {
+        if (isset($_POST['ajax_check'])) {
             echo json_encode(array('success' => true, 'insecure' => true));
             exit();
         }
+		header ("Location: ../../index.php");
 		exit();
 	}
+
+    if (isset($_POST['ajax_check'])) {
+        echo json_encode(array('success' => true, 'insecure' => false));
+        exit();
+    }
 
 	if($Browser=="WML")
 	{
@@ -199,6 +216,10 @@ else
 		header("Location: ../../movil/FRONT/index_m.php?errorusuario=si");
 	}
 	else{
+        if (isset($_POST['ajax_check'])) {
+            echo json_encode(array('success' => false));
+            exit();
+        }
 		header("Location: ../../index.php?errorusuario=si");
 	}
         exit();

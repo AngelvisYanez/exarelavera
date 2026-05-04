@@ -1,10 +1,10 @@
-<?Php
+<?php
 /**
  * Logica del control del acceso del sistema para bases de datos distribuidas
  *
  * @author Lewis Chimarro
  * @version 1.0
- * Fecha de actualizaci�n:	2013-JUN-20
+ * Fecha de actualización:	2013-JUN-20
  *
  * @package administrador.LOGICA
  */ 
@@ -150,6 +150,94 @@ class Class_Log_Datos_Cnt extends MysqlDatos{
 		}else{
 			return $this->Error;
 		}
+	}
+
+	/**
+	 * Obtiene o genera un device_id único para el navegador
+	 * @return string
+	 */
+	function getOrCreateDeviceId() {
+		if (isset($_COOKIE['device_id']) && !empty($_COOKIE['device_id'])) {
+			return $_COOKIE['device_id'];
+		}
+		
+		$userAgent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'unknown';
+		$time = time();
+		$rand = mt_rand(1000, 9999);
+		$deviceId = md5($userAgent . $time . $rand);
+		
+		// Cookie por 10 años
+		setcookie('device_id', $deviceId, time() + (86400 * 365 * 10), "/");
+		$_COOKIE['device_id'] = $deviceId; // Asegurar disponibilidad inmediata
+		
+		return $deviceId;
+	}
+
+	/**
+	 * Valida si el dispositivo está autorizado para el usuario
+	 * @param int $usuario_id
+	 * @param object $obBD_conexion
+	 * @return array array('success' => bool, 'message' => string)
+	 */
+	function validarDispositivo($usuario_id, $obBD_conexion) {
+		$deviceId = $this->getOrCreateDeviceId();
+		
+		// 1. Verificar si el usuario tiene restricción (equipos asignados en usuario_inventario)
+		$check_asig = $this->getRowConsulta(100, $usuario_id, $obBD_conexion);
+		$total_allowed = $check_asig ? (int)$check_asig['total'] : 0;
+		
+		if ($total_allowed == 0) {
+			return array('success' => true, 'message' => 'Acceso libre (sin equipos asignados)');
+		}
+		
+		// 2. Verificar si el navegador actual ya está vinculado
+		$device = $this->getRowConsulta(101, $deviceId . '*' . $usuario_id, $obBD_conexion);
+		
+		if ($device) {
+			// Si ya existe, solo actualizamos fecha de último acceso
+			$this->operacionobBD(104, $deviceId . '*' . $usuario_id, $obBD_conexion);
+			return array('success' => true, 'message' => 'Dispositivo autorizado');
+		}
+		
+		// 3. Si el navegador es NUEVO, intentar vincularlo a un cupo libre del panel
+		// Detectamos el tipo de dispositivo actual
+		$ua_user = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'unknown';
+		$is_mobile = preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i', $ua_user);
+		$current_type = $is_mobile ? 'MOVIL' : 'PC';
+		
+		// Buscamos una MAC asignada que coincida con el tipo de equipo (PC o MOVIL)
+		$free_slot = $this->getRowConsulta(105, $usuario_id . '*' . $current_type, $obBD_conexion);
+		
+		if ($free_slot && isset($free_slot['InvDis_Cod'])) {
+			// Capturamos metadatos del sistema
+			$inv_cod = $free_slot['InvDis_Cod'];
+			$inv_nom = $free_slot['InvDis_Nom'];
+			
+			// Lógica para obtener IP en formato IPv4
+			$ip_user = '0.0.0.0';
+			if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+				$ip_user = $_SERVER['HTTP_CLIENT_IP'];
+			} elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+				$ip_user = $_SERVER['HTTP_X_FORWARDED_FOR'];
+			} else {
+				$ip_user = $_SERVER['REMOTE_ADDR'];
+			}
+			
+			if ($ip_user == '::1') $ip_user = '127.0.0.1';
+			
+			// ¡Hay un cupo libre! Vinculamos este navegador a ese equipo físico
+			$params = $usuario_id . '*' . $deviceId . '*' . $inv_cod . '*' . $inv_nom . '*' . $ip_user . '*' . $ua_user;
+			$this->operacionobBD(106, $params, $obBD_conexion);
+			
+			return array('success' => true, 'message' => 'Nuevo navegador vinculado exitosamente al equipo (' . $current_type . '): ' . $inv_nom);
+		}
+		
+		// 4. Si no hay cupos libres del TIPO correcto, BLOQUEAR
+		$error_msg = ($current_type == 'MOVIL') 
+			? 'Acceso denegado: Este usuario no tiene permitido el acceso desde dispositivos MÓVILES.' 
+			: 'Acceso denegado: Este usuario no tiene permitido el acceso desde computadoras (PC).';
+			
+		return array('success' => false, 'message' => $error_msg . ' Contacte al administrador para asignar el equipo correcto.');
 	}
 	
 }
