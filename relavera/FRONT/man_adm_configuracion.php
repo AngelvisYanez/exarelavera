@@ -2217,16 +2217,16 @@ $obBD_con1->utf8_change_param($transportes);
                             </select>
                         </div>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" hidden>
                         <label class="col-sm-4 control-label label-sm" for="Prs_Tel">Tel&eacute;fono 1:</label>
                         <div class="col-sm-4">
                             <input id="Prs_Tel" name="Prs_Tel" class="form-control input-xs" placeholder="" type="text" onkeypress="return validar_numeric(event);" />
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-xs-4 control-label label-xs" for="Pep_Tel">Tel&eacute;fono 2:</label>
+                        <label class="col-xs-4 control-label label-xs" for="Pep_Tel">Tel&eacute;fono :</label>
                         <div class="col-xs-8">
-                            <input type="text" id="Pep_Tel" name="Pep_Tel" class="form-control input-xs" placeholder="Teléfono del administrador" maxlength="20">
+                            <input type="text" id="Pep_Tel" name="Pep_Tel" class="form-control input-xs" placeholder="Teléfono del administrador" maxlength="10">
                         </div>
                     </div>
                     <div class="form-group">
@@ -2314,16 +2314,16 @@ $obBD_con1->utf8_change_param($transportes);
                             </select>
                         </div>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" hidden>
                         <label class="col-sm-4 control-label label-sm" for="Trb_Prs_Tel">Tel&eacute;fono 1:</label>
                         <div class="col-sm-4">
                             <input id="Trb_Prs_Tel" name="Trb_Prs_Tel" class="form-control input-xs" placeholder="" type="text" onkeypress="return validar_numeric(event);" />
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-xs-4 control-label label-xs">Teléfono 2:</label>
+                        <label class="col-xs-4 control-label label-xs">Teléfono :</label>
                         <div class="col-xs-8">
-                            <input type="text" id="Trb_Pep_Tel" name="Trb_Pep_Tel" class="form-control input-xs" placeholder="Teléfono del administrador" maxlength="20">
+                            <input type="text" id="Trb_Pep_Tel" name="Trb_Pep_Tel" class="form-control input-xs" placeholder="Teléfono del administrador" maxlength="10">
                         </div>
                     </div>
                     <div class="form-group">
@@ -2411,16 +2411,16 @@ $obBD_con1->utf8_change_param($transportes);
                             </select>
                         </div>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" hidden>
                         <label class="col-sm-4 control-label label-sm" for="Amb_Prs_Tel">Tel&eacute;fono 1:</label>
                         <div class="col-sm-4">
                             <input id="Amb_Prs_Tel" name="Amb_Prs_Tel" class="form-control input-xs" placeholder="" type="text" onkeypress="return validar_numeric(event);" />
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-xs-4 control-label label-xs">Teléfono 2:</label>
+                        <label class="col-xs-4 control-label label-xs">Teléfono :</label>
                         <div class="col-xs-8">
-                            <input type="text" id="Amb_Pep_Tel" name="Amb_Pep_Tel" class="form-control input-xs" placeholder="Teléfono del administrador" maxlength="20">
+                            <input type="text" id="Amb_Pep_Tel" name="Amb_Pep_Tel" class="form-control input-xs" placeholder="Teléfono del administrador" maxlength="10">
                         </div>
                     </div>
                     <div class="form-group">
