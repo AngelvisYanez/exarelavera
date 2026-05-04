@@ -1,4 +1,5 @@
 <?php
+session_start();
 /**
  * @abstract Permite realizar la activacion/baja de usuarios
  * @author Cesar Bermeo
@@ -14,7 +15,17 @@ require_once('../../Librerias/procedimientos/almacenados_standar.php');
 /* Creacion del objeto mysql para las consultas */
 $obBD_con1 = new Class_Log_Datos_Usuarios;
 /* Creacion del Objeto de conexion */
-$obBD_con1->setConnection(new Class_Log_Conexion_Global($Ses_Dat_Dis));
+$obBD_con1->setConnection(new Class_Log_Conexion_Global($_SESSION['Ses_Dat_Dis']));
+
+$isAdminProfile = false;
+if (isset($_SESSION['Ses_Per_Des']) && is_array($_SESSION['Ses_Per_Des'])) {
+    foreach ($_SESSION['Ses_Per_Des'] as $p) {
+        if ($p === 'Administrador de Sistemas' || $p === 'Admin_Oper') {
+            $isAdminProfile = true;
+            break;
+        }
+    }
+}
 
 //Listo usuarios
 if(isset($usrAjax)){
@@ -23,9 +34,6 @@ if(isset($usrAjax)){
     $setWhere = array('distinct','setEmpCod','setSucCod','notIsInterno','setPerfiles');
     if(isset($tabType) && $tabType === 'plantas'){
         $setWhere[] = 'setOnlyPlantas';
-        $setWhere[] = 'joinPlanta';
-        $setWhere[] = 'notHasAdminProfile';
-        // $data['group'] = 'usuarios.Usu_Cod';
     } else {
         $setWhere[] = 'notIsSpecialProfiles';
         $setWhere[] = 'notHasPlantasProfile';
@@ -37,12 +45,17 @@ if(isset($usrAjax)){
     }
 
     $data = array_merge($_GET, array('order' => $order, 'setWhere' => $setWhere));
-    if(isset($tabType) && $tabType === 'plantas'){
-        $data['group'] = 'usuarios.Usu_Cod';
-    }
     $responce = $obBD_con1->getPageGrid('usuarios.selectWhere', $data);
     foreach($responce['rows'] as $k=>&$v){
         $v['Perfiles']=$obBD_con1->getArrayConsulta("usuarperfi.selectWhere", array('clean'=>true,'Usu_Cod'=>$v['Usu_Cod'], 'Per_Est'=>'A', 'join'=>array('perfiles'=>array('on'=>'perfiles.Per_Cod=usuarperfi.Per_Cod','cols'=>'Per_Des'))));
+        
+        // Cargar Plantas si estamos en la pestaña de plantas
+        if(isset($tabType) && $tabType === 'plantas'){
+            $plantasArr = $obBD_con1->getArrayConsulta("manifiesto_usuario.selectWhere", array('clean'=>true, 'Usu_Cod'=>$v['Usu_Cod'], 'join'=>array('manifiesto_plantas'=>array('on'=>'manifiesto_plantas.Pla_Cod=manifiesto_usuario.Pla_Cod','cols'=>'Pla_Nom'))));
+            $p_nombres = array();
+            foreach($plantasArr as $pa) if(!empty($pa['Pla_Nom'])) $p_nombres[] = $pa['Pla_Nom'];
+            $v['Planta'] = implode(", ", $p_nombres);
+        }
     } unset($v);
     $obBD_con1->echoJson($responce);
 }
@@ -52,6 +65,16 @@ if(isset($updateUsuario)){
     $obBD_con1->inicioTransaccion();
     try{
         $obBD_con1->operacionobBD('usuarios.update',array('Usu_Est'=>$Usu_Est,'where'=>array('Usu_Cod'=>$Usu_Cod)));
+    }catch(Exception $e){ $obBD_con1->rollBackNomsn($e->getMessage(),$resp);  }
+    $obBD_con1->finTransaccionNoMsn($resp);   
+    $obBD_con1->echoJson($resp);
+}
+
+// Cambiar contraseña
+if(isset($changePassAjax)){
+    $obBD_con1->inicioTransaccion();
+    try{
+        $obBD_con1->operacionobBD('usuarios.update', array('Usu_Pal'=>$Usu_Pal, 'where'=>array('Usu_Cod'=>$Usu_Cod)));
     }catch(Exception $e){ $obBD_con1->rollBackNomsn($e->getMessage(),$resp);  }
     $obBD_con1->finTransaccionNoMsn($resp);   
     $obBD_con1->echoJson($resp);
@@ -77,6 +100,9 @@ if(isset($updateUsuVis)){
         <link rel="stylesheet" href="../../framework/jquery/bootstrap/popover/jquery.flyout.css">
         <?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
         <script src="../../framework/jquery/bootstrap/popover/jquery.flyout.js"></script>
+        <script type="text/javascript">
+            const IS_ADMIN_PROFILE = <?php echo $isAdminProfile ? 'true' : 'false'; ?>;
+        </script>
         <style>
             .nav-tabs {
                 border-bottom: 1px solid #337ab7;
@@ -107,6 +133,53 @@ if(isset($updateUsuVis)){
                 border-bottom-color: transparent !important;
                 color: #e67e22 !important; /* Color naranja del estilo */
                 cursor: default;
+            }
+            /* Ajustes para el modal de tabs */
+            #editPlantaDialog .nav-tabs {
+                margin-bottom: 10px;
+                font-size: 12px;
+            }
+            #editPlantaDialog .nav-tabs > li > a {
+                padding: 4px 12px;
+            }
+            #editPlantaDialog .tab-pane {
+                padding-top: 5px;
+            }
+            #editPlantaDialog .tab-content {
+                padding: 15px 45px 0;
+            }
+            #editPlantaDialog .control-label {
+                padding-top: 0;
+                text-align: right;
+                font-weight: bold;
+                font-size: 11px;
+                color: #333;
+                margin-bottom: 0;
+            }
+            #editPlantaDialog .form-group {
+                margin-bottom: 12px;
+                display: flex;
+                align-items: center;
+            }
+            #editPlantaDialog .input-sm, 
+            #editPlantaDialog .form-control {
+                height: 26px;
+                padding: 2px 10px;
+                font-size: 11px;
+                margin-bottom: 0;
+            }
+            #editPlantaDialog .btn-sm {
+                padding: 4px 10px;
+                height: 26px;
+                line-height: 1.2;
+            }
+            #editPlantaDialog .exa-fieldset {
+                padding-bottom: 15px;
+            }
+            #editPlantaDialog .required-star {
+                color: #0C3;
+                font-weight: bold;
+                margin-right: 3px;
             }
         </style>
     </HEAD>
@@ -159,47 +232,93 @@ if(isset($updateUsuVis)){
                 </div>
             </div>
         </div>
-        <!-- MINI DIALOG: Editar Cliente/Planta -->
+        <!-- MINI DIALOG: Editar Cliente/Planta / Password -->
         <div id="editPlantaDialog" style="display:none;">
             <input type="hidden" id="epUsu_Cod" />
             <input type="hidden" id="epCli_Cod" />
-            <fieldset class="exa-fieldset" style="margin:8px 0 0;">
-                <legend class="Titulos2">Datos Empresa/Cliente</legend>
-                <div class="form-group">
-                    <label class="col-sm-3 control-label label-sm">C.I/Ruc:</label>
-                    <div class="col-sm-9">
-                        <input id="epPrs_Ced" type="text" class="form-control input-sm" style="width:180px;" readonly placeholder="C.I/RUC del Cliente..." />
+            
+            <div class="form-horizontal">
+                <ul class="nav nav-tabs" id="modalEpTabs" style="margin-top: 5px;">
+                    <li class="active"><a href="#epTabPlanta" data-toggle="tab">Cambiar Planta</a></li>
+                    <li><a href="#epTabPass" data-toggle="tab">Cambiar Contrase&ntilde;a</a></li>
+                </ul>
+
+                <div class="tab-content">
+                    <!-- TAB: CAMBIAR PLANTA -->
+                    <div class="tab-pane active" id="epTabPlanta">
+                        <fieldset class="exa-fieldset">
+                            <legend class="Titulos2">Datos Empresa/Cliente</legend>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label label-sm" style="margin-left: -20px;">Cliente:</label>
+                                <div class="col-sm-8">
+                                    <div style="display: flex; align-items: stretch; width: 100%;">
+                                        <input id="epPrs_Ced" type="text" class="form-control input-sm" style="width: 120px; text-align: center; font-weight: bold; background: #b8cde6; background: linear-gradient(to bottom, #f0f5f9 0%,#b8cde6 100%); color: #337ab7; border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: 0;" readonly placeholder="---" />
+                                        <input id="epCliNom" class="form-control input-sm" style="flex: 1; background: #f9f9f9; border-radius: 0; border-right: 0;" readonly placeholder="Nombre del Cliente..." />
+                                        <div style="display: flex;">
+                                            <button type="button" id="epBtnBusCli" class="btn btn-success btn-sm" style="border-radius: 0; margin: 0; height: 26px;" title="Buscar Cliente">
+                                                <span class="glyphicon glyphicon-transfer"></span>
+                                            </button>
+                                            <button type="button" id="epBtnLimpiar" class="btn btn-danger btn-sm" style="border-top-left-radius: 0; border-bottom-left-radius: 0; margin: 0; height: 26px;" title="Limpiar">
+                                                <span class="glyphicon glyphicon-trash"></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label label-sm" style="margin-left: -20px;">C&oacute;digo de Planta:</label>
+                                <div class="col-sm-8">
+                                    <select id="epPla_Cod" class="form-control input-sm">
+                                        <option value="">-- Seleccione --</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+
+                    <!-- TAB: CAMBIAR CONTRASEÑA -->
+                    <div class="tab-pane" id="epTabPass">
+                        <fieldset class="exa-fieldset">
+                            <legend class="Titulos2">Seguridad de Usuario</legend>
+                            
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label label-sm">Usuario:</label>
+                                <div class="col-sm-9">
+                                    <div style="display: flex; align-items: stretch; width: 100%;">
+                                        <input id="epUserCed" class="form-control input-sm" style="width: 110px; text-align: center; font-weight: bold; background: #b8cde6; background: linear-gradient(to bottom, #f0f5f9 0%,#b8cde6 100%); color: #337ab7; border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: 0;" readonly placeholder="---" />
+                                        <input id="epUserNom" class="form-control input-sm" style="flex: 1; background: #f9f9f9; border-top-left-radius: 0; border-bottom-left-radius: 0;" readonly placeholder="Nombre del Usuario..." />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr style="margin: 12px 0; border-color: #ddd;" />
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label label-sm"><span class="required-star">*</span> Nueva clave:</label>
+                                <div class="col-sm-8">
+                                    <input id="epNewPass" type="password" class="form-control input-sm" placeholder="Nueva contrase&ntilde;a..." maxlength="20" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label label-sm"><span class="required-star">*</span> Confirmar:</label>
+                                <div class="col-sm-8">
+                                    <input id="epConfPass" type="password" class="form-control input-sm" placeholder="Repita contrase&ntilde;a..." maxlength="20" />
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 5px;">
+                                <div class="col-sm-offset-4 col-sm-8">
+                                    <span class="text-muted" style="font-size: 11px;">
+                                        <i class="glyphicon glyphicon-info-sign"></i> Solo letras y n&uacute;meros.
+                                    </span>
+                                </div>
+                            </div>
+                        </fieldset>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label class="col-sm-3 control-label label-sm">Cliente:</label>
-                    <div class="col-sm-9">
-                        <div class="input-group input-group-sm" style="width:310px;">
-                            <input id="epCliNom" class="form-control input-sm" readonly placeholder="Nombre del Cliente..." />
-                            <span class="input-group-btn">
-                                <button type="button" id="epBtnBusCli" class="btn btn-success btn-sm" title="Buscar Cliente">
-                                    <span class="glyphicon glyphicon-transfer"></span>
-                                </button>
-                            </span>
-                            <span class="input-group-btn">
-                                <button type="button" id="epBtnLimpiar" class="btn btn-danger btn-sm" title="Limpiar">
-                                    <span class="glyphicon glyphicon-trash"></span>
-                                </button>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-sm-3 control-label label-sm">C&oacute;digo de Planta:</label>
-                    <div class="col-sm-9">
-                        <select id="epPla_Cod" class="form-control input-sm" style="width:250px;">
-                            <option value="">-- Seleccione --</option>
-                        </select>
-                    </div>
-                </div>
-            </fieldset>
-            <div style="text-align:center; margin-top:14px;">
-                <button type="button" id="epBtnGuardar" class="btn btn-sm btn-primary">
+            </div>
+
+            <div style="text-align:center; padding: 15px 0 5px;">
+                <button type="button" id="epBtnGuardar" class="btn btn-sm btn-primary" style="padding: 6px 10px; height: 30px;">
                     <i class="glyphicon glyphicon-floppy-disk"></i> Guardar
                 </button>
             </div>
@@ -235,7 +354,8 @@ if(isset($updateUsuVis)){
             </div>
         </div>
 
-        <script src="../VALIDACIONES/man_adm_usuario.js?x=5"></script>
+        <script src="../../Librerias/validaciones/validacion.js"></script>
+        <script src="../VALIDACIONES/man_adm_usuario.js?x=10"></script>
         <script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>
         <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=1"></script>
         <script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>

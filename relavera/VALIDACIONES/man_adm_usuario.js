@@ -15,14 +15,10 @@ $(function () {
             { label:'Perfiles', name: 'Perfiles', width: 12, formatter:'tags', formatoptions:{label:'Per_Des',type:'purple'} },
             { label:'Estado', name: 'Usu_Est', align: "center", width: 3, formatter:'estado', formatoptions:{full:true} },
             { label:$.createIcon('pencil'), name:'editPlanta', width:2, formatter:'gridButton', formatoptions:{
-                action:'editarClientePlanta', data:['Usu_Cod','Usuario'], icon:'pencil', type:'warning', title:'Editar Cliente/Planta',
+                action:'editarClientePlanta', data:['Usu_Cod','Usuario','Usu_Ced'], icon:'pencil', type:'warning', title:'Editar Cliente/Planta',
                 conditional:function(o){
-                    var enPlantas = $('#tabType').val() === 'plantas';
-                    if (!enPlantas) return false;
-                    var perfiles = o.Perfiles || [];
-                    var tieneplantas = $.grep(perfiles, function(p){ return p.Per_Des === 'Plantas'; }).length > 0;
-                    var tieneprueba  = $.grep(perfiles, function(p){ return p.Per_Des === 'Prueba';  }).length > 0;
-                    return tieneplantas && tieneprueba;
+                    // Aparece para todos los registros si estamos en la pestaña de Plantas
+                    return $('#tabType').val() === 'plantas';
                 },
                 caseFalse:function(){ return ''; }
             } },
@@ -94,7 +90,9 @@ function changeUsuario(usu){
     usu['updateUsuario']=true;
     //console.log(usu);
     $.createDialogConfirm(`¿Est&aacute; seguro que desea `+(usu['Usu_Est']==='A'?'<strong class="green">ACTIVAR</strong> a <u class="red">':'<strong class="red">DESACTIVAR</strong> a <u class="green">')+`${usu['Usuario']}</u>  ?`,usu,function(){
+        $('#loader').fadeIn();
         $.saveDataJson("", usu, function(r){                 
+            $('#loader').fadeOut();
             container.changeRowData(usu.Usu_Cod,usu);
             return false;
         });
@@ -103,28 +101,57 @@ function changeUsuario(usu){
 
 function updateUsuVis(usuCod, isChecked) {
     var val = isChecked ? 'S' : 'N';
+    $('#loader').fadeIn();
     $.saveDataJson("", { updateUsuVis: true, Usu_Cod: usuCod, Usu_Vis: val }, function(r) {
+        $('#loader').fadeOut();
         if (r.success) {
-            // Recargar el grid después de que el usuario cierre el mensaje de éxito
-            $.alert(r.message, function(){
-                container.trigger("reloadGrid");
-            }, 'ok');
-            return false; // Evitar que $.saveDataJson muestre su propio alert
-        }
-    });
-}
+                // Recargar el grid después de que el usuario cierre el mensaje de éxito
+                $.alert(r.message, function(){
+                    container.trigger("reloadGrid");
+                }, 'ok');
+                return false; // Evitar que $.saveDataJson muestre su propio alert
+            }
+        });
+    }
 
-/* =========================================================
- *  EDITAR CLIENTE / PLANTA  (solo para perfil Plantas+Prueba)
- * ========================================================= */
+    /* =========================================================
+    *  EDITAR CLIENTE / PLANTA  (solo para perfil Plantas+Prueba)
+    * ========================================================= */
 function editarClientePlanta(usu) {
-    $('#epUsu_Cod').val(usu.Usu_Cod);
+    var realCod = usu.Usu_Cod;
+    var rowId = realCod;
+    
+    $('#epUsu_Cod').val(realCod);
     $('#epPrs_Ced').val('');
     $('#epCliNom').val('');
     $('#epCli_Cod').val('');
     $('#epPla_Cod').html('<option value="">-- Seleccione --</option>');
+    
+    // Cargar datos del Usuario en los campos informativos
+    $('#epUserCed').val(usu.Usu_Ced || '');
+    $('#epUserNom').val(usu.Usuario || '');
 
-    $.getJSON(EP_URL, { getClienteByUser: true, Usu_Cod: usu.Usu_Cod }, function(r) {
+    // Manejo dinámico de Tabs basado en perfiles del usuario
+    // Obtenemos el HTML directamente de la celda del grid para mayor seguridad
+    var $gridCell = container.find('tr#' + rowId + ' td[aria-describedby$="_Perfiles"]');
+    var totalPerfiles = $gridCell.find('span, label, div[class*="label"]').length;
+    var textoPrimerPerfil = $gridCell.find('span, label, div[class*="label"]').first().text().trim();
+    
+    var soloPlantas = (totalPerfiles === 1 && textoPrimerPerfil === 'Plantas');
+
+    if (soloPlantas) {
+        // Solo tiene perfil Plantas: ocultamos tab de planta y activamos el de contraseña
+        $('#modalEpTabs a[href="#epTabPlanta"]').parent().hide();
+        $('#modalEpTabs a[href="#epTabPass"]').tab('show');
+    } else {
+        // Tiene más perfiles: mostramos ambos tabs y activamos el de Planta por defecto
+        $('#modalEpTabs a[href="#epTabPlanta"]').parent().show();
+        $('#modalEpTabs a[href="#epTabPlanta"]').tab('show');
+    }
+
+    $('#epNewPass, #epConfPass').val('');
+
+    $.getJSON(EP_URL, { getClienteByUser: true, Usu_Cod: realCod }, function(r) {
         if (r.success && r.cliente && r.cliente.Cli_Cod) {
             var c = r.cliente;
             $('#epPrs_Ced').val(c.Prs_Ced || '');
@@ -135,7 +162,8 @@ function editarClientePlanta(usu) {
     });
 
     $('#editPlantaDialog')
-        .dialog('option', 'title', 'Editar Planta/Cliente \u2014 ' + usu.Usuario)
+        .dialog('option', 'title', 'Editar Planta/Cliente \u2014 ' + (usu.Usuario || ''))
+        .dialog('option', 'height', 'auto')
         .dialog('open');
 }
 
@@ -177,22 +205,54 @@ function epBuscarClientes() {
 }
 
 $(function() {
-    $('#editPlantaDialog').dialog({ autoOpen: false, modal: true, width: 500, resizable: false, title: 'Editar Planta/Cliente' });
+    $('#editPlantaDialog').dialog({ autoOpen: false, modal: true, width: 650, resizable: false, title: 'Editar Planta/Cliente' });
     $('#epCliDialog').dialog({ autoOpen: false, modal: false, width: 620, height: 430, resizable: false, title: 'B\u00fasqueda de Clientes' });
+
+    // Ajustar altura del modal al cambiar de pestaña
+    $('#modalEpTabs a').on('shown.bs.tab', function() {
+        $('#editPlantaDialog').dialog('option', 'height', 'auto');
+    });
 
     $(document).on('click', '#epBtnGuardar', function() {
         var Usu_Cod = $('#epUsu_Cod').val();
-        var Cli_Cod = $('#epCli_Cod').val();
-        var Pla_Cod = $('#epPla_Cod').val();
         if (!Usu_Cod) { $.alert('Error: usuario no identificado.'); return; }
-        $.getJSON(EP_URL, { actualizarClientePlantaAjax: true, Usu_Cod: Usu_Cod, Cli_Cod: Cli_Cod, Pla_Cod: Pla_Cod }, function(r) {
-            if (r.success) {
-                $.alert('Planta/Cliente actualizado correctamente.');
-                $('#editPlantaDialog').dialog('close');
-            } else {
-                $.alert('Error: ' + (r.message || 'No se pudo guardar.'));
-            }
-        });
+
+        var activeTab = $('#modalEpTabs li.active a').attr('href');
+
+        if (activeTab === '#epTabPlanta') {
+            var Cli_Cod = $('#epCli_Cod').val();
+            var Pla_Cod = $('#epPla_Cod').val();
+            $('#loader').fadeIn();
+            $.getJSON(EP_URL, { actualizarClientePlantaAjax: true, Usu_Cod: Usu_Cod, Cli_Cod: Cli_Cod, Pla_Cod: Pla_Cod }, function(r) {
+                $('#loader').fadeOut();
+                if (r.success) {
+                    $.alert('Planta/Cliente actualizado correctamente.');
+                    $('#editPlantaDialog').dialog('close');
+                } else {
+                    $.alert('Error: ' + (r.message || 'No se pudo guardar.'));
+                }
+            });
+        } else {
+            var pass  = $('#epNewPass').val();
+            var conf  = $('#epConfPass').val();
+            var regex = /^[a-z0-9]+$/i;
+
+            if (pass === '') { $.alert('Ingrese la nueva contrase&ntilde;a.'); return; }
+            if (!regex.test(pass)) { $.alert('La contrase&ntilde;a solo debe contener letras y n&uacute;meros.'); return; }
+            if (pass !== conf) { $.alert('Las contrase&ntilde;as no coinciden.'); return; }
+
+            var passMD5 = md5(pass);
+            $('#loader').fadeIn();
+            $.getJSON('', { changePassAjax: true, Usu_Cod: Usu_Cod, Usu_Pal: passMD5 }, function(r) {
+                $('#loader').fadeOut();
+                if (r.success) {
+                    $.alert('Contrase&ntilde;a actualizada correctamente.');
+                    $('#editPlantaDialog').dialog('close');
+                } else {
+                    $.alert('Error: ' + (r.message || 'No se pudo actualizar la contrase&ntilde;a.'));
+                }
+            });
+        }
     });
 
     $(document).on('click', '#epBtnLimpiar', function() {
