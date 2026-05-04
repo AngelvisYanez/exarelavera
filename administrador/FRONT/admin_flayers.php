@@ -241,6 +241,6 @@
     <script src="../../skins/js/jquery.js"></script>
     <script src="../../framework/jquery/bootstrap/bootstrap-3.3.5/js/bootstrap.custom.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.4/jquery-confirm.min.js"></script>
-    <script src="../VALIDACIONES/flayers.js"></script>
+    <script src="../VALIDACIONES/flayers.js?e=2"></script>
 </body>
 </html>

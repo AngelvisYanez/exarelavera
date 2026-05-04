@@ -6,7 +6,12 @@ let flayersList = [];
 
 function cargarFlayers() {
     $.getJSON('../config/getFlayers.php', function(data) {
-        flayersList = data;
+        // Asegurar que flayersList sea siempre un array
+        flayersList = Array.isArray(data) ? data : [];
+        renderFlayers();
+    }).fail(function() {
+        console.error("Error al cargar flayers");
+        flayersList = [];
         renderFlayers();
     });
 }
@@ -74,14 +79,27 @@ function abrirModalNuevo() {
 }
 
 function abrirModalEditar(index) {
+    // Validación de seguridad para evitar errores de 'undefined'
+    if (!flayersList || index === undefined || index === null || !flayersList[index]) {
+        console.error("Error: Flayer no encontrado en el índice", index);
+        $.alert({
+            title: 'Error',
+            content: 'No se pudo encontrar la información del flayer seleccionado. Por favor, intenta recargar la página.',
+            type: 'red'
+        });
+        return;
+    }
+
     const flayer = flayersList[index];
     $('#modalTitle').text('Editar Flayer #' + (index + 1));
     $('#editIndex').val(index);
-    $('#mTitulo').val(flayer.titulo);
-    $('#mOrden').val(flayer.orden);
-    $('#mDescripcion').val(flayer.descripcion);
-    $('#mImagen').val(flayer.imagen);
-    $('#mActivo').prop('checked', flayer.activo);
+    
+    // Asegurar valores por defecto si faltan propiedades
+    $('#mTitulo').val(flayer.titulo || '');
+    $('#mOrden').val(flayer.orden || 0);
+    $('#mDescripcion').val(flayer.descripcion || '');
+    $('#mImagen').val(flayer.imagen || '0');
+    $('#mActivo').prop('checked', !!flayer.activo);
     $('#mFile').val('');
     
     if (flayer.ruta_imagen) {
