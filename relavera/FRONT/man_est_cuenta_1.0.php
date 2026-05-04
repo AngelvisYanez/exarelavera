@@ -317,7 +317,7 @@ utf8_encode_deep($periodos);
                                                     <div class="input-group input-group-xs" style="width: 100%;">
                                                         <span class="input-group-addon alert-info">Desde</span>
                                                         <input type="text" id="Fec_IniM" name="Fec_IniM" class="form-control datepicker" style="text-align: center;" disabled />
-                                                        <span class="input-group-addon" title="Intercambiar fechas" style="cursor: pointer;" onclick="intercambiarFechas()">
+                                                        <span class="input-group-addon" style="cursor: pointer;">
                                                             <i class="glyphicon glyphicon-transfer"></i>
                                                         </span>
                                                         <span class="input-group-addon alert-info">Hasta</span>
@@ -421,7 +421,7 @@ utf8_encode_deep($periodos);
                                                     <label class="control-label label-xs" style="display: inline-block; width: auto; margin-right: 5px; font-size: 14px;">Fecha:</label>
                                                     <span class="input-group-addon alert-info" style="display: inline-block; font-size: 14px; vertical-align: middle; border-radius: 4px 0 0 4px; margin-bottom: 0; width: 65px;">Desde</span>
                                                     <input type="text" id="Fec_IniM_Grupal" name="Fec_IniM_Grupal" class="form-control datepicker" style="display: inline-block; text-align: center; width: 120px; font-size: 14px; vertical-align: middle; margin-left: -1px; border-radius: 0; margin-bottom: 0;" disabled />
-                                                    <span class="input-group-addon" title="Intercambiar fechas" style="display: inline-block; cursor: pointer; font-size: 14px; vertical-align: middle; margin-left: -1px; border-radius: 0; margin-bottom: 0; width: auto;" onclick="intercambiarFechasGrupal()">
+                                                    <span class="input-group-addon" style="display: inline-block; cursor: pointer; font-size: 14px; vertical-align: middle; margin-left: -1px; border-radius: 0; margin-bottom: 0; width: auto;">
                                                         <i class="glyphicon glyphicon-transfer"></i>
                                                     </span>
                                                     <span class="input-group-addon alert-info" style="display: inline-block; font-size: 14px; vertical-align: middle; margin-left: -1px; border-radius: 0; margin-bottom: 0; width: 65px;">Hasta</span>
