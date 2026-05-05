@@ -930,7 +930,7 @@ if(isset($_GET['aprobarManifiestoAjax']) || isset($aprobarManifiestoAjax)){
                                             <span class="input-addon-mobile">M</span>
                                             <input type="text" id="searchPlaCodMobile" name="searchPlaCodMobile" class="form-control input-planta" placeholder="Planta" maxlength="2" pattern="[0-9]*" inputmode="numeric">
                                             <span class="input-addon-mobile">-</span>
-                                            <input type="text" id="searchInputManifiestoMobile" name="searchInputManifiestoMobile" class="form-control input-numero" placeholder="Manif #" maxlength="4" pattern="[0-9]*" inputmode="numeric">
+                                            <input type="text" id="searchInputManifiestoMobile" name="searchInputManifiestoMobile" class="form-control input-numero" placeholder="Manif #" pattern="[0-9]*" inputmode="numeric">
                                         </div>
                                         
                                         <!-- Botón Buscar y Limpiar -->
