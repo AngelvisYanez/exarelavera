@@ -15,7 +15,7 @@ class manifiesto extends AbstractModel{
                 if(LOCATE('GS', Man_Tes) > 0, 'GS', 0) as Man_Tip_3,
                 if(LOCATE('F', Man_Tes) > 0, 'F', 0) as Man_Tip_4,
                 if(LOCATE('R', Man_Tes) > 0, 'R', 0) as Man_Tip_5,             
-                DATE(Man_Fec) AS Man_Fec,DATE_FORMAT(Man_Fes, '%H:%i') AS Man_Fes_Hor,CONCAT('M',$this->_name.Pla_Cod,'-',LPAD(Man_Num,4,0)) as ManNum,DATE(Man_Fes) AS Man_Fes,
+                DATE(Man_Fec) AS Man_Fec,DATE_FORMAT(Man_Fes, '%H:%i') AS Man_Fes_Hor,CONCAT('M',$this->_name.Pla_Cod,'-',LPAD(Man_Num,6,0)) as ManNum,DATE(Man_Fes) AS Man_Fes,
                 DATE_FORMAT(Man_Fea, '%H:%i') AS Man_Fea_Hor,DATE(Man_Fea) AS Man_Fea,cast(Man_Pes*(Man_Pun/1000) as decimal(10,2))as total,
                 DATE_FORMAT($this->_name.Man_Sys, '%Y-%m-%d %H:%i:%s') AS Man_Sys_Formatted"))
             ->join('cliente', "cliente.Cli_Cod = $this->_name.Cli_Cod")
