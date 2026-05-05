@@ -380,6 +380,147 @@ function relavera_ultramsg_parse_total_estadisticas($json)
     return $any ? $sum : null;
 }
 
+/**
+ * @param mixed $v
+ * @return int|null Unix segundos
+ */
+function relavera_ultramsg_valor_a_unix($v)
+{
+    if ($v === null || $v === '') {
+        return null;
+    }
+    if (is_numeric($v)) {
+        $n = (float) $v;
+        if ($n > 9999999999) {
+            return (int) round($n / 1000);
+        }
+        return (int) round($n);
+    }
+    if (is_string($v)) {
+        $t = strtotime($v);
+        if ($t !== false) {
+            return (int) $t;
+        }
+    }
+    return null;
+}
+
+/**
+ * @param array<string,mixed> $row
+ * @return int|null
+ */
+function relavera_ultramsg_row_timestamp_unix($row)
+{
+    if (!is_array($row)) {
+        return null;
+    }
+    $prior = array('timestamp', 'time', 'created_at', 'sent_at', 'delivered_at', 'read_at', 'createdAt', 'sentAt', 'deliveredAt', 'readAt');
+    foreach ($prior as $k) {
+        if (!array_key_exists($k, $row)) {
+            continue;
+        }
+        $ts = relavera_ultramsg_valor_a_unix($row[$k]);
+        if ($ts !== null) {
+            return $ts;
+        }
+    }
+    foreach ($row as $k => $v) {
+        if (!is_string($k)) {
+            continue;
+        }
+        $kl = strtolower($k);
+        if (preg_match('/_at$/', $kl) || preg_match('/(date|datetime|time|timestamp)/', $kl)) {
+            $ts = relavera_ultramsg_valor_a_unix($v);
+            if ($ts !== null) {
+                return $ts;
+            }
+        }
+    }
+    return null;
+}
+
+/**
+ * @param string $s YYYY-MM-DD
+ * @return int|null
+ */
+function relavera_ultramsg_fecha_dia_inicio_unix($s)
+{
+    $s = trim((string) $s);
+    if ($s === '') {
+        return null;
+    }
+    $t = strtotime($s . ' 00:00:00');
+    return ($t !== false) ? (int) $t : null;
+}
+
+/**
+ * @param string $s YYYY-MM-DD
+ * @return int|null
+ */
+function relavera_ultramsg_fecha_dia_fin_unix($s)
+{
+    $s = trim((string) $s);
+    if ($s === '') {
+        return null;
+    }
+    $t = strtotime($s . ' 23:59:59');
+    return ($t !== false) ? (int) $t : null;
+}
+
+/**
+ * @param mixed $json
+ * @param string $desde YYYY-MM-DD o vacío
+ * @param string $hasta YYYY-MM-DD o vacío
+ * @return mixed
+ */
+function relavera_ultramsg_messages_filtrar_por_fechas($json, $desde, $hasta)
+{
+    $ts0 = ($desde !== '') ? relavera_ultramsg_fecha_dia_inicio_unix($desde) : null;
+    $ts1 = ($hasta !== '') ? relavera_ultramsg_fecha_dia_fin_unix($hasta) : null;
+    if ($ts0 === null && $ts1 === null) {
+        return $json;
+    }
+    $filt = function ($row) use ($ts0, $ts1) {
+        if (!is_array($row)) {
+            return false;
+        }
+        $t = relavera_ultramsg_row_timestamp_unix($row);
+        if ($t === null) {
+            return false;
+        }
+        if ($ts0 !== null && $t < $ts0) {
+            return false;
+        }
+        if ($ts1 !== null && $t > $ts1) {
+            return false;
+        }
+        return true;
+    };
+    if (is_array($json)) {
+        $idx = 0;
+        foreach ($json as $k => $_) {
+            if ($k !== $idx) {
+                break;
+            }
+            $idx++;
+        }
+        if ($idx > 0 && $idx === count($json)) {
+            $out = array();
+            foreach ($json as $row) {
+                if ($filt($row)) {
+                    $out[] = $row;
+                }
+            }
+            return $out;
+        }
+        if (isset($json['messages']) && is_array($json['messages'])) {
+            $json['messages'] = array_values(array_filter($json['messages'], $filt));
+            return $json;
+        }
+    }
+    return $json;
+}
+
 if (!empty($_GET['listarMensajesUltramsgAjax'])) {
     header('Content-Type: application/json; charset=UTF-8');
     $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
@@ -391,29 +532,51 @@ if (!empty($_GET['listarMensajesUltramsgAjax'])) {
         $limit = 1000;
     }
     $status = isset($_GET['status']) ? trim((string) $_GET['status']) : '';
+    $fechaDesde = isset($_GET['fecha_desde']) ? trim((string) $_GET['fecha_desde']) : '';
+    $fechaHasta = isset($_GET['fecha_hasta']) ? trim((string) $_GET['fecha_hasta']) : '';
+    if ($fechaDesde !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaDesde)) {
+        $fechaDesde = '';
+    }
+    if ($fechaHasta !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaHasta)) {
+        $fechaHasta = '';
+    }
     $r = relavera_ultramsg_api_get_messages($page, $limit, $status);
+    $jsonOut = $r['json'];
+    $rawOut = is_string($r['body']) ? $r['body'] : '';
+    if ($fechaDesde !== '' || $fechaHasta !== '') {
+        $jsonOut = relavera_ultramsg_messages_filtrar_por_fechas($r['json'], $fechaDesde, $fechaHasta);
+        if (is_array($jsonOut) && isset($jsonOut['messages']) && is_array($jsonOut['messages'])) {
+            $jsonOut = $jsonOut['messages'];
+        }
+        $rawOut = json_encode($jsonOut, JSON_UNESCAPED_UNICODE);
+    }
     $totalMessages = relavera_ultramsg_messages_total_desde_respuesta($r['json']);
     $stNorm = ($status === '') ? 'todos' : strtolower($status);
-    if ($totalMessages === null && ($stNorm === 'todos' || $stNorm === 'all')) {
+    if ($fechaDesde !== '' || $fechaHasta !== '') {
+        $totalMessages = null;
+    }
+    if ($totalMessages === null && ($stNorm === 'todos' || $stNorm === 'all') && $fechaDesde === '' && $fechaHasta === '') {
         $rs = relavera_ultramsg_api_get_messages_statistics();
         if ($rs['ok']) {
             $totalMessages = relavera_ultramsg_parse_total_estadisticas($rs['json']);
         }
     }
     $totalPages = null;
-    if ($totalMessages !== null && $totalMessages >= 0 && $limit > 0) {
+    if ($totalMessages !== null && $totalMessages >= 0 && $limit > 0 && $fechaDesde === '' && $fechaHasta === '') {
         $totalPages = (int) max(1, (int) ceil($totalMessages / $limit));
     }
     echo json_encode(array(
         'success' => $r['ok'],
         'http_code' => $r['http_code'],
         'error' => $r['error'],
-        'data' => $r['json'],
-        'raw' => $r['body'],
+        'data' => $jsonOut,
+        'raw' => $rawOut,
         'page' => $page,
         'limit' => $limit,
         'total_messages' => $totalMessages,
         'total_pages' => $totalPages,
+        'fecha_desde' => $fechaDesde,
+        'fecha_hasta' => $fechaHasta,
     ));
     exit;
 }
@@ -537,6 +700,14 @@ if (!empty($_GET['cargarChatsUltramsgAjax'])) {
                 <div class="form-group" style="margin-right:12px;">
                     <label for="um_inp_limit" style="margin-right:6px;">Límite</label>
                     <input type="number" id="um_inp_limit" class="form-control input-sm" style="width:90px;" min="1" max="1000" value="10" />
+                </div>
+                <div class="form-group" style="margin-right:12px;">
+                    <label for="um_date_desde" style="margin-right:6px;">Desde</label>
+                    <input type="date" id="um_date_desde" class="form-control input-sm" />
+                </div>
+                <div class="form-group" style="margin-right:12px;">
+                    <label for="um_date_hasta" style="margin-right:6px;">Hasta</label>
+                    <input type="date" id="um_date_hasta" class="form-control input-sm" />
                 </div>
                 <button type="button" id="btn_um_cargar" class="btn btn-primary btn-sm">
                     <span class="glyphicon glyphicon-refresh"></span> Cargar
@@ -1064,6 +1235,8 @@ if (!empty($_GET['cargarChatsUltramsgAjax'])) {
     var btn = document.getElementById('btn_um_cargar');
     var sel = document.getElementById('um_sel_status');
     var inpL = document.getElementById('um_inp_limit');
+    var inpDesde = document.getElementById('um_date_desde');
+    var inpHasta = document.getElementById('um_date_hasta');
     var pagBox = document.getElementById('paginacion_um');
     var pagUl = document.getElementById('pag_ul_um');
     var currentPage = 1;
@@ -1118,7 +1291,16 @@ if (!empty($_GET['cargarChatsUltramsgAjax'])) {
 
     function esClaveFecha(key) {
         var k = String(key || '').toLowerCase();
-        return (k === 'created_at' || k === 'sent_at' || k === 'delivered_at' || k === 'read_at' || k === 'timestamp' || k === 'time' || /_at$/.test(k));
+        if (k === 'created_at' || k === 'sent_at' || k === 'delivered_at' || k === 'read_at' || k === 'timestamp' || k === 'time') {
+            return true;
+        }
+        // snake_case y variantes comunes
+        if (/_at$/.test(k)) return true;
+        // camelCase: createdAt, sentAt, deliveredAt, readAt
+        if (/at$/.test(k) && /(created|sent|delivered|read)/.test(k)) return true;
+        // otros nombres frecuentes
+        if (/(date|datetime|time|timestamp)/.test(k)) return true;
+        return false;
     }
 
     function fechaObjDesdeValor(v) {
@@ -1153,6 +1335,64 @@ if (!empty($_GET['cargarChatsUltramsgAjax'])) {
             hour12: false,
             timeZoneName: 'short'
         });
+    }
+
+    function parseDateInputStart(el) {
+        if (!el || !el.value) return null;
+        var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(el.value).trim());
+        if (!m) return null;
+        var y = parseInt(m[1], 10), mo = parseInt(m[2], 10), da = parseInt(m[3], 10);
+        var d = new Date(y, mo - 1, da, 0, 0, 0, 0);
+        if (isNaN(d.getTime())) return null;
+        return d;
+    }
+
+    function parseDateInputEnd(el) {
+        if (!el || !el.value) return null;
+        var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(el.value).trim());
+        if (!m) return null;
+        var y = parseInt(m[1], 10), mo = parseInt(m[2], 10), da = parseInt(m[3], 10);
+        var d = new Date(y, mo - 1, da, 23, 59, 59, 999);
+        if (isNaN(d.getTime())) return null;
+        return d;
+    }
+
+    function fechaFilaUm(row) {
+        if (!row || typeof row !== 'object') return null;
+        var orden = [
+            'timestamp', 'time',
+            'created_at', 'sent_at', 'delivered_at', 'read_at',
+            'createdAt', 'sentAt', 'deliveredAt', 'readAt'
+        ];
+        for (var i = 0; i < orden.length; i++) {
+            if (Object.prototype.hasOwnProperty.call(row, orden[i])) {
+                var d0 = fechaObjDesdeValor(row[orden[i]]);
+                if (d0) return d0;
+            }
+        }
+        for (var k in row) {
+            if (Object.prototype.hasOwnProperty.call(row, k) && esClaveFecha(k)) {
+                var d1 = fechaObjDesdeValor(row[k]);
+                if (d1) return d1;
+            }
+        }
+        return null;
+    }
+
+    function filtrarPorFechaUm(rows) {
+        if (!rows || !rows.length) return rows;
+        var d0 = parseDateInputStart(inpDesde);
+        var d1 = parseDateInputEnd(inpHasta);
+        if (!d0 && !d1) return rows;
+        var out = [];
+        for (var i = 0; i < rows.length; i++) {
+            var rf = fechaFilaUm(rows[i]);
+            if (!rf) continue;
+            if (d0 && rf < d0) continue;
+            if (d1 && rf > d1) continue;
+            out.push(rows[i]);
+        }
+        return out;
     }
 
     function textoSeguro(v) {
@@ -1198,7 +1438,9 @@ if (!empty($_GET['cargarChatsUltramsgAjax'])) {
             return kl !== 'referenceid' && kl !== 'metadata' && kl !== 'created_at' && kl !== 'priority' && kl !== 'ack';
         });
         if (!keys.length) return false;
+        var baseNum = (Math.max(1, currentPage | 0) - 1) * (lastLimit > 0 ? lastLimit : 10);
         var h = '<tr>';
+        h += '<th style="width:56px;text-align:right;">#</th>';
         for (var i = 0; i < keys.length; i++) {
             var es = etiquetaColumnaEs(keys[i]);
             h += '<th>' + escapeHtml(es ? es : keys[i]) + '</th>';
@@ -1211,6 +1453,7 @@ if (!empty($_GET['cargarChatsUltramsgAjax'])) {
             var row = rows[r];
             var trClass = filaEsInvalid(row) ? ' class="row-invalid"' : (filaEsExpired(row) ? ' class="row-expired"' : '');
             html += '<tr' + trClass + '>';
+            html += '<td style="text-align:right;color:#666;font-weight:600;">' + (baseNum + r + 1) + '</td>';
             for (var k = 0; k < keys.length; k++) {
                 var key = keys[k];
                 var v = row[key];
@@ -1380,10 +1623,17 @@ if (!empty($_GET['cargarChatsUltramsgAjax'])) {
         var limResp = data.limit != null ? parseInt(data.limit, 10) : lastLimit;
         if (limResp >= 1) lastLimit = limResp;
 
-        if (rows && renderTabla(rows)) {
+        var rowsFiltradas = rows ? filtrarPorFechaUm(rows) : null;
+        if (rowsFiltradas && renderTabla(rowsFiltradas)) {
             tabla.style.display = 'table';
-            lastRowCount = rows.length;
-            meta.textContent += ' · ' + rows.length + ' filas';
+            lastRowCount = rowsFiltradas.length;
+            meta.textContent += ' · ' + rowsFiltradas.length + ' filas';
+            if (rows && rowsFiltradas.length !== rows.length) {
+                meta.textContent += ' (filtradas de ' + rows.length + ')';
+            }
+            if (typeof data.total_messages === 'number' && data.total_messages >= 0) {
+                meta.textContent += ' · Total mensajes: ' + data.total_messages;
+            }
             if (typeof data.total_pages === 'number' && data.total_pages >= 1) {
                 totalPagesEffective = data.total_pages;
             } else if (rows.length < lastLimit) {
@@ -1415,6 +1665,10 @@ if (!empty($_GET['cargarChatsUltramsgAjax'])) {
             + '&page=' + encodeURIComponent(String(page))
             + '&limit=' + encodeURIComponent(String(limit));
         if (status) q += '&status=' + encodeURIComponent(status);
+        var fd = inpDesde && inpDesde.value ? String(inpDesde.value).trim() : '';
+        var fh = inpHasta && inpHasta.value ? String(inpHasta.value).trim() : '';
+        if (fd) q += '&fecha_desde=' + encodeURIComponent(fd);
+        if (fh) q += '&fecha_hasta=' + encodeURIComponent(fh);
 
         fetch('man_adm_chats.php?' + q, { credentials: 'same-origin' })
             .then(function (r) {
@@ -1461,6 +1715,9 @@ if (!empty($_GET['cargarChatsUltramsgAjax'])) {
             cargar(false);
         });
     }
+
+    if (inpDesde) inpDesde.addEventListener('change', function () { cargar(true); });
+    if (inpHasta) inpHasta.addEventListener('change', function () { cargar(true); });
 
     cargar(true);
 })();
