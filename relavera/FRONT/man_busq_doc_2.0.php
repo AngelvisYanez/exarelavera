@@ -910,7 +910,7 @@ if(isset($_GET['aprobarManifiestoAjax']) || isset($aprobarManifiestoAjax)){
                                         <span class="input-group-addon alert-info" style="min-width: 30px; text-align: center;">M</span>
                                         <input type="text" id="searchPlaCod" name="searchPlaCod" class="form-control" placeholder="Planta" maxlength="2" style="text-align: center; margin: 0; border-right: none;" pattern="[0-9]*" inputmode="numeric">
                                         <span class="input-group-addon alert-info" style="min-width: 20px; text-align: center; padding-left: 0; padding-right: 0; border-left: none; border-right: none;">-</span>
-                                        <input type="text" id="searchInputManifiesto" name="searchInputManifiesto" class="form-control" placeholder="Manif #" maxlength="4" style="text-align: center; margin: 0; border-left: none;" pattern="[0-9]*" inputmode="numeric">
+                                        <input type="text" id="searchInputManifiesto" name="searchInputManifiesto" class="form-control" placeholder="Manif #" style="text-align: center; margin: 0; border-left: none;" pattern="[0-9]*" inputmode="numeric">
                                         <span class="input-group-btn">
                                             <button type="button" id="btnSearchManifiesto" class="btn btn-success" title="Buscar Documento">
                                                 <span class="glyphicon glyphicon-search"></span>
