@@ -264,12 +264,12 @@ function sentencias_manifiesto_cli($id, $Par_Sql)
 				LEFT JOIN usuarios AS usuarios_tec ON manifiesto_tecnico.Usu_Cod = usuarios_tec.Usu_Cod
 				LEFT JOIN persona AS persona_tec ON usuarios_tec.Prs_Cod = persona_tec.Prs_Cod
 				WHERE manifiesto.Man_Cod = '$Par_Sql[Man_Cod]'";
-			return $sql;		
+			return $sql;
 		case 7:
 			// Determinar el tipo de búsqueda
 			$op_opciones = isset($Par_Sql['op_opciones']) ? $Par_Sql['op_opciones'] : '';
 			$searchCli = isset($Par_Sql['searchCli']) ? addslashes($Par_Sql['searchCli']) : '';
-			
+
 			// Construir la condición de búsqueda según el tipo
 			if ($op_opciones == "c") {
 				// Búsqueda por cédula/RUC
@@ -281,7 +281,7 @@ function sentencias_manifiesto_cli($id, $Par_Sql)
 				// Búsqueda por nombre del cliente
 				$search = $searchCli != '' ? "(CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape) LIKE '%$searchCli%' OR persona.Prs_Nom LIKE '%$searchCli%' OR persona.Prs_Ape LIKE '%$searchCli%')" : "1=1";
 			}
-			
+
 			// Si no hay limits, es para contar registros
 			if (empty($Par_Sql['limits'])) {
 				$campos = "COUNT(DISTINCT cliente.Cli_Cod) AS total";
@@ -294,7 +294,7 @@ function sentencias_manifiesto_cli($id, $Par_Sql)
 							GROUP_CONCAT(mp.Pla_Nom ORDER BY mp.Pla_Nom SEPARATOR ', ') AS plantas";
 				$limits = $Par_Sql['limits'];
 			}
-			
+
 			$sql = "SELECT $campos
 					FROM persona
 						INNER JOIN cliente ON cliente.Prs_Cod = persona.Prs_Cod
@@ -329,7 +329,7 @@ function sentencias_manifiesto_cli($id, $Par_Sql)
 					AND m.Man_Est = 'A'
 					ORDER BY m.Man_Fes ASC";
 			return $sql;
-			
+
 		case 10: // Datos completos para el certificado de gestión de desechos
 			$sql = "SELECT 
 						m.Man_Cod,
@@ -411,6 +411,31 @@ function sentencias_manifiesto_cli($id, $Par_Sql)
 				WHERE $where $search
 				$limits";
 			}
-			return $sql;	
+			return $sql;
+
+
+		case 12:
+			// Listar personal de planta por planta
+			$sql = "SELECT Pep_Cor, Pep_Tel FROM manifiesto_personal_planta WHERE Pla_Cod = '$Par_Sql[Pla_Cod]' AND Pep_Est = 'A' AND Pep_Tip = '$Par_Sql[Pep_Tip]'";
+			return $sql;
+		case 13:
+			// Listar nombre de planta por planta
+			$sql = "SELECT Pla_Nom FROM manifiesto_plantas WHERE Pla_Cod = '$Par_Sql[Pla_Cod]' AND Pla_Est = 'A'";
+			return $sql;
+
+		case 14:
+			// Listar personal de planta por planta
+			$sql = "SELECT Pla_Cod, Veh_Pla,Veh_Tip FROM manifiesto_vehiculo 
+		INNER JOIN vehiculo ON vehiculo.Veh_Cod = manifiesto_vehiculo.Veh_Cod
+		WHERE vehiculo.Veh_Cod = '$Par_Sql[Veh_Cod]' AND Veh_Est = 'A'";
+			return $sql;
+
+		case 15:
+			// Listar chofer por vehiculo
+			$sql = "SELECT manifiesto_chofer.Cho_Cod, Cho_Tel , CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape) AS cho_nom FROM chofer 
+					INNER JOIN manifiesto_chofer ON manifiesto_chofer.Cho_Cod = chofer.Cho_Cod
+					INNER JOIN persona ON persona.Prs_Cod = chofer.Prs_Cod
+			WHERE manifiesto_chofer.Cho_Cod = '$Par_Sql[Cho_Cod]' AND Cho_Est = 'A' ";
+			return $sql;
 	}
 }

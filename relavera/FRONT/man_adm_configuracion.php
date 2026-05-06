@@ -9,7 +9,7 @@
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/man_log_manifiesto.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
-
+require_once('../../MODELS/send_whatsapp.php');
 /* Creacion del Objeto de conexion */
 $obBD_conexion = new Class_Log_Conexion_Global($Ses_Dat_Dis);
 $obBD_con1 = new Class_Log_Datos_Mani;
@@ -30,62 +30,62 @@ if (isset($cliAjax)) {
 
 // Tab GENERAL: saldo mínimo de anticipo (manifiesto_plantas.Pla_Smi) para crear manifiestos
 if (isset($_POST['getGeneralManifiestoAjax'])) {
-	$resp = array('success' => true, 'pla_smi_sugerido' => 0, 'plantas_activas' => 0);
-	$emp = (int) $Ses_Emp_Cod;
-	try {
-		$row = $obBD_con1->fetch_assoc($obBD_con1->consulta(
-			"SELECT COUNT(*) AS n, COALESCE(AVG(COALESCE(mp.Pla_Smi, 0)), 0) AS prom
+    $resp = array('success' => true, 'pla_smi_sugerido' => 0, 'plantas_activas' => 0);
+    $emp = (int) $Ses_Emp_Cod;
+    try {
+        $row = $obBD_con1->fetch_assoc($obBD_con1->consulta(
+            "SELECT COUNT(*) AS n, COALESCE(AVG(COALESCE(mp.Pla_Smi, 0)), 0) AS prom
 			 FROM manifiesto_plantas mp
 			 LEFT JOIN cliente c ON c.Cli_Cod = mp.Cli_Cod
 			 WHERE mp.Pla_Est = 'A'
 			 AND (c.Emp_Cod = $emp OR mp.Cli_Cod IS NULL)
 			 AND (c.Cli_Est = 'A' OR mp.Cli_Cod IS NULL)",
-			$obBD_conexion->conexion
-		));
-		$resp['plantas_activas'] = isset($row['n']) ? (int) $row['n'] : 0;
-		$resp['pla_smi_sugerido'] = isset($row['prom']) ? round((float) $row['prom'], 2) : 0;
-	} catch (Exception $e) {
-		$resp['success'] = false;
-		$resp['message'] = $e->getMessage();
-	}
-	$obBD_con1->echoJson($resp);
+            $obBD_conexion->conexion
+        ));
+        $resp['plantas_activas'] = isset($row['n']) ? (int) $row['n'] : 0;
+        $resp['pla_smi_sugerido'] = isset($row['prom']) ? round((float) $row['prom'], 2) : 0;
+    } catch (Exception $e) {
+        $resp['success'] = false;
+        $resp['message'] = $e->getMessage();
+    }
+    $obBD_con1->echoJson($resp);
 }
 
 if (isset($_POST['saveGeneralManifiestoAjax'])) {
-	$resp = array('success' => false);
-	try {
-		// grabarv_registros (operacionobBD) no ejecuta si Error != 0; consulta() no siempre resetea Error.
-		$obBD_con1->setError(0, '');
-		$raw = isset($_POST['Pla_Smi_general']) ? trim((string) $_POST['Pla_Smi_general']) : '0';
-		if ($raw === '' || $raw === 'true' || $raw === 'false') {
-			$raw = '0';
-		}
-		$val = floatval(str_replace(',', '.', preg_replace('/[^\d.,\-]/', '', $raw)));
-		if ($val < 0) {
-			throw new Exception('El valor no puede ser negativo.');
-		}
-		$emp = (int) $Ses_Emp_Cod;
-		$valSql = number_format($val, 2, '.', '');
-		// Aplicar con una sola sentencia SQL.
-		$sqlUpd = "UPDATE manifiesto_plantas mp
+    $resp = array('success' => false);
+    try {
+        // grabarv_registros (operacionobBD) no ejecuta si Error != 0; consulta() no siempre resetea Error.
+        $obBD_con1->setError(0, '');
+        $raw = isset($_POST['Pla_Smi_general']) ? trim((string) $_POST['Pla_Smi_general']) : '0';
+        if ($raw === '' || $raw === 'true' || $raw === 'false') {
+            $raw = '0';
+        }
+        $val = floatval(str_replace(',', '.', preg_replace('/[^\d.,\-]/', '', $raw)));
+        if ($val < 0) {
+            throw new Exception('El valor no puede ser negativo.');
+        }
+        $emp = (int) $Ses_Emp_Cod;
+        $valSql = number_format($val, 2, '.', '');
+        // Aplicar con una sola sentencia SQL.
+        $sqlUpd = "UPDATE manifiesto_plantas mp
 			LEFT JOIN cliente c ON c.Cli_Cod = mp.Cli_Cod
 			SET mp.Pla_Smi = $valSql
 			WHERE mp.Pla_Est = 'A'
 			AND (c.Emp_Cod = $emp OR mp.Cli_Cod IS NULL)
 			AND (c.Cli_Est = 'A' OR mp.Cli_Cod IS NULL)";
-		$obBD_con1->consulta($sqlUpd, $obBD_conexion);
-		if ((int) $obBD_con1->Error !== 0) {
-			throw new Exception($obBD_con1->MsgError ? $obBD_con1->MsgError : 'Error al actualizar Pla_Smi (¿existe la columna en manifiesto_plantas?).');
-		}
-		$con = $obBD_con1->getMyCon($obBD_conexion);
-		$cnt = ($con ? (int)mysqli_affected_rows($con) : 0);
-		$resp['success'] = true;
-		$resp['filas_afectadas'] = $cnt;
-		$resp['message'] = 'Se guardo correctamente.';
-	} catch (Exception $e) {
-		$resp['message'] = $e->getMessage();
-	}
-	$obBD_con1->echoJson($resp);
+        $obBD_con1->consulta($sqlUpd, $obBD_conexion);
+        if ((int) $obBD_con1->Error !== 0) {
+            throw new Exception($obBD_con1->MsgError ? $obBD_con1->MsgError : 'Error al actualizar Pla_Smi (¿existe la columna en manifiesto_plantas?).');
+        }
+        $con = $obBD_con1->getMyCon($obBD_conexion);
+        $cnt = ($con ? (int)mysqli_affected_rows($con) : 0);
+        $resp['success'] = true;
+        $resp['filas_afectadas'] = $cnt;
+        $resp['message'] = 'Se guardo correctamente.';
+    } catch (Exception $e) {
+        $resp['message'] = $e->getMessage();
+    }
+    $obBD_con1->echoJson($resp);
 }
 
 
@@ -997,6 +997,7 @@ if (isset($saveSancionVehiculoAjax)) {
         $Msa_Fei = isset($_POST['Msa_Fei']) ? $_POST['Msa_Fei'] : '';
         $Msa_Fef = isset($_POST['Msa_Fef']) ? $_POST['Msa_Fef'] : '';
         $Msa_Obs = isset($_POST['Msa_Obs']) ? trim($_POST['Msa_Obs']) : '';
+        $Msa_Cho = isset($_POST['Msa_Cho']) ? trim($_POST['Msa_Cho']) : '';
         if (empty($Veh_Cod)) {
             throw new Exception('Debe seleccionar un vehículo.');
         }
@@ -1016,6 +1017,38 @@ if (isset($saveSancionVehiculoAjax)) {
             $obBD_con1->operacionobBD('manifiesto_sanciones.update', $datos, $obBD_conexion);
         } else {
             $obBD_con1->operacionobBD('manifiesto_sanciones.insert', $datos, $obBD_conexion);
+
+
+
+            //cREAR UNA CONULSTA QUE POR MEDIO DEL PLA_cod me traiga la tabla manifiesto_personal_planta esta tiene el Per_Cor correo y Pep_Tel telefono
+            $vehiculo = $obBD_con1->getArrayConsulta(14, array('Veh_Cod' => $Veh_Cod), $obBD_conexion);
+            $vehiculoRow = (is_array($vehiculo) && isset($vehiculo[0]) && is_array($vehiculo[0])) ? $vehiculo[0] : (is_array($vehiculo) ? $vehiculo : array());
+            $plaCod = isset($vehiculoRow['Pla_Cod']) ? $vehiculoRow['Pla_Cod'] : '';
+            $personal = $obBD_con1->getArrayConsulta(12, array('Pla_Cod' => $plaCod, 'Pep_Tip' => 'AP'), $obBD_conexion);
+            //if (isset($personal['Pep_Tel']) && !empty($personal['Pep_Tel'])) {
+            $Nom_Pla = $obBD_con1->getArrayConsulta(13, array('Pla_Cod' => $plaCod), $obBD_conexion);
+            $Nom_Pla = isset($Nom_Pla['Pla_Nom']) ? $Nom_Pla['Pla_Nom'] : '';
+            // Agrega un icono de precaución (emoji ⚠️) al inicio del mensaje
+            $telsPlanta = array();
+            if (is_array($personal)) {
+                foreach ($personal as $p) {
+                    if (is_array($p) && isset($p['Pep_Tel']) && trim((string) $p['Pep_Tel']) !== '') {
+                        $telsPlanta[] = (string) $p['Pep_Tel'];
+                    }
+                }
+            } elseif (is_string($personal) && trim($personal) !== '') {
+                $telsPlanta[] = (string) $personal;
+            }
+            // $placa = isset($vehiculoRow['Vhe_Cod']) ? (string) $vehiculoRow['Vhe_Cod'] : (isset($vehiculoRow['Veh_Cod']) ? (string) $vehiculoRow['Veh_Cod'] : '');
+
+            $placa = isset($vehiculoRow['Veh_Pla']) ? (string) $vehiculoRow['Veh_Pla'] : '';
+            $mensaje = "⚠️ *Sancion aplicada a vehiculo con placa: " . $placa . "*\n" .
+                ' - Chofer: ' . $Msa_Cho . "\n" .
+                ' - Fec.Inicio: ' . $Msa_Fei . "\n" .
+                ' - Fec.Fin: ' . $Msa_Fef . "\n" .
+                'Observación: ' . $Msa_Obs . "\n" .
+                ' - No podrá seleccionar este vehiculo en manifiestos - ';
+            enviarNotificacionWhatsapp($mensaje, $telsPlanta);
         }
     } catch (Exception $e) {
         $obBD_con1->rollBack_nomsn($obBD_conexion);
@@ -1055,6 +1088,26 @@ if (isset($saveSancionChoferAjax)) {
             $obBD_con1->operacionobBD('manifiesto_sanciones.update', $datos, $obBD_conexion);
         } else {
             $obBD_con1->operacionobBD('manifiesto_sanciones.insert', $datos, $obBD_conexion);
+
+
+            //cREAR UNA CONULSTA QUE POR MEDIO DEL PLA_cod me traiga la tabla manifiesto_personal_planta esta tiene el Per_Cor correo y Pep_Tel telefono
+            $choferRows = $obBD_con1->getArrayConsulta(15, array('Cho_Cod' => $Cho_Cod), $obBD_conexion);
+            $chofer = (is_array($choferRows) && isset($choferRows[0]) && is_array($choferRows[0])) ? $choferRows[0] : array();
+            $choNom = isset($chofer['cho_nom']) ? (string) $chofer['cho_nom'] : '';
+            $choTels = array();
+            if (is_array($choferRows)) {
+                foreach ($choferRows as $r) {
+                    if (is_array($r) && isset($r['Cho_Tel']) && trim((string) $r['Cho_Tel']) !== '') {
+                        $choTels[] = (string) $r['Cho_Tel'];
+                    }
+                }
+            }
+            $mensaje = "⚠️ *Sancion aplicada a chofer : " . $choNom . "*\n" .
+                ' - Fec.Inicio: ' . $Msa_Fei . "\n" .
+                ' - Fec.Fin: ' . $Msa_Fef . "\n" .
+                'Observación: ' . $Msa_Obs . "\n" .
+                ' - Chofer sancionado - ';
+            enviarNotificacionWhatsapp($mensaje, $choTels);
         }
     } catch (Exception $e) {
         $obBD_con1->rollBack_nomsn($obBD_conexion);
@@ -1094,6 +1147,19 @@ if (isset($saveSancionPlantaAjax)) {
             $obBD_con1->operacionobBD('manifiesto_sanciones.update', $datos, $obBD_conexion);
         } else {
             $obBD_con1->operacionobBD('manifiesto_sanciones.insert', $datos, $obBD_conexion);
+
+            //cREAR UNA CONULSTA QUE POR MEDIO DEL PLA_cod me traiga la tabla manifiesto_personal_planta esta tiene el Per_Cor correo y Pep_Tel telefono
+            $personal = $obBD_con1->getRowConsulta(12, array('Pla_Cod' => $Pla_Cod, 'Pep_Tip' => 'AP'), $obBD_conexion);
+            //if (isset($personal['Pep_Tel']) && !empty($personal['Pep_Tel'])) {
+            $Nom_Pla = $obBD_con1->getRowConsulta(13, array('Pla_Cod' => $Pla_Cod), $obBD_conexion);
+            $Nom_Pla = isset($Nom_Pla['Pla_Nom']) ? $Nom_Pla['Pla_Nom'] : '';
+            // Agrega un icono de precaución (emoji ⚠️) al inicio del mensaje
+            $mensaje = "⚠️ *Sanción aplicada a planta: " . $Nom_Pla . "*\n" .
+                ' - Fec.Inicio: ' . $Msa_Fei . "\n" .
+                ' - Fec.Fin: ' . $Msa_Fef . "\n" .
+                'Observación: ' . $Msa_Obs . "\n" .
+                ' - No podrá realizar manifiestos - ';
+            enviarNotificacionWhatsapp($mensaje, $personal['Pep_Tel']);
         }
     } catch (Exception $e) {
         $obBD_con1->rollBack_nomsn($obBD_conexion);
@@ -1386,7 +1452,7 @@ if (isset($saveNuevoTipoSancionAjax)) {
         }
         if ($Tsa_Niv === '' || !in_array($Tsa_Niv, array('M', 'A', 'B'))) {
             throw new Exception('Nivel de riesgo inválido (use M, A o B).');
-        }       
+        }
 
         $datosNuevo = array(
             'Emp_Cod' => $Emp_Cod_Post,
@@ -1624,7 +1690,7 @@ $obBD_con1->utf8_change_param($transportes);
 
             <!-- Pestañas -->
             <div class="nav-tabs-custom">
-                <ul class="nav nav-tabs" role="tablist">                    
+                <ul class="nav nav-tabs" role="tablist">
                     <li role="presentation" class="active">
                         <a href="#tabPlantas" aria-controls="tabPlantas" role="tab" data-toggle="tab">
                             <i class="glyphicon glyphicon-home icon-tab"></i>Plantas
@@ -1965,19 +2031,19 @@ $obBD_con1->utf8_change_param($transportes);
                         <div class="row">
                             <div class="col-sm-10 col-sm-offset-1">
                                 <fieldset class="exa-fieldset">
-                                    <legend class="Titulos2">Saldo mínimo para crear manifiestos</legend>                                    
+                                    <legend class="Titulos2">Saldo mínimo para crear manifiestos</legend>
                                     <form id="formGeneralManifiesto" class="form-horizontal normal" onsubmit="return false;">
                                         <div class="form-group">
                                             <label class="col-sm-4 control-label label-sm" for="cfg_pla_smi_general">Valor mínimo (USD)</label>
                                             <div class="col-sm-3">
                                                 <input type="text" class="form-control input-sm" id="cfg_pla_smi_general" name="cfg_pla_smi_general" value="<?php echo $valorMinimo; ?>" placeholder="0.00" autocomplete="off" />
-                                            </div>                                            
+                                            </div>
                                             <div class=" col-sm-4">
                                                 <button type="button" class="btn btn-primary btn-sm" onclick="guardarGeneralManifiesto();">
-                                                    <i class="glyphicon glyphicon-floppy-disk"></i> Guardar 
-                                                </button>                                                
+                                                    <i class="glyphicon glyphicon-floppy-disk"></i> Guardar
+                                                </button>
                                             </div>
-                                        </div>                                        
+                                        </div>
                                     </form>
                                 </fieldset>
                             </div>
@@ -2974,13 +3040,13 @@ $obBD_con1->utf8_change_param($transportes);
                 <label class="col-xs-4 control-label label-xs required">Nivel Riesgo:</label>
                 <div class="col-xs-8">
                     <select id="nuevoTsa_Niv" name="Tsa_Niv" class="form-control input-xs" required>
-                        <option value="">— Seleccione —</option>                       
+                        <option value="">— Seleccione —</option>
                         <option value="A">ALTO</option>
                         <option value="B">BAJO</option>
                         <option value="M">MEDIO</option>
                     </select>
                 </div>
-            </div>            
+            </div>
         </form>
         <div style="text-align: center; margin-top: 15px;">
             <button class="btn btn-sm btn-primary" type="button" onclick="guardarNuevoTipoSancion();">
