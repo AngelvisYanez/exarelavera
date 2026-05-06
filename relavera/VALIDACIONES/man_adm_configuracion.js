@@ -2340,6 +2340,54 @@ function cerrarModalSancionUnificada() {
     $('#sancionUnificadaDialog').dialog('close');
 }
 
+
+function setLoadingModalSancionUnificada(isLoading, text) {
+    var $dlg = $('#sancionUnificadaDialog');
+    if (!$dlg.length) return;
+
+    var $uiDialog = $dlg.closest('.ui-dialog');
+    var $paneButtons = $uiDialog.find('.ui-dialog-buttonpane button');
+    var $inputs = $dlg.find('input, select, textarea, button');
+
+    var overlayId = 'sancionUnificadaLoadingOverlay';
+    var $overlay = $dlg.find('#' + overlayId);
+    if (!$overlay.length) {
+        $dlg.css('position', 'relative').append(
+            '<div id="' + overlayId + '" style="' +
+            'display:none; position:absolute; inset:0; z-index:9999;' +
+            'background: rgba(255,255,255,0.55);' +
+            'align-items:center; justify-content:center; text-align:center;' +
+            '">' +
+            '<div style="min-width:260px; padding:16px 20px; background:#fff; border:1px solid #cfcfcf; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.25);">' +
+            '<div class="spinner-border" style="width:2rem; height:2rem; border: .28em solid #d0d0d0; border-top-color:#111; border-radius:50%; display:inline-block; animation: sancionSpin 0.8s linear infinite;"></div>' +
+            '<div id="' + overlayId + '_text" style="margin-top:12px; color:#111; font-size:15px; font-weight:600;"></div>' +
+            '</div>' +
+            '</div>'
+        );
+        if (!document.getElementById('sancionUnificadaSpinKeyframes')) {
+            var style = document.createElement('style');
+            style.id = 'sancionUnificadaSpinKeyframes';
+            style.type = 'text/css';
+            style.appendChild(document.createTextNode('@keyframes sancionSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}'));
+            document.head.appendChild(style);
+        }
+        $overlay = $dlg.find('#' + overlayId);
+    }
+
+    if (isLoading) {
+        $dlg.find('#' + overlayId + '_text').text(text || 'Registrando...');
+        $overlay.css('display', 'flex');
+        $inputs.prop('disabled', true);
+        $paneButtons.prop('disabled', true);
+    } else {
+        $overlay.hide();
+        $inputs.prop('disabled', false);
+        $paneButtons.prop('disabled', false);
+    }
+}
+
+
+
 function toDatetimeLocal(val) {
     if (!val) return '';
     return String(val).replace(' ', 'T').substring(0, 16);
@@ -2491,14 +2539,19 @@ function preGuardarSancionVehiculo() {
     $.createDialogConfirm('Est&aacute; seguro que desea guardar los datos?', data, saveSancionVehiculo);
 }
 function saveSancionVehiculo(data){   
+    setLoadingModalSancionUnificada(true, 'Guardando sanción...');
     $.post('', data, function (r) {
         if (r.success) {
-            cerrarModalSancionUnificada();
             actualizarGridSanciones();
+            cerrarModalSancionUnificada();
         } else {
             $.alert(r.message || 'Error al guardar');
         }
-    }, 'json');
+    }, 'json').fail(function () {
+        $.alert('Error de conexión al guardar.');
+    }).always(function () {
+        setLoadingModalSancionUnificada(false);
+    });
 }
 function guardarSancionChofer() {
     if (!validarTipoSancionSiAplica()) {
@@ -2518,14 +2571,19 @@ function guardarSancionChofer() {
         Msa_Obs: $('#sancionCho_Msa_Obs').val(),
         Tsa_Cod: $.trim($('#Tsa_Cod').val())
     };
+    setLoadingModalSancionUnificada(true, 'Guardando sanción...');
     $.post('', data, function (r) {
         if (r.success) {
-            cerrarModalSancionUnificada();
             actualizarGridSanciones();
+            cerrarModalSancionUnificada();
         } else {
             $.alert(r.message || 'Error al guardar');
         }
-    }, 'json');
+    }, 'json').fail(function () {
+        $.alert('Error de conexión al guardar.');
+    }).always(function () {
+        setLoadingModalSancionUnificada(false);
+    });
 }
 function guardarSancionPlanta() {
     if (!validarTipoSancionSiAplica()) {
@@ -2538,6 +2596,7 @@ function guardarSancionPlanta() {
     }
     var data = {
         saveSancionPlantaAjax: true,
+        Msa_Tel: $('#sancionPla_Msa_Tel').val(),
         Msa_Cod: $('#sancionPla_Msa_Cod').val(),
         Pla_Cod: Pla_Cod,
         Msa_Fei: $('#sancionPla_Msa_Fei').val(),
@@ -2545,12 +2604,18 @@ function guardarSancionPlanta() {
         Msa_Obs: $('#sancionPla_Msa_Obs').val(),
         Tsa_Cod: $.trim($('#Tsa_Cod').val())
     };
+    setLoadingModalSancionUnificada(true, 'Guardando sanción...');
     $.post('', data, function (r) {
         if (r.success) {
-            cerrarModalSancionUnificada();
             actualizarGridSanciones();
+            cerrarModalSancionUnificada();
         } else {
             $.alert(r.message || 'Error al guardar');
         }
-    }, 'json');
+    }, 'json').fail(function () {
+        $.alert('Error de conexión al guardar.');
+    }).always(function () {
+        setLoadingModalSancionUnificada(false);
+    });
 }
+

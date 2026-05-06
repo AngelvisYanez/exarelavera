@@ -3251,7 +3251,7 @@ $obBD_con1->utf8_change_param($transportes);
     </style>
 
 </body>
-<script type="text/javascript" src="../VALIDACIONES/man_adm_configuracion.js?x=48"></script>
+<script type="text/javascript" src="../VALIDACIONES/man_adm_configuracion.js?x=49"></script>
 
 </script>
 
