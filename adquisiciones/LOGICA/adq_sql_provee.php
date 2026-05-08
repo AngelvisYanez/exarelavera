@@ -30,7 +30,7 @@ function sentencias_provee($id, $Par_Sql)
             }
             if (isset($Par_Sql["limits"])) {
                 $Par_Sql["limits"] = "ORDER BY Prs_Ape $Par_Sql[limits]";
-                $campos = "proveedore.Prv_Cod,proveedore.Prs_Cod,Prv_fax,Prv_est,Tco_cod,Prv_Esp,Prv_Con,Prv_Reg,Prv_Ris,Prv_Gct,Prv_Rim_Emp,Prv_Rim_Np,Prv_Ag_Ret,Prv_Tic,if(Prv_Tic='N','Natural','Jurídico')as PrvTic,Emp_cod,proveedore.Prv_Com, Prs_Ced,Prs_Ced as Prs_Ced_Ant ,Prs_Ape, persona.Ide_Cod,Ide_Sri,Prs_Ape,Prs_Nom, CONCAT(Prs_Ape,' ',Prs_Nom) AS proveedor,Prs_Sex,persona.Ciu_Cod,Prs_Dir,Prv_Tel,Prs_Te2,Prs_Cel,Prv_Cor, provee_aut.Tri_Cod,provee_aut.Tic_Cod,provee_aut.Prd_Aut,provee_aut.Prd_Imp,provee_aut.Prd_Cad, provee_aut.Ciu_Cod as Ciu_Cod_Aut, provee_aut.Ren_Cod_Ren, provee_aut.Ren_Cod_Iva";
+                $campos = "proveedore.Prv_Cod,proveedore.Prs_Cod,Prv_fax,Prv_est,Tco_cod,Prv_Esp,Prv_Con,Prv_Reg,Prv_Ris,Prv_Gct,Prv_Rim_Emp,Prv_Rim_Np,Prv_Ag_Ret,Prv_Tic,Prv_Tac,if(Prv_Tic='N','Natural','Jurídico')as PrvTic,Emp_cod,proveedore.Prv_Com, Prs_Ced,Prs_Ced as Prs_Ced_Ant ,Prs_Ape, persona.Ide_Cod,Ide_Sri,Prs_Ape,Prs_Nom, CONCAT(Prs_Ape,' ',Prs_Nom) AS proveedor,Prs_Sex,persona.Ciu_Cod,Prs_Dir,Prv_Tel,Prs_Te2,Prs_Cel,Prv_Cor, provee_aut.Tri_Cod,provee_aut.Tic_Cod,provee_aut.Prd_Aut,provee_aut.Prd_Imp,provee_aut.Prd_Cad, provee_aut.Ciu_Cod as Ciu_Cod_Aut, provee_aut.Ren_Cod_Ren, provee_aut.Ren_Cod_Iva";
             } else {
                 $campos = "COUNT(proveedore.Prv_Cod) as total";
                 $Par_Sql["limits"] = "";
@@ -66,7 +66,8 @@ function sentencias_provee($id, $Par_Sql)
                 . " Prv_Gct='$Par_Sql[Prv_Gct]',"
                 . " Prv_Rim_Emp='$Par_Sql[Prv_Rim_Emp]',"
                 . " Prv_Rim_Np='$Par_Sql[Prv_Rim_Np]',"
-                . " Prv_Ag_Ret='$Par_Sql[Prv_Ag_Ret]'"
+                . " Prv_Ag_Ret='$Par_Sql[Prv_Ag_Ret]',"
+                . " Prv_Tac='$Par_Sql[Prv_Tac]' "
                 . "WHERE Prv_Cod='$Par_Sql[Prv_Cod]'; ";
             break;
         case 5:
@@ -97,7 +98,7 @@ function sentencias_provee($id, $Par_Sql)
             break;
         case 8:
             $sql = "INSERT INTO proveedore (Emp_Cod,Prs_Cod,Prv_Com,Prv_Tic,Prv_Tel,Prv_Cor,Prv_Esp,Prv_Con,Prv_Reg,Prv_Ris,
-            Prv_Gct,Prv_Rim_Emp, Prv_Rim_Np ,Prv_Ag_Ret, Prv_Est) VALUES ("
+            Prv_Gct,Prv_Rim_Emp, Prv_Rim_Np ,Prv_Ag_Ret, Prv_Tac, Prv_Est) VALUES ("
                 . "'$Par_Sql[Emp_Cod]',"
                 . "'$Par_Sql[Prs_Cod]',"
                 . "'$Par_Sql[Prv_Com]',"
@@ -112,6 +113,7 @@ function sentencias_provee($id, $Par_Sql)
                 . "'$Par_Sql[Prv_Rim_Emp]',"
                 . "'$Par_Sql[Prv_Rim_Np]',"
                 . "'$Par_Sql[Prv_Ag_Ret]',"
+                . "'$Par_Sql[Prv_Tac]',"
                 . "'A');";
             break;
         case 9:

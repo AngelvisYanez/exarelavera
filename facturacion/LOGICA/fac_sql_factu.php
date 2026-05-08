@@ -275,7 +275,7 @@ function sentencias_doc($id, $Par_Sql)
             break;
         case 32:
             // $sql = "INSERT INTO proveedore(Prs_Cod,Prv_Tic,Prv_Com,Prv_Con,Prv_Esp,Emp_Cod,Prv_Cor,Prv_Tel,Prv_Reg,Prv_Ris) VALUES($Par_Sql[Prs_Cod],'$Par_Sql[Prv_Tic]','$Par_Sql[Prv_Com]','$Par_Sql[Prv_Con]','$Par_Sql[Prv_Esp]',$Par_Sql[Emp_Cod],'$Par_Sql[Prv_Cor]','$Par_Sql[Prv_Tel]','$Par_Sql[Prv_Reg]','$Par_Sql[Prv_Ris]');";
-            $sql = "INSERT INTO proveedore(Prs_Cod,Prv_Tic,Prv_Com,Prv_Con,Prv_Esp,Emp_Cod,Prv_Cor,Prv_Tel,Prv_Reg,Prv_Ris,Prv_Gct,Prv_Rim_Emp,Prv_Rim_Np,Prv_Ag_Ret) 
+            $sql = "INSERT INTO proveedore(Prs_Cod,Prv_Tic,Prv_Com,Prv_Con,Prv_Esp,Emp_Cod,Prv_Cor,Prv_Tel,Prv_Reg,Prv_Ris,Prv_Gct,Prv_Rim_Emp,Prv_Rim_Np,Prv_Ag_Ret,Prv_Tac) 
                     VALUES($Par_Sql[Prs_Cod],'$Par_Sql[Prv_Tic]'
                     ,'$Par_Sql[Prv_Com]','$Par_Sql[Prv_Con]'
                     ,'$Par_Sql[Prv_Esp]',$Par_Sql[Emp_Cod]
@@ -287,6 +287,7 @@ function sentencias_doc($id, $Par_Sql)
                     ,'$Par_Sql[Prv_Rim_Emp]'
                     ,'$Par_Sql[Prv_Rim_Np]'
                     ,'$Par_Sql[Prv_Ag_Ret]'
+                    ,'$Par_Sql[Prv_Tac]'
                     );";
             //ChromePhp::log($sql);
             break;

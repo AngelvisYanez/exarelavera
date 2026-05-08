@@ -936,6 +936,16 @@ $Pec_Cop = $obBD_con1->getRowConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
 if (!empty($Pec_Cop['Pec_Fei'])) $hoy = substr($Pec_Cop['Pec_Fei'], 0, 4) . substr($hoy, 4, 10);
 $insert = true;
 $rs_tip_compr = $obBD_con1->getArrayConsulta('tipo_compr.selectWhere', array('clean' => true, 'where' => array('Tic_Est' => 'A')), $obBD_conexion);
+$listaActividad = $obBD_con1->getArrayConsulta('proveedore.selectWhere', array(
+    'clean' => true,
+    'unsetColsInit' => true,
+    'setWhere' => array('listaTacDistinctPorEmpresa'),
+    'where' => array(
+        'proveedore.Emp_Cod' => $Ses_Emp_Cod,
+        'proveedore.Prv_Est' => 'A',
+    ),
+    'order' => 'Prv_Tac ASC',
+), $obBD_conexion);
 
 //Obtener datos de CCxPP 08/10/2025
 if (isset($saldoCCxPP)) {
@@ -991,7 +1001,7 @@ if (isset($saldoCCxPP)) {
     </script>
 
     <script language="javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/fac_val_factu.js?gh=99"></script>
+    <script type="text/javascript" src="../VALIDACIONES/fac_val_factu.js?gh=100"></script>
     <script language="javascript" src="../../framework/plugins/cedulaRuc.js"></script>
 </HEAD>
 
@@ -1409,6 +1419,24 @@ if (isset($saldoCCxPP)) {
                     <label class="col-xs-3 control-label label-xs">Nomb.Comerc.:</label>
                     <div class="col-xs-5"><input name="Prv_Com" type="text" class="form-control input-xs" /></div>
                 </div>
+                <div class="form-group natural">
+                    <label class="col-xs-3 control-label label-xs">Tipo Actividad:</label>
+                    <div class="col-xs-5">
+                        <div class="input-group input-group-xs">
+                            <select name="Prv_Tac" id="Prv_Tac" class="form-control input-xs">
+                                <option value="">— Seleccionar —</option>
+                                <?php foreach ($listaActividad as $row) {
+                                    $tac = isset($row['Prv_Tac']) ? $row['Prv_Tac'] : '';
+                                    $tacEsc = htmlspecialchars((string) $tac, ENT_QUOTES, 'UTF-8');
+                                    echo '<option value="' . $tacEsc . '">' . $tacEsc . '</option>';
+                                } ?>
+                            </select>
+                            <span class="input-group-btn">
+                                <button type="button" class="btn btn-info btn-xs" title="Agregar actividad" onclick="abrirDialogoPrvTacFact(); return false;" tabindex="-1"><i class="glyphicon glyphicon-plus"></i></button>
+                            </span>
+                        </div>
+                    </div>
+                </div>
             </fieldset>
             <fieldset class="exa-fieldset">
                 <legend class="Titulos2">Datos de Ubicación</legend>
@@ -1446,6 +1474,17 @@ if (isset($saldoCCxPP)) {
 
     </div>
     <!-- FIN DEL DIALOGO PROVEEDOR-->
+    <div id="provTacCreateDialogFact" style="display:none;" title="Nueva actividad económica">
+        <div style="padding:10px 6px 4px;border-radius:10px;background:linear-gradient(180deg,#fafbfd 0%,#ffffff 55%);border:1px solid rgba(0,0,0,.06);box-shadow:0 4px 18px rgba(15,23,42,.06);">
+            <p style="margin:0 0 14px;font-size:13px;line-height:1.45;color:#64748b;">Describe la actividad en pocas palabras. El texto se guardará tal cual en el proveedor.</p>
+            <div class="form-group" id="prvTacDescGroupFact" style="margin-bottom:0;">
+                <label for="prvTacDescInputFact" style="font-size:12px;font-weight:600;color:#334155;margin-bottom:6px;display:block;">Actividad <span class="text-danger">*</span></label>
+                <input type="text" id="prvTacDescInputFact" class="form-control input-xs" maxlength="20" autocomplete="off" placeholder="Ej. Comercio al por menor" />
+                <div id="prvTacDescMeterFact" style="margin-top:6px;font-size:11px;color:#94a3b8;text-align:right;"><span id="prvTacDescCountFact">0</span> / 20 caracteres</div>
+                <span id="prvTacDescErrFact" class="help-block text-danger" style="display:none;margin-top:8px;font-size:12px;"></span>
+            </div>
+        </div>
+    </div>
     <?php include("../COMPONENTES/facComReembolsos.php"); ?>
 
     <div id="loadXml" title="Cargar Documento Electronico">
@@ -1501,6 +1540,56 @@ if (isset($saldoCCxPP)) {
                 }
             }
         }
+        function actualizarContadorPrvTacFact(maxLen) {
+            var n = $('#prvTacDescInputFact').val().length;
+            $('#prvTacDescCountFact').text(n);
+            var $m = $('#prvTacDescMeterFact');
+            if (n >= maxLen) {
+                $m.css({ color: '#dc2626', fontWeight: 600 });
+            } else {
+                $m.css({ color: '#94a3b8', fontWeight: '' });
+            }
+        }
+        function abrirDialogoPrvTacFact() {
+            $('#provTacCreateDialogFact').dialog('open');
+        }
+        function aplicarNuevaPrvTacFact() {
+            var maxLen = 20;
+            var $inp = $('#prvTacDescInputFact');
+            var desc = $.trim($inp.val()).toLocaleUpperCase('es');
+            var $grp = $('#prvTacDescGroupFact');
+            var $err = $('#prvTacDescErrFact');
+            $err.hide().text('');
+            $grp.removeClass('has-error');
+            if (!desc.length) {
+                $err.text('Ingrese una descripción.').show();
+                $grp.addClass('has-error');
+                $inp.trigger('focus');
+                return false;
+            }
+            if (desc.length > maxLen) {
+                $err.text('La actividad no puede superar ' + maxLen + ' caracteres.').show();
+                $grp.addClass('has-error');
+                return false;
+            }
+            var $sel = $('#provCreateForm #Prv_Tac');
+            var $matchOpt = null;
+            $sel.find('option').each(function() {
+                var v = $(this).val();
+                if (v === '') return true;
+                if ($.trim(v).toLocaleUpperCase('es') === desc) {
+                    $matchOpt = $(this);
+                    return false;
+                }
+            });
+            if ($matchOpt && $matchOpt.length) {
+                if ($matchOpt.val() !== desc) $matchOpt.attr('value', desc).text(desc);
+            } else {
+                $sel.append($('<option></option>').attr('value', desc).text(desc));
+            }
+            $sel.val(desc).trigger('chosen:updated');
+            return true;
+        }
         $('#loadXml').createDialog({
             width: 500,
             height: 250,
@@ -1540,6 +1629,7 @@ if (isset($saldoCCxPP)) {
                         $('#reset').val(0);
                         if (!$.varValid(re.data['Prv_Cod']) || re.data['Prv_Cod'] === '') {
                             $('#provCreateForm').setData(re.data);
+                            $('#provCreateForm #Prv_Tac').trigger('chosen:updated');
                             $('#Ide_Cod').val(re.data['Prs_Ced'].length === 10 ? 2 : 1);
                             $('#Prv_Tic').val(ValidacionCedulaRucService.esIdentificacionValida(re.data['Prs_Ced'])['tipo_abrev'] === 'NA' ? 'N' : 'J').trigger('change');
                             if ($.varValid(re.data['Prs_Cod']) && re.data['Prs_Cod'] !== '') $('#Prs_Ced').trigger('change');
@@ -1636,6 +1726,41 @@ if (isset($saldoCCxPP)) {
         //Ver negociaciones
         var containerNegoci = $("#containerNegoci");
         $(function() {
+            $('#provCreateForm #Prv_Tac').createChosen('input-xs', {
+                width: '100%',
+                placeholder_text_single: '— Seleccionar —',
+                search_contains: true
+            });
+            var PRV_TAC_MAX_FACT = 20;
+            $('#provTacCreateDialogFact').createDialog({
+                title: 'Nueva actividad económica',
+                width: 440,
+                height: 260,
+                noTitleStuff: false,
+                icon: 'plus-sign',
+                buttons: [{
+                    text: 'Agregar',
+                    icons: { primary: 'ui-icon-check' },
+                    click: function() {
+                        if (aplicarNuevaPrvTacFact()) $(this).dialog('close');
+                    }
+                }, {
+                    text: 'Cancelar',
+                    icons: { primary: 'ui-icon-closethick' },
+                    click: function() { $(this).dialog('close'); }
+                }],
+                afterOpen: function() {
+                    var $inp = $('#prvTacDescInputFact');
+                    $inp.val('');
+                    $('#prvTacDescGroupFact').removeClass('has-error');
+                    $('#prvTacDescErrFact').hide().text('');
+                    actualizarContadorPrvTacFact(PRV_TAC_MAX_FACT);
+                    setTimeout(function() { $inp.trigger('focus'); }, 80);
+                }
+            });
+            $(document).on('input', '#prvTacDescInputFact', function() {
+                actualizarContadorPrvTacFact(PRV_TAC_MAX_FACT);
+            });
             armargrid();
         });
 

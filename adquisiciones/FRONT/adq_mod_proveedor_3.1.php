@@ -96,6 +96,16 @@ if (isset($editarProvAjax)) {
 }
 
 $rs_tip_compr = $obBD_con1->getArrayConsulta('tipo_compr.selectWhere', array('clean' => true, 'where' => array('Tic_Est' => 'A')), $obBD_conexion);
+$listaActividad = $obBD_con1->getArrayConsulta('proveedore.selectWhere', array(
+    'clean' => true,
+    'unsetColsInit' => true,
+    'setWhere' => array('listaTacDistinctPorEmpresa'),
+    'where' => array(
+        'proveedore.Emp_Cod' => $Ses_Emp_Cod,
+        'proveedore.Prv_Est' => 'A',
+    ),
+    'order' => 'Prv_Tac ASC',
+), $obBD_conexion);
 
 ?>
 
@@ -194,6 +204,17 @@ $rs_tip_compr = $obBD_con1->getArrayConsulta('tipo_compr.selectWhere', array('cl
                         </fieldset>
                     </form>
                 </div>
+                <div id="prvTacDialog" style="display:none;" title="Nueva actividad económica">
+                    <div style="padding:10px 6px 4px;border-radius:10px;background:linear-gradient(180deg,#fafbfd 0%,#ffffff 55%);border:1px solid rgba(0,0,0,.06);box-shadow:0 4px 18px rgba(15,23,42,.06);">
+                        <p style="margin:0 0 14px;font-size:13px;line-height:1.45;color:#64748b;">Describe la actividad en pocas palabras del proveedor.</p>
+                        <div class="form-group" id="prvTacDescGroup" style="margin-bottom:0;">
+                            <label for="prvTacDescInput" style="font-size:12px;font-weight:600;color:#334155;margin-bottom:6px;display:block;">Actividad <span class="text-danger">*</span></label>
+                            <input type="text" id="prvTacDescInput" class="form-control input-xs" maxlength="20" autocomplete="off" placeholder="Ej. Comercio al por menor" />
+                            <div id="prvTacDescMeter" style="margin-top:6px;font-size:11px;color:#94a3b8;text-align:right;"><span id="prvTacDescCount">0</span> / 20 caracteres</div>
+                            <span id="prvTacDescErr" class="help-block text-danger" style="display:none;margin-top:8px;font-size:12px;"></span>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="col-sm-3"></div>
                 <div class="col-md-6 col-sm-8">
@@ -274,6 +295,24 @@ $rs_tip_compr = $obBD_con1->getArrayConsulta('tipo_compr.selectWhere', array('cl
                                             <option value="M">MASCULINO</option>
                                             <option value="F">FEMENINO</option>
                                         </select>
+                                    </div>
+                                </div>
+                                <div class="form-group natural">
+                                    <label class="col-xs-3 control-label label-xs ">Tipo Actividad:</label>
+                                    <div class="col-xs-9">
+                                        <div class="input-group input-group-xs">
+                                            <select name="Prv_Tac" id="Prv_Tac" class="form-control input-xs">
+                                                <option value="">— Seleccionar —</option>
+                                                <?php foreach ($listaActividad as $row) {
+                                                    $tac = isset($row['Prv_Tac']) ? $row['Prv_Tac'] : '';
+                                                    $tacEsc = htmlspecialchars((string) $tac, ENT_QUOTES, 'UTF-8');
+                                                    echo '<option value="' . $tacEsc . '">' . $tacEsc . '</option>';
+                                                } ?>
+                                            </select>
+                                            <span class="input-group-btn">
+                                                <button type="button" class="btn btn-info btn-xs" title="Agregar actividad" onclick="agregarPrvTac(); return false;" tabindex="-1"><i class="glyphicon glyphicon-plus"></i></button>
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -517,6 +556,53 @@ $rs_tip_compr = $obBD_con1->getArrayConsulta('tipo_compr.selectWhere', array('cl
                     return '<div class="over"><b>' + t + '</b></div><div class="over desc" style="font-size:11px;"><b>Provincia:</b> ' + d['prov'] + ' <b>Pa&iacute;s:</b> ' + d['pai'] + '</div>';
                 }
             });
+            $('#Prv_Tac').createChosen('input-xs', {
+                width: '100%',
+                placeholder_text_single: '— Seleccionar —',
+                search_contains: true
+            });
+
+            var PRV_TAC_MAX = 20;
+            $('#prvTacDialog').createDialog({
+                title: 'Nueva actividad económica',
+                width: 440,
+                height: 260,
+                noTitleStuff: false,
+                icon: 'plus-sign',
+                dialogClass: 'prv-tac-dialog-wrap',
+                buttons: [{
+                    text: 'Agregar',
+                    icons: {
+                        primary: 'ui-icon-check'
+                    },
+                    click: function() {
+                        if (aplicarNuevaPrvTacDesdeDialog()) {
+                            $(this).dialog('close');
+                        }
+                    }
+                }, {
+                    text: 'Cancelar',
+                    icons: {
+                        primary: 'ui-icon-closethick'
+                    },
+                    click: function() {
+                        $(this).dialog('close');
+                    }
+                }],
+                afterOpen: function() {
+                    var $inp = $('#prvTacDescInput');
+                    $inp.val('');
+                    $('#prvTacDescGroup').removeClass('has-error');
+                    $('#prvTacDescErr').hide().text('');
+                    actualizarContadorPrvTacDesc(PRV_TAC_MAX);
+                    setTimeout(function() {
+                        $inp.trigger('focus');
+                    }, 80);
+                }
+            });
+            $(document).on('input', '#prvTacDescInput', function() {
+                actualizarContadorPrvTacDesc(PRV_TAC_MAX);
+            });
 
             //Inicio Grid para presentar el detalle de factura
             $("#Lis_Proveedor").createGrid({
@@ -743,6 +829,7 @@ $rs_tip_compr = $obBD_con1->getArrayConsulta('tipo_compr.selectWhere', array('cl
             $('#Prs_Ced').fieldValid(true);
             ide_cod = proveedor['Ide_Cod'];
             $('#Select_Ciudad').trigger('chosen:updated');
+            $('#Prv_Tac').trigger('chosen:updated');
         }
 
         function EditaProveedor() {
@@ -765,6 +852,76 @@ $rs_tip_compr = $obBD_con1->getArrayConsulta('tipo_compr.selectWhere', array('cl
                 });
 
 
+        }
+
+        function actualizarContadorPrvTacDesc(maxLen) {
+            var n = $('#prvTacDescInput').val().length;
+            $('#prvTacDescCount').text(n);
+            var $m = $('#prvTacDescMeter');
+            if (n >= maxLen) {
+                $m.css({
+                    color: '#dc2626',
+                    fontWeight: 600
+                });
+            } else {
+                $m.css({
+                    color: '#94a3b8',
+                    fontWeight: ''
+                });
+            }
+        }
+
+        function agregarPrvTac() {
+            $('#prvTacDialog').dialog('open');
+        }
+
+        function aplicarNuevaPrvTacDesdeDialog() {
+            var maxLen = 20;
+            var $inp = $('#prvTacDescInput');
+            var raw = $inp.val();
+            var desc = $.trim(raw).toLocaleUpperCase('es');
+            var $grp = $('#prvTacDescGroup');
+            var $err = $('#prvTacDescErr');
+
+            $err.hide().text('');
+            $grp.removeClass('has-error');
+
+            if (!desc.length) {
+                $err.text('Ingrese una descripción.').show();
+                $grp.addClass('has-error');
+                $inp.trigger('focus');
+                return false;
+            }
+            if (desc.length > maxLen) {
+                $err.text('La actividad no puede superar ' + maxLen + ' caracteres.').show();
+                $grp.addClass('has-error');
+                return false;
+            }
+
+            var $sel = $('#Prv_Tac');
+            var $matchOpt = null;
+            $sel.find('option').each(function() {
+                var v = $(this).val();
+                if (v === '') {
+                    return true;
+                }
+                if ($.trim(v).toLocaleUpperCase('es') === desc) {
+                    $matchOpt = $(this);
+                    return false;
+                }
+            });
+
+            if ($matchOpt && $matchOpt.length) {
+                if ($matchOpt.val() !== desc) {
+                    $matchOpt.attr('value', desc).text(desc);
+                }
+                $sel.val(desc).trigger('chosen:updated');
+                return true;
+            }
+
+            $sel.append($('<option></option>').attr('value', desc).text(desc));
+            $sel.val(desc).trigger('chosen:updated');
+            return true;
         }
 
         function setTipoDoc() {

@@ -115,7 +115,7 @@
 						Prs_Cor, ps.Ide_Cod, p.Prv_Cod,
 						p.Prv_Com, p.Prv_Tic, p.Prv_Con,
 						p.Prv_Nge, p.Prv_Apg, p.Prv_Tlg,
-						p.Prv_Ceg, p.Prv_Cog, p.Prv_Ace,
+						p.Prv_Ceg, p.Prv_Cog, p.Prv_Ace, p.Prv_Tac,
 						p.Prv_Fin, p.Prv_Fce, p.Prv_Fre,
 						p.Prv_Fac, p.Prv_Act, p.Prv_Nct,
 						p.Prv_Ect, p.Prv_Fax, p.Prv_Esp, p.Prv_Rep
@@ -146,7 +146,7 @@
 					Prv_Nct = '$Par_Sql[14]',
 					Prv_Ect = '$Par_Sql[15]',
 					Prv_Fax = '$Par_Sql[16]',
-					Prv_Tic = '$Par_Sql[18]', Prv_Rep = '$Par_Sql[19]'
+					Prv_Tic = '$Par_Sql[18]', Prv_Rep = '$Par_Sql[19]', Prv_Tac = '$Par_Sql[20]'
 				WHERE Prv_Cod = '$Par_Sql[17]'";
 				return $sql;
 				break;

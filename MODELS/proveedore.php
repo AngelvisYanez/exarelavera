@@ -38,6 +38,13 @@ class proveedore extends AbstractModel{
                 $sql->where("productor_bana.Prd_Cod IS NOT NULL");
                 //echo $sql.'<br/>';
                 break;
+            /** Actividades distintas (Prv_Tac) por empresa; Emp_Cod y Prv_Est se aplican en selectWhere */
+            case "listaTacDistinctPorEmpresa":
+                $sql->unsetCols(null);
+                $sql->columns('proveedore.Prv_Tac');
+                $sql->group('proveedore.Prv_Tac');
+                $sql->where("proveedore.Prv_Tac IS NOT NULL AND TRIM(IFNULL(proveedore.Prv_Tac,'')) <> ''");
+                break;
             default: $this->sqlByParams($id,$sql,array(
                     'isActive'=>"$this->_name.$this->_state='A'"
                 ));

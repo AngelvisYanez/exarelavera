@@ -48,7 +48,7 @@ if (isset($_POST['hdd_save']))
 		$Ide_Max = ($Ide_Max != 10 && $Ide_Max != 13)?-1:$Ide_Max;
 		$Identifica = $obBD_con1->getRowConsulta(6,$Ide_Max,$obBD_conexion);
 		
-        $Param_Proveedor = strtoupper($Prv_Com).'*'.$Prv_Esp.'*'.$Prv_Con.'*'.strtoupper($Prv_Nge).'*'.strtoupper($Prv_Apg).'*'.$Prv_Tlg.'*'.$Prv_Ceg.'*'.$Prv_Cog.'*'.strtoupper($Prv_Ace).'*'.$Prv_Fin.'*'.$Prv_Fce.'*'.$Prv_Fre.'*'.$Prv_Fac.'*'.strtoupper($Prv_Act).'*'.strtoupper($Prv_Nct).'*'.$Prv_Ect.'*'.$Prv_Fax.'*'.$Prv_Cod.'*'.$Prv_Tic.'*'.$Prv_Rep;
+        $Param_Proveedor = strtoupper($Prv_Com).'*'.$Prv_Esp.'*'.$Prv_Con.'*'.strtoupper($Prv_Nge).'*'.strtoupper($Prv_Apg).'*'.$Prv_Tlg.'*'.$Prv_Ceg.'*'.$Prv_Cog.'*'.strtoupper($Prv_Ace).'*'.$Prv_Fin.'*'.$Prv_Fce.'*'.$Prv_Fre.'*'.$Prv_Fac.'*'.strtoupper($Prv_Act).'*'.strtoupper($Prv_Nct).'*'.$Prv_Ect.'*'.$Prv_Fax.'*'.$Prv_Cod.'*'.$Prv_Tic.'*'.$Prv_Rep.'*'.strtoupper(trim($Prv_Tac));
 
         $Param_Persona = $Prs_Ced.'*'.$Identifica['Ide_Cod'].'*'.strtoupper($Prs_Nom).'*'.strtoupper($Prs_Ape).'*'.$Ciu_Cod.'*'.strtoupper($Prs_Dir).'*'.$Prs_Tel.'*'.$Prs_Te2.'*'.$Prs_Cel.'*'.$Prs_Cor.'*'.$Prs_Cod;
 
@@ -66,9 +66,11 @@ if (isset($_POST['hdd_save']))
   
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
+	<link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
 	<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
 	<script language="javascript" src="../VALIDACIONES/adq_val_proveedor.js"></script>
     <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>        
+    <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/javascript"> 
       $(function() {
 			$('#set1 *').tooltip({showURL: false});
@@ -187,6 +189,16 @@ if (isset($_POST['hdd_save']))
    <? $thisPost->startPost();?>
    <?
    	$Row_Persona = $obBD_con1->getRowConsulta(11, $Prv_Cod, $obBD_conexion);
+    $listaActividad = $obBD_con1->getArrayConsulta('proveedore.selectWhere', array(
+        'clean' => true,
+        'unsetColsInit' => true,
+        'setWhere' => array('listaTacDistinctPorEmpresa'),
+        'where' => array(
+            'proveedore.Emp_Cod' => $Ses_Emp_Cod,
+            'proveedore.Prv_Est' => 'A',
+        ),
+        'order' => 'Prv_Tac ASC',
+    ), $obBD_conexion);
    ?>
    <? echo mensaje_requerido();?>
    <FIELDSET>
@@ -235,6 +247,23 @@ if (isset($_POST['hdd_save']))
        <td width="78%" class="LetraNegra">&nbsp;
 	     <input name="Prv_Com" type="text" id="Prv_Com" 
          style="text-transform:uppercase" value="<? echo $Row_Persona['Prv_Com'];?>" size="50" maxlength="100"/>
+       </td>
+      </tr>
+      <tr>
+       <td width="22%" class="Etiqueta1">Tipo Actividad:</td>
+       <td width="78%" class="LetraNegra">&nbsp;
+         <select name="Prv_Tac" id="Prv_Tac" data-placeholder="— Seleccionar —" style="width: 360px;">
+           <option value=""></option>
+           <?php foreach ($listaActividad as $row) {
+                $tac = isset($row['Prv_Tac']) ? $row['Prv_Tac'] : '';
+                $tacEsc = htmlspecialchars((string) $tac, ENT_QUOTES, 'UTF-8');
+                $selected = (isset($Row_Persona['Prv_Tac']) && trim($Row_Persona['Prv_Tac']) === trim($tac)) ? 'selected' : '';
+                echo '<option value="' . $tacEsc . '" ' . $selected . '>' . $tacEsc . '</option>';
+            } ?>
+         </select>
+         <button type="button" class="btn btn-info btn-mini" title="Agregar actividad" onclick="abrirDialogoPrvTac(); return false;" style="margin-left:6px;">
+           <i class="icon-plus icon-white"></i>
+         </button>
        </td>
       </tr>
       <tr>
@@ -491,6 +520,23 @@ if (isset($_POST['hdd_save']))
    </table>
   <? } ?> 
   
+  <div id="prvTacDialog" title="Nueva actividad económica" style="display:none;">
+    <table width="100%" border="0" cellpadding="2" cellspacing="0">
+      <tr>
+        <td class="Etiqueta1">Actividad:</td>
+      </tr>
+      <tr>
+        <td>
+          <input type="text" id="prvTacDescInput" class="textbox" maxlength="20" style="width:100%; text-transform:uppercase;" />
+          <div style="font-size:11px; color:#666; text-align:right; margin-top:4px;">
+            <span id="prvTacDescCount">0</span> / 20 caracteres
+          </div>
+          <div id="prvTacDescErr" style="display:none; color:#C0392B; font-size:11px; margin-top:4px;"></div>
+        </td>
+      </tr>
+    </table>
+  </div>
+  
   
   
  
@@ -503,6 +549,76 @@ if (isset($_POST['hdd_save']))
  </tr>
  </table>
    </div>
+   <script type="text/javascript">
+    function actualizarContadorPrvTacMod() {
+      $('#prvTacDescCount').text($('#prvTacDescInput').val().length);
+    }
+
+    function abrirDialogoPrvTac() {
+      $('#prvTacDescInput').val('');
+      $('#prvTacDescErr').hide().text('');
+      actualizarContadorPrvTacMod();
+      $('#prvTacDialog').dialog('open');
+      setTimeout(function(){ $('#prvTacDescInput').focus(); }, 50);
+    }
+
+    function aplicarNuevaPrvTacMod() {
+      var desc = $.trim($('#prvTacDescInput').val()).toLocaleUpperCase('es');
+      if (!desc.length) {
+        $('#prvTacDescErr').text('Ingrese una descripción.').show();
+        return false;
+      }
+      if (desc.length > 20) {
+        $('#prvTacDescErr').text('La actividad no puede superar 20 caracteres.').show();
+        return false;
+      }
+      var $sel = $('#Prv_Tac');
+      var $match = null;
+      $sel.find('option').each(function(){
+        var v = $(this).val();
+        if (v && $.trim(v).toLocaleUpperCase('es') === desc) {
+          $match = $(this);
+          return false;
+        }
+      });
+      if ($match && $match.length) {
+        if ($match.val() !== desc) $match.attr('value', desc).text(desc);
+      } else {
+        $sel.append($('<option></option>').attr('value', desc).text(desc));
+      }
+      $sel.val(desc).trigger('chosen:updated');
+      return true;
+    }
+
+    $(function() {
+      if ($('#Prv_Tac').length) {
+        $('#Prv_Tac').chosen({width: '360px', search_contains: true, no_results_text: 'Sin resultados'});
+      }
+      $('#prvTacDialog').dialog({
+        autoOpen: false,
+        modal: true,
+        resizable: false,
+        width: 430,
+        buttons: {
+          "Agregar": function() {
+            $('#prvTacDescErr').hide().text('');
+            if (aplicarNuevaPrvTacMod()) $(this).dialog('close');
+          },
+          "Cancelar": function() {
+            $(this).dialog('close');
+          }
+        }
+      });
+      $(document).on('input', '#prvTacDescInput', actualizarContadorPrvTacMod);
+      $(document).on('keydown', '#prvTacDescInput', function(ev){
+        if (ev.keyCode === 13) {
+          ev.preventDefault();
+          $('#prvTacDescErr').hide().text('');
+          if (aplicarNuevaPrvTacMod()) $('#prvTacDialog').dialog('close');
+        }
+      });
+    });
+   </script>
     <script type="text/javascript" src="../VALIDACIONES/adq_par_proveedor.js"></script>
   <script type="text/javascript" src="../../Librerias/textbox/main.js"></script>
   </BODY>
