@@ -782,6 +782,10 @@ LEFT JOIN bancos ON cheques_ext.Bak_Cod=bancos.Bak_Cod
         case 61:
             $sql = "SELECT * FROM confi_fact WHERE Emp_Cod=$Par_Sql[0]";
             break;
+
+        case 62:
+            $sql = "SELECT IFNULL(COUNT(*),0) AS tot_fact FROM anticipos_clientes WHERE Vet_Cod=$Par_Sql[0] AND Ant_Est!='I'";
+            break;
     }
     //echo $sql."<br/>";
     return $sql;

@@ -24,16 +24,9 @@ $mes = date("m");
 /* Configuraciones de la Empresa */
 $configs = $obBD_con1->getRowConsulta(61, $Ses_Emp_Cod, $obBD_conexion);
 
+
 if (isset($dataReport)) {
-    // Aumentar límites de memoria y tiempo de ejecución para reportes grandes
-    ini_set('memory_limit', '512M');
-    ini_set('max_execution_time', 300);
-    ini_set('post_max_size', '50M');
-    
     $full = !isset($resumido) || !(isset($resumido) && $resumido == 'true');
-    // Definir resumido1 basado en resumido o usar el valor recibido directamente
-    $resumido1 = isset($resumido1) ? $resumido1 : (isset($resumido) ? $resumido : 'G');
-    
     $responce['success'] = false;
     if ($tipo == 'true') $b = '1px';
     else $b = '0.1pt';
@@ -51,33 +44,47 @@ if (isset($dataReport)) {
     if ($full || $resumido1 == "T") {
         // Encabezado completo para reporte general y resumido total
         $table['{header}'] = '<tr>
-            <td style="font-weight:bold; border: 1px solid #000;" colspan="2">No. COMPR.</td>
+            <td style="font-weight:bold; border: 1px solid #000;" colspan="1">No. COMPR.</td>
             <td style="font-weight:bold; border: 1px solid #000;">FECHA EMIS.</td>
             <td style="font-weight:bold; border: 1px solid #000;">FECHA VENC.</td>
             <td style="font-weight:bold; border: 1px solid #000;">&nbsp;</td>    
             <td style="font-weight:bold; border: 1px solid #000;">DOCUM.</td>	  
-            <td style="font-weight:bold; border: 1px solid #000;" colspan="1">CTA. BANCARIA / BANCO</td> 
+            <td style="font-weight:bold; border: 1px solid #000;" colspan="2">CTA. BANCARIA / BANCO</td> 
             <td style="font-weight:bold; border: 1px solid #000;">FEC. CH.</td>          
             <td style="font-weight:bold; border: 1px solid #000;text-align:center;" colspan="3">SALDOS</td>
         </tr>';
     } else {
         // Encabezado simple para reporte resumido por clientes
         $table['{header}'] = '<tr>
-            <td style="font-weight:bold; border-top: 1px solid #000; border-bottom: 1px solid #000; text-align:center;" colspan="6">Clientes</td>
-            <td style="font-weight:bold; border-top: 1px solid #000; border-bottom: 1px solid #000; text-align:right;">Total</td>
-            <td style="font-weight:bold; border-top: 1px solid #000; border-bottom: 1px solid #000; text-align:right;">Abonos</td>
-            <td style="font-weight:bold; border-top: 1px solid #000; border-bottom: 1px solid #000; text-align:right;">Saldo</td>
+            <td style="font-weight:bold; border-top: 1px solid #000; border-bottom: 1px solid #000; text-align:center;" colspan="8">Clientes</td>
+            <td style="font-weight:bold; border-top: 1px solid #000; border-bottom: 1px solid #000; text-align:center;" colspan="3">SALDOS</td>
+        </tr>
+        <tr>
+            <td style="font-weight:bold; border-bottom: 1px solid #000;" colspan="8">&nbsp;</td>
+            <td style="font-weight:bold; border-bottom: 1px solid #000; text-align:right;">Total</td>
+            <td style="font-weight:bold; border-bottom: 1px solid #000; text-align:right;">Abonos</td>
+            <td style="font-weight:bold; border-bottom: 1px solid #000; text-align:right;">Saldo</td>
         </tr>';
     }
 
     if ($resumido1 != "T") {
+        // Cuando es "resumido por clientes" el template tiene "SALDOS" fijo en cabecera.
+        // Aquí agregamos la fila inferior con las 3 columnas: Total / Abonos / Saldo.
+        if (!$full) {
+            $table['{body}'] .= '<tr>
+                <td colspan="8" style="font-weight:bold; border-bottom: 1px solid #000; text-align:right;">&nbsp;</td>
+                <td style="font-weight:bold; border-bottom: 1px solid #000; text-align:right;">Total</td>
+                <td style="font-weight:bold; border-bottom: 1px solid #000; text-align:right;">Abonos</td>
+                <td style="font-weight:bold; border-bottom: 1px solid #000; text-align:right;">Saldo</td>
+            </tr>';
+        }
         foreach ($dataReport as $provee) {
             $saldoProvee = 0;
             $saldoFacturas = 0;
             if ($full) {
                 // Reporte General: muestra nombre del cliente en el encabezado
                 $table['{body}'] = $table['{body}'] . '<tr>
-                <td colspan="7" style="border-left: 0px solid white; border-right:  0px solid white; border-top: 1px solid #000; border-bottom: 1px solid #000; font-weight:bold;"><strong>CLIENTE: ' . $provee['Cliente'] . '</strong></td> 
+                <td colspan="8" style="border-left: 0px solid white; border-right:  0px solid white; border-top: 1px solid #fff; border-bottom: 1px solid #fff; font-weight:bold;"><strong> </strong></td> 
                 <td style="border-left: 0px solid white; border-right:  0px solid white; border-top: 1px solid #000; border-bottom: 1px solid #000; text-align:right;"><strong>Total</strong></td>
                 <td style="border-left: 0px solid white; border-right:  0px solid white; border-top: 1px solid #000; border-bottom: 1px solid #000; text-align:right;"><strong>Abonos</strong></td>
                 <td style="border-left: 0px solid white; border-right:  0px solid white; border-top: 1px solid #000; border-bottom: 1px solid #000; text-align:right;"><strong>Saldo</strong></td>
@@ -85,74 +92,91 @@ if (isset($dataReport)) {
             }
             foreach ($provee['Cpcs'] as $cuenta) {
                 $Cpp_Data = $obBD_con1->getRowConsulta(31, $cuenta, $obBD_conexion);
+                $verif_rete = $obBD_con1->getRowConsulta(62, $Cpp_Data['Vet_Cod'], $obBD_conexion);
                 if (empty($Cpp_Data)) $Cpp_Data = $obBD_con1->getRowConsulta(46, $cuenta, $obBD_conexion);
+                utf8_encode_deep($Cpp_Data);
                 $saldo = $Cpp_Data['total'] * 1;
                 $saldoFacturas = $saldoFacturas + $Cpp_Data['total'] * 1;
                 $saldoTotalFact = $saldoTotalFact + $Cpp_Data['total'] * 1;
                 if ($full) $table['{body}'] = $table['{body}'] . '<tr><td style="font-weight:bold;"  colspan="2">' . $Cpp_Data['Com_Codigo'] . '</td>  	    
                     <td style="font-weight:bold;white-space:nowrap;width:70px;">' . $Cpp_Data['Caj_Fec'] . '</td> 
-                    <td style="font-weight:bold;white-space:nowrap;width:70px;">' . $Cpp_Data['Cpc_Ven'] . '</td>
-                    <td></td>
-                    <td style="font-weight:bold;" colspan="2">' . $Cpp_Data['Tic_Des'] . ': ' . $Cpp_Data['Vet_Num'] . '</td>
-                    <td style="text-align:right;mso-number-format:&#39;#,##0.00&#39;;">' . number_format($Cpp_Data['total'], 2) . '</td>
+                    <td style="font-weight:bold;" colspan="5">' . $Cpp_Data['Tic_Des'] . ': ' . $Cpp_Data['Vet_Num'] . ' -  ' . $provee['Cliente'] . '</td>
+                     <td style="text-align:right;mso-number-format:&#39;#,##0.00&#39;;">' . number_format($Cpp_Data['total'], 2) . '</td>
+		       
 		        </tr>';
                 $pagoRetencion = false;
                 if ($Cpp_Data['Cpc_Cod'] != NULL) {
                     $cancelaciones = $obBD_con1->getArrayConsulta(7, $Cpp_Data['Cpc_Cod'], $obBD_conexion);
+                    utf8_encode_deep($cancelaciones);
                     foreach ($cancelaciones as $pago) {
                         $abrevi = $obBD_con1->getRowConsulta(53, $pago['Pag_Cod'], $obBD_conexion);
-                        $banco = NULL; $info="";
+                        utf8_encode_deep($abrevi);
+                        $banco = NULL;
+                        $info = "";
                         $PagAbr = $abrevi['Pag_Abr'];
-                        if ($PagAbr != 'RET') {
-                            if ($PagAbr == 'CHE'){
+                        if ($PagAbr != 'RET' || $verif_rete['tot_fact'] > 0) {
+                            if ($PagAbr == 'CHE') {
                                 $banco = $obBD_con1->getRowConsulta(38, $pago['Dcc_Cod'], $obBD_conexion);
                                 $info =  $banco != NULL ? $banco['Che_Cta'] . '/' . $banco['Banco'] : '';
-                            }if ($PagAbr == 'TRF' || $PagAbr == 'DEP')
+                            }
+                            if ($PagAbr == 'TRF' || $PagAbr == 'DEP')
                                 $info =  $pago['Pld_Des'];
                             $saldo = $saldo - $pago['Cpc_Val'];
                             if ($full) $table['{body}'] = $table['{body}'] . '<tr>
                             <td style="font-weight:bold;border-right: ' . $b . ' solid #000;">&gt;</td>
                             <td>' . $pago['Com_Codigo'] . '</td>
                             <td style="text-align:center;white-space:nowrap;">' . $pago['Cpc_Fec'] . '</td>
-                            <td></td>
                             <td>' . $PagAbr . '</td>
                             <td style="mso-number-format:&#39;@&#39;;">' . ($banco != NULL ? $banco['Che_Num'] : '') . '</td>
-                            <td colspan="2" style="white-space:nowrap;overflow:hidden;">' . $info . ($banco != NULL && $banco['Che_Fec'] != '' ? ' (' . $banco['Che_Fec'] . ')' : '') . '</td>
-                            <td style="text-align:right;mso-number-format:&#39;#,##0.00&#39;;">' . number_format($pago['Cpc_Val'], 2) . '</td>
-                            <td></td>
+                            <td style="white-space:nowrap;overflow:hidden;">' . $info . '</td>
+                            <td>' . ($banco != NULL && $banco['Che_Fec'] != '' ? '(' . $banco['Che_Fec'] . ')' : '') . '</td>
+                            <td style="text-align:right;mso-number-format:&#39;#,##0.00&#39;;" colspan="2">' . number_format($pago['Cpc_Val'], 2) . '</td>
+                           <td></td>
                         </tr>';
                         }
                     }
                 }
 
                 if ($pagoRetencion == false) {
-                    $Retenciones1 = $obBD_con1->getArrayConsulta(32, $Cpp_Data['Vet_Cod'], $obBD_conexion);
-                    $Retenciones2 = $obBD_con1->getArrayConsulta(33, $Cpp_Data['Vet_Cod'], $obBD_conexion);
-                    $Retenciones = array_merge($Retenciones1, $Retenciones2);
-                    foreach ($Retenciones as $ret) {
-                        $saldo = $saldo - round($ret['retencion'], 2);
-                        if ($full) $table['{body}'] = $table['{body}'] . '<tr>
+                    if ($verif_rete['tot_fact'] <= 0) {
+                        $Retenciones1 = $obBD_con1->getArrayConsulta(32, $Cpp_Data['Vet_Cod'], $obBD_conexion);
+                        $Retenciones2 = $obBD_con1->getArrayConsulta(33, $Cpp_Data['Vet_Cod'], $obBD_conexion);
+                        utf8_encode_deep($Retenciones1);
+                        utf8_encode_deep($Retenciones2);
+                        $Retenciones = array_merge($Retenciones1, $Retenciones2);
+                        foreach ($Retenciones as $ret) {
+                            $saldo = $saldo - round($ret['retencion'], 2);
+                            if ($full) $table['{body}'] = $table['{body}'] . '<tr>
                             <td style="font-weight:bold;border-right: ' . $b . ' solid #000;">&gt;</td>
                             <td></td>
                             <td style="text-align:center;white-space:nowrap;">' . $ret['Ret_Fec'] . '</td>
                             <td></td>
                             <td>' . $ret['tipo'] . '</td>
-                            <td colspan="2" style="mso-number-format:&#39;@&#39;;">' . $ret['Ret_Num'] . '</td>
+                            <td style="mso-number-format:&#39;@&#39;;">' . $ret['Ret_Num'] . '</td>
+                            <td></td>
+                            <td></td>
                             <td></td>
                             <td style="text-align:right;mso-number-format:&#39;#,##0.00&#39;;">' . number_format($ret['retencion'], 2) . '</td>
                             <td></td>
                         </tr>';
+                        }
                     }
                 }
-                if ($full) $table['{body}'] = $table['{body}'] . '<tr><td style="word-wrap: break-word;" colspan="7"><strong>Obs:</strong> ' . htmlentities($Cpp_Data['Vet_Obs'], ENT_QUOTES, 'UTF-8') . '</td>
-                <td colspan="2" style="text-align:right;border-top: ' . $b . ' solid #000;white-space:nowrap;">SALDO DOCUMENTO:</td>
-                <td style="border-top: ' . $b . ' solid #000;text-align:right;white-space:nowrap;mso-number-format:&#39;#,##0.00&#39;;">' . number_format($saldo, 2) . '</td></tr>';
+                if ($full) $table['{body}'] = $table['{body}'] . '<tr><td style="word-wrap: break-word;" colspan="8"><strong>Obs:</strong> ' . $Cpp_Data['Vet_Obs'] . '</td>
+               
+                <td colspan="2" style="text-align:right;border-top: ' . $b . ' solid #000;">SALDO DOCUMENTO:</td>
+                <td style="border-top: ' . $b . ' solid #000;text-align:right;mso-number-format:&#39;#,##0.00&#39;;">' . number_format($saldo, 2) . '</td></tr><tr><td colspan="10" style="height:20px;"></td></tr>';
                 $saldoProvee = $saldoProvee + $saldo;
                 $saldoAbono = $saldoFacturas - $saldoProvee;
             }
             if ($full) {
                 $table['{body}'] = $table['{body}'] . '<tr>
-                <td colspan="9" style="border-bottom: 3px double #000; font-weight:bold;text-align:right;">TOTAL CLIENTE: ' . $provee['Cliente'] . ' &nbsp;&gt;&gt;</td>
+                 <td></td>
+            <td></td>
+            <td></td>   
+            <td></td>
+            <td></td> 
+                <td colspan="5" style="border-bottom: 3px double #000; font-weight:bold;text-align:right;">TOTAL CLIENTE: ' . $provee['Cliente'] . ' &nbsp;&gt;&gt;</td>
                 <td style="border-bottom: 3px double #000;text-align:right;mso-number-format:&#39;#,##0.00&#39;;">' . number_format($saldoProvee, 2) . '</td>
                 </tr>
                 <tr>
@@ -160,7 +184,7 @@ if (isset($dataReport)) {
                 </tr>';
             } else {
                 $table['{body}'] = $table['{body}'] . '<tr>
-                <td colspan="6" style="border-bottom:1px solid #D5DADF;">' . $provee['Cliente'] . '</td>
+                <td colspan="8" style="border-bottom:1px solid #D5DADF;">' . $provee['Cliente'] . '</td>
                 <td style="text-align:right; border-bottom:1px solid #D5DADF;">' . number_format($saldoFacturas, 2) . '</td>
                 <td style="text-align:right; border-bottom:1px solid #D5DADF;">' . number_format($saldoAbono, 2) . '</td>
                 <td style="text-align:right; border-bottom:1px solid #D5DADF;">' . number_format($saldoProvee, 2) . '</td>
@@ -170,12 +194,12 @@ if (isset($dataReport)) {
         }
         if ($full) {
             $table['{rowtotal}'] = $table['{rowtotal}'] . '<tr>
-            <td colspan="9" style="font-weight:bold;text-align:right; border-bottom: 3px double #000; border-top:1px solid #000;">TOTAL GENERAL:</td>       
+            <td colspan="10" style="font-weight:bold;text-align:right; border-bottom: 3px double #000; border-top:1px solid #000;">TOTAL GENERAL:</td>       
             <td style="font-weight:bold;text-align:right; border-bottom: 3px double #000; border-top:1px solid #000;mso-number-format:&#39;#,##0.00&#39;;">' . number_format($saldoGeneral, 2) . '</td>
             </tr>';
         } else {
             $table['{rowtotal}'] = $table['{rowtotal}'] . '<tr>
-            <td colspan="6" style="font-weight:bold;text-align:right; border-bottom: 3px double #000; border-top:1px solid #000;">TOTAL GENERAL:</td> 
+            <td colspan="8" style="font-weight:bold;text-align:right; border-bottom: 3px double #000; border-top:1px solid #000;">TOTAL GENERAL:</td> 
             <td style="font-weight:bold;text-align:right; border-bottom: 3px double #000; border-top:1px solid #000;">' . number_format($saldoTotalFact, 2) . '</td> 
             <td style="font-weight:bold;text-align:right; border-bottom: 3px double #000; border-top:1px solid #000;mso-number-format:&#39;#,##0.00&#39;;">' . number_format($saldoTotalFact - $saldoGeneral, 2) . '</td>
             <td style="font-weight:bold;text-align:right; border-bottom: 3px double #000; border-top:1px solid #000;mso-number-format:&#39;#,##0.00&#39;;">' . number_format($saldoGeneral, 2) . '</td>
@@ -195,18 +219,22 @@ if (isset($dataReport)) {
                 </tr>';
             foreach ($provee['Cpcs'] as $cuenta) {
                 $Cpp_Data = $obBD_con1->getRowConsulta(31, $cuenta, $obBD_conexion);
+                $verif_rete = $obBD_con1->getRowConsulta(62, $Cpp_Data['Vet_Cod'], $obBD_conexion);
                 if (empty($Cpp_Data)) $Cpp_Data = $obBD_con1->getRowConsulta(46, $cuenta, $obBD_conexion);
+                utf8_encode_deep($Cpp_Data);
                 $saldo = $Cpp_Data['total'] * 1;
                 $saldoFacturas = $saldoFacturas + $Cpp_Data['total'] * 1;
                 $saldoTotalFact = $saldoTotalFact + $Cpp_Data['total'] * 1;
                 $pagoRetencion = false;
                 if ($Cpp_Data['Cpc_Cod'] != NULL) {
                     $cancelaciones = $obBD_con1->getArrayConsulta(7, $Cpp_Data['Cpc_Cod'], $obBD_conexion);
+                    utf8_encode_deep($cancelaciones);
                     foreach ($cancelaciones as $pago) {
                         $abrevi = $obBD_con1->getRowConsulta(53, $pago['Pag_Cod'], $obBD_conexion);
+                        utf8_encode_deep($abrevi);
                         $banco = NULL;
                         $PagAbr = $abrevi['Pag_Abr'];
-                        if ($PagAbr != 'RET') {
+                        if ($PagAbr != 'RET' || $verif_rete['tot_fact'] > 0) {
                             if ($PagAbr != 'EF')
                                 $banco = $obBD_con1->getRowConsulta(38, $pago['Dcc_Cod'], $obBD_conexion);
                             $saldo = $saldo - $pago['Cpc_Val'];
@@ -215,26 +243,26 @@ if (isset($dataReport)) {
                     }
                 }
                 if ($pagoRetencion == false) {
-                    $Retenciones1 = $obBD_con1->getArrayConsulta(32, $Cpp_Data['Vet_Cod'], $obBD_conexion);
-                    $Retenciones2 = $obBD_con1->getArrayConsulta(33, $Cpp_Data['Vet_Cod'], $obBD_conexion);
-                    $Retenciones = array_merge($Retenciones1, $Retenciones2);
-                    foreach ($Retenciones as $ret) {
-                        $saldo = $saldo - round($ret['retencion'], 2);
-                        $saldo_abono = $saldo_abono + number_format($ret['retencion'], 2);
+                    if ($verif_rete['tot_fact'] <= 0) {
+                        $Retenciones1 = $obBD_con1->getArrayConsulta(32, $Cpp_Data['Vet_Cod'], $obBD_conexion);
+                        $Retenciones2 = $obBD_con1->getArrayConsulta(33, $Cpp_Data['Vet_Cod'], $obBD_conexion);
+                        utf8_encode_deep($Retenciones1);
+                        utf8_encode_deep($Retenciones2);
+                        $Retenciones = array_merge($Retenciones1, $Retenciones2);
+                        foreach ($Retenciones as $ret) {
+                            $saldo = $saldo - round($ret['retencion'], 2);
+                            $saldo_abono = $saldo_abono + round($ret['retencion'], 2);
+                        }
                     }
                 }
 
-                // $provee['Cliente'] 
                 $table['{body}'] = $table['{body}'] . '<tr><td style="font-weight:400;"  colspan="2">' . $Cpp_Data['Com_Codigo'] . '</td>  	    
                 <td style="font-weight:400;white-space:nowrap;width:75px;">' . $Cpp_Data['Caj_Fec'] . '</td> 
                 <td style="font-weight:400;white-space:nowrap;width:75px;">' . $Cpp_Data['Cpc_Ven'] . '</td> 
-                <td style="font-weight:400;" colspan="4">' .
-                    htmlentities($Cpp_Data['Tic_Des'], ENT_QUOTES, 'UTF-8') . ': ' .
-                    htmlentities($Cpp_Data['Vet_Num'], ENT_QUOTES, 'UTF-8') . ' -  ' .
-                    htmlentities($Cpp_Data['Vet_Obs'], ENT_QUOTES, 'UTF-8') . '</td>
+                <td style="font-weight:400;" colspan="4">' . $Cpp_Data['Tic_Des'] . ': ' . $Cpp_Data['Vet_Num'] . ' -  ' .  $Cpp_Data['Vet_Obs'] . '</td>
                 <td style="text-align:right;mso-number-format:&#39;#,##0.00&#39;;">' . number_format($Cpp_Data['total'], 2) . '</td> 
-                <td style="text-align:right;mso-number-format:&#39;#,##0.00&#39;;" colspan="">' . number_format($saldo_abono, 2) . '</td>
-                <td style="solid #000;text-align:right;mso-number-format:&#39;#,##0.00&#39;;">' . number_format(max($saldo, 0), 2) . '</td>
+                <td style="text-align:right;mso-number-format:&#39;#,##0.00&#39;;">' . number_format($saldo_abono, 2) . '</td>
+                <td style="border-right: 1px solid #fff;text-align:right;mso-number-format:&#39;#,##0.00&#39;;">' . number_format(max($saldo, 0), 2) . '</td>
                 </tr>';
                 $saldoProvee = $saldoProvee + $saldo;
                 $saldoAbono = $saldoFacturas - $saldoProvee;
@@ -242,7 +270,7 @@ if (isset($dataReport)) {
             }
             $table['{body}'] = $table['{body}'] . '
             <tr>
-                <td style="text-align:right; border-bottom:1px solid #D5DADF;" colspan="11"></td>
+               <td style="text-align:right; border-bottom:1px solid #D5DADF;" colspan="11"></td>
             </tr>
             <tr>
                 <td style="text-align:right; border-bottom:1px solid #D5DADF;font-weight:bold;" colspan="8"><b>TOTAL DE: ' . $provee['Cliente'] . '   </b> </td>
@@ -253,7 +281,7 @@ if (isset($dataReport)) {
             <tr>
                 <td colspan="11" style="height:15px;"></td>
             </tr>
-                ';
+               ';
             $saldoGeneral = $saldoGeneral + $saldoProvee;
         }
         $table['{rowtotal}'] = $table['{rowtotal}'] . '<tr>
@@ -263,32 +291,23 @@ if (isset($dataReport)) {
             <td style="font-weight:bold;text-align:right; border-bottom: 3px double #000; border-top:1px solid #000;mso-number-format:&#39;#,##0.00&#39;;">' . number_format($saldoGeneral, 2) . '</td>
             </tr>';
     }
-    // Construir la ruta completa del archivo de plantilla
-    $templatePath = __DIR__ . '/tes_pri_ccpp_cobros.html';
-    
-    try {
-        // Verificar que la plantilla existe antes de llamar a reporteHtml
-        if (!file_exists($templatePath)) {
-            throw new Exception('No se ha encontrado la plantilla en: ' . $templatePath);
-        }
-        
-        $responce['html'] = reporteHtml($table, $templatePath);
-        
-        // Verificar que el HTML se generó correctamente
-        if ($responce['html'] === null || $responce['html'] === false || empty($responce['html'])) {
-            throw new Exception('Error al generar el HTML del reporte. La función reporteHtml devolvió null o vacío.');
-        }
-        
-        $responce['success'] = true;
-    } catch (Exception $e) {
+    $templateFile = __DIR__ . '/tes_pri_ccpp_cobros.html';
+    if (!file_exists($templateFile)) {
+        $responce['error'] = 'Plantilla no encontrada: ' . $templateFile;
         $responce['success'] = false;
-        $responce['message'] = 'Error al generar el reporte: ' . $e->getMessage();
-        $responce['html'] = null;
-        error_log('Error en reporte tes_con_cccc_pagados: ' . $e->getMessage());
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($responce);
+        exit();
     }
-    
+    $responce['html'] = reporteHtml($table, $templateFile);
+    $responce['success'] = true;
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode($responce);
+    $jsonResult = json_encode($responce);
+    if ($jsonResult === false) {
+        echo json_encode(array('success' => false, 'error' => 'Error JSON: ' . json_last_error_msg()));
+    } else {
+        echo $jsonResult;
+    }
     exit();
 }
 if (isset($provAjax)) {
