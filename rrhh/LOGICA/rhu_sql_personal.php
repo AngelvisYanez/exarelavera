@@ -35,8 +35,8 @@ function sentencias_rrhh($id, $Par_Sql)
             break;
             //Inserta un registro en la tabla personal 
         case 5:
-            $sql = "INSERT INTO personal (Prs_Cod,Emp_Cod,Per_Car,Per_Tit,Per_Obs,Per_Cfi,Per_Req) 
-            VALUES('$Par_Sql[0]','$Par_Sql[1]','$Par_Sql[2]','$Par_Sql[3]','$Par_Sql[4]','$Par_Sql[5]',$Par_Sql[6])";
+            $sql = "INSERT INTO personal (Prs_Cod,Emp_Cod,Per_Car,Per_Tit,Per_Obs,Per_Cfi,Per_Req,Per_Rso,Per_Mov) 
+            VALUES('$Par_Sql[0]','$Par_Sql[1]','$Par_Sql[2]','$Par_Sql[3]','$Par_Sql[4]','$Par_Sql[5]',$Par_Sql[6],'$Par_Sql[7]','$Par_Sql[8]')";
             //echo $sql;
             break;
             //Update en la tabla personal para actualizar la foto de perfil (Per_Fot)
@@ -52,7 +52,7 @@ function sentencias_rrhh($id, $Par_Sql)
             }
             if (isset($Par_Sql["limits"])) {
                 $Par_Sql["limits"] = "ORDER BY Prs_Ape $Par_Sql[limits]";
-                $campos = "Per_Cod,Ide_Des,ciudad.Ciu_Cod,Ciu_Des,Prs_Ced,Prs_Ape,Prs_Nom,IF(personal.Per_Req=1,'Si','No') AS Per_Req,IF(personal.Per_Req=1,1,0) AS requisitor,CONCAT(Prs_Ape,' ',Prs_Nom) AS empleado,Prs_Sex,IF(Prs_Sex='M','Masculino','Femenino') AS Prs_Gen,Prs_Esc,Prs_Fec,Prs_Tel,Prs_Te2,Prs_Cel,Prs_Cor,Prs_Dir,Prs_San,CONCAT(Prs_Nom,' ',Prs_Ape) AS personal,Per_Car,Per_Tit,IF(Per_Tit='Np','NO POSEE',IF(Per_Tit='Abg','ABOGADO/A',IF(Per_Tit='Bac','BACHILLER',IF(Per_Tit='Dr','DOCTOR/A',IF(Per_Tit='Eco','ECONOMISTA',IF(Per_Tit='Ing','INGENIERO/A',IF(Per_Tit='Lcd','LICENCIADO/A','')))))))AS Per_Ti1,Per_Obs,IF(ISNULL(Per_Fot),'no',Per_Fot) AS Per_Fot,Per_Cfi, IF (Per_Est='A','Activo','Inactivo') as Per_Est,CURDATE() AS Fec_Sys";
+                $campos = "Per_Cod,Ide_Des,ciudad.Ciu_Cod,Ciu_Des,Prs_Ced,Prs_Ape,Prs_Nom,IF(personal.Per_Req=1,'Si','No') AS Per_Req,IF(personal.Per_Req=1,1,0) AS requisitor,CONCAT(Prs_Ape,' ',Prs_Nom) AS empleado,Prs_Sex,IF(Prs_Sex='M','Masculino','Femenino') AS Prs_Gen,Prs_Esc,Prs_Fec,Prs_Tel,Prs_Te2,Prs_Cel,Prs_Cor,Prs_Dir,Prs_San,CONCAT(Prs_Nom,' ',Prs_Ape) AS personal,Per_Car,Per_Tit,IF(Per_Tit='Np','NO POSEE',IF(Per_Tit='Abg','ABOGADO/A',IF(Per_Tit='Bac','BACHILLER',IF(Per_Tit='Dr','DOCTOR/A',IF(Per_Tit='Eco','ECONOMISTA',IF(Per_Tit='Ing','INGENIERO/A',IF(Per_Tit='Lcd','LICENCIADO/A','')))))))AS Per_Ti1,Per_Obs,IF(ISNULL(Per_Fot),'no',Per_Fot) AS Per_Fot,Per_Cfi,personal.Per_Rso,personal.Per_Mov, IF (Per_Est='A','Activo','Inactivo') as Per_Est,CURDATE() AS Fec_Sys";
             } else {
                 $campos = "COUNT(Per_Cod) as total";
                 $Par_Sql["limits"] = "";
@@ -72,8 +72,17 @@ function sentencias_rrhh($id, $Par_Sql)
             } else {
                 $Par_Sql[16] = "'$Par_Sql[16]'";
             }
-            $sql = "UPDATE persona,personal SET Prs_Nom='$Par_Sql[1]',Prs_Ape='$Par_Sql[2]',Prs_Sex='$Par_Sql[3]',Prs_Esc='$Par_Sql[4]',Prs_Fec='$Par_Sql[5]',Ciu_Cod='$Par_Sql[6]',Prs_Tel='$Par_Sql[7]',Prs_Te2='$Par_Sql[8]',Prs_Cel='$Par_Sql[9]',Prs_Cor='$Par_Sql[10]',Prs_Dir='$Par_Sql[11]',Prs_San='$Par_Sql[12]',Per_Car='$Par_Sql[13]',Per_Tit='$Par_Sql[14]',Per_Obs='$Par_Sql[15]',Per_Fot=$Par_Sql[16],Per_Cfi='$Par_Sql[17]',Per_Req='$Par_Sql[18]'
-                    WHERE Per_Cod='$Par_Sql[0]' AND personal.Prs_Cod=persona.Prs_Cod";
+            $sql = "UPDATE persona,personal SET Prs_Nom='$Par_Sql[1]',Prs_Ape='$Par_Sql[2]',Prs_Sex='$Par_Sql[3]',Prs_Esc='$Par_Sql[4]',Prs_Fec='$Par_Sql[5]',Ciu_Cod='$Par_Sql[6]',Prs_Tel='$Par_Sql[7]',Prs_Te2='$Par_Sql[8]',Prs_Cel='$Par_Sql[9]',Prs_Cor='$Par_Sql[10]',Prs_Dir='$Par_Sql[11]',Prs_San='$Par_Sql[12]',Per_Car='$Par_Sql[13]',Per_Tit='$Par_Sql[14]',Per_Obs='$Par_Sql[15]',Per_Fot=$Par_Sql[16],Per_Cfi='$Par_Sql[17]'";
+            if (isset($Par_Sql[18])) {
+                $sql .= ",Per_Req='$Par_Sql[18]'";
+            }
+            if (isset($Par_Sql[19])) {
+                $sql .= ",Per_Rso='$Par_Sql[19]'";
+            }
+            if (isset($Par_Sql[20])) {
+                $sql .= ",Per_Mov='$Par_Sql[20]'";
+            }
+            $sql .= " WHERE Per_Cod='$Par_Sql[0]' AND personal.Prs_Cod=persona.Prs_Cod";
             break;
             //Select para extraer la informaci�n de un empleado de la tabla personal
         case 9:
@@ -121,7 +130,7 @@ function sentencias_rrhh($id, $Par_Sql)
             break;
             //Select para extraer los datos de un empleado
         case 15:
-            $sql = "SELECT Per_Cod,Ide_Des,ciudad.Ciu_Cod,Ciu_Des,Prs_Ced,CONCAT(Prs_Ape,' ',Prs_Nom) AS empleado,IF(Prs_Sex='M','Masculino','Femenino') AS Prs_Gen,IF(Prs_Esc='S','SOLTERO/A',IF(Prs_Esc='C','CASADO/A',IF(Prs_Esc='D','DIVORCIADO/A',IF(Prs_Esc='V','VIUDO/A',IF(Prs_Esc='U','UNION LIBRE',''))))) AS Prs_Esc,Prs_Fec,Prs_Tel,Prs_Te2,Prs_Cel,Prs_Cor,Prs_Dir,Prs_San,CONCAT(Prs_Nom,' ',Prs_Ape) AS personal,Per_Car,IF(Per_Tit='Np','NO POSEE',IF(Per_Tit='Abg','ABOGADO/A',IF(Per_Tit='Bac','BACHILLER',IF(Per_Tit='Dr','DOCTOR/A',IF(Per_Tit='Eco','ECONOMISTA',IF(Per_Tit='Ing','INGENIERO/A',IF(Per_Tit='Lcd','LICENCIADO/A','')))))))AS Per_Tit,Per_Obs,IF(ISNULL(Per_Fot),'no',Per_Fot) AS Per_Fot,Per_Cfi, IF (Per_Est='A','Activo','Inactivo') as Per_Est,CURDATE() AS Fec_Sys
+            $sql = "SELECT Per_Cod,Ide_Des,ciudad.Ciu_Cod,Ciu_Des,Prs_Ced,CONCAT(Prs_Ape,' ',Prs_Nom) AS empleado,IF(Prs_Sex='M','Masculino','Femenino') AS Prs_Gen,IF(Prs_Esc='S','SOLTERO/A',IF(Prs_Esc='C','CASADO/A',IF(Prs_Esc='D','DIVORCIADO/A',IF(Prs_Esc='V','VIUDO/A',IF(Prs_Esc='U','UNION LIBRE',''))))) AS Prs_Esc,Prs_Fec,Prs_Tel,Prs_Te2,Prs_Cel,Prs_Cor,Prs_Dir,Prs_San,CONCAT(Prs_Nom,' ',Prs_Ape) AS personal,Per_Car,IF(Per_Tit='Np','NO POSEE',IF(Per_Tit='Abg','ABOGADO/A',IF(Per_Tit='Bac','BACHILLER',IF(Per_Tit='Dr','DOCTOR/A',IF(Per_Tit='Eco','ECONOMISTA',IF(Per_Tit='Ing','INGENIERO/A',IF(Per_Tit='Lcd','LICENCIADO/A','')))))))AS Per_Tit,Per_Obs,IF(ISNULL(Per_Fot),'no',Per_Fot) AS Per_Fot,Per_Cfi,personal.Per_Rso,personal.Per_Mov, IF (Per_Est='A','Activo','Inactivo') as Per_Est,CURDATE() AS Fec_Sys
                     FROM personal
                     INNER JOIN persona ON persona.Prs_Cod=personal.Prs_Cod
                     INNER JOIN identifica ON identifica.Ide_Cod=persona.Ide_Cod

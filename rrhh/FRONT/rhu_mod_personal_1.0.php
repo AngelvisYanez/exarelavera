@@ -59,7 +59,7 @@ if (isset($savePersonal)) {
 	}
     
     //Ejecutamos un update sobre la tabla personal para agregar la foto de perfil
-    $obBD_con1->operacionobBD(8, $Per_Cod . '*' . $Prs_Nom . '*' . $Prs_Ape . '*' . $Prs_Sex . '*' . $Prs_Esc . '*' . $Prs_Fec . '*' . $Ciu_Cod . '*' . $Prs_Tel . '*' . $Prs_Te2 . '*' . $Prs_Cel . '*' . $Prs_Cor . '*' . $Prs_Dir. '*' . $Prs_San . '*' . $Per_Car . '*' . $Per_Tit . '*' . $Per_Obs . '*' . $ruta. '*' . $Per_Cfi. '*' . $requisitor, $obBD_conexion);
+    $obBD_con1->operacionobBD(8, $Per_Cod . '*' . $Prs_Nom . '*' . $Prs_Ape . '*' . $Prs_Sex . '*' . $Prs_Esc . '*' . $Prs_Fec . '*' . $Ciu_Cod . '*' . $Prs_Tel . '*' . $Prs_Te2 . '*' . $Prs_Cel . '*' . $Prs_Cor . '*' . $Prs_Dir. '*' . $Prs_San . '*' . $Per_Car . '*' . $Per_Tit . '*' . $Per_Obs . '*' . $ruta. '*' . $Per_Cfi. '*' . $requisitor. '*' . $Per_Rso . '*' . $Per_Mov, $obBD_conexion);
     $obBD_con1->fin_transaccion_nomsn($obBD_conexion->conexion);
     if ($obBD_con1->Error == 0) {
         $response['success'] = true;
@@ -274,6 +274,29 @@ if (isset($savePersonal)) {
                                                                 </div>
                                                             </div>
                                                             <div class="form-group">
+                                                                <label class="col-sm-3 control-label label-sm" for="Per_Rso">Riesgo Social:</label>
+                                                                <div class="col-sm-4">
+                                                                    <select id="Per_Rso" name="Per_Rso" class="form-control input-xs">
+                                                                        <option value="A">ALTO</option>
+                                                                        <option value="M" selected>MEDIO</option>
+                                                                        <option value="B">BAJO</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label class="col-sm-3 control-label label-sm" for="Per_Mov">Tipo Movilizacion:</label>
+                                                                <div class="col-sm-4">
+                                                                    <select id="Per_Mov" name="Per_Mov" class="form-control input-xs">
+                                                                        <option value="BU" selected>BUS</option>
+                                                                        <option value="MO">MOTO</option>
+                                                                        <option value="VP">VEHICULO PARTICULAR</option>
+                                                                        <option value="CA">CAMINANDO</option>
+                                                                        <option value="BI">BICICLETA</option>
+                                                                        <option value="VI">VEHICULO INSTITUCIONAL</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                            <div class="form-group">
                                                                 <label class="col-sm-3 control-label label-sm" for="Per_Car">Carga Familiar:</label>  
                                                                 <div class="col-sm-4">
                                                                     <input id="Per_Car" name="Per_Car" class="form-control input-xs" placeholder="" type="text" onkeypress="return validar_numeric(event);"/>
@@ -435,6 +458,8 @@ if (isset($savePersonal)) {
                 $('#Prs_Esc').prop('selectedIndex', 0);
                 $('#Prs_Sex').prop('selectedIndex', 0);
                 $('#Per_Tit').prop('selectedIndex', 0);
+                $('#Per_Rso').val('M');
+                $('#Per_Mov').val('BU');
                 $('#Ide_Des').val('');
             }
             //Funci�n para cargar la imagen en el fileinput

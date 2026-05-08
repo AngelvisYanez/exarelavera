@@ -62,7 +62,7 @@ if (isset($savePersonal)) {
     }
     //Insert en la tabla personal
     
-    $obBD_con1->operacionobBD(5, $Prs_Cod . '*' . $Ses_Emp_Cod . '*' . $Per_Car . '*' . $Per_Tit . '*' . $Per_Obs.'*'.$Per_Cfi.'*'.$requisitor, $obBD_conexion);
+    $obBD_con1->operacionobBD(5, $Prs_Cod . '*' . $Ses_Emp_Cod . '*' . $Per_Car . '*' . $Per_Tit . '*' . $Per_Obs.'*'.$Per_Cfi.'*'.$requisitor.'*'.$Per_Rso.'*'.$Per_Mov, $obBD_conexion);
     //Secci�n para obtener el c�digo de la �ltima inserci�n en la tabla personal
     $Per_Cod = $obBD_con1->insercionid($obBD_conexion->conexion);
 
@@ -286,8 +286,31 @@ if (isset($savePersonal)) {
                                                                 </div>
                                                             </div>
                                                             <div class="form-group">
-                                                                <label class="col-sm-3 control-label label-sm" for="Per_Car">Carga Familiar:</label>
+                                                                <label class="col-sm-3 control-label label-sm" for="Per_Rso">Riesgo Social:</label>
                                                                 <div class="col-sm-4">
+                                                                <select id="Per_Rso" name="Per_Rso" class="form-control input-xs">
+                                                                        <option value="A">ALTO</option>
+                                                                        <option value="M" selected>MEDIO</option>
+                                                                        <option value="B">BAJO</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label class="col-sm-3 control-label label-sm" for="Per_Mov">Tipo Movilizacion:</label>
+                                                                <div class="col-sm-4">
+                                                                    <select id="Per_Mov" name="Per_Mov" class="form-control input-xs">
+                                                                        <option value="BU" selected>BUS</option>
+                                                                        <option value="MO">MOTO</option>
+                                                                        <option value="VP">VEHICULO PARTICULAR</option>
+                                                                        <option value="CA">CAMINANDO</option>
+                                                                        <option value="BI">BICICLETA</option>
+                                                                        <option value="VI">VEHICULO INSTITUCIONAL</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label class="col-sm-3 control-label label-sm" for="Per_Car">Carga Familiar:</label>
+                                                                <div class="col-sm-3">
                                                                     <input id="Per_Car" name="Per_Car" class="form-control input-xs" placeholder="" type="text" onkeypress="return validar_numeric(event);" value="0"/>
                                                                 </div>
                                                             </div>
@@ -299,9 +322,13 @@ if (isset($savePersonal)) {
                                                                         <option value="Abg">ABOGADO/A</option>
                                                                         <option value="Bac">BACHILLER</option>
                                                                         <option value="Dr">DOCTOR/A</option>
+                                                                        <option value="Sec">SECUNDARIA</option>
+                                                                        <option value="Unv">UNIVERSITARIO</option>
                                                                         <option value="Eco">ECONOMISTA</option>
                                                                         <option value="Ing">INGENIERO/A</option>
                                                                         <option value="Lcd">LICENCIADO/A</option>
+                                                                        <option value="Mst">MAESTRIA</option>
+                                                                        <option value="Phd">PHD</option>
                                                                     </select>
                                                                 </div>
                                                                 <label>
