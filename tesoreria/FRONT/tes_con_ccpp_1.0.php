@@ -84,6 +84,7 @@ if (isset($getAsientosAbono)) {
 
   $response['data'] = $obBD_con1->getArrayConsulta(30, array('Com_Cod' => $Com_Cod), $obBD_conexion);
   $response['data_che'] = $obBD_con1->getArrayConsulta(31, array('Com_Cod' => $Com_Cod), $obBD_conexion);
+  $response['data_facts'] = $obBD_con1->getArrayConsulta(75, array('Com_Cod' => $Com_Cod), $obBD_conexion);
 
   if ($obBD_con1->Error == 0) {
     $response['success'] = true;
@@ -266,7 +267,8 @@ if (isset($getReportAbono)) {
 
       if ($tipo_reporte == 'resumido_prov') {
         $estructuraTable .= "<tr style='font-size:11px;'>"
-          . "<td style='border-bottom: 1px solid #000; border-top: 0px;'>" . $dpr['nombre'] . "</td>"
+          . "<td style='border-bottom: 1px solid #000; border-top: 0px;'>" . $dpr['Prs_Ced'] . "</td>"
+          . "<td style='border-bottom: 1px solid #000; border-top: 0px;'>". $dpr['nombre'] . "</td>"
           . "<td style='border-bottom: 1px solid #000; border-top: 0px; text-align:right;'>" . number_format($prov_monto, 2, '.', ',') . "</td>"
           . "<td style='border-bottom: 1px solid #000; border-top: 0px; text-align:right;'>" . number_format($prov_abono, 2, '.', ',') . "</td>"
           . "<td style='border-bottom: 1px solid #000; border-top: 0px; text-align:right;'>" . number_format($prov_saldo, 2, '.', ',') . "</td>"
@@ -288,7 +290,7 @@ if (isset($getReportAbono)) {
 
   if ($tipo_reporte == 'resumido_prov') {
     $estructuraTable .= "<tr>"
-      . "<td style='text-align:right;border-bottom: 2px solid #000; border-top:2px solid #000;'><b>TOTAL GENERAL: </b></td>"
+      . "<td colspan='2' style='text-align:right;border-bottom: 2px solid #000; border-top:2px solid #000;'><b>TOTAL GENERAL: </b></td>"
       . "<td style='text-align:right;border-bottom: 2px solid #000; border-top:2px solid #000;'>" . number_format($grand_monto, 2, '.', ',') . "</td>"
       . "<td style='text-align:right;border-bottom: 2px solid #000; border-top:2px solid #000;'>" . number_format($grand_abono, 2, '.', ',') . "</td>"
       . "<td style='text-align:right;border-bottom: 2px solid #000; border-top:2px solid #000;'>" . number_format($grand_saldo, 2, '.', ',') . "</td>"
@@ -320,7 +322,7 @@ if (isset($getReportAbono)) {
   <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
   <?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
   <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
-  <script src="../VALIDACIONES/tes_val_con_ccpp.js?a=5"></script>
+  <script src="../VALIDACIONES/tes_val_con_ccpp.js?a=6"></script>
   <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js"></script>
   <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
   <script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>
@@ -536,6 +538,7 @@ if (isset($getReportAbono)) {
           <ul style="font-size: 12px;" role="tablist">
             <li id="ant_detasi"><a href="#ant_det_asi">Asientos</a></li>
             <li id="ant_detche"><a href="#ant_det_che">Cheques</a></li>
+            <li id="ant_detfact"><a href="#ant_det_fact">Facturas</a></li>
           </ul>
           <div id="ant_det_asi">
             <div class="row">
@@ -548,6 +551,13 @@ if (isset($getReportAbono)) {
             <div class="row">
               <div class="col-sm-12" style="padding-top: 10px;">
                 <table id="showPagosChe" name="showPagosChe"></table>
+              </div>
+            </div>
+          </div>
+          <div id="ant_det_fact">
+            <div class="row">
+              <div class="col-sm-12" style="padding-top: 10px;">
+                <table id="showPagosFact" name="showPagosFact"></table>
               </div>
             </div>
           </div>
@@ -622,7 +632,9 @@ if (isset($getReportAbono)) {
     var headerHtml = "";
     if (tipo == 'resumido_prov') {
       $('#imprimir_ccpp table#datosTabla').attr('border', '0');
-      headerHtml = '<th style="border-top: 2px solid #000; border-bottom: 2px solid #000; text-align:left;">Proveedor</th>' +
+      headerHtml = 
+        '<th style="border-top: 2px solid #000; border-bottom: 2px solid #000; text-align:left;">Cedula</th>'+
+        '<th style="border-top: 2px solid #000; border-bottom: 2px solid #000; text-align:left;">Proveedor</th>' +
         '<th style="border-top: 2px solid #000; border-bottom: 2px solid #000; width:20%; text-align:right;">Total</th>' +
         '<th style="border-top: 2px solid #000; border-bottom: 2px solid #000; width:20%; text-align:right;">Abonos</th>' +
         '<th style="border-top: 2px solid #000; border-bottom: 2px solid #000; width:20%; text-align:right;">Saldo</th>';
@@ -665,7 +677,8 @@ if (isset($getReportAbono)) {
     var tipo = $("input[name='tipo_reporte_opt']:checked").val();
     var headerHtml = "";
     if (tipo == 'resumido_prov') {
-      headerHtml = '<th style="width:40%;">Proveedor</th>' +
+      headerHtml = '<th style="width:10%;">Cedula</th>'+
+        '<th style="width:30%;">Proveedor</th>' +
         '<th style="width:20%; text-align:right;">Total</th>' +
         '<th style="width:20%; text-align:right;">Abonos</th>' +
         '<th style="width:20%; text-align:right;">Saldo</th>';
