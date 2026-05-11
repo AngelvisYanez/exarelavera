@@ -61,8 +61,8 @@ $(function () {
         ]
     }, {
         title: 'cliente'
-    });    
-    $('#sancionVeh_Msa_Cho').on('input', function() {
+    });
+    $('#sancionVeh_Msa_Cho').on('input', function () {
         this.value = this.value.toUpperCase();
     });
 
@@ -569,7 +569,7 @@ function cargarGeneralManifiesto() {
             var sug = parseFloat(r.pla_smi_sugerido);
             if (isNaN(sug)) {
                 sug = 0;
-            }            
+            }
         } else {
             $.alert((r && r.message) ? r.message : 'No se pudo cargar la configuración general.');
         }
@@ -1271,8 +1271,8 @@ function abrirModalChofer() {
     $('#choferForm')[0].reset();
     $('#Cho_Cod').val('');
     $('#Prs_Cod').val('');
-    $('#Prs_Nom, #Prs_Ape').prop('readonly', false).css('background-color', '');
-    $("#Cho_Ced_Est").removeClass().css("color", "");
+    $('#choferForm #Prs_Nom, #choferForm #Prs_Ape').prop('readonly', false).css('background-color', '');
+    $('#choferForm #Cho_Ced').prop('readonly', false).css('background-color', '');
     // Cargar plantas
     cargarPlantasDropdown('choferForm #Pla_Cod');
     $('#choferDialog').dialog('open');
@@ -1294,6 +1294,16 @@ function editarChofer(o) {
         Cho_Mae: '' // Campo oculto, siempre vacío
     };
     $('#choferForm').setData(formData);
+
+    // Edición: permitir corregir nombres; la cédula identifica a la persona y no debe cambiarse
+    $('#choferForm #Prs_Nom, #choferForm #Prs_Ape').prop('readonly', false).css('background-color', '');
+    if (o.Cho_Cod) {
+        $('#choferForm #Cho_Ced').prop('readonly', true).css('background-color', '#eee');
+    } else {
+        $('#choferForm #Cho_Ced').prop('readonly', false).css('background-color', '');
+    }
+
+
     // Cargar plantas y luego seleccionar la planta
     cargarPlantasDropdown('choferForm #Pla_Cod', function () {
         if (o.Pla_Cod) {
@@ -1311,8 +1321,7 @@ function editarChofer(o) {
             $('#Cho_Tsa').val(o.Cho_Tsa).trigger('chosen:updated');
         }
         // Marcar los campos de nombre y apellido como readonly si ya existe la persona
-        if (o.Prs_Cod) {
-            $('#Prs_Nom, #Prs_Ape').prop('readonly', true).css('background-color', '#eee');
+       if (o.Prs_Cod) {
             $("#Cho_Ced_Est").removeClass().addClass("fa fa-check").css("color", "green");
         }
     });
@@ -1354,8 +1363,9 @@ function buscarPersonaPorCedula(cedula) {
 
             var prsNom = r.chofer.Prs_Nom || r.persona.Prs_Nom || '';
             var prsApe = r.chofer.Prs_Ape || r.persona.Prs_Ape || '';
-            $('#choferForm  #Prs_Nom').val(prsNom).prop('readonly', true).css('background-color', '#eee');
-            $('#choferForm #Prs_Ape').val(prsApe).prop('readonly', true).css('background-color', '#eee');
+            $('#choferForm #Prs_Nom').val(prsNom).prop('readonly', false).css('background-color', '');
+            $('#choferForm #Prs_Ape').val(prsApe).prop('readonly', false).css('background-color', '');
+            $('#choferForm #Cho_Ced').prop('readonly', true).css('background-color', '#eee');
 
             if (r.chofer.Cho_Tel) $('#Cho_Tel').val(r.chofer.Cho_Tel);
             else if (r.persona.Prs_Tel) $('#Cho_Tel').val(r.persona.Prs_Tel);
@@ -1370,15 +1380,17 @@ function buscarPersonaPorCedula(cedula) {
             // La persona existe pero no es chofer en esta planta
             $('#Cho_Cod').val('');
             $('#Prs_Cod').val(r.persona.Prs_Cod);
-            $('#choferForm #Prs_Nom').val(r.persona.Prs_Nom).prop('readonly', true).css('background-color', '#eee');
-            $('#choferForm #Prs_Ape').val(r.persona.Prs_Ape).prop('readonly', true).css('background-color', '#eee');
+            $('#choferForm #Prs_Nom').val(r.persona.Prs_Nom).prop('readonly', false).css('background-color', '');
+            $('#choferForm #Prs_Ape').val(r.persona.Prs_Ape).prop('readonly', false).css('background-color', '');
+            $('#choferForm #Cho_Ced').prop('readonly', true).css('background-color', '#eee');
             if (r.persona.Prs_Tel) $('#Cho_Tel').val(r.persona.Prs_Tel);
             $("#Cho_Ced_Est").removeClass().addClass("fa fa-check").css("color", "green");
         } else {
             // La persona no existe
             $('#Cho_Cod').val('');
             $('#Prs_Cod').val('');
-            $('#Prs_Nom, #Prs_Ape').val('').prop('readonly', false).css('background-color', '');
+            $('#choferForm #Prs_Nom, #choferForm #Prs_Ape').val('').prop('readonly', false).css('background-color', '');
+            $('#choferForm #Cho_Ced').prop('readonly', false).css('background-color', '');
             $("#Cho_Ced_Est").removeClass().addClass("fa fa-check").css("color", "#337ab7");
         }
     }, 'json');
@@ -1640,7 +1652,7 @@ function createGridCeldas() {
             "reloadOnExpand": true,
             "selectOnExpand": false
         },
-        subGridRowExpanded: function(subgrid_id, row_id) {
+        subGridRowExpanded: function (subgrid_id, row_id) {
             var subgrid_table_id = subgrid_id + "_t";
             $("#" + subgrid_id).html("<table id='" + subgrid_table_id + "' class='scroll'></table>");
             $("#" + subgrid_table_id).createGrid({
@@ -1723,22 +1735,22 @@ function createGridCeldas() {
                     records: "records",
                     repeatitems: false
                 },
-                loadComplete: function(data) {
+                loadComplete: function (data) {
                     // Aplicar estilos a las filas de detalles (sub-registros)
                     var grid = $('#' + subgrid_table_id);
                     var rowIds = grid.jqGrid('getDataIDs');
-                    
-                    $.each(rowIds, function(index, rowId) {
+
+                    $.each(rowIds, function (index, rowId) {
                         var $row = $('#' + rowId, grid);
                         $row.css({
                             'background-color': '#e6f3ff'
-                           
+
                         });
                         $row.find('td').css({
                             'background-color': '#e6f3ff'
                         });
                         $row.find('td:first').css({
-                           
+
                             'padding-left': '25px'
                         });
                         // Marcar inactivas usando data crudo (getRowData devuelve HTML formateado)
@@ -1750,69 +1762,69 @@ function createGridCeldas() {
             }, false);
         },
         colModel: [
-        {
-            label: 'Código',
-            name: 'Cel_Cod',
-            key: true,
-            width: 60,
-            align: "center",
-            hidden: true,
-            formatter: function (cellvalue) {
-                return '<strong style="font-size: 1.05em;">' + cellvalue + '</strong>';
-            }
-        },
-        {
-            label: 'Nombre',
-            name: 'Cel_Nom',
-            width: 200,
-            formatter: function (cellvalue) {
-                return '<strong style="color: #333; font-size: 1.05em;">' + cellvalue + '</strong>';
-            }
-        },
-        {
-            label: 'Número/Código',
-            name: 'Cel_Num',
-            width: 120,
-            align: "center",
-            formatter: function (cellvalue) {
-                return '<span style="color: #999;">-</span>';
-            }
-        },
-        {
-            label: 'Tipo',
-            name: 'Cel_Tip',
-            width: 80,
-            align: "center",
-            formatter: function (v) {
-                return '<span class="label label-primary">Grupo</span>';
-            }
-        },
-        {
-            label: 'Estado',
-            name: 'Cel_Est',
-            width: 70,
-            align: "center",
-            formatter: function (v) {
-                return v === 'A' ? '<span class="label label-success">Activo</span>' : '<span class="label label-danger">Inactivo</span>';
-            }
-        },
-        {
-            label: '<center><i class="glyphicon glyphicon-cog"></i></center>',
-            name: 'acciones',
-            width: 100,
-            align: 'center',
-            formatter: function (cellvalue, options, o) {
-                var botones = $.getGridButton('editarCelda', o, 'Editar', 'pencil', '', 'success') + '&nbsp;';
-                if (o.Cel_Est === 'A') {
-                    botones += $.getGridButton('anularCeldaGrid', o.Cel_Cod, 'Anular', 'remove', '', 'warning ') + '&nbsp;';
-                    botones += $.getGridButton('eliminarCeldaGrid', o.Cel_Cod, 'Eliminar', 'trash   ', '', 'danger');
-                } else if (o.Cel_Est === 'I') {
-                    botones += $.getGridButton('activarCeldaGrid', o.Cel_Cod, 'Activar', 'ok', '', 'primary') + '&nbsp;';
-                    botones += $.getGridButton('eliminarCeldaGrid', o.Cel_Cod, 'Eliminar', 'trash', '', 'danger');
+            {
+                label: 'Código',
+                name: 'Cel_Cod',
+                key: true,
+                width: 60,
+                align: "center",
+                hidden: true,
+                formatter: function (cellvalue) {
+                    return '<strong style="font-size: 1.05em;">' + cellvalue + '</strong>';
                 }
-                return botones;
+            },
+            {
+                label: 'Nombre',
+                name: 'Cel_Nom',
+                width: 200,
+                formatter: function (cellvalue) {
+                    return '<strong style="color: #333; font-size: 1.05em;">' + cellvalue + '</strong>';
+                }
+            },
+            {
+                label: 'Número/Código',
+                name: 'Cel_Num',
+                width: 120,
+                align: "center",
+                formatter: function (cellvalue) {
+                    return '<span style="color: #999;">-</span>';
+                }
+            },
+            {
+                label: 'Tipo',
+                name: 'Cel_Tip',
+                width: 80,
+                align: "center",
+                formatter: function (v) {
+                    return '<span class="label label-primary">Grupo</span>';
+                }
+            },
+            {
+                label: 'Estado',
+                name: 'Cel_Est',
+                width: 70,
+                align: "center",
+                formatter: function (v) {
+                    return v === 'A' ? '<span class="label label-success">Activo</span>' : '<span class="label label-danger">Inactivo</span>';
+                }
+            },
+            {
+                label: '<center><i class="glyphicon glyphicon-cog"></i></center>',
+                name: 'acciones',
+                width: 100,
+                align: 'center',
+                formatter: function (cellvalue, options, o) {
+                    var botones = $.getGridButton('editarCelda', o, 'Editar', 'pencil', '', 'success') + '&nbsp;';
+                    if (o.Cel_Est === 'A') {
+                        botones += $.getGridButton('anularCeldaGrid', o.Cel_Cod, 'Anular', 'remove', '', 'warning ') + '&nbsp;';
+                        botones += $.getGridButton('eliminarCeldaGrid', o.Cel_Cod, 'Eliminar', 'trash   ', '', 'danger');
+                    } else if (o.Cel_Est === 'I') {
+                        botones += $.getGridButton('activarCeldaGrid', o.Cel_Cod, 'Activar', 'ok', '', 'primary') + '&nbsp;';
+                        botones += $.getGridButton('eliminarCeldaGrid', o.Cel_Cod, 'Eliminar', 'trash', '', 'danger');
+                    }
+                    return botones;
+                }
             }
-        }
         ],
         rowNum: 10000,
         viewrecords: true,
@@ -1823,12 +1835,12 @@ function createGridCeldas() {
             records: "records",
             repeatitems: false
         },
-        loadComplete: function(data) {
+        loadComplete: function (data) {
             // Aplicar estilos a las filas de grupos y marcar inactivas
             var grid = $('#gridCeldas');
             var rowIds = grid.jqGrid('getDataIDs');
-            
-            $.each(rowIds, function(index, rowId) {
+
+            $.each(rowIds, function (index, rowId) {
                 var $row = $('#' + rowId, grid);
                 $row.addClass('fila-grupo');
                 // Marcar inactivas usando data crudo (getRowData devuelve HTML formateado)
@@ -2058,19 +2070,19 @@ function eliminarCeldaGrid(Cel_Cod) {
 
 // ==================== GRID SANCIONES (UNIFICADO) ====================
 function getPostDataSanciones() {
-    var data = { listSancionesGridAjax: true };    
+    var data = { listSancionesGridAjax: true };
     data.filtro_tipo = $('#filtro_tipo_sanciones').val();
-    if ($('#filtro_vigentes_sanciones').is(':checked')) data.filtro_vigentes = '1';else data.filtro_vigentes = '';
+    if ($('#filtro_vigentes_sanciones').is(':checked')) data.filtro_vigentes = '1'; else data.filtro_vigentes = '';
     data.op = $('input[name="op_opciones"]:checked', '#filtroSancionesForm').val();
-    var search = ($('input[name="search"]', '#filtroSancionesForm').val() || '').trim();    
+    var search = ($('input[name="search"]', '#filtroSancionesForm').val() || '').trim();
     if (data.op === 'i') {
         data.filtro_nombres = ''; // Limpiar filtro de nombres
         data.filtro_identificacion = search;
     } else {
-        data.filtro_nombres = search;   
+        data.filtro_nombres = search;
         data.filtro_identificacion = ''; // Limpiar filtro de identificación
     }
-    
+
     return data;
 }
 function createGridSanciones() {
@@ -2085,9 +2097,10 @@ function createGridSanciones() {
         height: 280,
         colModel: [
             { label: 'Cód. Int.', name: 'Msa_Cod', key: true, width: 20, align: 'center' },
-            { label: 'Tipo', name: 'Msa_Tip', width: 40, align: 'center',
+            {
+                label: 'Tipo', name: 'Msa_Tip', width: 40, align: 'center',
                 formatter: formatterIconoTipoSancion
-            },            
+            },
             { label: 'Identificacion', name: 'Prs_Ced', width: 80 },
             { label: 'Sancionado', name: 'Identificador', width: 160 },
             { label: 'Veh_Cod', name: 'Veh_Cod', width: 60, hidden: true },
@@ -2100,10 +2113,11 @@ function createGridSanciones() {
             { label: 'Fecha/Hora Inicio', name: 'Msa_Fei', width: 70, align: 'center' },
             { label: 'Fecha/Hora Fin', name: 'Msa_Fef', width: 70, align: 'center' },
             { label: 'Observación', name: 'Msa_Obs', width: 150 },
-            { label: 'Acciones', name: 'act', width: 90, align: 'center', sortable: false,
+            {
+                label: 'Acciones', name: 'act', width: 90, align: 'center', sortable: false,
                 formatter: function (cellvalue, options, o) {
-                    return $.getGridButton('editarSancionPorTipo', o,'Editar','pencil','','success') +'&nbsp;' +
-                        $.getGridButton('suspenderSancionGrid',o.Msa_Cod,'Suspender Sancion','minus-sign','','info') + '&nbsp;' +
+                    return $.getGridButton('editarSancionPorTipo', o, 'Editar', 'pencil', '', 'success') + '&nbsp;' +
+                        $.getGridButton('suspenderSancionGrid', o.Msa_Cod, 'Suspender Sancion', 'minus-sign', '', 'info') + '&nbsp;' +
                         $.getGridButton('anularSancionGrid', o.Msa_Cod, 'Anular', 'trash', '', 'danger');
                 }
             }
@@ -2485,8 +2499,8 @@ function editarSancionPlanta(o) {
     });
 }
 
-function anularSancionGrid(Msa_Cod) {   
-    $.createDialogConfirm('¿Desea anular esta sanción?', { anularSancionAjax: true, Msa_Cod: Msa_Cod }, function(d) {
+function anularSancionGrid(Msa_Cod) {
+    $.createDialogConfirm('¿Desea anular esta sanción?', { anularSancionAjax: true, Msa_Cod: Msa_Cod }, function (d) {
         $.post('', { anularSancionAjax: true, Msa_Cod: d.Msa_Cod }, function (r) {
             if (r.success) {
                 actualizarGridSanciones();
@@ -2525,7 +2539,7 @@ function preGuardarSancionVehiculo() {
     if (!Veh_Cod || Veh_Cod === '0') {
         $.alert('Debe seleccionar un vehículo. Ingrese la placa y pulse Buscar.');
         return;
-    }    
+    }
     var data = {
         saveSancionVehiculoAjax: true,
         Msa_Cod: $('#sancionVeh_Msa_Cod').val(),
@@ -2538,7 +2552,7 @@ function preGuardarSancionVehiculo() {
     };
     $.createDialogConfirm('Est&aacute; seguro que desea guardar los datos?', data, saveSancionVehiculo);
 }
-function saveSancionVehiculo(data){   
+function saveSancionVehiculo(data) {
     setLoadingModalSancionUnificada(true, 'Guardando sanción...');
     $.post('', data, function (r) {
         if (r.success) {

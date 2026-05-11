@@ -666,6 +666,15 @@ if (isset($saveChoferAjax)) {
                 $Prs_Cod_New = $persona['Prs_Cod'];
             }
         }
+
+        if (!empty($Prs_Cod_New)) {
+            $obBD_con1->operacionobBD('persona.update', array(
+                'Prs_Nom' => $Prs_Nom,
+                'Prs_Ape' => $Prs_Ape,
+                'where' => array('Prs_Cod' => $Prs_Cod_New)
+            ), $obBD_conexion, true);
+        }
+
         $datosChofer = array(
             'Prs_Cod' => $Prs_Cod_New,
             'Emp_Cod' => $Ses_Emp_Cod,
@@ -3251,7 +3260,7 @@ $obBD_con1->utf8_change_param($transportes);
     </style>
 
 </body>
-<script type="text/javascript" src="../VALIDACIONES/man_adm_configuracion.js?x=49"></script>
+<script type="text/javascript" src="../VALIDACIONES/man_adm_configuracion.js?x=51"></script>
 
 </script>
 
