@@ -121,6 +121,7 @@ function sentencias_estado_cuenta($id, $Par_Sql) {
                                         FROM manifiesto_anticipo ma 
                                         WHERE ma.Cli_Cod = '$Cli_Cod' 
                                         AND ma.Ama_Est = 'A' 
+                                        AND ma.Ama_Tip = 'A'
                                         AND ma.Ama_Fec < '$Fec_Ini' 
                                         $where_pla_ma_prev), 0)
                             -
@@ -203,7 +204,7 @@ function sentencias_estado_cuenta($id, $Par_Sql) {
                         COALESCE((SELECT b.Ban_Cue 
                                     FROM manifiesto_anticipo ma 
                                         INNER JOIN banco b ON ma.Ban_Cod = b.Ban_Cod
-                                    WHERE ma.Cli_Cod = c.Cli_Cod AND ma.Ama_Est = 'A'
+                                    WHERE ma.Cli_Cod = c.Cli_Cod AND ma.Ama_Est = 'A' AND ma.Ama_Tip = 'A'
                                     ORDER BY ma.Ama_Fec DESC LIMIT 1), '') as Ban_Cue
                     FROM cliente c
                     INNER JOIN persona p ON c.Prs_Cod = p.Prs_Cod
@@ -220,6 +221,7 @@ function sentencias_estado_cuenta($id, $Par_Sql) {
                         INNER JOIN persona ON cliente.Prs_Cod = persona.Prs_Cod
                         INNER JOIN manifiesto_anticipo ON cliente.Cli_Cod = manifiesto_anticipo.Cli_Cod
                     WHERE cliente.Cli_Est = 'A'
+                        AND manifiesto_anticipo.Ama_Tip = 'A'
                         AND cliente.Emp_Cod = '$_SESSION[Ses_Emp_Cod]'
                     ORDER BY persona.Prs_Nom, persona.Prs_Ape;";
             return $sql;
@@ -234,6 +236,7 @@ function sentencias_estado_cuenta($id, $Par_Sql) {
                         INNER JOIN persona ON usuarios.Prs_Cod = persona.Prs_Cod
                         INNER JOIN manifiesto_anticipo ON usuarios.Usu_Cod = manifiesto_anticipo.Usu_Cod
                     WHERE usuarios.Usu_Est = 'A'
+                        AND manifiesto_anticipo.Ama_Tip = 'A'
                     ORDER BY persona.Prs_Nom, persona.Prs_Ape;";
             return $sql;
 
@@ -267,14 +270,14 @@ function sentencias_estado_cuenta($id, $Par_Sql) {
                         (SELECT COALESCE(SUM(ma.Ama_Val), 0)
                         FROM manifiesto_anticipo ma
                         LEFT JOIN tipos_pago tp ON ma.Pag_Cod = tp.Pag_Cod
-                        WHERE ma.Cli_Cod = '$Cli_Cod' AND ma.Ama_Est = 'A'
+                        WHERE ma.Cli_Cod = '$Cli_Cod' AND ma.Ama_Est = 'A' AND ma.Ama_Tip = 'A'
                             AND (tp.Pag_Abr IN ('DEP', 'TRF') OR tp.Pag_Abr IS NULL)
                             $where_pla_ma $where_date_ma) as Depositos,
                             
                         (SELECT COALESCE(SUM(ma.Ama_Val), 0)
                         FROM manifiesto_anticipo ma
                         LEFT JOIN tipos_pago tp ON ma.Pag_Cod = tp.Pag_Cod
-                        WHERE ma.Cli_Cod = '$Cli_Cod' AND ma.Ama_Est = 'A'
+                        WHERE ma.Cli_Cod = '$Cli_Cod' AND ma.Ama_Est = 'A' AND ma.Ama_Tip = 'A'
                             AND tp.Pag_Abr = 'RET'
                             $where_pla_ma $where_date_ma) as Retenciones,
                             
@@ -364,7 +367,7 @@ function sentencias_estado_cuenta($id, $Par_Sql) {
                             COALESCE((SELECT SUM(ma.Ama_Val) 
                                         FROM manifiesto_anticipo ma 
                                         WHERE ma.Pla_Cod = mp.Pla_Cod 
-                                        AND ma.Ama_Est = 'A' 
+                                        AND ma.Ama_Est = 'A' AND ma.Ama_Tip = 'A'
                                         AND ma.Ama_Fec < '$Fec_Ini'), 0)
                             -
                             COALESCE((SELECT SUM((m.Man_Pes / 1000) * IFNULL(m.Man_Pun, 0)) 
@@ -380,7 +383,7 @@ function sentencias_estado_cuenta($id, $Par_Sql) {
                                     FROM manifiesto_anticipo ma
                                     LEFT JOIN tipos_pago tp ON ma.Pag_Cod = tp.Pag_Cod
                                     WHERE ma.Pla_Cod = mp.Pla_Cod 
-                                    AND ma.Ama_Est = 'A'
+                                    AND ma.Ama_Est = 'A'  AND ma.Ama_Tip = 'A'
                                     AND (tp.Pag_Abr IN ('DEP', 'TRF') OR tp.Pag_Abr IS NULL)
                                     AND ma.Ama_Fec BETWEEN '$Fec_Ini' AND '$Fec_Fin'), 0) as Depositos,
                         
@@ -389,7 +392,7 @@ function sentencias_estado_cuenta($id, $Par_Sql) {
                                     FROM manifiesto_anticipo ma
                                     LEFT JOIN tipos_pago tp ON ma.Pag_Cod = tp.Pag_Cod
                                     WHERE ma.Pla_Cod = mp.Pla_Cod 
-                                    AND ma.Ama_Est = 'A'
+                                    AND ma.Ama_Est = 'A'  AND ma.Ama_Tip = 'A'
                                     AND tp.Pag_Abr = 'RET'
                                     AND ma.Ama_Fec BETWEEN '$Fec_Ini' AND '$Fec_Fin'), 0) as Retenciones,
                         
