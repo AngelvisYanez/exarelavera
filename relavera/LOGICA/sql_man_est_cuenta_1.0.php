@@ -70,7 +70,7 @@ function sentencias_estado_cuenta($id, $Par_Sql) {
                         LEFT JOIN anticipos_clientes ON anticipos_clientes.Ama_Cod = manifiesto_anticipo.Ama_Cod AND anticipos_clientes.Ant_Est = 'A'
                         INNER JOIN comprobantes ON comprobantes.Com_Cod = anticipos_clientes.Com_Cod
                         INNER JOIN tipo_asien ON tipo_asien.Tia_Cod = comprobantes.Tia_Cod
-                    WHERE manifiesto_anticipo.Ama_Est = 'A'
+                    WHERE manifiesto_anticipo.Ama_Est = 'A' AND manifiesto_anticipo.Ama_Tip='A'
                         $wherefecha $wherefiltro
                     ORDER BY manifiesto_anticipo.Ama_Fec DESC, manifiesto_anticipo.Ama_Cod DESC;";
             return $sql;
@@ -161,7 +161,7 @@ function sentencias_estado_cuenta($id, $Par_Sql) {
                         LEFT JOIN comprobantes c ON c.Com_Cod = ac.Com_Cod
                         LEFT JOIN tipo_asien ta ON ta.Tia_Cod = c.Tia_Cod
                     WHERE ma.Cli_Cod = '$Cli_Cod'
-                        AND ma.Ama_Est = 'A'
+                        AND ma.Ama_Est = 'A' AND ma.Ama_Tip = 'A'
                         $wherefecha_ma
                         $where_pla_ma)
 
@@ -256,7 +256,7 @@ function sentencias_estado_cuenta($id, $Par_Sql) {
 
             // Subqueries for Saldo Inicial
             // Ingresos < Fec_Ini
-            $sql_ing_ini = "SELECT COALESCE(SUM(ma.Ama_Val), 0) FROM manifiesto_anticipo ma WHERE ma.Cli_Cod = '$Cli_Cod' AND ma.Ama_Est = 'A' AND ma.Ama_Fec < '$Fec_Ini' $where_pla_ma";
+            $sql_ing_ini = "SELECT COALESCE(SUM(ma.Ama_Val), 0) FROM manifiesto_anticipo ma WHERE ma.Cli_Cod = '$Cli_Cod' AND ma.Ama_Est = 'A' AND ma.Ama_Tip = 'A' AND ma.Ama_Fec < '$Fec_Ini' $where_pla_ma";
             // Egresos < Fec_Ini
             $sql_egr_ini = "SELECT COALESCE(SUM((m.Man_Pes / 1000) * IFNULL(m.Man_Pun, 0)), 0) FROM manifiesto m WHERE m.Cli_Cod = '$Cli_Cod' AND m.Man_Est = 'A' AND m.Man_Tes NOT IN ('R') AND m.Man_Fec < '$Fec_Ini' $where_pla_m";
 
