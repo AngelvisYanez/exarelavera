@@ -40,8 +40,19 @@ $pdf->Row(array('No.','CÓDIGO','DESCRIPCIÓN','CANTIDAD','PRECIO U.','TOTAL'),t
 $pdf->SetFont('Arial','',8);
 $pdf->SetCAligns(array('L','C','L','C','R','R'));
 $pdf->SetCHeight(5);
-foreach ($pdf->formatArray($datoXml['detalles']['detalle'])AS $i=>$deta){
+/*foreach ($pdf->formatArray($datoXml['detalles']['detalle'])AS $i=>$deta){
     $pdf->Row(array(($i+1),issetText($deta,'codigoAdicional'),$deta['descripcion'].detallesAdi($pdf, $deta),$deta['cantidad'],$deta['precioUnitario'],number_format((float)$deta['cantidad']*(float)$deta['precioUnitario'],2)  ) ,true,false);
+}*/
+foreach ($pdf->formatArray($datoXml['detalles']['detalle']) as $i => $deta) {
+    /* Tercer argumento true = multilínea (MultiCell). Si es false, Row() usa cutString() y el texto largo se corta sin salto de línea. */
+    $pdf->Row(array(
+        ($i + 1),
+        issetText($deta, 'codigoAdicional'),
+        issetText($deta, 'descripcion') . detallesAdi($pdf, $deta),
+        issetText($deta, 'cantidad'),
+        issetText($deta, 'precioUnitario'),
+        number_format((float) $deta['cantidad'] * (float) $deta['precioUnitario'], 2)
+    ), true, true);
 }
 
 /* iniciamos en cero las variables */
