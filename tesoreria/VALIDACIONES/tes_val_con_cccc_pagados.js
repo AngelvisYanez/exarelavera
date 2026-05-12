@@ -116,6 +116,54 @@ function cargarSelect() {
     $('#list').submit();
 }
 
+/** Aviso: facturas sin cuenta Debe en ccpp_cliente (mismos filtros que la grilla CCXCC). */
+function actualizarCcccClieVariosAlerta() {
+    if (!$('#formCompTemp').length || !$('#cccc_alerta_clie_varios').length) return;
+    var d = $('#formCompTemp').getData('getCcccCuentaAlerta');
+    $.post(phpSelf, d, function (resp) {
+        if (!resp || resp.success !== true) {
+            $('#cccc_alerta_clie_varios').hide();
+            return;
+        }
+        var n = parseInt(resp.count, 10) || 0;
+        if (n < 1) {
+            $('#cccc_alerta_clie_varios').hide();
+            return;
+        }
+        $('#cccc_alerta_clie_varios').show();
+        var $num = $('#cccc_alerta_clie_varios_num');
+        $num.text(n).data('rows', resp.rows || []);
+        var tip = [];
+        $.each(resp.rows || [], function (i, r) {
+            var cta = (r.cuenta_debe != null && r.cuenta_debe !== '') ? r.cuenta_debe : (r.cuenta_haber || '');
+            tip.push((r.Com_Codigo || '') + ' | Fact. ' + (r.Cop_Num || '') + ' | ' + (r.Cop_Fec || '') + ' | ' + (r.proveedor || '') + ' | Debe: ' + cta);
+        });
+        $num.attr('title', tip.join('\n'));
+    }, 'json').fail(function () { $('#cccc_alerta_clie_varios').hide(); });
+}
+
+$(document).on('click', '#cccc_alerta_clie_varios_num', function (e) {
+    e.preventDefault();
+    var rows = $(this).data('rows') || [];
+    if (!rows.length) return;
+    var esc = function (s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+    };
+    var html = '<div style="text-align:left;max-height:340px;overflow:auto;font-size:12px;">';
+    html += '<p style="margin-bottom:10px;">La cuenta del asiento <strong>Debe</strong> no est&aacute; en la configuraci&oacute;n <strong>ccpp_cliente</strong> (CxC clientes / &laquo;Clientes varios&raquo;). Debe dar de alta esa cuenta o corregir el asiento.</p><ul style="padding-left:18px;margin:0;">';
+    $.each(rows, function (i, r) {
+        var cta = (r.cuenta_debe != null && r.cuenta_debe !== '') ? r.cuenta_debe : (r.cuenta_haber || '');
+        html += '<li style="margin-bottom:12px;"><b>' + esc(r.Com_Codigo) + '</b> &mdash; Factura <b>' + esc(r.Cop_Num) + '</b>, ' + esc(r.Cop_Fec) + '<br/>' + esc(r.proveedor) + '<br/><span style="color:#555;">Debe: ' + esc(cta) + '</span></li>';
+    });
+    html += '</ul></div>';
+    $('<div title="Facturas excluidas del listado">' + html + '</div>').dialog({
+        modal: true,
+        width: 540,
+        buttons: [{ text: 'Cerrar', click: function () { $(this).dialog('close'); } }],
+        close: function () { $(this).remove(); }
+    });
+});
+
 function initCompGrid() {
     var mostrarColumnas = (isnego === 'S');
     $.createDateRange('#txt_fec_ini', '#txt_fec_fin');
@@ -155,6 +203,13 @@ function initCompGrid() {
                 label: 'C&oacute;d.Int.',
                 name: 'Cli_Cod',
                 width: 15,
+                align: "center",
+                hidden: true
+            },
+            {
+                label: 'C&eacute;dula',
+                name: 'Prs_Ced',
+                width: 30,
                 align: "center",
                 hidden: true
             },
@@ -328,6 +383,7 @@ function initCompGrid() {
                     $("#" + data.rows[i].Cpc_Cod).css("background", "#DDFAE2");
             }
             updateTotals($(this));
+            actualizarCcccClieVariosAlerta();
         },
         subGridOptions: {
             "plusicon": "ui-icon-triangle-1-e",
@@ -711,7 +767,8 @@ function exportar(banTipo) {
         }
         if (ban) batch.push({
             Cli_Cod: datos['Cli_Cod'],
-            Cliente: datos['proveedor']
+            Cliente: datos['proveedor'],
+            Prs_Ced: datos['Prs_Ced'] || ''
         });
     }
     
@@ -729,7 +786,7 @@ function exportar(banTipo) {
         var seleccionado = (document.querySelector('input[name="resumido"]:checked')).value;
 
         $.post(phpSelf, {
-            resumido: $('#resumido').prop('checked'),
+            resumido: (seleccionado === 'S'),
             resumido1: seleccionado,
             dataReport: batch,
             tipo: banTipo,

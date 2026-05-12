@@ -114,7 +114,7 @@ function sentencias_cccc($id, $Par_Sql)
             //ChromePhp::log($sql);
             break;
         case 8: /*consulta de facturas con pagos segun el proveedor*/
-
+            
             $adicional = "";
             $filtroCCxCC = "";
             $filtroWhereCxp = "";
@@ -123,14 +123,15 @@ function sentencias_cccc($id, $Par_Sql)
             if ($Par_Sql[1] != '') $Par_Sql[1] = "AND cliente.Cli_Cod=$Par_Sql[1]";
             if ($Par_Sql[2] != '') $Par_Sql[2] = "AND perio_cont.Pec_Cod= $Par_Sql[2]";
             else $Par_Sql[2] = " AND Caj_Fec BETWEEN '$Par_Sql[3] 00:00:00' AND '$Par_Sql[4] 23:59:59'";
-
+            
             if ($Par_Sql[6] != '') $Par_Sql[6] = $adicional = " nego_documentos.*, negocam.Num_Neg,";
             if ($Par_Sql[6] != '') $Par_Sql[6] = $filtroCCxCC = " LEFT JOIN nego_documentos ON nego_documentos.Cod_Doc = ventas.Vet_Cod
 								LEFT JOIN nego_camaron AS negocam ON nego_documentos.Cod_Neg = negocam.Cod_Neg ";
 
             if ($Par_Sql[7] != '') $filtroWhereCxp = " AND nego_documentos.Tip_Prod='$Par_Sql[7]'";
-
+            
             $sql = "SELECT cliente.Cli_Cod,CONCAT(persona.Prs_Ape,' ',persona.Prs_Nom) AS proveedor, persona.Prs_Ape, persona.Prs_Nom,
+            persona.Prs_Ced,
             ventas.Vet_Cod, ventas.Vet_Obs, $adicional ccpp_cobrar.Cpc_Cod, caja_aper.Caj_Fec,  CONCAT(Suc_Sri,'-',Pun_Sri,'-',
             CAST(LPAD(Vet_Num,9,'0')AS char)) AS Vet_Num, ccpp_cobrar.Cpc_Ven, ccpp_cobrar.Com_Cod, asientos.Asi_Cod,
             asientos.Asi_Val,asientos.Pld_Cod,Pld_Cdc,Pld_Des,
@@ -387,19 +388,19 @@ INNER JOIN comprobantes as comp2 ON comp2.Com_Cod=det_ccpp_c.Com_Cod,persona
             break;
         case 32:
             $sql = "SELECT Ret_Num,Ret_Fec,CONCAT('R',Ren_Ret) AS tipo,SUM((Vet_imp-(Vet_imp*(Vet_Des/100)))*(Ren_Por/100)) AS retencion FROM ventas_det
-INNER JOIN renta_iva ON renta_iva.Ren_Cod=ventas_det.Ren_Cod
-INNER JOIN ventas ON ventas_det.Vet_Cod=ventas.Vet_Cod
-WHERE ventas.Vet_Cod='$Par_Sql[0]'
-GROUP BY ventas.Vet_Cod";
+                        INNER JOIN renta_iva ON renta_iva.Ren_Cod=ventas_det.Ren_Cod
+                        INNER JOIN ventas ON ventas_det.Vet_Cod=ventas.Vet_Cod
+                    WHERE ventas.Vet_Cod='$Par_Sql[0]'
+                    GROUP BY ventas.Vet_Cod";
             //echo $sql;
             break;
         case 33:
             $sql = "SELECT Ret_Num,Ret_Fec,CONCAT('R',Ren_Ret) AS tipo,SUM((Vet_Imp*(Iva_Por/100))*(Ren_Por/100)) AS retencion FROM ventas_det
-INNER JOIN renta_iva ON renta_iva.Ren_Cod=ventas_det.Ren_Iva
-INNER JOIN iva ON iva.Iva_Cod=ventas_det.Iva_Cod
-INNER JOIN ventas ON ventas_det.Vet_Cod=ventas.Vet_Cod
-WHERE ventas.Vet_Cod='$Par_Sql[0]'
-GROUP BY ventas.Vet_Cod";
+                        INNER JOIN renta_iva ON renta_iva.Ren_Cod=ventas_det.Ren_Iva
+                        INNER JOIN iva ON iva.Iva_Cod=ventas_det.Iva_Cod
+                        INNER JOIN ventas ON ventas_det.Vet_Cod=ventas.Vet_Cod
+                    WHERE ventas.Vet_Cod='$Par_Sql[0]'
+                    GROUP BY ventas.Vet_Cod";
             //echo $sql;
             break;
         case 34: /*consulta de facturas con pagos segun el proveedor*/
@@ -409,28 +410,28 @@ GROUP BY ventas.Vet_Cod";
             if ($Par_Sql[5] != 'T') $Par_Sql[5] = "AND tipos_pago.Pag_Cod=$Par_Sql[5]";
             else  $Par_Sql[5] = "";
             $sql = "SELECT CONCAT(ventas.Vet_Cod,'_',ccpp_cobrar.Cpc_Cod),
-  ventas.Vet_Cod,Vet_Obs,ccpp_cobrar.Cpc_Cod,det_ccpp_c.Com_Cod,cliente.Cli_Cod,det_ccpp_c.Pag_Cod,Pag_Des,Cpc_Fec,CONCAT(persona.Prs_Ape,' ',persona.Prs_Nom) AS proveedor, persona.Prs_Ape, persona.Prs_Nom,   caja_aper.Caj_Fec,  CONCAT(Suc_Sri,'-',Pun_Sri,'-',CAST(LPAD(Vet_Num,9,'0')AS char)) AS Vet_Num,Cpc_Val,det_ccpp_c.Cpc_Obs,
-  CONCAT(Tia_Abr,'-',IF(CHAR_LENGTH(MONTH(comprobantes.Com_Fec))=1,CONCAT('0',CAST(MONTH(comprobantes.Com_Fec) AS char)),CAST(MONTH(comprobantes.Com_Fec) AS char)),'-',CAST(comprobantes.Com_Num AS char)) AS Com_Codigo,
-  CONCAT(Bak_Des,'/',Che_Cta) AS Banco,Che_Num,Che_Fec
-  
-FROM det_ccpp_c
-INNER JOIN ccpp_cobrar ON ccpp_cobrar.Cpc_Cod=det_ccpp_c.Cpc_Cod
-INNER JOIN comprobantes ON comprobantes.Com_Cod=det_ccpp_c.Com_Cod
-INNER JOIN tipo_asien ON tipo_asien.Tia_Cod=comprobantes.Tia_Cod 
-INNER JOIN perio_cont ON (comprobantes.Pec_Cod = perio_cont.Pec_Cod)
-INNER JOIN ventas ON (ccpp_cobrar.Vet_Cod = ventas.Vet_Cod)
-INNER JOIN caja_aper ON (ventas.Caj_Cod = caja_aper.Caj_Cod) 
-INNER JOIN puntos_imp ON caja_aper.Pun_Cod=puntos_imp.Pun_Cod
-INNER JOIN autorizaci ON autorizaci.Aut_Cod=ventas.Aut_Cod 
-INNER JOIN sucursal ON sucursal.Suc_Cod=puntos_imp.Suc_Cod  
-INNER JOIN cliente ON cliente.Cli_Cod=ventas.Cli_Cod 
-INNER JOIN persona ON persona.Prs_Cod=cliente.Prs_Cod 
-INNER JOIN tipos_pago ON det_ccpp_c.Pag_Cod=tipos_pago.Pag_Cod 
-LEFT JOIN cheq_det_ccpp ON det_ccpp_c.Dcc_Cod=cheq_det_ccpp.Dcc_Cod
-LEFT JOIN cheques_ext ON (cheques_ext.Che_Cod=cheq_det_ccpp.Che_Cod  AND Che_Est='A')
-LEFT JOIN bancos ON cheques_ext.Bak_Cod=bancos.Bak_Cod
-		WHERE (ventas.vet_Est='A' OR ventas.vet_Est='E')  AND (comprobantes.Com_Est='A' OR comprobantes.Com_Est='E')
-                $Par_Sql[1] $Par_Sql[2] AND sucursal.Emp_Cod=$Par_Sql[0] $Par_Sql[5] /*GROUP BY ventas.Vet_Cod*/ ORDER BY Cpc_Fec DESC  "; //
+                        ventas.Vet_Cod,Vet_Obs,ccpp_cobrar.Cpc_Cod,det_ccpp_c.Com_Cod,cliente.Cli_Cod,det_ccpp_c.Pag_Cod,Pag_Des,Cpc_Fec,CONCAT(persona.Prs_Ape,' ',persona.Prs_Nom) AS proveedor, persona.Prs_Ape, persona.Prs_Nom,   caja_aper.Caj_Fec,  CONCAT(Suc_Sri,'-',Pun_Sri,'-',CAST(LPAD(Vet_Num,9,'0')AS char)) AS Vet_Num,Cpc_Val,det_ccpp_c.Cpc_Obs,
+                        CONCAT(Tia_Abr,'-',IF(CHAR_LENGTH(MONTH(comprobantes.Com_Fec))=1,CONCAT('0',CAST(MONTH(comprobantes.Com_Fec) AS char)),CAST(MONTH(comprobantes.Com_Fec) AS char)),'-',CAST(comprobantes.Com_Num AS char)) AS Com_Codigo,
+                        CONCAT(Bak_Des,'/',Che_Cta) AS Banco,Che_Num,Che_Fec
+                        
+                    FROM det_ccpp_c
+                        INNER JOIN ccpp_cobrar ON ccpp_cobrar.Cpc_Cod=det_ccpp_c.Cpc_Cod
+                        INNER JOIN comprobantes ON comprobantes.Com_Cod=det_ccpp_c.Com_Cod
+                        INNER JOIN tipo_asien ON tipo_asien.Tia_Cod=comprobantes.Tia_Cod 
+                        INNER JOIN perio_cont ON (comprobantes.Pec_Cod = perio_cont.Pec_Cod)
+                        INNER JOIN ventas ON (ccpp_cobrar.Vet_Cod = ventas.Vet_Cod)
+                        INNER JOIN caja_aper ON (ventas.Caj_Cod = caja_aper.Caj_Cod) 
+                        INNER JOIN puntos_imp ON caja_aper.Pun_Cod=puntos_imp.Pun_Cod
+                        INNER JOIN autorizaci ON autorizaci.Aut_Cod=ventas.Aut_Cod 
+                        INNER JOIN sucursal ON sucursal.Suc_Cod=puntos_imp.Suc_Cod  
+                        INNER JOIN cliente ON cliente.Cli_Cod=ventas.Cli_Cod 
+                        INNER JOIN persona ON persona.Prs_Cod=cliente.Prs_Cod 
+                        INNER JOIN tipos_pago ON det_ccpp_c.Pag_Cod=tipos_pago.Pag_Cod 
+                        LEFT JOIN cheq_det_ccpp ON det_ccpp_c.Dcc_Cod=cheq_det_ccpp.Dcc_Cod
+                        LEFT JOIN cheques_ext ON (cheques_ext.Che_Cod=cheq_det_ccpp.Che_Cod  AND Che_Est='A')
+                        LEFT JOIN bancos ON cheques_ext.Bak_Cod=bancos.Bak_Cod
+                    WHERE (ventas.vet_Est='A' OR ventas.vet_Est='E')  AND (comprobantes.Com_Est='A' OR comprobantes.Com_Est='E')
+                            $Par_Sql[1] $Par_Sql[2] AND sucursal.Emp_Cod=$Par_Sql[0] $Par_Sql[5] /*GROUP BY ventas.Vet_Cod*/ ORDER BY Cpc_Fec DESC  "; //
             //ChromePhp::log($sql);
             //echo $sql;
             break;
@@ -456,7 +457,7 @@ LEFT JOIN bancos ON cheques_ext.Bak_Cod=bancos.Bak_Cod
                     ";
             //echo $sql;
             break;
-        /*********************/
+            /*********************/
         case 39:
             $sql = "SELECT comprobantes.*,CONCAT(Prs1.Prs_Ape,' ',Prs1.Prs_Nom)AS Cliente,CONCAT(Prs2.Prs_Ape,' ',Prs2.Prs_Nom)AS Usuario FROM comprobantes 
                 INNER JOIN cliente ON comprobantes.Cli_Cod=cliente.Cli_Cod
@@ -554,7 +555,7 @@ LEFT JOIN bancos ON cheques_ext.Bak_Cod=bancos.Bak_Cod
 					  INNER JOIN persona persona1 ON (usuarios.Prs_Cod = persona1.Prs_Cod)
 					  INNER JOIN tipo_asien ON (comprobantes.Tia_Cod = tipo_asien.Tia_Cod)
 					WHERE det_ccpp_c.Com_Cod = '$Par_Sql[0]'";
-            // //ChromePhp::log($sql);
+                    // //ChromePhp::log($sql);
             //echo $sql;
             return $sql;
 
@@ -580,97 +581,22 @@ LEFT JOIN bancos ON cheques_ext.Bak_Cod=bancos.Bak_Cod
                     INNER JOIN persona ON cliente.Prs_Cod = persona.Prs_Cod 
                     WHERE Cpc_Cod='$Par_Sql[0]' GROUP BY ventas.Vet_Cod";
             return $sql;
-            /* case 47: 
-            $adicional = "";
-            $filtroCCxCC = "";
-            $filtroWhereCxp = "";           
-            if ($Par_Sql[5] != '') $Par_Sql[5] = " AND tipo_compr.Tic_Cod=$Par_Sql[5]";
-            if ($Par_Sql[1] != '') $Par_Sql[1] = "AND cliente.Cli_Cod=$Par_Sql[1]";        
-            if ($Par_Sql[2] != '') $Par_Sql[2] = "AND perio_cont.Pec_Cod= $Par_Sql[2]";
-            else $Par_Sql[2] = " AND Caj_Fec BETWEEN '$Par_Sql[3] 00:00:00' AND '$Par_Sql[4] 23:59:59'";
-            if ($Par_Sql[6] != '') $Par_Sql[6] = $adicional = " nego_documentos.*, negocam.Num_Neg,";
-            if ($Par_Sql[6] != '') $Par_Sql[6] = $filtroCCxCC = " LEFT JOIN nego_documentos ON nego_documentos.Cod_Doc = ventas.Vet_Cod
-								LEFT JOIN nego_camaron AS negocam ON nego_documentos.Cod_Neg = negocam.Cod_Neg ";
-            if ($Par_Sql[7] != '') $filtroWhereCxp = " AND nego_documentos.Tip_Prod='$Par_Sql[7]'";
-            $sql = "SELECT cliente.Cli_Cod,CONCAT(persona.Prs_Ape,' ',persona.Prs_Nom) AS proveedor, persona.Prs_Ape, persona.Prs_Nom,
-                            ventas.Vet_Cod, $adicional ccpp_cobrar.Cpc_Cod, caja_aper.Caj_Fec,  CONCAT(Suc_Sri,'-',Pun_Sri,'-',
-                            CAST(LPAD(Vet_Num,9,'0')AS char)) AS Vet_Num, ccpp_cobrar.Cpc_Ven, ccpp_cobrar.Com_Cod, asientos.Asi_Cod,
-                            asientos.Asi_Val,asientos.Pld_Cod,Pld_Cdc,Pld_Des,
-                            CONCAT(Tia_Abr,'-',IF(CHAR_LENGTH(MONTH(comprobantes.Com_Fec))=1,
-                            CONCAT('0',CAST(MONTH(comprobantes.Com_Fec) AS char)),CAST(MONTH(comprobantes.Com_Fec) AS char)),'-',CAST(comprobantes.Com_Num AS char)) AS Com_Codigo 
-                            ,IF(SUM(IF(comp2.Com_Est='A',ROUND(ROUND(Cpc_Val,2),2),0))=Asi_Val,'Pagado'
-                            ,IF(DATEDIFF(Cpc_Ven,CURDATE())>0,CONCAT(CAST(DATEDIFF(Cpc_Ven,CURDATE()) AS char),' d&iacute;as'),'Vencido')) AS vencimiento 
-                            ,IF(SUM(IF(comp2.Com_Est='A',ROUND(ROUND(Cpc_Val,2),2),0)) IS NULL,0,SUM(IF(comp2.Com_Est='A',ROUND(ROUND(Cpc_Val,2),2),0))) AS Abono, Tic_Des 
-                    FROM cliente
-                        INNER JOIN ventas ON (cliente.Cli_Cod = ventas.Cli_Cod)
-                        INNER JOIN tipo_compr ON (ventas.Tic_Cod = tipo_compr.Tic_Cod)
-                        INNER JOIN caja_aper ON (ventas.Caj_Cod = caja_aper.Caj_Cod) 
-                        INNER JOIN puntos_imp ON caja_aper.Pun_Cod=puntos_imp.Pun_Cod
-                        INNER JOIN autorizaci ON autorizaci.Aut_Cod=ventas.Aut_Cod 
-                        INNER JOIN sucursal ON sucursal.Suc_Cod=puntos_imp.Suc_Cod 
-                        INNER JOIN ccpp_cobrar ON (ventas.Vet_Cod = ccpp_cobrar.Vet_Cod) 
-                        INNER JOIN comprobantes ON (ccpp_cobrar.Com_Cod = comprobantes.Com_Cod) 
-                        INNER JOIN tipo_asien ON tipo_asien.Tia_Cod=comprobantes.Tia_Cod 
-                        INNER JOIN asientos ON (comprobantes.Com_Cod = asientos.Com_Cod) 
-                        $filtroCCxCC
-                        INNER JOIN perio_cont ON (comprobantes.Pec_Cod = perio_cont.Pec_Cod) 
-                        INNER JOIN ccpp_cliente ON (asientos.Pld_Cod = ccpp_cliente.Pld_Cod) 
-                        INNER JOIN det_plan ON (asientos.Pld_Cod = det_plan.Pld_Cod) 
-                        LEFT JOIN det_ccpp_c ON ccpp_cobrar.Cpc_Cod=det_ccpp_c.Cpc_Cod 
-                        LEFT JOIN comprobantes as comp2 ON (comp2.Com_Cod=det_ccpp_c.Com_Cod),persona
-                    WHERE cliente.Prs_Cod = persona.Prs_Cod AND
-                        comprobantes.Com_Cod = ccpp_cobrar.Com_Cod AND
-                        asientos.Com_Cod= comprobantes.Com_Cod AND
-                        asientos.Asi_Deh= 'D' AND
-                        (ventas.vet_Est='A' OR ventas.vet_Est='E') AND
-                        (comprobantes.Com_Est='A' OR comprobantes.Com_Est='E')
-                        $Par_Sql[1] $Par_Sql[2] AND
-                        sucursal.Emp_Cod=$Par_Sql[0] $Par_Sql[5] $filtroWhereCxp
-                    GROUP BY ventas.Vet_Cod
-                    ORDER BY Vet_Num  "; 
-            break;*/
-
-
-
         case 47: /*consulta de facturas con pagos segun el proveedor*/
-
-            $adicional = "";
-            $filtroCCxCC = "";
-            $filtroWhereCxp = "";
-
             if ($Par_Sql[5] != '') $Par_Sql[5] = " AND tipo_compr.Tic_Cod=$Par_Sql[5]";
             if ($Par_Sql[1] != '') $Par_Sql[1] = "AND cliente.Cli_Cod=$Par_Sql[1]";
-            // if ($Par_Sql[2] != '') {
-            //     $Par_Sql[2] = "AND perio_cont.Pec_Cod= $Par_Sql[2]";
-            //     $pago = '';
-            // } else {
-            //     $pago = " AND Cpc_Fec BETWEEN '$Par_Sql[3] 00:00:00' AND '$Par_Sql[4] 23:59:59' ";
-            //     $Par_Sql[2] = " AND Caj_Fec BETWEEN '$Par_Sql[3] 00:00:00' AND '$Par_Sql[4] 23:59:59'";
-            // }
-
-            if ($Par_Sql[2] != '') $Par_Sql[2] = "AND perio_cont.Pec_Cod= $Par_Sql[2]";
-            else $Par_Sql[2] = " AND Caj_Fec BETWEEN '$Par_Sql[3] 00:00:00' AND '$Par_Sql[4] 23:59:59'";
-
-            if ($Par_Sql[6] != '') $Par_Sql[6] = $adicional = " nego_documentos.*, negocam.Num_Neg,";
-            if ($Par_Sql[6] != '') $Par_Sql[6] = $filtroCCxCC = " LEFT JOIN nego_documentos ON nego_documentos.Cod_Doc = ventas.Vet_Cod
-								LEFT JOIN nego_camaron AS negocam ON nego_documentos.Cod_Neg = negocam.Cod_Neg ";
-
-            if ($Par_Sql[7] != '') $filtroWhereCxp = " AND nego_documentos.Tip_Prod='$Par_Sql[7]'";
-
-            // Solo contar en Abono y Pagado los pagos con fecha <= fecha fin del periodo (corte)
-            $fecFin = isset($Par_Sql[4]) && $Par_Sql[4] !== '' ? "'" . $Par_Sql[4] . " 23:59:59'" : "NULL";
-            $condicionPagoAlCorte = ($fecFin === "NULL") ? "1" : "det_ccpp_c.Cpc_Fec <= $fecFin";
-            $sumaAbono = "SUM(IF(comp2.Com_Est='A' AND ($condicionPagoAlCorte), ROUND(ROUND(det_ccpp_c.Cpc_Val,2),2), 0))";
-
-            $sql = "SELECT cliente.Cli_Cod,CONCAT(persona.Prs_Ape,' ',persona.Prs_Nom) AS proveedor, persona.Prs_Ape, persona.Prs_Nom,
-                            ventas.Vet_Cod, $adicional ccpp_cobrar.Cpc_Cod, caja_aper.Caj_Fec,  CONCAT(Suc_Sri,'-',Pun_Sri,'-',
-                            CAST(LPAD(Vet_Num,9,'0')AS char)) AS Vet_Num, ccpp_cobrar.Cpc_Ven, ccpp_cobrar.Com_Cod, asientos.Asi_Cod,
-                            asientos.Asi_Val,asientos.Pld_Cod,Pld_Cdc,Pld_Des,
-                            CONCAT(Tia_Abr,'-',IF(CHAR_LENGTH(MONTH(comprobantes.Com_Fec))=1,
-                            CONCAT('0',CAST(MONTH(comprobantes.Com_Fec) AS char)),CAST(MONTH(comprobantes.Com_Fec) AS char)),'-',CAST(comprobantes.Com_Num AS char)) AS Com_Codigo 
-                            ,IF($sumaAbono=Asi_Val,'Pagado'
-                            ,IF(DATEDIFF(Cpc_Ven,CURDATE())>0,CONCAT(CAST(DATEDIFF(Cpc_Ven,CURDATE()) AS char),' d&iacute;as'),'Vencido')) AS vencimiento 
-                            ,IF($sumaAbono IS NULL,0,$sumaAbono) AS Abono, Tic_Des 
+            if ($Par_Sql[2] != '') {
+                $Par_Sql[2] = "AND perio_cont.Pec_Cod= $Par_Sql[2]";
+                $pago = '';
+            } else {
+                $pago = " AND Cpc_Fec BETWEEN '$Par_Sql[3] 00:00:00' AND '$Par_Sql[4] 23:59:59' ";
+                $Par_Sql[2] = " AND Caj_Fec BETWEEN '$Par_Sql[3] 00:00:00' AND '$Par_Sql[4] 23:59:59'";
+            }
+            $sql = "SELECT cliente.Cli_Cod,CONCAT(persona.Prs_Ape,' ',persona.Prs_Nom) AS proveedor, persona.Prs_Ape, persona.Prs_Nom, ventas.Vet_Cod, ccpp_cobrar.Cpc_Cod, caja_aper.Caj_Fec,  CONCAT(Suc_Sri,'-',Pun_Sri,'-',CAST(LPAD(Vet_Num,9,'0')AS char)) AS Vet_Num, ccpp_cobrar.Cpc_Ven, ccpp_cobrar.Com_Cod, asientos.Asi_Cod, asientos.Asi_Val,asientos.Pld_Cod,Pld_Cdc,Pld_Des,
+                        CONCAT(Tia_Abr,'-',IF(CHAR_LENGTH(MONTH(comprobantes.Com_Fec))=1,
+                        CONCAT('0',CAST(MONTH(comprobantes.Com_Fec) AS char)),CAST(MONTH(comprobantes.Com_Fec) AS char)),'-',CAST(comprobantes.Com_Num AS char)) AS Com_Codigo 
+                        ,IF(SUM(IF(comp2.Com_Est='A',ROUND(ROUND(Cpc_Val,2),2),0))=Asi_Val,'Pagado'
+                        ,IF(DATEDIFF(Cpc_Ven,CURDATE())>0,CONCAT(CAST(DATEDIFF(Cpc_Ven,CURDATE()) AS char),' d&iacute;as'),'Vencido')) AS vencimiento 
+                        ,IF(SUM(IF(comp2.Com_Est='A',ROUND(ROUND(Cpc_Val,2),2),0)) IS NULL,0,SUM(IF(comp2.Com_Est='A',ROUND(ROUND(Cpc_Val,2),2),0))) AS Abono, Tic_Des 
                     FROM cliente
                         INNER JOIN ventas ON (cliente.Cli_Cod = ventas.Cli_Cod)
                         INNER JOIN tipo_compr ON (ventas.Tic_Cod = tipo_compr.Tic_Cod)
@@ -682,26 +608,16 @@ LEFT JOIN bancos ON cheques_ext.Bak_Cod=bancos.Bak_Cod
                         INNER JOIN comprobantes ON (ccpp_cobrar.Com_Cod = comprobantes.Com_Cod) 
                         INNER JOIN tipo_asien ON tipo_asien.Tia_Cod=comprobantes.Tia_Cod 
                         INNER JOIN asientos ON (comprobantes.Com_Cod = asientos.Com_Cod) 
-                        $filtroCCxCC
                         INNER JOIN perio_cont ON (comprobantes.Pec_Cod = perio_cont.Pec_Cod) 
                         INNER JOIN ccpp_cliente ON (asientos.Pld_Cod = ccpp_cliente.Pld_Cod) 
                         INNER JOIN det_plan ON (asientos.Pld_Cod = det_plan.Pld_Cod) 
-                        LEFT JOIN det_ccpp_c ON ccpp_cobrar.Cpc_Cod=det_ccpp_c.Cpc_Cod
+                        LEFT JOIN det_ccpp_c ON ccpp_cobrar.Cpc_Cod=det_ccpp_c.Cpc_Cod $pago
                         LEFT JOIN comprobantes as comp2 ON (comp2.Com_Cod=det_ccpp_c.Com_Cod),persona
-                    WHERE cliente.Prs_Cod = persona.Prs_Cod AND
-                        comprobantes.Com_Cod = ccpp_cobrar.Com_Cod AND
-                        asientos.Com_Cod= comprobantes.Com_Cod AND
-                        asientos.Asi_Deh= 'D' AND
-                        (ventas.vet_Est='A' OR ventas.vet_Est='E') AND
-                        (comprobantes.Com_Est='A' OR comprobantes.Com_Est='E')
-                        $Par_Sql[1] $Par_Sql[2] AND
-                        sucursal.Emp_Cod=$Par_Sql[0] $Par_Sql[5] $filtroWhereCxp
-                    GROUP BY ventas.Vet_Cod
-                    ORDER BY Vet_Num /*ccpp_cobrar.Cpc_Ven*/  "; //
+                    WHERE cliente.Prs_Cod = persona.Prs_Cod AND comprobantes.Com_Cod = ccpp_cobrar.Com_Cod AND asientos.Com_Cod= comprobantes.Com_Cod AND asientos.Asi_Deh= 'D' AND (ventas.vet_Est='A' OR ventas.vet_Est='E')  AND (comprobantes.Com_Est='A' OR comprobantes.Com_Est='E')
+                            $Par_Sql[1] $Par_Sql[2] AND sucursal.Emp_Cod=$Par_Sql[0] $Par_Sql[5] GROUP BY ventas.Vet_Cod ORDER BY Vet_Num /*ccpp_cobrar.Cpc_Ven*/  "; //
             //var_dump( $sql );
             //ChromePhp::log(substr($sql, 200));
             break;
-
         case 48:
             $sql = "SELECT * FROM perio_cont WHERE Pec_Cod=$Par_Sql[0] ";
             //echo $sql."<br/>";
@@ -732,7 +648,7 @@ LEFT JOIN bancos ON cheques_ext.Bak_Cod=bancos.Bak_Cod
             $sql = "SELECT Pag_Abr FROM tipos_pago WHERE Pag_Cod='$Par_Sql[0]' ";
             break;
 
-        /**NUEVAS CONSULTAS PARA ELIMINAR ANTICIPOS */
+            /**NUEVAS CONSULTAS PARA ELIMINAR ANTICIPOS */
         case 54:
             $sql = "SELECT dac.Ant_Cod
                         from det_ant_cccc as dac where dac.Dcc_Cod = $Par_Sql[Dcc_Cod];";
@@ -786,6 +702,85 @@ LEFT JOIN bancos ON cheques_ext.Bak_Cod=bancos.Bak_Cod
         case 62:
             $sql = "SELECT IFNULL(COUNT(*),0) AS tot_fact FROM anticipos_clientes WHERE Vet_Cod=$Par_Sql[0] AND Ant_Est!='I'";
             break;
+
+        /* Facturas venta sin ningún Debe en ccpp_cliente (excluidas del listado CCXCC; aviso en pantalla — mismos filtros que caso 8) */
+        case 137:
+            $emp = isset($Par_Sql['Ses_Emp_Cod']) ? intval($Par_Sql['Ses_Emp_Cod']) : 0;
+            if ($emp < 1 && isset($_SESSION['Ses_Emp_Cod'])) {
+                $emp = intval($_SESSION['Ses_Emp_Cod']);
+            }
+            $cli = "";
+            if (isset($Par_Sql['Cli_Cod']) && $Par_Sql['Cli_Cod'] !== '' && $Par_Sql['Cli_Cod'] !== null) {
+                $cli = "AND cliente.Cli_Cod = " . intval($Par_Sql['Cli_Cod']);
+            }
+            $fec_sql = "";
+            if (isset($Par_Sql['Pec_Cod']) && $Par_Sql['Pec_Cod'] !== '' && $Par_Sql['Pec_Cod'] !== null) {
+                $fec_sql = "AND perio_cont.Pec_Cod = " . intval($Par_Sql['Pec_Cod']);
+            } else {
+                $f_ini = isset($Par_Sql['txt_fec_ini']) ? trim($Par_Sql['txt_fec_ini']) : date('Y-01-01');
+                $f_fin = isset($Par_Sql['txt_fec_fin']) ? trim($Par_Sql['txt_fec_fin']) : date('Y-m-d');
+                if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $f_ini)) {
+                    $f_ini = date('Y-01-01');
+                }
+                if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $f_fin)) {
+                    $f_fin = date('Y-m-d');
+                }
+                $fec_sql = "AND (caja_aper.Caj_Fec BETWEEN '" . $f_ini . " 00:00:00' AND '" . $f_fin . " 23:59:59')";
+            }
+            $tic = "";
+            if (isset($Par_Sql['Tic_Cod']) && $Par_Sql['Tic_Cod'] !== '' && $Par_Sql['Tic_Cod'] !== null) {
+                $tic = " AND tipo_compr.Tic_Cod = " . intval($Par_Sql['Tic_Cod']);
+            }
+            $filtroCCxCC = "";
+            $filtroWhereCxp = "";
+            if (isset($Par_Sql['isnegoCCxCC']) && $Par_Sql['isnegoCCxCC'] === 'S') {
+                $filtroCCxCC = " LEFT JOIN nego_documentos ON nego_documentos.Cod_Doc = ventas.Vet_Cod
+								LEFT JOIN nego_camaron AS negocam ON nego_documentos.Cod_Neg = negocam.Cod_Neg ";
+                if (!empty($Par_Sql['filtroCCxCC'])) {
+                    $tip = str_replace(array("\\", "'", '"'), array("\\\\", "''", ''), $Par_Sql['filtroCCxCC']);
+                    $filtroWhereCxp = " AND nego_documentos.Tip_Prod='" . $tip . "'";
+                }
+            }
+            $sql = "SELECT
+						ventas.Vet_Cod,
+						MAX(CONCAT(Suc_Sri,'-',Pun_Sri,'-',CAST(LPAD(Vet_Num,9,'0') AS char))) AS Cop_Num,
+						MAX(caja_aper.Caj_Fec) AS Cop_Fec,
+						MAX(CONCAT(Tia_Abr,'-',IF(CHAR_LENGTH(MONTH(comprobantes.Com_Fec))=1,CONCAT('0',CAST(MONTH(comprobantes.Com_Fec) AS char)),CAST(MONTH(comprobantes.Com_Fec) AS char)),'-',CAST(comprobantes.Com_Num AS char))) AS Com_Codigo,
+						MAX(CONCAT(persona.Prs_Ape,' ',persona.Prs_Nom)) AS proveedor,
+						GROUP_CONCAT(DISTINCT CONCAT(det_plan.Pld_Cdc,' - ',det_plan.Pld_Des) ORDER BY asientos.Asi_Cod SEPARATOR ' | ') AS cuenta_debe
+					FROM cliente
+						INNER JOIN persona ON (cliente.Prs_Cod = persona.Prs_Cod)
+						INNER JOIN ventas ON (cliente.Cli_Cod = ventas.Cli_Cod)
+						INNER JOIN tipo_compr ON (ventas.Tic_Cod = tipo_compr.Tic_Cod)
+						INNER JOIN caja_aper ON (ventas.Caj_Cod = caja_aper.Caj_Cod)
+						INNER JOIN puntos_imp ON caja_aper.Pun_Cod=puntos_imp.Pun_Cod
+						INNER JOIN autorizaci ON autorizaci.Aut_Cod=ventas.Aut_Cod
+						INNER JOIN sucursal ON sucursal.Suc_Cod=puntos_imp.Suc_Cod
+						INNER JOIN ccpp_cobrar ON (ventas.Vet_Cod = ccpp_cobrar.Vet_Cod)
+						INNER JOIN comprobantes ON (ccpp_cobrar.Com_Cod = comprobantes.Com_Cod)
+						INNER JOIN tipo_asien ON tipo_asien.Tia_Cod=comprobantes.Tia_Cod
+						INNER JOIN asientos ON (comprobantes.Com_Cod = asientos.Com_Cod AND asientos.Asi_Deh = 'D')
+						INNER JOIN perio_cont ON (comprobantes.Pec_Cod = perio_cont.Pec_Cod)
+						INNER JOIN det_plan ON (asientos.Pld_Cod = det_plan.Pld_Cod)
+						$filtroCCxCC
+					WHERE
+						comprobantes.Com_Cod = ccpp_cobrar.Com_Cod
+						AND asientos.Com_Cod = comprobantes.Com_Cod
+						$cli
+						AND (ventas.Vet_Est='A' OR ventas.Vet_Est='E')
+						AND (comprobantes.Com_Est='A' OR comprobantes.Com_Est='E')
+						$fec_sql
+						AND sucursal.Emp_Cod=$emp
+						$tic
+						$filtroWhereCxp
+						AND NOT EXISTS (
+							SELECT 1 FROM asientos a2
+							INNER JOIN ccpp_cliente ccli ON a2.Pld_Cod = ccli.Pld_Cod
+							WHERE a2.Com_Cod = comprobantes.Com_Cod AND a2.Asi_Deh = 'D'
+						)
+					GROUP BY ventas.Vet_Cod
+					ORDER BY MAX(caja_aper.Caj_Fec), ventas.Vet_Cod";
+            return $sql;
     }
     //echo $sql."<br/>";
     return $sql;
