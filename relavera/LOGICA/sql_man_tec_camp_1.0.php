@@ -364,5 +364,20 @@ function sentencias_manif_tec_camp($id, $Par_Sql)
 			WHERE manifiesto.Man_Cod = "' . $Man_Cod . '"
 			LIMIT 1';
 			return $sql;
+
+		case 16:
+			$Pla_Cod = isset($Par_Sql['Pla_Cod']) ? addslashes($Par_Sql['Pla_Cod']) : NULL;
+			$Man_Cod = isset($Par_Sql['Man_Cod']) ? addslashes($Par_Sql['Man_Cod']) : NULL;
+			$Veh_Cod = (!empty($Par_Sql['Veh_Cod'])) ? "'" . addslashes($Par_Sql['Veh_Cod']) . "'" : "NULL";
+			$Cho_Cod = (!empty($Par_Sql['Cho_Cod'])) ? "'" . addslashes($Par_Sql['Cho_Cod']) . "'" : "NULL";
+			$Msj_Id = isset($Par_Sql['Msj_Id']) ? addslashes($Par_Sql['Msj_Id']) : '';
+			$Msj_Tip = isset($Par_Sql['Msj_Tip']) ? addslashes($Par_Sql['Msj_Tip']) : '';
+			$Msj_Tex = isset($Par_Sql['Msj_Tex']) ? addslashes($Par_Sql['Msj_Tex']) : '';
+			$Msj_Img = isset($Par_Sql['Msj_Img']) ? addslashes($Par_Sql['Msj_Img']) : '';
+			$Msj_Fec = isset($Par_Sql['Msj_Fec']) ? date('Y-m-d', strtotime($Par_Sql['Msj_Fec'])) : '';
+			$Msj_Est = isset($Par_Sql['Msj_Est']) ? addslashes($Par_Sql['Msj_Est']) : '';
+			$sql = "INSERT INTO manifiesto_mensajes (Pla_Cod,Man_Cod,Veh_Cod,Cho_Cod,Msj_Id,Msj_Tip,Msj_Tex,Msj_Img,Msj_Fec,Msj_Est) 
+			VALUES ('$Pla_Cod','$Man_Cod',$Veh_Cod,$Cho_Cod,'$Msj_Id','$Msj_Tip','$Msj_Tex','$Msj_Img','$Msj_Fec','$Msj_Est');";
+			return $sql;
 	}
 }

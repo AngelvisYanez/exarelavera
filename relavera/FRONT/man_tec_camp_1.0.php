@@ -504,10 +504,17 @@ if (isset($saveManiTecAjax)) {
 
                 $tel_chofer = '+593' . $tel_chofer_sin0;
                 $tel_planta = ''; // '+593' . $tel_planta;
-
                 if (!is_null($mensaje) && $mensaje !== '' && strtolower(trim($mensaje)) !== 'null') {
-                    enviarMensajeWhatsapp($mensaje, $tel_chofer, $tel_planta);
+                    $id = enviarMensajeWhatsapp($mensaje, $tel_chofer, $tel_planta);
+                    if ($id) {
+                        $obBD_con1->operacionobBD(16, array('Pla_Cod' => $datos_ge['Pla_Cod'], 'Man_Cod' => $_POST['Man_Cod'], 
+                        'Veh_Cod' => $datos_ge['Veh_Cod'], 'Cho_Cod' => $datos_ge['Cho_Cod'], 'Msj_Id' => $id, 'Msj_Tip' => 'TRE',
+                        'Msj_Tex' => $mensaje, 'Msj_Img' => '', 'Msj_Fec' => date('Y-m-d', strtotime($fecha_actual)), 'Msj_Est' => 'A'), $obBD_conexion);
+                    }
                 }
+                /*if (!is_null($mensaje) && $mensaje !== '' && strtolower(trim($mensaje)) !== 'null') {
+                    enviarMensajeWhatsapp($mensaje, $tel_chofer, $tel_planta);
+                }*/
             }
         }
     } catch (Exception $e) {
@@ -519,7 +526,44 @@ if (isset($saveManiTecAjax)) {
     exit();
 }
 
+
 function enviarMensajeWhatsapp($mensaje, $tel_cliente, $tel_planta)
+{
+    $ids = array();
+    $numeros = array();
+    if (!empty($tel_cliente)) $numeros[] = $tel_cliente;
+    if (!empty($tel_planta) && $tel_planta != $tel_cliente) $numeros[] = $tel_planta;
+    foreach ($numeros as $numero) {
+        $params = array('token' => 'ao5aoi2f77trfaxc', 'to' => $numero, 'body' => $mensaje);
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => "https://api.ultramsg.com/instance164295/messages/chat",
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => "",
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_SSL_VERIFYPEER => 0,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "POST",
+            CURLOPT_POSTFIELDS => http_build_query($params),
+            CURLOPT_HTTPHEADER => array("content-type: application/x-www-form-urlencoded"),
+        ));
+        $response = curl_exec($curl);
+        $err = curl_error($curl);
+        curl_close($curl);
+        if ($err) {  $ids[$numero] = null; continue;}
+        $data = json_decode((string)$response, true);
+        $ids[$numero] = (is_array($data) && isset($data['id'])) ? $data['id'] : null;
+    }
+    // Si solo fue a un número, retorna el id directo; si fueron dos, retorna por número.
+    if (count($numeros) <= 1) {
+        $n = isset($numeros[0]) ? $numeros[0] : null;
+        return ($n !== null && array_key_exists($n, $ids)) ? $ids[$n] : null;
+    }
+    return $ids;
+}
+/*function enviarMensajeWhatsapp($mensaje, $tel_cliente, $tel_planta)
 {
     $resultados = array();
     $numeros = array();
@@ -540,17 +584,16 @@ function enviarMensajeWhatsapp($mensaje, $tel_cliente, $tel_planta)
             CURLOPT_CUSTOMREQUEST => "POST",
             CURLOPT_POSTFIELDS => json_encode($params),
             CURLOPT_HTTPHEADER => array("Content-Type: application/json"),
-
             /*CURLOPT_POSTFIELDS => http_build_query($params),
             CURLOPT_HTTPHEADER => array("content-type: application/x-www-form-urlencoded"),*/
-        ));
+       /* ));
         $response = curl_exec($curl);
         $err = curl_error($curl);
         curl_close($curl);
         $resultados[$numero] = !$err;
     }
     return !in_array(false, $resultados, true);
-}
+}*/
 
 
 // Búsqueda por código QR en el modal
