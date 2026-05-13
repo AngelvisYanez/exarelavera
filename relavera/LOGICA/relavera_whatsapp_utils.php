@@ -107,12 +107,7 @@ if (!function_exists('relavera_enviar_whatsapp_imagen_notif')) {
         } else {
             $caption = substr($caption, 0, 1024);
         }
-        $params = array(
-            'token' => 'ao5aoi2f77trfaxc',
-            'to' => $numero,
-            'image' => $imageBase64,
-            'caption' => $caption,
-        );
+        $params = array( 'token' => 'ao5aoi2f77trfaxc','to' => $numero, 'image' => $imageBase64, 'caption' => $caption, );
         $curl = curl_init();
         curl_setopt_array($curl, array(
             CURLOPT_URL => 'https://api.ultramsg.com/instance164295/messages/image',
@@ -127,9 +122,11 @@ if (!function_exists('relavera_enviar_whatsapp_imagen_notif')) {
             CURLOPT_POSTFIELDS => json_encode($params),
             CURLOPT_HTTPHEADER => array('Content-Type: application/json'),
         ));
-        curl_exec($curl);
+        $response = curl_exec($curl);
         $err = curl_error($curl);
         curl_close($curl);
-        return !$err;
+        if ($err) { return false;}
+        $data = json_decode((string)$response, true);
+        return (is_array($data) && isset($data['id'])) ? $data['id'] : null;
     }
 }

@@ -62,7 +62,7 @@ if (isset($getSearchSuggestionsAjax)) {
 if (isset($obtenerPeriodoMinMax)) {
     $resp = array('success' => false, 'data' => array(), 'message' => '');
     $periodo = $obBD_con1->getRowConsulta('perio_cont.selectWhere', array('perio_cont.Pec_Est' => 'A', 'setWhere' => array('setEmpCod'), 'order' => 'perio_cont.Pec_Fei DESC'), $obBD_conexion);
-    
+
     if ($periodo && !empty($periodo)) {
         $resp['success'] = true;
         $resp['data'] = array(
@@ -256,6 +256,7 @@ if (isset($saveManiAjax)) {
                     $numeros_whatsapp[$tel] = $tel;
                 }
                 if (count($numeros_whatsapp) > 0) {
+                    $id = null;
                     $nombre_pla = isset($_POST['Pla_Nom']) ? trim($_POST['Pla_Nom']) : '';
                     $ama_val = isset($_POST['Ama_Val']) ? trim($_POST['Ama_Val']) : '';
                     $icono = html_entity_decode('&#128227;', ENT_QUOTES, 'UTF-8');
@@ -268,9 +269,29 @@ if (isset($saveManiAjax)) {
                     if ($img_whatsapp !== null && $img_whatsapp !== '') {
                         /* Un solo bloque de texto: va en la leyenda de la imagen (no duplicar con messages/chat). */
                         $capImg = relavera_man_ant_caption_imagen_whatsapp($mensaje_notif);
-                        enviarMensajeWhatsappImagenLista($nums, $img_whatsapp, $capImg);
-                    } else {
-                        enviarMensajeWhatsappLista($mensaje_notif, $nums);
+                        $id = enviarMensajeWhatsappImagenLista($nums, $img_whatsapp, $capImg);
+                    }
+
+                    if ($id) {
+                        // Si hay más de un código/número (varios destinos), registrar cada uno
+                        if (is_array($id)) {
+                            foreach ($id as $num_wa => $codigo) {
+                                if ($codigo) { // solo si hay código válido
+                                    $obBD_con1->operacionobBD(45, array(
+                                        'Pla_Cod' => $_POST['Pla_Cod'],
+                                        'Man_Cod' => 'NULL',
+                                        'Veh_Cod' => 'NULL',
+                                        'Cho_Cod' => 'NULL',
+                                        'Msj_Id' => $codigo,
+                                        'Msj_Tip' => 'DAN',
+                                        'Msj_Tex' => $mensaje_notif,
+                                        'Msj_Img' => $ama_img_post,
+                                        'Msj_Fec' => date('Y-m-d', strtotime($_POST['Ama_Fec'])),
+                                        'Msj_Est' => 'A'
+                                    ), $obBD_conexion);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -366,13 +387,15 @@ function enviarMensajeWhatsappImagenLista(array $numeros, $imagePayload, $captio
         if ($numero === '' || $imagePayload === '') {
             continue;
         }
-        $resultados[$numero] = relavera_enviar_whatsapp_imagen_notif($numero, $imagePayload, $caption);
+        $id = relavera_enviar_whatsapp_imagen_notif($numero, $imagePayload, $caption);
+        $resultados[$numero] = $id;
     }
-    return count($resultados) === 0 ? true : !in_array(false, $resultados, true);
+    return count($resultados) === 0 ? null : $resultados;
 }
 
 /** Envía el mismo mensaje a varios números — delega en relavera_enviar_whatsapp_notif. */
-function enviarMensajeWhatsappLista($mensaje, array $numeros) {
+function enviarMensajeWhatsappLista($mensaje, array $numeros)
+{
     $resultados = array();
     foreach ($numeros as $numero) {
         $numero = trim((string) $numero);
@@ -875,7 +898,7 @@ if (isset($uploadVoucherAjax)) {
 
     $emp_cod = $_SESSION['Ses_Emp_Cod'];
     $target_dir = $emp_cod . "/";
-    
+
     if (!file_exists($target_dir)) {
         mkdir($target_dir, 0777, true);
         chmod($target_dir, 0777);
@@ -926,7 +949,7 @@ if (isset($uploadVoucherAjax)) {
 
     if ($success_save) {
         $resp['success'] = true;
-        $resp['url'] = $target_file; 
+        $resp['url'] = $target_file;
         $resp['message'] = $msg_ok;
     } else {
         $resp['message'] = 'Error al guardar el archivo en el servidor.';
@@ -1016,7 +1039,7 @@ if (isset($saveComprobanteAjax)) {
 
         // Obtener el siguiente número de comprobante
         $params_num = array('Tia_Cod' => $tia_cod, 'Pec_Cod' => $periodo['Pec_Cod'], 'Com_Fec' => $anticipo['Ama_Fec']);
-        $siguiente_num = $obBD_con1->getRowConsulta(18, $params_num, $obBD_conexion);        
+        $siguiente_num = $obBD_con1->getRowConsulta(18, $params_num, $obBD_conexion);
 
         if (!$siguiente_num || $obBD_con1->Error != 0) {
             $resp['message'] = 'Error al obtener el siguiente número de comprobante: ' . ($obBD_con1->MsgError ? $obBD_con1->MsgError : 'Error desconocido');
@@ -1196,8 +1219,8 @@ if (isset($saveComprobanteAjax)) {
                             }
                         }
 
-                        
-                        
+
+
 
 
 
@@ -1217,7 +1240,6 @@ if (isset($saveComprobanteAjax)) {
                     } else {
                         $resp['message'] = 'Error al registrar en pag_anticipo_cli: ' . ($obBD_con1->MsgError ? $obBD_con1->MsgError : 'Error desconocido');
                     }
-
                 } else {
                     $resp['message'] = 'Error de registro:  ' . ($obBD_con1->MsgError ? $obBD_con1->MsgError : 'Error desconocido');
                 }
@@ -1340,19 +1362,24 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
         .relavera-ant-filtros .form-group {
             margin-bottom: 8px;
         }
+
         .relavera-ant-filtros .input-group-addon {
             padding: 2px 7px;
         }
+
         .relavera-ant-filtros .radioset label {
             margin-right: 6px;
         }
+
         .relavera-ant-toolbar {
             margin-top: 8px;
             margin-bottom: 4px;
         }
+
         .relavera-search-wrap {
             position: relative;
         }
+
         .relavera-search-suggest {
             position: absolute;
             left: 0;
@@ -1367,6 +1394,7 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
             overflow-y: auto;
             display: none;
         }
+
         .relavera-search-suggest .item {
             padding: 6px 8px;
             font-size: 11px;
@@ -1375,19 +1403,23 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
             cursor: pointer;
             background: #fff;
         }
+
         .relavera-search-suggest .item:last-child {
             border-bottom: 0;
         }
+
         .relavera-search-suggest .item:hover,
         .relavera-search-suggest .item.active {
             background: #f3f7fc;
             color: #1f2d4d;
         }
+
         .relavera-search-suggest .item.two-col {
             display: flex;
             align-items: center;
             gap: 8px;
         }
+
         .relavera-search-suggest .item .col-ruc {
             min-width: 120px;
             max-width: 140px;
@@ -1399,12 +1431,14 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
             border-right: 1px solid #e7edf5;
             padding-right: 8px;
         }
+
         .relavera-search-suggest .item .col-nom {
             flex: 1;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
+
         /* Loader más natural para este módulo: sin bloquear toda la pantalla */
         #loader.relavera-soft-loader {
             background: transparent !important;
@@ -1415,6 +1449,7 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
             height: 0 !important;
             pointer-events: none;
         }
+
         #loader.relavera-soft-loader::after {
             content: '';
             position: fixed;
@@ -1426,23 +1461,42 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
             border-top-color: #3f7fb9;
             border-radius: 50%;
             animation: relaveraSpin .7s linear infinite;
-            box-shadow: 0 0 0 1px rgba(255,255,255,.8);
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, .8);
         }
+
         @keyframes relaveraSpin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
         }
+
         /* Vista incrustada desde Estado de Cuenta > Consolidado */
-        body.man-ant-embed-ec .panel-heading.exa-header { display: none; }
-        body.man-ant-embed-ec #documentoSearch > .row > form > .col-xs-5,
-        body.man-ant-embed-ec #documentoSearch > .row > form > .col-sm-7 { display: none; }
-        body.man-ant-embed-ec .panel.panel-main { border: 0; box-shadow: none; }
-        body.man-ant-embed-ec .panel-body.exa-body { padding-top: 0; }
-        
+        body.man-ant-embed-ec .panel-heading.exa-header {
+            display: none;
+        }
+
+        body.man-ant-embed-ec #documentoSearch>.row>form>.col-xs-5,
+        body.man-ant-embed-ec #documentoSearch>.row>form>.col-sm-7 {
+            display: none;
+        }
+
+        body.man-ant-embed-ec .panel.panel-main {
+            border: 0;
+            box-shadow: none;
+        }
+
+        body.man-ant-embed-ec .panel-body.exa-body {
+            padding-top: 0;
+        }
+
         /* Eliminar color amarillo de autocompletado del navegador */
         #searchTxt:-webkit-autofill,
-        #searchTxt:-webkit-autofill:hover, 
-        #searchTxt:-webkit-autofill:focus, 
+        #searchTxt:-webkit-autofill:hover,
+        #searchTxt:-webkit-autofill:focus,
         #searchTxt:-webkit-autofill:active {
             -webkit-box-shadow: 0 0 0 30px white inset !important;
             -webkit-text-fill-color: #555 !important;
@@ -1510,7 +1564,7 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
                                     <label class="col-xs-2 control-label label-xs">Estado:</label>
                                     <div class="col-sm-4 radioset opt_search">
                                         <!-- <input id="radsc1" name="op_opciones2" type="radio" value="T" /><label for="radsc1">Todos&nbsp;</label> -->
-                                        <input id="radsc2" name="op_opciones2" type="radio" value="A" alt="" checked/><label for="radsc2">Activos</label>
+                                        <input id="radsc2" name="op_opciones2" type="radio" value="A" alt="" checked /><label for="radsc2">Activos</label>
                                         <input id="radsc3" name="op_opciones2" type="radio" value="I" alt="" /><label for="radsc3">Anulados</label>
                                     </div>
                                     <label class="col-sm-2 control-label label-xs">Filtrado:</label>
@@ -1528,7 +1582,9 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
                                     <label class="col-sm-2 control-label label-xs">Periodo:</label>
                                     <div class="col-sm-3">
                                         <select id="Pec_Cod" name="Pec_Cod" class="form-control input-xs" onchange="desbloquear();">
-                                            <option value="T"> << Todos>> </option>
+                                            <option value="T">
+                                                << Todos>>
+                                            </option>
                                             <option value="PF" selected>Mes actual</option>
                                             <?php
                                             foreach ($periodos as $i => $p) {
@@ -1567,7 +1623,7 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
                             <div class="Titulos2">
                                 <span id="plan-footer">
                                     <strong>Leyenda:</strong> <span class="glyphicon glyphicon-ok green"></span> Aprobados | <span class="glyphicon glyphicon-remove red"></span> Anulados/Inactivos
-                                </div>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -1587,19 +1643,19 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
                         <fieldset class="exa-fieldset">
                             <legend class="Titulos2">Datos del Cliente</legend>
                             <div class="form-group">
-                                    <!-- Hidden fields -->
-                                    <input name="bandera_prov" id="bandera_prov" type="hidden" value="nosel" />
-                                    <input name="Prs_Cod" id="Prs_Cod" type="hidden" />
-                                    <input name="Cli_Cod" id="Cli_Cod" type="hidden" />
-                                    <input name="Usu_Cod" id="Usu_Cod" type="hidden" />
-                                    <input name="save_bnd" id="save_bnd" type="hidden" value="n" />
-                                    <input name="Ant_Val" id="Ant_Val" type="hidden" value="0.00" />
-                                    <input name="Ama_Cod" id="Ama_Cod" type="hidden" value="" />
-                                    <input name="Pla_Cod" id="Pla_Cod" type="hidden" value="" />
-                                <label class="col-xs-2 control-label label-sm">C&eacute;dula/RUC:</label><!-- required -->                               
+                                <!-- Hidden fields -->
+                                <input name="bandera_prov" id="bandera_prov" type="hidden" value="nosel" />
+                                <input name="Prs_Cod" id="Prs_Cod" type="hidden" />
+                                <input name="Cli_Cod" id="Cli_Cod" type="hidden" />
+                                <input name="Usu_Cod" id="Usu_Cod" type="hidden" />
+                                <input name="save_bnd" id="save_bnd" type="hidden" value="n" />
+                                <input name="Ant_Val" id="Ant_Val" type="hidden" value="0.00" />
+                                <input name="Ama_Cod" id="Ama_Cod" type="hidden" value="" />
+                                <input name="Pla_Cod" id="Pla_Cod" type="hidden" value="" />
+                                <label class="col-xs-2 control-label label-sm">C&eacute;dula/RUC:</label><!-- required -->
                                 <div class="col-xs-4">
                                     <input name="Prs_Ced" id="Prs_Ced" type="text" class="form-control input-xs always-readonly" tabindex="1" required readonly />
-                                </div>                               
+                                </div>
                                 <label class="col-sm-1 control-label label-xs">Cliente:</label>
                                 <div class="col-xs-5">
                                     <div class="input-group input-group-xs"><input name="nombre" id="nombre" class="form-control input-xs databind datatitle always-readonly" readonly />
@@ -1610,7 +1666,7 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
                                         </span>
                                     </div>
                                 </div>
-                            
+
                             </div>
 
                             <div class="form-group">
@@ -1620,11 +1676,11 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
                                 </div>
                                 <label class="col-sm-2 control-label label-xs" style="margin-left: -22px;">Licencia:</label>
                                 <div class="col-xs-4">
-                                    <input name="Pla_Lic" id="Pla_Lic" class="form-control input-xs databind datatitle always-readonly" style="margin-left: -25px;"readonly />
-                                </div>    
+                                    <input name="Pla_Lic" id="Pla_Lic" class="form-control input-xs databind datatitle always-readonly" style="margin-left: -25px;" readonly />
+                                </div>
 
-                                    
-                                
+
+
                             </div>
                         </fieldset>
                     </div>
@@ -1701,7 +1757,7 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
                             </small>
                         </div>
                     </div-->
-                                
+
                     <div class="form-group Transferencia Deposito">
                         <label class="col-xs-3 control-label label-xs required">Voucher:</label>
                         <div class="col-xs-8">
@@ -1965,7 +2021,7 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
                     </div>
                     <!-- Pager info -->
                     <div style="margin-top: 5px; font-size: 11px; color: #666; font-weight: bold;">
-                        <span>Registros Visualizados: <span id="lblVouchersRegistros">0</span></span> | 
+                        <span>Registros Visualizados: <span id="lblVouchersRegistros">0</span></span> |
                         <span>Total de Vouchers: <span id="lblVouchersTotal">0</span></span>
                     </div>
                 </div>
@@ -1981,38 +2037,38 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
     </div>
 
     <?php if ($embed_ec_consolidado) { ?>
-    <script type="text/javascript">
-    $(function () {
-        var q = <?php echo json_encode(array(
-            'Cli_Cod' => isset($_GET['Cli_Cod']) ? (string) $_GET['Cli_Cod'] : '',
-            'Pla_Cod' => isset($_GET['Pla_Cod']) ? (string) $_GET['Pla_Cod'] : '',
-            'Fec_IniM' => isset($_GET['Fec_IniM']) ? (string) $_GET['Fec_IniM'] : '',
-            'Fec_FinM' => isset($_GET['Fec_FinM']) ? (string) $_GET['Fec_FinM'] : '',
-        ), JSON_UNESCAPED_UNICODE); ?>;
-        $('#ec_consolidado_flag').val('1');
-        if (q.Cli_Cod) {
-            $('#Cli_Cod').val(q.Cli_Cod);
-        }
-        if (q.Pla_Cod) {
-            $('#Pla_Cod_busq_manif').val(q.Pla_Cod);
-        }
-        $('input[name="op_opciones"][value="cl"]').prop('checked', true);
-        if (typeof desbloquear === 'function') {
-            $('#Pec_Cod').val('PF');
-            desbloquear();
-        }
-        if (q.Fec_IniM) {
-            $('#Fec_IniM').val(q.Fec_IniM);
-        }
-        if (q.Fec_FinM) {
-            $('#Fec_FinM').val(q.Fec_FinM);
-        }
-        $('#Fec_IniM, #Fec_FinM').prop('disabled', false);
-        if ($('#man_antGrid').length && typeof $('#man_antGrid').Search === 'function') {
-            $('#man_antGrid').Search('#searchManifesto', 'LoadManifAjax');
-        }
-    });
-    </script>
+        <script type="text/javascript">
+            $(function() {
+                var q = <?php echo json_encode(array(
+                            'Cli_Cod' => isset($_GET['Cli_Cod']) ? (string) $_GET['Cli_Cod'] : '',
+                            'Pla_Cod' => isset($_GET['Pla_Cod']) ? (string) $_GET['Pla_Cod'] : '',
+                            'Fec_IniM' => isset($_GET['Fec_IniM']) ? (string) $_GET['Fec_IniM'] : '',
+                            'Fec_FinM' => isset($_GET['Fec_FinM']) ? (string) $_GET['Fec_FinM'] : '',
+                        ), JSON_UNESCAPED_UNICODE); ?>;
+                $('#ec_consolidado_flag').val('1');
+                if (q.Cli_Cod) {
+                    $('#Cli_Cod').val(q.Cli_Cod);
+                }
+                if (q.Pla_Cod) {
+                    $('#Pla_Cod_busq_manif').val(q.Pla_Cod);
+                }
+                $('input[name="op_opciones"][value="cl"]').prop('checked', true);
+                if (typeof desbloquear === 'function') {
+                    $('#Pec_Cod').val('PF');
+                    desbloquear();
+                }
+                if (q.Fec_IniM) {
+                    $('#Fec_IniM').val(q.Fec_IniM);
+                }
+                if (q.Fec_FinM) {
+                    $('#Fec_FinM').val(q.Fec_FinM);
+                }
+                $('#Fec_IniM, #Fec_FinM').prop('disabled', false);
+                if ($('#man_antGrid').length && typeof $('#man_antGrid').Search === 'function') {
+                    $('#man_antGrid').Search('#searchManifesto', 'LoadManifAjax');
+                }
+            });
+        </script>
     <?php } ?>
 
     <?php
@@ -2020,6 +2076,6 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
     $obBD_con1->liberar();
     $obBD_conexion->cerrar();
     ?>
-</BODY>
+    </BODY>
 
 </HTML>
