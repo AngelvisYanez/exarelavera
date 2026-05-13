@@ -297,7 +297,7 @@ $listaActividad = $obBD_con1->getArrayConsulta('proveedore.selectWhere', array(
                                         </select>
                                     </div>
                                 </div>
-                                <div class="form-group natural">
+                                <div class="form-group">
                                     <label class="col-xs-3 control-label label-xs ">Tipo Actividad:</label>
                                     <div class="col-xs-9">
                                         <div class="input-group input-group-xs">
