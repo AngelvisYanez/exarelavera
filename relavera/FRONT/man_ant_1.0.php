@@ -402,9 +402,10 @@ function enviarMensajeWhatsappLista($mensaje, array $numeros)
         if ($numero === '') {
             continue;
         }
-        $resultados[$numero] = relavera_enviar_whatsapp_notif($numero, $mensaje);
+       $id = relavera_enviar_whatsapp_notif($numero, $mensaje);
+        $resultados[$numero] = $id;
     }
-    return count($resultados) === 0 ? true : !in_array(false, $resultados, true);
+      return count($resultados) === 0 ? null : $resultados;
 }
 
 // Metodo universal: dos destinos (compatibilidad)
@@ -1190,10 +1191,7 @@ if (isset($saveComprobanteAjax)) {
                     );
 
                     $obBD_con1->operacionobBD(32, $params_pag_anticipo, $obBD_conexion);
-
                     if ($obBD_con1->Error == 0) {
-
-
                         // WhatsApp al administrador de la planta: pago aprobado (valor + nombre planta)
                         if (!empty($anticipo['Pla_Cod'])) {
                             $fila_pla = $obBD_con1->getRowConsulta(36, array('Pla_Cod' => $anticipo['Pla_Cod']), $obBD_conexion);
@@ -1214,25 +1212,30 @@ if (isset($saveComprobanteAjax)) {
                                     $msg_pla .= 'Su anticipo ha sido *aprobado* y acreditado.\n';
                                     $msg_pla .= 'Planta: *' . $pla_nom . "*\n";
                                     $msg_pla .= 'Valor: *' . $val_txt . '*';
-                                    enviarMensajeWhatsappLista($msg_pla, array($tel_planta));
+                                    $id = enviarMensajeWhatsappLista($msg_pla, array($tel_planta));
+                                    if ($id) {
+                                        if (is_array($id)) {
+                                            foreach ($id as $num_wa => $codigo) {
+                                                if ($codigo) { // solo si hay código válido
+                                                    $obBD_con1->operacionobBD(45, array(
+                                                        'Pla_Cod' => $anticipo['Pla_Cod'],
+                                                        'Man_Cod' => 'NULL',
+                                                        'Veh_Cod' => 'NULL',
+                                                        'Cho_Cod' => 'NULL',
+                                                        'Msj_Id' => $codigo,
+                                                        'Msj_Tip' => 'CAN',
+                                                        'Msj_Tex' =>  $msg_pla,
+                                                        'Msj_Img' => '',
+                                                        'Msj_Fec' => date('Y-m-d', strtotime($_POST['Ama_Fec'])),
+                                                        'Msj_Est' => 'A'
+                                                    ), $obBD_conexion);
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                         $resp['success'] = true;
                         $resp['message'] = 'Datos registrados correctamente!!.';
                         $resp['Com_Cod'] = $com_cod;
@@ -1258,16 +1261,6 @@ if (isset($saveComprobanteAjax)) {
     $obBD_con1->echoJson($resp);
     exit();
 }
-
-
-
-
-
-
-
-
-
-
 
 /* Registro en la tabla de anticipos */
 // if(isset($saveAnticipoAjax)){

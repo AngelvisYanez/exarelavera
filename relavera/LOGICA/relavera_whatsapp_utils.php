@@ -77,10 +77,12 @@ if (!function_exists('relavera_enviar_whatsapp_notif')) {
             CURLOPT_POSTFIELDS => json_encode($params),
             CURLOPT_HTTPHEADER => array('Content-Type: application/json'),
         ));
-        curl_exec($curl);
+        $response = curl_exec($curl);
         $err = curl_error($curl);
         curl_close($curl);
-        return !$err;
+        if ($err) { return false; }
+        $data = json_decode((string)$response, true);
+        return (is_array($data) && isset($data['id'])) ? $data['id'] : null;
     }
 }
 
