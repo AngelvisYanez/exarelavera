@@ -322,7 +322,7 @@ function renderGrid(data, extraMessage) {
     if (data && data.length > 0) {
         $.each(data, function(i, item) {
             var manCod = parseInt(item.Man_Num || item.Man_Cod || 0);
-            var manCodFormateado = ('0000' + manCod).slice(-4);
+            var manCodFormateado = ('0000' + manCod).slice(-6);
             var plaCod = item.Pla_Cod || '';
             // Si viene el código completo Man_Cod usémoslo, si no construyámoslo
             var fullCode = item.Man_Cod ? item.Man_Cod : ('M' + plaCod + '-' + manCodFormateado);

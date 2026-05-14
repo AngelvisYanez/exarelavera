@@ -40,7 +40,7 @@ function loadManifiestosTecnicosHTML() {
             if (response && response.length > 0) {
                 $.each(response, function(i, item) {
                     var manCod = parseInt(item.Man_Num || item.Man_Cod || 0);
-                    var manCodFormateado = ('0000' + manCod).slice(-4);
+                    var manCodFormateado = ('0000' + manCod).slice(-6);
                     var plaCod = item.Pla_Cod || '';
                     var fullCode = 'M' + plaCod + '-' + manCodFormateado;
                     
