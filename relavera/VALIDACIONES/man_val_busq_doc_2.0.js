@@ -250,7 +250,7 @@ function buscarDocumento() {
             return;
         }
 
-        var numeroFormateado = String(numeroInt).padStart(9, '0');
+        var numeroFormateado = String(numeroInt).length < 4 ? String(numeroInt).padStart(6, '0') : String(numeroInt);
         params = {
             buscarPorManifiestoAjax: true,
             pla_cod: plaCod,
@@ -322,7 +322,7 @@ function renderGrid(data, extraMessage) {
     if (data && data.length > 0) {
         $.each(data, function(i, item) {
             var manCod = parseInt(item.Man_Num || item.Man_Cod || 0);
-            var manCodFormateado = String(manCod).padStart(9, '0');
+            var manCodFormateado = String(manCod).length < 4 ? String(manCod).padStart(6, '0') : String(manCod);
             var plaCod = item.Pla_Cod || '';
             // Si viene el código completo Man_Cod usémoslo, si no construyámoslo
             var fullCode = item.Man_Cod ? item.Man_Cod : ('M' + plaCod + '-' + manCodFormateado);
@@ -538,7 +538,7 @@ function mostrarResultadoEspecial(data, mensaje, tipoMensaje) {
             $('#placaValue').text(data.Veh_Pla || 'N/A');
             var fullCode = data.Man_Cod || 'N/A';
             if (data.Pla_Cod && data.Man_Num) {
-                fullCode = 'M' + data.Pla_Cod + "-" + String(data.Man_Num).padStart(5, '0');
+                fullCode = 'M' + data.Pla_Cod + "-" + (String(data.Man_Num).length < 4 ? String(data.Man_Num).padStart(6, '0') : String(data.Man_Num));
             }
             $('#manifiestoValue').text(fullCode);
             var fecha = data.Man_Fec || '';
@@ -564,7 +564,7 @@ function mostrarResultadoEspecial(data, mensaje, tipoMensaje) {
             $('#placaValue').text(data.Veh_Pla || 'N/A');
             var fullCode = data.Man_Cod || 'N/A';
             if (data.Pla_Cod && data.Man_Num) {
-                fullCode = 'M' + data.Pla_Cod + "-" + String(data.Man_Num).padStart(5, '0');
+                fullCode = 'M' + data.Pla_Cod + "-" + (String(data.Man_Num).length < 4 ? String(data.Man_Num).padStart(6, '0') : String(data.Man_Num));
             }
             $('#manifiestoValue').text(fullCode);
             var fecha = data.Man_Fec || '';
@@ -591,7 +591,7 @@ function mostrarResultadoEspecial(data, mensaje, tipoMensaje) {
             
             var fullCode = data.Man_Cod || 'N/A';
             if (data.Pla_Cod && data.Man_Num) {
-                fullCode = 'M' + data.Pla_Cod + "-" + String(data.Man_Num).padStart(5, '0');
+                fullCode = 'M' + data.Pla_Cod + "-" + (String(data.Man_Num).length < 4 ? String(data.Man_Num).padStart(6, '0') : String(data.Man_Num));
             }
             $('#manifiestoValue').text(fullCode);
             
@@ -622,7 +622,7 @@ function mostrarResultadoEspecial(data, mensaje, tipoMensaje) {
             
             var fullCode = data.Man_Cod || 'N/A';
             if (data.Pla_Cod && data.Man_Num) {
-                fullCode = 'M' + data.Pla_Cod + "-" + String(data.Man_Num).padStart(5, '0');
+                fullCode = 'M' + data.Pla_Cod + "-" + (String(data.Man_Num).length < 4 ? String(data.Man_Num).padStart(6, '0') : String(data.Man_Num));
             }
             $('#manifiestoValue').text(fullCode);
             
@@ -676,7 +676,7 @@ function mostrarResultadoEspecial(data, mensaje, tipoMensaje) {
             // ... resto de campos
              var fullCode = data.Man_Cod || 'N/A';
             if (data.Pla_Cod && data.Man_Num) {
-                fullCode = 'M' + data.Pla_Cod + "-" + String(data.Man_Num).padStart(5, '0');
+                fullCode = 'M' + data.Pla_Cod + "-" + (String(data.Man_Num).length < 4 ? String(data.Man_Num).padStart(6, '0') : String(data.Man_Num));
             }
             $('#manifiestoValue').text(fullCode);
             var fecha = data.Man_Fec || '';
@@ -752,7 +752,7 @@ function verificarManifiesto(manCod, plaCod, manNum) {
         // para que el usuario pueda ver el botón de aprobar grande.
         
         var numeroInt = parseInt(manNum, 10);
-        var numeroFormateado = String(numeroInt).padStart(5, '0');
+        var numeroFormateado = String(numeroInt).length < 4 ? String(numeroInt).padStart(6, '0') : String(numeroInt);
         
         var params = {
             buscarPorManifiestoAjax: true,
