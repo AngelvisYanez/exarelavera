@@ -1063,7 +1063,24 @@ if (isset($saveSancionVehiculoAjax)) {
                 ' - Fec.Fin: ' . $Msa_Fef . "\n" .
                 'Observación: ' . $Msa_Obs . "\n" .
                 ' - No podrá seleccionar este vehiculo en manifiestos - ';
-            enviarNotificacionWhatsapp($mensaje, $telsPlanta);
+            $id = enviarNotificacionWhatsapp($mensaje, $telsPlanta);
+            if (is_array($id)) {
+                foreach ($id as $numero => $msgId) {
+                    if ($msgId) {
+                        $obBD_con1->operacionobBD(16, array(
+                            'Pla_Cod' => ($plaCod !== '' && $plaCod !== null && is_numeric($plaCod)) ? (int) $plaCod : null,
+                            'Man_Cod' => null,
+                            'Veh_Cod' => $Veh_Cod,
+                            'Cho_Cod' => null,
+                            'Msj_Id' => $msgId,
+                            'Msj_Tip' => 'SVH',
+                            'Msj_Tex' => $mensaje,
+                            'Msj_Img' => '',
+                            'Msj_Fec' => date('Y-m-d', strtotime($Msa_Fef)),
+                            'Msj_Est' => 'A'), $obBD_conexion);
+                    }
+                }
+            }
         }
     } catch (Exception $e) {
         $obBD_con1->rollBack_nomsn($obBD_conexion);
@@ -1122,7 +1139,25 @@ if (isset($saveSancionChoferAjax)) {
                 ' - Fec.Fin: ' . $Msa_Fef . "\n" .
                 'Observación: ' . $Msa_Obs . "\n" .
                 ' - Chofer sancionado - ';
-            enviarNotificacionWhatsapp($mensaje, $choTels);
+            $id =enviarNotificacionWhatsapp($mensaje, $choTels);
+            if (is_array($id)) {
+                foreach ($id as $numero => $msgId) {
+                    if ($msgId) {
+                        $obBD_con1->operacionobBD(16, array(
+                            'Pla_Cod' => null,
+                            'Man_Cod' => null,
+                            'Veh_Cod' => null,
+                            'Cho_Cod' => $Cho_Cod,
+                            'Msj_Id' => $msgId,
+                            'Msj_Tip' => 'SCH',
+                            'Msj_Tex' => $mensaje,
+                            'Msj_Img' => '',
+                            'Msj_Fec' => date('Y-m-d', strtotime($Msa_Fef)),
+                            'Msj_Est' => 'A'
+                        ), $obBD_conexion);
+                    }
+                }
+            }
         }
     } catch (Exception $e) {
         $obBD_con1->rollBack_nomsn($obBD_conexion);
@@ -1174,7 +1209,25 @@ if (isset($saveSancionPlantaAjax)) {
                 ' - Fec.Fin: ' . $Msa_Fef . "\n" .
                 'Observación: ' . $Msa_Obs . "\n" .
                 ' - No podrá realizar manifiestos - ';
-            enviarNotificacionWhatsapp($mensaje, $personal['Pep_Tel']);
+            $id =enviarNotificacionWhatsapp($mensaje, $personal['Pep_Tel']);
+            if (is_array($id)) {
+                foreach ($id as $numero => $msgId) {
+                    if ($msgId) {
+                        $obBD_con1->operacionobBD(16, array(
+                            'Pla_Cod' => $Pla_Cod,
+                            'Man_Cod' => null,
+                            'Veh_Cod' => null,
+                            'Cho_Cod' => null,
+                            'Msj_Id' => $msgId,
+                            'Msj_Tip' => 'SPL',
+                            'Msj_Tex' => $mensaje,
+                            'Msj_Img' => '',
+                            'Msj_Fec' => date('Y-m-d', strtotime($Msa_Fef)),
+                            'Msj_Est' => 'A'
+                        ), $obBD_conexion);
+                    }
+                }
+            }
         }
     } catch (Exception $e) {
         $obBD_con1->rollBack_nomsn($obBD_conexion);

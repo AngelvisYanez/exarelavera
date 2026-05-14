@@ -985,16 +985,6 @@ if (isset($getAnticipoAjax)) {
     exit();
 }
 
-
-
-
-
-
-
-
-
-
-
 /* Registrar el comprobante del anticipo */
 if (isset($saveComprobanteAjax)) {
     $resp = array();

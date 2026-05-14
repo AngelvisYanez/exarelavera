@@ -437,5 +437,28 @@ function sentencias_manifiesto_cli($id, $Par_Sql)
 					INNER JOIN persona ON persona.Prs_Cod = chofer.Prs_Cod
 			WHERE manifiesto_chofer.Cho_Cod = '$Par_Sql[Cho_Cod]' AND Cho_Est = 'A' ";
 			return $sql;
+
+		case 16:
+			// INSERT manifiesto_mensajes (WhatsApp / historial). Claves foráneas: SQL NULL, no cadena vacía ni 'NULL' entre comillas.
+			$normFkInt = function ($v) {
+				if ($v === null || $v === '' || $v === false) {	return 'NULL';}
+				if (is_string($v) && strtoupper(trim($v)) === 'NULL') {return 'NULL';}
+				if (!is_numeric($v)) {return 'NULL';}
+				$n = (int) $v;
+				return (string) $n;
+			};
+			$Pla_Cod = $normFkInt(isset($Par_Sql['Pla_Cod']) ? $Par_Sql['Pla_Cod'] : null);
+			$Man_Cod = $normFkInt(isset($Par_Sql['Man_Cod']) ? $Par_Sql['Man_Cod'] : null);
+			$Veh_Cod = $normFkInt(isset($Par_Sql['Veh_Cod']) ? $Par_Sql['Veh_Cod'] : null);
+			$Cho_Cod = $normFkInt(isset($Par_Sql['Cho_Cod']) ? $Par_Sql['Cho_Cod'] : null);
+			$Msj_Id = isset($Par_Sql['Msj_Id']) ? addslashes($Par_Sql['Msj_Id']) : '';
+			$Msj_Tip = isset($Par_Sql['Msj_Tip']) ? addslashes($Par_Sql['Msj_Tip']) : '';
+			$Msj_Tex = isset($Par_Sql['Msj_Tex']) ? addslashes($Par_Sql['Msj_Tex']) : '';
+			$Msj_Img = isset($Par_Sql['Msj_Img']) ? addslashes($Par_Sql['Msj_Img']) : '';
+			$Msj_Fec = isset($Par_Sql['Msj_Fec']) ? date('Y-m-d', strtotime($Par_Sql['Msj_Fec'])) : '';
+			$Msj_Est = isset($Par_Sql['Msj_Est']) ? addslashes($Par_Sql['Msj_Est']) : '';
+			$sql = "INSERT INTO manifiesto_mensajes (Pla_Cod,Man_Cod,Veh_Cod,Cho_Cod,Msj_Id,Msj_Tip,Msj_Tex,Msj_Img,Msj_Fec,Msj_Est) 
+				VALUES ($Pla_Cod,$Man_Cod,$Veh_Cod,$Cho_Cod,'$Msj_Id','$Msj_Tip','$Msj_Tex','$Msj_Img','$Msj_Fec','$Msj_Est');";
+			return $sql;
 	}
 }

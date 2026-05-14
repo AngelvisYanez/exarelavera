@@ -69,11 +69,12 @@ function send_whatsapp_api_respuesta_ok($response)
     }
     if (array_key_exists('sent', $data)) {
         $sent = $data['sent'];
+        $id = $data['id'];
         if ($sent !== true && $sent !== 'true' && $sent !== 1 && $sent !== '1') {
             return false;
         }
     }
-    return true;
+    return $id; //Retorna el id del mensaje
 }
 
 function enviarNotificacionWhatsapp($mensaje, $numeros)
@@ -88,9 +89,10 @@ function enviarNotificacionWhatsapp($mensaje, $numeros)
     }
     $resultados = array();
     foreach ($numeros as $numero) {
-        $resultados[$numero] = send_whatsapp_text($numero, $mensaje);
+        $id = send_whatsapp_text($numero, $mensaje);
+        $resultados[$numero] = $id;
     }
-    return !in_array(false, $resultados, true);
+    return count($resultados) === 0 ? null : $resultados;
 }
 
 function enviarImagenWhatsapp($imagen, $numeros, $caption = '')
