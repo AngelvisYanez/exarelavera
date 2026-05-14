@@ -1699,7 +1699,7 @@ $obBD_con1->utf8_change_param($transportes);
 
         .tab-content {
             padding: 20px;
-            background: #fff;
+            /* background: #fff; */
             border: 1px solid #ddd;
             border-top: none;
             border-radius: 0 0 5px 5px;
