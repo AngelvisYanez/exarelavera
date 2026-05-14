@@ -415,7 +415,7 @@ if (isset($getManifiestosDashboardAjax)) {
                 DATE(manifiesto.Man_Fec) as Man_Fec,
                 DATE_FORMAT(manifiesto.Man_Fec, '%H:%i') as Man_Hor,
                 DATE(manifiesto.Man_Fes) as Man_Fes,
-                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, 4, 0)) as ManNum,
+                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, GREATEST(4, LENGTH(manifiesto.Man_Num)), '0')) as ManNum,
                 CONCAT(persona_cli.Prs_Nom, ' ', persona_cli.Prs_Ape) as Cliente,
                 manifiesto_plantas.Pla_Nom,
                 manifiesto.Man_Est,
@@ -493,7 +493,7 @@ if (isset($getManifiestosDiaAjax)) {
                 DATE(manifiesto.Man_Fec) as Man_Fec,
                 DATE_FORMAT(manifiesto.Man_Fec, '%H:%i') as Man_Hor,
                 DATE(manifiesto.Man_Fes) as Man_Fes,
-                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, 4, 0)) as ManNum,
+                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, GREATEST(4, LENGTH(manifiesto.Man_Num)), '0')) as ManNum,
                 CONCAT(persona_cli.Prs_Nom, ' ', persona_cli.Prs_Ape) as Cliente,
                 manifiesto_plantas.Pla_Nom,
                 manifiesto.Man_Est,
@@ -561,7 +561,7 @@ if (isset($getManifiestosConfiguracionAjax)) {
                 manifiesto_turnos_det.Tud_Fec,
                 manifiesto_turnos_det.Tud_Hin,
                 manifiesto_turnos_det.Tud_Hfi,
-                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, 4, 0)) as ManNum,
+                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, GREATEST(4, LENGTH(manifiesto.Man_Num)), '0')) as ManNum,
                 CONCAT(persona_cli.Prs_Nom, ' ', persona_cli.Prs_Ape) as Cliente,
                 manifiesto_plantas.Pla_Nom,
                 manifiesto.Man_Est,
@@ -634,7 +634,7 @@ if (isset($getManifiestosPorRangoSlotAjax)) {
     $turnoInfo = array('fecha' => $fechaFormato, 'horario' => $horarioTexto);
     
     $sql = "SELECT manifiesto.Man_Cod, manifiesto.Man_Num, DATE(manifiesto.Man_Fec) as Man_Fec, DATE_FORMAT(manifiesto.Man_Fec, '%H:%i') as Man_Hor, DATE(manifiesto.Man_Fes) as Man_Fes,
-                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, 4, 0)) as ManNum,
+                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, GREATEST(4, LENGTH(manifiesto.Man_Num)), '0')) as ManNum,
                 CONCAT(persona_cli.Prs_Nom, ' ', persona_cli.Prs_Ape) as Cliente, manifiesto_plantas.Pla_Nom, manifiesto.Man_Est,
                 if(LOCATE('GE', manifiesto.Man_Tes) > 0,'GE','') as Man_Tip_1, if(LOCATE('A', manifiesto.Man_Tes) > 0,'A','') as Man_Tip_2,
                 if(LOCATE('GS', manifiesto.Man_Tes) > 0,'GS','') as Man_Tip_3, if(LOCATE('F', manifiesto.Man_Tes) > 0,'F','') as Man_Tip_4, if(LOCATE('R', manifiesto.Man_Tes) > 0,'R','') as Man_Tip_5,
@@ -684,7 +684,7 @@ if (isset($getManifiestosPorRangoDiaAjax)) {
     
     $sql = "SELECT manifiesto.Man_Cod, manifiesto.Man_Num, DATE(manifiesto.Man_Fec) as Man_Fec, DATE_FORMAT(manifiesto.Man_Fec, '%H:%i') as Man_Hor, DATE(manifiesto.Man_Fes) as Man_Fes,
                 manifiesto_turnos_det.Tud_Hin, manifiesto_turnos_det.Tud_Hfi,
-                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, 4, 0)) as ManNum,
+                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, GREATEST(4, LENGTH(manifiesto.Man_Num)), '0')) as ManNum,
                 CONCAT(persona_cli.Prs_Nom, ' ', persona_cli.Prs_Ape) as Cliente, manifiesto_plantas.Pla_Nom, manifiesto.Man_Est,
                 if(LOCATE('GE', manifiesto.Man_Tes) > 0,'GE','') as Man_Tip_1, if(LOCATE('A', manifiesto.Man_Tes) > 0,'A','') as Man_Tip_2,
                 if(LOCATE('GS', manifiesto.Man_Tes) > 0,'GS','') as Man_Tip_3, if(LOCATE('F', manifiesto.Man_Tes) > 0,'F','') as Man_Tip_4, if(LOCATE('R', manifiesto.Man_Tes) > 0,'R','') as Man_Tip_5,
@@ -742,7 +742,7 @@ if (isset($getManifiestosPorRangoCompletoAjax)) {
     
     $sql = "SELECT manifiesto.Man_Cod, manifiesto.Man_Num, DATE(manifiesto.Man_Fec) as Man_Fec, DATE_FORMAT(manifiesto.Man_Fec, '%H:%i') as Man_Hor, DATE(manifiesto.Man_Fes) as Man_Fes,
                 manifiesto_turnos_det.Tud_Fec, manifiesto_turnos_det.Tud_Hin, manifiesto_turnos_det.Tud_Hfi,
-                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, 4, 0)) as ManNum,
+                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, GREATEST(4, LENGTH(manifiesto.Man_Num)), '0')) as ManNum,
                 CONCAT(persona_cli.Prs_Nom, ' ', persona_cli.Prs_Ape) as Cliente, manifiesto_plantas.Pla_Nom, manifiesto.Man_Est,
                 if(LOCATE('GE', manifiesto.Man_Tes) > 0,'GE','') as Man_Tip_1, if(LOCATE('A', manifiesto.Man_Tes) > 0,'A','') as Man_Tip_2,
                 if(LOCATE('GS', manifiesto.Man_Tes) > 0,'GS','') as Man_Tip_3, if(LOCATE('F', manifiesto.Man_Tes) > 0,'F','') as Man_Tip_4, if(LOCATE('R', manifiesto.Man_Tes) > 0,'R','') as Man_Tip_5,
@@ -889,7 +889,7 @@ if (isset($getDashboardManifiestosAjax)) {
     $condPlaUsuario = ($Pla_Cod_Asignada > 0) ? " AND manifiesto.Pla_Cod = $Pla_Cod_Asignada " : "";
     $sql = "SELECT manifiesto.Man_Cod, manifiesto.Man_Num, manifiesto.Cho_Cod, manifiesto.Veh_Cod, manifiesto.Pla_Cod, manifiesto.Man_Usu, manifiesto.Man_Tes,
                 DATE(manifiesto.Man_Fec) as Man_Fec, COALESCE(DATE_FORMAT(manifiesto.Man_Fea, '%H:%i'), DATE_FORMAT(manifiesto.Man_Fes, '%H:%i'), DATE_FORMAT(manifiesto.Man_Sys, '%H:%i'), DATE_FORMAT(manifiesto.Man_Fec, '%H:%i')) as Man_Hor,
-                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, 4, 0)) as ManNum,
+                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, GREATEST(4, LENGTH(manifiesto.Man_Num)), '0')) as ManNum,
                 manifiesto_plantas.Pla_Nom,
                 COALESCE(CONCAT(persona_chofer.Prs_Nom, ' ', persona_chofer.Prs_Ape), '') as chofer_nombre,
                 COALESCE(persona_chofer.Prs_Ced, '') as chofer_cedula,
@@ -1694,7 +1694,7 @@ if (isset($_GET['getListadoInactivosExcelAjax']) || isset($getListadoInactivosEx
         $total_activos = isset($row_act['total']) ? intval($row_act['total']) : 0;
     }
     $sql = "SELECT manifiesto_plantas.Pla_Nom,
-        CONCAT('M', manifiesto.Pla_Cod, '-', LPAD(manifiesto.Man_Num, 4, 0)) as ManNum,
+        CONCAT('M', manifiesto.Pla_Cod, '-', LPAD(manifiesto.Man_Num, GREATEST(4, LENGTH(manifiesto.Man_Num)), '0')) as ManNum,
         COALESCE(vehiculo.Veh_Pla, 'Sin placa') as placa,
         COALESCE(CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape), 'Sin asignar') as chofer_nombre
         FROM manifiesto
@@ -1771,7 +1771,7 @@ if (isset($_GET['getInactivosDetallePlantaAjax']) || isset($getInactivosDetalleP
     $sql_detalle = "SELECT COALESCE(vehiculo.Veh_Pla, 'Sin placa') as placa,
         COALESCE(CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape), 'Sin asignar') as chofer_nombre,
         COUNT(*) as inactivos,
-        GROUP_CONCAT(CONCAT('M', manifiesto.Pla_Cod, '-', LPAD(manifiesto.Man_Num, 4, 0)) ORDER BY manifiesto.Man_Fec ASC, manifiesto.Man_Num ASC SEPARATOR ', ') as numeros_manifiesto
+        GROUP_CONCAT(CONCAT('M', manifiesto.Pla_Cod, '-', LPAD(manifiesto.Man_Num, GREATEST(4, LENGTH(manifiesto.Man_Num)), '0')) ORDER BY manifiesto.Man_Fec ASC, manifiesto.Man_Num ASC SEPARATOR ', ') as numeros_manifiesto
         FROM manifiesto
         INNER JOIN manifiesto_turnos_det ON manifiesto_turnos_det.Tud_Cod = manifiesto.Tud_Cod
         INNER JOIN manifiesto_turnos_cab ON manifiesto_turnos_cab.Tur_Cod = manifiesto_turnos_det.Tur_Cod
