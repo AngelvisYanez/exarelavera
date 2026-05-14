@@ -28,15 +28,15 @@ if (isset($cliAjax)) {
     $obBD_con1->getPageGridJson('cliente.selectWhere', $_GET, $obBD_conexion);
 }
 
-// Tab GENERAL: saldo mínimo de anticipo (manifiesto_plantas.Pla_Smi) y Campaña (Pla_Act)
+// Tab GENERAL: saldo mínimo de anticipo (manifiesto_plantas.Pla_Smi) para crear manifiestos
 if (isset($_POST['getGeneralManifiestoAjax'])) {
-    $resp = array('success' => true, 'pla_smi_sugerido' => 0, 'plantas_activas' => 0, 'pla_act_general' => 'N');
+    $resp = array('success' => true, 'pla_smi_sugerido' => 0, 'pla_act_general' => 'N', 'plantas_activas' => 0);
     $emp = (int) $Ses_Emp_Cod;
     try {
         $row = $obBD_con1->fetch_assoc($obBD_con1->consulta(
             "SELECT COUNT(*) AS n, 
                     COALESCE(AVG(COALESCE(mp.Pla_Smi, 0)), 0) AS prom,
-                    MAX(mp.Pla_Act) as act
+                    MAX(mp.Pla_Act) as act_max
 			 FROM manifiesto_plantas mp
 			 LEFT JOIN cliente c ON c.Cli_Cod = mp.Cli_Cod
 			 WHERE mp.Pla_Est = 'A'
@@ -46,7 +46,7 @@ if (isset($_POST['getGeneralManifiestoAjax'])) {
         ));
         $resp['plantas_activas'] = isset($row['n']) ? (int) $row['n'] : 0;
         $resp['pla_smi_sugerido'] = isset($row['prom']) ? round((float) $row['prom'], 2) : 0;
-        $resp['pla_act_general'] = (isset($row['act']) && $row['act'] == 'S') ? 'S' : 'N';
+        $resp['pla_act_general'] = (isset($row['act_max']) && $row['act_max'] === 'S') ? 'S' : 'N';
     } catch (Exception $e) {
         $resp['success'] = false;
         $resp['message'] = $e->getMessage();
@@ -57,7 +57,6 @@ if (isset($_POST['getGeneralManifiestoAjax'])) {
 if (isset($_POST['saveGeneralManifiestoAjax'])) {
     $resp = array('success' => false);
     try {
-        // grabarv_registros (operacionobBD) no ejecuta si Error != 0; consulta() no siempre resetea Error.
         $obBD_con1->setError(0, '');
         $raw = isset($_POST['Pla_Smi_general']) ? trim((string) $_POST['Pla_Smi_general']) : '0';
         if ($raw === '' || $raw === 'true' || $raw === 'false') {
@@ -67,11 +66,13 @@ if (isset($_POST['saveGeneralManifiestoAjax'])) {
         if ($val < 0) {
             throw new Exception('El valor no puede ser negativo.');
         }
+
+        $plaAct = isset($_POST['Pla_Act_general']) ? trim($_POST['Pla_Act_general']) : 'N';
+        if ($plaAct !== 'S') $plaAct = 'N';
+
         $emp = (int) $Ses_Emp_Cod;
         $valSql = number_format($val, 2, '.', '');
-        $plaAct = (isset($_POST['Pla_Act_general']) && $_POST['Pla_Act_general'] == 'S') ? 'S' : 'N';
-        
-        // Aplicar con una sola sentencia SQL.
+
         $sqlUpd = "UPDATE manifiesto_plantas mp
 			LEFT JOIN cliente c ON c.Cli_Cod = mp.Cli_Cod
 			SET mp.Pla_Smi = $valSql,
@@ -81,7 +82,7 @@ if (isset($_POST['saveGeneralManifiestoAjax'])) {
 			AND (c.Cli_Est = 'A' OR mp.Cli_Cod IS NULL)";
         $obBD_con1->consulta($sqlUpd, $obBD_conexion);
         if ((int) $obBD_con1->Error !== 0) {
-            throw new Exception($obBD_con1->MsgError ? $obBD_con1->MsgError : 'Error al actualizar Pla_Smi (¿existe la columna en manifiesto_plantas?).');
+            throw new Exception($obBD_con1->MsgError ? $obBD_con1->MsgError : 'Error al actualizar configuración general.');
         }
         $con = $obBD_con1->getMyCon($obBD_conexion);
         $cnt = ($con ? (int)mysqli_affected_rows($con) : 0);
@@ -1698,7 +1699,7 @@ $obBD_con1->utf8_change_param($transportes);
 
         .tab-content {
             padding: 20px;
-            /* background: #fff; */
+            background: #fff;
             border: 1px solid #ddd;
             border-top: none;
             border-radius: 0 0 5px 5px;
@@ -2094,33 +2095,38 @@ $obBD_con1->utf8_change_param($transportes);
                         <table id="gridSanciones"></table>
                         <div id="gridSancionesPager"></div>
                     </div>
-                    <!-- Tab General: saldo mínimo anticipo (Pla_Smi) -->
+                    <!-- Tab General -->
                     <div role="tabpanel" class="tab-pane" id="tabGeneral">
                         <div class="row">
                             <div class="col-sm-10 col-sm-offset-1">
                                 <fieldset class="exa-fieldset">
-                                    <legend class="Titulos2">Saldo mínimo para crear manifiestos</legend>
+                                    <legend class="Titulos2">Configuración General de Manifiestos</legend>
                                     <form id="formGeneralManifiesto" class="form-horizontal normal" onsubmit="return false;">
                                         <div class="form-group">
-                                            <label class="col-sm-4 control-label label-sm" for="cfg_pla_smi_general">Valor mínimo (USD)</label>
+                                            <label class="col-sm-4 control-label label-sm" for="cfg_pla_smi_general">Valor mínimo Anticipo (USD):</label>
                                             <div class="col-sm-3">
                                                 <input type="text" class="form-control input-sm" id="cfg_pla_smi_general" name="cfg_pla_smi_general" value="<?php echo $valorMinimo; ?>" placeholder="0.00" autocomplete="off" />
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label class="col-sm-4 control-label label-sm" for="cfg_pla_act_general">Activar Campa&ntilde;a Actualizaci&oacute;n</label>
-                                            <div class="col-sm-3">
-                                                <div class="checkbox">
-                                                    <label>
-                                                        <input type="checkbox" id="cfg_pla_act_general" name="cfg_pla_act_general" value="S"> (Marcar para Habilitar)
+                                            <label class="col-sm-4 control-label label-sm">Campaña de Actualización:</label>
+                                            <div class="col-sm-6">
+                                                <div class="checkbox" style="padding-top: 0;">
+                                                    <label style="font-size: 13px; font-weight: bold; color: #337ab7;">
+                                                        <input type="checkbox" id="cfg_pla_act_general" name="cfg_pla_act_general" style="width: 18px; height: 18px; margin-top: -2px;">
+                                                        Activar bloqueo por actualización de datos
                                                     </label>
+                                                    <p class="help-block" style="font-size: 11px; margin-top: 5px;">
+                                                        Si se activa, los clientes no podrán crear manifiestos hasta que actualicen sus datos personales.
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>
+                                        <hr>
                                         <div class="form-group">
                                             <div class="col-sm-offset-4 col-sm-8">
-                                                <button type="button" class="btn btn-primary btn-sm" onclick="guardarGeneralManifiesto();">
-                                                    <i class="glyphicon glyphicon-floppy-disk"></i> Guardar Configuraci&oacute;n
+                                                <button type="button" class="btn btn-primary" onclick="guardarGeneralManifiesto();">
+                                                    <i class="glyphicon glyphicon-floppy-disk"></i> Guardar Cambios
                                                 </button>
                                             </div>
                                         </div>
@@ -3337,6 +3343,6 @@ $obBD_con1->utf8_change_param($transportes);
 
 </HTML>
 <?php
-    $obBD_con1->liberar();
-    $obBD_conexion->cerrar();
+$obBD_con1->liberar();
+$obBD_conexion->cerrar();
 ?>

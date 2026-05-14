@@ -570,6 +570,14 @@ function cargarGeneralManifiesto() {
             if (isNaN(sug)) {
                 sug = 0;
             }
+            $('#cfg_pla_smi_general').val(sug.toFixed(2));
+            
+            // Cargar estado de la campaña
+            if (r.pla_act_general === 'S') {
+                $('#cfg_pla_act_general').prop('checked', true);
+            } else {
+                $('#cfg_pla_act_general').prop('checked', false);
+            }
         } else {
             $.alert((r && r.message) ? r.message : 'No se pudo cargar la configuración general.');
         }
@@ -585,10 +593,13 @@ function guardarGeneralManifiesto() {
         $.alert('Ingrese un valor numérico mayor o igual a 0.');
         return;
     }
-    var msg = 'Se modificara el valor minimo de Anticipos para crear Manifiestos. ¿Desea continuar?';
+    var plaAct = $('#cfg_pla_act_general').is(':checked') ? 'S' : 'N';
+    
+    var msg = 'Se modificara la configuracion general de manifiestos. ¿Desea continuar?';
     $.createDialogConfirm(msg, {
         saveGeneralManifiestoAjax: 1,
-        Pla_Smi_general: v.toFixed(2)
+        Pla_Smi_general: v.toFixed(2),
+        Pla_Act_general: plaAct
     }, function (data) {
         var postUrl = (window.location.href || '').split('#')[0];
         var payload = $.extend({}, data);
