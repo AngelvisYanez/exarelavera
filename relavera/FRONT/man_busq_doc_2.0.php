@@ -1041,7 +1041,7 @@ if(isset($_GET['aprobarManifiestoAjax']) || isset($aprobarManifiestoAjax)){
             </div>
         </div>
         
-        <script src="../VALIDACIONES/man_val_busq_doc_2.0.js?e=7"></script>
+        <script src="../VALIDACIONES/man_val_busq_doc_2.0.js?e=8"></script>
 
         <?php
         // Cerrado y liberacion de las conexiones

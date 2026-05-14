@@ -40,7 +40,7 @@ function loadManifiestosTecnicosHTML() {
             if (response && response.length > 0) {
                 $.each(response, function(i, item) {
                     var manCod = parseInt(item.Man_Num || item.Man_Cod || 0);
-                    var manCodFormateado = ('0000' + manCod).slice(-6);
+                    var manCodFormateado = String(manCod).padStart(9, '0');
                     var plaCod = item.Pla_Cod || '';
                     var fullCode = 'M' + plaCod + '-' + manCodFormateado;
                     
@@ -133,7 +133,7 @@ function viewManifTec(item, matCod) {
 
     function populateFromItem() {
         var manNum = parseInt(item.Man_Num || 0);
-        var manNumFormatted = ('0000' + manNum).slice(-4);
+        var manNumFormatted = String(manNum).padStart(9, '0');
         var plaCod = item.Pla_Cod;
         $('#Man_Cod').val('M' + plaCod + '-' + manNumFormatted);
         
@@ -165,7 +165,7 @@ function viewManifTec(item, matCod) {
                     }
 
                     var manNum = parseInt(data.Man_Num || item.Man_Num || 0);
-                    var manNumFormatted = ('0000' + manNum).slice(-4);
+                    var manNumFormatted = String(manNum).padStart(9, '0');
                     var plaCod = data.Pla_Cod || item.Pla_Cod;
                     $('#Man_Cod').val('M' + plaCod + '-' + manNumFormatted);
                     
@@ -210,7 +210,7 @@ function editManifTec(item, matCod) {
     // Helper to populate from item
     function populateFromItem() {
         var manNum = parseInt(item.Man_Num || 0);
-        var manNumFormatted = ('0000' + manNum).slice(-4);
+        var manNumFormatted = String(manNum).padStart(9, '0');
         var plaCod = item.Pla_Cod;
         $('#Man_Cod').val('M' + plaCod + '-' + manNumFormatted);
         
@@ -244,7 +244,7 @@ function editManifTec(item, matCod) {
                     
                     // Format Man_Cod
                     var manNum = parseInt(data.Man_Num || item.Man_Num || 0);
-                    var manNumFormatted = ('0000' + manNum).slice(-4);
+                    var manNumFormatted = String(manNum).padStart(9, '0');
                     var plaCod = data.Pla_Cod || item.Pla_Cod;
                     $('#Man_Cod').val('M' + plaCod + '-' + manNumFormatted);
                     
