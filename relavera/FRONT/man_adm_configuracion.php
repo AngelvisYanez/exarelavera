@@ -28,13 +28,15 @@ if (isset($cliAjax)) {
     $obBD_con1->getPageGridJson('cliente.selectWhere', $_GET, $obBD_conexion);
 }
 
-// Tab GENERAL: saldo mínimo de anticipo (manifiesto_plantas.Pla_Smi) para crear manifiestos
+// Tab GENERAL: saldo mínimo de anticipo (manifiesto_plantas.Pla_Smi) y Campaña (Pla_Act)
 if (isset($_POST['getGeneralManifiestoAjax'])) {
-    $resp = array('success' => true, 'pla_smi_sugerido' => 0, 'plantas_activas' => 0);
+    $resp = array('success' => true, 'pla_smi_sugerido' => 0, 'plantas_activas' => 0, 'pla_act_general' => 'N');
     $emp = (int) $Ses_Emp_Cod;
     try {
         $row = $obBD_con1->fetch_assoc($obBD_con1->consulta(
-            "SELECT COUNT(*) AS n, COALESCE(AVG(COALESCE(mp.Pla_Smi, 0)), 0) AS prom
+            "SELECT COUNT(*) AS n, 
+                    COALESCE(AVG(COALESCE(mp.Pla_Smi, 0)), 0) AS prom,
+                    MAX(mp.Pla_Act) as act
 			 FROM manifiesto_plantas mp
 			 LEFT JOIN cliente c ON c.Cli_Cod = mp.Cli_Cod
 			 WHERE mp.Pla_Est = 'A'
@@ -44,6 +46,7 @@ if (isset($_POST['getGeneralManifiestoAjax'])) {
         ));
         $resp['plantas_activas'] = isset($row['n']) ? (int) $row['n'] : 0;
         $resp['pla_smi_sugerido'] = isset($row['prom']) ? round((float) $row['prom'], 2) : 0;
+        $resp['pla_act_general'] = (isset($row['act']) && $row['act'] == 'S') ? 'S' : 'N';
     } catch (Exception $e) {
         $resp['success'] = false;
         $resp['message'] = $e->getMessage();
@@ -66,10 +69,13 @@ if (isset($_POST['saveGeneralManifiestoAjax'])) {
         }
         $emp = (int) $Ses_Emp_Cod;
         $valSql = number_format($val, 2, '.', '');
+        $plaAct = (isset($_POST['Pla_Act_general']) && $_POST['Pla_Act_general'] == 'S') ? 'S' : 'N';
+        
         // Aplicar con una sola sentencia SQL.
         $sqlUpd = "UPDATE manifiesto_plantas mp
 			LEFT JOIN cliente c ON c.Cli_Cod = mp.Cli_Cod
-			SET mp.Pla_Smi = $valSql
+			SET mp.Pla_Smi = $valSql,
+                mp.Pla_Act = '$plaAct'
 			WHERE mp.Pla_Est = 'A'
 			AND (c.Emp_Cod = $emp OR mp.Cli_Cod IS NULL)
 			AND (c.Cli_Est = 'A' OR mp.Cli_Cod IS NULL)";
@@ -1639,7 +1645,7 @@ $obBD_con1->utf8_change_param($transportes);
 
         .tab-content {
             padding: 20px;
-            background: #fff;
+            /* background: #fff; */
             border: 1px solid #ddd;
             border-top: none;
             border-radius: 0 0 5px 5px;
@@ -2047,9 +2053,21 @@ $obBD_con1->utf8_change_param($transportes);
                                             <div class="col-sm-3">
                                                 <input type="text" class="form-control input-sm" id="cfg_pla_smi_general" name="cfg_pla_smi_general" value="<?php echo $valorMinimo; ?>" placeholder="0.00" autocomplete="off" />
                                             </div>
-                                            <div class=" col-sm-4">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-4 control-label label-sm" for="cfg_pla_act_general">Activar Campa&ntilde;a Actualizaci&oacute;n</label>
+                                            <div class="col-sm-3">
+                                                <div class="checkbox">
+                                                    <label>
+                                                        <input type="checkbox" id="cfg_pla_act_general" name="cfg_pla_act_general" value="S"> (Marcar para Habilitar)
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-sm-offset-4 col-sm-8">
                                                 <button type="button" class="btn btn-primary btn-sm" onclick="guardarGeneralManifiesto();">
-                                                    <i class="glyphicon glyphicon-floppy-disk"></i> Guardar
+                                                    <i class="glyphicon glyphicon-floppy-disk"></i> Guardar Configuraci&oacute;n
                                                 </button>
                                             </div>
                                         </div>
@@ -3266,6 +3284,6 @@ $obBD_con1->utf8_change_param($transportes);
 
 </HTML>
 <?php
-$obBD_con1->liberar();
-$obBD_conexion->cerrar();
+    $obBD_con1->liberar();
+    $obBD_conexion->cerrar();
 ?>
