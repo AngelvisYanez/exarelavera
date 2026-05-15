@@ -239,7 +239,7 @@ function sentencias_actualizacion($id, $Par_Sql)
                     FROM usuarperfi up
                     INNER JOIN perfiles p ON up.Per_Cod = p.Per_Cod
                     WHERE up.Usu_Cod = '$Par_Sql[0]' 
-                    AND p.Per_Des = 'Plantas'";
+                    AND (p.Per_Des = 'Plantas' OR p.Per_Des = 'Prueba')";
             break;
     }
 
