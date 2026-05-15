@@ -38,9 +38,17 @@ if ($Pla_Cod_Log == 0) {
     $Pla_Cod_Log = isset($row_pla_def['Pla_Cod']) ? $row_pla_def['Pla_Cod'] : 0;
 }
 
+// Verificar si el usuario logeado tiene perfil de "Plantas"
+$row_perfil = $obBD_con1->getRowConsulta(26, array($_SESSION['Ses_Usu_Cod']), $obBD_conexion);
+$es_perfil_plantas = (isset($row_perfil['count']) && $row_perfil['count'] > 0);
+
 // Verificar si la campaña de actualización está activa para la empresa
 $row_campana = $obBD_con1->getRowConsulta(18, array($_SESSION['Ses_Emp_Cod']), $obBD_conexion);
 $campana_activa = (isset($row_campana['activa']) && $row_campana['activa'] > 0);
+
+// Lógica de visualización
+$mostrar_bloqueo_perfil = !$es_perfil_plantas;
+$mostrar_bloqueo_campana = $es_perfil_plantas && !$campana_activa;
 
 // Obtener datos del usuario logeado para auto-llenado
 $row_user = $obBD_con1->getRowConsulta(23, array($_SESSION['Ses_Usu_Cod']), $obBD_conexion);
@@ -280,6 +288,76 @@ if (isset($_POST['savePersonal'])) {
             .input-group-sangre { display: flex; }
             .input-group-sangre select { border-top-right-radius: 0; border-bottom-right-radius: 0; flex: 1; }
             #Prs_San_Otro { border-top-left-radius: 0; border-bottom-left-radius: 0; border-left: 0; flex: 1; }
+            
+            /* Estilo Premium para Mensajes de Bloqueo - Rediseño Vibrante */
+            .restricted-container {
+                max-width: 650px;
+                margin: 60px auto;
+                padding: 0;
+                background: #fff;
+                border-radius: 16px;
+                box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+                text-align: center;
+                border: none;
+                overflow: hidden;
+                border-top: 5px solid #d9534f;
+            }
+            .restricted-header {
+                background: linear-gradient(to bottom, #fff5f5, #fff);
+                padding: 40px 30px 20px;
+            }
+            .restricted-icon-wrapper {
+                width: 80px;
+                height: 80px;
+                background: linear-gradient(135deg, #ff6b6b, #d9534f);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 20px;
+                box-shadow: 0 8px 15px rgba(217, 83, 79, 0.3);
+            }
+            .restricted-icon {
+                font-size: 32px;
+                color: #fff;
+                margin-bottom: 0 !important;
+            }
+            .restricted-title {
+                font-size: 24px;
+                font-weight: 800;
+                color: #2c3e50;
+                margin-bottom: 10px;
+                letter-spacing: -0.5px;
+            }
+            .restricted-body {
+                padding: 0 40px 40px;
+            }
+            .restricted-text {
+                font-size: 16px;
+                color: #5a6c7d;
+                line-height: 1.6;
+                margin-bottom: 30px;
+            }
+            .restricted-footer {
+                font-size: 13px;
+                color: #8898aa;
+                background: #f8f9fe;
+                padding: 20px 40px;
+                border-top: 1px solid #edf2f7;
+            }
+            .restricted-footer b { color: #d9534f; }
+
+            /* Versión Azul/Info para Campaña Inactiva */
+            .restricted-container.info-theme {
+                border-top: 5px solid #3498db;
+            }
+            .restricted-container.info-theme .restricted-icon-wrapper {
+                background: linear-gradient(135deg, #5dade2, #3498db);
+                box-shadow: 0 8px 15px rgba(52, 152, 219, 0.3);
+            }
+            .restricted-container.info-theme .restricted-header {
+                background: linear-gradient(to bottom, #ebf5fb, #fff);
+            }
         </style>
     </HEAD>
     <BODY>
@@ -289,10 +367,39 @@ if (isset($_POST['savePersonal'])) {
             </div>
             <div class="panel-body exa-body">
                 
-                <?php if(!$campana_activa) { ?>
-                    <div class="alert alert-warning" style="margin-top: 20px; text-align: center;">
-                        <span class="glyphicon glyphicon-info-sign"></span> 
-                        Lo sentimos, la campa&ntilde;a de actualizaci&oacute;n de datos no se encuentra activa para su planta en este momento.
+                <?php if($mostrar_bloqueo_perfil) { ?>
+                    <div class="restricted-container">
+                        <div class="restricted-header">
+                            <div class="restricted-icon-wrapper">
+                                <span class="glyphicon glyphicon-lock restricted-icon"></span>
+                            </div>
+                            <div class="restricted-title">Acceso Restringido</div>
+                        </div>
+                        <div class="restricted-body">
+                            <div class="restricted-text">
+                                Este m&oacute;dulo de actualizaci&oacute;n de datos est&aacute; habilitado exclusivamente para el personal operativo de las <b>Plantas asignadas</b>.
+                            </div>
+                        </div>
+                        <div class="restricted-footer">
+                            Para mayor informaci&oacute;n o gestiones administrativas, por favor contacte con la <b>Administraci&oacute;n del Sistema</b>.
+                        </div>
+                    </div>
+                <?php } elseif($mostrar_bloqueo_campana) { ?>
+                    <div class="restricted-container info-theme">
+                        <div class="restricted-header">
+                            <div class="restricted-icon-wrapper">
+                                <span class="glyphicon glyphicon-info-sign restricted-icon"></span>
+                            </div>
+                            <div class="restricted-title">Campa&ntilde;a Inactiva</div>
+                        </div>
+                        <div class="restricted-body">
+                            <div class="restricted-text">
+                                Lo sentimos, la campa&ntilde;a de actualizaci&oacute;n de datos <b>no se encuentra activa</b> para su planta en este momento.
+                            </div>
+                        </div>
+                        <div class="restricted-footer">
+                            Le informaremos oportunamente cuando se habilite un nuevo periodo de actualizaci&oacute;n.
+                        </div>
                     </div>
                 <?php } else { ?>
 
@@ -540,7 +647,17 @@ if (isset($_POST['savePersonal'])) {
                 <?php } ?>
             </div>
         </div>
-        <script type="text/javascript">var dataLog = <?php echo json_encode($persona_log); ?>;</script>
-        <script src="../VALIDACIONES/man_val_datos_personales.js?x=6"></script>
+        <script type="text/javascript">
+            var dataLog = <?php echo json_encode($persona_log); ?>;
+            var mostrarDirecto = false; // Deshabilitado para mostrar siempre el Grid primero
+        </script>
+        <!-- Loader -->
+        <div id="loader" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.7); z-index: 9999; text-align: center; padding-top: 20%;">
+            <div style="display: inline-block; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+                <i class="fa fa-spinner fa-spin fa-3x fa-fw" style="color: #3c8dbc;"></i>
+                <div style="margin-top: 10px; font-weight: bold; color: #444;">Procesando...</div>
+            </div>
+        </div>
+        <script src="../VALIDACIONES/man_val_datos_personales.js?x=9"></script>
     </BODY>
 </HTML>

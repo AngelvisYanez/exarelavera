@@ -28,15 +28,15 @@ if (isset($cliAjax)) {
     $obBD_con1->getPageGridJson('cliente.selectWhere', $_GET, $obBD_conexion);
 }
 
-// Tab GENERAL: saldo mínimo de anticipo (manifiesto_plantas.Pla_Smi) para crear manifiestos
+// Tab GENERAL: saldo mínimo de anticipo (manifiesto_plantas.Pla_Smi) y Campaña (Pla_Act)
 if (isset($_POST['getGeneralManifiestoAjax'])) {
-    $resp = array('success' => true, 'pla_smi_sugerido' => 0, 'pla_act_general' => 'N', 'plantas_activas' => 0);
+    $resp = array('success' => true, 'pla_smi_sugerido' => 0, 'plantas_activas' => 0, 'pla_act_general' => 'N');
     $emp = (int) $Ses_Emp_Cod;
     try {
         $row = $obBD_con1->fetch_assoc($obBD_con1->consulta(
             "SELECT COUNT(*) AS n, 
                     COALESCE(AVG(COALESCE(mp.Pla_Smi, 0)), 0) AS prom,
-                    MAX(mp.Pla_Act) as act_max
+                    MAX(mp.Pla_Act) as act
 			 FROM manifiesto_plantas mp
 			 LEFT JOIN cliente c ON c.Cli_Cod = mp.Cli_Cod
 			 WHERE mp.Pla_Est = 'A'
@@ -46,7 +46,7 @@ if (isset($_POST['getGeneralManifiestoAjax'])) {
         ));
         $resp['plantas_activas'] = isset($row['n']) ? (int) $row['n'] : 0;
         $resp['pla_smi_sugerido'] = isset($row['prom']) ? round((float) $row['prom'], 2) : 0;
-        $resp['pla_act_general'] = (isset($row['act_max']) && $row['act_max'] === 'S') ? 'S' : 'N';
+        $resp['pla_act_general'] = (isset($row['act']) && $row['act'] == 'S') ? 'S' : 'N';
     } catch (Exception $e) {
         $resp['success'] = false;
         $resp['message'] = $e->getMessage();
@@ -57,6 +57,7 @@ if (isset($_POST['getGeneralManifiestoAjax'])) {
 if (isset($_POST['saveGeneralManifiestoAjax'])) {
     $resp = array('success' => false);
     try {
+        // grabarv_registros (operacionobBD) no ejecuta si Error != 0; consulta() no siempre resetea Error.
         $obBD_con1->setError(0, '');
         $raw = isset($_POST['Pla_Smi_general']) ? trim((string) $_POST['Pla_Smi_general']) : '0';
         if ($raw === '' || $raw === 'true' || $raw === 'false') {
@@ -66,13 +67,11 @@ if (isset($_POST['saveGeneralManifiestoAjax'])) {
         if ($val < 0) {
             throw new Exception('El valor no puede ser negativo.');
         }
-
-        $plaAct = isset($_POST['Pla_Act_general']) ? trim($_POST['Pla_Act_general']) : 'N';
-        if ($plaAct !== 'S') $plaAct = 'N';
-
         $emp = (int) $Ses_Emp_Cod;
         $valSql = number_format($val, 2, '.', '');
-
+        $plaAct = (isset($_POST['Pla_Act_general']) && $_POST['Pla_Act_general'] == 'S') ? 'S' : 'N';
+        
+        // Aplicar con una sola sentencia SQL.
         $sqlUpd = "UPDATE manifiesto_plantas mp
 			LEFT JOIN cliente c ON c.Cli_Cod = mp.Cli_Cod
 			SET mp.Pla_Smi = $valSql,
@@ -82,7 +81,7 @@ if (isset($_POST['saveGeneralManifiestoAjax'])) {
 			AND (c.Cli_Est = 'A' OR mp.Cli_Cod IS NULL)";
         $obBD_con1->consulta($sqlUpd, $obBD_conexion);
         if ((int) $obBD_con1->Error !== 0) {
-            throw new Exception($obBD_con1->MsgError ? $obBD_con1->MsgError : 'Error al actualizar configuración general.');
+            throw new Exception($obBD_con1->MsgError ? $obBD_con1->MsgError : 'Error al actualizar Pla_Smi (¿existe la columna en manifiesto_plantas?).');
         }
         $con = $obBD_con1->getMyCon($obBD_conexion);
         $cnt = ($con ? (int)mysqli_affected_rows($con) : 0);
@@ -1064,24 +1063,7 @@ if (isset($saveSancionVehiculoAjax)) {
                 ' - Fec.Fin: ' . $Msa_Fef . "\n" .
                 'Observación: ' . $Msa_Obs . "\n" .
                 ' - No podrá seleccionar este vehiculo en manifiestos - ';
-            $id = enviarNotificacionWhatsapp($mensaje, $telsPlanta);
-            if (is_array($id)) {
-                foreach ($id as $numero => $msgId) {
-                    if ($msgId) {
-                        $obBD_con1->operacionobBD(16, array(
-                            'Pla_Cod' => ($plaCod !== '' && $plaCod !== null && is_numeric($plaCod)) ? (int) $plaCod : null,
-                            'Man_Cod' => null,
-                            'Veh_Cod' => $Veh_Cod,
-                            'Cho_Cod' => null,
-                            'Msj_Id' => $msgId,
-                            'Msj_Tip' => 'SVH',
-                            'Msj_Tex' => $mensaje,
-                            'Msj_Img' => '',
-                            'Msj_Fec' => date('Y-m-d', strtotime($Msa_Fef)),
-                            'Msj_Est' => 'A'), $obBD_conexion);
-                    }
-                }
-            }
+            enviarNotificacionWhatsapp($mensaje, $telsPlanta);
         }
     } catch (Exception $e) {
         $obBD_con1->rollBack_nomsn($obBD_conexion);
@@ -1140,25 +1122,7 @@ if (isset($saveSancionChoferAjax)) {
                 ' - Fec.Fin: ' . $Msa_Fef . "\n" .
                 'Observación: ' . $Msa_Obs . "\n" .
                 ' - Chofer sancionado - ';
-            $id =enviarNotificacionWhatsapp($mensaje, $choTels);
-            if (is_array($id)) {
-                foreach ($id as $numero => $msgId) {
-                    if ($msgId) {
-                        $obBD_con1->operacionobBD(16, array(
-                            'Pla_Cod' => null,
-                            'Man_Cod' => null,
-                            'Veh_Cod' => null,
-                            'Cho_Cod' => $Cho_Cod,
-                            'Msj_Id' => $msgId,
-                            'Msj_Tip' => 'SCH',
-                            'Msj_Tex' => $mensaje,
-                            'Msj_Img' => '',
-                            'Msj_Fec' => date('Y-m-d', strtotime($Msa_Fef)),
-                            'Msj_Est' => 'A'
-                        ), $obBD_conexion);
-                    }
-                }
-            }
+            enviarNotificacionWhatsapp($mensaje, $choTels);
         }
     } catch (Exception $e) {
         $obBD_con1->rollBack_nomsn($obBD_conexion);
@@ -1210,25 +1174,7 @@ if (isset($saveSancionPlantaAjax)) {
                 ' - Fec.Fin: ' . $Msa_Fef . "\n" .
                 'Observación: ' . $Msa_Obs . "\n" .
                 ' - No podrá realizar manifiestos - ';
-            $id =enviarNotificacionWhatsapp($mensaje, $personal['Pep_Tel']);
-            if (is_array($id)) {
-                foreach ($id as $numero => $msgId) {
-                    if ($msgId) {
-                        $obBD_con1->operacionobBD(16, array(
-                            'Pla_Cod' => $Pla_Cod,
-                            'Man_Cod' => null,
-                            'Veh_Cod' => null,
-                            'Cho_Cod' => null,
-                            'Msj_Id' => $msgId,
-                            'Msj_Tip' => 'SPL',
-                            'Msj_Tex' => $mensaje,
-                            'Msj_Img' => '',
-                            'Msj_Fec' => date('Y-m-d', strtotime($Msa_Fef)),
-                            'Msj_Est' => 'A'
-                        ), $obBD_conexion);
-                    }
-                }
-            }
+            enviarNotificacionWhatsapp($mensaje, $personal['Pep_Tel']);
         }
     } catch (Exception $e) {
         $obBD_con1->rollBack_nomsn($obBD_conexion);
@@ -2095,43 +2041,66 @@ $obBD_con1->utf8_change_param($transportes);
                         <table id="gridSanciones"></table>
                         <div id="gridSancionesPager"></div>
                     </div>
-                    <!-- Tab General -->
+                    <!-- Tab General: Configuraciones Base -->
                     <div role="tabpanel" class="tab-pane" id="tabGeneral">
                         <div class="row">
-                            <div class="col-sm-10 col-sm-offset-1">
-                                <fieldset class="exa-fieldset">
-                                    <legend class="Titulos2">Configuración General de Manifiestos</legend>
+                            <div class="col-md-10 col-md-offset-1">
+                                <div class="config-card">
+                                    <h4 class="config-section-title">
+                                        <i class="glyphicon glyphicon-cog" style="font-size: 14px; margin-right: 8px; opacity: 0.7;"></i>
+                                        Configuraci&oacute;n Inicial del Sistema
+                                    </h4>
+
                                     <form id="formGeneralManifiesto" class="form-horizontal normal" onsubmit="return false;">
-                                        <div class="form-group">
-                                            <label class="col-sm-4 control-label label-sm" for="cfg_pla_smi_general">Valor mínimo Anticipo (USD):</label>
-                                            <div class="col-sm-3">
-                                                <input type="text" class="form-control input-sm" id="cfg_pla_smi_general" name="cfg_pla_smi_general" value="<?php echo $valorMinimo; ?>" placeholder="0.00" autocomplete="off" />
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="col-sm-4 control-label label-sm">Campaña de Actualización:</label>
-                                            <div class="col-sm-6">
-                                                <div class="checkbox" style="padding-top: 0;">
-                                                    <label style="font-size: 13px; font-weight: bold; color: #337ab7;">
-                                                        <input type="checkbox" id="cfg_pla_act_general" name="cfg_pla_act_general" style="width: 18px; height: 18px; margin-top: -2px;">
-                                                        Activar bloqueo por actualización de datos
+                                        <div class="row">
+                                            <!-- Columna Izquierda: Valor Mínimo -->
+                                            <div class="col-sm-4" style="border-right: 1px solid #f1f5f9; padding-right: 30px;">
+                                                <div class="form-group" style="margin: 0;">
+                                                    <label class="control-label" style="font-weight: 700; color: #334155; margin-bottom: 12px; display: block; text-align: left; padding-top: 0; font-size: 15px;">
+                                                        Valor m&iacute;nimo Anticipo (USD) 
+                                                        <i class="glyphicon glyphicon-info-sign" style="color: #94a3b8; margin-left: 5px; cursor: help;" title="Umbral m&iacute;nimo para permitir la creaci&oacute;n de manifiestos."></i>
                                                     </label>
-                                                    <p class="help-block" style="font-size: 11px; margin-top: 5px;">
-                                                        Si se activa, los clientes no podrán crear manifiestos hasta que actualicen sus datos personales.
+                                                    <div class="input-group" style="margin-bottom: 10px; display: flex; align-items: stretch;">
+                                                        <span class="input-group-addon" style="background: #f8fafc; border-color: #cbd5e1; color: #64748b; border-radius: 6px 0 0 6px; display: flex; align-items: center; justify-content: center; width: 40px; border-right: 0; font-size: 16px;">$</span>
+                                                        <input type="text" class="form-control" id="cfg_pla_smi_general" name="cfg_pla_smi_general" value="<?php echo $valorMinimo; ?>" placeholder="0.00" autocomplete="off" style="border-color: #cbd5e1; font-weight: 700; height: 45px; font-size: 18px; border-radius: 0 6px 6px 0; box-shadow: none;" />
+                                                    </div>
+                                                    <p class="help-block" style="font-size: 11px; font-style: italic; color: #64748b; line-height: 1.4;">
+                                                        Monto base requerido para la validaci&oacute;n y emisi&oacute;n de manifiestos.
                                                     </p>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <hr>
-                                        <div class="form-group">
-                                            <div class="col-sm-offset-4 col-sm-8">
-                                                <button type="button" class="btn btn-primary" onclick="guardarGeneralManifiesto();">
-                                                    <i class="glyphicon glyphicon-floppy-disk"></i> Guardar Cambios
-                                                </button>
+
+                                            <!-- Columna Derecha: Campaña -->
+                                            <div class="col-sm-8" style="padding-left: 30px;">
+                                                <div class="config-campaign-section" style="margin-top: 0;">
+                                                    <label style="font-weight: 700; color: #334155; margin-bottom: 12px; display: block; font-size: 15px;">Gesti&oacute;n de Campa&ntilde;a:</label>
+                                                    
+                                                    <div class="config-group-box" style="display: flex; align-items: center; justify-content: space-between; padding: 15px 20px;">
+                                                        <div style="flex: 1; padding-right: 20px;">
+                                                            <strong style="color: #1e293b; display: block; font-size: 16px; margin-bottom: 4px;">Lanzar campa&ntilde;a de actualizaci&oacute;n</strong>
+                                                            <span style="color: #64748b; font-size: 12px; font-weight: normal; line-height: 1.4; display: block;">
+                                                                Habilita el formulario de datos personales para usuarios con perfil de Planta.
+                                                            </span>
+                                                        </div>
+                                                        <div style="width: 160px;">
+                                                            <select id="cfg_pla_act_general" name="cfg_pla_act_general" class="form-control" style="font-weight: 800; border-radius: 6px; height: 45px; border-color: #cbd5e1; cursor: pointer; font-size: 15px; text-align: center;">
+                                                                <option value="N" style="color: #ef4444; font-weight: bold;">INACTIVO</option>
+                                                                <option value="S" style="color: #10b981; font-weight: bold;">ACTIVO</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
+
+                                        <!-- Actions -->
+                                        <div style="margin-top: 30px; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 25px;">
+                                            <button type="button" class="btn btn-primary btn-lg" onclick="guardarGeneralManifiesto();" style="border-radius: 6px; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2); transition: all 0.2s;">
+                                                <i class="glyphicon glyphicon-floppy-disk"></i> Guardar Configuraci&oacute;n
+                                            </button>
+                                        </div>
                                     </form>
-                                </fieldset>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -3218,6 +3187,51 @@ $obBD_con1->utf8_change_param($transportes);
 
 
     <style>
+        /* Estilos Premium para Tab General */
+        .config-card {
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            margin: 15px 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .config-section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-bottom: 25px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+        }
+
+        .config-group-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .config-group-box:hover {
+            border-color: #cbd5e1;
+            background: #f1f5f9;
+        }
+
+        .config-campaign-section {
+            margin-top: 30px;
+        }
+
+        .config-card .form-control:focus {
+            border-color: #3b8dbc;
+            box-shadow: 0 0 0 3px rgba(60, 141, 188, 0.1);
+        }
+
         /* Estilos para el modal del QR - Vista compacta */
         #qrVehiculoDialog {
             text-align: center;
@@ -3336,8 +3350,16 @@ $obBD_con1->utf8_change_param($transportes);
         }
     </style>
 
+    <!-- Loader -->
+    <div id="loader" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.7); z-index: 9999; text-align: center; padding-top: 20%;">
+        <div style="display: inline-block; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+            <i class="fa fa-spinner fa-spin fa-3x fa-fw" style="color: #3c8dbc;"></i>
+            <div style="margin-top: 10px; font-weight: bold; color: #444;">Procesando...</div>
+        </div>
+    </div>
+
 </body>
-<script type="text/javascript" src="../VALIDACIONES/man_adm_configuracion.js?x=51"></script>
+<script type="text/javascript" src="../VALIDACIONES/man_adm_configuracion.js?x=52"></script>
 
 </script>
 

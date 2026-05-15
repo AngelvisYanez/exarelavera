@@ -31,11 +31,28 @@ $(function () {
         $select.trigger('chosen:updated');
     });
 
-    // Inicializar el Grid de Personal
-    createGridPersonal();
+    // Inicializar el Grid de Personal solo si el elemento existe en el DOM
+    if ($('#gridPersonal').length > 0) {
+        createGridPersonal();
+    }
 
     // Inicializar botones de radio
     $(".radioset").buttonset();
+
+    // Si es perfil planta y la campaña está activa, mostrar formulario directo
+    if (typeof mostrarDirecto !== 'undefined' && mostrarDirecto === true) {
+        if (typeof dataLog !== 'undefined' && dataLog && dataLog.Prs_Cod) {
+            setTimeout(function() {
+                mostrarFormulario(dataLog);
+                // Ocultar botón cancelar para forzar la actualización
+                $('.btn-save').each(function() {
+                    if ($(this).text().indexOf('Cancelar') !== -1) {
+                        $(this).hide();
+                    }
+                });
+            }, 500); // Pequeño delay para asegurar que el grid y combos estén listos
+        }
+    }
 });
 
 // ==================== FUNCIONES DE AMBIENTES ====================

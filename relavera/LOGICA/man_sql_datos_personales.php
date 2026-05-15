@@ -232,6 +232,15 @@ function sentencias_actualizacion($id, $Par_Sql)
                         Per_Req='$Par_Sql[18]'
                     WHERE Prs_Cod='$Par_Sql[19]'";
             break;
+
+        // Caso 26: Verificar si el usuario tiene el perfil "Plantas"
+        case 26:
+            $sql = "SELECT COUNT(*) as count
+                    FROM usuarperfi up
+                    INNER JOIN perfiles p ON up.Per_Cod = p.Per_Cod
+                    WHERE up.Usu_Cod = '$Par_Sql[0]' 
+                    AND p.Per_Des = 'Plantas'";
+            break;
     }
 
     return $sql;

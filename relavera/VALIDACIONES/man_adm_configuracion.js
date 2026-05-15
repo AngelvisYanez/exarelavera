@@ -572,12 +572,8 @@ function cargarGeneralManifiesto() {
             }
             $('#cfg_pla_smi_general').val(sug.toFixed(2));
             
-            // Cargar estado de la campaña
-            if (r.pla_act_general === 'S') {
-                $('#cfg_pla_act_general').prop('checked', true);
-            } else {
-                $('#cfg_pla_act_general').prop('checked', false);
-            }
+            // Cargar estado de la campaña (Select)
+            $('#cfg_pla_act_general').val(r.pla_act_general === 'S' ? 'S' : 'N').trigger('change');
         } else {
             $.alert((r && r.message) ? r.message : 'No se pudo cargar la configuración general.');
         }
@@ -593,7 +589,7 @@ function guardarGeneralManifiesto() {
         $.alert('Ingrese un valor numérico mayor o igual a 0.');
         return;
     }
-    var plaAct = $('#cfg_pla_act_general').is(':checked') ? 'S' : 'N';
+    var plaAct = $('#cfg_pla_act_general').val();
     
     var msg = 'Se modificara la configuracion general de manifiestos. ¿Desea continuar?';
     $.createDialogConfirm(msg, {
@@ -601,9 +597,11 @@ function guardarGeneralManifiesto() {
         Pla_Smi_general: v.toFixed(2),
         Pla_Act_general: plaAct
     }, function (data) {
+        $('#loader').show();
         var postUrl = (window.location.href || '').split('#')[0];
         var payload = $.extend({}, data);
         $.post(postUrl, payload, function (r) {
+            $('#loader').fadeOut('slow');
             if (r && r.success) {
                 $.alert(r.message || 'Guardado correctamente.');
                 if ($('#gridPlantas').length && $('#gridPlantas').data('jqGrid')) {
@@ -614,10 +612,23 @@ function guardarGeneralManifiesto() {
                 $.alert((r && r.message) ? r.message : 'No se pudo guardar.');
             }
         }, 'json').fail(function () {
+            $('#loader').fadeOut('slow');
             $.alert('Error de comunicación al guardar.');
         });
     });
 }
+
+// Inicializar colores del select de campaña
+$(document).ready(function() {
+    $(document).on('change', '#cfg_pla_act_general', function() {
+        var val = $(this).val();
+        if (val === 'S') {
+            $(this).css({ 'color': '#10b981', 'border-color': '#10b981' });
+        } else {
+            $(this).css({ 'color': '#ef4444', 'border-color': '#ef4444' });
+        }
+    });
+});
 
 // ==================== GRID PLANTAS ====================
 function createGridPlantas() {
