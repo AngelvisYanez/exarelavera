@@ -119,20 +119,28 @@ class Class_Log_Datos_Elect extends MysqlDatos
             require '../../Librerias/PHPMailer/PHPMailer.php';
             require '../../Librerias/PHPMailer/SMTP.php';
             require '../../Librerias/PHPMailer/Exception.php';
-               
             $mail = new PHPMailer(true); // Crear una nueva  instancia de PHPMailer habilitando el tratamiento de excepciones
             $mail->charSet = "UTF-8";
             $mail->IsSMTP();
             $mail->Host = "smtp.gmail.com";
             $mail->SMTPAuth = true;
-            $mail->Username = "exa.facturacion@gmail.com";
-            $mail->Password =  "owdjkcjdxvftwbxg";  //habilitar
+           /* $mail->Username = "exa.facturacion@gmail.com";
+            $mail->Password =  "owdjkcjdxvftwbxg";  //habilitar*/
+
+            $mail->Username = "exacontable@gmail.com";
+            $mail->Password =  "pnpkutrayjdghrua";  //habilitar
+
+
             $mail->SMTPSecure = 'tls';
             $mail->Port = 587;
             $mail->Timeout = 10;
             $mail->SMTPKeepAlive = true;
-            $mail->From = "exa.facturacion@gmail.com"; 
-            $mail->Sender = "exa.facturacion@gmail.com";
+            /*$mail->From = "exa.facturacion@gmail.com"; 
+            $mail->Sender = "exa.facturacion@gmail.com";*/
+
+            $mail->From = "exacontable@gmail.com"; 
+            $mail->Sender = "exacontable@gmail.com";
+
             $mail->FromName = $datos['Emp_Nom'];
             $correos = explode(",", $correo);
             foreach ($correos as  $c) {
