@@ -30,6 +30,8 @@ $rows_tipo_asiento = $obBD_con1->getArrayConsulta('tipo_asien.selectWhere', arra
  * Tipos de pago
  */
 $tPagos = $obBD_con1->getArrayConsulta('tipos_pago.selectWhere', array('where' => array("Pag_Abr='EFE' OR Pag_Abr='CHE' OR Pag_Abr='TRF' OR Pag_Abr='DEP'")), $obBD_conexion);
+$consumoPagoCli = $obBD_con1->getArrayConsulta('tipos_pago.selectWhere', array('where' => array("Pag_Abr='EFE' OR Pag_Abr='CHE' OR Pag_Abr='TRF' OR Pag_Abr='DEP' OR Pag_Abr='OTR'")), $obBD_conexion);
+$consumoBancoCli = $obBD_con1->getArrayConsulta('banco.selectWhere', array('setWhere' => array('setEmpCod', 'byDetPlan', 'byPlan'), 'where' => array("Ban_Tip in('B','C')")), $obBD_conexion, true);
 /**
  * Periodos
  */
@@ -54,6 +56,19 @@ if (isset($verificaCheque)) {
 }
 
 /**
+ * CRUCE MANUAL: Obtener siguiente número de cheque según banco
+ */
+if (isset($getNextChequeNum)) {
+	$obBD_con1->debugLogs(false);
+	$row = $obBD_con1->getRowConsultaSql("SELECT COALESCE(MAX(CAST(Che_Num AS UNSIGNED)),0)+1 AS siguiente FROM cheques WHERE Ban_Cod = " . intval($Ban_Cod), $obBD_conexion);
+	$resultado = array(
+		'success' => true,
+		'siguiente' => isset($row['siguiente']) ? $row['siguiente'] : 1,
+	);
+	$obBD_con1->echoJson($resultado);
+}
+
+/**
  * Obtener plan de cuentas y No. Cuenta del banco para anticipos con cheques
  */
 if (isset($getPlanCuentasCheq)) {
@@ -70,6 +85,248 @@ if (isset($getPlanCuentasCheq)) {
 		'getData' => $obBD_con1->getArrayConsulta('det_plan.selectWhere', array('Ban_Tip' => $campo, 'where' => array('Pec_Cod' => $Pec_Cod), 'setWhere' => array('byPerioCont', 'byBanco')), $obBD_conexion, true),
 	);
 	$obBD_con1->echoJson($resultado);
+}
+
+/**
+ * CRUCE MANUAL: Obtener anticipos pendientes de un cliente
+ */
+if (isset($anticiposCruceCliAjax)) {
+	$resultado['rows'] = $obBD_con1->getArrayConsulta('anticipos_clientes.2', $_GET, $obBD_conexion, true);
+	$obBD_con1->echoJson($resultado);
+}
+
+/**
+ * CRUCE MANUAL: Obtener detalle de un consumo existente (para editar)
+ */
+if (isset($getDetalleConsumoCli)) {
+	$resp = array('det' => array(), 'che' => array());
+	/* Priorizar Cli_Cod del request (evita que sesión register_globals lo sobrescriba) */
+	$cliCodSaldo = isset($_GET['Cli_Cod']) ? $_GET['Cli_Cod'] : (isset($_POST['Cli_Cod']) ? $_POST['Cli_Cod'] : $Cli_Cod);
+	if ($cliCodSaldo === '' || $cliCodSaldo === null) {
+		$cliCodSaldo = $Cli_Cod;
+	}
+	/* Si no viene Cli_Cod (p. ej. jqGrid no envía la columna), obtenerlo por Com_Cod del consumo */
+	if (($cliCodSaldo === '' || $cliCodSaldo === null) && !empty($Com_Cod)) {
+		$rowCli = $obBD_con1->getRowConsultaSql(
+			'SELECT ac.Cli_Cod FROM det_ant_cccc d INNER JOIN anticipos_clientes ac ON ac.Ant_Cod = d.Ant_Cod WHERE d.Com_Cod = ' . intval($Com_Cod) . ' LIMIT 1',
+			$obBD_conexion
+		);
+		if (!empty($rowCli['Cli_Cod'])) {
+			$cliCodSaldo = $rowCli['Cli_Cod'];
+		}
+	}
+	$paramsDet = array('Cli_Cod' => $cliCodSaldo, 'Com_Cod' => $Com_Cod);
+	if (!empty($Ant_Cod)) {
+		$paramsDet['Ant_Cod'] = $Ant_Cod;
+	}
+	// Anticipos con saldo (caso 2) + datos del cruce en edición (caso 3)
+	if ($cliCodSaldo !== '' && $cliCodSaldo !== null) {
+		$conSaldo = $obBD_con1->getArrayConsulta('anticipos_clientes.2', array('Cli_Cod' => $cliCodSaldo), $obBD_conexion);
+		$enEdicion = $obBD_con1->getArrayConsulta('anticipos_clientes.3', $paramsDet, $obBD_conexion);
+	} else {
+		$conSaldo = array();
+		$enEdicion = array();
+	}
+	$mapEdicion = array();
+	foreach ($enEdicion as $fila) {
+		$mapEdicion[(string) $fila['Ant_Cod']] = $fila;
+	}
+	$detMerge = array();
+	$usados = array();
+	foreach ($conSaldo as $fila) {
+		$cod = (string) $fila['Ant_Cod'];
+		$usados[$cod] = true;
+		if (isset($mapEdicion[$cod])) {
+			$detMerge[] = $mapEdicion[$cod];
+		} else {
+			$fila['chkAnt'] = 'N';
+			$fila['cruce'] = '0';
+			$fila['pendiente'] = $fila['Ant_Val'];
+			$detMerge[] = $fila;
+		}
+	}
+	foreach ($mapEdicion as $cod => $fila) {
+		if (empty($usados[(string) $cod])) {
+			$detMerge[] = $fila;
+		}
+	}
+	$resp['det'] = $detMerge;
+	/* SQL directo: cheques.selectWhere + JOIN asientos puede fallar (ambigüedad / error SQL) y rompe todo el JSON */
+	if (!empty($Asi_Cod)) {
+		$asiInt = intval($Asi_Cod);
+		$rowChe = $obBD_con1->getRowConsultaSql(
+			'SELECT Che_Cod, Prv_Cod, Ban_Cod, Asi_Cod, Che_Num, Che_Fec, Che_Val, Che_Est FROM cheques WHERE Asi_Cod = ' . $asiInt . ' LIMIT 1',
+			$obBD_conexion
+		);
+		$resp['che'] = is_array($rowChe) ? $rowChe : array();
+		$asiHaber = $obBD_con1->getRowConsultaSql(
+			"SELECT Asi_Cod, Com_Cod, Asi_Deh, Pld_Cod, Asi_Val FROM asientos WHERE Asi_Cod = " . $asiInt . " AND Asi_Deh = 'H' LIMIT 1",
+			$obBD_conexion
+		);
+		$pagAbrCruce = '';
+		if (!empty($Com_Cod)) {
+			$rowPag = $obBD_con1->getRowConsultaSql(
+				'SELECT tp.Pag_Abr FROM pag_anticipo_cli pac INNER JOIN det_ant_cccc d ON d.Pac_Cod = pac.Pac_Cod '
+				. 'INNER JOIN tipos_pago tp ON tp.Pag_Cod = pac.Pag_Cod WHERE d.Com_Cod = ' . intval($Com_Cod) . ' LIMIT 1',
+				$obBD_conexion
+			);
+			if (!empty($rowPag['Pag_Abr'])) {
+				$pagAbrCruce = strtoupper(trim($rowPag['Pag_Abr']));
+			}
+		}
+		if ($pagAbrCruce === 'OTR' && !empty($asiHaber['Pld_Cod'])) {
+			$pld = $obBD_con1->getRowConsulta('det_plan.selectWhere', array('where' => array('det_plan.Pld_Cod' => $asiHaber['Pld_Cod'])), $obBD_conexion);
+			$resp['pago'] = array(
+				'Pld_Cod' => $asiHaber['Pld_Cod'],
+				'Pld_Des' => isset($pld['Pld_Des']) ? $pld['Pld_Des'] : '',
+				'Pld_Cdc' => isset($pld['Pld_Cdc']) ? $pld['Pld_Cdc'] : ''
+			);
+		}
+	}
+	$obBD_con1->echoJson($resp);
+}
+
+/**
+ * CRUCE MANUAL: Guardar consumo de anticipo cliente
+ */
+if (isset($saveConsumoCliAjax)) {
+	$obBD_ins1 = new Class_Log_Datos_Ant_Cli;
+	$obBD_conexionIns = new Class_Log_Conexion_Global($Ses_Dat_Dis);
+	$resp = array('success' => false);
+	$ctas = $obBD_con1->getArrayConsulta('plan_param.selectWhere', array("Tpa_Abr in('CD','ANC','ANP','CCH','CA','CEF')", 'Emp_Cod' => $Ses_Emp_Cod), $obBD_conexion, true);
+
+	if ($tipo == 'EFE') {
+		$Com_Con = 'CONSUMO EFECTIVO';
+		$ctaPago = $Pld_Cod_banco;
+	}
+	if ($tipo == 'CHE') {
+		$Com_Con = 'CONSUMO CHEQUE No: ' . $CheNum;
+		$ctaPago = $Pld_Cod_banco;
+	}
+	if ($tipo == 'TRF') {
+		$Com_Con = 'CONSUMO TRANSF.';
+		$ctaPago = $Pld_Cod_banco;
+	}
+	if ($tipo == 'OTR') {
+		$Com_Con = 'CONSUMO OTROS';
+		$ctaPago = $Pld_Cod_Otr;
+	}
+	$obBD_ins1->inicio_transaccion($obBD_conexionIns);
+	try {
+		// Buscar o crear proveedor a partir del Prs_Cod del cliente
+		$Prv_Cod_Cruce = null;
+		if (!empty($Prs_Cod_Cruce)) {
+			$provExiste = $obBD_con1->getRowConsultaSql("SELECT Prv_Cod FROM proveedore WHERE Prs_Cod = " . intval($Prs_Cod_Cruce) . " AND Emp_Cod = " . intval($Ses_Emp_Cod) . " LIMIT 1", $obBD_conexion);
+			if (!empty($provExiste) && !empty($provExiste['Prv_Cod'])) {
+				$Prv_Cod_Cruce = $provExiste['Prv_Cod'];
+			} else {
+				$obBD_ins1->operacionobBD('proveedore.insert', array(
+					'Prs_Cod' => intval($Prs_Cod_Cruce),
+					'Emp_Cod' => intval($Ses_Emp_Cod),
+					'Prv_Est' => 'A',
+					'Prv_Tic' => 'N'
+				), $obBD_conexionIns, true);
+				$Prv_Cod_Cruce = $obBD_ins1->insercionid($obBD_conexionIns);
+			}
+		}
+
+		$Pec_Cod = $obBD_ins1->getRowConsulta('perio_cont.selectWhere', array('Date' => $Com_Fec, 'where' => array(), 'setWhere' => array('getByDate', 'getPerioByFec')), $obBD_conexion, true);
+
+		if (empty($Pec_Cod) || empty($Pec_Cod['Pec_Cod'])) {
+			throw new Exception("No existe un periodo contable activo para la fecha $Com_Fec. Verifique los periodos.");
+		}
+
+		$Pld_Cod_Ant = $obBD_ins1->getRowConsulta('plan_param.selectWhere', array('setWhere' => array('setEmpCod'), 'where' => array('Tpa_Abr' => 'ANC', 'Pld_Est' => 'A')), $obBD_conexion);
+
+		if (empty($Com_Cod)) {
+			$Com_Num = $obBD_ins1->getComNumPecAuto(15, $Pec_Cod['Pec_Cod'], $Com_Fec, $obBD_conexion);
+			$obBD_ins1->operacionobBD('comprobantes.insert', array('Pec_Cod' => $Pec_Cod['Pec_Cod'], 'Prv_Cod' => $Prv_Cod_Cruce, 'Com_num' => $Com_Num, 'Com_Fec' => $Com_Fec, 'Usu_Cod' => $Ses_Usu_Cod, 'Com_Con' => $Com_Con,'Com_Gen' => 'A', 'Com_Val' => $PapVal, 'Tia_Cod' => 15), $obBD_conexionIns);
+			$Com_Cod = $obBD_ins1->insercionid($obBD_conexionIns);
+		} else {
+			$arr_com = array('Cli_Cod' => $Cli_Cod_Cruce, 'Com_Fec' => $Com_Fec, 'Com_Con' => $Com_Con, 'Com_Val' => $PapVal);
+			if (date('m', strtotime($Com_Fec)) !== date('m', strtotime($Com_Fec_Old)))
+				$arr_com['Com_Num'] = $obBD_ins1->getComNumPecAuto(15, $Pec_Cod['Pec_Cod'], $Com_Fec, $obBD_conexion);
+			$arr_com['where'] = array('Com_Cod' => $Com_Cod);
+			$obBD_ins1->operacionobBD('comprobantes.update', $arr_com, $obBD_conexionIns, true);
+			$comCodEdit = intval($Com_Cod);
+			$obBD_ins1->grabarv_registros(
+				"UPDATE cheques ch INNER JOIN asientos a ON a.Asi_Cod = ch.Asi_Cod SET ch.Che_Est = 'I' WHERE a.Com_Cod = {$comCodEdit} AND ch.Che_Est = 'A'",
+				$obBD_conexionIns
+			);
+			$obBD_ins1->getRowConsultaSql(
+				'DELETE pag_anticipo_cli, det_ant_cccc FROM pag_anticipo_cli INNER JOIN det_ant_cccc ON pag_anticipo_cli.Pac_Cod = det_ant_cccc.Pac_Cod WHERE det_ant_cccc.Com_Cod =' . $comCodEdit,
+				$obBD_conexionIns
+			);
+			$obBD_ins1->operacionobBD('asientos.deleteWhere', array('Com_Cod' => $Com_Cod), $obBD_conexionIns, true);
+		}
+
+		$obBD_ins1->operacionobBD('asientos.insert', array('Com_Cod' => $Com_Cod, 'Asi_Deh' => 'D', 'Asi_Glo' => "Anticipo Clientes", 'Asi_Con' => "Anticipo Clientes", 'Asi_Val' => $PapVal, 'Pld_Cod' => $Pld_Cod_Ant['Pld_Cod']), $obBD_conexionIns);
+		$obBD_ins1->operacionobBD('asientos.insert', array('Com_Cod' => $Com_Cod, 'Asi_Deh' => 'H', 'Asi_Glo' => $Com_Con, 'Asi_Val' => $PapVal, 'Pld_Cod' => $ctaPago), $obBD_conexionIns);
+		$Asi_Cod_Haber = $obBD_ins1->insercionid($obBD_conexionIns);
+
+		if ($tipo == 'CHE') {
+			$obBD_ins1->operacionobBD('cheques.insert', array('Prv_Cod' => $Prv_Cod_Cruce, 'Che_Fec' => $CheFec,'Che_Cob' => $CheFec, 'Ban_Cod' => $BanCodCruce, 'Asi_Cod' => $Asi_Cod_Haber, 'Che_Num' => $CheNum, 'Che_Val' => $PapVal, 'Che_Est' => 'A'), $obBD_conexionIns);
+		}
+
+		foreach ($anticipo as $ant) {
+			$arr = array('Ant_Cod' => $ant['Ant_Cod'], 'Asi_Cod' => $Asi_Cod_Haber, 'Pag_Cod' => $PagCod, 'Pac_Cto' => isset($Pap_Cto) ? $Pap_Cto : '', 'Pac_Ctd' => isset($PapCtd) ? $PapCtd : '', 'Pac_Est' => 'A', 'Pac_Obs' => $PapObs, 'Pac_Val' => $ant['Acl_Cru'], 'Pac_Es2' => 'M');
+			$obBD_ins1->operacionobBD('pag_anticipo_cli.insert', $arr, $obBD_conexionIns, true);
+			$Pac_Cod = $obBD_ins1->insercionid($obBD_conexionIns);
+
+			$obBD_ins1->operacionobBD('det_ant_cccc.insert', array('Ant_Cod' => $ant['Ant_Cod'], 'Pac_Cod' => $Pac_Cod, 'Ddc_Val' => $ant['Acl_Cru'], 'Com_Cod' => $Com_Cod), $obBD_conexionIns, true);
+			$Ddc_Cod = $obBD_ins1->insercionid($obBD_conexionIns);
+			if (isset($Ddc_Cod)) {
+				$obBD_ins1->operacionobBD('anticipos_clientes.4', array('Ant_Cod' => $ant['Ant_Cod']), $obBD_conexionIns);
+			}
+		}
+		$resp['link'] = "../../contabilidad/FRONT/con_pri_compr_2.1.php?codigo=" . $Com_Cod;
+	} catch (Exception $e) {
+		$obBD_ins1->rollBack_nomsn($obBD_conexionIns);
+		$resp['message'] = $e->getMessage();
+		$obBD_ins1->echoJson($resp);
+	}
+	$resp['success'] = $obBD_ins1->fin_transaccion_nomsn($obBD_conexionIns);
+	if (!$resp['success']) $resp['error'] = $obBD_ins1->MsgError;
+	$obBD_con1->echoJson($resp);
+}
+
+/**
+ * CRUCE MANUAL: Anular un consumo de anticipo cliente
+ */
+if (isset($bajaConsumoCliAjax)) {
+	$obBD_ins1 = new Class_Log_Datos_Ant_Cli;
+	$obBD_conexionIns = new Class_Log_Conexion_Global($Ses_Dat_Dis);
+	$response['success'] = false;
+	try {
+		$obBD_ins1->inicio_transaccion($obBD_conexionIns);
+		$comCodInt = intval($Com_Cod);
+		$rowConc = $obBD_con1->getRowConsultaSql(
+			"SELECT COUNT(*) AS cnt FROM conciliacion_banc_asientos cba INNER JOIN asientos a ON a.Asi_Cod = cba.Asi_Cod WHERE a.Com_Cod = {$comCodInt}",
+			$obBD_conexion
+		);
+		if (!empty($rowConc['cnt']) && intval($rowConc['cnt']) > 0) {
+			throw new Exception('No se puede anular: existen asientos en conciliación bancaria.');
+		}
+		// UPDATE directo: cheques.update vía ORM exige PK completa y validPk() falla con Prv_Cod/Ban_Cod = 0 o NULL
+		$obBD_ins1->grabarv_registros(
+			"UPDATE cheques ch INNER JOIN asientos a ON a.Asi_Cod = ch.Asi_Cod SET ch.Che_Est = 'I' WHERE a.Com_Cod = {$comCodInt} AND ch.Che_Est = 'A'",
+			$obBD_conexionIns
+		);
+		$obBD_con1->getRowConsultaSql('DELETE pag_anticipo_cli, det_ant_cccc FROM pag_anticipo_cli INNER JOIN det_ant_cccc ON pag_anticipo_cli.Pac_Cod = det_ant_cccc.Pac_Cod WHERE det_ant_cccc.Com_Cod =' . $comCodInt, $obBD_conexion);
+		$obBD_ins1->operacionobBD('comprobantes.update', array('Com_Est' => 'I', 'where' => array('Com_Cod' => $Com_Cod)), $obBD_conexionIns);
+		$response['success'] = $obBD_ins1->fin_transaccion_nomsn($obBD_conexionIns);
+	} catch (Exception $e) {
+		$obBD_ins1->rollBack_nomsn($obBD_conexionIns);
+		$response['message'] = $e->getMessage();
+	}
+	$obBD_con1->echoJson($response);
+}
+
+/**
+ * CRUCE MANUAL: Grid para búsqueda de cuentas contables
+ */
+if (isset($cuentasCliAjax)) {
+	$obBD_con1->getPageGridJson('det_plan.12', $_GET, $obBD_conexion);
 }
 
 /**
@@ -381,6 +638,9 @@ if (isset($clientesAjax)) {
 	$dataClie = $obBD_con1->getPageGridJson(1, $_GET, $obBD_conexion);
 	$obBD_con1->echoJson($dataClie);
 }
+if (isset($clientesCruceAjax)) {
+	$obBD_con1->getPageGridJson(1, $_GET, $obBD_conexion);
+}
 
 ?>
 <!DOCTYPE html>
@@ -419,6 +679,30 @@ if (isset($clientesAjax)) {
 
 		.chosen-single span {
 			padding-left: 5px;
+		}
+
+		/* Total columna A Cruzar: fondo claro (evita gris de .disabled input en pie) */
+		#gbox_crucesCliGrid .ui-jqgrid-smotion .footrow td[aria-describedby="crucesCliGrid_cruce"],
+		#gbox_crucesCliGrid .ui-jqgrid-smotion .myfootrow td[aria-describedby="crucesCliGrid_cruce"] {
+			background: #fffde7 !important;
+			background-color: #fffde7 !important;
+		}
+
+		#gbox_crucesCliGrid .footrow td[aria-describedby="crucesCliGrid_cruce"] input,
+		#gbox_crucesCliGrid .footrow td[aria-describedby="crucesCliGrid_cruce"] .cruces-cli-total-val {
+			background: #fffde7 !important;
+			background-color: #fffde7 !important;
+			color: #1a1a1a !important;
+			font-weight: bold !important;
+			font-size: 13px !important;
+			border: 1px solid #ffe082 !important;
+			text-align: right;
+		}
+
+		#gbox_crucesCliGrid .footrow td[aria-describedby="crucesCliGrid_cruce"] .cruces-cli-total-val {
+			display: block;
+			padding: 3px 6px;
+			border: none !important;
 		}
 	</style>
 </HEAD>
@@ -573,7 +857,12 @@ if (isset($clientesAjax)) {
 							<span class="glyphicon glyphicon-stop red"></span> Anticipos Anulados </span>
 						</div>
 						<div id="searchGridPager"></div>
-					</div>
+						<br>
+						<div>
+							<button class="btn btn-sm btn-success" type="button" onclick="vaciarGridCruceCli(); $('#cruceCliDialog').dialog('open');"><i class="glyphicon glyphicon-random"></i> Cruce Manual</button>
+						</div>
+					</div>					
+					
 				</div>
 			</div>
 			<div id="verAsientoDialogMod" title="Datos">
@@ -1064,7 +1353,130 @@ if (isset($clientesAjax)) {
 
 
 
-	<script src="../VALIDACIONES/tes_val_anticipo_mod_cli_2.0.js?k=151"></script>
+	<!-- Modal Cruce Manual de anticipos clientes -->
+	<div id="cruceCliDialog" title="Consumo de Anticipos - Clientes">
+		<form id="cruceCliForm" class="form-horizontal normal">
+			<div id="infoCruceCli" name="infoCruceCli">
+				<fieldset class="exa-fieldset">
+					<legend class="Titulos2">Datos del Cruce</legend>
+					<div class="form-group">
+						<label class="col-xs-2 control-label label-xs">Cliente:</label>
+						<div class="col-xs-9">
+							<div class="input-group input-group-xs">
+								<span id='PrsCedCruce' class="input-group-addon bold alert-info"></span>
+								<input type='hidden' id='Cli_Cod_Cruce' name='Cli_Cod_Cruce'>
+								<input type='hidden' id='Prs_Cod_Cruce' name='Prs_Cod_Cruce'>
+								<input type='hidden' id='Com_Cod_Cruce' name='Com_Cod_Cruce'>
+								<input type='hidden' id='Com_Fec_Old_Cruce' name='Com_Fec_Old_Cruce'>
+								<input name="Cli_Nom_Cruce" id="Cli_Nom_Cruce" type="text" placeholder="Seleccione un cliente..." class="form-control input-xs" tabindex="1" readonly />
+								<span class="input-group-btn">
+									<a onclick="$('#clientesCruceDialog').dialog('open');" class="btn btn-success btn-xs" title="Seleccionar Cliente" tabindex="2"><span class="glyphicon glyphicon-search"></span></a>
+								</span>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label class="col-xs-2 control-label label-xs required">Tipo:</label>
+						<div class="col-xs-3">
+							<select id="PagCodCruce" name="PagCodCruce" class="form-control input-xs" onchange="habilitaCacillerosCli($(this).find(':selected').data().class)">
+								<?php
+								foreach ($consumoPagoCli as $row) {
+									echo "<option value='$row[Pag_Cod]' data-abr='$row[Pag_Abr]' data-class='$row[Pag_Des]'>$row[Pag_Des]</option>";
+								}
+								?>
+							</select>
+						</div>
+						<label class="col-xs-3 control-label label-xs required">Fecha Pago:</label>
+						<div class="col-xs-3">
+							<input name="Com_Fec_Cruce" type="text" id="Com_Fec_Cruce" class="form-control input-xs datepicker" required="" />
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label class="col-xs-2 control-label label-xs required">Cta. Origen</label>
+						<div class="col-xs-4">
+							<select id="BanCodCruce" name="BanCodCruce" class="form-control input-xs TransferenciaCli ChequeCli EfectivoCli DepositoCli BloqueoCli" onchange="obtenerSiguienteCheque()" required="">
+								<?php
+								foreach ($consumoBancoCli as $row) {
+									echo "<option value='$row[Ban_Cod]' " . (($row['Ban_Tip'] !== 'C') ? "style='display: none'" : "") . " data-des='$row[Pld_Des]' data-tip='$row[Ban_Tip]' data-Pld='$row[Pld_Cod]' data-Cta='$row[Ban_Cue]'>$row[Pld_Des]</option>";
+								}
+								?>
+							</select>
+						</div>
+						<label class="col-xs-2 control-label label-xs required">Bco. Destino:</label>
+						<div class="col-xs-4">
+							<select id="BakCodCruce" name="BakCodCruce" class="form-control input-xs TransferenciaCli BloqueoCli" disabled required="">
+								<?php
+								$bancosCruce = $obBD_con1->getArrayConsultaSql('select bancos.* From bancos where Bak_Est="A" AND Bak_Cod!=1', $obBD_conexion);
+								foreach ($bancosCruce as $row) {
+									echo "<option value='$row[Bak_Cod]' data-des='$row[Bak_Des]' data-tip='$row[Ban_Tip]'>$row[Bak_Des]</option>";
+								}
+								?>
+							</select>
+						</div>
+					</div>
+					<div class="form-group">						
+						<label class="col-xs-2 control-label label-xs required">No. cheque:</label>
+						<div class="col-xs-4">
+							<div class="input-group input-group-xs">
+								<span class="input-group-addon validate"><i id="estadoNumCheCli" class=""></i></span>
+								<input type="text" id="CheNumCruce" name="CheNumCruce" size="20" onchange="validaNumChequeExtCli(this.value)" disabled class="form-control input-xs ChequeCli BloqueoCli" onkeypress="return soloNumeros(event)">
+								<span class="input-group-addon bold alert-info validate" title="Fecha de Cheque"><i id="indicadorCheCli" class=""></i>Fecha</span>
+								<input name="CheFecCruce" type="text" id="CheFecCruce" class="form-control input-xs datepicker ChequeCli BloqueoCli" disabled required="" />
+							</div>
+						</div>
+						<label class="col-xs-2 control-label label-xs required">Cta. Destino:</label>
+						<div class="col-xs-4">
+							<input type="text" id="PapCtdCruce" name="PapCtdCruce" disabled onkeypress="return soloNumeros(event)" class="form-control input-xs DepositoCli TransferenciaCli BloqueoCli">
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-xs-2 control-label label-sm required">Valor:</label>
+						<div class="col-xs-3">
+							<input name="PapValCruce" type="text" id="PapValCruce" size="10" class="form-control input-xs readOnly" disabled required="" autocomplete="off" onkeypress="return validar_decimal(event)" />
+						</div>
+						<label class="col-xs-3 control-label label-xs required">Cta Otros:</label>
+						<div class="col-xs-4">
+							<div class="input-group input-group-xs">
+								<span class="input-group-addon validate"><i id="infPldCdcCli" class=""></i></span>
+								<input type="hidden" id="Pld_Cod_OtrCli" name="Pld_Cod_OtrCli">
+								<input type="text" id="Pld_Des_OtrCli" name="Pld_Des_OtrCli" size="20" disabled class="form-control input-xs OtrosCli BloqueoCli">
+								<span class="input-group-btn">
+									<a id="btnCuentaCli" name="btnCuentaCli" onclick="$('#cuentasCliDialog').dialog('open');" class="btn btn-success btn-xs OtrosCli BloqueoCli disabled" title="Seleccionar Cuenta" tabindex="2"><span class="glyphicon glyphicon-search"></span></a>
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-xs-2 control-label label-xs">Observ.:</label>
+						<div class="col-sm-10">
+							<input name="PapObsCruce" type="text" id="PapObsCruce" size="30" class="form-control input-xs" required="" autocomplete="off" />
+						</div>
+					</div>
+				</fieldset>
+			</div>
+		</form>
+		<div class="row">
+			<div class="col-sm-12">
+				<table id="crucesCliGrid" name="crucesCliGrid"></table>
+			</div>
+		</div>
+		<br>
+		<div class="form-group center">
+			<a id="btnGuardarCruceCli" class="btn btn-sm btn-primary" onclick="preSaveConsumoCli()"> <i class="glyphicon glyphicon-floppy-disk"></i> Guardar</a>
+		</div>
+	</div>
+
+	<!-- Dialogo busqueda de clientes para cruce -->
+	<div id="clientesCruceDialog" title="B&uacute;squeda de Clientes">
+	</div>
+
+	<!-- Dialogo busqueda de cuentas contables para cruce -->
+	<div id="cuentasCliDialog" title="B&uacute;squeda de Cuentas">
+	</div>
+
+	<script src="../VALIDACIONES/tes_val_anticipo_mod_cli_2.0.js?k=176"></script>
 
 	<script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>
 	<script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=2"></script>

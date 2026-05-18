@@ -218,12 +218,64 @@ class anticipos_clientes extends AbstractModel
         switch ($id) {
             case 0:
                 $sql = "";
-                //echo $this->getSqlString($sql)."<br/>";
                 break;
+            case 2:
+                /* Solo consumos con comprobante activo (comp hace match solo si Com_Est='A') */
+                $aboAct = 'COALESCE(SUM(IF(comp.Com_Cod IS NOT NULL, daCCCC.Ddc_Val, 0)), 0)';
+                $sql = "SELECT anticipos_clientes.Ant_Cod, Ant_Fec, Ant_Obs,
+                    CONCAT(tpAst.Tia_Abr,'-',MONTH(cprbnt.Com_Fec),'-',cprbnt.Com_Num) as Com_Num,
+                    CAST(Ant_Val - {$aboAct} AS DECIMAL(10,2)) as Ant_Val,
+                    {$aboAct} as cruces,
+                    CAST(Ant_Val - {$aboAct} AS DECIMAL(10,2)) as pendiente
+                FROM anticipos_clientes
+                    INNER JOIN comprobantes cprbnt ON (anticipos_clientes.Com_Cod = cprbnt.Com_Cod)
+                    INNER JOIN tipo_asien tpAst ON (cprbnt.Tia_Cod = tpAst.Tia_Cod)
+                    LEFT JOIN det_ant_cccc daCCCC ON (anticipos_clientes.Ant_Cod = daCCCC.Ant_Cod)
+                    LEFT JOIN comprobantes comp ON (daCCCC.Com_Cod = comp.Com_Cod AND comp.Com_Est='A')
+                WHERE anticipos_clientes.Cli_Cod='{$Par_Sql['Cli_Cod']}' AND Ant_Est!='I'
+                GROUP BY anticipos_clientes.Ant_Cod
+                HAVING pendiente > 0";
+                return $sql;
+            case 3:
+                $comCod = intval($Par_Sql['Com_Cod']);
+                $cruceCom = "COALESCE(SUM(IF(comp.Com_Cod={$comCod},daCCCC.Ddc_Val,0)),0)";
+                $aboAct = 'COALESCE(SUM(IF(comp.Com_Cod IS NOT NULL, daCCCC.Ddc_Val, 0)), 0)';
+                $pendReal = "CAST(Ant_Val - {$aboAct} AS DECIMAL(10,2))";
+                $sql = "SELECT anticipos_clientes.Ant_Cod, Ant_Fec, Ant_Obs,
+                    IF({$cruceCom}>0,'S','N') as chkAnt,
+                    CONCAT(tpAst.Tia_Abr,'-',MONTH(cprbnt.Com_Fec),'-',cprbnt.Com_Num) as Com_Num,
+                    {$pendReal} + {$cruceCom} as Ant_Val,
+                    {$cruceCom} as cruce,
+                    {$pendReal} as pendiente
+                FROM anticipos_clientes
+                    INNER JOIN comprobantes cprbnt ON (anticipos_clientes.Com_Cod = cprbnt.Com_Cod)
+                    INNER JOIN tipo_asien tpAst ON (cprbnt.Tia_Cod = tpAst.Tia_Cod)
+                    LEFT JOIN det_ant_cccc daCCCC ON (anticipos_clientes.Ant_Cod = daCCCC.Ant_Cod)
+                    LEFT JOIN comprobantes comp ON (daCCCC.Com_Cod = comp.Com_Cod AND comp.Com_Est='A')
+                WHERE anticipos_clientes.Cli_Cod='{$Par_Sql['Cli_Cod']}' AND Ant_Est!='I'
+                GROUP BY anticipos_clientes.Ant_Cod
+                HAVING pendiente > 0 OR cruce > 0" . (!empty($Par_Sql['Ant_Cod']) ? " OR anticipos_clientes.Ant_Cod = " . intval($Par_Sql['Ant_Cod']) : "");
+                return $sql;
+            case 4:
+                $sql = "UPDATE anticipos_clientes a
+                LEFT JOIN (
+                    SELECT a.Ant_Cod, a.Ant_Val, CAST(COALESCE(SUM(d.Ddc_Val),0) AS DECIMAL(10,2)) AS TotalAbonado
+                    FROM det_ant_cccc d
+                        LEFT JOIN anticipos_clientes a ON d.Ant_Cod = a.Ant_Cod
+                        LEFT JOIN comprobantes ON d.Com_Cod = comprobantes.Com_Cod
+                    WHERE a.Ant_Cod = {$Par_Sql['Ant_Cod']} AND comprobantes.Com_Est = 'A'
+                    GROUP BY a.Ant_Cod, a.Ant_Val
+                ) t ON a.Ant_Cod = t.Ant_Cod
+                SET a.Ant_Est = CASE
+                    WHEN COALESCE(t.TotalAbonado,0) = 0 THEN 'A'
+                    WHEN COALESCE(t.TotalAbonado,0) < a.Ant_Val THEN 'U'
+                    ELSE 'C'
+                END
+                WHERE a.Ant_Cod = {$Par_Sql['Ant_Cod']}";
+                return $sql;
             default:
                 throw new Exception("No existe la sql numero $id!");
         }
-        //echo $this->getSqlString($sql)."<br/>";
         return $sql;
     }
 }

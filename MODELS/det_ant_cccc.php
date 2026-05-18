@@ -40,10 +40,14 @@ class det_ant_cccc extends AbstractModel{
                 break;
             // reemplazado por implementacion de fecha corte
             case "subGrid":
+                $sql->joinLeft(array('pac' => 'pag_anticipo_cli'), "pac.Pac_Cod = $this->_name.Pac_Cod", array('Pac_Es2', 'Pac_Cod', 'Asi_Cod', 'Pag_Cod', 'Pac_Ctd', 'Pac_Obs', 'Pac_Cto'));
+                $sql->addCols(null, array(
+                    'En_Conc_Banc' => new Zend_Db_Expr("IF(pac.Pac_Es2 = 'M' AND pac.Asi_Cod IS NOT NULL AND EXISTS (SELECT 1 FROM conciliacion_banc_asientos cba WHERE cba.Asi_Cod = pac.Asi_Cod), 'S', 'N')"),
+                    /* comprobantes.Cli_Cod suele ser NULL en cruces manuales (Tia 15); forzar el del anticipo */
+                    'Cli_Cod' => new Zend_Db_Expr('atc.Cli_Cod')
+                ));
                 $sql->where('det_ant_cccc.Ant_Cod=?', "{$Par_Sql['movAnticipo']}");
             
-                // Verificar si las fechas están definidas en $Par_Sql
-                // if (!empty($Par_Sql['txt_fec_ini']) && !empty($Par_Sql['txt_fec_fin'])) {
                 if (!empty($Par_Sql['Pec_Cod']) && $Par_Sql['Pec_Cod'] === 'Corte') {
                     $sql->where('dccppc.Cpc_Fec >= ?', $Par_Sql['txt_fec_ini']);
                     $sql->where('dccppc.Cpc_Fec <= ?', $Par_Sql['txt_fec_fin']);

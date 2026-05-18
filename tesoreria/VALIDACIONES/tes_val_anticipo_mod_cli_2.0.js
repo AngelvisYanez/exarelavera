@@ -43,6 +43,7 @@ $(function () {
     crearGridshowPagosChe();
     createPagosModGrid();
     changeCuentaCod();
+    initCruceManualCli();
 });
 
 
@@ -1168,6 +1169,17 @@ function createGrid() {
                     { label: '', name: 'Ant_Est', hidden: true },
                     { label: '', name: 'Tia_Cod', hidden: true },
                     { label: '', name: 'Com_Num', hidden: true },
+                    { label: '', name: 'Pac_Es2', hidden: true },
+                    { label: '', name: 'En_Conc_Banc', hidden: true },
+                    { label: '', name: 'Asi_Cod', hidden: true },
+                    { label: '', name: 'Cli_Cod', hidden: true },
+                    { label: '', name: 'Prs_Cod', hidden: true },
+                    { label: '', name: 'Prs_Ced', hidden: true },
+                    { label: '', name: 'nombre', hidden: true },
+                    { label: '', name: 'Pag_Cod', hidden: true },
+                    { label: '', name: 'Pac_Ctd', hidden: true },
+                    { label: '', name: 'Pac_Obs', hidden: true },
+                    { label: '', name: 'Com_Val', hidden: true },
                     { label: 'No. Compr.', name: 'codigoCompra', width: 30, align: "left" },
                     { label: 'Fecha', name: 'Com_Fec', width: 20, align: "center" },
                     { label: 'Fecha', name: 'Ant_Fec', width: 20, align: "left" },
@@ -1177,15 +1189,23 @@ function createGrid() {
                     {
                         label: '<center><i class="ui-icon ui-icon-gear"></i></center>',
                         name: 'btns_sub_anti',
-                        width: 40,
+                        width: 50,
                         align: 'center',
                         viewable: false,
                         formatter: function (cellvalue, options, rowObject) {
                             var parm_getdet = [rowObject];
-                            //console.log(rowObject);
-                            return $.getGridButton(verMovimiento, parm_getdet, 'ver asiento', 'info-sign', '', 'info') + "&nbsp;" +
+                            var enConc = (rowObject['En_Conc_Banc'] || '').toString().trim().toUpperCase() === 'S';
+                            var iconConc = '';
+                            if (enConc) {
+                                iconConc = '<i class="fa fa-bank" style="color:orange;cursor:default;" title="CONCILIACION BANCARIA"></i>&nbsp;';
+                            }
+                            var btns = iconConc + $.getGridButton(verMovimiento, parm_getdet, 'ver asiento', 'info-sign', '', 'info') + "&nbsp;" +
                                 $.getGridButton(imprimirAsiento, parm_getdet, 'Imprimir', 'print', '', 'success');
-
+                            if (rowObject['Pac_Es2'] === 'M' && !enConc) {
+                                btns += "&nbsp;" + $.getGridButton(editaConsumoCli, rowObject, 'Editar cruce manual', 'pencil', '', 'success');
+                                btns += "&nbsp;" + $.getGridButton(preAnularCruceCli, parm_getdet, 'Anular cruce manual', 'remove', '', 'danger');
+                            }
+                            return btns;
                         }
                     }
 
@@ -1332,4 +1352,441 @@ async function planCuentaWithNum(tipoAbr, pecCod) {
 async function getCheqNum(valor, bakCod, cheCta, cliCod) {
     let numChq = await getNumCheque(valor, bakCod, cheCta, cliCod);
     return numChq;
+}
+
+/*************** CRUCE MANUAL CLIENTES ***************/
+var modoEdicionCruceCli = false;
+
+function habilitarCruceInputCli(rowId, valCruce) {
+    var $inp = $('#' + rowId + '_cruce');
+    if (!$inp.length) {
+        return false;
+    }
+    $inp.prop('disabled', false).removeAttr('disabled');
+    $inp.closest('td').removeClass('columnDisabled');
+    if (valCruce !== undefined && valCruce !== null && valCruce !== '') {
+        $inp.val($.toFixed(parseFloat(valCruce) || 0, 2));
+    }
+    return true;
+}
+
+function sumCruceInputsCli() {
+    var total = 0;
+    $('#crucesCliGrid').find('input[id$="_cruce"]').each(function () {
+        var rowId = this.id.replace(/_cruce$/, '');
+        if ($('#' + rowId + '_chkAnt').prop('checked')) {
+            total += (parseFloat($(this).val()) || 0);
+        }
+    });
+    return total;
+}
+
+function estiloFooterCruceCli() {
+    var sel = '#gbox_crucesCliGrid .ui-jqgrid-smotion .footrow td[aria-describedby="crucesCliGrid_cruce"],'
+        + '#gbox_crucesCliGrid .ui-jqgrid-smotion .myfootrow td[aria-describedby="crucesCliGrid_cruce"]';
+    $(sel).each(function () {
+        var $td = $(this);
+        var val = $td.find('input').val();
+        if (val === undefined || val === '') {
+            val = $td.text().trim();
+        }
+        $td.removeClass('columnDisabled disabled ui-state-default');
+        $td.addClass('cruces-cli-total-cruce');
+        if ($td.find('input').length) {
+            $td.empty().html('<span class="cruces-cli-total-val">' + val + '</span>');
+        } else if (!$td.find('.cruces-cli-total-val').length) {
+            $td.html('<span class="cruces-cli-total-val">' + val + '</span>');
+        } else {
+            $td.find('.cruces-cli-total-val').text(val);
+        }
+    });
+}
+
+function syncCruceGridDataCli() {
+    var $grid = $('#crucesCliGrid');
+    $grid.find('input[id$="_cruce"]').each(function () {
+        var rowId = this.id.replace(/_cruce$/, '');
+        var val = $('#' + rowId + '_chkAnt').prop('checked') ? (parseFloat($(this).val()) || 0) : 0;
+        var row = $grid.jqGrid('getLocalRow', rowId);
+        if (row) {
+            row.cruce = $.toFixed(val, 2);
+        }
+    });
+}
+
+function actualizarTotalesCruceCli() {
+    var totalCruce = sumCruceInputsCli();
+    var sum_pendi = $('#crucesCliGrid').getGridSummary(['pendiente']);
+    $('#crucesCliGrid').jqGrid('footerData', 'set', {
+        cruce: '' + totalCruce.toFixed(2),
+        pendiente: sum_pendi.pendiente.toFixed(2)
+    });
+    setTimeout(estiloFooterCruceCli, 0);
+    $('#PapValCruce').val(totalCruce.toFixed(2));
+}
+
+function initCruceManualCli() {
+    $("#cruceCliDialog").createDialog({ width: 900, height: 485, icon: 'info-sign' });
+    $('#Com_Fec_Cruce, #CheFecCruce').createDatePickers({ checkAvailability: true, hideMsg: false }).mask('9999-99-99', { placeholder: '_' });
+
+    $.createSearchDialog('clientesCruceDialog', [
+        { label: 'C&oacute;d.Int.', name: 'Cli_Cod', key: true, width: 15, align: "center", hidden: true },
+        { label: 'C&eacute;dula/RUC', name: 'Prs_Ced', width: 50 },
+        { label: 'Cliente', name: 'nombre', width: 100 },
+        { label: 'Direcc.', name: 'Prs_Dir', width: 60 },
+        { label: '&nbsp;', name: 'act1', width: 20, align: 'center', viewable: false, formatter: 'gridButton', formatoptions: { action: selectClienteCruce } }
+    ], null, null, null, { headertitles: true }, { title: 'Cliente', text: 'searchCli' });
+
+    $.createSearchDialog('cuentasCliDialog', [
+        { label: 'Cod. Int.', name: 'Pld_Cod', width: 20, align: "left" },
+        { label: 'C&oacute;digo', name: 'Pld_Cdc', width: 50, align: "left" },
+        { label: 'Cuenta Contable', name: 'Pld_Des', width: 100, align: "left" },
+        {
+            label: '&nbsp;', name: 'plsel', width: 15, align: 'center', viewable: false, title: false,
+            formatter: function (cellvalue, options, rowObject) {
+                return $.getGridButton(cambiarCuentaCli, rowObject, 'Seleccionar cuenta', 'check', '', 'success');
+            }
+        }
+    ], null, null, null, null, { title: 'Cuenta', options: [{ label: '&nbsp;&nbsp;Descripci&oacute;n&nbsp;&nbsp;', value: 'd' }, { label: '&nbsp;&nbsp;C&oacute;digo&nbsp;&nbsp;', value: 'c' }] });
+
+    gridCruceCli();
+
+    $('#BakCodCruce').on('change', function () {
+        var tipoAbr = $('#PagCodCruce option:selected').attr('data-abr');
+        if (tipoAbr === 'CHE') {
+            obtenerSiguienteCheque();
+        }
+    });
+
+    habilitaCacillerosCli($('#PagCodCruce option:selected').attr('data-class') || '');
+}
+
+function selectClienteCruce(cliente) {
+    $('#PrsCedCruce').html(cliente.Prs_Ced);
+    $('#Cli_Nom_Cruce').val(cliente.nombre);
+    $('#Cli_Cod_Cruce').val(cliente.Cli_Cod);
+    $('#Prs_Cod_Cruce').val(cliente.Prs_Cod);
+    $('#clientesCruceDialog').dialog('close');
+    $('#crucesCliGrid').clearGrid(true);
+    $.get('', { anticiposCruceCliAjax: true, Cli_Cod: cliente.Cli_Cod }, function (r) {
+        if (r.rows && r.rows.length > 0) {
+            $('#crucesCliGrid').setRows(r.rows);
+            setTimeout(actualizarTotalesCruceCli, 50);
+        }
+    }, 'json').fail(function () {
+        console.log("El Servidor ha fallado en responder!");
+    });
+}
+
+/** omitSigCheque: al editar un cruce con cheque no llamar obtenerSiguienteCheque (sobrescribe el número ya registrado) */
+function habilitaCacillerosCli(tipoPago, omitSigCheque) {
+    $('.BloqueoCli').prop('disabled', true);
+    $('.' + tipoPago + 'Cli').prop('disabled', false);
+
+    $('#BanCodCruce option').hide();
+    if (tipoPago === 'Efectivo' || tipoPago === 'Deposito')
+        $('#BanCodCruce option[data-tip="C"]').show();
+    if (tipoPago === 'Transferencia' || tipoPago === 'Deposito' || tipoPago === 'Cheque')
+        $('#BanCodCruce option[data-tip="B"]').show();
+    if (tipoPago !== 'Cheque') {
+        $('#CheNumCruce').val('');
+        $("#estadoNumCheCli").removeClass("fa fa-close").removeClass("fa fa-check");        
+    }
+    $('#BanCodCruce option').filter(function () {
+        return $(this).css('display') !== 'none';
+    }).first().prop('selected', true);
+
+    if (tipoPago == 'Otros') {
+        $('#btnCuentaCli').removeClass('disabled');
+    } else {
+        $('#btnCuentaCli').addClass('disabled');
+        $('#Pld_Cod_OtrCli').val('');
+        $('#Pld_Des_OtrCli').val('');
+        $('#infPldCdcCli').html('');
+    }
+
+    if (tipoPago === 'Cheque' && !omitSigCheque) {
+        obtenerSiguienteCheque();
+    }
+}
+
+function obtenerSiguienteCheque() {
+    if ($('#PagCodCruce option:selected').attr('data-abr')!=='CHE') return;
+    var banCod = $('#BanCodCruce').val();
+    if (!banCod) return;
+    $.get('', { getNextChequeNum: true, Ban_Cod: banCod }, function (r) {
+        if (r.success && r.siguiente) {
+            $('#CheNumCruce').val(r.siguiente);
+            $("#estadoNumCheCli").removeClass("fa fa-close").addClass("fa fa-check").css("color", "green").attr('title', 'Siguiente numero: ' + r.siguiente);
+        }
+    }, 'json');
+}
+
+function cambiarCuentaCli(row) {
+    if ($('#PagCodCruce option:selected').attr('data-class') !== 'Otros') {
+        return;
+    }
+    $('#Pld_Cod_OtrCli').val(row.Pld_Cod);
+    $('#Pld_Des_OtrCli').val(row.Pld_Des);
+    $('#infPldCdcCli').html(row.Pld_Cdc);
+    $('#cuentasCliDialog').dialog('close');
+}
+
+function validaNumChequeExtCli(num) {
+    $.getDataJson('', { verificaCheque: true, Che_Num: num, Bak_Cod: $('#BakCodCruce').val(), Che_Cta: $('#PapCtdCruce').val(), Cli_Cod: $('#Cli_Cod_Cruce').val() }, function (r) {
+        if ($.isEmpty(r.numCheque))
+            $("#estadoNumCheCli").removeClass("fa fa-close").addClass("fa fa-check").css("color", "green").attr('title', 'Numero Aceptado');
+        else {
+            $("#estadoNumCheCli").removeClass("fa fa-check").addClass("fa fa-close").css("color", "red").attr('title', 'El Numero ya Existe!');
+            $('#CheNumCruce').val('');
+        }
+    });
+}
+
+function gridCruceCli() {
+    $('#crucesCliGrid').createGrid({
+        viewrecords: false,
+        caption: "<center>Anticipos del Cliente</center>",
+        data: [], rowNum: 100, height: 130, width: 850, footerrow: true, responsive: false, totalCols: ['Ant_Val', 'cruce', 'pendiente'],
+        onSelectRow: function (rowid, e) { $(this).resetSelection(); },
+        colModel: [
+            { label: 'ID', key: true, name: 'Ant_Cod', width: 6 },
+            { label: 'Diario', name: 'Com_Num', width: 10, align: "left" },
+            { label: 'Fecha', name: 'Ant_Fec', width: 10, align: "center" },
+            { label: 'Observ.', name: 'Ant_Obs', width: 15, align: "left" },
+            { label: '<i class="ui-icon ui-icon-circle-check"></i>', name: 'chkAnt', align: "center", width: 4, formatter: 'checkboxExa', formatoptions: { dataEvents: { Change: 'setPagoCellAntCli.call(this);' } } },
+            { label: 'Saldo', name: 'Ant_Val', width: 10, align: 'right', formatter: 'currency', decimalPlaces: '2', summaryRound: 2, formatoptions: { prefix: '$ ', thousandsSeparator: ',', decimalSeparator: '.' }, summaryTpl: "Total: {0}", summaryType: "sum" },
+            { label: 'A Cruzar', name: 'cruce', classes: 'no_padding', width: 10, align: "right", title: false, formatter: 'textboxExa', formatoptions: { type: 'decimal', decimals: 8, attr: { disabled: 'disabled' }, dataEvents: { keyup: 'updateRowItemAntCli.call(this);' } } },
+            { label: 'Pendiente', name: 'pendiente', width: 10, align: 'right', formatter: 'currency', decimalPlaces: '2', summaryRound: 2, formatoptions: { prefix: '$ ', thousandsSeparator: ',', decimalSeparator: '.' }, summaryTpl: "Total: {0}", summaryType: "sum" }
+        ]
+    }, true, '', { view: false });
+    $('#crucesCliGrid').on('jqGridAfterLoadComplete', function () {
+        setTimeout(estiloFooterCruceCli, 0);
+    });
+}
+
+function setPagoCellAntCli(row, valCruceEdit) {
+    if (!row && this && this.id) {
+        row = String(this.id).replace(/_chkAnt$/, '');
+    }
+    if (!row) {
+        return;
+    }
+    var $grid = $('#crucesCliGrid');
+    var saldo = $grid.getCell(row, 'Ant_Val').toNum();
+    var checked = $('#' + row + '_chkAnt').prop('checked');
+    $grid.setCell(row, 'chkAnt', checked ? 'S' : 'N');
+
+    if (checked) {
+        var cruce = (valCruceEdit !== undefined && valCruceEdit !== null && valCruceEdit !== '')
+            ? parseFloat(valCruceEdit) || 0
+            : saldo;
+        $grid.setCell(row, 'cruce', $.toFixed(cruce, 2));
+        $grid.setCell(row, 'pendiente', $.toFixed(Math.max(0, saldo - cruce), 2));
+        setTimeout(function () {
+            habilitarCruceInputCli(row, cruce);
+            actualizarTotalesCruceCli();
+        }, 0);
+    } else {
+        var pendBase = parseFloat($grid.getCell(row, 'pendiente')) || 0;
+        if (pendBase <= 0) {
+            pendBase = saldo;
+        }
+        $grid.setCell(row, 'cruce', '0.00');
+        $grid.setCell(row, 'pendiente', $.toFixed(pendBase, 2));
+        setTimeout(function () {
+            var $inp = $('#' + row + '_cruce');
+            if ($inp.length) {
+                $inp.prop('disabled', true).attr('disabled', 'disabled').val('0.00');
+                $inp.closest('td').addClass('columnDisabled');
+            }
+            actualizarTotalesCruceCli();
+        }, 0);
+    }
+}
+
+function updateRowItemAntCli() {
+    var rowId = $(this).data('rowId');
+    var saldo = $('#crucesCliGrid').getCell(rowId, 'Ant_Val').toNum();
+    var cruce_act = $('#' + rowId + '_cruce').val();
+    if (cruce_act === undefined || cruce_act === '') {
+        cruce_act = $('#crucesCliGrid').getCell(rowId, 'cruce');
+    }
+    cruce_act = parseFloat(cruce_act) || 0;
+
+    if (cruce_act >= saldo) {
+        cruce_act = saldo;
+        $('#' + rowId + '_cruce').val($.toFixed(cruce_act, 2));
+        $('#crucesCliGrid').setCell(rowId, 'pendiente', '0.00');
+    } else {
+        $('#crucesCliGrid').setCell(rowId, 'pendiente', $.toFixed(saldo - cruce_act, 2));
+    }
+    actualizarTotalesCruceCli();
+}
+
+function resolveCliCodCruce(data) {
+    var cliCod = data.Cli_Cod || data.cli_cod || data.Ant_Cli_Cod || '';
+    if (!cliCod && data.Ant_Cod) {
+        var parentRow = $('#searchGrid').getRowData(data.Ant_Cod);
+        if (parentRow && parentRow.Cli_Cod) {
+            cliCod = parentRow.Cli_Cod;
+        }
+    }
+    return cliCod;
+}
+
+function editaConsumoCli(data) {
+    var enConc = (data.En_Conc_Banc || '').toString().trim().toUpperCase() === 'S';
+    if (enConc) {
+        $.alert('No se puede editar: el asiento consta en conciliaci&oacute;n bancaria.');
+        return;
+    }
+    vaciarGridCruceCli();
+    modoEdicionCruceCli = true;
+    var cliCod = resolveCliCodCruce(data);
+    $('#Cli_Cod_Cruce').val(cliCod);
+    $('#Prs_Cod_Cruce').val(data.Prs_Cod);
+    $('#Com_Cod_Cruce').val(data.Com_Cod);
+    $('#Cli_Nom_Cruce').val(data.nombre);
+    $('#PrsCedCruce').html(data.Prs_Ced || '');
+    $('#PapCtdCruce').val(data.Pac_Ctd || '');
+    $('#PapValCruce').val(data.Com_Val);
+    $('#PapObsCruce').val(data.Pac_Obs || '');
+    $('#Com_Fec_Old_Cruce').val(data.Com_Fec);
+    $('#Com_Fec_Cruce').val(data.Com_Fec);
+    $('#PagCodCruce').val(data.Pag_Cod);
+    var $pagSel = $('#PagCodCruce option:selected');
+    var tipoPagCls = $pagSel.attr('data-class') || ($pagSel.data('class') || '');
+    habilitaCacillerosCli(tipoPagCls, true);
+
+    $.get('', {
+        getDetalleConsumoCli: true,
+        Asi_Cod: data.Asi_Cod,
+        Com_Cod: data.Com_Cod,
+        Cli_Cod: $('#Cli_Cod_Cruce').val() || resolveCliCodCruce(data),
+        Ant_Cod: data.Ant_Cod
+    }, function (r) {
+        var che = r.che || {};
+        var cheNum = che.Che_Num != null && che.Che_Num !== '' ? che.Che_Num : che.che_num;
+        var cheFec = che.Che_Fec || che.che_fec;
+        var banCod = che.Ban_Cod != null && che.Ban_Cod !== '' ? che.Ban_Cod : che.ban_cod;
+        if (cheNum != null && cheNum !== '') {
+            if (banCod) {
+                $('#BanCodCruce').val(String(banCod));
+            }
+            $('#CheNumCruce').val(String(cheNum));
+            if (cheFec) {
+                $('#CheFecCruce').val(cheFec);
+            }
+            $("#estadoNumCheCli").removeClass("fa fa-close").addClass("fa fa-check").css("color", "green").attr('title', 'Cheque registrado');
+        }
+        if (tipoPagCls === 'Otros' && r.pago && r.pago.Pld_Cod) {
+            $('#Pld_Cod_OtrCli').val(r.pago.Pld_Cod);
+            $('#Pld_Des_OtrCli').val(r.pago.Pld_Des);
+            $('#infPldCdcCli').html(r.pago.Pld_Cdc || '');
+        }
+        if (r.det && r.det.length > 0) {
+            $('#crucesCliGrid').setRows(r.det);
+            setTimeout(function () {
+                $.each(r.det, function (i, v) {
+                    if (v.chkAnt === 'S' || (v.cruce && parseFloat(v.cruce) > 0)) {
+                        $('#' + v.Ant_Cod + '_chkAnt').prop('checked', true);
+                        setPagoCellAntCli(v.Ant_Cod, v.cruce);
+                        habilitarCruceInputCli(v.Ant_Cod, v.cruce);
+                    }
+                });
+                actualizarTotalesCruceCli();
+            }, 120);
+        }
+    }, 'json').fail(function () {
+        console.log("El Servidor ha fallado en responder!");
+    });
+    $('#cruceCliDialog').dialog('open');
+}
+
+function preSaveConsumoCli() {
+    var data = $('#cruceCliForm').getData();
+    data.Pld_Cod_banco = $('#BanCodCruce option:selected').attr('data-pld');
+    data.Pld_Des_banco = $('#BanCodCruce option:selected').attr('data-des');
+    data.Pap_Cto = $('#BanCodCruce option:selected').attr('data-cta');
+    data.Bak_Des_banco = $('#BakCodCruce option:selected').attr('data-des');
+    data.BakCod = $('#BakCodCruce').val();
+    data.tipo = $('#PagCodCruce option:selected').attr('data-abr');
+    data.PagCod = $('#PagCodCruce').val();
+    data.Com_Fec = $('#Com_Fec_Cruce').val();
+    data.PapVal = $('#PapValCruce').val();
+    data.PapObs = $('#PapObsCruce').val();
+    data.PapCtd = $('#PapCtdCruce').val();
+    data.CheNum = $('#CheNumCruce').val();
+    data.CheFec = $('#CheFecCruce').val();
+    data.Pld_Cod_Otr = $('#Pld_Cod_OtrCli').val();
+    data.Com_Cod = $('#Com_Cod_Cruce').val();
+    data.Com_Fec_Old = $('#Com_Fec_Old_Cruce').val();
+    data.Prs_Cod_Cruce = $('#Prs_Cod_Cruce').val();
+    data.Prs_Ced_Cruce = $('#PrsCedCruce').text();
+    syncCruceGridDataCli();
+    data.anticipo = $.map($('#crucesCliGrid').getGridBatch(function (o) { return o.chkAnt === 'S'; }), function (o) { return [{ Ant_Cod: o.Ant_Cod, Acl_Cru: o.cruce }]; });
+    data.saveConsumoCliAjax = true;
+    data.Cli_Cod_Cruce = $('#Cli_Cod_Cruce').val() || data.Cli_Cod_Cruce || '';
+
+    if (!data.Cli_Cod_Cruce) { $.alert('Seleccione un cliente.'); return; }
+    if (!data.Com_Fec) { $.alert('Ingrese una fecha de pago.'); return; }
+    if (!data.PapVal || parseFloat(data.PapVal) <= 0) { $.alert('El valor a cruzar debe ser mayor a 0.'); return; }
+    if (data.anticipo.length === 0) { $.alert('Seleccione al menos un anticipo a cruzar.'); return; }
+    if (data.tipo === 'OTR' && !data.Pld_Cod_Otr) { $.alert('Seleccione la cuenta en Cta Otros.'); return; }
+
+    $.createDialogConfirm('&iquest;Est&aacute; seguro que desea guardar el cruce?', data, saveConsumoCli);
+}
+
+function saveConsumoCli(data) {
+    $.saveDataJson('', data, function (r) {
+        vaciarGridCruceCli();
+        $('#cruceCliDialog').dialog('close');
+        grid.trigger("reloadGrid");
+        if ($.ifEmpty(r.link))
+            window.open(r.link);
+    }, function (r) {
+        console.log(r);
+    });
+}
+
+function vaciarGridCruceCli() {
+    modoEdicionCruceCli = false;
+    $('#PapObsCruce').val('');
+    $('#CheNumCruce').val('');
+    $('#PapCtdCruce').val('');
+    $('#PapValCruce').val('');
+    $('#Pld_Cod_OtrCli').val('');
+    $('#Pld_Des_OtrCli').val('');
+    $('#infPldCdcCli').html('');
+    $('#Com_Cod_Cruce').val('');
+    $('#Com_Fec_Old_Cruce').val('');
+    $('#Cli_Cod_Cruce').val('');
+    $('#Prs_Cod_Cruce').val('');
+    $('#Cli_Nom_Cruce').val('');
+    $('#PrsCedCruce').html('');
+    $('#crucesCliGrid').clearGrid(true);
+    $("#estadoNumCheCli").removeClass("fa fa-close").removeClass("fa fa-check");
+}
+
+function preAnularCruceCli(data) {
+    var enConc = (data[0].En_Conc_Banc || '').toString().trim().toUpperCase() === 'S';
+    if (enConc) {
+        $.alert('No se puede anular: el asiento consta en conciliaci&oacute;n bancaria.');
+        return;
+    }
+    $.createDialogConfirm('&iquest;Est&aacute; seguro que desea anular este cruce manual?', data[0], anularCruceCli);
+}
+
+function anularCruceCli(row) {
+    $.post('', { bajaConsumoCliAjax: true, Com_Cod: row.Com_Cod }, function (r) {
+        if (r.success === true) {
+            $.alert("&iexcl;Se anul&oacute; correctamente!");
+            grid.trigger("reloadGrid");
+        } else {
+            $.alert(r.message || 'Error al anular el cruce.');
+        }
+    }, 'json').fail(function () {
+        $.alert("El Servidor ha fallado en responder!");
+    });
 }
