@@ -152,6 +152,159 @@ function sentencias_rrhh($id, $Par_Sql)
             INNER JOIN pago_contrato ON contratos_lab.Con_Cod = pago_contrato.Con_Cod
             WHERE contratos_lab.Per_Cod ='$Par_Sql[0]'";
             break;
+            // Dashboard: personal activo por género (persona.Prs_Sex)
+        case 18:
+            $emp = intval($Par_Sql[0]);
+            $sexGrp = "COALESCE(NULLIF(TRIM(persona.Prs_Sex),''),'?')";
+            $sql = "SELECT $sexGrp AS Prs_Sex, COUNT(*) AS total
+                    FROM personal
+                    INNER JOIN persona ON persona.Prs_Cod = personal.Prs_Cod
+                    WHERE personal.Emp_Cod = $emp AND personal.Per_Est = 'A'
+                    GROUP BY $sexGrp";
+            break;
+            // Dashboard: personal activo por nivel de estudio (personal.Per_Tit)
+        case 19:
+            $emp = intval($Par_Sql[0]);
+            $titGrp = "COALESCE(NULLIF(TRIM(personal.Per_Tit),''),'')";
+            $sql = "SELECT $titGrp AS Per_Tit_Cod,
+                    CASE $titGrp
+                        WHEN 'Np' THEN 'NO POSEE'
+                        WHEN 'Abg' THEN 'ABOGADO/A'
+                        WHEN 'Bac' THEN 'BACHILLER'
+                        WHEN 'Dr' THEN 'DOCTOR/A'
+                        WHEN 'Sec' THEN 'SECUNDARIA'
+                        WHEN 'Unv' THEN 'UNIVERSITARIO'
+                        WHEN 'Eco' THEN 'ECONOMISTA'
+                        WHEN 'Ing' THEN 'INGENIERO/A'
+                        WHEN 'Lcd' THEN 'LICENCIADO/A'
+                        WHEN 'Mst' THEN 'MAESTRIA'
+                        WHEN 'Phd' THEN 'PHD'
+                        WHEN '' THEN '(Sin definir)'
+                        ELSE COALESCE(NULLIF(TRIM(personal.Per_Tit),''), '(Sin definir)')
+                    END AS titulo_des,
+                    COUNT(*) AS total
+                    FROM personal
+                    WHERE personal.Emp_Cod = $emp AND personal.Per_Est = 'A'
+                    GROUP BY $titGrp
+                    ORDER BY total DESC";
+            break;
+            // Dashboard: total personal activo (sin depender de persona)
+        case 25:
+            $emp = intval($Par_Sql[0]);
+            $sql = "SELECT COUNT(*) AS total
+                    FROM personal
+                    WHERE personal.Emp_Cod = $emp AND personal.Per_Est = 'A'";
+            break;
+            // Dashboard: personal activo por ciudad
+        case 20:
+            $emp = intval($Par_Sql[0]);
+            $sql = "SELECT COALESCE(ciudad.Ciu_Des,'(Sin ciudad)') AS Ciu_Des, COUNT(*) AS total
+                    FROM personal
+                    INNER JOIN persona ON persona.Prs_Cod = personal.Prs_Cod
+                    LEFT JOIN ciudad ON ciudad.Ciu_Cod = persona.Ciu_Cod
+                    WHERE personal.Emp_Cod = $emp AND personal.Per_Est = 'A'
+                    GROUP BY ciudad.Ciu_Des
+                    ORDER BY total DESC";
+            break;
+            // Dashboard: personal activo por tipo de movilización (Per_Mov)
+        case 21:
+            $emp = intval($Par_Sql[0]);
+            $movGrp = "COALESCE(NULLIF(TRIM(personal.Per_Mov),''),'(Sin definir)')";
+            $sql = "SELECT $movGrp AS Per_Mov_Cod,
+                    CASE TRIM(personal.Per_Mov)
+                        WHEN 'BU' THEN 'BUS'
+                        WHEN 'MO' THEN 'MOTO'
+                        WHEN 'VP' THEN 'VEHICULO PARTICULAR'
+                        WHEN 'CA' THEN 'CAMINANDO'
+                        WHEN 'BI' THEN 'BICICLETA'
+                        WHEN 'VI' THEN 'VEHICULO INSTITUCIONAL'
+                        ELSE COALESCE(NULLIF(TRIM(personal.Per_Mov),''),'(Sin definir)')
+                    END AS mov_des,
+                    COUNT(*) AS total
+                    FROM personal
+                    INNER JOIN persona ON persona.Prs_Cod = personal.Prs_Cod
+                    WHERE personal.Emp_Cod = $emp AND personal.Per_Est = 'A'
+                    GROUP BY $movGrp
+                    ORDER BY total DESC";
+            break;
+            // Dashboard: proveedores activos por tipo de actividad (Prv_Tac)
+        case 22:
+            $emp = intval($Par_Sql[0]);
+            $sql = "SELECT COALESCE(NULLIF(TRIM(proveedore.Prv_Tac),''),'(Sin actividad)') AS actividad,
+                    COUNT(*) AS total
+                    FROM proveedore
+                    WHERE proveedore.Emp_Cod = $emp AND proveedore.Prv_Est = 'A'
+                    GROUP BY COALESCE(NULLIF(TRIM(proveedore.Prv_Tac),''),'(Sin actividad)')
+                    ORDER BY total DESC";
+            break;
+            // Dashboard: personal activo por riesgo social (Per_Rso)
+        case 23:
+            $emp = intval($Par_Sql[0]);
+            $rsoGrp = "COALESCE(NULLIF(TRIM(personal.Per_Rso),''),'(Sin definir)')";
+            $sql = "SELECT $rsoGrp AS Per_Rso_Cod,
+                    CASE TRIM(personal.Per_Rso)
+                        WHEN 'A' THEN 'ALTO'
+                        WHEN 'M' THEN 'MEDIO'
+                        WHEN 'B' THEN 'BAJO'
+                        ELSE COALESCE(NULLIF(TRIM(personal.Per_Rso),''),'(Sin definir)')
+                    END AS rso_des,
+                    COUNT(*) AS total
+                    FROM personal
+                    INNER JOIN persona ON persona.Prs_Cod = personal.Prs_Cod
+                    WHERE personal.Emp_Cod = $emp AND personal.Per_Est = 'A'
+                    GROUP BY $rsoGrp
+                    ORDER BY total DESC";
+            break;
+            // Dashboard: personal por rango de total ingresos (ultimo rol, campo total_ingr)
+        case 24:
+            $emp = intval($Par_Sql[0]);
+            $sql = "SELECT datos.rango_ord, datos.rango_des, COUNT(DISTINCT datos.Per_Cod) AS total
+                    FROM (
+                        SELECT personal.Per_Cod,
+                        CASE
+                            WHEN ing.ing_val < 450 THEN 1
+                            WHEN ing.ing_val <= 600 THEN 2
+                            WHEN ing.ing_val <= 800 THEN 3
+                            ELSE 4
+                        END AS rango_ord,
+                        CASE
+                            WHEN ing.ing_val < 450 THEN '< \$450'
+                            WHEN ing.ing_val <= 600 THEN '\$450 - \$600'
+                            WHEN ing.ing_val <= 800 THEN '\$601 - \$800'
+                            ELSE '> \$800'
+                        END AS rango_des
+                        FROM personal
+                        INNER JOIN contratos_lab cl ON cl.Per_Cod = personal.Per_Cod AND cl.Con_Est = 'A'
+                        INNER JOIN (
+                            SELECT dr.Con_Cod,
+                            CAST(
+                                REPLACE(
+                                    REPLACE(REPLACE(TRIM(dr.Rol_Val), '\$', ''), ' ', ''),
+                                    ',', '.'
+                                ) AS DECIMAL(14,2)
+                            ) AS ing_val
+                            FROM det_rpagos dr
+                            INNER JOIN campo_rol cr ON cr.Cam_Cod = dr.Cam_Cod
+                                AND cr.Cam_Var IN ('total_ingr', 'total_ing')
+                            WHERE dr.Rol_Cod = (
+                                SELECT rp.Rol_Cod
+                                FROM rol_pagos rp
+                                INNER JOIN areas_rrhh ar ON ar.Are_Cod = rp.Are_Cod
+                                INNER JOIN det_rpagos drx ON drx.Rol_Cod = rp.Rol_Cod
+                                INNER JOIN campo_rol crx ON crx.Cam_Cod = drx.Cam_Cod
+                                    AND crx.Cam_Var IN ('total_ingr', 'total_ing')
+                                WHERE ar.Emp_Cod = $emp AND rp.Rol_Est = 'A'
+                                ORDER BY IFNULL(rp.Rol_Fef, rp.Rol_Fei) DESC, rp.Rol_Num DESC, rp.Rol_Cod DESC
+                                LIMIT 1
+                            )
+                            AND TRIM(dr.Rol_Val) <> '' AND TRIM(dr.Rol_Val) <> '0'
+                        ) ing ON ing.Con_Cod = cl.Con_Cod
+                        WHERE personal.Emp_Cod = $emp AND personal.Per_Est = 'A'
+                            AND ing.ing_val IS NOT NULL AND ing.ing_val > 0
+                    ) datos
+                    GROUP BY datos.rango_ord, datos.rango_des
+                    ORDER BY datos.rango_ord";
+            break;
     }
 
     return $sql;
