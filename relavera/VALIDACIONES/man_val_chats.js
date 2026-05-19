@@ -18,6 +18,15 @@
 		CAN: 'Confirmación de anticipo.',
 		TRE: 'Tiempo en Relavera del vehículo.'
 	};
+	/** Nombre legible corto para leyenda del gráfico circular */
+	var MSJ_TIP_NOMBRES_CORTOS = {
+		SCH: 'Sanción Chofer',
+		SVH: 'Sanción Vehículo',
+		SPL: 'Sanción Planta',
+		DAN: 'Depósito de anticipo',
+		CAN: 'Confirmación de anticipo',
+		TRE: 'Tiempo Relavera'
+	};
 	/** Color por código de tipo (gráfico circular). */
 	var MSJ_TIP_COLOR_GRAF = {
 		SCH: 'rgba(217,83,79,0.92)',
@@ -90,7 +99,7 @@
 			parts.push('Envío hasta: ' + data.Msj_Fec_Hasta);
 		}
 		if (data.Msj_Prs_Bus_Tex) {
-			parts.push('Persona (' + (data.Msj_Prs_Bus_Tip === 'AP' ? 'admin. planta' : 'chofer') + '): ' + data.Msj_Prs_Bus_Tex);
+			parts.push('Persona (' + (data.Msj_Prs_Bus_Tip === 'AP' ? 'administrador planta' : 'chofer') + '): ' + data.Msj_Prs_Bus_Tex);
 		}
 		return parts.join(' · ');
 	}
@@ -162,11 +171,22 @@
 		}
 		$tbP.empty();
 		$tbT.empty();
+
+		// Reiniciar contadores KPI a 0
+		$('#kpi_cnt_sch').text('0');
+		$('#kpi_cnt_svh').text('0');
+		$('#kpi_cnt_spl').text('0');
+		$('#kpi_cnt_dan').text('0');
+		$('#kpi_cnt_can').text('0');
+		$('#kpi_cnt_tre').text('0');
+
 		rowsPla = $.isArray(rowsPla) ? rowsPla : [];
 		rowsTip = $.isArray(rowsTip) ? rowsTip : [];
 		if (rowsPla.length === 0) {
 			$tbP.append($('<tr/>').append($('<td colspan="2" class="text-muted"/>').text('Sin datos')));
+			$('#tablaMsjResumenPlantaTotal').text('0');
 		} else {
+			var sumPla = 0;
 			$.each(rowsPla, function (i, r) {
 				if (!r) {
 					return;
@@ -176,15 +196,18 @@
 				if (isNaN(cnt)) {
 					cnt = 0;
 				}
+				sumPla += cnt;
 				var $tr = $('<tr/>');
 				$tr.append($('<td/>').text(nom || ('Planta #' + (r.Pla_Cod != null ? r.Pla_Cod : ''))));
 				$tr.append($('<td class="text-right"/>').text(String(cnt)));
 				$tbP.append($tr);
 			});
+			$('#tablaMsjResumenPlantaTotal').text(String(sumPla));
 		}
 		if (rowsTip.length === 0) {
 			$tbT.append($('<tr/>').append($('<td colspan="3" class="text-muted"/>').text('Sin datos para los filtros actuales.')));
 			$('#tablaMsjResumenTipoTotal').text('0');
+			$('#kpi_cnt_total').text('0');
 		} else {
 			var sumTip = 0;
 			$.each(rowsTip, function (i, r) {
@@ -202,8 +225,18 @@
 				$tr.append($('<td/>').text(descripcionMsjTipoTabla(cod)));
 				$tr.append($('<td class="text-right"/>').text(String(cnt)));
 				$tbT.append($tr);
+
+				// Actualizar valores de los cuadros KPI correspondientes
+				var c = String(cod).toUpperCase().trim();
+				if (c === 'SCH') $('#kpi_cnt_sch').text(String(cnt));
+				else if (c === 'SVH') $('#kpi_cnt_svh').text(String(cnt));
+				else if (c === 'SPL') $('#kpi_cnt_spl').text(String(cnt));
+				else if (c === 'DAN') $('#kpi_cnt_dan').text(String(cnt));
+				else if (c === 'CAN') $('#kpi_cnt_can').text(String(cnt));
+				else if (c === 'TRE') $('#kpi_cnt_tre').text(String(cnt));
 			});
 			$('#tablaMsjResumenTipoTotal').text(String(sumTip));
+			$('#kpi_cnt_total').text(String(sumTip));
 		}
 	}
 
@@ -297,8 +330,10 @@
 									var v = Number(ds.data[idx]) || 0;
 									var pct = tot > 0 ? ((v / tot) * 100).toFixed(1) : '0.0';
 									var hidden = meta.data[idx] ? !!meta.data[idx].hidden : false;
+									var fullName = MSJ_TIP_NOMBRES_CORTOS[lab] || lab;
+									var labelText = fullName + ' (' + lab + ')';
 									return {
-										text: lab + ': ' + v + ' (' + pct + '%)',
+										text: labelText + ': ' + v + ' (' + pct + '%)',
 										fillStyle: ds.backgroundColor[idx],
 										strokeStyle: ds.borderColor,
 										lineWidth: typeof ds.borderWidth === 'number' ? ds.borderWidth : 2,
@@ -322,12 +357,48 @@
 									tot += Number(arr[j]) || 0;
 								}
 								var pct = tot > 0 ? ((v / tot) * 100).toFixed(1) : '0.0';
-								return ' ' + context.label + ': ' + v + ' mensajes (' + pct + '%)';
+								var fullName = MSJ_TIP_NOMBRES_CORTOS[context.label] || context.label;
+								var labelText = fullName + ' (' + context.label + ')';
+								return ' ' + labelText + ': ' + v + ' mensajes (' + pct + '%)';
 							}
 						}
 					}
 				}
-			}
+			},
+			plugins: [{
+				id: 'sliceLabels',
+				afterDatasetsDraw: function (chart) {
+					var ctx = chart.ctx;
+					ctx.save();
+					chart.data.datasets.forEach(function (dataset, i) {
+						var meta = chart.getDatasetMeta(i);
+						meta.data.forEach(function (element, index) {
+							var dataVal = dataset.data[index];
+							if (!dataVal || dataVal === 0) return;
+
+							// Calcular el punto medio exacto de la porción circular
+							var center = typeof element.getCenterPoint === 'function' ? element.getCenterPoint() : null;
+							if (!center) return;
+
+							// Estilos de texto premium
+							ctx.fillStyle = '#ffffff';
+							ctx.font = 'bold 11px "Helvetica Neue", Helvetica, Arial, sans-serif';
+							ctx.textAlign = 'center';
+							ctx.textBaseline = 'middle';
+
+							// Sombreado elegante para alta legibilidad sobre cualquier color
+							ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+							ctx.shadowBlur = 4;
+							ctx.shadowOffsetX = 0;
+							ctx.shadowOffsetY = 1;
+
+							// Pintar el número
+							ctx.fillText(dataVal, center.x, center.y);
+						});
+					});
+					ctx.restore();
+				}
+			}]
 		});
 	}
 
@@ -509,21 +580,25 @@
 
 	function colModelMensajesManifiesto() {
 		return [
-			{ name: 'Msj_Cod', label: 'Cód.', width: 42, align: 'center', key: true, sorttype: 'integer' },
+			{ name: 'Msj_Cod', label: 'Cód.', width: 42, align: 'center', key: true, sorttype: 'integer', hidden: true },
 			{ name: 'Pla_Cod', label: 'Pla', width: 36, align: 'center', sorttype: 'integer', hidden: true },
 			{ name: 'Pla_Nom', label: 'Planta', width: 110 },
-			{ name: 'Pla_Admin_Nom', label: 'Admin. planta', width: 130,
+			{
+				name: 'Pla_Admin_Nom', label: 'Admin. planta', width: 130,
 				formatter: function (cv) {
 					var t = cv == null ? '' : String(cv).trim();
 					if (t === '') return '<span class="text-muted">—</span>';
 					return $('<span/>').text(t).html();
-				} },
-			{ name: 'Pla_Admin_Tel', label: 'Tel. admin.', width: 88, align: 'center',
+				}
+			},
+			{
+				name: 'Pla_Admin_Tel', label: 'Tel. admin.', width: 88, align: 'center',
 				formatter: function (cv) {
 					var t = cv == null ? '' : String(cv).trim();
 					if (t === '') return '<span class="text-muted">—</span>';
 					return $('<span/>').text(t).html();
-				} },
+				}
+			},
 			{ name: 'Man_Cod', label: 'Man', width: 36, align: 'center', sorttype: 'integer', hidden: true },
 			{ name: 'Man_Num', label: 'N° man.', width: 52, align: 'center' },
 			{ name: 'Man_Fec', label: 'F. manif.', width: 72, align: 'center' },
@@ -531,8 +606,16 @@
 			{ name: 'Veh_Pla', label: 'Placa', width: 62, align: 'center' },
 			{ name: 'Cho_Cod', label: 'Cho', width: 36, align: 'center', sorttype: 'integer', hidden: true },
 			{ name: 'Chofer_Nom', label: 'Chofer', width: 120 },
-			{ name: 'Msj_Id', label: 'Msj_Id', width: 72, align: 'center', sorttype: 'integer' },
-			{ name: 'Msj_Tip', label: 'Tipo', width: 38, align: 'center' },
+			{ name: 'Msj_Id', label: 'Msj_Id', width: 72, align: 'center', sorttype: 'integer', hidden: true },
+			{
+				name: 'Msj_Tip', label: 'Tipo', width: 140,
+				formatter: function (cv) {
+					var cod = cv == null ? '' : String(cv).toUpperCase().trim();
+					if (cod === '') return '<span class="text-muted">—</span>';
+					var fullName = MSJ_TIP_NOMBRES_CORTOS[cod] || cod;
+					return $('<span/>').text(fullName).html();
+				}
+			},
 			{
 				name: 'Msj_Tex',
 				label: 'Texto',
@@ -556,8 +639,8 @@
 					return '<a href="' + escAttr(cv) + '" target="_blank" rel="noopener">ver</a>';
 				}
 			},
-			{ name: 'Msj_Fec', label: 'F. envío', width: 72, align: 'center' },
-			{ name: 'Msj_Sys', label: 'Sistema', width: 130, align: 'center' }
+			{ name: 'Msj_Fec', label: 'F. envío', width: 72, align: 'center', hidden: true },
+			{ name: 'Msj_Sys', label: 'Fecha Envio', width: 130, align: 'center' }
 		];
 	}
 
@@ -596,6 +679,15 @@
 			}
 		]);
 		$g.data('chatsExportNav', true);
+
+		// Transformar programáticamente a los estilos nativos ui-corner-all btn btn-xs btn-success
+		$('#gridMensajesManifiestoPager_left').find('td.ui-pg-button.ui-corner-all')
+			.unbind('mouseenter mouseleave')
+			.removeClass('ui-pg-button')
+			.addClass('btn btn-xs btn-success')
+			.find('.ui-pg-div span')
+			.removeClass('ui-icon')
+			.addClass('glyphicon');
 	}
 
 	function contarFilasGridMensajes($g) {
@@ -769,7 +861,7 @@
 			return;
 		}
 		$g.createGrid({
-			caption: 'Resultados <div class="pull-right"><b>manifiesto_mensajes</b></div>',
+			caption: 'Resultados <div class="pull-right"><b>Envio de mensajes por WhatsApp</b></div>',
 			height: 320,
 			datatype: 'local',
 			data: rows,
