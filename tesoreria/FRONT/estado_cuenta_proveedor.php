@@ -94,10 +94,10 @@ if (isset($_REQUEST['getEstadoCuentaProveedor'])) {
         } elseif ($tipo === 'Factura' || $tipo === 'Nota Crédito') {
             $abono_fact = isset($r['Abono_Factura']) ? floatval($r['Abono_Factura']) : 0;
             $dias = isset($r['Dias_Vencimiento']) ? intval($r['Dias_Vencimiento']) : 0;
-            if ($abono_fact >= $total) {
+            if (round($abono_fact, 2) >= round($total, 2)) {
                 $r['Estado_Color'] = 'verde';
                 $r['Dias_Vencimiento'] = ''; // Factura pagada: días venc. vacío
-            } elseif ($abono_fact > 0) {
+            } elseif (round($abono_fact, 2) > 0) {
                 $r['Estado_Color'] = 'amarillo';
             } elseif ($dias > 0) {
                 $r['Estado_Color'] = 'rojo';
