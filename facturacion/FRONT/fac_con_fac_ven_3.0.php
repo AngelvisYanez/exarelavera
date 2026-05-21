@@ -157,11 +157,14 @@ if (isset($ajaxTotales)) {
     if ($For_Cod != 'T') array_push($FILTERS, 'byTipPago');
     if ($Chk_Reem == 'S') array_push($FILTERS, 'hasReembolso');
     if ($Pun_Cod != 'T') array_push($FILTERS, 'byPunCod');
-     if ($Pag_Cod != 'T') array_push($FILTERS, 'byPagCod');
+    if ($Pag_Cod != 'T') array_push($FILTERS, 'byPagCod');
+    if (!empty($Vet_Aut) && $Vet_Aut != 'T') array_push($FILTERS, 'byVetAut');
 
     $response = $obBD_con1->getPageGrid('ventas', array_merge($_GET, array('where' => array(), 'setWhere' => array_merge($FILTERS, array(/*'setUsuario','setRetencion',*/'setTotales')))));
     $totalGlobal = $obBD_con1->getRowConsulta('ventas', array_merge($_GET, array('where' => array(), 'unsetCols' => array(/*'Vnd_Cod','Pun_Cod','Vendedor'*/), 'setWhere' => array_merge($FILTERS, array('setEmpCod',/*'setUsuario','setRetencion',*/ 'isSummary')))));
-    $response['userdata'] = array_merge($totalGlobal, array('Vet_Obs' => '<div class="txtRight">TOTAL GLOBAL:</div>', 'Tot_Renta' => 0, 'Tot_Iva' => 0));
+    // $response['userdata'] = array_merge($totalGlobal, array('Vet_Obs' => '<div class="txtRight">TOTAL GLOBAL:</div>', 'Tot_Renta' => 0, 'Tot_Iva' => 0));
+    $response['userdata'] = array_merge($totalGlobal, array('Vet_Obs' => '<div class="txtRight">TOTAL GLOBAL:</div>'));
+
 
     foreach ($response['rows'] as &$row) {
         //  $row['cliente']=$row['cliente'];
@@ -182,16 +185,16 @@ if (isset($ajaxTotales)) {
         $pagos = $obBD_con1->getRowConsulta("ventas.2", $row['Vet_Cod']);
         $row['Forma_Pago'] = ($pagos['total'] > 0) ? 'Credito' : 'Contado';
        
-         $tipos_pago = $obBD_con1->getRowConsulta("ventas.tipo_doc_pago", $row['Vet_Cod']);
+        $tipos_pago = $obBD_con1->getRowConsulta("ventas.tipo_doc_pago", $row['Vet_Cod']);
         $row['FormasPago'] =  $tipos_pago['FormasPago'];
 
         $ret_data = $obBD_con1->getRowConsulta('ventas.getRetencionVet', $row['Vet_Cod']);
         if (!empty($ret_data)) {            
             $row = array_merge(array('Tot_Iva' => $ret_data['Tot_Iva'], 'Tot_Renta' => $ret_data['Tot_Renta']), $row);
             // Aplicar factor de Nota de Crédito: restar si Tic_Sri = '04'
-            $factorNC = (isset($row['Tic_Sri']) && $row['Tic_Sri'] === '04') ? -1 : 1;
-            $response['userdata']['Tot_Renta'] += ($ret_data['Tot_Renta'] * 1 * $factorNC);
-            $response['userdata']['Tot_Iva'] += ($ret_data['Tot_Iva'] * 1 * $factorNC);
+            // $factorNC = (isset($row['Tic_Sri']) && $row['Tic_Sri'] === '04') ? -1 : 1;
+            // $response['userdata']['Tot_Renta'] += ($ret_data['Tot_Renta'] * 1 * $factorNC);
+            // $response['userdata']['Tot_Iva'] += ($ret_data['Tot_Iva'] * 1 * $factorNC);
         }
     }
     $obBD_con1->echoJson($response);
@@ -504,7 +507,18 @@ if (isset($ajaxDetalleVentas)) {
         var tic_cod_ant, vet_num_ant;
     </script>
     <script type="text/ecmascript" src="../VALIDACIONES/fac_val_factura.js?x=2"></script>
-    <style></style>
+    <style>
+        .exa-fieldset .filtros-ventas-row {
+            margin-bottom: 2px !important;
+            margin-top: 0;
+        }
+        .exa-fieldset .filtros-ventas-row:last-child {
+            margin-bottom: 0;
+        }
+        .exa-fieldset .filtros-ventas-row .control-label {
+            padding-top: 3px;
+        }
+    </style>
 </HEAD>
 
 <BODY>
@@ -1047,7 +1061,7 @@ if (isset($ajaxDetalleVentas)) {
                             }
 
                             // Añade un item al documento
-                            function addPago(pago, carga_inicial = false) {
+                           function addPago(pago, carga_inicial = false) {
                                 var next = $('#pagosGrid').jqGrid('getCol', 'Vet_Num', false, 'max');
                                 var text = $('#Pag_Cod').find('option:selected').text().toUpperCase();
                                 pago['Vet_Num'] = (isNaN(next) ? 1 : next + 1);
@@ -1065,7 +1079,7 @@ if (isset($ajaxDetalleVentas)) {
                                 if (bancoReal !== "") {
                                     pago['Bak_Cod'] = bancoReal;
                                 } else {
-                                    // Fallback a selects
+                                    // Fallback a selects locales (probando IDs CamelCase y minúsculas)
                                     var banIdStr = (pago['Ban_Cod'] !== undefined && pago['Ban_Cod'] !== null && pago['Ban_Cod'].toString().length > 0) ? 'Ban_Cod' : ((pago['Bak_Cod'] !== undefined && pago['Bak_Cod'] !== null && pago['Bak_Cod'].toString().length > 0) ? 'Bak_Cod' : null);
                                     if (!banIdStr) {
                                         banIdStr = (pago['ban_cod'] !== undefined && pago['ban_cod'] !== null && pago['ban_cod'].toString().length > 0) ? 'ban_cod' : ((pago['bak_cod'] !== undefined && pago['bak_cod'] !== null && pago['bak_cod'].toString().length > 0) ? 'bak_cod' : null);
@@ -1257,6 +1271,9 @@ if (isset($ajaxDetalleVentas)) {
                                         $("#Bod_Cod").val(resp['Bod_Cod'].Bod_Cod);
                                     }
 
+                                    // $("#Ret_Ren_Tot").val(parseFloat(doc['Tot_Renta']) + parseFloat(doc['Tot_Iva']));
+                                    // $("#Iva_Ren_Tot").val(doc['Tot_Iva']);
+                                    // $("#Ren_Tot").val(parseFloat(doc['Tot_Renta']) + parseFloat(doc['Tot_Iva']));
                                     $("#Ret_Ren_Tot").val(parseFloat(doc['Tot_Renta'] || 0) + parseFloat(doc['Tot_Iva'] || 0));
                                     $("#Iva_Ren_Tot").val(doc['Tot_Iva'] || 0);
                                     $("#Ren_Tot").val(parseFloat(doc['Tot_Renta'] || 0) + parseFloat(doc['Tot_Iva'] || 0));
@@ -1690,7 +1707,8 @@ if (isset($ajaxDetalleVentas)) {
                 </div>
 
                 <div id="tab2" class="ui-tabs-panel">
-                    <form id="formSearchReport" action="javascript:if(!$('#op_range').is(':checked') && !$('#op_cedul').is(':checked')) $.alert('Debe seleecionar al menos un filtro!'); else  $('#ReportResumen').Search('#formSearchReport', 'ajaxTotales');" class="form-horizontal normal">
+                    <form id="formSearchReport" action="javascript:if(!$('#op_range').is(':checked') && !$('#op_cedul').is(':checked')) $.alert('Debe seleecionar al menos un filtro!'); else { $('#formSearchReport input[name=CustomOrderBy]').val($('#selCustomOrderBy').val()); $('#ReportResumen').Search('#formSearchReport', 'ajaxTotales'); }" class="form-horizontal normal">
+                        <input type="hidden" name="CustomOrderBy" value="">
                         <div class="row">
                             <div class="col-sm-6">
                                 <fieldset class="exa-fieldset">
@@ -1748,152 +1766,120 @@ if (isset($ajaxDetalleVentas)) {
                             <div class="col-sm-6">
                                 <fieldset class="exa-fieldset">
                                     <legend class="Titulos2">Tipos de Filtrado:</legend>
-                                    <div class="form-group">
+                                    <?php
+                                    if (!isset($sucursal)) {
+                                        $sucursal = $obBD_con1->getArray('sucursal.selectWhere', array('clean' => true, 'unsetCols' => true, 'addCols' => array('sucursal' => array('Suc_Cod', 'Suc_Des')), 'where' => array('Emp_Cod' => $Ses_Emp_Cod)));
+                                    }
+                                    if (!function_exists('TicDes')) {
+                                        function TicDes($v) { return "$v[Tic_Sri] - $v[Tic_Des]"; }
+                                        function selFactura($v) { return $v['Tic_Sri'] == 'T'; }
+                                    }
+                                    $cajas = $obBD_con2->getArrayConsulta(157, $Ses_Suc_Cod, $obBD_conexion);
+                                    $punto = $obBD_con2->getArrayConsulta(1588, $Ses_Suc_Cod, $obBD_conexion);
+                                    $tipos_pago = $obBD_con2->getArrayConsulta(175, $Ses_Suc_Cod, $obBD_conexion);
+                                    ?>
+                                    <div class="form-group filtros-ventas-row">
                                         <label class="col-sm-2 control-label label-xs">Sucursal:</label>
-                                        <div class="col-sm-5">
-                                            <?php $sucursal = $obBD_con1->getArray('sucursal.selectWhere', array('clean' => true, 'unsetCols' => true, 'addCols' => array('sucursal' => array('Suc_Cod', 'Suc_Des')), 'where' => array('Emp_Cod' => $Ses_Emp_Cod))); ?>
+                                        <div class="col-sm-4">
                                             <select name="Suc_Cod" class="form-control input-xs">
-                                                <option value="T" selected="">
-                                                    << TODAS >>
-                                                </option>
+                                                <option value="T" selected=""><< TODAS >></option>
                                                 <?php foreach ($sucursal as $s) { ?>
                                                     <option value="<?php echo $s['Suc_Cod']; ?>"><?php echo $s['Suc_Des']; ?></option>
                                                 <?php } ?>
                                             </select>
                                         </div>
-                                        <label class="col-sm-2 control-label label-xs" style="margin-left: -10px;">Orden:</label>
-                                        <div class="col-sm-3">
-                                            <select name="CustomOrderBy" class="form-control input-xs">
-                                                <option value="" selected="">
-                                                    << Sin Ordenar >>
-                                                </option>
-                                                <option value="Cliente ASC">Cliente</option>
-                                                <option value="Caj_Fec ASC">Fecha ASC</option>
-                                                <option value="Caj_Fec DESC">Fecha DESC</option>
-                                                <option value="Vet_Num ASC">Nro. Doc.</option>
-                                                <option value="Tic_Des ASC">Tipo Doc.</option>
+                                        <label class="col-sm-2 control-label label-xs" title="Autorizaciones de Facturas Electr&oacute;nicas:">Aut. Electr&oacute;nica:</label>
+                                        <div class="col-sm-4">
+                                            <select name="Vet_Aut" class="form-control input-xs">
+                                                }                                                
+                                                <option selected="" value="S">Autorizadas</option>
+                                                <option value="N">No Autorizadas</option>
+                                                <option value="T"><< Todas >></option>
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="form-group" style="margin-top: 6px;">
+                                    <div class="form-group filtros-ventas-row">
                                         <label class="col-sm-2 control-label label-xs">Tipo.&nbsp;Doc.:</label>
-                                        <div class="col-sm-5">
+                                        <div class="col-sm-4">
                                             <select name="Tic_Cod" class="form-control input-xs">
-                                                <option value="T" selected="">
-                                                    << TODOS >>
-                                                </option>
-                                                <?php
-                                                function TicDes($v) {
-                                                    return "$v[Tic_Sri] - $v[Tic_Des]";
-                                                }
-                                                function selFactura($v) {
-                                                    return $v['Tic_Sri'] == 'T'; //antes estaba return $v['Tic_Sri'] == '01';
-                                                }
-                                                echo utf8_encode($obBD_con1->htmlOptions($rs_tip_compr, 'Tic_Cod', 'TicDes', false, 'selFactura'));
-                                                ?>
+                                                <option value="T" selected=""><< TODOS >></option>
+                                                <?php echo utf8_encode($obBD_con1->htmlOptions($rs_tip_compr, 'Tic_Cod', 'TicDes', false, 'selFactura')); ?>
                                             </select>
                                         </div>
-                                        <!-- <div class="col-sm-4"><label class="label-xs"><input name="Chk_Ret" type="checkbox" id="Chk_Ret" class="check-big" value="S"><span>&nbsp; No Sujetas a Ret.</span></label></div> -->
-                                        <div class="form-group">
-                                            <label class="col-sm-2 control-label label-xs" style="margin-left: -15px;">Tiene Retención:</label>
-                                            <div class="col-sm-3">
-                                                <select name="Chk_Ret" class="form-control input-xs" style="margin-top: 5px;">
-                                                    <option value="T" selected="">
-                                                        << Seleccione >>
-                                                    </option>
-                                                    <option value="S">SI</option>
-                                                    <option value="NS">NO</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="form-group" style="margin-top: -10px;">
-                                        <label class="col-sm-2 control-label label-xs">Vendedor:</label>
-                                        <div class="col-sm-5">
-                                            <?php $cajas =   $obBD_con2->getArrayConsulta(157, $Ses_Suc_Cod, $obBD_conexion); ?>
-                                            <select name="Vnd_Cod" class="form-control input-xs">
-                                                <option value="V" selected="">
-                                                    << TODOS >>
-                                                </option>
-                                                <?php foreach ($cajas as $v) { ?>
-                                                    <option value="<?php echo $v['Vnd_Cod']; ?>"><?php echo $v['Prs_Nom'] . " " . $v['Prs_Ape'] . "  (" . $v['Pun_Des'] . ")"; ?></option>
-                                                <?php } ?>
-                                            </select>
-                                        </div>
-                                        <label class="col-sm-2 control-label label-xs" style="margin-left: -10px;">Agrupar Por:</label>
-                                        <div class="col-sm-3">
-                                            <select name="CustomGroupBy" class="form-control input-xs">
-                                                <option value="" selected="">
-                                                    << Sin Agrupar >>
-                                                </option>
-                                                <option value="Agr_Cli"> - Cliente -</option>
-                                                <!-- <option value="Agr_Pro"> - Producto - </option> -->
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label class="col-sm-2 control-label label-xs">Forma de Pago:</label>
-                                        <div class="col-sm-5">
-                                            <select name="For_Cod" class="form-control input-xs">
-                                                <option value="T" selected="">
-                                                    << TODAS >>
-                                                </option>
-                                                <option value="Contado">Contado</option>
-                                                <option value="Credito">Crédito</option>
-                                            </select>
-                                        </div>
-                                        <label class="col-sm-2 control-label label-xs" style="margin-left: -10px;">Tiene Reembolso:</label>
-                                        <div class="col-sm-3">
-                                            <select name="Chk_Reem" id="Chk_Reem" class="form-control input-xs" style="margin-top: 5px;">
-                                                <option value="T" selected="">
-                                                    << Seleccione >>
-                                                </option>
+                                        <label class="col-sm-2 control-label label-xs">Tiene Retenci&oacute;n:</label>
+                                        <div class="col-sm-4">
+                                            <select name="Chk_Ret" class="form-control input-xs">
+                                                <option value="T" selected=""><< Seleccione >></option>
                                                 <option value="S">SI</option>
                                                 <option value="NS">NO</option>
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="form-group">
+                                    <div class="form-group filtros-ventas-row">
+                                        <label class="col-sm-2 control-label label-xs">Vendedor:</label>
+                                        <div class="col-sm-4">
+                                            <select name="Vnd_Cod" class="form-control input-xs">
+                                                <option value="V" selected=""><< TODOS >></option>
+                                                <?php foreach ($cajas as $v) { ?>
+                                                    <option value="<?php echo $v['Vnd_Cod']; ?>"><?php echo $v['Prs_Nom'] . " " . $v['Prs_Ape'] . "  (" . $v['Pun_Des'] . ")"; ?></option>
+                                                <?php } ?>
+                                            </select>
+                                        </div>
+                                        <label class="col-sm-2 control-label label-xs">Agrupar Por:</label>
+                                        <div class="col-sm-4">
+                                            <select name="CustomGroupBy" class="form-control input-xs">
+                                                <option value="" selected=""><< Sin Agrupar >></option>
+                                                <option value="Agr_Cli"> - Cliente -</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group filtros-ventas-row">
+                                        <label class="col-sm-2 control-label label-xs">Forma de Pago:</label>
+                                        <div class="col-sm-4">
+                                            <select name="For_Cod" class="form-control input-xs">
+                                                <option value="T" selected=""><< TODAS >></option>
+                                                <option value="Contado">Contado</option>
+                                                <option value="Credito">Crédito</option>
+                                            </select>
+                                        </div>
+                                        <label class="col-sm-2 control-label label-xs">Tiene Reembolso:</label>
+                                        <div class="col-sm-4">
+                                            <select name="Chk_Reem" id="Chk_Reem" class="form-control input-xs">
+                                                <option value="T" selected=""><< Seleccione >></option>
+                                                <option value="S">SI</option>
+                                                <option value="NS">NO</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group filtros-ventas-row">
                                         <label class="col-sm-2 control-label label-xs">Punto de SRI:</label>
-                                        <div class="col-sm-5">
-                                            <?php $punto =   $obBD_con2->getArrayConsulta(1588, $Ses_Suc_Cod, $obBD_conexion); ?>
+                                        <div class="col-sm-4">
                                             <select name="Pun_Cod" class="form-control input-xs" id="selectPuntoSri">
-                                                <option value="T" selected="">
-                                                    << TODOS >>
-                                                </option>
+                                                <option value="T" selected=""><< TODOS >></option>
                                                 <?php foreach ($punto as $v) { ?>
-                                                    <!-- <option value="<?php echo $v['Pun_Cod']; ?>"><?php echo $v['Pun_Des'] . ' - ' . $v['Pun_Sri']; ?></option> -->
                                                     <option value="<?php echo $v['Pun_Cod']; ?>" data-pun-sri="<?php echo $v['Pun_Sri']; ?>">
                                                         <?php echo '-- Punto de Emisión ' . $v['Pun_Sri'] . ' --'; ?>
                                                     </option>
                                                 <?php } ?>
                                             </select>
                                             <input type="hidden" name="Pun_Sri" id="inputPunSri" value="">
-                                            <script>
-                                                document.getElementById('selectPuntoSri').addEventListener('change', function() {
-                                                    const selected = this.options[this.selectedIndex];
-                                                    const punSri = selected.dataset.punSri || '';
-                                                    document.getElementById('inputPunSri').value = punSri;
-                                                });
-                                            </script>
                                         </div>
-                                        <label class="col-sm-2 control-label label-xs" style="margin-left: -10px;">Doc.Pago:</label>
-                                        <div class="col-sm-3">
-                                            <?php $tipos_pago =   $obBD_con2->getArrayConsulta(175, $Ses_Suc_Cod, $obBD_conexion); ?>
+                                        <label class="col-sm-2 control-label label-xs">Doc.Pago:</label>
+                                        <div class="col-sm-4">
                                             <select name="Pag_Cod" class="form-control input-xs" id="selectPagos">
-                                                <option value="T" selected="">
-                                                    << TODOS >>
-                                                </option>
+                                                <option value="T" selected=""><< TODOS >></option>
                                                 <?php foreach ($tipos_pago as $v) { ?>
-                                                    <option value="<?php echo $v['Pag_Cod']; ?>">
-                                                        <?php echo  utf8_encode($v['Pag_Des']); ?>
-                                                    </option>
+                                                    <option value="<?php echo $v['Pag_Cod']; ?>"><?php echo utf8_encode($v['Pag_Des']); ?></option>
                                                 <?php } ?>
                                             </select>
                                         </div>
                                     </div>
+                                    <script>
+                                        document.getElementById('selectPuntoSri').addEventListener('change', function() {
+                                            var selected = this.options[this.selectedIndex];
+                                            document.getElementById('inputPunSri').value = selected.getAttribute('data-pun-sri') || '';
+                                        });
+                                    </script>
                                 </fieldset>
                             </div>
                         </div>
@@ -2279,6 +2265,18 @@ if (isset($ajaxDetalleVentas)) {
                                             </select>
                                         </div>
                                     </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label label-xs">Aut. Electr&oacute;nica (SRI):</label>
+                                        <div class="col-sm-5">
+                                            <select name="Vet_Aut" class="form-control input-xs">
+                                                <option value="T" selected="">
+                                                    << TODOS >>
+                                                </option>
+                                                <option value="S">Autorizadas</option>
+                                                <option value="N">No Autorizadas</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </fieldset>
                             </div>
                         </div>
@@ -2516,7 +2514,7 @@ if (isset($ajaxDetalleVentas)) {
                 shrinkToFit: false,
                 datatype: 'local',
                 stateCol: 'Cop_Est',
-                caption: "Resultados de la búsqueda",
+                caption: 'Resultados de la b&uacute;squeda <div class="pull-right"><b>ORDEN:</b>&nbsp;<select id="selCustomOrderBy" class="form-control input-xs" style="display:inline-block;width:auto;min-width:140px;vertical-align:middle;height:22px;padding:2px 6px;"><option value="" selected="">&lt;&lt; Sin Ordenar &gt;&gt;</option><option value="Cliente ASC">Cliente</option><option value="Caj_Fec ASC">Fecha ASC</option><option value="Caj_Fec DESC">Fecha DESC</option><option value="Vet_Num ASC">Nro. Doc.</option><option value="Tic_Des ASC">Tipo Doc.</option></select>&nbsp;</div>',
                 postData: $("#formTotales").getData("ajaxTotales"),
                 colModel: [
                     { label: 'Cod.Int.', name: 'Vet_Cod', index: 'Vet_Cod',width: "50px", key: true, hidden: false }, 

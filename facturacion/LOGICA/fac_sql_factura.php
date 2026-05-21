@@ -152,6 +152,49 @@ function sentencias_facturaVenta($id, $Par_Sql)
                   categorias.Emp_Cod = $Par_Sql[1] $Par_Sql[3]";
 
             break;
+
+        case 133: //Variante de 13 para VENTA RÁPIDA (Búsqueda expandida con códigos)
+            if ($Par_Sql[3] == '') $campos = " COUNT(item.Ite_Cod) AS total ";
+            else $campos = "prec.Pre_Est, prec.Pre_Fin, prec.Pre_Ini, prec.Pre_Pvp, prec.Pre_Cod, prec.Pre_Des, tipo_preci.Tpv_Cod, item.Ite_Cod,item.Ite_Est,ice.Ice_Int,categorias.Cat_Cod,categorias.Cat_Des,
+            item.Ite_Cor,item.Ite_Lar,marca.Mar_Cod,marca.Mar_Des,adquisicio.Adq_Cod,Adq_Cor,adquisicio.Adq_Des,iva.Iva_Cod,
+            iva.Iva_Por,iva.Iva_Sri,producto.Pro_Bar,ubicacion.Ubi_Des,ubicacion.Ubi_Cod,unidad.Uni_Cod,unidad.Uni_Des,producto.Pro_Obs,
+            producto.Pro_Cod,producto.Pro_Est,producto.Pro_Gen,producto.Pro_Cdc,producto.Pro_Sec,Stk_Can,Ice_Por,tipo_preci.Tpv_Des,
+            prec.Pre_Pvp as Vet_Pru";
+            
+            $search = "";
+            $array = explode(" ", strtoupper($Par_Sql[0]));
+            foreach ($array as $ar) {
+                if (!empty($ar) && $ar != '')
+                    $search .= (($search != '' ? " AND " : "") . "CAST(UPPER(
+                                                                        REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                                                                            REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                                                                                CONCAT(Ite_Lar,' ',Pro_Obs,' ',Ite_Cor,' ',IFNULL(producto.Pro_Bar,''),' ',IFNULL(producto.Pro_Cod,''),' ',IFNULL(producto.Pro_Cod_Emp,'')),
+                                                                            'á','a'),'é','e'),'í','i'),'ó','o'),'ú','u'),
+                                                                            'Á','A'),'É','E'),'Í','I'),'Ó','O'),'Ú','U')
+                                                                    )
+                                                                AS CHAR) LIKE '%$ar%'");
+            }
+            if ($search == '') $search = "1=1";
+            
+            $sql = "SELECT
+                    $campos
+                  FROM
+                    categorias
+                    INNER JOIN item ON (categorias.Cat_Cod = item.Cat_Cod)
+                    INNER JOIN producto ON (item.Ite_Cod = producto.Ite_Cod)
+                    INNER JOIN marca ON (producto.Mar_Cod = marca.Mar_Cod)
+                    INNER JOIN adquisicio ON (producto.Adq_Cod = adquisicio.Adq_Cod)
+                    INNER JOIN unidad ON (producto.Uni_Cod = unidad.Uni_Cod)
+                    INNER JOIN ubicacion ON (producto.Ubi_Cod = ubicacion.Ubi_Cod)
+                    INNER JOIN iva ON (producto.Iva_Cod = iva.Iva_Cod)
+                    INNER JOIN stock ON stock.Pro_Cod=producto.Pro_Cod AND stock.Suc_Cod=$_SESSION[Ses_Suc_Cod]
+                    LEFT JOIN ice ON producto.Ice_Int=ice.Ice_Int
+                    INNER JOIN precios AS prec ON prec.Suc_Cod=$_SESSION[Ses_Suc_Cod] AND prec.Pro_Cod=producto.Pro_Cod AND prec.Pre_Est='A'
+                    INNER JOIN tipo_preci ON prec.Tpv_Cod = tipo_preci.Tpv_Cod                  
+                  WHERE $search AND Pro_Est='A' AND
+                  categorias.Emp_Cod = $Par_Sql[1] $Par_Sql[3]";
+
+            break;
         case 14: //Select para obtener el precio de los productos
             $sql = "SELECT Pre_Cod,Pre_Pvp,Tpv_Des,Pre_Des,Pre_Est,precios.Tpv_Cod,Pre_Ini,Pre_Fin FROM precios INNER JOIN tipo_preci ON tipo_preci.Tpv_Cod=precios.Tpv_Cod WHERE precios.Suc_Cod='$Par_Sql[0]' AND Pro_Cod='$Par_Sql[1]' AND Pre_Est='$Par_Sql[2]' " . (empty($Par_Sql[3]) ? '' : "AND Tpv_Def='D'") . " " . (empty($Par_Sql[4]) ? '' : "(('$Par_Sql[4]' AND BETWEEN Pre_Ini AND Pre_Fin) OR (Pre_Ini IS NULL AND Pre_Fin IS NULL) OR (Pre_Ini='0000-00-00' AND Pre_Fin='0000-00-00'))") . ";";
 
@@ -760,7 +803,7 @@ function sentencias_facturaVenta($id, $Par_Sql)
         case 86: // usado
             $sql = "INSERT INTO ventas_det SET Vet_Cod=$Par_Sql[Vet_Cod], Pro_Cod=$Par_Sql[Pro_Cod], Vet_Can=$Par_Sql[Vet_Can],
             Iva_Cod=$Par_Sql[Iva_Cod], Vet_Pru=$Par_Sql[Vet_Pru], Vet_Imp=$Par_Sql[Vet_Imp], Vet_Dec='" . (empty($Par_Sql['Vet_Dec']) ? 0 : $Par_Sql['Vet_Dec']) . "', Nge_Cod = '" . (empty($Par_Sql['Nge_Cod']) ? 0 : $Par_Sql['Nge_Cod']) . "',
-            Asi_Int='" . (empty($Par_Sql['Asi_Int']) ? 0 : $Par_Sql['Asi_Int']) . "', Vet_Rec='" . (empty($Par_Sql['Vet_Rec']) ? 0 : $Par_Sql['Vet_Rec']) . "', Cnt_Cod='" . (empty($Par_Sql['Cnt_Cod']) ? 0 : $Par_Sql['Cnt_Cod']) . "', Vet_Int='" . (empty($Par_Sql['Vet_Int']) ? 0 : $Par_Sql['Vet_Int']) . "', Vet_Uni='" . (empty($Par_Sql['Vet_Uni']) || $Par_Sql['Vet_Uni'] * 1 <= 0 ? 1 : $Par_Sql['Vet_Uni']) . "', Ren_Cod=" . (empty($Par_Sql['Ret_Ren_Cod']) ? 'NULL' : "'$Par_Sql[Ret_Ren_Cod]'") . ", Ren_Iva=" . (empty($Par_Sql['Iva_Ren_Cod']) ? 'NULL' : "'$Par_Sql[Iva_Ren_Cod]'") . ",Vet_Ite='$Par_Sql[Vet_Ite]', Vet_Ice='" . (empty($Par_Sql['Ice_Por']) ? 0 : $Par_Sql['Ice_Por']) . "', Vet_Cre='" .  (empty($Par_Sql['Vet_Cre']) ? 0 : $Par_Sql['Vet_Cre']) . "', Ime_Cod=" . (empty($Par_Sql['Ime_Cod']) || $Par_Sql['Ime_Cod'] == '0' || $Par_Sql['Ime_Cod'] == 'undefined' ? 'NULL' : "'$Par_Sql[Ime_Cod]'") . "";
+            Asi_Int='" . (empty($Par_Sql['Asi_Int']) ? 0 : $Par_Sql['Asi_Int']) . "', Vet_Rec='" . (empty($Par_Sql['Vet_Rec']) ? 0 : $Par_Sql['Vet_Rec']) . "', Cnt_Cod='" . (empty($Par_Sql['Cnt_Cod']) ? 0 : $Par_Sql['Cnt_Cod']) . "', Vet_Int='" . (empty($Par_Sql['Vet_Int']) ? 0 : $Par_Sql['Vet_Int']) . "', Vet_Uni='" . (empty($Par_Sql['Vet_Uni']) || $Par_Sql['Vet_Uni'] * 1 <= 0 ? 1 : $Par_Sql['Vet_Uni']) . "', Ren_Cod=" . (empty($Par_Sql['Ret_Ren_Cod']) ? 'NULL' : "'$Par_Sql[Ret_Ren_Cod]'") . ", Des_Adi=" . (empty($Par_Sql['Des_Adi']) ? 'NULL' : "'$Par_Sql[Des_Adi]'") . ", Ren_Iva=" . (empty($Par_Sql['Iva_Ren_Cod']) ? 'NULL' : "'$Par_Sql[Iva_Ren_Cod]'") . ",Vet_Ite='$Par_Sql[Vet_Ite]', Vet_Ice='" . (empty($Par_Sql['Ice_Por']) ? 0 : $Par_Sql['Ice_Por']) . "', Vet_Cre='" .  (empty($Par_Sql['Vet_Cre']) ? 0 : $Par_Sql['Vet_Cre']) . "', Ime_Cod=" . (empty($Par_Sql['Ime_Cod']) || $Par_Sql['Ime_Cod'] == '0' || $Par_Sql['Ime_Cod'] == 'undefined' ? 'NULL' : "'$Par_Sql[Ime_Cod]'") . "";
             //echo $sql."<br>";
             break;
 
@@ -1848,7 +1891,8 @@ function sentencias_facturaVenta($id, $Par_Sql)
         //Fin de consultar para autorizar facturas
         case 175:
             if (!empty($Par_Sql[0])) {
-                $Par_Sql[0] = " AND Pag_Abr='RET'";
+                //$Par_Sql[0] = " AND Pag_Abr='RET'";
+                $Par_Sql[0] = " AND Pag_Abr='$Par_Sql[0]'";
             }
             $sql = "SELECT * FROM tipos_pago  WHERE  Pag_Est='A' $Par_Sql[0];";
             break;
@@ -1963,11 +2007,6 @@ function sentencias_facturaVenta($id, $Par_Sql)
             break;
         case 1844:
             $sql = "SELECT * FROM manifiesto WHERE Man_Est = 'A' AND  Man_Tip = 'F' AND Vet_Cod = $Par_Sql[0] LIMIT 1";
-            break;
-
-        /* Obtener anticipo ocupado por Vet_Cod (U/C) */
-        case 1845:
-            $sql = "SELECT Ant_Cod, Ant_Est FROM anticipos_clientes WHERE Vet_Cod = " . (int)$Par_Sql[0] . " AND Ant_Est IN ('U','C') LIMIT 1";
             break;
 
         case 1855:
@@ -2133,6 +2172,10 @@ function sentencias_facturaVenta($id, $Par_Sql)
 
             if (!empty($Par_Sql['cedul']) && $Par_Sql['cedul'] == 'S' && !empty($Par_Sql['Cli_Cod'])) {
                 $where .= " AND ventas.Cli_Cod = " . $Par_Sql['Cli_Cod'];
+            }
+
+            if (!empty($Par_Sql['Vet_Aut']) && $Par_Sql['Vet_Aut'] != 'T' && in_array($Par_Sql['Vet_Aut'], array('S', 'N'), true)) {
+                $where .= " AND ventas.Vet_Aut = '" . $Par_Sql['Vet_Aut'] . "'";
             }
 
             $sql = "SELECT $campos FROM ventas
