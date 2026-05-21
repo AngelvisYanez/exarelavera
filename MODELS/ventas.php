@@ -269,6 +269,12 @@ class ventas extends AbstractModel
                 //echo $this->getSqlString($sql)."<br/>";
                 break;
 
+            case "byVetAut":
+                if (!empty($Par_Sql['Vet_Aut']) && $Par_Sql['Vet_Aut'] !== 'T' && in_array($Par_Sql['Vet_Aut'], array('S', 'N'), true)) {
+                    $sql->where("ventas.Vet_Aut=?", $Par_Sql['Vet_Aut']);
+                }
+                break;
+
             case "hasReembolso":
                 $sql->where("EXISTS (SELECT 1 FROM venta_reembolsos reemb WHERE reemb.Vet_Cod = ventas.Vet_Cod)");
                 break;
@@ -526,10 +532,15 @@ class ventas extends AbstractModel
             'Iva_Tot'   => new Zend_Db_Expr($this->castDecimal("SUM(IF(Iva_Por != 0, $this->IVA, 0))")),
             // 'Total'     =>new Zend_Db_Expr($this->castDecimal("SUM( $this->Importe_Descu + $this->ICE + $this->IVA )"))
             // 'Prop'      => new Zend_Db_Expr($this->castDecimal("SUM(tbl.Prop)")),
-            'Total' => new Zend_Db_Expr($this->castDecimal("SUM($this->Aux_Tot)")) // Usar la variable Total
+            // 'Total' => new Zend_Db_Expr($this->castDecimal("SUM($this->Aux_Tot)")) // Usar la variable Total
+            'Total' => new Zend_Db_Expr($this->castDecimal("SUM($this->Aux_Tot)")), // Usar la variable Total
+            'Tot_Renta' => new Zend_Db_Expr($this->castDecimal("SUM( IF(ventas_det.Ren_Cod IS NOT NULL,IF(renta_imp.Ren_Por>0,($this->Importe_Descu*renta_imp.Ren_Por/100),0),0) )")),
+            'Tot_Iva' => new Zend_Db_Expr($this->castDecimal("SUM( IF(ventas_det.Ren_Iva IS NOT NULL,IF(iva_imp.Ren_Por>0 AND Iva_Por!=0,($this->IVA*iva_imp.Ren_Por/100),0),0) )"))
         ));
         $sql->join('ventas_det', "ventas_det.Vet_Cod=$this->_name.Vet_Cod", array())
-            ->join('iva', "iva.Iva_Cod=ventas_det.Iva_Cod", array());
+            ->join('iva', "iva.Iva_Cod=ventas_det.Iva_Cod", array())
+            ->joinLeft(array('renta_imp' => 'renta_iva'), 'renta_imp.Ren_Cod= ventas_det.Ren_Cod', array())
+            ->joinLeft(array('iva_imp' => 'renta_iva'), 'iva_imp.Ren_Cod= ventas_det.Ren_Iva', array());
     }
     private function getSummaryCols($sql, $menosNC = false)
     {
@@ -546,7 +557,10 @@ class ventas extends AbstractModel
             'Ice_Tot'   => new Zend_Db_Expr($this->castDecimal("SUM(IF(tbl.Tic_Sri = '04', -1 * tbl.Ice_Tot, tbl.Ice_Tot))")),
             'Iva_Tot'   => new Zend_Db_Expr($this->castDecimal("SUM(IF(tbl.Tic_Sri = '04', -1 * tbl.Iva_Tot, tbl.Iva_Tot))")),
             // 'Prop'      => new Zend_Db_Expr($this->castDecimal("SUM(tbl.Prop)")),
-            'Total'     => new Zend_Db_Expr($this->castDecimal("SUM(IF(tbl.Tic_Sri = '04', -1 * tbl.Total, tbl.Total))"))
+            // 'Total'     => new Zend_Db_Expr($this->castDecimal("SUM(IF(tbl.Tic_Sri = '04', -1 * tbl.Total, tbl.Total))"))
+            'Total'     => new Zend_Db_Expr($this->castDecimal("SUM(IF(tbl.Tic_Sri = '04', -1 * tbl.Total, tbl.Total))")),
+            'Tot_Renta' => new Zend_Db_Expr($this->castDecimal("SUM(IF(tbl.Tic_Sri = '04', -1 * IFNULL(tbl.Tot_Renta,0), IFNULL(tbl.Tot_Renta,0)))")),
+            'Tot_Iva'   => new Zend_Db_Expr($this->castDecimal("SUM(IF(tbl.Tic_Sri = '04', -1 * IFNULL(tbl.Tot_Iva,0), IFNULL(tbl.Tot_Iva,0)))"))
         ));
         return $sumas->getDataSelect();
     }
