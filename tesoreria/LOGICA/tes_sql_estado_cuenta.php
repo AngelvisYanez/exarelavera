@@ -61,7 +61,7 @@ if (!function_exists('sentencias_estado_cuenta_proveedor')) {
                     "asientos.Asi_Val AS TOTAL, " .
                     "0 AS ABONO, " .
                     "DATEDIFF(CURDATE(), ccpp_pagar.Cpp_Ven) AS Dias_Vencimiento, " .
-                    "(SELECT COALESCE(SUM(det_ccpp_p.Pag_Val), 0) FROM det_ccpp_p WHERE det_ccpp_p.Cpp_Cod = ccpp_pagar.Cpp_Cod) AS Abono_Factura, " .
+                    "(SELECT COALESCE(SUM(dcp.Pag_Val), 0) FROM det_ccpp_p dcp INNER JOIN comprobantes cp_abn ON (dcp.Com_Cod = cp_abn.Com_Cod) WHERE dcp.Cpp_Cod = ccpp_pagar.Cpp_Cod AND cp_abn.Com_Est = 'A') AS Abono_Factura, " .
                     "1 AS Orden_Tipo, " .
                     "IF(persona.Prs_Nom=persona.Prs_Ape, persona.Prs_Nom, CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape)) AS Proveedor, " .
                     "comprobantes.Com_Cod AS Com_Cod_Pago, " .
@@ -127,7 +127,7 @@ if (!function_exists('sentencias_estado_cuenta_proveedor')) {
                     "INNER JOIN ccpp_pagar ON (compras.Cop_Cod = ccpp_pagar.Cop_Cod) " .
                     "INNER JOIN comprobantes ON (ccpp_pagar.Com_Cod = comprobantes.Com_Cod) " .
                     "INNER JOIN asientos ON (comprobantes.Com_Cod = asientos.Com_Cod AND asientos.Asi_Deh = 'H') " .
-                    "LEFT JOIN (SELECT Cpp_Cod, SUM(Pag_Val) AS tot FROM det_ccpp_p GROUP BY Cpp_Cod) abonos ON ccpp_pagar.Cpp_Cod = abonos.Cpp_Cod " .
+                    "LEFT JOIN (SELECT dcp.Cpp_Cod, SUM(dcp.Pag_Val) AS tot FROM det_ccpp_p dcp INNER JOIN comprobantes cp_abn ON (dcp.Com_Cod = cp_abn.Com_Cod) WHERE cp_abn.Com_Est = 'A' GROUP BY dcp.Cpp_Cod) abonos ON ccpp_pagar.Cpp_Cod = abonos.Cpp_Cod " .
                     "WHERE proveedore.Emp_Cod = '" . $Emp_Cod . "'" . $filter_prov . " " .
                     "AND ccpp_pagar.Cpp_Ven < CURDATE() " .
                     "AND (compras.Cop_Est = 'A' OR compras.Cop_Est = 'E') " .
@@ -204,7 +204,7 @@ if (!function_exists('sentencias_estado_cuenta_proveedor')) {
                     "INNER JOIN tipos_pago ON (det_ccpp_p.Pag_Cod = tipos_pago.Pag_Cod) " .
                     "INNER JOIN comprobantes ON (det_ccpp_p.Com_Cod = comprobantes.Com_Cod) " .
                     "INNER JOIN tipo_asien ON (comprobantes.Tia_Cod = tipo_asien.Tia_Cod) " .
-                    "WHERE det_ccpp_p.Cpp_Cod = " . $Cpp_Cod . " ORDER BY comprobantes.Com_Fec";
+                    "WHERE det_ccpp_p.Cpp_Cod = " . $Cpp_Cod . " AND comprobantes.Com_Est = 'A' ORDER BY comprobantes.Com_Fec";
 
             /* Lista de tipos de pago activos */
             case 8:
