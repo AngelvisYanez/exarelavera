@@ -9,10 +9,10 @@ function sentencias_asignacion_dispositivos($id, $Par_Sql) {
         case 1: // Listado de dispositivos asignados con estado de vínculo de navegador
             $usuario_id = intval($Par_Sql['usuario_id']);
             $sql = "SELECT ui.UsInv_Cod as id, inv.InvDis_Cod, inv.mac_address, inv.InvDis_Nom, inv.InvDis_Est as estado,
-                           du.DisUsr_Cod as vinculado_id, du.DisUsr_Fec as fecha_vinculo, du.DisUsr_IP as ip_vinculo
+                        du.DisUsr_Cod as vinculado_id, /*du.DisUsr_FecR as fecha_vinculo,*/ du.DisUsr_IP as ip_vinculo
                     FROM usuario_inventario ui
-                    INNER JOIN inventario_dispositivos inv ON ui.InvDis_Cod = inv.InvDis_Cod
-                    LEFT JOIN dispositivos_usuario du ON (ui.InvDis_Cod = du.InvDis_Cod AND du.Usu_Cod = ui.UsInv_Usu AND du.DisUsr_Est = 'A')
+                        INNER JOIN inventario_dispositivos inv ON ui.InvDis_Cod = inv.InvDis_Cod
+                        LEFT JOIN dispositivos_usuario du ON (ui.InvDis_Cod = du.InvDis_Cod AND du.Usu_Cod = ui.UsInv_Usu AND du.DisUsr_Est = 'A')
                     WHERE ui.UsInv_Usu = $usuario_id AND ui.UsInv_Est = 'A'";
             return $sql;
 
