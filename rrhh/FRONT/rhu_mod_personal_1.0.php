@@ -277,8 +277,9 @@ if (isset($savePersonal)) {
                                                                 <label class="col-sm-3 control-label label-sm" for="Per_Rso">Riesgo Social:</label>
                                                                 <div class="col-sm-4">
                                                                     <select id="Per_Rso" name="Per_Rso" class="form-control input-xs">
+                                                                        <option value="" selected>Seleccione...</option>
                                                                         <option value="A">ALTO</option>
-                                                                        <option value="M" selected>MEDIO</option>
+                                                                        <option value="M">MEDIO</option>
                                                                         <option value="B">BAJO</option>
                                                                     </select>
                                                                 </div>
@@ -287,7 +288,8 @@ if (isset($savePersonal)) {
                                                                 <label class="col-sm-3 control-label label-sm" for="Per_Mov">Tipo Movilizacion:</label>
                                                                 <div class="col-sm-4">
                                                                     <select id="Per_Mov" name="Per_Mov" class="form-control input-xs">
-                                                                        <option value="BU" selected>BUS</option>
+                                                                        <option value="" selected>Seleccione...</option>
+                                                                        <option value="BU">BUS</option>
                                                                         <option value="MO">MOTO</option>
                                                                         <option value="VP">VEHICULO PARTICULAR</option>
                                                                         <option value="CA">CAMINANDO</option>
@@ -306,13 +308,18 @@ if (isset($savePersonal)) {
                                                                 <label class="col-sm-3 control-label label-sm required" for="Per_Tit">T&iacute;tulo:</label>  
                                                                 <div class="col-sm-4">
                                                                     <select id="Per_Tit" name="Per_Tit" class="form-control input-xs">
+                                                                        <option value="">Seleccione...</option>
                                                                         <option value="Np">NO POSEE</option>
                                                                         <option value="Abg">ABOGADO/A</option>
                                                                         <option value="Bac">BACHILLER</option>
                                                                         <option value="Dr">DOCTOR/A</option>
+                                                                        <option value="Sec">SECUNDARIA</option>
+                                                                        <option value="Unv">UNIVERSITARIO</option>
                                                                         <option value="Eco">ECONOMISTA</option>
                                                                         <option value="Ing">INGENIERO/A</option>
                                                                         <option value="Lcd">LICENCIADO/A</option>
+                                                                        <option value="Mst">MAESTRIA</option>
+                                                                        <option value="Phd">PHD</option>
                                                                     </select>
                                                                 </div>
                                                                 <label>
@@ -458,8 +465,8 @@ if (isset($savePersonal)) {
                 $('#Prs_Esc').prop('selectedIndex', 0);
                 $('#Prs_Sex').prop('selectedIndex', 0);
                 $('#Per_Tit').prop('selectedIndex', 0);
-                $('#Per_Rso').val('M');
-                $('#Per_Mov').val('BU');
+                $('#Per_Rso').val('');
+                $('#Per_Mov').val('');
                 $('#Ide_Des').val('');
             }
             //Funci�n para cargar la imagen en el fileinput
