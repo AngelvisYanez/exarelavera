@@ -232,9 +232,12 @@ require_once('../../administrador/LOGICA/seguridad.php');
                                             Seleccione un usuario para ver dispositivos disponibles
                                         </div>
                                     </div>
-                                    <div style="margin-top: 10px;">
-                                        <button type="button" id="btn_asignar" class="btn btn-success btn-block btn-sm" disabled onclick="asignarDispositivos()">
+                                    <div style="margin-top: 10px; display: flex; gap: 5px;">
+                                        <button type="button" id="btn_asignar" class="btn btn-success btn-sm" style="flex: 1;" disabled onclick="asignarDispositivos()">
                                             <i class="fa fa-link"></i> Asignar Dispositivos
+                                        </button>
+                                        <button type="button" class="btn btn-default btn-sm" title="Actualizar Lista" onclick="let uid = $('#cmb_usuario').val(); if(uid) cargarDispositivosDisponibles(uid);">
+                                            <i class="fa fa-refresh"></i>
                                         </button>
                                     </div>
                                 </fieldset>
@@ -304,7 +307,13 @@ require_once('../../administrador/LOGICA/seguridad.php');
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="cupos_dispositivo">Nº Cupos <span style="color:red">*</span></label>
+                                    <input type="number" class="form-control" id="cupos_dispositivo" min="1" max="99" value="1" title="Número de navegadores permitidos para este registro">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="estado">Estado</label>
                                     <select class="form-control" id="estado">
@@ -347,8 +356,9 @@ require_once('../../administrador/LOGICA/seguridad.php');
                             <tr class="active">
                                 <th style="width: 20%;">Dirección MAC <span style="color:red">*</span></th>
                                 <th style="width: 20%;">Nombre del Equipo <span style="color:red">*</span></th>
-                                <th style="width: 25%;">Descripción</th>
-                                <th style="width: 15%;">Tipo</th>
+                                <th style="width: 20%;">Descripción</th>
+                                <th style="width: 12%;">Tipo</th>
+                                <th style="width: 8%;">Cupos</th>
                                 <th style="width: 15%;">Estado</th>
                                 <th style="width: 5%;"></th>
                             </tr>
@@ -374,7 +384,7 @@ require_once('../../administrador/LOGICA/seguridad.php');
     </div>
 
     <!-- Scripts -->
-    <script type="text/javascript" src="../VALIDACIONES/inventario_dispositivos.js?e=3"></script>
+    <script type="text/javascript" src="../VALIDACIONES/inventario_dispositivos.js?e=4"></script>
     <script type="text/javascript" src="../VALIDACIONES/asignacion_dispositivos.js?e=6"></script>
     
     <script>

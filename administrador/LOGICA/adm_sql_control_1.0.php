@@ -188,7 +188,7 @@
 					WHERE Dev_Cod = '$Par_Sql[0]' AND Usu_Cod = $Par_Sql[1]";
 			return $sql;
 
-		case 105: // Buscar cupo libre que COINCIDA con el tipo de dispositivo (PC o MOVIL)
+		case 105: // Buscar cupo libre verificando la cantidad máxima de cupos por dispositivo (InvDis_Cupos)
 			$sql = "SELECT ui.InvDis_Cod, inv.InvDis_Nom
 					FROM usuario_inventario ui
 					INNER JOIN inventario_dispositivos inv ON ui.InvDis_Cod = inv.InvDis_Cod
@@ -196,32 +196,14 @@
 					WHERE ui.UsInv_Usu = $Par_Sql[0] 
 					  AND ui.UsInv_Est = 'A'
 					  AND inv.InvDis_Tipo = '$Par_Sql[1]'
-					  AND du.Dev_Cod IS NULL
+					GROUP BY ui.InvDis_Cod, inv.InvDis_Nom, inv.InvDis_Cupos
+					HAVING COUNT(du.DisUsr_Cod) < inv.InvDis_Cupos
 					LIMIT 1";
 			return $sql;
 
 		case 106: // Registrar vinculación completa con IP, User Agent y Nombre
 			$sql = "INSERT INTO dispositivos_usuario (Usu_Cod, Dev_Cod, InvDis_Cod, DisUsr_Nom, DisUsr_IP, user_agent, DisUsr_FecR, DisUsr_FecUA, DisUsr_Est)
 					VALUES ($Par_Sql[0], '$Par_Sql[1]', $Par_Sql[2], '$Par_Sql[3]', '$Par_Sql[4]', '$Par_Sql[5]', NOW(), NOW(), 'A')";
-			return $sql;
-
-		case 107: // Buscar cupo OCUPADO que comparta la misma IP y Mismo Tipo
-			$sql = "SELECT du.DisUsr_Cod, du.InvDis_Cod, inv.InvDis_Nom
-					FROM dispositivos_usuario du
-					INNER JOIN inventario_dispositivos inv ON du.InvDis_Cod = inv.InvDis_Cod
-					WHERE du.Usu_Cod = $Par_Sql[0]
-					  AND du.DisUsr_IP = '$Par_Sql[1]'
-					  AND inv.InvDis_Tipo = '$Par_Sql[2]'
-					  AND du.DisUsr_Est = 'A'
-					LIMIT 1";
-			return $sql;
-
-		case 108: // Reemplazar la huella (Dev_Cod) de un cupo existente (Compartir por IP)
-			$sql = "UPDATE dispositivos_usuario 
-					SET Dev_Cod = '$Par_Sql[0]',
-						user_agent = '$Par_Sql[1]',
-						DisUsr_FecUA = NOW()
-					WHERE DisUsr_Cod = $Par_Sql[2]";
 			return $sql;
 		}
 	}

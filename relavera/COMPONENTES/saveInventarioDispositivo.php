@@ -46,9 +46,10 @@ try {
                 $nombre = addslashes(trim($disp['nombre_equipo']));
                 $desc = addslashes(trim($disp['descripcion']));
                 $tipo = addslashes($disp['tipo_equipo']);
+                $cupos = intval($disp['cupos']);
                 $estado = addslashes($disp['estado']);
                 
-                $filas_para_insertar[] = "('$mac', '$nombre', '$desc', '$tipo', '$estado', NOW())";
+                $filas_para_insertar[] = "('$mac', '$nombre', '$desc', '$tipo', $cupos, '$estado', NOW())";
             }
             
             if (!empty($filas_para_insertar)) {
@@ -88,6 +89,7 @@ try {
         $nombre = isset($_POST['nombre_equipo']) ? trim($_POST['nombre_equipo']) : '';
         $desc = isset($_POST['descripcion']) ? trim($_POST['descripcion']) : '';
         $estado = isset($_POST['estado']) ? $_POST['estado'] : 'A';
+        $cupos = isset($_POST['cupos']) ? intval($_POST['cupos']) : 1;
         
         $params = array(
             'id' => $id,
@@ -95,6 +97,7 @@ try {
             'nombre_equipo' => $nombre,
             'descripcion' => $desc,
             'tipo_equipo' => isset($_POST['tipo_equipo']) ? $_POST['tipo_equipo'] : 'PC',
+            'cupos' => $cupos,
             'estado' => $estado
         );
         

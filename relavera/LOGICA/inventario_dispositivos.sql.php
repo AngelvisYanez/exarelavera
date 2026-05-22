@@ -27,7 +27,7 @@ function sentencias_inventario_dispositivos($id, $Par_Sql) {
                 $where .= " AND InvDis_Est = '" . addslashes($Par_Sql['estado']) . "'";
             }
             
-            $sql = "SELECT InvDis_Cod, mac_address, InvDis_Nom, InvDis_Des, InvDis_Tipo, InvDis_Est, InvDis_Fec 
+            $sql = "SELECT InvDis_Cod, mac_address, InvDis_Nom, InvDis_Des, InvDis_Tipo, InvDis_Cupos, InvDis_Est, InvDis_Fec 
                     FROM inventario_dispositivos 
                     WHERE $where";
             
@@ -54,9 +54,10 @@ function sentencias_inventario_dispositivos($id, $Par_Sql) {
             $nombre = addslashes($Par_Sql['nombre_equipo']);
             $desc = addslashes($Par_Sql['descripcion']);
             $tipo = addslashes($Par_Sql['tipo_equipo']);
+            $cupos = intval($Par_Sql['cupos']);
             $estado = addslashes($Par_Sql['estado']);
-            $sql = "INSERT INTO inventario_dispositivos (mac_address, InvDis_Nom, InvDis_Des, InvDis_Tipo, InvDis_Est, InvDis_Fec) 
-                    VALUES ('$mac', '$nombre', '$desc', '$tipo', '$estado', NOW())";
+            $sql = "INSERT INTO inventario_dispositivos (mac_address, InvDis_Nom, InvDis_Des, InvDis_Tipo, InvDis_Cupos, InvDis_Est, InvDis_Fec) 
+                    VALUES ('$mac', '$nombre', '$desc', '$tipo', $cupos, '$estado', NOW())";
             return $sql;
 
         case 4: // Actualizar dispositivo
@@ -65,12 +66,14 @@ function sentencias_inventario_dispositivos($id, $Par_Sql) {
             $nombre = addslashes($Par_Sql['nombre_equipo']);
             $desc = addslashes($Par_Sql['descripcion']);
             $tipo = addslashes($Par_Sql['tipo_equipo']);
+            $cupos = intval($Par_Sql['cupos']);
             $estado = addslashes($Par_Sql['estado']);
             $sql = "UPDATE inventario_dispositivos SET 
                     mac_address = '$mac', 
                     InvDis_Nom = '$nombre', 
                     InvDis_Des = '$desc', 
                     InvDis_Tipo = '$tipo',
+                    InvDis_Cupos = $cupos,
                     InvDis_Est = '$estado' 
                     WHERE InvDis_Cod = $id";
             return $sql;
@@ -110,7 +113,7 @@ function sentencias_inventario_dispositivos($id, $Par_Sql) {
         case 8: // Inserción masiva agrupada
             $filas = $Par_Sql['filas']; // Array de strings formateados
             $valores = implode(",", $filas);
-            $sql = "INSERT INTO inventario_dispositivos (mac_address, InvDis_Nom, InvDis_Des, InvDis_Tipo, InvDis_Est, InvDis_Fec) 
+            $sql = "INSERT INTO inventario_dispositivos (mac_address, InvDis_Nom, InvDis_Des, InvDis_Tipo, InvDis_Cupos, InvDis_Est, InvDis_Fec) 
                     VALUES $valores";
             return $sql;
     }

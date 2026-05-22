@@ -57,6 +57,7 @@ function initGrid() {
             { name: 'InvDis_Nom', index: 'InvDis_Nom', width: 200 },
             { name: 'InvDis_Fec', index: 'InvDis_Fec', width: 130, align: 'center' },
             { name: 'InvDis_Des', index: 'InvDis_Des', hidden: true },
+            { name: 'InvDis_Cupos', index: 'InvDis_Cupos', width: 60, align: 'center' },
             { name: 'InvDis_Tipo', index: 'InvDis_Tipo', width: 80, align: 'center',
                 formatter: function(cell) {
                     var val = (cell || '').toString().toUpperCase();
@@ -154,6 +155,7 @@ function agregarFilaMasiva() {
         '<td><input type="text" class="input-masivo" maxlength="100" placeholder="Nombre del equipo"></td>' +
         '<td><input type="text" class="input-masivo" placeholder="Opcional..."></td>' +
         '<td><select class="input-masivo"><option value="PC">PC</option><option value="MOVIL">Movil</option></select></td>' +
+        '<td><input type="number" class="input-masivo text-center" min="1" max="99" value="1"></td>' +
         '<td><select class="input-masivo"><option value="A">Activo</option><option value="I">Inactivo</option></select></td>' +
         '<td class="text-center"><button type="button" class="btn btn-xs btn-danger" onclick="eliminarFilaMasiva(this)"><i class="fa fa-trash"></i></button></td>' +
         '</tr>';
@@ -188,7 +190,8 @@ function guardarMasivo() {
         let nombre = $(this).find('td:eq(1) input').val();
         let desc = $(this).find('td:eq(2) input').val();
         let tipo = $(this).find('td:eq(3) select').val();
-        let estado = $(this).find('td:eq(4) select').val();
+        let cupos = $(this).find('td:eq(4) input').val();
+        let estado = $(this).find('td:eq(5) select').val();
         
         if (mac === "" || nombre === "") {
             $.alert("MAC y Nombre son obligatorios en todas las filas");
@@ -207,6 +210,7 @@ function guardarMasivo() {
             nombre_equipo: nombre,
             descripcion: desc,
             tipo_equipo: tipo,
+            cupos: cupos,
             estado: estado
         });
     });
@@ -240,6 +244,7 @@ function abrirModalEditar(rowId) {
     $('#nombre_equipo').val(rowData.InvDis_Nom);
     $('#descripcion').val(rowData.InvDis_Des);
     $('#tipo_dispositivo').val(rowData.InvDis_Tipo);
+    $('#cupos_dispositivo').val(rowData.InvDis_Cupos || 1);
     $('#estado').val(rowData.InvDis_Est.includes('Activo') ? 'A' : 'I');
     
     $('#modal_titulo').text('Editar Dispositivo');
@@ -257,6 +262,7 @@ function guardarDispositivo() {
     let nombre = $('#nombre_equipo').val();
     let descripcion = $('#descripcion').val();
     let tipo = $('#tipo_dispositivo').val();
+    let cupos = $('#cupos_dispositivo').val() || 1;
     let estado = $('#estado').val();
     
     if (mac === "") {
@@ -289,6 +295,7 @@ function guardarDispositivo() {
                 nombre_equipo: nombre,
                 descripcion: descripcion,
                 tipo_equipo: tipo,
+                cupos: cupos,
                 estado: estado,
                 action: 'save'
             }, function (result) {
