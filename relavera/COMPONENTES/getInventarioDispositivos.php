@@ -67,6 +67,7 @@ if (is_array($data_rows)) {
             'InvDis_Est'  => $row['InvDis_Est'],
             'InvDis_Fec'  => $row['InvDis_Fec'],
             'InvDis_Tipo' => $row['InvDis_Tipo'],
+            'InvDis_Cupos'=> isset($row['InvDis_Cupos']) ? $row['InvDis_Cupos'] : 1,
             'InvDis_Des'  => $row['InvDis_Des']
         );
     }
