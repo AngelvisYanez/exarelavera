@@ -174,7 +174,7 @@ $(function () {
 
 function createGrid() {
     grid.createGrid({
-        caption: 'Manifiestos Generados <div class="pull-right"><b>Ordenar por:</b>&nbsp;<select id="ordenar_por" onchange="cargarSelect();"><option value="">Por defecto</option><option value="manifiesto">Nº Manif</option><option value="cliente">Cliente</option><option value="fecha">Fecha</option><option value="placa">Placa</option></select>&nbsp;</div>',
+        caption: 'Manifiestos Generados <div class="pull-right"><b>Ordenar por:</b>&nbsp;<select id="ordenar_por" onchange="cargarSelect();"><option value="">Por defecto</option><option value="manifiesto">Nº Manif</option><option value="cliente">Cliente</option><option value="fecha">Fecha</option><option value="placa">Placa</option><option value="hora_llegada">H. Llegada</option></select>&nbsp;</div>',
         height: 350,datatype: 'local',
         jsonReader: { root: "rows", id: "Man_Cod" },
         colModel: [
@@ -277,7 +277,8 @@ function createGrid() {
                     });
                 }
             }
-        }, footerrow: true, userDataOnFooter: true, headertitles: true, rowNum: 30, rowList: [30, 50, 100, 200], gridview: true, viewrecords: true
+            $('.ui-pg-selbox option[value=10000]').text('Todos');
+        }, footerrow: true, userDataOnFooter: true, headertitles: true, rowNum: 250, rowList: [250, 500, 1000, 2000, 10000], gridview: true, viewrecords: true
     }, false, '#searchGridPager', { refresh: true, view: false }).gridButtonsAdd([
         { caption: 'Exportar Excel', buttonicon: 'glyphicon glyphicon-download',
             onClickButton: function () {
@@ -291,6 +292,8 @@ function createGrid() {
             }
         }
     ]);
+
+    $('#searchGridPager table.navtable').find('td.ui-pg-button.ui-corner-all').unbind('mouseenter mouseleave').removeClass('ui-pg-button').addClass('btn btn-xs btn-success').find('.ui-pg-div span').removeClass('ui-icon').addClass('glyphicon');
 
     function ExpandirAll() {
         let ids = grid.getDataIDs();

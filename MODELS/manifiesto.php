@@ -79,6 +79,9 @@ class manifiesto extends AbstractModel{
                 case 'manifiesto':
                     $sel->order('manifiesto.Pla_Cod ASC, manifiesto.Man_Num ASC');
                     break;
+                case 'hora_llegada':
+                    $sel->order('manifiesto.Man_Fea ASC');
+                    break;
             }
         }
         
