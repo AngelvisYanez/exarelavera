@@ -856,43 +856,116 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
         <div class="row">
             <!-- Carousel Section -->
             <div class="col-md-6 col-lg-7 d-flex align-items-center justify-content-center order-md-1 order-2 p-0">
+                <?php
+                // Cargar flayers personalizados
+                $flayersFile = 'administrador/config/login_flayers.json';
+                $customFlayers = array();
+                if (file_exists($flayersFile)) {
+                    $allFlayers = json_decode(file_get_contents($flayersFile), true);
+                    if (is_array($allFlayers)) {
+                        foreach ($allFlayers as $f) {
+                            if (isset($f['activo']) && $f['activo']) {
+                                $customFlayers[] = $f;
+                            }
+                        }
+                    }
+                }
+                ?>
                 <div id="loginCarousel" class="carousel slide w-100" data-bs-ride="carousel">
                     <div class="carousel-inner">
-                        <?php if ($es_portal_relavera) { ?>
-                        <div class="carousel-item active">
-                            <div class="carousel-caption carousel-caption-relavera d-flex flex-column align-items-center justify-content-center text-center" style="height:60%;">
-                                <h2>Disposici&oacute;n final autorizada</h2>
-                                <p>Gesti&oacute;n de relaves alineada con la normativa ambiental y el control de las autoridades.</p>
+                        <?php 
+                        // Prioridad a los flayers personalizados
+                        if (!empty($customFlayers)) { 
+                            foreach ($customFlayers as $idx => $flayer) { 
+                                $imgNum = isset($flayer['imagen']) ? $flayer['imagen'] : '1';
+                                $imgSrc = !empty($flayer['ruta_imagen']) ? $flayer['ruta_imagen'] : ($imgNum !== '0' ? 'imagenes/ingresar/' . $imgNum . '.png' : '');
+                                ?>
+                            <div class="carousel-item <?php echo $idx === 0 ? 'active' : ''; ?>">
+                                
+                                <?php 
+                                // Detección de contenido
+                                $hasText = !empty($flayer['titulo']) || !empty($flayer['descripcion']);
+                                // Si no hay texto, permitimos que la imagen sea mucho más grande
+                                $maxImgHeight = $hasText ? ($es_portal_relavera ? '200px' : '240px') : '80vh';
+                                ?>
+
+                                <?php if ($es_portal_relavera) { ?>
+                                    <!-- Estilo Relavera -->
+                                    <div class="carousel-caption carousel-caption-relavera d-flex flex-column align-items-center justify-content-center text-center" style="top: 0; bottom: 0; height: 100%; left: 5%; right: 5%; padding: 0;">
+                                        <div class="content-wrapper" style="max-width: 90%; width: 100%; word-wrap: break-word; overflow-wrap: break-word; word-break: break-word;">
+                                            <?php if (!empty($flayer['titulo'])) { ?>
+                                                <h2 style="margin-bottom: 5px; font-size: 1.8rem;"><?php echo $flayer['titulo']; ?></h2>
+                                            <?php } ?>
+                                            <?php if (!empty($flayer['descripcion'])) { ?>
+                                                <p style="margin-bottom: 15px; font-size: 1rem; line-height: 1.3;"><?php echo $flayer['descripcion']; ?></p>
+                                            <?php } ?>
+
+                                            <!-- Imagen Personalizada o Predefinida -->
+                                            <?php if (!empty($imgSrc)) { ?>
+                                                <div style="perspective: 1000px;">
+                                                    <img src="<?php echo $imgSrc; ?>" alt="" class="img-fluid animate__animated animate__zoomIn" 
+                                                        style="max-height: <?php echo $maxImgHeight; ?>; width: auto; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1);">
+                                                </div>
+                                            <?php } ?>
+                                        </div>
+                                    </div>
+                                <?php } else { ?>
+                                    <!-- Estilo EXA -->
+                                    <div class="carousel-caption d-flex flex-column align-items-center justify-content-center" style="top: 0; bottom: 0; height: 100%; left: 10%; right: 10%; padding: 0;">
+                                        <div class="content-wrapper" style="max-width: 85%; width: 100%; word-wrap: break-word; overflow-wrap: break-word; word-break: break-word;">
+                                            <?php if (!empty($flayer['titulo'])) { ?>
+                                                <h1 class="fw-bold animate__animated animate__fadeInDown" style="font-size: 2.2rem; color: #fff; margin-bottom: 5px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);"><?php echo $flayer['titulo']; ?></h1>
+                                            <?php } ?>
+                                            <?php if (!empty($flayer['descripcion'])) { ?>
+                                                <p class="fs-5 animate__animated animate__fadeIn" style="color: #eee; margin-bottom: 20px; text-shadow: 0 2px 5px rgba(0,0,0,0.5); line-height: 1.3;"><?php echo $flayer['descripcion']; ?></p>
+                                            <?php } ?>
+
+                                            <?php if (!empty($imgSrc)) { ?>
+                                                <img src="<?php echo $imgSrc; ?>" alt="" class="img-fluid animate__animated animate__fadeInUp" 
+                                                    style="max-height: <?php echo $maxImgHeight; ?>; width: auto; border-radius: 15px; box-shadow: 0 15px 45px rgba(0,0,0,0.7); border: 2px solid rgba(255,255,255,0.2);">
+                                            <?php } ?>
+                                        </div>
+                                    </div>
+                                <?php } ?>
                             </div>
-                        </div>
-                        <div class="carousel-item">
-                            <div class="carousel-caption carousel-caption-relavera d-flex flex-column align-items-center justify-content-center text-center" style="height:60%;">
-                                <h2>Certificados y trazabilidad</h2>
-                                <p>Portal para clientes: consulte documentaci&oacute;n y el seguimiento de sus entregas de forma segura.</p>
+                        <?php } 
+                        } else if ($es_portal_relavera) { ?>
+                            <!-- Fallback Relavera Estático -->
+                            <div class="carousel-item active">
+                                <div class="carousel-caption carousel-caption-relavera d-flex flex-column align-items-center justify-content-center text-center" style="height:60%;">
+                                    <h2>Disposici&oacute;n final autorizada</h2>
+                                    <p>Gesti&oacute;n de relaves alineada con la normativa ambiental y el control de las autoridades.</p>
+                                </div>
                             </div>
-                        </div>
-                        <div class="carousel-item">
-                            <div class="carousel-caption carousel-caption-relavera d-flex flex-column align-items-center justify-content-center text-center" style="height:60%;">
-                                <h2>Relavera Comunitaria El Tabl&oacute;n</h2>
-                                <p>Soluci&oacute;n autorizada para el distrito minero Zaruma &ndash; Portovelo. Operaci&oacute;n bajo licencia ambiental.</p>
+                            <div class="carousel-item">
+                                <div class="carousel-caption carousel-caption-relavera d-flex flex-column align-items-center justify-content-center text-center" style="height:60%;">
+                                    <h2>Certificados y trazabilidad</h2>
+                                    <p>Portal para clientes: consulte documentaci&oacute;n y el seguimiento de sus entregas de forma segura.</p>
+                                </div>
                             </div>
-                        </div>
+                            <div class="carousel-item">
+                                <div class="carousel-caption carousel-caption-relavera d-flex flex-column align-items-center justify-content-center text-center" style="height:60%;">
+                                    <h2>Relavera Comunitaria El Tabl&oacute;n</h2>
+                                    <p>Soluci&oacute;n autorizada para el distrito minero Zaruma &ndash; Portovelo. Operaci&oacute;n bajo licencia ambiental.</p>
+                                </div>
+                            </div>
                         <?php } else { ?>
-                        <div class="carousel-item active">
-                            <div class="carousel-caption d-flex flex-column align-items-center justify-content-center" style="height:60%;">
-                                <img src="imagenes/ingresar/1.png" alt="" class="img-fluid" style="max-width: 100%; max-height: 400px; display: block; margin: 0 auto;">
+                            <!-- Fallback EXA Estático -->
+                            <div class="carousel-item active">
+                                <div class="carousel-caption d-flex flex-column align-items-center justify-content-center" style="height:60%;">
+                                    <img src="imagenes/ingresar/1.png" alt="" class="img-fluid" style="max-width: 100%; max-height: 400px; display: block; margin: 0 auto;">
+                                </div>
                             </div>
-                        </div>
-                        <div class="carousel-item">
-                            <div class="carousel-caption d-flex flex-column align-items-center justify-content-center" style="height:60%;">
-                                <img src="imagenes/ingresar/2.png" alt="" class="img-fluid" style="max-width: 100%; max-height: 400px; display: block; margin: 0 auto;">
+                            <div class="carousel-item">
+                                <div class="carousel-caption d-flex flex-column align-items-center justify-content-center" style="height:60%;">
+                                    <img src="imagenes/ingresar/2.png" alt="" class="img-fluid" style="max-width: 100%; max-height: 400px; display: block; margin: 0 auto;">
+                                </div>
                             </div>
-                        </div>
-                        <div class="carousel-item">
-                            <div class="carousel-caption d-flex flex-column align-items-center justify-content-center" style="height:60%;">
-                                <img src="imagenes/ingresar/3.png" alt="" class="img-fluid" style="max-width: 100%; max-height: 400px; display: block; margin: 0 auto;">
+                            <div class="carousel-item">
+                                <div class="carousel-caption d-flex flex-column align-items-center justify-content-center" style="height:60%;">
+                                    <img src="imagenes/ingresar/3.png" alt="" class="img-fluid" style="max-width: 100%; max-height: 400px; display: block; margin: 0 auto;">
+                                </div>
                             </div>
-                        </div>
                         <?php } ?>
                     </div>
                     <button class="carousel-control-prev" type="button" data-bs-target="#loginCarousel" data-bs-slide="prev">
@@ -904,9 +977,14 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
                         <span class="visually-hidden">Next</span>
                     </button>
                     <div class="carousel-indicators">
-                        <button type="button" data-bs-target="#loginCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
-                        <button type="button" data-bs-target="#loginCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
-                        <button type="button" data-bs-target="#loginCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                        <?php 
+                        $totalFlayers = !empty($customFlayers) ? count($customFlayers) : 3;
+                        for ($i = 0; $i < $totalFlayers; $i++) { ?>
+                            <button type="button" data-bs-target="#loginCarousel" data-bs-slide-to="<?php echo $i; ?>" 
+                                    class="<?php echo $i === 0 ? 'active' : ''; ?>" 
+                                    aria-current="<?php echo $i === 0 ? 'true' : 'false'; ?>" 
+                                    aria-label="Slide <?php echo $i + 1; ?>"></button>
+                        <?php } ?>
                     </div>
                 </div>
             </div>
@@ -933,16 +1011,10 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
                             <img src="imagenes/ingresar/logo.png" alt="EXA Logo" class="img-fluid">
                         </div>
                         <?php } ?>
-                        <!-- <h4 class="text-center mb-4 fw-bold">Iniciar sesi&oacute;n</h4> -->
                         <h4 class="text-center mb-4 fw-bold"><?php echo $es_portal_relavera ? 'Iniciar sesi&oacute;n' : 'Iniciar Sesión'; ?></h4>
                         <p class="small text-secondary">Inicie sesi&oacute;n con su cuenta registrada.</p>
-                        <form action="administrador/FRONT/adm_con_control_1.2.php" method="post" name="acceso" id="acceso" onsubmit="handleLogin(); return false;">
+                        <form action="administrador/FRONT/adm_con_control_1.2.php" method="post" name="acceso" id="acceso">
                             <div class="login-fields">
-                                <!--div class="form-group position-relative mb-3">
-                                    <input class="form-control" type="text" id="user_name" name="user_name" value="" placeholder="Usuario" class="login username-field"
-                                        onBlur="if(trim(this.value) !== ''){ loadEmp(this.value);/*ajax_classic('<?php echo $_SERVER['PHP_SELF']; ?>?ajax_empresas=1&ajax_username='+this.value,'div_empresas');*/ }" />
-                                    <i class="bi bi-person-fill form-control-icon"></i>
-                                </div-->
                                 <div class="form-group position-relative mb-3">
                                     <input class="form-control" type="text" id="user_name" name="user_name" value="" placeholder="Usuario" class="login username-field"
                                         onBlur="if(trim(this.value) !== ''){ loadEmp(this.value); }" />
@@ -951,7 +1023,7 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
 
                                 <div class="form-group position-relative mb-3">
                                     <input class="form-control" type="password" id="password" name="password" value="" placeholder="Contraseña" class="login password-field" oncontextmenu="return false"
-                                        onKeyPress="if ((event.keyCode || event.which) === 13){ handleLogin(); return false; }else{return validar_injections(event);}" />
+                                        onKeyPress="if (event.keyCode===13){ var o=document.querySelector('#Emp_Cod option:checked'); document.getElementById('Suc_Cod').value=o? (o.getAttribute('data-suc-cod')||''):''; document.getElementById('encryptor').value = md5(document.getElementById('password').value); this.form.submit();}else{return  validar_injections(event);}" />
                                     <i class="bi bi-lock-fill form-control-icon"></i>
                                 </div>
                                 <div class="form-group position-relative mb-3" id="div_empresas" style="display: none;">
@@ -960,67 +1032,23 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
                                     </select>
                                     <i class="bi bi-building form-control-icon"></i>
                                 </div>
-                                <!-- <div class="form-group position-relative mb-3" id="div_empresas" style="display: none;">
-                                    <select class="form-select form-control text-center" name="Emp_Cod" id="Emp_Cod" data-placeholder="Seleccione Empresa..." style="text-align-last:center;">
-                                        <option selected></option>
-                                    </select>
-                                    <i class="bi bi-building form-control-icon"></i>
-                                </div> -->
                             </div>
 
                             <!-- /login-fields -->
                             <div class="form-group login-actions">
                                 <input type="hidden" name="encryptor" id="encryptor" />
                                 <input type="hidden" name="Suc_Cod" id="Suc_Cod" />
-                                <!-- <button class="btn btn-primary w-100" type="button"
-                                    onClick="var o=document.querySelector('#Emp_Cod option:checked'); document.getElementById('Suc_Cod').value=o? (o.getAttribute('data-suc-cod')||''):''; document.getElementById('encryptor').value = md5(document.getElementById('password').value); this.form.submit();"> -->
                                 <button class="btn btn-primary w-100" type="button"
                                     onClick="handleLogin();">
                                     Entrar <i class="bi bi-box-arrow-in-right"></i>
                                 </button>
                             </div>
-                            <?php if ((isset($_GET["errorusuario"]) && $_GET["errorusuario"] == "si") || (isset($_GET["errorsistema"]) && $_GET["errorsistema"] == "si")) {
-                                // echo '<div class="alert alert-error"><span>' . (isset($_GET["errorusuario"]) ? 'Datos incorrectos' : 'Error del Sistema') . '</span></div>';
-                                echo '<div class="alert alert-danger mt-3 py-2 small text-center" style="border-radius: 8px;"><span>' . (isset($_GET["errorusuario"]) ? 'Datos incorrectos' : 'Error del Sistema') . '</span></div>';
+                            <?php if ((isset($_GET["errorusuario"]) && $_GET["errorusuario"] == "si") || (isset($_GET["errorsistema"]) && $_GET["errorsistema"] == "si") || (isset($_GET["errordispositivo"]) && $_GET["errordispositivo"] == "si")) {
+                                $errorMsg = 'Error del Sistema';
+                                if (isset($_GET["errorusuario"])) $errorMsg = 'Datos incorrectos';
+                                if (isset($_GET["errordispositivo"])) $errorMsg = 'Acceso denegado: dispositivo no autorizado. Este usuario solo puede ingresar desde equipos previamente registrados.';
+                                echo '<div class="alert alert-danger mt-3 py-2 small text-center" style="border-radius: 8px;"><span>' . $errorMsg . '</span></div>';
                             } ?>
-                            <!-- .actions -->
-                        </form>
-                    </div> <!-- ojo aqui -->
-                </div>
-
-                <!-- Segundo Ambiente: Cambio de Contraseña -->
-                <div class="login-section card animate__animated animate__fadeIn" id="change-pass-section" style="display: none;">
-                    <div class="card-body">
-                        <div class="logo-relavera-stack text-center mb-4">
-                            <div class="portal-relavera-badge mb-2">Seguridad de cuenta</div>
-                            <h4 class="fw-bold" style="color: var(--login-accent);">Nueva Contraseña</h4>
-                        </div>
-                        <p class="small text-secondary mb-4">Por favor, actualice sus credenciales para continuar de forma segura.</p>
-                        
-                        <div id="change-pass-alert"></div>
-
-                        <form id="form-change-pass">
-                            <div class="form-group position-relative mb-3">
-                                <input class="form-control" type="password" id="old_pass" placeholder="Clave Actual" required />
-                                <i class="bi bi-key-fill form-control-icon"></i>
-                            </div>
-                            <div class="form-group position-relative mb-3">
-                                <input class="form-control" type="password" id="new_pass" placeholder="Nueva Clave" required />
-                                <i class="bi bi-shield-lock-fill form-control-icon"></i>
-                            </div>
-                            <div class="form-group position-relative mb-3">
-                                <input class="form-control" type="password" id="conf_pass" placeholder="Confirmar Clave" required />
-                                <i class="bi bi-check-circle-fill form-control-icon"></i>
-                            </div>
-                            
-                            <div class="login-actions mt-4">
-                                <button class="btn btn-primary w-100" type="button" id="btnSavePass" onclick="saveNewPass()">
-                                    Actualizar Contraseña <i class="bi bi-save-fill ms-1"></i>
-                                </button>
-                                <button class="btn btn-link w-100 mt-2 text-decoration-none small" type="button" onclick="location.href='administrador/LOGICA/logout.php'" style="color: #666;">
-                                    Cancelar y Salir
-                                </button>
-                            </div>
                         </form>
                     </div>
                 </div>
@@ -1061,6 +1089,7 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
                         </form>
                     </div>
                 </div>
+
                 <?php if ($es_portal_relavera) { ?>
                 <div class="login-exa-fuera text-center">
                     <span class="logo-exa-label">Plataforma</span>
@@ -1388,10 +1417,9 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
                         <strong style="color: var(--login-accent);">Se le recomienda cambiar su contrase&ntilde;a</strong> para continuar.
                     </p>
                     <div class="py-3">
-                        <a href="javascript:void(0)" 
-                           class="fs-5 fw-bold"
-                           style="color: var(--login-accent); text-decoration: underline; transition: all 0.2s;"
-                           onclick="switchToChangePass()">
+                        <a href="javascript:void(0)" class="fs-5 fw-bold"
+                            style="color: var(--login-accent); text-decoration: underline; transition: all 0.2s;"
+                            onclick="switchToChangePass()">
                             Cambiar Contrase&ntilde;a
                         </a>
                     </div>
@@ -1438,7 +1466,11 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
                     }
                 } else {
                     // Datos incorrectos, recargar con error
-                    window.location.href = 'index.php?errorusuario=si';
+                    if (r.error_type === 'device') {
+                        window.location.href = 'index.php?errordispositivo=si';
+                    } else {
+                        window.location.href = 'index.php?errorusuario=si';
+                    }
                 }
             }, 'json').fail(function() {
                 // Fallback a login tradicional
