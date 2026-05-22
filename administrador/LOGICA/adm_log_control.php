@@ -205,6 +205,18 @@ class Class_Log_Datos_Cnt extends MysqlDatos{
 		$is_mobile = preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i', $ua_user);
 		$current_type = $is_mobile ? 'MOVIL' : 'PC';
 		
+		// Lógica para obtener IP en formato IPv4
+		$ip_user = '0.0.0.0';
+		if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+			$ip_user = $_SERVER['HTTP_CLIENT_IP'];
+		} elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+			$ip_user = $_SERVER['HTTP_X_FORWARDED_FOR'];
+		} else {
+			$ip_user = $_SERVER['REMOTE_ADDR'];
+		}
+		
+		if ($ip_user == '::1') $ip_user = '127.0.0.1';
+
 		// Buscamos una MAC asignada que coincida con el tipo de equipo (PC o MOVIL)
 		$free_slot = $this->getRowConsulta(105, $usuario_id . '*' . $current_type, $obBD_conexion);
 		
@@ -212,18 +224,6 @@ class Class_Log_Datos_Cnt extends MysqlDatos{
 			// Capturamos metadatos del sistema
 			$inv_cod = $free_slot['InvDis_Cod'];
 			$inv_nom = $free_slot['InvDis_Nom'];
-			
-			// Lógica para obtener IP en formato IPv4
-			$ip_user = '0.0.0.0';
-			if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-				$ip_user = $_SERVER['HTTP_CLIENT_IP'];
-			} elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-				$ip_user = $_SERVER['HTTP_X_FORWARDED_FOR'];
-			} else {
-				$ip_user = $_SERVER['REMOTE_ADDR'];
-			}
-			
-			if ($ip_user == '::1') $ip_user = '127.0.0.1';
 			
 			// ¡Hay un cupo libre! Vinculamos este navegador a ese equipo físico
 			$params = $usuario_id . '*' . $deviceId . '*' . $inv_cod . '*' . $inv_nom . '*' . $ip_user . '*' . $ua_user;
