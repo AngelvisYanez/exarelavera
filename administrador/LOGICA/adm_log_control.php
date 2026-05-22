@@ -232,7 +232,21 @@ class Class_Log_Datos_Cnt extends MysqlDatos{
 			return array('success' => true, 'message' => 'Nuevo navegador vinculado exitosamente al equipo (' . $current_type . '): ' . $inv_nom);
 		}
 		
-		// 4. Si no hay cupos libres del TIPO correcto, BLOQUEAR
+		// 4. NUEVO HÍBRIDO: Validar si la IP y el TIPO coinciden con un cupo ya asignado (ocupado)
+		// Si es así, "hereda" ese cupo (reemplaza el Dev_Cod viejo por el nuevo)
+		$shared_slot = $this->getRowConsulta(107, $usuario_id . '*' . $ip_user . '*' . $current_type, $obBD_conexion);
+		
+		if ($shared_slot && isset($shared_slot['DisUsr_Cod'])) {
+			$dis_usr_cod = $shared_slot['DisUsr_Cod'];
+			$inv_nom = $shared_slot['InvDis_Nom'];
+			
+			// Actualizamos el registro existente con la nueva huella (Dev_Cod)
+			$this->operacionobBD(108, $deviceId . '*' . $ua_user . '*' . $dis_usr_cod, $obBD_conexion);
+			
+			return array('success' => true, 'message' => 'Cupo compartido por IP en equipo (' . $current_type . '): ' . $inv_nom);
+		}
+
+		// 5. Si no hay cupos libres del TIPO correcto ni IP compartida, BLOQUEAR
 		$error_msg = ($current_type == 'MOVIL') 
 			? 'Acceso denegado: Este usuario no tiene permitido el acceso desde dispositivos MÓVILES.' 
 			: 'Acceso denegado: Este usuario no tiene permitido el acceso desde computadoras (PC).';
