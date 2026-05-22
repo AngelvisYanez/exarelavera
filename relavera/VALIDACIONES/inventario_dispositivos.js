@@ -50,7 +50,7 @@ function initGrid() {
     $("#grid_dispositivos").jqGrid({
         url: '../COMPONENTES/getInventarioDispositivos.php',
         datatype: "json",
-        colNames: ['ID', 'MAC Address', 'Nombre Equipo', 'Fecha Registro', 'Descripción', 'Tipo', 'Estado', 'Acciones'],
+        colNames: ['ID', 'MAC Address', 'Nombre Equipo', 'Fecha Registro', 'Descripción', 'Cupos', 'Tipo', 'Estado', 'Acciones'],
         colModel: [
             { name: 'InvDis_Cod', index: 'InvDis_Cod', width: 50, align: 'center', hidden: true },
             { name: 'mac_address', index: 'mac_address', width: 150, align: 'center' },

@@ -384,7 +384,7 @@ require_once('../../administrador/LOGICA/seguridad.php');
     </div>
 
     <!-- Scripts -->
-    <script type="text/javascript" src="../VALIDACIONES/inventario_dispositivos.js?e=4"></script>
+    <script type="text/javascript" src="../VALIDACIONES/inventario_dispositivos.js?e=5"></script>
     <script type="text/javascript" src="../VALIDACIONES/asignacion_dispositivos.js?e=6"></script>
     
     <script>
