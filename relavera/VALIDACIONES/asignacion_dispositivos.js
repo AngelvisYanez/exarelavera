@@ -75,12 +75,22 @@ function initGridAsignados() {
         height: 350,
         caption: "Dispositivos del Usuario",
         hidegrid: false,
+        pager: "#pager_asignados",
         jsonReader: {
             repeatitems: false,
             id: "id",
             root: "rows"
         }
     });
+
+    $("#grid_asignados").jqGrid('navGrid', '#pager_asignados', 
+        { edit: false, add: false, del: false, search: false, refresh: true, view: false },
+        {}, // edit options
+        {}, // add options
+        {}, // del options
+        {}, // search options
+        {}  // view options
+    );
 }
 
 function cargarUsuarios() {
