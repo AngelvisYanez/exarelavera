@@ -59,43 +59,32 @@ if (isset($dataReport)) {
         foreach ($provee['Cpcs'] as $cuenta) {
             $Cpp_Data = $obBD_con1->getRowConsulta(31, $cuenta, $obBD_conexion);
             if (empty($Cpp_Data)) $Cpp_Data = $obBD_con1->getRowConsulta(46, $cuenta, $obBD_conexion);
-            $saldo = $Cpp_Data['total'] * 1;
-            $saldoFacturas = $saldoFacturas + $Cpp_Data['total'] * 1;
-            $saldoTotalFact = $saldoTotalFact + $Cpp_Data['total'] * 1;
+            $saldo = $Cpp_Data['Asi_Val'] * 1;
+            $saldoFacturas = $saldoFacturas + $Cpp_Data['Asi_Val'] * 1;
+            $saldoTotalFact = $saldoTotalFact + $Cpp_Data['Asi_Val'] * 1;
             if ($full) $table['{body}'] = $table['{body}'] . '<tr><td style="font-weight:bold;"  colspan="2">' . $Cpp_Data['Com_Codigo'] . '</td>  	    
                     <td style="font-weight:bold;" >' . $Cpp_Data['Caj_Fec'] . '</td> 
                     <td style="font-weight:bold;" colspan="4">' . $Cpp_Data['Tic_Des'] . ': ' . $Cpp_Data['Vet_Num'] . ' -  ' . $provee['Cliente'] . '</td>
-                    <td style="text-align:center;mso-number-format:&#39;#,##0.00&#39;;">' . number_format($Cpp_Data['total'], 2) . '</td>
+                    <td style="text-align:center;mso-number-format:&#39;#,##0.00&#39;;">' . number_format($Cpp_Data['Asi_Val'], 2) . '</td>
 		            </tr>';
 
-            $pagoRetencion = false;
             if ($Cpp_Data['Cpc_Cod'] != NULL) {
-                $cancelaciones = $obBD_con1->getArrayConsulta(49, $Cpp_Data['Cpc_Cod'] . '*' . $Pec_Cod . '*' . $txt_fec_ini . '*' . $txt_fec_fin, $obBD_conexion);
+                // Use date filter for payments to match the grid's case 47
+                $fec_ini_pago = empty($Pec_Cod) ? (empty($txt_fec_ini) ? '1900-01-01' : $txt_fec_ini) : '1900-01-01';
+                $fec_fin_pago = empty($Pec_Cod) ? (empty($txt_fec_fin) ? '2099-12-31' : $txt_fec_fin) : '2099-12-31';
+                $cancelaciones = $obBD_con1->getArrayConsulta(49, $Cpp_Data['Cpc_Cod'] . '*' . $Pec_Cod . '*' . $fec_ini_pago . '*' . $fec_fin_pago, $obBD_conexion);
                 foreach ($cancelaciones as $pago) {
                     if ($pago['Pag_Cod'] != 50) {
                         $banco = NULL;
-                        $PagAbr = 'EF';
-                        /* if ($pago['Pag_Cod'] == 2) $PagAbr = 'TC';
-                        if ($pago['Pag_Cod'] == 3) $PagAbr = 'CH';*/
-                        if ($pago['Pag_Abr'] == 'TDC') {
-                            $PagAbr = 'TC';
-                        } else if ($pago['Pag_Abr'] == 'CHE') {
-                            $PagAbr = 'CH';
-                        } else if ($pago['Pag_Abr'] == 'TRF') {
-                            $PagAbr = 'TRF';
-                        } else if ($pago['Pag_Abr'] == 'ANT') {
-                            $PagAbr = 'ANT';
-                        }
-
-
-                        if ($PagAbr != 'EF')
+                        if ($pago['For_Cod'] != 1) { // Not cash
                             $banco = $obBD_con1->getRowConsulta(38, $pago['Dcc_Cod'], $obBD_conexion);
+                        }
                         $saldo = $saldo - $pago['Cpc_Val'];
                         if ($full) $table['{body}'] = $table['{body}'] . '<tr>
                             <td style="font-weight:bold;border-right: ' . $b . ' solid #000;">&gt;</td>
                             <td>' . $pago['Com_Codigo'] . '</td>
                             <td style="text-align:center;">' . $pago['Cpc_Fec'] . '</td>
-                            <td>' . $PagAbr . '</td>
+                            <td>' . $pago['Pag_Des'] . '</td>
                             <td style="mso-number-format:&#39;@&#39;;">' . ($banco != NULL ? $banco['Che_Num'] : '') . '</td>
                             <td style="white-space:nowrap;overflow:hidden;">' . ($banco != NULL ? $banco['Che_Cta'] . '/' . $banco['Banco'] : '') . '</td>
                             <td style="text-align:center;">' . ($banco != NULL ? $banco['Che_Fec'] : '') . '</td>
@@ -106,15 +95,7 @@ if (isset($dataReport)) {
                 }
             }
 
-            if ($pagoRetencion == false) {
-                $Retenciones1 = $obBD_con1->getArrayConsulta(32, $Cpp_Data['Vet_Cod'], $obBD_conexion);
-                $Retenciones2 = $obBD_con1->getArrayConsulta(33, $Cpp_Data['Vet_Cod'], $obBD_conexion);
-                $Retenciones = array_merge($Retenciones1, $Retenciones2);
-                foreach ($Retenciones as $ret) {
-                    $saldo = $saldo - round($ret['retencion'], 2);
-                    if ($full) $table['{body}'] = $table['{body}'] . '<tr><td style="font-weight:bold;border-right: ' . $b . ' solid #000;">&gt;</td><td style="color:gray;">--------------</td><td style="text-align:center;">' . $ret['Ret_Fec'] . '</td><td>' . $ret['tipo'] . '</td><td colspan="2" style="mso-number-format:&#39;@&#39;;">' . $ret['Ret_Num'] . '</td><td></td><td style="text-align:right;mso-number-format:&#39;#,##0.00&#39;;" colspan="2">' . number_format($ret['retencion'], 2) . '</td><td></td></tr>';
-                }
-            }
+
 
             if ($full) $table['{body}'] = $table['{body}'] . '<tr><td style="word-wrap: break-word;" colspan="6"><strong>Obs:</strong> ' . $Cpp_Data['Vet_Obs'] . '</td><td colspan="3" style="text-align:right;border-top: ' . $b . ' solid #000;">SALDO DOCUMENTO:</td><td style="border-top: ' . $b . ' solid #000;text-align:right;mso-number-format:&#39;#,##0.00&#39;;">' . number_format($saldo, 2) . '</td></tr><tr><td colspan="9" style="height:20px;"></td></tr>';
             $saldoProvee = $saldoProvee + $saldo;
