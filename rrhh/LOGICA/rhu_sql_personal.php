@@ -52,7 +52,22 @@ function sentencias_rrhh($id, $Par_Sql)
             }
             if (isset($Par_Sql["limits"])) {
                 $Par_Sql["limits"] = "ORDER BY Prs_Ape $Par_Sql[limits]";
-                $campos = "Per_Cod,Ide_Des,ciudad.Ciu_Cod,Ciu_Des,Prs_Ced,Prs_Ape,Prs_Nom,IF(personal.Per_Req=1,'Si','No') AS Per_Req,IF(personal.Per_Req=1,1,0) AS requisitor,CONCAT(Prs_Ape,' ',Prs_Nom) AS empleado,Prs_Sex,IF(Prs_Sex='M','Masculino','Femenino') AS Prs_Gen,Prs_Esc,Prs_Fec,Prs_Tel,Prs_Te2,Prs_Cel,Prs_Cor,Prs_Dir,Prs_San,CONCAT(Prs_Nom,' ',Prs_Ape) AS personal,Per_Car,Per_Tit,IF(Per_Tit='Np','NO POSEE',IF(Per_Tit='Abg','ABOGADO/A',IF(Per_Tit='Bac','BACHILLER',IF(Per_Tit='Dr','DOCTOR/A',IF(Per_Tit='Eco','ECONOMISTA',IF(Per_Tit='Ing','INGENIERO/A',IF(Per_Tit='Lcd','LICENCIADO/A','')))))))AS Per_Ti1,Per_Obs,IF(ISNULL(Per_Fot),'no',Per_Fot) AS Per_Fot,Per_Cfi,personal.Per_Rso,personal.Per_Mov, IF (Per_Est='A','Activo','Inactivo') as Per_Est,CURDATE() AS Fec_Sys";
+                $campos = "Per_Cod,Ide_Des,ciudad.Ciu_Cod,Ciu_Des,Prs_Ced,Prs_Ape,Prs_Nom,IF(personal.Per_Req=1,'Si','No') AS Per_Req,IF(personal.Per_Req=1,1,0) AS requisitor,CONCAT(Prs_Ape,' ',Prs_Nom) AS empleado,Prs_Sex,IF(Prs_Sex='M','Masculino','Femenino') AS Prs_Gen,Prs_Esc,Prs_Fec,Prs_Tel,Prs_Te2,Prs_Cel,Prs_Cor,Prs_Dir,Prs_San,CONCAT(Prs_Nom,' ',Prs_Ape) AS personal,Per_Car,Per_Tit,
+                CASE Per_Tit
+                    WHEN 'Np' THEN 'NO POSEE'
+                    WHEN 'Abg' THEN 'ABOGADO/A'
+                    WHEN 'Bac' THEN 'BACHILLER'
+                    WHEN 'Dr' THEN 'DOCTOR/A'
+                    WHEN 'Sec' THEN 'SECUNDARIA'
+                    WHEN 'Unv' THEN 'UNIVERSITARIO'
+                    WHEN 'Eco' THEN 'ECONOMISTA'
+                    WHEN 'Ing' THEN 'INGENIERO/A'
+                    WHEN 'Lcd' THEN 'LICENCIADO/A'
+                    WHEN 'Mst' THEN 'MAESTRIA'
+                    WHEN 'Phd' THEN 'PHD'
+                    WHEN '' THEN '(Sin definir)'
+                    ELSE COALESCE(NULLIF(TRIM(personal.Per_Tit),''), '(Sin definir)')
+                END AS Per_Ti1";
             } else {
                 $campos = "COUNT(Per_Cod) as total";
                 $Par_Sql["limits"] = "";

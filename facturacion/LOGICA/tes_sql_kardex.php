@@ -705,5 +705,25 @@ function sentencias_kar($id, $Par_Sql)
 			//echo $sql;
 			return $sql;
 			break;
+	
+		case 5010:
+			/**
+			 * Consulta la cantidad del producto por fecha 0000-00-00 
+			 */
+			$joinBodega="";$bodega="";
+			if(!empty($Par_Sql['tipos']) && $Par_Sql['tipos'] == 'S') {
+				$bodega = " AND kardex_ie.Bod_Cod=" . $Par_Sql['Bod_Cod'];
+				$joinBodega = " INNER JOIN bodega ON bodega.Bod_Cod=kardex_ie.Bod_Cod";
+			}			
+			$sql = " SELECT (SUM(Kar_Can)- SUM(Kar_Sal)) as Stock, (SUM(Kar_Ims)- SUM(Kar_Ime)) AS Saldo, 
+				SUM((Kar_Ime)+(( ( (Kar_Ime)-(((Kar_Ime)*Kar_Des)/100)  )*Iva_Por)/100)) AS Precio_ent, 
+				SUM((Kar_Ims)+(( ( (Kar_Ims)-(((Kar_Ims)*Kar_Des)/100)  )*Iva_Por)/100)) AS Precio_sal
+				FROM kardex_ie
+				INNER JOIN iva ON iva.Iva_Cod=kardex_ie.Iva_Cod
+				$joinBodega
+				WHERE Kar_Est='A' AND Kar_Fec<'$Par_Sql[Kar_Fec] 00:00:00' AND Pro_Cod=$Par_Sql[Pro_Cod] $bodega ";
+			//echo $sql.'<br>';
+			return $sql;
+			break;
 	}
 }
