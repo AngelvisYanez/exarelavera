@@ -290,7 +290,7 @@ function sentencias_estado_cuenta($id, $Par_Sql) {
                         (SELECT COALESCE(SUM((m.Man_Pes / 1000) * IFNULL(m.Man_Pun, 0)), 0)
                         FROM manifiesto m
                         WHERE m.Cli_Cod = '$Cli_Cod' AND m.Man_Est = 'A' AND m.Man_Tes NOT IN ('R')
-                            AND m.Man_Tip != 'F'
+                            AND (m.Man_Tip != 'F' OR m.Man_Tip IS NULL)
                             $where_pla_m $where_date_m) as ManifiestosPend;";
             return $sql;
 
@@ -411,7 +411,7 @@ function sentencias_estado_cuenta($id, $Par_Sql) {
                                     WHERE m.Pla_Cod = mp.Pla_Cod 
                                     AND m.Man_Est = 'A' 
                                     AND m.Man_Tes NOT IN ('R')
-                                    AND m.Man_Tip != 'F'
+                                    AND (m.Man_Tip != 'F' OR m.Man_Tip IS NULL)
                                     AND m.Man_Fec BETWEEN '$Fec_Ini' AND '$Fec_Fin'), 0) as Manifiestos_Pend
                         
                     FROM manifiesto_plantas mp

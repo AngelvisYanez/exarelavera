@@ -397,7 +397,7 @@ function sentencias_dashboard_relavera($id, $Par_Sql) {
                         COALESCE((SELECT SUM((m.Man_Pes/1000)*IFNULL(m.Man_Pun,0)) FROM manifiesto m
                             INNER JOIN cliente c ON m.Cli_Cod = c.Cli_Cod
                             WHERE m.Man_Est = 'A' AND (m.Man_Tes IS NULL OR LOCATE('R', m.Man_Tes)=0)
-                            AND m.Man_Tip != 'F' AND (m.Vet_Cod IS NULL OR m.Vet_Cod = 0)
+                            AND (m.Man_Tip != 'F' OR m.Man_Tip IS NULL) AND (m.Vet_Cod IS NULL OR m.Vet_Cod = 0)
                             AND c.Emp_Cod = $Emp_Cod $where_pla_m $where_cli_m $where_fec_m), 0) as consumo_pendiente";
             return $sql;
 
