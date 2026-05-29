@@ -3,6 +3,8 @@
  * Recursos Humanos (rrhh)
  */
 
+
+
 function sentencias_rrhh($id,$Par_Sql)
 {
     switch ($id){
@@ -112,7 +114,23 @@ function sentencias_rrhh($id,$Par_Sql)
         break;
         //Select para extraer los datos de un empleado
         case 15:
-            $sql = "SELECT Per_Cod,Ide_Des,ciudad.Ciu_Cod,Ciu_Des,Prs_Ced,CONCAT(Prs_Ape,' ',Prs_Nom) AS empleado,IF(Prs_Sex='M','Masculino','Femenino') AS Prs_Gen,IF(Prs_Esc='S','SOLTERO/A',IF(Prs_Esc='C','CASADO/A',IF(Prs_Esc='D','DIVORCIADO/A',IF(Prs_Esc='V','VIUDO/A',IF(Prs_Esc='U','UNION LIBRE',''))))) AS Prs_Esc,Prs_Fec,Prs_Tel,Prs_Te2,Prs_Cel,Prs_Cor,Prs_Dir,Prs_San,CONCAT(Prs_Nom,' ',Prs_Ape) AS personal,Per_Car,IF(Per_Tit='Np','NO POSEE',IF(Per_Tit='Abg','ABOGADO/A',IF(Per_Tit='Bac','BACHILLER',IF(Per_Tit='Dr','DOCTOR/A',IF(Per_Tit='Eco','ECONOMISTA',IF(Per_Tit='Ing','INGENIERO/A',IF(Per_Tit='Lcd','LICENCIADO/A','')))))))AS Per_Tit,Per_Obs,IF(ISNULL(Per_Fot),'no',Per_Fot) AS Per_Fot,Per_Cfi, IF (Per_Est='A','Activo','Inactivo') as Per_Est,CURDATE() AS Fec_Sys
+            $sql = "SELECT Per_Cod,Ide_Des,ciudad.Ciu_Cod,Ciu_Des,Prs_Ced,CONCAT(Prs_Ape,' ',Prs_Nom) AS empleado,IF(Prs_Sex='M','Masculino','Femenino') AS Prs_Gen,IF(Prs_Esc='S','SOLTERO/A',IF(Prs_Esc='C','CASADO/A',IF(Prs_Esc='D','DIVORCIADO/A',IF(Prs_Esc='V','VIUDO/A',IF(Prs_Esc='U','UNION LIBRE',''))))) AS Prs_Esc,Prs_Fec,Prs_Tel,Prs_Te2,Prs_Cel,Prs_Cor,Prs_Dir,Prs_San,CONCAT(Prs_Nom,' ',Prs_Ape) AS personal,Per_Car,
+            CASE Per_Tit
+                WHEN 'Np' THEN 'NO POSEE'
+                WHEN 'Abg' THEN 'ABOGADO/A'
+                WHEN 'Bac' THEN 'BACHILLER'
+                WHEN 'Dr' THEN 'DOCTOR/A'
+                WHEN 'Sec' THEN 'SECUNDARIA'
+                WHEN 'Unv' THEN 'UNIVERSITARIO'
+                WHEN 'Eco' THEN 'ECONOMISTA'
+                WHEN 'Ing' THEN 'INGENIERO/A'
+                WHEN 'Lcd' THEN 'LICENCIADO/A'
+                WHEN 'Mst' THEN 'MAESTRIA'
+                WHEN 'Phd' THEN 'PHD'
+                WHEN '' THEN '(Sin definir)'
+                ELSE COALESCE(NULLIF(TRIM(personal.Per_Tit),''), '(Sin definir)')
+            END AS Per_Ti1,
+            Per_Obs,IF(ISNULL(Per_Fot),'no',Per_Fot) AS Per_Fot,Per_Cfi, IF (Per_Est='A','Activo','Inactivo') as Per_Est,TIMESTAMPDIFF(YEAR, Prs_fec, CURDATE()) AS Prs_Eda,CURDATE() AS Fec_Sys
                     FROM personal
                     INNER JOIN persona ON persona.Prs_Cod=personal.Prs_Cod
                     INNER JOIN identifica ON identifica.Ide_Cod=persona.Ide_Cod
@@ -182,11 +200,26 @@ function sentencias_rrhh($id,$Par_Sql)
                             personal.Per_Cod,
                             concat(persona.Prs_Ape,' ', persona.Prs_Nom) as empleado,
                             IF(Prs_Sex='M','Masculino','Femenino') AS Prs_Gen, 
-                            IF(Per_Tit='Np','NO POSEE',IF(Per_Tit='Abg','ABOGADO/A',IF(Per_Tit='Bac','BACHILLER',IF(Per_Tit='Dr','DOCTOR/A',IF(Per_Tit='Eco','ECONOMISTA',IF(Per_Tit='Ing','INGENIERO/A',IF(Per_Tit='Lcd','LICENCIADO/A','')))))))AS Per_Ti1,
+                            CASE Per_Tit
+                                WHEN 'Np' THEN 'NO POSEE'
+                                WHEN 'Abg' THEN 'ABOGADO/A'
+                                WHEN 'Bac' THEN 'BACHILLER'
+                                WHEN 'Dr' THEN 'DOCTOR/A'
+                                WHEN 'Sec' THEN 'SECUNDARIA'
+                                WHEN 'Unv' THEN 'UNIVERSITARIO'
+                                WHEN 'Eco' THEN 'ECONOMISTA'
+                                WHEN 'Ing' THEN 'INGENIERO/A'
+                                WHEN 'Lcd' THEN 'LICENCIADO/A'
+                                WHEN 'Mst' THEN 'MAESTRIA'
+                                WHEN 'Phd' THEN 'PHD'
+                                WHEN '' THEN '(Sin definir)'
+                                ELSE COALESCE(NULLIF(TRIM(personal.Per_Tit),''), '(Sin definir)')
+                            END AS Per_Ti1,
                             ciudad.Ciu_Des, 
                             dedica_lab.Ded_Des, 
                             tiposcargo.Tic_Des,
                             sueldos.Sue_Val,
+                            TIMESTAMPDIFF(YEAR, Prs_fec, CURDATE()) AS Prs_Eda,
                             CURDATE() AS Fec_Sys,
                             Prs_Fec, 
                             CASE 

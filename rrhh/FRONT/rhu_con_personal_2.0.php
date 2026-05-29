@@ -28,13 +28,7 @@ if (isset($personalAjax)) {
     $responce = $pagination['data'];
     $data["limits"] = $pagination['limits'];
     if ($contar['total'] > 0) {
-        $responce['rows'] = $obBD_con1->getArrayConsulta(57, $data, $obBD_conexion);
-        foreach($responce['rows'] as &$value){
-            $descomponer=explode('-',$value['Fec_Sys']);
-            $descompone1=explode('-',$value['Prs_Fec']);
-            $Prs_Eda=$descomponer[0]-$descompone1[0];
-            $value['Prs_Eda']=$Prs_Eda;
-        }unset($value);
+        $responce['rows'] = $obBD_con1->getArrayConsulta(57, $data, $obBD_conexion);        
     }
     utf8_encode_deep($responce['rows']);
     echo json_encode($responce);

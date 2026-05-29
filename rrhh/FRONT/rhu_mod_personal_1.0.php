@@ -59,7 +59,8 @@ if (isset($savePersonal)) {
 	}
     
     //Ejecutamos un update sobre la tabla personal para agregar la foto de perfil
-    $obBD_con1->operacionobBD(8, $Per_Cod . '*' . $Prs_Nom . '*' . $Prs_Ape . '*' . $Prs_Sex . '*' . $Prs_Esc . '*' . $Prs_Fec . '*' . $Ciu_Cod . '*' . $Prs_Tel . '*' . $Prs_Te2 . '*' . $Prs_Cel . '*' . $Prs_Cor . '*' . $Prs_Dir. '*' . $Prs_San . '*' . $Per_Car . '*' . $Per_Tit . '*' . $Per_Obs . '*' . $ruta. '*' . $Per_Cfi. '*' . $requisitor. '*' . $Per_Rso . '*' . $Per_Mov, $obBD_conexion);
+    //$obBD_con1->operacionobBD(8, $Per_Cod.'*'.$Prs_Nom.'*'.$Prs_Ape.'*'.$Prs_Sex.'*'.$Prs_Esc.'*'.$Prs_Fec.'*'.$Ciu_Cod.'*'.$Prs_Tel.'*'.$Prs_Te2.'*'.$Prs_Cel.'*'.$Prs_Cor.'*'.$Prs_Dir.'*'.$Prs_San.'*'.$Per_Tcf.'*'.$Per_Car.'*'.$Per_Tit.'*'.$Per_Obs.'*'.$ruta.'*'.$Per_Cfi.'*'.$requisitor.'*'.$Per_Rso.'*'.$Per_Mov.'*'.$Per_Tcf, $obBD_conexion);
+    $obBD_con1->operacionobBD(26, array('Per_Cod'=>$Per_Cod, 'Prs_Nom'=>$Prs_Nom, 'Prs_Ape'=>$Prs_Ape, 'Prs_Sex'=>$Prs_Sex, 'Prs_Esc'=>$Prs_Esc, 'Prs_Fec'=>$Prs_Fec, 'Ciu_Cod'=>$Ciu_Cod, 'Prs_Tel'=>$Prs_Tel, 'Prs_Te2'=>$Prs_Te2, 'Prs_Cel'=>$Prs_Cel, 'Prs_Cor'=>$Prs_Cor, 'Prs_Dir'=>$Prs_Dir, 'Prs_San'=>$Prs_San, 'Per_Tcf'=>$Per_Tcf, 'Per_Car'=>$Per_Car, 'Per_Tit'=>$Per_Tit, 'Per_Obs'=>$Per_Obs, 'ruta'=>$ruta, 'Per_Cfi'=>$Per_Cfi, 'requisitor'=>$requisitor, 'Per_Rso'=>$Per_Rso, 'Per_Mov'=>$Per_Mov, 'Per_Tcf'=>$Per_Tcf), $obBD_conexion);
     $obBD_con1->fin_transaccion_nomsn($obBD_conexion->conexion);
     if ($obBD_con1->Error == 0) {
         $response['success'] = true;
@@ -299,7 +300,7 @@ if (isset($savePersonal)) {
                                                                 </div>
                                                             </div>
                                                             <div class="form-group">
-                                                                <label class="col-sm-3 control-label label-sm" for="Per_Car">Carga Familiar:</label>  
+                                                                <label class="col-sm-3 control-label label-sm" for="Per_Car">No Carga Familiar:</label>  
                                                                 <div class="col-sm-4">
                                                                     <input id="Per_Car" name="Per_Car" class="form-control input-xs" placeholder="" type="text" onkeypress="return validar_numeric(event);"/>
                                                                 </div>
@@ -308,7 +309,7 @@ if (isset($savePersonal)) {
                                                                 <label class="col-sm-3 control-label label-sm required" for="Per_Tit">T&iacute;tulo:</label>  
                                                                 <div class="col-sm-4">
                                                                     <select id="Per_Tit" name="Per_Tit" class="form-control input-xs">
-                                                                        <option value="">Seleccione...</option>
+                                                                    <option value="">Seleccione...</option>
                                                                         <option value="Np">NO POSEE</option>
                                                                         <option value="Abg">ABOGADO/A</option>
                                                                         <option value="Bac">BACHILLER</option>
@@ -333,18 +334,38 @@ if (isset($savePersonal)) {
                                             <fieldset class="exa-fieldset">                           
                                                 <legend class="Titulos2">Datos M&eacute;dicos</legend>
                                                 <div class="col-md-6 col-sm-7">
-                                                    <div class="form-group">
-                                                        <label class="col-sm-4 control-label label-sm" for="Per_Cfi">Condici&oacute;n F&iacute;sica:</label>  
-                                                        <div class="col-sm-7">
-                                                            <textarea id="Per_Cfi" name="Per_Cfi" class="form-control input-xs" style="resize: none;"></textarea>
-                                                        </div>
+                                                    <label class="col-sm-3 control-label label-sm required" for="Per_Tcf">Tipo Condici&oacute;n F&iacute;sica:</label>
+                                                    <div class="col-sm-4">
+                                                        <select id="Per_Tcf" name="Per_Tcf" class="form-control input-xs">                                                            
+                                                            <option value="AP">APTO</option>
+                                                            <option value="AO">APTO CON OBSERVACION</option>
+                                                            <option value="AL">APTO CON LIMITACIONES</option>
+                                                            <option value="NA">NO APTO</option>
+                                                        </select>
                                                     </div>
-                                                </div>
+                                                </div>                                                
                                                 <div class="col-md-6 col-sm-5">
                                                     <div class="form-group">
                                                         <label class="col-sm-3 control-label label-sm" for="Prs_San">Tipo Sangre:</label>  
                                                         <div class="col-sm-4">
-                                                            <input id="Prs_San" name="Prs_San" class="form-control input-xs" type="text"/>
+                                                            <select id="Prs_San" name="Prs_San" class="form-control input-xs">                                                            
+                                                                <option value="A+">A+</option>
+                                                                <option value="A-">A-</option>
+                                                                <option value="B+">B+</option>
+                                                                <option value="B-">B-</option>
+                                                                <option value="AB+">AB+</option>
+                                                                <option value="AB-">AB-</option>
+                                                                <option value="O+">O+</option>
+                                                                <option value="O-">O-</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 col-sm-7">
+                                                    <div class="form-group">
+                                                        <label class="col-sm-3 control-label label-sm" for="Per_Cfi">Observaciones Condici&oacute;n:</label>  
+                                                        <div class="col-sm-7">
+                                                            <textarea id="Per_Cfi" name="Per_Cfi" class="form-control input-xs" style="resize: none;"></textarea>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -465,8 +486,8 @@ if (isset($savePersonal)) {
                 $('#Prs_Esc').prop('selectedIndex', 0);
                 $('#Prs_Sex').prop('selectedIndex', 0);
                 $('#Per_Tit').prop('selectedIndex', 0);
-                $('#Per_Rso').val('');
-                $('#Per_Mov').val('');
+                $('#Per_Rso').val('M');
+                $('#Per_Mov').val('BU');
                 $('#Ide_Des').val('');
             }
             //Funci�n para cargar la imagen en el fileinput

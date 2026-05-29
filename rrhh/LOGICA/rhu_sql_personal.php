@@ -30,13 +30,13 @@ function sentencias_rrhh($id, $Par_Sql)
             break;
             //Inserta un registro en la tabla persona 
         case 4:
-            $sql = "INSERT INTO persona (Ciu_Cod,Ide_Cod,Prs_Ced,Prs_Nom,Prs_Ape,Prs_Sex,Prs_Esc,Prs_Fec,Prs_Tel,Prs_Te2,Prs_Cel,Prs_Cor,Prs_Dir,Prs_San) 
-            VALUES('$Par_Sql[0]','$Par_Sql[1]','$Par_Sql[2]','$Par_Sql[3]','$Par_Sql[4]','$Par_Sql[5]','$Par_Sql[6]','$Par_Sql[7]','$Par_Sql[8]','$Par_Sql[9]','$Par_Sql[10]','$Par_Sql[11]','$Par_Sql[12]','$Par_Sql[13]')";
+            $sql = "INSERT INTO persona (Ciu_Cod,Ide_Cod,Prs_Ced,Prs_Nom,Prs_Ape,Prs_Sex,Prs_Esc,Prs_Fec,Prs_Tel,Prs_Te2,Prs_Cel,Prs_Cor,Prs_Dir,Prs_San,Per_Tcf) 
+            VALUES('$Par_Sql[0]','$Par_Sql[1]','$Par_Sql[2]','$Par_Sql[3]','$Par_Sql[4]','$Par_Sql[5]','$Par_Sql[6]','$Par_Sql[7]','$Par_Sql[8]','$Par_Sql[9]','$Par_Sql[10]','$Par_Sql[11]','$Par_Sql[12]','$Par_Sql[13]','$Par_Sql[14]')";
             break;
             //Inserta un registro en la tabla personal 
         case 5:
-            $sql = "INSERT INTO personal (Prs_Cod,Emp_Cod,Per_Car,Per_Tit,Per_Obs,Per_Cfi,Per_Req,Per_Rso,Per_Mov) 
-            VALUES('$Par_Sql[0]','$Par_Sql[1]','$Par_Sql[2]','$Par_Sql[3]','$Par_Sql[4]','$Par_Sql[5]',$Par_Sql[6],'$Par_Sql[7]','$Par_Sql[8]')";
+            $sql = "INSERT INTO personal (Prs_Cod,Emp_Cod,Per_Car,Per_Tit,Per_Obs,Per_Cfi,Per_Req,Per_Rso,Per_Mov,Per_Tcf) 
+            VALUES('$Par_Sql[0]','$Par_Sql[1]','$Par_Sql[2]','$Par_Sql[3]','$Par_Sql[4]','$Par_Sql[5]',$Par_Sql[6],'$Par_Sql[7]','$Par_Sql[8]','$Par_Sql[9]')";
             //echo $sql;
             break;
             //Update en la tabla personal para actualizar la foto de perfil (Per_Fot)
@@ -52,7 +52,8 @@ function sentencias_rrhh($id, $Par_Sql)
             }
             if (isset($Par_Sql["limits"])) {
                 $Par_Sql["limits"] = "ORDER BY Prs_Ape $Par_Sql[limits]";
-                $campos = "Per_Cod,Ide_Des,ciudad.Ciu_Cod,Ciu_Des,Prs_Ced,Prs_Ape,Prs_Nom,IF(personal.Per_Req=1,'Si','No') AS Per_Req,IF(personal.Per_Req=1,1,0) AS requisitor,CONCAT(Prs_Ape,' ',Prs_Nom) AS empleado,Prs_Sex,IF(Prs_Sex='M','Masculino','Femenino') AS Prs_Gen,Prs_Esc,Prs_Fec,Prs_Tel,Prs_Te2,Prs_Cel,Prs_Cor,Prs_Dir,Prs_San,CONCAT(Prs_Nom,' ',Prs_Ape) AS personal,Per_Car,Per_Tit,
+                $campos = "Per_Cod,Ide_Des,ciudad.Ciu_Cod,Ciu_Des,Prs_Ced,Prs_Ape,Prs_Nom,IF(personal.Per_Req=1,'Si','No') AS Per_Req,IF(personal.Per_Req=1,1,0) AS requisitor,CONCAT(Prs_Ape,' ',Prs_Nom) AS empleado,
+                Prs_Sex,IF(Prs_Sex='M','Masculino','Femenino') AS Prs_Gen,Prs_Esc,Per_Rso,Per_Mov,Per_Tcf,Per_Cfi,Prs_Fec,Prs_Tel,Prs_Te2,Prs_Cel,Prs_Cor,Prs_Dir,Prs_San,CONCAT(Prs_Nom,' ',Prs_Ape) AS personal,Per_Car,Per_Tit,TIMESTAMPDIFF(YEAR, Prs_fec, CURDATE()) AS Prs_Eda,
                 CASE Per_Tit
                     WHEN 'Np' THEN 'NO POSEE'
                     WHEN 'Abg' THEN 'ABOGADO/A'
@@ -80,7 +81,7 @@ function sentencias_rrhh($id, $Par_Sql)
             //echo $sql;
             break;
 
-            //Update en la tabla persona y personal
+        //Update en la tabla persona y personal
         case 8:
             if (empty($Par_Sql[16])) {
                 $Par_Sql[16] = "NULL";
@@ -96,6 +97,9 @@ function sentencias_rrhh($id, $Par_Sql)
             }
             if (isset($Par_Sql[20])) {
                 $sql .= ",Per_Mov='$Par_Sql[20]'";
+            }
+            if (isset($Par_Sql[21])) {
+                $sql .= ",Per_Tcf='$Par_Sql[21]'";
             }
             $sql .= " WHERE Per_Cod='$Par_Sql[0]' AND personal.Prs_Cod=persona.Prs_Cod";
             break;
@@ -145,12 +149,53 @@ function sentencias_rrhh($id, $Par_Sql)
             break;
             //Select para extraer los datos de un empleado
         case 15:
-            $sql = "SELECT Per_Cod,Ide_Des,ciudad.Ciu_Cod,Ciu_Des,Prs_Ced,CONCAT(Prs_Ape,' ',Prs_Nom) AS empleado,IF(Prs_Sex='M','Masculino','Femenino') AS Prs_Gen,IF(Prs_Esc='S','SOLTERO/A',IF(Prs_Esc='C','CASADO/A',IF(Prs_Esc='D','DIVORCIADO/A',IF(Prs_Esc='V','VIUDO/A',IF(Prs_Esc='U','UNION LIBRE',''))))) AS Prs_Esc,Prs_Fec,Prs_Tel,Prs_Te2,Prs_Cel,Prs_Cor,Prs_Dir,Prs_San,CONCAT(Prs_Nom,' ',Prs_Ape) AS personal,Per_Car,IF(Per_Tit='Np','NO POSEE',IF(Per_Tit='Abg','ABOGADO/A',IF(Per_Tit='Bac','BACHILLER',IF(Per_Tit='Dr','DOCTOR/A',IF(Per_Tit='Eco','ECONOMISTA',IF(Per_Tit='Ing','INGENIERO/A',IF(Per_Tit='Lcd','LICENCIADO/A','')))))))AS Per_Tit,Per_Obs,IF(ISNULL(Per_Fot),'no',Per_Fot) AS Per_Fot,Per_Cfi,personal.Per_Rso,personal.Per_Mov, IF (Per_Est='A','Activo','Inactivo') as Per_Est,CURDATE() AS Fec_Sys
+            $sql = "SELECT Per_Cod,Ide_Des,ciudad.Ciu_Cod,Ciu_Des,Prs_Ced,CONCAT(Prs_Ape,' ',Prs_Nom) AS empleado,IF(Prs_Sex='M','Masculino','Femenino') AS Prs_Gen,IF(Prs_Esc='S','SOLTERO/A',IF(Prs_Esc='C','CASADO/A',IF(Prs_Esc='D','DIVORCIADO/A',IF(Prs_Esc='V','VIUDO/A',IF(Prs_Esc='U','UNION LIBRE',''))))) AS Prs_Esc,Prs_Fec,Prs_Tel,Prs_Te2,Prs_Cel,Prs_Cor,Prs_Dir,Prs_San,CONCAT(Prs_Nom,' ',Prs_Ape) AS personal,Per_Car,
+            CASE Per_Tit
+                    WHEN 'Np' THEN 'NO POSEE'
+                    WHEN 'Abg' THEN 'ABOGADO/A'
+                    WHEN 'Bac' THEN 'BACHILLER'
+                    WHEN 'Dr' THEN 'DOCTOR/A'
+                    WHEN 'Sec' THEN 'SECUNDARIA'
+                    WHEN 'Unv' THEN 'UNIVERSITARIO'
+                    WHEN 'Eco' THEN 'ECONOMISTA'
+                    WHEN 'Ing' THEN 'INGENIERO/A'
+                    WHEN 'Lcd' THEN 'LICENCIADO/A'
+                    WHEN 'Mst' THEN 'MAESTRIA'
+                    WHEN 'Phd' THEN 'PHD'
+                    WHEN '' THEN '(Sin definir)'
+                    ELSE COALESCE(NULLIF(TRIM(personal.Per_Tit),''), '(Sin definir)')            
+                END AS Per_Tit,
+                CASE Per_Tcf
+                    WHEN 'AP' THEN 'APTO'
+                    WHEN 'AO' THEN 'APTO CON OBSERVACION'
+                    WHEN 'AL' THEN 'APTO CON LIMITACIONES'
+                    WHEN 'NA' THEN 'NO APTO'                    
+                    WHEN '' THEN '(Sin definir)'
+                    ELSE COALESCE(NULLIF(TRIM(personal.Per_Tcf),''), '(Sin definir)')
+                END AS Per_Tcf,
+                CASE Per_Rso
+                    WHEN 'A' THEN 'ALTO'
+                    WHEN 'M' THEN 'MEDIO'
+                    WHEN 'B' THEN 'BAJO'
+                    WHEN '' THEN '(Sin definir)'
+                    ELSE COALESCE(NULLIF(TRIM(personal.Per_Rso),''), '(Sin definir)')
+                END AS Per_Rso,
+                CASE Per_Mov
+                    WHEN 'BU' THEN 'BUS'
+                    WHEN 'MO' THEN 'MOTO'
+                    WHEN 'VP' THEN 'VEHICULO PARTICULAR'
+                    WHEN 'CA' THEN 'CAMINANDO'
+                    WHEN 'BI' THEN 'BICICLETA'
+                    WHEN 'VI' THEN 'VEHICULO INSTITUCIONAL'
+                    WHEN '' THEN '(Sin definir)'
+                    ELSE COALESCE(NULLIF(TRIM(personal.Per_Mov),''), '(Sin definir)')
+                END AS Per_Mov,
+                Per_Obs,IF(ISNULL(Per_Fot),'no',Per_Fot) AS Per_Fot,Per_Cfi, IF (Per_Est='A','Activo','Inactivo') as Per_Est,CURDATE() AS Fec_Sys
                     FROM personal
                     INNER JOIN persona ON persona.Prs_Cod=personal.Prs_Cod
                     INNER JOIN identifica ON identifica.Ide_Cod=persona.Ide_Cod
                     INNER JOIN ciudad ON ciudad.Ciu_Cod=persona.Ciu_Cod
-                    WHERE Per_Cod='$Par_Sql[0]' AND personal.Emp_Cod='$Par_Sql[1]'";
+                    WHERE Per_Cod='$Par_Sql[0]' AND personal.Emp_Cod='$Par_Sql[1]'";            
             break;
             //Update en la tabla persona
         case 16:
@@ -320,6 +365,19 @@ function sentencias_rrhh($id, $Par_Sql)
                     GROUP BY datos.rango_ord, datos.rango_des
                     ORDER BY datos.rango_ord";
             break;
+        //Update en la tabla persona y personal
+        case 26:
+            $sql = "UPDATE persona
+                INNER JOIN personal ON persona.Prs_Cod=personal.Prs_Cod
+                SET Prs_Nom='$Par_Sql[Prs_Nom]',Prs_Ape='$Par_Sql[Prs_Ape]',Prs_Sex='$Par_Sql[Prs_Sex]',Prs_Esc='$Par_Sql[Prs_Esc]',Prs_Fec='$Par_Sql[Prs_Fec]',
+                    Ciu_Cod='$Par_Sql[Ciu_Cod]',Prs_Tel='$Par_Sql[Prs_Tel]',Prs_Te2='$Par_Sql[Prs_Te2]',Prs_Cel='$Par_Sql[Prs_Cel]',
+                    Prs_Cor='$Par_Sql[Prs_Cor]',Prs_Dir='$Par_Sql[Prs_Dir]',Prs_San='$Par_Sql[Prs_San]',Per_Car='$Par_Sql[Per_Car]',
+                    Per_Tit='$Par_Sql[Per_Tit]',Per_Obs='$Par_Sql[Per_Obs]',Per_Fot='$Par_Sql[Per_Fot]',Per_Cfi='$Par_Sql[Per_Cfi]',
+                    Per_Tcf='$Par_Sql[Per_Tcf]',Per_Rso='$Par_Sql[Per_Rso]',Per_Mov='$Par_Sql[Per_Mov]'
+                WHERE personal.Per_Cod='$Par_Sql[Per_Cod]'";
+                //echo $sql;
+            break;
+            
     }
 
     return $sql;

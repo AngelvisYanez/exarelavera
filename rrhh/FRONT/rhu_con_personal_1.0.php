@@ -16,6 +16,7 @@ $obBD_conexion = new Class_Log_Conexion_rrhh($Ses_Dat_Dis);
  * Creacion del objeto mysql para las consultas 
  */
 $obBD_con1 = new Class_Log_Datos_rrhh;
+$hoy = date("Y-m-d");
 
 //Secci�n para cargar datos en el Jqgrid referente al personal registrado
 if (isset($personalAjax)) {
@@ -26,13 +27,7 @@ if (isset($personalAjax)) {
     $responce = $pagination['data'];
     $data["limits"] = $pagination['limits'];
     if ($contar['total'] > 0) {
-        $responce['rows'] = $obBD_con1->getArrayConsulta(7, $data, $obBD_conexion);
-        foreach($responce['rows'] as &$value){
-            $descomponer=explode('-',$value['Fec_Sys']);
-            $descompone1=explode('-',$value['Prs_Fec']);
-            $Prs_Eda=$descomponer[0]-$descompone1[0];
-            $value['Prs_Eda']=$Prs_Eda;
-        }unset($value);
+        $responce['rows'] = $obBD_con1->getArrayConsulta(7, $data, $obBD_conexion);        
     }
     utf8_encode_deep($responce['rows']);
     echo json_encode($responce);

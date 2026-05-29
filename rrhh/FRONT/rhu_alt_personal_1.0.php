@@ -52,7 +52,7 @@ if (isset($savePersonal)) {
         mkdir($carpeta, 0777, true);
     }
     if ($Prs_Cod == 0) {
-        $obBD_con1->operacionobBD(4, $Ciu_Cod . '*' . $Ide_Cod . '*' . $Prs_Ced . '*' . $Prs_Nom . '*' . $Prs_Ape . '*' . $Prs_Sex . '*' . $Prs_Esc . '*' . $Prs_Fec . '*' . $Prs_Tel . '*' . $Prs_Te2 . '*' . $Prs_Cel . '*' . $Prs_Cor . '*' . $Prs_Dir.'*'.$Prs_San, $obBD_conexion);
+        $obBD_con1->operacionobBD(4, $Ciu_Cod.'*'.$Ide_Cod.'*'.$Prs_Ced.'*'.$Prs_Nom.'*'.$Prs_Ape.'*'.$Prs_Sex.'*'.$Prs_Esc.'*'.$Prs_Fec.'*'.$Prs_Tel.'*'.$Prs_Te2.'*'.$Prs_Cel.'*'.$Prs_Cor.'*'.$Prs_Dir.'*'.$Prs_San.'*'.$Per_Tcf, $obBD_conexion);
         //Secci�n para obtener el c�digo de la �ltima inserci�n en la tabla persona
         $Prs_Cod = $obBD_con1->insercionid($obBD_conexion->conexion);
     }else{
@@ -289,8 +289,9 @@ if (isset($savePersonal)) {
                                                                 <label class="col-sm-3 control-label label-sm" for="Per_Rso">Riesgo Social:</label>
                                                                 <div class="col-sm-4">
                                                                 <select id="Per_Rso" name="Per_Rso" class="form-control input-xs">
+                                                                        <option value="" selected>Seleccione...</option>
                                                                         <option value="A">ALTO</option>
-                                                                        <option value="M" selected>MEDIO</option>
+                                                                        <option value="M">MEDIO</option>
                                                                         <option value="B">BAJO</option>
                                                                     </select>
                                                                 </div>
@@ -299,7 +300,8 @@ if (isset($savePersonal)) {
                                                                 <label class="col-sm-3 control-label label-sm" for="Per_Mov">Tipo Movilizacion:</label>
                                                                 <div class="col-sm-4">
                                                                     <select id="Per_Mov" name="Per_Mov" class="form-control input-xs">
-                                                                        <option value="BU" selected>BUS</option>
+                                                                        <option value="" selected>Seleccione...</option>
+                                                                        <option value="BU">BUS</option>
                                                                         <option value="MO">MOTO</option>
                                                                         <option value="VP">VEHICULO PARTICULAR</option>
                                                                         <option value="CA">CAMINANDO</option>
@@ -318,6 +320,7 @@ if (isset($savePersonal)) {
                                                                 <label class="col-sm-3 control-label label-sm required" for="Per_Tit">T&iacute;tulo:</label>
                                                                 <div class="col-sm-4">
                                                                     <select id="Per_Tit" name="Per_Tit" class="form-control input-xs">
+                                                                        <option value="">Seleccione...</option>
                                                                         <option value="Np">NO POSEE</option>
                                                                         <option value="Abg">ABOGADO/A</option>
                                                                         <option value="Bac">BACHILLER</option>
@@ -339,21 +342,41 @@ if (isset($savePersonal)) {
                                                     </div>
                                                 </div>
                                             </fieldset>
-                                            <fieldset class="exa-fieldset">
+                                            <fieldset class="exa-fieldset">                                                
                                                 <legend class="Titulos2">Datos M&eacute;dicos</legend>
                                                 <div class="col-md-6 col-sm-7">
-                                                    <div class="form-group">
-                                                        <label class="col-sm-4 control-label label-sm" for="Per_Cfi">Condici&oacute;n F&iacute;sica:</label>
-                                                        <div class="col-sm-7">
-                                                            <textarea id="Per_Cfi" name="Per_Cfi" class="form-control input-xs" style="resize: none;"></textarea>
-                                                        </div>
+                                                    <label class="col-sm-3 control-label label-sm required" for="Per_Tcf">Tipo Condici&oacute;n F&iacute;sica:</label>
+                                                    <div class="col-sm-4">
+                                                        <select id="Per_Tcf" name="Per_Tcf" class="form-control input-xs">                                                            
+                                                            <option value="AP">APTO</option>
+                                                            <option value="AO">APTO CON OBSERVACION</option>
+                                                            <option value="AL">APTO CON LIMITACIONES</option>
+                                                            <option value="NA">NO APTO</option>
+                                                        </select>
                                                     </div>
-                                                </div>
+                                                </div>                                                
                                                 <div class="col-md-6 col-sm-5">
                                                     <div class="form-group">
                                                         <label class="col-sm-3 control-label label-sm" for="Prs_San">Tipo Sangre:</label>
                                                         <div class="col-sm-4">
-                                                            <input id="Prs_San" name="Prs_San" class="form-control input-xs" type="text"/>
+                                                        <select id="Prs_San" name="Prs_San" class="form-control input-xs">                                                            
+                                                            <option value="A+">A+</option>
+                                                            <option value="A-">A-</option>
+                                                            <option value="B+">B+</option>
+                                                            <option value="B-">B-</option>
+                                                            <option value="AB+">AB+</option>
+                                                            <option value="AB-">AB-</option>
+                                                            <option value="O+">O+</option>
+                                                            <option value="O-">O-</option>
+                                                        </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 col-sm-7">
+                                                    <div class="form-group">
+                                                        <label class="col-sm-3 control-label label-sm" for="Per_Cfi">Observaciones Condici&oacute;n:</label>
+                                                        <div class="col-sm-7">
+                                                            <textarea id="Per_Cfi" name="Per_Cfi" class="form-control input-xs" style="resize: none;"></textarea>
                                                         </div>
                                                     </div>
                                                 </div>
