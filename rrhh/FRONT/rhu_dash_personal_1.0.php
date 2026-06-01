@@ -1,53 +1,77 @@
 <?php
+/**
+ * Dashboard resumido de personal: perfil, laboral, movilidad, familia y salud.
+ */
 require_once('../../administrador/LOGICA/seguridad.php');
-require_once('../LOGICA/fac_log_compras.php');
+require_once('../LOGICA/rhu_log_personal.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
 
-$obBD_conexion = new Class_Log_Conexion_Comt($Ses_Dat_Dis);
-$obBD_con1 = new Class_Log_Datos_Comt;
+$obBD_conexion = new Class_Log_Conexion_rrhh($Ses_Dat_Dis);
+$obBD_con1 = new Class_Log_Datos_rrhh;
 
-$hoy = date('Y-m-d');
-$inicioAnio = date('Y-01-01');
-
-function dashProvNormalizarFecha($valor, $defecto) {
-    $valor = trim((string) $valor);
-    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $valor)) {
-        return $valor;
-    }
-    return $defecto;
-}
-
-if (isset($dashProveedoresAjax)) {
+if (isset($dashPersonalAjax)) {
     header('Content-Type: application/json; charset=UTF-8');
-
-    $desde = dashProvNormalizarFecha(isset($_REQUEST['desde']) ? $_REQUEST['desde'] : '', $inicioAnio);
-    $hasta = dashProvNormalizarFecha(isset($_REQUEST['hasta']) ? $_REQUEST['hasta'] : '', $hoy);
-    if ($desde > $hasta) {
-        $tmp = $desde;
-        $desde = $hasta;
-        $hasta = $tmp;
+    $bySex = $obBD_con1->getArrayConsulta(18, $Ses_Emp_Cod, $obBD_conexion);
+    $byTit = $obBD_con1->getArrayConsulta(19, $Ses_Emp_Cod, $obBD_conexion);
+    $byCiu = $obBD_con1->getArrayConsulta(20, $Ses_Emp_Cod, $obBD_conexion);
+    $byMov = $obBD_con1->getArrayConsulta(21, $Ses_Emp_Cod, $obBD_conexion);
+    $byRso = $obBD_con1->getArrayConsulta(23, $Ses_Emp_Cod, $obBD_conexion);
+    $byIng = $obBD_con1->getArrayConsulta(24, $Ses_Emp_Cod, $obBD_conexion);
+    $byAre = $obBD_con1->getArrayConsulta(27, $Ses_Emp_Cod, $obBD_conexion);
+    $byCar = $obBD_con1->getArrayConsulta(28, $Ses_Emp_Cod, $obBD_conexion);
+    $byTcf = $obBD_con1->getArrayConsulta(29, $Ses_Emp_Cod, $obBD_conexion);
+    $byCon = $obBD_con1->getArrayConsulta(30, $Ses_Emp_Cod, $obBD_conexion);
+    $bySan = $obBD_con1->getArrayConsulta(31, $Ses_Emp_Cod, $obBD_conexion);
+    $ultRol = $obBD_con1->getRowConsultaSql(
+        "SELECT rp.Rol_Cod, rp.Rol_Num, rp.Rol_Fef, rp.Rol_Fei, rp.Rol_Con
+         FROM rol_pagos rp
+         INNER JOIN areas_rrhh ar ON ar.Are_Cod = rp.Are_Cod
+         INNER JOIN det_rpagos dr ON dr.Rol_Cod = rp.Rol_Cod
+         INNER JOIN campo_rol cr ON cr.Cam_Cod = dr.Cam_Cod
+             AND cr.Cam_Var IN ('total_ingr', 'total_ing')
+         WHERE ar.Emp_Cod = " . intval($Ses_Emp_Cod) . " AND rp.Rol_Est = 'A'
+         ORDER BY IFNULL(rp.Rol_Fef, rp.Rol_Fei) DESC, rp.Rol_Num DESC, rp.Rol_Cod DESC
+         LIMIT 1",
+        $obBD_conexion
+    );
+    utf8_encode_deep($bySex);
+    utf8_encode_deep($byTit);
+    utf8_encode_deep($byCiu);
+    utf8_encode_deep($byMov);
+    utf8_encode_deep($byRso);
+    utf8_encode_deep($byIng);
+    utf8_encode_deep($byAre);
+    utf8_encode_deep($byCar);
+    utf8_encode_deep($byTcf);
+    utf8_encode_deep($byCon);
+    utf8_encode_deep($bySan);
+    if (is_array($ultRol)) {
+        utf8_encode_deep($ultRol);
     }
-
-    $param = $Ses_Emp_Cod . '*' . $desde . '*' . $hasta;
-
-    $topProv = $obBD_con1->getArrayConsulta(1200, $param, $obBD_conexion);
-    $provCiudad = $obBD_con1->getArrayConsulta(1201, $param, $obBD_conexion);
-    $topProd = $obBD_con1->getArrayConsulta(1202, $param, $obBD_conexion);
-    $creditos = $obBD_con1->getArrayConsulta(1203, $param, $obBD_conexion);
-
-    utf8_encode_deep($topProv);
-    utf8_encode_deep($provCiudad);
-    utf8_encode_deep($topProd);
-    utf8_encode_deep($creditos);
-
+    $rowTotal = $obBD_con1->getArrayConsulta(25, $Ses_Emp_Cod, $obBD_conexion);
+    $total = 0;
+    if (!empty($rowTotal[0]['total'])) {
+        $total = (int) $rowTotal[0]['total'];
+    } else {
+        foreach ($bySex as $r) {
+            $total += (int) $r['total'];
+        }
+    }
     echo json_encode(array(
         'success' => true,
-        'desde' => $desde,
-        'hasta' => $hasta,
-        'topProveedores' => $topProv,
-        'proveedoresPorCiudad' => $provCiudad,
-        'topProductos' => $topProd,
-        'creditosProveedores' => $creditos
+        'totalPersonal' => $total,
+        'bySex' => $bySex,
+        'byTit' => $byTit,
+        'byCiu' => $byCiu,
+        'byMov' => $byMov,
+        'byRso' => $byRso,
+        'byIng' => $byIng,
+        'byAre' => $byAre,
+        'byCar' => $byCar,
+        'byTcf' => $byTcf,
+        'byCon' => $byCon,
+        'bySan' => $bySan,
+        'ultimoRol' => $ultRol ? $ultRol : array(),
     ));
     exit();
 }
@@ -55,337 +79,1214 @@ if (isset($dashProveedoresAjax)) {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dashboard proveedores [EXA]</title>
+    <title>Dashboard personal [EXA]</title>
     <meta charset="UTF-8">
     <?php require_once("../../mascaras/model1/estilos/jqgrid5.php"); ?>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .dash-wrap { padding: 12px 10px 8px; }
-        .dash-card {
-            background: #fff;
-            border: 1px solid #e8ecf1;
-            border-radius: 10px;
-            margin-bottom: 18px;
-            padding: 16px 18px;
-            min-height: 360px;
-            box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06);
+        :root {
+            --dash-bg: #eef1f6;
+            --dash-card: #ffffff;
+            --dash-text: #1e293b;
+            --dash-muted: #64748b;
+            --dash-border: #e8ecf3;
+            --dash-teal: #26a69a;
+            --dash-purple: #7e57c2;
+            --dash-pink: #ec407a;
+            --dash-blue: #42a5f5;
+            --dash-orange: #ffa726;
+            --dash-shadow: 0 4px 18px rgba(15, 23, 42, 0.07);
+            --dash-radius: 14px;
         }
-        .dash-card h4 {
-            margin: 0 0 12px 0;
-            font-size: 14px;
-            font-weight: 600;
-            color: #1e293b;
-            border-bottom: 1px solid #f1f5f9;
-            padding-bottom: 10px;
+        body.dash-modern-body { background: var(--dash-bg) !important; }
+        .panel-main.dash-panel {
+            border: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
+            margin: 0 !important;
         }
-        .dash-card h4 i { color: #3b82f6; margin-right: 6px; }
-        .dash-host { position: relative; width: 100%; height: 300px; }
-        .dash-empty { text-align: center; color: #94a3b8; padding: 80px 10px; font-size: 13px; }
-        .dash-kpi { font-size: 12px; color: #64748b; margin-bottom: 8px; font-weight: 500; }
-
-        /* Barra de filtros */
-        .dash-filter-bar {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: flex-end;
-            gap: 14px 20px;
-            margin-bottom: 22px;
-            padding: 18px 22px;
-            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 55%, #f1f5f9 100%);
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.07);
+        .panel-main.dash-panel > .panel-heading.exa-header {
+            display: none;
         }
-        .dash-filter-head {
-            flex: 1 1 100%;
+        .dash-app {
+            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+            color: var(--dash-text);
+            padding: 8px 4px 28px;
+        }
+        .dash-topbar {
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 2px;
+            gap: 12px;
+            margin-bottom: 20px;
         }
-        .dash-filter-title {
+        .dash-topbar-title {
             margin: 0;
-            font-size: 15px;
-            font-weight: 600;
-            color: #0f172a;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--dash-text);
             letter-spacing: -0.02em;
         }
-        .dash-filter-title i {
-            color: #3b82f6;
-            margin-right: 8px;
-            font-size: 14px;
+        .dash-topbar-sub {
+            margin: 4px 0 0;
+            font-size: 12px;
+            color: var(--dash-muted);
         }
-        .dash-filter-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 5px 12px;
-            font-size: 11px;
+        .btn-print-dash {
+            margin: 0;
+            border: none;
+            border-radius: 10px;
+            padding: 8px 16px;
+            background: var(--dash-purple);
+            color: #fff;
             font-weight: 600;
-            color: #1d4ed8;
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            border-radius: 999px;
-            min-height: 28px;
+            font-size: 12px;
+            box-shadow: 0 4px 12px rgba(126, 87, 194, 0.35);
         }
-        .dash-filter-badge:empty { display: none; }
-        .dash-filter-badge i { font-size: 12px; opacity: 0.85; }
-        .dash-filter-field {
+        .btn-print-dash:hover { background: #6a4aad; color: #fff; }
+        .dash-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+        .dash-kpi-card {
+            background: var(--dash-card);
+            border-radius: var(--dash-radius);
+            padding: 18px 20px;
+            box-shadow: var(--dash-shadow);
+            border: 1px solid var(--dash-border);
+            position: relative;
+            overflow: hidden;
+        }
+        .dash-kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+        }
+        .dash-kpi-card--teal::before { background: linear-gradient(90deg, var(--dash-teal), #4db6ac); }
+        .dash-kpi-card--purple::before { background: linear-gradient(90deg, var(--dash-purple), #9575cd); }
+        .dash-kpi-card--pink::before { background: linear-gradient(90deg, var(--dash-pink), #f48fb1); }
+        .dash-kpi-card--hero { grid-column: span 1; min-height: 100px; }
+        @media (min-width: 992px) {
+            .dash-kpi-card--hero { grid-column: span 1; }
+        }
+        .dash-kpi-card .kpi-icon {
+            float: right;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
             display: flex;
-            flex-direction: column;
-            gap: 6px;
-            min-width: 160px;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #fff;
         }
-        .dash-filter-field label {
+        .dash-kpi-card--teal .kpi-icon { background: var(--dash-teal); }
+        .dash-kpi-card--purple .kpi-icon { background: var(--dash-purple); }
+        .dash-kpi-card--pink .kpi-icon { background: var(--dash-pink); }
+        .dash-kpi-card .kpi-value {
+            font-size: 34px;
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            color: var(--dash-text);
+        }
+        .dash-kpi-card--hero .kpi-value { font-size: 42px; }
+        .dash-kpi-card .kpi-label {
             font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.06em;
-            color: #64748b;
-            margin: 0;
+            color: var(--dash-muted);
+            margin-top: 6px;
         }
-        .dash-filter-input-wrap {
+        .dash-section {
+            margin-bottom: 22px;
+        }
+        .dash-section-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--dash-muted);
+            margin: 0 0 12px 4px;
+        }
+        .dash-section-label .fa { margin-right: 6px; color: var(--dash-purple); }
+        .dash-row-cards {
             display: flex;
-            align-items: center;
-            background: #fff;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            overflow: hidden;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            flex-wrap: wrap;
+            margin-left: -8px;
+            margin-right: -8px;
         }
-        .dash-filter-input-wrap:focus-within {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        .dash-row-cards > [class*="col-"] {
+            display: flex;
+            flex-direction: column;
+            padding-left: 8px;
+            padding-right: 8px;
+            margin-bottom: 16px;
         }
-        .dash-filter-input-wrap .input-icon {
+        .dash-card-modern {
+            background: var(--dash-card);
+            border: 1px solid var(--dash-border);
+            border-radius: var(--dash-radius);
+            box-shadow: var(--dash-shadow);
+            padding: 0;
+            margin-bottom: 0;
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .dash-card-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 16px 18px 10px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .dash-card-eyebrow {
+            display: block;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--dash-muted);
+            margin-bottom: 2px;
+        }
+        .dash-card-title {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--dash-text);
+            line-height: 1.3;
+        }
+        .dash-card-icon {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 38px;
-            height: 36px;
-            color: #94a3b8;
-            background: #f8fafc;
-            border-right: 1px solid #e2e8f0;
-            flex-shrink: 0;
+            color: #fff;
+            font-size: 15px;
         }
-        .dash-filter-input-wrap input {
-            flex: 1;
-            border: none !important;
-            box-shadow: none !important;
-            height: 36px;
-            padding: 6px 12px;
-            font-size: 13px;
-            font-weight: 500;
-            color: #0f172a;
-            background: transparent !important;
-        }
-        .dash-filter-actions {
+        .dash-icon-teal { background: linear-gradient(135deg, #26a69a, #00897b); }
+        .dash-icon-purple { background: linear-gradient(135deg, #7e57c2, #5e35b1); }
+        .dash-icon-pink { background: linear-gradient(135deg, #ec407a, #d81b60); }
+        .dash-icon-blue { background: linear-gradient(135deg, #42a5f5, #1e88e5); }
+        .dash-icon-orange { background: linear-gradient(135deg, #ffa726, #fb8c00); }
+        .dash-icon-green { background: linear-gradient(135deg, #66bb6a, #43a047); }
+        .dash-card-body {
+            padding: 8px 14px 16px;
+            flex: 1 1 auto;
             display: flex;
-            align-items: flex-end;
-            gap: 8px;
-            flex-wrap: wrap;
+            flex-direction: column;
         }
-        .btn-dash-filter {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            height: 36px;
-            padding: 0 18px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #fff;
-            background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
-            border: none;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
-            cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+        .dash-chart-host {
+            position: relative;
+            margin: 0 auto;
+            width: 100%;
+            max-width: 100%;
+            flex: 0 1 auto;
+            min-height: 0;
         }
-        .btn-dash-filter:hover {
-            background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
-            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45);
-            color: #fff;
+        .dash-chart-host canvas { width: 100% !important; height: 100% !important; display: block; }
+        .dash-chart-host--compact {
+            flex: 0 0 auto !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
         }
-        .btn-dash-filter:active { transform: translateY(1px); }
-        .btn-dash-preset {
-            height: 36px;
-            padding: 0 12px;
+        #dashSexHost.dash-chart-host--compact,
+        #dashConPieHost.dash-chart-host--compact { max-width: none; }
+        #dashSexHost:not(.dash-chart-host--compact),
+        #dashConPieHost:not(.dash-chart-host--compact) {
+            max-width: 280px;
+            margin-left: auto;
+            margin-right: auto;
+            min-height: 240px;
+        }
+        .dash-rol-ref {
+            font-size: 11px;
+            color: var(--dash-muted);
+            margin: 0 0 10px;
+            line-height: 1.45;
+        }
+        .dash-ing-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
             font-size: 12px;
-            font-weight: 500;
-            color: #475569;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .dash-ing-table thead th {
+            background: linear-gradient(135deg, #7e57c2, #9575cd);
+            color: #fff;
+            font-weight: 600;
+            text-align: center;
+            padding: 10px 8px;
+            border: none;
+        }
+        .dash-ing-table tbody td {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--dash-border);
+            color: var(--dash-text);
             background: #fff;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.15s, border-color 0.15s, color 0.15s;
         }
-        .btn-dash-preset:hover {
-            background: #f8fafc;
-            border-color: #94a3b8;
-            color: #0f172a;
+        .dash-ing-table tbody tr:last-child td { border-bottom: none; }
+        .dash-ing-table tbody td:last-child {
+            text-align: center;
+            font-weight: 700;
+            color: var(--dash-purple);
         }
-        @media (max-width: 768px) {
-            .dash-filter-bar { padding: 14px 16px; }
-            .dash-filter-field { flex: 1 1 100%; min-width: 0; }
-            .dash-filter-actions { width: 100%; }
-            .btn-dash-filter { flex: 1; justify-content: center; }
+        .dash-print-header { display: none; }
+        .exa-body.dash-app-wrap { background: var(--dash-bg) !important; padding: 16px 20px 24px !important; }
+
+        @media print {
+            @page {
+                margin: 10mm 12mm;
+            }
+            html, body {
+                margin: 0;
+                padding: 0;
+                background: #fff !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .panel-heading,
+            .btn-print-dash {
+                display: none !important;
+            }
+            .panel-main {
+                border: none !important;
+                box-shadow: none !important;
+            }
+            .exa-body {
+                padding: 0 !important;
+            }
+            .dash-print-header {
+                display: block !important;
+                margin-bottom: 14px;
+                padding-bottom: 10px;
+                border-bottom: 3px solid #1565c0;
+            }
+            .dash-print-header h1 {
+                margin: 0 0 4px;
+                font-size: 18px;
+                font-weight: 700;
+                color: #1a237e;
+                letter-spacing: 0.2px;
+            }
+            .dash-print-header .dash-print-meta {
+                margin: 0;
+                font-size: 10px;
+                color: #546e7a;
+            }
+            .dash-topbar { display: none !important; }
+            .dash-kpi-grid {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 12px;
+                margin-bottom: 14px;
+                padding: 8px 0 12px;
+                border-bottom: 1px solid #e0e0e0;
+            }
+            .dash-kpi-card {
+                min-width: 140px;
+                flex: 1 1 140px;
+                max-width: 220px;
+                padding: 10px 16px;
+                box-shadow: none;
+            }
+            .dash-kpi-card .kpi-icon { display: none; }
+            .dash-kpi-card .kpi-value { font-size: 22px; }
+            .dash-kpi-card .kpi-label { font-size: 8px; }
+            .dash-section-label { font-size: 9px; margin-bottom: 8px; }
+            .row {
+                display: block !important;
+                margin: 0 0 6px !important;
+                page-break-inside: auto;
+            }
+            .col-md-4,
+            .col-md-6,
+            .col-md-8,
+            .col-sm-12 {
+                width: 100% !important;
+                max-width: 100% !important;
+                float: none !important;
+                display: block !important;
+                flex: none !important;
+                padding: 0 0 16px !important;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            .dash-card-modern {
+                height: auto !important;
+                min-height: 0 !important;
+                margin-bottom: 0;
+                border: 1px solid #dde3ef;
+                border-radius: 8px;
+                background: #fff !important;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            .dash-card-head {
+                padding: 10px 12px 6px;
+                border-bottom: 1px solid #e8ecf3;
+            }
+            .dash-card-eyebrow { font-size: 8px; }
+            .dash-card-title {
+                font-size: 10px;
+                font-weight: 700;
+                color: #1565c0;
+                text-transform: uppercase;
+            }
+            .dash-card-icon { display: none; }
+            .dash-card-body { padding: 6px 10px 10px; }
+            .dash-section {
+                margin-bottom: 16px;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            .dash-row-cards > [class*="col-"] {
+                padding-bottom: 12px !important;
+            }
+            body.dash-printing .dash-chart-host {
+                width: 100% !important;
+                max-width: 100% !important;
+                height: 250px !important;
+                min-height: 250px !important;
+                margin: 0 !important;
+            }
+            body.dash-printing #dashSexHost.dash-chart-host,
+            body.dash-printing #dashConPieHost.dash-chart-host {
+                width: 240px !important;
+                max-width: 240px !important;
+                height: 240px !important;
+                min-height: 240px !important;
+            }
+            .dash-chart-host canvas {
+                max-width: none !important;
+                max-height: none !important;
+            }
+            .dash-ing-table {
+                max-width: 100%;
+                font-size: 10px;
+            }
+            .dash-rol-ref { font-size: 9px; margin-bottom: 6px; }
         }
     </style>
 </head>
-<body>
-<div class="panel panel-main">
-    <div class="panel-heading ui-widget-header ui-corner-top exa-head">
-        <h3 class="panel-title">&raquo; Dashboard de proveedores</h3>
+<body class="dash-modern-body">
+<div class="panel panel-main dash-panel">
+    <div class="panel-heading exa-header">
+        <h3 class="panel-title">&raquo; Dashboard Socioeconomico RCET</h3>
     </div>
-    <div class="panel-body ui-widget-content ui-corner-bottom exa-body dash-wrap">
-        <form id="formDashProv" onsubmit="return false;">
-            <div class="dash-filter-bar">
-                <div class="dash-filter-head">
-                    <h4 class="dash-filter-title"><i class="fa fa-sliders"></i> Periodo de consulta</h4>
-                    <span id="dashRangoRef" class="dash-filter-badge"></span>
-                </div>
-                <div class="dash-filter-field">
-                    <label for="dashDesde">Desde</label>
-                    <div class="dash-filter-input-wrap">
-                        <span class="input-icon"><i class="fa fa-calendar"></i></span>
-                        <input type="text" id="dashDesde" name="desde" class="datepickers" value="<?php echo $inicioAnio; ?>" placeholder="AAAA-MM-DD" autocomplete="off" />
-                    </div>
-                </div>
-                <div class="dash-filter-field">
-                    <label for="dashHasta">Hasta</label>
-                    <div class="dash-filter-input-wrap">
-                        <span class="input-icon"><i class="fa fa-calendar"></i></span>
-                        <input type="text" id="dashHasta" name="hasta" class="datepickers" value="<?php echo $hoy; ?>" placeholder="AAAA-MM-DD" autocomplete="off" />
-                    </div>
-                </div>
-                <div class="dash-filter-actions">
-                    <button type="button" class="btn-dash-preset" data-preset="mes" title="Mes en curso">Mes actual</button>
-                    <button type="button" class="btn-dash-preset" data-preset="anio" title="A&ntilde;o en curso">A&ntilde;o actual</button>
-                    <button type="button" id="btnDashProvBuscar" class="btn-dash-filter" title="Aplicar filtro">
-                        <i class="glyphicon glyphicon-search"></i> Aplicar
-                    </button>
-                </div>
+    <div class="panel-body ui-widget-content ui-corner-bottom exa-body dash-app-wrap">
+        <div class="dash-app">
+        <div class="dash-print-header">
+            <h1>Dashboard general &mdash; Personal</h1>
+            <p class="dash-print-meta">
+                <span id="dashPrintDate"></span>
+                &nbsp;&bull;&nbsp;
+                <span id="dashPrintKpi"></span>
+            </p>
+        </div>
+        <div class="dash-topbar">
+            <div>
+                <h1 class="dash-topbar-title">Dashboard Socioecon&oacute;mico RCET</h1>
+                <p class="dash-topbar-sub">Resumen anal&iacute;tico del personal activo</p>
             </div>
-        </form>
+            <button type="button" class="btn btn-sm btn-print-dash" onclick="printDashboard()"><i class="fa fa-print"></i> Imprimir</button>
+        </div>
+        <div class="dash-kpi-grid">
+            <div class="dash-kpi-card dash-kpi-card--hero dash-kpi-card--teal">
+                <span class="kpi-icon"><i class="fa fa-users"></i></span>
+                <div class="kpi-value" id="kpiTotal">&mdash;</div>
+                <div class="kpi-label">Personal activo</div>
+            </div>
+            <div class="dash-kpi-card dash-kpi-card--purple">
+                <span class="kpi-icon"><i class="fa fa-file-text-o"></i></span>
+                <div class="kpi-value" id="kpiConIndef">&mdash;</div>
+                <div class="kpi-label">Contratos indefinidos</div>
+            </div>
+            <div class="dash-kpi-card dash-kpi-card--pink">
+                <span class="kpi-icon"><i class="fa fa-clock-o"></i></span>
+                <div class="kpi-value" id="kpiConAprob">&mdash;</div>
+                <div class="kpi-label">En aprobaci&oacute;n</div>
+            </div>
+        </div>
 
-        <div class="row">
-            <div class="col-md-6 col-sm-12">
-                <div class="dash-card">
-                    <h4><i class="fa fa-line-chart"></i> Proveedores a los que m&aacute;s compro</h4>
-                    <div id="kpiTopProv" class="dash-kpi"></div>
-                    <div id="hostTopProv" class="dash-host"><canvas id="chartTopProv"></canvas></div>
+        <div class="dash-section">
+            <p class="dash-section-label"><i class="fa fa-id-card"></i> Perfil del personal</p>
+            <div class="row dash-row-cards">
+                <div class="col-md-4 col-sm-12">
+                    <div class="dash-card-modern">
+                        <div class="dash-card-head">
+                            <div><span class="dash-card-eyebrow">Demograf&iacute;a</span><h4 class="dash-card-title">Distribuci&oacute;n por g&eacute;nero</h4></div>
+                            <span class="dash-card-icon dash-icon-teal"><i class="fa fa-pie-chart"></i></span>
+                        </div>
+                        <div class="dash-card-body"><div id="dashSexHost" class="dash-chart-host"><canvas id="chartSex"></canvas></div></div>
+                    </div>
                 </div>
-            </div>
-            <div class="col-md-6 col-sm-12">
-                <div class="dash-card">
-                    <h4><i class="fa fa-map-marker"></i> Proveedores por ciudad</h4>
-                    <div id="kpiCiudad" class="dash-kpi"></div>
-                    <div id="hostCiudad" class="dash-host"><canvas id="chartCiudad"></canvas></div>
+                <div class="col-md-4 col-sm-12">
+                    <div class="dash-card-modern">
+                        <div class="dash-card-head">
+                            <div><span class="dash-card-eyebrow">Formaci&oacute;n</span><h4 class="dash-card-title">Nivel de estudio</h4></div>
+                            <span class="dash-card-icon dash-icon-purple"><i class="fa fa-graduation-cap"></i></span>
+                        </div>
+                        <div class="dash-card-body"><div id="dashTitHost" class="dash-chart-host"><canvas id="chartTit"></canvas></div></div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-12">
+                    <div class="dash-card-modern">
+                        <div class="dash-card-head">
+                            <div><span class="dash-card-eyebrow">Ubicaci&oacute;n</span><h4 class="dash-card-title">Personal por ciudad</h4></div>
+                            <span class="dash-card-icon dash-icon-pink"><i class="fa fa-map-marker"></i></span>
+                        </div>
+                        <div class="dash-card-body"><div id="dashCiuHost" class="dash-chart-host"><canvas id="chartCiu"></canvas></div></div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-md-6 col-sm-12">
-                <div class="dash-card">
-                    <h4><i class="fa fa-cubes"></i> Productos m&aacute;s comprados a proveedores</h4>
-                    <div id="kpiTopProd" class="dash-kpi"></div>
-                    <div id="hostTopProd" class="dash-host"><canvas id="chartTopProd"></canvas></div>
+
+        <div class="dash-section">
+            <p class="dash-section-label"><i class="fa fa-briefcase"></i> Informaci&oacute;n laboral</p>
+            <div class="row dash-row-cards">
+                <div class="col-md-8 col-sm-12">
+                    <div class="dash-card-modern">
+                        <div class="dash-card-head">
+                            <div><span class="dash-card-eyebrow">Organizaci&oacute;n</span><h4 class="dash-card-title">Personal por &aacute;rea de trabajo</h4></div>
+                            <span class="dash-card-icon dash-icon-blue"><i class="fa fa-building"></i></span>
+                        </div>
+                        <div class="dash-card-body"><div id="dashAreHost" class="dash-chart-host"><canvas id="chartAre"></canvas></div></div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-12">
+                    <div class="dash-card-modern">
+                        <div class="dash-card-head">
+                            <div><span class="dash-card-eyebrow">N&oacute;mina</span><h4 class="dash-card-title">Ingreso mensual</h4></div>
+                            <span class="dash-card-icon dash-icon-green"><i class="fa fa-money"></i></span>
+                        </div>
+                        <div class="dash-card-body">
+                            <p id="dashIngRolRef" class="dash-rol-ref"></p>
+                            <div id="dashIngTableWrap"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-6 col-sm-12">
-                <div class="dash-card">
-                    <h4><i class="fa fa-credit-card"></i> Cr&eacute;ditos otorgados por proveedores</h4>
-                    <div id="kpiCreditos" class="dash-kpi"></div>
-                    <div id="hostCreditos" class="dash-host"><canvas id="chartCreditos"></canvas></div>
+        </div>
+
+        <div class="dash-section">
+            <p class="dash-section-label"><i class="fa fa-file-text-o"></i> Contratos laborales</p>
+            <div class="row dash-row-cards">
+                <div class="col-md-6 col-sm-12">
+                    <div class="dash-card-modern">
+                        <div class="dash-card-head">
+                            <div><span class="dash-card-eyebrow">Vigentes</span><h4 class="dash-card-title">Tipo de contrato activo</h4></div>
+                            <span class="dash-card-icon dash-icon-teal"><i class="fa fa-bar-chart"></i></span>
+                        </div>
+                        <div class="dash-card-body">
+                            <p class="dash-rol-ref">Indefinidos: fin 31/12/9999. En aprobaci&oacute;n: inicio hasta hoy sin afiliaci&oacute;n IESS activa. Culminados: fecha fin anterior a hoy.</p>
+                            <div id="dashConHost" class="dash-chart-host"><canvas id="chartCon"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-sm-12">
+                    <div class="dash-card-modern">
+                        <div class="dash-card-head">
+                            <div><span class="dash-card-eyebrow">Proporci&oacute;n</span><h4 class="dash-card-title">Distribuci&oacute;n de contratos</h4></div>
+                            <span class="dash-card-icon dash-icon-purple"><i class="fa fa-pie-chart"></i></span>
+                        </div>
+                        <div class="dash-card-body"><div id="dashConPieHost" class="dash-chart-host"><canvas id="chartConPie"></canvas></div></div>
+                    </div>
                 </div>
             </div>
+        </div>
+
+        <div class="dash-section">
+            <p class="dash-section-label"><i class="fa fa-road"></i> Movilidad y riesgo social</p>
+            <div class="row dash-row-cards">
+                <div class="col-md-6 col-sm-12">
+                    <div class="dash-card-modern">
+                        <div class="dash-card-head">
+                            <div><span class="dash-card-eyebrow">Traslado</span><h4 class="dash-card-title">Tipo de movilizaci&oacute;n</h4></div>
+                            <span class="dash-card-icon dash-icon-blue"><i class="fa fa-bus"></i></span>
+                        </div>
+                        <div class="dash-card-body"><div id="dashMovHost" class="dash-chart-host"><canvas id="chartMov"></canvas></div></div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-sm-12">
+                    <div class="dash-card-modern">
+                        <div class="dash-card-head">
+                            <div><span class="dash-card-eyebrow">Factor social</span><h4 class="dash-card-title">Riesgo social</h4></div>
+                            <span class="dash-card-icon dash-icon-orange"><i class="fa fa-exclamation-triangle"></i></span>
+                        </div>
+                        <div class="dash-card-body"><div id="dashRsoHost" class="dash-chart-host"><canvas id="chartRso"></canvas></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dash-section">
+            <p class="dash-section-label"><i class="fa fa-child"></i> Carga familiar</p>
+            <div class="row dash-row-cards">
+                <div class="col-md-6 col-sm-12 col-md-offset-3">
+                    <div class="dash-card-modern">
+                        <div class="dash-card-head">
+                            <div><span class="dash-card-eyebrow">Dependientes</span><h4 class="dash-card-title">Carga familiar declarada</h4></div>
+                            <span class="dash-card-icon dash-icon-pink"><i class="fa fa-users"></i></span>
+                        </div>
+                        <div class="dash-card-body"><div id="dashCarHost" class="dash-chart-host"><canvas id="chartCar"></canvas></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dash-section">
+            <p class="dash-section-label"><i class="fa fa-medkit"></i> Condici&oacute;n m&eacute;dica</p>
+            <div class="row dash-row-cards">
+                <div class="col-md-6 col-sm-12">
+                    <div class="dash-card-modern">
+                        <div class="dash-card-head">
+                            <div><span class="dash-card-eyebrow">Cl&iacute;nico</span><h4 class="dash-card-title">Tipo de sangre</h4></div>
+                            <span class="dash-card-icon dash-icon-pink"><i class="fa fa-tint"></i></span>
+                        </div>
+                        <div class="dash-card-body"><div id="dashSanHost" class="dash-chart-host"><canvas id="chartSan"></canvas></div></div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-sm-12">
+                    <div class="dash-card-modern">
+                        <div class="dash-card-head">
+                            <div><span class="dash-card-eyebrow">Evaluaci&oacute;n</span><h4 class="dash-card-title">Tipo condici&oacute;n m&eacute;dica</h4></div>
+                            <span class="dash-card-icon dash-icon-teal"><i class="fa fa-stethoscope"></i></span>
+                        </div>
+                        <div class="dash-card-body"><div id="dashTcfHost" class="dash-chart-host"><canvas id="chartTcf"></canvas></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
         </div>
     </div>
 </div>
-
 <script type="text/javascript">
+Chart.register(ChartDataLabels);
 (function () {
-    var chartTopProv = null;
-    var chartCiudad = null;
-    var chartTopProd = null;
-    var chartCreditos = null;
+    var DASH_THEME = {
+        teal: '#26a69a',
+        purple: '#7e57c2',
+        pink: '#ec407a',
+        blue: '#42a5f5',
+        orange: '#ffa726',
+        green: '#66bb6a',
+        palette: ['#26a69a', '#7e57c2', '#ec407a', '#42a5f5', '#ffa726', '#66bb6a', '#4db6ac', '#9575cd', '#f48fb1', '#64b5f6', '#ffb74d'],
+        sex: ['#26a69a', '#ec407a', '#7e57c2', '#42a5f5'],
+        con: ['#7e57c2', '#ec407a', '#94a3b8'],
+        tcf: {
+            'APTO': '#26a69a',
+            'APTO CON OBSERVACION': '#ffa726',
+            'APTO CON LIMITACIONES': '#ec407a',
+            'NO APTO': '#ef5350',
+            '(Sin definir)': '#94a3b8'
+        }
+    };
+    if (Chart.defaults) {
+        Chart.defaults.font.family = "'Inter', 'Segoe UI', sans-serif";
+        Chart.defaults.color = '#64748b';
+    }
+    function themePalette(n) {
+        var out = [];
+        for (var i = 0; i < n; i++) {
+            out.push(DASH_THEME.palette[i % DASH_THEME.palette.length]);
+        }
+        return out;
+    }
+    var chartSex = null;
+    var chartTit = null;
+    var chartCiu = null;
+    var chartMov = null;
+    var chartRso = null;
+    var chartAre = null;
+    var chartCar = null;
+    var chartSan = null;
+    var chartTcf = null;
+    var chartCon = null;
+    var chartConPie = null;
+    var CHART_SIZE = {
+        minBarH: 220,
+        maxBarH: 620,
+        pxPerBarH: 38,
+        padH: 72,
+        minVertH: 260,
+        maxVertH: 420,
+        minBarW: 300,
+        maxBarW: 900,
+        compactPxPerCat: 98,
+        compactPadW: 88,
+        compactMaxCategories: 6,
+        compactMinW: 280,
+        compactMinBarH: 200,
+        compactMaxBarH: 360,
+        compactPxPerBarV: 52,
+        compactPxPerBarH: 34,
+        compactPadBar: 56,
+        doughnutH: 280,
+        doughnutMinW: 260,
+        printBarH: 250,
+        printDoughnutH: 240,
+        printDoughnutW: 240
+    };
+    var printState = null;
 
-    function destroyCharts() {
-        [chartTopProv, chartCiudad, chartTopProd, chartCreditos].forEach(function (c) {
-            if (c && typeof c.destroy === 'function') c.destroy();
+    function allChartInstances() {
+        return [chartSex, chartTit, chartCiu, chartMov, chartRso, chartAre, chartCar, chartSan, chartTcf, chartCon, chartConPie].filter(function (c) {
+            return !!c;
         });
-        chartTopProv = chartCiudad = chartTopProd = chartCreditos = null;
     }
 
-    var LABEL_MAX_PROVEEDOR = 28;
-    var LABEL_MAX_CIUDAD = 22;
-    var LABEL_MAX_PRODUCTO = 32;
+    function captureHostPrintState(hostId) {
+        var $host = $('#' + hostId);
+        return {
+            hostId: hostId,
+            width: $host[0].style.width,
+            height: $host[0].style.height,
+            minHeight: $host[0].style.minHeight,
+            maxWidth: $host[0].style.maxWidth,
+            compact: $host.hasClass('dash-chart-host--compact')
+        };
+    }
 
-    function formatMoney(v) {
-        var n = parseFloat(v || 0);
-        return n.toLocaleString('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    function applyHostPrintState(state) {
+        var $host = $('#' + state.hostId);
+        $host.css({
+            width: state.width,
+            height: state.height,
+            minHeight: state.minHeight,
+            maxWidth: state.maxWidth
+        });
+        $host.toggleClass('dash-chart-host--compact', !!state.compact);
+    }
+
+    function printContentWidth() {
+        var $body = $('.exa-body');
+        var w = $body.length ? $body.innerWidth() : $(window).width();
+        return Math.max(280, Math.min(CHART_SIZE.maxBarW, (w || 700) - 32));
+    }
+
+    function preparePrintCharts() {
+        var hostIds = ['dashSexHost', 'dashTitHost', 'dashCiuHost', 'dashMovHost', 'dashRsoHost', 'dashAreHost', 'dashCarHost', 'dashSanHost', 'dashTcfHost', 'dashConHost', 'dashConPieHost'];
+        printState = hostIds.map(captureHostPrintState);
+        var barHosts = ['dashTitHost', 'dashCiuHost', 'dashMovHost', 'dashRsoHost', 'dashAreHost', 'dashCarHost', 'dashSanHost', 'dashTcfHost', 'dashConHost'];
+        var printW = printContentWidth();
+        var i;
+        $('.dash-row-cards .dash-card-modern').css({ maxWidth: '100%', width: '100%' });
+        setChartHostSize('dashSexHost', CHART_SIZE.printDoughnutW, CHART_SIZE.printDoughnutH, false);
+        setChartHostSize('dashConPieHost', CHART_SIZE.printDoughnutW, CHART_SIZE.printDoughnutH, false);
+        for (i = 0; i < barHosts.length; i++) {
+            setChartHostSize(barHosts[i], printW, CHART_SIZE.printBarH, true);
+        }
+        allChartInstances().forEach(function (chart) {
+            chart.resize();
+            chart.update('none');
+        });
+    }
+
+    function restorePrintCharts() {
+        var i;
+        if (!printState) {
+            return;
+        }
+        for (i = 0; i < printState.length; i++) {
+            applyHostPrintState(printState[i]);
+        }
+        printState = null;
+        allChartInstances().forEach(function (chart) {
+            chart.resize();
+        });
+    }
+
+    function finishPrintMode() {
+        restorePrintCharts();
+        document.body.classList.remove('dash-printing');
+    }
+
+    function printDashboard() {
+        document.body.classList.add('dash-printing');
+        var now = new Date();
+        $('#dashPrintDate').text(
+            'Impreso: ' + now.toLocaleDateString('es-EC') + ' ' +
+            now.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' })
+        );
+        $('#dashPrintKpi').text(
+            ($('#kpiTotal').text() || '0') + ' personal activo · ' +
+            ($('#kpiConIndef').text() || '0') + ' indefinidos · ' +
+            ($('#kpiConAprob').text() || '0') + ' en aprobación'
+        );
+        preparePrintCharts();
+        setTimeout(function () {
+            preparePrintCharts();
+            setTimeout(function () {
+                window.print();
+            }, 350);
+        }, 200);
+    }
+
+    window.printDashboard = printDashboard;
+
+    function hostParentWidth(hostId) {
+        var $col = $('#' + hostId).closest('[class*="col-"]');
+        var w = $col.length ? $col.innerWidth() : $('#' + hostId).parent().width();
+        return Math.max(160, Math.min(CHART_SIZE.maxBarW, (w || 320) - 24));
+    }
+
+    function maxLabelChars(labels) {
+        var m = 0;
+        for (var i = 0; i < labels.length; i++) {
+            m = Math.max(m, String(labels[i] || '').length);
+        }
+        return m;
+    }
+
+    /** Ancho del canvas según cantidad de categorías (pocos datos = más compacto) */
+    function compactChartWidth(categoryCount, parentMaxW) {
+        var n = Math.max(categoryCount, 1);
+        parentMaxW = parentMaxW || CHART_SIZE.maxBarW;
+        return Math.min(parentMaxW, Math.max(CHART_SIZE.compactMinW, n * CHART_SIZE.compactPxPerCat + CHART_SIZE.compactPadW));
+    }
+
+    function compactBarHeight(categoryCount, horizontal, labels) {
+        var n = Math.max(categoryCount, 1);
+        if (horizontal) {
+            return Math.min(CHART_SIZE.compactMaxBarH, Math.max(CHART_SIZE.compactMinBarH, n * CHART_SIZE.compactPxPerBarH + CHART_SIZE.compactPadBar));
+        }
+        var longLbl = maxLabelChars(labels) > 18;
+        var extra = longLbl ? 24 : 0;
+        return Math.min(CHART_SIZE.compactMaxBarH, Math.max(CHART_SIZE.compactMinBarH, 150 + n * CHART_SIZE.compactPxPerBarV + extra));
+    }
+
+    function shouldAutoCompact(categoryCount, layout, chartOpts) {
+        if (chartOpts.forceFull) {
+            return false;
+        }
+        if (chartOpts.compact === true) {
+            return true;
+        }
+        if (chartOpts.compact === false) {
+            return false;
+        }
+        var n = Math.max(categoryCount, 1);
+        if (layout && layout.horizontal) {
+            return false;
+        }
+        return n <= CHART_SIZE.compactMaxCategories;
+    }
+
+    /** Barras: ancho completo solo con muchas categorías */
+    function barChartWidth(categoryCount, horizontal, labels, parentMaxW, compact) {
+        if (compact) {
+            return compactChartWidth(categoryCount, parentMaxW);
+        }
+        return parentMaxW || CHART_SIZE.maxBarW;
+    }
+
+    function doughnutChartWidth(sliceCount, parentMaxW, compact) {
+        parentMaxW = parentMaxW || 360;
+        if (compact) {
+            return Math.min(parentMaxW, Math.max(200, sliceCount * 72 + 120));
+        }
+        return Math.min(parentMaxW, Math.max(CHART_SIZE.doughnutMinW, Math.round(parentMaxW * 0.88)));
+    }
+
+    function doughnutChartHeight(sliceCount, widthPx, compact) {
+        if (compact) {
+            return Math.max(200, Math.min(widthPx, 260));
+        }
+        return CHART_SIZE.doughnutH;
+    }
+
+    function barChartHeight(categoryCount, horizontal, labels) {
+        var n = Math.max(categoryCount, 1);
+        var longLbl = maxLabelChars(labels) > 22;
+        if (horizontal) {
+            return Math.min(CHART_SIZE.maxBarH, Math.max(CHART_SIZE.minBarH, n * CHART_SIZE.pxPerBarH + CHART_SIZE.padH));
+        }
+        var extra = longLbl ? 40 : 0;
+        return Math.min(CHART_SIZE.maxVertH, Math.max(CHART_SIZE.minVertH, 240 + Math.min(n, 10) * 14 + extra));
+    }
+
+    function barChartLayout(categoryCount, labels) {
+        var n = Math.max(categoryCount, 1);
+        var longLbl = maxLabelChars(labels) > 20;
+        /* Horizontal solo con muchas categorías; si no, barras verticales a ancho completo */
+        var horizontal = n > 8 || (n > 6 && longLbl);
+        var barPct = 0.45;
+        var catPct = 0.65;
+        if (n <= 3) {
+            barPct = 0.5;
+            catPct = 0.7;
+        } else if (n <= 8) {
+            barPct = 0.6;
+            catPct = 0.75;
+        } else if (horizontal) {
+            barPct = 0.72;
+            catPct = 0.88;
+        } else {
+            barPct = 0.55;
+            catPct = 0.8;
+        }
+        return { horizontal: horizontal, barPercentage: barPct, categoryPercentage: catPct };
+    }
+
+    function setChartHostSize(hostId, widthPx, heightPx, fullWidth) {
+        var css = {
+            maxWidth: '100%',
+            height: heightPx + 'px',
+            minHeight: heightPx + 'px',
+            marginLeft: 'auto',
+            marginRight: 'auto'
+        };
+        if (fullWidth) {
+            css.width = '100%';
+        } else {
+            css.width = widthPx + 'px';
+        }
+        $('#' + hostId).css(css);
+    }
+
+    function setCompactHost(hostId, compact) {
+        $('#' + hostId).toggleClass('dash-chart-host--compact', !!compact);
+    }
+
+    function resetChartHost(hostId, canvasId, widthPx, heightPx, fullWidth) {
+        setChartHostSize(hostId, widthPx, heightPx, fullWidth !== false);
+        $('#' + hostId).html('<canvas id="' + canvasId + '"></canvas>');
+        return document.getElementById(canvasId);
     }
 
     function truncateLabel(text, maxLen) {
-        var s = String(text || '').trim();
-        if (!s) return '(Sin dato)';
-        maxLen = maxLen || 28;
-        if (s.length <= maxLen) return s;
-        return s.substring(0, maxLen - 1).trim() + '\u2026';
+        text = String(text || '');
+        if (text.length <= maxLen) {
+            return text;
+        }
+        return text.substring(0, maxLen - 1) + '\u2026';
     }
 
-    function paintEmpty(hostId, msg) {
-        $('#' + hostId).html('<div class="dash-empty">' + msg + '</div>');
+    function destroyAllCharts() {
+        [chartSex, chartTit, chartCiu, chartMov, chartRso, chartAre, chartCar, chartSan, chartTcf, chartCon, chartConPie].forEach(function (c) {
+            if (c) {
+                c.destroy();
+            }
+        });
+        chartSex = chartTit = chartCiu = chartMov = chartRso = chartAre = chartCar = chartSan = chartTcf = chartCon = chartConPie = null;
     }
 
-    function resetHost(hostId, canvasId) {
-        $('#' + hostId).html('<canvas id="' + canvasId + '"></canvas>');
-        return document.getElementById(canvasId).getContext('2d');
-    }
-
-    function createHorizontalBar(ctx, labels, fullLabels, data, color, titleLabel, formatValue) {
-        fullLabels = fullLabels || labels;
-        formatValue = formatValue || function (v) { return v; };
+    function createBarChart(hostId, canvasId, labels, data, palette, datasetLabel, chartOpts) {
+        chartOpts = chartOpts || {};
+        var n = labels.length;
+        var layout = barChartLayout(n, labels);
+        var parentW = hostParentWidth(hostId);
+        var compact = shouldAutoCompact(n, layout, chartOpts);
+        var w = barChartWidth(n, layout.horizontal, labels, parentW, compact);
+        if (compact) {
+            if (!layout.horizontal && n <= 8) {
+                layout.barPercentage = 0.42;
+                layout.categoryPercentage = 0.62;
+            }
+        }
+        var h = compact ? compactBarHeight(n, layout.horizontal, labels) : barChartHeight(n, layout.horizontal, labels);
+        setCompactHost(hostId, compact);
+        var longLbl = maxLabelChars(labels) > 18;
+        var ctx = resetChartHost(hostId, canvasId, w, h, !compact);
+        var displayLabels = labels.map(function (lb) {
+            if (layout.horizontal) {
+                return truncateLabel(lb, 42);
+            }
+            return longLbl ? truncateLabel(lb, 28) : lb;
+        });
+        var opts = {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: layout.horizontal ? 'y' : 'x',
+            layout: {
+                padding: {
+                    top: 10,
+                    right: compact ? 6 : 14,
+                    bottom: layout.horizontal ? 10 : (longLbl ? 28 : 16),
+                    left: compact ? 6 : (layout.horizontal ? 8 : 10)
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: function (items) {
+                            if (!items.length) {
+                                return '';
+                            }
+                            var i = items[0].dataIndex;
+                            return labels[i] != null ? labels[i] : '';
+                        }
+                    }
+                },
+                datalabels: {
+                    anchor: layout.horizontal ? 'end' : 'end',
+                    align: layout.horizontal ? 'end' : 'end',
+                    offset: chartOpts.showPct ? 4 : 0,
+                    font: { weight: '600', size: n > 12 ? 10 : 11, family: "'Inter', sans-serif" },
+                    color: '#475569',
+                    formatter: chartOpts.showPct ? function (value, ctx) {
+                        if (!value) {
+                            return '';
+                        }
+                        return value + ' (' + pctOfTotal(value, ctx.dataset.data, chartOpts.pctTotal) + '%)';
+                    } : undefined,
+                    display: chartOpts.showPct ? function (ctx) {
+                        return (ctx.dataset.data[ctx.dataIndex] || 0) > 0;
+                    } : true
+                }
+            },
+            scales: {}
+        };
+        if (chartOpts.showPct) {
+            opts.plugins.tooltip.callbacks.label = function (ctx) {
+                var v = ctx.raw || 0;
+                var pct = pctOfTotal(v, ctx.dataset.data, chartOpts.pctTotal);
+                return (ctx.dataset.label || '') + ': ' + v + ' (' + pct + '%)';
+            };
+            if (!layout.horizontal) {
+                opts.layout.padding.top = 22;
+            } else {
+                opts.layout.padding.right = 48;
+            }
+        }
+        if (layout.horizontal) {
+            opts.scales.x = {
+                beginAtZero: true,
+                ticks: { precision: 0, padding: 4, color: '#94a3b8' },
+                grid: { color: '#f1f5f9' }
+            };
+            opts.scales.y = {
+                ticks: {
+                    autoSkip: false,
+                    font: { size: 11 },
+                    padding: 8,
+                    color: '#64748b',
+                    callback: function (val, idx) {
+                        return displayLabels[idx] != null ? displayLabels[idx] : val;
+                    }
+                },
+                grid: { color: '#f1f5f9' }
+            };
+        } else {
+            opts.scales.y = {
+                beginAtZero: true,
+                ticks: { precision: 0, padding: 4, color: '#94a3b8' },
+                grid: { color: '#f1f5f9' }
+            };
+            opts.scales.x = {
+                ticks: {
+                    autoSkip: n > 14,
+                    maxTicksLimit: n > 14 ? 14 : undefined,
+                    maxRotation: longLbl || n > 5 ? 50 : 35,
+                    minRotation: longLbl || n > 5 ? 32 : 0,
+                    font: { size: 11 },
+                    padding: 6,
+                    color: '#64748b',
+                    callback: function (val, idx) {
+                        return displayLabels[idx] != null ? displayLabels[idx] : val;
+                    }
+                },
+                grid: { display: false }
+            };
+        }
         return new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: titleLabel,
+                    label: datasetLabel,
                     data: data,
-                    backgroundColor: color,
-                    borderColor: color,
+                    backgroundColor: labels.map(function (_, i) { return palette[i % palette.length]; }),
+                    borderWidth: 0,
+                    borderRadius: layout.horizontal ? 4 : 6,
+                    barPercentage: layout.barPercentage,
+                    categoryPercentage: layout.categoryPercentage
+                }]
+            },
+            options: opts
+        });
+    }
+
+    function labelSex(code) {
+        if (code === 'M') return 'Masculino';
+        if (code === 'F') return 'Femenino';
+        if (code === '?') return 'Sin indicar';
+        return code || 'Otro';
+    }
+
+    function pctOfTotal(value, dataArr, fixedTotal) {
+        var sum = fixedTotal > 0 ? fixedTotal : 0;
+        if (!sum) {
+            for (var i = 0; i < dataArr.length; i++) {
+                sum += dataArr[i] || 0;
+            }
+        }
+        if (!sum || !value) {
+            return 0;
+        }
+        return Math.round(value * 1000 / sum) / 10;
+    }
+
+    var ING_RANGES_DEFAULT = [
+        { rango_ord: 1, rango_des: '< $450', total: 0 },
+        { rango_ord: 2, rango_des: '$450 - $600', total: 0 },
+        { rango_ord: 3, rango_des: '$601 - $800', total: 0 },
+        { rango_ord: 4, rango_des: '> $800', total: 0 }
+    ];
+
+    function mergeIngRanges(rows) {
+        var map = {};
+        ING_RANGES_DEFAULT.forEach(function (r) {
+            map[r.rango_ord] = { rango_ord: r.rango_ord, rango_des: r.rango_des, total: 0 };
+        });
+        (rows || []).forEach(function (row) {
+            var ord = parseInt(row.rango_ord, 10);
+            if (map[ord]) {
+                map[ord].total = parseInt(row.total, 10) || 0;
+                if (row.rango_des) {
+                    map[ord].rango_des = row.rango_des;
+                }
+            }
+        });
+        return ING_RANGES_DEFAULT.map(function (r) {
+            return map[r.rango_ord];
+        });
+    }
+
+    var CON_TYPES_DEFAULT = [
+        { con_tipo: 'indefinido', con_des: 'Contratos indefinidos', total: 0 },
+        { con_tipo: 'aprobacion', con_des: 'En aprobaci\u00f3n', total: 0 },
+        { con_tipo: 'culminado', con_des: 'Contratos culminados', total: 0 }
+    ];
+
+    var SAN_ORDER = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', '(Sin definir)'];
+
+    function sortSanRows(rows) {
+        function rank(label) {
+            var lb = String(label || '').trim();
+            var i, idx = SAN_ORDER.indexOf(lb);
+            if (idx >= 0) {
+                return idx;
+            }
+            var norm = lb.toUpperCase().replace(/\s+/g, '');
+            for (i = 0; i < SAN_ORDER.length; i++) {
+                if (SAN_ORDER[i].toUpperCase() === norm) {
+                    return i;
+                }
+            }
+            return SAN_ORDER.length + 1;
+        }
+        return (rows || []).slice().sort(function (a, b) {
+            var ra = rank(a.san_des);
+            var rb = rank(b.san_des);
+            if (ra !== rb) {
+                return ra - rb;
+            }
+            return String(a.san_des || '').localeCompare(String(b.san_des || ''));
+        });
+    }
+
+    function mergeConTypes(rows) {
+        var map = {};
+        CON_TYPES_DEFAULT.forEach(function (r) {
+            map[r.con_tipo] = { con_tipo: r.con_tipo, con_des: r.con_des, total: 0 };
+        });
+        (rows || []).forEach(function (row) {
+            var key = row.con_tipo || '';
+            if (map[key]) {
+                map[key].total = parseInt(row.total, 10) || 0;
+                if (row.con_des) {
+                    map[key].con_des = row.con_des;
+                }
+            }
+        });
+        return CON_TYPES_DEFAULT.map(function (r) {
+            return map[r.con_tipo];
+        });
+    }
+
+    function createDoughnutChart(hostId, canvasId, labels, data, colors) {
+        var compact = labels.length <= CHART_SIZE.compactMaxCategories;
+        var w = doughnutChartWidth(labels.length, hostParentWidth(hostId), compact);
+        var h = doughnutChartHeight(labels.length, w, compact);
+        setCompactHost(hostId, compact);
+        var ctx = resetChartHost(hostId, canvasId, w, h, false);
+        return new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: labels.map(function (_, i) { return colors[i % colors.length]; }),
                     borderWidth: 1
                 }]
             },
             options: {
-                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
+                cutout: '58%',
                 plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        enabled: true,
-                        callbacks: {
-                            title: function (items) {
-                                if (!items.length) return '';
-                                var i = items[0].dataIndex;
-                                return fullLabels[i] || labels[i] || '';
-                            },
-                            label: function (ctx) {
-                                return titleLabel + ': ' + formatValue(ctx.raw);
+                    datalabels: {
+                        display: function (ctx) {
+                            var v = ctx.dataset.data[ctx.dataIndex] || 0;
+                            return pctOfTotal(v, ctx.dataset.data) >= 4;
+                        },
+                        color: '#fff',
+                        font: { weight: '600', size: 12, family: "'Inter', sans-serif" },
+                        anchor: 'center',
+                        align: 'center',
+                        textStrokeColor: 'rgba(0,0,0,0.4)',
+                        textStrokeWidth: 2,
+                        formatter: function (value, ctx) {
+                            return pctOfTotal(value, ctx.dataset.data) + '%';
+                        }
+                    },
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            generateLabels: function (chart) {
+                                var ds = chart.data.datasets[0];
+                                var data = chart.data.labels || [];
+                                return data.map(function (label, i) {
+                                    var value = ds.data[i] || 0;
+                                    var pct = pctOfTotal(value, ds.data);
+                                    return {
+                                        text: label + ' \u2014 ' + value + ' (' + pct + '%)',
+                                        fillStyle: ds.backgroundColor[i],
+                                        strokeStyle: ds.borderColor ? ds.borderColor[i] : '#fff',
+                                        lineWidth: ds.borderWidth || 1,
+                                        hidden: false,
+                                        index: i
+                                    };
+                                });
                             }
                         }
-                    }
-                },
-                scales: {
-                    x: { beginAtZero: true },
-                    y: {
-                        ticks: {
-                            autoSkip: false,
-                            font: { size: 11 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                var v = ctx.raw || 0;
+                                var pct = pctOfTotal(v, ctx.dataset.data);
+                                return ctx.label + ': ' + v + ' (' + pct + '%)';
+                            }
                         }
                     }
                 }
@@ -393,137 +1294,318 @@ if (isset($dashProveedoresAjax)) {
         });
     }
 
-    function renderBarChart(hostId, canvasId, kpiId, rows, labelField, valueField, color, titleLabel, emptyMsg, kpiFormatter, maxLabelLen, formatValue) {
-        if (!rows.length) {
-            paintEmpty(hostId, emptyMsg);
-            $('#' + kpiId).text('');
-            return null;
-        }
-        var labels = [];
-        var fullLabels = [];
-        var data = [];
-        var kpiExtra = 0;
-        rows.forEach(function (r) {
-            var full = r[labelField] || '(Sin dato)';
-            fullLabels.push(full);
-            labels.push(truncateLabel(full, maxLabelLen));
-            var val = parseFloat(r[valueField] || 0);
-            data.push(val);
-            kpiExtra += val;
+    function renderIngTable(rows) {
+        var html = '<table class="dash-ing-table"><thead><tr><th>RANGO MENSUAL</th><th>TOTAL</th></tr></thead><tbody>';
+        rows.forEach(function (row) {
+            html += '<tr><td>' + (row.rango_des || '') + '</td><td>' + (parseInt(row.total, 10) || 0) + '</td></tr>';
         });
-        $('#' + kpiId).text(kpiFormatter(kpiExtra, rows));
-        return createHorizontalBar(resetHost(hostId, canvasId), labels, fullLabels, data, color, titleLabel, formatValue);
+        html += '</tbody></table>';
+        $('#dashIngTableWrap').html(html);
+    }
+
+    function setUltimoRolRef(rol) {
+        var $ref = $('#dashIngRolRef');
+        if (!rol || !rol.Rol_Cod) {
+            $ref.text('Sin rol de pagos activo con total de ingresos.');
+            return;
+        }
+        var parts = [];
+        if (rol.Rol_Num) {
+            parts.push('Rol #' + rol.Rol_Num);
+        }
+        if (rol.Rol_Fef) {
+            parts.push('cierre ' + rol.Rol_Fef);
+        } else if (rol.Rol_Fei) {
+            parts.push('desde ' + rol.Rol_Fei);
+        }
+        if (rol.Rol_Con) {
+            parts.push(rol.Rol_Con);
+        }
+        $ref.text(parts.length ? ('Referencia: ' + parts.join(' · ')) : '');
     }
 
     function loadDashboard() {
-        var params = {
-            dashProveedoresAjax: 1,
-            desde: $('#dashDesde').val(),
-            hasta: $('#dashHasta').val()
-        };
-
-        $.get(UrlSaveJson, params, function (res) {
+        $.get(UrlSaveJson, { dashPersonalAjax: 1 }, function (res) {
             if (!res || !res.success) {
-                if (typeof $.alert === 'function') $.alert('No se pudo cargar el dashboard de proveedores.');
+                if (typeof $.alert === 'function') $.alert('No se pudo cargar el dashboard.'); else alert('No se pudo cargar el dashboard.');
+                return;
+            }
+            var tot = res.totalPersonal != null ? res.totalPersonal : 0;
+            var conKpi = mergeConTypes(res.byCon || []);
+            $('#kpiTotal').text(tot);
+            $('#kpiConIndef').text(conKpi[0] ? (parseInt(conKpi[0].total, 10) || 0) : 0);
+            $('#kpiConAprob').text(conKpi[1] ? (parseInt(conKpi[1].total, 10) || 0) : 0);
+
+            if (tot === 0) {
+                destroyAllCharts();
+                $('#kpiConIndef').text('0');
+                $('#kpiConAprob').text('0');
+                var msg0 = '<p class="text-muted text-center" style="padding:40px 10px;">No hay personal activo para esta empresa.</p>';
+                ['dashSexHost', 'dashTitHost', 'dashCiuHost', 'dashMovHost', 'dashRsoHost', 'dashAreHost', 'dashCarHost', 'dashSanHost', 'dashTcfHost', 'dashConHost', 'dashConPieHost'].forEach(function (id) {
+                    $('#' + id).removeClass('dash-chart-host--compact').html(msg0);
+                });
+                $('#dashIngTableWrap').empty();
+                $('#dashIngRolRef').text('');
                 return;
             }
 
-            if (res.desde) $('#dashDesde').val(res.desde);
-            if (res.hasta) $('#dashHasta').val(res.hasta);
-            $('#dashRangoRef').html('<i class="fa fa-clock-o"></i> ' + res.desde + ' &mdash; ' + res.hasta);
+            destroyAllCharts();
 
-            destroyCharts();
+            var sexRows = res.bySex || [];
+            var labelsS = [];
+            var dataS = [];
+            var colorsS = DASH_THEME.sex;
+            sexRows.forEach(function (row) {
+                labelsS.push(labelSex(row.Prs_Sex));
+                dataS.push(parseInt(row.total, 10) || 0);
+            });
+            if (labelsS.length === 0) {
+                labelsS.push('Sin clasificar');
+                dataS.push(tot);
+            }
 
-            chartTopProv = renderBarChart(
-                'hostTopProv', 'chartTopProv', 'kpiTopProv',
-                res.topProveedores || [], 'proveedor', 'monto_total',
-                '#2e86de', 'Monto de compra',
-                'Sin compras en el rango seleccionado.',
-                function (total) { return 'Monto acumulado TOP: $ ' + formatMoney(total); },
-                LABEL_MAX_PROVEEDOR,
-                function (v) { return '$ ' + formatMoney(v); }
-            );
-
-            chartCiudad = renderBarChart(
-                'hostCiudad', 'chartCiudad', 'kpiCiudad',
-                res.proveedoresPorCiudad || [], 'ciudad', 'total_proveedores',
-                '#27ae60', 'Proveedores',
-                'Sin proveedores con compras en el rango.',
-                function (total) { return 'Total proveedores en TOP ciudades: ' + parseInt(total, 10); },
-                LABEL_MAX_CIUDAD,
-                function (v) { return parseInt(v, 10); }
-            );
-
-            chartTopProd = renderBarChart(
-                'hostTopProd', 'chartTopProd', 'kpiTopProd',
-                res.topProductos || [], 'producto', 'cantidad_total',
-                '#f39c12', 'Cantidad comprada',
-                'Sin productos comprados en el rango.',
-                function (total) { return 'Cantidad acumulada TOP: ' + total.toFixed(2); },
-                LABEL_MAX_PRODUCTO,
-                function (v) { return parseFloat(v).toFixed(2); }
-            );
-
-            chartCreditos = renderBarChart(
-                'hostCreditos', 'chartCreditos', 'kpiCreditos',
-                res.creditosProveedores || [], 'proveedor', 'monto_credito',
-                '#8e44ad', 'Monto a credito',
-                'Sin creditos otorgados (ccpp_pagar) en el rango.',
-                function (total, rows) {
-                    var docs = 0;
-                    rows.forEach(function (r) { docs += parseInt(r.total_creditos || 0, 10); });
-                    return 'Creditos TOP: $ ' + formatMoney(total) + ' (' + docs + ' documentos)';
+            var wSex = doughnutChartWidth(labelsS.length, hostParentWidth('dashSexHost'), labelsS.length <= CHART_SIZE.compactMaxCategories);
+            var hSex = doughnutChartHeight(labelsS.length, wSex, labelsS.length <= CHART_SIZE.compactMaxCategories);
+            setCompactHost('dashSexHost', labelsS.length <= CHART_SIZE.compactMaxCategories);
+            var ctxS = resetChartHost('dashSexHost', 'chartSex', wSex, hSex, false);
+            chartSex = new Chart(ctxS, {
+                type: 'doughnut',
+                data: {
+                    labels: labelsS,
+                    datasets: [{
+                        data: dataS,
+                        backgroundColor: labelsS.map(function (_, i) { return colorsS[i % colorsS.length]; }),
+                        borderWidth: 1
+                    }]
                 },
-                LABEL_MAX_PROVEEDOR,
-                function (v) { return '$ ' + formatMoney(v); }
-            );
-        }, 'json');
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '58%',
+                    plugins: {
+                        datalabels: {
+                            display: function (ctx) {
+                                var v = ctx.dataset.data[ctx.dataIndex] || 0;
+                                return pctOfTotal(v, ctx.dataset.data) >= 4;
+                            },
+                            color: '#fff',
+                            font: { weight: '600', size: 12, family: "'Inter', sans-serif" },
+                            anchor: 'center',
+                            align: 'center',
+                            textStrokeColor: 'rgba(0,0,0,0.4)',
+                            textStrokeWidth: 2,
+                            formatter: function (value, ctx) {
+                                return pctOfTotal(value, ctx.dataset.data) + '%';
+                            }
+                        },
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                generateLabels: function (chart) {
+                                    var ds = chart.data.datasets[0];
+                                    var data = chart.data.labels || [];
+                                    return data.map(function (label, i) {
+                                        var value = ds.data[i] || 0;
+                                        var pct = pctOfTotal(value, ds.data);
+                                        return {
+                                            text: label + ' — ' + value + ' (' + pct + '%)',
+                                            fillStyle: ds.backgroundColor[i],
+                                            strokeStyle: ds.borderColor ? ds.borderColor[i] : '#fff',
+                                            lineWidth: ds.borderWidth || 1,
+                                            hidden: false,
+                                            index: i
+                                        };
+                                    });
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (ctx) {
+                                    var v = ctx.raw || 0;
+                                    var pct = pctOfTotal(v, ctx.dataset.data);
+                                    return ctx.label + ': ' + v + ' (' + pct + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            var titRows = res.byTit || [];
+            var labelsT = [];
+            var dataT = [];
+            titRows.forEach(function (row) {
+                labelsT.push(row.titulo_des || row.Per_Tit_Cod || '');
+                dataT.push(parseInt(row.total, 10) || 0);
+            });
+            if (labelsT.length === 0) {
+                labelsT.push('Sin datos');
+                dataT.push(0);
+            }
+            chartTit = createBarChart('dashTitHost', 'chartTit', labelsT, dataT, themePalette(labelsT.length), 'Empleados', {
+                showPct: true,
+                pctTotal: tot,
+                forceFull: labelsT.length > CHART_SIZE.compactMaxCategories
+            });
+
+            // Gráfico por ciudad
+            var ciuRows = res.byCiu || [];
+            var labelsC = [];
+            var dataC = [];
+            ciuRows.forEach(function (row) {
+                labelsC.push(row.Ciu_Des || '(Sin ciudad)');
+                dataC.push(parseInt(row.total, 10) || 0);
+            });
+            if (labelsC.length === 0) {
+                labelsC.push('Sin datos');
+                dataC.push(0);
+            }
+            chartCiu = createBarChart('dashCiuHost', 'chartCiu', labelsC, dataC, themePalette(labelsC.length), 'Empleados', {
+                forceFull: labelsC.length > CHART_SIZE.compactMaxCategories
+            });
+
+            // Gráfico por tipo de movilización
+            var movRows = res.byMov || [];
+            var labelsM = [];
+            var dataM = [];
+            movRows.forEach(function (row) {
+                labelsM.push(row.mov_des || row.Per_Mov_Cod || '(Sin definir)');
+                dataM.push(parseInt(row.total, 10) || 0);
+            });
+            if (labelsM.length === 0) {
+                labelsM.push('Sin datos');
+                dataM.push(0);
+            }
+            chartMov = createBarChart('dashMovHost', 'chartMov', labelsM, dataM, themePalette(labelsM.length), 'Empleados');
+
+            // Gráfico por riesgo social
+            var rsoRows = res.byRso || [];
+            var labelsR = [];
+            var dataR = [];
+            rsoRows.forEach(function (row) {
+                labelsR.push(row.rso_des || row.Per_Rso_Cod || '(Sin definir)');
+                dataR.push(parseInt(row.total, 10) || 0);
+            });
+            if (labelsR.length === 0) {
+                labelsR.push('Sin datos');
+                dataR.push(0);
+            }
+            chartRso = createBarChart('dashRsoHost', 'chartRso', labelsR, dataR, themePalette(labelsR.length), 'Empleados');
+
+            var areRows = res.byAre || [];
+            var labelsA = [];
+            var dataA = [];
+            areRows.forEach(function (row) {
+                labelsA.push(row.are_des || '(Sin area)');
+                dataA.push(parseInt(row.total, 10) || 0);
+            });
+            if (labelsA.length === 0) {
+                labelsA.push('Sin datos');
+                dataA.push(0);
+            }
+            chartAre = createBarChart('dashAreHost', 'chartAre', labelsA, dataA, themePalette(labelsA.length), 'Empleados', {
+                forceFull: labelsA.length > CHART_SIZE.compactMaxCategories
+            });
+
+            var conRows = mergeConTypes(res.byCon || []);
+            var labelsCon = [];
+            var dataCon = [];
+            var totCon = 0;
+            conRows.forEach(function (row) {
+                labelsCon.push(row.con_des);
+                var n = parseInt(row.total, 10) || 0;
+                dataCon.push(n);
+                totCon += n;
+            });
+            chartCon = createBarChart('dashConHost', 'chartCon', labelsCon, dataCon, DASH_THEME.con, 'Contratos', {
+                showPct: true,
+                pctTotal: totCon
+            });
+            chartConPie = createDoughnutChart('dashConPieHost', 'chartConPie', labelsCon, dataCon, DASH_THEME.con);
+
+            var carRows = res.byCar || [];
+            var labelsCar = [];
+            var dataCar = [];
+            carRows.forEach(function (row) {
+                labelsCar.push(row.car_des || row.Per_Car_Cod || '(Sin definir)');
+                dataCar.push(parseInt(row.total, 10) || 0);
+            });
+            if (labelsCar.length === 0) {
+                labelsCar.push('Sin datos');
+                dataCar.push(0);
+            }
+            chartCar = createBarChart('dashCarHost', 'chartCar', labelsCar, dataCar, themePalette(labelsCar.length), 'Empleados');
+
+            var sanRows = sortSanRows(res.bySan || []);
+            var labelsSan = [];
+            var dataSan = [];
+            var totSan = 0;
+            sanRows.forEach(function (row) {
+                labelsSan.push(row.san_des || '(Sin definir)');
+                var n = parseInt(row.total, 10) || 0;
+                dataSan.push(n);
+                totSan += n;
+            });
+            if (labelsSan.length === 0) {
+                labelsSan.push('Sin datos');
+                dataSan.push(0);
+            }
+            chartSan = createBarChart('dashSanHost', 'chartSan', labelsSan, dataSan, themePalette(labelsSan.length), 'Empleados', {
+                showPct: true,
+                pctTotal: totSan
+            });
+
+            var tcfRows = res.byTcf || [];
+            var labelsTcf = [];
+            var dataTcf = [];
+            var totTcf = 0;
+            var paletteTcf = [];
+            tcfRows.forEach(function (row) {
+                var lb = row.tcf_des || row.Per_Tcf_Cod || '(Sin definir)';
+                labelsTcf.push(lb);
+                var n = parseInt(row.total, 10) || 0;
+                dataTcf.push(n);
+                totTcf += n;
+                paletteTcf.push(DASH_THEME.tcf[lb] || DASH_THEME.purple);
+            });
+            if (labelsTcf.length === 0) {
+                labelsTcf.push('Sin datos');
+                dataTcf.push(0);
+                paletteTcf.push('#94a3b8');
+            }
+            chartTcf = createBarChart('dashTcfHost', 'chartTcf', labelsTcf, dataTcf, paletteTcf, 'Empleados', {
+                showPct: true,
+                pctTotal: totTcf
+            });
+
+            setUltimoRolRef(res.ultimoRol || {});
+            renderIngTable(mergeIngRanges(res.byIng || []));
+        }, 'json').fail(function () {
+            if (typeof $.alert === 'function') $.alert('Error de comunicaci&oacute;n al cargar datos.'); else alert('Error de comunicacion al cargar datos.');
+        });
     }
 
-    function pad2(n) { return (n < 10 ? '0' : '') + n; }
-    function fmtDate(d) {
-        return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
-    }
-    function aplicarPreset(tipo) {
-        var hoy = new Date();
-        var desde, hasta = fmtDate(hoy);
-        if (tipo === 'mes') {
-            desde = hoy.getFullYear() + '-' + pad2(hoy.getMonth() + 1) + '-01';
-        } else {
-            desde = hoy.getFullYear() + '-01-01';
-        }
-        $('#dashDesde').val(desde);
-        $('#dashHasta').val(hasta);
+    $(function () {
         loadDashboard();
-    }
-
-    if ($.fn.createDatePickers) {
-        $('#dashDesde').createDatePickers({
-            clean: true,
-            checkAvailability: true,
-            onClose: function (sd) { $('#dashHasta').datepicker('option', 'minDate', sd); }
+        var resizeTimer;
+        $(window).on('resize', function () {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function () {
+                allChartInstances().forEach(function (c) {
+                    c.resize();
+                });
+            }, 200);
         });
-        $('#dashHasta').createDatePickers({
-            clean: true,
-            checkAvailability: true,
-            onClose: function (sd) { $('#dashDesde').datepicker('option', 'maxDate', sd); }
-        });
-        var vDesde = $('#dashDesde').val();
-        var vHasta = $('#dashHasta').val();
-        if (vDesde) $('#dashHasta').datepicker('option', 'minDate', vDesde);
-        if (vHasta) $('#dashDesde').datepicker('option', 'maxDate', vHasta);
-    }
-    $('.btn-dash-preset').on('click', function () {
-        aplicarPreset($(this).data('preset'));
-    });
-    $('#btnDashProvBuscar').on('click', loadDashboard);
-    $('#formDashProv').on('keydown', function (e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            loadDashboard();
+        window.addEventListener('afterprint', finishPrintMode);
+        if (window.matchMedia) {
+            window.matchMedia('print').addListener(function (mq) {
+                if (!mq.matches) {
+                    finishPrintMode();
+                }
+            });
         }
     });
-    $(loadDashboard);
 })();
 </script>
 </body>
