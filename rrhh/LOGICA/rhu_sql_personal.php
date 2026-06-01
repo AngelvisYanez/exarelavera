@@ -365,6 +365,110 @@ function sentencias_rrhh($id, $Par_Sql)
                     GROUP BY datos.rango_ord, datos.rango_des
                     ORDER BY datos.rango_ord";
             break;
+            // Dashboard: personal activo por area de trabajo (contrato activo)
+        case 27:
+            $emp = intval($Par_Sql[0]);
+            $sql = "SELECT COALESCE(areas_rrhh.Are_Des, '(Sin area)') AS are_des,
+                    COUNT(DISTINCT personal.Per_Cod) AS total
+                    FROM personal
+                    LEFT JOIN contratos_lab cl ON cl.Per_Cod = personal.Per_Cod AND cl.Con_Est = 'A'
+                    LEFT JOIN tiposcargo ON tiposcargo.Tic_Cod = cl.Tic_Cod
+                    LEFT JOIN departamen ON departamen.Dep_Cod = tiposcargo.Dep_Cod
+                    LEFT JOIN areas_rrhh ON areas_rrhh.Are_Cod = departamen.Are_Cod AND areas_rrhh.Emp_Cod = $emp
+                    WHERE personal.Emp_Cod = $emp AND personal.Per_Est = 'A'
+                    GROUP BY COALESCE(areas_rrhh.Are_Des, '(Sin area)')
+                    ORDER BY total DESC";
+            break;
+            // Dashboard: personal activo por carga familiar (Per_Car)
+        case 28:
+            $emp = intval($Par_Sql[0]);
+            $carGrp = "COALESCE(NULLIF(TRIM(personal.Per_Car),''),'?')";
+            $sql = "SELECT $carGrp AS Per_Car_Cod,
+                    CASE $carGrp
+                        WHEN '?' THEN '(Sin definir)'
+                        ELSE CONCAT(TRIM(personal.Per_Car), ' dependiente(s)')
+                    END AS car_des,
+                    COUNT(*) AS total
+                    FROM personal
+                    WHERE personal.Emp_Cod = $emp AND personal.Per_Est = 'A'
+                    GROUP BY $carGrp
+                    ORDER BY CASE $carGrp WHEN '?' THEN 999 ELSE CAST($carGrp AS UNSIGNED) END";
+            break;
+            // Dashboard: personal activo por condicion medica (Per_Tcf)
+        case 29:
+            $emp = intval($Par_Sql[0]);
+            $tcfGrp = "COALESCE(NULLIF(TRIM(personal.Per_Tcf),''),'')";
+            $sql = "SELECT $tcfGrp AS Per_Tcf_Cod,
+                    CASE $tcfGrp
+                        WHEN 'AP' THEN 'APTO'
+                        WHEN 'AO' THEN 'APTO CON OBSERVACION'
+                        WHEN 'AL' THEN 'APTO CON LIMITACIONES'
+                        WHEN 'NA' THEN 'NO APTO'
+                        WHEN '' THEN '(Sin definir)'
+                        ELSE COALESCE(NULLIF(TRIM(personal.Per_Tcf),''), '(Sin definir)')
+                    END AS tcf_des,
+                    COUNT(*) AS total
+                    FROM personal
+                    WHERE personal.Emp_Cod = $emp AND personal.Per_Est = 'A'
+                    GROUP BY $tcfGrp
+                    ORDER BY FIELD($tcfGrp, 'AP', 'AO', 'AL', 'NA', '', '?')";
+            break;
+            // Dashboard: contratos indefinidos, en aprobacion y culminados
+        case 30:
+            $emp = intval($Par_Sql[0]);
+            $sql = "SELECT datos.con_tipo, datos.con_des, COUNT(*) AS total
+                    FROM (
+                        SELECT cl.Con_Cod,
+                        CASE
+                            WHEN cl.Con_Fin IS NOT NULL AND cl.Con_Fin >= '9999-12-31' THEN 'indefinido'
+                            WHEN cl.Con_Fin IS NOT NULL AND TRIM(cl.Con_Fin) <> '' AND cl.Con_Fin <> '0000-00-00'
+                                AND cl.Con_Fin < CURDATE() THEN 'culminado'
+                            WHEN cl.Con_Ini IS NOT NULL AND TRIM(cl.Con_Ini) <> '' AND cl.Con_Ini <> '0000-00-00'
+                                AND cl.Con_Ini <= CURDATE()
+                                AND NOT EXISTS (
+                                    SELECT 1 FROM afiliacion af
+                                    WHERE af.Con_Cod = cl.Con_Cod AND af.Afi_Est = 'A'
+                                ) THEN 'aprobacion'
+                            ELSE NULL
+                        END AS con_tipo,
+                        CASE
+                            WHEN cl.Con_Fin IS NOT NULL AND cl.Con_Fin >= '9999-12-31' THEN 'Contratos indefinidos'
+                            WHEN cl.Con_Fin IS NOT NULL AND TRIM(cl.Con_Fin) <> '' AND cl.Con_Fin <> '0000-00-00'
+                                AND cl.Con_Fin < CURDATE() THEN 'Contratos culminados'
+                            WHEN cl.Con_Ini IS NOT NULL AND TRIM(cl.Con_Ini) <> '' AND cl.Con_Ini <> '0000-00-00'
+                                AND cl.Con_Ini <= CURDATE()
+                                AND NOT EXISTS (
+                                    SELECT 1 FROM afiliacion af
+                                    WHERE af.Con_Cod = cl.Con_Cod AND af.Afi_Est = 'A'
+                                ) THEN 'En aprobacion'
+                            ELSE NULL
+                        END AS con_des
+                        FROM contratos_lab cl
+                        INNER JOIN personal p ON p.Per_Cod = cl.Per_Cod
+                        WHERE p.Emp_Cod = $emp AND p.Per_Est = 'A'
+                            AND (
+                                cl.Con_Est = 'A'
+                                OR (
+                                    cl.Con_Fin IS NOT NULL AND TRIM(cl.Con_Fin) <> '' AND cl.Con_Fin <> '0000-00-00'
+                                    AND cl.Con_Fin < CURDATE() AND cl.Con_Fin < '9999-12-31'
+                                )
+                            )
+                    ) datos
+                    WHERE datos.con_tipo IS NOT NULL
+                    GROUP BY datos.con_tipo, datos.con_des
+                    ORDER BY FIELD(datos.con_tipo, 'indefinido', 'aprobacion', 'culminado')";
+            break;
+            // Dashboard: personal activo por tipo de sangre (persona.Prs_San)
+        case 31:
+            $emp = intval($Par_Sql[0]);
+            $sanGrp = "COALESCE(NULLIF(TRIM(persona.Prs_San),''),'(Sin definir)')";
+            $sql = "SELECT $sanGrp AS san_des, COUNT(*) AS total
+                    FROM personal
+                    INNER JOIN persona ON persona.Prs_Cod = personal.Prs_Cod
+                    WHERE personal.Emp_Cod = $emp AND personal.Per_Est = 'A'
+                    GROUP BY $sanGrp
+                    ORDER BY FIELD($sanGrp, 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', '(Sin definir)'), $sanGrp";
+            break;
         //Update en la tabla persona y personal
         case 26:
             $sql = "UPDATE persona

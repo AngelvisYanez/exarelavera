@@ -1,70 +1,53 @@
 <?php
-/**
- * Dashboard resumido de personal: género y nivel de estudio.
- */
 require_once('../../administrador/LOGICA/seguridad.php');
-require_once('../LOGICA/rhu_log_personal.php');
+require_once('../LOGICA/fac_log_compras.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
 
-$obBD_conexion = new Class_Log_Conexion_rrhh($Ses_Dat_Dis);
-$obBD_con1 = new Class_Log_Datos_rrhh;
+$obBD_conexion = new Class_Log_Conexion_Comt($Ses_Dat_Dis);
+$obBD_con1 = new Class_Log_Datos_Comt;
 
-if (isset($dashPersonalAjax)) {
+$hoy = date('Y-m-d');
+$inicioAnio = date('Y-01-01');
+
+function dashProvNormalizarFecha($valor, $defecto) {
+    $valor = trim((string) $valor);
+    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $valor)) {
+        return $valor;
+    }
+    return $defecto;
+}
+
+if (isset($dashProveedoresAjax)) {
     header('Content-Type: application/json; charset=UTF-8');
-    $bySex = $obBD_con1->getArrayConsulta(18, $Ses_Emp_Cod, $obBD_conexion);
-    $byTit = $obBD_con1->getArrayConsulta(19, $Ses_Emp_Cod, $obBD_conexion);
-    $byCiu = $obBD_con1->getArrayConsulta(20, $Ses_Emp_Cod, $obBD_conexion);
-    $byMov = $obBD_con1->getArrayConsulta(21, $Ses_Emp_Cod, $obBD_conexion);
-    $byTac = $obBD_con1->getArrayConsulta(22, $Ses_Emp_Cod, $obBD_conexion);
-    $byRso = $obBD_con1->getArrayConsulta(23, $Ses_Emp_Cod, $obBD_conexion);
-    $byIng = $obBD_con1->getArrayConsulta(24, $Ses_Emp_Cod, $obBD_conexion);
-    $ultRol = $obBD_con1->getRowConsultaSql(
-        "SELECT rp.Rol_Cod, rp.Rol_Num, rp.Rol_Fef, rp.Rol_Fei, rp.Rol_Con
-         FROM rol_pagos rp
-         INNER JOIN areas_rrhh ar ON ar.Are_Cod = rp.Are_Cod
-         INNER JOIN det_rpagos dr ON dr.Rol_Cod = rp.Rol_Cod
-         INNER JOIN campo_rol cr ON cr.Cam_Cod = dr.Cam_Cod
-             AND cr.Cam_Var IN ('total_ingr', 'total_ing')
-         WHERE ar.Emp_Cod = " . intval($Ses_Emp_Cod) . " AND rp.Rol_Est = 'A'
-         ORDER BY IFNULL(rp.Rol_Fef, rp.Rol_Fei) DESC, rp.Rol_Num DESC, rp.Rol_Cod DESC
-         LIMIT 1",
-        $obBD_conexion
-    );
-    utf8_encode_deep($bySex);
-    utf8_encode_deep($byTit);
-    utf8_encode_deep($byCiu);
-    utf8_encode_deep($byMov);
-    utf8_encode_deep($byTac);
-    utf8_encode_deep($byRso);
-    utf8_encode_deep($byIng);
-    if (is_array($ultRol)) {
-        utf8_encode_deep($ultRol);
+
+    $desde = dashProvNormalizarFecha(isset($_REQUEST['desde']) ? $_REQUEST['desde'] : '', $inicioAnio);
+    $hasta = dashProvNormalizarFecha(isset($_REQUEST['hasta']) ? $_REQUEST['hasta'] : '', $hoy);
+    if ($desde > $hasta) {
+        $tmp = $desde;
+        $desde = $hasta;
+        $hasta = $tmp;
     }
-    $rowTotal = $obBD_con1->getArrayConsulta(25, $Ses_Emp_Cod, $obBD_conexion);
-    $total = 0;
-    if (!empty($rowTotal[0]['total'])) {
-        $total = (int) $rowTotal[0]['total'];
-    } else {
-        foreach ($bySex as $r) {
-            $total += (int) $r['total'];
-        }
-    }
-    $totalProv = 0;
-    foreach ($byTac as $r) {
-        $totalProv += (int) $r['total'];
-    }
+
+    $param = $Ses_Emp_Cod . '*' . $desde . '*' . $hasta;
+
+    $topProv = $obBD_con1->getArrayConsulta(1200, $param, $obBD_conexion);
+    $provCiudad = $obBD_con1->getArrayConsulta(1201, $param, $obBD_conexion);
+    $topProd = $obBD_con1->getArrayConsulta(1202, $param, $obBD_conexion);
+    $creditos = $obBD_con1->getArrayConsulta(1203, $param, $obBD_conexion);
+
+    utf8_encode_deep($topProv);
+    utf8_encode_deep($provCiudad);
+    utf8_encode_deep($topProd);
+    utf8_encode_deep($creditos);
+
     echo json_encode(array(
         'success' => true,
-        'totalPersonal' => $total,
-        'totalProveedores' => $totalProv,
-        'bySex' => $bySex,
-        'byTit' => $byTit,
-        'byCiu' => $byCiu,
-        'byMov' => $byMov,
-        'byTac' => $byTac,
-        'byRso' => $byRso,
-        'byIng' => $byIng,
-        'ultimoRol' => $ultRol ? $ultRol : array(),
+        'desde' => $desde,
+        'hasta' => $hasta,
+        'topProveedores' => $topProv,
+        'proveedoresPorCiudad' => $provCiudad,
+        'topProductos' => $topProd,
+        'creditosProveedores' => $creditos
     ));
     exit();
 }
@@ -72,879 +55,475 @@ if (isset($dashPersonalAjax)) {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dashboard personal [EXA]</title>
+    <title>Dashboard proveedores [EXA]</title>
     <meta charset="UTF-8">
     <?php require_once("../../mascaras/model1/estilos/jqgrid5.php"); ?>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
     <style>
-        .dash-card { background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 16px; margin-bottom: 16px; min-height: auto; }
-        .dash-card h4 { margin-top: 0; margin-bottom: 16px; color: #333; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
-        .dash-kpi-row { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; padding: 18px 0 24px; }
-        .dash-kpi-box { background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%); border: 1px solid #e0e0e0; border-radius: 8px; padding: 18px 32px; text-align: center; min-width: 200px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-        .dash-kpi-box .kpi-value { font-size: 32px; font-weight: 700; line-height: 1.2; }
-        .dash-kpi-box .kpi-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #666; margin-top: 4px; }
-        .dash-kpi-box.kpi-personal .kpi-value { color: #2e7d32; }
-        .dash-kpi-box.kpi-proveedores .kpi-value { color: #1565c0; }
-        .dash-chart-host { position: relative; margin: 0; margin-right: auto; max-width: 100%; }
-        .dash-chart-host canvas { width: 100% !important; height: 100% !important; display: block; }
-        .dash-card-compact { padding: 12px 10px 14px; margin-left: 0; margin-right: auto; }
-        .dash-ing-table { width: 100%; max-width: 420px; margin: 0 0 12px 0; border-collapse: collapse; font-size: 12px; }
-        .dash-ing-table thead th { background: #c8e6c9; color: #1b5e20; font-weight: 700; text-align: center; padding: 6px 8px; border: 1px solid #a5d6a7; }
-        .dash-ing-table tbody td { padding: 5px 8px; border: 1px solid #e0e0e0; color: #2e7d32; }
-        .dash-ing-table tbody td:last-child { text-align: center; font-weight: 600; }
-        .dash-ing-table tbody td:first-child { text-align: left; }
-        .dash-rol-ref { font-size: 11px; color: #666; margin: -8px 0 10px; text-align: left; }
-        .btn-print-dash { margin: 0 0 0 auto; display: block; }
-        .dash-print-header { display: none; }
+        .dash-wrap { padding: 12px 10px 8px; }
+        .dash-card {
+            background: #fff;
+            border: 1px solid #e8ecf1;
+            border-radius: 10px;
+            margin-bottom: 18px;
+            padding: 16px 18px;
+            min-height: 360px;
+            box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06);
+        }
+        .dash-card h4 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 10px;
+        }
+        .dash-card h4 i { color: #3b82f6; margin-right: 6px; }
+        .dash-host { position: relative; width: 100%; height: 300px; }
+        .dash-empty { text-align: center; color: #94a3b8; padding: 80px 10px; font-size: 13px; }
+        .dash-kpi { font-size: 12px; color: #64748b; margin-bottom: 8px; font-weight: 500; }
 
-        @media print {
-            @page {
-                margin: 10mm 12mm;
-            }
-            html, body {
-                margin: 0;
-                padding: 0;
-                background: #fff !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            .panel-heading,
-            .btn-print-dash {
-                display: none !important;
-            }
-            .panel-main {
-                border: none !important;
-                box-shadow: none !important;
-            }
-            .exa-body {
-                padding: 0 !important;
-            }
-            .dash-print-header {
-                display: block !important;
-                margin-bottom: 14px;
-                padding-bottom: 10px;
-                border-bottom: 3px solid #1565c0;
-            }
-            .dash-print-header h1 {
-                margin: 0 0 4px;
-                font-size: 18px;
-                font-weight: 700;
-                color: #1a237e;
-                letter-spacing: 0.2px;
-            }
-            .dash-print-header .dash-print-meta {
-                margin: 0;
-                font-size: 10px;
-                color: #546e7a;
-            }
-            .dash-kpi-row {
-                display: flex;
-                justify-content: center;
-                gap: 20px;
-                margin-bottom: 14px;
-                padding: 10px 0 12px;
-                border-bottom: 1px solid #e0e0e0;
-            }
-            .dash-kpi-box {
-                min-width: 160px;
-                padding: 10px 22px;
-                border: 1px solid #c5cae9;
-                border-radius: 6px;
-                box-shadow: none;
-                background: #f5f7ff !important;
-            }
-            .dash-kpi-box .kpi-value { font-size: 24px; }
-            .dash-kpi-box .kpi-label { font-size: 9px; }
-            .row {
-                display: block !important;
-                margin: 0 0 6px !important;
-                page-break-inside: auto;
-            }
-            .col-md-4,
-            .col-md-6,
-            .col-sm-12 {
-                width: 100% !important;
-                max-width: 100% !important;
-                float: none !important;
-                display: block !important;
-                flex: none !important;
-                padding: 0 0 16px !important;
-                page-break-inside: avoid;
-                break-inside: avoid;
-            }
-            .dash-card {
-                height: auto !important;
-                min-height: 0 !important;
-                margin-bottom: 0;
-                padding: 12px 12px 10px;
-                border: 1px solid #dde3ef;
-                border-radius: 6px;
-                background: #fff !important;
-                page-break-inside: avoid;
-                break-inside: avoid;
-            }
-            .dash-card h4 {
-                margin-bottom: 8px;
-                padding-bottom: 6px;
-                font-size: 10px;
-                font-weight: 700;
-                color: #1565c0;
-                text-transform: uppercase;
-                letter-spacing: 0.35px;
-                border-bottom: 2px solid #e8eaf6;
-            }
-            .dash-card-compact {
-                max-width: 100% !important;
-                width: 100% !important;
-                margin: 0 !important;
-            }
-            body.dash-printing .dash-chart-host {
-                width: 100% !important;
-                max-width: 100% !important;
-                height: 250px !important;
-                min-height: 250px !important;
-                margin: 0 !important;
-            }
-            body.dash-printing #dashSexHost.dash-chart-host {
-                width: 240px !important;
-                max-width: 240px !important;
-                height: 240px !important;
-                min-height: 240px !important;
-            }
-            .dash-chart-host canvas {
-                max-width: none !important;
-                max-height: none !important;
-            }
-            .dash-ing-table {
-                max-width: 100%;
-                font-size: 10px;
-            }
-            .dash-rol-ref { font-size: 9px; margin-bottom: 6px; }
+        /* Barra de filtros */
+        .dash-filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 14px 20px;
+            margin-bottom: 22px;
+            padding: 18px 22px;
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 55%, #f1f5f9 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.07);
+        }
+        .dash-filter-head {
+            flex: 1 1 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 2px;
+        }
+        .dash-filter-title {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+        }
+        .dash-filter-title i {
+            color: #3b82f6;
+            margin-right: 8px;
+            font-size: 14px;
+        }
+        .dash-filter-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #1d4ed8;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 999px;
+            min-height: 28px;
+        }
+        .dash-filter-badge:empty { display: none; }
+        .dash-filter-badge i { font-size: 12px; opacity: 0.85; }
+        .dash-filter-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 160px;
+        }
+        .dash-filter-field label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #64748b;
+            margin: 0;
+        }
+        .dash-filter-input-wrap {
+            display: flex;
+            align-items: center;
+            background: #fff;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .dash-filter-input-wrap:focus-within {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+        .dash-filter-input-wrap .input-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 36px;
+            color: #94a3b8;
+            background: #f8fafc;
+            border-right: 1px solid #e2e8f0;
+            flex-shrink: 0;
+        }
+        .dash-filter-input-wrap input {
+            flex: 1;
+            border: none !important;
+            box-shadow: none !important;
+            height: 36px;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #0f172a;
+            background: transparent !important;
+        }
+        .dash-filter-actions {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .btn-dash-filter {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            height: 36px;
+            padding: 0 18px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+        }
+        .btn-dash-filter:hover {
+            background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45);
+            color: #fff;
+        }
+        .btn-dash-filter:active { transform: translateY(1px); }
+        .btn-dash-preset {
+            height: 36px;
+            padding: 0 12px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #475569;
+            background: #fff;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+        }
+        .btn-dash-preset:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+            color: #0f172a;
+        }
+        @media (max-width: 768px) {
+            .dash-filter-bar { padding: 14px 16px; }
+            .dash-filter-field { flex: 1 1 100%; min-width: 0; }
+            .dash-filter-actions { width: 100%; }
+            .btn-dash-filter { flex: 1; justify-content: center; }
         }
     </style>
 </head>
 <body>
 <div class="panel panel-main">
-    <div class="panel-heading exa-header">
-        <h3 class="panel-title">&raquo; Dashboard Socioeconomico RCET</h3>
+    <div class="panel-heading ui-widget-header ui-corner-top exa-head">
+        <h3 class="panel-title">&raquo; Dashboard de proveedores</h3>
     </div>
-    <div class="panel-body ui-widget-content ui-corner-bottom exa-body">
-        <div class="dash-print-header">
-            <h1>Dashboard general &mdash; Personal</h1>
-            <p class="dash-print-meta">
-                <span id="dashPrintDate"></span>
-                &nbsp;&bull;&nbsp;
-                <span id="dashPrintKpi"></span>
-            </p>
-        </div>
-        <button type="button" class="btn btn-default btn-sm btn-print-dash" onclick="printDashboard()"><i class="fa fa-print"></i> Imprimir</button>
-        <div class="dash-kpi-row">
-            <div class="dash-kpi-box kpi-personal">
-                <div class="kpi-value" id="kpiTotal">&mdash;</div>
-                <div class="kpi-label"><i class="fa fa-users"></i> Personal activo</div>
-            </div>
-            <div class="dash-kpi-box kpi-proveedores">
-                <div class="kpi-value" id="kpiProveedores">&mdash;</div>
-                <div class="kpi-label"><i class="fa fa-truck"></i> Proveedores activos</div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-4 col-sm-12">
-                <div class="dash-card">
-                    <h4><i class="fa fa-pie-chart"></i> Distribuci&oacute;n por g&eacute;nero</h4>
-                    <div id="dashSexHost" class="dash-chart-host"><canvas id="chartSex"></canvas></div>
+    <div class="panel-body ui-widget-content ui-corner-bottom exa-body dash-wrap">
+        <form id="formDashProv" onsubmit="return false;">
+            <div class="dash-filter-bar">
+                <div class="dash-filter-head">
+                    <h4 class="dash-filter-title"><i class="fa fa-sliders"></i> Periodo de consulta</h4>
+                    <span id="dashRangoRef" class="dash-filter-badge"></span>
+                </div>
+                <div class="dash-filter-field">
+                    <label for="dashDesde">Desde</label>
+                    <div class="dash-filter-input-wrap">
+                        <span class="input-icon"><i class="fa fa-calendar"></i></span>
+                        <input type="text" id="dashDesde" name="desde" class="datepickers" value="<?php echo $inicioAnio; ?>" placeholder="AAAA-MM-DD" autocomplete="off" />
+                    </div>
+                </div>
+                <div class="dash-filter-field">
+                    <label for="dashHasta">Hasta</label>
+                    <div class="dash-filter-input-wrap">
+                        <span class="input-icon"><i class="fa fa-calendar"></i></span>
+                        <input type="text" id="dashHasta" name="hasta" class="datepickers" value="<?php echo $hoy; ?>" placeholder="AAAA-MM-DD" autocomplete="off" />
+                    </div>
+                </div>
+                <div class="dash-filter-actions">
+                    <button type="button" class="btn-dash-preset" data-preset="mes" title="Mes en curso">Mes actual</button>
+                    <button type="button" class="btn-dash-preset" data-preset="anio" title="A&ntilde;o en curso">A&ntilde;o actual</button>
+                    <button type="button" id="btnDashProvBuscar" class="btn-dash-filter" title="Aplicar filtro">
+                        <i class="glyphicon glyphicon-search"></i> Aplicar
+                    </button>
                 </div>
             </div>
-            <div class="col-md-4 col-sm-12">
-                <div class="dash-card">
-                    <h4><i class="fa fa-bar-chart"></i> Total por nivel de estudio</h4>
-                    <div id="dashTitHost" class="dash-chart-host"><canvas id="chartTit"></canvas></div>
-                </div>
-            </div>
-            <div class="col-md-4 col-sm-12">
-                <div class="dash-card">
-                    <h4><i class="fa fa-bar-chart"></i> Personal por ciudad</h4>
-                    <div id="dashCiuHost" class="dash-chart-host"><canvas id="chartCiu"></canvas></div>
-                </div>
-            </div>
-        </div>
+        </form>
+
         <div class="row">
             <div class="col-md-6 col-sm-12">
-                <div class="dash-card dash-card-compact">
-                    <h4><i class="fa fa-bar-chart"></i> Personal por tipo de movilizaci&oacute;n</h4>
-                    <div id="dashMovHost" class="dash-chart-host"><canvas id="chartMov"></canvas></div>
+                <div class="dash-card">
+                    <h4><i class="fa fa-line-chart"></i> Proveedores a los que m&aacute;s compro</h4>
+                    <div id="kpiTopProv" class="dash-kpi"></div>
+                    <div id="hostTopProv" class="dash-host"><canvas id="chartTopProv"></canvas></div>
                 </div>
             </div>
             <div class="col-md-6 col-sm-12">
                 <div class="dash-card">
-                    <h4><i class="fa fa-bar-chart"></i> Proveedores por actividad</h4>
-                    <div id="dashTacHost" class="dash-chart-host"><canvas id="chartTac"></canvas></div>
+                    <h4><i class="fa fa-map-marker"></i> Proveedores por ciudad</h4>
+                    <div id="kpiCiudad" class="dash-kpi"></div>
+                    <div id="hostCiudad" class="dash-host"><canvas id="chartCiudad"></canvas></div>
                 </div>
             </div>
         </div>
         <div class="row">
             <div class="col-md-6 col-sm-12">
-                <div class="dash-card dash-card-compact">
-                    <h4><i class="fa fa-bar-chart"></i> Personal por riesgo social</h4>
-                    <div id="dashRsoHost" class="dash-chart-host"><canvas id="chartRso"></canvas></div>
+                <div class="dash-card">
+                    <h4><i class="fa fa-cubes"></i> Productos m&aacute;s comprados a proveedores</h4>
+                    <div id="kpiTopProd" class="dash-kpi"></div>
+                    <div id="hostTopProd" class="dash-host"><canvas id="chartTopProd"></canvas></div>
                 </div>
             </div>
             <div class="col-md-6 col-sm-12">
                 <div class="dash-card">
-                    <h4><i class="fa fa-bar-chart"></i> Personal por ingreso mensual (&uacute;ltimo rol)</h4>
-                    <p id="dashIngRolRef" class="dash-rol-ref"></p>
-                    <div id="dashIngTableWrap"></div>
+                    <h4><i class="fa fa-credit-card"></i> Cr&eacute;ditos otorgados por proveedores</h4>
+                    <div id="kpiCreditos" class="dash-kpi"></div>
+                    <div id="hostCreditos" class="dash-host"><canvas id="chartCreditos"></canvas></div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
 <script type="text/javascript">
-Chart.register(ChartDataLabels);
 (function () {
-    var chartSex = null;
-    var chartTit = null;
-    var chartCiu = null;
-    var chartMov = null;
-    var chartTac = null;
-    var chartRso = null;
-    var CHART_SIZE = {
-        minBarH: 220,
-        maxBarH: 620,
-        pxPerBarH: 38,
-        padH: 72,
-        minVertH: 260,
-        maxVertH: 420,
-        minBarW: 300,
-        maxBarW: 900,
-        compactPxPerCat: 98,
-        compactPadW: 88,
-        doughnutH: 280,
-        doughnutMinW: 260,
-        printBarH: 250,
-        printDoughnutH: 240,
-        printDoughnutW: 240
-    };
-    var printState = null;
+    var chartTopProv = null;
+    var chartCiudad = null;
+    var chartTopProd = null;
+    var chartCreditos = null;
 
-    function allChartInstances() {
-        return [chartSex, chartTit, chartCiu, chartMov, chartTac, chartRso].filter(function (c) {
-            return !!c;
+    function destroyCharts() {
+        [chartTopProv, chartCiudad, chartTopProd, chartCreditos].forEach(function (c) {
+            if (c && typeof c.destroy === 'function') c.destroy();
         });
+        chartTopProv = chartCiudad = chartTopProd = chartCreditos = null;
     }
 
-    function captureHostPrintState(hostId) {
-        var $host = $('#' + hostId);
-        var $compact = $host.closest('.dash-card-compact');
-        var state = {
-            hostId: hostId,
-            width: $host[0].style.width,
-            height: $host[0].style.height,
-            minHeight: $host[0].style.minHeight,
-            maxWidth: $host[0].style.maxWidth
-        };
-        if ($compact.length) {
-            state.compact = {
-                maxWidth: $compact[0].style.maxWidth,
-                width: $compact[0].style.width
-            };
-        }
-        return state;
-    }
+    var LABEL_MAX_PROVEEDOR = 28;
+    var LABEL_MAX_CIUDAD = 22;
+    var LABEL_MAX_PRODUCTO = 32;
 
-    function applyHostPrintState(state) {
-        var $host = $('#' + state.hostId);
-        $host.css({
-            width: state.width,
-            height: state.height,
-            minHeight: state.minHeight,
-            maxWidth: state.maxWidth
-        });
-        if (state.compact) {
-            $host.closest('.dash-card-compact').css(state.compact);
-        }
-    }
-
-    function printContentWidth() {
-        var $body = $('.exa-body');
-        var w = $body.length ? $body.innerWidth() : $(window).width();
-        return Math.max(280, Math.min(CHART_SIZE.maxBarW, (w || 700) - 32));
-    }
-
-    function preparePrintCharts() {
-        var hostIds = ['dashSexHost', 'dashTitHost', 'dashCiuHost', 'dashMovHost', 'dashTacHost', 'dashRsoHost'];
-        printState = hostIds.map(captureHostPrintState);
-        var barHosts = ['dashTitHost', 'dashCiuHost', 'dashMovHost', 'dashTacHost', 'dashRsoHost'];
-        var printW = printContentWidth();
-        var i;
-        $('.dash-card-compact').css({ maxWidth: '100%', width: '100%' });
-        setChartHostSize('dashSexHost', CHART_SIZE.printDoughnutW, CHART_SIZE.printDoughnutH, false);
-        for (i = 0; i < barHosts.length; i++) {
-            setChartHostSize(barHosts[i], printW, CHART_SIZE.printBarH, true);
-        }
-        allChartInstances().forEach(function (chart) {
-            chart.resize();
-            chart.update('none');
-        });
-    }
-
-    function restorePrintCharts() {
-        var i;
-        if (!printState) {
-            return;
-        }
-        for (i = 0; i < printState.length; i++) {
-            applyHostPrintState(printState[i]);
-        }
-        printState = null;
-        allChartInstances().forEach(function (chart) {
-            chart.resize();
-        });
-    }
-
-    function finishPrintMode() {
-        restorePrintCharts();
-        document.body.classList.remove('dash-printing');
-    }
-
-    function printDashboard() {
-        document.body.classList.add('dash-printing');
-        var now = new Date();
-        $('#dashPrintDate').text(
-            'Impreso: ' + now.toLocaleDateString('es-EC') + ' ' +
-            now.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' })
-        );
-        $('#dashPrintKpi').text(
-            ($('#kpiTotal').text() || '0') + ' personal activo  |  ' +
-            ($('#kpiProveedores').text() || '0') + ' proveedores activos'
-        );
-        preparePrintCharts();
-        setTimeout(function () {
-            preparePrintCharts();
-            setTimeout(function () {
-                window.print();
-            }, 350);
-        }, 200);
-    }
-
-    window.printDashboard = printDashboard;
-
-    function hostParentWidth(hostId) {
-        var $col = $('#' + hostId).closest('[class*="col-"]');
-        var w = $col.length ? $col.innerWidth() : $('#' + hostId).parent().width();
-        return Math.max(160, Math.min(CHART_SIZE.maxBarW, (w || 320) - 24));
-    }
-
-    function maxLabelChars(labels) {
-        var m = 0;
-        for (var i = 0; i < labels.length; i++) {
-            m = Math.max(m, String(labels[i] || '').length);
-        }
-        return m;
-    }
-
-    /** Barras: usar siempre el ancho de la columna para que las etiquetas no se monten */
-    function barChartWidth(categoryCount, horizontal, labels, parentMaxW) {
-        return parentMaxW || CHART_SIZE.maxBarW;
-    }
-
-    function doughnutChartWidth(sliceCount, parentMaxW) {
-        parentMaxW = parentMaxW || 360;
-        return Math.min(parentMaxW, Math.max(CHART_SIZE.doughnutMinW, Math.round(parentMaxW * 0.88)));
-    }
-
-    function barChartHeight(categoryCount, horizontal, labels) {
-        var n = Math.max(categoryCount, 1);
-        var longLbl = maxLabelChars(labels) > 22;
-        if (horizontal) {
-            return Math.min(CHART_SIZE.maxBarH, Math.max(CHART_SIZE.minBarH, n * CHART_SIZE.pxPerBarH + CHART_SIZE.padH));
-        }
-        var extra = longLbl ? 40 : 0;
-        return Math.min(CHART_SIZE.maxVertH, Math.max(CHART_SIZE.minVertH, 240 + Math.min(n, 10) * 14 + extra));
-    }
-
-    function barChartLayout(categoryCount, labels) {
-        var n = Math.max(categoryCount, 1);
-        var longLbl = maxLabelChars(labels) > 20;
-        /* Horizontal solo con muchas categorías; si no, barras verticales a ancho completo */
-        var horizontal = n > 8 || (n > 6 && longLbl);
-        var barPct = 0.45;
-        var catPct = 0.65;
-        if (n <= 3) {
-            barPct = 0.5;
-            catPct = 0.7;
-        } else if (n <= 8) {
-            barPct = 0.6;
-            catPct = 0.75;
-        } else if (horizontal) {
-            barPct = 0.72;
-            catPct = 0.88;
-        } else {
-            barPct = 0.55;
-            catPct = 0.8;
-        }
-        return { horizontal: horizontal, barPercentage: barPct, categoryPercentage: catPct };
-    }
-
-    function setChartHostSize(hostId, widthPx, heightPx, fullWidth) {
-        var css = {
-            maxWidth: '100%',
-            height: heightPx + 'px',
-            minHeight: heightPx + 'px',
-            margin: '0',
-            marginRight: 'auto'
-        };
-        if (fullWidth) {
-            css.width = '100%';
-        } else {
-            css.width = widthPx + 'px';
-        }
-        $('#' + hostId).css(css);
-    }
-
-    function resetChartHost(hostId, canvasId, widthPx, heightPx, fullWidth) {
-        setChartHostSize(hostId, widthPx, heightPx, fullWidth !== false);
-        $('#' + hostId).html('<canvas id="' + canvasId + '"></canvas>');
-        return document.getElementById(canvasId);
+    function formatMoney(v) {
+        var n = parseFloat(v || 0);
+        return n.toLocaleString('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     function truncateLabel(text, maxLen) {
-        text = String(text || '');
-        if (text.length <= maxLen) {
-            return text;
-        }
-        return text.substring(0, maxLen - 1) + '\u2026';
+        var s = String(text || '').trim();
+        if (!s) return '(Sin dato)';
+        maxLen = maxLen || 28;
+        if (s.length <= maxLen) return s;
+        return s.substring(0, maxLen - 1).trim() + '\u2026';
     }
 
-    function destroyAllCharts() {
-        [chartSex, chartTit, chartCiu, chartMov, chartTac, chartRso].forEach(function (c) {
-            if (c) {
-                c.destroy();
-            }
-        });
-        chartSex = chartTit = chartCiu = chartMov = chartTac = chartRso = null;
+    function paintEmpty(hostId, msg) {
+        $('#' + hostId).html('<div class="dash-empty">' + msg + '</div>');
     }
 
-    function fitCompactCard(hostId, categoryCount) {
-        var parentW = hostParentWidth(hostId);
-        var n = Math.max(categoryCount, 1);
-        var cardW = Math.min(parentW, Math.max(300, n * CHART_SIZE.compactPxPerCat + CHART_SIZE.compactPadW));
-        $('#' + hostId).closest('.dash-card-compact').css({
-            maxWidth: cardW + 'px',
-            width: cardW + 'px'
-        });
+    function resetHost(hostId, canvasId) {
+        $('#' + hostId).html('<canvas id="' + canvasId + '"></canvas>');
+        return document.getElementById(canvasId).getContext('2d');
     }
 
-    function createBarChart(hostId, canvasId, labels, data, palette, datasetLabel, chartOpts) {
-        chartOpts = chartOpts || {};
-        var n = labels.length;
-        var layout = barChartLayout(n, labels);
-        var parentW = hostParentWidth(hostId);
-        var w = barChartWidth(n, layout.horizontal, labels, parentW);
-        if (chartOpts.compact) {
-            w = Math.min(parentW, Math.max(300, n * CHART_SIZE.compactPxPerCat + CHART_SIZE.compactPadW));
-            if (!layout.horizontal && n <= 8) {
-                layout.barPercentage = 0.42;
-                layout.categoryPercentage = 0.62;
-            }
-            fitCompactCard(hostId, n);
-        }
-        var h = barChartHeight(n, layout.horizontal, labels);
-        var longLbl = maxLabelChars(labels) > 18;
-        var ctx = resetChartHost(hostId, canvasId, w, h, true);
-        var displayLabels = labels.map(function (lb) {
-            if (layout.horizontal) {
-                return truncateLabel(lb, 42);
-            }
-            return longLbl ? truncateLabel(lb, 28) : lb;
-        });
-        var opts = {
-            responsive: true,
-            maintainAspectRatio: false,
-            indexAxis: layout.horizontal ? 'y' : 'x',
-            layout: {
-                padding: {
-                    top: 10,
-                    right: chartOpts.compact ? 6 : 14,
-                    bottom: layout.horizontal ? 10 : (longLbl ? 28 : 16),
-                    left: chartOpts.compact ? 6 : (layout.horizontal ? 8 : 10)
-                }
-            },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        title: function (items) {
-                            if (!items.length) {
-                                return '';
-                            }
-                            var i = items[0].dataIndex;
-                            return labels[i] != null ? labels[i] : '';
-                        }
-                    }
-                },
-                datalabels: {
-                    anchor: layout.horizontal ? 'end' : 'end',
-                    align: layout.horizontal ? 'end' : 'end',
-                    offset: chartOpts.showPct ? 4 : 0,
-                    font: { weight: 'bold', size: n > 12 ? 10 : 11 },
-                    color: '#333',
-                    formatter: chartOpts.showPct ? function (value, ctx) {
-                        if (!value) {
-                            return '';
-                        }
-                        return value + ' (' + pctOfTotal(value, ctx.dataset.data, chartOpts.pctTotal) + '%)';
-                    } : undefined,
-                    display: chartOpts.showPct ? function (ctx) {
-                        return (ctx.dataset.data[ctx.dataIndex] || 0) > 0;
-                    } : true
-                }
-            },
-            scales: {}
-        };
-        if (chartOpts.showPct) {
-            opts.plugins.tooltip.callbacks.label = function (ctx) {
-                var v = ctx.raw || 0;
-                var pct = pctOfTotal(v, ctx.dataset.data, chartOpts.pctTotal);
-                return (ctx.dataset.label || '') + ': ' + v + ' (' + pct + '%)';
-            };
-            if (!layout.horizontal) {
-                opts.layout.padding.top = 22;
-            } else {
-                opts.layout.padding.right = 48;
-            }
-        }
-        if (layout.horizontal) {
-            opts.scales.x = { beginAtZero: true, ticks: { precision: 0, padding: 4 } };
-            opts.scales.y = {
-                ticks: {
-                    autoSkip: false,
-                    font: { size: 11 },
-                    padding: 8,
-                    callback: function (val, idx) {
-                        return displayLabels[idx] != null ? displayLabels[idx] : val;
-                    }
-                }
-            };
-        } else {
-            opts.scales.y = { beginAtZero: true, ticks: { precision: 0, padding: 4 } };
-            opts.scales.x = {
-                ticks: {
-                    autoSkip: n > 14,
-                    maxTicksLimit: n > 14 ? 14 : undefined,
-                    maxRotation: longLbl || n > 5 ? 50 : 35,
-                    minRotation: longLbl || n > 5 ? 32 : 0,
-                    font: { size: 11 },
-                    padding: 6,
-                    callback: function (val, idx) {
-                        return displayLabels[idx] != null ? displayLabels[idx] : val;
-                    }
-                }
-            };
-        }
+    function createHorizontalBar(ctx, labels, fullLabels, data, color, titleLabel, formatValue) {
+        fullLabels = fullLabels || labels;
+        formatValue = formatValue || function (v) { return v; };
         return new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: datasetLabel,
+                    label: titleLabel,
                     data: data,
-                    backgroundColor: labels.map(function (_, i) { return palette[i % palette.length]; }),
-                    borderWidth: 1,
-                    barPercentage: layout.barPercentage,
-                    categoryPercentage: layout.categoryPercentage
+                    backgroundColor: color,
+                    borderColor: color,
+                    borderWidth: 1
                 }]
             },
-            options: opts
-        });
-    }
-
-    function labelSex(code) {
-        if (code === 'M') return 'Masculino';
-        if (code === 'F') return 'Femenino';
-        if (code === '?') return 'Sin indicar';
-        return code || 'Otro';
-    }
-
-    function pctOfTotal(value, dataArr, fixedTotal) {
-        var sum = fixedTotal > 0 ? fixedTotal : 0;
-        if (!sum) {
-            for (var i = 0; i < dataArr.length; i++) {
-                sum += dataArr[i] || 0;
-            }
-        }
-        if (!sum || !value) {
-            return 0;
-        }
-        return Math.round(value * 1000 / sum) / 10;
-    }
-
-    var ING_RANGES_DEFAULT = [
-        { rango_ord: 1, rango_des: '< $450', total: 0 },
-        { rango_ord: 2, rango_des: '$450 - $600', total: 0 },
-        { rango_ord: 3, rango_des: '$601 - $800', total: 0 },
-        { rango_ord: 4, rango_des: '> $800', total: 0 }
-    ];
-
-    function mergeIngRanges(rows) {
-        var map = {};
-        ING_RANGES_DEFAULT.forEach(function (r) {
-            map[r.rango_ord] = { rango_ord: r.rango_ord, rango_des: r.rango_des, total: 0 };
-        });
-        (rows || []).forEach(function (row) {
-            var ord = parseInt(row.rango_ord, 10);
-            if (map[ord]) {
-                map[ord].total = parseInt(row.total, 10) || 0;
-                if (row.rango_des) {
-                    map[ord].rango_des = row.rango_des;
-                }
-            }
-        });
-        return ING_RANGES_DEFAULT.map(function (r) {
-            return map[r.rango_ord];
-        });
-    }
-
-    function renderIngTable(rows) {
-        var html = '<table class="dash-ing-table"><thead><tr><th>RANGO MENSUAL</th><th>TOTAL</th></tr></thead><tbody>';
-        rows.forEach(function (row) {
-            html += '<tr><td>' + (row.rango_des || '') + '</td><td>' + (parseInt(row.total, 10) || 0) + '</td></tr>';
-        });
-        html += '</tbody></table>';
-        $('#dashIngTableWrap').html(html);
-    }
-
-    function setUltimoRolRef(rol) {
-        var $ref = $('#dashIngRolRef');
-        if (!rol || !rol.Rol_Cod) {
-            $ref.text('Sin rol de pagos activo con total de ingresos.');
-            return;
-        }
-        var parts = [];
-        if (rol.Rol_Num) {
-            parts.push('Rol #' + rol.Rol_Num);
-        }
-        if (rol.Rol_Fef) {
-            parts.push('cierre ' + rol.Rol_Fef);
-        } else if (rol.Rol_Fei) {
-            parts.push('desde ' + rol.Rol_Fei);
-        }
-        if (rol.Rol_Con) {
-            parts.push(rol.Rol_Con);
-        }
-        $ref.text(parts.length ? ('Referencia: ' + parts.join(' · ')) : '');
-    }
-
-    function loadDashboard() {
-        $.get(UrlSaveJson, { dashPersonalAjax: 1 }, function (res) {
-            if (!res || !res.success) {
-                if (typeof $.alert === 'function') $.alert('No se pudo cargar el dashboard.'); else alert('No se pudo cargar el dashboard.');
-                return;
-            }
-            var tot = res.totalPersonal != null ? res.totalPersonal : 0;
-            var totProv = res.totalProveedores != null ? res.totalProveedores : 0;
-            $('#kpiTotal').text(tot);
-            $('#kpiProveedores').text(totProv);
-
-            if (tot === 0) {
-                destroyAllCharts();
-                var msg0 = '<p class="text-muted text-center" style="padding:40px 10px;">No hay personal activo para esta empresa.</p>';
-                $('#dashSexHost').html(msg0);
-                $('#dashTitHost').html(msg0);
-                $('#dashCiuHost').html(msg0);
-                $('#dashMovHost').html(msg0);
-                $('#dashTacHost').html(msg0);
-                $('#dashRsoHost').html(msg0);
-                $('#dashIngTableWrap').empty();
-                $('#dashIngRolRef').text('');
-                return;
-            }
-
-            destroyAllCharts();
-
-            var sexRows = res.bySex || [];
-            var labelsS = [];
-            var dataS = [];
-            var colorsS = ['#5cb85c', '#5bc0de', '#f0ad4e', '#d9534f'];
-            sexRows.forEach(function (row) {
-                labelsS.push(labelSex(row.Prs_Sex));
-                dataS.push(parseInt(row.total, 10) || 0);
-            });
-            if (labelsS.length === 0) {
-                labelsS.push('Sin clasificar');
-                dataS.push(tot);
-            }
-
-            var wSex = doughnutChartWidth(labelsS.length, hostParentWidth('dashSexHost'));
-            var ctxS = resetChartHost('dashSexHost', 'chartSex', wSex, CHART_SIZE.doughnutH, false);
-            chartSex = new Chart(ctxS, {
-                type: 'doughnut',
-                data: {
-                    labels: labelsS,
-                    datasets: [{
-                        data: dataS,
-                        backgroundColor: labelsS.map(function (_, i) { return colorsS[i % colorsS.length]; }),
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        datalabels: {
-                            display: function (ctx) {
-                                var v = ctx.dataset.data[ctx.dataIndex] || 0;
-                                return pctOfTotal(v, ctx.dataset.data) >= 4;
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            title: function (items) {
+                                if (!items.length) return '';
+                                var i = items[0].dataIndex;
+                                return fullLabels[i] || labels[i] || '';
                             },
-                            color: '#fff',
-                            font: { weight: 'bold', size: 12 },
-                            anchor: 'center',
-                            align: 'center',
-                            textStrokeColor: 'rgba(0,0,0,0.4)',
-                            textStrokeWidth: 2,
-                            formatter: function (value, ctx) {
-                                return pctOfTotal(value, ctx.dataset.data) + '%';
-                            }
-                        },
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                generateLabels: function (chart) {
-                                    var ds = chart.data.datasets[0];
-                                    var data = chart.data.labels || [];
-                                    return data.map(function (label, i) {
-                                        var value = ds.data[i] || 0;
-                                        var pct = pctOfTotal(value, ds.data);
-                                        return {
-                                            text: label + ' — ' + value + ' (' + pct + '%)',
-                                            fillStyle: ds.backgroundColor[i],
-                                            strokeStyle: ds.borderColor ? ds.borderColor[i] : '#fff',
-                                            lineWidth: ds.borderWidth || 1,
-                                            hidden: false,
-                                            index: i
-                                        };
-                                    });
-                                }
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function (ctx) {
-                                    var v = ctx.raw || 0;
-                                    var pct = pctOfTotal(v, ctx.dataset.data);
-                                    return ctx.label + ': ' + v + ' (' + pct + '%)';
-                                }
+                            label: function (ctx) {
+                                return titleLabel + ': ' + formatValue(ctx.raw);
                             }
                         }
                     }
+                },
+                scales: {
+                    x: { beginAtZero: true },
+                    y: {
+                        ticks: {
+                            autoSkip: false,
+                            font: { size: 11 }
+                        }
+                    }
                 }
-            });
-
-            var titRows = res.byTit || [];
-            var labelsT = [];
-            var dataT = [];
-            titRows.forEach(function (row) {
-                labelsT.push(row.titulo_des || row.Per_Tit_Cod || '');
-                dataT.push(parseInt(row.total, 10) || 0);
-            });
-            if (labelsT.length === 0) {
-                labelsT.push('Sin datos');
-                dataT.push(0);
             }
-            var palette = ['#439943', '#31708f', '#8a6d3b', '#a94442', '#777', '#337ab7', '#5cb85c', '#f0ad4e', '#5bc0de', '#d9534f', '#9b59b6'];
-            chartTit = createBarChart('dashTitHost', 'chartTit', labelsT, dataT, palette, 'Empleados', {
-                showPct: true,
-                pctTotal: tot
-            });
-
-            // Gráfico por ciudad
-            var ciuRows = res.byCiu || [];
-            var labelsC = [];
-            var dataC = [];
-            ciuRows.forEach(function (row) {
-                labelsC.push(row.Ciu_Des || '(Sin ciudad)');
-                dataC.push(parseInt(row.total, 10) || 0);
-            });
-            if (labelsC.length === 0) {
-                labelsC.push('Sin datos');
-                dataC.push(0);
-            }
-            var paletteCiu = ['#337ab7', '#5cb85c', '#f0ad4e', '#5bc0de', '#d9534f', '#439943', '#9b59b6', '#31708f', '#8a6d3b', '#a94442', '#777'];
-            chartCiu = createBarChart('dashCiuHost', 'chartCiu', labelsC, dataC, paletteCiu, 'Empleados');
-
-            // Gráfico por tipo de movilización
-            var movRows = res.byMov || [];
-            var labelsM = [];
-            var dataM = [];
-            movRows.forEach(function (row) {
-                labelsM.push(row.mov_des || row.Per_Mov_Cod || '(Sin definir)');
-                dataM.push(parseInt(row.total, 10) || 0);
-            });
-            if (labelsM.length === 0) {
-                labelsM.push('Sin datos');
-                dataM.push(0);
-            }
-            var paletteMov = ['#5bc0de', '#439943', '#f0ad4e', '#d9534f', '#337ab7', '#9b59b6', '#31708f', '#8a6d3b', '#a94442', '#777', '#5cb85c'];
-            chartMov = createBarChart('dashMovHost', 'chartMov', labelsM, dataM, paletteMov, 'Empleados', { compact: true });
-
-            // Gráfico proveedores por actividad
-            var tacRows = res.byTac || [];
-            var labelsTac = [];
-            var dataTac = [];
-            tacRows.forEach(function (row) {
-                labelsTac.push(row.actividad || '(Sin actividad)');
-                dataTac.push(parseInt(row.total, 10) || 0);
-            });
-            if (labelsTac.length === 0) {
-                labelsTac.push('Sin datos');
-                dataTac.push(0);
-            }
-            var paletteTac = ['#337ab7', '#5cb85c', '#f0ad4e', '#d9534f', '#5bc0de', '#9b59b6', '#31708f', '#8a6d3b', '#a94442', '#439943', '#777'];
-            chartTac = createBarChart('dashTacHost', 'chartTac', labelsTac, dataTac, paletteTac, 'Proveedores');
-
-            // Gráfico por riesgo social
-            var rsoRows = res.byRso || [];
-            var labelsR = [];
-            var dataR = [];
-            rsoRows.forEach(function (row) {
-                labelsR.push(row.rso_des || row.Per_Rso_Cod || '(Sin definir)');
-                dataR.push(parseInt(row.total, 10) || 0);
-            });
-            if (labelsR.length === 0) {
-                labelsR.push('Sin datos');
-                dataR.push(0);
-            }
-            var paletteRso = ['#d9534f', '#f0ad4e', '#5cb85c', '#337ab7', '#777', '#9b59b6'];
-            chartRso = createBarChart('dashRsoHost', 'chartRso', labelsR, dataR, paletteRso, 'Empleados', { compact: true });
-
-            setUltimoRolRef(res.ultimoRol || {});
-            renderIngTable(mergeIngRanges(res.byIng || []));
-        }, 'json').fail(function () {
-            if (typeof $.alert === 'function') $.alert('Error de comunicaci&oacute;n al cargar datos.'); else alert('Error de comunicacion al cargar datos.');
         });
     }
 
-    $(function () {
-        loadDashboard();
-        var resizeTimer;
-        $(window).on('resize', function () {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(function () {
-                allChartInstances().forEach(function (c) {
-                    c.resize();
-                });
-            }, 200);
+    function renderBarChart(hostId, canvasId, kpiId, rows, labelField, valueField, color, titleLabel, emptyMsg, kpiFormatter, maxLabelLen, formatValue) {
+        if (!rows.length) {
+            paintEmpty(hostId, emptyMsg);
+            $('#' + kpiId).text('');
+            return null;
+        }
+        var labels = [];
+        var fullLabels = [];
+        var data = [];
+        var kpiExtra = 0;
+        rows.forEach(function (r) {
+            var full = r[labelField] || '(Sin dato)';
+            fullLabels.push(full);
+            labels.push(truncateLabel(full, maxLabelLen));
+            var val = parseFloat(r[valueField] || 0);
+            data.push(val);
+            kpiExtra += val;
         });
-        window.addEventListener('afterprint', finishPrintMode);
-        if (window.matchMedia) {
-            window.matchMedia('print').addListener(function (mq) {
-                if (!mq.matches) {
-                    finishPrintMode();
-                }
-            });
+        $('#' + kpiId).text(kpiFormatter(kpiExtra, rows));
+        return createHorizontalBar(resetHost(hostId, canvasId), labels, fullLabels, data, color, titleLabel, formatValue);
+    }
+
+    function loadDashboard() {
+        var params = {
+            dashProveedoresAjax: 1,
+            desde: $('#dashDesde').val(),
+            hasta: $('#dashHasta').val()
+        };
+
+        $.get(UrlSaveJson, params, function (res) {
+            if (!res || !res.success) {
+                if (typeof $.alert === 'function') $.alert('No se pudo cargar el dashboard de proveedores.');
+                return;
+            }
+
+            if (res.desde) $('#dashDesde').val(res.desde);
+            if (res.hasta) $('#dashHasta').val(res.hasta);
+            $('#dashRangoRef').html('<i class="fa fa-clock-o"></i> ' + res.desde + ' &mdash; ' + res.hasta);
+
+            destroyCharts();
+
+            chartTopProv = renderBarChart(
+                'hostTopProv', 'chartTopProv', 'kpiTopProv',
+                res.topProveedores || [], 'proveedor', 'monto_total',
+                '#2e86de', 'Monto de compra',
+                'Sin compras en el rango seleccionado.',
+                function (total) { return 'Monto acumulado TOP: $ ' + formatMoney(total); },
+                LABEL_MAX_PROVEEDOR,
+                function (v) { return '$ ' + formatMoney(v); }
+            );
+
+            chartCiudad = renderBarChart(
+                'hostCiudad', 'chartCiudad', 'kpiCiudad',
+                res.proveedoresPorCiudad || [], 'ciudad', 'total_proveedores',
+                '#27ae60', 'Proveedores',
+                'Sin proveedores con compras en el rango.',
+                function (total) { return 'Total proveedores en TOP ciudades: ' + parseInt(total, 10); },
+                LABEL_MAX_CIUDAD,
+                function (v) { return parseInt(v, 10); }
+            );
+
+            chartTopProd = renderBarChart(
+                'hostTopProd', 'chartTopProd', 'kpiTopProd',
+                res.topProductos || [], 'producto', 'cantidad_total',
+                '#f39c12', 'Cantidad comprada',
+                'Sin productos comprados en el rango.',
+                function (total) { return 'Cantidad acumulada TOP: ' + total.toFixed(2); },
+                LABEL_MAX_PRODUCTO,
+                function (v) { return parseFloat(v).toFixed(2); }
+            );
+
+            chartCreditos = renderBarChart(
+                'hostCreditos', 'chartCreditos', 'kpiCreditos',
+                res.creditosProveedores || [], 'proveedor', 'monto_credito',
+                '#8e44ad', 'Monto a credito',
+                'Sin creditos otorgados (ccpp_pagar) en el rango.',
+                function (total, rows) {
+                    var docs = 0;
+                    rows.forEach(function (r) { docs += parseInt(r.total_creditos || 0, 10); });
+                    return 'Creditos TOP: $ ' + formatMoney(total) + ' (' + docs + ' documentos)';
+                },
+                LABEL_MAX_PROVEEDOR,
+                function (v) { return '$ ' + formatMoney(v); }
+            );
+        }, 'json');
+    }
+
+    function pad2(n) { return (n < 10 ? '0' : '') + n; }
+    function fmtDate(d) {
+        return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+    }
+    function aplicarPreset(tipo) {
+        var hoy = new Date();
+        var desde, hasta = fmtDate(hoy);
+        if (tipo === 'mes') {
+            desde = hoy.getFullYear() + '-' + pad2(hoy.getMonth() + 1) + '-01';
+        } else {
+            desde = hoy.getFullYear() + '-01-01';
+        }
+        $('#dashDesde').val(desde);
+        $('#dashHasta').val(hasta);
+        loadDashboard();
+    }
+
+    if ($.fn.createDatePickers) {
+        $('#dashDesde').createDatePickers({
+            clean: true,
+            checkAvailability: true,
+            onClose: function (sd) { $('#dashHasta').datepicker('option', 'minDate', sd); }
+        });
+        $('#dashHasta').createDatePickers({
+            clean: true,
+            checkAvailability: true,
+            onClose: function (sd) { $('#dashDesde').datepicker('option', 'maxDate', sd); }
+        });
+        var vDesde = $('#dashDesde').val();
+        var vHasta = $('#dashHasta').val();
+        if (vDesde) $('#dashHasta').datepicker('option', 'minDate', vDesde);
+        if (vHasta) $('#dashDesde').datepicker('option', 'maxDate', vHasta);
+    }
+    $('.btn-dash-preset').on('click', function () {
+        aplicarPreset($(this).data('preset'));
+    });
+    $('#btnDashProvBuscar').on('click', loadDashboard);
+    $('#formDashProv').on('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            loadDashboard();
         }
     });
+    $(loadDashboard);
 })();
 </script>
 </body>
