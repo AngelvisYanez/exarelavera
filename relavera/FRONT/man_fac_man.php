@@ -335,6 +335,38 @@ if (isset($_GET['manifiestosFactura'])) {
     <?php require_once("../../mascaras/model1/estilos/jqgrid5.php"); ?>
     <style>
         /*  #gridFacturas { width: 100% !important; height: 600px !important; }*/
+        #certFacLoader {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.45);
+            z-index: 10050;
+            cursor: wait;
+        }
+        #certFacLoader .cert-fac-loader-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 22px 28px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            min-width: 220px;
+        }
+        #certFacLoader .glyphicon-spin {
+            display: inline-block;
+            animation: certFacSpin 0.9s infinite linear;
+        }
+        @keyframes certFacSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        body.cert-fac-loading { overflow: hidden !important; }
     </style>
 </head>
 
@@ -460,6 +492,13 @@ if (isset($_GET['manifiestosFactura'])) {
                     <button type="button" class="btn btn-primary btn-sm" id="btnCertFacGenerar"><span class="glyphicon glyphicon-print"></span> Generar certificado</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="certFacLoader" aria-hidden="true" role="alertdialog" aria-busy="true" aria-label="Generando certificado">
+        <div class="cert-fac-loader-box">
+            <span class="glyphicon glyphicon-refresh glyphicon-spin" style="font-size: 28px; color: #337ab7;"></span>
+            <div id="certFacLoaderMsg" style="margin-top: 12px; font-weight: bold; color: #334155; font-size: 13px;">Generando certificado...</div>
         </div>
     </div>
 
@@ -1240,6 +1279,21 @@ if (isset($_GET['manifiestosFactura'])) {
                 $('#btnCertFacSi').addClass('btn-default').removeClass('btn-primary active');
             });
 
+            function showCertFacLoader(msg) {
+                if (msg) {
+                    $('#certFacLoaderMsg').text(msg);
+                } else {
+                    $('#certFacLoaderMsg').text('Generando certificado...');
+                }
+                $('body').addClass('cert-fac-loading');
+                $('#certFacLoader').show();
+            }
+
+            function hideCertFacLoader() {
+                $('body').removeClass('cert-fac-loading');
+                $('#certFacLoader').hide();
+            }
+
             function impCertificadoFactura() {
                 var data = window._certFacData;
                 var $btn = window._certFacBtn;
@@ -1255,6 +1309,7 @@ if (isset($_GET['manifiestosFactura'])) {
                 }
 
                 $('#modalCertificadoFirma').modal('hide');
+                showCertFacLoader('Generando certificado...');
 
                 var unlock = function() {
                     $btn.data('printing', false).prop('disabled', false).removeClass('disabled');
@@ -1271,19 +1326,39 @@ if (isset($_GET['manifiestosFactura'])) {
                 iframe.style.border = '0';
                 iframe.style.visibility = 'hidden';
 
-                var cleanup = function() {
+                var finished = false;
+                var finish = function() {
+                    if (finished) return;
+                    finished = true;
+                    if (safetyTimer) clearTimeout(safetyTimer);
+                    hideCertFacLoader();
                     try { document.body.removeChild(iframe); } catch (err) {}
                     unlock();
                 };
 
+                var safetyTimer = setTimeout(function() {
+                    finish();
+                }, 45000);
+
                 iframe.onload = function() {
                     setTimeout(function() {
-                        try { iframe.contentWindow.focus(); } catch (err) {}
-                        try { iframe.contentWindow.print(); } catch (err) {}
-                        setTimeout(cleanup, 1500);
-                    }, 150);
+                        hideCertFacLoader();
+                        var win = null;
+                        try { win = iframe.contentWindow; } catch (err) {}
+                        if (win) {
+                            try { win.focus(); } catch (err) {}
+                            try {
+                                win.onafterprint = function() { finish(); };
+                            } catch (err) {}
+                            try { win.print(); } catch (err) { finish(); return; }
+                        } else {
+                            finish();
+                            return;
+                        }
+                        setTimeout(finish, 2000);
+                    }, 100);
                 };
-                iframe.onerror = cleanup;
+                iframe.onerror = finish;
                 document.body.appendChild(iframe);
                 iframe.src = url;
             }
