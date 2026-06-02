@@ -82,7 +82,12 @@ class manifiesto extends AbstractModel{
                 case 'hora_llegada':
                     $sel->order('manifiesto.Man_Fea ASC');
                     break;
-            }
+                default:
+                    $sel->order('manifiesto.Man_Cod ASC, manifiesto.Man_Fec ASC');
+                    break;
+                }
+        } else {
+            $sel->order('manifiesto.Man_Cod ASC, manifiesto.Man_Fec ASC');
         }
         
         return $sel;
