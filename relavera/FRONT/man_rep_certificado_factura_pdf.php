@@ -1,6 +1,6 @@
 <?php
 /**
- * Certificado B.07.01 por factura con firma electrónica (TCPDF).
+ * Certificado B.07.01 por factura con firma electrnica (TCPDF).
  */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/log_man_fac_1.0.php');
@@ -157,14 +157,13 @@ $header_tabla = function ($pdf) {
     $pdf->SetFont('helvetica', 'B', 7);
     $pdf->SetFillColor(240, 240, 240);
     $pdf->Cell(8, 7, '#', 1, 0, 'C', true);
-    $pdf->Cell(14, 7, 'Cod.', 1, 0, 'C', true);
-    $pdf->Cell(20, 7, 'Fecha', 1, 0, 'C', true);
-    $pdf->Cell(14, 7, 'H.Lleg.', 1, 0, 'C', true);
+    $pdf->Cell(22, 7, 'Fecha', 1, 0, 'C', true);
     $pdf->Cell(28, 7, 'No Manif.', 1, 0, 'C', true);
+    $pdf->Cell(26, 7, 'Guia', 1, 0, 'C', true);
     $pdf->Cell(18, 7, 'Peso KG', 1, 0, 'C', true);
-    $pdf->Cell(28, 7, 'Factura', 1, 0, 'C', true);
-    $pdf->Cell(22, 7, 'Vehiculo', 1, 0, 'C', true);
-    $pdf->Cell(22, 7, 'Valor', 1, 1, 'C', true);
+    $pdf->Cell(26, 7, 'Factura', 1, 0, 'C', true);
+    $pdf->Cell(20, 7, 'Vehiculo', 1, 0, 'C', true);
+    $pdf->Cell(20, 7, 'Valor', 1, 1, 'C', true);
     $pdf->SetFont('helvetica', '', 7);
 };
 
@@ -176,19 +175,18 @@ foreach ($listado as $item) {
         $header_tabla($pdf);
     }
     $pdf->Cell(8, 5, (string)$count++, 1, 0, 'C');
-    $pdf->Cell(14, 5, (string)$item['Man_Cod'], 1, 0, 'C');
-    $pdf->Cell(20, 5, date('d/m/Y', strtotime($item['Fecha'])), 1, 0, 'C');
-    $pdf->Cell(14, 5, substr((string)$item['Llegada'], 0, 5), 1, 0, 'C');
+    $pdf->Cell(22, 5, date('d/m/Y', strtotime($item['Fecha'])), 1, 0, 'C');
     $pdf->Cell(28, 5, $item['Man_Num_Full'], 1, 0, 'C');
+    $pdf->Cell(26, 5, isset($item['Man_Gui']) ? $item['Man_Gui'] : '', 1, 0, 'C');
     $pdf->Cell(18, 5, number_format((float)$item['Man_Pes'], 2, '.', ','), 1, 0, 'R');
-    $pdf->Cell(28, 5, ((int)$item['Facturado'] === 1) ? $item['Factura'] : '-', 1, 0, 'C');
-    $pdf->Cell(22, 5, $item['Veh_Pla'], 1, 0, 'C');
-    $pdf->Cell(22, 5, '$ ' . number_format((float)$item['Valor'], 2, '.', ','), 1, 1, 'R');
+    $pdf->Cell(26, 5, ((int)$item['Facturado'] === 1) ? $item['Factura'] : '-', 1, 0, 'C');
+    $pdf->Cell(20, 5, $item['Veh_Pla'], 1, 0, 'C');
+    $pdf->Cell(20, 5, '$ ' . number_format((float)$item['Valor'], 2, '.', ','), 1, 1, 'R');
 }
 
 $pdf->SetFont('helvetica', 'B', 8);
-$pdf->Cell(152, 6, 'TOTAL:', 0, 0, 'R');
-$pdf->Cell(22, 6, '$ ' . number_format($suma_total, 2, '.', ','), 1, 1, 'R');
+$pdf->Cell(144, 6, 'TOTAL:', 0, 0, 'R');
+$pdf->Cell(20, 6, '$ ' . number_format($suma_total, 2, '.', ','), 1, 1, 'R');
 
 $pdf->SetAutoPageBreak(false);
 if ($pdf->GetY() > 215) {

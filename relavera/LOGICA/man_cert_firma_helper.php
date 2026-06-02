@@ -68,7 +68,6 @@ function man_cert_firma_html_blocks($firmar, $Ses_Emp_Cod, $obBD_con1, $obBD_con
                 </div>";
         }
     } else {
-        $watermark = "<div class='draft-watermark'>BORRADOR</div>";
         $signature = "
             <div class='signature-box' style='opacity: 0.4;'>
                 <div style='height: 80px; text-align: center; padding-top: 30px; font-weight: bold; color: #999;'>SIN FIRMA AUTORIZADA</div>

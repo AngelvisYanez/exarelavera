@@ -663,7 +663,7 @@ if (isset($_GET['manifiestosFactura'])) {
                             var clienteC = (rowObject.cliente || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
                             var plantaC = (rowObject.Pla_Nom || rowObject.pla_nom || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
                             var fechaC = rowObject.Vet_Fec || '';
-                            return '<button type="button" class="btn btn-danger btn-xs btn-certificado-factura" title="Imprimir certificado (PDF)" data-vet-cod="' + rowObject.Vet_Cod + '" data-vet-num="' + (numShow + '').replace(/"/g, '&quot;') + '" data-cliente="' + clienteC + '" data-planta="' + plantaC + '" data-fecha="' + fechaC + '"><span class="glyphicon glyphicon-print"></span></button>';
+                            return '<button type="button" class="btn btn-primary btn-xs btn-certificado-factura" title="Imprimir certificado (PDF)" data-vet-cod="' + rowObject.Vet_Cod + '" data-vet-num="' + (numShow + '').replace(/"/g, '&quot;') + '" data-cliente="' + clienteC + '" data-planta="' + plantaC + '" data-fecha="' + fechaC + '"><span class="glyphicon glyphicon-print"></span></button>';
                         }
                     }
                 ],

@@ -104,22 +104,6 @@ $firma_blocks = man_cert_firma_html_blocks($firmar, $Ses_Emp_Cod, $obBD_con1, $o
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
-        .draft-watermark {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotate(-45deg);
-            font-size: 110px;
-            font-weight: bold;
-            color: rgba(200, 0, 0, 0.1);
-            z-index: 0;
-            pointer-events: none;
-            white-space: nowrap;
-            border: 15px solid rgba(200, 0, 0, 0.1);
-            padding: 20px;
-            border-radius: 30px;
-            text-transform: uppercase;
-        }
         .signature-section {
             padding: 16px 22px 8px;
             background: #fff;
@@ -375,8 +359,6 @@ $firma_blocks = man_cert_firma_html_blocks($firmar, $Ses_Emp_Cod, $obBD_con1, $o
 </head>
 <body<?php echo $embed ? '' : ' onload="window.print();"'; ?>>
 
-    <?php echo $firma_blocks['watermark']; ?>
-
     <?php if (!$embed) { ?>
     <button class="btn-print" onclick="window.print();">Imprimir Certificado</button>
     <?php } ?>
@@ -480,10 +462,9 @@ $firma_blocks = man_cert_firma_html_blocks($firmar, $Ses_Emp_Cod, $obBD_con1, $o
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Cod. int.</th>
                         <th>Fecha</th>
-                        <th>H. llegada</th>
                         <th>No. manif.</th>
+                        <th>Gu&iacute;a</th>
                         <th>Peso (kg)</th>
                         <th>Factura</th>
                         <th>Veh&iacute;culo</th>
@@ -499,10 +480,9 @@ $firma_blocks = man_cert_firma_html_blocks($firmar, $Ses_Emp_Cod, $obBD_con1, $o
                     ?>
                     <tr>
                         <td><?php echo $count++; ?></td>
-                        <td><?php echo (int)$item['Man_Cod']; ?></td>
                         <td><?php echo date('d/m/Y', strtotime($item['Fecha'])); ?></td>
-                        <td><?php echo h(substr((string)$item['Llegada'], 0, 5)); ?></td>
                         <td><?php echo h($item['Man_Num_Full']); ?></td>
+                        <td><?php echo h(isset($item['Man_Gui']) ? $item['Man_Gui'] : ''); ?></td>
                         <td class="numeric"><?php echo number_format((float)$item['Man_Pes'], 2, '.', ','); ?></td>
                         <td<?php echo ((int)$item['Facturado'] === 0) ? ' class="no-factura"' : ''; ?>>
                             <?php echo ((int)$item['Facturado'] === 1) ? h($item['Factura']) : '-'; ?>
@@ -512,7 +492,7 @@ $firma_blocks = man_cert_firma_html_blocks($firmar, $Ses_Emp_Cod, $obBD_con1, $o
                     </tr>
                     <?php endforeach; ?>
                     <tr class="total-row">
-                        <td colspan="8">TOTALES</td>
+                        <td colspan="7">TOTALES</td>
                         <td class="numeric">$ <?php echo number_format($suma_total, 2, '.', ','); ?></td>
                     </tr>
                 </tbody>
