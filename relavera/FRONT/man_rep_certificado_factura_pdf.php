@@ -149,7 +149,7 @@ $pdf->Cell(30, 5, (string)(int)$facturados, 'B', 1, 'R');
 
 $pdf->Ln(2);
 $pdf->SetFont('helvetica', '', 8);
-$txt_cert = 'Certifico que el valor total reflejado en la presente factura corresponde a los manifiestos de transporte generados por cada viaje con cargamento de relave, documentos en los cuales constan el peso transportado y el valor economico correspondiente a cada operacion realizada.';
+$txt_cert = 'EL presente certificado detalla los manifiestos emitidos por la entrega de Desechos Peligrosos B.07.01 al proyecto ambiental asociativo "EL TABLON", por parte del generador de Desechos Peligrosos.';
 $pdf->MultiCell(0, 4, $txt_cert, 0, 'J');
 $pdf->Ln(2);
 

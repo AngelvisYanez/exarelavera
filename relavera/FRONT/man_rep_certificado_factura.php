@@ -462,7 +462,7 @@ $firma_blocks = man_cert_firma_html_blocks($firmar, $Ses_Emp_Cod, $obBD_con1, $o
         </section>
 
         <p class="cert-statement">
-            Certifico que el valor total reflejado en la presente factura corresponde a los manifiestos de transporte generados por cada viaje con cargamento de relave, documentos en los cuales constan el peso transportado y el valor econ&oacute;mico correspondiente a cada operaci&oacute;n realizada.
+            EL presente certificado detalla los manifiestos emitidos por la entrega de Desechos Peligrosos B.07.01 al proyecto ambiental asociativo &quot;EL TABL&Oacute;N&quot;, por parte del generador de Desechos Peligrosos.
         </p>
 
         <div class="table-block">
