@@ -307,6 +307,15 @@ $firma_blocks = man_cert_firma_html_blocks($firmar, $Ses_Emp_Cod, $obBD_con1, $o
             text-overflow: clip;
         }
         table.data-table tbody tr:nth-child(even) { background: #f8fafc; }
+        table.data-table th:nth-child(1),
+        table.data-table td:nth-child(1) {
+            width: 42px;
+            max-width: 42px;
+            min-width: 42px;
+            padding: 2px 4px;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
         table.data-table tbody td.numeric {
             text-align: right;
             font-variant-numeric: tabular-nums;

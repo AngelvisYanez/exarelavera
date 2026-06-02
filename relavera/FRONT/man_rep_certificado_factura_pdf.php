@@ -156,7 +156,7 @@ $pdf->Ln(2);
 $header_tabla = function ($pdf) {
     $pdf->SetFont('helvetica', 'B', 7);
     $pdf->SetFillColor(240, 240, 240);
-    $pdf->Cell(8, 7, '#', 1, 0, 'C', true);
+    $pdf->Cell(10, 7, '#', 1, 0, 'C', true);
     $pdf->Cell(22, 7, 'Fecha', 1, 0, 'C', true);
     $pdf->Cell(28, 7, 'No Manif.', 1, 0, 'C', true);
     $pdf->Cell(26, 7, 'Guia', 1, 0, 'C', true);
@@ -174,7 +174,7 @@ foreach ($listado as $item) {
         $pdf->AddPage();
         $header_tabla($pdf);
     }
-    $pdf->Cell(8, 5, (string)$count++, 1, 0, 'C');
+    $pdf->Cell(10, 5, (string)$count++, 1, 0, 'C');
     $pdf->Cell(22, 5, date('d/m/Y', strtotime($item['Fecha'])), 1, 0, 'C');
     $pdf->Cell(28, 5, $item['Man_Num_Full'], 1, 0, 'C');
     $pdf->Cell(26, 5, isset($item['Man_Gui']) ? $item['Man_Gui'] : '', 1, 0, 'C');
@@ -185,7 +185,7 @@ foreach ($listado as $item) {
 }
 
 $pdf->SetFont('helvetica', 'B', 8);
-$pdf->Cell(144, 6, 'TOTAL:', 0, 0, 'R');
+$pdf->Cell(138, 6, 'TOTAL:', 0, 0, 'R');
 $pdf->Cell(20, 6, '$ ' . number_format($suma_total, 2, '.', ','), 1, 1, 'R');
 
 $pdf->SetAutoPageBreak(false);
