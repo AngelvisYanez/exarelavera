@@ -484,8 +484,10 @@ $firma_blocks = man_cert_firma_html_blocks($firmar, $Ses_Emp_Cod, $obBD_con1, $o
                     <?php
                     $count = 1;
                     $suma_total = 0;
+                    $suma_peso = 0;
                     foreach ($listado as $item):
                         $suma_total += (float)$item['Valor'];
+                        $suma_peso += (float)$item['Man_Pes'];
                     ?>
                     <tr>
                         <td><?php echo $count++; ?></td>
@@ -501,7 +503,10 @@ $firma_blocks = man_cert_firma_html_blocks($firmar, $Ses_Emp_Cod, $obBD_con1, $o
                     </tr>
                     <?php endforeach; ?>
                     <tr class="total-row">
-                        <td colspan="7">TOTALES</td>
+                        <td colspan="4">TOTALES</td>
+                        <td class="numeric"><?php echo number_format($suma_peso, 2, '.', ','); ?></td>
+                        <td></td>
+                        <td></td>
                         <td class="numeric">$ <?php echo number_format($suma_total, 2, '.', ','); ?></td>
                     </tr>
                 </tbody>

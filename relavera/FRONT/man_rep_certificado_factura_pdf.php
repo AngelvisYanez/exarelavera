@@ -38,11 +38,13 @@ $facturados = 0;
 $Fec_Des = null;
 $Fec_Has = null;
 $suma_total = 0;
+$suma_peso = 0;
 foreach ($listado as $l) {
     if (!empty($l['Facturado'])) {
         $facturados++;
     }
     $suma_total += (float)$l['Valor'];
+    $suma_peso += (float)$l['Man_Pes'];
     $f = isset($l['Fecha']) ? substr((string)$l['Fecha'], 0, 10) : null;
     if ($f) {
         if ($Fec_Des === null || $f < $Fec_Des) {
@@ -185,7 +187,10 @@ foreach ($listado as $item) {
 }
 
 $pdf->SetFont('helvetica', 'B', 8);
-$pdf->Cell(138, 6, 'TOTAL:', 0, 0, 'R');
+$pdf->Cell(86, 6, 'TOTALES', 0, 0, 'R');
+$pdf->Cell(18, 6, number_format($suma_peso, 2, '.', ','), 1, 0, 'R');
+$pdf->Cell(26, 6, '', 1, 0, 'C');
+$pdf->Cell(20, 6, '', 1, 0, 'C');
 $pdf->Cell(20, 6, '$ ' . number_format($suma_total, 2, '.', ','), 1, 1, 'R');
 
 $pdf->SetAutoPageBreak(false);
