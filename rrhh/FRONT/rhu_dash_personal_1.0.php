@@ -351,7 +351,8 @@ if (isset($dashPersonalAjax)) {
 
         @media print {
             @page {
-                margin: 10mm 12mm;
+                size: A4 portrait;
+                margin: 10mm 11mm;
             }
             html, body {
                 margin: 0;
@@ -361,127 +362,181 @@ if (isset($dashPersonalAjax)) {
                 print-color-adjust: exact;
             }
             .panel-heading,
-            .btn-print-dash {
+            .panel-heading.exa-header,
+            .btn-print-dash,
+            .dash-topbar {
                 display: none !important;
+                height: 0 !important;
+                min-height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+                border: none !important;
             }
             .panel-main {
                 border: none !important;
                 box-shadow: none !important;
             }
-            .exa-body {
+            .exa-body,
+            .dash-app {
                 padding: 0 !important;
             }
             .dash-print-header {
                 display: block !important;
-                margin-bottom: 14px;
-                padding-bottom: 10px;
-                border-bottom: 3px solid #1565c0;
+                margin-bottom: 10px;
+                padding-bottom: 8px;
+                border-bottom: 2px solid #1565c0;
             }
             .dash-print-header h1 {
-                margin: 0 0 4px;
-                font-size: 18px;
+                margin: 0 0 3px;
+                font-size: 16px;
                 font-weight: 700;
                 color: #1a237e;
-                letter-spacing: 0.2px;
             }
             .dash-print-header .dash-print-meta {
                 margin: 0;
-                font-size: 10px;
+                font-size: 9px;
                 color: #546e7a;
             }
-            .dash-topbar { display: none !important; }
             .dash-kpi-grid {
-                display: flex;
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 12px;
-                margin-bottom: 14px;
-                padding: 8px 0 12px;
+                display: grid !important;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+                margin: 0 0 8px !important;
+                padding-bottom: 8px;
                 border-bottom: 1px solid #e0e0e0;
+                page-break-after: avoid;
             }
             .dash-kpi-card {
-                min-width: 140px;
-                flex: 1 1 140px;
-                max-width: 220px;
-                padding: 10px 16px;
+                padding: 8px 10px;
                 box-shadow: none;
+                border: 1px solid #dde3ef;
             }
+            .dash-kpi-card::before { height: 3px; }
             .dash-kpi-card .kpi-icon { display: none; }
-            .dash-kpi-card .kpi-value { font-size: 22px; }
-            .dash-kpi-card .kpi-label { font-size: 8px; }
-            .dash-section-label { font-size: 9px; margin-bottom: 8px; }
-            .row {
-                display: block !important;
-                margin: 0 0 6px !important;
-                page-break-inside: auto;
+            .dash-kpi-card .kpi-value { font-size: 20px; }
+            .dash-kpi-card--hero .kpi-value { font-size: 22px; }
+            .dash-kpi-card .kpi-label { font-size: 7px; }
+            .dash-section {
+                margin: 0 0 10px !important;
+                padding: 0 !important;
+                page-break-inside: auto !important;
+                break-inside: auto !important;
             }
-            .col-md-4,
-            .col-md-6,
-            .col-md-8,
-            .col-sm-12 {
-                width: 100% !important;
-                max-width: 100% !important;
+            .dash-section-label {
+                font-size: 9px;
+                margin: 0 0 5px !important;
+                padding-left: 2px;
+                page-break-after: avoid;
+            }
+            .dash-row-cards,
+            .dash-row-cards.row {
+                display: block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                font-size: 0;
+                line-height: 0;
+            }
+            .dash-row-cards > [class*="col-"] {
                 float: none !important;
-                display: block !important;
-                flex: none !important;
-                padding: 0 0 16px !important;
-                page-break-inside: avoid;
-                break-inside: avoid;
-            }
-            .dash-card-modern {
+                display: inline-block !important;
+                vertical-align: top !important;
+                box-sizing: border-box;
                 height: auto !important;
                 min-height: 0 !important;
-                margin-bottom: 0;
+                max-height: none !important;
+                padding: 0 5px 8px !important;
+                margin: 0 !important;
+                font-size: 10px;
+                line-height: normal;
+                page-break-inside: auto !important;
+                break-inside: auto !important;
+            }
+            .dash-row-cards > .col-md-4 {
+                width: 33.333% !important;
+                max-width: 33.333% !important;
+            }
+            .dash-row-cards > .col-md-6 {
+                width: 50% !important;
+                max-width: 50% !important;
+            }
+            .dash-row-cards > .col-md-8 {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            .dash-row-cards > .col-md-6.col-md-offset-3 {
+                width: 50% !important;
+                max-width: 50% !important;
+                margin-left: 25% !important;
+            }
+            .dash-card-modern {
+                display: block !important;
+                height: auto !important;
+                min-height: 0 !important;
+                max-height: none !important;
                 border: 1px solid #dde3ef;
-                border-radius: 8px;
+                border-radius: 6px;
                 background: #fff !important;
                 page-break-inside: avoid;
-                break-inside: avoid;
+                break-inside: avoid-page;
+            }
+            .dash-card-body {
+                display: block !important;
+                height: auto !important;
+                min-height: 0 !important;
+                flex: none !important;
+                padding: 4px 8px 8px;
             }
             .dash-card-head {
-                padding: 10px 12px 6px;
+                padding: 8px 10px 4px;
                 border-bottom: 1px solid #e8ecf3;
             }
-            .dash-card-eyebrow { font-size: 8px; }
+            .dash-card-eyebrow { font-size: 7px; }
             .dash-card-title {
-                font-size: 10px;
+                font-size: 9px;
                 font-weight: 700;
                 color: #1565c0;
                 text-transform: uppercase;
+                line-height: 1.25;
             }
             .dash-card-icon { display: none; }
-            .dash-card-body { padding: 6px 10px 10px; }
-            .dash-section {
-                margin-bottom: 16px;
-                page-break-inside: avoid;
-                break-inside: avoid;
-            }
-            .dash-row-cards > [class*="col-"] {
-                padding-bottom: 12px !important;
+            body.dash-printing #dashSexHost,
+            body.dash-printing #dashConPieHost,
+            body.dash-printing .dash-chart-host {
+                min-height: 0 !important;
+                max-height: none !important;
+                overflow: visible !important;
             }
             body.dash-printing .dash-chart-host {
+                margin-left: auto !important;
+                margin-right: auto !important;
+                flex: none !important;
+            }
+            body.dash-printing .dash-chart-host--compact {
                 width: 100% !important;
                 max-width: 100% !important;
-                height: 250px !important;
-                min-height: 250px !important;
-                margin: 0 !important;
             }
-            body.dash-printing #dashSexHost.dash-chart-host,
-            body.dash-printing #dashConPieHost.dash-chart-host {
-                width: 240px !important;
-                max-width: 240px !important;
-                height: 240px !important;
-                min-height: 240px !important;
+            body.dash-printing .dash-chart-host--doughnut-print {
+                max-width: 100% !important;
+            }
+            body.dash-printing .dash-chart-host--bar-print {
+                width: 100% !important;
+                max-width: 100% !important;
             }
             .dash-chart-host canvas {
-                max-width: none !important;
-                max-height: none !important;
+                max-width: 100% !important;
             }
             .dash-ing-table {
                 max-width: 100%;
-                font-size: 10px;
+                font-size: 9px;
             }
-            .dash-rol-ref { font-size: 9px; margin-bottom: 6px; }
+            .dash-ing-table thead th { padding: 6px 4px; }
+            .dash-ing-table tbody td { padding: 5px 6px; }
+            .dash-rol-ref {
+                font-size: 7px;
+                margin-bottom: 4px;
+                line-height: 1.35;
+            }
         }
     </style>
 </head>
@@ -740,11 +795,27 @@ Chart.register(ChartDataLabels);
         compactPadBar: 56,
         doughnutH: 280,
         doughnutMinW: 260,
-        printBarH: 250,
-        printDoughnutH: 240,
-        printDoughnutW: 240
+        printBarH: 200,
+        printDoughnutH: 200,
+        printDoughnutW: 200,
+        printPageMaxW: 820
     };
     var printState = null;
+    var printChartOptsState = null;
+
+    var PRINT_CHART_BY_HOST = {
+        dashSexHost: function () { return chartSex; },
+        dashTitHost: function () { return chartTit; },
+        dashCiuHost: function () { return chartCiu; },
+        dashMovHost: function () { return chartMov; },
+        dashRsoHost: function () { return chartRso; },
+        dashAreHost: function () { return chartAre; },
+        dashCarHost: function () { return chartCar; },
+        dashSanHost: function () { return chartSan; },
+        dashTcfHost: function () { return chartTcf; },
+        dashConHost: function () { return chartCon; },
+        dashConPieHost: function () { return chartConPie; }
+    };
 
     function allChartInstances() {
         return [chartSex, chartTit, chartCiu, chartMov, chartRso, chartAre, chartCar, chartSan, chartTcf, chartCon, chartConPie].filter(function (c) {
@@ -760,7 +831,11 @@ Chart.register(ChartDataLabels);
             height: $host[0].style.height,
             minHeight: $host[0].style.minHeight,
             maxWidth: $host[0].style.maxWidth,
-            compact: $host.hasClass('dash-chart-host--compact')
+            marginLeft: $host[0].style.marginLeft,
+            marginRight: $host[0].style.marginRight,
+            compact: $host.hasClass('dash-chart-host--compact'),
+            doughnutPrint: $host.hasClass('dash-chart-host--doughnut-print'),
+            barPrint: $host.hasClass('dash-chart-host--bar-print')
         };
     }
 
@@ -770,29 +845,161 @@ Chart.register(ChartDataLabels);
             width: state.width,
             height: state.height,
             minHeight: state.minHeight,
-            maxWidth: state.maxWidth
+            maxWidth: state.maxWidth,
+            marginLeft: state.marginLeft,
+            marginRight: state.marginRight
         });
         $host.toggleClass('dash-chart-host--compact', !!state.compact);
+        $host.toggleClass('dash-chart-host--doughnut-print', !!state.doughnutPrint);
+        $host.toggleClass('dash-chart-host--bar-print', !!state.barPrint);
     }
 
-    function printContentWidth() {
-        var $body = $('.exa-body');
-        var w = $body.length ? $body.innerWidth() : $(window).width();
-        return Math.max(280, Math.min(CHART_SIZE.maxBarW, (w || 700) - 32));
+    function printPageWidth() {
+        var w = document.documentElement.clientWidth || window.innerWidth || 794;
+        return Math.max(620, Math.min(CHART_SIZE.printPageMaxW, w - 24));
+    }
+
+    function printHostColumnWidth(hostId) {
+        var $col = $('#' + hostId).closest('[class*="col-"]');
+        var pageW = printPageWidth();
+        if ($col.hasClass('col-md-8')) {
+            return pageW - 16;
+        }
+        if ($col.hasClass('col-md-4')) {
+            return Math.floor(pageW * 0.31) - 12;
+        }
+        if ($col.hasClass('col-md-6')) {
+            return Math.floor(pageW * 0.48) - 12;
+        }
+        return Math.floor(pageW * 0.48) - 12;
+    }
+
+    function getChartForHost(hostId) {
+        var fn = PRINT_CHART_BY_HOST[hostId];
+        return fn ? fn() : null;
+    }
+
+    function printBarHeightForHost(hostId) {
+        var chart = getChartForHost(hostId);
+        if (!chart || !chart.data || !chart.data.labels) {
+            return CHART_SIZE.printBarH;
+        }
+        var labels = chart.data.labels;
+        var n = labels.length;
+        var layout = barChartLayout(n, labels);
+        if (layout.horizontal) {
+            return Math.min(280, Math.max(140, n * 24 + 50));
+        }
+        if (n <= 2) {
+            return 145;
+        }
+        if (n <= 4) {
+            return 165;
+        }
+        if (n <= 8) {
+            return 185;
+        }
+        return Math.min(235, 155 + n * 9);
+    }
+
+    function printDoughnutDimensions(hostId) {
+        var $col = $('#' + hostId).closest('[class*="col-"]');
+        var colW = printHostColumnWidth(hostId);
+        var side = $col.hasClass('col-md-4') ? 188 : 205;
+        side = Math.min(side, colW - 8);
+        return { w: side, h: side };
+    }
+
+    function snapshotChartOptions(chart) {
+        var plugins = chart.options.plugins || {};
+        var legend = plugins.legend && plugins.legend.labels ? plugins.legend.labels : {};
+        var datalabels = plugins.datalabels || {};
+        return {
+            legendSize: legend.font && legend.font.size,
+            legendPadding: legend.padding,
+            datalabelSize: datalabels.font && datalabels.font.size
+        };
+    }
+
+    function applyPrintChartOptions(enable) {
+        allChartInstances().forEach(function (chart, idx) {
+            if (!printChartOptsState) {
+                printChartOptsState = [];
+            }
+            if (enable) {
+                if (!printChartOptsState[idx]) {
+                    printChartOptsState[idx] = snapshotChartOptions(chart);
+                }
+                if (chart.options.plugins.legend && chart.options.plugins.legend.labels) {
+                    chart.options.plugins.legend.labels.font = Object.assign({}, chart.options.plugins.legend.labels.font || {}, { size: 8 });
+                    chart.options.plugins.legend.padding = 8;
+                }
+                if (chart.options.plugins.datalabels) {
+                    chart.options.plugins.datalabels.font = Object.assign({}, chart.options.plugins.datalabels.font || {}, { size: 9 });
+                }
+                if (chart.options.scales) {
+                    ['x', 'y'].forEach(function (axis) {
+                        if (chart.options.scales[axis] && chart.options.scales[axis].ticks) {
+                            chart.options.scales[axis].ticks.font = Object.assign({}, chart.options.scales[axis].ticks.font || {}, { size: 8 });
+                        }
+                    });
+                }
+            } else if (printChartOptsState[idx]) {
+                var saved = printChartOptsState[idx];
+                if (chart.options.plugins.legend && chart.options.plugins.legend.labels) {
+                    if (saved.legendSize != null) {
+                        chart.options.plugins.legend.labels.font = Object.assign({}, chart.options.plugins.legend.labels.font || {}, { size: saved.legendSize });
+                    }
+                    if (saved.legendPadding != null) {
+                        chart.options.plugins.legend.padding = saved.legendPadding;
+                    }
+                }
+                if (chart.options.plugins.datalabels && saved.datalabelSize != null) {
+                    chart.options.plugins.datalabels.font = Object.assign({}, chart.options.plugins.datalabels.font || {}, { size: saved.datalabelSize });
+                }
+            }
+        });
+        if (!enable) {
+            printChartOptsState = null;
+        }
+    }
+
+    function resetPrintLayoutHeights() {
+        $('.dash-row-cards > [class*="col-"], .dash-card-modern, .dash-card-body').css({
+            height: 'auto',
+            minHeight: '0',
+            maxHeight: 'none'
+        });
     }
 
     function preparePrintCharts() {
         var hostIds = ['dashSexHost', 'dashTitHost', 'dashCiuHost', 'dashMovHost', 'dashRsoHost', 'dashAreHost', 'dashCarHost', 'dashSanHost', 'dashTcfHost', 'dashConHost', 'dashConPieHost'];
-        printState = hostIds.map(captureHostPrintState);
-        var barHosts = ['dashTitHost', 'dashCiuHost', 'dashMovHost', 'dashRsoHost', 'dashAreHost', 'dashCarHost', 'dashSanHost', 'dashTcfHost', 'dashConHost'];
-        var printW = printContentWidth();
-        var i;
-        $('.dash-row-cards .dash-card-modern').css({ maxWidth: '100%', width: '100%' });
-        setChartHostSize('dashSexHost', CHART_SIZE.printDoughnutW, CHART_SIZE.printDoughnutH, false);
-        setChartHostSize('dashConPieHost', CHART_SIZE.printDoughnutW, CHART_SIZE.printDoughnutH, false);
-        for (i = 0; i < barHosts.length; i++) {
-            setChartHostSize(barHosts[i], printW, CHART_SIZE.printBarH, true);
+        if (!printState) {
+            printState = hostIds.map(captureHostPrintState);
         }
+        var doughnutHosts = ['dashSexHost', 'dashConPieHost'];
+        var barHosts = ['dashTitHost', 'dashCiuHost', 'dashMovHost', 'dashRsoHost', 'dashAreHost', 'dashCarHost', 'dashSanHost', 'dashTcfHost', 'dashConHost'];
+        var i;
+        resetPrintLayoutHeights();
+        $('.dash-topbar').css({ display: 'none', height: 0, margin: 0, padding: 0 });
+        $('.dash-row-cards .dash-card-modern').css({ maxWidth: '100%', width: '100%' });
+        for (i = 0; i < doughnutHosts.length; i++) {
+            var dHost = doughnutHosts[i];
+            var dSz = printDoughnutDimensions(dHost);
+            setCompactHost(dHost, false);
+            $('#' + dHost).addClass('dash-chart-host--doughnut-print').removeClass('dash-chart-host--bar-print');
+            setChartHostSize(dHost, dSz.w, dSz.h, false);
+            $('#' + dHost).css({ marginLeft: 'auto', marginRight: 'auto' });
+        }
+        for (i = 0; i < barHosts.length; i++) {
+            var bHost = barHosts[i];
+            var bW = printHostColumnWidth(bHost);
+            var bH = printBarHeightForHost(bHost);
+            setCompactHost(bHost, false);
+            $('#' + bHost).addClass('dash-chart-host--bar-print').removeClass('dash-chart-host--doughnut-print');
+            setChartHostSize(bHost, bW, bH, true);
+        }
+        applyPrintChartOptions(true);
         allChartInstances().forEach(function (chart) {
             chart.resize();
             chart.update('none');
@@ -808,8 +1015,18 @@ Chart.register(ChartDataLabels);
             applyHostPrintState(printState[i]);
         }
         printState = null;
+        applyPrintChartOptions(false);
+        $('.dash-row-cards > [class*="col-"], .dash-card-modern, .dash-card-body, .dash-topbar').css({
+            height: '',
+            minHeight: '',
+            maxHeight: '',
+            display: '',
+            margin: '',
+            padding: ''
+        });
         allChartInstances().forEach(function (chart) {
             chart.resize();
+            chart.update('none');
         });
     }
 
@@ -834,9 +1051,10 @@ Chart.register(ChartDataLabels);
         setTimeout(function () {
             preparePrintCharts();
             setTimeout(function () {
+                preparePrintCharts();
                 window.print();
-            }, 350);
-        }, 200);
+            }, 450);
+        }, 280);
     }
 
     window.printDashboard = printDashboard;
