@@ -170,7 +170,7 @@ if (isset($generarFacturasAjax)) {
     // Rango de facturación (viene de los inputs Fec_Ini / Fec_Fin)
     $Fec_Ini = isset($_POST['Fec_Ini']) ? trim((string) $_POST['Fec_Ini']) : (isset($_GET['Fec_Ini']) ? trim((string) $_GET['Fec_Ini']) : '');
     $Fec_Fin = isset($_POST['Fec_Fin']) ? trim((string) $_POST['Fec_Fin']) : (isset($_GET['Fec_Fin']) ? trim((string) $_GET['Fec_Fin']) : '');
-   
+
     // Verificar si está agrupado desde el parámetro fac_group
     $fac_group = isset($_POST['fac_group']) && (
         $_POST['fac_group'] === true ||
@@ -231,7 +231,6 @@ if (isset($generarFacturasAjax)) {
 
     // Recibir los manifiestos desde POST
     $manifiestos = isset($_POST['manifiestos']) ? $_POST['manifiestos'] : array();
-
     $cantidad_manifiestos = count($manifiestos); // La función count está bien utilizada aquí.
 
     try {

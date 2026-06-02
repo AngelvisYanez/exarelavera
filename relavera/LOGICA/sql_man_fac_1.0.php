@@ -8,6 +8,7 @@
 
 function sentencias_manifiesto($id, $Par_Sql)
 {
+    $sql = '';
     switch ($id) {
         case 1: // Antes: 5 - Obtener periodos contables
             $sql = "SELECT Pec_Cod,Pec_Fei,Pec_Fef,CAST(SUBSTRING_INDEX(Pec_Fei,'-',1) AS char) AS Anio,perio_cont.Pla_Cod
@@ -757,33 +758,24 @@ function sentencias_manifiesto($id, $Par_Sql)
             $sql .= (empty($Par_Sql['limits']) ? '' : (' ' . $order . ' ' . $Par_Sql['limits']));
             break;
 
-        case 74: // Listar manifiestos de una factura (por Vet_Cod), opcionalmente filtrado por planta del usuario (sin usar manifiesto.Pla_Cod)
+        case 74: // Listar manifiestos de una factura (por Vet_Cod), filtro planta igual que case 73 (EXISTS)
             $Vet_Cod = isset($Par_Sql['Vet_Cod']) ? intval($Par_Sql['Vet_Cod']) : 0;
             $Pla_Cod_Usuario_74 = isset($Par_Sql['Pla_Cod_Usuario']) ? intval($Par_Sql['Pla_Cod_Usuario']) : 0;
-
-            if ($Pla_Cod_Usuario_74 > 0) {
-                $sql = "SELECT manifiesto.Man_Cod, manifiesto.Man_Num, manifiesto.Pla_Cod, manifiesto.Man_Fes, manifiesto.Man_Pes,
-                        manifiesto.Man_Pun, manifiesto.Man_Tip, manifiesto_plantas.Pla_Nom,
-                        CONCAT(persona.Prs_Ape, ' ', persona.Prs_Nom) AS cliente, persona.Prs_Ced,
-                        ROUND(manifiesto.Man_Pun * manifiesto.Man_Pes, 2) AS total
-                    FROM manifiesto
-                    INNER JOIN manifiesto_plantas ON manifiesto_plantas.Cli_Cod = manifiesto.Cli_Cod AND manifiesto_plantas.Pla_Cod = " . $Pla_Cod_Usuario_74 . "
-                    INNER JOIN cliente ON manifiesto.Cli_Cod = cliente.Cli_Cod
-                    INNER JOIN persona ON cliente.Prs_Cod = persona.Prs_Cod
-                    WHERE manifiesto.Man_Est = 'A' AND manifiesto.Vet_Cod = $Vet_Cod
-                    ORDER BY manifiesto.Man_Fes DESC, manifiesto.Man_Num";
-            } else {
-                $sql = "SELECT manifiesto.Man_Cod, manifiesto.Man_Num, manifiesto.Pla_Cod, manifiesto.Man_Fes, manifiesto.Man_Pes,
-                        manifiesto.Man_Pun, manifiesto.Man_Tip, mp_agg.Pla_Nom,
-                        CONCAT(persona.Prs_Ape, ' ', persona.Prs_Nom) AS cliente, persona.Prs_Ced,
-                        ROUND(manifiesto.Man_Pun * manifiesto.Man_Pes, 2) AS total
-                    FROM manifiesto
-                    LEFT JOIN (SELECT Cli_Cod, GROUP_CONCAT(Pla_Nom ORDER BY Pla_Nom SEPARATOR ', ') AS Pla_Nom FROM manifiesto_plantas WHERE Pla_Est = 'A' GROUP BY Cli_Cod) mp_agg ON mp_agg.Cli_Cod = manifiesto.Cli_Cod
-                    INNER JOIN cliente ON manifiesto.Cli_Cod = cliente.Cli_Cod
-                    INNER JOIN persona ON cliente.Prs_Cod = persona.Prs_Cod
-                    WHERE manifiesto.Man_Est = 'A' AND manifiesto.Vet_Cod = $Vet_Cod
-                    ORDER BY manifiesto.Man_Fes DESC, manifiesto.Man_Num";
-            }
+            $filter_planta_74 = ($Pla_Cod_Usuario_74 > 0)
+                ? " AND EXISTS (SELECT 1 FROM manifiesto_plantas mpf WHERE mpf.Cli_Cod = manifiesto.Cli_Cod AND mpf.Pla_Cod = $Pla_Cod_Usuario_74)"
+                : '';
+            $sql = "SELECT manifiesto.Man_Cod, manifiesto.Man_Num, manifiesto.Pla_Cod, manifiesto.Man_Fes, manifiesto.Man_Pes,
+                    manifiesto.Man_Pun, manifiesto.Man_Tip,
+                    COALESCE(mp_row.Pla_Nom, mp_agg.Pla_Nom, '') AS Pla_Nom,
+                    CONCAT(persona.Prs_Ape, ' ', persona.Prs_Nom) AS cliente, persona.Prs_Ced,
+                    ROUND(manifiesto.Man_Pun * manifiesto.Man_Pes, 2) AS total
+                FROM manifiesto
+                LEFT JOIN manifiesto_plantas mp_row ON mp_row.Pla_Cod = manifiesto.Pla_Cod AND mp_row.Cli_Cod = manifiesto.Cli_Cod
+                LEFT JOIN (SELECT Cli_Cod, GROUP_CONCAT(Pla_Nom ORDER BY Pla_Nom SEPARATOR ', ') AS Pla_Nom FROM manifiesto_plantas WHERE Pla_Est = 'A' GROUP BY Cli_Cod) mp_agg ON mp_agg.Cli_Cod = manifiesto.Cli_Cod
+                INNER JOIN cliente ON manifiesto.Cli_Cod = cliente.Cli_Cod
+                INNER JOIN persona ON cliente.Prs_Cod = persona.Prs_Cod
+                WHERE manifiesto.Man_Est = 'A' AND manifiesto.Vet_Cod = $Vet_Cod $filter_planta_74
+                ORDER BY manifiesto.Man_Fes DESC, manifiesto.Man_Num";
             break;
 
              case 78:
@@ -893,6 +885,66 @@ function sentencias_manifiesto($id, $Par_Sql)
                             ORDER BY bodega, cliente " . $Par_Sql['limits'];
                 }
                 break;
+
+        case 87: // Cabecera reporte / certificado por factura (Vet_Cod)
+            $Vet_Cod = isset($Par_Sql['Vet_Cod']) ? intval($Par_Sql['Vet_Cod']) : 0;
+            // Número completo y fecha de factura (misma lógica del grid: caja_aper.Caj_Fec)
+            $sql = "SELECT
+                        CONCAT(LPAD(sucursal.Suc_Sri, 4, '0'), '-', LPAD(autorizaci.Pun_Sri, 4, '0'), '-', LPAD(ventas.Vet_Num, 9, '0')) AS Vet_Num_Completo,
+                        caja_aper.Caj_Fec AS Vet_Fec
+                    FROM ventas
+                    INNER JOIN autorizaci ON ventas.Aut_Cod = autorizaci.Aut_Cod
+                    LEFT JOIN caja_aper ON caja_aper.Caj_Cod = ventas.Caj_Cod
+                    LEFT JOIN puntos_imp ON puntos_imp.Pun_Cod = caja_aper.Pun_Cod
+                    LEFT JOIN sucursal ON sucursal.Suc_Cod = puntos_imp.Suc_Cod
+                    WHERE ventas.Vet_Cod = $Vet_Cod
+                    LIMIT 1";
+            break;
+
+        case 88: // Listado de manifiestos para certificado por factura (Vet_Cod) - formato B.07.01
+            $Vet_Cod = isset($Par_Sql['Vet_Cod']) ? intval($Par_Sql['Vet_Cod']) : 0;
+            $Pla_Cod_Usuario_88 = isset($Par_Sql['Pla_Cod_Usuario']) ? intval($Par_Sql['Pla_Cod_Usuario']) : 0;
+            $filter_planta_88 = ($Pla_Cod_Usuario_88 > 0)
+                ? " AND EXISTS (SELECT 1 FROM manifiesto_plantas mpf WHERE mpf.Cli_Cod = m.Cli_Cod AND mpf.Pla_Cod = $Pla_Cod_Usuario_88)"
+                : "";
+            $sql = "SELECT
+                        m.Man_Cod,
+                        m.Pla_Cod,
+                        DATE(m.Man_Fes) AS Fecha,
+                        TIME(m.Man_Fea) AS Llegada,
+                        m.Man_Num,
+                        CONCAT('M', m.Pla_Cod, '-', LPAD(m.Man_Num, 4, '0')) AS Man_Num_Full,
+                        m.Man_Pes,
+                        COALESCE(v.Vet_Num, 'S/F') AS Factura,
+                        vehiculo.Veh_Pla,
+                        CAST((m.Man_Pes * (m.Man_Pun / 1000)) AS DECIMAL(10,2)) AS Valor,
+                        IF(m.Vet_Cod IS NOT NULL AND m.Vet_Cod > 0, 1, 0) AS Facturado
+                    FROM manifiesto m
+                    LEFT JOIN vehiculo ON m.Veh_Cod = vehiculo.Veh_Cod
+                    LEFT JOIN ventas v ON m.Vet_Cod = v.Vet_Cod
+                    WHERE m.Vet_Cod = $Vet_Cod AND m.Man_Est = 'A' $filter_planta_88
+                    ORDER BY m.Man_Fes ASC";
+            break;
+
+        case 89: // Cabecera para certificado por factura (Vet_Cod)
+            $Vet_Cod = isset($Par_Sql['Vet_Cod']) ? intval($Par_Sql['Vet_Cod']) : 0;
+            $Pla_Cod_Usuario_89 = isset($Par_Sql['Pla_Cod_Usuario']) ? intval($Par_Sql['Pla_Cod_Usuario']) : 0;
+            $filter_planta_89 = ($Pla_Cod_Usuario_89 > 0)
+                ? " AND EXISTS (SELECT 1 FROM manifiesto_plantas mpf WHERE mpf.Cli_Cod = m.Cli_Cod AND mpf.Pla_Cod = $Pla_Cod_Usuario_89)"
+                : "";
+            $sql = "SELECT
+                        persona.Prs_Ced,
+                        IF(persona.Prs_Nom = persona.Prs_Ape, persona.Prs_Nom, CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape)) AS Representante,
+                        mp.Pla_Nom,
+                        mp.Pla_Car
+                    FROM manifiesto m
+                    INNER JOIN cliente ON m.Cli_Cod = cliente.Cli_Cod
+                    INNER JOIN persona ON cliente.Prs_Cod = persona.Prs_Cod
+                    INNER JOIN manifiesto_plantas mp ON mp.Cli_Cod = m.Cli_Cod AND mp.Pla_Cod = m.Pla_Cod
+                    WHERE m.Vet_Cod = $Vet_Cod AND m.Man_Est = 'A' $filter_planta_89
+                    ORDER BY m.Man_Fes ASC
+                    LIMIT 1";
+            break;
     }
     return $sql;
 }

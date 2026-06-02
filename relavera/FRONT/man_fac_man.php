@@ -19,6 +19,25 @@ $Pla_Cod_Asignada = (is_array($pla_asignada) && count($pla_asignada) > 0) ? intv
 /** Nombre de empresa en cabecera del reporte PDF/imprimir manifiestos */
 $man_fac_empresa_encabezado = 'Ecoparkmining';
 
+/* Perfiles: opciones de firma en certificado (igual que man_alt_manifiesto.php) */
+$perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array(
+    'where' => array('Emp_Cod' => $Ses_Emp_Cod, 'Usu_Cod' => $Ses_Usu_Cod),
+    'setWhere' => array('getPerfil')
+), $obBD_conexion);
+$firmar_solo_si = false;
+$firmar_solo_no = false;
+if (is_array($perfil)) {
+    foreach ($perfil as $p) {
+        $per_desc = trim($p['Per_Des']);
+        if ($per_desc == 'Gerente' || $per_desc == 'Contador') {
+            $firmar_solo_si = true;
+        }
+        if ($per_desc == 'Admin_Oper') {
+            $firmar_solo_no = true;
+        }
+    }
+}
+
 /* Listado de plantas con cliente para modal (búsqueda por cédula y nombre) - formato simple para carga local */
 if (isset($_GET['listadoPlantasModal'])) {
     $data = array(
@@ -411,9 +430,44 @@ if (isset($_GET['manifiestosFactura'])) {
         </div>
     </div>
 
+    <!-- Modal: ¿Firmar certificado? (como man_alt_manifiesto / impCertificadoRango) -->
+    <div class="modal fade" id="modalCertificadoFirma" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Certificado de manifiestos</h4>
+                </div>
+                <div class="modal-body">
+                    <p style="font-size: 12px; margin-bottom: 12px;">
+                        Factura: <strong id="certFacNum"></strong>
+                    </p>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="control-label" style="font-size: 12px;">&iquest;Desea firmarlo?</label>
+                        <div class="btn-group" style="margin-left: 8px;">
+                            <?php if (!$firmar_solo_no) { ?>
+                            <button id="btnCertFacSi" type="button" class="btn btn-xs <?php echo (!$firmar_solo_no ? 'btn-primary active' : 'btn-default'); ?>" style="width: 44px;">Si</button>
+                            <?php } ?>
+                            <?php if (!$firmar_solo_si) { ?>
+                            <button id="btnCertFacNo" type="button" class="btn btn-xs <?php echo ($firmar_solo_no ? 'btn-primary active' : 'btn-default'); ?>" style="width: 44px;">No</button>
+                            <?php } ?>
+                        </div>
+                        <input type="checkbox" id="Cert_Fac_Firmar" style="display: none;" <?php echo ($firmar_solo_no ? '' : 'checked'); ?> />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="btnCertFacGenerar"><span class="glyphicon glyphicon-print"></span> Generar certificado</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         var MAN_FAC_EMPRESA = '<?php echo ($man_fac_empresa_encabezado); ?>';
         var MAN_FAC_LOGO = '<?php echo (isset($Ses_Emp_Log) ? $Ses_Emp_Log : ''); ?>';
+        var MAN_FAC_FIRMAR_SOLO_SI = <?php echo $firmar_solo_si ? 'true' : 'false'; ?>;
+        var MAN_FAC_FIRMAR_SOLO_NO = <?php echo $firmar_solo_no ? 'true' : 'false'; ?>;
         $(function() {
             // Rango por defecto: desde enero (año actual) hasta hoy
             var hoy = new Date();
@@ -595,6 +649,22 @@ if (isset($_GET['manifiestosFactura'])) {
                             var total = rowObject.total_factura || 0;
                             return '<span class="glyphicon glyphicon-stats btn-chart-factura" style="color: #337ab7; font-size: 18px; cursor: pointer;" title="Imprimir factura y gráfico de manifiestos" data-vet-cod="' + rowObject.Vet_Cod + '" data-vet-num="' + numShow + '" data-cliente="' + cliente + '" data-planta="' + planta + '" data-direccion="' + direccion + '" data-fecha="' + fecha + '" data-subtotal="' + subtotal + '" data-iva="' + iva + '" data-total="' + total + '" data-cant="' + n + '"></span>';
                         }
+                    },
+                    {
+                        name: 'certificado',
+                        label: 'Certificado',
+                        width: 85,
+                        align: 'center',
+                        sortable: false,
+                        formatter: function(cellvalue, options, rowObject) {
+                            var n = rowObject.cant_manifiestos * 1;
+                            if (n === 0) return '';
+                            var numShow = rowObject.Vet_Num_Completo || rowObject.Vet_Num || '';
+                            var clienteC = (rowObject.cliente || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                            var plantaC = (rowObject.Pla_Nom || rowObject.pla_nom || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                            var fechaC = rowObject.Vet_Fec || '';
+                            return '<button type="button" class="btn btn-danger btn-xs btn-certificado-factura" title="Imprimir certificado (PDF)" data-vet-cod="' + rowObject.Vet_Cod + '" data-vet-num="' + (numShow + '').replace(/"/g, '&quot;') + '" data-cliente="' + clienteC + '" data-planta="' + plantaC + '" data-fecha="' + fechaC + '"><span class="glyphicon glyphicon-print"></span></button>';
+                        }
                     }
                 ],
                 pager: '#gridFacturasPager',
@@ -702,6 +772,32 @@ if (isset($_GET['manifiestosFactura'])) {
                         }, 'json').fail(function() {
                             $('#gridManifiestosDetalle').jqGrid('clearGridData').trigger('reloadGrid');
                         });
+                    });
+                    $g.find('.btn-certificado-factura').off('click').on('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        var $btn = $(this);
+                        var vetCod = $btn.data('vet-cod');
+                        if (!vetCod) return;
+                        window._certFacBtn = $btn;
+                        window._certFacData = {
+                            vetCod: vetCod,
+                            vetNum: $btn.data('vet-num') || '',
+                            cliente: $btn.data('cliente') || '',
+                            planta: $btn.data('planta') || '',
+                            fecha: $btn.data('fecha') || ''
+                        };
+                        $('#certFacNum').text(window._certFacData.vetNum || vetCod);
+                        if (MAN_FAC_FIRMAR_SOLO_SI) {
+                            $('#Cert_Fac_Firmar').prop('checked', true);
+                            $('#btnCertFacSi').addClass('btn-primary active').removeClass('btn-default');
+                            $('#btnCertFacNo').addClass('btn-default').removeClass('btn-primary active');
+                        } else if (MAN_FAC_FIRMAR_SOLO_NO) {
+                            $('#Cert_Fac_Firmar').prop('checked', false);
+                            $('#btnCertFacNo').addClass('btn-primary active').removeClass('btn-default');
+                            $('#btnCertFacSi').addClass('btn-default').removeClass('btn-primary active');
+                        }
+                        $('#modalCertificadoFirma').modal('show');
                     });
                     $g.find('.btn-chart-factura').off('click').on('click', function(e) {
                         e.preventDefault();
@@ -1131,6 +1227,69 @@ if (isset($_GET['manifiestosFactura'])) {
                 if ($('#gridManifiestosDetalle').length && $.fn.jqGrid) {
                     $('#gridManifiestosDetalle').trigger('reloadGrid');
                 }
+            });
+
+            $('#btnCertFacSi').on('click', function() {
+                $('#Cert_Fac_Firmar').prop('checked', true);
+                $(this).addClass('btn-primary active').removeClass('btn-default');
+                $('#btnCertFacNo').addClass('btn-default').removeClass('btn-primary active');
+            });
+            $('#btnCertFacNo').on('click', function() {
+                $('#Cert_Fac_Firmar').prop('checked', false);
+                $(this).addClass('btn-primary active').removeClass('btn-default');
+                $('#btnCertFacSi').addClass('btn-default').removeClass('btn-primary active');
+            });
+
+            function impCertificadoFactura() {
+                var data = window._certFacData;
+                var $btn = window._certFacBtn;
+                if (!data || !data.vetCod || !$btn || !$btn.length) return;
+                if ($btn.data('printing')) return;
+
+                var firmar = $('#Cert_Fac_Firmar').is(':checked') ? 1 : 0;
+                /* Siempre el mismo certificado HTML; firmar=1 añade bloque de firma (sin BORRADOR) */
+                var url = 'man_rep_certificado_factura.php?embed=1&Vet_Cod=' + encodeURIComponent(data.vetCod) + '&firmar=' + firmar;
+                var plaCod = $('#Pla_Cod_Usuario').val();
+                if (plaCod) {
+                    url += '&Pla_Cod_Usuario=' + encodeURIComponent(plaCod);
+                }
+
+                $('#modalCertificadoFirma').modal('hide');
+
+                var unlock = function() {
+                    $btn.data('printing', false).prop('disabled', false).removeClass('disabled');
+                };
+
+                $btn.data('printing', true).prop('disabled', true).addClass('disabled');
+
+                var iframe = document.createElement('iframe');
+                iframe.style.position = 'fixed';
+                iframe.style.right = '0';
+                iframe.style.bottom = '0';
+                iframe.style.width = '0';
+                iframe.style.height = '0';
+                iframe.style.border = '0';
+                iframe.style.visibility = 'hidden';
+
+                var cleanup = function() {
+                    try { document.body.removeChild(iframe); } catch (err) {}
+                    unlock();
+                };
+
+                iframe.onload = function() {
+                    setTimeout(function() {
+                        try { iframe.contentWindow.focus(); } catch (err) {}
+                        try { iframe.contentWindow.print(); } catch (err) {}
+                        setTimeout(cleanup, 1500);
+                    }, 150);
+                };
+                iframe.onerror = cleanup;
+                document.body.appendChild(iframe);
+                iframe.src = url;
+            }
+
+            $('#btnCertFacGenerar').on('click', function() {
+                impCertificadoFactura();
             });
 
             $('#btnExportarExcelMan').on('click', function() {
