@@ -1,12 +1,13 @@
 <?php
 /**
- * Verificacion publica del certificado B.07.01 por Cod_Ven (Vet_Cod).
- * Sin sesion: ?Cod_Ven=123  solo totales y datos de cabecera.
+ * Verificacion publica del certificado B.07.01 por codesales (Vet_Cod) y codecompany (Emp_Cod).
+ * Sin sesion: ?codesales=181X...&codecompany=620Y...
  */
 require_once(__DIR__ . '/../../Librerias/config.php/register_globals.php');
 require_once(__DIR__ . '/../../DATA/MysqlConexion.php');
 require_once(__DIR__ . '/../../administrador/LOGICA/logica.php');
 require_once(__DIR__ . '/../LOGICA/log_man_fac_1.0.php');
+require_once(__DIR__ . '/../LOGICA/man_cert_firma_helper.php');
 
 header('Content-Type: text/html; charset=UTF-8');
 
@@ -97,18 +98,25 @@ function man_verf_resolve_dat_dis($vet_cod, $emp_cod = 0) {
 }
 
 $cod_ven = 0;
-if (!empty($_GET['Cod_Ven'])) {
+if (!empty($_GET['codesales'])) {
+    $cod_ven = man_cert_deobfuscate_code($_GET['codesales']);
+} elseif (!empty($_GET['Cod_Ven'])) {
     $cod_ven = (int)$_GET['Cod_Ven'];
 } elseif (!empty($_GET['Vet_Cod'])) {
     $cod_ven = (int)$_GET['Vet_Cod'];
 }
-$emp_cod_url = !empty($_GET['Emp_Cod']) ? (int)$_GET['Emp_Cod'] : 0;
+$emp_cod_url = 0;
+if (!empty($_GET['codecompany'])) {
+    $emp_cod_url = man_cert_deobfuscate_code($_GET['codecompany']);
+} elseif (!empty($_GET['Emp_Cod'])) {
+    $emp_cod_url = (int)$_GET['Emp_Cod'];
+}
 
 $error = '';
 $row = null;
 
 if ($cod_ven <= 0) {
-    $error = 'Debe indicar el parametro Cod_Ven en la URL (codigo interno de la factura).';
+    $error = 'Enlace de verificacion no valido. Debe incluir el parametro codesales.';
 } else {
     $dat_dis = man_verf_resolve_dat_dis($cod_ven, $emp_cod_url);
     if ($dat_dis === null) {
@@ -428,7 +436,7 @@ if (!file_exists($exa_logo_fs)) {
             <?php if ($error !== '') { ?>
                 <div class="alert"><?php echo h_verf($error); ?></div>
                 <p style="margin-top:12px;font-size:12px;color:#64748b;">
-                    Ejemplo: <code>man_verf_certificado.php?Cod_Ven=151</code>
+                    Ejemplo: <code>man_verf_certificado.php?codesales=151X7K2M9A4P1Q&amp;codecompany=620B3N8R2K5M7W</code>
                 </p>
             <?php } else { ?>
 

@@ -12,6 +12,47 @@ if (!class_exists('QRcode')) {
 }
 
 /**
+ * Sufijo aleatorio: 1 letra mayuscula + 10 alfanumericos (letras en mayuscula).
+ */
+function man_cert_url_token_suffix() {
+    $letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    $suffix = $letters[mt_rand(0, 25)];
+    for ($i = 0; $i < 10; $i++) {
+        $suffix .= $chars[mt_rand(0, strlen($chars) - 1)];
+    }
+    return $suffix;
+}
+
+/**
+ * Codigo numerico + sufijo (ej. 181 + X + 10 chars = 181X7K2M9A4P1Q).
+ */
+function man_cert_obfuscate_code($numeric_code) {
+    $numeric_code = (int)$numeric_code;
+    if ($numeric_code <= 0) {
+        return '';
+    }
+    return (string)$numeric_code . man_cert_url_token_suffix();
+}
+
+/**
+ * Extrae el codigo numerico de un token codesales / codecompany.
+ */
+function man_cert_deobfuscate_code($token) {
+    $token = strtoupper(trim((string)$token));
+    if ($token === '') {
+        return 0;
+    }
+    if (preg_match('/^(\d+)([A-Z][A-Z0-9]{10})$/', $token, $m)) {
+        return (int)$m[1];
+    }
+    if (preg_match('/^\d+$/', $token)) {
+        return (int)$token;
+    }
+    return 0;
+}
+
+/**
  * URL absoluta de verificacion publica del certificado por factura.
  */
 function man_cert_verificacion_url($vet_cod, $emp_cod) {
@@ -24,7 +65,10 @@ function man_cert_verificacion_url($vet_cod, $emp_cod) {
     if ($script_dir === '') {
         $script_dir = '/relavera/FRONT';
     }
-    $rel = $script_dir . '/man_verf_certificado.php?Cod_Ven=' . $vet_cod . '&Emp_Cod=' . $emp_cod;
+    $codesales = man_cert_obfuscate_code($vet_cod);
+    $codecompany = man_cert_obfuscate_code($emp_cod);
+    $rel = $script_dir . '/man_verf_certificado.php?codesales=' . rawurlencode($codesales)
+        . '&codecompany=' . rawurlencode($codecompany);
     $httpsVar = isset($_SERVER['HTTPS']) ? $_SERVER['HTTPS'] : '';
     $scheme = ($httpsVar && strtolower($httpsVar) !== 'off') ? 'https' : 'http';
     $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
