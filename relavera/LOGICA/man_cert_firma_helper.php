@@ -1,7 +1,121 @@
 <?php
 /**
  * Bloques HTML de firma / borrador para certificados B.07.01
- * @param bool $firmar Si el usuario eligiÛ firmar (Cert_Firmar)
+ */
+
+if (!class_exists('QRcode')) {
+    global $APP_REAL_PATH;
+    $ruta_qr_lib = isset($APP_REAL_PATH) ? $APP_REAL_PATH . '/Librerias/phpqrcode/phpqrcode.php' : '';
+    if ($ruta_qr_lib !== '' && file_exists($ruta_qr_lib)) {
+        require_once($ruta_qr_lib);
+    }
+}
+
+/**
+ * URL absoluta de verificacion publica del certificado por factura.
+ */
+function man_cert_verificacion_url($vet_cod, $emp_cod) {
+    $vet_cod = (int)$vet_cod;
+    $emp_cod = (int)$emp_cod;
+    $script_dir = '';
+    if (!empty($_SERVER['SCRIPT_NAME'])) {
+        $script_dir = rtrim(dirname(str_replace('\\', '/', $_SERVER['SCRIPT_NAME'])), '/');
+    }
+    if ($script_dir === '') {
+        $script_dir = '/relavera/FRONT';
+    }
+    $rel = $script_dir . '/man_verf_certificado.php?Cod_Ven=' . $vet_cod . '&Emp_Cod=' . $emp_cod;
+    $httpsVar = isset($_SERVER['HTTPS']) ? $_SERVER['HTTPS'] : '';
+    $scheme = ($httpsVar && strtolower($httpsVar) !== 'off') ? 'https' : 'http';
+    $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
+    return $scheme . '://' . $host . $rel;
+}
+
+/**
+ * Imagen QR (data URI o API) para incrustar en HTML/PDF.
+ */
+function man_cert_qr_image_src($text, $api_size = 140) {
+    $text = (string)$text;
+    if ($text === '') {
+        return '';
+    }
+    if (class_exists('QRcode')) {
+        ob_start();
+        @QRcode::png($text, false, 0, 6, 2);
+        $qr_img_bin = ob_get_contents();
+        ob_end_clean();
+        if (!empty($qr_img_bin) && strlen($qr_img_bin) > 100) {
+            return 'data:image/png;base64,' . base64_encode($qr_img_bin);
+        }
+    }
+    return 'https://api.qrserver.com/v1/create-qr-code/?size=' . (int)$api_size . 'x' . (int)$api_size . '&data=' . urlencode($text);
+}
+
+/**
+ * Bloque HTML: QR de verificacion al final del certificado.
+ */
+function man_cert_verificacion_qr_html($vet_cod, $emp_cod) {
+    $url = man_cert_verificacion_url($vet_cod, $emp_cod);
+    $qr_src = man_cert_qr_image_src($url, 140);
+    if ($qr_src === '') {
+        return '';
+    }
+    $qr_h = htmlspecialchars($qr_src, ENT_QUOTES, 'UTF-8');
+    return "
+        <div class='verf-qr-section'>
+            <div class='verf-qr-box'>
+                <img src=\"{$qr_h}\" class='verf-qr-img' alt='QR de verificacion'>
+                <div class='verf-qr-caption'>QR de verificaci&oacute;n</div>
+                <div class='verf-qr-hint'>Escanee para verificar los datos del certificado</div>
+            </div>
+        </div>";
+}
+
+/**
+ * Dibuja QR de verificacion en TCPDF (centrado).
+ */
+function man_cert_verificacion_qr_tcpdf($pdf, $vet_cod, $emp_cod, $x = null, $y = null, $size_mm = 28) {
+    $url = man_cert_verificacion_url($vet_cod, $emp_cod);
+    if ($url === '') {
+        return;
+    }
+    $page_w = $pdf->getPageWidth();
+    $margin = $pdf->getMargins();
+    $usable_w = $page_w - $margin['left'] - $margin['right'];
+    $qr_x = ($x !== null) ? $x : ($margin['left'] + ($usable_w - $size_mm) / 2);
+    $qr_y = ($y !== null) ? $y : ($pdf->GetY() + 4);
+    if ($qr_y > 250) {
+        $pdf->AddPage();
+        $qr_y = 30;
+    }
+    require_once(dirname(__FILE__) . '/../../Librerias/TCPDF/include/barcodes/qrcode.php');
+    $qr = new QRcode($url, 'L');
+    $barcode_array = $qr->getBarcodeArray();
+    if (empty($barcode_array) || !isset($barcode_array['bcode'])) {
+        return;
+    }
+    $num_cols = max(1, (int)$barcode_array['num_cols']);
+    $module_size = $size_mm / $num_cols;
+    $pdf->SetFillColor(0, 0, 0);
+    foreach ($barcode_array['bcode'] as $r => $row) {
+        foreach ($row as $c => $val) {
+            if ($val) {
+                $pdf->Rect($qr_x + ($c * $module_size), $qr_y + ($r * $module_size), $module_size, $module_size, 'F');
+            }
+        }
+    }
+    $txt_w = 80;
+    $txt_x = $margin['left'] + ($usable_w - $txt_w) / 2;
+    $pdf->SetXY($txt_x, $qr_y + $size_mm + 1);
+    $pdf->SetFont('helvetica', 'B', 7);
+    $pdf->Cell($txt_w, 4, 'QR de verificacion', 0, 1, 'C');
+    $pdf->SetX($txt_x);
+    $pdf->SetFont('helvetica', '', 5);
+    $pdf->MultiCell($txt_w, 3, 'Validar certificado en linea', 0, 'C');
+}
+
+/**
+ * @param bool $firmar Si el usuario eligiù firmar (Cert_Firmar)
  * @return array{watermark:string,signature:string}
  */
 function man_cert_firma_html_blocks($firmar, $Ses_Emp_Cod, $obBD_con1, $obBD_conexion, $fecha_ref = null) {
@@ -29,19 +143,7 @@ function man_cert_firma_html_blocks($firmar, $Ses_Emp_Cod, $obBD_con1, $obBD_con
                     $nombre_firmante = isset($cert_info['subject']['CN']) ? $cert_info['subject']['CN'] : 'Firmante Autorizado';
                     $entidad_cert = isset($cert_info['issuer']['O']) ? $cert_info['issuer']['O'] : 'Entidad Certificadora';
                     $qr_sig_data = "Firmado electr\u00f3nicamente por: $nombre_firmante\nFecha: $fecha_ref\nEntidad: $entidad_cert\nValidar en: www.firmadigital.gob.ec";
-                    $qr_src = '';
-                    if (class_exists('QRcode')) {
-                        ob_start();
-                        @QRcode::png($qr_sig_data, false, 0, 6, 2);
-                        $qr_img_bin = ob_get_contents();
-                        ob_end_clean();
-                        if (!empty($qr_img_bin)) {
-                            $qr_src = 'data:image/png;base64,' . base64_encode($qr_img_bin);
-                        }
-                    }
-                    if ($qr_src === '') {
-                        $qr_src = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($qr_sig_data);
-                    }
+                    $qr_src = man_cert_qr_image_src($qr_sig_data, 150);
                     $signature = "
                         <div class='signature-box'>
                             <div class='signature-box-content'>

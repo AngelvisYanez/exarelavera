@@ -1,10 +1,11 @@
 <?php
 /**
- * Certificado B.07.01 por factura con firma electrnica (TCPDF).
+ * Certificado B.07.01 por factura con firma electr?nica (TCPDF).
  */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/log_man_fac_1.0.php');
 require_once('../../Librerias/TCPDF/MYPDF.php');
+require_once('../LOGICA/man_cert_firma_helper.php');
 
 $obBD_conexion = new Class_Log_Conexion_manifiesto($Ses_Dat_Dis);
 $obBD_con1 = new Class_Log_Datos_manifiesto;
@@ -242,6 +243,12 @@ if ($firma_fue_leida && !empty($certs['cert'])) {
     $pdf->SetFont('helvetica', '', 5);
     $pdf->Cell(80, 3, 'Validar documento con FirmaEC', 0, 1, 'L');
 }
+
+$emp_cod_verf = isset($Ses_Emp_Cod) ? (int)$Ses_Emp_Cod : 0;
+if ($pdf->GetY() > 230) {
+    $pdf->AddPage();
+}
+man_cert_verificacion_qr_tcpdf($pdf, $Vet_Cod, $emp_cod_verf);
 
 $pdf->SetY(-15);
 $pdf->SetFont('helvetica', 'I', 7);

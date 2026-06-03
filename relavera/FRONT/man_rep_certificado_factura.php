@@ -1,8 +1,8 @@
 <?php
 /**
  * Certificado de Manifiestos (B.07.01) por factura.
- * Se imprime en la MISMA pgina usando iframe desde man_fac_man.php.
- * ?embed=1 : no auto-imprime, sin botn (lo imprime el parent).
+ * Se imprime en la MISMA p?gina usando iframe desde man_fac_man.php.
+ * ?embed=1 : no auto-imprime, sin bot?n (lo imprime el parent).
  */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/log_man_fac_1.0.php');
@@ -13,7 +13,7 @@ header('Content-Type: text/html; charset=UTF-8');
 function toUtf8($s) {
     if ($s === null) return '';
     $s = (string)$s;
-    // Si ya es UTF-8 vlido, se mantiene.
+    // Si ya es UTF-8 v?lido, se mantiene.
     $u = @iconv('UTF-8', 'UTF-8//IGNORE', $s);
     if ($u !== false && $u !== '') return $u;
     // Si viene como Windows-1252 / Latin1, convertir.
@@ -82,6 +82,8 @@ foreach ($listado as $l) {
 $total_entregados = count($listado);
 
 $firma_blocks = man_cert_firma_html_blocks($firmar, $Ses_Emp_Cod, $obBD_con1, $obBD_conexion, date('Y-m-d'));
+$emp_cod_verf = isset($Ses_Emp_Cod) ? (int)$Ses_Emp_Cod : 0;
+$verf_qr_html = man_cert_verificacion_qr_html($Vet_Cod, $emp_cod_verf);
 
 ?>
 <!DOCTYPE html>
@@ -342,6 +344,41 @@ $firma_blocks = man_cert_firma_html_blocks($firmar, $Ses_Emp_Cod, $obBD_con1, $o
             background: #fff;
         }
         .footer-exa strong { color: #475569; }
+        .verf-qr-section {
+            padding: 12px 22px 16px;
+            background: #fff;
+            border-top: 1px dashed #e2e8f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        .verf-qr-box {
+            text-align: center;
+            width: 100%;
+            max-width: 220px;
+            margin: 0 auto;
+        }
+        .verf-qr-img {
+            width: 120px;
+            height: 120px;
+            display: block;
+            margin: 0 auto 6px;
+        }
+        .verf-qr-caption {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #0f766e;
+        }
+        .verf-qr-hint {
+            font-size: 9px;
+            color: #64748b;
+            margin-top: 3px;
+            line-height: 1.3;
+        }
         .btn-print {
             position: fixed;
             top: 20px;
@@ -516,6 +553,8 @@ $firma_blocks = man_cert_firma_html_blocks($firmar, $Ses_Emp_Cod, $obBD_con1, $o
         <div class="signature-section">
             <?php echo $firma_blocks['signature']; ?>
         </div>
+
+        <?php if ($verf_qr_html !== '') { echo $verf_qr_html; } ?>
 
         <footer class="footer-exa">
             <div><strong>Generado por:</strong> <?php echo h($_SESSION['Ses_Prs_Nom'] . ' ' . $_SESSION['Ses_Prs_Ape']); ?></div>

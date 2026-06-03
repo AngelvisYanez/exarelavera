@@ -945,6 +945,145 @@ function sentencias_manifiesto($id, $Par_Sql)
                     ORDER BY m.Man_Fes ASC
                     LIMIT 1";
             break;
+
+        case 90: // Consulta pública: resumen factura por Vet_Cod (Cod_Ven)
+            $Vet_Cod = isset($Par_Sql['Vet_Cod']) ? intval($Par_Sql['Vet_Cod']) : 0;
+            $sql = "SELECT
+                        ventas.Vet_Cod,
+                        ventas.Vet_Num,
+                        CONCAT(LPAD(sucursal.Suc_Sri, 4, '0'), '-', LPAD(autorizaci.Pun_Sri, 4, '0'), '-', LPAD(ventas.Vet_Num, 9, '0')) AS Vet_Num_Completo,
+                        caja_aper.Caj_Fec AS Vet_Fec,
+                        ventas.Vet_Aut,
+                        CONCAT(persona.Prs_Ape, ' ', persona.Prs_Nom) AS cliente,
+                        persona.Prs_Ced,
+                        cliente.Cli_Cod,
+                        cliente.Emp_Cod,
+                        COALESCE(MAX(comprobantes.Com_Val), 0) AS total_factura,
+                        COALESCE(sm.subtotal_factura, 0) AS subtotal_factura,
+                        COALESCE(sm.iva_factura, 0) AS iva_factura,
+                        CASE WHEN ventas.Vet_Aut = 'S' THEN 'Autorizada' WHEN ventas.Vet_Aut = 'N' THEN 'Sin autorizar' ELSE 'No facturado' END AS Vet_Aut_Des,
+                        COALESCE(m.cant_manifiestos, 0) AS cant_manifiestos,
+                        COALESCE(m.peso_total, 0) AS peso_total,
+                        COALESCE(m.valor_manifiestos, 0) AS valor_manifiestos,
+                        COALESCE(ant.total_anticipos, 0) AS total_anticipos,
+                        COALESCE(gen.Representante, '') AS Representante,
+                        COALESCE(gen.Pla_Nom, pl.Pla_Nom, '') AS Pla_Nom,
+                        COALESCE(gen.Pla_Car, '') AS Pla_Car,
+                        fr.Fec_Des,
+                        fr.Fec_Has
+                    FROM ventas
+                    INNER JOIN cliente ON ventas.Cli_Cod = cliente.Cli_Cod
+                    INNER JOIN persona ON cliente.Prs_Cod = persona.Prs_Cod
+                    INNER JOIN autorizaci ON ventas.Aut_Cod = autorizaci.Aut_Cod
+                    INNER JOIN tipo_compr ON autorizaci.Tic_Cod = tipo_compr.Tic_Cod
+                    LEFT JOIN caja_aper ON caja_aper.Caj_Cod = ventas.Caj_Cod
+                    LEFT JOIN puntos_imp ON puntos_imp.Pun_Cod = caja_aper.Pun_Cod
+                    LEFT JOIN sucursal ON sucursal.Suc_Cod = puntos_imp.Suc_Cod
+                    LEFT JOIN ventas_compr ON ventas_compr.Vet_Cod = ventas.Vet_Cod
+                    LEFT JOIN comprobantes ON comprobantes.Com_Cod = ventas_compr.Com_Cod
+                    LEFT JOIN (
+                        SELECT vd.Vet_Cod,
+                               SUM(ROUND((vd.Vet_Imp - (vd.Vet_Imp * vd.Vet_Dec / 100)) * (1 - COALESCE(v.Vet_Des, 0) / 100), 2)) AS subtotal_factura,
+                               SUM(ROUND(((vd.Vet_Imp - (vd.Vet_Imp * vd.Vet_Dec / 100)) * (1 - COALESCE(v.Vet_Des, 0) / 100) + COALESCE(vd.Vet_Ice, 0)) * i.Iva_Por / 100, 2)) AS iva_factura
+                        FROM ventas_det vd
+                        INNER JOIN iva i ON i.Iva_Cod = vd.Iva_Cod
+                        INNER JOIN ventas v ON v.Vet_Cod = vd.Vet_Cod
+                        GROUP BY vd.Vet_Cod
+                    ) sm ON sm.Vet_Cod = ventas.Vet_Cod
+                    LEFT JOIN (
+                        SELECT Vet_Cod,
+                               COUNT(Man_Cod) AS cant_manifiestos,
+                               SUM(COALESCE(Man_Pes, 0)) AS peso_total,
+                               SUM(CAST((COALESCE(Man_Pes, 0) * (COALESCE(Man_Pun, 0) / 1000)) AS DECIMAL(14, 2))) AS valor_manifiestos
+                        FROM manifiesto
+                        WHERE Man_Est = 'A' AND Vet_Cod IS NOT NULL AND Vet_Cod > 0
+                        GROUP BY Vet_Cod
+                    ) m ON m.Vet_Cod = ventas.Vet_Cod
+                    LEFT JOIN (
+                        SELECT cpc.Vet_Cod, SUM(COALESCE(dacc.Ddc_Val, 0)) AS total_anticipos
+                        FROM ccpp_cobrar cpc
+                        INNER JOIN det_ccpp_c dcc ON dcc.Cpc_Cod = cpc.Cpc_Cod
+                        INNER JOIN det_ant_cccc dacc ON dacc.Dcc_Cod = dcc.Dcc_Cod
+                        INNER JOIN comprobantes com ON com.Com_Cod = dcc.Com_Cod AND com.Com_Est = 'A'
+                        GROUP BY cpc.Vet_Cod
+                    ) ant ON ant.Vet_Cod = ventas.Vet_Cod
+                    LEFT JOIN (
+                        SELECT m2.Vet_Cod, GROUP_CONCAT(DISTINCT mp.Pla_Nom ORDER BY mp.Pla_Nom SEPARATOR ', ') AS Pla_Nom
+                        FROM manifiesto m2
+                        INNER JOIN manifiesto_plantas mp ON mp.Cli_Cod = m2.Cli_Cod AND mp.Pla_Cod = m2.Pla_Cod
+                        WHERE m2.Man_Est = 'A' AND m2.Vet_Cod IS NOT NULL AND m2.Vet_Cod > 0
+                        GROUP BY m2.Vet_Cod
+                    ) pl ON pl.Vet_Cod = ventas.Vet_Cod
+                    LEFT JOIN (
+                        SELECT m3.Vet_Cod,
+                               IF(persona.Prs_Nom = persona.Prs_Ape, persona.Prs_Nom, CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape)) AS Representante,
+                               mp.Pla_Nom,
+                               mp.Pla_Car
+                        FROM manifiesto m3
+                        INNER JOIN cliente ON m3.Cli_Cod = cliente.Cli_Cod
+                        INNER JOIN persona ON cliente.Prs_Cod = persona.Prs_Cod
+                        INNER JOIN manifiesto_plantas mp ON mp.Cli_Cod = m3.Cli_Cod AND mp.Pla_Cod = m3.Pla_Cod
+                        WHERE m3.Man_Est = 'A' AND m3.Vet_Cod = $Vet_Cod
+                        ORDER BY m3.Man_Fes ASC
+                        LIMIT 1
+                    ) gen ON gen.Vet_Cod = ventas.Vet_Cod
+                    LEFT JOIN (
+                        SELECT Vet_Cod,
+                               MIN(DATE(Man_Fes)) AS Fec_Des,
+                               MAX(DATE(Man_Fes)) AS Fec_Has
+                        FROM manifiesto
+                        WHERE Man_Est = 'A' AND Vet_Cod IS NOT NULL AND Vet_Cod > 0
+                        GROUP BY Vet_Cod
+                    ) fr ON fr.Vet_Cod = ventas.Vet_Cod
+                    WHERE ventas.Vet_Cod = $Vet_Cod AND ventas.Vet_Est = 'A'
+                    AND (tipo_compr.Tic_Sri = '1' OR tipo_compr.Tic_Sri = '4')
+                    GROUP BY ventas.Vet_Cod";
+            break;
+
+        case 91: // Anticipos aplicados a la factura (Vet_Cod)
+            $Vet_Cod = isset($Par_Sql['Vet_Cod']) ? intval($Par_Sql['Vet_Cod']) : 0;
+            $sql = "SELECT
+                        dacc.Ddc_Val AS valor_aplicado,
+                        dacc.Ddc_Obs AS observacion,
+                        ant.Ant_Cod,
+                        ant.Ant_Fec,
+                        ant.Ant_Doc,
+                        ma.Ama_Doc,
+                        ma.Ama_Fec,
+                        CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape) AS titular_anticipo,
+                        com.Com_Num,
+                        com.Com_Fec
+                    FROM ccpp_cobrar cpc
+                    INNER JOIN det_ccpp_c dcc ON dcc.Cpc_Cod = cpc.Cpc_Cod
+                    INNER JOIN det_ant_cccc dacc ON dacc.Dcc_Cod = dcc.Dcc_Cod
+                    INNER JOIN comprobantes com ON com.Com_Cod = dcc.Com_Cod AND com.Com_Est = 'A'
+                    INNER JOIN anticipos_clientes ant ON ant.Ant_Cod = dacc.Ant_Cod
+                    LEFT JOIN manifiesto_anticipo ma ON ma.Ama_Cod = ant.Ama_Cod
+                    LEFT JOIN cliente ON ant.Cli_Cod = cliente.Cli_Cod
+                    LEFT JOIN persona ON cliente.Prs_Cod = persona.Prs_Cod
+                    WHERE cpc.Vet_Cod = $Vet_Cod
+                    ORDER BY com.Com_Fec DESC, dacc.Ddc_Cod DESC";
+            break;
+
+        case 92: // Manifiestos de la factura (consulta pública)
+            $Vet_Cod = isset($Par_Sql['Vet_Cod']) ? intval($Par_Sql['Vet_Cod']) : 0;
+            $sql = "SELECT
+                        manifiesto.Man_Cod,
+                        manifiesto.Man_Num,
+                        manifiesto.Pla_Cod,
+                        manifiesto.Man_Fes,
+                        manifiesto.Man_Pes,
+                        manifiesto.Man_Gui,
+                        CONCAT('M', manifiesto.Pla_Cod, '-', LPAD(manifiesto.Man_Num, 4, '0')) AS Man_Num_Full,
+                        COALESCE(mp_row.Pla_Nom, '') AS Pla_Nom,
+                        vehiculo.Veh_Pla,
+                        CAST((manifiesto.Man_Pes * (manifiesto.Man_Pun / 1000)) AS DECIMAL(10,2)) AS Valor
+                    FROM manifiesto
+                    LEFT JOIN manifiesto_plantas mp_row ON mp_row.Pla_Cod = manifiesto.Pla_Cod AND mp_row.Cli_Cod = manifiesto.Cli_Cod
+                    LEFT JOIN vehiculo ON manifiesto.Veh_Cod = vehiculo.Veh_Cod
+                    WHERE manifiesto.Man_Est = 'A' AND manifiesto.Vet_Cod = $Vet_Cod
+                    ORDER BY manifiesto.Man_Fes ASC, manifiesto.Man_Num ASC";
+            break;
     }
     return $sql;
 }
