@@ -507,6 +507,82 @@ if (isset($_GET['manifiestosFactura'])) {
         var MAN_FAC_LOGO = '<?php echo (isset($Ses_Emp_Log) ? $Ses_Emp_Log : ''); ?>';
         var MAN_FAC_FIRMAR_SOLO_SI = <?php echo $firmar_solo_si ? 'true' : 'false'; ?>;
         var MAN_FAC_FIRMAR_SOLO_NO = <?php echo $firmar_solo_no ? 'true' : 'false'; ?>;
+
+        /**
+         * Firefox (y otros) muestran la vista previa en blanco si el iframe tiene 0x0 o visibility:hidden.
+         * Debe tener tamaño real (A4 aprox.) y estar fuera de pantalla, no oculto con visibility.
+         */
+        function manFacCreatePrintIframe() {
+            var iframe = document.createElement('iframe');
+            iframe.setAttribute('title', 'Vista de impresion');
+            iframe.style.position = 'fixed';
+            iframe.style.left = '-10000px';
+            iframe.style.top = '0';
+            iframe.style.width = '794px';
+            iframe.style.height = '1123px';
+            iframe.style.border = '0';
+            iframe.style.margin = '0';
+            iframe.style.padding = '0';
+            iframe.style.background = '#fff';
+            iframe.style.zIndex = '2147483646';
+            return iframe;
+        }
+
+        function manFacPrintIframeWindow(win, onDone) {
+            if (!win || !win.document) {
+                if (onDone) onDone();
+                return;
+            }
+            var finished = false;
+            var finish = function() {
+                if (finished) return;
+                finished = true;
+                if (onDone) onDone();
+            };
+            var doPrint = function() {
+                try { win.onafterprint = finish; } catch (e) {}
+                try { win.focus(); } catch (e) {}
+                try { win.print(); } catch (e) {
+                    finish();
+                    return;
+                }
+                setTimeout(finish, 3000);
+            };
+            var doc = win.document;
+            var whenReady = function() {
+                var imgs = doc.images;
+                var pending = 0;
+                var i;
+                if (imgs && imgs.length) {
+                    for (i = 0; i < imgs.length; i++) {
+                        if (!imgs[i].complete) pending++;
+                    }
+                }
+                if (!pending) {
+                    setTimeout(doPrint, 250);
+                    return;
+                }
+                var left = pending;
+                var tick = function() {
+                    left--;
+                    if (left <= 0) setTimeout(doPrint, 150);
+                };
+                for (i = 0; i < imgs.length; i++) {
+                    if (!imgs[i].complete) {
+                        imgs[i].onload = tick;
+                        imgs[i].onerror = tick;
+                    }
+                }
+                setTimeout(doPrint, 4500);
+            };
+            if (doc.readyState === 'complete') {
+                whenReady();
+            } else {
+                win.addEventListener('load', whenReady);
+                setTimeout(whenReady, 6000);
+            }
+        }
+
         $(function() {
             // Rango por defecto: desde enero (año actual) hasta hoy
             var hoy = new Date();
@@ -1013,15 +1089,7 @@ if (isset($_GET['manifiestosFactura'])) {
                     Fec_Ini: $('#Fec_Ini').val() || '',
                     Fec_Fin: $('#Fec_Fin').val() || ''
                 });
-                // Sin abrir otra ventana: iframe oculto + impresión (Guardar como PDF / imprimir)
-                var iframe = document.createElement('iframe');
-                iframe.style.position = 'fixed';
-                iframe.style.right = '0';
-                iframe.style.bottom = '0';
-                iframe.style.width = '0';
-                iframe.style.height = '0';
-                iframe.style.border = '0';
-                iframe.style.visibility = 'hidden';
+                var iframe = manFacCreatePrintIframe();
                 document.body.appendChild(iframe);
 
                 var unlock = function() {
@@ -1034,12 +1102,7 @@ if (isset($_GET['manifiestosFactura'])) {
                 };
 
                 iframe.onload = function() {
-                    try { iframe.contentWindow.onafterprint = cleanup; } catch (e) {}
-                    setTimeout(function() {
-                        try { iframe.contentWindow.focus(); } catch (e) {}
-                        try { iframe.contentWindow.print(); } catch (e) {}
-                        setTimeout(cleanup, 1500);
-                    }, 150);
+                    manFacPrintIframeWindow(iframe.contentWindow, cleanup);
                 };
 
                 iframe.onerror = function() {
@@ -1317,14 +1380,7 @@ if (isset($_GET['manifiestosFactura'])) {
 
                 $btn.data('printing', true).prop('disabled', true).addClass('disabled');
 
-                var iframe = document.createElement('iframe');
-                iframe.style.position = 'fixed';
-                iframe.style.right = '0';
-                iframe.style.bottom = '0';
-                iframe.style.width = '0';
-                iframe.style.height = '0';
-                iframe.style.border = '0';
-                iframe.style.visibility = 'hidden';
+                var iframe = manFacCreatePrintIframe();
 
                 var finished = false;
                 var finish = function() {
@@ -1341,22 +1397,8 @@ if (isset($_GET['manifiestosFactura'])) {
                 }, 45000);
 
                 iframe.onload = function() {
-                    setTimeout(function() {
-                        hideCertFacLoader();
-                        var win = null;
-                        try { win = iframe.contentWindow; } catch (err) {}
-                        if (win) {
-                            try { win.focus(); } catch (err) {}
-                            try {
-                                win.onafterprint = function() { finish(); };
-                            } catch (err) {}
-                            try { win.print(); } catch (err) { finish(); return; }
-                        } else {
-                            finish();
-                            return;
-                        }
-                        setTimeout(finish, 2000);
-                    }, 100);
+                    hideCertFacLoader();
+                    manFacPrintIframeWindow(iframe.contentWindow, finish);
                 };
                 iframe.onerror = finish;
                 document.body.appendChild(iframe);
@@ -1556,15 +1598,7 @@ if (isset($_GET['manifiestosFactura'])) {
                 html += '</div>'; // #printArea
                 html += '</body></html>';
 
-                // Imprimir sin abrir otra ventana/pestaña: usar iframe oculto
-                var iframe = document.createElement('iframe');
-                iframe.style.position = 'fixed';
-                iframe.style.right = '0';
-                iframe.style.bottom = '0';
-                iframe.style.width = '0';
-                iframe.style.height = '0';
-                iframe.style.border = '0';
-                iframe.style.visibility = 'hidden';
+                var iframe = manFacCreatePrintIframe();
                 document.body.appendChild(iframe);
 
                 var unlock = function() {
@@ -1581,13 +1615,7 @@ if (isset($_GET['manifiestosFactura'])) {
                     unlock();
                 };
 
-                // afterprint no siempre dispara en iframe según navegador; dejar fallback
-                try { iframe.contentWindow.onafterprint = cleanup; } catch (e) {}
-                setTimeout(function() {
-                    try { iframe.contentWindow.focus(); } catch (e) {}
-                    try { iframe.contentWindow.print(); } catch (e) {}
-                    setTimeout(cleanup, 1500);
-                }, 150);
+                manFacPrintIframeWindow(iframe.contentWindow, cleanup);
             });
 
         });

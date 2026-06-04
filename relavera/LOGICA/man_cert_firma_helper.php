@@ -159,7 +159,7 @@ function man_cert_verificacion_qr_tcpdf($pdf, $vet_cod, $emp_cod, $x = null, $y 
 }
 
 /**
- * @param bool $firmar Si el usuario eligiù firmar (Cert_Firmar)
+ * @param bool $firmar Si el usuario eligiÔøΩ firmar (Cert_Firmar)
  * @return array{watermark:string,signature:string}
  */
 function man_cert_firma_html_blocks($firmar, $Ses_Emp_Cod, $obBD_con1, $obBD_conexion, $fecha_ref = null) {

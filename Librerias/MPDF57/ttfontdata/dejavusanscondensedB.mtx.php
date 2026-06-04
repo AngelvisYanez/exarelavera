@@ -13,9 +13,9 @@ $desc=array (
 );
 $up=-63;
 $ut=44;
-$ttffile='C:/AppServ/www/exa/Librerias/MPDF57/ttfonts/DejaVuSansCondensed-Bold.ttf';
+$ttffile='C:/xampp/htdocs/exa-relavera/Librerias/MPDF57/ttfonts/DejaVuSansCondensed-Bold.ttf';
 $TTCfontID='0';
-$originalsize=545712;
+$originalsize=665028;
 $sip=false;
 $smp=false;
 $BMPselected=true;

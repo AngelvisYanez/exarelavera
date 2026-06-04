@@ -393,9 +393,23 @@ $verf_qr_html = man_cert_verificacion_qr_html($Vet_Cod, $emp_cod_verf);
             z-index: 1000;
         }
         @media print {
-            body { background: #fff; padding: 0; }
+            html, body {
+                background: #fff !important;
+                padding: 0;
+                margin: 0;
+                height: auto !important;
+                overflow: visible !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
             .btn-print { display: none; }
-            .report-wrap { border: none; box-shadow: none; border-radius: 0; }
+            .report-wrap {
+                display: block !important;
+                visibility: visible !important;
+                border: none;
+                box-shadow: none;
+                border-radius: 0;
+            }
             .report-header,
             .cert-official-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; page-break-inside: avoid; break-inside: avoid; }
             table.data-table thead th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
