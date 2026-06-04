@@ -1,0 +1,37 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+
+interface UseQueryOptions {
+  auto?: boolean;
+}
+
+export function useQuery<T>(
+  fetcher: () => Promise<T>,
+  options: UseQueryOptions = {}
+) {
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const refetch = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await fetcher();
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error desconocido');
+    } finally {
+      setLoading(false);
+    }
+  }, [fetcher]);
+
+  useEffect(() => {
+    if (options.auto) {
+      refetch();
+    }
+  }, []);
+
+  return { data, loading, error, refetch };
+}
