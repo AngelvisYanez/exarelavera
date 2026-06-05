@@ -12,7 +12,7 @@
         </style>
     </head>
 <body>
-    <?Php  list($anio, $mes, $dia) = split('[/.-]', $row_rs_cliente['Caj_Fec']);?>
+    <?Php  list($anio, $mes, $dia) = preg_split('![/.-]!', $row_rs_cliente['Caj_Fec']);?>
     <!--fecha  --><span style="<?php echo getCss('fecha'); ?>" class="flota"><? echo $dia.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$mes.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$anio; ?></span>
     <!--cliente--><span style="<?php echo getCss('cliente'); ?>" class="flota truncate"><? if ($row_rs_representante['Cli_Fac'] != ""){echo $row_rs_representante['Cli_Fac'];}else{ echo $row_rs_cliente['Prs_Ape'].' '.$row_rs_cliente['Prs_Nom'];}?></span>
     <!--direcci--><span style="<?php echo getCss('direccion'); ?>" class="flota truncate"><? if ($row_rs_representante['Cli_Dir'] != ""){echo substr($row_rs_representante['Cli_Dir'],0,31);}else{echo substr($row_rs_cliente['Prs_Dir'],0,31);}?></span>

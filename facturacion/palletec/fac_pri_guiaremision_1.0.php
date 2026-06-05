@@ -1,9 +1,9 @@
 <?php 
 /**
-* @abstract Reporte de ventas para la impresión en factura o nota de venta
+* @abstract Reporte de ventas para la impresiÃ³n en factura o nota de venta
 * @author Lewis Chimarro
 * @version 1.0
-* Fecha de actualización  2012-05-23
+* Fecha de actualizaciÃ³n  2012-05-23
 * @author Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -50,7 +50,7 @@ if (isset($Gui_Cod))
 <link rel="stylesheet" href="print.css" type="text/css" media="print" />
 </head>
 <body>
-<?Php  list($anio, $mes, $dia) = split('[/.-]', $rs_destina['Gui_Fec']);?>
+<?Php  list($anio, $mes, $dia) = preg_split('![/.-]!', $rs_destina['Gui_Fec']);?>
 
 <span style="top:100px;left:200px;" class="flota"><? echo $rs_destina['Gui_Fsa']; ?></span>
 <span style="top:125px;left:200px;" class="flota"><? echo $rs_destina['Gui_Far']; ?></span>

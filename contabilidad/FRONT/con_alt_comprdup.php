@@ -1,7 +1,7 @@
 <?	
 /**
-* Descripci髇: Duplicar comprobantes
-* Fecha de actualizaci髇: 2016-Mar-16
+* Descripci贸n: Duplicar comprobantes
+* Fecha de actualizaci贸n: 2016-Mar-16
 * Desarrollador: Jose Cumbicos
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -9,7 +9,7 @@ require_once('../LOGICA/con_log_compr.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
 require_once('../../Librerias/postclass.php');	
 /**
-* Creaci髇 del objeto para evitar el reenvio 
+* Creaci贸n del objeto para evitar el reenvio 
 */
 $thisPost = new Post_Block;
 
@@ -50,8 +50,8 @@ exit();
 /* Control para el calculo del numero de comprobantes */
 if (isset($ajax_compr))
 {  
-	/* Carga el a駉 de la fecha incial */
-	list($ann, $mes, $dia) = split('[/.-]', $Com_Fec);
+	/* Carga el a帽o de la fecha incial */
+	list($ann, $mes, $dia) = preg_split('![/.-]!', $Com_Fec);
 	$Com_Num = $obBD_con1->codigoComprAuto2($opTia, $Pec_Cod, $mes, $obBD_conexion);
 	
 ?>
@@ -99,7 +99,7 @@ else
 					$Asi_Glo=current($glosa);
 					next($glosa);
 					
-					/* Inserci髇 del asiento contable del Comprobante */
+					/* Inserci贸n del asiento contable del Comprobante */
 					$obBD_ins1->operacionobBD(325,$ultimo.'*'.$Asi_Deh.'*'.$Asi_Val.'*'.$Asi_Con.'*'.$Asi_Glo.'*'.$cuenta,$obBD_conexion);						
 				}	
 					
@@ -223,13 +223,13 @@ else
       <td height="389" align="left" valign="top">
 <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1"> 
 	<?
-/* Control para la elecci髇 del periodo contable */
+/* Control para la elecci贸n del periodo contable */
 if (!isset($hdd_save) && !isset($txt_busqueda) && !isset($Com_Cod))
 {
 ?>
 <FIELDSET>
 	<LEGEND>
-		<label class="Titulos2">Selecci髇 Periodo Contable</label>
+		<label class="Titulos2">Selecci贸n Periodo Contable</label>
 	</LEGEND>
 
     <table width="30%" border="0" cellspacing="0" cellpadding="0">
@@ -388,7 +388,7 @@ if(isset($txt_busqueda))
 		  <td align="center" >&nbsp;<? echo $row_rs_cabcomp['Com_Fec']; ?></td>			
 		  <td align="right" >&nbsp;<? echo $row_rs_cabcomp['Com_Val']; ?></td>
 		  <td align="center"><button type="button" class="btn btn-info btn-mini" title="Detalle del registro" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_info=1&com_codigo=<? echo $row_rs_cabcomp['Com_Cod'];?>&Ses_Emp_Cod=<? echo $Ses_Emp_Cod;?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>
-		  <td align="center"><button type="button" class="btn btn-success btn-mini" title="Ver Factura/Retenci髇" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_info2=1&com_codigo=<? echo $row_rs_cabcomp['Com_Cod'];?>&op=<? echo $op;?>&Ses_Suc_Cod=<? echo $Ses_Suc_Cod;?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>
+		  <td align="center"><button type="button" class="btn btn-success btn-mini" title="Ver Factura/Retenci贸n" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_info2=1&com_codigo=<? echo $row_rs_cabcomp['Com_Cod'];?>&op=<? echo $op;?>&Ses_Suc_Cod=<? echo $Ses_Suc_Cod;?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>
 		  <td align="center">		  		
           <input name="cod" id="cod" type="hidden"  value="<?php echo $row_rs_cabcomp['Com_Cod']; ?>">
           <input name="op" id="op" type="hidden"  value="<?php echo $op; ?>">
@@ -486,7 +486,7 @@ if ($cod > 0 && !(isset($txt_busqueda)))
 		  <td colspan="3" align="left" class="LetraNegra"><input name="Com_Con" type="text" id="Com_Con" size="30" value="<? echo $row_rs_codcompr['Com_Con']; ?>">		  </td>
 		</tr>
 		<tr>
-			<td class="Etiqueta1">Observaci髇:</td>
+			<td class="Etiqueta1">Observaci贸n:</td>
 			<td colspan="3" align="left" class="LetraNegra"><input name="Com_Obs" type="text" id="Com_Obs" size="30" value="<? echo $row_rs_codcompr['Com_Obs']; ?>"> 
 			<input name="Com_Tipo" type="hidden" id="Com_Tipo" value="<? echo $row_rs_codcompr['Com_Tipo']; ?>">
 			<input name="op" type="hidden" id="op" value="<? echo $op; ?>">			</td>

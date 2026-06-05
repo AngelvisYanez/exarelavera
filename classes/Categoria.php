@@ -21,7 +21,8 @@ class CategoriaClass {
 
     public function getCategorias($body){
         $data=$body;
-        $consulta = $this->datos->getArrayConsulta( 1028,$data['Cat_Rec'].'*'.$data['Emp_Cod'], $this->conexion);
+        $catRec = isset($data['Cat_Rec']) ? $data['Cat_Rec'] : '0';
+        $consulta = $this->datos->getArrayConsulta(1028, $catRec . '*' . $data['Emp_Cod'], $this->conexion);
         $response['data'] = $consulta;
         if ($this->datos->Error == 0) {
             $response['status'] = true;

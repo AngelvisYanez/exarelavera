@@ -312,7 +312,7 @@ function MakeDefinitionFile($file, $type, $enc, $embed, $map, $info)
 function MakeFont($fontfile, $enc='cp1252', $embed=true)
 {
 	// Generate a font definition file
-	if(get_magic_quotes_runtime())
+	if(function_exists('get_magic_quotes_runtime') && @get_magic_quotes_runtime())
 		@set_magic_quotes_runtime(0);
 	ini_set('auto_detect_line_endings', '1');
 

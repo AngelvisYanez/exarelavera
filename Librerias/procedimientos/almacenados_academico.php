@@ -185,8 +185,8 @@ function colegios()
 /* Funcion que devuelve la cantidad de horas entre dos horas */
 function sumar_horas($hora1, $hora2, $op)
 {
-	$hora1=split(":",$hora1);
-	$hora2=split(":",$hora2);
+	$hora1=explode(":",$hora1);
+	$hora2=explode(":",$hora2);
 	$horas=(int)$hora1[0]+(int)$hora2[0];
 	$minutos=(int)$hora1[1]+(int)$hora2[1];
 	$horas+=(int)($minutos/60);
@@ -286,7 +286,7 @@ function estado_faltas($total_faltas, $porcentaje1, $porcentaje2)
 	{
 		if ($total_faltas >= $porcentaje1 && $total_faltas <= $porcentaje2)
 		{
-			$estado = "O";//Reprobado por faltas, con opción a acogerse al reglamento
+			$estado = "O";//Reprobado por faltas, con opciï¿½n a acogerse al reglamento
 		}
 		else
 		{
@@ -314,7 +314,7 @@ function comentario_faltas($estado)
 	{
 		if ($estado == 'O')
 		{
-			$comentario = "Reprobado por faltas, con opción <br> de acogerse al reglamento";
+			$comentario = "Reprobado por faltas, con opciï¿½n <br> de acogerse al reglamento";
 		}
 		else
 		{

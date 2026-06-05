@@ -1,10 +1,10 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?	
 /**
-* Descripci�n: Permite consultar la mayorizacion contable
-* Fecha de actualizaci�n:	2010-11-15 
+* Descripciï¿½n: Permite consultar la mayorizacion contable
+* Fecha de actualizaciï¿½n:	2010-11-15 
 * Desarrollador:	Lewis Chimarro 
-* Fecha de actualizaci�n:	2012-06-24
+* Fecha de actualizaciï¿½n:	2012-06-24
 * Desarrollador:	Lewis Chimarro 
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -248,9 +248,9 @@ switch ($op){
 		$row_rs_cuenta = $obBD_con1->registros();
 		$total_rs_cuenta = $obBD_con1->numregistros();		
 		/**
-		* Carga el a�o de la fecha incial 
+		* Carga el aï¿½o de la fecha incial 
 		*/
-		list($annn, $mess, $dia) = split('[/.-]', $fech_fut);
+		list($annn, $mess, $dia) = preg_split('![/.-]!', $fech_fut);
 		$anio = date("Y", mktime(0,0,0,$mes,$dia,$ann));
 	}//Fin del if ($txt_busqueda != "")
 	break;
@@ -353,7 +353,7 @@ if (!isset($hdd_save) && !isset($hdd_save2) && !isset($hdd_save3))
 { ?>
 <FIELDSET>
 	<LEGEND>
-		<label class="Titulos2">Selección Periodo Contable</label>
+		<label class="Titulos2">SelecciÃ³n Periodo Contable</label>
 	</LEGEND>
     <table width="268" border="0" cellspacing="0" cellpadding="0">
       <tr>
@@ -509,7 +509,7 @@ switch ($op){
    <br />  
    <FIELDSET>
    <LEGEND>
-        <label class="Titulos2">Detalle de Mayorización:</label>
+        <label class="Titulos2">Detalle de MayorizaciÃ³n:</label>
    </LEGEND>
    <div id="Exportar_a_Excel">       
   <table width="778" border="0" cellpadding="0" cellspacing="0" class="LetraNegra">
@@ -520,7 +520,7 @@ switch ($op){
       <td width="387">&nbsp;<?Php echo $txt_fec_fin; ?></td>
       </tr>
     <tr>
-      <td class="Etiqueta1">Código:</td>
+      <td class="Etiqueta1">CÃ³digo:</td>
       <td>&nbsp;<?Php echo $row_rs_recur['Pld_Cdc']; ?></td>
       <td class="Etiqueta1">GRUPO:</td>
       <td>&nbsp;<?Php echo $row_rs_recur['Pld_Des']; ?></td>
@@ -594,7 +594,7 @@ switch ($op){
 			}//Fin del if ($row_rs_cuenta['Tia_Ini'] == 'I')
 		  
 	  $i++; 
-	  list($ann, $mes, $dia) = split('[/.-]', $row_rs_cuenta['Com_Fec']);
+	  list($ann, $mes, $dia) = preg_split('![/.-]!', $row_rs_cuenta['Com_Fec']);
 	  /**
 	  * Control para mostrar una sola vez el + 
 	  */
@@ -771,9 +771,9 @@ switch ($op){
 		$row_rs_cuenta = $obBD_con1->registros();
 		$total_rs_cuenta = $obBD_con1->numregistros();				
 		/**
-		* Carga el a�o de la fecha incial 
+		* Carga el aï¿½o de la fecha incial 
 		*/
-		list($ann, $mes, $dia) = split('[/.-]', $fech_fut);
+		list($ann, $mes, $dia) = preg_split('![/.-]!', $fech_fut);
 		$anio = date("Y", mktime(0,0,0,$mes,$dia,$ann));
 
 		if ($total_rs_cuenta > 0 or $total_rs_saldos > 0){

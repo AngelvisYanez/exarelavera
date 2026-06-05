@@ -57,60 +57,27 @@ if ($total_rs_control !=0)
 	* Inicia la sessión 
 	*/
 	session_start();
-    session_register("hp2_");
 	/**
 	* Variables de Sesion del usuario 
 	*/
-	session_register("Ses_Usu_Cod");
-	session_register("Ses_Usu_Ced");
-	session_register("Ses_Usu_Est");
-	session_register("Ses_Usu_Cad");
-	session_register("Ses_Usu_Men");	
 	/**
 	* Variable para definir la sucursal y empresa
 	*/
-	session_register("Ses_Suc_Cod");
-	session_register("Ses_Suc_Des");
-	session_register("Ses_Emp_Cod");
-	session_register("Ses_Emp_Nom");
-	session_register("Ses_Emp_Cor");	
-	session_register("Ses_Suc_Web");	
-	session_register("Ses_Emp_Log");		
 	/**
 	* Variables del Perfil del usuario 
 	*/	
-	session_register("Ses_Per_Cod");
-	session_register("Ses_Per_Let");
-	session_register("Ses_Lis_Per");
-	session_register("Ses_Lis_Let");
-	session_register("Ses_Per_Des");
 	/**
 	* Variables de la persona 
 	*/
-	session_register("Ses_Prs_Cod");
-	session_register("Ses_Prs_Ape");
-	session_register("Ses_Prs_Nom");
-	session_register("Ses_Prs_Ced");
-	session_register("Ses_Prs_Sex");
-	session_register("username"); //chat
-	session_register("Ses_Per_Fot");	
 	/**
 	* Variables para la informacion del sistema 
 	*/
-	session_register("Ses_Sys_Nom");
-	session_register("Ses_Sys_Ver");
-	session_register("Ses_Sys_Tim");
-	session_register("Ses_Sys_Date");		
 	/**
 	 * Variable de sesion de auditoria
 	 */
-	session_register("Ses_Ses_Cod");	
 	/**
 	* Variable para la base de datos del sistema local
 	*/
-	session_register("Ses_Dat_Dis"); //Base de datos operativa
-	session_register("Ses_Dat_Aud"); //Base de datos auditoria
-	session_register("Ses_Dat_Stg"); //Base de datos storage
 	
 	/**
 	* Consulta los perfiles asignados al usuario 

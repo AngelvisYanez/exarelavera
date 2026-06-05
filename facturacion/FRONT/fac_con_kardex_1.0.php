@@ -1,11 +1,11 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?Php 
 /***
-* Descripci髇: Consulta del kardex 
-* Fecha de actualizaci髇:	2011-04-28
+* Descripci贸n: Consulta del kardex 
+* Fecha de actualizaci贸n:	2011-04-28
 * Desarrollador: Lewis Chimarro
 * <<<  Ite_Cod es equivalente a Pro_Cod  >>>
-* Fecha de actualizaci髇:	2013-01-08
+* Fecha de actualizaci贸n:	2013-01-08
 * Desarrollador: Lewis Chimarro
 */	
 
@@ -23,7 +23,7 @@ require_once('../../Librerias/procedimientos/almacenados_standar.php');
 */  
 $obBD_conexion = new Class_Log_Conexion_Kar($Ses_Dat_Dis);
 /**
-* Objeto para la obtenci髇 de datos
+* Objeto para la obtenci贸n de datos
 */
 $obBD_con1 =  new Class_Log_Datos_Kar; 
 
@@ -105,7 +105,7 @@ if($ajax_1==1)
 		 	<td>&nbsp;</td>
 		 	<td>&nbsp;</td>
 		 	<td>&nbsp;</td>
-		 	<td><?php echo error_alerta("o hay resultados que mostrar!", 1) ?></td>
+		 	<td><?php echo error_alerta("隆No hay resultados que mostrar!", 1) ?></td>
 		 	<td>&nbsp;</td>                                                
 		 </tr>	
     </tbody>     
@@ -190,12 +190,12 @@ mensaje_requerido();
   </tr>
   
   <tr>
-    <td class="Etiqueta1">Descripci髇: </td>
+    <td class="Etiqueta1">Descripci贸n: </td>
     <td class="LetraNegra"><input style="border:none"  name="Ite_Lar" type="text" id="Ite_Lar" value="<?Php echo $row_rs_consulta['Ite_Lar']; ?>" size="25"/>
       <input name="Ite_Cor" type="hidden" id="Ite_Cor" value=""/></td>
   </tr>
   <tr>
-    <td class="Etiqueta1">Observaci髇:</td>
+    <td class="Etiqueta1">Observaci贸n:</td>
     <td class="LetraNegra"><input style="border:none" name="Pro_Obs" type="text" id="Pro_Obs" value="<?Php echo $row_rs_consulta['Pro_Obs'];?>" size="25" maxlength="30" /></td>
   </tr>
   
@@ -365,7 +365,7 @@ mensaje_requerido();
               <td>&nbsp;</td>
               <td>&nbsp;</td>
               <td>&nbsp;</td>
-              <td colspan="2" align="center">Saldo al <span class="LetraNegra"><?php list($ann, $mes, $dia) = split('[/.-]',$ini); echo $dia.', de '.mes($mes, 1).', '.$ann; ?></span></td>
+              <td colspan="2" align="center">Saldo al <span class="LetraNegra"><?php list($ann, $mes, $dia) = preg_split('![/.-]!',$ini); echo $dia.', de '.mes($mes, 1).', '.$ann; ?></span></td>
               <td><div align="right">
                 <div align="right">
                 <span class="Encabezado_reporte">
@@ -521,10 +521,10 @@ mensaje_requerido();
         <tr>
 		<form name="form_bus" action="" method="post">
           <td width="26%" ><input type="radio" id="op_opciones" name="op_opciones" value="r" onClick="setfocus(document.getElementById('txt_busqueda')); document.getElementById('op').value = this.value;"  />
-              <span class="LetraNegra">C骴igo de barra</span></td>
+              <span class="LetraNegra">C贸digo de barra</span></td>
           <td width="74%" > <input id="op_opciones" name="op_opciones" type="radio" value="d" onClick="setfocus(document.getElementById('txt_busqueda')); document.getElementById('op').value = this.value;" checked="checked" />
           <input type="hidden" name="op" id="op" value="d" />
-              <span class="LetraNegra">Descripci髇</span></td>
+              <span class="LetraNegra">Descripci贸n</span></td>
 	   </form>
         </tr>
       </table></td>

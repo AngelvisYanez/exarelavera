@@ -3,9 +3,9 @@
 * @abstract Reporte de comprobante contable (ingreso, egreso, diario)
 * @author Lewis Chimarro
 * @version 1.0
-* Fecha de actualización: 2010-09-06
-* Fecha de actualización  2012-04-29
-* Fecha de actualización  2015-05-07
+* Fecha de actualizaciÃ³n: 2010-09-06
+* Fecha de actualizaciÃ³n  2012-04-29
+* Fecha de actualizaciÃ³n  2015-05-07
 * @author Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -29,7 +29,7 @@ if (isset($codigo))
     $row_rs_cabcomp = $obBD_con1->getRowConsulta(37, $codigo, $obBD_conexion);
 	$row_rs_usuComp = $obBD_con1->getRowConsulta(38, $row_rs_cabcomp['Usu_Cod'], $obBD_conexion);
 
-	list($ann, $mes, $dia) = split('[/.-]', $row_rs_cabcomp['Com_Fec']);
+	list($ann, $mes, $dia) = preg_split('![/.-]!', $row_rs_cabcomp['Com_Fec']);
 }
 
 if(count($row_rs_cabcomp) > 0){

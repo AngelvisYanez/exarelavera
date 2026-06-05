@@ -606,7 +606,7 @@ if (!empty($_REQUEST['reporteTareasPDF'])) {
     $html .= '</tbody></table>';
     ini_set('memory_limit', '64M');
     include(__DIR__ . '/../../Librerias/MPDF57/mpdf.php');
-    $mpdf = new mPDF('c', 'A4-L', '', '', 10, 10, 10, 10, 6, 6);
+    $mpdf = new \Mpdf\Mpdf(['mode' => 'c', 'format' => 'A4-L', 'margin_left' => 10, 'margin_right' => 10, 'margin_top' => 10, 'margin_bottom' => 10, 'margin_header' => 6, 'margin_footer' => 6]);
     $mpdf->SetDisplayMode('fullpage');
     $mpdf->WriteHTML('<meta charset="UTF-8">' . $html, 2);
     $nombre = 'Reporte_tareas_' . date('Y-m-d_His') . '.pdf';

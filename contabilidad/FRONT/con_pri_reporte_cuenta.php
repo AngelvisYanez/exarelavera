@@ -65,8 +65,8 @@ switch ($op) {
 			/* Consulta del detalle de la mayorizacion */
 			$rs_cuenta = $obBD_con1->getArrayConsulta(201, $txt_fec_ini . '*' . $txt_fec_fin . '*' . $Pld_Cod . '*' . $ordenar . '*' . $Pec_Cod . '*' . $Com_Aut, $obBD_conexion);
 			$total_rs_cuenta = count($rs_cuenta);
-			/* Carga el año de la fecha incial */
-			list($annn, $mess, $dia) = split('[/.-]', $fech_fut);
+			/* Carga el aÃ±o de la fecha incial */
+			list($annn, $mess, $dia) = preg_split('![/.-]!', $fech_fut);
 			$anio = date("Y", mktime(0, 0, 0, $mess, $dia, $annn));
 		} //Fin del if ($txt_busqueda != "")
 		break;
@@ -160,7 +160,7 @@ switch ($op) {
 								<table width="100%" border="1" cellpadding="0" cellspacing="0" style="table-layout:fixed; border-collapse:collapse">
 									<tr class="Texto_Listados">
 										<td width="3%" align="center" bgcolor="#CCCCCC">Ord.</td>
-										<td width="3%" align="center" bgcolor="#CCCCCC"><strong>Nº Cuenta.</strong></td>
+										<td width="3%" align="center" bgcolor="#CCCCCC"><strong>NÂº Cuenta.</strong></td>
 										<td width="8%" align="center" bgcolor="#CCCCCC">
 											<div align="center"><strong>Cuenta. Cont.</strong></div>
 										</td>
@@ -209,7 +209,7 @@ switch ($op) {
 											$saldos = $debe - $haber;
 										}
 
-										list($annn, $mess, $dia) = split('[/.-]', $fech_fut);
+										list($annn, $mess, $dia) = preg_split('![/.-]!', $fech_fut);
 										$anio = date("Y", mktime(0, 0, 0, $mess, $dia, $annn));
 									?>
 
@@ -247,7 +247,7 @@ switch ($op) {
 												}
 												$total_rs_proveedore = isset($rs_proveedore) ? count($rs_proveedore) : 0;
 												$i++;
-												list($ann, $mes, $dia) = split('[/.-]', $row['Com_Fec']);
+												list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 										?>
 												<tr class="Texto_Listados">
 													<td align="center"><?php echo $cont; ?></td>
@@ -361,7 +361,7 @@ switch ($op) {
 									<tr class="Texto_Listados">
 
 										<td width="3%" align="center" bgcolor="#CCCCCC">Ord.</td>
-										<td width="3%" align="center" bgcolor="#CCCCCC"><strong>Nº Cuenta.</strong></td>
+										<td width="3%" align="center" bgcolor="#CCCCCC"><strong>NÂº Cuenta.</strong></td>
 										<td width="8%" align="center" bgcolor="#CCCCCC">
 											<div align="center"><strong>Cuenta. Cont.</strong></div>
 										</td>
@@ -419,7 +419,7 @@ switch ($op) {
 												$row_proveedore = $obBD_con1->getRowConsulta(218, $row['Prv_Cod'], $obBD_conexion);
 											} //Fin del if ($row_rs_cuenta['Tia_Ini'] == 'I')
 											$total_rs_proveedore = count($rs_proveedore);
-											list($ann, $mes, $dia) = split('[/.-]', $row['Com_Fec']);
+											list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 										?>
 											<tr class="Texto_Listados">
 												<td align="center"><?php echo $cont; ?></td>
@@ -573,7 +573,7 @@ switch ($op) {
 											<thead>
 												<tr class="Texto_Listados" bgcolor="#CCCCCC">
 													<th width="3%" align="center">Ord.</th>
-													<th width="6%" align="center">Nº Cuenta</th>
+													<th width="6%" align="center">NÂº Cuenta</th>
 													<th width="8%" align="center">Cuenta Cont.</th>
 													<th width="9%" align="center">Fecha</th>
 													<th width="22%" align="center">Proveedor</th>

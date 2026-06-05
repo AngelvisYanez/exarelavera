@@ -12,7 +12,6 @@
         $obBD_con1 =  new Class_Log_Datos_Tes;
         $categoria_api = new CategoriaClass($obBD_conexion, $obBD_con1);
         $categoria_api->setCategoria($body);
-        // echo json_encode($body);
     });
 
     $app->post('/v1/categorias/obtener', function () {
@@ -21,7 +20,6 @@
         $obBD_con1 =  new Class_Log_Datos_Tes;
         $categoria_api = new CategoriaClass($obBD_conexion, $obBD_con1);
         $categoria_api->getCategorias($body);
-        echo json_encode($body);
     });
 
     $app->post('/v1/categorias/obtener-detalles', function () {
@@ -30,7 +28,6 @@
         $obBD_con1 =  new Class_Log_Datos_Tes;
         $categoria_api = new CategoriaClass($obBD_conexion, $obBD_con1);
         $categoria_api->getAllDetalles($body);
-        echo json_encode($body);
     });
 
     $app->post('/v1/categorias/modificar', function () {
@@ -39,6 +36,5 @@
         $obBD_con1 =  new Class_Log_Datos_Tes;
         $categoria_api = new CategoriaClass($obBD_conexion, $obBD_con1);
         $categoria_api->updateCategoria($body);
-        echo json_encode($body);
     });
 ?>

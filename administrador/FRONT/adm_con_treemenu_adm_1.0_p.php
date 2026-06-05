@@ -90,7 +90,7 @@ if (isset($Com_Tipo))
 	 ///Creacion del objeto para el menu
 	$menu  = new HTML_TreeMenu();
 	arbol($obBD_con1, $obBD_conexion, $menu, 0, "", $Com_Tipo, $codigo);			  
-	$treeMenu = &new HTML_TreeMenu_DHTML($menu, array('/images' => '/images', 'defaultClass' => 'treeMenuDefault'));
+	$treeMenu = new HTML_TreeMenu_DHTML($menu, array('/images' => '/images', 'defaultClass' => 'treeMenuDefault'));
 	$treeMenu->printMenu();
 }//Fin del if (isset($Com_Tipo))
 else

@@ -1,0 +1,83 @@
+name: Playwright Synthetic Monitoring
+
+on:
+  schedule:
+    # Se ejecuta cada 30 minutos, de lunes a viernes de 12:00 a 23:30 UTC (horario laboral)
+    - cron: '*/30 12-23 * * 1-5'
+  workflow_dispatch: # Permite ejecución manual desde la UI de GitHub
+
+jobs:
+  monitor:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Install Dependencies
+      run: |
+        cd frontend-next
+        npm ci
+
+    - name: Install Playwright Browsers
+      run: |
+        cd frontend-next
+        npx playwright install --with-deps chromium
+
+    - name: Run Playwright Monitoring Tests
+      env:
+        MONITOR_TARGET_URL: ${{ secrets.MONITOR_TARGET_URL }}
+        MONITOR_USER: ${{ secrets.MONITOR_USER }}
+        MONITOR_PASSWORD: ${{ secrets.MONITOR_PASSWORD }}
+      run: |
+        cd frontend-next
+        npx playwright test
+
+    - name: Upload Debug Report and Trace on Failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-report
+        path: frontend-next/playwright-report/
+        retention-days: 7
+
+    - name: Send Incident Alert Webhook
+      if: failure()
+      run: |
+        # Envía una notificación inmediata a través de un Webhook de Discord, Slack o MS Teams
+        # Asegúrate de configurar la clave MONITOR_ALERTS_WEBHOOK en los Secrets de tu repositorio en GitHub
+        curl -H "Content-Type: application/json" \
+             -X POST \
+             -d '{
+               "embeds": [{
+                 "title": "🚨 ALERTA: Fallo de Monitoreo en Exa Contable Relavera 🚨",
+                 "description": "El monitor sintético automatizado de Playwright ha detectado una anomalía o caída en producción. Accede al reporte y descarga las trazas de depuración inmediatamente.",
+                 "color": 16711680,
+                 "fields": [
+                   {
+                     "name": "Proyecto/Módulo",
+                     "value": "frontend-next",
+                     "inline": true
+                   },
+                   {
+                     "name": "Entorno",
+                     "value": "Producción",
+                     "inline": true
+                   },
+                   {
+                     "name": "Ver Detalle y Reporte de GitHub",
+                     "value": "[Haga clic aquí para ir al Workflow de GitHub Actions](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+                   }
+                 ],
+                 "footer": {
+                   "text": "Playwright Synthetic Monitor"
+                 },
+                 "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
+               }]
+             }' \
+             "${{ secrets.MONITOR_ALERTS_WEBHOOK }}"

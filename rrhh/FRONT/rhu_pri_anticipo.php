@@ -1,10 +1,10 @@
 <?php
 
 /**
- * @abstract Reporte de ventas para la impresi�n en factura o nota de venta
+ * @abstract Reporte de ventas para la impresiï¿½n en factura o nota de venta
  * @author Lewis Chimarro
  * @version 1.0
- * Fecha de actualizaci�n  2012-05-23
+ * Fecha de actualizaciï¿½n  2012-05-23
  * @author Lewis Chimarro
  */
 require_once('../../Librerias/config.php/register_globals.php');
@@ -34,8 +34,8 @@ if (empty($fecha_ant) || trim($fecha_ant) === "") {
   $fechas_rol =   $fecha_ant;
 }
 
-list($anio, $mes, $dia) = split('[-]', $fechas_rol);
-//list($anio, $mes, $dia) = split('[-]', $rs_datos[0]['Ant_Fec']);
+list($anio, $mes, $dia) = preg_split('![-]!', $fechas_rol);
+//list($anio, $mes, $dia) = preg_split('![-]!', $rs_datos[0]['Ant_Fec']);
 
 
 ?>

@@ -83,3 +83,9 @@ $RECYCLE.BIN/
 !/facturacion/FRONT/tes_alt_orden_1.0.php
 .vscode/
 !/facturacion/FRONT/*
+# Excluir carpetas solicitadas para migracionphp
+/servicios/
+/exa_master/
+/exa/
+/frontend-next/
+/vercel/

@@ -1011,9 +1011,9 @@ Phasellus feugiat, lectus ac aliquam molestie, leo lacus tincidunt turpis, vel a
 //==============================================================
 //==============================================================
 ini_set('memory_limit', '32M');
-include("../../Librerias/MPDF57/mpdf.php");
+require_once __DIR__ . '/../../vendor/autoload.php';
 
-$mpdf=new mPDF('c','A4','','',32,25,27,25,16,13); 
+$mpdf = new \Mpdf\Mpdf(['mode' => 'c', 'format' => 'A4', 'margin_left' => 32, 'margin_right' => 25, 'margin_top' => 27, 'margin_bottom' => 25, 'margin_header' => 16, 'margin_footer' => 13]); 
 
 $mpdf->SetDisplayMode('fullpage');
 

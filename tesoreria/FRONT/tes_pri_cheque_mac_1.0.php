@@ -4,9 +4,9 @@
 * @abstract Reporte de cheque para banco de machala
 * @author Lewis Chimarro
 * @version 1.0
-* Fecha de actualizaci�n  2012-07-23
+* Fecha de actualizaciï¿½n  2012-07-23
 * @author Lewis Chimarro
-* Fecha de actualizaci�n  2013-03-11
+* Fecha de actualizaciï¿½n  2013-03-11
 * @author Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -43,7 +43,7 @@ $row_institucion = $obBD_con1->getRowConsulta(126, $Ses_Suc_Cod, $obBD_conexion)
         <span style="top:39px;left:35px;" class="flota"><? if($row_pri_cheque['Che_Ben']==''){echo $row_pri_cheque['Prs_Ape'].' '.$row_pri_cheque['Prs_Nom'];}else{echo $row_pri_cheque['Che_Ben'];} ?></span>
         <span style="top:39px;left:415px;" class="flota"><b><? echo number_format($row_pri_cheque['Che_Val'],2); ?></b></span>
         <span style="top:65px;left:25px;" class="flota"><? echo '<span style="letter-spacing:0.1em">'.num2letras($row_pri_cheque['Che_Val']).'</span>';?></span>
-        <span style="top:112px;left:10px;" class="flota"><?Php echo $row_institucion['Ciu_Des']?>, &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?Php list($ann, $mes, $dia) = split('[/.-]', $fecha); echo $ann.'/'.$mes.'/'.$dia;?></span>   
+        <span style="top:112px;left:10px;" class="flota"><?Php echo $row_institucion['Ciu_Des']?>, &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?Php list($ann, $mes, $dia) = preg_split('![/.-]!', $fecha); echo $ann.'/'.$mes.'/'.$dia;?></span>   
     </body>
 </html>
 <?Php

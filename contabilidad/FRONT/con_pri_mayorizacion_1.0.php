@@ -1,8 +1,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?	
 /**
-* Descripci髇: Permite consultar la mayorizacion contable
-* Fecha de actualizaci髇:	2010-11-15 
+* Descripci贸n: Permite consultar la mayorizacion contable
+* Fecha de actualizaci贸n:	2010-11-15 
 * Desarrollador:	Lewis Chimarro 
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -93,9 +93,9 @@ switch ($op){
 		$total_rs_cuenta = $obBD_con1->numregistros();		
 
 		/**
-		* Carga el a駉 de la fecha incial 
+		* Carga el a帽o de la fecha incial 
 		*/
-		list($ann, $mes, $dia) = split('[/.-]', $fech_fut);
+		list($ann, $mes, $dia) = preg_split('![/.-]!', $fech_fut);
 		$anio = date("Y", mktime(0,0,0,$mes,$dia,$ann));
 	}//Fin del if ($txt_busqueda != "")
 	break;
@@ -132,7 +132,7 @@ switch ($op){
 	   <td><table width="80%" border="0" align="center" cellpadding="0" cellspacing="0">
 	     <tr align="center">
 	       <td colspan="4">&nbsp;
-	         <?php $obBD_con1->cabeceraReporteStandar($Ses_Suc_Cod, "Mayorizaci髇 General ".$periodo, " ", $obBD_conexion); ?>
+	         <?php $obBD_con1->cabeceraReporteStandar($Ses_Suc_Cod, "Mayorizaci贸n General ".$periodo, " ", $obBD_conexion); ?>
 	         &nbsp;</td>
          </tr>
        </table></td>
@@ -162,7 +162,7 @@ switch ($op){
       <td width="101">&nbsp;</td>
     </tr>
     <tr>
-      <td class="Texto_Reporte"><div align="right"><strong>C骴igo:</strong></div></td>
+      <td class="Texto_Reporte"><div align="right"><strong>C贸digo:</strong></div></td>
       <td>&nbsp;<?Php echo $row_rs_recur['Pld_Cdc']; ?></td>
       <td class="Texto_Reporte"><div align="right"><strong>GRUPO:</strong></div></td>
       <td>&nbsp;<?Php echo $row_rs_recur['Pld_Des']; ?></td>
@@ -374,8 +374,8 @@ switch ($op){
 			$row_rs_cuenta = $obBD_con1->registros();
 			$total_rs_cuenta = $obBD_con1->numregistros();		
 		
-			/* Carga el a駉 de la fecha incial */
-			list($ann, $mes, $dia) = split('[/.-]', $fech_fut);
+			/* Carga el a帽o de la fecha incial */
+			list($ann, $mes, $dia) = preg_split('![/.-]!', $fech_fut);
 			$anio = date("Y", mktime(0,0,0,$mes,$dia,$ann));
 
 			if ($total_rs_cuenta > 0 or $total_rs_saldos > 0) {

@@ -3,9 +3,9 @@
 * @abstract Permite modificar los comprobantes contables
 * @author Lewis Chimarro
 * @version 1.0
-* Fecha de actualizaci�n: 2010-11-16
-* Fecha de actualizaci�n  2012-04-25
-* Fecha de actualizaci�n  2015-05-01
+* Fecha de actualizaciï¿½n: 2010-11-16
+* Fecha de actualizaciï¿½n  2012-04-25
+* Fecha de actualizaciï¿½n  2015-05-01
 * @author Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -161,7 +161,7 @@ if (isset($ajax_buscador))
     <td>	
     <FIELDSET>
 	<LEGEND>
-	<label class="Titulos2">B�squeda de Cuentas</label>
+	<label class="Titulos2">Bï¿½squeda de Cuentas</label>
 	</LEGEND>
 	<table width="481" border="0" cellpadding="0" cellspacing="0">
 		<tr>
@@ -195,7 +195,7 @@ if (isset($ajax_buscador))
 exit();
 }
 /**
-* Buscador para editar cuentas de la contabilizaci�n
+* Buscador para editar cuentas de la contabilizaciï¿½n
 */
 if (isset($ajax_buscador2))
 { ?>
@@ -206,7 +206,7 @@ if (isset($ajax_buscador2))
     <td>	
     <FIELDSET>
 	<LEGEND>
-	<label class="Titulos2">B�squeda de Cuentas</label>
+	<label class="Titulos2">Bï¿½squeda de Cuentas</label>
 	</LEGEND>
 	<table width="481" border="0" cellpadding="0" cellspacing="0">
 		<tr>
@@ -240,7 +240,7 @@ if (isset($ajax_buscador2))
 exit();
 }
 /**
-* Cargado AJAX de los resultados de la b�squeda 1
+* Cargado AJAX de los resultados de la bï¿½squeda 1
 */
 if (isset($ajax_buscod1))
 {	
@@ -263,7 +263,7 @@ if (isset($ajax_buscod1))
 	<table width="100%" border="1" cellpadding="0" cellspacing="0">
 	  <tr class="Cabecera1">
 	    <td width="6%">C&oacute;d. Int.</td>
-		<td width="10%"><strong>C�digo</strong></td>
+		<td width="10%"><strong>Cï¿½digo</strong></td>
 		<td width="24%"><strong>Cuenta</strong></td>
 		<td width="20%"><strong>Grupo</strong></td>
 		<td width="10%"><strong>Tipo</strong></td>
@@ -307,7 +307,7 @@ if (isset($ajax_buscod1))
 	  </tr>
 	  <? } //FIn del foreach ($row as $row)
 	  } else { ?>
-		<tr><td colspan="9" class="Alertas"><?Php echo error_alerta("�No hay resultados que mostrar!", 1); ?></td>
+		<tr><td colspan="9" class="Alertas"><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1); ?></td>
 		</tr>
 	  <? }//Fin del if ($total_rs_buscta > 0)
 	  ?>
@@ -318,7 +318,7 @@ if (isset($ajax_buscod1))
 exit();
 }//if (isset($buscod))
 /**
-* Cargado AJAX de los resultados de la b�squeda 2
+* Cargado AJAX de los resultados de la bï¿½squeda 2
 */
 if (isset($ajax_buscod2))
 {	
@@ -341,7 +341,7 @@ if (isset($ajax_buscod2))
 	<table width="100%" border="1" cellpadding="0" cellspacing="0">
 	  <tr class="Cabecera1">
 	    <td width="6%">C&oacute;d. Int.</td>
-		<td width="10%"><strong>C�digo</strong></td>
+		<td width="10%"><strong>Cï¿½digo</strong></td>
 		<td width="24%"><strong>Cuenta</strong></td>
 		<td width="20%"><strong>Grupo</strong></td>
 		<td width="10%"><strong>Tipo</strong></td>
@@ -381,7 +381,7 @@ if (isset($ajax_buscod2))
 	  </tr>
 	  <? } //FIn del foreach ($row as $row)
 	  } else { ?>
-		<tr><td colspan="8" class="Alertas"><?Php echo error_alerta("�No hay resultados que mostrar!", 1); ?></td>
+		<tr><td colspan="8" class="Alertas"><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1); ?></td>
 		</tr>
 	  <? }//Fin del if ($total_rs_buscta > 0)
 	  ?>
@@ -393,7 +393,7 @@ exit();
 }//if (isset($buscod))
 
 /**
-* Cargado AJAX de los resultados de la b�squeda
+* Cargado AJAX de los resultados de la bï¿½squeda
 */
 if (isset($buscod))
 {	
@@ -416,7 +416,7 @@ if (isset($buscod))
 	<table width="100%" border="1" cellpadding="0" cellspacing="0">
 	  <tr class="Cabecera1">
 	    <td width="6%">C&oacute;d. Int.</td>
-		<td width="10%"><strong>C�digo</strong></td>
+		<td width="10%"><strong>Cï¿½digo</strong></td>
 		<td width="24%"><strong>Cuenta</strong></td>
 		<td width="20%"><strong>Grupo</strong></td>
 		<td width="10%"><strong>Tipo</strong></td>
@@ -472,7 +472,7 @@ exit();
 }//if (isset($buscod))
 
 /** 
-* Cargado de Informaci�n a trav�s de AJAX 
+* Cargado de Informaciï¿½n a travï¿½s de AJAX 
 */
 if (isset($codigo))
 {
@@ -505,7 +505,7 @@ if (isset($codigo))
 */
 require_once('../../Librerias/postclass.php');	
 /** 
-* Creaci�n del objeto para evitar el reenvio 
+* Creaciï¿½n del objeto para evitar el reenvio 
 */
 $thisPost = new Post_Block;
 
@@ -536,7 +536,7 @@ else
 			*/
 			$obBD_con1->inicio_transaccion($obBD_conexion->conexion);
 			/** 
-			* Carga el a�o de la fecha incial 
+			* Carga el aï¿½o de la fecha incial 
 			*/
 			$var_mes = explode('-', $Com_Fec);
 		
@@ -748,7 +748,7 @@ exit();
       <td height="400" align="left" valign="top">      
 	<?
 /**
-* Control para la elecci�n del periodo contable 
+* Control para la elecciï¿½n del periodo contable 
 */
 if (!isset($hdd_save) && !isset($txt_busqueda) && !isset($Com_Cod))
 {
@@ -756,7 +756,7 @@ if (!isset($hdd_save) && !isset($txt_busqueda) && !isset($Com_Cod))
 <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1">
 <FIELDSET>
 	<LEGEND>
-		<label class="Titulos2">Selecci�n Periodo Contable</label>
+		<label class="Titulos2">Selecciï¿½n Periodo Contable</label>
 	</LEGEND>
 	<table width="251" border="0" cellspacing="0" cellpadding="0">
 	  <tr>
@@ -912,7 +912,7 @@ if(isset($txt_busqueda))
 		  <td align="center"><font color="<?php echo $rojo; ?>"><?Php  if ($row['Com_Gen'] == 'M') echo "Manual"; else echo "Auto";
 		  ?></font></td>
 		  <td align="center"><font color="<?php echo $rojo; ?>">&nbsp;<? 
-	  	list($ann, $mes, $dia) = split('[/.-]', $row['Com_Fec']);
+	  	list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 		  echo $row['Tia_Abr']."-".$mes.'-'.$row['Com_Num']; ?></font></td>
 		  <td><font color="<?php echo $rojo; ?>"><? echo $row['Prs_Ced']; ?>&nbsp;</font></td>
 		  <td><font color="<?php echo $rojo; ?>"><?Php echo marcar_cadena($_POST['txt_busqueda'], $row['Prs_Ape']." ".$row['Prs_Nom'], '#FFFF00', 1); ?></font></td>
@@ -947,7 +947,7 @@ if(isset($txt_busqueda))
 					echo "&nbsp;";  
 				}		  
 		  } else { ?>
-		    <img src="../../mascaras/model1/imagenes/32x32/encrypted.png" title="Comprobante bloqueado por generaci�n autom�tica" width="22" height="22"> 
+		    <img src="../../mascaras/model1/imagenes/32x32/encrypted.png" title="Comprobante bloqueado por generaciï¿½n automï¿½tica" width="22" height="22"> 
 		    <?Php } ?>		  </td>					
 		  </tr>
 		</form>
@@ -1237,7 +1237,7 @@ if ($cod > 0 && !(isset($txt_busqueda)))
                          if(response['success']===true){                           
                             $('#CliCli').html(Cliente);
                             closeModal();
-                            alert("Transaccion Realizada con Éxito!");                            
+                            alert("Transaccion Realizada con Ã‰xito!");                            
                          }else{alert(response['message']);}
                    },'json').fail(function(error) { alert("El Servidor ha fallado en responder!"); });
             }

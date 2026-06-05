@@ -3,8 +3,8 @@
 * @abstract Permite anular los cheques 
 * @author Lewis Chimarro
 * @version 1.0
-* Fecha de creaci�n  2012-07-19
-* Fecha de actualizaci�n  2012-07-29
+* Fecha de creaciï¿½n  2012-07-19
+* Fecha de actualizaciï¿½n  2012-07-29
 * @author Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -74,7 +74,7 @@ else
 				{
 					$cant=0;
 					/**
-					* Anulaci�n de cheques 
+					* Anulaciï¿½n de cheques 
 					*/
 					$obBD_con1->grabarv_registros(sentencias_che(191,$obBD_con1->parametros($param[3].'*'.$param[0].'*'.$param[1].'*'.$param[9])), $obBD_conexion->conexion);				
 					unset($param);
@@ -316,7 +316,7 @@ if(isset($txt_busqueda))
 		        </font></td>
 		      <td align="center"><font color="<?php echo $rojo; ?>">
 		        <?php 
-	  	list($ann, $mes, $dia) = split('[/.-]', $row['Com_Fec']);
+	  	list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 		  echo $row['Tia_Abr'].'-'.$mes.'-'.$row['Com_Num']; ?>
 		        </font></td>
 		      <td><font color="<?php echo $rojo;?>"><?php echo $row['Prs_Ced']; ?></font></td>
@@ -441,7 +441,7 @@ if ($total_rs_cabcomp >0)
     <td width="15%" class="Etiqueta1"><input name="Pec_Cod" id="Pec_Cod" type="hidden"  value="<?php echo $Pec_Cod; ?>">
     <input name="Pec_Fei" id="Pec_Fei" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fei']; ?>">
     <input name="Pec_Fef" id="Pec_Fef" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fef']; ?>">C&oacute;d. Compr: </td>
-    <td width="38%" class="LetraNegra">&nbsp;<?php list($ann, $mes, $dia) = split('[/.-]', $row_rs_cabcomp['Com_Fec']);
+    <td width="38%" class="LetraNegra">&nbsp;<?php list($ann, $mes, $dia) = preg_split('![/.-]!', $row_rs_cabcomp['Com_Fec']);
 		  echo $row_rs_cabcomp['Tia_Abr'].'-'.$mes.'-'.$row_rs_cabcomp['Com_Num']; ?></td>
     <td width="11%" class="Etiqueta1">Fecha:</td>
     <td width="36%" class="LetraNegra">&nbsp;<?php echo $row_rs_cabcomp['Com_Fec']; ?></td>
@@ -621,7 +621,7 @@ if ($total_rs_cabcomp >0)
 	<br>	
 	<table width="312" border="0" cellpadding="0" cellspacing="0">
 	  <tr>
-		    <td width="110"><button type="button" class="btn btn-inverse fileinput-button" title="Atrás" onclick="campos_hide(this.form, 'txt_busqueda*op_opciones*cmb_mes*Pec_Cod*hdd_volver*bancos', '<?php echo $volver_busqueda.'*'.$volver_opciones.'*'.$volver_mes.'*'.$Pec_Cod.'*1*'.$volver_bancos;?>')"> <i class=" icon-arrow-left icon-white"></i> <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span></button>
+		    <td width="110"><button type="button" class="btn btn-inverse fileinput-button" title="AtrÃ¡s" onclick="campos_hide(this.form, 'txt_busqueda*op_opciones*cmb_mes*Pec_Cod*hdd_volver*bancos', '<?php echo $volver_busqueda.'*'.$volver_opciones.'*'.$volver_mes.'*'.$Pec_Cod.'*1*'.$volver_bancos;?>')"> <i class=" icon-arrow-left icon-white"></i> <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span></button>
             <input id="nfilas" name="nfilas" type="hidden" value="<?php echo $fila; ?>">
 			  <input id="asientos" name="asientos" type="hidden" value="<?php echo $asientos; ?>">
 			  <input id="bt_save" name="bt_save" type="hidden" value="Grabar">
@@ -649,7 +649,7 @@ if ($total_rs_cabcomp >0)
     <td>			
     <FIELDSET>
     <LEGEND>
-    <label class="Titulos2">Búsqueda de Proveedor</label>
+    <label class="Titulos2">BÃºsqueda de Proveedor</label>
     </LEGEND>
     <table width="450" border="0">
         <tr>
@@ -706,7 +706,7 @@ if ($total_rs_cabcomp >0)
                    //alert(asi+" "+che);
                    $.post( "<?php echo $_SERVER['PHP_SELF']; ?>",{anula:true,asi_cod:asi,che_cod:che}, function( response ) {
                          if(response['success']===true){
-                            alert("Transaccion Realizada con Éxito!");
+                            alert("Transaccion Realizada con Ã‰xito!");
                             $(".anulaChe").html("ANULADO");                       
                             $(".anulaChe").closest('tr').find('td').each(function(){$(this).css('color','red');});
                          }else{alert(response['message']);}

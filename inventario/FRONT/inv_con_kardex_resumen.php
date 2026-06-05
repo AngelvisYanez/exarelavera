@@ -4,7 +4,7 @@
  * @abstract Permite realizar movimientos de inventario
  * @author Erik Niebla
  * @version 1.0
- * Fecha de creación  2015-07-22
+ * Fecha de creaciÃ³n  2015-07-22
  */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/inv_log_inventario.php');
@@ -46,7 +46,7 @@ if (isset($productos)) {
 				$kardex1[0]['Stock'] = 0;
 			}
 
-			list($ann, $mes, $dia) = split('[/.-]', $ini);
+			list($ann, $mes, $dia) = preg_split('![/.-]!', $ini);
 			$kardex1[0]['Kar_Det'] = '<b>Saldo al ' . $dia . ', de ' . mes($mes, 1) . ', ' . $ann . '</b>';
 			$kardex2 = $obBD_con1->getArrayConsulta(24, $ini . '*' . $fin . '*' . $Ite_Cod, $obBD_conexion);
 
@@ -100,7 +100,7 @@ if (isset($productos)) {
 			$row['Kar_Sal'] = (string)(empty($kardex[$x - 1]['Saldo']) ? 0.000000 : $kardex[$x - 1]['Saldo']);
 		}
 	} catch (Exception $e) {
-		$responce = array(success => false, message => 'No se logro obtener información del Kardex!', error => $e);
+		$responce = array(success => false, message => 'No se logro obtener informaciÃ³n del Kardex!', error => $e);
 	}
 	$responce['rows'] = array_values($array);
 	utf8_encode_deep($responce['rows']);
@@ -200,7 +200,7 @@ if (isset($productos)) {
 											<input name="fin" type="text" id="fin" class="form-control input-sm">
 										</div>
 										<div class="col-xs-2">
-											<div class=""><button type="button" onclick="kardexGrid.setGridParam({postData:$('#formFiltros').getData('productos')}); kardexGrid.trigger('reloadGrid', [{page:1}]) " class="btn btn-sm btn-success" title="Ejecutar Búsqueda"><span class="glyphicon glyphicon-search"></span> &nbsp;Filtrar</button></div>
+											<div class=""><button type="button" onclick="kardexGrid.setGridParam({postData:$('#formFiltros').getData('productos')}); kardexGrid.trigger('reloadGrid', [{page:1}]) " class="btn btn-sm btn-success" title="Ejecutar BÃºsqueda"><span class="glyphicon glyphicon-search"></span> &nbsp;Filtrar</button></div>
 										</div>
 									</div>
 								</div>
@@ -238,7 +238,7 @@ if (isset($productos)) {
 									sortable: false /*,editrules: {edithidden: true}*/
 								},
 								colModel: [{
-										label: 'Cód.Int.',
+										label: 'CÃ³d.Int.',
 										name: 'Pro_Cod',
 										key: true,
 										hidden: false,

@@ -64,7 +64,7 @@ if (isset($productos)) {
 				$kardex1[0]['Saldo'] = 0;
 				$kardex1[0]['Stock'] = 0;
 			}
-			list($ann, $mes, $dia) = split('[/.-]', $ini);
+			list($ann, $mes, $dia) = preg_split('![/.-]!', $ini);
 			$kardex1[0]['Kar_Det'] = '<b>Saldo al ' . $dia . ', de ' . mes($mes, 1) . ', ' . $ann . '</b>';
 			$kardex2 = $obBD_con1->getArrayConsulta(24, $ini . '*' . $fin . '*' . $Ite_Cod . '*' . $bodega, $obBD_conexion);
 			$kardex = (count($kardex2) > 0) ? array_merge($kardex1, $kardex2) : $kardex1;
@@ -97,7 +97,7 @@ if (isset($productos)) {
 			$row['Kar_Sal'] = (string)(empty($kardex[$x - 1]['Saldo']) ? 0.00 : $kardex[$x - 1]['Saldo']);
 		}
 	} catch (Exception $e) {
-		$response = array('success' => false, 'message' => 'No se logró obtener información del Kardex!', 'error' => $e->getMessage());
+		$response = array('success' => false, 'message' => 'No se logrÃ³ obtener informaciÃ³n del Kardex!', 'error' => $e->getMessage());
 	}
 	$responce['rows'] = array_values($array);
 	utf8_encode_deep($responce['rows']);
@@ -150,7 +150,7 @@ if (isset($productos)) {
 		utf8_encode_deep($response['rows']);
 		echo json_encode($response);
 	} catch (Exception $e) {
-		$response = array('success' => false, 'message' => 'No se logró obtener información del Kardex!', 'error' => $e->getMessage());
+		$response = array('success' => false, 'message' => 'No se logrÃ³ obtener informaciÃ³n del Kardex!', 'error' => $e->getMessage());
 		echo json_encode($response);
 	}
 	exit();
@@ -221,7 +221,7 @@ if (isset($productos)) {
 											<input name="fin" type="text" id="fin" class="form-control input-sm">
 										</div>
 										<div class="col-xs-2">
-											<div class=""><button type="button" onclick="kardexGrid.setGridParam({postData:$('#formFiltros').getData('productos')}); kardexGrid.trigger('reloadGrid', [{page:1}]) " class="btn btn-sm btn-success" title="Ejecutar Búsqueda"><span class="glyphicon glyphicon-search"></span> &nbsp;Filtrar</button></div>
+											<div class=""><button type="button" onclick="kardexGrid.setGridParam({postData:$('#formFiltros').getData('productos')}); kardexGrid.trigger('reloadGrid', [{page:1}]) " class="btn btn-sm btn-success" title="Ejecutar BÃºsqueda"><span class="glyphicon glyphicon-search"></span> &nbsp;Filtrar</button></div>
 										</div>
 									</div>
 									<div class="form-group">
@@ -230,7 +230,7 @@ if (isset($productos)) {
 											<?php $row_rs_categ = $obBD_con1->getArrayConsulta(30, $Ses_Emp_Cod, $obBD_conexion); ?>
 											<select name="Cate_Cod" id="Cate_Cod" class="form-control input-xs" data-placeholder="Todas">
 												<option value="">Todas</option>
-												<?Php foreach ($row_rs_categ as $row) { ?><option value="<?Php echo $row['Cat_Cod']; ?>"><?Php echo /* strtoupper($row['Par_Cat_Des']).' � '. */ $row['Cat_Des']; ?></option><?Php } ?>
+												<?Php foreach ($row_rs_categ as $row) { ?><option value="<?Php echo $row['Cat_Cod']; ?>"><?Php echo /* strtoupper($row['Par_Cat_Des']).' ï¿½ '. */ $row['Cat_Des']; ?></option><?Php } ?>
 											</select>
 										</div>
 									</div>
@@ -287,7 +287,7 @@ if (isset($productos)) {
 									sortable: false /*,editrules: {edithidden: true}*/
 								},
 								colModel: [{
-										label: 'Cód. Int.',
+										label: 'CÃ³d. Int.',
 										name: 'Pro_Cod',
 										key: true,
 										hidden: false,

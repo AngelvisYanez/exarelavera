@@ -1,7 +1,7 @@
 <?php
 /*
-* Descripci髇: Reporte para la impresi髇 de la factura (formato completo)
-* Fecha de actualizaci髇: 2012-08-09
+* Descripci贸n: Reporte para la impresi贸n de la factura (formato completo)
+* Fecha de actualizaci贸n: 2012-08-09
 * Desarrollador: Lewis Chimarro
 */	
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -44,7 +44,7 @@ if (isset($Vet_Cod))
 	*/
 	$row_rs_vendedor = $obBD_con1->getRowConsulta(24, $Ses_Prs_Cod.'*'.$Ses_Suc_Cod, $obBD_conexion);
 	/**
-	* Consulta los datos de la serie 001-001 de la autorizaci髇
+	* Consulta los datos de la serie 001-001 de la autorizaci贸n
 	*/		  
 	$row_rs_facturanum = $obBD_con1->getRowConsulta(81, $row_cliente['Aut_Cod'], $obBD_conexion);
 	$Aut_Sri = $row_rs_facturanum['Aut_Sri'];
@@ -198,7 +198,7 @@ echo $row_rs_cabecera['Ciu_Des'].$provincia;?></div>
      <td valign="top" class="style2"><div align="left">Direcci&oacute;n:</div></td>
      <td colspan="4" valign="top"><? echo $row_cliente['Prs_Dir']; ?></td>
      <td valign="top" class="tabla"><div align="center">
-         <?Php list($ann, $mes, $dia) = split('[/.-]', $row_cliente['Caj_Fec']); 
+         <?Php list($ann, $mes, $dia) = preg_split('![/.-]!', $row_cliente['Caj_Fec']); 
          echo $ann; ?>
      </div></td>
      <td valign="top" class="tabla"><div align="center"><?Php

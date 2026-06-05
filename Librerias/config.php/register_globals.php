@@ -13,10 +13,10 @@ $bodyPostData = getBody();
 if($bodyPostData != null && $bodyPostData != ''){
     // print_r( $bodyPostData);
     $tags4 = array_keys($bodyPostData);
-    $valores4 = get_object_vars($bodyPostData);
+    $valores4 = array_values($bodyPostData);
 
     foreach ($valores4 as $key => $value) {
-        $$tags4[$key] = $value;
+        ${$tags4[$key]} = $value;
     }
 }
 
@@ -28,7 +28,7 @@ $tags = array_keys($_GET);// obtiene los nombres de las varibles
 $valores = array_values($_GET);// obtiene los valores de las varibles
 
 for($i=0;$i<$numero;$i++){ // crea las variables y les asigna el valor
-$$tags[$i]=$valores[$i];
+${$tags[$i]}=$valores[$i];
 }
 
 /**
@@ -39,19 +39,21 @@ $tags2 = array_keys($_POST); // obtiene los nombres de las varibles
 $valores2 = array_values($_POST);// obtiene los valores de las varibles
 
 for($i=0;$i<$numero2;$i++){ // crea las variables y les asigna el valor
-$$tags2[$i]=$valores2[$i];
+    if (!is_array($valores2[$i])) {
+        ${$tags2[$i]}=$valores2[$i];
+    }
 }
 
 /**
 * Variables SESSION
 */
-if(!isset($_SESSION)){ session_start(); }
-$numero3 = count($_SESSION);
-$tags3 = array_keys($_SESSION); // obtiene los nombres de las varibles
-$valores3 = array_values($_SESSION);// obtiene los valores de las varibles
+if(session_status() === PHP_SESSION_NONE) { @session_start(); }
+$numero3 = isset($_SESSION) ? count($_SESSION) : 0;
+$tags3 = isset($_SESSION) ? array_keys($_SESSION) : [];
+$valores3 = isset($_SESSION) ? array_values($_SESSION) : [];
 
 for($i=0;$i<$numero3;$i++){ // crea las variables y les asigna el valor
-$$tags3[$i]=$valores3[$i];
+${$tags3[$i]}=$valores3[$i];
 }
 
 $DirSep=DIRECTORY_SEPARATOR;

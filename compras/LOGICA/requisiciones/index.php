@@ -21,9 +21,9 @@ class Class_Log_Datos_Requisiciones extends MysqlDatosContab{
       $this->conexion = $conexion;
    }
 
-   function getRequisitores($_POST){
+   function getRequisitores($postData){
       //ChromePhp::log("GETREQUISITORES");
-      $requisitores = $this->getArrayConsulta('requisitores.0', $_POST, $this->conexion);
+      $requisitores = $this->getArrayConsulta('requisitores.0', $postData, $this->conexion);
       //ChromePhp::log("REQUISITORES",$requisitores);
       $this->MsgError;
       $this->echoJson($requisitores);

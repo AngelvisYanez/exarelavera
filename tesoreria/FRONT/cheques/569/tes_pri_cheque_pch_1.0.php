@@ -27,7 +27,7 @@ include($APP_REAL_PATH.'/tesoreria/FRONT/cheques/cheque_config.php');
     <!-- suma -->
     <span style="top:68px; left:152px; font-size:12px;" class="flota"><?php echo '<span style="letter-spacing:0.1em">' . num2letras($row_pri_cheque['Che_Val'], false, false) . '</span>'; ?></span>
     <!-- Ciudad y fecha -->
-    <span style="top:108px; left:140px; font-size:12px;" class="flota"><?php echo $row_institucion['Ciu_Des'] ?>, &nbsp;<?php list($ann, $mes, $dia) = split('[/.-]', $fecha); echo $ann . '/' . str_pad($mes, 2, '0', STR_PAD_LEFT) . '/' . $dia; ?></span>
+    <span style="top:108px; left:140px; font-size:12px;" class="flota"><?php echo $row_institucion['Ciu_Des'] ?>, &nbsp;<?php list($ann, $mes, $dia) = preg_split('![/.-]!', $fecha); echo $ann . '/' . str_pad($mes, 2, '0', STR_PAD_LEFT) . '/' . $dia; ?></span>
         
     </body>
 </html>

@@ -1,9 +1,9 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?
 /**
- * Descripci�n: Permite consultar la mayorizacion contable
- * Fecha de actualizaci�n:	2010-11-15 
- * Fecha de actualizaci�n:	2015-05-06 
+ * Descripciï¿½n: Permite consultar la mayorizacion contable
+ * Fecha de actualizaciï¿½n:	2010-11-15 
+ * Fecha de actualizaciï¿½n:	2015-05-06 
  * Desarrollador:	Lewis Chimarro 
  */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -85,9 +85,9 @@ switch ($op) {
 			$rs_cuenta = $obBD_con1->getArrayConsulta(201, $txt_fec_ini . '*' . $txt_fec_fin . '*' . $Pld_Cod . '*' . $ordenar . '*' . $Pec_Cod . '*' . $Com_Aut, $obBD_conexion);
 			$total_rs_cuenta = count($rs_cuenta);
 			/**
-			 * Carga el a�o de la fecha incial 
+			 * Carga el aï¿½o de la fecha incial 
 			 */
-			list($annn, $mess, $dia) = split('[/.-]', $fech_fut);
+			list($annn, $mess, $dia) = preg_split('![/.-]!', $fech_fut);
 			$anio = date("Y", mktime(0, 0, 0, $mess, $dia, $annn));
 		} //Fin del if ($txt_busqueda != "")
 		break;
@@ -238,7 +238,7 @@ switch ($op) {
 											$saldos = $debe - $haber;
 										}
 
-										list($annn, $mess, $dia) = split('[/.-]', $fech_fut);
+										list($annn, $mess, $dia) = preg_split('![/.-]!', $fech_fut);
 										$anio = date("Y", mktime(0, 0, 0, $mess, $dia, $annn));
 									?>
 
@@ -282,7 +282,7 @@ switch ($op) {
 												}
 												$total_rs_proveedore = isset($rs_proveedore) ? count($rs_proveedore) : 0;
 												$i++;
-												list($ann, $mes, $dia) = split('[/.-]', $row['Com_Fec']);
+												list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 										?>
 												<tr class="Texto_Listados">
 													<td align="center"><?Php echo $cont; ?></td>
@@ -470,7 +470,7 @@ switch ($op) {
 												$row_proveedore = $obBD_con1->getRowConsulta(218, $row['Prv_Cod'], $obBD_conexion);
 											} //Fin del if ($row_rs_cuenta['Tia_Ini'] == 'I')
 											$total_rs_proveedore = count($rs_proveedore);
-											list($ann, $mes, $dia) = split('[/.-]', $row['Com_Fec']);
+											list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 										?>
 											<tr class="Texto_Listados">
 												<td align="center"><?Php echo $cont; ?></td>
@@ -663,7 +663,7 @@ switch ($op) {
 															$registrosCuenta = $obBD_con1->getArrayConsulta(201, $r['start'] . '*' . $r['end'] . '*' . $row_rango['Pld_Cod'] . '*' . $ordenar . '*' .$Pec_Cod . '*' . $Com_Aut, $obBD_conexion);
 
 															$fech_fut = fechas_futuras($r['start'], -1);
-															list($ann, $mes, $dia) = split('[/.-]', $fech_fut);
+															list($ann, $mes, $dia) = preg_split('![/.-]!', $fech_fut);
 															$anio = date("Y", mktime(0, 0, 0, $mes, $dia, $ann));
 														?>
 															<tr class="Texto_Listados">
@@ -835,9 +835,9 @@ switch ($op) {
 													$Pec_Cod . '*' . $Com_Aut, $obBD_conexion);
 												$total_rs_cuenta = count($rs_cuenta);
 												/**
-												 * Carga el a�o de la fecha incial 
+												 * Carga el aï¿½o de la fecha incial 
 												 */
-												list($ann, $mes, $dia) = split('[/.-]', $fech_fut);
+												list($ann, $mes, $dia) = preg_split('![/.-]!', $fech_fut);
 												$anio = date("Y", mktime(0, 0, 0, $mes, $dia, $ann));
 
 												if ($total_rs_cuenta > 0 or $total_rs_saldos > 0) {

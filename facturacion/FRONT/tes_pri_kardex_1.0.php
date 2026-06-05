@@ -1,7 +1,7 @@
 <?	
 /*Alias:	Reporte de kardex
-Descripción: Reporte de kardex listo para la impreison
-Fecha de actualización:	2013-11-07
+DescripciÃ³n: Reporte de kardex listo para la impreison
+Fecha de actualizaciÃ³n:	2013-11-07
 Desarrollador:	El Didi
 <<<  Ite_Cod es equivalente a Pro_Cod  >>>
 MULTIEMPRESA : 
@@ -174,7 +174,7 @@ $total_rs_consulta =  count($rs_consulta);
 		      <td>&nbsp;</td>
 		      <td>&nbsp;</td>
 		      <td colspan="2" align="center">Saldo al :<span class="LetraNegra">
-		        <?php list($ann, $mes, $dia) = split('[/.-]',$fech_ini); echo $dia.', de '.mes($mes, 1).', '.$ann; ?>
+		        <?php list($ann, $mes, $dia) = preg_split('![/.-]!',$fech_ini); echo $dia.', de '.mes($mes, 1).', '.$ann; ?>
 		        </span></td>
 		      <td><div align="right">&nbsp;</div></td>
 		      <td><div align="right">&nbsp;</div></td>

@@ -4,7 +4,7 @@
 * @abstract Permite la consulta individual y total de los comprobantes 
 * @author Lewis Chimarro
 * @version 1.0
-* Fecha de actualizaci髇  2012-05-01
+* Fecha de actualizaci贸n  2012-05-01
 * @author Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -205,14 +205,14 @@ exit();
 	<tr>
       <td height="389" align="left" valign="top"> 
 <?Php
-/* Control para la elecci髇 del periodo contable */
+/* Control para la elecci贸n del periodo contable */
 if (!isset($hdd_save) && !isset($txt_busqueda))
 {
 ?>
 <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1">
 <FIELDSET>
 	<LEGEND>
-		<label class="Titulos2">Selecci髇 Periodo Contable</label>
+		<label class="Titulos2">Selecci贸n Periodo Contable</label>
 	</LEGEND>
 	<table width="225" border="0" cellspacing="0" cellpadding="0">
 	  <tr>
@@ -375,7 +375,7 @@ if (($op==1 || $op==2 || $op==3))
 		  }//Fin del else if ($row_det_rs_ccpp_p > 0)
 		  ?></font></td>
 		  <td align="center"><font color="<?php echo $rojo; ?>">&nbsp;<? 
-  	  	list($ann, $mes, $dia) = split('[/.-]', $row['Com_Fec']);
+  	  	list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 		  echo $mes.'-'.$row['Com_Num']; ?></font></td>
 		  <td><font color="<?php echo $rojo; ?>"><? echo $row['Prs_Ced']; ?>&nbsp;</font></td>
 		  <td><font color="<?php echo $rojo; ?>">
@@ -586,7 +586,7 @@ else
         <td width="167"><select name="Com_Aut" id="Com_Aut">
           <option <?php if ($Com_Aut == "T"){ echo "selected"; } ?> value="T"><< TODOS >></option>
           <option <?php if ($Com_Aut == "M"){ echo "selected"; } ?> value="M">Manual</option>
- 	      <option <?php if ($Com_Aut == "A"){ echo "selected"; } ?> value="A">Autom醫icos</option>
+ 	      <option <?php if ($Com_Aut == "A"){ echo "selected"; } ?> value="A">Autom谩ticos</option>
         </select>
         </td>
       </tr>
@@ -617,7 +617,7 @@ else
 	<td width="585">
 	<FIELDSET>
     <LEGEND>
-    <label class="Titulos2">Opciones de presentaci髇</label>
+    <label class="Titulos2">Opciones de presentaci贸n</label>
     </LEGEND>
     <table width="342" border="0" cellpadding="0" cellspacing="0" class="LetraNegra">
       <tr>
@@ -643,7 +643,7 @@ else
         <td width="406">
         <input type="hidden" id="hdd_ann" value="<?php echo $row_rs_periodo['Ann']; ?>" />
 		<?Php 
-		list($ann, $mes, $dia) = split('[/.-]', date("Y/m/d"));
+		list($ann, $mes, $dia) = preg_split('![/.-]!', date("Y/m/d"));
 		/* 
 		* Fecha de inicio del componente 
 		*/
@@ -736,7 +736,7 @@ else
 		  ?>
               </td>            
             <td align="center"><? 
-			list($ann, $mes, $dia) = split('[/.-]', $row['Com_Fec']);
+			list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 			echo $mes.'-'.$row['Com_Num']; ?></td>
             <td align="center"><? echo $row['Com_Fec']; ?></td>
             <td><? echo $row['Prs_Ape'].' '.$row['Prs_Nom']; ?></td>

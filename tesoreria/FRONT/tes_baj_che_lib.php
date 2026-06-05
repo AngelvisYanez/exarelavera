@@ -45,7 +45,7 @@ if(isset($cheqAjax)){
 if(isset($liberarCheq)){
 
     $data=$_POST;
-    $data['Che_Cod']=  split('_',$data['Che_Cod']);
+    $data['Che_Cod']=  explode('_',$data['Che_Cod']);
     $data['Ban_Cod']=$data['Che_Cod'][0];
     $data['Che_Num']=$data['Che_Cod'][1];
     $data['Che_Cod']=$data['Che_Cod'][2];

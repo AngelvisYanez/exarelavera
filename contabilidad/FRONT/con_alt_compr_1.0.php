@@ -3,8 +3,8 @@
 * @abstract Permite registrar comprobantes de ingreso, egreso y diario
 * @author Lewis Chimarro
 * @version 1.0
-* Fecha de creaci髇  2009-12-11
-* Fecha de actualizaci髇  2012-04-25
+* Fecha de creaci贸n  2009-12-11
+* Fecha de actualizaci贸n  2012-04-25
 * @author Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -22,7 +22,7 @@ $obBD_con1 =  new Class_Log_Datos_Con;
 $hoy = date("Y-m-d");
 $mes = date("m");
 
-/*** Cargado de Informaci髇 a trav閟 de AJAX ***/
+/*** Cargado de Informaci贸n a trav茅s de AJAX ***/
 if (isset($codigo))
 {
 	/* 
@@ -47,7 +47,7 @@ if (isset($codigo))
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?Php
 /*
-* Cargado AJAX de los resultados de la b鷖queda
+* Cargado AJAX de los resultados de la b煤squeda
 */
 if (isset($buscod))
 {	
@@ -70,7 +70,7 @@ if (isset($buscod))
 	<table width="100%" border="1" cellpadding="0" cellspacing="0">
 	  <tr class="Cabecera1">
 	    <td width="6%">C&oacute;d. Int.</td>
-		<td width="10%"><strong>C骴igo</strong></td>
+		<td width="10%"><strong>C贸digo</strong></td>
 		<td width="24%"><strong>Cuenta</strong></td>
 		<td width="20%"><strong>Grupo</strong></td>
 		<td width="10%"><strong>Tipo</strong></td>
@@ -106,7 +106,7 @@ if (isset($buscod))
 	  </tr>
 	  <? } //FIn del foreach ($row as $row)
 	  } else { ?>
-		<tr><td colspan="9" class="Alertas"><?Php echo error_alerta("o hay resultados que mostrar!", 1); ?></td>
+		<tr><td colspan="9" class="Alertas"><?Php echo error_alerta("隆No hay resultados que mostrar!", 1); ?></td>
 		</tr>
 	  <? }//Fin del if ($total_rs_buscta > 0)
 	  ?>
@@ -156,7 +156,7 @@ exit();
 */
 require_once('../../Librerias/postclass.php');	
 /* 
-* Creaci髇 del objeto para evitar el reenvio 
+* Creaci贸n del objeto para evitar el reenvio 
 */
 $thisPost = new Post_Block;
 /*
@@ -192,7 +192,7 @@ else
 		$Com_Num = $obBD_con1->codigoComprAuto($op, $Pec_Cod, $var_mes[1], $obBD_conexion);
 		
 		/* 
-		* Inserci髇 del Comprobante 
+		* Inserci贸n del Comprobante 
 		*/
 		if ($op==1) { $tabla="cliente"; $campo="Cli_Cod"; }
 		if ($op==2 || $op==3) { $tabla="proveedore"; $campo="Prv_Cod"; }
@@ -235,7 +235,7 @@ else
 				}
 		}
 		/*
-		* Finaliza la transacci髇
+		* Finaliza la transacci贸n
 		*/
 		$obBD_con1->fin_transaccion($obBD_conexion->conexion);
 	}//Fin del if (isset($bt_save))
@@ -263,15 +263,15 @@ else
 				*/
 				$arreglo_caja = explode("*",$Caj_Cod); 	
 				/* 
-				* Carga el a駉 de la fecha incial 
+				* Carga el a帽o de la fecha incial 
 				*/
-				list($ann, $mes, $dia) = split('[/.-]', $arreglo_caja[1]);							
+				list($ann, $mes, $dia) = preg_split('![/.-]!', $arreglo_caja[1]);							
 				/* 
 				* Consulta el codigo del cliente reservado para la caja 
 				*/
 				$row_rs_caja_clien = $obBD_con1->getRowConsulta(180, $Ses_Emp_Cod, $obBD_conexion);			
 				/* 
-				* Nombre y C骴igo del cliente 
+				* Nombre y C贸digo del cliente 
 				*/
 				$Cli_Cod = $row_rs_caja_clien['Cli_Cod'];
 				$Nombre = $row_rs_caja_clien['Prs_Ape'].' '.$row_rs_caja_clien['Prs_Nom'];											
@@ -346,7 +346,7 @@ else
 	$Pec_Cod = $arreglo[0];
 
 	/*
-	* En esta consulta debe botar un solo registro ya en un a駉 contable normalmente se utiliza un plan de cuentas 
+	* En esta consulta debe botar un solo registro ya en un a帽o contable normalmente se utiliza un plan de cuentas 
 	*/
 	$row_rs_cuenta_manual = $obBD_con1->getRowConsulta(113, $Pec_Cod.'*'.$Ses_Emp_Cod, $obBD_conexion);
 	$Pla_Cod = $row_rs_cuenta_manual['Pla_Cod'];	
@@ -420,14 +420,14 @@ if (isset($bt_save) && isset($ultimo) && !isset($hdd_volver))
 	<tr>
       <td height="400" align="left" valign="top">
 <?Php
-/* Control para la elecci髇 del periodo contable */
+/* Control para la elecci贸n del periodo contable */
 if (!isset($hdd_save) && !isset($txt_busqueda) && !isset($chk_diario))
 {
 ?>
 <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1">
 <FIELDSET>
 	<LEGEND>
-		<label class="Titulos2">Selecci髇 Periodo Contable</label>
+		<label class="Titulos2">Selecci贸n Periodo Contable</label>
 	</LEGEND>
     <table width="225" border="0" cellspacing="0" cellpadding="0">
       <tr>
@@ -687,7 +687,7 @@ if ((isset($Cli_Cod) && ($op==1)) || (isset($Prv_Cod) && ($op==2 || $op==3)))
 	document.onkeypress = stopRKey; 
 	</script>
 	<?php	
-	// En la opci髇 3 colocar el c骴igo del cliente que se va a utilizar para los Comprobantes de Ajuste
+	// En la opci贸n 3 colocar el c贸digo del cliente que se va a utilizar para los Comprobantes de Ajuste
 	switch($op) {
 	case 1: $codigo=$Cli_Cod; $etiqueta=$array_asien[0]; break;
 	case 2:	$codigo=$Prv_Cod; $etiqueta=$array_asien[1]; break;
@@ -809,7 +809,7 @@ if ((isset($Cli_Cod) && ($op==1)) || (isset($Prv_Cod) && ($op==2 || $op==3)))
 	  <td width="54"><input name="datos[<? echo $fila; ?>,2]" type="text" id="datos[<? echo $fila; ?>,2]" onKeyUp="cargar_cuenta('<?php echo $_SERVER['PHP_SELF']; ?>?Pla_Cod='+document.getElementById('Pla_Cod').value+'&Pec_Cod=<?Php echo $Pec_Cod; ?>&codigo=',this,this.parentNode.parentNode.childNodes(2).firstChild,this.parentNode.parentNode.childNodes(0).firstChild)" value="<? echo $row['Pld_Cdc']; ?>" size="7"></td>
 	  <td width="224" class="LetraNegra"><input name="datos[<? echo $fila; ?>,3]" id="datos[<? echo $fila; ?>,3]" type="text" size="30" maxlength="100" value="<?Php echo $row['Pld_Des']; ?>" readonly="true"></td>
 	  <td width="281"><input name="datos[<? echo $fila; ?>,6]" id="datos[<? echo $fila; ?>,6]" type="text" size="35" maxlength="25" value="<?Php echo $row['Vet_Che'].' - '."Factura No: ".$row['Vet_Num']; ?>"></td>
-		<td width="59" align="right"><input name="datos[<? echo $fila; ?>,4]" id="datos[<? echo $fila; ?>,4]" type="text" size="7" maxlength="10" value="<? echo round($row['Importe'],2); ?>" style="text-align:right" onBlur="numerico(this)" onKeyUp="sumar_totales()" title="C骴. Int.: <?php echo $row['Vet_Cod']; ?>"></td>
+		<td width="59" align="right"><input name="datos[<? echo $fila; ?>,4]" id="datos[<? echo $fila; ?>,4]" type="text" size="7" maxlength="10" value="<? echo round($row['Importe'],2); ?>" style="text-align:right" onBlur="numerico(this)" onKeyUp="sumar_totales()" title="C贸d. Int.: <?php echo $row['Vet_Cod']; ?>"></td>
 		<td width="63">&nbsp;</td>
 		<td width="33" align="center"><input id="quitar_fila2" type="button" class="BotonEliminar" name="quitar_fila2" value="X" onClick="quitar_fila_st(this)"></td>
 	    </tr>
@@ -834,7 +834,7 @@ if ((isset($Cli_Cod) && ($op==1)) || (isset($Prv_Cod) && ($op==2 || $op==3)))
 	  <td width="54"><input name="datos[<? echo $fila; ?>,2]" type="text" id="datos[<? echo $fila; ?>,2]" onKeyUp="cargar_cuenta('<?php echo $_SERVER['PHP_SELF']; ?>?Pla_Cod='+document.getElementById('Pla_Cod').value+&Pec_Cod=<?Php echo $Pec_Cod; ?>&codigo=',this,this.parentNode.parentNode.childNodes(2).firstChild,this.parentNode.parentNode.childNodes(0).firstChild)" value="" size="7"></td>
 	  <td width="224"><input name="datos[<? echo $fila; ?>,3]" id="datos[<? echo $fila; ?>,3]" type="text" size="30" maxlength="100" value="" readonly="true" ></td>
 		<td width="281"><input name="datos[<? echo $fila; ?>,6]" id="datos[<? echo $fila; ?>,6]" type="text" size="35" maxlength="25" title="Factura No: <?Php echo $row['Vet_Num']; ?>" value="...Factura No: <?Php echo $row['Vet_Num']; ?>"></td>
-		<td width="59" align="right"><input name="datos[<? echo $fila; ?>,4]" id="datos[<? echo $fila; ?>,4]" type="text" size="7" maxlength="10" value="<? echo round($row['Importe'],2); ?>" style="text-align:right" onBlur="numerico(this)" onKeyUp="sumar_totales()" title="C骴. Int.: <?php echo $row['Vet_Cod']; ?>"></td>
+		<td width="59" align="right"><input name="datos[<? echo $fila; ?>,4]" id="datos[<? echo $fila; ?>,4]" type="text" size="7" maxlength="10" value="<? echo round($row['Importe'],2); ?>" style="text-align:right" onBlur="numerico(this)" onKeyUp="sumar_totales()" title="C贸d. Int.: <?php echo $row['Vet_Cod']; ?>"></td>
 		<td width="63">&nbsp;</td>
 		<td width="33" align="center"><input id="quitar_fila2" type="button" class="BotonEliminar" name="quitar_fila2" value="X" onClick="quitar_fila_st(this)">			  </td>
 	    </tr>
@@ -1010,7 +1010,7 @@ if ((isset($Cli_Cod) && ($op==1)) || (isset($Prv_Cod) && ($op==2 || $op==3)))
 		<tr>
 	  <td><input name="datos[<? echo $fila; ?>,1]" id="datos[<? echo $fila; ?>,1]" type="hidden" value="<? echo $row_rs_iva_cobrado['Pld_Cod']; ?>"></td>
 	  <td><input name="datos[<? echo $fila; ?>,2]" type="text" <?Php if (count($row_rs_iva_cobrado) > 0){ ?> readonly="true" <?Php } ?> id="datos[<? echo $fila; ?>,2]" onKeyUp="cargar_cuenta('<?php echo $_SERVER['PHP_SELF']; ?>?Pla_Cod='+document.getElementById('Pla_Cod').value+'&Pec_Cod=<?Php echo $Pec_Cod; ?>&codigo=',this,this.parentNode.parentNode.childNodes(2).firstChild,this.parentNode.parentNode.childNodes(0).firstChild)" value="<? echo $row_rs_iva_cobrado['Pld_Cdc']; ?>" size="7"></td>
-	  <td><input name="datos[<? echo $fila; ?>,3]" id="datos[<? echo $fila; ?>,3]" type="text" size="20" maxlength="100" <?Php if (count($row_rs_iva_cobrado) == 0){ echo "style='color:#FF0000'"; } ?>   value="<?Php if (count($row_rs_iva_cobrado) > 0){ echo $row_rs_iva_cobrado['Pld_Des']; }else { echo "o existe una cuenta contable configurada para el Iva Cobrado!"; }; ?>" readonly="true"></td>
+	  <td><input name="datos[<? echo $fila; ?>,3]" id="datos[<? echo $fila; ?>,3]" type="text" size="20" maxlength="100" <?Php if (count($row_rs_iva_cobrado) == 0){ echo "style='color:#FF0000'"; } ?>   value="<?Php if (count($row_rs_iva_cobrado) > 0){ echo $row_rs_iva_cobrado['Pld_Des']; }else { echo "隆No existe una cuenta contable configurada para el Iva Cobrado!"; }; ?>" readonly="true"></td>
 	  <td><input name="datos[<? echo $fila; ?>,6]" id="datos[<? echo $fila; ?>,6]" type="text" size="23" maxlength="25" value=""></td>
 	  <td>&nbsp;</td>
 	  <td align="right"><input name="datos[<? echo $fila; ?>,5]" id="datos[<? echo $fila; ?>,5]" type="text" size="7" maxlength="10" value="<?Php echo round($total_iva_cob,2); ?>" style="text-align:right" onBlur="numerico(this)" onKeyUp="sumar_totales()" title="<?Php ?>"></td>
@@ -1092,7 +1092,7 @@ if ((isset($Cli_Cod) && ($op==1)) || (isset($Prv_Cod) && ($op==2 || $op==3)))
     <td>	
     <FIELDSET>
 	<LEGEND>
-	<label class="Titulos2">B鷖queda de Cuentas</label>
+	<label class="Titulos2">B煤squeda de Cuentas</label>
 	</LEGEND>
 	<table width="481" border="0" cellpadding="0" cellspacing="0">
 		<tr>

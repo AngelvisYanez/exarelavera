@@ -4,7 +4,7 @@
 * @abstract Reporte de cheque para banco de PACIFICO
 * @author Lewis Chimarro
 * @version 1.0
-* Fecha de actualizaci�n  2017-06-01
+* Fecha de actualizaciï¿½n  2017-06-01
 * @author Erik Niebla
 */
 require_once('../../../../Librerias/config.php/register_globals.php');
@@ -54,7 +54,7 @@ $row_institucion = $obBD_con1->getRowConsulta(126, $Ses_Suc_Cod, $obBD_conexion)
 			?></span></td>
         </tr>
 	  <tr>
-	    <td height="25" colspan="3" valign="top" class="Texto_Reporte"><?Php echo $row_institucion['Ciu_Des']?>, &nbsp;<?Php list($ann, $mes, $dia) = split('[/.-]', $fecha); 
+	    <td height="25" colspan="3" valign="top" class="Texto_Reporte"><?Php echo $row_institucion['Ciu_Des']?>, &nbsp;<?Php list($ann, $mes, $dia) = preg_split('![/.-]!', $fecha); 
 		       echo $ann.'/'.str_pad($mes, 2, '0', STR_PAD_LEFT).'/'.$dia;
 		  ?></td>
 	    </tr>    

@@ -3,10 +3,10 @@
  * Slim - a micro PHP 5 framework
  *
  * @author      Josh Lockhart <info@slimframework.com>
- * @copyright   2011-2017 Josh Lockhart
+ * @copyright   2011 Josh Lockhart
  * @link        http://www.slimframework.com
  * @license     http://www.slimframework.com/license
- * @version     2.6.4
+ * @version     2.6.2
  * @package     Slim
  *
  * MIT LICENSE
@@ -35,7 +35,7 @@ namespace Slim\Http;
 /**
  * Slim HTTP Utilities
  *
- * This class provides useful methods for handling HTTP requests.
+ * This class provides useful methods for slashes, encryption, and cookies.
  *
  * @package Slim
  * @author  Josh Lockhart
@@ -46,8 +46,7 @@ class Util
     /**
      * Strip slashes from string or array
      *
-     * This method strips slashes from its input. By default, this method will only
-     * strip slashes from its input if magic quotes are enabled. Otherwise, you may
+     * This method will strip slashes from its input if magic quotes are enabled. Otherwise, you may
      * override the magic quotes setting with either TRUE or FALSE as the send argument
      * to force this method to strip or not strip slashes from its input.
      *
@@ -55,9 +54,8 @@ class Util
      * @param  bool            $overrideStripSlashes
      * @return array|string
      */
-    public static function stripSlashesIfMagicQuotes($rawData, $overrideStripSlashes = null)
-    {
-        $strip = is_null($overrideStripSlashes) ? get_magic_quotes_gpc() : $overrideStripSlashes;
+    public static function stripSlashesIfMagicQuotes($rawData, $overrideStripSlashes = null) {
+        $strip = false;
         if ($strip) {
             return self::stripSlashes($rawData);
         }
@@ -70,9 +68,9 @@ class Util
      * @param  array|string $rawData
      * @return array|string
      */
-    protected static function stripSlashes($rawData)
+    public static function stripSlashes($rawData)
     {
-        return is_array($rawData) ? array_map(array('self', 'stripSlashes'), $rawData) : stripslashes($rawData);
+        return is_array($rawData) ? array_map([__CLASS__, "stripSlashes"], $rawData) : stripslashes($rawData);
     }
 
     /**
@@ -89,21 +87,21 @@ class Util
      * @param  array  $settings Optional key-value array with custom algorithm and mode
      * @return string
      */
-    public static function encrypt($data, $key, $iv, $settings = array())
+    public static function encrypt($data, $key, $iv, $settings = [])
     {
-        if ($data === '' || !extension_loaded('mcrypt')) {
+        if ($data === "" || !extension_loaded("mcrypt")) {
             return $data;
         }
 
         //Merge settings with defaults
-        $defaults = array(
-            'algorithm' => MCRYPT_RIJNDAEL_256,
-            'mode' => MCRYPT_MODE_CBC
-        );
+        $defaults = [
+            "algorithm" => MCRYPT_RIJNDAEL_256,
+            "mode" => MCRYPT_MODE_CBC
+        ];
         $settings = array_merge($defaults, $settings);
 
         //Get module
-        $module = mcrypt_module_open($settings['algorithm'], '', $settings['mode'], '');
+        $module = mcrypt_module_open($settings["algorithm"], "", $settings["mode"], "");
 
         //Validate IV
         $ivSize = mcrypt_enc_get_iv_size($module);
@@ -139,21 +137,21 @@ class Util
      * @param  array  $settings Optional key-value array with custom algorithm and mode
      * @return string
      */
-    public static function decrypt($data, $key, $iv, $settings = array())
+    public static function decrypt($data, $key, $iv, $settings = [])
     {
-        if ($data === '' || !extension_loaded('mcrypt')) {
+        if ($data === "" || !extension_loaded("mcrypt")) {
             return $data;
         }
 
         //Merge settings with defaults
-        $defaults = array(
-            'algorithm' => MCRYPT_RIJNDAEL_256,
-            'mode' => MCRYPT_MODE_CBC
-        );
+        $defaults = [
+            "algorithm" => MCRYPT_RIJNDAEL_256,
+            "mode" => MCRYPT_MODE_CBC
+        ];
         $settings = array_merge($defaults, $settings);
 
         //Get module
-        $module = mcrypt_module_open($settings['algorithm'], '', $settings['mode'], '');
+        $module = mcrypt_module_open($settings["algorithm"], "", $settings["mode"], "");
 
         //Validate IV
         $ivSize = mcrypt_enc_get_iv_size($module);
@@ -182,23 +180,16 @@ class Util
      * @param  \Slim\Http\Cookies $cookies The Response cookies
      * @param  array              $config  The Slim app settings
      */
-    public static function serializeCookies(\Slim\Http\Headers &$headers, \Slim\Http\Cookies $cookies, array $config)
-    {
-        if ($config['cookies.encrypt']) {
+    public static function serializeCookies(\Slim\Http\Headers &$headers, \Slim\Http\Cookies $cookies, array $config) {
+        if ($config["cookies.encrypt"]) {
             foreach ($cookies as $name => $settings) {
-                if (is_string($settings['expires'])) {
-                    $expires = strtotime($settings['expires']);
+                if (is_string($settings["expires"])) {
+                    $expires = strtotime($settings["expires"]);
                 } else {
-                    $expires = (int) $settings['expires'];
+                    $expires = (int) $settings["expires"];
                 }
 
-                $settings['value'] = static::encodeSecureCookie(
-                    $settings['value'],
-                    $expires,
-                    $config['cookies.secret_key'],
-                    $config['cookies.cipher'],
-                    $config['cookies.cipher_mode']
-                );
+                $settings["value"] = static::encodeSecureCookie($settings["value"], $expires, $config["cookies.secret_key"], $config["cookies.cipher"], $config["cookies.cipher_mode"]);
                 static::setCookieHeader($headers, $name, $settings);
             }
         } else {
@@ -222,24 +213,13 @@ class Util
      * @param int    $mode      The algorithm mode to use for encryption
      * @return string
      */
-    public static function encodeSecureCookie($value, $expires, $secret, $algorithm, $mode)
-    {
-        $key = hash_hmac('sha1', (string) $expires, $secret);
+    public static function encodeSecureCookie($value, $expires, $secret, $algorithm, $mode) {
+        $key = hash_hmac("sha1", (string) $expires, $secret);
         $iv = self::getIv($expires, $secret);
-        $secureString = base64_encode(
-            self::encrypt(
-                $value,
-                $key,
-                $iv,
-                array(
-                    'algorithm' => $algorithm,
-                    'mode' => $mode
-                )
-            )
-        );
-        $verificationString = hash_hmac('sha1', $expires . $value, $key);
+        $secureString = base64_encode(self::encrypt($value, $key, $iv, ["algorithm" => $algorithm, "mode" => $mode]));
+        $verificationString = hash_hmac("sha1", $expires . $value, $key);
 
-        return implode('|', array($expires, $secureString, $verificationString));
+        return implode("|", [$expires, $secureString, $verificationString]);
     }
 
     /**
@@ -255,23 +235,20 @@ class Util
      * @param int    $mode      The algorithm mode to use for encryption
      * @return bool|string
      */
-    public static function decodeSecureCookie($value, $secret, $algorithm, $mode)
-    {
+    public static function decodeSecureCookie($value, $secret, $algorithm, $mode) {
         if ($value) {
-            $value = explode('|', $value);
-            if (count($value) === 3 && ((int) $value[0] === 0 || (int) $value[0] > time())) {
-                $key = hash_hmac('sha1', $value[0], $secret);
+            $value = explode("|", $value);
+            if (
+                count($value) === 3 &&
+                ((int) $value[0] === 0 || (int) $value[0] > time())
+            ) {
+                $key = hash_hmac("sha1", $value[0], $secret);
                 $iv = self::getIv($value[0], $secret);
-                $data = self::decrypt(
-                    base64_decode($value[1]),
-                    $key,
-                    $iv,
-                    array(
-                        'algorithm' => $algorithm,
-                        'mode' => $mode
-                    )
-                );
-                $verificationString = hash_hmac('sha1', $value[0] . $data, $key);
+                $data = self::decrypt(base64_decode($value[1]), $key, $iv, [
+                    "algorithm" => $algorithm,
+                    "mode" => $mode
+                ]);
+                $verificationString = hash_hmac("sha1", $value[0] . $data, $key);
                 if ($verificationString === $value[2]) {
                     return $data;
                 }
@@ -301,43 +278,56 @@ class Util
     {
         //Build cookie header
         if (is_array($value)) {
-            $domain = '';
-            $path = '';
-            $expires = '';
-            $secure = '';
-            $httponly = '';
-            if (isset($value['domain']) && $value['domain']) {
-                $domain = '; domain=' . $value['domain'];
+            $domain = "";
+            $path = "";
+            $expires = "";
+            $secure = "";
+            $httponly = "";
+            if (isset($value["domain"]) && $value["domain"]) {
+                $domain = "; domain=" . $value["domain"];
             }
-            if (isset($value['path']) && $value['path']) {
-                $path = '; path=' . $value['path'];
+            if (isset($value["path"]) && $value["path"]) {
+                $path = "; path=" . $value["path"];
             }
-            if (isset($value['expires'])) {
-                if (is_string($value['expires'])) {
-                    $timestamp = strtotime($value['expires']);
+            if (isset($value["expires"])) {
+                if (is_string($value["expires"])) {
+                    $timestamp = strtotime($value["expires"]);
                 } else {
-                    $timestamp = (int) $value['expires'];
+                    $timestamp = (int) $value["expires"];
                 }
                 if ($timestamp !== 0) {
-                    $expires = '; expires=' . gmdate('D, d-M-Y H:i:s e', $timestamp);
+                    $expires =
+                        "; expires=" . gmdate("D, d-M-Y H:i:s e", $timestamp);
                 }
             }
-            if (isset($value['secure']) && $value['secure']) {
-                $secure = '; secure';
+            if (isset($value["secure"]) && $value["secure"]) {
+                $secure = "; secure";
             }
-            if (isset($value['httponly']) && $value['httponly']) {
-                $httponly = '; HttpOnly';
+            if (isset($value["httponly"]) && $value["httponly"]) {
+                $httponly = "; HttpOnly";
             }
-            $cookie = sprintf('%s=%s%s', urlencode($name), urlencode((string) $value['value']), $domain . $path . $expires . $secure . $httponly);
+            $cookie = sprintf(
+                "%s=%s%s",
+                urlencode($name),
+                urlencode((string) $value["value"]),
+                $domain . $path . $expires . $secure . $httponly
+            );
         } else {
-            $cookie = sprintf('%s=%s', urlencode($name), urlencode((string) $value));
+            $cookie = sprintf(
+                "%s=%s",
+                urlencode($name),
+                urlencode((string) $value)
+            );
         }
 
         //Set cookie header
-        if (!isset($header['Set-Cookie']) || $header['Set-Cookie'] === '') {
-            $header['Set-Cookie'] = $cookie;
+        if (!isset($header["Set-Cookie"]) || $header["Set-Cookie"] === "") {
+            $header["Set-Cookie"] = $cookie;
         } else {
-            $header['Set-Cookie'] = implode("\n", array($header['Set-Cookie'], $cookie));
+            $header["Set-Cookie"] = implode("\n", [
+                $header["Set-Cookie"],
+                $cookie
+            ]);
         }
     }
 
@@ -358,32 +348,36 @@ class Util
      * @param  string $name
      * @param  array  $value
      */
-    public static function deleteCookieHeader(&$header, $name, $value = array())
+    public static function deleteCookieHeader(&$header, $name, $value = [])
     {
         //Remove affected cookies from current response header
-        $cookiesOld = array();
-        $cookiesNew = array();
-        if (isset($header['Set-Cookie'])) {
-            $cookiesOld = explode("\n", $header['Set-Cookie']);
+        $cookiesOld = [];
+        $cookiesNew = [];
+        if (isset($header["Set-Cookie"])) {
+            $cookiesOld = explode("\n", $header["Set-Cookie"]);
         }
         foreach ($cookiesOld as $c) {
-            if (isset($value['domain']) && $value['domain']) {
-                $regex = sprintf('@%s=.*domain=%s@', urlencode($name), preg_quote($value['domain']));
+            if (isset($value["domain"]) && $value["domain"]) {
+                $regex = sprintf(
+                    "@%s=.*domain=%s@",
+                    urlencode($name),
+                    preg_quote($value["domain"])
+                );
             } else {
-                $regex = sprintf('@%s=@', urlencode($name));
+                $regex = sprintf("@%s=@", urlencode($name));
             }
             if (preg_match($regex, $c) === 0) {
                 $cookiesNew[] = $c;
             }
         }
         if ($cookiesNew) {
-            $header['Set-Cookie'] = implode("\n", $cookiesNew);
+            $header["Set-Cookie"] = implode("\n", $cookiesNew);
         } else {
-            unset($header['Set-Cookie']);
+            unset($header["Set-Cookie"]);
         }
 
         //Set invalidating cookie to clear client-side cookie
-        self::setCookieHeader($header, $name, array_merge(array('value' => '', 'path' => null, 'domain' => null, 'expires' => time() - 100), $value));
+        self::setCookieHeader($header, $name, array_merge(["value" => "", "path" => null, "domain" => null, "expires" => time() - 100], $value));
     }
 
     /**
@@ -397,14 +391,14 @@ class Util
      */
     public static function parseCookieHeader($header)
     {
-        $cookies = array();
-        $header = rtrim($header, "\r\n");
-        $headerPieces = preg_split('@\s*[;,]\s*@', $header);
-        foreach ($headerPieces as $c) {
-            $cParts = explode('=', $c, 2);
-            if (count($cParts) === 2) {
-                $key = urldecode($cParts[0]);
-                $value = urldecode($cParts[1]);
+        $cookies = [];
+        $header = rtrim($header, "\r\n;");
+        $pieces = preg_split('/[;]\s*/', $header);
+        foreach ($pieces as $cookie) {
+            $cookieParts = explode("=", $cookie, 2);
+            if (count($cookieParts) === 2) {
+                $key = urldecode($cookieParts[0]);
+                $value = urldecode($cookieParts[1]);
                 if (!isset($cookies[$key])) {
                     $cookies[$key] = $value;
                 }
@@ -415,20 +409,17 @@ class Util
     }
 
     /**
-     * Generate a random IV
+     * Get cookie initialization vector
      *
-     * This method will generate a non-predictable IV for use with
-     * the cookie encryption
-     *
-     * @param  int    $expires The UNIX timestamp at which this cookie will expire
-     * @param  string $secret  The secret key used to hash the cookie value
-     * @return string Hash
+     * @param  int    $expires  The UNIX timestamp at which this cookie will expire
+     * @param  string $secret   The secret key used to hash the cookie value
+     * @return string           The initialization vector
      */
-    private static function getIv($expires, $secret)
+    protected static function getIv($expires, $secret)
     {
-        $data1 = hash_hmac('sha1', 'a'.$expires.'b', $secret);
-        $data2 = hash_hmac('sha1', 'z'.$expires.'y', $secret);
+        $ivSize = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_CBC);
+        $ivSeed = hash_hmac("sha1", (string) $expires, $secret);
 
-        return pack("h*", $data1.$data2);
+        return substr($ivSeed, 0, $ivSize);
     }
 }

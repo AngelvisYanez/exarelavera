@@ -1,11 +1,11 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?
 /**
-* @abstract Permite la anulaci�n individual de los comprobantes 
+* @abstract Permite la anulaciï¿½n individual de los comprobantes 
 * @author Lewis Chimarro
 * @version 1.0
-* Fecha de actualizaci�n  2012-05-01
-* Fecha de actualizaci�n  2015-05-01
+* Fecha de actualizaciï¿½n  2012-05-01
+* Fecha de actualizaciï¿½n  2015-05-01
 * @author Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -22,7 +22,7 @@ $obBD_conexion = new Class_Log_Conexion_Con($Ses_Dat_Dis);
 */
 $obBD_con1 =  new Class_Log_Datos_Con;
 /** 
-* Creaci�n del objeto para evitar el reenvio 
+* Creaciï¿½n del objeto para evitar el reenvio 
 */
 $thisPost = new Post_Block;
 
@@ -194,7 +194,7 @@ exit();
       <td height="400" align="left" valign="top"> 
 <?Php
 /**
-* Control para la elecci�n del periodo contable 
+* Control para la elecciï¿½n del periodo contable 
 */
 if (!isset($hdd_save) && !isset($txt_busqueda))
 {
@@ -202,7 +202,7 @@ if (!isset($hdd_save) && !isset($txt_busqueda))
 <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1">
 <FIELDSET>
 	<LEGEND>
-		<label class="Titulos2">Selecci�n Periodo Contable</label>
+		<label class="Titulos2">Selecciï¿½n Periodo Contable</label>
 	</LEGEND>
 	<table width="267" border="0" cellspacing="0" cellpadding="0">
 	  <tr>
@@ -363,7 +363,7 @@ if (($op=="I" || $op=="E" || $op=="D"))
 		  }//Fin del else if ($row_det_rs_ccpp_p > 0)
 		  ?></font></td>
 		  <td align="center"><font color="<?php echo $rojo; ?>">&nbsp;<? 
-  	  	list($ann, $mes, $dia) = split('[/.-]', $row['Com_Fec']);
+  	  	list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 		  echo $mes.'-'.$row['Com_Num']; ?></font></td>
 		  <td><font color="<?php echo $rojo; ?>"><? echo $row['Prs_Ced']; ?>&nbsp;</font></td>
 		  <td><font color="<?php echo $rojo; ?>">
@@ -400,7 +400,7 @@ if (($op=="I" || $op=="E" || $op=="D"))
 		  }//Fin del if ($row['Com_Est'] == 'A')
 		  else
 		  { ?>
-		    <img src="../../mascaras/model1/imagenes/32x32/encrypted.png" width="22" height="22" title="Comprobante bloqueado por generaci�n autom�tica" />
+		    <img src="../../mascaras/model1/imagenes/32x32/encrypted.png" width="22" height="22" title="Comprobante bloqueado por generaciï¿½n automï¿½tica" />
 		    <?php
 		  }
 		?>       

@@ -1,9 +1,9 @@
 <?php 
 /**
-* @abstract Reporte de ventas para la impresión en factura o nota de venta
+* @abstract Reporte de ventas para la impresiÃ³n en factura o nota de venta
 * @author Lewis Chimarro
 * @version 1.0
-* Fecha de actualización  2012-05-23
+* Fecha de actualizaciÃ³n  2012-05-23
 * @author Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -72,7 +72,7 @@ if (isset($Vet_Cod))
           </td>
         <td width="176" rowspan="2" valign="bottom" class="Texto_Reporte"><table width="148" border="0" align="right" cellpadding="0" cellspacing="0" class="Texto_bloques">
           <tr>
-            <td align="center"><?Php list($ann, $mes, $dia) = split('[/.-]', $row_rs_cliente['Caj_Fec']); ?>
+            <td align="center"><?Php list($ann, $mes, $dia) = preg_split('![/.-]!', $row_rs_cliente['Caj_Fec']); ?>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<? echo $dia.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$mes.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$ann; ?> </td>
           </tr>
           <tr>

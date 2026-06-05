@@ -13,7 +13,7 @@
         </style>
     </head>
 <body>
-    <?Php  list($anio, $mes, $dia) = split('[/.-]', $row_prin_renta['Ret_Fec']);?>
+    <?Php  list($anio, $mes, $dia) = preg_split('![/.-]!', $row_prin_renta['Ret_Fec']);?>
     <!--fecha  --><span style="<?php echo getCss($docp,'fecha'); ?>" class="flota"><? echo $dia.'/'.$mes.'/'.$anio; ?></span>
     <!--provee--><span style="<?php echo getCss($docp,'proveedor'); ?>" class="flota truncate"><? echo $row_prin_renta['Prs_Ape'].' '.$row_prin_renta['Prs_Nom']; ?></span>
     <!--direcci--><span style="<?php echo getCss($docp,'direccion'); ?>" class="flota truncate"><? echo $row_prin_renta['Prs_Dir']; ?></span>

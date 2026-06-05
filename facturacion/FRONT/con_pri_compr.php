@@ -23,7 +23,7 @@ $hoy = date("Y-m-d");
 		$row_rs_cabcomp = $obBD_con1->registros();
 		$total_rs_cabcomp = $obBD_con1->numregistros();
 
-		list($ann, $mes, $dia) = split('[/.-]', $row_rs_cabcomp['Com_Fec']);
+		list($ann, $mes, $dia) = preg_split('![/.-]!', $row_rs_cabcomp['Com_Fec']);
 		
 	  }
 ?>				

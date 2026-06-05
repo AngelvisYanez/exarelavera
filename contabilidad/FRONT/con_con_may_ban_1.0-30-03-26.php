@@ -1,12 +1,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php
 /**
-* Descripci�n: Permite consultar la mayorizacion contable
-* Fecha de actualizaci�n:	2010-11-15 
+* Descripciï¿½n: Permite consultar la mayorizacion contable
+* Fecha de actualizaciï¿½n:	2010-11-15 
 * Desarrollador:	Lewis Chimarro 
-* Fecha de actualizaci�n:	2012-06-24
+* Fecha de actualizaciï¿½n:	2012-06-24
 * Desarrollador:	Lewis Chimarro 
-* Fecha de actualizaci�n:	2015-05-05
+* Fecha de actualizaciï¿½n:	2015-05-05
 * Desarrollador:	Lewis Chimarro 
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -247,9 +247,9 @@ switch ($op){
 		$rs_cuenta = $obBD_con1->getArrayConsulta(341, $txt_fec_ini.'*'.$txt_fec_fin.'*'.$Pld_Cod.'*'.$ordenar.'*'.$Pec_Cod.'*'.$Com_Aut							, $obBD_conexion);
 		$total_rs_cuenta = count($rs_cuenta);
 		/**
-		* Carga el a�o de la fecha incial 
+		* Carga el aï¿½o de la fecha incial 
 		*/
-		list($annn, $mess, $dia) = split('[/.-]', $fech_fut);
+		list($annn, $mess, $dia) = preg_split('![/.-]!', $fech_fut);
 		$anio = date("Y", mktime(0,0,0,$mess,$dia,$annn));
 	}//Fin del if ($txt_busqueda != "")
 	break;
@@ -349,7 +349,7 @@ if (!isset($hdd_save) && !isset($hdd_save2) && !isset($hdd_save3))
 { ?>
 <FIELDSET>
 	<LEGEND>
-		<label class="Titulos2">Selección Periodo Contable</label>
+		<label class="Titulos2">SelecciÃ³n Periodo Contable</label>
 	</LEGEND>
     <table width="304" border="0" cellspacing="0" cellpadding="0">
       <tr>
@@ -485,7 +485,7 @@ switch ($op){
       <td width="387"><?php echo $txt_fec_fin; ?></td>
       </tr>
     <tr>
-      <td class="Etiqueta1">Código:</td>
+      <td class="Etiqueta1">CÃ³digo:</td>
       <td><?php echo $row_cuenta['Pld_Cdc_Grupo']; ?></td>
       <td class="Etiqueta1">GRUPO:</td>
       <td><?php echo $row_cuenta['Pld_Des_Grupo']; ?></td>
@@ -506,7 +506,7 @@ switch ($op){
       <th align="center" width="12%">Fecha</th>
       <th align="center" width="10%">Tipo pago.</th>
       <th align="center" width="28%">Cliente/Proveedor</th>
-	  <th align="center" width="10%">Nº de Cheque</th>
+	  <th align="center" width="10%">NÂº de Cheque</th>
       <th align="center" width="15%">Detalle</th>
       <th align="center" width="7%">Debe</th>
       <th align="center" width="7%">Haber</th>
@@ -556,7 +556,7 @@ switch ($op){
 			$total_rs_proveedore = count($rs_proveedore);
 		  
 	  $i++; 
-	  list($ann, $mes, $dia) = split('[/.-]', $row['Com_Fec']);
+	  list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 	  ?>	
     <tr>
       <td align="center"><?php echo $row['Com_Cod']; ?></td>

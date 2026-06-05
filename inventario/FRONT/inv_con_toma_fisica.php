@@ -3,7 +3,7 @@
 * @abstract Permite realizar movimientos de inventario
 * @author Erik Niebla
 * @version 1.0
-* Fecha de creaci�n  2015-07-22
+* Fecha de creaciï¿½n  2015-07-22
 */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/inv_log_inventario.php');
@@ -57,7 +57,7 @@ if(isset($productos)){
 			}else{
 				$kardex1[0]['Promedio']=0;$kardex1[0]['Saldo']=0;$kardex1[0]['Stock']=0;
 			}
-			list($ann, $mes, $dia) = split('[/.-]',$ini);
+			list($ann, $mes, $dia) = preg_split('![/.-]!',$ini);
 			$kardex1[0]['Kar_Det']='<b>Saldo al '.$dia.', de '.mes($mes, 1).', '.$ann.'</b>';
 			$kardex2 = $obBD_con1->getArrayConsulta(33,$Ite_Cod, $obBD_conexion);
 			if(count($kardex2)>0) $kardex=array_merge($kardex1,$kardex2);
@@ -94,7 +94,7 @@ if(isset($productos)){
 			$row['Kar_Prp']=(string)round((empty($kardex[$x-1]['Promedio'])?0.00:$kardex[$x-1]['Promedio']),8);
 			$row['Kar_Sal']=(string)(empty($kardex[$x-1]['Saldo'])?0.00:$kardex[$x-1]['Saldo']); 
 		}
-    }catch(Exception $e){ $responce=array(success=>false,message=>'No se logro obtener información del Kardex!',error=>$e); }      
+    }catch(Exception $e){ $responce=array(success=>false,message=>'No se logro obtener informaciÃ³n del Kardex!',error=>$e); }      
     $responce['rows'] = array_values($array);
     utf8_encode_deep($responce['rows']);
     echo json_encode($responce);exit();
@@ -180,23 +180,23 @@ if(isset($productos)){
 									
 
 										  <div class="form-group">
-											<label class="col-sm-2 control-label label-xs " for="Cate_Cod">Categoría:</label>
+											<label class="col-sm-2 control-label label-xs " for="Cate_Cod">CategorÃ­a:</label>
 											<div class="col-sm-7">
 												<?php $row_rs_categ = $obBD_con1->getArrayConsulta(30, $Ses_Emp_Cod, $obBD_conexion); ?>
 												<select name="Cate_Cod" id="Cate_Cod" class="form-control input-xs" data-placeholder="Todas">
 													<option value="">Todas</option>
-													<?Php foreach ($row_rs_categ as $row) { ?><option value="<?Php echo $row['Cat_Cod']; ?>"><?Php echo /* strtoupper($row['Par_Cat_Des']).' � '. */$row['Cat_Des']; ?></option><?Php } ?>
+													<?Php foreach ($row_rs_categ as $row) { ?><option value="<?Php echo $row['Cat_Cod']; ?>"><?Php echo /* strtoupper($row['Par_Cat_Des']).' ï¿½ '. */$row['Cat_Des']; ?></option><?Php } ?>
 												</select>
 											</div>
 
 
 											<div class="col-xs-2">
-											  <div class=""><button type="button"  onclick="kardexGrid.setGridParam({postData:$('#formFiltros').getData('productos')}); kardexGrid.trigger('reloadGrid', [{page:1}]) " class="btn btn-sm btn-success" title="Ejecutar Búsqueda"><span class="glyphicon glyphicon-search"></span> &nbsp;Filtrar</button></div>
+											  <div class=""><button type="button"  onclick="kardexGrid.setGridParam({postData:$('#formFiltros').getData('productos')}); kardexGrid.trigger('reloadGrid', [{page:1}]) " class="btn btn-sm btn-success" title="Ejecutar BÃºsqueda"><span class="glyphicon glyphicon-search"></span> &nbsp;Filtrar</button></div>
 											</div>
 										 </div>
 
 										 <div class="form-group">
-											<label class="col-sm-2 control-label label-xs " for="Sub_Cod">Subcategoría:</label>
+											<label class="col-sm-2 control-label label-xs " for="Sub_Cod">SubcategorÃ­a:</label>
 											<div class="col-sm-7">
 												<select name="Sub_Cod" id="Sub_Cod" class="form-control input-xs" data-placeholder="Todas">
 													<option value=''>Todas</option>
@@ -204,7 +204,7 @@ if(isset($productos)){
 											</div>
 										</div>
 										<div class="form-group">
-											<label class="col-sm-2 control-label label-xs " for="Ubi_Cod">Ubicación:</label>
+											<label class="col-sm-2 control-label label-xs " for="Ubi_Cod">UbicaciÃ³n:</label>
 											<div class="col-sm-7">
 												<?php $rs_ubicacion = $obBD_con1->getArrayConsulta(50, $Ses_Emp_Cod, $obBD_conexion); ?>
 												<select name="Ubi_Cod" id="Ubi_Cod" class="form-control input-xs">
@@ -240,7 +240,7 @@ if(isset($productos)){
                                     caption:'Listado de Productos',hidegrid:false,
                                     cmTemplate: {sortable:false /*,editrules: {edithidden: true}*/},
                                     colModel: [                               
-                                        { label: 'Cód.Int.', name: 'Pro_Cod', key: true, hidden:false,viewable:true, width: 25,align:'center' },                                        
+                                        { label: 'CÃ³d.Int.', name: 'Pro_Cod', key: true, hidden:false,viewable:true, width: 25,align:'center' },                                        
                                         { label: 'Nombre del Producto',name: 'Ite_Lar', width: 80, formatter:function(c,o,r){ return r.Ite_Lar+(r.Ite_Lar!==r.Pro_Obs&&$.vv(r.Pro_Obs)?' '+r.Pro_Obs:''); } },
 					{ label: 'Categoria',name: 'Cat_Des', width: 40,classes:'columnHighlight1',align:'center', hidedlg:'false'},       
 					{ label: 'Marca',name: 'Mar_Des', width: 40,classes:'columnHighlight1',align:'center', hidedlg:'false'},                                   

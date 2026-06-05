@@ -1,9 +1,9 @@
 <?php 
 /**
-* @abstract Reporte de ventas para la impresiÛn en factura o nota de venta
+* @abstract Reporte de ventas para la impresi√≥n en factura o nota de venta
 * @author Lewis Chimarro
 * @version 1.0
-* Fecha de actualizaciÛn  2012-05-23
+* Fecha de actualizaci√≥n  2012-05-23
 * @author Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -70,7 +70,7 @@ body {
 </style>
 </head>
 <body>
-<?Php  list($anio, $mes, $dia) = split('[-]', $row_rs_cliente[0]['Caj_Fec']);?>
+<?Php  list($anio, $mes, $dia) = preg_split('![-]!', $row_rs_cliente[0]['Caj_Fec']);?>
 <table width="571" height="96%" border="0" align="center">
           <td width="565" height="256" colspan="4" align="left" valign="top"><table width="100%" border="0" cellpadding="0" cellspacing="0" class="Letra_punto_venta_2">
         <tr>
@@ -80,7 +80,7 @@ body {
           <td colspan="4" align="center" class="Letra_punto_venta_2">&quot;EXCLISIVIDAD PARA NOSOTRAS&quot;</td>
         </tr>
         <tr>
-          <td colspan="4" align="center" class="Texto_normal_10"><div align="center" class="Letra_punto_venta_2"> EL ORO-MACHALA / BOLIçVAR Y JUAN MONTALVO / TELF: 072968640</div></td>
+          <td colspan="4" align="center" class="Texto_normal_10"><div align="center" class="Letra_punto_venta_2"> EL ORO-MACHALA / BOLI¬çVAR Y JUAN MONTALVO / TELF: 072968640</div></td>
           </tr>
         <tr>
           <td height="16" colspan="4" align="center" class="Letra_punto_venta_2"><strong>RECIBO DE VENTA</strong></td>

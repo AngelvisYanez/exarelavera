@@ -17,14 +17,14 @@ function barcode_encode_ean($ean, $encoding = "EAN-13"){
  $guards=array("9a1a","1a1a1","a1a");
 
  $ean=trim($ean);
- if (eregi("[^0-9]",$ean)){
+ if (preg_match('/[^0-9]/',$ean)){
   return array("text"=>"Codigo EAN incorrecto");
  }
  $encoding=strtoupper($encoding);
  if ($encoding=="ISBN"){
-  (!ereg("^978", $ean)) ? $ean="978".$ean : null;
- }
- (ereg("^978", $ean)) ? $encoding="ISBN" : null;
+  (!preg_match('/^978/', $ean)) ? $ean="978".$ean : null;
+  }
+  (preg_match('/^978/', $ean)) ? $encoding="ISBN" : null;
  if (strlen($ean)<12 || strlen($ean)>13){
   return array("text"=>"Codigo $encoding no valido (debe ser de 12 o 13 digitos)");
  }

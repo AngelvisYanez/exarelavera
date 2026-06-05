@@ -4,8 +4,8 @@
 * @abstract Permite registrar los cheques 
 * @author Lewis Chimarro
 * @version 1.0
-* Fecha de creaci�n  2012-07-19
-* Fecha de actualizaci�n  2012-04-25
+* Fecha de creaciï¿½n  2012-07-19
+* Fecha de actualizaciï¿½n  2012-04-25
 * @author Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -33,7 +33,7 @@ if(isset($ajax)){
         exit();
 }    
 /**
-* Cargado AJAX de los resultados de la b�squeda
+* Cargado AJAX de los resultados de la bï¿½squeda
 */
 if (isset($buscod))
 {
@@ -167,7 +167,7 @@ else
 		
 		$mostrar=true;
 		/** 
-		* Fin del la transacci�n
+		* Fin del la transacciï¿½n
 		*/
 		$obBD_con1->fin_transaccion($obBD_conexion->conexion);
 	}// Fin de Guardado
@@ -205,7 +205,7 @@ else
 	else
 	{
 		/**
-		* Control para mostrar la descripci�n del comprobante cuando se graba el cheque
+		* Control para mostrar la descripciï¿½n del comprobante cuando se graba el cheque
 		*/	
 		if (isset($codigo))
 		{
@@ -220,7 +220,7 @@ else
 			if (isset($mostrar))
 			{
 			/**
-			 * Cargado de los cheques seg�n el n�mero de comprobante de egreso
+			 * Cargado de los cheques segï¿½n el nï¿½mero de comprobante de egreso
 			 */
 			$rs_concomp = $obBD_con1->getArrayConsulta(143,$codigo,$obBD_conexion);
 			//$row_rs_concomp = $obBD_con1->registros();
@@ -411,7 +411,7 @@ if(isset($txt_busqueda))
 		  ?></font></td>		  
 		  <td align="center"><font color="<?php echo $rojo; ?>">
 		    <?php 
-	  	list($ann, $mes, $dia) = split('[/.-]', $row['Com_Fec']);
+	  	list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 		  echo $row['Tia_Abr'].'-'.$mes.'-'.$row['Com_Num']; ?>
 		    </font></td>
 		  <td><FONT COLOR="<?php echo $rojo;?>"><?php echo $row['Prs_Ced']; ?></FONT></td>
@@ -524,7 +524,7 @@ if ($total_rs_cabcomp >0)
     <input name="Pec_Fei" id="Pec_Fei" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fei']; ?>">
     <input name="Pec_Fef" id="Pec_Fef" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fef']; ?>"> 
 No. Compr: </td>
-		<td width="43%" class="LetraNegra">&nbsp;<? list($ann, $mes, $dia) = split('[/.-]', $row_rs_cabcomp['Com_Fec']);
+		<td width="43%" class="LetraNegra">&nbsp;<? list($ann, $mes, $dia) = preg_split('![/.-]!', $row_rs_cabcomp['Com_Fec']);
 		  echo $row_rs_cabcomp['Tia_Abr'].'-'.$mes.'-'.$row_rs_cabcomp['Com_Num']; ?>
 		  
 		<td width="9%" class="Etiqueta1">Fecha:</td>
@@ -662,7 +662,7 @@ No. Compr: </td>
 		<br>
 		  <table width="312" border="0" cellpadding="0" cellspacing="0">
 			  <tr>
-			    <td width="110"><button type="button" class="btn btn-inverse fileinput-button" title="Atrás" onclick="campos_hide(this.form, 'txt_busqueda*op_opciones*cmb_mes*Pec_Cod*hdd_volver*bancos', '<?php echo $volver_busqueda.'*'.$volver_opciones.'*'.$volver_mes.'*'.$Pec_Cod.'*1*'.$volver_bancos;?>')"> <i class=" icon-arrow-left icon-white"></i> <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span> </button>
+			    <td width="110"><button type="button" class="btn btn-inverse fileinput-button" title="AtrÃ¡s" onclick="campos_hide(this.form, 'txt_busqueda*op_opciones*cmb_mes*Pec_Cod*hdd_volver*bancos', '<?php echo $volver_busqueda.'*'.$volver_opciones.'*'.$volver_mes.'*'.$Pec_Cod.'*1*'.$volver_bancos;?>')"> <i class=" icon-arrow-left icon-white"></i> <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span> </button>
                                 <input id="nfilas" name="nfilas" type="hidden" value="0">
 				<input id="bt_save" name="bt_save" type="hidden" value="Grabar">
                                 <input id="hdd_save" name="hdd_save" type="hidden" value="oculto">
@@ -730,7 +730,7 @@ if (isset($bt_save) && !isset($hdd_volver))
                   <input name="asi" type="hidden" id="asi" value="<?php echo $asi; ?>">
                   <input name="ban" type="hidden" id="ban" value="<?php echo $ban; ?>">
                   <input name="pro" type="hidden" id="pro" value="<?php echo $pro; ?>">
-                  <input type="image" name="imageField" src="../../mascaras/model1/imagenes/32x32/banco_pacifico.jpg" title="Ver cheque Banco Pacífico" width="24" height="23">
+                  <input type="image" name="imageField" src="../../mascaras/model1/imagenes/32x32/banco_pacifico.jpg" title="Ver cheque Banco PacÃ­fico" width="24" height="23">
               </td>
             </form>
             <form action="tes_pri_cheque_rum_1.0.php" method="post" name= "form3" target="_blank">
@@ -738,7 +738,7 @@ if (isset($bt_save) && !isset($hdd_volver))
                   <input name="asi" type="hidden" id="asi" value="<?php echo $asi; ?>">
                   <input name="ban" type="hidden" id="ban" value="<?php echo $ban; ?>">
                   <input name="pro" type="hidden" id="pro" value="<?php echo $pro; ?>">
-                  <input type="image" name="imageField" src="../../mascaras/model1/imagenes/32x32/banco_ruminahui.jpg" title="Ver cheque Banco Rumiñahui" width="30" height="15">
+                  <input type="image" name="imageField" src="../../mascaras/model1/imagenes/32x32/banco_ruminahui.jpg" title="Ver cheque Banco RumiÃ±ahui" width="30" height="15">
               </td>
             </form>
             <form action="tes_pri_cheque_gua_1.0.php" method="post" name= "form3" target="_blank">

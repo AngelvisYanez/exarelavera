@@ -3,8 +3,8 @@
 * @abstract Reporte total de comprobantes contables (ingreso, egreso, diario)
 * @author Lewis Chimarro
 * @version 1.0
-* Fecha de actualización: 2010-09-06
-* Fecha de actualización  2012-05-05
+* Fecha de actualizaciÃ³n: 2010-09-06
+* Fecha de actualizaciÃ³n  2012-05-05
 * @author Lewis Chimarro
 */
 
@@ -122,7 +122,7 @@ $comfec = current($row_rs_comfec);
 		  }
 		  ?></td>
           <td align="center"><? 
-		  list($ann, $mes, $dia) = split('[/.-]', $row['Com_Fec']);
+		  list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 		  echo $mes.'-'.$row['Com_Num']; ?></td>
           <td align="center"><? echo $row['Com_Fec']; ?></td>
           <td><? echo $row['Prs_Ape'].' '.$row['Prs_Nom']; ?></td>

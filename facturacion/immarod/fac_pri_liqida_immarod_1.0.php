@@ -3,7 +3,7 @@
 * @abstract Reporte de liquidacion de compras
 * @author Jose Cumbicos
 * @version 1.0
-* Fecha de actualización  2016-06-06
+* Fecha de actualizaciÃ³n  2016-06-06
 * @author Jose Cumbicos
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -49,7 +49,7 @@ if (isset($Cop_Cod))
 </style>
 </head>
 <body>
-<?Php  list($anio, $mes, $dia) = split('[-]', $row_rs_proveedor[0]['Cop_Fec']);?>
+<?Php  list($anio, $mes, $dia) = preg_split('![-]!', $row_rs_proveedor[0]['Cop_Fec']);?>
 <table width="672" height="100%" border="0" align="center" cellpadding="0" cellspacing="0">
 <tr>
           <td height="287" colspan="4" align="left" valign="top">

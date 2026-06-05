@@ -157,7 +157,7 @@ echo "</font>";
 	$menu->addItem($node1[$c]);
 }//Fin del while($v0= $obBD_con1->fetch_array($rs_organizado_cero))
 	
-$treeMenu = &new HTML_TreeMenu_DHTML($menu, array('/images' => '/images', 'defaultClass' => 'treeMenuDefault'));
+$treeMenu = new HTML_TreeMenu_DHTML($menu, array('/images' => '/images', 'defaultClass' => 'treeMenuDefault'));
 $treeMenu->printMenu();
 
 /* Liberacion de los cursores de la base de datos */

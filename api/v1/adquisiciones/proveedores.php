@@ -12,7 +12,6 @@
         $obBD_con1 =  new Class_Log_Datos_Prv;
         $proveedor_api = new ProveedorClass($obBD_conexion, $obBD_con1);
         $proveedor_api->setProveedor($body);
-        // echo json_encode($body);
     });
 
     $app->post('/v1/proveedores/obtener', function () {
@@ -21,7 +20,6 @@
         $obBD_con1 =  new Class_Log_Datos_Prv;
         $proveedor_api = new ProveedorClass($obBD_conexion, $obBD_con1);
         $proveedor_api->getProveedores($body);
-        echo json_encode($body);
     });
 
     $app->post('/v1/proveedores/modificar', function () {
@@ -30,6 +28,5 @@
         $obBD_con1 =  new Class_Log_Datos_Prv;
         $proveedor_api = new ProveedorClass($obBD_conexion, $obBD_con1);
         $proveedor_api->updateProveedor($body);
-        echo json_encode($body);
     });
 ?>

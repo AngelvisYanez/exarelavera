@@ -177,7 +177,7 @@ function basePath($page=NULL,$atRoot=FALSE){
     $base_path=baseUrl($page,$atRoot,TRUE);
     return $base_path['path'];
 }
-// Convierte a�o real a a�o contable
+// Convierte aï¿½o real a aï¿½o contable
 function days_360($fecha1,$fecha2,$europeo=true) {
   if(empty($fecha1)||empty($fecha2)) {return(-1);}  // no date
   if( $fecha1 > $fecha2 ) { $temf = $fecha1;  $fecha1 = $fecha2; $fecha2 = $temf; } //try switch dates: min to max
@@ -435,7 +435,7 @@ if ($numero >= 10)
 if ($numero >= 90 && $numero <= 99)
 {
 if ($numero == 90)
-return "noventa c�ntimos";
+return "noventa cï¿½ntimos";
 else if ($numero == 91)
 return "noventa y un centavos";
 else
@@ -453,7 +453,7 @@ return "ochenta y ".unidad_centimos($numero - 80);
 if ($numero >= 70 && $numero <= 79)
 {
 if ($numero == 70)
-return "setenta c�ntimos";
+return "setenta cï¿½ntimos";
 else if ($numero == 71)
 return "setenta y un centavos";
 else
@@ -841,7 +841,7 @@ $parcial = substr($importe_parcial, 0, $car);
 $importe_parcial = substr($importe_parcial, $car);
 
 if ($parcial == 1)
-$num_letras = "un mill�n ";
+$num_letras = "un millï¿½n ";
 else
 $num_letras = centena($parcial)." millones ";
 
@@ -863,7 +863,7 @@ $num_letras = cien();
 else if ($numero >= 0.01 && $numero <= 0.99)
 {
 if ($numero == 0.01)
-$num_letras = "un c�ntimo";
+$num_letras = "un cï¿½ntimo";
 else
 $num_letras = convertir_a_letras(($numero * 100)."/100")." centavos";
 }
@@ -949,7 +949,7 @@ function num2letras($num, $fem = false, $dec = false) {
         if($num[1]==0&&$num[2]==0) $t = ' cien' . $t; else $t = ' ciento' . $t;
       }elseif ($n == 5){ $t = ' ' . $matunisub[$n] . 'ient' . $subcent . $t; }elseif ($n != 0){ $t = ' ' . $matunisub[$n] . 'cient' . $subcent . $t; }
       if ($sub == 1) {
-      }elseif (! isset($matsub[$sub])) { if ($num == 1) { $t = ' mil'; }elseif ($num > 1){ $t .= ' mil'; } }elseif ($num == 1) { $t .= ' ' . $matsub[$sub] . '�n'; }elseif ($num > 1){ $t .= ' ' . $matsub[$sub] . 'ones'; }
+      }elseif (! isset($matsub[$sub])) { if ($num == 1) { $t = ' mil'; }elseif ($num > 1){ $t .= ' mil'; } }elseif ($num == 1) { $t .= ' ' . $matsub[$sub] . 'ï¿½n'; }elseif ($num > 1){ $t .= ' ' . $matsub[$sub] . 'ones'; }
       if ($num == '000') $mils ++;
       elseif ($mils != 0) { if (isset($matmil[$sub])) $t .= ' ' . $matmil[$sub]; $mils = 0; }
       $neutro = true;
@@ -984,15 +984,15 @@ function envio_parametros($cant, $Niv_Cod)
 	return $cod2;
 }
 
-/* Funcion que crea pesta�as diamicas */
-function links($tama�o, $nombres, $vinculo)
+/* Funcion que crea pestaï¿½as diamicas */
+function links($tamaï¿½o, $nombres, $vinculo)
 {
 	/* separa los nombres de los links */
 	$links = explode('*',$nombres);
 	$pagina = explode('*',$vinculo);
 	echo "<table border='0'>
 		   <tr>";
-		   for ($i=0; $i<=$tama�o-1; $i++)
+		   for ($i=0; $i<=$tamaï¿½o-1; $i++)
 			{
                echo "<td class='links'><a href=".$pagina[$i]." class='href'>".$links[$i]."</a></td>";
 			 }
@@ -1000,14 +1000,14 @@ function links($tama�o, $nombres, $vinculo)
           </table>";
 }//background='../../layers/model1/pestanas/pestana1.JPG' style='background-repeat:no-repeat'
 
-/* Funcion que crea pesta�as diamicas */
-function tabs($tama�o, $nombres, $vinculo, $activo)
+/* Funcion que crea pestaï¿½as diamicas */
+function tabs($tamaï¿½o, $nombres, $vinculo, $activo)
 {
 	/* separa los nombres de los links */
 	$links = explode('*',$nombres);
 	$pagina = explode('*',$vinculo);
 	echo "<ul id='tabnav'>";
-		   for ($i=0; $i<=$tama�o-1; $i++)
+		   for ($i=0; $i<=$tamaï¿½o-1; $i++)
 			{
 				$url = "javascript:ir('".urlencode($pagina[$i])."'); CambiarEstilo('bt".$i."')";
 			   if ($activo == $i+1){ $enfoque = "activo"; }else{ $enfoque = "inactivo";}
@@ -1019,7 +1019,7 @@ function tabs($tama�o, $nombres, $vinculo, $activo)
 /*funcioin para detectar que es celular*/
 function detectar_acceso()
 {
-	// Debido a que este script env�a un encabezado de informaci�n HTTP el primer car�cter en el archivo debe ser el
+	// Debido a que este script envï¿½a un encabezado de informaciï¿½n HTTP el primer carï¿½cter en el archivo debe ser el
 	//tag.
 	//  $htmlredirect = "/html/my_htmlpage.html";  // URL relativo a su archivo HTML
 	  if (strpos(isset($_SERVER['HTTP_ACCEPT'])?$_SERVER['HTTP_ACCEPT']:'',"vnd.wap.wml") > 0) {  // Revisa si el navegador/gateway dice si acepta VML.
@@ -1028,8 +1028,8 @@ function detectar_acceso()
 	  else {
 		$browser=isset($HTTP_USER_AGENT)?substr(trim($HTTP_USER_AGENT),0,4):'';
 
-		if($browser=="Noki" || // Tel�fonos Nokia y emuladores
-		  $browser=="Eric" || // Ericsson WAP tel�fonos y emuladores
+		if($browser=="Noki" || // Telï¿½fonos Nokia y emuladores
+		  $browser=="Eric" || // Ericsson WAP telï¿½fonos y emuladores
 		  $browser=="WapI" || // Ericsson WapIDE 2.0
 		  $browser=="MC21" || // Ericsson MC218
 		  $browser=="AUR " || // Ericsson R320
@@ -1357,8 +1357,8 @@ function paleta($campo)
 <?Php
 }
 
-/*Esta funci�n calcula el n�mero de d�a de la semana de una fecha indicada por par�metro. El n�mero de d�a
-de la semana que devuelve corresponde con 0 en el caso de que la fecha sea un lunes, 1 en caso de ser martes, y as� hasta
+/*Esta funciï¿½n calcula el nï¿½mero de dï¿½a de la semana de una fecha indicada por parï¿½metro. El nï¿½mero de dï¿½a
+de la semana que devuelve corresponde con 0 en el caso de que la fecha sea un lunes, 1 en caso de ser martes, y asï¿½ hasta
 llegar al 6, que corresponde con el domingo. */
 
 function calcula_numero_dia_semana($dia,$mes,$ano){
@@ -1377,17 +1377,17 @@ function dias($dias, $tipo){
 	//2 = Dia en abreviatura
 	switch ($tipo){
 		case 1:
-			$array_dias1 =array ("Domingo", "Lunes", "Martes", "Mi�rcoles", "Jueves", "Viernes", "S�bado");
+			$array_dias1 =array ("Domingo", "Lunes", "Martes", "Miï¿½rcoles", "Jueves", "Viernes", "Sï¿½bado");
 			break;
 		 case 2:
-			$array_dias1 =array ("Dom", "Lun", "Mar", "Mi�", "Jue", "Vie", "S�b");
+			$array_dias1 =array ("Dom", "Lun", "Mar", "Miï¿½", "Jue", "Vie", "Sï¿½b");
 			break;
 	}
 	return $array_dias1[$dias];
 }
 
-/*Sirve para devolver el �ltimo d�a de un mes y a�o indicados por par�metro. El �ltimo d�a del mes se refiere al n�mero de
-d�as que tiene un mes. Por ejemplo en enero 31, febrero 28 � 29, ... diciembre 31. */
+/*Sirve para devolver el ï¿½ltimo dï¿½a de un mes y aï¿½o indicados por parï¿½metro. El ï¿½ltimo dï¿½a del mes se refiere al nï¿½mero de
+dï¿½as que tiene un mes. Por ejemplo en enero 31, febrero 28 ï¿½ 29, ... diciembre 31. */
 
 function ultimoDia($mes,$anio){
     $ultimo_dia=28;
@@ -1420,11 +1420,11 @@ function formato_numero($numero, $decimales, $tipo)
 				Ejemplo : 5,000.45 */
 			$f_numero = number_format($numero,$decimales,'.',',');
 		break;
-		case 3: /* Formato ? (Espa�ol) con separador decimales (,) y sin separador de miles
+		case 3: /* Formato ? (Espaï¿½ol) con separador decimales (,) y sin separador de miles
 				Ejemplo : 5000,45 */
 			$f_numero = number_format($numero,$decimales,',','');
 		break;
-		case 4: /* Formato ? (Espa�ol) con separador decimales (,) y con separador de miles (.)
+		case 4: /* Formato ? (Espaï¿½ol) con separador decimales (,) y con separador de miles (.)
 				Ejemplo : 5.000,45 */
 			$f_numero = number_format($numero,$decimales,',','.');
 		break;
@@ -1512,19 +1512,19 @@ function caracteres_especiales($cadena, $tipo)
 	2 = minuscula -> MAYUSCULA */
 
 	/* Caracteres especiales minusculas*/
-	$caracter[]="�";
-	$caracter[]="�";
-	$caracter[]="�";
-	$caracter[]="�";
-	$caracter[]="�";
-	$caracter[]="�";
+	$caracter[]="ï¿½";
+	$caracter[]="ï¿½";
+	$caracter[]="ï¿½";
+	$caracter[]="ï¿½";
+	$caracter[]="ï¿½";
+	$caracter[]="ï¿½";
 	/* Caracteres especiales mayusculas*/
-	$CARACTER[]="�";
-	$CARACTER[]="�";
-	$CARACTER[]="�";
-	$CARACTER[]="�";
-	$CARACTER[]="�";
-	$CARACTER[]="�";
+	$CARACTER[]="ï¿½";
+	$CARACTER[]="ï¿½";
+	$CARACTER[]="ï¿½";
+	$CARACTER[]="ï¿½";
+	$CARACTER[]="ï¿½";
+	$CARACTER[]="ï¿½";
 
 
 	for ($i=0; $i<=count($caracter)-1; $i++)
@@ -1556,11 +1556,11 @@ function cambio_cadena($tipo, $cadena)
 			$retorno = strtolower($cadena);
 		break;
 		case 3:
-			/* Pone a may�sculas el primer caracter de una cadena	 */
+			/* Pone a mayï¿½sculas el primer caracter de una cadena	 */
 			$retorno = ucfirst($cadena);
 		break;
 		case 4:
-			/* Pone en may�sculas el primer caracter de cada palabra de una cadena */
+			/* Pone en mayï¿½sculas el primer caracter de cada palabra de una cadena */
 			$retorno = ucwords($cadena);
 		break;
 	}//Fin del switch ($tipo)
@@ -1570,7 +1570,7 @@ function cambio_cadena($tipo, $cadena)
 /* Funcion que determina la edad de una persona */
 function edad($anio_nac, $mes_nac, $dia_nac)
 {
-	/* C�lculo de la edad */
+	/* Cï¿½lculo de la edad */
 	$hoy=date('Y-m-d');
 	$anio_actual=explode('-',$hoy);
 	if($anio_actual[1]>=$mes_nac)
@@ -1587,7 +1587,7 @@ function edad($anio_nac, $mes_nac, $dia_nac)
 	$an1=$anio_actual[0]+$aaux;
 	//$an1=$anio_actual[0]-$anio_nac;
 	$an1=$an1-$anio_nac;
-	return $an1.' a�os '.$mss.' mes(es)';
+	return $an1.' aï¿½os '.$mss.' mes(es)';
 }//Fin del edad($anio_nac, $mes_nac, $dia_nac)
 
 /* Funcion que devuelve una cadena de parametros para iniciar la busqueda de un sql */
@@ -1608,7 +1608,7 @@ function submit_parametros($cant, $arreglo)
 /*Funcion que devuelve fechas futuras a partir de una fecha y un incremento*/
 function fechas_futuras($fecha, $incremento)
 {
-	list($ann, $mes, $dia) = split('[/.-]', $fecha); //Se descompone la fecha
+	list($ann, $mes, $dia) = preg_split('![/.-]!', $fecha); //Se descompone la fecha
 	$fecha_fut = date( "Y-m-d", mktime(0,0,0,$mes, $dia + $incremento, $ann));
 	return $fecha_fut;
 }//Fin del function fechas_futuras($fecha, $incremento)
@@ -1668,7 +1668,7 @@ function noEnterSubmit()
 	echo "<input name='evitar_envio' type='text' id='evitar_envio' size='1' maxlength='1' readonly style='display:none'>";
 }
 
-/* Funci�n que permite la resta entre dos horas o fechas
+/* Funciï¿½n que permite la resta entre dos horas o fechas
 time_date_cox: Hora o fecha de avance del tiempo de conexion al sistema. Ejemplo: 11:55 am
 time_date_log: hora o fecha de conexion al sistema. Ejemplo: 10:30 am
 $op = 0 representa horas, 1 representa dias
@@ -1698,7 +1698,7 @@ function difenciaTimeDate($time_date_cox, $time_date_log, $op)
 // Funcion para subir imagenes
 function upLoadImg($archivo, $nombreup, $sizeup, $directorioup)
 {
-		//Tama�o de la imagen
+		//Tamaï¿½o de la imagen
 		$size=$_FILES['archivo']['size'];
 
 		//variable de control para sacar la extencion real de la imagen
@@ -1710,10 +1710,10 @@ function upLoadImg($archivo, $nombreup, $sizeup, $directorioup)
 
 		if($extension=="jpg" || $extension=="jpeg" || $extension=="png"
 
-)//valida la extensi�n del archivo
+)//valida la extensiï¿½n del archivo
 		{
 
-			if($size < $sizeup) //valida el tama�o del archivo en bytes
+			if($size < $sizeup) //valida el tamaï¿½o del archivo en bytes
 			{
 				$archivo_name = $nombreup.".".strtolower($extImg[1]);
 				$directorioFinal=$directorioup.$archivo_name;
@@ -1761,7 +1761,7 @@ function wizard($cant,$num)
 /* Funcion para subir imagenes de cualquier objeto file, y mantiene el nombre original */
 function upLoadImg_2($input, $archivo, $nombreup, $sizeup, $directorioup)
 {
-		//Tama�o de la imagen
+		//Tamaï¿½o de la imagen
 		$size=$_FILES[$input]['size'];
 
 		//variable de control para sacar la extencion real de la imagen
@@ -1772,10 +1772,10 @@ function upLoadImg_2($input, $archivo, $nombreup, $sizeup, $directorioup)
 		//ruta fisica de la imagen
 		$archivo= $_FILES[$input]['tmp_name'];
 
-		if($extension=="jpg" || $extension=="jpeg" || $extension=="png" || $extension=="gif")//valida la extensi�n del archivo
+		if($extension=="jpg" || $extension=="jpeg" || $extension=="png" || $extension=="gif")//valida la extensiï¿½n del archivo
 		{
 
-			if($size < $sizeup) //valida el tama�o del archivo en bytes
+			if($size < $sizeup) //valida el tamaï¿½o del archivo en bytes
 			{
 				/* Control para asignar el nombre original al archivo */
 				if (trim($nombreup) == "")
@@ -1835,7 +1835,7 @@ Para usar esta funcion es necesario llamar a la libreria
 - ventana_flot.js
 - definir en el BODY onmousemove="SetValues(event)"
 - Colocar una hidden TxtPos para el almacenamiento de la posicion
-$width = tama�o de la ventana
+$width = tamaï¿½o de la ventana
 $height = alto de la ventana
 $left = ubicacion del lado izquierdo de la ventana
 $top = ubicacion superior de la ventana
@@ -1881,8 +1881,8 @@ document.getElementById('id_max').disabled=true;
 <?php
 }
 
-/* Funciones que detectan la codificaci�n de un string y de esta manera realizan la conversi�n de codificaci�n s�lo si es necesario. */
-//Funci�n que converte un string a ISO-8859-1 (LATIN1)
+/* Funciones que detectan la codificaciï¿½n de un string y de esta manera realizan la conversiï¿½n de codificaciï¿½n sï¿½lo si es necesario. */
+//Funciï¿½n que converte un string a ISO-8859-1 (LATIN1)
 function latin1($txt)
 {
 	$encoding = mb_detect_encoding($txt, 'ASCII,UTF-8,ISO-8859-1');
@@ -1890,7 +1890,7 @@ function latin1($txt)
 		$txt = utf8_decode($txt); } return $txt;
 	}
 
-//Funci�n que converte un string a UTF-8
+//Funciï¿½n que converte un string a UTF-8
 function utf8($txt)
 {
 	$encoding = mb_detect_encoding($txt, 'ASCII,UTF-8,ISO-8859-1');
@@ -1984,7 +1984,7 @@ function ocultarDetalle($cant)
 /* Funcion para subir cualquier objeto file, y mantiene el nombre original */
 function upLoadFile($input, $archivo, $nombreup, $sizeup, $directorioup)
 {
-		//Tama�o de la imagen
+		//Tamaï¿½o de la imagen
 		$size=$_FILES[$input]['size'];
 //print_r ($_FILES[$input]);
 		//variable de control para sacar la extencion real de la imagen
@@ -1995,10 +1995,10 @@ function upLoadFile($input, $archivo, $nombreup, $sizeup, $directorioup)
 		//ruta fisica de la imagen
 		$archivo= $_FILES[$input]['tmp_name'];
 
-		//if($extension=="jpg" || $extension=="jpeg" || $extension=="png" || $extension=="gif")//valida la extensi�n del archivo
+		//if($extension=="jpg" || $extension=="jpeg" || $extension=="png" || $extension=="gif")//valida la extensiï¿½n del archivo
 		//{
 
-			if($size <= $sizeup) //valida el tama�o del archivo en bytes
+			if($size <= $sizeup) //valida el tamaï¿½o del archivo en bytes
 			{
 				/* Control para asignar el nombre original al archivo */
 				if (trim($nombreup) == "")

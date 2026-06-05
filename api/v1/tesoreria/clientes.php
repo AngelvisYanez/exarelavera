@@ -11,7 +11,6 @@
         $obBD_con1 =  new Class_Log_Datos_Cli;
         $cliente_api = new ClienteClass($obBD_conexion, $obBD_con1);
         $cliente_api->setCliente($body);
-        echo json_encode($body);
     });
 
     $app->post('/v1/clientes/obtener', function () {
@@ -21,7 +20,6 @@
         $obBD_con1 =  new Class_Log_Datos_Cli;
         $cliente_api = new ClienteClass($obBD_conexion, $obBD_con1);
         $cliente_api->getClientes($body);
-        echo json_encode($body);
     });
 
     $app->post('/v1/clientes/modificar', function () {
@@ -31,6 +29,5 @@
         $obBD_con1 =  new Class_Log_Datos_Cli;
         $cliente_api = new ClienteClass($obBD_conexion, $obBD_con1);
         $cliente_api->updateCliente($body);
-        echo json_encode($body);
     });
 ?>

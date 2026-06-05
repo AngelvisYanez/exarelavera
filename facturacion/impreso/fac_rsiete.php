@@ -1,10 +1,10 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php 
 /**
-* @abstract Reporte de ventas para la impresión en recibo o nota de venta
+* @abstract Reporte de ventas para la impresiÃ³n en recibo o nota de venta
 * @author 
 * @version 1.0
-* Fecha de actualización  2012-05-23
+* Fecha de actualizaciÃ³n  2012-05-23
 * @author 
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -77,7 +77,7 @@ if (isset($Vet_Cod))
 			return ret.length == 1 ? "0" + ret : ret;
 		};
 </script>
-<?Php  list($anio, $mes, $dia) = split('[/.-]', $row_rs_cliente['Caj_Fec']);
+<?Php  list($anio, $mes, $dia) = preg_split('![/.-]!', $row_rs_cliente['Caj_Fec']);
 $top=150;
 $topCab=30;
 $claveacceso=$row_rs_cliente['Vet_Xml'];
@@ -106,7 +106,7 @@ $claveacceso=$row_rs_cliente['Vet_Xml'];
 <span style="top:<? echo $topCab-0;?>px;left:550px; border: 1px solid; padding-left: 15px; padding-right: 15px;padding-top: 10px;padding-bottom: 5px;" class="mini"><? echo $row_institucion['Suc_Sri'].'-'.$auto['Pun_Sri'].'-'.str_pad($row_rs_cliente['Vet_Num'], 9, "0", STR_PAD_LEFT);?></span>
 <span style="top:<? echo $topCab+30;?>px;left:550px; border: 1px solid; padding-left: 10px; padding-right: 9px;padding-top: 2px;padding-bottom: 2px;" class="mini"><strong>DIA</strong></span>
 <span style="top:<? echo $topCab+30;?>px;left:591px; border: 1px solid; padding-left: 10px; padding-right: 9px;padding-top: 2px;padding-bottom: 2px;" class="mini"><strong>MES</strong></span>
-<span style="top:<? echo $topCab+30;?>px;left:637px; border: 1px solid; padding-left: 12px; padding-right: 12px;padding-top: 2px;padding-bottom: 2px;" class="mini"><strong>AÑO</strong></span>
+<span style="top:<? echo $topCab+30;?>px;left:637px; border: 1px solid; padding-left: 12px; padding-right: 12px;padding-top: 2px;padding-bottom: 2px;" class="mini"><strong>AÃ‘O</strong></span>
 <span style="top:<? echo $topCab+49;?>px;left:550px; border: 1px solid; padding-left: 13px; padding-right: 14px;padding-top: 5px;padding-bottom: 5px;" class="mini"><? echo $dia?></span>
 <span style="top:<? echo $topCab+49;?>px;left:591px; border: 1px solid; padding-left: 16px; padding-right: 16px;padding-top: 5px;padding-bottom: 5px;" class="mini"><? echo $mes ?></span>
 <span style="top:<? echo $topCab+49;?>px;left:637px; border: 1px solid; padding-left: 12px; padding-right: 12px;padding-top: 5px;padding-bottom: 5px;" class="mini"><? echo $anio?></span>
@@ -142,7 +142,7 @@ $resultados = explode('*',$obBD_con1->calculos($Vet_Cod, $obBD_conexion));
 <span style="top:<? echo $aux+50;?>px;left:0px; "class="mini"><strong>FORMA DE PAGO: </strong><? echo $row_rs_pagos['For_Des']?></span>
 <span style="top:<? echo $aux+75;?>px;left:0px; padding-right: 300px; background-color: #0000ff;" class="mini"><strong>OBSERVACIONES: </strong>&nbsp;<? echo $observacion?></span>
 <span style="top:<? echo $aux+145;?>px;left:0px; "class="mini">________________</span>
-<span style="top:<? echo $aux+165;?>px;left:20px; "class="mini center"><strong>ENTREGUÉ<br>CONFORME</strong>&nbsp;</span>
+<span style="top:<? echo $aux+165;?>px;left:20px; "class="mini center"><strong>ENTREGUÃ‰<br>CONFORME</strong>&nbsp;</span>
 <span style="top:<? echo $aux+145;?>px;left:130px; "class="mini">________________</span>
 <span style="top:<? echo $aux+165;?>px;left:140px; "class="mini center"><strong>DESPACHADO<br>POR</strong>&nbsp;</span>
 <span style="top:<? echo $aux+145;?>px;left:260px; "class="mini">________________</span>

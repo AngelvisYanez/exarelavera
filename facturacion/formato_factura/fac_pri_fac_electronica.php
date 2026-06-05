@@ -1,10 +1,10 @@
 <?php
 
 /**
- * @abstract Reporte de ventas para la impresi�n en factura o nota de venta
+ * @abstract Reporte de ventas para la impresiï¿½n en factura o nota de venta
  * @author Lewis Chimarro
  * @version 1.0
- * Fecha de actualizaci�n  2012-05-23
+ * Fecha de actualizaciï¿½n  2012-05-23
  * @author Lewis Chimarro
  */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -73,7 +73,7 @@ if (isset($Vet_Cod)) {
 
 <body>
 	<?Php
-	list($anio, $mes, $dia) = split('[/.-]', $row_rs_cliente['Caj_Fec']);
+	list($anio, $mes, $dia) = preg_split('![/.-]!', $row_rs_cliente['Caj_Fec']);
 	$top = 50;
 	$topIn = 15;
 
@@ -92,12 +92,12 @@ if (isset($Vet_Cod)) {
 						$top = $top + $topIn; ?>px;left:70px;" class="flota"><? echo $row_institucion['Suc_Te1']; ?></span>
 
 	<?php
-	$altoDireccion = count(explode("\n", $row_institucion['Suc_Dir'])) * 4; // Ajusta 12 según el tamaño de fuente y espaciado
+	$altoDireccion = count(explode("\n", $row_institucion['Suc_Dir'])) * 4; // Ajusta 12 segÃºn el tamaÃ±o de fuente y espaciado
 
-	// Incrementar top antes de la dirección
+	// Incrementar top antes de la direcciÃ³n
 	?>
 	<span style="top:<? echo $top;
-						$top = $top + $topIn; ?>px;left:5px;" class="textos">Dirección: </span>
+						$top = $top + $topIn; ?>px;left:5px;" class="textos">DirecciÃ³n: </span>
 	<span style="top:<?php echo $top; ?>px;left:5px; white-space: pre-wrap; font-size: small; text-align: justify;" class="flota"><?php echo utf8(wrapText($row_institucion['Suc_Dir'], 40)); ?>
 	</span>
 
@@ -138,7 +138,7 @@ if (isset($Vet_Cod)) {
 																				} else {
 																					echo utf8($row_rs_cliente['Prs_Ape']) . ' ' . utf8($row_rs_cliente['Prs_Nom']);
 																				} ?></span>
-	<span style="top:<? echo $top; ?>px;left:5px;" class="textos">Dirección: </span>
+	<span style="top:<? echo $top; ?>px;left:5px;" class="textos">DirecciÃ³n: </span>
 	<span style="top:<? echo $top;
 						$top = $top + $topIn; ?>px;left:70px;" class="flota"><? if ($row_rs_representante['Cli_Dir'] != "") {
 																					echo substr($row_rs_representante['Cli_Dir'], 0, 31);
@@ -244,7 +244,7 @@ if (isset($Vet_Cod)) {
 	<span style="left:0px;" class="flota"> - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - </span>
 	<table style="margin-top:10px">
 		<tr>
-			<td style="text-align: left;"> <strong>Observación:</strong> </td>
+			<td style="text-align: left;"> <strong>ObservaciÃ³n:</strong> </td>
 		</tr>
 		<tr>
 			<td>

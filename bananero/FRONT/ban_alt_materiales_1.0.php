@@ -3,7 +3,7 @@
 * @abstract Permite realizar la cancelacion de comprobantes por abonos
 * @author Erik Niebla
 * @version 1.0
-* Fecha de creaciï¿½n  2015-07-22
+* Fecha de creaciÃ¯Â¿Â½n  2015-07-22
 */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/ban_log_materiales.php');
@@ -38,7 +38,7 @@ if(isset($ajaxProd)){
     }else{
         $kardex1[0]['Promedio']=0;$kardex1[0]['Saldo']=0;$kardex1[0]['Stock']=0;
     }
-    list($ann, $mes, $dia) = split('[/.-]',$ini);
+    list($ann, $mes, $dia) = preg_split('![/.-]!',$ini);
     $kardex1[0]['Kar_Det']='<b>Saldo al '.$dia.', de '.mes($mes, 1).', '.$ann.'</b>';
     $responce['stocks']=$kardex1[0];
     
@@ -114,12 +114,12 @@ if(isset($getMarcas)){
                        <form  class="form-horizontal normal"   >
   
                         <fieldset class="exa-fieldset">                           
-                           <legend class="Titulos2">Artículo a Producir:</legend> <!-- Form Name -->
+                           <legend class="Titulos2">ArtÃ­culo a Producir:</legend> <!-- Form Name -->
                               <div class="row">                                  
                                   <div class="col-xs-4">
                                       <!-- static input-->
                                         <div class="form-group">
-                                          <label class="col-xs-3 control-label label-xs ">Descripción:</label>  
+                                          <label class="col-xs-3 control-label label-xs ">DescripciÃ³n:</label>  
                                           <div class="col-xs-8">  
                                             <div class="input-group input-group-xs">      
                                                 <input id="producto"  type="text" class="form-control" placeholder="Seleccione un Producto ..." required readonly />
@@ -138,7 +138,7 @@ if(isset($getMarcas)){
                                         </div> -->
                                       <!-- static input-->
                                         <div class="form-group">
-                                          <label class="col-xs-3 control-label label-xs ">Adquisición:</label>  
+                                          <label class="col-xs-3 control-label label-xs ">AdquisiciÃ³n:</label>  
                                           <div class="col-xs-8">                                    
                                               <span  class="form-control input-xs" id="pro_adq"></span>                              
                                           </div>                                  
@@ -161,7 +161,7 @@ if(isset($getMarcas)){
                                         </div>
                                       <!-- static input-->
                                         <div class="form-group">
-                                          <label class="col-xs-3 control-label label-xs ">Observación:</label>  
+                                          <label class="col-xs-3 control-label label-xs ">ObservaciÃ³n:</label>  
                                           <div class="col-xs-8">                                    
                                               <span  class="form-control input-xs" id="pro_obs"></span>                              
                                           </div>                                  
@@ -202,7 +202,7 @@ if(isset($getMarcas)){
                            <legend class="Titulos2">Material de entrega:</legend> <!-- Form Name -->
                             <!-- static input-->
                             <div class="form-group">
-                                <label class="col-sm-3 control-label label-xs ">Combinación:</label>
+                                <label class="col-sm-3 control-label label-xs ">CombinaciÃ³n:</label>
                                 <div class="col-sm-9">   
                                     <select onchange="cambiarMezcla($(this).val())" name="Mes_Tip" id="Mes_Tip" class="form-control input-xs">
                                         <option value="C">Caja</option>
@@ -234,7 +234,7 @@ if(isset($getMarcas)){
                             </div>
                             <!-- static input-->
                             <div class="form-group">
-                              <label class="col-sm-3 control-label label-xs ">Descripción:</label>  
+                              <label class="col-sm-3 control-label label-xs ">DescripciÃ³n:</label>  
                               <div class="col-sm-9"> 
                                   <textarea name="Mes_Des" class="form-control input-xs"></textarea>
                               </div>                                  
@@ -286,7 +286,7 @@ if(isset($getMarcas)){
                                         $('.btn-new').removeAttr('disabled');                                        
                                     },function( response ){
                                         $('.btn-frm').removeAttr('disabled');
-                                        $.alert("No se Logro Guardar la Información");
+                                        $.alert("No se Logro Guardar la InformaciÃ³n");
                                         $("#prods").startGridEdit();
                                         return false;
                                     }, function(){
@@ -349,7 +349,7 @@ if(isset($getMarcas)){
                     <label class="col-xs-2 control-label">B&uacute;squeda:</label>  
                     <div class="col-xs-7" >
                         <div class="input-group">                        
-                        <input name="search" onkeydown="if (event.keyCode === 13) this.form.submit()" type="text" size="50" maxlength="50" placeholder="Ingrese búsqueda..." autofocus  class="form-control input-sm "/>
+                        <input name="search" onkeydown="if (event.keyCode === 13) this.form.submit()" type="text" size="50" maxlength="50" placeholder="Ingrese bÃºsqueda..." autofocus  class="form-control input-sm "/>
                         <span class="input-group-btn"><button type="button" onclick="this.form.submit()" class="btn btn-success btn-sm" title="Buscar Producto" ><span class="glyphicon glyphicon-search"></span> <span>Buscar</span></button></span>
                       </div><!-- /input-group --> 
                     </div>                    
@@ -375,7 +375,7 @@ if(isset($getMarcas)){
                     <label class="col-xs-2 control-label">B&uacute;squeda:</label>  
                     <div class="col-xs-7" >
                         <div class="input-group">                        
-                        <input name="search" onkeydown="if (event.keyCode === 13) this.form.submit()" type="text" size="50" maxlength="50" placeholder="Ingrese búsqueda..." autofocus  class="form-control input-sm "/>
+                        <input name="search" onkeydown="if (event.keyCode === 13) this.form.submit()" type="text" size="50" maxlength="50" placeholder="Ingrese bÃºsqueda..." autofocus  class="form-control input-sm "/>
                         <span class="input-group-btn"><button type="button" onclick="this.form.submit()" class="btn btn-success btn-sm" title="Buscar Producto" ><span class="glyphicon glyphicon-search"></span> <span>Buscar</span></button></span>
                       </div><!-- /input-group --> 
                     </div>                    
@@ -388,7 +388,7 @@ if(isset($getMarcas)){
         // DIALOG BUSCAR CUENTAS            
              $.createSearchDialog('proDialog',[
                     { label: 'C&oacute;d.Int.', name: 'Pro_Cod', key: true, width: 15,align:"center",hidden:true },                                
-                    { label: 'Descripción', name: 'Producto', width: 110 },                      
+                    { label: 'DescripciÃ³n', name: 'Producto', width: 110 },                      
                     { label: 'Marca', name: 'Mar_Des', width: 40},
                     { label: 'Tipo', name: 'Cat_Des', width: 110,align:"center" },                    
                         { label:'<center><i class="ui-icon ui-icon-gear"></i></center>', name: 'act1', width: 20, align: 'center',viewable: false,
@@ -399,7 +399,7 @@ if(isset($getMarcas)){
                 ]);
             $.createSearchDialog('matDialog',[
                     { label: 'C&oacute;d.Int.', name: 'Pro_Cod', key: true, width: 15,align:"center",hidden:true },                                
-                    { label: 'Descripción', name: 'Producto', width: 110 },                      
+                    { label: 'DescripciÃ³n', name: 'Producto', width: 110 },                      
                     { label: 'Marca', name: 'Mar_Des', width: 40},
                     { label: 'Unidad', name: 'Uni_Des', width: 40,hidden:true},
                     { label: 'Tipo', name: 'Cat_Des', width: 110,align:"center" },                    
@@ -445,7 +445,7 @@ if(isset($getMarcas)){
                             $('#Can_Pro').val(1);
                             $('#Can_Lot').val(1);
                         }
-                    }else {$.alert("No se logro obtener informacion deñ Producto!");}                                
+                    }else {$.alert("No se logro obtener informacion deÃ± Producto!");}                                
                 },'json').fail(function(error) { $.alert("El Servidor ha fallado en responder!");});
             }
             function cambiarMezcla(tip_mz){

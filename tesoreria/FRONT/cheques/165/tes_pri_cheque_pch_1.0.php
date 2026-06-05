@@ -44,7 +44,7 @@ include($APP_REAL_PATH.'/tesoreria/FRONT/cheques/cheque_config.php');
 			?></span> xxxxxxxxxxxxxxxxxxxxxxxxxxxx</td>
 </tr>
 <tr>
-	    <td height="25" colspan="3" valign="top" class="report" style="font-size:13px;"><?Php echo $row_institucion['Ciu_Des']?>,<strong> &nbsp;</strong>	      <?Php list($ann, $mes, $dia) = split('[/.-]', $fecha); 
+	    <td height="25" colspan="3" valign="top" class="report" style="font-size:13px;"><?Php echo $row_institucion['Ciu_Des']?>,<strong> &nbsp;</strong>	      <?Php list($ann, $mes, $dia) = preg_split('![/.-]!', $fecha); 
 		       echo $ann.'/'.strtoupper( mes($mes, 1)).'/'.$dia;
 		  ?></td>
 </tr>    

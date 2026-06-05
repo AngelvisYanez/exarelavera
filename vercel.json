@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cd vercel && npm run build",
+  "outputDirectory": "vercel/.next",
+  "devCommand": "cd vercel && npm run dev",
+  "installCommand": "cd vercel && npm install"
+}

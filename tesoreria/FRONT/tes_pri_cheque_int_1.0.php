@@ -4,9 +4,9 @@
 * @abstract Reporte de cheque para banco de machala
 * @author Lewis Chimarro
 * @version 1.0
-* Fecha de actualizaci�n  2012-07-23
+* Fecha de actualizaciï¿½n  2012-07-23
 * @author Lewis Chimarro
-* Fecha de actualizaci�n  2013-03-11
+* Fecha de actualizaciï¿½n  2013-03-11
 * @author Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -48,7 +48,7 @@ $row_institucion = $obBD_con1->getRowConsulta(126, $Ses_Suc_Cod, $obBD_conexion)
     <span style="top:60px;left:30px;" class="flota"><? if($row_pri_cheque['Che_Ben']==''){echo $row_pri_cheque['Prs_Ape'].' '.$row_pri_cheque['Prs_Nom'];}else{echo $row_pri_cheque['Che_Ben'];} ?></span>
     <span style="top:60px;left:380px;" class="flota"><b><? echo number_format($row_pri_cheque['Che_Val'],2); ?></b></span>
     <span style="top:81px;left:30px;" class="flota"><? echo '<span style="letter-spacing:0.1em">'.num2letras($row_pri_cheque['Che_Val']).'</span>';?>xxxxxxxxxxxx</span>
-    <span style="top:127px;left:10px;" class="flota"><?Php echo $row_institucion['Ciu_Des']?>, &nbsp;<?Php list($ann, $mes, $dia) = split('[/.-]', $fecha); echo $ann.'/'.$mes.'/'.$dia;?></span>
+    <span style="top:127px;left:10px;" class="flota"><?Php echo $row_institucion['Ciu_Des']?>, &nbsp;<?Php list($ann, $mes, $dia) = preg_split('![/.-]!', $fecha); echo $ann.'/'.$mes.'/'.$dia;?></span>
     <!--<table width="608" border="0" class="TablaRepCompr_b" style="">
       <tr>
 		<td width="18" valign="top" class="Texto_Reporte">&nbsp;</td>		
@@ -64,7 +64,7 @@ $row_institucion = $obBD_con1->getRowConsulta(126, $Ses_Suc_Cod, $obBD_conexion)
 			?></span></td>
         </tr>
 	  <tr>
-	    <td height="25" colspan="3" valign="top" class="Texto_Reporte"><?Php echo $row_institucion['Ciu_Des']?>, &nbsp;<?Php list($ann, $mes, $dia) = split('[/.-]', $fecha); 
+	    <td height="25" colspan="3" valign="top" class="Texto_Reporte"><?Php echo $row_institucion['Ciu_Des']?>, &nbsp;<?Php list($ann, $mes, $dia) = preg_split('![/.-]!', $fecha); 
 		       echo mes($mes, 1).'  '.$dia.' de '.$ann;
 		  ?></td>
 	    </tr>    

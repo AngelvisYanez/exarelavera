@@ -22,7 +22,7 @@ include($APP_REAL_PATH.'/tesoreria/FRONT/cheques/cheque_config.php');
         <span style="top:35px;left:50px;" class="flota"><? if($row_pri_cheque['Che_Ben']==''){echo $row_pri_cheque['Prs_Ape'].' '.$row_pri_cheque['Prs_Nom'];}else{echo $row_pri_cheque['Che_Ben'];} ?></span>
         <span style="top:35px;left:445px;" class="flota"><b><? echo number_format($row_pri_cheque['Che_Val'],2)."***"; ?></b></span>
         <span style="top:60px;left:20px;" class="flota"><? echo '<span style="letter-spacing:0.1em">'.strtoupper (num2letras($row_pri_cheque['Che_Val'])).'</span>';?>xxxxxxxxxxxx</span>
-        <span style="top:110px;left:0px;" class="flota"><?Php echo $row_institucion['Ciu_Des']?> &nbsp;&nbsp;&nbsp;&nbsp;<?Php list($ann, $mes, $dia) = split('[/.-]', $fecha); echo $ann.'/'.$mes.'/'.$dia;?></span>   
+        <span style="top:110px;left:0px;" class="flota"><?Php echo $row_institucion['Ciu_Des']?> &nbsp;&nbsp;&nbsp;&nbsp;<?Php list($ann, $mes, $dia) = preg_split('![/.-]!', $fecha); echo $ann.'/'.$mes.'/'.$dia;?></span>   
     </body>
 </html>
 <?Php

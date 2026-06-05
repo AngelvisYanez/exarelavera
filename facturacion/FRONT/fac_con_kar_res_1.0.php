@@ -3,7 +3,7 @@
 * @abstract Permite realizar la cancelacion de comprobantes por abonos
 * @author Erik Niebla
 * @version 1.0
-* Fecha de creaciï¿½n  2015-07-22
+* Fecha de creaciÃ¯Â¿Â½n  2015-07-22
 */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/tes_log_kardex.php');
@@ -36,12 +36,12 @@ if(isset($ajaxProd)){
         }else{
             $kardex1[0]['Promedio']=0;$kardex1[0]['Saldo']=0;$kardex1[0]['Stock']=0;
         }
-        list($ann, $mes, $dia) = split('[/.-]',$ini);
+        list($ann, $mes, $dia) = preg_split('![/.-]!',$ini);
         $kardex1[0]['Kar_Det']='<b>Saldo al '.$dia.', de '.mes($mes, 1).', '.$ann.'</b>';
         $responce['stocks']=$kardex1[0];
         $responce['prod'] = $obBD_con1->getRowConsulta(1051,$Ite_Cod.'*'.$Ses_Suc_Cod, $obBD_conexion);
         $responce['success']=true; 
-    }catch(Exception $e){ $responce=array(success=>false,message=>'No se logro obtener información del Producto!',error=>$e); }        
+    }catch(Exception $e){ $responce=array(success=>false,message=>'No se logro obtener informaciÃ³n del Producto!',error=>$e); }        
     utf8_encode_deep($responce); echo json_encode($responce); exit();
 }
 if(isset($ajaxKardex)){ 
@@ -77,7 +77,7 @@ if(isset($ajaxKardex)){
         $responce['rows'] = $array;       
         $responce['records']=count($array);       
         $responce['success']=true;
-    }catch(Exception $e){ $responce=array(success=>false,message=>'No se logro obtener información del Kardex!',error=>$e); }      
+    }catch(Exception $e){ $responce=array(success=>false,message=>'No se logro obtener informaciÃ³n del Kardex!',error=>$e); }      
     utf8_encode_deep($responce); echo json_encode($responce); exit();
 }
 ?>
@@ -118,14 +118,14 @@ if(isset($ajaxKardex)){
                                                 <?Php
                                                 foreach ($row_rs_categ as $row) {
                                                     ?>
-                                                    <option value="<?Php echo $row['Cat_Cod']; ?>" ><?Php echo /* strtoupper($row['Par_Cat_Des']).' » '. */$row['Cat_Des']; ?></option>
+                                                    <option value="<?Php echo $row['Cat_Cod']; ?>" ><?Php echo /* strtoupper($row['Par_Cat_Des']).' Â» '. */$row['Cat_Des']; ?></option>
                                                     <?Php }
                                                 ?>
                                             </select>                           
                                           </div>                                  
                                         </div>
                                         <div class="form-group">
-                                          <label class="col-sm-3 control-label label-xs ">Ubicación:</label>  
+                                          <label class="col-sm-3 control-label label-xs ">UbicaciÃ³n:</label>  
                                           <div class="col-sm-8">                                    
                                             <?php $rs_ubicacion = $obBD_con1->getArrayConsulta(5007, $Ses_Emp_Cod, $obBD_conexion); ?>
                                             <select name="Ubi_Cod" id="Ubi_Cod" class="form-control input-xs">
@@ -172,7 +172,7 @@ if(isset($ajaxKardex)){
                                                             <input name="fin" type="text" id="fin" class="form-control input-sm">                              
                                                         </div>
                                                         <div class="col-xs-2">
-                                                          <div class=""><button type="button"  onclick="this.form.submit();$('#kardex').jqGrid('setCaption', 'Existencias'+' - Rango ('+$('#display').text().replace(/\u00a0/g,'')+') - '+'Desde '+ $('#ini').val()+' Hasta '+$('#fin').val());" class="btn btn-sm btn-success" title="Ejecutar Búsqueda"><span class="glyphicon glyphicon-search"></span> &nbsp;Filtrar</button></div>
+                                                          <div class=""><button type="button"  onclick="this.form.submit();$('#kardex').jqGrid('setCaption', 'Existencias'+' - Rango ('+$('#display').text().replace(/\u00a0/g,'')+') - '+'Desde '+ $('#ini').val()+' Hasta '+$('#fin').val());" class="btn btn-sm btn-success" title="Ejecutar BÃºsqueda"><span class="glyphicon glyphicon-search"></span> &nbsp;Filtrar</button></div>
                                                         </div>
                                                       </div>
                                                 </div>

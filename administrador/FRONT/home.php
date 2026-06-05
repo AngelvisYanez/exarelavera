@@ -148,7 +148,8 @@ $data_tickets = $obBD_con1->getArrayConsulta(224, $Ses_Emp_Cod, $obBD_conexion1)
 //var_dump($data_tickets);
 //Contar las notificaciones que no se han atendidos
 $Cantidad_tickets = $obBD_con1->getRowConsulta(225, $Ses_Emp_Cod, $obBD_conexion1);
-//echo ($Cantidad_tickets["TOTAL"]);
+$total_tickets = isset($Cantidad_tickets["TOTAL"]) ? $Cantidad_tickets["TOTAL"] : 0;
+//echo ($total_tickets);
 //Traer documentos sin autorizar
 $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_Cod, $obBD_conexion1);
 
@@ -291,7 +292,7 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
                 <ul class="nav ace-nav">
                     <?php
                     //Nuevo item para verificar si existen tickets activos
-                    $message_tickets = ($Cantidad_tickets["TOTAL"] != 0) ? "tickets que requieren tu atenci&oacute;n" : "tickets";
+                    $message_tickets = ($total_tickets != 0) ? "tickets que requieren tu atenci&oacute;n" : "tickets";
                     $docs_pendientes = (count($data_documentos) != 0) ? "documentos sin autorizar que requieren tu atenci&oacute;n" : "documentos sin autorizar"; ?>
                     <!-- oculta ciertos iconos para el mobil a una resolucion - cambiar a futuro -->
                     <style>
@@ -313,7 +314,7 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
                             <a>
                                 <i style="font-size: 18px;" class="ace-icon fa fa-bell icon-animated-bell" aria-hidden="true"></i>
                                 <span class="badge badge-important">
-                                    <?php echo $Cantidad_tickets["TOTAL"]; ?>
+                                    <?php echo $total_tickets; ?>
                                 </span>
                             </a>
                         </li>

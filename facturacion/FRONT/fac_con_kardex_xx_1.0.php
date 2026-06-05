@@ -1,11 +1,11 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?Php 
 /***
-* Descripci髇: Consulta del kardex 
-* Fecha de actualizaci髇:	2011-04-28
+* Descripci贸n: Consulta del kardex 
+* Fecha de actualizaci贸n:	2011-04-28
 * Desarrollador: Lewis Chimarro
 * <<<  Ite_Cod es equivalente a Pro_Cod  >>>
-* Fecha de actualizaci髇:	2013-01-08
+* Fecha de actualizaci贸n:	2013-01-08
 * Desarrollador: Lewis Chimarro
 */	
 
@@ -18,7 +18,7 @@ require_once('../../Librerias/procedimientos/almacenados_standar.php');
 */  
 $obBD_conexion = new Class_Log_Conexion_Kar($Ses_Dat_Dis);
 /**
-* Objeto para la obtenci髇 de datos
+* Objeto para la obtenci贸n de datos
 */
 $obBD_con1 =  new Class_Log_Datos_Kar; 
 
@@ -48,10 +48,10 @@ if($ajax_1==1)
 	<table border="1" width="100%" cellpadding="0" cellspacing="0" class="fixedHeader01">
     <thead>
 	  <tr>
-          <th width="4%">C骴. Int.</th>
+          <th width="4%">C贸d. Int.</th>
 		  <th width="20%">Categoria</th>
-          <th width="20%">Descripci髇 Corta </th>
-		  <th width="56%">Descripci髇 Larga</th>
+          <th width="20%">Descripci贸n Corta </th>
+		  <th width="56%">Descripci贸n Larga</th>
 		  <th width="2%">&nbsp;</th>
       </tr>
      </thead>
@@ -101,7 +101,7 @@ if($ajax_1==1)
 		 	<td>&nbsp;</td>
 		 	<td>&nbsp;</td>
 		 	<td>&nbsp;</td>
-		 	<td><?php echo error_alerta("o hay resultados que mostrar!", 1) ?></td>
+		 	<td><?php echo error_alerta("隆No hay resultados que mostrar!", 1) ?></td>
 		 	<td>&nbsp;</td>                                                
 		 </tr>	
     </tbody>     
@@ -186,11 +186,11 @@ mensaje_requerido();
       <input border="0" name="Cat_Cdc" type="hidden" id="Cat_Cdc" value="" size="15" maxlength="30" /></td>
   </tr>
   <tr>
-    <td class="Etiqueta1">Descripci髇  Corta: </td>
+    <td class="Etiqueta1">Descripci贸n  Corta: </td>
     <td class="LetraNegra"><input disabled="disabled" border="0" name="Ite_Cor" type="text" id="Ite_Cor" value="<?Php echo $row_rs_consulta['Ite_Cor']; ?>" size="15" maxlength="30" /></td>
   </tr>
   <tr>
-    <td class="Etiqueta1">Descripci髇 Larga: </td>
+    <td class="Etiqueta1">Descripci贸n Larga: </td>
     <td class="LetraNegra"><input  disabled="disabled" name="Ite_Lar" type="text" id="Ite_Lar" value="<?Php echo $row_rs_consulta['Ite_Lar']; ?>" size="25" maxlength="30" /></td>
   </tr>
   
@@ -354,7 +354,7 @@ mensaje_requerido();
               <td width="10%">&nbsp;</td>
               <td width="10%">&nbsp;</td>
               <td width="10%">&nbsp;</td>
-              <td colspan="2" align="center">Saldo al <span class="LetraNegra"><?php list($ann, $mes, $dia) = split('[/.-]',$ini); echo $dia.', de '.mes($mes, 1).', '.$ann; ?></span></td>
+              <td colspan="2" align="center">Saldo al <span class="LetraNegra"><?php list($ann, $mes, $dia) = preg_split('![/.-]!',$ini); echo $dia.', de '.mes($mes, 1).', '.$ann; ?></span></td>
               <td width="5%"><div align="right">
                 <div align="right"><span class="Encabezado_reporte">
                   <? echo ' '; ?>
@@ -504,10 +504,10 @@ mensaje_requerido();
         <tr>
 		<form name="form_bus" action="" method="post">
           <td ><input type="radio" id="op_opciones" name="op_opciones" value="r" onClick="setfocus(document.getElementById('txt_busqueda')); document.getElementById('op').value = this.value;"  />
-              <span class="LetraNegra">C骴igo de barra</span></td>
+              <span class="LetraNegra">C贸digo de barra</span></td>
           <td > <input id="op_opciones" name="op_opciones" type="radio" value="d" onClick="setfocus(document.getElementById('txt_busqueda')); document.getElementById('op').value = this.value;" checked="checked" />
           <input type="hidden" name="op" id="op" value="d" />
-              <span class="LetraNegra">Descripci髇</span></td>
+              <span class="LetraNegra">Descripci贸n</span></td>
 	   </form>
         </tr>
       </table></td>

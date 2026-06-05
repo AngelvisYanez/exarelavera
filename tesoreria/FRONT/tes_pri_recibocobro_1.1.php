@@ -1,9 +1,9 @@
 <?php 
 /**
-* @abstract Reporte de ventas para la impresi�n en factura o nota de venta
+* @abstract Reporte de ventas para la impresiï¿½n en factura o nota de venta
 * @author Lewis Chimarro
 * @version 1.0
-* Fecha de actualizaci�n  2012-05-23
+* Fecha de actualizaciï¿½n  2012-05-23
 * @author Lewis Chimarro
 */
 require_once('../../Librerias/config.php/register_globals.php'); 
@@ -54,7 +54,7 @@ body {
 </style>
 </head>
 <body>
-<?Php  list($anio, $mes, $dia) = split('[-]', $row_rs_cliente[0]['Caj_Fec']);?>
+<?Php  list($anio, $mes, $dia) = preg_split('![-]!', $row_rs_cliente[0]['Caj_Fec']);?>
 <table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
   <tr>
     <td  align="left" valign="top"><table width="100%" border="0" cellpadding="0" cellspacing="0" >

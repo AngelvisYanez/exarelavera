@@ -1,9 +1,9 @@
 <?php 
 /**
-* @abstract Reporte de ventas para la impresión en factura o nota de venta
+* @abstract Reporte de ventas para la impresiÃ³n en factura o nota de venta
 * @author Lewis Chimarro
 * @version 1.0
-* Fecha de actualización  2012-05-23
+* Fecha de actualizaciÃ³n  2012-05-23
 * @author Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -90,7 +90,7 @@ body {
 </style>
 </head>
 <body>
-<?Php  list($anio, $mes, $dia) = split('[-]', $row_rs_cliente[0]['Caj_Fec']);?>
+<?Php  list($anio, $mes, $dia) = preg_split('![-]!', $row_rs_cliente[0]['Caj_Fec']);?>
 <table width="100%" border="0" align="center">
   <tr>
   	<td  align="left" valign="top"><table width="100%" border="0" cellpadding="0" cellspacing="0" >

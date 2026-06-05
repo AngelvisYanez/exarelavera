@@ -137,9 +137,9 @@ $html = '
 
 /*Configuraci�n de impresi�n y hoja*/
 ini_set('memory_limit', '32M');
-include("../../Librerias/MPDF57/mpdf.php");
+require_once __DIR__ . '/../../vendor/autoload.php';
 
-$mpdf = new mPDF('c', 'A4', '', '', 15, 15, 16, 16, 9, 9);
+$mpdf = new \Mpdf\Mpdf(['mode' => 'c', 'format' => 'A4', 'margin_left' => 15, 'margin_right' => 15, 'margin_top' => 16, 'margin_bottom' => 16, 'margin_header' => 9, 'margin_footer' => 9]);
 
 $mpdf->SetDisplayMode('fullpage');
 

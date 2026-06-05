@@ -289,7 +289,7 @@ class P12 extends PrivatePublic
             ));
         } 
         if ($wrap){ 
-            $cert=wordwrap(eregi_replace( "[\n]",'',$cert), $this->config['wordwrap'], "\n", true); 
+            $cert=wordwrap(preg_replace('/[\n]/i', '', $cert), $this->config['wordwrap'], "\n", true); 
             //var_dump($this->config['wordwrap']);
         }
         return $cert;

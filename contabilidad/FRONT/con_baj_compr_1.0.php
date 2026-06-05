@@ -1,10 +1,10 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?
 /**
-* @abstract Permite la anulaci髇 individual de los comprobantes 
+* @abstract Permite la anulaci贸n individual de los comprobantes 
 * @author Lewis Chimarro
 * @version 1.0
-* Fecha de actualizaci髇  2012-05-01
+* Fecha de actualizaci贸n  2012-05-01
 * @author Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -20,7 +20,7 @@ $obBD_conexion = new Class_Log_Conexion_Con($Ses_Dat_Dis);
 */
 $obBD_con1 =  new Class_Log_Datos_Con;
 /* 
-* Creaci髇 del objeto para evitar el reenvio 
+* Creaci贸n del objeto para evitar el reenvio 
 */
 $thisPost = new Post_Block;
 
@@ -185,14 +185,14 @@ exit();
 	<tr>
       <td height="389" align="left" valign="top"> 
 <?Php
-/* Control para la elecci髇 del periodo contable */
+/* Control para la elecci贸n del periodo contable */
 if (!isset($hdd_save) && !isset($txt_busqueda))
 {
 ?>
 <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1">
 <FIELDSET>
 	<LEGEND>
-		<label class="Titulos2">Selecci髇 Periodo Contable</label>
+		<label class="Titulos2">Selecci贸n Periodo Contable</label>
 	</LEGEND>
 	<table width="225" border="0" cellspacing="0" cellpadding="0">
 	  <tr>
@@ -354,7 +354,7 @@ if (($op==1 || $op==2 || $op==3))
 		  }//Fin del else if ($row_det_rs_ccpp_p > 0)
 		  ?></font></td>
 		  <td align="center"><font color="<?php echo $rojo; ?>">&nbsp;<? 
-  	  	list($ann, $mes, $dia) = split('[/.-]', $row['Com_Fec']);
+  	  	list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 		  echo $mes.'-'.$row['Com_Num']; ?></font></td>
 		  <td><font color="<?php echo $rojo; ?>"><? echo $row['Prs_Ced']; ?>&nbsp;</font></td>
 		  <td><font color="<?php echo $rojo; ?>">
@@ -390,7 +390,7 @@ if (($op==1 || $op==2 || $op==3))
 		  }//Fin del if ($row['Com_Est'] == 'A')
 		  else
 		  { ?>
-		    <img src="../../mascaras/model1/imagenes/32x32/encrypted.png" width="22" height="22" title="Comprobante bloqueado por generaci髇 autom醫ica" />
+		    <img src="../../mascaras/model1/imagenes/32x32/encrypted.png" width="22" height="22" title="Comprobante bloqueado por generaci贸n autom谩tica" />
 		    <?php
 		  }
 		?>       

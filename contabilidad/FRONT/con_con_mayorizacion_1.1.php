@@ -1,12 +1,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php
 /**
- * Descripción: Permite consultar la mayorizacion contable
- * Fecha de actualización:	2010-11-15 
+ * DescripciÃ³n: Permite consultar la mayorizacion contable
+ * Fecha de actualizaciÃ³n:	2010-11-15 
  * Desarrollador:	Lewis Chimarro 
- * Fecha de actualización:	2012-06-24
+ * Fecha de actualizaciÃ³n:	2012-06-24
  * Desarrollador:	Lewis Chimarro 
- * Fecha de actualización:	2015-05-05
+ * Fecha de actualizaciÃ³n:	2015-05-05
  * Desarrollador:	Lewis Chimarro 
  */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -25,7 +25,7 @@ if (!(isset($op))) {
 
 /**
  * Cuando se llega desde el balance con Pec_Cod2 ya armado, inicializar
- * las variables del período para evitar errores en los componentes.
+ * las variables del perÃ­odo para evitar errores en los componentes.
  */
 if (isset($Pec_Cod2) && $Pec_Cod2 != '') {
 	$__arrPec = explode('~', $Pec_Cod2);
@@ -171,7 +171,7 @@ if (isset($ajax_detalle)) {
 	exit();
 }
 
-/* Inicializar variables del período si se viene desde el balance (con hdd_save2 y Pec_Cod2) */
+/* Inicializar variables del perÃ­odo si se viene desde el balance (con hdd_save2 y Pec_Cod2) */
 if (isset($hdd_save2) && isset($Pec_Cod2) && !isset($Pec_Cod)) {
 	/* Divide la cadena del periodo contable que viene desde el balance */
 	$arreglo_periodo = explode("~", $Pec_Cod2);
@@ -180,13 +180,13 @@ if (isset($hdd_save2) && isset($Pec_Cod2) && !isset($Pec_Cod)) {
 	$Pec_Fef = isset($arreglo_periodo[2]) ? $arreglo_periodo[2] : '';
 	$Pla_Cod = isset($arreglo_periodo[3]) ? $arreglo_periodo[3] : '';
 	
-	/* Si viene desde el balance con txt_busqueda, establecer fechas por defecto del período */
+	/* Si viene desde el balance con txt_busqueda, establecer fechas por defecto del perÃ­odo */
 	// if (isset($txt_busqueda) && $txt_busqueda != "" && !isset($txt_fec_ini)) {
 	// 	$txt_fec_ini = $Pec_Fei;
 	// 	$txt_fec_fin = $Pec_Fef;
 	/* Si viene desde el balance con txt_busqueda, establecer fechas */
 	if (isset($txt_busqueda) && $txt_busqueda != "") {
-		/* Usar fechas de la URL si vienen, si no, usar fechas del período */
+		/* Usar fechas de la URL si vienen, si no, usar fechas del perÃ­odo */
 		if (!isset($txt_fec_ini) || $txt_fec_ini == "") {
 			$txt_fec_ini = $Pec_Fei;
 		}
@@ -195,9 +195,9 @@ if (isset($hdd_save2) && isset($Pec_Cod2) && !isset($Pec_Cod)) {
 		}
 		/* Si viene Chk_Fec=1 desde el balance, significa que se usaron fechas personalizadas */
 		if (isset($Chk_Fec) && $Chk_Fec == 1) {
-			/* El checkbox ya viene activo, las fechas ya están en txt_fec_ini y txt_fec_fin */
+			/* El checkbox ya viene activo, las fechas ya estÃ¡n en txt_fec_ini y txt_fec_fin */
 		}
-		/* Asegurar que op esté establecido */
+		/* Asegurar que op estÃ© establecido */
 		if (!isset($op)) {
 			$op = 1;
 		}
@@ -275,16 +275,16 @@ if (isset($hdd_save2) or isset($hdd_save3)) {
 					$saldos = $debe - $haber;
 				}
 				/**
-				 * Consulta del detalle de la mayorización 
+				 * Consulta del detalle de la mayorizaciÃ³n 
 				 */
 				$rs_cuenta = $obBD_con1->getArrayConsulta(201, $txt_fec_ini . '*' . $txt_fec_fin . '*' . $Pld_Cod . '*' . $ordenar . '*' . $Pec_Cod . '*' . $Com_Aut, $obBD_conexion);
 				// //ChromePhp::log("",$rs_cuenta);
 				$total_rs_cuenta = count($rs_cuenta);
 
 				/**
-				 * Carga el año de la fecha incial 
+				 * Carga el aÃ±o de la fecha incial 
 				 */
-				list($annn, $mess, $dia) = split('[/.-]', $fech_fut);
+				list($annn, $mess, $dia) = preg_split('![/.-]!', $fech_fut);
 				$anio = date("Y", mktime(0, 0, 0, $mess, $dia, $annn));
 			} //Fin del if ($txt_busqueda != "")
 			break;
@@ -384,7 +384,7 @@ else {
 						if (!isset($hdd_save) && !isset($hdd_save2) && !isset($hdd_save3)) { ?>
 							<FIELDSET>
 								<LEGEND>
-									<label class="Titulos2">Selección Periodo Contable</label>
+									<label class="Titulos2">SelecciÃ³n Periodo Contable</label>
 								</LEGEND>
 								<table width="304" border="0" cellspacing="0" cellpadding="0">
 									<tr>
@@ -613,7 +613,7 @@ else {
 																$saldos = $debe - $haber;
 															}
 
-															list($annn, $mess, $dia) = split('[/.-]', $fech_fut);
+															list($annn, $mess, $dia) = preg_split('![/.-]!', $fech_fut);
 															$anio = date("Y", mktime(0, 0, 0, $mess, $dia, $annn));?>
 															<tr>
 																<td align="center">&nbsp;</td>
@@ -659,7 +659,7 @@ else {
 																	}
 																	$total_rs_proveedore = isset($rs_proveedore) ? count($rs_proveedore) : 0;
 																	$i++;
-																	list($ann, $mes, $dia) = split('[/.-]', $row['Com_Fec']);
+																	list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 															?>
 																	<tr>
 																		<td align="center"><?php echo $row['Com_Cod']; ?></td>
@@ -862,7 +862,7 @@ else {
 																	$total_rs_proveedore = isset($rs_proveedore) ? count($rs_proveedore) : 0;
 
 																	$i++;
-																	list($ann, $mes, $dia) = split('[/.-]', $row['Com_Fec']);
+																	list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 
 
 																	$documento_compra = isset($tipo_documento_compra) ? $tipo_documento_compra : '';
@@ -1065,7 +1065,7 @@ else {
 																						$Pec_Cod . '*' . $Com_Aut, $obBD_conexion);
 
 																					$fech_fut = fechas_futuras($r['start'], -1);
-																					list($ann, $mes, $dia) = split('[/.-]', $fech_fut);
+																					list($ann, $mes, $dia) = preg_split('![/.-]!', $fech_fut);
 																					$anio = date("Y", mktime(0, 0, 0, $mes, $dia, $ann));
 																				?>
 																					<tr>
@@ -1096,7 +1096,7 @@ else {
 																							$row_numDoc = $obBD_con1->getRowConsulta(2, $row['Com_Cod'], $obBD_conexion);
 																							$numeroDocCompra = $row_numDoc['Cop_Num'];
 																						}
-																						list($ann, $mes, $dia) = split('[/.-]', $row_rs_cuenta['Com_Fec']);
+																						list($ann, $mes, $dia) = preg_split('![/.-]!', $row_rs_cuenta['Com_Fec']);
 																						if ($row_rs_cuenta['Tia_Ini'] == 'I') {
 																							$rs_proveedore = $obBD_con1->getRowConsulta(217, $row_rs_cuenta['Cli_Cod'], $obBD_conexion);
 																						} else {
@@ -1245,9 +1245,9 @@ else {
 																		$cheque = $row['Che_Num'];
 																		$total_rs_cuenta = count($rs_cuenta);
 																		/**
-																		 * Carga el a�o de la fecha incial 
+																		 * Carga el aï¿½o de la fecha incial 
 																		 */
-																		list($ann, $mes, $dia) = split('[/.-]', $fech_fut);
+																		list($ann, $mes, $dia) = preg_split('![/.-]!', $fech_fut);
 																		$anio = date("Y", mktime(0, 0, 0, $mes, $dia, $ann));
 
 																		if ($total_rs_cuenta > 0 or $total_rs_saldos > 0) {
@@ -1320,7 +1320,7 @@ else {
 																							$numeroDocCompra = $row_numDoc['Cop_Num'];
 																						}
 
-																						list($ann, $mes, $dia) = split('[/.-]', $row_rs_cuenta['Com_Fec']);
+																						list($ann, $mes, $dia) = preg_split('![/.-]!', $row_rs_cuenta['Com_Fec']);
 																						/**
 																						 * Consulta del cliente o proveedor 
 																						 */
@@ -1431,7 +1431,7 @@ else {
 														<tr>
 															<td width="110" scope="col">
 																<form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" name="form_volver" id="form_volver" style="display: inline-block;">
-																	<button type="submit" class="btn" title="Volver a selección de período"
+																	<button type="submit" class="btn" title="Volver a selecciÃ³n de perÃ­odo"
 																		style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%); color: #ffffff; width: auto; padding: 6px 14px; border-radius: 6px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; margin-left: 10px;">
 																		<i class="icon-arrow-left icon-white"></i>
 																		<span> Volver</span>

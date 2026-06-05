@@ -14,7 +14,7 @@
 		{
 ?>
 			<script LANGUAGE="JavaScript">	
-				alert ("¡No se ha podido guardar los datos porque el banco ya existe en la base de datos!");
+				alert ("ï¿½No se ha podido guardar los datos porque el banco ya existe en la base de datos!");
 			</script>
 <?Php
 		}
@@ -82,6 +82,6 @@
 <?php
 if (isset($rs_insbancos))
 {
-	mysql_free_result ($rs_insbancos);
+	mysqli_free_result ($rs_insbancos);
 }
 ?>

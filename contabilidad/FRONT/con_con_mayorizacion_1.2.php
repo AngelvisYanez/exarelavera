@@ -1,12 +1,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php
 /**
- * Descripci�n: Permite consultar la mayorizacion contable
- * Fecha de actualizaci�n:	2010-11-15 
+ * Descripciï¿½n: Permite consultar la mayorizacion contable
+ * Fecha de actualizaciï¿½n:	2010-11-15 
  * Desarrollador:	Lewis Chimarro 
- * Fecha de actualizaci�n:	2012-06-24
+ * Fecha de actualizaciï¿½n:	2012-06-24
  * Desarrollador:	Lewis Chimarro 
- * Fecha de actualizaci�n:	2015-05-05
+ * Fecha de actualizaciï¿½n:	2015-05-05
  * Desarrollador:	Lewis Chimarro 
  */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -243,9 +243,9 @@ if (isset($hdd_save2) or isset($hdd_save3)) {
 				$rs_cuenta = $obBD_con1->getArrayConsulta(201, $txt_fec_ini . '*' . $txt_fec_fin . '*' . $Pld_Cod . '*' . $ordenar . '*' . $Pec_Cod . '*' . $Com_Aut, $obBD_conexion);
 				$total_rs_cuenta = count($rs_cuenta);
 				/**
-				 * Carga el a�o de la fecha incial 
+				 * Carga el aï¿½o de la fecha incial 
 				 */
-				list($annn, $mess, $dia) = split('[/.-]', $fech_fut);
+				list($annn, $mess, $dia) = preg_split('![/.-]!', $fech_fut);
 				$anio = date("Y", mktime(0, 0, 0, $mess, $dia, $annn));
 			} //Fin del if ($txt_busqueda != "")
 			break;
@@ -345,7 +345,7 @@ else {
 						if (!isset($hdd_save) && !isset($hdd_save2) && !isset($hdd_save3)) { ?>
 							<FIELDSET>
 								<LEGEND>
-									<label class="Titulos2">Selección Periodo Contable</label>
+									<label class="Titulos2">SelecciÃ³n Periodo Contable</label>
 								</LEGEND>
 								<table width="304" border="0" cellspacing="0" cellpadding="0">
 									<tr>
@@ -502,7 +502,7 @@ else {
 													<td width="387"><?Php echo $txt_fec_fin; ?></td>
 												</tr>
 												<tr>
-													<td class="Etiqueta1">Código:</td>
+													<td class="Etiqueta1">CÃ³digo:</td>
 													<td><?Php echo $row_cuenta['Pld_Cdc_Grupo']; ?></td>
 													<td class="Etiqueta1">GRUPO:</td>
 													<td><?Php echo $row_cuenta['Pld_Des_Grupo']; ?></td>
@@ -569,7 +569,7 @@ else {
 															$total_rs_proveedore = count($rs_proveedore);
 
 															$i++;
-															list($ann, $mes, $dia) = split('[/.-]', $row['Com_Fec']);
+															list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 														?>
 															<tr>
 																<td align="center"><? echo $row['Com_Cod']; ?></td>
@@ -578,7 +578,7 @@ else {
 																<td align="center"><?Php echo  $row['Tia_Abr'] . "-" . $mes . "-" . str_pad($row['Com_Num'], 2, "0", STR_PAD_LEFT); ?></td>
 																<td align="center"><?Php echo $row['Com_Fec']; ?></td>
 																<td align="left" style="display:none"><?Php echo $row_proveedore['Prs_Ape'] . ' ' . $row_proveedore['Prs_Nom']; ?></td>
-																<!--td><? echo (empty($row['Com_Con']) ? 'COMPRA DE MATERIALES DE PRODUCCIÓN' : $row['Com_Con']); ?></td-->
+																<!--td><? echo (empty($row['Com_Con']) ? 'COMPRA DE MATERIALES DE PRODUCCIÃ“N' : $row['Com_Con']); ?></td-->
 																<td><? echo (empty($row['Com_Con']) ? $row['Com_Obs'] : $row['Com_Con']); ?></td>
 
 																<td align="right"><? if ($row['Asi_Deh'] == 'D') {
@@ -737,9 +737,9 @@ else {
 															$Pec_Cod . '*' . $Com_Aut, $obBD_conexion);
 														$total_rs_cuenta = count($rs_cuenta);
 														/**
-														 * Carga el a�o de la fecha incial 
+														 * Carga el aï¿½o de la fecha incial 
 														 */
-														list($ann, $mes, $dia) = split('[/.-]', $fech_fut);
+														list($ann, $mes, $dia) = preg_split('![/.-]!', $fech_fut);
 														$anio = date("Y", mktime(0, 0, 0, $mes, $dia, $ann));
 
 														if ($total_rs_cuenta > 0 or $total_rs_saldos > 0) {
@@ -796,7 +796,7 @@ else {
 																	</tr>
 																	<?
 																	foreach ($rs_cuenta as $row_rs_cuenta) {
-																		list($ann, $mes, $dia) = split('[/.-]', $row_rs_cuenta['Com_Fec']);
+																		list($ann, $mes, $dia) = preg_split('![/.-]!', $row_rs_cuenta['Com_Fec']);
 																		/**
 																		 * Consulta del cliente o proveedor 
 																		 */
@@ -821,7 +821,7 @@ else {
 																			<td align="center"><?Php echo  $row['Tia_Abr'] . "-" . $mes . "-" . str_pad($row['Com_Num'], 2, "0", STR_PAD_LEFT); ?></td>
 																			<td align="center"><?Php echo $row_rs_cuenta['Com_Fec']; ?></td>
 																			<td align="left" style="display:none"><?Php echo $rs_proveedore['Prs_Ape'] . ' ' . $rs_proveedore['Prs_Nom']; ?></td>
-																			<!--td><? echo (empty($row_rs_cuenta['Com_Con']) ? 'COMPRA DE MATERIALES DE PRODUCCIÓN' : $row_rs_cuenta['Com_Con']); ?></td-->
+																			<!--td><? echo (empty($row_rs_cuenta['Com_Con']) ? 'COMPRA DE MATERIALES DE PRODUCCIÃ“N' : $row_rs_cuenta['Com_Con']); ?></td-->
 																			<td><? echo (empty($row_rs_cuenta['Com_Con']) ? $row_rs_cuenta['Com_Obs'] : $row_rs_cuenta['Com_Con']); ?></td>
 
 																			<td align="right"><? if ($row_rs_cuenta['Asi_Deh'] == 'D') {

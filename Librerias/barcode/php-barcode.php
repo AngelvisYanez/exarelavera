@@ -30,13 +30,13 @@ function barcode_outimage($text, $bars, $scale=1, $mode , $total_y=0, $space = '
    $width = false;
    continue;
   }
-  if(ereg("[a-z]", $val)){
+ if(preg_match('/[a-z]/', $val)){
    $val=ord($val)-ord('a')+1;
   } 
   $xpos+=$val*$scale;
   $width=true;
- }
- $total_x = ($xpos) + $space['right'] + $space['right'];
+  }
+  $total_x = ($xpos) + $space['right'] + $space['right'];
  $xpos = $space['left'];
  if(!function_exists("imagecreate")){
   print "Es necesaria tener la extension gd2 activada en PHP<BR>\n";
@@ -62,7 +62,7 @@ function barcode_outimage($text, $bars, $scale=1, $mode , $total_y=0, $space = '
    $width=false;
    continue;
   }
-  if(ereg("[a-z]", $val)){
+   if(preg_match('/[a-z]/', $val)){
    $val=ord($val)-ord('a')+1;
    $h=$height2;
   }
@@ -113,7 +113,7 @@ function barcode_outtext($code,$bars){
    for ($a=0;$a<$val;$a++) $bar_line.="-";
    continue;
   }
-  if (ereg("[a-z]", $val)){
+  if (preg_match('/[a-z]/', $val)){
    $val=ord($val)-ord('a')+1;
    $h=$heigh2;
    for ($a=0;$a<$val;$a++) $bar_line.="I";
@@ -128,10 +128,10 @@ function barcode_outtext($code,$bars){
 
 function barcode_encode_genbarcode($code,$encoding){
  global $genbarcode_loc;
- if (eregi("^ean$", $encoding) && strlen($code)==13) $code=substr($code,0,12);
+ if (preg_match('/^ean$/i', $encoding) && strlen($code)==13) $code=substr($code,0,12);
  if (!$encoding) $encoding="EAN13";
- $encoding=ereg_replace("[|\\]", "_", $encoding);
- $code=ereg_replace("[|\\]", "_", $code);
+ $encoding=preg_replace('/[|\\\\]/', '_', $encoding);
+ $code=preg_replace('/[|\\\\]/', '_', $code);
  $cmd=$genbarcode_loc." \""
  .str_replace("\"", "\\\"",$code)."\" \""
  .str_replace("\"", "\\\"",strtoupper($encoding))."\"";
@@ -157,14 +157,14 @@ function barcode_encode_genbarcode($code,$encoding){
 function barcode_encode($code, $encoding){
  global $genbarcode_loc;
  if(
-  ((eregi("^ean$", $encoding) &&
-  ( strlen($code)==12 || strlen($code)==13)))
-  || (($encoding) && (eregi("^isbn$", $encoding))
-  && (( strlen($code)==9 || strlen($code)==10) ||
-  (((ereg("^978", $code) && strlen($code)==12) ||
-  (strlen($code)==13)))))
-  || (( !isset($encoding) || !$encoding || (eregi("^ANY$", $encoding) ))
-  && (ereg("^[0-9]{12,13}$", $code)))
+ ((preg_match('/^ean$/i', $encoding) &&
+   ( strlen($code)==12 || strlen($code)==13)))
+   || (($encoding) && (preg_match('/^isbn$/i', $encoding))
+   && (( strlen($code)==9 || strlen($code)==10) ||
+   (((preg_match('/^978/', $code) && strlen($code)==12) ||
+   (strlen($code)==13)))))
+   || (( !isset($encoding) || !$encoding || (preg_match('/^ANY$/i', $encoding) ))
+   && (preg_match('/^[0-9]{12,13}$/', $code)))
   ){
   $bars=barcode_encode_ean($code, $encoding);
  }

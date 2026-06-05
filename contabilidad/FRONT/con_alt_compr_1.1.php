@@ -3,9 +3,9 @@
 * @abstract Permite registrar comprobantes de ingreso, egreso y diario
 * @author Lewis Chimarro
 * @version 1.0
-* Fecha de creaci�n  2009-12-11
-* Fecha de actualizaci�n  2012-04-25
-* Fecha de actualizaci�n  2015-04-30
+* Fecha de creaciï¿½n  2009-12-11
+* Fecha de actualizaciï¿½n  2012-04-25
+* Fecha de actualizaciï¿½n  2015-04-30
 * @author Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -17,7 +17,7 @@ require_once('../../Librerias/procedimientos/almacenados_standar.php');
 */
 require_once('../../Librerias/postclass.php');	
 /** 
-* Creaci�n del objeto para evitar el reenvio 
+* Creaciï¿½n del objeto para evitar el reenvio 
 */
 $thisPost = new Post_Block;
 /**
@@ -44,7 +44,7 @@ if (isset($loadCuenta)){
     exit();
 }
 /**
-* Cargado de Informaci�n a trav�s de AJAX 
+* Cargado de Informaciï¿½n a travï¿½s de AJAX 
 */
 if (isset($codigo) && !isset($bt_save))
 {
@@ -78,7 +78,7 @@ if (isset($ajax_buscador))
     <td>	
     <FIELDSET>
 	<LEGEND>
-	<label class="Titulos2">B�squeda de Cuentas</label>
+	<label class="Titulos2">Bï¿½squeda de Cuentas</label>
 	</LEGEND>
 	<table width="481" border="0" cellpadding="0" cellspacing="0">
 		<tr>
@@ -112,7 +112,7 @@ if (isset($ajax_buscador))
 exit();
 }
 /**
-* Buscador para editar cuentas de la contabilizaci�n
+* Buscador para editar cuentas de la contabilizaciï¿½n
 */
 if (isset($ajax_buscador2))
 { ?>
@@ -122,7 +122,7 @@ if (isset($ajax_buscador2))
     <td>	
     <FIELDSET>
 	<LEGEND>
-	<label class="Titulos2">B�squeda de Cuentas</label>
+	<label class="Titulos2">Bï¿½squeda de Cuentas</label>
 	</LEGEND>
 	<table width="481" border="0" cellpadding="0" cellspacing="0">
 		<tr>
@@ -156,7 +156,7 @@ if (isset($ajax_buscador2))
 exit();
 }
 /**
-* Cargado AJAX de los resultados de la b�squeda 1
+* Cargado AJAX de los resultados de la bï¿½squeda 1
 */
 if (isset($ajax_buscod1))
 {	
@@ -179,7 +179,7 @@ if (isset($ajax_buscod1))
 	<table width="100%" border="1" cellpadding="0" cellspacing="0">
 	  <tr class="Cabecera1">
 	    <td width="6%">C&oacute;d. Int.</td>
-		<td width="10%"><strong>C�digo</strong></td>
+		<td width="10%"><strong>Cï¿½digo</strong></td>
 		<td width="24%"><strong>Cuenta</strong></td>
 		<td width="20%"><strong>Grupo</strong></td>
 		<td width="10%"><strong>Tipo</strong></td>
@@ -223,7 +223,7 @@ if (isset($ajax_buscod1))
 	  </tr>
 	  <? } //FIn del foreach ($row as $row)
 	  } else { ?>
-		<tr><td colspan="9" class="Alertas"><?Php echo error_alerta("�No hay resultados que mostrar!", 1); ?></td>
+		<tr><td colspan="9" class="Alertas"><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1); ?></td>
 		</tr>
 	  <? }//Fin del if ($total_rs_buscta > 0)
 	  ?>
@@ -234,7 +234,7 @@ if (isset($ajax_buscod1))
 exit();
 }//if (isset($buscod))
 /**
-* Cargado AJAX de los resultados de la b�squeda 2
+* Cargado AJAX de los resultados de la bï¿½squeda 2
 */
 if (isset($ajax_buscod2))
 {	
@@ -257,7 +257,7 @@ if (isset($ajax_buscod2))
 	<table width="100%" border="1" cellpadding="0" cellspacing="0">
 	  <tr class="Cabecera1">
 	    <td width="6%">C&oacute;d. Int.</td>
-		<td width="10%"><strong>C�digo</strong></td>
+		<td width="10%"><strong>Cï¿½digo</strong></td>
 		<td width="24%"><strong>Cuenta</strong></td>
 		<td width="20%"><strong>Grupo</strong></td>
 		<td width="10%"><strong>Tipo</strong></td>
@@ -297,7 +297,7 @@ if (isset($ajax_buscod2))
 	  </tr>
 	  <? } //FIn del foreach ($row as $row)
 	  } else { ?>
-		<tr><td colspan="8" class="Alertas"><?Php echo error_alerta("�No hay resultados que mostrar!", 1); ?></td>
+		<tr><td colspan="8" class="Alertas"><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1); ?></td>
 		</tr>
 	  <? }//Fin del if ($total_rs_buscta > 0)
 	  ?>
@@ -332,7 +332,7 @@ if (isset($caja))
 	exit();	
 }
 /**
-* D�as de las ventas, para contabilizar
+* Dï¿½as de las ventas, para contabilizar
 */
 if (isset($caja_mes))
 {
@@ -388,12 +388,12 @@ if (isset($ajax_compra))
 	exit();	
 }
 /**
-* D�as de las compras, para contabilizar
+* Dï¿½as de las compras, para contabilizar
 */
 if (isset($compra_mes))
 {
 	/** 
-	* Consulta de los d�as a generar 
+	* Consulta de los dï¿½as a generar 
 	*/
 	$row_rs_dias = $obBD_con1->getArrayConsulta(186, $Pec_Cod.'*'.$Mes, $obBD_conexion); ?>
        <?Php 
@@ -454,7 +454,7 @@ else
 		$Com_Num = $obBD_con1->codigoComprAuto($Tia_Cod, $Pec_Cod, $var_mes[1], $obBD_conexion);
 		
 		/** 
-		* Inserci�n del Comprobante 
+		* Inserciï¿½n del Comprobante 
 		*/
 		if ($op=="I") { $tabla="cliente"; $campo="Cli_Cod"; }
 		if ($op=="E" || $op=="D") { $tabla="proveedore"; $campo="Prv_Cod"; }
@@ -476,7 +476,7 @@ else
 		}
 		
 		/** 
-		* Control para el grabado de las relaci�n con compras
+		* Control para el grabado de las relaciï¿½n con compras
 		*/
 		if (isset($Cop_Cod))
 		{
@@ -513,7 +513,7 @@ else
 				}
 		}
 		/**
-		* Finaliza la transacci�n
+		* Finaliza la transacciï¿½n
 		*/
 		$obBD_con1->fin_transaccion($obBD_conexion->conexion);
 	}//Fin del if (isset($bt_save))
@@ -537,12 +537,12 @@ else
 			if (isset($chk_diario))
 			{
 				/**
-				* Cuando se seleccionan varios d�as, se toma como fecha el �ltimo d�a del mes
+				* Cuando se seleccionan varios dï¿½as, se toma como fecha el ï¿½ltimo dï¿½a del mes
 				*/
 				if (count($Caj_Cod) > 1)
 				{
 				    $arreglo_caja = explode("*",$Caj_Cod[0]); 
-					list($ann, $mes, $dia) = split('[/.-]', $arreglo_caja[1]);
+					list($ann, $mes, $dia) = preg_split('![/.-]!', $arreglo_caja[1]);
 					$dia_ultimo = ultimoDia($mes,$ann);
 					$fechaCompr = $ann."-".$mes."-".$dia_ultimo;
 					for ($i=0; $i<=count($Caj_Cod);$i++)
@@ -561,7 +561,7 @@ else
 				else
 				{
 					/**
-					* Cuando se selecciona un d�a
+					* Cuando se selecciona un dï¿½a
 					*/
 					$arreglo_caja = explode("*",current($Caj_Cod)); 
 					$fechaCompr = $arreglo_caja[1];
@@ -574,7 +574,7 @@ else
 				*/
 				$row_rs_caja_clien = $obBD_con1->getRowConsulta(180, $Ses_Emp_Cod, $obBD_conexion);			
 				/** 
-				* Nombre y C�digo del cliente 
+				* Nombre y Cï¿½digo del cliente 
 				*/
 				$Cli_Cod = $row_rs_caja_clien['Cli_Cod'];
 				$Nombre = $row_rs_caja_clien['Prs_Ape'].' '.$row_rs_caja_clien['Prs_Nom'];											
@@ -625,12 +625,12 @@ else
 			if (isset($chk_compra))
 			{
 				/**
-				* Cuando se seleccionan varios d�as, se toma como fecha el �ltimo d�a del mes
+				* Cuando se seleccionan varios dï¿½as, se toma como fecha el ï¿½ltimo dï¿½a del mes
 				*/
 				if (count($Cop_Cod) > 1)
 				{
 				    $arreglo_caja = explode("*",$Cop_Cod[0]); 
-					list($ann, $mes, $dia) = split('[/.-]', $arreglo_caja[1]);
+					list($ann, $mes, $dia) = preg_split('![/.-]!', $arreglo_caja[1]);
 					$dia_ultimo = ultimoDia($mes,$ann);
 					$fechaCompr = $ann."-".$mes."-".$dia_ultimo;
 					for ($i=0; $i<=count($Cop_Cod);$i++)
@@ -649,7 +649,7 @@ else
 				else
 				{
 					/**
-					* Cuando se selecciona un d�a
+					* Cuando se selecciona un dï¿½a
 					*/
 					$arreglo_caja = explode("*",current($Cop_Cod)); 
 					$fechaCompr = $arreglo_caja[1];
@@ -662,7 +662,7 @@ else
 				*/
 				$row_rs_compas_prov = $obBD_con1->getRowConsulta(187, $Ses_Emp_Cod, $obBD_conexion);			
 				/** 
-				* Nombre y C�digo del cliente 
+				* Nombre y Cï¿½digo del cliente 
 				*/
 				$Prv_Cod = $row_rs_compas_prov['Prv_Cod'];
 				$Nombre = $row_rs_compas_prov['Prs_Ape'].' '.$row_rs_compas_prov['Prs_Nom'];											
@@ -697,7 +697,7 @@ else
 	$Pec_Cod = $arreglo[0];
 
 	/**
-	* En esta consulta debe botar un solo registro ya en un a�o contable normalmente se utiliza un plan de cuentas 
+	* En esta consulta debe botar un solo registro ya en un aï¿½o contable normalmente se utiliza un plan de cuentas 
 	*/
 	$row_rs_cuenta_manual = $obBD_con1->getRowConsulta(113, $Pec_Cod.'*'.$Ses_Emp_Cod, $obBD_conexion);
 	$Pla_Cod = $row_rs_cuenta_manual['Pla_Cod'];	
@@ -774,7 +774,7 @@ if (isset($bt_save) && isset($ultimo) && !isset($hdd_volver))
       <td height="400" align="left" valign="top">
 <?Php
 /**
-* Control para la elecci�n del periodo contable 
+* Control para la elecciï¿½n del periodo contable 
 */
 if (!isset($hdd_save) && !isset($txt_busqueda) && !isset($chk_diario) && !isset($chk_compra))
 {
@@ -782,7 +782,7 @@ if (!isset($hdd_save) && !isset($txt_busqueda) && !isset($chk_diario) && !isset(
 <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1">
 <FIELDSET>
 	<LEGEND>
-		<label class="Titulos2">Selecci�n Periodo Contable</label>
+		<label class="Titulos2">Selecciï¿½n Periodo Contable</label>
 	</LEGEND>
     <table width="252" border="0" cellspacing="0" cellpadding="0">
       <tr>
@@ -1095,7 +1095,7 @@ if ((isset($Cli_Cod) && ($op=="I")) || (isset($Prv_Cod) && ($op=="E" || $op=="D"
 	</script>
 	<?php	
 	/** 
-	* En la opci�n 3 colocar el c�digo del cliente que se va a utilizar para los Comprobantes de Ajuste
+	* En la opciï¿½n 3 colocar el cï¿½digo del cliente que se va a utilizar para los Comprobantes de Ajuste
 	*/
 	switch($op) {
 	case "I": $codigo=$Cli_Cod; $etiqueta=$array_asien[0]; break;
@@ -1411,7 +1411,7 @@ if ((isset($Cli_Cod) && ($op=="I")) || (isset($Prv_Cod) && ($op=="E" || $op=="D"
 	  <td width="281">
       <input name="datos[<? echo $fila; ?>,6]" id="datos[<? echo $fila; ?>,6]" type="text" size="35" maxlength="25" title="Factura No: <?Php echo $row['Vet_Num']." - ".$row['Caj_Fec']; ?>" value="...Factura No: <?Php echo $row['Vet_Num']." - ".$row['Caj_Fec']; ?>"></td>
 	  <td width="59" align="right">
-      <input name="datos[<? echo $fila; ?>,4]" id="datos[<? echo $fila; ?>,4]" type="text" size="7" maxlength="10" value="<? echo round($row['Importe']-$row_renta_venta['Renta']*1-$row_renta_iva_venta['Renta']*1,2); ?>" style="text-align:right" onBlur="numerico(this)" onKeyUp="sumar_totales()" title="C�d. Int.: <?php echo $row['Vet_Cod']; ?>">
+      <input name="datos[<? echo $fila; ?>,4]" id="datos[<? echo $fila; ?>,4]" type="text" size="7" maxlength="10" value="<? echo round($row['Importe']-$row_renta_venta['Renta']*1-$row_renta_iva_venta['Renta']*1,2); ?>" style="text-align:right" onBlur="numerico(this)" onKeyUp="sumar_totales()" title="Cï¿½d. Int.: <?php echo $row['Vet_Cod']; ?>">
       </td>
 		<td width="63">&nbsp;</td>
 		<td width="33" align="center">
@@ -1660,7 +1660,7 @@ if ((isset($Cli_Cod) && ($op=="I")) || (isset($Prv_Cod) && ($op=="E" || $op=="D"
       <input name="datos[<? echo $fila; ?>,2]" type="text" <?Php if (count($row_rs_iva_cobrado) > 0){ ?> readonly <?Php } ?> id="datos[<? echo $fila; ?>,2]"  onkeypress="if (event.keyCode == 13){loadCuenta('<? echo $fila; ?>',this.value);}" value="<? echo $row_rs_iva_cobrado['Pld_Cdc']; ?>" size="7">
       </td>
 	  <td>
-      <input name="datos[<? echo $fila; ?>,3]" id="datos[<? echo $fila; ?>,3]" type="text" size="20" maxlength="100" <?Php if (count($row_rs_iva_cobrado) == 0){ echo "style='color:#FF0000'"; } ?>   value="<?Php if (count($row_rs_iva_cobrado) > 0){ echo $row_rs_iva_cobrado['Pld_Des']; }else { echo "�No existe una cuenta contable configurada para el Iva Cobrado!"; }; ?>" readonly>
+      <input name="datos[<? echo $fila; ?>,3]" id="datos[<? echo $fila; ?>,3]" type="text" size="20" maxlength="100" <?Php if (count($row_rs_iva_cobrado) == 0){ echo "style='color:#FF0000'"; } ?>   value="<?Php if (count($row_rs_iva_cobrado) > 0){ echo $row_rs_iva_cobrado['Pld_Des']; }else { echo "ï¿½No existe una cuenta contable configurada para el Iva Cobrado!"; }; ?>" readonly>
       </td>
 	  <td>
       <input name="datos[<? echo $fila; ?>,6]" id="datos[<? echo $fila; ?>,6]" type="text" size="23" maxlength="25" value="">
@@ -1747,7 +1747,7 @@ if ((isset($Cli_Cod) && ($op=="I")) || (isset($Prv_Cod) && ($op=="E" || $op=="D"
       <input name="datos[<? echo $fila; ?>,6]" id="datos[<? echo $fila; ?>,6]" type="text" size="35" maxlength="25" title="Factura No: <?Php echo $row['Cop_Num']; ?>" value="...Documento No: <?Php echo $row['Cop_Num']; ?>">
       </td>
 	  <td width="59" align="right">
-      <input name="datos[<? echo $fila; ?>,4]" id="datos[<? echo $fila; ?>,4]" type="text" size="7" maxlength="10" value="<? echo round($row['Importe']/*-$row_renta_venta['Renta']*/,2); ?>" style="text-align:right" onBlur="numerico(this)" onKeyUp="sumar_totales()" title="C�d. Int.: <?php echo $row['Cop_Cod']; ?>">
+      <input name="datos[<? echo $fila; ?>,4]" id="datos[<? echo $fila; ?>,4]" type="text" size="7" maxlength="10" value="<? echo round($row['Importe']/*-$row_renta_venta['Renta']*/,2); ?>" style="text-align:right" onBlur="numerico(this)" onKeyUp="sumar_totales()" title="Cï¿½d. Int.: <?php echo $row['Cop_Cod']; ?>">
       </td>
 		<td width="63">&nbsp;</td>
 		<td width="33" align="center">
@@ -1776,7 +1776,7 @@ if ((isset($Cli_Cod) && ($op=="I")) || (isset($Prv_Cod) && ($op=="E" || $op=="D"
       </td>
 	  <td>
               <?php if (count($row_rs_iva_cobrado) <= 1){  /*var_dump($row_rs_iva_cobrado);*/ ?>
-      <input name="datos[<? echo $fila; ?>,3]" id="datos[<? echo $fila; ?>,3]" type="text" size="20" maxlength="100" <?Php if (count($row_rs_iva_cobrado) == 0){ echo "style='color:#FF0000'"; } ?>   value="<?Php if (count($row_rs_iva_cobrado) > 0){ echo $row_rs_iva_cobrado[0]['Pld_Des']; }else { echo "�No existe una cuenta contable configurada para el Iva Cobrado!"; }; ?>" readonly>
+      <input name="datos[<? echo $fila; ?>,3]" id="datos[<? echo $fila; ?>,3]" type="text" size="20" maxlength="100" <?Php if (count($row_rs_iva_cobrado) == 0){ echo "style='color:#FF0000'"; } ?>   value="<?Php if (count($row_rs_iva_cobrado) > 0){ echo $row_rs_iva_cobrado[0]['Pld_Des']; }else { echo "ï¿½No existe una cuenta contable configurada para el Iva Cobrado!"; }; ?>" readonly>
               <?php }else{ ?>
       <input name="datos[<? echo $fila; ?>,3]" id="datos[<? echo $fila; ?>,3]" type="text" size="20" maxlength="100" <?Php if (count($row_rs_iva_cobrado) == 0){ echo "style='color:#FF0000'"; } ?>   value="<?Php if (count($row_rs_iva_cobrado) > 0){ echo $row_rs_iva_cobrado[0]['Pld_Des']; } ?>" readonly style="display:none">
       <select onChange="var tempAux=this.value.split('~');document.getElementById('datos[<? echo $fila; ?>,1]').value=tempAux[0];document.getElementById('datos[<? echo $fila; ?>,2]').value=tempAux[1];document.getElementById('datos[<? echo $fila; ?>,3]').value=tempAux[2];" >

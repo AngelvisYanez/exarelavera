@@ -1,9 +1,9 @@
 <?php 
 /**
-* @abstract Reporte de ventas para la impresión en factura o nota de venta
+* @abstract Reporte de ventas para la impresiÃ³n en factura o nota de venta
 * @author Lewis Chimarro
 * @version 1.0
-* Fecha de actualización  2012-05-23
+* Fecha de actualizaciÃ³n  2012-05-23
 * @author Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -72,7 +72,7 @@ if (isset($Vet_Cod))
 </style>
 </head>
 <body>
-<?Php  list($anio, $mes, $dia) = split('[/.-]', $row_rs_cliente['Caj_Fec']);?>
+<?Php  list($anio, $mes, $dia) = preg_split('![/.-]!', $row_rs_cliente['Caj_Fec']);?>
 
 <span style="top:150px;left:60px;" class="flota"><? if ($row_rs_representante['Cli_Fac'] != ""){echo substr($row_rs_representante['Cli_Fac'],0,40);}else{ echo substr($row_rs_cliente['Prs_Ape'].' '.$row_rs_cliente['Prs_Nom'],0,40);}?></span>
 <span style="top:179px;left:60px;" class="flota"><? if ($row_rs_representante['Cli_Dir'] != ""){echo substr($row_rs_representante['Cli_Dir'],0,41);}else{echo substr($row_rs_cliente['Prs_Dir'],0,41);}?></span>

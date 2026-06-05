@@ -1,9 +1,9 @@
 <?php 
 /**
-* @abstract Reporte de ventas para la impresión en factura o nota de venta
+* @abstract Reporte de ventas para la impresiÃ³n en factura o nota de venta
 * @author Lewis Chimarro
 * @version 1.0
-* Fecha de actualización  2012-05-23
+* Fecha de actualizaciÃ³n  2012-05-23
 * @author Lewis Chimarro
 */
 
@@ -53,7 +53,7 @@ if (isset($Gui_Cod))
 </style>
 </head>
 <body>
-<?Php  list($anio, $mes, $dia) = split('[-]', $row_rs_cliente['Caj_Fec']);?>
+<?Php  list($anio, $mes, $dia) = preg_split('![-]!', $row_rs_cliente['Caj_Fec']);?>
 <table width="538" height="100%" border="0" align="left">
 <tr>
           <td width="532" height="214" colspan="4" align="left" valign="top"><table width="100%" border="0" cellpadding="0" cellspacing="0" style="table-layout:fixed;" class="Letra_punto_venta_2">

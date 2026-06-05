@@ -1,8 +1,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?
 /**
- * Descripción: Permite consultar movimiento en cuentas contables (similar a la mayorización)
- * Fecha de actualización:	2025-03-24 
+ * DescripciÃ³n: Permite consultar movimiento en cuentas contables (similar a la mayorizaciÃ³n)
+ * Fecha de actualizaciÃ³n:	2025-03-24 
  * Desarrollador: Patricio Moreno 
  */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -203,12 +203,12 @@ if (isset($hdd_save2) or isset($hdd_save3)) {
 				} else {
 					$saldos = $debe - $haber;
 				}
-				/* Consulta del detalle de la mayorización */
+				/* Consulta del detalle de la mayorizaciÃ³n */
 				$rs_cuenta = $obBD_con1->getArrayConsulta(201, $txt_fec_ini . '*' . $txt_fec_fin . '*' . $Pld_Cod . '*' . $ordenar . '*' . $Pec_Cod . '*' . $Com_Aut, $obBD_conexion);
 				$total_rs_cuenta = count($rs_cuenta);
 
-				/* Carga el año de la fecha incial */
-				list($annn, $mess, $dia) = split('[/.-]', $fech_fut);
+				/* Carga el aÃ±o de la fecha incial */
+				list($annn, $mess, $dia) = preg_split('![/.-]!', $fech_fut);
 				$anio = date("Y", mktime(0, 0, 0, $mess, $dia, $annn));
 			} //Fin del if ($txt_busqueda != "")
 			break;
@@ -299,7 +299,7 @@ else {
 						if (!isset($hdd_save) && !isset($hdd_save2) && !isset($hdd_save3)) { ?>
 							<FIELDSET>
 								<LEGEND>
-									<label class="Titulos2">Selección Periodo Contable</label>
+									<label class="Titulos2">SelecciÃ³n Periodo Contable</label>
 								</LEGEND>
 								<table width="304" border="0" cellspacing="0" cellpadding="0">
 									<tr>
@@ -485,7 +485,7 @@ else {
 													<thead>
 														<tr>
 															<th align="center" width="5%">C&oacute;d. Int.</th>
-															<th align="center" width="6%">Nº Cuenta.</th>
+															<th align="center" width="6%">NÂº Cuenta.</th>
 															<th align="center" width="6%">Cuenta. Cont.</th>
 															<th align="center" width="6%">Fecha</th>
 															<th align="center" width="20%">Cliente/Proveedor</th>
@@ -522,7 +522,7 @@ else {
 																$saldos = $debe - $haber;
 															}
 
-															list($annn, $mess, $dia) = split('[/.-]', $fech_fut);
+															list($annn, $mess, $dia) = preg_split('![/.-]!', $fech_fut);
 															$anio = date("Y", mktime(0, 0, 0, $mess, $dia, $annn));?>
 															<tr>
 																<!-- <td align="center">&nbsp;</td> -->
@@ -560,7 +560,7 @@ else {
 																	}
 																	$total_rs_proveedore = isset($rs_proveedore) ? count($rs_proveedore) : 0;
 																	$i++;
-																	list($ann, $mes, $dia) = split('[/.-]', $row['Com_Fec']);
+																	list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 															?>
 																	<tr>
 																		<td align="center"><? echo $row['Com_Cod']; ?></td>
@@ -674,7 +674,7 @@ else {
 														<thead>
 															<tr>
 																<th align="center" width="5%">C&oacute;d. Int.</th>
-																<th align="center" width="6%">Nº Cuenta.</th>
+																<th align="center" width="6%">NÂº Cuenta.</th>
 																<th align="center" width="6%">Cuenta. Cont.</th>
 																<th align="center" width="6%">Fecha</th>
 																<th align="center" width="8%">Ced/Ruc</th>
@@ -735,7 +735,7 @@ else {
 																	$total_rs_proveedore = isset($rs_proveedore) ? count($rs_proveedore) : 0;
 
 																	$i++;
-																	list($ann, $mes, $dia) = split('[/.-]', $row['Com_Fec']);
+																	list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 
 																	$documento_compra = isset($tipo_documento_compra) ? $tipo_documento_compra : '';
 																	$documento_venta = isset($tipo_documento_venta) ? $tipo_documento_venta : '';
@@ -860,7 +860,7 @@ else {
 																<tr>
 																	<th width="3%" align="center">Ord.</th>
 																	<th align="center" width="5%">C&oacute;d. Int.</th>
-																	<th align="center" width="6%">Nº Cuenta.</th>
+																	<th align="center" width="6%">NÂº Cuenta.</th>
 																	<th align="center" width="6%">Cuenta. Cont.</th>
 																	<th align="center" width="6%">Fecha</th>
 																	<th align="center" width="21%">Cliente/Proveedor</th>

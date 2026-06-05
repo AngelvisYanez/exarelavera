@@ -4,8 +4,8 @@
 * @abstract Permite modificar los comprobantes contables
 * @author Lewis Chimarro
 * @version 1.0
-* Fecha de actualizaci髇: 2010-11-16
-* Fecha de actualizaci髇  2012-04-25
+* Fecha de actualizaci贸n: 2010-11-16
+* Fecha de actualizaci贸n  2012-04-25
 * @author Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -24,7 +24,7 @@ $hoy = date("Y-m-d");
 $mes = date("m");
 
 /*
-* Cargado AJAX de los resultados de la b鷖queda
+* Cargado AJAX de los resultados de la b煤squeda
 */
 if (isset($buscod))
 {	
@@ -47,7 +47,7 @@ if (isset($buscod))
 	<table width="100%" border="1" cellpadding="0" cellspacing="0">
 	  <tr class="Cabecera1">
 	    <td width="6%">C&oacute;d. Int.</td>
-		<td width="10%"><strong>C骴igo</strong></td>
+		<td width="10%"><strong>C贸digo</strong></td>
 		<td width="24%"><strong>Cuenta</strong></td>
 		<td width="20%"><strong>Grupo</strong></td>
 		<td width="10%"><strong>Tipo</strong></td>
@@ -95,7 +95,7 @@ exit();
 }//if (isset($buscod))
 
 /* 
-* Cargado de Informaci髇 a trav閟 de AJAX 
+* Cargado de Informaci贸n a trav茅s de AJAX 
 */
 if (isset($codigo))
 {
@@ -128,7 +128,7 @@ if (isset($codigo))
 */
 require_once('../../Librerias/postclass.php');	
 /* 
-* Creaci髇 del objeto para evitar el reenvio 
+* Creaci贸n del objeto para evitar el reenvio 
 */
 $thisPost = new Post_Block;
 
@@ -157,7 +157,7 @@ else
 			*/
 			$obBD_con1->inicio_transaccion($obBD_conexion->conexion);
 			/* 
-			* Carga el a駉 de la fecha incial 
+			* Carga el a帽o de la fecha incial 
 			*/
 			$var_mes = explode('-', $Com_Fec);
 		
@@ -362,14 +362,14 @@ exit();
 	<tr>
       <td height="389" align="left" valign="top">      
 	<?
-/* Control para la elecci髇 del periodo contable */
+/* Control para la elecci贸n del periodo contable */
 if (!isset($hdd_save) && !isset($txt_busqueda) && !isset($Com_Cod))
 {
 ?>
 <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1">
 <FIELDSET>
 	<LEGEND>
-		<label class="Titulos2">Selecci髇 Periodo Contable</label>
+		<label class="Titulos2">Selecci贸n Periodo Contable</label>
 	</LEGEND>
 	<table width="225" border="0" cellspacing="0" cellpadding="0">
 	  <tr>
@@ -514,7 +514,7 @@ if(isset($txt_busqueda))
 		  <td align="center"><font color="<?php echo $rojo; ?>"><?Php  if ($row['Com_Gen'] == 'M') echo "Manual"; else echo "Auto";
 		  ?></font></td>
 		  <td align="center"><font color="<?php echo $rojo; ?>">&nbsp;<? 
-	  	list($ann, $mes, $dia) = split('[/.-]', $row['Com_Fec']);
+	  	list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 		  echo $mes.'-'.$row['Com_Num']; ?></font></td>
 		  <td><font color="<?php echo $rojo; ?>"><? echo $row['Prs_Ced']; ?>&nbsp;</font></td>
 		  <td><font color="<?php echo $rojo; ?>"><?Php echo marcar_cadena($_POST['txt_busqueda'], $row['Prs_Ape']." ".$row['Prs_Nom'], '#FFFF00', 1); ?></font></td>
@@ -545,7 +545,7 @@ if(isset($txt_busqueda))
 					echo "&nbsp;";  
 				}		  
 		  } else { ?>
-		    <img src="../../mascaras/model1/imagenes/32x32/encrypted.png" title="Comprobante bloqueado por generaci髇 autom醫ica" width="22" height="22"> 
+		    <img src="../../mascaras/model1/imagenes/32x32/encrypted.png" title="Comprobante bloqueado por generaci贸n autom谩tica" width="22" height="22"> 
 		    <?Php } ?>		  </td>					
 		  </tr>
 		</form>

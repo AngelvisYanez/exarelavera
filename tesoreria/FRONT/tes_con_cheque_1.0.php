@@ -4,8 +4,8 @@
 * @abstract Permite consultar los cheques 
 * @author Lewis Chimarro
 * @version 1.0
-* Fecha de creaci�n  2012-07-19
-* Fecha de actualizaci�n  2012-07-25
+* Fecha de creaciï¿½n  2012-07-19
+* Fecha de actualizaciï¿½n  2012-07-25
 * @author Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -92,7 +92,7 @@ else
 				$total_rs_cabcomp = $obBD_con1->numregistros();		
 				
 				/**
-				* Cargado de los cheques seg�n el n�mero de comprobante de egreso
+				* Cargado de los cheques segï¿½n el nï¿½mero de comprobante de egreso
 				*/
 				$rs_concomp = $obBD_con1->consulta(sentencias_che(143,$obBD_con1->parametros($codigo)), 
 						$obBD_conexion->conexion);
@@ -387,7 +387,7 @@ No. de Cheque
 					</font></td>
 				  <td align="center"><font color="<?php echo $rojo; ?>">
 					<? 
-			list($ann, $mes, $dia) = split('[/.-]', $row['Com_Fec']);
+			list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 			  echo $row['Tia_Abr'].'-'.$mes.'-'.$row['Com_Num']; ?>
 					</font></td>
 				  <td><font color="<? echo $rojo;?>"><? echo $row['Prs_Ced']; ?></font></td>
@@ -485,7 +485,7 @@ No. de Cheque
 				<input name="Pec_Fei" id="Pec_Fei" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fei']; ?>">
 				<input name="Pec_Fef" id="Pec_Fef" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fef']; ?>">
 			  C&oacute;d. Compr: </td>
-			<td width="38%" class="LetraNegra">&nbsp;<? list($ann, $mes, $dia) = split('[/.-]', $row_rs_cabcomp['Com_Fec']);
+			<td width="38%" class="LetraNegra">&nbsp;<? list($ann, $mes, $dia) = preg_split('![/.-]!', $row_rs_cabcomp['Com_Fec']);
 		  echo $row_rs_cabcomp['Tia_Abr'].'-'.$mes.'-'.$row_rs_cabcomp['Com_Num']; ?></td>
 			<td width="11%" class="Etiqueta1">Fecha:</td>
 			<td width="36%" class="LetraNegra">&nbsp;<? echo $row_rs_cabcomp['Com_Fec']; ?></td>
@@ -731,7 +731,7 @@ No. de Cheque
 		  <tr>
 				<td width="110">
 				<form action="<?Php  echo $_SERVER['PHP_SELF']?>" method="post" name= "form2">
-				<button type="button" class="btn btn-inverse fileinput-button" title="Atr�s" onclick="campos_hide(this.form, 'txt_busqueda*op_opciones*cmb_mes*Pec_Cod*hdd_volver*bancos', '<? echo $volver_busqueda.'*'.$volver_opciones.'*'.$volver_mes.'*'.$Pec_Cod.'*1*'.$volver_bancos;?>')"> <i class=" icon-arrow-left icon-white"></i> <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span></button>
+				<button type="button" class="btn btn-inverse fileinput-button" title="Atrï¿½s" onclick="campos_hide(this.form, 'txt_busqueda*op_opciones*cmb_mes*Pec_Cod*hdd_volver*bancos', '<? echo $volver_busqueda.'*'.$volver_opciones.'*'.$volver_mes.'*'.$Pec_Cod.'*1*'.$volver_bancos;?>')"> <i class=" icon-arrow-left icon-white"></i> <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span></button>
 				 <input name="Pec_Cod" id="Pec_Cod" type="hidden"  value="<?php echo $Pec_Cod; ?>" />
 				  <input name="hdd_save" type="hidden" id="hdd_save" />
 				  <input name="op" type="hidden" value="<?Php echo $op; ?>" >
@@ -787,7 +787,7 @@ No. de Cheque
           <tr>
             <td align="left"><font color="<?php echo $rojo; ?>">
               <? 
-			list($ann, $mes, $dia) = split('[/.-]', $row_rs_tot_cheques['Com_Fec']);
+			list($ann, $mes, $dia) = preg_split('![/.-]!', $row_rs_tot_cheques['Com_Fec']);
 			  echo $row_rs_tot_cheques['Tia_Abr'].'-'.$mes.'-'.$row_rs_tot_cheques['Com_Num']; ?>
             </font></td>
             <td title="<? echo $row_rs_tot_cheques['Prs_Ape'].' '.$row_rs_tot_cheques['Prs_Nom']; ?>" style="white-space: nowrap; overflow: hidden;"><font color="<?php echo $rojo; ?>"><? echo $row_rs_tot_cheques['Prs_Ape'].' '.$row_rs_tot_cheques['Prs_Nom']; ?></font></td>
