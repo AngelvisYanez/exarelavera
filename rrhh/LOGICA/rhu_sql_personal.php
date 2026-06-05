@@ -30,8 +30,8 @@ function sentencias_rrhh($id, $Par_Sql)
             break;
             //Inserta un registro en la tabla persona 
         case 4:
-            $sql = "INSERT INTO persona (Ciu_Cod,Ide_Cod,Prs_Ced,Prs_Nom,Prs_Ape,Prs_Sex,Prs_Esc,Prs_Fec,Prs_Tel,Prs_Te2,Prs_Cel,Prs_Cor,Prs_Dir,Prs_San,Per_Tcf) 
-            VALUES('$Par_Sql[0]','$Par_Sql[1]','$Par_Sql[2]','$Par_Sql[3]','$Par_Sql[4]','$Par_Sql[5]','$Par_Sql[6]','$Par_Sql[7]','$Par_Sql[8]','$Par_Sql[9]','$Par_Sql[10]','$Par_Sql[11]','$Par_Sql[12]','$Par_Sql[13]','$Par_Sql[14]')";
+            $sql = "INSERT INTO persona (Ciu_Cod,Ide_Cod,Prs_Ced,Prs_Nom,Prs_Ape,Prs_Sex,Prs_Esc,Prs_Fec,Prs_Tel,Prs_Te2,Prs_Cel,Prs_Cor,Prs_Dir,Prs_San) 
+            VALUES('$Par_Sql[0]','$Par_Sql[1]','$Par_Sql[2]','$Par_Sql[3]','$Par_Sql[4]','$Par_Sql[5]','$Par_Sql[6]','$Par_Sql[7]','$Par_Sql[8]','$Par_Sql[9]','$Par_Sql[10]','$Par_Sql[11]','$Par_Sql[12]','$Par_Sql[13]')";
             break;
             //Inserta un registro en la tabla personal 
         case 5:
