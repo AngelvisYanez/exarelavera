@@ -1205,11 +1205,15 @@ function cambiarCamposPagos(tipo_pago, tipo_pago_abr) {
 
             for (i = 0; i < result['data'].length; i++) {
                 if (tipo_pago_abr === "TRF" || tipo_pago_abr === "DEP") {
+                    // restriccion a una sola cuenta de deposito hasta esta fecha 08-06-26
+                    if (result['data'][i].Ban_Cue && result['data'][i].Ban_Cue.indexOf('1720') !== -1) continue;
                     $("#Ban_Cod").append("<option value='" + result['data'][i].Ban_Cod + "' data-pla='" + result['data'][i].Pld_Cod + "' data-cdc='" + result['data'][i].Pld_Cdc + "' data-cue='" + result['data'][i].Ban_Cue + "' data-des='" + result['data'][i].Pld_Des + "'>" + result['data'][i].Pld_Des + " - " + result['data'][i].Ban_Cue + "</option>");
                 }
             }
             if (result['data_ban'] !== null) {
                 for (i = 0; i < result['data_ban'].length; i++) {
+                    // restriccion a una sola cuenta de deposito hasta esta fecha 08-06-26
+                    if (result['data_ban'][i].Ban_Cue && result['data_ban'][i].Ban_Cue.indexOf('1720') !== -1) continue;
                     $("#Ban_Cod").append("<option value='" + result['data_ban'][i].Ban_Cod + "' data-pla='" + result['data_ban'][i].Pld_Cod + "' data-cdc='" + result['data_ban'][i].Pld_Cdc + "' data-cue='" + result['data_ban'][i].Ban_Cue + "' data-des='" + result['data_ban'][i].Pld_Des + "'>" + result['data_ban'][i].Pld_Des + " - " + result['data_ban'][i].Ban_Cue + "</option>");
                 }
             }
