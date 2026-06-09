@@ -22,18 +22,81 @@ if (isset($dashPersonalAjax)) {
     $byTcf = $obBD_con1->getArrayConsulta(29, $Ses_Emp_Cod, $obBD_conexion);
     $byCon = $obBD_con1->getArrayConsulta(30, $Ses_Emp_Cod, $obBD_conexion);
     $bySan = $obBD_con1->getArrayConsulta(31, $Ses_Emp_Cod, $obBD_conexion);
-    $ultRol = $obBD_con1->getRowConsultaSql(
-        "SELECT rp.Rol_Cod, rp.Rol_Num, rp.Rol_Fef, rp.Rol_Fei, rp.Rol_Con
-         FROM rol_pagos rp
-         INNER JOIN areas_rrhh ar ON ar.Are_Cod = rp.Are_Cod
-         INNER JOIN det_rpagos dr ON dr.Rol_Cod = rp.Rol_Cod
-         INNER JOIN campo_rol cr ON cr.Cam_Cod = dr.Cam_Cod
-             AND cr.Cam_Var IN ('total_ingr', 'total_ing')
-         WHERE ar.Emp_Cod = " . intval($Ses_Emp_Cod) . " AND rp.Rol_Est = 'A'
-         ORDER BY IFNULL(rp.Rol_Fef, rp.Rol_Fei) DESC, rp.Rol_Num DESC, rp.Rol_Cod DESC
+    $empCod = intval($Ses_Emp_Cod);
+    $pecUltSql = "(SELECT pec.Pec_Cod
+        FROM perio_cont pec
+        INNER JOIN plan_cuenta pla ON pla.Pla_Cod = pec.Pla_Cod AND pla.Emp_Cod = $empCod AND pla.Pla_Est = 'A'
+        WHERE pec.Pec_Est = 'A'
+        ORDER BY pec.Pec_Fei DESC, pec.Pec_Cod DESC
+        LIMIT 1)";
+    $mesAreaSql = "(SELECT DATE_FORMAT(MAX(IFNULL(rpM.Rol_Fef, rpM.Rol_Fei)), '%Y-%m')
+        FROM rol_pagos rpM
+        INNER JOIN det_rpagos drM ON drM.Rol_Cod = rpM.Rol_Cod
+        INNER JOIN campo_rol crM ON crM.Cam_Cod = drM.Cam_Cod
+            AND crM.Cam_Var IN ('total_ingr', 'total_ing')
+        WHERE rpM.Are_Cod = rp1.Are_Cod AND rpM.Rol_Est = 'A' AND rpM.Pec_Cod = $pecUltSql
+            AND TRIM(drM.Rol_Val) <> '' AND TRIM(drM.Rol_Val) <> '0')";
+    $periodoAct = $obBD_con1->getRowConsultaSql(
+        "SELECT pec.Pec_Cod, pec.Pec_Fei, pec.Pec_Fef, YEAR(pec.Pec_Fei) AS Periodo
+         FROM perio_cont pec
+         INNER JOIN plan_cuenta pla ON pla.Pla_Cod = pec.Pla_Cod
+         WHERE pla.Emp_Cod = $empCod AND pla.Pla_Est = 'A' AND pec.Pec_Est = 'A'
+         ORDER BY pec.Pec_Fei DESC, pec.Pec_Cod DESC
          LIMIT 1",
         $obBD_conexion
     );
+    $ingresoMeta = array('periodoAnio' => null, 'periodoRango' => '', 'refMesLabel' => '', 'totalAreas' => 0);
+    if (!empty($periodoAct['Periodo'])) {
+        $ingresoMeta['periodoAnio'] = (int) $periodoAct['Periodo'];
+        $ingresoMeta['periodoRango'] = trim($periodoAct['Pec_Fei'] . ' - ' . $periodoAct['Pec_Fef']);
+    }
+    $ultRoles = $obBD_con1->getArrayConsultaSql(
+        "SELECT rp.Rol_Cod, rp.Rol_Num, rp.Rol_Fef, rp.Rol_Fei, ar.Are_Des,
+                DATE_FORMAT(IFNULL(rp.Rol_Fef, rp.Rol_Fei), '%Y-%m') AS ref_mes
+         FROM rol_pagos rp
+         INNER JOIN areas_rrhh ar ON ar.Are_Cod = rp.Are_Cod AND ar.Emp_Cod = $empCod AND ar.Are_Est = 'A'
+         INNER JOIN (
+             SELECT rp1.Are_Cod,
+             SUBSTRING_INDEX(
+                 GROUP_CONCAT(
+                     rp1.Rol_Cod
+                     ORDER BY IFNULL(rp1.Rol_Fef, rp1.Rol_Fei) DESC, rp1.Rol_Num DESC, rp1.Rol_Cod DESC
+                 ),
+                 ',', 1
+             ) AS Rol_Cod
+             FROM rol_pagos rp1
+             INNER JOIN areas_rrhh ar1 ON ar1.Are_Cod = rp1.Are_Cod
+                 AND ar1.Emp_Cod = $empCod AND ar1.Are_Est = 'A'
+             INNER JOIN det_rpagos drx ON drx.Rol_Cod = rp1.Rol_Cod
+             INNER JOIN campo_rol crx ON crx.Cam_Cod = drx.Cam_Cod
+                 AND crx.Cam_Var IN ('total_ingr', 'total_ing')
+             WHERE rp1.Rol_Est = 'A' AND rp1.Pec_Cod = $pecUltSql
+                 AND TRIM(drx.Rol_Val) <> '' AND TRIM(drx.Rol_Val) <> '0'
+                 AND DATE_FORMAT(IFNULL(rp1.Rol_Fef, rp1.Rol_Fei), '%Y-%m') = $mesAreaSql
+             GROUP BY rp1.Are_Cod
+         ) ult_rol ON ult_rol.Rol_Cod = rp.Rol_Cod
+         WHERE rp.Rol_Est = 'A' AND rp.Pec_Cod = $pecUltSql
+         ORDER BY ar.Are_Des",
+        $obBD_conexion
+    );
+    $mesesEs = array('01' => 'Ene', '02' => 'Feb', '03' => 'Mar', '04' => 'Abr', '05' => 'May', '06' => 'Jun',
+        '07' => 'Jul', '08' => 'Ago', '09' => 'Sep', '10' => 'Oct', '11' => 'Nov', '12' => 'Dic');
+    $mesSet = array();
+    if (is_array($ultRoles)) {
+        foreach ($ultRoles as $r) {
+            if (!empty($r['ref_mes']) && preg_match('/^(\d{4})-(\d{2})$/', $r['ref_mes'], $mRef)) {
+                $mesSet[$r['ref_mes']] = (isset($mesesEs[$mRef[2]]) ? $mesesEs[$mRef[2]] : $mRef[2]) . ' ' . $mRef[1];
+            }
+        }
+    }
+    $mesKeys = array_keys($mesSet);
+    sort($mesKeys);
+    if (count($mesKeys) === 1) {
+        $ingresoMeta['refMesLabel'] = $mesSet[$mesKeys[0]];
+    } elseif (count($mesKeys) > 1) {
+        $ingresoMeta['refMesLabel'] = $mesSet[$mesKeys[0]] . ' - ' . $mesSet[$mesKeys[count($mesKeys) - 1]];
+    }
+    $ingresoMeta['totalAreas'] = is_array($ultRoles) ? count($ultRoles) : 0;
     utf8_encode_deep($bySex);
     utf8_encode_deep($byTit);
     utf8_encode_deep($byCiu);
@@ -45,8 +108,11 @@ if (isset($dashPersonalAjax)) {
     utf8_encode_deep($byTcf);
     utf8_encode_deep($byCon);
     utf8_encode_deep($bySan);
-    if (is_array($ultRol)) {
-        utf8_encode_deep($ultRol);
+    if (is_array($ultRoles)) {
+        utf8_encode_deep($ultRoles);
+    }
+    if (is_array($ingresoMeta)) {
+        utf8_encode_deep($ingresoMeta);
     }
     $rowTotal = $obBD_con1->getArrayConsulta(25, $Ses_Emp_Cod, $obBD_conexion);
     $total = 0;
@@ -71,7 +137,8 @@ if (isset($dashPersonalAjax)) {
         'byTcf' => $byTcf,
         'byCon' => $byCon,
         'bySan' => $bySan,
-        'ultimoRol' => $ultRol ? $ultRol : array(),
+        'ultimosRoles' => $ultRoles ? $ultRoles : array(),
+        'ingresoMeta' => $ingresoMeta,
     ));
     exit();
 }
@@ -230,6 +297,11 @@ if (isset($dashPersonalAjax)) {
             padding-right: 8px;
             margin-bottom: 16px;
         }
+        .dash-row-cards > .dash-col-fullrow {
+            flex: 0 0 100%;
+            max-width: 100%;
+            width: 100%;
+        }
         .dash-card-modern {
             background: var(--dash-card);
             border: 1px solid var(--dash-border);
@@ -298,6 +370,30 @@ if (isset($dashPersonalAjax)) {
             min-height: 0;
         }
         .dash-chart-host canvas { width: 100% !important; height: 100% !important; display: block; }
+        .dash-print-data-table {
+            display: none;
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-top: 8px;
+        }
+        .dash-print-data-table th,
+        .dash-print-data-table td {
+            border: 1px solid var(--dash-border);
+            padding: 5px 8px;
+            text-align: left;
+        }
+        .dash-print-data-table th {
+            background: #f1f5f9;
+            font-weight: 600;
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+        .dash-print-data-table td:last-child {
+            text-align: center;
+            font-weight: 700;
+            width: 70px;
+        }
         .dash-chart-host--compact {
             flex: 0 0 auto !important;
             margin-left: auto !important;
@@ -469,6 +565,12 @@ if (isset($dashPersonalAjax)) {
                 max-width: 50% !important;
                 margin-left: 25% !important;
             }
+            .dash-row-cards > .dash-col-fullrow {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin-left: 0 !important;
+                display: block !important;
+            }
             .dash-card-modern {
                 display: block !important;
                 height: auto !important;
@@ -503,7 +605,6 @@ if (isset($dashPersonalAjax)) {
             body.dash-printing #dashSexHost,
             body.dash-printing #dashConPieHost,
             body.dash-printing .dash-chart-host {
-                min-height: 0 !important;
                 max-height: none !important;
                 overflow: visible !important;
             }
@@ -522,6 +623,40 @@ if (isset($dashPersonalAjax)) {
             body.dash-printing .dash-chart-host--bar-print {
                 width: 100% !important;
                 max-width: 100% !important;
+            }
+            body.dash-printing .dash-chart-host.dash-chart-frozen {
+                overflow: visible !important;
+            }
+            body.dash-printing .dash-chart-host.dash-chart-frozen canvas {
+                display: none !important;
+                visibility: hidden !important;
+            }
+            body.dash-printing .dash-print-snapshot {
+                display: block !important;
+                max-width: 100% !important;
+                margin: 0 auto !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            body.dash-printing .dash-print-data-table {
+                display: table !important;
+                font-size: 8px !important;
+                margin-top: 4px !important;
+            }
+            body.dash-printing .dash-print-data-table th {
+                padding: 4px 6px !important;
+                font-size: 7px !important;
+            }
+            body.dash-printing .dash-print-data-table td {
+                padding: 3px 6px !important;
+            }
+            body.dash-printing .dash-chart-host canvas {
+                visibility: visible !important;
+                display: block !important;
+                max-width: 100% !important;
+            }
+            body.dash-printing .dash-chart-host.dash-chart-frozen canvas {
+                display: none !important;
             }
             .dash-chart-host canvas {
                 max-width: 100% !important;
@@ -560,7 +695,7 @@ if (isset($dashPersonalAjax)) {
                 <h1 class="dash-topbar-title">Dashboard Socioecon&oacute;mico RCET</h1>
                 <p class="dash-topbar-sub">Resumen anal&iacute;tico del personal activo</p>
             </div>
-            <button type="button" class="btn btn-sm btn-print-dash" onclick="printDashboard()"><i class="fa fa-print"></i> Imprimir</button>
+            <button type="button" class="btn btn-sm btn-print-dash" id="btnPrintDash"><i class="fa fa-print"></i> Imprimir</button>
         </div>
         <div class="dash-kpi-grid">
             <div class="dash-kpi-card dash-kpi-card--hero dash-kpi-card--teal">
@@ -798,10 +933,16 @@ Chart.register(ChartDataLabels);
         printBarH: 200,
         printDoughnutH: 200,
         printDoughnutW: 200,
-        printPageMaxW: 820
+        printPageMaxW: 820,
+        printSnapshotScale: 2
     };
     var printState = null;
-    var printChartOptsState = null;
+    var printBusy = false;
+    var PRINT_HOST_IDS = [
+        'dashSexHost', 'dashTitHost', 'dashCiuHost', 'dashMovHost', 'dashRsoHost',
+        'dashAreHost', 'dashCarHost', 'dashSanHost', 'dashTcfHost', 'dashConHost', 'dashConPieHost'
+    ];
+    var PRINT_DOUGHNUT_HOSTS = { dashSexHost: 1, dashConPieHost: 1 };
 
     var PRINT_CHART_BY_HOST = {
         dashSexHost: function () { return chartSex; },
@@ -825,17 +966,34 @@ Chart.register(ChartDataLabels);
 
     function captureHostPrintState(hostId) {
         var $host = $('#' + hostId);
+        var el = $host[0];
+        if (!el) {
+            return {
+                hostId: hostId,
+                width: '',
+                height: '',
+                minHeight: '',
+                maxWidth: '',
+                marginLeft: '',
+                marginRight: '',
+                compact: false,
+                doughnutPrint: false,
+                barPrint: false,
+                frozen: false
+            };
+        }
         return {
             hostId: hostId,
-            width: $host[0].style.width,
-            height: $host[0].style.height,
-            minHeight: $host[0].style.minHeight,
-            maxWidth: $host[0].style.maxWidth,
-            marginLeft: $host[0].style.marginLeft,
-            marginRight: $host[0].style.marginRight,
+            width: el.style.width,
+            height: el.style.height,
+            minHeight: el.style.minHeight,
+            maxWidth: el.style.maxWidth,
+            marginLeft: el.style.marginLeft,
+            marginRight: el.style.marginRight,
             compact: $host.hasClass('dash-chart-host--compact'),
             doughnutPrint: $host.hasClass('dash-chart-host--doughnut-print'),
-            barPrint: $host.hasClass('dash-chart-host--bar-print')
+            barPrint: $host.hasClass('dash-chart-host--bar-print'),
+            frozen: $host.hasClass('dash-chart-frozen')
         };
     }
 
@@ -852,6 +1010,124 @@ Chart.register(ChartDataLabels);
         $host.toggleClass('dash-chart-host--compact', !!state.compact);
         $host.toggleClass('dash-chart-host--doughnut-print', !!state.doughnutPrint);
         $host.toggleClass('dash-chart-host--bar-print', !!state.barPrint);
+        $host.toggleClass('dash-chart-frozen', !!state.frozen);
+    }
+
+    function escHtml(text) {
+        return String(text || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function printDisplaySize(hostId) {
+        var isDoughnut = !!PRINT_DOUGHNUT_HOSTS[hostId];
+        if (isDoughnut) {
+            var dSz = printDoughnutDimensions(hostId);
+            return { w: dSz.w, h: dSz.h, fullWidth: false };
+        }
+        return {
+            w: printHostColumnWidth(hostId),
+            h: printBarHeightForHost(hostId),
+            fullWidth: true
+        };
+    }
+
+    function buildPrintDataTable(chart, pctTotal) {
+        if (!chart || !chart.data || !chart.data.labels || !chart.data.datasets.length) {
+            return '';
+        }
+        var labels = chart.data.labels;
+        var data = chart.data.datasets[0].data || [];
+        var sum = pctTotal > 0 ? pctTotal : 0;
+        if (!sum) {
+            data.forEach(function (v) { sum += v || 0; });
+        }
+        var html = '<table class="dash-print-data-table"><thead><tr><th>Categor&iacute;a</th><th>Total</th></tr></thead><tbody>';
+        labels.forEach(function (lb, i) {
+            var v = parseInt(data[i], 10) || 0;
+            var pct = sum ? Math.round(v * 1000 / sum) / 10 : 0;
+            var cell = v + (pct ? ' (' + pct + '%)' : '');
+            html += '<tr><td>' + escHtml(lb) + '</td><td>' + cell + '</td></tr>';
+        });
+        html += '</tbody></table>';
+        return html;
+    }
+
+    function getPrintTableWrapId(hostId) {
+        return hostId + 'PrintTable';
+    }
+
+    function renderPrintDataTable(hostId, chart) {
+        var wrapId = getPrintTableWrapId(hostId);
+        var $wrap = $('#' + wrapId);
+        if (!$wrap.length) {
+            $('#' + hostId).after('<div id="' + wrapId + '" class="dash-print-table-wrap"></div>');
+            $wrap = $('#' + wrapId);
+        }
+        $wrap.html(buildPrintDataTable(chart, 0));
+    }
+
+    function clearPrintDataTables() {
+        PRINT_HOST_IDS.forEach(function (hostId) {
+            $('#' + getPrintTableWrapId(hostId)).empty();
+        });
+    }
+
+    function captureChartSnapshot(hostId, chart, displayW, displayH, fullWidth) {
+        var $host = $('#' + hostId);
+        var scale = CHART_SIZE.printSnapshotScale;
+        var renderW = Math.max(120, Math.round(displayW * scale));
+        var renderH = Math.max(100, Math.round(displayH * scale));
+        var dataUrl;
+
+        setCompactHost(hostId, false);
+        setChartHostSize(hostId, renderW, renderH, fullWidth);
+        chart.resize();
+
+        try {
+            dataUrl = chart.toBase64Image('image/png', 1);
+        } catch (e) {
+            dataUrl = chart.canvas.toDataURL('image/png');
+        }
+
+        $host.css({
+            width: fullWidth ? '100%' : (displayW + 'px'),
+            height: displayH + 'px',
+            minHeight: displayH + 'px',
+            maxWidth: '100%',
+            marginLeft: fullWidth ? '' : 'auto',
+            marginRight: fullWidth ? '' : 'auto',
+            position: 'relative'
+        });
+
+        var $img = $host.find('img.dash-print-snapshot');
+        if (!$img.length) {
+            $host.append('<img class="dash-print-snapshot" alt="" />');
+            $img = $host.find('img.dash-print-snapshot');
+        }
+        $img.attr('src', dataUrl).css({
+            display: 'block',
+            width: displayW + 'px',
+            height: displayH + 'px',
+            maxWidth: '100%',
+            margin: '0 auto'
+        });
+
+        $host.addClass('dash-chart-frozen');
+        $host.find('canvas').css('visibility', 'hidden');
+        renderPrintDataTable(hostId, chart);
+    }
+
+    function unfreezeChartSnapshots() {
+        PRINT_HOST_IDS.forEach(function (hostId) {
+            var $host = $('#' + hostId);
+            $host.removeClass('dash-chart-frozen');
+            $host.find('img.dash-print-snapshot').remove();
+            $host.find('canvas').css('visibility', '');
+        });
+        clearPrintDataTables();
     }
 
     function printPageWidth() {
@@ -862,7 +1138,7 @@ Chart.register(ChartDataLabels);
     function printHostColumnWidth(hostId) {
         var $col = $('#' + hostId).closest('[class*="col-"]');
         var pageW = printPageWidth();
-        if ($col.hasClass('col-md-8')) {
+        if ($col.hasClass('dash-col-fullrow') || $col.hasClass('col-md-8')) {
             return pageW - 16;
         }
         if ($col.hasClass('col-md-4')) {
@@ -872,6 +1148,81 @@ Chart.register(ChartDataLabels);
             return Math.floor(pageW * 0.48) - 12;
         }
         return Math.floor(pageW * 0.48) - 12;
+    }
+
+    function chartNeedsFullRow(hostId) {
+        if (PRINT_DOUGHNUT_HOSTS[hostId]) {
+            var chartD = getChartForHost(hostId);
+            if (!chartD || !chartD.data || !chartD.data.labels) {
+                return false;
+            }
+            return chartD.data.labels.length > 5;
+        }
+        var chart = getChartForHost(hostId);
+        if (!chart || !chart.data || !chart.data.labels) {
+            return false;
+        }
+        var labels = chart.data.labels;
+        var n = labels.length;
+        var $col = $('#' + hostId).closest('[class*="col-"]');
+        if ($col.hasClass('col-md-8')) {
+            return true;
+        }
+        var layout = barChartLayout(n, labels, hostId);
+        if (layout.horizontal) {
+            return true;
+        }
+        if (n > 6) {
+            return true;
+        }
+        if (maxLabelChars(labels) > 14 && n > 3) {
+            return true;
+        }
+        return false;
+    }
+
+    function applyFullRowLayout() {
+        PRINT_HOST_IDS.forEach(function (hostId) {
+            var $col = $('#' + hostId).closest('[class*="col-"]');
+            if (!$col.length) {
+                return;
+            }
+            $col.toggleClass('dash-col-fullrow', chartNeedsFullRow(hostId));
+        });
+    }
+
+    function resizeChartsForFullRow() {
+        applyFullRowLayout();
+        PRINT_HOST_IDS.forEach(function (hostId) {
+            var chart = getChartForHost(hostId);
+            var $host = $('#' + hostId);
+            if (!chart || !$host.length) {
+                return;
+            }
+            if (!chartNeedsFullRow(hostId)) {
+                return;
+            }
+            var labels = chart.data.labels || [];
+            var n = labels.length;
+            var layout = barChartLayout(n, labels, hostId);
+            var parentW = hostParentWidth(hostId);
+            var h;
+            if (PRINT_DOUGHNUT_HOSTS[hostId]) {
+                var wD = Math.min(parentW, Math.max(220, Math.round(parentW * 0.45)));
+                h = wD;
+                setCompactHost(hostId, false);
+                setChartHostSize(hostId, wD, h, false);
+            } else {
+                h = layout.horizontal
+                    ? Math.min(620, Math.max(220, n * 38 + 80))
+                    : barChartHeight(n, layout.horizontal, labels);
+                setCompactHost(hostId, false);
+                setChartHostSize(hostId, parentW, h, true);
+            }
+            try {
+                chart.resize();
+            } catch (e) {}
+        });
     }
 
     function getChartForHost(hostId) {
@@ -886,20 +1237,21 @@ Chart.register(ChartDataLabels);
         }
         var labels = chart.data.labels;
         var n = labels.length;
-        var layout = barChartLayout(n, labels);
-        if (layout.horizontal) {
-            return Math.min(280, Math.max(140, n * 24 + 50));
+        var layout = barChartLayout(n, labels, hostId);
+        var fullRow = $('#' + hostId).closest('.dash-col-fullrow').length > 0;
+        if (layout.horizontal || fullRow) {
+            return Math.min(fullRow ? 420 : 360, Math.max(180, n * (fullRow ? 36 : 34) + 64));
         }
         if (n <= 2) {
-            return 145;
+            return 170;
         }
         if (n <= 4) {
-            return 165;
+            return 195;
         }
         if (n <= 8) {
-            return 185;
+            return 220;
         }
-        return Math.min(235, 155 + n * 9);
+        return Math.min(280, 185 + n * 10);
     }
 
     function printDoughnutDimensions(hostId) {
@@ -910,58 +1262,14 @@ Chart.register(ChartDataLabels);
         return { w: side, h: side };
     }
 
-    function snapshotChartOptions(chart) {
-        var plugins = chart.options.plugins || {};
-        var legend = plugins.legend && plugins.legend.labels ? plugins.legend.labels : {};
-        var datalabels = plugins.datalabels || {};
-        return {
-            legendSize: legend.font && legend.font.size,
-            legendPadding: legend.padding,
-            datalabelSize: datalabels.font && datalabels.font.size
-        };
-    }
-
-    function applyPrintChartOptions(enable) {
-        allChartInstances().forEach(function (chart, idx) {
-            if (!printChartOptsState) {
-                printChartOptsState = [];
-            }
-            if (enable) {
-                if (!printChartOptsState[idx]) {
-                    printChartOptsState[idx] = snapshotChartOptions(chart);
-                }
-                if (chart.options.plugins.legend && chart.options.plugins.legend.labels) {
-                    chart.options.plugins.legend.labels.font = Object.assign({}, chart.options.plugins.legend.labels.font || {}, { size: 8 });
-                    chart.options.plugins.legend.padding = 8;
-                }
-                if (chart.options.plugins.datalabels) {
-                    chart.options.plugins.datalabels.font = Object.assign({}, chart.options.plugins.datalabels.font || {}, { size: 9 });
-                }
-                if (chart.options.scales) {
-                    ['x', 'y'].forEach(function (axis) {
-                        if (chart.options.scales[axis] && chart.options.scales[axis].ticks) {
-                            chart.options.scales[axis].ticks.font = Object.assign({}, chart.options.scales[axis].ticks.font || {}, { size: 8 });
-                        }
-                    });
-                }
-            } else if (printChartOptsState[idx]) {
-                var saved = printChartOptsState[idx];
-                if (chart.options.plugins.legend && chart.options.plugins.legend.labels) {
-                    if (saved.legendSize != null) {
-                        chart.options.plugins.legend.labels.font = Object.assign({}, chart.options.plugins.legend.labels.font || {}, { size: saved.legendSize });
-                    }
-                    if (saved.legendPadding != null) {
-                        chart.options.plugins.legend.padding = saved.legendPadding;
-                    }
-                }
-                if (chart.options.plugins.datalabels && saved.datalabelSize != null) {
-                    chart.options.plugins.datalabels.font = Object.assign({}, chart.options.plugins.datalabels.font || {}, { size: saved.datalabelSize });
-                }
+    function hostIdForChart(chart) {
+        var found = null;
+        Object.keys(PRINT_CHART_BY_HOST).forEach(function (id) {
+            if (PRINT_CHART_BY_HOST[id]() === chart) {
+                found = id;
             }
         });
-        if (!enable) {
-            printChartOptsState = null;
-        }
+        return found;
     }
 
     function resetPrintLayoutHeights() {
@@ -973,49 +1281,53 @@ Chart.register(ChartDataLabels);
     }
 
     function preparePrintCharts() {
-        var hostIds = ['dashSexHost', 'dashTitHost', 'dashCiuHost', 'dashMovHost', 'dashRsoHost', 'dashAreHost', 'dashCarHost', 'dashSanHost', 'dashTcfHost', 'dashConHost', 'dashConPieHost'];
-        if (!printState) {
-            printState = hostIds.map(captureHostPrintState);
+        if (printBusy) {
+            return;
         }
-        var doughnutHosts = ['dashSexHost', 'dashConPieHost'];
-        var barHosts = ['dashTitHost', 'dashCiuHost', 'dashMovHost', 'dashRsoHost', 'dashAreHost', 'dashCarHost', 'dashSanHost', 'dashTcfHost', 'dashConHost'];
-        var i;
-        resetPrintLayoutHeights();
-        $('.dash-topbar').css({ display: 'none', height: 0, margin: 0, padding: 0 });
-        $('.dash-row-cards .dash-card-modern').css({ maxWidth: '100%', width: '100%' });
-        for (i = 0; i < doughnutHosts.length; i++) {
-            var dHost = doughnutHosts[i];
-            var dSz = printDoughnutDimensions(dHost);
-            setCompactHost(dHost, false);
-            $('#' + dHost).addClass('dash-chart-host--doughnut-print').removeClass('dash-chart-host--bar-print');
-            setChartHostSize(dHost, dSz.w, dSz.h, false);
-            $('#' + dHost).css({ marginLeft: 'auto', marginRight: 'auto' });
+        printBusy = true;
+        try {
+            if (!printState) {
+                printState = PRINT_HOST_IDS.map(captureHostPrintState);
+            }
+            resetPrintLayoutHeights();
+            applyFullRowLayout();
+            $('.dash-topbar').css({ display: 'none', height: 0, margin: 0, padding: 0 });
+            $('.dash-row-cards .dash-card-modern').css({ maxWidth: '100%', width: '100%' });
+            PRINT_HOST_IDS.forEach(function (hostId) {
+                var chart = getChartForHost(hostId);
+                var $host = $('#' + hostId);
+                if (!chart || !$host.length) {
+                    return;
+                }
+                var isDoughnut = !!PRINT_DOUGHNUT_HOSTS[hostId];
+                var size = printDisplaySize(hostId);
+                $host.toggleClass('dash-chart-host--doughnut-print', isDoughnut);
+                $host.toggleClass('dash-chart-host--bar-print', !isDoughnut);
+                if (isDoughnut) {
+                    $host.css({ marginLeft: 'auto', marginRight: 'auto' });
+                }
+                try {
+                    captureChartSnapshot(hostId, chart, size.w, size.h, size.fullWidth);
+                } catch (e) {
+                    if (typeof console !== 'undefined' && console.error) {
+                        console.error('captureChartSnapshot', hostId, e);
+                    }
+                }
+            });
+        } finally {
+            printBusy = false;
         }
-        for (i = 0; i < barHosts.length; i++) {
-            var bHost = barHosts[i];
-            var bW = printHostColumnWidth(bHost);
-            var bH = printBarHeightForHost(bHost);
-            setCompactHost(bHost, false);
-            $('#' + bHost).addClass('dash-chart-host--bar-print').removeClass('dash-chart-host--doughnut-print');
-            setChartHostSize(bHost, bW, bH, true);
-        }
-        applyPrintChartOptions(true);
-        allChartInstances().forEach(function (chart) {
-            chart.resize();
-            chart.update('none');
-        });
     }
 
     function restorePrintCharts() {
         var i;
-        if (!printState) {
-            return;
+        unfreezeChartSnapshots();
+        if (printState) {
+            for (i = 0; i < printState.length; i++) {
+                applyHostPrintState(printState[i]);
+            }
+            printState = null;
         }
-        for (i = 0; i < printState.length; i++) {
-            applyHostPrintState(printState[i]);
-        }
-        printState = null;
-        applyPrintChartOptions(false);
         $('.dash-row-cards > [class*="col-"], .dash-card-modern, .dash-card-body, .dash-topbar').css({
             height: '',
             minHeight: '',
@@ -1025,36 +1337,54 @@ Chart.register(ChartDataLabels);
             padding: ''
         });
         allChartInstances().forEach(function (chart) {
-            chart.resize();
-            chart.update('none');
+            try {
+                chart.resize();
+            } catch (e) {}
         });
+        applyFullRowLayout();
+        resizeChartsForFullRow();
     }
 
     function finishPrintMode() {
+        if (printBusy) {
+            return;
+        }
         restorePrintCharts();
         document.body.classList.remove('dash-printing');
     }
 
     function printDashboard() {
-        document.body.classList.add('dash-printing');
-        var now = new Date();
-        $('#dashPrintDate').text(
-            'Impreso: ' + now.toLocaleDateString('es-EC') + ' ' +
-            now.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' })
-        );
-        $('#dashPrintKpi').text(
-            ($('#kpiTotal').text() || '0') + ' personal activo · ' +
-            ($('#kpiConIndef').text() || '0') + ' indefinidos · ' +
-            ($('#kpiConAprob').text() || '0') + ' en aprobación'
-        );
-        preparePrintCharts();
-        setTimeout(function () {
+        try {
+            printState = null;
+            printBusy = false;
+            document.body.classList.add('dash-printing');
+            var now = new Date();
+            $('#dashPrintDate').text(
+                'Impreso: ' + now.toLocaleDateString('es-EC') + ' ' +
+                now.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' })
+            );
+            $('#dashPrintKpi').text(
+                ($('#kpiTotal').text() || '0') + ' personal activo · ' +
+                ($('#kpiConIndef').text() || '0') + ' indefinidos · ' +
+                ($('#kpiConAprob').text() || '0') + ' en aprobación'
+            );
             preparePrintCharts();
-            setTimeout(function () {
-                preparePrintCharts();
-                window.print();
-            }, 450);
-        }, 280);
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () {
+                    window.print();
+                });
+            });
+        } catch (err) {
+            finishPrintMode();
+            if (typeof console !== 'undefined' && console.error) {
+                console.error('printDashboard', err);
+            }
+            if (typeof $.alert === 'function') {
+                $.alert('No se pudo abrir la impresi&oacute;n.');
+            } else {
+                alert('No se pudo abrir la impresion.');
+            }
+        }
     }
 
     window.printDashboard = printDashboard;
@@ -1140,11 +1470,13 @@ Chart.register(ChartDataLabels);
         return Math.min(CHART_SIZE.maxVertH, Math.max(CHART_SIZE.minVertH, 240 + Math.min(n, 10) * 14 + extra));
     }
 
-    function barChartLayout(categoryCount, labels) {
+    function barChartLayout(categoryCount, labels, hostId) {
         var n = Math.max(categoryCount, 1);
         var longLbl = maxLabelChars(labels) > 20;
-        /* Horizontal solo con muchas categorías; si no, barras verticales a ancho completo */
-        var horizontal = n > 8 || (n > 6 && longLbl);
+        var parentW = hostId ? hostParentWidth(hostId) : 900;
+        var narrow = parentW < 420;
+        /* Horizontal en columnas estrechas o con muchas categorías: etiquetas legibles */
+        var horizontal = n > 8 || (n > 6 && longLbl) || (narrow && n > 2);
         var barPct = 0.45;
         var catPct = 0.65;
         if (n <= 3) {
@@ -1209,7 +1541,7 @@ Chart.register(ChartDataLabels);
     function createBarChart(hostId, canvasId, labels, data, palette, datasetLabel, chartOpts) {
         chartOpts = chartOpts || {};
         var n = labels.length;
-        var layout = barChartLayout(n, labels);
+        var layout = barChartLayout(n, labels, hostId);
         var parentW = hostParentWidth(hostId);
         var compact = shouldAutoCompact(n, layout, chartOpts);
         var w = barChartWidth(n, layout.horizontal, labels, parentW, compact);
@@ -1313,11 +1645,11 @@ Chart.register(ChartDataLabels);
                 ticks: {
                     autoSkip: n > 14,
                     maxTicksLimit: n > 14 ? 14 : undefined,
-                    maxRotation: longLbl || n > 5 ? 50 : 35,
-                    minRotation: longLbl || n > 5 ? 32 : 0,
-                    font: { size: 11 },
+                    maxRotation: longLbl || n > 6 ? 40 : 0,
+                    minRotation: longLbl || n > 6 ? 30 : 0,
+                    font: { size: 11, weight: '600' },
                     padding: 6,
-                    color: '#64748b',
+                    color: '#475569',
                     callback: function (val, idx) {
                         return displayLabels[idx] != null ? displayLabels[idx] : val;
                     }
@@ -1521,25 +1853,30 @@ Chart.register(ChartDataLabels);
         $('#dashIngTableWrap').html(html);
     }
 
-    function setUltimoRolRef(rol) {
+    function setUltimoRolRef(roles, meta) {
         var $ref = $('#dashIngRolRef');
-        if (!rol || !rol.Rol_Cod) {
-            $ref.text('Sin rol de pagos activo con total de ingresos.');
+        meta = meta || {};
+        var parts = [];
+        if (meta.periodoAnio) {
+            parts.push('Periodo ' + meta.periodoAnio);
+        }
+        if (meta.refMesLabel) {
+            parts.push(meta.refMesLabel);
+        }
+        if (meta.totalAreas > 0) {
+            parts.push(meta.totalAreas + ' \u00e1rea' + (meta.totalAreas === 1 ? '' : 's'));
+        }
+        var list = Array.isArray(roles) ? roles : (roles && roles.Rol_Cod ? [roles] : []);
+        list = list.filter(function (rol) { return rol && rol.Rol_Cod; });
+        if (!parts.length && !list.length) {
+            $ref.text('Sin datos de n\u00f3mina en el \u00faltimo periodo.');
             return;
         }
-        var parts = [];
-        if (rol.Rol_Num) {
-            parts.push('Rol #' + rol.Rol_Num);
+        if (!list.length) {
+            $ref.text(parts.join(' \u00b7 ') + '. Sin roles con total de ingresos.');
+            return;
         }
-        if (rol.Rol_Fef) {
-            parts.push('cierre ' + rol.Rol_Fef);
-        } else if (rol.Rol_Fei) {
-            parts.push('desde ' + rol.Rol_Fei);
-        }
-        if (rol.Rol_Con) {
-            parts.push(rol.Rol_Con);
-        }
-        $ref.text(parts.length ? ('Referencia: ' + parts.join(' · ')) : '');
+        $ref.text(parts.join(' \u00b7 ') + '.');
     }
 
     function loadDashboard() {
@@ -1797,8 +2134,9 @@ Chart.register(ChartDataLabels);
                 pctTotal: totTcf
             });
 
-            setUltimoRolRef(res.ultimoRol || {});
+            setUltimoRolRef(res.ultimosRoles || res.ultimoRol || [], res.ingresoMeta || null);
             renderIngTable(mergeIngRanges(res.byIng || []));
+            resizeChartsForFullRow();
         }, 'json').fail(function () {
             if (typeof $.alert === 'function') $.alert('Error de comunicaci&oacute;n al cargar datos.'); else alert('Error de comunicacion al cargar datos.');
         });
@@ -1806,8 +2144,15 @@ Chart.register(ChartDataLabels);
 
     $(function () {
         loadDashboard();
+        $('#btnPrintDash').on('click', function (e) {
+            e.preventDefault();
+            printDashboard();
+        });
         var resizeTimer;
         $(window).on('resize', function () {
+            if (document.body.classList.contains('dash-printing')) {
+                return;
+            }
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(function () {
                 allChartInstances().forEach(function (c) {
@@ -1816,13 +2161,6 @@ Chart.register(ChartDataLabels);
             }, 200);
         });
         window.addEventListener('afterprint', finishPrintMode);
-        if (window.matchMedia) {
-            window.matchMedia('print').addListener(function (mq) {
-                if (!mq.matches) {
-                    finishPrintMode();
-                }
-            });
-        }
     });
 })();
 </script>

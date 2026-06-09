@@ -315,9 +315,22 @@ function sentencias_rrhh($id, $Par_Sql)
                     GROUP BY $rsoGrp
                     ORDER BY total DESC";
             break;
-            // Dashboard: personal por rango de total ingresos (ultimo rol, campo total_ingr)
+            // Dashboard: ingreso mensual por rango (ultimo mes por area en ultimo periodo)
         case 24:
             $emp = intval($Par_Sql[0]);
+            $pecUltSql = "(SELECT pec.Pec_Cod
+                FROM perio_cont pec
+                INNER JOIN plan_cuenta pla ON pla.Pla_Cod = pec.Pla_Cod AND pla.Emp_Cod = $emp AND pla.Pla_Est = 'A'
+                WHERE pec.Pec_Est = 'A'
+                ORDER BY pec.Pec_Fei DESC, pec.Pec_Cod DESC
+                LIMIT 1)";
+            $mesAreaSql = "(SELECT DATE_FORMAT(MAX(IFNULL(rpM.Rol_Fef, rpM.Rol_Fei)), '%Y-%m')
+                FROM rol_pagos rpM
+                INNER JOIN det_rpagos drM ON drM.Rol_Cod = rpM.Rol_Cod
+                INNER JOIN campo_rol crM ON crM.Cam_Cod = drM.Cam_Cod
+                    AND crM.Cam_Var IN ('total_ingr', 'total_ing')
+                WHERE rpM.Are_Cod = rp1.Are_Cod AND rpM.Rol_Est = 'A' AND rpM.Pec_Cod = $pecUltSql
+                    AND TRIM(drM.Rol_Val) <> '' AND TRIM(drM.Rol_Val) <> '0')";
             $sql = "SELECT datos.rango_ord, datos.rango_des, COUNT(DISTINCT datos.Per_Cod) AS total
                     FROM (
                         SELECT personal.Per_Cod,
@@ -346,18 +359,30 @@ function sentencias_rrhh($id, $Par_Sql)
                             FROM det_rpagos dr
                             INNER JOIN campo_rol cr ON cr.Cam_Cod = dr.Cam_Cod
                                 AND cr.Cam_Var IN ('total_ingr', 'total_ing')
-                            WHERE dr.Rol_Cod = (
-                                SELECT rp.Rol_Cod
-                                FROM rol_pagos rp
-                                INNER JOIN areas_rrhh ar ON ar.Are_Cod = rp.Are_Cod
-                                INNER JOIN det_rpagos drx ON drx.Rol_Cod = rp.Rol_Cod
+                            INNER JOIN rol_pagos rp ON rp.Rol_Cod = dr.Rol_Cod AND rp.Rol_Est = 'A'
+                                AND rp.Pec_Cod = $pecUltSql
+                            INNER JOIN areas_rrhh ar ON ar.Are_Cod = rp.Are_Cod AND ar.Emp_Cod = $emp AND ar.Are_Est = 'A'
+                            INNER JOIN (
+                                SELECT rp1.Are_Cod,
+                                SUBSTRING_INDEX(
+                                    GROUP_CONCAT(
+                                        rp1.Rol_Cod
+                                        ORDER BY IFNULL(rp1.Rol_Fef, rp1.Rol_Fei) DESC, rp1.Rol_Num DESC, rp1.Rol_Cod DESC
+                                    ),
+                                    ',', 1
+                                ) AS Rol_Cod
+                                FROM rol_pagos rp1
+                                INNER JOIN areas_rrhh ar1 ON ar1.Are_Cod = rp1.Are_Cod
+                                    AND ar1.Emp_Cod = $emp AND ar1.Are_Est = 'A'
+                                INNER JOIN det_rpagos drx ON drx.Rol_Cod = rp1.Rol_Cod
                                 INNER JOIN campo_rol crx ON crx.Cam_Cod = drx.Cam_Cod
                                     AND crx.Cam_Var IN ('total_ingr', 'total_ing')
-                                WHERE ar.Emp_Cod = $emp AND rp.Rol_Est = 'A'
-                                ORDER BY IFNULL(rp.Rol_Fef, rp.Rol_Fei) DESC, rp.Rol_Num DESC, rp.Rol_Cod DESC
-                                LIMIT 1
-                            )
-                            AND TRIM(dr.Rol_Val) <> '' AND TRIM(dr.Rol_Val) <> '0'
+                                WHERE rp1.Rol_Est = 'A' AND rp1.Pec_Cod = $pecUltSql
+                                    AND TRIM(drx.Rol_Val) <> '' AND TRIM(drx.Rol_Val) <> '0'
+                                    AND DATE_FORMAT(IFNULL(rp1.Rol_Fef, rp1.Rol_Fei), '%Y-%m') = $mesAreaSql
+                                GROUP BY rp1.Are_Cod
+                            ) ult_rol ON ult_rol.Rol_Cod = rp.Rol_Cod
+                            WHERE TRIM(dr.Rol_Val) <> '' AND TRIM(dr.Rol_Val) <> '0'
                         ) ing ON ing.Con_Cod = cl.Con_Cod
                         WHERE personal.Emp_Cod = $emp AND personal.Per_Est = 'A'
                             AND ing.ing_val IS NOT NULL AND ing.ing_val > 0

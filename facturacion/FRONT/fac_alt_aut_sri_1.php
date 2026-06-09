@@ -88,7 +88,13 @@ if (isset($autorizaDocs)) {
             //$obBD_con1->echoLog($result);	
             if ($result['success'] == true) {
                 $d['Doc_Env'] = 'S';
-            } else $d['Error'] = "<span>Error al enviar el documento!<br/>[<i style='color:red;'>$result[message]</i>]" . (!empty($result['informacionAdicional']) ? "<br/>$result[informacionAdicional]</span>" : '');
+            } else {
+                $d['Error'] = "<span>Error al enviar el documento!<br/>[<i style='color:red;'>$result[message]</i>]" . (!empty($result['informacionAdicional']) ? "<br/>$result[informacionAdicional]</span>" : '');
+                if (esErrorSecuencialRegistradoSri($result['message'] . ' ' . (isset($result['informacionAdicional']) ? $result['informacionAdicional'] : ''))) {
+                    $d['Doc_VerSri'] = 'S';
+                    $d['Doc_Env'] = 'S';
+                }
+            }
             //}else $d['Error']="<span>Error al enviar el documento!<br/>[<i style='color:red;'>$result[message]</i>]";
         }
         if ($d['Doc_Fir'] == 'S' && $d['Doc_Env'] == 'S' && $d['Doc_Aut'] != 'S') {
@@ -120,7 +126,95 @@ if (isset($autorizaDocs)) {
                 }
             } else {
                 $d['Error'] = "<span>Error al autorizar el documento!<br/>[<i style='color:red;'>$result[message]</i>]" . (!empty($result['informacionAdicional']) ? "<br/>$result[informacionAdicional]</span>" : '');
+                if (esErrorSecuencialRegistradoSri($result['message'] . ' ' . (isset($result['informacionAdicional']) ? $result['informacionAdicional'] : ''))) {
+                    $d['Doc_VerSri'] = 'S';
+                    $d['Doc_Env'] = 'S';
+                }
             }
+        }
+    }
+    unset($d);
+    $obBD_con1->echoJson($resp);
+}
+function esErrorSecuencialRegistradoSri($texto) {
+    $texto = strtoupper(strip_tags($texto));
+    return (preg_match('/\b45\b\s*:\s*SECUENCIAL\s+REGISTRADO/i', $texto) === 1)
+        || (strpos($texto, '45') !== false && strpos($texto, 'SECUENCIAL REGISTRADO') !== false);
+}
+if (isset($autorizaSriDocs)) {
+    require_once('../../Librerias/Xml/XML.php');
+    require_once('../../Librerias/FactElect/FirmaElectronica.php');
+    $xml_roots = array(
+        'VENTAS' => 'factura',
+        'NOTASC' => 'notaCredito',
+        'NOTASD' => 'notaDebito',
+        'RETENC' => 'comprobanteRetencion',
+        'GUIAS' => 'guiaRemision',
+        'LIQUIDC' => 'liquidacionCompra'
+    );
+    $resp = array('success' => true, 'data' => $data);
+    $DocElect = new FirmaElectronica();
+    $DocElect->setProduction(($config['Cof_Fac'] * 1 == 2));
+    foreach ($resp['data'] as &$d) {
+        try {
+            $clave = trim($d['Doc_Xml']);
+            $xml_path = $ruta_xmls . $clave;
+            $xml_aut_file = $xml_path . '_A.xml';
+            if ($d['Doc_Aut'] == 'S' && is_readable($xml_aut_file)) {
+                $d['Doc_Fir'] = 'S';
+                $d['Doc_Env'] = 'S';
+                $d['Error'] = 'El documento ya está autorizado.';
+                continue;
+            }
+            if (empty($clave)) throw new Exception('No se encontró la <u>Clave de Acceso</u> del documento!');
+
+            $xml_aut = null;
+            if (is_readable($xml_aut_file)) {
+                $xml_aut = XmlDoc::createFromFile($xml_aut_file);
+            } else {
+                $DocElect->setFileAutorized($xml_aut_file);
+                $res = $DocElect->autorizarSri($clave);
+                if ($res['success'] != true || empty($res['xml'])) {
+                    throw new Exception($res['message'] . (!empty($res['informacionAdicional']) ? '<br/>' . $res['informacionAdicional'] : ''));
+                }
+                $xml_aut = new XmlDoc((!mb_detect_encoding($res['xml'], 'UTF-8', true)) ? utf8_encode($res['xml']) : $res['xml']);
+            }
+
+            if (isset($xml_aut->estado) && trim((string) $xml_aut->estado->text()) != 'AUTORIZADO') {
+                throw new Exception('El documento no se encuentra <u>Autorizado</u> en el SRI!');
+            }
+
+            $data_xml = (string) $xml_aut->comprobante;
+            $xml_doc = new XmlDoc((!mb_detect_encoding($data_xml, 'UTF-8', true)) ? utf8_encode($data_xml) : $data_xml);
+            $rootEsperado = isset($d['Type']) && isset($xml_roots[$d['Type']]) ? $xml_roots[$d['Type']] : '';
+            if (empty($rootEsperado)) throw new Exception('Tipo de documento no soportado para verificación!');
+            if ($xml_doc->getName() != $rootEsperado) {
+                throw new Exception('El documento electrónico no es un <u>' . (isset($d['Tipo']) ? $d['Tipo'] : $d['Type']) . '</u>!');
+            }
+
+            $numeroAutorizacion = $xml_aut->numeroAutorizacion->text();
+            if (empty($numeroAutorizacion)) throw new Exception('No se obtuvo el número de autorización del SRI!');
+
+            $claveXml = $xml_doc->infoTributaria->claveAcceso->text();
+            if (trim($claveXml) !== $clave) {
+                throw new Exception('La clave de acceso del XML no coincide con el documento seleccionado!');
+            }
+
+            if (!is_readable($xml_aut_file) && !empty($res['xml'])) {
+                file_put_contents($xml_aut_file, $res['xml']);
+            }
+
+            $d['Doc_Aut'] = 'S';
+            $d['Doc_Fir'] = 'S';
+            $d['Doc_Env'] = 'S';
+            $d['Selection'] = 'N';
+            $d['Error'] = 'Se Autorizó Correctamente!<br/><u class="green">' . $numeroAutorizacion . '</u>';
+            $d['numeroAutorizacion'] = $numeroAutorizacion;
+            $obBD_con1->operacionobBD(6, $d, $obBD_conexion);
+            if (is_readable($xml_path . '.xml')) unlink($xml_path . '.xml');
+            if (is_readable($xml_path . '_F.xml')) unlink($xml_path . '_F.xml');
+        } catch (Exception $e) {
+            $d['Error'] = "<span>Error al autorizar el documento!<br/>[<i style='color:red;'>" . $e->getMessage() . "</i>]</span>";
         }
     }
     unset($d);
@@ -255,6 +349,24 @@ if (isset($autorizaDocs)) {
                         name: 'Doc_Num',
                         width: 30,
                         align: "center"
+                    },
+                    {
+                        label: '&nbsp;',
+                        name: 'actAutSri',
+                        width: 25,
+                        align: 'center',
+                        viewable: false,
+                        formatter: 'gridButton',
+                        formatoptions: {
+                            action: consultarAutSriUno,
+                            icon: 'refresh',
+                            type: 'primary',
+                            title: 'Verificacion de Autorizacion en SRI',
+                            conditional: function(o) {
+                                return o.Doc_Aut !== 'S' && esErrorSecuencialRegistrado(o);
+                            }
+                        },
+                        title: false
                     },
                     {
                         label: 'Archivo',
@@ -435,6 +547,51 @@ if (isset($autorizaDocs)) {
             }, data)]);
         }
 
+        function esErrorSecuencialRegistrado(o) {
+            if (o.Doc_VerSri === 'S') return true;
+            var errorTxt = o.Error || '';
+            if (errorTxt.indexOf('<') !== -1) {
+                errorTxt = $('<div>').html(errorTxt).text();
+            }
+            var msgTxt = o.ErrorMsg || '';
+            if (msgTxt.indexOf('<') !== -1) {
+                msgTxt = $('<div>').html(msgTxt).text();
+            }
+            var txt = (errorTxt + ' ' + msgTxt).toUpperCase();
+            return (txt.indexOf('45') !== -1 && txt.indexOf('SECUENCIAL REGISTRADO') !== -1);
+        }
+
+        function consultarAutSriUno(data) {
+            $.createDialogConfirm('¿Desea consultar la autorización en el SRI para este documento?', data, ejecutarAutSriUno);
+        }
+
+        function ejecutarAutSriUno(data) {
+            docs.changeRow(data[docs[0].p.keyName], {
+                ErrorMsg: '<i class="fa fa-spin fa-pulse fa-spinner grey" style="font-size: 15px;">&nbsp;</i>'
+            });
+            $.saveDataJson('', {
+                autorizaSriDocs: true,
+                data: [data]
+            }, function(re) {
+                $.each(re['data'], function(i, v) {
+                    v['ErrorMsg'] = '<span style="padding:1px"><i class="glyphicon glyphicon-' + ((v['Doc_Aut'] === 'S') ? 'ok green' : 'remove red') + '" style="font-size: 14px;"></i>' + (v['Error'] || '') + '</span>';
+                    docs.changeRow(v[docs[0].p.keyName], v);
+                    docs.changeRow(v[docs[0].p.keyName], {
+                        actAutSri: ''
+                    });
+                });
+                return false;
+            }, function() {
+                docs.changeRow(data[docs[0].p.keyName], {
+                    ErrorMsg: ''
+                });
+            }, function() {
+                docs.changeRow(data[docs[0].p.keyName], {
+                    ErrorMsg: ''
+                });
+            });
+        }
+
         function confirmaAutorizacion(data) {
             $.createDialogConfirm('¿Está seguro que desea autorizar el(los) documento(s)?', data, autorizarSri);
         }
@@ -450,9 +607,13 @@ if (isset($autorizaDocs)) {
                 }, function(re) {
                     $.each(re['data'], function(i, v) {
                         v['ErrorMsg'] = '<span style="padding:1px"><i class="glyphicon glyphicon-' + ((v['Doc_Aut'] === 'S') ? 'ok ' + ($.vv(v['Doc_Mail']) && v['Doc_Mail'] === 'N' ? 'orange' : 'green') : 'remove red') + '" style="font-size: 14px;"></i>'+  ''+ v['Error']+'</span>';
+                        if (v['Doc_Aut'] !== 'S' && esErrorSecuencialRegistrado(v)) {
+                            v['Doc_VerSri'] = 'S';
+                        }
                         docs.changeRow(v[docs[0].p.keyName], v);
                         docs.changeRow(v[docs[0].p.keyName], {
-                            act1: ''
+                            act1: '',
+                            actAutSri: ''
                         });
                     });
                     return false;
