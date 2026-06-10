@@ -79,7 +79,7 @@ jQuery(function($) {
 			'include_toggle': false || ace.vars['safari'] || ace.vars['ios_safari'] //true = include toggle button in the scrollbars
 		});
 		if($.fn.ace_sidebar_hover)	$sidebar.ace_sidebar_hover({
-			'sub_hover_delay': 750,
+			'sub_hover_delay': 50,
 			'sub_scroll_style': 'no-track scroll-thin scroll-margin scroll-visible'
 		});
 	}
@@ -1757,7 +1757,7 @@ jQuery(function($) {
 	var scroll_right = false;
 	//scroll style class
 	
-	if(hasTouch) self.settings.sub_hover_delay = parseInt(Math.max(self.settings.sub_hover_delay, 2500));//for touch device, delay is at least 2.5sec
+	if(hasTouch) self.settings.sub_hover_delay = parseInt(Math.max(self.settings.sub_hover_delay, 50));//for touch device, delay is at least 2.5sec
 
 	var $window = $(window);
 	//navbar used for adding extra offset from top when adjusting submenu
@@ -1860,6 +1860,7 @@ jQuery(function($) {
 		if( sidebar_vars['collapsible'] /**|| sidebar_vars['horizontal']*/ ) return;
 		
 		var $this = $(this);
+		$this.siblings().removeClass('hover-show hover-shown hover-flip');
 
 		var shortcuts = false;
 		var has_hover = $this.hasClass('hover');
@@ -2208,7 +2209,7 @@ jQuery(function($) {
  }
  
   $.fn.ace_sidebar_hover.defaults = {
-	'sub_sub_hover_delay': 750,
+	'sub_sub_hover_delay': 50,
 	'sub_scroll_style': 'no-track scroll-thin'
  }
  
