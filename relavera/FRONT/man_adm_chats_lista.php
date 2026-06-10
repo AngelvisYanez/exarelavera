@@ -131,6 +131,8 @@ function relavera_chats_lista_html_formulario_filtros($sufijo, $lista_plantas, $
     $idFd = 'filtro_msj_fec_desde_' . $s;
     $idFh = 'filtro_msj_fec_hasta_' . $s;
     $nameRadio = 'Msj_Prs_Bus_Tip_' . $s;
+    $fecDesdeDef = date('Y-m-01');
+    $fecHastaDef = date('Y-m-t');
     ?>
     <div class="filtros-bar">
         <p style="margin: 0 0 10px; font-size: 12px; color: #6c757d; font-weight: 600;">
@@ -142,12 +144,14 @@ function relavera_chats_lista_html_formulario_filtros($sufijo, $lista_plantas, $
                 <div class="col-xs-12 col-sm-6 col-md-3">
                     <label for="<?php echo relavera_chats_h($idFd); ?>">Fecha envío desde</label>
                     <input type="date" id="<?php echo relavera_chats_h($idFd); ?>" name="Msj_Fec_Desde"
-                        class="form-control input-sm" autocomplete="off" />
+                        class="form-control input-sm" autocomplete="off"
+                        value="<?php echo relavera_chats_h($fecDesdeDef); ?>" />
                 </div>
                 <div class="col-xs-12 col-sm-6 col-md-3">
                     <label for="<?php echo relavera_chats_h($idFh); ?>">Fecha envío hasta</label>
                     <input type="date" id="<?php echo relavera_chats_h($idFh); ?>" name="Msj_Fec_Hasta"
-                        class="form-control input-sm" autocomplete="off" />
+                        class="form-control input-sm" autocomplete="off"
+                        value="<?php echo relavera_chats_h($fecHastaDef); ?>" />
                 </div>
                 <div class="col-xs-12 col-sm-6 col-md-4">
                     <label for="<?php echo relavera_chats_h($idPla); ?>">Planta</label>
