@@ -368,8 +368,11 @@ if (isset($dashPersonalAjax)) {
             max-width: 100%;
             flex: 0 1 auto;
             min-height: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
         }
-        .dash-chart-host canvas { width: 100% !important; height: 100% !important; display: block; }
+        .dash-chart-host canvas { width: 100% !important; height: 100% !important; display: block; max-height: 100%; }
         .dash-print-data-table {
             display: none;
             width: 100%;
@@ -911,25 +914,29 @@ Chart.register(ChartDataLabels);
     var chartCon = null;
     var chartConPie = null;
     var CHART_SIZE = {
-        minBarH: 220,
-        maxBarH: 620,
-        pxPerBarH: 38,
-        padH: 72,
-        minVertH: 260,
-        maxVertH: 420,
-        minBarW: 300,
-        maxBarW: 900,
-        compactPxPerCat: 98,
-        compactPadW: 88,
-        compactMaxCategories: 6,
-        compactMinW: 280,
-        compactMinBarH: 200,
-        compactMaxBarH: 360,
-        compactPxPerBarV: 52,
-        compactPxPerBarH: 34,
-        compactPadBar: 56,
-        doughnutH: 280,
-        doughnutMinW: 260,
+        minBarH: 240,
+        maxBarH: 560,
+        pxPerBarH: 34,
+        padH: 88,
+        minVertH: 300,
+        maxVertH: 460,
+        minBarW: 280,
+        maxBarW: 880,
+        vertPxPerCat: 58,
+        vertPadW: 120,
+        compactPxPerCat: 72,
+        compactPadW: 72,
+        compactMaxCategories: 5,
+        doughnutMaxCategories: 4,
+        doughnutMinCategories: 2,
+        compactMinW: 260,
+        compactMinBarH: 220,
+        compactMaxBarH: 380,
+        compactPxPerBarV: 40,
+        compactPxPerBarH: 30,
+        compactPadBar: 64,
+        doughnutH: 260,
+        doughnutMinW: 240,
         printBarH: 200,
         printDoughnutH: 200,
         printDoughnutW: 200,
@@ -1021,8 +1028,28 @@ Chart.register(ChartDataLabels);
             .replace(/"/g, '&quot;');
     }
 
+    function isChartDoughnut(hostId) {
+        if (PRINT_DOUGHNUT_HOSTS[hostId]) {
+            return true;
+        }
+        var chart = getChartForHost(hostId);
+        return !!(chart && chart.config && chart.config.type === 'doughnut');
+    }
+
+    function shouldUseDoughnut(categoryCount, chartOpts) {
+        chartOpts = chartOpts || {};
+        if (chartOpts.preferBar || chartOpts.forceBar) {
+            return false;
+        }
+        if (chartOpts.forceDoughnut) {
+            return true;
+        }
+        var n = Math.max(categoryCount, 0);
+        return n >= CHART_SIZE.doughnutMinCategories && n <= CHART_SIZE.doughnutMaxCategories;
+    }
+
     function printDisplaySize(hostId) {
-        var isDoughnut = !!PRINT_DOUGHNUT_HOSTS[hostId];
+        var isDoughnut = isChartDoughnut(hostId);
         if (isDoughnut) {
             var dSz = printDoughnutDimensions(hostId);
             return { w: dSz.w, h: dSz.h, fullWidth: false };
@@ -1151,19 +1178,15 @@ Chart.register(ChartDataLabels);
     }
 
     function chartNeedsFullRow(hostId) {
-        if (PRINT_DOUGHNUT_HOSTS[hostId]) {
-            var chartD = getChartForHost(hostId);
-            if (!chartD || !chartD.data || !chartD.data.labels) {
-                return false;
-            }
-            return chartD.data.labels.length > 5;
-        }
         var chart = getChartForHost(hostId);
         if (!chart || !chart.data || !chart.data.labels) {
             return false;
         }
         var labels = chart.data.labels;
         var n = labels.length;
+        if (isChartDoughnut(hostId)) {
+            return n > CHART_SIZE.doughnutMaxCategories + 2;
+        }
         var $col = $('#' + hostId).closest('[class*="col-"]');
         if ($col.hasClass('col-md-8')) {
             return true;
@@ -1207,17 +1230,20 @@ Chart.register(ChartDataLabels);
             var layout = barChartLayout(n, labels, hostId);
             var parentW = hostParentWidth(hostId);
             var h;
-            if (PRINT_DOUGHNUT_HOSTS[hostId]) {
-                var wD = Math.min(parentW, Math.max(220, Math.round(parentW * 0.45)));
+            if (isChartDoughnut(hostId)) {
+                var wD = Math.min(parentW, Math.max(200, Math.round(parentW * 0.42)));
                 h = wD;
-                setCompactHost(hostId, false);
+                setCompactHost(hostId, true);
                 setChartHostSize(hostId, wD, h, false);
             } else {
                 h = layout.horizontal
-                    ? Math.min(620, Math.max(220, n * 38 + 80))
+                    ? Math.min(520, Math.max(260, n * CHART_SIZE.pxPerBarH + CHART_SIZE.padH))
                     : barChartHeight(n, layout.horizontal, labels);
+                var w = layout.horizontal
+                    ? parentW
+                    : Math.min(parentW, verticalBarChartWidth(n, parentW));
                 setCompactHost(hostId, false);
-                setChartHostSize(hostId, parentW, h, true);
+                setChartHostSize(hostId, w, h, layout.horizontal);
             }
             try {
                 chart.resize();
@@ -1299,7 +1325,7 @@ Chart.register(ChartDataLabels);
                 if (!chart || !$host.length) {
                     return;
                 }
-                var isDoughnut = !!PRINT_DOUGHNUT_HOSTS[hostId];
+                var isDoughnut = isChartDoughnut(hostId);
                 var size = printDisplaySize(hostId);
                 $host.toggleClass('dash-chart-host--doughnut-print', isDoughnut);
                 $host.toggleClass('dash-chart-host--bar-print', !isDoughnut);
@@ -1403,6 +1429,13 @@ Chart.register(ChartDataLabels);
         return m;
     }
 
+    /** Ancho proporcional para barras verticales (evita barras anchas en canvas muy ancho) */
+    function verticalBarChartWidth(categoryCount, parentMaxW) {
+        var n = Math.max(categoryCount, 1);
+        parentMaxW = parentMaxW || CHART_SIZE.maxBarW;
+        return Math.min(parentMaxW, Math.max(CHART_SIZE.minBarW, n * CHART_SIZE.vertPxPerCat + CHART_SIZE.vertPadW));
+    }
+
     /** Ancho del canvas según cantidad de categorías (pocos datos = más compacto) */
     function compactChartWidth(categoryCount, parentMaxW) {
         var n = Math.max(categoryCount, 1);
@@ -1437,12 +1470,15 @@ Chart.register(ChartDataLabels);
         return n <= CHART_SIZE.compactMaxCategories;
     }
 
-    /** Barras: ancho completo solo con muchas categorías */
+    /** Barras: ancho según categorías; horizontal usa todo el contenedor */
     function barChartWidth(categoryCount, horizontal, labels, parentMaxW, compact) {
+        if (horizontal) {
+            return parentMaxW || CHART_SIZE.maxBarW;
+        }
         if (compact) {
             return compactChartWidth(categoryCount, parentMaxW);
         }
-        return parentMaxW || CHART_SIZE.maxBarW;
+        return verticalBarChartWidth(categoryCount, parentMaxW);
     }
 
     function doughnutChartWidth(sliceCount, parentMaxW, compact) {
@@ -1462,35 +1498,35 @@ Chart.register(ChartDataLabels);
 
     function barChartHeight(categoryCount, horizontal, labels) {
         var n = Math.max(categoryCount, 1);
-        var longLbl = maxLabelChars(labels) > 22;
+        var longLbl = maxLabelChars(labels) > 18;
         if (horizontal) {
             return Math.min(CHART_SIZE.maxBarH, Math.max(CHART_SIZE.minBarH, n * CHART_SIZE.pxPerBarH + CHART_SIZE.padH));
         }
-        var extra = longLbl ? 40 : 0;
-        return Math.min(CHART_SIZE.maxVertH, Math.max(CHART_SIZE.minVertH, 240 + Math.min(n, 10) * 14 + extra));
+        var extra = longLbl ? 32 : 12;
+        return Math.min(CHART_SIZE.maxVertH, Math.max(CHART_SIZE.minVertH, 260 + n * 22 + extra));
     }
 
     function barChartLayout(categoryCount, labels, hostId) {
         var n = Math.max(categoryCount, 1);
-        var longLbl = maxLabelChars(labels) > 20;
+        var longLbl = maxLabelChars(labels) > 16;
         var parentW = hostId ? hostParentWidth(hostId) : 900;
         var narrow = parentW < 420;
-        /* Horizontal en columnas estrechas o con muchas categorías: etiquetas legibles */
-        var horizontal = n > 8 || (n > 6 && longLbl) || (narrow && n > 2);
-        var barPct = 0.45;
-        var catPct = 0.65;
+        /* Horizontal con 5+ categorías o etiquetas largas: mejor proporción y lectura */
+        var horizontal = n >= 5 || (n > 3 && longLbl) || (narrow && n > 2);
+        var barPct = 0.58;
+        var catPct = 0.72;
         if (n <= 3) {
-            barPct = 0.5;
-            catPct = 0.7;
-        } else if (n <= 8) {
-            barPct = 0.6;
-            catPct = 0.75;
+            barPct = 0.62;
+            catPct = 0.78;
         } else if (horizontal) {
-            barPct = 0.72;
-            catPct = 0.88;
+            barPct = n <= 6 ? 0.68 : 0.72;
+            catPct = n <= 6 ? 0.82 : 0.88;
+        } else if (n <= 8) {
+            barPct = 0.52;
+            catPct = 0.58;
         } else {
-            barPct = 0.55;
-            catPct = 0.8;
+            barPct = 0.48;
+            catPct = 0.55;
         }
         return { horizontal: horizontal, barPercentage: barPct, categoryPercentage: catPct };
     }
@@ -1541,25 +1577,27 @@ Chart.register(ChartDataLabels);
     function createBarChart(hostId, canvasId, labels, data, palette, datasetLabel, chartOpts) {
         chartOpts = chartOpts || {};
         var n = labels.length;
+        if (shouldUseDoughnut(n, chartOpts)) {
+            return createDoughnutChart(hostId, canvasId, labels, data, palette);
+        }
         var layout = barChartLayout(n, labels, hostId);
         var parentW = hostParentWidth(hostId);
         var compact = shouldAutoCompact(n, layout, chartOpts);
         var w = barChartWidth(n, layout.horizontal, labels, parentW, compact);
-        if (compact) {
-            if (!layout.horizontal && n <= 8) {
-                layout.barPercentage = 0.42;
-                layout.categoryPercentage = 0.62;
-            }
+        if (compact && !layout.horizontal && n <= 8) {
+            layout.barPercentage = 0.55;
+            layout.categoryPercentage = 0.65;
         }
         var h = compact ? compactBarHeight(n, layout.horizontal, labels) : barChartHeight(n, layout.horizontal, labels);
         setCompactHost(hostId, compact);
-        var longLbl = maxLabelChars(labels) > 18;
-        var ctx = resetChartHost(hostId, canvasId, w, h, !compact);
+        var longLbl = maxLabelChars(labels) > 14;
+        var useFullWidth = layout.horizontal;
+        var ctx = resetChartHost(hostId, canvasId, w, h, useFullWidth);
         var displayLabels = labels.map(function (lb) {
             if (layout.horizontal) {
-                return truncateLabel(lb, 42);
+                return truncateLabel(lb, 36);
             }
-            return longLbl ? truncateLabel(lb, 28) : lb;
+            return longLbl ? truncateLabel(lb, 14) : truncateLabel(lb, 18);
         });
         var opts = {
             responsive: true,
@@ -1589,18 +1627,17 @@ Chart.register(ChartDataLabels);
                 datalabels: {
                     anchor: layout.horizontal ? 'end' : 'end',
                     align: layout.horizontal ? 'end' : 'end',
-                    offset: chartOpts.showPct ? 4 : 0,
-                    font: { weight: '600', size: n > 12 ? 10 : 11, family: "'Inter', sans-serif" },
+                    offset: layout.horizontal ? 4 : 2,
+                    font: { weight: '600', size: n > 10 ? 9 : 10, family: "'Inter', sans-serif" },
                     color: '#475569',
-                    formatter: chartOpts.showPct ? function (value, ctx) {
-                        if (!value) {
-                            return '';
-                        }
-                        return value + ' (' + pctOfTotal(value, ctx.dataset.data, chartOpts.pctTotal) + '%)';
-                    } : undefined,
-                    display: chartOpts.showPct ? function (ctx) {
+                    formatter: chartOpts.showPct ? function (value) {
+                        return value ? String(value) : '';
+                    } : function (value) {
+                        return value ? String(value) : '';
+                    },
+                    display: function (ctx) {
                         return (ctx.dataset.data[ctx.dataIndex] || 0) > 0;
-                    } : true
+                    }
                 }
             },
             scales: {}
@@ -1612,9 +1649,9 @@ Chart.register(ChartDataLabels);
                 return (ctx.dataset.label || '') + ': ' + v + ' (' + pct + '%)';
             };
             if (!layout.horizontal) {
-                opts.layout.padding.top = 22;
+                opts.layout.padding.top = 18;
             } else {
-                opts.layout.padding.right = 48;
+                opts.layout.padding.right = 42;
             }
         }
         if (layout.horizontal) {
@@ -1643,13 +1680,12 @@ Chart.register(ChartDataLabels);
             };
             opts.scales.x = {
                 ticks: {
-                    autoSkip: n > 14,
-                    maxTicksLimit: n > 14 ? 14 : undefined,
-                    maxRotation: longLbl || n > 6 ? 40 : 0,
-                    minRotation: longLbl || n > 6 ? 30 : 0,
-                    font: { size: 11, weight: '600' },
-                    padding: 6,
-                    color: '#475569',
+                    autoSkip: false,
+                    maxRotation: 0,
+                    minRotation: 0,
+                    font: { size: 10, weight: '500' },
+                    padding: 4,
+                    color: '#64748b',
                     callback: function (val, idx) {
                         return displayLabels[idx] != null ? displayLabels[idx] : val;
                     }
@@ -1774,9 +1810,15 @@ Chart.register(ChartDataLabels);
     }
 
     function createDoughnutChart(hostId, canvasId, labels, data, colors) {
-        var compact = labels.length <= CHART_SIZE.compactMaxCategories;
-        var w = doughnutChartWidth(labels.length, hostParentWidth(hostId), compact);
-        var h = doughnutChartHeight(labels.length, w, compact);
+        var n = labels.length;
+        var compact = n <= CHART_SIZE.doughnutMaxCategories + 1;
+        var parentW = hostParentWidth(hostId);
+        var w = doughnutChartWidth(n, parentW, compact);
+        var h = doughnutChartHeight(n, w, compact);
+        if (compact && n <= CHART_SIZE.doughnutMaxCategories) {
+            w = Math.min(w, Math.max(200, n * 56 + 100));
+            h = Math.min(h, Math.max(200, w));
+        }
         setCompactHost(hostId, compact);
         var ctx = resetChartHost(hostId, canvasId, w, h, false);
         return new Chart(ctx, {
@@ -2000,8 +2042,7 @@ Chart.register(ChartDataLabels);
             }
             chartTit = createBarChart('dashTitHost', 'chartTit', labelsT, dataT, themePalette(labelsT.length), 'Empleados', {
                 showPct: true,
-                pctTotal: tot,
-                forceFull: labelsT.length > CHART_SIZE.compactMaxCategories
+                pctTotal: tot
             });
 
             // Gráfico por ciudad
@@ -2016,9 +2057,7 @@ Chart.register(ChartDataLabels);
                 labelsC.push('Sin datos');
                 dataC.push(0);
             }
-            chartCiu = createBarChart('dashCiuHost', 'chartCiu', labelsC, dataC, themePalette(labelsC.length), 'Empleados', {
-                forceFull: labelsC.length > CHART_SIZE.compactMaxCategories
-            });
+            chartCiu = createBarChart('dashCiuHost', 'chartCiu', labelsC, dataC, themePalette(labelsC.length), 'Empleados');
 
             // Gráfico por tipo de movilización
             var movRows = res.byMov || [];
@@ -2059,9 +2098,7 @@ Chart.register(ChartDataLabels);
                 labelsA.push('Sin datos');
                 dataA.push(0);
             }
-            chartAre = createBarChart('dashAreHost', 'chartAre', labelsA, dataA, themePalette(labelsA.length), 'Empleados', {
-                forceFull: labelsA.length > CHART_SIZE.compactMaxCategories
-            });
+            chartAre = createBarChart('dashAreHost', 'chartAre', labelsA, dataA, themePalette(labelsA.length), 'Empleados');
 
             var conRows = mergeConTypes(res.byCon || []);
             var labelsCon = [];
@@ -2075,7 +2112,8 @@ Chart.register(ChartDataLabels);
             });
             chartCon = createBarChart('dashConHost', 'chartCon', labelsCon, dataCon, DASH_THEME.con, 'Contratos', {
                 showPct: true,
-                pctTotal: totCon
+                pctTotal: totCon,
+                preferBar: true
             });
             chartConPie = createDoughnutChart('dashConPieHost', 'chartConPie', labelsCon, dataCon, DASH_THEME.con);
 
