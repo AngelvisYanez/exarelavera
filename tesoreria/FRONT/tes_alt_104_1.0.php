@@ -80,7 +80,7 @@ if (isset($xml) || isset($html)) {
     $row_407 = $obBD_con1->getRowConsulta(43, $ini . '*' . $fin . '*' . $Ses_Emp_Cod . "*$noiva*1", $obBD_conexion);
     $row_408 = $obBD_con1->getRowConsulta(42, $ini . '*' . $fin . '*' . $Ses_Emp_Cod . "*$noiva*1", $obBD_conexion);
     $row_434 = $obBD_con1->getRowConsulta(35, $ini . '*' . $fin . '*' . $Ses_Emp_Cod . "**41", $obBD_conexion);
-
+    
     // IVA 5%
     $row_425_contado = $obBD_con1->getRowConsulta(15, $ini . '*' . $fin . '*' . $Ses_Emp_Cod . "*$iva*1*1*5", $obBD_conexion);
     $row_425_credito = $obBD_con1->getRowConsulta(15, $ini . '*' . $fin . '*' . $Ses_Emp_Cod . "*$iva*1*2*5", $obBD_conexion);
@@ -89,10 +89,10 @@ if (isset($xml) || isset($html)) {
     //$NC_credito= $obBD_con1->getRowConsulta(15, $ini.'*'.$fin.'*'.$Ses_Emp_Cod."*$iva*4*2", $obBD_conexion,true);    
     
     $NC_Ventas = $obBD_con1->getRowConsulta(40, $ini . '*' . $fin . '*' . $Ses_Emp_Cod . "*$iva*4*2", $obBD_conexion);    
-    $row_412 = $obBD_con1->getRowConsulta(14, $ini . '*' . $fin . '*' . $Ses_Emp_Cod . "*$iva*4", $obBD_conexion);
-    $row_435 = $obBD_con1->getRowConsulta(14, $ini . '*' . $fin . '*' . $Ses_Emp_Cod . "*$iva*4*5", $obBD_conexion); //5%
+    $row_412 = $obBD_con1->getRowConsulta(14, array('ini'=>$ini ,'fin'=>$fin ,'Emp_Cod'=>$Ses_Emp_Cod,'iva'=>$iva,'Tic_Cod'=>4,'Adq_Cod'=>'2'), $obBD_conexion);
+    $row_435 = $obBD_con1->getRowConsulta(14, array('ini'=>$ini ,'fin'=>$fin ,'Emp_Cod'=>$Ses_Emp_Cod,'iva'=>$iva,'Tic_Cod'=>4,'Iva_Por'=>5,'Adq_Cod'=>'1,3'), $obBD_conexion); //5%
     $row_413 = $obBD_con1->getRowConsulta(13, $ini . '*' . $fin . '*' . $Ses_Emp_Cod . "*$noiva*4", $obBD_conexion);    
-    $row_414 = $obBD_con1->getRowConsulta(14, $ini . '*' . $fin . '*' . $Ses_Emp_Cod . "*$noiva*4", $obBD_conexion);
+    $row_414 = $obBD_con1->getRowConsulta(14, array('ini'=>$ini ,'fin'=>$fin ,'Emp_Cod'=>$Ses_Emp_Cod,'iva'=>$noiva,'Tic_Cod'=>4,'Adq_Cod'=>'2'), $obBD_conexion);
     $row_415 = $obBD_con1->getRowConsulta(13, $ini . '*' . $fin . '*' . $Ses_Emp_Cod . "*$noiva*4*S", $obBD_conexion);
     // NOTA: no se puede diferenciar cuando es venta de activos fijos
     //COMPRAS        
@@ -442,7 +442,7 @@ if (isset($xml) || isset($html)) {
                                     <div class="form-group">
                                         <label class="col-xs-2 control-label label-xs">Año:</label>
                                         <div class="col-sm-5 ">
-                                            <select name="anio" id="anio" class="form-control input-sm" onchange="generaHtml();">
+                                            <select name="anio" id="anio" class="form-control input-sm" onchange="">
                                                 <?Php for ($i = date("Y"); $i >= date("Y") - 5; $i--) { //Presentamos los dos ultimos a�os para generar el XML  ?>
                                                     <option <?Php if ($anio == $i) { echo "selected"; } ?> value="<?Php echo $i; ?>"><?Php echo $i; ?></option>
                                                 <?Php } ?>
@@ -453,7 +453,7 @@ if (isset($xml) || isset($html)) {
                                     <div class="form-group">
                                         <label class="col-xs-2 control-label label-xs">Mes:</label>
                                         <div class="col-sm-5 ">
-                                            <select name="mes" id="mes" class="form-control input-sm" onchange="generaHtml();">
+                                            <select name="mes" id="mes" class="form-control input-sm" onchange="/*generaHtml()*/">
                                                 <option value="01">Enero</option>
                                                 <option value="02">Febrero</option>
                                                 <option value="03">Marzo</option>
@@ -533,11 +533,11 @@ if (isset($xml) || isset($html)) {
                                     <tr>
                                         <td style="white-space: nowrap; overflow: hidden;">VENTAS LOCALES (EXCLUYE ACTIVOS FIJOS) GRAVADAS TARIFA DIFERENTE A CERO</td>
                                         <td align="right">401</td>
-                                        <td align="right" style="border: 1px solid #000000;"><label  class="lbl" id="401">0.00</label></td>
+                                        <td align="right" style="border: 1px solid #000000;"><span style="color:#4F85F0;  float: left;" class="glyphicon glyphicon-pencil"></span><label  class="lbl" id="401">0.00</label><input type="text" style="display: none" class="input_edit" id="txt_401" value="0.00"></td>
                                         <td align="right">411</td>
-                                        <td align="right" style="border: 1px solid #000000;"><label  class="lbl" id="411">0.00</label></td>
+                                        <td align="right" style="border: 1px solid #000000;"><span style="color:#4F85F0;  float: left;" class="glyphicon glyphicon-pencil"></span><label  class="lbl" id="411">0.00</label><input type="text" style="display: none" class="input_edit" id="txt_411" value="0.00"></td>
                                         <td align="right">421</td>
-                                        <td align="right" style="border: 1px solid #000000;"><label  class="lbl" id="421">0.00</label></td>
+                                        <td align="right" style="border: 1px solid #000000;"><span style="color:#4F85F0;  float: left;" class="glyphicon glyphicon-pencil"></span><label  class="lbl" id="421">0.00</label><input type="text" style="display: none" class="input_edit" id="txt_421" value="0.00"></td>
                                     </tr>
                                     <tr>
                                         <td>VENTAS DE ACTIVOS FIJOS GRAVADAS TARIFA DIFERENTE A CERO</td>
@@ -583,7 +583,7 @@ if (isset($xml) || isset($html)) {
                                     <tr>
                                         <td style="white-space: nowrap; overflow: hidden;">VENTAS LOCALES (EXCLUYE ACTIVOS FIJOS) GRAVADAS TARIFA 0% SIN DERECHO A CRED.TRIB.</td>
                                         <td align="right">403</td>
-                                        <td align="right" style="border: 1px solid #000000;"><label  class="lbl" id="403">0.00</label></td>
+                                        <td align="right" style="border: 1px solid #000000;"><span style="color:#4F85F0;  float: left;" class="glyphicon glyphicon-pencil"></span><label  class="lbl" id="403">0.00</label><input type="text" style="display: none" class="input_edit" id="txt_403" value="0.00"></td>
                                         <td align="right">413</td>
                                         <td align="right" style="border: 1px solid #000000;"><label  class="lbl" id="413">0.00</label></td>
                                         <td align></td>
@@ -601,7 +601,7 @@ if (isset($xml) || isset($html)) {
                                     <tr>
                                         <td style="white-space: nowrap; overflow: hidden;">VENTAS LOCALES (EXCLUYE ACTIVOS FIJOS) GRAVADAS TARIFA 0% CON DERECHO A CRED.TRIB.</td>
                                         <td align="right">405</td>
-                                        <td align="right" style="border: 1px solid #000000;"><label  class="lbl" id="405">0.00</label></td>
+                                        <td align="right" style="border: 1px solid #000000;"><span style="color:#4F85F0;  float: left;" class="glyphicon glyphicon-pencil"></span><label  class="lbl" id="405">0.00</label><input type="text" style="display: none" class="input_edit" id="txt_405" value="0.00"></td>
                                         <td align="right">415</td>
                                         <td align="right" style="border: 1px solid #000000;"><label  class="lbl" id="415">0.00</label></td>
                                         <td align></td>
@@ -1291,7 +1291,8 @@ if (isset($xml) || isset($html)) {
                     calculos_generales();
                 });
             }
-            editar_valor('480');editar_valor('481');
+            editar_valor('401');editar_valor('411');editar_valor('421');
+            editar_valor('403');editar_valor('405');editar_valor('480');editar_valor('481');
             editar_valor('483');editar_valor('484');editar_valor('603');editar_valor('604');editar_valor('605');
             editar_valor('606');editar_valor('607');editar_valor('608');editar_valor('622');editar_valor('625');
             editar_valor('610');editar_valor('611');editar_valor('612');editar_valor('613');editar_valor('614');

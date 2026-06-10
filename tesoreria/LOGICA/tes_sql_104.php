@@ -255,7 +255,7 @@ function sentencias_anx($id, $Par_Sql)
 		            */
                     LEFT JOIN venta_reembolsos ON ventas.Vet_Cod=venta_reembolsos.Vet_Cod
                     WHERE producto.Adq_Cod<>2 AND venta_reembolsos.Cop_Cod IS NULL AND 
-                    ventas.Vet_Est = 'A' AND ventas.Tic_Cod=$Par_Sql[4] AND $CreTri 
+                    ventas.Vet_Est = 'A' AND ventas.Tic_Cod=$Par_Sql[4] AND Vet_Aut='S' AND $CreTri 
                     caja_aper.Caj_Fec BETWEEN '$Par_Sql[0]' AND '$Par_Sql[1]' AND `cliente`.`Emp_Cod`= $Par_Sql[2] AND iva.Iva_Por  $Par_Sql[3] AND Tic_Sri!='0'
 		    ";
             //echo $sql."<br/>";
@@ -263,14 +263,14 @@ function sentencias_anx($id, $Par_Sql)
         case 14: 
             /* if (is_var_true($Par_Sql[3])) $Par_Sql[3] = '!=0';
             else $Par_Sql[3] = '=0';*/
-            if (is_var_true($Par_Sql[3])) {
-                if ($Par_Sql[5]*1 == 5) {
-                    $Par_Sql[3] = ' AND iva.Iva_Por=5';
+            if (is_var_true($Par_Sql['iva'])) {
+                if ($Par_Sql['Iva_Por']*1 == 5) {
+                    $Par_Sql['iva'] = ' AND iva.Iva_Por=5';
                 } else {
-                    $Par_Sql[3] = ' AND iva.Iva_Por !=0 AND iva.Iva_Por!=5';
+                    $Par_Sql['iva'] = ' AND iva.Iva_Por !=0 AND iva.Iva_Por!=5';
                 }
             } else {
-                $Par_Sql[3] = ' AND iva.Iva_Por=0 ';
+                $Par_Sql['iva'] = ' AND iva.Iva_Por=0 ';
             }
 
             $sql = "SELECT /* codigo 404 */ 
@@ -285,9 +285,9 @@ function sentencias_anx($id, $Par_Sql)
                     INNER JOIN cliente ON (ventas.Cli_Cod = cliente.Cli_Cod)
                     INNER JOIN tipo_compr ON (ventas.Tic_Cod = tipo_compr.Tic_Cod)
                     LEFT JOIN venta_reembolsos ON ventas.Vet_Cod=venta_reembolsos.Vet_Cod
-                    WHERE (producto.Adq_Cod=1 OR producto.Adq_Cod=3 OR producto.Adq_Cod=13 OR  producto.Adq_Cod=14) AND venta_reembolsos.Cop_Cod IS NULL AND 
-                    ventas.Vet_Est = 'A' AND ventas.Tic_Cod=$Par_Sql[4] AND
-                    caja_aper.Caj_Fec BETWEEN '$Par_Sql[0]' AND '$Par_Sql[1]' AND `cliente`.`Emp_Cod`= $Par_Sql[2]  $Par_Sql[3] AND Tic_Sri!='0'";
+                    WHERE producto.Adq_Cod IN ($Par_Sql[Adq_Cod]) AND venta_reembolsos.Cop_Cod IS NULL AND 
+                    ventas.Vet_Est = 'A' AND ventas.Tic_Cod=$Par_Sql[Tic_Cod] AND Vet_Aut='S' AND 
+                    caja_aper.Caj_Fec BETWEEN '$Par_Sql[ini]' AND '$Par_Sql[fin]' AND `cliente`.`Emp_Cod`= $Par_Sql[Emp_Cod]  $Par_Sql[iva] AND Tic_Sri!='0'";
             //echo $sql."<br/>";
 
             break;
@@ -295,7 +295,11 @@ function sentencias_anx($id, $Par_Sql)
             /* if (is_var_true($Par_Sql[3])) $Par_Sql[3] = '!=0'; 
             if (is_var_true($Par_Sql[3])) $Par_Sql[3] = '!=0 AND iva.Iva_Por!=5 '; 
             else $Par_Sql[3] = '=0';*/
-
+            $contadoCredito= '';
+            if(isset($Par_Sql[5]) && $Par_Sql[5] == '1')
+                $contadoCredito= ' Cpc_Cod IS NOT NULL AND ';            
+            else
+                $contadoCredito= ' Cpc_Cod IS NULL AND ';
             if (is_var_true($Par_Sql[3])) {
                 if ($Par_Sql[6] == 5) {
                     $Par_Sql[3] = ' AND iva.Iva_Por!=0 AND iva.Iva_Por=5';
@@ -314,13 +318,12 @@ function sentencias_anx($id, $Par_Sql)
                     INNER JOIN caja_aper ON (ventas.Caj_Cod = caja_aper.Caj_Cod)
                     INNER JOIN ventas_det ON (ventas.Vet_Cod = ventas_det.Vet_Cod)
                     INNER JOIN producto ON (ventas_det.Pro_Cod = producto.Pro_Cod)
-                    INNER JOIN pago_venta ON (ventas.Vet_Cod = pago_venta.Vet_Cod)
-                    INNER JOIN tipos_pago ON (tipos_pago.Pag_Cod = pago_venta.Pag_Cod)
+                    LEFT JOIN ccpp_cobrar on ventas.Vet_Cod = ccpp_cobrar.Vet_Cod 
                     INNER JOIN iva ON (ventas_det.Iva_Cod = iva.Iva_Cod)
                     INNER JOIN cliente ON (ventas.Cli_Cod = cliente.Cli_Cod)
-                    INNER JOIN tipo_compr ON (ventas.Tic_Cod = tipo_compr.Tic_Cod)
-                    WHERE (producto.Adq_Cod=1 OR producto.Adq_Cod=3 OR producto.Adq_Cod=13 OR  producto.Adq_Cod=14) AND For_Cod='$Par_Sql[5]' AND 
-                    ventas.Vet_Est = 'A' AND ventas.Tic_Cod=$Par_Sql[4] AND
+                    INNER JOIN tipo_compr ON (ventas.Tic_Cod = tipo_compr.Tic_Cod)                                     
+                    WHERE $contadoCredito (producto.Adq_Cod=1 OR producto.Adq_Cod=3 OR producto.Adq_Cod=13 OR  producto.Adq_Cod=14) AND 
+                    ventas.Vet_Est = 'A' AND ventas.Tic_Cod=$Par_Sql[4] AND Vet_Aut='S' AND
                     caja_aper.Caj_Fec BETWEEN '$Par_Sql[0]' AND '$Par_Sql[1]' AND `cliente`.`Emp_Cod`= $Par_Sql[2] $Par_Sql[3] AND Tic_Sri!='0'";
             //echo $sql."<br/>";
             break;
@@ -830,7 +833,7 @@ function sentencias_anx($id, $Par_Sql)
                 $Par_Sql['iva'] = ' AND iva.Iva_Por=0 ';
             }
             $CreTri=(!empty($Par_Sql['CreTri']) && $Par_Sql['CreTri']=='S')?" Vet_Cre='S' AND ":" (Vet_Cre IS NULL OR Vet_Cre='' OR Vet_Cre='N') AND"; 
-            $sql = "SELECT /* codigo 405 */ 
+            $sql = "SELECT /* codigo 405 49*/ 
                     SUM(ROUND((ventas_det.Vet_Imp - (((Vet_Imp * Vet_Des) / 100) + ((Vet_Imp * Vet_Dec) / 100))), 2)) AS Total,
                     SUM(((ventas_det.Vet_Imp - (((Vet_Imp * Vet_Des) / 100) + ((Vet_Imp * Vet_Dec) / 100))) * Iva_Por) / 100) AS Iva
                     FROM
@@ -844,7 +847,7 @@ function sentencias_anx($id, $Par_Sql)
                     INNER JOIN tipo_compr ON (ventas.Tic_Cod = tipo_compr.Tic_Cod)
                     LEFT JOIN venta_reembolsos ON ventas.Vet_Cod=venta_reembolsos.Vet_Cod
                     WHERE $CreTri adquisicio.Adq_Cor in ($Par_Sql[Adq_Cor]) AND venta_reembolsos.Cop_Cod IS NULL AND 
-                    ventas.Vet_Est = 'A' AND ventas.Tic_Cod=$Par_Sql[Tic_Cod] AND
+                    ventas.Vet_Est = 'A' AND ventas.Tic_Cod=$Par_Sql[Tic_Cod] AND Vet_Aut='S' AND 
                     caja_aper.Caj_Fec BETWEEN '$Par_Sql[ini]' AND '$Par_Sql[fin]' AND `cliente`.`Emp_Cod`= $Par_Sql[Emp_Cod]  $Par_Sql[iva] AND Tic_Sri!='0'";
             //echo $sql."<br/>";
             break;
