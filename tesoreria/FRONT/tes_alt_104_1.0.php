@@ -377,6 +377,58 @@ if (isset($xml) || isset($html)) {
     exit();
 }
 
+/**
+ * Grid modal: ventas con tarifa 0% de IVA
+ */
+if (isset($ventasIva0Ajax) || isset($_REQUEST['ventasIva0Ajax'])) {
+    $data = array_merge($_REQUEST, array('Emp_Cod' => $Ses_Emp_Cod));
+    if (!empty($data['ruc'])) {
+        $data['ruc'] = trim($data['ruc']);
+    }
+    if (!empty($data['apellido'])) {
+        $data['apellido'] = trim($data['apellido']);
+    }
+    $resultado = $obBD_con1->getPageGrid(60, $data, $obBD_conexion);
+    utf8_encode_deep($resultado);
+    echo json_encode($resultado);
+    exit();
+}
+
+/**
+ * Guardar Vet_Cre en líneas 0% según check del modal
+ */
+if (isset($saveVentasIva0Ajax) || isset($_REQUEST['saveVentasIva0Ajax'])) {
+    $resp = array('success' => true, 'message' => '', 'updated' => 0);
+    $lista = array();
+    if (!empty($_POST['rows'])) {
+        $lista = json_decode($_POST['rows'], true);
+    } elseif (!empty($rows)) {
+        $lista = is_array($rows) ? $rows : json_decode($rows, true);
+    }
+    if (!is_array($lista)) {
+        $lista = array();
+    }
+    foreach ($lista as $row) {
+        if (empty($row['Vet_Cod'])) {
+            continue;
+        }
+        $vetCre = (!empty($row['chkV0']) && $row['chkV0'] === 'S') ? 'S' : 'N';
+        $obBD_con1->operacionobBD(61, array(
+            'Vet_Cod' => intval($row['Vet_Cod']),
+            'Emp_Cod' => $Ses_Emp_Cod,
+            'Vet_Cre' => $vetCre
+        ), $obBD_conexion);
+        $resp['updated']++;
+    }
+    if ($resp['updated'] === 0) {
+        $resp['success'] = false;
+        $resp['message'] = 'No hay registros para guardar.';
+    }
+    utf8_encode_deep($resp);
+    echo json_encode($resp);
+    exit();
+}
+
 ?>
 
 <html lang="en">
@@ -421,7 +473,161 @@ if (isset($xml) || isset($html)) {
         text-align: right;
         font-weight: bold;
     }   
-   
+
+    /* ===== Modal Ventas 0% ===== */
+    #ventas0Dialog {
+        padding: 0;
+        overflow: hidden;
+    }
+    #ventas0Dialog .v0-filtros {
+        flex: 0 0 auto;
+        background: linear-gradient(180deg, #f7f9fc 0%, #eef2f7 100%);
+        border: 1px solid #d9e1ec;
+        border-radius: 6px;
+        padding: 10px 12px 6px;
+        margin-bottom: 2px;
+    }
+    #ventas0Dialog .v0-filtros-titulo {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .4px;
+        color: #0c4597;
+        margin: 0 0 8px;
+        padding-bottom: 5px;
+        border-bottom: 1px solid #dde5ef;
+    }
+    #ventas0Dialog .v0-filtros-titulo .glyphicon {
+        margin-right: 5px;
+        color: #4F85F0;
+    }
+    #ventas0Dialog .v0-filtros .row {
+        margin-left: -6px;
+        margin-right: -6px;
+    }
+    #ventas0Dialog .v0-filtros .row > [class*="col-"] {
+        padding-left: 6px;
+        padding-right: 6px;
+    }
+    #ventas0Dialog .v0-field {
+        margin-bottom: 0;
+    }
+    #ventas0Dialog .v0-field > label {
+        display: block;
+        font-size: 10px;
+        font-weight: 600;
+        color: #5a6b82;
+        margin: 0 0 3px 1px;
+        line-height: 1.2;
+    }
+    #ventas0Dialog .v0-field .input-group { width: 100%; }
+    #ventas0Dialog .v0-field-ruc {
+        max-width: 140px;
+    }
+    #ventas0Dialog .v0-field .input-group-addon {
+        background: #fff;
+        border-color: #cfd9e6;
+        color: #4F85F0;
+        padding: 4px 8px;
+    }
+    #ventas0Dialog .v0-field .form-control {
+        height: 28px;
+        font-size: 11px;
+        border-color: #cfd9e6;
+        box-shadow: none;
+        padding: 4px 8px;
+    }
+    #ventas0Dialog .v0-field .form-control:focus {
+        border-color: #4F85F0;
+        box-shadow: 0 0 0 2px rgba(79,133,240,.12);
+    }
+    #ventas0Dialog .v0-acciones {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: flex-end;
+        padding-top: 16px;
+    }
+    #ventas0Dialog .v0-acciones .btn {
+        height: 28px;
+        padding: 4px 10px;
+        font-size: 11px;
+    }
+    #ventas0Dialog .v0-grid-wrap {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+    }
+    #ventas0Dialog .v0-grid-wrap .ui-jqgrid {
+        border-radius: 4px;
+    }
+    .ui-dialog.ventas0-dialog > .ui-dialog-content {
+        padding: 8px 10px;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+    .ui-dialog.ventas0-dialog .ui-dialog-titlebar {
+        cursor: move;
+    }
+    .ui-dialog.ventas0-dialog .v0-wrap {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+    #ventas0Dialog .v0-resumen {
+        flex: 0 0 auto;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 0 0 4px;
+        padding: 0;
+    }
+    #ventas0Dialog .v0-kpi {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 8px 3px 3px;
+        background: linear-gradient(135deg, #ffffff 0%, #f0f4fa 100%);
+        border: 1px solid #d9e2ef;
+        border-radius: 6px;
+        box-shadow: 0 1px 2px rgba(12, 69, 151, 0.06);
+    }
+    #ventas0Dialog .v0-kpi-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 5px;
+        background: linear-gradient(135deg, #0c4597 0%, #4F85F0 100%);
+        color: #fff;
+        font-size: 11px;
+        flex-shrink: 0;
+    }
+    #ventas0Dialog .v0-kpi-body {
+        display: flex;
+        align-items: baseline;
+        gap: 5px;
+        line-height: 1;
+        white-space: nowrap;
+    }
+    #ventas0Dialog .v0-kpi-label {
+        font-size: 9px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .3px;
+        color: #5a6b82;
+    }
+    #ventas0Dialog .v0-kpi-value {
+        font-size: 12px;
+        font-weight: 700;
+        color: #0c4597;
+    }
+    #ventas0Dialog .v0-kpi-total .v0-kpi-value {
+        color: #1b7a3d;
+    }
 </style>
 </head>
 
@@ -501,6 +707,7 @@ if (isset($xml) || isset($html)) {
                         <fieldset class="exa-fieldset">                            
 							<legend class="Titulos2">Datos Generados:</legend>
                             <div class="text-right">						
+                                <button class="btn btn-sm btn-info" type="button" onclick="abrirModalVentas0();"><i class="glyphicon glyphicon-list-alt"></i> Ventas 0%</button>
                                 <button class="btn btn-sm btn-primary" type="button" onclick="imprimirDiv('Html104');"><i class="glyphicon glyphicon-print"></i> Resumen</button>
                                 <button class="btn btn-sm btn-primary" type="button" onclick="generaAsiento();"><i class="fa fa-magic"></i> Generar Diario</button>
                             </div><br>
@@ -1252,11 +1459,108 @@ if (isset($xml) || isset($html)) {
     </div>
     </div>
 
+    <!-- Modal ventas tarifa 0% (fuera del panel para centrado correcto) -->
+    <div id="ventas0Dialog" title="Ventas con tarifa 0% de IVA" style="display:none;">
+        <div class="v0-wrap">
+            <form id="ventas0Form" action="javascript:buscarVentas0();" onsubmit="buscarVentas0(); return false;">
+                <div class="v0-filtros">
+                    <div class="v0-filtros-titulo"><span class="glyphicon glyphicon-filter"></span>Filtros de b&uacute;squeda</div>
+                    <div class="row">
+                        <div class="col-sm-2 col-xs-6 v0-field">
+                            <label for="v0_fec_ini">Desde</label>
+                            <div class="input-group">
+                                <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                                <input type="date" id="v0_fec_ini" name="fec_ini" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="col-sm-2 col-xs-6 v0-field">
+                            <label for="v0_fec_fin">Hasta</label>
+                            <div class="input-group">
+                                <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                                <input type="date" id="v0_fec_fin" name="fec_fin" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="col-sm-2 col-xs-4 v0-field v0-field-ruc">
+                            <label for="v0_ruc">RUC / C&eacute;dula</label>
+                            <input type="text" id="v0_ruc" name="ruc" class="form-control" placeholder="RUC o c&eacute;dula" />
+                        </div>
+                        <div class="col-sm-3 col-xs-6 v0-field">
+                            <label for="v0_apellido">Apellido</label>
+                            <input type="text" id="v0_apellido" name="apellido" class="form-control" placeholder="Apellido cliente" />
+                        </div>
+                        <div class="col-sm-3 col-xs-12 v0-acciones">
+                            <button type="button" class="btn btn-sm btn-default" onclick="limpiarFiltrosVentas0();"><span class="glyphicon glyphicon-erase"></span> Limpiar</button>
+                            <button type="button" class="btn btn-sm btn-success" onclick="buscarVentas0();"><span class="glyphicon glyphicon-search"></span> Buscar</button>
+                            <button type="button" class="btn btn-sm btn-primary" onclick="guardarVentas0();"><span class="glyphicon glyphicon-floppy-disk"></span> Guardar</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <div class="v0-resumen">
+                <div class="v0-kpi">
+                    <div class="v0-kpi-icon"><span class="glyphicon glyphicon-check"></span></div>
+                    <div class="v0-kpi-body">
+                        <span class="v0-kpi-label">Facturas seleccionadas</span>
+                        <span class="v0-kpi-value" id="v0_cant_seleccionadas">0</span>
+                    </div>
+                </div>
+                <div class="v0-kpi v0-kpi-total">
+                    <div class="v0-kpi-icon"><span class="glyphicon glyphicon-usd"></span></div>
+                    <div class="v0-kpi-body">
+                        <span class="v0-kpi-label">Total Credito Tribu.</span>
+                        <span class="v0-kpi-value" id="v0_total_credito">$ 0.00</span>
+                    </div>
+                </div>
+            </div>
+            <div class="v0-grid-wrap">
+                <table id="ventas0Grid"></table>
+                <div id="ventas0GridPager"></div>
+            </div>
+        </div>
+    </div>
+
 
   
    <script type="text/javascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=1"></script>
     <script>
+        var ventas0GridInit = false;
+        var ventas0Sel = {};
+        var ventas0Desel = {};
+
         $(document).ready(function () {
+            $('#ventas0Dialog').appendTo('body').createDialog({
+                width: Math.min($(window).width() - 40, 1050),
+                height: Math.min($(window).height() - 80, 520),
+                icon: 'list-alt',
+                dialogClass: 'ventas0-dialog',
+                noOverflow: true,
+                draggable: true,
+                afterOpen: function () {
+                    if (!ventas0GridInit) {
+                        initVentas0Grid();
+                        ventas0GridInit = true;
+                        $('#ventas0Form input').on('keydown', function (e) {
+                            if (e.keyCode === 13) {
+                                e.preventDefault();
+                                buscarVentas0();
+                            }
+                        });
+                    }
+                    setTimeout(function () {
+                        resizeVentas0Grid();
+                        buscarVentas0();
+                    }, 0);
+                },
+                resize: function () {
+                    resizeVentas0Grid();
+                },
+                afterClose: function () {
+                    ventas0Sel = {};
+                    ventas0Desel = {};
+                    actualizarTotalCreditoTribV0();
+                }
+            });
+
             function editar_valor(o){
                 const $input = $('#txt_'+o);
                 const $label = $('#'+o);            
@@ -1292,7 +1596,7 @@ if (isset($xml) || isset($html)) {
                 });
             }
             editar_valor('401');editar_valor('411');editar_valor('421');
-            editar_valor('403');editar_valor('405');editar_valor('480');editar_valor('481');
+            /*editar_valor('403');editar_valor('405');*/editar_valor('480');editar_valor('481');
             editar_valor('483');editar_valor('484');editar_valor('603');editar_valor('604');editar_valor('605');
             editar_valor('606');editar_valor('607');editar_valor('608');editar_valor('622');editar_valor('625');
             editar_valor('610');editar_valor('611');editar_valor('612');editar_valor('613');editar_valor('614');
@@ -1439,6 +1743,205 @@ if (isset($xml) || isset($html)) {
             ventana.document.close();
             ventana.print();
         }
+
+        function getRangoFechas104() {
+            var anio = $('#anio').val();
+            var mes = $('#mes').val();
+            if ($('#chk_fechas').is(':checked')) {
+                return { ini: $('#Ats_Fec_Ini').val(), fin: $('#Ats_Fec_Fin').val() };
+            }
+            return {
+                ini: anio + '-' + mes + '-01',
+                fin: anio + '-' + mes + '-' + moment(anio + '-' + mes, 'YYYY-MM').daysInMonth()
+            };
+        }
+
+        function abrirModalVentas0() {
+            var rango = getRangoFechas104();
+            $('#v0_fec_ini').val(rango.ini);
+            $('#v0_fec_fin').val(rango.fin);
+            $('#ventas0Dialog').dialog('open');
+        }
+
+        function initVentas0Grid() {
+            $('#ventas0Grid').createGrid({
+                url: UrlSaveJson,
+                mtype: 'GET',
+                caption: 'Documentos con l&iacute;neas gravadas al 0%',
+                height: 280,
+                autowidth: true,
+                shrinkToFit: true,
+                rowNum: 50,
+                rowList: [20, 50, 100, 200],
+                footerrow: true,
+                totalCols: ['Base_0'],
+                totalDefault: { Cre_Trib: '<div style="text-align:right;font-weight:bold;">TOTAL:</div>' },
+                selectGridRows: false,
+                onSelectRow: function () { $(this).resetSelection(); },
+                colModel: [
+                    { label: 'ID', name: 'Vet_Cod', key: true, hidden: true },
+                    { label: '<i class="ui-icon ui-icon-circle-check"></i>', name: 'chkV0', width: 30, align: 'center', formatter: 'checkboxExa', formatoptions: { dataEvents: { Change: 'marcarVenta0.call(this);' } } },
+                    { label: 'Fecha', name: 'Caj_Fec', width: 60, align: 'center' },
+                    { label: 'Documento', name: 'Fac_Num', width: 90 },
+                    { label: 'RUC/CI', name: 'Prs_Ced', width: 75 },
+                    { label: 'Cliente', name: 'Prs_Ape', width: 190, formatter: function (cv, opt, row) {
+                        var ape = $.trim(row.Prs_Ape || '');
+                        var nom = $.trim(row.Prs_Nom || '');
+                        return ape && nom ? ape + ' ' + nom : (ape || nom);
+                    } },
+                    { name: 'Prs_Nom', hidden: true },
+                    { label: 'Tipo', name: 'Tic_Des', width: 70 },
+                    { name: 'Adq_Des', hidden: true },
+                    { label: 'Cr&eacute;d.Trib.', name: 'Cre_Trib', width: 55, align: 'center' },
+                    { label: 'Base 0%', name: 'Base_0', width: 80, align: 'right', formatter: 'currency', decimalPlaces: 2, summaryRound: 2, formatoptions: { prefix: '$ ', thousandsSeparator: ',', decimalSeparator: '.', decimalPlaces: 2 }, summaryTpl: '{0}', summaryType: 'sum' }
+                ]
+            }, false, 'ventas0GridPager', { view: false });
+            $('#ventas0Grid').on('jqGridAfterLoadComplete', function (ev, glc) {
+                resizeVentas0Grid();
+                sincronizarSeleccionVentas0(glc);
+            });
+        }
+
+        function persistirSeleccionPaginaV0() {
+            if (!ventas0GridInit || !$('#ventas0Grid')[0].grid) return;
+            $('#ventas0Grid').getGridBatch().forEach(function (o) {
+                var id = String(o.Vet_Cod);
+                if (o.chkV0 === 'S') {
+                    ventas0Sel[id] = { Vet_Cod: id, Base_0: parseMoneyV0(o.Base_0) };
+                    delete ventas0Desel[id];
+                } else if (ventas0Sel[id]) {
+                    delete ventas0Sel[id];
+                    ventas0Desel[id] = true;
+                }
+            });
+        }
+
+        function sincronizarSeleccionVentas0(glc) {
+            var rows = (glc && glc.rows) ? glc.rows : [];
+            var $grid = $('#ventas0Grid');
+            rows.forEach(function (row) {
+                var id = String(row.Vet_Cod);
+                if (ventas0Sel[id]) {
+                    ventas0Sel[id].Base_0 = parseMoneyV0(row.Base_0);
+                    $grid.setCell(id, 'chkV0', 'S');
+                } else if (row.chkV0 === 'S' && !ventas0Desel[id]) {
+                    ventas0Sel[id] = { Vet_Cod: id, Base_0: parseMoneyV0(row.Base_0) };
+                    $grid.setCell(id, 'chkV0', 'S');
+                } else {
+                    $grid.setCell(id, 'chkV0', 'N');
+                }
+            });
+            setTimeout(function () {
+                rows.forEach(function (row) {
+                    var id = String(row.Vet_Cod);
+                    var marcado = !!ventas0Sel[id];
+                    var $chk = $('#' + id + '_chkV0');
+                    if ($chk.length) $chk.prop('checked', marcado);
+                });
+                actualizarTotalCreditoTribV0();
+            }, 0);
+        }
+
+        function resizeVentas0Grid() {
+            if (!ventas0GridInit || !$('#ventas0Grid')[0].grid) return;
+            var $content = $('#ventas0Dialog');
+            if (!$content.is(':visible')) return;
+            var contentH = $content.innerHeight();
+            $content.find('.v0-wrap').height(contentH);
+            var h = contentH
+                - $('#ventas0Form').outerHeight(true)
+                - $('.v0-resumen').outerHeight(true)
+                - $('#ventas0GridPager').outerHeight(true)
+                - ($('#gbox_ventas0Grid .ui-jqgrid-hdiv').outerHeight() || 28)
+                - ($('#gbox_ventas0Grid .ui-jqgrid-titlebar').outerHeight() || 24)
+                - ($('#gbox_ventas0Grid .ui-jqgrid-sdiv').outerHeight() || 24)
+                - 8;
+            $('#ventas0Grid').jqGrid('setGridWidth', $content.innerWidth() - 2, true);
+            $('#ventas0Grid').jqGrid('setGridHeight', Math.max(180, h));
+        }
+
+        function marcarVenta0() {
+            if (!this.id) return;
+            var rowId = String(this.id).replace(/_chkV0$/, '');
+            var checked = $('#' + rowId + '_chkV0').prop('checked');
+            $('#ventas0Grid').setCell(rowId, 'chkV0', checked ? 'S' : 'N');
+            if (checked) {
+                var row = $('#ventas0Grid').getRowData(rowId);
+                ventas0Sel[rowId] = { Vet_Cod: rowId, Base_0: parseMoneyV0(row.Base_0) };
+                delete ventas0Desel[rowId];
+            } else {
+                delete ventas0Sel[rowId];
+                ventas0Desel[rowId] = true;
+            }
+            actualizarTotalCreditoTribV0();
+        }
+
+        function parseMoneyV0(val) {
+            if (val === null || val === undefined || val === '') return 0;
+            if (typeof val === 'number') return val;
+            return parseFloat(String(val).replace(/[^\d.-]/g, '')) || 0;
+        }
+
+        function actualizarTotalCreditoTribV0() {
+            var total = 0;
+            var cant = 0;
+            $.each(ventas0Sel, function (k, v) {
+                cant++;
+                total += parseMoneyV0(v.Base_0);
+            });
+            $('#v0_cant_seleccionadas').text(cant);
+            $('#v0_total_credito').text('$ ' + $.toFixed(total, 2));
+        }
+
+        function buscarVentas0() {
+            if (!ventas0GridInit) return;
+            persistirSeleccionPaginaV0();
+            $('#ventas0Grid').Search('#ventas0Form', 'ventasIva0Ajax');
+        }
+
+        function limpiarFiltrosVentas0() {
+            var rango = getRangoFechas104();
+            $('#v0_fec_ini').val(rango.ini);
+            $('#v0_fec_fin').val(rango.fin);
+            $('#v0_ruc').val('');
+            $('#v0_apellido').val('');
+            buscarVentas0();
+        }
+
+        function getVentas0Marcadas() {
+            var lista = [];
+            $.each(ventas0Sel, function (k, v) {
+                lista.push(v);
+            });
+            return lista;
+        }
+
+        function guardarVentas0() {
+            if (!ventas0GridInit) return;
+            persistirSeleccionPaginaV0();
+            var rows = [];
+            $.each(ventas0Sel, function (k) {
+                rows.push({ Vet_Cod: k, chkV0: 'S' });
+            });
+            $.each(ventas0Desel, function (k) {
+                rows.push({ Vet_Cod: k, chkV0: 'N' });
+            });
+            if (rows.length === 0) {
+                $.alert('No hay registros para guardar.');
+                return;
+            }
+            $.createDialogConfirm('&iquest;Desea guardar los cambios de cr&eacute;dito tributario?', null, function () {
+                $.postDataJson(UrlSaveJson, {
+                    saveVentasIva0Ajax: true,
+                    rows: JSON.stringify(rows)
+                }, function () {
+                    ventas0Desel = {};
+                    buscarVentas0();
+                    return true;
+                });
+            });
+        }
+
         //generaHtml();
     </script>
 <?Php
