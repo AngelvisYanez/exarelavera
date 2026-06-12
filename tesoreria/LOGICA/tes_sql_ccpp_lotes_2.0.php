@@ -1312,7 +1312,7 @@ function sentencias_ccpp($id, $Par_Sql)
 						WHERE anp.Prv_Cod = $Par_Sql[0] AND prov.Emp_Cod = $Par_Sql[1] AND anp.Atp_Est != 'C' AND anp.Atp_Est != 'I'
 						GROUP BY anp.Atp_Cod
 						HAVING (anp.Atp_Val - COALESCE(SUM(daccp.Dac_Val), 0)) > 0
-						ORDER BY anp.Atp_Fec DESC;";
+						ORDER BY anp.Atp_Fec ASC, anp.Atp_Cod ASC;";
 			return $sql;
 			//NUEVAS CONSLTAS PARA REPOSICION DE CAJA CHICA
 		case 127:
