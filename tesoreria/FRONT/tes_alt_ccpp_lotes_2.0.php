@@ -639,13 +639,13 @@ if (isset($loadCruzeCuentas)) {
 <html>
 
 <head>
-	<!--TITLE><?php echo $Ses_Sys_Nom; ?></TITLE-->
-	<TITLE><?php echo "Ccxpp Lotes [EXA] "; ?></TITLE>
+	<!--TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE-->
+	<TITLE><?Php echo "Ccxpp Lotes [EXA] "; ?></TITLE>
 	<meta charset="UTF-8">
 	<link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
-	<?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
+	<?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
 	<script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
-	<script src="../VALIDACIONES/tes_val_alt_ccpp_lotes.js?a=30"></script>
+	<script src="../VALIDACIONES/tes_val_alt_ccpp_lotes.js?a=42"></script>
 	<script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js"></script>
 	<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
 	<script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>
@@ -690,11 +690,6 @@ if (isset($loadCruzeCuentas)) {
 		#searchGrid input[type="text"]:read-only {
 			background-color: #a2a2a2;
 			border: none;
-		}
-
-		.btn-siguiente {
-			background: #57b257 !important;
-
 		}
 	</style>
 </head>
@@ -746,7 +741,7 @@ if (isset($loadCruzeCuentas)) {
 												<input type="checkbox" id="f_periodo" name="f_periodo" onchange="cambiarFiltro()">
 											</span>
 											<select class="form-control input-xs" name="sel_per" id="sel_per" onchange="cambioPreiodoSearch('peri')" disabled>
-												<?php
+												<?
 												$periodos_rows = $obBD_con1->getArrayConsulta(45, "", $obBD_conexion);
 												if (count($periodos_rows) > 0) {
 													foreach ($periodos_rows as $row) {
@@ -932,7 +927,7 @@ if (isset($loadCruzeCuentas)) {
 														<label class="col-sm-3 control-label label-sm required" for="Tia_Cod">Tipo Comprobante:</label>
 														<div class="col-sm-4">
 															<select id="Tia_Cod" name="Tia_Cod" class="form-control input-xs" required="" onchange="">
-																<?php
+																<?Php
 																$row_rs_tipo_asien2 = $obBD_con1->getArrayConsulta(4, "ALL", $obBD_conexion);
 																foreach ($row_rs_tipo_asien2 as $row) { ?>
 																	<option value="<?php echo $row['Tia_Cod']; ?>" data-abr="<?php echo $row['Tia_Abr']; ?>">
@@ -950,7 +945,7 @@ if (isset($loadCruzeCuentas)) {
 														<div class="col-sm-3">
 
 															<select id="Pag_Cod" name="Pag_Cod" class="form-control input-xs" required="" onchange="enableDisableCampos()">
-																<?php
+																<?Php
 																$row_rs_tipo_asien2 = $obBD_con1->getArrayConsulta(5, "", $obBD_conexion);
 																foreach ($row_rs_tipo_asien2 as $row) { ?>
 																	<option value="<?php echo $row['Pag_Cod']; ?>" data-abr="<?php echo $row['Pag_Abr']; ?>">
@@ -978,7 +973,7 @@ if (isset($loadCruzeCuentas)) {
 														<label class="col-sm-3 control-label label-sm required" for="Ban_Cod">Banco:</label>
 														<div class="col-sm-4">
 															<select id="Ban_Cod" name="Ban_Cod" class="form-control input-xs ed_element ed_CHE ed_TRF ed_TDC ed_NDD" required="" onchange="" disabled>
-																<?php
+																<?Php
 																$row_rs_tipo_asien2 = $obBD_con1->getArrayConsulta(9, array('Ban_Tip' => 'B'), $obBD_conexion);
 																foreach ($row_rs_tipo_asien2 as $row) { ?>
 																	<option value="<?php echo $row['Ban_Cod']; ?>" data-des="<?php echo $row['Pld_Des']; ?>" data-cue="<?php echo $row['Ban_Cue']; ?>" data-cdc="<?php echo $row['Pld_Cdc']; ?>" data-pla="<?php echo $row['Pld_Cod']; ?>">
@@ -995,7 +990,7 @@ if (isset($loadCruzeCuentas)) {
 													<div class="form-group">
 														<label class="col-sm-3 control-label label-xs" for="Num_Doc">Nro. Documento:</label>
 														<div class="col-sm-2">
-															<input id="Num_Doc" name="Num_Doc" class="form-control input-xs ed_elemento ed_TRF " placeholder="002554" type="text" disabled />
+															<input id="Num_Doc" name="Num_Doc" class="form-control input-xs ed_elemento ed_TRF" placeholder="002554" type="text" disabled />
 														</div>
 													</div>
 												</div>
@@ -1089,45 +1084,6 @@ if (isset($loadCruzeCuentas)) {
 				</div>
 			</div>
 
-			<!-- Asignar el total que se va a cancelar a cada anticipo -->
-			<div id="agregar_anticipos" style="display: none;">
-				<div class="col-sm-12">
-					<form class="form-horizontal normal" name="formPagos_anticipo" id="formPagos_anticipo" action="javascript:$('#Lista_Anticipos').Search('#formPagos_anticipo','loadAnticipos');">
-						<!--form id="frm_prod_ven" name="frm_prod_ven" class="form-horizontal normal" action="javascript:$('#container').Search('#frm_prod_ven','prodAjax');"-->
-						<fieldset class="exa-fieldset">
-							<legend class="Titulos2">Datos de anticipos del proveedor</legend>
-							<div class="col-sm-4">
-							</div>
-							<div class="col-sm-8">
-								<div class="form-group">
-									<input name="Prv_Cod_ant" id="Prv_Cod_ant" type="text" style="display:none;" />
-									<label class="col-sm-4 control-label" style="margin-bottom: 7px;">Monto a pagar $:</label>
-									<div class="col-xs-8 text-right">
-										<div class="col-sm-4">
-											<input class="form-control input-xs" type="text" name="monto_total" id="monto_total" readonly>
-										</div>
-										<div class="col-sm-4">
-											<button type="button" id="calcular" class="btn btn-success btn-xs" onclick="calcularMontosPagar()">
-												<span class="glyphicon glyphicon-check"></span> Asignar
-											</button>
-										</div>
-										<div class="col-sm-4">
-											<button class="btn btn-success btn-xs" type="button" onclick="this.form.submit()"> <span class="glyphicon glyphicon-refresh"></span> Recargar</button>
-										</div>
-
-									</div>
-								</div>
-							</div>
-						</fieldset>
-						<div class="row">
-							<div class="col-sm-12">
-								<table id="Lista_Anticipos" style="width: 100%!important;"></table>
-								<div id="Pag_Cli"></div>
-							</div>
-						</div>
-					</form>
-				</div>
-			</div>
 			<!-- Fin de cancelar el anticipo -->
 			<!-- Asignar el total que se va a cancelar a cada anticipo -->
 			<!--div id="agregar_anticipos" style="display: none;">
@@ -1216,6 +1172,35 @@ if (isset($loadCruzeCuentas)) {
 
 	<div id="proveedoresDialog" title="B&uacute;squeda de Proveedores">
 		<form class="form-horizontal normal"> </form>
+	</div>
+	<div id="agregar_anticipos" title="Pagar con Anticipos">
+		<form class="form-horizontal normal" name="formPagos_anticipo" id="formPagos_anticipo" action="javascript:$('#Lista_Anticipos').Search('#formPagos_anticipo','loadAnticipos');">
+			<fieldset class="exa-fieldset">
+				<legend class="Titulos2">Asignaci&oacute;n de anticipos</legend>
+				<input name="Prv_Cod_ant" id="Prv_Cod_ant" type="hidden" />
+				<div class="form-group">
+					<label class="col-xs-3 control-label label-xs">Monto a pagar $:</label>
+					<div class="col-xs-3">
+						<input class="form-control input-xs" type="text" name="monto_total" id="monto_total" readonly>
+					</div>
+					<div class="col-xs-6 text-right">
+						<button type="button" id="calcular" class="btn btn-success btn-xs" onclick="calcularMontosPagar()">
+							<span class="glyphicon glyphicon-check"></span> Asignar
+						</button>
+						<button class="btn btn-success btn-xs" type="button" onclick="cargarDatosAnticipos(true);">
+							<span class="glyphicon glyphicon-refresh"></span> Recargar
+						</button>
+						<button type="button" id="btn_siguiente" name="btn_siguiente" class="btn btn-primary btn-xs" onclick="validarAnticiposModal();">
+							<span class="glyphicon glyphicon-arrow-right"></span> Siguiente
+						</button>
+					</div>
+				</div>
+			</fieldset>
+			<div class="condensed">
+				<table id="Lista_Anticipos"></table>
+				<div id="Pag_Cli"></div>
+			</div>
+		</form>
 	</div>
 	<div id="cuentasDialog" title="B&uacute;squeda de Cuentas" style="display: none"></div>
 	<div id="successDialog" title="Mensaje del Sistema">
@@ -1415,7 +1400,7 @@ if (isset($loadCruzeCuentas)) {
 					</td>
 					<td>
 						<span>
-							<?php echo $Ses_Emp_Nom; ?>
+							<? echo $Ses_Emp_Nom; ?>
 						</span>
 					</td>
 				</tr>
@@ -1425,7 +1410,7 @@ if (isset($loadCruzeCuentas)) {
 					</td>
 					<td>
 						<span>
-							<?php $fecha = explode('-', $hoy);
+							<? $fecha = explode('-', $hoy);
 							echo dias(calcula_numero_dia_semana($fecha[2], $fecha[1], $fecha[0]), 1) . ', ' . $fecha[2] . ' de ' . mes($fecha[1], 1) . ' de ' . $fecha[0]; ?>
 						</span>
 					</td>
