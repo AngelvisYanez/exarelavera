@@ -301,6 +301,7 @@ if (isset($dashPersonalAjax)) {
             flex: 0 0 100%;
             max-width: 100%;
             width: 100%;
+            margin-left: 0 !important;
         }
         .dash-card-modern {
             background: var(--dash-card);
@@ -360,6 +361,8 @@ if (isset($dashPersonalAjax)) {
             flex: 1 1 auto;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
+            min-width: 0;
         }
         .dash-chart-host {
             position: relative;
@@ -368,11 +371,19 @@ if (isset($dashPersonalAjax)) {
             max-width: 100%;
             flex: 0 1 auto;
             min-height: 0;
+            min-width: 0;
+            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: flex-start;
         }
-        .dash-chart-host canvas { width: 100% !important; height: 100% !important; display: block; max-height: 100%; }
+        .dash-chart-host canvas {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+            max-width: 100%;
+            max-height: 100%;
+        }
         .dash-print-data-table {
             display: none;
             width: 100%;
@@ -1191,8 +1202,11 @@ Chart.register(ChartDataLabels);
         if ($col.hasClass('col-md-8')) {
             return true;
         }
+        if ($col.hasClass('col-md-6') && $col.is('[class*="offset"]')) {
+            return false;
+        }
         var layout = barChartLayout(n, labels, hostId);
-        if (layout.horizontal) {
+        if (layout.horizontal && n > 6) {
             return true;
         }
         if (n > 6) {
@@ -1537,12 +1551,13 @@ Chart.register(ChartDataLabels);
             height: heightPx + 'px',
             minHeight: heightPx + 'px',
             marginLeft: 'auto',
-            marginRight: 'auto'
+            marginRight: 'auto',
+            boxSizing: 'border-box'
         };
         if (fullWidth) {
             css.width = '100%';
         } else {
-            css.width = widthPx + 'px';
+            css.width = Math.min(widthPx, hostParentWidth(hostId)) + 'px';
         }
         $('#' + hostId).css(css);
     }
@@ -1650,13 +1665,23 @@ Chart.register(ChartDataLabels);
             };
             if (!layout.horizontal) {
                 opts.layout.padding.top = 18;
-            } else {
-                opts.layout.padding.right = 42;
             }
         }
         if (layout.horizontal) {
+            opts.layout.padding.right = chartOpts.showPct ? 42 : 28;
+            opts.plugins.datalabels.clip = true;
+            opts.plugins.datalabels.anchor = 'end';
+            opts.plugins.datalabels.align = 'start';
+            opts.plugins.datalabels.offset = -8;
+            opts.plugins.datalabels.color = function (ctx) {
+                var v = ctx.dataset.data[ctx.dataIndex] || 0;
+                var max = 0;
+                ctx.dataset.data.forEach(function (x) { max = Math.max(max, x || 0); });
+                return v >= max * 0.12 ? '#ffffff' : '#475569';
+            };
             opts.scales.x = {
                 beginAtZero: true,
+                grace: '2%',
                 ticks: { precision: 0, padding: 4, color: '#94a3b8' },
                 grid: { color: '#f1f5f9' }
             };

@@ -483,8 +483,20 @@ function sentencias_ccpp($id, $Par_Sql)
 			return $sql;
 		case 30:
 			$sql = "SELECT
-							det_plan.Pld_Cdc,
-							det_plan.Pld_Des,
+							-- det_plan.Pld_Cdc,
+							-- det_plan.Pld_Des,
+						if(asientos.Asi_Deh='D', (
+							SELECT dp.Pld_Cdc
+							FROM det_plan dp, ccpp_prove cp, plan_cuenta pc
+							WHERE dp.Pld_Cod = cp.Pld_Cod AND dp.Pla_Cod = pc.Pla_Cod AND pc.Emp_Cod = '$_SESSION[Ses_Emp_Cod]'
+							LIMIT 1
+						), det_plan.Pld_Cdc) AS Pld_Cdc,
+						if(asientos.Asi_Deh='D', (
+							SELECT dp.Pld_Des
+							FROM det_plan dp, ccpp_prove cp, plan_cuenta pc
+							WHERE dp.Pld_Cod = cp.Pld_Cod AND dp.Pla_Cod = pc.Pla_Cod AND pc.Emp_Cod = '$_SESSION[Ses_Emp_Cod]'
+							LIMIT 1
+						), det_plan.Pld_Des) AS Pld_Des,
 							asientos.Asi_Deh,
 							asientos.Asi_Val,
 							asientos.Asi_Con,
@@ -747,7 +759,6 @@ function sentencias_ccpp($id, $Par_Sql)
 								AND	(comprobantes.Com_Est='A' OR comprobantes.Com_Est='E' )
 								$fec_sql
 								AND proveedore.Emp_Cod=$_SESSION[Ses_Emp_Cod]
-								$filtroWhereCxp
 								GROUP BY compras.Cop_Cod ORDER by ccpp_pagar.Cpp_Ven $Par_Sql[limits];";
 			//ChromePhp::log($sql);
 			return $sql;
@@ -1227,6 +1238,32 @@ function sentencias_ccpp($id, $Par_Sql)
 					INNER JOIN ccpp_prove ON ccpp_prove.Pld_Cod=asientos.Pld_Cod
 					WHERE Asi_Deh='H' AND Com_Cod=$Par_Sql[Com_Cod]";
 			break;
+		case 75:
+			// Obtiene las facturas (documentos) asociados a un comprobante de pago (abono)
+			$sql = "SELECT
+						det_ccpp_p.Cpp_Cod,
+						compras.Cop_Num,
+						compras.Cop_Fec,
+						ccpp_pagar.Cpp_Ven,
+						det_ccpp_p.Pag_Val AS monto_pagado,
+						asientos.Asi_Val AS total_factura,
+						CONCAT(Tia_Abr,'-',
+							IF(CHAR_LENGTH(MONTH(comp_fact.Com_Fec))=1,
+								CONCAT('0',CAST(MONTH(comp_fact.Com_Fec) AS char)),
+								CAST(MONTH(comp_fact.Com_Fec) AS char)
+							),'-',CAST(comp_fact.Com_Num AS char)
+						) AS num_compro_factura
+					FROM det_ccpp_p
+						INNER JOIN ccpp_pagar ON ccpp_pagar.Cpp_Cod = det_ccpp_p.Cpp_Cod
+						INNER JOIN compras ON compras.Cop_Cod = ccpp_pagar.Cop_Cod
+						INNER JOIN comprobantes AS comp_fact ON comp_fact.Com_Cod = ccpp_pagar.Com_Cod
+						INNER JOIN tipo_asien ON tipo_asien.Tia_Cod = comp_fact.Tia_Cod
+						INNER JOIN asientos ON asientos.Com_Cod = ccpp_pagar.Com_Cod
+							AND asientos.Asi_Deh = 'H'
+					WHERE det_ccpp_p.Com_Cod = $Par_Sql[Com_Cod]
+					ORDER BY compras.Cop_Num;";
+			return $sql;
+
 		case 74:
 			$sql = "UPDATE anticipos_proveedores
 						SET Atp_Est='U'
@@ -1266,14 +1303,16 @@ function sentencias_ccpp($id, $Par_Sql)
 				anp.Atp_Fec, pr.Prs_Ced, 
 				COALESCE(SUM(daccp.Dac_Val),0) AS Dac_Val, 
 				COALESCE(SUM(daccp.Dac_Val),0) AS Dac_Val_Aux,
-				(anp.Atp_Val - COALESCE(Sum(daccp.Dac_Val),0)) as saldo,    
-				(anp.Atp_Val - COALESCE(Sum(daccp.Dac_Val),0)) as saldo_aux 
-						 FROM anticipos_proveedores  as anp
-						INNER JOIN proveedore as prov ON anp.Prv_Cod = prov.Prv_Cod
-						INNER JOIN persona as pr ON pr.Prs_Cod = prov.Prs_Cod
-						  LEFT JOIN det_ant_ccpp as daccp ON daccp.Atp_Cod = anp.Atp_Cod
-						WHERE anp.Prv_Cod = $Par_Sql[0] AND prov.Emp_Cod =$Par_Sql[1]  AND  anp.Atp_Est!='C' AND anp.Atp_Est!='I'
-						GROUP BY anp.Atp_Cod  order by anp.Atp_Fec DESC;";
+				(anp.Atp_Val - COALESCE(SUM(daccp.Dac_Val),0)) AS saldo,    
+				(anp.Atp_Val - COALESCE(SUM(daccp.Dac_Val),0)) AS saldo_aux 
+						 FROM anticipos_proveedores AS anp
+						INNER JOIN proveedore AS prov ON anp.Prv_Cod = prov.Prv_Cod
+						INNER JOIN persona AS pr ON pr.Prs_Cod = prov.Prs_Cod
+						LEFT JOIN det_ant_ccpp AS daccp ON daccp.Atp_Cod = anp.Atp_Cod
+						WHERE anp.Prv_Cod = $Par_Sql[0] AND prov.Emp_Cod = $Par_Sql[1] AND anp.Atp_Est != 'C' AND anp.Atp_Est != 'I'
+						GROUP BY anp.Atp_Cod
+						HAVING (anp.Atp_Val - COALESCE(SUM(daccp.Dac_Val), 0)) > 0
+						ORDER BY anp.Atp_Fec ASC, anp.Atp_Cod ASC;";
 			return $sql;
 			//NUEVAS CONSLTAS PARA REPOSICION DE CAJA CHICA
 		case 127:

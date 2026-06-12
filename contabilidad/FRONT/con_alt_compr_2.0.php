@@ -130,7 +130,7 @@ if (isset($ajaxLiquidacionForm104)) {
     if(isset($_429) && $_429*1>0){        
         $diario[]=array_merge($iva_cobrado,array('Debe'=>$_429,'Det_Tip'=>'D','Haber'=>null,'Index'=>$index++));
     }
-
+    /* Retenciones de IVA de compras */
     $ret_iva_compra=$obBD_con1->getArrayConsulta(43,array('ini'=>$ini,'fin'=>$fin),$obBD_conexion);
     foreach($ret_iva_compra as $row){
         $diario[] = $row; 
@@ -144,7 +144,7 @@ if (isset($ajaxLiquidacionForm104)) {
         $row=reset(array_filter($ctas,function($e){if($e['Tpa_Abr']=='FRM615')return $e;}));
         $diario[]=array_merge($row,array('Debe'=>null,'Det_Tip'=>'H','Haber'=>$_606,'Index'=>$index++));
     }
-    if(isset($_605) && $_605*1>0){
+    if(isset($_605) && $_605*1>0){      
         $row=reset(array_filter($ctas,function($e){if($e['Tpa_Abr']=='FRM617')return $e;}));
         $diario[]=array_merge($row,array('Debe'=>null,'Det_Tip'=>'H','Haber'=>$_605,'Index'=>$index++));
     }
@@ -160,6 +160,7 @@ if (isset($ajaxLiquidacionForm104)) {
         $row=reset(array_filter($ctas,function($e){if($e['Tpa_Abr']=='FRM529')return $e;}));
         $diario[]=array_merge($row,array('Debe'=>null,'Det_Tip'=>'H','Haber'=>$_529*1,'Index'=>$index++));
     } 
+    $diario=array_diff($diario, array(''));
     //var_dump($diario);
     $responce['diario']=$diario;
     $responce['compro']['anio'] = $anio;

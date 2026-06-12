@@ -1,6 +1,8 @@
 let ids_pagos = 0;
 var Lista_Anticipos;
 var list_facturas_cruze;
+var pendingAntPago = null;
+var anticiposEstado = { prvCod: null, seleccion: {}, cargado: false };
 $(function () {
     Lista_Anticipos = $("#Lista_Anticipos");
     list_facturas_cruze = $("#lista_facturas_cruze");
@@ -22,6 +24,19 @@ $(function () {
     $("#altr_ant").createDialog({ width: 420, height: 150, icon: 'info' });
     $("#anular_abo_dialog").createDialog({ width: 300, height: 150, icon: 'warning-sign' });
     $("#verPagosDialogMod").createDialog({ width: 700, height: 435, icon: 'info-sign' });
+    $('#agregar_anticipos').appendTo('body').createDialog({
+        width: Math.min($(window).width() - 40, 900),
+        height: Math.min($(window).height() - 80, 500),
+        icon: 'usd',
+        noOverflow: true,
+        afterOpen: function () {
+            setTimeout(function () { resizeAnticiposGrid(); }, 0);
+        },
+        afterClose: function () {
+            guardarEstadoAnticipos();
+            pendingAntPago = null;
+        }
+    });
     $("#searchGrid").createGrid({
         caption: 'Lista de documentos <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy"><option value="">No ordenar</option><option value="compras.Cop_Num ASC">Nro. Doc.</option><option value="Com_Codigo Asc">No Compr Asc.</option>  <option value="compras.Cop_Fec DESC">Fecha Emi. DESC.</option> <option value="compras.Cop_Fec ASC">Fecha Emi ASC.</option><select>&nbsp;</div>',
         postData: $("#searchCcpp").getData("ajaxComprobante"),
@@ -701,59 +716,6 @@ function cambiarCuenta(row) {
 
 function enableDisableCampos() {
 
-    $(".ed_element").attr("disabled", "");//bloquea todos los .ed_elemento
-    $(".ed_" + $("#Pag_Cod option:selected").attr("data-abr")).removeAttr("disabled");
-
-    $("#cont_anticipo_info").attr("hidden", "");
-    $("#cont_ccc_info").attr("hidden", "");
-    if ($("#Pag_Cod option:selected").attr("data-abr") === 'ANT') {
-
-        $("#cont_anticipo_info").removeAttr("hidden");
-        $.post("", { getAnticipoCantAjax: true, Prv_Cod: $("#agg_Prv_Cod").val() }, function (responce) {
-            if (responce['success'] === true) {
-                if (responce['data'] === 'none' || responce['data_ant'] === 0) {
-                    $("#anticipo_info").text("0.00");
-                    $("#lim_val_pago").val("none");
-                } else {
-                    $("#lim_val_pago").val("" + parseFloat(responce['data']).toFixed(2));
-                    $("#anticipo_info").text("" + parseFloat(responce['data']).toFixed(2));
-                    $("#Com_Val_pago").val("" + parseFloat(responce['data']).toFixed(2));
-                    //$("#Com_Val_pago").val((parseFloat($("#Com_Val").val()) * 1 - parseFloat(totalPagos().haber) * 1).toFixed(2));
-                }
-            } else {
-                $.alert(responce['message']);
-            }
-        }, 'json')
-            .fail(function (error) {
-                $.alert("El Servidor ha fallado en responder!");
-            });
-
-    } else if ($("#Pag_Cod option:selected").attr("data-abr") === 'CDC') {
-        $("#cont_ccc_info").removeAttr("hidden");
-        $.post("", { getCccAjax: true, Prv_Cod: $("#agg_Prv_Cod").val(), Pec_Cod: $("#Pec_Cod").val() }, function (responce) {
-            if (responce['success'] === true) {
-                if (responce['data'] === 'none') {
-                    $("#ccc_info").text("0.00");
-                    $("#lim_val_pago_cc").val("none");
-                } else {
-                    $("#lim_val_pago_cc").val("" + parseFloat(responce['data']).toFixed(2));
-                    $("#ccc_info").text("" + parseFloat(responce['data']).toFixed(2));
-                    $("#Com_Val_pago").val("" + parseFloat(responce['data']).toFixed(2));
-                }
-            } else {
-                $.alert(responce['message']);
-            }
-        }, 'json')
-            .fail(function (error) {
-                $.alert("El Servidor ha fallado en responder!");
-            });
-    } else {
-        $("#Com_Val_pago").val((parseFloat($("#Com_Val").val()) * 1 - parseFloat(totalPagos().haber) * 1).toFixed(2));
-    }
-}
-
-function enableDisableCampos() {
-
     $(".ed_element").attr("disabled", "");
     $(".ed_" + $("#Pag_Cod option:selected").attr("data-abr")).removeAttr("disabled");
 
@@ -771,8 +733,6 @@ function enableDisableCampos() {
                 } else {
                     $("#lim_val_pago").val("" + parseFloat(responce['data']).toFixed(2));
                     $("#anticipo_info").text("" + parseFloat(responce['data']).toFixed(2));
-                    $("#Com_Val_pago").val("" + parseFloat(responce['data']).toFixed(2));
-                    //$("#Com_Val_pago").val((parseFloat($("#Com_Val").val()) * 1 - parseFloat(totalPagos().haber) * 1).toFixed(2));
                 }
             } else {
                 $.alert(responce['message']);
@@ -802,36 +762,24 @@ function enableDisableCampos() {
                 $.alert("El Servidor ha fallado en responder!");
             });
     } else {
-        $("#Com_Val_pago").val((parseFloat($("#Com_Val").val()) * 1 - parseFloat(totalPagos().haber) * 1).toFixed(2));
+        $("#Com_Val_pago").val(getRestanteHaber().toFixed(2));
     }
 }
 
 function cambioValPago(elemento) {
     if (elemento.val() != '') {
-        if ($("#Pag_Cod option:selected").attr("data-abr") === 'ANT') {
-
-            if ($("#lim_val_pago").val() !== "none") {
-                if (parseFloat(parseFloat(elemento.val()).toFixed(2)) <= parseFloat(parseFloat($("#lim_val_pago").val()).toFixed(2))) {
-                    elemento.val(parseFloat(elemento.val()).toFixed(2));
-                } else {
-                    elemento.val(parseFloat($("#lim_val_pago").val()).toFixed(2));
-                }
-            } else {
-                elemento.val("0.00");
-            }
-        } else if ($("#Pag_Cod option:selected").attr("data-abr") === 'CDC') {
-            if ($("#lim_val_pago_cc").val() !== "none") {
-                if (parseFloat(parseFloat(elemento.val()).toFixed(2)) <= parseFloat(parseFloat($("#lim_val_pago_cc").val()).toFixed(2))) {
-                    elemento.val(parseFloat(elemento.val()).toFixed(2));
-                } else {
-                    elemento.val(parseFloat($("#lim_val_pago_cc").val()).toFixed(2));
-                }
-            } else {
-                elemento.val("0.00");
-            }
-        } else {
-            elemento.val(parseFloat(elemento.val()).toFixed(2));
+        var val = parseFloat(elemento.val()) || 0;
+        var max = getRestanteHaber();
+        var abr = $("#Pag_Cod option:selected").attr("data-abr");
+        if (abr === 'ANT' && $("#lim_val_pago").val() !== "none") {
+            max = Math.min(max, parseFloat($("#lim_val_pago").val()) || 0);
+        } else if (abr === 'CDC' && $("#lim_val_pago_cc").val() !== "none") {
+            max = Math.min(max, parseFloat($("#lim_val_pago_cc").val()) || 0);
         }
+        if (val > max) {
+            val = max;
+        }
+        elemento.val(val.toFixed(2));
     } else {
         elemento.val("0.00");
     }
@@ -892,10 +840,30 @@ function verificarNoCheque(valor) {
     }, 'json');
 }
 
-function incrementarSaldoInfo() {
-    let saldo_info = 0.00;
-    saldo_info = saldo_info + parseFloat($("#Com_Val_pago").val());
-    saldo_info = saldo_info + parseFloat($("#saldo_info2").text());
+function getRestanteHaber() {
+    var tots = totalPagos();
+    return Math.max(0, parseFloat((tots.debe - tots.haber).toFixed(2)));
+}
+
+function validarAbonoNoExcedeDebe(monto) {
+    monto = parseFloat(monto) || 0;
+    var tots = totalPagos();
+    var restante = getRestanteHaber();
+    if (monto > restante + 0.004) {
+        $.alert("El total de abonos no puede superar la sumatoria del DEBE ($ " + parseFloat(tots.debe).toFixed(2) + "). Restante: $ " + restante.toFixed(2));
+        return false;
+    }
+    return true;
+}
+
+function incrementarSaldoInfo(monto) {
+    let valor = (monto !== undefined && monto !== null && monto !== '')
+        ? parseFloat(monto)
+        : parseFloat($("#Com_Val_pago").val());
+    if (!validarAbonoNoExcedeDebe(valor)) {
+        return false;
+    }
+    let saldo_info = valor + parseFloat($("#saldo_info2").text());
     $("#saldo_info2").text(parseFloat(saldo_info).toFixed(2));
     if (parseFloat($("#saldo_info1").text()) === parseFloat($("#saldo_info2").text())) {
         $("#saldo_info").removeClass("txt-red");
@@ -904,45 +872,141 @@ function incrementarSaldoInfo() {
         $("#saldo_info").removeClass("txt-green");
         $("#saldo_info").addClass("txt-red");
     }
+    return true;
 }
 
+function addPagoConSaldo(prm_array) {
+    if (incrementarSaldoInfo()) {
+        addPago(prm_array);
+    }
+}
 
+function getMontoTotalAnt() {
+    return parseFloat($("#monto_total").val()) || 0;
+}
 
-function open_anticipos() {
-    load_anticipos();
-    $('#Lista_Anticipos').Search('#formPagos_anticipo', 'loadAnticipos');
-    $("#monto_total").val($("#Com_Val_pago").val());
-    $('#agregar_anticipos').dialog({
-        autoOpen: false, // No abrir automáticamente al crear
-        modal: true,
-        width: '65%',
-        title: 'Pagar con Anticipos',
-        dialogClass: 'no-close', // jQuery UI way to remove default close button (X)
-        buttons: {
-            Siguiente: {
-                text: "Siguiente",
-                class: 'btn-siguiente',
-                click: function () {
-                    var valor = $('td[aria-describedby="Lista_Anticipos_saldo_pagar"].columnDisabled').text();
-                    var numero = parseFloat(valor.replace(/[^\d.-]/g, ''));
-                    var monto_total = $("#monto_total").val();
-                    if (monto_total == numero) {
-                        $(this).dialog('close');
-                    } else {
-                        $.alert("Existen errores en la asignación de cantidades, vuelva a revisar");
-                    }
-                }
-            }
-        },
-        open: function (event, ui) {
-            // Agregar clase adicional al botón al abrir el diálogo
-            $(this).parent().find('.btn-siguiente').addClass('btn-primary');
-            // Esconde el botón X de cierre a nivel de DOM/UI
-            $(this).parent().find('.ui-dialog-titlebar-close').hide();
+function getTotalAnticiposExcept(excludeId) {
+    var total = 0;
+    $('#Lista_Anticipos').jqGrid('getDataIDs').forEach(function (id) {
+        if (excludeId !== null && excludeId !== undefined && String(id) === String(excludeId)) return;
+        var val = parseFloat($('#sg_pago_' + id).val());
+        if (!isNaN(val) && val > 0) {
+            total += val;
         }
     });
+    return parseFloat(total.toFixed(2));
+}
+
+function getTotalAnticiposSeleccionados() {
+    return getTotalAnticiposExcept(null);
+}
+
+
+
+function limpiarEstadoAnticipos() {
+    anticiposEstado = { prvCod: null, seleccion: {}, cargado: false };
+}
+
+function guardarEstadoAnticipos() {
+    if (!$('#Lista_Anticipos')[0] || !$('#Lista_Anticipos')[0].grid) return;
+    var sel = {};
+    $('#Lista_Anticipos').jqGrid('getDataIDs').forEach(function (id) {
+        var pago = parseFloat($('#sg_pago_' + id).val()) || 0;
+        var chk = $('#sg_act_' + id).prop('checked');
+        if (chk || pago > 0) {
+            sel[id] = { chk: chk, pago: pago.toFixed(2) };
+        }
+    });
+    anticiposEstado.prvCod = $("#agg_Prv_Cod").val();
+    anticiposEstado.seleccion = sel;
+    anticiposEstado.cargado = $('#Lista_Anticipos').jqGrid('getDataIDs').length > 0;
+}
+
+function restaurarEstadoAnticipos() {
+    if (!anticiposEstado.cargado || anticiposEstado.prvCod !== $("#agg_Prv_Cod").val()) return;
+    $.each(anticiposEstado.seleccion, function (id, st) {
+        var $chk = $('#sg_act_' + id);
+        var $input = $('#sg_pago_' + id);
+        if (!$chk.length) return;
+        $chk.prop('checked', st.chk);
+        if (st.chk) {
+            $input.prop('readonly', false).val(st.pago);
+        } else {
+            $input.prop('readonly', true).val(st.pago || '0.00');
+        }
+    });
+    actualizarTotalesAnt();
+}
+
+function cargarDatosAnticipos(forzarReload) {
+    $("#Prv_Cod_ant").val($("#agg_Prv_Cod").val());
+    $("#monto_total").val($("#Com_Val_pago").val());
+    if (!$("#agg_Prv_Cod").val()) return;
+
+    if (anticiposEstado.prvCod !== $("#agg_Prv_Cod").val()) {
+        limpiarEstadoAnticipos();
+    }
+
+    var gridTieneDatos = $('#Lista_Anticipos')[0] && $('#Lista_Anticipos')[0].grid
+        && $('#Lista_Anticipos').jqGrid('getDataIDs').length > 0;
+
+    if (!forzarReload && anticiposEstado.cargado && gridTieneDatos) {
+        restaurarEstadoAnticipos();
+        return;
+    }
+
+    if (forzarReload) {
+        limpiarEstadoAnticipos();
+    }
+    $('#Lista_Anticipos').Search('#formPagos_anticipo', 'loadAnticipos');
+}
+
+function validarAnticiposModal() {
+    actualizarTotalesAnt();
+    var totalAnt = getTotalAnticiposSeleccionados();
+    var monto_total = getMontoTotalAnt();
+    if (totalAnt > monto_total + 0.004) {
+        $.alert("La suma de anticipos seleccionados supera el monto a pagar ($ " + monto_total.toFixed(2) + ")");
+        return;
+    }
+    if (totalAnt <= 0) {
+        $.alert("Seleccione al menos un anticipo con valor mayor a cero");
+        return;
+    }
+    if (!validarAbonoNoExcedeDebe(totalAnt)) {
+        return;
+    }
+    if (pendingAntPago) {
+        pendingAntPago[16] = totalAnt.toFixed(2);
+        if (incrementarSaldoInfo(totalAnt)) {
+            addPago(pendingAntPago);
+            pendingAntPago = null;
+        }
+    }
+    guardarEstadoAnticipos();
+    $('#agregar_anticipos').dialog('close');
+}
+
+function resizeAnticiposGrid() {
+    if (!$('#Lista_Anticipos')[0] || !$('#Lista_Anticipos')[0].grid) return;
+    var $dlg = $('#agregar_anticipos');
+    if (!$dlg.is(':visible')) return;
+    var w = $dlg.innerWidth() - 20;
+    var h = $dlg.innerHeight()
+        - $('#formPagos_anticipo fieldset').outerHeight(true)
+        - ($('#gbox_Lista_Anticipos .ui-jqgrid-hdiv').outerHeight() || 28)
+        - ($('#gbox_Lista_Anticipos .ui-jqgrid-sdiv').outerHeight() || 24)
+        - ($('#Pag_Cli').outerHeight() || 28)
+        - 12;
+    $('#Lista_Anticipos').jqGrid('setGridWidth', w, true);
+    $('#Lista_Anticipos').jqGrid('setGridHeight', Math.max(180, h));
+}
+
+function open_anticipos() {
+    cargarDatosAnticipos();
     $('#agregar_anticipos').dialog('open');
 }
+
 
 
 function preAddPago() {
@@ -956,22 +1020,18 @@ function preAddPago() {
             if (responce['success'] === true) {
                 if ($("#pagosGrid td:contains('EFE')").text().search("EFE") == -1 && $("#Pag_Cod option:selected").attr("data-abr") === "EFE") {
                     prm_array = ["H", "pago", "", "", $("#Pag_Cod").val(), $("#Pag_Cod option:selected").attr("data-abr"), $.trim($("#Pag_Cod option:selected").text()), "", "", "", "", "", responce['data'].Pld_Cod, responce['data'].Pld_Cdc, responce['data'].Pld_Des, "", $("#Com_Val_pago").val(), $("#Com_Con").val(), "last", ""];
-                    incrementarSaldoInfo();
-                    addPago(prm_array);
+                    addPagoConSaldo(prm_array);
                 }
                 if ($("#pagosGrid td:contains('DEP')").text().search("DEP") == -1 && $("#Pag_Cod option:selected").attr("data-abr") === "DEP") {
                     prm_array = ["H", "pago", "", "", $("#Pag_Cod").val(), $("#Pag_Cod option:selected").attr("data-abr"), $.trim($("#Pag_Cod option:selected").text()), "", "", "", "", "", responce['data'].Pld_Cod, responce['data'].Pld_Cdc, responce['data'].Pld_Des, "", $("#Com_Val_pago").val(), $("#Com_Con").val(), "last", ""];
-                    incrementarSaldoInfo();
-                    addPago(prm_array);
+                    addPagoConSaldo(prm_array);
                 }
                 if ($("#pagosGrid td:contains('ANT')").text().search("ANT") == -1 && $("#Pag_Cod option:selected").attr("data-abr") === "ANT") {
                     if ($("#lim_val_pago").val() === "none") {
                         $.alert("No tiene anticipos disponibles para este proveedor!");
                     } else {
-                        open_anticipos();//Abrir modal
-                        prm_array = ["H", "pago", "", "", $("#Pag_Cod").val(), $("#Pag_Cod option:selected").attr("data-abr"), $.trim($("#Pag_Cod option:selected").text()), "", "", "", "", "", responce['data'].Pld_Cod, responce['data'].Pld_Cdc, responce['data'].Pld_Des, "", $("#Com_Val_pago").val(), $("#Com_Con").val(), "last", ""];
-                        incrementarSaldoInfo();
-                        addPago(prm_array);
+                        pendingAntPago = ["H", "pago", "", "", $("#Pag_Cod").val(), $("#Pag_Cod option:selected").attr("data-abr"), $.trim($("#Pag_Cod option:selected").text()), "", "", "", "", "", responce['data'].Pld_Cod, responce['data'].Pld_Cdc, responce['data'].Pld_Des, "", "0.00", $("#Com_Con").val(), "last", ""];
+                        open_anticipos();
                     }
                 }
 
@@ -983,8 +1043,7 @@ function preAddPago() {
                     } else {
                         open_facturas_cruze();
                         prm_array = ["H", "pago", "", "", $("#Pag_Cod").val(), $("#Pag_Cod option:selected").attr("data-abr"), $.trim($("#Pag_Cod option:selected").text()), "", "", "", "", "", responce['data'].Pld_Cod, responce['data'].Pld_Cdc, responce['data'].Pld_Des, "", $("#Com_Val_pago").val(), $("#Com_Con").val(), "last", ""];
-                        incrementarSaldoInfo();
-                        addPago(prm_array);
+                        addPagoConSaldo(prm_array);
                     }
                 }
 
@@ -996,16 +1055,14 @@ function preAddPago() {
 
                 if ($("#Pag_Cod option:selected").attr("data-abr") === "OTR") {
                     prm_array = ["H", "pago", "", "", $("#Pag_Cod").val(), $("#Pag_Cod option:selected").attr("data-abr"), $.trim($("#Pag_Cod option:selected").text()), "", "", "", "", "", responce['data'].Pld_Cod, responce['data'].Pld_Cdc, responce['data'].Pld_Des, "", $("#Com_Val_pago").val(), $("#Com_Con").val(), "last", ""];
-                    incrementarSaldoInfo();
-                    addPago(prm_array);
+                    addPagoConSaldo(prm_array);
                 }
 
                 if ($("#Pag_Cod option:selected").attr("data-abr") === "RC") {//CAJA REPOSICION
                     let data = responce['data'];
                     if (data && data.Pld_Cod) {
                         prm_array = ["H", "pago", "", "", $("#Pag_Cod").val(), $("#Pag_Cod option:selected").attr("data-abr"), $.trim($("#Pag_Cod option:selected").text()), "", "", "", "", "", responce['data'].Pld_Cod, responce['data'].Pld_Cdc, responce['data'].Pld_Des, "", $("#Com_Val_pago").val(), $("#Com_Con").val(), "last", ""];
-                        incrementarSaldoInfo();
-                        addPago(prm_array);
+                        addPagoConSaldo(prm_array);
                     } else {
                         $.alert("Verifica si la cuenta reposicion de caja chica esta parametrizada! Ve a: <span style='color:#0000FF'>(Parametrizacion->Productos->General)<span>");
                     }
@@ -1053,8 +1110,7 @@ function preAddPago() {
                     "CHEQUE NO. " + $("#Che_Num").val(),
                     "last", ""
                 ];
-                incrementarSaldoInfo();
-                addPago(prm_array);
+                addPagoConSaldo(prm_array);
             } else {
                 $.alert("No puede ingresar dos pagos con el mismo n&uacute;mero de cheque");
             }
@@ -1078,8 +1134,7 @@ function preAddPago() {
             $("#Com_Con").val()
         ],
             "last", "";
-        incrementarSaldoInfo();
-        addPago(prm_array);
+        addPagoConSaldo(prm_array);
     }
 }
 
@@ -1088,6 +1143,16 @@ function preAddPago() {
 
 
 function addPago(prm_array) {
+    if (prm_array[0] === 'H') {
+        var haber = parseFloat(prm_array[16]) || 0;
+        if (haber <= 0) {
+            $.alert("El valor del abono debe ser mayor a cero");
+            return false;
+        }
+        if (!validarAbonoNoExcedeDebe(haber)) {
+            return false;
+        }
+    }
     ids_pagos++;
     $("#pagosGrid").jqGrid('addRowData', ids_pagos, {
         index: ids_pagos,
@@ -1125,6 +1190,11 @@ function addPago(prm_array) {
 function guardarPago() {
     let tots = totalPagos();
     console.log(parseFloat(tots.debe).toFixed(2) + "===" + parseFloat(tots.haber).toFixed(2));
+
+    if (parseFloat(tots.haber).toFixed(2) > parseFloat(tots.debe).toFixed(2)) {
+        $.alert("El total de abonos ($ " + parseFloat(tots.haber).toFixed(2) + ") supera la sumatoria del DEBE ($ " + parseFloat(tots.debe).toFixed(2) + ")");
+        return;
+    }
 
     if (parseFloat(tots.debe).toFixed(2) === parseFloat(tots.haber).toFixed(2)) {
         if (parseFloat(tots.debe).toFixed(2) === parseFloat($("#Com_Val").val()).toFixed(2)) {
@@ -1346,11 +1416,13 @@ function limpiarPagos() {
 
     $("#lim_val_pago").val("none");
     $("#lim_val_pago_cc").val("none");
+    limpiarEstadoAnticipos();
 }
 
 function gestionarPago() {
 
     $("#tip_trans").val("add");
+    limpiarEstadoAnticipos();
     if ($("#Prv_Cod").val() !== "") {
         if (actualizarTotalesSG() !== 0) {
             $("#Pec_Cod").trigger("onchange");
@@ -1492,6 +1564,9 @@ function actualizarTotalesSG() {
 
 
 function selectProveedor(proveedor) {
+    if ($("#Prv_Cod").val() !== String(proveedor.Prv_Cod)) {
+        limpiarEstadoAnticipos();
+    }
     $("#Prv_Cod").val(proveedor.Prv_Cod);
     $("#Prs_Ced").val(proveedor.Prs_Ced);
     $("#nombre").val(proveedor.nombre);
@@ -1659,36 +1734,35 @@ function loadAnticipos() {
 //NUEVOS METODOS POR WILSON BELDUMA
 
 function calcularMontosPagar() {
-    //Obtener el saldo
     limpiarPagoAnt();
-    valorNumero = $("#monto_total").val();
-    var i = 0;
-    $fecha_pago_factura = $("#Com_Fec").val();//fecha del pago de factura
+    var valorNumero = getMontoTotalAnt();
+    var $fecha_pago_factura = $("#Com_Fec").val();
     $("#Lista_Anticipos tbody tr[role='row']").each(function (i) {
         if (i != 0) {
             var codFila = $(this).attr('id');
             var sal = $(this).find("td[aria-describedby='Lista_Anticipos_saldo_aux']").text().replace(',', '');
-
-            var fecha_anticipo = $(this).find("td[aria-describedby='Lista_Anticipos_Atp_Fec']").text();//Capturar las fechas
-            var cod_anticipo = $(this).find("td[aria-describedby='Lista_Anticipos_Atp_Cod']").text();//Capturar cod. Ant
+            var fecha_anticipo = $(this).find("td[aria-describedby='Lista_Anticipos_Atp_Fec']").text();
+            var cod_anticipo = $(this).find("td[aria-describedby='Lista_Anticipos_Atp_Cod']").text();
 
             if ($fecha_pago_factura < fecha_anticipo) {
                 msg_alerta_anticipos($fecha_pago_factura, cod_anticipo, fecha_anticipo);
                 return false;
             }
 
+            if (valorNumero <= 0) {
+                return false;
+            }
+
             $("#sg_act_" + codFila).prop('checked', true);
             $("#sg_pago_" + codFila).removeAttr("readonly");
 
-            var saldoNumero = parseFloat(sal);
-            // console.log(valorNumero + ">=" + saldoNumero);
-
+            var saldoNumero = parseFloat(sal) || 0;
             if (valorNumero >= saldoNumero) {
                 $("#sg_pago_" + codFila).val(saldoNumero.toFixed(2));
                 valorNumero -= saldoNumero;
             } else {
                 $("#sg_pago_" + codFila).val(parseFloat(valorNumero).toFixed(2));
-                return false;
+                valorNumero = 0;
             }
         }
         i++;
@@ -1713,33 +1787,35 @@ function limpiarPagoAnt() {
 }
 
 function setPagoCellAnticipo(row) {
+    var $grid = $('#Lista_Anticipos');
+    var $chk = $('#sg_act_' + row);
+    var $input = $('#sg_pago_' + row);
 
-    var $fecha_pago_factura = $("#Com_Fec").val();
-    var fecha_anticipo = ($('tr#' + row + ' td[aria-describedby="Lista_Anticipos_Atp_Fec"]').text());
-    var cod_anticipo = ($('tr#' + row + ' td[aria-describedby="Lista_Anticipos_Atp_Cod"]').text());
-    if ($fecha_pago_factura < fecha_anticipo) {
-        msg_alerta_anticipos($fecha_pago_factura, cod_anticipo, fecha_anticipo);
-        $("#sg_act_" + row).prop('checked', false);
-        return false;
-    } else {
-
-        if ($("#sg_act_" + row).prop('checked')) {
-            $("#sg_pago_" + row).removeAttr("readonly");
-            var saldoPagar = parseFloat($('tr#' + row + ' td[aria-describedby="Lista_Anticipos_saldo_aux"]').text().replace(/[^\d.-]/g, '')).toFixed(2);
-            $("#sg_pago_" + row).val(saldoPagar);
-            // $("#sg_pago_" + row).val("0.00");
-
-        } else {
-            $("#sg_pago_" + row).attr("readonly", "");
-            $("#sg_pago_" + row).val("0.00");
+    if ($chk.prop('checked')) {
+        var reg = $grid.jqGrid('getRowData', row);
+        var fecPago = $('#Com_Fec').val();
+        if (fecPago < reg.Atp_Fec) {
+            msg_alerta_anticipos(fecPago, reg.Atp_Cod, reg.Atp_Fec);
+            $chk.prop('checked', false);
+            return;
         }
-        actualizarTotalesAnt();
+        var montoMax = getMontoTotalAnt();
+        var restante = montoMax - getTotalAnticiposExcept(row);
+        if (restante <= 0) {
+            $.alert("Ya se alcanz&oacute; el monto a pagar ($ " + montoMax.toFixed(2) + ")");
+            $chk.prop('checked', false);
+            return;
+        }
+        var saldoAnt = parseFloat(reg.saldo_aux) || 0;
+        $input.prop('readonly', false).val(Math.min(saldoAnt, restante).toFixed(2));
+    } else {
+        $input.prop('readonly', true).val('0.00');
     }
+    actualizarTotalesAnt();
 }
 
-function msg_alerta_anticipos($fecha_pago_factura, cod_anticipo, fecha_anticipo) {
-    $.alert(" La fecha de la factura a cancelar es: " + $fecha_pago_factura + " y el anticipos Nro: " + cod_anticipo + " esta con fecha: " + fecha_anticipo + ", por este motivo no se puede cancelar la factura con fecha anterior al anticipo.");
-
+function msg_alerta_anticipos(fecPago, codAnticipo, fecAnticipo) {
+    $.alert(" La fecha de la factura a cancelar es: " + fecPago + " y el anticipos Nro: " + codAnticipo + " esta con fecha: " + fecAnticipo + ", por este motivo no se puede cancelar la factura con fecha anterior al anticipo.");
 }
 
 function redondear(num, decimales) {
@@ -1749,32 +1825,48 @@ function redondear(num, decimales) {
 
 
 function actualizarTotalesAnt() {
-    //obtener todos los ids para buscar valores de debe y haber
     let ids = $('#Lista_Anticipos').jqGrid('getDataIDs');
-    let abonos = 0, total_pago = 0.00, tot = 0, auxiliar = 0, valor_pagado = 0;
+    let abonos = 0, total_pago = 0.00, tot = 0;
+    let montoMax = getMontoTotalAnt();
+    let excedioMonto = false;
+
     for (let i = 0; i < ids.length; i++) {
         let reg_pago = $('#Lista_Anticipos').jqGrid('getRowData', ids[i]);
-        if (typeof $('#sg_pago_' + ids[i]).val() !== 'undefined') {
-            auxiliar = parseFloat($('#sg_pago_' + ids[i]).val());
-            valor_pagado = (parseFloat(reg_pago.Dac_Val_Aux) + auxiliar);
-            //  var saldo_restante =    (parseFloat(reg_pago.saldo_aux) - auxiliar);
-            var saldo_restante = (redondear(parseFloat(reg_pago.saldo_aux), 2) - auxiliar);
-            console.log("Id:" + reg_pago.Atp_Cod + "Este valor resulta:" + parseFloat(reg_pago.saldo_aux) + " -  " + auxiliar + "=" + saldo_restante);
-            if (saldo_restante < 0) {
-                $.alert("Cantidad ingresada supera al saldo del anticipo");
-                $("#sg_pago_" + ids[i]).val("0.00");
-            } else {
-                $('#Lista_Anticipos').jqGrid('setCell', ids[i], "saldo", (parseFloat(reg_pago.saldo_aux) - auxiliar));
-                $('#Lista_Anticipos').jqGrid('setCell', ids[i], "Dac_Val", (parseFloat(valor_pagado)));
-                total_pago += parseFloat($('#sg_pago_' + ids[i]).val());
-            }
+        if (typeof $('#sg_pago_' + ids[i]).val() === 'undefined') continue;
+
+        let auxiliar = parseFloat($('#sg_pago_' + ids[i]).val()) || 0;
+        let saldoAnt = parseFloat(reg_pago.saldo_aux) || 0;
+        let maxPorMonto = Math.max(0, montoMax - total_pago);
+        let maxPermitido = Math.min(saldoAnt, maxPorMonto);
+
+        if (auxiliar > maxPermitido + 0.004) {
+            excedioMonto = true;
+            auxiliar = maxPermitido;
+            $("#sg_pago_" + ids[i]).val(auxiliar.toFixed(2));
         }
+
+        let saldo_restante = redondear(saldoAnt, 2) - auxiliar;
+        if (saldo_restante < 0) {
+            $.alert("Cantidad ingresada supera al saldo del anticipo");
+            auxiliar = 0;
+            $("#sg_pago_" + ids[i]).val("0.00");
+            saldo_restante = saldoAnt;
+        }
+
+        let valor_pagado = (parseFloat(reg_pago.Dac_Val_Aux) || 0) + auxiliar;
+        $('#Lista_Anticipos').jqGrid('setCell', ids[i], "saldo", saldo_restante);
+        $('#Lista_Anticipos').jqGrid('setCell', ids[i], "Dac_Val", valor_pagado);
+        total_pago += auxiliar;
+    }
+
+    if (excedioMonto) {
+        $.alert("La suma de anticipos no puede superar el monto a pagar ($ " + montoMax.toFixed(2) + ")");
     }
 
     let ids_actual = $('#Lista_Anticipos').jqGrid('getDataIDs');
     for (let i = 0; i < ids_actual.length; i++) {
-        let reg_pago = $('#Lista_Anticipos').jqGrid('getRowData', ids[i]);
-        tot = tot + parseFloat(reg_pago.Dac_Val);//pagado
+        let reg_pago = $('#Lista_Anticipos').jqGrid('getRowData', ids_actual[i]);
+        tot = tot + parseFloat(reg_pago.Dac_Val);
         abonos = abonos + parseFloat(reg_pago.saldo);
     }
 
@@ -1931,21 +2023,21 @@ function load_anticipos() {
         userDataOnFooter: true,
 
         loadComplete: function () {
-
             $('#Lista_Anticipos').jqGrid('footerData', 'set', {
                 Atp_Val: $('#Lista_Anticipos').jqGrid('getCol', 'Atp_Val', false, 'sum')
             });
-
             $('#Lista_Anticipos').jqGrid('footerData', 'set', {
                 Dac_Val: $('#Lista_Anticipos').jqGrid('getCol', 'Dac_Val', false, 'sum')
             });
-
             $('#Lista_Anticipos').jqGrid('footerData', 'set', {
                 saldo: $('#Lista_Anticipos').jqGrid('getCol', 'saldo', false, 'sum')
             });
             $('#Lista_Anticipos').jqGrid('footerData', 'set', {
                 saldo_pagar: $('#Lista_Anticipos').jqGrid('getCol', 'saldo_pagar', false, 'sum')
             });
+            anticiposEstado.prvCod = $("#agg_Prv_Cod").val();
+            anticiposEstado.cargado = true;
+            restaurarEstadoAnticipos();
         }
     }, false, "");
 }
