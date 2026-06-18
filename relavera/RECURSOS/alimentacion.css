@@ -1,0 +1,70 @@
+/* Estilos para el módulo de Alimentación */
+.panel-main {
+    margin: 20px;
+}
+
+.tab-content {
+    padding: 15px 0;
+}
+
+.form-horizontal .form-group {
+    margin-bottom: 10px;
+}
+
+.modal-body .chosen-container {
+    width: 100% !important;
+}
+
+/* Hacer visible el botón cerrar (X) del modal en la cabecera oscura */
+.exa-header .close {
+    color: #fff !important;
+    text-shadow: none !important;
+    opacity: 0.8 !important;
+    filter: alpha(opacity=80);
+}
+.exa-header .close:hover {
+    color: #fff !important;
+    opacity: 1 !important;
+    filter: alpha(opacity=100);
+}
+
+.chk-container-alimentacion {
+    display: inline-block;
+    width: 110px;
+}
+
+#cboVehiculoReporte + .chosen-container,
+#cboChoferReporte + .chosen-container {
+    width: 180px !important;
+    margin-left: 5px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Estilos Bootstrap nav-tabs — model3/03-tabs.css solo cubre jQuery UI #tabsLabores */
+.nav-tabs-custom { margin-bottom: 15px; }
+.nav-tabs-custom > .nav-tabs { border-bottom: 3px solid #334a5f; }
+.nav-tabs-custom > .nav-tabs > li { margin-right: 4px; }
+.nav-tabs-custom > .nav-tabs > li > a {
+    font-weight: bold;
+    color: #475569;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-bottom: none;
+    padding: 10px 18px;
+    border-radius: 4px 4px 0 0;
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+.nav-tabs-custom > .nav-tabs > li.active > a,
+.nav-tabs-custom > .nav-tabs > li.active > a:focus,
+.nav-tabs-custom > .nav-tabs > li.active > a:hover {
+    background: #334a5f;
+    color: #fff;
+    border-color: #334a5f;
+}
+.nav-tabs-custom > .nav-tabs > li > a:hover {
+    background: #e2e8f0;
+    color: #334a5f;
+}
+.tab-content-custom { padding: 15px 0; }
