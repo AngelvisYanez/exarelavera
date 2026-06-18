@@ -225,6 +225,19 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
         #gview_jqGridRep {
             height: 350px !important;
         }
+        #gview_conciliacionForm .ui-jqgrid-htable th[id$="_conc_select"] {
+            text-align: center;
+            vertical-align: middle;
+        }
+        #gview_conciliacionForm .ui-jqgrid-htable th[id$="_conc_select"] input[type=checkbox] {
+            margin: 0 4px;
+            vertical-align: middle;
+            -ms-transform: scale(1.6);
+            -moz-transform: scale(1.6);
+            -webkit-transform: scale(1.6);
+            -o-transform: scale(1.6);
+            transform: scale(1.6);
+        }
     </style>
     <script>var Usu_Adm=<? echo $Ses_Prs_Cod;?></script>
     <BODY>
@@ -621,7 +634,7 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
                             },
                             totalCols: ['Asi_Sald'],
                             colModel: [
-                                { label: $.createIcon('check'), name: 'conc_select', width: 20, align: 'center', formatter: 'checkboxExa',
+                                { label: ' ', name: 'conc_select', width: 20, align: 'center', title: false, sortable: false, formatter: 'checkboxExa',
                                     formatoptions: {
                                         defaultChecked: false,
                                         dataEvents: { change: 'updateTotal($(this).data("rowId"));' },
@@ -686,11 +699,19 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
                                 groupCollapse: false,
                                 groupSummary: [true],
                                 showSummaryOnHide: [true]
+                            },
+                            gridComplete: function() {
+                                injectConcSelectHeader();
+                                syncConcSelectHeader();
                             }
                         }, true, '#conciliacionFormPager');
                         $("#conciliacionForm").jqGrid('footerData', 'set', {
                             cmpd_glos: '<div class="txtRight">TOTAL:</div>'
                         }, false);
+                        $("#conciliacionForm").on('jqGridAfterLoadComplete', function() {
+                            injectConcSelectHeader();
+                            syncConcSelectHeader();
+                        });
                     },
 
                     buscaDiv: () => {
@@ -845,6 +866,51 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
                 return isNaN(v) ? 0 : (obj['cmpd_id'] === 'no_id' || obj['conc_select'] === 'N' ? 0 : v);
             }
 
+            function getConcSelectableRows() {
+                return $("#conciliacionForm").getGridBatch().filter(r => r.Asi_Cod !== 'no_id');
+            }
+
+            function setConcSelectValue(rowId, val) {
+                let gridConc = $("#conciliacionForm"),
+                    checked = val === 'S',
+                    localRow = gridConc.jqGrid('getLocalRow', rowId);
+                if (localRow) localRow.conc_select = val;
+                gridConc.find('tr#' + rowId + ' input[type=checkbox][data-name="conc_select"]').prop('checked', checked);
+                gridConc.find('tr#' + rowId + ' td').toggleClass('cellGreen2', checked);
+            }
+
+            function injectConcSelectHeader() {
+                let $th = $('#gview_conciliacionForm .ui-jqgrid-htable th[id$="_conc_select"]');
+                if (!$th.length || $('#conc_select_all').length) return;
+                $th.empty().append(
+                    $('<input type="checkbox" id="conc_select_all" value="S" offval="N" title="Seleccionar / Deseleccionar todos" onclick="toggleConcSelectAll(this)" />')
+                );
+            }
+
+            function toggleConcSelectAll(checkbox) {
+                let rows = getConcSelectableRows(),
+                    checkedCount = rows.filter(r => r.conc_select === 'S').length,
+                    newState = checkedCount < rows.length,
+                    val = newState ? 'S' : 'N';
+                if (checkbox) checkbox.checked = newState;
+                for (let i = 0, z = rows.length; i < z; i++) {
+                    setConcSelectValue(rows[i].Asi_Cod, val);
+                }
+                updateTotal();
+            }
+            window.toggleConcSelectAll = toggleConcSelectAll;
+
+            function syncConcSelectHeader() {
+                let rows = getConcSelectableRows(),
+                    total = rows.length,
+                    checked = rows.filter(r => r.conc_select === 'S').length,
+                    $all = $('#conc_select_all');
+                if ($all.length) {
+                    $all.prop('checked', total > 0 && checked === total);
+                    $all.prop('indeterminate', checked > 0 && checked < total);
+                }
+            }
+
             function nuevaConciliacion() {
                 $('#conciliacionForm').clearGrid(true);
                 let form = $('#formConcilia');
@@ -934,6 +1000,7 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
                 //console.log("Totales " + ((performance.now() - t0)/1000) + " seconds.");t0=performance.now();
                 //gridConc.triggerHandler('jqGridAfterLoadComplete');
                 //console.log("Trigger " + ((performance.now() - t0)/1000) + " seconds.");t0=performance.now();
+                syncConcSelectHeader();
             }
 
             function validarForm(newItem) {
