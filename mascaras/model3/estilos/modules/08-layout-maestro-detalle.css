@@ -1,0 +1,838 @@
+﻿/* Layout maestro-detalle y reglas de pantalla (antes inline en modulo) */
+/* Esta pantalla: menos margen lateral del panel y del grid para aprovechar el ancho */
+.panel.panel-main.exa-ui-panel {
+	margin-left: 6px;
+	margin-right: 6px;
+}
+.panel.panel-main.exa-ui-panel > .exa-body {
+	padding-left: 4px !important;
+	padding-right: 4px !important;
+}
+.panel.panel-main.exa-ui-panel > .exa-body > .row > .v2-labores-page-host {
+	padding-left: 8px;
+	padding-right: 8px;
+}
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+	/* display: none; <- Crashes Chrome on hover */
+	-webkit-appearance: none;
+	margin: 0;
+	/* <-- Apparently some margin are still there even though it's hidden */
+}
+/* Lista nativa de empleados (sustituye jqGrid en maestro-detalle v2) */
+#regActividadV2 #tableEmpRegAct.v2-emp-wrap {
+	border: 1px solid #aed0ea;
+	border-radius: 3px;
+	overflow: hidden;
+	background: #fff;
+	flex: 1 1 auto;
+	display: flex;
+	flex-direction: column;
+	min-height: 480px;
+}
+#regActividadV2 #tableEmpRegAct .v2-emp-caption {
+	padding: 6px 10px;
+	font-weight: 600;
+	font-size: 12px;
+	letter-spacing: 0.02em;
+	border-bottom: 1px solid #aed0ea;
+	flex: 0 0 auto;
+}
+#regActividadV2 #tableEmpRegAct .v2-emp-scroll {
+	flex: 1 1 0;
+	min-height: 300px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+	background: #fafafa;
+	position: relative;
+}
+#regActividadV2 #tableEmpRegAct .v2-emp-table {
+	margin-bottom: 0;
+	background: #fff;
+	table-layout: fixed;
+}
+#regActividadV2 #tableEmpRegAct .v2-emp-table thead th {
+	position: sticky;
+	top: 0;
+	z-index: 5;
+	font-size: 11px;
+	vertical-align: middle !important;
+	padding: 6px 8px !important;
+	border-bottom-width: 2px !important;
+	background-color: #5c9ccc;
+	color: #fff;
+	box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
+}
+#regActividadV2 #tableEmpRegAct .v2-emp-table tbody td {
+	font-size: 11px;
+	vertical-align: middle !important;
+	padding: 5px 8px !important;
+}
+#regActividadV2 #tableEmpRegAct .v2-emp-table thead th:nth-child(1),
+#regActividadV2 #tableEmpRegAct .v2-emp-table tbody td:nth-child(1) {
+	width: 28px;
+	max-width: 28px;
+	padding-left: 4px !important;
+	padding-right: 4px !important;
+}
+#regActividadV2 #tableEmpRegAct .v2-emp-table thead th:nth-child(2),
+#regActividadV2 #tableEmpRegAct .v2-emp-table tbody td:nth-child(2) {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+#regActividadV2 #tableEmpRegAct .v2-emp-table thead th:nth-child(3),
+#regActividadV2 #tableEmpRegAct .v2-emp-table tbody td:nth-child(3) {
+	width: 94px;
+	max-width: 94px;
+	padding-left: 5px !important;
+	padding-right: 5px !important;
+}
+#regActividadV2 #tableEmpRegAct .v2-emp-table thead th:nth-child(3) {
+	white-space: nowrap;
+}
+/* Sel. y quitar: ~10% menos de ancho; botones ~10% m&aacute;s compactos */
+#regActividadV2 #tableEmpRegAct .v2-emp-table thead th:nth-child(4),
+#regActividadV2 #tableEmpRegAct .v2-emp-table tbody td:nth-child(4) {
+	width: 45px;
+	max-width: 45px;
+	padding-left: 4px !important;
+	padding-right: 4px !important;
+}
+#regActividadV2 #tableEmpRegAct .v2-emp-table thead th:nth-child(5),
+#regActividadV2 #tableEmpRegAct .v2-emp-table tbody td:nth-child(5) {
+	width: 40px;
+	max-width: 40px;
+	padding-left: 4px !important;
+	padding-right: 4px !important;
+}
+#regActividadV2 #tableEmpRegAct .v2-emp-table .v2-grid-act-btn,
+#regActividadV2 #tableActividad .v2-lab-table .v2-grid-act-btn,
+#modRegActividadV2 .v2-mod-emp-table .v2-grid-act-btn,
+#modRegActividadV2 .v2-mod-lab-table .v2-grid-act-btn {
+	transform: none;
+}
+#regActividadV2 .v2-emp-sum-bar {
+	flex: 0 0 auto;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 6px 10px;
+	border-top: 1px solid #aed0ea;
+	background: #f5f9fc;
+	font-size: 11px;
+	font-weight: 600;
+}
+#regActividadV2 #tableEmpRegAct .v2-emp-table thead th .glyphicon {
+	color: #fff;
+}
+#regActividadV2 #tableEmpRegAct .v2-emp-row:hover {
+	background-color: #f0f7ff !important;
+}
+#regActividadV2 #tableEmpRegAct .v2-emp-row.v2-emp-sel {
+	background-color: #bbdefb !important;
+	font-weight: 600;
+}
+#regActividadV2 #tableEmpRegAct .v2-emp-footer {
+	padding: 6px 8px;
+	border-top: 1px solid #aed0ea;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	flex-wrap: wrap;
+	gap: 6px;
+	flex: 0 0 auto;
+}
+#regActividadV2 #v2EmpStatus {
+	margin-left: auto;
+	text-align: right;
+	flex: 1 1 auto;
+}
+#regActividadV2 #tableEmpRegAct .v2-emp-nombre {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+/* Labores nativas (mismo criterio visual que empleados) */
+#regActividadV2 #tableActividad.v2-lab-wrap {
+	border: 1px solid #aed0ea;
+	border-radius: 3px;
+	overflow: visible;
+	background: #fff;
+	flex: 1 1 auto;
+	display: flex;
+	flex-direction: column;
+	min-height: 480px;
+}
+#regActividadV2 #tableActividad .v2-lab-caption {
+	padding: 6px 10px;
+	font-weight: 600;
+	font-size: 12px;
+	letter-spacing: 0.02em;
+	border-bottom: 1px solid #aed0ea;
+	flex: 0 0 auto;
+}
+#regActividadV2 #tableActividad .v2-lab-scroll {
+	flex: 1 1 0;
+	min-height: 288px;
+	overflow-x: auto;
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+	background: #fafafa;
+	position: relative;
+	border-radius: 0 0 0 0;
+}
+#regActividadV2 #tableActividad .v2-lab-table {
+	margin-bottom: 0;
+	background: #fff;
+	table-layout: fixed;
+	width: 100%;
+	max-width: 100%;
+}
+/* Cabecera fija al hacer scroll vertical en el cuerpo */
+#regActividadV2 #tableActividad .v2-lab-table thead th {
+	position: sticky;
+	top: 0;
+	z-index: 5;
+	font-size: 11px;
+	vertical-align: middle !important;
+	padding: 6px 6px !important;
+	border-bottom-width: 2px !important;
+	background-color: #5c9ccc;
+	color: #fff;
+	box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
+}
+/* Columna Fecha: ancho m&iacute;nimo para ver yyyy-mm-dd completo */
+#regActividadV2 #tableActividad .v2-lab-table thead th:nth-child(4),
+#regActividadV2 #tableActividad .v2-lab-table tbody td:nth-child(4) {
+	min-width: 108px;
+	width: 12%;
+}
+#regActividadV2 #tableActividad .v2-lab-table tbody td {
+	font-size: 11px;
+	vertical-align: middle !important;
+	padding: 4px 6px !important;
+	overflow-wrap: break-word;
+	word-wrap: break-word;
+}
+#regActividadV2 #tableActividad .v2-lab-table thead th:nth-child(3),
+#regActividadV2 #tableActividad .v2-lab-table thead th:nth-child(4),
+#regActividadV2 #tableActividad .v2-lab-table thead th:nth-child(5),
+#regActividadV2 #tableActividad .v2-lab-table thead th:nth-child(6),
+#regActividadV2 #tableActividad .v2-lab-table thead th:nth-child(7),
+#regActividadV2 #tableActividad .v2-lab-table thead th:nth-child(8),
+#regActividadV2 #tableActividad .v2-lab-table thead th:nth-child(9) {
+	white-space: nowrap;
+}
+#regActividadV2 #tableActividad .v2-lab-table thead th:nth-child(9),
+#regActividadV2 #tableActividad .v2-lab-table tbody td:nth-child(9) {
+	width: 38px;
+	max-width: 38px;
+	padding-left: 3px !important;
+	padding-right: 3px !important;
+}
+#regActividadV2 #tableActividad .v2-lab-table tbody td:nth-child(6),
+#regActividadV2 #tableActividad .v2-lab-table tbody td:nth-child(7),
+#regActividadV2 #tableActividad .v2-lab-table tbody td:nth-child(8) {
+	white-space: nowrap;
+}
+/* Campos no editables (Labor v&iacute;a di&aacute;logo, Unidad, P. unit., Total): fondo gris claro */
+#regActividadV2 #tableActividad .v2-lab-table .form-control.input-xs[readonly],
+#regActividadV2 #tableActividad .v2-lab-table .form-control.input-xs[disabled],
+#regActividadV2 #tableActividad .v2-lab-table input[id$="_Tpg_Des"],
+#regActividadV2 #tableActividad .v2-lab-table input[id$="_Lab_Val"],
+#regActividadV2 #tableActividad .v2-lab-table input[id$="_Total"] {
+	background-color: #e4e8ee !important;
+	border-color: #c8d0da !important;
+	cursor: default;
+	box-shadow: none;
+}
+#regActividadV2 #tableActividad #btn_agr {
+	display: none !important;
+}
+#regActividadV2 .v2-lab-sum-bar {
+	flex: 0 0 auto;
+	border-top: 1px solid #aed0ea;
+	background: #f5f9fc;
+	position: relative;
+	z-index: 6;
+}
+#regActividadV2 .v2-lab-sum-inner {
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+	gap: 10px;
+	padding: 6px 10px;
+	font-size: 11px;
+}
+#regActividadV2 .v2-lab-sum-inner .v2-lab-foot-sum {
+	min-width: 4.5em;
+	font-weight: 600;
+	text-align: right;
+}
+#regActividadV2 #tableActividad .v2-lab-footer {
+	padding: 6px 8px;
+	border-top: 1px solid #aed0ea;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	flex-wrap: wrap;
+	gap: 6px;
+	flex: 0 0 auto;
+}
+#regActividadV2 #v2LabStatus {
+	margin-left: auto;
+	text-align: right;
+	flex: 1 1 auto;
+}
+/* Paneles misma altura (stretch) y listado m&aacute;s alto (~8 filas &uacute;tiles) */
+#regActividadV2.v2-reg-actividad-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: stretch;
+	min-width: 0;
+	min-height: 480px;
+	width: 100%;
+	max-width: none;
+	margin-left: 0;
+	margin-right: 0;
+}
+#regActividadV2.v2-reg-actividad-row > .v2-reg-col {
+	float: none;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	min-width: 0;
+	min-height: 0;
+}
+/* La columna de empleados no debe crecer con el listado: recorta y deja scroll interno */
+#regActividadV2.v2-reg-actividad-row > .col-md-4.v2-reg-col {
+	overflow: hidden;
+}
+@media (min-width: 992px) {
+	#regActividadV2.v2-reg-actividad-row > .col-md-4.v2-reg-col {
+		width: 33.33333333%;
+		flex: 0 0 33.33333333%;
+		max-width: 33.33333333%;
+	}
+	#regActividadV2.v2-reg-actividad-row > .col-md-8.v2-reg-col {
+		width: 66.66666667%;
+		flex: 0 0 66.66666667%;
+		max-width: 66.66666667%;
+	}
+}
+@media (max-width: 991px) {
+	#regActividadV2.v2-reg-actividad-row > .v2-reg-col {
+		flex: 0 0 100%;
+		max-width: 100%;
+		width: 100%;
+	}
+}
+#regActividadV2 .v2-reg-fieldset {
+	margin-bottom: 0;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
+	overflow: visible;
+	width: 100%;
+	border: none;
+	padding: 0;
+	box-shadow: none;
+}
+/* Misma base flex en ambas columnas para alinear cabeceras y cajas */
+#regActividadV2 .col-md-4.v2-reg-col .v2-reg-fieldset,
+#regActividadV2 .col-md-8.v2-reg-col .v2-reg-fieldset {
+	flex: 1 1 auto;
+	width: 100%;
+}
+#regActividadV2 .col-md-4.v2-reg-col .v2-reg-fieldset {
+	overflow: hidden;
+}
+#regActividadV2 .col-md-8.v2-reg-col .v2-reg-fieldset {
+	overflow: visible;
+}
+#regActividadV2 .v2-reg-fieldset > .v2-emp-wrap,
+#regActividadV2 .v2-reg-fieldset > #tableActividad.v2-lab-wrap {
+	margin-top: 0;
+}
+/* Formulario Datos: mÃ¡s angosto, alineado a la izquierda, menos disperso */
+#frm_alt_actividad .v2-datos-actividad {
+	max-width: 920px;
+	margin-left: 0;
+	margin-right: auto;
+}
+#frm_alt_actividad .v2-datos-actividad .form-group {
+	margin-bottom: 7px;
+}
+#frm_alt_actividad .v2-datos-actividad .control-label {
+	text-align: left !important;
+	padding-top: 4px;
+}
+#frm_alt_actividad .v2-datos-actividad label.v2-label-fecha-pega {
+	text-align: right !important;
+	padding-right: 2px;
+	padding-left: 0;
+}
+#frm_alt_actividad .v2-datos-actividad #Act_Fec {
+	text-align: left !important;
+}
+/* Calendario por encima de cabeceras sticky y paneles (datepicker pone z-index inline) */
+#ui-datepicker-div.ui-datepicker,
+#ui-datepicker-div {
+	z-index: 30000 !important;
+}
+/* Por encima de cabeceras sticky (z-index 6), por debajo de .ui-dialog del sistema */
+.ui-autocomplete.ui-widget-content.v2-lab-ac-menu {
+	z-index: 90 !important;
+	max-height: 196px;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+.ui-dialog.dialog-alert-test {
+	z-index: 1100 !important;
+}
+.ui-dialog.dialog-alert-test + .ui-widget-overlay {
+	z-index: 1099 !important;
+}
+.ui-autocomplete .v2-lab-ac-li {
+	padding: 0;
+	margin: 0;
+}
+.ui-autocomplete .v2-lab-ac-a {
+	border: none;
+	text-decoration: none;
+	color: inherit;
+}
+.ui-autocomplete .v2-lab-ac-a:hover,
+.ui-autocomplete .v2-lab-ac-a:focus {
+	text-decoration: none;
+	color: inherit;
+}
+#frm_alt_actividad .v2-datos-actividad .form-control,
+#frm_alt_actividad .v2-datos-actividad .input-group {
+	max-width: 100%;
+}
+#frm_alt_actividad .v2-datos-actividad .form-group .col-xs-3 {
+	max-width: 260px;
+}
+#frm_alt_actividad .v2-datos-actividad .form-group .col-xs-4 {
+	max-width: 300px;
+}
+#frm_alt_actividad .v2-datos-actividad .form-group .col-xs-5,
+#frm_alt_actividad .v2-datos-actividad .form-group .col-xs-6 {
+	max-width: 520px;
+}
+#frm_alt_actividad .v2-datos-actividad .v2-btn-ayuda-area {
+	margin-left: 4px;
+	padding: 2px 6px;
+	vertical-align: top;
+}
+/* Tabla labores: columnas acotadas, celdas a la izquierda, inputs con borde visible */
+#regActividadV2 #tableActividad .v2-lab-table thead th,
+#regActividadV2 #tableActividad .v2-lab-table tbody td {
+	text-align: left;
+	vertical-align: middle !important;
+}
+#regActividadV2 #tableActividad .v2-lab-table thead th.text-center,
+#regActividadV2 #tableActividad .v2-lab-table tbody td.text-center {
+	text-align: center;
+}
+#regActividadV2 #tableActividad .v2-lab-table thead th.text-right,
+#regActividadV2 #tableActividad .v2-lab-table tbody td.text-right,
+#regActividadV2 #tableActividad .v2-lab-table tfoot td.text-right {
+	text-align: right;
+}
+#regActividadV2 #tableActividad .v2-lab-table .form-control.input-xs {
+	width: 100%;
+	max-width: 100%;
+	border: 1px solid #b0bec5;
+	background-color: #fff;
+	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+#regActividadV2 #tableActividad .v2-lab-table .input-group {
+	width: 100%;
+	max-width: 100%;
+}
+#regActividadV2 #tableActividad .v2-lab-table .input-group .form-control {
+	border: 1px solid #b0bec5;
+}
+#modRegActividadV2.v2-reg-actividad-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: stretch;
+	min-width: 0;
+	min-height: 420px;
+	width: 100%;
+	margin-left: 0;
+	margin-right: 0;
+}
+#modRegActividadV2.v2-reg-actividad-row > .v2-reg-col {
+	float: none;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	min-width: 0;
+	min-height: 0;
+}
+@media (min-width: 992px) {
+	#modRegActividadV2.v2-reg-actividad-row > .col-md-4.v2-reg-col {
+		width: 33.33333333%;
+		flex: 0 0 33.33333333%;
+		max-width: 33.33333333%;
+	}
+	#modRegActividadV2.v2-reg-actividad-row > .col-md-8.v2-reg-col {
+		width: 66.66666667%;
+		flex: 0 0 66.66666667%;
+		max-width: 66.66666667%;
+	}
+}
+#modRegActividadV2 .v2-reg-fieldset {
+	margin-bottom: 0;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
+	overflow: visible;
+	width: 100%;
+	border: none;
+	padding: 0;
+	box-shadow: none;
+}
+#modRegActividadV2 .col-md-4.v2-reg-col .v2-reg-fieldset,
+#modRegActividadV2 .col-md-8.v2-reg-col .v2-reg-fieldset {
+	flex: 1 1 auto;
+	width: 100%;
+}
+#modRegActividadV2 .col-md-4.v2-reg-col .v2-reg-fieldset {
+	overflow: hidden;
+}
+#modRegActividadV2 .col-md-8.v2-reg-col .v2-reg-fieldset {
+	overflow: visible;
+}
+#modRegActividadV2.v2-reg-actividad-row > .col-md-4.v2-reg-col {
+	overflow: hidden;
+}
+/* Empleados: recortar bordes redondeados. Labores: visible como en Registrar (hidden rompe sticky thead / pintado del tbody en algunos navegadores). */
+#modRegActividadV2 #modTableEmpRegAct.v2-emp-wrap {
+	border: 1px solid #aed0ea;
+	border-radius: 3px;
+	overflow: hidden;
+	background: #fff;
+	flex: 1 1 auto;
+	display: flex;
+	flex-direction: column;
+	min-height: 480px;
+}
+#modRegActividadV2 #modTableActividad.v2-lab-wrap {
+	border: 1px solid #aed0ea;
+	border-radius: 3px;
+	overflow: visible;
+	background: #fff;
+	flex: 1 1 auto;
+	display: flex;
+	flex-direction: column;
+	min-height: 480px;
+}
+#modRegActividadV2 .v2-emp-caption,
+#modRegActividadV2 .v2-lab-caption {
+	padding: 6px 10px;
+	font-weight: 600;
+	font-size: 12px;
+	letter-spacing: 0.02em;
+	border-bottom: 1px solid #aed0ea;
+	flex: 0 0 auto;
+}
+/* min-height:0 evita que el hijo flex tome la altura total del contenido (tabla larga) y alargue toda la p&aacute;gina */
+#modRegActividadV2 .v2-emp-scroll {
+	flex: 1 1 0;
+	min-height: 300px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+	background: #fafafa;
+	position: relative;
+}
+#modRegActividadV2 .v2-lab-scroll {
+	flex: 1 1 0;
+	min-height: 0;
+	overflow-x: auto;
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+	background: #fafafa;
+	position: relative;
+}
+#modRegActividadV2 .v2-mod-emp-table,
+#modRegActividadV2 .v2-mod-lab-table {
+	margin-bottom: 0;
+	background: #fff;
+	table-layout: fixed;
+	width: 100%;
+}
+#modRegActividadV2 .v2-mod-emp-table thead th,
+#modRegActividadV2 .v2-mod-lab-table thead th {
+	position: sticky;
+	top: 0;
+	z-index: 5;
+	font-size: 11px;
+	vertical-align: middle !important;
+	padding: 6px 8px !important;
+	border-bottom-width: 2px !important;
+	background-color: #5c9ccc;
+	color: #fff;
+	box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
+}
+#modRegActividadV2 .v2-mod-emp-table tbody td {
+	font-size: 11px;
+	vertical-align: middle !important;
+	padding: 5px 8px !important;
+}
+#modRegActividadV2 .v2-mod-emp-table thead th:nth-child(1),
+#modRegActividadV2 .v2-mod-emp-table tbody td:nth-child(1) {
+	width: 28px;
+	max-width: 28px;
+	padding-left: 4px !important;
+	padding-right: 4px !important;
+}
+#modRegActividadV2 .v2-mod-emp-table thead th:nth-child(2),
+#modRegActividadV2 .v2-mod-emp-table tbody td:nth-child(2) {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+#modRegActividadV2 .v2-mod-emp-table thead th:nth-child(3),
+#modRegActividadV2 .v2-mod-emp-table tbody td:nth-child(3) {
+	width: 94px;
+	max-width: 94px;
+	padding-left: 5px !important;
+	padding-right: 5px !important;
+}
+#modRegActividadV2 .v2-mod-emp-table thead th:nth-child(3) {
+	white-space: nowrap;
+}
+#modRegActividadV2 .v2-mod-emp-table thead th:nth-child(4),
+#modRegActividadV2 .v2-mod-emp-table tbody td:nth-child(4) {
+	width: 45px;
+	max-width: 45px;
+}
+#modRegActividadV2 .v2-mod-emp-table thead th:nth-child(5),
+#modRegActividadV2 .v2-mod-emp-table tbody td:nth-child(5) {
+	width: 40px;
+	max-width: 40px;
+}
+/* Labores Modificar: mismas proporciones / paddings que Registrar (#tableActividad .v2-lab-table) */
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table {
+	max-width: 100%;
+}
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table thead th {
+	padding: 6px 6px !important;
+}
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table tbody td {
+	font-size: 11px;
+	vertical-align: middle !important;
+	padding: 4px 6px !important;
+	overflow-wrap: break-word;
+	word-wrap: break-word;
+}
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table thead th:nth-child(4),
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table tbody td:nth-child(4) {
+	min-width: 108px;
+	width: 12%;
+}
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table thead th:nth-child(3),
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table thead th:nth-child(4),
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table thead th:nth-child(5),
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table thead th:nth-child(6),
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table thead th:nth-child(7),
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table thead th:nth-child(8),
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table thead th:nth-child(9) {
+	white-space: nowrap;
+}
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table tbody td:nth-child(6),
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table tbody td:nth-child(7),
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table tbody td:nth-child(8) {
+	white-space: nowrap;
+}
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table thead th:nth-child(9),
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table tbody td:nth-child(9) {
+	width: 38px;
+	max-width: 38px;
+	padding-left: 3px !important;
+	padding-right: 3px !important;
+}
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table thead th,
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table tbody td {
+	text-align: left;
+	vertical-align: middle !important;
+}
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table thead th.text-center,
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table tbody td.text-center {
+	text-align: center;
+}
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table thead th.text-right,
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table tbody td.text-right {
+	text-align: right;
+}
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table .form-control.input-xs {
+	width: 100%;
+	max-width: 100%;
+	border: 1px solid #b0bec5;
+	background-color: #fff;
+	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table .form-control.input-xs[readonly],
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table .form-control.input-xs[disabled],
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table input[id$="_Tpg_Des"],
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table input[id$="_Lab_Val"],
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table input[id$="_Total"] {
+	background-color: #e4e8ee !important;
+	border-color: #c8d0da !important;
+	cursor: default;
+	box-shadow: none;
+}
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table .input-group {
+	width: 100%;
+	max-width: 100%;
+}
+#modRegActividadV2 #modTableActividad .v2-mod-lab-table .input-group .form-control {
+	border: 1px solid #b0bec5;
+}
+#modRegActividadV2 .v2-mod-emp-row:not(.v2-mod-emp-sel):not(.v2-mod-emp-dirty):hover td {
+	background-color: #f0f7ff !important;
+}
+/* Seleccionado (sin ediciones pendientes en labores): azul */
+#modRegActividadV2 .v2-mod-emp-row.v2-mod-emp-sel:not(.v2-mod-emp-dirty) td {
+	background-color: #bbdefb !important;
+	font-weight: 600;
+}
+#modRegActividadV2 .v2-mod-emp-row.v2-mod-emp-sel:not(.v2-mod-emp-dirty):hover td {
+	background-color: #90caf9 !important;
+}
+/* Labores de este empleado editadas: amarillo claro (prioridad sobre azul de selecci&oacute;n) */
+#modRegActividadV2 .v2-mod-emp-row.v2-mod-emp-dirty td {
+	background-color: #fff9c4 !important;
+	font-weight: 600;
+}
+#modRegActividadV2 .v2-mod-emp-row.v2-mod-emp-dirty:hover td {
+	background-color: #fff59d !important;
+}
+#modRegActividadV2 .v2-mod-emp-table thead th .glyphicon {
+	color: #fff;
+}
+#modRegActividadV2 .v2-mod-emp-nombre {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+#modRegActividadV2 .v2-emp-sum-bar {
+	flex: 0 0 auto;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 6px 10px;
+	border-top: 1px solid #aed0ea;
+	background: #f5f9fc;
+	font-size: 11px;
+	font-weight: 600;
+}
+#modRegActividadV2 .v2-lab-sum-bar {
+	flex: 0 0 auto;
+	border-top: 1px solid #aed0ea;
+	background: #f5f9fc;
+	position: relative;
+	z-index: 6;
+}
+#modRegActividadV2 .v2-lab-sum-inner {
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+	gap: 10px;
+	padding: 6px 10px;
+	font-size: 11px;
+}
+#modRegActividadV2 .v2-lab-sum-inner .v2-mod-lab-foot-sum {
+	min-width: 4.5em;
+	font-weight: 600;
+	text-align: right;
+}
+#modRegActividadV2 .v2-emp-footer,
+#modRegActividadV2 .v2-lab-footer {
+	flex: 0 0 auto;
+	padding: 6px 8px;
+	border-top: 1px solid #aed0ea;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	flex-wrap: wrap;
+	gap: 6px;
+	font-size: 11px;
+}
+#modRegActividadV2 #modV2EmpStatus,
+#modRegActividadV2 #modV2LabStatus {
+	margin-left: auto;
+	text-align: right;
+	flex: 1 1 auto;
+}
+#modRegActividadV2 #modTableEmpRegAct .v2-mod-emp-footer-actions {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+/* Agrupa botones para que no se separen con space-between (Agregar + Reestablecer pegados). */
+#modRegActividadV2 #modTableActividad .v2-lab-footer .v2-mod-lab-footer-actions {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+#modRegActividadV2 #modTableActividad #btn_mod_agr {
+	display: none !important;
+}
+#frm_mod_actividad .v2-mod-busq-act {
+	max-width: 920px;
+	margin-left: 0;
+}
+/* Varias coincidencias: combo = ancho del campo nombre; &laquo;Cargar Datos&raquo; pegado como &laquo;Elegir empleado&raquo;; cola flexible alinea con columna Buscar. */
+#tabs-3 #modq_match_panel .v2-modq-match-row {
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: stretch;
+	width: 100%;
+	gap: 0;
+}
+#tabs-3 #modq_match_panel .v2-modq-match-select {
+	flex: 0 0 auto;
+	width: 220px;
+	min-width: 80px;
+	max-width: 100%;
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+}
+#tabs-3 #modq_match_panel .v2-modq-match-tail {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+#tabs-3 #modq_match_panel .v2-modq-match-row > .input-group-btn {
+	flex: 0 0 auto;
+	white-space: nowrap;
+	vertical-align: middle;
+}
+#tabs-3 #modq_match_panel .v2-modq-match-row > .input-group-btn .btn {
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+	margin-left: -1px;
+}
+/* Grid jqGrid oculto: createGrid() asigna min-height al padre antes del wrap; debe estarse fuera del layout (&aacute;rea pantalla Modificar). */
+#tabs-3 .v2-consultar-grid-host {
+	min-height: 0 !important;
+	height: 1px !important;
+	max-height: 1px !important;
+	overflow: hidden !important;
+	margin: 0 !important;
+	padding: 0 !important;
+}
+#tabs-3 #gbox_consultarGrid {
+	min-height: 0 !important;
+}

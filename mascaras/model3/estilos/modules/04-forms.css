@@ -1,0 +1,126 @@
+﻿/* �� Fieldsets / filtros �� */
+.exa-ui-panel .exa-fieldset {
+	border: var(--v2-elev-border);
+	border-radius: var(--v2-radius);
+	background: var(--v2-bg-panel);
+	padding: 12px 14px 10px;
+	margin-bottom: 12px;
+	box-shadow: var(--v2-elev-shadow);
+}
+.exa-ui-panel .exa-fieldset legend.Titulos2 {
+	float: none;
+	display: inline-block;
+	width: auto;
+	margin: 0 0 0 10px;
+	padding: 0 6px;
+	border: none;
+	background: var(--v2-bg-panel);
+	font-family: var(--v2-font);
+	font-size: 11px;
+	font-weight: 700;
+	font-style: normal;
+	color: #5b6f88;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	line-height: 1.3;
+}
+.exa-ui-panel #frm_alt_actividad .v2-datos-actividad,
+.exa-ui-panel #frm_mod_actividad .v2-mod-busq-act {
+	max-width: 880px;
+}
+.exa-ui-panel .v2-datos-actividad .form-group,
+.exa-ui-panel .v2-mod-busq-act .form-group {
+	margin-bottom: 10px;
+}
+.exa-ui-panel .exa-fieldset .control-label,
+.exa-ui-panel .control-label.label-xs,
+.exa-ui-panel .control-label.label-sm {
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	color: var(--v2-text-muted);
+	padding-top: 6px;
+}
+.exa-ui-panel .form-control.input-xs,
+.exa-ui-panel .form-control.input-sm,
+.exa-ui-panel select.form-control,
+.exa-ui-panel textarea.form-control {
+	border: 1px solid var(--v2-border);
+	border-radius: var(--v2-radius-sm);
+	background: var(--v2-bg-input);
+	color: var(--v2-text);
+	box-shadow: none;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.exa-ui-panel .form-control:focus,
+.exa-ui-panel select.form-control:focus {
+	border-color: var(--v2-brand);
+	box-shadow: 0 0 0 2px rgba(74, 136, 181, 0.15);
+	outline: none;
+}
+.exa-ui-panel .input-group-addon {
+	border-color: var(--v2-border);
+	background: var(--v2-bg-grid);
+	color: var(--v2-text-muted);
+}
+
+/* �� Botones �� */
+.exa-ui-panel .btn {
+	border-radius: var(--v2-radius-sm);
+	font-weight: 500;
+	font-size: 12px;
+	text-shadow: none;
+	box-shadow: none;
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.exa-ui-panel .btn-xs {
+	padding: 4px 10px;
+	line-height: 1.35;
+}
+.exa-ui-panel .btn-sm {
+	padding: 6px 14px;
+	font-size: 12px;
+}
+.exa-ui-panel .btn-primary {
+	background: var(--v2-brand);
+	border-color: var(--v2-brand-dark);
+}
+.exa-ui-panel .btn-primary:hover,
+.exa-ui-panel .btn-primary:focus {
+	background: var(--v2-brand-dark);
+	border-color: #265a78;
+}
+.exa-ui-panel .btn-success {
+	background: #3d8b5c;
+	border-color: #357a50;
+}
+.exa-ui-panel .btn-success:hover {
+	background: #357a50;
+	border-color: #2d6844;
+}
+.exa-ui-panel .btn-info {
+	background: #4a9ab8;
+	border-color: #3d849e;
+}
+.exa-ui-panel .btn-info:hover {
+	background: #3d849e;
+}
+.exa-ui-panel .btn-danger {
+	background: #c45c5c;
+	border-color: #b04e4e;
+}
+.exa-ui-panel .btn-default {
+	background: var(--v2-surface);
+	border-color: var(--v2-border);
+	color: var(--v2-text);
+}
+.exa-ui-panel .btn-default:hover {
+	background: var(--v2-surface-hover);
+	border-color: var(--v2-brand-muted);
+}
+
+/* Barra acciones guardar/cancelar */
+.exa-ui-panel div[style*="text-align: center"] {
+	padding-top: 12px !important;
+}

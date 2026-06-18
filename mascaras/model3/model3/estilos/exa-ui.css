@@ -1,0 +1,18 @@
+/**
+ * Model3 - hoja agregadora UI ERP (Gestionar Actividades Bananeras).
+ * Incluir una sola vez: require mascaras/model3/estilos/estilos.php
+ * Contenedor raiz en HTML: class="panel panel-main exa-ui-panel"
+ */
+@import url('modules/01-variables.css');
+@import url('modules/02-shell.css');
+@import url('modules/03-tabs.css');
+@import url('modules/04-forms.css');
+@import url('modules/05-grids.css');
+@import url('modules/06-jqgrid-dialogs.css');
+@import url('modules/07-density-overrides.css');
+@import url('modules/08-layout-maestro-detalle.css');
+@import url('modules/09-jqgrid-cells.css');
+@import url('modules/10-layout-viewport.css');
+@import url('modules/11-jqgrid-layout.css');
+@import url('modules/12-jqgrid-subgrid.css');
+@import url('modules/13-form-busqueda.css');
