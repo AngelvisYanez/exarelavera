@@ -52,9 +52,10 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 $sde_des = mysqli_real_escape_string($this->conexion->conexion, $item['Sde_Des']);
                 $sde_can = floatval($item['Sde_Can']);
                 $sde_pru = floatval($item['Sde_Pru']);
+                $sde_iva = !empty($item['Sde_Iva']) ? 1 : 0;
 
-                $sqlDet = "INSERT INTO adq_solicitudes_det (Sol_Cod, Sde_Int, Pro_Cod, Sde_Des, Sde_Can, Sde_Pru) 
-                           VALUES ($sol_cod, $idx, $pro_cod, '$sde_des', $sde_can, $sde_pru);";
+                $sqlDet = "INSERT INTO adq_solicitudes_det (Sol_Cod, Sde_Int, Pro_Cod, Sde_Des, Sde_Can, Sde_Pru, Sde_Iva) 
+                           VALUES ($sol_cod, $idx, $pro_cod, '$sde_des', $sde_can, $sde_pru, $sde_iva);";
                 $this->grabarv_registros($sqlDet, $this->conexion);
                 $idx++;
             }

@@ -1,18 +1,18 @@
 <?php
 /**
- * EXA Workflow Manager & Adquisiciones - Suite de Pruebas de Integraci√≥n
+ * EXA Workflow Manager & Adquisiciones - Suite de Pruebas de IntegraciÛn
  * 
- * Este script ejecuta de manera program√°tica el ciclo de vida completo de un requerimiento
- * de adquisici√≥n, evaluando transiciones, bifurcaciones de decisi√≥n por monto (SLA),
- * validaciones obligatorias de nodos y auditor√≠a en base de datos.
+ * Este script ejecuta de manera program·tica el ciclo de vida completo de un requerimiento
+ * de adquisiciÛn, evaluando transiciones, bifurcaciones de decisiÛn por monto (SLA),
+ * validaciones obligatorias de nodos y auditorÌa en base de datos.
  * 
- * Ejecuci√≥n desde CLI: php adquisiciones/TEST/wf_integration_test.php
+ * EjecuciÛn desde CLI: php adquisiciones/TEST/wf_integration_test.php
  * @author Oz <oz-agent@warp.dev>
  */
 
 define('TEST_MODE', true);
 
-// Mockear clases ausentes en CLI (como DebugBar y ChromePhp) para evitar ca√≠das en el core de EXA
+// Mockear clases ausentes en CLI (como DebugBar y ChromePhp) para evitar caÌdas en el core de EXA
 if (!class_exists('DebugBar')) {
     class DebugBar {
         public static function startQueryMeasure() {}
@@ -27,13 +27,13 @@ if (!class_exists('ChromePhp')) {
     }
 }
 
-// Mockear variables de sesi√≥n globales de EXA
+// Mockear variables de sesiÛn globales de EXA
 if (session_id() === '') session_start();
 $_SESSION['Ses_Emp_Cod'] = 1;
 $_SESSION['Ses_Suc_Cod'] = 1;
 $_SESSION['Ses_Usu_Cod'] = 1;
 $_SESSION['Ses_Dep_Cod'] = 1;
-$_SESSION['Ses_Prs_Cod'] = 1; // Habilitar depuraci√≥n detallada de errores
+$_SESSION['Ses_Prs_Cod'] = 1; // Habilitar depuraciÛn detallada de errores
 $_SESSION['Ses_Lis_Per'] = array(1, 2); // Perfil Administrador / Jefe
 $_SESSION['Ses_Dat_Dis'] = 'exa'; // Base de datos del inquilino/corporativa para el test
 
@@ -55,7 +55,7 @@ class EXAWorkflowIntegrationTestSuite {
 
     public function run() {
         echo "========================================================================\n";
-        echo " EXA WORKFLOW MANAGER - SUITE DE PRUEBAS DE INTEGRACI√ìN (INTEGRATION TESTS)\n";
+        echo " EXA WORKFLOW MANAGER - SUITE DE PRUEBAS DE INTEGRACI”N (INTEGRATION TESTS)\n";
         echo "========================================================================\n\n";
 
         try {
@@ -65,12 +65,12 @@ class EXAWorkflowIntegrationTestSuite {
             $this->testValidacionesCamposObligatorios();
 
             echo "\n========================================================================\n";
-            echo " ‚úîÔ∏è TODAS LAS PRUEBAS DE INTEGRACI√ìN SE COMPLETARON CON √âXITO (ALL PASSED)\n";
+            echo " ?? TODAS LAS PRUEBAS DE INTEGRACI”N SE COMPLETARON CON …XITO (ALL PASSED)\n";
             echo "========================================================================\n";
         } catch (Exception $e) {
-            echo "\n‚ùå ERROR CR√çTICO DURANTE LA EJECUCI√ìN DE LAS PRUEBAS:\n";
+            echo "\n? ERROR CRÕTICO DURANTE LA EJECUCI”N DE LAS PRUEBAS:\n";
             echo "   Mensaje: " . $e->getMessage() . "\n";
-            echo "   L√≠nea:   " . $e->getLine() . "\n";
+            echo "   LÌnea:   " . $e->getLine() . "\n";
             echo "========================================================================\n";
             exit(1);
         }
@@ -83,10 +83,10 @@ class EXAWorkflowIntegrationTestSuite {
         echo ">> 1. Verificando Requisitos Previos en Base de Datos... ";
         
         $flujo = $this->obBD_datos->getRowConsultaSql("SELECT * FROM wf_flujos_modelos WHERE Wfm_Cod = 1 AND Wfm_Est = 'A';", $this->obBD_conexion);
-        $this->assert(!empty($flujo), "No se encontr√≥ el flujo modelo por defecto 'Compra de Bienes y Servicios' (ID 1) activo.");
+        $this->assert(!empty($flujo), "No se encontrÛ el flujo modelo por defecto 'Compra de Bienes y Servicios' (ID 1) activo.");
 
         $tipo = $this->obBD_datos->getRowConsultaSql("SELECT * FROM adq_tipos_requerimientos WHERE Trq_Cod = 1 AND Trq_Est = 'A';", $this->obBD_conexion);
-        $this->assert(!empty($tipo), "No se encontr√≥ el tipo de requerimiento por defecto (ID 1) activo.");
+        $this->assert(!empty($tipo), "No se encontrÛ el tipo de requerimiento por defecto (ID 1) activo.");
 
         $nodos = $this->obBD_datos->getArrayConsultaSql("SELECT * FROM wf_nodos WHERE Wfm_Cod = 1;", $this->obBD_conexion);
         $this->assert(count($nodos) == 6, "El flujo modelo 1 debe poseer exactamente 6 nodos configurados. Posee: " . count($nodos));
@@ -95,9 +95,9 @@ class EXAWorkflowIntegrationTestSuite {
     }
 
     /**
-     * Caso de prueba: Adquisici√≥n por un total de $1,200.00
-     * El flujo debe iniciar, pasar Jefatura, evaluar autom√°ticamente el nodo de decisi√≥n (Monto <= 5000),
-     * OMITIR aprobaci√≥n de Gerencia General, ir directo a Facturaci√≥n, y finalizar exitosamente.
+     * Caso de prueba: AdquisiciÛn por un total de $1,200.00
+     * El flujo debe iniciar, pasar Jefatura, evaluar autom·ticamente el nodo de decisiÛn (Monto <= 5000),
+     * OMITIR aprobaciÛn de Gerencia General, ir directo a FacturaciÛn, y finalizar exitosamente.
      */
     protected function testCasoCompraBajoMonto() {
         echo ">> 2. Test Caso Compra Bajo Monto ($ 1,200.00)... \n";
@@ -109,7 +109,7 @@ class EXAWorkflowIntegrationTestSuite {
             'Sol_Val_Est' => '1200.00',
             'Cdc_Cod' => 'DEP_TI',
             'Prv_Sug' => 1,
-            'Sol_Jus' => 'Adquisici√≥n de licencias de prueba para auditor√≠as internas de software.',
+            'Sol_Jus' => 'AdquisiciÛn de licencias de prueba para auditorÌas internas de software.',
             'Sol_Det' => '2 Licencias temporales de desarrollo.',
             'Emp_Cod' => 1,
             'Suc_Cod' => 1
@@ -120,7 +120,7 @@ class EXAWorkflowIntegrationTestSuite {
         );
 
         $cotizaciones = array(
-            array('Prv_Cod' => 1, 'Cot_Val' => 1200.00, 'Cot_Adj' => 'adquisiciones_sustentos/cot_demo1.pdf', 'Cot_Sel' => 1, 'Cot_Jus' => 'Proveedor √∫nico homologado')
+            array('Prv_Cod' => 1, 'Cot_Val' => 1200.00, 'Cot_Adj' => 'adquisiciones_sustentos/cot_demo1.pdf', 'Cot_Sel' => 1, 'Cot_Jus' => 'Proveedor ˙nico homologado')
         );
 
         // A. Guardar solicitud e iniciar flujo
@@ -130,40 +130,40 @@ class EXAWorkflowIntegrationTestSuite {
 
         // Recuperar instancia de flujo
         $instancia = $this->obBD_datos->getRowConsultaSql("SELECT * FROM wf_instancias WHERE Ins_Ent_Typ = 'adq_solicitudes' AND Ins_Ent_Cod = $sol_cod;", $this->obBD_conexion);
-        $this->assert(!empty($instancia), "No se cre√≥ la instancia de flujo en base de datos.");
+        $this->assert(!empty($instancia), "No se creÛ la instancia de flujo en base de datos.");
         $ins_cod = $instancia['Ins_Cod'];
 
-        // El flujo se debi√≥ autotransicionar del nodo 1 (Inicio) al nodo 2 (Aprobaci√≥n Jefatura)
+        // El flujo se debiÛ autotransicionar del nodo 1 (Inicio) al nodo 2 (AprobaciÛn Jefatura)
         $this->assert($instancia['Nod_Act'] == 2, "La instancia debe estar activa actualmente en el Nodo 2 (Jefatura). Nodo actual: " . $instancia['Nod_Act']);
         echo "   [PASO 1] Solicitud creada exitosamente. Instanciado workflow # $ins_cod en Jefatura (Nodo 2).\n";
 
-        // B. Aprobaci√≥n de Jefatura (Nodo 2) -> Avanza a Nodo 3 (Decisi√≥n)
-        // El motor eval√∫a autom√°ticamente el Nodo 3 y, al ser $1200 <= $5000, salta Gerencia (Nodo 4) y se posiciona en Factura (Nodo 5)
+        // B. AprobaciÛn de Jefatura (Nodo 2) -> Avanza a Nodo 3 (DecisiÛn)
+        // El motor eval˙a autom·ticamente el Nodo 3 y, al ser $1200 <= $5000, salta Gerencia (Nodo 4) y se posiciona en Factura (Nodo 5)
         $action_res = $this->wf_mgr->procesarAccionUsuario($ins_cod, 'APROBAR', 'Autorizado por presupuesto de depto.');
-        $this->assert($action_res['success'], "Error al procesar la aprobaci√≥n de Jefatura.");
+        $this->assert($action_res['success'], "Error al procesar la aprobaciÛn de Jefatura.");
 
         $instancia_post_jefatura = $this->obBD_datos->getRowConsultaSql("SELECT * FROM wf_instancias WHERE Ins_Cod = $ins_cod;", $this->obBD_conexion);
-        // Debe estar en Nodo 5 (Factura), salt√°ndose Nodo 4 (Gerencia)
-        $this->assert($instancia_post_jefatura['Nod_Act'] == 5, "La decisi√≥n debi√≥ saltar al Nodo 5. Se encuentra en: " . $instancia_post_jefatura['Nod_Act']);
-        echo "   [PASO 2] Aprobada Jefatura. Decisi√≥n evalu√≥ Monto ($1200 <= $5000) y salt√≥ exitosamente al Nodo 5 (Facturaci√≥n).\n";
+        // Debe estar en Nodo 5 (Factura), salt·ndose Nodo 4 (Gerencia)
+        $this->assert($instancia_post_jefatura['Nod_Act'] == 5, "La decisiÛn debiÛ saltar al Nodo 5. Se encuentra en: " . $instancia_post_jefatura['Nod_Act']);
+        echo "   [PASO 2] Aprobada Jefatura. DecisiÛn evaluÛ Monto ($1200 <= $5000) y saltÛ exitosamente al Nodo 5 (FacturaciÛn).\n";
 
         // C. Resolver Factura (Nodo 5) -> Finalizar (Nodo 6)
         $action_res_fin = $this->wf_mgr->procesarAccionUsuario($ins_cod, 'APROBAR', 'Factura recibida y vinculada de forma correcta.', 'adquisiciones_sustentos/factura_123.pdf');
-        $this->assert($action_res_fin['success'], "Error al procesar la aprobaci√≥n de Facturaci√≥n.");
+        $this->assert($action_res_fin['success'], "Error al procesar la aprobaciÛn de FacturaciÛn.");
 
         $instancia_final = $this->obBD_datos->getRowConsultaSql("SELECT * FROM wf_instancias WHERE Ins_Cod = $ins_cod;", $this->obBD_conexion);
-        $this->assert($instancia_final['Ins_Est'] == 'F', "La instancia debe estar marcada como FINALIZADA con √©xito ('F').");
+        $this->assert($instancia_final['Ins_Est'] == 'F', "La instancia debe estar marcada como FINALIZADA con Èxito ('F').");
         
         $solicitud_final = $this->obBD_datos->getRowConsultaSql("SELECT * FROM adq_solicitudes WHERE Sol_Cod = $sol_cod;", $this->obBD_conexion);
-        $this->assert($solicitud_final['Sol_Est'] == 'A', "La solicitud de adquisici√≥n original debe estar en estado APROBADO ('A').");
-        echo "   [PASO 3] Facturaci√≥n procesada. El flujo se cerr√≥ con √©xito ('F') y la adquisici√≥n fue aprobada ('A').\n";
+        $this->assert($solicitud_final['Sol_Est'] == 'A', "La solicitud de adquisiciÛn original debe estar en estado APROBADO ('A').");
+        echo "   [PASO 3] FacturaciÛn procesada. El flujo se cerrÛ con Èxito ('F') y la adquisiciÛn fue aprobada ('A').\n";
         echo "   -> CASO BAJO MONTO: PASSED!\n\n";
     }
 
     /**
-     * Caso de prueba: Adquisici√≥n por un total de $8,500.00 (Supera $5000)
-     * El flujo debe pasar Jefatura, evaluar el nodo de decisi√≥n, REQUERIR aprobaci√≥n de Gerencia General (Nodo 4),
-     * pasar a Facturaci√≥n, y finalizar.
+     * Caso de prueba: AdquisiciÛn por un total de $8,500.00 (Supera $5000)
+     * El flujo debe pasar Jefatura, evaluar el nodo de decisiÛn, REQUERIR aprobaciÛn de Gerencia General (Nodo 4),
+     * pasar a FacturaciÛn, y finalizar.
      */
     protected function testCasoCompraAltoMonto() {
         echo ">> 3. Test Caso Compra Alto Monto ($ 8,500.00)... \n";
@@ -174,7 +174,7 @@ class EXAWorkflowIntegrationTestSuite {
             'Sol_Val_Est' => '8500.00',
             'Cdc_Cod' => 'DEP_TI',
             'Prv_Sug' => 1,
-            'Sol_Jus' => 'Adquisici√≥n de equipamientos de servidores de TI para data center.',
+            'Sol_Jus' => 'AdquisiciÛn de equipamientos de servidores de TI para data center.',
             'Sol_Det' => 'Compra de Servidor Rack 1U.',
             'Emp_Cod' => 1,
             'Suc_Cod' => 1
@@ -185,7 +185,7 @@ class EXAWorkflowIntegrationTestSuite {
         );
 
         $cotizaciones = array(
-            array('Prv_Cod' => 1, 'Cot_Val' => 8500.00, 'Cot_Adj' => 'adquisiciones_sustentos/cot_serv.pdf', 'Cot_Sel' => 1, 'Cot_Jus' => 'Mejor oferta t√©cnica')
+            array('Prv_Cod' => 1, 'Cot_Val' => 8500.00, 'Cot_Adj' => 'adquisiciones_sustentos/cot_serv.pdf', 'Cot_Sel' => 1, 'Cot_Jus' => 'Mejor oferta tÈcnica')
         );
 
         // A. Guardar solicitud
@@ -198,31 +198,31 @@ class EXAWorkflowIntegrationTestSuite {
         $ins_cod = $instancia['Ins_Cod'];
         $this->assert($instancia['Nod_Act'] == 2, "La instancia debe iniciar en Jefatura (Nodo 2).");
 
-        // B. Aprobaci√≥n de Jefatura (Nodo 2) -> Avanza a Nodo 3 (Decisi√≥n)
-        // El motor eval√∫a el Nodo 3 y, al ser $8500 > $5000, REFIERE a Gerencia General (Nodo 4)
+        // B. AprobaciÛn de Jefatura (Nodo 2) -> Avanza a Nodo 3 (DecisiÛn)
+        // El motor eval˙a el Nodo 3 y, al ser $8500 > $5000, REFIERE a Gerencia General (Nodo 4)
         $action_res = $this->wf_mgr->procesarAccionUsuario($ins_cod, 'APROBAR', 'Aprobado y recomendado por depto TI.');
-        $this->assert($action_res['success'], "Error en aprobaci√≥n Jefatura.");
+        $this->assert($action_res['success'], "Error en aprobaciÛn Jefatura.");
 
         $instancia_post_jefatura = $this->obBD_datos->getRowConsultaSql("SELECT * FROM wf_instancias WHERE Ins_Cod = $ins_cod;", $this->obBD_conexion);
         // Debe estar en Nodo 4 (Gerencia General)
-        $this->assert($instancia_post_jefatura['Nod_Act'] == 4, "Al superar $5000, debi√≥ enrutarse a Gerencia General (Nodo 4). Nodo: " . $instancia_post_jefatura['Nod_Act']);
-        echo "   [PASO 1] Aprobada Jefatura. Decisi√≥n evalu√≥ Monto ($8500 > $5000) y enrut√≥ correctamente a Gerencia General (Nodo 4).\n";
+        $this->assert($instancia_post_jefatura['Nod_Act'] == 4, "Al superar $5000, debiÛ enrutarse a Gerencia General (Nodo 4). Nodo: " . $instancia_post_jefatura['Nod_Act']);
+        echo "   [PASO 1] Aprobada Jefatura. DecisiÛn evaluÛ Monto ($8500 > $5000) y enrutÛ correctamente a Gerencia General (Nodo 4).\n";
 
-        // C. Aprobaci√≥n de Gerencia General (Nodo 4) -> Avanza a Factura (Nodo 5)
-        $action_res_ger = $this->wf_mgr->procesarAccionUsuario($ins_cod, 'APROBAR', 'Compra autorizada estrat√©gicamente por Gerencia.', 'adquisiciones_sustentos/firma_gerencial.pdf');
-        $this->assert($action_res_ger['success'], "Error en aprobaci√≥n Gerencial.");
+        // C. AprobaciÛn de Gerencia General (Nodo 4) -> Avanza a Factura (Nodo 5)
+        $action_res_ger = $this->wf_mgr->procesarAccionUsuario($ins_cod, 'APROBAR', 'Compra autorizada estratÈgicamente por Gerencia.', 'adquisiciones_sustentos/firma_gerencial.pdf');
+        $this->assert($action_res_ger['success'], "Error en aprobaciÛn Gerencial.");
 
         $instancia_post_gerencia = $this->obBD_datos->getRowConsultaSql("SELECT * FROM wf_instancias WHERE Ins_Cod = $ins_cod;", $this->obBD_conexion);
-        $this->assert($instancia_post_gerencia['Nod_Act'] == 5, "Debi√≥ avanzar a Facturaci√≥n (Nodo 5). Nodo: " . $instancia_post_gerencia['Nod_Act']);
-        echo "   [PASO 2] Aprob√≥ Gerencia General con sustento f√≠sico. Avanz√≥ correctamente a Factura (Nodo 5).\n";
+        $this->assert($instancia_post_gerencia['Nod_Act'] == 5, "DebiÛ avanzar a FacturaciÛn (Nodo 5). Nodo: " . $instancia_post_gerencia['Nod_Act']);
+        echo "   [PASO 2] AprobÛ Gerencia General con sustento fÌsico. AvanzÛ correctamente a Factura (Nodo 5).\n";
 
         // D. Procesar Factura (Nodo 5) -> Fin (Nodo 6)
-        $action_res_fin = $this->wf_mgr->procesarAccionUsuario($ins_cod, 'APROBAR', 'Facturaci√≥n completada de forma correcta.', 'adquisiciones_sustentos/fac_serv.pdf');
-        $this->assert($action_res_fin['success'], "Error en aprobaci√≥n Facturaci√≥n.");
+        $action_res_fin = $this->wf_mgr->procesarAccionUsuario($ins_cod, 'APROBAR', 'FacturaciÛn completada de forma correcta.', 'adquisiciones_sustentos/fac_serv.pdf');
+        $this->assert($action_res_fin['success'], "Error en aprobaciÛn FacturaciÛn.");
 
         $instancia_final = $this->obBD_datos->getRowConsultaSql("SELECT * FROM wf_instancias WHERE Ins_Cod = $ins_cod;", $this->obBD_conexion);
         $this->assert($instancia_final['Ins_Est'] == 'F', "La instancia debe estar finalizada ('F').");
-        echo "   [PASO 3] Facturaci√≥n procesada. Flujo cerrado con √©xito ('F').\n";
+        echo "   [PASO 3] FacturaciÛn procesada. Flujo cerrado con Èxito ('F').\n";
         echo "   -> CASO ALTO MONTO: PASSED!\n\n";
     }
 
@@ -239,8 +239,8 @@ class EXAWorkflowIntegrationTestSuite {
             'Sol_Val_Est' => '6000.00',
             'Cdc_Cod' => 'DEP_TI',
             'Prv_Sug' => 1,
-            'Sol_Jus' => 'Prueba de validaci√≥n obligatoria.',
-            'Sol_Det' => 'Soporte t√©cnico.',
+            'Sol_Jus' => 'Prueba de validaciÛn obligatoria.',
+            'Sol_Det' => 'Soporte tÈcnico.',
             'Emp_Cod' => 1,
             'Suc_Cod' => 1
         );
@@ -257,26 +257,20 @@ class EXAWorkflowIntegrationTestSuite {
         $ins_cod = $instancia['Ins_Cod'];
         echo "   [DEBUG] Instancia creada ID: $ins_cod, Nodo Activo: " . $instancia['Nod_Act'] . ", Estado: " . $instancia['Ins_Est'] . "\n";
 
-        // 1. Intentar aprobar Jefatura (Nodo 2) con COMENTARIO VAC√çO (Debe fallar porque Nod_Com_Obl = 1)
-        try {
-            $action_res = $this->wf_mgr->procesarAccionUsuario($ins_cod, 'APROBAR', '  '); // Solo espacios
-            $this->assert(false, "El motor debi√≥ denegar la transacci√≥n por comentario obligatorio vac√≠o.");
-        } catch (Exception $e) {
-            $this->assert(strpos($e->getMessage(), "comentario es obligatorio") !== false, "Error inesperado al validar comentario obligatorio: " . $e->getMessage());
-            echo "   [OK] El motor deneg√≥ correctamente la aprobaci√≥n sin comentarios en Jefatura.\n";
-        }
+        // 1. Intentar aprobar Jefatura (Nodo 2) con COMENTARIO VACÕO (Debe fallar porque Nod_Com_Obl = 1)
+        $action_res = $this->wf_mgr->procesarAccionUsuario($ins_cod, 'APROBAR', '  '); // Solo espacios
+        $this->assert(!$action_res['success'], "El motor debiÛ denegar la transacciÛn por comentario obligatorio vacÌo.");
+        $this->assert(strpos($action_res['message'], "comentario es obligatorio") !== false, "Error inesperado al validar comentario obligatorio: " . $action_res['message']);
+        echo "   [OK] El motor denegÛ correctamente la aprobaciÛn sin comentarios en Jefatura.\n";
 
-        // Aprobar de forma v√°lida para avanzar a Gerencia
-        $this->wf_mgr->procesarAccionUsuario($ins_cod, 'APROBAR', 'Comentario v√°lido obligatorio para avanzar.');
+        // Aprobar de forma v·lida para avanzar a Gerencia
+        $this->wf_mgr->procesarAccionUsuario($ins_cod, 'APROBAR', 'Comentario v·lido obligatorio para avanzar.');
 
         // 2. Intentar aprobar Gerencia (Nodo 4) sin ADJUNTO (Debe fallar porque Nod_Adj_Obl = 1)
-        try {
-            $action_res_ger = $this->wf_mgr->procesarAccionUsuario($ins_cod, 'APROBAR', 'Aprobado sin adjunto por Gerente.', null); // Adjunto null
-            $this->assert(false, "El motor debi√≥ denegar la transacci√≥n por adjunto obligatorio ausente.");
-        } catch (Exception $e) {
-            $this->assert(strpos($e->getMessage(), "archivo adjunto como sustento") !== false, "Error inesperado al validar adjunto obligatorio: " . $e->getMessage());
-            echo "   [OK] El motor deneg√≥ correctamente la aprobaci√≥n sin adjuntos en Gerencia General.\n";
-        }
+        $action_res_ger = $this->wf_mgr->procesarAccionUsuario($ins_cod, 'APROBAR', 'Aprobado sin adjunto por Gerente.', null); // Adjunto null
+        $this->assert(!$action_res_ger['success'], "El motor debiÛ denegar la transacciÛn por adjunto obligatorio ausente.");
+        $this->assert(strpos($action_res_ger['message'], "archivo adjunto como sustento") !== false, "Error inesperado al validar adjunto obligatorio: " . $action_res_ger['message']);
+        echo "   [OK] El motor denegÛ correctamente la aprobaciÛn sin adjuntos en Gerencia General.\n";
 
         echo "   -> TEST VALIDACIONES OBLIGATORIAS: PASSED!\n";
     }
