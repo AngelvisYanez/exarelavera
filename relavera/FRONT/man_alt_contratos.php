@@ -394,41 +394,10 @@ function man_con_contratos_validar_pdf($file) {
     if (!isset($file['error']) || $file['error'] !== UPLOAD_ERR_OK) {
         throw new Exception('Error al subir el archivo PDF.');
     }
-    $maxSize = 10 * 1024 * 1024;
-    if ($file['size'] > $maxSize) {
-        throw new Exception('El PDF no puede superar 10 MB.');
-    }
     $nombre = isset($file['name']) ? $file['name'] : '';
     $ext = strtolower(pathinfo($nombre, PATHINFO_EXTENSION));
     if ($ext !== 'pdf') {
         throw new Exception('Solo se permiten archivos PDF.');
-    }
-
-    $mime = '';
-    if (function_exists('finfo_open')) {
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        if ($finfo) {
-            $mime = finfo_file($finfo, $file['tmp_name']);
-            finfo_close($finfo);
-        }
-    } elseif (function_exists('mime_content_type') && is_file($file['tmp_name'])) {
-        $mime = mime_content_type($file['tmp_name']);
-    }
-
-    if ($mime !== '' && $mime !== 'application/pdf' && $mime !== 'application/x-pdf') {
-        throw new Exception('El archivo seleccionado no es un PDF valido.');
-    }
-
-    // Validacion por cabecera %PDF cuando no hay extension fileinfo
-    if ($mime === '' && is_readable($file['tmp_name'])) {
-        $fh = @fopen($file['tmp_name'], 'rb');
-        if ($fh) {
-            $header = fread($fh, 5);
-            fclose($fh);
-            if (strncmp($header, '%PDF-', 5) !== 0) {
-                throw new Exception('El archivo seleccionado no es un PDF valido.');
-            }
-        }
     }
 }
 
@@ -1333,7 +1302,7 @@ if (!empty($usuarioActual['Usuario'])) {
 
     <script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/man_val_con_contratos.js?v=31"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_con_contratos.js?v=32"></script>
 
     <!-- Div oculto para imprimir reporte de contratos -->
     <div id="imprimirContratos" class="contratos-reporte-wrap" style="display: none;">
@@ -1459,6 +1428,15 @@ if (!empty($usuarioActual['Usuario'])) {
             <?php echo $obBD_con1->getReportFooter($Ses_Suc_Cod, $Ses_Usu_Cod, $obBD_conexion); ?>
         </div>
     </div>
+
+    <!-- Cargador Visual / Loader -->
+    <div id="loader" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.7); z-index: 9999; text-align: center; padding-top: 20%;">
+        <div style="display: inline-block; padding: 25px 35px; background: #fff; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+            <i class="fa fa-spinner fa-spin fa-3x fa-fw" style="color: #334a5f;"></i>
+            <div style="margin-top: 15px; font-weight: bold; color: #334a5f; font-size: 14px;">Procesando solicitud...</div>
+        </div>
+    </div>
+
     <?php
     $obBD_con1->liberar();
     $obBD_conexion->cerrar();

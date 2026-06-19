@@ -520,6 +520,20 @@ function initEventosContratos() {
             $('#contratoDialog').dialog('close');
         }
     });
+
+    $('#Mco_Fap, #Mco_Fca').on('input change', function () {
+        limitarAnioInput($(this));
+    });
+}
+
+function limitarAnioInput($input) {
+    var val = $input.val();
+    if (!val) return;
+    var partes = val.split('-');
+    if (partes[0] && partes[0].length > 4) {
+        partes[0] = partes[0].substring(0, 4);
+        $input.val(partes.join('-'));
+    }
 }
 
 function resetRespaldos() {
@@ -589,14 +603,8 @@ function esPdfValido(file) {
     if (!file) {
         return false;
     }
-    if (file.type && file.type !== 'application/pdf') {
-        return false;
-    }
     if (file.name && file.name.split('.').pop().toLowerCase() !== 'pdf') {
-        return false;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-        $.alert('El archivo "' + file.name + '" supera 10 MB.');
+        $.alert('Solo se permiten archivos PDF: ' + file.name);
         return false;
     }
     return true;
@@ -934,6 +942,25 @@ function buildRespaldoFormData(mcoCod) {
     for (i = 0; i < respaldosEliminar.length; i++) {
         fd.append('Mcd_Del[]', respaldosEliminar[i]);
     }
+    // Automatically include files in the input if user forgot to click "Agregar"
+    var fileInput = $('#Mcd_File_New')[0];
+    if (fileInput && fileInput.files && fileInput.files.length > 0) {
+        var tituloBase = $.trim($('#Mcd_Tip_New').val());
+        var n = fileInput.files.length;
+        for (i = 0; i < n; i++) {
+            var file = fileInput.files[i];
+            if (esPdfValido(file)) {
+                var titulo = tituloBase;
+                if (!titulo) {
+                    titulo = file.name.replace(/\.pdf$/i, '');
+                } else if (n > 1) {
+                    titulo = tituloBase + ' (' + (i + 1) + ')';
+                }
+                fd.append('Mcd_Tip[]', titulo);
+                fd.append('Mcd_File[]', file);
+            }
+        }
+    }
     return fd;
 }
 
@@ -943,7 +970,9 @@ function guardarRespaldos() {
         $.alert('Contrato no valido.');
         return;
     }
-    if (respaldosPendientes.length === 0 && respaldosEliminar.length === 0) {
+    var fileInput = $('#Mcd_File_New')[0];
+    var tieneArchivosEnInput = fileInput && fileInput.files && fileInput.files.length > 0;
+    if (respaldosPendientes.length === 0 && respaldosEliminar.length === 0 && !tieneArchivosEnInput) {
         $.alert('Agregue al menos un PDF o marque respaldos para eliminar.');
         return;
     }
@@ -952,6 +981,7 @@ function guardarRespaldos() {
     fd.append('guardarRespaldosAjax', '1');
 
     $('#btnGuardarRespaldos').prop('disabled', true);
+    $('#loader').show();
     $.ajax({
         url: 'man_alt_contratos.php',
         type: 'POST',
@@ -972,6 +1002,7 @@ function guardarRespaldos() {
         $.alert('Error de conexion con el servidor');
     }).always(function () {
         $('#btnGuardarRespaldos').prop('disabled', false);
+        $('#loader').hide();
     });
 }
 
@@ -1008,7 +1039,28 @@ function guardarContrato() {
         fd.append('Mcd_Del[]', respaldosEliminar[i]);
     }
 
+    // Automatically include files in the input if user forgot to click "Agregar"
+    var fileInput = $('#Mcd_File_New')[0];
+    if (fileInput && fileInput.files && fileInput.files.length > 0) {
+        var tituloBase = $.trim($('#Mcd_Tip_New').val());
+        var n = fileInput.files.length;
+        for (i = 0; i < n; i++) {
+            var file = fileInput.files[i];
+            if (esPdfValido(file)) {
+                var titulo = tituloBase;
+                if (!titulo) {
+                    titulo = file.name.replace(/\.pdf$/i, '');
+                } else if (n > 1) {
+                    titulo = tituloBase + ' (' + (i + 1) + ')';
+                }
+                fd.append('Mcd_Tip[]', titulo);
+                fd.append('Mcd_File[]', file);
+            }
+        }
+    }
+
     $('#btnGuardarContrato').prop('disabled', true);
+    $('#loader').show();
     $.ajax({
         url: 'man_alt_contratos.php',
         type: 'POST',
@@ -1028,6 +1080,7 @@ function guardarContrato() {
         $.alert('Error de conexion con el servidor');
     }).always(function () {
         $('#btnGuardarContrato').prop('disabled', false);
+        $('#loader').hide();
     });
 }
 
