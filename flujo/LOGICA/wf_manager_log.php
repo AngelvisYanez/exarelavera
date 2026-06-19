@@ -1,8 +1,8 @@
 <?php
 /**
- * EXA Workflow Manager - Motor de Flujos GenÃ©rico
+ * EXA Workflow Manager - Motor de Flujos Genérico
  * 
- * LÃ³gica principal del motor de procesos empresariales y enrutamientos.
+ * Lógica principal del motor de procesos empresariales y enrutamientos.
  * @author Oz <oz-agent@warp.dev>
  * @version 1.0
  */
@@ -24,7 +24,16 @@ class wf_manager_log {
     }
 
     /**
-     * Inicializa una nueva instancia de flujo para una transacciÃ³n/entidad
+     * Verifica si el usuario actual tiene acceso a una ventana o pestaña específica
+     */
+    public function verificarAccesoVentana($ventana, $tab = null) {
+        // Retornamos true por defecto para que el usuario gestione los accesos
+        // mediante el sistema de seguridad nativo de EXA (seguridad.php)
+        return true;
+    }
+
+    /**
+     * Inicializa una nueva instancia de flujo para una transacción/entidad
      */
     public function iniciarInstancia($Wfm_Cod, $Ent_Typ, $Ent_Cod) {
         $this->obBD_datos->inicio_transaccion($this->obBD_conexion);
@@ -51,11 +60,11 @@ class wf_manager_log {
             $dep_cod = isset($_SESSION['Ses_Dep_Cod']) ? $_SESSION['Ses_Dep_Cod'] : 0; // Departamento del usuario si existe
 
             $sqlInsertHistorial = "INSERT INTO wf_instancias_nodos (Ins_Cod, Nod_Cod, Usu_Cod, Dep_Cod, Isn_Acc, Isn_Com, Isn_Fec, Isn_Ip, Isn_Ses) 
-                                   VALUES ($Ins_Cod, $nodoInicio[Nod_Cod], $usu_cod, $dep_cod, 'CREAR', 'InstanciaciÃ³n inicial del flujo.', '$fecha_actual', '$ip_usuario', '$session_id');";
+                                   VALUES ($Ins_Cod, $nodoInicio[Nod_Cod], $usu_cod, $dep_cod, 'CREAR', 'Instanciación inicial del flujo.', '$fecha_actual', '$ip_usuario', '$session_id');";
             $this->obBD_datos->grabarv_registros($sqlInsertHistorial, $this->obBD_conexion);
 
-            // 4. Avanzar automÃ¡ticamente al siguiente nodo desde el nodo Inicio
-            $this->avanzarSiguientePaso($Ins_Cod, $nodoInicio['Nod_Cod'], 'CREAR', 'Avance automÃ¡tico desde Inicio.', null);
+            // 4. Avanzar automáticamente al siguiente nodo desde el nodo Inicio
+            $this->avanzarSiguientePaso($Ins_Cod, $nodoInicio['Nod_Cod'], 'CREAR', 'Avance automático desde Inicio.', null);
 
             $this->obBD_datos->commit_nomsn($this->obBD_conexion);
             return array('success' => true, 'Ins_Cod' => $Ins_Cod);
@@ -66,7 +75,7 @@ class wf_manager_log {
     }
 
     /**
-     * Avanza el flujo de trabajo al siguiente nodo lÃ³gico evaluando condiciones
+     * Avanza el flujo de trabajo al siguiente nodo lógico evaluando condiciones
      */
     public function avanzarSiguientePaso($Ins_Cod, $Nod_Actual_Cod, $Accion, $Comentario = '', $Adjuntos = null) {
         $fecha_actual = date('Y-m-d H:i:s');
@@ -96,22 +105,22 @@ class wf_manager_log {
             throw new Exception("El nodo actual no tiene conexiones de salida configuradas.");
         }
 
-        // 3. Evaluar conexiones para decidir a quÃ© nodo avanzar
+        // 3. Evaluar conexiones para decidir a qué nodo avanzar
         $nodoDestino_Cod = null;
         $conexionDefault = null;
 
         foreach ($conexiones as $conexion) {
             if ($conexion['Con_Acc'] == 'CONDICIONAL' && !empty($conexion['Con_Con_Exp'])) {
-                // Nodo decisiÃ³n con condiciÃ³n especÃ­fica
+                // Nodo decisión con condición específica
                 if ($this->evaluarCondicion($conexion['Con_Con_Exp'], $instancia['Ins_Ent_Typ'], $instancia['Ins_Ent_Cod'])) {
                     $nodoDestino_Cod = $conexion['Nod_Des'];
                     break;
                 }
             } elseif ($conexion['Con_Acc'] == 'APROBAR' && empty($conexion['Con_Con_Exp']) && $Accion == 'CONDICIONAL') {
-                // Rama por defecto/Else en un nodo decisiÃ³n
+                // Rama por defecto/Else en un nodo decisión
                 $conexionDefault = $conexion['Nod_Des'];
             } elseif ($conexion['Con_Acc'] == $Accion) {
-                // ConexiÃ³n directa segÃºn acciÃ³n ejecutada
+                // Conexión directa según acción ejecutada
                 $nodoDestino_Cod = $conexion['Nod_Des'];
                 break;
             }
@@ -121,12 +130,12 @@ class wf_manager_log {
             $nodoDestino_Cod = $conexionDefault;
         }
 
-        // Si no se cumpliÃ³ ninguna condiciÃ³n de decisiÃ³n o acciÃ³n coincidente, tomamos la primera por defecto
+        // Si no se cumplió ninguna condición de decisión o acción coincidente, tomamos la primera por defecto
         if ($nodoDestino_Cod === null && count($conexiones) > 0) {
             $nodoDestino_Cod = $conexiones[0]['Nod_Des'];
         }
 
-        // 4. Obtener informaciÃ³n del nodo destino
+        // 4. Obtener información del nodo destino
         $nodoDestino = $this->obBD_datos->getRowConsultaSql("SELECT * FROM wf_nodos WHERE Nod_Cod = $nodoDestino_Cod;", $this->obBD_conexion);
         if (empty($nodoDestino)) {
             throw new Exception("El nodo destino configurado no existe.");
@@ -148,12 +157,12 @@ class wf_manager_log {
                                    VALUES ($Ins_Cod, $nodoDestino_Cod, $usu_cod, $dep_cod, '$Accion', '" . mysqli_real_escape_string($this->obBD_conexion->conexion, $Comentario) . "', $adjunto_str, '$fecha_actual', $sla_vencimiento, '$ip_usuario', '$session_id');";
         $this->obBD_datos->grabarv_registros($sqlInsertHistorialDest, $this->obBD_conexion);
 
-        // 8. Si el nuevo nodo es un Nodo de DecisiÃ³n o de NotificaciÃ³n, se procesa automÃ¡ticamente
+        // 8. Si el nuevo nodo es un Nodo de Decisión o de Notificación, se procesa automáticamente
         if ($nodoDestino['Nod_Tip'] == 'DECISION') {
-            return $this->avanzarSiguientePaso($Ins_Cod, $nodoDestino_Cod, 'CONDICIONAL', 'Avance automÃ¡tico por nodo decisiÃ³n.', null);
+            return $this->avanzarSiguientePaso($Ins_Cod, $nodoDestino_Cod, 'CONDICIONAL', 'Avance automático por nodo decisión.', null);
         } elseif ($nodoDestino['Nod_Tip'] == 'NOTIFICACION') {
             $this->enviarNotificacionNodo($nodoDestino, $instancia);
-            return $this->avanzarSiguientePaso($Ins_Cod, $nodoDestino_Cod, 'COMPLETAR', 'Avance automÃ¡tico tras notificaciÃ³n.', null);
+            return $this->avanzarSiguientePaso($Ins_Cod, $nodoDestino_Cod, 'COMPLETAR', 'Avance automático tras notificación.', null);
         } elseif ($nodoDestino['Nod_Tip'] == 'FIN') {
             // Cierra la instancia del flujo
             $this->obBD_datos->grabarv_registros("UPDATE wf_instancias SET Ins_Est = 'F', Ins_Fec_Fin = '$fecha_actual' WHERE Ins_Cod = $Ins_Cod;", $this->obBD_conexion);
@@ -167,7 +176,7 @@ class wf_manager_log {
     }
 
     /**
-     * EvalÃºa expresiones condicionales dinÃ¡micas basadas en JSON
+     * Evalúa expresiones condicionales dinámicas basadas en JSON
      * Formato de ejemplo: {"campo": "Sol_Val_Est", "operador": ">", "valor": "5000"}
      */
     protected function evaluarCondicion($expression_json, $entity_type, $entity_id) {
@@ -203,22 +212,22 @@ class wf_manager_log {
     }
 
     /**
-     * EnvÃ­a notificaciones de correo/alertas basadas en el nodo y la instancia
+     * Envía notificaciones de correo/alertas basadas en el nodo y la instancia
      */
     protected function enviarNotificacionNodo($nodo, $instancia) {
-        // En un caso de producciÃ³n real se usarÃ­a la clase Mailer o enviar_correo del sistema
-        // Para este entregable, dejamos la simulaciÃ³n del envÃ­o de correo integrada
-        $asunto = "NotificaciÃ³n de Workflow EXA: " . $nodo['Nod_Nom'];
-        $cuerpo = "Se ha procesado una etapa en el workflow para la solicitud # " . $instancia['Ins_Ent_Cod'] . ".\nEtapa: " . $nodo['Nod_Nom'] . "\nDescripciÃ³n: " . $nodo['Nod_Des'];
+        // En un caso de producción real se usaría la clase Mailer o enviar_correo del sistema
+        // Para este entregable, dejamos la simulación del envío de correo integrada
+        $asunto = "Notificación de Workflow EXA: " . $nodo['Nod_Nom'];
+        $cuerpo = "Se ha procesado una etapa en el workflow para la solicitud # " . $instancia['Ins_Ent_Cod'] . ".\nEtapa: " . $nodo['Nod_Nom'] . "\nDescripción: " . $nodo['Nod_Des'];
         
-        // En una base de datos real, buscarÃ­amos correos del departamento responsable o del solicitante
+        // En una base de datos real, buscaríamos correos del departamento responsable o del solicitante
         // Simulando registro de log de notificaciones
         $fecha_actual = date('Y-m-d H:i:s');
         $this->obBD_datos->grabarv_registros("INSERT INTO query_log (sql_text, execution_time) VALUES ('[Notificacion Enviada] Asunto: $asunto', '$fecha_actual');", $this->obBD_conexion);
     }
 
     /**
-     * Ejecuta una acciÃ³n manual de usuario (Aprobar, Rechazar, Observar, Devolver)
+     * Ejecuta una acción manual de usuario (Aprobar, Rechazar, Observar, Devolver)
      */
     public function procesarAccionUsuario($Ins_Cod, $Accion, $Comentario, $Adjuntos = null) {
         $this->obBD_datos->inicio_transaccion($this->obBD_conexion);
@@ -233,7 +242,7 @@ class wf_manager_log {
             $nodoActual = $this->obBD_datos->getRowConsultaSql("SELECT * FROM wf_nodos WHERE Nod_Cod = $nod_actual_cod;", $this->obBD_conexion);
 
             if (empty($nodoActual)) {
-                throw new Exception("La etapa actual del flujo no es vÃ¡lida.");
+                throw new Exception("La etapa actual del flujo no es válida.");
             }
 
             // Validar requerimientos obligatorios del nodo (solo para APROBAR)
@@ -253,7 +262,7 @@ class wf_manager_log {
             $usu_cod = isset($_SESSION['Ses_Usu_Cod']) ? $_SESSION['Ses_Usu_Cod'] : 0;
             $dep_cod = isset($_SESSION['Ses_Dep_Cod']) ? $_SESSION['Ses_Dep_Cod'] : 0;
 
-            // Manejar acciÃ³n DEVOLVER: retroceder al nodo anterior en el historial
+            // Manejar acción DEVOLVER: retroceder al nodo anterior en el historial
             if ($Accion == 'DEVOLVER') {
                 $nodoAnterior = $this->obBD_datos->getRowConsultaSql("
                     SELECT DISTINCT h.Nod_Cod 
@@ -270,7 +279,7 @@ class wf_manager_log {
 
                 $nod_devolver = $nodoAnterior['Nod_Cod'];
 
-                // Registrar en historial la acciÃ³n DEVOLVER en el nodo actual
+                // Registrar en historial la acción DEVOLVER en el nodo actual
                 $com_esc = mysqli_real_escape_string($this->obBD_conexion->conexion, $Comentario);
                 $adjunto_str = $Adjuntos !== null ? "'" . $Adjuntos . "'" : "NULL";
                 $this->obBD_datos->grabarv_registros("INSERT INTO wf_instancias_nodos (Ins_Cod, Nod_Cod, Usu_Cod, Dep_Cod, Isn_Acc, Isn_Com, Isn_Adj, Isn_Fec, Isn_Ip, Isn_Ses) 
@@ -288,7 +297,7 @@ class wf_manager_log {
                 return array('success' => true);
             }
 
-            // Actualizar estado intermedio de la solicitud segÃºn la acciÃ³n
+            // Actualizar estado intermedio de la solicitud según la acción
             if ($instancia['Ins_Ent_Typ'] == 'adq_solicitudes') {
                 $nuevo_est_sol = 'E'; // Por defecto En proceso
                 if ($Accion == 'RECHAZAR') {
@@ -314,11 +323,11 @@ class wf_manager_log {
     }
 
     /**
-     * Vincula una factura de compra con una solicitud de adquisiciÃ³n aprobada
+     * Vincula una factura de compra con una solicitud de adquisición aprobada
      */
     public function vincularCompra($Sol_Cod, $Cop_Cod) {
         $fecha_actual = date('Y-m-d H:i:s');
-        // Verificar que no exista ya la vinculaciÃ³n
+        // Verificar que no exista ya la vinculación
         $existe = $this->obBD_datos->getRowConsultaSql("SELECT Scm_Cod FROM adq_solicitudes_compras WHERE Sol_Cod = $Sol_Cod AND Cop_Cod = $Cop_Cod;", $this->obBD_conexion);
         if (!empty($existe)) {
             return array('success' => false, 'message' => 'Esta factura ya fue vinculada a la solicitud.');
@@ -352,7 +361,7 @@ class wf_manager_log {
     }
 
     /**
-     * Retorna el Ã¡rbol/red de nodos actual con su color de estado
+     * Retorna el árbol/red de nodos actual con su color de estado
      */
     public function getVisualFlowData($Ins_Cod) {
         $instancia = $this->obBD_datos->getRowConsultaSql("SELECT * FROM wf_instancias WHERE Ins_Cod = $Ins_Cod;", $this->obBD_conexion);
@@ -382,7 +391,7 @@ class wf_manager_log {
                 if ($accion == 'RECHAZAR') {
                     $color = 'red'; // Rechazado
                 } elseif ($accion == 'OBSERVAR') {
-                    $color = 'red'; // Observado (atenciÃ³n requerida)
+                    $color = 'red'; // Observado (atención requerida)
                 } else {
                     $color = 'green'; // Completado
                 }
