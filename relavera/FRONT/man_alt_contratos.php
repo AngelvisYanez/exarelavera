@@ -392,7 +392,8 @@ function man_con_contratos_enviar_archivo($ruta, $nombre, $mime, $eliminarDespue
 
 function man_con_contratos_validar_pdf($file) {
     if (!isset($file['error']) || $file['error'] !== UPLOAD_ERR_OK) {
-        throw new Exception('Error al subir el archivo PDF.');
+        $dump = var_export($file, true);
+        throw new Exception('Error al subir el archivo PDF. Detalle del archivo: ' . $dump);
     }
     $nombre = isset($file['name']) ? $file['name'] : '';
     $ext = strtolower(pathinfo($nombre, PATHINFO_EXTENSION));
