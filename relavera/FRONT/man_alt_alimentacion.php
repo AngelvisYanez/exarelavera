@@ -178,15 +178,8 @@ if (isset($_POST['saveAlimentacionAjax'])) {
         $obBD_con1->fin_transaccion_nomsn($obBD_conexion);
         $resp['success'] = true;
 
-        // Construir mensaje detallado
-        $msg = "Alimentación procesada correctamente.<br>";
-        if (!empty($guardados)) {
-            $msg .= "<br><b>Guardados:</b><br> - " . implode("<br> - ", $guardados);
-        }
-        if (!empty($duplicados)) {
-            $msg .= "<br><br><b>Ya Existían:</b><br> - " . implode("<br> - ", $duplicados);
-        }
-        $resp['message'] = $msg;
+        // Mensaje simple: solo confirmar que se procesó
+        $resp['message'] = "Alimentación procesada correctamente.";
 
     } catch (Exception $e) {
         $obBD_con1->rollBack_nomsn($obBD_conexion);
@@ -280,6 +273,59 @@ if (isset($_GET['listAlimentacionGridAjax'])) {
     exit;
 }
 
+// Obtener preview detallado de alimentación para el modal
+if (isset($_GET['getPreviewAlimentacionAjax'])) {
+    $active_ids = isset($_GET['Active_Ids']) ? trim($_GET['Active_Ids']) : '';
+    $active_ids = preg_replace('/[^0-9,]/', '', $active_ids);
+    $active_ids = trim($active_ids, ',');
+    if (empty($active_ids)) {
+        $obBD_con1->echoJson(array('success' => false, 'message' => 'Identificador inválido.'));
+        exit;
+    }
+
+    $sql = "SELECT a.Mal_Fec, CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) AS Cho_Nom, v.Veh_Pla, a.Mal_Tip
+            FROM maquinaria_alimentacion a
+            INNER JOIN chofer c ON c.Cho_Cod = a.Cho_Cod
+            INNER JOIN persona p ON p.Prs_Cod = c.Prs_Cod
+            INNER JOIN vehiculo v ON v.Veh_Cod = a.Veh_Cod
+            WHERE a.Mal_Cod IN ($active_ids) AND a.Mal_Est = 'A'
+            ORDER BY FIELD(a.Mal_Tip, 'D', 'A', 'M', 'C')";
+
+    $rows = $obBD_con1->getArrayConsultaSql($sql, $obBD_conexion);
+    if (empty($rows)) {
+        $obBD_con1->echoJson(array('success' => false, 'message' => 'No se encontraron datos de alimentación.'));
+        exit;
+    }
+
+    $comidas = array();
+    $fecha = '';
+    $chofer = '';
+    $vehiculo = '';
+
+    foreach ($rows as $row) {
+        if (empty($fecha) && isset($row['Mal_Fec'])) {
+            $fecha = $row['Mal_Fec'];
+        }
+        if (empty($chofer) && isset($row['Cho_Nom'])) {
+            $chofer = $row['Cho_Nom'];
+        }
+        if (empty($vehiculo) && isset($row['Veh_Pla'])) {
+            $vehiculo = $row['Veh_Pla'];
+        }
+        if (isset($row['Mal_Tip']) && !in_array($row['Mal_Tip'], $comidas)) {
+            $comidas[] = $row['Mal_Tip'];
+        }
+    }
+
+    $obBD_con1->echoJson(array('success' => true, 'data' => array(
+        'fecha' => $fecha,
+        'chofer' => $chofer,
+        'vehiculo' => $vehiculo,
+        'comidas' => $comidas
+    )));
+    exit;
+}
+
 // Anular registro de alimentación (Múltiple)
 if (isset($_POST['anularAlimentacionAjax'])) {
     $resp = array('success' => false);
@@ -361,6 +407,77 @@ if (isset($_GET['getReporteAlimentacionAjax'])) {
     <?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
     <?php require_once("../../mascaras/model3/estilos/estilos.php") ?>
     <link rel="stylesheet" type="text/css" href="../RECURSOS/alimentacion.css" />
+    <style>
+        .preview-timeline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 18px;
+            padding: 0 10px;
+        }
+        .preview-step {
+            text-align: center;
+            width: 22%;
+            position: relative;
+            color: #b0b9c4;
+        }
+        .preview-step.active {
+            color: #1e88e5;
+        }
+        .preview-step::after {
+            content: '';
+            position: absolute;
+            top: 24px;
+            left: 50%;
+            width: calc(100% + 32px);
+            height: 2px;
+            background: #d8dde6;
+            z-index: -1;
+        }
+        .preview-step.active::after {
+            background: #1e88e5;
+        }
+        .preview-step:last-child::after {
+            display: none;
+        }
+        .preview-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 8px;
+            border-radius: 50%;
+            background: #f1f5f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+        }
+        .preview-step.active .preview-icon {
+            background: #1e88e5;
+            color: #fff;
+        }
+        .preview-icon i {
+            font-size: 20px;
+        }
+        .preview-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 8px;
+            border-radius: 50%;
+            background: #f1f5f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+        }
+        .preview-step.active .preview-icon {
+            background: #1e88e5;
+            color: #fff;
+        }
+        .preview-label {
+            font-size: 13px;
+            font-weight: 700;
+        }
+    </style>
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
     <script language="javascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
@@ -548,14 +665,39 @@ if (isset($_GET['getReporteAlimentacionAjax'])) {
         </div>
     </div>
 
-    <!-- Cargador Visual / Loader -->
-    <div id="loaderAlimentacion" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.7); z-index: 9999; text-align: center; padding-top: 20%;">
-        <div style="display: inline-block; padding: 25px 35px; background: #fff; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
-             <i class="fa fa-spinner fa-spin fa-3x fa-fw" style="color: #334a5f;"></i>
-             <div style="margin-top: 15px; font-weight: bold; color: #334a5f; font-size: 14px;">Procesando solicitud...</div>
+    <!-- Modal Preview de Alimentación -->
+    <div class="modal fade" id="modalPreviewAlimentacion" tabindex="-1" role="dialog" aria-labelledby="modalPreviewAlimentacionLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header exa-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="modalPreviewAlimentacionLabel"><i class="glyphicon glyphicon-eye-open"></i> Detalle de Alimentación</h4>
+                </div>
+                        <div class="modal-body" id="bodyPreviewAlimentacion">
+                    <!-- Contenido dinámico -->
+                    <div style="font-size:14px;">
+                        <p><strong>Fecha:</strong> <span id="pv_fecha"></span></p>
+                        <p><strong>Chofer:</strong> <span id="pv_chofer"></span></p>
+                        <p><strong>Vehículo:</strong> <span id="pv_vehiculo"></span></p>
+                        <p><strong>Comidas registradas:</strong></p>
+                        <div id="pv_comidas_list"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <script type="text/javascript" src="../VALIDACIONES/man_val_alimentacion.js?v=7"></script>
+    <!-- Cargador Visual / Loader -->
+    <div id="loaderAlimentacion" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.7); z-index: 9999; text-align: center; padding-top: 20%;">
+        <div style="display: inline-block; padding: 25px 35px; background: #fff; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+            <i class="fa fa-spinner fa-spin fa-3x fa-fw" style="color: #334a5f;"></i>
+            <div style="margin-top: 15px; font-weight: bold; color: #334a5f; font-size: 14px;">Procesando solicitud...</div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="../VALIDACIONES/man_val_alimentacion.js?v=8"></script>
 </BODY>
 </HTML>

@@ -194,6 +194,49 @@ function onChoferChangeModal(cho_cod) {
     });
 }
 
+// ==================== VALIDACIÓN DE SECUENCIA ====================
+// Función para validar que no se salten comidas (D -> A -> M -> C)
+function validarSecuenciaComidas(todosComidas, comidasExistentes, comidAsSeleccionadas) {
+    var orden = ['D', 'A', 'M', 'C'];
+    var nombres = { 'D': 'Desayuno', 'A': 'Almuerzo', 'M': 'Merienda', 'C': 'Cena' };
+    
+    // Si no hay comidas a guardar, no hay que validar secuencia
+    if (comidAsSeleccionadas.length === 0) {
+        return null;
+    }
+    
+    // Crear conjunto de todas las comidas después de guardar
+    var comidasTotales = {};
+    orden.forEach(function(c) {
+        comidasTotales[c] = false;
+    });
+    
+    comidasExistentes.forEach(function(c) {
+        comidasTotales[c] = true;
+    });
+    
+    comidAsSeleccionadas.forEach(function(c) {
+        comidasTotales[c] = true;
+    });
+    
+    // Validar que no haya huecos en la secuencia
+    var ultimaComida = -1;
+    for (var i = 0; i < orden.length; i++) {
+        if (comidasTotales[orden[i]]) {
+            ultimaComida = i;
+        } else if (ultimaComida > -1) {
+            // Hay un hueco: encontramos una comida anterior pero esta no existe
+            var comidasFaltantes = [];
+            for (var j = ultimaComida + 1; j < i; j++) {
+                comidasFaltantes.push(nombres[orden[j]]);
+            }
+            return 'No puede saltar comidas. Le falta registrar: ' + comidasFaltantes.join(', ') + '.';
+        }
+    }
+    
+    return null; // Secuencia válida
+}
+
 function cargarComidasRegistradas() {
     var fecha = $('#txtFechaModal').val();
     var chofer = $('#cboChoferModal').val();
@@ -267,6 +310,19 @@ function guardarAlimentacionModal() {
     // Bloquear si todas las raciones seleccionadas ya existían previamente
     if (nuevosTipos.length === 0 && tiposSeleccionados.length > 0) {
         mostrarAlertaError('No ha seleccionado ninguna ración de alimentación nueva para guardar (las seleccionadas ya fueron registradas).');
+        return;
+    }
+
+    // Validar que no salte comidas (secuencia: D -> A -> M -> C)
+    var comidas_registradas_conjunto = comidasRegistradas.slice(); // copiar array
+    var comidas_a_guardar_conjunto = nuevosTipos.slice(); // copiar array
+    var todas_comidas = comidas_registradas_conjunto.concat(comidas_a_guardar_conjunto);
+    
+    // Orden de secuencia válida
+    var orden = ['D', 'A', 'M', 'C'];
+    var errorsecuencia = validarSecuenciaComidas(todas_comidas, comidasRegistradas, nuevosTipos);
+    if (errorsecuencia) {
+        mostrarAlertaError(errorsecuencia);
         return;
     }
 
@@ -406,7 +462,8 @@ function initializeGrid() {
             }},
             { label: 'Acciones', name: 'acciones', width: 90, align: 'center', sortable: false, formatter: function(cell, opts, rowData) {
                 if (rowData.Mal_Est == 'A' && rowData.Active_Ids) {
-                    return '<button type="button" class="btn btn-xs exa-ui-btn-danger" onclick="anularRegistro(\'' + rowData.Active_Ids + '\');">Anular</button>';
+                    var previewBtn = '<button type="button" class="btn btn-xs btn-info" title="Ver detalle" onclick="previewRegistroByIds(\'' + rowData.Active_Ids + '\');"><i class="glyphicon glyphicon-eye-open"></i></button>';
+                    return previewBtn;
                 }
                 return '';
             }}
@@ -488,6 +545,64 @@ function anularRegistro(mal_cod) {
         });
     }
 }
+
+// Mostrar preview de las comidas de un registro usando Active_Ids
+function previewRegistroByIds(activeIds) {
+    if (!activeIds) {
+        alert('No se recibió el identificador del registro.');
+        return;
+    }
+
+    $.ajax({
+        url: 'man_alt_alimentacion.php',
+        data: { getPreviewAlimentacionAjax: 1, Active_Ids: activeIds },
+        type: 'GET',
+        dataType: 'json',
+        success: function(resp) {
+            if (!resp || !resp.success) {
+                mostrarAlertaError(resp && resp.message ? resp.message : 'No se pudo obtener el detalle de alimentación.');
+                return;
+            }
+
+            $('#pv_fecha').text(resp.data.fecha || '');
+            $('#pv_chofer').text(resp.data.chofer || '');
+            $('#pv_vehiculo').text(resp.data.vehiculo || '');
+
+            renderPreviewTimeline(resp.data.comidas || []);
+            $('#modalPreviewAlimentacion').modal('show');
+        },
+        error: function(xhr) {
+            mostrarAlertaError('Error al obtener el detalle: ' + xhr.responseText);
+        }
+    });
+}
+
+function renderPreviewTimeline(comidas) {
+    var orden = [
+        { clave: 'D', label: 'Desayuno', icon: 'glyphicon-fire' },
+        { clave: 'A', label: 'Almuerzo', icon: 'glyphicon-cutlery' },
+        { clave: 'M', label: 'Merienda', icon: 'glyphicon-time' },
+        { clave: 'C', label: 'Cena', icon: 'glyphicon-star' }
+    ];
+
+    var comidasSet = {};
+    comidas.forEach(function(tipo) {
+        comidasSet[tipo] = true;
+    });
+
+    var html = '<div class="preview-timeline">';
+    orden.forEach(function(item, index) {
+        var active = comidasSet[item.clave];
+        html += '<div class="preview-step' + (active ? ' active' : '') + '">';
+        html += '<div class="preview-icon"><i class="glyphicon ' + item.icon + '"></i></div>';
+        html += '<div class="preview-label">' + item.label + '</div>';
+        html += '</div>';
+    });
+    html += '</div>';
+
+    $('#pv_comidas_list').html(html);
+}
+
 
 // ==================== REPORTE ====================
 function generarReporte() {
