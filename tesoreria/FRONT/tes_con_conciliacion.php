@@ -239,7 +239,7 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
             transform: scale(1.6);
         }
     </style>
-    <script>var Usu_Adm=<? echo $Ses_Prs_Cod;?></script>
+    <script>var Usu_Adm="<?php echo isset($Ses_Prs_Cod) ? $Ses_Prs_Cod : ''; ?>";</script>
     <BODY>
         <div id="buscaDiv" class="panel panel-main" style="display:none">
             <div class="panel-heading exa-header">
