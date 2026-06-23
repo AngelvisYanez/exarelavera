@@ -33,19 +33,14 @@ function sentencias_vehiculos_choferes($id, $Par_Sql)
                 $sql = "SELECT COUNT(*) as total 
                         FROM chofer
                         INNER JOIN persona ON persona.Prs_Cod = chofer.Prs_Cod
-                        INNER JOIN manifiesto_chofer ON manifiesto_chofer.Cho_Cod = chofer.Cho_Cod
                         WHERE chofer.Emp_Cod = '$Par_Sql[0]' 
-                          AND manifiesto_chofer.Pla_Cod = '$Par_Sql[Pla_Cod]' 
                           AND chofer.Cho_Est = 'A' AND IFNULL(chofer.Cho_Tip, '') != 'CM' $search";
             } else {
                 $sql = "SELECT chofer.*, persona.Prs_Cod, persona.Prs_Nom, persona.Prs_Ape, persona.Prs_Ced,
-                               CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape) as nombre,
-                               manifiesto_chofer.Pla_Cod
+                               CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape) as nombre
                         FROM chofer
                         INNER JOIN persona ON persona.Prs_Cod = chofer.Prs_Cod
-                        INNER JOIN manifiesto_chofer ON manifiesto_chofer.Cho_Cod = chofer.Cho_Cod
                         WHERE chofer.Emp_Cod = '$Par_Sql[0]' 
-                          AND manifiesto_chofer.Pla_Cod = '$Par_Sql[Pla_Cod]' 
                           AND chofer.Cho_Est = 'A' AND IFNULL(chofer.Cho_Tip, '') != 'CM' $search
                         ORDER BY persona.Prs_Ape ASC, persona.Prs_Nom ASC " . $Par_Sql['limits'];
             }
@@ -63,19 +58,16 @@ function sentencias_vehiculos_choferes($id, $Par_Sql)
 
             if (empty($Par_Sql['limits'])) {
                 $sql = "SELECT COUNT(*) as total 
-                        FROM manifiesto_vehiculo
-                        INNER JOIN vehiculo ON vehiculo.Veh_Cod = manifiesto_vehiculo.Veh_Cod
+                        FROM vehiculo
                         WHERE vehiculo.Veh_Est = 'A' 
                           AND vehiculo.Emp_Cod = '$Par_Sql[0]' 
-                          AND manifiesto_vehiculo.Pla_Cod = '$Par_Sql[Pla_Cod]' 
                           AND IFNULL(vehiculo.Veh_Tip, '') != 'VM' $search";
             } else {
-                $sql = "SELECT vehiculo.Veh_Cod, vehiculo.Veh_Pla, vehiculo.Veh_Mar, vehiculo.Veh_Col, vehiculo.Veh_Cap, vehiculo.Veh_Tit, vehiculo.Prv_Cod,
+                $sql = "SELECT vehiculo.Veh_Cod, vehiculo.Veh_Pla, vehiculo.Veh_Mar, vehiculo.Veh_Col, vehiculo.Veh_Cap, vehiculo.Veh_Tit, vehiculo.Prv_Cod, vehiculo.Veh_Val,
                                CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape) as empresa_transporte
-                        FROM manifiesto_vehiculo
-                        INNER JOIN vehiculo ON vehiculo.Veh_Cod = manifiesto_vehiculo.Veh_Cod
-                        LEFT JOIN proveedor ON proveedor.Prv_Cod = vehiculo.Prv_Cod
-                        LEFT JOIN persona ON persona.Prs_Cod = proveedor.Prs_Cod
+                        FROM vehiculo
+                        LEFT JOIN proveedore ON proveedore.Prv_Cod = vehiculo.Prv_Cod
+                        LEFT JOIN persona ON persona.Prs_Cod = proveedore.Prs_Cod
                         WHERE vehiculo.Veh_Est = 'A' 
                           AND vehiculo.Emp_Cod = '$Par_Sql[0]' 
                           AND manifiesto_vehiculo.Pla_Cod = '$Par_Sql[Pla_Cod]' 
@@ -111,28 +103,126 @@ function sentencias_vehiculos_choferes($id, $Par_Sql)
             break;
 
         case 8:
-            // INSERT Relación manifiesto_chofer
-            $sql = "INSERT IGNORE INTO manifiesto_chofer (Cho_Cod, Pla_Cod)
-                    VALUES ('$Par_Sql[0]', '$Par_Sql[1]')";
+            // No se usa manifiesto_chofer
+            $sql = "SELECT 1";
             break;
 
         case 9:
             // INSERT Vehículo
-            $sql = "INSERT INTO vehiculo (Veh_Mar, Veh_Pla, Veh_Col, Veh_Cap, Veh_Tit, Emp_Cod, Veh_Tip, Mat_Cod, Veh_Est, Prv_Cod)
-                    VALUES ('$Par_Sql[0]', '$Par_Sql[1]', '$Par_Sql[2]', '$Par_Sql[3]', '$Par_Sql[4]', '$Par_Sql[5]', '', NULL, 'A', " . (empty($Par_Sql[7]) ? 'NULL' : "'$Par_Sql[7]'") . ")";
+            $sql = "INSERT INTO vehiculo (Veh_Mar, Veh_Pla, Veh_Col, Veh_Cap, Veh_Tit, Emp_Cod, Veh_Tip, Mat_Cod, Veh_Est, Prv_Cod, Veh_Val, Veh_Adi)
+                    VALUES ('$Par_Sql[0]', '$Par_Sql[1]', '$Par_Sql[2]', '$Par_Sql[3]', '$Par_Sql[4]', '$Par_Sql[5]', '', NULL, 'A', " . (empty($Par_Sql[7]) ? 'NULL' : "'$Par_Sql[7]'") . ", " . (empty($Par_Sql[8]) ? "'0.00'" : "'$Par_Sql[8]'") . ", '$Par_Sql[9]')";
             break;
 
         case 10:
             // UPDATE Vehículo
             $sql = "UPDATE vehiculo 
-                    SET Veh_Mar = '$Par_Sql[1]', Veh_Col = '$Par_Sql[2]', Veh_Cap = '$Par_Sql[3]', Veh_Tit = '$Par_Sql[4]', Mat_Cod = NULL, Prv_Cod = " . (empty($Par_Sql[6]) ? 'NULL' : "'$Par_Sql[6]'") . "
+                    SET Veh_Mar = '$Par_Sql[1]', Veh_Col = '$Par_Sql[2]', Veh_Cap = '$Par_Sql[3]', Veh_Tit = '$Par_Sql[4]', Mat_Cod = NULL, Prv_Cod = " . (empty($Par_Sql[6]) ? 'NULL' : "'$Par_Sql[6]'") . ", Veh_Val = " . (empty($Par_Sql[7]) ? "'0.00'" : "'$Par_Sql[7]'") . ", Veh_Adi = '$Par_Sql[8]'
                     WHERE Veh_Cod = '$Par_Sql[0]'";
             break;
 
         case 11:
-            // INSERT Relación manifiesto_vehiculo
-            $sql = "INSERT IGNORE INTO manifiesto_vehiculo (Veh_Cod, Pla_Cod)
-                    VALUES ('$Par_Sql[0]', '$Par_Sql[1]')";
+            // No se usa manifiesto_vehiculo
+            $sql = "SELECT 1";
+            break;
+
+        case 12:
+            // Buscar Vehículo por placa
+            $sql = "SELECT Veh_Mar, Veh_Col, Veh_Tit, Prv_Cod, Veh_Val, Veh_Adi 
+                    FROM vehiculo 
+                    WHERE Veh_Pla = '$Par_Sql[0]' AND Emp_Cod = '$Par_Sql[1]' AND Veh_Est = 'A' LIMIT 1";
+            break;
+
+        case 13:
+            // Buscar nombre de proveedor por ID
+            $sql = "SELECT CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape) as Prv_Nom 
+                    FROM proveedore 
+                    INNER JOIN persona ON persona.Prs_Cod = proveedore.Prs_Cod 
+                    WHERE proveedore.Prv_Cod = '$Par_Sql[0]' LIMIT 1";
+            break;
+
+        case 14:
+            // Buscar Proveedor por cédula
+            $sql = "SELECT proveedore.Prv_Cod, CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape) as Prv_Nom 
+                    FROM proveedore 
+                    INNER JOIN persona ON persona.Prs_Cod = proveedore.Prs_Cod 
+                    WHERE persona.Prs_Ced = '$Par_Sql[0]' LIMIT 1";
+            break;
+
+        case 15:
+            // Insertar persona (Para registro rápido de proveedor)
+            $sql = "INSERT INTO persona (Prs_Ced, Prs_Sex, Prs_Ape, Prs_Nom, Ciu_Cod, Prs_Dir, Ide_Cod, Prs_Tel, Prs_Cor, Prs_Est) VALUES ("
+                . "'$Par_Sql[Prs_Ced]',"
+                . "'$Par_Sql[Prs_Sex]',"
+                . "'$Par_Sql[Prs_Ape]',"
+                . "'$Par_Sql[Prs_Nom]',"
+                . "'$Par_Sql[Ciu_Cod]',"
+                . "'$Par_Sql[Prs_Dir]',"
+                . "'$Par_Sql[Ide_Cod]',"
+                . "'$Par_Sql[Prs_Tel]',"
+                . "'$Par_Sql[Prs_Cor]',"
+                . "'A');";
+            break;
+
+        case 16:
+            // Insertar proveedor (Para registro rápido de proveedor)
+            $sql = "INSERT INTO proveedore (Emp_Cod, Prs_Cod, Prv_Com, Prv_Tic, Prv_Esp, Prv_Con, Prv_Reg, Prv_Ris, Prv_Gct, Prv_Rim_Emp, Prv_Rim_Np, Prv_Ag_Ret, Prv_Est) VALUES ("
+                . "'$Par_Sql[Emp_Cod]',"
+                . "'$Par_Sql[Prs_Cod]',"
+                . "'$Par_Sql[Prv_Com]',"
+                . "'$Par_Sql[Prv_Tic]',"
+                . "'$Par_Sql[Prv_Esp]',"
+                . "'$Par_Sql[Prv_Con]',"
+                . "'$Par_Sql[Prv_Reg]',"
+                . "'$Par_Sql[Prv_Ris]',"
+                . "'$Par_Sql[Prv_Gct]',"
+                . "'$Par_Sql[Prv_Rim_Emp]',"
+                . "'$Par_Sql[Prv_Rim_Np]',"
+                . "'$Par_Sql[Prv_Ag_Ret]',"
+                . "'A');";
+            break;
+        case 17:
+            // Obtener marcas únicas
+            $sql = "SELECT DISTINCT Veh_Mar FROM vehiculo WHERE Veh_Mar IS NOT NULL AND Veh_Mar != '' ORDER BY Veh_Mar ASC";
+            break;
+
+        case 18:
+            // Obtener colores únicos
+            $sql = "SELECT DISTINCT Veh_Col FROM vehiculo WHERE Veh_Col IS NOT NULL AND Veh_Col != '' ORDER BY Veh_Col ASC";
+            break;
+
+        case 19:
+            // Obtener tipos/títulos únicos
+            $sql = "SELECT DISTINCT Veh_Tit FROM vehiculo WHERE Veh_Tit IS NOT NULL AND Veh_Tit != '' ORDER BY Veh_Tit ASC";
+            break;
+        case 20:
+            $sql = "SELECT Pla_Cod FROM manifiesto_usuario WHERE Usu_Cod = '$Par_Sql[0]' LIMIT 1";
+            break;
+        case 21:
+            $sql = "SELECT Pla_Cod FROM manifiesto_plantas mp LEFT JOIN cliente c ON c.Cli_Cod = mp.Cli_Cod WHERE mp.Pla_Est = 'A' AND c.Emp_Cod = '$Par_Sql[0]' LIMIT 1";
+            break;
+        case 22:
+            $sql = "SELECT Pla_Nom FROM manifiesto_plantas WHERE Pla_Cod = '$Par_Sql[0]' LIMIT 1";
+            break;
+        case 23:
+            $sql = "SELECT Ciu_Cod, Ciu_Des FROM ciudad WHERE Ciu_Des != '' ORDER BY Ciu_Des";
+            break;
+        case 24:
+            $sql = "SELECT Prs_Cod, Prs_Nom, Prs_Ape, Prs_Tel, Prs_San FROM persona WHERE Prs_Ced = '$Par_Sql[0]' LIMIT 1";
+            break;
+        case 25:
+            $sql = "SELECT Cho_Tli, Cho_Cli FROM chofer WHERE Prs_Cod = '$Par_Sql[0]' LIMIT 1";
+            break;
+        case 26:
+            $sql = "SELECT Prs_Cod FROM persona WHERE Prs_Ced = '$Par_Sql[0]' LIMIT 1";
+            break;
+        case 27:
+            $sql = "SELECT Prv_Cod FROM proveedore WHERE Prs_Cod = '$Par_Sql[0]' AND Emp_Cod = '$Par_Sql[1]' LIMIT 1";
+            break;
+        case 28:
+            $sql = "SELECT Cho_Cod, IFNULL(Cho_Tip, '') as Cho_Tip FROM chofer WHERE Prs_Cod = '$Par_Sql[0]' AND Emp_Cod = '$Par_Sql[1]' LIMIT 1";
+            break;
+        case 29:
+            $sql = "SELECT Veh_Cod, IFNULL(Veh_Tip, '') as Veh_Tip FROM vehiculo WHERE Veh_Pla = '$Par_Sql[0]' AND Emp_Cod = '$Par_Sql[1]' AND Veh_Est = 'A' LIMIT 1";
             break;
     }
     return $sql;
