@@ -878,7 +878,7 @@ if (isset($_POST['saveVehiculoAjax'])) {
         </div>
     </div>
 
-    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_vehiculos_choferes.js?v=6"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_vehiculos_choferes.js?v=7"></script>
 </BODY>
 
 </HTML>

@@ -139,3 +139,23 @@
     color: #ef4444;
     margin-left: 2px;
 }
+
+/* Modal Mini Opcion Styles */
+#modalMiniOpcion {
+    z-index: 10500;
+}
+#modalMiniOpcion .modal-header {
+    background: #334a5f;
+    color: white;
+    padding: 10px 15px;
+}
+#modalMiniOpcion .close {
+    color: white;
+    opacity: 0.8;
+}
+#modalMiniOpcion .modal-title {
+    font-size: 14px;
+}
+#modalMiniOpcion .modal-footer {
+    padding: 10px;
+}

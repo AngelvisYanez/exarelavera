@@ -48,6 +48,100 @@ $(function () {
         }
     });
 
+    // Detectar cuando el usuario termina de escribir la placa para autocompletar
+    $('#Veh_Pla').on('blur', function() {
+        var placa = $(this).val().trim().toUpperCase();
+        $(this).val(placa);
+        if (placa.length >= 7) {
+            buscarVehiculoPorPlaca(placa);
+        }
+    });
+
+    // Eventos para la búsqueda de Proveedor
+    $('#Prv_Ced').on('blur', function() {
+        var cedula = $(this).val().trim();
+        if (cedula.length === 10 || cedula.length === 13) {
+            buscarProveedor(cedula);
+        }
+    });
+
+    $('#Prv_Ced').on('keypress', function(e) {
+        if (e.which === 13) { // Enter
+            e.preventDefault();
+            var cedula = $(this).val().trim();
+            if (cedula.length === 10 || cedula.length === 13) {
+                buscarProveedor(cedula);
+            }
+        }
+    });
+
+    $('#Prv_Ced').on('input', function() {
+        $('#iconProveedorStatus').html('<i class="glyphicon glyphicon-minus" style="color: #999;"></i>');
+        $('#Prv_Nom').val('');
+        $('#Prv_Cod').val('');
+    });
+
+    // Sincronizar checkbox RUC con Select Documento en Modal Proveedor
+    $('#Reg_isRuc').on('change', function() {
+        var isChecked = $(this).is(':checked');
+        var currentVal = $('#Reg_Ide_Cod').val();
+        
+        var cedulaInput = $('#Reg_Prs_Ced');
+        var valCed = cedulaInput.val().trim();
+        
+        if (isChecked) {
+            if (valCed.length === 10) {
+                cedulaInput.val(valCed + "001");
+            }
+            if (currentVal !== '1') {
+                $('#Reg_Ide_Cod').val('1').trigger('change');
+            }
+        } else {
+            if (valCed.length === 13 && valCed.endsWith("001")) {
+                cedulaInput.val(valCed.substring(0, 10));
+            }
+            if (currentVal === '1') {
+                $('#Reg_Ide_Cod').val('2').trigger('change');
+            }
+        }
+    });
+
+    $('#Reg_Ide_Cod').on('change', function() {
+        var val = $(this).val();
+        var isRucChecked = $('#Reg_isRuc').is(':checked');
+        
+        var cedulaInput = $('#Reg_Prs_Ced');
+        var valCed = cedulaInput.val().trim();
+        
+        if (val === '1' && !isRucChecked) {
+            if (valCed.length === 10) {
+                cedulaInput.val(valCed + "001");
+            }
+            $('#Reg_isRuc').prop('checked', true);
+        } else if (val !== '1' && isRucChecked) {
+            if (valCed.length === 13 && valCed.endsWith("001")) {
+                cedulaInput.val(valCed.substring(0, 10));
+            }
+            $('#Reg_isRuc').prop('checked', false);
+        }
+        
+        // Ajustar maxlength del campo cédula/RUC
+        if (val === '1') {
+            $('#Reg_Prs_Ced').attr('maxlength', '13');
+        } else if (val === '2') {
+            $('#Reg_Prs_Ced').attr('maxlength', '10');
+        } else {
+            $('#Reg_Prs_Ced').attr('maxlength', '13');
+        }
+    });
+
+    // Hacer modal draggable si existe jQuery UI
+    if ($.fn.draggable) {
+        $('#modalProveedor .modal-dialog').draggable({
+            handle: ".modal-header"
+        });
+    }
+
     // Reajustar jqGrid al cambiar de tab
     $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
         $(window).trigger('resize');
@@ -80,6 +174,31 @@ function buscarPersonaPorCedula(cedula) {
         }
     }).fail(function() {
         console.error("Error al buscar persona por cédula o RUC.");
+    });
+}
+
+/**
+ * Busca si un vehículo existe por su placa y autocompleta el formulario para edición
+ * @param {string} placa 
+ */
+function buscarVehiculoPorPlaca(placa) {
+    $.post('', { buscarVehiculoPorPlacaAjax: 1, placa: placa }, function (res) {
+        if (res && res.success) {
+            $('#Veh_Mar').val(res.Veh_Mar);
+            $('#Veh_Col').val(res.Veh_Col);
+            $('#Veh_Tit').val(res.Veh_Tit);
+            $('#Veh_Val').val(res.Veh_Val);
+            $('#Veh_Adi').val(res.Veh_Adi);
+            $('#Prv_Cod').val(res.Prv_Cod);
+            if (res.Prv_Nom) {
+                $('#Prv_Nom').val(res.Prv_Nom);
+            }
+            if (res.Veh_Val !== undefined && res.Veh_Val !== null) {
+                $('#Veh_Val').val(res.Veh_Val);
+            }
+        }
+    }, 'json').fail(function() {
+        console.error("Error al buscar vehículo por placa.");
     });
 }
 
@@ -127,12 +246,13 @@ function initGrids() {
             { label: 'Color', name: 'Veh_Col', width: 100, align: 'center' },
             { label: 'Tipo', name: 'Veh_Tit', width: 110, align: 'center', formatter: function(v) {
                 if (v === 'V') return 'Volqueta';
-                if (v === 'B') return 'Bus';
+                if (v === 'B') return 'Bus(eta)';
                 if (v === 'C') return 'Camioneta';
                 if (v === 'T') return 'Tráiler';
-                if (v === 'M') return 'Mixer';
+                if (v === 'M') return 'Maquinaria';
                 return v || '';
             }},
+            { label: 'Valor Hora', name: 'Veh_Val', width: 90, align: 'right', formatter: 'number', formatoptions: { decimalSeparator: ".", thousandsSeparator: "", decimalPlaces: 2 } },
             { label: 'Empresa Transporte', name: 'empresa_transporte', width: 200 }
         ],
         viewrecords: true,
@@ -213,7 +333,9 @@ function mostrarFormulario(tipo) {
 /**
  * Guarda los datos del Chofer
  */
+var isGuardandoChofer = false;
 function guardarChofer() {
+    if (isGuardandoChofer) return;
     var ced = $('#Cho_Ced').val().trim();
     var tel = $('#Cho_Tel').val().trim();
     var nom = $('#Prs_Nom').val().trim();
@@ -240,12 +362,17 @@ function guardarChofer() {
         }
     }
 
+    isGuardandoChofer = true;
     $('#loader').show();
+    $('#formChofer').find('button[onclick="guardarChofer();"]').prop('disabled', true);
+    
     var formData = $('#formChofer').serialize();
     formData += '&saveChoferAjax=1';
 
     $.post('', formData, function (res) {
         $('#loader').hide();
+        isGuardandoChofer = false;
+        $('#formChofer').find('button[onclick="guardarChofer();"]').prop('disabled', false);
         if (res && res.success) {
             $.alert(res.message || "Chofer registrado exitosamente.", function() {
                 mostrarListado();
@@ -256,6 +383,8 @@ function guardarChofer() {
         }
     }, 'json').fail(function() {
         $('#loader').hide();
+        isGuardandoChofer = false;
+        $('#formChofer').find('button[onclick="guardarChofer();"]').prop('disabled', false);
         $.alert("Error de comunicación con el servidor.");
     });
 }
@@ -263,12 +392,16 @@ function guardarChofer() {
 /**
  * Guarda los datos del Vehículo
  */
+var isGuardandoVehiculo = false;
 function guardarVehiculo() {
+    if (isGuardandoVehiculo) return;
     var prv = $('#Prv_Cod').val();
     var pla = $('#Veh_Pla').val().trim().toUpperCase();
-    var mar = $('#Veh_Mar').val().trim();
-    var col = $('#Veh_Col').val().trim();
+    var mar = $('#Veh_Mar').val();
+    var col = $('#Veh_Col').val();
     var tit = $('#Veh_Tit').val();
+    var val = $('#Veh_Val').val().trim();
+    var adi = $('#Veh_Adi').val().trim();
 
     // Guardar placa en mayúsculas
     $('#Veh_Pla').val(pla);
@@ -276,6 +409,19 @@ function guardarVehiculo() {
     if (!prv || !pla || !mar || !col || !tit) {
         $.alert("Todos los campos marcados con asterisco (*) son obligatorios, incluido el Proveedor.");
         return;
+    }
+    
+    if (val !== '') {
+        var numVal = parseFloat(val);
+        if (isNaN(numVal) || numVal < 0) {
+            $.alert("El valor pactado por hora debe ser un número mayor o igual a 0.");
+            return;
+        }
+        var partes = val.split('.');
+        if (partes[0].length > 10 || (partes[1] && partes[1].length > 2)) {
+            $.alert("El valor pactado por hora no cumple con el formato (máximo 10 enteros y 2 decimales).");
+            return;
+        }
     }
 
     // Validar placa (Formato ecuatoriano: AAA-1234 o similar, 7 u 8 caracteres)
@@ -285,12 +431,17 @@ function guardarVehiculo() {
         return;
     }
 
+    isGuardandoVehiculo = true;
     $('#loader').show();
+    $('#formVehiculo').find('button[onclick="guardarVehiculo();"]').prop('disabled', true);
+    
     var formData = $('#formVehiculo').serialize();
     formData += '&saveVehiculoAjax=1';
 
     $.post('', formData, function (res) {
         $('#loader').hide();
+        isGuardandoVehiculo = false;
+        $('#formVehiculo').find('button[onclick="guardarVehiculo();"]').prop('disabled', false);
         if (res && res.success) {
             $.alert(res.message || "Vehículo registrado exitosamente.", function() {
                 mostrarListado();
@@ -301,6 +452,8 @@ function guardarVehiculo() {
         }
     }, 'json').fail(function() {
         $('#loader').hide();
+        isGuardandoVehiculo = false;
+        $('#formVehiculo').find('button[onclick="guardarVehiculo();"]').prop('disabled', false);
         $.alert("Error de comunicación con el servidor.");
     });
 }
@@ -320,13 +473,152 @@ function buscarProveedor(cedula) {
         if (res && res.success) {
             $('#Prv_Cod').val(res.Prv_Cod);
             $('#Prv_Nom').val(res.Prv_Nom);
+            $('#iconProveedorStatus').html('<i class="glyphicon glyphicon-ok" style="color: green;"></i>');
         } else {
             $('#Prv_Cod').val('');
             $('#Prv_Nom').val('');
-            $.alert(res.message || "Proveedor no encontrado.");
+            $('#iconProveedorStatus').html('<i class="glyphicon glyphicon-remove" style="color: red;"></i>');
+            var msg = res.message || "Proveedor no encontrado. ¿Desea registrarlo ahora?";
+            if (typeof $.createDialogConfirm === 'function') {
+                $.createDialogConfirm(msg, null, function() {
+                    abrirModalProveedor(cedula);
+                });
+            } else {
+                if (confirm(msg)) {
+                    abrirModalProveedor(cedula);
+                }
+            }
         }
     }, 'json').fail(function() {
         $('#loader').hide();
         $.alert("Error de comunicación con el servidor.");
+    });
+}
+
+function abrirModalProveedor(cedula) {
+    var isRuc = false;
+    var currentCod = '2'; // Cédula por defecto
+    if (cedula && cedula.length === 13) {
+        isRuc = true;
+        currentCod = '1';
+    }
+
+    document.getElementById('formRegistroProveedor').reset();
+    $('#Reg_Prs_Ced').val(cedula || '');
+    $('#Reg_isRuc').prop('checked', isRuc);
+    $('#Reg_Ide_Cod').val(currentCod).trigger('change');
+    toggleTiposProveedor('N');
+
+    $('#modalProveedor').modal('show');
+}
+
+function abrirMiniModal(selectId, label) {
+    $('#tituloMiniModal').text('Agregar ' + label);
+    $('#miniModalSelectId').val(selectId);
+    $('#miniModalInput').val('');
+    $('#modalMiniOpcion').modal('show');
+    
+    setTimeout(function() {
+        $('#miniModalInput').focus();
+    }, 500);
+}
+
+function guardarMiniModal() {
+    var val = $('#miniModalInput').val().trim().toUpperCase();
+    var selectId = $('#miniModalSelectId').val();
+    
+    if (val !== '') {
+        var exists = false;
+        $('#' + selectId + ' option').each(function() {
+            if ($(this).val().toUpperCase() === val) {
+                exists = true;
+                return false;
+            }
+        });
+        
+        if (!exists) {
+            $('#' + selectId).append($('<option>', {
+                value: val,
+                text: val
+            }));
+        }
+        
+        $('#' + selectId).val(val);
+    }
+    
+    $('#modalMiniOpcion').modal('hide');
+}
+
+function toggleTiposProveedor(tipo) {
+    if (tipo === 'J') {
+        $('.reg_natural').hide();
+        $('.reg_juridico').show();
+    } else {
+        $('.reg_natural').show();
+        $('.reg_juridico').hide();
+    }
+}
+
+var guardandoProveedor = false;
+function guardarProveedorRapido() {
+    if (guardandoProveedor) return;
+
+    var form = document.getElementById('formRegistroProveedor');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    // Validar identificación usando la librería del framework
+    var cedula = $('#Reg_Prs_Ced').val().trim();
+    if (typeof validaNoIdentif === 'function') {
+        var resVal = validaNoIdentif(cedula);
+        if (!resVal.success) {
+            $.alert(resVal.message || "La identificación ingresada no es válida.");
+            return;
+        }
+    } else {
+        if (cedula.length < 10 || cedula.length > 13) {
+            $.alert("La identificación debe tener entre 10 y 13 dígitos.");
+            return;
+        }
+    }
+
+    var formData = new FormData(form);
+    formData.append('saveProveedorRapidoAjax', 1);
+
+    guardandoProveedor = true;
+    $("#loader").show();
+    $('#modalProveedor .btn-primary').prop('disabled', true);
+
+    $.ajax({
+        url: '',
+        type: 'POST',
+        dataType: 'json',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function (response) {
+            $("#loader").hide();
+            guardandoProveedor = false;
+            $('#modalProveedor .btn-primary').prop('disabled', false);
+
+            if (response && response.success) {
+                $('#modalProveedor').modal('hide');
+                
+                $('#Prv_Ced').val(response.Prs_Ced);
+                $('#Prv_Cod').val(response.Prv_Cod);
+                $('#Prv_Nom').val(response.Prv_Nom);
+                $('#iconProveedorStatus').html('<i class="glyphicon glyphicon-ok" style="color: green;"></i>');
+            } else {
+                $.alert(response.message || "Ocurrió un error al registrar el proveedor.");
+            }
+        },
+        error: function () {
+            $("#loader").hide();
+            guardandoProveedor = false;
+            $('#modalProveedor .btn-primary').prop('disabled', false);
+            $.alert('Error de conexión al servidor.');
+        }
     });
 }
