@@ -22,6 +22,7 @@ if (isset($dashPersonalAjax)) {
     $byTcf = $obBD_con1->getArrayConsulta(29, $Ses_Emp_Cod, $obBD_conexion);
     $byCon = $obBD_con1->getArrayConsulta(30, $Ses_Emp_Cod, $obBD_conexion);
     $bySan = $obBD_con1->getArrayConsulta(31, $Ses_Emp_Cod, $obBD_conexion);
+    $byEdad = $obBD_con1->getArrayConsulta(32, $Ses_Emp_Cod, $obBD_conexion);
     $empCod = intval($Ses_Emp_Cod);
     $pecUltSql = "(SELECT pec.Pec_Cod
         FROM perio_cont pec
@@ -108,6 +109,7 @@ if (isset($dashPersonalAjax)) {
     utf8_encode_deep($byTcf);
     utf8_encode_deep($byCon);
     utf8_encode_deep($bySan);
+    utf8_encode_deep($byEdad);
     if (is_array($ultRoles)) {
         utf8_encode_deep($ultRoles);
     }
@@ -137,6 +139,7 @@ if (isset($dashPersonalAjax)) {
         'byTcf' => $byTcf,
         'byCon' => $byCon,
         'bySan' => $bySan,
+        'byEdad' => $byEdad,
         'ultimosRoles' => $ultRoles ? $ultRoles : array(),
         'ingresoMeta' => $ingresoMeta,
     ));
@@ -760,6 +763,17 @@ if (isset($dashPersonalAjax)) {
                     </div>
                 </div>
             </div>
+            <div class="row dash-row-cards">
+                <div class="col-md-12 col-sm-12">
+                    <div class="dash-card-modern">
+                        <div class="dash-card-head">
+                            <div><span class="dash-card-eyebrow">Demograf&iacute;a</span><h4 class="dash-card-title">Distribuci&oacute;n por edad</h4></div>
+                            <span class="dash-card-icon dash-icon-orange"><i class="fa fa-birthday-cake"></i></span>
+                        </div>
+                        <div class="dash-card-body"><div id="dashEdadHost" class="dash-chart-host"><canvas id="chartEdad"></canvas></div></div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="dash-section">
@@ -924,6 +938,7 @@ Chart.register(ChartDataLabels);
     var chartTcf = null;
     var chartCon = null;
     var chartConPie = null;
+    var chartEdad = null;
     var CHART_SIZE = {
         minBarH: 240,
         maxBarH: 560,
@@ -957,7 +972,7 @@ Chart.register(ChartDataLabels);
     var printState = null;
     var printBusy = false;
     var PRINT_HOST_IDS = [
-        'dashSexHost', 'dashTitHost', 'dashCiuHost', 'dashMovHost', 'dashRsoHost',
+        'dashSexHost', 'dashTitHost', 'dashCiuHost', 'dashEdadHost', 'dashMovHost', 'dashRsoHost',
         'dashAreHost', 'dashCarHost', 'dashSanHost', 'dashTcfHost', 'dashConHost', 'dashConPieHost'
     ];
     var PRINT_DOUGHNUT_HOSTS = { dashSexHost: 1, dashConPieHost: 1 };
@@ -966,6 +981,7 @@ Chart.register(ChartDataLabels);
         dashSexHost: function () { return chartSex; },
         dashTitHost: function () { return chartTit; },
         dashCiuHost: function () { return chartCiu; },
+        dashEdadHost: function () { return chartEdad; },
         dashMovHost: function () { return chartMov; },
         dashRsoHost: function () { return chartRso; },
         dashAreHost: function () { return chartAre; },
@@ -977,7 +993,7 @@ Chart.register(ChartDataLabels);
     };
 
     function allChartInstances() {
-        return [chartSex, chartTit, chartCiu, chartMov, chartRso, chartAre, chartCar, chartSan, chartTcf, chartCon, chartConPie].filter(function (c) {
+        return [chartSex, chartTit, chartCiu, chartEdad, chartMov, chartRso, chartAre, chartCar, chartSan, chartTcf, chartCon, chartConPie].filter(function (c) {
             return !!c;
         });
     }
@@ -1581,12 +1597,12 @@ Chart.register(ChartDataLabels);
     }
 
     function destroyAllCharts() {
-        [chartSex, chartTit, chartCiu, chartMov, chartRso, chartAre, chartCar, chartSan, chartTcf, chartCon, chartConPie].forEach(function (c) {
+        [chartSex, chartTit, chartCiu, chartEdad, chartMov, chartRso, chartAre, chartCar, chartSan, chartTcf, chartCon, chartConPie].forEach(function (c) {
             if (c) {
                 c.destroy();
             }
         });
-        chartSex = chartTit = chartCiu = chartMov = chartRso = chartAre = chartCar = chartSan = chartTcf = chartCon = chartConPie = null;
+        chartSex = chartTit = chartCiu = chartEdad = chartMov = chartRso = chartAre = chartCar = chartSan = chartTcf = chartCon = chartConPie = null;
     }
 
     function createBarChart(hostId, canvasId, labels, data, palette, datasetLabel, chartOpts) {
@@ -1963,7 +1979,7 @@ Chart.register(ChartDataLabels);
                 $('#kpiConIndef').text('0');
                 $('#kpiConAprob').text('0');
                 var msg0 = '<p class="text-muted text-center" style="padding:40px 10px;">No hay personal activo para esta empresa.</p>';
-                ['dashSexHost', 'dashTitHost', 'dashCiuHost', 'dashMovHost', 'dashRsoHost', 'dashAreHost', 'dashCarHost', 'dashSanHost', 'dashTcfHost', 'dashConHost', 'dashConPieHost'].forEach(function (id) {
+                ['dashSexHost', 'dashTitHost', 'dashCiuHost', 'dashEdadHost', 'dashMovHost', 'dashRsoHost', 'dashAreHost', 'dashCarHost', 'dashSanHost', 'dashTcfHost', 'dashConHost', 'dashConPieHost'].forEach(function (id) {
                     $('#' + id).removeClass('dash-chart-host--compact').html(msg0);
                 });
                 $('#dashIngTableWrap').empty();
@@ -2083,6 +2099,23 @@ Chart.register(ChartDataLabels);
                 dataC.push(0);
             }
             chartCiu = createBarChart('dashCiuHost', 'chartCiu', labelsC, dataC, themePalette(labelsC.length), 'Empleados');
+
+            var edadRows = res.byEdad || [];
+            var labelsEd = [];
+            var dataEd = [];
+            edadRows.forEach(function (row) {
+                labelsEd.push(row.edad_des || '(Sin rango)');
+                dataEd.push(parseInt(row.total, 10) || 0);
+            });
+            if (labelsEd.length === 0) {
+                labelsEd.push('Sin datos');
+                dataEd.push(0);
+            }
+            chartEdad = createBarChart('dashEdadHost', 'chartEdad', labelsEd, dataEd, themePalette(labelsEd.length), 'Empleados', {
+                showPct: true,
+                pctTotal: tot,
+                preferBar: true
+            });
 
             // Gráfico por tipo de movilización
             var movRows = res.byMov || [];

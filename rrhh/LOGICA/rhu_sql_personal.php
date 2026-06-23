@@ -494,6 +494,35 @@ function sentencias_rrhh($id, $Par_Sql)
                     GROUP BY $sanGrp
                     ORDER BY FIELD($sanGrp, 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', '(Sin definir)'), $sanGrp";
             break;
+            // Dashboard: personal activo por rango de edad (persona.Prs_Fec)
+        case 32:
+            $emp = intval($Par_Sql[0]);
+            $sql = "SELECT datos.edad_ord, datos.edad_des, COUNT(*) AS total
+                    FROM (
+                        SELECT personal.Per_Cod,
+                        CASE
+                            WHEN persona.Prs_Fec IS NULL OR persona.Prs_Fec = '0000-00-00' OR persona.Prs_Fec > CURDATE() THEN 0
+                            WHEN TIMESTAMPDIFF(YEAR, persona.Prs_Fec, CURDATE()) < 25 THEN 1
+                            WHEN TIMESTAMPDIFF(YEAR, persona.Prs_Fec, CURDATE()) <= 34 THEN 2
+                            WHEN TIMESTAMPDIFF(YEAR, persona.Prs_Fec, CURDATE()) <= 44 THEN 3
+                            WHEN TIMESTAMPDIFF(YEAR, persona.Prs_Fec, CURDATE()) <= 54 THEN 4
+                            ELSE 5
+                        END AS edad_ord,
+                        CASE
+                            WHEN persona.Prs_Fec IS NULL OR persona.Prs_Fec = '0000-00-00' OR persona.Prs_Fec > CURDATE() THEN '(Sin fecha nac.)'
+                            WHEN TIMESTAMPDIFF(YEAR, persona.Prs_Fec, CURDATE()) < 25 THEN 'Menor de 25'
+                            WHEN TIMESTAMPDIFF(YEAR, persona.Prs_Fec, CURDATE()) <= 34 THEN '25 - 34'
+                            WHEN TIMESTAMPDIFF(YEAR, persona.Prs_Fec, CURDATE()) <= 44 THEN '35 - 44'
+                            WHEN TIMESTAMPDIFF(YEAR, persona.Prs_Fec, CURDATE()) <= 54 THEN '45 - 54'
+                            ELSE '55 o mas'
+                        END AS edad_des
+                        FROM personal
+                        INNER JOIN persona ON persona.Prs_Cod = personal.Prs_Cod
+                        WHERE personal.Emp_Cod = $emp AND personal.Per_Est = 'A'
+                    ) datos
+                    GROUP BY datos.edad_ord, datos.edad_des
+                    ORDER BY datos.edad_ord";
+            break;
         //Update en la tabla persona y personal
         case 26:
             $sql = "UPDATE persona
