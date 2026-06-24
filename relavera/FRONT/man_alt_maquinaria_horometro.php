@@ -996,6 +996,6 @@ if (isset($_GET['getEvidenciasAjax'])) {
         </div>
     </div>
 
-    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_maquinaria_horometro.js?v=6"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_maquinaria_horometro.js?v=7"></script>
 </BODY>
 </HTML>

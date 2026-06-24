@@ -215,3 +215,19 @@
     background: #f8fafc;
     border-bottom: 1px solid #e2e8f0;
 }
+
+/* Asegurar que los mensajes de error/alerta aparezcan por delante de los modales (z-index de Bootstrap es 1050) */
+.ui-dialog,
+.ui-widget-overlay,
+.jconfirm,
+.sweet-alert,
+.swal2-container,
+.modal-alert {
+    z-index: 1060 !important;
+}
+
+.jconfirm-bg,
+.swal2-overlay,
+.ui-widget-overlay {
+    z-index: 1059 !important;
+}

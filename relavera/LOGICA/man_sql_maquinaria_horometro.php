@@ -9,21 +9,18 @@ function sentencias_maquinaria_horometro($id, $Par_Sql)
     $sql = "";
     switch ($id) {
         case 1:
-            // Obtener catálogo de maquinaria (vehículos) asociados a la planta del usuario
-            $sql = "SELECT v.Veh_Cod, v.Veh_Pla, v.Veh_Mar 
-                    FROM manifiesto_vehiculo mv 
-                    INNER JOIN vehiculo v ON v.Veh_Cod = mv.Veh_Cod 
-                    WHERE v.Veh_Est = 'A' AND mv.Pla_Cod = " . (int)$Par_Sql['Pla_Cod'] . "
-                    ORDER BY v.Veh_Pla ASC";
+            $sql = "SELECT DISTINCT Veh_Cod, Veh_Pla, Veh_Mar 
+                    FROM vehiculo 
+                    WHERE Veh_Est = 'A' AND Emp_Cod = " . (int)$Par_Sql['Emp_Cod'] . " AND (Veh_Tip != 'VM' OR Veh_Tip IS NULL)
+                    ORDER BY Veh_Pla ASC";
             break;
 
         case 2:
-            // Obtener catálogo de operadores (choferes) asociados a la planta del usuario
-            $sql = "SELECT c.Cho_Cod, CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) as nombre, p.Prs_Ced 
-                    FROM manifiesto_chofer mc 
-                    INNER JOIN chofer c ON c.Cho_Cod = mc.Cho_Cod 
+            $sql = "SELECT MIN(c.Cho_Cod) as Cho_Cod, CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) as nombre, p.Prs_Ced 
+                    FROM chofer c 
                     INNER JOIN persona p ON p.Prs_Cod = c.Prs_Cod 
-                    WHERE c.Cho_Est = 'A' AND mc.Pla_Cod = " . (int)$Par_Sql['Pla_Cod'] . "
+                    WHERE c.Cho_Est = 'A' AND c.Emp_Cod = " . (int)$Par_Sql['Emp_Cod'] . " AND (c.Cho_Tip != 'CM' OR c.Cho_Tip IS NULL)
+                    GROUP BY p.Prs_Cod, p.Prs_Nom, p.Prs_Ape, p.Prs_Ced
                     ORDER BY p.Prs_Ape ASC, p.Prs_Nom ASC";
             break;
 
@@ -124,44 +121,7 @@ function sentencias_maquinaria_horometro($id, $Par_Sql)
             }
             break;
 
-        case 8:
-            // CONFIGURACIÓN MANTENIMIENTO: Insertar o actualizar frecuencia
-            if ($Par_Sql['op'] == 'insert') {
-                $sql = "INSERT INTO maquinaria_config_mantenimiento (Veh_Cod, Cma_Hrs_Fco, Cma_Hrs_Ult, Cma_Est)
-                        VALUES (" . (int)$Par_Sql[0] . ", " . (float)$Par_Sql[1] . ", " . (float)$Par_Sql[2] . ", 'A')";
-            } else if ($Par_Sql['op'] == 'update') {
-                $sql = "UPDATE maquinaria_config_mantenimiento 
-                        SET Cma_Hrs_Fco = " . (float)$Par_Sql[1] . ", Cma_Hrs_Ult = " . (float)$Par_Sql[2] . " 
-                        WHERE Veh_Cod = " . (int)$Par_Sql[0];
-            } else {
-                $sql = "SELECT * FROM maquinaria_config_mantenimiento WHERE Veh_Cod = " . (int)$Par_Sql[0] . " LIMIT 1";
-            }
-            break;
 
-        case 9:
-            // REGISTRAR BITÁCORA MANTENIMIENTO REALIZADO
-            $sql = "INSERT INTO maquinaria_historial_mantenimiento (Veh_Cod, Usu_Cod, Hma_Fec, Hma_Hor, Hma_Det, Hma_Res)
-                    VALUES (" . (int)$Par_Sql[0] . ", " . (int)$Par_Sql[1] . ", '" . $Par_Sql[2] . "', " . (float)$Par_Sql[3] . ", '" . addslashes($Par_Sql[4]) . "', '" . addslashes($Par_Sql[5]) . "')";
-            break;
-
-        case 10:
-            // ALERTAS MANTENIMIENTO PREVENTIVO (Cálculo horas restantes)
-            $sql = "SELECT v.Veh_Cod, v.Veh_Pla, v.Veh_Mar, cm.Cma_Hrs_Fco, cm.Cma_Hrs_Ult,
-                           COALESCE((SELECT MAX(mh.Hor_Fin) FROM maquinaria_horometro mh WHERE mh.Veh_Cod = v.Veh_Cod AND mh.Hor_Est = 'A'), 0) as lectura_actual
-                    FROM vehiculo v
-                    INNER JOIN maquinaria_config_mantenimiento cm ON cm.Veh_Cod = v.Veh_Cod
-                    WHERE cm.Cma_Est = 'A' AND v.Emp_Cod = " . (int)$Par_Sql[0] . "
-                    ORDER BY (cm.Cma_Hrs_Ult + cm.Cma_Hrs_Fco) ASC";
-            break;
-
-        case 11:
-            // Listar Historial de Mantenimientos por Máquina
-            $sql = "SELECT hm.*, u.Usu_Nom
-                    FROM maquinaria_historial_mantenimiento hm
-                    LEFT JOIN usuarios u ON u.Usu_Cod = hm.Usu_Cod
-                    WHERE hm.Veh_Cod = " . (int)$Par_Sql[0] . "
-                    ORDER BY hm.Hma_Fec DESC, hm.Hma_Cod DESC";
-            break;
 
         case 12:
             // UPDATE Registro de Horómetro (Añadir Hor_Fin, etc)
@@ -196,6 +156,68 @@ function sentencias_maquinaria_horometro($id, $Par_Sql)
                 $sql = "SELECT COUNT(*) as total FROM maquinaria_horometro WHERE Veh_Cod = " . (int)$Par_Sql['Veh_Cod'] . " AND Cho_Cod = " . (int)$Par_Sql['Cho_Cod'] . " AND Hor_Fec = '" . $Par_Sql['Hor_Fec'] . "'";
             }
             break;
+
+        case 20:
+            // Ficha de Maquinaria para Reporte Individual
+            $sql = "SELECT v.Veh_Pla as id, v.Veh_Mar as marca, 'N/A' as modelo, 'N/A' as serie, 'Empresa' as propiedad
+                    FROM vehiculo v
+                    WHERE v.Veh_Cod = " . (int)$Par_Sql['Veh_Cod'] . " LIMIT 1";
+            break;
+
+        case 21:
+            // Detalle Diario para Reporte Individual
+            $sql = "SELECT 
+                        DAY(mh.Hor_Fec) as dia,
+                        mh.Hor_Fec as fecha,
+                        CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) as operador,
+                        mh.Hor_Ini as hor_inicial,
+                        mh.Hor_Fin as hor_final,
+                        IF(mh.Hor_Fin > 0, mh.Hor_Fin - mh.Hor_Ini, 0) as total_hrs,
+                        IFNULL(mh.Hor_Set, 0) as descuento,
+                        IF(mh.Hor_Fin > 0, (mh.Hor_Fin - mh.Hor_Ini) - CAST(IFNULL(mh.Hor_Set, 0) AS DECIMAL(10,2)), 0) as prod_hrs,
+                        0 as combustible,
+                        mh.Hor_Obs as observaciones,
+                        mh.Cho_Cod
+                    FROM maquinaria_horometro mh
+                    INNER JOIN chofer c ON c.Cho_Cod = mh.Cho_Cod
+                    INNER JOIN persona p ON p.Prs_Cod = c.Prs_Cod
+                    WHERE mh.Veh_Cod = " . (int)$Par_Sql['Veh_Cod'] . "
+                      AND DATE_FORMAT(mh.Hor_Fec, '%Y-%m') = '" . $Par_Sql['anio_mes'] . "'";
+            
+            if (!empty($Par_Sql['Cho_Cod']) && $Par_Sql['Cho_Cod'] != 'TODOS') {
+                $sql .= " AND mh.Cho_Cod = " . (int)$Par_Sql['Cho_Cod'];
+            }
+            $sql .= " ORDER BY mh.Hor_Fec ASC";
+            break;
+
+        case 22:
+            // Reporte Consolidado
+            $sql = "SELECT 
+                        v.Veh_Cod as veh_cod,
+                        v.Veh_Pla as maquina,
+                        mh.Cho_Cod as cho_cod,
+                        CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) as operador,
+                        SUM(IF(mh.Hor_Fin > 0, mh.Hor_Fin - mh.Hor_Ini, 0)) as horas_trabajadas,
+                        SUM(IFNULL(mh.Hor_Set, 0)) as desfase,
+                        SUM(IF(mh.Hor_Fin > 0, (mh.Hor_Fin - mh.Hor_Ini) - CAST(IFNULL(mh.Hor_Set, 0) AS DECIMAL(10,2)), 0)) as horas_productivas,
+                        0 as combustible,
+                        'Activo' as estado
+                    FROM maquinaria_horometro mh
+                    INNER JOIN vehiculo v ON v.Veh_Cod = mh.Veh_Cod
+                    INNER JOIN chofer c ON c.Cho_Cod = mh.Cho_Cod
+                    INNER JOIN persona p ON p.Prs_Cod = c.Prs_Cod
+                    WHERE v.Emp_Cod = " . (int)$Par_Sql['Emp_Cod'] . "
+                      AND DATE_FORMAT(mh.Hor_Fec, '%Y-%m') = '" . $Par_Sql['anio_mes'] . "'";
+
+            if (!empty($Par_Sql['Veh_Cod']) && $Par_Sql['Veh_Cod'] != 'TODAS') {
+                $sql .= " AND mh.Veh_Cod = " . (int)$Par_Sql['Veh_Cod'];
+            }
+            if (!empty($Par_Sql['Cho_Cod']) && $Par_Sql['Cho_Cod'] != 'TODOS') {
+                $sql .= " AND mh.Cho_Cod = " . (int)$Par_Sql['Cho_Cod'];
+            }
+            $sql .= " GROUP BY v.Veh_Cod, v.Veh_Pla, mh.Cho_Cod, operador ORDER BY v.Veh_Pla ASC";
+            break;
     }
     return $sql;
 }
+?>
