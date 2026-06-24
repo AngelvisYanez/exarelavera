@@ -68,3 +68,33 @@
     color: #334a5f;
 }
 .tab-content-custom { padding: 15px 0; }
+
+/* ==================== ESTILOS DE IMPRESIÓN ==================== */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #divReportePrint, #divReportePrint * {
+        visibility: visible;
+    }
+    #divReportePrint {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+    .no-print {
+        display: none !important;
+    }
+    
+    @page {
+        size: A4;
+        margin: 20mm 15mm;
+    }
+    
+    table { page-break-inside:auto }
+    tr    { page-break-inside:avoid; page-break-after:auto }
+    thead { display:table-header-group }
+    tfoot { display:table-footer-group }
+}

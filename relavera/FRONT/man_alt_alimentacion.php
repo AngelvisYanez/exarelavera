@@ -1,7 +1,7 @@
 <?php
 /**
- * Control de Alimentación de Choferes - Relavera
- * Permite registrar, consultar y generar reportes de alimentación.
+ * Control de Alimentación de Personal Interno - Relavera
+ * Permite registrar, consultar y generar reportes de alimentación del personal interno.
  * @author Sistema EXA
  * @version 2.0 (Ajuste de Interfaz)
  */
@@ -29,64 +29,17 @@ if ($Pla_Cod_Log === 0) {
 
 /* ==================== AJAX HANDLERS ==================== */
 
-// Listar choferes asociados a la planta
-if (isset($_GET['listChoferesAjax'])) {
+// Listar personal interno
+if (isset($_GET['listPersonalAjax'])) {
     $rows_data = $obBD_con1->getArrayConsulta(1, array('Pla_Cod' => $Pla_Cod_Log), $obBD_conexion);
     $obBD_con1->utf8_change_param($rows_data);
     $obBD_con1->echoJson($rows_data);
     exit;
 }
 
-// Listar vehículos asociados a la planta
-if (isset($_GET['listVehiculosAjax'])) {
-    $rows_data = $obBD_con1->getArrayConsulta(2, array('Pla_Cod' => $Pla_Cod_Log), $obBD_conexion);
-    $obBD_con1->utf8_change_param($rows_data);
-    $obBD_con1->echoJson($rows_data);
-    exit;
-}
-
-// Obtener último vehículo usado por un chofer y sus raciones registradas (Optimizado)
-if (isset($_GET['getUltimoVehiculoChoferAjax'])) {
-    $cho_cod = isset($_GET['Cho_Cod']) ? intval($_GET['Cho_Cod']) : 0;
-    $fecha = isset($_GET['Mal_Fec']) ? trim($_GET['Mal_Fec']) : '';
-
-    // Obtener último vehículo
-    $rows_data = $obBD_con1->getArrayConsulta(3, array('Cho_Cod' => $cho_cod), $obBD_conexion);
-    $obBD_con1->utf8_change_param($rows_data);
-
-    $veh_cod = 0;
-    if (isset($rows_data[0]['Veh_Cod'])) {
-        $veh_cod = intval($rows_data[0]['Veh_Cod']);
-    }
-
-    // Obtener raciones ya registradas para este vehículo y fecha
-    $tipos = array();
-    if ($veh_cod > 0 && !empty($fecha)) {
-        if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $fecha)) {
-            list($d, $m, $y) = explode('/', $fecha);
-            $fecha = "$y-$m-$d";
-        }
-        $meal_rows = $obBD_con1->getArrayConsultaSql("
-            SELECT Mal_Tip FROM maquinaria_alimentacion 
-            WHERE Cho_Cod = $cho_cod AND Veh_Cod = $veh_cod AND Mal_Fec = '$fecha' AND Mal_Est = 'A'
-        ", $obBD_conexion);
-        foreach ($meal_rows as $row) {
-            $tipos[] = $row['Mal_Tip'];
-        }
-    }
-
-    $response = array(
-        'vehiculo' => $rows_data,
-        'comidas' => $tipos
-    );
-    $obBD_con1->echoJson($response);
-    exit;
-}
-
-// Obtener alimentaciones ya registradas para un chofer, vehículo y fecha
+// Obtener alimentaciones ya registradas para un personal y fecha
 if (isset($_GET['getAlimentacionRegistradaAjax'])) {
-    $cho_cod = isset($_GET['Cho_Cod']) ? intval($_GET['Cho_Cod']) : 0;
-    $veh_cod = isset($_GET['Veh_Cod']) ? intval($_GET['Veh_Cod']) : 0;
+    $per_cod = isset($_GET['Per_Cod']) ? intval($_GET['Per_Cod']) : 0;
     $fecha = isset($_GET['Mal_Fec']) ? trim($_GET['Mal_Fec']) : '';
 
     if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $fecha)) {
@@ -96,7 +49,7 @@ if (isset($_GET['getAlimentacionRegistradaAjax'])) {
 
     $rows = $obBD_con1->getArrayConsultaSql("
         SELECT Mal_Tip FROM maquinaria_alimentacion 
-        WHERE Cho_Cod = $cho_cod AND Veh_Cod = $veh_cod AND Mal_Fec = '$fecha' AND Mal_Est = 'A'
+        WHERE Per_Cod = $per_cod AND Mal_Fec = '$fecha' AND Mal_Est = 'A'
     ", $obBD_conexion);
 
     $tipos = array();
@@ -114,12 +67,11 @@ if (isset($_POST['saveAlimentacionAjax'])) {
     $obBD_con1->inicio_transaccion($obBD_conexion);
     try {
         $fecha = isset($_POST['txtFecha']) ? trim($_POST['txtFecha']) : '';
-        $cho_cod = isset($_POST['cboChofer']) ? intval($_POST['cboChofer']) : 0;
-        $veh_cod = isset($_POST['cboVehiculo']) ? intval($_POST['cboVehiculo']) : 0;
+        $per_cod = isset($_POST['cboPersonal']) ? intval($_POST['cboPersonal']) : 0;
         $tipos = isset($_POST['cboTipos']) && is_array($_POST['cboTipos']) ? $_POST['cboTipos'] : array();
 
-        if (empty($cho_cod) || empty($veh_cod)) {
-            throw new Exception('Debe seleccionar chofer y vehículo.');
+        if (empty($per_cod)) {
+            throw new Exception('Debe seleccionar al personal.');
         }
         if (empty($tipos)) {
             throw new Exception('Debe seleccionar al menos un tipo de alimentación.');
@@ -148,8 +100,7 @@ if (isset($_POST['saveAlimentacionAjax'])) {
 
             // Verificar duplicados
             $check = $obBD_con1->getArrayConsulta(4, array(
-                'Cho_Cod' => $cho_cod,
-                'Veh_Cod' => $veh_cod,
+                'Per_Cod' => $per_cod,
                 'Mal_Fec' => $fecha,
                 'Mal_Tip' => $tipo
             ), $obBD_conexion);
@@ -161,9 +112,8 @@ if (isset($_POST['saveAlimentacionAjax'])) {
 
             // Insertar registro
             $obBD_con1->operacionobBD(5, array(
-                'Cho_Cod' => $cho_cod,
+                'Per_Cod' => $per_cod,
                 'Usu_Cod' => $_SESSION['Ses_Usu_Cod'],
-                'Veh_Cod' => $veh_cod,
                 'Mal_Tip' => $tipo,
                 'Mal_Fec' => $fecha
             ), $obBD_conexion);
@@ -199,7 +149,7 @@ if (isset($_GET['listAlimentacionGridAjax'])) {
     $f_val_mes = isset($_GET['f_val_mes']) ? $_GET['f_val_mes'] : '';
     $f_quincena = isset($_GET['f_quincena']) ? $_GET['f_quincena'] : '';
     $f_buscar = isset($_GET['f_buscar']) ? trim($_GET['f_buscar']) : '';
-    $f_tipo_busqueda = isset($_GET['f_tipo_busqueda']) ? trim($_GET['f_tipo_busqueda']) : 'chofer';
+    $f_tipo_busqueda = isset($_GET['f_tipo_busqueda']) ? trim($_GET['f_tipo_busqueda']) : 'personal';
     $f_estado = isset($_GET['f_estado']) ? $_GET['f_estado'] : '';
 
     $params = array();
@@ -244,7 +194,11 @@ if (isset($_GET['listAlimentacionGridAjax'])) {
         $params['Mal_Est'] = $f_estado;
     }
     $params['f_buscar'] = $f_buscar;
-    $params['f_tipo_busqueda'] = $f_tipo_busqueda;
+    if ($f_tipo_busqueda == 'personal') {
+        $params['f_tipo_busqueda'] = 'personal';
+    } else {
+        $params['f_tipo_busqueda'] = 'personal';
+    }
 
     // Obtener conteo total
     $row_count = $obBD_con1->getRowConsulta(6, $params, $obBD_conexion);
@@ -283,11 +237,10 @@ if (isset($_GET['getPreviewAlimentacionAjax'])) {
         exit;
     }
 
-    $sql = "SELECT a.Mal_Fec, CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) AS Cho_Nom, v.Veh_Pla, a.Mal_Tip
+    $sql = "SELECT a.Mal_Fec, CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) AS Per_Nom, a.Mal_Tip
             FROM maquinaria_alimentacion a
-            INNER JOIN chofer c ON c.Cho_Cod = a.Cho_Cod
-            INNER JOIN persona p ON p.Prs_Cod = c.Prs_Cod
-            INNER JOIN vehiculo v ON v.Veh_Cod = a.Veh_Cod
+            INNER JOIN personal pe ON pe.Per_Cod = a.Per_Cod
+            INNER JOIN persona p ON p.Prs_Cod = pe.Prs_Cod
             WHERE a.Mal_Cod IN ($active_ids) AND a.Mal_Est = 'A'
             ORDER BY FIELD(a.Mal_Tip, 'D', 'A', 'M', 'C')";
 
@@ -299,18 +252,14 @@ if (isset($_GET['getPreviewAlimentacionAjax'])) {
 
     $comidas = array();
     $fecha = '';
-    $chofer = '';
-    $vehiculo = '';
+    $personal = '';
 
     foreach ($rows as $row) {
         if (empty($fecha) && isset($row['Mal_Fec'])) {
             $fecha = $row['Mal_Fec'];
         }
-        if (empty($chofer) && isset($row['Cho_Nom'])) {
-            $chofer = $row['Cho_Nom'];
-        }
-        if (empty($vehiculo) && isset($row['Veh_Pla'])) {
-            $vehiculo = $row['Veh_Pla'];
+        if (empty($personal) && isset($row['Per_Nom'])) {
+            $personal = $row['Per_Nom'];
         }
         if (isset($row['Mal_Tip']) && !in_array($row['Mal_Tip'], $comidas)) {
             $comidas[] = $row['Mal_Tip'];
@@ -319,8 +268,7 @@ if (isset($_GET['getPreviewAlimentacionAjax'])) {
 
     $obBD_con1->echoJson(array('success' => true, 'data' => array(
         'fecha' => $fecha,
-        'chofer' => $chofer,
-        'vehiculo' => $vehiculo,
+        'personal' => $personal,
         'comidas' => $comidas
     )));
     exit;
@@ -355,34 +303,30 @@ if (isset($_POST['anularAlimentacionAjax'])) {
 if (isset($_GET['getReporteAlimentacionAjax'])) {
     $mes = isset($_GET['cboMes']) ? intval($_GET['cboMes']) : date('n');
     $anio = isset($_GET['cboAnio']) ? intval($_GET['cboAnio']) : date('Y');
-    $veh_cod = isset($_GET['cboVehiculoReporte']) ? intval($_GET['cboVehiculoReporte']) : 0;
-    $cho_cod = isset($_GET['cboChoferReporte']) ? intval($_GET['cboChoferReporte']) : 0;
+    $per_cod = isset($_GET['cboPersonalReporte']) ? intval($_GET['cboPersonalReporte']) : 0;
 
     $params = array('Mes' => $mes, 'Anio' => $anio);
-    if ($veh_cod) {
-        $params['Veh_Cod'] = $veh_cod;
-    }
-    if ($cho_cod) {
-        $params['Cho_Cod'] = $cho_cod;
+    if ($per_cod) {
+        $params['Per_Cod'] = $per_cod;
     }
 
     $data = $obBD_con1->getArrayConsulta(9, $params, $obBD_conexion);
     $obBD_con1->utf8_change_param($data);
 
-    // Organizar datos por vehículo y fecha
+    // Organizar datos por personal y fecha
     $reporte = array();
     foreach ($data as $row) {
-        $veh_key = $row['Veh_Cod'] . '-' . $row['Veh_Pla'];
-        if (!isset($reporte[$veh_key])) {
-            $reporte[$veh_key] = array(
-                'Veh_Pla' => $row['Veh_Pla'],
+        $per_key = $row['Per_Cod'];
+        if (!isset($reporte[$per_key])) {
+            $reporte[$per_key] = array(
+                'Per_Nom' => $row['Per_Nom'],
                 'datos' => array()
             );
         }
 
         $fecha = $row['Mal_Fec'];
-        if (!isset($reporte[$veh_key]['datos'][$fecha])) {
-            $reporte[$veh_key]['datos'][$fecha] = array(
+        if (!isset($reporte[$per_key]['datos'][$fecha])) {
+            $reporte[$per_key]['datos'][$fecha] = array(
                 'Desayuno' => 0,
                 'Almuerzo' => 0,
                 'Merienda' => 0
@@ -390,7 +334,7 @@ if (isset($_GET['getReporteAlimentacionAjax'])) {
         }
 
         $tipo = $row['Mal_Tip'] == 'D' ? 'Desayuno' : ($row['Mal_Tip'] == 'A' ? 'Almuerzo' : 'Merienda');
-        $reporte[$veh_key]['datos'][$fecha][$tipo] = 1;
+        $reporte[$per_key]['datos'][$fecha][$tipo] = 1;
     }
 
     $obBD_con1->echoJson($reporte);
@@ -401,7 +345,7 @@ if (isset($_GET['getReporteAlimentacionAjax'])) {
 <!DOCTYPE HTML>
 <HTML>
 <HEAD>
-    <TITLE>Control de Alimentación de Choferes</TITLE>
+    <TITLE>Control de Alimentación de Personal Interno</TITLE>
     <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
     <?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
@@ -485,7 +429,7 @@ if (isset($_GET['getReporteAlimentacionAjax'])) {
 <BODY>
     <div class="panel panel-default panel-main exa-ui-panel">
         <div class="panel-heading exa-header">
-            <h3 class="panel-title"><span class="glyphicon glyphicon-cutlery"></span> » Control de Alimentación de Choferes</h3>
+            <h3 class="panel-title"><span class="glyphicon glyphicon-cutlery"></span> » Control de Alimentación de Personal Interno</h3>
         </div>
         <div class="panel-body exa-body">
             <div class="nav-tabs-custom">
@@ -515,9 +459,8 @@ if (isset($_GET['getReporteAlimentacionAjax'])) {
                                     <option value="2">2da Quincena (16-fin)</option>
                                 </select>
                                 <label class="control-label" style="font-weight:bold; margin-right:5px; margin-left:10px;">Buscar:</label>
-                                <select id="tipoBusqueda" class="form-control input-sm" style="margin-right:5px;">
-                                    <option value="chofer">Chofer (Nombre/Cédula)</option>
-                                    <option value="vehiculo">Placa de Vehículo</option>
+                                <select id="tipoBusqueda" class="form-control input-sm" style="margin-right:5px; display:none;">
+                                    <option value="personal">Personal (Nombre/Cédula)</option>
                                 </select>
                                 <input type="text" id="txtBuscar" class="form-control input-sm" placeholder="Buscar..." style="margin-right:5px; width: 200px;">
                                 <label class="control-label" style="font-weight:bold; margin-right:5px; margin-left:10px;">Estado:</label>
@@ -568,12 +511,8 @@ if (isset($_GET['getReporteAlimentacionAjax'])) {
                                     }
                                     ?>
                                 </select>
-                                <label class="control-label" style="font-weight:bold; margin-left:15px;">Vehículo:</label>
-                                <select id="cboVehiculoReporte" class="form-control input-sm chosen-select" style="margin-left:5px; width:180px;">
-                                    <option value="">Todos</option>
-                                </select>
-                                <label class="control-label" style="font-weight:bold; margin-left:15px;">Chofer:</label>
-                                <select id="cboChoferReporte" class="form-control input-sm chosen-select" style="margin-left:5px; width:180px;">
+                                <label class="control-label" style="font-weight:bold; margin-left:15px;">Personal Interno:</label>
+                                <select id="cboPersonalReporte" class="form-control input-sm chosen-select" style="margin-left:5px; width:220px;">
                                     <option value="">Todos</option>
                                 </select>
                             </div>
@@ -638,19 +577,11 @@ if (isset($_GET['getReporteAlimentacionAjax'])) {
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-sm-6">
+                            <div class="col-sm-12">
                                 <div class="form-group">
-                                    <label class="control-label">Chofer:</label>
-                                    <select id="cboChoferModal" class="form-control input-sm chosen-select" style="width: 100%;">
-                                        <option value="">Seleccione Chofer</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="form-group">
-                                    <label class="control-label">Vehículo:</label>
-                                    <select id="cboVehiculoModal" class="form-control input-sm chosen-select" style="width: 100%;">
-                                        <option value="">Seleccione Vehículo</option>
+                                    <label class="control-label">Personal Interno:</label>
+                                    <select id="cboPersonalModal" class="form-control input-sm chosen-select" style="width: 100%;">
+                                        <option value="">Seleccione Personal</option>
                                     </select>
                                 </div>
                             </div>
@@ -677,8 +608,7 @@ if (isset($_GET['getReporteAlimentacionAjax'])) {
                     <!-- Contenido dinámico -->
                     <div style="font-size:14px;">
                         <p><strong>Fecha:</strong> <span id="pv_fecha"></span></p>
-                        <p><strong>Chofer:</strong> <span id="pv_chofer"></span></p>
-                        <p><strong>Vehículo:</strong> <span id="pv_vehiculo"></span></p>
+                        <p><strong>Personal:</strong> <span id="pv_personal"></span></p>
                         <p><strong>Comidas registradas:</strong></p>
                         <div id="pv_comidas_list"></div>
                     </div>
@@ -698,6 +628,6 @@ if (isset($_GET['getReporteAlimentacionAjax'])) {
         </div>
     </div>
 
-    <script type="text/javascript" src="../VALIDACIONES/man_val_alimentacion.js?v=8"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_alimentacion.js?v=14"></script>
 </BODY>
 </HTML>
