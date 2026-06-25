@@ -780,6 +780,7 @@ if (isset($delAbono)) {
                               <label class="control-label label-xs">Disponible $ <span id="anticipo_info">0.00</span></label>
                             </div>
                             <div id="cont_ccc_info" class="col-sm-6 txt-blue" style="padding-left:0;" hidden>
+                              <a class="btn btn-info btn-xs" onclick="$('#comprasDialog').dialog('open');"><span class="glyphicon glyphicon-random"></span>&nbsp; Compras</a>
                               <span class="glyphicon glyphicon-info-sign" style="font-size:10px;" title="Cant. disponible para el cruce de cuentas con este proveedor"></span>
                               <label class="control-label label-xs">Deuda del proveedor $ <span id="ccc_info">0.00</span></label>
                             </div>
@@ -1029,6 +1030,18 @@ if (isset($delAbono)) {
   </div>
 
 
+  <div id="comprasDialog" title="Cuentas por Pagar">
+    <div class="row">
+      <div class="col-sm-12">
+        <table id="crucesGrid" name="crucesGrid"></table>
+      </div>
+    </div>
+    <br>
+    <div class="form-group center">
+      <a id="btnGuardar" class="btn btn-sm btn-success" onclick="$('#comprasDialog').dialog('close')"> <i class="glyphicon glyphicon-ok"></i> Aceptar</a>
+    </div>
+  </div>
+
   <div id="clientesDialog" title="B&uacute;squeda de Clientes">
     <form class="form-horizontal normal"> </form>
   </div>
@@ -1048,7 +1061,7 @@ if (isset($delAbono)) {
   </div>
 
   <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
-  <script src="../VALIDACIONES/tes_val_cccc_lotes.js?a=60"></script>
+  <script src="../VALIDACIONES/tes_val_cccc_lotes.js?a=63"></script>
   <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js"></script>
   <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
   <script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>

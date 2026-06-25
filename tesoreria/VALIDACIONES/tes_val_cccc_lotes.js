@@ -13,7 +13,8 @@ $(function () {
 
     if ($('#successDialog').length === 1)
         $("#successDialog").createDialog({ width: 500, height: 200, icon: 'print' });
-    $("#comprasDialog").createDialog({width:930,height:570,icon:'random'});
+    if ($('#comprasDialog').length === 1)
+        $("#comprasDialog").createDialog({width:930,height:570,icon:'random'});
     if ($('#verFactsDialog').length === 1)
         $("#verFactsDialog").createDialog({ width: 700, height: 400, icon: 'info-sign' });
 
@@ -159,7 +160,8 @@ $(function () {
         $('input[name=order]').val($(this).val());
         $('#searchCccc').formSubmit();
     });
-    gridCompras();
+    if ($('#crucesGrid').length === 1)
+        gridCompras();
     //FIN DE FUNCION INICIAL*******
 });
 
@@ -807,6 +809,7 @@ function cargarFactsGrid() {
 }
 /************** Codigo de Jose **************/
 function gridCompras() {
+    if ($('#crucesGrid').length !== 1) return;
     $('#crucesGrid').createGrid({
         viewrecords: false,
         caption: "<center>Facturas de Compras</center>",
@@ -988,7 +991,7 @@ function modificarAbono(row) {
     $("#Pec_Cod option[value=" + row[0].Pec_Cod + "]").prop("selected", true);
     $("#Pec_Cod").trigger("onchange");
 
-    addPagoIni();
+    /*addPagoIni();
 
     $.getDataJson('', { getPagsAbono: true, Com_Cod: row[0].Com_Cod, Cli_Cod: $("#agg_Cli_Cod").val() }, function (responce) {
         //agregar pagos correspondientes a este pago de la o las facturas
@@ -1050,7 +1053,95 @@ function modificarAbono(row) {
         $("#Com_Val_dism").val(parseFloat(valr_pagar).toFixed(2));
     }, function (err) {
         $.alert(err['message']);
+    });*/
+
+     $.getDataJson('', { getAsientosAbono: true, Com_Cod: row[0].Com_Cod }, function (respAsi) {
+        if (respAsi && respAsi.success && respAsi.data && respAsi.data.length) {
+            var asientoH = null;
+            for (let k = 0; k < respAsi.data.length; k++) {
+                if (respAsi.data[k].Asi_Deh === 'H') {
+                    asientoH = respAsi.data[k];
+                    break;
+                }
+            }
+            if (asientoH) {
+                addPago([
+                    "H", "inicial", "", "",
+                    "", "", "", "", "", "", "", "",
+                    asientoH.Pld_Cod, asientoH.Pld_Cdc, asientoH.Pld_Des,
+                    $("#Com_Con").val(), $("#Com_Con").val(),
+                    "", $("#Com_Val").val(), "", "first"
+                ]);
+            }
+        }
+
+        $.getDataJson('', { getPagsAbono: true, Com_Cod: row[0].Com_Cod, Cli_Cod: $("#agg_Cli_Cod").val() }, function (responce) {
+            //agregar pagos correspondientes a este pago de la o las facturas
+            for (let i = 0; i < responce['data'].length; i++) {
+                let par_array = [
+                    responce['data'][i].Asi_Deh,
+                    "pago",
+                    responce['data'][i].Che_Cod,
+                    responce['data'][i].Asi_Cod,
+                    responce['data'][i].Pag_Cod,
+                    responce['data'][i].Pag_Abr,
+                    responce['data'][i].Pag_Des,
+                    responce['data'][i].Bak_Cod,
+                    responce['data'][i].Che_Num,
+                    responce['data'][i].Che_Fec,
+                    responce['data'][i].Che_Cta,
+                    "",
+                    responce['data'][i].Pld_Cod,
+                    responce['data'][i].Pld_Cdc,
+                    responce['data'][i].Pld_Des,
+                    responce['data'][i].Asi_Con,
+                    responce['data'][i].Asi_Glo,
+                    responce['data'][i].Asi_Val,
+                    "",
+                    responce['data'][i].Che_Est,
+                    "last",
+                    responce['data'][i].Che_Cli
+                ];
+                addPago(par_array);
+                incrementarSaldoInfo();
+                if (responce['data'][i].Pag_Abr === "ANT") {
+                    if (responce['data_ant'] === 'none') {
+                        $("#lim_val_pago").val("none");
+                    } else {
+                        $("#lim_val_pago").val("" + parseFloat(responce['data_ant']).toFixed(2));
+                    }
+                } else if (responce['data'][i].Pag_Abr === "CDC") {
+                    if (responce['data_ccc'] === 'none') {
+                        $("#lim_val_pago_cc").val("none");
+                    } else {
+                        $("#lim_val_pago_cc").val("" + parseFloat(responce['data_ccc']).toFixed(2));
+                    }
+                }
+                //valor real a pagar
+                if (responce['data'][i].Che_Est === 'P') {
+                    valr_pagar += parseFloat(responce['data'][i].Asi_Val);
+                }
+            }
+            //asignamos valor real a pagar
+            if (parseFloat(totalPagos().haber) < parseFloat(row[0].Com_Val)) {
+                $("#saldo_info").removeClass("txt-green");
+                $("#saldo_info").addClass("txt-red");
+                $("#saldo_info2").text("" + parseFloat(totalPagos().haber).toFixed(2));
+            } else {
+                $("#saldo_info").removeClass("txt-red");
+                $("#saldo_info").addClass("txt-green");
+                $("#saldo_info2").text("" + parseFloat(totalPagos().haber).toFixed(2));
+            }
+            $("#Com_Val_dism").val(parseFloat(valr_pagar).toFixed(2));
+        }, function (err) {
+            $.alert(err['message']);
+        });
+    }, function (err) {
+        // si falla la carga de asientos, igual intentamos cargar los pagos
+        $.getDataJson('', { getPagsAbono: true, Com_Cod: row[0].Com_Cod, Cli_Cod: $("#agg_Cli_Cod").val() }, function () { }, function () { });
+        if (err && err.message) $.alert(err.message);
     });
+
 
     moveToAggCcpp();
     verFacturasAbono(row[0].Com_Cod);
