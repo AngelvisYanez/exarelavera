@@ -127,10 +127,14 @@ function man_cert_verificacion_qr_tcpdf($pdf, $vet_cod, $emp_cod, $x = null, $y 
     $margin = $pdf->getMargins();
     $usable_w = $page_w - $margin['left'] - $margin['right'];
     $qr_x = ($x !== null) ? $x : ($margin['left'] + ($usable_w - $size_mm) / 2);
-    $qr_y = ($y !== null) ? $y : ($pdf->GetY() + 4);
-    if ($qr_y > 250) {
-        $pdf->AddPage();
-        $qr_y = 30;
+    if ($y !== null) {
+        $qr_y = $y;
+    } else {
+        $qr_y = $pdf->GetY() + 6;
+        if ($qr_y > 248) {
+            $pdf->AddPage();
+            $qr_y = 30;
+        }
     }
     require_once(dirname(__FILE__) . '/../../Librerias/TCPDF/include/barcodes/qrcode.php');
     $qr = new QRcode($url, 'L');
@@ -148,14 +152,14 @@ function man_cert_verificacion_qr_tcpdf($pdf, $vet_cod, $emp_cod, $x = null, $y 
             }
         }
     }
-    $txt_w = 80;
-    $txt_x = $margin['left'] + ($usable_w - $txt_w) / 2;
-    $pdf->SetXY($txt_x, $qr_y + $size_mm + 1);
+    $txt_w = max($size_mm, 50);
+    $txt_x = $qr_x;
+    $pdf->SetXY($txt_x, $qr_y + $size_mm + 2);
     $pdf->SetFont('helvetica', 'B', 7);
-    $pdf->Cell($txt_w, 4, 'QR de verificacion', 0, 1, 'C');
+    $pdf->Cell($txt_w, 4, 'QR de verificacion', 0, 1, 'L');
     $pdf->SetX($txt_x);
     $pdf->SetFont('helvetica', '', 5);
-    $pdf->MultiCell($txt_w, 3, 'Validar certificado en linea', 0, 'C');
+    $pdf->MultiCell($txt_w, 3, 'Validar certificado en linea', 0, 'L');
 }
 
 /**

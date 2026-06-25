@@ -165,7 +165,7 @@ $pdf->Cell(30, 5, (string)(int)$facturados, 'B', 1, 'R');
 $pdf->Ln(2);
 $pdf->SetFont('helvetica', '', 8);
 $txt_cert = 'EL presente certificado detalla los manifiestos emitidos por la entrega de Desechos Peligrosos B.07.01 al proyecto ambiental asociativo "EL TABLON", por parte del generador de Desechos Peligrosos.';
-$pdf->MultiCell(0, 4, $txt_cert, 0, 'J');
+$pdf->MultiCell(0, 4, $txt_cert, 0, 'L');
 $pdf->Ln(2);
 
 // Anchos de columna proporcionales al ancho útil de la página (sin espacio vacío a la derecha)
@@ -312,10 +312,14 @@ if ($firma_fue_leida && !empty($certs['cert'])) {
 }
 
 $emp_cod_verf = isset($Ses_Emp_Cod) ? (int)$Ses_Emp_Cod : 0;
-if ($pdf->GetY() > 230) {
+// QR de verificacion: centrado y mas abajo en la pagina (no confundir con el QR de firma electronica)
+$page_h = $pdf->getPageHeight();
+$verf_qr_y = $page_h - 58;
+if ($pdf->GetY() > $verf_qr_y - 8) {
     $pdf->AddPage();
+    $verf_qr_y = $page_h - 58;
 }
-man_cert_verificacion_qr_tcpdf($pdf, $Vet_Cod, $emp_cod_verf);
+man_cert_verificacion_qr_tcpdf($pdf, $Vet_Cod, $emp_cod_verf, null, $verf_qr_y);
 
 $pdf->SetY(-15);
 $pdf->SetFont('helvetica', 'I', 7);

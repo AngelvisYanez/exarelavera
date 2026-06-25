@@ -280,7 +280,7 @@ $verf_qr_html = man_cert_verificacion_qr_html($Vet_Cod, $emp_cod_verf);
             background: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
-            text-align: justify;
+            text-align: left;
         }
         .table-block {
             padding: 8px 22px 20px;
@@ -385,7 +385,8 @@ $verf_qr_html = man_cert_verificacion_qr_html($Vet_Cod, $emp_cod_verf);
         }
         .footer-exa strong { color: #475569; }
         .verf-qr-section {
-            padding: 12px 22px 16px;
+            padding: 28px 22px 20px;
+            margin-top: 24px;
             background: #fff;
             border-top: 1px dashed #e2e8f0;
             display: flex;
@@ -395,7 +396,7 @@ $verf_qr_html = man_cert_verificacion_qr_html($Vet_Cod, $emp_cod_verf);
             break-inside: avoid;
         }
         .verf-qr-box {
-            text-align: center;
+            text-align: left;
             width: 100%;
             max-width: 220px;
             margin: 0 auto;
