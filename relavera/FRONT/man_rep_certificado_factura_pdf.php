@@ -168,7 +168,18 @@ $txt_cert = 'EL presente certificado detalla los manifiestos emitidos por la ent
 $pdf->MultiCell(0, 4, $txt_cert, 0, 'J');
 $pdf->Ln(2);
 
-$cert_col_widths = array(8, 18, 42, 22, 20, 14, 16, 16, 14);
+// Anchos de columna proporcionales al ancho útil de la página (sin espacio vacío a la derecha)
+$cert_margins = $pdf->getMargins();
+$cert_table_w = $pdf->getPageWidth() - $cert_margins['left'] - $cert_margins['right'];
+$cert_base_widths = array(8, 18, 46, 22, 26, 14, 14, 14, 18); // Chofer/Guía más anchos; Factura/Valor más compactos
+$cert_scale = $cert_table_w / array_sum($cert_base_widths);
+$cert_col_widths = array();
+foreach ($cert_base_widths as $bw) {
+    $cert_col_widths[] = round($bw * $cert_scale, 2);
+}
+$cert_width_fix = $cert_table_w - array_sum($cert_col_widths);
+$cert_col_widths[count($cert_col_widths) - 1] += $cert_width_fix;
+$pdf->SetX($cert_margins['left']);
 $cert_col_aligns = array('C', 'C', 'L', 'C', 'C', 'R', 'C', 'C', 'R');
 $cert_line_h = 4;
 
@@ -198,7 +209,8 @@ $cert_print_row = function ($pdf, $cells, $widths, $aligns, $lineH) {
     $pdf->SetXY($x0, $y + $h);
 };
 
-$header_tabla = function ($pdf) use ($cert_col_widths) {
+$header_tabla = function ($pdf) use ($cert_col_widths, $cert_margins) {
+    $pdf->SetX($cert_margins['left']);
     $pdf->SetFont('helvetica', 'B', 7);
     $pdf->SetFillColor(240, 240, 240);
     $pdf->Cell($cert_col_widths[0], 7, '#', 1, 0, 'C', true);
@@ -235,12 +247,14 @@ foreach ($listado as $item) {
     $rowH = $cert_line_h * $rowLines;
     if ($pdf->GetY() + $rowH > 250) {
         $pdf->AddPage();
+        $pdf->SetX($cert_margins['left']);
         $header_tabla($pdf);
     }
     $cert_print_row($pdf, $cells, $cert_col_widths, $cert_col_aligns, $cert_line_h);
 }
 
 $pdf->SetFont('helvetica', 'B', 8);
+$pdf->SetX($cert_margins['left']);
 $pdf->Cell(array_sum(array_slice($cert_col_widths, 0, 5)), 6, 'TOTALES', 0, 0, 'R');
 $pdf->Cell($cert_col_widths[5], 6, number_format($suma_peso, 2, '.', ','), 1, 0, 'R');
 $pdf->Cell($cert_col_widths[6], 6, '', 1, 0, 'C');
