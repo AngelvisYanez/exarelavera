@@ -168,46 +168,77 @@ $txt_cert = 'EL presente certificado detalla los manifiestos emitidos por la ent
 $pdf->MultiCell(0, 4, $txt_cert, 0, 'J');
 $pdf->Ln(2);
 
-$header_tabla = function ($pdf) {
+$cert_col_widths = array(8, 18, 42, 22, 20, 14, 16, 16, 14);
+$cert_col_aligns = array('C', 'C', 'L', 'C', 'C', 'R', 'C', 'C', 'R');
+$cert_line_h = 4;
+
+$cert_print_row = function ($pdf, $cells, $widths, $aligns, $lineH) {
+    $nb = 1;
+    foreach ($cells as $i => $text) {
+        $n = $pdf->getNumLines((string)$text, $widths[$i]);
+        if ($n > $nb) {
+            $nb = $n;
+        }
+    }
+    $h = $lineH * $nb;
+    $x0 = $pdf->GetX();
+    $y = $pdf->GetY();
+    $x = $x0;
+    foreach ($cells as $i => $text) {
+        $pdf->MultiCell($widths[$i], $lineH, (string)$text, 1, $aligns[$i], false, 0, $x, $y, true, 0, false, true, $h, 'M');
+        $x += $widths[$i];
+    }
+    $pdf->SetXY($x0, $y + $h);
+};
+
+$header_tabla = function ($pdf) use ($cert_col_widths) {
     $pdf->SetFont('helvetica', 'B', 7);
     $pdf->SetFillColor(240, 240, 240);
-    $pdf->Cell(8, 7, '#', 1, 0, 'C', true);
-    $pdf->Cell(18, 7, 'Fecha', 1, 0, 'C', true);
-    $pdf->Cell(42, 7, 'Chofer', 1, 0, 'C', true);
-    $pdf->Cell(22, 7, 'No Manif.', 1, 0, 'C', true);
-    $pdf->Cell(20, 7, 'Guia', 1, 0, 'C', true);
-    $pdf->Cell(14, 7, 'Peso KG', 1, 0, 'C', true);
-    $pdf->Cell(16, 7, 'Factura', 1, 0, 'C', true);
-    $pdf->Cell(16, 7, 'Vehiculo', 1, 0, 'C', true);
-    $pdf->Cell(14, 7, 'Valor', 1, 1, 'C', true);
+    $pdf->Cell($cert_col_widths[0], 7, '#', 1, 0, 'C', true);
+    $pdf->Cell($cert_col_widths[1], 7, 'Fecha', 1, 0, 'C', true);
+    $pdf->Cell($cert_col_widths[2], 7, 'Chofer', 1, 0, 'C', true);
+    $pdf->Cell($cert_col_widths[3], 7, 'No Manif.', 1, 0, 'C', true);
+    $pdf->Cell($cert_col_widths[4], 7, 'Guia', 1, 0, 'C', true);
+    $pdf->Cell($cert_col_widths[5], 7, 'Peso KG', 1, 0, 'C', true);
+    $pdf->Cell($cert_col_widths[6], 7, 'Factura', 1, 0, 'C', true);
+    $pdf->Cell($cert_col_widths[7], 7, 'Vehiculo', 1, 0, 'C', true);
+    $pdf->Cell($cert_col_widths[8], 7, 'Valor', 1, 1, 'C', true);
     $pdf->SetFont('helvetica', '', 7);
 };
 
 $header_tabla($pdf);
 $count = 1;
 foreach ($listado as $item) {
-    if ($pdf->GetY() > 250) {
+    $chofer_txt = isset($item['chofer']) ? trim($item['chofer']) : '';
+    $cells = array(
+        (string)$count++,
+        date('d/m/Y', strtotime($item['Fecha'])),
+        $chofer_txt,
+        $item['Man_Num_Full'],
+        isset($item['Man_Gui']) ? $item['Man_Gui'] : '',
+        number_format((float)$item['Man_Pes'], 2, '.', ','),
+        ((int)$item['Facturado'] === 1) ? $item['Factura'] : '-',
+        isset($item['Veh_Pla']) ? $item['Veh_Pla'] : '',
+        '$ ' . number_format((float)$item['Valor'], 2, '.', ',')
+    );
+    $rowLines = 1;
+    foreach ($cells as $i => $text) {
+        $rowLines = max($rowLines, $pdf->getNumLines((string)$text, $cert_col_widths[$i]));
+    }
+    $rowH = $cert_line_h * $rowLines;
+    if ($pdf->GetY() + $rowH > 250) {
         $pdf->AddPage();
         $header_tabla($pdf);
     }
-    $pdf->Cell(8, 5, (string)$count++, 1, 0, 'C');
-    $pdf->Cell(18, 5, date('d/m/Y', strtotime($item['Fecha'])), 1, 0, 'C');
-    $chofer_txt = isset($item['chofer']) ? trim($item['chofer']) : '';
-    $pdf->Cell(42, 5, $chofer_txt, 1, 0, 'L');
-    $pdf->Cell(22, 5, $item['Man_Num_Full'], 1, 0, 'C');
-    $pdf->Cell(20, 5, isset($item['Man_Gui']) ? $item['Man_Gui'] : '', 1, 0, 'C');
-    $pdf->Cell(14, 5, number_format((float)$item['Man_Pes'], 2, '.', ','), 1, 0, 'R');
-    $pdf->Cell(16, 5, ((int)$item['Facturado'] === 1) ? $item['Factura'] : '-', 1, 0, 'C');
-    $pdf->Cell(16, 5, isset($item['Veh_Pla']) ? $item['Veh_Pla'] : '', 1, 0, 'C');
-    $pdf->Cell(14, 5, '$ ' . number_format((float)$item['Valor'], 2, '.', ','), 1, 1, 'R');
+    $cert_print_row($pdf, $cells, $cert_col_widths, $cert_col_aligns, $cert_line_h);
 }
 
 $pdf->SetFont('helvetica', 'B', 8);
-$pdf->Cell(110, 6, 'TOTALES', 0, 0, 'R');
-$pdf->Cell(14, 6, number_format($suma_peso, 2, '.', ','), 1, 0, 'R');
-$pdf->Cell(16, 6, '', 1, 0, 'C');
-$pdf->Cell(16, 6, '', 1, 0, 'C');
-$pdf->Cell(14, 6, '$ ' . number_format($suma_total, 2, '.', ','), 1, 1, 'R');
+$pdf->Cell(array_sum(array_slice($cert_col_widths, 0, 5)), 6, 'TOTALES', 0, 0, 'R');
+$pdf->Cell($cert_col_widths[5], 6, number_format($suma_peso, 2, '.', ','), 1, 0, 'R');
+$pdf->Cell($cert_col_widths[6], 6, '', 1, 0, 'C');
+$pdf->Cell($cert_col_widths[7], 6, '', 1, 0, 'C');
+$pdf->Cell($cert_col_widths[8], 6, '$ ' . number_format($suma_total, 2, '.', ','), 1, 1, 'R');
 
 $pdf->SetAutoPageBreak(false);
 if ($pdf->GetY() > 215) {
