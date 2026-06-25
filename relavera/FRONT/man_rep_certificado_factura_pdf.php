@@ -183,9 +183,16 @@ $cert_print_row = function ($pdf, $cells, $widths, $aligns, $lineH) {
     $h = $lineH * $nb;
     $x0 = $pdf->GetX();
     $y = $pdf->GetY();
+    // Bordes unificados por fila (evita líneas horizontales desalineadas)
+    $xBorder = $x0;
+    foreach ($widths as $w) {
+        $pdf->Rect($xBorder, $y, $w, $h);
+        $xBorder += $w;
+    }
+    // Texto sin borde propio, centrado verticalmente en la celda
     $x = $x0;
     foreach ($cells as $i => $text) {
-        $pdf->MultiCell($widths[$i], $lineH, (string)$text, 1, $aligns[$i], false, 0, $x, $y, true, 0, false, true, $h, 'M');
+        $pdf->MultiCell($widths[$i], $lineH, (string)$text, 0, $aligns[$i], false, 0, $x, $y, true, 0, false, true, $h, 'M');
         $x += $widths[$i];
     }
     $pdf->SetXY($x0, $y + $h);
