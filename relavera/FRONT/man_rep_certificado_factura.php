@@ -324,13 +324,19 @@ $verf_qr_html = man_cert_verificacion_qr_html($Vet_Cod, $emp_cod_verf);
         table.data-table td:nth-child(3) {
             width: 20%;
         }
-        table.data-table th:nth-child(7),
-        table.data-table td:nth-child(7) {
-            width: 9%;
+        table.data-table th:nth-child(4),
+        table.data-table td:nth-child(4) {
+            width: 7%;
         }
+        table.data-table th:nth-child(6),
+        table.data-table td:nth-child(6),
         table.data-table th:nth-child(9),
         table.data-table td:nth-child(9) {
             width: 8%;
+        }
+        table.data-table th:nth-child(7),
+        table.data-table td:nth-child(7) {
+            width: 9%;
         }
         table.data-table thead th {
             background: #fff;

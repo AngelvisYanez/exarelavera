@@ -171,7 +171,7 @@ $pdf->Ln(2);
 // Anchos de columna proporcionales al ancho útil de la página (sin espacio vacío a la derecha)
 $cert_margins = $pdf->getMargins();
 $cert_table_w = $pdf->getPageWidth() - $cert_margins['left'] - $cert_margins['right'];
-$cert_base_widths = array(8, 18, 46, 22, 26, 14, 14, 14, 18); // Chofer/Guía más anchos; Factura/Valor más compactos
+$cert_base_widths = array(8, 18, 46, 18, 26, 18, 14, 14, 18); // Peso KG = Valor; No Manif. más estrecho
 $cert_scale = $cert_table_w / array_sum($cert_base_widths);
 $cert_col_widths = array();
 foreach ($cert_base_widths as $bw) {
