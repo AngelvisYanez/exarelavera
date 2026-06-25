@@ -195,7 +195,7 @@ if (isset($_POST['saveProveedorRapidoAjax'])) {
         // 1. Validate if persona already exists by cedula
         $prsCedBusq = strlen($Prs_Ced) === 13 ? substr($Prs_Ced, 0, 10) : $Prs_Ced;
         $persona = $obBD_con1->getArrayConsulta(26, array($prsCedBusq), $obBD_conexion);
-        
+
         $Prs_Cod = 0;
         if (!empty($persona)) {
             $Prs_Cod = $persona[0]['Prs_Cod'];
@@ -247,7 +247,6 @@ if (isset($_POST['saveProveedorRapidoAjax'])) {
         $resp['Prv_Cod'] = $Prv_Cod;
         $resp['Prv_Nom'] = ($Prv_Tic == 'N') ? trim($Prs_Ape . ' ' . $Prs_Nom) : (($Prv_Com != '') ? trim($Prv_Com) : trim($Prs_Ape));
         $resp['Prs_Ced'] = $Prs_Ced;
-
     } catch (Exception $e) {
         $obBD_con1->rollBack_nomsn($obBD_conexion);
         $resp['message'] = $e->getMessage();
@@ -441,19 +440,24 @@ if (isset($_POST['saveVehiculoAjax'])) {
 
                         <!-- Grid Choferes -->
                         <div role="tabpanel" class="tab-pane active" id="tabListChoferes">
-                            <div class="form-inline" style="margin-bottom: 15px;">
-                                <label class="control-label" style="font-weight: bold;">Filtrar por:</label>
-                                <select id="opChofer" class="form-control input-sm" style="margin-left: 5px;">
-                                    <option value="d">Nombre</option>
-                                    <option value="c">Cédula</option>
-                                </select>
-                                <input type="text" id="searchChofer" class="form-control input-sm" placeholder="Buscar..." style="margin-left: 5px; width: 200px;">
-                                <button type="button" class="btn btn-sm btn-primary" id="btnBuscarChofer" onclick="reloadGridChoferes();"><i class="fa fa-search"></i> Buscar</button>
-
-                                <!-- Botón que lleva al Ambiente 2 de registro -->
-                                <button type="button" class="btn btn-sm btn-exa-success" style="float: right;" onclick="mostrarFormulario('chofer');">
-                                    <i class="glyphicon glyphicon-plus"></i> Registrar Nuevo Operario
-                                </button>
+                            <div style="margin-bottom: 15px; background-color: #f9f9f9; padding: 10px; border-radius: 4px; border: 1px solid #eee;">
+                                <div class="form-inline" style="margin-bottom: 10px;">
+                                    <label class="control-label" style="font-weight: bold; width: 70px;">Filtro:</label>
+                                    <input type="hidden" id="opChofer" value="d">
+                                    <div class="btn-group" style="vertical-align: top;">
+                                        <button type="button" class="btn btn-default btn-sm active" onclick="document.getElementById('opChofer').value='d'; $(this).addClass('active').css({'color':'#e67e22','background-color':'#fff'}).siblings().removeClass('active').css({'color':'#000','background-color':'#e6e6e6'});" style="color: #e67e22; font-weight: bold; background-color: #fff;">Nombre</button>
+                                        <button type="button" class="btn btn-default btn-sm" onclick="document.getElementById('opChofer').value='c'; $(this).addClass('active').css({'color':'#e67e22','background-color':'#fff'}).siblings().removeClass('active').css({'color':'#000','background-color':'#e6e6e6'});" style="color: #000; font-weight: bold; background-color: #e6e6e6;">Cédula</button>
+                                    </div>
+                                    <!-- Botón que lleva al Ambiente 2 de registro -->
+                                    <button type="button" class="btn btn-sm btn-exa-success" style="float: right;" onclick="mostrarFormulario('chofer');">
+                                        <i class="glyphicon glyphicon-plus"></i> Registrar Nuevo Operario
+                                    </button>
+                                </div>
+                                <div class="form-inline">
+                                    <label class="control-label" style="font-weight: bold; width: 70px;">Buscar:</label>
+                                    <input type="text" id="searchChofer" class="form-control input-sm" placeholder="Escriba aquí para buscar..." style="width: 250px;">
+                                    <button type="button" class="btn btn-sm btn-primary" id="btnBuscarChofer" onclick="reloadGridChoferes();"><i class="fa fa-search"></i> Buscar</button>
+                                </div>
                             </div>
                             <table id="gridChoferes"></table>
                             <div id="pagerChoferes"></div>
@@ -461,18 +465,23 @@ if (isset($_POST['saveVehiculoAjax'])) {
 
                         <!-- Grid Vehículos -->
                         <div role="tabpanel" class="tab-pane" id="tabListVehiculos">
-                            <div class="form-inline" style="margin-bottom: 15px;">
-                                <label class="control-label" style="font-weight: bold;">Filtrar por:</label>
-                                <select id="opVehiculo" class="form-control input-sm" style="margin-left: 5px;">
-                                    <option value="p">Placa</option>
-                                </select>
-                                <input type="text" id="searchVehiculo" class="form-control input-sm" placeholder="Buscar por placa..." style="margin-left: 5px; width: 200px;">
-                                <button type="button" class="btn btn-sm btn-primary" id="btnBuscarVehiculo" onclick="reloadGridVehiculos();"><i class="fa fa-search"></i> Buscar</button>
-
-                                <!-- Botón que lleva al Ambiente 2 de registro -->
-                                <button type="button" class="btn btn-sm btn-exa-success" style="float: right;" onclick="mostrarFormulario('vehiculo');">
-                                    <i class="glyphicon glyphicon-plus"></i> Registrar Nuevo Vehículo
-                                </button>
+                            <div style="margin-bottom: 15px; background-color: #f9f9f9; padding: 10px; border-radius: 4px; border: 1px solid #eee;">
+                                <div class="form-inline" style="margin-bottom: 10px;">
+                                    <label class="control-label" style="font-weight: bold; width: 70px;">Filtro:</label>
+                                    <input type="hidden" id="opVehiculo" value="p">
+                                    <div class="btn-group" style="vertical-align: top;">
+                                        <button type="button" class="btn btn-default btn-sm active" onclick="document.getElementById('opVehiculo').value='p'; $(this).addClass('active').css({'color':'#e67e22','background-color':'#fff'}).siblings().removeClass('active').css({'color':'#000','background-color':'#e6e6e6'});" style="color: #e67e22; font-weight: bold; background-color: #fff;">Placa</button>
+                                    </div>
+                                    <!-- Botón que lleva al Ambiente 2 de registro -->
+                                    <button type="button" class="btn btn-sm btn-exa-success" style="float: right;" onclick="mostrarFormulario('vehiculo');">
+                                        <i class="glyphicon glyphicon-plus"></i> Registrar Nuevo Vehículo
+                                    </button>
+                                </div>
+                                <div class="form-inline">
+                                    <label class="control-label" style="font-weight: bold; width: 70px;">Buscar:</label>
+                                    <input type="text" id="searchVehiculo" class="form-control input-sm" placeholder="Buscar por placa..." style="width: 250px;">
+                                    <button type="button" class="btn btn-sm btn-primary" id="btnBuscarVehiculo" onclick="reloadGridVehiculos();"><i class="fa fa-search"></i> Buscar</button>
+                                </div>
                             </div>
                             <table id="gridVehiculos"></table>
                             <div id="pagerVehiculos"></div>
@@ -631,7 +640,7 @@ if (isset($_POST['saveVehiculoAjax'])) {
                                                 <div class="input-group">
                                                     <select id="Veh_Mar" name="Veh_Mar" class="form-control">
                                                         <option value="">Seleccione...</option>
-                                                        <?php if(isset($rs_marcas) && is_array($rs_marcas)) foreach($rs_marcas as $m) { ?>
+                                                        <?php if (isset($rs_marcas) && is_array($rs_marcas)) foreach ($rs_marcas as $m) { ?>
                                                             <option value="<?php echo htmlspecialchars($m['Veh_Mar']); ?>"><?php echo htmlspecialchars($m['Veh_Mar']); ?></option>
                                                         <?php } ?>
                                                     </select>
@@ -651,7 +660,7 @@ if (isset($_POST['saveVehiculoAjax'])) {
                                                 <div class="input-group">
                                                     <select id="Veh_Col" name="Veh_Col" class="form-control">
                                                         <option value="">Seleccione...</option>
-                                                        <?php if(isset($rs_colores) && is_array($rs_colores)) foreach($rs_colores as $c) { ?>
+                                                        <?php if (isset($rs_colores) && is_array($rs_colores)) foreach ($rs_colores as $c) { ?>
                                                             <option value="<?php echo htmlspecialchars($c['Veh_Col']); ?>"><?php echo htmlspecialchars($c['Veh_Col']); ?></option>
                                                         <?php } ?>
                                                     </select>
@@ -677,16 +686,16 @@ if (isset($_POST['saveVehiculoAjax'])) {
                                                         <option value="M">MAQUINARIA</option>
                                                         <option value="T">TRÁILER</option>
                                                         <option value="V" selected>VOLQUETA</option>
-                                                        <?php 
+                                                        <?php
                                                         $titulos_fijos = array('B', 'C', 'M', 'T', 'V');
-                                                        if(isset($rs_titulos) && is_array($rs_titulos)) {
-                                                            foreach($rs_titulos as $t) {
-                                                                if(!in_array(trim($t['Veh_Tit']), $titulos_fijos) && trim($t['Veh_Tit']) !== '') {
+                                                        if (isset($rs_titulos) && is_array($rs_titulos)) {
+                                                            foreach ($rs_titulos as $t) {
+                                                                if (!in_array(trim($t['Veh_Tit']), $titulos_fijos) && trim($t['Veh_Tit']) !== '') {
                                                         ?>
-                                                            <option value="<?php echo htmlspecialchars(trim($t['Veh_Tit'])); ?>"><?php echo htmlspecialchars(trim($t['Veh_Tit'])); ?></option>
-                                                        <?php 
+                                                                    <option value="<?php echo htmlspecialchars(trim($t['Veh_Tit'])); ?>"><?php echo htmlspecialchars(trim($t['Veh_Tit'])); ?></option>
+                                                        <?php
                                                                 }
-                                                            } 
+                                                            }
                                                         }
                                                         ?>
                                                     </select>
@@ -823,7 +832,7 @@ if (isset($_POST['saveVehiculoAjax'])) {
                                         <div class="col-sm-8">
                                             <select name="Reg_Ciu_Cod" id="Reg_Ciu_Cod" class="form-control input-sm" required>
                                                 <option value="">Seleccione...</option>
-                                                <?php foreach($rs_ciudad as $c) { ?>
+                                                <?php foreach ($rs_ciudad as $c) { ?>
                                                     <option value="<?php echo $c['Ciu_Cod']; ?>"><?php echo $c['Ciu_Des']; ?></option>
                                                 <?php } ?>
                                             </select>
@@ -878,7 +887,7 @@ if (isset($_POST['saveVehiculoAjax'])) {
         </div>
     </div>
 
-    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_vehiculos_choferes.js?v=7"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_vehiculos_choferes.js?v=8"></script>
 </BODY>
 
 </HTML>

@@ -30,7 +30,7 @@ function sentencias_vehiculos_choferes($id, $Par_Sql)
             }
 
             if (empty($Par_Sql['limits'])) {
-                $sql = "SELECT COUNT(*) as total 
+                $sql = "SELECT COUNT(DISTINCT chofer.Prs_Cod) as total 
                         FROM chofer
                         INNER JOIN persona ON persona.Prs_Cod = chofer.Prs_Cod
                         WHERE chofer.Emp_Cod = '$Par_Sql[0]' 
@@ -42,6 +42,7 @@ function sentencias_vehiculos_choferes($id, $Par_Sql)
                         INNER JOIN persona ON persona.Prs_Cod = chofer.Prs_Cod
                         WHERE chofer.Emp_Cod = '$Par_Sql[0]' 
                           AND chofer.Cho_Est = 'A' AND IFNULL(chofer.Cho_Tip, '') != 'CM' $search
+                        GROUP BY chofer.Prs_Cod
                         ORDER BY persona.Prs_Ape ASC, persona.Prs_Nom ASC " . $Par_Sql['limits'];
             }
             break;
