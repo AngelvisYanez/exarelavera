@@ -1046,8 +1046,68 @@ function verDetalleMaquina(veh_cod, cho_cod) {
 }
 
 function exportarReportePDF() {
-    $.alert("Funcionalidad PDF en desarrollo...");
-    // Aquí se llamará a la librería de PDF o endpoint de backend.
+    var tipo = $('#rep_tipo').val();
+    var contenido = "";
+    var titulo = "";
+
+    if (tipo === 'individual') {
+        if ($('#contenedorReporteIndividual').is(':visible')) {
+            contenido = $('#contenedorReporteIndividual').html();
+            titulo = "Reporte Individual de Horómetro";
+        } else {
+            $.alert("Primero debe generar el reporte individual.");
+            return;
+        }
+    } else {
+        if ($('#contenedorReporteConsolidado').is(':visible')) {
+            contenido = $('#contenedorReporteConsolidado').html();
+            titulo = "Reporte Consolidado de Horómetro";
+        } else {
+            $.alert("Primero debe generar el reporte consolidado.");
+            return;
+        }
+    }
+
+    var divPrint = document.createElement('div');
+    divPrint.innerHTML = contenido;
+    
+    // Removemos botones del contenido a imprimir
+    var buttons = divPrint.querySelectorAll('button');
+    for (var i = 0; i < buttons.length; i++) {
+        buttons[i].parentNode.removeChild(buttons[i]);
+    }
+
+    var ventana = window.open('', 'PRINT', 'height=800,width=1000');
+    
+    ventana.document.write('<html><head><title>' + titulo + '</title>');
+    ventana.document.write('<style>');
+    ventana.document.write('body { font-family: Arial, sans-serif; padding: 20px; }');
+    ventana.document.write('table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }');
+    ventana.document.write('th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }');
+    ventana.document.write('th { background-color: #f2f2f2; font-weight: bold; }');
+    ventana.document.write('.text-center { text-align: center; }');
+    ventana.document.write('.text-right { text-align: right; }');
+    ventana.document.write('.fw-bold { font-weight: bold; }');
+    ventana.document.write('h2, h3, h4, h5 { margin-top: 0; }');
+    ventana.document.write('.row { display: flex; flex-wrap: wrap; margin-bottom: 15px; }');
+    ventana.document.write('.col-sm-3, .col-sm-4, .col-sm-6, .col-sm-12 { flex: 1; padding: 0 10px; }');
+    ventana.document.write('.metric-card { border: 1px solid #ccc; padding: 15px; border-radius: 5px; text-align: center; margin-bottom:10px; }');
+    ventana.document.write('.metric-value { font-size: 24px; font-weight: bold; }');
+    ventana.document.write('.metric-title { font-size: 12px; color: #666; }');
+    ventana.document.write('</style>');
+    ventana.document.write('</head><body>');
+    ventana.document.write('<h2>' + titulo + '</h2>');
+    ventana.document.write(divPrint.innerHTML);
+    ventana.document.write('</body></html>');
+    
+    ventana.document.close(); // Necesario para IE >= 10
+    ventana.focus(); // Necesario para IE >= 10
+
+    // Esperar a que los estilos se apliquen
+    setTimeout(function() {
+        ventana.print();
+        ventana.close();
+    }, 250);
 }
 
 function exportarReporteExcel() {

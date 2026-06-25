@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Formulario y Gestión de Horómetro de Maquinaria - Relavera
  * Permite registrar, revisar, aprobar y controlar lecturas de horómetro y mantenimiento preventivo.
@@ -15,20 +16,7 @@ $obBD_conexion = new Class_Log_Conexion_Maquinaria_Horometro($Ses_Dat_Dis);
 $obBD_con1 = new Class_Log_Datos_Maquinaria_Horometro;
 
 // 1. Obtener planta asignada al usuario
-$Pla_Cod_Log = isset($_SESSION['Ses_Pla_Cod']) ? (int)$_SESSION['Ses_Pla_Cod'] : 0;
-
-if ($Pla_Cod_Log === 0) {
-    $row_mu = $obBD_con1->getArrayConsultaSql("SELECT Pla_Cod FROM manifiesto_usuario WHERE Usu_Cod = '".$_SESSION['Ses_Usu_Cod']."' LIMIT 1", $obBD_conexion);
-    if (isset($row_mu[0]['Pla_Cod'])) {
-        $Pla_Cod_Log = (int)$row_mu[0]['Pla_Cod'];
-    }
-}
-
-if ($Pla_Cod_Log === 0) {
-    $row_pla_def = $obBD_con1->getArrayConsultaSql("SELECT Pla_Cod FROM manifiesto_plantas mp LEFT JOIN cliente c ON c.Cli_Cod = mp.Cli_Cod WHERE mp.Pla_Est = 'A' AND c.Emp_Cod = '".$_SESSION['Ses_Emp_Cod']."' LIMIT 1", $obBD_conexion);
-    $Pla_Cod_Log = isset($row_pla_def[0]['Pla_Cod']) ? (int)$row_pla_def[0]['Pla_Cod'] : 0;
-}
-
+// El sistema se basa puramente en la empresa seleccionada
 // Determinar rol de usuario
 $user_role = 'OP'; // Operador por defecto
 $row_perfil = $obBD_con1->getArrayConsultaSql("SELECT p.Per_Des FROM usuarperfi up INNER JOIN perfiles p ON up.Per_Cod = p.Per_Cod WHERE up.Usu_Cod = '" . $_SESSION['Ses_Usu_Cod'] . "'", $obBD_conexion);
@@ -49,7 +37,7 @@ if (!empty($row_perfil)) {
 // Cargar Métricas Dashboard
 if (isset($_GET['getDashboardMetricsAjax'])) {
     $resp = array('success' => true, 'pendientes' => 0, 'horas_mes' => 0, 'mantenimientos_alerta' => 0);
-    
+
     // Lecturas pendientes
     $row_p = $obBD_con1->getRowConsulta(7, array('tipo' => 'pendientes'), $obBD_conexion);
     $resp['pendientes'] = isset($row_p['total']) ? (int)$row_p['total'] : 0;
@@ -58,26 +46,13 @@ if (isset($_GET['getDashboardMetricsAjax'])) {
     $row_h = $obBD_con1->getRowConsulta(7, array('tipo' => 'horas_mes'), $obBD_conexion);
     $resp['horas_mes'] = isset($row_h['total']) ? (float)$row_h['total'] : 0.00;
 
-    // Alertas de mantenimiento preventivo
-    $alert_count = 0;
-    $row_alertas = $obBD_con1->getArrayConsulta(10, array($_SESSION['Ses_Emp_Cod']), $obBD_conexion);
-    if (!empty($row_alertas)) {
-        foreach ($row_alertas as $alert) {
-            $limite = (float)$alert['Cma_Hrs_Ult'] + (float)$alert['Cma_Hrs_Fco'];
-            if ((float)$alert['lectura_actual'] >= $limite) {
-                $alert_count++;
-            }
-        }
-    }
-    $resp['mantenimientos_alerta'] = $alert_count;
-
     $obBD_con1->echoJson($resp);
     exit;
 }
 
 // Listar máquinas asociadas a la planta
 if (isset($_GET['listMaquinasAjax'])) {
-    $rows_data = $obBD_con1->getArrayConsulta(1, array('Pla_Cod' => $Pla_Cod_Log), $obBD_conexion);
+    $rows_data = $obBD_con1->getArrayConsulta(1, array('Emp_Cod' => $_SESSION['Ses_Emp_Cod']), $obBD_conexion);
     $obBD_con1->utf8_change_param($rows_data);
     $obBD_con1->echoJson($rows_data);
     exit;
@@ -85,7 +60,7 @@ if (isset($_GET['listMaquinasAjax'])) {
 
 // Listar operadores asociados a la planta
 if (isset($_GET['listOperadoresAjax'])) {
-    $rows_data = $obBD_con1->getArrayConsulta(2, array('Pla_Cod' => $Pla_Cod_Log), $obBD_conexion);
+    $rows_data = $obBD_con1->getArrayConsulta(2, array('Emp_Cod' => $_SESSION['Ses_Emp_Cod']), $obBD_conexion);
     $obBD_con1->utf8_change_param($rows_data);
     $obBD_con1->echoJson($rows_data);
     exit;
@@ -97,19 +72,19 @@ if (isset($_GET['listHorometrosGridAjax'])) {
     $rows = isset($_GET['rows']) ? (int)$_GET['rows'] : 50;
     $search = isset($_GET['search']) ? trim($_GET['search']) : '';
     $op_opciones = isset($_GET['op_opciones']) ? trim($_GET['op_opciones']) : '';
-    
+
     $params = array(
         0 => $_SESSION['Ses_Emp_Cod'],
         'search' => $search,
         'op_opciones' => $op_opciones
     );
-    
+
     $row_count = $obBD_con1->getRowConsulta(3, $params, $obBD_conexion);
     $total_records = isset($row_count['total']) ? (int)$row_count['total'] : 0;
-    
+
     $pagination = pages($total_records, $page, $rows);
     $response = $pagination['data'];
-    
+
     if ($total_records > 0) {
         $params['limits'] = $pagination['limits'];
         $response['rows'] = $obBD_con1->getArrayConsulta(3, $params, $obBD_conexion);
@@ -159,7 +134,7 @@ if (isset($_POST['saveHorometroAjax'])) {
         $Hor_Fin = isset($_POST['Hor_Fin']) ? trim($_POST['Hor_Fin']) : '0';
         $Hor_Set = isset($_POST['Hor_Set']) ? trim($_POST['Hor_Set']) : '';
         $Hor_Obs = isset($_POST['Hor_Obs']) ? trim($_POST['Hor_Obs']) : '';
-        
+
         $Hor_Hini = date('Y-m-d H:i:s'); // Fecha y Hora inicial automática (DATETIME)
         $Hor_Hfin = date('Y-m-d H:i:s'); // Fecha y Hora final automática (DATETIME)
 
@@ -295,21 +270,7 @@ if (isset($_POST['changeEstadoAjax'])) {
         $obBD_con1->operacionobBD(5, array($Hor_Cod, $Estado_Nue), $obBD_conexion);
         if ($obBD_con1->Error != 0) throw new Exception("Error BD (Estado): " . $obBD_con1->getMsgError());
 
-        // Si se aprueba, revisar si supera límites de mantenimiento preventivo
-        if ($Estado_Nue === 'A') {
-            // Verificar si el vehículo tiene configuración de mantenimiento
-            $row_conf = $obBD_con1->getArrayConsultaSql("SELECT Cma_Hrs_Ult, Cma_Hrs_Fco FROM maquinaria_config_mantenimiento WHERE Veh_Cod = $Veh_Cod AND Cma_Est = 'A' LIMIT 1", $obBD_conexion);
-            if (!empty($row_conf)) {
-                $frecuencia = (float)$row_conf[0]['Cma_Hrs_Fco'];
-                $ultimo_mant = (float)$row_conf[0]['Cma_Hrs_Ult'];
-                $proximo = $ultimo_mant + $frecuencia;
-                
-                if ($Hor_Fin >= $proximo) {
-                    $resp['mantenimiento_warning'] = true;
-                    $resp['mantenimiento_msg'] = '¡Alerta! La máquina requiere mantenimiento preventivo inmediato ya que superó la lectura de ' . $proximo . ' horas.';
-                }
-            }
-        }
+
 
         $resp['success'] = true;
         $resp['message'] = 'Estado actualizado exitosamente.';
@@ -324,119 +285,201 @@ if (isset($_POST['changeEstadoAjax'])) {
     exit;
 }
 
-// Cargar Historial de Mantenimientos por Máquina (AJAX)
-if (isset($_GET['getHistorialMantenimientoAjax'])) {
-    $Veh_Cod = isset($_GET['Veh_Cod']) ? (int)$_GET['Veh_Cod'] : 0;
-    $resp = array('success' => true, 'rows' => array(), 'config' => null);
-    if ($Veh_Cod > 0) {
-        $resp['rows'] = $obBD_con1->getArrayConsulta(11, array($Veh_Cod), $obBD_conexion);
-        $obBD_con1->utf8_change_param($resp['rows']);
+// Obtener Datos para Reporte
+if (isset($_GET['getReporteOperativoAjax'])) {
+    $resp = array('success' => false, 'message' => '');
+    $tipo = isset($_GET['tipo']) ? trim($_GET['tipo']) : 'individual';
+    $anio = isset($_GET['anio']) ? trim($_GET['anio']) : date('Y');
+    $mes = isset($_GET['mes']) ? trim($_GET['mes']) : date('m');
+    $maq = isset($_GET['maq']) ? trim($_GET['maq']) : 'TODAS';
+    $ope = isset($_GET['ope']) ? trim($_GET['ope']) : 'TODOS';
+
+    $meses = array(
+        '01'=>'Enero', '02'=>'Febrero', '03'=>'Marzo', '04'=>'Abril',
+        '05'=>'Mayo', '06'=>'Junio', '07'=>'Julio', '08'=>'Agosto',
+        '09'=>'Septiembre', '10'=>'Octubre', '11'=>'Noviembre', '12'=>'Diciembre'
+    );
+    $periodo = (isset($meses[$mes]) ? strtoupper($meses[$mes]) : '') . ' ' . $anio;
+    $anio_mes = $anio . '-' . $mes;
+
+    $params = array(
+        'anio_mes' => $anio_mes,
+        'Veh_Cod' => $maq,
+        'Cho_Cod' => $ope,
+        'Emp_Cod' => $_SESSION['Ses_Emp_Cod']
+    );
+
+    if ($tipo === 'individual') {
+        // Consultar Ficha de Maquinaria
+        $ficha = array('id' => 'N/D', 'marca' => 'N/D', 'modelo' => 'N/D', 'serie' => 'N/D', 'propiedad' => 'N/D');
+        if ($maq !== 'TODAS') {
+            $row_ficha = $obBD_con1->getRowConsulta(20, $params, $obBD_conexion);
+            if (!empty($row_ficha)) {
+                $ficha['id'] = $row_ficha['id'];
+                $ficha['marca'] = $row_ficha['marca'];
+                $ficha['modelo'] = $row_ficha['modelo'];
+                $ficha['serie'] = $row_ficha['serie'];
+                $ficha['propiedad'] = $row_ficha['propiedad'];
+            }
+        }
+
+        // Consultar Detalle Diario
+        $rows_diario = $obBD_con1->getArrayConsulta(21, $params, $obBD_conexion);
+
+        $tot_ht = 0; $tot_hp = 0; $tot_desf = 0; $tot_comb = 0;
+        $q1_ht = 0; $q1_hp = 0; $q1_desf = 0; $q1_comb = 0; $q1_dias = 0;
+        $q2_ht = 0; $q2_hp = 0; $q2_desf = 0; $q2_comb = 0; $q2_dias = 0;
         
-        $row_conf = $obBD_con1->getArrayConsultaSql("SELECT Cma_Hrs_Fco, Cma_Hrs_Ult FROM maquinaria_config_mantenimiento WHERE Veh_Cod = $Veh_Cod LIMIT 1", $obBD_conexion);
-        if (!empty($row_conf)) {
-            $resp['config'] = array(
-                'Cma_Hrs_Fco' => (float)$row_conf[0]['Cma_Hrs_Fco'],
-                'Cma_Hrs_Ult' => (float)$row_conf[0]['Cma_Hrs_Ult']
-            );
+        $op_nom = 'N/D';
+        $dias_trabajados = array();
+        $dias_q1 = array();
+        $dias_q2 = array();
+
+        $detalle_q1 = array();
+        $detalle_q2 = array();
+
+        if (!empty($rows_diario)) {
+            foreach ($rows_diario as $r) {
+                $dia = (int)$r['dia'];
+                $ht = (float)$r['total_hrs'];
+                $hp = (float)$r['prod_hrs'];
+                $desf = (float)$r['descuento'];
+                $comb = (float)$r['combustible'];
+                if ($op_nom === 'N/D') $op_nom = $r['operador'];
+
+                $tot_ht += $ht; $tot_hp += $hp; $tot_desf += $desf; $tot_comb += $comb;
+                $dias_trabajados[$dia] = true;
+
+                $item = array(
+                    'dia' => str_pad($dia, 2, '0', STR_PAD_LEFT),
+                    'fecha' => $r['fecha'],
+                    'operador' => $r['operador'],
+                    'hor_inicial' => number_format((float)$r['hor_inicial'], 2),
+                    'hor_final' => number_format((float)$r['hor_final'], 2),
+                    'total_hrs' => number_format($ht, 2),
+                    'descuento' => number_format($desf, 2),
+                    'prod_hrs' => number_format($hp, 2),
+                    'combustible' => number_format($comb, 2),
+                    'observaciones' => $r['observaciones']
+                );
+
+                if ($dia <= 15) {
+                    $q1_ht += $ht; $q1_hp += $hp; $q1_desf += $desf; $q1_comb += $comb;
+                    $dias_q1[$dia] = true;
+                    $detalle_q1[] = $item;
+                } else {
+                    $q2_ht += $ht; $q2_hp += $hp; $q2_desf += $desf; $q2_comb += $comb;
+                    $dias_q2[$dia] = true;
+                    $detalle_q2[] = $item;
+                }
+            }
         }
-    }
-    $obBD_con1->echoJson($resp);
-    exit;
-}
 
-// Registrar Mantenimiento Preventivo (AJAX)
-if (isset($_POST['saveMantenimientoAjax'])) {
-    $resp = array('success' => false);
-    $obBD_con1->inicio_transaccion($obBD_conexion);
-    try {
-        $Veh_Cod = isset($_POST['Veh_Cod_Mant']) ? (int)$_POST['Veh_Cod_Mant'] : 0;
-        $Hma_Fec = isset($_POST['Hma_Fec']) ? trim($_POST['Hma_Fec']) : '';
-        $Hma_Hor = isset($_POST['Hma_Hor']) ? trim($_POST['Hma_Hor']) : '';
-        $Hma_Det = isset($_POST['Hma_Det']) ? trim($_POST['Hma_Det']) : '';
-        $Hma_Res = isset($_POST['Hma_Res']) ? trim($_POST['Hma_Res']) : '';
-
-        if (empty($Veh_Cod) || empty($Hma_Fec) || empty($Hma_Hor) || empty($Hma_Det) || empty($Hma_Res)) {
-            throw new Exception('Todos los campos son obligatorios para registrar un mantenimiento.');
-        }
-
-        // Formatear fecha para MySQL
-        if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $Hma_Fec)) {
-            $parts = explode('/', $Hma_Fec);
-            $Hma_Fec = $parts[2] . '-' . $parts[1] . '-' . $parts[0];
-        }
-
-        // 1. Guardar en bitácora de historial
-        $obBD_con1->operacionobBD(9, array($Veh_Cod, $_SESSION['Ses_Usu_Cod'], $Hma_Fec, (float)$Hma_Hor, $Hma_Det, $Hma_Res), $obBD_conexion);
-        if ($obBD_con1->Error != 0) throw new Exception("Error BD (Mant Historial): " . $obBD_con1->getMsgError());
-
-        // 2. Actualizar configuración para marcar este como el último mantenimiento realizado
-        $row_conf = $obBD_con1->getArrayConsultaSql("SELECT Cma_Cod FROM maquinaria_config_mantenimiento WHERE Veh_Cod = $Veh_Cod LIMIT 1", $obBD_conexion);
-        if (!empty($row_conf)) {
-            // Existe -> Actualizar Cma_Hrs_Ult
-            $obBD_con1->operacionobBD(8, array($Veh_Cod, (float)$_POST['Cma_Hrs_Fco'], (float)$Hma_Hor, 'update'), $obBD_conexion);
-            if ($obBD_con1->Error != 0) throw new Exception("Error BD (Mant Update): " . $obBD_con1->getMsgError());
-        } else {
-            // No existe -> Crear nueva configuración con la frecuencia suministrada
-            $frecuencia = isset($_POST['Cma_Hrs_Fco']) ? (float)$_POST['Cma_Hrs_Fco'] : 250.00;
-            $obBD_con1->operacionobBD(8, array($Veh_Cod, $frecuencia, (float)$Hma_Hor, 'insert'), $obBD_conexion);
-            if ($obBD_con1->Error != 0) throw new Exception("Error BD (Mant Insert): " . $obBD_con1->getMsgError());
-        }
+        $tot_dias = count($dias_trabajados);
+        $q1_dias = count($dias_q1);
+        $q2_dias = count($dias_q2);
+        $prom_diario = $tot_dias > 0 ? ($tot_hp / $tot_dias) : 0;
 
         $resp['success'] = true;
-        $resp['message'] = 'Historial de mantenimiento preventivo registrado exitosamente. El horómetro de alerta se ha actualizado.';
-    } catch (Exception $e) {
-        $obBD_con1->rollBack_nomsn($obBD_conexion);
-        $resp['message'] = $e->getMessage();
-        $obBD_con1->echoJson($resp);
-        exit;
-    }
-    $obBD_con1->fin_transaccion_nomsn($obBD_conexion);
-    $obBD_con1->echoJson($resp);
-    exit;
-}
+        $resp['periodo'] = $periodo;
+        $resp['operador_nombre'] = $op_nom;
+        $resp['ficha'] = $ficha;
 
-// Guardar o Actualizar Configuración de Frecuencia de Mantenimiento (AJAX)
-if (isset($_POST['saveConfigMantenimientoAjax'])) {
-    $resp = array('success' => false);
-    $obBD_con1->inicio_transaccion($obBD_conexion);
-    try {
-        $Veh_Cod = isset($_POST['Veh_Cod_Conf']) ? (int)$_POST['Veh_Cod_Conf'] : 0;
-        $Cma_Hrs_Fco = isset($_POST['Cma_Hrs_Fco']) ? (float)$_POST['Cma_Hrs_Fco'] : 0.00;
-        $Cma_Hrs_Ult = isset($_POST['Cma_Hrs_Ult']) ? (float)$_POST['Cma_Hrs_Ult'] : 0.00;
+        $resp['resumen'] = array(
+            'horas_trabajadas' => number_format($tot_ht, 2),
+            'horas_productivas' => number_format($tot_hp, 2),
+            'desfase' => number_format($tot_desf, 2),
+            'combustible' => number_format($tot_comb, 2),
+            'promedio_diario' => number_format($prom_diario, 2),
+            'dias_laborados' => $tot_dias
+        );
 
-        if ($Veh_Cod <= 0 || $Cma_Hrs_Fco <= 0) {
-            throw new Exception('Ingrese una frecuencia válida de horas para el mantenimiento.');
-        }
+        $resp['q1'] = array(
+            'horas_trabajadas' => number_format($q1_ht, 2),
+            'horas_productivas' => number_format($q1_hp, 2),
+            'desfase' => number_format($q1_desf, 2),
+            'combustible' => number_format($q1_comb, 2),
+            'dias_laborados' => $q1_dias
+        );
+        $resp['q2'] = array(
+            'horas_trabajadas' => number_format($q2_ht, 2),
+            'horas_productivas' => number_format($q2_hp, 2),
+            'desfase' => number_format($q2_desf, 2),
+            'combustible' => number_format($q2_comb, 2),
+            'dias_laborados' => $q2_dias
+        );
 
-        $row_conf = $obBD_con1->getArrayConsultaSql("SELECT Cma_Cod FROM maquinaria_config_mantenimiento WHERE Veh_Cod = $Veh_Cod LIMIT 1", $obBD_conexion);
-        if (!empty($row_conf)) {
-            $obBD_con1->operacionobBD(8, array($Veh_Cod, $Cma_Hrs_Fco, $Cma_Hrs_Ult, 'update'), $obBD_conexion);
-            if ($obBD_con1->Error != 0) throw new Exception("Error BD (Conf Update): " . $obBD_con1->getMsgError());
-        } else {
-            $obBD_con1->operacionobBD(8, array($Veh_Cod, $Cma_Hrs_Fco, $Cma_Hrs_Ult, 'insert'), $obBD_conexion);
-            if ($obBD_con1->Error != 0) throw new Exception("Error BD (Conf Insert): " . $obBD_con1->getMsgError());
-        }
+        $resp['detalle_q1'] = $detalle_q1;
+        $resp['detalle_q2'] = $detalle_q2;
 
+    } else {
+        // Consolidado (Case 22)
         $resp['success'] = true;
-        $resp['message'] = 'Frecuencia de mantenimiento guardada de forma exitosa.';
-    } catch (Exception $e) {
-        $obBD_con1->rollBack_nomsn($obBD_conexion);
-        $resp['message'] = $e->getMessage();
-        $obBD_con1->echoJson($resp);
-        exit;
+        $resp['periodo'] = $periodo;
+        
+        $resumen = array('horas_trabajadas' => 0.0, 'horas_productivas' => 0.0, 'desfase' => 0.0, 'combustible' => 0.0, 'total_maquinas' => 0);
+        $detalle = array();
+        
+        $rows = $obBD_con1->getArrayConsulta(22, $params, $obBD_conexion);
+        $maquinas_vistas = array();
+
+        if (!empty($rows)) {
+            foreach($rows as $r) {
+                if (!isset($maquinas_vistas[$r['veh_cod']])) {
+                    $maquinas_vistas[$r['veh_cod']] = true;
+                    $resumen['total_maquinas']++;
+                }
+
+                $resumen['horas_trabajadas'] += (float)$r['horas_trabajadas'];
+                $resumen['horas_productivas'] += (float)$r['horas_productivas'];
+                $resumen['desfase'] += (float)$r['desfase'];
+                $resumen['combustible'] += (float)$r['combustible'];
+
+                $detalle[] = array(
+                    'veh_cod' => $r['veh_cod'],
+                    'cho_cod' => $r['cho_cod'],
+                    'maquina' => $r['maquina'],
+                    'operador' => $r['operador'],
+                    'horas_trabajadas' => number_format((float)$r['horas_trabajadas'], 2),
+                    'horas_productivas' => number_format((float)$r['horas_productivas'], 2),
+                    'desfase' => number_format((float)$r['desfase'], 2),
+                    'combustible' => number_format((float)$r['combustible'], 2),
+                    'estado' => $r['estado']
+                );
+            }
+        }
+
+        $resp['resumen'] = array(
+            'horas_trabajadas' => number_format($resumen['horas_trabajadas'], 2),
+            'horas_productivas' => number_format($resumen['horas_productivas'], 2),
+            'desfase' => number_format($resumen['desfase'], 2),
+            'combustible' => number_format($resumen['combustible'], 2),
+            'total_maquinas' => $resumen['total_maquinas']
+        );
+        $resp['detalle'] = $detalle;
     }
-    $obBD_con1->fin_transaccion_nomsn($obBD_conexion);
+
     $obBD_con1->echoJson($resp);
     exit;
 }
 
-// Cargar Alertas Generales de Mantenimiento Preventivo (AJAX)
-if (isset($_GET['listAlertasMantenimientoAjax'])) {
-    $rows = $obBD_con1->getArrayConsulta(10, array($_SESSION['Ses_Emp_Cod']), $obBD_conexion);
-    $obBD_con1->utf8_change_param($rows);
-    $obBD_con1->echoJson($rows);
+
+if (isset($_GET['getLastVehiculoByOperadorAjax'])) {
+    $Cho_Cod = isset($_GET['Cho_Cod']) ? (int)$_GET['Cho_Cod'] : 0;
+    $resp = array('success' => false, 'Veh_Cod' => 0);
+    if ($Cho_Cod > 0) {
+        $sql = "SELECT Veh_Cod FROM maquinaria_horometro WHERE Cho_Cod = $Cho_Cod AND Hor_Est != 'E' ORDER BY Hor_Fec DESC, Hor_Cod DESC LIMIT 1";
+        $row = $obBD_con1->getArrayConsultaSql($sql, $obBD_conexion);
+        if (!empty($row)) {
+            $resp['success'] = true;
+            $resp['Veh_Cod'] = (int)$row[0]['Veh_Cod'];
+        }
+    }
+    $obBD_con1->echoJson($resp);
     exit;
 }
+
+
 // Cargar Evidencias de Horómetro (AJAX)
 if (isset($_GET['getEvidenciasAjax'])) {
     $Hor_Cod = isset($_GET['Hor_Cod']) ? (int)$_GET['Hor_Cod'] : 0;
@@ -446,6 +489,7 @@ if (isset($_GET['getEvidenciasAjax'])) {
         if (!empty($row)) {
             $resp['Hor_Img_Ini'] = $row[0]['Hor_Img_Ini'];
             $resp['Hor_Img_Fin'] = $row[0]['Hor_Img_Fin'];
+            $resp['Emp_Cod'] = isset($_SESSION['Ses_Emp_Cod']) ? $_SESSION['Ses_Emp_Cod'] : '0';
             $resp['success'] = true;
         } else {
             $resp['message'] = "Registro no encontrado.";
@@ -457,8 +501,9 @@ if (isset($_GET['getEvidenciasAjax'])) {
 ?>
 <!DOCTYPE HTML>
 <HTML>
+
 <HEAD>
-    <TITLE>Gestión de Horómetro y Mantenimiento de Maquinaria [EXA]</TITLE>
+    <TITLE>Gestión de Horómetro de Maquinaria [EXA]</TITLE>
     <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
     <?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
@@ -471,24 +516,33 @@ if (isset($_GET['getEvidenciasAjax'])) {
     </script>
     <style>
         /* Asegurar que los mensajes de error/alerta aparezcan por delante de los modales (z-index de Bootstrap es 1050) */
-        .ui-dialog, .ui-widget-overlay, .jconfirm, .sweet-alert, .swal2-container, .modal-alert {
+        .ui-dialog,
+        .ui-widget-overlay,
+        .jconfirm,
+        .sweet-alert,
+        .swal2-container,
+        .modal-alert {
             z-index: 1060 !important;
         }
-        .jconfirm-bg, .swal2-overlay, .ui-widget-overlay {
+
+        .jconfirm-bg,
+        .swal2-overlay,
+        .ui-widget-overlay {
             z-index: 1059 !important;
         }
     </style>
 </HEAD>
+
 <BODY>
     <div class="panel panel-default panel-main">
         <div class="panel-heading">
-            <span class="glyphicon glyphicon-tasks"></span> » Gestión de Horómetro y Mantenimiento de Maquinaria
+            <span class="glyphicon glyphicon-tasks"></span> » Gestión de Horómetro de Maquinaria
         </div>
         <div class="panel-body exa-body">
 
             <!-- ==================== AMBIENTE 1: DASHBOARD, GRID Y CONSULTA ==================== -->
             <div id="divListado">
-                
+
                 <!-- Tarjetas del Dashboard -->
                 <div class="dashboard-metrics-container">
                     <div class="metric-card metric-pending">
@@ -505,13 +559,7 @@ if (isset($_GET['getEvidenciasAjax'])) {
                             <span class="metric-value" id="dash_horas_mes">0.00 h</span>
                         </div>
                     </div>
-                    <div class="metric-card metric-alert" style="cursor:pointer;" onclick="abrirModalAlertas();">
-                        <div class="metric-icon-wrapper"><i class="glyphicon glyphicon-warning-sign"></i></div>
-                        <div class="metric-info">
-                            <span class="metric-title">Máquinas en Alerta</span>
-                            <span class="metric-value" id="dash_alertas_mant">0</span>
-                        </div>
-                    </div>
+
                 </div>
 
                 <!-- Pestañas de Consulta -->
@@ -522,8 +570,13 @@ if (isset($_GET['getEvidenciasAjax'])) {
                                 <i class="glyphicon glyphicon-list-alt" style="margin-right: 8px;"></i>Lecturas de Horómetro
                             </a>
                         </li>
+                        <li>
+                            <a href="#tabReportes" role="tab" data-toggle="tab">
+                                <i class="glyphicon glyphicon-stats" style="margin-right: 8px;"></i>Reportes Operativos
+                            </a>
+                        </li>
                     </ul>
-                    
+
                     <div class="tab-content tab-content-custom">
                         <div role="tabpanel" class="tab-pane active" id="tabListHorometros">
                             <div class="form-inline" style="margin-bottom: 15px;">
@@ -535,7 +588,7 @@ if (isset($_GET['getEvidenciasAjax'])) {
                                     <option value="Q">Quincenal</option>
                                     <option value="M">Mensual</option>
                                 </select>
-                                
+
                                 <input type="date" id="filtroFechaDia" class="form-control input-sm" style="margin-right: 5px; display:none;">
                                 <input type="week" id="filtroFechaSemana" class="form-control input-sm" style="margin-right: 5px; display:none;">
                                 <input type="month" id="filtroFechaMes" class="form-control input-sm" style="margin-right: 5px; display:none;">
@@ -549,12 +602,12 @@ if (isset($_GET['getEvidenciasAjax'])) {
                                     <option value="p">Placa de Máquina</option>
                                     <option value="o">Operador (Nombre/Cédula)</option>
                                 </select>
-                                
+
                                 <input type="text" id="searchHorometro" class="form-control input-sm" placeholder="Buscar placa..." style="margin-right: 5px; width: 150px;">
 
                                 <button type="button" class="btn btn-sm btn-primary" onclick="reloadGridHorometros();"><i class="fa fa-search"></i> Buscar</button>
                                 <button type="button" class="btn btn-sm btn-exa-primary" onclick="exportarExcel();" title="Exportar a Excel"><i class="fa fa-file-excel-o"></i> Excel</button>
-                                
+
                                 <button type="button" class="btn btn-sm btn-exa-success" style="float: right;" onclick="mostrarFormulario();">
                                     <i class="glyphicon glyphicon-plus"></i> Registrar Lectura Horómetro
                                 </button>
@@ -562,78 +615,397 @@ if (isset($_GET['getEvidenciasAjax'])) {
                             <table id="gridHorometros"></table>
                             <div id="pagerHorometros"></div>
                         </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- ==================== AMBIENTE 2: REGISTRO / FORMULARIO ==================== -->
-            <div id="divFormulario" style="display:none;">
-                
-                <!-- HEADER DE CONTEXTO DEL TURNO -->
-                <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-                    <form id="formContexto" class="form-horizontal" onsubmit="return false;">
-                        <div class="row">
-                            <div class="col-sm-3">
-                                <label class="control-label" style="font-size:12px; margin-bottom:5px; color:#475569;">Máquina / Vehículo:</label>
-                                <select id="Veh_Cod" name="Veh_Cod" class="form-control" onchange="limpiarSubgrid();">
-                                    <option value="">Seleccione Máquina...</option>
-                                </select>
+                        <!-- PESTAÑA REPORTES -->
+                        <div role="tabpanel" class="tab-pane" id="tabReportes">
+                            <div class="report-filters" style="background:#f8fafc; border:1px solid #cbd5e1; padding:15px; border-radius:8px; margin-bottom:20px;">
+                                <div class="row">
+                                    <div class="col-sm-1" style="width: 180px;">
+                                        <label>Tipo de Reporte:</label>
+                                        <select id="rep_tipo" class="form-control input-sm" onchange="toggleReportView()">
+                                            <option value="individual">Reporte Individual</option>
+                                            <option value="consolidado">Reporte Consolidado</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-sm-1">
+                                        <label>Año:</label>
+                                        <select id="rep_anio" class="form-control input-sm"></select>
+                                    </div>
+                                    <div class="col-sm-1" style="width: 130px;">
+                                        <label>Mes:</label>
+                                        <select id="rep_mes" class="form-control input-sm">
+                                            <option value="01">Enero</option>
+                                            <option value="02">Febrero</option>
+                                            <option value="03">Marzo</option>
+                                            <option value="04">Abril</option>
+                                            <option value="05">Mayo</option>
+                                            <option value="06">Junio</option>
+                                            <option value="07">Julio</option>
+                                            <option value="08">Agosto</option>
+                                            <option value="09">Septiembre</option>
+                                            <option value="10">Octubre</option>
+                                            <option value="11">Noviembre</option>
+                                            <option value="12">Diciembre</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <label>Operador:</label>
+                                        <select id="rep_operador" class="form-control input-sm">
+                                            <option value="TODOS">
+                                                << TODOS>>
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <label>Maquinaria:</label>
+                                        <select id="rep_maquina" class="form-control input-sm">
+                                            <option value="TODAS">
+                                                << TODAS>>
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="col-sm-3 text-right">
+                                        <label>&nbsp;</label><br>
+                                        <button class="btn btn-sm btn-primary" onclick="generarReporte()"><i class="fa fa-refresh"></i> Generar</button>
+                                        <button class="btn btn-sm btn-danger" onclick="exportarReportePDF()"><i class="fa fa-file-pdf-o"></i> PDF/IMPRIMIR</button>
+                                        <button class="btn btn-sm btn-success" onclick="exportarReporteExcel()"><i class="fa fa-file-excel-o"></i> Excel</button>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-sm-3">
-                                <label class="control-label" style="font-size:12px; margin-bottom:5px; color:#475569;">Operador:</label>
-                                <select id="Cho_Cod" name="Cho_Cod" class="form-control" onchange="limpiarSubgrid();">
-                                    <option value="">Seleccione Operador...</option>
-                                </select>
-                            </div>
-                            <div class="col-sm-3">
-                                <label class="control-label" style="font-size:12px; margin-bottom:5px; color:#475569;">Fecha del Turno:</label>
-                                <input id="Hor_Fec" name="Hor_Fec" type="text" class="form-control datepicker" placeholder="dd/mm/aaaa" onchange="limpiarSubgrid();" />
-                            </div>
-                            <div class="col-sm-2" style="padding-top: 25px;">
-                                <button type="button" class="btn btn-primary btn-block" onclick="cargarJornada();" style="height:30px; padding:4px; font-weight:bold;"><i class="glyphicon glyphicon-search"></i> Cargar</button>
-                            </div>
+
+                            <!-- CONTENEDOR REPORTE INDIVIDUAL -->
+                            <div id="contenedorReporteIndividual" style="display:none; background:#fff; padding:20px; border:1px solid #e2e8f0; border-radius:8px;">
+                                <!-- ENCABEZADO -->
+                                <div class="text-center" style="margin-bottom:20px; border-bottom:2px solid #3c8dbc; padding-bottom:10px;">
+                                    <h4 style="font-weight:bold; color:#2c3e50; margin:0 0 5px 0;">PROYECTO AMBIENTAL ASOCIATIVO RELAVERA COMUNITARIA EL TABLÓN</h4>
+                                    <h5 style="font-weight:bold; color:#3c8dbc; margin:0 0 10px 0;">REPORTE OPERATIVO DE HORÓMETROS Y MAQUINARIA</h5>
+                                    <div class="row" style="font-size:12px; color:#64748b;">
+                                        <div class="col-xs-3 text-left"><strong id="lbl_rep_periodo">PERÍODO: </strong></div>
+                                        <div class="col-xs-3 text-left"><strong id="lbl_rep_maquina">MÁQUINA: </strong></div>
+                                        <div class="col-xs-3 text-left"><strong id="lbl_rep_operador">OPERADOR: </strong></div>
+                                        <div class="col-xs-3 text-right"><strong>EMISIÓN: </strong> <?php echo date('Y-m-d H:i'); ?></div>
+                                    </div>
+                                </div>
+
+                                <!-- FICHA MAQUINARIA -->
+                                <div style="background:#f1f5f9; border-radius:6px; padding:10px 15px; margin-bottom:20px; display:flex; justify-content:space-between; font-size:12px;">
+                                    <div><strong>MÁQUINA/ID:</strong> <span id="ficha_id"></span></div>
+                                    <div><strong>MARCA:</strong> <span id="ficha_marca"></span></div>
+                                    <div><strong>MODELO:</strong> <span id="ficha_modelo"></span></div>
+                                    <div><strong>SERIE:</strong> <span id="ficha_serie"></span></div>
+                                    <div><strong>PROPIEDAD:</strong> <span id="ficha_propiedad"></span></div>
+                                </div>
+
+                                <!-- RESUMEN EJECUTIVO (CARDS) -->
+                                <div class="row" style="margin-bottom:20px;">
+                                    <div class="col-md-2 col-xs-6 mb-2">
+                                        <div style="background:#fff; border:1px solid #cbd5e1; border-radius:6px; padding:10px; text-align:center;">
+                                            <div style="font-size:11px; color:#64748b; font-weight:bold;">HORAS TRAB.</div>
+                                            <div style="font-size:18px; color:#0f172a; font-weight:bold;" id="res_hrs_trab">0.0</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 col-xs-6 mb-2">
+                                        <div style="background:#fff; border:1px solid #cbd5e1; border-radius:6px; padding:10px; text-align:center;">
+                                            <div style="font-size:11px; color:#64748b; font-weight:bold;">HORAS PROD.</div>
+                                            <div style="font-size:18px; color:#16a34a; font-weight:bold;" id="res_hrs_prod">0.0</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 col-xs-6 mb-2">
+                                        <div style="background:#fff; border:1px solid #cbd5e1; border-radius:6px; padding:10px; text-align:center;">
+                                            <div style="font-size:11px; color:#64748b; font-weight:bold;">DESFASE</div>
+                                            <div style="font-size:18px; color:#dc2626; font-weight:bold;" id="res_desfase">0.0</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 col-xs-6 mb-2">
+                                        <div style="background:#fff; border:1px solid #cbd5e1; border-radius:6px; padding:10px; text-align:center;">
+                                            <div style="font-size:11px; color:#64748b; font-weight:bold;">COMBUSTIBLE</div>
+                                            <div style="font-size:18px; color:#ca8a04; font-weight:bold;" id="res_comb">0 Gls</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 col-xs-6 mb-2">
+                                        <div style="background:#fff; border:1px solid #cbd5e1; border-radius:6px; padding:10px; text-align:center;">
+                                            <div style="font-size:11px; color:#64748b; font-weight:bold;">PROM. DIARIO</div>
+                                            <div style="font-size:18px; color:#2563eb; font-weight:bold;" id="res_prom">0.0</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 col-xs-6 mb-2">
+                                        <div style="background:#fff; border:1px solid #cbd5e1; border-radius:6px; padding:10px; text-align:center;">
+                                            <div style="font-size:11px; color:#64748b; font-weight:bold;">DÍAS LABORADOS</div>
+                                            <div style="font-size:18px; color:#475569; font-weight:bold;" id="res_dias">0</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- COMPARATIVO QUINCENAL -->
+                                <h5 style="font-weight:bold; color:#334155; border-bottom:1px solid #cbd5e1; padding-bottom:5px;">COMPARATIVO QUINCENAL</h5>
+                                <div class="table-responsive" style="margin-bottom:20px;">
+                                    <table class="table table-bordered table-condensed table-striped" style="font-size:12px;">
+                                        <thead>
+                                            <tr style="background:#e2e8f0;">
+                                                <th>Indicador</th>
+                                                <th class="text-center">Primera Quincena (1-15)</th>
+                                                <th class="text-center">Segunda Quincena (16-fin)</th>
+                                                <th class="text-center">TOTAL MENSUAL</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tbl_comparativo">
+                                            <tr>
+                                                <td>Horas Trabajadas</td>
+                                                <td class="text-center" id="cmp_ht_1">0.0</td>
+                                                <td class="text-center" id="cmp_ht_2">0.0</td>
+                                                <td class="text-center fw-bold" id="cmp_ht_t">0.0</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Horas Productivas</td>
+                                                <td class="text-center" id="cmp_hp_1">0.0</td>
+                                                <td class="text-center" id="cmp_hp_2">0.0</td>
+                                                <td class="text-center fw-bold" id="cmp_hp_t">0.0</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Desfase / Descuento</td>
+                                                <td class="text-center" id="cmp_df_1">0.0</td>
+                                                <td class="text-center" id="cmp_df_2">0.0</td>
+                                                <td class="text-center fw-bold" id="cmp_df_t">0.0</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Combustible (Galones)</td>
+                                                <td class="text-center" id="cmp_cb_1">0</td>
+                                                <td class="text-center" id="cmp_cb_2">0</td>
+                                                <td class="text-center fw-bold" id="cmp_cb_t">0</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Días Laborados</td>
+                                                <td class="text-center" id="cmp_dl_1">0</td>
+                                                <td class="text-center" id="cmp_dl_2">0</td>
+                                                <td class="text-center fw-bold" id="cmp_dl_t">0</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- DETALLE DIARIO - 1RA QUINCENA -->
+                                <h5 style="font-weight:bold; color:#334155; border-bottom:1px solid #cbd5e1; padding-bottom:5px; margin-top:30px;">DETALLE DIARIO: PRIMERA QUINCENA (1 al 15)</h5>
+                                <div class="table-responsive" style="margin-bottom:20px;">
+                                    <table class="table table-bordered table-condensed table-hover" style="font-size:11px;">
+                                        <thead>
+                                            <tr style="background:#3c8dbc; color:#fff;">
+                                                <th width="40">Día</th>
+                                                <th width="70">Fecha</th>
+                                                <th>Operador</th>
+                                                <th width="70" class="text-right">Hor. Inicial</th>
+                                                <th width="70" class="text-right">Hor. Final</th>
+                                                <th width="60" class="text-right">Total Hrs</th>
+                                                <th width="60" class="text-right">Descuento</th>
+                                                <th width="60" class="text-right">Prod. Hrs</th>
+                                                <th width="70" class="text-right">Combust.</th>
+                                                <th>Observaciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tbl_q1">
+                                            <tr>
+                                                <td colspan="10" class="text-center text-muted">No hay registros para la primera quincena</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- DETALLE DIARIO - 2DA QUINCENA -->
+                                <h5 style="font-weight:bold; color:#334155; border-bottom:1px solid #cbd5e1; padding-bottom:5px; margin-top:30px;">DETALLE DIARIO: SEGUNDA QUINCENA (16 al Fin de Mes)</h5>
+                                <div class="table-responsive" style="margin-bottom:20px;">
+                                    <table class="table table-bordered table-condensed table-hover" style="font-size:11px;">
+                                        <thead>
+                                            <tr style="background:#3c8dbc; color:#fff;">
+                                                <th width="40">Día</th>
+                                                <th width="70">Fecha</th>
+                                                <th>Operador</th>
+                                                <th width="70" class="text-right">Hor. Inicial</th>
+                                                <th width="70" class="text-right">Hor. Final</th>
+                                                <th width="60" class="text-right">Total Hrs</th>
+                                                <th width="60" class="text-right">Descuento</th>
+                                                <th width="60" class="text-right">Prod. Hrs</th>
+                                                <th width="70" class="text-right">Combust.</th>
+                                                <th>Observaciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tbl_q2">
+                                            <tr>
+                                                <td colspan="10" class="text-center text-muted">No hay registros para la segunda quincena</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- RESUMEN MENSUAL -->
+                                <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:15px; margin-top:30px;">
+                                    <h5 style="font-weight:bold; color:#334155; margin-top:0; border-bottom:1px solid #cbd5e1; padding-bottom:5px;">RESUMEN MENSUAL Y OBSERVACIONES</h5>
+                                    <div class="row">
+                                        <div class="col-sm-8">
+                                            <p style="font-size:12px; margin-bottom:5px;"><strong>Observación General:</strong></p>
+                                            <p style="font-size:12px; color:#475569; font-style:italic;" id="res_obs_gen">El reporte consolida el total de horas de la máquina seleccionada durante el período especificado.</p>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <table class="table table-condensed" style="font-size:12px; margin-bottom:0; background:transparent;">
+                                                <tr>
+                                                    <td><strong>Horas Trabajadas:</strong></td>
+                                                    <td class="text-right" id="fin_ht">0.0</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Horas Productivas:</strong></td>
+                                                    <td class="text-right text-success" id="fin_hp"><strong>0.0</strong></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Desfase Total:</strong></td>
+                                                    <td class="text-right text-danger" id="fin_df">0.0</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Combustible Total:</strong></td>
+                                                    <td class="text-right text-warning" id="fin_cb">0 Gls</td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div> <!-- Fin reporte individual -->
+
+                            <!-- CONTENEDOR REPORTE CONSOLIDADO -->
+                            <div id="contenedorReporteConsolidado" style="display:none; background:#fff; padding:20px; border:1px solid #e2e8f0; border-radius:8px;">
+                                <!-- ENCABEZADO CONSOLIDADO -->
+                                <div class="text-center" style="margin-bottom:20px; border-bottom:2px solid #3c8dbc; padding-bottom:10px;">
+                                    <h4 style="font-weight:bold; color:#2c3e50; margin:0 0 5px 0;">PROYECTO AMBIENTAL ASOCIATIVO RELAVERA COMUNITARIA EL TABLÓN</h4>
+                                    <h5 style="font-weight:bold; color:#3c8dbc; margin:0 0 10px 0;">REPORTE CONSOLIDADO DE MAQUINARIA</h5>
+                                    <div class="row" style="font-size:12px; color:#64748b;">
+                                        <div class="col-xs-6 text-left"><strong id="lbl_rep_con_periodo">PERÍODO: </strong></div>
+                                        <div class="col-xs-6 text-right"><strong>EMISIÓN: </strong> <?php echo date('Y-m-d H:i'); ?></div>
+                                    </div>
+                                </div>
+
+                                <!-- RESUMEN GENERAL (CARDS) -->
+                                <div class="row" style="margin-bottom:20px;">
+                                    <div class="col-md-3 col-xs-6 mb-2">
+                                        <div style="background:#fff; border:1px solid #cbd5e1; border-radius:6px; padding:15px; text-align:center;">
+                                            <div style="font-size:12px; color:#64748b; font-weight:bold;">TOTAL HORAS TRAB.</div>
+                                            <div style="font-size:22px; color:#0f172a; font-weight:bold;" id="con_hrs_trab">0.0</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 col-xs-6 mb-2">
+                                        <div style="background:#fff; border:1px solid #cbd5e1; border-radius:6px; padding:15px; text-align:center;">
+                                            <div style="font-size:12px; color:#64748b; font-weight:bold;">TOTAL HORAS PROD.</div>
+                                            <div style="font-size:22px; color:#16a34a; font-weight:bold;" id="con_hrs_prod">0.0</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 col-xs-6 mb-2">
+                                        <div style="background:#fff; border:1px solid #cbd5e1; border-radius:6px; padding:15px; text-align:center;">
+                                            <div style="font-size:12px; color:#64748b; font-weight:bold;">TOTAL COMBUSTIBLE</div>
+                                            <div style="font-size:22px; color:#ca8a04; font-weight:bold;" id="con_comb">0 Gls</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 col-xs-6 mb-2">
+                                        <div style="background:#fff; border:1px solid #cbd5e1; border-radius:6px; padding:15px; text-align:center;">
+                                            <div style="font-size:12px; color:#64748b; font-weight:bold;">MÁQUINAS ACTIVAS</div>
+                                            <div style="font-size:22px; color:#2563eb; font-weight:bold;" id="con_maquinas">0</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- TABLA CONSOLIDADA -->
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-condensed table-hover table-striped" style="font-size:12px;">
+                                        <thead>
+                                            <tr style="background:#3c8dbc; color:#fff;">
+                                                <th>Máquina</th>
+                                                <th>Operador</th>
+                                                <th class="text-right">Horas Trabajadas</th>
+                                                <th class="text-right">Horas Productivas</th>
+                                                <th class="text-right">Desfase</th>
+                                                <th class="text-right">Combustible</th>
+                                                <th class="text-center">Estado</th>
+                                                <th class="text-center" width="90">Acción</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tbl_consolidado">
+                                            <tr>
+                                                <td colspan="8" class="text-center text-muted">Genere el reporte para ver la información</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div> <!-- Fin reporte consolidado -->
+
                         </div>
-                    </form>
-                </div>
-
-                <!-- SUBGRID DE REGISTROS DE LA JORNADA -->
-                <div id="panelJornada" style="display:none; border: 1px solid #e2e8f0; border-radius: 8px; overflow:hidden;">
-                    <div style="background: #334a5f; color: #fff; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
-                        <span><i class="glyphicon glyphicon-time"></i> Bitácora de Horómetros de la Jornada</span>
-                        <button type="button" class="btn btn-xs btn-success" style="font-weight:bold; border-radius:4px;" onclick="abrirModalRegistro(0);">
-                            <i class="glyphicon glyphicon-plus"></i> Añadir Nuevo Registro
-                        </button>
-                    </div>
-                    <div style="background: #fff; padding: 15px;">
-                        <table class="table table-striped table-bordered table-condensed" id="tblJornada" style="font-size:12px; margin-bottom:0;">
-                            <thead>
-                                <tr style="background:#f1f5f9; color:#334a5f;">
-                                    <th>Horómetro Inicial</th>
-                                    <th>Evidencia Inicial</th>
-                                    <th>Horómetro Final</th>
-                                    <th>Evidencia Final</th>
-                                    <th>Horas Trab.</th>
-                                    <th>Ubicación / Área</th>
-                                    <th>Estado</th>
-                                    <th style="width:90px; text-align:center;">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Las filas se cargarán por AJAX -->
-                            </tbody>
-                        </table>
                     </div>
                 </div>
-
-                <div class="button-center" style="margin-top: 20px;">
-                    <button type="button" class="btn btn-custom btn-default" onclick="mostrarListado();">
-                        <i class="glyphicon glyphicon-arrow-left"></i> Volver a Consultas
-                    </button>
-                </div>
-
             </div>
-
         </div>
+    </div>
+
+    <!-- ==================== AMBIENTE 2: REGISTRO / FORMULARIO ==================== -->
+    <div id="divFormulario" style="display:none;">
+
+        <!-- HEADER DE CONTEXTO DEL TURNO -->
+        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+            <form id="formContexto" class="form-horizontal" onsubmit="return false;">
+                <div class="row">
+                    <div class="col-sm-3">
+                        <label class="control-label" style="font-size:12px; margin-bottom:5px; color:#475569;">Máquina / Vehículo:</label>
+                        <select id="Veh_Cod" name="Veh_Cod" class="form-control" onchange="limpiarSubgrid();">
+                            <option value="">Seleccione Máquina...</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-3">
+                        <label class="control-label" style="font-size:12px; margin-bottom:5px; color:#475569;">Operador:</label>
+                        <select id="Cho_Cod" name="Cho_Cod" class="form-control" onchange="limpiarSubgrid();">
+                            <option value="">Seleccione Operador...</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-3">
+                        <label class="control-label" style="font-size:12px; margin-bottom:5px; color:#475569;">Fecha del Turno:</label>
+                        <input id="Hor_Fec" name="Hor_Fec" type="text" class="form-control datepicker" placeholder="dd/mm/aaaa" onchange="limpiarSubgrid();" />
+                    </div>
+                    <div class="col-sm-2" style="padding-top: 25px;">
+                        <button type="button" class="btn btn-primary btn-block" onclick="cargarJornada();" style="height:30px; padding:4px; font-weight:bold;"><i class="glyphicon glyphicon-search"></i> Cargar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- SUBGRID DE REGISTROS DE LA JORNADA -->
+        <div id="panelJornada" style="display:none; border: 1px solid #e2e8f0; border-radius: 8px; overflow:hidden;">
+            <div style="background: #334a5f; color: #fff; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+                <span><i class="glyphicon glyphicon-time"></i> Bitácora de Horómetros de la Jornada</span>
+                <button type="button" class="btn btn-xs btn-success" style="font-weight:bold; border-radius:4px;" onclick="abrirModalRegistro(0);">
+                    <i class="glyphicon glyphicon-plus"></i> Añadir Nuevo Registro
+                </button>
+            </div>
+            <div style="background: #fff; padding: 15px;">
+                <table class="table table-striped table-bordered table-condensed" id="tblJornada" style="font-size:12px; margin-bottom:0;">
+                    <thead>
+                        <tr style="background:#f1f5f9; color:#334a5f;">
+                            <th>Horómetro Inicial</th>
+                            <th>Evidencia Inicial</th>
+                            <th>Horómetro Final</th>
+                            <th>Evidencia Final</th>
+                            <th>Horas Trab.</th>
+                            <th>Ubicación / Área</th>
+                            <th>Estado</th>
+                            <th style="width:90px; text-align:center;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Las filas se cargarán por AJAX -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="button-center" style="margin-top: 20px;">
+            <button type="button" class="btn btn-custom btn-default" onclick="mostrarListado();">
+                <i class="glyphicon glyphicon-arrow-left"></i> Volver a Consultas
+            </button>
+        </div>
+
+    </div>
+
+    </div>
     </div>
 
     <!-- ==================== MODAL: FORMULARIO DE INGRESO/EDICION HOROMETRO ==================== -->
@@ -647,7 +1019,7 @@ if (isset($_GET['getEvidenciasAjax'])) {
                 <div class="modal-body" style="background:#f8fafc; padding:20px;">
                     <form id="formHorometroModal" class="form-horizontal" onsubmit="return false;" enctype="multipart/form-data">
                         <input type="hidden" id="Hor_Cod_Modal" name="Hor_Cod" value="0" />
-                        
+
                         <!-- Bloque Inicial -->
                         <fieldset class="exa-fieldset" style="background:#fff; border-color:#cbd5e1; border-top: 3px solid #3b82f6;">
                             <legend style="color:#1d4ed8;">Apertura (Horómetro Inicial)</legend>
@@ -734,172 +1106,10 @@ if (isset($_GET['getEvidenciasAjax'])) {
         </div>
     </div>
 
-        </div>
+    </div>
     </div>
 
-    <!-- ==================== MODAL 1: HISTORIAL Y CONFIGURACIÓN MANTENIMIENTO PREVENTIVO ==================== -->
-    <div class="modal fade" id="modalMantenimiento" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document" style="width: 85%; max-width: 750px;">
-            <div class="modal-content" style="border-radius:8px; overflow:hidden;">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
-                    <h4 class="modal-title modal-title-custom"><i class="glyphicon glyphicon-wrench"></i> Control de Mantenimiento Preventivo: <span id="modal_maquina_titulo"></span></h4>
-                </div>
-                <div class="modal-body" style="background: #f8fafc; padding: 20px;">
-                    
-                    <!-- Pestañas del Modal -->
-                    <div class="nav-tabs-custom" style="margin-bottom: 15px;">
-                        <ul class="nav nav-tabs" role="tablist">
-                            <li class="active"><a href="#tabMantHistorial" role="tab" data-toggle="tab"><i class="glyphicon glyphicon-time"></i> Historial de Trabajos</a></li>
-                            <li id="tabHeaderRegistrarMant" style="display:none;"><a href="#tabMantForm" role="tab" data-toggle="tab"><i class="glyphicon glyphicon-plus"></i> Registrar Mantenimiento</a></li>
-                            <li id="tabHeaderConfigAlerts" style="display:none;"><a href="#tabMantConfig" role="tab" data-toggle="tab"><i class="glyphicon glyphicon-cog"></i> Configurar Frecuencia</a></li>
-                        </ul>
-                        
-                        <div class="tab-content" style="padding: 15px 0; background:transparent; border:none;">
-                            
-                            <!-- Modal Tab 1: Historial de mantenimientos -->
-                            <div role="tabpanel" class="tab-pane active" id="tabMantHistorial">
-                                <div id="alerta_proximo_mantenimiento" class="alert alert-warning" style="display:none; font-size:12px; font-weight:bold; margin-bottom:12px;"></div>
-                                <div style="max-height: 250px; overflow-y: auto; background: #fff; border: 1px solid #cbd5e1; border-radius: 6px;">
-                                    <table class="table table-striped table-condensed" id="tblHistorialMantenimiento" style="margin-bottom:0; font-size:12px;">
-                                        <thead>
-                                            <tr style="background:#475569; color:#fff;">
-                                                <th style="padding: 8px;">Fecha</th>
-                                                <th>Horómetro</th>
-                                                <th>Detalle del Trabajo</th>
-                                                <th>Responsable</th>
-                                                <th>Registrado Por</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr><td colspan="5" class="text-center text-muted" style="padding: 20px;">Cargando historial de trabajos...</td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <!-- Modal Tab 2: Registrar Mantenimiento Realizado -->
-                            <div role="tabpanel" class="tab-pane" id="tabMantForm">
-                                <form id="formRegistrarMantenimiento" class="form-horizontal" onsubmit="return false;">
-                                    <input type="hidden" id="Veh_Cod_Mant" name="Veh_Cod_Mant" value="0" />
-                                    <!-- Mandamos la frecuencia configurada por si se necesita actualizar Cma_Hrs_Ult -->
-                                    <input type="hidden" id="Cma_Hrs_Fco_Hidden" name="Cma_Hrs_Fco" value="250" />
-                                    <div class="row">
-                                        <div class="col-sm-6">
-                                            <div class="form-group">
-                                                <label class="col-sm-4 control-label label-sm">Fecha Trabajo:<span class="text-danger">*</span></label>
-                                                <div class="col-sm-8">
-                                                    <input type="text" id="Hma_Fec" name="Hma_Fec" class="form-control datepicker" placeholder="dd/mm/aaaa" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-6">
-                                            <div class="form-group">
-                                                <label class="col-sm-4 control-label label-sm">Horómetro:<span class="text-danger">*</span></label>
-                                                <div class="col-sm-8">
-                                                    <input type="text" id="Hma_Hor" name="Hma_Hor" class="form-control" placeholder="Horómetro de trabajo" onkeypress="return validar_decimal(event);" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-sm-12">
-                                            <div class="form-group">
-                                                <label class="col-sm-2 control-label label-sm">Responsable/Taller:<span class="text-danger">*</span></label>
-                                                <div class="col-sm-10">
-                                                    <input type="text" id="Hma_Res" name="Hma_Res" class="form-control" placeholder="Persona o taller encargado" maxlength="100" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-sm-12">
-                                            <div class="form-group" style="margin-bottom:0;">
-                                                <label class="col-sm-2 control-label label-sm">Detalle Trabajo:<span class="text-danger">*</span></label>
-                                                <div class="col-sm-10">
-                                                    <textarea id="Hma_Det" name="Hma_Det" class="form-control" style="height: 60px; resize:none;" placeholder="Escriba el detalle de los preventivos o reparaciones hechas..."></textarea>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="button-center" style="margin-top:12px; padding-top:10px;">
-                                        <button type="button" class="btn btn-sm btn-exa-success" onclick="guardarMantenimiento();"><span class="glyphicon glyphicon-floppy-disk"></span> Guardar Mantenimiento</button>
-                                    </div>
-                                </form>
-                            </div>
-
-                            <!-- Modal Tab 3: Configurar Frecuencias -->
-                            <div role="tabpanel" class="tab-pane" id="tabMantConfig">
-                                <form id="formConfigMantenimiento" class="form-horizontal" onsubmit="return false;">
-                                    <input type="hidden" id="Veh_Cod_Conf" name="Veh_Cod_Conf" value="0" />
-                                    <div class="row">
-                                        <div class="col-sm-6">
-                                            <div class="form-group">
-                                                <label class="col-sm-5 control-label label-sm">Frecuencia Alertas (Horas):<span class="text-danger">*</span></label>
-                                                <div class="col-sm-7">
-                                                    <input type="text" id="Cma_Hrs_Fco" name="Cma_Hrs_Fco" class="form-control" placeholder="Ej: 250" onkeypress="return validar_numeric(event);" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-6">
-                                            <div class="form-group">
-                                                <label class="col-sm-5 control-label label-sm">Último Mantenimiento (Horómetro):</label>
-                                                <div class="col-sm-7">
-                                                    <input type="text" id="Cma_Hrs_Ult" name="Cma_Hrs_Ult" class="form-control" placeholder="0.00" onkeypress="return validar_decimal(event);" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="button-center" style="margin-top:12px; padding-top:10px;">
-                                        <button type="button" class="btn btn-sm btn-exa-primary" onclick="guardarConfigMantenimiento();"><span class="glyphicon glyphicon-floppy-disk"></span> Guardar Configuración</button>
-                                    </div>
-                                </form>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer" style="background:#f8fafc;">
-                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="glyphicon glyphicon-remove"></i> Cerrar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ==================== MODAL 2: TABLA DE ALERTAS GENERAL DE MANTENIMIENTO PREVENTIVO ==================== -->
-    <div class="modal fade" id="modalAlertasMantenimiento" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document" style="width: 80%; max-width: 650px;">
-            <div class="modal-content" style="border-radius:8px; overflow:hidden;">
-                <div class="modal-header" style="background: #fee2e2; border-bottom: 1px solid #fca5a5;">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
-                    <h4 class="modal-title modal-title-custom" style="color:#b91c1c;"><i class="glyphicon glyphicon-warning-sign"></i> Alertas Automáticas de Mantenimiento Preventivo</h4>
-                </div>
-                <div class="modal-body" style="background:#fff; padding: 20px;">
-                    <p style="font-size:12px; color:#475569; margin-bottom:12px; font-weight:bold;">Las siguientes máquinas han alcanzado o superado su frecuencia de mantenimiento preventivo configurada:</p>
-                    <div style="max-height: 250px; overflow-y:auto; border: 1px solid #e2e8f0; border-radius:6px;">
-                        <table class="table table-striped table-condensed" id="tblMaquinasAlerta" style="margin-bottom:0; font-size:12px;">
-                            <thead>
-                                <tr style="background:#f1f5f9; color:#1e293b;">
-                                    <th style="padding:8px;">Placa</th>
-                                    <th>Máquina</th>
-                                    <th>Frecuencia (h)</th>
-                                    <th>Últ. Mant. (h)</th>
-                                    <th>Lectura Actual (h)</th>
-                                    <th style="color:#b91c1c;">Exceso/Faltante (h)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td colspan="6" class="text-center text-muted" style="padding:20px;">No hay máquinas con alertas activas.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal"><i class="glyphicon glyphicon-remove"></i> Cerrar</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    >
 
     <!-- ==================== MODAL 3: AUDITORÍA / HISTORIAL DE ESTADOS ==================== -->
     <div class="modal fade" id="modalAuditoria" tabindex="-1" role="dialog">
@@ -922,7 +1132,9 @@ if (isset($_GET['getEvidenciasAjax'])) {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td colspan="5" class="text-center text-muted" style="padding:20px;">Cargando historial de auditoría...</td></tr>
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted" style="padding:20px;">Cargando historial de auditoría...</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -996,6 +1208,7 @@ if (isset($_GET['getEvidenciasAjax'])) {
         </div>
     </div>
 
-    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_maquinaria_horometro.js?v=7"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_maquinaria_horometro.js?v=9"></script>
 </BODY>
+
 </HTML>

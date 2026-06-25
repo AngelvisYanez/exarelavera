@@ -159,13 +159,18 @@ function sentencias_maquinaria_horometro($id, $Par_Sql)
 
         case 20:
             // Ficha de Maquinaria para Reporte Individual
+            $veh_cod = isset($Par_Sql['Veh_Cod']) ? (int)$Par_Sql['Veh_Cod'] : (isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0);
             $sql = "SELECT v.Veh_Pla as id, v.Veh_Mar as marca, 'N/A' as modelo, 'N/A' as serie, 'Empresa' as propiedad
                     FROM vehiculo v
-                    WHERE v.Veh_Cod = " . (int)$Par_Sql['Veh_Cod'] . " LIMIT 1";
+                    WHERE v.Veh_Cod = " . $veh_cod . " LIMIT 1";
             break;
 
         case 21:
             // Detalle Diario para Reporte Individual
+            $veh_cod = isset($Par_Sql['Veh_Cod']) ? (int)$Par_Sql['Veh_Cod'] : (isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0);
+            $anio_mes = isset($Par_Sql['anio_mes']) ? $Par_Sql['anio_mes'] : '';
+            $cho_cod = isset($Par_Sql['Cho_Cod']) ? $Par_Sql['Cho_Cod'] : '';
+            
             $sql = "SELECT 
                         DAY(mh.Hor_Fec) as dia,
                         mh.Hor_Fec as fecha,
@@ -181,17 +186,22 @@ function sentencias_maquinaria_horometro($id, $Par_Sql)
                     FROM maquinaria_horometro mh
                     INNER JOIN chofer c ON c.Cho_Cod = mh.Cho_Cod
                     INNER JOIN persona p ON p.Prs_Cod = c.Prs_Cod
-                    WHERE mh.Veh_Cod = " . (int)$Par_Sql['Veh_Cod'] . "
-                      AND DATE_FORMAT(mh.Hor_Fec, '%Y-%m') = '" . $Par_Sql['anio_mes'] . "'";
+                    WHERE mh.Veh_Cod = " . $veh_cod . "
+                      AND DATE_FORMAT(mh.Hor_Fec, '%Y-%m') = '" . $anio_mes . "'";
             
-            if (!empty($Par_Sql['Cho_Cod']) && $Par_Sql['Cho_Cod'] != 'TODOS') {
-                $sql .= " AND mh.Cho_Cod = " . (int)$Par_Sql['Cho_Cod'];
+            if (!empty($cho_cod) && $cho_cod != 'TODOS') {
+                $sql .= " AND mh.Cho_Cod = " . (int)$cho_cod;
             }
             $sql .= " ORDER BY mh.Hor_Fec ASC";
             break;
 
         case 22:
             // Reporte Consolidado
+            $emp_cod = isset($Par_Sql['Emp_Cod']) ? (int)$Par_Sql['Emp_Cod'] : (isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0);
+            $anio_mes = isset($Par_Sql['anio_mes']) ? $Par_Sql['anio_mes'] : '';
+            $veh_cod = isset($Par_Sql['Veh_Cod']) ? $Par_Sql['Veh_Cod'] : '';
+            $cho_cod = isset($Par_Sql['Cho_Cod']) ? $Par_Sql['Cho_Cod'] : '';
+            
             $sql = "SELECT 
                         v.Veh_Cod as veh_cod,
                         v.Veh_Pla as maquina,
@@ -206,14 +216,14 @@ function sentencias_maquinaria_horometro($id, $Par_Sql)
                     INNER JOIN vehiculo v ON v.Veh_Cod = mh.Veh_Cod
                     INNER JOIN chofer c ON c.Cho_Cod = mh.Cho_Cod
                     INNER JOIN persona p ON p.Prs_Cod = c.Prs_Cod
-                    WHERE v.Emp_Cod = " . (int)$Par_Sql['Emp_Cod'] . "
-                      AND DATE_FORMAT(mh.Hor_Fec, '%Y-%m') = '" . $Par_Sql['anio_mes'] . "'";
+                    WHERE v.Emp_Cod = " . $emp_cod . "
+                      AND DATE_FORMAT(mh.Hor_Fec, '%Y-%m') = '" . $anio_mes . "'";
 
-            if (!empty($Par_Sql['Veh_Cod']) && $Par_Sql['Veh_Cod'] != 'TODAS') {
-                $sql .= " AND mh.Veh_Cod = " . (int)$Par_Sql['Veh_Cod'];
+            if (!empty($veh_cod) && $veh_cod != 'TODAS') {
+                $sql .= " AND mh.Veh_Cod = " . (int)$veh_cod;
             }
-            if (!empty($Par_Sql['Cho_Cod']) && $Par_Sql['Cho_Cod'] != 'TODOS') {
-                $sql .= " AND mh.Cho_Cod = " . (int)$Par_Sql['Cho_Cod'];
+            if (!empty($cho_cod) && $cho_cod != 'TODOS') {
+                $sql .= " AND mh.Cho_Cod = " . (int)$cho_cod;
             }
             $sql .= " GROUP BY v.Veh_Cod, v.Veh_Pla, mh.Cho_Cod, operador ORDER BY v.Veh_Pla ASC";
             break;
