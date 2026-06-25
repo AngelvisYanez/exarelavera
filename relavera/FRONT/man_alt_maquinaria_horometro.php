@@ -295,9 +295,18 @@ if (isset($_GET['getReporteOperativoAjax'])) {
     $ope = isset($_GET['ope']) ? trim($_GET['ope']) : 'TODOS';
 
     $meses = array(
-        '01'=>'Enero', '02'=>'Febrero', '03'=>'Marzo', '04'=>'Abril',
-        '05'=>'Mayo', '06'=>'Junio', '07'=>'Julio', '08'=>'Agosto',
-        '09'=>'Septiembre', '10'=>'Octubre', '11'=>'Noviembre', '12'=>'Diciembre'
+        '01' => 'Enero',
+        '02' => 'Febrero',
+        '03' => 'Marzo',
+        '04' => 'Abril',
+        '05' => 'Mayo',
+        '06' => 'Junio',
+        '07' => 'Julio',
+        '08' => 'Agosto',
+        '09' => 'Septiembre',
+        '10' => 'Octubre',
+        '11' => 'Noviembre',
+        '12' => 'Diciembre'
     );
     $periodo = (isset($meses[$mes]) ? strtoupper($meses[$mes]) : '') . ' ' . $anio;
     $anio_mes = $anio . '-' . $mes;
@@ -326,10 +335,21 @@ if (isset($_GET['getReporteOperativoAjax'])) {
         // Consultar Detalle Diario
         $rows_diario = $obBD_con1->getArrayConsulta(21, $params, $obBD_conexion);
 
-        $tot_ht = 0; $tot_hp = 0; $tot_desf = 0; $tot_comb = 0;
-        $q1_ht = 0; $q1_hp = 0; $q1_desf = 0; $q1_comb = 0; $q1_dias = 0;
-        $q2_ht = 0; $q2_hp = 0; $q2_desf = 0; $q2_comb = 0; $q2_dias = 0;
-        
+        $tot_ht = 0;
+        $tot_hp = 0;
+        $tot_desf = 0;
+        $tot_comb = 0;
+        $q1_ht = 0;
+        $q1_hp = 0;
+        $q1_desf = 0;
+        $q1_comb = 0;
+        $q1_dias = 0;
+        $q2_ht = 0;
+        $q2_hp = 0;
+        $q2_desf = 0;
+        $q2_comb = 0;
+        $q2_dias = 0;
+
         $op_nom = 'N/D';
         $dias_trabajados = array();
         $dias_q1 = array();
@@ -347,7 +367,10 @@ if (isset($_GET['getReporteOperativoAjax'])) {
                 $comb = (float)$r['combustible'];
                 if ($op_nom === 'N/D') $op_nom = $r['operador'];
 
-                $tot_ht += $ht; $tot_hp += $hp; $tot_desf += $desf; $tot_comb += $comb;
+                $tot_ht += $ht;
+                $tot_hp += $hp;
+                $tot_desf += $desf;
+                $tot_comb += $comb;
                 $dias_trabajados[$dia] = true;
 
                 $item = array(
@@ -364,11 +387,17 @@ if (isset($_GET['getReporteOperativoAjax'])) {
                 );
 
                 if ($dia <= 15) {
-                    $q1_ht += $ht; $q1_hp += $hp; $q1_desf += $desf; $q1_comb += $comb;
+                    $q1_ht += $ht;
+                    $q1_hp += $hp;
+                    $q1_desf += $desf;
+                    $q1_comb += $comb;
                     $dias_q1[$dia] = true;
                     $detalle_q1[] = $item;
                 } else {
-                    $q2_ht += $ht; $q2_hp += $hp; $q2_desf += $desf; $q2_comb += $comb;
+                    $q2_ht += $ht;
+                    $q2_hp += $hp;
+                    $q2_desf += $desf;
+                    $q2_comb += $comb;
                     $dias_q2[$dia] = true;
                     $detalle_q2[] = $item;
                 }
@@ -411,20 +440,19 @@ if (isset($_GET['getReporteOperativoAjax'])) {
 
         $resp['detalle_q1'] = $detalle_q1;
         $resp['detalle_q2'] = $detalle_q2;
-
     } else {
         // Consolidado (Case 22)
         $resp['success'] = true;
         $resp['periodo'] = $periodo;
-        
+
         $resumen = array('horas_trabajadas' => 0.0, 'horas_productivas' => 0.0, 'desfase' => 0.0, 'combustible' => 0.0, 'total_maquinas' => 0);
         $detalle = array();
-        
+
         $rows = $obBD_con1->getArrayConsulta(22, $params, $obBD_conexion);
         $maquinas_vistas = array();
 
         if (!empty($rows)) {
-            foreach($rows as $r) {
+            foreach ($rows as $r) {
                 if (!isset($maquinas_vistas[$r['veh_cod']])) {
                     $maquinas_vistas[$r['veh_cod']] = true;
                     $resumen['total_maquinas']++;
@@ -650,18 +678,14 @@ if (isset($_GET['getEvidenciasAjax'])) {
                                     </div>
                                     <div class="col-sm-3">
                                         <label>Operador:</label>
-                                        <select id="rep_operador" class="form-control input-sm">
-                                            <option value="TODOS">
-                                                << TODOS>>
-                                            </option>
+                                        <select id="rep_operador" class="form-control input-sm chosen-select">
+                                            <option value="TODOS">TODOS LOS OPERADORES</option>
                                         </select>
                                     </div>
                                     <div class="col-sm-2">
                                         <label>Maquinaria:</label>
-                                        <select id="rep_maquina" class="form-control input-sm">
-                                            <option value="TODAS">
-                                                << TODAS>>
-                                            </option>
+                                        <select id="rep_maquina" class="form-control input-sm chosen-select">
+                                            <option value="TODAS">TODAS LAS MÁQUINAS</option>
                                         </select>
                                     </div>
                                     <div class="col-sm-3 text-right">
@@ -935,77 +959,76 @@ if (isset($_GET['getEvidenciasAjax'])) {
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- ==================== AMBIENTE 2: REGISTRO / FORMULARIO ==================== -->
-    <div id="divFormulario" style="display:none;">
 
-        <!-- HEADER DE CONTEXTO DEL TURNO -->
-        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-            <form id="formContexto" class="form-horizontal" onsubmit="return false;">
-                <div class="row">
-                    <div class="col-sm-3">
-                        <label class="control-label" style="font-size:12px; margin-bottom:5px; color:#475569;">Máquina / Vehículo:</label>
-                        <select id="Veh_Cod" name="Veh_Cod" class="form-control" onchange="limpiarSubgrid();">
-                            <option value="">Seleccione Máquina...</option>
-                        </select>
+            <!-- ==================== AMBIENTE 2: REGISTRO / FORMULARIO ==================== -->
+            <div id="divFormulario" style="display:none;">
+
+                <!-- HEADER DE CONTEXTO DEL TURNO -->
+                <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                    <form id="formContexto" class="form-horizontal" onsubmit="return false;">
+                        <div class="row">
+                            <div class="col-sm-3">
+                                <label class="control-label" style="font-size:12px; margin-bottom:5px; color:#475569;">Operador:</label>
+                                <select id="Cho_Cod" name="Cho_Cod" class="form-control chosen-select" onchange="limpiarSubgrid();">
+                                    <option value="">Seleccione Operador...</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-3">
+                                <label class="control-label" style="font-size:12px; margin-bottom:5px; color:#475569;">Máquina / Vehículo:</label>
+                                <select id="Veh_Cod" name="Veh_Cod" class="form-control chosen-select" onchange="limpiarSubgrid();">
+                                    <option value="">Seleccione Máquina...</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-3">
+                                <label class="control-label" style="font-size:12px; margin-bottom:5px; color:#475569;">Fecha del Turno:</label>
+                                <input id="Hor_Fec" name="Hor_Fec" type="text" class="form-control datepicker" placeholder="dd/mm/aaaa" onchange="limpiarSubgrid();" />
+                            </div>
+                            <div class="col-sm-2" style="padding-top: 25px;">
+                                <button type="button" class="btn btn-primary btn-block" onclick="cargarJornada();" style="height:30px; padding:4px; font-weight:bold;"><i class="glyphicon glyphicon-search"></i> Cargar</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- SUBGRID DE REGISTROS DE LA JORNADA -->
+                <div id="panelJornada" style="display:none; border: 1px solid #e2e8f0; border-radius: 8px; overflow:hidden;">
+                    <div style="background: #334a5f; color: #fff; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="glyphicon glyphicon-time"></i> Bitácora de Horómetros de la Jornada</span>
+                        <button type="button" class="btn btn-xs btn-success" style="font-weight:bold; border-radius:4px;" onclick="abrirModalRegistro(0);">
+                            <i class="glyphicon glyphicon-plus"></i> Añadir Nuevo Registro
+                        </button>
                     </div>
-                    <div class="col-sm-3">
-                        <label class="control-label" style="font-size:12px; margin-bottom:5px; color:#475569;">Operador:</label>
-                        <select id="Cho_Cod" name="Cho_Cod" class="form-control" onchange="limpiarSubgrid();">
-                            <option value="">Seleccione Operador...</option>
-                        </select>
-                    </div>
-                    <div class="col-sm-3">
-                        <label class="control-label" style="font-size:12px; margin-bottom:5px; color:#475569;">Fecha del Turno:</label>
-                        <input id="Hor_Fec" name="Hor_Fec" type="text" class="form-control datepicker" placeholder="dd/mm/aaaa" onchange="limpiarSubgrid();" />
-                    </div>
-                    <div class="col-sm-2" style="padding-top: 25px;">
-                        <button type="button" class="btn btn-primary btn-block" onclick="cargarJornada();" style="height:30px; padding:4px; font-weight:bold;"><i class="glyphicon glyphicon-search"></i> Cargar</button>
+                    <div style="background: #fff; padding: 15px;">
+                        <table class="table table-striped table-bordered table-condensed" id="tblJornada" style="font-size:12px; margin-bottom:0;">
+                            <thead>
+                                <tr style="background:#f1f5f9; color:#334a5f;">
+                                    <th>Horómetro Inicial</th>
+                                    <th>Evidencia Inicial</th>
+                                    <th>Horómetro Final</th>
+                                    <th>Evidencia Final</th>
+                                    <th>Horas Trab.</th>
+                                    <th>Ubicación / Área</th>
+                                    <th>Estado</th>
+                                    <th style="width:90px; text-align:center;">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Las filas se cargarán por AJAX -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            </form>
-        </div>
 
-        <!-- SUBGRID DE REGISTROS DE LA JORNADA -->
-        <div id="panelJornada" style="display:none; border: 1px solid #e2e8f0; border-radius: 8px; overflow:hidden;">
-            <div style="background: #334a5f; color: #fff; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
-                <span><i class="glyphicon glyphicon-time"></i> Bitácora de Horómetros de la Jornada</span>
-                <button type="button" class="btn btn-xs btn-success" style="font-weight:bold; border-radius:4px;" onclick="abrirModalRegistro(0);">
-                    <i class="glyphicon glyphicon-plus"></i> Añadir Nuevo Registro
-                </button>
+                <div class="button-center" style="margin-top: 20px;">
+                    <button type="button" class="btn btn-custom btn-default" onclick="mostrarListado();">
+                        <i class="glyphicon glyphicon-arrow-left"></i> Volver a Consultas
+                    </button>
+                </div>
+
             </div>
-            <div style="background: #fff; padding: 15px;">
-                <table class="table table-striped table-bordered table-condensed" id="tblJornada" style="font-size:12px; margin-bottom:0;">
-                    <thead>
-                        <tr style="background:#f1f5f9; color:#334a5f;">
-                            <th>Horómetro Inicial</th>
-                            <th>Evidencia Inicial</th>
-                            <th>Horómetro Final</th>
-                            <th>Evidencia Final</th>
-                            <th>Horas Trab.</th>
-                            <th>Ubicación / Área</th>
-                            <th>Estado</th>
-                            <th style="width:90px; text-align:center;">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Las filas se cargarán por AJAX -->
-                    </tbody>
-                </table>
-            </div>
+
         </div>
-
-        <div class="button-center" style="margin-top: 20px;">
-            <button type="button" class="btn btn-custom btn-default" onclick="mostrarListado();">
-                <i class="glyphicon glyphicon-arrow-left"></i> Volver a Consultas
-            </button>
-        </div>
-
-    </div>
-
-    </div>
     </div>
 
     <!-- ==================== MODAL: FORMULARIO DE INGRESO/EDICION HOROMETRO ==================== -->
@@ -1109,8 +1132,6 @@ if (isset($_GET['getEvidenciasAjax'])) {
     </div>
     </div>
 
-    >
-
     <!-- ==================== MODAL 3: AUDITORÍA / HISTORIAL DE ESTADOS ==================== -->
     <div class="modal fade" id="modalAuditoria" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document" style="width: 85%; max-width: 650px;">
@@ -1208,7 +1229,7 @@ if (isset($_GET['getEvidenciasAjax'])) {
         </div>
     </div>
 
-    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_maquinaria_horometro.js?v=9"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_maquinaria_horometro.js?v=10"></script>
 </BODY>
 
 </HTML>

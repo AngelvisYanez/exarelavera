@@ -4,6 +4,11 @@
  * @version 1.0
  */
 $(function () {
+    // Inicializar selectores con buscador
+    if ($(".chosen-select").length > 0 && typeof $.fn.chosen !== 'undefined') {
+        $(".chosen-select").chosen({search_contains: true, width: '100%'});
+    }
+
     // Inicializar indicadores y grids
     updateDashboardMetrics();
     initGridHorometros();
@@ -154,6 +159,8 @@ function loadSelectors() {
                 text: textOpt
             }));
         });
+        $sel.trigger("chosen:updated");
+        $repMaq.trigger("chosen:updated");
     }).fail(function () {
         console.error("Error al cargar las máquinas de la planta.");
     });
@@ -175,6 +182,8 @@ function loadSelectors() {
                 text: textOpt
             }));
         });
+        $sel.trigger("chosen:updated");
+        $repOpe.trigger("chosen:updated");
     }).fail(function () {
         console.error("Error al cargar los operadores de la planta.");
     });
@@ -1128,7 +1137,7 @@ $(function() {
     $("#rep_anio").html(htmlAnio);
     $("#rep_mes").val(month);
 
-    // Evento para cargar la última máquina asignada cuando se selecciona un operador
+    // Evento para cargar la última máquina asignada cuando se selecciona un operador (Reportes)
     $("#rep_operador").on('change', function() {
         var cho_cod = $(this).val();
         if (cho_cod !== 'TODOS' && cho_cod !== '') {
@@ -1140,6 +1149,25 @@ $(function() {
                 success: function(r) {
                     if (r.success && r.Veh_Cod > 0) {
                         $("#rep_maquina").val(r.Veh_Cod).trigger("chosen:updated");
+                    }
+                }
+            });
+        }
+    });
+
+    // Evento para cargar la última máquina asignada cuando se selecciona un operador (Registro)
+    $("#Cho_Cod").on('change', function() {
+        var cho_cod = $(this).val();
+        if (cho_cod !== '') {
+            $.ajax({
+                url: 'man_alt_maquinaria_horometro.php?getLastVehiculoByOperadorAjax=1',
+                type: 'GET',
+                data: { Cho_Cod: cho_cod },
+                dataType: 'json',
+                success: function(r) {
+                    if (r.success && r.Veh_Cod > 0) {
+                        $("#Veh_Cod").val(r.Veh_Cod).trigger("chosen:updated");
+                        limpiarSubgrid();
                     }
                 }
             });
