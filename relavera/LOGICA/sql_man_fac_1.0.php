@@ -765,15 +765,20 @@ function sentencias_manifiesto($id, $Par_Sql)
                 ? " AND EXISTS (SELECT 1 FROM manifiesto_plantas mpf WHERE mpf.Cli_Cod = manifiesto.Cli_Cod AND mpf.Pla_Cod = $Pla_Cod_Usuario_74)"
                 : '';
             $sql = "SELECT manifiesto.Man_Cod, manifiesto.Man_Num, manifiesto.Pla_Cod, manifiesto.Man_Fes, manifiesto.Man_Pes,
-                    manifiesto.Man_Pun, manifiesto.Man_Tip,
+                    manifiesto.Man_Pun, manifiesto.Man_Tip, manifiesto.Man_Gui,
                     COALESCE(mp_row.Pla_Nom, mp_agg.Pla_Nom, '') AS Pla_Nom,
                     CONCAT(persona.Prs_Ape, ' ', persona.Prs_Nom) AS cliente, persona.Prs_Ced,
+                    vehiculo.Veh_Pla,
+                    CONCAT(persona_chofer.Prs_Nom, ' ', persona_chofer.Prs_Ape) AS chofer,
                     ROUND(manifiesto.Man_Pun * manifiesto.Man_Pes, 2) AS total
                 FROM manifiesto
                 LEFT JOIN manifiesto_plantas mp_row ON mp_row.Pla_Cod = manifiesto.Pla_Cod AND mp_row.Cli_Cod = manifiesto.Cli_Cod
                 LEFT JOIN (SELECT Cli_Cod, GROUP_CONCAT(Pla_Nom ORDER BY Pla_Nom SEPARATOR ', ') AS Pla_Nom FROM manifiesto_plantas WHERE Pla_Est = 'A' GROUP BY Cli_Cod) mp_agg ON mp_agg.Cli_Cod = manifiesto.Cli_Cod
                 INNER JOIN cliente ON manifiesto.Cli_Cod = cliente.Cli_Cod
                 INNER JOIN persona ON cliente.Prs_Cod = persona.Prs_Cod
+                LEFT JOIN vehiculo ON manifiesto.Veh_Cod = vehiculo.Veh_Cod
+                LEFT JOIN chofer ON manifiesto.Cho_Cod = chofer.Cho_Cod
+                LEFT JOIN persona AS persona_chofer ON chofer.Prs_Cod = persona_chofer.Prs_Cod
                 WHERE manifiesto.Man_Est = 'A' AND manifiesto.Vet_Cod = $Vet_Cod $filter_planta_74
                 ORDER BY manifiesto.Man_Fes DESC, manifiesto.Man_Num";
             break;
@@ -917,10 +922,13 @@ function sentencias_manifiesto($id, $Par_Sql)
                         m.Man_Pes,
                         COALESCE(v.Vet_Num, 'S/F') AS Factura,
                         vehiculo.Veh_Pla,
+                        CONCAT(persona_chofer.Prs_Nom, ' ', persona_chofer.Prs_Ape) AS chofer,
                         CAST((m.Man_Pes * (m.Man_Pun / 1000)) AS DECIMAL(10,2)) AS Valor,
                         IF(m.Vet_Cod IS NOT NULL AND m.Vet_Cod > 0, 1, 0) AS Facturado
                     FROM manifiesto m
                     LEFT JOIN vehiculo ON m.Veh_Cod = vehiculo.Veh_Cod
+                    LEFT JOIN chofer ON m.Cho_Cod = chofer.Cho_Cod
+                    LEFT JOIN persona AS persona_chofer ON chofer.Prs_Cod = persona_chofer.Prs_Cod
                     LEFT JOIN ventas v ON m.Vet_Cod = v.Vet_Cod
                     WHERE m.Vet_Cod = $Vet_Cod AND m.Man_Est = 'A' $filter_planta_88
                     ORDER BY m.Man_Fes ASC";

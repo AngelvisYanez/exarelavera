@@ -70,9 +70,11 @@ if ($llave && !empty($llave['Lla_Rut'])) {
     $password = $llave['Lla_Cla'];
     if (file_exists($ruta_p12)) {
         $p12_data = file_get_contents($ruta_p12);
-        if (openssl_pkcs12_read($p12_data, $certs, $password)) {
+        if (@openssl_pkcs12_read($p12_data, $certs, $password)) {
+            $cert_info = openssl_x509_parse($certs['cert']);
+            $nombre_firmante_cert = isset($cert_info['subject']['CN']) ? $cert_info['subject']['CN'] : '';
             $info = array(
-                'Name' => isset($cabecera['Representante']) ? $cabecera['Representante'] : '',
+                'Name' => $nombre_firmante_cert !== '' ? $nombre_firmante_cert : (isset($cabecera['Representante']) ? $cabecera['Representante'] : ''),
                 'Location' => 'Ecuador',
                 'Reason' => 'Certificado de Manifiestos por Factura',
                 'ContactInfo' => '',
@@ -81,6 +83,16 @@ if ($llave && !empty($llave['Lla_Rut'])) {
             $firma_fue_leida = true;
         }
     }
+}
+
+if (!$firma_fue_leida) {
+    header('Content-Type: text/html; charset=UTF-8');
+    die(
+        '<p style="font-family:sans-serif;padding:20px;"><strong>No se pudo firmar el certificado.</strong></p>'
+        . '<p>Verifique que exista una llave electr&oacute;nica activa (<code>llave_elect</code>) '
+        . 'y el archivo .p12 en <code>facturacion/FRONT/' . (int)$Ses_Emp_Cod . '/</code> con la clave correcta.</p>'
+        . '<p><a href="javascript:history.back();">Volver</a></p>'
+    );
 }
 
 $pdf->SetCreator('EXA Software');
@@ -159,14 +171,15 @@ $pdf->Ln(2);
 $header_tabla = function ($pdf) {
     $pdf->SetFont('helvetica', 'B', 7);
     $pdf->SetFillColor(240, 240, 240);
-    $pdf->Cell(10, 7, '#', 1, 0, 'C', true);
-    $pdf->Cell(22, 7, 'Fecha', 1, 0, 'C', true);
-    $pdf->Cell(28, 7, 'No Manif.', 1, 0, 'C', true);
-    $pdf->Cell(26, 7, 'Guia', 1, 0, 'C', true);
-    $pdf->Cell(18, 7, 'Peso KG', 1, 0, 'C', true);
-    $pdf->Cell(26, 7, 'Factura', 1, 0, 'C', true);
-    $pdf->Cell(20, 7, 'Vehiculo', 1, 0, 'C', true);
-    $pdf->Cell(20, 7, 'Valor', 1, 1, 'C', true);
+    $pdf->Cell(8, 7, '#', 1, 0, 'C', true);
+    $pdf->Cell(18, 7, 'Fecha', 1, 0, 'C', true);
+    $pdf->Cell(42, 7, 'Chofer', 1, 0, 'C', true);
+    $pdf->Cell(22, 7, 'No Manif.', 1, 0, 'C', true);
+    $pdf->Cell(20, 7, 'Guia', 1, 0, 'C', true);
+    $pdf->Cell(14, 7, 'Peso KG', 1, 0, 'C', true);
+    $pdf->Cell(16, 7, 'Factura', 1, 0, 'C', true);
+    $pdf->Cell(16, 7, 'Vehiculo', 1, 0, 'C', true);
+    $pdf->Cell(14, 7, 'Valor', 1, 1, 'C', true);
     $pdf->SetFont('helvetica', '', 7);
 };
 
@@ -177,22 +190,24 @@ foreach ($listado as $item) {
         $pdf->AddPage();
         $header_tabla($pdf);
     }
-    $pdf->Cell(10, 5, (string)$count++, 1, 0, 'C');
-    $pdf->Cell(22, 5, date('d/m/Y', strtotime($item['Fecha'])), 1, 0, 'C');
-    $pdf->Cell(28, 5, $item['Man_Num_Full'], 1, 0, 'C');
-    $pdf->Cell(26, 5, isset($item['Man_Gui']) ? $item['Man_Gui'] : '', 1, 0, 'C');
-    $pdf->Cell(18, 5, number_format((float)$item['Man_Pes'], 2, '.', ','), 1, 0, 'R');
-    $pdf->Cell(26, 5, ((int)$item['Facturado'] === 1) ? $item['Factura'] : '-', 1, 0, 'C');
-    $pdf->Cell(20, 5, $item['Veh_Pla'], 1, 0, 'C');
-    $pdf->Cell(20, 5, '$ ' . number_format((float)$item['Valor'], 2, '.', ','), 1, 1, 'R');
+    $pdf->Cell(8, 5, (string)$count++, 1, 0, 'C');
+    $pdf->Cell(18, 5, date('d/m/Y', strtotime($item['Fecha'])), 1, 0, 'C');
+    $chofer_txt = isset($item['chofer']) ? trim($item['chofer']) : '';
+    $pdf->Cell(42, 5, $chofer_txt, 1, 0, 'L');
+    $pdf->Cell(22, 5, $item['Man_Num_Full'], 1, 0, 'C');
+    $pdf->Cell(20, 5, isset($item['Man_Gui']) ? $item['Man_Gui'] : '', 1, 0, 'C');
+    $pdf->Cell(14, 5, number_format((float)$item['Man_Pes'], 2, '.', ','), 1, 0, 'R');
+    $pdf->Cell(16, 5, ((int)$item['Facturado'] === 1) ? $item['Factura'] : '-', 1, 0, 'C');
+    $pdf->Cell(16, 5, isset($item['Veh_Pla']) ? $item['Veh_Pla'] : '', 1, 0, 'C');
+    $pdf->Cell(14, 5, '$ ' . number_format((float)$item['Valor'], 2, '.', ','), 1, 1, 'R');
 }
 
 $pdf->SetFont('helvetica', 'B', 8);
-$pdf->Cell(86, 6, 'TOTALES', 0, 0, 'R');
-$pdf->Cell(18, 6, number_format($suma_peso, 2, '.', ','), 1, 0, 'R');
-$pdf->Cell(26, 6, '', 1, 0, 'C');
-$pdf->Cell(20, 6, '', 1, 0, 'C');
-$pdf->Cell(20, 6, '$ ' . number_format($suma_total, 2, '.', ','), 1, 1, 'R');
+$pdf->Cell(110, 6, 'TOTALES', 0, 0, 'R');
+$pdf->Cell(14, 6, number_format($suma_peso, 2, '.', ','), 1, 0, 'R');
+$pdf->Cell(16, 6, '', 1, 0, 'C');
+$pdf->Cell(16, 6, '', 1, 0, 'C');
+$pdf->Cell(14, 6, '$ ' . number_format($suma_total, 2, '.', ','), 1, 1, 'R');
 
 $pdf->SetAutoPageBreak(false);
 if ($pdf->GetY() > 215) {

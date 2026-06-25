@@ -435,7 +435,7 @@ if (isset($_GET['manifiestosFactura'])) {
 
     <!-- Modal manifiestos de la factura -->
     <div class="modal fade" id="modalManifiestos" tabindex="-1">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lg" style="width: 95%; max-width: 1150px;">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -877,6 +877,9 @@ if (isset($_GET['manifiestosFactura'])) {
                             $det.trigger('reloadGrid');
                             $det.jqGrid('footerData', 'set', {
                                 Man_Num: 'TOTALES',
+                                Man_Gui: '',
+                                Veh_Pla: '',
+                                chofer: '',
                                 Man_Fes: '',
                                 Pla_Nom: '',
                                 cliente: '',
@@ -1271,6 +1274,23 @@ if (isset($_GET['manifiestosFactura'])) {
                         }
                     },
                     {
+                        name: 'Man_Gui',
+                        label: 'Nº Guía',
+                        width: 110,
+                        align: 'center'
+                    },
+                    {
+                        name: 'Veh_Pla',
+                        label: 'Placa',
+                        width: 75,
+                        align: 'center'
+                    },
+                    {
+                        name: 'chofer',
+                        label: 'Chofer',
+                        width: 140
+                    },
+                    {
                         name: 'Man_Fes',
                         label: 'Fecha',
                         width: 130,
@@ -1313,7 +1333,7 @@ if (isset($_GET['manifiestosFactura'])) {
                         }
                     }
                 ],
-                width: 865,
+                width: 1100,
                 height: 280,
                 datatype: 'local',
                 pager: '#gridManifiestosDetallePager',
@@ -1364,21 +1384,31 @@ if (isset($_GET['manifiestosFactura'])) {
                 if ($btn.data('printing')) return;
 
                 var firmar = $('#Cert_Fac_Firmar').is(':checked') ? 1 : 0;
-                /* Siempre el mismo certificado HTML; firmar=1 añade bloque de firma (sin BORRADOR) */
-                var url = 'man_rep_certificado_factura.php?embed=1&Vet_Cod=' + encodeURIComponent(data.vetCod) + '&firmar=' + firmar;
+                var qs = 'Vet_Cod=' + encodeURIComponent(data.vetCod);
                 var plaCod = $('#Pla_Cod_Usuario').val();
                 if (plaCod) {
-                    url += '&Pla_Cod_Usuario=' + encodeURIComponent(plaCod);
+                    qs += '&Pla_Cod_Usuario=' + encodeURIComponent(plaCod);
                 }
 
                 $('#modalCertificadoFirma').modal('hide');
-                showCertFacLoader('Generando certificado...');
 
                 var unlock = function() {
                     $btn.data('printing', false).prop('disabled', false).removeClass('disabled');
                 };
 
                 $btn.data('printing', true).prop('disabled', true).addClass('disabled');
+
+                /* Igual que impCertificadoRango: firmar=Sí → PDF con setSignature (TCPDF); No → HTML sin firma */
+                if (firmar) {
+                    showCertFacLoader('Generando certificado firmado...');
+                    unlock();
+                    hideCertFacLoader();
+                    window.location.href = 'man_rep_certificado_factura_pdf.php?' + qs;
+                    return;
+                }
+
+                showCertFacLoader('Generando certificado...');
+                var url = 'man_rep_certificado_factura.php?embed=1&firmar=0&' + qs;
 
                 var iframe = manFacCreatePrintIframe();
 
@@ -1437,6 +1467,9 @@ if (isset($_GET['manifiestosFactura'])) {
                 html += '<tr>';
                 html += '<th style="background-color: #eee;">#</th>';
                 html += '<th style="background-color: #eee;">Nº Manifiesto</th>';
+                html += '<th style="background-color: #eee;">Nº Guía</th>';
+                html += '<th style="background-color: #eee;">Placa</th>';
+                html += '<th style="background-color: #eee;">Chofer</th>';
                 html += '<th style="background-color: #eee;">Fecha</th>';
                 html += '<th style="background-color: #eee;">Planta</th>';
                 html += '<th style="background-color: #eee;">Cliente</th>';
@@ -1456,6 +1489,9 @@ if (isset($_GET['manifiestosFactura'])) {
                     })() : (r.Man_Num || '');
                     html += '<td align="center">' + (i + 1) + '</td>';
                     html += '<td>' + manNumDisplay + '</td>';
+                    html += '<td>' + (r.Man_Gui || '') + '</td>';
+                    html += '<td>' + (r.Veh_Pla || '') + '</td>';
+                    html += '<td>' + (r.chofer || '') + '</td>';
                     html += '<td>' + r.Man_Fes + '</td>';
                     html += '<td>' + (r.Pla_Nom || '') + '</td>';
                     html += '<td>' + (r.cliente || '') + '</td>';
@@ -1469,7 +1505,7 @@ if (isset($_GET['manifiestosFactura'])) {
 
                 // Fila de totales (sPes ya en toneladas)
                 html += '<tr>';
-                html += '<td colspan="5" style="background-color: #f9f9f9;"><strong>TOTALES</strong></td>';
+                html += '<td colspan="8" style="background-color: #f9f9f9;"><strong>TOTALES</strong></td>';
                 html += '<td align="right" style="background-color: #f9f9f9;"><strong>' + sPes.toFixed(2) + '</strong></td>';
                 html += '<td style="background-color: #f9f9f9;"></td>';
                 html += '<td align="right" style="background-color: #f9f9f9;"><strong>' + sTot.toFixed(2) + '</strong></td>';
@@ -1530,29 +1566,27 @@ if (isset($_GET['manifiestosFactura'])) {
                 html += 'table.meta-table tr:nth-child(even) th{background:#f1f5f9;}';
                 html += 'table.meta-table tr:nth-child(even) td{background:#fafbfc;}';
                 html += '.table-block{padding:8px 22px 20px;background:#fff;}';
-                // Forzar que los anchos definidos por columna se respeten
                 html += 'table.data-table{width:100%;border-collapse:collapse;margin:0;font-size:11.5px;table-layout:fixed;}';
                 html += 'table.data-table caption{caption-side:top;text-align:left;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;padding:14px 0 8px;}';
-                html += 'table.data-table th,table.data-table td{border:1px solid #e2e8f0;padding:2px 4px;text-align:left;vertical-align:middle;overflow:hidden;text-overflow:ellipsis;}';
-                html += 'table.data-table thead th{background:#fff;color:#0f172a;font-weight:700;font-size:11px;border-color:#e2e8f0;text-align:center;}';
-                // Evitar que el encabezado se vea como "Pes..." / "P.u..." / "T..."
-                html += 'table.data-table thead th{overflow:visible;text-overflow:clip;white-space:nowrap;font-size:10.5px;padding:2px 2px;}';
+                html += 'table.data-table th,table.data-table td{border:1px solid #e2e8f0;padding:3px 5px;text-align:left;vertical-align:top;word-wrap:break-word;overflow-wrap:break-word;word-break:break-word;}';
+                html += 'table.data-table thead th{background:#fff;color:#0f172a;font-weight:700;font-size:11px;border-color:#e2e8f0;text-align:center;white-space:normal;line-height:1.25;}';
+                html += 'table.data-table tbody td{white-space:normal;overflow:visible;}';
                 html += 'table.data-table tbody tr:nth-child(even){background:#f8fafc;}';
-                html += 'table.data-table tbody td.numeric{text-align:right;font-variant-numeric:tabular-nums;}';
-                // Centrar valores en columnas: Peso (Tn), P. unit., Total (sobrescribe .numeric)
-                html += 'table.data-table tbody td:nth-child(5),table.data-table tbody td:nth-child(6),table.data-table tbody td:nth-child(7){text-align:center !important;}';
-                // Columnas de identificación más angostas: Nº Man, Fecha
-                html += 'table.data-table th:nth-child(1),table.data-table td:nth-child(1){width:45px;white-space:nowrap;}';  // #
-                html += 'table.data-table th:nth-child(2),table.data-table td:nth-child(2){width:70px;white-space:nowrap;}';  // Nº Man
-                html += 'table.data-table th:nth-child(3),table.data-table td:nth-child(3){width:120px;white-space:nowrap;}';  // Fecha
-                // Columnas numéricas más angostas: Peso(Tn), P.Unit, Total
-                // (Los anchos muy pequeños hacían que el encabezado se corte)
-                html += 'table.data-table th:nth-child(5),table.data-table td:nth-child(5){width:70px;white-space:nowrap;}';  // Peso (Tn)
-                html += 'table.data-table th:nth-child(6),table.data-table td:nth-child(6){width:70px;white-space:nowrap;}';  // P. unit.
-                // Hacer más ancha la columna Total para que no se corte la suma
-                html += 'table.data-table th:nth-child(7),table.data-table td:nth-child(7){width:70px;white-space:nowrap;}';  // Total
-                html += 'table.data-table tr.total-row td{background:#f1f5f9;font-weight:700;border-color:#cbd5e1;color:#0f172a;overflow:visible;text-overflow:clip;}';
-                html += 'table.data-table tr.total-row td.numeric{text-align:right !important;}';
+                html += 'table.data-table tbody td.numeric{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}';
+                html += 'table.data-table tbody td:nth-child(8),table.data-table tbody td:nth-child(9),table.data-table tbody td:nth-child(10){text-align:center !important;}';
+                html += 'table.data-table th:nth-child(1),table.data-table td:nth-child(1){width:36px;}';
+                html += 'table.data-table th:nth-child(2),table.data-table td:nth-child(2){width:68px;}';
+                html += 'table.data-table th:nth-child(3),table.data-table td:nth-child(3){width:88px;}';
+                html += 'table.data-table th:nth-child(4),table.data-table td:nth-child(4){width:62px;}';
+                html += 'table.data-table th:nth-child(5),table.data-table td:nth-child(5){width:105px;}';
+                html += 'table.data-table th:nth-child(6),table.data-table td:nth-child(6){width:88px;}';
+                html += 'table.data-table th:nth-child(7),table.data-table td:nth-child(7){width:105px;}';
+                html += 'table.data-table th:nth-child(8),table.data-table td:nth-child(8){width:62px;white-space:nowrap;}';
+                html += 'table.data-table th:nth-child(9),table.data-table td:nth-child(9){width:62px;white-space:nowrap;}';
+                html += 'table.data-table th:nth-child(10),table.data-table td:nth-child(10){width:62px;white-space:nowrap;}';
+                html += 'table.data-table tr.total-row td{background:#f1f5f9;font-weight:700;border-color:#cbd5e1;color:#0f172a;}';
+                html += 'table.data-table tr.total-row td.numeric{text-align:right !important;white-space:nowrap;}';
+                html += 'table.meta-table td{white-space:normal;word-wrap:break-word;overflow-wrap:break-word;}';
                 // Márgenes de impresión más reducidos (PDF)
                 // @page ayuda a reducir el margen real al “Guardar como PDF”.
                 // Dejar margen suficiente para que el navegador dibuje su pie (numeración).
@@ -1580,7 +1614,7 @@ if (isset($_GET['manifiestosFactura'])) {
                 html += '</table></section>';
 
                 html += '<div class="table-block">';
-                html += '<table class="data-table"><caption>Detalle de manifiestos</caption><thead><tr><th>#</th><th>Nº Man</th><th>Fecha</th><th>Planta</th><th>Peso (Tn)</th><th>P. unit.</th><th>Total</th></tr></thead><tbody>';
+                html += '<table class="data-table"><caption>Detalle de manifiestos</caption><thead><tr><th>#</th><th>Nº Man</th><th>Nº Guía</th><th>Placa</th><th>Chofer</th><th>Fecha</th><th>Planta</th><th>Peso (Tn)</th><th>P. unit.</th><th>Total</th></tr></thead><tbody>';
                 var sPes = 0,
                     sTot = 0;
                 rows.forEach(function(r, i) {
@@ -1589,11 +1623,11 @@ if (isset($_GET['manifiestosFactura'])) {
                         while (n.length < 4) n = '0' + n;
                         return 'M' + r.Pla_Cod + '-' + n;
                     })() : (r.Man_Num || '');
-                    html += '<tr><td>' + escPdf(String(i + 1)) + '</td><td>' + escPdf(manNumD) + '</td><td>' + escPdf(r.Man_Fes) + '</td><td>' + escPdf(r.Pla_Nom || '') + '</td><td class="numeric">' + (parseFloat(r.Man_Pes).toFixed(2)) + '</td><td class="numeric">' + escPdf(String(r.Man_Pun != null ? r.Man_Pun : '')) + '</td><td class="numeric">' + escPdf(String(r.total != null ? r.total : '')) + '</td></tr>';
+                    html += '<tr><td>' + escPdf(String(i + 1)) + '</td><td>' + escPdf(manNumD) + '</td><td>' + escPdf(r.Man_Gui || '') + '</td><td>' + escPdf(r.Veh_Pla || '') + '</td><td>' + escPdf(r.chofer || '') + '</td><td>' + escPdf(r.Man_Fes) + '</td><td>' + escPdf(r.Pla_Nom || '') + '</td><td class="numeric">' + (parseFloat(r.Man_Pes).toFixed(2)) + '</td><td class="numeric">' + escPdf(String(r.Man_Pun != null ? r.Man_Pun : '')) + '</td><td class="numeric">' + escPdf(String(r.total != null ? r.total : '')) + '</td></tr>';
                     sPes += parseFloat(r.Man_Pes) || 0;
                     sTot += parseFloat(r.total) || 0;
                 });
-                html += '<tr class="total-row"><td colspan="4">TOTALES</td><td class="numeric">' + sPes.toFixed(2) + '</td><td></td><td class="numeric">' + sTot.toFixed(2) + '</td></tr>';
+                html += '<tr class="total-row"><td colspan="7">TOTALES</td><td class="numeric">' + sPes.toFixed(2) + '</td><td></td><td class="numeric">' + sTot.toFixed(2) + '</td></tr>';
                 html += '</tbody></table></div></div>';
                 html += '</div>'; // #printArea
                 html += '</body></html>';

@@ -1,8 +1,8 @@
 <?php
 /**
- * Certificado de Manifiestos (B.07.01) por factura.
- * Se imprime en la MISMA p?gina usando iframe desde man_fac_man.php.
- * ?embed=1 : no auto-imprime, sin bot?n (lo imprime el parent).
+ * Certificado B.07.01 por factura (HTML, sin firma digital embebida).
+ * Con firma electronica usar man_rep_certificado_factura_pdf.php (igual que rango en man_alt_manifiesto).
+ * embed=1: impresion desde iframe en man_fac_man.php (firmar=0).
  */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/log_man_fac_1.0.php');
@@ -35,6 +35,20 @@ $embed = !empty($_GET['embed']);
 $firmar = isset($_GET['firmar']) && $_GET['firmar'] !== '' && $_GET['firmar'] !== '0';
 
 $Vet_Cod = isset($_GET['Vet_Cod']) ? intval($_GET['Vet_Cod']) : 0;
+
+/* Redireccion si pidieron firma: el PDF lleva setSignature como man_rep_certificado_rango_pdf.php */
+if ($firmar && $Vet_Cod > 0) {
+    if ($embed) {
+        echo '<script>if (window.parent && window.parent.alert) { window.parent.alert("La firma electronica se genera en PDF. Elija Firmar: Si en el listado de facturas."); }</script>';
+        exit;
+    }
+    $redir = 'man_rep_certificado_factura_pdf.php?Vet_Cod=' . $Vet_Cod;
+    if (!empty($_GET['Pla_Cod_Usuario']) && intval($_GET['Pla_Cod_Usuario']) > 0) {
+        $redir .= '&Pla_Cod_Usuario=' . intval($_GET['Pla_Cod_Usuario']);
+    }
+    header('Location: ' . $redir);
+    exit;
+}
 if ($Vet_Cod <= 0) {
     if ($embed) {
         echo '<script>if (window.parent && window.parent.alert) window.parent.alert("Factura no valida");</script>';
@@ -294,9 +308,29 @@ $verf_qr_html = man_cert_verificacion_qr_html($Vet_Cod, $emp_cod_verf);
             border: 1px solid #e2e8f0;
             padding: 3px 4px;
             text-align: center;
-            vertical-align: middle;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            vertical-align: top;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+        table.data-table tbody td {
+            white-space: normal;
+            overflow: visible;
+        }
+        table.data-table tbody td.chofer-col {
+            text-align: left;
+        }
+        table.data-table th:nth-child(3),
+        table.data-table td:nth-child(3) {
+            width: 20%;
+        }
+        table.data-table th:nth-child(7),
+        table.data-table td:nth-child(7) {
+            width: 9%;
+        }
+        table.data-table th:nth-child(9),
+        table.data-table td:nth-child(9) {
+            width: 8%;
         }
         table.data-table thead th {
             background: #fff;
@@ -523,6 +557,7 @@ $verf_qr_html = man_cert_verificacion_qr_html($Vet_Cod, $emp_cod_verf);
                     <tr>
                         <th>#</th>
                         <th>Fecha</th>
+                        <th>Chofer</th>
                         <th>No. manif.</th>
                         <th>Gu&iacute;a</th>
                         <th>Peso (kg)</th>
@@ -543,6 +578,7 @@ $verf_qr_html = man_cert_verificacion_qr_html($Vet_Cod, $emp_cod_verf);
                     <tr>
                         <td><?php echo $count++; ?></td>
                         <td><?php echo date('d/m/Y', strtotime($item['Fecha'])); ?></td>
+                        <td class="chofer-col"><?php echo h(isset($item['chofer']) ? $item['chofer'] : ''); ?></td>
                         <td><?php echo h($item['Man_Num_Full']); ?></td>
                         <td><?php echo h(isset($item['Man_Gui']) ? $item['Man_Gui'] : ''); ?></td>
                         <td class="numeric"><?php echo number_format((float)$item['Man_Pes'], 2, '.', ','); ?></td>
@@ -554,7 +590,7 @@ $verf_qr_html = man_cert_verificacion_qr_html($Vet_Cod, $emp_cod_verf);
                     </tr>
                     <?php endforeach; ?>
                     <tr class="total-row">
-                        <td colspan="4">TOTALES</td>
+                        <td colspan="5">TOTALES</td>
                         <td class="numeric"><?php echo number_format($suma_peso, 2, '.', ','); ?></td>
                         <td></td>
                         <td></td>
