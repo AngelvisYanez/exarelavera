@@ -481,6 +481,12 @@ function initContratoForm() {
 }
 
 function initEventosContratos() {
+    if ($.fn.select2) {
+        $('#Ciu_Cod').select2({
+            dropdownParent: $('#contratoDialog')
+        });
+    }
+
     $('#btnNuevoContrato').on('click', function () {
         nuevoContrato();
         $('#contratoDialog').dialog('open');
@@ -858,6 +864,14 @@ function cargarContratoEnForm(data) {
     $('#Pla_Nom').val(data.Pla_Nom || '');
     $('#Mco_Num').val(data.Mco_Num || '');
     $('#Mco_Not').val(data.Mco_Not || '');
+    $('#Mco_DirN').val(data.Mco_DirN || '');
+    $('#Ciu_Cod').val(data.Ciu_Cod || '').trigger('change');
+    if (data.Mco_Ren == 1 || data.Mco_Ren === 'S') {
+        $('#ren_si').prop('checked', true);
+    } else {
+        $('#ren_no').prop('checked', true);
+    }
+    try { $('.radioset').buttonset('refresh'); } catch (e) {}
     $('#Mco_Fap').val(data.Mco_Fap || '');
     $('#Mco_Fca').val(data.Mco_Fca || '');
     $('#Mco_Obs').val(data.Mco_Obs || '');
@@ -874,6 +888,9 @@ function nuevoContrato() {
     $('#Usuario_Reg').text($('#Usu_Nom').val());
     $('#contratoForm').validate().resetForm();
     resetRespaldos();
+    $('#Ciu_Cod').val('').trigger('change');
+    $('#ren_si').prop('checked', true);
+    try { $('.radioset').buttonset('refresh'); } catch (e) {}
 }
 
 function descargarDocumentacionContrato(mcoCod) {
@@ -1025,6 +1042,9 @@ function guardarContrato() {
     fd.append('Pla_Cod', $('#Pla_Cod').val());
     fd.append('Mco_Num', $('#Mco_Num').val());
     fd.append('Mco_Not', $('#Mco_Not').val());
+    fd.append('Mco_DirN', $('#Mco_DirN').val());
+    fd.append('Ciu_Cod', $('#Ciu_Cod').val());
+    fd.append('Mco_Ren', $('input[name="Mco_Ren"]:checked').val() || 0);
     fd.append('Mco_Fap', fap);
     fd.append('Mco_Fca', fca);
     fd.append('Mco_Obs', $('#Mco_Obs').val());

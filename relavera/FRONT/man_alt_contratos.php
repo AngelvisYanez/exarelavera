@@ -74,6 +74,9 @@ if (isset($guardarContratoAjax)) {
         if ($Mco_Not === '') {
             throw new Exception('Ingrese el nombre del notario.');
         }
+        if (empty($_POST['Ciu_Cod']) || (int)$_POST['Ciu_Cod'] <= 0) {
+            throw new Exception('Seleccione una ciudad.');
+        }
         if ($Mco_Fap === '' || $Mco_Fca === '') {
             throw new Exception('Ingrese las fechas de apertura y caducidad.');
         }
@@ -88,6 +91,9 @@ if (isset($guardarContratoAjax)) {
             'Pla_Cod' => $Pla_Cod,
             'Mco_Num' => isset($_POST['Mco_Num']) ? trim($_POST['Mco_Num']) : '',
             'Mco_Not' => $Mco_Not,
+            'Mco_DirN' => isset($_POST['Mco_DirN']) ? trim($_POST['Mco_DirN']) : '',
+            'Ciu_Cod' => isset($_POST['Ciu_Cod']) ? (int)$_POST['Ciu_Cod'] : 0,
+            'Mco_Ren' => (isset($_POST['Mco_Ren']) && $_POST['Mco_Ren'] === 'S') ? 'S' : 'N',
             'Mco_Fap' => $Mco_Fap,
             'Mco_Fca' => $Mco_Fca,
             'Mco_Obs' => isset($_POST['Mco_Obs']) ? trim($_POST['Mco_Obs']) : '',
@@ -692,6 +698,14 @@ if (!empty($usuarioActual['Usuario'])) {
     $nombreUsuario = trim($usuarioActual['Prs_Nom'] . ' ' . (isset($usuarioActual['Prs_Ape']) ? $usuarioActual['Prs_Ape'] : ''));
 }
 
+$listaCiudades = array();
+$resCiu = @mysqli_query($obBD_conexion->conexion, "SELECT Ciu_Cod, Ciu_Des FROM ciudad WHERE Ciu_Des != '' ORDER BY Ciu_Des");
+if ($resCiu) {
+    while ($rowC = mysqli_fetch_assoc($resCiu)) {
+        $listaCiudades[] = $rowC;
+    }
+}
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -1227,6 +1241,19 @@ if (!empty($usuarioActual['Usuario'])) {
                         <input type="text" id="Mco_Not" name="Mco_Not" class="form-control" maxlength="50" required placeholder="Nombre del notario">
                     </div>
                     <div class="fld">
+                        <label class="req">Ciudad</label>
+                        <select id="Ciu_Cod" name="Ciu_Cod" class="form-control" style="width: 100%;" required>
+                            <option value="">Seleccione una ciudad...</option>
+                            <?php foreach($listaCiudades as $ciu): ?>
+                                <option value="<?php echo htmlspecialchars($ciu['Ciu_Cod']); ?>"><?php echo htmlspecialchars($ciu['Ciu_Des']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="fld">
+                        <label>Notar&iacute;a</label>
+                        <input type="text" id="Mco_DirN" name="Mco_DirN" class="form-control" maxlength="100" placeholder="Nombre de la notar&iacute;a">
+                    </div>
+                    <div class="fld">
                         <label class="req">F. Apertura</label>
                         <input type="date" id="Mco_Fap" name="Mco_Fap" class="form-control" required>
                     </div>
@@ -1234,9 +1261,18 @@ if (!empty($usuarioActual['Usuario'])) {
                         <label class="req">F. Caducidad</label>
                         <input type="date" id="Mco_Fca" name="Mco_Fca" class="form-control" required>
                     </div>
-                    <div class="fld span-2">
+                    <div class="fld">
                         <label>Observaci&oacute;n</label>
-                        <textarea id="Mco_Obs" name="Mco_Obs" class="form-control" rows="2" placeholder="Notas adicionales (opcional)"></textarea>
+                        <textarea id="Mco_Obs" name="Mco_Obs" class="form-control" rows="2" placeholder="Notas adicionales (opcional)" style="resize: vertical !important; max-height: none !important; height: 40px !important;"></textarea>
+                    </div>
+                    <div class="fld">
+                        <label>Contrato Renovable</label>
+                        <div class="radioset" style="display: block; margin-top: 4px;">
+                            <input type="radio" id="ren_si" name="Mco_Ren" value="S" checked>
+                            <label for="ren_si">S&iacute;</label>
+                            <input type="radio" id="ren_no" name="Mco_Ren" value="N">
+                            <label for="ren_no">No</label>
+                        </div>
                     </div>
                 </div>
                 </div>
@@ -1300,10 +1336,11 @@ if (!empty($usuarioActual['Usuario'])) {
     <div id="plantaDialog" title="Buscar Planta" style="display: none;">
         <form class="form-horizontal normal"></form>
     </div>
-
+    <link rel="stylesheet" type="text/css" media="screen" href="../../framework/plugins/select2/select2.min.css" />
+    <script type="text/javascript" src="../../framework/plugins/select2/select2.min.js"></script>
     <script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/man_val_con_contratos.js?v=32"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_con_contratos.js?v=33"></script>
 
     <!-- Div oculto para imprimir reporte de contratos -->
     <div id="imprimirContratos" class="contratos-reporte-wrap" style="display: none;">

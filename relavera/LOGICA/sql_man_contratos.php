@@ -99,12 +99,17 @@ function sentencias_contratos_planta($id, $Par_Sql) {
             $Mco_Fca = addslashes($Par_Sql['Mco_Fca']);
             $Mco_Obs = isset($Par_Sql['Mco_Obs']) ? addslashes(trim($Par_Sql['Mco_Obs'])) : '';
             $Mco_Est = addslashes($Par_Sql['Mco_Est']);
+            $Mco_DirN = isset($Par_Sql['Mco_DirN']) ? addslashes(trim($Par_Sql['Mco_DirN'])) : '';
+            $Ciu_Cod = isset($Par_Sql['Ciu_Cod']) ? (int)$Par_Sql['Ciu_Cod'] : 0;
+            $Mco_Ren = (isset($Par_Sql['Mco_Ren']) && $Par_Sql['Mco_Ren'] === 'S') ? 'S' : 'N';
+            
             $numSql = ($Mco_Num !== '') ? "'$Mco_Num'" : "NULL";
             $obsSql = ($Mco_Obs !== '') ? "'$Mco_Obs'" : "NULL";
+            $ciuSql = ($Ciu_Cod > 0) ? $Ciu_Cod : "NULL";
             $sql = "INSERT INTO manifiesto_contratos
-                        (Pla_Cod, Usu_Cod, Mco_Num, Mco_Not, Mco_Fap, Mco_Fca, Mco_Obs, Mco_Est, Mco_Sys)
+                        (Pla_Cod, Usu_Cod, Mco_Num, Mco_Not, Mco_DirN, Ciu_Cod, Mco_Ren, Mco_Fap, Mco_Fca, Mco_Obs, Mco_Est, Mco_Sys)
                     VALUES
-                        ($Pla_Cod, $Usu_Cod, $numSql, '$Mco_Not', '$Mco_Fap', '$Mco_Fca', $obsSql, '$Mco_Est', NOW())";
+                        ($Pla_Cod, $Usu_Cod, $numSql, '$Mco_Not', '$Mco_DirN', $ciuSql, '$Mco_Ren', '$Mco_Fap', '$Mco_Fca', $obsSql, '$Mco_Est', NOW())";
             return $sql;
 
         case 4:
@@ -117,12 +122,20 @@ function sentencias_contratos_planta($id, $Par_Sql) {
             $Mco_Fca = addslashes($Par_Sql['Mco_Fca']);
             $Mco_Obs = isset($Par_Sql['Mco_Obs']) ? addslashes(trim($Par_Sql['Mco_Obs'])) : '';
             $Mco_Est = addslashes($Par_Sql['Mco_Est']);
+            $Mco_DirN = isset($Par_Sql['Mco_DirN']) ? addslashes(trim($Par_Sql['Mco_DirN'])) : '';
+            $Ciu_Cod = isset($Par_Sql['Ciu_Cod']) ? (int)$Par_Sql['Ciu_Cod'] : 0;
+            $Mco_Ren = (isset($Par_Sql['Mco_Ren']) && $Par_Sql['Mco_Ren'] === 'S') ? 'S' : 'N';
+            
             $numSql = ($Mco_Num !== '') ? "'$Mco_Num'" : "NULL";
             $obsSql = ($Mco_Obs !== '') ? "'$Mco_Obs'" : "NULL";
+            $ciuSql = ($Ciu_Cod > 0) ? $Ciu_Cod : "NULL";
             $sql = "UPDATE manifiesto_contratos SET
                         Pla_Cod = $Pla_Cod,
                         Mco_Num = $numSql,
                         Mco_Not = '$Mco_Not',
+                        Mco_DirN = '$Mco_DirN',
+                        Ciu_Cod = $ciuSql,
+                        Mco_Ren = '$Mco_Ren',
                         Mco_Fap = '$Mco_Fap',
                         Mco_Fca = '$Mco_Fca',
                         Mco_Obs = $obsSql,
