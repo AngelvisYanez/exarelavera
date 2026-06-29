@@ -17,11 +17,6 @@ $obBD_conexion = new Class_Log_Conexion_Anx($Ses_Dat_Dis);
  */
 $obBD_con1 =  new Class_Log_Datos_Anx;
 
-/**
- * Incrementa la capacidad de espacio reservado en la memoria ram para este script 
- */
-ini_set("memory_limit", "32M");
-
 $ctas_param=$obBD_con1->getArrayConsulta('plan_param.selectWhere',array("Tpa_Abr in('IPM','FRM485','FRM615','FRM617','FRM618')",'Emp_Cod'=>$Ses_Emp_Cod), $obBD_conexion); 
 
 if (isset($xml) || isset($html)) {    
@@ -96,14 +91,14 @@ if (isset($xml) || isset($html)) {
     $row_415 = $obBD_con1->getRowConsulta(13, $ini . '*' . $fin . '*' . $Ses_Emp_Cod . "*$noiva*4*S", $obBD_conexion);
     // NOTA: no se puede diferenciar cuando es venta de activos fijos
     //COMPRAS        
-    $row_500 = $obBD_con1->getRowConsulta(12, $ini . '*' . $fin . '*' . $Ses_Emp_Cod . "*$iva*1~3*2~7", $obBD_conexion);
+    $row_500 = $obBD_con1->getRowConsulta(12, $ini . '*' . $fin . '*' . $Ses_Emp_Cod . "*$iva*1~3~5*2~7", $obBD_conexion);
     $row_501 = $obBD_con1->getRowConsulta(12, $ini . '*' . $fin . '*' . $Ses_Emp_Cod . "*$iva*1~3*4", $obBD_conexion);
     
     
     $row_502 = $obBD_con1->getRowConsulta(12, $ini . '*' . $fin . '*' . $Ses_Emp_Cod . "*$iva*1~3*3", $obBD_conexion);
     
     
-    $row_507 = $obBD_con1->getRowConsulta(12, $ini . '*' . $fin . '*' . $Ses_Emp_Cod . "*$noiva*1~3", $obBD_conexion);
+    $row_507 = $obBD_con1->getRowConsulta(12, $ini . '*' . $fin . '*' . $Ses_Emp_Cod . "*$noiva*1~3~5", $obBD_conexion);
     $row_508 = $obBD_con1->getRowConsulta(12, $ini . '*' . $fin . '*' . $Ses_Emp_Cod . "*$noiva*2", $obBD_conexion);
     $row_540 = $obBD_con1->getRowConsulta(12, $ini . '*' . $fin . '*' . $Ses_Emp_Cod . "*$iva*1~3*2~7*5", $obBD_conexion);//IVA 5%
     $row5_510 = $obBD_con1->getRowConsulta(12, $ini . '*' . $fin . '*' . $Ses_Emp_Cod . "*$iva*4*2~7*5", $obBD_conexion);
@@ -120,8 +115,10 @@ if (isset($xml) || isset($html)) {
     $row_504 = $obBD_con1->getRowConsulta(36, $ini . '*' . $fin . '*' . $Ses_Emp_Cod . "*$iva*16*1~2~6~7*B", $obBD_conexion);
     $row_505 = $obBD_con1->getRowConsulta(12, $ini . '*' . $fin . '*' . $Ses_Emp_Cod . "*$iva*16*3~4", $obBD_conexion);
     $row_506 = $obBD_con1->getRowConsulta(12, $ini . '*' . $fin . '*' . $Ses_Emp_Cod . "*$noiva*16", $obBD_conexion);
-    //RETENCIONES
+    //RETENCIONES VENTAS Y BANCARIAS
     $row_609 = $obBD_con1->getRowConsulta(10, $ini . '*' . $fin . '*' . $Ses_Emp_Cod, $obBD_conexion);
+    $row_609_retBan = $obBD_con1->getRowConsulta(59, $ini.'*'.$fin.'*'.$Ses_Emp_Cod, $obBD_conexion);
+
     $row_721 = $obBD_con1->getRowConsulta(9, $ini . '*' . $fin . '*' . '10' . '*' . $Ses_Emp_Cod, $obBD_conexion);
     $row_723 = $obBD_con1->getRowConsulta(9, $ini . '*' . $fin . '*' . '20' . '*' . $Ses_Emp_Cod, $obBD_conexion);
     $row_725 = $obBD_con1->getRowConsulta(9, $ini . '*' . $fin . '*' . '30' . '*' . $Ses_Emp_Cod, $obBD_conexion);
@@ -217,7 +214,7 @@ if (isset($xml) || isset($html)) {
     // NOTA: estos valores no estan calculados xq no hay ventas a credito
     $form['482'] = $form['429'];
 
-    $form['483'] = formato_numero($iva_mes_ant['saldo'], 2, 1); // 485 MES ANTERIOR
+    $form['483'] = formato_numero($iva_mes_ant['saldo_haber'], 2, 1); // 485 MES ANTERIOR
     $form['484'] = formato_numero($form['429'], 2, 1);
     $form['485'] = formato_numero($form['482'] - $form['484'], 2, 1);
     $form['486'] ='0.00';
@@ -288,10 +285,10 @@ if (isset($xml) || isset($html)) {
     $form['555'] ='0.00';
 
     if (($form['419'] * 1) > 0){ //FACTOR PROPORCIONALIDAD
-        $form['563'] = formato_numero((($form['411'] * 1) + ($form['412'] * 1) + ($form['420'] * 1) + ($form['415'] * 1) + ($form['416'] * 1) + ($form['417'] * 1) + ($form['418'] * 1)+ ($form['435'] * 1)) / $form['419'], 2, 1);
+        $form['563'] = formato_numero((($form['411'] * 1) + ($form['412'] * 1) + ($form['420'] * 1) + ($form['415'] * 1) + ($form['416'] * 1) + ($form['417'] * 1) + ($form['418'] * 1)+ ($form['435'] * 1)) / $form['419'], 4, 1);
     }
-    $form['564'] = (($form['520']*1)+($form['521']*1)+($form['523']*1)+($form['524']*1)+($form['525']*1)+($form['526']*1)+($form['527']*1)+($form['534']*1)+($form['560']*1)) * ($form['563']*1);
-    $form['564'] = formato_numero($form['564'], 2, 1); //CREDITO TRIBUTARIO APLICABLE
+    //CREDITO TRIBUTARIO APLICABLE
+    $form['564'] = formato_numero((($form['520']*1)+($form['521']*1)+($form['523']*1)+($form['524']*1)+($form['525']*1)+($form['526']*1)+($form['527']*1)+($form['534']*1)+($form['560']*1)) * formato_numero(($form['563']*1),2,1),2,1);    
 
     $IMPOSITIVO = ($form['499'] * 1) - ($form['564'] * 1);
     $CREDITOTRIB = ($form['564'] * 1) - ($form['499'] * 1);
@@ -311,7 +308,7 @@ if (isset($xml) || isset($html)) {
     $form['606'] = formato_numero($diario_617['saldo_debe'], 2, 1); 
     $form['607'] = formato_numero($diario_618['saldo_debe'], 2, 1); 
     $form['608'] = formato_numero($diario_619['saldo_debe'], 2, 1); 
-    $form['609'] = formato_numero($row_609['Iva_Ret'], 2, 1); //Ret en la fuente del periodo
+    $form['609'] = formato_numero($row_609['Iva_Ret'] + $row_609_retBan['Ret_Iva'], 2, 1); //Ret en la fuente del periodo
     $form['610'] = formato_numero(0, 2, 1); //NUEVOS CODIGOS DEL SRI FALTA PROGRAMAR LA OPERACION
     $form['611'] = formato_numero(0, 2, 1); //NUEVOS CODIGOS DEL SRI FALTA PROGRAMAR LA OPERACION
     $form['612'] = formato_numero(0, 2, 1); //NUEVOS CODIGOS DEL SRI FALTA PROGRAMAR LA OPERACION
@@ -370,7 +367,7 @@ if (isset($xml) || isset($html)) {
         $buffer = reporteHtml($form, 'tes_pri_html_104.html');
         $responce['html_104'] = preg_replace('/{(.+)}/', '', $buffer);
     }*/
-    $responce['form'] = $form;    
+    $responce['form'] = $form;
     $responce['success'] = true;
     utf8_encode_deep($responce);
     echo json_encode($responce);
@@ -710,6 +707,9 @@ if (isset($saveVentasIva0Ajax) || isset($_REQUEST['saveVentasIva0Ajax'])) {
                                 <button class="btn btn-sm btn-info" type="button" onclick="abrirModalVentas0();"><i class="glyphicon glyphicon-list-alt"></i> Ventas 0%</button>
                                 <button class="btn btn-sm btn-primary" type="button" onclick="imprimirDiv('Html104');"><i class="glyphicon glyphicon-print"></i> Resumen</button>
                                 <button class="btn btn-sm btn-primary" type="button" onclick="generaAsiento();"><i class="fa fa-magic"></i> Generar Diario</button>
+                                <button class="btn btn-sm btn-default" type="button" onclick="exportarForm104Json();" title="Descargar todos los casilleros en JSON"><i class="glyphicon glyphicon-export"></i> Exportar JSON</button>
+                                <button class="btn btn-sm btn-default" type="button" onclick="$('#inputCargar104Json').click();" title="Cargar casilleros desde archivo JSON"><i class="glyphicon glyphicon-import"></i> Cargar JSON</button>
+                                <input type="file" id="inputCargar104Json" accept="application/json,.json" style="display:none;">
                             </div><br>
                             <div>                                                
                                 <div class="LetraNegra" id="Html104">                                            
@@ -926,7 +926,7 @@ if (isset($saveVentasIva0Ajax) || isset($_REQUEST['saveVentasIva0Ajax'])) {
 
                                     <tr>
                                         <td colspan="5">IMPUESTO A LIQUIDAR EN EL PROXIMO MES</td>
-                                        <td align="right">485</td>
+                                        <td align="right">485(482-484)</td>
                                         <td align="right" style="border: 1px solid #000000;"><label  class="lbl" id="485">0.00</label></td>
                                     </tr>
 
@@ -1621,7 +1621,7 @@ if (isset($saveVentasIva0Ajax) || isset($_REQUEST['saveVentasIva0Ajax'])) {
 
             /*  suma 564 */            
             var codigos_564=[520,521,534,560,522,523,524,524,525,526,527];
-            $('#564').text(sumar(codigos_564)*($('#563').text()*1));    
+            $('#564').text(sumar(codigos_564)*($('#563').text()*1).toFixed(2));
             //$('#564').text(($('#529').text()*1)*($('#563').text()*1));    
             
             $codigo_601 = (($('#499').text()*1)-($('#564').text()*1));
@@ -1631,8 +1631,8 @@ if (isset($saveVentasIva0Ajax) || isset($_REQUEST['saveVentasIva0Ajax'])) {
             $('#617').text(($('#605').text()*1-$('#601').text()*1<0? ($('#606').text()*1-(($('#605').text()*1-$('#601').text()*1)*-1)+$('#609').text()*1>0?($('#606').text()*1-(($('#605').text()*1-$('#601').text()*1)*-1)+$('#609').text()*1):0):($('#606').text()*1+$('#609').text()*1)).toFixed(2)); 
             var codigo_620=($('#601').text()*1-$('#602').text()*1-$('#603').text()*1-$('#604').text()*1-$('#605').text()*1-$('#606').text()*1-$('#607').text()*1-$('#608').text()*1-$('#609').text()*1+$('#610').text()*1+$('#611').text()*1+$('#612').text()*1+$('#613').text()*1+$('#614').text()*1).toFixed(2);
             $('#620').text(codigo_620<0?0:codigo_620);
-            $('#699').text(($('#620').text()*1+$('#621').text()*1));
-            $('#859').text(($('#699').text()*1+$('#801').text()*1));
+            $('#699').text(($('#620').text()*1+$('#621').text()*1).toFixed(2));
+            $('#859').text(redondearCodigo859($('#699').text()*1+$('#801').text()*1));
         }
         
         function sumar(lista){
@@ -1653,10 +1653,186 @@ if (isset($saveVentasIva0Ajax) || isset($_REQUEST['saveVentasIva0Ajax'])) {
             let ini=anio+'-'+mes+'-01';
             let fin=anio+'-'+mes+'-'+moment(`${anio}-${mes}`, "YYYY-M").daysInMonth();
 			// Construimos la URL con parámetros
-            let link = url + "&_mes="+mes*1+"&anio="+anio+"&ini="+ini+"&fin="+fin+"&Ren_Cod=T&optest=A&_615="+$('#615').text()+"&_617="+$('#617').text()+"&_606="+$('#606').text()+"&_605="+$('#605').text()+"&_429="+$('#429').text()+"&_529="+$('#529').text()+"&_609="+$('#609').text();
+            let link = url + "&_mes="+mes*1+"&anio="+anio+"&ini="+ini+"&fin="+fin+"&Ren_Cod=T&optest=A&_615="+$('#615').text()+"&_617="+$('#617').text()+"&_606="+$('#606').text()+"&_605="+$('#605').text()+"&_429="+$('#429').text()+"&_485="+$('#485').text()*1+"&_529="+$('#529').text()+"&_609="+$('#609').text()+"&_859="+$('#859').text()*1;
             // Abrimos en una nueva pestaña
             window.open(link, "_blank");
         }
+        function recogerCodigos104() {
+            var codigos = {};
+            $('#tbl_104 label.lbl[id]').each(function () {
+                var id = this.id;
+                if (id) {
+                    codigos[id] = $.trim($(this).text());
+                }
+            });
+            return codigos;
+        }
+
+        function obtenerPeriodo104() {
+            return {
+                anio: $('#anio').val(),
+                mes: $('#mes').val(),
+                tipo: $('input[name="tipo"]:checked').val() || 'O',
+                chk_fechas: $('#chk_fechas').is(':checked'),
+                Ats_Fec_Ini: $('#Ats_Fec_Ini').val(),
+                Ats_Fec_Fin: $('#Ats_Fec_Fin').val()
+            };
+        }
+
+        function aplicarPeriodo104(periodo) {
+            if (!periodo) {
+                return;
+            }
+            if (periodo.anio) {
+                $('#anio').val(periodo.anio);
+            }
+            if (periodo.mes) {
+                $('#mes').val(periodo.mes);
+            }
+            if (periodo.tipo) {
+                $('input[name="tipo"][value="' + periodo.tipo + '"]').prop('checked', true);
+                $('#Tip_Frm').html(periodo.tipo === 'S' ? '- SUSTITUTIVA' : '- ORIGINAL');
+            } else if (periodo.TIPO) {
+                var esSust = String(periodo.TIPO).toUpperCase().indexOf('SUSTIT') === 0;
+                $('input[name="tipo"][value="' + (esSust ? 'S' : 'O') + '"]').prop('checked', true);
+                $('#Tip_Frm').html(esSust ? '- SUSTITUTIVA' : '- ORIGINAL');
+            }
+            if (typeof periodo.chk_fechas === 'boolean') {
+                $('#chk_fechas').prop('checked', periodo.chk_fechas);
+                filtros();
+            }
+            if (periodo.Ats_Fec_Ini) {
+                $('#Ats_Fec_Ini').val(periodo.Ats_Fec_Ini);
+            }
+            if (periodo.Ats_Fec_Fin) {
+                $('#Ats_Fec_Fin').val(periodo.Ats_Fec_Fin);
+            }
+        }
+
+        function casillero104(id) {
+            return $('[id="' + id + '"]');
+        }
+
+        function redondearCodigo859(valor) {
+            if (valor === null || valor === undefined || valor === '') {
+                return valor;
+            }
+            var num = parseFloat(String(valor).replace(/[^\d.-]/g, ''));
+            if (isNaN(num)) {
+                return valor;
+            }
+            return (Math.round(num * 100) / 100).toFixed(2);
+        }
+
+        function aplicarCodigos104(codigos) {
+            if (!codigos || typeof codigos !== 'object') {
+                return 0;
+            }
+            var aplicados = 0;
+            $.each(codigos, function (id, valor) {
+                if (id === '859') {
+                    valor = redondearCodigo859(valor);
+                }
+                var $lbl = casillero104(id);
+                if ($lbl.length && $lbl.hasClass('lbl')) {
+                    $lbl.text(valor);
+                    var $txt = $('#txt_' + id);
+                    if ($txt.length) {
+                        $txt.val(valor);
+                    }
+                    aplicados++;
+                }
+            });
+            if (aplicados > 0 && typeof calculos_generales === 'function') {
+                calculos_generales();
+                casillero104('859').text(redondearCodigo859(casillero104('859').text()));
+            }
+            return aplicados;
+        }
+
+        function tipoForm104Descripcion(codigo) {
+            return (codigo === 'S') ? 'Sustitutiva' : 'Original';
+        }
+
+        function exportarForm104Json() {
+            var codigos = recogerCodigos104();
+            if (!codigos || Object.keys(codigos).length === 0) {
+                alert('No hay casilleros para exportar. Genere primero el formulario 104.');
+                return;
+            }
+            var periodo = obtenerPeriodo104();
+            var payload = {
+                version: 1,
+                formulario: '104',
+                TIPO: tipoForm104Descripcion(periodo.tipo),
+                exportedAt: new Date().toISOString(),
+                periodo: periodo,
+                codigos: codigos
+            };
+            var nombre = 'form104-' + (periodo.anio || 'anio') + '-' + (periodo.mes || 'mes');
+            if (codigos['201']) {
+                nombre += '-' + String(codigos['201']).replace(/[^\w]/g, '');
+            }
+            nombre += '.json';
+            var contenido = JSON.stringify(payload, null, 2);
+            if (typeof $.downloadFile === 'function') {
+                $.downloadFile(contenido, nombre);
+            } else {
+                var blob = new Blob([contenido], { type: 'application/json;charset=utf-8' });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = nombre;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        function cargarForm104Json(file) {
+            if (!file) {
+                return;
+            }
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    var data = JSON.parse(e.target.result);
+                    var codigos = data.codigos || data.form || data;
+                    if (!codigos || typeof codigos !== 'object' || Array.isArray(codigos)) {
+                        throw new Error('Estructura JSON invalida');
+                    }
+                    if (data.periodo) {
+                        aplicarPeriodo104(data.periodo);
+                    }
+                    if (Object.prototype.hasOwnProperty.call(codigos, '859')) {
+                        codigos['859'] = redondearCodigo859(codigos['859']);
+                    }
+                    var n = aplicarCodigos104(codigos);
+                    if (n === 0) {
+                        alert('No se encontraron casilleros validos en el archivo JSON.');
+                    } else if (typeof $.alert === 'function') {
+                        $.alert('Se cargaron ' + n + ' casilleros del formulario 104.');
+                    } else {
+                        alert('Se cargaron ' + n + ' casilleros del formulario 104.');
+                    }
+                } catch (err) {
+                    alert('No se pudo leer el archivo JSON: ' + (err.message || err));
+                }
+                $('#inputCargar104Json').val('');
+            };
+            reader.onerror = function () {
+                alert('Error al leer el archivo seleccionado.');
+                $('#inputCargar104Json').val('');
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        $('#inputCargar104Json').on('change', function () {
+            if (this.files && this.files[0]) {
+                cargarForm104Json(this.files[0]);
+            }
+        });
         function filtros() {
             if (document.getElementById("chk_fechas").checked) {
                 document.getElementById("Ats_Fec_Fin").disabled = false;
