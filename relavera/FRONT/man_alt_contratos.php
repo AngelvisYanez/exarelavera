@@ -1134,55 +1134,65 @@ if ($resCiu) {
         </div>
         <div class="panel-body ui-widget-content ui-corner-bottom exa-body">
 
-            <fieldset class="exa-fieldset contratos-busqueda">
-                <legend class="Titulos2">B&uacute;squeda</legend>
-                <div class="contratos-filtros-wrap">
-                    <div class="contratos-filtros-line">
-                        <div class="contratos-filtro-inline">
-                            <span class="lbl">Criterio</span>
-                            <div class="radioset">
-                                <input id="filtro_p" name="filtro" type="radio" value="p" checked />
-                                <label for="filtro_p">Planta</label>
-                                <input id="filtro_n" name="filtro" type="radio" value="n" />
-                                <label for="filtro_n">N&deg; Contrato</label>
-                                <input id="filtro_t" name="filtro" type="radio" value="t" />
-                                <label for="filtro_t">Notario</label>
+            <div style="display: flex; gap: 15px; margin-bottom: 10px; flex-wrap: wrap;">
+                <fieldset class="exa-fieldset contratos-busqueda" style="margin-bottom: 0;">
+                    <legend class="Titulos2">B&uacute;squeda</legend>
+                    <div class="contratos-filtros-wrap">
+                        <!-- Fila 1: Opciones de filtrado -->
+                        <div class="contratos-filtros-line" style="align-items: center; margin-bottom: 8px; display: flex;">
+                            <label class="control-label" style="margin-bottom: 0; padding-right: 15px; width: 95px; text-align: right;">Filtrar Por:</label>
+                            <div class="contratos-filtro-inline" style="align-items: center;">
+                                <div class="radioset" style="white-space: nowrap;">
+                                    <input id="filtro_p" name="filtro" type="radio" value="p" checked />
+                                    <label for="filtro_p">Planta</label>
+                                    <input id="filtro_n" name="filtro" type="radio" value="n" />
+                                    <label for="filtro_n">N&deg; Contrato</label>
+                                    <input id="filtro_t" name="filtro" type="radio" value="t" />
+                                    <label for="filtro_t">Notario</label>
+                                </div>
                             </div>
                         </div>
-                        <span class="contratos-filtro-sep"></span>
-                        <div class="contratos-filtro-inline">
-                            <label for="filtro_estado">Estado</label>
-                            <select id="filtro_estado" class="form-control input-xs">
-                                <option value="">Todos</option>
-                                <option value="A">Activos</option>
-                                <option value="I">Inactivos</option>
-                            </select>
-                        </div>
-                        <div class="contratos-filtro-inline">
-                            <label for="filtro_vigencia">Vigencia</label>
-                            <select id="filtro_vigencia" class="form-control input-xs">
-                                <option value="">Todos</option>
-                                <option value="V">Vigentes</option>
-                                <option value="C">Caducados</option>
-                            </select>
-                        </div>
-                        <div class="contratos-filtro-inline contratos-filtro-grow">
-                            <label for="search_contrato">Buscar</label>
-                            <div class="contratos-search-group">
-                                <input type="text" id="search_contrato" class="form-control input-xs clearable" placeholder="Texto..." maxlength="50">
-                                <div class="contratos-search-actions">
-                                    <button type="button" id="btnLimpiarFiltros" class="btn btn-default btn-xs" title="Restablecer filtros">
+
+                        <!-- Fila 2: Buscador -->
+                        <div class="contratos-filtros-line" style="align-items: center; margin-top: 4px; display: flex;">
+                            <label class="control-label" style="margin-bottom: 0; padding-right: 15px; width: 95px; text-align: right;">B&uacute;squeda:</label>
+                            <div class="contratos-search-group" style="width: 400px; display: flex; align-items: center;">
+                                <input type="text" id="search_contrato" class="form-control input-xs clearable" placeholder="Texto de búsqueda..." maxlength="50" style="flex: 1; min-width: 0; height: 26px; border-top-right-radius: 0; border-bottom-right-radius: 0;">
+                                <div class="contratos-search-actions" style="display: flex;">
+                                    <button type="button" id="btnLimpiarFiltros" class="btn btn-default btn-xs" title="Restablecer filtros" style="height: 26px; border-radius: 0;">
                                         <span class="glyphicon glyphicon-refresh"></span>
                                     </button>
-                                    <button type="button" id="btnBuscarContratosMain" class="btn btn-success btn-xs">
+                                    <button type="button" id="btnBuscarContratosMain" class="btn btn-success btn-xs" style="height: 26px; border-top-left-radius: 0; border-bottom-left-radius: 0;">
                                         <span class="glyphicon glyphicon-search"></span> Buscar
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </fieldset>
+                </fieldset>
+
+                <fieldset class="exa-fieldset contratos-busqueda" style="margin-bottom: 0; min-width: 250px;">
+                    <legend class="Titulos2">Otros Filtros</legend>
+                    <div class="contratos-filtros-wrap" style="display: flex; gap: 15px; align-items: center; height: 100%;">
+                        <div class="contratos-filtro-inline" style="flex: 1; min-width: 0;">
+                            <label for="filtro_estado" style="display: block; margin-bottom: 4px;">Estado</label>
+                            <select id="filtro_estado" class="form-control input-xs" style="width: 100%;">
+                                <option value="">Todos</option>
+                                <option value="A">Activos</option>
+                                <option value="I">Inactivos</option>
+                            </select>
+                        </div>
+                        <div class="contratos-filtro-inline" style="flex: 1; min-width: 0;">
+                            <label for="filtro_vigencia" style="display: block; margin-bottom: 4px;">Vigencia</label>
+                            <select id="filtro_vigencia" class="form-control input-xs" style="width: 100%;">
+                                <option value="">Todos</option>
+                                <option value="V">Vigentes</option>
+                                <option value="C">Caducados</option>
+                            </select>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
 
             <div style="min-height: 320px; margin-top: 6px;">
                 <table id="contratosGrid"></table>
