@@ -1868,7 +1868,7 @@ function generarComprobanteAnticipo(rowObject) {
                 // El registro en pag_anticipo_cli ya se realiza en el servidor
                 // durante la generación del comprobante; sólo recargamos el grid.
             } else {
-                $.alert('Error al generar el comprobante: ' + (response.message || 'Error desconocido'));
+                $.alert('Error en la aprobacion: ' + (response.message || 'Error desconocido'));
             }
         },
         error: function (xhr, status, error) {
