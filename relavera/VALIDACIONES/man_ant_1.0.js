@@ -1819,6 +1819,11 @@ function validarAnticipoParaComprobante(rowObject) {
     // Validar que el anticipo esté pendiente (Ama_Tip = 'P')
     if (row.Ama_Tip && String(row.Ama_Tip).toUpperCase() !== 'P') { return { valid: false, message: 'Solo se pueden aprobar anticipos pendientes. Este anticipo ya fue procesado.' }; }
 
+    // Validar que no tenga comprobante de aprobación previo
+    if (row.Com_Cod && String(row.Com_Cod).trim() !== '' && String(row.Com_Cod).trim() !== '0') {
+        return { valid: false, message: 'Este anticipo ya fue aprobado con anterioridad y tiene un comprobante registrado.' };
+    }
+
     // Validar que tenga valor
     if (!row.Ama_Val || parseFloat(row.Ama_Val) <= 0) { return { valid: false, message: 'El anticipo debe tener un valor mayor a cero.' }; }
 

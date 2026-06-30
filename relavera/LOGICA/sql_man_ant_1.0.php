@@ -847,5 +847,12 @@ function sentencias_manifiesto($id, $Par_Sql)
             $sql = "INSERT INTO manifiesto_mensajes (Pla_Cod,Man_Cod,Veh_Cod,Cho_Cod,Msj_Id,Msj_Tip,Msj_Tex,Msj_Img,Msj_Fec,Msj_Est) 
                 VALUES ('$Pla_Cod',$Man_Cod,$Veh_Cod,$Cho_Cod,'$Msj_Id','$Msj_Tip','$Msj_Tex','$Msj_Img','$Msj_Fec','$Msj_Est');";
             return $sql;
+        case 46:
+            $sql = "SELECT ac.Ant_Cod, ac.Com_Cod, ac.Ant_Doc, ac.Ant_Fec
+                    FROM anticipos_clientes ac
+                    WHERE ac.Ama_Cod = '" . addslashes($Par_Sql['Ama_Cod']) . "'
+                      AND ac.Ant_Est IN ('A','U','C')
+                    LIMIT 1;";
+            return $sql;
     }
 }

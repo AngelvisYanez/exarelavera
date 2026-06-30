@@ -1009,6 +1009,19 @@ if (isset($saveComprobanteAjax)) {
             exit();
         }
 
+        if (isset($anticipo['Ama_Tip']) && strtoupper(trim($anticipo['Ama_Tip'])) === 'A') {
+            $resp['message'] = 'Este anticipo ya fue aprobado y acreditado con anterioridad.';
+            $obBD_con1->echoJson($resp);
+            exit();
+        }
+
+        $anticipo_aprobado = $obBD_con1->getRowConsulta(46, $valores_anticipo, $obBD_conexion);
+        if ($anticipo_aprobado && $obBD_con1->Error == 0 && !empty($anticipo_aprobado['Ant_Cod'])) {
+            $resp['message'] = 'Este anticipo ya tiene un comprobante de aprobación registrado. No se puede aprobar nuevamente.';
+            $obBD_con1->echoJson($resp);
+            exit();
+        }
+
         // Obtener el tipo de asiento INGRESO (Tia_Abr='IN' y Tia_Est='A')
         $tipo_asiento = $obBD_con1->getRowConsulta(31, "", $obBD_conexion);
         if (!$tipo_asiento || $obBD_con1->Error != 0 || empty($tipo_asiento['Tia_Cod'])) {
