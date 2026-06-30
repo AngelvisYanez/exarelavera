@@ -602,8 +602,8 @@ function cargar_comp_reten() {
             editable = true;
             editing = true;
             if (response.compro && Array.isArray(response.compro.cntaliqui) && response.compro.cntaliqui.length <= 0) {
-                $.alert("Configure las cuentas de liquidación de IVA y retenciones en Parametrización General → LIQUIDACIÓN.");
-            }
+                   $.alert("Configure la cuenta de liquidación de retenciones (LQR) en Parametrización General → LIQUIDACIÓN."); 
+          }
             console.log(response['compro']['detalle']);
             gridCompAsien.setRowsByIndex(response['compro']['detalle'], 'Index');
             gridCompAsien.startGridEdit().updateGridDiario();

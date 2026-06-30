@@ -496,7 +496,8 @@ function sentencias_doc($id, $Par_Sql)
             break;
 
 
-        case 38:
+         case 38:
+
             $sql = "SELECT  retencion.Aut_Cod, renta_iva.Ren_Sri,  Pld_Des, 
                 SUM(det_retenc.Ret_Bas) AS Ret_Bas, 
                 ROUND(( (renta_iva.Ren_Por/100) * SUM(det_retenc.Ret_Bas) ), 4) AS Debe,  NULL AS Haber,  'D' AS Det_Tip,
@@ -505,14 +506,16 @@ function sentencias_doc($id, $Par_Sql)
                     INNER JOIN compras ON compras.Cop_Cod = retencion.Cop_Cod
                     INNER JOIN proveedore ON proveedore.Prv_Cod = compras.Prv_Cod
                     INNER JOIN det_retenc ON retencion.Ret_Cod = det_retenc.Ret_Cod
-                    INNER JOIN renta_iva  ON det_retenc.Ren_Cod = renta_iva.Ren_Cod
+                    left JOIN renta_iva  ON det_retenc.Ren_Cod = renta_iva.Ren_Cod
                     INNER JOIN reniva_pla ON reniva_pla.Ren_Cod = renta_iva.Ren_Cod
                     INNER JOIN det_plan ON det_plan.Pld_Cod = reniva_pla.Pld_Cod                      
                     INNER JOIN plan_cuenta ON plan_cuenta.Pla_Cod = det_plan.Pla_Cod
                 WHERE 
-                retencion.Ret_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+               -- retencion.Ret_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+               compras.Cop_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
                 AND proveedore.Emp_Cod = '$Par_Sql[0]' AND renta_iva.Ren_Est = 'A' AND retencion.Ret_Est='A'
                 AND plan_cuenta.Emp_Cod = '$Par_Sql[0]' AND reniva_pla.Ren_Tip='C'
+                AND renta_iva.Ren_Ret = 'R'
                 GROUP BY  renta_iva.Ren_Sri, renta_iva.Ren_Cod, renta_iva.Ren_Ret
             UNION ALL
 
@@ -528,21 +531,25 @@ function sentencias_doc($id, $Par_Sql)
                 INNER JOIN det_plan ON det_plan.Pld_Cod = reniva_pla.Pld_Cod                      
                 INNER JOIN plan_cuenta ON plan_cuenta.Pla_Cod = det_plan.Pla_Cod
             WHERE 
-                retencion.Ret_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+                -- retencion.Ret_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
+                compras.Cop_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
                 AND proveedore.Emp_Cod = '$Par_Sql[0]'  
                 AND renta_iva.Ren_Est = 'A' 
                 AND retencion.Ret_Est = 'A'
                 AND plan_cuenta.Emp_Cod = '$Par_Sql[0]' 
                 AND reniva_pla.Ren_Tip='C'
+                AND renta_iva.Ren_Ret = 'R'
             GROUP BY renta_iva.Ren_Ret;";
+            ChromePhp::log($sql);
             break;
         case 39:
             $sql = " SELECT det_plan.* from det_plan
                     INNER JOIN plan_cuenta ON plan_cuenta.Pla_Cod = det_plan.Pla_Cod
                     INNER JOIN plan_param ON det_plan.Pld_Cod = plan_param.Pld_Cod
                     INNER JOIN tipo_param ON plan_param.Tpa_Cod = tipo_param.Tpa_Cod 
-                    WHERE  (Tpa_Abr = 'LQR' OR Tpa_Abr = 'LQI')  AND plan_cuenta.Emp_Cod = '$Par_Sql[0]'";
+                    WHERE Tpa_Abr = 'LQR' AND plan_cuenta.Emp_Cod = '$Par_Sql[0]'";
             break;
+
         case 40:
             $sql = " SELECT det_plan.*,Tpa_Abr from det_plan
                     INNER JOIN plan_cuenta ON plan_cuenta.Pla_Cod = det_plan.Pla_Cod

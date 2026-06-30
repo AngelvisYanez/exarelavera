@@ -78,26 +78,21 @@ if (isset($generar_asiento_ret)) {
     } else {
         $responce['compro']['detalle'] = $obBD_con1->getArrayConsulta(38, $Ses_Emp_Cod . '*' . $ini . '*' . $fin, $obBD_conexion);
     }*/
-    $responce['compro']['detalle'] = $obBD_con1->getArrayConsulta(38, $Ses_Emp_Cod . '*' . $ini . '*' . $fin, $obBD_conexion);
+   $responce['compro']['detalle'] = $obBD_con1->getArrayConsulta(38, $Ses_Emp_Cod . '*' . $ini . '*' . $fin, $obBD_conexion);
     $responce['compro']['cntaliqui'] = $obBD_con1->getArrayConsulta(39, $Ses_Emp_Cod . '*' . $ini . '*' . $fin, $obBD_conexion);
     $detalle = $responce['compro']['detalle'];
     $liqui = $responce['compro']['cntaliqui'];
     if (!empty($detalle) && !empty($liqui)) {
-        // Unir los datos del liqui con las dos últimas filas del detalle
-        $lastIndex = count($detalle) - 2; // índice de la penúltima fila (I)
-        // Combinar la fila de renta (I) con LQR (Formulario 104)
+        // Combinar la fila HABER de renta con la cuenta LQR (solo retenciones de renta, sin IVA/LQI)
+        $lastIndex = count($detalle) - 1;
         if (isset($liqui[0])) {
             $detalle[$lastIndex] = array_merge($detalle[$lastIndex], $liqui[0]);
         }
-        // Combinar la fila de IVA (R) con LQI (Formulario 103)
-        if (isset($liqui[1])) {
-            $detalle[$lastIndex + 1] = array_merge($detalle[$lastIndex + 1], $liqui[1]);
-        }
-        // Reemplazar en el array principal
         $responce['compro']['detalle'] = $detalle;
     }
     $responce['compro']['anio'] = $cmb_anio;
     $responce['compro']['mes'] = $cmb_mes;
+    ChromePhp::log($response);
     utf8_encode_deep($responce);
     echo json_encode($responce);
     exit();
@@ -184,7 +179,7 @@ if (isset($ajaxLiquidacionForm104)) {
         <?php require_once("../../mascaras/model1/estilos/jqgrid5.php")?>          
         <style>#tabsInsert.ui-widget-content{background:none !important;} .ui-tabs-panel{padding-bottom: 0 !important;}.ui-tabs-nav{padding-top: 0 !important;}.ui-tabs .ui-tabs-panel{padding: 5px;}</style>
         <script>var gridCompAsien,tipo="Ingreso";</script>
-        <script type="text/ecmascript" src="../VALIDACIONES/con_val_compr_2.js?x=20"></script>
+        <script type="text/ecmascript" src="../VALIDACIONES/con_val_compr_2.js?x=22"></script>
     </HEAD>
 <BODY>
     <div class="panel panel-main">
