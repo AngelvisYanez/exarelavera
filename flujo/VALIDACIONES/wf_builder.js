@@ -5,6 +5,8 @@
  */
 
 let workflowId = null;
+let workflowFamilyId = null;
+let workflowMeta = null;
 let nodes = [];
 let connections = [];
 let activeNode = null;
@@ -12,15 +14,57 @@ let activeConnection = null; // Conexión actualmente seleccionada
 let isDraggingNode = false;
 let draggedElement = null;
 let offset = { x: 0, y: 0 };
+let workflowBuilderReady = false;
+let pendingSaveAfterModal = false;
 
 // Puerto de conexión temporal para dibujo de cable
 let drawingConnection = false;
 let connStartPort = null;
 
-$(document).ready(function() {
+/** IDs numéricos de BD no son válidos como selector CSS (#5); usar prefijo estable. */
+function wfNodeId(id) {
+    if (id === null || id === undefined || id === '') {
+        return 'node_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+    }
+    const s = String(id);
+    if (s.indexOf('node_') === 0 || s.indexOf('n_') === 0) {
+        return s;
+    }
+    return 'n_' + s;
+}
+
+function sameId(a, b) {
+    return String(a) === String(b);
+}
+
+function wfNodeEl(id) {
+    const el = document.getElementById(String(id));
+    return el ? $(el) : $();
+}
+
+function wfNotify(tipo, mensaje, onAceptar) {
+    if (typeof mostrarMensajeModal === 'function') {
+        mostrarMensajeModal(tipo, mensaje, onAceptar);
+    } else {
+        alert(mensaje);
+        if (typeof onAceptar === 'function') {
+            onAceptar();
+        }
+    }
+}
+
+function initWorkflowBuilder() {
+    if (!$('#canvas').length) {
+        return;
+    }
     setupCanvas();
     setupToolbox();
     setupSVG();
+    workflowBuilderReady = true;
+}
+
+$(document).ready(function() {
+    initWorkflowBuilder();
 });
 
 function setupCanvas() {
@@ -87,7 +131,7 @@ function setupSVG() {
 }
 
 function createNode(type, name, x, y, id = null) {
-    const nodeId = id || 'node_' + Date.now();
+    const nodeId = wfNodeId(id);
     const nodeObj = {
         id: nodeId,
         tipo: type,
@@ -145,7 +189,7 @@ function renderNode(node) {
             
             // Actualizar datos del nodo
             const nId = draggedElement.attr('id');
-            const n = nodes.find(item => item.id === nId);
+            const n = nodes.find(item => sameId(item.id, nId));
             if (n) {
                 n.x = x;
                 n.y = y;
@@ -188,7 +232,7 @@ function renderNode(node) {
 }
 
 function openNodeProperties(id) {
-    activeNode = nodes.find(item => item.id === id);
+    activeNode = nodes.find(item => sameId(item.id, id));
     if (!activeNode) return;
 
     $('#nodeId').val(activeNode.id);
@@ -248,9 +292,9 @@ function openNodeProperties(id) {
         activeNode.adj_obl = $('#nodeAdjObl').is(':checked');
 
         // Actualizar etiqueta del nodo visual
-        const $hdr = $(`#${activeNode.id}`).find('.wf-node-header span');
+        const $hdr = wfNodeEl(activeNode.id).find('.wf-node-header span');
         $hdr.html(`<i class="bi bi-square-fill text-secondary"></i> ${activeNode.nombre}`);
-        const $bdy = $(`#${activeNode.id}`).find('.wf-node-body');
+        const $bdy = wfNodeEl(activeNode.id).find('.wf-node-body');
         $bdy.html(`${activeNode.tipo}<br><small class="text-muted">${activeNode.descripcion || 'Sin descripción'}</small>`);
     });
 }
@@ -289,9 +333,10 @@ function cargarUsuariosAsignacionNodo(depCod, callback) {
         if (res.success) {
             let html = '';
             res.usuarios.forEach(function(u) {
+                const equivIds = (u.Usu_Cods || String(u.Usu_Cod)).split(',');
                 html += `
                     <div class="form-check">
-                        <input class="form-check-input chk-asig-usu" type="checkbox" value="${u.Usu_Cod}" id="chkAsig_${u.Usu_Cod}" onchange="onUserAsigCheckboxChange()">
+                        <input class="form-check-input chk-asig-usu" type="checkbox" value="${u.Usu_Cod}" data-equiv="${equivIds.join(',')}" id="chkAsig_${u.Usu_Cod}" onchange="onUserAsigCheckboxChange()">
                         <label class="form-check-label small" for="chkAsig_${u.Usu_Cod}">
                             ${u.Usuario_Nom}
                         </label>
@@ -306,8 +351,14 @@ function cargarUsuariosAsignacionNodo(depCod, callback) {
             // Si el nodo activo tiene usuarios específicos, marcarlos
             if (activeNode && activeNode.usu_asig && activeNode.usu_asig !== 'TODOS') {
                 const selectedUsers = activeNode.usu_asig.split(',');
-                selectedUsers.forEach(function(uId) {
-                    $(`#chkAsig_${uId}`).prop('checked', true);
+                $('.chk-asig-usu').each(function() {
+                    const equiv = ($(this).data('equiv') || $(this).val()).toString().split(',');
+                    const match = selectedUsers.some(function(uId) {
+                        return equiv.indexOf(String(uId).trim()) !== -1;
+                    });
+                    if (match) {
+                        $(this).prop('checked', true);
+                    }
                 });
             }
             
@@ -325,7 +376,7 @@ function onUserAsigCheckboxChange() {
     if (selected.length > 0) {
         activeNode.usu_asig = selected.join(',');
     } else {
-        activeNode.usu_asig = 'TODOS'; // Fallback si ninguno está marcado
+        activeNode.usu_asig = 'TODOS';
     }
 }
 
@@ -399,13 +450,13 @@ function deleteNode(id, e) {
     if (e) e.stopPropagation();
     
     // Eliminar del array
-    nodes = nodes.filter(item => item.id !== id);
+    nodes = nodes.filter(item => !sameId(item.id, id));
     // Eliminar conexiones asociadas
-    connections = connections.filter(item => item.origen !== id && item.destino !== id);
+    connections = connections.filter(item => !sameId(item.origen, id) && !sameId(item.destino, id));
     // Eliminar del DOM
-    $(`#${id}`).remove();
+    wfNodeEl(id).remove();
     
-    if (activeNode && activeNode.id === id) {
+    if (activeNode && sameId(activeNode.id, id)) {
         closeDrawer();
     }
     redrawConnections();
@@ -413,11 +464,11 @@ function deleteNode(id, e) {
 
 function createConnection(origenId, destinoId) {
     // Validar si ya existe
-    const duplicada = connections.find(c => c.origen === origenId && c.destino === destinoId);
+    const duplicada = connections.find(c => sameId(c.origen, origenId) && sameId(c.destino, destinoId));
     if (duplicada) return;
 
     let accion = 'APROBAR';
-    const nodoOri = nodes.find(n => n.id === origenId);
+    const nodoOri = nodes.find(n => sameId(n.id, origenId));
     if (nodoOri && nodoOri.tipo === 'DECISION') {
         accion = 'CONDICIONAL';
     }
@@ -464,8 +515,8 @@ function redrawConnections() {
     const canvasOffset = $('#canvas').offset();
 
     connections.forEach(function(con, index) {
-        const $oriNode = $(`#${con.origen}`);
-        const $desNode = $(`#${con.destino}`);
+        const $oriNode = wfNodeEl(con.origen);
+        const $desNode = wfNodeEl(con.destino);
 
         if ($oriNode.length && $desNode.length) {
             const oriPort = $oriNode.find('.node-port-out');
@@ -488,7 +539,7 @@ function redrawConnections() {
             path.setAttribute("fill", "none");
             
             // Si la conexión está activa/seleccionada, la destacamos con color azul brillante, mayor grosor y opacidad de 0.3
-            const isSelected = (activeConnection && activeConnection.origen === con.origen && activeConnection.destino === con.destino);
+            const isSelected = (activeConnection && sameId(activeConnection.origen, con.origen) && sameId(activeConnection.destino, con.destino));
             if (isSelected) {
                 path.setAttribute("stroke", "#0d6efd");
                 path.setAttribute("stroke-width", "4");
@@ -555,27 +606,58 @@ function redrawConnections() {
     });
 }
 
+function actualizarEstadoFlujoUI(flujo) {
+    workflowMeta = flujo || null;
+    if (!flujo || !flujo.nombre) {
+        $('#lblFlowActiveName').hide();
+        $('#lblFlowVersion').hide();
+        $('#lblFlowDraft').hide();
+        $('#lblFlowActiveInstances').hide();
+        $('.wf-builder-status-bar').hide();
+        return;
+    }
+    $('.wf-builder-status-bar').show();
+    $('#lblFlowActiveName').show().find('span').text(flujo.nombre);
+    if (flujo.version) {
+        $('#lblFlowVersion').show().text('v' + flujo.version + (flujo.es_borrador ? ' (borrador)' : ' (publicada)'));
+    } else {
+        $('#lblFlowVersion').hide();
+    }
+    if (flujo.es_borrador) {
+        $('#lblFlowDraft').show();
+    } else {
+        $('#lblFlowDraft').hide();
+    }
+    if (flujo.instancias_activas > 0) {
+        $('#lblFlowActiveInstances').show().html('<i class="bi bi-hourglass-split"></i> ' + flujo.instancias_activas + ' solicitud(es) en curso con version anterior');
+    } else {
+        $('#lblFlowActiveInstances').hide();
+    }
+}
+
 function cargarFlujo() {
     const id = $('#selWorkflow').val();
     if (!id) {
-        // Modo creación
         workflowId = null;
+        workflowFamilyId = null;
+        workflowMeta = null;
         nodes = [];
         connections = [];
         $('.wf-node').remove();
         redrawConnections();
         $('#flowName').val('');
         $('#flowDesc').val('');
-        $('#lblFlowActiveName').hide().find('span').text('');
+        actualizarEstadoFlujoUI(null);
         return;
     }
 
     $.getJSON('adq_configuracion.php', { ajax_load_workflow: true, id: id }, function(res) {
         if (res.success) {
             workflowId = res.flujo.id;
+            workflowFamilyId = res.flujo.familia_cod || id;
             $('#flowName').val(res.flujo.nombre);
             $('#flowDesc').val(res.flujo.descripcion);
-            $('#lblFlowActiveName').show().find('span').text(res.flujo.nombre);
+            actualizarEstadoFlujoUI(res.flujo);
             
             // Limpiar lienzo
             $('.wf-node').remove();
@@ -585,28 +667,39 @@ function cargarFlujo() {
             // Recrear nodos
             res.nodos.forEach(function(n) {
                 createNode(n.tipo, n.nombre, n.x, n.y, n.id);
-                // Cargar datos extra en memoria
-                const nodeMemory = nodes.find(item => item.id === n.id);
-                nodeMemory.descripcion = n.descripcion;
-                nodeMemory.dep_cod = n.dep_cod;
-                nodeMemory.per_cod = n.per_cod;
-                nodeMemory.sla = n.sla;
-                nodeMemory.com_obl = (parseInt(n.com_obl) === 1);
-                nodeMemory.adj_obl = (parseInt(n.adj_obl) === 1);
+                const nodeMemory = nodes.find(item => sameId(item.id, wfNodeId(n.id)));
+                if (!nodeMemory) {
+                    return;
+                }
+                nodeMemory.descripcion = n.descripcion || '';
+                nodeMemory.dep_cod = n.dep_cod || '';
+                nodeMemory.per_cod = n.per_cod || '';
+                nodeMemory.sla = n.sla || '';
+                nodeMemory.com_obl = (parseInt(n.com_obl, 10) === 1);
+                nodeMemory.adj_obl = (parseInt(n.adj_obl, 10) === 1);
                 nodeMemory.usu_asig = n.usu_asig || 'TODOS';
             });
 
-            // Recrear conexiones
-            connections = res.conexiones;
+            // Recrear conexiones (mapear IDs de BD al prefijo del lienzo)
+            connections = res.conexiones.map(function(c) {
+                return {
+                    origen: wfNodeId(c.origen),
+                    destino: wfNodeId(c.destino),
+                    accion: c.accion,
+                    condicion: c.condicion
+                };
+            });
             redrawConnections();
         } else {
-            alert('Error al cargar flujo: ' + res.message);
+            wfNotify('danger', 'Error al cargar flujo: ' + (res.message || 'Error desconocido'));
         }
+    }).fail(function() {
+        wfNotify('danger', 'Error de red al cargar el flujo.');
     });
 }
 
 function abrirModalNuevoFlujo() {
-    // Si ya hay un id seleccionado, lo limpiamos para que sea un flujo nuevo
+    pendingSaveAfterModal = false;
     $('#modalFlowName').val('');
     $('#modalFlowDesc').val('');
     $('#modalWorkflowDataLabel').text('Crear Nuevo Flujo Modelo');
@@ -616,34 +709,35 @@ function abrirModalNuevoFlujo() {
 function aceptarDatosFlujo() {
     const nombre = $('#modalFlowName').val().trim();
     if (!nombre) {
-        alert('Por favor ingrese el nombre del flujo.');
+        wfNotify('danger', 'Por favor ingrese el nombre del flujo.');
         return;
     }
-    
-    // Asignar a los campos ocultos
+
+    const esGuardadoPendiente = pendingSaveAfterModal;
+    pendingSaveAfterModal = false;
+
     $('#flowName').val(nombre);
     $('#flowDesc').val($('#modalFlowDesc').val());
-    
-    // Limpiar lienzo para empezar un flujo nuevo
+    $('#lblFlowActiveName').show().find('span').text(nombre);
+    $('#modalWorkflowData').modal('hide');
+
+    if (esGuardadoPendiente) {
+        guardarFlujo();
+        return;
+    }
+
     workflowId = null;
     nodes = [];
     connections = [];
     $('.wf-node').remove();
     redrawConnections();
-    
-    // Mostrar indicador de flujo activo
-    $('#lblFlowActiveName').show().find('span').text(nombre);
-    
-    // Deseleccionar cualquier flujo en el combo
     $('#selWorkflow').val('');
-    
-    $('#modalWorkflowData').modal('hide');
 }
 
 function guardarFlujo() {
     const nombre = $('#flowName').val().trim();
     if (!nombre) {
-        // Si no tiene nombre, forzar a que abra el modal para definirlo
+        pendingSaveAfterModal = true;
         $('#modalFlowName').val('');
         $('#modalFlowDesc').val($('#flowDesc').val());
         $('#modalWorkflowDataLabel').text('Definir Datos del Flujo para Guardar');
@@ -651,10 +745,15 @@ function guardarFlujo() {
         return;
     }
 
+    if (!nodes.length) {
+        wfNotify('danger', 'El flujo debe tener al menos un nodo antes de guardar.');
+        return;
+    }
+
     const payload = {
         id: workflowId,
         nombre: nombre,
-        descripcion: $('#flowDesc').val(),
+        descripcion: $('#flowDesc').val() || '',
         nodos: nodes,
         conexiones: connections
     };
@@ -664,19 +763,148 @@ function guardarFlujo() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
     })
-    .then(r => r.json())
-    .then(res => {
-        if (res.success) {
-            alert('¡El flujo modelo se ha guardado con éxito!');
-            if (!workflowId) {
-                // Agregar opción al combo y seleccionarlo
-                $('#selWorkflow').append(`<option value="${res.id}">${nombre}</option>`);
-                $('#selWorkflow').val(res.id);
-                workflowId = res.id;
+    .then(function(r) {
+        return r.text().then(function(text) {
+            let res;
+            try {
+                res = JSON.parse(text);
+            } catch (e) {
+                throw new Error('Respuesta invalida del servidor.');
             }
-            $('#lblFlowActiveName').show().find('span').text(nombre);
+            if (!r.ok && (!res || !res.message)) {
+                throw new Error('Error HTTP ' + r.status);
+            }
+            return res;
+        });
+    })
+    .then(function(res) {
+        if (res.success) {
+            const eraNuevo = !payload.id;
+            workflowId = res.id;
+            workflowFamilyId = res.familia_cod || workflowFamilyId;
+            let msg = 'Borrador guardado correctamente.';
+            if (res.instancias_activas > 0) {
+                msg += ' Hay ' + res.instancias_activas + ' solicitud(es) en curso que seguiran con la version publicada hasta que publique.';
+            }
+            wfNotify('success', msg, function() {
+                if (eraNuevo) {
+                    const famId = res.familia_cod || res.id;
+                    const nombre = $('#flowName').val();
+                    if ($('#selWorkflow option[value="' + famId + '"]').length === 0) {
+                        $('#selWorkflow').append('<option value="' + famId + '">' + nombre + ' (v' + (res.version || 1) + ')</option>');
+                    }
+                    $('#selWorkflow').val(String(famId));
+                }
+                cargarFlujo();
+            });
         } else {
-            alert('Error al guardar: ' + res.message);
+            wfNotify('danger', 'Error al guardar: ' + (res.message || 'Error desconocido'));
         }
+    })
+    .catch(function(err) {
+        wfNotify('danger', 'No se pudo guardar el flujo: ' + (err.message || 'Error de red'));
+    });
+}
+
+function publicarFlujo() {
+    const nombre = $('#flowName').val().trim();
+    if (!nombre || !nodes.length) {
+        wfNotify('danger', 'Guarde un borrador con al menos un nodo antes de publicar.');
+        return;
+    }
+
+    const publicarAhora = function(wfmId) {
+        const activas = workflowMeta && workflowMeta.instancias_activas ? workflowMeta.instancias_activas : 0;
+        let confirmMsg = 'Publicar esta version del flujo? Las solicitudes nuevas usaran esta version.';
+        if (activas > 0) {
+            confirmMsg += '\n\n' + activas + ' solicitud(es) en curso seguiran con la version anterior hasta finalizar.';
+        }
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+
+        fetch('adq_configuracion.php?ajax_publish_workflow=1', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: wfmId })
+        })
+        .then(function(r) {
+            return r.text().then(function(text) {
+                let res;
+                try { res = JSON.parse(text); } catch (e) { throw new Error('Respuesta invalida del servidor.'); }
+                return res;
+            });
+        })
+        .then(function(res) {
+            if (res.success) {
+                wfNotify('success', res.message || 'Flujo publicado.', function() {
+                    const famId = res.familia_cod || workflowFamilyId;
+                    const label = $('#flowName').val() + ' (v' + (res.version || '') + ')';
+                    if (famId && $('#selWorkflow option[value="' + famId + '"]').length) {
+                        $('#selWorkflow option[value="' + famId + '"]').text(label);
+                        $('#selWorkflow').val(String(famId));
+                    }
+                    cargarFlujo();
+                });
+            } else {
+                wfNotify('danger', 'Error al publicar: ' + (res.message || 'Error desconocido'));
+            }
+        })
+        .catch(function(err) {
+            wfNotify('danger', 'No se pudo publicar: ' + (err.message || 'Error de red'));
+        });
+    };
+
+    if (!workflowId) {
+        guardarFlujoInterno(function(res) {
+            if (res && res.success) {
+                publicarAhora(res.id);
+            }
+        });
+        return;
+    }
+
+    if (workflowMeta && !workflowMeta.es_borrador) {
+        wfNotify('info', 'Primero guarde los cambios como borrador y luego publique.');
+        return;
+    }
+
+    publicarAhora(workflowId);
+}
+
+function guardarFlujoInterno(onDone) {
+    const nombre = $('#flowName').val().trim();
+    const payload = {
+        id: workflowId,
+        nombre: nombre,
+        descripcion: $('#flowDesc').val() || '',
+        nodos: nodes,
+        conexiones: connections
+    };
+
+    return fetch('adq_configuracion.php?ajax_save_workflow=1', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(function(r) {
+        return r.text().then(function(text) {
+            let res;
+            try { res = JSON.parse(text); } catch (e) { throw new Error('Respuesta invalida del servidor.'); }
+            if (!r.ok && (!res || !res.message)) {
+                throw new Error('Error HTTP ' + r.status);
+            }
+            return res;
+        });
+    })
+    .then(function(res) {
+        if (res.success) {
+            workflowId = res.id;
+            workflowFamilyId = res.familia_cod || workflowFamilyId;
+        }
+        if (typeof onDone === 'function') {
+            onDone(res);
+        }
+        return res;
     });
 }

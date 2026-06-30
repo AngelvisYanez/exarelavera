@@ -11,13 +11,13 @@ $obBD_conexion = new Class_Log_Conexion_Global($Ses_Dat_Dis);
 $obBD_con1 = new MysqlDatos($obBD_conexion);
 $wf_mgr = new wf_manager_log($Ses_Dat_Dis);
 
-// Verificar acceso a la ventana 'dashboard' y pesta�a 'dashboard_general'
+// Verificar acceso a la ventana 'dashboard' y pestaña 'dashboard_general'
 if (!$wf_mgr->verificarAccesoVentana('dashboard', 'dashboard_general')) {
     echo "<div class='alert alert-danger m-3'>Acceso denegado. No tiene permisos para ver esta ventana.</div>";
     exit;
 }
 
-// 1. Estad�sticas de Resumen
+// 1. Estadísticas de Resumen
 $stats = $obBD_con1->getRowConsultaSql("
     SELECT 
         COUNT(CASE WHEN Sol_Est = 'E' THEN 1 END) as Activos,
@@ -30,27 +30,27 @@ $stats = $obBD_con1->getRowConsultaSql("
 
 // 2. Cuellos de Botella: Solicitudes por etapa activa actual
 $cuellos = $obBD_con1->getArrayConsultaSql("
-    SELECT n.Nod_Nom, d.Dep_Des, COUNT(i.Ins_Cod) as Total
+    SELECT n.Nod_Nom, d.Wde_Des AS Dep_Des, COUNT(i.Ins_Cod) as Total
     FROM wf_instancias i
     INNER JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act
-    LEFT JOIN departamen d ON d.Dep_Cod = n.Dep_Cod
+    LEFT JOIN wf_departamentos d ON d.Wde_Cod = n.Dep_Cod
     WHERE i.Ins_Est = 'P' AND n.Wfm_Cod IN (SELECT Wfm_Cod FROM wf_flujos_modelos WHERE Emp_Cod = $Ses_Emp_Cod)
-    GROUP BY n.Nod_Nom, d.Dep_Des
+    GROUP BY n.Nod_Nom, d.Wde_Des
     ORDER BY Total DESC;", $obBD_conexion);
 
-// 3. Ranking de Departamentos por SLA de atenci�n
+// 3. Ranking de Departamentos por SLA de atención
 $departamentos_ranking = $obBD_con1->getArrayConsultaSql("
-    SELECT d.Dep_Des,
+    SELECT d.Wde_Des AS Dep_Des,
            COUNT(h.Isn_Cod) as Resoluciones,
-           IFNULL(AVG(TIMESTAMPDIFF(HOUR, h.Isn_Fec, (SELECT MIN(h2.Isn_Fec) FROM wf_instancias_nodos h2 WHERE h2.Ins_Cod = h.Ins_Cod AND h2.Isn_Cod > h.Isn_Cod))), 0) as Tiempo_Atencion
+           IFNULL(AVG(TIMESTAMPDIFF(HOUR, h.Isn_Fec, (SELECT MIN(h2.Isn_Fec) FROM wf_instancias_nodos h2 WHERE h2.Ins_Cod = h.Ins_Cod AND h2.Isn_Cod > h.Isn_Cod)) / 24.0), 0) as Tiempo_Atencion
     FROM wf_instancias_nodos h
     INNER JOIN wf_nodos n ON n.Nod_Cod = h.Nod_Cod
-    INNER JOIN departamen d ON d.Dep_Cod = h.Dep_Cod
+    INNER JOIN wf_departamentos d ON d.Wde_Cod = h.Dep_Cod
     WHERE h.Isn_Acc IN ('APROBAR', 'OBSERVAR', 'DEVOLVER') AND d.Emp_Cod = $Ses_Emp_Cod
-    GROUP BY d.Dep_Des
+    GROUP BY d.Wde_Des
     ORDER BY Tiempo_Atencion ASC;", $obBD_conexion);
 
-// 4. Vol�menes Mensuales de Solicitudes
+// 4. Volúmenes Mensuales de Solicitudes
 $volumenes = $obBD_con1->getArrayConsultaSql("
     SELECT DATE_FORMAT(Sol_Fec, '%Y-%m') as Mes, COUNT(Sol_Cod) as Total, SUM(Sol_Val_Est) as Monto
     FROM adq_solicitudes
@@ -75,9 +75,9 @@ $filtro_depto = isset($_GET['filtro_depto']) ? intval($_GET['filtro_depto']) : 0
 $filtro_tipo = isset($_GET['filtro_tipo']) ? intval($_GET['filtro_tipo']) : 0;
 
 if ($es_gerencial_admin) {
-    // Calcular m�tricas de SLA generales para todos los procesos activos
+    // Calcular métricas de SLA generales para todos los procesos activos
     $sql_metrics = "
-        SELECT i.Ins_Fec_Ini, tr.Trq_Tiempo_Est
+        SELECT i.Ins_Fec_Ini, COALESCE(s.Sol_Tiempo_Est, tr.Trq_Tiempo_Est) AS Sla_Dias
         FROM wf_instancias i
         INNER JOIN adq_solicitudes s ON i.Ins_Ent_Typ = 'adq_solicitudes' AND i.Ins_Ent_Cod = s.Sol_Cod
         INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
@@ -87,12 +87,12 @@ if ($es_gerencial_admin) {
     $now = time();
     foreach ($active_processes as $ap) {
         $total_activos++;
-        if ($ap['Trq_Tiempo_Est'] === null || $ap['Trq_Tiempo_Est'] === '') {
+        if ($ap['Sla_Dias'] === null || $ap['Sla_Dias'] === '') {
             $total_sin_sla++;
         } else {
             $fec_ini = strtotime($ap['Ins_Fec_Ini']);
             $elapsed_days = ($now - $fec_ini) / 86400.0;
-            $limit_days = floatval($ap['Trq_Tiempo_Est']);
+            $limit_days = floatval($ap['Sla_Dias']);
             $ratio = $elapsed_days / $limit_days;
             
             if ($ratio < 0.8) {
@@ -106,7 +106,7 @@ if ($es_gerencial_admin) {
     }
 
     // Obtener listas para filtros
-    $departamentos = $obBD_con1->getArrayConsultaSql("SELECT MIN(Dep_Cod) AS Dep_Cod, Dep_Des FROM departamen WHERE Emp_Cod = $Ses_Emp_Cod GROUP BY Dep_Des ORDER BY Dep_Des ASC;", $obBD_conexion);
+    $departamentos = $obBD_con1->getArrayConsultaSql("SELECT Wde_Cod AS Dep_Cod, Wde_Des AS Dep_Des FROM wf_departamentos WHERE Emp_Cod = $Ses_Emp_Cod AND Wde_Est = 'A' ORDER BY Wde_Des ASC;", $obBD_conexion);
     $tipos_req = $obBD_con1->getArrayConsultaSql("SELECT Trq_Cod, Trq_Des FROM adq_tipos_requerimientos WHERE Emp_Cod = $Ses_Emp_Cod AND Trq_Est = 'A' ORDER BY Trq_Des ASC;", $obBD_conexion);
 
     // Construir consulta para la tabla
@@ -135,14 +135,14 @@ if ($es_gerencial_admin) {
     $sql_table = "
         SELECT i.Ins_Cod, i.Ins_Fec_Ini, i.Ins_Fec_Fin, i.Ins_Est, i.Nod_Act,
                s.Sol_Cod, s.Sol_Num, s.Sol_Fec, s.Sol_Val_Est, s.Sol_Est,
-               tr.Trq_Des, tr.Trq_Tiempo_Est,
-               n.Nod_Nom, d.Dep_Des,
+               tr.Trq_Des, COALESCE(s.Sol_Tiempo_Est, tr.Trq_Tiempo_Est) AS Sla_Dias,
+               n.Nod_Nom, d.Wde_Des AS Dep_Des,
                u.Usu_Ced as Usu_Nom, p.Prs_Nom, p.Prs_Ape
         FROM wf_instancias i
         INNER JOIN adq_solicitudes s ON i.Ins_Ent_Typ = 'adq_solicitudes' AND i.Ins_Ent_Cod = s.Sol_Cod
         INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
         LEFT JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act
-        LEFT JOIN departamen d ON d.Dep_Cod = n.Dep_Cod
+        LEFT JOIN wf_departamentos d ON d.Wde_Cod = n.Dep_Cod
         LEFT JOIN usuarios u ON u.Usu_Cod = s.Usu_Sol
         LEFT JOIN persona p ON p.Prs_Cod = u.Prs_Cod
         WHERE " . implode(" AND ", $where_clauses) . "
@@ -162,16 +162,12 @@ if ($es_gerencial_admin) {
     <div class="panel panel-main exa-ui-panel exa-ui-fill-page">
         <div class="panel-heading exa-header exa-header-flex">
             <h3 class="panel-title"><i class="bi bi-graph-up-arrow"></i> Dashboard Gerencial</h3>
-            <div class="exa-header-actions">
-                <a href="adq_configuracion.php" class="btn btn-default btn-sm"><i class="bi bi-gear"></i> Configuraci�n</a>
-                <a href="adq_bandeja.php" class="btn btn-default btn-sm"><i class="bi bi-arrow-left"></i> Volver a Bandeja</a>
-            </div>
         </div>
         <div class="panel-body exa-body">
             <div class="exa-ui-page-view">
         <ul class="nav nav-tabs exa-ui-nav-tabs" id="dashboardTabs" role="tablist">
             <li role="presentation" class="active">
-                <a href="#metrics-panel" id="metrics-tab" role="tab" data-toggle="tab"><i class="bi bi-bar-chart-line"></i> M�tricas Generales</a>
+                <a href="#metrics-panel" id="metrics-tab" role="tab" data-toggle="tab"><i class="bi bi-bar-chart-line"></i> Métricas Generales</a>
             </li>
             <li role="presentation">
                 <a href="#all-processes-panel" id="all-processes-tab" role="tab" data-toggle="tab"><i class="bi bi-collection-play"></i> Todos los Procesos</a>
@@ -179,11 +175,11 @@ if ($es_gerencial_admin) {
         </ul>
 
         <div class="tab-content exa-ui-tab-content panels-area" id="dashboardTabsContent">
-            <!-- 1. M�TRICAS GENERALES -->
+            <!-- 1. MÉTRICAS GENERALES -->
             <div class="tab-pane active" id="metrics-panel" role="tabpanel">
                 <div class="exa-adq-kpi-row">
                     <div class="exa-adq-kpi kpi-primary">
-                        <span class="kpi-label">Procesos en ejecuci�n</span>
+                        <span class="kpi-label">Procesos en ejecución</span>
                         <span class="kpi-value"><?php echo $stats['Activos']; ?></span>
                     </div>
                     <div class="exa-adq-kpi kpi-success">
@@ -196,7 +192,7 @@ if ($es_gerencial_admin) {
                     </div>
                     <div class="exa-adq-kpi kpi-danger">
                         <span class="kpi-label">Tiempo promedio ciclo</span>
-                        <span class="kpi-value"><?php echo number_format($stats['Tiempo_Promedio'], 1); ?> <small>D�as</small></span>
+                        <span class="kpi-value"><?php echo number_format($stats['Tiempo_Promedio'], 1); ?> <small>Días</small></span>
                     </div>
                 </div>
 
@@ -247,13 +243,13 @@ if ($es_gerencial_admin) {
                             </thead>
                             <tbody>
                                 <?php if (empty($departamentos_ranking)) { ?>
-                                    <tr class="text-center"><td colspan="3" class="text-muted py-3">No se han registrado transacciones de workflow aprobadas a�n.</td></tr>
+                                    <tr class="text-center"><td colspan="3" class="text-muted py-3">No se han registrado transacciones de workflow aprobadas aún.</td></tr>
                                 <?php } else {
                                     foreach ($departamentos_ranking as $r) { ?>
                                         <tr class="text-center">
                                             <td class="text-start fw-bold"><?php echo $r['Dep_Des']; ?></td>
                                             <td><?php echo $r['Resoluciones']; ?></td>
-                                            <td class="fw-bold font-monospace text-success"><?php echo number_format($r['Tiempo_Atencion'], 1); ?> Hrs</td>
+                                            <td class="fw-bold font-monospace text-success"><?php echo number_format($r['Tiempo_Atencion'], 1); ?> d&iacute;as</td>
                                         </tr>
                                 <?php }
                                 } ?>
@@ -263,16 +259,16 @@ if ($es_gerencial_admin) {
                 </div>
             </div>
 
-            <!-- 3. Evoluci�n del Gasto -->
+            <!-- 3. Evolución del Gasto -->
             <div class="col-12">
                 <div class="exa-adq-section">
-                    <h5 class="exa-adq-section-title"><i class="bi bi-calendar-event text-primary"></i> Vol�menes de Gasto de los �ltimos 6 Meses</h5>
+                    <h5 class="exa-adq-section-title"><i class="bi bi-calendar-event text-primary"></i> Volúmenes de Gasto de los Últimos 6 Meses</h5>
                     <div class="exa-adq-table-wrap">
                         <table class="table table-bordered exa-adq-table">
                             <thead>
                                 <tr>
                                     <th>Mes Calendario</th>
-                                    <th>Total Requerimientos de Adquisici�n</th>
+                                    <th>Total Requerimientos de Adquisición</th>
                                     <th>Presupuesto Total Estimado</th>
                                 </tr>
                             </thead>
@@ -302,7 +298,7 @@ if ($es_gerencial_admin) {
             <div class="alert alert-warning m-4 text-center">
                 <i class="bi bi-shield-slash fs-1 d-block mb-2"></i>
                 <h5 class="fw-bold">Acceso Restringido</h5>
-                <p class="mb-0">Esta secci�n es de uso exclusivo para perfiles gerenciales, directores o administradores del sistema.</p>
+                <p class="mb-0">Esta sección es de uso exclusivo para perfiles gerenciales, directores o administradores del sistema.</p>
             </div>
         <?php } else { ?>
             <!-- Tarjetas de Resumen SLA -->
@@ -360,16 +356,16 @@ if ($es_gerencial_admin) {
                     <table class="table table-bordered exa-adq-table">
                         <thead>
                             <tr>
-                                <th>N� Sol.</th>
-                                <th>Fecha Emisi�n</th>
+                                <th>Nº Sol.</th>
+                                <th>Fecha Emisión</th>
                                 <th>Solicitante</th>
                                 <th>Tipo Requerimiento</th>
                                 <th>Monto Est.</th>
                                 <th>Etapa Actual</th>
                                 <th>Responsable</th>
                                 <th>Estado</th>
-                                <th>SLA Sem�foro</th>
-                                <th>Acci�n</th>
+                                <th>SLA Semáforo</th>
+                                <th>Acción</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -379,9 +375,9 @@ if ($es_gerencial_admin) {
                                 </tr>
                             <?php } else {
                                 foreach ($procesos as $p) {
-                                    // Calcular SLA y Sem�foro
+                                    // Calcular SLA y Semáforo
                                     $elapsed_days = 0;
-                                    $limit_days = !empty($p['Trq_Tiempo_Est']) ? floatval($p['Trq_Tiempo_Est']) : null;
+                                    $limit_days = !empty($p['Sla_Dias']) ? floatval($p['Sla_Dias']) : null;
                                     
                                     $fec_ini = strtotime($p['Ins_Fec_Ini']);
                                     if ($p['Ins_Est'] === 'P') {
@@ -443,7 +439,7 @@ if ($es_gerencial_admin) {
                                             </span>
                                         </td>
                                         <td>
-                                            <button class="btn btn-xs btn-outline-primary py-0" onclick="abrirSeguimiento(<?php echo $p['Sol_Cod']; ?>)">
+                                            <button class="btn btn-xs btn-outline-primary py-0" onclick="abrirSeguimiento(<?php echo intval($p['Sol_Cod']); ?>, <?php echo intval($p['Sol_Num']); ?>)">
                                                 <i class="bi bi-clock-history"></i> Seguimiento
                                             </button>
                                         </td>
@@ -470,7 +466,7 @@ if ($es_gerencial_admin) {
                 <h4 class="modal-title" id="lblSeguimientoTitle">Seguimiento de Requerimiento</h4>
             </div>
             <div class="modal-body" id="seguimientoModalBody" style="max-height:75vh;overflow-y:auto;">
-                <!-- Contenido AJAX se inyecta aqu� -->
+                <!-- Contenido AJAX se inyecta aquí -->
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cerrar</button>
@@ -482,20 +478,23 @@ if ($es_gerencial_admin) {
 
 <script>
     let currentSolCod = null;
-    function abrirSeguimiento(solCod) {
+    function abrirSeguimiento(solCod, solNum) {
         currentSolCod = solCod;
-        $('#lblSeguimientoTitle').text('Seguimiento de Requerimiento #' + solCod);
+        const tituloNum = solNum || solCod;
+        $('#lblSeguimientoTitle').text('Seguimiento de Requerimiento #' + tituloNum);
         $('#seguimientoModalBody').html('<div class="text-center p-4"><i class="glyphicon glyphicon-refresh glyphicon-spin" style="font-size:24px;"></i><div class="mt-2">Cargando seguimiento...</div></div>');
         
         $('#mdlSeguimiento').modal('show');
         
         $.get('adq_seguimiento.php', { sol_cod: solCod }, function(html) {
             $('#seguimientoModalBody').html(html);
+        }).fail(function() {
+            $('#seguimientoModalBody').html('<div class="alert alert-danger m-2 small">No se pudo cargar el seguimiento del requerimiento.</div>');
         });
     }
 
     $(document).ready(function() {
-        // Activar pesta�a espec�fica por URL si se solicita
+        // Activar pestaña específica por URL si se solicita
         const urlParams = new URLSearchParams(window.location.search);
         const tab = urlParams.get('tab');
         if (tab === 'todos_procesos') {

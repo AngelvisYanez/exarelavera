@@ -12,10 +12,17 @@ $obBD_con1 = new adq_adquisiciones_log($obBD_conexion);
 require_once('../LOGICA/wf_manager_log.php');
 $wf_mgr = new wf_manager_log($Ses_Dat_Dis);
 
-// Verificar acceso a la ventana 'bandeja' y pesta�a 'crear_solicitud'
+$ajax_save_solicitud = isset($_GET['ajax_save_solicitud']) ? $_GET['ajax_save_solicitud'] : (isset($_POST['ajax_save_solicitud']) ? $_POST['ajax_save_solicitud'] : null);
+$ajax_save_borrador = isset($_GET['ajax_save_borrador']) ? $_GET['ajax_save_borrador'] : (isset($_POST['ajax_save_borrador']) ? $_POST['ajax_save_borrador'] : null);
+$ajax_get_trq_details = isset($_GET['ajax_get_trq_details']) ? $_GET['ajax_get_trq_details'] : null;
+$ajax_get_borrador = isset($_GET['ajax_get_borrador']) ? $_GET['ajax_get_borrador'] : null;
+$ajax_search_proveedores = isset($_GET['ajax_search_proveedores']) ? $_GET['ajax_search_proveedores'] : null;
+$ajax_save_proveedor = isset($_POST['ajax_save_proveedor']) ? $_POST['ajax_save_proveedor'] : null;
+
+// Verificar acceso a la ventana 'bandeja' y pestaña 'crear_solicitud'
 if (!$wf_mgr->verificarAccesoVentana('bandeja', 'crear_solicitud')) {
-    if (isset($ajax_save_solicitud) || isset($ajax_get_trq_details) || isset($ajax_search_proveedores) || isset($ajax_save_proveedor)) {
-        $obBD_con1->echoJson(array('success' => false, 'message' => 'Acceso denegado. No tiene permisos para realizar esta acci�n.'));
+    if (isset($ajax_save_solicitud) || isset($ajax_save_borrador) || isset($ajax_get_trq_details) || isset($ajax_get_borrador) || isset($ajax_search_proveedores) || isset($ajax_save_proveedor)) {
+        $obBD_con1->echoJson(array('success' => false, 'message' => 'Acceso denegado. No tiene permisos para realizar esta acción.'));
         exit;
     } else {
         echo "<div class='alert alert-danger m-3'>Acceso denegado. No tiene permisos para ver esta ventana.</div>";
@@ -23,33 +30,40 @@ if (!$wf_mgr->verificarAccesoVentana('bandeja', 'crear_solicitud')) {
     }
 }
 
-// Redirecci�n segura para navegaci�n directa del navegador (no AJAX)
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['ajax_get_form']) && !isset($_GET['ajax_get_trq_details']) && !isset($_GET['ajax_search_proveedores']) && !isset($_GET['ajax_save_proveedor'])) {
+// Redirección segura para navegación directa del navegador (no AJAX)
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['ajax_get_form']) && !isset($_GET['ajax_get_trq_details']) && !isset($_GET['ajax_get_borrador']) && !isset($_GET['ajax_search_proveedores']) && !isset($_GET['ajax_save_proveedor']) && !isset($_GET['ajax_save_solicitud']) && !isset($_GET['ajax_save_borrador'])) {
     header("Location: adq_bandeja.php?tab=crear_solicitud");
     exit;
 }
 
 // Manejo de llamadas AJAX
-if (isset($ajax_save_solicitud)) {
-    // Formatear items recibidos
+if (isset($ajax_save_solicitud) || isset($ajax_save_borrador)) {
     $items = array();
     if (isset($_POST['items'])) {
         $items = $_POST['items'];
     }
 
-    // Formatear cotizaciones cargadas si aplica
     $cotizaciones = array();
     if (isset($_POST['cotizaciones'])) {
         $cotizaciones = $_POST['cotizaciones'];
     }
 
-    // Si hay archivos cargados para cotizaci�n, moverlos a un directorio seguro
+    $cotizaciones_existentes = array();
+    if (isset($_POST['cotizaciones_existentes'])) {
+        $cotizaciones_existentes = $_POST['cotizaciones_existentes'];
+    }
+
+    $cot_eliminar = array();
+    if (isset($_POST['cot_eliminar'])) {
+        $cot_eliminar = is_array($_POST['cot_eliminar']) ? $_POST['cot_eliminar'] : array($_POST['cot_eliminar']);
+    }
+
+    $target_dir = "../../DATA/adquisiciones_sustentos/";
+    if (!file_exists($target_dir)) {
+        mkdir($target_dir, 0777, true);
+    }
+
     if (isset($_FILES['cotizacion_archivos'])) {
-        $target_dir = "../../DATA/adquisiciones_sustentos/";
-        if (!file_exists($target_dir)) {
-            mkdir($target_dir, 0777, true);
-        }
-        
         foreach ($_FILES['cotizacion_archivos']['name'] as $idx => $name) {
             if ($_FILES['cotizacion_archivos']['error'][$idx] == 0) {
                 $tmp_name = $_FILES['cotizacion_archivos']['tmp_name'][$idx];
@@ -64,10 +78,39 @@ if (isset($ajax_save_solicitud)) {
         }
     }
 
+    if (isset($_FILES['cotizacion_archivos_existentes'])) {
+        foreach ($_FILES['cotizacion_archivos_existentes']['name'] as $sco_cod => $name) {
+            if ($_FILES['cotizacion_archivos_existentes']['error'][$sco_cod] == 0) {
+                $tmp_name = $_FILES['cotizacion_archivos_existentes']['tmp_name'][$sco_cod];
+                $ext = pathinfo($name, PATHINFO_EXTENSION);
+                $unique_name = "cot_" . uniqid() . "." . $ext;
+                $target_file = $target_dir . $unique_name;
+                if (move_uploaded_file($tmp_name, $target_file)) {
+                    if (!isset($cotizaciones_existentes[$sco_cod])) {
+                        $cotizaciones_existentes[$sco_cod] = array();
+                    }
+                    $cotizaciones_existentes[$sco_cod]['Cot_Adj'] = "adquisiciones_sustentos/" . $unique_name;
+                }
+            }
+        }
+    }
+
     $_POST['Emp_Cod'] = $Ses_Emp_Cod;
     $_POST['Suc_Cod'] = $Ses_Suc_Cod;
 
-    $resp = $obBD_con1->guardarSolicitud($_POST, $items, $cotizaciones);
+    if (isset($ajax_save_borrador)) {
+        $resp = $obBD_con1->guardarBorrador($_POST, $items, $cotizaciones, $cotizaciones_existentes, $cot_eliminar);
+    } else {
+        $resp = $obBD_con1->guardarSolicitud($_POST, $items, $cotizaciones, $cotizaciones_existentes, $cot_eliminar);
+    }
+    $obBD_con1->echoJson($resp);
+    exit;
+}
+
+if (isset($ajax_get_borrador)) {
+    $sol_cod = intval($_GET['sol_cod']);
+    $usu_sol = isset($Ses_Usu_Cod) ? intval($Ses_Usu_Cod) : 0;
+    $resp = $obBD_con1->obtenerBorradorParaEdicion($sol_cod, $Ses_Emp_Cod, $usu_sol);
     $obBD_con1->echoJson($resp);
     exit;
 }
@@ -182,7 +225,7 @@ if (isset($ajax_save_proveedor)) {
     exit;
 }
 
-// Cargar cat�logos iniciales
+// Cargar catálogos iniciales
 $tipos_req = $obBD_con1->getArrayConsultaSql("SELECT Trq_Cod, Trq_Des FROM adq_tipos_requerimientos WHERE Emp_Cod = $Ses_Emp_Cod AND Trq_Est = 'A' ORDER BY Trq_Des;", $obBD_conexion);
 $centros_costo = $obBD_con1->getArrayConsultaSql("SELECT DISTINCT Dep_Cdc AS Cdc_Cod FROM departamen WHERE Emp_Cod = $Ses_Emp_Cod AND Dep_Cdc IS NOT NULL AND Dep_Cdc <> '';", $obBD_conexion);
 
@@ -190,7 +233,7 @@ if (isset($ajax_get_form)) {
     header('Content-Type: text/html; charset=UTF-8');
     ?>
     <style>
-        /* Estilos de mejora visual para el formulario de creaci�n */
+        /* Estilos de mejora visual para el formulario de creación */
         .adq-step-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
@@ -271,12 +314,18 @@ if (isset($ajax_get_form)) {
     </style>
 
     <div class="p-1">
+        <div id="bannerEdicionBorrador" class="alert alert-info py-2 px-3 mb-3" style="display: none; font-size: 12px;">
+            <i class="bi bi-pencil-square"></i> <strong>Completando borrador</strong> <span id="lblBorradorNum"></span>.
+            Puede guardar sin cotizaciones y enviar a aprobacion cuando este listo.
+        </div>
         <form id="frmSolicitud" method="POST" enctype="multipart/form-data">
+            <input type="hidden" id="Sol_Cod" name="Sol_Cod" value="">
+            <div id="cotEliminarContainer"></div>
             
-            <!-- PASO 1: Informaci�n General -->
+            <!-- PASO 1: Información General -->
             <div class="adq-step-card">
                 <span class="adq-step-badge">Paso 1</span>
-                <h5 class="adq-step-title"><i class="bi bi-info-circle-fill"></i> Informaci�n General de la Solicitud</h5>
+                <h5 class="adq-step-title"><i class="bi bi-info-circle-fill"></i> Información General de la Solicitud</h5>
                 
                 <div class="row">
                     <!-- Tipo de Requerimiento -->
@@ -288,7 +337,7 @@ if (isset($ajax_get_form)) {
                                 <option value="<?php echo $tr['Trq_Cod']; ?>"><?php echo $tr['Trq_Des']; ?></option>
                             <?php } ?>
                         </select>
-                        <span class="text-muted" style="font-size: 10px; display: block; margin-top: 3px;">Determina el flujo de aprobaciones que seguir� la solicitud.</span>
+                        <span class="text-muted" style="font-size: 10px; display: block; margin-top: 3px;">Determina el flujo de aprobaciones que seguirá la solicitud.</span>
                     </div>
 
                     <!-- Prioridad -->
@@ -313,6 +362,56 @@ if (isset($ajax_get_form)) {
                         </select>
                     </div>
 
+                    <!-- Requisitos de esta solicitud -->
+                    <div class="col-12 mb-3" id="divRequisitosSolicitud" style="display: none;">
+                        <div class="p-3 rounded border" style="background: #f8fafc; border-color: #e2e8f0 !important;">
+                            <h6 class="fw-bold text-primary mb-2" style="font-size: 13px;"><i class="bi bi-sliders"></i> Requisitos de esta solicitud</h6>
+                            <p class="text-muted mb-3" style="font-size: 10px;">Se precargan desde el tipo seleccionado. Puede ajustarlos para este caso sin crear otro tipo de requerimiento.</p>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-1">
+                                        <input class="form-check-input" type="checkbox" id="Sol_Req_Fac" name="Sol_Req_Fac" value="1" onchange="syncReqConfigFromForm()">
+                                        <label class="form-check-label small" for="Sol_Req_Fac">Factura de compra al cierre</label>
+                                    </div>
+                                    <div class="form-check mb-1">
+                                        <input class="form-check-input" type="checkbox" id="Sol_Per_Cie" name="Sol_Per_Cie" value="1" onchange="syncReqConfigFromForm()">
+                                        <label class="form-check-label small" for="Sol_Per_Cie">Permitir cierre parcial de items</label>
+                                    </div>
+                                    <div class="form-check mb-1">
+                                        <input class="form-check-input" type="checkbox" id="Sol_Req_Cot" name="Sol_Req_Cot" value="1" onchange="toggleMinCotizaciones(); syncReqConfigFromForm();">
+                                        <label class="form-check-label small" for="Sol_Req_Cot">Cotizaciones de sustento obligatorias</label>
+                                    </div>
+                                    <div class="ms-4 mb-2" id="divSolMinCot" style="display: none;">
+                                        <label class="form-label-req small mb-1">Minimo de cotizaciones</label>
+                                        <input type="number" class="form-control form-control-sm form-control-adq" id="Sol_Min_Cot" name="Sol_Min_Cot" min="1" value="1" style="width: 100px;" onchange="syncReqConfigFromForm(); aplicarReglasCotizaciones();">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-1">
+                                        <input class="form-check-input" type="checkbox" id="Sol_Req_Pre" name="Sol_Req_Pre" value="1" onchange="syncReqConfigFromForm()">
+                                        <label class="form-check-label small" for="Sol_Req_Pre">Verificar disponibilidad presupuestaria</label>
+                                    </div>
+                                    <div class="form-check mb-1">
+                                        <input class="form-check-input" type="checkbox" id="Sol_Req_Adj" name="Sol_Req_Adj" value="1" onchange="syncReqConfigFromForm()">
+                                        <label class="form-check-label small" for="Sol_Req_Adj">Archivos adjuntos obligatorios</label>
+                                    </div>
+                                    <div class="form-check mb-1">
+                                        <input class="form-check-input" type="checkbox" id="Sol_Req_Pro" name="Sol_Req_Pro" value="1" onchange="toggleProveedorSugerido(); syncReqConfigFromForm();">
+                                        <label class="form-check-label small" for="Sol_Req_Pro">Proveedor sugerido obligatorio</label>
+                                    </div>
+                                    <div class="form-check mb-1">
+                                        <input class="form-check-input" type="checkbox" id="Sol_Define_Sla" name="Sol_Define_Sla" value="1" onchange="toggleSlaDias(); syncReqConfigFromForm();">
+                                        <label class="form-check-label small" for="Sol_Define_Sla">Definir tiempo estimado (SLA)</label>
+                                    </div>
+                                    <div class="ms-4" id="divSolTiempoEst" style="display: none;">
+                                        <label class="form-label-req small mb-1">Dias estimados de resolucion</label>
+                                        <input type="number" class="form-control form-control-sm form-control-adq" id="Sol_Tiempo_Est" name="Sol_Tiempo_Est" min="1" style="width: 120px;" onchange="syncReqConfigFromForm()">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Proveedor Sugerido -->
                     <div class="col-md-6 mb-3" id="divProveedorSugerido" style="display: none;">
                         <label class="form-label-req">Proveedor Sugerido *</label>
@@ -326,46 +425,46 @@ if (isset($ajax_get_form)) {
                         </div>
                     </div>
 
-                    <!-- Justificaci�n -->
+                    <!-- Justificación -->
                     <div class="col-12 mb-3">
-                        <label class="form-label-req">Justificaci�n Comercial *</label>
-                        <textarea class="form-control form-control-adq" id="Sol_Jus" name="Sol_Jus" rows="2" placeholder="Explique brevemente por qu� es necesaria esta adquisici�n..." required></textarea>
+                        <label class="form-label-req">Justificación Comercial *</label>
+                        <textarea class="form-control form-control-adq" id="Sol_Jus" name="Sol_Jus" rows="2" placeholder="Explique brevemente por qué es necesaria esta adquisición..." required></textarea>
                     </div>
 
-                    <!-- Descripci�n detallada -->
+                    <!-- Descripción detallada -->
                     <div class="col-12 mb-2">
-                        <label class="form-label-req">Descripci�n Detallada del Pedido *</label>
-                        <textarea class="form-control form-control-adq" id="Sol_Det" name="Sol_Det" rows="3" placeholder="Indique especificaciones t�cnicas, marcas, modelos o detalles espec�ficos..." required></textarea>
+                        <label class="form-label-req">Descripción Detallada del Pedido *</label>
+                        <textarea class="form-control form-control-adq" id="Sol_Det" name="Sol_Det" rows="3" placeholder="Indique especificaciones técnicas, marcas, modelos o detalles específicos..." required></textarea>
                     </div>
                 </div>
             </div>
 
-            <!-- PASO 2: Art�culos o Servicios -->
+            <!-- PASO 2: Artículos o Servicios -->
             <div class="adq-step-card">
                 <span class="adq-step-badge">Paso 2</span>
-                <h5 class="adq-step-title"><i class="bi bi-cart-fill"></i> Art�culos / Servicios Requeridos</h5>
+                <h5 class="adq-step-title"><i class="bi bi-cart-fill"></i> Artículos / Servicios Requeridos</h5>
                 
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover table-condensed table-items-adq" id="tblItems">
                         <thead>
                             <tr class="text-center">
                                 <th style="width: 40px; text-align: center;">#</th>
-                                <th>Art�culo / Descripci�n T�cnica</th>
+                                <th>Artículo / Descripción Técnica</th>
                                 <th style="width: 100px; text-align: center;">Cantidad</th>
                                 <th style="width: 140px; text-align: right;">P. Unit. Est. ($)</th>
                                 <th style="width: 100px; text-align: center;">Lleva IVA</th>
                                 <th style="width: 140px; text-align: right;">Total Est. ($)</th>
-                                <th style="width: 50px; text-align: center;">Acci�n</th>
+                                <th style="width: 50px; text-align: center;">Acción</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- Las l�neas se inyectan por JS -->
+                            <!-- Las líneas se inyectan por JS -->
                         </tbody>
                     </table>
                 </div>
                 
                 <div class="d-flex justify-content-between align-items-center mt-3">
-                    <button type="button" class="btn btn-sm btn-primary fw-bold" onclick="agregarLinea()"><i class="bi bi-plus-circle"></i> Agregar �tem / Fila</button>
+                    <button type="button" class="btn btn-sm btn-primary fw-bold" onclick="agregarLinea()"><i class="bi bi-plus-circle"></i> Agregar Ítem / Fila</button>
                     
                     <div class="lbl-total-box text-end">
                         <span class="text-muted small fw-bold d-block">VALOR TOTAL ESTIMADO</span>
@@ -378,7 +477,7 @@ if (isset($ajax_get_form)) {
             <!-- PASO 3: Cotizaciones de Sustento -->
             <div class="adq-step-card" id="divCotizaciones">
                 <span class="adq-step-badge">Paso 3</span>
-                <h5 class="adq-step-title"><i class="bi bi-file-earmark-pdf-fill"></i> Sustento de Cotizaciones F�sicas</h5>
+                <h5 class="adq-step-title"><i class="bi bi-file-earmark-pdf-fill"></i> Sustento de Cotizaciones Físicas</h5>
                 
                 <!-- Estado 1: Inicial (Sin Tipo de Requerimiento seleccionado) -->
                 <div id="cotizacionesStateInitial" class="text-center p-4" style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px;">
@@ -388,25 +487,19 @@ if (isset($ajax_get_form)) {
 
                 <!-- Estado 2: Tipo de Requerimiento seleccionado -->
                 <div id="cotizacionesStateActive" style="display: none;">
-                    <!-- Alerta din�mica (se llena por JS) -->
-                    <div id="cotizacionesAlert" class="alert p-3 mb-3" style="font-size: 12px; border-radius: 6px; line-height: 1.5;">
-                        <!-- Mensaje inyectado por JS -->
-                    </div>
-
-                    <div class="row g-3" id="cotizacionesList">
-                        <!-- Se inyectan cotizaciones din�micas -->
-                    </div>
-                    
+                    <div id="cotizacionesAlert" class="alert p-3 mb-3" style="font-size: 12px; border-radius: 6px; line-height: 1.5;"></div>
+                    <div class="row g-3" id="cotizacionesList"></div>
                     <div class="mt-3" id="divBtnAddCot">
-                        <button type="button" class="btn btn-sm btn-outline-secondary fw-bold" onclick="agregarCotizacionHTML()"><i class="bi bi-paperclip"></i> A�adir Otra Cotizaci�n F�sica</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary fw-bold" onclick="agregarCotizacionHTML(false)"><i class="bi bi-paperclip"></i> Anadir Cotizacion Fisica</button>
                     </div>
                 </div>
             </div>
 
-            <!-- Botones de Acci�n -->
+            <!-- Botones de Acción -->
             <div class="d-flex justify-content-end gap-2 mt-4 mb-3">
                 <button type="button" class="btn btn-default" onclick="limpiarFormulario()"><i class="bi bi-trash"></i> Limpiar Todo</button>
-                <button type="submit" class="btn btn-success fw-bold p-3 py-2" style="font-size: 14px;"><i class="bi bi-send-check"></i> Enviar Solicitud a Aprobaci�n</button>
+                <button type="button" class="btn btn-outline-secondary fw-bold p-3 py-2" style="font-size: 14px;" onclick="guardarBorrador()"><i class="bi bi-save"></i> Guardar Borrador</button>
+                <button type="submit" class="btn btn-success fw-bold p-3 py-2" style="font-size: 14px;"><i class="bi bi-send-check"></i> Enviar Solicitud a Aprobación</button>
             </div>
         </form>
 
@@ -460,7 +553,7 @@ if (isset($ajax_get_form)) {
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Nueva Solicitud de Adquisici�n</title>
+    <title>Nueva Solicitud de Adquisición</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -470,16 +563,16 @@ if (isset($ajax_get_form)) {
 <body class="bg-light py-4">
     <div class="container bg-white p-4 rounded shadow-sm" style="max-width: 900px;">
         <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-            <h4 class="fw-bold text-primary m-0"><i class="bi bi-file-earmark-plus"></i> Registro de Adquisici�n</h4>
+            <h4 class="fw-bold text-primary m-0"><i class="bi bi-file-earmark-plus"></i> Registro de Adquisición</h4>
             <a href="adq_bandeja.php" class="btn btn-sm btn-secondary"><i class="bi bi-arrow-left"></i> Volver a mi Bandeja</a>
         </div>
 
         <form id="frmSolicitud" method="POST" enctype="multipart/form-data">
-            <!-- El contenido de este formulario se maneja din�micamente o por carga h�brida -->
+            <!-- El contenido de este formulario se maneja dinámicamente o por carga híbrida -->
         </form>
     </div>
 
-    <!-- Script del validador de adquisici�n -->
+    <!-- Script del validador de adquisición -->
     <script src="../VALIDACIONES/adq_solicitud.js" charset="UTF-8"></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 <?php
 /**
- * EXA Workflow Builder - Dise�ador Visual de Flujos
+ * EXA Workflow Builder - Diseñador Visual de Flujos
  * @author Oz <oz-agent@warp.dev>
  */
 
@@ -11,10 +11,10 @@ $obBD_conexion = new Class_Log_Conexion_Global($Ses_Dat_Dis);
 $obBD_con1 = new MysqlDatos($obBD_conexion);
 $wf_mgr = new wf_manager_log($Ses_Dat_Dis);
 
-// Verificar acceso a la ventana 'configuracion' y pesta�a 'disenador_flujos'
+// Verificar acceso a la ventana 'configuracion' y pestaña 'disenador_flujos'
 if (!$wf_mgr->verificarAccesoVentana('configuracion', 'disenador_flujos')) {
-    if (isset($ajax_save_workflow) || isset($ajax_load_workflow) || isset($ajax_get_department_users) || isset($ajax_save_department_users) || isset($ajax_get_users_by_department)) {
-        $obBD_con1->echoJson(array('success' => false, 'message' => 'Acceso denegado. No tiene permisos para realizar esta acci�n.'));
+    if (isset($ajax_save_workflow) || isset($ajax_publish_workflow) || isset($ajax_load_workflow) || isset($ajax_get_department_users) || isset($ajax_save_department_users) || isset($ajax_get_users_by_department)) {
+        $obBD_con1->echoJson(array('success' => false, 'message' => 'Acceso denegado. No tiene permisos para realizar esta acción.'));
         exit;
     } else {
         echo "<div class='alert alert-danger m-3'>Acceso denegado. No tiene permisos para ver esta ventana.</div>";
@@ -22,10 +22,34 @@ if (!$wf_mgr->verificarAccesoVentana('configuracion', 'disenador_flujos')) {
     }
 }
 
-// Redirecci�n segura para navegaci�n directa del navegador (no AJAX)
+// Redirección segura para navegación directa del navegador (no AJAX)
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['ajax_get_builder']) && !isset($_GET['ajax_load_workflow']) && !isset($_GET['ajax_get_department_users']) && !isset($_GET['ajax_get_users_by_department'])) {
     header("Location: adq_configuracion.php?tab=disenador");
     exit;
+}
+
+function wf_builder_escape($obBD_conexion, $value) {
+    if ($value === null) {
+        return '';
+    }
+    return mysqli_real_escape_string($obBD_conexion->conexion, (string)$value);
+}
+
+function wf_builder_resolve_node_id($frontend_id) {
+    if ($frontend_id === null || $frontend_id === '') {
+        return 0;
+    }
+    $id = (string)$frontend_id;
+    if (strpos($id, 'n_') === 0) {
+        return intval(substr($id, 2));
+    }
+    if (strpos($id, 'node_') === 0) {
+        return 0;
+    }
+    if (ctype_digit($id)) {
+        return intval($id);
+    }
+    return 0;
 }
 
 // Manejo de peticiones AJAX
@@ -33,59 +57,23 @@ if (isset($ajax_save_workflow)) {
     $data = json_decode(file_get_contents('php://input'), true);
     $obBD_con1->inicio_transaccion($obBD_conexion);
     try {
-        $wfm_nom = mysqli_real_escape_string($obBD_conexion->conexion, $data['nombre']);
-        $wfm_des = mysqli_real_escape_string($obBD_conexion->conexion, $data['descripcion']);
-        
-        // 1. Guardar o actualizar cabecera del Flujo Modelo
-        if (empty($data['id'])) {
-            $sqlFlujo = "INSERT INTO wf_flujos_modelos (Emp_Cod, Wfm_Nom, Wfm_Des, Wfm_Est) VALUES ($Ses_Emp_Cod, '$wfm_nom', '$wfm_des', 'A');";
-            $obBD_con1->grabarv_registros($sqlFlujo, $obBD_conexion);
-            $wfm_cod = $obBD_con1->insercionid($obBD_conexion);
-        } else {
-            $wfm_cod = intval($data['id']);
-            $sqlFlujo = "UPDATE wf_flujos_modelos SET Wfm_Nom = '$wfm_nom', Wfm_Des = '$wfm_des' WHERE Wfm_Cod = $wfm_cod;";
-            $obBD_con1->grabarv_registros($sqlFlujo, $obBD_conexion);
-            
-            // Limpiar conexiones y nodos previos para resalvado (cascada resolver� consistencias)
-            $obBD_con1->grabarv_registros("DELETE FROM wf_conexiones WHERE Wfm_Cod = $wfm_cod;", $obBD_conexion);
-            $obBD_con1->grabarv_registros("DELETE FROM wf_nodos WHERE Wfm_Cod = $wfm_cod;", $obBD_conexion);
-        }
-
-        // 2. Guardar Nodos
-        $node_map = array(); // Mapea id temporal frontend a Nod_Cod real
-        foreach ($data['nodos'] as $nodo) {
-            $nod_nom = mysqli_real_escape_string($obBD_conexion->conexion, $nodo['nombre']);
-            $nod_des = mysqli_real_escape_string($obBD_conexion->conexion, $nodo['descripcion']);
-            $dep_cod = !empty($nodo['dep_cod']) ? intval($nodo['dep_cod']) : 'NULL';
-            $per_cod = !empty($nodo['per_cod']) ? intval($nodo['per_cod']) : 'NULL';
-            $sla = !empty($nodo['sla']) ? intval($nodo['sla']) : 'NULL';
-            $com_obl = !empty($nodo['com_obl']) ? 1 : 0;
-            $adj_obl = !empty($nodo['adj_obl']) ? 1 : 0;
-            $vis_x = intval($nodo['x']);
-            $vis_y = intval($nodo['y']);
-            $usu_asig = !empty($nodo['usu_asig']) ? "'" . mysqli_real_escape_string($obBD_conexion->conexion, $nodo['usu_asig']) . "'" : "'TODOS'";
-            
-            $sqlNodo = "INSERT INTO wf_nodos (Wfm_Cod, Nod_Tip, Nod_Nom, Nod_Des, Dep_Cod, Per_Cod, Nod_Sla, Nod_Com_Obl, Nod_Adj_Obl, Nod_Vis_X, Nod_Vis_Y, Nod_Est, Nod_Usu_Asig) 
-                        VALUES ($wfm_cod, '$nodo[tipo]', '$nod_nom', '$nod_des', $dep_cod, $per_cod, $sla, $com_obl, $adj_obl, $vis_x, $vis_y, 'A', $usu_asig);";
-            $obBD_con1->grabarv_registros($sqlNodo, $obBD_conexion);
-            $real_id = $obBD_con1->insercionid($obBD_conexion);
-            $node_map[$nodo['id']] = $real_id;
-        }
-
-        // 3. Guardar Conexiones
-        foreach ($data['conexiones'] as $con) {
-            $nod_ori = $node_map[$con['origen']];
-            $nod_des = $node_map[$con['destino']];
-            $con_acc = mysqli_real_escape_string($obBD_conexion->conexion, $con['accion']);
-            $con_con_exp = !empty($con['condicion']) ? "'" . mysqli_real_escape_string($obBD_conexion->conexion, json_encode($con['condicion'])) . "'" : 'NULL';
-            
-            $sqlCon = "INSERT INTO wf_conexiones (Wfm_Cod, Nod_Ori, Nod_Des, Con_Acc, Con_Con_Exp) 
-                       VALUES ($wfm_cod, $nod_ori, $nod_des, '$con_acc', $con_con_exp);";
-            $obBD_con1->grabarv_registros($sqlCon, $obBD_conexion);
-        }
-
+        $result = $wf_mgr->guardarFlujoDisenador($data, $Ses_Emp_Cod);
         $obBD_con1->commit_nomsn($obBD_conexion);
-        $obBD_con1->echoJson(array('success' => true, 'id' => $wfm_cod));
+        $obBD_con1->echoJson(array_merge(array('success' => true), $result));
+    } catch (Exception $e) {
+        $obBD_con1->rollBack_nomsn($obBD_conexion);
+        $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
+    }
+}
+
+if (isset($ajax_publish_workflow)) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $wfm_cod = !empty($data['id']) ? intval($data['id']) : 0;
+    $obBD_con1->inicio_transaccion($obBD_conexion);
+    try {
+        $result = $wf_mgr->publicarFlujoDisenador($wfm_cod, $Ses_Emp_Cod);
+        $obBD_con1->commit_nomsn($obBD_conexion);
+        $obBD_con1->echoJson(array_merge(array('success' => true, 'message' => 'Flujo publicado correctamente.'), $result));
     } catch (Exception $e) {
         $obBD_con1->rollBack_nomsn($obBD_conexion);
         $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
@@ -95,12 +83,10 @@ if (isset($ajax_save_workflow)) {
 if (isset($ajax_load_workflow)) {
     $wfm_cod = intval($_GET['id']);
     try {
-        $flujo = $obBD_con1->getRowConsultaSql("SELECT * FROM wf_flujos_modelos WHERE Wfm_Cod = $wfm_cod;", $obBD_conexion);
-        $nodos = $obBD_con1->getArrayConsultaSql("SELECT * FROM wf_nodos WHERE Wfm_Cod = $wfm_cod AND Nod_Est = 'A';", $obBD_conexion);
-        $conexiones = $obBD_con1->getArrayConsultaSql("SELECT * FROM wf_conexiones WHERE Wfm_Cod = $wfm_cod;", $obBD_conexion);
-        
+        $pack = $wf_mgr->cargarFlujoDisenador($wfm_cod, $Ses_Emp_Cod);
+        $flujo = $pack['flujo'];
         $payload_nodos = array();
-        foreach ($nodos as $nodo) {
+        foreach ($pack['nodos'] as $nodo) {
             $payload_nodos[] = array(
                 'id' => $nodo['Nod_Cod'],
                 'tipo' => $nodo['Nod_Tip'],
@@ -118,7 +104,7 @@ if (isset($ajax_load_workflow)) {
         }
 
         $payload_conexiones = array();
-        foreach ($conexiones as $con) {
+        foreach ($pack['conexiones'] as $con) {
             $condicion = !empty($con['Con_Con_Exp']) ? json_decode($con['Con_Con_Exp'], true) : null;
             $payload_conexiones[] = array(
                 'origen' => $con['Nod_Ori'],
@@ -128,12 +114,19 @@ if (isset($ajax_load_workflow)) {
             );
         }
 
+        $estado = $flujo['Wfm_Est'];
         $obBD_con1->echoJson(array(
             'success' => true,
             'flujo' => array(
                 'id' => $flujo['Wfm_Cod'],
+                'familia_cod' => $pack['familia_cod'],
                 'nombre' => $flujo['Wfm_Nom'],
-                'descripcion' => $flujo['Wfm_Des']
+                'descripcion' => $flujo['Wfm_Des'],
+                'version' => intval($flujo['Wfm_Version']),
+                'estado' => $estado,
+                'es_borrador' => ($estado === 'B'),
+                'instancias_activas' => $pack['instancias_activas'],
+                'version_publicada' => !empty($pack['publicado']) ? intval($pack['publicado']['Wfm_Version']) : null
             ),
             'nodos' => $payload_nodos,
             'conexiones' => $payload_conexiones
@@ -143,19 +136,31 @@ if (isset($ajax_load_workflow)) {
     }
 }
 
-// --- AJAX: Obtener usuarios de la empresa con flag de asignaci�n al departamento ---
+// --- AJAX: Obtener usuarios de la empresa con flag de asignación al departamento ---
 if (isset($ajax_get_department_users)) {
     $dep_cod = intval($_GET['dep_cod']);
     try {
         $usuarios = $obBD_con1->getArrayConsultaSql("
-            SELECT u.Usu_Cod, CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) as Usuario_Nom,
-                   IF(du.Wdu_Cod IS NOT NULL, 1, 0) as asignado
-            FROM usuarios u
-            INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
-            INNER JOIN sucursal s ON s.Suc_Cod = u.Suc_Cod
-            LEFT JOIN wf_departamento_usuarios du ON du.Usu_Cod = u.Usu_Cod AND du.Dep_Cod = $dep_cod
-            WHERE s.Emp_Cod = $Ses_Emp_Cod AND u.Usu_Est = 'A'
-            ORDER BY Usuario_Nom;", $obBD_conexion);
+            SELECT base.Usu_Cod,
+                   base.Usuario_Nom,
+                   IF(EXISTS (
+                       SELECT 1
+                       FROM usuarios ux
+                       INNER JOIN sucursal sx ON sx.Suc_Cod = ux.Suc_Cod
+                       INNER JOIN wf_departamento_usuarios du2 ON du2.Usu_Cod = ux.Usu_Cod AND du2.Dep_Cod = $dep_cod
+                       WHERE sx.Emp_Cod = $Ses_Emp_Cod AND ux.Usu_Ced = base.Usu_Ced AND ux.Usu_Est = 'A' AND ux.Usu_Wf = 'S'
+                   ), 1, 0) AS asignado
+            FROM (
+                SELECT MIN(u.Usu_Cod) AS Usu_Cod,
+                       TRIM(CONCAT(p.Prs_Nom, ' ', p.Prs_Ape)) AS Usuario_Nom,
+                       u.Usu_Ced
+                FROM usuarios u
+                INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
+                INNER JOIN sucursal s ON s.Suc_Cod = u.Suc_Cod
+                WHERE s.Emp_Cod = $Ses_Emp_Cod AND u.Usu_Est = 'A' AND u.Usu_Wf = 'S'
+                GROUP BY u.Usu_Ced, p.Prs_Nom, p.Prs_Ape
+            ) base
+            ORDER BY asignado DESC, Usuario_Nom;", $obBD_conexion);
         $obBD_con1->echoJson(array('success' => true, 'usuarios' => $usuarios));
     } catch (Exception $e) {
         $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
@@ -173,7 +178,18 @@ if (isset($ajax_save_department_users)) {
         $obBD_con1->grabarv_registros("DELETE FROM wf_departamento_usuarios WHERE Dep_Cod = $dep_cod;", $obBD_conexion);
         foreach ($usuarios_ids as $u_id) {
             $u_id = intval($u_id);
-            $obBD_con1->grabarv_registros("INSERT INTO wf_departamento_usuarios (Dep_Cod, Usu_Cod) VALUES ($dep_cod, $u_id);", $obBD_conexion);
+            $cuentas = $obBD_con1->getArrayConsultaSql("
+                SELECT ux.Usu_Cod
+                FROM usuarios ux
+                INNER JOIN sucursal sx ON sx.Suc_Cod = ux.Suc_Cod
+                WHERE sx.Emp_Cod = $Ses_Emp_Cod AND ux.Usu_Est = 'A' AND ux.Usu_Wf = 'S'
+                  AND ux.Usu_Ced = (SELECT u0.Usu_Ced FROM usuarios u0 WHERE u0.Usu_Cod = $u_id LIMIT 1);", $obBD_conexion);
+            if ($cuentas === false || $cuentas === null) {
+                $cuentas = array();
+            }
+            foreach ($cuentas as $cuenta) {
+                $obBD_con1->grabarv_registros("INSERT INTO wf_departamento_usuarios (Dep_Cod, Usu_Cod) VALUES ($dep_cod, {$cuenta['Usu_Cod']});", $obBD_conexion);
+            }
         }
         $obBD_con1->commit_nomsn($obBD_conexion);
         $obBD_con1->echoJson(array('success' => true));
@@ -184,17 +200,25 @@ if (isset($ajax_save_department_users)) {
     exit;
 }
 
-// --- AJAX: Obtener usuarios asignados a un departamento ---
+// --- AJAX: Obtener usuarios asignados a un departamento (uno por persona/cédula) ---
 if (isset($ajax_get_users_by_department)) {
     $dep_cod = intval($_GET['dep_cod']);
     try {
         $usuarios = $obBD_con1->getArrayConsultaSql("
-            SELECT u.Usu_Cod, CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) as Usuario_Nom
+            SELECT MIN(u.Usu_Cod) AS Usu_Cod,
+                   TRIM(CONCAT(p.Prs_Nom, ' ', p.Prs_Ape)) AS Usuario_Nom,
+                   GROUP_CONCAT(u.Usu_Cod ORDER BY u.Usu_Cod) AS Usu_Cods
             FROM wf_departamento_usuarios du
             INNER JOIN usuarios u ON u.Usu_Cod = du.Usu_Cod
             INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
-            WHERE du.Dep_Cod = $dep_cod AND u.Usu_Est = 'A'
+            INNER JOIN sucursal s ON s.Suc_Cod = u.Suc_Cod
+            WHERE du.Dep_Cod = $dep_cod AND s.Emp_Cod = $Ses_Emp_Cod
+              AND u.Usu_Est = 'A' AND u.Usu_Wf = 'S'
+            GROUP BY u.Usu_Ced, p.Prs_Nom, p.Prs_Ape
             ORDER BY Usuario_Nom;", $obBD_conexion);
+        if ($usuarios === false || $usuarios === null) {
+            $usuarios = array();
+        }
         $obBD_con1->echoJson(array('success' => true, 'usuarios' => $usuarios));
     } catch (Exception $e) {
         $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
@@ -202,10 +226,24 @@ if (isset($ajax_get_users_by_department)) {
     exit;
 }
 
-// Cargar cat�logos para configuraci�n de nodos
-$departamentos = $obBD_con1->getArrayConsultaSql("SELECT MIN(Dep_Cod) AS Dep_Cod, Dep_Des FROM departamen WHERE Emp_Cod = $Ses_Emp_Cod AND Dep_Est = 'A' GROUP BY Dep_Des ORDER BY Dep_Des;", $obBD_conexion);
+// Cargar catálogos para configuración de nodos
+$wf_mgr->syncDepartamentosFromRrhh($Ses_Emp_Cod);
+$departamentos = $obBD_con1->getArrayConsultaSql("
+    SELECT d.Wde_Cod AS Dep_Cod, d.Wde_Des AS Dep_Des
+    FROM wf_departamentos d
+    WHERE d.Emp_Cod = $Ses_Emp_Cod AND d.Wde_Est = 'A'
+      AND EXISTS (
+          SELECT 1
+          FROM wf_departamento_usuarios du
+          INNER JOIN usuarios u ON u.Usu_Cod = du.Usu_Cod
+          INNER JOIN sucursal s ON s.Suc_Cod = u.Suc_Cod
+          WHERE du.Dep_Cod = d.Wde_Cod AND s.Emp_Cod = $Ses_Emp_Cod
+            AND u.Usu_Est = 'A' AND u.Usu_Wf = 'S'
+      )
+    ORDER BY d.Wde_Des;", $obBD_conexion);
 $perfiles = $obBD_con1->getArrayConsultaSql("SELECT Per_Cod, Per_Des FROM perfiles WHERE Emp_Cod = $Ses_Emp_Cod AND Per_Est = 'A' ORDER BY Per_Des;", $obBD_conexion);
-$flujos_existentes = $obBD_con1->getArrayConsultaSql("SELECT Wfm_Cod, Wfm_Nom FROM wf_flujos_modelos WHERE Emp_Cod = $Ses_Emp_Cod AND Wfm_Est = 'A';", $obBD_conexion);
+$wf_mgr->ensureVersioningSchema();
+$flujos_existentes = $wf_mgr->listarFlujosPublicados($Ses_Emp_Cod);
 
 if (isset($ajax_get_builder)) {
     ?>
@@ -344,22 +382,43 @@ if (isset($ajax_get_builder)) {
             overflow-y: auto;
         }
         .properties-drawer.open { right: 0; }
+        .wf-builder-header {
+            margin-bottom: 1rem;
+            padding: 0.5rem 0.75rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        .wf-builder-status-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+            margin-top: 0.65rem;
+            padding-top: 0.65rem;
+            border-top: 1px solid #e2e8f0;
+        }
     </style>
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 p-2 bg-light border rounded gap-2 shadow-sm">
+    <div class="wf-builder-header">
         <div class="d-flex flex-wrap gap-2 align-items-center">
             <label class="fw-bold m-0 small text-dark"><i class="bi bi-funnel"></i> Seleccionar Flujo:</label>
             <select id="selWorkflow" class="form-control form-control-sm" style="width: 200px; display: inline-block;">
                 <option value="">-- Seleccionar un Flujo --</option>
                 <?php foreach ($flujos_existentes as $flow) { ?>
-                    <option value="<?php echo $flow['Wfm_Cod']; ?>"><?php echo $flow['Wfm_Nom']; ?></option>
+                    <option value="<?php echo intval($flow['Wfm_Fam_Cod']); ?>"><?php echo htmlspecialchars($flow['Wfm_Nom'], ENT_QUOTES, 'UTF-8'); ?> (v<?php echo intval($flow['Wfm_Version']); ?>)</option>
                 <?php } ?>
             </select>
             <button class="btn btn-sm btn-info text-white fw-bold" onclick="cargarFlujo()"><i class="bi bi-folder-2-open"></i> Abrir</button>
             <button class="btn btn-sm btn-primary fw-bold" onclick="abrirModalNuevoFlujo()"><i class="bi bi-plus-lg"></i> Nuevo</button>
-            <button class="btn btn-sm btn-success fw-bold" onclick="guardarFlujo()"><i class="bi bi-save"></i> Guardar</button>
+            <button class="btn btn-sm btn-success fw-bold" onclick="guardarFlujo()"><i class="bi bi-save"></i> Guardar borrador</button>
+            <button class="btn btn-sm btn-warning fw-bold text-dark" onclick="publicarFlujo()"><i class="bi bi-cloud-upload"></i> Publicar</button>
         </div>
-        <div class="d-flex flex-wrap gap-2 align-items-center">
+        <div class="wf-builder-status-bar" style="display: none;">
             <span class="badge bg-primary p-2" id="lblFlowActiveName" style="font-size: 12px; display: none;"><i class="bi bi-diagram-3-fill"></i> Flujo Activo: <span></span></span>
+            <span class="badge bg-secondary p-2" id="lblFlowVersion" style="font-size: 11px; display: none;"></span>
+            <span class="badge bg-warning text-dark p-2" id="lblFlowDraft" style="font-size: 11px; display: none;"><i class="bi bi-pencil-square"></i> Borrador</span>
+            <span class="badge bg-info text-dark p-2" id="lblFlowActiveInstances" style="font-size: 11px; display: none;"></span>
             <!-- Inputs ocultos para mantener compatibilidad con el JS -->
             <input type="hidden" id="flowName">
             <input type="hidden" id="flowDesc">
@@ -373,19 +432,19 @@ if (isset($ajax_get_builder)) {
                 <i class="bi bi-play-circle text-success"></i> Inicio
             </div>
             <div class="toolbox-item" draggable="true" data-type="APROBACION">
-                <i class="bi bi-check-circle text-primary"></i> Aprobaci�n
+                <i class="bi bi-check-circle text-primary"></i> Aprobación
             </div>
             <div class="toolbox-item" draggable="true" data-type="DECISION">
-                <i class="bi bi-shuffle text-warning"></i> Decisi�n
+                <i class="bi bi-shuffle text-warning"></i> Decisión
             </div>
             <div class="toolbox-item" draggable="true" data-type="RECEPCION">
-                <i class="bi bi-box-seam text-secondary"></i> Recepci�n
+                <i class="bi bi-box-seam text-secondary"></i> Recepción
             </div>
             <div class="toolbox-item" draggable="true" data-type="FACTURA">
                 <i class="bi bi-receipt text-info"></i> Factura
             </div>
             <div class="toolbox-item" draggable="true" data-type="NOTIFICACION">
-                <i class="bi bi-envelope text-dark"></i> Notificaci�n
+                <i class="bi bi-envelope text-dark"></i> Notificación
             </div>
             <div class="toolbox-item" draggable="true" data-type="TAREA">
                 <i class="bi bi-card-checklist text-muted"></i> Tarea
@@ -418,7 +477,7 @@ if (isset($ajax_get_builder)) {
                 <input type="text" id="nodeName" class="form-control form-control-sm">
             </div>
             <div class="mb-3">
-                <label class="form-label">Descripci�n</label>
+                <label class="form-label">Descripción</label>
                 <textarea id="nodeDesc" class="form-control form-control-sm" rows="2"></textarea>
             </div>
             <div class="mb-3 sec-responsabilidad">
@@ -436,18 +495,18 @@ if (isset($ajax_get_builder)) {
                 </div>
             </div>
             <div class="mb-3 sec-responsabilidad sec-asignacion-usuarios" style="display: none;">
-                <label class="form-label d-block">Asignaci�n de Usuarios</label>
+                <label class="form-label d-block">Asignación de Usuarios</label>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="radio" name="userAsigType" id="asigTodos" value="TODOS" checked onchange="toggleAsigType(this.value)">
                     <label class="form-check-label" for="asigTodos">Todos los del depto</label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="radio" name="userAsigType" id="asigEspecificos" value="ESPECIFICOS" onchange="toggleAsigType(this.value)">
-                    <label class="form-check-label" for="asigEspecificos">Usuarios espec�ficos</label>
+                    <label class="form-check-label" for="asigEspecificos">Usuarios específicos</label>
                 </div>
                 
                 <div id="secAsigEspecificosList" class="mt-2" style="display: none; max-height: 150px; overflow-y: auto; border: 1px solid #dee2e6; padding: 8px; border-radius: 4px; background: #fff;">
-                    <!-- Checkboxes de usuarios se cargar�n din�micamente aqu� -->
+                    <!-- Checkboxes de usuarios se cargarán dinámicamente aquí -->
                 </div>
             </div>
             <div class="mb-3 sec-responsabilidad" id="secNodePer">
@@ -460,7 +519,7 @@ if (isset($ajax_get_builder)) {
                 </select>
             </div>
             <div class="mb-3 sec-sla">
-                <label class="form-label">Tiempo L�mite (Horas SLA)</label>
+                <label class="form-label">Tiempo Límite (Días SLA)</label>
                 <input type="number" id="nodeSla" class="form-control form-control-sm" min="0">
             </div>
             <div class="mb-3 form-check sec-checks">
@@ -474,7 +533,7 @@ if (isset($ajax_get_builder)) {
         </div>
     </div>
 
-    <!-- Modal de Gesti�n de Usuarios por Departamento -->
+    <!-- Modal de Gestión de Usuarios por Departamento -->
     <div class="modal fade" id="modalDepUsers" tabindex="-1" role="dialog" aria-labelledby="modalDepUsersLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -486,7 +545,7 @@ if (isset($ajax_get_builder)) {
                     <input type="hidden" id="manageDepCod">
                     <p class="text-muted small">Seleccione los usuarios que pertenecen a este departamento para el Workflow:</p>
                     <div id="depUsersList" class="list-group">
-                        <!-- Lista de usuarios con checkboxes se cargar� aqu� -->
+                        <!-- Lista de usuarios con checkboxes se cargarán aquí -->
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -508,11 +567,11 @@ if (isset($ajax_get_builder)) {
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nombre del Flujo *</label>
-                        <input type="text" id="modalFlowName" class="form-control" placeholder="Ej. Aprobaci�n de Compras de Tecnolog�a" required>
+                        <input type="text" id="modalFlowName" class="form-control" placeholder="Ej. Aprobación de Compras de Tecnología" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Descripci�n / Notas</label>
-                        <textarea id="modalFlowDesc" class="form-control" rows="3" placeholder="Indique el prop�sito de este flujo..."></textarea>
+                        <label class="form-label fw-bold">Descripción / Notas</label>
+                        <textarea id="modalFlowDesc" class="form-control" rows="3" placeholder="Indique el propósito de este flujo..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -523,15 +582,28 @@ if (isset($ajax_get_builder)) {
         </div>
     </div>
 
-    <script src="../VALIDACIONES/wf_builder.js"></script>
     <?php
     exit;
 }
 
-// Cargar cat�logos para configuraci�n de nodos
-$departamentos = $obBD_con1->getArrayConsultaSql("SELECT MIN(Dep_Cod) AS Dep_Cod, Dep_Des FROM departamen WHERE Emp_Cod = $Ses_Emp_Cod AND Dep_Est = 'A' GROUP BY Dep_Des ORDER BY Dep_Des;", $obBD_conexion);
+// Cargar catálogos para configuración de nodos
+$wf_mgr->syncDepartamentosFromRrhh($Ses_Emp_Cod);
+$departamentos = $obBD_con1->getArrayConsultaSql("
+    SELECT d.Wde_Cod AS Dep_Cod, d.Wde_Des AS Dep_Des
+    FROM wf_departamentos d
+    WHERE d.Emp_Cod = $Ses_Emp_Cod AND d.Wde_Est = 'A'
+      AND EXISTS (
+          SELECT 1
+          FROM wf_departamento_usuarios du
+          INNER JOIN usuarios u ON u.Usu_Cod = du.Usu_Cod
+          INNER JOIN sucursal s ON s.Suc_Cod = u.Suc_Cod
+          WHERE du.Dep_Cod = d.Wde_Cod AND s.Emp_Cod = $Ses_Emp_Cod
+            AND u.Usu_Est = 'A' AND u.Usu_Wf = 'S'
+      )
+    ORDER BY d.Wde_Des;", $obBD_conexion);
 $perfiles = $obBD_con1->getArrayConsultaSql("SELECT Per_Cod, Per_Des FROM perfiles WHERE Emp_Cod = $Ses_Emp_Cod AND Per_Est = 'A' ORDER BY Per_Des;", $obBD_conexion);
-$flujos_existentes = $obBD_con1->getArrayConsultaSql("SELECT Wfm_Cod, Wfm_Nom FROM wf_flujos_modelos WHERE Emp_Cod = $Ses_Emp_Cod AND Wfm_Est = 'A';", $obBD_conexion);
+$wf_mgr->ensureVersioningSchema();
+$flujos_existentes = $wf_mgr->listarFlujosPublicados($Ses_Emp_Cod);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -676,12 +748,13 @@ $flujos_existentes = $obBD_con1->getArrayConsultaSql("SELECT Wfm_Cod, Wfm_Nom FR
                 <select id="selWorkflow" class="form-control form-control-sm" style="width: 180px; display: inline-block;">
                     <option value="">-- Seleccionar un Flujo --</option>
                     <?php foreach ($flujos_existentes as $flow) { ?>
-                        <option value="<?php echo $flow['Wfm_Cod']; ?>"><?php echo $flow['Wfm_Nom']; ?></option>
+                        <option value="<?php echo intval($flow['Wfm_Fam_Cod']); ?>"><?php echo htmlspecialchars($flow['Wfm_Nom'], ENT_QUOTES, 'UTF-8'); ?> (v<?php echo intval($flow['Wfm_Version']); ?>)</option>
                     <?php } ?>
                 </select>
                 <button class="btn btn-sm btn-info text-white fw-bold" onclick="cargarFlujo()"><i class="bi bi-folder-2-open"></i> Abrir</button>
                 <button class="btn btn-sm btn-primary fw-bold" onclick="abrirModalNuevoFlujo()"><i class="bi bi-plus-lg"></i> Nuevo</button>
-                <button class="btn btn-sm btn-success fw-bold" onclick="guardarFlujo()"><i class="bi bi-save"></i> Guardar</button>
+                <button class="btn btn-sm btn-success fw-bold" onclick="guardarFlujo()"><i class="bi bi-save"></i> Guardar borrador</button>
+            <button class="btn btn-sm btn-warning fw-bold text-dark" onclick="publicarFlujo()"><i class="bi bi-cloud-upload"></i> Publicar</button>
 
                 <span class="badge bg-primary p-2 ms-3" id="lblFlowActiveName" style="font-size: 12px; display: none;"><i class="bi bi-diagram-3-fill"></i> Flujo Activo: <span></span></span>
                 <!-- Inputs ocultos para mantener compatibilidad con el JS -->
@@ -699,19 +772,19 @@ $flujos_existentes = $obBD_con1->getArrayConsultaSql("SELECT Wfm_Cod, Wfm_Nom FR
                 <i class="bi bi-play-circle text-success"></i> Inicio
             </div>
             <div class="toolbox-item" draggable="true" data-type="APROBACION">
-                <i class="bi bi-check-circle text-primary"></i> Aprobaci�n
+                <i class="bi bi-check-circle text-primary"></i> Aprobación
             </div>
             <div class="toolbox-item" draggable="true" data-type="DECISION">
-                <i class="bi bi-shuffle text-warning"></i> Decisi�n
+                <i class="bi bi-shuffle text-warning"></i> Decisión
             </div>
             <div class="toolbox-item" draggable="true" data-type="RECEPCION">
-                <i class="bi bi-box-seam text-secondary"></i> Recepci�n
+                <i class="bi bi-box-seam text-secondary"></i> Recepción
             </div>
             <div class="toolbox-item" draggable="true" data-type="FACTURA">
                 <i class="bi bi-receipt text-info"></i> Factura
             </div>
             <div class="toolbox-item" draggable="true" data-type="NOTIFICACION">
-                <i class="bi bi-envelope text-dark"></i> Notificaci�n
+                <i class="bi bi-envelope text-dark"></i> Notificación
             </div>
             <div class="toolbox-item" draggable="true" data-type="TAREA">
                 <i class="bi bi-card-checklist text-muted"></i> Tarea
@@ -744,7 +817,7 @@ $flujos_existentes = $obBD_con1->getArrayConsultaSql("SELECT Wfm_Cod, Wfm_Nom FR
                 <input type="text" id="nodeName" class="form-control form-control-sm">
             </div>
             <div class="mb-3">
-                <label class="form-label">Descripci�n</label>
+                <label class="form-label">Descripción</label>
                 <textarea id="nodeDesc" class="form-control form-control-sm" rows="2"></textarea>
             </div>
             <div class="mb-3 sec-responsabilidad">
@@ -762,18 +835,18 @@ $flujos_existentes = $obBD_con1->getArrayConsultaSql("SELECT Wfm_Cod, Wfm_Nom FR
                 </div>
             </div>
             <div class="mb-3 sec-responsabilidad sec-asignacion-usuarios" style="display: none;">
-                <label class="form-label d-block">Asignaci�n de Usuarios</label>
+                <label class="form-label d-block">Asignación de Usuarios</label>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="radio" name="userAsigType" id="asigTodos" value="TODOS" checked onchange="toggleAsigType(this.value)">
                     <label class="form-check-label" for="asigTodos">Todos los del depto</label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="radio" name="userAsigType" id="asigEspecificos" value="ESPECIFICOS" onchange="toggleAsigType(this.value)">
-                    <label class="form-check-label" for="asigEspecificos">Usuarios espec�ficos</label>
+                    <label class="form-check-label" for="asigEspecificos">Usuarios específicos</label>
                 </div>
                 
                 <div id="secAsigEspecificosList" class="mt-2" style="display: none; max-height: 150px; overflow-y: auto; border: 1px solid #dee2e6; padding: 8px; border-radius: 4px; background: #fff;">
-                    <!-- Checkboxes de usuarios se cargar�n din�micamente aqu� -->
+                    <!-- Checkboxes de usuarios se cargarán dinámicamente aquí -->
                 </div>
             </div>
             <div class="mb-3 sec-responsabilidad" id="secNodePer">
@@ -786,7 +859,7 @@ $flujos_existentes = $obBD_con1->getArrayConsultaSql("SELECT Wfm_Cod, Wfm_Nom FR
                 </select>
             </div>
             <div class="mb-3 sec-sla">
-                <label class="form-label">Tiempo L�mite (Horas SLA)</label>
+                <label class="form-label">Tiempo Límite (Días SLA)</label>
                 <input type="number" id="nodeSla" class="form-control form-control-sm" min="0">
             </div>
             <div class="mb-3 form-check sec-checks">
@@ -800,7 +873,7 @@ $flujos_existentes = $obBD_con1->getArrayConsultaSql("SELECT Wfm_Cod, Wfm_Nom FR
         </div>
     </div>
 
-    <!-- Modal de Gesti�n de Usuarios por Departamento -->
+    <!-- Modal de Gestión de Usuarios por Departamento -->
     <div class="modal fade" id="modalDepUsers" tabindex="-1" role="dialog" aria-labelledby="modalDepUsersLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -812,7 +885,7 @@ $flujos_existentes = $obBD_con1->getArrayConsultaSql("SELECT Wfm_Cod, Wfm_Nom FR
                     <input type="hidden" id="manageDepCod">
                     <p class="text-muted small">Seleccione los usuarios que pertenecen a este departamento para el Workflow:</p>
                     <div id="depUsersList" class="list-group">
-                        <!-- Lista de usuarios con checkboxes se cargar� aqu� -->
+                        <!-- Lista de usuarios con checkboxes se cargarán aquí -->
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -834,11 +907,11 @@ $flujos_existentes = $obBD_con1->getArrayConsultaSql("SELECT Wfm_Cod, Wfm_Nom FR
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nombre del Flujo *</label>
-                        <input type="text" id="modalFlowName" class="form-control" placeholder="Ej. Aprobaci�n de Compras de Tecnolog�a" required>
+                        <input type="text" id="modalFlowName" class="form-control" placeholder="Ej. Aprobación de Compras de Tecnología" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Descripci�n / Notas</label>
-                        <textarea id="modalFlowDesc" class="form-control" rows="3" placeholder="Indique el prop�sito de este flujo..."></textarea>
+                        <label class="form-label fw-bold">Descripción / Notas</label>
+                        <textarea id="modalFlowDesc" class="form-control" rows="3" placeholder="Indique el propósito de este flujo..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">

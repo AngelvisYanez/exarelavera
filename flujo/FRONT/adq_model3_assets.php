@@ -245,13 +245,27 @@ require_once('../../mascaras/model3/estilos/estilos.php');
         font-weight: bold;
         color: #495057;
         text-align: center;
-        min-width: 90px;
+        min-width: 110px;
+        max-width: 150px;
         flex-shrink: 0;
     }
     .tracker-node.color-green { border-color: #198754; background-color: #e2f0d9; color: #198754; }
     .tracker-node.color-blue { border-color: #0d6efd; background-color: #cfe2ff; color: #0d6efd; box-shadow: 0 0 6px rgba(13,110,253,0.2); }
     .tracker-node.color-red { border-color: #dc3545; background-color: #f8d7da; color: #dc3545; }
     .tracker-node.color-grey { border-color: #6c757d; background-color: #f8f9fa; color: #6c757d; }
+    .tracker-actor {
+        font-size: 8px;
+        font-weight: 600;
+        display: block;
+        margin-top: 3px;
+        line-height: 1.25;
+        opacity: 0.95;
+        white-space: normal;
+        word-break: break-word;
+    }
+    .tracker-pendiente span {
+        display: block;
+    }
     .tracker-arrow { font-size: 14px; color: #6c757d; flex-shrink: 0; }
 
     .semaforo-dot {
@@ -295,20 +309,26 @@ require_once('../../mascaras/model3/estilos/estilos.php');
         color: #ffffff;
         border-top-left-radius: 6px;
         border-top-right-radius: 6px;
-        padding: 15px 20px;
+        padding: 8px 14px;
+        min-height: 0;
     }
     #mdlResolution .modal-header .close, #mdlSeguimiento .modal-header .close {
         color: #ffffff;
         opacity: 0.8;
-        font-size: 22px;
-        margin-top: -2px;
+        font-size: 20px;
+        line-height: 1;
+        margin-top: 0;
+        padding: 0;
     }
     #mdlResolution .modal-header .close:hover, #mdlSeguimiento .modal-header .close:hover {
         opacity: 1;
     }
     #mdlResolution .modal-title, #mdlSeguimiento .modal-title {
         font-weight: 700;
-        font-size: 16px;
+        font-size: 14px;
+        line-height: 1.25;
+        margin: 0;
+        padding-right: 24px;
         color: #ffffff;
     }
     #mdlResolution .modal-body, #mdlSeguimiento .modal-body {
