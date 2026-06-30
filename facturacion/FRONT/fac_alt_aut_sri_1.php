@@ -26,14 +26,14 @@ $ruta_xmls = $APP_REAL_PATH . "/facturacion/FRONT/$Ses_Emp_Cod/";
 if (isset($docsAjax)) {
     $resp = array('success' => true);
     $all = (!isset($type) || empty($type) || $type == 'TODOS');
-    $ventas = $all || $type == 'VENTAS' ? $obBD_con1->getArrayConsulta(1, $Ses_Emp_Cod . '*Tic_Sri!=4 AND Tic_Sri!=5  AND Tic_Sri!=0'      , $obBD_conexion) : array();
+    $ventas = $all || $type == 'VENTAS' ? $obBD_con1->getArrayConsulta(1, $Ses_Emp_Cod . '*Tic_Sri!=4 AND Tic_Sri!=5  AND Tic_Sri!=0', $obBD_conexion) : array();
     $notasc = $all || $type == 'NOTASC' ? $obBD_con1->getArrayConsulta(1, $Ses_Emp_Cod . '*Tic_Sri=4', $obBD_conexion) : array();
     $retenc = $all || $type == 'RETENC' ? $obBD_con1->getArrayConsulta(2, $Ses_Emp_Cod, $obBD_conexion) : array();
     $guiasr = $all || $type == 'GUIAS' ? $obBD_con1->getArrayConsulta(8, $Ses_Emp_Cod, $obBD_conexion) : array();
     $notasd = $all || $type == 'NOTASD' ? $obBD_con1->getArrayConsulta(1, $Ses_Emp_Cod . '*Tic_Sri=5', $obBD_conexion) : array();
     $liquidCompra = $all || $type == 'LIQUIDC' ? $obBD_con1->getArrayConsulta(12, $Ses_Emp_Cod . '*Tic_Cod=3', $obBD_conexion) : array();
 
-    $resp['rows'] = array_merge($retenc, array_merge($ventas, array_merge($notasc, array_merge($notasd, $guiasr, $liquidCompra ))));
+    $resp['rows'] = array_merge($retenc, array_merge($ventas, array_merge($notasc, array_merge($notasd, $guiasr, $liquidCompra))));
 
     foreach ($resp['rows'] as &$r) {
         $xml = $ruta_xmls . $r['Doc_Xml'];
@@ -73,12 +73,10 @@ if (isset($autorizaDocs)) {
 
             $doc = $DocElect->sendToSign($xml . ".xml", $ruta_xmls . $llave['Lla_Rut'], $llave['Lla_Cla']);
             //ChromePhp::log($DocElect);
-           
+
             if ($doc['success'] == true && !empty($doc['xml'])) {
                 $d['Doc_Fir'] = 'S';
             } else $d['Error'] = 'Error al Firmar el documento!. ' . $doc['message'];
-
-
         } else $d['Error'] = "Error no se encontro el <u>XML</u> de $d[Doc_Xml]!";
         //}
         if ($d['Doc_Fir'] == 'S' && $d['Doc_Env'] != 'S') {
@@ -108,19 +106,36 @@ if (isset($autorizaDocs)) {
                 $d['numeroAutorizacion'] = $result['numeroAutorizacion'];
                 $obBD_con1->operacionobBD(6, $d, $obBD_conexion);
 
-              //  $sql="UPDATE $Par_Sql[tabla] SET $Par_Sql[campo1]='$Par_Sql[numeroAutorizacion]',$Par_Sql[campo2]='S' WHERE $Par_Sql[cod]=$Par_Sql[Doc_Cod] ;";
+                //  $sql="UPDATE $Par_Sql[tabla] SET $Par_Sql[campo1]='$Par_Sql[numeroAutorizacion]',$Par_Sql[campo2]='S' WHERE $Par_Sql[cod]=$Par_Sql[Doc_Cod] ;";
 
 
                 if (is_readable($xml . ".xml")) unlink($xml . ".xml");
                 if (is_readable($xml . "_F.xml")) unlink($xml . "_F.xml");
 
-                if ($send_mail == true && $d['tabla'] != 'guias_remis') {
+                /*if ($send_mail == true && $d['tabla'] != 'guias_remis') {
                     $d['Doc_Mail'] = 'N';
                     if (!empty($d['Email']) && trim($d['Email']) != '' && trim($d['Email']) != '-' && trim($d['Email']) != '0') {
                         require_once('../LOGICA/fac_log_electronica.php');
                         //$obBD_elect=($d['tabla']=="retencion"?new Class_Log_Datos_Retencion_Elect:new Class_Log_Datos_Factura_Elect);
                         $obBD_elect = getClassElect($d['Type']);
                         $d['Doc_Mail'] = $obBD_elect->sendMailDoc($d['Doc_Cod'], $d['Email'], NULL, $obBD_conexion, true) == true ? 'S' : 'N';
+                        if ($d['Doc_Mail'] == 'N') $d['error'] = "<span>Error al enviar el email!<br/>[<i style='color:blue;'>Se autorizo corectamente pero no se pudo enviar el mail</i>]</span>";
+                    } else $d['error'] = "<span>Error al enviar el email!<br/>[<i style='color:blue;'>Se autorizo corectamente pero no se registro ningun email para enviar el documento</i>]</span>";
+                }*/
+
+                if ($send_mail == true) {
+                    $d['Doc_Mail'] = 'N';
+                    require_once('../LOGICA/fac_log_electronica.php');
+                    $obBD_elect = getClassElect($d['Type']);
+                    $mailTo = $d['Email'];
+                    if ($d['tabla'] == 'guias_remis') {
+                        $destEmails = $obBD_elect->getDestinatariosEmails($d['Doc_Cod'], $obBD_conexion);
+                        if (!empty($destEmails)) {
+                            $mailTo = $destEmails;
+                        }
+                    }
+                    if (!empty($mailTo) && trim($mailTo) != '' && trim($mailTo) != '-' && trim($mailTo) != '0') {
+                        $d['Doc_Mail'] = $obBD_elect->sendMailDoc($d['Doc_Cod'], $mailTo, NULL, $obBD_conexion, true) == true ? 'S' : 'N';
                         if ($d['Doc_Mail'] == 'N') $d['error'] = "<span>Error al enviar el email!<br/>[<i style='color:blue;'>Se autorizo corectamente pero no se pudo enviar el mail</i>]</span>";
                     } else $d['error'] = "<span>Error al enviar el email!<br/>[<i style='color:blue;'>Se autorizo corectamente pero no se registro ningun email para enviar el documento</i>]</span>";
                 }
@@ -136,7 +151,8 @@ if (isset($autorizaDocs)) {
     unset($d);
     $obBD_con1->echoJson($resp);
 }
-function esErrorSecuencialRegistradoSri($texto) {
+function esErrorSecuencialRegistradoSri($texto)
+{
     $texto = strtoupper(strip_tags($texto));
     return (preg_match('/\b45\b\s*:\s*SECUENCIAL\s+REGISTRADO/i', $texto) === 1)
         || (strpos($texto, '45') !== false && strpos($texto, 'SECUENCIAL REGISTRADO') !== false);
@@ -448,7 +464,7 @@ if (isset($autorizaSriDocs)) {
                             title: 'Error'
                         },
                         title: false,
-                        autoResizable: true 
+                        autoResizable: true
                     },
 
                     {
@@ -606,7 +622,7 @@ if (isset($autorizaSriDocs)) {
                     data: [v]
                 }, function(re) {
                     $.each(re['data'], function(i, v) {
-                        v['ErrorMsg'] = '<span style="padding:1px"><i class="glyphicon glyphicon-' + ((v['Doc_Aut'] === 'S') ? 'ok ' + ($.vv(v['Doc_Mail']) && v['Doc_Mail'] === 'N' ? 'orange' : 'green') : 'remove red') + '" style="font-size: 14px;"></i>'+  ''+ v['Error']+'</span>';
+                        v['ErrorMsg'] = '<span style="padding:1px"><i class="glyphicon glyphicon-' + ((v['Doc_Aut'] === 'S') ? 'ok ' + ($.vv(v['Doc_Mail']) && v['Doc_Mail'] === 'N' ? 'orange' : 'green') : 'remove red') + '" style="font-size: 14px;"></i>' + '' + v['Error'] + '</span>';
                         if (v['Doc_Aut'] !== 'S' && esErrorSecuencialRegistrado(v)) {
                             v['Doc_VerSri'] = 'S';
                         }

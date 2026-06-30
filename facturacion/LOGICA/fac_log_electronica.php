@@ -124,7 +124,7 @@ class Class_Log_Datos_Elect extends MysqlDatos
             $mail->IsSMTP();
             $mail->Host = "smtp.gmail.com";
             $mail->SMTPAuth = true;
-           /* $mail->Username = "exa.facturacion@gmail.com";
+            /* $mail->Username = "exa.facturacion@gmail.com";
             $mail->Password =  "owdjkcjdxvftwbxg";  //habilitar*/
 
             $mail->Username = "exacontable@gmail.com";
@@ -138,7 +138,7 @@ class Class_Log_Datos_Elect extends MysqlDatos
             /*$mail->From = "exa.facturacion@gmail.com"; 
             $mail->Sender = "exa.facturacion@gmail.com";*/
 
-            $mail->From = "exacontable@gmail.com"; 
+            $mail->From = "exacontable@gmail.com";
             $mail->Sender = "exacontable@gmail.com";
 
             $mail->FromName = $datos['Emp_Nom'];
@@ -155,7 +155,7 @@ class Class_Log_Datos_Elect extends MysqlDatos
                 $logo = realpath(dirname(__file__) . "/$datos[Emp_Log]");
                 $file_autorized = "$ruta/$datos[claveAcceso]_A.xml";
                 $file_ride = "$ruta/$datos[claveAcceso].pdf";
-                
+
                 $this->createPdfByString($file_autorized, $logo, 'F', false, "$ruta/");
                 $mail->AddAttachment($file_autorized, "$datos[claveAcceso].xml");
                 $mail->AddAttachment($file_ride, "$datos[claveAcceso].pdf");
@@ -164,7 +164,7 @@ class Class_Log_Datos_Elect extends MysqlDatos
             $mail->Send(); // Enviar el correo
             if (isset($file_ride) && is_file($file_ride)) unlink($file_ride);
         } catch (Exception $e) {
-            $ban = false; 
+            $ban = false;
             //ChromePhp::log($e);
         }
         return $ban;
@@ -238,7 +238,7 @@ class Class_Log_Datos_Elect extends MysqlDatos
         if ($op != 'F') exit();
     }
 
-   /* protected function saveXml($xml, $clave_acc)
+    /* protected function saveXml($xml, $clave_acc)
     {
         $Emp_Cod = $_SESSION['Ses_Emp_Cod'];
         if (!file_exists($Emp_Cod)) mkdir($Emp_Cod, 0777, true);
@@ -292,7 +292,6 @@ class Class_Log_Datos_Elect extends MysqlDatos
         if (is_string($input)) {
             //$input = str_ireplace(array('&', "'", "\"", '<', '>', "~", "^", "¿", "?"), array("&amp;", "&apos;", "&quot;", "&lt;", "&gt;", "", "", "", ""), trim($input));
             $input = str_ireplace(array('&', "\"", '<', '>', "~", "^", "¿", "?"), array("&amp;", "&apos;", "&quot;", "&lt;", "&gt;", "", "", "", ""), trim($input));
-        
         } else if (is_array($input)) {
             foreach ($input as &$value) {
                 $this->cleanEspecialChar($value);
@@ -496,6 +495,55 @@ class Class_Log_Datos_Guia_Elect extends Class_Log_Datos_Elect
         $this->createPdf($guia['Gui_Cod'], $obBD);
     }
 
+    function getDestinatariosEmails($Doc_Cod, $obBD)
+    {
+        $rows = $this->getArrayConsultaSql("SELECT TRIM(p.Prs_Cor) AS email, gd.Gui_Int
+            FROM guia_destino gd
+            INNER JOIN guia_persona gp ON gd.Gpe_Cod=gp.Gpe_Cod
+            INNER JOIN persona p ON gp.Prs_Cod=p.Prs_Cod
+            WHERE gd.Gui_Cod='$Doc_Cod'
+            AND p.Prs_Cor IS NOT NULL AND TRIM(p.Prs_Cor)<>'' AND TRIM(p.Prs_Cor)<>'-' AND TRIM(p.Prs_Cor)<>'0'
+            ORDER BY gd.Gui_Int", $obBD);
+        $emails = array();
+        foreach ($rows as $r) {
+            $e = trim($r['email']);
+            if ($e !== '' && !in_array($e, $emails, true)) {
+                $emails[] = $e;
+            }
+        }
+        return implode(',', $emails);
+    }
+
+    function getMailData($Doc_Cod, $obBD)
+    {
+        $row = $this->getRowConsultaSql("SELECT guias_remis.Gui_Cod, Gui_Fec AS Fecha, Gui_Xml AS claveAcceso,
+            CONCAT(sucursal.Suc_Sri,'-',autorizaci.Pun_Sri,'-',LPAD(CAST(guias_remis.Gui_Num AS CHAR),9,'0')) AS Secuencia,
+            Gui_Aut AS Aut,
+            IF(Gpe_Ras IS NULL OR Gpe_Ras='',CONCAT(persona.Prs_Ape,' ',persona.Prs_Nom),Gpe_Ras) AS transportista
+            FROM guias_remis
+            INNER JOIN guia_persona ON guia_persona.Gpe_Cod=guias_remis.Gpe_Cod
+            INNER JOIN persona ON guia_persona.Prs_Cod=persona.Prs_Cod
+            INNER JOIN autorizaci ON autorizaci.Aut_Cod=guias_remis.Aut_Cod
+            INNER JOIN puntos_imp ON puntos_imp.Pun_Cod=autorizaci.Pun_Cod
+            INNER JOIN sucursal ON sucursal.Suc_Cod=puntos_imp.Suc_Cod
+            WHERE guias_remis.Gui_Cod='$Doc_Cod';", $obBD);
+        if (!empty($row)) {
+            $dests = $this->getArrayConsultaSql("SELECT IF(Gpe_Ras IS NULL OR Gpe_Ras='',CONCAT(Prs_Ape,' ',Prs_Nom),Gpe_Ras) AS destinatario
+                FROM guia_destino
+                INNER JOIN guia_persona ON guia_destino.Gpe_Cod=guia_persona.Gpe_Cod
+                INNER JOIN persona ON guia_persona.Prs_Cod=persona.Prs_Cod
+                WHERE guia_destino.Gui_Cod='$Doc_Cod' ORDER BY guia_destino.Gui_Int", $obBD);
+            $names = array();
+            foreach ($dests as $d) {
+                if (!empty($d['destinatario']) && !in_array($d['destinatario'], $names, true)) {
+                    $names[] = $d['destinatario'];
+                }
+            }
+            $row['Destinatario'] = !empty($names) ? implode(', ', $names) : $row['transportista'];
+            unset($row['transportista']);
+        }
+        return $row;
+    }
     //XML  GUIA DE REMISION
     function createXmlGuiaRemision($Doc_Cod, $Aut_Cod, $clave_acc, $obBD)
     {
@@ -1063,7 +1111,7 @@ class Class_Log_Datos_Factura_Elect extends Class_Log_Datos_Elect
 
     protected function getSqlVentas($Doc_Cod)
     {
-       return "SELECT ventas.Vet_Cod, Vet_Aut, Vet_Xml, sucursal.Emp_Cod, persona.Prs_Cod, sucursal.Suc_Cod, ventas.Aut_Cod,
+        return "SELECT ventas.Vet_Cod, Vet_Aut, Vet_Xml, sucursal.Emp_Cod, persona.Prs_Cod, sucursal.Suc_Cod, ventas.Aut_Cod,
                 autorizaci.Pun_Cod, autorizaci.Tic_Cod, LPAD(CAST(Tic_Sri AS CHAR),2,'0') AS Tic_Sri, ventas.Caj_Cod, Vnd_Cod, Caj_Fec, Suc_Sri, Pun_Sri, ventas.Vet_Num,
                 CONCAT(Suc_Sri,'-',Pun_Sri,'-',LPAD(CAST(ventas.Vet_Num AS CHAR),9,'0')) AS Secuencia, 
                 IF(Vet_Xml IS NULL OR TRIM(Vet_Xml)='', Aut_Sri, IF(Vet_Sri IS NULL OR TRIM(Vet_Sri)='','PENDIENTE',Vet_Sri)) AS Autorizacion,
@@ -1335,7 +1383,7 @@ class Class_Log_Datos_Retencion_Elect extends Class_Log_Datos_Elect
             'parteRel'                    => $emp['Cof_Ret'] == '2.0' ? 'SI' : '',
             'razonSocialSujetoRetenido'   => $fact['Proveedor'],
             'identificacionSujetoRetenido' => $fact['Prs_Ced'],
-            'periodoFiscal'               => substr($fact['Cop_Fec'],5,2).'/'.substr($fact['Cop_Fec'],0,4) // la Retencion se reporta con el mes de la compra
+            'periodoFiscal'               => substr($fact['Cop_Fec'], 5, 2) . '/' . substr($fact['Cop_Fec'], 0, 4) // la Retencion se reporta con el mes de la compra
         );
         $this->unsetOpcionales($infoRet, array('tipoSujetoRetenido', 'parteRel'));
         $this->clearArray($infoRet, array('dirEstablecimiento', 'obligadoContabilidad', 'contribuyenteEspecial'));

@@ -13,6 +13,20 @@
  * 
  * @package inv.LOGICA
  */
+
+function guias_remis_email_sql()
+{
+    return "IFNULL(NULLIF(TRIM((SELECT GROUP_CONCAT(DISTINCT TRIM(p.Prs_Cor) ORDER BY gd.Gui_Int SEPARATOR ',')
+            FROM guia_destino gd
+            INNER JOIN guia_persona gp ON gd.Gpe_Cod=gp.Gpe_Cod
+            INNER JOIN persona p ON gp.Prs_Cod=p.Prs_Cod
+            WHERE gd.Gui_Cod=guias_remis.Gui_Cod
+            AND p.Prs_Cor IS NOT NULL AND TRIM(p.Prs_Cor)<>'' AND TRIM(p.Prs_Cor)<>'-' AND TRIM(p.Prs_Cor)<>'0')), ''),
+        IF(persona.Prs_Cor IS NULL OR TRIM(persona.Prs_Cor)='' OR TRIM(persona.Prs_Cor)='-' OR TRIM(persona.Prs_Cor)='0','',TRIM(persona.Prs_Cor))
+    )";
+}
+
+
 function sentencias_facele($id, $Par_Sql)
 {
     $sql = "";
@@ -66,13 +80,26 @@ function sentencias_facele($id, $Par_Sql)
             $sql = "SElECT * FROM confi_fact WHERE Emp_Cod=$Par_Sql[0];";
             //echo $sql.'<br/>';
             break;
-        case 8:
+        /*case 8:
             $sql = "SELECT 'GUIAS' AS Tipo, 'GUIAS' AS Type, 'guias_remis' AS tabla, 'Gui_Sri' AS campo1, 'Gui_Aut' AS campo2, 'Gui_Cod' AS cod, 'N' AS Doc_Fir, 'N' AS Doc_Env, Gui_Fec AS Doc_Fec, Gui_Num AS Doc_Num, Gui_Cod AS Doc_Cod, Gui_Aut AS Doc_Aut, Gui_Xml AS Doc_Xml, Gui_Sri AS Doc_Sri, '' AS Info_Adi FROM guias_remis                 
                         INNER JOIN guia_persona ON guia_persona.Gpe_Cod=guias_remis.Gpe_Cod  
                     WHERE Gui_Est='A' AND Gui_Aut='N' AND TRIM(coalesce(Gui_Xml, ''))<>'' AND Emp_Cod='$Par_Sql[0]'
                     ORDER BY Gui_Fei ASC, Doc_Num ASC;";
             //echo $sql.'<br/>';
+            break;*/
+
+        case 8:
+            $sql = "SELECT 'GUIAS' AS Tipo, 'GUIAS' AS Type, 'guias_remis' AS tabla, 'Gui_Sri' AS campo1, 'Gui_Aut' AS campo2, 'Gui_Cod' AS cod, 'N' AS Doc_Fir, 'N' AS Doc_Env, 'N' AS Doc_Mail, Gui_Fec AS Doc_Fec, Gui_Num AS Doc_Num, Gui_Cod AS Doc_Cod, Gui_Aut AS Doc_Aut, Gui_Xml AS Doc_Xml, Gui_Sri AS Doc_Sri, '' AS Info_Adi,
+                    " . guias_remis_email_sql() . " AS Email
+                    FROM guias_remis
+                        INNER JOIN guia_persona ON guia_persona.Gpe_Cod=guias_remis.Gpe_Cod
+                        INNER JOIN persona ON persona.Prs_Cod=guia_persona.Prs_Cod
+                    WHERE Gui_Est='A' AND Gui_Aut='N' AND TRIM(coalesce(Gui_Xml, ''))<>'' AND Emp_Cod='$Par_Sql[0]'
+                    ORDER BY Gui_Fei ASC, Doc_Num ASC;";
+            //echo $sql.'<br/>';
             break;
+
+
         case 9:
             $sql = "SELECT IF(Tic_Sri=4,'NOTAS DE CREDITO',IF(Tic_Sri=5,'NOTAS DE DEBITO','VENTAS')) AS Tipo, IF(Tic_Sri=4,'NOTASC',IF(Tic_Sri=5,'NOTASD','VENTAS')) AS Type, 'ventas' AS tabla, 'Vet_Sri' AS campo1, 'Vet_Aut' AS campo2,  'Vet_Cod' AS cod, 'N' AS Doc_Fir, 'N' AS Doc_Env, 'N' AS Doc_Mail, Caj_Fec AS Doc_Fec, Vet_Num AS Doc_Num, Vet_Cod AS Doc_Cod, Vet_Aut AS Doc_Aut, Vet_Xml AS Doc_Xml, Vet_Sri AS Doc_Sri, '' AS Info_Adi, IF(Cli_Cor IS NULL OR TRIM(Cli_Cor)='' OR TRIM(Cli_Cor)='-',IF(Prs_Cor IS NULL OR TRIM(Prs_Cor)='-','',Prs_Cor),Cli_Cor)AS Email FROM ventas 
                         INNER JOIN cliente ON cliente.Cli_Cod=ventas.Cli_Cod
@@ -91,13 +118,24 @@ function sentencias_facele($id, $Par_Sql)
                 WHERE Ret_Est='A' AND Ret_Aut='S' AND TRIM(coalesce(Ret_Xml, ''))<>'' AND Emp_Cod='$Par_Sql[0]' AND Ret_Num='$Par_Sql[1]' ORDER BY Ret_Fec;";
             //echo $sql.'<br/>';
             break;
-        case 11:
+        /*case 11:
             $sql = "SELECT 'GUIAS' AS Tipo, 'guias_remis' AS tabla, 'Gui_Sri' AS campo1, 'Gui_Aut' AS campo2, 'Gui_Cod' AS cod, 'N' AS Doc_Fir, 'N' AS Doc_Env, Gui_Fec AS Doc_Fec, Gui_Num AS Doc_Num, Gui_Cod AS Doc_Cod, Gui_Aut AS Doc_Aut, Gui_Xml AS Doc_Xml, Gui_Sri AS Doc_Sri, '' AS Info_Adi FROM guias_remis                 
                         INNER JOIN guia_persona ON guia_persona.Gpe_Cod=guias_remis.Gpe_Cod  
                     WHERE Gui_Est='A' AND Gui_Aut='S' AND TRIM(coalesce(Gui_Xml, ''))<>'' AND Emp_Cod='$Par_Sql[0]' AND Gui_Num='$Par_Sql[1]'
                     ORDER BY Gui_Fei ASC, Doc_Num ASC;";
             //echo $sql.'<br/>';
-            break;
+            break;*/
+  
+        case 11:
+            $sql = "SELECT 'GUIAS' AS Tipo, 'GUIAS' AS Type, 'guias_remis' AS tabla, 'Gui_Sri' AS campo1, 'Gui_Aut' AS campo2, 'Gui_Cod' AS cod, 'N' AS Doc_Fir, 'N' AS Doc_Env, 'N' AS Doc_Mail, Gui_Fec AS Doc_Fec, Gui_Num AS Doc_Num, Gui_Cod AS Doc_Cod, Gui_Aut AS Doc_Aut, Gui_Xml AS Doc_Xml, Gui_Sri AS Doc_Sri, '' AS Info_Adi,
+                    " . guias_remis_email_sql() . " AS Email
+                    FROM guias_remis
+                        INNER JOIN guia_persona ON guia_persona.Gpe_Cod=guias_remis.Gpe_Cod
+                        INNER JOIN persona ON persona.Prs_Cod=guia_persona.Prs_Cod
+                    WHERE Gui_Est='A' AND Gui_Aut='S' AND TRIM(coalesce(Gui_Xml, ''))<>'' AND Emp_Cod='$Par_Sql[0]' AND Gui_Num='$Par_Sql[1]'
+                    ORDER BY Gui_Fei ASC, Doc_Num ASC;";
+            //echo $sql.'<br/>';
+        break;
 
 
         case 12:

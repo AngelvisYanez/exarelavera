@@ -27,11 +27,11 @@ if(isset($docsAjax)){
     $ventas=$all||$type=='VENTAS'?$obBD_con1->getArrayConsulta(9, $Ses_Emp_Cod.'*Tic_Sri!=4 AND Tic_Sri!=5'.'*'.$search, $obBD_conexion):array();
     $notasc=$all||$type=='NOTASC'?$obBD_con1->getArrayConsulta(9, $Ses_Emp_Cod.'*Tic_Sri=4'.'*'.$search, $obBD_conexion):array();
     $retenc=$all||$type=='RETENC'?$obBD_con1->getArrayConsulta(10, $Ses_Emp_Cod.'*'.$search, $obBD_conexion):array();
-    //$guiasr=$all||$type=='GUIAS'?$obBD_con1->getArrayConsulta(11, $Ses_Emp_Cod.'*'.$search, $obBD_conexion):array();
+    $guiasr=$all||$type=='GUIAS'?$obBD_con1->getArrayConsulta(11, $Ses_Emp_Cod.'*'.$search, $obBD_conexion):array();
     $notasd=$all||$type=='NOTASD'?$obBD_con1->getArrayConsulta(9, $Ses_Emp_Cod.'*Tic_Sri=5'.'*'.$search, $obBD_conexion):array();
    
-    $resp['rows']=array_merge($retenc, array_merge($ventas, array_merge($notasc, /*array_merge(*/$notasd/*, $guiasr)*/ ) ) );
-    
+    //$resp['rows']=array_merge($retenc, array_merge($ventas, array_merge($notasc, /*array_merge(*/$notasd/*, $guiasr)*/ ) ) );
+     $resp['rows']=array_merge($retenc, array_merge($ventas, array_merge($notasc, array_merge($notasd, $guiasr))));
     foreach($resp['rows'] AS &$r){  
         $xml=$ruta_xmls.$r['Doc_Xml'];      
         if( $r['Doc_Aut']=='S' || is_readable($xml."_A.xml")){            
@@ -48,7 +48,7 @@ if(isset($docsAjax)){
 }
 if(isset($sendMail)){
     $resp=array('success'=>false);
-    if($tabla=='guias_remis'){ $resp['message']='EXA No envia mail a <b class="green">GUIAS DE REMISION</b>!'; $obBD_con1->echoJson($resp); }
+    //if($tabla=='guias_remis'){ $resp['message']='EXA No envia mail a <b class="green">GUIAS DE REMISION</b>!'; $obBD_con1->echoJson($resp); }
     if(!empty($Email)&&trim($Email)!=''&&trim($Email)!='-'&&trim($Email)!='0'){
         require_once('../LOGICA/fac_log_electronica.php');
         //$obBD_elect=($tabla=="retencion"?new Class_Log_Datos_Retencion_Elect:new Class_Log_Datos_Factura_Elect);        
@@ -106,7 +106,7 @@ $config=$obBD_con1->getRowConsulta(7, $Ses_Emp_Cod, $obBD_conexion);
                                             <option value="VENTAS">Ventas</option>
                                             <option value="NOTASC">Notas de Crédito</option>
                                             <option value="RETENC">Retenciones</option>
-                                            <!--<option value="GUIAS">Guias de Remisi�n</option>-->
+                                            <option value="GUIAS">Guias de Remisión</option>
                                             <option value="NOTASD">Notas de Débito</option>
                                         </select>
                                     </div>                                  
