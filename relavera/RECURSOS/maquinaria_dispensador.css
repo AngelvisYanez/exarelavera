@@ -1,0 +1,21 @@
+/* Estilos para Módulo de Control de Dispensador de Combustible */
+
+.header-exa {
+    background-color: #2c3e50;
+    color: white;
+}
+
+.btn-exa-success {
+    background-color: #27ae60;
+    color: white;
+    border-color: #2ecc71;
+}
+
+.btn-exa-success:hover {
+    background-color: #219653;
+    color: white;
+}
+
+.jqgrid-altrow {
+    background-color: #f9f9f9;
+}
