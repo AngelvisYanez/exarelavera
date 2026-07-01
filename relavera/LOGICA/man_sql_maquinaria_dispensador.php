@@ -124,7 +124,7 @@ function sentencias_maquinaria_dispensador($id, $Par_Sql)
             $sql = "SELECT DISTINCT pv.Prv_Cod, IF(p.Prs_Nom=p.Prs_Ape, p.Prs_Nom, CONCAT(p.Prs_Nom, ' ', p.Prs_Ape)) as proveedor_nombre
                     FROM proveedore pv
                     INNER JOIN persona p ON pv.Prs_Cod = p.Prs_Cod
-                    WHERE pv.Prv_Est = 'A' AND p.Emp_Cod = " . (int)$Par_Sql[0] . "
+                    WHERE pv.Prv_Est = 'A' AND pv.Emp_Cod = " . (int)$Par_Sql[0] . "
                     ORDER BY proveedor_nombre ASC";
             break;
 
@@ -360,7 +360,12 @@ function sentencias_maquinaria_dispensador($id, $Par_Sql)
             // Resumen General: Dispensadores, Existencia Total
             $sql = "SELECT 
                         COUNT(d.Dis_Cod) as total_dispensadores,
-                        SUM(d.existencia) as existencia_total,
+                        (SELECT 
+                            IFNULL(SUM(CASE WHEN m.Did_Tip IN ('IN', 'IC') THEN m.Did_Can ELSE 0 END), 0) - 
+                            IFNULL(SUM(CASE WHEN m.Did_Tip IN ('SA', 'SC') THEN m.Did_Can ELSE 0 END), 0)
+                         FROM maquinaria_dispensador_det m
+                         INNER JOIN maquinaria_dispensador md ON m.Dis_Cod = md.Dis_Cod
+                         WHERE m.Did_Est = 'A' AND md.Emp_Cod = " . (int)$Par_Sql[0] . ") as existencia_total,
                         (SELECT MAX(Cie_Fec) FROM maquinaria_dispensador_cierre WHERE Cie_Est = 'A' AND Emp_Cod = " . (int)$Par_Sql[0] . ") as ultimo_cierre
                     FROM maquinaria_dispensador d
                     WHERE d.Dis_Est = 'A' AND d.Emp_Cod = " . (int)$Par_Sql[0];
@@ -368,10 +373,9 @@ function sentencias_maquinaria_dispensador($id, $Par_Sql)
 
         case 23:
             // Movimientos: Mes y Día
-            // Par_Sql: 0=>Emp_Cod, 1=>Fecha_Inicio, 2=>Fecha_Fin, 3=>Dis_Cod(opcional), 4=>Combustible(opcional), 5=>Fecha_Hoy
-            $filtro = " AND m.Emp_Cod = " . (int)$Par_Sql[0];
+            $filtro = " AND d.Emp_Cod = " . (int)$Par_Sql[0];
             if (!empty($Par_Sql[3])) $filtro .= " AND m.Dis_Cod = " . (int)$Par_Sql[3];
-            if (!empty($Par_Sql[4])) $filtro .= " AND d.Dis_Com = '" . addslashes($Par_Sql[4]) . "'";
+            if (!empty($Par_Sql[4])) $filtro .= " AND d.Dis_Tip = '" . addslashes($Par_Sql[4]) . "'";
             
             $sql = "SELECT 
                         SUM(CASE WHEN m.Did_Tip IN ('IN','IC') AND DATE(m.Did_Fec) BETWEEN '" . addslashes($Par_Sql[1]) . "' AND '" . addslashes($Par_Sql[2]) . "' THEN m.Did_Can ELSE 0 END) as ingresos_mes,
@@ -380,7 +384,7 @@ function sentencias_maquinaria_dispensador($id, $Par_Sql)
                         SUM(CASE WHEN m.Did_Tip = 'IN' AND DATE(m.Did_Fec) = '" . addslashes($Par_Sql[5]) . "' THEN m.Did_Can ELSE 0 END) as in_dia,
                         SUM(CASE WHEN m.Did_Tip = 'IC' AND DATE(m.Did_Fec) = '" . addslashes($Par_Sql[5]) . "' THEN m.Did_Can ELSE 0 END) as ic_dia,
                         SUM(CASE WHEN m.Did_Tip = 'SC' AND DATE(m.Did_Fec) = '" . addslashes($Par_Sql[5]) . "' THEN m.Did_Can ELSE 0 END) as sc_dia
-                    FROM maquinaria_dispensador_movimiento m
+                    FROM maquinaria_dispensador_det m
                     LEFT JOIN maquinaria_dispensador d ON m.Dis_Cod = d.Dis_Cod
                     WHERE m.Did_Est = 'A' " . $filtro;
             break;
@@ -389,9 +393,10 @@ function sentencias_maquinaria_dispensador($id, $Par_Sql)
             // Estado de Dispensadores (Tarjetas)
             $filtro = "";
             if (!empty($Par_Sql[1])) $filtro .= " AND d.Dis_Cod = " . (int)$Par_Sql[1];
-            if (!empty($Par_Sql[2])) $filtro .= " AND d.Dis_Com = '" . addslashes($Par_Sql[2]) . "'";
-            $sql = "SELECT d.Dis_Cod, d.Dis_Nom, d.Dis_Com, d.Dis_Cap, d.existencia, d.Dis_Uni, 
-                           ROUND((d.existencia / d.Dis_Cap) * 100, 2) as pct_usado 
+            if (!empty($Par_Sql[2])) $filtro .= " AND d.Dis_Tip = '" . addslashes($Par_Sql[2]) . "'";
+            $sql = "SELECT d.Dis_Cod, d.Dis_Nom, d.Dis_Tip as Dis_Com, d.Dis_Cap, d.Dis_Uni, 
+                           IFNULL((SELECT IFNULL(SUM(CASE WHEN m.Did_Tip IN ('IN', 'IC') THEN m.Did_Can ELSE 0 END), 0) - IFNULL(SUM(CASE WHEN m.Did_Tip IN ('SA', 'SC') THEN m.Did_Can ELSE 0 END), 0) FROM maquinaria_dispensador_det m WHERE m.Dis_Cod = d.Dis_Cod AND m.Did_Est = 'A'), 0) as existencia,
+                           ROUND((IFNULL((SELECT IFNULL(SUM(CASE WHEN m.Did_Tip IN ('IN', 'IC') THEN m.Did_Can ELSE 0 END), 0) - IFNULL(SUM(CASE WHEN m.Did_Tip IN ('SA', 'SC') THEN m.Did_Can ELSE 0 END), 0) FROM maquinaria_dispensador_det m WHERE m.Dis_Cod = d.Dis_Cod AND m.Did_Est = 'A'), 0) / d.Dis_Cap) * 100, 2) as pct_usado 
                     FROM maquinaria_dispensador d 
                     WHERE d.Dis_Est = 'A' AND d.Emp_Cod = " . (int)$Par_Sql[0] . $filtro;
             break;
@@ -408,28 +413,29 @@ function sentencias_maquinaria_dispensador($id, $Par_Sql)
 
         case 26:
             // Top Maquinarias
-            $filtro = " AND m.Emp_Cod = " . (int)$Par_Sql[0];
+            $filtro = " AND d.Emp_Cod = " . (int)$Par_Sql[0];
             if (!empty($Par_Sql[3])) $filtro .= " AND m.Dis_Cod = " . (int)$Par_Sql[3];
-            if (!empty($Par_Sql[4])) $filtro .= " AND d.Dis_Com = '" . addslashes($Par_Sql[4]) . "'";
-            $sql = "SELECT v.vehiculo_nombre, SUM(m.Did_Can) as consumo, u.Usu_Ape, u.Usu_Nom
-                    FROM maquinaria_dispensador_movimiento m
-                    LEFT JOIN vehiculo v ON m.Veh_Cod = v.vehiculo_codigo
+            if (!empty($Par_Sql[4])) $filtro .= " AND d.Dis_Tip = '" . addslashes($Par_Sql[4]) . "'";
+            $sql = "SELECT CONCAT(v.Veh_Pla, ' ', IFNULL(v.Veh_Mar, '')) as vehiculo_nombre, SUM(m.Did_Can) as consumo, pu.Prs_Ape as Usu_Ape, pu.Prs_Nom as Usu_Nom
+                    FROM maquinaria_dispensador_det m
+                    LEFT JOIN vehiculo v ON m.Veh_Cod = v.Veh_Cod
                     LEFT JOIN usuarios u ON m.Usu_Cod = u.Usu_Cod
+                    LEFT JOIN persona pu ON u.Prs_Cod = pu.Prs_Cod
                     LEFT JOIN maquinaria_dispensador d ON m.Dis_Cod = d.Dis_Cod
                     WHERE m.Did_Est = 'A' AND m.Did_Tip = 'SA' 
                       AND DATE(m.Did_Fec) BETWEEN '" . addslashes($Par_Sql[1]) . "' AND '" . addslashes($Par_Sql[2]) . "'
                       " . $filtro . "
-                    GROUP BY m.Veh_Cod, v.vehiculo_nombre, u.Usu_Ape, u.Usu_Nom
+                    GROUP BY m.Veh_Cod, vehiculo_nombre, pu.Prs_Ape, pu.Prs_Nom
                     ORDER BY consumo DESC LIMIT 5";
             break;
 
         case 27:
             // Gráfico Consumo Diario
-            $filtro = " AND m.Emp_Cod = " . (int)$Par_Sql[0];
+            $filtro = " AND d.Emp_Cod = " . (int)$Par_Sql[0];
             if (!empty($Par_Sql[3])) $filtro .= " AND m.Dis_Cod = " . (int)$Par_Sql[3];
-            if (!empty($Par_Sql[4])) $filtro .= " AND d.Dis_Com = '" . addslashes($Par_Sql[4]) . "'";
+            if (!empty($Par_Sql[4])) $filtro .= " AND d.Dis_Tip = '" . addslashes($Par_Sql[4]) . "'";
             $sql = "SELECT DATE(m.Did_Fec) as fecha, SUM(m.Did_Can) as consumo
-                    FROM maquinaria_dispensador_movimiento m
+                    FROM maquinaria_dispensador_det m
                     LEFT JOIN maquinaria_dispensador d ON m.Dis_Cod = d.Dis_Cod
                     WHERE m.Did_Est = 'A' AND m.Did_Tip = 'SA' 
                       AND DATE(m.Did_Fec) BETWEEN '" . addslashes($Par_Sql[1]) . "' AND '" . addslashes($Par_Sql[2]) . "'

@@ -7,7 +7,7 @@ $(document).ready(function () {
     inicializarGridKardex();
     inicializarGridCierres();
 
-    // Reajustar grids si la ventana cambia de tamaño
+    // Reajustar grids si la ventana cambia de tamaÃ±o
     $(window).resize(function () {
         if (typeof exaUiFitJqGrid === "function") {
             if ($("#tab-dispensadores").hasClass("active")) {
@@ -446,7 +446,7 @@ function guardarIngreso(btn) {
 
     if (Did_Tip == "") { $.alert("Seleccione el tipo de ingreso."); return; }
     if (Did_Tip == "IN" && Prv_Cod == "") { $.alert("Seleccione un proveedor."); return; }
-    if (Did_Tip == "IC" && Veh_Cod == "") { $.alert("Seleccione un vehículo consignado."); return; }
+    if (Did_Tip == "IC" && Veh_Cod == "") { $.alert("Seleccione un vehï¿½culo consignado."); return; }
     if (Dis_Cod == "") { $.alert("Seleccione un dispensador."); return; }
     if (Did_Fec == "") { $.alert("Ingrese la fecha."); return; }
     if (isNaN(Did_Can) || Did_Can <= 0) { $.alert("La cantidad debe ser mayor a cero."); return; }
@@ -753,7 +753,7 @@ function guardarDespacho(btn) {
     var extActual = parseFloat($("#existencia_actual_out").val());
 
     if (Did_Tip == "") { $.alert("Seleccione el tipo de salida."); return; }
-    if (Did_Tip == "SA" && Veh_Cod == "") { $.alert("Seleccione una maquinaria/vehículo."); return; }
+    if (Did_Tip == "SA" && Veh_Cod == "") { $.alert("Seleccione una maquinaria/vehï¿½culo."); return; }
     if (Did_Tip == "SC" && Did_Obs == "") { $.alert("Debe ingresar el motivo del ajuste negativo."); return; }
     if (Dis_Cod == "") { $.alert("Seleccione un dispensador."); return; }
     if (Did_Fec == "") { $.alert("Ingrese la fecha."); return; }
@@ -948,7 +948,7 @@ function cargarInfoDispensadorAj(dis_cod) {
         },
         error: function () {
             if (typeof $.carga === 'function') { $.carga('hide'); }
-            $.alert('Error de conexión.');
+            $.alert('Error de conexiï¿½n.');
         }
     });
 }
@@ -988,7 +988,7 @@ function guardarAjuste(btn) {
     var Did_Obs = $.trim($('#Did_Obs_Aj').val());
 
     if (!Dis_Cod || !Did_Tip || !Did_Fec || isNaN(Did_Can) || Did_Can <= 0 || !Did_Obs) {
-        $.alert('Por favor, complete todos los campos obligatorios (*) y asegúrese de que la cantidad sea mayor a 0. El motivo es indispensable.');
+        $.alert('Por favor, complete todos los campos obligatorios (*) y asegï¿½rese de que la cantidad sea mayor a 0. El motivo es indispensable.');
         return;
     }
 
@@ -1037,13 +1037,13 @@ function guardarAjuste(btn) {
         error: function () {
             $btn.prop('disabled', false).removeClass('is-loading');
             if (typeof $.carga === 'function') { $.carga('hide'); }
-            $.alert('Error de conexión.');
+            $.alert('Error de conexiï¿½n.');
         }
     });
 }
 
 function anularAjuste(didCod) {
-    if (confirm('¿Está seguro de anular este ajuste? La existencia será recalculada.')) {
+    if (confirm('ï¿½Estï¿½ seguro de anular este ajuste? La existencia serï¿½ recalculada.')) {
         if (typeof $.carga === 'function') { $.carga('show'); }
         $.ajax({
             url: window.location.href,
@@ -1061,7 +1061,7 @@ function anularAjuste(didCod) {
             },
             error: function () {
                 if (typeof $.carga === 'function') { $.carga('hide'); }
-                $.alert('Error de conexión.');
+                $.alert('Error de conexiï¿½n.');
             }
         });
     }
@@ -1074,7 +1074,7 @@ function inicializarGridKardex() {
     $('#gridKardex').jqGrid({
         url: window.location.href + (window.location.href.indexOf('?') > -1 ? '&' : '?') + 'listKardexAjax=true',
         mtype: 'GET',
-        datatype: 'local', // Inicia local para no cargar automáticamente al inicio
+        datatype: 'local', // Inicia local para no cargar automï¿½ticamente al inicio
         postData: {
             fec_ini: function () { return $('#filtro_fec_ini_kx').val(); },
             fec_fin: function () { return $('#filtro_fec_fin_kx').val(); },
@@ -1151,7 +1151,7 @@ function imprimirKardex() {
     var dis_nom = $('#filtro_Dis_Cod_Kx option:selected').text();
     var now = new Date().toLocaleString();
 
-    var header = "<div style=\"text-align:center; margin-bottom: 20px;\"><h2>CONTROL DE COMBUSTIBLE</h2><h3>KARDEX DE DISPENSADOR</h3><p><strong>Período:</strong> " + fec_ini + " a " + fec_fin + "</p><p><strong>Dispensador:</strong> " + dis_nom + "</p><p><strong>Fecha generación:</strong> " + now + "</p></div>";
+    var header = "<div style=\"text-align:center; margin-bottom: 20px;\"><h2>CONTROL DE COMBUSTIBLE</h2><h3>KARDEX DE DISPENSADOR</h3><p><strong>Perï¿½odo:</strong> " + fec_ini + " a " + fec_fin + "</p><p><strong>Dispensador:</strong> " + dis_nom + "</p><p><strong>Fecha generaciï¿½n:</strong> " + now + "</p></div>";
 
     document.body.innerHTML = header + printContents;
     window.print();
@@ -1172,7 +1172,7 @@ function inicializarGridCierres() {
             Dis_Cod: function () { return $('#filtro_Dis_Cod_Cie').val(); },
             Cie_Estado: function () { return $('#filtro_Cie_Estado').val(); }
         },
-        colNames: ['ID', 'Fecha', 'Dispensador', 'Inicial', 'Ingresos', 'Salidas', 'Teórico', 'Físico', 'Diferencia', 'Estado', 'Usuario', 'Acciones'],
+        colNames: ['ID', 'Fecha', 'Dispensador', 'Inicial', 'Ingresos', 'Salidas', 'Teï¿½rico', 'Fï¿½sico', 'Diferencia', 'Estado', 'Usuario', 'Acciones'],
         colModel: [
             { name: 'Cie_Cod', index: 'Cie_Cod', hidden: true },
             { name: 'Cie_Fec', index: 'Cie_Fec', width: 100, align: 'center' },
@@ -1282,14 +1282,14 @@ function cargarCalculoPrevioCierre() {
                 $('#boxCalculoTeorico').show();
                 calcularDiferenciaCierre();
             } else {
-                $.alert(res.message || 'Error al obtener cálculo.');
+                $.alert(res.message || 'Error al obtener cï¿½lculo.');
                 $('#boxCalculoTeorico').hide();
                 $('#btnGuardarCierre').prop('disabled', true);
             }
         },
         error: function () {
             if (typeof $.carga === 'function') { $.carga('hide'); }
-            $.alert('Error de conexión.');
+            $.alert('Error de conexiï¿½n.');
         }
     });
 }
@@ -1377,13 +1377,13 @@ function guardarCierre(form) {
         error: function () {
             $btn.prop('disabled', false).removeClass('is-loading');
             if (typeof $.carga === 'function') { $.carga('hide'); }
-            $.alert('Error de conexión.');
+            $.alert('Error de conexiï¿½n.');
         }
     });
 }
 
 function anularCierre(cieCod) {
-    if (confirm('¿Está seguro de anular este Cierre Diario?')) {
+    if (confirm('ï¿½Estï¿½ seguro de anular este Cierre Diario?')) {
         if (typeof $.carga === 'function') { $.carga('show'); }
         $.ajax({
             url: window.location.href,
@@ -1401,7 +1401,7 @@ function anularCierre(cieCod) {
             },
             error: function () {
                 if (typeof $.carga === 'function') { $.carga('hide'); }
-                $.alert('Error de conexión.');
+                $.alert('Error de conexiï¿½n.');
             }
         });
     }
@@ -1423,6 +1423,8 @@ function loadDashboard() {
         $.alert('Debe seleccionar fecha de inicio y fin.');
         return;
     }
+    
+    if (typeof $.carga === 'function') { $.carga('show'); }
     
     $.ajax({
         url: window.location.href,

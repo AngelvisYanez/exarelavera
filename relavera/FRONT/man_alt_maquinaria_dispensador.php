@@ -9,6 +9,93 @@ $obBD_conexion = new Class_Log_Conexion_Maquinaria_Dispensador($Ses_Dat_Dis);
 $obBD_con1 = new Class_Log_Datos_Maquinaria_Dispensador;
 
 
+// ======================================================================
+// MANEJO DE PETICIONES AJAX - FASE 6 (DASHBOARD)
+// ======================================================================
+if (isset($_POST['getDashboardAjax'])) {
+    $fecha_ini = isset($_POST['fecha_ini']) ? $_POST['fecha_ini'] : date('Y-m-01');
+    $fecha_fin = isset($_POST['fecha_fin']) ? $_POST['fecha_fin'] : date('Y-m-t');
+    $dispensador = isset($_POST['dis_cod']) ? $_POST['dis_cod'] : '';
+
+    $response = array(
+        'success' => true,
+        'general' => array(
+            'total_dispensadores' => 0,
+            'existencia_total' => 0,
+            'ultimo_cierre' => '-'
+        ),
+        'movimientos' => array(
+            'ingresos_mes' => 0,
+            'despachos_mes' => 0,
+            'consumo_dia' => 0,
+            'in_dia' => 0,
+            'ic_dia' => 0,
+            'sc_dia' => 0
+        ),
+        'cierre' => array(
+            'Cie_Fec' => '-',
+            'Cie_Estado' => '-',
+            'Cie_Dif' => 0
+        ),
+        'dispensadores' => array(),
+        'grafico' => array(),
+        'top_maq' => array(),
+        'alertas' => array()
+    );
+
+    $emp_cod = $_SESSION['Ses_Emp_Cod'];
+    $f_hoy = date('Y-m-d');
+
+    // Resumen General (22)
+    $res22 = $obBD_con1->getArrayConsulta(22, array($emp_cod), $obBD_conexion);
+    if ($res22 && count($res22) > 0) {
+        $response['general']['total_dispensadores'] = $res22[0]['total_dispensadores'];
+        $response['general']['existencia_total'] = $res22[0]['existencia_total'];
+        $response['general']['ultimo_cierre'] = $res22[0]['ultimo_cierre'];
+    }
+
+    // Movimientos (23)
+    $res23 = $obBD_con1->getArrayConsulta(23, array($emp_cod, $fecha_ini, $fecha_fin, $dispensador, '', $f_hoy), $obBD_conexion);
+    if ($res23 && count($res23) > 0) {
+        $response['movimientos']['ingresos_mes'] = $res23[0]['ingresos_mes'];
+        $response['movimientos']['despachos_mes'] = $res23[0]['despachos_mes'];
+        $response['movimientos']['consumo_dia'] = $res23[0]['consumo_dia'];
+        $response['movimientos']['in_dia'] = $res23[0]['in_dia'];
+        $response['movimientos']['ic_dia'] = $res23[0]['ic_dia'];
+        $response['movimientos']['sc_dia'] = $res23[0]['sc_dia'];
+    }
+
+    // Ultimo Cierre (25)
+    $res25 = $obBD_con1->getArrayConsulta(25, array($emp_cod, $dispensador), $obBD_conexion);
+    if ($res25 && count($res25) > 0) {
+        $response['cierre']['Cie_Fec'] = $res25[0]['Cie_Fec'];
+        $response['cierre']['Cie_Estado'] = $res25[0]['Cie_Estado'];
+        $response['cierre']['Cie_Dif'] = $res25[0]['Cie_Dif'];
+    }
+
+    // Tarjetas Dispensadores (24)
+    $res24 = $obBD_con1->getArrayConsulta(24, array($emp_cod, $dispensador, ''), $obBD_conexion);
+    if ($res24) {
+        $obBD_con1->utf8_change_param($res24);
+        $response['dispensadores'] = $res24;
+    }
+
+    // Top Maquinarias (26)
+    $res26 = $obBD_con1->getArrayConsulta(26, array($emp_cod, $fecha_ini, $fecha_fin, $dispensador, ''), $obBD_conexion);
+    if ($res26) {
+        $obBD_con1->utf8_change_param($res26);
+        $response['top_vehiculos'] = $res26;
+    }
+
+    // Gráfico Consumo Diario (27)
+    $res27 = $obBD_con1->getArrayConsulta(27, array($emp_cod, $fecha_ini, $fecha_fin, $dispensador, ''), $obBD_conexion);
+    if ($res27) {
+        $response['grafico'] = $res27;
+    }
+
+    echo json_encode($response);
+    exit;
+}
 
 // ======================================================================
 // MANEJO DE PETICIONES AJAX - FASE 5 (CIERRE DIARIO)
@@ -20,7 +107,7 @@ if (isset($_GET['listCierresAjax'])) {
         $limit = isset($_GET['rows']) ? (int)$_GET['rows'] : 50;
         $start = ($limit * $page) - $limit;
         if ($start < 0) $start = 0;
-        
+
         $params = array(
             0 => $_SESSION['Ses_Emp_Cod'],
             'fec_ini' => isset($_GET['fec_ini']) ? $_GET['fec_ini'] : '',
@@ -28,12 +115,12 @@ if (isset($_GET['listCierresAjax'])) {
             'Dis_Cod' => isset($_GET['Dis_Cod']) ? $_GET['Dis_Cod'] : '',
             'Cie_Estado' => isset($_GET['Cie_Estado']) ? $_GET['Cie_Estado'] : ''
         );
-        
+
         $params['limits'] = "";
         $total_arr = $obBD_con1->getArrayConsulta(18, $params, $obBD_conexion);
         $count = (int)$total_arr[0]['total'];
         $total_pages = ($count > 0 && $limit > 0) ? ceil($count / $limit) : 0;
-        
+
         $params['limits'] = "LIMIT $start, $limit";
         $rows = $obBD_con1->getArrayConsulta(18, $params, $obBD_conexion);
         if ($rows) {
@@ -41,13 +128,15 @@ if (isset($_GET['listCierresAjax'])) {
         } else {
             $rows = array();
         }
-        
+
         $response = array();
         $response['page'] = $page;
         $response['total'] = $total_pages;
         $response['records'] = $count;
         $response['rows'] = $rows;
-        
+
+
+
         $obBD_con1->echoJson($response);
     } catch (Exception $e) {
         $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
@@ -96,7 +185,7 @@ if (isset($_POST['saveCierreAjax'])) {
         if ($res_check[0]['existe_cierre'] > 0) {
             throw new Exception("Ya existe un cierre registrado para este dispensador en la fecha seleccionada.");
         }
-        
+
         $params = array(
             0 => $_SESSION['Ses_Emp_Cod'],
             1 => $_POST['Cie_Dis_Cod'],
@@ -111,11 +200,12 @@ if (isset($_POST['saveCierreAjax'])) {
             10 => $_POST['Cie_Estado'],
             11 => utf8_decode(isset($_POST['Cie_Obs']) ? $_POST['Cie_Obs'] : '')
         );
-        
-        if (!$obBD_con1->getSqlConsulta(20, $params, $obBD_conexion)) {
-            throw new Exception("Error al guardar el cierre.");
+
+        $obBD_con1->operacionobBD(20, $params, $obBD_conexion);
+        if ($obBD_con1->Error != 0) {
+            throw new Exception("Error al guardar el cierre: " . $obBD_con1->getMsgError());
         }
-        
+
         $resp['success'] = true;
         $resp['message'] = 'Cierre diario guardado correctamente.';
     } catch (Exception $e) {
@@ -134,8 +224,9 @@ if (isset($_POST['changeEstadoCierreAjax'])) {
     $obBD_con1->inicio_transaccion($obBD_conexion);
     try {
         $params = array(0 => $_POST['Cie_Cod']);
-        if (!$obBD_con1->getSqlConsulta(21, $params, $obBD_conexion)) {
-            throw new Exception("Error al anular el cierre.");
+        $obBD_con1->operacionobBD(21, $params, $obBD_conexion);
+        if ($obBD_con1->Error != 0) {
+            throw new Exception("Error al anular el cierre: " . $obBD_con1->getMsgError());
         }
         $resp['success'] = true;
         $resp['message'] = 'Cierre anulado correctamente.';
@@ -176,6 +267,8 @@ if (isset($_GET['listGridAjax'])) {
     } else {
         $response['rows'] = array();
     }
+
+
     $obBD_con1->echoJson($response);
     exit;
 }
@@ -268,6 +361,8 @@ if (isset($_GET['listIngresosGridAjax'])) {
     } else {
         $response['rows'] = array();
     }
+
+
     $obBD_con1->echoJson($response);
     exit;
 }
@@ -391,6 +486,8 @@ if (isset($_GET['listDespachosGridAjax'])) {
     } else {
         $response['rows'] = array();
     }
+
+
     $obBD_con1->echoJson($response);
     exit;
 }
@@ -499,6 +596,8 @@ if (isset($_GET['listAjustesGridAjax'])) {
     } else {
         $response['rows'] = array();
     }
+
+
     $obBD_con1->echoJson($response);
     exit;
 }
@@ -664,6 +763,8 @@ if (isset($_GET['listKardexAjax'])) {
         );
 
         $obBD_con1->utf8_change_param($response);
+
+
         $obBD_con1->echoJson($response);
     } catch (Exception $e) {
         $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
@@ -695,39 +796,7 @@ $obBD_con1->utf8_change_param($vehiculos);
     <?php require_once('../../mascaras/model3/estilos/estilos.php'); ?>
     <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
     <link rel="stylesheet" type="text/css" href="../RECURSOS/maquinaria_dispensador.css" />
-    <style>
-        .jconfirm,
-        .jconfirm-bg {
-            z-index: 1060 !important;
-        }
-
-        .info-box {
-            background: #f8f9fa;
-            padding: 10px;
-            border-left: 4px solid #007bff;
-            margin-bottom: 15px;
-        }
-
-        .info-label {
-            font-weight: bold;
-            color: #555;
-        }
-
-        .info-value {
-            color: #000;
-            font-size: 1.1em;
-        }
-
-        .nav-tabs>li.active>a,
-        .nav-tabs>li.active>a:focus,
-        .nav-tabs>li.active>a:hover {
-            font-weight: bold;
-        }
-
-        .tab-pane {
-            padding-top: 15px;
-        }
-    </style>
+    
 </HEAD>
 
 <BODY>
@@ -745,7 +814,7 @@ $obBD_con1->utf8_change_param($vehiculos);
                 <!-- <li><a data-toggle="tab" href="#tab-ajustes"><i class="fa fa-sliders"></i> Ajustes</a></li> -->
                 <li><a data-toggle="tab" href="#tab-kardex"><i class="fa fa-exchange"></i> Kardex</a></li>
                 <li><a data-toggle="tab" href="#tab-cierre"><i class="fa fa-lock"></i> Cierre Diario</a></li>
-                <li><a data-toggle="tab" href="#tab-reportes"><i class="fa fa-file-text-o"></i> Reportes</a></li>
+                <!-- <li><a data-toggle="tab" href="#tab-reportes"><i class="fa fa-file-text-o"></i> Reportes</a></li> -->
             </ul>
 
             <div class="tab-content">
@@ -753,189 +822,208 @@ $obBD_con1->utf8_change_param($vehiculos);
                 <!-- PENDIENTES DE IMPLEMENTACIÓN    -->
                 <!-- =============================== -->
                 <div id="tab-dashboard" class="tab-pane fade">
-    <div class="row" style="margin-bottom: 15px;">
-        <!-- Filtros Superiores -->
-        <div class="col-md-12">
-            <div class="box box-primary">
-                <div class="box-header with-border">
-                    <h3 class="box-title"><i class="fa fa-filter"></i> Filtros del Dashboard</h3>
-                </div>
-                <div class="box-body">
-                    <form id="formFiltrosDashboard" onsubmit="event.preventDefault(); loadDashboard();">
-                        <div class="row">
-                            <div class="col-md-3">
-                                <label>Fecha Inicio</label>
-                                <input type="date" id="dash_fec_ini" class="form-control" value="<?php echo date('Y-m-01'); ?>">
-                            </div>
-                            <div class="col-md-3">
-                                <label>Fecha Fin</label>
-                                <input type="date" id="dash_fec_fin" class="form-control" value="<?php echo date('Y-m-t'); ?>">
-                            </div>
-                            <div class="col-md-3">
-                                <label>Dispensador (Opcional)</label>
-                                <select id="dash_dis_cod" class="form-control">
-                                    <option value="0">- Todos los Dispensadores -</option>
-                                    <?php foreach ($dispensadores as $d) { echo "<option value='{\$d['Dis_Cod']}'>{\$d['Dis_Nom']}</option>"; } ?>
-                                </select>
-                            </div>
-                            <div class="col-md-3" style="padding-top: 25px;">
-                                <button type="button" class="btn btn-primary btn-block" onclick="loadDashboard()"><i class="fa fa-refresh"></i> Actualizar Dashboard</button>
+                    <div class="row" style="margin-bottom: 15px;">
+                        <!-- Filtros Superiores -->
+                        <div class="col-md-12">
+                            <div class="box box-primary">
+                                <div class="box-header with-border">
+                                    <h3 class="box-title"><i class="fa fa-filter"></i> Filtros del Dashboard</h3>
+                                </div>
+                                <div class="box-body">
+                                    <form id="formFiltrosDashboard" onsubmit="event.preventDefault(); loadDashboard();">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <label>Fecha Inicio</label>
+                                                <input type="date" id="dash_fec_ini" class="form-control" value="<?php echo date('Y-m-01'); ?>">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label>Fecha Fin</label>
+                                                <input type="date" id="dash_fec_fin" class="form-control" value="<?php echo date('Y-m-t'); ?>">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label>Dispensador (Opcional)</label>
+                                                <select id="dash_dis_cod" class="form-control">
+                                                    <option value="0">- Todos los Dispensadores -</option>
+                                                    <?php foreach ($dispensadores as $d) {
+                                                        echo "<option value='{$d['Dis_Cod']}'>{$d['Dis_Nom']}</option>";
+                                                    } ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3" style="padding-top: 25px;">
+                                                <button type="button" class="btn btn-primary btn-block" onclick="loadDashboard()"><i class="fa fa-refresh"></i> Actualizar Dashboard</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+                    </div>
 
-    <!-- SECCIÓN 6: ALERTAS -->
-    <div class="row" id="dash_alertas_container" style="display:none;">
-        <div class="col-md-12">
-            <div class="alert alert-warning alert-dismissible">
-                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                <h4><i class="icon fa fa-warning"></i> Alertas de Sistema</h4>
-                <ul id="dash_alertas_list" style="margin:0; padding-left:20px;"></ul>
-            </div>
-        </div>
-    </div>
+                    <!-- SECCIÓN 6: ALERTAS -->
+                    <div class="row" id="dash_alertas_container" style="display:none;">
+                        <div class="col-md-12">
+                            <div class="alert alert-warning alert-dismissible">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                <h4><i class="icon fa fa-warning"></i> Alertas de Sistema</h4>
+                                <ul id="dash_alertas_list" style="margin:0; padding-left:20px;"></ul>
+                            </div>
+                        </div>
+                    </div>
 
-    <!-- SECCIÓN 1: RESUMEN GENERAL (Tarjetas Superiores) -->
-    <div class="row">
-        <div class="col-lg-2 col-xs-6">
-            <div class="small-box bg-aqua">
-                <div class="inner">
-                    <h3 id="dash_gen_disp">0</h3>
-                    <p>Dispensadores Activos</p>
-                </div>
-                <div class="icon"><i class="fa fa-hdd-o"></i></div>
-            </div>
-        </div>
-        <div class="col-lg-2 col-xs-6">
-            <div class="small-box bg-green">
-                <div class="inner">
-                    <h3 id="dash_gen_ext">0</h3>
-                    <p>Existencia Total (Gl)</p>
-                </div>
-                <div class="icon"><i class="fa fa-cubes"></i></div>
-            </div>
-        </div>
-        <div class="col-lg-2 col-xs-6">
-            <div class="small-box bg-blue">
-                <div class="inner">
-                    <h3 id="dash_gen_ing">0</h3>
-                    <p>Ingresos del Per&iacute;odo</p>
-                </div>
-                <div class="icon"><i class="fa fa-arrow-down"></i></div>
-            </div>
-        </div>
-        <div class="col-lg-2 col-xs-6">
-            <div class="small-box bg-red">
-                <div class="inner">
-                    <h3 id="dash_gen_sal">0</h3>
-                    <p>Despachos Per&iacute;odo</p>
-                </div>
-                <div class="icon"><i class="fa fa-arrow-up"></i></div>
-            </div>
-        </div>
-        <div class="col-lg-2 col-xs-6">
-            <div class="small-box bg-yellow">
-                <div class="inner">
-                    <h3 id="dash_gen_condia">0</h3>
-                    <p>Consumo del D&iacute;a</p>
-                </div>
-                <div class="icon"><i class="fa fa-calendar"></i></div>
-            </div>
-        </div>
-        <div class="col-lg-2 col-xs-6">
-            <div class="small-box bg-purple">
-                <div class="inner">
-                    <h3 id="dash_gen_cierre" style="font-size: 24px; padding-top:6px;">-</h3>
-                    <p>&Uacute;ltimo Cierre</p>
-                </div>
-                <div class="icon"><i class="fa fa-lock"></i></div>
-            </div>
-        </div>
-    </div>
+                    <!-- SECCIÓN 1: RESUMEN GENERAL (Tarjetas Superiores) -->
+                    <div class="row">
+                        <div class="col-lg-2 col-xs-6">
+                            <div class="small-box bg-aqua">
+                                <div class="inner">
+                                    <h3 id="dash_gen_disp">0</h3>
+                                    <p>Dispensadores Activos</p>
+                                </div>
+                                <div class="icon"><i class="fa fa-hdd-o"></i></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-2 col-xs-6">
+                            <div class="small-box bg-green">
+                                <div class="inner">
+                                    <h3 id="dash_gen_ext">0</h3>
+                                    <p>Existencia Total (Gl)</p>
+                                </div>
+                                <div class="icon"><i class="fa fa-cubes"></i></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-2 col-xs-6">
+                            <div class="small-box bg-blue">
+                                <div class="inner">
+                                    <h3 id="dash_gen_ing">0</h3>
+                                    <p>Ingresos del Per&iacute;odo</p>
+                                </div>
+                                <div class="icon"><i class="fa fa-arrow-down"></i></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-2 col-xs-6">
+                            <div class="small-box bg-red">
+                                <div class="inner">
+                                    <h3 id="dash_gen_sal">0</h3>
+                                    <p>Despachos Per&iacute;odo</p>
+                                </div>
+                                <div class="icon"><i class="fa fa-arrow-up"></i></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-2 col-xs-6">
+                            <div class="small-box bg-yellow">
+                                <div class="inner">
+                                    <h3 id="dash_gen_condia">0</h3>
+                                    <p>Consumo del D&iacute;a</p>
+                                </div>
+                                <div class="icon"><i class="fa fa-calendar"></i></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-2 col-xs-6">
+                            <div class="small-box bg-purple">
+                                <div class="inner">
+                                    <h3 id="dash_gen_cierre" style="font-size: 24px; padding-top:6px;">-</h3>
+                                    <p>&Uacute;ltimo Cierre</p>
+                                </div>
+                                <div class="icon"><i class="fa fa-lock"></i></div>
+                            </div>
+                        </div>
+                    </div>
 
-    <!-- SECCIÓN 2: ESTADO DE DISPENSADORES -->
-    <h4 class="page-header"><i class="fa fa-battery-half"></i> Estado de Dispensadores</h4>
-    <div class="row" id="dash_dispensadores_container">
-        <!-- Renderizado dinámico -->
-    </div>
+                    <!-- SECCIÓN 2: ESTADO DE DISPENSADORES -->
+                    <h4 class="page-header"><i class="fa fa-battery-half"></i> Estado de Dispensadores</h4>
+                    <div class="row" id="dash_dispensadores_container">
+                        <!-- Renderizado dinámico -->
+                    </div>
 
-    <div class="row">
-        <div class="col-md-8">
-            <!-- SECCIÓN 7: GRÁFICO (Consumo Diario) -->
-            <div class="box box-info">
-                <div class="box-header with-border">
-                    <h3 class="box-title"><i class="fa fa-bar-chart"></i> Consumo Diario</h3>
-                </div>
-                <div class="box-body">
-                    <canvas id="chartConsumoDiario" style="height: 250px; width: 100%;"></canvas>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <!-- SECCIÓN 3: MOVIMIENTOS DEL DÍA -->
-            <div class="box box-success">
-                <div class="box-header with-border">
-                    <h3 class="box-title"><i class="fa fa-exchange"></i> Movimientos del D&iacute;a</h3>
-                </div>
-                <div class="box-body" style="padding:0;">
-                    <table class="table table-striped">
-                        <tbody>
-                            <tr><td><strong>(IN) Compra Proveedor</strong></td><td class="text-right text-green" id="dash_dia_in">0.00</td></tr>
-                            <tr><td><strong>(IC) Ajuste (+)</strong></td><td class="text-right text-blue" id="dash_dia_ic">0.00</td></tr>
-                            <tr><td><strong>(SA) Abastecimiento</strong></td><td class="text-right text-red" id="dash_dia_sa">0.00</td></tr>
-                            <tr><td><strong>(SC) Ajuste (-)</strong></td><td class="text-right text-orange" id="dash_dia_sc">0.00</td></tr>
-                        </tbody>
-                        <tfoot>
-                            <tr><th>Total Movimientos</th><th class="text-right" id="dash_dia_total">0.00</th></tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-            
-            <!-- SECCIÓN 4: CIERRES -->
-            <div class="box box-warning">
-                <div class="box-header with-border">
-                    <h3 class="box-title"><i class="fa fa-lock"></i> Estado &Uacute;ltimo Cierre</h3>
-                </div>
-                <div class="box-body text-center">
-                    <h4 id="dash_cierre_fecha">-</h4>
-                    <h2 id="dash_cierre_estado" style="margin:5px 0;">-</h2>
-                    <p class="text-muted">Diferencia: <strong id="dash_cierre_dif">0.00</strong></p>
-                </div>
-            </div>
-        </div>
-    </div>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <!-- SECCIÓN 7: GRÁFICO (Consumo Diario) -->
+                            <div class="box box-info">
+                                <div class="box-header with-border">
+                                    <h3 class="box-title"><i class="fa fa-bar-chart"></i> Consumo Diario</h3>
+                                </div>
+                                <div class="box-body">
+                                    <canvas id="chartConsumoDiario" style="height: 250px; width: 100%;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <!-- SECCIÓN 3: MOVIMIENTOS DEL DÍA -->
+                            <div class="box box-success">
+                                <div class="box-header with-border">
+                                    <h3 class="box-title"><i class="fa fa-exchange"></i> Movimientos del D&iacute;a</h3>
+                                </div>
+                                <div class="box-body" style="padding:0;">
+                                    <table class="table table-striped">
+                                        <tbody>
+                                            <tr>
+                                                <td><strong>(IN) Compra Proveedor</strong></td>
+                                                <td class="text-right text-green" id="dash_dia_in">0.00</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>(IC) Ajuste (+)</strong></td>
+                                                <td class="text-right text-blue" id="dash_dia_ic">0.00</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>(SA) Abastecimiento</strong></td>
+                                                <td class="text-right text-red" id="dash_dia_sa">0.00</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>(SC) Ajuste (-)</strong></td>
+                                                <td class="text-right text-orange" id="dash_dia_sc">0.00</td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <th>Total Movimientos</th>
+                                                <th class="text-right" id="dash_dia_total">0.00</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
 
-    <!-- SECCIÓN 5: TOP MAQUINARIAS -->
-    <div class="row">
-        <div class="col-md-12">
-            <div class="box box-danger">
-                <div class="box-header with-border">
-                    <h3 class="box-title"><i class="fa fa-truck"></i> Top 5 Maquinarias (Mayor Consumo en el Per&iacute;odo)</h3>
+                            <!-- SECCIÓN 4: CIERRES -->
+                            <div class="box box-warning">
+                                <div class="box-header with-border">
+                                    <h3 class="box-title"><i class="fa fa-lock"></i> Estado &Uacute;ltimo Cierre</h3>
+                                </div>
+                                <div class="box-body text-center">
+                                    <h4 id="dash_cierre_fecha">-</h4>
+                                    <h2 id="dash_cierre_estado" style="margin:5px 0;">-</h2>
+                                    <p class="text-muted">Diferencia: <strong id="dash_cierre_dif">0.00</strong></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN 5: TOP MAQUINARIAS -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="box box-danger">
+                                <div class="box-header with-border">
+                                    <h3 class="box-title"><i class="fa fa-truck"></i> Top 5 Maquinarias (Mayor Consumo en el Per&iacute;odo)</h3>
+                                </div>
+                                <div class="box-body table-responsive no-padding">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Maquinaria</th>
+                                                <th class="text-right">Consumo Total</th>
+                                                <th>Operador (Usuario)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="dash_top_maq_body">
+                                            <tr>
+                                                <td colspan="4" class="text-center">Cargando...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="box-body table-responsive no-padding">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Maquinaria</th>
-                                <th class="text-right">Consumo Total</th>
-                                <th>Operador (Usuario)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="dash_top_maq_body">
-                            <tr><td colspan="4" class="text-center">Cargando...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
                 <div id="tab-despachos" class="tab-pane fade">
                     <div class="row" style="margin-bottom: 10px;">
@@ -1707,12 +1795,15 @@ $obBD_con1->utf8_change_param($vehiculos);
         </div>
     </div>
 
+    <!-- Carga de Chart.js para el Dashboard -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+
     <!-- Carga de JS -->
-    <script src="../VALIDACIONES/man_val_maquinaria_dispensador.js?v=6"></script>
+    <script src="../VALIDACIONES/man_val_maquinaria_dispensador.js?v=8"></script>
 
     <?php
-    $obBD_con1->liberar();
-    $obBD_conexion->cerrar();
+        $obBD_con1->liberar();
+        $obBD_conexion->cerrar();
     ?>
 </BODY>
 
