@@ -310,12 +310,16 @@ if (isset($_GET['getReporteOperativoAjax'])) {
     );
     $periodo = (isset($meses[$mes]) ? strtoupper($meses[$mes]) : '') . ' ' . $anio;
     $anio_mes = $anio . '-' . $mes;
+    $fecha_ini = $anio_mes . '-01';
+    $fecha_fin = date("Y-m-t", strtotime($fecha_ini));
 
     $params = array(
         'anio_mes' => $anio_mes,
         'Veh_Cod' => $maq,
         'Cho_Cod' => $ope,
-        'Emp_Cod' => $_SESSION['Ses_Emp_Cod']
+        'Emp_Cod' => $_SESSION['Ses_Emp_Cod'],
+        'fecha_ini' => $fecha_ini,
+        'fecha_fin' => $fecha_fin
     );
 
     if ($tipo === 'individual') {
@@ -334,20 +338,34 @@ if (isset($_GET['getReporteOperativoAjax'])) {
 
         // Consultar Detalle Diario
         $rows_diario = $obBD_con1->getArrayConsulta(21, $params, $obBD_conexion);
+        
+        $rows_combustible = $obBD_con1->getCombustibleReporte('individual', $params, $obBD_conexion);
+        $comb_por_fecha = array();
+        if(!empty($rows_combustible)){
+            foreach($rows_combustible as $rc){
+                $comb_por_fecha[$rc['fecha']] = array(
+                    'cargado' => (float)$rc['combustible_cargado'],
+                    'costo' => (float)$rc['costo_combustible']
+                );
+            }
+        }
 
         $tot_ht = 0;
         $tot_hp = 0;
         $tot_desf = 0;
         $tot_comb = 0;
+        $tot_costo = 0;
         $q1_ht = 0;
         $q1_hp = 0;
         $q1_desf = 0;
         $q1_comb = 0;
+        $q1_costo = 0;
         $q1_dias = 0;
         $q2_ht = 0;
         $q2_hp = 0;
         $q2_desf = 0;
         $q2_comb = 0;
+        $q2_costo = 0;
         $q2_dias = 0;
 
         $op_nom = 'N/D';
@@ -364,13 +382,19 @@ if (isset($_GET['getReporteOperativoAjax'])) {
                 $ht = (float)$r['total_hrs'];
                 $hp = (float)$r['prod_hrs'];
                 $desf = (float)$r['descuento'];
-                $comb = (float)$r['combustible'];
+                
+                $f_row = $r['fecha'];
+                $comb = isset($comb_por_fecha[$f_row]) ? $comb_por_fecha[$f_row]['cargado'] : 0;
+                $costo = isset($comb_por_fecha[$f_row]) ? $comb_por_fecha[$f_row]['costo'] : 0;
+                $rend = ($ht > 0) ? ($comb / $ht) : 0;
+
                 if ($op_nom === 'N/D') $op_nom = $r['operador'];
 
                 $tot_ht += $ht;
                 $tot_hp += $hp;
                 $tot_desf += $desf;
                 $tot_comb += $comb;
+                $tot_costo += $costo;
                 $dias_trabajados[$dia] = true;
 
                 $item = array(
@@ -383,6 +407,8 @@ if (isset($_GET['getReporteOperativoAjax'])) {
                     'descuento' => number_format($desf, 2),
                     'prod_hrs' => number_format($hp, 2),
                     'combustible' => number_format($comb, 2),
+                    'costo' => number_format($costo, 2),
+                    'rendimiento' => $ht > 0 ? number_format($rend, 2) : 'N/A',
                     'observaciones' => $r['observaciones']
                 );
 
@@ -391,6 +417,7 @@ if (isset($_GET['getReporteOperativoAjax'])) {
                     $q1_hp += $hp;
                     $q1_desf += $desf;
                     $q1_comb += $comb;
+                    $q1_costo += $costo;
                     $dias_q1[$dia] = true;
                     $detalle_q1[] = $item;
                 } else {
@@ -398,6 +425,7 @@ if (isset($_GET['getReporteOperativoAjax'])) {
                     $q2_hp += $hp;
                     $q2_desf += $desf;
                     $q2_comb += $comb;
+                    $q2_costo += $costo;
                     $dias_q2[$dia] = true;
                     $detalle_q2[] = $item;
                 }
@@ -419,6 +447,7 @@ if (isset($_GET['getReporteOperativoAjax'])) {
             'horas_productivas' => number_format($tot_hp, 2),
             'desfase' => number_format($tot_desf, 2),
             'combustible' => number_format($tot_comb, 2),
+            'costo' => number_format($tot_costo, 2),
             'promedio_diario' => number_format($prom_diario, 2),
             'dias_laborados' => $tot_dias
         );
@@ -428,6 +457,7 @@ if (isset($_GET['getReporteOperativoAjax'])) {
             'horas_productivas' => number_format($q1_hp, 2),
             'desfase' => number_format($q1_desf, 2),
             'combustible' => number_format($q1_comb, 2),
+            'costo' => number_format($q1_costo, 2),
             'dias_laborados' => $q1_dias
         );
         $resp['q2'] = array(
@@ -435,6 +465,7 @@ if (isset($_GET['getReporteOperativoAjax'])) {
             'horas_productivas' => number_format($q2_hp, 2),
             'desfase' => number_format($q2_desf, 2),
             'combustible' => number_format($q2_comb, 2),
+            'costo' => number_format($q2_costo, 2),
             'dias_laborados' => $q2_dias
         );
 
@@ -445,10 +476,22 @@ if (isset($_GET['getReporteOperativoAjax'])) {
         $resp['success'] = true;
         $resp['periodo'] = $periodo;
 
-        $resumen = array('horas_trabajadas' => 0.0, 'horas_productivas' => 0.0, 'desfase' => 0.0, 'combustible' => 0.0, 'total_maquinas' => 0);
+        $resumen = array('horas_trabajadas' => 0.0, 'horas_productivas' => 0.0, 'desfase' => 0.0, 'combustible' => 0.0, 'costo' => 0.0, 'total_maquinas' => 0);
         $detalle = array();
 
         $rows = $obBD_con1->getArrayConsulta(22, $params, $obBD_conexion);
+        
+        $rows_combustible = $obBD_con1->getCombustibleReporte('consolidado', $params, $obBD_conexion);
+        $comb_por_maq = array();
+        if(!empty($rows_combustible)){
+            foreach($rows_combustible as $rc){
+                $comb_por_maq[$rc['Veh_Cod']] = array(
+                    'cargado' => (float)$rc['combustible_cargado'],
+                    'costo' => (float)$rc['costo_combustible']
+                );
+            }
+        }
+
         $maquinas_vistas = array();
 
         if (!empty($rows)) {
@@ -458,20 +501,30 @@ if (isset($_GET['getReporteOperativoAjax'])) {
                     $resumen['total_maquinas']++;
                 }
 
-                $resumen['horas_trabajadas'] += (float)$r['horas_trabajadas'];
+                $v_cod = $r['veh_cod'];
+                $comb = isset($comb_por_maq[$v_cod]) ? $comb_por_maq[$v_cod]['cargado'] : 0;
+                $costo = isset($comb_por_maq[$v_cod]) ? $comb_por_maq[$v_cod]['costo'] : 0;
+                
+                $ht = (float)$r['horas_trabajadas'];
+                $rend = ($ht > 0) ? ($comb / $ht) : 0;
+
+                $resumen['horas_trabajadas'] += $ht;
                 $resumen['horas_productivas'] += (float)$r['horas_productivas'];
                 $resumen['desfase'] += (float)$r['desfase'];
-                $resumen['combustible'] += (float)$r['combustible'];
+                $resumen['combustible'] += $comb;
+                $resumen['costo'] += $costo;
 
                 $detalle[] = array(
                     'veh_cod' => $r['veh_cod'],
                     'cho_cod' => $r['cho_cod'],
                     'maquina' => $r['maquina'],
                     'operador' => $r['operador'],
-                    'horas_trabajadas' => number_format((float)$r['horas_trabajadas'], 2),
+                    'horas_trabajadas' => number_format($ht, 2),
                     'horas_productivas' => number_format((float)$r['horas_productivas'], 2),
                     'desfase' => number_format((float)$r['desfase'], 2),
-                    'combustible' => number_format((float)$r['combustible'], 2),
+                    'combustible' => number_format($comb, 2),
+                    'costo' => number_format($costo, 2),
+                    'rendimiento' => $ht > 0 ? number_format($rend, 2) : 'N/A',
                     'estado' => $r['estado']
                 );
             }
@@ -482,6 +535,7 @@ if (isset($_GET['getReporteOperativoAjax'])) {
             'horas_productivas' => number_format($resumen['horas_productivas'], 2),
             'desfase' => number_format($resumen['desfase'], 2),
             'combustible' => number_format($resumen['combustible'], 2),
+            'costo' => number_format($resumen['costo'], 2),
             'total_maquinas' => $resumen['total_maquinas']
         );
         $resp['detalle'] = $detalle;
@@ -534,7 +588,8 @@ if (isset($_GET['getEvidenciasAjax'])) {
     <TITLE>Gestión de Horómetro de Maquinaria [EXA]</TITLE>
     <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
-    <?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
+    <?php require_once("../../mascaras/model1/estilos/jqgrid5.php"); ?>
+    <?php require_once('../../mascaras/model3/estilos/estilos.php'); ?>
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
     <script language="javascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
@@ -542,23 +597,7 @@ if (isset($_GET['getEvidenciasAjax'])) {
     <script>
         var user_role = '<?php echo $user_role; ?>';
     </script>
-    <style>
-        /* Asegurar que los mensajes de error/alerta aparezcan por delante de los modales (z-index de Bootstrap es 1050) */
-        .ui-dialog,
-        .ui-widget-overlay,
-        .jconfirm,
-        .sweet-alert,
-        .swal2-container,
-        .modal-alert {
-            z-index: 1060 !important;
-        }
-
-        .jconfirm-bg,
-        .swal2-overlay,
-        .ui-widget-overlay {
-            z-index: 1059 !important;
-        }
-    </style>
+    
 </HEAD>
 
 <BODY>
@@ -572,22 +611,25 @@ if (isset($_GET['getEvidenciasAjax'])) {
             <div id="divListado">
 
                 <!-- Tarjetas del Dashboard -->
-                <div class="dashboard-metrics-container">
-                    <div class="metric-card metric-pending">
-                        <div class="metric-icon-wrapper"><i class="glyphicon glyphicon-hourglass"></i></div>
-                        <div class="metric-info">
-                            <span class="metric-title">Lecturas Pendientes</span>
-                            <span class="metric-value" id="dash_pendientes">0</span>
+                <div class="row" style="margin-bottom: 20px;">
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="v2-metric-card warning">
+                            <i class="glyphicon glyphicon-hourglass v2-metric-icon"></i>
+                            <div class="v2-metric-content">
+                                <h3 class="v2-metric-value" id="dash_pendientes">0</h3>
+                                <p class="v2-metric-label">Lecturas Pendientes</p>
+                            </div>
                         </div>
                     </div>
-                    <div class="metric-card metric-hours">
-                        <div class="metric-icon-wrapper"><i class="glyphicon glyphicon-time"></i></div>
-                        <div class="metric-info">
-                            <span class="metric-title">Horas Trabajadas (Mes)</span>
-                            <span class="metric-value" id="dash_horas_mes">0.00 h</span>
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="v2-metric-card success">
+                            <i class="glyphicon glyphicon-time v2-metric-icon"></i>
+                            <div class="v2-metric-content">
+                                <h3 class="v2-metric-value" id="dash_horas_mes">0.00 h</h3>
+                                <p class="v2-metric-label">Horas Trabajadas (Mes)</p>
+                            </div>
                         </div>
                     </div>
-
                 </div>
 
                 <!-- Pestañas de Consulta -->
@@ -798,6 +840,12 @@ if (isset($_GET['getEvidenciasAjax'])) {
                                                 <td class="text-center fw-bold" id="cmp_cb_t">0</td>
                                             </tr>
                                             <tr>
+                                                <td>Costo Combustible ($)</td>
+                                                <td class="text-center" id="cmp_cc_1">0</td>
+                                                <td class="text-center" id="cmp_cc_2">0</td>
+                                                <td class="text-center fw-bold" id="cmp_cc_t">0</td>
+                                            </tr>
+                                            <tr>
                                                 <td>Días Laborados</td>
                                                 <td class="text-center" id="cmp_dl_1">0</td>
                                                 <td class="text-center" id="cmp_dl_2">0</td>
@@ -821,7 +869,9 @@ if (isset($_GET['getEvidenciasAjax'])) {
                                                 <th width="60" class="text-right">Total Hrs</th>
                                                 <th width="60" class="text-right">Descuento</th>
                                                 <th width="60" class="text-right">Prod. Hrs</th>
-                                                <th width="70" class="text-right">Combust.</th>
+                                                <th width="70" class="text-right">Comb. Carg.</th>
+                                                <th width="70" class="text-right">Costo Comb.</th>
+                                                <th width="70" class="text-right">Rend. (Gal/h)</th>
                                                 <th>Observaciones</th>
                                             </tr>
                                         </thead>
@@ -847,7 +897,9 @@ if (isset($_GET['getEvidenciasAjax'])) {
                                                 <th width="60" class="text-right">Total Hrs</th>
                                                 <th width="60" class="text-right">Descuento</th>
                                                 <th width="60" class="text-right">Prod. Hrs</th>
-                                                <th width="70" class="text-right">Combust.</th>
+                                                <th width="70" class="text-right">Comb. Carg.</th>
+                                                <th width="70" class="text-right">Costo Comb.</th>
+                                                <th width="70" class="text-right">Rend. (Gal/h)</th>
                                                 <th>Observaciones</th>
                                             </tr>
                                         </thead>
@@ -884,6 +936,10 @@ if (isset($_GET['getEvidenciasAjax'])) {
                                                 <tr>
                                                     <td><strong>Combustible Total:</strong></td>
                                                     <td class="text-right text-warning" id="fin_cb">0 Gls</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Costo Combustible Total:</strong></td>
+                                                    <td class="text-right text-info" id="fin_cc">$ 0.00</td>
                                                 </tr>
                                             </table>
                                         </div>
@@ -941,7 +997,9 @@ if (isset($_GET['getEvidenciasAjax'])) {
                                                 <th class="text-right">Horas Trabajadas</th>
                                                 <th class="text-right">Horas Productivas</th>
                                                 <th class="text-right">Desfase</th>
-                                                <th class="text-right">Combustible</th>
+                                                <th class="text-right">Comb. Carg.</th>
+                                                <th class="text-right">Costo Comb.</th>
+                                                <th class="text-right">Rend. (Gal/h)</th>
                                                 <th class="text-center">Estado</th>
                                                 <th class="text-center" width="90">Acción</th>
                                             </tr>
@@ -1229,7 +1287,13 @@ if (isset($_GET['getEvidenciasAjax'])) {
         </div>
     </div>
 
-    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_maquinaria_horometro.js?v=10"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_maquinaria_horometro.js?v=11"></script>
+
+    <!-- Liberacion y cierre de conexiones -->
+    <?php
+        $obBD_con1->liberar();
+        $obBD_conexion->cerrar();
+    ?>
 </BODY>
 
 </HTML>

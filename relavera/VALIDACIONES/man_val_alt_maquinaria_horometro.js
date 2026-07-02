@@ -927,6 +927,10 @@ function cargarReporteIndividual(anio, mes, maq, ope) {
             $("#cmp_cb_2").text(res.q2.combustible);
             $("#cmp_cb_t").text(res.resumen.combustible);
 
+            $("#cmp_cc_1").text('$ ' + res.q1.costo);
+            $("#cmp_cc_2").text('$ ' + res.q2.costo);
+            $("#cmp_cc_t").text('$ ' + res.resumen.costo);
+
             $("#cmp_dl_1").text(res.q1.dias_laborados);
             $("#cmp_dl_2").text(res.q2.dias_laborados);
             $("#cmp_dl_t").text(res.resumen.dias_laborados);
@@ -945,6 +949,8 @@ function cargarReporteIndividual(anio, mes, maq, ope) {
                     htmlQ1 += "<td class='text-right text-danger'>" + d.descuento + "</td>";
                     htmlQ1 += "<td class='text-right text-success'>" + d.prod_hrs + "</td>";
                     htmlQ1 += "<td class='text-right text-warning'>" + d.combustible + "</td>";
+                    htmlQ1 += "<td class='text-right text-info'>" + (d.costo !== '0.00' ? '$ ' + d.costo : '$ 0.00') + "</td>";
+                    htmlQ1 += "<td class='text-right text-primary'>" + (d.rendimiento !== 'N/A' ? d.rendimiento + ' gal/h' : 'N/A') + "</td>";
                     htmlQ1 += "<td>" + d.observaciones + "</td>";
                     htmlQ1 += "</tr>";
                 });
@@ -967,6 +973,8 @@ function cargarReporteIndividual(anio, mes, maq, ope) {
                     htmlQ2 += "<td class='text-right text-danger'>" + d.descuento + "</td>";
                     htmlQ2 += "<td class='text-right text-success'>" + d.prod_hrs + "</td>";
                     htmlQ2 += "<td class='text-right text-warning'>" + d.combustible + "</td>";
+                    htmlQ2 += "<td class='text-right text-info'>" + (d.costo !== '0.00' ? '$ ' + d.costo : '$ 0.00') + "</td>";
+                    htmlQ2 += "<td class='text-right text-primary'>" + (d.rendimiento !== 'N/A' ? d.rendimiento + ' gal/h' : 'N/A') + "</td>";
                     htmlQ2 += "<td>" + d.observaciones + "</td>";
                     htmlQ2 += "</tr>";
                 });
@@ -980,6 +988,7 @@ function cargarReporteIndividual(anio, mes, maq, ope) {
             $("#fin_hp").text(res.resumen.horas_productivas);
             $("#fin_df").text(res.resumen.desfase);
             $("#fin_cb").text(res.resumen.combustible + " Gls");
+            $("#fin_cc").text("$ " + res.resumen.costo);
 
             $("#contenedorReporteConsolidado").hide();
             $("#contenedorReporteIndividual").fadeIn();
@@ -1024,6 +1033,8 @@ function cargarReporteConsolidado(anio, mes, maq, ope) {
                     html += "<td class='text-right text-success'>" + d.horas_productivas + "</td>";
                     html += "<td class='text-right text-danger'>" + d.desfase + "</td>";
                     html += "<td class='text-right text-warning'>" + d.combustible + "</td>";
+                    html += "<td class='text-right text-info'>" + (d.costo !== '0.00' ? '$ ' + d.costo : '$ 0.00') + "</td>";
+                    html += "<td class='text-right text-primary'>" + (d.rendimiento !== 'N/A' ? d.rendimiento + ' gal/h' : 'N/A') + "</td>";
                     html += "<td class='text-center'>" + d.estado + "</td>";
                     html += "<td class='text-center'><button class='btn btn-xs btn-info' onclick='verDetalleMaquina(\"" + d.veh_cod + "\", \"" + d.cho_cod + "\")'><i class='fa fa-eye'></i> Ver Detalle</button></td>";
                     html += "</tr>";

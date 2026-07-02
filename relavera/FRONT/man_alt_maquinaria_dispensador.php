@@ -1,8 +1,9 @@
 <?php
 // SECCION PARA IMPORTAR RECURSOS
 require_once('../../administrador/LOGICA/seguridad.php');
-require_once('../LOGICA/man_log_maquinaria_dispensador.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
+require_once('../LOGICA/man_log_maquinaria_dispensador.php');
+
 
 // INICIAMOS LA CONEXION A LA BASE DE DATOS
 $obBD_conexion = new Class_Log_Conexion_Maquinaria_Dispensador($Ses_Dat_Dis);
@@ -87,7 +88,7 @@ if (isset($_POST['getDashboardAjax'])) {
         $response['top_vehiculos'] = $res26;
     }
 
-    // Gráfico Consumo Diario (27)
+    // Gr&aacute;fico Consumo Diario (27)
     $res27 = $obBD_con1->getArrayConsulta(27, array($emp_cod, $fecha_ini, $fecha_fin, $dispensador, ''), $obBD_conexion);
     if ($res27) {
         $response['grafico'] = $res27;
@@ -150,7 +151,7 @@ if (isset($_GET['getCalculoPrevioCierreAjax'])) {
         $dis_cod = $_GET['Dis_Cod'];
         $fecha = $_GET['Cie_Fec'];
         if (!$dis_cod || !$fecha) {
-            throw new Exception("Parámetros incompletos");
+            throw new Exception("Par&aacute;metros incompletos");
         }
         $params = array(
             0 => $_SESSION['Ses_Emp_Cod'],
@@ -284,7 +285,7 @@ if (isset($_POST['saveAjax'])) {
         $Dis_Uni = isset($_POST['Dis_Uni']) ? trim($_POST['Dis_Uni']) : '';
 
         if (empty($Dis_Nom) || $Dis_Cap <= 0 || empty($Dis_Tip) || empty($Dis_Uni)) {
-            throw new Exception('Faltan campos obligatorios o la capacidad es inválida.');
+            throw new Exception('Faltan campos obligatorios o la capacidad es inv&aacute;lida.');
         }
 
         if ($Dis_Cod == 0) {
@@ -315,7 +316,7 @@ if (isset($_POST['changeEstadoAjax'])) {
     try {
         $Dis_Cod = isset($_POST['Dis_Cod']) ? (int)$_POST['Dis_Cod'] : 0;
         $Dis_Est = isset($_POST['Dis_Est']) ? trim($_POST['Dis_Est']) : '';
-        if (empty($Dis_Cod) || empty($Dis_Est)) throw new Exception('Parámetros inválidos.');
+        if (empty($Dis_Cod) || empty($Dis_Est)) throw new Exception('Par&aacute;metros inv&aacute;lidos.');
 
         $obBD_con1->operacionobBD(4, array($Dis_Cod, $Dis_Est), $obBD_conexion);
         if ($obBD_con1->Error != 0) throw new Exception("Error BD: " . $obBD_con1->getMsgError());
@@ -395,8 +396,8 @@ if (isset($_POST['saveIngresoAjax'])) {
 
         if (empty($Dis_Cod) || empty($Did_Tip) || empty($Did_Fec)) throw new Exception('Faltan campos obligatorios.');
         if ($Did_Tip == 'IN' && empty($Prv_Cod)) throw new Exception('El proveedor es obligatorio para compras (IN).');
-        if ($Did_Tip == 'IC' && empty($Veh_Cod)) throw new Exception('El vehículo es obligatorio para cargas internas (IC).');
-        if ($Did_Tip != 'IN' && $Did_Tip != 'IC') throw new Exception('Tipo de ingreso no válido.');
+        if ($Did_Tip == 'IC' && empty($Veh_Cod)) throw new Exception('El veh&iacute;culo es obligatorio para cargas internas (IC).');
+        if ($Did_Tip != 'IN' && $Did_Tip != 'IC') throw new Exception('Tipo de ingreso no v&aacute;lido.');
 
         if ($Did_Tip == 'IN') $Veh_Cod = 0;
         if ($Did_Tip == 'IC') $Prv_Cod = 0;
@@ -406,7 +407,7 @@ if (isset($_POST['saveIngresoAjax'])) {
         // Validar capacidad
         $params_info = array(0 => $_SESSION['Ses_Emp_Cod'], 1 => $Dis_Cod);
         $info = $obBD_con1->getRowConsulta(9, $params_info, $obBD_conexion);
-        if (!$info) throw new Exception('Dispensador no válido.');
+        if (!$info) throw new Exception('Dispensador no v&aacute;lido.');
 
         $capacidad = (float)$info['Dis_Cap'];
         $existencia = (float)$info['existencia'];
@@ -439,7 +440,7 @@ if (isset($_POST['changeEstadoIngresoAjax'])) {
     $obBD_con1->inicio_transaccion($obBD_conexion);
     try {
         $Did_Cod = isset($_POST['Did_Cod']) ? (int)$_POST['Did_Cod'] : 0;
-        if (empty($Did_Cod)) throw new Exception('Registro no válido.');
+        if (empty($Did_Cod)) throw new Exception('Registro no v&aacute;lido.');
 
         $obBD_con1->operacionobBD(11, array($Did_Cod), $obBD_conexion);
         if ($obBD_con1->Error != 0) throw new Exception("Error BD: " . $obBD_con1->getMsgError());
@@ -506,9 +507,9 @@ if (isset($_POST['saveDespachoAjax'])) {
         $Did_Pun = isset($_POST['Did_Pun']) ? (float)$_POST['Did_Pun'] : 0;
 
         if (empty($Dis_Cod) || empty($Did_Tip) || empty($Did_Fec)) throw new Exception('Faltan campos obligatorios.');
-        if ($Did_Tip == 'SA' && empty($Veh_Cod)) throw new Exception('La maquinaria/vehículo es obligatorio para abastecimiento (SA).');
+        if ($Did_Tip == 'SA' && empty($Veh_Cod)) throw new Exception('La maquinaria/veh&iacute;culo es obligatorio para abastecimiento (SA).');
         if ($Did_Tip == 'SC' && empty($Did_Obs)) throw new Exception('Debe ingresar el motivo del ajuste negativo (SC).');
-        if ($Did_Tip != 'SA' && $Did_Tip != 'SC') throw new Exception('Tipo de salida no válido.');
+        if ($Did_Tip != 'SA' && $Did_Tip != 'SC') throw new Exception('Tipo de salida no v&aacute;lido.');
 
         if ($Did_Tip == 'SC') {
             $Veh_Cod = 0;
@@ -519,7 +520,7 @@ if (isset($_POST['saveDespachoAjax'])) {
         // Validar existencia
         $params_info = array(0 => $_SESSION['Ses_Emp_Cod'], 1 => $Dis_Cod);
         $info = $obBD_con1->getRowConsulta(9, $params_info, $obBD_conexion);
-        if (!$info) throw new Exception('Dispensador no válido.');
+        if (!$info) throw new Exception('Dispensador no v&aacute;lido.');
 
         $existencia = (float)$info['existencia'];
 
@@ -550,7 +551,7 @@ if (isset($_POST['changeEstadoDespachoAjax'])) {
     $obBD_con1->inicio_transaccion($obBD_conexion);
     try {
         $Did_Cod = isset($_POST['Did_Cod']) ? (int)$_POST['Did_Cod'] : 0;
-        if (empty($Did_Cod)) throw new Exception('Registro no válido.');
+        if (empty($Did_Cod)) throw new Exception('Registro no v&aacute;lido.');
 
         $obBD_con1->operacionobBD(15, array($Did_Cod), $obBD_conexion);
         if ($obBD_con1->Error != 0) throw new Exception("Error BD: " . $obBD_con1->getMsgError());
@@ -612,18 +613,18 @@ if (isset($_POST['saveAjusteAjax'])) {
         $Did_Fec = isset($_POST['Did_Fec']) ? trim($_POST['Did_Fec']) : '';
         $Did_Fec = str_replace('T', ' ', $Did_Fec);
         $Did_Can = isset($_POST['Did_Can']) ? (float)$_POST['Did_Can'] : 0;
-        $Did_Pun = 0; // Se fuerza a 0 según reglas de ajuste
+        $Did_Pun = 0; // Se fuerza a 0 seg&uacute;n reglas de ajuste
         $Veh_Cod = 0;
         $Prv_Cod = 0;
 
         if (empty($Dis_Cod) || empty($Did_Tip) || empty($Did_Fec) || empty($Did_Obs)) throw new Exception('Faltan campos obligatorios.');
-        if ($Did_Tip != 'IC' && $Did_Tip != 'SC') throw new Exception('Tipo de ajuste no válido.');
+        if ($Did_Tip != 'IC' && $Did_Tip != 'SC') throw new Exception('Tipo de ajuste no v&aacute;lido.');
         if ($Did_Can <= 0) throw new Exception('La cantidad debe ser mayor a cero.');
 
         // Validar existencia
         $params_info = array(0 => $_SESSION['Ses_Emp_Cod'], 1 => $Dis_Cod);
         $info = $obBD_con1->getRowConsulta(9, $params_info, $obBD_conexion);
-        if (!$info) throw new Exception('Dispensador no válido.');
+        if (!$info) throw new Exception('Dispensador no v&aacute;lido.');
 
         $existencia = (float)$info['existencia'];
         $capacidad = (float)$info['Dis_Cap'];
@@ -659,7 +660,7 @@ if (isset($_POST['changeEstadoAjusteAjax'])) {
     $obBD_con1->inicio_transaccion($obBD_conexion);
     try {
         $Did_Cod = isset($_POST['Did_Cod']) ? (int)$_POST['Did_Cod'] : 0;
-        if (empty($Did_Cod)) throw new Exception('Registro no válido.');
+        if (empty($Did_Cod)) throw new Exception('Registro no v&aacute;lido.');
 
         $obBD_con1->operacionobBD(15, array($Did_Cod), $obBD_conexion);
         if ($obBD_con1->Error != 0) throw new Exception("Error BD: " . $obBD_con1->getMsgError());
@@ -775,7 +776,7 @@ if (isset($_GET['listKardexAjax'])) {
 // ======================================================================
 // RENDERIZADO HTML
 // ======================================================================
-// Obtener catálogos para combos
+// Obtener cat&aacute;logos para combos
 $dispensadores = $obBD_con1->getArrayConsulta(7, array(0 => $_SESSION['Ses_Emp_Cod']), $obBD_conexion) ?: array();
 $obBD_con1->utf8_change_param($dispensadores);
 
@@ -796,40 +797,65 @@ $obBD_con1->utf8_change_param($vehiculos);
     <?php require_once('../../mascaras/model3/estilos/estilos.php'); ?>
     <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
     <link rel="stylesheet" type="text/css" href="../RECURSOS/maquinaria_dispensador.css" />
-    
+
 </HEAD>
 
 <BODY>
+    <style>
+        /* Corrección de selección de fila y forzado ant-cache */
+        /* Corrección de selección de fila infalible (Cubre JQueryUI y Bootstrap) */
+        tr.ui-state-highlight,
+        tr.ui-state-highlight td,
+        .ui-jqgrid-btable tr.ui-state-highlight td,
+        .ui-jqgrid-btable tr.success td,
+        .ui-jqgrid-btable tr.active td,
+        .ui-jqgrid-btable tr.info td,
+        tr[aria-selected="true"] td {
+            background-color: #337ab7 !important;
+            background-image: none !important;
+            color: #ffffff !important;
+        }
+
+
+
+        /* Estilo de encabezado igual al de Horómetro */
+        .exa-header {
+            background: #334a5f !important;
+            color: #fff !important;
+            font-weight: bold;
+            font-size: 14px;
+            padding: 12px 18px !important;
+            border-bottom: none !important;
+        }
+    </style>
     <div class="panel panel-main exa-ui-panel exa-ui-fill-page">
         <div class="panel-heading exa-header">
-            <h3 class="panel-title"><i class="fa fa-gas-pump"></i> Administracion de Combustible</h3>
+            <h3 class="panel-title"><i class="fa fa-tint"></i> Administracion de Combustible</h3>
         </div>
         <div class="panel-body exa-ui-page-view">
 
-            <ul class="nav nav-tabs">
-                <li><a data-toggle="tab" href="#tab-dashboard"><i class="fa fa-bar-chart"></i> Dashboard</a></li>
-                <li class="active"><a data-toggle="tab" href="#tab-dispensadores"><i class="fa fa-hdd-o"></i> Dispensadores</a></li>
-                <li><a data-toggle="tab" href="#tab-ingresos"><i class="fa fa-arrow-down"></i> Carga de Combustible</a></li>
-                <li><a data-toggle="tab" href="#tab-despachos"><i class="fa fa-arrow-up"></i> Despachos</a></li>
-                <!-- <li><a data-toggle="tab" href="#tab-ajustes"><i class="fa fa-sliders"></i> Ajustes</a></li> -->
-                <li><a data-toggle="tab" href="#tab-kardex"><i class="fa fa-exchange"></i> Kardex</a></li>
-                <li><a data-toggle="tab" href="#tab-cierre"><i class="fa fa-lock"></i> Cierre Diario</a></li>
-                <!-- <li><a data-toggle="tab" href="#tab-reportes"><i class="fa fa-file-text-o"></i> Reportes</a></li> -->
-            </ul>
+            <div class="nav-tabs-custom">
+                <ul class="nav nav-tabs">
+                    <li><a data-toggle="tab" href="#tab-dashboard"><i class="fa fa-bar-chart"></i> Dashboard</a></li>
+                    <li class="active"><a data-toggle="tab" href="#tab-dispensadores"><i class="fa fa-hdd-o"></i> Dispensadores</a></li>
+                    <li><a data-toggle="tab" href="#tab-ingresos"><i class="fa fa-arrow-down"></i> Carga de Combustible</a></li>
+                    <li><a data-toggle="tab" href="#tab-despachos"><i class="fa fa-arrow-up"></i> Despachos</a></li>
+                    <!-- <li><a data-toggle="tab" href="#tab-ajustes"><i class="fa fa-sliders"></i> Ajustes</a></li> -->
+                    <li><a data-toggle="tab" href="#tab-kardex"><i class="fa fa-exchange"></i> Kardex</a></li>
+                    <li><a data-toggle="tab" href="#tab-cierre"><i class="fa fa-lock"></i> Cierre Diario</a></li>
+                    <!-- <li><a data-toggle="tab" href="#tab-reportes"><i class="fa fa-file-text-o"></i> Reportes</a></li> -->
+                </ul>
 
-            <div class="tab-content">
-                <!-- =============================== -->
-                <!-- PENDIENTES DE IMPLEMENTACIÓN    -->
-                <!-- =============================== -->
-                <div id="tab-dashboard" class="tab-pane fade">
-                    <div class="row" style="margin-bottom: 15px;">
-                        <!-- Filtros Superiores -->
-                        <div class="col-md-12">
-                            <div class="box box-primary">
-                                <div class="box-header with-border">
-                                    <h3 class="box-title"><i class="fa fa-filter"></i> Filtros del Dashboard</h3>
-                                </div>
-                                <div class="box-body">
+                <div class="tab-content tab-content-custom">
+                    <!-- =============================== -->
+                    <!-- PENDIENTES DE IMPLEMENTACI&Oacute;N    -->
+                    <!-- =============================== -->
+                    <div id="tab-dashboard" class="tab-pane fade">
+                        <div class="row" style="margin-bottom: 15px;">
+                            <!-- Filtros Superiores -->
+                            <div class="col-md-12">
+                                <div class="v2-filters">
+                                    <h4 style="margin-top:0; margin-bottom:15px; color:var(--v2-brand-dark); font-weight:600;"><i class="fa fa-filter"></i> Filtros del Dashboard</h4>
                                     <form id="formFiltrosDashboard" onsubmit="event.preventDefault(); loadDashboard();">
                                         <div class="row">
                                             <div class="col-md-3">
@@ -850,600 +876,598 @@ $obBD_con1->utf8_change_param($vehiculos);
                                                 </select>
                                             </div>
                                             <div class="col-md-3" style="padding-top: 25px;">
-                                                <button type="button" class="btn btn-primary btn-block" onclick="loadDashboard()"><i class="fa fa-refresh"></i> Actualizar Dashboard</button>
+                                                <button type="button" class="btn btn-exa-success btn-block" onclick="loadDashboard()"><i class="fa fa-refresh"></i> Actualizar Dashboard</button>
                                             </div>
                                         </div>
                                     </form>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- SECCIÓN 6: ALERTAS -->
-                    <div class="row" id="dash_alertas_container" style="display:none;">
-                        <div class="col-md-12">
-                            <div class="alert alert-warning alert-dismissible">
-                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                                <h4><i class="icon fa fa-warning"></i> Alertas de Sistema</h4>
-                                <ul id="dash_alertas_list" style="margin:0; padding-left:20px;"></ul>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- SECCIÓN 1: RESUMEN GENERAL (Tarjetas Superiores) -->
-                    <div class="row">
-                        <div class="col-lg-2 col-xs-6">
-                            <div class="small-box bg-aqua">
-                                <div class="inner">
-                                    <h3 id="dash_gen_disp">0</h3>
-                                    <p>Dispensadores Activos</p>
-                                </div>
-                                <div class="icon"><i class="fa fa-hdd-o"></i></div>
-                            </div>
-                        </div>
-                        <div class="col-lg-2 col-xs-6">
-                            <div class="small-box bg-green">
-                                <div class="inner">
-                                    <h3 id="dash_gen_ext">0</h3>
-                                    <p>Existencia Total (Gl)</p>
-                                </div>
-                                <div class="icon"><i class="fa fa-cubes"></i></div>
-                            </div>
-                        </div>
-                        <div class="col-lg-2 col-xs-6">
-                            <div class="small-box bg-blue">
-                                <div class="inner">
-                                    <h3 id="dash_gen_ing">0</h3>
-                                    <p>Ingresos del Per&iacute;odo</p>
-                                </div>
-                                <div class="icon"><i class="fa fa-arrow-down"></i></div>
-                            </div>
-                        </div>
-                        <div class="col-lg-2 col-xs-6">
-                            <div class="small-box bg-red">
-                                <div class="inner">
-                                    <h3 id="dash_gen_sal">0</h3>
-                                    <p>Despachos Per&iacute;odo</p>
-                                </div>
-                                <div class="icon"><i class="fa fa-arrow-up"></i></div>
-                            </div>
-                        </div>
-                        <div class="col-lg-2 col-xs-6">
-                            <div class="small-box bg-yellow">
-                                <div class="inner">
-                                    <h3 id="dash_gen_condia">0</h3>
-                                    <p>Consumo del D&iacute;a</p>
-                                </div>
-                                <div class="icon"><i class="fa fa-calendar"></i></div>
-                            </div>
-                        </div>
-                        <div class="col-lg-2 col-xs-6">
-                            <div class="small-box bg-purple">
-                                <div class="inner">
-                                    <h3 id="dash_gen_cierre" style="font-size: 24px; padding-top:6px;">-</h3>
-                                    <p>&Uacute;ltimo Cierre</p>
-                                </div>
-                                <div class="icon"><i class="fa fa-lock"></i></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- SECCIÓN 2: ESTADO DE DISPENSADORES -->
-                    <h4 class="page-header"><i class="fa fa-battery-half"></i> Estado de Dispensadores</h4>
-                    <div class="row" id="dash_dispensadores_container">
-                        <!-- Renderizado dinámico -->
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-8">
-                            <!-- SECCIÓN 7: GRÁFICO (Consumo Diario) -->
-                            <div class="box box-info">
-                                <div class="box-header with-border">
-                                    <h3 class="box-title"><i class="fa fa-bar-chart"></i> Consumo Diario</h3>
-                                </div>
-                                <div class="box-body">
-                                    <canvas id="chartConsumoDiario" style="height: 250px; width: 100%;"></canvas>
+                        <!-- SECCI&Oacute;N 6: ALERTAS -->
+                        <div class="row" id="dash_alertas_container" style="display:none;">
+                            <div class="col-md-12">
+                                <div class="alert alert-warning alert-dismissible">
+                                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                    <h4><i class="icon fa fa-warning"></i> Alertas de Sistema</h4>
+                                    <ul id="dash_alertas_list" style="margin:0; padding-left:20px;"></ul>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <!-- SECCIÓN 3: MOVIMIENTOS DEL DÍA -->
-                            <div class="box box-success">
-                                <div class="box-header with-border">
-                                    <h3 class="box-title"><i class="fa fa-exchange"></i> Movimientos del D&iacute;a</h3>
-                                </div>
-                                <div class="box-body" style="padding:0;">
-                                    <table class="table table-striped">
-                                        <tbody>
-                                            <tr>
-                                                <td><strong>(IN) Compra Proveedor</strong></td>
-                                                <td class="text-right text-green" id="dash_dia_in">0.00</td>
-                                            </tr>
-                                            <tr>
-                                                <td><strong>(IC) Ajuste (+)</strong></td>
-                                                <td class="text-right text-blue" id="dash_dia_ic">0.00</td>
-                                            </tr>
-                                            <tr>
-                                                <td><strong>(SA) Abastecimiento</strong></td>
-                                                <td class="text-right text-red" id="dash_dia_sa">0.00</td>
-                                            </tr>
-                                            <tr>
-                                                <td><strong>(SC) Ajuste (-)</strong></td>
-                                                <td class="text-right text-orange" id="dash_dia_sc">0.00</td>
-                                            </tr>
-                                        </tbody>
-                                        <tfoot>
-                                            <tr>
-                                                <th>Total Movimientos</th>
-                                                <th class="text-right" id="dash_dia_total">0.00</th>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <!-- SECCIÓN 4: CIERRES -->
-                            <div class="box box-warning">
-                                <div class="box-header with-border">
-                                    <h3 class="box-title"><i class="fa fa-lock"></i> Estado &Uacute;ltimo Cierre</h3>
-                                </div>
-                                <div class="box-body text-center">
-                                    <h4 id="dash_cierre_fecha">-</h4>
-                                    <h2 id="dash_cierre_estado" style="margin:5px 0;">-</h2>
-                                    <p class="text-muted">Diferencia: <strong id="dash_cierre_dif">0.00</strong></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- SECCIÓN 5: TOP MAQUINARIAS -->
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="box box-danger">
-                                <div class="box-header with-border">
-                                    <h3 class="box-title"><i class="fa fa-truck"></i> Top 5 Maquinarias (Mayor Consumo en el Per&iacute;odo)</h3>
-                                </div>
-                                <div class="box-body table-responsive no-padding">
-                                    <table class="table table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>#</th>
-                                                <th>Maquinaria</th>
-                                                <th class="text-right">Consumo Total</th>
-                                                <th>Operador (Usuario)</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="dash_top_maq_body">
-                                            <tr>
-                                                <td colspan="4" class="text-center">Cargando...</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="tab-despachos" class="tab-pane fade">
-                    <div class="row" style="margin-bottom: 10px;">
-                        <div class="col-md-12 text-right">
-                            <button class="btn btn-success" onclick="abrirModalDespacho()"><i class="fa fa-arrow-up"></i> Nueva Salida</button>
-                            <button class="btn btn-default" onclick="reloadGridDespachos()"><i class="fa fa-refresh"></i> Actualizar</button>
-                        </div>
-                    </div>
-                    <div class="row" style="margin-bottom: 15px;">
-                        <form id="formFiltrosDespachos" onsubmit="event.preventDefault(); reloadGridDespachos();">
-                            <div class="col-md-2">
-                                <label>Desde:</label>
-                                <input type="date" id="filtro_fec_ini_out" class="form-control input-sm" value="<?php echo date('Y-m-01'); ?>" max="9999-12-31">
-                            </div>
-                            <div class="col-md-2">
-                                <label>Hasta:</label>
-                                <input type="date" id="filtro_fec_fin_out" class="form-control input-sm" value="<?php echo date('Y-m-t'); ?>" max="9999-12-31">
-                            </div>
-                            <div class="col-md-3">
-                                <label>Dispensador:</label>
-                                <select id="filtro_Dis_Cod_Out" class="form-control input-sm">
-                                    <option value="">-- Todos --</option>
-                                    <?php foreach ($dispensadores as $d) {
-                                        echo "<option value='{$d['Dis_Cod']}'>{$d['Dis_Nom']}</option>";
-                                    } ?>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label>Tipo de Salida:</label>
-                                <select id="filtro_Did_Tip_Out" class="form-control input-sm">
-                                    <option value="">-- Todos --</option>
-                                    <option value="SA">SA - Abastecimiento a Maquinaria</option>
-                                    <option value="SC">SC - Ajuste Negativo</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2" style="padding-top: 22px;">
-                                <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i> Buscar</button>
-                                <button type="button" class="btn btn-default btn-sm" onclick="limpiarFiltrosDespachos()"><i class="fa fa-eraser"></i> Limpiar</button>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12 exa-ui-grid-host">
-                            <table id="gridDespachos"></table>
-                            <div id="pagerDespachos"></div>
-                        </div>
-                    </div>
-                </div>
-                <div id="tab-ajustes" class="tab-pane fade">
-                    <div class="row" style="margin-bottom: 10px;">
-                        <div class="col-md-12 text-right">
-                            <button class="btn btn-success" onclick="abrirModalAjuste()"><i class="fa fa-wrench"></i> Nuevo Ajuste</button>
-                            <button class="btn btn-default" onclick="reloadGridAjustes()"><i class="fa fa-refresh"></i> Actualizar</button>
-                        </div>
-                    </div>
-                    <div class="row" style="margin-bottom: 15px;">
-                        <form id="formFiltrosAjustes" onsubmit="event.preventDefault(); reloadGridAjustes();">
-                            <div class="col-md-2">
-                                <label>Desde:</label>
-                                <input type="date" id="filtro_fec_ini_aj" class="form-control input-sm" value="<?php echo date('Y-m-01'); ?>" max="9999-12-31">
-                            </div>
-                            <div class="col-md-2">
-                                <label>Hasta:</label>
-                                <input type="date" id="filtro_fec_fin_aj" class="form-control input-sm" value="<?php echo date('Y-m-t'); ?>" max="9999-12-31">
-                            </div>
-                            <div class="col-md-3">
-                                <label>Dispensador:</label>
-                                <select id="filtro_Dis_Cod_Aj" class="form-control input-sm">
-                                    <option value="">-- Todos --</option>
-                                    <?php foreach ($dispensadores as $d) {
-                                        echo "<option value='{$d['Dis_Cod']}'>{$d['Dis_Nom']}</option>";
-                                    } ?>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label>Tipo de Ajuste:</label>
-                                <select id="filtro_Did_Tip_Aj" class="form-control input-sm">
-                                    <option value="">-- Todos --</option>
-                                    <option value="IC">IC - Ajuste Positivo</option>
-                                    <option value="SC">SC - Ajuste Negativo</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2" style="padding-top: 22px;">
-                                <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i> Buscar</button>
-                                <button type="button" class="btn btn-default btn-sm" onclick="limpiarFiltrosAjustes()"><i class="fa fa-eraser"></i> Limpiar</button>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12 exa-ui-grid-host">
-                            <table id="gridAjustes"></table>
-                            <div id="pagerAjustes"></div>
-                        </div>
-                    </div>
-                </div>
-                <div id="tab-kardex" class="tab-pane fade">
-                    <div class="row" style="margin-bottom: 15px;">
-                        <form id="formFiltrosKardex" onsubmit="event.preventDefault(); consultarKardex();">
-                            <div class="col-md-2">
-                                <label>Desde:</label>
-                                <input type="date" id="filtro_fec_ini_kx" class="form-control input-sm" value="<?php echo date('Y-m-01'); ?>" max="9999-12-31" required>
-                            </div>
-                            <div class="col-md-2">
-                                <label>Hasta:</label>
-                                <input type="date" id="filtro_fec_fin_kx" class="form-control input-sm" value="<?php echo date('Y-m-t'); ?>" max="9999-12-31" required>
-                            </div>
-                            <div class="col-md-3">
-                                <label>Dispensador:</label>
-                                <select id="filtro_Dis_Cod_Kx" class="form-control input-sm">
-                                    <option value="">-- Todos --</option>
-                                    <?php foreach ($dispensadores as $d) {
-                                        echo "<option value='{$d['Dis_Cod']}'>{$d['Dis_Nom']}</option>";
-                                    } ?>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label>Movimiento:</label>
-                                <select id="filtro_Did_Tip_Kx" class="form-control input-sm">
-                                    <option value="">-- Todos --</option>
-                                    <option value="IN">IN - Compra</option>
-                                    <option value="IC">IC - Ajuste Positivo</option>
-                                    <option value="SA">SA - Abastecimiento</option>
-                                    <option value="SC">SC - Ajuste Negativo</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2" style="padding-top: 22px;">
-                                <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i> Consultar</button>
-                                <button type="button" class="btn btn-default btn-sm" onclick="imprimirKardex()"><i class="fa fa-print"></i> Imprimir</button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div class="row" style="margin-bottom: 15px;">
-                        <div class="col-md-3 col-sm-6">
-                            <div class="info-box bg-green">
-                                <span class="info-box-icon"><i class="fa fa-arrow-down"></i></span>
-                                <div class="info-box-content">
-                                    <span class="info-box-text">Total Entradas</span>
-                                    <span class="info-box-number" id="lbl_Kx_In">0.00</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-sm-6">
-                            <div class="info-box bg-red">
-                                <span class="info-box-icon"><i class="fa fa-arrow-up"></i></span>
-                                <div class="info-box-content">
-                                    <span class="info-box-text">Total Salidas</span>
-                                    <span class="info-box-number" id="lbl_Kx_Out">0.00</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-sm-6">
-                            <div class="info-box bg-aqua">
-                                <span class="info-box-icon"><i class="fa fa-exchange"></i></span>
-                                <div class="info-box-content">
-                                    <span class="info-box-text">Movimientos</span>
-                                    <span class="info-box-number" id="lbl_Kx_Mov">0</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-sm-6">
-                            <div class="info-box bg-yellow">
-                                <span class="info-box-icon"><i class="fa fa-database"></i></span>
-                                <div class="info-box-content">
-                                    <span class="info-box-text">Saldo Final</span>
-                                    <span class="info-box-number" id="lbl_Kx_Saldo">0.00</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row" id="divKardexPrint">
-                        <div class="col-md-12 exa-ui-grid-host">
-                            <table id="gridKardex"></table>
-                            <div id="pagerKardex"></div>
-                        </div>
-                    </div>
-                </div>
-                <div id="tab-cierre" class="tab-pane fade">
-                    <div class="row" style="margin-bottom: 15px;">
-                        <form id="formFiltrosCierre" onsubmit="event.preventDefault(); reloadGridCierres();">
-                            <div class="col-md-2">
-                                <label>Desde:</label>
-                                <input type="date" id="filtro_fec_ini_cie" class="form-control input-sm" value="<?php echo date('Y-m-01'); ?>" max="9999-12-31" required>
-                            </div>
-                            <div class="col-md-2">
-                                <label>Hasta:</label>
-                                <input type="date" id="filtro_fec_fin_cie" class="form-control input-sm" value="<?php echo date('Y-m-t'); ?>" max="9999-12-31" required>
-                            </div>
-                            <div class="col-md-3">
-                                <label>Dispensador:</label>
-                                <select id="filtro_Dis_Cod_Cie" class="form-control input-sm">
-                                    <option value="">-- Todos --</option>
-                                    <?php foreach ($dispensadores as $d) {
-                                        echo "<option value='{$d['Dis_Cod']}'>{$d['Dis_Nom']}</option>";
-                                    } ?>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label>Estado:</label>
-                                <select id="filtro_Cie_Estado" class="form-control input-sm">
-                                    <option value="">-- Todos --</option>
-                                    <option value="CUADRADO">CUADRADO</option>
-                                    <option value="SOBRANTE">SOBRANTE</option>
-                                    <option value="DESCUADRADO">DESCUADRADO</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2" style="padding-top: 22px;">
-                                <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i> Buscar</button>
-                                <button type="button" class="btn btn-default btn-sm" onclick="limpiarFiltrosCierres()"><i class="fa fa-eraser"></i> Limpiar</button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div class="row" style="margin-bottom: 10px;">
-                        <div class="col-md-12">
-                            <button class="btn btn-success" onclick="abrirModalCierre()"><i class="fa fa-plus"></i> Nuevo Cierre</button>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12 exa-ui-grid-host">
-                            <table id="gridCierre"></table>
-                            <div id="pagerCierre"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- MODAL CIERRE DIARIO -->
-                <div class="modal fade" id="modalFormularioCierre" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
-                    <div class="modal-dialog modal-lg" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                <h4 class="modal-title"><i class="fa fa-lock"></i> Registrar Cierre Diario</h4>
-                            </div>
-                            <div class="modal-body">
-                                <form id="formCierre" onsubmit="event.preventDefault(); guardarCierre(this);">
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <div class="form-group">
-                                                <label>Fecha de Cierre <span class="text-danger">*</span></label>
-                                                <input type="date" id="Cie_Fec" class="form-control" value="<?php echo date('Y-m-d'); ?>" max="<?php echo date('Y-m-d'); ?>" onchange="cargarCalculoPrevioCierre()" required>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-8">
-                                            <div class="form-group">
-                                                <label>Dispensador <span class="text-danger">*</span></label>
-                                                <select id="Cie_Dis_Cod" class="form-control" onchange="cargarCalculoPrevioCierre()" required>
-                                                    <option value="">Seleccione...</option>
-                                                    <?php foreach ($dispensadores as $d) {
-                                                        echo "<option value='{$d['Dis_Cod']}'>{$d['Dis_Nom']} - {$d['Dis_Cap']} {$d['Dis_Uni']}</option>";
-                                                    } ?>
-                                                </select>
-                                            </div>
-                                        </div>
+                        <!-- SECCI&Oacute;N 1: RESUMEN GENERAL (Tarjetas Superiores) -->
+                        <div class="row">
+                            <div class="col-lg-2 col-xs-6">
+                                <div class="v2-metric-card info">
+                                    <i class="fa fa-hdd-o v2-metric-icon"></i>
+                                    <div class="v2-metric-content">
+                                        <h3 class="v2-metric-value" id="dash_gen_disp">0</h3>
+                                        <p class="v2-metric-label">Dispensadores Activos</p>
                                     </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-xs-6">
+                                <div class="v2-metric-card success">
+                                    <i class="fa fa-cubes v2-metric-icon"></i>
+                                    <div class="v2-metric-content">
+                                        <h3 class="v2-metric-value" id="dash_gen_ext">0</h3>
+                                        <p class="v2-metric-label">Existencia Total (Gl)</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-xs-6">
+                                <div class="v2-metric-card brand">
+                                    <i class="fa fa-arrow-down v2-metric-icon"></i>
+                                    <div class="v2-metric-content">
+                                        <h3 class="v2-metric-value" id="dash_gen_ing">0</h3>
+                                        <p class="v2-metric-label">Ingresos del Per&iacute;odo</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-xs-6">
+                                <div class="v2-metric-card danger">
+                                    <i class="fa fa-arrow-up v2-metric-icon"></i>
+                                    <div class="v2-metric-content">
+                                        <h3 class="v2-metric-value" id="dash_gen_sal">0</h3>
+                                        <p class="v2-metric-label">Despachos Per&iacute;odo</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-xs-6">
+                                <div class="v2-metric-card warning">
+                                    <i class="fa fa-calendar v2-metric-icon"></i>
+                                    <div class="v2-metric-content">
+                                        <h3 class="v2-metric-value" id="dash_gen_condia">0</h3>
+                                        <p class="v2-metric-label">Consumo del D&iacute;a</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-xs-6">
+                                <div class="v2-metric-card purple">
+                                    <i class="fa fa-lock v2-metric-icon"></i>
+                                    <div class="v2-metric-content">
+                                        <h3 class="v2-metric-value" id="dash_gen_cierre" style="font-size: 24px;">-</h3>
+                                        <p class="v2-metric-label">&Uacute;ltimo Cierre</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                                    <div id="boxCalculoTeorico" style="display:none;">
-                                        <h5 class="page-header" style="margin-top:10px;">C&aacute;lculo Te&oacute;rico</h5>
-                                        <div class="row text-center" style="margin-bottom:15px;">
-                                            <div class="col-md-3">
-                                                <div class="well well-sm" style="background:#f9f9f9; border-left:3px solid #777;">
-                                                    <small class="text-muted">Existencia Inicial</small><br>
-                                                    <h4 id="lbl_cie_ini" style="margin:5px 0 0 0;">0.00</h4>
-                                                    <input type="hidden" id="cie_ini_val" value="0">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="well well-sm" style="background:#f9f9f9; border-left:3px solid #00a65a;">
-                                                    <small class="text-muted">(+) Ingresos del D&iacute;a</small><br>
-                                                    <h4 id="lbl_cie_ing" class="text-success" style="margin:5px 0 0 0;">0.00</h4>
-                                                    <input type="hidden" id="cie_ing_val" value="0">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="well well-sm" style="background:#f9f9f9; border-left:3px solid #dd4b39;">
-                                                    <small class="text-muted">(-) Salidas del D&iacute;a</small><br>
-                                                    <h4 id="lbl_cie_sal" class="text-danger" style="margin:5px 0 0 0;">0.00</h4>
-                                                    <input type="hidden" id="cie_sal_val" value="0">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="well well-sm" style="background:#f4f4f4; border-left:3px solid #00c0ef;">
-                                                    <small class="text-muted">(=) Existencia Te&oacute;rica</small><br>
-                                                    <h4 id="lbl_cie_teo" class="text-info font-bold" style="margin:5px 0 0 0;">0.00</h4>
-                                                    <input type="hidden" id="cie_teo_val" value="0">
-                                                </div>
-                                            </div>
-                                        </div>
+                        <!-- SECCI&Oacute;N 2: ESTADO DE DISPENSADORES -->
+                        <h4 class="page-header"><i class="fa fa-battery-half"></i> Estado de Dispensadores</h4>
+                        <div class="row" id="dash_dispensadores_container">
+                            <!-- Renderizado din&aacute;mico -->
+                        </div>
 
-                                        <h5 class="page-header">Medici&oacute;n F&iacute;sica</h5>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <!-- SECCI&Oacute;N 7: GR&Aacute;FICO (Consumo Diario) -->
+                                <div class="v2-panel">
+                                    <div class="v2-panel-header">
+                                        <i class="fa fa-bar-chart"></i> Consumo Diario
+                                    </div>
+                                    <div class="v2-panel-body">
+                                        <canvas id="chartConsumoDiario" style="height: 250px; width: 100%;"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <!-- SECCI&Oacute;N 3: MOVIMIENTOS DEL D&Iacute;A -->
+                                <div class="v2-panel">
+                                    <div class="v2-panel-header">
+                                        <i class="fa fa-exchange"></i> Movimientos del D&iacute;a
+                                    </div>
+                                    <div class="v2-panel-body" style="padding:0;">
+                                        <table class="v2-table">
+                                            <tbody>
+                                                <tr>
+                                                    <td><strong>(IN) Compra Proveedor</strong></td>
+                                                    <td class="text-right" style="color:#27ae60; font-weight:bold;" id="dash_dia_in">0.00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>(IC) Ajuste (+)</strong></td>
+                                                    <td class="text-right" style="color:#2980b9; font-weight:bold;" id="dash_dia_ic">0.00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>(SA) Abastecimiento</strong></td>
+                                                    <td class="text-right" style="color:#c0392b; font-weight:bold;" id="dash_dia_sa">0.00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>(SC) Ajuste (-)</strong></td>
+                                                    <td class="text-right" style="color:#f39c12; font-weight:bold;" id="dash_dia_sc">0.00</td>
+                                                </tr>
+                                            </tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <th style="background:var(--v2-bg-grid);">Total Movimientos</th>
+                                                    <th class="text-right" style="background:var(--v2-bg-grid); color:var(--v2-brand-dark);" id="dash_dia_total">0.00</th>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- SECCI&Oacute;N 4: CIERRES -->
+                                <div class="v2-panel">
+                                    <div class="v2-panel-header">
+                                        <i class="fa fa-lock"></i> Estado &Uacute;ltimo Cierre
+                                    </div>
+                                    <div class="v2-panel-body v2-cierre-status">
+                                        <div class="v2-cierre-fecha" id="dash_cierre_fecha">-</div>
+                                        <div class="v2-cierre-valor" id="dash_cierre_estado">-</div>
+                                        <p style="color:var(--v2-text-muted); font-size:13px; margin:0;">Diferencia: <strong id="dash_cierre_dif" style="color:var(--v2-text);">0.00</strong></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECCI&Oacute;N 5: TOP MAQUINARIAS -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="v2-panel">
+                                    <div class="v2-panel-header">
+                                        <i class="fa fa-truck"></i> Top 5 Maquinarias (Mayor Consumo en el Per&iacute;odo)
+                                    </div>
+                                    <div style="overflow-x:auto;">
+                                        <table class="v2-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Maquinaria</th>
+                                                    <th class="text-right">Consumo Total</th>
+                                                    <th>Operador (Usuario)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="dash_top_maq_body">
+                                                <tr>
+                                                    <td colspan="4" class="text-center">Cargando...</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="tab-despachos" class="tab-pane fade">
+                        <div class="row" style="margin-bottom: 10px;">
+                            <div class="col-md-12 text-right">
+                                <button class="btn btn-success" onclick="abrirModalDespacho()"><i class="fa fa-arrow-up"></i> Nueva Salida</button>
+                                <button class="btn btn-default" onclick="reloadGridDespachos()"><i class="fa fa-refresh"></i> Actualizar</button>
+                            </div>
+                        </div>
+                        <div class="row" style="margin-bottom: 15px;">
+                            <form id="formFiltrosDespachos" onsubmit="event.preventDefault(); reloadGridDespachos();">
+                                <div class="col-md-2">
+                                    <label>Desde:</label>
+                                    <input type="date" id="filtro_fec_ini_out" class="form-control input-sm" value="<?php echo date('Y-m-01'); ?>" max="9999-12-31">
+                                </div>
+                                <div class="col-md-2">
+                                    <label>Hasta:</label>
+                                    <input type="date" id="filtro_fec_fin_out" class="form-control input-sm" value="<?php echo date('Y-m-t'); ?>" max="9999-12-31">
+                                </div>
+                                <div class="col-md-3">
+                                    <label>Dispensador:</label>
+                                    <select id="filtro_Dis_Cod_Out" class="form-control input-sm">
+                                        <option value="">-- Todos --</option>
+                                        <?php foreach ($dispensadores as $d) {
+                                            echo "<option value='{$d['Dis_Cod']}'>{$d['Dis_Nom']}</option>";
+                                        } ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label>Tipo de Salida:</label>
+                                    <select id="filtro_Did_Tip_Out" class="form-control input-sm">
+                                        <option value="">-- Todos --</option>
+                                        <option value="SA">SA - Abastecimiento a Maquinaria</option>
+                                        <option value="SC">SC - Ajuste Negativo</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2" style="padding-top: 22px;">
+                                    <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i> Buscar</button>
+                                    <button type="button" class="btn btn-default btn-sm" onclick="limpiarFiltrosDespachos()"><i class="fa fa-eraser"></i> Limpiar</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 exa-ui-grid-host">
+                                <table id="gridDespachos"></table>
+                                <div id="pagerDespachos"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tab-ajustes" class="tab-pane fade">
+                        <div class="row" style="margin-bottom: 10px;">
+                            <div class="col-md-12 text-right">
+                                <button class="btn btn-success" onclick="abrirModalAjuste()"><i class="fa fa-wrench"></i> Nuevo Ajuste</button>
+                                <button class="btn btn-default" onclick="reloadGridAjustes()"><i class="fa fa-refresh"></i> Actualizar</button>
+                            </div>
+                        </div>
+                        <div class="row" style="margin-bottom: 15px;">
+                            <form id="formFiltrosAjustes" onsubmit="event.preventDefault(); reloadGridAjustes();">
+                                <div class="col-md-2">
+                                    <label>Desde:</label>
+                                    <input type="date" id="filtro_fec_ini_aj" class="form-control input-sm" value="<?php echo date('Y-m-01'); ?>" max="9999-12-31">
+                                </div>
+                                <div class="col-md-2">
+                                    <label>Hasta:</label>
+                                    <input type="date" id="filtro_fec_fin_aj" class="form-control input-sm" value="<?php echo date('Y-m-t'); ?>" max="9999-12-31">
+                                </div>
+                                <div class="col-md-3">
+                                    <label>Dispensador:</label>
+                                    <select id="filtro_Dis_Cod_Aj" class="form-control input-sm">
+                                        <option value="">-- Todos --</option>
+                                        <?php foreach ($dispensadores as $d) {
+                                            echo "<option value='{$d['Dis_Cod']}'>{$d['Dis_Nom']}</option>";
+                                        } ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label>Tipo de Ajuste:</label>
+                                    <select id="filtro_Did_Tip_Aj" class="form-control input-sm">
+                                        <option value="">-- Todos --</option>
+                                        <option value="IC">IC - Ajuste Positivo</option>
+                                        <option value="SC">SC - Ajuste Negativo</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2" style="padding-top: 22px;">
+                                    <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i> Buscar</button>
+                                    <button type="button" class="btn btn-default btn-sm" onclick="limpiarFiltrosAjustes()"><i class="fa fa-eraser"></i> Limpiar</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 exa-ui-grid-host">
+                                <table id="gridAjustes"></table>
+                                <div id="pagerAjustes"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tab-kardex" class="tab-pane fade">
+                        <div class="row" style="margin-bottom: 15px;">
+                            <form id="formFiltrosKardex" onsubmit="event.preventDefault(); consultarKardex();">
+                                <div class="col-md-2">
+                                    <label>Desde:</label>
+                                    <input type="date" id="filtro_fec_ini_kx" class="form-control input-sm" value="<?php echo date('Y-m-01'); ?>" max="9999-12-31" required>
+                                </div>
+                                <div class="col-md-2">
+                                    <label>Hasta:</label>
+                                    <input type="date" id="filtro_fec_fin_kx" class="form-control input-sm" value="<?php echo date('Y-m-t'); ?>" max="9999-12-31" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label>Dispensador:</label>
+                                    <select id="filtro_Dis_Cod_Kx" class="form-control input-sm">
+                                        <option value="">-- Todos --</option>
+                                        <?php foreach ($dispensadores as $d) {
+                                            echo "<option value='{$d['Dis_Cod']}'>{$d['Dis_Nom']}</option>";
+                                        } ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label>Movimiento:</label>
+                                    <select id="filtro_Did_Tip_Kx" class="form-control input-sm">
+                                        <option value="">-- Todos --</option>
+                                        <option value="IN">IN - Compra</option>
+                                        <option value="IC">IC - Ajuste Positivo</option>
+                                        <option value="SA">SA - Abastecimiento</option>
+                                        <option value="SC">SC - Ajuste Negativo</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2" style="padding-top: 22px;">
+                                    <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i> Consultar</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="row" style="margin-bottom: 15px;">
+                            <div class="col-md-3 col-sm-6">
+                                <div class="v2-metric-card success">
+                                    <i class="fa fa-arrow-down v2-metric-icon"></i>
+                                    <div class="v2-metric-content">
+                                        <h3 class="v2-metric-value" id="lbl_Kx_In">0.00</h3>
+                                        <p class="v2-metric-label">Total Entradas</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="v2-metric-card danger">
+                                    <i class="fa fa-arrow-up v2-metric-icon"></i>
+                                    <div class="v2-metric-content">
+                                        <h3 class="v2-metric-value" id="lbl_Kx_Out">0.00</h3>
+                                        <p class="v2-metric-label">Total Salidas</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="v2-metric-card info">
+                                    <i class="fa fa-exchange v2-metric-icon"></i>
+                                    <div class="v2-metric-content">
+                                        <h3 class="v2-metric-value" id="lbl_Kx_Mov">0</h3>
+                                        <p class="v2-metric-label">Movimientos</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="v2-metric-card warning">
+                                    <i class="fa fa-database v2-metric-icon"></i>
+                                    <div class="v2-metric-content">
+                                        <h3 class="v2-metric-value" id="lbl_Kx_Saldo">0.00</h3>
+                                        <p class="v2-metric-label">Saldo Final</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row" id="divKardexPrint">
+                            <div class="col-md-12 exa-ui-grid-host">
+                                <table id="gridKardex"></table>
+                                <div id="pagerKardex"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tab-cierre" class="tab-pane fade">
+                        <div class="row" style="margin-bottom: 15px;">
+                            <form id="formFiltrosCierre" onsubmit="event.preventDefault(); reloadGridCierres();">
+                                <div class="col-md-2">
+                                    <label>Desde:</label>
+                                    <input type="date" id="filtro_fec_ini_cie" class="form-control input-sm" value="<?php echo date('Y-m-01'); ?>" max="9999-12-31" required>
+                                </div>
+                                <div class="col-md-2">
+                                    <label>Hasta:</label>
+                                    <input type="date" id="filtro_fec_fin_cie" class="form-control input-sm" value="<?php echo date('Y-m-t'); ?>" max="9999-12-31" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label>Dispensador:</label>
+                                    <select id="filtro_Dis_Cod_Cie" class="form-control input-sm">
+                                        <option value="">-- Todos --</option>
+                                        <?php foreach ($dispensadores as $d) {
+                                            echo "<option value='{$d['Dis_Cod']}'>{$d['Dis_Nom']}</option>";
+                                        } ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label>Estado:</label>
+                                    <select id="filtro_Cie_Estado" class="form-control input-sm">
+                                        <option value="">-- Todos --</option>
+                                        <option value="CUADRADO">CUADRADO</option>
+                                        <option value="SOBRANTE">SOBRANTE</option>
+                                        <option value="DESCUADRADO">DESCUADRADO</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2" style="padding-top: 22px;">
+                                    <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i> Buscar</button>
+                                    <button type="button" class="btn btn-default btn-sm" onclick="limpiarFiltrosCierres()"><i class="fa fa-eraser"></i> Limpiar</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="row" style="margin-bottom: 10px;">
+                            <div class="col-md-12">
+                                <button class="btn btn-success" onclick="abrirModalCierre()"><i class="fa fa-plus"></i> Nuevo Cierre</button>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 exa-ui-grid-host">
+                                <table id="gridCierre"></table>
+                                <div id="pagerCierre"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MODAL CIERRE DIARIO -->
+                    <div class="modal fade" id="modalFormularioCierre" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+                        <div class="modal-dialog modal-lg" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                    <h4 class="modal-title"><i class="fa fa-lock"></i> Registrar Cierre Diario</h4>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="formCierre" onsubmit="event.preventDefault(); guardarCierre(this);">
                                         <div class="row">
                                             <div class="col-md-4">
                                                 <div class="form-group">
-                                                    <label>Existencia F&iacute;sica <span class="text-danger">*</span></label>
-                                                    <div class="input-group">
-                                                        <input type="number" id="Cie_Fis" class="form-control" step="0.01" min="0" onkeyup="calcularDiferenciaCierre()" onchange="calcularDiferenciaCierre()" required>
-                                                        <span class="input-group-addon"><i class="fa fa-tachometer"></i></span>
+                                                    <label>Fecha de Cierre <span class="text-danger">*</span></label>
+                                                    <input type="date" id="Cie_Fec" class="form-control" value="<?php echo date('Y-m-d'); ?>" max="<?php echo date('Y-m-d'); ?>" onchange="cargarCalculoPrevioCierre()" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="form-group">
+                                                    <label>Dispensador <span class="text-danger">*</span></label>
+                                                    <select id="Cie_Dis_Cod" class="form-control" onchange="cargarCalculoPrevioCierre()" required>
+                                                        <option value="">Seleccione...</option>
+                                                        <?php foreach ($dispensadores as $d) {
+                                                            echo "<option value='{$d['Dis_Cod']}'>{$d['Dis_Nom']} - {$d['Dis_Cap']} {$d['Dis_Uni']}</option>";
+                                                        } ?>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div id="boxCalculoTeorico" style="display:none;">
+                                            <h5 class="page-header" style="margin-top:10px;">C&aacute;lculo Te&oacute;rico</h5>
+                                            <div class="row text-center" style="margin-bottom:15px;">
+                                                <div class="col-md-3">
+                                                    <div class="well well-sm" style="background:#f9f9f9; border-left:3px solid #777;">
+                                                        <small class="text-muted">Existencia Inicial</small><br>
+                                                        <h4 id="lbl_cie_ini" style="margin:5px 0 0 0;">0.00</h4>
+                                                        <input type="hidden" id="cie_ini_val" value="0">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="well well-sm" style="background:#f9f9f9; border-left:3px solid #00a65a;">
+                                                        <small class="text-muted">(+) Ingresos del D&iacute;a</small><br>
+                                                        <h4 id="lbl_cie_ing" class="text-success" style="margin:5px 0 0 0;">0.00</h4>
+                                                        <input type="hidden" id="cie_ing_val" value="0">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="well well-sm" style="background:#f9f9f9; border-left:3px solid #dd4b39;">
+                                                        <small class="text-muted">(-) Salidas del D&iacute;a</small><br>
+                                                        <h4 id="lbl_cie_sal" class="text-danger" style="margin:5px 0 0 0;">0.00</h4>
+                                                        <input type="hidden" id="cie_sal_val" value="0">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="well well-sm" style="background:#f4f4f4; border-left:3px solid #00c0ef;">
+                                                        <small class="text-muted">(=) Existencia Te&oacute;rica</small><br>
+                                                        <h4 id="lbl_cie_teo" class="text-info font-bold" style="margin:5px 0 0 0;">0.00</h4>
+                                                        <input type="hidden" id="cie_teo_val" value="0">
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-md-4">
-                                                <div class="form-group">
-                                                    <label>Diferencia</label>
-                                                    <input type="text" id="Cie_Dif" class="form-control" readonly>
-                                                    <input type="hidden" id="cie_dif_val" value="0">
+
+                                            <h5 class="page-header">Medici&oacute;n F&iacute;sica</h5>
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <div class="form-group">
+                                                        <label>Existencia F&iacute;sica <span class="text-danger">*</span></label>
+                                                        <div class="input-group">
+                                                            <input type="number" id="Cie_Fis" class="form-control" step="0.01" min="0" onkeyup="calcularDiferenciaCierre()" onchange="calcularDiferenciaCierre()" required>
+                                                            <span class="input-group-addon"><i class="fa fa-tachometer"></i></span>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="form-group">
-                                                    <label>Estado</label><br>
-                                                    <h3 id="lbl_cie_estado" style="text-align: center; margin:0; padding:5px 10px; border-radius:4px;" class="bg-gray text-center">-</h3>
-                                                    <input type="hidden" id="cie_estado_val" value="">
+                                                <div class="col-md-4">
+                                                    <div class="form-group">
+                                                        <label>Diferencia</label>
+                                                        <input type="text" id="Cie_Dif" class="form-control" readonly>
+                                                        <input type="hidden" id="cie_dif_val" value="0">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-group">
+                                                        <label>Estado</label><br>
+                                                        <h3 id="lbl_cie_estado" style="text-align: center; margin:0; padding:5px 10px; border-radius:4px;" class="bg-gray text-center">-</h3>
+                                                        <input type="hidden" id="cie_estado_val" value="">
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <div class="form-group">
-                                                <label>Observaci&oacute;n (Opcional)</label>
-                                                <textarea id="Cie_Obs" class="form-control" rows="2" maxlength="250" placeholder="Motivo de la diferencia, condiciones especiales, etc."></textarea>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label>Observaci&oacute;n (Opcional)</label>
+                                                    <textarea id="Cie_Obs" class="form-control" rows="2" maxlength="250" placeholder="Motivo de la diferencia, condiciones especiales, etc."></textarea>
+                                                </div>
                                             </div>
                                         </div>
+                                        <hr>
+                                        <div class="text-right">
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                                            <button type="submit" class="btn btn-success" id="btnGuardarCierre" disabled><i class="fa fa-save"></i> Guardar Cierre</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- FIN MODAL CIERRE DIARIO -->
+                    <div id="tab-reportes" class="tab-pane fade">
+                        <div class="alert alert-info"><i class="fa fa-info-circle"></i> Funcionalidad pendiente de implementaci&oacute;n. (Fases futuras)</div>
+                    </div>
+
+                    <!-- =============================== -->
+                    <!-- TAB 1: DISPENSADORES            -->
+                    <!-- =============================== -->
+                    <div id="tab-dispensadores" class="tab-pane fade in active">
+                        <div class="row" style="margin-bottom: 10px;">
+                            <div class="col-md-6">
+                                <form id="formSearch" onsubmit="event.preventDefault(); searchGrid();" class="form-inline">
+                                    <div class="form-group">
+                                        <input type="text" class="form-control" id="search_dis_nom" placeholder="Buscar por nombre...">
                                     </div>
-                                    <hr>
-                                    <div class="text-right">
-                                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
-                                        <button type="submit" class="btn btn-success" id="btnGuardarCierre" disabled><i class="fa fa-save"></i> Guardar Cierre</button>
-                                    </div>
+                                    <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> Buscar</button>
                                 </form>
                             </div>
+                            <div class="col-md-6 text-right">
+                                <button class="btn btn-success" onclick="abrirModalNuevo()"><i class="fa fa-plus"></i> Nuevo Dispensador</button>
+                                <button class="btn btn-default" onclick="reloadGrid()"><i class="fa fa-refresh"></i> Actualizar</button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 exa-ui-grid-host">
+                                <table id="gridData"></table>
+                                <div id="pagerData"></div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <!-- FIN MODAL CIERRE DIARIO -->
-                <div id="tab-reportes" class="tab-pane fade">
-                    <div class="alert alert-info"><i class="fa fa-info-circle"></i> Funcionalidad pendiente de implementaci&oacute;n. (Fases futuras)</div>
-                </div>
 
-                <!-- =============================== -->
-                <!-- TAB 1: DISPENSADORES            -->
-                <!-- =============================== -->
-                <div id="tab-dispensadores" class="tab-pane fade in active">
-                    <div class="row" style="margin-bottom: 10px;">
-                        <div class="col-md-6">
-                            <form id="formSearch" onsubmit="event.preventDefault(); searchGrid();" class="form-inline">
-                                <div class="form-group">
-                                    <input type="text" class="form-control" id="search_dis_nom" placeholder="Buscar por nombre...">
+                    <!-- =============================== -->
+                    <!-- TAB 2: CARGA DE COMBUSTIBLE     -->
+                    <!-- =============================== -->
+                    <div id="tab-ingresos" class="tab-pane fade">
+                        <div class="row" style="margin-bottom: 10px;">
+                            <div class="col-md-12 text-right">
+                                <button class="btn btn-success" onclick="abrirModalIngreso()"><i class="fa fa-plus"></i> Nueva Carga</button>
+                                <button class="btn btn-default" onclick="reloadGridIngresos()"><i class="fa fa-refresh"></i> Actualizar</button>
+                            </div>
+                        </div>
+                        <div class="row" style="margin-bottom: 15px;">
+                            <form id="formFiltrosIngresos" onsubmit="event.preventDefault(); reloadGridIngresos();">
+                                <div class="col-md-2">
+                                    <label>Desde:</label>
+                                    <input type="date" id="filtro_fec_ini" class="form-control input-sm" value="<?php echo date('Y-m-01'); ?>" max="9999-12-31">
                                 </div>
-                                <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> Buscar</button>
+                                <div class="col-md-2">
+                                    <label>Hasta:</label>
+                                    <input type="date" id="filtro_fec_fin" class="form-control input-sm" value="<?php echo date('Y-m-t'); ?>" max="9999-12-31">
+                                </div>
+                                <div class="col-md-3">
+                                    <label>Dispensador:</label>
+                                    <select id="filtro_Dis_Cod_In" class="form-control input-sm">
+                                        <option value="">-- Todos --</option>
+                                        <?php foreach ($dispensadores as $d) {
+                                            echo "<option value='{$d['Dis_Cod']}'>{$d['Dis_Nom']}</option>";
+                                        } ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label>Proveedor (Ref. Antiguos):</label>
+                                    <select id="filtro_Prv_Cod_In" class="form-control input-sm">
+                                        <option value="">-- Todos --</option>
+                                        <?php foreach ($proveedores as $p) {
+                                            echo "<option value='{$p['Prv_Cod']}'>{$p['proveedor_nombre']}</option>";
+                                        } ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-2" style="padding-top: 22px;">
+                                    <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i> Buscar</button>
+                                    <button type="button" class="btn btn-default btn-sm" onclick="limpiarFiltrosIngresos()"><i class="fa fa-eraser"></i> Limpiar</button>
+                                </div>
                             </form>
                         </div>
-                        <div class="col-md-6 text-right">
-                            <button class="btn btn-success" onclick="abrirModalNuevo()"><i class="fa fa-plus"></i> Nuevo Dispensador</button>
-                            <button class="btn btn-default" onclick="reloadGrid()"><i class="fa fa-refresh"></i> Actualizar</button>
+                        <div class="row">
+                            <div class="col-md-12 exa-ui-grid-host">
+                                <table id="gridIngresos"></table>
+                                <div id="pagerIngresos"></div>
+                            </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-12 exa-ui-grid-host">
-                            <table id="gridData"></table>
-                            <div id="pagerData"></div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- =============================== -->
-                <!-- TAB 2: CARGA DE COMBUSTIBLE     -->
-                <!-- =============================== -->
-                <div id="tab-ingresos" class="tab-pane fade">
-                    <div class="row" style="margin-bottom: 10px;">
-                        <div class="col-md-12 text-right">
-                            <button class="btn btn-success" onclick="abrirModalIngreso()"><i class="fa fa-plus"></i> Nueva Carga</button>
-                            <button class="btn btn-default" onclick="reloadGridIngresos()"><i class="fa fa-refresh"></i> Actualizar</button>
-                        </div>
-                    </div>
-                    <div class="row" style="margin-bottom: 15px;">
-                        <form id="formFiltrosIngresos" onsubmit="event.preventDefault(); reloadGridIngresos();">
-                            <div class="col-md-2">
-                                <label>Desde:</label>
-                                <input type="date" id="filtro_fec_ini" class="form-control input-sm" value="<?php echo date('Y-m-01'); ?>" max="9999-12-31">
-                            </div>
-                            <div class="col-md-2">
-                                <label>Hasta:</label>
-                                <input type="date" id="filtro_fec_fin" class="form-control input-sm" value="<?php echo date('Y-m-t'); ?>" max="9999-12-31">
-                            </div>
-                            <div class="col-md-3">
-                                <label>Dispensador:</label>
-                                <select id="filtro_Dis_Cod_In" class="form-control input-sm">
-                                    <option value="">-- Todos --</option>
-                                    <?php foreach ($dispensadores as $d) {
-                                        echo "<option value='{$d['Dis_Cod']}'>{$d['Dis_Nom']}</option>";
-                                    } ?>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label>Proveedor (Ref. Antiguos):</label>
-                                <select id="filtro_Prv_Cod_In" class="form-control input-sm">
-                                    <option value="">-- Todos --</option>
-                                    <?php foreach ($proveedores as $p) {
-                                        echo "<option value='{$p['Prv_Cod']}'>{$p['proveedor_nombre']}</option>";
-                                    } ?>
-                                </select>
-                            </div>
-                            <div class="col-md-2" style="padding-top: 22px;">
-                                <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i> Buscar</button>
-                                <button type="button" class="btn btn-default btn-sm" onclick="limpiarFiltrosIngresos()"><i class="fa fa-eraser"></i> Limpiar</button>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12 exa-ui-grid-host">
-                            <table id="gridIngresos"></table>
-                            <div id="pagerIngresos"></div>
-                        </div>
-                    </div>
-                </div>
-
-            </div> <!-- fin tab-content -->
+                </div> <!-- fin tab-content -->
+            </div> <!-- fin nav-tabs-custom -->
         </div>
     </div>
 
@@ -1568,7 +1592,7 @@ $obBD_con1->utf8_change_param($vehiculos);
 
                         <div class="row" id="div_vehiculo" style="display:none;">
                             <div class="col-md-12 form-group">
-                                <label for="Veh_Cod_In">Vehículo Consignado <span class="text-danger">*</span></label>
+                                <label for="Veh_Cod_In">Veh&iacute;culo Consignado <span class="text-danger">*</span></label>
                                 <select class="form-control" id="Veh_Cod_In" name="Veh_Cod">
                                     <option value="">-- Seleccione --</option>
                                     <?php foreach ($vehiculos as $v) {
@@ -1627,7 +1651,7 @@ $obBD_con1->utf8_change_param($vehiculos);
                                 <select class="form-control" id="Did_Tip_Out" name="Did_Tip" required onchange="cambiarTipoSalida()">
                                     <option value="">-- Seleccione --</option>
                                     <option value="SA">SA - Abastecimiento a Maquinaria</option>
-                                    <option value="SC">SC - Ajuste Negativo / Corrección</option>
+                                    <option value="SC">SC - Ajuste Negativo / Correcci&oacute;n</option>
                                 </select>
                             </div>
                         </div>
@@ -1665,7 +1689,7 @@ $obBD_con1->utf8_change_param($vehiculos);
 
                         <div class="row" id="div_vehiculo_out" style="display:none;">
                             <div class="col-md-12 form-group">
-                                <label for="Veh_Cod_Out">Maquinaria / Vehículo <span class="text-danger">*</span></label>
+                                <label for="Veh_Cod_Out">Maquinaria / Veh&iacute;culo <span class="text-danger">*</span></label>
                                 <select class="form-control" id="Veh_Cod_Out" name="Veh_Cod">
                                     <option value="">-- Seleccione --</option>
                                     <?php foreach ($vehiculos as $v) {
@@ -1770,8 +1794,8 @@ $obBD_con1->utf8_change_param($vehiculos);
 
                         <div class="row">
                             <div class="col-md-12 form-group">
-                                <label for="Did_Obs_Aj">Motivo / Observación del Ajuste <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="Did_Obs_Aj" name="Did_Obs" maxlength="250" placeholder="Ej: Medición de varilla, limpieza de tanque..." required>
+                                <label for="Did_Obs_Aj">Motivo / Observaci&oacute;n del Ajuste <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="Did_Obs_Aj" name="Did_Obs" maxlength="250" placeholder="Ej: Medici&oacute;n de varilla, limpieza de tanque..." required>
                             </div>
                         </div>
 
@@ -1799,8 +1823,10 @@ $obBD_con1->utf8_change_param($vehiculos);
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
 
     <!-- Carga de JS -->
-    <script src="../VALIDACIONES/man_val_maquinaria_dispensador.js?v=8"></script>
+    <script language="javascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
+    <script src="../VALIDACIONES/man_val_maquinaria_dispensador.js?v=10"></script>
 
+    <!-- Liberacion y cierre de conexiones -->
     <?php
         $obBD_con1->liberar();
         $obBD_conexion->cerrar();

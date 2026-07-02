@@ -1,4 +1,5 @@
 $(document).ready(function () {
+
     // Inicializar grids
     inicializarGridDispensador();
     inicializarGridIngresos();
@@ -60,6 +61,7 @@ function inicializarGridDispensador() {
         url: 'man_alt_maquinaria_dispensador.php?listGridAjax=true',
         datatype: "json",
         mtype: "GET",
+        cmTemplate: { sortable: false },
         colNames: ['Cod', 'Nombre', 'Capacidad', 'Combustible', 'Unidad', 'Estado', 'Opciones'],
         colModel: [
             { name: 'Dis_Cod', index: 'Dis_Cod', width: 50, align: 'center', key: true },
@@ -85,7 +87,13 @@ function inicializarGridDispensador() {
             }
         }
     });
-    $("#gridData").jqGrid('navGrid', '#pagerData', { edit: false, add: false, del: false, search: false, refresh: false });
+    $("#gridData").jqGrid('navGrid', '#pagerData', { edit: false, add: false, del: false, search: false, refresh: true, view: true })
+    .jqGrid('navButtonAdd', '#pagerData', {
+        caption: "", title: "Exportar a Excel", buttonicon: "ui-icon-document",
+        onClickButton: function () {
+            $("#gridData").jqGrid('exportGridExcel', { nombre: 'Dispensadores', hoja: 'Datos', footer: false, removeHiddens: true });
+        }, position: "last"
+    });
 }
 
 function formatoCombustible(cellvalue, options, rowObject) {
@@ -247,11 +255,13 @@ function inicializarGridIngresos() {
         url: 'man_alt_maquinaria_dispensador.php?listIngresosGridAjax=true',
         datatype: "json",
         mtype: "GET",
-        colNames: ['Cod', 'Tipo', 'Fecha', 'Dispensador', 'Responsable', 'Cantidad', 'Precio Unit.', 'Total Ref.', 'Estado', 'Opciones'],
+        cmTemplate: { sortable: false },
+        colNames: ['Cod', 'Tipo', 'Fecha', 'Hora', 'Dispensador', 'Responsable', 'Cantidad', 'Precio Unit.', 'Total Ref.', 'Estado', 'Opciones'],
         colModel: [
             { name: 'Did_Cod', index: 'Did_Cod', width: 50, align: 'center', key: true },
             { name: 'Did_Tip', index: 'Did_Tip', width: 120, align: 'center', formatter: formatoTipoIngreso },
-            { name: 'Did_Fec', index: 'Did_Fec', width: 80, align: 'center' },
+            { name: 'Did_Fec_Fecha', index: 'Did_Fec', width: 80, align: 'center', formatter: function(cv, opt, row) { return row.Did_Fec ? row.Did_Fec.split(' ')[0] : ''; } },
+            { name: 'Did_Fec_Hora', index: 'Did_Fec', width: 60, align: 'center', formatter: function(cv, opt, row) { return row.Did_Fec && row.Did_Fec.split(' ').length > 1 ? row.Did_Fec.split(' ')[1] : ''; } },
             { name: 'Dis_Nom', index: 'Dis_Nom', width: 150 },
             { name: 'responsable', index: 'responsable', width: 180, formatter: formatoResponsableIngreso },
             { name: 'Did_Can', index: 'Did_Can', width: 80, align: 'right', formatter: 'number' },
@@ -293,7 +303,13 @@ function inicializarGridIngresos() {
             }
         }
     });
-    $("#gridIngresos").jqGrid('navGrid', '#pagerIngresos', { edit: false, add: false, del: false, search: false, refresh: false });
+    $("#gridIngresos").jqGrid('navGrid', '#pagerIngresos', { edit: false, add: false, del: false, search: false, refresh: true, view: true })
+    .jqGrid('navButtonAdd', '#pagerIngresos', {
+        caption: "", title: "Exportar a Excel", buttonicon: "ui-icon-document",
+        onClickButton: function () {
+            $("#gridIngresos").jqGrid('exportGridExcel', { nombre: 'Ingresos_Combustible', hoja: 'Datos', footer: true, removeHiddens: true });
+        }, position: "last"
+    });
 }
 
 function formatoTipoIngreso(cellvalue, options, rowObject) {
@@ -540,11 +556,13 @@ function inicializarGridDespachos() {
         url: 'man_alt_maquinaria_dispensador.php?listDespachosGridAjax=true',
         datatype: "json",
         mtype: "GET",
-        colNames: ['Cod', 'Tipo', 'Fecha', 'Dispensador', 'Responsable / Destino', 'Cantidad', 'Precio Ref.', 'Total Ref.', 'Estado', 'Opciones'],
+        cmTemplate: { sortable: false },
+        colNames: ['Cod', 'Tipo', 'Fecha', 'Hora', 'Dispensador', 'Responsable / Destino', 'Cantidad', 'Precio Ref.', 'Total Ref.', 'Estado', 'Opciones'],
         colModel: [
             { name: 'Did_Cod', index: 'Did_Cod', width: 50, align: 'center', key: true },
             { name: 'Did_Tip', index: 'Did_Tip', width: 120, align: 'center', formatter: formatoTipoDespacho },
-            { name: 'Did_Fec', index: 'Did_Fec', width: 80, align: 'center' },
+            { name: 'Did_Fec_Fecha', index: 'Did_Fec', width: 80, align: 'center', formatter: function(cv, opt, row) { return row.Did_Fec ? row.Did_Fec.split(' ')[0] : ''; } },
+            { name: 'Did_Fec_Hora', index: 'Did_Fec', width: 60, align: 'center', formatter: function(cv, opt, row) { return row.Did_Fec && row.Did_Fec.split(' ').length > 1 ? row.Did_Fec.split(' ')[1] : ''; } },
             { name: 'Dis_Nom', index: 'Dis_Nom', width: 150 },
             { name: 'responsable', index: 'responsable', width: 180, formatter: formatoResponsableDespacho },
             { name: 'Did_Can', index: 'Did_Can', width: 80, align: 'right', formatter: 'number' },
@@ -586,7 +604,13 @@ function inicializarGridDespachos() {
             }
         }
     });
-    $("#gridDespachos").jqGrid('navGrid', '#pagerDespachos', { edit: false, add: false, del: false, search: false, refresh: false });
+    $("#gridDespachos").jqGrid('navGrid', '#pagerDespachos', { edit: false, add: false, del: false, search: false, refresh: true, view: true })
+    .jqGrid('navButtonAdd', '#pagerDespachos', {
+        caption: "", title: "Exportar a Excel", buttonicon: "ui-icon-document",
+        onClickButton: function () {
+            $("#gridDespachos").jqGrid('exportGridExcel', { nombre: 'Salidas_Combustible', hoja: 'Datos', footer: true, removeHiddens: true });
+        }, position: "last"
+    });
 }
 
 function formatoTipoDespacho(cellvalue, options, rowObject) {
@@ -853,10 +877,14 @@ function inicializarGridAjustes() {
             Dis_Cod: function () { return $('#filtro_Dis_Cod_Aj').val(); },
             Did_Tip: function () { return $('#filtro_Did_Tip_Aj').val(); }
         },
-        colNames: ['ID', 'Fecha', 'Dispensador', 'Tipo Ajuste', 'Cantidad', 'Motivo', 'Usuario', 'Estado', 'Acciones'],
+        datatype: "json",
+        mtype: "GET",
+        cmTemplate: { sortable: false },
+        colNames: ['ID', 'Fecha', 'Hora', 'Dispensador', 'Tipo Ajuste', 'Cantidad', 'Motivo', 'Usuario', 'Estado', 'Acciones'],
         colModel: [
             { name: 'Did_Cod', index: 'Did_Cod', hidden: true },
-            { name: 'Did_Fec', index: 'Did_Fec', width: 120, align: 'center' },
+            { name: 'Did_Fec_Fecha', index: 'Did_Fec', width: 80, align: 'center', formatter: function(cv, opt, row) { return row.Did_Fec ? row.Did_Fec.split(' ')[0] : ''; } },
+            { name: 'Did_Fec_Hora', index: 'Did_Fec', width: 60, align: 'center', formatter: function(cv, opt, row) { return row.Did_Fec && row.Did_Fec.split(' ').length > 1 ? row.Did_Fec.split(' ')[1] : ''; } },
             { name: 'Dis_Nom', index: 'Dis_Nom', width: 150 },
             { name: 'Did_Tip', index: 'Did_Tip', width: 150, formatter: function(cellvalue) {
                 if (cellvalue == 'IC') return 'IC - Positivo';
@@ -890,6 +918,13 @@ function inicializarGridAjustes() {
                 exaUiFitJqGrid('#gridAjustes', '#tab-ajustes .exa-ui-grid-host');
             }
         }
+    });
+    $("#gridAjustes").jqGrid('navGrid', '#pagerAjustes', { edit: false, add: false, del: false, search: false, refresh: true, view: true })
+    .jqGrid('navButtonAdd', '#pagerAjustes', {
+        caption: "", title: "Exportar a Excel", buttonicon: "ui-icon-document",
+        onClickButton: function () {
+            $("#gridAjustes").jqGrid('exportGridExcel', { nombre: 'Ajustes_Combustible', hoja: 'Datos', footer: false, removeHiddens: true });
+        }, position: "last"
     });
 }
 
@@ -1081,9 +1116,11 @@ function inicializarGridKardex() {
             Dis_Cod: function () { return $('#filtro_Dis_Cod_Kx').val(); },
             Did_Tip: function () { return $('#filtro_Did_Tip_Kx').val(); }
         },
-        colNames: ['Fecha', 'Dispensador', 'Tipo Movimiento', 'Responsable / Origen / Destino', 'Entrada', 'Salida', 'Precio Unit.', 'Total Ref.', 'Saldo', 'Usuario Reg.', 'Estado'],
+        cmTemplate: { sortable: false },
+        colNames: ['Fecha', 'Hora', 'Dispensador', 'Tipo Movimiento', 'Responsable / Origen / Destino', 'Entrada', 'Salida', 'Precio Unit.', 'Total Ref.', 'Saldo', 'Usuario Reg.', 'Estado'],
         colModel: [
-            { name: 'Did_Fec', index: 'Did_Fec', width: 130, align: 'center' },
+            { name: 'Did_Fec_Fecha', index: 'Did_Fec', width: 80, align: 'center', formatter: function(cv, opt, row) { return row.Did_Fec ? row.Did_Fec.split(' ')[0] : ''; } },
+            { name: 'Did_Fec_Hora', index: 'Did_Fec', width: 60, align: 'center', formatter: function(cv, opt, row) { return row.Did_Fec && row.Did_Fec.split(' ').length > 1 ? row.Did_Fec.split(' ')[1] : ''; } },
             { name: 'Dis_Nom', index: 'Dis_Nom', width: 150 },
             { name: 'Did_Tip', index: 'Did_Tip', width: 100, align: 'center', formatter: function(cellvalue) {
                 if (cellvalue == 'IN') return '<span class=\"label label-success\">IN - Compra</span>';
@@ -1122,6 +1159,19 @@ function inicializarGridKardex() {
                 exaUiFitJqGrid('#gridKardex', '#tab-kardex .exa-ui-grid-host');
             }
         }
+    });
+    $("#gridKardex").jqGrid('navGrid', '#pagerKardex', { edit: false, add: false, del: false, search: false, refresh: true, view: true })
+    .jqGrid('navButtonAdd', '#pagerKardex', {
+        caption: " Excel", title: "Exportar a Excel", buttonicon: "ui-icon-document",
+        onClickButton: function () {
+            $("#gridKardex").jqGrid('exportGridExcel', { nombre: 'Kardex_Combustible', hoja: 'Datos', footer: false, removeHiddens: true });
+        }, position: "last"
+    })
+    .jqGrid('navButtonAdd', '#pagerKardex', {
+        caption: "", title: "Imprimir Kardex", buttonicon: "ui-icon-print",
+        onClickButton: function () {
+            imprimirKardex();
+        }, position: "last"
     });
 }
 
@@ -1172,10 +1222,12 @@ function inicializarGridCierres() {
             Dis_Cod: function () { return $('#filtro_Dis_Cod_Cie').val(); },
             Cie_Estado: function () { return $('#filtro_Cie_Estado').val(); }
         },
-        colNames: ['ID', 'Fecha', 'Dispensador', 'Inicial', 'Ingresos', 'Salidas', 'Te�rico', 'F�sico', 'Diferencia', 'Estado', 'Usuario', 'Acciones'],
+        cmTemplate: { sortable: false },
+        colNames: ['ID', 'Fecha', 'Hora', 'Dispensador', 'Inicial', 'Ingresos', 'Salidas', 'Te&oacute;rico', 'F&iacute;sico', 'Diferencia', 'Estado', 'Usuario', 'Acciones'],
         colModel: [
             { name: 'Cie_Cod', index: 'Cie_Cod', hidden: true },
-            { name: 'Cie_Fec', index: 'Cie_Fec', width: 100, align: 'center' },
+            { name: 'Cie_Fec_Fecha', index: 'Cie_Fec', width: 80, align: 'center', formatter: function(cv, opt, row) { return row.Cie_Fec ? row.Cie_Fec.split(' ')[0] : ''; } },
+            { name: 'Cie_Fec_Hora', index: 'Cie_Fec', width: 60, align: 'center', formatter: function(cv, opt, row) { return row.Cie_Fec && row.Cie_Fec.split(' ').length > 1 ? row.Cie_Fec.split(' ')[1] : ''; } },
             { name: 'Dis_Nom', index: 'Dis_Nom', width: 150 },
             { name: 'Cie_Ini', index: 'Cie_Ini', width: 80, align: 'right', formatter: 'number' },
             { name: 'Cie_Ing', index: 'Cie_Ing', width: 80, align: 'right', formatter: 'number' },
@@ -1212,6 +1264,13 @@ function inicializarGridCierres() {
                 exaUiFitJqGrid('#gridCierre', '#tab-cierre .exa-ui-grid-host');
             }
         }
+    });
+    $("#gridCierre").jqGrid('navGrid', '#pagerCierre', { edit: false, add: false, del: false, search: false, refresh: true, view: true })
+    .jqGrid('navButtonAdd', '#pagerCierre', {
+        caption: " Excel", title: "Exportar a Excel", buttonicon: "ui-icon-document",
+        onClickButton: function () {
+            $("#gridCierre").jqGrid('exportGridExcel', { nombre: 'Cierres_Combustible', hoja: 'Datos', footer: false, removeHiddens: true });
+        }, position: "last"
     });
 }
 
@@ -1508,7 +1567,7 @@ function loadDashboard() {
                                    '</tr>';
                     });
                 } else {
-                    topHtml = '<tr><td colspan="4" class="text-center">No existen datos para el período seleccionado.</td></tr>';
+                    topHtml = '<tr><td colspan="4" class="text-center">No existen datos para el per&iacute;odo seleccionado.</td></tr>';
                 }
                 $('#dash_top_maq_body').html(topHtml);
                 
@@ -1575,6 +1634,11 @@ function renderChart(datos) {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
+                xAxes: [{
+                    barPercentage: 0.5,
+                    categoryPercentage: 0.5,
+                    maxBarThickness: 40
+                }],
                 yAxes: [{
                     ticks: { beginAtZero: true }
                 }]

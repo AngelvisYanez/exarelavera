@@ -15,4 +15,12 @@ class Class_Log_Datos_Maquinaria_Horometro extends MysqlDatos{
     function __construct() {
         $this->setSentencias('sentencias_maquinaria_horometro');
     } 
+
+    public function getCombustibleReporte($tipo, $params, $conexion) {
+        if ($tipo == 'individual') {
+            return $this->getArrayConsulta(23, $params, $conexion);
+        } else {
+            return $this->getArrayConsulta(24, $params, $conexion);
+        }
+    }
 }

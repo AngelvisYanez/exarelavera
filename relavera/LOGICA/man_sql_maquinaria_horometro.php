@@ -173,7 +173,7 @@ function sentencias_maquinaria_horometro($id, $Par_Sql)
             
             $sql = "SELECT 
                         DAY(mh.Hor_Fec) as dia,
-                        mh.Hor_Fec as fecha,
+                        DATE(mh.Hor_Fec) as fecha,
                         CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) as operador,
                         mh.Hor_Ini as hor_inicial,
                         mh.Hor_Fin as hor_final,
@@ -226,6 +226,55 @@ function sentencias_maquinaria_horometro($id, $Par_Sql)
                 $sql .= " AND mh.Cho_Cod = " . (int)$cho_cod;
             }
             $sql .= " GROUP BY v.Veh_Cod, v.Veh_Pla, mh.Cho_Cod, operador ORDER BY v.Veh_Pla ASC";
+            break;
+
+        case 23:
+            // Combustible para Reporte Individual (agrupado por fecha)
+            $emp_cod = isset($Par_Sql['Emp_Cod']) ? (int)$Par_Sql['Emp_Cod'] : 0;
+            $fecha_ini = isset($Par_Sql['fecha_ini']) ? $Par_Sql['fecha_ini'] : '';
+            $fecha_fin = isset($Par_Sql['fecha_fin']) ? $Par_Sql['fecha_fin'] : '';
+            $veh_cod = isset($Par_Sql['Veh_Cod']) ? $Par_Sql['Veh_Cod'] : '';
+            
+            $sql = "SELECT 
+                        det.Veh_Cod,
+                        DATE(det.Did_Fec) AS fecha,
+                        SUM(IFNULL(det.Did_Can,0)) AS combustible_cargado,
+                        SUM(IFNULL(det.Did_Can,0) * IFNULL(det.Did_Pun,0)) AS costo_combustible
+                    FROM maquinaria_dispensador_det det
+                    INNER JOIN maquinaria_dispensador d ON det.Dis_Cod = d.Dis_Cod
+                    WHERE d.Emp_Cod = " . $emp_cod . "
+                      AND det.Did_Tip = 'SA'
+                      AND det.Did_Est = 'A'
+                      AND DATE(det.Did_Fec) BETWEEN '" . $fecha_ini . "' AND '" . $fecha_fin . "'";
+            
+            if (!empty($veh_cod) && $veh_cod != 'TODAS') {
+                $sql .= " AND det.Veh_Cod = " . (int)$veh_cod;
+            }
+            $sql .= " GROUP BY det.Veh_Cod, DATE(det.Did_Fec)";
+            break;
+
+        case 24:
+            // Combustible para Reporte Consolidado (agrupado por maquina)
+            $emp_cod = isset($Par_Sql['Emp_Cod']) ? (int)$Par_Sql['Emp_Cod'] : 0;
+            $fecha_ini = isset($Par_Sql['fecha_ini']) ? $Par_Sql['fecha_ini'] : '';
+            $fecha_fin = isset($Par_Sql['fecha_fin']) ? $Par_Sql['fecha_fin'] : '';
+            $veh_cod = isset($Par_Sql['Veh_Cod']) ? $Par_Sql['Veh_Cod'] : '';
+            
+            $sql = "SELECT 
+                        det.Veh_Cod,
+                        SUM(IFNULL(det.Did_Can,0)) AS combustible_cargado,
+                        SUM(IFNULL(det.Did_Can,0) * IFNULL(det.Did_Pun,0)) AS costo_combustible
+                    FROM maquinaria_dispensador_det det
+                    INNER JOIN maquinaria_dispensador d ON det.Dis_Cod = d.Dis_Cod
+                    WHERE d.Emp_Cod = " . $emp_cod . "
+                      AND det.Did_Tip = 'SA'
+                      AND det.Did_Est = 'A'
+                      AND DATE(det.Did_Fec) BETWEEN '" . $fecha_ini . "' AND '" . $fecha_fin . "'";
+            
+            if (!empty($veh_cod) && $veh_cod != 'TODAS') {
+                $sql .= " AND det.Veh_Cod = " . (int)$veh_cod;
+            }
+            $sql .= " GROUP BY det.Veh_Cod";
             break;
     }
     return $sql;
