@@ -175,7 +175,7 @@
             <?php } ?>
             
             <!-- Preliquidacion -->
-            <?php if (isset($rs_infoEmpresa["Cof_Prl"]) && $rs_infoEmpresa["Cof_Prl"] == 'S') { ?>
+            <?php if (isset($configs["Cof_Prl"]) && $configs["Cof_Prl"] == 'S') { ?>
                 <fieldset class="exa-fieldset" id="formPrl">
                     <legend class="Titulos2">Preliquidaci&oacute;n:</legend>
                     <div class="form-group">
