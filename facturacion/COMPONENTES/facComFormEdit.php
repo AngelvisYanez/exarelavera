@@ -172,6 +172,29 @@
                             </div>
                         </div>
                     </div>
+            <?php } ?>
+            
+            <!-- Preliquidacion -->
+            <?php if (isset($rs_infoEmpresa["Cof_Prl"]) && $rs_infoEmpresa["Cof_Prl"] == 'S') { ?>
+                <fieldset class="exa-fieldset" id="formPrl">
+                    <legend class="Titulos2">Preliquidaci&oacute;n:</legend>
+                    <div class="form-group">
+                        <label class="col-xs-3 control-label label-xs">Preliquidaci&oacute;n:</label>
+                        <div class="col-xs-9">
+                            <div class="input-group input-group-xs">
+                                <input type="text" name="Num_Prl" id="Num_Prl" placeholder="Ingrese cod.Preliquidaci&oacute;n..." class="form-control input-xs " readonly />
+                                <input type="text" name="Cod_Prl" id="Cod_Prl" style="display:none;" />
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-primary btn-xs" id="btn_busc_prl" onclick="$('#prlDialog').dialog('open');" title="Buscar Preliquidaci&oacute;n">
+                                        <span class="glyphicon glyphicon-search"></span>
+                                    </button>
+                                    <button type="button" class="btn btn-warning btn-xs" id="btn_lim_prl" onclick="limpiarCamposPrl();" title="Limpiar Campos">
+                                        <span class="glyphicon glyphicon-trash"></span>
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </fieldset>
             <?php } ?>
 

@@ -408,6 +408,19 @@ foreach ($ids_proc as $id) {
                                     </div>
                                 </div>
 
+                                <!-- Funciones de Preliquidacion(Relavera) -->
+                                <div class="form-group">
+                                    <label class="col-md-4 control-label" style="text-align: right;font-size: 10px;padding-top: 2px;">Asociar Preliquidacion a Compras:</label>
+                                    <div class="col-md-3">
+                                        <div class="radioset">
+                                            <input type="radio" name="Cof_Prl" id="rad-prl-1" value="S" autocomplete="off" <?php if ($empresa['Cof_Prl'] == 'S') echo "checked"; ?>>
+                                            <label for="rad-prl-1">Si</label>
+                                            <input type="radio" name="Cof_Prl" id="rad-prl-2" value="N" autocomplete="off" <?php if ($empresa['Cof_Prl'] == 'N') echo "checked"; ?>>
+                                            <label for="rad-prl-2">No</label>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="form-group">
                                     <label class="col-md-4 control-label" style="text-align: right;font-size: 10px; padding-top: 5px;">Tipo Regimen:</label>
                                     <div class="col-md-5">

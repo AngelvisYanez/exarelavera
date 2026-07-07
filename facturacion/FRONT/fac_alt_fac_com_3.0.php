@@ -249,6 +249,22 @@ if ($rs_infoEmpresa["Cof_NegCam"] == 'S') {
     }
 }
 
+$configsTemp = $obBD_con1->getRowConsulta(8, $Ses_Emp_Cod, $obBD_conexion);
+if (isset($configsTemp["Cof_Prl"]) && $configsTemp["Cof_Prl"] == 'S') {
+    if (isset($preliquidacionAjax)) {
+        $sql = "SELECT Mal_Cod, Mal_Num, Mal_Fec, Mal_Obs, Mal_Tot_Cob FROM manifiesto_liquidacion_maq WHERE Mal_Est = 'A'";
+        if (!empty($search)) {
+            $sql .= " AND Mal_Num LIKE '%" . mysqli_real_escape_string($obBD_conexion->conexion, $search) . "%'";
+        }
+        $res = @mysqli_query($obBD_conexion->conexion, $sql);
+        $data = array();
+        while ($row = @mysqli_fetch_assoc($res)) {
+            $data[] = $row;
+        }
+        $obBD_con1->echoJson($data);
+    }
+}
+
 /* ver si exite un proveedor */
 if (isset($provAjax2)) {
     $pers = $obBD_con1->getArrayConsulta(30, $Prs_Ced . '*' . $Ses_Emp_Cod, $obBD_conexion);
@@ -539,8 +555,27 @@ if (isset($saveDocument)) {
         /*Update Cop_Ide*/
         $obBD_ins1->operacionobBD(1009, array('Cop_Ide' => $Cop_Ide, 'Cop_Cod' => $Cop_Cod), $obBD_conexionIns);
         //Registrar documento de la negociación
-        if (isset($Cod_Neg) && !empty($Cod_Neg) && $Cod_Neg != 0) {
+        if (isset($Cod_Neg) && !empty($Cod_Neg) && $Cod_Neg != 0 && $Cod_Neg !== 'null') {
             $obBD_ins1->operacionobBD(1007, $Cod_Neg . '*' . $Cop_Cod . '*' . 'CMP', $obBD_conexionIns);
+        }
+        
+        //Registrar documento de la preliquidacion
+        if (isset($Cod_Prl) && !empty($Cod_Prl) && $Cod_Prl != 0 && $Cod_Prl !== 'null') {
+            if (isset($configs["Cof_Prl"]) && $configs["Cof_Prl"] == 'S') {
+                $sql_ver = "SELECT Mal_Tot_Cob FROM manifiesto_liquidacion_maq WHERE Mal_Cod = " . (int)$Cod_Prl;
+                $res_ver = @mysqli_query($obBD_conexionIns->conexion, $sql_ver);
+                if ($res_ver && $row_ver = mysqli_fetch_assoc($res_ver)) {
+                    $total_liq = (float)$row_ver['Mal_Tot_Cob'];
+                    $total_compra = isset($t_rubros) ? (float)str_replace(',', '', $t_rubros) : 0;
+                    if (abs($total_liq - $total_compra) > 0.01) {
+                        $compra_formato = number_format($total_compra, 2);
+                        $preliq_formato = number_format($total_liq, 2);
+                        throw new Exception("Existe diferencia en valores<br><span style=\"color: #4CAF50; font-weight: bold;\">Compra: $$compra_formato</span><br><span style=\"color: #FF9800; font-weight: bold;\">Preliquidacion: $$preliq_formato</span><br>Los totales deben coincidir para esta accion");
+                    }
+                }
+                $sql_update_preliq = "UPDATE manifiesto_liquidacion_maq SET Cop_Cod = " . (int)$Cop_Cod . " WHERE Mal_Cod = " . (int)$Cod_Prl;
+                @mysqli_query($obBD_conexionIns->conexion, $sql_update_preliq);
+            }
         }
 
 
@@ -1186,6 +1221,31 @@ if (isset($saldoCCxPP)) {
         </form>
         <table id="containerNegoci"></table>
     </div>
+
+    <!-- Preliquidacion Dialog -->
+    <div id="prlDialog" title="B&uacute;squeda de Preliquidaci&oacute;n">
+        <form id="frm_prl" name="frm_prl" class="form-horizontal normal" action="javascript:$('#containerPrl').Search('#frm_prl','preliquidacionAjax'); ">
+            <fieldset class="exa-fieldset" id="prodFormTemp">
+                <div class="col-xs-12 col-sm-12">
+                    <legend class="Titulos2">B&uacute;squeda</legend>
+                    <div class="form-group">
+                        <div class="col-sm-12">
+                            <div class="input-group">
+                                <input id="search" name="search" onkeydown=" this.form.submit()" type="text" size="50" maxlength="50" placeholder="Ingrese b&uacute;squeda..." autofocus class="form-control input-xs clearable submit" />
+                                <span class="input-group-btn">
+                                    <button type="button" onclick="this.form.submit()" class="btn btn-success btn-xs" title="Buscar Preliquidación" tabindex="-1">
+                                        <span class="glyphicon glyphicon-search"></span> <span>Buscar</span>
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="text" tabindex="-1" style="display:none;">
+                </div>
+            </fieldset>
+        </form>
+        <table id="containerPrl"></table>
+    </div>
     <script>
         function selectProvee(provee) {
             var reset = ($('#reset').val() !== '0');
@@ -1725,10 +1785,12 @@ if (isset($saldoCCxPP)) {
         }
         //Ver negociaciones
         var containerNegoci = $("#containerNegoci");
+        var containerPrl = $("#containerPrl");
+
         $(function() {
             $('#provCreateForm #Prv_Tac').createChosen('input-xs', {
                 width: '100%',
-                placeholder_text_single: '— Seleccionar —',
+                placeholder_text_single: '- Seleccionar -',
                 search_contains: true
             });
             var PRV_TAC_MAX_FACT = 20;
@@ -1761,6 +1823,13 @@ if (isset($saldoCCxPP)) {
             $(document).on('input', '#prvTacDescInputFact', function() {
                 actualizarContadorPrvTacFact(PRV_TAC_MAX_FACT);
             });
+            
+            $('#prlDialog').dialog({
+                autoOpen: false,
+                width: 600,
+                height: 400
+            });
+
             armargrid();
         });
 
@@ -1797,12 +1866,44 @@ if (isset($saldoCCxPP)) {
                 datatype: "local",
                 footerrow: false
             });
+            
+            containerPrl.createGrid({
+                width: 550,
+                height: 250,
+                colModel: [
+                    { label: 'Cod.Prl', name: 'Mal_Cod', width: 50 },
+                    { label: 'Num.Prl', name: 'Mal_Num', width: 80 },
+                    { label: 'Fec.Prl', name: 'Mal_Fec', width: 80 },
+                    { label: 'Obs.Prl', name: 'Mal_Obs', width: 200 },
+                    { label: 'Total', name: 'Mal_Tot_Cob', width: 80, align: 'right' },
+                    { label: '&nbsp;', name: 'act1', width: 30, align: 'center', viewable: false, formatter: 'gridButton', formatoptions: { action: selectPrl } }
+                ],
+                jsonReader: { root: "response", repeatitems: false },
+                datatype: "local",
+                footerrow: false
+            });
         }
 
         function selectNego(data) {
             $('#Num_Neg').val(data['Num_Neg']);
             $('#Cod_Neg').val(data['Cod_Neg']);
             $('#negDialog').dialog('close');
+        }
+        
+        function selectPrl(data) {
+            $('[name="Cod_Prl"]').val(data['Mal_Cod']);
+            $('[name="Num_Prl"]').val(data['Mal_Num']);
+            
+            $('[name="Cop_Obs"]').val(data['Mal_Num']);
+            $('[name="Cpp_Obs"]').val(data['Mal_Num']);
+            $('#Cop_Obs').val(data['Mal_Num']);
+            
+            $('#prlDialog').dialog('close');
+        }
+
+        function limpiarCamposPrl() {
+            $('[name="Cod_Prl"]').val("");
+            $('[name="Num_Prl"]').val("");
         }
     </script>
 

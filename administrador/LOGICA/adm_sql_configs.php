@@ -24,7 +24,7 @@ function sentencias_configs($id, $Par_Sql)
             //echo $sql.'<br/>';
             break;
         case 3:
-            $sql = "UPDATE confi_fact SET Cof_Con = '$Par_Sql[Cof_Con]',Cof_Fac = '$Par_Sql[Cof_Fac]',Cof_Ret = '$Par_Sql[Cof_Ret]', Cof_Gce = '$Par_Sql[Cof_Gce]', Cof_Stk='$Par_Sql[Cof_Stk]', Cof_Gcr='$Par_Sql[Cof_Gcr]', Cof_Stk_Neg='$Par_Sql[Cof_Stk_Neg]', Cof_Micro='$Par_Sql[Cof_Micro]',Cof_Rim='$Par_Sql[Cof_Rim]',Cof_Age='$Par_Sql[Cof_Age]', Cof_NegCam='$Par_Sql[Cof_NegCam]', Cof_Sld='$Par_Sql[Cof_Sld]' WHERE Emp_Cod = '$_SESSION[Ses_Emp_Cod]'";
+            $sql = "UPDATE confi_fact SET Cof_Con = '$Par_Sql[Cof_Con]',Cof_Fac = '$Par_Sql[Cof_Fac]',Cof_Ret = '$Par_Sql[Cof_Ret]', Cof_Gce = '$Par_Sql[Cof_Gce]', Cof_Stk='$Par_Sql[Cof_Stk]', Cof_Gcr='$Par_Sql[Cof_Gcr]', Cof_Stk_Neg='$Par_Sql[Cof_Stk_Neg]', Cof_Micro='$Par_Sql[Cof_Micro]',Cof_Rim='$Par_Sql[Cof_Rim]',Cof_Age='$Par_Sql[Cof_Age]', Cof_NegCam='$Par_Sql[Cof_NegCam]', Cof_Sld='$Par_Sql[Cof_Sld]', Cof_Prl='$Par_Sql[Cof_Prl]' WHERE Emp_Cod = '$_SESSION[Ses_Emp_Cod]'";
             //echo $sql.'<br/>';
             break;
         case 4:
