@@ -276,6 +276,19 @@ function sentencias_maquinaria_horometro($id, $Par_Sql)
             }
             $sql .= " GROUP BY det.Veh_Cod";
             break;
+        case 25:
+            // Obtener último operador de una maquinaria (Coincidiendo con el MIN(c2.Cho_Cod) del Caso 2)
+            $sql = "SELECT (
+                        SELECT MIN(c2.Cho_Cod)
+                        FROM chofer c2 
+                        WHERE c2.Prs_Cod = c1.Prs_Cod AND c2.Cho_Est = 'A'
+                    ) as Cho_Cod 
+                    FROM maquinaria_horometro mh
+                    INNER JOIN chofer c1 ON c1.Cho_Cod = mh.Cho_Cod
+                    WHERE mh.Veh_Cod = '" . $Par_Sql['Veh_Cod'] . "' AND mh.Hor_Est IN ('A', 'F', 'P')
+                    ORDER BY DATE(mh.Hor_Fec) DESC, mh.Hor_Fin DESC 
+                    LIMIT 1";
+            break;
     }
     return $sql;
 }

@@ -50,6 +50,20 @@ if (isset($_GET['getDashboardMetricsAjax'])) {
     exit;
 }
 
+if (isset($_GET['getLastOperadorAjax'])) {
+    $resp = array('success' => false, 'Cho_Cod' => null);
+    $veh_cod = isset($_GET['veh_cod']) ? addslashes($_GET['veh_cod']) : '';
+    if (!empty($veh_cod)) {
+        $row = $obBD_con1->getRowConsulta(25, array('Veh_Cod' => $veh_cod), $obBD_conexion);
+        if ($row && !empty($row['Cho_Cod'])) {
+            $resp['success'] = true;
+            $resp['Cho_Cod'] = $row['Cho_Cod'];
+        }
+    }
+    $obBD_con1->echoJson($resp);
+    exit;
+}
+
 // Listar máquinas asociadas a la planta
 if (isset($_GET['listMaquinasAjax'])) {
     $rows_data = $obBD_con1->getArrayConsulta(1, array('Emp_Cod' => $_SESSION['Ses_Emp_Cod']), $obBD_conexion);
@@ -169,7 +183,8 @@ if (isset($_POST['saveHorometroAjax'])) {
         }
         $fecha_str = date('Ymd'); // "fechaactual"
 
-        $ruta_destino = "../RECURSOS/horometro/";
+        $emp_cod = isset($_SESSION['Ses_Emp_Cod']) ? $_SESSION['Ses_Emp_Cod'] : '620';
+        $ruta_destino = "../../imagenes/" . $emp_cod . "/horometro/";
         if (!file_exists($ruta_destino)) {
             @mkdir($ruta_destino, 0777, true);
         }
@@ -178,7 +193,7 @@ if (isset($_POST['saveHorometroAjax'])) {
         $hor_img_ini_path = '';
         if (isset($_FILES['Hor_Img_Ini']) && $_FILES['Hor_Img_Ini']['error'] == 0) {
             $ext = pathinfo($_FILES['Hor_Img_Ini']['name'], PATHINFO_EXTENSION);
-            $hor_img_ini_path = $fecha_str . '_horom_ini_' . $count_n . '.' . $ext;
+            $hor_img_ini_path = $fecha_str . '_ini_' . $count_n . '.' . $ext;
             move_uploaded_file($_FILES['Hor_Img_Ini']['tmp_name'], $ruta_destino . $hor_img_ini_path);
         }
 
@@ -186,7 +201,7 @@ if (isset($_POST['saveHorometroAjax'])) {
         $hor_img_fin_path = '';
         if (isset($_FILES['Hor_Img_Fin']) && $_FILES['Hor_Img_Fin']['error'] == 0) {
             $ext = pathinfo($_FILES['Hor_Img_Fin']['name'], PATHINFO_EXTENSION);
-            $hor_img_fin_path = $fecha_str . '_horom_fin_' . $count_n . '.' . $ext;
+            $hor_img_fin_path = $fecha_str . '_fin_' . $count_n . '.' . $ext;
             move_uploaded_file($_FILES['Hor_Img_Fin']['tmp_name'], $ruta_destino . $hor_img_fin_path);
         }
 
@@ -338,11 +353,11 @@ if (isset($_GET['getReporteOperativoAjax'])) {
 
         // Consultar Detalle Diario
         $rows_diario = $obBD_con1->getArrayConsulta(21, $params, $obBD_conexion);
-        
+
         $rows_combustible = $obBD_con1->getCombustibleReporte('individual', $params, $obBD_conexion);
         $comb_por_fecha = array();
-        if(!empty($rows_combustible)){
-            foreach($rows_combustible as $rc){
+        if (!empty($rows_combustible)) {
+            foreach ($rows_combustible as $rc) {
                 $comb_por_fecha[$rc['fecha']] = array(
                     'cargado' => (float)$rc['combustible_cargado'],
                     'costo' => (float)$rc['costo_combustible']
@@ -382,7 +397,7 @@ if (isset($_GET['getReporteOperativoAjax'])) {
                 $ht = (float)$r['total_hrs'];
                 $hp = (float)$r['prod_hrs'];
                 $desf = (float)$r['descuento'];
-                
+
                 $f_row = $r['fecha'];
                 $comb = isset($comb_por_fecha[$f_row]) ? $comb_por_fecha[$f_row]['cargado'] : 0;
                 $costo = isset($comb_por_fecha[$f_row]) ? $comb_por_fecha[$f_row]['costo'] : 0;
@@ -480,11 +495,11 @@ if (isset($_GET['getReporteOperativoAjax'])) {
         $detalle = array();
 
         $rows = $obBD_con1->getArrayConsulta(22, $params, $obBD_conexion);
-        
+
         $rows_combustible = $obBD_con1->getCombustibleReporte('consolidado', $params, $obBD_conexion);
         $comb_por_maq = array();
-        if(!empty($rows_combustible)){
-            foreach($rows_combustible as $rc){
+        if (!empty($rows_combustible)) {
+            foreach ($rows_combustible as $rc) {
                 $comb_por_maq[$rc['Veh_Cod']] = array(
                     'cargado' => (float)$rc['combustible_cargado'],
                     'costo' => (float)$rc['costo_combustible']
@@ -504,7 +519,7 @@ if (isset($_GET['getReporteOperativoAjax'])) {
                 $v_cod = $r['veh_cod'];
                 $comb = isset($comb_por_maq[$v_cod]) ? $comb_por_maq[$v_cod]['cargado'] : 0;
                 $costo = isset($comb_por_maq[$v_cod]) ? $comb_por_maq[$v_cod]['costo'] : 0;
-                
+
                 $ht = (float)$r['horas_trabajadas'];
                 $rend = ($ht > 0) ? ($comb / $ht) : 0;
 
@@ -597,7 +612,7 @@ if (isset($_GET['getEvidenciasAjax'])) {
     <script>
         var user_role = '<?php echo $user_role; ?>';
     </script>
-    
+
 </HEAD>
 
 <BODY>
@@ -1023,19 +1038,19 @@ if (isset($_GET['getEvidenciasAjax'])) {
             <div id="divFormulario" style="display:none;">
 
                 <!-- HEADER DE CONTEXTO DEL TURNO -->
-                <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; padding-bottom: 120px; margin-bottom: 20px;">
                     <form id="formContexto" class="form-horizontal" onsubmit="return false;">
                         <div class="row">
+                            <div class="col-sm-3">
+                                <label class="control-label" style="font-size:12px; margin-bottom:5px; color:#475569;">Máquina / Vehículo:</label>
+                                <select id="Veh_Cod" name="Veh_Cod" class="form-control chosen-select" onchange="limpiarSubgrid(); buscarUltimoOperadorOriginal(this.value);">
+                                    <option value="">Seleccione Máquina...</option>
+                                </select>
+                            </div>
                             <div class="col-sm-3">
                                 <label class="control-label" style="font-size:12px; margin-bottom:5px; color:#475569;">Operador:</label>
                                 <select id="Cho_Cod" name="Cho_Cod" class="form-control chosen-select" onchange="limpiarSubgrid();">
                                     <option value="">Seleccione Operador...</option>
-                                </select>
-                            </div>
-                            <div class="col-sm-3">
-                                <label class="control-label" style="font-size:12px; margin-bottom:5px; color:#475569;">Máquina / Vehículo:</label>
-                                <select id="Veh_Cod" name="Veh_Cod" class="form-control chosen-select" onchange="limpiarSubgrid();">
-                                    <option value="">Seleccione Máquina...</option>
                                 </select>
                             </div>
                             <div class="col-sm-3">
@@ -1287,12 +1302,12 @@ if (isset($_GET['getEvidenciasAjax'])) {
         </div>
     </div>
 
-    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_maquinaria_horometro.js?v=11"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_maquinaria_horometro.js?v=12"></script>
 
     <!-- Liberacion y cierre de conexiones -->
     <?php
-        $obBD_con1->liberar();
-        $obBD_conexion->cerrar();
+    $obBD_con1->liberar();
+    $obBD_conexion->cerrar();
     ?>
 </BODY>
 

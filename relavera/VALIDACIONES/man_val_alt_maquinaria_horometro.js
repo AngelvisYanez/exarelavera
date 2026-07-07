@@ -523,10 +523,33 @@ function abrirModalRegistro(Hor_Cod) {
                 $("#Hor_Hfin").val(hrFin);
             }
             
-            // Como ya no traemos las imágenes en el payload de edición para ahorrar datos,
-            // y además la sección inicial se bloquea, indicamos esto:
-            $("#preview_ini_container").html('<span style="color:#94a3b8; font-size:11px;">(Evidencia inicial protegida)</span>');
-            $("#preview_fin_container").html('<span style="color:#94a3b8; font-size:11px;">(Suba evidencia final)</span>');
+            // Cargar evidencias vía AJAX
+            $("#preview_ini_container").html('<span style="color:#94a3b8; font-size:11px;">(Cargando evidencia...)</span>');
+            $("#preview_fin_container").html('<span style="color:#94a3b8; font-size:11px;">(Cargando evidencia...)</span>');
+            
+            $.getJSON('', { getEvidenciasAjax: 1, Hor_Cod: Hor_Cod }, function(resImg) {
+                if (resImg && resImg.success) {
+                    var emp_cod = resImg.Emp_Cod || '0';
+                    var basePath = '../../imagenes/' + emp_cod + '/horometro/';
+                    if (resImg.Hor_Img_Ini) {
+                        $("#preview_ini_container").html('<img src="' + basePath + resImg.Hor_Img_Ini + '" style="max-height:100px; max-width:100%; border-radius:4px;" />');
+                    } else {
+                        $("#preview_ini_container").html('<span style="color:#94a3b8; font-size:11px;">(Sin evidencia inicial)</span>');
+                    }
+                    if (resImg.Hor_Img_Fin) {
+                        $("#preview_fin_container").html('<img src="' + basePath + resImg.Hor_Img_Fin + '" style="max-height:100px; max-width:100%; border-radius:4px;" />');
+                    } else {
+                        if (r.Hor_Est === 'P') {
+                            $("#preview_fin_container").html('<span style="color:#94a3b8; font-size:11px;">(Suba evidencia final)</span>');
+                        } else {
+                            $("#preview_fin_container").html('<span style="color:#94a3b8; font-size:11px;">(Sin evidencia final)</span>');
+                        }
+                    }
+                } else {
+                    $("#preview_ini_container").html('<span style="color:#94a3b8; font-size:11px;">(Evidencia protegida)</span>');
+                    $("#preview_fin_container").html('<span style="color:#94a3b8; font-size:11px;">(Evidencia protegida)</span>');
+                }
+            });
 
             // Si ya fue aprobado, podríamos bloquear edición
             if (r.Hor_Est === 'A' || r.Hor_Est === 'R' || r.Hor_Est === 'I') {
@@ -1185,3 +1208,21 @@ $(function() {
         }
     });
 });
+
+// -------------------------------------------------------------------------
+// FUNCION AUXILIAR PARA AUTO-SELECCIONAR EL OPERADOR
+// -------------------------------------------------------------------------
+function buscarUltimoOperadorOriginal(veh_cod) {
+    if (!veh_cod) return;
+    
+    $.ajax({
+        url: 'man_alt_maquinaria_horometro.php?getLastOperadorAjax=1&veh_cod=' + veh_cod,
+        type: 'GET',
+        dataType: 'json',
+        success: function(res) {
+            if (res.success && res.Cho_Cod) {
+                $('#Cho_Cod').val(res.Cho_Cod).trigger('chosen:updated');
+            }
+        }
+    });
+}
