@@ -67,6 +67,7 @@ $perfiles_permitidos = array('Administrador de Sistemas', 'Gerente', 'Admin_Oper
 $mostrarBotonCertificado = false;
 $mostrarBotonSelectorPlantaSaldos = false;
 $firmar_solo_si = false;
+$esPerfilLectura = false;
 
 if (is_array($perfil)) {
     foreach ($perfil as $p) {
@@ -79,6 +80,9 @@ if (is_array($perfil)) {
         }
         if ($per_desc == 'Gerente' || $per_desc == 'Contador') {
             $firmar_solo_si = true;
+        }
+        if ($per_desc == 'Contador_Lectura' || $per_desc == 'Aux_Cont_Lectura') {
+            $esPerfilLectura = true;
         }
     }
 }
@@ -306,6 +310,11 @@ if (isset($obtenerDatosManifiestoTiempoLlegadaAjax)) {
 // Modificar tiempo de llegada del manifiesto
 if (isset($modificarTiempoLlegadaAjax)) {
 	$resp = array('success' => false);
+	if (isset($esPerfilLectura) && $esPerfilLectura) {
+		$resp['message'] = 'No tiene permisos para modificar la hora de llegada (Perfil Lectura)';
+		$obBD_con1->echoJson($resp);
+		exit;
+	}
 	$obBD_con1->inicio_transaccion($obBD_conexion);
 	try {
 		// Validar que Man_Cod esté presente
@@ -1001,6 +1010,12 @@ if (isset($saveManifiestoAjax)) {
 	$datos = $_POST;
 	$resp = array('success' => false);
 	
+	if (isset($esPerfilLectura) && $esPerfilLectura) {
+		$resp['message'] = 'No tiene permisos para registrar o modificar manifiestos (Perfil Lectura)';
+		$obBD_con1->echoJson($resp);
+		exit;
+	}
+
 	$obBD_con1->inicio_transaccion($obBD_conexion);
 	try {
 		// Validar que la planta no tenga sanción activa (según fecha y hora actual)
@@ -1266,6 +1281,12 @@ if (isset($getSaldosAjax)) {
 if (isset($anularManifiestoAjax)) {
 	$Man_Cod = isset($_POST['Man_Cod']) ? intval($_POST['Man_Cod']) : 0;
 	$resp = array('success' => false);
+
+	if (isset($esPerfilLectura) && $esPerfilLectura) {
+		$resp['message'] = 'No tiene permisos para anular manifiestos (Perfil Lectura)';
+		$obBD_con1->echoJson($resp);
+		exit;
+	}
 
 	if (empty($Man_Cod)) {
 		$resp['message'] = 'Código de manifiesto no válido';
@@ -1744,6 +1765,9 @@ foreach ($perfil as $p) {
     if ($per_desc == 'Admin_Oper') {
         $firmar_solo_no = true;
     }
+    if ($per_desc == 'Contador_Lectura' || $per_desc == 'Aux_Cont_Lectura') {
+        $esPerfilLectura = true;
+    }
 }
 
 /**
@@ -1805,6 +1829,7 @@ if (isset($anularAnticipo)) {
 			prf = <?php echo json_encode($perfil) ?>;
 		var plantasSaldosModal = <?php echo json_encode($plantas_saldos_modal); ?>;
 		var hoy= <?php echo json_encode($hoy); ?>;	
+		var esPerfilLectura = <?php echo (isset($esPerfilLectura) && $esPerfilLectura) ? 'true' : 'false'; ?>;
 	</script>
 	<style>
 		.pagination>li>a,
@@ -2444,10 +2469,21 @@ if (isset($anularAnticipo)) {
 				</div>
 				<br>
 				<div>
-					<?php if( empty($plaSanciones[0]['Msa_Cod']) ) { ?>
-						<button class="btn btn-sm btn-success" id="btnNuevo" type="button" onclick="<?php echo !$saldo_total_insuficiente ? 'abrirModalTurno();' : ''; ?>" <?php echo $saldo_total_insuficiente ? 'disabled title="No se puede generar manifiesto: saldo total en cero o insuficiente (m&iacute;nimo: ' . number_format($pla_smi_saldo_min, 2, '.', ',') . ')"' : ''; ?>><i class="glyphicon glyphicon-plus"></i> Nuevo</button>
-					<?php } else { ?>
-						<button class="btn btn-sm btn-warning" id="btnNuevoSancion" type="button" onclick="$('#sancionPlantaDialog').dialog('open');" title="La planta tiene una sanción activa"><i class="glyphicon glyphicon-alert"></i> Nuevo</button>
+					<?php if (!(isset($esPerfilLectura) && $esPerfilLectura)) { ?>
+						<?php if( empty($plaSanciones[0]['Msa_Cod']) ) { 
+							$disabled_nuevo = '';
+							$title_nuevo = '';
+							$onclick_nuevo = 'abrirModalTurno();';
+							if ($saldo_total_insuficiente) {
+								$disabled_nuevo = 'disabled';
+								$title_nuevo = 'title="No se puede generar manifiesto: saldo total en cero o insuficiente (m&iacute;nimo: ' . number_format($pla_smi_saldo_min, 2, '.', ',') . ')"';
+								$onclick_nuevo = '';
+							}
+						?>
+							<button class="btn btn-sm btn-success" id="btnNuevo" type="button" onclick="<?php echo $onclick_nuevo; ?>" <?php echo $disabled_nuevo; ?> <?php echo $title_nuevo; ?>><i class="glyphicon glyphicon-plus"></i> Nuevo</button>
+						<?php } else { ?>
+							<button class="btn btn-sm btn-warning" id="btnNuevoSancion" type="button" onclick="$('#sancionPlantaDialog').dialog('open');" title="La planta tiene una sanción activa"><i class="glyphicon glyphicon-alert"></i> Nuevo</button>
+						<?php } ?>
 					<?php } ?>
 					<?php if ($mostrarBotonCertificado) { ?>
 						<button class="btn btn-sm btn-info" id="btnGenerarCertificado" type="button" onclick="abrirCertificadoModal();"><i class="glyphicon glyphicon-certificate"></i> Generar Certificado</button>
@@ -2864,7 +2900,7 @@ if (isset($anularAnticipo)) {
 						<div class="row">
 							<div class="col-sm-12">
 								<button class="btn btn-sm btn-inverse no" onclick="moveToMain()"><i class="glyphicon glyphicon-arrow-left"></i> Atras</button>
-								<?php if (!$saldo_total_insuficiente) { ?>
+								<?php if (!$saldo_total_insuficiente && !(isset($esPerfilLectura) && $esPerfilLectura)) { ?>
 									<button class="btn btn-sm btn-primary no" onclick="$('#manifiestoForm').formSubmit();"><i class="glyphicon glyphicon-floppy-disk"></i> Guardar</button>
 								<?php } ?>
 							</div>
@@ -3494,7 +3530,7 @@ if (isset($anularAnticipo)) {
 		
 	</div>
 
-	<script src="../VALIDACIONES/man_val_manifiesto.js?a=322"></script>
+	<script src="../VALIDACIONES/man_val_manifiesto.js?a=323"></script>
 	<script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>
 	<script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=2"></script>
 	<script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>

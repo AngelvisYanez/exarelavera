@@ -247,17 +247,17 @@ function createGrid() {
                         (o.Man_Tip!='F'?$.getGridButton('print', {Man_Cod: o.Man_Cod,tipo: 'cliente'}, 'Imprimir Manifiesto', 'print', '', 'primary') + "&nbsp;":'') +
                         (o.Man_Tip!='GS' || o.Man_Tip!='F'?$.getGridButton('printClienteQR',o.Man_Cod, 'Generar codigo QR', 'qrcode', '', 'info')+ "&nbsp;":'')  +
                         (o.Man_Tip=='F'  && esAdminSistemasPlanta?$.getGridButton('printCertificado', {Man_Cod: o.Man_Cod,tipo: 'certif'}, 'Imprimir Certf. Desechos', 'print', '', 'warning')+ "&nbsp;":'')  +
-                        /*(o.Man_Tip=='P' && $.isEmpty(Cli_Cod_Man)?$.getGridButton('modalModificarTiempoLlegada', {Man_Cod: o.Man_Cod,Man_Num: o.ManNum,Man_Fea: o.Man_Fea,Man_Fea_Hora: o.Man_Fea_Hor}, 'Modificar Hora Llegada', 'time', '', 'warning')+ "&nbsp;":'')  +*/
+                        /*(o.Man_Tip=='P' && $.isEmpty(Cli_Cod_Man) && !esPerfilLectura?$.getGridButton('modalModificarTiempoLlegada', {Man_Cod: o.Man_Cod,Man_Num: o.ManNum,Man_Fea: o.Man_Fea,Man_Fea_Hora: o.Man_Fea_Hor}, 'Modificar Hora Llegada', 'time', '', 'warning')+ "&nbsp;":'')  +*/
                         /*(o.Man_Tip=='P'?$.getGridButton('modificaManifiesto', o, 'Editar Manifiesto', 'pencil', '', 'success')+ "&nbsp;" : '')  +*/
-                        (o.Man_Est=='A' && o.Man_Tip=='P' && $.isEmpty(Cli_Cod_Man)?$.getGridButton('anularManifiesto', o.Man_Cod, 'Anular manifiesto', 'remove', '', 'danger') : '');
+                        (o.Man_Est=='A' && o.Man_Tip=='P' && $.isEmpty(Cli_Cod_Man) && !esPerfilLectura?$.getGridButton('anularManifiesto', o.Man_Cod, 'Anular manifiesto', 'remove', '', 'danger') : '');
                     } else {
                         botones += $.getGridButton('print', {Man_Cod: o.Man_Cod,tipo: 'admin'}, 'Manifiesto Administrativo', 'print', '', 'primary') + "&nbsp;" +
                         $.getGridButton('print', {Man_Cod: o.Man_Cod,tipo: 'cliente'}, 'Imprimir Manifiesto', 'print', '', 'primary') + "&nbsp;" +
                         (o.Man_Tip=='F' && esAdminSistemasPlanta ? $.getGridButton('printCertificado', {Man_Cod: o.Man_Cod,tipo: 'certif'}, 'Imprimir Certf. Desechos', 'print', '', 'warning')+ "&nbsp;":'')  +
-                        (o.Man_Tip=='P' && $.isEmpty(Cli_Cod_Man)?$.getGridButton('modalModificarTiempoLlegada', {Man_Cod: o.Man_Cod,Man_Num: o.ManNum,Man_Fea: o.Man_Fea,Man_Fea_Hora: o.Man_Fea_Hor}, 'Modificar Hora Llegada', 'time', '', 'warning')+ "&nbsp;":'')  +
+                        (o.Man_Tip=='P' && $.isEmpty(Cli_Cod_Man) && !esPerfilLectura?$.getGridButton('modalModificarTiempoLlegada', {Man_Cod: o.Man_Cod,Man_Num: o.ManNum,Man_Fea: o.Man_Fea,Man_Fea_Hora: o.Man_Fea_Hor}, 'Modificar Hora Llegada', 'time', '', 'warning')+ "&nbsp;":'')  +
                         // (o.Man_Tip!='GS' || o.Man_Tip!='F'?$.getGridButton('printClienteQR',o.Man_Cod, 'Generar codigo QR', 'qrcode', '', 'info')+ "&nbsp;":'')  +
                         /*(o.Man_Tip=='P' && $.isEmpty(Cli_Cod_Man)?$.getGridButton('modificaManifiesto', o, 'Editar Manifiesto', 'pencil', '', 'success')+ "&nbsp;" : '')  +*/
-                        (o.Man_Est=='A' && o.Man_Tip=='P' && $.isEmpty(Cli_Cod_Man)?$.getGridButton('anularManifiesto', o.Man_Cod, 'Anular manifiesto', 'remove', '', 'danger') : '');
+                        (o.Man_Est=='A' && o.Man_Tip=='P' && $.isEmpty(Cli_Cod_Man) && !esPerfilLectura?$.getGridButton('anularManifiesto', o.Man_Cod, 'Anular manifiesto', 'remove', '', 'danger') : '');
                     }
                     return botones;
                 }
