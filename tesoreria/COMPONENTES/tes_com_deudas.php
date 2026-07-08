@@ -247,34 +247,34 @@ if(isset($Com_Codigo))
 						?>
 						<tr>
 							<td align="center">
-								<FONT COLOR="<? echo $naranja;?>">
+								<FONT COLOR="<?php echo $naranja;?>">
 									<?Php echo $row_rs_deudas['Pro_Cod'];?>
 								</FONT>
 							</td>
 							<td>
-								<FONT COLOR="<? echo $naranja;?>">
+								<FONT COLOR="<?php echo $naranja;?>">
 									<?Php echo $row_rs_deudas['Ite_Lar']; ?>
 								</FONT>
 							</td>
 							<td align="center">
-								<FONT COLOR="<? echo $naranja;?>">
+								<FONT COLOR="<?php echo $naranja;?>">
 									<?Php echo $row_rs_deudas['Deu_Fec']; ?>
 								</FONT>
 							</td>
 							<td align="right">
-								<FONT COLOR="<? echo $naranja;?>">
+								<FONT COLOR="<?php echo $naranja;?>">
 									<?Php echo formato_numero($row_rs_deudas['Deu_Val'] -  $row_rs_pagos['Vet_Imp'],2,4); ?>
 								</FONT>
 							</td>
 							<?php if($Cli_Est){?>
 							<td align="center">
-								<FONT COLOR="<? echo $naranja;?>">
+								<FONT COLOR="<?php echo $naranja;?>">
 									<?Php echo $mensaje; ?>
 								</FONT>
 							</td>
 							<?php }?>
 							<td align="right">
-								<FONT COLOR="<? echo $naranja;?>">
+								<FONT COLOR="<?php echo $naranja;?>">
 									<?Php echo formato_numero($saldo,2,4); ?>
 								</FONT>
 							</td>
@@ -334,7 +334,7 @@ if(isset($Com_Codigo))
 											<i class=" icon-arrow-right icon-white"></i>
 											</button>
 										</form>
-										<?
+										<?php
 									break;
 						 		}
 								?>
@@ -431,12 +431,12 @@ if(isset($Com_Codigo))
 									$saldo_total = $saldo_total + $saldo_int;
 									?>
 										<tr>
-											<td align="center"><FONT COLOR="<? echo $naranja;?>"><strong><? echo $row_rs_interes['Pro_Cod']; ?></strong></FONT></td>
-											<td align="left"><FONT COLOR="<? echo $naranja;?>"><strong><? echo $row_rs_interes['Ite_Lar']; ?></strong></FONT></td>
-											<td align="center"><FONT COLOR="<? echo $naranja;?>"><strong><? echo $row_rs_interes['Deu_Fec']; ?></strong></FONT></td>						
-											<td align="right"><FONT COLOR="<? echo $naranja;?>"><strong><? echo formato_numero($saldo_int,2,4); ?></strong></FONT></td>
+											<td align="center"><FONT COLOR="<?php echo $naranja;?>"><strong><?php echo $row_rs_interes['Pro_Cod']; ?></strong></FONT></td>
+											<td align="left"><FONT COLOR="<?php echo $naranja;?>"><strong><?php echo $row_rs_interes['Ite_Lar']; ?></strong></FONT></td>
+											<td align="center"><FONT COLOR="<?php echo $naranja;?>"><strong><?php echo $row_rs_interes['Deu_Fec']; ?></strong></FONT></td>						
+											<td align="right"><FONT COLOR="<?php echo $naranja;?>"><strong><?php echo formato_numero($saldo_int,2,4); ?></strong></FONT></td>
 											<?php if($Cli_Est){?><td>&nbsp;</td><?php }?>
-											<td align="right"><FONT COLOR="<? echo $naranja;?>"><strong><? echo formato_numero($saldo_int,2,4); ?></strong></FONT></td>
+											<td align="right"><FONT COLOR="<?php echo $naranja;?>"><strong><?php echo formato_numero($saldo_int,2,4); ?></strong></FONT></td>
 											<?php if($Com_Tipo != 1){?><td align="center">
 												<form action="#">
 													<button type="button" class="btn btn-success btn-mini" title="Ver Detalle" onclick="ajax_datos('<?php echo $_SERVER['PHP_SELF'];?>?<?php echo 'detalle='.(($Cli_Est)? '1&Nge_Cod='.$Nge_Cod.'&Com_Codigo='.$Com_Codigo.'&Bec_Cod='.$row_rs_deudas['Bec_Cod'].'&Pro_Cod='.$Pro_Cod:'2&Cnt_Cod='.$Cnt_Cod);?>','contenido');Muestra_Aparecer();">

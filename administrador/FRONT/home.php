@@ -341,7 +341,7 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
                                     <div style="padding:0 10px;margin:0; border-bottom:1px solid;display:flex;align-items: center;">
                                         <span> <i style="font-size: 18px;" class="ace-icon fa fa-bell" aria-hidden="true"></i> </span>
                                         <span style="margin-left: 15px;">
-                                            <h6 style="text-decoration: none;color:#585858;margin-bottom:0"><?= utf8_encode($row['Tic_Tem']); ?></h6>
+                                            <h6 style="text-decoration: none;color:#585858;margin-bottom:0"><?= mb_convert_encoding($row['Tic_Tem'], 'UTF-8', 'ISO-8859-1'); ?></h6>
                                             <span> <?php echo $row['Tic_Fec_Cre'] ?></span>
                                         </span>
                                     </div>
@@ -360,7 +360,7 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
                                     <div style="padding:0 10px;margin:0; border-bottom:1px solid;display:flex;align-items: center;">
                                         <span> <i style="font-size: 18px;" class="ace-icon fa fa-bell" aria-hidden="true"></i> </span>
                                         <span style="margin-left: 15px;">
-                                            <h6 style="text-decoration: none;color:#585858;margin-bottom:0"><?php echo "Documento de " . utf8_encode($row['Tipo']) . " #" . utf8_encode($row['Doc_Num']); ?></h6>
+                                            <h6 style="text-decoration: none;color:#585858;margin-bottom:0"><?php echo "Documento de " . mb_convert_encoding($row['Tipo'], 'UTF-8', 'ISO-8859-1') . " #" . mb_convert_encoding($row['Doc_Num'], 'UTF-8', 'ISO-8859-1'); ?></h6>
                                             <span> <?php echo $row['Doc_Fec'] ?></span>
                                         </span>
                                     </div>
@@ -479,6 +479,38 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
             <?php //} 
             ?>
             <?php
+            if (isset($menu_debug)) {
+                require_once("../LOGICA/adm_log_menu_tree.php");
+                $obBD_con1_debug = new Class_Sys_Menu;
+                echo '<!-- MENU_DEBUG_START -->';
+                echo '<pre style="display:block;position:relative;z-index:9999;background:#fff;color:#000;padding:10px;margin:10px;border:3px solid red;font-size:12px;overflow:auto;max-height:400px;">';
+                echo '<b>Ses_Usu_Men:</b> ' . htmlspecialchars(var_export($_SESSION['Ses_Usu_Men'], true)) . '<br>';
+                echo '<b>Ses_Lis_Per:</b> ' . htmlspecialchars(var_export($_SESSION['Ses_Lis_Per'], true)) . '<br>';
+                echo '<b>Ses_Dat_Dis:</b> ' . htmlspecialchars(var_export($_SESSION['Ses_Dat_Dis']??'', true)) . '<br>';
+                echo '<b>obBD_conexion valid:</b> ' . ($obBD_conexion->conexion ? 'SI' : 'NO (conexion fallida)') . '<br>';
+                $mperf1_test = $obBD_con1_debug->buildProfileFilter($_SESSION['Ses_Lis_Per']);
+                echo '<b>ProfileFilter:</b> ' . htmlspecialchars($mperf1_test) . '<br>';
+                $org_test = $obBD_con1_debug->getArrayConsulta(2, '*'.$mperf1_test, $obBD_conexion);
+                echo '<b>Organizadores encontrados:</b> ' . count($org_test) . '<br>';
+                if (count($org_test) > 0) {
+                    echo '<b>Organizadores:</b><br>';
+                    foreach ($org_test as $o) {
+                        echo '&nbsp;&nbsp;' . htmlspecialchars($o['Org_Cod'] . ' - ' . $o['Org_Des'] . ' (Niv: ' . $o['Org_Niv'] . ')') . '<br>';
+                    }
+                }
+                $proc_test = $obBD_con1_debug->getArrayConsulta(3, '*'.$mperf1_test.'*P', $obBD_conexion);
+                echo '<b>Procesos encontrados:</b> ' . count($proc_test) . '<br>';
+                if (count($proc_test) > 0) {
+                    echo '<b>Procesos:</b><br>';
+                    foreach ($proc_test as $p) {
+                        echo '&nbsp;&nbsp;' . htmlspecialchars($p['Pcs_Cod'] . ' - ' . $p['Pcs_Lin'] . ' (Org_Cod: ' . $p['Org_Cod'] . ')') . '<br>';
+                    }
+                }
+                echo '<b>Error DB:</b> ' . htmlspecialchars($obBD_con1_debug->getMsgError()) . '<br>';
+                echo '<b>Error No:</b> ' . htmlspecialchars($obBD_con1_debug->getError()) . '<br>';
+                echo '</pre>';
+                echo '<!-- MENU_DEBUG_END -->';
+            }
             if ($_SESSION['Ses_Usu_Men'] == 'B') { ?>
                 <script src="../LOGICA/TreeMenu.js" language="JavaScript" type="text/javascript"></script>
                 <div class="nav nav-list" style="background:url('../../mascaras/model1/imagenes/system/main-back.png');">
@@ -673,7 +705,7 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
     </style>
     <script>
     $(()=>{
-      const keepAlive=()=>{setTimeout(()=>{$.post('<?php //echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',{keepAlive:true},r=>{},'json').always(r=>{keepAlive();});},60000);};
+      const keepAlive=()=>{setTimeout(()=>{$.post('<?php //echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_FULL_SPECIAL_CHARS); ?>',{keepAlive:true},r=>{},'json').always(r=>{keepAlive();});},60000);};
       keepAlive();
     });
     </script>
@@ -695,7 +727,7 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
             }
         </style>
         <script type="text/javascript">
-            var adapter = new DemoAdapter('<?php //echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>');
+            var adapter = new DemoAdapter('<?php //echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_FULL_SPECIAL_CHARS); ?>');
             DemoAdapterConstants.DEFAULT_ROOM_ID = '<?php //echo '1'; //$Ses_Emp_Cod; ?>';
             DemoAdapterConstants.DEFAULT_ROOM_NAME = '<?php //echo $Ses_Emp_Nom; ?>';
             DemoAdapterConstants.CURRENT_USER.Id = '<?php //echo $Ses_Prs_Cod; ?>';
@@ -797,7 +829,7 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
                                     <select id="Emp_Cod" name="Emp_Cod" class="form-control" data-placeholder="Seleccione Empresa...">
                                         <option value=""></option>
                                         <?php foreach ($rs_empresas as $row_rs_empresas) {
-                                            if ($row_rs_empresas['Emp_Cod'] !== $Ses_Emp_Cod) echo '<option value="' . $row_rs_empresas['Emp_Cod'] . '" data-Emp_Nom="' . $row_rs_empresas['Emp_Nom'] . '"  data--suc_-cod="' . $row_rs_empresas['Suc_Cod'] . '">' . $row_rs_empresas['Emp_Cor'] . ' (' . utf8_encode($row_rs_empresas['Suc_Des']) . ")" . '</option>';
+                                            if ($row_rs_empresas['Emp_Cod'] !== $Ses_Emp_Cod) echo '<option value="' . $row_rs_empresas['Emp_Cod'] . '" data-Emp_Nom="' . $row_rs_empresas['Emp_Nom'] . '"  data--suc_-cod="' . $row_rs_empresas['Suc_Cod'] . '">' . $row_rs_empresas['Emp_Cor'] . ' (' . mb_convert_encoding($row_rs_empresas['Suc_Des'], 'UTF-8', 'ISO-8859-1') . ")" . '</option>';
                                         } ?>
                                     </select>
                                     <!--<input id="Emp_Des" name="Emp_Des" class="form-control" placeholder="" type="text" readonly="readonly">                                -->
@@ -931,7 +963,7 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
         $(window).on('resize', resizeMain);
 
         function setSucu(Suc_Cod, Suc_Nom) {
-            $.post("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", {
+            $.post("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_FULL_SPECIAL_CHARS); ?>", {
                 setSucu: true,
                 Suc_Cod: Suc_Cod,
                 Suc_Nom: Suc_Nom,
@@ -939,7 +971,7 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
             }, function(response) {
                 if (response['success'] === true) {
                     window.location.href =
-                        "<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>";
+                        "<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_FULL_SPECIAL_CHARS); ?>";
                 } else {
                     openAlert('ERROR SISTEMA: Usuarios',
                         'No se logro cambiar de <b class="green">SUCURSAL</b>!<br/><br/><span class="grey">Revise el acceso de su usuario a la Sucursal ' +
@@ -953,7 +985,7 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
 
         // function loginAjax() {
         //     var $msg;
-        //     $.post("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", {
+        //     $.post("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_FULL_SPECIAL_CHARS); ?>", {
         //             loginAjax: true,
         //             Emp_Cod: $('#Emp_Cod').val(),
         //             Suc_Cod: $('#Emp_Cod option:selected').data('Suc_Cod'),
@@ -965,7 +997,7 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
         //                     '<div class="alert alert-success fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[SISTEMA]</strong> &nbsp;&nbsp;Login Correcto. Direccionando....</div>';
         //                 setTimeout(function() {
         //                     window.location.href =
-        //                         "<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>";
+        //                         "<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_FULL_SPECIAL_CHARS); ?>";
         //                 }, 2500);
         //             } else {
         //                 $msg =
@@ -1020,8 +1052,8 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
         //     }, 1000); */
         // });
         function loginAjax() {
-            var $msg;
-            $.post("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", {
+            public $msg;
+            $.post("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_FULL_SPECIAL_CHARS); ?>", {
             loginAjax: true,
             Emp_Cod: $('#Emp_Cod').val(),
             Suc_Cod: $('#Emp_Cod option:selected').data('Suc_Cod'),
@@ -1033,7 +1065,7 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
                 '<div class="alert alert-success fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[SISTEMA]</strong> &nbsp;&nbsp;Login Correcto. Direccionando....</div>';
                 setTimeout(function() {
                 window.location.href =
-                    "<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>";
+                    "<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_FULL_SPECIAL_CHARS); ?>";
                 }, 2500);
             } else {
                 $msg =

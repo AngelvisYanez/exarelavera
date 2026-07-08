@@ -179,7 +179,7 @@ if(isset($elimina)){
                                     <div class="col-md-12">
                                         <select id="ciu_cod" name="ciu_cod" class="form-control input-xs select_carga" style="display: none;">
                                             <?php foreach ($ciudades as $row){?>
-                                            <option value="<?php echo $row['Ciu_Cod'];?>"><?php echo utf8_decode($row['Ciu_Des']);?></option>
+                                            <option value="<?php echo $row['Ciu_Cod'];?>"><?php echo mb_convert_encoding($row['Ciu_Des'], 'ISO-8859-1', 'UTF-8');?></option>
                                             <?php }?>
                                         </select>
                                         <div>
@@ -493,7 +493,7 @@ if(isset($elimina)){
             //Función que agrega una fila al grid
             function agregarFila(indice,grid,cod,aux){
                 $('#'+grid).jqGrid('resizeGrid');
-                var $this=$('#'+grid),id,nuevo;
+                public $this=$('#'+grid),id,nuevo;
                 if(indice<1){
                     id=($this.jqGrid('getCol',cod,false,'max')+1)||0;
                     nuevo='N';

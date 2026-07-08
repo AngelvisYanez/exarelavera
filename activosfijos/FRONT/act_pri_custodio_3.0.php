@@ -67,7 +67,7 @@ if (isset($_POST['codigo']))
     	<td>
            <table width="80%" border="0" cellpadding="0" cellspacing="0" align="center">
                 <tr align="center">
-                  <td colspan="4" ><? $obBD_con1->cabeceraReporteStandar($Ses_Suc_Cod,$Titulo,$Subtitulo,$obBD_conexion)?></td>
+                  <td colspan="4" ><?php $obBD_con1->cabeceraReporteStandar($Ses_Suc_Cod,$Titulo,$Subtitulo,$obBD_conexion)?></td>
                 </tr>
            </table>  
       </td>
@@ -87,16 +87,16 @@ if (isset($_POST['codigo']))
   </tr>
   <tr>
     <td><span class="Etiqueta1">Fecha de Emisi&oacute;n :</span></td>
-    <td><span class="LetraNegra"><? echo $hoy ?></span></td>
+    <td><span class="LetraNegra"><?php echo $hoy ?></span></td>
     <td>&nbsp;</td>
     <td>&nbsp;</td>
   </tr>
-  <? $Nombre = $rs_consultar[0]['Nombre']; $Cedula = $rs_consultar[0]['Prs_Ced'];?>
+  <?php $Nombre = $rs_consultar[0]['Nombre']; $Cedula = $rs_consultar[0]['Prs_Ced'];?>
   <tr>
     <td><span class="Etiqueta1">Nombre del Custodio :</span></td>
-    <td><span class="LetraNegra"><? echo $Nombre; ?></span></td>
+    <td><span class="LetraNegra"><?php echo $Nombre; ?></span></td>
     <td><span class="Etiqueta1">Cédula :</span></td>
-    <td><span class="LetraNegra"><? echo $Cedula; ?></span></td>
+    <td><span class="LetraNegra"><?php echo $Cedula; ?></span></td>
   </tr>
 </table>
 <br/>
@@ -118,27 +118,27 @@ if (isset($_POST['codigo']))
 				foreach($rs_camp as $row_rs_camp){
 				?>
 					<th width="20%">
-					<? echo $row_rs_camp['Cam_Cor']; $td +=1;?>
+					<?php echo $row_rs_camp['Cam_Cor']; $td +=1;?>
                     </th>
-			   <? }//if($total_rs_camp > 0){
+			   <?php }//if($total_rs_camp > 0){
 			}
 	
 	?>  
     <td width="10%">Estado</td>
      <td width="5%">Costo</td> 
 </tr>
- <? if( $total_rs_consultar > 0){
+ <?php if( $total_rs_consultar > 0){
 	 
 	 $Total=0;
     foreach($rs_consultar as $row_rs_consultar){
         $i++;
     ?>
 <tr>
-    <td class="LetraNegra" align="center"><? echo $i;?></td>
-    <td class="LetraNegra" align="center"><? echo $row_rs_consultar['Act_Cod'];?></td>
-    <td class="LetraNegra" align="left"><? echo $row_rs_consultar['Dep_Des'];?></td>
-    <td class="LetraNegra"><? echo $row_rs_consultar['Act_Des'];?></td>
-    <td class="LetraNegra" align="left"><? echo $row_rs_consultar['Act_Obs'];?></td>
+    <td class="LetraNegra" align="center"><?php echo $i;?></td>
+    <td class="LetraNegra" align="center"><?php echo $row_rs_consultar['Act_Cod'];?></td>
+    <td class="LetraNegra" align="left"><?php echo $row_rs_consultar['Dep_Des'];?></td>
+    <td class="LetraNegra"><?php echo $row_rs_consultar['Act_Des'];?></td>
+    <td class="LetraNegra" align="left"><?php echo $row_rs_consultar['Act_Obs'];?></td>
    <?php 		
 			$rs_camp = $obBD_con1->getArrayConsulta(140,'', $obBD_conexion);
 			$total_rs_camp =  count($rs_camp);
@@ -149,19 +149,19 @@ if (isset($_POST['codigo']))
 					<td align="center" width="16%">
 						<?Php echo $rs_val_Camp['Act_Val'] ?>                
 					</td>
-					<?
+					<?php
 				}
 		 	 }
 		  ?>
    
-    <td class="LetraNegra" align="center"><? echo $row_rs_consultar['Est_Des'];?></td>
-    <td class="LetraNegra" align="right"><? if($row_rs_consultar['Act_Val']==0){ echo "0.00";}else{
+    <td class="LetraNegra" align="center"><?php echo $row_rs_consultar['Est_Des'];?></td>
+    <td class="LetraNegra" align="right"><?php if($row_rs_consultar['Act_Val']==0){ echo "0.00";}else{
 				echo formato_numero($row_rs_consultar['Act_Val'], 2, 1); $Total= $Total+ $row_rs_consultar['Act_Val'];}?>
              </td>
     
     
 </tr>
-<? 	 
+<?php 	 
 	/**
 	 * Almacena en un arreglo las observaciones del los activos.
 	 */
@@ -174,8 +174,8 @@ if (isset($_POST['codigo']))
         	 <?Php
         if ($total_rs_camp> 0){
 			$total_rs_camp = $total_rs_camp+5;?>          
-				<td <? echo "colspan='".$total_rs_camp."'" ?>  >&nbsp;</td>
-			<?	
+				<td <?php echo "colspan='".$total_rs_camp."'" ?>  >&nbsp;</td>
+			<?php	
 		 	 }
 			 else{
 			  echo "<td colspan='6'>&nbsp;</td>";}
@@ -183,7 +183,7 @@ if (isset($_POST['codigo']))
             <td  style="font-size:14px"  class="LetraNegra" align="right"><strong>Total</strong></td>
             <td  style="font-size:14px"  class="LetraNegra" align="right"><?Php echo formato_numero($Total, 2, 4);?></td>
         </tr>  
-	 <?
+	 <?php
     }?>
 </table>
 <br>
@@ -227,7 +227,7 @@ if (isset($_POST['codigo']))
 <td valign="top" align="center">___________________________<br>    </td>
 </tr>
 <tr>
-  <td height="19" align="center" valign="top"><span class="LetraNegra"><? echo $Nombre;?></span><br/><span class="LetraNegra"><? echo $Cedula;?></span></td>
+  <td height="19" align="center" valign="top"><span class="LetraNegra"><?php echo $Nombre;?></span><br/><span class="LetraNegra"><?php echo $Cedula;?></span></td>
   <td align="center" valign="top">Responsable Administrativo-Financiero</td>
    <td align="center" valign="top">Inventariadora de activos Fijos</td>
   </tr>

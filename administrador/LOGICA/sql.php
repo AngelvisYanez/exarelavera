@@ -652,12 +652,12 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
                 SELECT * FROM servicios.tickets WHERE Tic_Est = '0' LIMIT 10
                 -- UNION ALL
                 -- SELECT * FROM test_prueba.tickets WHERE Tic_Est = '0' LIMIT 10
-                UNION ALL
-                SELECT * FROM agrofertil.tickets WHERE Tic_Est = '0' LIMIT 10
-                UNION ALL
-                SELECT * FROM agronuevo.tickets WHERE Tic_Est = '0' LIMIT 10
-                UNION ALL
-                SELECT * FROM exa.tickets WHERE Tic_Est = '0' LIMIT 10
+                -- UNION ALL
+                -- SELECT * FROM agrofertil.tickets WHERE Tic_Est = '0' LIMIT 10
+                -- UNION ALL
+                -- SELECT * FROM agronuevo.tickets WHERE Tic_Est = '0' LIMIT 10
+                -- UNION ALL
+                -- SELECT * FROM exa.tickets WHERE Tic_Est = '0' LIMIT 10
                 -- UNION ALL
                 -- SELECT * FROM orquideas.tickets WHERE Tic_Est = '0' LIMIT 10
             ) AS all_tickets 
@@ -671,12 +671,12 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
                 SELECT COUNT(Tic_Cod) AS TOTAL FROM servicios.tickets WHERE Tic_Est = '0'
                 -- UNION ALL
                 -- SELECT COUNT(Tic_Cod) AS TOTAL FROM test_prueba.tickets WHERE Tic_Est = '0'
-                UNION ALL
-                SELECT COUNT(Tic_Cod) AS TOTAL FROM agrofertil.tickets WHERE Tic_Est = '0'
-                UNION ALL
-                SELECT COUNT(Tic_Cod) AS TOTAL FROM agronuevo.tickets WHERE Tic_Est = '0'
-                UNION ALL
-                SELECT COUNT(Tic_Cod) AS TOTAL FROM exa.tickets WHERE Tic_Est = '0'
+                -- UNION ALL
+                -- SELECT COUNT(Tic_Cod) AS TOTAL FROM agrofertil.tickets WHERE Tic_Est = '0'
+                -- UNION ALL
+                -- SELECT COUNT(Tic_Cod) AS TOTAL FROM agronuevo.tickets WHERE Tic_Est = '0'
+                -- UNION ALL
+                -- SELECT COUNT(Tic_Cod) AS TOTAL FROM exa.tickets WHERE Tic_Est = '0'
                 -- UNION ALL
                 -- SELECT COUNT(Tic_Cod) AS TOTAL FROM orquideas.tickets WHERE Tic_Est = '0'
               ) AS all_counts;";

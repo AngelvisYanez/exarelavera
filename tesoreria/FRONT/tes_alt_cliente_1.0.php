@@ -326,7 +326,7 @@ if (isset($guardarCliente)) {
                                     <select id="Ciu_Cod" name="Ciu_Cod" class="form-control input-xs" data-placeholder="Seleccione una ciudad" required="">
                                         <option value=""></option>
                                         <?php foreach ($rs_ciudad as $row) {
-                                            echo "<option value='$row[Ciu_Cod]' data-prov='" . utf8_encode($row[Pro_Nom]). "' data-pais='" . utf8_encode($row[Pas_Nom]) . "'>" . utf8_encode($row['Ciu_Des']) . "</option>";
+                                            echo "<option value='$row[Ciu_Cod]' data-prov='" . mb_convert_encoding($row[Pro_Nom], 'UTF-8', 'ISO-8859-1'). "' data-pais='" . mb_convert_encoding($row[Pas_Nom], 'UTF-8', 'ISO-8859-1') . "'>" . mb_convert_encoding($row['Ciu_Des'], 'UTF-8', 'ISO-8859-1') . "</option>";
                                         } ?>
                                     </select>
                                 </div>

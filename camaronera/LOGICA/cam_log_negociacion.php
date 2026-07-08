@@ -28,19 +28,19 @@ class Class_Log_datos_Cam extends MysqlDatosContab
 
     
 
-    /* function consultasobBD($sen_sql, $param, $obBD)
+    /* function consultasobBD($sen_sql, $param, $obBD = null)
     {
         $Par_Sql = $this->parametros($param);
         return $this->consulta(sentencias_cch($sen_sql, $Par_Sql), $obBD->conexion);
     }
 
 
-    function operacionobBD($sen_sql, $param, $obBD)
+    function operacionobBD($sen_sql, $param, $obBD = null)
     {
         $Par_Sql = $this->parametros($param);
         return $this->grabarv_registros(sentencias_cch($sen_sql, $Par_Sql), $obBD->conexion);
     }
-    function getRowConsulta($sen_sql, $param, $obBD)
+    function getRowConsulta($sen_sql, $param, $obBD = null)
     {
         $result = $this->consultasobBD($sen_sql, $param, $obBD);
 
@@ -50,7 +50,7 @@ class Class_Log_datos_Cam extends MysqlDatosContab
 
         return $row;
     }
-    function getArrayConsulta($sen_sql, $param, $obBD)
+    function getArrayConsulta($sen_sql, $param, $obBD = null)
     {
         $result = $this->consultasobBD($sen_sql, $param, $obBD);
 

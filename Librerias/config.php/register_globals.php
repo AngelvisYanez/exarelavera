@@ -1,4 +1,8 @@
 <?Php
+require_once __DIR__ . '/../debugbar/vendor/autoload.php';
+if (!class_exists('DebugBar', false)) {
+    class_alias('DebugBar\DebugHelper', 'DebugBar');
+}
 
 /**
 * Permite tomar las variables GET y POST
@@ -61,3 +65,8 @@ $APP_REAL_PATH=realpath(str_replace(basename( __FILE__ ),'',__FILE__).'..'.$DirS
 
 include_once(__DIR__.'/debugbar.php');
 include_once(__DIR__.'/monolog.php');
+
+$autoloadPath = __DIR__ . '/../../vendor/autoload.php';
+if (file_exists($autoloadPath)) {
+    require_once $autoloadPath;
+}

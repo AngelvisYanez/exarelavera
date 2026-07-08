@@ -78,7 +78,7 @@ $obBD_con1 =  new Class_Log_Datos_pre;
 	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 	</HEAD>
 <BODY>
-<?
+<?php
 
   $Letras = array("A","B","C","D","E","F","G","H","I","J","K","L","M","N","Ñ","O","P","Q","R","S","T","U","V","W","X","Y","Z","TODOS");
   /**
@@ -101,7 +101,7 @@ $obBD_con1 =  new Class_Log_Datos_pre;
 	  <td height="10">&raquo; listado de productos </td>
   </tr>
   
-<? if(!isset($Tpv_Cod) || isset($hdd_volver))
+<?php if(!isset($Tpv_Cod) || isset($hdd_volver))
  {
 ?>
   <tr>
@@ -117,13 +117,13 @@ $obBD_con1 =  new Class_Log_Datos_pre;
       <tr>
       <td width="29%" class="Etiqueta1"><span class="Asterisco">*</span> Tipo de Precio:</td>
         <td width="44%">&nbsp;
-        <?
+        <?php
         	$Arr_Tipo_Precio = $obBD_con1->getArrayConsulta(1, $Ses_Suc_Cod, $obBD_conexion);//EjecutarConsulta(1,$Ses_Suc_Cod);
 		?>
         <select name="Tpv_Cod" id="Tpv_Cod">
         <option value="">Seleccionar...</option>
-           <? foreach($Arr_Tipo_Precio as $row){?>
-           <option value="<? echo $row['Tpv_Cod'];?>"><? echo $row['Tpv_Des'];?></option><?
+           <?php foreach($Arr_Tipo_Precio as $row){?>
+           <option value="<?php echo $row['Tpv_Cod'];?>"><?php echo $row['Tpv_Des'];?></option><?php
 			}
 		   ?>
         </select>
@@ -144,7 +144,7 @@ $obBD_con1 =  new Class_Log_Datos_pre;
   </td>
   </tr>
   
-<? }else{ ?>
+<?php }else{ ?>
 
 	<tr>
         <td valign="top">
@@ -153,16 +153,16 @@ $obBD_con1 =  new Class_Log_Datos_pre;
 			<label class="Titulos2">Filtros de búsqueda</label>
 		  </LEGEND>	
 		   <ul id="pagination-clean">
-          <?
+          <?php
         	foreach($Letras as $letra)
 			{
 	  		    if($page == $letra)
 				{
-				  ?><li class="active"><? echo $letra;?></li><?
+				  ?><li class="active"><?php echo $letra;?></li><?php
 				}
 				else
 				{
-				  ?><li><a href="fac_con_producto_1.0.php?page=<? echo $letra;?>&Tpv_Cod=<? echo $Tpv_Cod;?>" ><? echo $letra;?></a></li><?
+				  ?><li><a href="fac_con_producto_1.0.php?page=<?php echo $letra;?>&Tpv_Cod=<?php echo $Tpv_Cod;?>" ><?php echo $letra;?></a></li><?php
 			    }
 			}
 		  ?>
@@ -171,7 +171,7 @@ $obBD_con1 =  new Class_Log_Datos_pre;
         </td>
 	</tr>
 <tr><td>
- <?
+ <?php
     	if($page == 'TODOS')
 		{
 			$Arr_Producto = $obBD_con1->getArrayConsulta(2, $Tpv_Cod.'*'.$Ses_Suc_Cod, $obBD_conexion);//EjecutarConsulta(2,$Tpv_Cod);
@@ -185,8 +185,8 @@ $obBD_con1 =  new Class_Log_Datos_pre;
    
     <fieldset>
     <legend>
-    <? $Tpv_Des = $obBD_con1->getRowConsulta(4, $Tpv_Cod, $obBD_conexion);//GetRowConsulta(4,$Tpv_Cod);?>
-     <label class="Titulos2">Listado de Productos - Precios <? echo $Tpv_Des["Tpv_Des"];?></label>
+    <?php $Tpv_Des = $obBD_con1->getRowConsulta(4, $Tpv_Cod, $obBD_conexion);//GetRowConsulta(4,$Tpv_Cod);?>
+     <label class="Titulos2">Listado de Productos - Precios <?php echo $Tpv_Des["Tpv_Des"];?></label>
     </legend>
     <div id="">
     <table class="fixedHeader01" width="100%" border="1" cellpadding="0" cellspacing="0" id="Exportar_a_Excel">
@@ -203,7 +203,7 @@ $obBD_con1 =  new Class_Log_Datos_pre;
           </tr>
           </thead>
           <tbody>
-          <? 
+          <?php 
 		  if ($total_rs_Producto<>0 )
 		  {
 		  $filas = 0;
@@ -221,7 +221,7 @@ $obBD_con1 =  new Class_Log_Datos_pre;
             <td align="right"><?Php echo number_format($row['Pre_Pvp'],2);?></td>
             <td align="right"><?Php echo number_format($row['Pre_Pvp'] + ($row['Pre_Pvp'] * $row['Iva_Por'])/100,2);?></td>
           </tr>
-          <? }
+          <?php }
 		  }else{
 		  ?>
           <tr>
@@ -234,18 +234,18 @@ $obBD_con1 =  new Class_Log_Datos_pre;
                 <td align="right">&nbsp;</td>
                 <td align="right">&nbsp;</td>
           </tr>
-          <? }?>
+          <?php }?>
           </tbody>
     </table>
     </div>
-    <? echo barra_estado($filas);?>
+    <?php echo barra_estado($filas);?>
     </fieldset>
     <div id="set1">
          <table cellpadding="0" cellspacing="0" border="0">
          <tr>
          <td width="106">
          <form method="post" name="form1" action="<?Php echo $_SERVER['PHP_SELF']; ?>">
-         <button type="button" class="btn btn-inverse fileinput-button" title="Atrás" onClick="campos_hide(this.form, 'hdd_volver', '<? echo '1';?>')">
+         <button type="button" class="btn btn-inverse fileinput-button" title="Atrás" onClick="campos_hide(this.form, 'hdd_volver', '<?php echo '1';?>')">
                             <i class=" icon-arrow-left icon-white"></i>
                             <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
                </button>
@@ -253,8 +253,8 @@ $obBD_con1 =  new Class_Log_Datos_pre;
          </td>
          <td width="106">
          <form action="fac_pri_producto_1.0.php" method="post" target="_blank">
-             <input type="hidden" value="<? echo $page;?>" name="page" id="page">
-            <input type="hidden" value="<? echo $Tpv_Cod;?>" name="Tpv_Cod" id="Tpv_Cod">
+             <input type="hidden" value="<?php echo $page;?>" name="page" id="page">
+            <input type="hidden" value="<?php echo $Tpv_Cod;?>" name="Tpv_Cod" id="Tpv_Cod">
             <button type="button" class="btn btn-primary start" title="Imprimir Productos" onclick="this.form.submit()"> <i class="icon-print icon-white"></i> <span>Imprimir</span> </button>
         </form>
          </td>
@@ -275,7 +275,7 @@ $obBD_con1 =  new Class_Log_Datos_pre;
  </tr>
  </table>
  
- <? } ?>
+ <?php } ?>
 </BODY>
 </HTML>
 <?Php	

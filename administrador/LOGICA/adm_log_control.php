@@ -35,14 +35,14 @@ class Class_Log_Datos_Cnt extends MysqlDatos{
 	 * de Insert, Update, Delete
 	 * @var string
 	 */
-	var $sentencias = '';
+	public $sentencias = '';
 	
 	/**
 	 * guarda los codigos de autoincrementos en los insert
 	 * concatenados con *
 	 * @var string
 	 */
-	var $codigos = '';
+	public $codigos = '';
 
 	/**
 	 * Numero de la tabla que se encontro resultados
@@ -52,7 +52,7 @@ class Class_Log_Datos_Cnt extends MysqlDatos{
 	 * 4 - 8: personal
 	 * @var int
 	 */
-	var $id_tabla;
+	public $id_tabla;
 	
 	/**
 	 * Realiza una consulta en la base de datos -  STARDARD

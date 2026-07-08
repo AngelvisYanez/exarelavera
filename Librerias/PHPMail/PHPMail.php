@@ -9,13 +9,13 @@ class PHPMail{
 	 * objeto phpmailer
 	 * @var PHPMailer
 	 */
-	var $mail = null;
+	public $mail = null;
 	
 	/**
 	 * pop3
 	 * @var pop3
 	 */
-	var $pop = null;
+	public $pop = null;
 	
 	/**
 	 * enables SMTP debug information (for testing)
@@ -23,39 +23,39 @@ class PHPMail{
 	 * 2 = messages only
 	 * @var number
 	 */
-	var $SMTPDebug = 0;
+	public $SMTPDebug = 0;
 	
 	/**
 	 * SMTP server
 	 * sets GMAIL as the SMTP server
 	 * @var string
 	 */          
-	var $Host = "ofsercont.com";
+	public $Host = "ofsercont.com";
 	//var $Host = "199.89.54.243";	
 	
 	/**
 	 * set the SMTP port for the GMAIL server
 	 * @var number
 	 */
-	var $Port = 10;
+	public $Port = 10;
 	
 	/**
 	 * GMAIL username
 	 * @var string
 	 */
-	var $Username = "facturacion.electronica@ofsercont.com";
+	public $Username = "facturacion.electronica@ofsercont.com";
 	
 	/**
 	 * GMAIL password
 	 * @var string
 	 */
-	var $Password = "p.123456";
+	public $Password = "p.123456";
 	
 	/**
 	 * mensaje de error o satisfacci�n
 	 * @var string
 	 */
-	var $Msg = '';
+	public $Msg = '';
 	
 	/**
 	 * Crea y envia el mensaje

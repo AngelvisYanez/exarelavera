@@ -75,33 +75,33 @@ if (isset($Vet_Cod))
 $top=136;
 ?>
 
-<span style="top:<? echo $top+15;?>px;left:10px;" class="flota"><? if ($row_rs_representante['Cli_Fac'] != ""){echo $row_rs_representante['Cli_Fac'];}else{ echo $row_rs_cliente['Prs_Ape'].' '.$row_rs_cliente['Prs_Nom'];}?></span>
-<span style="top:<? echo $top+45;?>px;left:10px;" class="flota"><? if ($row_rs_representante['Cli_Dir'] != ""){echo substr($row_rs_representante['Cli_Dir'],0,31);}else{echo substr($row_rs_cliente['Prs_Dir'],0,31);}?></span>
-<span style="top:<? echo $top+35;?>px;left:350px;" class="flota"><? echo $dia.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$mes.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$anio; ?></span>
-<span style="top:<? echo $top+68;?>px;left:375px;" class="flota"><? echo $row_institucion['Ciu_Des'];?></span>
-<span style="top:<? echo $top+70;?>px;left:25px;" class="flota"><? if ($row_rs_representante['Cli_Fac'] != ""){echo $row_rs_representante['Cli_Ruf'];}else{echo $row_rs_cliente['Prs_Ced'];}?></span>
+<span style="top:<?php echo $top+15;?>px;left:10px;" class="flota"><?php if ($row_rs_representante['Cli_Fac'] != ""){echo $row_rs_representante['Cli_Fac'];}else{ echo $row_rs_cliente['Prs_Ape'].' '.$row_rs_cliente['Prs_Nom'];}?></span>
+<span style="top:<?php echo $top+45;?>px;left:10px;" class="flota"><?php if ($row_rs_representante['Cli_Dir'] != ""){echo substr($row_rs_representante['Cli_Dir'],0,31);}else{echo substr($row_rs_cliente['Prs_Dir'],0,31);}?></span>
+<span style="top:<?php echo $top+35;?>px;left:350px;" class="flota"><?php echo $dia.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$mes.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$anio; ?></span>
+<span style="top:<?php echo $top+68;?>px;left:375px;" class="flota"><?php echo $row_institucion['Ciu_Des'];?></span>
+<span style="top:<?php echo $top+70;?>px;left:25px;" class="flota"><?php if ($row_rs_representante['Cli_Fac'] != ""){echo $row_rs_representante['Cli_Ruf'];}else{echo $row_rs_cliente['Prs_Ced'];}?></span>
 
 
-<? $aux=262;
+<?php $aux=262;
 do{?>
-	<span style=" top:<? echo $aux; ?>px;left:0px;" class="flota"><? echo formato_numero($row_rs_cliente['Vet_Can'],1,1);?></span>
-    <span style="top:<? echo $aux; ?>px;left:70px;" class="flota"><? echo substr($row_rs_cliente['Ite_Lar'].' '.$row_rs_cliente['Pro_Obs'],0,35);?></span>
-    <span style="top:<? echo $aux; ?>px;left:325px;" class="flota rigth"><? echo number_format($row_rs_cliente['Vet_Pru'], 2);?></span>
-    <span style="top:<? echo $aux; ?>px;left:420px;" class="flota rigth"><? echo number_format($row_rs_cliente['Vet_Imp'], 2);?></span>
+	<span style=" top:<?php echo $aux; ?>px;left:0px;" class="flota"><?php echo formato_numero($row_rs_cliente['Vet_Can'],1,1);?></span>
+    <span style="top:<?php echo $aux; ?>px;left:70px;" class="flota"><?php echo substr($row_rs_cliente['Ite_Lar'].' '.$row_rs_cliente['Pro_Obs'],0,35);?></span>
+    <span style="top:<?php echo $aux; ?>px;left:325px;" class="flota rigth"><?php echo number_format($row_rs_cliente['Vet_Pru'], 2);?></span>
+    <span style="top:<?php echo $aux; ?>px;left:420px;" class="flota rigth"><?php echo number_format($row_rs_cliente['Vet_Imp'], 2);?></span>
 
-<? $aux+=25; }while ($row_rs_cliente = $obBD_con1->fetch_assoc ($rs_cliente));
+<?php $aux+=25; }while ($row_rs_cliente = $obBD_con1->fetch_assoc ($rs_cliente));
 $resultados = explode('*',$obBD_con1->calculos($Vet_Cod, $obBD_conexion));	
 ?>
-<span style="top:670px;left:300px;" class="flota"><? echo 'x'; ?></span>
-<!--<span style="top:730px;left:55px;" class="flota"><? //$v_absoluto=explode(".",$resultados[5]);echo substr(num2letras($v_absoluto[0],false,true).' con '.str_pad($v_absoluto[1],  2, "0").'/100',0,36);	?></span>
-<span style="top:755px;left:30px;" class="flota"><? //$v_absoluto=explode(".",$resultados[5]);echo substr(num2letras($v_absoluto[0],false,true).' con '.str_pad($v_absoluto[1],  2, "0").'/100',37,100);	?></span>-->
-<? $posTot='613';?>
-<span style="top:<? echo $posTot;?>px;left:440px;" class="flota"><!--Subtotal&nbsp;--><?Php echo formato_numero($resultados[0], 2, 1); ?></span>
-<span style="top:<? echo $posTot+25;?>px;left:440px;" class="flota"><!--Descuento&nbsp;--><?Php echo formato_numero($resultados[4], 2, 1); ?></span>
-<span style="top:<? echo $posTot+55;?>px;left:440px;" class="flota"><!--Tarifa 0%--><?Php echo formato_numero($resultados[1]+0, 2, 1); ?></span>
-<span style="top:<? echo $posTot+80;?>px;left:440px;" class="flota"><!--IVA&nbsp;--><?Php echo formato_numero($resultados[3], 2, 1); ?></span>
-<!--<span style="top:<? //echo $posTot+100;?>px;left:270px;" class="flota"><!--Tarifa 12%&nbsp;--><?Php //echo formato_numero($resultados[2]+0, 2, 1); ?><!--</span>-->
-<span aling="rigth" style="top:<? echo $posTot+110;?>px;left:440px;" class="flota"><!--TOTAL&nbsp;--><strong><?php echo number_format($resultados[5], 2); ?></strong></span>
+<span style="top:670px;left:300px;" class="flota"><?php echo 'x'; ?></span>
+<!--<span style="top:730px;left:55px;" class="flota"><?php //$v_absoluto=explode(".",$resultados[5]);echo substr(num2letras($v_absoluto[0],false,true).' con '.str_pad($v_absoluto[1],  2, "0").'/100',0,36);	?></span>
+<span style="top:755px;left:30px;" class="flota"><?php //$v_absoluto=explode(".",$resultados[5]);echo substr(num2letras($v_absoluto[0],false,true).' con '.str_pad($v_absoluto[1],  2, "0").'/100',37,100);	?></span>-->
+<?php $posTot='613';?>
+<span style="top:<?php echo $posTot;?>px;left:440px;" class="flota"><!--Subtotal&nbsp;--><?Php echo formato_numero($resultados[0], 2, 1); ?></span>
+<span style="top:<?php echo $posTot+25;?>px;left:440px;" class="flota"><!--Descuento&nbsp;--><?Php echo formato_numero($resultados[4], 2, 1); ?></span>
+<span style="top:<?php echo $posTot+55;?>px;left:440px;" class="flota"><!--Tarifa 0%--><?Php echo formato_numero($resultados[1]+0, 2, 1); ?></span>
+<span style="top:<?php echo $posTot+80;?>px;left:440px;" class="flota"><!--IVA&nbsp;--><?Php echo formato_numero($resultados[3], 2, 1); ?></span>
+<!--<span style="top:<?php //echo $posTot+100;?>px;left:270px;" class="flota"><!--Tarifa 12%&nbsp;--><?Php //echo formato_numero($resultados[2]+0, 2, 1); ?><!--</span>-->
+<span aling="rigth" style="top:<?php echo $posTot+110;?>px;left:440px;" class="flota"><!--TOTAL&nbsp;--><strong><?php echo number_format($resultados[5], 2); ?></strong></span>
 
 
 </body>

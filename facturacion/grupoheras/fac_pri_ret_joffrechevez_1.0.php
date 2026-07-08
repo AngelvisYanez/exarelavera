@@ -54,32 +54,32 @@ if (isset($Ret_Cod))
 </style></head>
 <body>
 <?Php $Fec_Emi=explode('-',$row_prin_renta['Ret_Fec']); ?>
-<span style="top:120px;left:585px;" class="flota"><? echo $Fec_Emi[2].'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$Fec_Emi[1].'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$Fec_Emi[0]; ?></span>
-<span style="top:146px;left:80px;" class="flota"><? echo $row_prin_renta['Prs_Ape'].' '.$row_prin_renta['Prs_Nom']; ?></span>
-<span style="top:150px;left:570px;" class="flota"><? echo $row_prin_renta['Prs_Ced']; ?></span>
+<span style="top:120px;left:585px;" class="flota"><?php echo $Fec_Emi[2].'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$Fec_Emi[1].'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$Fec_Emi[0]; ?></span>
+<span style="top:146px;left:80px;" class="flota"><?php echo $row_prin_renta['Prs_Ape'].' '.$row_prin_renta['Prs_Nom']; ?></span>
+<span style="top:150px;left:570px;" class="flota"><?php echo $row_prin_renta['Prs_Ced']; ?></span>
 
-<span style="top:180px;left:80px;" class="flota"><? echo substr($row_prin_renta['Prs_Dir'],0,50); ?></span>
-<span style="top:180px;left:520px;" class="flota"><? echo $row_prin_renta['Ciu_Des']; ?></span>
+<span style="top:180px;left:80px;" class="flota"><?php echo substr($row_prin_renta['Prs_Dir'],0,50); ?></span>
+<span style="top:180px;left:520px;" class="flota"><?php echo $row_prin_renta['Ciu_Des']; ?></span>
 
-<span style="top:235px;left:95px;" class="flota"><? echo $row_prin_renta['Tic_Des']; ?></span>
-<span style="top:235px;left:280px;" class="flota"><? echo $row_prin_renta['Cop_Num']; ?></span>
-<span style="top:235px;left:500px;" class="flota"><? echo $row_prin_renta['Cop_Fec']; ?></span>
+<span style="top:235px;left:95px;" class="flota"><?php echo $row_prin_renta['Tic_Des']; ?></span>
+<span style="top:235px;left:280px;" class="flota"><?php echo $row_prin_renta['Cop_Num']; ?></span>
+<span style="top:235px;left:500px;" class="flota"><?php echo $row_prin_renta['Cop_Fec']; ?></span>
 
-<span style="top:270px;left:40px;" class="autoriza"><? echo $row_prin_renta['Cop_Aut'];  ?></span>
-<span style="top:270px;left:410px;" class="flota"><? echo $row_prin_renta['Cop_Imf']; ?></span>
-<span style="top:270px;left:580px;" class="flota"><? echo $row_prin_renta['Cop_Cad']; ?></span>
+<span style="top:270px;left:40px;" class="autoriza"><?php echo $row_prin_renta['Cop_Aut'];  ?></span>
+<span style="top:270px;left:410px;" class="flota"><?php echo $row_prin_renta['Cop_Imf']; ?></span>
+<span style="top:270px;left:580px;" class="flota"><?php echo $row_prin_renta['Cop_Cad']; ?></span>
 
 <?Php $Total_Ret=0; 
 $Eje_Fis=explode('-',$row_prin_renta['Ret_Fec']); 
 $fila="330";
 foreach($rs_prin_renta as $row)
 { ?>
-	<span style="top:<? echo $fila;?>px;left:40px;" class="flota"><?Php $Ejerci=$Eje_Fis[0]; echo $Ejerci;?></span>
-	<span style="top:<? echo $fila;?>px;left:130px;" class="flota"><? echo $row['Ren_Sri']?></span>
-	<span style="top:<? echo $fila;?>px;left:280px;" class="flota"><? echo $row['Ret_Imp']?></span>
-	<span style="top:<? echo $fila;?>px;left:450px;" class="flota"><? echo number_format($row['Ret_Bas'], 2,'.',',');  ?></span>
-	<span style="top:<? echo $fila;?>px;left:560px;" class="flota"><? echo $row['Ren_Por'].'%'; ?></span>
-	<span style="top:<? echo $fila;?>px;left:660px;" class="flota"><? echo $Val_Ret=formato_numero((formato_numero($row['Ret_Bas'],2,1)* $row['Ren_Por'])/100,2,1); $Total_Ret+=$Val_Ret; ?></span>
+	<span style="top:<?php echo $fila;?>px;left:40px;" class="flota"><?Php $Ejerci=$Eje_Fis[0]; echo $Ejerci;?></span>
+	<span style="top:<?php echo $fila;?>px;left:130px;" class="flota"><?php echo $row['Ren_Sri']?></span>
+	<span style="top:<?php echo $fila;?>px;left:280px;" class="flota"><?php echo $row['Ret_Imp']?></span>
+	<span style="top:<?php echo $fila;?>px;left:450px;" class="flota"><?php echo number_format($row['Ret_Bas'], 2,'.',',');  ?></span>
+	<span style="top:<?php echo $fila;?>px;left:560px;" class="flota"><?php echo $row['Ren_Por'].'%'; ?></span>
+	<span style="top:<?php echo $fila;?>px;left:660px;" class="flota"><?php echo $Val_Ret=formato_numero((formato_numero($row['Ret_Bas'],2,1)* $row['Ren_Por'])/100,2,1); $Total_Ret+=$Val_Ret; ?></span>
 <?Php unset($Ejerci); $fila+=20;}/*Fin del foreach*/?>
 <span style="top:395px;left:660px;" class="flota"><strong><?Php echo $Total_Ret; ?></strong></span>
 </body>

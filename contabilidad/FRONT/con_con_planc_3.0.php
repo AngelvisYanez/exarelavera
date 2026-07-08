@@ -84,7 +84,7 @@ $obBD_con1->getPageGridJson(354,$_GET, $obBD_conexion,true);
 
                                   <label class="col-sm-7 label-xs">C&oacute;digo: <?echo $row_plan['Pla_Cod'];?> <p style="margin-left: 10%;display: inline;">Estado: <?echo $row_plan['Pla_Est'];?></p> </label>
                                   <label class="col-sm-7 label-xs">Fecha: <?echo $row_plan['Pla_Fec'];?></label>
-                                  <?
+                                  <?php
                                   $row_rep_plan = $obBD_con1->getRowConsulta(355, $Ses_Emp_Cod,$obBD_conexion);
                                   if ($row_rep_plan['cuenta']!=0){
                                   ?>
@@ -106,13 +106,13 @@ $obBD_con1->getPageGridJson(354,$_GET, $obBD_conexion,true);
                               <button type="button" onclick="exportar('Lis_Pla')" class="btn btn-primary btn-sm start" title="Exportar registros"><i class="glyphicon glyphicon-download-alt"></i> <span>Exportar</s-printpan></button>
                               <form action="con_pri_planc_2.0.php" method="post" name= "form1" target="_blank" style="display: inline;">
                                   <button type="button" class="btn btn-primary btn-sm start" title="Imprimir Plan de Cuentas" onclick="this.form.submit()"><i class="glyphicon glyphicon-align-left"></i> <span>Imprimir Todos</span> </button>
-                                  <input type="hidden" name="codigo" id="codigo" value="<? echo $row_plan['Pla_Cod']; ?>" />
+                                  <input type="hidden" name="codigo" id="codigo" value="<?php echo $row_plan['Pla_Cod']; ?>" />
                               </form>
                           </div>
                       </div>
                       <div style="min-height:500px; visibility: hidden;" class="" id="rep_reg">
                           <form id="frm_rep" name="frm_rep" class="form-horizontal normal" action="javascript:$('#Lis_Rep').Search('#frm_rep','planRepAjax');">
-                             <input type="hidden" name="codigo" id="codigo" value="<? echo $row_plan['Pla_Cod']; ?>" />
+                             <input type="hidden" name="codigo" id="codigo" value="<?php echo $row_plan['Pla_Cod']; ?>" />
                           </form>
                           <table id="Lis_Rep"></table>
                           <div id="Pag_Rep"></div>
@@ -122,7 +122,7 @@ $obBD_con1->getPageGridJson(354,$_GET, $obBD_conexion,true);
                               <button type="button" onclick="exportar('Lis_Rep')" class="btn btn-primary btn-sm start" title="Exportar registros"><i class="glyphicon glyphicon-download-alt"></i> <span>Exportar</s-printpan></button>
                               <form action="con_pri_planc_2.0.php" method="post" name= "form1" target="_blank" style="display: inline;">
                                   <button type="button" class="btn btn-primary btn-sm start" title="Imprimir Plan de Cuentas" onclick="this.form.submit()"><i class="glyphicon glyphicon-align-left"></i> <span>Imprimir</span> </button>
-                                  <input type="hidden" name="codigo" id="codigo" value="<? echo $row_plan['Pla_Cod']; ?>" />
+                                  <input type="hidden" name="codigo" id="codigo" value="<?php echo $row_plan['Pla_Cod']; ?>" />
                               </form>
                           </div>
                       </div>

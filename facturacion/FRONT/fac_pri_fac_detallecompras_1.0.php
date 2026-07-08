@@ -1,4 +1,4 @@
-<? 
+<?php 
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/fac_log_compras.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
@@ -42,12 +42,12 @@ if (isset($com_codigo))
 </p>
 <table width="95%" border="0" cellspacing="0" cellpadding="0">
   <tr>
-    <td width="50%" valign="bottom" class="TEXTO_NORMAL_UPPER_18" style="font-size:14px"><div align="left"><strong><? echo $rs_infoEmpresa['Emp_Nom'];?></strong></div></td>
+    <td width="50%" valign="bottom" class="TEXTO_NORMAL_UPPER_18" style="font-size:14px"><div align="left"><strong><?php echo $rs_infoEmpresa['Emp_Nom'];?></strong></div></td>
     <td width="50%">&nbsp;</td>
   </tr>
   <tr>
     <td width="50%" valign="bottom" class="TITULO_REPORTE"><div align="left" > detalle de compras</div></td>
-    <td align="right" class="Texto_Listados" style="font-size:11px"><div align="right" ><? echo $hoy;?></div></td>
+    <td align="right" class="Texto_Listados" style="font-size:11px"><div align="right" ><?php echo $hoy;?></div></td>
   </tr>
   <tr>
     <td height="19" colspan="2"><hr /></td>
@@ -57,28 +57,28 @@ if (isset($com_codigo))
 <table width="95%" border="0" cellspacing="0" cellpadding="0">
       <tr>
         <td class="Texto_Listados" style="font-size:11px"><strong>Proveedor</strong>:</td>
-        <td colspan="5" class="Texto_Listados" style="font-size:11px"><span class="Texto_Listados" style="font-size:11px"><? echo $rs_info['Prs_Ape'].' '.$rs_info['Prs_Nom'];?></span></td>
+        <td colspan="5" class="Texto_Listados" style="font-size:11px"><span class="Texto_Listados" style="font-size:11px"><?php echo $rs_info['Prs_Ape'].' '.$rs_info['Prs_Nom'];?></span></td>
   </tr>
       <tr>
        <td class="Texto_Listados" style="font-size:11px"><span class="Texto_Listados" style="font-size:11px"><strong>C&eacute;dula/R.U.C.:&nbsp;</strong></span></td>
-        <td class="Texto_Listados" style="font-size:11px"><span class="Texto_Listados" style="font-size:11px"><? echo $rs_info['Prs_Ced'];?>&nbsp;</span></td>
+        <td class="Texto_Listados" style="font-size:11px"><span class="Texto_Listados" style="font-size:11px"><?php echo $rs_info['Prs_Ced'];?>&nbsp;</span></td>
         <td class="Texto_Listados" style="font-size:11px"><div align="right"><strong>Tipo:&nbsp;</strong></div></td>
-        <td class="Texto_Listados" style="font-size:11px"><span class="Texto_Listados" style="font-size:11px"><? echo $rs_tipoCompr['Tic_Des'];?></span></td>
+        <td class="Texto_Listados" style="font-size:11px"><span class="Texto_Listados" style="font-size:11px"><?php echo $rs_tipoCompr['Tic_Des'];?></span></td>
         <td class="Texto_Listados" style="font-size:11px"><div align="right"><strong>Creado el:&nbsp;</strong></div></td>
-        <td class="Texto_Listados" style="font-size:11px"><? echo $rs_info['Cop_Sys']; ?>&nbsp;</td>
+        <td class="Texto_Listados" style="font-size:11px"><?php echo $rs_info['Cop_Sys']; ?>&nbsp;</td>
       </tr>
       <tr>
         <td width="10%" class="Texto_Listados" style="font-size:11px"><strong>No. Docto:</strong></td>
-        <td width="18%" class="Texto_Listados" style="font-size:11px"><? echo $rs_info['Cop_Num'];?>&nbsp;</td>
+        <td width="18%" class="Texto_Listados" style="font-size:11px"><?php echo $rs_info['Cop_Num'];?>&nbsp;</td>
         <td width="6%" class="Texto_Listados" style="font-size:11px"><div align="right"><strong>Autorizaci&oacute;n:&nbsp;</strong></div></td>
-        <td width="17%" class="Texto_Listados" style="font-size:11px"><span class="Texto_Listados" style="font-size:11px"><? echo $rs_info['Cop_Aut'];?></span></td>
+        <td width="17%" class="Texto_Listados" style="font-size:11px"><span class="Texto_Listados" style="font-size:11px"><?php echo $rs_info['Cop_Aut'];?></span></td>
         <td width="14%" class="Texto_Listados" style="font-size:11px"><div align="right"><strong>Emisi&oacute;n:&nbsp;</strong></div></td>
-        <td width="35%" class="Texto_Listados" style="font-size:11px"><span class="Texto_Listados" style="font-size:11px"><? echo $rs_info['Cop_Fec'];?></span>&nbsp;</td>
+        <td width="35%" class="Texto_Listados" style="font-size:11px"><span class="Texto_Listados" style="font-size:11px"><?php echo $rs_info['Cop_Fec'];?></span>&nbsp;</td>
       </tr>  
       <tr>
         <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
         <td width="14%" class="Texto_Listados" style="font-size:11px"><div align="right"><strong>Usuario:</strong></div></td>
-        <td width="35%" class="Texto_Listados" style="font-size:11px">&nbsp;<? echo $rs_usuVendedor['Prs_Ape'].' '.$rs_usuVendedor['Prs_Nom']; ?></td>
+        <td width="35%" class="Texto_Listados" style="font-size:11px">&nbsp;<?php echo $rs_usuVendedor['Prs_Ape'].' '.$rs_usuVendedor['Prs_Nom']; ?></td>
       </tr>
 </table>
 
@@ -162,7 +162,7 @@ if (isset($com_codigo))
       </tbody>            
 </table>
      <br>
-     <?
+     <?php
 	 
 	    $rs_retCod = $obBD_con1->getRowConsulta(718,$com_codigo,$obBD_conexion);
             $rs_confiEmp = $obBD_con1->getRowConsulta(1049,$Ses_Suc_Cod,$obBD_conexion);	  
@@ -204,7 +204,7 @@ if (isset($com_codigo))
             </tr>
           </thead>
       	  <tbody class="Fondo">
-          <? foreach($rs_detalle as $row_rs_detalle){?>
+          <?php foreach($rs_detalle as $row_rs_detalle){?>
           <tr height="20">
             <td align="center"><?Php echo $row_rs_detalle['Ren_Sri']; ?></td>
             <td><?Php echo $row_rs_detalle['Ren_Con']; ?></td>
@@ -213,7 +213,7 @@ if (isset($com_codigo))
             <td align="center"><?Php echo $row_rs_detalle['Ren_Por']; ?></td>
             <td align="right"><?Php $impTotal=$impTotal+$row_rs_detalle['Val_Ret']; echo formato_numero($row_rs_detalle['Val_Ret'],2,4); ?></td>
             </tr>
-          <? }?>
+          <?php }?>
           </tbody>
 </table>  
         <table width="100%" border="0" cellspacing="0" cellpadding="0">
@@ -221,13 +221,13 @@ if (isset($com_codigo))
             <td width="25%">&nbsp;</td>
             <td width="25%">&nbsp;</td>
             <td width="37%">&nbsp;</td>
-            <td width="13%" align="right"><strong>Total:&nbsp;&nbsp;<? echo formato_numero($impTotal,2,4);?></strong></td>
+            <td width="13%" align="right"><strong>Total:&nbsp;&nbsp;<?php echo formato_numero($impTotal,2,4);?></strong></td>
           </tr>
         </table>                                  
         <br />
-     <? }?>          
+     <?php }?>          
 
-    <? //echo barra_estado($tot_rs_detalle);?>    
+    <?php //echo barra_estado($tot_rs_detalle);?>    
     <?Php
     }//FIn del if (isset($com_codigo))
     else

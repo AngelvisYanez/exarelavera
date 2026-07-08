@@ -174,12 +174,12 @@ $bancos = $obBD_con1->getArrayConsulta(19,"", $obBD_conexion);
                                                                     <?Php
                                                                     foreach ($row_rs_sub_dep as $row) {
                                                                         ?>
-                                                                        <optgroup label="<?Php echo utf8_decode($row['Dep_Des']); ?>">
+                                                                        <optgroup label="<?Php echo mb_convert_encoding($row['Dep_Des'], 'ISO-8859-1', 'UTF-8'); ?>">
                                                                             <?php $row_rs_cargo = $obBD_con1->getArrayConsulta(8, $row['Dep_Cod'], $obBD_conexion); ?>
                                                                             <?Php
                                                                             foreach ($row_rs_cargo as $row) {
                                                                                 ?>
-                                                                                <option value="<?php echo $row['Tic_Cod']; ?>"><?Php echo utf8_decode($row['Tic_Des']); ?></option>
+                                                                                <option value="<?php echo $row['Tic_Cod']; ?>"><?Php echo mb_convert_encoding($row['Tic_Des'], 'ISO-8859-1', 'UTF-8'); ?></option>
                                                                             <?Php } ?>
                                                                         </optgroup>
                                                                     <?Php } ?>

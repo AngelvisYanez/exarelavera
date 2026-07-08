@@ -37,7 +37,7 @@ if(isset($ajax_suc_cod))
           <option value="<?Php echo $row_rs_modalidad['Mod_Cod'];  ?>" ><?Php echo $row_rs_modalidad['Mod_Des'];  ?></option>
           <?Php 
 			}  ?>
-        </select> <?
+        </select> <?php
 	}
 	exit();
 }

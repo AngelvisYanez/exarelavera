@@ -61,7 +61,7 @@ if (isset($buscod)) {
                     ?>
                     <tr class="Fondo">
                         <td><?php echo $row['Pld_Cdc']; ?></td>
-                        <td><?php echo utf8_encode($row['Pld_Des']); ?></td>
+                        <td><?php echo mb_convert_encoding($row['Pld_Des'], 'UTF-8', 'ISO-8859-1'); ?></td>
                         <td align="center"><?php if ($rs_recur['Pld_Des'] != ""){ echo $rs_recur['Pld_Des']; }else{ echo "&nbsp;"; } ?></td>
                         <td align="center"><?php echo $row['Pld_Tip']; ?></td>				  
                         <td align="center"><?php echo $row['Pld_Est']; ?></td>

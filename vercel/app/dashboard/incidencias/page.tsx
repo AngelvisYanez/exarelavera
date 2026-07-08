@@ -134,6 +134,7 @@ export default function IncidenciasPage() {
     null,
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showResolved, setShowResolved] = useState(false);
   const [filter, setFilter] = useState<"all" | "fatal" | "error" | "warning">(
     "all",
   );
@@ -309,33 +310,39 @@ export default function IncidenciasPage() {
     setPassword("");
   };
 
-  // Simulación de Refresco en tiempo real
-  const handleRefresh = () => {
+  // Refresco real: obtiene incidencias de la DB y ejecuta monitores
+  const handleRefresh = async () => {
     setIsRefreshing(true);
-    setTimeout(() => {
-      setIsRefreshing(false);
-      // Añadir un reporte aleatorio ocasionalmente para simular tiempo real
-      if (incidents.length < 5) {
-        const newIncident: Incident = {
-          id: String(Date.now()),
-          title:
-            "NetworkError: Failed to load resource 'icon.png' (404 Not Found)",
-          culprit: "public/assets/ in GET",
-          level: "warning",
-          count: 4,
-          usersAffected: 2,
-          lastSeen: "Hace 1 segundo",
-          status: "unresolved",
-          browser: "Firefox 126.0",
-          os: "Linux (Fedora)",
-          stackTrace: [
-            "GET https://exa-relavera.com/assets/icon.png 404 (Not Found)",
-          ],
-        };
-        setIncidents([newIncident, ...incidents]);
+    try {
+      const [incidentsRes, playwrightRes] = await Promise.allSettled([
+        fetch("/api/incidents"),
+        fetch("/api/admin/run-test", { method: "POST" }),
+      ]);
+
+      if (incidentsRes.status === "fulfilled") {
+        const data = await incidentsRes.value.json();
+        if (Array.isArray(data)) {
+          setIncidents(data);
+        } else if (data.data && Array.isArray(data.data)) {
+          setIncidents(data.data);
+        }
       }
-      setSystemUptime(Number((99.8 + Math.random() * 0.15).toFixed(2)));
-    }, 800);
+
+      if (playwrightRes.status === "fulfilled") {
+        const data = await playwrightRes.value.json();
+        setPlaywrightMessage({
+          type: data.success ? "success" : "error",
+          text: data.message || data.error || "Diagnóstico completado",
+        });
+        if (data.reportUrl) {
+          setPlaywrightReportUrl(data.reportUrl + "?t=" + Date.now());
+        }
+      }
+    } catch {
+      // fallback silencioso
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   // Simulación de resolver incidencia
@@ -352,9 +359,11 @@ export default function IncidenciasPage() {
 
   // Filtrado de incidencias
   const filteredIncidents = incidents.filter((inc) => {
-    if (filter === "all") return inc.status === "unresolved";
-    return inc.level === filter && inc.status === "unresolved";
+    if (!showResolved && inc.status === "resolved") return false;
+    if (filter === "all") return true;
+    return inc.level === filter;
   });
+  const resolvedCount = incidents.filter((i) => i.status === "resolved").length;
 
   // --- VISTA GATED (LOGIN DE SUPERADMIN) ---
   if (!isSuperAdmin) {
@@ -498,6 +507,11 @@ export default function IncidenciasPage() {
           <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-bold">
             {incidents.filter((i) => i.status === "unresolved").length}
           </span>
+          {resolvedCount > 0 && (
+            <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">
+              {resolvedCount} resueltos
+            </span>
+          )}
         </button>
         <button
           onClick={() => setActiveTab("kuma")}
@@ -535,9 +549,9 @@ export default function IncidenciasPage() {
             <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-gray-800">
-                  Incidentes no resueltos
+                  {showResolved ? "Historial de incidencias" : "Incidentes no resueltos"}
                 </h3>
-                <div className="flex items-center gap-1.5 text-xs">
+                <div className="flex items-center gap-1.5 text-xs flex-wrap">
                   <span className="text-gray-500 font-medium">
                     Filtrar por:
                   </span>
@@ -556,50 +570,89 @@ export default function IncidenciasPage() {
                       </button>
                     ),
                   )}
+                  <span className="w-px h-4 bg-gray-300 mx-1" />
+                  <button
+                    onClick={() => setShowResolved(!showResolved)}
+                    className={`flex items-center gap-1 px-2 py-1 rounded font-semibold border transition ${
+                      showResolved
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : "bg-white hover:bg-gray-50 text-gray-600"
+                    }`}
+                  >
+                    <CheckCircle className="w-3 h-3" />
+                    Resueltos
+                    {resolvedCount > 0 && (
+                      <span className="px-1 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-bold">
+                        {resolvedCount}
+                      </span>
+                    )}
+                  </button>
                 </div>
               </div>
 
               {filteredIncidents.length === 0 ? (
                 <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-                  <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-2" />
-                  <p className="font-semibold text-gray-700">
-                    ¡Excelente! Cero incidencias críticas
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Todas las alertas de GlitchTip han sido resueltas o
-                    silenciadas.
-                  </p>
+                  {showResolved ? (
+                    <>
+                      <Clock className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                      <p className="font-semibold text-gray-700">
+                        No hay incidencias resueltas
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Aún no se ha resuelto ninguna incidencia.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-2" />
+                      <p className="font-semibold text-gray-700">
+                        ¡Excelente! Cero incidencias críticas
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Todas las alertas de GlitchTip han sido resueltas o
+                        silenciadas.
+                      </p>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-3">
                   {filteredIncidents.map((inc) => (
                     <div
                       key={inc.id}
-                      onClick={() => setSelectedIncident(inc)}
+                      onClick={() => { if (inc.status !== "resolved") setSelectedIncident(inc); }}
                       className={`p-4 rounded-lg border transition cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4 ${
-                        selectedIncident?.id === inc.id
-                          ? "border-purple-500 bg-purple-50/20 shadow-sm"
-                          : "border-gray-150 hover:border-gray-300 hover:bg-gray-50/50 bg-white"
+                        inc.status === "resolved"
+                          ? "border-emerald-200 bg-emerald-50/30 opacity-70 hover:opacity-100"
+                          : selectedIncident?.id === inc.id
+                            ? "border-purple-500 bg-purple-50/20 shadow-sm"
+                            : "border-gray-150 hover:border-gray-300 hover:bg-gray-50/50 bg-white"
                       }`}
                     >
                       <div className="space-y-1.5 flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                              inc.level === "fatal"
-                                ? "bg-red-100 text-red-700 border border-red-200"
-                                : inc.level === "error"
-                                  ? "bg-orange-100 text-orange-700 border border-orange-200"
-                                  : "bg-yellow-100 text-yellow-700 border border-yellow-200"
-                            }`}
-                          >
-                            {inc.level}
-                          </span>
+                          {inc.status === "resolved" ? (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                              <CheckCircle className="w-3 h-3" /> resuelto
+                            </span>
+                          ) : (
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                                inc.level === "fatal"
+                                  ? "bg-red-100 text-red-700 border border-red-200"
+                                  : inc.level === "error"
+                                    ? "bg-orange-100 text-orange-700 border border-orange-200"
+                                    : "bg-yellow-100 text-yellow-700 border border-yellow-200"
+                              }`}
+                            >
+                              {inc.level}
+                            </span>
+                          )}
                           <span className="text-xs text-gray-400 font-medium">
                             {inc.culprit}
                           </span>
                         </div>
-                        <h4 className="font-bold text-gray-800 text-sm truncate leading-snug">
+                        <h4 className={`font-bold text-sm truncate leading-snug ${inc.status === "resolved" ? "text-gray-500 line-through" : "text-gray-800"}`}>
                           {inc.title}
                         </h4>
                         <div className="flex items-center gap-3 text-xs text-gray-500">
@@ -616,7 +669,11 @@ export default function IncidenciasPage() {
                         </div>
                       </div>
                       <div className="flex items-center self-end md:self-auto">
-                        <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-purple-600 transition" />
+                        {inc.status === "resolved" ? (
+                          <CheckCircle className="w-5 h-5 text-emerald-400" />
+                        ) : (
+                          <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-purple-600 transition" />
+                        )}
                       </div>
                     </div>
                   ))}

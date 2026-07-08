@@ -126,21 +126,21 @@
 	  <tr>
 		<td valign="top">
  
-	<?
+	<?php
 	/* Entra cuando niega un evento */
 	if (!($evento > 0)) 
 	{ 
 	?>
-    <form method="post" name= "formbus" action="<? echo $_SERVER['PHP_SELF'];?>">
+    <form method="post" name= "formbus" action="<?php echo $_SERVER['PHP_SELF'];?>">
       <?php require_once '../../componentes/FRONT/com_con_persona.php'; ?>
     </form>
-     <?
+     <?php
      if(isset($txt_busqueda)){?>
      <FIELDSET>
         <LEGEND>
         <label class="Titulos2">Resultados de la busqueda</label>
         </LEGEND>
-<?
+<?php
 		
 		$param = $txt_busqueda;
 		
@@ -197,13 +197,13 @@
 						<td ><FONT COLOR="<?php echo $rojo; ?>"> <?php echo marcar_cadena($_POST['txt_busqueda'], $row_rs_persona['Prs_Ape'] . " " . $row_rs_persona['Prs_Nom'], "#FFFF00", 1); ?> </FONT></td>
 						<form id="blanco" name="blanco" action="<?php echo $_SERVER['PHP_SELF']; ?>" method="POST">
                         <td align="center">
-                        <? if($row_rs_persona['Prs_Est']=='A'){?>
+                        <?php if($row_rs_persona['Prs_Est']=='A'){?>
 								<input type="image" id="editar_img" name="editar_img"  src="../../mascaras/model1/imagenes/32x32/forward.png" width="18" height="18" title="Elegir" />
 								<input type="hidden" id="Prs_Ced" name="Prs_Ced" value="<?php echo $row_rs_persona['Prs_Ced']; ?>" />
 								<input type="hidden" id="codigo" name="codigo" value="<?php echo $row_rs_persona['Prs_Cod']; ?>"/>
                                 <input type="hidden" name="volver_busqueda" id="volver_busqueda" value="<?Php echo $txt_busqueda;?>"/>
-								<input type="hidden" name="volver_opciones" id="volver_opciones" value="<? echo $op_opciones?>">
-                        <? } else{
+								<input type="hidden" name="volver_opciones" id="volver_opciones" value="<?php echo $op_opciones?>">
+                        <?php } else{
 							echo "&nbsp;";
 						 }?>
 						</td>
@@ -224,7 +224,7 @@
 			else
 				echo error_alerta("No hay resultados que mostrar!", 1); ?>
 		</FIELDSET>
-		<? }?>
+		<?php }?>
         
 	<br />
 	
@@ -238,7 +238,7 @@
 	
 	<table width="100%"  border="0" cellpadding="0" cellspacing="0">
 	<tr>
-	  <td>         <form method="post" name= "form1" id="form1" action="<? echo $_SERVER['PHP_SELF'];?>">
+	  <td>         <form method="post" name= "form1" id="form1" action="<?php echo $_SERVER['PHP_SELF'];?>">
 	<FIELDSET>
 	<LEGEND>
 	<label class="Titulos2">Datos a registrar</label>
@@ -463,7 +463,7 @@
 		  <tr>
           	<td>
             <input name="btn_atras" type="button" class="Boton_Atras"
-			  onClick="campos_hide(this.form, '<?Php echo "txt_busqueda*op_opciones*hdd_volver"; ?>','<?Php echo $volver_busqueda.'*'.$volver_opciones.'*'.'1'; ?>')"><? if ($evento == 2) { ?><input type="button" class="Boton_Guardar" title="Guardar" onClick="submit()"	value="Guardar"><input name="hdd_save" type="hidden" id="hdd_save" value="insertar" /><input name="Prs_Cod" type="hidden" id="Prs_Cod" value="<? echo $codigo;?>" /><? }?></td>
+			  onClick="campos_hide(this.form, '<?Php echo "txt_busqueda*op_opciones*hdd_volver"; ?>','<?Php echo $volver_busqueda.'*'.$volver_opciones.'*'.'1'; ?>')"><?php if ($evento == 2) { ?><input type="button" class="Boton_Guardar" title="Guardar" onClick="submit()"	value="Guardar"><input name="hdd_save" type="hidden" id="hdd_save" value="insertar" /><input name="Prs_Cod" type="hidden" id="Prs_Cod" value="<?php echo $codigo;?>" /><?php }?></td>
           </tr>
           </table>
         </form>

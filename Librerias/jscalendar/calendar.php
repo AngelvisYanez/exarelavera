@@ -13,13 +13,13 @@
 define('NEWLINE', "\n");
 
 class DHTML_Calendar {
-    var $calendar_lib_path;
+    public $calendar_lib_path;
 
-    var $calendar_file;
-    var $calendar_lang_file;
-    var $calendar_setup_file;
-    var $calendar_theme_file;
-    var $calendar_options;
+    public $calendar_file;
+    public $calendar_lang_file;
+    public $calendar_setup_file;
+    public $calendar_theme_file;
+    public $calendar_options;
 
     function DHTML_Calendar($calendar_lib_path = '/calendar/',
                             $lang              = 'en',
@@ -95,7 +95,7 @@ class DHTML_Calendar {
     function _make_js_hash($array) {
         $jstr = '';
         reset($array);
-        while (list($key, $val) = each($array)) {
+        foreach($$array as $$key => $$val) {
             if (is_bool($val))
                 $val = $val ? 'true' : 'false';
             else if (!is_numeric($val))
@@ -109,7 +109,7 @@ class DHTML_Calendar {
     function _make_html_attr($array) {
         $attrstr = '';
         reset($array);
-        while (list($key, $val) = each($array)) {
+        foreach($$array as $$key => $$val) {
             $attrstr .= $key . '="' . $val . '" ';
         }
         return $attrstr;

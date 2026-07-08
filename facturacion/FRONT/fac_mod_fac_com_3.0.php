@@ -1535,7 +1535,7 @@ if (isset($saldoCCxPP)) {
                             <option value=""></option>
                             <?php foreach ($rs_identi as $row) {
                                 //echo "<option value='$row[Ide_Cod]'>$row[Ide_Des]</option>";
-                                echo "<option value='{$row['Ide_Cod']}'>" . utf8_encode($row['Ide_Des']) . "</option>";
+                                echo "<option value='{$row['Ide_Cod']}'>" . mb_convert_encoding($row['Ide_Des'], 'UTF-8', 'ISO-8859-1') . "</option>";
                             } ?>
                         </select>
                     </div>
@@ -1580,7 +1580,7 @@ if (isset($saldoCCxPP)) {
                             <option value=""></option>
                             <?php foreach ($rs_ciudad as $row) {
                                 //echo "<option value='$row[Ciu_Cod]' data-prov='$row[Pro_Nom]'>$row[Ciu_Des]</option>";
-                                echo "<option value='{$row['Ciu_Cod']}' data-prov='{$row['Pro_Nom']}'>" . utf8_encode($row['Ciu_Des']) . "</option>";
+                                echo "<option value='{$row['Ciu_Cod']}' data-prov='{$row['Pro_Nom']}'>" . mb_convert_encoding($row['Ciu_Des'], 'UTF-8', 'ISO-8859-1') . "</option>";
                             } ?>
                         </select>
                     </div>
@@ -1628,7 +1628,7 @@ if (isset($saldoCCxPP)) {
                         <select name="Tri_Cod" class="form-control input-xs" tabindex="3" required="">
                             <option value="">Seleccione...</option>
                             <?php foreach ($rs_sustento as $row) {
-                                echo "<option value='{$row['Tri_Cod']}' " . ($row['Tri_Cod'] == 2 ? 'selected' : '') . ">" . utf8_encode($row['Tri_Sri']) . " - " . utf8_encode($row['Tri_Des']) . "</option>";
+                                echo "<option value='{$row['Tri_Cod']}' " . ($row['Tri_Cod'] == 2 ? 'selected' : '') . ">" . mb_convert_encoding($row['Tri_Sri'], 'UTF-8', 'ISO-8859-1') . " - " . mb_convert_encoding($row['Tri_Des'], 'UTF-8', 'ISO-8859-1') . "</option>";
                                 // echo "<option value='{$row['Tri_Cod']}' " . ($row['Tri_Cod'] == 2 ? 'selected' : '') . ">$row[Tri_Sri] - $row[Tri_Des]</option>";
                             } ?>
                         </select>

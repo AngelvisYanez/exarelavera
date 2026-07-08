@@ -1176,7 +1176,7 @@ $(function () {
             }
         }
         if (desde > hasta) { alert('La fecha Desde no puede ser mayor que Hasta.'); return; }
-        var $btn = $(this);
+        public $btn = $(this);
         $btn.prop('disabled', true);
         var params = { listarTareasAsignacion: 1, Fecha_Ini: desde, Fecha_Fin: hasta };
         $.get(urlBase, params, function (r) {
@@ -1290,7 +1290,7 @@ $(function () {
     });
 
     $(document).on('change', '.input-fecha-limite', function () {
-        var $inp = $(this);
+        public $inp = $(this);
         var tar = $inp.data('tar');
         var fec = $inp.val();
         if (!tar) return;
@@ -1410,9 +1410,9 @@ $(function () {
             }
             $('#listaUsuariosAsignados').html(html);
             $('#modalAsigComentario').val(r.Tar_Observaciones || '');
-            var $imgSec = $('#modalAsigObsImagenes');
-            var $imgLista = $('#modalAsigAdjuntosLista');
-            var $sinAdj = $('#modalAsigSinAdjuntos');
+            public $imgSec = $('#modalAsigObsImagenes');
+            public $imgLista = $('#modalAsigAdjuntosLista');
+            public $sinAdj = $('#modalAsigSinAdjuntos');
             if (adjuntos.length > 0) {
                 $imgSec.show();
                 $sinAdj.hide();
@@ -1447,10 +1447,10 @@ $(function () {
     });
 
     $(document).on('click', '.btnGuardarAvanceAsig', function () {
-        var $li = $(this).closest('li');
+        public $li = $(this).closest('li');
         var tar = $li.data('tar');
         var per = $li.data('per');
-        var $input = $li.find('.input-avance-asig');
+        public $input = $li.find('.input-avance-asig');
         var porc = parseInt($input.val(), 10);
         if (isNaN(porc) || porc < 0) porc = 0;
         if (porc > 100) porc = 100;
@@ -1472,7 +1472,7 @@ $(function () {
     $(document).on('click', '.btnEliminarAsig', function () {
         var tar = $(this).data('tar');
         var per = $(this).data('per');
-        var $li = $(this).closest('li');
+        public $li = $(this).closest('li');
         if (!tar || !per) return;
         if (!confirm('¿Eliminar esta asignación?')) return;
         $.post(urlBase, { eliminarAsignacionTarea: 1, Tar_Cod: tar, Per_Cod: per }, function (r) {
@@ -1526,7 +1526,7 @@ $(function () {
         $('#fechaDesdeGenerar').val(fecIni);
         $('#fechaHastaGenerar').val(fecFin);
         $.get(urlBase, { listarClientesContratosPeriodo: 1, Tar_Periodo: per }, function (r) {
-            var $combo = $('#filtroClienteGenerar');
+            public $combo = $('#filtroClienteGenerar');
             if ($combo.hasClass('select2-hidden-accessible')) $combo.select2('destroy');
             $combo.find('option:gt(0)').remove();
             (r.rows || []).forEach(function (row) {
@@ -1549,7 +1549,7 @@ $(function () {
         if (desde && desde.length >= 7) {
             var per = desde.substring(0, 7);
             $.get(urlBase, { listarClientesContratosPeriodo: 1, Tar_Periodo: per }, function (r) {
-                var $combo = $('#filtroClienteGenerar');
+                public $combo = $('#filtroClienteGenerar');
                 if ($combo.find('option').length <= 1) {
                     if ($combo.hasClass('select2-hidden-accessible')) $combo.select2('destroy');
                     $combo.find('option:gt(0)').remove();
@@ -1565,8 +1565,8 @@ $(function () {
     // -------- Tarea EVENTUAL individual (modal) --------
     function cargarClientesEventual() {
         var per = $('#periodoEventual').val().trim();
-        var $cli = $('#clienteEventual');
-        var $act = $('#actividadEventual');
+        public $cli = $('#clienteEventual');
+        public $act = $('#actividadEventual');
         if ($cli.hasClass('select2-hidden-accessible')) $cli.select2('destroy');
         if ($act.hasClass('select2-hidden-accessible')) $act.select2('destroy');
         $cli.find('option:gt(0)').remove();
@@ -1583,7 +1583,7 @@ $(function () {
     function cargarActividadesEventuales() {
         var per = $('#periodoEventual').val().trim();
         var cli = $('#clienteEventual').val();
-        var $act = $('#actividadEventual');
+        public $act = $('#actividadEventual');
         if ($act.hasClass('select2-hidden-accessible')) $act.select2('destroy');
         $act.find('option:gt(0)').remove();
         if (!per || !cli) {
@@ -1643,7 +1643,7 @@ $(function () {
         if (!per || per.length < 7) { alert('Indique el período (mes) para la tarea eventual.'); return; }
         if (!cli) { alert('Seleccione el cliente.'); return; }
         if (!act) { alert('Seleccione la actividad eventual.'); return; }
-        var $btn = $(this);
+        public $btn = $(this);
         $btn.prop('disabled', true);
         $('#resultadoTareaEventual').html('<div class=\"alert alert-info\"><span class=\"glyphicon glyphicon-refresh glyphicon-spin\"></span> Generando tarea...</div>');
         $.post(urlBase, { generarTareaEventual: 1, Tar_Periodo: per, Cli_Cod: cli, Act_Cod: act, Tar_Fecha_Limite: fec }, function (r) {
@@ -1677,7 +1677,7 @@ $(function () {
         }
         if (desde > hasta) { alert('La fecha Desde no puede ser mayor que Hasta.'); return; }
         var filtroCli = $('#filtroClienteGenerar').val() || '';
-        var $btn = $(this);
+        public $btn = $(this);
         $btn.prop('disabled', true);
         $('#vistaPreviaTareas').show();
         $('#tablaVistaPrevia tbody').html('<tr><td colspan="8" class="text-muted"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> Cargando...</td></tr>');
@@ -1729,7 +1729,7 @@ $(function () {
     $(document).on('click', '.btn-eliminar-tarea-prev', function () {
         var tar = $(this).data('tar');
         if (!tar || !confirm('¿Eliminar esta tarea? Se borrará permanentemente junto con sus asignaciones.')) return;
-        var $tr = $(this).closest('tr');
+        public $tr = $(this).closest('tr');
         $.post(urlBase, { eliminarTareaDespacho: 1, Tar_Cod: tar }, function (r) {
             if (r && r.success) {
                 $tr.fadeOut(200, function () { $(this).remove(); });
@@ -1758,13 +1758,13 @@ $(function () {
         if (desde > hasta) { alert('La fecha Desde no puede ser mayor que Hasta.'); return; }
         var fechasOverride = [];
         $('#tablaVistaPrevia tbody tr.nueva').each(function () {
-            var $tr = $(this), cli = $tr.data('cli-cod'), act = $tr.data('act-cod'), periodo = $tr.data('tar-periodo');
-            var $input = $tr.find('.input-fecha-limite');
+            public $tr = $(this), cli = $tr.data('cli-cod'), act = $tr.data('act-cod'), periodo = $tr.data('tar-periodo');
+            public $input = $tr.find('.input-fecha-limite');
             if (cli && act && periodo && $input.length && $input.val()) {
                 fechasOverride.push({ Cli_Cod: cli, Act_Cod: act, Tar_Periodo: periodo, Tar_Fecha_Limite: $input.val() });
             }
         });
-        var $btn = $(this);
+        public $btn = $(this);
         $btn.prop('disabled', true);
         var data = { generarTareas: 1, Fecha_Ini: desde, Fecha_Fin: hasta };
         if (fechasOverride.length) data.fechasOverride = JSON.stringify(fechasOverride);

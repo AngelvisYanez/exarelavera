@@ -40,14 +40,14 @@ if($ajax_punto==1)
 	$row_rs_puntoImp = $obBD_con1->getArrayConsulta(508, $cadena_suc[0], $obBD_conexion); ?>
 	<select name="Pun_Cod" id="Pun_Cod" >
 	<option value="">Seleccione...</option>
-	<? 
+	<?php 
 	foreach ($row_rs_puntoImp as $row)
 	{?>
-	<option value="<? echo $row['Pun_Cod']."*".$row['Pun_Des']."*".$cadena_suc[1];?>"><? echo $row['Pun_Des']?></option>
-	<? 
+	<option value="<?php echo $row['Pun_Cod']."*".$row['Pun_Des']."*".$cadena_suc[1];?>"><?php echo $row['Pun_Des']?></option>
+	<?php 
     }//Fin del foreach --> $row_rs_puntoImp ?>
     </select>
-<?
+<?php
 exit();
 }
   
@@ -114,8 +114,8 @@ if ($thisPost->postBlock($_POST['postID']))
   </tr>
 	<tr>
   	  <td valign="top" height="400">
-  <form method="post" name= "form1" action="<? echo $_SERVER['PHP_SELF'];?>">  
-<? 
+  <form method="post" name= "form1" action="<?php echo $_SERVER['PHP_SELF'];?>">  
+<?php 
 if (!isset($hdd_avilita_1)){ ?>
 <FIELDSET>
 <LEGEND>
@@ -126,18 +126,18 @@ if (!isset($hdd_avilita_1)){ ?>
       <tr>
         <td class="Etiqueta1"><span 2="Asterisco"><span class="Asterisco">* </span> Sucursal:</span></td>
         <td>
-		<?
+		<?php
 		/** 
 		* Carga las sucursales de la empresa
 		*/
 		$row_rs_sucursal = $obBD_con1->getArrayConsulta(507, $Ses_Emp_Cod, $obBD_conexion);  ?>				
 		<select name="Suc_Cod" id="Suc_Cod" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_punto=1&Suc_Cod=' + this.value,'div_punImp')">
           <option >Seleccione...</option>
-		  <? 
+		  <?php 
 		  foreach ($row_rs_sucursal as $row)
 		  {?>
-		  	<option value="<? echo $row['Suc_Cod']."*".$row['Suc_Des'];?>"><? echo $row['Suc_Des']?></option>          
-		  <? } //fin del foreach $row_rs_sucursal ?>
+		  	<option value="<?php echo $row['Suc_Cod']."*".$row['Suc_Des'];?>"><?php echo $row['Suc_Des']?></option>          
+		  <?php } //fin del foreach $row_rs_sucursal ?>
         </select>		
         </td>
       </tr>
@@ -160,14 +160,14 @@ if (!isset($hdd_avilita_1)){ ?>
      </td>
     </tr>
   </table>
-<? }// fin del if (!isset($hdd_avilita_1)) ?>
+<?php }// fin del if (!isset($hdd_avilita_1)) ?>
 </form>
-<? if(isset($hdd_avilita_2)){ ?>
+<?php if(isset($hdd_avilita_2)){ ?>
 <FIELDSET>
 <LEGEND>
 <label class="Titulos2"> Resultado de la busqueda </label>
 </LEGEND>   
-  <?
+  <?php
   	$cadena=explode("*",$Pun_Cod);	
 	/** 
 	* Carga los tipos de documentos de un Punto de Impresion
@@ -177,11 +177,11 @@ if (!isset($hdd_avilita_1)){ ?>
   <table width="100%"  border="0" cellpadding="0" cellspacing="0">
   <tr>
 		<td width="13%" class="Etiqueta1">Sucursal:</td>	
-		<td width="87%" align="left" class="LetraNegra">&nbsp;<? echo $cadena[2];?></td>	
+		<td width="87%" align="left" class="LetraNegra">&nbsp;<?php echo $cadena[2];?></td>	
   </tr>
   <tr>    
 		<td width="13%" class="Etiqueta1">Punto de impresi&oacute;n:</td>	
-		<td width="87%" align="left" class="LetraNegra">&nbsp;<? echo $cadena[1];?></td>		
+		<td width="87%" align="left" class="LetraNegra">&nbsp;<?php echo $cadena[1];?></td>		
   </tr>  
   </table>
   <table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader01">
@@ -197,13 +197,13 @@ if (!isset($hdd_avilita_1)){ ?>
   </tr>
   </thead>
   <tbody>
-  <?   
+  <?php   
   if(count($row_rs_documentos)!=0)
   { $i=1;
   	foreach ($row_rs_documentos as $row)
 	{?>  
   <tr>  
-  <form method="post" name="form6[<? echo $i?>]" id="form6[<? echo $i?>]" action="<? echo $_SERVER['PHP_SELF'];?>">
+  <form method="post" name="form6[<?php echo $i?>]" id="form6[<?php echo $i?>]" action="<?php echo $_SERVER['PHP_SELF'];?>">
   <?php $thisPost->startPost(); ?>
     <td><div align="center"><?php echo $row['Aut_Cod'];?></div></td>
 	<td>&nbsp;<?php echo $row['Tic_Des'];?></td>
@@ -216,8 +216,8 @@ if (!isset($hdd_avilita_1)){ ?>
 	<input type="hidden" id="cerrar" name="cerrar" value="1">
 	<input type="hidden" id="hdd_avilita_1" name="hdd_avilita_1" value="1">
 	<input type="hidden" id="hdd_avilita_2" name="hdd_avilita_2" value="1">
-	<input type="hidden" id="Pun_Cod" name="Pun_Cod" value="<? echo $Pun_Cod;?>">
-	<button type="button" class="btn btn-danger delete" title="Cerrar Autorizaci�n" onClick="confirmacion2(document.getElementById('form6[<? echo $i?>]'));">
+	<input type="hidden" id="Pun_Cod" name="Pun_Cod" value="<?php echo $Pun_Cod;?>">
+	<button type="button" class="btn btn-danger delete" title="Cerrar Autorizaci�n" onClick="confirmacion2(document.getElementById('form6[<?php echo $i?>]'));">
                     <i class="icon-trash icon-white"></i>
                     <span>Cerrar</span>
     </button>
@@ -225,7 +225,7 @@ if (!isset($hdd_avilita_1)){ ?>
 	</td>
   </form>	
   </tr>
-  <? $i++;
+  <?php $i++;
   	}// Fin del foreach --> $row_rs_documentos 
   }else{
   ?>
@@ -237,7 +237,7 @@ if (!isset($hdd_avilita_1)){ ?>
     <td>&nbsp;</td>
     <td>&nbsp;</td>
   </tr>	
-  <? } //if($row_rs_numdocumentos!=0)?>
+  <?php } //if($row_rs_numdocumentos!=0)?>
   </tbody>
 </table>
 <?php echo barra_estado(count($row_rs_documentos)); ?>
@@ -245,7 +245,7 @@ if (!isset($hdd_avilita_1)){ ?>
 	<table border="0" cellpadding="0" cellspacing="0">
 	 <tr>
 	   <td width="105">
-	   <form method="post" name= "form4" action="<? echo $_SERVER['PHP_SELF'];?>">
+	   <form method="post" name= "form4" action="<?php echo $_SERVER['PHP_SELF'];?>">
        <button type="button" class="btn btn-inverse fileinput-button" title="Atr�s" onClick="document.getElementById('hdd_avilita_3').value=0; this.form.submit()">
                     <i class=" icon-arrow-left icon-white"></i>
                     <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
@@ -253,12 +253,12 @@ if (!isset($hdd_avilita_1)){ ?>
 	   </form>       
 	   </td>
 	   <td width="170">
-	   <form method="post" name= "form4" action="<? echo $_SERVER['PHP_SELF'];?>">
+	   <form method="post" name= "form4" action="<?php echo $_SERVER['PHP_SELF'];?>">
        <button type="button" name="button1" id="button1" class="btn btn-success fileinput-button" title="Agregar Autorizaci�n">
            <i class="icon-plus icon-white"></i>
            <span>Agregar</span>
            </button>
-       <input type="hidden" id="Pun_Cod" name="Pun_Cod" value="<? echo $Pun_Cod;?>">
+       <input type="hidden" id="Pun_Cod" name="Pun_Cod" value="<?php echo $Pun_Cod;?>">
 		   <input name="hdd_avilita_1" type="hidden" id="hdd_avilita_1" value="1">
 		   <input name="hdd_avilita_2" type="hidden" id="hdd_avilita_2" value="1">
 		   <input type="hidden" id="hdd_avilita_3" name="hdd_avilita_3" value="1">       
@@ -267,7 +267,7 @@ if (!isset($hdd_avilita_1)){ ?>
 	 </tr>
 	</table>
   
-<? } //if(isset($hdd_avilita_2))
+<?php } //if(isset($hdd_avilita_2))
 
 /**
 * Registro de los datos de la nueva autorizaci�n
@@ -276,7 +276,7 @@ if (!isset($hdd_avilita_1)){ ?>
   <div id="bgtransparent" class="bgtransparent" style="display:none" onclick="closeModal()">
 </div>
 <div id="bgmodal"  class="bgmodal"   style="display:none">		
- <form method="post" name= "form2" action="<? echo $_SERVER['PHP_SELF'];?>">
+ <form method="post" name= "form2" action="<?php echo $_SERVER['PHP_SELF'];?>">
  <?Php
   	/**
 	* Carga los tipos de documentos de un Punto de Impresion
@@ -291,21 +291,21 @@ if (!isset($hdd_avilita_1)){ ?>
 <table width="100%" border="0" cellpadding="0" cellspacing="0">
   <tr>
     <td width="22%" class="Etiqueta1">Sucursal:</td>
-    <td colspan="2" class="LetraNegra">&nbsp;<? echo $cadena[2];?></td>
+    <td colspan="2" class="LetraNegra">&nbsp;<?php echo $cadena[2];?></td>
   </tr>
   <tr>
     <td valign="top" class="Etiqueta1">Punto de impresi&oacute;n:</td>
-    <td colspan="2" valign="top" class="LetraNegra">&nbsp;<? echo $cadena[1];?></td>
+    <td colspan="2" valign="top" class="LetraNegra">&nbsp;<?php echo $cadena[1];?></td>
   </tr>
   <tr>
     <td class="Etiqueta1"><span class="Asterisco">*</span> Tipo de Documento:</td>
     <td colspan="2"><select name="Tic_Cod" id="Tic_Cod" style="width: 30%">
       <option>Seleccionar...</option>
-      <? 
+      <?php 
 	  foreach ($row_rs_documento as $row)
 	  {?>
       <option value="<?php echo $row['Tic_Cod']?>"><?php echo $row['Tic_Des']?></option>
-      <? }//Fin del $row_rs_documento ?>
+      <?php }//Fin del $row_rs_documento ?>
     </select>
     </tr>
   <tr>
@@ -361,7 +361,7 @@ if (!isset($hdd_avilita_1)){ ?>
 <table width="126" border="0">
   <tr>
     <td width="100%">
-	<input name="Pun_Cod" type="hidden" id="Pun_Cod" value="<? echo $Pun_Cod; ?>">
+	<input name="Pun_Cod" type="hidden" id="Pun_Cod" value="<?php echo $Pun_Cod; ?>">
 	<input name="hdd_save" type="hidden" id="hdd_save" value="0">
 	<input type="hidden" id="hdd_avilita_1" name="hdd_avilita_1" value="1">
 	<input type="hidden" id="hdd_avilita_2" name="hdd_avilita_2" value="1">

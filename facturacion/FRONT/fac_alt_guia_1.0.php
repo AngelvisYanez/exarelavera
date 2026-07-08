@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?	  
+<?php	  
 /*Alias:Ingreso de Guia.
 Fecha de actualización:	30-10-2013 
 Desarrollador:	Jose Cumbicos Ortiz*/
@@ -37,7 +37,7 @@ if($ajax_agregar==1)
     </td>
   </tr>
 </table>
-<?	
+<?php	
 exit();	
 }
 
@@ -63,22 +63,22 @@ if($ajax_cargar==1)
 		  </tr>
           </thead>
           <tbody>
-		  <?  
+		  <?php  
 		  if($total_row!=0){
 		  foreach($row as $datos) {  ?>
 		  
 		  <tr>
-			<td height="73%" align="center"><? echo $datos['Slc_Cod']; ?></td>
-			<td align="center"><? echo $datos['Slc_Fec']; ?></td>
-			<td align="center"><? echo $datos['Slc_Hor']; ?></td>
-			<td align="left">&nbsp;<? echo marcar_cadena($txt_busqueda,$datos['Prs_Ape'].' '.$datos['Prs_Nom'],'#FFFF00', 1) ?></td>			
+			<td height="73%" align="center"><?php echo $datos['Slc_Cod']; ?></td>
+			<td align="center"><?php echo $datos['Slc_Fec']; ?></td>
+			<td align="center"><?php echo $datos['Slc_Hor']; ?></td>
+			<td align="left">&nbsp;<?php echo marcar_cadena($txt_busqueda,$datos['Prs_Ape'].' '.$datos['Prs_Nom'],'#FFFF00', 1) ?></td>			
             <td width="2%" align="center">
 			<input type="hidden" name="Slc_Cod" id="Slc_Cod" value="<?Php echo $datos['Slc_Cod'];?>">			
             <input type="hidden" name="Con_Cod" id="Con_Cod" value="<?Php echo $datos['Con_Cod'];?>">
 			<button type="button" class="btn btn-success btn-mini" title="Elegir" onclick="Muestra_Aparecer();ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_detalle=1&Slc_Cod=<?Php echo $datos['Slc_Cod'];?>&Con_Cod=<?Php echo $datos['Con_Cod'];?>&Slc_Fec=<?Php echo $datos['Slc_Fec'];?>','bgmodal')"><i class="icon-arrow-right icon-white"></i></button>
             </td>           
 		  </tr>		  
-		  <? }
+		  <?php }
 		  }else{?>
             <tr>
               <td>&nbsp;</td>
@@ -87,12 +87,12 @@ if($ajax_cargar==1)
               <td><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
               <td>&nbsp;</td>
             </tr>
-     	  <? }?>
+     	  <?php }?>
           </tbody>
 	  </table>
 </FIELDSET>
-<? echo barra_estado($total_row);?>   
-<?	
+<?php echo barra_estado($total_row);?>   
+<?php	
 exit();	
 }
 
@@ -109,7 +109,7 @@ if($ajax_detalle==1)
     <table border="0" cellpadding="0" cellspacing="0">
     <tr>
     	<td><strong>Fecha de Pedido:</strong></td>
-        <td>&nbsp;<? echo $Slc_Fec;?></td>
+        <td>&nbsp;<?php echo $Slc_Fec;?></td>
     </tr>
     </table>
 	<table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader02">
@@ -124,7 +124,7 @@ if($ajax_detalle==1)
 		  </tr>
           </thead>
           <tbody>
-		  <?  
+		  <?php  
 		  if($total_row!=0){
 		  $x=0;	  
 		  foreach($row as $datos) { 
@@ -135,29 +135,29 @@ if($ajax_detalle==1)
 		  ?>		  
 		  <tr>
 			<td align="center">
-			<? echo $datos['Slc_Can']; ?> 
-            <input type="hidden" name="Hdd_Slc_Can[<? echo $x?>]" id="Hdd_Slc_Can[<? echo $x?>]" value="<?Php echo $datos['Slc_Can'];?>">
+			<?php echo $datos['Slc_Can']; ?> 
+            <input type="hidden" name="Hdd_Slc_Can[<?php echo $x?>]" id="Hdd_Slc_Can[<?php echo $x?>]" value="<?Php echo $datos['Slc_Can'];?>">
             </td>
             <td align="center">
-			<? echo formato_numero($busca['Gia_Can'],2,1); ?>
-            <input type="hidden" name="Hdd_Gia_Cod[<? echo $x?>]" id="Hdd_Gia_Cod[<? echo $x?>]" value="<?Php echo $busca['Gia_Can'];?>">
+			<?php echo formato_numero($busca['Gia_Can'],2,1); ?>
+            <input type="hidden" name="Hdd_Gia_Cod[<?php echo $x?>]" id="Hdd_Gia_Cod[<?php echo $x?>]" value="<?Php echo $busca['Gia_Can'];?>">
             </td>            
-            <td align="center"><input type="hidden" id="ProCod[<? echo $x?>]" name="ProCod[<? echo $x?>]" value="<? echo $datos['Pro_Cod']; ?>" />
-            <? if($datos['Slc_Can'] > $busca['Gia_Can']){?>
-            <input type="text" size="6" id="Cant[<? echo $x?>]" name="Cant[<? echo $x?>]" value="<? echo $datos['Slc_Can'] - $busca['Gia_Can']; ?>" />
-            <? }else{ echo $datos['Slc_Can'] - $busca['Gia_Can'];}?>
+            <td align="center"><input type="hidden" id="ProCod[<?php echo $x?>]" name="ProCod[<?php echo $x?>]" value="<?php echo $datos['Pro_Cod']; ?>" />
+            <?php if($datos['Slc_Can'] > $busca['Gia_Can']){?>
+            <input type="text" size="6" id="Cant[<?php echo $x?>]" name="Cant[<?php echo $x?>]" value="<?php echo $datos['Slc_Can'] - $busca['Gia_Can']; ?>" />
+            <?php }else{ echo $datos['Slc_Can'] - $busca['Gia_Can'];}?>
             </td>
-			<td align="center"><? echo $datos['Mar_Des']; ?><input type="hidden" id="ProDes[<? echo $x?>]" name="ProDes[<? echo $x?>]" value="<? echo $datos['Ite_Lar']; ?>" /></td>			
-			<td align="left">&nbsp;<? echo $datos['Ite_Lar']; ?></td>			
+			<td align="center"><?php echo $datos['Mar_Des']; ?><input type="hidden" id="ProDes[<?php echo $x?>]" name="ProDes[<?php echo $x?>]" value="<?php echo $datos['Ite_Lar']; ?>" /></td>			
+			<td align="left">&nbsp;<?php echo $datos['Ite_Lar']; ?></td>			
             <td align="center">
-			<? if($datos['Slc_Can'] > $busca['Gia_Can']){?>
-            	<input type="checkbox" id="chk[<? echo $x;?>]" name="chk[<? echo $x;?>]"/>            
-            <? }else{?>
+			<?php if($datos['Slc_Can'] > $busca['Gia_Can']){?>
+            	<input type="checkbox" id="chk[<?php echo $x;?>]" name="chk[<?php echo $x;?>]"/>            
+            <?php }else{?>
             	<input type="checkbox" id="chk" name="chk" disabled="disabled" />
-            <? }?>
+            <?php }?>
             </td>           
 		  </tr>		  
-		  <? }
+		  <?php }
 		  }else{?>
             <tr>
               <td>&nbsp;</td>
@@ -166,11 +166,11 @@ if($ajax_detalle==1)
               <td><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
               <td>&nbsp;</td>
             </tr>
-     	  <? }?>
+     	  <?php }?>
           </tbody>
 	  </table>
 	</FIELDSET>
-    <? echo barra_estado($total_row);?> 
+    <?php echo barra_estado($total_row);?> 
     <table width="202" height="16%" border="0" cellpadding="0" cellspacing="0" class="Azul">
       <tr>
         <td width="91">            
@@ -179,11 +179,11 @@ if($ajax_detalle==1)
         <td width="111">
         <button name="btn_guardar" type="button" class="btn btn-primary fileinput-button" id= "btn_guardar" title= "Aceptar" onClick=" val_check('<?Php echo $x;?>','chk')" value="Actualizar"><i class="icon-ok icon-white"></i><span>&nbsp;&nbsp;Aceptar&nbsp;&nbsp;</span></button>
             <input name="hdd_save" type="hidden" id="hdd_save" value="insertar">
-            <input name="hdd_Slc_Cod" type="hidden" id="hdd_Slc_Cod" value="<? echo $Slc_Cod;?>">            
+            <input name="hdd_Slc_Cod" type="hidden" id="hdd_Slc_Cod" value="<?php echo $Slc_Cod;?>">            
         </td>
       </tr>
     </table>
-    <?
+    <?php
 exit();
 }
 
@@ -317,7 +317,7 @@ if (isset($txt_busqueda))
 ///if ($thisPost->postBlock($_POST['postID'])) 
 if (isset($Rcb_Cod))
 { 
-?><script language="javascript">windows('fac_pri_guiaremision_1.0.php?Gia_Cod=<?Php echo $Rcb_Cod;?>','', 800,600,'yes', 'yes', 'yes', 'no');</script><?
+?><script language="javascript">windows('fac_pri_guiaremision_1.0.php?Gia_Cod=<?Php echo $Rcb_Cod;?>','', 800,600,'yes', 'yes', 'yes', 'no');</script><?php
 }//Fin del if (isset($hdd_save) && !isset($hdd_volver))
 ?>
 
@@ -327,7 +327,7 @@ if (isset($Rcb_Cod))
 </tr>
 <tr>
     <td align="left" valign="top">
-    <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1"> 	
+    <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1"> 	
 	<?php require_once("../../componentes/FRONT/com_con_persona.php"); ?>
     </form>
 	<?Php
@@ -350,14 +350,14 @@ if (isset($Rcb_Cod))
 		  </tr>
           </thead>
           <tbody>
-		  <?  
+		  <?php  
 		  if($total_rs_buspro!=0){
 		  foreach($rs_buspro as $row_rs_buspro) {  ?>
-		  <form name='frm_personal' method='post' action="<? echo $_SERVER['PHP_SELF']; ?>">
+		  <form name='frm_personal' method='post' action="<?php echo $_SERVER['PHP_SELF']; ?>">
 		  <tr>
-			<td height="73%" align="center"><? echo $row_rs_buspro['Per_Cod']; ?></td>
-			<td align="center"><? echo $row_rs_buspro['Prs_Ced']; ?></td>
-			<td align="left">&nbsp;<? echo marcar_cadena($txt_busqueda,$row_rs_buspro['Prs_Ape'].' '.$row_rs_buspro['Prs_Nom'],'#FFFF00', 1) ?></td>
+			<td height="73%" align="center"><?php echo $row_rs_buspro['Per_Cod']; ?></td>
+			<td align="center"><?php echo $row_rs_buspro['Prs_Ced']; ?></td>
+			<td align="left">&nbsp;<?php echo marcar_cadena($txt_busqueda,$row_rs_buspro['Prs_Ape'].' '.$row_rs_buspro['Prs_Nom'],'#FFFF00', 1) ?></td>
 			<td width="4%" align="center">
 			<input type="hidden" name="codigo" id="codigo" value="<?Php echo $row_rs_buspro['Per_Cod'];?>">
 			<input type="hidden" name="Rec_Cod" id="Rec_Cod" value="<?Php echo $row_rs_buspro['Per_Cod'];?>">
@@ -370,7 +370,7 @@ if (isset($Rcb_Cod))
             </td>
 		  </tr>
 		  </form>
-		  <? }
+		  <?php }
 		  }else{?>
             <tr>
               <td>&nbsp;</td>
@@ -378,13 +378,13 @@ if (isset($Rcb_Cod))
               <td><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
               <td>&nbsp;</td>
             </tr>
-     	  <? }?>
+     	  <?php }?>
           </tbody>
 	  </table>	 
 	</FIELDSET>
-  	 <? echo barra_estado($total_rs_buspro);?>
-<? } ?>
-<? 	
+  	 <?php echo barra_estado($total_rs_buspro);?>
+<?php } ?>
+<?php 	
 if (isset($codigo) && !isset($hdd_volver))
 {
 		//resultado de los datos de la persona//
@@ -413,13 +413,13 @@ if (isset($codigo) && !isset($hdd_volver))
 <table width="95%" border="0" cellpadding="0" cellspacing="0">
 <tr>
 	<td width="12%" class="Etiqueta1">Cédula/R.U.C.:</td>
-	<td width="88%" class="LetraNegra">&nbsp;<? echo $row_rs_personal['Prs_Ced']?>
+	<td width="88%" class="LetraNegra">&nbsp;<?php echo $row_rs_personal['Prs_Ced']?>
 	  <input name="Con_Cod" id="Con_Cod" type="hidden" value="<?Php echo $Con_Cod;?>">      
       <input name="Usu_Cod" id="Usu_Cod" type="hidden" value="<?Php echo $Ses_Usu_Cod;?>" /></td>
 	</tr>
 	<tr>	
 	<td width="12%" class="Etiqueta1">Nombre:</td>
-	<td class="LetraNegra">&nbsp;<? echo $row_rs_personal['Prs_Ape'].' '.$row_rs_personal['Prs_Nom']; ?></td>
+	<td class="LetraNegra">&nbsp;<?php echo $row_rs_personal['Prs_Ape'].' '.$row_rs_personal['Prs_Nom']; ?></td>
 	</tr>
 </table>
 </FIELDSET>
@@ -437,18 +437,18 @@ if (isset($codigo) && !isset($hdd_volver))
 		 <tr>
 		   <td class="Etiqueta1"><span class="Asterisco">*</span> Movimiento/Tipo</td>
 		   <td class="LetraNegra">
-           <?
+           <?php
            	/* Consultamos los tipos de movimientos activos*/
 			$row = $obBD_con1->getArrayConsulta(903,'',$obBD_conexion);	
 			$total_row= count($row);
 		   ?>
            <select id="Tia_Cod" name="Tia_Cod">
-           <? if($total_row!=0){?>
+           <?php if($total_row!=0){?>
            		<option value="">Seleccione...</option>
-                <? foreach($row as $datos){?>
-                	<option value="<? echo $datos['Tia_Cod'];?>"><? echo $datos['Tia_Des'];?></option>
-                <? }?>
-           <? }?>     
+                <?php foreach($row as $datos){?>
+                	<option value="<?php echo $datos['Tia_Cod'];?>"><?php echo $datos['Tia_Des'];?></option>
+                <?php }?>
+           <?php }?>     
            </select>
            </td>
 		   </tr>
@@ -498,18 +498,18 @@ if (isset($codigo) && !isset($hdd_volver))
 	 </table>-->
 	 <table width="196" border="0" cellpadding="0" cellspacing="0">
 	  <tr>
-	  <? if($total_solicitud==0){?>	
+	  <?php if($total_solicitud==0){?>	
         <td width="95">
 		  <input id="nfilas" name="nfilas" type="hidden" value="0">		 
           <button type="button" name="button" id="button" title="Agregar Suministros" onclick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_agregar=1','bgmodal')" class="btn btn-success btn-mini" ><i class="icon-plus icon-white"></i><span>&nbsp;&nbsp;Agregar&nbsp;&nbsp;</span></button>
         </td>
-        <? }else{?>
+        <?php }else{?>
         <td width="101">
         <input id="nfilas" name="nfilas" type="hidden" value="0">		  	 
-          <button type="button" name="button1" id="button1" title="Cargar por Solicitudes" onclick="Muestra_Aparecer();ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_cargar=1&Con_Cod=<? echo $Con_Cod;?>','bgmodal')" class="btn btn-success btn-mini" ><i class="icon-list-alt icon-white"></i><span>&nbsp;&nbsp;Solicitudes&nbsp;&nbsp;</span></button>
+          <button type="button" name="button1" id="button1" title="Cargar por Solicitudes" onclick="Muestra_Aparecer();ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_cargar=1&Con_Cod=<?php echo $Con_Cod;?>','bgmodal')" class="btn btn-success btn-mini" ><i class="icon-list-alt icon-white"></i><span>&nbsp;&nbsp;Solicitudes&nbsp;&nbsp;</span></button>
                    
         </td>
-        <? }?>
+        <?php }?>
 	  </tr>
 	 </table>
      <br />	
@@ -522,7 +522,7 @@ if (isset($codigo) && !isset($hdd_volver))
         <td width="111"><button name="btn_guardar" type="button" class="btn btn-primary fileinput-button" id= "btn_guardar" title= "Guardar" onClick= "validar_requeridos(this.form, 'Tia_Cod*Gia_Det', 1)" value="Actualizar"><i class=" icon-book icon-white"></i><span>&nbsp;&nbsp;Guardar&nbsp;&nbsp;</span></button>
             <input name="hdd_save" type="hidden" id="hdd_save" value="insertar">
             <input name="Slc_Cod" type="hidden" id="Slc_Cod" value="">
-            <input name="Slc_Ent" type="hidden" id="Slc_Ent" value="<? echo $solicitud['Slc_Ent']?>">            
+            <input name="Slc_Ent" type="hidden" id="Slc_Ent" value="<?php echo $solicitud['Slc_Ent']?>">            
         </td>
       </tr>
     </table>
@@ -530,7 +530,7 @@ if (isset($codigo) && !isset($hdd_volver))
 	  </td>
     </tr>
   </table>
-<? } ?>
+<?php } ?>
 <div id="bgtransparent" class="bgtransparent" style="display:none" onClick="closeModal();">
 </div>
 <div id="bgmodal"  class="bgmodal" style="display:none"></div>

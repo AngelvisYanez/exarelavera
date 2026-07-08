@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?	
+<?php	
 /**
 * @abstract Permite modificartrar los cheques 
 * @author Lewis Chimarro
@@ -87,28 +87,28 @@ if (isset($buscod))
         <td><strong>Proveedor</strong></td>
         <td width="35">&nbsp;</td>
         </tr>
-      <?
+      <?php
 	  if ($total_rs_buspro > 0) 
 	  {
 	  do { ?>
-      <tr <? echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo");?> class="Fondo">
-        <td align="center"><? echo $row_rs_buspro['Prv_Cod']; ?></td>
-        <td align="left"><? echo $row_rs_buspro['Prs_Ced']; ?></td>
-        <td align="left"><? echo $row_rs_buspro['Prs_Ape'].' '. $row_rs_buspro['Prs_Nom']; ?></td>
+      <tr <?php echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo");?> class="Fondo">
+        <td align="center"><?php echo $row_rs_buspro['Prv_Cod']; ?></td>
+        <td align="left"><?php echo $row_rs_buspro['Prs_Ced']; ?></td>
+        <td align="left"><?php echo $row_rs_buspro['Prs_Ape'].' '. $row_rs_buspro['Prs_Nom']; ?></td>
         <td align="center">
-            <button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="nueva_fila_cheque('contenido',<? echo $row_rs_buspro['Prv_Cod']; ?>,'<? echo $row_rs_buspro['Prs_Ape'].' '.
-		$row_rs_buspro['Prs_Nom']; ?>',<? echo $ban_cod; ?>,<? echo $ban_des; ?>,<? echo $cod_prv; ?>, '<?Php echo $com_fec; ?>',<?Php echo $asi_val; ?>,'<?Php echo $varios_prov; ?>')">
+            <button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="nueva_fila_cheque('contenido',<?php echo $row_rs_buspro['Prv_Cod']; ?>,'<?php echo $row_rs_buspro['Prs_Ape'].' '.
+		$row_rs_buspro['Prs_Nom']; ?>',<?php echo $ban_cod; ?>,<?php echo $ban_des; ?>,<?php echo $cod_prv; ?>, '<?Php echo $com_fec; ?>',<?Php echo $asi_val; ?>,'<?Php echo $varios_prov; ?>')">
 		        <i class="icon-arrow-right icon-white"></i>
             </button> </td>
         </tr>
-      <? } while ($row_rs_buspro = $obBD_con1->fetch_assoc($rs_buspro));
+      <?php } while ($row_rs_buspro = $obBD_con1->fetch_assoc($rs_buspro));
 	  } else { ?>
 	  	<tr><td colspan="4" align="center"><?Php echo error_alerta("No hay resultados que mostrar", 1); ?></td>
 	  	</tr>
-	  <? }?>
+	  <?php }?>
     </table>
     <?php echo barra_estado($total_rs_buspro); ?>	 
-<? 
+<?php 
 @$obBD_con1->free_result($rs_buspro);
 @$obBD_con1->free_result($rs_combo);
 exit();
@@ -249,7 +249,7 @@ else
 	<tr>
       <td align="left" valign="top" height="400">
     <form action="<?Php echo $_SERVER['PHP_SELF']; ?>" method="post" name= "form1">
-<? 
+<?php 
 if (!isset($hdd_save) && !isset($hdd_save2) && !isset($codigo)) 
 { ?>
 	<FIELDSET>
@@ -350,7 +350,7 @@ else
 		  </table>
 		</FIELDSET>
 	</form>
-<? 
+<?php 
 if(isset($txt_busqueda))
 	{
 	  ?>	
@@ -374,7 +374,7 @@ if(isset($txt_busqueda))
 	        </tr>
 	      </thead>
 		  <tbody>
-	<?
+	<?php
 	if ($total_rs_cabcompr > 0) 
 	{		 
 		$i=0; 				
@@ -385,25 +385,25 @@ if(isset($txt_busqueda))
 	  		  { $rojo='#FF0000'; $anulada++; }else{$rojo='';}  ?>
 		    <tr>
 		      <!--<td align="center"><img src="../../imagenes/edit_add.png" id="mas[<?php echo $i; ?>]" width="25" height="25" title="Ver detalle" style="cursor:pointer" onclick="mas_menos(1,'mas[<?php echo $i;?>]', 'menos[<?php echo $i;?>]', <?Php echo $i; ?>)" /><img src="../../imagenes/edit_remove.png" id="menos[<?php echo $i; ?>]" width="25" title="Ocultar detalle" style="cursor:pointer" height="25" onclick="mas_menos(2, 'mas[<?php echo $i;?>]', 'menos[<?php echo $i;?>]', <?Php echo $i; ?>)" /></td>-->
-		      <td align="center"><font color="<? echo $rojo;?>"><? echo $row['Com_Cod']; ?></font></td>
-                      <td align="center"><font color="<? echo $rojo;?>"><? echo $row['Che_Num']; ?></font></td>
+		      <td align="center"><font color="<?php echo $rojo;?>"><?php echo $row['Com_Cod']; ?></font></td>
+                      <td align="center"><font color="<?php echo $rojo;?>"><?php echo $row['Che_Num']; ?></font></td>
 		      <td align="center"><font color="<?php echo $rojo; ?>">
 		        <?Php  if ($row['Com_Gen'] == 'M') echo "Manual"; else echo "Autom&aacute;tico";
 		  ?>
 		        </font></td>
 		      <td align="center"><font color="<?php echo $rojo; ?>">
-		        <? 
+		        <?php 
 	  	list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 		  echo $row['Tia_Abr'].'-'.$mes.'-'.$row['Com_Num']; ?>
 		        </font></td>
-		      <td><font color="<? echo $rojo;?>"><? echo $row['Prs_Ced']; ?></font></td>
-		      <td><font color="<? echo $rojo;?>"><? echo $row['Prs_Ape']." ".$row['Prs_Nom']; ?></font></td>
-		      <td align="center"><font color="<? echo $rojo;?>"><? echo $row['Com_Fec']; ?></font></td>
-		      <td align="right"><font color="<? echo $rojo;?>"><? echo $row['Com_Val']; ?></font></td>
+		      <td><font color="<?php echo $rojo;?>"><?php echo $row['Prs_Ced']; ?></font></td>
+		      <td><font color="<?php echo $rojo;?>"><?php echo $row['Prs_Ape']." ".$row['Prs_Nom']; ?></font></td>
+		      <td align="center"><font color="<?php echo $rojo;?>"><?php echo $row['Com_Fec']; ?></font></td>
+		      <td align="right"><font color="<?php echo $rojo;?>"><?php echo $row['Com_Val']; ?></font></td>
                       <td align="center">
                             <!--<button type="button" class="btn btn-info btn-mini" onclick="Muestra_Aparecer();ajax_datos('<?Php //echo $_SERVER['PHP_SELF']; ?>?ajax=true&ComCod=<?php echo $row['Com_Cod']; ?>','ajax_modal')"><i class="icon-info-sign icon-white"></i></button>-->
                         </td>
-		      <td align="center"><? if ($row['Com_Est']=='A') { ?>
+		      <td align="center"><?php if ($row['Com_Est']=='A') { ?>
 		        <form action="<?Php echo $_SERVER['PHP_SELF']; ?>" method="post" name="form2" id="form2">
 		          <input name="codigo" id="codigo" type="hidden"  value="<?php echo $row['Com_Cod']; ?>" />
 		          <input name="Pec_Cod" id="Pec_Cod" type="hidden"  value="<?php echo $Pec_Cod; ?>" />
@@ -426,7 +426,7 @@ if(isset($txt_busqueda))
 		      <td colspan="7"><?Php //include('../../contabilidad/COMPONENTES/con_con_detalleCompr.php'); ?></td>
 		      <td align="center">&nbsp;</td>
 	        </tr>
-		    <?	  		
+		    <?php	  		
 	  	}//while ($row_rs_cabcompr = $obBD_con1->fetch_assoc($rs_cabcompr));  ?>
 		    <?Php 
 	}//Fin del if ($total_rs_cabcompr > 0)
@@ -457,10 +457,10 @@ if(isset($txt_busqueda))
         }//Fin del if ($anulada > 0)
         ?>
         <br/>
-    <?
+    <?php
     require_once('../../componentes/FRONT/com_con_leyenda.php');?>         
 	</FIELDSET>
-<? }
+<?php }
 if ($total_rs_cabcomp >0)
 {
 	/**
@@ -519,24 +519,24 @@ if ($total_rs_cabcomp >0)
     <td width="15%" class="Etiqueta1"><input name="Pec_Cod" id="Pec_Cod" type="hidden"  value="<?php echo $Pec_Cod; ?>">
     <input name="Pec_Fei" id="Pec_Fei" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fei']; ?>">
     <input name="Pec_Fef" id="Pec_Fef" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fef']; ?>">C&oacute;d. Compr: </td>
-    <td width="38%" class="LetraNegra">&nbsp;<? list($ann, $mes, $dia) = preg_split('![/.-]!', $row_rs_cabcomp['Com_Fec']);
+    <td width="38%" class="LetraNegra">&nbsp;<?php list($ann, $mes, $dia) = preg_split('![/.-]!', $row_rs_cabcomp['Com_Fec']);
 		  echo $row_rs_cabcomp['Tia_Abr'].'-'.$mes.'-'.$row_rs_cabcomp['Com_Num']; ?></td>
     <td width="11%" class="Etiqueta1">Fecha:</td>
-    <td width="36%" class="LetraNegra">&nbsp;<? echo $row_rs_cabcomp['Com_Fec']; ?></td>
+    <td width="36%" class="LetraNegra">&nbsp;<?php echo $row_rs_cabcomp['Com_Fec']; ?></td>
   </tr>
   <tr>
     <td class="Etiqueta1">Nombre:</td>
-    <td class="LetraNegra">&nbsp;<? echo $row_rs_cabcomp['Prs_Ape'].' '.$row_rs_cabcomp['Prs_Nom']; ?></td>
+    <td class="LetraNegra">&nbsp;<?php echo $row_rs_cabcomp['Prs_Ape'].' '.$row_rs_cabcomp['Prs_Nom']; ?></td>
     <td class="Etiqueta1">Valor:</td>
-    <td class="LetraNegra">&nbsp;<? echo $row_rs_cabcomp['Com_Val']; ?></td>
+    <td class="LetraNegra">&nbsp;<?php echo $row_rs_cabcomp['Com_Val']; ?></td>
   </tr>
   <tr>
     <td class="Etiqueta1">Concepto:</td>
-    <td colspan="3" class="LetraNegra">&nbsp;<? echo $row_rs_cabcomp['Com_Con']; ?></td>
+    <td colspan="3" class="LetraNegra">&nbsp;<?php echo $row_rs_cabcomp['Com_Con']; ?></td>
     </tr>
   <tr>
     <td valign="top" class="Etiqueta1">Observaci&oacute;n:</td>
-    <td colspan="3" valign="top" class="LetraNegra">&nbsp;<? echo $row_rs_cabcomp['Com_Obs']; ?><input name="codigo" type="hidden" id="codigo" value="<?Php echo $codigo;  ?>"></td>
+    <td colspan="3" valign="top" class="LetraNegra">&nbsp;<?php echo $row_rs_cabcomp['Com_Obs']; ?><input name="codigo" type="hidden" id="codigo" value="<?Php echo $codigo;  ?>"></td>
     </tr>
 	</table>
 	</FIELDSET>
@@ -555,29 +555,29 @@ if ($total_rs_cabcomp >0)
 		</tr>
     </thead>
     <tbody>    
-	<? 
+	<?php 
 	if ($total_rs_cuentas > 0)
 	{ 
 		do {   
 	?>
 	<tr>
-	  <td><? echo $row_rs_cuentas['Pld_Cdc']; ?></td>
-		<td><? echo $row_rs_cuentas['Pld_Des']; ?></td>
-		<td><? echo $row_rs_cuentas['Asi_Glo']; ?></td>
+	  <td><?php echo $row_rs_cuentas['Pld_Cdc']; ?></td>
+		<td><?php echo $row_rs_cuentas['Pld_Des']; ?></td>
+		<td><?php echo $row_rs_cuentas['Asi_Glo']; ?></td>
 		<td align="right">
-	  <? if ($row_rs_cuentas['Asi_Deh']=='D') { echo $row_rs_cuentas['Asi_Val']; $total=$total + $row_rs_cuentas['Asi_Val']; } ?>
+	  <?php if ($row_rs_cuentas['Asi_Deh']=='D') { echo $row_rs_cuentas['Asi_Val']; $total=$total + $row_rs_cuentas['Asi_Val']; } ?>
 	  	</td>
 		<td align="right">
-		  <? if ($row_rs_cuentas['Asi_Deh']=='H') { echo $row_rs_cuentas['Asi_Val']; } ?>
+		  <?php if ($row_rs_cuentas['Asi_Deh']=='H') { echo $row_rs_cuentas['Asi_Val']; } ?>
 		  </td>
 		</tr>
-	<? } while($row_rs_cuentas=$obBD_con1->fetch_assoc($rs_cuentas)); } ?>
+	<?php } while($row_rs_cuentas=$obBD_con1->fetch_assoc($rs_cuentas)); } ?>
 	<tr>
 	  <td class="LetraNegra">&nbsp;</td>
 	  <td class="LetraNegra">&nbsp;</td>
 	  <td class="LetraNegra"><strong>Totales</strong></td>
-	  <td class="LetraNegra" align="right"><strong><? echo number_format($total,2); ?></strong></td>
-	  <td class="LetraNegra" align="right"><strong><? echo number_format($total,2); ?></strong></td>
+	  <td class="LetraNegra" align="right"><strong><?php echo number_format($total,2); ?></strong></td>
+	  <td class="LetraNegra" align="right"><strong><?php echo number_format($total,2); ?></strong></td>
 	  </tr>	
 	</table>
     <?php  echo barra_estado($total_rs_cuentas);  ?>
@@ -600,7 +600,7 @@ if ($total_rs_cabcomp >0)
 	  </tr>      
 	 </thead>	
      <tbody id="contenido">
-	 <?
+	 <?php
 	/**
 	* Cargado de los cheques del comprobante 
 	*/
@@ -639,33 +639,33 @@ if ($total_rs_cabcomp >0)
 	 ?>
 	  <tr>
 	    <td>
-        <input name="datos[<? echo $fila; ?>,1]" id="datos[<? echo $fila; ?>,1]" type="hidden" value="<? echo $row_rs_carcheq['Ban_Cod']; ?>"><input name="datos[<? echo $fila; ?>,2]" id="datos[<? echo $fila; ?>,2]" type="hidden" value="<? echo $row_rs_carcheq['Asi_Cod']; ?>">		
-              <select <?php if ($row_rs_carcheq['Che_Est'] == 'C'){echo '';} ?>  name="datos[<? echo $fila; ?>,10]" id="datos[<? echo $fila; ?>,10]" onChange="cargar_codban(this,this.parentNode.firstChild,this.parentNode.childNodes[1]); 
+        <input name="datos[<?php echo $fila; ?>,1]" id="datos[<?php echo $fila; ?>,1]" type="hidden" value="<?php echo $row_rs_carcheq['Ban_Cod']; ?>"><input name="datos[<?php echo $fila; ?>,2]" id="datos[<?php echo $fila; ?>,2]" type="hidden" value="<?php echo $row_rs_carcheq['Asi_Cod']; ?>">		
+              <select <?php if ($row_rs_carcheq['Che_Est'] == 'C'){echo '';} ?>  name="datos[<?php echo $fila; ?>,10]" id="datos[<?php echo $fila; ?>,10]" onChange="cargar_codban(this,this.parentNode.firstChild,this.parentNode.childNodes[1]); 
 		<?Php if ($cheques == false){ ?>
 				seleccionar_valor(this,<?Php echo $asi_val; ?>,this.parentNode.parentNode.childNodes(3).firstChild);
 		<?Php } ?>">
 	        <option value="0"></option>
-	        <?
+	        <?php
 		  /**
 		  * Mueve el puntero al inicio 
 		  */
 		  $row_rs_combo = first_last($rs_combo, $row_rs_combo, 0);
 				
 		  do {  ?>
-	        <option value="<? echo $row_rs_combo['Banasi']; ?>" <?
+	        <option value="<?php echo $row_rs_combo['Banasi']; ?>" <?php
 		  $bancos=explode("*",$row_rs_combo['Banasi']);
-		  if ($bancos[0]==$row_rs_carcheq['Ban_Cod']) { echo "selected"; } ?>><? echo $row_rs_combo['Pld_Des']." ($".$row_rs_carcheq['Che_Val'].")"; ?></option>
+		  if ($bancos[0]==$row_rs_carcheq['Ban_Cod']) { echo "selected"; } ?>><?php echo $row_rs_combo['Pld_Des']." ($".$row_rs_carcheq['Che_Val'].")"; ?></option>
 	        <?php
 			} while ($row_rs_combo = $obBD_con1->fetch_array($rs_combo));
 			?>
 	        </select></td>
-	    <td><input <?php if ($row_rs_carcheq['Che_Est'] == 'C'){echo 'readonly';} ?> name="datos[<? echo $fila; ?>,3]" id="datos[<? echo $fila; ?>,3]" type="hidden" value="<? echo $row_rs_carcheq['Prv_Cod']; ?>"><? echo $row_rs_carcheq['Prs_Ape'].' '.$row_rs_carcheq['Prs_Nom']; ?></td>
-	    <td align="right"><input <?php if ($row_rs_carcheq['Che_Est'] == 'C'){echo 'readonly';} ?> name="datos[<? echo $fila; ?>,4]" type="text" id="datos[<? echo $fila; ?>,4]" value="<? echo $row_rs_carcheq['Che_Num']; ?>" size="10" maxlength="10"></td>
-	    <td align="right"><input <?php if ($row_rs_carcheq['Che_Est'] == 'C'){echo 'readonly';} ?> name="datos[<? echo $fila; ?>,5]" type="text" id="datos[<? echo $fila; ?>,5]" value="<? echo number_format($row_rs_carcheq['Che_Val'],2,'.',''); ?>" size="6" maxlength="10" onKeyUp="cal_total_cheque(5)" style="text-align:right"></td>
-		<td><input <?php if ($row_rs_carcheq['Che_Est'] == 'C'){echo 'readonly';} ?> name="datos[<? echo $fila; ?>,8]" type="text" id="datos[<? echo $fila; ?>,8]" onBlur="validar_fecha2(this)" onKeyUp="mascara(this,'-',patron,true);" value="<? if ($row_rs_carcheq['Che_Fec'] != 0){ echo $row_rs_carcheq['Che_Fec']; }?>" size="7" maxlength="10"></td>
-	    <td style="display: none;"><input <?php if ($row_rs_carcheq['Che_Est'] == 'C'){echo 'readonly';} ?> name="datos[<? echo $fila; ?>,6]" type="text" id="datos[<? echo $fila; ?>,6]" onBlur="validar_fecha2(this)" onKeyUp="mascara(this,'-',patron,true);" value="<? if ($row_rs_carcheq['Che_Cob'] != 0){ echo $row_rs_carcheq['Che_Cob']; }?>" size="7" maxlength="10"></td>
-	    <td><input <?php if ($row_rs_carcheq['Che_Est'] == 'C'){echo 'readonly';} ?> name="datos[<? echo $fila; ?>,7]" type="text" id="datos[<? echo $fila; ?>,7]" value="<? echo $row_rs_carcheq['Che_Obs']; ?>" size="7" maxlength="20">
-	      <input <?php if ($row_rs_carcheq['Che_Est'] == 'C'){echo 'readonly';} ?> name="datos[<? echo $fila; ?>,9]" type="hidden" id="datos[<? echo $fila; ?>,9]" value="<? echo $row_rs_carcheq['Che_Cod']; ?>"></td>		
+	    <td><input <?php if ($row_rs_carcheq['Che_Est'] == 'C'){echo 'readonly';} ?> name="datos[<?php echo $fila; ?>,3]" id="datos[<?php echo $fila; ?>,3]" type="hidden" value="<?php echo $row_rs_carcheq['Prv_Cod']; ?>"><?php echo $row_rs_carcheq['Prs_Ape'].' '.$row_rs_carcheq['Prs_Nom']; ?></td>
+	    <td align="right"><input <?php if ($row_rs_carcheq['Che_Est'] == 'C'){echo 'readonly';} ?> name="datos[<?php echo $fila; ?>,4]" type="text" id="datos[<?php echo $fila; ?>,4]" value="<?php echo $row_rs_carcheq['Che_Num']; ?>" size="10" maxlength="10"></td>
+	    <td align="right"><input <?php if ($row_rs_carcheq['Che_Est'] == 'C'){echo 'readonly';} ?> name="datos[<?php echo $fila; ?>,5]" type="text" id="datos[<?php echo $fila; ?>,5]" value="<?php echo number_format($row_rs_carcheq['Che_Val'],2,'.',''); ?>" size="6" maxlength="10" onKeyUp="cal_total_cheque(5)" style="text-align:right"></td>
+		<td><input <?php if ($row_rs_carcheq['Che_Est'] == 'C'){echo 'readonly';} ?> name="datos[<?php echo $fila; ?>,8]" type="text" id="datos[<?php echo $fila; ?>,8]" onBlur="validar_fecha2(this)" onKeyUp="mascara(this,'-',patron,true);" value="<?php if ($row_rs_carcheq['Che_Fec'] != 0){ echo $row_rs_carcheq['Che_Fec']; }?>" size="7" maxlength="10"></td>
+	    <td style="display: none;"><input <?php if ($row_rs_carcheq['Che_Est'] == 'C'){echo 'readonly';} ?> name="datos[<?php echo $fila; ?>,6]" type="text" id="datos[<?php echo $fila; ?>,6]" onBlur="validar_fecha2(this)" onKeyUp="mascara(this,'-',patron,true);" value="<?php if ($row_rs_carcheq['Che_Cob'] != 0){ echo $row_rs_carcheq['Che_Cob']; }?>" size="7" maxlength="10"></td>
+	    <td><input <?php if ($row_rs_carcheq['Che_Est'] == 'C'){echo 'readonly';} ?> name="datos[<?php echo $fila; ?>,7]" type="text" id="datos[<?php echo $fila; ?>,7]" value="<?php echo $row_rs_carcheq['Che_Obs']; ?>" size="7" maxlength="20">
+	      <input <?php if ($row_rs_carcheq['Che_Est'] == 'C'){echo 'readonly';} ?> name="datos[<?php echo $fila; ?>,9]" type="hidden" id="datos[<?php echo $fila; ?>,9]" value="<?php echo $row_rs_carcheq['Che_Cod']; ?>"></td>		
 	    <td align="center">
                 <?php if ($row_rs_carcheq['Che_Est'] == 'C'){echo 'Cobrado el '.$row_rs_carcheq['Che_Cob'];}else{ ?>
         <button type="button" class="btn btn-danger delete" title="Eliminar definitivamente el Cheque" onclick="quitar_fila_st(this)">
@@ -681,16 +681,16 @@ if ($total_rs_cabcomp >0)
 	 {
 	  ?>  
 	  <tr>
-	    <td><font color="<? echo $rojo;?>"><?Php echo $row_rs_carcheq['Pld_Des']; ?></font></td>
-	    <td><font color="<? echo $rojo;?>"><? echo $row_rs_carcheq['Prs_Ape'].' '.$row_rs_carcheq['Prs_Nom']; ?></font></td>
-	    <td align="center"><font color="<? echo $rojo;?>"><? echo $row_rs_carcheq['Che_Num']; ?></font></td>
-	    <td align="right"><font color="<? echo $rojo;?>"><? echo round($row_rs_carcheq['Che_Val'],2); ?></font></td>
-	    <td><font color="<? echo $rojo;?>"><? if ($row_rs_carcheq['Che_Fec'] != 0){ echo $row_rs_carcheq['Che_Fec']; }?></font></td>
-	    <td><font color="<? echo $rojo;?>"><? if ($row_rs_carcheq['Che_Cob'] != 0){ echo $row_rs_carcheq['Che_Cob']; }?></font></td>
-	    <td><font color="<? echo $rojo;?>"><? echo $row_rs_carcheq['Che_Obs']; ?></font></td>
+	    <td><font color="<?php echo $rojo;?>"><?Php echo $row_rs_carcheq['Pld_Des']; ?></font></td>
+	    <td><font color="<?php echo $rojo;?>"><?php echo $row_rs_carcheq['Prs_Ape'].' '.$row_rs_carcheq['Prs_Nom']; ?></font></td>
+	    <td align="center"><font color="<?php echo $rojo;?>"><?php echo $row_rs_carcheq['Che_Num']; ?></font></td>
+	    <td align="right"><font color="<?php echo $rojo;?>"><?php echo round($row_rs_carcheq['Che_Val'],2); ?></font></td>
+	    <td><font color="<?php echo $rojo;?>"><?php if ($row_rs_carcheq['Che_Fec'] != 0){ echo $row_rs_carcheq['Che_Fec']; }?></font></td>
+	    <td><font color="<?php echo $rojo;?>"><?php if ($row_rs_carcheq['Che_Cob'] != 0){ echo $row_rs_carcheq['Che_Cob']; }?></font></td>
+	    <td><font color="<?php echo $rojo;?>"><?php echo $row_rs_carcheq['Che_Obs']; ?></font></td>
 	    <td align="center">&nbsp;</td>
 	    </tr>
-	<? 
+	<?php 
 	 }//FIn del else if ($row_rs_carcheq['Che_Est'] == 'A')
 	} while ($row_rs_carcheq = $obBD_con1->fetch_assoc($rs_carcheq)); ?>
 	</tbody>
@@ -721,20 +721,20 @@ if ($total_rs_cabcomp >0)
         }//Fin del if ($anulada > 0)
         ?>
         <br/>
-    <?
+    <?php
     require_once('../../componentes/FRONT/com_con_leyenda.php');?> 
 	</FIELDSET>
 	<br>	
 	<table width="312" border="0" cellpadding="0" cellspacing="0">
 	  <tr>
-		    <td width="110"><button type="button" class="btn btn-inverse fileinput-button" title="Atrï¿½s" onclick="campos_hide(this.form, 'txt_busqueda*op_opciones*cmb_mes*Pec_Cod*hdd_volver*bancos', '<? echo $volver_busqueda.'*'.$volver_opciones.'*'.$volver_mes.'*'.$Pec_Cod.'*1*'.$volver_bancos;?>')"> <i class=" icon-arrow-left icon-white"></i> <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span></button>
-            <input id="nfilas" name="nfilas" type="hidden" value="<? echo $fila; ?>">
-			  <input id="asientos" name="asientos" type="hidden" value="<? echo $asientos; ?>">
+		    <td width="110"><button type="button" class="btn btn-inverse fileinput-button" title="Atrï¿½s" onclick="campos_hide(this.form, 'txt_busqueda*op_opciones*cmb_mes*Pec_Cod*hdd_volver*bancos', '<?php echo $volver_busqueda.'*'.$volver_opciones.'*'.$volver_mes.'*'.$Pec_Cod.'*1*'.$volver_bancos;?>')"> <i class=" icon-arrow-left icon-white"></i> <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span></button>
+            <input id="nfilas" name="nfilas" type="hidden" value="<?php echo $fila; ?>">
+			  <input id="asientos" name="asientos" type="hidden" value="<?php echo $asientos; ?>">
 			  <input id="bt_save" name="bt_save" type="hidden" value="Grabar">
             <!-- <input id="hdd_save" name="hdd_save" type="hidden" value="oculto">-->
             <input name="cantmodal" id="cantmodal" type="hidden" value="2">
             </td>
-		    <td width="202"><button type="button" class="btn btn-primary start" title="Guardar" onclick="validar_cheques(this.form,<? echo $asi_cod; ?>,<? echo $asi_val; ?>)"> <i class="icon-book icon-white"></i> <span>Guardar</span></button>
+		    <td width="202"><button type="button" class="btn btn-primary start" title="Guardar" onclick="validar_cheques(this.form,<?php echo $asi_cod; ?>,<?php echo $asi_val; ?>)"> <i class="icon-book icon-white"></i> <span>Guardar</span></button>
              <input name="Pec_Cod" id="Pec_Cod" type="hidden"  value="<?php echo $Pec_Cod; ?>" />
 		          <input name="txt_busqueda" id="txt_busqueda" type="hidden"  value="<?php echo $volver_busqueda; ?>" />
 		          <input name="op_opciones" id="op_opciones" type="hidden"  value="<?php echo $volver_opciones; ?>" />
@@ -748,7 +748,7 @@ if ($total_rs_cabcomp >0)
 <div id="bgtransparent" class="bgtransparent" style="display:none" onClick="closeModal()">
 </div>
 <div id="bgmodal"  class="bgmodal"   style="display:none">	
-<form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name="form2" id="formSearch">
+<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name="form2" id="formSearch">
 <?Php noEnterSubmit(); ?>
 <table width="100%" border="0" cellspacing="0" cellpadding="0">
   <tr>
@@ -769,9 +769,9 @@ if ($total_rs_cabcomp >0)
     <tbody id="tbusqueda">
       <tr>
         <td width="85" height="28" class="BarraBusqueda"><div align="right"><strong>B&uacute;squeda</strong>:</div></td>
-        <td width="359" class="BarraBusqueda"><input name="buscta" type="text" id="buscta" size="50" maxlength="50" onKeyPress="if (trim(document.getElementById('buscta').value) != ''){ var form = document.getElementById('formSearch');enter_ajax('<?Php echo $_SERVER['PHP_SELF']; ?>?buscod='+document.getElementById('buscta').value+'&op_opciones2=ver'+form.elements['op_opciones2'].value+'&cod_num='+<? echo $row_rs_cabcomp['Com_Cod']; ?>+'&cod_prv='+<? echo $row_rs_cabcomp['Prv_Cod']; ?>+'&com_fec=<? echo $row_rs_cabcomp['Com_Fec']; ?>&varios_prov=<?Php echo $varios_prov; ?>','busqueda') }"></td>
+        <td width="359" class="BarraBusqueda"><input name="buscta" type="text" id="buscta" size="50" maxlength="50" onKeyPress="if (trim(document.getElementById('buscta').value) != ''){ var form = document.getElementById('formSearch');enter_ajax('<?Php echo $_SERVER['PHP_SELF']; ?>?buscod='+document.getElementById('buscta').value+'&op_opciones2=ver'+form.elements['op_opciones2'].value+'&cod_num='+<?php echo $row_rs_cabcomp['Com_Cod']; ?>+'&cod_prv='+<?php echo $row_rs_cabcomp['Prv_Cod']; ?>+'&com_fec=<?php echo $row_rs_cabcomp['Com_Fec']; ?>&varios_prov=<?Php echo $varios_prov; ?>','busqueda') }"></td>
         <td width="110" align="center">
-        <button type="button" class="btn btn-success" title="Buscar" onClick="var form = document.getElementById('formSearch');ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?buscod='+document.getElementById('buscta').value+'&op_opciones2='+form.elements['op_opciones2'].value+'&cod_num='+<? echo $row_rs_cabcomp['Com_Cod']; ?>+'&cod_prv='+<? echo $row_rs_cabcomp['Prv_Cod']; ?>+'&com_fec=<? echo $row_rs_cabcomp['Com_Fec']; ?>&varios_prov=<?Php echo $varios_prov; ?>','busqueda')"> <i class="icon-search icon-white"></i> <span>Buscar</span> </button>
+        <button type="button" class="btn btn-success" title="Buscar" onClick="var form = document.getElementById('formSearch');ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?buscod='+document.getElementById('buscta').value+'&op_opciones2='+form.elements['op_opciones2'].value+'&cod_num='+<?php echo $row_rs_cabcomp['Com_Cod']; ?>+'&cod_prv='+<?php echo $row_rs_cabcomp['Prv_Cod']; ?>+'&com_fec=<?php echo $row_rs_cabcomp['Com_Fec']; ?>&varios_prov=<?Php echo $varios_prov; ?>','busqueda')"> <i class="icon-search icon-white"></i> <span>Buscar</span> </button>
         </td>
       </tr>
     </tbody>
@@ -785,7 +785,7 @@ if ($total_rs_cabcomp >0)
 </form>    	
 </div>    
     
-<? }  
+<?php }  
 }//FIn else
 	?></td>
   </tr>

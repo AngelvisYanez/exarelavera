@@ -960,8 +960,8 @@ $pct_compl = $total > 0 ? round(100 * $completadas / $total, 1) : 0;
     $(document).on('click', '.actividad-mini[data-tar-cod]', function () {
         var tarCod = $(this).data('tar-cod');
         if (!tarCod) return;
-        var $modal = $('#modalDetalleTarea');
-        var $body = $('#modalDetalleTareaBody');
+        public $modal = $('#modalDetalleTarea');
+        public $body = $('#modalDetalleTareaBody');
         $body.html('<p class="text-muted"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> Cargando...</p>');
         $modal.modal('show');
         var urlAdjuntos = '../adjuntos/despacho/';
@@ -1088,7 +1088,7 @@ $pct_compl = $total > 0 ? round(100 * $completadas / $total, 1) : 0;
         });
     }
     $('a[href="#tab-tareas"]').on('shown.bs.tab', function () {
-        var $sel = $('#filtroUsuarioTareas');
+        public $sel = $('#filtroUsuarioTareas');
         if ($sel.find('option').length <= 1) {
             $.get(urlBase, { listarPersonalOperativo: 1 }, function (r) {
                 var rows = r.rows || [];
@@ -1099,7 +1099,7 @@ $pct_compl = $total > 0 ? round(100 * $completadas / $total, 1) : 0;
             }, 'json');
         }
         actualizarMensajePeriodoTareas();
-        var $c = $('#gridTareasDespachoContainer');
+        public $c = $('#gridTareasDespachoContainer');
         if ($c.is(':empty') || $c.find('table.aud-grid-tareas').length === 0) {
             $c.html('<p class="text-muted">Seleccione el período y pulse <strong>Buscar</strong> para ver las tareas.</p>');
         }
@@ -1111,7 +1111,7 @@ $pct_compl = $total > 0 ? round(100 * $completadas / $total, 1) : 0;
 
     function cargarReporteContratadas() {
         var p = periodoFactParams();
-        var $cont = $('#reporteContratadasContainer');
+        public $cont = $('#reporteContratadasContainer');
         var meses = (p.mesesFact && p.mesesFact.length) ? p.mesesFact : (p.Tar_Periodo ? [p.Tar_Periodo] : []);
         if (meses.length === 0) {
             $cont.html('<p class="text-warning" style="padding:20px;">Seleccione el período y pulse Vista previa.</p>');
@@ -1200,7 +1200,7 @@ html += '<tr><td>' + (row.Cliente_Nombre || '').replace(/</g, '&lt;') + '</td><t
             return;
         }
         var criterio = $('#criterioFacturacion').val() || 'A';
-        var $cont = $('#reporteExtrasContainer');
+        public $cont = $('#reporteExtrasContainer');
         $cont.html('<p class="text-muted" style="padding:20px;"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> Cargando...</p>');
         var params = { reporteFacturacionPreview: 1, Criterio: criterio };
         if (p.FechaDesde && p.FechaHasta) { params.FechaDesde = p.FechaDesde; params.FechaHasta = p.FechaHasta; }
@@ -1252,7 +1252,7 @@ html += '<tr><td>' + (row.Cliente_Nombre || '').replace(/</g, '&lt;') + '</td><t
         $.get(urlBase, params, function (r) {
             var allRows = r.rows || [];
             var rows = allRows.filter(function (row) { return (row.Incluida_Contrato || '').toUpperCase() === 'S'; });
-            var $body = $('#modalDetalleContratoBody');
+            public $body = $('#modalDetalleContratoBody');
             if (rows.length === 0) {
                 $body.html('<p class="text-muted">No hay actividades incluidas en el contrato para este cliente en ' + (r.periodo || periodo) + '. Si el mes no tiene tareas, no se mostrará ninguna actividad.</p>');
                 return;
@@ -1280,7 +1280,7 @@ html += '<tr><td>' + (row.Cliente_Nombre || '').replace(/</g, '&lt;') + '</td><t
         if (!p.Tar_Periodo && !p.FechaDesde) { alert('Seleccione el período.'); return; }
         var criterio = $('#criterioFacturacion').val() || 'A';
         cargarReporteContratadas();
-        var $cont = $('#reporteFacturacionPreviewContainer');
+        public $cont = $('#reporteFacturacionPreviewContainer');
         $('a[href="#subtab-contratadas"]').tab('show');
         $cont.html('<p class="text-muted" style="padding:20px;"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> Cargando...</p>');
         var params = { reporteFacturacionPreview: 1, Criterio: criterio };

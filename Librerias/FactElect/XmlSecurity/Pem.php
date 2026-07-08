@@ -52,7 +52,7 @@
  * $pem = \ass\XmlSecurity\Pem::formatKeyInPemFormat($key, \ass\XmlSecurity\Pem::PEM_TYPE_CERTIFICATE_X509);
  * $modulus = '';
  * $exponent = '';
- * $pem = \ass\XmlSecurity\Pem::getPublicKeyFromModExp($modulus, $exponent);
+ * $pem = \ass\XmlSecurity\Pem::getpublicKeyFromModExp($modulus, $exponent);
  * </code>
  *
  * @author Andreas Schamberger <mail@andreass.net>
@@ -93,7 +93,7 @@ class Pem
     /**
      * PEM type X.509 public key
      */
-    const PEM_TYPE_PUBLIC_X509 = "PUBLIC KEY";
+    const PEM_TYPE_public_X509 = "public KEY";
 
     /**
      * The object identifier for DSA Keys (1.2.840.10040.4.1)
@@ -161,7 +161,7 @@ class Pem
      * @see: https://polarssl.org/kb/cryptography/asn1-key-structures-in-der-and-pem
      * @see: http://lapo.it/asn1js/
      */
-    public static function getPublicKeyFromModExp($modulus, $exponent)
+    public static function getpublicKeyFromModExp($modulus, $exponent)
     {
         // the code is formatted like the logical nodes in the ASN.1 format
         $publicKey = self::encodeAsnData(self::ASN_TYPE_SEQUENCE,
@@ -178,7 +178,7 @@ class Pem
         );
         $publicKeyBase64 = base64_encode($publicKey);
 
-        return self::formatKeyInPemFormat($publicKeyBase64, self::PEM_TYPE_PUBLIC_X509);
+        return self::formatKeyInPemFormat($publicKeyBase64, self::PEM_TYPE_public_X509);
     }
 
     /**
@@ -191,7 +191,7 @@ class Pem
      *
      * @return string
      */
-    public static function getPublicKeyFromPqgy($p, $q, $g, $y)
+    public static function getpublicKeyFromPqgy($p, $q, $g, $y)
     {
         // the code is formatted like the logical nodes in the ASN.1 format
         $publicKey = self::encodeAsnData(self::ASN_TYPE_SEQUENCE,
@@ -209,7 +209,7 @@ class Pem
         );
         $publicKeyBase64 = base64_encode($publicKey);
 
-        return self::formatKeyInPemFormat($publicKeyBase64, self::PEM_TYPE_PUBLIC_X509);
+        return self::formatKeyInPemFormat($publicKeyBase64, self::PEM_TYPE_public_X509);
     }
 
     /**

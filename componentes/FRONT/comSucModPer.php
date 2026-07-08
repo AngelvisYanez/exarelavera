@@ -59,7 +59,7 @@ $obBD_con2 =  new Class_Log_Datos_Com;
           <?Php 
           }
           ?>     
-        </select><?
+        </select><?php
          } ?>
     </td>
   </tr>
@@ -67,7 +67,7 @@ $obBD_con2 =  new Class_Log_Datos_Com;
     <td width="16%" class="Etiqueta1"><span class="Asterisco" >* </span>Modalidad:</td>
     <td width="84%" class="LetraNegra">
         <div id="div_sucursales" >
-            <? 
+            <?php 
           $rs_sucursal= $obBD_con2->getArrayConsulta(302, $Ses_Emp_Cod, $obBD_conexion1);
           if (count($rs_sucursales) == 1)
           {            
@@ -78,7 +78,7 @@ $obBD_con2 =  new Class_Log_Datos_Com;
            <?php 
             $Com_Hoy=  date("Y-m-d");
             ?>
-        <?
+        <?php
           }
           else
           {
@@ -95,7 +95,7 @@ $obBD_con2 =  new Class_Log_Datos_Com;
           }
           ?>     
         </select>
-          <?
+          <?php
           }
           ?>
           </div>	
@@ -105,7 +105,7 @@ $obBD_con2 =  new Class_Log_Datos_Com;
     <td class="Etiqueta1"><span class="Asterisco" >* </span>Periodo:</td>
     <td class="LetraNegra">
         <div id="div_periodo">
-               <? 
+               <?php 
              $rs_periodos = $obBD_con2->getArrayConsulta(303, $Mod_Cod.'*'.$Com_Hoy.'*'.$Suc_Cod, $obBD_conexion1);
             if( count($rs_periodos) == 1)
             {

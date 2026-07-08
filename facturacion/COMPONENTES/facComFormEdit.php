@@ -219,7 +219,7 @@
                                 <select id="Tri_Cod" name="Tri_Cod" class="form-control input-xs" tabindex="3" onchange="tipoComprobanteHide($('option:selected', this).attr('data-ticsri'))" required="">
                                     <option value="">Seleccione...</option>
                                     <?php foreach ($rs_sustento as $row) {
-                                        echo "<option value='{$row['Tri_Cod']}' " . ($row['Tri_Cod'] == 2 ? 'selected' : '') . " data-ticsri='" . $row['Tri_Sri'] . "' >" . utf8_encode($row['Tri_Sri']) . "-" . utf8_encode($row['Tri_Des']) . "     </option>";
+                                        echo "<option value='{$row['Tri_Cod']}' " . ($row['Tri_Cod'] == 2 ? 'selected' : '') . " data-ticsri='" . $row['Tri_Sri'] . "' >" . mb_convert_encoding($row['Tri_Sri'], 'UTF-8', 'ISO-8859-1') . "-" . mb_convert_encoding($row['Tri_Des'], 'UTF-8', 'ISO-8859-1') . "     </option>";
                                     } ?>
                                 </select>
                             </div>
@@ -233,7 +233,7 @@
                                         <?php foreach ($rs_tip_compr as $row) {
                                             if ($row['Tic_Sri'] != 4 && $row['Tic_Sri'] != 5 && $row['Tic_Sri'] != 7 && $row['Tic_Sri'] != 23 && $row['Tic_Sri'] != 24)
                                                 //echo "<option value='$row[Tic_Cod]' data-ticsri='$row[Tic_Sri]'>$row[Tic_Sri] - $row[Tic_Des]</option>";
-                                                echo "<option value='{$row['Tic_Cod']}' data-ticsri='" . utf8_encode($row['Tic_Sri']) . "'>" . utf8_encode($row['Tic_Sri']) . " - " . utf8_encode($row['Tic_Des']) . "</option>";
+                                                echo "<option value='{$row['Tic_Cod']}' data-ticsri='" . mb_convert_encoding($row['Tic_Sri'], 'UTF-8', 'ISO-8859-1') . "'>" . mb_convert_encoding($row['Tic_Sri'], 'UTF-8', 'ISO-8859-1') . " - " . mb_convert_encoding($row['Tic_Des'], 'UTF-8', 'ISO-8859-1') . "</option>";
                                         } ?>
                                     </select>
                                     <span class="input-group-addon input-xs" title="Ingresar autorización" onclick="validaIngresoAut()"><i class="glyphicon glyphicon-erase"></i></span>
@@ -295,7 +295,7 @@
                                     <option value=""></option>
                                     <?php foreach ($rs_ciudad as $row) {
                                         //echo "<option value='$row[Ciu_Cod]' data-prov='$row[Pro_Nom]'>$row[Ciu_Des]</option>";
-                                        echo "<option value='{$row['Ciu_Cod']}' data-prov='" . utf8_encode($row['Pro_Nom']) . "'>" . utf8_encode($row['Ciu_Des']) . "</option>";
+                                        echo "<option value='{$row['Ciu_Cod']}' data-prov='" . mb_convert_encoding($row['Pro_Nom'], 'UTF-8', 'ISO-8859-1') . "'>" . mb_convert_encoding($row['Ciu_Des'], 'UTF-8', 'ISO-8859-1') . "</option>";
                                     } ?>
                                 </select>
                             </div>
@@ -459,7 +459,7 @@
                             <option value="">Seleccione...</option>
                             <?php foreach ($rs_pag_sri as $row) {
                                 //echo "<option value='$row[Tpc_Cod]' >$row[Tpc_Sri] - $row[Tpc_Des]</option>";
-                                echo "<option value='" . $row['Tpc_Cod'] . "' " . $selected .  " >" . utf8_encode($row['Tpc_Sri']) . " - " . utf8_encode($row['Tpc_Des']) . "</option>";
+                                echo "<option value='" . $row['Tpc_Cod'] . "' " . $selected .  " >" . mb_convert_encoding($row['Tpc_Sri'], 'UTF-8', 'ISO-8859-1') . " - " . mb_convert_encoding($row['Tpc_Des'], 'UTF-8', 'ISO-8859-1') . "</option>";
                             } ?>
                         </select>
                     </div>

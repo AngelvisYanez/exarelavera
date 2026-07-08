@@ -68,7 +68,7 @@ try {
                 foreach($row as $key => $val){
                     if(is_string($val)){
                         // Basic UTF8 fix
-                        $val = utf8_encode($val);
+                        $val = mb_convert_encoding($val, 'UTF-8', 'ISO-8859-1');
                         // Remove newlines/carriage returns that break JSON
                         $val = str_replace(array("\r", "\n"), ' ', $val);
                         

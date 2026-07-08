@@ -1,4 +1,4 @@
-<?	
+<?php	
 /**
 * @abstract Reporte del libro diario 
 * @author Lewis Chimarro
@@ -134,7 +134,7 @@ if ($total_rs_compr > 0) {
 		}
 	?>
     <tr class="Texto_Reporte">
-      <td align="center"><? if ($cont==1)
+      <td align="center"><?php if ($cont==1)
 							{
 	  							echo $row_rs_comprobantes['Com_Cod']; 
 							}
@@ -173,7 +173,7 @@ if ($total_rs_compr > 0) {
 							?>	  </td>	  	  
       <td><?Php echo $row_rs_comprobantes['Pld_Des']; ?></td>	  	  
    	  <td width="8%" align="right">&nbsp;
-	  					<? if ($row_rs_comprobantes['Asi_Deh'] == 'D')
+	  					<?php if ($row_rs_comprobantes['Asi_Deh'] == 'D')
 	  					{
 							echo formato_numero($row_rs_comprobantes['Asi_Val'], 2, 4); 
 							$debe = $row_rs_comprobantes['Asi_Val'];
@@ -184,7 +184,7 @@ if ($total_rs_compr > 0) {
 							echo "&nbsp;"; 
 							$debe = 0;
 						}?></td>
-      <td width="8%" align="right">&nbsp;<? if ($row_rs_comprobantes['Asi_Deh'] == 'H')
+      <td width="8%" align="right">&nbsp;<?php if ($row_rs_comprobantes['Asi_Deh'] == 'H')
 	  					{
 							echo formato_numero($row_rs_comprobantes['Asi_Val'], 2, 4); 
 							$haber = $row_rs_comprobantes['Asi_Val'];
@@ -213,7 +213,7 @@ if ($total_rs_compr > 0) {
  } else { ?>
       <td colspan="7"><?Php echo error_alerta("No hay resultados que mostrar", 2) ?></td>
     </tr>
-<? } //Fin del else	?>
+<?php } //Fin del else	?>
   </table>  
   <?Php 	
 //}//Fin del if ($total_rs_comprobantes > 0)

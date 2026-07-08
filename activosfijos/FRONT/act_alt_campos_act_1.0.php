@@ -36,7 +36,7 @@ if(isset($iscamp))
 		 <table width="70%" border="0" cellpadding="0" cellspacing="0">
               <tr>
                 <td width="25%">
-				<input name="Cam_Lar" type="text" id="Cam_Lar" size="50" maxlength="50" <?php if($total_rs_nomcamp == 0 ){ ?> value="<?php echo utf8_decode($nom_camp); ?>" <?php }?> style="text-transform:uppercase" onBlur="if (trim(this.value) != ''){ ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?iscamp=1&nom_camp=' + this.value,'div_existe') }" >
+				<input name="Cam_Lar" type="text" id="Cam_Lar" size="50" maxlength="50" <?php if($total_rs_nomcamp == 0 ){ ?> value="<?php echo mb_convert_encoding($nom_camp, 'ISO-8859-1', 'UTF-8'); ?>" <?php }?> style="text-transform:uppercase" onBlur="if (trim(this.value) != ''){ ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?iscamp=1&nom_camp=' + this.value,'div_existe') }" >
 				</td>
                 <td width="75%">
 				<?php if($total_rs_nomcamp!=0)
@@ -105,8 +105,8 @@ if ($thisPost->postBlock($_POST['postID']))
     </tr>
 	<tr>
 	  	<td height="389" valign="top">
-         <form method="post" name= "form" action="<? echo $_SERVER['PHP_SELF'];?>">
- <? 
+         <form method="post" name= "form" action="<?php echo $_SERVER['PHP_SELF'];?>">
+ <?php 
  /** 
   * Creacion del campo REPOST
   */

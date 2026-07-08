@@ -106,7 +106,7 @@ if ($thisPost->postBlock($_POST['postID']))
 	  
 	  do { ?>
       <form name="form3" id="form3" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
-        <tr <? echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo"); ?> class="Fondo">
+        <tr <?php echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo"); ?> class="Fondo">
           <td align="center"><?Php echo $row_rs_buscar['Ubi_Cod']; ?></td>
           <td align="left"><?Php echo marcar_cadena(trim($txt_busqueda), $row_rs_buscar['Ubi_Des'],'#FFFF00', 1); ?></td>
 		  <td align="center"><input type="image" name="imageField" src="../../mascaras/model1/imagenes/forward.png" width="22" height="22" title="Elegir">

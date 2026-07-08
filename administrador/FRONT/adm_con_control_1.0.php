@@ -1,4 +1,4 @@
-<?
+<?php
 /**
 * Descripci�n: Permite generar la sesion correspondiente para el usuario con bases de datos distribuidas
 * Fecha de actualizaci�n:	2010-08-30

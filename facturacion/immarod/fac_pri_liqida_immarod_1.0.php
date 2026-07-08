@@ -59,19 +59,19 @@ if (isset($Cop_Cod))
             </tr>
           <tr>
           <td width="12%">RUC./C.I:</td>
-          <td><? echo $row_rs_proveedor[0]['Prs_Ced']; ?></td>
+          <td><?php echo $row_rs_proveedor[0]['Prs_Ced']; ?></td>
           <td width="10%" align="right">FECHA:</td>
-          <td width="16%">&nbsp;<?  echo date("d/m/Y", strtotime($row_rs_proveedor[0]['Cop_Fec']));?></td>
+          <td width="16%">&nbsp;<?php  echo date("d/m/Y", strtotime($row_rs_proveedor[0]['Cop_Fec']));?></td>
           <td width="13%" align="right">CIUDAD:</td>
           <td width="22%" colspan="2" align="left">&nbsp;<?Php echo $row_institucion['Ciu_Des']; ?></td>
           </tr>
         <tr>
           <td>CLIENTES:</td>
-          <td colspan="6"><? echo $row_rs_proveedor[0]['Prs_Ape'].' '.$row_rs_proveedor[0]['Prs_Nom']; ?></td>
+          <td colspan="6"><?php echo $row_rs_proveedor[0]['Prs_Ape'].' '.$row_rs_proveedor[0]['Prs_Nom']; ?></td>
           </tr>
         <tr>
           <td>DIRECCI&Oacute;N:</td>
-          <td colspan="6"><? echo $row_rs_proveedor['Prs_Dir'];?></td>
+          <td colspan="6"><?php echo $row_rs_proveedor['Prs_Dir'];?></td>
           </tr>
         <tr>
           <td>&nbsp;</td>
@@ -102,7 +102,7 @@ if (isset($Cop_Cod))
               <tr>
                 <td height="2" colspan="4" align="center"><hr size=1></td>
               </tr>
-              <? foreach($row_rs_proveedor as $row){ ?>
+              <?php foreach($row_rs_proveedor as $row){ ?>
               <tr>
                 <td width="54" height="26" align="center"><?Php echo $row['Cop_Can']?></td>
                 <td width="242"><div align="left">&nbsp;<?Php echo $row['Cop_Pro'];?></div></td>
@@ -154,7 +154,7 @@ if (isset($Cop_Cod))
               <tr>
                 <td width="74%" rowspan="6" align="left" valign="top"><table width="95%" height="21" border="0" cellpadding="0" cellspacing="0">
                   <tr>
-                    <td><? echo "<strong>OBSERVACI&Oacute;N:</strong> ".$row_rs_proveedor[0]['Cop_Obs']?></td>
+                    <td><?php echo "<strong>OBSERVACI&Oacute;N:</strong> ".$row_rs_proveedor[0]['Cop_Obs']?></td>
                   </tr>
                 </table></td>
                 <td height="0" align="right">Sub-Tot Iva:&nbsp;&nbsp;</td>

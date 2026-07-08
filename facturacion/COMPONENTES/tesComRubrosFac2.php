@@ -1,4 +1,4 @@
-<?
+<?php
 /** 
 * Descripci�n: Componente que muestra el cuadro de texto para la busqueda de Rubros.
 * Fecha de actualizaci�n: 2010-06-29.
@@ -51,7 +51,7 @@ if ($car > 0)
 		<tbody id="tbusqueda">
 		  <tr>
 			<td width="85" height="36" align="right" class="BarraBusqueda"><div align="right"><strong>Descripci&oacute;n:</strong></div></td>
-			<td width="351" height="36" class="BarraBusqueda"><? noEnterSubmit(); ?>
+			<td width="351" height="36" class="BarraBusqueda"><?php noEnterSubmit(); ?>
 			<input name="buscta" type="text" id="buscta" size="50" maxlength="50" style="text-transform:uppercase" onKeyUp="parametro_injection(this)" onkeypress="var evt = (evt) ? evt : ((event) ? event : null);
 		if (trim(document.getElementById('buscta').value) != '' && evt.keyCode == 13)
         {  

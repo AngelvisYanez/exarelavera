@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?
+<?php
 /**
  * Descripciï¿½n: Permite consultar la mayorizacion contable
  * Fecha de actualizaciï¿½n:	2010-11-15 
@@ -289,10 +289,10 @@ switch ($op) {
 													<td align="center"><?Php echo $row['Com_Gen']; ?></td>
 													<td align="center"><?Php echo  $row['Tia_Abr'] . "-" . $mes . "-" . str_pad($row['Com_Num'], 2, "0", STR_PAD_LEFT); ?></td>
 													<td align="center"><?Php echo $row['Com_Fec']; ?></td>
-													<td align="center"><? echo $numeroDocVenta . $numeroDocCompra . ($cheque ? 'Cheque No. ' . $cheque : ''); ?></td>
+													<td align="center"><?php echo $numeroDocVenta . $numeroDocCompra . ($cheque ? 'Cheque No. ' . $cheque : ''); ?></td>
 													<td align="left" style="white-space: break-spaces; overflow: hidden;"><?Php echo $row_proveedore['Prs_Ape'] . ' ' . $row_proveedore['Prs_Nom']; ?></td>
-													<!--td style="white-space: nowrap; overflow: hidden;"><? echo cadena_mas($row['Com_Con'], 35); ?>&nbsp;</td-->
-													<td align="left" style="white-space: break-spaces; overflow: hidden;"><? echo ($row['Com_Con']); ?>&nbsp;</td>
+													<!--td style="white-space: nowrap; overflow: hidden;"><?php echo cadena_mas($row['Com_Con'], 35); ?>&nbsp;</td-->
+													<td align="left" style="white-space: break-spaces; overflow: hidden;"><?php echo ($row['Com_Con']); ?>&nbsp;</td>
 													<td align="right">
 														<?Php
 														if ($row['Asi_Deh'] == 'D') {
@@ -439,7 +439,7 @@ switch ($op) {
 																	echo "style='color:#FF0000'";
 																} ?>><?Php echo formato_numero($saldos, 2, 2); ?></td>
 										</tr>
-										<? $cont = 0;
+										<?php $cont = 0;
 										foreach ($rs_cuenta as $row) {
 											$cont++;
 											$cheque = $row['Che_Num'];
@@ -477,10 +477,10 @@ switch ($op) {
 												<td align="center"><?Php echo $row['Com_Gen']; ?></td>
 												<td align="center"><?Php echo  $row['Tia_Abr'] . "-" . $mes . "-" . str_pad($row['Com_Num'], 2, "0", STR_PAD_LEFT); ?></td>
 												<td align="center"><?Php echo $row['Com_Fec']; ?></td>
-												<td align="center"><? echo $numeroDocVenta . $numeroDocCompra . ($cheque ? 'Cheque No. ' . $cheque : ''); ?></td>
+												<td align="center"><?php echo $numeroDocVenta . $numeroDocCompra . ($cheque ? 'Cheque No. ' . $cheque : ''); ?></td>
 												<td align="left" style="white-space: break-spaces; overflow: hidden;"><?Php echo $row_proveedore['Prs_Ape'] . ' ' . $row_proveedore['Prs_Nom']; ?></td>
-												<td align="left" style="white-space: break-spaces; overflow: hidden;"><? echo ($row['Com_Con']); ?>&nbsp;</td>
-												<td align="right"><? if ($row['Asi_Deh'] == 'D') {
+												<td align="left" style="white-space: break-spaces; overflow: hidden;"><?php echo ($row['Com_Con']); ?>&nbsp;</td>
+												<td align="right"><?php if ($row['Asi_Deh'] == 'D') {
 																		echo formato_numero($row['Asi_Val'], 2, 2);
 																		$debe = $row['Asi_Val'];
 																		$total_debe = $total_debe + $debe;
@@ -488,7 +488,7 @@ switch ($op) {
 																		echo "0,00";
 																		$debe = 0;
 																	} ?></td>
-												<td align="right"><? if ($row['Asi_Deh'] == 'H') {
+												<td align="right"><?php if ($row['Asi_Deh'] == 'H') {
 																		echo formato_numero($row['Asi_Val'], 2, 2);
 																		$haber = $row['Asi_Val'];
 																		$total_haber = $total_haber + $haber;
@@ -535,7 +535,7 @@ switch ($op) {
 										<tr>
 											<td colspan="9"><?Php echo error_alerta(" No hay resultados que mostrar", 1) ?></td>
 										</tr>
-							<? 		} //Fin del else
+							<?php 		} //Fin del else
 								}
 							} //Fin del if ($txt_busqueda)
 							?>
@@ -677,7 +677,7 @@ switch ($op) {
 																<td align="right">&nbsp;</td>
 																<td align="right" <?Php if ($saldos < 0) {echo "style='color:#FF0000'";} ?>><?Php echo formato_numero($saldos, 2, 2); ?></td>
 															</tr>
-															<?
+															<?php
 															$cont = 0;
 															foreach ($registrosCuenta as $row_rs_cuenta) {
 																$cont++;
@@ -702,12 +702,12 @@ switch ($op) {
 																	<td align="center"><?Php echo $row_rs_cuenta['Com_Gen']; ?></td>
 																	<td align="center"><?Php echo  "C" . $row_rs_cuenta['Tia_Ini'] . "-" . $mes . "-" . $row_rs_cuenta['Com_Num']; ?>&nbsp;</td>
 																	<td align="center"><?Php echo $row_rs_cuenta['Com_Fec']; ?>&nbsp;</td>
-																	<td align="center"><? echo $numeroDocVenta . $numeroDocCompra . ($cheque ? 'Cheque No. ' . $cheque : ''); ?></td>
+																	<td align="center"><?php echo $numeroDocVenta . $numeroDocCompra . ($cheque ? 'Cheque No. ' . $cheque : ''); ?></td>
 																	<td align="left" style="white-space: nowrap; overflow: hidden;"><?Php echo $rs_proveedore['Prs_Ape'] . ' ' . $rs_proveedore['Prs_Nom']; ?></td>
-																	<td align="left" style="white-space: nowrap; overflow: hidden;"><? echo ($row_rs_cuenta['Com_Con']); ?>&nbsp;</td>
+																	<td align="left" style="white-space: nowrap; overflow: hidden;"><?php echo ($row_rs_cuenta['Com_Con']); ?>&nbsp;</td>
 																	
 																	
-																	<td width="9%" align="right"><? if ($row_rs_cuenta['Asi_Deh'] == 'D') {
+																	<td width="9%" align="right"><?php if ($row_rs_cuenta['Asi_Deh'] == 'D') {
 																										echo formato_numero($row_rs_cuenta['Asi_Val'], 2, 2);
 																										$debe = $row_rs_cuenta['Asi_Val'];
 																										$total_debe = $total_debe + $debe;
@@ -715,7 +715,7 @@ switch ($op) {
 																										echo "0.00";
 																										$debe = 0;
 																									} ?></td>
-																	<td align="right"><? if ($row_rs_cuenta['Asi_Deh'] == 'H') {
+																	<td align="right"><?php if ($row_rs_cuenta['Asi_Deh'] == 'H') {
 																							echo formato_numero($row_rs_cuenta['Asi_Val'], 2, 2);
 																							$haber = $row_rs_cuenta['Asi_Val'];
 																							$total_haber = $total_haber + $haber;
@@ -914,7 +914,7 @@ switch ($op) {
 																				} ?>><?Php
 																																		echo formato_numero($saldos, 2, 2); ?></td>
 														</tr>
-														<?
+														<?php
 														$cont = 0;
 														foreach ($rs_cuenta as $row_rs_cuenta) {
 															$cont++;
@@ -951,10 +951,10 @@ switch ($op) {
 																<td align="center"><?Php echo $row_rs_cuenta['Com_Gen']; ?></td>
 																<td align="center"><?Php echo  "C" . $row_rs_cuenta['Tia_Ini'] . "-" . $mes . "-" . $row_rs_cuenta['Com_Num']; ?>&nbsp;</td>
 																<td align="center"><?Php echo $row_rs_cuenta['Com_Fec']; ?>&nbsp;</td>
-																<td align="center"><? echo $numeroDocVenta . $numeroDocCompra . ($cheque ? 'Cheque No. ' . $cheque : ''); ?></td>
+																<td align="center"><?php echo $numeroDocVenta . $numeroDocCompra . ($cheque ? 'Cheque No. ' . $cheque : ''); ?></td>
 																<td align="left" style="white-space: break-spaces; overflow: hidden;"><?Php echo $rs_proveedore['Prs_Ape'] . ' ' . $rs_proveedore['Prs_Nom']; ?></td>
-																<td align="left" style="white-space: nowrap; overflow: hidden;"><? echo $row_rs_cuenta['Com_Con']; ?>&nbsp;</td>
-																<td width="9%" align="right"><? if ($row_rs_cuenta['Asi_Deh'] == 'D') {
+																<td align="left" style="white-space: nowrap; overflow: hidden;"><?php echo $row_rs_cuenta['Com_Con']; ?>&nbsp;</td>
+																<td width="9%" align="right"><?php if ($row_rs_cuenta['Asi_Deh'] == 'D') {
 																									echo formato_numero($row_rs_cuenta['Asi_Val'], 2, 2);
 																									$debe = $row_rs_cuenta['Asi_Val'];
 																									$total_debe = $total_debe + $debe;
@@ -962,7 +962,7 @@ switch ($op) {
 																									echo "0.00";
 																									$debe = 0;
 																								} ?></td>
-																<td align="right"><? if ($row_rs_cuenta['Asi_Deh'] == 'H') {
+																<td align="right"><?php if ($row_rs_cuenta['Asi_Deh'] == 'H') {
 																						echo formato_numero($row_rs_cuenta['Asi_Val'], 2, 2);
 																						$haber = $row_rs_cuenta['Asi_Val'];
 																						$total_haber = $total_haber + $haber;

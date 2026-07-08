@@ -417,7 +417,7 @@ if(isset($saveTipoActivo)){
    }
    
    /*Variable para manejo del arbol jstree*/
-   var $treeview=$('#using_json_2');     
+   public $treeview=$('#using_json_2');     
    
    function updateTipoActivo(){
    		$treeview.jstree(true).settings.core.data = {'url': '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>?tipoactivAjax=true',"dataType": "json" };

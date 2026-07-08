@@ -80,7 +80,7 @@ body {
           <td height="216" colspan="4" align="left" valign="top"><table width="100%" border="0" cellpadding="0" cellspacing="0" class="Letra_punto_venta">
         <tr>
           <td colspan="2"><input name="Vet_Cod" type="hidden" id="Vet_Cod" value="<?Php echo $cliente; ?>" >
-          No:&nbsp;<? echo $row_rs_cliente['Vet_Cod']; ?></td>
+          No:&nbsp;<?php echo $row_rs_cliente['Vet_Cod']; ?></td>
           </tr>
         <tr>
           <td colspan="2">Fecha: <?Php echo $row_rs_cliente['Caj_Fec']; ?></td>
@@ -91,7 +91,7 @@ body {
         <tr>
           <td colspan="2">
             Cliente: 
-            <? if ($row_rs_representante['Cli_Fac'] != "")
+            <?php if ($row_rs_representante['Cli_Fac'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Fac'];  
 			}
@@ -101,7 +101,7 @@ body {
         <tr>
           <td colspan="2">
             Ruc: 
-            <? if ($row_rs_representante['Cli_Fac'] != "")
+            <?php if ($row_rs_representante['Cli_Fac'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Ruf']; 
 			}
@@ -113,7 +113,7 @@ body {
         <tr>
           <td colspan="2">
             Direcci&oacute;n: 
-            <? if ($row_rs_representante['Cli_Dir'] != "")
+            <?php if ($row_rs_representante['Cli_Dir'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Dir']; 
 			}
@@ -140,7 +140,7 @@ body {
                 <td align="center">PVP</td>
                 <td align="center">Total</td>
               </tr>
-              <? do{?>
+              <?php do{?>
               <tr>
                 <td width="10" align="left"><div align="left"><?Php echo $row_rs_cliente['Vet_Can']?></div></td>
                 <td><?Php echo $row_rs_cliente['Ite_Lar'].' '.$row_rs_cliente['Pro_Obs']?></td>

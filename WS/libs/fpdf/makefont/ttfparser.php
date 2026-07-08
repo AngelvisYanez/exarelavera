@@ -9,24 +9,24 @@
 
 class TTFParser
 {
-	var $f;
-	var $tables;
-	var $unitsPerEm;
-	var $xMin, $yMin, $xMax, $yMax;
-	var $numberOfHMetrics;
-	var $numGlyphs;
-	var $widths;
-	var $chars;
-	var $postScriptName;
-	var $Embeddable;
-	var $Bold;
-	var $typoAscender;
-	var $typoDescender;
-	var $capHeight;
-	var $italicAngle;
-	var $underlinePosition;
-	var $underlineThickness;
-	var $isFixedPitch;
+	public $f;
+	public $tables;
+	public $unitsPerEm;
+	public $xMin, $yMin, $xMax, $yMax;
+	public $numberOfHMetrics;
+	public $numGlyphs;
+	public $widths;
+	public $chars;
+	public $postScriptName;
+	public $Embeddable;
+	public $Bold;
+	public $typoAscender;
+	public $typoDescender;
+	public $capHeight;
+	public $italicAngle;
+	public $underlinePosition;
+	public $underlineThickness;
+	public $isFixedPitch;
 
 	function Parse($file)
 	{

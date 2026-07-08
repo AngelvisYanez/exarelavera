@@ -974,7 +974,7 @@ $imprimir = $obBD_con1->reportesExa($_SERVER['PHP_SELF'], $Ses_Emp_Cod, $obBD_co
                                     <script type="text/javascript">
                                     <?php if($Ses_Emp_Cod == 608): ?>
                                     $(document).ready(function() {
-                                        var $bodegaSelect = $('#Bc_Cod').select2({
+                                        public $bodegaSelect = $('#Bc_Cod').select2({
                                             placeholder: "Seleccione...",
                                             allowClear: true,
                                             width: '100%'
@@ -991,7 +991,7 @@ $imprimir = $obBD_con1->reportesExa($_SERVER['PHP_SELF'], $Ses_Emp_Cod, $obBD_co
                                         $('#btnGuardarModalBodega').on('click', function(e) {
                                             e.preventDefault();
                                             var term = $.trim($('#modal_nueva_bodega').val()).toUpperCase();
-                                            var $btn = $(this);
+                                            public $btn = $(this);
                                             
                                             if (term !== '') {
                                                 $btn.prop('disabled', true);
@@ -1717,7 +1717,7 @@ $imprimir = $obBD_con1->reportesExa($_SERVER['PHP_SELF'], $Ses_Emp_Cod, $obBD_co
                 function recargarDerechosMineros(selectId) {
                     // console.log('DEBUG: Llamando a recargarDerechosMineros...');
                     var derMinIdIdToSet = selectId || $('#Der_Min_Id').val();
-                    var $select = $('#Der_Min_Id');
+                    public $select = $('#Der_Min_Id');
                     
                     // Si el select no existe, no hacemos nada (ej: empresa != 608)
                     if ($select.length === 0) return;

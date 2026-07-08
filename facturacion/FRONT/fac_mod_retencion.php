@@ -1,4 +1,4 @@
-<?	require_once('../../administrador/LOGICA/seguridad.php');
+<?php	require_once('../../administrador/LOGICA/seguridad.php');
 	require_once('../LOGICA/logica.php');
     require_once('../../Librerias/procedimientos/almacenados_standar.php');	
 /** Actualizacion de datos de la retención ********************************************************/

@@ -91,12 +91,14 @@ class ExceptionsCollector extends DataCollector implements Renderable
     /**
      * Adds an exception to be profiled in the debug bar
      *
-     * @param Exception $e
+     * @param \Throwable|Exception $e
      * @deprecated in favor on addThrowable
      */
-    public function addException(Exception $e)
+    public function addException($e)
     {
-        $this->addThrowable($e);
+        if ($e instanceof \Throwable || $e instanceof Exception) {
+            $this->addThrowable($e);
+        }
     }
 
     /**
@@ -143,11 +145,11 @@ class ExceptionsCollector extends DataCollector implements Renderable
     /**
      * Returns exception data as an array
      *
-     * @param Exception $e
+     * @param \Throwable|Exception $e
      * @return array
      * @deprecated in favor on formatThrowableData
      */
-    public function formatExceptionData(Exception $e)
+    public function formatExceptionData($e)
     {
         return $this->formatThrowableData($e);
     }

@@ -712,7 +712,7 @@ if (isset($delAbono)) {
                               <select id="Tia_Cod" name="Tia_Cod" class="form-control input-xs" required="" onchange="">
                                 <?php $row_rs_tipo_asien2 = $obBD_con_get->getArrayConsulta(6, "ALL", $obBD_conexion_get);
                                 foreach ($row_rs_tipo_asien2 as $row) { ?>
-                                  <option value="<?php echo $row['Tia_Cod']; ?>" data-abr="<?php echo $row['Tia_Abr']; ?>"><?php echo utf8_encode($row['Tia_Des']) ?> </option>
+                                  <option value="<?php echo $row['Tia_Cod']; ?>" data-abr="<?php echo $row['Tia_Abr']; ?>"><?php echo mb_convert_encoding($row['Tia_Des'], 'UTF-8', 'ISO-8859-1') ?> </option>
                                 <?php } ?>
                               </select>
                             </div>
@@ -770,7 +770,7 @@ if (isset($delAbono)) {
                                 <?php $row_rs_tipo_asien2 = $obBD_con_get->getArrayConsulta(7, "", $obBD_conexion_get);
                                 foreach ($row_rs_tipo_asien2 as $row) {
                                   if ($row['Pag_Abr'] != 'ANT') { ?>
-                                    <option value="<?php echo utf8_encode($row['Pag_Cod']); ?>" data-abr="<?php echo utf8_encode($row['Pag_Abr']); ?>"><?php echo utf8_encode($row['Pag_Des']) ?> </option>
+                                    <option value="<?php echo mb_convert_encoding($row['Pag_Cod'], 'UTF-8', 'ISO-8859-1'); ?>" data-abr="<?php echo mb_convert_encoding($row['Pag_Abr'], 'UTF-8', 'ISO-8859-1'); ?>"><?php echo mb_convert_encoding($row['Pag_Des'], 'UTF-8', 'ISO-8859-1') ?> </option>
                                 <?php }
                                 } ?>
                               </select>

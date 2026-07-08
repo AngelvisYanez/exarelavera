@@ -136,7 +136,7 @@ if(isset($For_Cod)){ /* inicio if(isset($For_Cod)){ */
     <td width="30%" align="center"><?Php echo $row_rs_tipo_pagos['Pag_Cod']; ?></td>
     <td><?Php echo $row_rs_tipo_pagos['Pag_Des']; ?></td>
     <td align="center"><img src="../../mascaras/model1/imagenes/ok-s.gif" width="16" height="16" title="Agregar cuenta" style="cursor:pointer"  
-	onclick="nueva_fila_cheque_com('Tbl_Cheques',<? echo $ban_cod; ?>,<? echo $ban_des; ?>,'Com_Fec', 'Val_Pcc');" />
+	onclick="nueva_fila_cheque_com('Tbl_Cheques',<?php echo $ban_cod; ?>,<?php echo $ban_des; ?>,'Com_Fec', 'Val_Pcc');" />
 	</td>
   </tr>
   <?php

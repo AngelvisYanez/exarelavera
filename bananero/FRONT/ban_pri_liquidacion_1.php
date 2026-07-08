@@ -1,4 +1,4 @@
-<?	
+<?php	
 /**
 * @abstract Reporte del libro diario 
 * @author Lewis Chimarro

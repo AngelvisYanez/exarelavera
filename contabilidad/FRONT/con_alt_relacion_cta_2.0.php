@@ -209,7 +209,7 @@ if(isset($deleteCuenta)){
                                         $('#list').navGrid('#listPager',{ edit: false, add: false, del: false, search: false, refresh: true, view: true, position: "left", cloneToTop: false });
                                         $("#list").jqGrid('bindKeys'); 
                                         
-                                    var $tabs=$( "#tabs" );
+                                    public $tabs=$( "#tabs" );
                                     $tabs.tabs({ selected: 0}); 
                                     $("#inventar").jqGrid({
                                         url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
@@ -413,7 +413,7 @@ if(isset($deleteCuenta)){
                     <div class="col-sm-12">  
                         <fieldset class="exa-fieldset">                           
                            <legend class="Titulos2">Seleccione Periodo</legend> <!-- Form Name -->
-                           <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1" class="form-horizontal normal">	 
+                           <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1" class="form-horizontal normal">	 
                                <div class="form-group">
                                   <label class="col-sm-2 control-label label-sm required" for="Pec_Cod">Periodo:</label>  
                                   <div class="col-sm-2">

@@ -41,19 +41,19 @@ if(isset($_GET['ajax_cmb'])){
 		$i++;
 		$str .= '<tr><td align="center">'.$arr[0].'</td>
 				 <td align="center">'.$arr[1].'</td>
-				 <td align="left">'.str_replace("{0}", strlen($row['Tab_Ali'])>0?utf8_encode($row['Tab_Ali']):$row['Tab_Nom'], utf8_encode($row['Eve_Des'])).'</td>
-				 <td align="left">'.utf8_encode($row['Pcs_Lin']).'</td>
-				 <td align="left">'.utf8_encode($row['Pcs_Det']).'</td>
+				 <td align="left">'.str_replace("{0}", strlen($row['Tab_Ali'])>0?mb_convert_encoding($row['Tab_Ali'], 'UTF-8', 'ISO-8859-1'):$row['Tab_Nom'], mb_convert_encoding($row['Eve_Des'], 'UTF-8', 'ISO-8859-1')).'</td>
+				 <td align="left">'.mb_convert_encoding($row['Pcs_Lin'], 'UTF-8', 'ISO-8859-1').'</td>
+				 <td align="left">'.mb_convert_encoding($row['Pcs_Det'], 'UTF-8', 'ISO-8859-1').'</td>
 				 <td align="center"><form action="'.$_SERVER['PHP_SELF'].'" method="post" name="frm'.$i.'" id="frm'.$i.'">
 										<button type="button" class="btn btn-success btn-mini" title="Elegir" onclick="Muestra_Aparecer();visualizarCampos(this.form,\'mostrar\');"><i class="icon-arrow-right icon-white"></i></button>
 										<input type="hidden" name="tabCodigo" value="'.$row['Tab_Cod'].'">
 										<input type="hidden" name="logCampos" value="'.$row['Log_Cam'].'">
-										<input type="hidden" name="logValores" value="'.utf8_encode($row['Log_Val']).'">
+										<input type="hidden" name="logValores" value="'.mb_convert_encoding($row['Log_Val'], 'UTF-8', 'ISO-8859-1').'">
 										<input type="hidden" name="ajax" value="1">
 									</form></td></tr>';
 	}
 	if(count($Arr_Resultado) == 0){
-		$str .= '<tr><td>&nbsp;</td><td>&nbsp;</td><td>'.error_alerta(utf8_encode("¡No hay resultados que mostrar!"), 1).'</td><td>&nbsp;</td><td>&nbsp;</td></tr>';
+		$str .= '<tr><td>&nbsp;</td><td>&nbsp;</td><td>'.error_alerta(mb_convert_encoding("¡No hay resultados que mostrar!", 'UTF-8', 'ISO-8859-1'), 1).'</td><td>&nbsp;</td><td>&nbsp;</td></tr>';
 	}
 	$str .= '</tbody></table>';
 	

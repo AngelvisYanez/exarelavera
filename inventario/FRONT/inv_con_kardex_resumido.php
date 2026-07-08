@@ -29,7 +29,7 @@ if (isset($CatSelect)) {
 	$Cat_Cod = $CatSelect;
 	echo "<option value=''>Todas</option>";
 	foreach ($rs_tpaj as $row)
-		echo utf8_encode("<option value='$row[Cat_Cod]'>$row[Cat_Des]</option>");
+		echo mb_convert_encoding("<option value='$row[Cat_Cod]'>$row[Cat_Des]</option>", 'UTF-8', 'ISO-8859-1');
 	exit();
 }
 
@@ -184,14 +184,14 @@ if (isset($productos)) {
 							<div class="row">
 								<div class="col-xs-6">
 									<div class="form-group">
-										<? $sucursales = $obBD_con1->getArrayConsulta(25, $Ses_Emp_Cod, $obBD_conexion, false); ?>
+										<?php $sucursales = $obBD_con1->getArrayConsulta(25, $Ses_Emp_Cod, $obBD_conexion, false); ?>
 										<label class="col-sm-3 control-label label-xs ">Sucursal:</label>
 										<div class="col-sm-6">
 											<select name="Suc_Cod" class="form-control input-xs" id="Suc_Cod">
-												<option value="t"><? echo "<< TODAS >>"; ?></option>
-												<? foreach ($sucursales as $datos) { ?>
-													<option value="<? echo $datos['Suc_Cod']; ?>"><? echo $datos['Suc_Des']; ?></option>
-												<? } ?>
+												<option value="t"><?php echo "<< TODAS >>"; ?></option>
+												<?php foreach ($sucursales as $datos) { ?>
+													<option value="<?php echo $datos['Suc_Cod']; ?>"><?php echo $datos['Suc_Des']; ?></option>
+												<?php } ?>
 												</select>
 										</div>
 									</div>

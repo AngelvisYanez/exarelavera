@@ -111,7 +111,7 @@ function arbol($obBD_con1, $obBD_conexion, $menu, $nivel, $nodo, $codigo)
 		$expandedIcon = $v0["Org_Ime"];///Icono de la raiz - carpeta abierta
 		
 		$node1[$c] = new HTML_TreeNode(array('text' => $band, 'icon' => $icon, 'expandedIcon' => $expandedIcon, 'expanded' => false));		
-		$node1[$c]->addItem(&$node1_link[$c]);
+		$node1[$c]->addItem($node1_link[$c]);
 
 		///Inicialización del Menú - carpetas
 		$band= "Academico";
@@ -122,7 +122,7 @@ function arbol($obBD_con1, $obBD_conexion, $menu, $nivel, $nodo, $codigo)
 
 
 		
-		$node2[$c]->addItem(&$node1[$c]);
+		$node2[$c]->addItem($node1[$c]);
 		
 		
 		$menu->addItem($node2[$c]);

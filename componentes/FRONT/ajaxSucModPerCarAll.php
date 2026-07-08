@@ -39,7 +39,7 @@ if(isset($ajax_periodo))
 {	 	
 	 $rs_periodos = $obBD_con11->GetArrayConsulta(303, $Mod_Cod.'*'.$hoy.'*'.$Suc_Cod, $obBD_conexion11);
 	 ?>
-	 <select name="Per_Int" id="Per_Int" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_carrera=1&Suc_Cod=<?Php echo $Suc_Cod; ?>&Com_Todos=<? echo $Com_Todos;?>&Eta_Cod=<?Php echo $rs_periodo['Eta_Cod']; ?>Mod_Cod=<?Php echo $Mod_Cod; ?>&Per_Int='+this.value+'&Com_Todos=<?php echo $Com_Todos; ?>', 'div_carrera')">
+	 <select name="Per_Int" id="Per_Int" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_carrera=1&Suc_Cod=<?Php echo $Suc_Cod; ?>&Com_Todos=<?php echo $Com_Todos;?>&Eta_Cod=<?Php echo $rs_periodo['Eta_Cod']; ?>Mod_Cod=<?Php echo $Mod_Cod; ?>&Per_Int='+this.value+'&Com_Todos=<?php echo $Com_Todos; ?>', 'div_carrera')">
 	 <option value="">Seleccione...</option>
 	 <?Php foreach($rs_periodos as $ro)
 	      { ?>
@@ -81,15 +81,15 @@ if(isset($ajax_carrera))
 	}	
 	?>
 	<select name="Car_Int" id="Car_Int">		   
-	   <? if($Com_Todos=="si")
+	   <?php if($Com_Todos=="si")
 	      {?>
-       <option value="<? echo $cadTodo;?>"><? echo"<< TODOS >>";?></option>
-	   <? }
+       <option value="<?php echo $cadTodo;?>"><?php echo"<< TODOS >>";?></option>
+	   <?php }
 		foreach($rs_carreras_etapa as $rows)  { ?>
 	   <option value="<?Php echo $rows['Car_Int'];?>"><?Php echo $rows['Car_Nom'];?></option>
 	 <?Php } ?>		   
     </select>
-	<input type="hidden" id="Com_Todos" name="Com_Todos" value="<? echo $Com_Todos;?>">
+	<input type="hidden" id="Com_Todos" name="Com_Todos" value="<?php echo $Com_Todos;?>">
 	<?Php
 	exit();
 }//Fin del if(isset($ajax_carrera))

@@ -1,4 +1,4 @@
-<? 
+<?php 
 /*
 Leyenda
 Alias: 					
@@ -38,24 +38,24 @@ if(isset($Com_Are_Cod))
 
 	if ($tip_cam[$i] == $aux){$j++; ?>
 	<th align="center">T. INGRESOS</th>	  
-	<? $aux=" ";
+	<?php $aux=" ";
 		} ?>
 																							
 
-    	<th align="center" id="td[<? echo $i;?>]" title="<?php echo $row_rs_cam_ing['Cam_Des']; ?>" width="1">
+    	<th align="center" id="td[<?php echo $i;?>]" title="<?php echo $row_rs_cam_ing['Cam_Des']; ?>" width="1">
 		<?php echo $row_rs_cam_ing['Cam_Dec'];?>		</th>		
 		<?Php		
 		if ($vis[$i] == "N")
 		{ //Control para ocultar los rubros q poseen "Cam_Vis=N" de la tabla Campo_rol?> 
 			<script language="javascript">
-  			fila = document.getElementById("td[<? echo $i;?>]");
+  			fila = document.getElementById("td[<?php echo $i;?>]");
     		fila.style.display = "none"; //ocultar fila 
             </script>
-			<?
+			<?php
 		}//FIn del if ($row_rs_cam_ing['Cam_vis']; == "S") 
 		$i++; ?>
-	<? }while($row_rs_cam_ing = $obBD_con1->fetch_assoc($rs_cam_ing)); ?>		
-    <input type="hidden" size="30" id="hdd_cod_camp" name="hdd_cod_camp" value="<? echo $cadena; ?>"/>
+	<?php }while($row_rs_cam_ing = $obBD_con1->fetch_assoc($rs_cam_ing)); ?>		
+    <input type="hidden" size="30" id="hdd_cod_camp" name="hdd_cod_camp" value="<?php echo $cadena; ?>"/>
 	<th align="center">T. EGRESOS.</th>
     <th>LIQ. RECIBIR</th>
  </tr>
@@ -79,11 +79,11 @@ if(isset($Com_Are_Cod))
    $hdd_cam_ingre_dis[$cont]=$row_rs_per_rol['Dis_Cod'];   
   ?>
  <tr>
-   	<td align="center"><? echo $cont; ?></td>
-    <td align="left" title="<? echo $row_rs_per_rol['Tic_Des'];?>" width="40%">
-	<input name="hdd_nombre" type="text" value="<? echo "Cód.: ".$row_rs_per_rol['Dis_Cod']." ".$row_rs_per_rol['Prs_Ape'].' '.$row_rs_per_rol['Prs_Nom']; ?>"size="50"  readonly="readonly" style=" border:none;text-align:left;background:none">
+   	<td align="center"><?php echo $cont; ?></td>
+    <td align="left" title="<?php echo $row_rs_per_rol['Tic_Des'];?>" width="40%">
+	<input name="hdd_nombre" type="text" value="<?php echo "Cód.: ".$row_rs_per_rol['Dis_Cod']." ".$row_rs_per_rol['Prs_Ape'].' '.$row_rs_per_rol['Prs_Nom']; ?>"size="50"  readonly="readonly" style=" border:none;text-align:left;background:none">
 	
-	<? 
+	<?php 
 	/* CALCULO CAMPOS INGRESOS */
 	$nombre=$row_rs_per_rol['Prs_Ape'].' '.$row_rs_per_rol['Prs_Nom'];
 	$cont_caja_ingre=0;
@@ -101,15 +101,15 @@ if(isset($Com_Are_Cod))
 		if($tip_cam[$cont_caja_ingre] == $aux)
 		{
 		?>
-		<td id="Det[<? echo $cont?>]" width="1" align="right">
+		<td id="Det[<?php echo $cont?>]" width="1" align="right">
 			<input type="text" name="txt_t_ingre[<?php echo $cont;?>]" id="txt_t_ingre[<?php echo $cont;?>]" value="<?Php echo round($suma_fila_i[$cont],2); ?>" size="4" 
             readonly="readonly" style=" border:none;text-align:right;background:none" />
 			<input type="hidden" name="hdd_t_ingre[<?php echo $cont;?>]" id="hdd_t_ingre[<?php echo $cont;?>]" 
             value="<?Php echo $ing_java;?>" />		</td>
-		<? $aux=" "; 
+		<?php $aux=" "; 
 		} // Fin  del else	if($tip_cam[$cont_caja_ingre] != $aux) ?>
-		<td align="right" <? if ($vis[$cont_caja_ingre] == "N"){?> id="<? echo "det[".$td_cont."]"; ?>"<? }?>>
-        <?  
+		<td align="right" <?php if ($vis[$cont_caja_ingre] == "N"){?> id="<?php echo "det[".$td_cont."]"; ?>"<?php }?>>
+        <?php  
 		/* Control para los modulos que se agregan a cada campo */
 		$param[0] = $cod;//Codigo del campo
 		$param[1] = $Cod_Emp;//Codigo del empleado
@@ -158,7 +158,7 @@ if(isset($Com_Are_Cod))
 		$row_rs_campoformula = $obBD_con1->registros();	
 		$total_campoformula = $obBD_con1->numregistros();		
 		 ?>
-		<input type="text" name="hdd_ing_egr[<? echo $cont;?>,<? echo $cod;?>]" style="border:none;text-align:right;background:none" id="hdd_ing_egr[<? echo $cont;?>,<? echo $cod; ?>]" size="4" <?php if($hdd_cam_ing_egr_cal[$cont_caja_ingre] == "S"){ echo "readonly='true'";}?> 
+		<input type="text" name="hdd_ing_egr[<?php echo $cont;?>,<?php echo $cod;?>]" style="border:none;text-align:right;background:none" id="hdd_ing_egr[<?php echo $cont;?>,<?php echo $cod; ?>]" size="4" <?php if($hdd_cam_ing_egr_cal[$cont_caja_ingre] == "S"){ echo "readonly='true'";}?> 
             value="<?php if ($Com_Tipo == 'A'){ if (count($modulo_rol['Value']) == 1){ echo $modulo_rol['Value'][0]; }else{ echo round($porc,4); } 
 				}elseif ($Com_Tipo = 'M')
 				{  
@@ -174,15 +174,15 @@ if(isset($Com_Are_Cod))
 				}?>" 
            
             onkeypress="return validar_decimal(event)"  
-            onkeyup="<? echo formula_rol($cont, $cod, $modulo_rol['Event'], $obBD_con1, $obBD_conexion);  ?> <?php  if($total_campoformula>0){ do{?>SumaCamposRol(this.form,  <?php echo $total_rs_per_rol;?>, <?php echo $row_rs_campoformula['Cam_Cod'];?>,<?php echo $cont;?>);<?php }while($row_rs_campoformula = $obBD_con1->fetch_assoc($rs_campoformula));} ?> SumaCamposRol(this.form,  <?php echo $total_rs_per_rol;?>, <?php echo $cod;?>,<?php echo $cont;?>);SumaColumnas(this.form, <?php echo $total_rs_per_rol;?>)" tabindex="<? if ($vis[$cont_caja_ingre] != "N"){ 
+            onkeyup="<?php echo formula_rol($cont, $cod, $modulo_rol['Event'], $obBD_con1, $obBD_conexion);  ?> <?php  if($total_campoformula>0){ do{?>SumaCamposRol(this.form,  <?php echo $total_rs_per_rol;?>, <?php echo $row_rs_campoformula['Cam_Cod'];?>,<?php echo $cont;?>);<?php }while($row_rs_campoformula = $obBD_con1->fetch_assoc($rs_campoformula));} ?> SumaCamposRol(this.form,  <?php echo $total_rs_per_rol;?>, <?php echo $cod;?>,<?php echo $cont;?>);SumaColumnas(this.form, <?php echo $total_rs_per_rol;?>)" tabindex="<?php if ($vis[$cont_caja_ingre] != "N"){ 
 			echo $cont;}?>"/>
-		<input type="hidden" name="hdd_ingreso_egreso[<? echo $cont;?>,<? echo $cod; ?>]" id="hdd_ingreso_egreso[<? echo $cont;?>,<? echo $cod; ?>]" value="<? echo $cod;?>"/>		</td>
-		<? if ($vis[$cont_caja_ingre] == "N"){ //Control para ocultar los rubros q poseen "Cam_Vis=N" de la tabla Campo_rol ?> 		
+		<input type="hidden" name="hdd_ingreso_egreso[<?php echo $cont;?>,<?php echo $cod; ?>]" id="hdd_ingreso_egreso[<?php echo $cont;?>,<?php echo $cod; ?>]" value="<?php echo $cod;?>"/>		</td>
+		<?php if ($vis[$cont_caja_ingre] == "N"){ //Control para ocultar los rubros q poseen "Cam_Vis=N" de la tabla Campo_rol ?> 		
 			<script language="javascript">
-			fila = document.getElementById("det[<? echo $td_cont;?>]");
+			fila = document.getElementById("det[<?php echo $td_cont;?>]");
     		fila.style.display = "none"; //ocultar col
 			</script>
-		<? }//Fin if ($vis[$cont_caja_ingre] == "N")
+		<?php }//Fin if ($vis[$cont_caja_ingre] == "N")
 		/* Concatena todos los campos que nos sera visibles */
 		if ($vis[$cont_caja_ingre] != "N")
 		{
@@ -201,13 +201,13 @@ if(isset($Com_Are_Cod))
 	}while ($cont_caja_ingre<$total_rs_cam_ing);	
 	?>
 	<td width="1">
-	<input type="text" name="txt_t_egre[<? echo $cont;?>]"  id="txt_t_egre[<? echo $cont;?>]" value="<?Php echo round($suma_fila_e[$cont],2); ?>"  size="5" readonly="true" style="text-align:right;border:none;background:none"/>
-	<input type="hidden" name="hdd_t_egre[<? echo $cont;?>]" id="hdd_t_egre[<? echo $cont;?>]" value="<? echo $ing_java2;?>" />	</td>
+	<input type="text" name="txt_t_egre[<?php echo $cont;?>]"  id="txt_t_egre[<?php echo $cont;?>]" value="<?Php echo round($suma_fila_e[$cont],2); ?>"  size="5" readonly="true" style="text-align:right;border:none;background:none"/>
+	<input type="hidden" name="hdd_t_egre[<?php echo $cont;?>]" id="hdd_t_egre[<?php echo $cont;?>]" value="<?php echo $ing_java2;?>" />	</td>
 	<td>
-	<input type="text" name="txt_t_liq[<? echo $cont;?>]" id="txt_t_liq[<? echo $cont;?>]" value="<?Php echo round($suma_fila_i[$cont] - $suma_fila_e[$cont],2); ?>"  size="5" readonly="true" 
+	<input type="text" name="txt_t_liq[<?php echo $cont;?>]" id="txt_t_liq[<?php echo $cont;?>]" value="<?Php echo round($suma_fila_i[$cont] - $suma_fila_e[$cont],2); ?>"  size="5" readonly="true" 
 	style=" text-align:right;border:none;;background:none <?php if (round($suma_fila_i[$cont] + $suma_fila_e[$cont],2)!=0){ ?> background:#CCCCCC <?Php }else{ ?>background:#F00 <?Php } ?>" />   </td>
   </tr>
-<? } while($row_rs_per_rol = $obBD_con1->fetch_assoc($rs_per_rol));  //Fin del IF $rs_per_rol ?>
+<?php } while($row_rs_per_rol = $obBD_con1->fetch_assoc($rs_per_rol));  //Fin del IF $rs_per_rol ?>
  
  <tr>
    <td colspan="2" align="rigth">TOTAL:</td>
@@ -219,13 +219,13 @@ if(isset($Com_Are_Cod))
     $k=0;
 	do{
 	$k++;?>
-   <td width="1"><input type="text" name="hdd_ingre[<? echo $row_rs_campos['Cam_Cod'];?>]" id="hdd_ingre[<? echo $row_rs_campos['Cam_Cod'];?>]" value="<?Php echo round($suma_colum_i[$row_rs_campos['Cam_Cod']],2); ?>" size="5" style=" border:none;text-align:right;background:none" /></td>
+   <td width="1"><input type="text" name="hdd_ingre[<?php echo $row_rs_campos['Cam_Cod'];?>]" id="hdd_ingre[<?php echo $row_rs_campos['Cam_Cod'];?>]" value="<?Php echo round($suma_colum_i[$row_rs_campos['Cam_Cod']],2); ?>" size="5" style=" border:none;text-align:right;background:none" /></td>
    <?php 
      /* Almacena el total de ingresos */
    	 $total_colum_i = $total_colum_i + $suma_colum_i[$row_rs_campos['Cam_Cod']];
    }while($row_rs_campos = $obBD_con1->fetch_assoc($rs_campos));
    ?>
-   <td id="Det[<? echo $cont?>]">
+   <td id="Det[<?php echo $cont?>]">
      <input type="text" name="txt_total_ingres" id="txt_total_ingres" value="<?Php echo round($total_colum_i,2); ?>" size="5" readonly="readonly" style=" border:none;text-align:right;background:none">    </td>
     <?php
    /* Consulta campos ingresos del rol de pagos*/
@@ -236,7 +236,7 @@ if(isset($Com_Are_Cod))
 	do{
 	$ke++;?>
    <td  width="1">
-   <input type="text" name="hdd_ingre[<? echo $row_rs_campose['Cam_Cod'];?>]" id="hdd_ingre[<? echo $row_rs_campose['Cam_Cod'];?>]" value="<?Php echo round($suma_colum_e[$row_rs_campose['Cam_Cod']],2); ?>" size="5" style=" border:none;text-align:right;background:none"></td>
+   <input type="text" name="hdd_ingre[<?php echo $row_rs_campose['Cam_Cod'];?>]" id="hdd_ingre[<?php echo $row_rs_campose['Cam_Cod'];?>]" value="<?Php echo round($suma_colum_e[$row_rs_campose['Cam_Cod']],2); ?>" size="5" style=" border:none;text-align:right;background:none"></td>
     <?php
      /* Almacena el total de egresos */
    	 $total_colum_e = $total_colum_e + $suma_colum_e[$row_rs_campose['Cam_Cod']];	
@@ -261,7 +261,7 @@ else
 </tbody>
 </table>
 </div>
-<? 
+<?php 
 }
 else
 {

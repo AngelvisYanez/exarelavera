@@ -1,5 +1,5 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<?	
+<?php	
 /* 
 * Alias:	Registrar
 * Descripci�n: Permite registrar los organizado y procesos del sistema
@@ -155,7 +155,7 @@ if (isset($nproceso))
 		<script type="text/javascript">$(function() {$('#set1 *').tooltip({showURL: false});});</script>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 	</HEAD>
-<?
+<?php
 if (!isset($np))
 {
 	$np=0;
@@ -177,7 +177,7 @@ if (isset($np))
 	<tr>
             <td height="389" align="left" valign="top" style="padding-left:10px;padding-right:10px;">
 	<br>
- <?	
+ <?php	
 		/*
 		* Consulta la ruta del departamento 
 		*/
@@ -260,7 +260,7 @@ if (isset($np))
    { 
 	  foreach($rs_nodos as $row_rs_nodos){ 	 ?>         
 	  <tr>
-            <td align="center"><? echo $row_rs_nodos['Org_Cod']; ?>
+            <td align="center"><?php echo $row_rs_nodos['Org_Cod']; ?>
             </td>
             <td colspan="2">
             <?Php
@@ -274,10 +274,10 @@ if (isset($np))
 				$color_d = '';	
 			}				
 			?>
-			<img style="vertical-align:middle" src="../LOGICA/images/<?Php echo $row_rs_nodos['Org_Img'] ?>" width="22" height="25" title="Departamento"><? echo "<font color='".$color_d."'><strong> ".$row_rs_nodos['Org_Des']."</strong></font>"; ?>
+			<img style="vertical-align:middle" src="../LOGICA/images/<?Php echo $row_rs_nodos['Org_Img'] ?>" width="22" height="25" title="Departamento"><?php echo "<font color='".$color_d."'><strong> ".$row_rs_nodos['Org_Des']."</strong></font>"; ?>
 
           </td>
-            <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form2" id="form2">
+            <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form2" id="form2">
             <td align="center">
             <?Php 
 			if ($row_rs_nodos['Org_Mod'] == 'A') 
@@ -299,14 +299,14 @@ if (isset($np))
    { ?>            				
 	  <tr><td colspan="4"><?Php echo error_alerta("No hay <strong>DIRECTORIOS</strong> que mostrar!", 1); ?></td>
 	    </tr>
-<? }//Fin del  if (count($rs_nodos) > 0) ?>
+<?php }//Fin del  if (count($rs_nodos) > 0) ?>
 		</tbody>
 	  </table>
            
    	<br>
 <table border="0" cellpadding="0" cellspacing="0">
   <tr>
-  <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3" id="form3">
+  <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3" id="form3">
 	<td align="right">
 	<?Php
 	if (isset($rs_direc) && count($rs_direc) >0)
@@ -385,7 +385,7 @@ if (isset($np))
       if (count($rs_procesos) == 0)
       {
         ?>
-       <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" enctype="multipart/form-data" name="form4" id="form4">        
+       <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" enctype="multipart/form-data" name="form4" id="form4">        
         <FIELDSET>    
         <LEGEND>
         <label class="Titulos2">Datos a registrar <img style="vertical-align:middle" src="../../mascaras/model1/imagenes/32x32/folder.png" width="18" height="18"></label>
@@ -418,7 +418,7 @@ if (isset($np))
               <tr>
                 <td class="LetraNegra">&nbsp;</td>
                 <td class="LetraNegra">
-                  <input name="np" type="hidden" id="np" value="<? echo $np; ?>">
+                  <input name="np" type="hidden" id="np" value="<?php echo $np; ?>">
                 <input name="ndirectorio" type="hidden" id="ndirectorio" value="ndirectorio">	
                 </td>
               </tr>
@@ -434,7 +434,7 @@ if (isset($np))
     </div>   
      
     <div id="id_proceso">
-      <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" enctype="multipart/form-data" name= "form4" id="form">
+      <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" enctype="multipart/form-data" name= "form4" id="form">
         <FIELDSET>
           <LEGEND>
             <label class="Titulos2">Datos a registrar <img style="vertical-align:middle" src="../../mascaras/model1/imagenes/32x32/proceso.png" width="20" height="20"></label>
@@ -521,7 +521,7 @@ if (isset($np))
             <tr>
               <td class="LetraNegra">&nbsp;</td>
               <td class="LetraNegra">
-                <input name="np" type="hidden" id="np" value="<? echo $np; ?>">
+                <input name="np" type="hidden" id="np" value="<?php echo $np; ?>">
                 <input name="nproceso" type="hidden" id="nproceso" value="nproceso">
                 </td>
             </tr>

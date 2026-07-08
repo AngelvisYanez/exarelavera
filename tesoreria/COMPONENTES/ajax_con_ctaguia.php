@@ -17,33 +17,33 @@ if ($ajax_buscador=="F")
 		<td width="18%"><strong>Adquisici&oacute;n</strong></td>
 		<td width="5%">&nbsp;</td>
 	  </tr>
-	  <?
+	  <?php
 	  if ($total_rs_buscta > 0) {
 	  do { 
 						  						  
 	  ?>
-	  <tr <? echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Cuerpo_ajax");?> class="Cuerpo_ajax">
-	    <td height="34%" align="center"><? echo $row_rs_buscta['Pro_Cod']; ?></td>
-		<td align="left"><? echo marcar_cadena($txtBusqueda,$row_rs_buscta['Ite_Lar'],'#FFFF00', 1); ?></td>
-		<td align="left"><? echo $row_rs_buscta['Mar_Des']; ?></td>
-		<td align="left"><? echo $row_rs_buscta['Adq_Des']; ?></td>		
+	  <tr <?php echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Cuerpo_ajax");?> class="Cuerpo_ajax">
+	    <td height="34%" align="center"><?php echo $row_rs_buscta['Pro_Cod']; ?></td>
+		<td align="left"><?php echo marcar_cadena($txtBusqueda,$row_rs_buscta['Ite_Lar'],'#FFFF00', 1); ?></td>
+		<td align="left"><?php echo $row_rs_buscta['Mar_Des']; ?></td>
+		<td align="left"><?php echo $row_rs_buscta['Adq_Des']; ?></td>		
 		<td align="center">
-		<? $rs_guia = $obBD_con1->consulta(sentencias_tes(1073, $obBD_con1->parametros($Rec_Cod.'*'.$row_rs_buscta['Pro_Cod'])),$obBD_conexion->conexion);	
+		<?php $rs_guia = $obBD_con1->consulta(sentencias_tes(1073, $obBD_con1->parametros($Rec_Cod.'*'.$row_rs_buscta['Pro_Cod'])),$obBD_conexion->conexion);	
 	$row_rs_guia = $obBD_con1->registros();
 	$total_rs_guia = $obBD_con1->numregistros();
 		 if ($total_rs_guia<=0)
 		{
 		?>
 		<img src="../../mascaras/model1/imagenes/32x32/forward.png" width="18" height="18" title="Agregar cuenta" style="	
-		cursor:pointer" onClick="nueva_fila_ajuste('c_contenido','<? echo $row_rs_buscta['Pro_Cod']; ?>','<? echo $row_rs_buscta['Ite_Lar']; ?>','<? echo 0.00; ?>','<? echo 400000;?>')">	<? }else{ ?><img src="../../mascaras/model1/imagenes/32x32/error1.jpg" width="18" height="18" title="Agregar cuenta" style="	
-		cursor:pointer" /><? }?>	</td>
+		cursor:pointer" onClick="nueva_fila_ajuste('c_contenido','<?php echo $row_rs_buscta['Pro_Cod']; ?>','<?php echo $row_rs_buscta['Ite_Lar']; ?>','<?php echo 0.00; ?>','<?php echo 400000;?>')">	<?php }else{ ?><img src="../../mascaras/model1/imagenes/32x32/error1.jpg" width="18" height="18" title="Agregar cuenta" style="	
+		cursor:pointer" /><?php }?>	</td>
 	  </tr>
-	  <? } while ($row_rs_buscta = $obBD_con1->fetch_assoc($rs_buscta));
+	  <?php } while ($row_rs_buscta = $obBD_con1->fetch_assoc($rs_buscta));
 	  } else { ?>
 		<tr>
 			<td height="32%" colspan="9" class="Alertas"><?Php echo error_alerta("No hay resultados que mostrar", 1); ?></td>
 		</tr>
-<? }?>
+<?php }?>
 </table>
 <?Php 
 @$obBD_con1->free_result($rs_buscta);

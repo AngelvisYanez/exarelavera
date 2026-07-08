@@ -156,7 +156,7 @@ if (isset($cargarFactura)) {
     $rs_ivass = $obBD_con1->getArrayConsulta(6, "", $obBD_conexion);
     foreach ($rs_forma as $row) {
         ($response['For_Cod'] == $row['For_Cod']) ? $sel = 'selected' : '';
-        $For_Cod .= "<option value=" . $row['For_Cod'] . " $sel>" . utf8_encode($row['For_Des']) . "</option>";
+        $For_Cod .= "<option value=" . $row['For_Cod'] . " $sel>" . mb_convert_encoding($row['For_Des'], 'UTF-8', 'ISO-8859-1') . "</option>";
     }
     foreach ($rs_tpago as $row) {
         ($response['Pag_Cod'] == $row['Pag_Cod']) ? $sel = 'selected' : '';

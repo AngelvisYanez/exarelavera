@@ -71,7 +71,7 @@ $hoy = date("Y-m-d");
     	<td>
            <table width="80%" border="0" cellpadding="0" cellspacing="0" align="center">
                 <tr align="center">
-                  <td colspan="4" ><? $obBD_con1->cabeceraReporteStandar($Ses_Suc_Cod,$Titulo,$Subtitulo,$obBD_conexion)?></td>
+                  <td colspan="4" ><?php $obBD_con1->cabeceraReporteStandar($Ses_Suc_Cod,$Titulo,$Subtitulo,$obBD_conexion)?></td>
                 </tr>
            </table>  
       </td>
@@ -127,18 +127,18 @@ $hoy = date("Y-m-d");
 		</tr>
 		<tr>
 			<td width="20%" class="Etiqueta1"><span class="Asterisco">*</span>Motivo:</td>
-			<td width="80%" class="Texto_Reporte">&nbsp;<? echo $rs_bajas['Est_Des'];?>      
+			<td width="80%" class="Texto_Reporte">&nbsp;<?php echo $rs_bajas['Est_Des'];?>      
             </td>
 			<td width="0%"></td>
 		</tr>
         <tr>
 			<td width="20%" class="Etiqueta1"><span class="Asterisco">*</span>Fecha del Informe:</td>
-			<td class="Texto_Reporte">&nbsp;<? echo $rs_bajas['Baj_Fba'];?> </td>
+			<td class="Texto_Reporte">&nbsp;<?php echo $rs_bajas['Baj_Fba'];?> </td>
 			<td></td>
 		</tr>       
 		<tr>
 			<td width="20%" class="Etiqueta1"><span class="Asterisco">*</span>Informe Técnico:</td>
-			<td class="Texto_Reporte" valign="middle">&nbsp;<div align="justify"> <? echo $rs_bajas['Baj_Inf'];?> </div></td>
+			<td class="Texto_Reporte" valign="middle">&nbsp;<div align="justify"> <?php echo $rs_bajas['Baj_Inf'];?> </div></td>
 			<td></td>
 		</tr>       
 		</table>
@@ -153,16 +153,16 @@ $hoy = date("Y-m-d");
 		</tr>
 		<tr>
 			<td width="20%" class="Etiqueta1"><span class="Asterisco">*</span>Destino:</td>
-			<td width="80%" class="Texto_Reporte">&nbsp;<? echo $rs_bajas['Baj_Des'];?>      	    	
+			<td width="80%" class="Texto_Reporte">&nbsp;<?php echo $rs_bajas['Baj_Des'];?>      	    	
             </td>			
 		</tr>
 		<tr>
 			<td width="20%" class="Etiqueta1"><span class="Asterisco">*</span>Receptor:</td>
-			<td class="Texto_Reporte">&nbsp;<? echo $rs_bajas['Baj_Qui'];?></td>			
+			<td class="Texto_Reporte">&nbsp;<?php echo $rs_bajas['Baj_Qui'];?></td>			
 		</tr>
         <tr>
 			<td width="20%" class="Etiqueta1"><span class="Asterisco">*</span>Valor:</td>
-			<td class="Texto_Reporte">&nbsp;<? echo $rs_bajas['Baj_Val'];?></td>			
+			<td class="Texto_Reporte">&nbsp;<?php echo $rs_bajas['Baj_Val'];?></td>			
 		</tr>
 	</table>
  </FIELDSET>
@@ -170,7 +170,7 @@ $hoy = date("Y-m-d");
  </tr>
 </table>
 
-<?
+<?php
  }
 ?>
 

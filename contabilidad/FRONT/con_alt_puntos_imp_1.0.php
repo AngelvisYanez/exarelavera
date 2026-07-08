@@ -69,10 +69,10 @@ if ($thisPost->postBlock($_POST['postID']))
   </tr>
 	<tr>
 	  	<td valign="top" height="400">
-         <form action="<? echo $_SERVER['PHP_SELF']; ?>" method="post" name= "form1" id="form1">
+         <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" name= "form1" id="form1">
   <table width="100%" border="0" align="left">
   </table>
- <? //Creacion del campo REPOST
+ <?php //Creacion del campo REPOST
 $thisPost->startPost();?>
 <FIELDSET>
 <LEGEND>
@@ -82,18 +82,18 @@ $thisPost->startPost();?>
  <table width="100%" cellpadding="0" cellspacing="0" border="0">
     	<tr>
     	  <td class="Etiqueta1"><span class="Asterisco">* </span> Sucursal:</td>
-    	  <td colspan="3"><?
+    	  <td colspan="3"><?php
 		/* 
 		* Carga las sucursales de la empresa
 		*/
 		$row_rs_sucursal = $obBD_con1->getArrayConsulta(1, $Ses_Emp_Cod, $obBD_conexion);  ?>
     	    <select name="Suc_Cod" id="Suc_Cod">
     	    <option >Seleccione...</option>
-    	    <? 
+    	    <?php 
 		  foreach ($row_rs_sucursal as $row)
 		  {?>
-    	    <option value="<? echo $row['Suc_Cod'];?>"><? echo $row['Suc_Des']?></option>
-    	    <? } //fin del foreach $row_rs_sucursal ?>
+    	    <option value="<?php echo $row['Suc_Cod'];?>"><?php echo $row['Suc_Des']?></option>
+    	    <?php } //fin del foreach $row_rs_sucursal ?>
   	    </select></td>
   	  </tr>
     	<tr>

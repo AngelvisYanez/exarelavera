@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?
+<?php
 /**
 * Descripción: Consulta de facturas electronicas
 * Fecha de actualización:	16-11-2014 
@@ -54,7 +54,7 @@ if(isset($ajx_det)){
 		?>
 		<fieldset>
 			<LEGEND>
-				<label class="Titulos2">Detalle : <? echo $aju_det; ?></label>
+				<label class="Titulos2">Detalle : <?php echo $aju_det; ?></label>
 			</LEGEND>
 		 <table width="100%" border="0" cellpadding="0" cellspacing="0" class="fixedHeader01">
 			<thead>    
@@ -64,18 +64,18 @@ if(isset($ajx_det)){
 				  <th width="27%" align="right"><strong>Importe</strong></th>
 				</tr>
 			   <tbody>
-				<? foreach($rs_detalle as $row_detalle){?>
+				<?php foreach($rs_detalle as $row_detalle){?>
 				<tr >     
-				  <td align="center" ><? echo $row_detalle['Aju_Can']; ?></td>
-				  <td>&nbsp;<? echo $row_detalle['Ite_Lar']; ?></td>
-				  <td align="right"><? echo formato_numero($row_detalle['Aju_Pru'],2,1); ?>&nbsp;</td>
-				  <td align="right"><? echo formato_numero($row_detalle['Aju_Imp'],2,1); $Total=$Total+$row_detalle['Rcb_Imp'];?>&nbsp;</td>
+				  <td align="center" ><?php echo $row_detalle['Aju_Can']; ?></td>
+				  <td>&nbsp;<?php echo $row_detalle['Ite_Lar']; ?></td>
+				  <td align="right"><?php echo formato_numero($row_detalle['Aju_Pru'],2,1); ?>&nbsp;</td>
+				  <td align="right"><?php echo formato_numero($row_detalle['Aju_Imp'],2,1); $Total=$Total+$row_detalle['Rcb_Imp'];?>&nbsp;</td>
 				</tr>
 			<?php } ?>
 				</tbody>
 			</table>	
 		</fieldset>
-	<?
+	<?php
 			exit();	
 	}
 	
@@ -156,7 +156,7 @@ switch($op){
 </tr>
 <tr>
  <td align="left" valign="top" height="400">
-  <?
+  <?php
 
 	    $descripcion = "Todos*Individual";
   		$pag1= $_SERVER['PHP_SELF']."?op=1";
@@ -164,7 +164,7 @@ switch($op){
 		tabs(1,$descripcion, $pag1.'*'.$pag2, $op);
 	?>
 
-<?
+<?php
 if(!isset($op)){$op = 1;}
 
 if ( $op==1 || $op==2 ) 
@@ -179,7 +179,7 @@ if ( $op==1 || $op==2 )
 		$total_rs_consultaGuiaRemi = count($rs_consultaGuiaRemi);			
 		$total_rs_consulta = count($rs_consulta);
 	?>	
-   	<form method="post" name="form3" id="form3" action="<? echo $_SERVER['PHP_SELF'];?> ">
+   	<form method="post" name="form3" id="form3" action="<?php echo $_SERVER['PHP_SELF'];?> ">
     <FIELDSET>
     <LEGEND>
     <label class="Titulos2">Facturas pendientes de enviar</label>
@@ -195,11 +195,11 @@ if ( $op==1 || $op==2 )
             <th width="11%">Tipo</th>
             <th width="30%">Clave de Acceso</th>  
             <th width="5%">Importe</th>
-            <th width="3%"><input type="checkbox" value="" onclick="checkear_xml(this,<? echo $total_rs_consulta ?>,this.form)" name="todos"/></th>
+            <th width="3%"><input type="checkbox" value="" onclick="checkear_xml(this,<?php echo $total_rs_consulta ?>,this.form)" name="todos"/></th>
             </tr>
           </thead>
           <tbody>        
-          <?
+          <?php
 			  $a=0;
 			  foreach($rs_consulta as $datos)
 			  {    //echo "<br>".strlen($datos['Prs_Ape']." ".$datos['Prs_Nom']);
@@ -207,15 +207,15 @@ if ( $op==1 || $op==2 )
 			  ?>
               
               <tr>
-                <td align="center"><? echo $datos['Vet_Cod']?></td>
-                <td align="center"><? echo $datos['Caj_Fec']?></td>
-                <td align="center"><? echo $datos['Prs_Ced']?></td>
-                <td align="left" style="white-space: nowrap; overflow: hidden;"><? echo $datos['Prs_Ape']." ".$datos['Prs_Nom'];?></td>
-                <td align="center"><? echo $datos['Suc_Sri'].'-'.$datos['Pun_Sri'].'-'.str_pad($datos['Vet_Num'], 9, "0", STR_PAD_LEFT)?></td>
-                <td align="center"><? echo $rs_tipCompro['Tic_Des'];?></td>
-                <td align="center"><? echo $datos['Vet_Xml'];?></td>
+                <td align="center"><?php echo $datos['Vet_Cod']?></td>
+                <td align="center"><?php echo $datos['Caj_Fec']?></td>
+                <td align="center"><?php echo $datos['Prs_Ced']?></td>
+                <td align="left" style="white-space: nowrap; overflow: hidden;"><?php echo $datos['Prs_Ape']." ".$datos['Prs_Nom'];?></td>
+                <td align="center"><?php echo $datos['Suc_Sri'].'-'.$datos['Pun_Sri'].'-'.str_pad($datos['Vet_Num'], 9, "0", STR_PAD_LEFT)?></td>
+                <td align="center"><?php echo $rs_tipCompro['Tic_Des'];?></td>
+                <td align="center"><?php echo $datos['Vet_Xml'];?></td>
                 <td align="center">
-                <? 
+                <?php 
 					if ($datos['Vet_Des']==0)
 					{
 						$impIva= ($datos['Imp_Iva']*12)/100;
@@ -228,28 +228,28 @@ if ( $op==1 || $op==2 )
                 ?>
                 </td>
                 <td align="center">
-                <input type="checkbox" value="<? echo $datos['Vet_Xml'].'.xml'?>" name="ficheros" id="ficheros"/></td>
+                <input type="checkbox" value="<?php echo $datos['Vet_Xml'].'.xml'?>" name="ficheros" id="ficheros"/></td>
               </tr>
               
-          <?  }
+          <?php  }
 		  if($total_rs_consultaGuiaRemi!=0)
 		  {
 		  	foreach($rs_consultaGuiaRemi as $datosRemi)
 			{   $a++;			  				
 			?>
 				<tr>
-                <td align="center"><? echo $datosRemi['Gui_Cod']?></td>
-                <td align="center"><? echo $datosRemi['Gui_Fec']?></td>
-                <td align="center"><? echo $datosRemi['Prs_Ced']?></td>
-                <td align="left" style="white-space: nowrap; overflow: hidden;"><? echo $datosRemi['Prs_Ape']." ".$datosRemi['Prs_Nom']?></td>
-                <td align="center"><? echo $datosRemi['Suc_Sri'].'-'.$datosRemi['Pun_Sri'].'-'.str_pad($datosRemi['Gui_Num'], 9, "0", STR_PAD_LEFT)?></td>
+                <td align="center"><?php echo $datosRemi['Gui_Cod']?></td>
+                <td align="center"><?php echo $datosRemi['Gui_Fec']?></td>
+                <td align="center"><?php echo $datosRemi['Prs_Ced']?></td>
+                <td align="left" style="white-space: nowrap; overflow: hidden;"><?php echo $datosRemi['Prs_Ape']." ".$datosRemi['Prs_Nom']?></td>
+                <td align="center"><?php echo $datosRemi['Suc_Sri'].'-'.$datosRemi['Pun_Sri'].'-'.str_pad($datosRemi['Gui_Num'], 9, "0", STR_PAD_LEFT)?></td>
                 <td align="center">GU&Iacute;A REMISI&Oacute;N</td>
-                <td align="center"><? echo $datosRemi['Gui_Xml'];?></td>
+                <td align="center"><?php echo $datosRemi['Gui_Xml'];?></td>
                 <td align="center">-</td>
                 <td align="center">
-                <input type="checkbox" value="<? echo $datosRemi['Gui_Xml'].'.xml'?>" name="ficheros" id="ficheros"/></td>
+                <input type="checkbox" value="<?php echo $datosRemi['Gui_Xml'].'.xml'?>" name="ficheros" id="ficheros"/></td>
               </tr>
-		  <? }
+		  <?php }
 		  }
 		   if($total_consultaRetencion!=0)
 		  {
@@ -264,18 +264,18 @@ if ( $op==1 || $op==2 )
 				unset($datosDetReten);
 		?>
 				<tr>
-                <td align="center"><? echo $datosReten['Ret_Cod']?></td>
-                <td align="center"><? echo $datosReten['Ret_Fec']?></td>
-                <td align="center"><? echo $datosReten['Prs_Ced']?></td>
-                <td align="left" style="white-space: nowrap; overflow: hidden;"><? echo $datosReten['Prs_Ape']." ".$datosReten['Prs_Nom']?></td>
-                <td align="center"><? echo $datosReten['Suc_Sri'].'-'.$datosReten['Pun_Sri'].'-'.str_pad($datosReten['Ret_Num'], 9, "0", STR_PAD_LEFT)?></td>
+                <td align="center"><?php echo $datosReten['Ret_Cod']?></td>
+                <td align="center"><?php echo $datosReten['Ret_Fec']?></td>
+                <td align="center"><?php echo $datosReten['Prs_Ced']?></td>
+                <td align="left" style="white-space: nowrap; overflow: hidden;"><?php echo $datosReten['Prs_Ape']." ".$datosReten['Prs_Nom']?></td>
+                <td align="center"><?php echo $datosReten['Suc_Sri'].'-'.$datosReten['Pun_Sri'].'-'.str_pad($datosReten['Ret_Num'], 9, "0", STR_PAD_LEFT)?></td>
                 <td align="center">RETENCI&Oacute;N</td>
-                <td align="center"><? echo $datosReten['Ret_Xml'];?></td>
-                <td align="center"><? echo formato_numero($totRet,2,1);?></td>
+                <td align="center"><?php echo $datosReten['Ret_Xml'];?></td>
+                <td align="center"><?php echo formato_numero($totRet,2,1);?></td>
                 <td align="center">
-                <input type="checkbox" value="<? echo $datosReten['Ret_Xml'].'.xml'?>" name="ficheros" id="ficheros"/></td>
+                <input type="checkbox" value="<?php echo $datosReten['Ret_Xml'].'.xml'?>" name="ficheros" id="ficheros"/></td>
               </tr>
-		  <?						
+		  <?php						
 			}
 		  }
 		  
@@ -291,7 +291,7 @@ if ( $op==1 || $op==2 )
             <td align="center">&nbsp;</td>
             <td align="center">&nbsp;</td>
           </tr>
-          <? }?>
+          <?php }?>
 		 </tbody>
         </table>
         <?php echo barra_estado($total_rs_consulta+$total_rs_consultaGuiaRemi+$total_consultaRetencion);?>
@@ -300,20 +300,20 @@ if ( $op==1 || $op==2 )
     <table width="299" border="0" cellpadding="0" cellspacing="0" class="Azul">
      
      <td width="149">     
-        <button type="button" class="btn btn-primary start" title="Bajar archivos" onclick="downloadURI('<? echo $Ses_Emp_Cod;?>','<? echo $total_rs_consulta+$total_rs_consultaGuiaRemi+$total_consultaRetencion;?>',this.form)"> <i class=" icon-download-alt icon-white"></i> <span>&nbsp;&nbsp;Bajar&nbsp;&nbsp;</span></button> 
+        <button type="button" class="btn btn-primary start" title="Bajar archivos" onclick="downloadURI('<?php echo $Ses_Emp_Cod;?>','<?php echo $total_rs_consulta+$total_rs_consultaGuiaRemi+$total_consultaRetencion;?>',this.form)"> <i class=" icon-download-alt icon-white"></i> <span>&nbsp;&nbsp;Bajar&nbsp;&nbsp;</span></button> 
      </td>
      </tr>
      </table>
 	</form>
 	
-<?  break;
+<?php  break;
 	case 2: 
 ?>      
         <form action="<?Php $_SERVER['PHP_SELF']  ?>" method="post" name="form1" id="form1">
         <?Php include("../../componentes/FRONT/com_con_persona.php"); ?>
-        <input name="op" id="op" type="hidden" value="<? echo $op;?>"> 
+        <input name="op" id="op" type="hidden" value="<?php echo $op;?>"> 
         </form>
-        <? if(isset($hdd_buscar)){ ?>
+        <?php if(isset($hdd_buscar)){ ?>
         
         <FIELDSET>
         <LEGEND>
@@ -341,11 +341,11 @@ if ( $op==1 || $op==2 )
                 <td align="center"><?Php echo $row_rs_buscar['Prs_Ape']; ?></td>
                 <td align="center"><?Php echo $row_rs_buscar['Prs_Nom']; ?></td>
                 <td align="center"><?Php echo $row_rs_buscar['Prs_Est'] ?>
-                <form name="form6" method="post"  action="<? echo $_SERVER['PHP_SELF'];?> ">   
+                <form name="form6" method="post"  action="<?php echo $_SERVER['PHP_SELF'];?> ">   
                     <input name="codigo" id="codigo" type="hidden" value="<?Php echo $row_rs_buscar['Cli_Cod'];?>">
                     <input name="volver_busqueda" id="volver_busqueda" type="hidden" value="<?Php echo $txt_busqueda;?>">
                     <input name="op_opciones" id="op_opciones" type="hidden" value="<?Php echo $op_opciones;?>">
-                    <input name="op" id="op" type="hidden" value="<? echo $op;?>">                
+                    <input name="op" id="op" type="hidden" value="<?php echo $op;?>">                
                     <input name="hdd_distri" id="hdd_distri" type="hidden" value="1">
                     <input name="hdd_ced" id="hdd_ced" type="hidden" value="<?Php echo $row_rs_buscar['Prs_Ced']; ?>">
                     <input name="hdd_ape" id="hdd_ape" type="hidden" value="<?Php echo $row_rs_buscar['Prs_Ape']; ?>">
@@ -367,19 +367,19 @@ if ( $op==1 || $op==2 )
                 <td align="center">&nbsp;</td>
                 <td align="center">&nbsp;</td>
               </tr>
-         <? }//Fin del else if($total_rs_buscar != 0) ?>
+         <?php }//Fin del else if($total_rs_buscar != 0) ?>
               </tbody>
             </table>
             <?php echo barra_estado($total_rs_buscar);?>
         </FIELDSET>
-        <?  } /*fin del if(isset($hdd_buscar) )*/?> 
+        <?php  } /*fin del if(isset($hdd_buscar) )*/?> 
         
-     <? if (isset($codigo)) 
+     <?php if (isset($codigo)) 
         { 
             $rs_consulta = $obBD_con1->getArrayConsulta(1,$codigo,$obBD_conexion);				
             $total_rs_consulta = count($rs_consulta);
         ?>    
-         <form method="post" name="form2" id="form2" action="<? echo $_SERVER['PHP_SELF'];?> ">
+         <form method="post" name="form2" id="form2" action="<?php echo $_SERVER['PHP_SELF'];?> ">
             <FIELDSET>
             <LEGEND>
             <label class="Titulos2">Datos seleccionados </label>
@@ -388,11 +388,11 @@ if ( $op==1 || $op==2 )
             <table width="509" border="0" cellpadding="0" cellspacing="0">
             <tr>
                 <td class="Etiqueta1" width="53" align="right">C&eacute;dula:&nbsp;</td>
-                <td class="LetraNegra" width="456">&nbsp;<? echo $hdd_ced;?></td>
+                <td class="LetraNegra" width="456">&nbsp;<?php echo $hdd_ced;?></td>
             </tr>              
             <tr>     
                 <td class="Etiqueta1" align="right">Nombre:&nbsp;</td>
-                <td class="LetraNegra">&nbsp;<? echo $hdd_ape." ".$hdd_nom;?></td>
+                <td class="LetraNegra">&nbsp;<?php echo $hdd_ape." ".$hdd_nom;?></td>
             </tr>           
             </table>
           <br />
@@ -404,11 +404,11 @@ if ( $op==1 || $op==2 )
                     <th width="18%">N&uacute;m. Documento</th>
                     <th width="50%">XML</th>  
                     <th width="10%">Importe</th>
-                    <th width="2%"><input type="checkbox" value="" onclick="checkear_xml(this,<? echo $total_rs_consulta ?>,this.form)" name="todos"/></th>
+                    <th width="2%"><input type="checkbox" value="" onclick="checkear_xml(this,<?php echo $total_rs_consulta ?>,this.form)" name="todos"/></th>
                     </tr>
                   </thead>
                   <tbody>        
-                  <? if ($total_rs_consulta!=0) {
+                  <?php if ($total_rs_consulta!=0) {
                       $a=0;
                       foreach($rs_consulta as $datos)
                       {
@@ -416,12 +416,12 @@ if ( $op==1 || $op==2 )
                       ?>
                       
                       <tr>
-                        <td align="center"><? echo $datos['Vet_Cod']?></td>
-                        <td align="center"><? echo $datos['Vet_Sys']?></td>
-                        <td align="center"><? echo $datos['Suc_Sri'].'-'.$datos['Pun_Sri'].'-'.str_pad($datos['Vet_Num'], 9, "0", STR_PAD_LEFT)?></td>
-                        <td align="center"><? echo $datos['Vet_Xml'].'.xml'?></td>
+                        <td align="center"><?php echo $datos['Vet_Cod']?></td>
+                        <td align="center"><?php echo $datos['Vet_Sys']?></td>
+                        <td align="center"><?php echo $datos['Suc_Sri'].'-'.$datos['Pun_Sri'].'-'.str_pad($datos['Vet_Num'], 9, "0", STR_PAD_LEFT)?></td>
+                        <td align="center"><?php echo $datos['Vet_Xml'].'.xml'?></td>
                         <td align="center">
-                        <? 
+                        <?php 
                             if ($datos['Vet_Des']==0)
                             {
                                 $impIva= ($datos['Imp_Iva']*12)/100;
@@ -434,10 +434,10 @@ if ( $op==1 || $op==2 )
                         ?>
                         </td>
                         <td align="center">
-                         <input type="checkbox" value="<? echo $datos['Vet_Xml'].'.xml'?>" name="ficheros" id="ficheros"/></td>
+                         <input type="checkbox" value="<?php echo $datos['Vet_Xml'].'.xml'?>" name="ficheros" id="ficheros"/></td>
                       </tr>
                       
-                  <?  }
+                  <?php  }
                   }else{?>
                   <tr>
                     <td align="center">&nbsp;</td>
@@ -447,7 +447,7 @@ if ( $op==1 || $op==2 )
                     <td align="center">&nbsp;</td>
                     <td align="center">&nbsp;</td>
                   </tr>
-                  <? }?>
+                  <?php }?>
                  </tbody>
                 </table>
                  <?php echo barra_estado($total_rs_consulta);?>
@@ -463,14 +463,14 @@ if ( $op==1 || $op==2 )
                </button>        
            </td>
          <td width="149">     
-            <button type="button" class="btn btn-primary start" title="Bajar archivos" onclick="downloadURI('<? echo $Ses_Emp_Cod;?>','<? echo $total_rs_consulta;?>',this.form)"> <i class=" icon-download-alt icon-white"></i> <span>&nbsp;&nbsp;Bajar&nbsp;&nbsp;</span></button> 
+            <button type="button" class="btn btn-primary start" title="Bajar archivos" onclick="downloadURI('<?php echo $Ses_Emp_Cod;?>','<?php echo $total_rs_consulta;?>',this.form)"> <i class=" icon-download-alt icon-white"></i> <span>&nbsp;&nbsp;Bajar&nbsp;&nbsp;</span></button> 
          </td>
          </tr>
          </table>
          </form>
          <br />
           
-     <? }
+     <?php }
  	break; 	
   }
 } 

@@ -1,10 +1,10 @@
-<?Php 
+Ôªø<?Php 
 /**
  * Logica de las paginas para el control de kardex
  *
  * @author Lewis Chimarro
  * @version 1.0
- * Fecha de actualizaciÛn:	2013-01-08
+ * Fecha de actualizaci√≥n:	2013-01-08
 
  *
  * @package tesoreria.LOGICA
@@ -40,7 +40,7 @@ class Class_Log_Datos_Factu extends MysqlDatos{
     * @param Class_Log_Conexion_Pro $obBD para realizar la conexcion correspondiente
     * @return result si existen datos de retorno
     */
-    function consultasobBD($sen_sql,$param, $obBD){
+    function consultasobBD($sen_sql,$param, $obBD = null){
         $Par_Sql= $this->parametros($param);
         return $this->consulta(sentencias_doc($sen_sql,$Par_Sql), $obBD->conexion);
     }
@@ -53,7 +53,7 @@ class Class_Log_Datos_Factu extends MysqlDatos{
     * @param Class_Log_Conexion_Pro $obBD para realizar la conexcion correspondiente
     * @return result si existen datos de retorno
     */
-    function operacionobBD($sen_sql,$param, $obBD){
+    function operacionobBD($sen_sql,$param, $obBD = null){
         $Par_Sql= $this->parametros($param);
         return $this->grabarv_registros(sentencias_doc($sen_sql,$Par_Sql), $obBD->conexion);
     }
@@ -65,7 +65,7 @@ class Class_Log_Datos_Factu extends MysqlDatos{
      * @param Class_Log_Conexion_Cli $obBD para realizar la conexcion correspondiente
      * @return array $row fila de datos
      */
-    function getRowConsulta($sen_sql,$param,$obBD){
+    function getRowConsulta($sen_sql,$param,$obBD = null){
         $result = $this->consultasobBD($sen_sql,$param,$obBD);
         $row =  $this->fetch_assoc($result);
         $this->free_result($result);
@@ -85,7 +85,7 @@ class Class_Log_Datos_Factu extends MysqlDatos{
      * @param Class_Log_Datos_Cli $obDT para la abtraccion de los datos
      * @return array $array arreglo de datos asociados
      */ 
-    function getArrayConsulta($sen_sql,$param,$obBD){
+    function getArrayConsulta($sen_sql,$param,$obBD = null){
         $result = $this->consultasobBD($sen_sql,$param,$obBD);
         $array = array();
         while($row_rs = $this->fetch_assoc($result)){
@@ -109,26 +109,26 @@ class Class_Log_Datos_Factu extends MysqlDatos{
      * @param string $param cadena de datos
      * @param Class_Log_Datos_Cli $obBD objeto de conexion
      */
-    function insertUpdateDelete($sen_sql,$param, $obBD){		
+    function insertUpdateDelete($sen_sql,$param, $obBD = null){		
         $this->inicio_transaccion($obBD->conexion);		
             $this->operacionobBD($sen_sql,$param,$obBD);//Realiza Insert, Update o Delete
         $this->fin_transaccion($obBD->conexion);		
     }
 
     function codigoSecMensualAuto($Pec_Cod, $mes, $obBD){			
-        /*  CodificaciÛn numerica en base al periodo contable y mensualmente  */
+        /*  Codificaci√≥n numerica en base al periodo contable y mensualmente  */
         $row_rs_numsec= $this->getRowConsultaSql("SELECT IFNULL(MAX(Cop_Sec),0)+1 AS Cop_Sec FROM compras WHERE  Pec_Cod ='$Pec_Cod' AND MONTH(Cop_Fec)='$mes';", $obBD);        
         return $row_rs_numsec['Cop_Sec'];
     }
     function codigoComprAutomatic($Tia_Cod, $Pec_Cod, $mes, $obBD){	
-        /*  CodificaciÛn numerica en base al periodo contable y mensualmente  */
+        /*  Codificaci√≥n numerica en base al periodo contable y mensualmente  */
         $row_rs_numcom= $this->getRowConsultaSql("SELECT IFNULL(MAX(Com_Num),0)+1 AS Com_Num FROM comprobantes WHERE Pec_Cod ='$Pec_Cod' AND MONTH(Com_Fec)='$mes' AND Tia_Cod='$Tia_Cod';", $obBD);        
         return $row_rs_numcom['Com_Num'];
     }
     /**
     * Formato standar para reportes
-    * @param int $sucursal CÛdigo de la sucursal
-    * @param string $titulo TÌtulo del reporte
+    * @param int $sucursal C√≥digo de la sucursal
+    * @param string $titulo T√≠tulo del reporte
     * @param string $subtitulo Subtitulo del reporte
     */
     function cabeceraReporteStandar($sucursal, $titulo, $subtitulo,$obBD){
@@ -165,18 +165,18 @@ class Class_Log_Datos_Factu extends MysqlDatos{
                     <td colspan="2" valign="top"><hr /></td>
                 </tr>
                 <tr align="center">
-                    <td colspan="2" valign="top" class="TITULO_REPORTE"><? echo $titulo; ?></td>
+                    <td colspan="2" valign="top" class="TITULO_REPORTE"><?php echo $titulo; ?></td>
                 </tr>
                 <tr align="center">
-                    <td colspan="2" valign="top" class="TITULO_REPORTE"><? echo $subtitulo; ?></td>
+                    <td colspan="2" valign="top" class="TITULO_REPORTE"><?php echo $subtitulo; ?></td>
                 </tr>
             </table>
             <?php
     } 
     /**
      * Formato standar para reportes
-     * @param int $sucursal CÛdigo de la sucursal
-     * @param string $usuario CÛdigo del usuario 
+     * @param int $sucursal C√≥digo de la sucursal
+     * @param string $usuario C√≥digo del usuario 
      */	
     function pieReporteStandar($sucursal, $usuario, $obBD){ 
         /* Consulta de la cabecera del reporte */
@@ -257,7 +257,7 @@ class Class_Log_Datos_Factu extends MysqlDatos{
             
             $tan_sql="SELECT Esq_Cod,Esq_Rec,Esq_Des,Esq_Xml,Esq_Ord FROM esquema WHERE esquema.Tan_Cod=$Tan_Cod AND esquema.Esq_Rec={Esq_Rec} AND esquema.Esq_Est='A' order by Esq_Ord Asc";
             $rs_esquema = $this->getArrayConsultaSql(str_replace("{Esq_Rec}",$Esq_Rec,$tan_sql), $obBD_conexion); // Consultamos las estiquetas Raiz del XML Factura Electronica
-            /* Inicio de bucle de la identificaciÛn */	
+            /* Inicio de bucle de la identificaci√≥n */	
             foreach($rs_esquema as $row){ // Asignamos las etiquetas consultadas a la variable "$etiqueta[]"
                 $Eti_raiz[] = $row['Esq_Xml'];
                 $Cod_raiz[] = $row['Esq_Cod'];					
@@ -337,13 +337,13 @@ class Class_Log_Datos_Factu extends MysqlDatos{
                 $Cod_infoFac[] = $row['Esq_Cod'];					
             } unset ($row);
             $armado_xml.="<".$Eti_infoFac[0].">".$rs_infoCliente['Ret_Fec']."</".$Eti_infoFac[0].">".             //<fechaEmision>
-                "<".$Eti_infoFac[1].">".utf8_encode($rs_infoEmpresa['Suc_Dir'])."</".$Eti_infoFac[1].">";       //<dirEstablecimiento>
+                "<".$Eti_infoFac[1].">".mb_convert_encoding($rs_infoEmpresa['Suc_Dir'], 'UTF-8', 'ISO-8859-1')."</".$Eti_infoFac[1].">";       //<dirEstablecimiento>
             if($rs_infoEmpresa['Emp_Reg']!=''){				
                 $armado_xml.="<".$Eti_infoFac[2].">".$rs_infoEmpresa['Emp_Reg']."</".$Eti_infoFac[2].">";       //<contribuyenteEspecial>
             }
             $armado_xml.="<".$Eti_infoFac[3].">".$rs_infoEmpresa['Emp_Cnt']."</".$Eti_infoFac[3].">". 	    //<obligadoContabilidad>
                 "<".$Eti_infoFac[4].">".$rs_infoCliente['Ide_Prv']."</".$Eti_infoFac[4].">".  	            //<tipoIdentificacionSujetoRetenido>
-                "<".$Eti_infoFac[5].">".utf8_encode($rs_infoCliente['Prs_Nom']." ".$rs_infoCliente['Prs_Ape'])."</".$Eti_infoFac[5].">".//<razonSocialSujetoRetenido> 
+                "<".$Eti_infoFac[5].">".mb_convert_encoding($rs_infoCliente['Prs_Nom']." ".$rs_infoCliente['Prs_Ape'], 'UTF-8', 'ISO-8859-1')."</".$Eti_infoFac[5].">".//<razonSocialSujetoRetenido> 
                 "<".$Eti_infoFac[6].">".$rs_infoCliente['Prs_Ced']."</".$Eti_infoFac[6].">".	           //<identificacionSujetoRetenido>
                 "<".$Eti_infoFac[7].">".$data['PeriodoFiscal']."</".$Eti_infoFac[7].">";//<periodoFiscal>
             $armado_xml .="</".$Eti_raiz[1].">";  //</infoCompRetencion> 	$rs_perContable['PerCon']
@@ -395,15 +395,15 @@ class Class_Log_Datos_Factu extends MysqlDatos{
                     $Cod_infoAdicional[] = $row['Esq_Cod'];					
                 }
                 if($rs_infoCliente['Prs_Dir']!='')
-                { $armado_xml.="<".$Eti_infoAdicional[0]." nombre='DirecciÛn'>".utf8_encode($rs_infoCliente['Prs_Dir'])."</".$Eti_infoAdicional[0].">";	}
+                { $armado_xml.="<".$Eti_infoAdicional[0]." nombre='Direcci√≥n'>".mb_convert_encoding($rs_infoCliente['Prs_Dir'], 'UTF-8', 'ISO-8859-1')."</".$Eti_infoAdicional[0].">";	}
                 if($rs_infoCliente['Prs_Tel']!='')
-                { $armado_xml.="<".$Eti_infoAdicional[0]." nombre='TelÈfono'>".$rs_infoCliente['Prs_Tel']."</".$Eti_infoAdicional[0].">"; }
+                { $armado_xml.="<".$Eti_infoAdicional[0]." nombre='Tel√©fono'>".$rs_infoCliente['Prs_Tel']."</".$Eti_infoAdicional[0].">"; }
                 if($rs_infoCliente['Prs_Cor']!='')
                 { $armado_xml.="<".$Eti_infoAdicional[0]." nombre='Email'>".$rs_infoCliente['Prs_Cor']."</".$Eti_infoAdicional[0].">"; }
                 $armado_xml .="</".$Eti_raiz[3].">";  //</infoAdicional>
             }
             $armado_xml ='<comprobanteRetencion id="comprobante" version="1.0.0">'.$armado_xml.'</comprobanteRetencion>';
-            $buffer = utf8_encode('<?xml version="1.0" encoding="UTF-8"?>'.$armado_xml);
+            $buffer = mb_convert_encoding('<?xml version="1.0" encoding="UTF-8"?>'.$armado_xml, 'UTF-8', 'ISO-8859-1');
             //var_dump($buffer);
             if (!file_exists($Emp_Cod)) mkdir($Emp_Cod, 0777, true);
             $archivo = $Emp_Cod."/".$claveAcceso.".xml";	
@@ -506,23 +506,23 @@ class Class_Log_Datos_Factu extends MysqlDatos{
         try{
             require '../../Librerias/PHPMail/class.phpmailer.php';            
             $mail = new PHPMailer(true); // Crear una nueva  instancia de PHPMailer habilitando el tratamiento de excepciones
-            // Configuramos el protocolo SMTP con autenticaciÛn
+            // Configuramos el protocolo SMTP con autenticaci√≥n
             $mail->IsSMTP();
             $mail->SMTPAuth = true;
             $mail->IsHTML(true);
-            // ConfiguraciÛn del servidor SMTP
+            // Configuraci√≥n del servidor SMTP
             $mail->Port = 25;
             $mail->Host = 'ofsercont.com';
             $mail->Username = "facturacion.electronica@ofsercont.com";
             $mail->Password = "p.123456";
-            // ConfiguraciÛn cabeceras del mensaje
+            // Configuraci√≥n cabeceras del mensaje
             $mail->From = "facturacion.electronica@ofsercont.com";
             $mail->FromName = $data['{Emp_Nom}'];
             $mail->AddAddress(trim($data['{Prs_Cor}']),strtoupper($data['{proveedor}']));
             //$mail->AddAddress("destino2@correo.com","Nombre 2");
             //$mail->AddCC("copia1@correo.com","Nombre copia 1");
             //$mail->AddBCC("copia1@correo.com","Nombre copia 1");
-            $mail->Subject = "Comprobante ElectrÛnico";
+            $mail->Subject = "Comprobante Electr√≥nico";
             // Creamos en una variable el cuerpo, contenido HMTL, del correo //$body  = "Proebando los correos con un tutorial<br>";
             $mail->Body = $body;
             // Ficheros adjuntos //$mail->AddAttachment("misImagenes/foto1.jpg", "developandoFoto.jpg");

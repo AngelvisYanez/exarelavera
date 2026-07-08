@@ -82,7 +82,7 @@ if (isset($hdd_save))
 	<tr>
 	  	
         <td height="389" valign="top">
-         <form method="post" name= "form1" action="<? echo $_SERVER['PHP_SELF'];?>">
+         <form method="post" name= "form1" action="<?php echo $_SERVER['PHP_SELF'];?>">
   <table width="100%" height="23"
    border="0" align="left" bgcolor="#C7E0CD" >
   </table>

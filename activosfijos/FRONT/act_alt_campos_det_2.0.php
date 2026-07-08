@@ -423,8 +423,8 @@ $total_rs_seccion = count($rs_seccion);
 		*/
 	 	$row_rs_con_tip_act = $obBD_con1->getRowConsulta(416,$Tia_Des, $obBD_conexion);
 ?>
-<form method="post" name= "form2" id="form2" action="<? echo $_SERVER['PHP_SELF'];?>"   enctype="multipart/form-data">
-<? 
+<form method="post" name= "form2" id="form2" action="<?php echo $_SERVER['PHP_SELF'];?>"   enctype="multipart/form-data">
+<?php 
   /** 
    * Creacion del campo REPOST
    */
@@ -441,7 +441,7 @@ $total_rs_seccion = count($rs_seccion);
 	<tr>
 	  <td class="Etiqueta1">Tipo de Activo:</td>
 	  <td width="83%" class="LetraNegra">&nbsp;<?php echo $row_rs_con_tip_act["Tia_Des"];?> 
-	    <input type="hidden" name="Tia_Cdc" id="Tia_Cdc" value="<? echo $row_rs_con_tip_act['Tia_Cdc'];?>">
+	    <input type="hidden" name="Tia_Cdc" id="Tia_Cdc" value="<?php echo $row_rs_con_tip_act['Tia_Cdc'];?>">
 	 	</td>
 	  </tr>
 	<!--<tr>
@@ -654,30 +654,30 @@ $total_rs_seccion = count($rs_seccion);
 		      <td width="12%" class="Etiqueta1"><?php if($row_rs_con_camp['Cam_Est'] == 'I'){ $rojo='#FF0000'; $isact ='F';}else{$rojo=''; $isact ='T';} ?><?php if($row_rs_con_camp['Cam_Req'] == 'R'){
 				echo "<span class=\"Asterisco\">* </span>";  $str = $str.'cam_r['.$r.']*';?>
 		        <?php echo $row_rs_con_camp['Cam_Cor'].": "; ?>
-		      <td width="40%">&nbsp;<input name="cam_rc[<? echo $r;  ?>]" type="hidden" id="cam_rc[<? echo $r; ?>]" value="<? echo $row_rs_con_camp['Cam_Cod']; ?>">
+		      <td width="40%">&nbsp;<input name="cam_rc[<?php echo $r;  ?>]" type="hidden" id="cam_rc[<?php echo $r; ?>]" value="<?php echo $row_rs_con_camp['Cam_Cod']; ?>">
 		          <?php $tipo = $row_rs_con_camp['Cam_Tip'];?>
 		          <?php if($tipo != 'TX'){?>
-		          <input name="cam_r[<? echo $r; ?>]2" type="text" id="cam_r[<? echo $r; ?>]"
+		          <input name="cam_r[<?php echo $r; ?>]2" type="text" id="cam_r[<?php echo $r; ?>]"
 				  <?php if($tipo == 'NE'){echo "onKeyPress=\"return validar_numeric(event)\"";}
 				  	if($tipo == 'ND'){echo "onKeyPress=\"return validar_decimal(event)\"";}
 				  ?>
 				  >
 		          <?php }else{?>
-  <textarea name="cam_r[<? echo $r ?>]"id="cam_r[<? echo $r; ?>]" cols="60" rows="3"></textarea><? }?></td>
+  <textarea name="cam_r[<?php echo $r ?>]"id="cam_r[<?php echo $r; ?>]" cols="60" rows="3"></textarea><?php }?></td>
 		      <?php
 				$r++;
 				}else{
 				echo $row_rs_con_camp['Cam_Cor']." :"; ?>	
-		      <td width="48%">&nbsp;<input name="cam_c[<? echo $i ?>]" type="hidden" id="cam_c[<? echo $i; ?>]" value="<? echo $row_rs_con_camp['Cam_Cod']; ?>">
+		      <td width="48%">&nbsp;<input name="cam_c[<?php echo $i ?>]" type="hidden" id="cam_c[<?php echo $i; ?>]" value="<?php echo $row_rs_con_camp['Cam_Cod']; ?>">
 		        <?php $tipo = $row_rs_con_camp['Cam_Tip'];?>
 		        <?php if($tipo != 'TX'){?>
-		        <input name="cam[<? echo $i ?>]" type="text" id="cam[<? echo $i; ?>]"
+		        <input name="cam[<?php echo $i ?>]" type="text" id="cam[<?php echo $i; ?>]"
 				   <?php if($tipo == 'NE'){echo "onKeyPress=\"return validar_numeric(event)\"";}
 				  	if($tipo == 'ND'){echo "onKeyPress=\"return validar_decimal(event)\"";}
 				  ?>
 				  ><?php }else{?>
-		        <textarea name="cam[<? echo $i ?>]"id="cam[<? echo $i; ?>]" cols="60" rows="3"></textarea><? }?></td>
-		      <?
+		        <textarea name="cam[<?php echo $i ?>]"id="cam[<?php echo $i; ?>]" cols="60" rows="3"></textarea><?php }?></td>
+		      <?php
 				$i++;
 				}
 				$cont++;
@@ -692,10 +692,10 @@ $total_rs_seccion = count($rs_seccion);
     </table> 
 </fieldset>
  </fieldset>
-   <input name="Tia_Des" type="hidden" id="Tia_Des" value="<? echo $Tia_Des; ?>">
+   <input name="Tia_Des" type="hidden" id="Tia_Des" value="<?php echo $Tia_Des; ?>">
 	<input name="hdd_save" type="hidden" id="hdd_save" value="insertar">
-    <input name="i" type="hidden" id="i" value="<? echo $i; ?>">
-	<input name="r" type="hidden" id="r" value="<? echo $r; ?>">    
+    <input name="i" type="hidden" id="i" value="<?php echo $i; ?>">
+	<input name="r" type="hidden" id="r" value="<?php echo $r; ?>">    
     <input type="hidden" name="volver_txt_busqueda" value="<?php echo $_POST['volver_txt_busqueda'];?>">
  </form>
     <br>
@@ -711,7 +711,7 @@ $total_rs_seccion = count($rs_seccion);
       </td>
       <td width="136">
       <form enctype="multipart/form-data">
-	  <button name="boton_guardar" id="boton_guardar" title="Guardar" type="button" class="btn btn-primary fileinput-button" value="Guardar" <? if($str != ""){ ?> onClick="validar_requeridos(document.getElementById('form2'),'Act_Des*Suc_Cod*Prv_Cod*Pri_Cod*Cus_Cod*Est_Cod*Act_Can*<?php echo substr($str, 0, -1); ?>',1)" <? }else{?>onClick="validar_requeridos(document.getElementById('form2'),'Act_Des*Suc_Cod*Prv_Cod*Pri_Cod*Cus_Cod*Sec_Cod*Est_Cod*Act_Can*Act_Val*Act_Res*Act_Ann',1)"<? }?> >
+	  <button name="boton_guardar" id="boton_guardar" title="Guardar" type="button" class="btn btn-primary fileinput-button" value="Guardar" <?php if($str != ""){ ?> onClick="validar_requeridos(document.getElementById('form2'),'Act_Des*Suc_Cod*Prv_Cod*Pri_Cod*Cus_Cod*Est_Cod*Act_Can*<?php echo substr($str, 0, -1); ?>',1)" <?php }else{?>onClick="validar_requeridos(document.getElementById('form2'),'Act_Des*Suc_Cod*Prv_Cod*Pri_Cod*Cus_Cod*Sec_Cod*Est_Cod*Act_Can*Act_Val*Act_Res*Act_Ann',1)"<?php }?> >
      <i class=" icon-book icon-white"></i>
 <span>&nbsp;&nbsp;Guardar&nbsp;&nbsp;</span>
       </button>     

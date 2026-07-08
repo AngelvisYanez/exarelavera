@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?	
+<?php	
 /**
 * @abstract Permite consultar los cheques 
 * @author Lewis Chimarro
@@ -184,7 +184,7 @@ else
   </tr>
 	<tr>
             <td align="left" valign="top" height="400">	  
-<? 
+<?php 
 if (!isset($hdd_save) && !isset($hdd_save2) && !isset($codigo)) 
 { ?>
 	<form action="<?Php echo $_SERVER['PHP_SELF']?>" method="post" name= "form1">
@@ -236,7 +236,7 @@ else
 		?>		
 		<div id="ContTabul">
 		<form action="<?Php echo $_SERVER['PHP_SELF']?>" method="post" name= "form1">				
-      	<? 
+      	<?php 
 		  switch ($op) 
 		  {
 			case 1: ?>      
@@ -327,7 +327,7 @@ No. de Cheque
 				<td width="144" class="BarraBusqueda"><input name="fin" type="text" id="fin" value="<?php if (isset($ini)){ echo $fin; }else{ echo date("Y-m-d"); }?>"  size="10" onBlur="validar_fecha2(this)" onKeyUp="mascara(this,'-',patron,true);">
 				</td>
 				<td width="113"><div align="center">
-					<input name="op" type="hidden" value="<? echo $op; ?>" >
+					<input name="op" type="hidden" value="<?php echo $op; ?>" >
 					<input name="Pec_Cod" id="Pec_Cod" type="hidden" value="<?Php  echo $Pec_Cod; ?>">
 					<input name="Pec_Fei" id="Pec_Fei" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fei']; ?>">
 					<input name="Pec_Fef" id="Pec_Fef" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fef']; ?>">				
@@ -368,7 +368,7 @@ No. de Cheque
 				  </tr>
 				</thead>
 			  <tbody>
-		<?
+		<?php
 		if ($total_rs_cabcompr > 0) 
 		{		 
 			$i=0; 				
@@ -379,25 +379,25 @@ No. de Cheque
 				  { $rojo='#FF0000'; $anulada++; }else{$rojo='';} ?>
 				<tr>
 				  
-				  <td align="center"><font color="<? echo $rojo;?>"><? echo $row['Com_Cod']; ?></font></td>
-                                  <td align="center"><font color="<? echo $rojo;?>"><? echo $row['Che_Num']; ?></font></td>
+				  <td align="center"><font color="<?php echo $rojo;?>"><?php echo $row['Com_Cod']; ?></font></td>
+                                  <td align="center"><font color="<?php echo $rojo;?>"><?php echo $row['Che_Num']; ?></font></td>
 				  <td align="center"><font color="<?php echo $rojo; ?>">
 					<?Php  if ($row['Com_Gen'] == 'M') echo "Manual"; else echo "Autom&aacute;tico";
 			  ?>
 					</font></td>
 				  <td align="center"><font color="<?php echo $rojo; ?>">
-					<? 
+					<?php 
 			list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 			  echo $row['Tia_Abr'].'-'.$mes.'-'.$row['Com_Num']; ?>
 					</font></td>
-				  <td><font color="<? echo $rojo;?>"><? echo $row['Prs_Ced']; ?></font></td>
-				  <td><font color="<? echo $rojo;?>"><? echo $row['Prs_Ape']." ".$row['Prs_Nom']; ?></font></td>
-				  <td align="center"><font color="<? echo $rojo;?>"><? echo $row['Com_Fec']; ?></font></td>
-				  <td align="right"><font color="<? echo $rojo;?>"><? echo $row['Com_Val']; ?></font></td>
+				  <td><font color="<?php echo $rojo;?>"><?php echo $row['Prs_Ced']; ?></font></td>
+				  <td><font color="<?php echo $rojo;?>"><?php echo $row['Prs_Ape']." ".$row['Prs_Nom']; ?></font></td>
+				  <td align="center"><font color="<?php echo $rojo;?>"><?php echo $row['Com_Fec']; ?></font></td>
+				  <td align="right"><font color="<?php echo $rojo;?>"><?php echo $row['Com_Val']; ?></font></td>
                                   <td align="center">
                                       <button type="button" class="btn btn-info btn-mini" onclick="Muestra_Aparecer();ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax=true&ComCod=<?php echo $row['Com_Cod']; ?>','ajax_modal')"><i class="icon-info-sign icon-white"></i></button>
                                   </td>
-                                  <td align="center"><? if ($row['Com_Est']=='A') { ?>
+                                  <td align="center"><?php if ($row['Com_Est']=='A') { ?>
 					<form action="<?Php echo $_SERVER['PHP_SELF']; ?>" method="post" name="form2" id="form2">
 					  <input name="codigo" id="codigo" type="hidden"  value="<?php echo $row['Com_Cod']; ?>" />
 					  <input name="Pec_Cod" id="Pec_Cod" type="hidden"  value="<?php echo $Pec_Cod; ?>" />
@@ -426,7 +426,7 @@ No. de Cheque
 				  <td align="center">&nbsp;</td>
                                   
 				  </tr>-->
-				<?	  		
+				<?php	  		
 			   }//while ($row_rs_cabcompr = $obBD_con1->fetch_assoc($rs_cabcompr));  ?>
                              
 				<?Php 
@@ -459,9 +459,9 @@ No. de Cheque
 			}//Fin del if ($anulada > 0)
 			?>
 			<br/>
-		<?
+		<?php
 		require_once('../../componentes/FRONT/com_con_leyenda.php');?> 
-	<? }//FIn del if(isset($txt_busqueda))
+	<?php }//FIn del if(isset($txt_busqueda))
 		
 	/**
 	* Control parte de la opcion 1 
@@ -485,24 +485,24 @@ No. de Cheque
 				<input name="Pec_Fei" id="Pec_Fei" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fei']; ?>">
 				<input name="Pec_Fef" id="Pec_Fef" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fef']; ?>">
 			  C&oacute;d. Compr: </td>
-			<td width="38%" class="LetraNegra">&nbsp;<? list($ann, $mes, $dia) = preg_split('![/.-]!', $row_rs_cabcomp['Com_Fec']);
+			<td width="38%" class="LetraNegra">&nbsp;<?php list($ann, $mes, $dia) = preg_split('![/.-]!', $row_rs_cabcomp['Com_Fec']);
 		  echo $row_rs_cabcomp['Tia_Abr'].'-'.$mes.'-'.$row_rs_cabcomp['Com_Num']; ?></td>
 			<td width="11%" class="Etiqueta1">Fecha:</td>
-			<td width="36%" class="LetraNegra">&nbsp;<? echo $row_rs_cabcomp['Com_Fec']; ?></td>
+			<td width="36%" class="LetraNegra">&nbsp;<?php echo $row_rs_cabcomp['Com_Fec']; ?></td>
 		  </tr>
 		  <tr>
 			<td class="Etiqueta1">Nombre:</td>
-			<td class="LetraNegra">&nbsp;<? echo $row_rs_cabcomp['Prs_Ape'].' '.$row_rs_cabcomp['Prs_Nom']; ?></td>
+			<td class="LetraNegra">&nbsp;<?php echo $row_rs_cabcomp['Prs_Ape'].' '.$row_rs_cabcomp['Prs_Nom']; ?></td>
 			<td class="Etiqueta1">Valor:</td>
-			<td class="LetraNegra">&nbsp;<? echo $row_rs_cabcomp['Com_Val']; ?></td>
+			<td class="LetraNegra">&nbsp;<?php echo $row_rs_cabcomp['Com_Val']; ?></td>
 		  </tr>
 		  <tr>
 			<td class="Etiqueta1">Concepto:</td>
-			<td colspan="3" class="LetraNegra">&nbsp;<? echo $row_rs_cabcomp['Com_Con']; ?></td>
+			<td colspan="3" class="LetraNegra">&nbsp;<?php echo $row_rs_cabcomp['Com_Con']; ?></td>
 		  </tr>
 		  <tr>
 			<td valign="top" class="Etiqueta1">Observaci&oacute;n:</td>
-			<td colspan="3" valign="top" class="LetraNegra">&nbsp;<? echo $row_rs_cabcomp['Com_Obs']; ?></td>
+			<td colspan="3" valign="top" class="LetraNegra">&nbsp;<?php echo $row_rs_cabcomp['Com_Obs']; ?></td>
 		  </tr>
 		</table>
 		</FIELDSET>
@@ -521,25 +521,25 @@ No. de Cheque
 			  </tr>
 			</thead>
 		  <tbody>
-			<? 
+			<?php 
 		if ($total_rs_cuentas > 0)
 		{ 
 			do {   
 		?>
 			<tr>
-			  <td><? echo $row_rs_cuentas['Pld_Cdc']; ?></td>
-			  <td><? echo $row_rs_cuentas['Pld_Des']; ?></td>
-			  <td><? echo $row_rs_cuentas['Asi_Glo']; ?></td>
-			  <td align="right"><? if ($row_rs_cuentas['Asi_Deh']=='D') { echo $row_rs_cuentas['Asi_Val']; $total=$total + $row_rs_cuentas['Asi_Val']; } ?></td>
-			  <td align="right"><? if ($row_rs_cuentas['Asi_Deh']=='H') { echo $row_rs_cuentas['Asi_Val']; } ?></td>
+			  <td><?php echo $row_rs_cuentas['Pld_Cdc']; ?></td>
+			  <td><?php echo $row_rs_cuentas['Pld_Des']; ?></td>
+			  <td><?php echo $row_rs_cuentas['Asi_Glo']; ?></td>
+			  <td align="right"><?php if ($row_rs_cuentas['Asi_Deh']=='D') { echo $row_rs_cuentas['Asi_Val']; $total=$total + $row_rs_cuentas['Asi_Val']; } ?></td>
+			  <td align="right"><?php if ($row_rs_cuentas['Asi_Deh']=='H') { echo $row_rs_cuentas['Asi_Val']; } ?></td>
 			  </tr>
-			<? } while($row_rs_cuentas=$obBD_con1->fetch_assoc($rs_cuentas)); } ?>
+			<?php } while($row_rs_cuentas=$obBD_con1->fetch_assoc($rs_cuentas)); } ?>
 			<tr>
 			  <td class="LetraNegra">&nbsp;</td>
 			  <td class="LetraNegra">&nbsp;</td>
 			  <td class="LetraNegra"><strong>Totales</strong></td>
-			  <td class="LetraNegra" align="right"><strong><? echo number_format($total,2); ?></strong></td>
-			  <td class="LetraNegra" align="right"><strong><? echo number_format($total,2); ?></strong></td>
+			  <td class="LetraNegra" align="right"><strong><?php echo number_format($total,2); ?></strong></td>
+			  <td class="LetraNegra" align="right"><strong><?php echo number_format($total,2); ?></strong></td>
 			  </tr>
 			</tbody>
 		  </table>
@@ -565,7 +565,7 @@ No. de Cheque
 			  </tr>
 			</thead>
 		  <tbody>
-			<? if($total_rs_concomp != 0)
+			<?php if($total_rs_concomp != 0)
 			  {
 		 do {
 			if($row_rs_concomp['Che_Est']=='I')
@@ -579,12 +579,12 @@ No. de Cheque
                         $ruta='.'.(file_exists ('cheques/'.$Ses_Emp_Cod)?'/cheques/'.$Ses_Emp_Cod:'');
 		 ?>
 			<tr>
-			  <td><font color="<? echo $rojo;?>"><? echo $row_rs_concomp['Prs_Ape'].' '.$row_rs_concomp['Prs_Nom']; ?></font></td>
-			  <td><font color="<? echo $rojo;?>"><? echo $row_rs_concomp['Pld_Des'];?>
+			  <td><font color="<?php echo $rojo;?>"><?php echo $row_rs_concomp['Prs_Ape'].' '.$row_rs_concomp['Prs_Nom']; ?></font></td>
+			  <td><font color="<?php echo $rojo;?>"><?php echo $row_rs_concomp['Pld_Des'];?>
 				</font></td>
-			  <td align="right"><font color="<? echo $rojo;?>"><? echo $row_rs_concomp['Che_Num']; ?></font></td>
-			  <td align="right"><font color="<? echo $rojo;?>"><? echo "$".''.number_format($row_rs_concomp['Che_Val'],2,'.',''); ?></font></td>
-			  <td align="center"><font color="<? echo $rojo;?>"><? echo $row_rs_concomp['Che_Fec']; ?></font></td>
+			  <td align="right"><font color="<?php echo $rojo;?>"><?php echo $row_rs_concomp['Che_Num']; ?></font></td>
+			  <td align="right"><font color="<?php echo $rojo;?>"><?php echo "$".''.number_format($row_rs_concomp['Che_Val'],2,'.',''); ?></font></td>
+			  <td align="center"><font color="<?php echo $rojo;?>"><?php echo $row_rs_concomp['Che_Fec']; ?></font></td>
 			  <form action="<?php echo $ruta; ?>/tes_pri_cheque_mac_1.0.php" method="post" name= "form3" target="_blank" id="form3">
 				<td align="center">
                 <?Php 
@@ -694,7 +694,7 @@ No. de Cheque
                   </td>
 				</form>
 			  </tr>
-			<? } while ($row_rs_concomp = $obBD_con1->fetch_assoc($rs_concomp)); 
+			<?php } while ($row_rs_concomp = $obBD_con1->fetch_assoc($rs_concomp)); 
 	   } //FIn del if($total_rs_concomp != 0) 
 	   else 
 	   { ?>
@@ -711,7 +711,7 @@ No. de Cheque
                           <td>&nbsp;</td>
 			  <td>&nbsp;</td>
 			  </tr>
-	<? } //Fin del else if($total_rs_concomp != 0) ?>
+	<?php } //Fin del else if($total_rs_concomp != 0) ?>
 			</tbody>
 		  </table>
 		<?php 
@@ -723,7 +723,7 @@ No. de Cheque
         }//Fin del if ($anulada > 0)
         ?>
         <br/>
-    <?
+    <?php
     require_once('../../componentes/FRONT/com_con_leyenda.php');?>	  	  	
 		</FIELDSET>	
 		<br />
@@ -731,7 +731,7 @@ No. de Cheque
 		  <tr>
 				<td width="110">
 				<form action="<?Php  echo $_SERVER['PHP_SELF']?>" method="post" name= "form2">
-				<button type="button" class="btn btn-inverse fileinput-button" title="Atrï¿½s" onclick="campos_hide(this.form, 'txt_busqueda*op_opciones*cmb_mes*Pec_Cod*hdd_volver*bancos', '<? echo $volver_busqueda.'*'.$volver_opciones.'*'.$volver_mes.'*'.$Pec_Cod.'*1*'.$volver_bancos;?>')"> <i class=" icon-arrow-left icon-white"></i> <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span></button>
+				<button type="button" class="btn btn-inverse fileinput-button" title="Atrï¿½s" onclick="campos_hide(this.form, 'txt_busqueda*op_opciones*cmb_mes*Pec_Cod*hdd_volver*bancos', '<?php echo $volver_busqueda.'*'.$volver_opciones.'*'.$volver_mes.'*'.$Pec_Cod.'*1*'.$volver_bancos;?>')"> <i class=" icon-arrow-left icon-white"></i> <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span></button>
 				 <input name="Pec_Cod" id="Pec_Cod" type="hidden"  value="<?php echo $Pec_Cod; ?>" />
 				  <input name="hdd_save" type="hidden" id="hdd_save" />
 				  <input name="op" type="hidden" value="<?Php echo $op; ?>" >
@@ -750,9 +750,9 @@ No. de Cheque
 			<table width="407" border="0" cellspacing="0" cellpadding="0">
 			  <tr>
 				<td width="47" class="LetraNegra"><strong>Desde:</strong></td>
-				<td width="138" class="LetraNegra"><? echo $ini;?></td>
+				<td width="138" class="LetraNegra"><?php echo $ini;?></td>
 				<td width="46" class="LetraNegra"><strong>Desde:</strong></td>
-				<td width="176"><span class="LetraNegra"><? echo $fin;?></span></td>
+				<td width="176"><span class="LetraNegra"><?php echo $fin;?></span></td>
 			  </tr>
 			  <tr>
 				<td colspan="4" class="LetraNegra"><strong>Cheques:</strong>&nbsp;
@@ -774,7 +774,7 @@ No. de Cheque
 		  </tr>
 		</thead>
 		<tbody>  
-		<? 
+		<?php 
 		if ($total_rs_tot_cheques) 
 		{
 			$total = 0;
@@ -786,18 +786,18 @@ No. de Cheque
 			?>
           <tr>
             <td align="left"><font color="<?php echo $rojo; ?>">
-              <? 
+              <?php 
 			list($ann, $mes, $dia) = preg_split('![/.-]!', $row_rs_tot_cheques['Com_Fec']);
 			  echo $row_rs_tot_cheques['Tia_Abr'].'-'.$mes.'-'.$row_rs_tot_cheques['Com_Num']; ?>
             </font></td>
-            <td title="<? echo $row_rs_tot_cheques['Prs_Ape'].' '.$row_rs_tot_cheques['Prs_Nom']; ?>" style="white-space: nowrap; overflow: hidden;"><font color="<?php echo $rojo; ?>"><? echo $row_rs_tot_cheques['Prs_Ape'].' '.$row_rs_tot_cheques['Prs_Nom']; ?></font></td>
-            <td><font color="<?php echo $rojo; ?>"><? echo $row_rs_tot_cheques['Pld_Des']; ?></font></td>
-            <td align="right"><font color="<?php echo $rojo; ?>"><? echo $row_rs_tot_cheques['Che_Num']; ?></font></td>
-            <td align="center"><font color="<?php echo $rojo; ?>"><? echo $row_rs_tot_cheques['Che_Fec']; ?></font></td>
-            <td width="21%" style="white-space: nowrap; overflow: hidden;" title="<? echo $row_rs_tot_cheques['Com_Con']; ?>"><font color="<?php echo $rojo; ?>"><? echo $row_rs_tot_cheques['Com_Con']; ?></font></td>
-            <td align="right"><font color="<?php echo $rojo; ?>"><? echo "$".''.number_format($row_rs_tot_cheques['Che_Val'],2,'.',''); ?></font></td>
+            <td title="<?php echo $row_rs_tot_cheques['Prs_Ape'].' '.$row_rs_tot_cheques['Prs_Nom']; ?>" style="white-space: nowrap; overflow: hidden;"><font color="<?php echo $rojo; ?>"><?php echo $row_rs_tot_cheques['Prs_Ape'].' '.$row_rs_tot_cheques['Prs_Nom']; ?></font></td>
+            <td><font color="<?php echo $rojo; ?>"><?php echo $row_rs_tot_cheques['Pld_Des']; ?></font></td>
+            <td align="right"><font color="<?php echo $rojo; ?>"><?php echo $row_rs_tot_cheques['Che_Num']; ?></font></td>
+            <td align="center"><font color="<?php echo $rojo; ?>"><?php echo $row_rs_tot_cheques['Che_Fec']; ?></font></td>
+            <td width="21%" style="white-space: nowrap; overflow: hidden;" title="<?php echo $row_rs_tot_cheques['Com_Con']; ?>"><font color="<?php echo $rojo; ?>"><?php echo $row_rs_tot_cheques['Com_Con']; ?></font></td>
+            <td align="right"><font color="<?php echo $rojo; ?>"><?php echo "$".''.number_format($row_rs_tot_cheques['Che_Val'],2,'.',''); ?></font></td>
           </tr>
-		<? 	} while ($row_rs_tot_cheques = $obBD_con1->fetch_assoc($rs_tot_cheques)); ?>
+		<?php 	} while ($row_rs_tot_cheques = $obBD_con1->fetch_assoc($rs_tot_cheques)); ?>
 		</tbody>
 		<tfoot>
 		  <tr>
@@ -806,7 +806,7 @@ No. de Cheque
             </td>
 		  </tr>
 		</tfoot>  	
-		<? 
+		<?php 
 		}//Fin del if ($total_rs_tot_cheques) 
 		else 
 		{ ?>
@@ -819,7 +819,7 @@ No. de Cheque
 				<td>&nbsp;</td>
 				<td>&nbsp;</td>
 			  </tr>
-	 <? } ?>		  
+	 <?php } ?>		  
 		</table>
         </div>
 		<?php 
@@ -831,7 +831,7 @@ No. de Cheque
         }//Fin del if ($anulada > 0)
         ?>
         <br/>
-    <?
+    <?php
     require_once('../../componentes/FRONT/com_con_leyenda.php');?>	  	  	
 		<?Php
 		if ($total_rs_tot_cheques>0) 

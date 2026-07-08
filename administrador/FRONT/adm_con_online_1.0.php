@@ -42,8 +42,8 @@ if ($total_rs_online > 0)
 		$apellido = explode(' ', $row_rs_online['Prs_Ape']);
 		$nombre = explode(' ', $row_rs_online['Prs_Nom']);
 		
-		$chat_username = utf8_encode(ucfirst($nombre[0])."-".ucfirst($apellido[0])); 
-		$chat_username2 = utf8_encode(ucfirst($nombre[0])." ".ucfirst($apellido[0]));		
+		$chat_username = mb_convert_encoding(ucfirst($nombre[0])."-".ucfirst($apellido[0]), 'UTF-8', 'ISO-8859-1'); 
+		$chat_username2 = mb_convert_encoding(ucfirst($nombre[0])." ".ucfirst($apellido[0]), 'UTF-8', 'ISO-8859-1');		
 		?>  
 		  <tr><td>
 				<a href="javascript:void(0)" style="color:#000;font-size:12px;padding-left:5px;" onClick="javascript:chatWith('<?Php echo $chat_username; ?>')"><img src="../../mascaras/model1/imagenes/32x32/user_green.png" width="14" height="14" style="border:none;"><?php echo " ".$chat_username2; ?></a>

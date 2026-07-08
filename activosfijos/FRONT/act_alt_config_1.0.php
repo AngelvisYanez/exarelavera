@@ -133,7 +133,7 @@ if(isset($saveConfiguracion)){
                     buttonicon:"glyphicon glyphicon-plus", 
                     title:'Agregar',
                     onClickButton: function(){ 
-                        var $this=$(this),id=($this.jqGrid('getCol','Index',false,'max')+1)||0; 
+                        public $this=$(this),id=($this.jqGrid('getCol','Index',false,'max')+1)||0; 
                         $this.jqGrid('addRowData',id,{'Index':id});     
                         $this.jqGrid('editRow',id);
                     }, 

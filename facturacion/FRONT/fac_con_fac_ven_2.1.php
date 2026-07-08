@@ -326,7 +326,7 @@ switch ($op) {
 														<option value="">Seleccione...</option>
 														<?Php
 														foreach ($row_tipo_compr as $row) {
-															$row = array_map('utf8_encode', $row); // Convert each element to UTF-8 
+															$row = array_map(function($v) { return mb_convert_encoding($v, 'UTF-8', 'ISO-8859-1'); }, $row); // Convert each element to UTF-8 
 														?>
 															<option <?Php if ($Tic_Cod == $row['Tic_Cod']) {
 																		echo "selected";
@@ -423,19 +423,19 @@ switch ($op) {
 												?>
 														<tr>
 															<td align="center">
-																<FONT COLOR="<? echo $rojo; ?>"><?Php echo $row_rs_buscar['Vet_Cod']; ?></FONT>
+																<FONT COLOR="<?php echo $rojo; ?>"><?Php echo $row_rs_buscar['Vet_Cod']; ?></FONT>
 															</td>
 															<td align="center">
-																<FONT COLOR="<? echo $rojo; ?>"><?Php echo $row_rs_buscar['Vet_Num']; ?></FONT>
+																<FONT COLOR="<?php echo $rojo; ?>"><?Php echo $row_rs_buscar['Vet_Num']; ?></FONT>
 															</td>
 															<td align="left">
-																<FONT COLOR="<? echo $rojo; ?>">&nbsp;<?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Prs_Ape'] . ' ' . $row_rs_buscar['Prs_Nom'], '#FFFF00', 1); ?></FONT>
+																<FONT COLOR="<?php echo $rojo; ?>">&nbsp;<?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Prs_Ape'] . ' ' . $row_rs_buscar['Prs_Nom'], '#FFFF00', 1); ?></FONT>
 															</td>
 															<td align="center">
-																<FONT COLOR="<? echo $rojo; ?>"><?Php echo $row_rs_buscar['Caj_Fec']; ?></FONT>
+																<FONT COLOR="<?php echo $rojo; ?>"><?Php echo $row_rs_buscar['Caj_Fec']; ?></FONT>
 															</td>
 															<td align="center">
-																<? if ($row_rs_buscar['Vet_Aut'] == 'S') {
+																<?php if ($row_rs_buscar['Vet_Aut'] == 'S') {
 																	/**
 																	 * Consulta los tipos de comprobantes
 																	 */
@@ -447,7 +447,7 @@ switch ($op) {
 																		$urlPdf = "../COMPONENTES/tesPdfNotasCreditoElectronica_2.0.php";
 																	}
 																?>
-																	<form name="frm_pdf" id="frm_pdf" action="<? echo $urlPdf; ?>" method="post" target="_blank">
+																	<form name="frm_pdf" id="frm_pdf" action="<?php echo $urlPdf; ?>" method="post" target="_blank">
 																		<button type="button" class="btn btn-primary btn-mini" title="Pdf(Factura electr&oacute;nica SRI)" onclick="this.form.submit()">
 																			<i class=" icon-download-alt icon-white"></i> <span></span> </button>
 																		<input name="urlXml" id="urlXml" type="hidden" value="<?Php echo '../FRONT/' . $Ses_Emp_Cod . "/" . $row_rs_buscar['Vet_Xml'] . "_A.xml"; ?>">
@@ -463,10 +463,10 @@ switch ($op) {
 
 																		?>
 
-																		<input name="logoUrl" id="logoUrl" type="hidden" value="<? echo $logoUrl; ?>">
+																		<input name="logoUrl" id="logoUrl" type="hidden" value="<?php echo $logoUrl; ?>">
 
 																	</form>
-																<? } ?>
+																<?php } ?>
 															</td>
 															<td align="center">
 																<button type="button" name="button" id="button" class="btn btn-info btn-mini" title="Ver detalle" onclick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_detalle=1&ajax_codigo=<?Php echo $row_rs_buscar['Vet_Cod']; ?>','ajax_modal')">
@@ -525,7 +525,7 @@ switch ($op) {
 								} //Fin del if ($anulada > 0)
 								?>
 								<br />
-								<?
+								<?php
 								require_once('../../componentes/FRONT/com_con_leyenda.php');
 								?>
 							<?Php
@@ -910,7 +910,7 @@ switch ($op) {
 																</tr>
 															</table>
 
-														<?
+														<?php
 														} else {
 														?>
 															<table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader02" style="table-layout:fixed;">
@@ -973,14 +973,14 @@ switch ($op) {
 																			<td align="center"><?php echo   str_pad($row_rs_buscarcarrera['Vet_Num'], 6, "0", STR_PAD_LEFT); ?></td>
 
 																			<td align="center"><?php echo $row_rs_buscarcarrera['Caj_Fec']; ?></td>
-																			<td style="mso-number-format:'@';" title="<? echo $row_rs_buscarcarrera['Prs_Ced']; ?>"><?PHP echo $row_rs_buscarcarrera['Prs_Ced']; ?></td>
-																			<td title="<? echo $CliCad; ?>"><?PHP echo $Cli_Nombre; ?></td>
-																			<td align="center" style="white-space: nowrap; overflow: hidden;" title="<? echo $row_rs_buscarcarrera['Ret_Num']; ?>"><?php echo $row_rs_buscarcarrera['Ret_Num'];/*$numRet=explode("-",$row_rs_buscarcarrera['Ret_Num']); echo (isset($numRet[2])?$numRet[2]:'');*/ ?></td>
-																			<td align="center" style="white-space: nowrap; overflow: hidden;" title="<? echo $row_rs_buscarcarrera['CodigoSri']; ?>"><?php echo $row_rs_buscarcarrera['CodigoSri'];/*$numRet=explode("-",$row_rs_buscarcarrera['Ret_Num']); echo (isset($numRet[2])?$numRet[2]:'');*/ ?></td>
-																			<td align="center" style="white-space: nowrap; overflow: hidden;" title="<? echo $row_rs_buscarcarrera['Ret_Aut']; ?>"><?php echo $row_rs_buscarcarrera['Ret_Aut']; ?></td>
-																			<td align="center" style="white-space: nowrap; overflow: hidden;" title="<? echo $row_rs_buscarcarrera['Ret_Fec']; ?>"><?php echo $row_rs_buscarcarrera['Ret_Fec']; ?></td>
-																			<td align="right" style="white-space: nowrap; overflow: hidden;"><? echo formato_numero($row_retencion['r_renta'], 2, 3); ?></td>
-																			<td align="right"><? echo formato_numero($row_retencion['r_iva'], 2, 3); ?></td>
+																			<td style="mso-number-format:'@';" title="<?php echo $row_rs_buscarcarrera['Prs_Ced']; ?>"><?PHP echo $row_rs_buscarcarrera['Prs_Ced']; ?></td>
+																			<td title="<?php echo $CliCad; ?>"><?PHP echo $Cli_Nombre; ?></td>
+																			<td align="center" style="white-space: nowrap; overflow: hidden;" title="<?php echo $row_rs_buscarcarrera['Ret_Num']; ?>"><?php echo $row_rs_buscarcarrera['Ret_Num'];/*$numRet=explode("-",$row_rs_buscarcarrera['Ret_Num']); echo (isset($numRet[2])?$numRet[2]:'');*/ ?></td>
+																			<td align="center" style="white-space: nowrap; overflow: hidden;" title="<?php echo $row_rs_buscarcarrera['CodigoSri']; ?>"><?php echo $row_rs_buscarcarrera['CodigoSri'];/*$numRet=explode("-",$row_rs_buscarcarrera['Ret_Num']); echo (isset($numRet[2])?$numRet[2]:'');*/ ?></td>
+																			<td align="center" style="white-space: nowrap; overflow: hidden;" title="<?php echo $row_rs_buscarcarrera['Ret_Aut']; ?>"><?php echo $row_rs_buscarcarrera['Ret_Aut']; ?></td>
+																			<td align="center" style="white-space: nowrap; overflow: hidden;" title="<?php echo $row_rs_buscarcarrera['Ret_Fec']; ?>"><?php echo $row_rs_buscarcarrera['Ret_Fec']; ?></td>
+																			<td align="right" style="white-space: nowrap; overflow: hidden;"><?php echo formato_numero($row_retencion['r_renta'], 2, 3); ?></td>
+																			<td align="right"><?php echo formato_numero($row_retencion['r_iva'], 2, 3); ?></td>
 																			<td align="right"><?php echo formato_numero($row_rs_buscarcarrera['Vet_Tot'], 2, 3);
 
 																								?></td>
@@ -1008,8 +1008,8 @@ switch ($op) {
 																<tfoot>
 																	<tr>
 																		<td align="right" colspan="9"><strong>TOTALES:</strong></td>
-																		<td align="right"><? echo $total_r_renta; ?></td>
-																		<td align="right"><? echo $total_r_iva; ?></td>
+																		<td align="right"><?php echo $total_r_renta; ?></td>
+																		<td align="right"><?php echo $total_r_iva; ?></td>
 																		<td align="right"><b><?Php echo formato_numero($total_imp, 2, 3); ?></b></td>
 																		<td align="right"><b><?Php echo formato_numero($total_des, 2, 3); ?></b></td>
 																		<td align="right"><?Php echo formato_numero($total_imp - $total_des, 2, 3); ?></td>
@@ -1379,7 +1379,7 @@ switch ($op) {
 																<td width="8%" valign="top" align="center"><?php echo $row_rs_buscarcarrera['Caj_Fec']; ?></td>
 																<td width="8%" valign="top" style="mso-number-format:'@';"><?PHP echo $row_rs_buscarcarrera['Prs_Ced']; ?></td>
 																<td width="25%" valign="top"><?PHP echo $row_rs_buscarcarrera['Prs_Ape'] . " " . $row_rs_buscarcarrera['Prs_Nom']; ?> &nbsp;</td>
-																<td width="25%" valign="top" align="left" style=""><? echo $row_rs_buscarcarrera['Vet_Obs']; ?></td>
+																<td width="25%" valign="top" align="left" style=""><?php echo $row_rs_buscarcarrera['Vet_Obs']; ?></td>
 																<td width="10%" valign="top" align="center">
 																	<?Php
 																	/*
@@ -2089,16 +2089,16 @@ switch ($op) {
 								<table width="100%" border="0" cellpadding="0" cellspacing="0">
 									<tr>
 										<td width="14%" class="Etiqueta1">Cudela/R.U.C.:</td>
-										<td class="LetraNegra">&nbsp;<? echo $row_rs_cliente['Est_Ruf']; ?> <div align="right"></div>
+										<td class="LetraNegra">&nbsp;<?php echo $row_rs_cliente['Est_Ruf']; ?> <div align="right"></div>
 										</td>
 									</tr>
 									<tr>
 										<td class="Etiqueta1">Representante:</td>
-										<td class="LetraNegra">&nbsp;<? echo $row_rs_cliente['Est_Fac']; ?></td>
+										<td class="LetraNegra">&nbsp;<?php echo $row_rs_cliente['Est_Fac']; ?></td>
 									</tr>
 									<tr>
 										<td class="Etiqueta1">Direcci&oacute;n:</td>
-										<td class="LetraNegra">&nbsp;<? echo $row_rs_cliente['Est_Dir']; ?></td>
+										<td class="LetraNegra">&nbsp;<?php echo $row_rs_cliente['Est_Dir']; ?></td>
 									</tr>
 								</table>
 							</FIELDSET>

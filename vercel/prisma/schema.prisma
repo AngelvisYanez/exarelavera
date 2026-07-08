@@ -1,5 +1,3 @@
-// schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,15 +7,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// --- Modelos de exa_master ---
-
 model Empresa {
   id      Int      @id @default(autoincrement())
   emp_cod Int      @unique @map("Emp_Cod")
   emp_nom String   @map("Emp_Nom")
   emp_ruc String   @map("Emp_Ruc")
   emp_est String   @map("Emp_Est")
-  accesos Acceso[]
   datos   Data[]
 
   @@map("empresas")
@@ -25,36 +20,33 @@ model Empresa {
 
 model Data {
   dat_cod Int     @id @default(autoincrement()) @map("Dat_Cod")
-  dat_dis String  @map("Dat_Dis") // Nombre de la BD distribuida
+  dat_dis String  @map("Dat_Dis")
   emp_cod Int     @map("Emp_Cod")
   empresa Empresa @relation(fields: [emp_cod], references: [emp_cod])
+  accesos Acceso[]
 
   @@map("data")
 }
 
 model Acceso {
-  id      Int     @id @default(autoincrement())
-  acc_usr String  @map("Acc_Usr")
-  acc_est String  @map("Acc_Est")
-  dat_cod Int     @map("Dat_Cod")
-  suc_cod Int     @map("Suc_Cod")
-  empresa Empresa @relation(fields: [dat_cod], references: [emp_cod])
+  id      Int    @id @default(autoincrement())
+  acc_usr String @map("Acc_Usr")
+  acc_est String @map("Acc_Est")
+  dat_cod Int    @map("Dat_Cod")
+  suc_cod Int    @map("Suc_Cod")
+  data    Data   @relation(fields: [dat_cod], references: [dat_cod])
 
   @@map("access")
 }
 
-// --- Modelo de Base Distribuida ---
-
 model Usuario {
   id      Int    @id @default(autoincrement())
-  usu_ced String @unique @map("Usu_Ced") // Usuario
-  usu_pal String @map("Usu_Pal")         // MD5 Password
+  usu_ced String @unique @map("Usu_Ced")
+  usu_pal String @map("Usu_Pal")
   usu_est String @map("Usu_Est")
 
   @@map("usuarios")
 }
-
-// --- Modelo del Monitor de Incidencias ---
 
 model Incident {
   id            String   @id @default(uuid())

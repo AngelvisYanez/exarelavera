@@ -27,23 +27,23 @@ if(isset($Com_Busqueda))
         		<td><strong>Descripci&oacute;n</strong></td>
 				<td width="4%"></td>
         	</tr>
-      		<?
+      		<?php
 	  		if ($total_rs_buscta > 0) {
 	  			do { 
 	  				?>
       				<tr <?Php echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Cuerpo_ajax");?> class="Cuerpo_ajax">
-        				<td><div align="center"><? echo $row_rs_buscta['Pro_Cod']; ?></div></td>
-						<td><div align="center"><? echo $row_rs_buscta['Pro_Ide']; ?></div></td>
-        				<td><? echo marcar_cadena($Com_Busqueda, $row_rs_buscta['Ite_Lar'], '#FFFF00', 0); ?></td>
+        				<td><div align="center"><?php echo $row_rs_buscta['Pro_Cod']; ?></div></td>
+						<td><div align="center"><?php echo $row_rs_buscta['Pro_Ide']; ?></div></td>
+        				<td><?php echo marcar_cadena($Com_Busqueda, $row_rs_buscta['Ite_Lar'], '#FFFF00', 0); ?></td>
         				<td><div align="center" onClick="nueva_fila_deuda('c_contenido', '<?php echo $row_rs_buscta['Pro_Cod'];?>','<?php echo $row_rs_buscta['Ite_Lar'];?>','<?php echo $Car_Nom; ?>','<?php echo $Sem_Nom; ?>','','','','','<?php echo $Com_Sem_Cod?>', '<?Php echo $_SERVER['PHP_SELF']; ?>', '<?Php echo $Per_Fea; ?>', '<?Php echo $Per_Fef; ?>')"><img src="../../imagenes/insertar.jpg" style="cursor:pointer"  width="22" height="22"></div>
 						</td>
         			</tr>
-      			<? } while ($row_rs_buscta = $obBD_con1->fetch_assoc($rs_buscta));
+      			<?php } while ($row_rs_buscta = $obBD_con1->fetch_assoc($rs_buscta));
 	  		} else { ?>
 	  				<tr>
 						<td colspan="4"><?php echo error_alerta("No hay resultados que mostrar", 1)?></td>
 	  				</tr>
-	  		<? }?>
+	  		<?php }?>
 			<tr>
 				<td colspan="4" align="center"><img src="../../imagenes/ocultar2.jpg" height="12" style="cursor:pointer" alt="Ocultar" onClick="ShowHide('tbl_resultados')"></td>
 			</tr>

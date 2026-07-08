@@ -1,10 +1,10 @@
-<?Php 
+﻿<?Php 
 /**
  * Logica de las paginas de factura de compra
  *
  * @author Lewis Chimarro
  * @version 1.0
- * Fecha de actualización:	2012-08-20
+ * Fecha de actualizaciÃ³n:	2012-08-20
  *
  * @package tesoreria.LOGICA
  */
@@ -39,7 +39,7 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 	* @param Class_Log_Conexion_Con $obBD para realizar la conexcion correspondiente
 	* @return result si existen datos de retorno
 	*/
-	function consultasobBD($sen_sql,$param, $obBD)
+	function consultasobBD($sen_sql,$param, $obBD = null)
 	{
 		$Par_Sql= $this->parametros($param);
 		return $this->consulta(sentencias_comf($sen_sql,$Par_Sql), $obBD->conexion);
@@ -53,7 +53,7 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 	* @param Class_Log_Conexion_Con $obBD para realizar la conexcion correspondiente
 	* @return result si existen datos de retorno
 	*/
-	function operacionobBD($sen_sql,$param, $obBD)
+	function operacionobBD($sen_sql,$param, $obBD = null)
 	{
 		//echo '<br>- '.$sen_sql;
 		$Par_Sql= $this->parametros($param);
@@ -67,7 +67,7 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 	 * @param Class_Log_Conexion_Con $obBD para realizar la conexcion correspondiente
 	 * @return array $row fila de datos
 	 */
-	function getRowConsulta($sen_sql,$param,$obBD)
+	function getRowConsulta($sen_sql,$param,$obBD = null)
 	{
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);
 		
@@ -86,7 +86,7 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 	 * @param Class_Log_Datos_Con $obDT para la abtraccion de los datos
 	 * @return array $array arreglo de datos asociados
 	 */ 
-	function getArrayConsulta($sen_sql,$param,$obBD)
+	function getArrayConsulta($sen_sql,$param,$obBD = null)
 	{
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);
 		
@@ -108,7 +108,7 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 	 * @param string $param cadena de datos
 	 * @param Class_Log_Datos_Con $obBD objeto de conexion
 	 */
-	function insertUpdateDelete($sen_sql,$param, $obBD)
+	function insertUpdateDelete($sen_sql,$param, $obBD = null)
 	{		
 		$this->inicio_transaccion($obBD->conexion);
 		
@@ -145,8 +145,8 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 	
 	/**
 	 * Formato standar para reportes
-	 * @param int $sucursal Código de la sucursal
-	 * @param string $titulo Título del reporte
+	 * @param int $sucursal CÃ³digo de la sucursal
+	 * @param string $titulo TÃ­tulo del reporte
 	 * @param string $subtitulo Subtitulo del reporte
 	 */	
 	function cabeceraReporteStandar($sucursal, $titulo, $subtitulo,$obBD)
@@ -185,16 +185,16 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 			echo $row_institucion['Ciu_Des'].$provincia;?></div></td>
 	      </tr>
 		  <tr align="center">
-		    <td align="center" valign="top" class="Texto_Reporte"><div align="center"><? echo $row_system['Sys_Tit'];?></div></td>
+		    <td align="center" valign="top" class="Texto_Reporte"><div align="center"><?php echo $row_system['Sys_Tit'];?></div></td>
   		  </tr>
 		  <tr align="center">
 		    <td colspan="2" valign="top"><hr /></td>
   		  </tr>
 		  <tr align="center">
-		    <td colspan="2" valign="top" class="TITULO_REPORTE"><? echo $titulo; ?></td>
+		    <td colspan="2" valign="top" class="TITULO_REPORTE"><?php echo $titulo; ?></td>
   		  </tr>
 		  <tr align="center">
-		    <td colspan="2" valign="top" class="TITULO_REPORTE"><? echo $subtitulo; ?></td>
+		    <td colspan="2" valign="top" class="TITULO_REPORTE"><?php echo $subtitulo; ?></td>
 	      </tr>
 	    </table>
 <?php
@@ -202,8 +202,8 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 
 	/**
 	 * Formato standar para reportes
-	 * @param int $sucursal Código de la sucursal
-	 * @param string $usuario Código del usuario 
+	 * @param int $sucursal CÃ³digo de la sucursal
+	 * @param string $usuario CÃ³digo del usuario 
 	 */	
 	function pieReporteStandar($sucursal, $usuario, $obBD)
 	{ 
@@ -237,10 +237,10 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 	function codigoComprAuto($Tia_Cod, $Pec_Cod, $mes, $obBD_conexion)
   	{			
 		/* 
-		* Codificación numerica en base al periodo contable y mensualmente 
+		* CodificaciÃ³n numerica en base al periodo contable y mensualmente 
 		*/
 		$row_rs_numcom = $this->getRowConsulta(152, $Tia_Cod.'*'.$Pec_Cod.'*'.$mes, $obBD_conexion);
-		// Revisar la condición (todo funciona correctamente pero con artificio)
+		// Revisar la condiciÃ³n (todo funciona correctamente pero con artificio)
 		if ((count($row_rs_numcom) > 0) && ($row_rs_numcom['Com_Num'] != ''))
 		{
 			$Com_Num=$row_rs_numcom['Com_Num'];
@@ -258,10 +258,10 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 	function codigoSecMensualAuto($PeCod, $mese, $obBD_conexion)
   	{			
 		/* 
-		* Codificación numerica en base al periodo contable y mensualmente 
+		* CodificaciÃ³n numerica en base al periodo contable y mensualmente 
 		*/
 		$row_rs_numcom = $this->getRowConsulta(1082,$PeCod.'*'.$mese, $obBD_conexion);
-		// Revisar la condición (todo funciona correctamente pero con artificio)
+		// Revisar la condiciÃ³n (todo funciona correctamente pero con artificio)
 		if ((count($row_rs_numcom) > 0) && ($row_rs_numcom['Com_Num'] != ''))
 		{
 			$Com_Num=$row_rs_numcom['Com_Num'];
@@ -291,9 +291,9 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 	
 	/**
 	* Anular compras
-	* @Cop_Cod: Código de la compra
-	* @Ret_Cod: Código de la retención
-	* @Com_Cod: Código del comprobante contable
+	* @Cop_Cod: CÃ³digo de la compra
+	* @Ret_Cod: CÃ³digo de la retenciÃ³n
+	* @Com_Cod: CÃ³digo del comprobante contable
 	*/
 	function anularCompras($Cop_Cod, $Ret_Cod, $Com_Cod,$SesSucCod, $obBD_conexion)
 	{
@@ -334,7 +334,7 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 		if($Ret_Cod>0)
 		{  	
 			/**
-			* Dar de baja a la retención perteneciente a la factura dada de baja 
+			* Dar de baja a la retenciÃ³n perteneciente a la factura dada de baja 
 			*/
 				$this->operacionobBD(510, $Cop_Cod.'*'.'I', $obBD_conexion);
 		}
@@ -344,7 +344,7 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 		if($Com_Cod>0)
 		{  	
 			/**
-			* Baja lógica del comprobante de contable 
+			* Baja lÃ³gica del comprobante de contable 
 			*/
 			$this->operacionobBD(359, $Com_Cod.'*'.'I', $obBD_conexion);
 		}
@@ -352,7 +352,7 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 	}
 	
     /** 
-	* Cálculos compras con I.C.E. 
+	* CÃ¡lculos compras con I.C.E. 
 	*/
 	function calculosCompraIce($Cop_Cod, $obBD_conexion)
 	{	

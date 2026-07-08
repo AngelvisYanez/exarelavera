@@ -1,4 +1,4 @@
-<?
+<?php
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/tes_log_anexo.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
@@ -225,7 +225,7 @@ if (isset($uploadXML)) {
 				<div class="col-xs-12">
 					<FIELDSET class="exa-fieldset">
 						<LEGEND class="Titulos2">Cargar ATS</LEGEND>
-						<form method="post" name="form3" id="form3" enctype="multipart/form-data" action="<? echo $_SERVER['PHP_SELF']; ?>" class="form-horizontal normal">
+						<form method="post" name="form3" id="form3" enctype="multipart/form-data" action="<?php echo $_SERVER['PHP_SELF']; ?>" class="form-horizontal normal">
 							<div class="form-group">
 								<label class="col-xs-1 control-label label-sm required">Seleccione:</label>								
 								<div class="col-xs-4">

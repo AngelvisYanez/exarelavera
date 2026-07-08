@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?
+<?php
 /*
 * Descripción: Anula las facturas de ventas en base al vendedor y su punto de impresión
 * Fecha de actualización: 2012-03-15
@@ -170,15 +170,15 @@ switch ($op){
     <tr>
     <td width="120" class="Etiqueta1"  ><span class="Asterisco">*</span> Tipo documento:&nbsp;</td>
     <td width="445">  
-   <? $rs_comp = $obBD_con1->consulta(sentencias_tes(1320, $obBD_con1->parametros($Ses_Emp_Cod)), $obBD_conexion->conexion);
+   <?php $rs_comp = $obBD_con1->consulta(sentencias_tes(1320, $obBD_con1->parametros($Ses_Emp_Cod)), $obBD_conexion->conexion);
 	  $row_rs_comp = $obBD_con1->registros();
 	  $total_rs_detalle= $obBD_con1->numregistros();
 	?>
       <select name="Tic_Cod" id="Tic_Cod">
               <!--<option  <?Php //if ($Tic_Cod == 1){ echo "selected"; } ?> value="1">FACTURA</option>-->
-              <? do{?>
+              <?php do{?>
               <option  value="<?Php echo $row_rs_comp['Tic_Cod']; ?>"><?Php echo $row_rs_comp['Tic_Des']; ?></option>
-              <? } while($row_rs_comp = $obBD_con1->fetch_assoc($rs_comp));?>
+              <?php } while($row_rs_comp = $obBD_con1->fetch_assoc($rs_comp));?>
       </select>
      </td>
   </tr>
@@ -239,11 +239,11 @@ switch ($op){
 	  ?>
       <form name="form1" method="post" action="<?Php $_SERVER['../LOGICA/PHP_SELF']?>">
 	  <tr>
-	    <td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Vet_Cod']; ?></FONT></td>
-		<td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Suc_Sri'].'-'.$row_rs_buscar['Pun_Sri'].'-'.str_pad($row_rs_buscar['Vet_Num'],9,0,STR_PAD_LEFT ); ?></FONT></td>
-		<td align="left"><FONT COLOR="<? echo $rojo;?>">		
+	    <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Vet_Cod']; ?></FONT></td>
+		<td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Suc_Sri'].'-'.$row_rs_buscar['Pun_Sri'].'-'.str_pad($row_rs_buscar['Vet_Num'],9,0,STR_PAD_LEFT ); ?></FONT></td>
+		<td align="left"><FONT COLOR="<?php echo $rojo;?>">		
 		<?Php echo marcarCadenaColor($txt_busqueda,$row_rs_buscar['Prs_Ape'].' '.$row_rs_buscar['Prs_Nom'],'#FFFF00', '#000', 1); ?></FONT></td>
-		<td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Caj_Fec']; ?></FONT></td>		
+		<td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Caj_Fec']; ?></FONT></td>		
 		<td align="center">
         <?Php if ($row_rs_buscar['Vet_Est'] == 'A') { ?>
          <input name="Vet_Cod" id="Vet_Cod" type="hidden" value="<?Php echo $row_rs_buscar['Vet_Cod']; ?>">
@@ -343,10 +343,10 @@ if (isset($hdd_fec))
 		?> 		
         <form name="form1" method="post" action="<?Php $_SERVER['../LOGICA/PHP_SELF']?>">
     	<tr>
-		  <td align="center"><FONT COLOR="<? echo $rojo;?>"><?php echo $row_rs_buscar['Vet_Cod']; ?></FONT></td>
-		  <td align="center"><font color="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Vet_Num']; ?></font></td>
-		  <td><FONT COLOR="<? echo $rojo;?>"><?PHP echo $row_rs_buscar['Prs_Ape'].' '.$row_rs_buscar['Prs_Nom']; ?></FONT></td>
-		  <td align="center"><FONT COLOR="<? echo $rojo;?>"><?php echo $row_rs_buscar['Caj_Fec']; ?></FONT></td>
+		  <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php echo $row_rs_buscar['Vet_Cod']; ?></FONT></td>
+		  <td align="center"><font color="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Vet_Num']; ?></font></td>
+		  <td><FONT COLOR="<?php echo $rojo;?>"><?PHP echo $row_rs_buscar['Prs_Ape'].' '.$row_rs_buscar['Prs_Nom']; ?></FONT></td>
+		  <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php echo $row_rs_buscar['Caj_Fec']; ?></FONT></td>
 		   <td align="center"><?Php if ($row_rs_buscar['Vet_Est'] == 'A') { ?>
          <input name="Vet_Cod" id="Vet_Cod" type="hidden" value="<?Php echo $row_rs_buscar['Vet_Cod']; ?>">
          <input name="elim" id="elim" type="hidden" value="<?Php echo $row_rs_buscar['Vet_Est']; ?>">
@@ -388,7 +388,7 @@ if ($anulada > 0)
 	$com_leyenda[1]=$anulada;
 }//Fin del if ($anulada > 0)
 ?>
-  <?
+  <?php
 require_once('../../componentes/FRONT/com_con_leyenda.php');
 ?>
   <br/>

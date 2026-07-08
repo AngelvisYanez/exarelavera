@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?	
+<?php	
 /**
 * Descripci�n: Permite imprimir el balance de Resultados
 * Fecha de actualizaci�n:	2012-10-06
@@ -56,7 +56,7 @@ $obBD_con1 =  new Class_Log_Datos_Con;
         <td valign="top">
 <table width="100%" border="0" cellspacing="0" cellpadding="0">
   <tr class="LetraNegra">
-    <td colspan="4"><? 	
+    <td colspan="4"><?php 	
 	/**
 	* Carga los nodos del plan de cuentas 
 	*/
@@ -93,17 +93,17 @@ $obBD_con1 =  new Class_Log_Datos_Con;
         <td align="left" valign="top">
           REPRESENTANTE LEGAL
           <p>
-            <p style="margin:-1.5% 0;"> <? echo $infoFirmas['Emp_Ren'];?> </p>
+            <p style="margin:-1.5% 0;"> <?php echo $infoFirmas['Emp_Ren'];?> </p>
           <p>
-            <p style="margin:-1.5% 0;"> CI:&nbsp;<? echo $infoFirmas['Emp_Rre'];?> </p>
+            <p style="margin:-1.5% 0;"> CI:&nbsp;<?php echo $infoFirmas['Emp_Rre'];?> </p>
          </td>
         <td align="center" valign="top">&nbsp;</td>
 
         <td align="left" valign="top">CONTADOR
           <p>
-            <p style="margin:-1.5% 0;"><? echo $infoFirmas['Emp_Con'];?></p>
+            <p style="margin:-1.5% 0;"><?php echo $infoFirmas['Emp_Con'];?></p>
           <p>
-            <p style="margin:-1.5% 0;">RUC:&nbsp;<? echo $infoFirmas['Emp_Rco'];?></p>
+            <p style="margin:-1.5% 0;">RUC:&nbsp;<?php echo $infoFirmas['Emp_Rco'];?></p>
           </td>
       </tr>
       <tr>

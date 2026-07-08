@@ -373,7 +373,7 @@ $rs_sucursales = $obBD_con1->getArrayConsulta(214, $Ses_Emp_Cod.'*'.$Ses_Usu_Ced
                 <?Php } ?>
                 function resizeMain(){ $('#contenido').css('min-height',( window.innerHeight-50)+'px'); }   $(window).on('resize' ,resizeMain);
                 function loginAjax(){   
-                    var $msg;
+                    public $msg;
                     $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{loginAjax:true,Emp_Cod:$('#Emp_Cod').val(),Suc_Cod:$('#Suc_Cod').val(),user_name:$('#Usu_Ced').val(),encryptor:md5($('#Usu_Pas').val())}, function( response ) {
                         if(response['success']===true){
                              $msg='<div class="alert alert-success fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[SISTEMA]</strong> &nbsp;&nbsp;Login Correcto. Direccionando....</div>';

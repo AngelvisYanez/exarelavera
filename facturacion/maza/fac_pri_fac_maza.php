@@ -100,13 +100,13 @@ body {
   	        <td width="21%" align="left"><img src="../maza/logo.jpg" width="130" height="80"></td>
   	        <td width="79%"><table width="100%" border="0" cellspacing="0" cellpadding="0">
   	          <tr>
-  	            <td align="left" class="tituloFact"><strong><? echo $Ses_Emp_Nom;?></strong></td>
+  	            <td align="left" class="tituloFact"><strong><?php echo $Ses_Emp_Nom;?></strong></td>
 	            </tr>
   	          <tr>
   	            <!--<td align="left" class="tituloFact2">SISTEMAS ELECTRONICOS DE SEGURIDAD Y REDES JE TECHNOLOGY</td>!-->
 	            </tr>
   	          <tr>
-  	            <td align="left" class="tituloFact2"><?echo $row_institucion['Suc_Dir'];?>. Telf: <? echo $row_institucion['Suc_Te1'].' - '.$row_institucion['Suc_Te2'];?></td>
+  	            <td align="left" class="tituloFact2"><?echo $row_institucion['Suc_Dir'];?>. Telf: <?php echo $row_institucion['Suc_Te1'].' - '.$row_institucion['Suc_Te2'];?></td>
 	            </tr>
 	          </table></td>
 	        </tr>
@@ -118,20 +118,20 @@ body {
   	  <tr>
   	    <td width="11%" align="left" class="etiquetaFact"><strong>No. FACTURA:</strong></td>
   	    <td width="32%" class="etiquetaFact">&nbsp;<strong>
-  	      <? 
+  	      <?php 
 		  	$row_rs_punSri = $obBD_con1->getRowConsulta(1216,$row_rs_cliente[0]['Pun_Cod'],$obBD_conexion);			
 			echo $row_rs_punSri['Suc_Sri']."-".$row_rs_punSri['Pun_Sri']."-".str_pad($row_rs_cliente[0]['Vet_Num'],9,'0',STR_PAD_LEFT); 
 		  ?>
 	      </strong></td>
   	    <td width="6%" align="left" class="etiquetaFact"><strong>EMISI&Oacute;N:</strong></td>
-  	    <td width="14%" class="etiquetaFact">&nbsp;<? echo $dia."/".$mes."/".$anio;?></td>
+  	    <td width="14%" class="etiquetaFact">&nbsp;<?php echo $dia."/".$mes."/".$anio;?></td>
   	    <td align="left" class="etiquetaFact"><strong>CIUDAD:</strong></td>
   	    <td align="left" class="etiquetaFact">&nbsp;<?Php echo $row_institucion['Ciu_Des']; ?></td>
 	    </tr>
   	  <tr>
   	    <td align="left" class="etiquetaFact"><strong>CLIENTE:</strong></td>
   	    <td colspan="3" class="etiquetaFact">&nbsp;
-  	      <? if ($row_rs_representante['Cli_Fac'] != "")
+  	      <?php if ($row_rs_representante['Cli_Fac'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Fac'];  
 			}
@@ -139,7 +139,7 @@ body {
 		    ?></td>
   	    <td width="10%" align="left" class="etiquetaFact"><strong>R.U.C / C.I:</strong></td>
   	    <td width="27%" class="etiquetaFact">&nbsp;
-  	      <? if ($row_rs_representante['Cli_Fac'] != "")
+  	      <?php if ($row_rs_representante['Cli_Fac'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Ruf']; 
 			}
@@ -151,7 +151,7 @@ body {
   	  <tr>
   	    <td align="left" class="etiquetaFact"><strong>DIRECCI&Oacute;N:</strong></td>
   	    <td colspan="5" class="etiquetaFact">&nbsp;
-  	      <? if ($row_rs_representante['Cli_Dir'] != "")
+  	      <?php if ($row_rs_representante['Cli_Dir'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Dir']; 
 			}
@@ -164,7 +164,7 @@ body {
   	    <td colspan="6" align="left"><table width="100%" border="0" cellspacing="0" cellpadding="0">
   	      <tr>
   	        <td width="12%" class="etiquetaFact"><strong>CLAVE DE ACCESO:</strong></td>
-  	        <td width="88%" class="etiquetaFact"><? echo $claveacceso;?></td>
+  	        <td width="88%" class="etiquetaFact"><?php echo $claveacceso;?></td>
 	        </tr>
 	      </table></td>
 	    </tr>
@@ -192,7 +192,7 @@ body {
   	          <td height="150" colspan="4" valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="0">
   	            <tr>
   	              <td><table width="100%">
-  	                <? foreach($row_rs_cliente as $row){?>
+  	                <?php foreach($row_rs_cliente as $row){?>
   	                <tr class="etiquetaFact">
   	                  <td width="83" align="left"><?Php echo $row['Vet_Can']?></td>
   	                  <td width="618">&nbsp;&nbsp;<?Php echo $row['Ite_Lar'].' '.$row['Pro_Obs']?></td>
@@ -259,8 +259,8 @@ body {
   	                  <td valign="top" class="etiquetaFact">&nbsp;</td>
 	                  </tr>
   	                <tr>
-  	                  <td width="11%" valign="top" class="etiquetaFact"><strong>&nbsp;<? if($row_rs_cliente[0]['Vet_Obs']!=''){?>OBSERVACI&Oacute;N:<? }?></strong></td>
-  	                  <td width="89%" valign="top" class="etiquetaFact">&nbsp;<? if($row_rs_cliente[0]['Vet_Obs']!=''){ echo $row_rs_cliente[0]['Vet_Obs'];}?></td>
+  	                  <td width="11%" valign="top" class="etiquetaFact"><strong>&nbsp;<?php if($row_rs_cliente[0]['Vet_Obs']!=''){?>OBSERVACI&Oacute;N:<?php }?></strong></td>
+  	                  <td width="89%" valign="top" class="etiquetaFact">&nbsp;<?php if($row_rs_cliente[0]['Vet_Obs']!=''){ echo $row_rs_cliente[0]['Vet_Obs'];}?></td>
 	                  </tr>
 	                </table></td>
 	              </tr>
@@ -288,7 +288,7 @@ body {
   	                  <td align="right"><?Php echo formato_numero($resultados[3]* $Cambio_Moneda, 2, 1); ?>&nbsp;</td>
 	                  </tr>
   	                <tr>
-  	                  <td width="73%" align="left">&nbsp;<strong>Forma de Pago:</strong> <? echo strtoupper($row_rs_formapago['Tpc_Des']);?></td>
+  	                  <td width="73%" align="left">&nbsp;<strong>Forma de Pago:</strong> <?php echo strtoupper($row_rs_formapago['Tpc_Des']);?></td>
   	                  <td width="15%" align="right"><strong>TOTAL:&nbsp;</strong></td>
   	                  <td align="right"><strong><?php echo number_format($resultados[5] * $Cambio_Moneda, 2); ?></strong>&nbsp;</td>
 	                  </tr>
@@ -305,7 +305,7 @@ body {
   </tr>
   <tr>
 
-          <td height="5" valign="top"  class="etiquetaFact" >&nbsp;<strong>Nota:</strong> Descargue su Factura Electr&oacute;nica en:  &nbsp;&nbsp;exa.ofsercont.com/facturacion/FRONT/electronica.php?Emp_Cod=<? echo $Ses_Emp_Cod;?>&Prs_Cod=<? echo $row_rs_cliente[0]['Prs_Cod'];?></td>
+          <td height="5" valign="top"  class="etiquetaFact" >&nbsp;<strong>Nota:</strong> Descargue su Factura Electr&oacute;nica en:  &nbsp;&nbsp;exa.ofsercont.com/facturacion/FRONT/electronica.php?Emp_Cod=<?php echo $Ses_Emp_Cod;?>&Prs_Cod=<?php echo $row_rs_cliente[0]['Prs_Cod'];?></td>
   </tr>
   <tr>
     <td height="6"  class="etiquetaFact" >&nbsp;</td>

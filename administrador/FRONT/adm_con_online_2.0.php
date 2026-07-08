@@ -37,7 +37,7 @@ if (count($rs_online) > 0)
                 $user=array(
                     'Id'=>$row['Prs_Cod'],//$row['Usu_Cod'],
                     'RoomId'=>'1',//$Ses_Emp_Cod,
-                    'Name'=> utf8_encode(ucfirst($nombre[0])." ".ucfirst($apellido[0])),
+                    'Name'=> mb_convert_encoding(ucfirst($nombre[0])." ".ucfirst($apellido[0]), 'UTF-8', 'ISO-8859-1'),
                     'Email'=> $row['Prs_Cor'],
                     'ProfilePictureUrl'=> ($row['Usu_Cox']*1>=$time_pasado3?'../../framework/jquery/ChatJs/images/userGreen.png':'../../framework/jquery/ChatJs/images/userGrey.png'),
                     'Status'=>($row['Usu_Cox']*1>=$time_pasado3?'1':'0')

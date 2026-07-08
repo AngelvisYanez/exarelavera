@@ -1,5 +1,5 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<?
+<?php
 /**
  * Permite registrar un nuevo Cliente ya sea Nacional(Cedula o Ruc) o Extranjero(Pasaporte)
  * 
@@ -183,7 +183,7 @@
     </tr>
    <tr>
     <td height="400" valign="top">
-     <form method="post" name= "form" action="<? echo $_SERVER['PHP_SELF'];?>">        
+     <form method="post" name= "form" action="<?php echo $_SERVER['PHP_SELF'];?>">        
       <table width="100%" border="0" cellpadding="0" cellspacing="0">
          <tr>
           <td width="11%"  align="right" class="LetraNegra">
@@ -241,7 +241,7 @@
      </form>
     </td>
    </tr> 
-   <? } ?>
+   <?php } ?>
 <tr>
 <td>
 <?php 
@@ -252,9 +252,9 @@
 <LEGEND>
 <label class='Titulos2'>Datos a registrar</label>
 </LEGEND>
-	<form method="post" name="form" action="<? echo $_SERVER['PHP_SELF'];?>">
-	<? $thisPost->startPost();?>
-    <input type="hidden" value="<? echo $event;?>" name="event" id="event" >
+	<form method="post" name="form" action="<?php echo $_SERVER['PHP_SELF'];?>">
+	<?php $thisPost->startPost();?>
+    <input type="hidden" value="<?php echo $event;?>" name="event" id="event" >
   <table width="100%" border="0">
   <tr>
        <td><?Php echo mensaje_requerido(); ?></td>
@@ -280,7 +280,7 @@
       <tr>
         <td class="Etiqueta1"><span class="Asterisco">*</span> Tipo de documento:</td>
 	    <td class="LetraNegra">&nbsp;
-		<?
+		<?php
 			/**
 			 * Total de caracteres
 			 * @var int
@@ -293,8 +293,8 @@
 			 */
 			$Identifica = $obBD_con1->getRowConsulta(6,$Ide_Max,$obBD_conexion);
 		?>
-		<input type="hidden" id="Ide_Cod" name="Ide_Cod" value="<? echo $Identifica['Ide_Cod'];?>">
-			<? echo $Identifica['Ide_Des'];?>			
+		<input type="hidden" id="Ide_Cod" name="Ide_Cod" value="<?php echo $Identifica['Ide_Cod'];?>">
+			<?php echo $Identifica['Ide_Des'];?>			
 		</td>
 	    </tr>
 	    
@@ -614,7 +614,7 @@
 			{
 		?>
 				<input name="Prs_Tel" type="text" id="Prs_Tel" style="text-transform:uppercase" value="" size="15" maxlength="15" onBlur="numerico(this)"/>
-		<?
+		<?php
 			}
 		?>
        </td>    
@@ -635,7 +635,7 @@
 			{
 		?>
 				<input name="Prs_Te2" type="text" id="Prs_Te2" style="text-transform:uppercase" value="" size="15" maxlength="15" onBlur="numerico(this)"/>
-		<?
+		<?php
 			}
 		?>
        </td>    
@@ -654,7 +654,7 @@
 			{
 		?>
 				<input name="Prs_Cel" type="text" id="Prs_Cel" style="text-transform:uppercase" value="" size="15" maxlength="15" onBlur="numerico(this)"/>
-		<?
+		<?php
 			}
 		?>
        </td>    
@@ -681,7 +681,7 @@
 			{
 		?>
 				<input name="Prs_Cor" type="text" id="Prs_Cor" value="" size="30" onblur="correo(this);"/>
-		<?
+		<?php
 			}
 		?>
        </td>

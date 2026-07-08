@@ -1,5 +1,5 @@
 <!DOCTYPE unspecified PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<?	
+<?php	
 /** 
 * Descripción: Permite registrar las cuentas del plan de cuentas
 * Fecha de actualización:	2011-04-13
@@ -218,7 +218,7 @@ if (isset($ajax_codigo))
       					</tr>
 					</thead>
     				<tbody>
-      				<? foreach($row_rs_planes as $row){
+      				<?php foreach($row_rs_planes as $row){
 	 		 			if($row['Pla_Est']=='Inactivo'){ 
 							$rojo='#FF0000';
 							if(!isset($com_leyenda[1]))$com_leyenda[1]=1;
@@ -227,23 +227,23 @@ if (isset($ajax_codigo))
 						}			
 						?>
 					      <tr>
-					        	<td align="center"><FONT COLOR="<? echo $rojo;?>"><? echo $row['Pla_Cod']; ?></FONT></td>
-					        	<td><FONT COLOR="<? echo $rojo;?>"><? echo $row['Pla_Obs']; ?></FONT></td>
+					        	<td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php echo $row['Pla_Cod']; ?></FONT></td>
+					        	<td><FONT COLOR="<?php echo $rojo;?>"><?php echo $row['Pla_Obs']; ?></FONT></td>
 					        	<td align="center">
-					        		<button type="button" class="btn btn-primary btn-mini" title="Editar" onclick="Muestra_Aparecer();$('#plaCodigo').val('<?php echo $row['Pla_Cod']; ?>');$('#des_plan').val('<? echo $row['Pla_Obs']; ?>');"><i class=" icon-edit icon-white"></i></button>
+					        		<button type="button" class="btn btn-primary btn-mini" title="Editar" onclick="Muestra_Aparecer();$('#plaCodigo').val('<?php echo $row['Pla_Cod']; ?>');$('#des_plan').val('<?php echo $row['Pla_Obs']; ?>');"><i class=" icon-edit icon-white"></i></button>
 					        	</td>
 					        	<td align="center">
-							        <form name='form1' method='post'  action='<? echo $_SERVER['PHP_SELF'];?>'>
+							        <form name='form1' method='post'  action='<?php echo $_SERVER['PHP_SELF'];?>'>
 							        <button type="button" class="btn btn-success btn-mini" title="Elegir" onclick="this.form.submit()">
 							        	<i class=" icon-arrow-right icon-white"></i>
 							        </button>
-							        <input type="hidden" id="codpla" name="codpla" value="<? echo $row['Pla_Cod']; ?>" />
+							        <input type="hidden" id="codpla" name="codpla" value="<?php echo $row['Pla_Cod']; ?>" />
 							        <input type="hidden" id="pag" name="pag" value="1" />
 							        <input type="hidden" id="np" name="np" value="0" />
 							       </form> 
 								</td>
 					      </tr>
-				      <? 
+				      <?php 
       				}
 					  /**
 					   * Mostrar un mensaje si no existen planes creados 
@@ -269,12 +269,12 @@ if (isset($ajax_codigo))
   			<div id="bgtransparent" class="bgtransparent" style="display:none" onClick="closeModal();"></div>
   			<div id="bgmodal"  class="bgmodal" style="display:none" >
  				<div id="ajax_modal">
- 				<form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form2" id="form2">
+ 				<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form2" id="form2">
  				<FIELDSET>
 					<LEGEND>
 						<label class="Titulos2">Modificar Plan de Cuentas</label>
 					</LEGEND>
-						<?
+						<?php
 						mensaje_requerido(); 
 						$thisPost->startPost();	 ?>
 						<table width="100%" border="0" cellpadding="0" cellspacing="0">
@@ -288,7 +288,7 @@ if (isset($ajax_codigo))
 						  <tr>
 						    <td>&nbsp;</td>
 						    <td><span class="LetraNegra">
-						      <input name="codemp" type="hidden" id="codemp" value="<? echo $txt_busqueda; ?>">
+						      <input name="codemp" type="hidden" id="codemp" value="<?php echo $txt_busqueda; ?>">
 						      </span></td>
 						    </tr>
 						  </table>
@@ -373,13 +373,13 @@ if (isset($ajax_codigo))
 							$color_d = '';	
 						}?>
 					  <tr>
-							<td align="center"><font color="<?php echo $color_d; ?>"><? echo $row['Pld_Cod']; ?></font></td>
-							<td><font color="<?php echo $color_d; ?>"><? echo $row['Pld_Cdc']; ?></font></td>
-							<td><font color="<?php echo $color_d; ?>"><? echo $row['Pld_Des']; ?></font></td>
-							<td align="center"><font color="<?php echo $color_d; ?>"><? echo $row['Pld_Tip']; ?></font></td>
-							<td align="center"><font color="<?php echo $color_d; ?>"><? echo $row['Pld_Est']; ?></font></td>
-							<td align="center"><font color="<?php echo $color_d; ?>"><? echo $row['Pld_Deb']; ?></font></td>
-							<td align="center"><font color="<?php echo $color_d; ?>"><? echo $row['Pld_Cre']; ?></font></td>
+							<td align="center"><font color="<?php echo $color_d; ?>"><?php echo $row['Pld_Cod']; ?></font></td>
+							<td><font color="<?php echo $color_d; ?>"><?php echo $row['Pld_Cdc']; ?></font></td>
+							<td><font color="<?php echo $color_d; ?>"><?php echo $row['Pld_Des']; ?></font></td>
+							<td align="center"><font color="<?php echo $color_d; ?>"><?php echo $row['Pld_Tip']; ?></font></td>
+							<td align="center"><font color="<?php echo $color_d; ?>"><?php echo $row['Pld_Est']; ?></font></td>
+							<td align="center"><font color="<?php echo $color_d; ?>"><?php echo $row['Pld_Deb']; ?></font></td>
+							<td align="center"><font color="<?php echo $color_d; ?>"><?php echo $row['Pld_Cre']; ?></font></td>
 							<td align="center">
 								<button type="button" class="btn btn-primary btn-mini" title="Editar" onclick="ajax_datos('<?php echo $_SERVER['PHP_SELF'];?>?ajax_mod=1&Pld_Cod=<?php echo $row['Pld_Cod'];?>','muestra');Muestra_Aparecer();bloqueo_asociacion();"><i class=" icon-edit icon-white"></i></button>
 							</td>
@@ -388,13 +388,13 @@ if (isset($ajax_codigo))
 							if ($row['Pld_Tip']=='GRUPO')
 							{
 							?>
-						        <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3">
+						        <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3">
 							        <button type="button" class="btn btn-success btn-mini" title="Elegir" onclick="this.form.submit()">
 							        	<i class=" icon-arrow-right icon-white"></i>
 							        </button>
 							        <input type="hidden" id="pag" name="pag" value="1" />
-							        <input type="hidden" id="codpla" name="codpla" value="<? echo $codpla; ?>" />
-							        <input type="hidden" id="np" name="np" value="<? echo $row['Pld_Cod']; ?>" />
+							        <input type="hidden" id="codpla" name="codpla" value="<?php echo $codpla; ?>" />
+							        <input type="hidden" id="np" name="np" value="<?php echo $row['Pld_Cod']; ?>" />
 						        </form>
 					        <?Php
 					        }
@@ -405,7 +405,7 @@ if (isset($ajax_codigo))
 							?>
 					        </td>
 					</tr>
-	  			<? }
+	  			<?php }
 	  				if(count($row_rs_nodos)==0){
 	  					?>
 	  					<tr><td>&nbsp;</td>
@@ -428,7 +428,7 @@ if (isset($ajax_codigo))
 			<table>
 			  	<tr>
 			  		<td width="110">
-			  			<form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3">
+			  			<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3">
 				        	<button type="button" class="btn btn-inverse fileinput-button" title="Volver al Plan de Cuentas" onclick="this.form.submit();"> <i class="icon-step-backward icon-white"></i> <span>&nbsp;&nbsp;Inicio&nbsp;&nbsp;</span></button>
 				        </form>
 			  		</td>
@@ -440,11 +440,11 @@ if (isset($ajax_codigo))
 				  		$row_rs_direca = $obBD_con1->getRowConsulta(306, $np, $obBD_conexion);
 			  		?>
 			  		<td width="110">
-				  		<form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3">
+				  		<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3">
 							<button type="button" class="btn btn-inverse fileinput-button" title="Atrás" onClick="this.form.submit()"><i class=" icon-arrow-left icon-white"></i><span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span></button>
 	       					<input type="hidden" id="pag" name="pag" value="1" />
-	       					<input type="hidden" id="codpla" name="codpla" value="<? echo $codpla; ?>" />
-	       					<input type="hidden" id="np" name="np" value="<? echo $row_rs_direca['Pld_Rec']; ?>" />
+	       					<input type="hidden" id="codpla" name="codpla" value="<?php echo $codpla; ?>" />
+	       					<input type="hidden" id="np" name="np" value="<?php echo $row_rs_direca['Pld_Rec']; ?>" />
 	       				</form>
 	       			</td>
 	       			<?php }?>
@@ -456,8 +456,8 @@ if (isset($ajax_codigo))
 			<div id="bgtransparent" class="bgtransparent" style="display:none" onClick="closeModal();"></div>
   			<div id="bgmodal"  class="bgmodal" style="display:none" >
  				<div id="ajax_modal">
- 				<form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3" id="form3">
-				    <? 
+ 				<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3" id="form3">
+				    <?php 
 				    	mensaje_requerido();
 						$thisPost->startPost();
 					?>
@@ -472,9 +472,9 @@ if (isset($ajax_codigo))
 				          </button>
 				          <input type="hidden" name="hdd_save" id="hdd_save" value="2">
 				          <input type="hidden" name="pag" id="pag" value="1">  
-				          <input name="np" type="hidden" id="np" value="<? echo $np; ?>">    
+				          <input name="np" type="hidden" id="np" value="<?php echo $np; ?>">    
 				          <input name="ncuenta" type="hidden" id="ncuenta" value="ncuenta">
-				          <input name="codpla" type="hidden" id="codpla" value="<? echo $codpla; ?>">
+				          <input name="codpla" type="hidden" id="codpla" value="<?php echo $codpla; ?>">
 				        </td>
 				      </tr>
 				    </table>

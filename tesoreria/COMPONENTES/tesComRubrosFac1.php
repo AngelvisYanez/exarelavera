@@ -1,4 +1,4 @@
-<?
+<?php
 /* Alias: [--]ALMACEN
    Descripción: Componente que muestra el cuadro de texto para la busqueda de Rubros.
    Fecha de actualización: 2010-06-29.
@@ -47,7 +47,7 @@ if ($car > 0)
 		<tbody id="tbusqueda">
 		  <tr>
 			<td width="87" height="28" align="right" class="Cabecera1"><div align="right"><strong>Descripci&oacute;n:</strong></div></td>
-			<td width="319" class="Cabecera1"><? noEnterSubmit(); ?>
+			<td width="319" class="Cabecera1"><?php noEnterSubmit(); ?>
 			<input name="buscta" type="text" id="buscta" size="50" maxlength="50" style="text-transform:uppercase" onKeyUp="parametro_injection(this)" onkeypress="var evt = (evt) ? evt : ((event) ? event : null);
 		if (trim(document.getElementById('buscta').value) != '' && evt.keyCode == 13)
         {  

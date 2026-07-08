@@ -18,7 +18,7 @@
 </tr>
 <tr>
  <td align="left" valign="top" height="400">
-    <form method="post" name="form3" id="form3" enctype="multipart/form-data" action="<? echo $_SERVER['PHP_SELF'];?> ">
+    <form method="post" name="form3" id="form3" enctype="multipart/form-data" action="<?php echo $_SERVER['PHP_SELF'];?> ">
     <FIELDSET>
     <LEGEND>
     <label class="Titulos2">Ingrese el Archivo XML</label>

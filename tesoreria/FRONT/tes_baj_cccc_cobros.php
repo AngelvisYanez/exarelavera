@@ -311,7 +311,7 @@ if (isset($detAjax)) {
                                             }
 
                                             function clearFooter() {
-                                                var $footRow = $("#grillaComp .ui-jqgrid-sdiv .footrow");
+                                                public $footRow = $("#grillaComp .ui-jqgrid-sdiv .footrow");
 
                                                 $footRow.find('>td[aria-describedby="list_subgrid"]').css("border-right-color", "transparent");
                                                 $footRow.find('>td[aria-describedby="list_Com_Codigo"]').css("border-right-color", "transparent");

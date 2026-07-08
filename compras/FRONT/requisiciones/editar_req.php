@@ -198,7 +198,7 @@ if (isset($getRequisicionPorId)) {
                                         <div class="col-md-4">
                                             <input type="text" id="Usuario" name="Usuario" class="form-control input-xs trigger" tabindex="2" style="text-align:center; background-color:powderblue;"
                                             value="" readonly></input>
-                                            <input type="text" id="Vnd_Cod" name="Vnd_Cod" style="display: none;" value="<?php  echo utf8_decode($vendedores['Vnd_Cod'])?>"
+                                            <input type="text" id="Vnd_Cod" name="Vnd_Cod" style="display: none;" value="<?php  echo mb_convert_encoding($vendedores['Vnd_Cod'], 'ISO-8859-1', 'UTF-8')?>"
                                             />
                                         </div>
                                         <label class="col-md-2 control-label label-xs" style="text-align:center;">Solicitado a:</label>

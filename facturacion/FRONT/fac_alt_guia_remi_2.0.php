@@ -554,7 +554,7 @@ if (isset($saveDocument)) {
                                         <label class="col-sm-3 col-xs-12 control-label label-xs">Documento:</label>
                                         <div class="col-sm-9 col-xs-12">
                                             <select id="Tic_Cod_Guia" name="Tic_Cod" class="form-control input-xs readOnly getData ins" disabled="">
-                                                <?php echo utf8_encode("<option value='$autori[Tic_Cod]' selected='' data--tic_-cod='$autori[Tic_Cod]' data--aut_-fci='$autori[Aut_Fci]' data--aut_-cad='$autori[Aut_Cad]' data--suc_-sri='$autori[Suc_Sri]' data--pun_-sri='$autori[Pun_Sri]' data--aut_-sri='$autori[Aut_Sri]' data--aut_-ini='$autori[Aut_Ini]' data--aut_-fin='$autori[Aut_Fin]' data--aut_-tem='$autori[Aut_Tem]' selected=''>     $autori[Tic_Des]   </option>");  ?>
+                                                <?php echo mb_convert_encoding("<option value='$autori[Tic_Cod]' selected='' data--tic_-cod='$autori[Tic_Cod]' data--aut_-fci='$autori[Aut_Fci]' data--aut_-cad='$autori[Aut_Cad]' data--suc_-sri='$autori[Suc_Sri]' data--pun_-sri='$autori[Pun_Sri]' data--aut_-sri='$autori[Aut_Sri]' data--aut_-ini='$autori[Aut_Ini]' data--aut_-fin='$autori[Aut_Fin]' data--aut_-tem='$autori[Aut_Tem]' selected=''>     $autori[Tic_Des]   </option>", 'UTF-8', 'ISO-8859-1');  ?>
                                             </select>
                                         </div>
                                     </div>
@@ -676,7 +676,7 @@ if (isset($saveDocument)) {
                                     <script type="text/javascript">
                                     <?php if($Ses_Emp_Cod == 608): ?>
                                     $(document).ready(function() {
-                                        var $bodegaSelect = $('#Bc_Cod').select2({
+                                        public $bodegaSelect = $('#Bc_Cod').select2({
                                             placeholder: "Seleccione...",
                                             allowClear: true,
                                             width: '100%'
@@ -693,7 +693,7 @@ if (isset($saveDocument)) {
                                         $('#btnGuardarModalBodega').on('click', function(e) {
                                             e.preventDefault();
                                             var term = $.trim($('#modal_nueva_bodega').val()).toUpperCase();
-                                            var $btn = $(this);
+                                            public $btn = $(this);
                                             
                                             if (term !== '') {
                                                 $btn.prop('disabled', true);

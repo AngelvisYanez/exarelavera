@@ -63,24 +63,24 @@ if (isset($Ret_Cod))
               </tr>
               <tr >
                 <td height="10" valign="middle" class="Texto_Reporte">C.I./R.U.C.:</td>
-                <td height="10" valign="middle" class="Texto_Reporte"><? echo $row_prin_renta['Prs_Ced']; ?></td>
+                <td height="10" valign="middle" class="Texto_Reporte"><?php echo $row_prin_renta['Prs_Ced']; ?></td>
                 <td height="10" valign="middle" class="Texto_Reporte">CIUDAD:</td>
-                <td height="10" valign="middle" class="Texto_Reporte"><? echo $row_prin_renta['Ciu_Des']; ?></td>
+                <td height="10" valign="middle" class="Texto_Reporte"><?php echo $row_prin_renta['Ciu_Des']; ?></td>
               </tr>
               <tr >
                 <td height="10" valign="middle" class="Texto_Reporte">RAZON SOCIAL:</td>
-                <td height="10" colspan="3" valign="middle" class="Texto_Reporte"><? echo $row_prin_renta['Prs_Ape'].' '.$row_prin_renta['Prs_Nom']; ?></td>
+                <td height="10" colspan="3" valign="middle" class="Texto_Reporte"><?php echo $row_prin_renta['Prs_Ape'].' '.$row_prin_renta['Prs_Nom']; ?></td>
               </tr>
               <tr >
                 <td height="10" valign="bottom" class="Texto_Reporte">DIRECCI&Oacute;N:</td>
-                <td colspan="2" valign="bottom" class="Texto_Reporte"><? echo $row_prin_renta['Prs_Dir']; ?></td>
-                <td valign="bottom" class="Texto_Reporte">FECHA:&nbsp; <? echo $row_prin_renta['Ret_Fec']; //$Fec_Emi[2].$Fec_Emi[1].$Fec_Emi[0]; ?></td>
+                <td colspan="2" valign="bottom" class="Texto_Reporte"><?php echo $row_prin_renta['Prs_Dir']; ?></td>
+                <td valign="bottom" class="Texto_Reporte">FECHA:&nbsp; <?php echo $row_prin_renta['Ret_Fec']; //$Fec_Emi[2].$Fec_Emi[1].$Fec_Emi[0]; ?></td>
               </tr>
               <tr>
                 <td width="99" height="10" align="rigth" class="Texto_Reporte" >TIPO COMPROBANTE:</td>
-                <td width="161" align="rigth" class="Texto_Reporte" ><span class="LetraEval"><? echo $row_prin_renta['Tic_Des']; ?></span></td>
+                <td width="161" align="rigth" class="Texto_Reporte" ><span class="LetraEval"><?php echo $row_prin_renta['Tic_Des']; ?></span></td>
                 <td width="96" align="rigth" class="Texto_Reporte" >No. DOCUMENTO:</td>
-                <td width="140" align="rigth" class="Texto_Reporte" ><? 
+                <td width="140" align="rigth" class="Texto_Reporte" ><?php 
 		if ($row_rs_renta['Aut_Cod'] != "") 
 		{ 
 			echo "001-001-000".$row_prin_renta['Cop_Num']; 
@@ -91,7 +91,7 @@ if (isset($Ret_Cod))
 		}?></td>
               </tr>
               <tr>
-                <td height="10" align="rigth" valign="bottom" class="Texto_Reporte" ><? 
+                <td height="10" align="rigth" valign="bottom" class="Texto_Reporte" ><?php 
 			if ($row_rs_renta['Aut_Cod'] != "") 
 			{ 
 				//echo $row_prin_renta['Aut_Sri']; 
@@ -101,7 +101,7 @@ if (isset($Ret_Cod))
 				//echo $row_prin_renta['Cop_Aut']; 
 			}
 			?></td>
-                <td height="10" align="rigth" valign="bottom" class="Texto_Reporte" ><? 
+                <td height="10" align="rigth" valign="bottom" class="Texto_Reporte" ><?php 
 			if ($row_rs_renta['Aut_Cod'] != "") 
 			{ 
 				//echo $row_prin_renta['Aut_Fci']; 
@@ -110,7 +110,7 @@ if (isset($Ret_Cod))
 			{
 				//echo $row_prin_renta['Cop_Imf']; 
 			}?></td>
-                <td align="rigth" valign="bottom" class="Texto_Reporte" ><? 
+                <td align="rigth" valign="bottom" class="Texto_Reporte" ><?php 
 			if ($row_rs_renta['Aut_Cod'] != "")  
 			{  
 				//echo $row_prin_renta['Aut_Cad']; 
@@ -119,7 +119,7 @@ if (isset($Ret_Cod))
 			{ 
 				//echo $row_prin_renta['Cop_Cad']; 
 			}?></td>
-                <td valign="bottom" class="Texto_Reporte" align="right"><? //echo $row_prin_renta['Cop_Fec']; ?></td>
+                <td valign="bottom" class="Texto_Reporte" align="right"><?php //echo $row_prin_renta['Cop_Fec']; ?></td>
               </tr>
             </table>                      
   <tr valign="top">
@@ -154,7 +154,7 @@ if (isset($Ret_Cod))
              <td width="60"><?Php $Ejerci=$Eje_Fis[0]; echo $Ejerci; unset($Ejerci);  ?></td>
              <td width="60"><?Php $Sri_Imp=$row['Ret_Imp']; echo $Sri_Imp;  ?></td>
              <td width="39"><?Php echo $Sri_Cod=$row['Ren_Sri']; //echo $obBD_con1->codAir($Sri_Cod); //"&nbsp"  ?></td>
-             <td width="181" align="left"><? echo $row['Ren_Con'];?></td>
+             <td width="181" align="left"><?php echo $row['Ren_Con'];?></td>
              <td width="63" valign="middle"><?Php $Ren_Bas = number_format($row['Ret_Bas'], 2,'.',','); echo $Ren_Bas; ?></td>
              <td width="42" align="center" valign="middle"><?Php $Ren_Por= $row['Ren_Por'].'%'; echo $Ren_Por; ?></td>
              <td width="60" align="right" valign="middle" ><?Php $Val_Ret=($row['Ret_Bas']*$row['Ren_Por'])/100; 

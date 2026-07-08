@@ -524,7 +524,7 @@ if ($total_rs_cabcomp >0)
     <input name="Pec_Fei" id="Pec_Fei" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fei']; ?>">
     <input name="Pec_Fef" id="Pec_Fef" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fef']; ?>"> 
 No. Compr: </td>
-		<td width="43%" class="LetraNegra">&nbsp;<? list($ann, $mes, $dia) = preg_split('![/.-]!', $row_rs_cabcomp['Com_Fec']);
+		<td width="43%" class="LetraNegra">&nbsp;<?php list($ann, $mes, $dia) = preg_split('![/.-]!', $row_rs_cabcomp['Com_Fec']);
 		  echo $row_rs_cabcomp['Tia_Abr'].'-'.$mes.'-'.$row_rs_cabcomp['Com_Num']; ?>
 		  
 		<td width="9%" class="Etiqueta1">Fecha:</td>
@@ -809,9 +809,9 @@ if (isset($bt_save) && !isset($hdd_volver))
 		<tbody id="tbusqueda">
 		  <tr>
 			<td width="85" height="28" class="BarraBusqueda"><div align="right"><strong>B&uacute;squeda</strong>:</div></td>
-			<td width="359" class="BarraBusqueda"><input name="buscta" type="text" id="buscta" size="50" maxlength="50" onKeyPress="if (trim(document.getElementById('buscta').value) != ''){ var form = document.getElementById('formSearch');enter_ajax('<?Php echo $_SERVER['PHP_SELF']; ?>?buscod='+document.getElementById('buscta').value+'&op_opciones='+form.elements['op_opciones'].value+'&cod_num='+<? echo $row_rs_cabcomp['Com_Cod']; ?>+'&cod_prv='+<? echo $row_rs_cabcomp['Prv_Cod']; ?>+'&com_fec=<? echo $row_rs_cabcomp['Com_Fec']; ?>&varios_prov=<?Php echo $varios_prov; ?>','busqueda') }"></td>
+			<td width="359" class="BarraBusqueda"><input name="buscta" type="text" id="buscta" size="50" maxlength="50" onKeyPress="if (trim(document.getElementById('buscta').value) != ''){ var form = document.getElementById('formSearch');enter_ajax('<?Php echo $_SERVER['PHP_SELF']; ?>?buscod='+document.getElementById('buscta').value+'&op_opciones='+form.elements['op_opciones'].value+'&cod_num='+<?php echo $row_rs_cabcomp['Com_Cod']; ?>+'&cod_prv='+<?php echo $row_rs_cabcomp['Prv_Cod']; ?>+'&com_fec=<?php echo $row_rs_cabcomp['Com_Fec']; ?>&varios_prov=<?Php echo $varios_prov; ?>','busqueda') }"></td>
 			<td width="110" align="center">
-            <button type="button" class="btn btn-success" title="Buscar" onClick="var form = document.getElementById('formSearch');ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?buscod='+document.getElementById('buscta').value+'&op_opciones='+form.elements['op_opciones'].value+'&cod_num='+<? echo $row_rs_cabcomp['Com_Cod']; ?>+'&cod_prv='+<? echo $row_rs_cabcomp['Prv_Cod']; ?>+'&com_fec=<? echo $row_rs_cabcomp['Com_Fec']; ?>&varios_prov=<?Php echo $varios_prov; ?>','busqueda')"> <i class="icon-search icon-white"></i> <span>Buscar</span> </button>
+            <button type="button" class="btn btn-success" title="Buscar" onClick="var form = document.getElementById('formSearch');ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?buscod='+document.getElementById('buscta').value+'&op_opciones='+form.elements['op_opciones'].value+'&cod_num='+<?php echo $row_rs_cabcomp['Com_Cod']; ?>+'&cod_prv='+<?php echo $row_rs_cabcomp['Prv_Cod']; ?>+'&com_fec=<?php echo $row_rs_cabcomp['Com_Fec']; ?>&varios_prov=<?Php echo $varios_prov; ?>','busqueda')"> <i class="icon-search icon-white"></i> <span>Buscar</span> </button>
 			</td>
 		  </tr>
 		</tbody>

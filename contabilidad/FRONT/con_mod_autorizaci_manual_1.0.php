@@ -38,16 +38,16 @@ if($ajax_punto==1)
 {
 	$cadena_suc=explode("*",$Suc_Cod);	
 	$row_rs_puntoImp = $obBD_con1->getArrayConsulta(508, $cadena_suc[0], $obBD_conexion); ?>
-	<select name="Pun_Cod" id="Pun_Cod" onchange="ajax_datos('<?pHP echo $_SERVER['PHP_SELF']; ?>?ajax_dcto=1&Pun_Cod=' + this.value + '&Suc_Cod=<? echo $Suc_Cod;?>','div_docAut')">
+	<select name="Pun_Cod" id="Pun_Cod" onchange="ajax_datos('<?pHP echo $_SERVER['PHP_SELF']; ?>?ajax_dcto=1&Pun_Cod=' + this.value + '&Suc_Cod=<?php echo $Suc_Cod;?>','div_docAut')">
 	<option value="">Seleccione...</option>
-	<? 
+	<?php 
 	foreach ($row_rs_puntoImp as $row)
 	{?>
-	<option value="<? echo $row['Pun_Cod'];?>"><? echo $row['Pun_Des']?></option>
-	<? 
+	<option value="<?php echo $row['Pun_Cod'];?>"><?php echo $row['Pun_Des']?></option>
+	<?php 
     }//Fin del foreach --> $row_rs_puntoImp ?>
     </select>
-<?
+<?php
 exit();
 }
 
@@ -60,16 +60,16 @@ if($ajax_dcto==1)
 	$total_rs_DoctoAut=count($row_rs_DoctoAut);
 ?>
 	<select name="Tic_Cod" id="Tic_Cod">
-	<? if($total_rs_DoctoAut!=0){?>	
+	<?php if($total_rs_DoctoAut!=0){?>	
         <option value="">Seleccionar...</option>
-		<? foreach ($row_rs_DoctoAut as $row){?>
+		<?php foreach ($row_rs_DoctoAut as $row){?>
 			<option value="<?php echo $row['Tic_Cod']?>"><?php echo $row['Tic_Des']?></option>
-		<? }
+		<?php }
 	}else{?>
     	<option value="">...</option>
-    <? }?>
+    <?php }?>
 	</select>
-<?
+<?php
 exit();
 }
 
@@ -135,7 +135,7 @@ if ($thisPost->postBlock($_POST['postID']))
   </tr>
 	<tr>
   	  <td height="400" valign="top">
-  <form method="post" name= "form1" id="form1" action="<? echo $_SERVER['PHP_SELF'];?>">    
+  <form method="post" name= "form1" id="form1" action="<?php echo $_SERVER['PHP_SELF'];?>">    
 
 <FIELDSET>
 <LEGEND>
@@ -146,18 +146,18 @@ if ($thisPost->postBlock($_POST['postID']))
       <tr>
         <td width="149" class="Etiqueta1"><span 2="Asterisco"><span class="Asterisco">* </span> Sucursal:</span></td>
         <td>
-		<?
+		<?php
 		/** 
 		* Carga las sucursales de la empresa
 		*/
 		$row_rs_sucursal = $obBD_con1->getArrayConsulta(507, $Ses_Emp_Cod, $obBD_conexion);  ?>						
 		<select name="Suc_Cod" id="Suc_Cod" onChange="ajax_datos('<?pHP echo $_SERVER['PHP_SELF']; ?>?ajax_punto=1&Suc_Cod=' + this.value,'div_punImp')">
           <option value="">Seleccione...</option>
-		 <? 
+		 <?php 
 		  foreach ($row_rs_sucursal as $row)
 		  {?>
-		  	<option value="<? echo $row['Suc_Cod']."*".$row['Suc_Des'];?>"><? echo $row['Suc_Des']?></option>          
-		  <? } //fin del foreach $row_rs_sucursal ?>
+		  	<option value="<?php echo $row['Suc_Cod']."*".$row['Suc_Des'];?>"><?php echo $row['Suc_Des']?></option>          
+		  <?php } //fin del foreach $row_rs_sucursal ?>
         </select>		</td>
       </tr>
       <tr>
@@ -194,14 +194,14 @@ if ($thisPost->postBlock($_POST['postID']))
   </table>
 
 </form>
-<? if(isset($hdd_avilita_2)){ ?>
- <form method="post" name="form2" id="form2" action="<? echo $_SERVER['PHP_SELF'];?>">
+<?php if(isset($hdd_avilita_2)){ ?>
+ <form method="post" name="form2" id="form2" action="<?php echo $_SERVER['PHP_SELF'];?>">
  <?Php $thisPost->startPost(); ?>
 <FIELDSET>
 <LEGEND>
 <label class="Titulos2"> Resultado de la busqueda </label>
 </LEGEND>   
-  <? 
+  <?php 
   	//$cadena=explode("*",$Pun_Cod);	
 	/**
 	*  Carga los tipos de documentos de un Punto de Impresion
@@ -212,11 +212,11 @@ if ($thisPost->postBlock($_POST['postID']))
   <table width="100%"  border="0" cellpadding="0" cellspacing="0">
   <tr>
 		<td width="13%" class="Etiqueta1"><span class="Etiqueta1">Sucursal:</span></td>	
-		<td width="87%" align="left" class="LetraPlan" >&nbsp;<? echo $row_rs_documentos[0]['Suc_Des'];?></td>	
+		<td width="87%" align="left" class="LetraPlan" >&nbsp;<?php echo $row_rs_documentos[0]['Suc_Des'];?></td>	
   </tr>
   <tr>    
 		<td width="13%" class="Etiqueta1"><span class="Etiqueta1">Punto de impresi&oacute;n:</span></td>	
-		<td width="87%" align="left" class="LetraPlan" >&nbsp;<? echo $row_rs_documentos[0]['Pun_Des'];?></td>		
+		<td width="87%" align="left" class="LetraPlan" >&nbsp;<?php echo $row_rs_documentos[0]['Pun_Des'];?></td>		
   </tr>  
   </table>
   <table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader01">
@@ -235,7 +235,7 @@ if ($thisPost->postBlock($_POST['postID']))
   </tr>
   </thead>
   <tbody>
-  <?   
+  <?php   
   if($total_rs_documentos!=0)
   { $i=1;
   foreach($row_rs_documentos as $row)
@@ -254,14 +254,14 @@ if ($thisPost->postBlock($_POST['postID']))
 	<td align="right"><div align="center"><?php echo $row['Aut_Sri'];?></div></td>	
     <td align="center">	
    		
-        <input type="hidden" id="Tic_Cod" name="Tic_Cod" value="<? echo $Tic_Cod;?>" /> 
-        <input type="hidden" id="Pun_Cod" name="Pun_Cod" value="<? echo $Pun_Cod;?>" /> 
-        <input type="hidden" id="total" name="total" value="<? echo $total_rs_documentos; ?>" />
+        <input type="hidden" id="Tic_Cod" name="Tic_Cod" value="<?php echo $Tic_Cod;?>" /> 
+        <input type="hidden" id="Pun_Cod" name="Pun_Cod" value="<?php echo $Pun_Cod;?>" /> 
+        <input type="hidden" id="total" name="total" value="<?php echo $total_rs_documentos; ?>" />
     	<input type="radio" id="optAut[]" name="optAut[]" value="<?Php echo $row['Aut_Cod'];?>" <?php if($row['Aut_Est']=='A'){echo "checked";}?> />
     
 	</td>	 
   </tr>
-  <? $i++;
+  <?php $i++;
   	}//Fin del foreach -> $row_rs_documentos 
   }else{
   ?>
@@ -277,11 +277,11 @@ if ($thisPost->postBlock($_POST['postID']))
     <td>&nbsp;</td>
 	<input type="hidden" id="hdd_avilita_3" name="hdd_avilita_3">	
   </tr>	
-<? } //if($row_rs_numdocumentos!=0)?>
+<?php } //if($row_rs_numdocumentos!=0)?>
   </tbody>
 </table>
 </FIELDSET>
-<? if($total_rs_documentos!=0){?>	
+<?php if($total_rs_documentos!=0){?>	
     <table border="0" cellpadding="0" cellspacing="0">
 	 <tr>
 	   <td width="109">
@@ -290,10 +290,10 @@ if ($thisPost->postBlock($_POST['postID']))
 	   </td>	  
 	 </tr>
 	</table>
- <? }?>
+ <?php }?>
 	<input name="cantmodal" id="cantmodal" type="hidden" value="<?php echo $i; ?>" />
   </form>   
-<? } //if(isset($hdd_avilita_2)) ?>
+<?php } //if(isset($hdd_avilita_2)) ?>
  <br />
  </td>
   </tr>

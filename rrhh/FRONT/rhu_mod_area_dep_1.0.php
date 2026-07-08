@@ -311,7 +311,7 @@ if(isset($eliminar)){
             });
             
             //Variable para manejo del arbol jstree
-            var $treeview=$('#using_json_2'),campo='',cod_eli=0,type='';     
+            public $treeview=$('#using_json_2'),campo='',cod_eli=0,type='';     
 
             function updateTipoActivo(){
                 $treeview.jstree(true).settings.core.data = {'url': '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>?areaAjax=true',"dataType": "json" };

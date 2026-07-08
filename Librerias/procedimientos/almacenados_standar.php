@@ -64,10 +64,30 @@ function change_string_deep($procedure,&$input,$args1=null){
 }
 function trim_deep(&$input){change_string_deep('trim',$input);}
 function addslashes_deep(&$input){change_string_deep('addslashes',$input);}
-function utf8_encode_deep(&$input){change_string_deep('utf8_encode',$input);}
+function utf8_encode_deep(&$input){
+    if (is_string($input)) {
+        $input = mb_convert_encoding($input, 'UTF-8', 'ISO-8859-1');
+    } else if (is_array($input)) {
+        foreach ($input as &$value) { utf8_encode_deep($value); }
+        unset($value);
+    } else if (is_object($input)) {
+        $vars = array_keys(get_object_vars($input));
+        foreach ($vars as $var) { utf8_encode_deep($input->$var); }
+    }
+}
 function htmlentities_deep(&$input){change_string_deep('htmlentities',$input);}
 function html_entity_decode_deep(&$input){change_string_deep('html_entity_decode',$input);}
-function utf8_encode_trim_deep(&$input){change_string_deep(array('utf8_encode','trim'),$input);}
+function utf8_encode_trim_deep(&$input){
+    if (is_string($input)) {
+        $input = trim(mb_convert_encoding($input, 'UTF-8', 'ISO-8859-1'));
+    } else if (is_array($input)) {
+        foreach ($input as &$value) { utf8_encode_trim_deep($value); }
+        unset($value);
+    } else if (is_object($input)) {
+        $vars = array_keys(get_object_vars($input));
+        foreach ($vars as $var) { utf8_encode_trim_deep($input->$var); }
+    }
+}
 
 function sql_conjunction($list, $prefix, $conjunction = 'OR', $init='AND') {
   if(is_string($list)) $list=array(0=>$list);
@@ -956,7 +976,7 @@ function num2letras($num, $fem = false, $dec = false) {
       $tex = $t . $tex;
    }
    $tex = $neg . substr($tex, 1) . $fin;
-   return utf8_encode(ucfirst($tex));
+   return mb_convert_encoding(ucfirst($tex), 'UTF-8', 'ISO-8859-1');
 }
 
 /* Funcion que mueve el apuntador de la consulta al inicio */
@@ -1887,7 +1907,7 @@ function latin1($txt)
 {
 	$encoding = mb_detect_encoding($txt, 'ASCII,UTF-8,ISO-8859-1');
 	if ($encoding == "UTF-8") {
-		$txt = utf8_decode($txt); } return $txt;
+		$txt = mb_convert_encoding($txt, 'ISO-8859-1', 'UTF-8'); } return $txt;
 	}
 
 //Funciï¿½n que converte un string a UTF-8
@@ -1895,7 +1915,7 @@ function utf8($txt)
 {
 	$encoding = mb_detect_encoding($txt, 'ASCII,UTF-8,ISO-8859-1');
 	if ($encoding == "ISO-8859-1") {
-		$txt = utf8_encode($txt); } return $txt;
+		$txt = mb_convert_encoding($txt, 'UTF-8', 'ISO-8859-1'); } return $txt;
 	}
 
 /* Funcion para marcar las palabras buscadas en una cadena de texto */

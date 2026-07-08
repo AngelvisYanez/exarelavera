@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?	
+<?php	
 /**
 * Descripciï¿½n: Permite consultar la mayorizacion contable
 * Fecha de actualizaciï¿½n:	2010-11-15 
@@ -86,14 +86,14 @@ if (isset($buscod))
 					$row_rs_recur = $obBD_con1->registros();					  				  
 				  ?>
 				  <tr>
-					<td><? echo $row_rs_buscar['Pld_Cdc']; ?></td>
-				  	<td><?php echo utf8_encode($row_rs_buscar['Pld_Des']); ?></td>
-				  	<td align="center"><? if ($row_rs_recur['Pld_Des'] != ""){ echo $row_rs_recur['Pld_Des']; }else{ echo "&nbsp;"; } ?></td>
-				  	<td align="center"><? echo $row_rs_buscar['Pld_Tip']; ?></td>				  
-				  	<td align="center"><? echo $row_rs_buscar['Pld_Est']; ?></td>
+					<td><?php echo $row_rs_buscar['Pld_Cdc']; ?></td>
+				  	<td><?php echo mb_convert_encoding($row_rs_buscar['Pld_Des'], 'UTF-8', 'ISO-8859-1'); ?></td>
+				  	<td align="center"><?php if ($row_rs_recur['Pld_Des'] != ""){ echo $row_rs_recur['Pld_Des']; }else{ echo "&nbsp;"; } ?></td>
+				  	<td align="center"><?php echo $row_rs_buscar['Pld_Tip']; ?></td>				  
+				  	<td align="center"><?php echo $row_rs_buscar['Pld_Est']; ?></td>
 				  	<td align="center">
 					<?Php if ($row_rs_buscar['Pld_Est'] == 'Activa'){?>
-                  	<button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="document.getElementById(document.getElementById('name_input').value).value='<? echo $row_rs_buscar['Pld_Cdc']; ?>'">
+                  	<button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="document.getElementById(document.getElementById('name_input').value).value='<?php echo $row_rs_buscar['Pld_Cdc']; ?>'">
         						<i class="icon-arrow-right icon-white"></i>
         			</button>
                   <?php }else{ echo "&nbsp;"; } ?>				
@@ -149,7 +149,7 @@ if(isset($cuentas))
             </tr>
           </table>
           <input name="op_op" type="hidden" id="op_op" value="d">
-          <input name="name_input" type="hidden" id="name_input" value="<? echo $name_input?>">
+          <input name="name_input" type="hidden" id="name_input" value="<?php echo $name_input?>">
           <table width="580" height="36" border="0" cellpadding="0" cellspacing="0">
             <tbody id="tbusqueda">
               <tr>
@@ -165,7 +165,7 @@ if(isset($cuentas))
       </FIELDSET>
       <div id="busqueda"></div>
   </table>
-<?
+<?php
 exit();	
 }
 
@@ -433,7 +433,7 @@ switch ($op){
 <table width="274" border="0" cellpadding="0" cellspacing="0">
 	<tr>
 	<td width="110">
-    <button type="button" class="btn btn-success fileinput-button" title="Buscar Cuenta de Detalle" name="button1" id="button1" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?cuentas=1&name_input=txt_busqueda&Ses_Emp_Cod=<? echo $Ses_Emp_Cod;?>&op=<? echo $op;?>&Pla_Cod=<?Php echo $Pla_Cod; ?>','mostrar');">
+    <button type="button" class="btn btn-success fileinput-button" title="Buscar Cuenta de Detalle" name="button1" id="button1" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?cuentas=1&name_input=txt_busqueda&Ses_Emp_Cod=<?php echo $Ses_Emp_Cod;?>&op=<?php echo $op;?>&Pla_Cod=<?Php echo $Pla_Cod; ?>','mostrar');">
            <i class="icon-list-alt icon-white"></i>
            <span>Cuenta</span>
            </button>    
@@ -474,7 +474,7 @@ switch ($op){
 	<table border="0" cellpadding="0" cellspacing="0">
 	  <tr>		
 		<td width="110">
-        <button type="button" class="btn btn-success fileinput-button" title="Buscar Cuenta de Detalle" name="button1" id="button1" onClick=" Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?cuentas=1&name_input=grupo&Ses_Emp_Cod=<? echo $Ses_Emp_Cod;?>&op=<? echo $op;?>&Pla_Cod=<?Php echo $Pla_Cod; ?>','mostrar');">
+        <button type="button" class="btn btn-success fileinput-button" title="Buscar Cuenta de Detalle" name="button1" id="button1" onClick=" Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?cuentas=1&name_input=grupo&Ses_Emp_Cod=<?php echo $Ses_Emp_Cod;?>&op=<?php echo $op;?>&Pla_Cod=<?Php echo $Pla_Cod; ?>','mostrar');">
            <i class="icon-list-alt icon-white"></i>
            <span>Cuenta</span>
            </button>
@@ -563,7 +563,7 @@ switch ($op){
       <td align="right" <?Php if ($saldos<0){ echo "style='color:#FF0000'"; } ?>><?Php echo formato_numero($saldos, 2, 2); ?></td>
       <td align="right" <?Php if ($saldos<0){ echo "style='color:#FF0000'"; } ?>>&nbsp;</td>
     </tr>
-    <?	
+    <?php	
 	/**
 	* Inicializa las variables para mostrar detalles (+-) en la mayorizacion 
 	*/
@@ -601,13 +601,13 @@ switch ($op){
 	  $com_codigo = $row_rs_cuenta['Com_Cod'];
 	  ?>	
     <tr>
-      <td align="center"><? echo $row_rs_cuenta['Com_Cod']; ?></td>
+      <td align="center"><?php echo $row_rs_cuenta['Com_Cod']; ?></td>
       <td align="center"><?Php echo $row_rs_cuenta['Com_Gen']; ?></td>
       <td align="center"><?Php echo  "C".$row_rs_cuenta['Tia_Ini']."-".$mes."-".$row_rs_cuenta['Com_Num']; ?></td>
       <td align="center"><?Php echo $row_rs_cuenta['Com_Fec']; ?></td>
       <td align="left"><?Php echo $row_rs_proveedore['Prs_Ape'].' '.$row_rs_proveedore['Prs_Nom']; ?></td>	  	  
-      <td><? echo $row_rs_cuenta['Com_Con']; ?></td>	  	  
-   	  <td align="right"><? if ($row_rs_cuenta['Asi_Deh'] == 'D')
+      <td><?php echo $row_rs_cuenta['Com_Con']; ?></td>	  	  
+   	  <td align="right"><?php if ($row_rs_cuenta['Asi_Deh'] == 'D')
 	  					{
 							echo formato_numero($row_rs_cuenta['Asi_Val'], 2, 2); 
 							$debe = $row_rs_cuenta['Asi_Val'];
@@ -618,7 +618,7 @@ switch ($op){
 							echo "0,00"; 
 							$debe = 0;
 						}?></td>
-      <td align="right"><? if ($row_rs_cuenta['Asi_Deh'] == 'H')
+      <td align="right"><?php if ($row_rs_cuenta['Asi_Deh'] == 'H')
 	  					{
 							echo formato_numero($row_rs_cuenta['Asi_Val'], 2, 2); 
 							$haber = $row_rs_cuenta['Asi_Val'];
@@ -649,7 +649,7 @@ switch ($op){
 			}//Nuevo			
 			?>
 	  <td align="right" <?Php if ($saldos<0){ echo "style='color:#FF0000'"; } ?>><?Php echo formato_numero($saldos, 2, 2); ?></td>
-	  <td align="right"><button type="button" class="btn btn-success btn-mini" title="Detalle del registro" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_info=1&com_codigo=<? echo $row_rs_cuenta['Com_Cod'];?>&Ses_Emp_Cod=<? echo $Ses_Emp_Cod;?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>
+	  <td align="right"><button type="button" class="btn btn-success btn-mini" title="Detalle del registro" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_info=1&com_codigo=<?php echo $row_rs_cuenta['Com_Cod'];?>&Ses_Emp_Cod=<?php echo $Ses_Emp_Cod;?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>
     </tr>
 	<?Php
 	/* Muestra el mas solo una vez */		
@@ -689,7 +689,7 @@ switch ($op){
       <td>&nbsp;</td>
       <td>&nbsp;</td>
     </tr>
-    <? } //Fin del else	
+    <?php } //Fin del else	
 		/**
 		* Muestra la barra de estados con la cantidad de registros encontrados 
 		*/
@@ -834,7 +834,7 @@ switch ($op){
                   <td align="right" <?Php if ($saldos<0){ echo "style='color:#FF0000'"; } ?>><?Php 
                                     echo formato_numero($saldos, 2, 2); ?></td>
             </tr>
-	<?			  
+	<?php			  
 	  do{ 
 	  		/**
 			* Consulta del cliente o proveedor 
@@ -889,14 +889,14 @@ switch ($op){
 	}	
 ?>
  		  </td>
-          <td align="center"><? echo $row_rs_cuenta['Com_Cod']; ?></td>
+          <td align="center"><?php echo $row_rs_cuenta['Com_Cod']; ?></td>
           <td align="center"><?Php echo $row_rs_cuenta['Com_Gen']; ?></td>
           <td align="center"><?Php echo  "C".$row_rs_cuenta['Tia_Ini']."-".$mes."-".$row_rs_cuenta['Com_Num']; ?></td>
           <td align="center"><?Php echo $row_rs_cuenta['Com_Fec']; ?></td>
           <td align="center"><?Php echo $row_rs_proveedore['Prs_Ape'].' '.$row_rs_proveedore['Prs_Nom']; ?></td>	  	  
-          <td><? echo $row_rs_cuenta['Com_Con']; ?></td>	  	  
+          <td><?php echo $row_rs_cuenta['Com_Con']; ?></td>	  	  
           <td align="right">
-		  		<? if ($row_rs_cuenta['Asi_Deh'] == 'D')
+		  		<?php if ($row_rs_cuenta['Asi_Deh'] == 'D')
 					{
 						echo formato_numero($row_rs_cuenta['Asi_Val'], 2, 2); 
 						$debe = $row_rs_cuenta['Asi_Val'];
@@ -909,7 +909,7 @@ switch ($op){
 					}?>
           </td>
 		  <td align="right">
-		  		<? if ($row_rs_cuenta['Asi_Deh'] == 'H')
+		  		<?php if ($row_rs_cuenta['Asi_Deh'] == 'H')
 					{
 						echo formato_numero($row_rs_cuenta['Asi_Val'], 2, 2); 
 						$haber = $row_rs_cuenta['Asi_Val'];

@@ -81,11 +81,11 @@ if (isset($Vet_Cod))
                         <td align="left" valign="bottom" class="Letra_punto_venta_2">&nbsp;</td>
                         <td width="54%" align="left" valign="bottom" class="Letra_punto_venta_2">&nbsp;</td>
                         <td width="12%" align="left" valign="bottom" class="Letra_punto_venta_2">FECHA:</td>
-                        <td width="21%" align="left" valign="bottom" class="Letra_punto_venta_2"><? echo $dia."/".$mes."/".$anio;?></td>
+                        <td width="21%" align="left" valign="bottom" class="Letra_punto_venta_2"><?php echo $dia."/".$mes."/".$anio;?></td>
                       </tr>
                       <tr>
                         <td width="13%" align="left">CLIENTE:</td>
-                        <td colspan="3"><? if ($row_rs_representante['Cli_Fac'] != "")
+                        <td colspan="3"><?php if ($row_rs_representante['Cli_Fac'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Fac'];  
 			}
@@ -94,7 +94,7 @@ if (isset($Vet_Cod))
                         </tr>
                       <tr>
                         <td align="left">RUC:</td>
-                        <td ><? if ($row_rs_representante['Cli_Fac'] != "")
+                        <td ><?php if ($row_rs_representante['Cli_Fac'] != "")
 						{ 
 							echo $row_rs_representante['Cli_Ruf']; 
 						}
@@ -107,7 +107,7 @@ if (isset($Vet_Cod))
                       </tr>
                       <tr>
                         <td align="left">DIRECCI&Oacute;N:</td>
-                        <td><? if ($row_rs_representante['Cli_Dir'] != "")
+                        <td><?php if ($row_rs_representante['Cli_Dir'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Dir']; 
 			}
@@ -155,7 +155,7 @@ if (isset($Vet_Cod))
                 <tr>
                   <td colspan="4" align="left"><hr size=1></td>
                 </tr>
-                <? do{?>
+                <?php do{?>
                 <tr class="Letra_punto_venta_2">
                   <td width="14%" align="left"><?Php echo $row_rs_cliente['Vet_Can']?></td>
                   <td><?Php echo $row_rs_cliente['Ite_Lar'].' '.$row_rs_cliente['Pro_Obs']?></td>

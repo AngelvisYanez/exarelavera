@@ -1,4 +1,4 @@
-<?	
+<?php	
 /*
 * Descripción: Reporte de la opción Totales, Detalle y Puntos de Impresión
 * Fecha de actualización: 2012-05-26

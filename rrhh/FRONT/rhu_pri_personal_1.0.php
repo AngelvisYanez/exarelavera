@@ -151,7 +151,7 @@ $mpdf->SetHTMLFooter('<hr width="100%" style="color: #000000;" /><table width="1
 //LOAD a stylesheet
 $stylesheet = file_get_contents('../../Librerias/MPDF57/css/mpdfstyletables.css');
 $mpdf->WriteHTML($stylesheet, 1); // The parameter 1 tells that this is css/style only and no body/html/text
-$html = utf8_encode($html);
+$html = mb_convert_encoding($html, 'UTF-8', 'ISO-8859-1');
 $mpdf->WriteHTML($html, 2);
 
 $mpdf->Output('mpdf.pdf', 'I');

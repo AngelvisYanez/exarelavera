@@ -38,14 +38,14 @@ $Subtitulo="";
 </head>
 
 <body class="Cuerpo">
-<? /* Consulta de la cabecera del reporte */
+<?php /* Consulta de la cabecera del reporte */
 	$row_institucion= $obBD_con1->getRowConsulta(15, $Ses_Suc_Cod, $obBD_conexion);//GetRowConsulta(5,$Ses_Cod_Suc);
 ?>
 <table width="100%" height="897" border="0" align="center" cellpadding="0" cellspacing="0">
   <tr>
     <td height="48" valign="top"><table width="100%" height="18" border="0" cellpadding="0" cellspacing="0">
       <tr align="center">&nbsp;
-        <td height="18" align="center" ><? $obBD_con1->cabeceraReporteStandar($Ses_Suc_Cod,$Titulo,$Subtitulo,$obBD_conexion)?></td>
+        <td height="18" align="center" ><?php $obBD_con1->cabeceraReporteStandar($Ses_Suc_Cod,$Titulo,$Subtitulo,$obBD_conexion)?></td>
       </tr>
     </table></td>
   </tr>
@@ -58,22 +58,22 @@ $Subtitulo="";
         <td width="35%">&nbsp;</td>
         <td>&nbsp;</td>
       </tr>
-      <? if($opn == 'C'){?>
+      <?php if($opn == 'C'){?>
 	  <tr class="Texto_normal_10">
         <td height="13" align="left" class="Texto_normal_10"><strong>NUMERO DE CHEQUE:</strong></td>
-        <td><? echo $rs_datosRepos['Che_Num'];?></td>
+        <td><?php echo $rs_datosRepos['Che_Num'];?></td>
         <td align="right"><strong>BANCO:</strong></td>
-        <td>&nbsp;&nbsp;<? echo strtoupper($rs_datosRepos['Pld_Des']);?></td>
+        <td>&nbsp;&nbsp;<?php echo strtoupper($rs_datosRepos['Pld_Des']);?></td>
         <td>&nbsp;</td>
       </tr>
-	  <? } ?>
+	  <?php } ?>
       <tr class="Texto_normal_10">
         <td width="11%" height="13" align="right"><strong>MONTO DE CAJA CHICA:</strong></td>
-        <td width="7%" align="left" >&nbsp;<? echo $rs_busCajaCh['Cch_Val'];?></td>
-		<? if($opn=='C'){?>
+        <td width="7%" align="left" >&nbsp;<?php echo $rs_busCajaCh['Cch_Val'];?></td>
+		<?php if($opn=='C'){?>
         <td width="10%" align="right"><strong>CHEQUE EMITIDO A:</strong></td>
-        <td>&nbsp;&nbsp;<? echo $rs_datosRepos['Prs_Ape'].' '.$rs_datosRepos['Prs_Nom'];?></td>
-        <? }?>
+        <td>&nbsp;&nbsp;<?php echo $rs_datosRepos['Prs_Ape'].' '.$rs_datosRepos['Prs_Nom'];?></td>
+        <?php }?>
         <td width="37%">&nbsp;</td>
       </tr>
       <tr>
@@ -95,7 +95,7 @@ $Subtitulo="";
               <tr class="Texto_Reporte">
                 <td colspan="5" class="LetraNegra"><strong><span class="Texto_normal_10">GASTOS DEDUCIBLES</span></strong></td>
                 </tr>
-              <? 
+              <?php 
 
 		  $sumaGen=0;
 		  /*compras con retenciones NO ASUMIDAS*/
@@ -104,12 +104,12 @@ $Subtitulo="";
 		  if ($totDeduc!=0){
 			  foreach($comDeducibles as $row){ ?>
               <tr class="Texto_normal_10">
-                <td align="center" class="LetraNegra">&nbsp;<? echo $row['Cop_Fec'];?></td>
-                <td class="LetraNegra">&nbsp;<? echo $row['provee'];?></td>
-                <td align="center" class="LetraNegra">&nbsp;<? echo $row['Tic_Des'];?></td>
-                <td align="center" class="LetraNegra">&nbsp;<? echo $row['Cop_Num'];?></td>
+                <td align="center" class="LetraNegra">&nbsp;<?php echo $row['Cop_Fec'];?></td>
+                <td class="LetraNegra">&nbsp;<?php echo $row['provee'];?></td>
+                <td align="center" class="LetraNegra">&nbsp;<?php echo $row['Tic_Des'];?></td>
+                <td align="center" class="LetraNegra">&nbsp;<?php echo $row['Cop_Num'];?></td>
                 <td class="LetraNegra" align="right">
-                  <!-- <? if($row['asu']=='N'){
+                  <!-- <?php if($row['asu']=='N'){
                       echo $row['total']-$row['ret'];
                       $sumaGen+=$row['total']-$row['ret'];
                     }else{
@@ -123,7 +123,7 @@ $Subtitulo="";
                   ?>&nbsp;
                   </td>
                 </tr>
-              <? }
+              <?php }
 		  }else{
 			?>
               <tr class="Texto_Reporte">
@@ -133,22 +133,22 @@ $Subtitulo="";
                 <td>&nbsp;</td> 
                 <td>&nbsp;</td> 
                 </tr>
-              <? }?>
+              <?php }?>
               <tr class="Texto_Reporte">
                 <td colspan="5" class="Texto_normal_10"><strong>GASTOS DEDUCIBLES</strong></td>
-                </tr><?
+                </tr><?php
           /*compras con retenciones ASUMIDAS*/
 		  $comNoDeducibles= $obBD_con1->getArrayConsulta(20, $Ses_Emp_Cod.'*'.$Rep_Cod.'*'.'S', $obBD_conexion);
 		  $totNoDeduc=count($comNoDeducibles);
 		  if ($totNoDeduc!=0){
 			  foreach($comNoDeducibles as $row){ ?>
               <tr class="Texto_normal_10">
-                <td align="center" class="LetraNegra">&nbsp;<? echo $row['Cop_Fec'];?></td>
-                <td class="LetraNegra">&nbsp;<? echo $row['provee'];?></td>
-                <td align="center" class="LetraNegra">&nbsp;<? echo $row['Tic_Des'];?></td>
-                <td align="center" class="LetraNegra">&nbsp;<? echo $row['Cop_Num'];?></td>
+                <td align="center" class="LetraNegra">&nbsp;<?php echo $row['Cop_Fec'];?></td>
+                <td class="LetraNegra">&nbsp;<?php echo $row['provee'];?></td>
+                <td align="center" class="LetraNegra">&nbsp;<?php echo $row['Tic_Des'];?></td>
+                <td align="center" class="LetraNegra">&nbsp;<?php echo $row['Cop_Num'];?></td>
                 <td class="LetraNegra" align="right">&nbsp;
-                  <!-- <? if($row['asu']=='S'){
+                  <!-- <?php if($row['asu']=='S'){
                     echo formato_numero($row['total'],2,1);
                     $sumaGen+=$row['total'];
                   }else{
@@ -162,7 +162,7 @@ $Subtitulo="";
                   ?>&nbsp;
                   </td>
                 </tr>
-              <? }
+              <?php }
 		  }else{
 			?>
               <tr class="Texto_Reporte">
@@ -172,14 +172,14 @@ $Subtitulo="";
                 <td>&nbsp;</td> 
                 <td>&nbsp;</td> 
                 </tr>
-              <? }?>
+              <?php }?>
               <tr class="Texto_normal_10">
                 <td colspan="4" align="right" ><strong>REPOSICI&Oacute;N TOTAL:</strong></td> 
-                <td align="right"><strong><? echo $sumaGen;?></strong>&nbsp;</td> 
+                <td align="right"><strong><?php echo $sumaGen;?></strong>&nbsp;</td> 
                 </tr>
               <tr class="Texto_normal_10">
                 <td colspan="4" align="right" ><strong>SALDO DE CAJA:</strong></td> 
-                <td align="right"><strong><? echo $rs_busCajaCh['Cch_Val']-$sumaGen;?></strong>&nbsp;</td> 
+                <td align="right"><strong><?php echo $rs_busCajaCh['Cch_Val']-$sumaGen;?></strong>&nbsp;</td> 
                 </tr>
               </tbody>
             </table>
@@ -206,7 +206,7 @@ $Subtitulo="";
         </table></td>
       </tr>
       <tr>
-        <td height="19" colspan="5" align="center"><? $obBD_con1->pieReporteStandar($Ses_Suc_Cod,$Ses_Usu_Cod,$obBD_conexion)?></td>
+        <td height="19" colspan="5" align="center"><?php $obBD_con1->pieReporteStandar($Ses_Suc_Cod,$Ses_Usu_Cod,$obBD_conexion)?></td>
       </tr>
   </table>
     

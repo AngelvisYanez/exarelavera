@@ -143,7 +143,7 @@ class MailNotification
     }
 	private function utf8_change_param(&$input,$type=false){ /* agregado por erik para limpieza de caracteres especiales */
         if (is_string($input)) { 
-            $inputs = trim($input); if((!!mb_detect_encoding($input, 'UTF-8', true))==$type) $input=call_user_func($type?'utf8_decode':'utf8_encode',$input);
+            $inputs = trim($input); if((!!mb_detect_encoding($input, 'UTF-8', true))==$type) $input=$type ? mb_convert_encoding($input, 'ISO-8859-1', 'UTF-8') : mb_convert_encoding($input, 'UTF-8', 'ISO-8859-1');
         } else if (is_array($input)) {
             foreach ($input as &$value) { $this->utf8_change_param($value, $type); } unset($value);
         } else if (is_object($input)) {
@@ -161,7 +161,7 @@ class MailNotification
 		$estado=$doc->createElement('estado', $estado); 
 		$numeroAutorizacion=$doc->createElement('numeroAutorizacion', $claveAcceso); 
 		$fechaAutorizacion=$doc->createElement('fechaAutorizacion', '0001-01-01T00:00:01-00:01');        
-		$cdata = $doc->createCDATASection((!mb_detect_encoding($xml, 'UTF-8', true))?utf8_encode($xml):$xml);            
+		$cdata = $doc->createCDATASection((!mb_detect_encoding($xml, 'UTF-8', true))?mb_convert_encoding($xml, 'UTF-8', 'ISO-8859-1'):$xml);            
 		$comprobante=$doc->createElement('comprobante');
 		$comprobante->appendChild($cdata);
 

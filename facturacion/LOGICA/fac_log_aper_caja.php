@@ -1,4 +1,4 @@
-<?
+﻿<?php
 	require_once('../../auditoria/LOGICA/aud_log_auditoria.php');
 	require_once ("fac_sql_aper_caja.php");
 
@@ -178,8 +178,8 @@ class Class_Log_Datos_Tes extends MysqlDatos{
 			
 	/**
 	* Formato standar para reportes
-	* @param int $sucursal Código de la sucursal
-	* @param string $titulo Título del reporte
+	* @param int $sucursal CÃ³digo de la sucursal
+	* @param string $titulo TÃ­tulo del reporte
 	* @param string $subtitulo Subtitulo del reporte
 	*/
 	function cabeceraReporteStandar($sucursal, $titulo, $subtitulo,$obBD)
@@ -220,18 +220,18 @@ class Class_Log_Datos_Tes extends MysqlDatos{
 				    <td colspan="2" valign="top"><hr /></td>
 		  		  </tr>
 				  <tr align="center">
-				    <td colspan="2" valign="top" class="TITULO_REPORTE"><? echo $titulo; ?></td>
+				    <td colspan="2" valign="top" class="TITULO_REPORTE"><?php echo $titulo; ?></td>
 		  		  </tr>
 				  <tr align="center">
-				    <td colspan="2" valign="top" class="TITULO_REPORTE"><? echo $subtitulo; ?></td>
+				    <td colspan="2" valign="top" class="TITULO_REPORTE"><?php echo $subtitulo; ?></td>
 			      </tr>
 			    </table>
 		<?php
 			} 
 			/**
 			 * Formato standar para reportes
-			 * @param int $sucursal Código de la sucursal
-			 * @param string $usuario Código del usuario 
+			 * @param int $sucursal CÃ³digo de la sucursal
+			 * @param string $usuario CÃ³digo del usuario 
 			 */	
 			function pieReporteStandar($sucursal, $usuario, $obBD)
 			{ 

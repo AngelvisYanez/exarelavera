@@ -1,4 +1,4 @@
-<?	
+<?php	
 /* 
 * Alias:					Registrar
 * Descripción: 				Permite registrar los perfiles

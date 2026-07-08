@@ -126,7 +126,7 @@ if(isset($getDetalleFactura)){
 	</div>
 
   <div id="exportar" style="display: none;">
-        <? php //echo $obBD_datos->getReportHeader($Ses_Suc_Cod, 'Devolucion de IVA', '', $obBD_conexion, false, 12,true) ?>
+        <?php php //echo $obBD_datos->getReportHeader($Ses_Suc_Cod, 'Devolucion de IVA', '', $obBD_conexion, false, 12,true) ?>
         <table id="tablaExporta" cellspacing="0" cellpadding="0" style="width: 1030px; border-collapse: collapse;table-layout: fixed;"></table>
   </div>
 

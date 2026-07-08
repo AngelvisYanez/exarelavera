@@ -66,19 +66,19 @@ $obBD_con1 =  new Class_Log_Datos_Ret;
           <td height="23" colspan="2" ><table width="100%" border="0" cellspacing="0" cellpadding="0">
             <tr>
               <td width="18%" height="25">&nbsp;</td>
-              <td width="24%"><span class="LetraNegra"><? echo $rs_print_renta[0]['Prs_Ced']; ?></span></td>
+              <td width="24%"><span class="LetraNegra"><?php echo $rs_print_renta[0]['Prs_Ced']; ?></span></td>
               <td width="38%">&nbsp;
                 <?Php $Fec_Emi=explode('-',$rs_print_renta[0]['Ret_Fec']); echo $Fec_Emi[2].'-'.mes($Fec_Emi[1],2).'-'.$Fec_Emi[0]; ?></td>
               <td width="19%"><?Php $Eje_Fis=explode('-',$rs_print_renta[0]['Ret_Fec']); $Ejerci=$Eje_Fis[0]; echo $Ejerci; unset($Ejerci);  ?></td>
             </tr>
             <tr>
               <td>&nbsp;</td>
-              <td colspan="2"><span class="LetraNegra"><? echo $rs_print_renta[0]['Prs_Ape'].' '.$rs_print_renta[0]['Prs_Nom']; ?></span></td>
+              <td colspan="2"><span class="LetraNegra"><?php echo $rs_print_renta[0]['Prs_Ape'].' '.$rs_print_renta[0]['Prs_Nom']; ?></span></td>
               <td>&nbsp;</td>
             </tr>
             <tr>
               <td height="25">&nbsp;</td>
-              <td colspan="2"><span class="LetraNegra"><? 
+              <td colspan="2"><span class="LetraNegra"><?php 
 				  	if (strlen($rs_print_renta[0]['Prs_Dir'])>40)
 					{
 						echo substr($rs_print_renta[0]['Prs_Dir'],0,40).'...'; 
@@ -86,13 +86,13 @@ $obBD_con1 =  new Class_Log_Datos_Ret;
 						echo $rs_print_renta[0]['Prs_Dir'];	
 					}
 				  ?></span></td>
-              <td><? echo $rs_print_renta[0]['Prs_Tel']?></td>
+              <td><?php echo $rs_print_renta[0]['Prs_Tel']?></td>
             </tr>
             <tr>
               <td height="22">&nbsp;</td>
-              <td colspan="2"><span class="LetraEval"><? echo $rs_print_renta[0]['Tic_Des']; ?></span></td>
+              <td colspan="2"><span class="LetraEval"><?php echo $rs_print_renta[0]['Tic_Des']; ?></span></td>
               <td><span class="LetraNegra">
-                <? if ($rs_print_renta[0]['Aut_Cod'] != "") { echo "001-001-000".$rs_print_renta[0]['Cop_Num']; } else {  echo $rs_print_renta[0]['Cop_Num'];}?>
+                <?php if ($rs_print_renta[0]['Aut_Cod'] != "") { echo "001-001-000".$rs_print_renta[0]['Cop_Num']; } else {  echo $rs_print_renta[0]['Cop_Num'];}?>
               </span></td>
             </tr>
           </table></td>
@@ -124,7 +124,7 @@ $obBD_con1 =  new Class_Log_Datos_Ret;
                     <td align="right">&nbsp;</td>
                     <td align="center">&nbsp;</td>
                   </tr>
-                  <? foreach($rs_print_renta as $row_prin_renta){ ?>
+                  <?php foreach($rs_print_renta as $row_prin_renta){ ?>
                   <tr align="center" >
                     <td height="25" align="left" valign="bottom" class="Estilo3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                       <?Php $Sri_Des=$row_prin_renta['Ren_Con']; echo substr($Sri_Des,0,30); //"&nbsp"  ?></td>
@@ -140,7 +140,7 @@ $obBD_con1 =  new Class_Log_Datos_Ret;
             </tr>
             <tr>
               <td width="15%" height="23" class="LetraNegra">&nbsp;</td>
-              <td width="71%" height="23" align="left"><? $decimal=explode(".",number_format($Total_Ret,2)); echo num2letras($decimal[0],false,true).', con '.$decimal[1].'/100 D&oacute;lares Americanos'; ?></td>
+              <td width="71%" height="23" align="left"><?php $decimal=explode(".",number_format($Total_Ret,2)); echo num2letras($decimal[0],false,true).', con '.$decimal[1].'/100 D&oacute;lares Americanos'; ?></td>
               <td width="14%" height="23" align="center" class="LetraNegra"><?Php echo number_format ($Total_Ret, 2,'.',''); ?>&nbsp;&nbsp;</td>
             </tr>
           </table>                  
@@ -161,20 +161,20 @@ $obBD_con1 =  new Class_Log_Datos_Ret;
               <td height="23" colspan="2" ><table width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
                   <td width="18%" height="25">&nbsp;</td>
-                  <td width="21%"><span class="LetraNegra"><? echo $rs_print_renta[0]['Prs_Ced']; ?></span></td>
+                  <td width="21%"><span class="LetraNegra"><?php echo $rs_print_renta[0]['Prs_Ced']; ?></span></td>
                   <td width="38%">&nbsp;
                     <?Php $Fec_Emi=explode('-',$rs_print_renta[0]['Ret_Fec']); echo $Fec_Emi[2].'-'.mes($Fec_Emi[1],2).'-'.$Fec_Emi[0]; ?></td>
                   <td width="17%"><?Php $Eje_Fis=explode('-',$rs_print_renta[0]['Ret_Fec']); $Ejerci=$Eje_Fis[0]; echo $Ejerci; unset($Ejerci);  ?></td>
                 </tr>
                 <tr>
                   <td>&nbsp;</td>
-                  <td colspan="2"><span class="LetraNegra"><? echo $rs_print_renta[0]['Prs_Ape'].' '.$rs_print_renta[0]['Prs_Nom']; ?></span></td>
+                  <td colspan="2"><span class="LetraNegra"><?php echo $rs_print_renta[0]['Prs_Ape'].' '.$rs_print_renta[0]['Prs_Nom']; ?></span></td>
                   <td>&nbsp;</td>
                 </tr>
                 <tr>
                   <td height="25">&nbsp;</td>
                   <td colspan="2"><span class="LetraNegra">
-                    <? 
+                    <?php 
 				  	if (strlen($rs_print_renta[0]['Prs_Dir'])>40)
 					{
 						echo substr($rs_print_renta[0]['Prs_Dir'],0,40).'...'; 
@@ -183,13 +183,13 @@ $obBD_con1 =  new Class_Log_Datos_Ret;
 					}
 				  ?>
                   </span></td>
-                  <td><? echo $rs_print_renta[0]['Prs_Tel']?></td>
+                  <td><?php echo $rs_print_renta[0]['Prs_Tel']?></td>
                 </tr>
                 <tr>
                   <td height="22">&nbsp;</td>
-                  <td colspan="2"><span class="LetraEval"><? echo $rs_print_renta[0]['Tic_Des']; ?></span></td>
+                  <td colspan="2"><span class="LetraEval"><?php echo $rs_print_renta[0]['Tic_Des']; ?></span></td>
                   <td><span class="LetraNegra">
-                    <? if ($rs_print_renta[0]['Aut_Cod'] != "") { echo "001-001-000".$rs_print_renta[0]['Cop_Num']; } else {  echo $rs_print_renta[0]['Cop_Num'];}?>
+                    <?php if ($rs_print_renta[0]['Aut_Cod'] != "") { echo "001-001-000".$rs_print_renta[0]['Cop_Num']; } else {  echo $rs_print_renta[0]['Cop_Num'];}?>
                   </span></td>
                 </tr>
               </table></td>
@@ -221,7 +221,7 @@ $obBD_con1 =  new Class_Log_Datos_Ret;
                   <td align="right">&nbsp;</td>
                   <td align="center">&nbsp;</td>
                 </tr>
-                <? foreach($rs_print_renta as $row_prin_renta){ ?>
+                <?php foreach($rs_print_renta as $row_prin_renta){ ?>
                 <tr align="center" >
                   <td height="25" align="left" valign="bottom" class="Estilo3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                     <?Php $Sri_Des=$row_prin_renta['Ren_Con']; echo substr($Sri_Des,0,30); //"&nbsp"  ?></td>
@@ -237,7 +237,7 @@ $obBD_con1 =  new Class_Log_Datos_Ret;
           </tr>
           <tr>
             <td width="17%" class="LetraNegra">&nbsp;</td>
-            <td width="69%" align="left"><? $decimal=explode(".",number_format($Total_Ret,2)); echo num2letras($decimal[0],false,true).', con '.$decimal[1].'/100 D&oacute;lares Americanos'; ?></td>
+            <td width="69%" align="left"><?php $decimal=explode(".",number_format($Total_Ret,2)); echo num2letras($decimal[0],false,true).', con '.$decimal[1].'/100 D&oacute;lares Americanos'; ?></td>
             <td width="14%" align="center" class="LetraNegra"><?Php echo number_format ($Total_Ret, 2,'.',''); ?>&nbsp;&nbsp;</td>
           </tr>
         </table>

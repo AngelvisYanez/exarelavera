@@ -188,11 +188,11 @@ if ($thisPost->postBlock($_POST['postID'])){
 				<tr>
 					<td width="105"><input name="op_opciones" type="radio" value="d"  checked  onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.txt_busqueda);">              
                     <span class="LetraNegra">Descripción</span> <input name="op_cam" id="op_cam" type="hidden" value="d"></td>
-					<td width="125"><input type="radio" name="op_opciones" value="cb" <?Php if($op_opciones== 'cb'){?> checked <? } ?> onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.txt_busqueda);">
+					<td width="125"><input type="radio" name="op_opciones" value="cb" <?Php if($op_opciones== 'cb'){?> checked <?php } ?> onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.txt_busqueda);">
                     <span class="LetraNegra">Código de Barra</span></td>
-					<td width="122"><input type="radio" name="op_opciones" value="cs" <?Php if($op_opciones== 'cs'){?> checked <? } ?> onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.txt_busqueda);" >
+					<td width="122"><input type="radio" name="op_opciones" value="cs" <?Php if($op_opciones== 'cs'){?> checked <?php } ?> onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.txt_busqueda);" >
                     <span class="LetraNegra">Código Secuencial</span></td>
-                    <td width="263"><input type="radio" name="op_opciones" value="ns" <?Php if($op_opciones== 'ns'){  ?> checked <? } ?> onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.Cam_Cod);">
+                    <td width="263"><input type="radio" name="op_opciones" value="ns" <?Php if($op_opciones== 'ns'){  ?> checked <?php } ?> onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.Cam_Cod);">
                     <span class="LetraNegra">Por Campo</span>
 <?Php
 					/**
@@ -204,7 +204,7 @@ if ($thisPost->postBlock($_POST['postID'])){
 <?Php 
 						foreach($rs_campos as $row_rs_campos){
 ?>  
-							<option  value="<? echo $row_rs_campos['Cam_Cod'];?>"><?PHP  echo $row_rs_campos['Cam_Cor'];?></option>
+							<option  value="<?php echo $row_rs_campos['Cam_Cod'];?>"><?PHP  echo $row_rs_campos['Cam_Cor'];?></option>
 <?Php 
 						} //fin foreach($rs_campos as $row_rs_campos){
 ?> 
@@ -235,7 +235,7 @@ if ($thisPost->postBlock($_POST['postID'])){
 		</form>
      </fieldset>  
  
- <? 
+ <?php 
 if (isset($txt_busqueda)){?>
 	<FIELDSET>
 	<LEGEND>
@@ -263,11 +263,11 @@ if (isset($txt_busqueda)){?>
 					 }
 ?>
 		<tr>
-			<td align="center"><FONT COLOR="<? echo $rojo;?>"><?php echo $row_rs_buscar['Act_Cod'];?></FONT></td>
-			<td title="<? echo $row_rs_buscar['Tia_Des'];?>"><FONT COLOR="<? echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Tia_Des'],'#FFFF00', 1);?></FONT></td>
-			<td  title="<? echo $row_rs_buscar['Act_Des'];?>"><FONT COLOR="<? echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Act_Des'],'#FFFF00', 1);?></FONT></td>
-			<td align="center"><FONT COLOR="<? echo $rojo;?>"><?php echo  $row_rs_buscar['Act_Cdc'];?></FONT></td>
-			<form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "frml" id="forml">
+			<td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php echo $row_rs_buscar['Act_Cod'];?></FONT></td>
+			<td title="<?php echo $row_rs_buscar['Tia_Des'];?>"><FONT COLOR="<?php echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Tia_Des'],'#FFFF00', 1);?></FONT></td>
+			<td  title="<?php echo $row_rs_buscar['Act_Des'];?>"><FONT COLOR="<?php echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Act_Des'],'#FFFF00', 1);?></FONT></td>
+			<td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php echo  $row_rs_buscar['Act_Cdc'];?></FONT></td>
+			<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "frml" id="forml">
 			<td align="center" width="5%">
 <?Php 
 			if($row_rs_buscar['Act_Est']=='A'){
@@ -278,8 +278,8 @@ if (isset($txt_busqueda)){?>
 			<input type="hidden" name="codigo" id="codigo" value="<?Php echo $row_rs_buscar['Act_Cod'];?>"/>
 			<input type="hidden" name="hdd_aux" id="hdd_aux" value="1">
 			<input type="hidden" name="volver_busqueda" id="volver_busqueda" value="<?Php echo $txt_busqueda;?>"/>
-			<input type="hidden" name="volver_opciones" id="volver_opciones" value="<? echo $op_opciones;?>">
-			<input type="hidden" name="volver_Cam_Cod" id="volver_Cam_Cod" value="<? echo $Cam_Cod;?>">
+			<input type="hidden" name="volver_opciones" id="volver_opciones" value="<?php echo $op_opciones;?>">
+			<input type="hidden" name="volver_Cam_Cod" id="volver_Cam_Cod" value="<?php echo $Cam_Cod;?>">
 <?Php
 			}
 			else{ echo "&nbsp;";}
@@ -298,7 +298,7 @@ if (isset($txt_busqueda)){?>
 			<td> </td>
 			<td> </td>
 		</tr>
-<?
+<?php
 		} // fin del if ($total_rs_buscar > 0)
 ?>
 		</tbody>
@@ -310,7 +310,7 @@ if (isset($txt_busqueda)){?>
 	echo barra_estado($total_rs_buscar+0);
 ?>
 	</FIELDSET>
-<?
+<?php
 }
 ?>
 
@@ -321,7 +321,7 @@ if ($anulada > 0)
 }//Fin del if ($anulada > 0)
 ?>
 <br/>
-<?
+<?php
 require_once('../../componentes/FRONT/com_con_leyenda.php');?> 
 
 
@@ -330,8 +330,8 @@ require_once('../../componentes/FRONT/com_con_leyenda.php');?>
 <?Php  
  if ($hdd_aux==1){ 
 ?>
-	<form method="post" name= "form2" action="<? echo $_SERVER['PHP_SELF'];?>">
-<? //Creacion del campo REPOST
+	<form method="post" name= "form2" action="<?php echo $_SERVER['PHP_SELF'];?>">
+<?php //Creacion del campo REPOST
 	$thisPost->startPost();
 ?>
 	<fieldset>
@@ -376,11 +376,11 @@ require_once('../../componentes/FRONT/com_con_leyenda.php');?>
                 	$rs_motivoBaj=$obBD_con1->getArrayConsulta(423,"",$obBD_conexion);				
 				?><select name="Baj_Mot" id="Baj_Mot" >
                    <option value="">Seleccione..</option>
-                <?
+                <?php
 				foreach($rs_motivoBaj as $row_rs_motivoBaj){
 				?>
             		<option value="<?Php echo $row_rs_motivoBaj['Est_Cod'] ?>"><?Php echo $row_rs_motivoBaj['Est_Des'];?></option>
-                <?
+                <?php
                 }
                 ?>
                 </select>
@@ -389,7 +389,7 @@ require_once('../../componentes/FRONT/com_con_leyenda.php');?>
 		</tr>
         <tr>
 			<td width="20%" class="Etiqueta1"><span class="Asterisco">*</span>Fecha del Informe:</td>
-			<td>&nbsp;<input name="Baj_Fba" type="text" id="Baj_Fba" value="<? echo date("Y-m-d");?>"></td>
+			<td>&nbsp;<input name="Baj_Fba" type="text" id="Baj_Fba" value="<?php echo date("Y-m-d");?>"></td>
 			<td></td>
 		</tr>       
 		<tr>
@@ -435,7 +435,7 @@ require_once('../../componentes/FRONT/com_con_leyenda.php');?>
 	<table  width="220">
         <tr>
             <td width="49%" align="left">   
-                <form method="post" name= "form3" action="<? echo $_SERVER['PHP_SELF'];?>">	
+                <form method="post" name= "form3" action="<?php echo $_SERVER['PHP_SELF'];?>">	
                         <input id="hdd_volver" name="hdd_volver" type="hidden" value="0">                         
                     <button type="button" name="btn_atras" id="btn_atras" value="Enviar" class="btn btn-inverse fileinput-button" title="Atr&aacute;s"
                     onClick="campos_hide(form2, '<?Php echo "op_opciones*txt_busqueda*hdd_volver"; ?>','<?Php echo $volver_opciones.'*'.$volver_busqueda.'*'.$hdd_volver;?>')">
@@ -444,7 +444,7 @@ require_once('../../componentes/FRONT/com_con_leyenda.php');?>
                  </form>                            
             </td>            
             <td width="51%" >  
-             <form method="post" name= "form4" action="<? echo $_SERVER['PHP_SELF'];?>">	                               
+             <form method="post" name= "form4" action="<?php echo $_SERVER['PHP_SELF'];?>">	                               
                 <button name="boton_guardar" id="boton_guardar" type="button"  class="btn btn-primary fileinput-button" title="Guardar" value="Guardar" onClick="validar_requeridos_baja(form2,validar_opciones(document.getElementById('destino').value),1)"> 
                 <i class="icon-book icon-white"></i>
                 <span>&nbsp;&nbsp;Guardar&nbsp;&nbsp;</span>
@@ -453,7 +453,7 @@ require_once('../../componentes/FRONT/com_con_leyenda.php');?>
             </td>                        
         </tr> 
 	</table> 
- <?
+ <?php
  }
  ?>
  

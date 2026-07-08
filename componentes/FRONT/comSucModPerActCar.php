@@ -67,7 +67,7 @@
 	  <?Php 
       }
       ?>     
-    </select><?
+    </select><?php
 	 }
 		?>
 	</td>
@@ -76,7 +76,7 @@
     <td width="16%" class="Etiqueta1"><span class="Asterisco" >* </span>Modalidad:</td>
     <td width="84%" class="LetraNegra">
       <div id="div_sucursales" >
-      <? 
+      <?php 
 	 /**
 		 * Combo donde carga modalidad, si hay más de 1 registro
 		 * Carga el combo caso contrario solo 
@@ -106,7 +106,7 @@
       }
       ?>     
     </select>
-      <?
+      <?php
 	  }
 	  ?>
       </div>	
@@ -115,7 +115,7 @@
   <tr>
     <td class="Etiqueta1"><span class="Asterisco" >* </span>Periodo:</td>
     <td class="LetraNegra"><div id="div_periodo">
-    <? 
+    <?php 
 	 $rs_periodos = $obBD_con11->getArrayConsulta(300, $Mod_Cod.'*'.$Com_Hoy.'*'.$Suc_Cod, $obBD_conexion11);
 	if( count($rs_periodos) == 1)
 	{
@@ -152,7 +152,7 @@
   <tr>
     <td class="Etiqueta1"><span class="Asterisco" >* </span>Carrera:</td>
     <td><div id="div_carrera">
-    <?
+    <?php
 	//if( count($rs_periodos) == 1)
 	//{
 		/** 
@@ -181,7 +181,7 @@
        <?Php foreach($rs_carreras_etapa as $rows) { ?>
        <option value="<?Php echo $rows['Car_Int'];  ?>"> <?Php echo $rows['Car_Nom']; ?> </option>
        <?Php }  ?>
-     </select>      <?	
+     </select>      <?php	
 	}
 	?>
     </div></td>

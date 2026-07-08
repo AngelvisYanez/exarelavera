@@ -5,16 +5,16 @@
 class SecureSession
 {
     // Include browser name in fingerprint?
-    var $check_browser = true;
+    public $check_browser = true;
 
     // How many numbers from IP use in fingerprint?
-    var $check_ip_blocks = 0;
+    public $check_ip_blocks = 0;
 
     // Control word - any word you want.
-    var $secure_word = '';
+    public $secure_word = '';
 
     // Regenerate session ID to prevent fixation attacks?
-    var $regenerate_id = true;
+    public $regenerate_id = true;
 
     // Call this when init session.
     function Open()

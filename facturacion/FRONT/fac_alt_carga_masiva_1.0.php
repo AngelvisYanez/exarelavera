@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?
+<?php
 /**
 * Descripción: Consulta de facturas electronicas
 * Fecha de actualización:	16-11-2014 
@@ -105,7 +105,7 @@ if ($thisPost->postBlock($_POST['postID']))
 	</HEAD>
 <BODY>
 
-<form method="post" name="form3" id="form3" enctype="multipart/form-data" action="<? echo $_SERVER['PHP_SELF'];?> ">
+<form method="post" name="form3" id="form3" enctype="multipart/form-data" action="<?php echo $_SERVER['PHP_SELF'];?> ">
 <table width="100%" border="0" cellpadding="0" cellspacing="0" class="table">
 <tr class="BarraTitulo">
 	  <td height="10">&raquo; Subir comprobantes electronicos .Xml</td>
@@ -134,7 +134,7 @@ if ($thisPost->postBlock($_POST['postID']))
        </tr>   
      </table>
     </FIELDSET>
-   <? if(isset($save)){ ?>	
+   <?php if(isset($save)){ ?>	
 	<FIELDSET>
     <LEGEND>
     <label class="Titulos2">Informaci&oacute;n del guardado</label>
@@ -142,15 +142,15 @@ if ($thisPost->postBlock($_POST['postID']))
 	<table width="100%" border="0" cellspacing="0" cellpadding="0">
       <tr>
         <td width="14%" class="Etiqueta1">Total ingresados:</td>
-        <td width="86%" class="Alertas">&nbsp; <? echo $contador_1;?></td>
+        <td width="86%" class="Alertas">&nbsp; <?php echo $contador_1;?></td>
       </tr>
       <tr>
         <td class="Etiqueta1">Total rechazados:</td>
-        <td class="Alertas3">&nbsp; <? echo $contador_2;?></td>
+        <td class="Alertas3">&nbsp; <?php echo $contador_2;?></td>
       </tr>
     </table>
     </FIELDSET>  
-    <? } ?>   
+    <?php } ?>   
 	  
     <table width="200" border="0" cellpadding="1" cellspacing="1">
       <tr>

@@ -84,7 +84,7 @@ if (isset($txt_bus)){
 			 * Consulta el activo x su seccion 
 			 */
      ?>
-    <? 
+    <?php 
 			//foreach($rs_bus as $row_rs_bus){	
 	?>
    <div class="paginado" >
@@ -125,10 +125,10 @@ if (isset($txt_bus)){
             <td class="Texto_Reporte"> </td>
         </tr>
         <tr >
-          <td><? //Custodio: xyz?></td>
+          <td><?php //Custodio: xyz?></td>
         </tr>
       </table>
-      <?
+      <?php
     /**
     * Consulta tipo de activo x su  departamento
     */
@@ -156,7 +156,7 @@ if (isset($txt_bus)){
                 <td><span class="LetraNegra"> <?php echo $rs_SugTipAct["Tia_Des"];?></span> </td>
             </tr>
          </table>                                             
-        <?
+        <?php
 		
 		$rs_act = $obBD_con1->getArrayConsulta(441,$txt_bus.'*'.$row_rs_tip["Tia_Cod"], $obBD_conexion);
 		
@@ -178,31 +178,31 @@ if (isset($txt_bus)){
               <td width="6" align="center" bgcolor="#CCCCCC"  ><strong>Vida Util(a&ntilde;s)</strong></td>
               <td width="10" align="center" bgcolor="#CCCCCC"><strong>Observaci&oacute;n</strong></td>
                 
-                <? if($total_rs_camp > 0){
+                <?php if($total_rs_camp > 0){
 						$ancho = 50/$total_rs_camp;
                         foreach($rs_camp as $row_rs_camp){
                     ?>
                         <td width="<?Php echo $ancho; ?>" align="center" bgcolor="#CCCCCC"><strong>
-						<? echo $row_rs_camp['Cam_Cor']; $td +=1;?></strong>
+						<?php echo $row_rs_camp['Cam_Cor']; $td +=1;?></strong>
                         </td>
-                <? 		}
+                <?php 		}
 					
                 	}
 				?>
               <td width="8" align="center" bgcolor="#CCCCCC"><strong>Cantidad</strong></td>
              </tr>
-		 <? if($total_rs_act > 0){
+		 <?php if($total_rs_act > 0){
                foreach($rs_act as $row_rs_act){
                 ?>
             <tr>
-                <td class="Texto_normal_9" align="center"><div align="center"><? echo $row_rs_act['Act_Cod'];?></div></td>
-                <td class="Texto_normal_9" align="center"><div align="center"><? echo $row_rs_act['Act_Cdc'];?></div></td>
-                <td class="Texto_normal_9" align="left" ><div align="left"><? echo $row_rs_act['Act_Des'];?></div></td>
-                <td class="Texto_normal_9" align="center" ><div align="center"><? echo $row_rs_act['Act_Fec'];?></div></td>
-                <td class="Texto_normal_9" align="center"><div align="center"><? echo $row_rs_act['Act_Ann'];?></div></td>
-                <td class="Texto_normal_9" align="left"><div align="left"><? echo $row_rs_act['Act_Obs'];?></div>										
+                <td class="Texto_normal_9" align="center"><div align="center"><?php echo $row_rs_act['Act_Cod'];?></div></td>
+                <td class="Texto_normal_9" align="center"><div align="center"><?php echo $row_rs_act['Act_Cdc'];?></div></td>
+                <td class="Texto_normal_9" align="left" ><div align="left"><?php echo $row_rs_act['Act_Des'];?></div></td>
+                <td class="Texto_normal_9" align="center" ><div align="center"><?php echo $row_rs_act['Act_Fec'];?></div></td>
+                <td class="Texto_normal_9" align="center"><div align="center"><?php echo $row_rs_act['Act_Ann'];?></div></td>
+                <td class="Texto_normal_9" align="left"><div align="left"><?php echo $row_rs_act['Act_Obs'];?></div>										
                 </td>
-               <?
+               <?php
                 //$row_rs_est_act = first_last($rs_est_act, $row_rs_est_act, 0);
                 foreach($rs_camp as $row_rs_camp){  
 					$total_rs_det_camp=0;                  
@@ -211,7 +211,7 @@ if (isset($txt_bus)){
                     $row_rs_det_camp = $rs_det_camp;                   
                 	if($total_rs_det_camp > 0){?>
                 		<td class="Texto_normal_9" align="right" ><div align="left">
-					<? 	if($row_rs_det_camp['Act_Val'] != ''){
+					<?php 	if($row_rs_det_camp['Act_Val'] != ''){
                             echo $row_rs_det_camp['Act_Val'];
                         }
                         else{
@@ -220,7 +220,7 @@ if (isset($txt_bus)){
 					?>
                     </div>
                 		</td>
-				<? 
+				<?php 
 					}    
 				else{
 					echo "<td align='right'>&nbsp;</td>";					
@@ -229,15 +229,15 @@ if (isset($txt_bus)){
 				}//fin  foreach($rs_camp as $row_rs_camp){
         //$row_rs_camp = first_last($rs_camp, $row_rs_camp, 0);
     		?>
-        		<td align="center" class="Texto_normal_9"><div align="center"><? echo $row_rs_act['Act_Can']; $cantidad += $row_rs_act['Act_Can'];?>
+        		<td align="center" class="Texto_normal_9"><div align="center"><?php echo $row_rs_act['Act_Can']; $cantidad += $row_rs_act['Act_Can'];?>
             	</div></td>
            </tr>
-        <? 	}/// fin  foreach($row_rs_act as $rs_act)
+        <?php 	}/// fin  foreach($row_rs_act as $rs_act)
         }?>
            <tr class="Fondo" >
-           		  <td  class="Texto_normal_9" align="right" colspan="<? echo $td+6;?>"><div align="right">Totales:</div></td>
-                  <td colspan="<? echo $td+6;?>" align="center" bgcolor="#CCCCCC" class="Texto_normal_9"><div align="center"><? echo $cantidad; $cantidad = 0;?></div></td>     
-<? 			if($td > 0 ){
+           		  <td  class="Texto_normal_9" align="right" colspan="<?php echo $td+6;?>"><div align="right">Totales:</div></td>
+                  <td colspan="<?php echo $td+6;?>" align="center" bgcolor="#CCCCCC" class="Texto_normal_9"><div align="center"><?php echo $cantidad; $cantidad = 0;?></div></td>     
+<?php 			if($td > 0 ){
                     $td = 0;
             }
 ?>                             
@@ -245,7 +245,7 @@ if (isset($txt_bus)){
            </table>
      <br>
            <br>
-<? 
+<?php 
 			}// fin  foreach($row_rs_tip as $rs_tip) 
 		}// fin if($total_rs_tip > 0)?>
                             <br>
@@ -273,7 +273,7 @@ if (isset($txt_bus)){
             </tr>
          </table>                    
           </div>
-		<?		
+		<?php		
 		//	}//  Fin foreach($row_rs_bus  as $rs_bus);
 	}// fin de if(isset($txt_bus))
 ?>	

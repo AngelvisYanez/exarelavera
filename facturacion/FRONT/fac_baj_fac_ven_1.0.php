@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?
+<?php
 /*
 * Descripción: Anula las facturas de ventas en base al vendedor y su punto de impresión
 * Fecha de actualización: 2012-03-15
@@ -241,11 +241,11 @@ switch ($op){
 	  ?>
       <form name="form1" method="post" action="<?Php $_SERVER['../LOGICA/PHP_SELF']?>">
 	  <tr>
-	    <td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Vet_Cod']; ?></FONT></td>
-		<td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Vet_Num']; ?></FONT></td>
-		<td align="left"><FONT COLOR="<? echo $rojo;?>">		
+	    <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Vet_Cod']; ?></FONT></td>
+		<td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Vet_Num']; ?></FONT></td>
+		<td align="left"><FONT COLOR="<?php echo $rojo;?>">		
 		<?Php echo marcarCadenaColor($txt_busqueda,$row_rs_buscar['Prs_Ape'].' '.$row_rs_buscar['Prs_Nom'],'#FFFF00', '#000', 1); ?></FONT></td>
-		<td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Caj_Fec']; ?></FONT></td>		
+		<td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Caj_Fec']; ?></FONT></td>		
 		<td align="center">
         <?Php if ($row_rs_buscar['Vet_Est'] == 'A') { ?>
          <input name="Vet_Cod" id="Vet_Cod" type="hidden" value="<?Php echo $row_rs_buscar['Vet_Cod']; ?>">
@@ -346,10 +346,10 @@ if (isset($hdd_fec))
 		?> 		
         <form name="form1" method="post" action="<?Php $_SERVER['../LOGICA/PHP_SELF']?>">
     	<tr>
-		  <td align="center"><FONT COLOR="<? echo $rojo;?>"><?php echo $row_rs_buscar['Vet_Cod']; ?></FONT></td>
-		  <td align="center"><font color="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Vet_Num']; ?></font></td>
-		  <td><FONT COLOR="<? echo $rojo;?>"><?PHP echo $row_rs_buscar['Prs_Ape'].' '.$row_rs_buscar['Prs_Nom']; ?></FONT></td>
-		  <td align="center"><FONT COLOR="<? echo $rojo;?>"><?php echo $row_rs_buscar['Caj_Fec']; ?></FONT></td>
+		  <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php echo $row_rs_buscar['Vet_Cod']; ?></FONT></td>
+		  <td align="center"><font color="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Vet_Num']; ?></font></td>
+		  <td><FONT COLOR="<?php echo $rojo;?>"><?PHP echo $row_rs_buscar['Prs_Ape'].' '.$row_rs_buscar['Prs_Nom']; ?></FONT></td>
+		  <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php echo $row_rs_buscar['Caj_Fec']; ?></FONT></td>
 		   <td align="center"><?Php if ($row_rs_buscar['Vet_Est'] == 'A') { ?>
          <input name="Vet_Cod" id="Vet_Cod" type="hidden" value="<?Php echo $row_rs_buscar['Vet_Cod']; ?>">
          <input name="elim" id="elim" type="hidden" value="<?Php echo $row_rs_buscar['Vet_Est']; ?>">
@@ -391,7 +391,7 @@ if ($anulada > 0)
 	$com_leyenda[1]=$anulada;
 }//Fin del if ($anulada > 0)
 ?>
-  <?
+  <?php
 require_once('../../componentes/FRONT/com_con_leyenda.php');
 ?>
   <br/>

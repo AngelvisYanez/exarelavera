@@ -81,7 +81,7 @@ if (isset($Vet_Cod))
     <td height="601" colspan="4" align="left" valign="top"><table width="91%" border="0" cellpadding="0" cellspacing="0" class="Letra_punto_venta_3">
       <tr>
         <td width="8%" align="right" valign="bottom">&nbsp;</td>
-        <td width="58%" height="52" valign="middle"><? if ($row_rs_representante['Cli_Fac'] != "")
+        <td width="58%" height="52" valign="middle"><?php if ($row_rs_representante['Cli_Fac'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Fac'];  
 			}
@@ -91,7 +91,7 @@ if (isset($Vet_Cod))
       </tr>
       <tr>
         <td>&nbsp;</td>
-        <td height="50" valign="middle"><? if ($row_rs_representante['Cli_Dir'] != "")
+        <td height="50" valign="middle"><?php if ($row_rs_representante['Cli_Dir'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Dir']; 
 			}
@@ -101,15 +101,15 @@ if (isset($Vet_Cod))
 			} ?></td>
         <td width="34%" rowspan="2" align="right" valign="middle"><table width="82%" border="0" cellpadding="0" cellspacing="0" class="Letra_punto_venta_3">
           <tr>
-            <td width="26%" height="34" align="right" valign="top">&nbsp;<? echo $dia;?></td>
-            <td width="35%" align="right" valign="top">&nbsp;<? echo $mes;?></td>
-            <td width="39%" align="right" valign="top">&nbsp;<? echo $anio;?></td>
+            <td width="26%" height="34" align="right" valign="top">&nbsp;<?php echo $dia;?></td>
+            <td width="35%" align="right" valign="top">&nbsp;<?php echo $mes;?></td>
+            <td width="39%" align="right" valign="top">&nbsp;<?php echo $anio;?></td>
           </tr>
         </table></td>
       </tr>
       <tr>
         <td>&nbsp;</td>
-        <td height="45" valign="middle"><? if ($row_rs_representante['Cli_Fac'] != "")
+        <td height="45" valign="middle"><?php if ($row_rs_representante['Cli_Fac'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Ruf']; 
 			}
@@ -133,7 +133,7 @@ if (isset($Vet_Cod))
 	
 	?><br>
           <table width="100%" border="0" cellpadding="0" cellspacing="0" class="Letra_punto_venta_3">
-            <? do{?>
+            <?php do{?>
             <tr>
               <td width="40" align="left"><?Php echo formato_numero($row_rs_cliente['Vet_Can'],2,1)?></td>
               <td width="160" align="left"><div align="left">&nbsp;<?Php echo $row_rs_cliente['Ite_Lar'].' '.$row_rs_cliente['Pro_Obs']?></div></td>

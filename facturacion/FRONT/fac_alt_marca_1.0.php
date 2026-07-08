@@ -107,7 +107,7 @@ exit();
   </tr>
 	<tr>
         <td height="400" valign="top">
-        <form method="post" name= "form1" id= "form1" action="<? echo $_SERVER['PHP_SELF'];?>">        
+        <form method="post" name= "form1" id= "form1" action="<?php echo $_SERVER['PHP_SELF'];?>">        
         <?Php 
         /** 
         * Creacion del campo repost 

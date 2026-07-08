@@ -42,7 +42,7 @@ if (isset($Com_Cli_Cod))
 					<td width="4%"><strong>Rubro:</strong></td>
 					<td width="29%"><?php echo $row_rs_producto['Ite_Lar']; ?></td>
 					<td width="3%"><strong><span class="Estilo1">Valor</span>:</strong></td>
-					<td width="64%"><? echo formato_numero($Com_Saldo,2,4); ?></td>
+					<td width="64%"><?php echo formato_numero($Com_Saldo,2,4); ?></td>
 				  </tr>
 				</table>
 				<table width="100%" border="1" cellpadding="0" cellspacing="0" class="Cabecera_ajax">
@@ -100,7 +100,7 @@ if (isset($Com_Cli_Cod))
 									echo formato_numero($inter,2,4)."%";?></td>
 					<td align="right"><?php 
 									echo "$".formato_numero($tot_int,2,4);?></td>
-					<td align="right"><? echo "$".formato_numero($Com_Saldo + ($tot_int),2,4); ?></td>
+					<td align="right"><?php echo "$".formato_numero($Com_Saldo + ($tot_int),2,4); ?></td>
 				 </tr>	 			 
 			<?php 			
 			} //Fin del for($j=0;$j<=10;$j++)

@@ -198,9 +198,9 @@ if(isset($_POST['txt_busqueda']) && !isset($_POST['Prs_Cod']))
 		}
 ?>
 	<tr>
-		<td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php echo $row['Prs_Cod']; ?></FONT></td>
-		<td><FONT COLOR="<? echo $rojo;?>">&nbsp;<?Php echo $row['Prs_Ced']; ?></FONT></td>
-		<td>&nbsp;<FONT COLOR="<? echo $rojo;?>"><?Php echo marcar_cadena($_POST['txt_busqueda'], $row['Prs_Ape']." ".$row['Prs_Nom'],'#FFFF00', 1);?></FONT></td>
+		<td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row['Prs_Cod']; ?></FONT></td>
+		<td><FONT COLOR="<?php echo $rojo;?>">&nbsp;<?Php echo $row['Prs_Ced']; ?></FONT></td>
+		<td>&nbsp;<FONT COLOR="<?php echo $rojo;?>"><?Php echo marcar_cadena($_POST['txt_busqueda'], $row['Prs_Ape']." ".$row['Prs_Nom'],'#FFFF00', 1);?></FONT></td>
 		<td align="center">
 <?php 
 		if($row['Estado']=='I')
@@ -218,14 +218,14 @@ if(isset($_POST['txt_busqueda']) && !isset($_POST['Prs_Cod']))
 				<?php
 			}else{
 			?>
-				<form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "frml" id="forml">
+				<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "frml" id="forml">
 					<button type="button" class="btn btn-success btn-mini" title="Elegir" onclick="this.form.submit()">
 		           		<i class=" icon-arrow-right icon-white"></i>
 		           	</button>					
 		            <input type="hidden" name="Prs_Cod" id="Prs_Cod" value="<?Php echo $row['Prs_Cod'];?>">
 					<input type="hidden" name="txt_busqueda" id="txt_busqueda" value="<?Php echo $_POST['txt_busqueda'];?>"/>
-					<input type="hidden" name="op_opciones" id="op_opciones" value="<? echo $_POST['op_opciones']?>">
-					<input type="hidden" name="id_tabla" id="id_tabla" value="<? echo $obBD_con1->id_tabla?>">
+					<input type="hidden" name="op_opciones" id="op_opciones" value="<?php echo $_POST['op_opciones']?>">
+					<input type="hidden" name="id_tabla" id="id_tabla" value="<?php echo $obBD_con1->id_tabla?>">
 				</form>
 			<?php
 			}
@@ -239,7 +239,7 @@ if(isset($_POST['txt_busqueda']) && !isset($_POST['Prs_Cod']))
   </tbody>
 </table>
 </FIELDSET>
-<?
+<?php
 echo barra_estado(count($Arr_Persona));
 }
 
@@ -248,7 +248,7 @@ if (isset($_POST['Prs_Cod']))
 	$Row_Persona = $obBD_con1->getRowConsulta(10, $_POST['Prs_Cod'], $obBD_conexion);
 ?> 	  
 <form action="<?Php echo $_SERVER['PHP_SELF']?>" method="post" name="form2" id="form2">
-<? 
+<?php 
 		$thisPost->startPost();
 ?>		  
 <FIELDSET>
@@ -330,13 +330,13 @@ if (isset($_POST['Prs_Cod']))
         <td width="14%" class="Etiqueta1" valign="top">Perfiles Activos: </td>
         <td width="86%" align="left">
 		  <table width="100%" border="0" cellpadding="0" cellspacing="0">
-          <?
+          <?php
           $rs_consulta2 = $obBD_con1->getArrayConsulta(11, $Ses_Emp_Cod, $obBD_conexion);
           
           for($ch = 0; $ch < count($rs_consulta2); ) {
 			  ?>
             <tr align="left">
-              <? for($i = 0; $i < 3; $i++){
+              <?php for($i = 0; $i < 3; $i++){
 		         	if(isset($rs_consulta2[$ch + $i]))
 		            {
 			        	$row_rs_consulta2 = $rs_consulta2[$ch + $i];
@@ -349,18 +349,18 @@ if (isset($_POST['Prs_Cod']))
 		  	  				$rojo='';
 		  	  			}	
 					      ?>
-			              <td width="30%" colspan="3" <? echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "LetraNegra");?> class="LetraNegra">
+			              <td width="30%" colspan="3" <?php echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "LetraNegra");?> class="LetraNegra">
 			              	<span id="span_foco" >
-			              		<input name="perfil[]" id="perfil[]" type="checkbox"  value="<? echo $row_rs_consulta2['Per_Cod']; ?>">&nbsp;
-			              		<FONT COLOR="<? echo $rojo;?>"><? echo $row_rs_consulta2['Per_Des']; ?>
+			              		<input name="perfil[]" id="perfil[]" type="checkbox"  value="<?php echo $row_rs_consulta2['Per_Cod']; ?>">&nbsp;
+			              		<FONT COLOR="<?php echo $rojo;?>"><?php echo $row_rs_consulta2['Per_Des']; ?>
 			              		</FONT>
 			              	</span>
 						  </td>
-		              <? 
+		              <?php 
 		          }
 		      }?>
             </tr>
-          <? 
+          <?php 
           	$ch = $ch + $i;
 		 }
 		 ?>
@@ -373,7 +373,7 @@ if (isset($_POST['Prs_Cod']))
    <table width="300" border="0" cellpadding="0" cellspacing="0">
    <tr>
      <td width="34%">
-  <button type="button" class="btn btn-inverse fileinput-button" title="Atras" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*hdd_volver', '<? echo $_POST['txt_busqueda'].'*'.$_POST['op_opciones'].'*'.'1';?>')">
+  <button type="button" class="btn btn-inverse fileinput-button" title="Atras" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*hdd_volver', '<?php echo $_POST['txt_busqueda'].'*'.$_POST['op_opciones'].'*'.'1';?>')">
                <i class=" icon-arrow-left icon-white"></i>
                <span>&nbsp;&nbsp;Atras&nbsp;&nbsp;</span>
        		 </button>

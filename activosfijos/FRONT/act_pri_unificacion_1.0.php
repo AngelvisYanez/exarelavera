@@ -93,11 +93,11 @@ $total_rs_est_act =  count($rs_est_act);
         <td colspan="5" valign="top" class="Texto_Reporte"><strong><div align="center">UNIFICACION DE TOTALES POR DEPARTAMENTOS</div></strong></td>
         </tr>
         <tr align="right" >
-        <td colspan="5" valign="top" align="right" class="Texto_Reporte"><span>Fecha de impresi&oacute;n: <? echo $hoy;?></span></td>
+        <td colspan="5" valign="top" align="right" class="Texto_Reporte"><span>Fecha de impresi&oacute;n: <?php echo $hoy;?></span></td>
         </tr>
 	      </table>
    <p>
-      <?
+      <?php
 					$rs_dep = $obBD_con1->getArrayConsulta(445,'', $obBD_conexion);
 					$total_rs_dep = count($rs_dep);
 					
@@ -128,10 +128,10 @@ $total_rs_est_act =  count($rs_est_act);
 	  ?>
       <tr class="Fondo">
 		  <td class="Texto_Reporte"  align="right">TOTAL :</td>
-          <td class="Texto_Reporte"><div align="right"><b><? echo formato_numero($act_val,2,2);?></b></div></td>
-		  <td class="Texto_Reporte"><div align="right"><b><? echo formato_numero($act_res,2,2);?></b></div></td>
+          <td class="Texto_Reporte"><div align="right"><b><?php echo formato_numero($act_val,2,2);?></b></div></td>
+		  <td class="Texto_Reporte"><div align="right"><b><?php echo formato_numero($act_res,2,2);?></b></div></td>
       </tr>
-      <?
+      <?php
   	  }else{
   	  ?>
       	<tr>
@@ -139,7 +139,7 @@ $total_rs_est_act =  count($rs_est_act);
             <td></td>
             <td><div align="right"><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></div></td>
         </tr>
-      <? } // fin del if ($total_rs_buscar > 0)?>
+      <?php } // fin del if ($total_rs_buscar > 0)?>
 	</table>
     						
 <br><br>

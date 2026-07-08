@@ -341,7 +341,7 @@ if(isset($saveForm)){
                                     footerrow: true, userDataOnFooter: false,
                                     rowNum: 10000000, pager: "#kardexPager", gridview: true, rownumbers: true, viewrecords: true, pgbuttons: false,pgtext: null
                                 }); 
-                                var $footRow = $("#gbox_prods #gview_prods .ui-jqgrid-sdiv .footrow");
+                                public $footRow = $("#gbox_prods #gview_prods .ui-jqgrid-sdiv .footrow");
                                 $footRow.find('>td:not(:last-child,:first-child,.Tot)').css("border-right-color", "transparent");
                                 $footRow.find('>td:not(.Total)').addClass("whiteI");
                             });

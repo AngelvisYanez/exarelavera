@@ -156,7 +156,7 @@ if (isset($ajax_cuenta))
 	}else{	$cuenta="Cuenta Inexistente";
 			$codigo=0;		}	
 	if (isset($cuenta))
-	{ $return_value='<?xml version="1.0" standalone="yes"?><cuenta><descripcion>'.utf8_encode($cuenta).'</descripcion><codigo>'.$codigo.'</codigo></cuenta>';
+	{ $return_value='<?xml version="1.0" standalone="yes"?><cuenta><descripcion>'.mb_convert_encoding($cuenta, 'UTF-8', 'ISO-8859-1').'</descripcion><codigo>'.$codigo.'</codigo></cuenta>';
 	} 	header('Content-Type: text/xml'); 
 		echo $return_value;
 		exit();
@@ -1389,9 +1389,9 @@ if (isset($hdd_save)  && !isset($hdd_volver))
 	?>    
 	<script language="javascript">
 	//Reporte Detalle de Compras
-	windows('../FRONT/fac_pri_fac_detallecompras_1.0.php?com_codigo=<? echo $Cop_Cod; ?>','',800,800,'no','yes','yes','yes');
-	<? if(isset($hdd_comprobante)){?>			
-		windows('<?php echo $hdd_comprobante;?>?Com_Num=<? echo $Com_Num; ?>&codigo=<? echo $Com_Cod; ?>&tabla=<? echo $tabla; ?>&tipo=<? echo $op; ?>&campo=<? echo $campo; ?>&Pec_Cod=<?php echo $Pec_Cod;?>','',800,800,'no','yes','yes','yes'); 	
+	windows('../FRONT/fac_pri_fac_detallecompras_1.0.php?com_codigo=<?php echo $Cop_Cod; ?>','',800,800,'no','yes','yes','yes');
+	<?php if(isset($hdd_comprobante)){?>			
+		windows('<?php echo $hdd_comprobante;?>?Com_Num=<?php echo $Com_Num; ?>&codigo=<?php echo $Com_Cod; ?>&tabla=<?php echo $tabla; ?>&tipo=<?php echo $op; ?>&campo=<?php echo $campo; ?>&Pec_Cod=<?php echo $Pec_Cod;?>','',800,800,'no','yes','yes','yes'); 	
 	<?Php 
 	}
 	/**
@@ -1405,7 +1405,7 @@ if (isset($hdd_save)  && !isset($hdd_volver))
 		
 	?>
 	</script>
-<?  unset($codigo); 
+<?php  unset($codigo); 
 }//Fin del if (isset($hdd_save)  && !isset($hdd_volver))
 ?>
 
@@ -1455,7 +1455,7 @@ else
         
                 <table width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
-                    <td align="center"><? if(($Ses_Dat_Dis=='exa' || $Ses_Dat_Dis=='aaa' || $Ses_Dat_Dis=='orquideas')&& !isset($hdd_volver)  && isset($hdd_save)){echo "<br><span class='Texto_grande' style='color:blue;'>".$infoTicDes."</span></br><br><span class='Texto_grande' style='color:blue;'>".mes($mese[1],1)."</span><br><span class='Texto_grande' style='color:teal;'><b style='color:darkgoldenrod;'>Sec:</b> ".$Cop_Sec.'</span><br><span class="Texto_grande"><b style="color: darkgoldenrod;">Cod:</b>'.$Cop_Cod."</span>";}?></td>
+                    <td align="center"><?php if(($Ses_Dat_Dis=='exa' || $Ses_Dat_Dis=='aaa' || $Ses_Dat_Dis=='orquideas')&& !isset($hdd_volver)  && isset($hdd_save)){echo "<br><span class='Texto_grande' style='color:blue;'>".$infoTicDes."</span></br><br><span class='Texto_grande' style='color:blue;'>".mes($mese[1],1)."</span><br><span class='Texto_grande' style='color:teal;'><b style='color:darkgoldenrod;'>Sec:</b> ".$Cop_Sec.'</span><br><span class="Texto_grande"><b style="color: darkgoldenrod;">Cod:</b>'.$Cop_Cod."</span>";}?></td>
                 </tr>
                 </table>     
 	</form>
@@ -1495,7 +1495,7 @@ if(isset($txt_busqueda))
           <td align="center"><?php if($row_rs_buscar['Prv_Con']==='S'){ ?><img src="../../mascaras/model1/imagenes/ok-s.gif" width="16" height="16" type="image" /><?php } ?></td>
                 <td align="center"><?php if($row_rs_buscar['Prv_Esp']==='S'){ ?><img src="../../mascaras/model1/imagenes/ok-s.gif" width="16" height="16" type="image" /><?php } ?></td>
 		<td width="1%" align="center">	
-        <? if($row_rs_buscar['Prv_Est']=='Activo'){?>
+        <?php if($row_rs_buscar['Prv_Est']=='Activo'){?>
         <button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="this.form.submit()">
         	<i class=" icon-arrow-right icon-white"></i>
         </button>	
@@ -1508,7 +1508,7 @@ if(isset($txt_busqueda))
 	    <input name="Pec_Fei" id="Pec_Fei" type="hidden" value="<?Php echo $Pec_Fei;?>">
 	    <input name="Pec_Fef" id="Pec_Fef" type="hidden" value="<?Php echo $Pec_Fef;?>">
         <input name="Ses_Rcb_Cod" id="Ses_Rcb_Cod" type="hidden" value="<?Php echo $Ses_Rcb_Cod;?>">      
-        <? }?>
+        <?php }?>
 		</td>		
 	  </tr>
 	  </form>
@@ -1802,7 +1802,7 @@ ShowHide('Tbl_Costos'); Esta pendiene por mejorar
 		 <th width="1%">&nbsp;</th>
 	</tr>
     </thead>
-    <tbody id="c_contenido" <? //echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo");?> class="Fondo">
+    <tbody id="c_contenido" <?php //echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo");?> class="Fondo">
 	</tbody>
     <tfoot>
 	<tr >
@@ -1969,7 +1969,7 @@ ShowHide('Tbl_Costos'); Esta pendiene por mejorar
     <table width="202" border="0" cellpadding="0" cellspacing="0">
 	  <tr>	
 		<td width="110" align="left"><input  id="nfilas" name="nfilas" type="hidden" value="0">
-        <button type="button" class="btn btn-success fileinput-button" title="Agregar producto" id="button" name="button" onClick="multiple_capa('<? $_SERVER['PHP_SELF']; ?>',600,300,'cont_fon_prod','cont_cua_prod','Busqueda de Producto','cont_tit_prod')"> <i class="icon-plus icon-white"></i> <span>Producto</span> </button>	
+        <button type="button" class="btn btn-success fileinput-button" title="Agregar producto" id="button" name="button" onClick="multiple_capa('<?php $_SERVER['PHP_SELF']; ?>',600,300,'cont_fon_prod','cont_cua_prod','Busqueda de Producto','cont_tit_prod')"> <i class="icon-plus icon-white"></i> <span>Producto</span> </button>	
 		  </td>
 		<td width="92">
 		<!--<input type="button" class="Boton_Distribuir" title="Mostrar distribuir"  
@@ -2043,7 +2043,7 @@ onClick="ShowHide('Tbl_Costos')" align="left"> esta oendiente por mejorar--></td
           <tr>
             <td width="12%" align="right"><span class="Asterisco">* </span>Pago SRI:</td>
             <td width="88%" align="left">
-            <? 
+            <?php 
                $row_rs_TipoPagoCom = $obBD_con1->getArrayConsulta(1047,'', $obBD_conexion); 
             ?>
           <select name="TipoPag" id="TipoPag"  onchange="document.getElementById('hdd_TipoSri').value=this.value">
@@ -2051,7 +2051,7 @@ onClick="ShowHide('Tbl_Costos')" align="left"> esta oendiente por mejorar--></td
             <?Php foreach($row_rs_TipoPagoCom as $row_rs_TipoPago)
             { ?>
                 <option value="<?Php echo $row_rs_TipoPago['Tpc_Cod'];?>"><?Php echo $row_rs_TipoPago['Tpc_Sri']."  -  ".$row_rs_TipoPago['Tpc_Des'];?></option>
-            <? }?>
+            <?php }?>
             </select>
          
             </td>
@@ -2229,10 +2229,10 @@ $Hdd_Valor = 'Val_Pcc';
 */
 $Hdd_Fecha = 'Com_Fec';		
 ?>
-<? if($llevarContabilidad['Cof_Con']=='S'){
+<?php if($llevarContabilidad['Cof_Con']=='S'){
 	  $contado=true; ?>
 <?Php include('../COMPONENTES/tesComChequesCompra_1.0.php'); ?>
-<? }?>
+<?php }?>
 <br>
 
 	<script language="javascript">
@@ -2257,7 +2257,7 @@ $Hdd_Fecha = 'Com_Fec';
 		  <input name="hdd_save" type="hidden" id="hdd_save" value="insertar"> 
           <input name="Ses_Rcb_Cod" id="Ses_Rcb_Cod" type="hidden" value="<?Php echo $Ses_Rcb_Cod;?>">
   		  <input name="codigo" id="codigo" type="hidden" value="<?Php echo $row_rs_proveedore['Prv_Cod'];?>">
-          <input name="confi_fact" type="hidden" id="confi_fact" value="<? echo $llevarContabilidad['Cof_Con']?>"> 
+          <input name="confi_fact" type="hidden" id="confi_fact" value="<?php echo $llevarContabilidad['Cof_Con']?>"> 
           
   
    <button type="button" class="btn btn-primary start" title="Guardar documento de compra" name="btn_guardar" onClick="if(getSriCod($('#Tic_Cod').val())==='3'&&($('#t_rubros').val()*1+liquida['actual']*1)>13000){alert('Las liquidacioness de este Proveedor exceden el limite!');}else{if ((document.getElementById('Tri_Cod').value==1) || (document.getElementById('Tri_Cod').value==6)){ validar_facturacion_compra(this.form) }else{ if(document.getElementById('t_rubros').value<1000 ){validar_facturacion_compra(this.form);}else{ if(document.getElementById('hdd_TipoSri').value>='1'){validar_facturacion_compra(this.form);}else{alert('?Falta escoger Pago SRI!'); document.getElementById('TipoPag').focus();}}};}">
@@ -2288,9 +2288,9 @@ $Hdd_Fecha = 'Com_Fec';
 				$Com_Com_Cod = $Com_Cod;
 				?>
 				<?Php include('../COMPONENTES/tesComConCheque_1.0.php'); ?>	
-        	<? }?>
+        	<?php }?>
         
-	<? } // fin del if (isset($hdd_save) && !isset($hdd_volver)) ) ?> 
+	<?php } // fin del if (isset($hdd_save) && !isset($hdd_volver)) ) ?> 
  <?Php
  	}//Fin del else if (!isset($hdd_Pec_Cod))
  

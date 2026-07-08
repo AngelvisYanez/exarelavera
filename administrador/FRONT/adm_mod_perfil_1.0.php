@@ -1,4 +1,4 @@
-<?     
+<?php     
 /* 
 * Alias:					Modificar
 * Descripción: 				Permite activar y desactivar los procesos
@@ -51,23 +51,23 @@ if(isset($ajax_op))
         	<table width="100%" border="0" cellpadding="0" cellspacing="0">
               <tr>
                 <td width="20%" class="Etiqueta1">Orden:&nbsp;</td>
-                <td width="80%" class="LetraNegra"><? echo $row_rs_proceso['Pcs_Ord'];?>&nbsp;</td>
+                <td width="80%" class="LetraNegra"><?php echo $row_rs_proceso['Pcs_Ord'];?>&nbsp;</td>
               </tr>
               <tr>
                 <td width="20%" class="Etiqueta1">Nombre:&nbsp;</td>
-                <td width="80%" class="LetraNegra"><? echo $row_rs_proceso['Pcs_Nom']; ?>&nbsp;</td>
+                <td width="80%" class="LetraNegra"><?php echo $row_rs_proceso['Pcs_Nom']; ?>&nbsp;</td>
               </tr>
               <tr>
                 <td width="20%" class="Etiqueta1">Link:&nbsp;</td>
-                <td width="80%" class="LetraNegra"><? echo $row_rs_proceso['Pcs_Lin']; ?>&nbsp;</td>
+                <td width="80%" class="LetraNegra"><?php echo $row_rs_proceso['Pcs_Lin']; ?>&nbsp;</td>
               </tr>
               <tr>
                 <td width="20%" class="Etiqueta1">Ruta:&nbsp;</td>
-                <td width="80%" class="LetraNegra"><? echo $row_rs_proceso['Rut_Des']; ?>&nbsp;</td>
+                <td width="80%" class="LetraNegra"><?php echo $row_rs_proceso['Rut_Des']; ?>&nbsp;</td>
               </tr>
               <tr>
                 <td width="20%" class="Etiqueta1">Observación:&nbsp;</td>
-                <td width="80%" class="LetraNegra"><? echo $row_rs_proceso['Pcs_Det']; ?>&nbsp;</td>
+                <td width="80%" class="LetraNegra"><?php echo $row_rs_proceso['Pcs_Det']; ?>&nbsp;</td>
               </tr>
            </table>
         
@@ -80,7 +80,7 @@ if(isset($ajax_op))
 		</legend>
         
 		<table width="100%" border="0" cellpadding="0" cellspacing="0">
-          <tr><? 
+          <tr><?php 
 		  //echo $op;
 		  	$i = 0; $nam = 0;
           	foreach($rs_perfiles as $row_rs_perfiles){
@@ -88,9 +88,9 @@ if(isset($ajax_op))
 					$rs_det = $obBD_con1->getArrayConsulta(7, $row_rs_perfiles['Per_Cod'].'*'.$ajax_op, $obBD_conexion); 
 					//if(count($rs_det) > 0){ echo count($rs_det);}
 		  ?>
- <td width="5%" class="Etiqueta1"><input name="per[<? echo $nam;?>]"  id="per[<? echo $nam;?>]" title="<? echo $row_rs_perfiles['Per_Cod'];?>" type='checkbox' style='cursor:pointer' value="<? echo $row_rs_perfiles['Per_Cod'];?>" <? if(count($rs_det) > 0){ echo " checked ";} ?> ></td>
-            <td width="15%" class="Etiqueta1"><div align="left"><? echo $row_rs_perfiles['Per_Des'];?></div></td>
-            <?
+ <td width="5%" class="Etiqueta1"><input name="per[<?php echo $nam;?>]"  id="per[<?php echo $nam;?>]" title="<?php echo $row_rs_perfiles['Per_Cod'];?>" type='checkbox' style='cursor:pointer' value="<?php echo $row_rs_perfiles['Per_Cod'];?>" <?php if(count($rs_det) > 0){ echo " checked ";} ?> ></td>
+            <td width="15%" class="Etiqueta1"><div align="left"><?php echo $row_rs_perfiles['Per_Des'];?></div></td>
+            <?php
 					$i++; $nam++;
 					if($i == 3){
 						echo "</tr><tr>";
@@ -104,7 +104,7 @@ if(isset($ajax_op))
           	<td>&nbsp;</td>
           </tr>
           <tr>
-          	<td class="Etiqueta1"><input name="All"  id="All" type='checkbox' style='cursor:pointer' value="1" onClick="allCheck('<? echo count($rs_perfiles); ?>', this)"></td>
+          	<td class="Etiqueta1"><input name="All"  id="All" type='checkbox' style='cursor:pointer' value="1" onClick="allCheck('<?php echo count($rs_perfiles); ?>', this)"></td>
              <td width="15%" class="Etiqueta1"><div align="left">Todos/Ninguno</div></td>
           </tr>
 		</table>
@@ -118,11 +118,11 @@ if(isset($ajax_op))
 		   <span>Guardar</span>
 		</button>
 			
-		<input name="pcs" id="pcs" type="hidden" value="<? echo $ajax_op; ?>">
+		<input name="pcs" id="pcs" type="hidden" value="<?php echo $ajax_op; ?>">
 		<input name="hdd_all" type="hidden" id="hdd_all" value="actualizar">
         </form>
      </fieldset>
-  <?
+  <?php
  exit();
 }
 
@@ -207,7 +207,7 @@ if (isset($hdd_all))
     </tr>
     <tr>
       <td height="296" valign="top">
-<?
+<?php
 if(!isset($op)){$op = 1;}
 
 $descripcion = "Individual*General";
@@ -246,7 +246,7 @@ if (isset($codigo) && !isset($hdd_volver))
 		  <table width="100%" height="100%" border="0" cellspacing="0" cellpadding="0" class="menu">
             <tr>
               <td align="left" valign="top" bgcolor="#999999">
-			  <? $Com_Tipo = 'M'; ?>
+			  <?php $Com_Tipo = 'M'; ?>
 			  <?php require_once("adm_con_treemenu_adm_1.0.php"); ?>
               </td>
               </tr>
@@ -264,10 +264,10 @@ if (isset($codigo) && !isset($hdd_volver))
 		           <span>Guardar</span>
 		           </button>
 		
-	<input name="codigo" type="hidden" value="<? echo $codigo; ?>">
+	<input name="codigo" type="hidden" value="<?php echo $codigo; ?>">
 	<input name="hdd_ind" type="hidden" id="hdd_ind" value="actualizar">
 	</form>
-<?	
+<?php	
 }
 else
 {	
@@ -305,7 +305,7 @@ else
 	<tr>
 	<td align="center"><?php  echo '<font color="'.$color.'">'.$row_rs_perfiles['Per_Cod'].'</font>'; ?></td>
 	<td><?Php echo '<font color="'.$color.'">'.$row_rs_perfiles['Per_Des'].'</font>'; ?></td>
-	<form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form2" id="form2">
+	<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form2" id="form2">
 	<td align="center">
 	<?Php 
 	   if ($row_rs_perfiles['Per_Est'] == 'A') 
@@ -329,7 +329,7 @@ else
 	</tbody>
 	</table>
 	</fieldset>
-	<? 
+	<?php 
 		echo barra_estado(count($rs_perfiles));
 }//Fin del else if (isset($codigo) && !isset($hdd_volver))
 	
@@ -358,7 +358,7 @@ else
 		<label class="Titulos2">Seleccione el proceso</label>
 		</LEGEND>	
         <div class="LetraNegra">	
-		<?	
+		<?php	
 		/*
 		* Consulta la ruta del departamento 
 		*/
@@ -421,7 +421,7 @@ else
                 </td>
                 <td width="35%"><?Php echo $row_rs_procesos['Rut_Des']."<b>".$row_rs_procesos['Pcs_Nom']."</b>"; ?></td>
                 <td align="center">
-					<form action="<? echo $_SERVER['PHP_SELF'].'?op=2';?>" method="post" name= "form_mod" id="form_mod">
+					<form action="<?php echo $_SERVER['PHP_SELF'].'?op=2';?>" method="post" name= "form_mod" id="form_mod">
 						<input type="hidden" name="mod" id="mod" value="<?php echo 'M';?>"/>	
 						<button type="button" title="Editar" class="btn btn-primary btn-mini"  onClick="ajax_datos('<?php echo $_SERVER['PHP_SELF'].'?op=2'; ?>&ajax_op=<?php echo $row_rs_procesos['Pcs_Cod']; ?>','ajax_modal');Muestra_Aparecer();"><i class=" icon-edit icon-white"></i>
 						</button>
@@ -440,7 +440,7 @@ else
                        $anulada =0;
 			  foreach($rs_nodos as $row_rs_nodos){ 	 ?>         
 			  <tr>
-                <td align="center"><? echo $row_rs_nodos['Org_Cod']; ?></td>
+                <td align="center"><?php echo $row_rs_nodos['Org_Cod']; ?></td>
                 <td width="40%">
                     <?Php
                     if ($row_rs_nodos['Org_Mod'] == 'I') 
@@ -453,11 +453,11 @@ else
                         $color_d = '';	
                     }				
                     ?>
-                    <img style="vertical-align:middle" src="../LOGICA/images/<?Php echo $row_rs_nodos['Org_Img'] ?>" width="22" height="25" title="Departamento"><? echo "<font color='".$color_d."'><strong> ".$row_rs_nodos['Org_Des']."</strong></font>"; ?>
+                    <img style="vertical-align:middle" src="../LOGICA/images/<?Php echo $row_rs_nodos['Org_Img'] ?>" width="22" height="25" title="Departamento"><?php echo "<font color='".$color_d."'><strong> ".$row_rs_nodos['Org_Des']."</strong></font>"; ?>
               	</td>
 			 	<td width="35%">&nbsp;</td>
               	<td align="center">
-               <form style="display:inline" action="<? echo $_SERVER['PHP_SELF'].'?op=2';?>" method="post" name= "form2" id="form2">
+               <form style="display:inline" action="<?php echo $_SERVER['PHP_SELF'].'?op=2';?>" method="post" name= "form2" id="form2">
                 <?Php 
                 	if ($row_rs_nodos['Org_Mod'] == 'A') 
                		{ 
@@ -471,7 +471,7 @@ else
                 </form> 
               	</td>
 			</tr>
-            <?
+            <?php
              	}//Fin foreach($rs_nodos as $row_rs_nodos)
 			}//Fin del if (count($rs_nodos) > 0)	
 			?>
@@ -479,7 +479,7 @@ else
         </table>
 				
 		</FIELDSET>		  
-		<? 
+		<?php 
 		if (count($rs_procesos) > 0)		
         {                
 			echo barra_estado(count($rs_procesos));
@@ -490,7 +490,7 @@ else
          <br>
 <table border="0" cellpadding="0" cellspacing="0">
   <tr>
-  <form action="<? echo $_SERVER['PHP_SELF'].'?op=2';?>" method="post" name= "form3" id="form3">
+  <form action="<?php echo $_SERVER['PHP_SELF'].'?op=2';?>" method="post" name= "form3" id="form3">
 	<td align="right">
 	<?Php
 	if (isset($rs_direc) && count($rs_direc) >0)
@@ -509,7 +509,7 @@ else
   </form>
   </tr>
 </table>
-        <?
+        <?php
 	break;
 	}
 }

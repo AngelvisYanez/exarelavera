@@ -392,7 +392,7 @@ class DSig
      * @return null
      * @throws MissingMandatoryParametersException
      */
-    protected static function checkMandatoryParametersForPublicKeyCalculation(array $mandatoryParameters, $keyAlgorithm, $parameters)
+    protected static function checkMandatoryParametersForpublicKeyCalculation(array $mandatoryParameters, $keyAlgorithm, $parameters)
     {
         foreach ($mandatoryParameters as $parameterName) {
             if (!isset($parameters[$parameterName])) {
@@ -615,11 +615,11 @@ class DSig
                             'Y',
                         );
                         // throws exception if mandatory parameters check fails
-                        self::checkMandatoryParametersForPublicKeyCalculation($mandatoryParameters, 'DSA', $parameters);
+                        self::checkMandatoryParametersForpublicKeyCalculation($mandatoryParameters, 'DSA', $parameters);
                         // calculate public key
-                        $publicKey = Pem::getPublicKeyFromPqgy($parameters['P'], $parameters['Q'], $parameters['G'], $parameters['Y']);
+                        $publicKey = Pem::getpublicKeyFromPqgy($parameters['P'], $parameters['Q'], $parameters['G'], $parameters['Y']);
 
-                        return Key::factory($algorithm, $publicKey, false, Key::TYPE_PUBLIC);
+                        return Key::factory($algorithm, $publicKey, false, Key::TYPE_public);
                     case 'RSAKeyValue':
                         $parameters = array();
                         foreach ($key->childNodes as $parameter) {
@@ -630,11 +630,11 @@ class DSig
                             'Exponent',
                         );
                         // throws exception if mandatory parameters check fails
-                        self::checkMandatoryParametersForPublicKeyCalculation($mandatoryParameters, 'DSA', $parameters);
+                        self::checkMandatoryParametersForpublicKeyCalculation($mandatoryParameters, 'DSA', $parameters);
                         // calculate public key
-                        $publicKey = Pem::getPublicKeyFromModExp($parameters['Modulus'], $parameters['Exponent']);
+                        $publicKey = Pem::getpublicKeyFromModExp($parameters['Modulus'], $parameters['Exponent']);
 
-                        return Key::factory($algorithm, $publicKey, false, Key::TYPE_PUBLIC);
+                        return Key::factory($algorithm, $publicKey, false, Key::TYPE_public);
                 }
             }
         }
@@ -656,7 +656,7 @@ class DSig
         if (!is_null($x509Certificate)) {
             $certificate = Pem::formatKeyInPemFormat($x509Certificate->textContent);
 
-            return Key::factory($algorithm, $certificate, false, Key::TYPE_PUBLIC);
+            return Key::factory($algorithm, $certificate, false, Key::TYPE_public);
         }
 
         return null;

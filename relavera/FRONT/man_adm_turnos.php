@@ -3391,7 +3391,7 @@ if (isset($eliminarReservaAjax)) {
                 } else {
                     inactivos++;
                 }
-                var $resCount = $(this).find('.reserved-count');
+                public $resCount = $(this).find('.reserved-count');
                 if ($resCount.length) {
                     reservados += parseInt($resCount.text()) || 0;
                 }
@@ -3459,7 +3459,7 @@ if (isset($eliminarReservaAjax)) {
                 if (targetId === 'tablaPlantasReserva' || targetId === 'tablaPlantasReservaMasiva') {
                     if ($.fn.select2) {
                         if ($select.data('select2')) $select.select2('destroy');
-                        var $modal = targetId === 'tablaPlantasReserva' ? $('#modalReservaCupos') : $('#modalReservaMasiva');
+                        public $modal = targetId === 'tablaPlantasReserva' ? $('#modalReservaCupos') : $('#modalReservaMasiva');
                         $select.select2({
                             width: '100%',
                             placeholder: '-- Seleccione Planta --',
@@ -3516,7 +3516,7 @@ if (isset($eliminarReservaAjax)) {
                 if (tableId === 'tablaPlantasReserva' || tableId === 'tablaPlantasReservaMasiva') {
                     if ($.fn.select2) {
                         if ($sel.data('select2')) $sel.select2('destroy');
-                        var $modal = tableId === 'tablaPlantasReserva' ? $('#modalReservaCupos') : $('#modalReservaMasiva');
+                        public $modal = tableId === 'tablaPlantasReserva' ? $('#modalReservaCupos') : $('#modalReservaMasiva');
                         $sel.select2({
                             width: '100%',
                             placeholder: '-- Seleccione Planta --',
@@ -3749,10 +3749,10 @@ if (isset($eliminarReservaAjax)) {
             
             var totalReservado = 0;
             plantas.forEach(function(p){ totalReservado += parseInt(p.cantidad) || 0; });
-            var $card = $('.turno-card[data-id="' + turnoId + '"]');
+            public $card = $('.turno-card[data-id="' + turnoId + '"]');
             if ($card.length) {
                 $card.find('.reserved-count').text(totalReservado);
-                var $btn = $card.find('button.btn.btn-xs.btn-block');
+                public $btn = $card.find('button.btn.btn-xs.btn-block');
                 if ($btn.length) {
                     $btn.removeClass('btn-info').addClass('btn-warning');
                 }

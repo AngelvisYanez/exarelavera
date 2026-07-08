@@ -36,7 +36,7 @@ $obBD_con1 =  new Class_Log_Datos_Con;
 	<table width="516" border="0" align="center">
       <tr>
         <td valign="top" align="center">
-	<? 			
+	<?php 			
 		if($tipo=="1"){
 			
 		/**
@@ -117,7 +117,7 @@ $obBD_con1 =  new Class_Log_Datos_Con;
 	<form name="form2" method="post" action="<?Php echo $_SERVER['PHP_SELF']; ?>">
 	  <table width="275" border="1"  bordercolor="#000000"  cellspacing="3">
         <tr>
-          <?  
+          <?php  
 			  foreach($rs_ite_pro as $row_rs_ite_pro)
 			  {
 				/**
@@ -131,21 +131,21 @@ $obBD_con1 =  new Class_Log_Datos_Con;
           <td width="250">
           		<table width="266" border="0" cellpadding="0" cellspacing="2">
               	<tr>
-                	<td colspan="2" align="center"><? $varcode=$row_rs_ite_pro["Act_Bar"];; include("../../Librerias/barcode/generadorbarras.php"); ?></td>
+                	<td colspan="2" align="center"><?php $varcode=$row_rs_ite_pro["Act_Bar"];; include("../../Librerias/barcode/generadorbarras.php"); ?></td>
               	</tr>
               	<tr>
               	  <td  width="84" class="Etiqueta1"><div align="left">Departamento:</div></td>
-              	  <td width="175" class="LetraNegra">&nbsp;<? echo $rs_DeparCust['Dep_Des'];?></td>
+              	  <td width="175" class="LetraNegra">&nbsp;<?php echo $rs_DeparCust['Dep_Des'];?></td>
             	</tr>              	
               	  <td width="84" class="Etiqueta1"><div align="left">Activo:</div></td>
-              	  <td class="LetraNegra">&nbsp;<? echo $row_rs_ite_pro['Act_Des']; ?></td>
+              	  <td class="LetraNegra">&nbsp;<?php echo $row_rs_ite_pro['Act_Des']; ?></td>
             	</tr>
               	<tr>
                 	<td class="Etiqueta1"><div align="left">Secuencial:</div></td>
-                	<td class="LetraNegra">&nbsp;<? echo $row_rs_ite_pro['Act_Sec']; ?></td>
+                	<td class="LetraNegra">&nbsp;<?php echo $row_rs_ite_pro['Act_Sec']; ?></td>
               	</tr>
           </table></td>
-          <? 
+          <?php 
 		   if($indicadorfila==4)
 		   {
 		   echo "</tr>";

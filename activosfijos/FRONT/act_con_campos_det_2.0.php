@@ -179,7 +179,7 @@ switch($op){
   </tr>
 	<tr>
 	  	<td valign="top">
-		<?
+		<?php
 		
 		$descripcion = "Individual*General*Resumen*Detallado";
   		$pag1= $_SERVER['PHP_SELF']."?op=1";
@@ -189,7 +189,7 @@ switch($op){
 		tabs(3,$descripcion, $pag1.'*'.$pag2.'*'.$pag3.'*'.$pag4, $op);
 	?>
  <!--<div id="ContTabul">-->
-	<?
+	<?php
 	if(!isset($op)){$op = 1;}
 	
 		if (($op==1 || $op==2 || $op==3 || $op==4)) {
@@ -222,7 +222,7 @@ switch($op){
 				?>
                     <select name="Cam_Cod" id="Cam_Cod" onChange="setfocus(this.form.txt_busqueda);">
                             <?Php foreach($rs_campos as $row_rs_campos){?>  
-                              <option  value="<? echo $row_rs_campos['Cam_Cod'];?>"><?PHP  echo $row_rs_campos['Cam_Cor'];?></option>
+                              <option  value="<?php echo $row_rs_campos['Cam_Cod'];?>"><?PHP  echo $row_rs_campos['Cam_Cor'];?></option>
                              <?Php 
                                 } //fin foreach($rs_campos as $row_rs_campos){
                               ?> 
@@ -279,7 +279,7 @@ switch($op){
   </script>
   
   </form>
-<? if (isset($txt_busqueda))
+<?php if (isset($txt_busqueda))
 {
 ?>
 <FIELDSET>
@@ -304,9 +304,9 @@ switch($op){
 				foreach($rs_camp as $row_rs_camp){
 				?>
 					<th width="11%">
-					<? echo $row_rs_camp['Cam_Cor']; $td +=1; ?>
+					<?php echo $row_rs_camp['Cam_Cor']; $td +=1; ?>
                     </th>
-			   <? }//if($total_rs_camp > 0){
+			   <?php }//if($total_rs_camp > 0){
 			}?>
           
           <th width="4%">&nbsp;</th>
@@ -332,13 +332,13 @@ switch($op){
 					<td align="center" width="16%">
 						<?Php echo $rs_val_Camp['Act_Val'] ?>                
 					</td>
-					<?
+					<?php
 				}
 		 	 }
 		  ?>
           
           <td align="center" width="4%">
-            <form action="<? echo $_SERVER['PHP_SELF']."?op=1";?>" method="post" name= "frml" id="forml">
+            <form action="<?php echo $_SERVER['PHP_SELF']."?op=1";?>" method="post" name= "frml" id="forml">
               <button type="image" name="imageField"  class="btn btn-success btn-mini" width="22" height="22" title="Ver">
                 <i class="icon-arrow-right icon-white"></i>
                 </button>					
@@ -346,7 +346,7 @@ switch($op){
               <input type="hidden" name="hdd_aux" id="hdd_aux" value="1">
                <input type="hidden" name="Cam_Cod" id="Cam_Cod" value="<?Php echo $Cam_Cod;?>">
               <input type="hidden" name="volver_busqueda" id="volver_busqueda" value="<?Php echo $txt_busqueda;?>"/>
-              <input type="hidden" name="volver_opciones" id="volver_opciones" value="<? echo $op_opciones?>">
+              <input type="hidden" name="volver_opciones" id="volver_opciones" value="<?php echo $op_opciones?>">
               </form>
           </td>		
 	  </tr>
@@ -368,7 +368,7 @@ switch($op){
            
            	<td>&nbsp;</td>
         </tr>
-      <? } // fin del if ($total_rs_buscar > 0)?>
+      <?php } // fin del if ($total_rs_buscar > 0)?>
       </tbody>
 	</table> 
     <?Php
@@ -380,7 +380,7 @@ switch($op){
 </FIELDSET>
 
 <p>
-<form method="post" name= "form10" action="<? echo 'act_pri_campos_det_fil_1.0.php';?>" target="_blank">
+<form method="post" name= "form10" action="<?php echo 'act_pri_campos_det_fil_1.0.php';?>" target="_blank">
   <button  name="boton_imprimir" id="boton_imprimir" type="submit" class="btn btn-primary start" value="Imprimir" >
                   <i class='icon-print icon-white'></i> <span>Imprimir</span>
     </button>
@@ -389,7 +389,7 @@ switch($op){
 	<input type="hidden" name="tipo_a" id="tipo_a" value="<?Php echo $tipo_a;?>"/>    
     
 </form>      
-<? }
+<?php }
 if ($hdd_aux==1) { ?>
 
 <fieldset>
@@ -463,7 +463,7 @@ if ($hdd_aux==1) { ?>
   </tr>
   <tr>
       <td width="20%" align="right" class="Etiqueta1"><span class="Asterisco">*</span> Custodio :</td>
-	  <td class="LetraNegra">&nbsp;<? 
+	  <td class="LetraNegra">&nbsp;<?php 
 	  	
 	   /** 
 	    * Consulta el  Custodio 
@@ -509,7 +509,7 @@ if ($hdd_aux==1) { ?>
       </table></td>
 	</tr>
   	<tr class="Etiqueta1">
-		<td colspan="3" class="Etiqueta1"><div align="center"><? 
+		<td colspan="3" class="Etiqueta1"><div align="center"><?php 
 	 		$varcode = $rs_consultar['Act_Bar'];
 	  include("../../Librerias/barcode/generadorbarras.php");
 	  ?></div></td>
@@ -528,15 +528,15 @@ if ($hdd_aux==1) { ?>
   	</tr>
       <tr>
         <td width="20%" align="right" class="Etiqueta1"><span class="Asterisco">*</span> Valor Actual :</td>
-        <td colspan="2" class="LetraNegra">&nbsp;<? echo $rs_consultar["Act_Val"]; ?></td>
+        <td colspan="2" class="LetraNegra">&nbsp;<?php echo $rs_consultar["Act_Val"]; ?></td>
         </tr>
 		 <tr>
         <td width="20%" align="right" class="Etiqueta1"><span class="Asterisco">*</span> Valor Residual :</td>
-        <td colspan="2" class="LetraNegra">&nbsp;<? echo $rs_consultar["Act_Res"]; ?></td>
+        <td colspan="2" class="LetraNegra">&nbsp;<?php echo $rs_consultar["Act_Res"]; ?></td>
         </tr>
 		 <tr>
         <td width="20%" align="right" class="Etiqueta1"><span class="Asterisco">*</span> Vida �til :</td>
-        <td colspan="2" class="LetraNegra">&nbsp;<? echo $rs_consultar["Act_Ann"]; ?>&nbsp;&nbsp;A�os </td>
+        <td colspan="2" class="LetraNegra">&nbsp;<?php echo $rs_consultar["Act_Ann"]; ?>&nbsp;&nbsp;A�os </td>
         </tr>
 	</table>	
 	</fieldset>
@@ -598,7 +598,7 @@ if ($hdd_aux==1) { ?>
                     <td width="17%" class="Etiqueta1"><?php if($row_rs_con_camp['Cam_Est'] == 'I'){ $rojo='#FF0000'; $isact ='F';}else{$rojo=''; $isact ='T';} ?><?php if($row_rs_con_camp['Cam_Req'] == 'R'){
                     echo "<span class=\"Asterisco\">* </span>";  $str = $str.'cam_r['.$r.']*';?>
                     <?php echo $row_rs_con_camp['Cam_Cor'].":"; ?>	
-                    <td width="54%" class="LetraNegra">&nbsp; <? 
+                    <td width="54%" class="LetraNegra">&nbsp; <?php 
 				/** 
 				 * Consulta los campos del activo.
 				 */
@@ -614,7 +614,7 @@ if ($hdd_aux==1) { ?>
 					$row_rs_det_camp = $rs_det_camp;
 					echo $row_rs_con_camp['Cam_Cor']." :"; ?>	
 					<td width="29%" class="LetraNegra">&nbsp;<?php echo $row_rs_det_camp["Act_Val"];?></td>
-				<?
+				<?php
 					$i++;
 				}
 					$cont++;
@@ -638,7 +638,7 @@ if ($hdd_aux==1) { ?>
 <table width="100%" border="0" cellpadding="0" cellspacing="0">
     <tr>
 	  <td width="9%">
-	  <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1"> 
+	  <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1"> 
 	  <button type="button" name="btn_atras" id="btn_atras" value="Enviar" class="btn btn-inverse fileinput-button" title="Atr&aacute;s"
   onClick="campos_hide(this.form, '<?Php echo "txt_busqueda*op_opciones*hdd_volver*Cam_Cod"; ?>','<?Php echo $volver_busqueda.'*'.$volver_opciones.'*'.'1'.'*'.$Cam_Cod; ?>')">
   <i class="icon-arrow-left icon-white"></i>
@@ -656,13 +656,13 @@ if ($hdd_aux==1) { ?>
 		 </form> </td>
     </tr>
   </table>
-<input name="Act_Cod" type="hidden" id="Act_Cod" value="<? echo $rs_consultar["Act_Cod"]; ?>">
+<input name="Act_Cod" type="hidden" id="Act_Cod" value="<?php echo $rs_consultar["Act_Cod"]; ?>">
 
 </fieldset>
 	</td>
   </tr>
 </table>
-<? } ?>
+<?php } ?>
 	    
 </BODY>
 </HTML>
@@ -689,7 +689,7 @@ $obBD_conexion->cerrar();
              <select name="txt_bus" id="txt_bus" >
             <?php 
 				foreach($rs_depar as $row_rs_depar){?>
-               <option <? if($row_rs_depar['Dep_Cod'] == $txt_bus){echo " selected";}?> value="<?php echo $row_rs_depar['Dep_Cod']?>"  ><?Php echo $row_rs_depar['Dep_Des']?>
+               <option <?php if($row_rs_depar['Dep_Cod'] == $txt_bus){echo " selected";}?> value="<?php echo $row_rs_depar['Dep_Cod']?>"  ><?Php echo $row_rs_depar['Dep_Des']?>
                </option>
                <?php
 				} // Fin  foreach($rs_depar as $row_rs_depar) 
@@ -720,10 +720,10 @@ $obBD_conexion->cerrar();
 <!--<div id="Exportar_a_Excel">-->
 <fieldset>
   <LEGEND>
-    <label class="LetraNegra">Activos ubicados en: <? echo $rs_Depar['Dep_Des']?></label>
+    <label class="LetraNegra">Activos ubicados en: <?php echo $rs_Depar['Dep_Des']?></label>
 </LEGEND>
   	
-    <? //if ($total_rs_bus > 0 )
+    <?php //if ($total_rs_bus > 0 )
 		//{
 				//foreach($rs_bus as $row_rs_bus){
 				$cantidad = 0;
@@ -736,7 +736,7 @@ $obBD_conexion->cerrar();
 					
 					if($total_rs_tip > 0){ ?>
 						
-					<?
+					<?php
 						foreach($rs_tip as $row_rs_tip){
 							// buscar el subgrupo de este  tipo de activo
 							$rs_SugTipAct = $obBD_con1->getRowConsulta(656,$row_rs_tip["Tia_Rec"], $obBD_conexion);
@@ -754,7 +754,7 @@ $obBD_conexion->cerrar();
                             </tr>
                          </table>        
                                              
-						<?
+						<?php
                         $rs_act = $obBD_con1->getArrayConsulta(441,$txt_bus.'*'.$row_rs_tip["Tia_Cod"], $obBD_conexion);
                         $total_rs_act = count($rs_act);				
                         /**
@@ -773,28 +773,28 @@ $obBD_conexion->cerrar();
                                  <td>Vida Util(a�os)</td>
                                  <td align="left">Observaci�n</td>
                                 
-                                <? if($total_rs_camp > 0){									
+                                <?php if($total_rs_camp > 0){									
 										foreach($rs_camp as $row_rs_camp){
 										?>
-											<td ><? echo $row_rs_camp['Cam_Cor']; $td +=1; ?></td>
-									   <? }//if($total_rs_camp > 0){
+											<td ><?php echo $row_rs_camp['Cam_Cor']; $td +=1; ?></td>
+									   <?php }//if($total_rs_camp > 0){
 									 }?>
 								<td align="center">Cantidad</td>
                              </tr>  
                             
-                             <? if($total_rs_act > 0){
+                             <?php if($total_rs_act > 0){
 								 		$act_val = 0;
 										$act_res = 0;
 									foreach($rs_act as $row_rs_act){
 									?>
                                    	
                                 		<tr <?Php echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo");?> class="Fondo">
-                                        	<td align="center"><? echo $row_rs_act['Act_Cod'];?></td>
-                                            <td align="center"><? echo $row_rs_act['Act_Cdc'];?></td>
-                                            <td align="left"><? echo $row_rs_act['Act_Des'];?></td>
-                                            <td align="center"><? echo $row_rs_act['Act_Fec'];?></td>
-                                            <td align="center"><? echo $row_rs_act['Act_Ann'];?></td>
-                                            <td><? echo $row_rs_act['Act_Obs'];?></td>                                            
+                                        	<td align="center"><?php echo $row_rs_act['Act_Cod'];?></td>
+                                            <td align="center"><?php echo $row_rs_act['Act_Cdc'];?></td>
+                                            <td align="left"><?php echo $row_rs_act['Act_Des'];?></td>
+                                            <td align="center"><?php echo $row_rs_act['Act_Fec'];?></td>
+                                            <td align="center"><?php echo $row_rs_act['Act_Ann'];?></td>
+                                            <td><?php echo $row_rs_act['Act_Obs'];?></td>                                            
                                             <?Php
 											foreach($rs_camp as $row_rs_camp){								
 												$rs_det_camp = $obBD_con1->getRowConsulta(430,$row_rs_camp['Cam_Cod'].'*'.$row_rs_act["Act_Cod"], $obBD_conexion);
@@ -808,18 +808,18 @@ $obBD_conexion->cerrar();
 													 echo "<td align='left'> &nbsp; </td>";
 												}
 												?>
-										<? }// fin foreach( $rs_camp as $row_rs_camp);
+										<?php }// fin foreach( $rs_camp as $row_rs_camp);
 									?>
-								<td align="center" ><? echo $row_rs_act['Act_Can']; $cantidad += $row_rs_act['Act_Can']; ?></td>
+								<td align="center" ><?php echo $row_rs_act['Act_Can']; $cantidad += $row_rs_act['Act_Can']; ?></td>
 								</tr>		
-									<? }// fin foreach( $rs_act as $row_rs_act);
+									<?php }// fin foreach( $rs_act as $row_rs_act);
 								} //if($total_rs_act > 0){   
 								?>
                               <tr class="Fondo">
                              
-                                 <td align="right" colspan="<? echo $td+6;?>">Totales: </td>
-                                 <td align="center" colspan="<? echo $td+6;?>"><? echo $cantidad; $cantidad = 0;?></td>
-                                <? if($td > 0 ){
+                                 <td align="right" colspan="<?php echo $td+6;?>">Totales: </td>
+                                 <td align="center" colspan="<?php echo $td+6;?>"><?php echo $cantidad; $cantidad = 0;?></td>
+                                <?php if($td > 0 ){
 									$td = 0;
 								   }
 								?>
@@ -827,18 +827,18 @@ $obBD_conexion->cerrar();
                              </tr>                            
                          </table>
           				<p>
-                       <? 
+                       <?php 
 						}//foreach($rs_tip as $row_rs_tip)
 					} //if($total_rs_tip > 0)
 					else{
 					?>
 						<label class="Titulos2">No se han encontrado registros de Activos!!</label>
-				<?	}	// fin if($total_rs_tip > 0)
+				<?php	}	// fin if($total_rs_tip > 0)
 			//}//while($row_rs_bus = $obBD_con1-> fetch_assoc($rs_bus));
 	   //}
 	    //else { ?>
               
-          <? //} ?>
+          <?php //} ?>
 </fieldset>     
 <!--</div> -->    
 <?Php
@@ -916,10 +916,10 @@ $obBD_conexion->cerrar();
 	  ?>
       <tr class="Fondo">
 		  <td align="right">TOTAL :</td>
-          <td align="right"><b><? echo formato_numero($act_val,2,2);?></b></td>
-		  <td align="right"><b><? echo formato_numero($act_res,2,2);?></b></td>
+          <td align="right"><b><?php echo formato_numero($act_val,2,2);?></b></td>
+		  <td align="right"><b><?php echo formato_numero($act_res,2,2);?></b></td>
       </tr>
-      <?
+      <?php
   	  }else{
   	  ?>
       	<tr>
@@ -927,7 +927,7 @@ $obBD_conexion->cerrar();
       		<td>&nbsp;</td>  
       		<td>&nbsp;</td>  		
       	</tr>
-      <? } // fin del if ($total_rs_buscar > 0)?>
+      <?php } // fin del if ($total_rs_buscar > 0)?>
        </tbody>
 	</table>
 	<table>
@@ -1060,7 +1060,7 @@ $obBD_conexion->cerrar();
 						foreach($rs_nodosrep as $row_rs_nodosrep){
 						?>
 						<tr>
-						<?
+						<?php
 							/* Control para agregar cero a las cuentas de detalle */
 							if ($row_rs_nodosrep['Tia_Tip']=='D')
 							{
@@ -1090,7 +1090,7 @@ $obBD_conexion->cerrar();
 							//if($ban == true){
 							?>	
                         	 <td align="right" >
-								<? //echo $row_rs_val['Act_Val']; 
+								<?php //echo $row_rs_val['Act_Val']; 
 									$suma = sumar_nodos(0,$row_rs_nodosrep['Tia_Cod'], $obBD_con3, $obBD_conexion3, 0);
 									$sumatotal = sumar_nodos(0,$row_rs_nodosrep['Tia_Cod'], $obBD_con3, $obBD_conexion3, $sumatotal);
 									//$espacios = str_repeat("&nbsp;", strlen($suma));
@@ -1104,7 +1104,7 @@ $obBD_conexion->cerrar();
 
 								?>
                         	</td>
-                       <?
+                       <?php
 					  	//}
 						//echo $row_rs_nodosrep['Tia_Des']."<br>";	.
 						//$sum = cargar_valores($cod,$row_rs_nodosrep['Tia_Cod'], $obBD_con1, $obBD_conexion, 0).'<br>';
@@ -1114,7 +1114,7 @@ $obBD_conexion->cerrar();
 						cargar_nodos($cod,$row_rs_nodosrep['Tia_Cod'], $obBD_con3, $obBD_conexion3);
 						?>
                         	</tr>
-                        <?
+                        <?php
 					} //while($row_rs_nodosrep=$obBD_con1->fetch_assoc($rs_nodosrep));
 			}
 			else
@@ -1128,8 +1128,8 @@ $obBD_conexion->cerrar();
 			?>
             <tr>
                 <td></td>
-                <td align="right"><strong><? echo "TOTAL :" ?></strong></td>
-                <td align="right"><? echo $sumatotal.$espacios; ?></td>
+                <td align="right"><strong><?php echo "TOTAL :" ?></strong></td>
+                <td align="right"><?php echo $sumatotal.$espacios; ?></td>
 			</tr>	
              
 			</table>
@@ -1186,7 +1186,7 @@ $obBD_conexion->cerrar();
 		  }
 		  ?>
           <tr class="Fondo">
-            <td colspan="4"> <? //cargar_nodos($codigo,0, $obBD_con1, $obBD_conexion, ' ');?></td>
+            <td colspan="4"> <?php //cargar_nodos($codigo,0, $obBD_con1, $obBD_conexion, ' ');?></td>
           </tr>
         </table>
         </td>
@@ -1204,7 +1204,7 @@ $obBD_conexion->cerrar();
             
     </table>
 
-<?
+<?php
 	break; 
 	}
 }

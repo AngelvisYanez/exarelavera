@@ -90,7 +90,7 @@ else
  </tr>
 <tr>
   <td valign="top" height="400">	
-    <form action="<? echo $_SERVER['PHP_SELF']; ?>" method="post" name= "form1" id="form1">
+    <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" name= "form1" id="form1">
     <fieldset>
       <legend>
       <label class="Titulos2">Buscar por:</label>
@@ -146,7 +146,7 @@ if(isset($txt_busqueda))
             <button type="button" class="btn btn-success btn-mini" title="Elegir" onclick="this.form.submit()">
            <i class=" icon-arrow-right icon-white"></i>
            </button>
-            <? } else { echo "&nbsp;"; } ?>	  
+            <?php } else { echo "&nbsp;"; } ?>	  
             </td>
           </form>
         </tr>
@@ -172,7 +172,7 @@ if(isset($txt_busqueda))
 if (count($row_punto) > 0)
 {  ?>
 <br />
-         <form method="post" name= "form" action="<? echo $_SERVER['PHP_SELF'];?>">
+         <form method="post" name= "form" action="<?php echo $_SERVER['PHP_SELF'];?>">
   <FIELDSET>
    <LEGEND>
 	<label class="Titulos2">Datos a modificar</label>
@@ -184,18 +184,18 @@ mensaje_requerido();
    <table width="100%" cellpadding="0" cellspacing="0" border="0">
      <tr>
        <td class="Etiqueta1"><span class="Asterisco">* </span> Sucursal:</td>
-       <td colspan="3"><?
+       <td colspan="3"><?php
 		/* 
 		* Carga las sucursales de la empresa
 		*/
 		$row_rs_sucursal = $obBD_con1->getArrayConsulta(1, $Ses_Emp_Cod, $obBD_conexion);  ?>
          <select name="Suc_Cod" id="Suc_Cod">
            <option >Seleccione...</option>
-           <? 
+           <?php 
 		  foreach ($row_rs_sucursal as $row)
 		  {?>
-           <option <?php if ($row_punto['Suc_Cod']==$row['Suc_Cod']) echo "selected"; ?> value="<? echo $row['Suc_Cod'];?>"><? echo $row['Suc_Des']?></option>
-           <? } //fin del foreach $row_rs_sucursal ?>
+           <option <?php if ($row_punto['Suc_Cod']==$row['Suc_Cod']) echo "selected"; ?> value="<?php echo $row['Suc_Cod'];?>"><?php echo $row['Suc_Des']?></option>
+           <?php } //fin del foreach $row_rs_sucursal ?>
          </select></td>
      </tr>
      <tr>
@@ -204,7 +204,7 @@ mensaje_requerido();
          <table width="70%" border="0" cellpadding="0" cellspacing="0">
            <tr>
              <td><div id="div_emb">
-               <input name="Pun_Des" type="text" id="Pun_Des" size="50" maxlength="50" onblur="if (trim(this.value) != '')ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_emb=1&amp;Pun_Des=' + this.value + '&Pun_Cod=<?php echo $row_punto['Pun_Cod']?>','div_emb')" value="<? echo $row_punto['Pun_Des'];?>" />
+               <input name="Pun_Des" type="text" id="Pun_Des" size="50" maxlength="50" onblur="if (trim(this.value) != '')ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_emb=1&amp;Pun_Des=' + this.value + '&Pun_Cod=<?php echo $row_punto['Pun_Cod']?>','div_emb')" value="<?php echo $row_punto['Pun_Des'];?>" />
              </div></td>
            </tr>
          </table>
@@ -212,7 +212,7 @@ mensaje_requerido();
      </tr>
      <tr>
        <td class="Etiqueta1"><span class="Asterisco">*</span> Ubicaci&oacute;n:</td>
-       <td colspan="3"><textarea name="Pun_Ubi" id="Pun_Ubi" cols="50" rows="4"><? echo $row_punto['Pun_Ubi'];?></textarea></td>
+       <td colspan="3"><textarea name="Pun_Ubi" id="Pun_Ubi" cols="50" rows="4"><?php echo $row_punto['Pun_Ubi'];?></textarea></td>
      </tr>
    </table>
   </FIELDSET> 

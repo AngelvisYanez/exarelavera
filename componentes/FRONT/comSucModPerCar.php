@@ -68,7 +68,7 @@
 				  <?Php 
 			  }
 			  ?>     
-			</select><?
+			</select><?php
          }
      ?>
     </td>
@@ -77,7 +77,7 @@
     <td width="17%" class="Etiqueta1"><span class="Asterisco" >* </span>Modalidad:</td>
     <td width="83%" class="LetraNegra">
       <div id="div_sucursales">
-        <? 
+        <?php 
 		/**
 		 * Combo donde carga modalidad, si hay más de 1 registro
 		 * Carga el combo caso contrario solo 
@@ -107,7 +107,7 @@
               }
               ?>     
             </select>
-              <?
+              <?php
           }
           ?>
      </div>	
@@ -117,7 +117,7 @@
     <td class="Etiqueta1"><span class="Asterisco" >* </span>Periodo:</td>
     <td class="LetraNegra">
       <div id="div_periodo">
-        <? 
+        <?php 
 		/**
 		 * Combo donde carga periódo, si hay más de 1 registro
 		 * Carga el combo caso contrario solo 
@@ -137,7 +137,7 @@
           else
           {
         ?>
-         <select name="Per_Int" id="Per_Int" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_carrera=1&Suc_Cod=<?Php echo $Suc_Cod; ?>&Mod_Cod=<?Php echo $Mod_Cod; ?>&Com_Todos=<? echo $Com_Todos;?>&Per_Int='+this.value, 'div_carrera')">
+         <select name="Per_Int" id="Per_Int" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_carrera=1&Suc_Cod=<?Php echo $Suc_Cod; ?>&Mod_Cod=<?Php echo $Mod_Cod; ?>&Com_Todos=<?php echo $Com_Todos;?>&Per_Int='+this.value, 'div_carrera')">
            <option value="">Seleccione...</option>
          <?Php foreach($rs_periodos as $row)
 		       { 
@@ -163,7 +163,7 @@
     <td class="Etiqueta1"><span class="Asterisco" >* </span>Carrera:</td>
     <td >
       <div id="div_carrera">
-        <?
+        <?php
 			/** 
 			* Consultar la etapa en base al periodos
 			*/
@@ -194,10 +194,10 @@
             {
           ?>
         <select name="Car_Int" id="Car_Int">
-          <? if($Com_Todos=="si")
+          <?php if($Com_Todos=="si")
                   {?>
-          <option value="<? echo $cadTodo;?>"><? echo"<< TODOS >>";?></option>
-          <? }
+          <option value="<?php echo $cadTodo;?>"><?php echo"<< TODOS >>";?></option>
+          <?php }
                  foreach($rs_carreras_etapa as $rows)
 				      { 
 			    ?>
@@ -205,7 +205,7 @@
           <?Php  } 
 			    ?>
           </select>    
-        <?	
+        <?php	
             }?>
         </div>
       </td>

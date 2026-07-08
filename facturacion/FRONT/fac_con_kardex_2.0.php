@@ -530,7 +530,7 @@ if (isset($obtenerPromedio)) {
 
                 { caption: 'Imprimir', buttonicon: "glyphicon glyphicon-print",
                   onClickButton: function() {
-                  var $grid = $("#kardex");
+                  public $grid = $("#kardex");
                   var postData = $grid.jqGrid('getGridParam', 'postData');
                   postData.rows = 1000000;
                   postData.page = 1;
@@ -646,7 +646,7 @@ if (isset($obtenerPromedio)) {
                 
                 { caption: 'Exportar', buttonicon: "glyphicon glyphicon-download",
                   onClickButton: function() {
-                    var $grid = $("#kardex");
+                    public $grid = $("#kardex");
                     var postData = $grid.jqGrid('getGridParam', 'postData');
                     postData.rows = 1000000;
                     postData.page = 1;

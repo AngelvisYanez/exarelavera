@@ -714,7 +714,7 @@ if(isset($downloadFileSri)){
                             <div class="col-xs-8">
                                 <fieldset class="exa-fieldset">
                                     <legend class="Titulos2">Cargar ATS</legend>
-                                    <form method="post" name="formDevolIva" id="formDevolIva" enctype="multipart/form-data" action="<? echo $_SERVER['PHP_SELF'];?>" class="form-horizontal normal">
+                                    <form method="post" name="formDevolIva" id="formDevolIva" enctype="multipart/form-data" action="<?php echo $_SERVER['PHP_SELF'];?>" class="form-horizontal normal">
                                         <div class="form-group">
                                             <label class="col-xs-2 control-label label-sm required">Seleccione:</label>
                                             <div class="col-xs-5" ><input type="file" multiple name="archivoXML[]" id="archivoXML[]" value="" accept="text/xml" class="form-control input-sm" required="" /></div>

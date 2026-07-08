@@ -116,7 +116,7 @@ $rs_anios = $obBD_con1->getArrayConsulta(1, $Ses_Emp_Cod, $obBD_conexion);
             <td width="11%" align="right">Base Imponible</td>
             <td width="11%" align="right">Renta</td>
             </tr>
-         	<?  
+         	<?php  
 			if($_POST['ckbTodos'])
 			{	
 				$rs_cedulas = $obBD_con1->getArrayConsulta(6, $Ses_Emp_Cod.'*2015-01-01*2015-12-31', $obBD_conexion);
@@ -139,16 +139,16 @@ $rs_anios = $obBD_con1->getArrayConsulta(1, $Ses_Emp_Cod, $obBD_conexion);
 				$rs_resumenRenta = $obBD_con1->getRowConsulta(3, $Ses_Emp_Cod.'*'.$param[$i].'*'.$cmb_anio.'-01-01'.'*'.$cmb_anio.'-12-31', $obBD_conexion);
 			?>
               <tr class="Texto_normal_9">
-                <td align="center"><? echo $rs_resumenBase['Prs_Ced'];?></td>
-                <td >&nbsp;<? echo $rs_resumenBase['Prs_Ape'].' '.$rs_resumenBase['Prs_Nom'];?></td>
-                <td align="right"><? echo formato_numero($rs_resumenBase['base'],2,2); $sumBas=$sumBas+$rs_resumenBase['base']; ?></td>
-                <td align="right"><? echo formato_numero($rs_resumenRenta['renta'],2,2); $sumRen=$sumRen+$rs_resumenRenta['renta'];?></td>
+                <td align="center"><?php echo $rs_resumenBase['Prs_Ced'];?></td>
+                <td >&nbsp;<?php echo $rs_resumenBase['Prs_Ape'].' '.$rs_resumenBase['Prs_Nom'];?></td>
+                <td align="right"><?php echo formato_numero($rs_resumenBase['base'],2,2); $sumBas=$sumBas+$rs_resumenBase['base']; ?></td>
+                <td align="right"><?php echo formato_numero($rs_resumenRenta['renta'],2,2); $sumRen=$sumRen+$rs_resumenRenta['renta'];?></td>
             </tr>
-            <? }}?>
+            <?php }}?>
           <tr class="Texto_normal_9">
             <td colspan="2" align="right" bgcolor="#CCCCCC"><strong>Total:</strong></td>
-            <td align="right" bgcolor="#CCCCCC"><strong><? echo formato_numero($sumBas,2,2)?></strong></td>
-            <td align="right" bgcolor="#CCCCCC"><strong><? echo formato_numero($sumRen,2,2)?></strong></td>
+            <td align="right" bgcolor="#CCCCCC"><strong><?php echo formato_numero($sumBas,2,2)?></strong></td>
+            <td align="right" bgcolor="#CCCCCC"><strong><?php echo formato_numero($sumRen,2,2)?></strong></td>
             </tr>
           </table>
 
@@ -166,11 +166,11 @@ $rs_anios = $obBD_con1->getArrayConsulta(1, $Ses_Emp_Cod, $obBD_conexion);
     </td>    
   </tr>
 </table>
-<? if(isset($codigo)){?>
+<?php if(isset($codigo)){?>
 <div id="excel" style="display: none;">
 <table width="1500" border="0" cellspacing="0" cellpadding="0">
   <tr>
-    <td colspan="25"><strong>RETENCIONES POR PAGOS EFECTUADOS PERIODO <? echo $cmb_anio;?></strong></td>   
+    <td colspan="25"><strong>RETENCIONES POR PAGOS EFECTUADOS PERIODO <?php echo $cmb_anio;?></strong></td>   
   </tr> 
 </table>
 <table width="1500" border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse; table-layout:fixed;" >
@@ -219,7 +219,7 @@ $rs_anios = $obBD_con1->getArrayConsulta(1, $Ses_Emp_Cod, $obBD_conexion);
   </tr>
  </thead>
  <tbody> 
- <?
+ <?php
  unset($arrBase);
  unset($arrRenta);
  $TotBaseImpo=0;
@@ -231,21 +231,21 @@ for ($i=0;$i<=count($param);$i++)
   {
  ?>
   <tr class="Texto_normal_9">	  
-    <?
+    <?php
     	$rs_provee = $obBD_con1->getRowConsulta(4,$param[$i], $obBD_conexion);				
 	?>
-    <td align="center" style="mso-number-format:'@'" ><? echo $rs_provee['Prs_Ced'];?></td>
-    <td align="left">&nbsp;<? echo $rs_provee['Prs_Ape'].' '.$rs_provee['Prs_Nom'];?></td>				
-    <? for($x=1;$x<=12;$x++){
+    <td align="center" style="mso-number-format:'@'" ><?php echo $rs_provee['Prs_Ced'];?></td>
+    <td align="left">&nbsp;<?php echo $rs_provee['Prs_Ape'].' '.$rs_provee['Prs_Nom'];?></td>				
+    <?php for($x=1;$x<=12;$x++){
 		/**
 		* Consultar los datos de resumen de compras(Base imponible, Renta) 
 		*/
 		$rs_resumenBase = $obBD_con1->getRowConsulta(2, $Ses_Emp_Cod.'*'.$param[$i].'*'.$cmb_anio.'-'.str_pad($x, 2, "0", STR_PAD_LEFT).'-01'.'*'.$cmb_anio.'-'.$x.'-'.ultimoDia($x,$cmb_anio), $obBD_conexion);
 		$rs_resumenRenta = $obBD_con1->getRowConsulta(3, $Ses_Emp_Cod.'*'.$param[$i].'*'.$cmb_anio.'-'.str_pad($x, 2, "0", STR_PAD_LEFT).'-01'.'*'.$cmb_anio.'-'.str_pad($x, 2, "0", STR_PAD_LEFT).'-'.ultimoDia($x,$cmb_anio), $obBD_conexion);	
 	?>
-        <td align="right"><? echo formato_numero($rs_resumenBase['base'],2,2);?></td>
-        <td align="right"><? echo formato_numero($rs_resumenRenta['renta'],2,2);?></td>
-   <? 
+        <td align="right"><?php echo formato_numero($rs_resumenBase['base'],2,2);?></td>
+        <td align="right"><?php echo formato_numero($rs_resumenRenta['renta'],2,2);?></td>
+   <?php 
    		
    		$arrBase[$x-1]+=formato_numero($rs_resumenBase['base'],2,1);
 		$TotBaseImpo+=formato_numero($rs_resumenBase['base'],2,1);
@@ -254,49 +254,49 @@ for ($i=0;$i<=count($param);$i++)
 		$TotImpRenta+=formato_numero($rs_resumenRenta['renta'],2,1);
    }?>
   </tr>
-  <? }} ?>
+  <?php }} ?>
   <tr class="Texto_normal_9">
     <td colspan="2" align="right"><strong>Totales Base Imp. y Reten. a la Fuente</strong></td>                          
-        <td align="right"><strong><? echo formato_numero($arrBase[0],2,2);?></strong></td>
-        <td align="right"><strong><? echo formato_numero($arrRenta[0],2,2);?></strong></td>
-        <td align="right"><strong><? echo formato_numero($arrBase[1],2,2);?></strong></td>
-        <td align="right"><strong><? echo formato_numero($arrRenta[1],2,2);?></strong></td>         
-        <td align="right"><strong><? echo formato_numero($arrBase[2],2,2);?></strong></td>
-        <td align="right"><strong><? echo formato_numero($arrRenta[2],2,2);?></strong></td>         
-        <td align="right"><strong><? echo formato_numero($arrBase[3],2,2);?></strong></td>
-        <td align="right"><strong><? echo formato_numero($arrRenta[3],2,2);?></strong></td>         
-        <td align="right"><strong><? echo formato_numero($arrBase[4],2,2);?></strong></td>
-        <td align="right"><strong><? echo formato_numero($arrRenta[4],2,2);?></strong></td>         
-        <td align="right"><strong><? echo formato_numero($arrBase[5],2,2);?></strong></td>
-        <td align="right"><strong><? echo formato_numero($arrRenta[5],2,2);?></strong></td>         
-        <td align="right"><strong><? echo formato_numero($arrBase[6],2,2);?></strong></td>
-        <td align="right"><strong><? echo formato_numero($arrRenta[6],2,2);?></strong></td>         
-        <td align="right"><strong><? echo formato_numero($arrBase[7],2,2);?></strong></td>
-        <td align="right"><strong><? echo formato_numero($arrRenta[7],2,2);?></strong></td>         
-        <td align="right"><strong><? echo formato_numero($arrBase[8],2,2);?></strong></td>
-        <td align="right"><strong><? echo formato_numero($arrRenta[8],2,2);?></strong></td>         
-        <td align="right"><strong><? echo formato_numero($arrBase[9],2,2);?></strong></td>
-        <td align="right"><strong><? echo formato_numero($arrRenta[9],2,2);?></strong></td>          
-        <td align="right"><strong><? echo formato_numero($arrBase[10],2,2);?></strong></td>
-        <td align="right"><strong><? echo formato_numero($arrRenta[10],2,2);?></strong></td>         
-        <td align="right"><strong><? echo formato_numero($arrBase[11],2,2);?></strong></td>
-        <td align="right"><strong><? echo formato_numero($arrRenta[11],2,2);?></strong></td>                             
+        <td align="right"><strong><?php echo formato_numero($arrBase[0],2,2);?></strong></td>
+        <td align="right"><strong><?php echo formato_numero($arrRenta[0],2,2);?></strong></td>
+        <td align="right"><strong><?php echo formato_numero($arrBase[1],2,2);?></strong></td>
+        <td align="right"><strong><?php echo formato_numero($arrRenta[1],2,2);?></strong></td>         
+        <td align="right"><strong><?php echo formato_numero($arrBase[2],2,2);?></strong></td>
+        <td align="right"><strong><?php echo formato_numero($arrRenta[2],2,2);?></strong></td>         
+        <td align="right"><strong><?php echo formato_numero($arrBase[3],2,2);?></strong></td>
+        <td align="right"><strong><?php echo formato_numero($arrRenta[3],2,2);?></strong></td>         
+        <td align="right"><strong><?php echo formato_numero($arrBase[4],2,2);?></strong></td>
+        <td align="right"><strong><?php echo formato_numero($arrRenta[4],2,2);?></strong></td>         
+        <td align="right"><strong><?php echo formato_numero($arrBase[5],2,2);?></strong></td>
+        <td align="right"><strong><?php echo formato_numero($arrRenta[5],2,2);?></strong></td>         
+        <td align="right"><strong><?php echo formato_numero($arrBase[6],2,2);?></strong></td>
+        <td align="right"><strong><?php echo formato_numero($arrRenta[6],2,2);?></strong></td>         
+        <td align="right"><strong><?php echo formato_numero($arrBase[7],2,2);?></strong></td>
+        <td align="right"><strong><?php echo formato_numero($arrRenta[7],2,2);?></strong></td>         
+        <td align="right"><strong><?php echo formato_numero($arrBase[8],2,2);?></strong></td>
+        <td align="right"><strong><?php echo formato_numero($arrRenta[8],2,2);?></strong></td>         
+        <td align="right"><strong><?php echo formato_numero($arrBase[9],2,2);?></strong></td>
+        <td align="right"><strong><?php echo formato_numero($arrRenta[9],2,2);?></strong></td>          
+        <td align="right"><strong><?php echo formato_numero($arrBase[10],2,2);?></strong></td>
+        <td align="right"><strong><?php echo formato_numero($arrRenta[10],2,2);?></strong></td>         
+        <td align="right"><strong><?php echo formato_numero($arrBase[11],2,2);?></strong></td>
+        <td align="right"><strong><?php echo formato_numero($arrRenta[11],2,2);?></strong></td>                             
    </tr>      
 </tbody>
 </table>
 <table width="1500" border="0" cellspacing="0" cellpadding="0">
   <tr class="Texto_normal_9">
     <td width="13%" align="right"><strong>Total Base Imponible:</strong></td>
-    <td ><? echo formato_numero($TotBaseImpo,2,2);?></td>
+    <td ><?php echo formato_numero($TotBaseImpo,2,2);?></td>
   </tr>
   <tr class="Texto_normal_9">
     <td align="right"><strong>Total Retenci&oacute;n a la Fuente:</strong></td>
-    <td ><? echo formato_numero($TotImpRenta,2,2);?></td>
+    <td ><?php echo formato_numero($TotImpRenta,2,2);?></td>
   </tr>
 </table>
 
 </div> 
-<? }?>  
+<?php }?>  
 </div>
 </body>
 </html>

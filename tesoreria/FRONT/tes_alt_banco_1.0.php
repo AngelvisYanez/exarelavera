@@ -300,7 +300,7 @@ exit();
 		  ?>
               <?php foreach($row_rs_tipo as $datos){$i++;?>
               <input type="checkbox" id="ckh[<?php echo $i;?>]" name="ckh[<?php echo $i;?>]" value='<?php echo $datos['Pag_Cod']?>' />
-              <?php echo utf8_encode($datos['tipo'])?><br />
+              <?php echo mb_convert_encoding($datos['tipo'], 'UTF-8', 'ISO-8859-1')?><br />
               <?php }?></td>
           </tr>
         </table>     

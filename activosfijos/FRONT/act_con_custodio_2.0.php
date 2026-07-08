@@ -109,7 +109,7 @@ $hoy = date("Y-m-d");
             </tr>
           </table>
   </form>
-<? if (isset($txt_busqueda))
+<?php if (isset($txt_busqueda))
 {
 ?>
     <FIELDSET>
@@ -132,12 +132,12 @@ $hoy = date("Y-m-d");
                { $rojo='#FF0000'; $anulada++; }else{$rojo='';}
           ?>
           <tr >
-          <td align="center"><FONT COLOR="<? echo $rojo;?>"><?php echo $row_rs_buscar['Cus_Cod'];?></FONT></td>
-          <td><FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Prs_Ced'];?></FONT></td>
-         <td><p><FONT COLOR="<? echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Nombre'],'#FFFF00', 1);?>    
+          <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php echo $row_rs_buscar['Cus_Cod'];?></FONT></td>
+          <td><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Prs_Ced'];?></FONT></td>
+         <td><p><FONT COLOR="<?php echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Nombre'],'#FFFF00', 1);?>    
          </FONT></p>
          </td>
-          <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "frml" id="forml">
+          <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "frml" id="forml">
           <td align="center" width="12%">
           <?Php if($row_rs_buscar['Cus_Est']=='A')
              { 
@@ -148,7 +148,7 @@ $hoy = date("Y-m-d");
                     <input type="hidden" name="codigo" id="codigo" value="<?Php echo $row_rs_buscar['Cus_Cod'];?>"/>
                     <input type="hidden" name="hdd_aux" id="hdd_aux" value="1">
                     <input type="hidden" name="volver_busqueda" id="volver_busqueda" value="<?Php echo $txt_busqueda;?>"/>
-                    <input type="hidden" name="volver_opciones" id="volver_opciones" value="<? echo $op_opciones?>">
+                    <input type="hidden" name="volver_opciones" id="volver_opciones" value="<?php echo $op_opciones?>">
                  <?Php
              }
              else
@@ -168,7 +168,7 @@ $hoy = date("Y-m-d");
              <td><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
               <td></td>
             </tr>
-          <? } // fin del if ($total_rs_buscar > 0)?>
+          <?php } // fin del if ($total_rs_buscar > 0)?>
           </tbody>
         </table>
     <?Php
@@ -179,7 +179,7 @@ $hoy = date("Y-m-d");
 	?>
 	</FIELDSET>
 
-<? } 
+<?php } 
 if(isset($codigo)){	
 			/**
 			 * Consulta de los datos del custodio
@@ -195,15 +195,15 @@ if(isset($codigo)){
       </tr>
       <tr>
         <td><span class="Etiqueta1">Fecha de Emisi&oacute;n :</span></td>
-        <td><span class="LetraNegra"><? echo $hoy ?></span></td>
+        <td><span class="LetraNegra"><?php echo $hoy ?></span></td>
         <td>&nbsp;</td>
         <td>&nbsp;</td>
       </tr>
       <tr>
         <td><span class="Etiqueta1">Nombre del Custodio :</span></td>
-        <td><span class="LetraNegra"><? echo  $rs_custodio['Nombre']; ?></span></td>
+        <td><span class="LetraNegra"><?php echo  $rs_custodio['Nombre']; ?></span></td>
         <td><span class="Etiqueta1">Cédula :</span></td>
-        <td><span class="LetraNegra"><? echo $rs_custodio['Prs_Ced']; ?></span></td>
+        <td><span class="LetraNegra"><?php echo $rs_custodio['Prs_Ced']; ?></span></td>
       </tr>
     </table>
     
@@ -228,9 +228,9 @@ if(isset($codigo)){
 				foreach($rs_camp as $row_rs_camp){
 				?>
 					<th width="10%">
-					<? echo $row_rs_camp['Cam_Cor']; $td +=1; ?>
+					<?php echo $row_rs_camp['Cam_Cor']; $td +=1; ?>
                     </th>
-			   <? }//if($total_rs_camp > 0){
+			   <?php }//if($total_rs_camp > 0){
 			}?>
             
             <th width="6%">Cant.</th>
@@ -238,16 +238,16 @@ if(isset($codigo)){
             <th width="5%">Costo</th>   
         </thead>
         <tbody>
-         <? if( $total_rs_consultar > 0){
+         <?php if( $total_rs_consultar > 0){
 			 	$Total=0;
                 foreach($rs_consultar as $row_rs_consultar){
                 $i++;
             ?>                     
         <tr>
-            <td class="LetraNegra" align="left"><? echo $i;?></td>
-            <td class="LetraNegra" align="left"><? echo $row_rs_consultar['Act_Cod'];?></td>
-            <td class="LetraNegra" align="left"><? echo $row_rs_consultar['Dep_Des'];?></td>
-            <td class="LetraNegra"><? echo $row_rs_consultar['Act_Des'];?></td>
+            <td class="LetraNegra" align="left"><?php echo $i;?></td>
+            <td class="LetraNegra" align="left"><?php echo $row_rs_consultar['Act_Cod'];?></td>
+            <td class="LetraNegra" align="left"><?php echo $row_rs_consultar['Dep_Des'];?></td>
+            <td class="LetraNegra"><?php echo $row_rs_consultar['Act_Des'];?></td>
              
            
               <?php 		
@@ -260,18 +260,18 @@ if(isset($codigo)){
 					<td align="center" width="16%">
 						<?Php echo $rs_val_Camp['Act_Val'] ?>                
 					</td>
-					<?
+					<?php
 				}
 		 	 }
 		  ?>
-            <td class="LetraNegra" align="center"><? echo $row_rs_consultar['Act_Can'];?></td>
-            <td class="LetraNegra" align="center"><? echo $row_rs_consultar['Est_Des'];?></td>
-            <td class="LetraNegra" align="right"><? if($row_rs_consultar['Act_Val']==0){ echo "0.00";}else{
+            <td class="LetraNegra" align="center"><?php echo $row_rs_consultar['Act_Can'];?></td>
+            <td class="LetraNegra" align="center"><?php echo $row_rs_consultar['Est_Des'];?></td>
+            <td class="LetraNegra" align="right"><?php if($row_rs_consultar['Act_Val']==0){ echo "0.00";}else{
 				echo formato_numero($row_rs_consultar['Act_Val'], 2, 1); $Total= $Total+ $row_rs_consultar['Act_Val'];}?>
              </td>
         </tr>
        <tbody>
-        <? 	  }//fin foreach($rs_consultar as $row_rs_consultar){
+        <?php 	  }//fin foreach($rs_consultar as $row_rs_consultar){
 			?>
          <tfoot>   
              <tr>
@@ -285,7 +285,7 @@ if(isset($codigo)){
 						$rs_val_Camp =  $obBD_con1->getRowConsulta(141, $row_rs_buscar['Act_Cod'].'*'. $row_rs_camp['Cam_Cod'],$obBD_conexion);
 					?>
 					<td align="center" width="16%">&nbsp;</td>
-					<?
+					<?php
 				}
 		 	 }
 		  ?>
@@ -294,7 +294,7 @@ if(isset($codigo)){
             <td  style="font-size:14px"  class="LetraNegra" align="right"><?Php echo formato_numero($Total, 2, 4);?></td>
         </tr>
         </tfoot>
-            <?
+            <?php
             }//Fin if( $total_rs_consultar > 0){?>         
 	</table>
      <?Php
@@ -309,7 +309,7 @@ if(isset($codigo)){
     <table width="215" border="0" cellpadding="0" cellspacing="0">
             <tr>
               <td width="110">
-              <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1"> 
+              <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1"> 
               <button type="button" name="btn_atras" id="btn_atras" value="Enviar" class="btn btn-inverse fileinput-button" title="Atr&aacute;s"
             onClick="campos_hide(this.form, '<?Php echo "txt_busqueda*op_opciones*hdd_volver"; ?>','<?Php echo $volver_busqueda.'*'.$volver_opciones.'*'.'1'; ?>')">
              <i class="icon-arrow-left icon-white"></i><span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
@@ -317,7 +317,7 @@ if(isset($codigo)){
             </form>
             </td>          
               <td width="110" height="23">            	
-                <form method="post" name= "form3" action="<? echo 'act_pri_custodio_3.0.php';?>" target="_blank">
+                <form method="post" name= "form3" action="<?php echo 'act_pri_custodio_3.0.php';?>" target="_blank">
                  <button  name="boton_imprimir" id="boton_imprimir" type="submit" class="btn btn-primary start" value="Imprimir" >
                   <i class='icon-print icon-white'></i> <span>Imprimir</span>
                   </button>
@@ -325,7 +325,7 @@ if(isset($codigo)){
                 </form> </td>
             </tr>
         </table> 
-            <?
+            <?php
 		 }// Fin if(isset($codigo)){	
 	?>   
  </fieldset>

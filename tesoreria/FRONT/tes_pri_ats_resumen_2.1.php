@@ -500,7 +500,7 @@ try {
 </style>
 
 <body class="Cuerpo">
-	<? /* Consulta de la cabecera del reporte */
+	<?php /* Consulta de la cabecera del reporte */
 	$row_institucion = $obBD_con1->getRowConsulta(5, $Ses_Suc_Cod, $obBD_conexion); //GetRowConsulta(5,$Ses_Cod_Suc);
 	/* Consulta de la cabecera del reporte */
 	$row_institucion = $obBD_con1->getRowConsulta(22, $Ses_Suc_Cod, $obBD_conexion);
@@ -516,7 +516,7 @@ try {
 					<tr align="center">
 						<td width="10%" rowspan="5" valign="top"><img src="../../mascaras/model2/imagenes/32x32/sri.png" width="100" height="70" /></td>
 						<td width="80%" height="24" class="titEmp"><strong><?Php echo $row_institucion['Emp_Nom']; ?></strong></td>
-						<td width="10%" rowspan="5" valign="top" class="TITULO_REPORTE_2"><img src="<? echo $row_institucion['Emp_Log'] ?>" width="115" height="83" /></td>
+						<td width="10%" rowspan="5" valign="top" class="TITULO_REPORTE_2"><img src="<?php echo $row_institucion['Emp_Log'] ?>" width="115" height="83" /></td>
 					</tr>
 					<tr align="center">
 						<td valign="top" class="Texto_Reporte">
@@ -550,10 +550,10 @@ try {
 						</td>
 					</tr>
 					<tr align="center">
-						<td colspan="3" valign="top" class="TITULO_REPORTE"><? echo $Titulo; ?></td>
+						<td colspan="3" valign="top" class="TITULO_REPORTE"><?php echo $Titulo; ?></td>
 					</tr>
 					<tr align="center">
-						<td colspan="3" valign="top" class="TITULO_REPORTE"><? echo $Subtitulo; ?></td>
+						<td colspan="3" valign="top" class="TITULO_REPORTE"><?php echo $Subtitulo; ?></td>
 					</tr>
 				</table>
 			</td>
@@ -566,7 +566,7 @@ try {
 						<td height="29">
 							<div align="center">
 								<label class="TITULO_REPORTE"><?Php echo $nivel[$i]; ?></label>
-								<?
+								<?php
 								$rsComprasNum = $obBD_con1->getArrayConsulta(865, $Ses_Emp_Cod . '*' . $ini . '*' . $fin, $obBD_conexion);
 								$totalCompras = count($rsComprasNum);
 								if ($totalCompras > 0 &&  $aCom == 1) {
@@ -591,7 +591,7 @@ try {
 											</tr>
 										</thead>
 										<tbody>
-											<?
+											<?php
 											$filas = 0;
 											$sumSub0 = 0;
 											$sumSub15 = 0;
@@ -629,19 +629,19 @@ try {
 													<td align="right"><?Php echo number_format($row['iva5'], 2); ?></td>
 													<td align="right"><?Php echo number_format($row['iva15'], 2); ?></td>
 												</tr>
-											<? } ?>
+											<?php } ?>
 											<tr class="txtValor">
 												<td colspan="3" align="right" class=""><strong>Total:</strong></td>
-												<td align="right" class=""><strong><? echo number_format($sumSub0, 2); ?></strong></td>
-												<td align="right" class=""><strong><? echo number_format($sumSub15, 2); ?></strong></td>
-												<td align="right" class=""><strong><? echo number_format($sumSub5, 2); ?></strong></td>
-												<td align="right" class=""><strong><? echo number_format($sumNOIva, 2); ?></strong></td>
-												<td align="right" class=""><strong><? echo number_format($sumIva5, 2); ?></strong></td>
-												<td align="right" class=""><strong><? echo number_format($sumIva15, 2); ?></strong></td>
+												<td align="right" class=""><strong><?php echo number_format($sumSub0, 2); ?></strong></td>
+												<td align="right" class=""><strong><?php echo number_format($sumSub15, 2); ?></strong></td>
+												<td align="right" class=""><strong><?php echo number_format($sumSub5, 2); ?></strong></td>
+												<td align="right" class=""><strong><?php echo number_format($sumNOIva, 2); ?></strong></td>
+												<td align="right" class=""><strong><?php echo number_format($sumIva5, 2); ?></strong></td>
+												<td align="right" class=""><strong><?php echo number_format($sumIva15, 2); ?></strong></td>
 											</tr>
 										</tbody>
 									</table>
-								<? } ?>
+								<?php } ?>
 							</div>
 						</td>
 					</tr>
@@ -650,7 +650,7 @@ try {
 					</tr>
 					<tr>
 						<td height="14">
-							<?
+							<?php
 							$rsVentasNum = $obBD_con1->getArrayConsulta(883, $Ses_Emp_Cod . '*' . $ini . '*' . $fin, $obBD_conexion);
 							$totalVentas = count($rsVentasNum);
 							if ($totalVentas > 0 && $bVen == 1) { ?>
@@ -674,7 +674,7 @@ try {
 										</tr>
 									</thead>
 									<tbody>
-										<?
+										<?php
 										$filas = 0;
 										$sumSub0 = 0;
 										$sumSub15 = 0;
@@ -715,22 +715,22 @@ try {
 												<td align="right"><?Php echo number_format($row['iva5'], 2); ?></td>
 												<td align="right"><?Php echo number_format($row['iva15'], 2); ?></td>
 											</tr>
-										<?  }
+										<?php  }
 										if ($filas == '0') { ?>
 											<tr class="totales">
 												<td colspan="6" align="right" class="">&nbsp;</td>
 											</tr>
-										<? } ?>
+										<?php } ?>
 										<tr class="txtValor">
 											<td colspan="3" align="right"><strong>Total:</strong></td>
-											<td align="right" class=""><strong><? echo number_format($sumSub0, 2); ?></strong></td>
-											<td align="right" class=""><strong><? echo number_format($sumSub5, 2); ?></strong></td>
-											<td align="right" class=""><strong><? echo number_format($sumSub15, 2); ?></strong></td>
-											<td align="right" class=""><strong><? echo number_format($sumNOIva, 2); ?></strong></td>
-											<td align="right" class=""><strong><? echo number_format($sumIva5, 2); ?></strong></td>
-											<td align="right" class=""><strong><? echo number_format($sumIva15, 2); ?></strong></td>
+											<td align="right" class=""><strong><?php echo number_format($sumSub0, 2); ?></strong></td>
+											<td align="right" class=""><strong><?php echo number_format($sumSub5, 2); ?></strong></td>
+											<td align="right" class=""><strong><?php echo number_format($sumSub15, 2); ?></strong></td>
+											<td align="right" class=""><strong><?php echo number_format($sumNOIva, 2); ?></strong></td>
+											<td align="right" class=""><strong><?php echo number_format($sumIva5, 2); ?></strong></td>
+											<td align="right" class=""><strong><?php echo number_format($sumIva15, 2); ?></strong></td>
 										</tr>
-										<? /*VENTAS DE TIPO REEMBOLSOS*/
+										<?php /*VENTAS DE TIPO REEMBOLSOS*/
 										foreach ($vntArr as $row) {
 
 											if ($row['Cod'] == '41') {
@@ -762,15 +762,15 @@ try {
 													<td align="right"><?Php echo number_format($row['iva5'], 2); ?></td>
 													<td align="right"><?Php echo number_format($row['iva15'], 2); ?></td>
 												</tr>
-										<? }
+										<?php }
 										} ?>
 									</tbody>
 								</table>
-							<? } ?>
+							<?php } ?>
 						</td>
 					</tr>
 
-					<? if (isset($anuladoArr)) { ?>
+					<?php if (isset($anuladoArr)) { ?>
 						<tr>
 							<td height="7">&nbsp;</td>
 						</tr>
@@ -790,7 +790,7 @@ try {
 										</tr>
 									</thead>
 									<tbody>
-										<?
+										<?php
 
 										$totalAnulados = 0;
 										foreach ($anuladoArr as $row) {
@@ -801,7 +801,7 @@ try {
 												<td align="center"><?Php echo $row['nom']; ?></span></td>
 												<td colspan="2" align="center"><?Php echo $row['reg']; ?></td>
 											</tr>
-										<? } ?>
+										<?php } ?>
 										<tr class="txtValor">
 											<td colspan="2" align="right"><strong>Total:</strong></td>
 											<td align="center"><strong><?Php echo $totalAnulados; ?></strong></td>
@@ -810,7 +810,7 @@ try {
 								</table>
 							</td>
 						</tr>
-					<? }
+					<?php }
 
 					if (isset($exporArr)) { ?>
 						<tr>
@@ -833,7 +833,7 @@ try {
 										</tr>
 									</thead>
 									<tbody>
-										<?
+										<?php
 										$totalExp = 0;
 										foreach ($exporArr as $row) {
 											$totalExp += $row['val'];
@@ -841,10 +841,10 @@ try {
 											<tr class="txtValor">
 												<td align="center"><?Php echo $row['Cod']; ?></td>
 												<td align="center" style="white-space: nowrap; overflow: hidden;"><span style="white-space: nowrap; overflow: hidden;"><?Php echo $row['nom']; ?></span></td>
-												<td align="center" style="white-space: nowrap; overflow: hidden;"><? echo $row['reg']; ?></td>
+												<td align="center" style="white-space: nowrap; overflow: hidden;"><?php echo $row['reg']; ?></td>
 												<td align="right"><?Php echo number_format($row['val'], 2); ?></td>
 											</tr>
-										<? } ?>
+										<?php } ?>
 										<tr class="txtValor">
 											<td colspan="3" align="right" class=""><strong>Total:</strong></td>
 											<td align="right" class=""><strong><?Php echo number_format($totalExp, 2); ?></strong></td>
@@ -853,7 +853,7 @@ try {
 								</table>
 							</td>
 						</tr>
-					<? } ?>
+					<?php } ?>
 					<tr>
 						<td height="15">&nbsp;</td>
 					</tr>
@@ -862,7 +862,7 @@ try {
 					</tr>
 					<tr>
 						<td height="30">
-							<?
+							<?php
 							?>
 							<table width="100%" border="1" style="border-collapse:collapse" cellpadding="2" cellspacing="0">
 								<thead>
@@ -880,7 +880,7 @@ try {
 									</tr>
 								</thead>
 								<tbody>
-									<?
+									<?php
 									$sumBase = 0;
 									$sumRta = 0;
 									foreach ($retCmpArr as $row) {
@@ -894,7 +894,7 @@ try {
 											<td align="right"><?Php echo number_format($row['base'], 2); ?></td>
 											<td align="right"><?Php echo number_format($row['val'], 2); ?></td>
 										</tr>
-									<? } ?>
+									<?php } ?>
 									<tr class="txtValor">
 										<td colspan="3" align="right" class=""><strong>Total:</strong></td>
 										<td align="right" class=""><strong><?Php echo number_format($sumBase, 2); ?></strong></td>
@@ -902,7 +902,7 @@ try {
 									</tr>
 								</tbody>
 							</table>
-							<? ?>
+							<?php ?>
 
 						</td>
 					</tr>
@@ -925,7 +925,7 @@ try {
 									</tr>
 								</thead>
 								<tbody>
-									<?
+									<?php
 									$filas = 0;
 									$suma1 = 0;
 									foreach ($retIvaComArr as $row) {
@@ -936,7 +936,7 @@ try {
 											<td align="center" style="white-space: nowrap; overflow: hidden;"><?Php echo $row['nom']; ?></td>
 											<td align="right"><?Php echo number_format($row['val'], 2); ?></td>
 										</tr>
-									<? } ?>
+									<?php } ?>
 									<tr class="txtValor">
 										<td colspan="2" align="right" class=""><strong>Total:</strong></td>
 										<td align="right" class=""><strong><?Php echo number_format($suma1, 2); ?></strong></td>
@@ -951,7 +951,7 @@ try {
 					</tr>
 					<tr>
 						<td height="59">
-							<?
+							<?php
 
 							?>
 							<table width="100%" border="1" style="border-collapse:collapse" cellpadding="2" cellspacing="0">
@@ -984,11 +984,11 @@ try {
 									</tr>
 								</tbody>
 							</table>
-							<?  ?>
+							<?php  ?>
 						</td>
 					</tr>
 
-					<? if (isset($codFinArr)) { ?>
+					<?php if (isset($codFinArr)) { ?>
 						<tr>
 							<td>
 								<table width="100%" border="1" style="border-collapse:collapse" cellpadding="2" cellspacing="0">
@@ -1007,24 +1007,24 @@ try {
 										</tr>
 									</thead>
 									<tbody>
-										<? foreach ($codFinArr as $datos) {
+										<?php foreach ($codFinArr as $datos) {
 											$TotReg += $datos['reg'];
 											$Totbase += $datos['base'];
 											$Totmon += $datos['val'];
 										?>
 											<tr class="txtValor">
-												<td align="center"><? echo $datos['Cod']; ?></td>
-												<td align="center"><? echo codigoRenta($datos['Cod']); ?></td>
-												<td align="center"><? echo $datos['reg']; ?></td>
-												<td align="right"><? echo number_format($datos['base'], 2); ?></td>
-												<td align="right"><? echo number_format($datos['val'], 2); ?></td>
+												<td align="center"><?php echo $datos['Cod']; ?></td>
+												<td align="center"><?php echo codigoRenta($datos['Cod']); ?></td>
+												<td align="center"><?php echo $datos['reg']; ?></td>
+												<td align="right"><?php echo number_format($datos['base'], 2); ?></td>
+												<td align="right"><?php echo number_format($datos['val'], 2); ?></td>
 											</tr>
-										<? } ?>
+										<?php } ?>
 										<tr class="txtValor">
 											<td colspan="2" align="right" class=""><strong>Total:</strong></td>
-											<td align="center"><strong><? echo $TotReg; ?></strong></td>
-											<td align="right"><strong><? echo number_format($Totbase, 2); ?></strong></td>
-											<td align="right"><strong><? echo number_format($Totmon, 2); ?></strong></td>
+											<td align="center"><strong><?php echo $TotReg; ?></strong></td>
+											<td align="right"><strong><?php echo number_format($Totbase, 2); ?></strong></td>
+											<td align="right"><strong><?php echo number_format($Totmon, 2); ?></strong></td>
 										</tr>
 
 									</tbody>
@@ -1045,29 +1045,29 @@ try {
 										</tr>
 									</thead>
 									<tbody>
-										<? foreach ($rndFinArr as $datos) {
+										<?php foreach ($rndFinArr as $datos) {
 											$Tot1 += $datos['dep'];
 											$Tot2 += $datos['gen'];
 										?>
 											<tr class="txtValor">
-												<td align="center"><? echo $datos['nom']; ?></td>
-												<td align="right"><? echo number_format($datos['dep'], 2); ?></td>
-												<td align="right"><? echo number_format($datos['gen'], 2); ?></td>
+												<td align="center"><?php echo $datos['nom']; ?></td>
+												<td align="right"><?php echo number_format($datos['dep'], 2); ?></td>
+												<td align="right"><?php echo number_format($datos['gen'], 2); ?></td>
 											</tr>
-										<? } ?>
+										<?php } ?>
 										<tr class="totales">
 											<td align="right" class=""><strong>Total:</strong></td>
-											<td align="right"><strong><? echo number_format($Tot1, 2); ?></strong></td>
-											<td align="right"><strong><? echo number_format($Tot2, 2); ?></strong></td>
+											<td align="right"><strong><?php echo number_format($Tot1, 2); ?></strong></td>
+											<td align="right"><strong><?php echo number_format($Tot2, 2); ?></strong></td>
 										</tr>
 
 									</tbody>
 								</table>
 							</td>
 						</tr>
-					<? } ?>
+					<?php } ?>
 					<tr class="txtValor">
-						<td valign="top"><? echo "<strong>Fecha de Generaci�n:</strong>&nbsp;&nbsp;" . date("d/m/Y H:i:s"); ?></td>
+						<td valign="top"><?php echo "<strong>Fecha de Generaci�n:</strong>&nbsp;&nbsp;" . date("d/m/Y H:i:s"); ?></td>
 					</tr>
 				</table>
 			</td>

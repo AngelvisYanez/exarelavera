@@ -113,15 +113,15 @@ $periodo = $periodos[0];
                                         <input name="Ren_Por" id="Ren_Por" class="form-control input-sm">
                                     </div>
                                 </div>
-                                <? $row_rs_adqui = $obBD_con1->getArrayConsulta(16,'',$obBD_conexion); /* Consulta adquisicion  */ ?> 
+                                <?php $row_rs_adqui = $obBD_con1->getArrayConsulta(16,'',$obBD_conexion); /* Consulta adquisicion  */ ?> 
                                 <div class="form-group">
                                     <label class="col-sm-4 control-label label-sm required">Bienes/Servicios:</label>
                                     <div class="col-sm-3">
                                         <select name="Adq_Cod" id="Adq_Cod" class="form-control input-sm">
                                             <option value="">Seleccione...</option>                
-                                            <? foreach($row_rs_adqui as $row){?>
-                                                    <option value="<? echo $row['Adq_Cod']; ?>" ><? echo $row['Adq_Des'];?></option>
-                                            <? }?>
+                                            <?php foreach($row_rs_adqui as $row){?>
+                                                    <option value="<?php echo $row['Adq_Cod']; ?>" ><?php echo $row['Adq_Des'];?></option>
+                                            <?php }?>
                                         </select>
                                     </div>
                                 </div>
@@ -178,9 +178,9 @@ $periodo = $periodos[0];
                           <input id="radc2" name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" alt="" /><label for="radc2">&nbsp;&nbsp;C&oacute;digo&nbsp;&nbsp;</label>                          
                     </div>                   
                     <div class="col-md-4"> <label class="control-label label-xs">Plan de Cuentas:</label>                       
-                        <input name="periodo" type="text" size="6" value="<? echo $periodo['Pla_Fec']?>" readonly style="text-align: center;display: inline-block;width: auto;" class="form-control input-xs" /> 
-                        <input name="Pec_Cod" type="hidden" value="<? echo $periodo['Pec_Cod']?>" /> 
-                        <input name="Pla_Cod" type="hidden" value="<? echo $periodo['Pla_Cod']?>" />
+                        <input name="periodo" type="text" size="6" value="<?php echo $periodo['Pla_Fec']?>" readonly style="text-align: center;display: inline-block;width: auto;" class="form-control input-xs" /> 
+                        <input name="Pec_Cod" type="hidden" value="<?php echo $periodo['Pec_Cod']?>" /> 
+                        <input name="Pla_Cod" type="hidden" value="<?php echo $periodo['Pla_Cod']?>" />
                     </div>    
                 </div>
                 <div class="form-group">

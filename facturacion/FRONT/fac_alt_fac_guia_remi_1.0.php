@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?	
+<?php	
 /**
 * Descripción: Permite crear guias de remision
 * Desarrollador:	Jose Cumbicos 
@@ -68,35 +68,35 @@ if(isset($ajax_desti))
     <table width="100%" border="0" cellspacing="0" cellpadding="0">
           <tr>
             <td width="30%" class="Etiqueta1"><span class="Asterisco">*</span> C&eacute;dula/R.U.C.:</td>
-            <td width="20%" align="left" class="LetraNegra">&nbsp;<input name="Prs_Ced" type="text" id="Prs_Ced" size="10" maxlength="13" value="<? echo $row['Prs_Ced']?>"/>
-            <input name="Des_Cod" type="hidden" id="Des_Cod" value="<? echo $row['Des_Cod']?>"/>
-            <input name="Prs_Cor" type="hidden" id="Prs_Cor" value="<? echo $row['Prs_Cor']?>"/>
-            <input name="Prs_Cod" type="hidden" id="Prs_Cod" value="<? echo $row['Prs_Cod']?>"/>
+            <td width="20%" align="left" class="LetraNegra">&nbsp;<input name="Prs_Ced" type="text" id="Prs_Ced" size="10" maxlength="13" value="<?php echo $row['Prs_Ced']?>"/>
+            <input name="Des_Cod" type="hidden" id="Des_Cod" value="<?php echo $row['Des_Cod']?>"/>
+            <input name="Prs_Cor" type="hidden" id="Prs_Cor" value="<?php echo $row['Prs_Cor']?>"/>
+            <input name="Prs_Cod" type="hidden" id="Prs_Cod" value="<?php echo $row['Prs_Cod']?>"/>
             </td>
-            <td colspan="2">&nbsp;<button type="button" name="button" id="button" class="btn btn-success btn-mini" title="Buscar Destinatario" onclick="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_desti=1&Prs_Ced='+ document.getElementById('Prs_Ced').value +'&Emp_Cod=<? echo $Emp_Cod;?>&op=1&titulo=<? echo 'Destinatario';?>','destinatario')">
+            <td colspan="2">&nbsp;<button type="button" name="button" id="button" class="btn btn-success btn-mini" title="Buscar Destinatario" onclick="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_desti=1&Prs_Ced='+ document.getElementById('Prs_Ced').value +'&Emp_Cod=<?php echo $Emp_Cod;?>&op=1&titulo=<?php echo 'Destinatario';?>','destinatario')">
               <i class="icon-search icon-white"></i> 
             </button></td>
             </tr>
           <tr>
             <td class="Etiqueta1">Nombre/Raz&oacute;n Social:</td>
-            <td colspan="3" class="LetraNegra">&nbsp;<input name="PrsNom" type="text" id="PrsNom" style="border:none" size="44" readonly="readonly" value="<? echo $row['Prs_Ape'].' '.$row['Prs_Nom']?>"/></td>
+            <td colspan="3" class="LetraNegra">&nbsp;<input name="PrsNom" type="text" id="PrsNom" style="border:none" size="44" readonly="readonly" value="<?php echo $row['Prs_Ape'].' '.$row['Prs_Nom']?>"/></td>
             </tr>
           <tr>
             <td class="Etiqueta1">C&oacute;d. Establecimiento:</td>
-            <td align="left" class="LetraNegra">&nbsp;<input name="Des_Sri" type="text" id="Des_Sri" style="border:none" size="10" maxlength="13" readonly="readonly" value="<? echo $row['Des_Sri'];?>"/></td>
+            <td align="left" class="LetraNegra">&nbsp;<input name="Des_Sri" type="text" id="Des_Sri" style="border:none" size="10" maxlength="13" readonly="readonly" value="<?php echo $row['Des_Sri'];?>"/></td>
             <td width="16%" class="Etiqueta1">C&oacute;digo Aduana:</td>
-            <td width="34%" align="left" class="LetraNegra">&nbsp;<input name="Des_Adu" type="text" id="Des_Adu" style="border:none; text-transform:uppercase" size="17" maxlength="13" readonly="readonly" value="<? echo $row['Des_Adu'];?>"/></td>
+            <td width="34%" align="left" class="LetraNegra">&nbsp;<input name="Des_Adu" type="text" id="Des_Adu" style="border:none; text-transform:uppercase" size="17" maxlength="13" readonly="readonly" value="<?php echo $row['Des_Adu'];?>"/></td>
             </tr>
           <tr>
             <td class="Etiqueta1"><span class="Asterisco">* </span>Direcci&oacute;n de Llegada:</td>
-            <td colspan="3" align="left" class="LetraNegra">&nbsp;<input name="Prs_Dir" type="text" id="Prs_Dir" style="text-transform:uppercase" size="44"  value="<? echo $row['Prs_Dir'];?>"/></td>
+            <td colspan="3" align="left" class="LetraNegra">&nbsp;<input name="Prs_Dir" type="text" id="Prs_Dir" style="text-transform:uppercase" size="44"  value="<?php echo $row['Prs_Dir'];?>"/></td>
             </tr>
           <tr>
             <td class="Etiqueta1"><span class="Asterisco">* </span>Motivo:</td>
             <td colspan="3" align="left" class="LetraNegra">&nbsp;<input name="Gui_Mot" type="text" id="Gui_Mot" style="text-transform:uppercase" size="44" /></td>
             </tr>
         </table>
-	<?
+	<?php
 	exit();
 }
 
@@ -111,17 +111,17 @@ if(isset($ajax_trans))
           <tr>
             <td width="31%" class="Etiqueta1"><span class="Asterisco">*</span> C&eacute;dula/R.U.C.:</td>
             <td width="11%" class="LetraNegra">
-              <input name="PrsCed" type="text" id="PrsCed" size="10" maxlength="13" value="<? echo $row['Prs_Ced']?>"/>
-              <input name="Tra_Cod" type="hidden" id="Tra_Cod" value="<? echo $row['Tra_Cod']?>"/>
+              <input name="PrsCed" type="text" id="PrsCed" size="10" maxlength="13" value="<?php echo $row['Prs_Ced']?>"/>
+              <input name="Tra_Cod" type="hidden" id="Tra_Cod" value="<?php echo $row['Tra_Cod']?>"/>
             </td>
-            <td width="58%">&nbsp;&nbsp;<button type="button" name="button" id="button" class="btn btn-success btn-mini" title="Buscar" onclick="ajax_datos('<?Php echo $_SERVER['PHP_SELF'];?>?ajax_trans=1&Prs_Ced='+ document.getElementById('PrsCed').value +'&Emp_Cod=<? echo $Emp_Cod;?>&op=2&titulo=<? echo 'Transportista';?>','transporte')">
+            <td width="58%">&nbsp;&nbsp;<button type="button" name="button" id="button" class="btn btn-success btn-mini" title="Buscar" onclick="ajax_datos('<?Php echo $_SERVER['PHP_SELF'];?>?ajax_trans=1&Prs_Ced='+ document.getElementById('PrsCed').value +'&Emp_Cod=<?php echo $Emp_Cod;?>&op=2&titulo=<?php echo 'Transportista';?>','transporte')">
               <i class="icon-search icon-white"></i>
             </button></td>
             </tr>
           <tr>
             <td class="Etiqueta1">Nombre/Raz&oacute;n Social:</td>
             <td colspan="2"><span class="LetraNegra">
-              <input name="TraNom" type="text" id="TraNom" style="border:none" size="44" readonly="readonly" value="<? echo $row['Prs_Ape'].' '.$row['Prs_Nom']?>"/>
+              <input name="TraNom" type="text" id="TraNom" style="border:none" size="44" readonly="readonly" value="<?php echo $row['Prs_Ape'].' '.$row['Prs_Nom']?>"/>
             </span></td>
             </tr>
           <tr>
@@ -156,7 +156,7 @@ if(isset($ajax_trans))
           </tr>
         </table>
         
-	<?
+	<?php
 	exit();
 }
 
@@ -174,12 +174,12 @@ if (isset($ajax_rubro))
           <LEGEND>
           <label class="Titulos2">B&uacute;squeda del rubro</label>
           </LEGEND>
-          		<? include("../COMPONENTES/tesComRubrosFac3.php");?>
+          		<?php include("../COMPONENTES/tesComRubrosFac3.php");?>
           </FIELDSET>
         </td>
        </tr>
       </table>
-    <?    	      		
+    <?php    	      		
 	exit();		
 }
 
@@ -612,20 +612,20 @@ if(isset($ajax_factura))
 	<table width="100%" border="0" cellpadding="0" cellspacing="0">
 	  <tr>
 	    <td width="14%" class="Etiqueta1">No. Documento:</td>
-	    <td width="13%" class="LetraNegra">&nbsp;<input name="Vet_Num" id="Vet_Num" type="text"  size="13" value="<? echo $Vet_Num;?>" maxlength="18" align="right" /></td>
-	    <td colspan="4"><button type="button" name="button" id="button" class="btn btn-success btn-mini"  title="Buscar Factura" onclick="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_factura=1&Vet_Num='+ document.getElementById('Vet_Num').value +'&Suc_Cod=<? echo $Suc_Cod;?>','div_factura')">
+	    <td width="13%" class="LetraNegra">&nbsp;<input name="Vet_Num" id="Vet_Num" type="text"  size="13" value="<?php echo $Vet_Num;?>" maxlength="18" align="right" /></td>
+	    <td colspan="4"><button type="button" name="button" id="button" class="btn btn-success btn-mini"  title="Buscar Factura" onclick="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_factura=1&Vet_Num='+ document.getElementById('Vet_Num').value +'&Suc_Cod=<?php echo $Suc_Cod;?>','div_factura')">
 	      <i class="icon-search icon-white"></i> 
 	      </button></td>
 	    </tr>
 	  <tr>
 	    <td class="Etiqueta1">Fecha:</td>
-	    <td class="LetraNegra">&nbsp;<input name="Vet_Fec" type="text" id="Vet_Fec" size="6" value="<? echo $rs_buscar_fac['Caj_Fec']?>" style="border:none"/></td>
+	    <td class="LetraNegra">&nbsp;<input name="Vet_Fec" type="text" id="Vet_Fec" size="6" value="<?php echo $rs_buscar_fac['Caj_Fec']?>" style="border:none"/></td>
 	    <td width="6%" class="LetraNegra"><span class="Etiqueta1">Autorizaci&oacute;n:</span></td>
-	    <td width="66%" colspan="3" class="LetraNegra"><input name="Vet_Aut" type="text" id="Vet_Aut" style="border:none" size="39" readonly="readonly" value="<? echo $rs_buscar_fac['Vet_Sri']?>" /></td>
+	    <td width="66%" colspan="3" class="LetraNegra"><input name="Vet_Aut" type="text" id="Vet_Aut" style="border:none" size="39" readonly="readonly" value="<?php echo $rs_buscar_fac['Vet_Sri']?>" /></td>
 	    </tr>
 	  <tr>
 	    <td class="Etiqueta1">Cliente:</td>
-	    <td colspan="5" class="LetraNegra">&nbsp;<input name="Cliente" type="text" id="Cliente" size="67" value="<? echo $rs_buscar_fac['Prs_Ape'].' '.$rs_buscar_fac['Prs_Nom']?>" style="border:none" readonly="readonly"/></td>
+	    <td colspan="5" class="LetraNegra">&nbsp;<input name="Cliente" type="text" id="Cliente" size="67" value="<?php echo $rs_buscar_fac['Prs_Ape'].' '.$rs_buscar_fac['Prs_Nom']?>" style="border:none" readonly="readonly"/></td>
 	    </tr>
 	  </table> 
       <input name="Vet_Cod" type="hidden" id="Vet_Cod" value="<?php echo $rs_buscar_fac['Vet_Cod']; ?>">
@@ -648,7 +648,7 @@ if(isset($ajax_factura))
             </tr>
         </thead>
         <tbody id="c_contenido">	
-     <? 
+     <?php 
 	    $contador=0;
 	    foreach($rs_guiaRemi as $row_rs_guia)
 		{
@@ -669,21 +669,21 @@ if(isset($ajax_factura))
 	    <input id="quitar_fila[<?Php echo $fila; ?>]" type="button" class="BotonEliminar" name="quitar_fila[<?Php echo $fila; ?>]" value="X" onClick="quitar_fila(this, <?Php echo count($rs_interes); ?>);"><!-- antes val_fac_fila    quitar_fila_mod !-->	  	    	                
 	      </td> 
 		</tr>    
-		<? }//Fin del foreach cliente ?>
+		<?php }//Fin del foreach cliente ?>
         </tbody>  
         <tr class="Cabecera1" height="30" id="tr_total">
             <td align="center">Total:</td>
-            <td align="left"><input type="text" style="background:#CCC; text-align:center" id="total_pro" readonly="readonly" name="total_pro" value="<? echo $contador;?>" size="10"  /></td>
+            <td align="left"><input type="text" style="background:#CCC; text-align:center" id="total_pro" readonly="readonly" name="total_pro" value="<?php echo $contador;?>" size="10"  /></td>
             <td>&nbsp;</td>
             <td>&nbsp;</td>
             <td>&nbsp;</td>
         </tr> 
        </table>            	        
-      <input id="nfilas" name="nfilas" type="hidden" value="<? echo $fila; ?>">
+      <input id="nfilas" name="nfilas" type="hidden" value="<?php echo $fila; ?>">
       <input id="nfilas_elim" name="nfilas_elim" type="hidden" value="">
       <br><br><br>     
     </FIELDSET>
-<?    
+<?php    
  exit();	
 }
 
@@ -775,17 +775,17 @@ if($total_rs_maxGuiaRemi!=0)
 	</HEAD>
 <BODY>
 <div id="set1">
-<? if (isset($Gui_Cod)){
+<?php if (isset($Gui_Cod)){
 	    /**
 		* Consulta del reporte para impresion 
 		*/
 		$pagina = $_SERVER['PHP_SELF'];
 		$reportes = $obBD_con1->reportes($pagina, $Ses_Emp_Cod, $obBD_conexion);
 ?>
-<script language="javascript">windows('<? echo $reportes[1];?>?Gui_Cod=<?Php echo $Gui_Cod;?>','', 800,600,'yes', 'yes', 'yes', 'no');</script>
-<? }//Fin del if (isset($hdd_save) && !isset($hdd_volver))?>
+<script language="javascript">windows('<?php echo $reportes[1];?>?Gui_Cod=<?Php echo $Gui_Cod;?>','', 800,600,'yes', 'yes', 'yes', 'no');</script>
+<?php }//Fin del if (isset($hdd_save) && !isset($hdd_volver))?>
 
-<? 
+<?php 
 if($total_rs_autorizacion!=0)
 {
   if($numGuiaRemi<=$rs_autorizacion['Aut_Fin'])
@@ -816,7 +816,7 @@ if($total_rs_autorizacion!=0)
           <tr>
             <td width="30%" class="Etiqueta1"><span class="Asterisco">*</span>&nbsp;C&eacute;dula/R.U.C.:</td>
             <td width="20%" align="left" class="LetraNegra">&nbsp;<input name="Prs_Ced" type="text" id="Prs_Ced" size="10" maxlength="13"/></td>
-            <td colspan="2">&nbsp;<button type="button" name="button" id="button" class="btn btn-success btn-mini" title="Buscar Destinatario" onclick="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_desti=1&Prs_Ced='+ document.getElementById('Prs_Ced').value +'&Emp_Cod=<? echo $Ses_Emp_Cod;?>&op=1&titulo=<? echo 'Destinatario';?>','destinatario')">
+            <td colspan="2">&nbsp;<button type="button" name="button" id="button" class="btn btn-success btn-mini" title="Buscar Destinatario" onclick="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_desti=1&Prs_Ced='+ document.getElementById('Prs_Ced').value +'&Emp_Cod=<?php echo $Ses_Emp_Cod;?>&op=1&titulo=<?php echo 'Destinatario';?>','destinatario')">
               <i class="icon-search icon-white"></i> 
             </button></td>
             </tr>
@@ -854,7 +854,7 @@ if($total_rs_autorizacion!=0)
             <td width="11%"><span class="LetraNegra">
               <input name="PrsCed" type="text" id="PrsCed" size="10" maxlength="13" />
             </span></td>
-            <td width="58%">&nbsp;&nbsp;<button type="button" name="button" id="button" class="btn btn-success btn-mini" title="Ver detalle" onclick="ajax_datos('<?Php echo $_SERVER['PHP_SELF'];?>?ajax_trans=1&Prs_Ced='+ document.getElementById('PrsCed').value +'&Emp_Cod=<? echo $Ses_Emp_Cod;?>&op=2&titulo=<? echo 'Transportista';?>','transporte')">
+            <td width="58%">&nbsp;&nbsp;<button type="button" name="button" id="button" class="btn btn-success btn-mini" title="Ver detalle" onclick="ajax_datos('<?Php echo $_SERVER['PHP_SELF'];?>?ajax_trans=1&Prs_Ced='+ document.getElementById('PrsCed').value +'&Emp_Cod=<?php echo $Ses_Emp_Cod;?>&op=2&titulo=<?php echo 'Transportista';?>','transporte')">
               <i class="icon-search icon-white"></i>
             </button></td>
             </tr>
@@ -901,7 +901,7 @@ if($total_rs_autorizacion!=0)
       </table>
 
 
-<?
+<?php
 /**
 * Creacion del campo repost 
 */
@@ -917,20 +917,20 @@ $thisPost->startPost();
     <LEGEND>
     <label class="Titulos2">Datos de la Gu&iacute;a de Remisi&oacute;n </label>
     </LEGEND>
-    <?  ?>
+    <?php  ?>
     <table width="100%" border="0" cellspacing="0" cellpadding="0">
       <tr>
         <td width="14%" class="Etiqueta1"><span class="Asterisco">*</span> No. Documento: </td>
-        <td width="15%" class="LetraNegra">&nbsp;<input name="Gui_Num" type="text" id="Gui_Num" size="10" maxlength="13" style="text-align:right" value="<? echo $numGuiaRemi;?>" /></td>
+        <td width="15%" class="LetraNegra">&nbsp;<input name="Gui_Num" type="text" id="Gui_Num" size="10" maxlength="13" style="text-align:right" value="<?php echo $numGuiaRemi;?>" /></td>
         <td width="11%" class="Etiqueta1">Fecha Emisi&oacute;n:</td>
         <td width="10%" class="LetraNegra">&nbsp;
-          <? echo date("Y-m-d");?>
-          <input type="hidden" id="Gui_Fec" name="Gui_Fec" value="<? echo date("d-m-Y")?>" /></td>
+          <?php echo date("Y-m-d");?>
+          <input type="hidden" id="Gui_Fec" name="Gui_Fec" value="<?php echo date("d-m-Y")?>" /></td>
         <td width="12%"class="Etiqueta1">Autorizaci&oacute;n:</td>
         <td width="38%" class="LetraNegra">&nbsp;
-          <? echo $autNumSri;?>
-          <input type="hidden" id="Tic_Cod" name="Tic_Cod" value="<? echo $rs_autorizacion['Tic_Cod']?>" />
-          <input type="hidden" id="Aut_Cod" name="Aut_Cod" value="<? echo $rs_autorizacion['Aut_Cod']?>" />
+          <?php echo $autNumSri;?>
+          <input type="hidden" id="Tic_Cod" name="Tic_Cod" value="<?php echo $rs_autorizacion['Tic_Cod']?>" />
+          <input type="hidden" id="Aut_Cod" name="Aut_Cod" value="<?php echo $rs_autorizacion['Aut_Cod']?>" />
           </td>
       </tr>
       </table>
@@ -946,7 +946,7 @@ $thisPost->startPost();
 	  <tr>
 	    <td width="14%" class="Etiqueta1">No. Documento:</td>
 	    <td width="13%" class="LetraNegra">&nbsp;<input name="Vet_Num" id="Vet_Num" type="text"  size="13" maxlength="15" align="right" /></td>
-	    <td colspan="4"><button type="button" name="button" id="button" class="btn btn-success btn-mini" title="Buscar Factura" onclick="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_factura=1&Vet_Num='+ document.getElementById('Vet_Num').value +'&Suc_Cod=<? echo $Ses_Suc_Cod;?>','div_factura')">
+	    <td colspan="4"><button type="button" name="button" id="button" class="btn btn-success btn-mini" title="Buscar Factura" onclick="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_factura=1&Vet_Num='+ document.getElementById('Vet_Num').value +'&Suc_Cod=<?php echo $Ses_Suc_Cod;?>','div_factura')">
 	      <i class="icon-search icon-white"></i> 
 	      </button></td>
 	    </tr>
@@ -994,7 +994,7 @@ $thisPost->startPost();
     
        <script language="javascript">ShowHide('tr_total');</script>  	
         
-      <input id="nfilas" name="nfilas" type="hidden" value="<? echo $fila; ?>">
+      <input id="nfilas" name="nfilas" type="hidden" value="<?php echo $fila; ?>">
       <input id="nfilas_elim" name="nfilas_elim" type="hidden" value="">
       <br><br><br>
       
@@ -1042,7 +1042,7 @@ $thisPost->startPost();
   </td>
   </tr>  
 </table>
-<? 
+<?php 
   }else{  
 	 echo error_alerta("&iexcl;No se puede generar el Documento: [".$numGuiaRemi."], la Autorización [".$rs_autorizacion['Aut_Sri']."] permite comprobantes de retenci&oacute;n entre [".$rs_autorizacion['Aut_Ini']."] y [".$rs_autorizacion['Aut_Fin']."]!", 2); 
   } //if($numGuiaRemi<=$rs_autorizacion['Aut_Fin'])

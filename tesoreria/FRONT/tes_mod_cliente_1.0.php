@@ -58,7 +58,7 @@ if (isset($searchCliente)) {
 if (isset($guardarCliente)) {
     $pers = $obBD_con1->getRowConsulta('persona.selectWhere', array('clean' => true, 'Prs_Cod' => $Prs_Cod), $obBD_conexion);
     $obBD_con1->inicio_transaccion($obBD_conexion->conexion);
-    $obBD_con1->operacionobBD(12, utf8_decode($Prs_Ced . '*' . $Prs_Nom . '*' . $Prs_Ape . '*' . $Prs_Sex . '*' . $Prs_Dir . '*' . $Prs_Tel . '*' . $Prs_Te2 . '*' . $Prs_Cel . '*' . $Ciu_Cod . '*' . $Ide_Cod . '*' . (!empty($Prs_Cor) ? $Prs_Cor : '') . '*' . $Prs_Cod), $obBD_conexion);
+    $obBD_con1->operacionobBD(12, mb_convert_encoding($Prs_Ced . '*' . $Prs_Nom . '*' . $Prs_Ape . '*' . $Prs_Sex . '*' . $Prs_Dir . '*' . $Prs_Tel . '*' . $Prs_Te2 . '*' . $Prs_Cel . '*' . $Ciu_Cod . '*' . $Ide_Cod . '*' . (!empty($Prs_Cor) ? $Prs_Cor : '') . '*' . $Prs_Cod, 'ISO-8859-1', 'UTF-8'), $obBD_conexion);
    
     $razon_social = "";//!empty($Prs_Nom) ? $Prs_Nom : $Prs_Ape;
    
@@ -222,7 +222,7 @@ if (isset($guardarCliente)) {
                                         } ?-->
                                         <?php
                                         foreach ($rs_ciudad as $row) {
-                                            echo "<option value='{$row['Ciu_Cod']}' data-prov='" . utf8_encode($row['Pro_Nom']) . "' data-pais='" . utf8_encode($row['Pas_Nom']) . "'>" . utf8_encode($row['Ciu_Des']) . "</option>";
+                                            echo "<option value='{$row['Ciu_Cod']}' data-prov='" . mb_convert_encoding($row['Pro_Nom'], 'UTF-8', 'ISO-8859-1') . "' data-pais='" . mb_convert_encoding($row['Pas_Nom'], 'UTF-8', 'ISO-8859-1') . "'>" . mb_convert_encoding($row['Ciu_Des'], 'UTF-8', 'ISO-8859-1') . "</option>";
                                         }
                                         ?>
 
@@ -476,7 +476,7 @@ if (isset($guardarCliente)) {
         }
 
         function setTipoDoc() {
-            var $Prs_Ced = $('#Prs_Ced'),
+            public $Prs_Ced = $('#Prs_Ced'),
                 Prs_Ced = $Prs_Ced.val(),
                 isRuc = $('#isRuc').is(':checked');
 

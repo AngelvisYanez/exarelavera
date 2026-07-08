@@ -325,7 +325,7 @@ $rs_Max_act = $obBD_con1->getRowConsulta(659,'', $obBD_conexion);
 				?>
                     <select name="Cam_Cod" id="Cam_Cod" onChange="setfocus(this.form.txt_busqueda);">
                             <?Php foreach($rs_campos as $row_rs_campos){?>  
-                              <option  value="<? echo $row_rs_campos['Cam_Cod'];?>"><?PHP  echo $row_rs_campos['Cam_Cor'];?></option>
+                              <option  value="<?php echo $row_rs_campos['Cam_Cod'];?>"><?PHP  echo $row_rs_campos['Cam_Cor'];?></option>
                              <?Php 
                                 } //fin foreach($rs_campos as $row_rs_campos){
                               ?> 
@@ -353,7 +353,7 @@ $rs_Max_act = $obBD_con1->getRowConsulta(659,'', $obBD_conexion);
   
   </form>
   
-<? if (isset($txt_busqueda))
+<?php if (isset($txt_busqueda))
 {
 ?>
 <FIELDSET>
@@ -379,11 +379,11 @@ $rs_Max_act = $obBD_con1->getRowConsulta(659,'', $obBD_conexion);
 	  	   { $rojo='#FF0000'; $anulada++; }else{$rojo='';}
 	  ?>
 	  <tr>
-	  <td align="center"><FONT COLOR="<? echo $rojo;?>"><?php echo $row_rs_buscar['Act_Cod'];?></FONT></td>
-	  <td><FONT COLOR="<? echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Tia_Des'],'#FFFF00', 1);?></FONT></td>
-	 <td><FONT COLOR="<? echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Act_Des'],'#FFFF00', 1);?></FONT></td>
-	 <td><FONT COLOR="<? echo $rojo;?>"><?php echo $row_rs_buscar['Act_Cdc'];?></FONT></td>
-	  <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "frml" id="forml">
+	  <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php echo $row_rs_buscar['Act_Cod'];?></FONT></td>
+	  <td><FONT COLOR="<?php echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Tia_Des'],'#FFFF00', 1);?></FONT></td>
+	 <td><FONT COLOR="<?php echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Act_Des'],'#FFFF00', 1);?></FONT></td>
+	 <td><FONT COLOR="<?php echo $rojo;?>"><?php echo $row_rs_buscar['Act_Cdc'];?></FONT></td>
+	  <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "frml" id="forml">
 	  <td align="center" width="3%"> 
       <?Php if($row_rs_buscar['Act_Est']=='Activo')
 		  { ?>
@@ -393,7 +393,7 @@ $rs_Max_act = $obBD_con1->getRowConsulta(659,'', $obBD_conexion);
             <input type="hidden" name="codigo" id="codigo" value="<?Php echo $row_rs_buscar['Act_Cod'];?>"/>
             <input type="hidden" name="hdd_aux" id="hdd_aux" value="1">
 			<input type="hidden" name="volver_busqueda" id="volver_busqueda" value="<?Php echo $txt_busqueda;?>"/>
-			<input type="hidden" name="volver_opciones" id="volver_opciones" value="<? echo $op_opciones?>">
+			<input type="hidden" name="volver_opciones" id="volver_opciones" value="<?php echo $op_opciones?>">
             <input type="hidden" name="Cam_Cod" id="Cam_Cod" value="<?Php echo $Cam_Cod;?>">
             <?Php
 		 }
@@ -416,7 +416,7 @@ $rs_Max_act = $obBD_con1->getRowConsulta(659,'', $obBD_conexion);
       	  <td>&nbsp;</td>
       	  <td>&nbsp;</td>
       	</tr>
-      <? 
+      <?php 
 	  } // fin del if ($total_rs_buscar > 0)?>
       </tbody>
 	</table>
@@ -427,10 +427,10 @@ $rs_Max_act = $obBD_con1->getRowConsulta(659,'', $obBD_conexion);
 	echo barra_estado($total_rs_buscar+0);
 	?>
 </FIELDSET>
-<? }
+<?php }
 if ($hdd_aux==1) { ?>
-<form method="post" name= "form2" action="<? echo $_SERVER['PHP_SELF'];?>"  enctype="multipart/form-data"  >
-<? /** 
+<form method="post" name= "form2" action="<?php echo $_SERVER['PHP_SELF'];?>"  enctype="multipart/form-data"  >
+<?php /** 
     * Creacion del campo REPOST
 	*/
 	$thisPost->startPost();
@@ -472,7 +472,7 @@ if ($hdd_aux==1) { ?>
 			
 			foreach($rs_suc_act as $row_rs_suc_act){	  
 		?>
-        <option <? if($row_rs_suc_act['Suc_Cod'] == $row_rs_consultar["Suc_Cod"] ){echo "selected";}?> value="<?php echo $row_rs_suc_act['Suc_Cod']?>"><?Php echo $row_rs_suc_act['Suc_Des']?> </option>
+        <option <?php if($row_rs_suc_act['Suc_Cod'] == $row_rs_consultar["Suc_Cod"] ){echo "selected";}?> value="<?php echo $row_rs_suc_act['Suc_Cod']?>"><?Php echo $row_rs_suc_act['Suc_Des']?> </option>
         <?php
 			} 
 	?>
@@ -485,7 +485,7 @@ if ($hdd_aux==1) { ?>
         <?php  
 			foreach($rs_prv_act as $row_rs_prv_act){
 		?>
-        <option <? if($row_rs_prv_act['Prv_Cod'] == $row_rs_consultar["Prv_Cod"] ){echo "selected";}?>  value="<?php echo $row_rs_prv_act['Prv_Cod']?>"><?Php if (!empty($row_rs_prv_act['Prv_Com'])){ echo $row_rs_prv_act['Prv_Com'].":: "; } echo $row_rs_prv_act['Nombre']; ?>  </option>
+        <option <?php if($row_rs_prv_act['Prv_Cod'] == $row_rs_consultar["Prv_Cod"] ){echo "selected";}?>  value="<?php echo $row_rs_prv_act['Prv_Cod']?>"><?Php if (!empty($row_rs_prv_act['Prv_Com'])){ echo $row_rs_prv_act['Prv_Com'].":: "; } echo $row_rs_prv_act['Nombre']; ?>  </option>
         <?php
 			} 
 	?>
@@ -498,7 +498,7 @@ if ($hdd_aux==1) { ?>
         <?php
 			foreach($rs_pri_act as $row_rs_pri_act){  
 		?>
-        <option <? if($row_rs_pri_act['Pri_Cod'] == $row_rs_consultar["Pri_Cod"] ){echo "selected";}?> value="<?php echo $row_rs_pri_act['Pri_Cod']?>"><?Php echo $row_rs_pri_act['Prs_Ape'].' '.$row_rs_pri_act['Prs_Nom']?></option>
+        <option <?php if($row_rs_pri_act['Pri_Cod'] == $row_rs_consultar["Pri_Cod"] ){echo "selected";}?> value="<?php echo $row_rs_pri_act['Pri_Cod']?>"><?Php echo $row_rs_pri_act['Prs_Ape'].' '.$row_rs_pri_act['Prs_Nom']?></option>
         <?php
 			} 
 	?>
@@ -508,7 +508,7 @@ if ($hdd_aux==1) { ?>
   </tr>
   <tr>
       <td width="20%" align="right" class="Etiqueta1"><span class="Asterisco">*</span> Custodio :</td>
-	  <td class="LetraNegra">&nbsp;<? 
+	  <td class="LetraNegra">&nbsp;<?php 
 	  
 	  	if($row_rs_asig['Asg_Con'] == 'N' or 1==1){
 			/** 
@@ -521,11 +521,11 @@ if ($hdd_aux==1) { ?>
 			foreach($rs_cus_act as $row_rs_cus_act){	  
 			?>
             <option value="<?php echo $row_rs_cus_act['Cus_Cod'];?>" 
-			<? if($row_rs_cus_act['Cus_Cod'] == $row_rs_asig['Cus_Cod']){ echo "selected"; } ?> ><?Php echo $row_rs_cus_act['Nombre'];?> </option>
+			<?php if($row_rs_cus_act['Cus_Cod'] == $row_rs_asig['Cus_Cod']){ echo "selected"; } ?> ><?Php echo $row_rs_cus_act['Nombre'];?> </option>
             <?php
 			} 
 			?>
-        </select> <?
+        </select> <?php
 		}
 		else{
 			/**
@@ -539,7 +539,7 @@ if ($hdd_aux==1) { ?>
   </tr>
   <tr>
         <td width="16%" align="right" class="Etiqueta1"><span class="Asterisco">*</span> Sección:</td>
-        <td colspan="2" class="LetraNegra">&nbsp;<? 
+        <td colspan="2" class="LetraNegra">&nbsp;<?php 
         if($row_rs_asig['Asg_Con'] == 'N' or 1==1){ ?>
           <select name="Sec_Cod" id="Sec_Cod">
             <option value="">Seleccione...</option>
@@ -547,12 +547,12 @@ if ($hdd_aux==1) { ?>
 			foreach($rs_seccion as $row_rs_seccion ){	  
 			?>
             <option value="<?php echo $row_rs_seccion['Sec_Cod'];?>" 
-			<? if($row_rs_seccion['Sec_Cod'] == $row_rs_asig['Sec_Cod']){ echo "selected"; } ?> ><?Php echo $row_rs_seccion['Dep_Des'].' - '.$row_rs_seccion['Sec_Des']?></option>
+			<?php if($row_rs_seccion['Sec_Cod'] == $row_rs_asig['Sec_Cod']){ echo "selected"; } ?> ><?Php echo $row_rs_seccion['Dep_Des'].' - '.$row_rs_seccion['Sec_Des']?></option>
             <?php
 			} 
 			?>
           </select>
-          <? }else{
+          <?php }else{
 			/** 
 			 * Consulta la  seccion 
 			 */
@@ -567,7 +567,7 @@ if ($hdd_aux==1) { ?>
         <?php
 			foreach($rs_est_act as $row_rs_est_act){  
 		?>
-        <option  <? if($row_rs_est_act['Est_Cod'] == $row_rs_consultar["Est_Cod"] ){echo "selected";}?> value="<?php echo $row_rs_est_act['Est_Cod']?>"><?Php echo $row_rs_est_act['Est_Des']?> </option>
+        <option  <?php if($row_rs_est_act['Est_Cod'] == $row_rs_consultar["Est_Cod"] ){echo "selected";}?> value="<?php echo $row_rs_est_act['Est_Cod']?>"><?Php echo $row_rs_est_act['Est_Des']?> </option>
         <?php
 			} 
 		?>
@@ -596,7 +596,7 @@ if ($hdd_aux==1) { ?>
       </table></td>
 	</tr>
   	<tr class="Etiqueta1">
-		<td colspan="3" class="Etiqueta1"><div align="center"><? 
+		<td colspan="3" class="Etiqueta1"><div align="center"><?php 
 	 		$varcode = $row_rs_consultar['Act_Bar'];
 	  include("../../Librerias/barcode/generadorbarras.php") ?></div></td>
 	</tr>
@@ -628,15 +628,15 @@ if ($hdd_aux==1) { ?>
       <tr>
       <tr>
         <td width="16%" align="right" class="Etiqueta1"><span class="Asterisco">*</span> Valor Actual :</td>
-        <td width="84%" colspan="2">&nbsp;<input name="Act_Val" type="text" id="Act_Val" value="<? echo $row_rs_consultar["Act_Val"]; ?>" size="10" onKeyPress = "return validar_decimal(event)"></td>
+        <td width="84%" colspan="2">&nbsp;<input name="Act_Val" type="text" id="Act_Val" value="<?php echo $row_rs_consultar["Act_Val"]; ?>" size="10" onKeyPress = "return validar_decimal(event)"></td>
         </tr>
 		 <tr>
         <td width="16%" align="right" class="Etiqueta1"><span class="Asterisco">*</span> Valor Residual :</td>
-        <td width="84%" colspan="2">&nbsp;<input name="Act_Res" type="text" id="Act_Res" value="<? echo $row_rs_consultar["Act_Res"]; ?>" size="10" onKeyPress = "return validar_decimal(event)"></td>
+        <td width="84%" colspan="2">&nbsp;<input name="Act_Res" type="text" id="Act_Res" value="<?php echo $row_rs_consultar["Act_Res"]; ?>" size="10" onKeyPress = "return validar_decimal(event)"></td>
         </tr>
 		 <tr>
         <td width="16%" align="right" class="Etiqueta1"><span class="Asterisco">*</span> Vida Útil :</td>
-        <td width="84%" colspan="2">&nbsp;<input name="Act_Ann" type="text" id="Act_Ann" value="<? echo $row_rs_consultar["Act_Ann"]; ?>" size="10" maxlength="3" onKeyPress="return validar_numeric(event)" ><span class="Etiqueta1"> Años </span></td>
+        <td width="84%" colspan="2">&nbsp;<input name="Act_Ann" type="text" id="Act_Ann" value="<?php echo $row_rs_consultar["Act_Ann"]; ?>" size="10" maxlength="3" onKeyPress="return validar_numeric(event)" ><span class="Etiqueta1"> Años </span></td>
         </tr>
 	</table>
 	</fieldset>
@@ -702,12 +702,12 @@ if ($hdd_aux==1) { ?>
 				<?php if($row_rs_con_camp['Cam_Req'] == 'R'){
 						echo "<span class=\"Asterisco\">* </span>";  $str = $str.'cam_r['.$r.']*';?>
 				  <?php echo $row_rs_con_camp['Cam_Cor']." :"; ?>	
-                <td width="80%">&nbsp;<input name="cam_rc[<? echo $r;  ?>]" type="hidden" id="cam_rc[<? echo $r; ?>]" value="<? echo $row_rs_con_camp['Cam_Cod']; ?>">
+                <td width="80%">&nbsp;<input name="cam_rc[<?php echo $r;  ?>]" type="hidden" id="cam_rc[<?php echo $r; ?>]" value="<?php echo $row_rs_con_camp['Cam_Cod']; ?>">
 					<?php $tipo = $row_rs_con_camp['Cam_Tip'];?>
                   <?php if($tipo != 'TX')
 				  		{
 					  		?>
-                  			<input name="cam_r[<? echo $r; ?>]" type="hidden" id="cam_r[<? echo $r; ?>]"
+                  			<input name="cam_r[<?php echo $r; ?>]" type="hidden" id="cam_r[<?php echo $r; ?>]"
 				  			<?php if($tipo == 'NE'){echo "onKeyPress=\"return validar_numeric(event)\"";}
 				  					if($tipo == 'ND'){echo "onKeyPress=\"return validar_decimal(event)\"";}
 										$rs_det_camp = $obBD_con1->getRowConsulta(430,$row_rs_con_camp['Cam_Cod'].'*'.$row_rs_consultar["Act_Cod"], $obBD_conexion);	
@@ -718,10 +718,10 @@ if ($hdd_aux==1) { ?>
 						$rs_det_camp1 = $obBD_con1->getRowConsulta(430,$row_rs_con_camp['Cam_Cod'].'*'.$row_rs_consultar["Act_Cod"], $obBD_conexion);
 						$total_rs_det_camp1 = count($rs_det_camp1);  		
 				  	?>
-						<textarea name="cam_r[<? echo $r ?>]"id="cam_r[<? echo $r; ?>]" >
+						<textarea name="cam_r[<?php echo $r ?>]"id="cam_r[<?php echo $r; ?>]" >
 					<?php echo $rs_det_camp1["Act_Val"];?>
 </textarea> 
-						<? 	
+						<?php 	
 						}
 						?> 
 				</td>
@@ -731,10 +731,10 @@ if ($hdd_aux==1) { ?>
 				else{
 					//si no es requerido el campo
 					echo $row_rs_con_camp['Cam_Cor']." :"; ?>	
-                	<td width="80%">&nbsp;<input name="cam_c[<? echo $i ?>]" type="hidden" id="cam_c[<? echo $i; ?>]" value="<? echo $row_rs_con_camp['Cam_Cod']; ?>">
+                	<td width="80%">&nbsp;<input name="cam_c[<?php echo $i ?>]" type="hidden" id="cam_c[<?php echo $i; ?>]" value="<?php echo $row_rs_con_camp['Cam_Cod']; ?>">
 					<?php $tipo = $row_rs_con_camp['Cam_Tip'];?>
                   	<?php if($tipo != 'TX'){?>
-                  	<input name="cam[<? echo $i ?>]" type="hidden" id="cam[<? echo $i; ?>]"
+                  	<input name="cam[<?php echo $i ?>]" type="hidden" id="cam[<?php echo $i; ?>]"
 				    <?php if($tipo == 'NE'){echo "onKeyPress=\"return validar_numeric(event)\"";}
 				  	if($tipo == 'ND'){echo "onKeyPress=\"return validar_decimal(event)\"";}
 					$rs_det_camp2 = $obBD_con1->getRowConsulta(430,$row_rs_con_camp['Cam_Cod'].'*'.$row_rs_consultar["Act_Cod"], $obBD_conexion);
@@ -744,10 +744,10 @@ if ($hdd_aux==1) { ?>
 				  $rs_det_camp3 = $obBD_con1->getRowConsulta(430,$row_rs_con_camp['Cam_Cod'].'*'.$row_rs_consultar["Act_Cod"], $obBD_conexion);
 				  $total_rs_det_camp3 = count($rs_det_camp3);
 				  ?>
-				<textarea name="cam[<? echo $i ?>]"id="cam[<? echo $i; ?>]" >
+				<textarea name="cam[<?php echo $i ?>]"id="cam[<?php echo $i; ?>]" >
 				<?php echo $rs_det_camp3["Act_Val"];?>
-				</textarea><? }?></td>
-				<?
+				</textarea><?php }?></td>
+				<?php
 				$i++;
 				}
 				$cont++;
@@ -776,22 +776,22 @@ if ($hdd_aux==1) { ?>
   </td>
       <td width="164" height="23">
 
-	  	  <button name="boton_guardar" id="boton_guardar" type="button"  class="btn btn-primary fileinput-button" value="Guardar" <? if($str != ""){ ?> onClick="validar_requeridos(this.form,'Act_Cdc*Act_Des*Suc_Cod*Prv_Cod*Pri_Cod*Est_Cod*Act_Can*<?php echo substr($str, 0, -1); ?>',1)" <? }else{?>onClick="validar_requeridos(this.form,'Act_Cdc*Act_Des*Suc_Cod*Prv_Cod*Pri_Cod*Est_Cod*Act_Can*Act_Val*Act_Res*Act_Ann',1)"<? }?>  title="Guardar">
+	  	  <button name="boton_guardar" id="boton_guardar" type="button"  class="btn btn-primary fileinput-button" value="Guardar" <?php if($str != ""){ ?> onClick="validar_requeridos(this.form,'Act_Cdc*Act_Des*Suc_Cod*Prv_Cod*Pri_Cod*Est_Cod*Act_Can*<?php echo substr($str, 0, -1); ?>',1)" <?php }else{?>onClick="validar_requeridos(this.form,'Act_Cdc*Act_Des*Suc_Cod*Prv_Cod*Pri_Cod*Est_Cod*Act_Can*Act_Val*Act_Res*Act_Ann',1)"<?php }?>  title="Guardar">
           <i class=" icon-book icon-white"></i>
 <span>&nbsp;&nbsp;Guardar&nbsp;&nbsp;</span>
           </button>      
  </td>
     </tr>
   </table>
-  <input name="Cam_Cod" type="hidden" id="Cam_Cod" value="<? echo $Cam_Cod;?>">
-<input name="Act_Cod" type="hidden" id="Act_Cod" value="<? echo $row_rs_consultar["Act_Cod"]; ?>">
-<input name="Act_Fot" type="hidden" id="Act_Fot" value="<? echo $row_rs_consultar["Act_Fot"]; ?>">
+  <input name="Cam_Cod" type="hidden" id="Cam_Cod" value="<?php echo $Cam_Cod;?>">
+<input name="Act_Cod" type="hidden" id="Act_Cod" value="<?php echo $row_rs_consultar["Act_Cod"]; ?>">
+<input name="Act_Fot" type="hidden" id="Act_Fot" value="<?php echo $row_rs_consultar["Act_Fot"]; ?>">
 <input name="hdd_save" type="hidden" id="hdd_save" value="insertar">
-<input name="i" type="hidden" id="i" value="<? echo $i; ?>">
-<input name="r" type="hidden" id="r" value="<? echo $r; ?>">
+<input name="i" type="hidden" id="i" value="<?php echo $i; ?>">
+<input name="r" type="hidden" id="r" value="<?php echo $r; ?>">
 <input type="hidden" name="txt_busqueda" id="volver_busqueda" value="<?Php echo $volver_busqueda; ?>"/>
-<input type="hidden" name="op_opciones" id="volver_opciones" value="<? echo $volver_opciones; ?>">
-<input type="hidden" name="confir" id="confir" value="<? echo $row_rs_asig['Asg_Con']; ?>">
+<input type="hidden" name="op_opciones" id="volver_opciones" value="<?php echo $volver_opciones; ?>">
+<input type="hidden" name="confir" id="confir" value="<?php echo $row_rs_asig['Asg_Con']; ?>">
 <?Php 
 if ($anulada > 0)
 {		
@@ -799,14 +799,14 @@ if ($anulada > 0)
 }//Fin del if ($anulada > 0)
 ?>
 <br/>
-<?
+<?php
 require_once('../../componentes/FRONT/com_con_leyenda.php');?>    
 </form>
 </fieldset>
 	</td>
   </tr>
 </table>
-<? } ?>
+<?php } ?>
 </div>	    
 
 	<div id="bgtransparent" class="bgtransparent" style="display:none" onClick="closeModal();"></div>

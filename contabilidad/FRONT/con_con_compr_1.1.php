@@ -861,7 +861,7 @@ else
 		<table width="100%" border="0" cellpadding="0" cellspacing="0">
           <tr>
             <td width="85%" align="right"><strong>TOTAL:</strong> </td>
-            <td width="8%" align="right"><strong><?phpPHP echo formato_numero($total_fin,2,2); ?></strong></td>
+            <td width="8%" align="right"><strong><?php echo formato_numero($total_fin,2,2); ?></strong></td>
             <td width="7%" align="right">&nbsp;&nbsp;</td>
           </tr>
         </table>

@@ -195,7 +195,7 @@ function ResetDirty()
 <tr>
 	<td>
 	<form action="<?Php echo $_SERVER['PHP_SELF']; ?>" method="post">
-    <? $thisPost->startPost(); ?>		  
+    <?php $thisPost->startPost(); ?>		  
 	<br />
 		<textarea cols="100" id="editor1" name="editor1" rows="10">		
         <?Php 

@@ -673,7 +673,7 @@ if (isset($copiarProveedoresAjax)) {
                 try {
                     var data = typeof response === 'string' ? JSON.parse(response) : response;
                     if (data.success && data.bases) {
-                        var $select = $('#selBaseDatos');
+                        public $select = $('#selBaseDatos');
                         $select.empty().append('<option value="">-- Seleccione una base de datos --</option>');
                         $.each(data.bases, function(i, base) {
                             $select.append('<option value="' + base.Dat_Dis + '">' + base.Emp_Nom + '</option>');
@@ -703,7 +703,7 @@ if (isset($copiarProveedoresAjax)) {
                         try {
                             var data = typeof response === 'string' ? JSON.parse(response) : response;
                             if (data.success && data.empresas) {
-                                var $select = $('#empresa_origen');
+                                public $select = $('#empresa_origen');
                                 $select.empty().append('<option value="">-- Seleccione una empresa --</option>');
                                 $.each(data.empresas, function(i, empresa) {
                                     var empresa_nombre = empresa.Emp_Nom || 'Empresa ' + empresa.Emp_Cod;

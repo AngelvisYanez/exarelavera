@@ -14,7 +14,7 @@
 | Copyright (c) 2004-2009, Andy Prevost. All Rights Reserved.               |
 | Copyright (c) 2001-2003, Brent R. Matzelle                                |
 | ------------------------------------------------------------------------- |
-|   License: Distributed under the Lesser General Public License (LGPL)     |
+|   License: Distributed under the Lesser General public License (LGPL)     |
 |            http://www.gnu.org/copyleft/lesser.html                        |
 | This program is distributed in the hope that it will be useful - WITHOUT  |
 | ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or     |
@@ -31,7 +31,7 @@
  * @copyright 2004 - 2008 Andy Prevost
  * @author Jim Jagielski
  * @copyright 2010 - 2012 Jim Jagielski
- * @license http://www.gnu.org/copyleft/lesser.html Distributed under the Lesser General Public License (LGPL)
+ * @license http://www.gnu.org/copyleft/lesser.html Distributed under the Lesser General public License (LGPL)
  */
 
 /**
@@ -541,7 +541,7 @@ class SMTP {
 
     $max_line_length = 998; // used below; set here for ease in change
 
-    while(list(,$line) = @each($lines)) {
+    foreach($lines as $line) {
       $lines_out = null;
       if($line == "" && $in_headers) {
         $in_headers = false;
@@ -570,7 +570,7 @@ class SMTP {
       $lines_out[] = $line;
 
       // send the lines to the server
-      while(list(,$line_out) = @each($lines_out)) {
+      foreach($lines_out as $line_out) {
         if(strlen($line_out) > 0)
         {
           if(substr($line_out, 0, 1) == ".") {

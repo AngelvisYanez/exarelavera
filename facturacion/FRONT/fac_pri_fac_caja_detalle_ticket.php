@@ -129,7 +129,7 @@ $total_ventas = count($row_FormasVentas);
               echo "<tr class='Texto_Reporte'><td colspan='7'><strong>".strtoupper($datos_forma['Pag_Des'])."</strong></td></tr>";
               foreach ($row_ventas as $datos) {
                 echo "<tr class='Texto_Reporte' style='background:#eee;'>
-                        <td colspan='5'>". utf8_encode( strtoupper($datos['Prs_Ape'].' '.$datos['Prs_Nom']) )  ."</td>
+                        <td colspan='5'>". mb_convert_encoding(strtoupper($datos['Prs_Ape'].' '.$datos['Prs_Nom']) , 'UTF-8', 'ISO-8859-1')  ."</td>
                         <td colspan='2'>".strtoupper($datos['Tic_Des'])."</td>
                       </tr>";
                 echo "<tr class='Texto_Reporte'>

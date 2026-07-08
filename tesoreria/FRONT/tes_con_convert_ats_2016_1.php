@@ -1,4 +1,4 @@
-<?
+<?php
 if(isset($_FILES)&&!empty($_FILES)){
     require_once('../../Librerias/Xml/XML.php');	
     $responce=array('success'=>false,'message'=>"No se ha encontrado ningun archivo!");
@@ -144,7 +144,7 @@ if(isset($_FILES)&&!empty($_FILES)){
                 <div class="col-xs-6">
                     <FIELDSET class="exa-fieldset">
                         <LEGEND class="Titulos2">Cargas ATS</LEGEND>
-                        <form method="post" name="form3" id="form3" enctype="multipart/form-data" action="<? echo $_SERVER['PHP_SELF'];?>" class="form-horizontal normal">
+                        <form method="post" name="form3" id="form3" enctype="multipart/form-data" action="<?php echo $_SERVER['PHP_SELF'];?>" class="form-horizontal normal">
                             <div class="form-group">
                                 <label class="col-xs-2 control-label label-sm required">Seleccione:</label>  
                                 <div class="col-xs-7" ><input type="file" multiple name="archivoXML[]" id="archivoXML[]" value="" accept="text/xml" class="form-control input-sm" required="" /></div>                                        

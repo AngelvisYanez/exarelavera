@@ -37,7 +37,7 @@ $total_rs_Custodios = count($rs_Custodios);
 if (isset($ajax_alt_Autor))
 {	
 ?>
-<? 
+<?php 
  /** 
   * Creacion del campo REPOST
   */
@@ -50,7 +50,7 @@ $Ses_Emp_Cod =1;
 	$rs_custodio = $obBD_con1->getRowConsulta(136,$codigo.'*'.$Ses_Emp_Cod, $obBD_conexion);
 ?>
 
- <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3" id= "form3" >  
+ <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3" id= "form3" >  
 
  	<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
  	<tr>
@@ -62,13 +62,13 @@ $Ses_Emp_Cod =1;
                 <table   width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
                   <tr>
                     <td width="15%" ><span  class="Etiqueta1">Custodio: </span></td>
-                    <td width="35%"> <span class="LetraNegra"><? echo  $rs_custodio['Nombre'];?></span></td>
+                    <td width="35%"> <span class="LetraNegra"><?php echo  $rs_custodio['Nombre'];?></span></td>
                      <td width="20%" ><span  class="Etiqueta1">Departamento: </span></td>
                       <td width="30%" ><span  class="Etiqueta1"> Area: Departamento</span></td>
                   </tr> 
                   <tr>
                     <td width="15%" ><span class="Etiqueta1">CI: </span></td>
-                    <td width="35%"><span class="LetraNegra"><? echo  $rs_custodio['Prs_Ced'];?></span></td>
+                    <td width="35%"><span class="LetraNegra"><?php echo  $rs_custodio['Prs_Ced'];?></span></td>
                      <td width="20%" ><span  class="Etiqueta1"></span></td>
                       <td width="30%" ><span  class="Etiqueta1"> </span></td>
                    </tr>    
@@ -101,9 +101,9 @@ $Ses_Emp_Cod =1;
 								$str.= "*".$row_rs_Asigna['Act_Cod'];
                        ?>                                         
                             <tr>
-                                <td class="LetraNegra" align="center" ><? echo $row_rs_Asigna['Act_Cod'];?></td>
-                                <td class="LetraNegra"><? echo $row_rs_Asigna['Act_Des'];?></td>      
-                                <td class="LetraNegra" align="center"><? echo $row_rs_Asigna['Est_Des'];?></td>              
+                                <td class="LetraNegra" align="center" ><?php echo $row_rs_Asigna['Act_Cod'];?></td>
+                                <td class="LetraNegra"><?php echo $row_rs_Asigna['Act_Des'];?></td>      
+                                <td class="LetraNegra" align="center"><?php echo $row_rs_Asigna['Est_Des'];?></td>              
                             </tr>  
                         <?Php 
                             }
@@ -149,7 +149,7 @@ $Ses_Emp_Cod =1;
    </tr> 
 </table>
 </form>
-  <?  
+  <?php  
   exit();
   }// Fin if(isset($codigo)){
 	    
@@ -227,7 +227,7 @@ $hoy = date("Y-m-d");
             <LEGEND>
             <label class="Titulos2">Lista de Asignaciones por confirmar</label>
             </LEGEND>  
-		<? 
+		<?php 
          /** 
           * Creacion del campo REPOST
           */
@@ -256,7 +256,7 @@ $hoy = date("Y-m-d");
                   <td align="center"><?Php echo $row_rs_Custodios['Cus_Cod'];?></td>
                   <td><?Php echo $row_rs_Custodios['Nombres'];?></td>
                   <td align="center">
-                  <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1" id= "form1" > 
+                  <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1" id= "form1" > 
                       <button  type="button" name="btnAutor" width="22" height="22" title="Seleccionar"  class='btn btn-success btn-mini' onClick="form.submit()" >	
             <i class='icon-arrow-right icon-white'></i>
                       </button> 
@@ -275,7 +275,7 @@ $hoy = date("Y-m-d");
                                 <td align="center"><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
                                 <td> </td>                               
                             </tr>          
-                    <?	
+                    <?php	
 						} //Fin if($cont>0){
 						
                   }// fin if($total_rs_Custodios>0){ 
@@ -287,7 +287,7 @@ $hoy = date("Y-m-d");
                             <td align="center"><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
                             <td> </td>                                
                         </tr>
-                    <?  
+                    <?php  
 				  }
                   ?>
             </tbody>   
@@ -298,11 +298,11 @@ $hoy = date("Y-m-d");
 		?>
     </td> 
   </tr>
-  <? }?>
+  <?php }?>
   
   <tr>
 <td>
-<? 
+<?php 
 if(isset($codigo)){
 
  /** 
@@ -316,7 +316,7 @@ $thisPost->startPost();
 	$rs_custodio = $obBD_con1->getRowConsulta(136,$codigo.'*'.$Ses_Emp_Cod, $obBD_conexion);
 ?>
 
- <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3" id= "form3" >  
+ <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3" id= "form3" >  
 
  	<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
  	<tr>
@@ -328,13 +328,13 @@ $thisPost->startPost();
                     <table   width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
                       <tr>
                         <td width="15%" class="Etiqueta1" ><span  class="Etiqueta1">Custodio: </span></td>
-                        <td width="22%">&nbsp;<span class="LetraNegra"><? echo  $rs_custodio['Nombre'];?></span></td>
+                        <td width="22%">&nbsp;<span class="LetraNegra"><?php echo  $rs_custodio['Nombre'];?></span></td>
                          <td width="13%" class="Etiqueta1" ><span  class="Etiqueta1">Departamento:</span></td>
-                          <td width="50%" >&nbsp;<span class=" LetraNegra"><? echo  $rs_custodio['Dep_Des'];?></span></td>
+                          <td width="50%" >&nbsp;<span class=" LetraNegra"><?php echo  $rs_custodio['Dep_Des'];?></span></td>
                       </tr> 
                       <tr>
                         <td width="15%" class="Etiqueta1" ><span class="Etiqueta1">Cédula:</span></td>
-                        <td width="22%">&nbsp;<span class="LetraNegra"><? echo  $rs_custodio['Prs_Ced'];?></span></td>
+                        <td width="22%">&nbsp;<span class="LetraNegra"><?php echo  $rs_custodio['Prs_Ced'];?></span></td>
                          <td width="13%" ><span  class="Etiqueta1"></span></td>
                           <td width="50%" ><span  class="Etiqueta1"> </span></td>
                       </tr>    
@@ -376,15 +376,15 @@ $thisPost->startPost();
 								$rs_custOld= $obBD_con1->getArrayConsulta(2005,$Ses_Emp_Cod.'*'.$row_rs_Asigna['Act_Cod'],$obBD_conexion);							
                        ?>                                         
                             <tr>
-                                <td class="LetraNegra" align="center" ><? echo $row_rs_Asigna['Act_Cod'];?>
-                                <input type="hidden" name="Act_Cod[<? $i;?>]" id="Act_Cod[<? echo $i;?>]" value="<? echo $row_rs_Asigna['Act_Cod'];?>"></td>
-                                <td class="LetraNegra"><? echo $row_rs_Asigna['Act_Des'];?></td>           
-                                <td class="LetraNegra" align="center"><? echo $row_rs_Asigna['Asg_Fec'];?></td>
-                                <td class="LetraNegra" align="left"><? echo $rs_custOld[0]['Nombres'];?></td>
-                                <td class="LetraNegra" align="left"><? echo $row_rs_Asigna['Act_Obs'];?></td>          
-                                <td class="LetraNegra" align="center"><? echo $row_rs_Asigna['Est_Des'];?></td>
-                                <td align="center"><input  type="checkbox" name="sel[<? echo $i;?>]" id="sel[<? echo $i;?>]" onClick="crear_lista_activos_check(<? echo $total_rs_Asigna?>)">
-                                 <input type="hidden" name="Asg_Ord[<? echo $row_rs_Asigna['Asg_Ord'];?>]" id="Act_Cod[<? echo $row_rs_Asigna['Asg_Ord'];?>]" value="<? echo $row_rs_Asigna['Asg_Ord'];?>"></td>
+                                <td class="LetraNegra" align="center" ><?php echo $row_rs_Asigna['Act_Cod'];?>
+                                <input type="hidden" name="Act_Cod[<?php $i;?>]" id="Act_Cod[<?php echo $i;?>]" value="<?php echo $row_rs_Asigna['Act_Cod'];?>"></td>
+                                <td class="LetraNegra"><?php echo $row_rs_Asigna['Act_Des'];?></td>           
+                                <td class="LetraNegra" align="center"><?php echo $row_rs_Asigna['Asg_Fec'];?></td>
+                                <td class="LetraNegra" align="left"><?php echo $rs_custOld[0]['Nombres'];?></td>
+                                <td class="LetraNegra" align="left"><?php echo $row_rs_Asigna['Act_Obs'];?></td>          
+                                <td class="LetraNegra" align="center"><?php echo $row_rs_Asigna['Est_Des'];?></td>
+                                <td align="center"><input  type="checkbox" name="sel[<?php echo $i;?>]" id="sel[<?php echo $i;?>]" onClick="crear_lista_activos_check(<?php echo $total_rs_Asigna?>)">
+                                 <input type="hidden" name="Asg_Ord[<?php echo $row_rs_Asigna['Asg_Ord'];?>]" id="Act_Cod[<?php echo $row_rs_Asigna['Asg_Ord'];?>]" value="<?php echo $row_rs_Asigna['Asg_Ord'];?>"></td>
                             </tr>  
                         <?Php 
                             }

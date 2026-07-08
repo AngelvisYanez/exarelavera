@@ -249,7 +249,7 @@ $confi = $obBD_con1->getRowConsulta(520, $Ses_Emp_Cod, $obBD_conexion);
                         <select id="Tic_Cod_n" name="Tic_Cod_n" class="form-control input-xs">
                             <?php
                             foreach ($tipDoc as $td) {
-                                echo "<option data--tic_-sri='" . utf8_encode($td['Tic_Sri']) . "' value='" . $td['Tic_Cod'] . "'>" . utf8_encode($td['Tic_Des']) . "</option>";
+                                echo "<option data--tic_-sri='" . mb_convert_encoding($td['Tic_Sri'], 'UTF-8', 'ISO-8859-1') . "' value='" . $td['Tic_Cod'] . "'>" . mb_convert_encoding($td['Tic_Des'], 'UTF-8', 'ISO-8859-1') . "</option>";
 
                                 //echo "<option data--tic_-sri='$td[Tic_Sri]' value='{$td['Tic_Cod']}'>{$td['Tic_Des']}</option>";
                             }

@@ -1,4 +1,4 @@
-<?
+<?php
 require_once ('../../auditoria/LOGICA/aud_log_auditoria.php');
 require_once("act_sql_param_dep.php");
 

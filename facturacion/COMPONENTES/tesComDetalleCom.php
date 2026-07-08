@@ -19,19 +19,19 @@ if (isset($com_codigo))
     <table width="100%" border="0" cellspacing="0" cellpadding="0">
       <tr>
         <td class="Etiqueta1">C&eacute;dula/R.U.C.:</td>
-        <td colspan="3" class="LetraNegra">&nbsp;<? echo $rs_info['Prs_Ced'];?></td>
+        <td colspan="3" class="LetraNegra">&nbsp;<?php echo $rs_info['Prs_Ced'];?></td>
       </tr>
       <tr>
        <td class="Etiqueta1">Proveedor:</td>
-        <td class="LetraNegra">&nbsp;<? echo $rs_info['Prs_Ape'].' '.$rs_info['Prs_Nom'];?></td>
+        <td class="LetraNegra">&nbsp;<?php echo $rs_info['Prs_Ape'].' '.$rs_info['Prs_Nom'];?></td>
         <td class="Etiqueta1">Creado el:</td>
-        <td class="LetraNegra">&nbsp;<? echo $rs_usuVendedor['fecha']; ?></td>
+        <td class="LetraNegra">&nbsp;<?php echo $rs_usuVendedor['fecha']; ?></td>
       </tr>
       <tr>
         <td width="10%" class="Etiqueta1">No. Docto:</td>
-        <td width="41%" class="LetraNegra">&nbsp;<? echo $rs_info['Cop_Num'];?></td>
+        <td width="41%" class="LetraNegra">&nbsp;<?php echo $rs_info['Cop_Num'];?></td>
         <td width="8%" class="Etiqueta1">Usuario:</td>
-        <td width="41%" class="LetraNegra">&nbsp;<? echo $rs_usuVendedor['Prs_Ape'].' '.$rs_usuVendedor['Prs_Nom']; ?></td>
+        <td width="41%" class="LetraNegra">&nbsp;<?php echo $rs_usuVendedor['Prs_Ape'].' '.$rs_usuVendedor['Prs_Nom']; ?></td>
       </tr>        
     </table>
 
@@ -70,7 +70,7 @@ if (isset($com_codigo))
       </tbody>            
      </table>
      <br>
-     <?
+     <?php
 	 
 	    $rs_retCod = $obBD_con1->getRowConsulta(718,$com_codigo,$obBD_conexion);
             $rs_confiEmp = $obBD_con1->getRowConsulta(1049,$Ses_Suc_Cod,$obBD_conexion);	  
@@ -112,7 +112,7 @@ if (isset($com_codigo))
             </tr>
           </thead>
       	  <tbody class="Fondo">
-          <? foreach($rs_detalle as $row_rs_detalle){?>
+          <?php foreach($rs_detalle as $row_rs_detalle){?>
           <tr height="20">
             <td align="center"><?Php echo $row_rs_detalle['Ren_Sri']; ?></td>
             <td><?Php echo $row_rs_detalle['Ren_Con']; ?></td>
@@ -121,7 +121,7 @@ if (isset($com_codigo))
             <td align="center"><?Php echo $row_rs_detalle['Ren_Por']; ?></td>
             <td align="right"><?Php $impTotal=$impTotal+$row_rs_detalle['Val_Ret']; echo formato_numero($row_rs_detalle['Val_Ret'],2,4); ?></td>
             </tr>
-          <? }?>
+          <?php }?>
           </tbody>
         </table>  
         <table width="100%" border="0" cellspacing="0" cellpadding="0">
@@ -129,13 +129,13 @@ if (isset($com_codigo))
             <td width="25%">&nbsp;</td>
             <td width="25%">&nbsp;</td>
             <td width="37%">&nbsp;</td>
-            <td width="13%" align="right"><strong>Total:&nbsp;&nbsp;<? echo formato_numero($impTotal,2,4);?></strong></td>
+            <td width="13%" align="right"><strong>Total:&nbsp;&nbsp;<?php echo formato_numero($impTotal,2,4);?></strong></td>
           </tr>
         </table>                                  
         <br />
-     <? }?>          
+     <?php }?>          
 </FIELDSET>
-    <? echo barra_estado($tot_rs_detalle);?>    
+    <?php echo barra_estado($tot_rs_detalle);?>    
     <?Php
     }//FIn del if (isset($com_codigo))
     else

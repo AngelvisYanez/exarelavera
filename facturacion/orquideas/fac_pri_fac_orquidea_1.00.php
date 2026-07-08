@@ -73,19 +73,19 @@ body {
         <tr>
           <td width="6%" align="right">
 No:</td>
-          <td width="43%">&nbsp;<input name="Vet_Cod" type="hidden" id="Vet_Cod" value="<?Php echo $cliente; ?>" ><? echo $row_rs_cliente['Vet_Cod']; ?></td>
+          <td width="43%">&nbsp;<input name="Vet_Cod" type="hidden" id="Vet_Cod" value="<?Php echo $cliente; ?>" ><?php echo $row_rs_cliente['Vet_Cod']; ?></td>
           <td width="51%">
             <table width="100%" border="0" cellpadding="0" cellspacing="0" class="Letra_punto_venta">
               <tr>
-                <td align="center">&nbsp;<? echo $dia;?></td>
-                <td align="center">&nbsp;<? echo $mes;?></td>
-                <td align="center">&nbsp;<? echo $anio;?></td>
+                <td align="center">&nbsp;<?php echo $dia;?></td>
+                <td align="center">&nbsp;<?php echo $mes;?></td>
+                <td align="center">&nbsp;<?php echo $anio;?></td>
               </tr>
           </table></td>
           </tr>
         <tr>
           <td>&nbsp;</td>
-          <td colspan="2"><? if ($row_rs_representante['Cli_Fac'] != "")
+          <td colspan="2"><?php if ($row_rs_representante['Cli_Fac'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Fac'];  
 			}
@@ -94,7 +94,7 @@ No:</td>
           </tr>
         <tr>
           <td>&nbsp;</td>
-          <td><? if ($row_rs_representante['Cli_Fac'] != "")
+          <td><?php if ($row_rs_representante['Cli_Fac'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Ruf']; 
 			}
@@ -106,7 +106,7 @@ No:</td>
           </tr>
         <tr>
           <td>&nbsp;</td>
-          <td colspan="2"><? if ($row_rs_representante['Cli_Dir'] != "")
+          <td colspan="2"><?php if ($row_rs_representante['Cli_Dir'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Dir']; 
 			}
@@ -130,7 +130,7 @@ No:</td>
                 <td align="center">&nbsp;<!--PVP--></td>
                 <td align="center">&nbsp;<!--Total--></td>
               </tr>
-              <? do{?>
+              <?php do{?>
               <tr>
                 <td width="10" align="left"><div align="left"><?Php echo $row_rs_cliente['Vet_Can']?></div></td>
                 <td>&nbsp;&nbsp;<?Php echo $row_rs_cliente['Ite_Lar'].' '.$row_rs_cliente['Pro_Obs']?></td>

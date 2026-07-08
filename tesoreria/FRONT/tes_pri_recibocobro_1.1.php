@@ -63,20 +63,20 @@ body {
         <table width="100%" border="0" cellspacing="0" cellpadding="0">
           <tr>
            <?php if($Ses_Suc_Cod != 334) { ?>            
-            <td width="13%" align="left"><img src="<? echo $Ses_Emp_Log;?>" width="90" height="80"></td> 
+            <td width="13%" align="left"><img src="<?php echo $Ses_Emp_Log;?>" width="90" height="80"></td> 
             <?php } ?>           
               <td width="87%"><table width="100%" border="0" cellspacing="0" cellpadding="0">
               <tr>
-                <td align="center" class="tituloFact"><strong><? echo $Ses_Emp_Nom;?></strong></td>
+                <td align="center" class="tituloFact"><strong><?php echo $Ses_Emp_Nom;?></strong></td>
               </tr>
               <tr>
                 <?php if($Ses_Suc_Cod != 334) { ?> 
-                <td align="center" class="tituloFact2"><? echo "Tel&eacute;fono 1:".$row_info_Empresa['Suc_Te1']."&nbsp;&nbsp;&nbsp;"."Tel&eacute;fono 2:".$row_info_Empresa['Suc_Te2']?></td>
+                <td align="center" class="tituloFact2"><?php echo "Tel&eacute;fono 1:".$row_info_Empresa['Suc_Te1']."&nbsp;&nbsp;&nbsp;"."Tel&eacute;fono 2:".$row_info_Empresa['Suc_Te2']?></td>
                 <?php } ?>  
               </tr>
               <tr>
                 <?php if($Ses_Suc_Cod != 334) { ?>
-                <td align="center" class="tituloFact2"><? echo $row_info_Empresa['Suc_Dir'];?></td>
+                <td align="center" class="tituloFact2"><?php echo $row_info_Empresa['Suc_Dir'];?></td>
                 <?php } ?>
               </tr>
             </table></td>
@@ -87,27 +87,27 @@ body {
         <td colspan="6" align="left"><hr></td>
       </tr>
       <tr>
-        <td height="24" colspan="6" align="center" class="subtitulo"><strong>COMPROBANTE DE CANCELACI&Oacute;N #:&nbsp;&nbsp;<? echo $row_rs_datos[0]['numCom']?></strong></td>
+        <td height="24" colspan="6" align="center" class="subtitulo"><strong>COMPROBANTE DE CANCELACI&Oacute;N #:&nbsp;&nbsp;<?php echo $row_rs_datos[0]['numCom']?></strong></td>
       </tr>
       <tr>
         <td width="10%" align="left" class="etiquetaFact"><strong>R.U.C / C.I:</strong></td>
-        <td width="25%" class="etiquetaFact">&nbsp;<? echo $row_rs_datos[0]['Prs_Ced']?></td>
+        <td width="25%" class="etiquetaFact">&nbsp;<?php echo $row_rs_datos[0]['Prs_Ced']?></td>
         <td width="10%" align="left" class="etiquetaFact"><strong>EMISI&Oacute;N:</strong></td>
-        <td width="16%" align="left" class="etiquetaFact">&nbsp;<? echo $row_rs_datos[0]['Cpc_Fec'];?></td>
+        <td width="16%" align="left" class="etiquetaFact">&nbsp;<?php echo $row_rs_datos[0]['Cpc_Fec'];?></td>
         <td width="14%" align="left" class="etiquetaFact"><strong></strong></td>
         <td width="25%" align="left" class="etiquetaFact">&nbsp;</td>
       </tr>
       <tr>
         <td align="left" class="etiquetaFact"><strong>CLIENTE:</strong></td>
-        <td colspan="5" class="etiquetaFact">&nbsp;<? echo $row_rs_datos[0]['Prs_Ape'].' '.$row_rs_datos[0]['Prs_Nom'];?></td>
+        <td colspan="5" class="etiquetaFact">&nbsp;<?php echo $row_rs_datos[0]['Prs_Ape'].' '.$row_rs_datos[0]['Prs_Nom'];?></td>
         </tr>
       <tr>
         <td align="left" class="etiquetaFact"><strong>CONCEPTO:</strong></td>
-        <td colspan="5" align="left"><span class="etiquetaFact"><? echo $row_rs_datos[0]['Com_Con'];?></span></td>
+        <td colspan="5" align="left"><span class="etiquetaFact"><?php echo $row_rs_datos[0]['Com_Con'];?></span></td>
       </tr>
       <tr>
         <td align="left" class="etiquetaFact"><strong>OBSERVACI&oacute;N:</strong></td>
-        <td colspan="5" align="left"><span class="etiquetaFact">&nbsp;<? echo $row_rs_datos[0]['Cpc_Obs'];?></span></td>
+        <td colspan="5" align="left"><span class="etiquetaFact">&nbsp;<?php echo $row_rs_datos[0]['Cpc_Obs'];?></span></td>
         </tr>
       <tr>
         <td height="94" colspan="6" align="left" valign="top"><?Php 
@@ -130,13 +130,13 @@ body {
             <tr>
               <td colspan="7"><hr style="border: 0; border-top: 1px solid #999; border-bottom: 1px solid #333; height:0;"></td>
             </tr>
-            <? $total=0; 
+            <?php $total=0; 
 			foreach ($row_rs_datos as $datos){ ?>
             <tr class="tituloFact2">
-              <td align="left">&nbsp;<? echo str_pad($datos['Vet_Num'],8,'0',STR_PAD_LEFT);?></td>
-              <td align="center"><? echo $datos['Pag_Des'];?></td>
-              <td align="center"><? if($datos['Che_Fec']!=''){ echo $datos['Che_Fec'];}else{echo '-';}?></td>
-              <!-- <td align="center"><? if($datos['Che_Num']!=''){echo $datos['Che_Num'];}else{echo '-';}?></td> -->
+              <td align="left">&nbsp;<?php echo str_pad($datos['Vet_Num'],8,'0',STR_PAD_LEFT);?></td>
+              <td align="center"><?php echo $datos['Pag_Des'];?></td>
+              <td align="center"><?php if($datos['Che_Fec']!=''){ echo $datos['Che_Fec'];}else{echo '-';}?></td>
+              <!-- <td align="center"><?php if($datos['Che_Num']!=''){echo $datos['Che_Num'];}else{echo '-';}?></td> -->
               <td align="center">
                 <?php 
                   $cheque = $datos['Che_Num'] ? "CH. " . $datos['Che_Num'] : '';
@@ -144,11 +144,11 @@ body {
                   echo $cheque || $transferencia ? trim($cheque . ' / ' . $transferencia, ' / ') : '-';
                 ?>
               </td>
-              <td align="center"><? if($datos['Bak_Des']!=''){echo $datos['Bak_Des'];}else{echo '-';}?></td>
-              <td align="center"><? if($datos['Che_Cta']!=''){echo $datos['Che_Cta'];}else{echo '-';}?></td>
-              <td align="right"><? echo formato_numero($datos['Cpc_Val'],2,1); $total+=$datos['Cpc_Val'];?></td>
+              <td align="center"><?php if($datos['Bak_Des']!=''){echo $datos['Bak_Des'];}else{echo '-';}?></td>
+              <td align="center"><?php if($datos['Che_Cta']!=''){echo $datos['Che_Cta'];}else{echo '-';}?></td>
+              <td align="right"><?php echo formato_numero($datos['Cpc_Val'],2,1); $total+=$datos['Cpc_Val'];?></td>
             </tr>
-            <? }?>
+            <?php }?>
             <tr>
               <td height="38">&nbsp;</td>
               <td>&nbsp;</td>
@@ -158,10 +158,10 @@ body {
               <td>&nbsp;</td>
             </tr>
             <tr>
-              <td colspan="4" class="tituloFact2"><span class="etiquetaFact"><strong>USUARIO:</strong></span><span class="tituloFact">&nbsp;&nbsp; <? if($Ses_Suc_Cod != 334) {echo $row_rs_datos[0]['usuApe'];} else{echo $row_rs_datos[0]['usuNom'];}//.' '.$row_rs_datos[0]['usuNom'];;?></span></td>
+              <td colspan="4" class="tituloFact2"><span class="etiquetaFact"><strong>USUARIO:</strong></span><span class="tituloFact">&nbsp;&nbsp; <?php if($Ses_Suc_Cod != 334) {echo $row_rs_datos[0]['usuApe'];} else{echo $row_rs_datos[0]['usuNom'];}//.' '.$row_rs_datos[0]['usuNom'];;?></span></td>
               <td>&nbsp;</td>
               <td align="right" class="tituloFact2"><strong>TOTAL:</strong></td>
-              <td align="right" class="etiquetaFact"><strong><? echo formato_numero($total,2,1);?></strong>&nbsp;</td>
+              <td align="right" class="etiquetaFact"><strong><?php echo formato_numero($total,2,1);?></strong>&nbsp;</td>
             </tr>
               
             <tr>

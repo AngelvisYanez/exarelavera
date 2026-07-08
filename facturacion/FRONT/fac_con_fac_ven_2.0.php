@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?	
+<?php	
 /*
 * Descripción: Consulta las ventas individual, total y detallada, de cada vendedor y punto de impresión
 * Fecha de actualización: 2012-05-25
@@ -370,20 +370,20 @@ if(isset($txt_busqueda))
 	  		  { $rojo='#FF0000'; $anulada++; }else{$rojo='';}
 	  ?>	  
 	  <tr>
-	    <td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Vet_Cod']; ?></FONT></td>
-		<td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Vet_Num']; ?></FONT></td>
-		<td align="left"><FONT COLOR="<? echo $rojo;?>">&nbsp;<?Php echo marcar_cadena($txt_busqueda,$row_rs_buscar['Prs_Ape'].' '.$row_rs_buscar['Prs_Nom'],'#FFFF00',1); ?></FONT></td>
-		<td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Caj_Fec']; ?></FONT></td>
+	    <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Vet_Cod']; ?></FONT></td>
+		<td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Vet_Num']; ?></FONT></td>
+		<td align="left"><FONT COLOR="<?php echo $rojo;?>">&nbsp;<?Php echo marcar_cadena($txt_busqueda,$row_rs_buscar['Prs_Ape'].' '.$row_rs_buscar['Prs_Nom'],'#FFFF00',1); ?></FONT></td>
+		<td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Caj_Fec']; ?></FONT></td>
 		<td align="center">
-        <? if($row_rs_buscar['Vet_Aut']=='S'){ ?>
-        <form name="frm_pdf" id="frm_pdf" action="<? echo $urlComXml;?>" method="post" target="_blank">
+        <?php if($row_rs_buscar['Vet_Aut']=='S'){ ?>
+        <form name="frm_pdf" id="frm_pdf" action="<?php echo $urlComXml;?>" method="post" target="_blank">
             <button type="button" class="btn btn-primary btn-mini" title="Pdf(Factura electr&oacute;nica SRI)" onclick="this.form.submit()">
             <i class=" icon-download-alt icon-white"></i> <span></span> </button>
             <input name="urlXml" id="urlXml" type="hidden" value="<?Php echo '../FRONT/'.$Ses_Emp_Cod."/".$row_rs_buscar['Vet_Xml']."_A.xml";?>">
             <input name="op" id="op" type="hidden" value="I">
-            <input name="logoUrl" id="logoUrl" type="hidden" value="<? echo $Ses_Emp_Log;?>">            
+            <input name="logoUrl" id="logoUrl" type="hidden" value="<?php echo $Ses_Emp_Log;?>">            
         </form>        
-        <? }?>
+        <?php }?>
         </td>
 		<td align="center">
         <button type="button" name="button" id="button" class="btn btn-info btn-mini" title="Ver detalle" onclick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_detalle=1&ajax_codigo=<?Php echo $row_rs_buscar['Vet_Cod']; ?>','ajax_modal')">
@@ -444,7 +444,7 @@ if ($anulada > 0)
 }//Fin del if ($anulada > 0)
 ?>
 <br/>
-<?
+<?php
 require_once('../../componentes/FRONT/com_con_leyenda.php');
 ?>
 <?Php
@@ -1775,15 +1775,15 @@ if ($codigo > 0 && !(isset($txt_busqueda))) { ?>
 	 <table width="100%" border="0" cellpadding="0" cellspacing="0">
 	  <tr>
 		<td width="14%" class="Etiqueta1">Cudela/R.U.C.:</td>
-		<td class="LetraNegra">&nbsp;<? echo $row_rs_cliente['Est_Ruf']; ?>		  <div align="right"></div></td>
+		<td class="LetraNegra">&nbsp;<?php echo $row_rs_cliente['Est_Ruf']; ?>		  <div align="right"></div></td>
 		</tr>
 	  <tr>
 	    <td class="Etiqueta1">Representante:</td>
-	    <td class="LetraNegra">&nbsp;<? echo $row_rs_cliente['Est_Fac']; ?></td>
+	    <td class="LetraNegra">&nbsp;<?php echo $row_rs_cliente['Est_Fac']; ?></td>
 	    </tr>
 	  <tr>
 		<td class="Etiqueta1">Direcci&oacute;n:</td>
-		<td class="LetraNegra">&nbsp;<? echo $row_rs_cliente['Est_Dir']; ?></td>
+		<td class="LetraNegra">&nbsp;<?php echo $row_rs_cliente['Est_Dir']; ?></td>
 	  </tr>
 	 </table>
 	 </FIELDSET>

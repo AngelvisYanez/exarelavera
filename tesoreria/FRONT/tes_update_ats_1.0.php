@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?
+<?php
 /**
 * Descripción: Consulta de facturas electronicas
 * Fecha de actualización:	16-11-2014 
@@ -85,7 +85,7 @@ if(isset($save))
 <tr>
  <td align="left" valign="top" height="400">
 
-   	<form method="post" name="form3" id="form3" enctype="multipart/form-data" action="<? echo $_SERVER['PHP_SELF'];?> ">
+   	<form method="post" name="form3" id="form3" enctype="multipart/form-data" action="<?php echo $_SERVER['PHP_SELF'];?> ">
     <?Php //$thisPost->startPost(); ?>
     <FIELDSET>
     <LEGEND>
@@ -94,7 +94,7 @@ if(isset($save))
      <table width="560" border="0" cellpadding="0" cellspacing="0">
      <tr>	
        <td width="87" align="right" class="LetraNegra">Seleccione:</td> 
-       <td width="345">&nbsp;<input type="file" multiple name="archivo[]" id="archivo[]" value="<? echo $archivo;?>" accept="text/xml" /></td>
+       <td width="345">&nbsp;<input type="file" multiple name="archivo[]" id="archivo[]" value="<?php echo $archivo;?>" accept="text/xml" /></td>
        <td width="128">
          <button type="button" class="btn btn-primary start" onclick="this.form.submit();"><i class=" icon-ok-sign icon-white"></i> <span>Subir</span> </button>
          <input type="hidden" id="save" name="save" value="1" />
@@ -102,7 +102,7 @@ if(isset($save))
      </tr>   
      </table>
     </FIELDSET>
-   <? if(isset($save)){ ?>	
+   <?php if(isset($save)){ ?>	
 	<FIELDSET>
     <LEGEND>
     <label class="Titulos2">Archivos subidos</label>
@@ -120,7 +120,7 @@ if(isset($save))
         </tr>
       </thead>
       <tbody>
-        <? 
+        <?php 
 		
 		
 		$tot = count($_FILES["archivo"]["name"]);  										
@@ -175,7 +175,7 @@ if(isset($save))
          
           </td>
         </tr>
-        <?  				
+        <?php  				
 		}	//fin del for ($i = 0; $i < $tot; $i++)			
 		?>		  
       </tbody>
@@ -187,7 +187,7 @@ if(isset($save))
 </td>
 </tr>
 </table>	
-<? } ?>		
+<?php } ?>		
 <div id="bgtransparent" class="bgtransparent" style="display:none" onClick="closeModal();"></div>
     <div id="bgmodal"  class="bgmodal" style="display:none" >
         <div id="ajax_modal">

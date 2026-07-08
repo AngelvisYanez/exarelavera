@@ -115,15 +115,15 @@ $periodo = $periodos[0];
                                 <div class="form-group">
                                     <label class="col-sm-4 control-label label-sm required">Plan de cuentas:</label>
                                     <div class="col-sm-2">
-            <?
+            <?php
             /** Consultar los Planes de cuenta*/
             $row_rs_planc = $obBD_con1->getArrayConsulta(1, strtoupper($Ses_Emp_Cod), $obBD_conexion);
             ?>
               <select class="form-control" name="Pla_Cod" id="Pla_Cod">
                 <option value=''>Seleccione...</option>
-                <? foreach($row_rs_planc as $datos){?>  
-                <option value='<? echo $datos['Pla_Cod']?>'><? echo $datos['Pla_Obs']?></option>
-                <? }?>
+                <?php foreach($row_rs_planc as $datos){?>  
+                <option value='<?php echo $datos['Pla_Cod']?>'><?php echo $datos['Pla_Obs']?></option>
+                <?php }?>
                 </select>
                                     </div>
                                 </div>
@@ -135,7 +135,7 @@ $periodo = $periodos[0];
                                     </div>
                                     <button class="btn btn-success btn-sm" onclick="$('#cuenDialog').dialog('open');" title="Buscar cuenta" type="button"><i class="glyphicon glyphicon-list"></i> Cuenta contable</button>
                                 </div>
-                                <? $row_rs_adqui = $obBD_con1->getArrayConsulta(16,'',$obBD_conexion); /* Consulta adquisicion  */ ?> 
+                                <?php $row_rs_adqui = $obBD_con1->getArrayConsulta(16,'',$obBD_conexion); /* Consulta adquisicion  */ ?> 
                                 <div class="form-group">
                                     <label class="col-sm-4 control-label label-sm required">Tipo cuenta:</label>
                                     <div class="col-sm-2">
@@ -162,17 +162,17 @@ $periodo = $periodos[0];
                                 <div class="form-group">
                                     <label class="col-sm-4 control-label label-sm required">Tipo de pago:</label>
                                     <div class="col-sm-5">
-                                        <?
+                                        <?php
             /** 
             * Consultar los Planes de cuenta
             */
             $row_rs_tipo = $obBD_con1->getArrayConsulta(10,'', $obBD_conexion);     
             $i=0;
           ?>
-              <? foreach($row_rs_tipo as $datos){$i++;?>
-              <input type="checkbox" id="ckh[<? echo $i;?>]" name="ckh[<? echo $i;?>]" value='<? echo $datos['Pag_Cod']?>' />
-              <? echo $datos['tipo']?><br />
-              <? }?>
+              <?php foreach($row_rs_tipo as $datos){$i++;?>
+              <input type="checkbox" id="ckh[<?php echo $i;?>]" name="ckh[<?php echo $i;?>]" value='<?php echo $datos['Pag_Cod']?>' />
+              <?php echo $datos['tipo']?><br />
+              <?php }?>
                                     </div>
                                 </div>
                             </fieldset>  
@@ -212,8 +212,8 @@ $periodo = $periodos[0];
                           <input id="radc2" name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" alt="" /><label for="radc2">&nbsp;&nbsp;C&oacute;digo&nbsp;&nbsp;</label>                          
                     </div>                   
                     <div class="col-md-4">
-                        <input name="Pec_Cod" type="hidden" value="<? echo $periodo['Pec_Cod']?>" /> 
-                        <input name="Pla_Cod" type="hidden" value="<? echo $periodo['Pla_Cod']?>" />
+                        <input name="Pec_Cod" type="hidden" value="<?php echo $periodo['Pec_Cod']?>" /> 
+                        <input name="Pla_Cod" type="hidden" value="<?php echo $periodo['Pla_Cod']?>" />
                     </div>
                 </div>
                 <div class="form-group">

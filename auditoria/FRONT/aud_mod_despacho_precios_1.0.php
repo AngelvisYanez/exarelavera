@@ -211,11 +211,11 @@ $(function () {
 
     $(document).on('click', '.btn-guardar-fila', function () {
         var act = $(this).data('act');
-        var $row = $(this).closest('tr');
+        public $row = $(this).closest('tr');
         var peq = parseFloat($row.find('.precio-pequeno').val().replace(',', '.')) || 0;
         var med = parseFloat($row.find('.precio-mediano').val().replace(',', '.')) || 0;
         var gra = parseFloat($row.find('.precio-grande').val().replace(',', '.')) || 0;
-        var $btn = $(this);
+        public $btn = $(this);
         $btn.prop('disabled', true);
         $.post(urlBase, {
             guardarPreciosActividad: 1,

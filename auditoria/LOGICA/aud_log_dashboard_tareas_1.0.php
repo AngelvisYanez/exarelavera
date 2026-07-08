@@ -33,7 +33,7 @@ class Class_Log_Datos_Aud_Tareas extends MysqlDatosContab
     /**
      * Consulta en BD usando sentencias_aud
      */
-    function consultasobBD($sen_sql, $param, $obBD)
+    function consultasobBD($sen_sql, $param, $obBD = null)
     {
         $Par_Sql = $this->parametros($param);
         return $this->consulta(sentencias_aud($sen_sql, $Par_Sql), $obBD->conexion);
@@ -42,7 +42,7 @@ class Class_Log_Datos_Aud_Tareas extends MysqlDatosContab
     /**
      * Obtiene una fila de consulta
      */
-    function getRowConsulta($sen_sql, $param, $obBD)
+    function getRowConsulta($sen_sql, $param, $obBD = null)
     {
         $result = $this->consultasobBD($sen_sql, $param, $obBD);
         $row = $this->fetch_assoc($result);
@@ -53,7 +53,7 @@ class Class_Log_Datos_Aud_Tareas extends MysqlDatosContab
     /**
      * Obtiene array de consulta
      */
-    function getArrayConsulta($sen_sql, $param, $obBD)
+    function getArrayConsulta($sen_sql, $param, $obBD = null)
     {
         $result = $this->consultasobBD($sen_sql, $param, $obBD);
         $array = array();
@@ -67,7 +67,7 @@ class Class_Log_Datos_Aud_Tareas extends MysqlDatosContab
     /**
      * Insert/Update/Delete usando sentencias_aud
      */
-    function operacionobBD($sen_sql, $param, $obBD)
+    function operacionobBD($sen_sql, $param, $obBD = null)
     {
         $Par_Sql = $this->parametros($param);
         return $this->grabarv_registros(sentencias_aud($sen_sql, $Par_Sql), $obBD->conexion);

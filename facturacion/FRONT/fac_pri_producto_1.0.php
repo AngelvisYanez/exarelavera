@@ -39,14 +39,14 @@ $Subtitulo="";
 </head>
 
 <body class="Cuerpo">
-<? /* Consulta de la cabecera del reporte */
+<?php /* Consulta de la cabecera del reporte */
 	$row_institucion= $obBD_con1->getRowConsulta(5, $Ses_Suc_Cod, $obBD_conexion);//GetRowConsulta(5,$Ses_Cod_Suc);
 ?>
 <table width="100%" height="907" border="0" align="center" cellpadding="0" cellspacing="0">
   <tr>
     <td height="58" valign="top"><table width="100%" height="18" border="0" cellpadding="0" cellspacing="0">
       <tr align="center">&nbsp;
-        <td height="18" align="center" ><? $obBD_con1->cabeceraReporteStandar($Ses_Suc_Cod,$Titulo,$Subtitulo,$obBD_conexion)?></td>
+        <td height="18" align="center" ><?php $obBD_con1->cabeceraReporteStandar($Ses_Suc_Cod,$Titulo,$Subtitulo,$obBD_conexion)?></td>
       </tr>
     </table></td>
   </tr>
@@ -57,7 +57,7 @@ $Subtitulo="";
       <tr>
         <td height="117"><div align="center">
 		  <label class="TITULO_REPORTE"><?Php echo $nivel[$i]; ?></label>
-          <?
+          <?php
     	if($page == 'TODOS')
 		{
 			$Arr_Producto = $obBD_con1->getArrayConsulta(2, $Tpv_Cod.'*'.$Ses_Suc_Cod, $obBD_conexion);//EjecutarConsulta(2,$Tpv_Cod);
@@ -81,7 +81,7 @@ $Subtitulo="";
           </tr>
           </thead>
           <tbody>
-          <? 
+          <?php 
 		     $filas = 0;
 		  foreach($Arr_Producto as $row)
 		  {
@@ -97,7 +97,7 @@ $Subtitulo="";
             <td class="LetraNegra" align="right"><?Php echo number_format($row['Pre_Pvp'],2);?>&nbsp;</td>
             <td class="LetraNegra" align="right"><?Php echo number_format($row['Pre_Pvp'] + ($row['Pre_Pvp'] * $row['Iva_Por'])/100,2);?></td>
           </tr>
-          <? }?>
+          <?php }?>
           </tbody>
     </table>
 		  <br>

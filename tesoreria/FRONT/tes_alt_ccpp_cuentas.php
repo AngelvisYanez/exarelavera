@@ -129,8 +129,8 @@ $periodo = $periodos[0];
                         <input id="radc2" name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" alt="" /><label for="radc2">&nbsp;&nbsp;C&oacute;digo&nbsp;&nbsp;</label>
                     </div>
                     <div class="col-md-4"> <label class="control-label label-xs">Plan de Cuentas:</label>
-                        <input name="periodo" type="text" size="6" value="<? echo $periodo['Pla_Fec'] ?>" readonly style="text-align: center;display: inline-block;width: auto;" class="form-control input-xs" />
-                        <input name="Pec_Cod" type="hidden" value="<? echo $periodo['Pec_Cod'] ?>" />
+                        <input name="periodo" type="text" size="6" value="<?php echo $periodo['Pla_Fec'] ?>" readonly style="text-align: center;display: inline-block;width: auto;" class="form-control input-xs" />
+                        <input name="Pec_Cod" type="hidden" value="<?php echo $periodo['Pec_Cod'] ?>" />
                     </div>
                 </div>
                 <div class="form-group">

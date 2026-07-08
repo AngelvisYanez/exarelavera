@@ -1,4 +1,4 @@
-<?
+<?php
 /* Alias: [--]
    Descripción: Componente que muestra el cuadro de texto para la busqueda de Rubros.
    Fecha de actualización: 2010-06-29.
@@ -57,4 +57,4 @@
 	</tbody>
     </table>
 	<div id="rubros"></div>	   
-<? 	@$obBD_con1->free_result($rs_semestre);?>
+<?php 	@$obBD_con1->free_result($rs_semestre);?>

@@ -15,7 +15,7 @@ class Class_Log_Datos_Aud extends MysqlDatos{
 	 * Arreglo de palabras reservadas
 	 * @var unknown
 	 */
-	var $reservadas;
+	public $reservadas;
 	
 	/**
 	 * Obtener una fila resultante de la base de datos
@@ -465,7 +465,7 @@ class Class_Log_Datos_Aud extends MysqlDatos{
 			 * obtener el ultimo codigo secuencial unico para el nuevo insertado
 			 */
 			case 6:
-				$sql = "SELECT (`Ses_Cod` + 1) AS 'Ses_Cod' FROM `auditoria`.`sesion` WHERE `Usu_Cod` = '$Par_Sql[0]' ORDER BY `Ses_Cod` DESC LIMIT 0,1";
+				$sql = "SELECT COALESCE(MAX(`Ses_Cod`), 0) + 1 AS 'Ses_Cod' FROM `auditoria`.`sesion` WHERE `Usu_Cod` = '$Par_Sql[0]'";
 				return $sql;
 			break;
 					

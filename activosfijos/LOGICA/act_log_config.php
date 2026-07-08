@@ -27,14 +27,14 @@ class Class_Log_Datos_Config extends MysqlDatos{
      * de Insert, Update, Delete
      * @var string
      */
-    var $sentencias = '';
+    public $sentencias = '';
 
     /**
      * guarda los codigos de autoincrementos en los insert
      * concatenados con *
      * @var string
      */
-    var $codigos = '';
+    public $codigos = '';
 
     /**
     * Realiza una consulta en la base de datos -  STARDARD
@@ -44,7 +44,7 @@ class Class_Log_Datos_Config extends MysqlDatos{
     * @param Class_Log_Conexion_Rhu $obBD para realizar la conexcion correspondiente
     * @return result si existen datos de retorno
     */
-    function consultasobBD($sen_sql,$param, $obBD)
+    function consultasobBD($sen_sql,$param, $obBD = null)
     {
         $Par_Sql= $this->parametros($param);
         return $this->consulta(sentencias_config($sen_sql,$Par_Sql), $obBD->conexion);
@@ -58,7 +58,7 @@ class Class_Log_Datos_Config extends MysqlDatos{
     * @param Class_Log_Conexion_Rhu $obBD para realizar la conexcion correspondiente
     * @return result si existen datos de retorno
     */
-    function operacionobBD($sen_sql,$param, $obBD)
+    function operacionobBD($sen_sql,$param, $obBD = null)
     {
         $Par_Sql= $this->parametros($param);
         $Query = sentencias_config($sen_sql,$Par_Sql);//mismo que el archivo sql
@@ -75,7 +75,7 @@ class Class_Log_Datos_Config extends MysqlDatos{
      * @param Class_Log_Conexion_Rhu $obBD para realizar la conexcion correspondiente
      * @return array $row fila de datos
      */
-    function getRowConsulta($sen_sql,$param,$obBD)
+    function getRowConsulta($sen_sql,$param,$obBD = null)
     {
         $result = $this->consultasobBD($sen_sql,$param,$obBD);
 
@@ -94,7 +94,7 @@ class Class_Log_Datos_Config extends MysqlDatos{
      * @param Class_Log_Datos_Cli $obDT para la abtraccion de los datos
      * @return array $array arreglo de datos asociados
      */ 
-    function getArrayConsulta($sen_sql,$param,$obBD)
+    function getArrayConsulta($sen_sql,$param,$obBD = null)
     {
         $result = $this->consultasobBD($sen_sql,$param,$obBD);
 

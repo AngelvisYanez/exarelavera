@@ -36,7 +36,7 @@ $pdf->SetFont('Arial','',9);
 $pdf->Text(148,18,$datoXml->infoTributaria[0]->ruc);
 
 $pdf->SetFont('Arial','B',12);
-$pdf->Text(128,25,utf8_decode("GUIA  DE  REMISIÓN"));
+$pdf->Text(128,25,mb_convert_encoding("GUIA  DE  REMISIÓN", 'ISO-8859-1', 'UTF-8'));
 
 $pdf->SetFont('Arial','B',9);
 $pdf->Text(128,31,"No:");
@@ -46,12 +46,12 @@ $pdf->Text(148,31,$datoXml->infoTributaria[0]->estab."-".$datoXml->infoTributari
 
 $pdf->SetTextColor(0,0,0);
 $pdf->SetFont('Arial','B',9);
-$pdf->Text(128,37,utf8_decode("NÚMERO DE AUTORIZACIÓN:"));
+$pdf->Text(128,37,mb_convert_encoding("NÚMERO DE AUTORIZACIÓN:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',9);
 $pdf->Text(128,44,$sri->numeroAutorizacion);
 
 $pdf->SetFont('Arial','B',9);
-$pdf->Text(128,51,utf8_decode("FECHA Y HORA DE AUTORIZACIÓN:"));
+$pdf->Text(128,51,mb_convert_encoding("FECHA Y HORA DE AUTORIZACIÓN:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',9);
 $pdf->Text(128,58,$sri->fechaAutorizacion);
 
@@ -60,17 +60,17 @@ $pdf->Text(128,65,"AMBIENTE:");
 $pdf->SetFont('Arial','',9);
 if($datoXml->infoTributaria[0]->ambiente==1)
 {$ProDet='PRUEBAS';}else{$ProDet='PRODUCCIÓN';}
-$pdf->Text(148,65,utf8_decode($ProDet));
+$pdf->Text(148,65,mb_convert_encoding($ProDet, 'ISO-8859-1', 'UTF-8'));
 
 $pdf->SetFont('Arial','B',9);
-$pdf->Text(128,72,utf8_decode("EMISIÓN:"));
+$pdf->Text(128,72,mb_convert_encoding("EMISIÓN:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',9);
 if($datoXml->infoTributaria[0]->tipoEmision==1)
 {$EmiDet='NORMAL';}else{$EmiDet='INDISPONIBILIDAD DEL SISTEMA';}
-$pdf->Text(148,72,utf8_decode($EmiDet));
+$pdf->Text(148,72,mb_convert_encoding($EmiDet, 'ISO-8859-1', 'UTF-8'));
 
 $pdf->SetFont('Arial','B',9);
-$pdf->Text(128,79,utf8_decode("CLAVE DE ACCESO:"));
+$pdf->Text(128,79,mb_convert_encoding("CLAVE DE ACCESO:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',9);
 
 /*RECTANGULO INFO EMPRESA*/
@@ -79,28 +79,28 @@ $pdf->SetFillColor(300);
 $pdf->RoundedRect(10, 60, 112, 36, 3.5, '');
 
 $pdf->SetFont('Arial','',12);
-$pdf->Text(13,67,utf8_decode($datoXml->infoTributaria[0]->razonSocial));
+$pdf->Text(13,67,mb_convert_encoding($datoXml->infoTributaria[0]->razonSocial, 'ISO-8859-1', 'UTF-8'));
 
 $pdf->SetFont('Arial','',9);
-$pdf->Text(13,72,utf8_decode($datoXml->infoTributaria[0]->nombreComercial));
+$pdf->Text(13,72,mb_convert_encoding($datoXml->infoTributaria[0]->nombreComercial, 'ISO-8859-1', 'UTF-8'));
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(13,78,utf8_decode("DIRECCIÓN:"));
+$pdf->Text(13,78,mb_convert_encoding("DIRECCIÓN:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
-$pdf->Text(38,78,utf8_decode($datoXml->infoTributaria[0]->dirMatriz));
+$pdf->Text(38,78,mb_convert_encoding($datoXml->infoTributaria[0]->dirMatriz, 'ISO-8859-1', 'UTF-8'));
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(13,83,utf8_decode("DIR. SUCURSAL:"));
+$pdf->Text(13,83,mb_convert_encoding("DIR. SUCURSAL:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
-$pdf->Text(38,83,utf8_decode(""));
+$pdf->Text(38,83,mb_convert_encoding("", 'ISO-8859-1', 'UTF-8'));
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(13,88,utf8_decode("CONTRIBUYENTE ESPECIAL Nro.:"));
+$pdf->Text(13,88,mb_convert_encoding("CONTRIBUYENTE ESPECIAL Nro.:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
 $pdf->Text(70,88,$datoXml->infoGuiaRemision[0]->contribuyenteEspecial);
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(13,93,utf8_decode("OBLIGADO A LLEVAR CONTABILIDAD:"));
+$pdf->Text(13,93,mb_convert_encoding("OBLIGADO A LLEVAR CONTABILIDAD:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
 $pdf->Text(70,93,$datoXml->infoGuiaRemision[0]->obligadoContabilidad);
 
@@ -110,32 +110,32 @@ $pdf->SetFillColor(300);
 $pdf->RoundedRect(10, 98, 194, 27, 0, '');
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(13,103,utf8_decode("IDENTIFICACIÓN (TRANSPORTÍSTA):"));
+$pdf->Text(13,103,mb_convert_encoding("IDENTIFICACIÓN (TRANSPORTÍSTA):", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
-$pdf->Text(75,103,utf8_decode($datoXml->infoGuiaRemision[0]->rucTransportista));
+$pdf->Text(75,103,mb_convert_encoding($datoXml->infoGuiaRemision[0]->rucTransportista, 'ISO-8859-1', 'UTF-8'));
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(13,108,utf8_decode("RAZÓN SOCIAL / NOMBRES Y APELLIDOS:"));
+$pdf->Text(13,108,mb_convert_encoding("RAZÓN SOCIAL / NOMBRES Y APELLIDOS:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
 $pdf->Text(75,108,$datoXml->infoGuiaRemision[0]->razonSocialTransportista);
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(13,113,utf8_decode("PLACA:"));
+$pdf->Text(13,113,mb_convert_encoding("PLACA:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
 $pdf->Text(75,113,$datoXml->infoGuiaRemision[0]->placa);
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(13,118,utf8_decode("PUNTO DE PARTIDA:"));
+$pdf->Text(13,118,mb_convert_encoding("PUNTO DE PARTIDA:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
 $pdf->Text(75,118,$datoXml->infoGuiaRemision[0]->dirPartida);
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(13,123,utf8_decode("FECHA SALIDA TRANSPORTE:"));
+$pdf->Text(13,123,mb_convert_encoding("FECHA SALIDA TRANSPORTE:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
 $pdf->Text(75,123,$datoXml->infoGuiaRemision[0]->fechaIniTransporte);
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(115,123,utf8_decode("FECHA LLEGADA TRANSPORTE:"));
+$pdf->Text(115,123,mb_convert_encoding("FECHA LLEGADA TRANSPORTE:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
 $pdf->Text(166,123,$datoXml->infoGuiaRemision[0]->fechaFinTransporte);
 
@@ -145,7 +145,7 @@ $pdf->SetFillColor(300);
 $pdf->RoundedRect(10, 127, 194, 50, 0, '');
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(13,132,utf8_decode("COMPROBANTE DE VENTA:"));
+$pdf->Text(13,132,mb_convert_encoding("COMPROBANTE DE VENTA:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
 if($datoXml->destinatarios[0]->destinatario[0]->numDocSustento!='')
 {
@@ -154,47 +154,47 @@ if($datoXml->destinatarios[0]->destinatario[0]->numDocSustento!='')
 $pdf->Text(75,132,$TipDoc.$datoXml->destinatarios[0]->destinatario[0]->numDocSustento);
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(132,132,utf8_decode("FECHA DE EMISIÓN:"));
+$pdf->Text(132,132,mb_convert_encoding("FECHA DE EMISIÓN:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
 $pdf->Text(166,132,$datoXml->destinatarios[0]->destinatario[0]->fechaEmisionDocSustento);
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(13,137,utf8_decode("NÚMERO DE AUTORIZACIÓN:"));
+$pdf->Text(13,137,mb_convert_encoding("NÚMERO DE AUTORIZACIÓN:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
 $pdf->Text(75,137,$datoXml->destinatarios[0]->destinatario[0]->numAutDocSustento); 
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(13,145,utf8_decode("MOTIVO DE TRASLADO:"));
+$pdf->Text(13,145,mb_convert_encoding("MOTIVO DE TRASLADO:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
 $pdf->Text(75,145,strtoupper($datoXml->destinatarios[0]->destinatario[0]->motivoTraslado));
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(13,150,utf8_decode("DESTINO (PUNTO DE LLEGADA):"));
+$pdf->Text(13,150,mb_convert_encoding("DESTINO (PUNTO DE LLEGADA):", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
 $pdf->Text(75,150,strtoupper($datoXml->destinatarios[0]->destinatario[0]->dirDestinatario));
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(13,155,utf8_decode("IDENTIFICACIÓN (DESTINATARIO):"));
+$pdf->Text(13,155,mb_convert_encoding("IDENTIFICACIÓN (DESTINATARIO):", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
 $pdf->Text(75,155,strtoupper($datoXml->destinatarios[0]->destinatario[0]->identificacionDestinatario));
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(13,160,utf8_decode("RAZÓN SOCIAL / NOMBRES Y APELLIDOS:"));
+$pdf->Text(13,160,mb_convert_encoding("RAZÓN SOCIAL / NOMBRES Y APELLIDOS:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
 $pdf->Text(75,160,strtoupper($datoXml->destinatarios[0]->destinatario[0]->razonSocialDestinatario));
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(13,165,utf8_decode("DOCUMENTO ADUANERO:"));
+$pdf->Text(13,165,mb_convert_encoding("DOCUMENTO ADUANERO:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
 $pdf->Text(75,165,strtoupper($datoXml->destinatarios[0]->destinatario[0]->docAduaneroUnico));
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(13,170,utf8_decode("CÓDIGO ESTABLECIMIENTO DESTINO:"));
+$pdf->Text(13,170,mb_convert_encoding("CÓDIGO ESTABLECIMIENTO DESTINO:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
 $pdf->Text(75,170,strtoupper($datoXml->destinatarios[0]->destinatario[0]->codEstabDestino));
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(13,175,utf8_decode("RUTA:"));
+$pdf->Text(13,175,mb_convert_encoding("RUTA:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
 $pdf->Text(75,175,strtoupper($datoXml->destinatarios[0]->destinatario[0]->ruta));
 
@@ -208,9 +208,9 @@ $pdf->AliasNbPages();
 $pdf->SetY(179);
 //Cabecera    	
 $pdf->SetFont('Arial','B',8);
-$pdf->Cell(30,7,utf8_decode('CÓDIGO PRINCIPAL'),1,0,'C');
+$pdf->Cell(30,7,mb_convert_encoding('CÓDIGO PRINCIPAL', 'ISO-8859-1', 'UTF-8'),1,0,'C');
 $pdf->Cell(28,7,'CANTIDAD',1,0,'C');
-$pdf->Cell(136,7,utf8_decode('DESCRIPCIÓN'),1,0,'C');
+$pdf->Cell(136,7,mb_convert_encoding('DESCRIPCIÓN', 'ISO-8859-1', 'UTF-8'),1,0,'C');
 $pdf->Ln();
 $pdf->SetFont('Arial','',8);
 
@@ -227,7 +227,7 @@ for($x=0;$x<=$totDet-1;$x++)
 
 $pdf->Ln();	
 $pdf->SetFont('Arial','I',8);
-$pdf->Text(100,290,utf8_decode('Página ').$pdf->PageNo().' de {nb}',0,0,'C');
+$pdf->Text(100,290,mb_convert_encoding('Página ', 'ISO-8859-1', 'UTF-8').$pdf->PageNo().' de {nb}',0,0,'C');
 
 //$pdf->TablaBasica($datos_xml);
 

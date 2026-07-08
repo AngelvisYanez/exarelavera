@@ -1,4 +1,4 @@
-<?	  
+<?php	  
 /**
 * Descripci�n: Registro de Ajustes
 * Fecha de actualizaci�n:	02-06-11
@@ -236,7 +236,7 @@ if (isset($hdd_save) && !isset($hdd_volver))
 		exit();
 	}
 	?>    
-    <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1"> 	
+    <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1"> 	
 	<?php require_once("../../componentes/FRONT/com_con_persona.php"); ?>
     </form>
 <?Php  
@@ -257,15 +257,15 @@ if(isset($txt_busqueda))
 		  </tr>
          </thead>
          <tbody> 
-		  <?  
+		  <?php  
 		  if(count($rs_buspro)!=0)
 		  {
 		  	foreach($rs_buspro as $row_rs_buspro){  ?>
-		  <form name='frm_personal' method='post' action="<? echo $_SERVER['PHP_SELF']; ?>">
+		  <form name='frm_personal' method='post' action="<?php echo $_SERVER['PHP_SELF']; ?>">
 		  <tr>
-			<td height="73%" align="center"><? echo $row_rs_buspro['Prv_Cod']; ?></td>
-			<td align="center"><? echo $row_rs_buspro['Prs_Ced']; ?></td>
-			<td align="left">&nbsp;<? echo marcar_cadena($txt_busqueda,$row_rs_buspro['Prs_Ape'].' '.$row_rs_buspro['Prs_Nom'],'#FFFF00', 1) ?></td>
+			<td height="73%" align="center"><?php echo $row_rs_buspro['Prv_Cod']; ?></td>
+			<td align="center"><?php echo $row_rs_buspro['Prs_Ced']; ?></td>
+			<td align="left">&nbsp;<?php echo marcar_cadena($txt_busqueda,$row_rs_buspro['Prs_Ape'].' '.$row_rs_buspro['Prs_Nom'],'#FFFF00', 1) ?></td>
 			<td width="4%" align="center">
 		
 			<input type="hidden" name="codigo" id="codigo" value="<?Php echo $row_rs_buspro['Per_Cod'];?>">
@@ -287,12 +287,12 @@ if(isset($txt_busqueda))
                 <td>&nbsp;</td>
                 <td>&nbsp;</td>
               </tr>
-     	  <? }?>
+     	  <?php }?>
           </tbody>
 	  </table>
-	  <? echo barra_estado(count($rs_buspro));?>
+	  <?php echo barra_estado(count($rs_buspro));?>
 	</FIELDSET>  
-<? 
+<?php 
 } //Fin del if(isset($txt_busqueda))
 
 if (isset($codigo) && !isset($hdd_volver))
@@ -312,14 +312,14 @@ if (isset($codigo) && !isset($hdd_volver))
 <table width="100%" border="0" cellpadding="0" cellspacing="0">
 <tr>
     <td width="12%" class="Etiqueta1">C&eacute;dula/R.U.C.:</td>
-	<td width="88%" class="LetraNegra">&nbsp;<? echo $row_rs_personal['Prs_Ced']?>
+	<td width="88%" class="LetraNegra">&nbsp;<?php echo $row_rs_personal['Prs_Ced']?>
 	  <input name="Rec_Cod" id="Rec_Cod" type="hidden" value="<?Php echo $Rec_Cod;?>">
       <input type="hidden" id="Vnd_Cod" name="Vnd_Cod" value="<?Php echo $rs_vendedor['Vnd_Cod']; ?>" />
       </td>
 	</tr>
 	<tr>	
 	<td width="12%" class="Etiqueta1">Nombre:</td>
-	<td class="LetraNegra">&nbsp;<? echo $row_rs_personal['Prs_Ape'].' '.$row_rs_personal['Prs_Nom']; ?></td>
+	<td class="LetraNegra">&nbsp;<?php echo $row_rs_personal['Prs_Ape'].' '.$row_rs_personal['Prs_Nom']; ?></td>
 	</tr>	
 </table>
 </FIELDSET>
@@ -451,7 +451,7 @@ if (isset($codigo) && !isset($hdd_volver))
 		</td>
 	  </tr>
 	</table>
-<? } 
+<?php } 
 ?>
 </div>
 <!-- Librerias para el tratamiento de la interfaz - cajas de texto -->

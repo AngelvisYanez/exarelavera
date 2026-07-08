@@ -145,8 +145,8 @@ if (isset($bt_save)) {
 	$xml_identifica = "<" . $identificacion[4] . ">R</" . $identificacion[4] . ">" .
 		"<" . $identificacion[0] . ">" . $row_rs_identifica['Emp_Ruc'] . "</" . $identificacion[0] . ">" .
 		"<" . $identificacion[1] . ">" . strtoupper($row_rs_identifica['Emp_Nom']) . "</" . $identificacion[1] . ">" .
-		"<" . $identificacion[2] . ">" . utf8_encode($anio) . "</" . $identificacion[2] . ">" .
-		"<" . $identificacion[3] . ">" . utf8_encode($mes) . "</" . $identificacion[3] . ">";
+		"<" . $identificacion[2] . ">" . mb_convert_encoding($anio, 'UTF-8', 'ISO-8859-1') . "</" . $identificacion[2] . ">" .
+		"<" . $identificacion[3] . ">" . mb_convert_encoding($mes, 'UTF-8', 'ISO-8859-1') . "</" . $identificacion[3] . ">";
 
 	if ($chk_fechas) {
 		$xml_identifica .= "<regimenMicroempresa>SI</regimenMicroempresa>";
@@ -1214,12 +1214,12 @@ if (isset($bt_save)) {
 								<tr>
 									<td width="13%" class="Etiqueta1"><span class="Asterisco">* </span>A&ntilde;o:&nbsp; </td>
 									<td width="87%">
-										<? $rs_periodo = $obBD_con1->getArrayConsulta(860, $Ses_Emp_Cod, $obBD_conexion); ?>
+										<?php $rs_periodo = $obBD_con1->getArrayConsulta(860, $Ses_Emp_Cod, $obBD_conexion); ?>
 										<select name="anio" id="anio">
-											<? foreach ($rs_periodo as $dato) { ?>
-												<option <? if (isset($anio) || $dato['Pec_Fei'] == date("Y")) {
+											<?php foreach ($rs_periodo as $dato) { ?>
+												<option <?php if (isset($anio) || $dato['Pec_Fei'] == date("Y")) {
 															echo "selected";
-														} ?> value="<?Php echo $dato['Pec_Fei']; ?>"><?Php echo $dato['Pec_Fei']; ?></option> <? } ?>
+														} ?> value="<?Php echo $dato['Pec_Fei']; ?>"><?Php echo $dato['Pec_Fei']; ?></option> <?php } ?>
 										</select>
 									</td>
 								</tr>
@@ -1227,40 +1227,40 @@ if (isset($bt_save)) {
 									<td class="Etiqueta1"><span class="Asterisco">* </span>Mes:&nbsp;</td>
 									<td>
 										<select name="mes" id="mes">
-											<option <? if (isset($mes) && $mes == "01") {
+											<option <?php if (isset($mes) && $mes == "01") {
 														echo "selected";
 													} ?> value="01">Enero</option>
-											<option <? if (isset($mes) && $mes == "02") {
+											<option <?php if (isset($mes) && $mes == "02") {
 														echo "selected";
 													} ?> value="02">Febrero</option>
-											<option <? if (isset($mes) && $mes == "03") {
+											<option <?php if (isset($mes) && $mes == "03") {
 														echo "selected";
 													} ?> value="03">Marzo</option>
-											<option <? if (isset($mes) && $mes == "04") {
+											<option <?php if (isset($mes) && $mes == "04") {
 														echo "selected";
 													} ?> value="04">Abril</option>
-											<option <? if (isset($mes) && $mes == "05") {
+											<option <?php if (isset($mes) && $mes == "05") {
 														echo "selected";
 													} ?> value="05">Mayo</option>
-											<option <? if (isset($mes) && $mes == "06") {
+											<option <?php if (isset($mes) && $mes == "06") {
 														echo "selected";
 													} ?> value="06">Junio</option>
-											<option <? if (isset($mes) && $mes == "07") {
+											<option <?php if (isset($mes) && $mes == "07") {
 														echo "selected";
 													} ?> value="07">Julio</option>
-											<option <? if (isset($mes) && $mes == "08") {
+											<option <?php if (isset($mes) && $mes == "08") {
 														echo "selected";
 													} ?> value="08">Agosto</option>
-											<option <? if (isset($mes) && $mes == "09") {
+											<option <?php if (isset($mes) && $mes == "09") {
 														echo "selected";
 													} ?> value="09">Septiembre</option>
-											<option <? if (isset($mes) && $mes == "10") {
+											<option <?php if (isset($mes) && $mes == "10") {
 														echo "selected";
 													} ?> value="10">Octubre</option>
-											<option <? if (isset($mes) && $mes == "11") {
+											<option <?php if (isset($mes) && $mes == "11") {
 														echo "selected";
 													} ?> value="11">Noviembre</option>
-											<option <? if (isset($mes) && $mes == "12") {
+											<option <?php if (isset($mes) && $mes == "12") {
 														echo "selected";
 													} ?> value="12">Diciembre</option>
 										</select>
@@ -1325,7 +1325,7 @@ if (isset($bt_save)) {
 										<td>
 											<?php
 											$buffer = '<?xml version="1.0" encoding="UTF-8"?><!--Archivo XML generado por Exa (http://www.exa.ofsercont.com)--><iva>';
-											$buffer = utf8_encode($buffer . $xml_identifica . $xml_compras . $xml_ventas . $xml_ventasEst . $xmlExportacion . $xml_anulados . '</iva>');
+											$buffer = mb_convert_encoding($buffer . $xml_identifica . $xml_compras . $xml_ventas . $xml_ventasEst . $xmlExportacion . $xml_anulados . '</iva>', 'UTF-8', 'ISO-8859-1');
 
 											$archivo = "SRI/" . $Ses_Emp_Cod . "/ATS" . $mes . $anio . ".xml";
 											if (file_exists($archivo))

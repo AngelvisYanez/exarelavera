@@ -1,4 +1,4 @@
-<?
+<?php
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/tes_log_anexo.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');	
@@ -131,7 +131,7 @@ if(isset($uploadXML)){
 </tr>
 <tr>
  <td align="left" valign="top" height="400">
-    <form method="post" name="form3" id="form3" enctype="multipart/form-data" action="<? echo $_SERVER['PHP_SELF'];?> ">
+    <form method="post" name="form3" id="form3" enctype="multipart/form-data" action="<?php echo $_SERVER['PHP_SELF'];?> ">
     <FIELDSET>
     <LEGEND>
     <label class="Titulos2">Selecci&oacute;n del Xml</label>

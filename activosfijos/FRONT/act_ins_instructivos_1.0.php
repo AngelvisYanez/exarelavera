@@ -67,9 +67,9 @@ if (isset($codigo))
 		 	$i++;
 	  ?>
 	  	    <tr >
-	  	      <td align="center"><font color="<? echo $rojo;?>"><?php echo $i; ?></font></td>
+	  	      <td align="center"><font color="<?php echo $rojo;?>"><?php echo $i; ?></font></td>
 	  	      <td><?Php echo $row['Fil_Des'] ?></td>
-	  	      <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "frml" id="form3">
+	  	      <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "frml" id="form3">
 	  	        <td align="center" width="4%"><button type="image" name="imageField" class='btn btn-info btn-mini' width="22" height="22" title="Seleccionar"> <i class='icon-search icon-white'></i> </button>
 	  	          <input type="hidden" name="codigo" id="codigo" value="<?Php echo $row['Fil_Ide']; ?>"/></td>
   	          </form>

@@ -61,22 +61,22 @@ body {
       <td width="90" valign="top">          
       <td width="800" height="101" valign="bottom"><table width="800" height="81" border="0" align="left" cellpadding="0" cellspacing="0">
         <tr>
-          <td colspan="3" class="Texto_Reporte1"><? echo $row_prin_renta['Prs_Ape'].' '.$row_prin_renta['Prs_Nom']; ?></td>
+          <td colspan="3" class="Texto_Reporte1"><?php echo $row_prin_renta['Prs_Ape'].' '.$row_prin_renta['Prs_Nom']; ?></td>
           <td>&nbsp;</td>
         </tr>
         <tr>
-          <td colspan="3" class="Texto_Reporte1"><? echo $row_prin_renta['Prs_Ced']; ?></td>
+          <td colspan="3" class="Texto_Reporte1"><?php echo $row_prin_renta['Prs_Ced']; ?></td>
           <td>&nbsp;</td>
         </tr>
         <tr >
-          <td colspan="3" class="Texto_Reporte1"><? echo $row_prin_renta['Prs_Dir']; ?></td>
+          <td colspan="3" class="Texto_Reporte1"><?php echo $row_prin_renta['Prs_Dir']; ?></td>
           <td class="Texto_Reporte1" align="center">&nbsp;&nbsp;&nbsp;
             <?Php $Fec_Emi=explode('-',$row_prin_renta['Ret_Fec']); ?>
-          <? echo $Fec_Emi[2].'&nbsp;&nbsp;&nbsp;&nbsp;'.$Fec_Emi[1].'&nbsp;&nbsp;&nbsp;&nbsp;'.$Fec_Emi[0]; ?></td>
+          <?php echo $Fec_Emi[2].'&nbsp;&nbsp;&nbsp;&nbsp;'.$Fec_Emi[1].'&nbsp;&nbsp;&nbsp;&nbsp;'.$Fec_Emi[0]; ?></td>
         </tr>
         <tr>
-          <td width="295" align="rigth" class="Texto_Reporte1" ><? echo $row_prin_renta['Tic_Des']; ?></td>
-          <td width="168" align="rigth" class="Texto_Reporte1" ><? 
+          <td width="295" align="rigth" class="Texto_Reporte1" ><?php echo $row_prin_renta['Tic_Des']; ?></td>
+          <td width="168" align="rigth" class="Texto_Reporte1" ><?php 
 		if ($row_rs_renta['Aut_Cod'] != "") 
 		{ 
 			echo "001-001-000".$row_prin_renta['Cop_Num']; 
@@ -86,7 +86,7 @@ body {
 			echo $row_prin_renta['Cop_Num'];
 		}?></td>
           <td width="134" align="rigth" class="Texto_Reporte1" >&nbsp;</td>
-          <td width="203" align="rigth" class="Texto_Reporte1" ><? echo $row_prin_renta['Cop_Fec']; ?></td>
+          <td width="203" align="rigth" class="Texto_Reporte1" ><?php echo $row_prin_renta['Cop_Fec']; ?></td>
         </tr>
       </table>            
   <tr valign="top">

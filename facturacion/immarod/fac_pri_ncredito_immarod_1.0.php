@@ -79,13 +79,13 @@ if (isset($Vet_Cod))
                       </tr>
                       <tr>
                         <td align="left" class="LetraPlan">FECHA:</td>
-                        <td width="46%" align="left" class="LetraPlan"><? echo $dia."/".$mes."/".$anio;?></td>
+                        <td width="46%" align="left" class="LetraPlan"><?php echo $dia."/".$mes."/".$anio;?></td>
                         <td width="10%" align="left" valign="bottom" class="LetraPlan">CIUDAD:</td>
                         <td width="32%" align="left" valign="bottom" class="LetraPlan"><?Php echo $row_institucion['Ciu_Des']; ?></td>
                       </tr>
                       <tr>
                         <td width="12%" align="left">CLIENTE:</td>
-                        <td colspan="3"><? if ($row_rs_representante['Cli_Fac'] != "")
+                        <td colspan="3"><?php if ($row_rs_representante['Cli_Fac'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Fac'];  
 			}
@@ -94,7 +94,7 @@ if (isset($Vet_Cod))
                         </tr>
                       <tr>
                         <td align="left">RUC:</td>
-                        <td ><? if ($row_rs_representante['Cli_Fac'] != "")
+                        <td ><?php if ($row_rs_representante['Cli_Fac'] != "")
 						{ 
 							echo $row_rs_representante['Cli_Ruf']; 
 						}
@@ -111,7 +111,7 @@ if (isset($Vet_Cod))
                       </tr>
                       <tr>
                         <td align="left">DIRECCI&Oacute;N:</td>
-                        <td colspan="3"><? if ($row_rs_representante['Cli_Dir'] != "")
+                        <td colspan="3"><?php if ($row_rs_representante['Cli_Dir'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Dir']; 
 			}
@@ -124,11 +124,11 @@ if (isset($Vet_Cod))
                         <td colspan="4" align="left"><table width="100%" border="0" cellpadding="0" cellspacing="0" class="Letra_punto_venta_2">
                           <tr>
                             <td width="33%" height="26">COMPROBANTE QUE MODIFICA:</td>
-                            <td width="22%">&nbsp;<? echo $row_rs_cliente['Vet_Nns']; ?></td>
+                            <td width="22%">&nbsp;<?php echo $row_rs_cliente['Vet_Nns']; ?></td>
                             <td width="8%">FECHA:</td>
-                            <td width="14%"><?  echo date("d/m/Y", strtotime($row_rs_cliente['Vet_Fdm']));?></td>
+                            <td width="14%"><?php  echo date("d/m/Y", strtotime($row_rs_cliente['Vet_Fdm']));?></td>
                             <td width="8%">TIPO:</td>
-                            <td width="15%">&nbsp;<?  if($row_rs_cliente['Vet_Ntd']=='1' || $row_rs_cliente['Vet_Ntd']=='01'){echo "FACTURA";} ?></td>
+                            <td width="15%">&nbsp;<?php  if($row_rs_cliente['Vet_Ntd']=='1' || $row_rs_cliente['Vet_Ntd']=='01'){echo "FACTURA";} ?></td>
                           </tr>
                         </table></td>
                         </tr>
@@ -165,7 +165,7 @@ if (isset($Vet_Cod))
                 <tr>
                   <td colspan="4" align="left"><hr size=1></td>
                 </tr>
-                <? do{?>
+                <?php do{?>
                 <tr class="Letra_punto_venta_2">
                   <td width="14%" align="left"><?Php echo $row_rs_cliente['Vet_Can']?></td>
                   <td><?Php echo $row_rs_cliente['Ite_Lar'].' '.$row_rs_cliente['Pro_Obs']?></td>

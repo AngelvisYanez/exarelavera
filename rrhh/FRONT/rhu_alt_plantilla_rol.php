@@ -866,7 +866,7 @@ if(isset($savePlantilla)){
         // Cargar bases de datos disponibles (solo exa y servicios)
         $.getDataJson('', {loadBasesDatos: true}, function(response){
             if(response.success && response.bases){
-                var $select = $('#selBaseDatos');
+                public $select = $('#selBaseDatos');
                 $select.empty().append('<option value="">Seleccione una base de datos...</option>');
                 $.each(response.bases, function(i, base){
                     $select.append('<option value="' + base.Dat_Dis + '">' + base.Emp_Nom + '</option>');
@@ -938,7 +938,7 @@ if(isset($savePlantilla)){
             $('#selPlantillaBase').prop('disabled', true);
             $.getDataJson('', {loadPlantillasByDB: true, Dat_Dis: Dat_Dis}, function(response){
                 if(response.success && response.plantillas){
-                    var $select = $('#selPlantillaBase');
+                    public $select = $('#selPlantillaBase');
                     $select.empty().append('<option value="">Seleccione una plantilla para cargar como base...</option>');
                     $.each(response.plantillas, function(i, plantilla){
                         var empresa_nombre = plantilla.Emp_Nom || 'Empresa ' + plantilla.Emp_Cod;

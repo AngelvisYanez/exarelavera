@@ -213,7 +213,7 @@ if (isset($For_Cod))
 				<td align="center"><?Php echo $row_rs_tipo_pagos['Pag_Cod']; ?></td>
 				<td><?Php echo $row_rs_tipo_pagos['Pag_Des']; ?></td>
 				<td align="center">
-                <button type="button" class="btn btn-success btn-mini" title="Elegir" onclick="nueva_fila_cheque_com('Tbl_Cheques', <? echo $ban_cod; ?>,<? echo $ban_des; ?>, '<?Php echo $Hdd_Fecha; ?>', '<?Php echo $Hdd_Valor; ?>'); cal_total_cheques(5, 'nfilas_ch', 'datos_ch')">
+                <button type="button" class="btn btn-success btn-mini" title="Elegir" onclick="nueva_fila_cheque_com('Tbl_Cheques', <?php echo $ban_cod; ?>,<?php echo $ban_des; ?>, '<?Php echo $Hdd_Fecha; ?>', '<?Php echo $Hdd_Valor; ?>'); cal_total_cheques(5, 'nfilas_ch', 'datos_ch')">
 	        	<i class=" icon-arrow-right icon-white"></i>
     		    </button>
 				</td>
@@ -304,7 +304,7 @@ if (isset($For_Cod))
 				<input name="name_cheque[<?php echo $i; ?>]" id="name_cheque[<?php echo $i; ?>]" type="hidden" value="" />
 				</td>
                 <td align="center"><img src="../../mascaras/model1/imagenes/ok-s.gif" width="16" height="16" title="Agregar cuenta" style="	
-					cursor:pointer" onclick="if (existe_cheque('nfilas_ch', 'datos_ch', 3, <? echo $ban_cod; ?>)== true){ nueva_fila_cheque_com('Tbl_Cheques', <? echo $ban_cod; ?>,<? echo $ban_des; ?>, '<?Php echo $Hdd_Fecha; ?>', '<?Php echo "sal_anticipos[".$i."]"; ?>'); cal_total_cheques(5, 'nfilas_ch', 'datos_ch'); validar_anticipos_cruce(<?php echo $i; ?>); }" /></td>
+					cursor:pointer" onclick="if (existe_cheque('nfilas_ch', 'datos_ch', 3, <?php echo $ban_cod; ?>)== true){ nueva_fila_cheque_com('Tbl_Cheques', <?php echo $ban_cod; ?>,<?php echo $ban_des; ?>, '<?Php echo $Hdd_Fecha; ?>', '<?Php echo "sal_anticipos[".$i."]"; ?>'); cal_total_cheques(5, 'nfilas_ch', 'datos_ch'); validar_anticipos_cruce(<?php echo $i; ?>); }" /></td>
               </tr>
 			  <?Php
 			  	}//Fin del if ($saldo >0)

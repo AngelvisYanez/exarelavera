@@ -45,20 +45,20 @@ $row_institucion = $obBD_con1->getRowConsulta(126, $Ses_Suc_Cod, $obBD_conexion)
 </style>
 </head>
 <body>
-    <span style="top:60px;left:30px;" class="flota"><? if($row_pri_cheque['Che_Ben']==''){echo $row_pri_cheque['Prs_Ape'].' '.$row_pri_cheque['Prs_Nom'];}else{echo $row_pri_cheque['Che_Ben'];} ?></span>
-    <span style="top:60px;left:380px;" class="flota"><b><? echo number_format($row_pri_cheque['Che_Val'],2); ?></b></span>
-    <span style="top:81px;left:30px;" class="flota"><? echo '<span style="letter-spacing:0.1em">'.num2letras($row_pri_cheque['Che_Val']).'</span>';?>xxxxxxxxxxxx</span>
+    <span style="top:60px;left:30px;" class="flota"><?php if($row_pri_cheque['Che_Ben']==''){echo $row_pri_cheque['Prs_Ape'].' '.$row_pri_cheque['Prs_Nom'];}else{echo $row_pri_cheque['Che_Ben'];} ?></span>
+    <span style="top:60px;left:380px;" class="flota"><b><?php echo number_format($row_pri_cheque['Che_Val'],2); ?></b></span>
+    <span style="top:81px;left:30px;" class="flota"><?php echo '<span style="letter-spacing:0.1em">'.num2letras($row_pri_cheque['Che_Val']).'</span>';?>xxxxxxxxxxxx</span>
     <span style="top:127px;left:10px;" class="flota"><?Php echo $row_institucion['Ciu_Des']?>, &nbsp;<?Php list($ann, $mes, $dia) = preg_split('![/.-]!', $fecha); echo $ann.'/'.$mes.'/'.$dia;?></span>
     <!--<table width="608" border="0" class="TablaRepCompr_b" style="">
       <tr>
 		<td width="18" valign="top" class="Texto_Reporte">&nbsp;</td>		
-		<td width="369" class="Texto_Reporte"><? echo $row_pri_cheque['Prs_Ape'].' '.$row_pri_cheque['Prs_Nom']; ?></td>
-        <td width="207" class="Texto_Reporte" style="font-size:14px;"><b><? echo number_format($row_pri_cheque['Che_Val'],2); ?></b></td>
+		<td width="369" class="Texto_Reporte"><?php echo $row_pri_cheque['Prs_Ape'].' '.$row_pri_cheque['Prs_Nom']; ?></td>
+        <td width="207" class="Texto_Reporte" style="font-size:14px;"><b><?php echo number_format($row_pri_cheque['Che_Val'],2); ?></b></td>
       </tr>
       <tr align="center">
         <td height="43"></td>
         <td height="45" colspan="2" align="left" valign="top"><span class="Texto_Reporte">
-       <? $v_absoluto=explode(".",$row_pri_cheque['Che_Val']);
+       <?php $v_absoluto=explode(".",$row_pri_cheque['Che_Val']);
 			echo strtoupper(num2letras($row_pri_cheque['Che_Val']));
 			//$row_pri_cheque['Che_Val'];
 			?></span></td>

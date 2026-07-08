@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?
+<?php
 /**
 * @abstract Permite la anulación individual de los comprobantes 
 * @author Lewis Chimarro
@@ -189,7 +189,7 @@ exit();
 if (!isset($hdd_save) && !isset($txt_busqueda))
 {
 ?>
-<form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1">
+<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1">
 <FIELDSET>
 	<LEGEND>
 		<label class="Titulos2">Selección Periodo Contable</label>
@@ -258,10 +258,10 @@ if (($op==1 || $op==2 || $op==3))
 		case 3:	$etiqueta="Buscar Comprobante de ".$array_asien[2]." por: "; 
 		break; 
 		} ?>
-<form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1">
+<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1">
 	<FIELDSET>
 	<LEGEND>
-	<label class="Titulos2"><? echo $etiqueta; ?></label>
+	<label class="Titulos2"><?php echo $etiqueta; ?></label>
 	</LEGEND>
 	<table width="495" height="27" border="0" cellpadding="0" cellspacing="0">
       <tr>
@@ -290,7 +290,7 @@ if (($op==1 || $op==2 || $op==3))
 		<tr>
 		  <td width="110" height="28" class="BarraBusqueda"><div align="right">Busqueda:</div></td>
 		  <td width="481" class="BarraBusqueda"><input name="txt_busqueda" type="text" id="txt_busqueda" value="" size="50" maxlength="50" onKeyUp="parametro_injection(this)">
-			<input name="op" type="hidden" value="<? echo $op; ?>" >
+			<input name="op" type="hidden" value="<?php echo $op; ?>" >
 			<input name="Pec_Cod" id="Pec_Cod" type="hidden" value="<?Php  echo $Pec_Cod; ?>"> 
 			<input name="Pec_Fei" id="Pec_Fei" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fei']; ?>">
           	<input name="Pec_Fef" id="Pec_Fef" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fef']; ?>">					
@@ -304,7 +304,7 @@ if (($op==1 || $op==2 || $op==3))
 	  </table>
 	</FIELDSET>
 </form>   
-	<? 
+	<?php 
 	if(isset($txt_busqueda))
 	{ ?>	
 		<FIELDSET>
@@ -326,7 +326,7 @@ if (($op==1 || $op==2 || $op==3))
         </tr>
      </thead>
      <tbody>	    
-		<? 			
+		<?php 			
 	if (count($row_rs_cabcomp) > 0) 
 	{	  		
 		$i=0;
@@ -341,7 +341,7 @@ if (($op==1 || $op==2 || $op==3))
 		?>
  	    <form name="form3" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
 		<tr>
-		  <td align="center"><font color="<?php echo $rojo; ?>"><? echo $row['Com_Cod']; ?></font></td>		  
+		  <td align="center"><font color="<?php echo $rojo; ?>"><?php echo $row['Com_Cod']; ?></font></td>		  
 		  <td align="center"><font color="<?php echo $rojo; ?>"><?Php 
 		  /* Control para mostrar si el comprobante es automatico o manual */		  
 		  if ($row['Com_Gen']=='A')
@@ -353,15 +353,15 @@ if (($op==1 || $op==2 || $op==3))
 		  		echo "Manual";
 		  }//Fin del else if ($row_det_rs_ccpp_p > 0)
 		  ?></font></td>
-		  <td align="center"><font color="<?php echo $rojo; ?>">&nbsp;<? 
+		  <td align="center"><font color="<?php echo $rojo; ?>">&nbsp;<?php 
   	  	list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 		  echo $mes.'-'.$row['Com_Num']; ?></font></td>
-		  <td><font color="<?php echo $rojo; ?>"><? echo $row['Prs_Ced']; ?>&nbsp;</font></td>
+		  <td><font color="<?php echo $rojo; ?>"><?php echo $row['Prs_Ced']; ?>&nbsp;</font></td>
 		  <td><font color="<?php echo $rojo; ?>">
 		    <?Php echo marcar_cadena($_POST['txt_busqueda'], $row['Prs_Ape']." ".$row['Prs_Nom'], '#FFFF00', 1); ?></font></td>
-		  <td align="center"><font color="<?php echo $rojo; ?>"><? echo $row['Com_Fec']; ?></font></td>			
-		  <td align="right"><font color="<?php echo $rojo; ?>">&nbsp;<? echo $row['Com_Val']; ?></font></td>
-		  <td align="center"><button type="button" class="btn btn-success btn-mini" title="Detalle del registro" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_info=1&com_codigo=<? echo $row['Com_Cod'];?>&Ses_Emp_Cod=<? echo $Ses_Emp_Cod;?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>
+		  <td align="center"><font color="<?php echo $rojo; ?>"><?php echo $row['Com_Fec']; ?></font></td>			
+		  <td align="right"><font color="<?php echo $rojo; ?>">&nbsp;<?php echo $row['Com_Val']; ?></font></td>
+		  <td align="center"><button type="button" class="btn btn-success btn-mini" title="Detalle del registro" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_info=1&com_codigo=<?php echo $row['Com_Cod'];?>&Ses_Emp_Cod=<?php echo $Ses_Emp_Cod;?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>
 		  <td align="center">
 		    <?Php
 		  if ($row['Com_Gen'] == 'M')
@@ -374,9 +374,9 @@ if (($op==1 || $op==2 || $op==3))
 		    <input name="Pec_Cod" id="Pec_Cod" type="hidden"  value="<?php echo $Pec_Cod; ?>">
 		    <input name="Pec_Fei" id="Pec_Fei" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fei']; ?>">
 		    <input name="Pec_Fef" id="Pec_Fef" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fef']; ?>">  	      	 
-		    <input name="volver_txt_busqueda" value="<? echo $txt_busqueda;?>" type="hidden">
-		    <input name="volver_op_opciones" value="<? echo $op_opciones;?>" type="hidden">
-		    <input name="volver_cmb_mes" value="<? echo $cmb_mes;?>" type="hidden">	
+		    <input name="volver_txt_busqueda" value="<?php echo $txt_busqueda;?>" type="hidden">
+		    <input name="volver_op_opciones" value="<?php echo $op_opciones;?>" type="hidden">
+		    <input name="volver_cmb_mes" value="<?php echo $cmb_mes;?>" type="hidden">	
 		    <input name="hdd_save" value="" type="hidden">        
 		    <button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="this.form.submit()">
 		      <i class="icon-arrow-right icon-white"></i>
@@ -397,7 +397,7 @@ if (($op==1 || $op==2 || $op==3))
 		    </td>
 		  </tr>
 		</form>
-        <?
+        <?php
 	  	} // Fin del foreach
   		}//Fin del //Fin del if ($total_rs_cabcomp > 0)
 		else
@@ -426,8 +426,8 @@ if (($op==1 || $op==2 || $op==3))
         }//Fin del if ($anulada > 0)
         ?>
         <br/>
-    	<? require_once('../../componentes/FRONT/com_con_leyenda.php');?>  
-		<?  
+    	<?php require_once('../../componentes/FRONT/com_con_leyenda.php');?>  
+		<?php  
 		/* 
 		* Control para ocultar el detalle de las filas 
 		*/
@@ -454,24 +454,24 @@ if (($op==1 || $op==2 || $op==3))
   <tr>
     <td class="Etiqueta1">No. Compr: </td>
     <td class="LetraNegra"><div id="div_codigo">&nbsp;
-      <? echo $row_rs_codcompr['Com_Num']; ?>
+      <?php echo $row_rs_codcompr['Com_Num']; ?>
     </div></td>
     <td class="Etiqueta1">Fecha:</td>
-    <td class="LetraNegra">&nbsp;<? echo $row_rs_codcompr['Com_Fec']; ?></td>
+    <td class="LetraNegra">&nbsp;<?php echo $row_rs_codcompr['Com_Fec']; ?></td>
   </tr>
   <tr>
     <td class="Etiqueta1">Proveedor/Cliente:</td>
-    <td class="LetraNegra">&nbsp;<? echo $row_rs_codcompr['Prs_Ape'].' '.$row_rs_codcompr['Prs_Nom']; ?></td>
+    <td class="LetraNegra">&nbsp;<?php echo $row_rs_codcompr['Prs_Ape'].' '.$row_rs_codcompr['Prs_Nom']; ?></td>
     <td class="Etiqueta1">Valor:</td>
-    <td class="LetraNegra">&nbsp;<? echo $row_rs_codcompr['Com_Val']; ?></td>
+    <td class="LetraNegra">&nbsp;<?php echo $row_rs_codcompr['Com_Val']; ?></td>
   </tr>
   <tr>
     <td class="Etiqueta1">Concepto:</td>
-    <td class="LetraNegra" colspan="3">&nbsp;<? echo $row_rs_codcompr['Com_Con']; ?></td>
+    <td class="LetraNegra" colspan="3">&nbsp;<?php echo $row_rs_codcompr['Com_Con']; ?></td>
   </tr>
   <tr>
     <td class="Etiqueta1">Observaci&oacute;n:</td>
-    <td class="LetraNegra" colspan="3" rowspan="2" valign="top">&nbsp;<? echo $row_rs_codcompr['Com_Obs']; ?></td>
+    <td class="LetraNegra" colspan="3" rowspan="2" valign="top">&nbsp;<?php echo $row_rs_codcompr['Com_Obs']; ?></td>
   </tr>
   <tr>
     <td>&nbsp;</td>
@@ -489,25 +489,25 @@ if (($op==1 || $op==2 || $op==3))
       </tr>
   </thead>
   <tbody id="c_contenido">
-    <? if (count($row_rs_cuentas) > 0)
+    <?php if (count($row_rs_cuentas) > 0)
 	{ 
 		foreach ($row_rs_cuentas as $row) 
 		{ 
 			$fila++;
 	?>
     <tr>
-      <td><? echo $row['Asi_Cod']; ?></td>
-      <td><? echo $row['Pld_Cdc']; ?></td>
-      <td><? echo $row['Pld_Des']; ?></td>
-      <td><? echo $row['Asi_Glo']; ?></td>
-      <td align="right"><? if ($row['Asi_Deh']=='D') { 
+      <td><?php echo $row['Asi_Cod']; ?></td>
+      <td><?php echo $row['Pld_Cdc']; ?></td>
+      <td><?php echo $row['Pld_Des']; ?></td>
+      <td><?php echo $row['Asi_Glo']; ?></td>
+      <td align="right"><?php if ($row['Asi_Deh']=='D') { 
 	  		$sum_debe = $sum_debe + $row['Asi_Val'];
 	  		 echo $row['Asi_Val']; } ?></td>
-      <td align="right"><? if ($row['Asi_Deh']=='H') { 
+      <td align="right"><?php if ($row['Asi_Deh']=='H') { 
 	  		$sum_haber = $sum_haber + $row['Asi_Val'];
 			echo $row['Asi_Val']; } ?></td>
       </tr>
-    <? } //Fin del foreach
+    <?php } //Fin del foreach
 	 } //Fin del if
 	 ?>
   </tbody>
@@ -530,14 +530,14 @@ if (($op==1 || $op==2 || $op==3))
     	  <tr>
     	    <td width="101">
             <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" name= "form2"> 
-            <button type="button" class="btn btn-inverse fileinput-button" title="Atras" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*cmb_mes*Pec_Cod*op*hdd_volver', '<? echo $volver_txt_busqueda.'*'.$volver_op_opciones.'*'.$volver_cmb_mes.'*'.$Pec_Cod.'*'.$op.'*1';?>')">
+            <button type="button" class="btn btn-inverse fileinput-button" title="Atras" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*cmb_mes*Pec_Cod*op*hdd_volver', '<?php echo $volver_txt_busqueda.'*'.$volver_op_opciones.'*'.$volver_cmb_mes.'*'.$Pec_Cod.'*'.$op.'*1';?>')">
                <i class=" icon-arrow-left icon-white"></i>
                <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
        		 </button>
              </form>
             </td>
 			<td width="199">
-			<? if ($row_rs_codcompr['Com_Est']=='A') 
+			<?php if ($row_rs_codcompr['Com_Est']=='A') 
 			{ ?>
             <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" name= "form2"> 
                 <?Php	/* Creacion del campo repost */
@@ -546,11 +546,11 @@ if (($op==1 || $op==2 || $op==3))
                     <i class="icon-trash icon-white"></i>
                     <span>Anular</span>
                 </button>
-                <input name="Com_Cod" type="hidden" value="<? echo $row_rs_codcompr['Com_Cod']; ?>">		
-		  <input name="tabla" type="hidden" value="<? echo $tabla; ?>">
-		  <input name="tipo" type="hidden" value="<? echo $op; ?>">
-		  <input name="campo" type="hidden" value="<? echo $campo; ?>">
-  		  <input name="Pec_Cod" type="hidden" value="<? echo $Pec_Cod; ?>">
+                <input name="Com_Cod" type="hidden" value="<?php echo $row_rs_codcompr['Com_Cod']; ?>">		
+		  <input name="tabla" type="hidden" value="<?php echo $tabla; ?>">
+		  <input name="tipo" type="hidden" value="<?php echo $op; ?>">
+		  <input name="campo" type="hidden" value="<?php echo $campo; ?>">
+  		  <input name="Pec_Cod" type="hidden" value="<?php echo $Pec_Cod; ?>">
           <input name="hdd_save2" id="hdd_save2" type="hidden" value="">
           <input name="hdd_save" id="hdd_save" type="hidden" value="">				
           </form>

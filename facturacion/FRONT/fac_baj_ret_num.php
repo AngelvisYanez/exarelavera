@@ -106,7 +106,7 @@ if(isset($save)){
 								<div class="form-group">
 								<label class="col-sm-3 control-label label-sm required" for="Tic_Cod">Proveedor:</label> 
 								  <div class="col-sm-5"> 
-								  <? $row_prvEgreso = $obBD_con1->getRowConsulta(566, $Ses_Emp_Cod, $obBD_conexion);?>
+								  <?php $row_prvEgreso = $obBD_con1->getRowConsulta(566, $Ses_Emp_Cod, $obBD_conexion);?>
 								  <input id="Prov" name="Prov" value="<?php if(isset($row_prvEgreso['Prv_Cod'])){echo $row_prvEgreso['Prs_Ape'];}?>" required="" readonly class="form-control input-sm dateType" placeholder="Falta parametrizar Varios Egreso"  required> 				
 								  </div>
                                 </div>

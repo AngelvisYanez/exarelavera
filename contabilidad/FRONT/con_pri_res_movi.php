@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?	
+<?php	
 /**
 * Descripci�n: Permite imprimir el balance de comprobaci�n
 * Fecha de actualizaci�n:	2012-10-09
@@ -55,7 +55,7 @@ $obBD_con1 =  new Class_Log_Datos_Con;
         <td valign="top">
 <table width="100%" border="0" cellspacing="0" cellpadding="0">
   <tr class="LetraNegra">
-    <td colspan="4"><? 	
+    <td colspan="4"><?php 	
 	$sql='';
         if($rangos=='G'){
             $sql=" AND Pld_Cdc LIKE '".trim($cta_grupo)."%' ";
@@ -94,14 +94,14 @@ $obBD_con1 =  new Class_Log_Datos_Con;
       <tr>
         <td height="9" align="left" valign="top">GERENTE
           <p></p>
-          <p style="margin:-1.5% 0;"><? echo $infoFirmas['Emp_Ren'];?></p>
+          <p style="margin:-1.5% 0;"><?php echo $infoFirmas['Emp_Ren'];?></p>
           <p></p>
-          <p style="margin:-1.5% 0;">CI:&nbsp;<? echo $infoFirmas['Emp_Rre'];?></p></td>
+          <p style="margin:-1.5% 0;">CI:&nbsp;<?php echo $infoFirmas['Emp_Rre'];?></p></td>
         <td align="left" valign="top">CONTADOR
           <p></p>
-          <p style="margin:-1.5% 0;"><? echo $infoFirmas['Emp_Con'];?></p>
+          <p style="margin:-1.5% 0;"><?php echo $infoFirmas['Emp_Con'];?></p>
           <p></p>
-          <p style="margin:-1.5% 0;">RUC:&nbsp;<? echo $infoFirmas['Emp_Rco'];?></p></td>
+          <p style="margin:-1.5% 0;">RUC:&nbsp;<?php echo $infoFirmas['Emp_Rco'];?></p></td>
         </tr>
       <tr>
         <td height="10" colspan="2" align="left" valign="top"><hr /></td>

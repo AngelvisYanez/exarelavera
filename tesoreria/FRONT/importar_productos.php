@@ -149,7 +149,7 @@ if (isset($_POST["import"]))
                         $row_rs_con_ide= $obBD_con1->getRowConsulta(19,$data['Cat_Cod'].'*'.$Ses_Emp_Cod,$obBD_conexion); 
                         $data['Pro_Ide']=$row_rs_con_ide['siguiente'];
                         if($row_rs_con_ide['siguiente']==NULL || $row_rs_con_ide['siguiente']=='') $data['Pro_Ide']=1;    
-                        change_string_deep('utf8_decode',$data);  
+                        if (is_string($data)) { $data = mb_convert_encoding($data, 'ISO-8859-1', 'UTF-8'); } else if (is_array($data)) { array_walk_recursive($data, function(&$v) { if (is_string($v)) $v = mb_convert_encoding($v, 'ISO-8859-1', 'UTF-8'); }); }  
                         $row_rs_sucur= $obBD_con1->getArrayConsulta(17,$Ses_Emp_Cod,$obBD_conexion);
 
                         $obBD_con1->inicio_transaccion($obBD_conexion->conexion);

@@ -1,4 +1,4 @@
-<?
+<?php
 /**
 * Descripcion: Componente que muestra los codigos ICE.
 * Fecha de actualizacion: 2015-17-28
@@ -35,7 +35,7 @@ if(isset($ajax_renta_ice_buscar))
      <tr>
         <td colspan="5" align="center" ><hr /></td>
      </tr>
-<?
+<?php
 	if ($total_busCtaIce != 0) 
 	{
 		foreach($rs_busCtaIce as $datos)	
@@ -49,9 +49,9 @@ if(isset($ajax_renta_ice_buscar))
 ?>			
 			
 			<tr>				
-				<td align="center" ><? echo $datos['Ice_Int']; ?></td>	
-				<td align="center"><? echo $datos['Ice_Sri']; ?></td>
-			  <td title="<? echo $datos['Ice_Des']; ?>"><? echo $DetIce; ?></td>
+				<td align="center" ><?php echo $datos['Ice_Int']; ?></td>	
+				<td align="center"><?php echo $datos['Ice_Sri']; ?></td>
+			  <td title="<?php echo $datos['Ice_Des']; ?>"><?php echo $DetIce; ?></td>
 				<td align="right"><?Php echo $datos['Ice_Por']." %";?>&nbsp;&nbsp;</td>
 				<td align="center">
                 <button type="button" class="btn btn-success btn-mini" title="Elegir" onclick="
@@ -63,7 +63,7 @@ if(isset($ajax_renta_ice_buscar))
         		</button>			
             	</td>
 			</tr>
-		<? 
+		<?php 
 		} //Fin del foreach
 	} else { ?>
 			<tr>
@@ -73,7 +73,7 @@ if(isset($ajax_renta_ice_buscar))
 				<td>&nbsp;</td>
 				<td>&nbsp;</td>
 			</tr>
-	<? }?>
+	<?php }?>
     </tbody>
 </table>
 <br />

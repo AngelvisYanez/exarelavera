@@ -23,8 +23,8 @@ class ClienteClass {
     protected $_direccion_fac = null;           // Dirección a nombre de quién saldrá la factura
     protected $_tipo_empresa = null;            // Tipo de empresa: P=publica, R=privada
     protected $_correo = null;                  // Correo gerencial
-    protected $_conexion = null;                  // Correo gerencial
-    protected $_datos = null;                  // Correo gerencial
+    protected $conexion = null;
+    protected $datos = null;
     
     function __construct($conexion, $datos){
         $this->conexion = $conexion;
@@ -62,7 +62,7 @@ class ClienteClass {
     public function updateCliente($body){
         $data=$body;
         $this->datos->inicio_transaccion($this->conexion->conexion);                  
-        $this->datos->operacionobBD(12,utf8_decode($body["Prs_Ced"].'*'.$body["Prs_Nom"].'*'.$body["Prs_Ape"].'*'.$body["Prs_Sex"].'*'.$body["Prs_Dir"].'*'.$body["Prs_Tel"].'*'.$body["Prs_Te2"].'*'.$body["Prs_Cel"].'*'.$body["Ciu_Cod"].'*'.$body["Ide_Cod"].'*'.(!empty($body["Prs_Cor"])?$body["Prs_Cor"]:'').'*'.$body["Prs_Cod"]),$this->conexion); 
+        $this->datos->operacionobBD(12,mb_convert_encoding($body["Prs_Ced"].'*'.$body["Prs_Nom"].'*'.$body["Prs_Ape"].'*'.$body["Prs_Sex"].'*'.$body["Prs_Dir"].'*'.$body["Prs_Tel"].'*'.$body["Prs_Te2"].'*'.$body["Prs_Cel"].'*'.$body["Ciu_Cod"].'*'.$body["Ide_Cod"].'*'.(!empty($body["Prs_Cor"])?$body["Prs_Cor"]:'').'*'.$body["Prs_Cod"], 'ISO-8859-1', 'UTF-8'),$this->conexion); 
         $this->datos->operacionobBD(26,$body["Prs_Cod"].'*'.$body["Cli_Tic"].'*'.$body["Cli_Con"].'*'.$body["Cli_Cod"].'*'.$body["Prs_Cor"],$this->conexion); 
         $this->datos->fin_transaccion_nomsn($this->conexion->conexion);
         if ($this->datos->Error == 0) { $responce['success'] = true; }

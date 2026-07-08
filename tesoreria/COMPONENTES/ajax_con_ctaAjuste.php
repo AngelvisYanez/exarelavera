@@ -32,30 +32,30 @@ if ($ajax_buscador=="F")
 		<td width="0%" align="center"><strong>Stock</strong></td>
 		<td width="2%" align="center">&nbsp;</td>
 	  </tr>
-	  <?
+	  <?php
 	  if ($total_rs_buscta > 0) {
 	  do { 
 						  						  
 	  ?>
-	  <tr <? echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo");?> class="Fondo">
-	    <td align="center"><? echo $row_rs_buscta['Pro_Cod']; ?></td>
-		<td align="left"><? echo marcar_cadena($txtBusqueda,$row_rs_buscta['Ite_Lar'],'#FFFF00', 1); ?></td>
-		<td align="left"><? echo $row_rs_buscta['Mar_Des']; ?></td>
-		<td align="left"><? echo $row_rs_buscta['Adq_Des']; ?></td>		
-		<td align="right"><? echo $row_rs_buscta['Pre_Pvp'];  ?></td>
-		<td align="right"><? echo $row_rs_buscta['Stk_Can']; ?></td>
+	  <tr <?php echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo");?> class="Fondo">
+	    <td align="center"><?php echo $row_rs_buscta['Pro_Cod']; ?></td>
+		<td align="left"><?php echo marcar_cadena($txtBusqueda,$row_rs_buscta['Ite_Lar'],'#FFFF00', 1); ?></td>
+		<td align="left"><?php echo $row_rs_buscta['Mar_Des']; ?></td>
+		<td align="left"><?php echo $row_rs_buscta['Adq_Des']; ?></td>		
+		<td align="right"><?php echo $row_rs_buscta['Pre_Pvp'];  ?></td>
+		<td align="right"><?php echo $row_rs_buscta['Stk_Can']; ?></td>
 		<td align="center">
-        <button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="nueva_fila_ajuste('c_contenido','<? echo $row_rs_buscta['Pro_Cod']; ?>','<? echo $row_rs_buscta['Ite_Lar']; ?>','<? echo $row_rs_buscta['Pre_Pvp']; ?>','<? echo 400000;?>')">
+        <button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="nueva_fila_ajuste('c_contenido','<?php echo $row_rs_buscta['Pro_Cod']; ?>','<?php echo $row_rs_buscta['Ite_Lar']; ?>','<?php echo $row_rs_buscta['Pre_Pvp']; ?>','<?php echo 400000;?>')">
            			<i class=" icon-arrow-right icon-white"></i>
            		</button>
 			</td>
 	  </tr>
-	  <? } while ($row_rs_buscta = $obBD_con1->fetch_assoc($rs_buscta));
+	  <?php } while ($row_rs_buscta = $obBD_con1->fetch_assoc($rs_buscta));
 	  } else { ?>
 		<tr>
 			<td height="32%" colspan="11"><?Php echo error_alerta("No hay resultados que mostrar", 1); ?></td>
 		</tr>
-<? }?>
+<?php }?>
 </table>
 <?Php 
 echo barra_estado($total_rs_buscta+0);

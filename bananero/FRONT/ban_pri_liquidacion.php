@@ -1,4 +1,4 @@
-<?
+<?php
 
 /**
  * @abstract Reporte del libro diario
@@ -422,7 +422,7 @@ if (isset($gerencial)) {
             </table>
         <?php } ?>
         <div style="font-size:9px;">
-            <?php echo utf8_encode($obBD_con1->getReportFooter($Ses_Suc_Cod, $Ses_Usu_Cod, $obBD_conexion)); ?>
+            <?php echo mb_convert_encoding($obBD_con1->getReportFooter($Ses_Suc_Cod, $Ses_Usu_Cod, $obBD_conexion), 'UTF-8', 'ISO-8859-1'); ?>
         </div>
     </div>
 </BODY>

@@ -43,7 +43,7 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
             .totales{font-size: 10px;font-weight: normal;font: 8pt verdana;}
 </style>
 <body class="Cuerpo">
-<? /* Consulta de la cabecera del reporte */
+<?php /* Consulta de la cabecera del reporte */
 	$row_institucion= $obBD_con1->getRowConsulta(5, $Ses_Suc_Cod, $obBD_conexion);//GetRowConsulta(5,$Ses_Cod_Suc);
 	/* Consulta de la cabecera del reporte */
 	$row_institucion = $obBD_con1->getRowConsulta(22, $Ses_Suc_Cod, $obBD_conexion);
@@ -58,7 +58,7 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
 			  <tr align="center">
 			    <td width="10%" rowspan="5" valign="top"><img src="../../mascaras/model2/imagenes/32x32/sri.png" width="94" height="61" /></td>
 			    <td width="80%" height="24" class="TITULO_REPORTE_2"><?Php echo $row_institucion['Emp_Nom']; ?></td>
-			    <td width="10%" rowspan="5" valign="top" class="TITULO_REPORTE_2"><img src="<? echo $row_institucion['Emp_Log']?>" width="94" height="61" /></td>
+			    <td width="10%" rowspan="5" valign="top" class="TITULO_REPORTE_2"><img src="<?php echo $row_institucion['Emp_Log']?>" width="94" height="61" /></td>
 			  </tr>
 			  <tr align="center">
 			    <td valign="top" class="Texto_Reporte"><div align="center"><strong>R.U.C.:</strong> &nbsp;<?php echo $row_institucion['Emp_Ruc']; ?>&nbsp;		      <strong>TELEFONO:</strong>&nbsp;<?php echo $row_institucion['Suc_Te1']; ?></div></td>
@@ -86,11 +86,11 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
 	  		  </tr>
 			  <tr align="center">
 			    <td valign="top" class="TITULO_REPORTE">&nbsp;</td>
-			    <td colspan="2" valign="top" class="TITULO_REPORTE"><? echo $Titulo; ?></td>
+			    <td colspan="2" valign="top" class="TITULO_REPORTE"><?php echo $Titulo; ?></td>
 	  		  </tr>
 			  <tr align="center">
 			    <td valign="top" class="TITULO_REPORTE">&nbsp;</td>
-			    <td colspan="2" valign="top" class="TITULO_REPORTE"><? echo $Subtitulo; ?></td>
+			    <td colspan="2" valign="top" class="TITULO_REPORTE"><?php echo $Subtitulo; ?></td>
 		      </tr>
 		    </table>
     
@@ -103,7 +103,7 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
       <tr>
         <td height="29"><div align="center">
 		<label class="TITULO_REPORTE"><?Php echo $nivel[$i]; ?></label>
-        <?
+        <?php
     	    $rsComprasNum = $obBD_con1->getArrayConsulta(865, $Ses_Emp_Cod.'*'.$ini.'*'.$fin, $obBD_conexion);			
 			$totalCompras= count($rsComprasNum);
 	    if ($totalCompras>0 &&  $aCom==1)
@@ -119,13 +119,13 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
             <th width="34%" align="center" bgcolor="#99CCCC">Transacci&oacute;n</th>
             <th width="12%" align="center" bgcolor="#99CCCC">No. Registros</th>
             <th width="12%" align="center" bgcolor="#99CCCC">BI Tarifa 0%</th>
-            <th width="12%" align="center" bgcolor="#99CCCC">BI Tarifa <? echo $row_rs_PorIva['Iva_Por']."%";?></th>
+            <th width="12%" align="center" bgcolor="#99CCCC">BI Tarifa <?php echo $row_rs_PorIva['Iva_Por']."%";?></th>
             <th width="12%" align="center" bgcolor="#99CCCC">BI No Objeto de IVA</th>
             <th width="12%" align="center" bgcolor="#99CCCC">Valor IVA</th>
           </tr>
           </thead>
           <tbody>
-          <? 
+          <?php 
 		     $filas = 0;
 			 $suma1=0;
 			 $suma2=0;
@@ -163,20 +163,20 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
             <td align="center" class="LetraNegra"><?Php echo "0.00";?>&nbsp;</td>
             <td align="center" class="LetraNegra"><?Php echo number_format($rsComprasBI['IvaTot'],2);?></td>
           </tr>
-		  <? }?>
+		  <?php }?>
           <tr class="totales">
             <td colspan="3" align="right" class=""><strong>Total:</strong></td>
-            <td align="center" class=""><strong><? echo number_format($suma1,2);?></strong></td>
-            <td align="center" class=""><strong><? echo number_format($suma2,2);?></strong></td>
-            <td align="center" class=""><strong><? echo $suma3;?></strong></td>
-            <td align="center" class=""><strong><? echo number_format($suma4,2);?></strong></td>
+            <td align="center" class=""><strong><?php echo number_format($suma1,2);?></strong></td>
+            <td align="center" class=""><strong><?php echo number_format($suma2,2);?></strong></td>
+            <td align="center" class=""><strong><?php echo $suma3;?></strong></td>
+            <td align="center" class=""><strong><?php echo number_format($suma4,2);?></strong></td>
           </tr>
           
           </tbody>
           </table>
 		 
           
-         <? }?>
+         <?php }?>
         </div>
         </td>
       </tr>
@@ -185,7 +185,7 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
       </tr>
       <tr>
         <td height="14">
-        <?        
+        <?php        
 		$rsVentasNum = $obBD_con1->getArrayConsulta(883, $Ses_Emp_Cod.'*'.$ini.'*'.$fin, $obBD_conexion);	    
 		$totalVentas=count($rsVentasNum);
 		if($totalVentas>0 && $bVen==1)
@@ -201,13 +201,13 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
               <th width="34%" align="center" bgcolor="#99CCCC">Transacci&oacute;n</th>
               <th width="12%" align="center" bgcolor="#99CCCC">No. Registros</th>
               <th width="12%" align="center" bgcolor="#99CCCC">BI Tarifa 0%</th>
-              <th width="12%" align="center" bgcolor="#99CCCC">BI Tarifa <? echo $row_rs_PorIva['Iva_Por']."%";?></th>
+              <th width="12%" align="center" bgcolor="#99CCCC">BI Tarifa <?php echo $row_rs_PorIva['Iva_Por']."%";?></th>
               <th width="12%" align="center" bgcolor="#99CCCC">BI No Objeto de IVA</th>
               <th width="12%" align="center" bgcolor="#99CCCC">Valor IVA</th>
             </tr>
           </thead>
           <tbody>
-            <? 
+            <?php 
 		     $filas = 0;
 			 $suma1='0.00';
 			 $suma2='0.00';
@@ -238,15 +238,15 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
               <td align="center" class="LetraNegra"><?Php echo '0.00';?>&nbsp;</td>
               <td align="center" class="LetraNegra"><?Php echo number_format($row['Tot_Iva'],2);?></td>
             </tr>            
-			<? }?>
+			<?php }?>
             <tr class="totales">
               <td colspan="3" align="right" class=""><strong>Total:</strong></td>
-              <td align="center" class=""><strong><? echo number_format($suma1,2);?></strong></td>
-              <td align="center" class=""><strong><? echo number_format($suma2,2);?></strong></td>
-              <td align="center" class=""><strong><? echo number_format($suma3,2);?></strong></td>
-              <td align="center" class=""><strong><? echo number_format($suma4,2);?></strong></td>
+              <td align="center" class=""><strong><?php echo number_format($suma1,2);?></strong></td>
+              <td align="center" class=""><strong><?php echo number_format($suma2,2);?></strong></td>
+              <td align="center" class=""><strong><?php echo number_format($suma3,2);?></strong></td>
+              <td align="center" class=""><strong><?php echo number_format($suma4,2);?></strong></td>
             </tr>
-           <? $rsVentasNum = $obBD_con1->getArrayConsulta(888, $Ses_Emp_Cod.'*'.$ini.'*'.$fin, $obBD_conexion);	
+           <?php $rsVentasNum = $obBD_con1->getArrayConsulta(888, $Ses_Emp_Cod.'*'.$ini.'*'.$fin, $obBD_conexion);	
 			  $totalVentas=count($rsVentasNum);
 		     $filas = 0;
 			 $suma1='0.00';
@@ -283,11 +283,11 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
               <td align="center" class="LetraNegra"><?Php echo '0.00';?>&nbsp;</td>
               <td align="center" class="LetraNegra"><?Php echo number_format($row['Tot_Iva'],2);?></td>
             </tr>            
-			<? } }	 
+			<?php } }	 
 			?>
           </tbody>
         </table>
-        <? }?>
+        <?php }?>
         </td>
       </tr>
       
@@ -309,7 +309,7 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
               </tr>
           </thead>
           <tbody>
-            <? 
+            <?php 
 		  
         	$rs_ventas = $obBD_con1->getArrayConsulta(390, $ini.'*'.$fin.'*'.$Ses_Emp_Cod, $obBD_conexion);
 			$rs_retencion = $obBD_con1->getArrayConsulta(237, $ini.'*'.$fin.'*'.'I'.'*'.$Ses_Emp_Cod, $obBD_conexion);
@@ -323,7 +323,7 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
               <td align="center" class="LetraNegra" style="white-space: nowrap; overflow: hidden;"><span class="LetraNegra" style="white-space: nowrap; overflow: hidden;"><?Php echo str_pad($row['Vet_Num'], 9, "0", STR_PAD_LEFT);?></span></td>
               <td colspan="2" align="left" class="LetraNegra" style="white-space: nowrap; overflow: hidden;"><?Php echo str_pad($row['Aut_Sri'], 9, "0", STR_PAD_LEFT);?></td>
               </tr>
-            <? }
+            <?php }
           foreach($rs_retencion as $row){
 		     $totalAnulados+=1;  
 		  ?>
@@ -332,7 +332,7 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
               <td align="center" class="LetraNegra" style="white-space: nowrap; overflow: hidden;"><span class="LetraNegra" style="white-space: nowrap; overflow: hidden;"><?Php echo str_pad($row['Ret_Num'], 9, "0", STR_PAD_LEFT);?></span></td>
               <td colspan="2" align="left" class="LetraNegra" style="white-space: nowrap; overflow: hidden;"><?Php echo str_pad($row['Aut_Sri'], 9, "0", STR_PAD_LEFT);?></td>
               </tr>
-            <? }?>  
+            <?php }?>  
             <tr class="Texto_Listados">
               <td colspan="3" align="right" class="LetraNegra"><strong>Total:</strong></td>
               <td width="25%" align="center" class="LetraNegra"><strong><?Php echo $totalAnulados;?></strong></td>
@@ -343,7 +343,7 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
       <tr>
         <td height="7">&nbsp;</td>
       </tr> 
-       <? $rsExport = $obBD_con1->getArrayConsulta(884, $Ses_Emp_Cod.'*'.$ini.'*'.$fin, $obBD_conexion);
+       <?php $rsExport = $obBD_con1->getArrayConsulta(884, $Ses_Emp_Cod.'*'.$ini.'*'.$fin, $obBD_conexion);
 	  $totalExpo=count($rsExport);	  
 	  if($totalExpo>0 && $Exp==1)
 	  {
@@ -363,7 +363,7 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
             </tr>
           </thead>
           <tbody>
-            <? 
+            <?php 
 		  $totalExp = 0;		  
 		  foreach($rsExport as $row)
 		  {
@@ -372,10 +372,10 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
             <tr class="Texto_Listados">
               <td align="center" class="LetraNegra"><?Php echo $row['Tic_Sri'];?></td>
               <td align="center" class="LetraNegra" style="white-space: nowrap; overflow: hidden;"><span class="LetraNegra" style="white-space: nowrap; overflow: hidden;"><?Php echo $row['Tic_Des'];?></span></td>
-              <td align="center" class="LetraNegra" style="white-space: nowrap; overflow: hidden;"><? echo $row['total'];?></td>
+              <td align="center" class="LetraNegra" style="white-space: nowrap; overflow: hidden;"><?php echo $row['total'];?></td>
               <td align="center" class="LetraNegra"><?Php echo number_format($row['Importe']+$row['Tot_Iva'],2);?></td>
             </tr>
-            <? }?>
+            <?php }?>
             <tr class="totales">
               <td colspan="3" align="right" class=""><strong>Total:</strong></td>
               <td align="center" class=""><strong><?Php echo number_format($totalExp,2);?></strong></td>
@@ -383,7 +383,7 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
           </tbody>
         </table></td>
       </tr>
-      <? }?>
+      <?php }?>
       <tr>
         <td height="15">&nbsp;</td>
       </tr>
@@ -392,7 +392,7 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
       </tr>
       <tr>
         <td height="30">
-        <?        
+        <?php        
     	$rsRentaCompra = $obBD_con1->getArrayConsulta(869, $Ses_Emp_Cod.'*R*'.$ini.'*'.$fin, $obBD_conexion);	    
 		$totalRenta=count($rsRentaCompra);
 		if($totalRenta>0 && $aCom==1)
@@ -412,7 +412,7 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
             </tr>
           </thead>
           <tbody>
-            <? 
+            <?php 
 		   $filas = 0;	
 		   $suma1=0;	   
 		   $suma2=0;
@@ -448,11 +448,11 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
                 <tr class="Texto_Listados">
                   <td align="center" class="LetraNegra">332</td>
                   <td align="center" class="LetraNegra" style="white-space: nowrap; overflow: hidden;">OTRAS COMPRAS DE BIENES Y SERVICIOS NO SUJETAS A RETENCIÓN</td>
-                  <td align="center" class="LetraNegra"><? echo $tot332;?></td>
-                  <td align="center" class="LetraNegra"><? echo number_format($base332,2);?></td>
+                  <td align="center" class="LetraNegra"><?php echo $tot332;?></td>
+                  <td align="center" class="LetraNegra"><?php echo number_format($base332,2);?></td>
                   <td align="center" class="LetraNegra">0.00</td>             
                 </tr>
-            <? }else{?>
+            <?php }else{?>
             <tr class="Texto_Listados">
               <td align="center" class="LetraNegra"><?Php echo $row['Ren_Sri'];?></td>
               <td align="center" class="LetraNegra"><?Php echo $row['Ren_Con'];?></td>
@@ -460,7 +460,7 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
               <td align="center" class="LetraNegra"><?Php echo number_format(round($rsValorRentaCompra['base'],2),2);//number_format($rsValorRentaCompra['base'],2);?></td>
               <td align="center" class="LetraNegra"><?Php echo number_format(round($rsValorRentaCompra['valor'],2),2);//number_format($rsValorRentaCompra['valor'],2);?></td>
             </tr>
-			<? }
+			<?php }
 		  }?>
             <tr class="totales">
               <td colspan="3" align="right" class=""><strong>Total:</strong></td>
@@ -469,7 +469,7 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
             </tr>            
           </tbody>
         </table>
-        <? }?>
+        <?php }?>
         
         </td>
       </tr>
@@ -478,7 +478,7 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
       </tr>
       <tr>
         <td height="65">
-		<?        
+		<?php        
     	   	 $rsIvaCompra = $obBD_con1->getArrayConsulta(870, '', $obBD_conexion);
 			 $totalIva=count($rsIvaCompra);	
 		if($totalIva>0 && $aCom==1)
@@ -496,7 +496,7 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
             </tr>
           </thead>
           <tbody>
-          <? 
+          <?php 
 		  $filas = 0;
 		  $suma1=0;
 		  foreach($rsIvaCompra as $row)
@@ -510,7 +510,7 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
               <td align="center" class="LetraNegra" style="white-space: nowrap; overflow: hidden;"><?Php echo $row['Ren_Con'];?></td>
               <td align="center" class="LetraNegra"><?Php echo number_format($rsDetIvaCompra['valor'],2);?></td>
             </tr>
-			<? }?>
+			<?php }?>
             <tr class="totales">
               <td colspan="2" align="right" class=""><strong>Total:</strong></td>
               <td align="center" class=""><strong><?Php echo number_format($suma1,2);?></strong></td>
@@ -518,7 +518,7 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
             
           </tbody>
         </table>
-        <? }?>
+        <?php }?>
         </td>
       </tr>
       <tr>
@@ -526,7 +526,7 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
       </tr>
       <tr>
         <td height="59">
-        <?
+        <?php
          /**
 		 * Consultando todas las ventas segun la cedula y fecha y empresa del cliente
 		 */
@@ -589,7 +589,7 @@ $row_rs_PorIva = $obBD_con1->getRowConsulta(876, $ini, $obBD_conexion);
            
           </tbody>
         </table>
-        <? }?>
+        <?php }?>
         </td>
       </tr>
       <tr>

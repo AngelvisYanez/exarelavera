@@ -315,7 +315,7 @@ if(isset($_POST['edit']))
 		echo "<br />";		
 		require_once('../../componentes/FRONT/com_con_leyenda.php');
 	?>	
-	<? if($total_nivel > 0){?>
+	<?php if($total_nivel > 0){?>
     <form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>" name="form" id="form">
 		<fieldset>
 			<legend class="Titulos2">Datos a Registrar</legend>    		
@@ -329,11 +329,11 @@ if(isset($_POST['edit']))
 				<table width="100%" border="0" cellpadding="0" cellspacing="0">
 					<tr>
 						<td width="14%" class="Etiqueta1"><span class="Asterisco">*</span> Descripci&oacute;n:</td>
-						<td width="86%">&nbsp;<input type="text" id="Ubi_Des" name="Ubi_Des" value="<? echo $descripcion;?>" style="text-transform:uppercase"/></td>
+						<td width="86%">&nbsp;<input type="text" id="Ubi_Des" name="Ubi_Des" value="<?php echo $descripcion;?>" style="text-transform:uppercase"/></td>
 					</tr>
 					<tr>
 						<td width="14%" class="Etiqueta1">&nbsp;Observaci&oacute;n:</td>
-						<td width="86%">&nbsp;<textarea id="Ubi_Obs" name="Ubi_Obs" cols="20" style="text-transform:uppercase"><? echo $observacion;?></textarea></td>
+						<td width="86%">&nbsp;<textarea id="Ubi_Obs" name="Ubi_Obs" cols="20" style="text-transform:uppercase"><?php echo $observacion;?></textarea></td>
 					</tr>
 				</table>
 		</fieldset>
@@ -348,7 +348,7 @@ if(isset($_POST['edit']))
            <span>Guardar</span>
     </button> 
 	</form>
-    <? }?>
+    <?php }?>
 </div>
 <script type="text/javascript" src="../VALIDACIONES/fac_par_categoria.js"></script>
 <script type="text/javascript" src="../../Librerias/textbox/main.js"></script>    

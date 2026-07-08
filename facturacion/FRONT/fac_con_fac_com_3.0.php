@@ -406,7 +406,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                                                     << TODOS >>
                                                 </option>
                                                 <?php foreach ($rs_tip_compr as $row_rs_tip_compr) { ?>
-                                                    <option value="<?php echo $row_rs_tip_compr['Tic_Cod'] ?>"><?php echo utf8_encode($row_rs_tip_compr['Tic_Sri']) . ' - ' . utf8_encode($row_rs_tip_compr['Tic_Des']); ?></option>
+                                                    <option value="<?php echo $row_rs_tip_compr['Tic_Cod'] ?>"><?php echo mb_convert_encoding($row_rs_tip_compr['Tic_Sri'], 'UTF-8', 'ISO-8859-1') . ' - ' . mb_convert_encoding($row_rs_tip_compr['Tic_Des'], 'UTF-8', 'ISO-8859-1'); ?></option>
 
                                                     <!--option value="<?php echo $row_rs_tip_compr['Tic_Cod'] ?>"><?php echo $row_rs_tip_compr['Tic_Sri'] . '-' . $row_rs_tip_compr['Tic_Des']; ?></option-->
                                                 <?php } ?>

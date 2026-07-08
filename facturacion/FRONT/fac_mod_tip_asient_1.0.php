@@ -83,16 +83,16 @@ if (isset($ajax_mod))
 		{			
 			if($Tia_Des==$des_orig) {								
 		?>
-        <input name="Tia_Des" type="text" id="Tia_Des" value="<?Php echo $Tia_Des; ?>" size="30" maxlength="30" style="text-transform:uppercase" onblur="if (trim(this.value) != '')ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mar=1&ajax_mod=1&des_orig=<? echo $des_orig?>&Tia_Des='+this.value+'&Tia_Ini=<?Php echo $Tia_Ini; ?>','div_tiaDes')">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/aceptar.jpg" width="22" height="22" />
+        <input name="Tia_Des" type="text" id="Tia_Des" value="<?Php echo $Tia_Des; ?>" size="30" maxlength="30" style="text-transform:uppercase" onblur="if (trim(this.value) != '')ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mar=1&ajax_mod=1&des_orig=<?php echo $des_orig?>&Tia_Des='+this.value+'&Tia_Ini=<?Php echo $Tia_Ini; ?>','div_tiaDes')">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/aceptar.jpg" width="22" height="22" />
 			
 		<?php
 			}else{ ?>
-			<input name="Tia_Des" type="text" id="Tia_Des" value="<? echo $Tia_Des?>" size="30" maxlength="30" style="text-transform:uppercase" onblur="if (trim(this.value) != '')ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mar=1&ajax_mod=1&des_orig=<? echo $des_orig?>&Tia_Des='+this.value+'&Tia_Ini=<?Php echo $Tia_Ini; ?>','div_tiaDes')">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/gtk-no.gif" width="22" height="22" />	¡La marca: <?php echo strtoupper($Tia_Des); ?> ya existe!  	
-			<?	
+			<input name="Tia_Des" type="text" id="Tia_Des" value="<?php echo $Tia_Des?>" size="30" maxlength="30" style="text-transform:uppercase" onblur="if (trim(this.value) != '')ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mar=1&ajax_mod=1&des_orig=<?php echo $des_orig?>&Tia_Des='+this.value+'&Tia_Ini=<?Php echo $Tia_Ini; ?>','div_tiaDes')">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/gtk-no.gif" width="22" height="22" />	¡La marca: <?php echo strtoupper($Tia_Des); ?> ya existe!  	
+			<?php	
 			}
 	    }else{		
 	 ?>
-			<input name="Tia_Des" type="text" id="Tia_Des" value="<?Php echo $Tia_Des; ?>" size="30" maxlength="30" style="text-transform:uppercase" onblur="if (trim(this.value) != '')ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mar=1&ajax_mod=1&des_orig=<? echo $des_orig?>&Tia_Des='+this.value+'&Tia_Ini=<?Php echo $Tia_Ini; ?>','div_tiaDes')">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/aceptar.jpg" width="22" height="22" />
+			<input name="Tia_Des" type="text" id="Tia_Des" value="<?Php echo $Tia_Des; ?>" size="30" maxlength="30" style="text-transform:uppercase" onblur="if (trim(this.value) != '')ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mar=1&ajax_mod=1&des_orig=<?php echo $des_orig?>&Tia_Des='+this.value+'&Tia_Ini=<?Php echo $Tia_Ini; ?>','div_tiaDes')">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/aceptar.jpg" width="22" height="22" />
 		<?php
 		}			
 exit();
@@ -227,7 +227,7 @@ if (isset($codigo) && !(isset($txt_busqueda)))
     <td width="106" class="Etiqueta1"><span class="Asterisco">*</span> Descripci&oacute;n:</td>
     <td width="458">
     <div class="Titulos2" id="div_tiaDes">
-     <input name="Tia_Des" type="text" id="Tia_Des" value="<?Php echo $row_rs_consulta['Tia_Des']?>" size="30" maxlength="30" style="text-transform:uppercase" onblur="if (trim(this.value) != '')ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mar=1&ajax_mod=1&des_orig=<? echo $des_orig?>&Tia_Des='+this.value+'&Tia_Ini='+document.getElementById('Tia_Ini').value,'div_tiaDes')"></div>
+     <input name="Tia_Des" type="text" id="Tia_Des" value="<?Php echo $row_rs_consulta['Tia_Des']?>" size="30" maxlength="30" style="text-transform:uppercase" onblur="if (trim(this.value) != '')ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mar=1&ajax_mod=1&des_orig=<?php echo $des_orig?>&Tia_Des='+this.value+'&Tia_Ini='+document.getElementById('Tia_Ini').value,'div_tiaDes')"></div>
     </td>
   </tr>
   <tr>

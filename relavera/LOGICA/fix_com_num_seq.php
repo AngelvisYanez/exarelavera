@@ -152,7 +152,7 @@ if ($pec_cod) {
                 }
 
                 echo "<tr style='$bg $color_est'>";
-                echo "<td>$com_cod</td><td>{$row['Com_Fec']}</td><td>" . utf8_encode($row['Com_Con']) . "</td><td>{$row['Com_Est']}</td><td>$old_num</td><td><b>$count</b></td><td>$accion</td>";
+                echo "<td>$com_cod</td><td>{$row['Com_Fec']}</td><td>" . mb_convert_encoding($row['Com_Con'], 'UTF-8', 'ISO-8859-1') . "</td><td>{$row['Com_Est']}</td><td>$old_num</td><td><b>$count</b></td><td>$accion</td>";
                 echo "</tr>";
                 
                 $count++;

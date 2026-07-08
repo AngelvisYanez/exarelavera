@@ -379,7 +379,7 @@ if (isset($saveDocument)) {
                                         <label class="col-xs-3 control-label label-xs">Documento:</label>
                                         <div class="col-xs-6">
                                             <select id="Tic_Cod_Guia" name="Tic_Cod" class="form-control input-xs readOnly getData ins" disabled="">
-                                                <?php echo utf8_encode("<option value='$autori[Tic_Cod]' selected='' data--tic_-cod='$autori[Tic_Cod]' data--aut_-fci='$autori[Aut_Fci]' data--aut_-cad='$autori[Aut_Cad]' data--suc_-sri='$autori[Suc_Sri]' data--pun_-sri='$autori[Pun_Sri]' data--aut_-sri='$autori[Aut_Sri]' data--aut_-ini='$autori[Aut_Ini]' data--aut_-fin='$autori[Aut_Fin]' data--aut_-tem='$autori[Aut_Tem]' selected=''>     $autori[Tic_Des]   </option>");  ?>
+                                                <?php echo mb_convert_encoding("<option value='$autori[Tic_Cod]' selected='' data--tic_-cod='$autori[Tic_Cod]' data--aut_-fci='$autori[Aut_Fci]' data--aut_-cad='$autori[Aut_Cad]' data--suc_-sri='$autori[Suc_Sri]' data--pun_-sri='$autori[Pun_Sri]' data--aut_-sri='$autori[Aut_Sri]' data--aut_-ini='$autori[Aut_Ini]' data--aut_-fin='$autori[Aut_Fin]' data--aut_-tem='$autori[Aut_Tem]' selected=''>     $autori[Tic_Des]   </option>", 'UTF-8', 'ISO-8859-1');  ?>
                                             </select>
                                         </div>
                                     </div>

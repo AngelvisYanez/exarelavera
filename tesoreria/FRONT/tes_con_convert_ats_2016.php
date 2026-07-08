@@ -1,4 +1,4 @@
-<?
+<?php
 require_once('../../Librerias/procedimientos/almacenados_standar.php');	
 //var_dump($uploadXML);    
 if(isset($_FILES)&&!empty($_FILES)){
@@ -196,7 +196,7 @@ if(isset($_FILES)&&!empty($_FILES)){
      <table width="100%" border="0" cellpadding="0" cellspacing="0">
      <tr>	
        <td width="87" align="right" class="LetraNegra">Seleccione:</td> 
-       <form method="post" name="form3" id="form3" enctype="multipart/form-data" action="<? echo $_SERVER['PHP_SELF'];?> ">
+       <form method="post" name="form3" id="form3" enctype="multipart/form-data" action="<?php echo $_SERVER['PHP_SELF'];?> ">
        <td width="380">&nbsp;<input type="file" multiple name="archivoXML[]" id="archivoXML[]" value="" accept="text/xml" />&nbsp;&nbsp;&nbsp; 
        <button type="button" class="btn btn-primary start" onclick="loadXML();"><i class=" icon-ok-sign icon-white"></i> <span>Aplicar</span> </button>
          <span style="display: inline-block;width: 50px;">&nbsp;</span>                    

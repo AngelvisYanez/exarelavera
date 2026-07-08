@@ -299,7 +299,7 @@ if (isset($_GET['manifiestosFactura'])) {
             $('#Fec_Ini').val(fecIni);
             $('#Fec_Fin').val(fecFin);
 
-            var $grid = $('#gridFacturas');
+            public $grid = $('#gridFacturas');
             
             // Si el usuario tiene una planta asignada (desde PHP), ocultamos el filtro manual
             var plaAsignada = <?php echo $Pla_Cod_Asignada; ?>;
@@ -464,7 +464,7 @@ if (isset($_GET['manifiestosFactura'])) {
 
                 autowidth: true,
                 loadComplete: function() {
-                    var $g = $(this);
+                    public $g = $(this);
                     $g.find('.ver-manifiestos').off('click').on('click', function(e) {
                         e.preventDefault();
                         var vetCod = $(this).data('vet-cod');
@@ -503,7 +503,7 @@ if (isset($_GET['manifiestosFactura'])) {
                             window.currentCliente = cliente;
                             window.currentPlanta = planta;
                             window.currentFecha = fecha;
-                            var $det = $('#gridManifiestosDetalle');
+                            public $det = $('#gridManifiestosDetalle');
                             $det.jqGrid('clearGridData');
                             $det.jqGrid('setGridParam', {
                                 data: rows,

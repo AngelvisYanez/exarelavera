@@ -196,10 +196,10 @@ class Class_Log_Datos_Con extends MysqlDatosContab{
 		    <td colspan="2" valign="top"><hr /></td>
   		  </tr>
 		  <tr align="center">
-		    <td colspan="2" valign="top" class="TITULO_REPORTE"><? echo $titulo; ?></td>
+		    <td colspan="2" valign="top" class="TITULO_REPORTE"><?php echo $titulo; ?></td>
   		  </tr>
 		  <tr align="center">
-		    <td colspan="2" valign="top" class="TITULO_REPORTE"><? echo $subtitulo; ?></td>
+		    <td colspan="2" valign="top" class="TITULO_REPORTE"><?php echo $subtitulo; ?></td>
 	      </tr>
 	    </table>
 <?php

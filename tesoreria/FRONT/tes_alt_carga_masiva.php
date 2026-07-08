@@ -673,12 +673,12 @@ function buscarSubtotales($clave)
     $DocElect = new FirmaElectronica();
     $res = $DocElect->autorizarSri($clave);
     if ($res['success'] == true) {
-        $xml_aut = new XmlDoc((!mb_detect_encoding($res['xml'], 'UTF-8', true)) ? utf8_encode($res['xml']) : $res['xml']);
+        $xml_aut = new XmlDoc((!mb_detect_encoding($res['xml'], 'UTF-8', true)) ? mb_convert_encoding($res['xml'], 'UTF-8', 'ISO-8859-1') : $res['xml']);
         //var_dump((string)$xml_aut->comprobante);
     } else throw new Exception($res['message']);
 
     $data_xml = (string)$xml_aut->comprobante;
-    $xml = new XmlDoc((!mb_detect_encoding($data_xml, 'UTF-8', true)) ? utf8_encode($data_xml) : $data_xml);
+    $xml = new XmlDoc((!mb_detect_encoding($data_xml, 'UTF-8', true)) ? mb_convert_encoding($data_xml, 'UTF-8', 'ISO-8859-1') : $data_xml);
     if ($xml->getName() != 'factura') throw new Exception('El documento electronico no es una <u>Factura</u>!');
     $factI = $xml->infoFactura;
 

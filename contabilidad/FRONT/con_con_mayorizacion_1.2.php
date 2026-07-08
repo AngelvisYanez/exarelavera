@@ -77,17 +77,17 @@ if (isset($buscod)) {
 						$rs_recur = $obBD_con1->getRowConsulta(204, $row['Pld_Rec'], $obBD_conexion);
 				?>
 						<tr class="Fondo">
-							<td><? echo $row['Pld_Cdc']; ?></td>
-							<td><?php echo utf8_encode($row['Pld_Des']); ?></td>
-							<td align="center"><? if ($rs_recur['Pld_Des'] != "") {
+							<td><?php echo $row['Pld_Cdc']; ?></td>
+							<td><?php echo mb_convert_encoding($row['Pld_Des'], 'UTF-8', 'ISO-8859-1'); ?></td>
+							<td align="center"><?php if ($rs_recur['Pld_Des'] != "") {
 													echo $rs_recur['Pld_Des'];
 												} else {
 													echo "&nbsp;";
 												} ?></td>
-							<td align="center"><? echo $row['Pld_Tip']; ?></td>
-							<td align="center"><? echo $row['Pld_Est']; ?></td>
+							<td align="center"><?php echo $row['Pld_Tip']; ?></td>
+							<td align="center"><?php echo $row['Pld_Est']; ?></td>
 							<td align="center"><?Php if ($row['Pld_Est'] == 'Activa') { ?>
-									<button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="document.getElementById(document.getElementById('name_input').value).value='<? echo $row['Pld_Cdc']; ?>'">
+									<button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="document.getElementById(document.getElementById('name_input').value).value='<?php echo $row['Pld_Cdc']; ?>'">
 										<i class="icon-arrow-right icon-white"></i>
 									</button>
 								<?php } else {
@@ -549,7 +549,7 @@ else {
 																					echo "style='color:#FF0000'";
 																				} ?>>&nbsp;</td>
 														</tr>
-														<?
+														<?php
 														$i = 0;
 														foreach ($rs_cuenta as $row) {
 															/**
@@ -572,16 +572,16 @@ else {
 															list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 														?>
 															<tr>
-																<td align="center"><? echo $row['Com_Cod']; ?></td>
+																<td align="center"><?php echo $row['Com_Cod']; ?></td>
 																<td align="center"><?Php echo $row['Com_Gen']; ?></td>
 																<!-- <td align="center"><?Php echo  "C" . $row['Tia_Ini'] . "-" . $mes . "-" . $row['Com_Num']; ?></td> -->
 																<td align="center"><?Php echo  $row['Tia_Abr'] . "-" . $mes . "-" . str_pad($row['Com_Num'], 2, "0", STR_PAD_LEFT); ?></td>
 																<td align="center"><?Php echo $row['Com_Fec']; ?></td>
 																<td align="left" style="display:none"><?Php echo $row_proveedore['Prs_Ape'] . ' ' . $row_proveedore['Prs_Nom']; ?></td>
-																<!--td><? echo (empty($row['Com_Con']) ? 'COMPRA DE MATERIALES DE PRODUCCIÃ“N' : $row['Com_Con']); ?></td-->
-																<td><? echo (empty($row['Com_Con']) ? $row['Com_Obs'] : $row['Com_Con']); ?></td>
+																<!--td><?php echo (empty($row['Com_Con']) ? 'COMPRA DE MATERIALES DE PRODUCCIÃ“N' : $row['Com_Con']); ?></td-->
+																<td><?php echo (empty($row['Com_Con']) ? $row['Com_Obs'] : $row['Com_Con']); ?></td>
 
-																<td align="right"><? if ($row['Asi_Deh'] == 'D') {
+																<td align="right"><?php if ($row['Asi_Deh'] == 'D') {
 																						echo formato_numero($row['Asi_Val'], 2, 2);
 																						$debe = $row['Asi_Val'];
 																						$total_debe = $total_debe + $debe;
@@ -589,7 +589,7 @@ else {
 																						echo "0,00";
 																						$debe = 0;
 																					} ?></td>
-																<td align="right"><? if ($row['Asi_Deh'] == 'H') {
+																<td align="right"><?php if ($row['Asi_Deh'] == 'H') {
 																						echo formato_numero($row['Asi_Val'], 2, 2);
 																						$haber = $row['Asi_Val'];
 																						$total_haber = $total_haber + $haber;
@@ -655,7 +655,7 @@ else {
 													<td>&nbsp;</td>
 													<td>&nbsp;</td>
 												</tr>
-										<? } //Fin del else	
+										<?php } //Fin del else	
 													/**
 													 * Muestra la barra de estados con la cantidad de registros encontrados 
 													 */
@@ -794,7 +794,7 @@ else {
 																									echo formato_numero($saldos, 2, 2); ?></td>
 																		<td align="right">&nbsp;</td>
 																	</tr>
-																	<?
+																	<?php
 																	foreach ($rs_cuenta as $row_rs_cuenta) {
 																		list($ann, $mes, $dia) = preg_split('![/.-]!', $row_rs_cuenta['Com_Fec']);
 																		/**
@@ -815,16 +815,16 @@ else {
 																		$i++;
 																	?>
 																		<tr>
-																			<td align="center"><? echo $row_rs_cuenta['Com_Cod']; ?></td>
+																			<td align="center"><?php echo $row_rs_cuenta['Com_Cod']; ?></td>
 																			<td align="center"><?Php echo $row_rs_cuenta['Com_Gen']; ?></td>
 																			<!-- <td align="center"><?Php echo  "C" . $row_rs_cuenta['Tia_Ini'] . "-" . $mes . "-" . $row_rs_cuenta['Com_Num']; ?></td> -->
 																			<td align="center"><?Php echo  $row['Tia_Abr'] . "-" . $mes . "-" . str_pad($row['Com_Num'], 2, "0", STR_PAD_LEFT); ?></td>
 																			<td align="center"><?Php echo $row_rs_cuenta['Com_Fec']; ?></td>
 																			<td align="left" style="display:none"><?Php echo $rs_proveedore['Prs_Ape'] . ' ' . $rs_proveedore['Prs_Nom']; ?></td>
-																			<!--td><? echo (empty($row_rs_cuenta['Com_Con']) ? 'COMPRA DE MATERIALES DE PRODUCCIÃ“N' : $row_rs_cuenta['Com_Con']); ?></td-->
-																			<td><? echo (empty($row_rs_cuenta['Com_Con']) ? $row_rs_cuenta['Com_Obs'] : $row_rs_cuenta['Com_Con']); ?></td>
+																			<!--td><?php echo (empty($row_rs_cuenta['Com_Con']) ? 'COMPRA DE MATERIALES DE PRODUCCIÃ“N' : $row_rs_cuenta['Com_Con']); ?></td-->
+																			<td><?php echo (empty($row_rs_cuenta['Com_Con']) ? $row_rs_cuenta['Com_Obs'] : $row_rs_cuenta['Com_Con']); ?></td>
 
-																			<td align="right"><? if ($row_rs_cuenta['Asi_Deh'] == 'D') {
+																			<td align="right"><?php if ($row_rs_cuenta['Asi_Deh'] == 'D') {
 																									echo formato_numero($row_rs_cuenta['Asi_Val'], 2, 2);
 																									$debe = $row_rs_cuenta['Asi_Val'];
 																									$total_debe = $total_debe + $debe;
@@ -832,7 +832,7 @@ else {
 																									echo "0.00";
 																									$debe = 0;
 																								} ?></td>
-																			<td align="right"><? if ($row_rs_cuenta['Asi_Deh'] == 'H') {
+																			<td align="right"><?php if ($row_rs_cuenta['Asi_Deh'] == 'H') {
 																									echo formato_numero($row_rs_cuenta['Asi_Val'], 2, 2);
 																									$haber = $row_rs_cuenta['Asi_Val'];
 																									$total_haber = $total_haber + $haber;
@@ -891,7 +891,7 @@ else {
 														} // Fin del if ($total_rs_cuenta > 0)			
 													} //Fin $row_rs_rango 
 													?>
-											</div><?
+											</div><?php
 												} //Fin del if ($total_rs_rango > 0)
 											} //Fin del if (isset($grupo))
 											break;

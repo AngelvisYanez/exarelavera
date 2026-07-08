@@ -168,7 +168,7 @@ if(isset($txt_busqueda) && !isset($codigo))
                 </button>                
                 </td>
               </tr>
-              <? } 
+              <?php } 
                 }else{ ?>
               <tr >
                 <td align="center">&nbsp;</td>
@@ -181,7 +181,7 @@ if(isset($txt_busqueda) && !isset($codigo))
             </table>
         </FIELDSET>
            <?Php echo barra_estado($total_rs_buscar); ?>
-     <? }?>
+     <?php }?>
      </form>
      <form method="post" name="form2" id="form2" action="<?Php $_SERVER['form2'] ?>">
      <?Php 

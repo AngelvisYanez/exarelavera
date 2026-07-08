@@ -1,4 +1,4 @@
-<?
+<?php
 /* Alias: [--] ALMACEN
    Descripción: Componente que muestra los Rubros de un punto de imprecion.
    Fecha de actualización: 2010-06-29.
@@ -30,17 +30,17 @@ else
         <td width="10%"><strong>Stock</strong></td>
         <td width="5%">&nbsp;</td>
     </tr>		
-<?
+<?php
 	if ($total_rs_buscta > 0) {
 		do { 
 			$Pro_Cod = $row_rs_buscta['Pro_Cod']; ?>			
-			<tr <? echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo");?> class="Fondo">
-				<td><div align="center"><? echo $row_rs_buscta['Pro_Cod']; ?></div></td>
+			<tr <?php echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo");?> class="Fondo">
+				<td><div align="center"><?php echo $row_rs_buscta['Pro_Cod']; ?></div></td>
 				<td><div align="left">&nbsp;<?Php echo marcarCadenaColor($busqueda,$row_rs_buscta['Ite_Lar'],'#FFFF00', '#000', 1); ?></div></td>
-				<td align="left"><div align="left"><? echo $row_rs_buscta['Mar_Des']; ?></div></td>	
-				<td align="left"><div align="left"><? echo $row_rs_buscta['Adq_Cor']; ?></div></td>
-				<td align="right"><div align="right"><? echo $row_rs_buscta['Pre_Pvp']; ?></div></td>
-				<td align="right"><div align="right"><? echo $row_rs_buscta['Stk_Can']; ?></div></td>
+				<td align="left"><div align="left"><?php echo $row_rs_buscta['Mar_Des']; ?></div></td>	
+				<td align="left"><div align="left"><?php echo $row_rs_buscta['Adq_Cor']; ?></div></td>
+				<td align="right"><div align="right"><?php echo $row_rs_buscta['Pre_Pvp']; ?></div></td>
+				<td align="right"><div align="right"><?php echo $row_rs_buscta['Stk_Can']; ?></div></td>
 				<td>
 				<div align="center">
                 <button type="button" class="btn btn-success btn-mini" title="Elegir" onclick="			
@@ -50,13 +50,13 @@ else
             </div>				
             </td>
 			</tr>
-		<? 
+		<?php 
 			} while ($row_rs_buscta = $obBD_con1->fetch_assoc($rs_buscta));
 	} else { ?>
 			<tr>
 				<td colspan="7"><?php echo error_alerta("¡No hay resultados que mostrar!", 1)?></td>
 			</tr>
-	<? }?>
+	<?php }?>
 </table>
 <?php
 echo barra_estado($total_rs_buscta);

@@ -52,32 +52,32 @@ if (isset($Gui_Cod))
 <body>
 <?Php  list($anio, $mes, $dia) = preg_split('![/.-]!', $rs_destina['Gui_Fec']);?>
 
-<span style="top:100px;left:200px;" class="flota"><? echo $rs_destina['Gui_Fsa']; ?></span>
-<span style="top:125px;left:200px;" class="flota"><? echo $rs_destina['Gui_Far']; ?></span>
-<span style="top:125px;left:335px;" class="flota"><? echo $anio.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$mes.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$dia; ?></span>
+<span style="top:100px;left:200px;" class="flota"><?php echo $rs_destina['Gui_Fsa']; ?></span>
+<span style="top:125px;left:200px;" class="flota"><?php echo $rs_destina['Gui_Far']; ?></span>
+<span style="top:125px;left:335px;" class="flota"><?php echo $anio.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$mes.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$dia; ?></span>
 
-<span style="top:150px;left:170px;" class="flota"><? echo $rs_destina['Gui_Nve']; ?></span>
-<span style="top:200px;left:140px;" class="flota"><? echo $rs_destina['Gui_Mot']; ?></span>
-<span style="top:214px;left:10px;" class="flota"><? echo 'x'; ?></span>
+<span style="top:150px;left:170px;" class="flota"><?php echo $rs_destina['Gui_Nve']; ?></span>
+<span style="top:200px;left:140px;" class="flota"><?php echo $rs_destina['Gui_Mot']; ?></span>
+<span style="top:214px;left:10px;" class="flota"><?php echo 'x'; ?></span>
 <!--Datos del destinatario-->
-<span style="top:295px;left:140px;" class="flota"><? echo $rs_destina['Gui_Fve']; ?></span>
-<span style="top:315px;left:120px;" class="flota"><? echo $rs_destina['Gui_Dsa']; ?></span>
-<span style="top:315px;left:350px;" class="flota"><? echo substr($rs_destina['Gui_Dar'],0,18); ?></span>
-<span style="top:340px;left:245px;" class="flota"><? echo substr($rs_destina['Prs_Ape'].' '.$rs_destina['Prs_Nom'],0,29); ?></span>
-<span style="top:362px;left:10px;" class="flota"><? echo substr($rs_destina['Prs_Ape'].' '.$rs_destina['Prs_Nom'],29,60); ?></span>
-<span style="top:362px;left:350px;" class="flota"><? echo $rs_destina['Prs_Ced']; ?></span>
+<span style="top:295px;left:140px;" class="flota"><?php echo $rs_destina['Gui_Fve']; ?></span>
+<span style="top:315px;left:120px;" class="flota"><?php echo $rs_destina['Gui_Dsa']; ?></span>
+<span style="top:315px;left:350px;" class="flota"><?php echo substr($rs_destina['Gui_Dar'],0,18); ?></span>
+<span style="top:340px;left:245px;" class="flota"><?php echo substr($rs_destina['Prs_Ape'].' '.$rs_destina['Prs_Nom'],0,29); ?></span>
+<span style="top:362px;left:10px;" class="flota"><?php echo substr($rs_destina['Prs_Ape'].' '.$rs_destina['Prs_Nom'],29,60); ?></span>
+<span style="top:362px;left:350px;" class="flota"><?php echo $rs_destina['Prs_Ced']; ?></span>
 <!--Datos del transporte-->
-<span style="top:405px;left:145px;" class="flota"><? echo substr($rs_trans['Prs_Ape'].' '.$rs_trans['Prs_Nom'],0,40); ?></span>
-<span style="top:430px;left:60px;" class="flota"><? echo $rs_trans['Prs_Ced']; ?></span>
-<span style="top:430px;left:360px;" class="flota"><? echo $rs_trans['Gui_Pla']; ?></span>
+<span style="top:405px;left:145px;" class="flota"><?php echo substr($rs_trans['Prs_Ape'].' '.$rs_trans['Prs_Nom'],0,40); ?></span>
+<span style="top:430px;left:60px;" class="flota"><?php echo $rs_trans['Prs_Ced']; ?></span>
+<span style="top:430px;left:360px;" class="flota"><?php echo $rs_trans['Gui_Pla']; ?></span>
 <!--Detalle de la guia de remision-->
-<? 
+<?php 
 $aux='510';
 foreach($rs_detalle as $datos){?>
-<span style="top:<? echo $aux;?>px;left:10px;" class="detalle"><? echo $datos['Gui_Can']; ?></span>
-<span style="top:<? echo $aux;?>px;left:80px;" class="detalle"><? echo $datos['Uni_Des']; ?></span>
-<span style="top:<? echo $aux;?>px;left:160px;" class="detalle"><? echo $datos['Ite_Lar']; ?></span>
-<? $aux+=15;}?>
+<span style="top:<?php echo $aux;?>px;left:10px;" class="detalle"><?php echo $datos['Gui_Can']; ?></span>
+<span style="top:<?php echo $aux;?>px;left:80px;" class="detalle"><?php echo $datos['Uni_Des']; ?></span>
+<span style="top:<?php echo $aux;?>px;left:160px;" class="detalle"><?php echo $datos['Ite_Lar']; ?></span>
+<?php $aux+=15;}?>
 </body>
 </html>
 <?Php

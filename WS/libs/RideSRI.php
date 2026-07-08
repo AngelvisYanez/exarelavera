@@ -39,7 +39,7 @@ class RideSRI
 			if( empty($file_xml)||!is_readable($file_xml) ) return array('success'=>false,'message'=>'No se especifico la ruta del archivo xmlss!','type'=>'setter');
 			
 			$xml=(is_readable($file_xml))?file_get_contents($file_xml):$file_xml;		
-			$sri = XML2Array::createArray(((!mb_detect_encoding($xml, 'UTF-8', true))?utf8_encode($xml):$xml));	
+			$sri = XML2Array::createArray(((!mb_detect_encoding($xml, 'UTF-8', true))?mb_convert_encoding($xml, 'UTF-8', 'ISO-8859-1'):$xml));	
 			
 			if(isset($sri['autorizacion'])){
 				$result['autorized'] = true;

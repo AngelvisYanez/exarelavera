@@ -12,16 +12,16 @@
 // This file is part of TCPDF software library.
 //
 // TCPDF is free software: you can redistribute it and/or modify it
-// under the terms of the GNU Lesser General Public License as
+// under the terms of the GNU Lesser General public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 //
 // TCPDF is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-// See the GNU Lesser General Public License for more details.
+// See the GNU Lesser General public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU Lesser General public License
 // along with TCPDF.  If not, see <http://www.gnu.org/licenses/>.
 //
 // See LICENSE.TXT file for more information.
@@ -878,7 +878,7 @@ class PDF417 {
 				$txtarr = array(); // array of characters and sub-mode switching characters
 				$codelen = strlen($code);
 				for ($i = 0; $i < $codelen; ++$i) {
-					$chval = ord($code{$i});
+					$chval = ord($code[$i]);
 					if (($k = array_search($chval, $this->textsubmodes[$submode])) !== false) {
 						// we are on the same sub-mode
 						$txtarr[] = $k;
@@ -888,7 +888,7 @@ class PDF417 {
 							// search new sub-mode
 							if (($s != $submode) AND (($k = array_search($chval, $this->textsubmodes[$s])) !== false)) {
 								// $s is the new submode
-								if (((($i + 1) == $codelen) OR ((($i + 1) < $codelen) AND (array_search(ord($code{($i + 1)}), $this->textsubmodes[$submode]) !== false))) AND (($s == 3) OR (($s == 0) AND ($submode == 1)))) {
+								if (((($i + 1) == $codelen) OR ((($i + 1) < $codelen) AND (array_search(ord($code[($i + 1)]), $this->textsubmodes[$submode]) !== false))) AND (($s == 3) OR (($s == 0) AND ($submode == 1)))) {
 									// shift (temporary change only for this char)
 									if ($s == 3) {
 										// shift to puntuaction
@@ -952,7 +952,7 @@ class PDF417 {
 						$cw = array_merge($cw, $cw6);
 					} else {
 						for ($i = 0; $i < $sublen; ++$i) {
-							$cw[] = ord($code{$i});
+							$cw[] = ord($code[$i]);
 						}
 					}
 					$code = $rest;

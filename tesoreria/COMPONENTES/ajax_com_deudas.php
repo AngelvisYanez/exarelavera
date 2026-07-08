@@ -14,7 +14,7 @@ if (isset($deudas))
 <FIELDSET class="Busqueda_ajax">
    <label class="Titulos2">Cuentas por cobrar</label>
 <table width="100%" border="1" cellpadding="0" cellspacing="0" class="Busqueda_ajax">
-		<?
+		<?php
 		if ($total_rs_deuda > 0) {
 	  		  $leyenda = "no";
 			  $puntero_actual = $row_rs_deuda['Car_Int'];
@@ -152,14 +152,14 @@ if (isset($deudas))
 				$row_rs_modulos = $obBD_con1->registros();			
 			}//Fin del if ($row_rs_deuda['Asi_Int'] != 0) ?>
       		<tr <?Php if ($row_rs_deuda['Deu_Fec'] < $hoy){  $leyenda = "si"; echo "class='LetraNegra' bgcolor='".$row_rs_confi_teso['Col_Cad']."'"; }else { ?> class="Cuerpo_ajax" <?php } ?>>
-      			<td align="center"><? echo $row_rs_deuda['Pro_Cod']; ?></td>
-        		<td align="center" width="8%"><? echo $row_rs_deuda['Pro_Ide']; ?></td>
-        		<td><? echo $row_rs_deuda['Ite_Lar']; ?></td>
-        		<td><? echo $row_rs_modulos['Asi_Des']."&nbsp;"; ?></td>						
-				<td align="center" width="8%"><? echo $row_rs_deuda['Deu_Fec']; ?></td>
-				<td align="right"><? echo formato_numero($row_rs_deuda['Deu_Val'] -  $row_rs_pagos['Vet_Imp'],2,1); ?></td>						
+      			<td align="center"><?php echo $row_rs_deuda['Pro_Cod']; ?></td>
+        		<td align="center" width="8%"><?php echo $row_rs_deuda['Pro_Ide']; ?></td>
+        		<td><?php echo $row_rs_deuda['Ite_Lar']; ?></td>
+        		<td><?php echo $row_rs_modulos['Asi_Des']."&nbsp;"; ?></td>						
+				<td align="center" width="8%"><?php echo $row_rs_deuda['Deu_Fec']; ?></td>
+				<td align="right"><?php echo formato_numero($row_rs_deuda['Deu_Val'] -  $row_rs_pagos['Vet_Imp'],2,1); ?></td>						
 				<td align="center"><?Php echo $mensaje; ?></td>
-				<td align="right"><? echo formato_numero($saldo,2,1); 
+				<td align="right"><?php echo formato_numero($saldo,2,1); 
 				/* Calculo del total suma interes */ 
 	     			$suma_deuda= $suma_deuda + $saldo; ?></td>																		
         		<td align="center" class="Cuerpo_ajax" width="4%"><img src="../../imagenes/insertar.jpg" style="cursor:pointer" width="22" height="22" 
@@ -211,14 +211,14 @@ if (isset($deudas))
 					?>
 				
 				<tr <?Php if ($row_rs_interes['Deu_Fec'] < $hoy){  $leyenda = "si"; echo "class='LetraNegra' bgcolor='".$row_rs_confi_teso['Col_Cad']."'"; } else { ?> class="Cuerpo_ajax" <?php } ?>>
-      				  <td align="center"><strong><? echo $row_rs_interes['Pro_Cod']; ?></strong></td>
-        			  <td align="center"><strong><? echo $row_rs_interes['Pro_Ide']; ?></strong></td>
-        			  <td><strong><a class="href_4" title="Proyecci&oacute;n de interes en los proximos d&iacute;as" style="cursor:pointer" onClick="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?codigo=<?Php echo $codigo; ?>&Pro_Cod=<?Php echo $Pro_Cod; ?>&interes=<?php echo $saldo_int; ?>&proye', 'proyecciones')"><? echo $row_rs_interes['Ite_Lar']; ?></a> </strong></td>
+      				  <td align="center"><strong><?php echo $row_rs_interes['Pro_Cod']; ?></strong></td>
+        			  <td align="center"><strong><?php echo $row_rs_interes['Pro_Ide']; ?></strong></td>
+        			  <td><strong><a class="href_4" title="Proyecci&oacute;n de interes en los proximos d&iacute;as" style="cursor:pointer" onClick="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?codigo=<?Php echo $codigo; ?>&Pro_Cod=<?Php echo $Pro_Cod; ?>&interes=<?php echo $saldo_int; ?>&proye', 'proyecciones')"><?php echo $row_rs_interes['Ite_Lar']; ?></a> </strong></td>
 					  <td>&nbsp;</td>							
-					  <td align="center"><strong><? echo $row_rs_interes['Deu_Fec']; ?></strong></td>
-					  <td align="right"><strong><? echo round($row_rs_interes['Deu_Val'] -  $row_rs_pagos_int['Vet_Imp'],2); ?></strong></td>						
+					  <td align="center"><strong><?php echo $row_rs_interes['Deu_Fec']; ?></strong></td>
+					  <td align="right"><strong><?php echo round($row_rs_interes['Deu_Val'] -  $row_rs_pagos_int['Vet_Imp'],2); ?></strong></td>						
 					  <td align="center">&nbsp;</td>
-					  <td align="right"><strong><? echo number_format($saldo_int,2); ?></strong>
+					  <td align="right"><strong><?php echo number_format($saldo_int,2); ?></strong>
 					  <?php /* Calculo del total suma interes */ 
 						     $suma_interes= $suma_interes + $saldo_int; ?>
 					  
@@ -248,7 +248,7 @@ if (isset($deudas))
 	  				<tr>
 						<td colspan="9"><div align="center"><?php echo error_alerta("No hay resultados que mostrar", 1)?></div></td>
 	  				</tr>
-	  		<? }?>
+	  		<?php }?>
 			<tr>
 				<td colspan="9" align="center"><img src="../../imagenes/ocultar2.jpg" height="12" style="cursor:pointer" alt="Ocultar" onClick="ShowHide('deudas_table')">
 				</td>

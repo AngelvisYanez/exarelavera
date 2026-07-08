@@ -10,7 +10,17 @@ export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [empresaSearch, setEmpresaSearch] = useState("");
   const [selectedEmpresa, setSelectedEmpresa] = useState("");
+
+  const empresasFiltradas = empresas.filter((emp) => {
+    if (!empresaSearch) return true;
+    const q = empresaSearch.toLowerCase();
+    return (
+      emp.Emp_Cor.toLowerCase().includes(q) ||
+      (emp.Suc_Des || "").toLowerCase().includes(q)
+    );
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -44,7 +54,7 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username || !password || (!selectedEmpresa && empresas.length > 0)) {
+    if (!username || !password || (!selectedEmpresa && empresasFiltradas.length > 0)) {
       setError("Por favor completa todos los campos");
       return;
     }
@@ -55,7 +65,7 @@ export default function LoginPage() {
       await login(
         username,
         password,
-        selectedEmpresa || (empresas[0]?.Emp_Cod ?? ""),
+        selectedEmpresa || (empresasFiltradas[0]?.Emp_Cod ?? ""),
       );
       router.push("/dashboard");
     } catch (err) {
@@ -100,18 +110,26 @@ export default function LoginPage() {
           </div>
 
           {empresas.length > 0 && (
-            <div className="animate-fade-in">
+            <div className="animate-fade-in space-y-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Empresa
               </label>
+              <input
+                type="text"
+                value={empresaSearch}
+                onChange={(e) => setEmpresaSearch(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-black"
+                placeholder="Buscar empresa..."
+              />
               <select
                 value={selectedEmpresa}
                 onChange={(e) => setSelectedEmpresa(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-black"
                 required
+                size={Math.min(empresasFiltradas.length, 6)}
               >
                 <option value="">-- Seleccione --</option>
-                {empresas.map((emp, index) => (
+                {empresasFiltradas.map((emp, index) => (
                   <option
                     key={`${emp.Emp_Cod}-${emp.Suc_Des || index}`}
                     value={emp.Emp_Cod}
@@ -120,6 +138,9 @@ export default function LoginPage() {
                   </option>
                 ))}
               </select>
+              {empresaSearch && empresasFiltradas.length === 0 && (
+                <p className="text-xs text-gray-500">Sin resultados</p>
+              )}
             </div>
           )}
 

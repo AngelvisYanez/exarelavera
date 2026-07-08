@@ -111,7 +111,7 @@ if (isset($ajax_distributi))
                 <?Php echo $row_rs_distributi['Asi_Des'];				 
                         if ($row_rs_distributi['Dis_Sub'] != '')
                         { 
-                           echo " [".utf8_encode($row_rs_distributi['Dis_Sub'])."]";
+                           echo " [".mb_convert_encoding($row_rs_distributi['Dis_Sub'], 'UTF-8', 'ISO-8859-1')."]";
                         } ?>
         </option>
         <?Php }while($row_rs_distributi=$obBD_con1->fetch_assoc($rs_distributi));?>

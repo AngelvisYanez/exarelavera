@@ -43,7 +43,7 @@ $hoy = date("Y-m-d");
 <table width="100%" height="100%" border="0" align="center">
   <tr>
     <td height="1" colspan="4" align="center" valign="top">
-	<? if($total_rs_cabcomp > 0) {
+	<?php if($total_rs_cabcomp > 0) {
 	/* Consulta de los tipos de asientos */
 	$rs_tipo_asien = $obBD_con1->consulta(sentencias_con(210, ''), $obBD_conexion->conexion);
 	$row_rs_tipo_asien = $obBD_con1->registros();
@@ -92,10 +92,10 @@ $hoy = date("Y-m-d");
         <td colspan="5" valign="top"><HR></td>
       </tr>
       <tr align="center">
-        <td colspan="5" valign="top" class="TITULO_REPORTE_2"><span class="Estilo2">Comprobante de <? echo $etiqueta; ?> N</span><span class="TITULO_REPORTE">o</span> <? echo "C".$row_rs_cabcomp['Tia_Ini']."-".$mes."-".$row_rs_cabcomp['Com_Num']; ?></td>
+        <td colspan="5" valign="top" class="TITULO_REPORTE_2"><span class="Estilo2">Comprobante de <?php echo $etiqueta; ?> N</span><span class="TITULO_REPORTE">o</span> <?php echo "C".$row_rs_cabcomp['Tia_Ini']."-".$mes."-".$row_rs_cabcomp['Com_Num']; ?></td>
         </tr>
       <tr align="center">
-        <td colspan="5" valign="top" class="TITULO_REPORTE"><div align="right"><span class="TITULO_REPORTE">POR:</span> <span class="TITULO_REPORTE_2">$<? echo number_format($row_rs_cabcomp['Com_Val'],2); ?></span>
+        <td colspan="5" valign="top" class="TITULO_REPORTE"><div align="right"><span class="TITULO_REPORTE">POR:</span> <span class="TITULO_REPORTE_2">$<?php echo number_format($row_rs_cabcomp['Com_Val'],2); ?></span>
             </div></td>
       </tr>
     </table>
@@ -111,25 +111,25 @@ $hoy = date("Y-m-d");
         </span></td>
       </tr>
       <tr align="center">
-        <td colspan="2" class="TITULO_REPORTE"><div align="left"><? echo $etiqueta2; ?></div></td>
-        <td colspan="3" class="Texto_Reporte"><div align="left"><? 
+        <td colspan="2" class="TITULO_REPORTE"><div align="left"><?php echo $etiqueta2; ?></div></td>
+        <td colspan="3" class="Texto_Reporte"><div align="left"><?php 
 					echo $row_rs_cabcomp['Prs_Ape'].' '.$row_rs_cabcomp['Prs_Nom'];  
 					?></div>          <div align="left"></div></td>
         </tr>
 	  
       <tr align="center">
         <td colspan="2" class="TITULO_REPORTE"><div align="left">LA cantidad DE :</div></td>
-        <td colspan="3" class="Texto_Reporte" style="text-transform:uppercase"><? //echo $row_rs_cabcomp['Com_Val']; 
+        <td colspan="3" class="Texto_Reporte" style="text-transform:uppercase"><?php //echo $row_rs_cabcomp['Com_Val']; 
 			$v_absoluto=explode(".",$row_rs_cabcomp['Com_Val']);
 			echo num2letras($v_absoluto[0],false,true).', '.$v_absoluto[1].' /100 DOLARES AMERICANOS'; ?></td>
         </tr>
       
       <tr align="center">
         <td colspan="2" class="TITULO_REPORTE"><div align="left">POR CONCEPTO :</div></td>
-        <td colspan="3" class="Texto_Reporte"><? echo $row_rs_cabcomp['Com_Con']; ?></td>
+        <td colspan="3" class="Texto_Reporte"><?php echo $row_rs_cabcomp['Com_Con']; ?></td>
       </tr>
     </table>
-	<? } ?></td>
+	<?php } ?></td>
   </tr>
   <tr valign="top">
     <td valign="top"><table width="100%" border="0" cellpadding="0" cellspacing="0">
@@ -164,19 +164,19 @@ $hoy = date("Y-m-d");
 	
 	  ?>
 	  <tr>
-	    <td class="LetraNegra" align="left"><? echo $row_rs_grupos['Pld_Cdc']; ?></td>
-	    <td class="LetraNegra" align="left" style="text-transform:uppercase"><? echo $row_rs_grupos['Pld_Des']." (".$row_rs_etiquetas_g['Pld_Des'].")"; ?></td>
+	    <td class="LetraNegra" align="left"><?php echo $row_rs_grupos['Pld_Cdc']; ?></td>
+	    <td class="LetraNegra" align="left" style="text-transform:uppercase"><?php echo $row_rs_grupos['Pld_Des']." (".$row_rs_etiquetas_g['Pld_Des'].")"; ?></td>
 	    <td class="LetraNegra" align="left" style="text-transform:uppercase">&nbsp;</td>
 	    <td class="LetraNegra" align="right">&nbsp;</td>
 	    <td class="LetraNegra" align="right">&nbsp;</td>
 	    </tr>
 	  <tr>	  
-      <?
+      <?php
 	  
 	  do {
 	  ?>
-        <td class="LetraNegra" align="left"><? echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$row_rs_cuentas['Pld_Cdc']; ?></td>
-        <td class="LetraNegra" align="left"><? 
+        <td class="LetraNegra" align="left"><?php echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$row_rs_cuentas['Pld_Cdc']; ?></td>
+        <td class="LetraNegra" align="left"><?php 
 		if ($row_rs_cuentas['Asi_Deh']=='D') { 
 			 echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$row_rs_cuentas['Pld_Des']; 
 			 }else
@@ -184,13 +184,13 @@ $hoy = date("Y-m-d");
 			 ?></td>
 		<td class="LetraNegra" align="left"><?Php echo $row_rs_cuentas['Asi_Glo']; ?></td>
 		<td class="LetraNegra" align="right">         
-            <? if ($row_rs_cuentas['Asi_Deh']=='D') { echo number_format($row_rs_cuentas['Asi_Val'],2); 
+            <?php if ($row_rs_cuentas['Asi_Deh']=='D') { echo number_format($row_rs_cuentas['Asi_Val'],2); 
 					$total=$total + $row_rs_cuentas['Asi_Val']; } else { echo '&nbsp'; }?>         </td>
 		 <td class="LetraNegra" align="right">
-		   <? if ($row_rs_cuentas['Asi_Deh']=='H') { echo number_format($row_rs_cuentas['Asi_Val'],2); 
+		   <?php if ($row_rs_cuentas['Asi_Deh']=='H') { echo number_format($row_rs_cuentas['Asi_Val'],2); 
 		   		} else{ echo '&nbsp'; } ?></td>
       </tr>
-	  <?
+	  <?php
 	  } while($row_rs_cuentas=mysqli_fetch_assoc($rs_cuentas)); 
 	 }while($row_rs_grupos=mysqli_fetch_assoc($rs_grupos));
 	/* Consulta las cuentas de grupo */
@@ -206,8 +206,8 @@ $hoy = date("Y-m-d");
 		$total_rs_etiquetas_g = $obBD_con1->numregistros();
 	?>
 	  <tr>
-	    <td class="LetraNegra" align="left"><? echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$row_rs_grupos['Pld_Cdc']; ?></td>
-	    <td class="LetraNegra" align="left" style="text-transform:uppercase"><? echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$row_rs_grupos['Pld_Des']." (".$row_rs_etiquetas_g['Pld_Des'].")"; ?></td>
+	    <td class="LetraNegra" align="left"><?php echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$row_rs_grupos['Pld_Cdc']; ?></td>
+	    <td class="LetraNegra" align="left" style="text-transform:uppercase"><?php echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$row_rs_grupos['Pld_Des']." (".$row_rs_etiquetas_g['Pld_Des'].")"; ?></td>
 	    <td class="LetraNegra" align="left" style="text-transform:uppercase">&nbsp;</td>
 	    <td class="LetraNegra" align="right">&nbsp;</td>
 	    <td class="LetraNegra" align="right">&nbsp;</td>
@@ -222,8 +222,8 @@ $hoy = date("Y-m-d");
 	  do {
 	  ?>
 	  <tr>
-        <td class="LetraNegra" align="left"><? echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$row_rs_cuentas['Pld_Cdc']; ?></td>
-        <td class="LetraNegra" align="left"><? 
+        <td class="LetraNegra" align="left"><?php echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$row_rs_cuentas['Pld_Cdc']; ?></td>
+        <td class="LetraNegra" align="left"><?php 
 		if ($row_rs_cuentas['Asi_Deh']=='D') { 
 			 echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$row_rs_cuentas['Pld_Des']; 
 			 }else
@@ -231,25 +231,25 @@ $hoy = date("Y-m-d");
 			 ?></td>
 		<td class="LetraNegra" align="left"><?Php echo $row_rs_cuentas['Asi_Glo']; ?></td>
 		<td class="LetraNegra" align="right">         
-            <? if ($row_rs_cuentas['Asi_Deh']=='D') { echo number_format($row_rs_cuentas['Asi_Val'],2); 
+            <?php if ($row_rs_cuentas['Asi_Deh']=='D') { echo number_format($row_rs_cuentas['Asi_Val'],2); 
 					$total=$total + $row_rs_cuentas['Asi_Val']; } else { echo '&nbsp'; }?>         </td>
 		 <td class="LetraNegra" align="right">
-		   <? if ($row_rs_cuentas['Asi_Deh']=='H') { echo number_format($row_rs_cuentas['Asi_Val'],2); 
+		   <?php if ($row_rs_cuentas['Asi_Deh']=='H') { echo number_format($row_rs_cuentas['Asi_Val'],2); 
 		   		} else{ echo '&nbsp'; } ?></td>
       </tr>
-	  <?
+	  <?php
 	  } while($row_rs_cuentas=mysqli_fetch_assoc($rs_cuentas)); 
 	 }while($row_rs_grupos = mysqli_fetch_assoc($rs_grupos));
 	  ?>
 	  
 	  <tr>
         <td colspan="3" class="TITULO_REPORTE"><div align="right"><strong>SUMAN:</strong></div></td>
-        <td class="TITULO_REPORTE"><div align="right"><? echo number_format($total,2); ?></div>          </td>
-		<td class="TITULO_REPORTE"><div align="right"><? echo number_format($total,2); ?></div>		  </td>
+        <td class="TITULO_REPORTE"><div align="right"><?php echo number_format($total,2); ?></div>          </td>
+		<td class="TITULO_REPORTE"><div align="right"><?php echo number_format($total,2); ?></div>		  </td>
       </tr>
 	  
     </table>
-	<?
+	<?php
 	/* Cargado de los cheques del comprobante */
 	$rs_carcheq = $obBD_con1->consulta(sentencias_con(334, $obBD_con1->parametros($row_rs_cabcomp['Com_Cod'])), $obBD_conexion->conexion);
 	$row_rs_carcheq = $obBD_con1->registros();
@@ -267,24 +267,24 @@ $hoy = date("Y-m-d");
             <td width="10%" align="center" class="TablaRepCompr">N&ordm; Ch.</td>
             <td width="10%" align="center" class="TablaRepCompr">Valor</td>
           </tr>
-          <?
+          <?php
 	 do {
 	 $fila++;
 	 $nombre=explode(" ",$row_rs_carcheq['Prs_Nom']);
 	 ?>
           <tr>
-            <td class="LetraNegra"><? echo $row_rs_carcheq['Pld_Des']; ?></td>
-            <td class="LetraNegra"><? echo $row_rs_carcheq['Prs_Ape'].' '.$nombre[0]; ?></td>
-            <td align="right" class="LetraNegra"><? echo $row_rs_carcheq['Che_Num']; ?></td>
-            <td align="right" class="LetraNegra"><? echo number_format($row_rs_carcheq['Che_Val'],2); ?></td>
+            <td class="LetraNegra"><?php echo $row_rs_carcheq['Pld_Des']; ?></td>
+            <td class="LetraNegra"><?php echo $row_rs_carcheq['Prs_Ape'].' '.$nombre[0]; ?></td>
+            <td align="right" class="LetraNegra"><?php echo $row_rs_carcheq['Che_Num']; ?></td>
+            <td align="right" class="LetraNegra"><?php echo number_format($row_rs_carcheq['Che_Val'],2); ?></td>
           </tr>
-          <? } while ($row_rs_carcheq = mysqli_fetch_assoc($rs_carcheq)); ?>
+          <?php } while ($row_rs_carcheq = mysqli_fetch_assoc($rs_carcheq)); ?>
         </tbody>
       </table>
-	  <? }
+	  <?php }
 	?>
 	<br>
-	<? switch ($tipo){
+	<?php switch ($tipo){
 		case 1: ?>
 	<table width="100%" border="0" align="center" cellpadding="2" cellspacing="0" class="Texto_Reporte">
       <tr>
@@ -355,7 +355,7 @@ $hoy = date("Y-m-d");
 		  <td valign="top" align="center"><div align="center"><span >C.I</span>...................................</div></td>
 	    </tr>
 	</table>
-	<? break;
+	<?php break;
 	   case 3: ?>
 	<table width="100%" border="0" align="center" cellpadding="2" cellspacing="0" class="Texto_Reporte">
       <tr>
@@ -387,7 +387,7 @@ $hoy = date("Y-m-d");
         <td valign="top" align="center"><div align="center"><span >C.I</span>...................................</div></td>
       </tr>
     </table>
-	<? break;	
+	<?php break;	
 	} //Fin del switch ($tipo){
 	?>  
   </tr>

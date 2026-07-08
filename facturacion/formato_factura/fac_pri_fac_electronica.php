@@ -78,25 +78,25 @@ if (isset($Vet_Cod)) {
 	$topIn = 15;
 
 	?>
-	<span style="top:5px;left:150px;margin-left:80px;" class="textos"><img style="width: 90px; height: 100%;" src="<? echo $row_institucion['Emp_Log']; ?>"></span>
-	<span style="top:<? echo $top;
-						$top = $top + $topIn; ?>px;left:5px;" class="flota"><? echo $row_institucion['Emp_Nom']; ?></span>
-	<span style="top:<? echo $top; ?>px;left:5px;" class="textos">R.U.C: </span>
-	<span style="top:<? echo $top;
-						$top = $top + $topIn; ?>px;left:70px;" class="flota"><? echo $row_institucion['Emp_Ruc']; ?></span>
-	<span style="top:<? echo $top; ?>px;left:5px;" class="textos">Correo: </span>
-	<span style="top:<? echo $top;
-						$top = $top + $topIn; ?>px;left:70px;" class="flota"><? echo $row_institucion['Suc_Cor']; ?></span>
-	<span style="top:<? echo $top; ?>px;left:5px;" class="textos">Telef: </span>
-	<span style="top:<? echo $top;
-						$top = $top + $topIn; ?>px;left:70px;" class="flota"><? echo $row_institucion['Suc_Te1']; ?></span>
+	<span style="top:5px;left:150px;margin-left:80px;" class="textos"><img style="width: 90px; height: 100%;" src="<?php echo $row_institucion['Emp_Log']; ?>"></span>
+	<span style="top:<?php echo $top;
+						$top = $top + $topIn; ?>px;left:5px;" class="flota"><?php echo $row_institucion['Emp_Nom']; ?></span>
+	<span style="top:<?php echo $top; ?>px;left:5px;" class="textos">R.U.C: </span>
+	<span style="top:<?php echo $top;
+						$top = $top + $topIn; ?>px;left:70px;" class="flota"><?php echo $row_institucion['Emp_Ruc']; ?></span>
+	<span style="top:<?php echo $top; ?>px;left:5px;" class="textos">Correo: </span>
+	<span style="top:<?php echo $top;
+						$top = $top + $topIn; ?>px;left:70px;" class="flota"><?php echo $row_institucion['Suc_Cor']; ?></span>
+	<span style="top:<?php echo $top; ?>px;left:5px;" class="textos">Telef: </span>
+	<span style="top:<?php echo $top;
+						$top = $top + $topIn; ?>px;left:70px;" class="flota"><?php echo $row_institucion['Suc_Te1']; ?></span>
 
 	<?php
 	$altoDireccion = count(explode("\n", $row_institucion['Suc_Dir'])) * 4; // Ajusta 12 segÃºn el tamaÃ±o de fuente y espaciado
 
 	// Incrementar top antes de la direcciÃ³n
 	?>
-	<span style="top:<? echo $top;
+	<span style="top:<?php echo $top;
 						$top = $top + $topIn; ?>px;left:5px;" class="textos">DirecciÃ³n: </span>
 	<span style="top:<?php echo $top; ?>px;left:5px; white-space: pre-wrap; font-size: small; text-align: justify;" class="flota"><?php echo utf8(wrapText($row_institucion['Suc_Dir'], 40)); ?>
 	</span>
@@ -105,7 +105,7 @@ if (isset($Vet_Cod)) {
 	$top = $top + $topIn * $altoDireccion;
 	if ($row_institucion['Emp_Cnt'] == 'S') {
 	?>
-		<span style="top:<? echo $top;
+		<span style="top:<?php echo $top;
 							$top = $top + $topIn; ?>px;left:5px;" class="flota">OBLIGADO A LLEVAR CONTABILIDAD</span>
 	<?Php
 	}
@@ -114,7 +114,7 @@ if (isset($Vet_Cod)) {
 	<?Php
 	if ($row_institucion['Cof_Rim'] == 'S') {
 	?>
-		<span style="top:<? echo $top;
+		<span style="top:<?php echo $top;
 							$top = $top + $topIn; ?>px;left:5px;" class="flota">Contribuyente Regimen Rimpe</span>
 	<?Php
 	}
@@ -123,63 +123,63 @@ if (isset($Vet_Cod)) {
 	<?Php
 	if ($row_institucion['Cof_Age'] == 'S') {
 	?>
-		<span style="top:<? echo $top;
+		<span style="top:<?php echo $top;
 							$top = $top + $topIn; ?>px;left:5px;" class="flota">Agente de Retencion No. Resolucion 1</span>
 	<?Php
 	}
 	?>
 
-	<span style="top:<? echo $top;
+	<span style="top:<?php echo $top;
 						$top = $top + $topIn; ?>px;left:0px;" class="flota"> - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</span>
-	<span style="top:<? echo $top; ?>px;left:5px;" class="textos">Cliente: </span>
-	<span style="top:<? echo $top;
-						$top = $top + $topIn; ?>px;left:60px;" class="flota"><? if ($row_rs_representante['Cli_Fac'] != "") {
+	<span style="top:<?php echo $top; ?>px;left:5px;" class="textos">Cliente: </span>
+	<span style="top:<?php echo $top;
+						$top = $top + $topIn; ?>px;left:60px;" class="flota"><?php if ($row_rs_representante['Cli_Fac'] != "") {
 																					echo $row_rs_representante['Cli_Fac'];
 																				} else {
 																					echo utf8($row_rs_cliente['Prs_Ape']) . ' ' . utf8($row_rs_cliente['Prs_Nom']);
 																				} ?></span>
-	<span style="top:<? echo $top; ?>px;left:5px;" class="textos">DirecciÃ³n: </span>
-	<span style="top:<? echo $top;
-						$top = $top + $topIn; ?>px;left:70px;" class="flota"><? if ($row_rs_representante['Cli_Dir'] != "") {
+	<span style="top:<?php echo $top; ?>px;left:5px;" class="textos">DirecciÃ³n: </span>
+	<span style="top:<?php echo $top;
+						$top = $top + $topIn; ?>px;left:70px;" class="flota"><?php if ($row_rs_representante['Cli_Dir'] != "") {
 																					echo substr($row_rs_representante['Cli_Dir'], 0, 31);
 																				} else {
 																					echo utf8(substr($row_rs_cliente['Prs_Dir'], 0, 31));
 																				} ?></span>
-	<span style="top:<? echo $top; ?>px;left:5px;" class="textos">CI/R.U.C: </span>
-	<span style="top:<? echo $top;
-						$top = $top + $topIn; ?>px;left:70px;" class="flota"><? if ($row_rs_representante['Cli_Fac'] != "") {
+	<span style="top:<?php echo $top; ?>px;left:5px;" class="textos">CI/R.U.C: </span>
+	<span style="top:<?php echo $top;
+						$top = $top + $topIn; ?>px;left:70px;" class="flota"><?php if ($row_rs_representante['Cli_Fac'] != "") {
 																					echo $row_rs_representante['Cli_Ruf'];
 																				} else {
 																					echo $row_rs_cliente['Prs_Ced'];
 																				} ?></span>
-	<span style="top:<? echo $top; ?>px;left:5px;" class="textos">Ciudad: </span>
-	<span style="top:<? echo $top;
-						$top = $top + $topIn; ?>px;left:60px;" class="flota"><? echo $row_rs_cliente['Ciu_Des']; ?></span>
+	<span style="top:<?php echo $top; ?>px;left:5px;" class="textos">Ciudad: </span>
+	<span style="top:<?php echo $top;
+						$top = $top + $topIn; ?>px;left:60px;" class="flota"><?php echo $row_rs_cliente['Ciu_Des']; ?></span>
 
-	<span style="top:<? echo $top;
+	<span style="top:<?php echo $top;
 						$top = $top + $topIn; ?>px;left:0px;" class="flota"> - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</span>
-	<span style="top:<? echo $top;
+	<span style="top:<?php echo $top;
 						$top = $top + $topIn; ?>px;left:5px;" class="textos">COMPROBANTE ELECTRONICO DE VENTA </span>
-	<span style="top:<? echo $top; ?>px;left:5px;" class="textos">Nro: </span>
-	<span style="top:<? echo $top;
-						$top = $top + $topIn; ?>px;left:70px;" class="flota"><? echo $row_rs_cliente['Fac_Num']; ?></span>
-	<span style="top:<? echo $top; ?>px;left:5px;" class="textos">Fecha: </span>
-	<span style="top:<? echo $top;
-						$top = $top + $topIn; ?>px;left:70PX;" class="flota"><? echo $dia . '/' . $mes . '/' . $anio; ?></span>
-	<span style="top:<? echo $top; ?>px;left:5px;" class="textos">Clave: </span>
-	<span style="top:<? echo $top;
-						$top = $top + $topIn; ?>px;left:70px; width: 250px" class="flota ajustar"><? echo $row_rs_cliente['Vet_Sri']; ?> </span>
+	<span style="top:<?php echo $top; ?>px;left:5px;" class="textos">Nro: </span>
+	<span style="top:<?php echo $top;
+						$top = $top + $topIn; ?>px;left:70px;" class="flota"><?php echo $row_rs_cliente['Fac_Num']; ?></span>
+	<span style="top:<?php echo $top; ?>px;left:5px;" class="textos">Fecha: </span>
+	<span style="top:<?php echo $top;
+						$top = $top + $topIn; ?>px;left:70PX;" class="flota"><?php echo $dia . '/' . $mes . '/' . $anio; ?></span>
+	<span style="top:<?php echo $top; ?>px;left:5px;" class="textos">Clave: </span>
+	<span style="top:<?php echo $top;
+						$top = $top + $topIn; ?>px;left:70px; width: 250px" class="flota ajustar"><?php echo $row_rs_cliente['Vet_Sri']; ?> </span>
 
-	<span style="top:<? echo $top + 10; ?>px;left:0px;" class="flota"> - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</span>
+	<span style="top:<?php echo $top + 10; ?>px;left:0px;" class="flota"> - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</span>
 
-	<table style="width: 300px; margin:0px; margin-top:<? echo $top; ?>px;">
+	<table style="width: 300px; margin:0px; margin-top:<?php echo $top; ?>px;">
 		<tr>
 			<th>Can. </th>
 			<th>Descripcion</th>
 			<th>P/Unit</th>
 			<th>Total</th>
 		</tr>
-		<?
+		<?php
 
 		$cant_decimales = 2;
 		if ($Ses_Emp_Cod == 534  || $Ses_Emp_Cod == 531 || $Ses_Emp_Cod == 44  || $Ses_Emp_Cod == 340 ) {
@@ -189,12 +189,12 @@ if (isset($Vet_Cod)) {
 		do { ?>
 
 			<tr class="border_bottom">
-				<td><? echo formato_numero($row_rs_cliente['Vet_Can'], 1, 1); ?></td>
-				<td><? echo  utf8($row_rs_cliente['Ite_Lar']) . ' ' . utf8($row_rs_cliente['Pro_Obs']); ?></td>
-				<td style="text-align: left;"><? echo number_format($row_rs_cliente['Vet_Pru'], $cant_decimales); ?></td>
-				<td style="text-align: right;"><? echo number_format($row_rs_cliente['Vet_Imp'], $cant_decimales); ?></td>
+				<td><?php echo formato_numero($row_rs_cliente['Vet_Can'], 1, 1); ?></td>
+				<td><?php echo  utf8($row_rs_cliente['Ite_Lar']) . ' ' . utf8($row_rs_cliente['Pro_Obs']); ?></td>
+				<td style="text-align: left;"><?php echo number_format($row_rs_cliente['Vet_Pru'], $cant_decimales); ?></td>
+				<td style="text-align: right;"><?php echo number_format($row_rs_cliente['Vet_Imp'], $cant_decimales); ?></td>
 			</tr>
-		<?
+		<?php
 		} while ($row_rs_cliente = $obBD_con1->fetch_assoc($rs_cliente));
 		$resultados = explode('*', $obBD_con1->calculos($Vet_Cod, $obBD_conexion));
 

@@ -51,13 +51,13 @@ $row_institucion = $obBD_con1->getRowConsulta(126, $Ses_Suc_Cod, $obBD_conexion)
         <td class="Texto_Reporte" style="font-size:14px;">&nbsp;</td>
       </tr>
       <tr>
-		<td height="30" colspan="2" valign="middle" class="Texto_Reporte" style="font-size:14px;">&nbsp;&nbsp;&nbsp;<strong><? if($row_pri_cheque['Che_Ben']==''){echo $row_pri_cheque['Prs_Ape'].' '.$row_pri_cheque['Prs_Nom'];}else{echo $row_pri_cheque['Che_Ben'];} ?></strong></td>		
-		<td width="204" valign="middle" ><span class="Texto_Reporte" style="font-size:16px;"><strong><? echo number_format($row_pri_cheque['Che_Val'],2); ?></strong></span><strong>xxx</strong></td>
+		<td height="30" colspan="2" valign="middle" class="Texto_Reporte" style="font-size:14px;">&nbsp;&nbsp;&nbsp;<strong><?php if($row_pri_cheque['Che_Ben']==''){echo $row_pri_cheque['Prs_Ape'].' '.$row_pri_cheque['Prs_Nom'];}else{echo $row_pri_cheque['Che_Ben'];} ?></strong></td>		
+		<td width="204" valign="middle" ><span class="Texto_Reporte" style="font-size:16px;"><strong><?php echo number_format($row_pri_cheque['Che_Val'],2); ?></strong></span><strong>xxx</strong></td>
       </tr>
       <tr align="center">
         
         <td height="50" colspan="3" align="left" valign="top"><span class="Texto_Reporte" style="font-size:15px;">&nbsp;&nbsp;<strong>
-          <? $v_absoluto=explode(".",$row_pri_cheque['Che_Val']);
+          <?php $v_absoluto=explode(".",$row_pri_cheque['Che_Val']);
 			echo strtoupper(num2letras($v_absoluto[0],false,true).' '.$v_absoluto[1].' /100'); 
 			//$row_pri_cheque['Che_Val'];
 			?></strong></span><strong> xxxxxxxxxxxx</strong></td>

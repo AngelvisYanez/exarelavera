@@ -1,4 +1,4 @@
-<?	
+<?php	
 
 	require_once('../../administrador/LOGICA/seguridad.php');
 	require_once('../LOGICA/con_log_diario.php');
@@ -57,14 +57,14 @@ if (isset($buscod))
 					$row_rs_recur = $obBD_con1->getRowConsulta(204,$row_rs_buscar['Pld_Rec'],$obBD_conexion);				  
 				  ?>
 				  <tr>
-					  <td><? echo $row_rs_buscar['Pld_Cdc']; ?></td>
-                      <td><?php echo utf8_encode($row_rs_buscar['Pld_Des']); ?></td>
-                      <td align="center"><? if ($row_rs_recur['Pld_Des'] != ""){ echo $row_rs_recur['Pld_Des']; }else{ echo "&nbsp;"; } ?></td>
-                      <td align="center"><? echo $row_rs_buscar['Pld_Tip']; ?></td>				  
-                      <td align="center"><? echo $row_rs_buscar['Pld_Est']; ?></td>
+					  <td><?php echo $row_rs_buscar['Pld_Cdc']; ?></td>
+                      <td><?php echo mb_convert_encoding($row_rs_buscar['Pld_Des'], 'UTF-8', 'ISO-8859-1'); ?></td>
+                      <td align="center"><?php if ($row_rs_recur['Pld_Des'] != ""){ echo $row_rs_recur['Pld_Des']; }else{ echo "&nbsp;"; } ?></td>
+                      <td align="center"><?php echo $row_rs_buscar['Pld_Tip']; ?></td>				  
+                      <td align="center"><?php echo $row_rs_buscar['Pld_Est']; ?></td>
                       <td align="center">
 					  <?Php if ($row_rs_buscar['Pld_Est'] == 'Activa'){?>                      
-					  <button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="document.form1.codRec.value='<? echo $row_rs_buscar['Pld_Rec']; ?>'; document.form1.txt_busqueda.value='<? echo $row_rs_buscar['Pld_Cdc']; ?>';">
+					  <button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="document.form1.codRec.value='<?php echo $row_rs_buscar['Pld_Rec']; ?>'; document.form1.txt_busqueda.value='<?php echo $row_rs_buscar['Pld_Cdc']; ?>';">
 		      <i class="icon-arrow-right icon-white"></i>
 		      </button>
 					  <?php }else{ echo "&nbsp;"; } ?>                         				
@@ -191,7 +191,7 @@ if (!isset($hdd_save) && !isset($hdd_save2))
 }//Fin del if (!isset($hdd_save))
 ?>
 
-<?
+<?php
 if (isset($hdd_save) or isset($hdd_save2))
 {
 	?>
@@ -372,7 +372,7 @@ if ($total_rs_compr > 0) {
 		}
 	?>
     <tr>
-      <td align="center"><? if ($cont==1)
+      <td align="center"><?php if ($cont==1)
 							{
 	  							echo $row_rs_comprobantes['Com_Cod']; 
 							}
@@ -411,7 +411,7 @@ if ($total_rs_compr > 0) {
 							?>	  </td>	  	  
       <td><?Php echo $row_rs_comprobantes['Pld_Des']; ?></td>	  	  
    	  <td width="8%" align="right">&nbsp;
-	  					<? if ($row_rs_comprobantes['Asi_Deh'] == 'D')
+	  					<?php if ($row_rs_comprobantes['Asi_Deh'] == 'D')
 	  					{
 							echo formato_numero($row_rs_comprobantes['Asi_Val'], 2, 4); 
 							$debe = $row_rs_comprobantes['Asi_Val'];
@@ -422,7 +422,7 @@ if ($total_rs_compr > 0) {
 							echo "&nbsp;"; 
 							$debe = 0;
 						}?></td>
-      <td width="8%" align="right">&nbsp;<? if ($row_rs_comprobantes['Asi_Deh'] == 'H')
+      <td width="8%" align="right">&nbsp;<?php if ($row_rs_comprobantes['Asi_Deh'] == 'H')
 	  					{
 							echo formato_numero($row_rs_comprobantes['Asi_Val'], 2, 4); 
 							$haber = $row_rs_comprobantes['Asi_Val'];
@@ -461,13 +461,13 @@ if ($total_rs_compr > 0) {
       <td>&nbsp;</td>
       <td>&nbsp;</td>
         </tr>
-<? } //Fin del else	
+<?php } //Fin del else	
 } //Fin del if ($txt_busqueda)
 	?>
     </tbody>
   </table> 
   
-  <? if ($total_rs_compr > 0) { //Condicion para mostrar o no el boton imprimir ?>
+  <?php if ($total_rs_compr > 0) { //Condicion para mostrar o no el boton imprimir ?>
     <table width="114" border="0" cellpadding="0" cellspacing="0">
     <tr>
     <td width="42%" align="center" >
@@ -478,7 +478,7 @@ if ($total_rs_compr > 0) {
     </td>
     </tr>
     </table> 
-  <? }//Fin del if ($total_rs_cuenta > 0 or $total_rs_saldos > 0) ?>
+  <?php }//Fin del if ($total_rs_cuenta > 0 or $total_rs_saldos > 0) ?>
 </form>
 </FIELDSET>
 <br>

@@ -29,7 +29,7 @@ if (isset($cargarConfi)) {
     $rs_banko=$obBD_con1->getArrayConsulta(26,"", $obBD_conexion);
     $rs_ivass=$obBD_con1->getArrayConsulta(6 ,"", $obBD_conexion);
     $a=1;foreach ($rs_perio as $row){($a==1)?$sel='selected':$sel='';$a++;$Pec_Cod.="<option value=".$row['Pec_Cod']." data-inicio=".$row['Pec_Fei']." data-fin=".$row['Pec_Fef']." $sel>".$row['Anio']."</option>";}
-    $b=1;foreach ($rs_forma as $row){($b==1)?$sel='selected':$sel='';$b++;$For_Cod.="<option value=".$row['For_Cod']." $sel>".utf8_encode($row['For_Des'])."</option>";}
+    $b=1;foreach ($rs_forma as $row){($b==1)?$sel='selected':$sel='';$b++;$For_Cod.="<option value=".$row['For_Cod']." $sel>".mb_convert_encoding($row['For_Des'], 'UTF-8', 'ISO-8859-1')."</option>";}
     $c=1;foreach ($rs_fpago as $row){($c==1)?$sel='selected':$sel='';$c++;$Tpc_Cod.="<option value=".$row['Tpc_Cod']." $sel>".$row['Tpc_Des']."</option>";}
     $d=1;foreach ($rs_tipoc as $row){($d==1)?$sel='selected':$sel='';$d++;$Tic_Cod.="<option value=".$row['Tic_Cod']." $sel>".$row['Tic_Des']."</option>";}
     $e=1;foreach ($rs_banko as $row){($e==1)?$sel='selected':$sel='';$e++;$Bak_Cod.="<option value=".$row['Bak_Cod']." $sel>".$row['Bak_Des']."</option>";}

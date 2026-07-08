@@ -213,12 +213,12 @@ if(isset($saveViaje)){
             <form id="frm_viajes" name="frm_viajes" class="form-horizontal normal" action="javascript:confirmaGuardado();">
                <select id="car_cod" name="car_cod" class="form-control input-xs select_carga" style="display: none;">
                   <?php foreach ($car as $row){?>
-                  <option   value="<?php echo $row['Car_Cod'];?>"><?php echo utf8_decode($row['Car_Des']);?></option>
+                  <option   value="<?php echo $row['Car_Cod'];?>"><?php echo mb_convert_encoding($row['Car_Des'], 'ISO-8859-1', 'UTF-8');?></option>
                   <?php }?>
                </select>
                <select id="mot_cod" name="mot_cod" class="form-control input-xs select_modo" style="display: none;">
                   <?php foreach ($mod as $row){?>
-                  <option  value="<?php echo $row['Mot_Cod'];?>"><?php echo utf8_decode($row['Mot_Des']);?></option>
+                  <option  value="<?php echo $row['Mot_Cod'];?>"><?php echo mb_convert_encoding($row['Mot_Des'], 'ISO-8859-1', 'UTF-8');?></option>
                   <?php }?>
                </select>
                <div class="row">

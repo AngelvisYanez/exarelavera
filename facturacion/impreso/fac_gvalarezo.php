@@ -92,81 +92,81 @@ $claveacceso=$row_rs_cliente['Vet_Xml'];
 </style>
 
 
-<span style="top:<? echo $topCab-20;?>px;left:0px;" class="cabecera"><strong>*FERRETERIA V A L R O C*</strong></span>
+<span style="top:<?php echo $topCab-20;?>px;left:0px;" class="cabecera"><strong>*FERRETERIA V A L R O C*</strong></span>
 
-<span style="top:<? echo $topCab+20;?>px;left:0px;" class="mini"><? echo substr($row_institucion['Suc_Dir'],0,40);?></span>
-<span style="top:<? echo $topCab+35;?>px;left:0px;" class="mini"><? echo "<strong>CEL:</strong> ".$row_institucion['Suc_Te1']."&nbsp;&nbsp;&nbsp;&nbsp;"."<strong>TELF.:</strong> ".$row_institucion['Suc_Te2']?></span>
-<span style="top:<? echo $topCab+50;?>px;left:0px;" class="mini"><? echo "<strong>RUC:</strong> ".$row_institucion['Emp_Ruc']?></span>
-<? if($row_institucion['Emp_Cnt']=='S'){?>
-<span style="top:<? echo $topCab+65;?>px;left:0px;" class="mini"><? echo "OBLIGADO A LLEVAR CONTABILIDAD"?></span>
+<span style="top:<?php echo $topCab+20;?>px;left:0px;" class="mini"><?php echo substr($row_institucion['Suc_Dir'],0,40);?></span>
+<span style="top:<?php echo $topCab+35;?>px;left:0px;" class="mini"><?php echo "<strong>CEL:</strong> ".$row_institucion['Suc_Te1']."&nbsp;&nbsp;&nbsp;&nbsp;"."<strong>TELF.:</strong> ".$row_institucion['Suc_Te2']?></span>
+<span style="top:<?php echo $topCab+50;?>px;left:0px;" class="mini"><?php echo "<strong>RUC:</strong> ".$row_institucion['Emp_Ruc']?></span>
+<?php if($row_institucion['Emp_Cnt']=='S'){?>
+<span style="top:<?php echo $topCab+65;?>px;left:0px;" class="mini"><?php echo "OBLIGADO A LLEVAR CONTABILIDAD"?></span>
 <?}?>
-<span style="top:<? echo $topCab+75;?>px;left:20px;" class="mini">
+<span style="top:<?php echo $topCab+75;?>px;left:20px;" class="mini">
 	<div>
 		<img id="barcode6"/>
 		<script>
 			//var repeat6 = function(){
-			//	JsBarcode("#barcode6", "<? echo $row_institucion['Suc_Sri'].'-'.$auto['Pun_Sri'].'-'.str_pad($row_rs_cliente['Vet_Num'], 9, "0", STR_PAD_LEFT);?>",{width:1 ,height:"27" ,format:"code128",displayValue:false,fontSize:10});
+			//	JsBarcode("#barcode6", "<?php echo $row_institucion['Suc_Sri'].'-'.$auto['Pun_Sri'].'-'.str_pad($row_rs_cliente['Vet_Num'], 9, "0", STR_PAD_LEFT);?>",{width:1 ,height:"27" ,format:"code128",displayValue:false,fontSize:10});
 			//};			
 			//repeat6();
 		</script>
 	</div>
 </span>
-<? if ($row_rs_cliente['Tic_Cod']==1){ ?>
-<span style="top:<? echo $topCab+83;?>px;left:0px;" class="flota">CLAVE DE ACCESO  /  AUTORIZACION</span>
-<span style="top:<? echo $topCab+100;?>px;left:0px; text-align: left; width: 280px;" class="flota ca"><? echo $row_rs_cliente['Vet_Xml'];?></span>
-<? }else{$top=100;}?>
+<?php if ($row_rs_cliente['Tic_Cod']==1){ ?>
+<span style="top:<?php echo $topCab+83;?>px;left:0px;" class="flota">CLAVE DE ACCESO  /  AUTORIZACION</span>
+<span style="top:<?php echo $topCab+100;?>px;left:0px; text-align: left; width: 280px;" class="flota ca"><?php echo $row_rs_cliente['Vet_Xml'];?></span>
+<?php }else{$top=100;}?>
 
-<span style="top:<? echo $top+20;?>px;left:0px;" class="flota"><strong><? if($row_rs_cliente['Tic_Cod']==1){ echo "FACTURA:";}else{echo "RECIBO:";}?></strong>&nbsp;<? echo $row_institucion['Suc_Sri'].'-'.$auto['Pun_Sri'].'-'.str_pad($row_rs_cliente['Vet_Num'], 9, "0", STR_PAD_LEFT);?></span>
-<span style="top:<? echo $top+35;?>px;left:0px;" class="flota"><strong>CI/RUC:</strong>&nbsp;<? if ($row_rs_representante['Cli_Fac'] != ""){echo $row_rs_representante['Cli_Ruf'];}else{echo $row_rs_cliente['Prs_Ced'];}?></span>
-<span style="top:<? echo $top+50;?>px;left:0px;" class="flota"><strong>CLIENTE:</strong>&nbsp;<? echo $row_rs_cliente['Prs_Ape'].' '.$row_rs_cliente['Prs_Nom'];?></span>
+<span style="top:<?php echo $top+20;?>px;left:0px;" class="flota"><strong><?php if($row_rs_cliente['Tic_Cod']==1){ echo "FACTURA:";}else{echo "RECIBO:";}?></strong>&nbsp;<?php echo $row_institucion['Suc_Sri'].'-'.$auto['Pun_Sri'].'-'.str_pad($row_rs_cliente['Vet_Num'], 9, "0", STR_PAD_LEFT);?></span>
+<span style="top:<?php echo $top+35;?>px;left:0px;" class="flota"><strong>CI/RUC:</strong>&nbsp;<?php if ($row_rs_representante['Cli_Fac'] != ""){echo $row_rs_representante['Cli_Ruf'];}else{echo $row_rs_cliente['Prs_Ced'];}?></span>
+<span style="top:<?php echo $top+50;?>px;left:0px;" class="flota"><strong>CLIENTE:</strong>&nbsp;<?php echo $row_rs_cliente['Prs_Ape'].' '.$row_rs_cliente['Prs_Nom'];?></span>
 
-<span style="top:<? echo $top+65;?>px;left:0px;" class="flota"><strong>FECHA:</strong>&nbsp;<? echo $dia.'/'.$mes.'/'.$anio.'&nbsp;&nbsp;'.substr($row_rs_cliente['Vet_Sys'],11,18); ?></span>
-<? if($claveacceso!=''){?>
+<span style="top:<?php echo $top+65;?>px;left:0px;" class="flota"><strong>FECHA:</strong>&nbsp;<?php echo $dia.'/'.$mes.'/'.$anio.'&nbsp;&nbsp;'.substr($row_rs_cliente['Vet_Sys'],11,18); ?></span>
+<?php if($claveacceso!=''){?>
 
-<? }?>
+<?php }?>
 
-<span style="top:<? echo $top+95;?>px;left:0px;" class="flota">DETALLE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CANT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;P.U.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TOTAL</span>
-<span style="top:<? echo $top+105;?>px;left:0px;" class="flota">-------------------------------------------------------</span>
-<? $aux=$top+120;
+<span style="top:<?php echo $top+95;?>px;left:0px;" class="flota">DETALLE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CANT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;P.U.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TOTAL</span>
+<span style="top:<?php echo $top+105;?>px;left:0px;" class="flota">-------------------------------------------------------</span>
+<?php $aux=$top+120;
 do{?>	
-    <span style="top:<? echo $aux; ?>px;left:0px;" class="flota"><? echo substr ($row_rs_cliente['Ite_Lar'].' '.$row_rs_cliente['Pro_Obs'],0,35);?></span>
-	<span style=" top:<? echo $aux+15; ?>px;left:75px;" class="flota"><? echo formato_numero($row_rs_cliente['Vet_Can'],1,1);?></span>
-    <span style="top:<? echo $aux+15; ?>px;left:115px;" class="flota rigth"><? echo number_format($row_rs_cliente['Vet_Pru'], 4);?></span>
-    <span style="top:<? echo $aux+15; ?>px;left:190px;" class="flota rigth"><? echo number_format($row_rs_cliente['Vet_Imp'], 2);?></span>
+    <span style="top:<?php echo $aux; ?>px;left:0px;" class="flota"><?php echo substr ($row_rs_cliente['Ite_Lar'].' '.$row_rs_cliente['Pro_Obs'],0,35);?></span>
+	<span style=" top:<?php echo $aux+15; ?>px;left:75px;" class="flota"><?php echo formato_numero($row_rs_cliente['Vet_Can'],1,1);?></span>
+    <span style="top:<?php echo $aux+15; ?>px;left:115px;" class="flota rigth"><?php echo number_format($row_rs_cliente['Vet_Pru'], 4);?></span>
+    <span style="top:<?php echo $aux+15; ?>px;left:190px;" class="flota rigth"><?php echo number_format($row_rs_cliente['Vet_Imp'], 2);?></span>
 
-<? $aux+=30; }while ($row_rs_cliente = $obBD_con1->fetch_assoc ($rs_cliente));
+<?php $aux+=30; }while ($row_rs_cliente = $obBD_con1->fetch_assoc ($rs_cliente));
 $resultados = explode('*',$obBD_con1->calculos($Vet_Cod, $obBD_conexion));	
 ?>
-<span style="top:<? echo $aux+50;?>px;left:0px;" class="flota">-------------------------------------------------------</span>
-<span style="top:683px;left:300px;" class="flota"><? //echo 'x'; ?></span>
-<!--<span style="top:730px;left:55px;" class="flota"><? //$v_absoluto=explode(".",$resultados[5]);echo substr(num2letras($v_absoluto[0],false,true).' con '.str_pad($v_absoluto[1],  2, "0").'/100',0,36);	?></span>
-<span style="top:755px;left:30px;" class="flota"><? //$v_absoluto=explode(".",$resultados[5]);echo substr(num2letras($v_absoluto[0],false,true).' con '.str_pad($v_absoluto[1],  2, "0").'/100',37,100);	?></span>-->
-<? $posTot=$aux+80;?>
-<span style="top:<? echo $posTot;?>px;left:110px;" class="flota">Subtotal:</span>
-<span style="top:<? echo $posTot;?>px;left:210px;" class="flota rigth"><?Php echo formato_numero($resultados[0], 2, 1); ?></span>
+<span style="top:<?php echo $aux+50;?>px;left:0px;" class="flota">-------------------------------------------------------</span>
+<span style="top:683px;left:300px;" class="flota"><?php //echo 'x'; ?></span>
+<!--<span style="top:730px;left:55px;" class="flota"><?php //$v_absoluto=explode(".",$resultados[5]);echo substr(num2letras($v_absoluto[0],false,true).' con '.str_pad($v_absoluto[1],  2, "0").'/100',0,36);	?></span>
+<span style="top:755px;left:30px;" class="flota"><?php //$v_absoluto=explode(".",$resultados[5]);echo substr(num2letras($v_absoluto[0],false,true).' con '.str_pad($v_absoluto[1],  2, "0").'/100',37,100);	?></span>-->
+<?php $posTot=$aux+80;?>
+<span style="top:<?php echo $posTot;?>px;left:110px;" class="flota">Subtotal:</span>
+<span style="top:<?php echo $posTot;?>px;left:210px;" class="flota rigth"><?Php echo formato_numero($resultados[0], 2, 1); ?></span>
 
-<span style="top:<? echo $posTot+15;?>px;left:110px;" class="flota">Descuento:</span>
-<span style="top:<? echo $posTot+15;?>px;left:210px;" class="flota rigth"><?Php echo formato_numero($resultados[4], 2, 1); ?></span>
+<span style="top:<?php echo $posTot+15;?>px;left:110px;" class="flota">Descuento:</span>
+<span style="top:<?php echo $posTot+15;?>px;left:210px;" class="flota rigth"><?Php echo formato_numero($resultados[4], 2, 1); ?></span>
 
-<span style="top:<? echo $posTot+30;?>px;left:110px;" class="flota">Tarifa 0%:</span>
-<span style="top:<? echo $posTot+30;?>px;left:210px;" class="flota rigth"><?Php echo formato_numero($resultados[1]+0, 2, 1); ?></span>
+<span style="top:<?php echo $posTot+30;?>px;left:110px;" class="flota">Tarifa 0%:</span>
+<span style="top:<?php echo $posTot+30;?>px;left:210px;" class="flota rigth"><?Php echo formato_numero($resultados[1]+0, 2, 1); ?></span>
 
-<span style="top:<? echo $posTot+45;?>px;left:110px;" class="flota">Tarifa <?=$resultados[6]?>%:</span>
-<span style="top:<? echo $posTot+45;?>px;left:210px;" class="flota rigth"><?Php echo formato_numero($resultados[2]+0, 2, 1); ?></span>
+<span style="top:<?php echo $posTot+45;?>px;left:110px;" class="flota">Tarifa <?=$resultados[6]?>%:</span>
+<span style="top:<?php echo $posTot+45;?>px;left:210px;" class="flota rigth"><?Php echo formato_numero($resultados[2]+0, 2, 1); ?></span>
 
-<span style="top:<? echo $posTot+60;?>px;left:110px;" class="flota">IVA:</span>
-<span style="top:<? echo $posTot+60;?>px;left:210px;" class="flota rigth"><?Php echo formato_numero($resultados[3], 2, 1); ?></span>
+<span style="top:<?php echo $posTot+60;?>px;left:110px;" class="flota">IVA:</span>
+<span style="top:<?php echo $posTot+60;?>px;left:210px;" class="flota rigth"><?Php echo formato_numero($resultados[3], 2, 1); ?></span>
 
-<span aling="rigth" style="top:<? echo $posTot+75;?>px;left:110px;" class="flota">TOTAL:</strong></span>
-<span aling="rigth" style="top:<? echo $posTot+75;?>px;left:210px;" class="flota rigth"><strong><?php echo number_format($resultados[5], 2); ?></strong></span>
-<? if($claveacceso!=''){?>
-<span style="top:<? echo $posTot+100;?>px;left:0px;" class="flota">TIPO DE PAGO:</span>
-<span style="top:<? echo $posTot+115;?>px;left:0px;" class="flota"><?php echo $row_pagoSri['Tpc_Sri'].' - '.substr($row_pagoSri['Tpc_Des'],0,28).'&nbsp;&nbsp;'.number_format($resultados[5], 2); ?></span>
+<span aling="rigth" style="top:<?php echo $posTot+75;?>px;left:110px;" class="flota">TOTAL:</strong></span>
+<span aling="rigth" style="top:<?php echo $posTot+75;?>px;left:210px;" class="flota rigth"><strong><?php echo number_format($resultados[5], 2); ?></strong></span>
+<?php if($claveacceso!=''){?>
+<span style="top:<?php echo $posTot+100;?>px;left:0px;" class="flota">TIPO DE PAGO:</span>
+<span style="top:<?php echo $posTot+115;?>px;left:0px;" class="flota"><?php echo $row_pagoSri['Tpc_Sri'].' - '.substr($row_pagoSri['Tpc_Des'],0,28).'&nbsp;&nbsp;'.number_format($resultados[5], 2); ?></span>
 
-<span style="top:<? echo $posTot+150;?>px;left:0px;" class="flota">DESCARGUE SU COMPROBANTE EN:</span>
-<span style="top:<? echo $posTot+165;?>px;left:0px;" class="flota">http://exa.ofsercont.com/pdf.php</span>
-<span style="top:<? echo $posTot+180;?>px;left:0px;" class="flota">.</span>
-<? }?>
+<span style="top:<?php echo $posTot+150;?>px;left:0px;" class="flota">DESCARGUE SU COMPROBANTE EN:</span>
+<span style="top:<?php echo $posTot+165;?>px;left:0px;" class="flota">http://exa.ofsercont.com/pdf.php</span>
+<span style="top:<?php echo $posTot+180;?>px;left:0px;" class="flota">.</span>
+<?php }?>
 </div>
 </body>
 </html>

@@ -1,4 +1,4 @@
-<?
+<?php
 require_once ('../../auditoria/LOGICA/aud_log_auditoria.php');
 require_once("fic_sql_paciente.php");
 

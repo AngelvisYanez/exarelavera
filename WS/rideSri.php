@@ -1,5 +1,8 @@
 <?php
-require_once(dirname(__file__)."/libs/nuSoap/nusoap.php");
+$autoloadPath = __DIR__ . '/../vendor/autoload.php';
+if (file_exists($autoloadPath)) {
+    require_once $autoloadPath;
+}
 
 function getRide($file, $logo='',$ext='') {
     try{

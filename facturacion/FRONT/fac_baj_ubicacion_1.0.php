@@ -47,7 +47,7 @@ $cadena_codigo = "";
 		 */
 		$row_ubi = $obBD_con1->getRowConsulta(10, $Ses_Emp_Cod.'*'.$ajax_op, $obBD_conexion); 
 	?>
-		<form method="post" name= "form2" id="form2" action="<? echo $_SERVER['PHP_SELF'];?>" enctype="multipart/form-data" >
+		<form method="post" name= "form2" id="form2" action="<?php echo $_SERVER['PHP_SELF'];?>" enctype="multipart/form-data" >
 		<FIELDSET>
 			<LEGEND>
 				<label class="Titulos2">Datos a modificar</label>
@@ -62,19 +62,19 @@ $cadena_codigo = "";
 			  <tr>
 				<td width="106" class="Etiqueta1"><span class="Asterisco">*</span> C&oacute;digo:</td>
 				<td width="419">
-					<input name="Ubi_Cod" type="text" id="Ubi_Cod" value="<? echo $row_ubi['Ubi_Cod'];?>" readonly="readonly" style="border:none">
+					<input name="Ubi_Cod" type="text" id="Ubi_Cod" value="<?php echo $row_ubi['Ubi_Cod'];?>" readonly="readonly" style="border:none">
 				</td>
 			  </tr>
 			  <tr>
 				<td width="106" class="Etiqueta1"><span class="Asterisco">*</span> Descripci&oacute;n:</td>
 				<td width="419">
-				<? echo $row_ubi['Ubi_Des'];?>
+				<?php echo $row_ubi['Ubi_Des'];?>
 				</td>
 			  </tr>
                <tr>
 				<td width="106" class="Etiqueta1"><span class="Asterisco">*</span> Observaci&oacute;n:</td>
 				<td width="419">
-				<? echo $row_ubi['Ubi_Obs'];?>
+				<?php echo $row_ubi['Ubi_Obs'];?>
 				</td>
 			  </tr>
 			  <tr>
@@ -111,9 +111,9 @@ $cadena_codigo = "";
 				  </td>
 			  </tr>
         </table>
-          <input name="hdd" type="hidden" id="hdd" value="<? echo $ajax_op;?>">
+          <input name="hdd" type="hidden" id="hdd" value="<?php echo $ajax_op;?>">
        </form>
-	<?	
+	<?php	
 		exit();
 	}	
 /**
@@ -314,7 +314,7 @@ $cadena_codigo = "";
 					   else
 					   { ?>
 							<button type="button" class="btn btn-danger btn-mini" title="Activar" onClick= "ajax_datos('<?php echo $_SERVER['PHP_SELF'];?>?ajax_op=<?php echo $row_nivel['Ubi_Cod']; ?>','ajax_modal');Muestra_Aparecer();" ><i class="icon-ban-circle icon-white"></i></button>
-							<?
+							<?php
 					   }//Fin del if ($row_rs_perfiles['Per_Est'] == 'A')  
 					?>
 					<input type="hidden" name="codigo" id="codigo" value="<?php echo $row_nivel['Ubi_Cod'];?>"/>

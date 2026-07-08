@@ -181,10 +181,10 @@ if (isset($productos)) {
 										<label class="col-sm-3 control-label label-xs ">Sucursal:</label>
 										<div class="col-sm-6">
 											<select name="Suc_Cod" class="form-control input-xs" id="Suc_Cod">
-												<option value="t"><? echo "<< TODAS >>"; ?></option>
-												<? foreach ($sucursales as $datos) { ?>
-													<option value="<? echo $datos['Suc_Cod']; ?>"><? echo $datos['Suc_Des']; ?></option>
-												<? } ?>
+												<option value="t"><?php echo "<< TODAS >>"; ?></option>
+												<?php foreach ($sucursales as $datos) { ?>
+													<option value="<?php echo $datos['Suc_Cod']; ?>"><?php echo $datos['Suc_Des']; ?></option>
+												<?php } ?>
 											<select>
 										</div>
 									</div>

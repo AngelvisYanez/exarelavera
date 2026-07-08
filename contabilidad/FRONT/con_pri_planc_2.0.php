@@ -1,4 +1,4 @@
-<?	
+<?php	
 /** 
  * Descripción: Permite imprimir el plan de cuentas
  * Fecha de actualización:	2012-04-23
@@ -35,7 +35,7 @@ $row_cabplan = $obBD_con1->getRowConsulta(2,$codigo,$obBD_conexion);
 <table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
   <tr>
     <td valign="top">
-	<? if(count($row_cabplan) > 0) { ?>
+	<?php if(count($row_cabplan) > 0) { ?>
 	<table width="80%" border="0" align="center" cellpadding="0" cellspacing="0">
       <tr align="center">
         <td colspan="4">&nbsp;<?php $obBD_con1->cabeceraReporteStandar($Ses_Suc_Cod, "Plan de Cuentas", " ", $obBD_conexion); ?>&nbsp;</td>
@@ -45,12 +45,12 @@ $row_cabplan = $obBD_con1->getRowConsulta(2,$codigo,$obBD_conexion);
 
       <tr align="center">
         <td width="81" valign="top" class="TITULO_REPORTE"><div align="left">Descripci&Oacute;N:</div></td>
-        <td width="217" class="Texto_Reporte"><div align="left">&nbsp;<? echo $row_cabplan['Pla_Obs']; ?></div></td>
+        <td width="217" class="Texto_Reporte"><div align="left">&nbsp;<?php echo $row_cabplan['Pla_Obs']; ?></div></td>
         <td width="55" valign="top" class="TITULO_REPORTE"><div align="right">ESTADO:</div></td>
-        <td width="105" valign="top" class="Texto_Reporte"><div align="left">&nbsp;<? echo $row_cabplan['Pla_Est']; ?></div></td>
+        <td width="105" valign="top" class="Texto_Reporte"><div align="left">&nbsp;<?php echo $row_cabplan['Pla_Est']; ?></div></td>
       </tr>
       </table>
-	<? } ?>
+	<?php } ?>
 	</td>
   </tr>
   <tr valign="top">

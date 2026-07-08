@@ -23,7 +23,7 @@ onchange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_pai_cod=1&Pas_Cod
     		<option value="">Seleccione...</option>
              <option></option>
         <?Php do{ ?>  
-          <option <?PHP if($row_rs_paises['Pas_Cod']== $row_rs_persona['Pas_Cod'] ){ echo "selected";}?> value="<?  echo $row_rs_paises['Pas_Cod']; ?>"><?  echo $row_rs_paises['Pas_Nom']; ?></option>
+          <option <?PHP if($row_rs_paises['Pas_Cod']== $row_rs_persona['Pas_Cod'] ){ echo "selected";}?> value="<?php  echo $row_rs_paises['Pas_Cod']; ?>"><?php  echo $row_rs_paises['Pas_Nom']; ?></option>
          <?Php }while($row_rs_paises=$obBD_con1->fetch_assoc($rs_paises));  ?> 
     </select></td>
   </tr>

@@ -1,5 +1,5 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<?     
+<?php     
 /* 
 * Alias:					Eliminar
 * Descripción: 				Permite dar de baja a los tipos de asiento
@@ -85,10 +85,10 @@ if (isset($ajax_op))
            <i class="icon-book icon-white"></i>
            <span>Guardar</span>
        </button>	
-	<input name="codigo" type="hidden" value="<? echo $ajax_op; ?>">
-	<input name="hdd_save" type="hidden" id="hdd_save" value="<? echo "1"; ?>">
+	<input name="codigo" type="hidden" value="<?php echo $ajax_op; ?>">
+	<input name="hdd_save" type="hidden" id="hdd_save" value="<?php echo "1"; ?>">
 	</form>
-<?	
+<?php	
 	exit();
 }
 
@@ -136,7 +136,7 @@ if ($thisPost->postBlock($_POST['postID']) && isset($hdd_save))
     </tr>
     <tr>
       <td height="340" valign="top">
-<?
+<?php
 /* 
 * Ingresa cuando se selecciona el tipo de asiento
 */		
@@ -186,7 +186,7 @@ if ($thisPost->postBlock($_POST['postID']) && isset($hdd_save))
 			if($row_rs_tipos['Tia_Ini']=='D'){ echo '<font color="'.$color.'">'.DIARIO.'</font>';} ?></td>
             <td><?Php if($row_rs_tipos['Tia_Est']=='A'){echo '<font color="'.$color.'">'.ACTIVO.'</font>';} 
 			if($row_rs_tipos['Tia_Est']=='I'){echo '<font color="'.$color.'">'.INACTIVO.'</font>';} ?></td>
-        	<form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form2" id="form2">
+        	<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form2" id="form2">
                 <td align="center">
                 <?Php 
                    if ($row_rs_tipos['Tia_Est'] == 'I') 
@@ -197,14 +197,14 @@ if ($thisPost->postBlock($_POST['postID']) && isset($hdd_save))
                    else
                    { ?>
                    <button type="button" class="btn btn-success btn-mini" title="Anular" onClick= "ajax_datos('<?php echo $_SERVER['PHP_SELF']; ?>?ajax_op=<?php echo $row_rs_tipos['Tia_Cod']; ?>','ajax_modal');Muestra_Aparecer();" ><i class='icon-arrow-right icon-white'></i></button>                                              
-                        <?
+                        <?php
                    }//Fin del if ($row_rs_perfiles['Per_Est'] == 'A')  
 				?>
 				    <input type="hidden" name="codigo" id="codigo" value="<?php echo $row_rs_tipos['Tia_Cod'];?>"/>
                 </td>
     		</form>
     	</tr>
-    	<? }}else{?>
+    	<?php }}else{?>
         <tr>
     	  <td align="center">&nbsp;</td>
     	  <td>&nbsp;</td>
@@ -213,11 +213,11 @@ if ($thisPost->postBlock($_POST['postID']) && isset($hdd_save))
     	  <td>&nbsp;</td>
     	  <td align="center">&nbsp;</td>
   	    </tr>
-		<? }?>
+		<?php }?>
     </tbody>
 </table>
 </fieldset>
-<? 
+<?php 
 	echo barra_estado(count($rs_tipos));
 /*
 * Control para setear el arreglo solo cuando tenga valores

@@ -122,7 +122,7 @@ if(count($rs_auditore)>0){
 						</table>                
 					</form>
 				</FIELDSET>
-<? if(isset($ok) || isset($hdd_volver)){?>
+<?php if(isset($ok) || isset($hdd_volver)){?>
 			<FIELDSET>
 				<LEGEND>
 					<label class="Titulos2">Resultados de la Consulta</label>
@@ -143,14 +143,14 @@ if(count($rs_auditore)>0){
 				{ $rojo='#FF0000'; $anulada++; }else{$rojo='';}
 ?>
 						<tr>
-							<td align="center"><FONT COLOR="<? echo $rojo;?>"><?php echo $row_rs_buscar['Aud_Int'];?></FONT></td>
-							<td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Prs_Ced'];?></FONT></td>
-							<td><p><FONT COLOR="<? echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Custodio'],'#FFFF00', 1);?>    
+							<td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php echo $row_rs_buscar['Aud_Int'];?></FONT></td>
+							<td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Prs_Ced'];?></FONT></td>
+							<td><p><FONT COLOR="<?php echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Custodio'],'#FFFF00', 1);?>    
 							</FONT></p>
 							</td>
 							<td align="center" ><?Php echo $row_rs_buscar['Aud_Fec'];?></td>
          
-					<form action="<? echo $_SERVER['PHP_SELF'];?>" method="post">
+					<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post">
 							<td align="center">
 						<?Php if($row_rs_buscar['Aud_Est']=='A'){?>
 						<input name="codigo1" type="hidden" id="codigo1" value="<?php echo $row_rs_buscar['Aud_Int'];?>"> 
@@ -185,18 +185,18 @@ if(count($rs_auditore)>0){
 							<td>&nbsp;</td>
 							<td>&nbsp;</td>
 						</tr>
-<?
+<?php
 			} // fin del if ($total_rs_buscar > 0)?>
 						</tbody>
 					</table>  
-<? 
+<?php 
 } //  fin de if(isset($ok)){
 ?>
 			  </FIELDSET>  
 			</td>
 		</tr>
 	</table>
-<?		
+<?php		
 	if (isset($codigo1))
 	{
 /**
@@ -218,7 +218,7 @@ $rs_auditore = $obBD_con1->getRowConsulta(11,$Aud_Cod,$obBD_conexion);
 		<table width="100%" border="0" cellpadding="0" cellspacing="0" >      
 			<tr>
 				<td width="8%" class="Etiqueta1" >Instituci&oacute;n:</td>
-				<td width="18%"  align="left" > &nbsp;<span class="LetraNegra"><? echo $rs_instituc['Emp_Nom'];?></span></td>
+				<td width="18%"  align="left" > &nbsp;<span class="LetraNegra"><?php echo $rs_instituc['Emp_Nom'];?></span></td>
 				<td width="2%"  align="left" class="Etiqueta1" > </td>  
 				<td width="72%" align="left"  class="Etiqueta1"> </td>  
 			</tr>
@@ -286,7 +286,7 @@ $rs_auditore = $obBD_con1->getRowConsulta(11,$Aud_Cod,$obBD_conexion);
 ?> 
 			</tbody>
 		</table>  
-<?
+<?php
 			echo barra_estado($total_rs_consultar);		
 	}
 ?>
@@ -300,7 +300,7 @@ $rs_auditore = $obBD_con1->getRowConsulta(11,$Aud_Cod,$obBD_conexion);
 			<table  width="247">
 				<tr>
                 	<td width="37%" align="left" >
-                    <form name="form6" method="post" action="<? echo $_SERVER['PHP_SELF'];?>">
+                    <form name="form6" method="post" action="<?php echo $_SERVER['PHP_SELF'];?>">
                     	<button type="button" name="btn_atras" id="btn_atras" value="Enviar" class="btn btn-inverse fileinput-button" title="Atr&aacute;s"
                         onClick="campos_hide(this.form, '<?Php echo "Fec1*Fec2*hdd_volver"; ?>','<?Php echo $Fec1.'*'.$Fec2.'*'.$hdd_volver;?>')">
                          <i class="icon-arrow-left icon-white"></i><span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
@@ -311,7 +311,7 @@ $rs_auditore = $obBD_con1->getRowConsulta(11,$Aud_Cod,$obBD_conexion);
                     </form>
                     </td>
 					<td width="63%" >              
-						<form name="form3" method="post" action="<? echo 'act_pri_activo_aud_1.0.php';?>" target="_blank">
+						<form name="form3" method="post" action="<?php echo 'act_pri_activo_aud_1.0.php';?>" target="_blank">
 							<button name="boton_imprimir" id="boton_imprimir" type="submit" class="btn btn-primary start" title="Imprimir" value="Imprimir"> 
 							<i class="icon-print icon-white"></i>
 							<span>&nbsp;&nbsp;Imprimir&nbsp;&nbsp;</span>

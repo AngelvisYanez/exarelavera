@@ -76,19 +76,19 @@ if (isset($Vet_Cod))
         <tr>
           <td width="12%" height="19" align="right" valign="bottom">
 No:</td>
-          <td width="37%" valign="bottom">&nbsp;<input name="Vet_Cod" type="hidden" id="Vet_Cod" value="<?Php echo $cliente; ?>" ><? echo $row_rs_cliente['Vet_Cod']; ?></td>
+          <td width="37%" valign="bottom">&nbsp;<input name="Vet_Cod" type="hidden" id="Vet_Cod" value="<?Php echo $cliente; ?>" ><?php echo $row_rs_cliente['Vet_Cod']; ?></td>
           <td width="51%">
             <table width="100%" border="0" cellpadding="0" cellspacing="0" class="Letra_punto_venta_2">
               <tr>
-                <td width="40%" align="right">&nbsp;<? echo $dia;?></td>
-                <td width="31%" align="right">&nbsp;<? echo $mes;?></td>
-                <td width="29%" align="right">&nbsp;<? echo $anio;?></td>
+                <td width="40%" align="right">&nbsp;<?php echo $dia;?></td>
+                <td width="31%" align="right">&nbsp;<?php echo $mes;?></td>
+                <td width="29%" align="right">&nbsp;<?php echo $anio;?></td>
               </tr>
           </table></td>
           </tr>
         <tr>
           <td>&nbsp;</td>
-          <td colspan="2"><? if ($row_rs_representante['Cli_Fac'] != "")
+          <td colspan="2"><?php if ($row_rs_representante['Cli_Fac'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Fac'];  
 			}
@@ -97,7 +97,7 @@ No:</td>
           </tr>
         <tr>
           <td>&nbsp;</td>
-          <td><? if ($row_rs_representante['Cli_Fac'] != "")
+          <td><?php if ($row_rs_representante['Cli_Fac'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Ruf']; 
 			}
@@ -109,7 +109,7 @@ No:</td>
           </tr>
         <tr>
           <td>&nbsp;</td>
-          <td colspan="2"><? if ($row_rs_representante['Cli_Dir'] != "")
+          <td colspan="2"><?php if ($row_rs_representante['Cli_Dir'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Dir']; 
 			}
@@ -139,7 +139,7 @@ No:</td>
                 <td align="center">&nbsp;<!--PVP--></td>
                 <td align="center">&nbsp;<!--Total--></td>
               </tr>
-              <? do{?>
+              <?php do{?>
               <tr>
                 <td width="60" align="left"><div align="left"><?Php echo $row_rs_cliente['Vet_Can']?></div></td>
                 <td width="120"><div align="left">&nbsp;<?Php echo $row_rs_cliente['Ite_Lar'].' '.$row_rs_cliente['Pro_Obs']?></div></td>

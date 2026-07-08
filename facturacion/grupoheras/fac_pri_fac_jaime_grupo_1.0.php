@@ -80,7 +80,7 @@ if (isset($Vet_Cod)) {
                         <tr>
                             <td height="35" align="right" valign="bottom">&nbsp;</td>
                             <td width="61%" valign="bottom">
-                                <?  if ($row_rs_representante['Cli_Fac'] != "") {
+                                <?php  if ($row_rs_representante['Cli_Fac'] != "") {
                                         echo $row_rs_representante['Cli_Fac'];
                                     } else {
                                         echo $row_rs_cliente['Prs_Ape'] . ' ' . $row_rs_cliente['Prs_Nom'];
@@ -90,9 +90,9 @@ if (isset($Vet_Cod)) {
                             <td width="33%" rowspan="2" align="center" valign="middle">
                                 <table width="100%" height="29" border="0" cellpadding="0" cellspacing="0" class="Letra_punto_venta_3">
                                     <tr>
-                                        <td width="29%" height="29" align="left" valign="bottom"><? echo $dia; ?></td>
-                                        <td width="29%" align="left" valign="bottom">&nbsp;<? echo $mes; ?></td>
-                                        <td width="29%" align="left" valign="bottom">&nbsp;<? echo $anio; ?></td>
+                                        <td width="29%" height="29" align="left" valign="bottom"><?php echo $dia; ?></td>
+                                        <td width="29%" align="left" valign="bottom">&nbsp;<?php echo $mes; ?></td>
+                                        <td width="29%" align="left" valign="bottom">&nbsp;<?php echo $anio; ?></td>
                                     </tr>
                                 </table>
                             </td>
@@ -100,7 +100,7 @@ if (isset($Vet_Cod)) {
                         <tr>
                             <td width="6%" height="35" align="right" valign="bottom">&nbsp;</td>
                             <td valign="bottom">
-                                <? if ($row_rs_representante['Cli_Dir'] != "") {
+                                <?php if ($row_rs_representante['Cli_Dir'] != "") {
                                     echo $row_rs_representante['Cli_Dir'];
                                 } else {
                                     echo $row_rs_cliente['Prs_Dir'];
@@ -110,7 +110,7 @@ if (isset($Vet_Cod)) {
                         <tr>
                             <td height="38">&nbsp;</td>
                             <td valign="bottom">
-                                <? if ($row_rs_representante['Cli_Fac'] != "") {
+                                <?php if ($row_rs_representante['Cli_Fac'] != "") {
                                     echo $row_rs_representante['Cli_Ruf'];
                                 } else {
                                     echo $row_rs_cliente['Prs_Ced'];
@@ -129,7 +129,7 @@ if (isset($Vet_Cod)) {
                                 $tarifa_12 = 0;
                                 ?>
                                 <table width="97%" border="0" cellpadding="0" cellspacing="0" class="Letra_punto_venta_3">
-                                <? do { ?>
+                                <?php do { ?>
                                     <!--<tr>
                                             <td width="30" height="28" align="left"><div align="left"><?Php echo formato_numero($row_rs_cliente['Vet_Can'], 2, 2); ?></div></td>
                                             <td width="170" align="left"><div align="left">&nbsp;<?Php echo $row_rs_cliente['Ite_Lar'] . ' ' . $row_rs_cliente['Pro_Obs'] ?></div></td>

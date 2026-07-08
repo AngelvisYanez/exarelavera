@@ -112,20 +112,20 @@ $fila=0;
         <?php if($Ses_Suc_Cod != 334) { ?>
         <td id="imag" style="line-height:0;" width="10%" rowspan="4"><img src="<?php echo $row_institucion['Emp_Log']; ?>" width="100" height="100" /></td>
         <?php } ?>
-        <td width="57%" valign="top"><strong><? echo $row_institucion['Emp_Nom']; ?></strong></td>
+        <td width="57%" valign="top"><strong><?php echo $row_institucion['Emp_Nom']; ?></strong></td>
         <td width="33%" align="right" valign="top"><strong>COMPROBANTE</strong></td>
       </tr>
       <tr>
          <?php if($Ses_Suc_Cod != 334) { ?>
-        <td valign="top"><strong>RUC:</strong> <? echo $row_institucion['Emp_Ruc']; ?></td>
+        <td valign="top"><strong>RUC:</strong> <?php echo $row_institucion['Emp_Ruc']; ?></td>
         <?php } else{?>
           <td></td>
         <?php }?>
-        <td align="right" valign="top"><? echo $etiqueta; ?></td>
+        <td align="right" valign="top"><?php echo $etiqueta; ?></td>
       </tr>
       <tr>
          <?php if($Ses_Suc_Cod != 334) { ?>
-        <td valign="top"><strong>TELEFONO:</strong> <? echo $row_institucion['Suc_Te1']; ?></td>
+        <td valign="top"><strong>TELEFONO:</strong> <?php echo $row_institucion['Suc_Te1']; ?></td>
         <?php } else{?>
           <td></td>
         <?php }?>

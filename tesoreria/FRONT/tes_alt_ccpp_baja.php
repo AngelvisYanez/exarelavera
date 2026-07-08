@@ -684,7 +684,7 @@ if(isset($migrado)){
                         <input type="checkbox" id="f_periodo" name="f_periodo" onchange="cambiarFiltro()">
                       </span>
                       <select class="form-control input-xs" name="sel_per" id="sel_per" onchange="cambioPreiodoSearch('peri')" disabled>
-                        <?
+                        <?php
                         $periodos_rows = $obBD_con1->getArrayConsulta(45, "", $obBD_conexion);
                         if (count($periodos_rows) > 0)
                         {

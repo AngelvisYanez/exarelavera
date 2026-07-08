@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?	
+<?php	
 /** 
 * Descripción: Permite modificar las cuentas del plan de cuentas
 * Fecha de actualización:	2012-04-19
@@ -168,7 +168,7 @@ else
       </tr>
       </thead>
       <tbody>
-      <?
+      <?php
 	  /**
 	  * Evalua si existen planes de cuenta creados 
 	  */
@@ -180,21 +180,21 @@ else
 	  		  { $rojo='#FF0000'; $anulada++; }else{$rojo='';}			
 	  ?>
       <tr>
-        <td align="center"><font color="<?php echo $rojo; ?>"><? echo $row['Pla_Cod']; ?></font></td>
-        <td align="center"><font color="<?php echo $rojo; ?>"><? echo $row['Pla_Fec']; ?></font></td>
-        <td><font color="<?php echo $rojo; ?>"><? echo $row['Pla_Obs']; ?></font></td>
-        <td align="center"><font color="<?php echo $rojo; ?>"><? echo $row['Pla_Est']; ?></font></td>
+        <td align="center"><font color="<?php echo $rojo; ?>"><?php echo $row['Pla_Cod']; ?></font></td>
+        <td align="center"><font color="<?php echo $rojo; ?>"><?php echo $row['Pla_Fec']; ?></font></td>
+        <td><font color="<?php echo $rojo; ?>"><?php echo $row['Pla_Obs']; ?></font></td>
+        <td align="center"><font color="<?php echo $rojo; ?>"><?php echo $row['Pla_Est']; ?></font></td>
         <td align="center">
-          <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1">      
+          <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1">      
             <button type="button" class="btn btn-success btn-mini" title="Elegir" onclick="this.form.submit()">
               <i class=" icon-arrow-right icon-white"></i>
               </button>
-            <input type="hidden" id="codpla" name="codpla" value="<? echo $row['Pla_Cod']; ?>" />         
+            <input type="hidden" id="codpla" name="codpla" value="<?php echo $row['Pla_Cod']; ?>" />         
             <input type="hidden" id="np" name="np" value="0" /> 
             </form>        
         </td>
       </tr>
-      <? 
+      <?php 
 	  		}//foreach($row_rs_planes as $row)
 	  }//Fin del if ($total_rs_planes > 0)  
 	  else
@@ -206,10 +206,10 @@ else
 	  	  <td>&nbsp;</td>
           <td>&nbsp;</td>
 	  	</tr>
-	  <? }?>
+	  <?php }?>
       </tbody>
     </table>
-    <? echo barra_estado(count($row_rs_planes)); ?>   
+    <?php echo barra_estado(count($row_rs_planes)); ?>   
 	</FIELDSET>
 	<?Php
     if ($anulada > 0)
@@ -218,9 +218,9 @@ else
         }//Fin del if ($anulada > 0)
         ?>
         <br/>
-    <?
+    <?php
     require_once('../../componentes/FRONT/com_con_leyenda.php');?>  
-	<? 
+	<?php 
 	 }//FIn del if (!isset($np))
 	
 	/**
@@ -246,7 +246,7 @@ else
 	  <tr>
 		<td width="123" class="Etiqueta1">Usted esta editando: </td>
 		<td width="240" class="LetraNegra"><strong>
-		  <?
+		  <?php
 		if ($np==0) 
 		{
 			echo "INICIO del Plan de Cuentas";
@@ -276,7 +276,7 @@ else
 		</tr>
     </thead>
     <tbody>    
-	  <?
+	  <?php
 	  if (count($row_rs_nodos) > 0) 
 	  {
 		foreach($row_rs_nodos as $row)
@@ -291,11 +291,11 @@ else
 					$color_d = '';	
 				} ?>
 	  <tr>
-	    <td align="center"><font color="<?php echo $color_d; ?>"><? echo $row['Pld_Cod']; ?></font></td>
-		<td><font color="<?php echo $color_d; ?>"><? echo $row['Pld_Cdc']; ?></font></td>
-		<td><font color="<?php echo $color_d; ?>"><? echo $row['Pld_Des']; ?></font></td>
-		<td align="center"><font color="<?php echo $color_d; ?>"><? echo $row['Pld_Tip']; ?></font></td>
-		<td align="center"><font color="<?php echo $color_d; ?>"><? echo $row['Pld_Est']; ?></font></td>
+	    <td align="center"><font color="<?php echo $color_d; ?>"><?php echo $row['Pld_Cod']; ?></font></td>
+		<td><font color="<?php echo $color_d; ?>"><?php echo $row['Pld_Cdc']; ?></font></td>
+		<td><font color="<?php echo $color_d; ?>"><?php echo $row['Pld_Des']; ?></font></td>
+		<td align="center"><font color="<?php echo $color_d; ?>"><?php echo $row['Pld_Tip']; ?></font></td>
+		<td align="center"><font color="<?php echo $color_d; ?>"><?php echo $row['Pld_Est']; ?></font></td>
 		<td align="center">
         <?Php
 		if ($row['Pld_Tip'] == 'Detalle')
@@ -311,15 +311,15 @@ else
 			else
 			{				
 		?>
-        <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3">
+        <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3">
         <?php $thisPost->startPost();?>
 			<button type="button" class="btn btn-primary btn-mini" title="Marcar cuenta contable para &laquo;Iva Ventas&raquo;" onClick= "confirmacion(this.form)" >
 					<i class="icon-white"></i>
 			</button>
-            <input type="hidden" id="codpla" name="codpla" value="<? echo $codpla; ?>" />
-            <input type="hidden" id="np" name="np" value="<? echo $row['Pld_Rec']; ?>" />
-            <input type="hidden" id="Pld_Cod" name="Pld_Cod" value="<? echo $row['Pld_Cod']; ?>" />
-            <input type="hidden" id="iva_cob" name="iva_cob" value="<? echo $row_ivacobrado['Pld_Cod']; ?>" />
+            <input type="hidden" id="codpla" name="codpla" value="<?php echo $codpla; ?>" />
+            <input type="hidden" id="np" name="np" value="<?php echo $row['Pld_Rec']; ?>" />
+            <input type="hidden" id="Pld_Cod" name="Pld_Cod" value="<?php echo $row['Pld_Cod']; ?>" />
+            <input type="hidden" id="iva_cob" name="iva_cob" value="<?php echo $row_ivacobrado['Pld_Cod']; ?>" />
             <input type="hidden" id="hdd_iva" name="hdd_iva" value="1" />
             <input type="hidden" id="hdd_save1" name="hdd_save1" value=""  />
         </form>
@@ -343,15 +343,15 @@ else
 			else
 			{				
 		?>
-        <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3">
+        <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3">
         <?php $thisPost->startPost();?>
 			<button type="button" class="btn btn-primary btn-mini" title="Marcar cuenta contable para &laquo;Iva Compras&raquo;" onClick= "confirmacion(this.form)" >
 					<i class="icon-white"></i>
 			</button>
-            <input type="hidden" id="codpla" name="codpla" value="<? echo $codpla; ?>" />
-            <input type="hidden" id="np" name="np" value="<? echo $row['Pld_Rec']; ?>" />
-            <input type="hidden" id="Pld_Cod" name="Pld_Cod" value="<? echo $row['Pld_Cod']; ?>" />
-            <input type="hidden" id="iva_pag" name="iva_pag" value="<? echo $row_ivapagado['Pld_Cod']; ?>" />
+            <input type="hidden" id="codpla" name="codpla" value="<?php echo $codpla; ?>" />
+            <input type="hidden" id="np" name="np" value="<?php echo $row['Pld_Rec']; ?>" />
+            <input type="hidden" id="Pld_Cod" name="Pld_Cod" value="<?php echo $row['Pld_Cod']; ?>" />
+            <input type="hidden" id="iva_pag" name="iva_pag" value="<?php echo $row_ivapagado['Pld_Cod']; ?>" />
             <input type="hidden" id="hdd_iva" name="hdd_iva" value="2" />
             <input type="hidden" id="hdd_save1" name="hdd_save1" value=""  />
         </form>
@@ -364,19 +364,19 @@ else
         <?Php
 		if ($row['Pld_Tip'] == 'GRUPO')
 		{ ?>
-        <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3">
+        <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3">
 		  <button type="button" class="btn btn-success btn-mini" title="Elegir" onclick="this.form.submit()">
 		    <i class=" icon-arrow-right icon-white"></i>
 		    </button>
-		  <input type="hidden" id="codpla" name="codpla" value="<? echo $codpla; ?>" />
-		  <input type="hidden" id="np" name="np" value="<? echo $row['Pld_Cod']; ?>" />
+		  <input type="hidden" id="codpla" name="codpla" value="<?php echo $codpla; ?>" />
+		  <input type="hidden" id="np" name="np" value="<?php echo $row['Pld_Cod']; ?>" />
 		  </form>
         <?Php
 		}
 		?>  
           </td>
 		</tr>
-	  <? } //Fin del foreach($row_rs_nodos as $row)
+	  <?php } //Fin del foreach($row_rs_nodos as $row)
 	  } else { ?>
 	  	<tr>
         	<td>&nbsp;</td>
@@ -388,20 +388,20 @@ else
 	  	  	<td>&nbsp;</td>
 	  	  	<td>&nbsp;</td>
 	  	</tr>
-	  <? }?>
+	  <?php }?>
       </tbody>
 	</table>
-		<? 
+		<?php 
 		 echo barra_estado(count($row_rs_nodos));			
 		?>              
     <table width="214" border="0" cellpadding="0" cellspacing="0">
       <tr>
         <td width="100">
-        <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3">
+        <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3">
         <button type="button" class="btn btn-inverse fileinput-button" title="Volver al Plan de Cuentas" onclick="campos_hide(this.form, 'hdd_volver', '')"> <i class="icon-step-backward icon-white"></i> <span>&nbsp;&nbsp;Inicio&nbsp;&nbsp;</span></button>
         </form>
         </td>        
-	<?	
+	<?php	
 	if ($np!=0) 
 	{
 		/**
@@ -409,13 +409,13 @@ else
 		*/
 		$row_rs_direca = $obBD_con1->getRowConsulta(306, $np, $obBD_conexion); ?>                
 			    <td width="114">
-                <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3">
+                <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3">
 <button type="button" class="btn btn-inverse fileinput-button" title="Atrás" onClick="this.form.submit()">
                     <i class=" icon-arrow-left icon-white"></i>
                     <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
        </button>
-       <input type="hidden" id="codpla" name="codpla" value="<? echo $codpla; ?>" />
-       <input type="hidden" id="np" name="np" value="<? echo $row_rs_direca['Pld_Rec']; ?>" />
+       <input type="hidden" id="codpla" name="codpla" value="<?php echo $codpla; ?>" />
+       <input type="hidden" id="np" name="np" value="<?php echo $row_rs_direca['Pld_Rec']; ?>" />
        </form>
         </td>
         <?Php
@@ -430,9 +430,9 @@ else
         }//Fin del if ($anulada > 0)
         ?>
         <br/>
-    <?
+    <?php
     require_once('../../componentes/FRONT/com_con_leyenda.php');?>      
-	<? } ?>	
+	<?php } ?>	
     </td>
   </tr>
 </table>	  

@@ -139,24 +139,24 @@ if($ajax_1==1)
               </tr>
               </thead>
               <tbody>
-             <? foreach($rs_consulta as $row_rs_consulta){ ?>
+             <?php foreach($rs_consulta as $row_rs_consulta){ ?>
                    <tr>
                        <td align="center"><?Php echo  $row_rs_consulta['Ite_Cod']; ?></td>
                        <td><?Php echo marcar_cadena($txt_b,$row_rs_consulta['Cat_Des'],'#FFFF00',1); ?></td>
                        <td><?Php echo  marcar_cadena($txt_b, $row_rs_consulta['Ite_Lar'],'#FFFF00',1);?></td>
                        <td><?Php echo $row_rs_consulta['Ite_Cor']; ?></td>
                        <td align="center">
-                       <button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="ponPrefijo('<? echo $row_rs_consulta["Ite_Cod"]; ?>','<? echo $row_rs_consulta["Ite_Cor"]; ?>','<? echo  $row_rs_consulta["Ite_Lar"]; ?>','<? echo  $row_rs_consulta["Cat_Cod"]; ?>','<? echo  $row_rs_consulta["Cat_Cdc"]; ?>','<? echo  $row_rs_consulta["Cat_Cod"]; ?>');
+                       <button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="ponPrefijo('<?php echo $row_rs_consulta["Ite_Cod"]; ?>','<?php echo $row_rs_consulta["Ite_Cor"]; ?>','<?php echo  $row_rs_consulta["Ite_Lar"]; ?>','<?php echo  $row_rs_consulta["Cat_Cod"]; ?>','<?php echo  $row_rs_consulta["Cat_Cdc"]; ?>','<?php echo  $row_rs_consulta["Cat_Cod"]; ?>');
                        ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mar_val=1&Ite_Cod='+ document.getElementById('Ite_Cod').value+'&Cat_Cod1='+ document.getElementById('Cat_Cod1').value,'contenedormarca'); ">
                     <i class=" icon-arrow-right icon-white"></i>
                 </button>               
                        </td>		
                   </tr>
-                  <? }?>
+                  <?php }?>
                  </tbody>
                </table>
   		<?php echo barra_estado($total_rs_consulta+0); ?>
-  	<? }else{                       
+  	<?php }else{                       
             echo error_alerta("�No hay resultados que mostrar!", 1);?>   
    </FIELDSET>
 	<br>
@@ -557,12 +557,12 @@ if(isset($hdd_save))
     <tr>
     <td class="Etiqueta1"><span class="Asterisco">*</span> Presentaci&oacute;n: </td>
     <td>
-    <?
+    <?php
     	 $row_rs_present= $obBD_con1->getArrayConsulta(1207,'',$obBD_conexion);         	    
 	?>
     <select name="Pre_Cod" id="Pre_Cod">
       <option value="">Seleccione...</option>
-      <? foreach($row_rs_present as $row){?>
+      <?php foreach($row_rs_present as $row){?>
       <option value="<?Php echo $row['Pre_Cod']; ?>"><?php echo $row['Pre_Des']; ?></option>
       <?php }?>
     </select></td>

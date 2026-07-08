@@ -371,7 +371,7 @@ if (isset($cuenAjaxv1)) {
                                                 <select class="form-control input-xs" name="Tia_Cod" id="Tia_Cod" onchange="updateNumCom()">
                                                     <option value="" class="todos">TODOS</option>
                                                     <?php foreach ($tiasien as $row) {  ?>
-                                                        <option value="<?php echo $row['Tia_Cod']; ?>" style="display:none" data-type="<?php echo $row['Tia_Ini']; ?>" data-abre="<?php echo $row['Tia_Abr']; ?>"><?php echo utf8_encode($row['Tia_Abr'] . ' - ' . $row['Tia_Des']); ?></option>
+                                                        <option value="<?php echo $row['Tia_Cod']; ?>" style="display:none" data-type="<?php echo $row['Tia_Ini']; ?>" data-abre="<?php echo $row['Tia_Abr']; ?>"><?php echo mb_convert_encoding($row['Tia_Abr'] . ' - ' . $row['Tia_Des'], 'UTF-8', 'ISO-8859-1'); ?></option>
 
                                                         <!--option value="<?php echo $row['Tia_Cod']; ?>" style="display:none" data-type="<?php echo $row['Tia_Ini']; ?>" data-abre="<?php echo $row['Tia_Abr']; ?>"><?php echo $row['Tia_Abr'] . ' - ' . $row['Tia_Des']; ?></option-->
                                                     <?php } ?>
@@ -494,7 +494,7 @@ if (isset($cuenAjaxv1)) {
                                                     <?PHP $rs_tipo_comprobante = $obBD_con1->getArrayConsulta(14, '', $obBD_conexion);
                                                     foreach ($rs_tipo_comprobante as $row) { ?>
                                                         <!--option value="<?php echo $row["Tic_Cod"]; ?>"><?php echo $row["Tic_Des"]; ?></option-->
-                                                        <option value="<?php echo $row["Tic_Cod"]; ?>"><?php echo utf8_encode($row["Tic_Des"]); ?></option>
+                                                        <option value="<?php echo $row["Tic_Cod"]; ?>"><?php echo mb_convert_encoding($row["Tic_Des"], 'UTF-8', 'ISO-8859-1'); ?></option>
 
                                                     <?PHP }
                                                     ?>
@@ -574,7 +574,7 @@ if (isset($cuenAjaxv1)) {
                                                     <?PHP $rs_tipo_comprobante = $obBD_con1->getArrayConsulta(14, '', $obBD_conexion);
                                                     foreach ($rs_tipo_comprobante as $row) { ?>
                                                         <!--option value="<?php echo $row["Tic_Cod"]; ?>"><?php echo $row["Tic_Des"]; ?></option-->
-                                                        <option value="<?php echo $row["Tic_Cod"]; ?>"><?php echo utf8_encode($row["Tic_Des"]); ?></option>
+                                                        <option value="<?php echo $row["Tic_Cod"]; ?>"><?php echo mb_convert_encoding($row["Tic_Des"], 'UTF-8', 'ISO-8859-1'); ?></option>
 
                                                     <?PHP }
                                                     ?>
@@ -658,7 +658,7 @@ if (isset($cuenAjaxv1)) {
                                             <option value="" class="todos">Seleccione..</option>
                                             <?php foreach ($tiasien as $row) {  ?>
                                                 <!--option value="<?php echo $row['Tia_Cod']; ?>" style="display:none" data-type="<?php echo $row['Tia_Ini']; ?>" data-abre="<?php echo $row['Tia_Abr']; ?>"><?php echo $row['Tia_Des']; ?></option-->
-                                                <option value="<?php echo $row['Tia_Cod']; ?>" style="display:none" data-type="<?php echo $row['Tia_Ini']; ?>" data-abre="<?php echo $row['Tia_Abr']; ?>"><?php echo utf8_encode($row['Tia_Des']); ?></option>
+                                                <option value="<?php echo $row['Tia_Cod']; ?>" style="display:none" data-type="<?php echo $row['Tia_Ini']; ?>" data-abre="<?php echo $row['Tia_Abr']; ?>"><?php echo mb_convert_encoding($row['Tia_Des'], 'UTF-8', 'ISO-8859-1'); ?></option>
                                             <?php } ?>
                                         </select>
                                         <input type="text" class="form-control input-xs hidden" readonly="" name="Com_Gen" data-compr="Com_Gen" value="" />
@@ -815,7 +815,7 @@ if (isset($cuenAjaxv1)) {
                                             <select class="form-control input-xs" id="Tia_Cod_Comp" name="Tia_Cod" class="isSelectMenu" required>
                                                 <option value="">Seleccione...</option>
                                                 <?php foreach ($tiasien as $row) {  ?>
-                                                    <option value="<?php echo $row['Tia_Cod']; ?>" style="display:none" data-type="<?php echo $row['Tia_Ini']; ?>" data--tia_-cod="<?php echo $row['Tia_Cod']; ?>" data--tia_-abr="<?php echo $row['Tia_Abr']; ?>" data--tia_-des="<?php echo utf8_encode($row['Tia_Des']); ?>"><?php echo utf8_encode($row['Tia_Des']); ?></option>
+                                                    <option value="<?php echo $row['Tia_Cod']; ?>" style="display:none" data-type="<?php echo $row['Tia_Ini']; ?>" data--tia_-cod="<?php echo $row['Tia_Cod']; ?>" data--tia_-abr="<?php echo $row['Tia_Abr']; ?>" data--tia_-des="<?php echo mb_convert_encoding($row['Tia_Des'], 'UTF-8', 'ISO-8859-1'); ?>"><?php echo mb_convert_encoding($row['Tia_Des'], 'UTF-8', 'ISO-8859-1'); ?></option>
 
                                                     <!--option value="<?php echo $row['Tia_Cod']; ?>" style="display:none" data-type="<?php echo $row['Tia_Ini']; ?>" data--tia_-cod="<?php echo $row['Tia_Cod']; ?>"  data--tia_-abr="<?php echo $row['Tia_Abr']; ?>" data--tia_-des="<?php echo $row['Tia_Des']; ?>" ><?php echo $row['Tia_Des']; ?></option-->
                                                 <?php } ?>

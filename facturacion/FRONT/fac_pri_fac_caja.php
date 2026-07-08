@@ -1,4 +1,4 @@
-<?
+<?php
 /*
 * Descripci�n: Reporte agupado por tipoa de pago: Efectivo, Cheque, Tarjeta... etc
 * Fecha de actualizaci�n: 2016-1028
@@ -56,7 +56,7 @@ $total_retenciones=count($row_retenciones);
               <td width="132" align="left" class="Texto_Reporte"><strong>Fecha de Apertura:</strong></td>
               <td width="236" class="Texto_Reporte">&nbsp;<?Php echo $row_ventas[0]['Caj_Fec'].' '.$row_ventas[0]['Caj_Hoi']; ?></td>
               <td width="139" class="Texto_Reporte"><strong>Caja:</strong></td>
-              <td width="140" class="Texto_Reporte"><? echo $row_ventas[0]['Pun_Des'];?></td>
+              <td width="140" class="Texto_Reporte"><?php echo $row_ventas[0]['Pun_Des'];?></td>
             </tr>
             <tr>
               <td width="132" class="Texto_Reporte"><strong>Fecha de Cierre:</strong></td>
@@ -115,7 +115,7 @@ $total_retenciones=count($row_retenciones);
 				    <td align="right">0.00</td>
 				    <td align="right">0.00</td>
 			      </tr>
-                  <? }?>
+                  <?php }?>
 
 
          <!-- retenciones en agregadas a las ventas en la fecha de inicio de caja -->
@@ -173,13 +173,13 @@ $total_retenciones=count($row_retenciones);
           <tr class="Texto_Reporte">
             <td>&nbsp;</td>
             <td><strong>Monto inicial caja:</strong></td>
-            <td align="right"><? echo formato_numero($row_ventas[0]['Caj_Exi']+0,2,2);?></td>
+            <td align="right"><?php echo formato_numero($row_ventas[0]['Caj_Exi']+0,2,2);?></td>
           </tr>
 
           <tr class="Texto_Reporte">
             <td>&nbsp;</td>
             <td><strong>Retenciones:</strong></td>
-            <td align="right"><? echo formato_numero($totalRetenciones,2,2);?></td>
+            <td align="right"><?php echo formato_numero($totalRetenciones,2,2);?></td>
           </tr>
 
           <tr class="Texto_Reporte">

@@ -1,4 +1,4 @@
-<?	
+<?php	
 /*
 * Descripción: Reporte de la opción Totales, Detalle y Puntos de Impresión
 * Fecha de actualización: 2012-05-26
@@ -80,7 +80,7 @@ $totRet=0;
             <td width="8%"><strong>BASE</strong></td>
             <td width="8%"><strong>MONTO</strong></td>
           </tr>      
-          <? foreach($rs_DatosCodigo as $codigo){  	     
+          <?php foreach($rs_DatosCodigo as $codigo){  	     
              if($codigo['Ren_Sri']!='332'){
                 $rs_DatosCompra=$obBD_con1->getArrayConsulta(557,$Ses_Emp_Cod.'*'.$codigo['Ren_Cod'].'*'.$ini.'*'.$fin.'*'.$optest,$obBD_conexion);
              }else{
@@ -89,9 +89,9 @@ $totRet=0;
              $rs_DatosCompra_total=count($rs_DatosCompra);
              ?>
           <tr>
-            <td colspan="7" bgcolor="#FFFF99" class="Texto_normal_10">&nbsp; <strong><? echo $codigo['Ren_Sri']." &nbsp;&nbsp;&nbsp;".$codigo['Ren_Con'];?></strong></td>
+            <td colspan="7" bgcolor="#FFFF99" class="Texto_normal_10">&nbsp; <strong><?php echo $codigo['Ren_Sri']." &nbsp;&nbsp;&nbsp;".$codigo['Ren_Con'];?></strong></td>
           </tr>
-           <? 
+           <?php 
             if($rs_DatosCompra_total!=0){
                $totRegistro=$totRegistro+$rs_DatosCompra_total;
                $totBase=0;	   
@@ -103,33 +103,33 @@ $totRet=0;
                 $totRet=$totRet+$compra['Ren_Ret'];
            ?>   
               <tr class="Texto_normal_9">
-                <td align="center" style="mso-number-format:'@'"><? if($compra['Ret_Num']!='-'){echo str_pad($compra['Ret_Num'], 9, "0", STR_PAD_LEFT);}else{echo "-";}?></td>
-                <td align="center"><? echo $compra['Ret_Fec'];?></td>
-                <td style="white-space:nowrap;overflow:hidden;">&nbsp;<? echo $compra['Prs_Ape'].' '.$compra['Prs_Nom'];?></td>
-                <td style="white-space:nowrap;overflow:hidden;">&nbsp;<? echo $nomDocComp.' &nbsp;&nbsp;'.$compra['Cop_Num'];?></td>
-                <td align="center">&nbsp;<? echo $compra['Cop_Fec'];?></td>
-                <td align="right"><? echo $compra['Ret_Bas'];?>&nbsp;</td>
-                <td align="right"><? echo $compra['Ren_Ret'];?>&nbsp;</td>
+                <td align="center" style="mso-number-format:'@'"><?php if($compra['Ret_Num']!='-'){echo str_pad($compra['Ret_Num'], 9, "0", STR_PAD_LEFT);}else{echo "-";}?></td>
+                <td align="center"><?php echo $compra['Ret_Fec'];?></td>
+                <td style="white-space:nowrap;overflow:hidden;">&nbsp;<?php echo $compra['Prs_Ape'].' '.$compra['Prs_Nom'];?></td>
+                <td style="white-space:nowrap;overflow:hidden;">&nbsp;<?php echo $nomDocComp.' &nbsp;&nbsp;'.$compra['Cop_Num'];?></td>
+                <td align="center">&nbsp;<?php echo $compra['Cop_Fec'];?></td>
+                <td align="right"><?php echo $compra['Ret_Bas'];?>&nbsp;</td>
+                <td align="right"><?php echo $compra['Ren_Ret'];?>&nbsp;</td>
               </tr>
                    
-          <? }?>  
+          <?php }?>  
               <tr class="letra10">
                 <td colspan="5" align="right" style="mso-number-format:'@'"><strong class="Texto_normal_10">Totales</strong>&nbsp;</td>
-                <td align="right"><strong class="Texto_normal_10"><? echo formato_numero($totBase,2,2);?></strong>&nbsp;</td>
-                <td align="right"><strong class="Texto_normal_10"><? echo formato_numero($totRet,2,2);?></strong>&nbsp;</td>
+                <td align="right"><strong class="Texto_normal_10"><?php echo formato_numero($totBase,2,2);?></strong>&nbsp;</td>
+                <td align="right"><strong class="Texto_normal_10"><?php echo formato_numero($totRet,2,2);?></strong>&nbsp;</td>
               </tr> 
-          <?	}else{
+          <?php	}else{
           ?>    
             <tr class="letra10">
                 <td align="center">&nbsp;</td>
                 <td align="center">&nbsp;</td>
-                <td colspan="2" align="center" title="<? echo isset($nomPro)?$nomPro:'';?>"><div class="Texto_normal_10"><?php $msg_mes = explode('-', $cmb_mes); echo " No hay resultados que mostrar para el codigo ".strtoupper($codigo['Ren_Sri']);
+                <td colspan="2" align="center" title="<?php echo isset($nomPro)?$nomPro:'';?>"><div class="Texto_normal_10"><?php $msg_mes = explode('-', $cmb_mes); echo " No hay resultados que mostrar para el codigo ".strtoupper($codigo['Ren_Sri']);
                  ?></div></td>
               <td align="center">&nbsp;</td>
                 <td align="right">&nbsp;</td>
                 <td align="right">&nbsp;</td>
               </tr>
-          <? }
+          <?php }
           } ?>
         </table>        
       </td>

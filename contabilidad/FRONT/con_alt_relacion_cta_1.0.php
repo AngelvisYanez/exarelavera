@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?	
+<?php	
 /**
 * Descripción: Permite registrar la relacion entre los productos y el plan de cuentas
 * Fecha de actualización:	2009-12-11
@@ -82,15 +82,15 @@ if(isset($ajax_plan_cta))
 					$rs_recur = $obBD_con1->consulta(sentencias_con(204, $obBD_con1->parametros($row_rs_buscar['Pld_Rec'])), $obBD_conexion->conexion);
 					$row_rs_recur = $obBD_con1->registros();					  				  
 				  ?>
-				  <tr <? echo focus_row("resaltar_text","resaltar_back","undo_resaltar_text","Fondo");?> class="Fondo">
-					<td><? echo $row_rs_buscar['Pld_Cdc']; ?></td>
+				  <tr <?php echo focus_row("resaltar_text","resaltar_back","undo_resaltar_text","Fondo");?> class="Fondo">
+					<td><?php echo $row_rs_buscar['Pld_Cdc']; ?></td>
 				  <td><?php echo $row_rs_buscar['Pld_Des']; ?></td>
-				  <td align="center"><? if ($row_rs_recur['Pld_Des'] != ""){ echo $row_rs_recur['Pld_Des']; }else{ echo "&nbsp;"; } ?></td>
-				  <td align="center"><? echo $row_rs_buscar['Pld_Tip']; ?></td>				  
-				  <td align="center"><? echo $row_rs_buscar['Pld_Est']; ?></td>
+				  <td align="center"><?php if ($row_rs_recur['Pld_Des'] != ""){ echo $row_rs_recur['Pld_Des']; }else{ echo "&nbsp;"; } ?></td>
+				  <td align="center"><?php echo $row_rs_buscar['Pld_Tip']; ?></td>				  
+				  <td align="center"><?php echo $row_rs_buscar['Pld_Est']; ?></td>
 				  <td align="center">
 				  <?Php if ($row_rs_buscar['Pld_Est'] == 'Activa'){?>
-                  <button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="document.getElementById('Cta_Des').value='<? echo $row_rs_buscar['Pld_Des'];?>'; document.getElementById('Pld_Cod').value='<? echo $row_rs_buscar['Pld_Cod'];?>';closeModal();">
+                  <button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="document.getElementById('Cta_Des').value='<?php echo $row_rs_buscar['Pld_Des'];?>'; document.getElementById('Pld_Cod').value='<?php echo $row_rs_buscar['Pld_Cod'];?>';closeModal();">
         	<i class=" icon-arrow-right icon-white"></i>
 		        </button>
 				  <?php }else{ echo "&nbsp;"; } ?>				
@@ -109,7 +109,7 @@ if(isset($ajax_plan_cta))
 		  </table>
           	<?Php echo barra_estado($total_rs_buscar); ?>
 		</FIELDSET>		
-<?
+<?php
 	@$obBD_con1->free_result($rs_recur);
 	@$obBD_con1->free_result($rs_buscar);
 	exit();
@@ -151,7 +151,7 @@ if(isset($ajax_verRelaciones))
 			?>
             <td width="14%">&nbsp;</td>
           </tr>
-          <?
+          <?php
 		    if($total_rs_relacion!=0){
 			do
 			{
@@ -168,20 +168,20 @@ if(isset($ajax_verRelaciones))
 				$row_rs_modalidad = $obBD_con1->registros();
 				$tot_rs_modalidad = $obBD_con1->numregistros();
 		  ?>
-			  <tr class="Fondo" <? echo focus_row("resaltar_text","resaltar_back","undo_resaltar_text","Fondo");?>>
-				<td height="34%" align="center"><? echo $row_rs_relacion['Pro_Cod']?></td>
-				<td align="center"><? echo $row_rs_relacion['Pld_Cod']?></td>
-				<td align="left">&nbsp;<? echo $row_rs_relacion['Pld_Des']?></td>
+			  <tr class="Fondo" <?php echo focus_row("resaltar_text","resaltar_back","undo_resaltar_text","Fondo");?>>
+				<td height="34%" align="center"><?php echo $row_rs_relacion['Pro_Cod']?></td>
+				<td align="center"><?php echo $row_rs_relacion['Pld_Cod']?></td>
+				<td align="left">&nbsp;<?php echo $row_rs_relacion['Pld_Des']?></td>
 	            <?Php
 				if ($tot_car >0)
 				{
 				?>
-				<td align="center"><?  echo $row_rs_modalidad['Mod_Des'];?></td>
-				<td align="center">&nbsp;<? echo $row_rs_carrera['Car_Nom'];?></td>
+				<td align="center"><?php  echo $row_rs_modalidad['Mod_Des'];?></td>
+				<td align="center">&nbsp;<?php echo $row_rs_carrera['Car_Nom'];?></td>
                 <?php
 				} ?>
 			    <td align="center">
-                                <button type="button" class="btn btn-danger delete" title="Eliminar Relación" onClick="if(confirmacion3(this.form)){ ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_verRelaciones=1&Pro_Cod=<? echo $Pro_Cod?>&Pld_Cod=<? echo $row_rs_relacion['Pld_Cod'];?>&tot_car=<?php echo $tot_car; ?>&Car_Int=<? echo $row_rs_carrera['Car_Int'];?>&Mod_Cod=<? echo $row_rs_modalidad['Mod_Cod'];?>','div_relacion')}">
+                                <button type="button" class="btn btn-danger delete" title="Eliminar Relación" onClick="if(confirmacion3(this.form)){ ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_verRelaciones=1&Pro_Cod=<?php echo $Pro_Cod?>&Pld_Cod=<?php echo $row_rs_relacion['Pld_Cod'];?>&tot_car=<?php echo $tot_car; ?>&Car_Int=<?php echo $row_rs_carrera['Car_Int'];?>&Mod_Cod=<?php echo $row_rs_modalidad['Mod_Cod'];?>','div_relacion')}">
                     <i class="icon-trash icon-white"></i>
                     <span>Eliminar</span>
                 </button>
@@ -205,10 +205,10 @@ if(isset($ajax_verRelaciones))
 			?>
             <td height="36%">&nbsp;</td>
           </tr>
-		  <? }?>
+		  <?php }?>
         </table>
 		</div>
-<?
+<?php
 $obBD_con1->free_result($rs_relacion);
 $obBD_con1->free_result($rs_carrera);
 $obBD_con1->free_result($rs_modalidad);
@@ -269,10 +269,10 @@ switch ($op)
 {
 	case 1: 
 ?>       
-	  <? 
+	  <?php 
 	  if(!isset($hdd_aux))
 	  {?>
-	  <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1">	  
+	  <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1">	  
 	 
       <FIELDSET>
 	  <LEGEND>
@@ -312,15 +312,15 @@ switch ($op)
                     <span>Buscar</span>
         </button>   			
 			<input name="hdd_aux" type="hidden" id="hdd_aux" value="1">
-			<input name="periodo" type="hidden" id="periodo" value="<? echo $periodo;?>">			
+			<input name="periodo" type="hidden" id="periodo" value="<?php echo $periodo;?>">			
 			</td>
 		  </tr>
 		</table>
 		</FIELDSET>			 
 		</form>	
-   <? } ?>		
+   <?php } ?>		
 		<br>			
-		<? 
+		<?php 
 		if(isset($hdd_aux))
 		{
 			/*
@@ -336,7 +336,7 @@ switch ($op)
 		<LEGEND>
 		<label class="Titulos2">Buscar producto:</label>
 		</LEGEND>				
-	    <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form2">
+	    <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form2">
 	    <table width="624" border="0" cellpadding="0" cellspacing="0">
 		<tr>
 		  <td width="112" height="44" class="BarraBusqueda"><div align="right"><span class="Asterisco">*</span> Busqueda:</div></td>
@@ -345,7 +345,7 @@ switch ($op)
 		  
 		  
 			<input name="aux" type="hidden" value="1">
-			<input name="periodo" type="hidden" id="periodo" value="<? echo $periodo;?>">
+			<input name="periodo" type="hidden" id="periodo" value="<?php echo $periodo;?>">
 			<input name="hdd_aux" type="hidden" id="hdd_aux" value="1">
 			<input name="Pec_Cod" id="Pec_Cod" type="hidden" value="<?Php  echo $Pec_Cod; ?>"> 
 			<input name="Pec_Fei" id="Pec_Fei" type="hidden" value="<?php echo $arreglo[1]; ?>">
@@ -361,7 +361,7 @@ switch ($op)
 	    </table>	
 	    </form>			  
 		</FIELDSET>
-		<? 
+		<?php 
 		}
 				
 		if(isset($aux))
@@ -389,17 +389,17 @@ switch ($op)
 		 </tr>		 		 
          </thead>
          <tbody>
-		 <? 
+		 <?php 
 		 if($total_rs_rubros!=0)
 		 {
 			 do{ ?>
 			 <tr>
-				<td align="center"><? echo $row_rs_rubros['Pro_Cod']; ?></td>
-				<td><? echo $row_rs_rubros['Cat_Des']; ?>&nbsp;</td>				
-				<td>&nbsp;<? echo $row_rs_rubros['Ite_Cor']?></td>
+				<td align="center"><?php echo $row_rs_rubros['Pro_Cod']; ?></td>
+				<td><?php echo $row_rs_rubros['Cat_Des']; ?>&nbsp;</td>				
+				<td>&nbsp;<?php echo $row_rs_rubros['Ite_Cor']?></td>
 				<td>&nbsp;<?Php  echo marcar_cadena($txt_busqueda, $row_rs_rubros['Ite_Lar'], '#FFFF00', 1); ?></td>
-				<td><? echo $row_rs_rubros['Mar_Des']; ?>&nbsp;</td>
-				<form method="post" name="form2" action="<? echo $_SERVER['PHP_SELF']?>">		  
+				<td><?php echo $row_rs_rubros['Mar_Des']; ?>&nbsp;</td>
+				<form method="post" name="form2" action="<?php echo $_SERVER['PHP_SELF']?>">		  
 				<td align="center">
 				<button type="button" class="btn btn-success btn-mini" title="Elegir" onclick="this.form.submit()">
         	<i class=" icon-arrow-right icon-white"></i>
@@ -411,10 +411,10 @@ switch ($op)
 				<input name="Ite_Lar" id="Ite_Lar" type="hidden" value="<?php echo $row_rs_rubros['Ite_Lar'];?>">
 				<input name="Mar_Des" id="Mar_Des" type="hidden" value="<?php echo $row_rs_rubros['Mar_Des'];?>">
 				<input name="txt_busqueda" id="txt_busqueda" type="hidden" value="<?php echo $txt_busqueda;?>">
-				<input type="hidden" name="codigo" id="codigo" value="<? echo $arreglo[0];?>">
+				<input type="hidden" name="codigo" id="codigo" value="<?php echo $arreglo[0];?>">
 				<input type="hidden" name="hdd_aux1" id="hdd_aux1" value="1">
 				<input type="hidden" name="hdd_aux" id="hdd_aux" value="1">
-				<input name="periodo" type="hidden" id="periodo" value="<? echo $periodo;?>">
+				<input name="periodo" type="hidden" id="periodo" value="<?php echo $periodo;?>">
   				<input name="Pec_Cod" id="Pec_Cod" type="hidden" value="<?php echo $Pec_Cod;?>">
 				</td>
 				</form>		 
@@ -428,18 +428,18 @@ switch ($op)
 		 		<td><?php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
 		 		<td>&nbsp;</td>
 		 	</tr>
-			<? }?>
+			<?php }?>
             </tbody>
 		</table>            
-			<? echo barra_estado($total_rs_rubros); 
+			<?php echo barra_estado($total_rs_rubros); 
 		 ?>
         </FIELDSET>
-<?
+<?php
 	}//Fin del if(isset($aux))
 	
 	if($hdd_aux1==1 && !isset($hdd_volver))
 	{?>	
-	<form method="post" name="form4" action="<? echo $_SERVER['PHP_SELF']?>">    	
+	<form method="post" name="form4" action="<?php echo $_SERVER['PHP_SELF']?>">    	
 	<table width="882">
 	<tr>
        <td ><?Php echo mensaje_requerido(); ?></td>
@@ -453,24 +453,24 @@ switch ($op)
       
       <tr>
         <td width="17%" class="Etiqueta1">C&oacute;d. Int.:</td>
-        <td width="83%" class="LetraNegra">&nbsp;<? echo $Ite_Cod;?>
-          <input type="hidden" name="Pro_Cod" id="Pro_Cod" value="<? echo $Pro_Cod;?>"></td>
+        <td width="83%" class="LetraNegra">&nbsp;<?php echo $Ite_Cod;?>
+          <input type="hidden" name="Pro_Cod" id="Pro_Cod" value="<?php echo $Pro_Cod;?>"></td>
       </tr>
       <tr>
         <td class="Etiqueta1">C&oacute;d. categoria:</td>
-        <td class="LetraNegra">&nbsp;<? echo $Cat_Des;?></td>
+        <td class="LetraNegra">&nbsp;<?php echo $Cat_Des;?></td>
       </tr>
       <tr>
         <td class="Etiqueta1">Descripcion corta:</td>
-        <td class="LetraNegra">&nbsp;<? echo $Ite_Cor;?></td>
+        <td class="LetraNegra">&nbsp;<?php echo $Ite_Cor;?></td>
       </tr>
       <tr>
         <td class="Etiqueta1">Descripcion larga:</td>
-        <td class="LetraNegra">&nbsp;<? echo $Ite_Lar;?></td>
+        <td class="LetraNegra">&nbsp;<?php echo $Ite_Lar;?></td>
       </tr>
       <tr>
         <td class="Etiqueta1">Marca:</td>
-        <td class="LetraNegra">&nbsp;<? echo $Mar_Des;?></td>
+        <td class="LetraNegra">&nbsp;<?php echo $Mar_Des;?></td>
       </tr>
       <tr>
         <td class="Etiqueta1"><span class="Asterisco">*</span> Cuenta contable:</td>
@@ -492,7 +492,7 @@ switch ($op)
       <tr>
         <td height="80" class="Etiqueta1">&nbsp;</td>
         <td valign="top">
-          <?
+          <?php
 			/**
 			* Carga el periodos contable actual 
 			*/
@@ -532,7 +532,7 @@ switch ($op)
                   </tr>
                 </thead>
               <tbody>
-                <?
+                <?php
 		    if($total_rs_relacion!=0){
 			do
 			{
@@ -550,19 +550,19 @@ switch ($op)
 				$tot_rs_modalidad_pro = $obBD_con1->numregistros();
 		  ?>
                 <tr >
-                  <td height="34%" align="center"><? echo $row_rs_relacion['Pro_Cod']?></td>
-                  <td align="center"><? echo $row_rs_relacion['Pld_Cod']?></td>
-                  <td align="left">&nbsp;<? echo $row_rs_relacion['Pld_Des']?></td>
+                  <td height="34%" align="center"><?php echo $row_rs_relacion['Pro_Cod']?></td>
+                  <td align="center"><?php echo $row_rs_relacion['Pld_Cod']?></td>
+                  <td align="left">&nbsp;<?php echo $row_rs_relacion['Pld_Des']?></td>
                   <?Php
 				if ($total_rs_carrera >0)
 				{
 				?>
-                  <td align="center"><?  echo $row_rs_modalidad_pro['Mod_Des'];?></td>
-                  <td align="center"><? echo $row_rs_carrera_pro['Car_Nom'];?></td>
+                  <td align="center"><?php  echo $row_rs_modalidad_pro['Mod_Des'];?></td>
+                  <td align="center"><?php echo $row_rs_carrera_pro['Car_Nom'];?></td>
                   <?php
 				} ?>
                   <td align="center">
-                    <button type="button" class="btn btn-danger btn-mini" title="Eliminar Relación" onClick="if(confirmacion3(this.form)){ ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_verRelaciones=1&Pro_Cod=<? echo $Pro_Cod?>&Pld_Cod=<? echo $row_rs_relacion['Pld_Cod'];?>&Car_Int=<? echo $row_rs_carrera_pro['Car_Int'];?>&tot_car=<?php echo $total_rs_carrera; ?>&Mod_Cod=<? echo $row_rs_modalidad_pro['Mod_Cod'];?>','div_relacion')}">
+                    <button type="button" class="btn btn-danger btn-mini" title="Eliminar Relación" onClick="if(confirmacion3(this.form)){ ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_verRelaciones=1&Pro_Cod=<?php echo $Pro_Cod?>&Pld_Cod=<?php echo $row_rs_relacion['Pld_Cod'];?>&Car_Int=<?php echo $row_rs_carrera_pro['Car_Int'];?>&tot_car=<?php echo $total_rs_carrera; ?>&Mod_Cod=<?php echo $row_rs_modalidad_pro['Mod_Cod'];?>','div_relacion')}">
                       <i class="icon-trash icon-white"></i>
                       <span>Eliminar</span>
                       </button>              
@@ -585,7 +585,7 @@ switch ($op)
 			}
 			?>
                   <td>&nbsp;</td>
-                  <? }?>
+                  <?php }?>
                   </tr>		  
                 </tbody>
               </table>
@@ -594,7 +594,7 @@ switch ($op)
       </tr>
       <tr>
         <td class="Etiqueta1">
-          <? if($total_rs_carrera!=0)
+          <?php if($total_rs_carrera!=0)
 		{?> 
           <span class="Asterisco">*</span> Modalidad:
           <?php
@@ -602,7 +602,7 @@ switch ($op)
 		?>
           </td>
         <td>
-          <? if($total_rs_carrera!=0)
+          <?php if($total_rs_carrera!=0)
 		{?> 
           <select name="Mod_Cod" id="Mod_Cod">         
             <option value="">Seleccione...</option>
@@ -613,7 +613,7 @@ switch ($op)
             <option value="<?Php echo $row_rs_modalidad['Mod_Cod']; ?>"> <?php echo $row_rs_modalidad['Mod_Des']; ?> </option>
             <?php } while ($row_rs_modalidad = $obBD_con1->fetch_assoc($rs_modalidad)); ?>
             </select>		
-          <? }
+          <?php }
 	  	else
 		{?>
           <input type="text" id="Mod_Cod" name="Mod_Cod" value="0" style="visibility:hidden" />        
@@ -624,7 +624,7 @@ switch ($op)
       </tr>
 	  <tr>
         <td class="Etiqueta1">
-        <? if($total_rs_carrera!=0)
+        <?php if($total_rs_carrera!=0)
 		{?> 
         <span class="Asterisco">*</span> Carrera:
         <?php
@@ -632,7 +632,7 @@ switch ($op)
 		?>
         </td>        
         <td>		
-        <? if($total_rs_carrera!=0)
+        <?php if($total_rs_carrera!=0)
 		{?> 
 		<select name="Car_Int" id="Car_Int">
 		 		 	
@@ -644,7 +644,7 @@ switch ($op)
 			  <option value="<?Php echo $row_rs_carrera['Car_Int']; ?>"> <?php echo "&raquo; ".$row_rs_carrera['Car_Nom']."[ ".$row_rs_carrera['Eta_Des']." ]"; ?> </option>
 			  <?php } while ($row_rs_carrera = $obBD_con1->fetch_assoc($rs_carrera)); ?>	
         </select>
-      <? }
+      <?php }
 	  	else
 		{?>
         <input type="text" id="Car_Int" name="Car_Int" value="0" style="visibility:hidden" />        
@@ -670,8 +670,8 @@ switch ($op)
 	          <span>Guardar</span>
 	          </button>
             <input name="hdd_save" id="hdd_save" type="hidden" value="1"/>
-			<input name="periodo" type="hidden" id="periodo" value="<? echo $periodo;?>">
-			<input type="hidden" name="Pec_Cod" id="Pec_Cod" value="<? echo $Pec_Cod;?>">
+			<input name="periodo" type="hidden" id="periodo" value="<?php echo $periodo;?>">
+			<input type="hidden" name="Pec_Cod" id="Pec_Cod" value="<?php echo $Pec_Cod;?>">
 			<input type="hidden" name="hdd_aux" id="hdd_aux" value="1">			
             
 			<input name="Ite_Cod" id="Ite_Cod" type="hidden" value="<?php echo $Ite_Cod; ?>">
@@ -681,7 +681,7 @@ switch ($op)
 				<input name="Ite_Lar" id="Ite_Lar" type="hidden" value="<?php echo $Ite_Lar; ?>">
 				<input name="Mar_Des" id="Mar_Des" type="hidden" value="<?php echo $Mar_Des; ?>">
 				<input name="txt_busqueda" id="txt_busqueda" type="hidden" value="<?php echo $txt_busqueda;?>">
-				<input type="hidden" name="Pec_Cod" id="Pec_Cod" value="<? echo $Pec_Cod;?>">
+				<input type="hidden" name="Pec_Cod" id="Pec_Cod" value="<?php echo $Pec_Cod;?>">
                 <input type="hidden" name="hdd_aux1" id="hdd_aux1" value="1">
         </td>
       </tr>
@@ -720,7 +720,7 @@ switch ($op)
       <td width="343" class="BarraBusqueda">
 	  <input name="txt_busqueda2" type="text" id="txt_busqueda2" value="" size="50" maxlength="50" style="text-transform:uppercase "></td>
       <td width="113"><div align="center">      
-      <button type="button" class="btn btn-success btn-mini" title="Buscar" onClick="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_1=1&txt_b='+ document.getElementById('txt_busqueda2').value+'&Pec_Cod=<? echo $Pec_Cod;?>&Pla_Cod=<?Php echo $arreglo[3]; ?>&ajax_plan_cta=1&tipo='+document.getElementById('opcion').value ,'busqueda_item')">
+      <button type="button" class="btn btn-success btn-mini" title="Buscar" onClick="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_1=1&txt_b='+ document.getElementById('txt_busqueda2').value+'&Pec_Cod=<?php echo $Pec_Cod;?>&Pla_Cod=<?Php echo $arreglo[3]; ?>&ajax_plan_cta=1&tipo='+document.getElementById('opcion').value ,'busqueda_item')">
                     <i class="icon-search icon-white"></i>
                     <span>Buscar</span>
         </button> 
@@ -734,12 +734,12 @@ switch ($op)
   </tr>
 </table>
 </div>
-	<? }?>
-<? break; //fin del case 1
+	<?php }?>
+<?php break; //fin del case 1
  
    case 2: 
    ?>
-   <form method="post" name="form5" action="<? echo $_SERVER['PHP_SELF']?>">
+   <form method="post" name="form5" action="<?php echo $_SERVER['PHP_SELF']?>">
    <FIELDSET>
 		<LEGEND>
 		<label class="Titulos2">Productos Relacionados</label>
@@ -750,16 +750,16 @@ switch ($op)
 		</LEGEND>
         <table width="48%" border="0" cellspacing="0" cellpadding="0">
           <tr>
-            <td width="9%" class="Etiqueta1" ><input type="radio" name="opt_1" id="opt_1" onclick="this.form.submit();" value="S" <? if($opt_1=='S'){ echo 'checked';}?>></td>
+            <td width="9%" class="Etiqueta1" ><input type="radio" name="opt_1" id="opt_1" onclick="this.form.submit();" value="S" <?php if($opt_1=='S'){ echo 'checked';}?>></td>
             <td width="17%" class="Etiqueta1"><div  align="left">&nbsp;Relacionados</div></td>
-            <td width="4%" class="Etiqueta1"><input type="radio" name="opt_1" id="opt_1" onclick="this.form.submit();" value="N" <? if($opt_1=='N'){ echo 'checked';}?>></td>
+            <td width="4%" class="Etiqueta1"><input type="radio" name="opt_1" id="opt_1" onclick="this.form.submit();" value="N" <?php if($opt_1=='N'){ echo 'checked';}?>></td>
             <td width="70%" class="Etiqueta1"><div  align="left">&nbsp;No Relacionados</div></td>
           </tr>
         </table>
-		<input type="hidden" id="op" name="op" value="<? echo $op;?>" />
+		<input type="hidden" id="op" name="op" value="<?php echo $op;?>" />
         </FIELDSET>
         <br />
-        <? if (isset($opt_1)){?> 
+        <?php if (isset($opt_1)){?> 
         <table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader02">
         <thead>
 		  <tr>
@@ -771,7 +771,7 @@ switch ($op)
 		 </tr>		 		 
          </thead>
          <tbody>
-		 <? 
+		 <?php 
 		 if($opt_1=='N')
 		 {
 			$rs_relacionProducto = $obBD_con1->getArrayConsulta(520,$Ses_Emp_Cod,$obBD_conexion); 
@@ -783,10 +783,10 @@ switch ($op)
 		 {
 			 foreach($rs_relacionProducto as $datos){ ?>
 			 <tr>
-				<td align="center"><? echo $datos['Pro_Cod']; ?></td>
-				<td>&nbsp;<? echo  $datos['Adq_Des'];?></td>
-				<td><? echo $datos['Ite_Lar']." ".$datos['Pro_Obs']; ?>&nbsp;</td>				
-				<td>&nbsp;<? echo $datos['Pld_Cdc']?></td>
+				<td align="center"><?php echo $datos['Pro_Cod']; ?></td>
+				<td>&nbsp;<?php echo  $datos['Adq_Des'];?></td>
+				<td><?php echo $datos['Ite_Lar']." ".$datos['Pro_Obs']; ?>&nbsp;</td>				
+				<td>&nbsp;<?php echo $datos['Pld_Cdc']?></td>
 				<td>&nbsp;<?Php  echo $datos['Pld_Des']; ?></td>							 
 			 </tr>
 			 <?Php };
@@ -798,15 +798,15 @@ switch ($op)
 		 		<td>&nbsp;</td>
 		 		<td>&nbsp;</td>		 		
 		 	</tr>
-			<? }?>
+			<?php }?>
             </tbody>
 		</table>            		
-        	<? echo barra_estado($total_relacionProducto); 
+        	<?php echo barra_estado($total_relacionProducto); 
 		}
 		 ?>
         </FIELDSET>
         </form>
-   <?
+   <?php
    break; //fin del case 1 	
 }
 ?>    

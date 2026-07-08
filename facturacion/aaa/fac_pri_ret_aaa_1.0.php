@@ -55,24 +55,24 @@ if (isset($Ret_Cod))
           <td height="23" colspan="3" >&nbsp;</td>
         </tr>
         <tr >
-          <td width="298" height="13" valign="middle" class="Letra_punto_venta_2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<? echo $row_prin_renta['Prs_Ape'].' '.$row_prin_renta['Prs_Nom']; ?></td>
+          <td width="298" height="13" valign="middle" class="Letra_punto_venta_2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $row_prin_renta['Prs_Ape'].' '.$row_prin_renta['Prs_Nom']; ?></td>
           <td height="13" valign="middle" class="Letra_punto_venta_2">&nbsp;</td>
           <td height="13" align="right" valign="bottom" class="Letra_punto_venta_2"><table width="100%" border="0" cellspacing="0" cellpadding="0">
             <tr>
               <td width="97%" align="right" valign="top" class="Letra_punto_venta_2"><?Php $Fec_Emi=explode('-',$row_prin_renta['Ret_Fec']); ?>
-                <span><? echo $Fec_Emi[2].'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$Fec_Emi[1].'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;'.$Fec_Emi[0]; ?></span>&nbsp;</td>
+                <span><?php echo $Fec_Emi[2].'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$Fec_Emi[1].'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;'.$Fec_Emi[0]; ?></span>&nbsp;</td>
               </tr>
           </table></td>
         </tr>
         <tr >
-          <td height="13" colspan="3" valign="bottom" class="Letra_punto_venta_2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<? echo $row_prin_renta['Prs_Ced']; ?></td>
+          <td height="13" colspan="3" valign="bottom" class="Letra_punto_venta_2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $row_prin_renta['Prs_Ced']; ?></td>
         </tr>
         <tr >
-          <td height="20" colspan="3" valign="top" class="Letra_punto_venta_2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<? echo $row_prin_renta['Prs_Dir']; ?></td>
+          <td height="20" colspan="3" valign="top" class="Letra_punto_venta_2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $row_prin_renta['Prs_Dir']; ?></td>
         </tr>
         <tr>
-          <td height="15" align="right" valign="bottom" class="Letra_punto_venta_2" ><span >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<? echo $row_prin_renta['Tic_Des']; ?></span></td>
-          <td width="183" colspan="-2" align="rigth" valign="bottom" class="Letra_punto_venta_2" ><? 
+          <td height="15" align="right" valign="bottom" class="Letra_punto_venta_2" ><span >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $row_prin_renta['Tic_Des']; ?></span></td>
+          <td width="183" colspan="-2" align="rigth" valign="bottom" class="Letra_punto_venta_2" ><?php 
 			if ($row_rs_renta['Aut_Cod'] != "")  
 			{  
 				//echo $row_prin_renta['Aut_Cad']; 
@@ -82,7 +82,7 @@ if (isset($Ret_Cod))
 				//echo $row_prin_renta['Cop_Cad']; 
 			}?></td>
           <td width="368" colspan="-2" align="right" valign="bottom" class="Letra_punto_venta_2">
-            <? 
+            <?php 
 		if ($row_rs_renta['Aut_Cod'] != "") 
 		{ 
 			echo "001-001-000".$row_prin_renta['Cop_Num']; 
@@ -93,8 +93,8 @@ if (isset($Ret_Cod))
 		}?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
         </tr>
         <tr >
-          <td height="19" align="right" class="Letra_punto_venta_2" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <? echo $row_prin_renta['Cop_Fec']; ?></td>
-          <td colspan="-2" align="right" valign="bottom" class="Texto_Reporte"><? 
+          <td height="19" align="right" class="Letra_punto_venta_2" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <?php echo $row_prin_renta['Cop_Fec']; ?></td>
+          <td colspan="-2" align="right" valign="bottom" class="Texto_Reporte"><?php 
 			if ($row_rs_renta['Aut_Cod'] != "") 
 			{ 
 				//echo $row_prin_renta['Aut_Fci']; 
@@ -103,7 +103,7 @@ if (isset($Ret_Cod))
 			{
 				//echo $row_prin_renta['Cop_Imf']; 
 			}?></td>
-          <td colspan="-2" align="right" valign="bottom" class="Letra_punto_venta_2"><? 
+          <td colspan="-2" align="right" valign="bottom" class="Letra_punto_venta_2"><?php 
 		if ($row_rs_renta['Aut_Cod'] != "") 
 		{ 
 			echo $row_prin_renta['Aut_Sri']; 

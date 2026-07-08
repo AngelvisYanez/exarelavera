@@ -79,14 +79,14 @@ if (isset($Gui_Cod))
             <tr>
               <td width="24%" height="12" align="right" valign="bottom">Destinatario</td>
               <td valign="bottom">
-			  <? echo $rs_destino['Prs_Ape'].' '.$rs_destino['Prs_Nom']; ?></td>
-              <td width="32%" align="left" valign="bottom"><span style="white-space: nowrap; overflow: hidden;"><? /*pto arribo */echo $rs_guia['Gui_Dar']?></span></td>
+			  <?php echo $rs_destino['Prs_Ape'].' '.$rs_destino['Prs_Nom']; ?></td>
+              <td width="32%" align="left" valign="bottom"><span style="white-space: nowrap; overflow: hidden;"><?php /*pto arribo */echo $rs_guia['Gui_Dar']?></span></td>
             </tr>
             <tr>
               <td height="12">&nbsp;</td>
-              <td valign="middle" style="white-space: nowrap; overflow: hidden;"><? echo $rs_destino['Prs_Ced']?></td>
+              <td valign="middle" style="white-space: nowrap; overflow: hidden;"><?php echo $rs_destino['Prs_Ced']?></td>
             <td width="32%" align="left" valign="bottom"><span style="white-space: nowrap; overflow: hidden;">
-              <? /*pto partida */ echo $rs_guia['Gui_Dsa']?>
+              <?php /*pto partida */ echo $rs_guia['Gui_Dsa']?>
             </span></td>
             </tr>
             <tr>
@@ -96,12 +96,12 @@ if (isset($Gui_Cod))
             </tr>
             <tr>
               <td height="3" align="right">Transporte</td>
-              <td><? echo $rs_transporte['Prs_Ape'].' '.$rs_transporte['Prs_Nom']; ?></td>
-              <td>&nbsp;<? echo $rs_guia['Gui_Pla']?></td>
+              <td><?php echo $rs_transporte['Prs_Ape'].' '.$rs_transporte['Prs_Nom']; ?></td>
+              <td>&nbsp;<?php echo $rs_guia['Gui_Pla']?></td>
             </tr>
             <tr>
               <td height="2">&nbsp;</td>
-              <td><span style="white-space: nowrap; overflow: hidden;"><? echo $rs_transporte['Prs_Ced']?></span></td>
+              <td><span style="white-space: nowrap; overflow: hidden;"><?php echo $rs_transporte['Prs_Ced']?></span></td>
               <td>&nbsp;</td>
             </tr>
             <tr>
@@ -111,17 +111,17 @@ if (isset($Gui_Cod))
             </tr>
             <tr>
               <td height="4" align="right">Fecha salida</td>
-              <td><span style="white-space: nowrap; overflow: hidden;"><? echo $rs_guia['Gui_Fsa']?></span></td>
-              <td><span style="white-space: nowrap; overflow: hidden;"><? echo $rs_guia['Gui_Far']?></span></td>
+              <td><span style="white-space: nowrap; overflow: hidden;"><?php echo $rs_guia['Gui_Fsa']?></span></td>
+              <td><span style="white-space: nowrap; overflow: hidden;"><?php echo $rs_guia['Gui_Far']?></span></td>
             </tr>
             <tr>
               <td height="5" align="right">Datos Factura</td>
-              <td><span style="white-space: nowrap; overflow: hidden;"><? echo $rs_guia['Gui_Fve']?></span></td>
-              <td><span style="white-space: nowrap; overflow: hidden;"><? echo $rs_guia['Gui_Ave']?></span></td>
+              <td><span style="white-space: nowrap; overflow: hidden;"><?php echo $rs_guia['Gui_Fve']?></span></td>
+              <td><span style="white-space: nowrap; overflow: hidden;"><?php echo $rs_guia['Gui_Ave']?></span></td>
             </tr>
             <tr>
               <td height="9">&nbsp;</td>
-              <td><span style="white-space: nowrap; overflow: hidden;"><? echo $rs_guia['Prs_Nve']?></span></td>
+              <td><span style="white-space: nowrap; overflow: hidden;"><?php echo $rs_guia['Prs_Nve']?></span></td>
               <td>&nbsp;</td>
             </tr>
             <tr>
@@ -141,7 +141,7 @@ if (isset($Gui_Cod))
             <tr>
               <td colspan="3" align="left" valign="top">
                 <table width="97%" border="0" cellpadding="0" cellspacing="0" class="Letra_punto_venta_2">
-                  <? foreach($rs_guia_det as $dato){?>
+                  <?php foreach($rs_guia_det as $dato){?>
                   <tr>
                     <td width="116" align="left"><div align="left"><?Php echo $dato['Gui_Can']?></div></td>
                     <td width="329"><div align="left">&nbsp;<?Php echo $dato['Ite_Lar'].' '.$dato['Pro_Obs']?></div></td>

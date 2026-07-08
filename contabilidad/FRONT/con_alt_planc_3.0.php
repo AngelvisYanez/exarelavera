@@ -236,7 +236,7 @@ if (isset($ajaxCodigo)) {
     </div>
 
     <script type="text/javascript">
-        var $treeview = $('#using_json_2'),
+        public $treeview = $('#using_json_2'),
             gridComp = $("#comp");
 
         function savePlan() {

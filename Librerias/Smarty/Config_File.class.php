@@ -4,16 +4,16 @@
  * Config_File class.
  *
  * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
+ * modify it under the terms of the GNU Lesser General public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * Lesser General public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
+ * You should have received a copy of the GNU Lesser General public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
@@ -39,29 +39,29 @@ class Config_File {
     /**
      * Controls whether variables with the same name overwrite each other.
      */
-    var $overwrite        =    true;
+    public $overwrite        =    true;
 
     /**
      * Controls whether config values of on/true/yes and off/false/no get
      * converted to boolean values automatically.
      */
-    var $booleanize        =    true;
+    public $booleanize        =    true;
 
     /**
      * Controls whether hidden config sections/vars are read from the file.
      */
-    var $read_hidden     =    true;
+    public $read_hidden     =    true;
 
     /**
      * Controls whether or not to fix mac or dos formatted newlines.
      * If set to true, \r or \r\n will be changed to \n.
      */
-    var $fix_newlines =    true;
+    public $fix_newlines =    true;
     /**#@-*/
 
     /** @access private */
-    var $_config_path    = "";
-    var $_config_data    = array();
+    public $_config_path    = "";
+    public $_config_data    = array();
     /**#@-*/
 
     /**
@@ -285,9 +285,9 @@ class Config_File {
             $line = $lines[$i];
             if (empty($line)) continue;
 
-            if ( $line{0} == '[' && preg_match('!^\[(.*?)\]!', $line, $match) ) {
+            if ( $line[0] == '[' && preg_match('!^\[(.*?)\]!', $line, $match) ) {
                 /* section found */
-                if ($match[1]{0} == '.') {
+                if ($match[1][0] == '.') {
                     /* hidden section */
                     if ($this->read_hidden) {
                         $section_name = substr($match[1], 1);
@@ -347,7 +347,7 @@ class Config_File {
      */
     function _set_config_var(&$container, $var_name, $var_value, $booleanize)
     {
-        if ($var_name{0} == '.') {
+        if ($var_name[0] == '.') {
             if (!$this->read_hidden)
                 return;
             else

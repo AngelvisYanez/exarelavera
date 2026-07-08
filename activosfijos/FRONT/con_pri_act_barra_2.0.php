@@ -28,7 +28,7 @@ $obBD_con1 =  new Class_Log_Datos_Con;
 	<table width="516" border="0" align="center">
       <tr>
         <td valign="top" align="center">
-	<? 	/* consulto todos los registros*/
+	<?php 	/* consulto todos los registros*/
 	$rs_ite_pro1= $obBD_con1->consulta(sentencias_con(637, $obBD_con1->parametros($cadena)), $obBD_conexion->conexion);
     $row_rs_ite_pro1 = $obBD_con1->registros();
 	$total_rs_ite_pro1 =  $obBD_con1->numregistros();
@@ -44,30 +44,30 @@ $obBD_con1 =  new Class_Log_Datos_Con;
 	<form name="form2" method="post" action="<?Php echo $_SERVER['PHP_SELF']; ?>">
 	  <table width="200" border="1"  bordercolor="#000000">
         <tr>
-          <?  do{ 
+          <?php  do{ 
 		   ?>
           <td><table width="200" border="0" cellpadding="0" cellspacing="0">
               	<tr>
-                	<td colspan="2" align="center"><?  $varcode=123456789000; include("../../Librerias/barcode/generadorbarras.php"); ?></td>
+                	<td colspan="2" align="center"><?php  $varcode=123456789000; include("../../Librerias/barcode/generadorbarras.php"); ?></td>
               	</tr>
               	<tr >
               	  <td width="91" class="Etiqueta1"><div align="left">Departamento:</div></td>
-              	  <td width="109" class="LetraNegra"><? echo $row_rs_ite_pro["Dep_Des"]; ?></td>
+              	  <td width="109" class="LetraNegra"><?php echo $row_rs_ite_pro["Dep_Des"]; ?></td>
             	  </tr>
               	<tr >
               	  <td class="Etiqueta1"><div align="left">Secci&oacute;n:</div></td>
-              	  <td class="LetraNegra"><? echo $row_rs_ite_pro["Sec_Des"]; ?></td>
+              	  <td class="LetraNegra"><?php echo $row_rs_ite_pro["Sec_Des"]; ?></td>
             	  </tr>
               	<tr>
               	  <td class="Etiqueta1"><div align="left">Nombre Activo:</div></td>
-              	  <td class="LetraNegra"><? echo $row_rs_ite_pro['Act_Des']; ?></td>
+              	  <td class="LetraNegra"><?php echo $row_rs_ite_pro['Act_Des']; ?></td>
             	  </tr>
               	<tr>
                 	<td class="Etiqueta1"><div align="left">Secuencial:</div></td>
-                	<td class="LetraNegra"><? echo $row_rs_ite_pro['Act_Sec']; ?></td>
+                	<td class="LetraNegra"><?php echo $row_rs_ite_pro['Act_Sec']; ?></td>
               	</tr>
           </table></td>
-          <? 
+          <?php 
 		   if($indicadorfila==4)
 		   {
 		   echo "</tr>";

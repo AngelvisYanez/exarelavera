@@ -15,7 +15,7 @@ if (isset($com_codigo))
 	  <td width="12%" class="Etiqueta1"><strong>La cantidad de:</strong></td>
       <td width="88%">
 		&nbsp;
-		<? 
+		<?php 
 		$detalle = current($row_rs_detalle);
 		$v_absoluto=explode(".",$detalle['Com_Val']);
 		echo num2letras($v_absoluto[0],false,true).', '.$v_absoluto[1].' /100 DOLARES AMERICANOS'; 
@@ -24,11 +24,11 @@ if (isset($com_codigo))
 	</tr>
     <tr>
 	  <td class="Etiqueta1"><strong>Por concepto:</strong>&nbsp;</td>
-	  <td>&nbsp;<? echo $detalle['Com_Con']; ?></td>
+	  <td>&nbsp;<?php echo $detalle['Com_Con']; ?></td>
 	</tr>
     <tr>
 	  <td class="Etiqueta1"><strong>Observaci&oacute;n:</strong>&nbsp;</td>
-	  <td>&nbsp;<? echo $detalle['Com_Obs']; ?></td>
+	  <td>&nbsp;<?php echo $detalle['Com_Obs']; ?></td>
 	</tr>
     </table>
     <br />
@@ -48,9 +48,9 @@ if (isset($com_codigo))
 	{
 	?>
 	<tr>
-	  <td align="left"><? echo $row['Pld_Cdc']; ?></td>
+	  <td align="left"><?php echo $row['Pld_Cdc']; ?></td>
 	  <td>&nbsp;
-	  <? 
+	  <?php 
 		if ($row['Asi_Deh']=='D') 
 		{ 
 	 		echo $row['Pld_Des']; 
@@ -60,7 +60,7 @@ if (isset($com_codigo))
 			echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$row['Pld_Des']; 
 		}
 	 ?></td>
-	  <td align="right"><? 
+	  <td align="right"><?php 
 	  if ($row['Asi_Deh']=='D') 
 	  { 
 	  	echo formato_numero($row['Asi_Val'], 2, 4); 
@@ -68,7 +68,7 @@ if (isset($com_codigo))
 		* Se uiliza round a 4 decimales para el detalle de cada calculo de las retenciones de renta e iva en el reporte compr se usan 3 decimales 
 		*/
 			$total=$total + round($row['Asi_Val2'],2); } else { echo '&nbsp'; }?></td>
-	  <td align="right"><? if ($row['Asi_Deh']=='H') { echo formato_numero($row['Asi_Val'], 2, 4); 
+	  <td align="right"><?php if ($row['Asi_Deh']=='H') { echo formato_numero($row['Asi_Val'], 2, 4); 
    	        /* Se uiliza round a 4 decimales para el detalle de cada calculo de las retenciones de renta e iva 
 			en el reporte compr se usan 3 decimales */
 			$total_h=$total_h + round($row['Asi_Val2'],2); } else{ echo '&nbsp'; } ?></td>

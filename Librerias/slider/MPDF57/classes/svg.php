@@ -13,23 +13,23 @@
 
 class SVG {
 
-	var $svg_gradient;	//	array - contient les infos sur les gradient fill du svg classé par id du svg
-	var $svg_shadinglist;	//	array - contient les ids des objet shading
-	var $svg_info;		//	array contenant les infos du svg voulue par l'utilisateur
-	var $svg_attribs;		//	array - holds all attributes of root <svg> tag
-	var $svg_style;		//	array contenant les style de groupes du svg
-	var $svg_string;		//	String contenant le tracage du svg en lui même.
-	var $txt_data;		//    array - holds string info to write txt to image
-	var $txt_style;		// 	array - current text style
-	var $mpdf_ref;
-	var $xbase;		// mPDF 4.4.003
-	var $ybase;		// mPDF 4.4.003
-	var $svg_error;	// mPDF 4.4.003
-	var $subPathInit;	// mPDF 4.4.003
-	var $spxstart;	// mPDF 4.4.003
-	var $spystart;	// mPDF 4.4.003
-	var $kp;		// mPDF 4.4.003  convert pixels to PDF units
-	var $pathBBox;	// mPDF 5.0.039
+	public $svg_gradient;	//	array - contient les infos sur les gradient fill du svg classé par id du svg
+	public $svg_shadinglist;	//	array - contient les ids des objet shading
+	public $svg_info;		//	array contenant les infos du svg voulue par l'utilisateur
+	public $svg_attribs;		//	array - holds all attributes of root <svg> tag
+	public $svg_style;		//	array contenant les style de groupes du svg
+	public $svg_string;		//	String contenant le tracage du svg en lui même.
+	public $txt_data;		//    array - holds string info to write txt to image
+	public $txt_style;		// 	array - current text style
+	public $mpdf_ref;
+	public $xbase;		// mPDF 4.4.003
+	public $ybase;		// mPDF 4.4.003
+	public $svg_error;	// mPDF 4.4.003
+	public $subPathInit;	// mPDF 4.4.003
+	public $spxstart;	// mPDF 4.4.003
+	public $spystart;	// mPDF 4.4.003
+	public $kp;		// mPDF 4.4.003  convert pixels to PDF units
+	public $pathBBox;	// mPDF 5.0.039
 
 	function SVG(&$mpdf){
 		$this->svg_gradient = array();
@@ -931,8 +931,8 @@ $md = $sy * cos($t);
 			if ($col) {
 				// mPDF 5.0.051
 				// mPDF 5.3.74
-				if ($col{0}==5) {	$critere_style['fill-opacity'] = ord($col{4}/100); }	// RGBa
-				if ($col{0}==6) {	$critere_style['fill-opacity'] = ord($col{5}/100); }	// CMYKa
+				if ($col[0]==5) {	$critere_style['fill-opacity'] = ord($col[4]/100); }	// RGBa
+				if ($col[0]==6) {	$critere_style['fill-opacity'] = ord($col[5]/100); }	// CMYKa
 				$path_style .= $this->mpdf_ref->SetFColor($col, true).' ';	// mPDF 5.0.051
 				$style .= 'F';
 			}
@@ -942,8 +942,8 @@ $md = $sy * cos($t);
 			if ($col) {
 				// mPDF 5.0.051
 				// mPDF 5.3.74
-				if ($col{0}==5) {	$critere_style['fill-opacity'] = ord($col{4}/100); }	// RGBa
-				if ($col{0}==6) {	$critere_style['fill-opacity'] = ord($col{5}/100); }	// CMYKa
+				if ($col[0]==5) {	$critere_style['fill-opacity'] = ord($col[4]/100); }	// RGBa
+				if ($col[0]==6) {	$critere_style['fill-opacity'] = ord($col[5]/100); }	// CMYKa
 				$path_style .= $this->mpdf_ref->SetFColor($col, true).' ';	// mPDF 5.0.051
 				$style .= 'F';
 			}
@@ -972,8 +972,8 @@ $md = $sy * cos($t);
 			if ($col) {
 				// mPDF 5.0.051
 				// mPDF 5.3.74
-				if ($col{0}==5) {	$critere_style['stroke-opacity'] = ord($col{4}/100); }	// RGBa
-				if ($col{0}==6) {	$critere_style['stroke-opacity'] = ord($col{5}/100); }	// CMYKa
+				if ($col[0]==5) {	$critere_style['stroke-opacity'] = ord($col[4]/100); }	// RGBa
+				if ($col[0]==6) {	$critere_style['stroke-opacity'] = ord($col[5]/100); }	// CMYKa
 				$path_style .= $this->mpdf_ref->SetDColor($col, true).' ';	// mPDF 5.0.051
 				$style .= 'D';
 				$lw = $this->ConvertSVGSizePixels($critere_style['stroke-width']);
@@ -985,8 +985,8 @@ $md = $sy * cos($t);
 			if ($col) {
 				// mPDF 5.0.051
 				// mPDF 5.3.74
-				if ($col{0}==5) {	$critere_style['stroke-opacity'] = ord($col{4}/100); }	// RGBa
-				if ($col{0}==6) {	$critere_style['stroke-opacity'] = ord($col{5}/100); }	// CMYKa
+				if ($col[0]==5) {	$critere_style['stroke-opacity'] = ord($col[4]/100); }	// RGBa
+				if ($col[0]==6) {	$critere_style['stroke-opacity'] = ord($col[5]/100); }	// CMYKa
 				$path_style .= $this->mpdf_ref->SetDColor($col, true).' ';	// mPDF 5.0.051
 				$style .= 'D';
 				$lw = $this->ConvertSVGSizePixels($critere_style['stroke-width']);	// mPDF 4.4.003 
@@ -2346,16 +2346,16 @@ function svgDefineTxtStyle($critere_style)
 
 						// mPDF 5.0.051
 						// mPDF 5.3.74
-						if ($col{0}==3 || $col{0}==5) {	// RGB
-							$color_final = sprintf('%.3F %.3F %.3F',ord($col{1})/255,ord($col{2})/255,ord($col{3})/255);
+						if ($col[0]==3 || $col[0]==5) {	// RGB
+							$color_final = sprintf('%.3F %.3F %.3F',ord($col[1])/255,ord($col[2])/255,ord($col[3])/255);
 							$svg_class->svg_gradient[$last_gradid]['colorspace']='RGB';
 						}
-						else if ($col{0}==4 || $col{0}==6) {	// CMYK
-							$color_final = sprintf('%.3F %.3F %.3F %.3F',ord($col{1})/100,ord($col{2})/100,ord($col{3})/100,ord($col{4})/100);
+						else if ($col[0]==4 || $col[0]==6) {	// CMYK
+							$color_final = sprintf('%.3F %.3F %.3F %.3F',ord($col[1])/100,ord($col[2])/100,ord($col[3])/100,ord($col[4])/100);
 							$svg_class->svg_gradient[$last_gradid]['colorspace']='CMYK';
 						}
-						else if ($col{0}==1) {	// Grayscale
-							$color_final = sprintf('%.3F',ord($col{1})/255);
+						else if ($col[0]==1) {	// Grayscale
+							$color_final = sprintf('%.3F',ord($col[1])/255);
 							$svg_class->svg_gradient[$last_gradid]['colorspace']='Gray';
 						}
 
@@ -2370,11 +2370,11 @@ function svgDefineTxtStyle($critere_style)
 						}
 						// mPDF 5.0.051
 						// mPDF 5.3.74
-						else if ($col{0}==5) {	// RGBa
-							$stop_opacity = ord($col{4}/100);
+						else if ($col[0]==5) {	// RGBa
+							$stop_opacity = ord($col[4]/100);
 						}
-						else if ($col{0}==6) {	// CMYKa
-							$stop_opacity = ord($col{5}/100);
+						else if ($col[0]==6) {	// CMYKa
+							$stop_opacity = ord($col[5]/100);
 						}
 
 						$tmp_color = array(

@@ -494,7 +494,7 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=($Pec_Cop['Pec_Fei']);//$hoy=substr($Pec_Co
                                                 <option value="">Seleccione...</option>
                                                 <?php foreach($rs_sustento as $row){ 
                                                    //echo "<option value='$row[Tri_Cod]' ".($row['Tri_Cod']==2?'selected':'').">$row[Tri_Sri] - $row[Tri_Des]</option>";
-                                                    echo "<option value='{$row['Tri_Cod']}' " . ($row['Tri_Cod'] == 2 ? 'selected' : '') . ">" . utf8_encode($row['Tri_Sri']) . " - " . utf8_encode($row['Tri_Des']) . "</option>";
+                                                    echo "<option value='{$row['Tri_Cod']}' " . ($row['Tri_Cod'] == 2 ? 'selected' : '') . ">" . mb_convert_encoding($row['Tri_Sri'], 'UTF-8', 'ISO-8859-1') . " - " . mb_convert_encoding($row['Tri_Des'], 'UTF-8', 'ISO-8859-1') . "</option>";
 
                                                 } ?>
                                             </select>

@@ -77,7 +77,7 @@ if (isset($Vet_Cod))
           <table width="98%" border="0" cellpadding="0" cellspacing="0" class="Letra_punto_venta_2">
         <tr>
           <td width="11%" height="110" align="right" valign="bottom">&nbsp;</td>
-          <td colspan="2" valign="bottom" height="18"><? if ($row_rs_representante['Cli_Fac'] != "")
+          <td colspan="2" valign="bottom" height="18"><?php if ($row_rs_representante['Cli_Fac'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Fac'];  
 			}
@@ -86,7 +86,7 @@ if (isset($Vet_Cod))
           </tr>
         <tr>
           <td height="18">&nbsp;</td>
-          <td colspan="2"><? if ($row_rs_representante['Cli_Dir'] != "")
+          <td colspan="2"><?php if ($row_rs_representante['Cli_Dir'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Dir']; 
 			}
@@ -97,7 +97,7 @@ if (isset($Vet_Cod))
           </tr>
         <tr>
           <td height="18">&nbsp;</td>
-          <td width="38%"><? if ($row_rs_representante['Cli_Fac'] != "")
+          <td width="38%"><?php if ($row_rs_representante['Cli_Fac'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Ruf']; 
 			}
@@ -107,9 +107,9 @@ if (isset($Vet_Cod))
 			} ?></td>
           <td width="51%" rowspan="2" align="right" valign="bottom"><table width="89%" border="0" cellpadding="0" cellspacing="0" class="Letra_punto_venta_2">
             <tr>
-              <td width="35%" align="center" valign="top">&nbsp;<? echo $dia;?>&nbsp;&nbsp;&nbsp;</td>
-              <td width="34%" align="center" valign="top">&nbsp;<? echo $mes;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
-              <td width="31%" align="center" valign="top">&nbsp;<? echo $anio;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+              <td width="35%" align="center" valign="top">&nbsp;<?php echo $dia;?>&nbsp;&nbsp;&nbsp;</td>
+              <td width="34%" align="center" valign="top">&nbsp;<?php echo $mes;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+              <td width="31%" align="center" valign="top">&nbsp;<?php echo $anio;?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
             </tr>
           </table></td>
           </tr>
@@ -132,7 +132,7 @@ if (isset($Vet_Cod))
                 <td align="center">&nbsp;<!--PVP--></td>
                 <td align="center">&nbsp;<!--Total--></td>
               </tr>
-              <? do{?>
+              <?php do{?>
               <tr>
                 <td width="50" align="left"><div align="left"><?Php echo $row_rs_cliente['Vet_Can']?></div></td>
                 <td width="120"><div align="left">&nbsp;<?Php echo $row_rs_cliente['Ite_Lar'].' '.$row_rs_cliente['Pro_Obs']?></div></td>

@@ -20,7 +20,7 @@ header("Expires: 0");
 if(isset($_POST['fileDownloadToken'])) setcookie("fileDownloadToken",$_POST['fileDownloadToken'], time()+180000, "/");
 
 if( isset($_POST) && isset($_POST['datos_a_enviar']) ){
-    $excel_content=((!!mb_detect_encoding($_POST['datos_a_enviar'], 'UTF-8', true))?$_POST['datos_a_enviar']:utf8_encode($_POST['datos_a_enviar']));
+    $excel_content=((!!mb_detect_encoding($_POST['datos_a_enviar'], 'UTF-8', true))?$_POST['datos_a_enviar']:mb_convert_encoding($_POST['datos_a_enviar'], 'UTF-8', 'ISO-8859-1'));
     if(isset($_POST['new'])) $excel_content = stripslashes($excel_content);
     // Extraer bloques <style> para colocarlos en <head> (Excel en producción interpreta mejor los estilos ahí)
     $styles_in_head = '';

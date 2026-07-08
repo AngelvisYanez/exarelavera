@@ -1,9 +1,9 @@
-<?Php 
+﻿<?Php 
 /**
  *
  * @author Erik Niebla
  * @version 1.0
- * Fecha de actualizaci�n:	2015-07-22
+ * Fecha de actualizaciï¿½n:	2015-07-22
  *
  * @package tesoreria.LOGICA
  */
@@ -37,7 +37,7 @@ class Class_Log_Datos_Produ extends MysqlDatos{
 	* @param Class_Log_Conexion_Cli $obBD para realizar la conexcion correspondiente
 	* @return result si existen datos de retorno
 	*/
-	function consultasobBD($sen_sql,$param, $obBD)
+	function consultasobBD($sen_sql,$param, $obBD = null)
 	{
             //
 		$Par_Sql= $this->parametros($param);
@@ -53,7 +53,7 @@ class Class_Log_Datos_Produ extends MysqlDatos{
 	* @param Class_Log_Conexion_Cli $obBD para realizar la conexcion correspondiente
 	* @return result si existen datos de retorno
 	*/
-	function operacionobBD($sen_sql,$param, $obBD)
+	function operacionobBD($sen_sql,$param, $obBD = null)
 	{
 		$Par_Sql= $this->parametros($param);
 		return $this->grabarv_registros(sentencias_produ($sen_sql,$Par_Sql), $obBD->conexion);
@@ -66,7 +66,7 @@ class Class_Log_Datos_Produ extends MysqlDatos{
 	 * @param Class_Log_Conexion_Cli $obBD para realizar la conexcion correspondiente
 	 * @return array $row fila de datos
 	 */
-	function getRowConsulta($sen_sql,$param,$obBD)
+	function getRowConsulta($sen_sql,$param,$obBD = null)
 	{
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);		
 		$row =  $this->fetch_assoc($result);		
@@ -82,7 +82,7 @@ class Class_Log_Datos_Produ extends MysqlDatos{
 	 * @param Class_Log_Datos_Cli $obDT para la abtraccion de los datos
 	 * @return array $array arreglo de datos asociados
 	 */ 
-	function getArrayConsulta($sen_sql,$param,$obBD)
+	function getArrayConsulta($sen_sql,$param,$obBD = null)
 	{
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);		
 		$array = array();		
@@ -100,7 +100,7 @@ class Class_Log_Datos_Produ extends MysqlDatos{
 	 * @param string $param cadena de datos
 	 * @param Class_Log_Datos_Cli $obBD objeto de conexion
 	 */
-	function insertUpdateDelete($sen_sql,$param, $obBD)
+	function insertUpdateDelete($sen_sql,$param, $obBD = null)
 	{		
 		$this->inicio_transaccion($obBD->conexion);		
 		//Realiza Insert, Update o Delete
@@ -110,10 +110,10 @@ class Class_Log_Datos_Produ extends MysqlDatos{
          function codigoComprAutomatic($Tia_Cod, $Pec_Cod, $mes, $obBD_conexion)
   	{			
 		/* 
-		* Codificaci�n numerica en base al periodo contable y mensualmente 
+		* Codificaciï¿½n numerica en base al periodo contable y mensualmente 
 		*/
 		$row_rs_numcom = $this->getRowConsulta(26, $Tia_Cod.'*'.$Pec_Cod.'*'.$mes, $obBD_conexion);
-		// Revisar la condici�n (todo funciona correctamente pero con artificio)
+		// Revisar la condiciï¿½n (todo funciona correctamente pero con artificio)
 		if ((count($row_rs_numcom) > 0) && ($row_rs_numcom['Com_Num'] != ''))
 		{
 			$Com_Num=$row_rs_numcom['Com_Num'];

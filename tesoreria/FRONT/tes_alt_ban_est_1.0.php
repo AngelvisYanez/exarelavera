@@ -488,7 +488,7 @@ foreach ($row_rs_tipo_asien as $row)
                             footerrow: true, userDataOnFooter: false,// set a footer row                             
                             rowNum: 10000000, pager: "#compPager", gridview: true, rownumbers: true, viewrecords: true, altRows: true, altclass: "myAltRowClass",pgbuttons: false,pgtext: null,
                             gridComplete: function () {
-                                var $self = $(this),
+                                public $self = $(this),
                                 deb = $self.jqGrid("getCol", "Debe", false, "sum"),
                                 hab = $self.jqGrid("getCol", "Haber", false, "sum");
                                 $self.jqGrid("footerData", "set", {Glosa: "<div style='text-align:right;'>Totales:</div>", Debe: deb, Haber:hab});

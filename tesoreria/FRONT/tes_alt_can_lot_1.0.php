@@ -151,8 +151,8 @@ if(isset($ajaxSubgrid)){
                             //$("#docu").attr("readOnly","readOnly");
                         }
                         function clearFooter(){ 
-                            var $footRow = $("#grillaComp .ui-jqgrid-sdiv .footrow");
-                            var $name = $footRow.find('>td[aria-describedby="list_Fac_Num"]'),
+                            public $footRow = $("#grillaComp .ui-jqgrid-sdiv .footrow");
+                            public $name = $footRow.find('>td[aria-describedby="list_Fac_Num"]'),
                             $invdate = $footRow.find('>td[aria-describedby="list_act1"]'),
                             width2 = $name.width()  + $invdate.outerWidth();
                             $invdate.css("display", "none");

@@ -1,0 +1,8 @@
+{
+    "nombre": "Relavera Producción",
+    "host": "104.36.166.126",
+    "port": 3306,
+    "user": "user_relavera",
+    "pass": "Pvhn713?6",
+    "database": "exa_master"
+}

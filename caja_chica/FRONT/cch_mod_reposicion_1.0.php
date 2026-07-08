@@ -1,4 +1,4 @@
-<?	  
+<?php	  
 /**
 * Descripcion: Registro de Reposicion Caja Chica
 * Fecha de actualizacion:	20-07-2016
@@ -319,8 +319,8 @@ $rs_TipAsiento = $obBD_con1->getArrayConsulta(5, 'E', $obBD_conexion);
 									<div class="form-group">
                                                                             <label class="col-sm-4 control-label label-sm required" for="monto">Monto de Caja:</label>  
                                                                             <div class="col-sm-2">                                    
-											<input id="monto" name="monto" class="form-control input-sm" readonly placeholder="0.00" type="text" value="<? echo number_format((float)$rs_busCajaCh['Cch_Val'],2,'.','');?>" />					  
-											<input type="hidden" id="Cch_Cod" name="Cch_Cod" value="<? echo $rs_busCajaCh['Cch_Cod'];?>" />
+											<input id="monto" name="monto" class="form-control input-sm" readonly placeholder="0.00" type="text" value="<?php echo number_format((float)$rs_busCajaCh['Cch_Val'],2,'.','');?>" />					  
+											<input type="hidden" id="Cch_Cod" name="Cch_Cod" value="<?php echo $rs_busCajaCh['Cch_Cod'];?>" />
                                                                             </div>
                                                                           
                                                                             <label class="col-sm-3 control-label label-sm" for="Sal_Act">Saldo Actual:</label>  

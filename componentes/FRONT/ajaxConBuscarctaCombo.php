@@ -44,7 +44,7 @@ if ($ajax_buscador=='C')
 		</tr>
     </thead>
     <tbody>
-	  <?
+	  <?php
 	  if ($total_rs_buscta > 0) {
 	  do { 
 		/**
@@ -74,21 +74,21 @@ if ($ajax_buscador=='C')
 						  						  
 	  ?>
 	  <tr>
-	    <td align="center"><? echo $row_rs_buscta['Pld_Cod']; ?></td>
-		<td align="left"><? echo $row_rs_buscta['Pld_Cdc']; ?></td>
+	    <td align="center"><?php echo $row_rs_buscta['Pld_Cod']; ?></td>
+		<td align="left"><?php echo $row_rs_buscta['Pld_Cdc']; ?></td>
 		<td align="left"><?Php echo marcar_cadena($ajax_buscod, $row_rs_buscta['Pld_Des'], '#FFFF00', 1);  ?>		
 		</td>
-		<td><div align="center"><? if ($row_rs_recur['Pld_Des'] != ""){ echo $row_rs_recur['Pld_Des']." <strong>(".$row_rs_grupo['Pld_Des'].")</strong>"; }else{ 
+		<td><div align="center"><?php if ($row_rs_recur['Pld_Des'] != ""){ echo $row_rs_recur['Pld_Des']." <strong>(".$row_rs_grupo['Pld_Des'].")</strong>"; }else{ 
 								echo "&nbsp;"; } ?></div></td>
-		<td align="center"><div align="center"><? echo $row_rs_buscta['Pld_Tip']; ?></div></td>
-		<td align="center"><div align="center"><? echo $row_rs_buscta['Pld_Est']; ?></div></td>
+		<td align="center"><div align="center"><?php echo $row_rs_buscta['Pld_Tip']; ?></div></td>
+		<td align="center"><div align="center"><?php echo $row_rs_buscta['Pld_Est']; ?></div></td>
 		<td align="center">
-        <button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="nueva_fila_cheque_com('Tbl_Cheques', <? echo $ban_cod; ?>,<? echo $ban_des; ?>, 'Com_Fec', 'Val_Pcc'); cal_total_cheques(5, 'nfilas_ch', 'datos_ch')">
+        <button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="nueva_fila_cheque_com('Tbl_Cheques', <?php echo $ban_cod; ?>,<?php echo $ban_des; ?>, 'Com_Fec', 'Val_Pcc'); cal_total_cheques(5, 'nfilas_ch', 'datos_ch')">
         	<i class=" icon-arrow-right icon-white"></i>
         	</button>
         </td>
 	  </tr>
-	  <? 
+	  <?php 
 	  	unset($ban_cod);
 		unset($ban_des);	  
 	  } while ($row_rs_buscta = $obBD_con1->fetch_assoc($rs_buscta));
@@ -103,7 +103,7 @@ if ($ajax_buscador=='C')
 		  <td>&nbsp;</td>
 		  <td>&nbsp;</td>
 		</tr>
-	  <? }?>
+	  <?php }?>
       </tbody>
 	</table>
 <?Php 

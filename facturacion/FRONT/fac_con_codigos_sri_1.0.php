@@ -1,5 +1,5 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<?     
+<?php     
 /**
  * Permite registrar Los Codigos renta_iva 
  * 
@@ -69,8 +69,8 @@ if (isset($ajax_op))
           <td width="13%" class="Etiqueta1">Estado:&nbsp;</td>
           <td width="87%" class="LetraNegra">
           <select id="estado" name="estado">
-			<option <? if($row_rs_tip['Ren_Est']=='Activo'){ echo "selected";}?>  value="A">Activo</option>
-            <option <? if($row_rs_tip['Ren_Est']=='Anulado'){ echo "selected";}?> value="I">Anular</option>					
+			<option <?php if($row_rs_tip['Ren_Est']=='Activo'){ echo "selected";}?>  value="A">Activo</option>
+            <option <?php if($row_rs_tip['Ren_Est']=='Anulado'){ echo "selected";}?> value="I">Anular</option>					
           </select>
           </td>
         </tr>
@@ -82,10 +82,10 @@ if (isset($ajax_op))
            <i class="icon-book icon-white"></i>
            <span>Guardar</span>
        </button>	
-	<input name="codigo" id="codigo" type="hidden" value="<? echo $ajax_op; ?>">
-	<input name="hdd_save" type="hidden" id="hdd_save" value="<? echo "1"; ?>">
+	<input name="codigo" id="codigo" type="hidden" value="<?php echo $ajax_op; ?>">
+	<input name="hdd_save" type="hidden" id="hdd_save" value="<?php echo "1"; ?>">
 	</form>
-<?	
+<?php	
 	exit();
 }
 
@@ -132,7 +132,7 @@ if ($thisPost->postBlock($_POST['postID']) && isset($hdd_save))
     </tr>
     <tr>
       <td height="340" valign="top">
-<?
+<?php
 /* 
 * Ingresa cuando se selecciona el tipo de asiento
 */		
@@ -167,18 +167,18 @@ if ($thisPost->postBlock($_POST['postID']) && isset($hdd_save))
            { $color = '#FF0000';}             
         ?>
     	<tr>
-        	<td align="center"><FONT COLOR="<? echo $rojo;?>"><? echo $row['Ren_Cod']?></FONT></td>
-        	<td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php echo $row['Ren_Sri']?></FONT></td>
-            <td title="<? echo $row['Ren_Con'];?>"><FONT COLOR="<? echo $rojo;?>">
-              <? if(strlen($row['Ren_Con'])<=70){echo $row['Ren_Con'];}else{ echo substr( $row['Ren_Con'],0,70)."..."; }?>
+        	<td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php echo $row['Ren_Cod']?></FONT></td>
+        	<td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row['Ren_Sri']?></FONT></td>
+            <td title="<?php echo $row['Ren_Con'];?>"><FONT COLOR="<?php echo $rojo;?>">
+              <?php if(strlen($row['Ren_Con'])<=70){echo $row['Ren_Con'];}else{ echo substr( $row['Ren_Con'],0,70)."..."; }?>
             </FONT></td>
-            <td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php echo $row['Ren_Por']."%"?></FONT></td>
-            <td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php echo $row['Ren_Tip']?></FONT></td>            
-            <td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php echo $row['Ren_Ret']?></FONT></td>
-            <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form2" id="form2">
+            <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row['Ren_Por']."%"?></FONT></td>
+            <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row['Ren_Tip']?></FONT></td>            
+            <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row['Ren_Ret']?></FONT></td>
+            <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form2" id="form2">
             </form>
     	</tr>
-    	<? }}else{?>
+    	<?php }}else{?>
         <tr>
     	  <td align="center">&nbsp;</td>
     	  <td>&nbsp;</td>
@@ -187,11 +187,11 @@ if ($thisPost->postBlock($_POST['postID']) && isset($hdd_save))
     	  <td>&nbsp;</td>
     	  <td>&nbsp;</td>
     	  </tr>
-		<? }?>
+		<?php }?>
     </tbody>
 </table>
 </fieldset>
-<? 
+<?php 
 	echo barra_estado(count($rs_tipos));
 /*
 * Control para setear el arreglo solo cuando tenga valores

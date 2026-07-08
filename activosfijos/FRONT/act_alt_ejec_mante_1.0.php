@@ -64,12 +64,12 @@ if (isset($ajax_Rev))
 				 });
 				 });
 	</script>
-	<form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form8" id="form8">
+	<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form8" id="form8">
 	<fieldset>
 		<LEGEND>
 			<label class="Titulos2">Detalles de la reparaci&oacute;n del mantenimiento</label>
 		</LEGEND>
-<? //Creacion del campo REPOST
+<?php //Creacion del campo REPOST
 	$thisPost->startPost();
 ?>
 	<table width="100%" border="0" cellpadding="0" cellspacing="0">
@@ -86,12 +86,12 @@ if (isset($ajax_Rev))
         </tr>
         <tr>
             <td width="16%" align="right" class="Etiqueta1"><span class="Asterisco">*</span>Detalle de la Reparaci&oacute;n:</td>
-            <td width="84%"><?Php if($rs_Mante['Man_Pro']=='1'){ echo "<div class='LetraNegra' align='left'>&nbsp;".$rs_Mante['Man_Des']."</div>";}else{?><textarea name="Man_Des" id="Man_Des" cols="50"></textarea><? }?>
+            <td width="84%"><?Php if($rs_Mante['Man_Pro']=='1'){ echo "<div class='LetraNegra' align='left'>&nbsp;".$rs_Mante['Man_Des']."</div>";}else{?><textarea name="Man_Des" id="Man_Des" cols="50"></textarea><?php }?>
             </td>
         </tr>
         <tr>
             <td width="20%" align="right" class="Etiqueta1"><span class="Asterisco">*</span>Observaciones:</td>
-            <td><?Php if($rs_Mante['Man_Pro']=='1'){ echo "<div class='LetraNegra' align='left'>&nbsp;".$rs_Mante['Man_Obs']."</div>";}else{?><textarea  name="Man_Obs" id="Man_Obs" cols="50"></textarea><? }?>
+            <td><?Php if($rs_Mante['Man_Pro']=='1'){ echo "<div class='LetraNegra' align='left'>&nbsp;".$rs_Mante['Man_Obs']."</div>";}else{?><textarea  name="Man_Obs" id="Man_Obs" cols="50"></textarea><?php }?>
             </td>
         </tr>
 	</table>	
@@ -105,10 +105,10 @@ if (isset($ajax_Rev))
         <i class="icon-book icon-white"></i>
 		<span>&nbsp;Guardar&nbsp;</span>
           </button>
-          <input name="Act_Cod" type="hidden" id="Act_Cod" value="<? echo $Act_Cod; ?>">
-          <input name="Man_Cod" type="hidden" id="Man_Cod" value="<? echo $Man_Cod; ?>">         
+          <input name="Act_Cod" type="hidden" id="Act_Cod" value="<?php echo $Act_Cod; ?>">
+          <input name="Man_Cod" type="hidden" id="Man_Cod" value="<?php echo $Man_Cod; ?>">         
           <input name="hdd_save_rev" type="hidden" id="hdd_save_rev" value="insertar">         
-          <? }?>
+          <?php }?>
 		</td>
     </tr>
 	</table>     
@@ -232,11 +232,11 @@ if ($thisPost->postBlock($_POST['postID'])){
 				<tr>
 					<td width="105"><input name="op_opciones" type="radio" value="d"  checked  onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.txt_busqueda);">              
                     <span class="LetraNegra">Descripción</span> <input name="op_cam" id="op_cam" type="hidden" value="d"></td>
-					<td width="125"><input type="radio" name="op_opciones" value="cb" <?Php if($op_opciones== 'cb'){?> checked <? } ?> onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.txt_busqueda);">
+					<td width="125"><input type="radio" name="op_opciones" value="cb" <?Php if($op_opciones== 'cb'){?> checked <?php } ?> onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.txt_busqueda);">
                     <span class="LetraNegra">Código de Barra</span></td>
-					<td width="122"><input type="radio" name="op_opciones" value="cs" <?Php if($op_opciones== 'cs'){?> checked <? } ?> onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.txt_busqueda);" >
+					<td width="122"><input type="radio" name="op_opciones" value="cs" <?Php if($op_opciones== 'cs'){?> checked <?php } ?> onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.txt_busqueda);" >
                     <span class="LetraNegra">Código Secuencial</span></td>
-                    <td width="263"><input type="radio" name="op_opciones" value="ns" <?Php if($op_opciones== 'ns'){  ?> checked <? } ?> onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.Cam_Cod);">
+                    <td width="263"><input type="radio" name="op_opciones" value="ns" <?Php if($op_opciones== 'ns'){  ?> checked <?php } ?> onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.Cam_Cod);">
                     <span class="LetraNegra">Por Campo</span>
 <?Php
 					/**
@@ -248,7 +248,7 @@ if ($thisPost->postBlock($_POST['postID'])){
 <?Php 
 						foreach($rs_campos as $row_rs_campos){
 ?>  
-							<option  value="<? echo $row_rs_campos['Cam_Cod'];?>"><?PHP  echo $row_rs_campos['Cam_Cor'];?></option>
+							<option  value="<?php echo $row_rs_campos['Cam_Cod'];?>"><?PHP  echo $row_rs_campos['Cam_Cor'];?></option>
 <?Php 
 						} //fin foreach($rs_campos as $row_rs_campos){
 ?> 
@@ -279,7 +279,7 @@ if ($thisPost->postBlock($_POST['postID'])){
 		</form>
      </fieldset>   
         
-<? 
+<?php 
 if (isset($txt_busqueda)){?>
 	<FIELDSET>
 	<LEGEND>
@@ -306,11 +306,11 @@ if (isset($txt_busqueda)){?>
 					 }
 ?>
 		<tr>
-			<td align="center"><FONT COLOR="<? echo $rojo;?>"><?php echo $row_rs_buscar['Act_Cod'];?></FONT></td>
-			<td title="<? echo $row_rs_buscar['Tia_Des'];?>"><FONT COLOR="<? echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Tia_Des'],'#FFFF00', 1);?></FONT></td>
-			<td  title="<? echo $row_rs_buscar['Act_Des'];?>"><FONT COLOR="<? echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Act_Des'],'#FFFF00', 1);?></FONT></td>
-			<td align="center"><FONT COLOR="<? echo $rojo;?>"><?php echo  $row_rs_buscar['Act_Cdc'];?></FONT></td>
-			<form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "frml" id="forml">
+			<td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php echo $row_rs_buscar['Act_Cod'];?></FONT></td>
+			<td title="<?php echo $row_rs_buscar['Tia_Des'];?>"><FONT COLOR="<?php echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Tia_Des'],'#FFFF00', 1);?></FONT></td>
+			<td  title="<?php echo $row_rs_buscar['Act_Des'];?>"><FONT COLOR="<?php echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Act_Des'],'#FFFF00', 1);?></FONT></td>
+			<td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php echo  $row_rs_buscar['Act_Cdc'];?></FONT></td>
+			<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "frml" id="forml">
 			<td align="center" width="5%">
 <?Php 
 			if($row_rs_buscar['Act_Est']=='A'){
@@ -321,8 +321,8 @@ if (isset($txt_busqueda)){?>
 			<input type="hidden" name="codigo" id="codigo" value="<?Php echo $row_rs_buscar['Act_Cod'];?>"/>
 			<input type="hidden" name="hdd_aux" id="hdd_aux" value="1">
 			<input type="hidden" name="volver_busqueda" id="volver_busqueda" value="<?Php echo $txt_busqueda;?>"/>
-			<input type="hidden" name="volver_opciones" id="volver_opciones" value="<? echo $op_opciones;?>">
-			<input type="hidden" name="volver_Cam_Cod" id="volver_Cam_Cod" value="<? echo $Cam_Cod;?>">
+			<input type="hidden" name="volver_opciones" id="volver_opciones" value="<?php echo $op_opciones;?>">
+			<input type="hidden" name="volver_Cam_Cod" id="volver_Cam_Cod" value="<?php echo $Cam_Cod;?>">
 <?Php
 			}
 			else{ echo "&nbsp;";}
@@ -341,7 +341,7 @@ if (isset($txt_busqueda)){?>
 			<td> </td>
 			<td> </td>
 		</tr>
-<?
+<?php
 		} // fin del if ($total_rs_buscar > 0)
 ?>
 		</tbody>
@@ -353,14 +353,14 @@ if (isset($txt_busqueda)){?>
 	echo barra_estado($total_rs_buscar+0);
 ?>
 	</FIELDSET>
-<?
+<?php
 }
 if ($hdd_aux==1){ 
 	$rs_mant=$obBD_con1->getArrayConsulta(479,$codigo,$obBD_conexion);
 	$rs_mant_Tot=count($rs_mant);
 ?>
-	<form method="post" name= "form2" action="<? echo $_SERVER['PHP_SELF'];?>">
-<? 
+	<form method="post" name= "form2" action="<?php echo $_SERVER['PHP_SELF'];?>">
+<?php 
 	//Creacion del campo REPOST
 	$thisPost->startPost();
 ?>  
@@ -395,7 +395,7 @@ if ($hdd_aux==1){
                 </td>
                 <td><span class="Etiqueta1">Custodio :</span></td>
                 <td width="50%">&nbsp;<span class="LetraNegra">
-<? 
+<?php 
                 /** 
                 * Consulta el  Custodio 
                 */
@@ -439,14 +439,14 @@ if ($hdd_aux==1){
 				switch($row_rs_mant['Man_Pro']){
 					case 0:
 ?>
-					<button type="button" name="imageField2" width="22" height="22" title="Dar de alta Mantenimiento"  class='btn btn-success fileinput-button' onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_Rev=1&Man_Cod=<?Php echo $row_rs_mant['Man_Cod'];?>&Act_Cod=<?php echo $codigo;?>&volver_opciones=<? echo $volver_opciones?>&volver_busqueda=<?Php echo $volver_busqueda?>','ajax_modal');">	
+					<button type="button" name="imageField2" width="22" height="22" title="Dar de alta Mantenimiento"  class='btn btn-success fileinput-button' onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_Rev=1&Man_Cod=<?Php echo $row_rs_mant['Man_Cod'];?>&Act_Cod=<?php echo $codigo;?>&volver_opciones=<?php echo $volver_opciones?>&volver_busqueda=<?Php echo $volver_busqueda?>','ajax_modal');">	
                    	 <i class='icon-ok-sign icon-white'></i>
                 	</button>			
 <?Php
 					break;
 					case 1:
 ?>
-					<button  type="button" name="imageField" class="btn btn-primary btn-mini"  width="32" height="32" title="Procesado.. ver detalles!!"  onClick="Muestra_Aparecer();ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_Rev=1&Man_Cod=<?Php echo $row_rs_mant['Man_Cod'];?>&Act_Cod=<?php echo $codigo;?>&volver_opciones=<? echo $volver_opciones?>&volver_busqueda=<?Php echo $volver_busqueda?>','ajax_modal');">	
+					<button  type="button" name="imageField" class="btn btn-primary btn-mini"  width="32" height="32" title="Procesado.. ver detalles!!"  onClick="Muestra_Aparecer();ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_Rev=1&Man_Cod=<?Php echo $row_rs_mant['Man_Cod'];?>&Act_Cod=<?php echo $codigo;?>&volver_opciones=<?php echo $volver_opciones?>&volver_busqueda=<?Php echo $volver_busqueda?>','ajax_modal');">	
                     <i class='icon-info-sign icon-white'></i>
                 	</button>	
 <?Php				
@@ -501,13 +501,13 @@ if ($anulada > 0)
 }//Fin del if ($anulada > 0)
 ?>
 <br/>
-<?
+<?php
 require_once('../../componentes/FRONT/com_con_leyenda.php');?>    
 	</form>		
 		</td>
 	</tr>
 </table>
-<? } ?>
+<?php } ?>
 <div id="bgtransparent" class="bgtransparent" style="display:none" onClick="closeModal();"></div>
 	  	<div id="bgmodal"  class="bgmodal" style="display:none" >
 	 		<div id="ajax_modal">

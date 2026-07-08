@@ -31,14 +31,14 @@ include($APP_REAL_PATH.'/tesoreria/FRONT/cheques/cheque_config.php');
       </tr>
       <tr>
 		<td width="22" height="32" valign="top" class="report">&nbsp;</td>		
-		<td width="371" valign="middle" class="report" style="font-size:13px;"><? if($row_pri_cheque['Che_Ben']==''){echo $row_pri_cheque['Prs_Ape'].' '.$row_pri_cheque['Prs_Nom'];}else{echo $row_pri_cheque['Che_Ben'];} ?></td>
-        <td width="205" valign="middle"><span class="report" style="font-size:13px;"><? echo number_format($row_pri_cheque['Che_Val'],2); ?></span>xxx</td>
+		<td width="371" valign="middle" class="report" style="font-size:13px;"><?php if($row_pri_cheque['Che_Ben']==''){echo $row_pri_cheque['Prs_Ape'].' '.$row_pri_cheque['Prs_Nom'];}else{echo $row_pri_cheque['Che_Ben'];} ?></td>
+        <td width="205" valign="middle"><span class="report" style="font-size:13px;"><?php echo number_format($row_pri_cheque['Che_Val'],2); ?></span>xxx</td>
       </tr>
       <tr align="center">
         <td height="50"></td>
         <td height="53" colspan="2" align="left" valign="top"><span class="report" style="font-size:13px;">
           
-          <? $v_absoluto=explode(".",$row_pri_cheque['Che_Val']);
+          <?php $v_absoluto=explode(".",$row_pri_cheque['Che_Val']);
 			echo strtoupper(num2letras($row_pri_cheque['Che_Val']));
 			//$row_pri_cheque['Che_Val'];
 			?></span> xxxxxxxxxxxxxxxxxxxxxxxxxxxx</td>

@@ -80,7 +80,7 @@ if (isset($buscod))
 				  ?>
 				  <tr>
 					  <td><?php echo $row_rs_buscar['Pld_Cdc']; ?></td>
-                      <td><?php echo utf8_encode($row_rs_buscar['Pld_Des']); ?></td>
+                      <td><?php echo mb_convert_encoding($row_rs_buscar['Pld_Des'], 'UTF-8', 'ISO-8859-1'); ?></td>
                       <td align="center"><?php if ($row_rs_recur['Pld_Des'] != ""){ echo $row_rs_recur['Pld_Des']; }else{ echo "&nbsp;"; } ?></td>
                       <td align="center"><?php echo $row_rs_buscar['Pld_Tip']; ?></td>				  
                       <td align="center"><?php echo $row_rs_buscar['Pld_Est']; ?></td>

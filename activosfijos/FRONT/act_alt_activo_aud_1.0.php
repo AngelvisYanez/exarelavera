@@ -181,7 +181,7 @@ if(count($rs_auditore)>0){
           	</table>
  	 		</form>
   		</FIELDSET>
-<?
+<?php
 	if (isset($txt_busqueda)){?>
     	<FIELDSET>
         <LEGEND>
@@ -203,12 +203,12 @@ if(count($rs_auditore)>0){
                { $rojo='#FF0000'; $anulada++; }else{$rojo='';}
           ?>
         <tr>
-            <td align="center"><FONT COLOR="<? echo $rojo;?>"><?php echo $row_rs_buscar['Cus_Cod'];?></FONT></td>
-            <td><FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Prs_Ced'];?></FONT></td>
-            <td><p><FONT COLOR="<? echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Nombre'],'#FFFF00', 1);?>    
+            <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php echo $row_rs_buscar['Cus_Cod'];?></FONT></td>
+            <td><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Prs_Ced'];?></FONT></td>
+            <td><p><FONT COLOR="<?php echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Nombre'],'#FFFF00', 1);?>    
             </FONT></p>
             </td>
-            <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post">
+            <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post">
             <td align="center" width="4%">
 <?Php
 				if($row_rs_buscar['Cus_Est']=='A'){?>
@@ -240,13 +240,13 @@ if(count($rs_auditore)>0){
             <td align="center"><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
             <td> </td>
         </tr>
-<?
+<?php
 			} // fin del if ($total_rs_buscar > 0)
 ?>
       	</tbody>
         </table> 
          
-<? 
+<?php 
 			echo barra_estado($total_rs_buscar);
 		} // fin if (isset($txt_busqueda)){
 ?>
@@ -254,7 +254,7 @@ if(count($rs_auditore)>0){
 		</td>
 	</tr>
 	</table>
-<?		
+<?php		
 	if (isset($codigo1)){
 	/**
 	 * Consulto los activos del custodio
@@ -267,7 +267,7 @@ if(count($rs_auditore)>0){
 	</LEGEND>
 	<form name="form4" method="post" action="<?Php echo $_SERVER['PHP_SELF']?>">
     
-    <? 
+    <?php 
   /** 
    * Creacion del campo REPOST
    */
@@ -276,7 +276,7 @@ if(count($rs_auditore)>0){
 	<table width="100%" border="0" cellpadding="0" cellspacing="0" >      
 		<tr>
 			<td width="14%" class="Etiqueta1">Institución:</td>
-			<td width="27%" >&nbsp;<span class="Etiqueta1"><? echo $rs_instituc['Emp_Nom'];?></span></td>
+			<td width="27%" >&nbsp;<span class="Etiqueta1"><?php echo $rs_instituc['Emp_Nom'];?></span></td>
 			<td width="10%" class="Etiqueta1"  > </td>  
 			<td width="49%" class="Etiqueta1"  > </td>  
 		</tr>
@@ -354,7 +354,7 @@ if(count($rs_auditore)>0){
 ?> 
 	</tbody>
 	</table>  
-<?
+<?php
 	echo barra_estado($total_rs_consultar);		
 }
 ?>	
@@ -371,7 +371,7 @@ if(count($rs_auditore)>0){
   		<table  width="226">
      		<tr>
                 <td width="44%" align="left" >
-                	 <form name="form6" method="post" action="<? echo $_SERVER['PHP_SELF'];?>">
+                	 <form name="form6" method="post" action="<?php echo $_SERVER['PHP_SELF'];?>">
                     	<button type="button" name="btn_atras" id="btn_atras" value="Enviar" class="btn btn-inverse fileinput-button" title="Atr&aacute;s"
                         onClick="campos_hide(this.form, '<?Php echo "op_opciones*txt_busqueda*hdd_volver"; ?>','<?Php echo $op_opciones.'*'.$txt_busqueda1.'*'.$hdd_volver;?>')">
                          <i class="icon-arrow-left icon-white"></i><span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>

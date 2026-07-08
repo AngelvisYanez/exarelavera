@@ -55,22 +55,22 @@ if(isset($Adq)){ /*inicio if(isset($Adq)){ */
 		}
 	 ?>
   <tr>
-    <td align="center" title="<? if (strlen($row_rs_iva_bienes['Ren_Con'])>40){echo $row_rs_iva_bienes['Ren_Con'];}?>"><? echo $row_rs_iva_bienes['Ren_Cod']; ?></td>
-    <td alin="center" title="<? if (strlen($row_rs_iva_bienes['Ren_Con'])>40){echo $row_rs_iva_bienes['Ren_Con'];}?>"><? echo $row_rs_iva_bienes['Ren_Sri']; ?></td>
-    <td align="left" id="set1" title="<? if (strlen($row_rs_iva_bienes['Ren_Con'])>40){echo $row_rs_iva_bienes['Ren_Con'];}?>"><?Php echo marcar_cadena($ajax_renta_iva_buscar, $renta, '#FFFF00', 1);?></td>
-    <td align="center" title="<? if (strlen($row_rs_iva_bienes['Ren_Con'])>40){echo $row_rs_iva_bienes['Ren_Con'];}?>"><? echo $row_rs_iva_bienes['Ren_Por']; ?>
+    <td align="center" title="<?php if (strlen($row_rs_iva_bienes['Ren_Con'])>40){echo $row_rs_iva_bienes['Ren_Con'];}?>"><?php echo $row_rs_iva_bienes['Ren_Cod']; ?></td>
+    <td alin="center" title="<?php if (strlen($row_rs_iva_bienes['Ren_Con'])>40){echo $row_rs_iva_bienes['Ren_Con'];}?>"><?php echo $row_rs_iva_bienes['Ren_Sri']; ?></td>
+    <td align="left" id="set1" title="<?php if (strlen($row_rs_iva_bienes['Ren_Con'])>40){echo $row_rs_iva_bienes['Ren_Con'];}?>"><?Php echo marcar_cadena($ajax_renta_iva_buscar, $renta, '#FFFF00', 1);?></td>
+    <td align="center" title="<?php if (strlen($row_rs_iva_bienes['Ren_Con'])>40){echo $row_rs_iva_bienes['Ren_Con'];}?>"><?php echo $row_rs_iva_bienes['Ren_Por']; ?>
     </td>
     <td align="center">
     <button type="button" class="btn btn-success btn-mini" title="Elegir" onclick="document.getElementById(document.getElementById('Hdd_Ren_Con').value).value = '<?Php echo $row_rs_iva_bienes['Ren_Sri']; ?>'; document.getElementById(document.getElementById('Hdd_Ren_Ide').value).value = '<?Php echo $row_rs_iva_bienes['Ren_Cod']; ?>';
 document.getElementById(document.getElementById('Hdd_Ren_Por').value).value = '<?Php echo $row_rs_iva_bienes['Ren_Por']; ?>'; 
 document.getElementById(document.getElementById('Hdd_Ren_Con').value).focus(); 
-todo_check_renta(<? echo $row_rs_iva_bienes['Ren_Cod']; ?>,'<? echo $row_rs_iva_bienes['Ren_Sri']; ?>', <? echo $row_rs_iva_bienes['Ren_Por']; ?>);
+todo_check_renta(<?php echo $row_rs_iva_bienes['Ren_Cod']; ?>,'<?php echo $row_rs_iva_bienes['Ren_Sri']; ?>', <?php echo $row_rs_iva_bienes['Ren_Por']; ?>);
 ">
         	<i class=" icon-arrow-right icon-white"></i>
         	</button>
 		</td>
   </tr>
-  <?  } /* fin  foreach ($rs_iva_bienes); */
+  <?php  } /* fin  foreach ($rs_iva_bienes); */
 	  } 
 	  else 
 	  { ?>
@@ -81,7 +81,7 @@ todo_check_renta(<? echo $row_rs_iva_bienes['Ren_Cod']; ?>,'<? echo $row_rs_iva_
     <td>&nbsp;</td>
     <td>&nbsp;</td>
   </tr>
-  <? } /* fin if($num_row_rs_iva_bienes>0){  */ ?>
+  <?php } /* fin if($num_row_rs_iva_bienes>0){  */ ?>
   </tbody>
 </table>
 <?Php   

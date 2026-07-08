@@ -83,7 +83,7 @@ $fecha = explode('-', $hoy);
          </tr>
          <tr>
             <td colspan="2" align="center"><b>Tel.:</b> <?echo $sucur['Suc_Te1']?></td>
-            <td><td><td width="150" style="border:1px solid;text-align:right;">$ <? echo number_format($anticipo['Ant_Val'], 2, '.', ',')?></td></td></td>
+            <td><td><td width="150" style="border:1px solid;text-align:right;">$ <?php echo number_format($anticipo['Ant_Val'], 2, '.', ',')?></td></td></td>
          </tr>
       </table>
    </div>
@@ -101,7 +101,7 @@ $fecha = explode('-', $hoy);
       </tr>
       <tr>
          <td><b>La cantidad de:</b></td>
-         <td> <? echo num2letras($anticipo['Ant_Val'],false).' DOLARES AMERICANOS'; ?></td>
+         <td> <?php echo num2letras($anticipo['Ant_Val'],false).' DOLARES AMERICANOS'; ?></td>
       </tr>
    </table>
    <br>

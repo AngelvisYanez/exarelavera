@@ -165,8 +165,8 @@ $periodo = $periodos[0];
                           <input id="radc2" name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" alt="" /><label for="radc2">&nbsp;&nbsp;C&oacute;digo&nbsp;&nbsp;</label>                          
                     </div>                   
                     <div class="col-md-4">
-                        <input name="Pec_Cod" type="hidden" value="<? echo $periodo['Pec_Cod']?>" /> 
-                        <input name="Pla_Cod" type="hidden" value="<? echo $periodo['Pla_Cod']?>" />
+                        <input name="Pec_Cod" type="hidden" value="<?php echo $periodo['Pec_Cod']?>" /> 
+                        <input name="Pla_Cod" type="hidden" value="<?php echo $periodo['Pla_Cod']?>" />
                     </div>
                 </div>
                 <div class="form-group">

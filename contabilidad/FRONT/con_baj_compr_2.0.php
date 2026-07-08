@@ -173,7 +173,7 @@ if(isset($cliAjax)){
                                           <option value="" class="todos">TODOS</option>
                                           <?php foreach($tiasien as $row){  ?>
                                           <!--option value="<?php echo $row['Tia_Cod']; ?>" style="display:none" data-type="<?php echo $row['Tia_Ini']; ?>" data-abre="<?php echo $row['Tia_Abr']; ?>"><?php echo $row['Tia_Des']; ?></option-->
-                                          <option value="<?php echo $row['Tia_Cod']; ?>" style="display:none" data-type="<?php echo $row['Tia_Ini']; ?>" data-abre="<?php echo $row['Tia_Abr']; ?>"><?php echo utf8_encode($row['Tia_Des']); ?></option>
+                                          <option value="<?php echo $row['Tia_Cod']; ?>" style="display:none" data-type="<?php echo $row['Tia_Ini']; ?>" data-abre="<?php echo $row['Tia_Abr']; ?>"><?php echo mb_convert_encoding($row['Tia_Des'], 'UTF-8', 'ISO-8859-1'); ?></option>
 
                                          
                                           <?php } ?>
@@ -277,7 +277,7 @@ if(isset($cliAjax)){
                                             <?PHP $rs_tipo_comprobante=$obBD_con1->getArrayConsulta(14,'',$obBD_conexion);
                                             foreach ($rs_tipo_comprobante as $row){?>
                                             <!--option value="<?php echo $row["Tic_Cod"];?>"><?php echo $row["Tic_Des"];?></option-->
-                                            <option value="<?php echo $row["Tic_Cod"];?>"><?php echo utf8_encode($row["Tic_Des"]);?></option>
+                                            <option value="<?php echo $row["Tic_Cod"];?>"><?php echo mb_convert_encoding($row["Tic_Des"], 'UTF-8', 'ISO-8859-1');?></option>
 
                                             <?PHP }
                                             ?>
@@ -339,7 +339,7 @@ if(isset($cliAjax)){
                                             <?PHP $rs_tipo_comprobante=$obBD_con1->getArrayConsulta(14,'',$obBD_conexion);
                                             foreach ($rs_tipo_comprobante as $row){?>
                                             <!--option value="<?php echo $row["Tic_Cod"];?>"><?php echo $row["Tic_Des"];?></option-->
-                                            <option value="<?php echo $row["Tic_Cod"];?>"><?php echo utf8_encode($row["Tic_Des"]);?></option>
+                                            <option value="<?php echo $row["Tic_Cod"];?>"><?php echo mb_convert_encoding($row["Tic_Des"], 'UTF-8', 'ISO-8859-1');?></option>
 
 
                                             <?PHP }

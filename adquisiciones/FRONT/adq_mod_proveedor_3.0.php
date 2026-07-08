@@ -130,7 +130,7 @@ if (isset($_POST['hdd_save']))
     </tr>
     </thead>
     <tbody>
-    <?
+    <?php
 	
 	$Arr_Proveedor = $obBD_con1->getArrayConsulta($op_opciones == "d"? 9 : 10,$txt_busqueda.'*'.$Ses_Emp_Cod, $obBD_conexion);
     $filas = 0;
@@ -147,17 +147,17 @@ if (isset($_POST['hdd_save']))
 		  <?Php echo marcar_cadena($txt_busqueda, ($row['Prv_Tic']=='N')?'&nbsp;'.$row['Prs_Ape']." ".$row['Prs_Nom']:'&nbsp;'.$row['Prs_Ape'], '#FFFF00', 1); ?>
 		 </td>
 		 <td align="center">
-		 <form name='form' method='post'  action='<? echo $_SERVER['PHP_SELF'];?>'>
+		 <form name='form' method='post'  action='<?php echo $_SERVER['PHP_SELF'];?>'>
 			<button type="button" class="btn btn-success btn-mini" title="Elegir" onclick="this.form.submit()">
 				<i class=" icon-arrow-right icon-white"></i>
 			</button>
 			<input name="Prv_Cod" id="Prv_Cod" type="hidden" value="<?Php echo $row['Prv_Cod']; ?>">
-			<input name="txt_busqueda" value="<? echo $txt_busqueda;?>" type="hidden">
-			<input name="op_opciones" value="<? echo $op_opciones;?>" type="hidden">
+			<input name="txt_busqueda" value="<?php echo $txt_busqueda;?>" type="hidden">
+			<input name="op_opciones" value="<?php echo $op_opciones;?>" type="hidden">
 		</form>
 		</td>		
 	   </tr>
-	  <? }}else{?> 
+	  <?php }}else{?> 
        <tr>
 		  <td align="center">&nbsp;</td>
 		  <td>&nbsp;</td>
@@ -165,17 +165,17 @@ if (isset($_POST['hdd_save']))
 		  <td align="center">&nbsp;</td>
 		</tr> 
 	   
-	<? }?>
+	<?php }?>
     </tbody>
   </table>
-  <?
+  <?php
    echo barra_estado($filas);
   ?>
   </FIELDSET>
-  <? }?>
+  <?php }?>
   
   
-  <? if(isset($Prv_Cod) && !isset($hdd_volver)){?>
+  <?php if(isset($Prv_Cod) && !isset($hdd_volver)){?>
   <table cellpadding="0" cellspacing="0" width="100%" >
   <tr>
   <td>
@@ -183,12 +183,12 @@ if (isset($_POST['hdd_save']))
    <LEGEND>
 	<label class="Titulos2">Datos a Modificar</label>
    </LEGEND>
-   <form method="post" name= "form" id="form" action="<? echo $_SERVER['PHP_SELF'];?>">
-   <? $thisPost->startPost();?>
-   <?
+   <form method="post" name= "form" id="form" action="<?php echo $_SERVER['PHP_SELF'];?>">
+   <?php $thisPost->startPost();?>
+   <?php
    	$Row_Persona = $obBD_con1->getRowConsulta(11, $Prv_Cod, $obBD_conexion);
    ?>
-   <? echo mensaje_requerido();?>
+   <?php echo mensaje_requerido();?>
    <FIELDSET>
 	 <LEGEND>
 	  <label class="Titulos2">Datos Generales</label>
@@ -208,16 +208,16 @@ if (isset($_POST['hdd_save']))
        <td width="78%" class="LetraNegra">&nbsp;
          <Select name="Prv_Tic" id="Prv_Tic" onChange="MostrarNJ(this)">
           <option value = "">Seleccionar...</option>
-          <option value = "N" <? if($Row_Persona['Prv_Tic']=='N')echo "selected";?>>NATURAL</option>
-          <option value = "J" <? if($Row_Persona['Prv_Tic']=='J')echo "selected";?>>JURIDICO</option>
+          <option value = "N" <?php if($Row_Persona['Prv_Tic']=='N')echo "selected";?>>NATURAL</option>
+          <option value = "J" <?php if($Row_Persona['Prv_Tic']=='J')echo "selected";?>>JURIDICO</option>
          </Select>
        </td>
       </tr>
-      <? $opiden = $Row_Persona['Prv_Tic'] == ""?"N":$Row_Persona['Prv_Tic'];?>      
+      <?php $opiden = $Row_Persona['Prv_Tic'] == ""?"N":$Row_Persona['Prv_Tic'];?>      
       <tr id="Natural">
        <td width="22%" class="Etiqueta1"><span class="Asterisco">*</span>Nombre (Raz&oacute;n Social):</td>
        <td width="78%" class="LetraNegra">&nbsp;
-        <input name="Prs_Nom" type="text" id="Prs_Nom" style="text-transform:uppercase" value="<? echo $Row_Persona['Prs_Nom'];?>" size="30" maxlength="80" />
+        <input name="Prs_Nom" type="text" id="Prs_Nom" style="text-transform:uppercase" value="<?php echo $Row_Persona['Prs_Nom'];?>" size="30" maxlength="80" />
        </td>
       </tr>      
       <tr>
@@ -227,14 +227,14 @@ if (isset($_POST['hdd_save']))
          <label id="Juridico">Raz&oacute;n Social:</label>        
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
-		<input name="Prs_Ape" type="text" id="Prs_Ape" style="text-transform:uppercase" value="<? echo $Row_Persona['Prs_Ape'];?>" size="50" maxlength="50" />
+		<input name="Prs_Ape" type="text" id="Prs_Ape" style="text-transform:uppercase" value="<?php echo $Row_Persona['Prs_Ape'];?>" size="50" maxlength="50" />
        </td>
       </tr>      
       <tr>
 	   <td width="22%" class="Etiqueta1"><span class="Asterisco">*</span>Nombre Comercial:</td>
        <td width="78%" class="LetraNegra">&nbsp;
 	     <input name="Prv_Com" type="text" id="Prv_Com" 
-         style="text-transform:uppercase" value="<? echo $Row_Persona['Prv_Com'];?>" size="50" maxlength="100"/>
+         style="text-transform:uppercase" value="<?php echo $Row_Persona['Prv_Com'];?>" size="50" maxlength="100"/>
        </td>
       </tr>
       <tr>
@@ -242,8 +242,8 @@ if (isset($_POST['hdd_save']))
        <td width="78%" class="LetraNegra">&nbsp;
 	     <Select name="Prv_Esp" id="Prv_Esp">
           <option value = "">Seleccionar...</option>
-          <option value = "S" <? if($Row_Persona['Prv_Esp']=='S')echo "selected";?>>SI</option>
-          <option value = "N" <? if($Row_Persona['Prv_Esp']=='N')echo "selected";?>>NO</option>
+          <option value = "S" <?php if($Row_Persona['Prv_Esp']=='S')echo "selected";?>>SI</option>
+          <option value = "N" <?php if($Row_Persona['Prv_Esp']=='N')echo "selected";?>>NO</option>
          </Select>
        </td>
       </tr>
@@ -252,30 +252,30 @@ if (isset($_POST['hdd_save']))
         <td width="78%" class="LetraNegra">&nbsp;
           <Select name="Prv_Con" id="Prv_Con">
             <option value = "">Seleccionar...</option>
-            <option value = "S" <? if($Row_Persona['Prv_Con']=='S')echo "selected";?>>SI</option>
-            <option value = "N" <? if($Row_Persona['Prv_Con']=='N')echo "selected";?>>NO</option>
+            <option value = "S" <?php if($Row_Persona['Prv_Con']=='S')echo "selected";?>>SI</option>
+            <option value = "N" <?php if($Row_Persona['Prv_Con']=='N')echo "selected";?>>NO</option>
           </Select>
         </td>
       </tr>
       <tr>
         <td class="Etiqueta1">Representante Legal: </td>
         <td class="LetraNegra">&nbsp;
-          <input name="Prv_Rep" type="text" id="Prv_Rep" style="text-transform:uppercase" value="<? echo $Row_Persona['Prv_Rep'];?>" size="66" maxlength="100"/>
+          <input name="Prv_Rep" type="text" id="Prv_Rep" style="text-transform:uppercase" value="<?php echo $Row_Persona['Prv_Rep'];?>" size="66" maxlength="100"/>
         </td>
       </tr>
      </table>     
     </FIELDSET>
-    <? if($opiden=="J"){?>
+    <?php if($opiden=="J"){?>
    <script language="javascript">
    		ShowHide('Natural');
 		ShowHide('Natural_a');
    </script>
-   <? }else{ if($opiden=="N"){
+   <?php }else{ if($opiden=="N"){
 	?>
 	   <script language="javascript">
    		ShowHide('Juridico');
    </script>
-	<? }}?>
+	<?php }}?>
     
     <fieldset>
      <legend>
@@ -469,7 +469,7 @@ if (isset($_POST['hdd_save']))
    <table border="0" cellpadding="0" cellspacing="0">
    <tr> 
       <td width="114">
-      		 <button type="button" class="btn btn-inverse fileinput-button" title="Atras" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*hdd_volver', '<? echo $_POST['txt_busqueda'].'*'.$_POST['op_opciones'].'*'.'1';?>')">
+      		 <button type="button" class="btn btn-inverse fileinput-button" title="Atras" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*hdd_volver', '<?php echo $_POST['txt_busqueda'].'*'.$_POST['op_opciones'].'*'.'1';?>')">
                <i class=" icon-arrow-left icon-white"></i>
                <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
        		 </button>&nbsp;&nbsp;
@@ -489,7 +489,7 @@ if (isset($_POST['hdd_save']))
    </td>
    </tr>
    </table>
-  <? } ?> 
+  <?php } ?> 
   
   
   

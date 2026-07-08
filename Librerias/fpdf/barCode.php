@@ -20,18 +20,18 @@ require('fpdf.php');
 
 class PDF_Code128 extends FPDF {
 
-var $T128;                                             // tableau des codes 128
-var $ABCset="";                                        // jeu des caractères éligibles au C128
-var $Aset="";                                          // Set A du jeu des caractères éligibles
-var $Bset="";                                          // Set B du jeu des caractères éligibles
-var $Cset="";                                          // Set C du jeu des caractères éligibles
-var $SetFrom;                                          // Convertisseur source des jeux vers le tableau
-var $SetTo;                                            // Convertisseur destination des jeux vers le tableau
-var $JStart = array("A"=>103, "B"=>104, "C"=>105);     // Caractères de sélection de jeu au début du C128
-var $JSwap = array("A"=>101, "B"=>100, "C"=>99);       // Caractères de changement de jeu
+public $T128;                                             // tableau des codes 128
+public $ABCset="";                                        // jeu des caractères éligibles au C128
+public $Aset="";                                          // Set A du jeu des caractères éligibles
+public $Bset="";                                          // Set B du jeu des caractères éligibles
+public $Cset="";                                          // Set C du jeu des caractères éligibles
+public $SetFrom;                                          // Convertisseur source des jeux vers le tableau
+public $SetTo;                                            // Convertisseur destination des jeux vers le tableau
+public $JStart = array("A"=>103, "B"=>104, "C"=>105);     // Caractères de sélection de jeu au début du C128
+public $JSwap = array("A"=>101, "B"=>100, "C"=>99);       // Caractères de changement de jeu
 
-var $tablewidths;   // VARIABLE PARA LAS TABLAS
-var $footerset;     // VARIABLE PARA LAS TABLAS
+public $tablewidths;   // VARIABLE PARA LAS TABLAS
+public $footerset;     // VARIABLE PARA LAS TABLAS
 
 //____________________________ Extension du constructeur _______________________
 function PDF_Code128($orientation='P', $unit='mm', $format='A4') {
@@ -290,9 +290,9 @@ function Code128($x, $y, $code, $w, $h) {
     }
 }
 /* AGREGADO X ERIK (MULTILINEA) */
-var $C_widths;
-var $C_aligns;
-var $C_Fonts;
+public $C_widths;
+public $C_aligns;
+public $C_Fonts;
 function SetCWidths($w){
 	//Set the array of column widths
 	$this->C_widths=$w;

@@ -17,18 +17,18 @@ if (isset($com_codigo))
       <tr>
         <td width="12%" align="right">La cantidad de:</td>
         <td width="88%" colspan="2">&nbsp;<span class="Texto_Reporte" style="text-transform:uppercase">
-          <? 
+          <?php 
 	$v_absoluto=explode(".",$row_rs_detalle['Com_Val']);
 	echo num2letras($v_absoluto[0],false,true).', '.$v_absoluto[1].' /100 DOLARES AMERICANOS'; ?>
         </span></td>
       </tr>
       <tr>
         <td align="right">Por concepto:</td>
-        <td><? echo $row_rs_detalle['Com_Con']; ?></td>
+        <td><?php echo $row_rs_detalle['Com_Con']; ?></td>
       </tr>
       <tr>
         <td align="right">Observaci&oacute;n:</td>
-        <td><? echo $row_rs_detalle['Com_Obs']; ?></td>
+        <td><?php echo $row_rs_detalle['Com_Obs']; ?></td>
       </tr>
       <tr>
         <td>&nbsp;</td>
@@ -51,19 +51,19 @@ if (isset($com_codigo))
 	do{
 	?>
 	<tr>
-	  <td align="left"><? echo $row_rs_detalle['Pld_Cdc']; ?></td>
+	  <td align="left"><?php echo $row_rs_detalle['Pld_Cdc']; ?></td>
 	  <td>&nbsp;
-		  <? 
+		  <?php 
 	if ($row_rs_detalle['Asi_Deh']=='D') { 
 	 echo $row_rs_detalle['Pld_Des']; 
 	 }else
 	 {  echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$row_rs_detalle['Pld_Des']; }
 	 ?></td>
-	  <td align="right"><? if ($row_rs_detalle['Asi_Deh']=='D') { echo formato_numero($row_rs_detalle['Asi_Val'], 2, 4); 
+	  <td align="right"><?php if ($row_rs_detalle['Asi_Deh']=='D') { echo formato_numero($row_rs_detalle['Asi_Val'], 2, 4); 
 			/* Se uiliza round a 4 decimales para el detalle de cada calculo de las retenciones de renta e iva
 			en el reporte compr se usan 3 decimales */
 			$total=$total + round($row_rs_detalle['Asi_Val2'],2); } else { echo '&nbsp'; }?></td>
-	  <td align="right"><? if ($row_rs_detalle['Asi_Deh']=='H') { echo formato_numero($row_rs_detalle['Asi_Val'], 2, 4); 
+	  <td align="right"><?php if ($row_rs_detalle['Asi_Deh']=='H') { echo formato_numero($row_rs_detalle['Asi_Val'], 2, 4); 
    	        /* Se uiliza round a 4 decimales para el detalle de cada calculo de las retenciones de renta e iva 
 			en el reporte compr se usan 3 decimales */
 			$total_h=$total_h + round($row_rs_detalle['Asi_Val2'],2); } else{ echo '&nbsp'; } ?></td>

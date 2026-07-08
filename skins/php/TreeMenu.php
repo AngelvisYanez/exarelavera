@@ -1,16 +1,17 @@
 <?php
 /**
-* Descripción: Objeto Paginacion
-* Fecha de actualización:	2016-12-25
+* DescripciÃ³n: Objeto Paginacion
+* Fecha de actualizaciÃ³n:	2016-12-25
 * Desarrollador:	 Erik Niebla
 */
+#[AllowDynamicProperties]
 class TreeMenu{
     protected $_index = array();
     protected $_dirtyIndex = false;
     protected $_pages=array();
     protected $_class;
     
-    function TreeMenu(){}
+    public function __construct(){}
     public function setClass($class = null){
         if (null !== $class && !is_string($class)) throw new Exception('Invalid argument: $class must be a string or null');
         $this->_class = $class;
@@ -174,6 +175,7 @@ class TreeMenu{
         return count($this->_index);
     }
 }
+#[AllowDynamicProperties]
 class TreeMenuItem extends TreeMenu {
     
     protected $_id;
@@ -199,7 +201,7 @@ class TreeMenuItem extends TreeMenu {
     protected $_rev = array();
     protected $_customHtmlAttribs = array();
         
-    function TreeMenuItem(array $options=null){ if($options!==null) $this->setOptions($options); }
+    public function __construct(array $options=null){ if($options!==null) $this->setOptions($options); }
     public function setHref($href){
         if (null !== $href && !is_string($href)) throw new Exception('Invalid argument: $label must be a string or null');
         $this->_href = $href; return $this;

@@ -1,4 +1,4 @@
-<?	
+<?php	
 
 //require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/fac_log_retencion.php');

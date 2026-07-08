@@ -41,23 +41,23 @@ if(isset($Com_Com_Cod))
 <input name="Com_Com_Cod" id="Com_Com_Cod" type="hidden" value="<?php echo $Com_Com_Cod; ?>" />
 C&oacute;d. Compr: </td>
 	<td width="40%" class="LetraNegra">&nbsp;
-	  <input name="textfield" type="text" style="border:none" value="<? echo $row_rs_cabcomp['Com_Num']; ?>"></td>
+	  <input name="textfield" type="text" style="border:none" value="<?php echo $row_rs_cabcomp['Com_Num']; ?>"></td>
 	<td width="9%" class="Etiqueta1">Fecha:</td>
-	<td width="35%" class="LetraNegra">&nbsp;<? echo $row_rs_cabcomp['Com_Fec']; ?></td>
+	<td width="35%" class="LetraNegra">&nbsp;<?php echo $row_rs_cabcomp['Com_Fec']; ?></td>
   </tr>
   <tr>
 	<td class="Etiqueta1">Nombre:</td>
-	<td class="LetraNegra">&nbsp;<? echo $row_rs_cabcomp['Prs_Ape'].' '.$row_rs_cabcomp['Prs_Nom']; ?></td>
+	<td class="LetraNegra">&nbsp;<?php echo $row_rs_cabcomp['Prs_Ape'].' '.$row_rs_cabcomp['Prs_Nom']; ?></td>
 	<td class="Etiqueta1">Valor:</td>
-	<td class="LetraNegra">&nbsp;<? echo $row_rs_cabcomp['Com_Val']; ?></td>
+	<td class="LetraNegra">&nbsp;<?php echo $row_rs_cabcomp['Com_Val']; ?></td>
   </tr>
   <tr>
 	<td height="24" class="Etiqueta1">Concepto:</td>
-	<td height="24" colspan="3" class="LetraNegra">&nbsp;<? echo $row_rs_cabcomp['Com_Con']; ?></td>
+	<td height="24" colspan="3" class="LetraNegra">&nbsp;<?php echo $row_rs_cabcomp['Com_Con']; ?></td>
 	</tr>
   <tr>
 	<td height="20" valign="top" class="Etiqueta1">Observaci&oacute;n:</td>
-	<td height="20" colspan="3" valign="top" class="LetraNegra">&nbsp;<? echo $row_rs_cabcomp['Com_Obs']; ?>
+	<td height="20" colspan="3" valign="top" class="LetraNegra">&nbsp;<?php echo $row_rs_cabcomp['Com_Obs']; ?>
 	  <input name="codigo" type="hidden" id="codigo" value="<?Php echo $codigo;  ?>"></td>
 	</tr>
 </table>
@@ -78,30 +78,30 @@ C&oacute;d. Compr: </td>
 	  </tr>
      </thead>
      <tbody>
-	  <? if (count($rs_cuentas) > 0)
+	  <?php if (count($rs_cuentas) > 0)
 		 {	 
 		  foreach($rs_cuentas as $row_rs_cuentas)
 		  {
 ?>
 	  <tr>
-		<td><? echo $row_rs_cuentas['Pld_Cdc']; ?></td>
-		<td><? echo $row_rs_cuentas['Pld_Des']; ?></td>
-		<td><? echo $row_rs_cuentas['Asi_Glo']; ?></td>
+		<td><?php echo $row_rs_cuentas['Pld_Cdc']; ?></td>
+		<td><?php echo $row_rs_cuentas['Pld_Des']; ?></td>
+		<td><?php echo $row_rs_cuentas['Asi_Glo']; ?></td>
 		<td><div align="right">
-			<? if ($row_rs_cuentas['Asi_Deh']=='D') { echo $row_rs_cuentas['Asi_Val']; $total=$total + $row_rs_cuentas['Asi_Val']; } ?>
+			<?php if ($row_rs_cuentas['Asi_Deh']=='D') { echo $row_rs_cuentas['Asi_Val']; $total=$total + $row_rs_cuentas['Asi_Val']; } ?>
 		</div></td>
 		<td><div align="right">
-			<? if ($row_rs_cuentas['Asi_Deh']=='H') { echo $row_rs_cuentas['Asi_Val']; } ?>
+			<?php if ($row_rs_cuentas['Asi_Deh']=='H') { echo $row_rs_cuentas['Asi_Val']; } ?>
 		</div></td>
 	  </tr>
-	  <? }//Fin del foreach $row_rs_cuentas 
+	  <?php }//Fin del foreach $row_rs_cuentas 
 		 } ?>
 	  <tr>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
 		<td><strong>Totales:</strong></td>
-		<td align="right"><strong><? echo number_format($total,2); ?></strong></td>
-		<td align="right"><strong><? echo number_format($total,2); ?></strong></td>
+		<td align="right"><strong><?php echo number_format($total,2); ?></strong></td>
+		<td align="right"><strong><?php echo number_format($total,2); ?></strong></td>
 	  </tr>
      </tbody> 
 	</table>
@@ -129,7 +129,7 @@ if (count($rs_concomp) > 0)
 	    <th class="Cabecera1">&nbsp;</th>
 	  </tr>
      </thead> 
-	  <? 
+	  <?php 
 	if(count($rs_concomp) != 0) 
 	{
  	foreach($rs_concomp as $row_rs_concomp)
@@ -140,13 +140,13 @@ if (count($rs_concomp) > 0)
 	$pro = $row_rs_concomp['Prv_Cod'];				
  ?>
 	  <tr>
-		<td <?Php if ($row_rs_concomp['Com_Est'] == 'I') { echo "bgcolor='#FF0000'"; } ?>><? echo $row_rs_concomp['Prs_Ape'].' '.$row_rs_concomp['Prs_Nom']; ?></td>
-		<td <?Php if ($row_rs_concomp['Com_Est'] == 'I') { echo "bgcolor='#FF0000'"; } ?>><input name="codigo2" type="hidden" id="codigo2" value="<? echo $cod; ?>">
-		  &nbsp;<? echo $row_rs_concomp['Pld_Des'];?>
+		<td <?Php if ($row_rs_concomp['Com_Est'] == 'I') { echo "bgcolor='#FF0000'"; } ?>><?php echo $row_rs_concomp['Prs_Ape'].' '.$row_rs_concomp['Prs_Nom']; ?></td>
+		<td <?Php if ($row_rs_concomp['Com_Est'] == 'I') { echo "bgcolor='#FF0000'"; } ?>><input name="codigo2" type="hidden" id="codigo2" value="<?php echo $cod; ?>">
+		  &nbsp;<?php echo $row_rs_concomp['Pld_Des'];?>
 		  </option></td>
-		<td align="right" <?Php if ($row_rs_concomp['Com_Est'] == 'I') { echo "bgcolor='#FF0000'"; } ?>><? echo $row_rs_concomp['Che_Num']; ?></td>
-		<td align="right" <?Php if ($row_rs_concomp['Com_Est'] == 'I') { echo "bgcolor='#FF0000'"; } ?>>&nbsp;<? echo "$".''.number_format($row_rs_concomp['Che_Val'],2,'.',''); ?></td>
-		<td align="center" <?Php if ($row_rs_concomp['Com_Est'] == 'I') { echo "bgcolor='#FF0000'"; } ?>><? echo $row_rs_concomp['Che_Fec']; ?></td>
+		<td align="right" <?Php if ($row_rs_concomp['Com_Est'] == 'I') { echo "bgcolor='#FF0000'"; } ?>><?php echo $row_rs_concomp['Che_Num']; ?></td>
+		<td align="right" <?Php if ($row_rs_concomp['Com_Est'] == 'I') { echo "bgcolor='#FF0000'"; } ?>>&nbsp;<?php echo "$".''.number_format($row_rs_concomp['Che_Val'],2,'.',''); ?></td>
+		<td align="center" <?Php if ($row_rs_concomp['Com_Est'] == 'I') { echo "bgcolor='#FF0000'"; } ?>><?php echo $row_rs_concomp['Che_Fec']; ?></td>
 	   <form action="tes_pri_cheque_mac_1.0.php" method="post" name= "form3" target="_blank">
 	<td width="3%" align="center">		
 	<input name="codigo" type="hidden" id="codigo" value="<?php echo $cod; ?>">
@@ -186,7 +186,7 @@ if (count($rs_concomp) > 0)
 		  </td>
 		</form>
 	  </tr>
-	  <? }//Fin del foreach
+	  <?php }//Fin del foreach
 } //FIn del if($total_rs_concomp != 0) 
 else 
 { ?>
@@ -202,7 +202,7 @@ else
 		<td width="133">&nbsp;</td>
 		<td width="266">&nbsp;</td>
 	  </tr>
-	  <? } //Fin del else if($total_rs_concomp != 0) 
+	  <?php } //Fin del else if($total_rs_concomp != 0) 
 ?>
 	</table>
 </FIELDSET>

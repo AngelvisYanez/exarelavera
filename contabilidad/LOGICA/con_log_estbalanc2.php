@@ -1,10 +1,10 @@
-<?php 
+﻿<?php 
 /**
  * Logica de las paginas de balances
  *
  * @author Lewis Chimarro
  * @version 1.0
- * Fecha de actualizaci�n:	2012-10-04
+ * Fecha de actualizaciï¿½n:	2012-10-04
  *
  * @package contabilidad.LOGICA
  */
@@ -38,7 +38,7 @@ class Class_Log_Datos_Con extends MysqlDatos{
 	* @param Class_Log_Conexion_Con $obBD para realizar la conexcion correspondiente
 	* @return result si existen datos de retorno
 	*/
-	function consultasobBD($sen_sql,$param, $obBD) {
+	function consultasobBD($sen_sql,$param, $obBD = null) {
 		$Par_Sql= $this->parametros($param);
 		return $this->consulta(sentencias_con($sen_sql,$Par_Sql), $obBD->conexion);
 	}
@@ -51,7 +51,7 @@ class Class_Log_Datos_Con extends MysqlDatos{
 	* @param Class_Log_Conexion_Con $obBD para realizar la conexcion correspondiente
 	* @return result si existen datos de retorno
 	*/
-	function operacionobBD($sen_sql,$param, $obBD)
+	function operacionobBD($sen_sql,$param, $obBD = null)
 	{
 		$Par_Sql= $this->parametros($param);
 		return $this->grabarv_registros(sentencias_con($sen_sql,$Par_Sql), $obBD->conexion);
@@ -64,7 +64,7 @@ class Class_Log_Datos_Con extends MysqlDatos{
 	 * @param Class_Log_Conexion_Con $obBD para realizar la conexcion correspondiente
 	 * @return array $row fila de datos
 	 */
-	function getRowConsulta($sen_sql,$param,$obBD)
+	function getRowConsulta($sen_sql,$param,$obBD = null)
 	{
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);
 		
@@ -83,7 +83,7 @@ class Class_Log_Datos_Con extends MysqlDatos{
 	 * @param Class_Log_Datos_Con $obDT para la abtraccion de los datos
 	 * @return array $array arreglo de datos asociados
 	 */ 
-	function getArrayConsulta($sen_sql,$param,$obBD)
+	function getArrayConsulta($sen_sql,$param,$obBD = null)
 	{
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);
 		
@@ -105,7 +105,7 @@ class Class_Log_Datos_Con extends MysqlDatos{
 	 * @param string $param cadena de datos
 	 * @param Class_Log_Datos_Con $obBD objeto de conexion
 	 */
-	function insertUpdateDelete($sen_sql,$param, $obBD)
+	function insertUpdateDelete($sen_sql,$param, $obBD = null)
 	{		
 		$this->inicio_transaccion($obBD->conexion);
 		
@@ -117,8 +117,8 @@ class Class_Log_Datos_Con extends MysqlDatos{
 
 	/**
 	 * Formato standar para reportes
-	 * @param int $sucursal C�digo de la sucursal
-	 * @param string $titulo T�tulo del reporte
+	 * @param int $sucursal Cï¿½digo de la sucursal
+	 * @param string $titulo Tï¿½tulo del reporte
 	 * @param string $subtitulo Subtitulo del reporte
 	 */	
 	function cabeceraReporteStandar($sucursal, $titulo, $subtitulo,$obBD)
@@ -163,10 +163,10 @@ class Class_Log_Datos_Con extends MysqlDatos{
 		    <td colspan="2" valign="top"><hr /></td>
   		  </tr>
 		  <tr align="center">
-		    <td colspan="2" valign="top" class="TITULO_REPORTE"><? echo $titulo; ?></td>
+		    <td colspan="2" valign="top" class="TITULO_REPORTE"><?php echo $titulo; ?></td>
   		  </tr>
 		  <tr align="center">
-		    <td colspan="2" valign="top" class="TITULO_REPORTE"><? echo $subtitulo; ?></td>
+		    <td colspan="2" valign="top" class="TITULO_REPORTE"><?php echo $subtitulo; ?></td>
 	      </tr>
 	    </table>
 <?php
@@ -174,8 +174,8 @@ class Class_Log_Datos_Con extends MysqlDatos{
 
 	/**
 	 * Formato standar para reportes
-	 * @param int $sucursal C�digo de la sucursal
-	 * @param string $usuario C�digo del usuario 
+	 * @param int $sucursal Cï¿½digo de la sucursal
+	 * @param string $usuario Cï¿½digo del usuario 
 	 */	
 	function fechaImpresion($sucursal, $obBD)
 	{ 
@@ -215,13 +215,13 @@ class Class_Log_Datos_Con extends MysqlDatos{
 
 	
 function getCtaChild($cuentas,$Pld_Rec){ 
-    /* OPTIMIZACIÓN: Indexar por padre si no se ha hecho para evitar O(N^2) */
+    /* OPTIMIZACIÃ“N: Indexar por padre si no se ha hecho para evitar O(N^2) */
     if (isset($cuentas['__indexed'])) {
         $index = $cuentas['__indexed'];
     } else {
         $index = array();
         foreach ($cuentas as $c) { $index[$c['Pld_Rec']][] = $c; }
-        // No podemos mutar el original fácilmente sin perder datos, así que pasamos un helper
+        // No podemos mutar el original fÃ¡cilmente sin perder datos, asÃ­ que pasamos un helper
     }
     
     $plan=array();
@@ -238,7 +238,7 @@ function getCtaChild($cuentas,$Pld_Rec){
     } else {
         foreach ($target as $value) {
             array_push($plan, $value);
-            /* Pasamos el índice en lugar del arreglo plano para recursión */
+            /* Pasamos el Ã­ndice en lugar del arreglo plano para recursiÃ³n */
             $plan = array_merge($plan, $this->getCtaChildInternal($index, $value['Pld_Cod']));
         }
     }
@@ -259,7 +259,7 @@ function getCtaChildInternal($index, $Pld_Rec) {
 
 
 function getTotalNodo($cuenta,$valores,$tipo){ 
-    /* OPTIMIZACIÓN: Si $valores es un mapa indexado por CDC */
+    /* OPTIMIZACIÃ“N: Si $valores es un mapa indexado por CDC */
     if (is_array($valores) && isset($valores['__optimized_map'])) {
         $map = $valores['__optimized_map'];
         return isset($map[$cuenta]) ? $map[$cuenta] : array('debe'=>0,'haber'=>0,'saldo'=>0,'asignar'=>false);
@@ -330,8 +330,8 @@ function formatCuentaDiario($cuenta,$cant_cuent,$total,$format){
   /**
   * Carga los nodos (cuentas) en el balance general 
   * $nivel = Contador de los niveles que tiene el plan de cuentas
-  * $max_nivel = M�ximo nivel a presentar 
-  * $format = Formato de presentaci�n de los n�mero 
+  * $max_nivel = Mï¿½ximo nivel a presentar 
+  * $format = Formato de presentaciï¿½n de los nï¿½mero 
   */ 
  function cargarNodosBalance($cod, $np, $ini, $fin, $obBD_conexion, $tipo, $Pec_Cod, $util, $cod_util, $nivel, $max_nivel, $format, $utilidadSiNo, $Pec_Cod2_completo = null, $Pec_Fei_periodo = null, $Pec_Fef_periodo = null, $sucursal = ''){
 
@@ -347,7 +347,7 @@ function formatCuentaDiario($cuenta,$cant_cuent,$total,$format){
     $filtroSucursal = ($sucursal != '') ? "usuarios.Suc_Cod = '$sucursal'" : "";
     $valores_raw = $this->getArrayConsulta(240, $Pec_Cod.'*'.$ini.'*'.$fin.'*'.$filtroSucursal, $obBD_conexion);
     
-    /* OPTIMIZACIÓN: Construir mapa jerárquico de totales por CDC en memoria */
+    /* OPTIMIZACIÃ“N: Construir mapa jerÃ¡rquico de totales por CDC en memoria */
     $valoresMap = array();
     foreach ($valores_raw as $v) {
         $cdc_parts = explode('.', $v['Pld_Cdc']);
@@ -446,19 +446,19 @@ function formatCuentaDiario($cuenta,$cant_cuent,$total,$format){
                 $esDetalle = ($cuenta['Pld_Tip'] == 'D');
                 $codigoCuentaHtml = '';
                 if ($esDetalle && $Pec_Cod2_completo !== null) {
-                    // Limpiar el código de cuenta de etiquetas HTML para la URL
+                    // Limpiar el cÃ³digo de cuenta de etiquetas HTML para la URL
                     $codigoCuentaLimpio = strip_tags($cuenta['Pld_Cdc']);
                     
-                    // Determinar si las fechas son personalizadas (diferentes al período completo)
+                    // Determinar si las fechas son personalizadas (diferentes al perÃ­odo completo)
                     $fechasPersonalizadas = false;
                     if ($Pec_Fei_periodo !== null && $Pec_Fef_periodo !== null) {
-                        // Si las fechas son diferentes a las del período, significa que se usó "Elegir fecha"
+                        // Si las fechas son diferentes a las del perÃ­odo, significa que se usÃ³ "Elegir fecha"
                         if ($ini != $Pec_Fei_periodo || $fin != $Pec_Fef_periodo) {
                             $fechasPersonalizadas = true;
                         }
                     }
                     
-                    // Construir el enlace a mayorización con Pec_Cod2, código de cuenta y fechas
+                    // Construir el enlace a mayorizaciÃ³n con Pec_Cod2, cÃ³digo de cuenta y fechas
                     $urlMayorizacion = 'con_con_mayorizacion_1.1.php?hdd_save2=1&txt_busqueda=' . urlencode($codigoCuentaLimpio) . '&Pec_Cod2=' . urlencode($Pec_Cod2_completo) . '&txt_fec_ini=' . urlencode($ini) . '&txt_fec_fin=' . urlencode($fin) . '&op=1';
                     // Si las fechas son personalizadas, agregar Chk_Fec=1 para activar el checkbox
                     if ($fechasPersonalizadas) {
@@ -466,14 +466,14 @@ function formatCuentaDiario($cuenta,$cant_cuent,$total,$format){
                     }
                     // Usar un target con nombre fijo para reutilizar la misma ventana
                     // Efecto hover: subrayado y cambio de color al pasar el mouse
-                    $codigoCuentaHtml = '<a href="' . htmlspecialchars($urlMayorizacion, ENT_QUOTES, 'UTF-8') . '" target="mayorizacion_window" style="color: inherit; text-decoration: none; cursor: pointer;" onmouseover="this.style.textDecoration=\'underline\'; this.style.color=\'#0066cc\';" onmouseout="this.style.textDecoration=\'none\'; this.style.color=\'inherit\';" title="Ver mayorización de esta cuenta">' . $cuenta['Pld_Cdc'] . '</a>';
+                    $codigoCuentaHtml = '<a href="' . htmlspecialchars($urlMayorizacion, ENT_QUOTES, 'UTF-8') . '" target="mayorizacion_window" style="color: inherit; text-decoration: none; cursor: pointer;" onmouseover="this.style.textDecoration=\'underline\'; this.style.color=\'#0066cc\';" onmouseout="this.style.textDecoration=\'none\'; this.style.color=\'inherit\';" title="Ver mayorizaciÃ³n de esta cuenta">' . $cuenta['Pld_Cdc'] . '</a>';
                 } else {
                     $codigoCuentaHtml = $cuenta['Pld_Cdc'];
                 }
 				?>        
             <tr>				  
                 <td width="2%"><?php echo $codigoCuentaHtml; ?></td>        
-				<td><?= utf8_encode($cuenta['Pld_Des']); ?></td>     
+				<td><?= mb_convert_encoding($cuenta['Pld_Des'], 'UTF-8', 'ISO-8859-1'); ?></td>     
                 <?php
 					if(str_replace(array('<b>','</b>'), '',$cuenta['Pld_Cdc']) == $grupoUtilidad and $utilidadSiNo == 'si'){
 						$cuenta['Total'] = str_replace(array('<b>','</b>',','), '',$cuenta['Total']) - $totalUtilidadesImpuestos['saldo'];
@@ -559,19 +559,19 @@ function formatCuentaDiario($cuenta,$cant_cuent,$total,$format){
                 $esDetalle2 = ($cuenta2['Pld_Tip'] == 'D');
                 $codigoCuentaHtml2 = '';
                 if ($esDetalle2 && $Pec_Cod2_completo !== null) {
-                    // Limpiar el código de cuenta de etiquetas HTML para la URL
+                    // Limpiar el cÃ³digo de cuenta de etiquetas HTML para la URL
                     $codigoCuentaLimpio2 = strip_tags($cuenta2['Pld_Cdc']);
                     
-                    // Determinar si las fechas son personalizadas (diferentes al período completo)
+                    // Determinar si las fechas son personalizadas (diferentes al perÃ­odo completo)
                     $fechasPersonalizadas2 = false;
                     if ($Pec_Fei_periodo !== null && $Pec_Fef_periodo !== null) {
-                        // Si las fechas son diferentes a las del período, significa que se usó "Elegir fecha"
+                        // Si las fechas son diferentes a las del perÃ­odo, significa que se usÃ³ "Elegir fecha"
                         if ($ini != $Pec_Fei_periodo || $fin != $Pec_Fef_periodo) {
                             $fechasPersonalizadas2 = true;
                         }
                     }
                     
-                    // Construir el enlace a mayorización con Pec_Cod2, código de cuenta y fechas
+                    // Construir el enlace a mayorizaciÃ³n con Pec_Cod2, cÃ³digo de cuenta y fechas
                     $urlMayorizacion2 = 'con_con_mayorizacion_1.1.php?hdd_save2=1&txt_busqueda=' . urlencode($codigoCuentaLimpio2) . '&Pec_Cod2=' . urlencode($Pec_Cod2_completo) . '&txt_fec_ini=' . urlencode($ini) . '&txt_fec_fin=' . urlencode($fin) . '&op=1';
                     // Si las fechas son personalizadas, agregar Chk_Fec=1 para activar el checkbox
                     if ($fechasPersonalizadas2) {
@@ -579,7 +579,7 @@ function formatCuentaDiario($cuenta,$cant_cuent,$total,$format){
                     }
                     // Usar un target con nombre fijo para reutilizar la misma ventana
                     // Efecto hover: subrayado y cambio de color al pasar el mouse
-                    $codigoCuentaHtml2 = '<a href="' . htmlspecialchars($urlMayorizacion2, ENT_QUOTES, 'UTF-8') . '" target="mayorizacion_window" style="color: inherit; text-decoration: none; cursor: pointer;" onmouseover="this.style.textDecoration=\'underline\'; this.style.color=\'#0066cc\';" onmouseout="this.style.textDecoration=\'none\'; this.style.color=\'inherit\';" title="Ver mayorización de esta cuenta">' . $cuenta2['Pld_Cdc'] . '</a>';
+                    $codigoCuentaHtml2 = '<a href="' . htmlspecialchars($urlMayorizacion2, ENT_QUOTES, 'UTF-8') . '" target="mayorizacion_window" style="color: inherit; text-decoration: none; cursor: pointer;" onmouseover="this.style.textDecoration=\'underline\'; this.style.color=\'#0066cc\';" onmouseout="this.style.textDecoration=\'none\'; this.style.color=\'inherit\';" title="Ver mayorizaciÃ³n de esta cuenta">' . $cuenta2['Pld_Cdc'] . '</a>';
                 } else {
                     $codigoCuentaHtml2 = $cuenta2['Pld_Cdc'];
                 }
@@ -1121,9 +1121,9 @@ function cargarNodosBalance1($cod, $np, $ini, $fin, $obBD_conexion, $tipo, $Pec_
   {
 	$debe=0; $haber=0;
     
-    /* OPTIMIZACIÓN: Si ya tenemos el mapa de totales, usarlo directamente en lugar de SQL */
+    /* OPTIMIZACIÃ“N: Si ya tenemos el mapa de totales, usarlo directamente en lugar de SQL */
     if ($valoresMap !== null) {
-        /* Usamos el CDC pasado o lo obtenemos si falta (aunque debería venir pasado) */
+        /* Usamos el CDC pasado o lo obtenemos si falta (aunque deberÃ­a venir pasado) */
         $cuenta_cdc = $cdc;
         if ($cuenta_cdc === null) {
             $row_cta = $this->getRowConsulta(204, $np, $obBD_conexion);
@@ -1739,8 +1739,8 @@ function cargarNodosBalance1($cod, $np, $ini, $fin, $obBD_conexion, $tipo, $Pec_
   /**
   * Carga los nodos (cuentas) en el balance general 
   * $nivel = Contador de los niveles que tiene el plan de cuentas
-  * $max_nivel = M�ximo nivel a presentar 
-  * $format = Formato de presentaci�n de los n�mero 
+  * $max_nivel = Mï¿½ximo nivel a presentar 
+  * $format = Formato de presentaciï¿½n de los nï¿½mero 
   */ 		
   function cargarNodosEfectivos($cod, $np, $ini, $fin, $obBD_conexion, $tipo, $Pec_Cod, $nivel, $max_nivel, $format)
   { 
@@ -1952,8 +1952,8 @@ function cargarNodosBalance1($cod, $np, $ini, $fin, $obBD_conexion, $tipo, $Pec_
   /**
   * Carga los nodos (cuentas) en el balance general 
   * $nivel = Contador de los niveles que tiene el plan de cuentas
-  * $max_nivel = M�ximo nivel a presentar 
-  * $format = Formato de presentaci�n de los n�mero 
+  * $max_nivel = Mï¿½ximo nivel a presentar 
+  * $format = Formato de presentaciï¿½n de los nï¿½mero 
   */ 		
   function cargarNodosConversion($cod, $np, $ini, $fin, $obBD_conexion, $tipo, $Pec_Cod, $format, $detalle)
   { 

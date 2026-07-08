@@ -28,9 +28,9 @@ if(isset($ajax_con_numrenta))
   <tr>
   	<td width="27%" class="Etiqueta1"><span class="Asterisco">* </span>No. Com. Reten:</td>
     <td colspan="2"><span class="LetraNegra">
-	<input name="Ret_Int" type="text" id="Ret_Int" style="text-align:right" size="15" maxlength="15" value="<?Php if($Ret_Int >= $numIni && $Ret_Int <= $numFin){if($total_rs_existe_renta_documento>0){echo $Ret_Id_Man;}else{echo $Ret_Int;}}else{echo $Ret_Id_Man;}?>" onblur="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_con_numrenta=1&Pun_Cod=<?Php echo $Pun_Cod; ?>&AutSri=<?Php echo $AutSri; ?>&Aut_Cod=<?Php echo $Aut_Cod; ?>&Ret_Id_Man=<?Php echo $Ret_Id_Man; ?>&numIni=<? echo $numIni;?>&numFin=<? echo $numFin;?>&Vnd_Cod=<? echo $Vnd_Cod;?>&Ret_Int='+ this.value,'div_con_num_renta');">
+	<input name="Ret_Int" type="text" id="Ret_Int" style="text-align:right" size="15" maxlength="15" value="<?Php if($Ret_Int >= $numIni && $Ret_Int <= $numFin){if($total_rs_existe_renta_documento>0){echo $Ret_Id_Man;}else{echo $Ret_Int;}}else{echo $Ret_Id_Man;}?>" onblur="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_con_numrenta=1&Pun_Cod=<?Php echo $Pun_Cod; ?>&AutSri=<?Php echo $AutSri; ?>&Aut_Cod=<?Php echo $Aut_Cod; ?>&Ret_Id_Man=<?Php echo $Ret_Id_Man; ?>&numIni=<?php echo $numIni;?>&numFin=<?php echo $numFin;?>&Vnd_Cod=<?php echo $Vnd_Cod;?>&Ret_Int='+ this.value,'div_con_num_renta');">
 	</span>
- <?  
+ <?php  
     if($Ret_Int >= $numIni && $Ret_Int <= $numFin)	
 	{		
 		if($total_rs_existe_renta_documento>0)
@@ -38,21 +38,21 @@ if(isset($ajax_con_numrenta))
 			/**
 			* muestra el mesaje de error 
 			*/
-	    	?><span class="Alertas3">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/cancel.gif" width="16" height="16" type="image"/><? 
+	    	?><span class="Alertas3">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/cancel.gif" width="16" height="16" type="image"/><?php 
 			echo "&iexcl;Ya existe el n&uacute;mero de retenci&oacute;n ".$Ret_Int."!"; ?></span>
-	<?  }else{ /* visto correcto del numero de retencion*/
-			?>&nbsp;<img src="../../mascaras/model1/imagenes/ok-s.gif"><?
+	<?php  }else{ /* visto correcto del numero de retencion*/
+			?>&nbsp;<img src="../../mascaras/model1/imagenes/ok-s.gif"><?php
 		}
 	}else{   
 			/**
 			* muestra el mesaje de error 
 			*/
-		    ?><span class="Alertas3">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/cancel.gif" width="16" height="16" type="image"/><? echo "&iexcl;El n&uacute;mero est&aacute; fuera de rango!";?></span>
- <? }?>
+		    ?><span class="Alertas3">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/cancel.gif" width="16" height="16" type="image"/><?php echo "&iexcl;El n&uacute;mero est&aacute; fuera de rango!";?></span>
+ <?php }?>
 	</td>    
   </tr>
   </table>
-<?
+<?php
 @$obBD_con1->free_result($rs_existe_renta_documento);
 exit(); } 
 ?>

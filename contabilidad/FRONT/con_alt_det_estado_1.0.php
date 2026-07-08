@@ -95,13 +95,13 @@ if (isset($ajax_buscod1))
 
 
 		<!--td><div align="left"><?Php echo marcar_cadena($buscod, $row['Pld_Des'],'#FFFF00', 1);?></div></td-->
-		<td><div align="left"><?php echo utf8_encode(marcar_cadena($buscod, $row['Pld_Des'],'#FFFF00', 1));?></div></td>
+		<td><div align="left"><?php echo mb_convert_encoding(marcar_cadena($buscod, $row['Pld_Des'],'#FFFF00', 1), 'UTF-8', 'ISO-8859-1');?></div></td>
 
 
 
 		<td><div align="center"><?php if ($row_rs_recur['Pld_Des'] != ""){ echo $row_rs_recur['Pld_Des']." <strong>(".$row_rs_grupo['Pld_Des'].")</strong>"; }else{ echo "&nbsp;"; } ?></div></td>
 		<td align="center"><div align="center"><?php echo $row['Pld_Tip']; ?></div></td>
-		<!--<td align="center"><div align="center"><? echo $row['Pld_Est']; ?></div></td>-->
+		<!--<td align="center"><div align="center"><?php echo $row['Pld_Est']; ?></div></td>-->
 		<td align="center">
                 <!--<button type="button" class="btn btn-success btn-mini" title="Agregar Utilidad" onClick="agregarUti('<?php echo $row['Pld_Cod']; ?>','<?php echo $Pec_Cod; ?>')">
                         <i class=" icon-arrow-right icon-white"></i>          
@@ -631,8 +631,8 @@ if (isset($np))
 			} ?>
 	  <tr>
 		<td align="center"><font color="<?php echo $color_d; ?>"><?php echo $row['Pld_Cod']; ?></font></td>
-		<!--td><font color="<?php echo $color_d; ?>"><? echo $row['Pld_Des']; ?></font></td-->
-		<td><font color="<?php echo $color_d; ?>"><?php echo utf8_encode($row['Pld_Des']); ?></font></td>
+		<!--td><font color="<?php echo $color_d; ?>"><?php echo $row['Pld_Des']; ?></font></td-->
+		<td><font color="<?php echo $color_d; ?>"><?php echo mb_convert_encoding($row['Pld_Des'], 'UTF-8', 'ISO-8859-1'); ?></font></td>
 
                 <td align="center"><?php echo ($row['Uti_Tip']=='G'?'Ganancias':($row['Uti_Tip']=='P'?'Perdidas':'Part. Impuestos')); ?></td>
 		<td align="center">

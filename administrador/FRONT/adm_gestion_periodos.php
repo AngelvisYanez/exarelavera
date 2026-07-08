@@ -18,7 +18,7 @@ require_once('../../Librerias/procedimientos/almacenados_standar.php');
 if (!function_exists('utf8_encode_deep')) {
     function utf8_encode_deep(&$input) {
         if (is_string($input)) {
-            $input = utf8_encode($input);
+            $input = mb_convert_encoding($input, 'UTF-8', 'ISO-8859-1');
         } else if (is_array($input)) {
             foreach ($input as &$value) {
                 utf8_encode_deep($value);

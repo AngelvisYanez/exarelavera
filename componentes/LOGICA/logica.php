@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 	require_once ("../../DATA/DAC.php");
 	require_once ("sql.php");
 
@@ -37,7 +37,7 @@ class Class_Log_Datos_Com extends Class_Datos{
 	* @param string $param cadena de valores para el filtrado de la busqueda
 	* @param Class_Log_Conexion_pac $obBD para realizar la conexcion correspondiente
 	*/
-	function consultasobBD($sen_sql,$param, $obBD)
+	function consultasobBD($sen_sql,$param, $obBD = null)
 	{
 		$Par_Sql= $this->parametros($param);
 		return $this->consulta(sentencias_com($sen_sql,$Par_Sql), $obBD->conexion);
@@ -51,7 +51,7 @@ class Class_Log_Datos_Com extends Class_Datos{
 	* @param string $param cadena de valores para el filtrado de la busqueda
 	* @param Class_Log_Conexion_pac $obBD para realizar la conexcion correspondiente
 	*/
-	function operacionobBD($sen_sql,$param, $obBD)
+	function operacionobBD($sen_sql,$param, $obBD = null)
 	{
 		$Par_Sql= $this->parametros($param);
 		return $this->grabarv_registros(sentencias_est($sen_sql,$Par_Sql), $obBD->conexion);
@@ -64,7 +64,7 @@ class Class_Log_Datos_Com extends Class_Datos{
 	 * @param string $param cadena de valores para el filtrado de la busqueda
 	 * @param Class_Log_Conexion_pac $obBD para realizar la conexcion correspondiente
 	 */
-	function getRowConsulta($sen_sql,$param,$obBD)
+	function getRowConsulta($sen_sql,$param,$obBD = null)
 	{
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);
 		
@@ -84,7 +84,7 @@ class Class_Log_Datos_Com extends Class_Datos{
 	 * @param Class_Log_Conexion_pac $obBD para realizar la conexcion correspondiente
 	 * @param Class_Log_Datos_pac $obDT para la abtraccion de los datos
 	 */ 
-	function getArrayConsulta($sen_sql,$param,$obBD)
+	function getArrayConsulta($sen_sql,$param,$obBD = null)
 	{
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);
 		
@@ -107,7 +107,7 @@ class Class_Log_Datos_Com extends Class_Datos{
 	 * @param string $param cadena de datos
 	 * @param string $obBD objeto de conexion
 	 */
-	function insertUpdateDelete($sen_sql,$param, $obBD)
+	function insertUpdateDelete($sen_sql,$param, $obBD = null)
 	{		
 		$this->inicio_transaccion($obBD->conexion);
 		

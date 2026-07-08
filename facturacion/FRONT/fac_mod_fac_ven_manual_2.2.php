@@ -1,4 +1,4 @@
-<?	
+<?php	
 /**
 * Descripci�n: Permite la modificaci�n de facturas de ventas
 * Fecha de actualizaci�n:	2010-07-04 
@@ -250,7 +250,7 @@ if(isset($docBanco))
 		{	?><span class="Alertas3">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/gtk-no.gif" width="20" height="20" type="image"/><?Php
 			echo "&nbsp;&iexcl;Ya existe el n&uacute;mero de documento!"; ?></span><?Php	
 		}else{
-			?>&nbsp;<img src="../../mascaras/model1/imagenes/ok-s.gif"><?
+			?>&nbsp;<img src="../../mascaras/model1/imagenes/ok-s.gif"><?php
 		}		
     }	
 	exit();
@@ -272,22 +272,22 @@ if($ajax_valid_Factnum==1)
 		if(count($row_rs_secuenciaFact)==0)
 		{
 		?>
-			<input name="Vet_Num" type="text" id="Vet_Num" style="text-align:right" size="7" maxlength="7" value="<?Php echo $For_Cod; ?>" onBlur="ajax_datos('<?Php echo $_SERVER['PHP_SELF'];?>?ajax_valid_Factnum=1&For_Cod=' + this.value + '&Aut_Cod='+ <? echo $Aut_Cod?> +	'&Tic_Cod='+ <? echo $Tic_Cod;?> +'&Numero='+ <? echo $Numero;?>,'div_numFact')"><span>&nbsp;<img src="../../mascaras/model1/imagenes/ok-s.gif"></span>
-		<?
+			<input name="Vet_Num" type="text" id="Vet_Num" style="text-align:right" size="7" maxlength="7" value="<?Php echo $For_Cod; ?>" onBlur="ajax_datos('<?Php echo $_SERVER['PHP_SELF'];?>?ajax_valid_Factnum=1&For_Cod=' + this.value + '&Aut_Cod='+ <?php echo $Aut_Cod?> +	'&Tic_Cod='+ <?php echo $Tic_Cod;?> +'&Numero='+ <?php echo $Numero;?>,'div_numFact')"><span>&nbsp;<img src="../../mascaras/model1/imagenes/ok-s.gif"></span>
+		<?php
 		}else{
 		?>
-			<input name="Vet_Num" type="text" id="Vet_Num" style="text-align:right" size="7" maxlength="7" value="<?Php echo $For_Cod; ?>" onBlur="ajax_datos('<?Php echo $_SERVER['PHP_SELF'];?>?ajax_valid_Factnum=1&For_Cod=' + this.value + '&Aut_Cod='+ <? echo $Aut_Cod?> +'&Tic_Cod='+ <? echo $Tic_Cod;?> +'&Numero='+ <? echo $Numero;?>,'div_numFact')"><span class="Texto_Reporte_Rojo">&nbsp;<? echo "&iexcl;El N&uacute;mero ya existe!";?></span>
-		<?  
+			<input name="Vet_Num" type="text" id="Vet_Num" style="text-align:right" size="7" maxlength="7" value="<?Php echo $For_Cod; ?>" onBlur="ajax_datos('<?Php echo $_SERVER['PHP_SELF'];?>?ajax_valid_Factnum=1&For_Cod=' + this.value + '&Aut_Cod='+ <?php echo $Aut_Cod?> +'&Tic_Cod='+ <?php echo $Tic_Cod;?> +'&Numero='+ <?php echo $Numero;?>,'div_numFact')"><span class="Texto_Reporte_Rojo">&nbsp;<?php echo "&iexcl;El N&uacute;mero ya existe!";?></span>
+		<?php  
 		}
 	}else{
 	?>	
-  	<input name="Vet_Num" type="text" id="Vet_Num" style="text-align:right" size="7" maxlength="7" onBlur="ajax_datos('<?Php echo $_SERVER['PHP_SELF'];?>?ajax_valid_Factnum=1&For_Cod=' + this.value + '&Aut_Cod='+ <? echo $Aut_Cod?> +'&Tic_Cod='+ <? echo $Tic_Cod;?> +'&Numero='+ <? echo $Numero;?>,'div_numFact')"><span class="Texto_Reporte_Rojo">&nbsp;<? echo "&iexcl;N&uacute;mero $For_Cod, fuera de rango!"; ?></span>
-    <? 
+  	<input name="Vet_Num" type="text" id="Vet_Num" style="text-align:right" size="7" maxlength="7" onBlur="ajax_datos('<?Php echo $_SERVER['PHP_SELF'];?>?ajax_valid_Factnum=1&For_Cod=' + this.value + '&Aut_Cod='+ <?php echo $Aut_Cod?> +'&Tic_Cod='+ <?php echo $Tic_Cod;?> +'&Numero='+ <?php echo $Numero;?>,'div_numFact')"><span class="Texto_Reporte_Rojo">&nbsp;<?php echo "&iexcl;N&uacute;mero $For_Cod, fuera de rango!"; ?></span>
+    <?php 
 	}
   }else{
   ?>
-  	<input name="Vet_Num" type="text" id="Vet_Num" style="text-align:right" size="7" maxlength="7" value="<?Php echo $For_Cod; ?>" onBlur= "ajax_datos('<?Php echo $_SERVER['PHP_SELF'];?>?ajax_valid_Factnum=1&For_Cod=' + this.value + '&Aut_Cod='+ <? echo $Aut_Cod?> + '&Tic_Cod='+ <? echo $Tic_Cod;?> +'&Numero='+ <? echo $Numero;?>,'div_numFact')">
-  <?
+  	<input name="Vet_Num" type="text" id="Vet_Num" style="text-align:right" size="7" maxlength="7" value="<?Php echo $For_Cod; ?>" onBlur= "ajax_datos('<?Php echo $_SERVER['PHP_SELF'];?>?ajax_valid_Factnum=1&For_Cod=' + this.value + '&Aut_Cod='+ <?php echo $Aut_Cod?> + '&Tic_Cod='+ <?php echo $Tic_Cod;?> +'&Numero='+ <?php echo $Numero;?>,'div_numFact')">
+  <?php
   }
 	exit();
 }
@@ -301,7 +301,7 @@ if (isset($cmb))
 	$facttipo = current($row_rs_facttipo);
 	$Pag = $facttipo['Pag_Cod'];	
 	?>
-		  <select name="<?php echo $nom_pag; ?>" id="<?php echo $nom_pag; ?>" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?cmb_tipo=1&Pag_Cod=' + this.value + '&nom_ban=<?php echo $nom_ban; ?>&nom_div=<?php echo $nom_div; ?>&Vet_Che=<? echo $Vet_Che;?>', '<?php echo $div_banco; ?>')">
+		  <select name="<?php echo $nom_pag; ?>" id="<?php echo $nom_pag; ?>" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?cmb_tipo=1&Pag_Cod=' + this.value + '&nom_ban=<?php echo $nom_ban; ?>&nom_div=<?php echo $nom_div; ?>&Vet_Che=<?php echo $Vet_Che;?>', '<?php echo $div_banco; ?>')">
             <?Php
             foreach ($row_rs_facttipo as $row)
 			{ ?>
@@ -324,7 +324,7 @@ if (isset($cmb_tipo))
 	*/
 	$row_rs_bancos = $obBD_con1->getArrayConsulta(179, $Pag_Cod.'*'.$Ses_Emp_Cod, $obBD_conexion);
 	?>
-	 <select name="<?Php echo $nom_ban; ?>" id="<?Php echo $nom_ban; ?>" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?docBanco=1&num_Doc=' + document.getElementById('<? echo $Vet_Che?>').value + '&Ban_Cod='+ this.value,'<? echo $nom_div?>')">
+	 <select name="<?Php echo $nom_ban; ?>" id="<?Php echo $nom_ban; ?>" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?docBanco=1&num_Doc=' + document.getElementById('<?php echo $Vet_Che?>').value + '&Ban_Cod='+ this.value,'<?php echo $nom_div?>')">
 		<option value="NULL">(Ninguno)</option>
 		<?php 
 		foreach ($row_rs_bancos as $row)
@@ -358,7 +358,7 @@ if (isset($deudas))
 	$Com_Tipo = 1;
 ?>	
 	<?php include("../COMPONENTES/tes_com_deudas.php");?>	
-<?
+<?php
 	exit();
 }
 
@@ -382,7 +382,7 @@ if (isset($otroBanco))
 {
 	$row_rs_bancos = $obBD_con1->getArrayConsulta(179, $codBusq.'*'.$Ses_Emp_Cod, $obBD_conexion);
 ?>
-	<select name="Ban_Cod2" id="Ban_Cod2" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?docBanco=1&num_Doc=<? echo $Vet_Che2 ?>&Ban_Cod='+ this.value,'<? echo $Div;?>')">
+	<select name="Ban_Cod2" id="Ban_Cod2" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?docBanco=1&num_Doc=<?php echo $Vet_Che2 ?>&Ban_Cod='+ this.value,'<?php echo $Div;?>')">
        <option value="NULL">(Ninguno)</option>
        <?php 
 	   foreach ($row_rs_bancos as $row)
@@ -392,7 +392,7 @@ if (isset($otroBanco))
        <?php 
 	   }//Fin del foreach -> $row_rs_bancos ?>
     </select>
-<?
+<?php
 	exit();
 } //Fin if (isset($otroBanco))
 
@@ -750,9 +750,9 @@ else
                     </button> </div>  </td>
                 </tr>
             </table>
-            <input type="hidden" id="CajFec" name="CajFec" value="<? echo $CajFec;?>" />
-            <input type="hidden" id="Pec_Cod" name="Pec_Cod" value="<? echo $Pec_Cod;?>" />
-            <input type="hidden" id="Pla_Cod" name="Pla_Cod" value="<? echo $Pla_Cod;?>" />
+            <input type="hidden" id="CajFec" name="CajFec" value="<?php echo $CajFec;?>" />
+            <input type="hidden" id="Pec_Cod" name="Pec_Cod" value="<?php echo $Pec_Cod;?>" />
+            <input type="hidden" id="Pla_Cod" name="Pla_Cod" value="<?php echo $Pla_Cod;?>" />
             </FIELDSET>
 		</form>      
   <?Php
@@ -793,10 +793,10 @@ else
                           
 	  ?>  		
 	  <tr>
-	    <td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Vet_Cod']; ?></FONT></td>
-	    <td height="25" align="center"><FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Vet_Num']; ?></FONT></td>
-	    <td><FONT COLOR="<? echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda,$row_rs_buscar['Prs_Ape'].' '.$row_rs_buscar['Prs_Nom'],'#FFFF00',1); ?></FONT></td>
-	    <td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Caj_Fec']; ?></FONT></td>
+	    <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Vet_Cod']; ?></FONT></td>
+	    <td height="25" align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Vet_Num']; ?></FONT></td>
+	    <td><FONT COLOR="<?php echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda,$row_rs_buscar['Prs_Ape'].' '.$row_rs_buscar['Prs_Nom'],'#FFFF00',1); ?></FONT></td>
+	    <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Caj_Fec']; ?></FONT></td>
 	    <td align="center" ><button type="button" name="button<?Php echo $i+1; ?>" id="button<?Php echo $i+1; ?>" class="btn btn-info btn-mini" title="Ver detalle" onClick="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_detalle=1&ajax_codigo=<?Php echo $row_rs_buscar['Vet_Cod']; ?>', 'ajax_modal')">
 	        <i class="icon-info-sign icon-white"></i>
 	        </button>		
@@ -817,9 +817,9 @@ else
 	        <i class=" icon-arrow-right icon-white"></i>
 	        </button>	
             
-          <input type="hidden" id="CajFec" name="CajFec" value="<? echo $CajFec;?>" />
-          <input type="hidden" id="Pec_Cod" name="Pec_Cod" value="<? echo $Pec_Cod;?>" />
-          <input type="hidden" id="Pla_Cod" name="Pla_Cod" value="<? echo $Pla_Cod;?>" /> 	
+          <input type="hidden" id="CajFec" name="CajFec" value="<?php echo $CajFec;?>" />
+          <input type="hidden" id="Pec_Cod" name="Pec_Cod" value="<?php echo $Pec_Cod;?>" />
+          <input type="hidden" id="Pla_Cod" name="Pla_Cod" value="<?php echo $Pla_Cod;?>" /> 	
             </form>
             <?php }else{ $existe_pagos++;
 	      ?><img src="../../mascaras/model1/imagenes/finance_thumb_sm.png" /><!--Agregadp por erik para quitar boton--> <?php  
@@ -877,7 +877,7 @@ if($existe_pagos>0){ /* inicio if($existe_pagos>0){  */ ?>
      </tr>
    </table>
  <?Php } /* fin if($existe_pagos>0){   */ ?>
-<?
+<?php
 require_once('../../componentes/FRONT/com_con_leyenda.php');
 ?>
   <form action="<?Php echo $_SERVER['form2']; ?>" method="post" name="form2" id="form2">
@@ -925,15 +925,15 @@ require_once('../../componentes/FRONT/com_con_leyenda.php');
 	 <table width="100%" border="0" cellpadding="0" cellspacing="0">
 	  <tr>
 		<td width="14%" class="Etiqueta1">Cudela/R.U.C.:</td>
-		<td class="LetraNegra">&nbsp;<? echo $rs_cliente[0]['Cli_Ruf']; ?></td>
+		<td class="LetraNegra">&nbsp;<?php echo $rs_cliente[0]['Cli_Ruf']; ?></td>
 	  </tr>
 	  <tr>
 	    <td class="Etiqueta1">Representante:</td>
-	    <td class="LetraNegra">&nbsp;<? echo $rs_cliente[0]['Cli_Fac']; ?></td>
+	    <td class="LetraNegra">&nbsp;<?php echo $rs_cliente[0]['Cli_Fac']; ?></td>
 	    </tr>
 	  <tr>
 		<td class="Etiqueta1">Direcci&oacute;n:</td>
-		<td class="LetraNegra">&nbsp;<? echo $rs_cliente[0]['Cli_Dir']; ?></td>
+		<td class="LetraNegra">&nbsp;<?php echo $rs_cliente[0]['Cli_Dir']; ?></td>
 	  </tr>
 	 </table>
 	 </FIELDSET>
@@ -981,7 +981,7 @@ require_once('../../componentes/FRONT/com_con_leyenda.php');
 		   <td width="13%" class="Etiqueta1"><span class="Asterisco">* </span>No secuencia:</td>
 		   <td width="26%" class="LetraNegra">
 		   <div id="div_numFact">
-			  <input name="Vet_Num" type="text" id="Vet_Num" size="7" maxlength="7" style="text-align:right" value="<?Php echo $rs_cliente[0]['Vet_Num']; ?>" onBlur=" ajax_datos('<?Php echo $_SERVER['PHP_SELF'];?>?ajax_valid_Factnum=1&For_Cod=' + this.value + '&Aut_Cod='+ <? echo $codAutoriza;?>+'&Tic_Cod='+ <? echo $Comprobante;?>+ '&Numero='+ <? echo $rs_cliente[0]['Vet_Num'];?>,'div_numFact')" onKeyPress="return validar_numeric(event)"> 
+			  <input name="Vet_Num" type="text" id="Vet_Num" size="7" maxlength="7" style="text-align:right" value="<?Php echo $rs_cliente[0]['Vet_Num']; ?>" onBlur=" ajax_datos('<?Php echo $_SERVER['PHP_SELF'];?>?ajax_valid_Factnum=1&For_Cod=' + this.value + '&Aut_Cod='+ <?php echo $codAutoriza;?>+'&Tic_Cod='+ <?php echo $Comprobante;?>+ '&Numero='+ <?php echo $rs_cliente[0]['Vet_Num'];?>,'div_numFact')" onKeyPress="return validar_numeric(event)"> 
 		   </div></td>
 		  </tr>		  
 		  <tr>
@@ -1350,7 +1350,7 @@ foreach($rs_interes as $row_rs_interes)
 	<tbody id="e_contenido">
 	</tbody>
 	</table>
-	<input id="nfilas" name="nfilas" type="hidden" value="<? echo $fila; ?>">
+	<input id="nfilas" name="nfilas" type="hidden" value="<?php echo $fila; ?>">
 	<input id="nfilas_elim" name="nfilas_elim" type="hidden" value="">	
 	
 
@@ -1394,19 +1394,19 @@ foreach($rs_interes as $row_rs_interes)
         <tr>
           <td class="Etiqueta1"> Fecha Emisi&oacute;n:</td>
           <td align="right" class="Etiqueta1"><div align="left">
-            <input name="Ret_Fec" id="Ret_Fec" type="text" onKeyUp="mascara(this,'-',patron,true)" value="<? echo $row_rs_cliente['Ret_Fec'];?>" size="10" maxlength="15" />
+            <input name="Ret_Fec" id="Ret_Fec" type="text" onKeyUp="mascara(this,'-',patron,true)" value="<?php echo $row_rs_cliente['Ret_Fec'];?>" size="10" maxlength="15" />
           </div></td>
         </tr>
         <tr>
           <td class="Etiqueta1">Num. Secuencia:</td>
           <td align="left" class="Etiqueta1"><div align="left">
-            <input name="Num_Ret" id="Num_Ret" type="text"  size="20" maxlength="15" value="<? echo $row_rs_cliente['Ret_Num'];?>" align="right" />
+            <input name="Num_Ret" id="Num_Ret" type="text"  size="20" maxlength="15" value="<?php echo $row_rs_cliente['Ret_Num'];?>" align="right" />
           </div></td>
         </tr>
         <tr>
           <td class="Etiqueta1">Num. Autorizaci&oacute;n:</td>
           <td class="Etiqueta1"><div align="left">
-            <input name="Num_Aut" id="Num_Aut" type="text"  size="35" maxlength="49" value="<? echo $row_rs_cliente['Ret_Aut'];?>"  align="right" />
+            <input name="Num_Aut" id="Num_Aut" type="text"  size="35" maxlength="49" value="<?php echo $row_rs_cliente['Ret_Aut'];?>"  align="right" />
           </div></td>
         </tr>
         <tr>

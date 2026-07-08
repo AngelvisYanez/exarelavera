@@ -53,7 +53,7 @@ class XmlDoc extends SimpleXMLElement {
                 $dom = new DOMDocument();
                 $dom->preserveWhiteSpace = $whitespaces;
                 $dom->formatOutput = $formatOutput;
-                $dom->loadXML((!mb_detect_encoding($data, 'UTF-8', true))?utf8_encode($data):$data);
+                $dom->loadXML((!mb_detect_encoding($data, 'UTF-8', true))?mb_convert_encoding($data, 'UTF-8', 'ISO-8859-1'):$data);
                 $data = new SimpleXMLElement($dom->saveXML());
             }
             if(is_a($data,'SimpleXMLElement')) $data = dom_import_simplexml($data);
@@ -152,7 +152,7 @@ class XmlDoc extends SimpleXMLElement {
     public static function &createFromString($xml) {
         $doc = new DOMDocument();
         $doc->formatOutput = false;
-        $doc->loadXml((!mb_detect_encoding($xml, 'UTF-8', true))?utf8_encode($xml):$xml);
+        $doc->loadXml((!mb_detect_encoding($xml, 'UTF-8', true))?mb_convert_encoding($xml, 'UTF-8', 'ISO-8859-1'):$xml);
         $xml_doc=new XmlDoc($doc->saveXML());
         return $xml_doc;
     }
@@ -166,7 +166,7 @@ class XmlDoc extends SimpleXMLElement {
     }   
     public static function &createFromStringToArray($xml) {
             require_once('XML2Array.php');
-            return XML2Array::createArray((!mb_detect_encoding($xml, 'UTF-8', true))?utf8_encode($xml):$xml);
+            return XML2Array::createArray((!mb_detect_encoding($xml, 'UTF-8', true))?mb_convert_encoding($xml, 'UTF-8', 'ISO-8859-1'):$xml);
     }
     public static function &createFromFileToArray($file) {		
             $xml = file_get_contents($file); 

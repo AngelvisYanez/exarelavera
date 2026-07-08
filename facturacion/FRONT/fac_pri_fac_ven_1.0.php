@@ -67,13 +67,13 @@ if (isset($Vet_Cod))
       <tr align="center">
         <td colspan="3" align="right" valign="top" class="Texto_Reporte">
         <div align="right"><input name="Vet_Cod" type="hidden" id="Vet_Cod" value="<?Php echo $cliente; ?>" >
-          No:&nbsp;<? echo $row_rs_cliente['Vet_Cod']; ?>
+          No:&nbsp;<?php echo $row_rs_cliente['Vet_Cod']; ?>
         </div>  
           </td>
         <td width="176" rowspan="2" valign="bottom" class="Texto_Reporte"><table width="148" border="0" align="right" cellpadding="0" cellspacing="0" class="Texto_bloques">
           <tr>
             <td align="center"><?Php list($ann, $mes, $dia) = preg_split('![/.-]!', $row_rs_cliente['Caj_Fec']); ?>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<? echo $dia.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$mes.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$ann; ?> </td>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $dia.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$mes.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$ann; ?> </td>
           </tr>
           <tr>
             <td>&nbsp;</td>
@@ -86,7 +86,7 @@ if (isset($Vet_Cod))
 	  <tr align="center">
 	    <td width="40" height="21" align="left">&nbsp;</td>
 	    <td height="21" colspan="2" align="left" valign="bottom" class="Texto_Reporte">
-		<? if ($row_rs_representante['Cli_Fac'] != "")
+		<?php if ($row_rs_representante['Cli_Fac'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Fac']." (Est.:".$row_rs_cliente['Prs_Ape'].' '.$row_rs_cliente['Prs_Nom']." - ".$row_rs_cliente['Prs_Ced'].")";  }
 								else { echo $row_rs_cliente['Prs_Ape'].' '.$row_rs_cliente['Prs_Nom']; }
@@ -95,7 +95,7 @@ if (isset($Vet_Cod))
 	  <tr align="center">
         <td align="left" class="LetraNegra">&nbsp;</td>
         <td width="346" align="left" valign="bottom" class="Texto_Reporte">
-		<? if ($row_rs_representante['Cli_Fac'] != "")
+		<?php if ($row_rs_representante['Cli_Fac'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Ruf']; 
 			}
@@ -103,13 +103,13 @@ if (isset($Vet_Cod))
 			{ 
 				echo $row_rs_cliente['Prs_Ced']; 
 			} ?></td>
-        <td width="119" align="left" valign="bottom" class="Texto_Reporte"><? echo $row_rs_cliente['Ciu_Des']; ?></td>
+        <td width="119" align="left" valign="bottom" class="Texto_Reporte"><?php echo $row_rs_cliente['Ciu_Des']; ?></td>
         <td>&nbsp;</td>
       </tr>
       <tr align="center">
         <td align="left">&nbsp;</td>
         <td colspan="2" align="left" class="Texto_Reporte">
-		<? if ($row_rs_representante['Cli_Dir'] != "")
+		<?php if ($row_rs_representante['Cli_Dir'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Dir']; 
 			}
@@ -120,20 +120,20 @@ if (isset($Vet_Cod))
         <td align="center" valign="top">
           <table width="100" border="0" align="right" cellpadding="0" cellspacing="0" class="Texto_normal_10">
             <tr>
-              <td colspan="3"><? echo cortar_cadena_param(' ',$row_rs_carrera['Car_Nom']); ?></td>
+              <td colspan="3"><?php echo cortar_cadena_param(' ',$row_rs_carrera['Car_Nom']); ?></td>
             </tr>
             <tr>
-              <td colspan="3"><? echo $row_rs_carrera['Mod_Des']; ?></td>
+              <td colspan="3"><?php echo $row_rs_carrera['Mod_Des']; ?></td>
             </tr>
             <tr>
               <td colspan="3">
-			  <?  if ($total_rs_carrera > 0)
+			  <?php  if ($total_rs_carrera > 0)
 			  		{ 
 						echo $row_rs_carrera['Sem_Nom']; 
 					} ?></td>
             </tr>
             <tr>
-              <td colspan="3"><? echo $row_rs_carrera['Sem_Par']; ?></td>
+              <td colspan="3"><?php echo $row_rs_carrera['Sem_Par']; ?></td>
               </tr>
           </table>
         </td>

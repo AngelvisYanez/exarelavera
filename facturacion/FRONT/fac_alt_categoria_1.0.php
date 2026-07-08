@@ -294,7 +294,7 @@ else
     <br>
 	<table width="23%" border="0" cellspacing="0" cellpadding="0">
     <tr>
-            <? if($nivel_actual != 0){ ?>
+            <?php if($nivel_actual != 0){ ?>
             <td width="43%" height="28">                   
             <form action='<?php echo $_SERVER['PHP_SELF']; ?>' method='post'>
             <input type='hidden' id='back' name='back' value='<?php echo $nivel_actual; ?>' />
@@ -317,7 +317,7 @@ else
   <table>
   <br>     
   </table>		 
-		<? /**
+		<?php /**
 		* Check if this thing is anulada
 		*/		
 		if ($anulada > 0)

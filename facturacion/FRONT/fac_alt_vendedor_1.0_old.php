@@ -82,7 +82,7 @@ if (isset($hdd_save) && !isset($hdd_volver))
   </tr>
   <tr>	  	
       <td height="389" valign="top">
-        <form action="<? echo $_SERVER['../LOGICA/PHP_SELF']; ?>" method="post" name= "form1" id="form1">
+        <form action="<?php echo $_SERVER['../LOGICA/PHP_SELF']; ?>" method="post" name= "form1" id="form1">
 		<?Php include("../../componentes/FRONT/com_con_persona.php"); ?>
     	</form>  
         <?Php  
@@ -141,7 +141,7 @@ if (isset($hdd_save) && !isset($hdd_volver))
 		<?php
 			echo barra_estado(count($rs_buscar));
 		}//Fin del if(isset($txt_busqueda)) ?>            
-    <? if(isset($codigo) && !isset($hdd_save))
+    <?php if(isset($codigo) && !isset($hdd_save))
 	  {
 		/**
 		* Consulta datos de la persona
@@ -153,7 +153,7 @@ if (isset($hdd_save) && !isset($hdd_volver))
          <LEGEND>
           <label class="Titulos2">Datos a registrar</label>
           </LEGEND>
-          <? /**
+          <?php /**
 			 * Creacion del campo REPOST
 			 */
 			 $thisPost->startPost(); 
@@ -171,7 +171,7 @@ if (isset($hdd_save) && !isset($hdd_volver))
               <tr>
                 <td width="12%" valign="middle" class="Etiqueta1"><span class="Asterisco">* </span>Punto de Impresi&oacute;n:</td>
                 <td colspan="3" class="LetraNegra">
-                <? 
+                <?php 
 				/**
 				* Consulta datos del punto de impresion
 				*/
@@ -179,13 +179,13 @@ if (isset($hdd_save) && !isset($hdd_volver))
 				?>
               <select name="Pun_Cod" id="Pun_Cod">
                 	<option value="">Seleccione...</option>
-                 <? 
+                 <?php 
 				 foreach($row_rs_puntos as $datos){
 				    $row_rs_existe= $obBD_con1->getRowConsulta(5,$datos['Pun_Cod'].'*'.$codigo, $obBD_conexion);  
 					$total_rs_axiste=$row_rs_existe['Vnd_Cod'] > 0? 1 : 0;
 				 ?>   
-                    <option <? if($total_rs_axiste!=0){ echo "disabled";}?> value="<? echo $datos['Pun_Cod']?>"><?  if($total_rs_axiste!=0){ echo $datos['Pun_Des']." [Asignado]";}else{ echo $datos['Pun_Des'];}?></option>
-                 <? }?>   
+                    <option <?php if($total_rs_axiste!=0){ echo "disabled";}?> value="<?php echo $datos['Pun_Cod']?>"><?php  if($total_rs_axiste!=0){ echo $datos['Pun_Des']." [Asignado]";}else{ echo $datos['Pun_Des'];}?></option>
+                 <?php }?>   
                 </select>
                 </td>
               </tr>
@@ -204,12 +204,12 @@ if (isset($hdd_save) && !isset($hdd_volver))
                        <span>Guardar</span>
                 </button>
                 <input name="hdd_save" type="hidden" id="hdd_save" value="insertar"> 
-                <input name="Prs_Cod" type="hidden" id="Prs_Cod" value="<? echo $codigo;?>"> 
+                <input name="Prs_Cod" type="hidden" id="Prs_Cod" value="<?php echo $codigo;?>"> 
               </td>
              </tr>
              </table>
         </form>
-       <? } ?> 
+       <?php } ?> 
     </td>
   </tr>
 

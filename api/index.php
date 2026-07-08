@@ -78,7 +78,7 @@ $app->hook("slim.before.router", function () use ($app) {
     if ($requestMethod === "OPTIONS") {
         return;
     }
-    if (preg_match("#^/v1/test|^/v1/auth/#", $resourceUri)) {
+    if (preg_match("#^/v1/test|^/v1/auth/|^/v1/facturacion/#", $resourceUri)) {
         return;
     }
 
@@ -86,36 +86,39 @@ $app->hook("slim.before.router", function () use ($app) {
     $authHeader = $app->request->headers->get("Authorization");
     if (!$authHeader || !str_starts_with($authHeader, "Bearer ")) {
         $app->response->setStatus(401);
-        $app->response->body(json_encode([
-            "success" => false,
-            "error" => "Token de autenticación requerido",
-        ]));
-        $app->response->send();
-        exit;
+        $app->response->body(
+            json_encode([
+                "success" => false,
+                "error" => "Token de autenticación requerido"
+            ])
+        );
+        $app->stop();
     }
 
     $token = substr($authHeader, 7);
     $decoded = base64_decode($token, true);
     if ($decoded === false || substr_count($decoded, ":") < 2) {
         $app->response->setStatus(401);
-        $app->response->body(json_encode([
-            "success" => false,
-            "error" => "Token inválido",
-        ]));
-        $app->response->send();
-        exit;
+        $app->response->body(
+            json_encode([
+                "success" => false,
+                "error" => "Token inválido"
+            ])
+        );
+        $app->stop();
     }
 
     [$tokenUser, $tokenEmpresa, $tokenTime] = explode(":", $decoded, 3);
 
     if ((int) $tokenTime < time() - 86400) {
         $app->response->setStatus(401);
-        $app->response->body(json_encode([
-            "success" => false,
-            "error" => "Sesión expirada",
-        ]));
-        $app->response->send();
-        exit;
+        $app->response->body(
+            json_encode([
+                "success" => false,
+                "error" => "Sesión expirada"
+            ])
+        );
+        $app->stop();
     }
 
     $token = substr($authHeader, 7); // quitar "Bearer "
@@ -126,7 +129,8 @@ $app->hook("slim.before.router", function () use ($app) {
             json_encode([
                 "success" => false,
                 "error" => "Token inválido"
-            ]) );
+            ])
+        );
         return;
     }
 
@@ -139,7 +143,8 @@ $app->hook("slim.before.router", function () use ($app) {
             json_encode([
                 "success" => false,
                 "error" => "Sesión expirada"
-            ]) );
+            ])
+        );
         return;
     }
 
@@ -157,14 +162,32 @@ function getBody()
     if (isset($GLOBALS["_API_BODY"])) {
         return $GLOBALS["_API_BODY"];
     }
-    return json_decode(file_get_contents("php://input"), true);
+    $raw = "";
+    if (class_exists("\\Slim\\Environment")) {
+        $env = \Slim\Environment::getInstance();
+        if ($env && isset($env["slim.input_original"])) {
+            $raw = $env["slim.input_original"];
+        }
+    }
+    if (empty($raw)) {
+        $raw = file_get_contents("php://input");
+    }
+    if (empty($raw)) {
+        $raw = file_get_contents("php://input", false, null, 0, 65535);
+    }
+    if (empty($raw)) {
+        // Last resort: try $_POST for form-encoded
+        return $_POST ?: [];
+    }
+    $parsed = json_decode($raw, true);
+    return is_array($parsed) ? $parsed : [$raw];
 }
 
 if (!function_exists("utf8_encode_deep")) {
     function utf8_encode_deep(&$input)
     {
         if (is_string($input)) {
-            $input = utf8_encode($input);
+            $input = mb_convert_encoding($input, 'UTF-8', 'ISO-8859-1');
         } elseif (is_array($input)) {
             foreach ($input as &$value) {
                 utf8_encode_deep($value);
@@ -177,6 +200,7 @@ if (!function_exists("utf8_encode_deep")) {
     }
 }
 
+// Módulos con API REST existentes
 require_once __DIR__ . "/v1/auth/auth.php";
 require_once __DIR__ . "/v1/tesoreria/clientes.php";
 require_once __DIR__ . "/v1/adquisiciones/proveedores.php";
@@ -184,6 +208,25 @@ require_once __DIR__ . "/v1/inventario/categorias.php";
 require_once __DIR__ . "/v1/inventario/marcas.php";
 require_once __DIR__ . "/v1/inventario/productos.php";
 require_once __DIR__ . "/v1/relavera/manifiestos.php";
+require_once __DIR__ . "/v1/facturacion/comprobantes.php";
+require_once __DIR__ . "/v1/facturacion/emitir.php";
+require_once __DIR__ . "/v1/auditoria/tareas.php";
+require_once __DIR__ . "/v1/admin/conexion.php";
+
+// Nuevos módulos legacy con API REST
+require_once __DIR__ . "/v1/data/index.php";
+require_once __DIR__ . "/v1/contabilidad/index.php";
+require_once __DIR__ . "/v1/rrhh/index.php";
+require_once __DIR__ . "/v1/compras/index.php";
+require_once __DIR__ . "/v1/activosfijos/index.php";
+require_once __DIR__ . "/v1/bodega/index.php";
+require_once __DIR__ . "/v1/caja_chica/index.php";
+require_once __DIR__ . "/v1/transportecarga/index.php";
+require_once __DIR__ . "/v1/bananero/index.php";
+require_once __DIR__ . "/v1/camaronera/index.php";
+require_once __DIR__ . "/v1/tesoreria/bancos.php";
+require_once __DIR__ . "/v1/admin/soporte.php";
+require_once __DIR__ . "/v1/admin/modulo-uso.php";
 
 $app->get("/v1/test", function () {
     echo json_encode(["mysqli" => function_exists("mysqli_connect")]);

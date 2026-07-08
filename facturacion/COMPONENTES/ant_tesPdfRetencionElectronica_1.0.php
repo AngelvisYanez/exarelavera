@@ -36,7 +36,7 @@ $pdf->SetFont('Arial','',9);
 $pdf->Text(148,18,$datoXml->infoTributaria[0]->ruc);
 
 $pdf->SetFont('Arial','B',12);
-$pdf->Text(128,25,utf8_decode("COMPROBANTE DE RETENCIÓN"));
+$pdf->Text(128,25,mb_convert_encoding("COMPROBANTE DE RETENCIÓN", 'ISO-8859-1', 'UTF-8'));
 
 $pdf->SetFont('Arial','B',9);
 $pdf->Text(128,31,"No:");
@@ -46,12 +46,12 @@ $pdf->Text(148,31,$datoXml->infoTributaria[0]->estab."-".$datoXml->infoTributari
 
 $pdf->SetTextColor(0,0,0);
 $pdf->SetFont('Arial','B',9);
-$pdf->Text(128,37,utf8_decode("NÚMERO DE AUTORIZACIÓN:"));
+$pdf->Text(128,37,mb_convert_encoding("NÚMERO DE AUTORIZACIÓN:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',7.7);
 $pdf->Text(128,44,$sri->numeroAutorizacion);
 
 $pdf->SetFont('Arial','B',9);
-$pdf->Text(128,51,utf8_decode("FECHA Y HORA DE AUTORIZACIÓN:"));
+$pdf->Text(128,51,mb_convert_encoding("FECHA Y HORA DE AUTORIZACIÓN:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',9);
 $pdf->Text(128,58,substr($sri->fechaAutorizacion,0,10).' '.substr($sri->fechaAutorizacion,11,8));
 
@@ -60,17 +60,17 @@ $pdf->Text(128,65,"AMBIENTE:");
 $pdf->SetFont('Arial','',9);
 if($datoXml->infoTributaria[0]->ambiente==1)
 {$ProDet='PRUEBAS';}else{$ProDet='PRODUCCIÓN';}
-$pdf->Text(148,65,utf8_decode($ProDet));
+$pdf->Text(148,65,mb_convert_encoding($ProDet, 'ISO-8859-1', 'UTF-8'));
 
 $pdf->SetFont('Arial','B',9);
-$pdf->Text(128,72,utf8_decode("EMISIÓN:"));
+$pdf->Text(128,72,mb_convert_encoding("EMISIÓN:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',9);
 if($datoXml->infoTributaria[0]->tipoEmision==1)
 {$EmiDet='NORMAL';}else{$EmiDet='INDISPONIBILIDAD DEL SISTEMA';}
-$pdf->Text(148,72,utf8_decode($EmiDet));
+$pdf->Text(148,72,mb_convert_encoding($EmiDet, 'ISO-8859-1', 'UTF-8'));
 
 $pdf->SetFont('Arial','B',9);
-$pdf->Text(128,79,utf8_decode("CLAVE DE ACCESO:"));
+$pdf->Text(128,79,mb_convert_encoding("CLAVE DE ACCESO:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',9);
 
 /*RECTANGULO INFO EMPRESA*/
@@ -81,31 +81,31 @@ $pdf->RoundedRect(10, 60, 112, 36, 3.5, '');
 $pdf->SetFont('Arial','',12);
 if (strlen($datoXml->infoTributaria[0]->razonSocial)<=42)
 {
-	$pdf->Text(13,67,utf8_decode($datoXml->infoTributaria[0]->razonSocial));
+	$pdf->Text(13,67,mb_convert_encoding($datoXml->infoTributaria[0]->razonSocial, 'ISO-8859-1', 'UTF-8'));
 }else{
-	$pdf->Text(13,67,utf8_decode($datoXml->infoTributaria[0]->nombreComercial));
+	$pdf->Text(13,67,mb_convert_encoding($datoXml->infoTributaria[0]->nombreComercial, 'ISO-8859-1', 'UTF-8'));
 }
 
 $pdf->SetFont('Arial','',9);
-$pdf->Text(13,72,utf8_decode($datoXml->infoTributaria[0]->nombreComercial));
+$pdf->Text(13,72,mb_convert_encoding($datoXml->infoTributaria[0]->nombreComercial, 'ISO-8859-1', 'UTF-8'));
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(13,78,utf8_decode("DIRECCIÓN:"));
+$pdf->Text(13,78,mb_convert_encoding("DIRECCIÓN:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
-$pdf->Text(38,78,utf8_decode($datoXml->infoTributaria[0]->dirMatriz));
+$pdf->Text(38,78,mb_convert_encoding($datoXml->infoTributaria[0]->dirMatriz, 'ISO-8859-1', 'UTF-8'));
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(13,83,utf8_decode("DIR. SUCURSAL:"));
+$pdf->Text(13,83,mb_convert_encoding("DIR. SUCURSAL:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
-$pdf->Text(38,83,utf8_decode(""));
+$pdf->Text(38,83,mb_convert_encoding("", 'ISO-8859-1', 'UTF-8'));
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(13,88,utf8_decode("CONTRIBUYENTE ESPECIAL Nro.:"));
+$pdf->Text(13,88,mb_convert_encoding("CONTRIBUYENTE ESPECIAL Nro.:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
 $pdf->Text(70,88,$datoXml->infoCompRetencion[0]->contribuyenteEspecial);
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(13,93,utf8_decode("OBLIGADO A LLEVAR CONTABILIDAD:"));
+$pdf->Text(13,93,mb_convert_encoding("OBLIGADO A LLEVAR CONTABILIDAD:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
 $pdf->Text(70,93,$datoXml->infoCompRetencion[0]->obligadoContabilidad);
 
@@ -115,22 +115,22 @@ $pdf->SetFillColor(300);
 $pdf->RoundedRect(10, 98, 194, 13, 0, '');
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(13,103,utf8_decode("RAZÓN SOCIAL / NOMBRES Y APELLIDOS:"));
+$pdf->Text(13,103,mb_convert_encoding("RAZÓN SOCIAL / NOMBRES Y APELLIDOS:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
 $numCad=strlen((string)$datoXml->infoCompRetencion[0]->razonSocialSujetoRetenido);
 if($numCad>38)//controlamos el tamaño de la razon social q no sea mayor d 38 caracteres
 {
-	$pdf->Text(75,103,substr(utf8_decode($datoXml->infoCompRetencion[0]->razonSocialSujetoRetenido),1,$numCad));
+	$pdf->Text(75,103,substr(mb_convert_encoding($datoXml->infoCompRetencion[0]->razonSocialSujetoRetenido, 'ISO-8859-1', 'UTF-8'),1,$numCad));
 }else{
-	$pdf->Text(75,103,utf8_decode($datoXml->infoCompRetencion[0]->razonSocialSujetoRetenido));
+	$pdf->Text(75,103,mb_convert_encoding($datoXml->infoCompRetencion[0]->razonSocialSujetoRetenido, 'ISO-8859-1', 'UTF-8'));
 }
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(145,108,utf8_decode("RUC / CI:"));
+$pdf->Text(145,108,mb_convert_encoding("RUC / CI:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
 $pdf->Text(160,108,$datoXml->infoCompRetencion[0]->identificacionSujetoRetenido);
 
 $pdf->SetFont('Arial','B',8);
-$pdf->Text(13,108,utf8_decode("FECHA DE EMISIÓN:"));
+$pdf->Text(13,108,mb_convert_encoding("FECHA DE EMISIÓN:", 'ISO-8859-1', 'UTF-8'));
 $pdf->SetFont('Arial','',8);
 $pdf->Text(75,108,$datoXml->infoCompRetencion[0]->fechaEmision);
 
@@ -143,9 +143,9 @@ $pdf->SetY(113);
 //Cabecera    	
 $pdf->SetFont('Arial','B',8);
 $pdf->Cell(30,7,'Comprobante',1,0,'C');
-$pdf->Cell(28,7,utf8_decode('Número'),1,0,'C');
-$pdf->Cell(22,7,utf8_decode('Fecha Emisión'),1,0,'C');
-$pdf->Cell(23,7,utf8_decode('Ejercicio Fiscal'),1,0,'C');
+$pdf->Cell(28,7,mb_convert_encoding('Número', 'ISO-8859-1', 'UTF-8'),1,0,'C');
+$pdf->Cell(22,7,mb_convert_encoding('Fecha Emisión', 'ISO-8859-1', 'UTF-8'),1,0,'C');
+$pdf->Cell(23,7,mb_convert_encoding('Ejercicio Fiscal', 'ISO-8859-1', 'UTF-8'),1,0,'C');
 $pdf->Cell(22,7,'Base Imponible',1,0,'C');
 $pdf->Cell(22,7,'Impuesto',1,0,'C');
 $pdf->Cell(22,7,'Porcentaje %',1,0,'C');
@@ -185,7 +185,7 @@ $iapos=$pdf->GetY()+10;
 $iapos2=$iapos+5;
 
 $pdf->SetFont('Arial','B',9);
-$pdf->Text(13,$iapos2,utf8_decode("INFORMACIÓN ADICIONAL"));
+$pdf->Text(13,$iapos2,mb_convert_encoding("INFORMACIÓN ADICIONAL", 'ISO-8859-1', 'UTF-8'));
 
 $pdf->Ln($iapos-117-($totDet-1)*5);
 $pdf->SetCWidths(array(30,97));
@@ -193,7 +193,7 @@ $pdf->SetCFonts(array(array('Arial','B',8)));
 $pdf->SetFont('Arial','',8);
 
 foreach($datoXml->infoAdicional->campoAdicional AS $k => $v){
-	$pdf->Row(array(utf8_decode(strtoupper($v['nombre'])).':',utf8_decode($v).''));
+	$pdf->Row(array(mb_convert_encoding(strtoupper($v['nombre']), 'ISO-8859-1', 'UTF-8').':',mb_convert_encoding($v, 'ISO-8859-1', 'UTF-8').''));
 }
 
 $pdf->SetLineWidth(0.1);
@@ -203,7 +203,7 @@ $pdf->RoundedRect(10, $iapos , 125, $pdf->GetY()-$iapos+2, 0, '');
 
 $pdf->Ln();	
 $pdf->SetFont('Arial','I',8);
-$pdf->Text(100,290,utf8_decode('Página ').$pdf->PageNo().' de {nb}',0,0,'C');
+$pdf->Text(100,290,mb_convert_encoding('Página ', 'ISO-8859-1', 'UTF-8').$pdf->PageNo().' de {nb}',0,0,'C');
 
 //$pdf->TablaBasica($datos_xml);
 

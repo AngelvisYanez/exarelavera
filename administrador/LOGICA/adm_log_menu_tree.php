@@ -1,7 +1,7 @@
 <?Php
 /**
-* Descripción: Cargar el menu del sistema informático
-* Fecha de actualización:	2016-12-25
+* Descripciï¿½n: Cargar el menu del sistema informï¿½tico
+* Fecha de actualizaciï¿½n:	2016-12-25
 * Desarrollador:	 Erik Niebla
 */
 require_once ('../../auditoria/LOGICA/aud_log_auditoria.php');
@@ -12,7 +12,8 @@ class Class_Sys_Menu extends MysqlDatos{
         $this->setSentencias('sentencias_men');
     }
     function getMenuContainer($Perfiles,$obBD){ 
-        $mperf=''; foreach($Perfiles as $item) $mperf=$mperf." "."perfiorgan.Per_Cod=".$item." OR"; $mperf1=trim(substr($mperf,1,count($mperf)-3));
+        $mperf1=$this->buildProfileFilter($Perfiles);
+        if (empty($mperf1)) { return new TreeMenu(); }
         $menu=new TreeMenu();
         $menu->setPages($this->getMenuPages(0,$mperf1,$obBD));
         return $menu;
@@ -32,13 +33,18 @@ class Class_Sys_Menu extends MysqlDatos{
         }
         return $pages;
     }
+    function buildProfileFilter($Perfiles){
+        if (!is_array($Perfiles) || empty($Perfiles)) return '';
+        $mperf='';
+        foreach($Perfiles as $item) $mperf=$mperf." "."perfiorgan.Per_Cod=".$item." OR";
+        return trim(substr($mperf,1,-2));
+    }
     function getMenuContainer2($Perfiles,$obBD){
-        $mperf=''; foreach($Perfiles as $item) $mperf=$mperf." "."perfiorgan.Per_Cod=".$item." OR"; $mperf1=trim(substr($mperf,1,count($mperf)-3));
+        $mperf1=$this->buildProfileFilter($Perfiles);
         $Organiza=groupBy($this->getArrayConsulta(2,'*'.$mperf1, $obBD),'Org_Niv');
         $Procesos=groupBy($this->getArrayConsulta(3,'*'.$mperf1.'*P', $obBD),'Org_Cod');
         $menu=new TreeMenu();
         $this->setMenuPages($menu,0,$Organiza,$Procesos);
-        //echo(json_encode($menu->toArray()));die();
         return $menu;
     }
     function setMenuPages(&$menu,$Org_Cod,$Organiza,$Procesos){

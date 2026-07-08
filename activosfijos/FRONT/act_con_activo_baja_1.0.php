@@ -136,14 +136,14 @@ $hoy = date("Y-m-d");
 		</tr>
 		<tr>
 			<td valign="top">      
-			<?
+			<?php
 				$descripcion = "Individual*Por Motivo de baja*Por Fecha";
 				$pag1= $_SERVER['PHP_SELF']."?op=1";
 				$pag2= $_SERVER['PHP_SELF']."?op=2";
 				$pag3= $_SERVER['PHP_SELF']."?op=3";
 				tabs(3,$descripcion, $pag1.'*'.$pag2.'*'.$pag3, $op);
 			?>   
-		<?
+		<?php
 		if(!isset($op)){$op = 1;}
 			if ($op==1 || $op==2 || $op==3 ){
 			switch($op){			
@@ -167,11 +167,11 @@ $hoy = date("Y-m-d");
 				<tr>
 					<td width="105"><input name="op_opciones" type="radio" value="d"  checked  onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.txt_busqueda);">              
                     <span class="LetraNegra">Descripción</span> <input name="op_cam" id="op_cam" type="hidden" value="d"></td>
-					<td width="125"><input type="radio" name="op_opciones" value="cb" <?Php if($op_opciones== 'cb'){?> checked <? } ?> onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.txt_busqueda);">
+					<td width="125"><input type="radio" name="op_opciones" value="cb" <?Php if($op_opciones== 'cb'){?> checked <?php } ?> onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.txt_busqueda);">
                     <span class="LetraNegra">Código de Barra</span></td>
-					<td width="122"><input type="radio" name="op_opciones" value="cs" <?Php if($op_opciones== 'cs'){?> checked <? } ?> onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.txt_busqueda);" >
+					<td width="122"><input type="radio" name="op_opciones" value="cs" <?Php if($op_opciones== 'cs'){?> checked <?php } ?> onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.txt_busqueda);" >
                     <span class="LetraNegra">Código Secuencial</span></td>
-                    <td width="263"><input type="radio" name="op_opciones" value="ns" <?Php if($op_opciones== 'ns'){  ?> checked <? } ?> onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.Cam_Cod);">
+                    <td width="263"><input type="radio" name="op_opciones" value="ns" <?Php if($op_opciones== 'ns'){  ?> checked <?php } ?> onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.Cam_Cod);">
                     <span class="LetraNegra">Por Campo</span>
 <?Php
 					/**
@@ -183,7 +183,7 @@ $hoy = date("Y-m-d");
 <?Php 
 						foreach($rs_campos as $row_rs_campos){
 ?>  
-							<option  value="<? echo $row_rs_campos['Cam_Cod'];?>"><?PHP  echo $row_rs_campos['Cam_Cor'];?></option>
+							<option  value="<?php echo $row_rs_campos['Cam_Cod'];?>"><?PHP  echo $row_rs_campos['Cam_Cor'];?></option>
 <?Php 
 						} //fin foreach($rs_campos as $row_rs_campos){
 ?> 
@@ -214,7 +214,7 @@ $hoy = date("Y-m-d");
 		</form>
 		</fieldset>  
  
-		<? 
+		<?php 
 		if (isset($txt_busqueda)){?>
 			<FIELDSET>
 			<LEGEND>
@@ -239,10 +239,10 @@ $hoy = date("Y-m-d");
 					?>
 				<tr>
 					<td align="center"><?php echo $row_rs_buscar['Act_Cod'];?></td>
-					<td title="<? echo $row_rs_buscar['Tia_Des'];?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Tia_Des'],'#FFFF00', 1);?></td>
-					<td  title="<? echo $row_rs_buscar['Act_Des'];?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Act_Des'],'#FFFF00', 1);?></td>
+					<td title="<?php echo $row_rs_buscar['Tia_Des'];?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Tia_Des'],'#FFFF00', 1);?></td>
+					<td  title="<?php echo $row_rs_buscar['Act_Des'];?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Act_Des'],'#FFFF00', 1);?></td>
 					<td align="center"><?php echo  $row_rs_buscar['Act_Cdc'];?></td>
-					<form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "frml" id="forml">
+					<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "frml" id="forml">
 					<td align="center" width="5%">
 
 					<button type="button" name="imageField"  class="btn btn-success btn-mini"  width="22" height="22" title="Seleccionar" onClick="this.form.submit()">	
@@ -251,8 +251,8 @@ $hoy = date("Y-m-d");
 					<input type="hidden" name="codigo" id="codigo" value="<?Php echo $row_rs_buscar['Act_Cod'];?>"/>
 					<input type="hidden" name="hdd_aux" id="hdd_aux" value="1">
 					<input type="hidden" name="volver_busqueda" id="volver_busqueda" value="<?Php echo $txt_busqueda;?>"/>
-					<input type="hidden" name="volver_opciones" id="volver_opciones" value="<? echo $op_opciones;?>">
-					<input type="hidden" name="volver_Cam_Cod" id="volver_Cam_Cod" value="<? echo $Cam_Cod;?>">	     
+					<input type="hidden" name="volver_opciones" id="volver_opciones" value="<?php echo $op_opciones;?>">
+					<input type="hidden" name="volver_Cam_Cod" id="volver_Cam_Cod" value="<?php echo $Cam_Cod;?>">	     
 					</td>
 				</form>
 				</tr>
@@ -267,7 +267,7 @@ $hoy = date("Y-m-d");
 			<td> </td>
 			<td> </td>
 		</tr>
-		<?
+		<?php
 		} // fin del if ($total_rs_buscar > 0)
 		?>
 		</tbody>
@@ -279,7 +279,7 @@ $hoy = date("Y-m-d");
 		echo barra_estado($total_rs_buscar+0);
 		?>
 		</FIELDSET>
-		<?
+		<?php
 		}//if (isset($txt_busqueda)){
 		?>
 <br/>
@@ -292,8 +292,8 @@ $hoy = date("Y-m-d");
 				
 			$rs_bajas = $obBD_con1->getRowConsulta(5,$codigo.'*'.$Ses_Emp_Cod,$obBD_conexion);
 		?>
-		<form method="post" name= "form2" action="<? echo $_SERVER['PHP_SELF'];?>">
-		<? //Creacion del campo REPOST
+		<form method="post" name= "form2" action="<?php echo $_SERVER['PHP_SELF'];?>">
+		<?php //Creacion del campo REPOST
 			$thisPost->startPost();
 		?>
 		<fieldset>
@@ -334,18 +334,18 @@ $hoy = date("Y-m-d");
 				</tr>
 				<tr>
 					<td width="20%" class="Etiqueta1"><span class="Asterisco">*</span>Motivo:</td>
-					<td width="80%" class="LetraNegra">&nbsp;<? echo $rs_bajas['Est_Des'];?>      
+					<td width="80%" class="LetraNegra">&nbsp;<?php echo $rs_bajas['Est_Des'];?>      
 					</td>
 					<td width="0%"></td>
 				</tr>
 				<tr>
 					<td width="20%" class="Etiqueta1"><span class="Asterisco">*</span>Fecha del Informe:</td>
-					<td class="LetraNegra">&nbsp;<? echo $rs_bajas['Baj_Fba'];?> </td>
+					<td class="LetraNegra">&nbsp;<?php echo $rs_bajas['Baj_Fba'];?> </td>
 					<td></td>
 				</tr>       
 				<tr>
 					<td width="20%" class="Etiqueta1"><span class="Asterisco">*</span>Informe Técnico:</td>
-					<td class="LetraNegra">&nbsp;<div align="justify"> <? echo $rs_bajas['Baj_Inf'];?> </div></td>
+					<td class="LetraNegra">&nbsp;<div align="justify"> <?php echo $rs_bajas['Baj_Inf'];?> </div></td>
 					<td></td>
 				</tr>       
 			</table>
@@ -361,17 +361,17 @@ $hoy = date("Y-m-d");
 				</tr>
 				<tr>
 					<td width="20%" class="Etiqueta1"><span class="Asterisco">*</span>Destino:</td>
-					<td width="80%" class="LetraNegra">&nbsp;<? echo $rs_bajas['Baj_Des'];?>
+					<td width="80%" class="LetraNegra">&nbsp;<?php echo $rs_bajas['Baj_Des'];?>
 						
 					</td>			
 				</tr>
 				<tr>
 					<td width="20%" class="Etiqueta1"><span class="Asterisco">*</span>Receptor:</td>
-					<td class="LetraNegra">&nbsp;<? echo $rs_bajas['Baj_Qui'];?></td>			
+					<td class="LetraNegra">&nbsp;<?php echo $rs_bajas['Baj_Qui'];?></td>			
 				</tr>
 				<tr>
 					<td width="20%" class="Etiqueta1"><span class="Asterisco">*</span>Valor:</td>
-					<td class="LetraNegra">&nbsp;<? echo $rs_bajas['Baj_Val'];?></td>			
+					<td class="LetraNegra">&nbsp;<?php echo $rs_bajas['Baj_Val'];?></td>			
 				</tr>
 			</table>
 		</fieldset>
@@ -383,7 +383,7 @@ $hoy = date("Y-m-d");
 		<table  width="220">
 			<tr>
 				<td width="49%" align="left">   
-					<form method="post" name= "form3" action="<? echo $_SERVER['PHP_SELF'];?>">	
+					<form method="post" name= "form3" action="<?php echo $_SERVER['PHP_SELF'];?>">	
 							<input id="hdd_volver" name="hdd_volver" type="hidden" value="0">                         
 						<button type="button" name="btn_atras" id="btn_atras" value="Enviar" class="btn btn-inverse fileinput-button" title="Atr&aacute;s"
 						onClick="campos_hide(form2, '<?Php echo "op_opciones*txt_busqueda*hdd_volver"; ?>','<?Php echo $volver_opciones.'*'.$volver_busqueda.'*'.$hdd_volver;?>')">
@@ -392,7 +392,7 @@ $hoy = date("Y-m-d");
 					</form>                            
 				</td>            
 				<td width="51%" >               
-					<form name="form11" method="post" action="<? echo 'act_pri_baja_activo_1.0.php';?>" target="_blank">          
+					<form name="form11" method="post" action="<?php echo 'act_pri_baja_activo_1.0.php';?>" target="_blank">          
 							<button title="Imprimir Baja de Activo" name="btn_imprimir" id="btn_imprimir" type="submit" class="btn btn-primary start" value="Selec">
 							<i class="icon-print icon-white"></i>
 								<span>&nbsp;Imprimir&nbsp;</span>
@@ -405,7 +405,7 @@ $hoy = date("Y-m-d");
 				</td>                        
 			</tr> 
 		</table> 
- <?
+ <?php
  }
  break;
  //Case para buscar por motivo de baja.
@@ -504,7 +504,7 @@ if (isset($btn_motivo)){
 				<td> </td>
 				<td> </td>
 			</tr>
-	<?
+	<?php
 		} // fin del if ($total_rs_buscar > 0)
 	?>
 			</tbody>
@@ -524,7 +524,7 @@ if (isset($btn_motivo)){
         <tr>
                      
             <td width="51%" >               
-                <form name="form11" method="post" action="<? echo 'act_pri_baja_act_general_1.0.php';?>" target="_blank">          
+                <form name="form11" method="post" action="<?php echo 'act_pri_baja_act_general_1.0.php';?>" target="_blank">          
                         <button title="Imprimir Baja de Activo" name="btn_imprimir" id="btn_imprimir" type="submit" class="btn btn-primary start" value="Selec">
                         <i class="icon-print icon-white"></i>
                             <span>&nbsp;Imprimir&nbsp;</span>
@@ -536,7 +536,7 @@ if (isset($btn_motivo)){
             </td>                        
         </tr> 
 	</table> 
-  <?      
+  <?php      
     }   	
 }		
  break;
@@ -620,7 +620,7 @@ if (isset($btn_motivo)){
 				<td> </td>
 				<td> </td>
 			</tr>
-		<?
+		<?php
 		} // fin del if ($total_rs_buscar > 0)
 		?>
 			</tbody>
@@ -637,7 +637,7 @@ if (isset($btn_motivo)){
     <table  width="145">
         <tr>            
             <td width="51%" >               
-                <form name="form11" method="post" action="<? echo 'act_pri_baja_act_general_1.0.php';?>" target="_blank">          
+                <form name="form11" method="post" action="<?php echo 'act_pri_baja_act_general_1.0.php';?>" target="_blank">          
                         <button title="Imprimir Baja de Activo" name="btn_imprimir" id="btn_imprimir" type="submit" class="btn btn-primary start" value="Selec">
                         <i class="icon-print icon-white"></i>
                             <span>&nbsp;Imprimir&nbsp;</span>

@@ -1,4 +1,4 @@
-<?
+<?php
 /*
 * Descripci�n: Reporte agupado por tipoa de pago: Efectivo, Cheque, Tarjeta... etc
 * Fecha de actualizaci�n: 2016-1028
@@ -51,7 +51,7 @@ $total_ventas = count($row_FormasVentas);
             <td width="132" align="left" class="Texto_Reporte"><strong>Fecha de Apertura:</strong></td>
             <td width="236" class="Texto_Reporte">&nbsp;<?Php echo $row_FormasVentas[0]['Caj_Fec'] . ' ' . $row_FormasVentas[0]['Caj_Hoi']; ?></td>
             <td width="139" class="Texto_Reporte"><strong>Caja:</strong></td>
-            <td width="140" class="Texto_Reporte"><? echo $row_FormasVentas[0]['Pun_Des']; ?></td>
+            <td width="140" class="Texto_Reporte"><?php echo $row_FormasVentas[0]['Pun_Des']; ?></td>
           </tr>
           <tr>
             <td width="132" class="Texto_Reporte"><strong>Fecha de Cierre:</strong></td>
@@ -93,13 +93,13 @@ $total_ventas = count($row_FormasVentas);
               <tr class="Texto_Reporte">
 
                 <!--Etiquetas de contado y transferencia-->
-                <td colspan="9" align="left">&nbsp;<strong><? echo strtoupper($datos_forma['Pag_Des']); ?></strong></td>
+                <td colspan="9" align="left">&nbsp;<strong><?php echo strtoupper($datos_forma['Pag_Des']); ?></strong></td>
               </tr>
 
 
 
 
-              <? foreach ($row_ventas as $datos) {  ?>
+              <?php foreach ($row_ventas as $datos) {  ?>
                 <tr class="Texto_Reporte">
                   <td align="left">&nbsp; <?php echo "&nbsp;&nbsp;&nbsp;&nbsp;" . strtoupper($datos['Tic_Des']);  ?></td>
                   <td align="left"><?php echo strtoupper($datos['Prs_Ape'] . ' ' . $datos['Prs_Nom']);  ?></td>
@@ -136,8 +136,8 @@ $total_ventas = count($row_FormasVentas);
 
               <!--Totales de efectivo y transferencia (forma de pago)-->
               <tr class="Texto_Reporte">
-                <td colspan="8" align="right"><strong><? echo "TOTAL " . strtoupper($datos_forma['Pag_Des']) ?></strong>&nbsp;</td>
-                <td align="right"><strong><? echo formato_numero($totalDetalle, 2, 2); ?></strong></td>
+                <td colspan="8" align="right"><strong><?php echo "TOTAL " . strtoupper($datos_forma['Pag_Des']) ?></strong>&nbsp;</td>
+                <td align="right"><strong><?php echo formato_numero($totalDetalle, 2, 2); ?></strong></td>
               </tr>
 
 
@@ -147,7 +147,7 @@ $total_ventas = count($row_FormasVentas);
 
 
 
-            <? }
+            <?php }
           } else {
             ?>
             <tr class="Texto_Reporte">
@@ -160,7 +160,7 @@ $total_ventas = count($row_FormasVentas);
               <td align="right">0.00</td>
               <td align="right">0.00</td>
             </tr>
-          <? } ?>
+          <?php } ?>
 
 
 
@@ -174,12 +174,12 @@ $total_ventas = count($row_FormasVentas);
               if ($tipos) {
           ?>
                 <tr class="Texto_Reporte">
-                  <td colspan="9" align="left">&nbsp;<strong><? echo 'RETENCIONES - ' . strtoupper($datos_forma['Pag_Des']); ?></strong></td>
+                  <td colspan="9" align="left">&nbsp;<strong><?php echo 'RETENCIONES - ' . strtoupper($datos_forma['Pag_Des']); ?></strong></td>
                 </tr>
 
 
 
-                <? foreach ($row_ventas as $datos) {  ?>
+                <?php foreach ($row_ventas as $datos) {  ?>
                   <tr class="Texto_Reporte">
                     <td align="left">&nbsp; <?php echo "&nbsp;&nbsp;&nbsp;&nbsp; RETENCION" ?></td>
                     <td align="left"><?php echo strtoupper($datos['Prs_Ape'] . ' ' . $datos['Prs_Nom']);  ?></td>
@@ -200,8 +200,8 @@ $total_ventas = count($row_FormasVentas);
                   $totalRetenciones += $datos['Total'];
                 } ?>
                 <tr class="Texto_Reporte">
-                  <td colspan="8" align="right"><strong><? echo "TOTAL RETENCIONES " . strtoupper($datos_forma['Pag_Des']) ?></strong>&nbsp;</td>
-                  <td align="right"><strong><? echo formato_numero($totalDetalle, 2, 2); ?></strong></td>
+                  <td colspan="8" align="right"><strong><?php echo "TOTAL RETENCIONES " . strtoupper($datos_forma['Pag_Des']) ?></strong>&nbsp;</td>
+                  <td align="right"><strong><?php echo formato_numero($totalDetalle, 2, 2); ?></strong></td>
                 </tr>
           <?php
               }
@@ -266,10 +266,10 @@ $total_ventas = count($row_FormasVentas);
           </tr>
           <tr class="Texto_Reporte">
             <td><strong>Monto inicial</strong></td>
-            <td align="left"><? echo formato_numero($row_FormasVentas[0]['Caj_Exi'] + 0, 2, 2); ?></td>
+            <td align="left"><?php echo formato_numero($row_FormasVentas[0]['Caj_Exi'] + 0, 2, 2); ?></td>
 
             <td align="right"><strong>Monto inicial</strong></td>
-            <td align="right"><? echo formato_numero($row_FormasVentas[0]['Caj_Exi'] + 0, 2, 2); ?></td>
+            <td align="right"><?php echo formato_numero($row_FormasVentas[0]['Caj_Exi'] + 0, 2, 2); ?></td>
 
           </tr>
           <tr class="Texto_Reporte">

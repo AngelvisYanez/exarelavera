@@ -113,14 +113,14 @@
     <!--tipos_pago-->
     <select id="pag_cod" name="pag_cod" class="form-control input-xs" style="display: none;">
         <?php if (isset($tipospago)) foreach ($tipospago as $row) { ?>
-            <option value="<?php echo $row['Pag_Cod']; ?>" data-forcod="<?php echo $row['For_Cod']; ?>"><?php echo utf8_decode($row['Pag_Des']); ?></option>
+            <option value="<?php echo $row['Pag_Cod']; ?>" data-forcod="<?php echo $row['For_Cod']; ?>"><?php echo mb_convert_encoding($row['Pag_Des'], 'ISO-8859-1', 'UTF-8'); ?></option>
         <?php } ?>
     </select>
 
     <!--bancos-->
     <select id="bak_cod" name="bak_cod" class="form-control input-xs" style="display: none;">
         <?php if (isset($bankos)) foreach ($bankos as $row) { ?>
-            <option value="<?php echo $row['Bak_Cod']; ?>"><?php echo utf8_decode($row['Bak_Des']); ?></option>
+            <option value="<?php echo $row['Bak_Cod']; ?>"><?php echo mb_convert_encoding($row['Bak_Des'], 'ISO-8859-1', 'UTF-8'); ?></option>
         <?php } ?>
     </select>
 
@@ -213,7 +213,7 @@
                             <option value=""></option>
                             <?php foreach ($rs_ciudad as $row) {
                                 //echo "<option value='$row[Ciu_Cod]' data-prov='$row[Pro_Nom]'>$row[Ciu_Des]</option>";
-                                echo "<option value='{$row['Ciu_Cod']}' data-prov='" . utf8_encode($row['Pro_Nom']) . "'>" . utf8_encode($row['Ciu_Des']) . "</option>";
+                                echo "<option value='{$row['Ciu_Cod']}' data-prov='" . mb_convert_encoding($row['Pro_Nom'], 'UTF-8', 'ISO-8859-1') . "'>" . mb_convert_encoding($row['Ciu_Des'], 'UTF-8', 'ISO-8859-1') . "</option>";
                             } ?>
                         </select>
                     </div>
@@ -388,7 +388,7 @@
                                     $selected = 'Selected';
                                 }
                                 //echo "<option value='$row[Tpc_Cod]' >$row[Tpc_Sri] - $row[Tpc_Des]</option>";
-                                echo "<option value='" . $row['Tpc_Cod'] . "' " . $selected .  " >" . utf8_encode($row['Tpc_Sri']) . " - " . utf8_encode($row['Tpc_Des']) . "</option>";
+                                echo "<option value='" . $row['Tpc_Cod'] . "' " . $selected .  " >" . mb_convert_encoding($row['Tpc_Sri'], 'UTF-8', 'ISO-8859-1') . " - " . mb_convert_encoding($row['Tpc_Des'], 'UTF-8', 'ISO-8859-1') . "</option>";
                             } ?>
                         </select>
                     </div>

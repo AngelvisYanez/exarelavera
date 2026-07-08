@@ -88,7 +88,7 @@ if($ajax_1==1)
 			   <td><?Php echo $row_rs_consulta['Mar_Des']; ?></td>
 			   <td><?Php echo $row_rs_consulta['Cat_Des'];?></td>
 			   <td align="center">
-                <button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="ponPrefijo('<? echo $row_rs_consulta['Pro_Cod']; ?>','<? echo $row_rs_consulta['Pro_Obs']; ?>','<? echo  $row_rs_consulta['Ite_Lar']; ?>','<? echo  $row_rs_consulta['Cat_Des']; ?>','<? echo  $row_rs_consulta['Cat_Cdc']; ?>','<? echo  $row_rs_consulta['Cat_Cod']; ?>','<? echo  $row_rs_consulta['Mar_Des']; ?>'); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mar_val=1&Ite_Cod='+ document.getElementById('Ite_Cod').value+'&Cat_Cod1='+ document.getElementById('Cat_Cod1').value+ '&Pro_Cod=<? echo  $row_rs_consulta["Pro_Cod"]; ?>'+ '&Mar_Des1=<? echo  $row_rs_consulta["Mar_Des"]; ?>','contenedormarca');">
+                <button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="ponPrefijo('<?php echo $row_rs_consulta['Pro_Cod']; ?>','<?php echo $row_rs_consulta['Pro_Obs']; ?>','<?php echo  $row_rs_consulta['Ite_Lar']; ?>','<?php echo  $row_rs_consulta['Cat_Des']; ?>','<?php echo  $row_rs_consulta['Cat_Cdc']; ?>','<?php echo  $row_rs_consulta['Cat_Cod']; ?>','<?php echo  $row_rs_consulta['Mar_Des']; ?>'); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mar_val=1&Ite_Cod='+ document.getElementById('Ite_Cod').value+'&Cat_Cod1='+ document.getElementById('Cat_Cod1').value+ '&Pro_Cod=<?php echo  $row_rs_consulta["Pro_Cod"]; ?>'+ '&Mar_Des1=<?php echo  $row_rs_consulta["Mar_Des"]; ?>','contenedormarca');">
            			<i class=" icon-arrow-right icon-white"></i>
            	    </button>
                 </td>		
@@ -175,7 +175,7 @@ mensaje_requerido();
           <td width="152">
             
             <input name="Ite_Cod2" type="text" id="Ite_Cod2" style="border:none"  size="15" maxlength="30" readonly="readonly"  />
-            <input name="Ite_Cod" type="hidden" id="Ite_Cod" value="<? echo $Ite_Cod;?>" />
+            <input name="Ite_Cod" type="hidden" id="Ite_Cod" value="<?php echo $Ite_Cod;?>" />
             </td>         
           <td width="120"><button style="font-size:9px" type="button" class="btn btn-success btn-mini" title="Elegir Producto" id="button"> <i class="icon-search icon-white"></i> <span>Buscar</span> </button></td>
         </tr>
@@ -244,7 +244,7 @@ mensaje_requerido();
     <td colspan="2"> 
 
   
-<? if(isset($hdd))
+<?php if(isset($hdd))
 {
 	/**
 	* Consulta los registros del kardex Ite_Cod = Pro_Cod
@@ -262,31 +262,31 @@ mensaje_requerido();
           <td><table width="100%" border="0" cellpadding="0" cellspacing="0" >
             <tr>
               <td width="10%"  class="Texto_Reporte">&nbsp;<strong>Categoria: </strong></td>
-              <td width="23%" class="Texto_Reporte" >&nbsp;<? echo  $row_rs_consulta['Cat_Des'] ?></td>
+              <td width="23%" class="Texto_Reporte" >&nbsp;<?php echo  $row_rs_consulta['Cat_Des'] ?></td>
               <td width="9%"  class="Texto_Reporte">&nbsp;<strong>Descripci&oacute;n:</strong></td>
-              <td width="22%" class="Texto_Reporte" >&nbsp;<? echo  $row_rs_consulta['Ite_Lar'] ?></td>
+              <td width="22%" class="Texto_Reporte" >&nbsp;<?php echo  $row_rs_consulta['Ite_Lar'] ?></td>
               <td width="7%" class="Texto_Reporte" >&nbsp;<strong>Iva: </strong></td>
-              <td width="29%" class="Texto_Reporte">&nbsp;<? echo  $row_rs_consulta['Iva_Por'] ?></td>
+              <td width="29%" class="Texto_Reporte">&nbsp;<?php echo  $row_rs_consulta['Iva_Por'] ?></td>
             </tr>
             <tr>
               <td class="Texto_Reporte">&nbsp;<strong>C&oacute;d. Categoria:</strong></td>
-              <td class="Texto_Reporte">&nbsp;<? echo  $row_rs_consulta['Pro_Cdc'] ?></td>
+              <td class="Texto_Reporte">&nbsp;<?php echo  $row_rs_consulta['Pro_Cdc'] ?></td>
               <td class="Texto_Reporte">&nbsp;<strong>Marca:</strong></td>
-              <td class="Texto_Reporte">&nbsp;<? echo  $row_rs_consulta['Mar_Des'] ?></td>
+              <td class="Texto_Reporte">&nbsp;<?php echo  $row_rs_consulta['Mar_Des'] ?></td>
               <td class="Texto_Reporte">&nbsp;<strong>Cod.Barra: </strong></td>
-              <td class="Texto_Reporte">&nbsp;<? echo  $row_rs_consulta['Pro_Bar'] ?></td>
+              <td class="Texto_Reporte">&nbsp;<?php echo  $row_rs_consulta['Pro_Bar'] ?></td>
             </tr>
             <tr>
               <td class="Texto_Reporte">&nbsp;<strong>Observaci&oacute;n: </strong></td>
-              <td class="Texto_Reporte">&nbsp;<? echo  $row_rs_consulta['Pro_Obs'] ?></td>
+              <td class="Texto_Reporte">&nbsp;<?php echo  $row_rs_consulta['Pro_Obs'] ?></td>
               <td class="Texto_Reporte">&nbsp;<strong>Adquisici&oacute;n: </strong></td>
-              <td class="Texto_Reporte">&nbsp;<? echo  $row_rs_consulta['Adq_Des'] ?></td>
+              <td class="Texto_Reporte">&nbsp;<?php echo  $row_rs_consulta['Adq_Des'] ?></td>
               <td class="Texto_Reporte">&nbsp;<strong>Ubicacion: </strong></td>
-              <td class="Texto_Reporte">&nbsp;<? echo  $row_rs_consulta['Ubi_Des'] ?></td>
+              <td class="Texto_Reporte">&nbsp;<?php echo  $row_rs_consulta['Ubi_Des'] ?></td>
             </tr>
             <tr>
               <td class="Texto_Reporte">&nbsp;<strong>Unidad:</strong></td>
-              <td class="Texto_Reporte">&nbsp;<? echo  $row_rs_consulta['Uni_Des'] ?></td>
+              <td class="Texto_Reporte">&nbsp;<?php echo  $row_rs_consulta['Uni_Des'] ?></td>
               <td class="Texto_Reporte">&nbsp;</td>
               <td class="Texto_Reporte">&nbsp;</td>
               <td class="Texto_Reporte"><div align="right"></div></td>
@@ -294,9 +294,9 @@ mensaje_requerido();
             </tr>
             <tr>
               <td class="Texto_Reporte">&nbsp;<strong>Desde:</strong></td>
-              <td class="Texto_Reporte">&nbsp;<? echo  $ini; ?></td>
+              <td class="Texto_Reporte">&nbsp;<?php echo  $ini; ?></td>
               <td class="Texto_Reporte">&nbsp;<strong>Hasta:</strong></td>
-              <td class="Texto_Reporte">&nbsp;<? echo  $fin; ?></td>
+              <td class="Texto_Reporte">&nbsp;<?php echo  $fin; ?></td>
               <td class="Texto_Reporte">&nbsp;</td>
               <td class="Texto_Reporte">&nbsp;</td>
             </tr>
@@ -304,7 +304,7 @@ mensaje_requerido();
         </tr>
         <tr>
           <td>
-		  <?
+		  <?php
 	/**
 	 * Consulta de fecha a fecha el movimiento del producto 
 	 */	  
@@ -369,24 +369,24 @@ mensaje_requerido();
               <td><div align="right">
                 <div align="right">
                 <span class="Encabezado_reporte">
-                  <? echo ' '; ?>
+                  <?php echo ' '; ?>
                 </span></div>
               </div></td>
               <td><div align="right">
                 <div align="right"><span class="Encabezado_reporte">
-                  <?  echo ' '; ?>
+                  <?php  echo ' '; ?>
                 </span></div>
               </div></td>
               <td><div align="right"><span class="Encabezado_reporte">
-                <?  echo ' '; ?>
+                <?php  echo ' '; ?>
               </span></div></td>
 			  <td><div align="right"><span class="Encabezado_reporte">
-			    <?  echo ' '; ?>
+			    <?php  echo ' '; ?>
 			  </span></div></td>
-              <td <?Php echo $rojo; ?>><div align="right"><span class="Encabezado_reporte"><? echo "$ ".formato_numero($Saldo_actual,2,1);?></span></div>              </td>
-              <td><div align="right"><span class="Encabezado_reporte"><? if($row_rs_stock['Stock']==''){ echo 0;}else{echo $row_rs_stock['Stock'];}?></span></div>              </td>
+              <td <?Php echo $rojo; ?>><div align="right"><span class="Encabezado_reporte"><?php echo "$ ".formato_numero($Saldo_actual,2,1);?></span></div>              </td>
+              <td><div align="right"><span class="Encabezado_reporte"><?php if($row_rs_stock['Stock']==''){ echo 0;}else{echo $row_rs_stock['Stock'];}?></span></div>              </td>
 	        </tr>
-    		<? 
+    		<?php 
 			
 			$Precio_Compra=0;
 			$Tota_Salida=0;
@@ -441,41 +441,41 @@ mensaje_requerido();
 						$observacion=$row_rs_docum['Aju_Obs'];
 					}?>
 	        <tr>
-              <td align="center"><? echo $row_rs_consulta['Kar_Fec']; ?></td>
-              <td align="center">&nbsp;<? echo $documento; ?></td>
-              <td align="center"><? echo $numero; ?></td>
-              <td align="center"><? echo $Tipo_Comprobante; ?></td>
-              <td title="<? echo $observacion; ?>" style="white-space:nowrap;overflow:hidden;"><? echo $observacion; ?> </td>
-              <td><div align="right"><? echo $row_rs_consulta['Kar_Can']; ?></div></td>
-              <td><div align="right"><? echo $row_rs_consulta['Kar_Sal']; 
+              <td align="center"><?php echo $row_rs_consulta['Kar_Fec']; ?></td>
+              <td align="center">&nbsp;<?php echo $documento; ?></td>
+              <td align="center"><?php echo $numero; ?></td>
+              <td align="center"><?php echo $Tipo_Comprobante; ?></td>
+              <td title="<?php echo $observacion; ?>" style="white-space:nowrap;overflow:hidden;"><?php echo $observacion; ?> </td>
+              <td><div align="right"><?php echo $row_rs_consulta['Kar_Can']; ?></div></td>
+              <td><div align="right"><?php echo $row_rs_consulta['Kar_Sal']; 
 			  										$Tota_Salida=$Tota_Salida+$row_rs_consulta['Kar_Sal'];
 			  ?></div></td>
-              <td><div align="right"><? echo  "$ ".formato_numero($row_rs_consulta['Precio_ent'],2,1); ?></div></td>
-			  <td><div align="right"><? echo "$ ".formato_numero($row_rs_consulta['Precio_sal'],2,1); 
+              <td><div align="right"><?php echo  "$ ".formato_numero($row_rs_consulta['Precio_ent'],2,1); ?></div></td>
+			  <td><div align="right"><?php echo "$ ".formato_numero($row_rs_consulta['Precio_sal'],2,1); 
 			  		$Precio_Compra=$Precio_Compra+$row_rs_consulta['Precio_sal'];
 			  ?> </div></td>
-              <? if($Saldo_actual+$row_rs_consulta['Saldo']<0){$rojo1 ="style='color:red;'";}else{$rojo1="";}?>
-              <td <?Php echo $rojo1; ?> ><div align="right"><? echo "$ ".formato_numero($Saldo_actual=$Saldo_actual+$row_rs_consulta['Saldo'],2,1); ?></div>              </td>
-              <td><div align="right"><? echo $Stock_actual=$Stock_actual+$row_rs_consulta['Stock']; ?></div>              </td>
+              <?php if($Saldo_actual+$row_rs_consulta['Saldo']<0){$rojo1 ="style='color:red;'";}else{$rojo1="";}?>
+              <td <?Php echo $rojo1; ?> ><div align="right"><?php echo "$ ".formato_numero($Saldo_actual=$Saldo_actual+$row_rs_consulta['Saldo'],2,1); ?></div>              </td>
+              <td><div align="right"><?php echo $Stock_actual=$Stock_actual+$row_rs_consulta['Stock']; ?></div>              </td>
 	        </tr>
-    	<?  } //FIN foreach($rs_consulta as $row_rs_consulta){?>
+    	<?php  } //FIN foreach($rs_consulta as $row_rs_consulta){?>
 	      </table></td>
         </tr>
         <tr>
           <td><table width="88%" height="22" border="1" cellpadding="0" cellspacing="0" bordercolor="#000000">
               <tr>
                 <td width="20%"><span class="Encabezado_reporte">Stock actual:
-                    <?	if($Stock_actual<>0){ echo  $Stock_actual;}else{echo '0';}	?>
+                    <?php	if($Stock_actual<>0){ echo  $Stock_actual;}else{echo '0';}	?>
                 </span></td>
-                <td width="20%" style="color:red" class="Encabezado_reporte">Saldo actual:                  <? if($Saldo_actual<>0){echo "$ ".formato_numero($Saldo_actual,2,1) ;	}else{echo '0';} ?></td>
+                <td width="20%" style="color:red" class="Encabezado_reporte">Saldo actual:                  <?php if($Saldo_actual<>0){echo "$ ".formato_numero($Saldo_actual,2,1) ;	}else{echo '0';} ?></td>
                 <td width="60%" class="Encabezado_reporte"><table width="117%" border="0" cellpadding="0" cellspacing="0">
                   <tr>
-                    <td width="234">Promedio Ponderado: <? echo $Precio_Compra.' / '.$Tota_Salida.' = ';		
+                    <td width="234">Promedio Ponderado: <?php echo $Precio_Compra.' / '.$Tota_Salida.' = ';		
 					if( $Tota_Salida==0){echo 0;}else{echo formato_numero(($Precio_Compra/$Tota_Salida),2,1); }	?></td>
                     <td width="272">Articulo  final : 
-                      <? if($Stock_actual<>0){echo  $Stock_actual.'   ' ;	}else {	echo '0'.'   ';}?>x <? if ($Tota_Salida==0){echo 0; }else{echo '  '.formato_numero(($Precio_Compra/$Tota_Salida),2,1).' ' ;}
+                      <?php if($Stock_actual<>0){echo  $Stock_actual.'   ' ;	}else {	echo '0'.'   ';}?>x <?php if ($Tota_Salida==0){echo 0; }else{echo '  '.formato_numero(($Precio_Compra/$Tota_Salida),2,1).' ' ;}
 ?>
-= <? if ($Tota_Salida==0){echo 0;}else{echo formato_numero(($Precio_Compra/$Tota_Salida)* $Stock_actual,2,1).' '; }
+= <?php if ($Tota_Salida==0){echo 0;}else{echo formato_numero(($Precio_Compra/$Tota_Salida)* $Stock_actual,2,1).' '; }
 		?>		</td>
                   </tr>
                 </table>
@@ -486,15 +486,15 @@ mensaje_requerido();
              <button  name="bnt_print" id="bnt_print" type="submit" class="btn btn-primary start" value="Imprimir" title="Imprimir" >
                   <i class='icon-print icon-white'></i> <span>Imprimir</span>
              </button>  
-            <input border="0" name="fech_ini" type="hidden" id="fech_ini" value="<? echo $ini; ?>" size="15" maxlength="30" />
-            <input border="0" name="fech_fin" type="hidden" id="fech_fin" value="<? echo $fin; ?>" size="15" maxlength="30" />
-            <input border="0" name="codigo" type="hidden" id="codigo" value="<? echo $Ite_Cod; ?>" size="15" maxlength="30" />
+            <input border="0" name="fech_ini" type="hidden" id="fech_ini" value="<?php echo $ini; ?>" size="15" maxlength="30" />
+            <input border="0" name="fech_fin" type="hidden" id="fech_fin" value="<?php echo $fin; ?>" size="15" maxlength="30" />
+            <input border="0" name="codigo" type="hidden" id="codigo" value="<?php echo $Ite_Cod; ?>" size="15" maxlength="30" />
 		  </td>
         </tr>
 		</table>
         <br />
 </form>
-<? } ?>
+<?php } ?>
 	</td>
     </tr>
 </table>

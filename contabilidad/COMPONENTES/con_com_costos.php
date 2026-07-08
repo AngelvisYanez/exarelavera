@@ -42,7 +42,7 @@
   <td class="Fondo"><?PHP echo $row_rs_lst_costo['Pld_Des']; ?>
   <input name="datos_ch[<?php echo $i; ?>,2]" id="datos_ch[<?php echo $i; ?>,2]" type="hidden" value="<?PHP echo $row_rs_lst_costo['Pld_Des']; ?>">
   </td>
-  <td class="Fondo"><? if ($row_rs_recur['Pld_Des'] != ""){ echo $row_rs_recur['Pld_Des']." <strong>(".$row_rs_grupo['Pld_Des'].")</strong>"; }
+  <td class="Fondo"><?php if ($row_rs_recur['Pld_Des'] != ""){ echo $row_rs_recur['Pld_Des']." <strong>(".$row_rs_grupo['Pld_Des'].")</strong>"; }
   else{ echo "&nbsp;"; } ?>
 	<input name="datos_ch[<?php echo $i; ?>,3]"  id="datos_ch[<?php echo $i; ?>,3]" type="hidden" value="<?PHP echo $row_rs_grupo['Pld_Des']; ?>">
   </td>
@@ -53,7 +53,7 @@
   <input name="datos_ch[<?php echo $i; ?>,5]"  id="datos_ch[<?php echo $i; ?>,5]" type="hidden" value="<?PHP echo $row_rs_lst_costo['Pld_Cod']; ?>">
   
   </td>
-	<td align="left" width="20"><? $suma=$suma + $row_rs_lst_costo['Tdc_Por'];?>
+	<td align="left" width="20"><?php $suma=$suma + $row_rs_lst_costo['Tdc_Por'];?>
 	      <input id="quitar_fila" type="button" class="BotonEliminar" name="quitar_fila" value="X" onClick="quitar_fila_cost(this)" title="Eliminar">
 	</td>
 	  </tr>

@@ -452,12 +452,12 @@ if(isset($uploadfoto)){
                                                     <option value=""></option>
 
                                                     <?Php foreach($row_rs_tia_tip as $row){ ?>
-                                                        <optgroup label="<?Php echo utf8_decode($row['descripcion']); ?>">
+                                                        <optgroup label="<?Php echo mb_convert_encoding($row['descripcion'], 'ISO-8859-1', 'UTF-8'); ?>">
                                                             <?php $row_rs_tia_det = $obBD_con1->getArrayConsulta(645, $row['Tia_Cod'], $obBD_conexion);?>
 
                                                             <?Php foreach($row_rs_tia_det as $rows){ ?>
                                                             <option value="<?php echo $rows['Tia_Cod'];?>">
-                                                                <?Php echo utf8_decode($rows['descripcion']); ?>     
+                                                                <?Php echo mb_convert_encoding($rows['descripcion'], 'ISO-8859-1', 'UTF-8'); ?>     
                                                             </option>
                                                             <?Php } ?>
 
@@ -477,14 +477,14 @@ if(isset($uploadfoto)){
                                                     <option value=""></option>
                                                     <?Php foreach($areas as $area)
                                                         { ?>
-                                                        <optgroup label="<?Php echo utf8_decode($area['Are_Des']); ?>">
+                                                        <optgroup label="<?Php echo mb_convert_encoding($area['Are_Des'], 'ISO-8859-1', 'UTF-8'); ?>">
 
                                                             <!-- Consultar departamentos de las areas -->
                                                             <?php $departamentos = $obBD_con1->getArrayConsulta(707, array('Are_Cod' => $area['Are_Cod'], 'Emp_Cod' => $Ses_Emp_Cod), $obBD_conexion);?>
                                                             <?Php                                         
                                                             foreach($departamentos as $departamento)
                                                             { ?>
-                                                            <option value="<?php echo $departamento['Dep_Cod'];?>"><?Php echo utf8_decode($departamento['Dep_Des']); ?></option>
+                                                            <option value="<?php echo $departamento['Dep_Cod'];?>"><?Php echo mb_convert_encoding($departamento['Dep_Des'], 'ISO-8859-1', 'UTF-8'); ?></option>
                                                             <?Php } ?>
                                                         </optgroup>
                                                     <?Php } ?>
@@ -1083,7 +1083,7 @@ if(isset($uploadfoto)){
         });
         $("#tabs").tabs({
             activate:function (event, ui) {
-                var $activeTab = $('#tabs').tabs('option','active');
+                public $activeTab = $('#tabs').tabs('option','active');
                 if($activeTab === 4){calcula_depreciacion();}
             }
         });

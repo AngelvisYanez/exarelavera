@@ -161,16 +161,16 @@ if($ajax_mar_val==1)
 		?>  <table width='85%' border='0' cellpadding='0' cellspacing='0'>
 			 <tr>
 			   <td width='15%' align="right"><span class='Etiqueta1'><span class='Asterisco'>* </span>No Fact.:</span></td>			   
-			   <td width='15%'><input name="Vet_Num" type="text" id="Vet_Num" size="7" maxlength="7" value="<? echo $Vet_Num;?>" style="text-align:right" onKeyPress="return validar_numeric(event)" onBlur="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_notif=1&Aut_Cod=<? echo $row_rs_autorizaci['Aut_Cod']; ?>&SecIni=<? echo $row_rs_autorizaci['Aut_Ini']; ?>&SecFin=<? echo $row_rs_autorizaci['Aut_Fin']; ?>&AutoSri=<? echo $row_rs_autorizaci['Aut_Sri']; ?>&NumFact='+ this.value,'div_notif')">
-                                <input name='Aut_Cod' type='hidden' id='Aut_Cod' value='<? echo $row_rs_autorizaci['Aut_Cod']?>'>
+			   <td width='15%'><input name="Vet_Num" type="text" id="Vet_Num" size="7" maxlength="7" value="<?php echo $Vet_Num;?>" style="text-align:right" onKeyPress="return validar_numeric(event)" onBlur="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_notif=1&Aut_Cod=<?php echo $row_rs_autorizaci['Aut_Cod']; ?>&SecIni=<?php echo $row_rs_autorizaci['Aut_Ini']; ?>&SecFin=<?php echo $row_rs_autorizaci['Aut_Fin']; ?>&AutoSri=<?php echo $row_rs_autorizaci['Aut_Sri']; ?>&NumFact='+ this.value,'div_notif')">
+                                <input name='Aut_Cod' type='hidden' id='Aut_Cod' value='<?php echo $row_rs_autorizaci['Aut_Cod']?>'>
                                 <input name="Aut_Sri" type="hidden" id="Aut_Sri" value="<?Php echo $row_rs_autorizaci['Aut_Sri']; ?>">
 			   <td align='left' width='10%'><div id='div_notif'>&nbsp;</div></td>
 			   </td>
 
 			   <td width='10%' align="right"><span class='Etiqueta1'>Autorizaci&oacute;n:</span></td>
-			   <td align='left' width='35%'><? echo $info;?></td>		
+			   <td align='left' width='35%'><?php echo $info;?></td>		
 			 </tr>
-		   </table><?		   		  
+		   </table><?php		   		  
 		}else{
 			echo "<span class='Alertas3'>&iexcl;El documento [".$Vet_Num."] esta fuera de rango, usted esta trabajando con el rango [".$row_rs_autorizaci['Aut_Ini']."] al [".$row_rs_autorizaci['Aut_Fin']."]!</span>";
 		}
@@ -191,8 +191,8 @@ if(isset($ajax_notif))
 	{		
 	?>
     	<img src='../../mascaras/model1/imagenes/32x32/cancel.gif' width='16' height='16' type='image'/>
-        <script language="javascript">alert("¿Ya existe el numero "+ <? echo $NumFact;?> +"!"); document.getElementById("Vet_Num").selectionStart = 0;document.getElementById("Vet_Num").value='<?php echo $Vet_Num; ?>';</script>
-	<?		
+        <script language="javascript">alert("¿Ya existe el numero "+ <?php echo $NumFact;?> +"!"); document.getElementById("Vet_Num").selectionStart = 0;document.getElementById("Vet_Num").value='<?php echo $Vet_Num; ?>';</script>
+	<?php		
 	}else{
 		if($SecIni<=$NumFact && $SecFin>=$NumFact)
 		{
@@ -200,15 +200,15 @@ if(isset($ajax_notif))
 			  <script>
 			  	$('#bt_guardar').attr('disabled',false);
 			  </script>
-			<?			
+			<?php			
 		}else{
 			?>
               <img src='../../mascaras/model1/imagenes/32x32/cancel.gif' width='16' height='16' type='image'/>
-              <script language="javascript">alert("¿N&uacute;mero fuera de rango (Rango valido: "+ <? echo $SecIni;?> +" al "+ <? echo $SecFin;?> +")!"); document.getElementById("Vet_Num").value='';
+              <script language="javascript">alert("¿N&uacute;mero fuera de rango (Rango valido: "+ <?php echo $SecIni;?> +" al "+ <?php echo $SecFin;?> +")!"); document.getElementById("Vet_Num").value='';
 			  document.getElementById("Vet_Num").selectionStart = 0;document.getElementById("Vet_Num").value='<?php echo $Vet_Num; ?>'; 
               $('#bt_guardar').attr('disabled',true);
               </script>
-            <?		
+            <?php		
 		}	
 	}	
 	exit();	
@@ -227,7 +227,7 @@ if(isset($docBanco))
 		{	?><span class="Alertas3">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/gtk-no.gif" width="20" height="20" type="image"/><?Php
 			echo "&nbsp;&iexcl;Ya existe el n&uacute;mero de documento!"; ?></span><?Php	
 		}else{
-			?>&nbsp;<img src="../../mascaras/model1/imagenes/ok-s.gif"><?
+			?>&nbsp;<img src="../../mascaras/model1/imagenes/ok-s.gif"><?php
 		}
     }
 	exit();
@@ -243,7 +243,7 @@ if (isset($cmb))
 	?>	
 	<input type="hidden" id="add_auxi" value="<?Php echo $row_rs_facttipo['Pag_Cod']; ?>">
 	<!--<select name="<?php echo $nom_pag; ?>" id="<?php echo $nom_pag; ?>" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?cmb_tipo=1&Pag_Cod=' + this.value + '&nom_ban=<?php echo $nom_ban; ?>','<?php echo $div_banco; ?>')">-->
-    	<? foreach($row_rs_facttipo as $row)
+    	<?php foreach($row_rs_facttipo as $row)
 		{ ?>
     		<option  value="<?Php echo $row['Pag_Cod']; ?>"><?PHP echo $row['Pag_Des']; ?></option>
     	<?PHP 
@@ -271,15 +271,15 @@ if (isset($cmb_tipo))
         if($rs_infoEmpresa['Cof_Con']=='S')
 	{ 
 	   if(count($row_rs_bancos)==0){ ?><option value="NULL">(Ninguno)</option><?php } ?>
-	   <? 
+	   <?php 
 	   foreach ($row_rs_bancos as $row)
 	   {?>
 			<option value="<?php echo $row['Ban_Cod']?>"><?php echo $row['Pld_Des']?></option>
-	   <? 
+	   <?php 
 	   } //Fin del $row_rs_bancos 
         }else{ ?><option value="NULL">(Ninguno)</option><?php }  ?>
 	<!--</select>	-->
-	<? 
+	<?php 
 	exit();
 }//Fin del if (isset($cmb))
 /** 
@@ -303,7 +303,7 @@ if (isset($deudas))
 	$Com_Tipo = 1;
 ?>	
 	<?php include("../COMPONENTES/tes_com_deudas.php");?>	
-<?
+<?php
   exit();
 }// Cierre de las deudas de los estudiantes 
 
@@ -363,11 +363,11 @@ if($total_rs_apercaja!=0)
 		$Pec_Cod=$row_rs_codPlaPeri['Pec_Cod'];
 	}else{
 		$correcto=0;
-		?><script language="javascript">alert("¡La fecha de Caja, no esta dentro del rango de la Autorización de ventas!");</script> <?
+		?><script language="javascript">alert("¡La fecha de Caja, no esta dentro del rango de la Autorización de ventas!");</script> <?php
 	}
 }else{
 	$correcto=0;
-	?><script language="javascript">alert("¡No existe apertura de Caja!");</script><?
+	?><script language="javascript">alert("¡No existe apertura de Caja!");</script><?php
 }
 
 
@@ -1362,7 +1362,7 @@ if($Ses_Prs_Cod==1){
                         .btn-edit .icon-pencil{margin-left: -4px;margin-top: -3px;}
                     </style>
 	</HEAD>
-    <BODY <? if ($total_rs_vendedor > 0){if ($total_rs_apercaja > 0){if ($total_rs_autorizaci > 0){if ($Vet_Num <= $row_rs_autorizaci['Aut_Fin']){ /*if ($codigo > 0){ */ ?> onLoad="setInterval('parpadeo(\'txt_blink\')',700);"<? /*}*/}}}}?> >	
+    <BODY <?php if ($total_rs_vendedor > 0){if ($total_rs_apercaja > 0){if ($total_rs_autorizaci > 0){if ($Vet_Num <= $row_rs_autorizaci['Aut_Fin']){ /*if ($codigo > 0){ */ ?> onLoad="setInterval('parpadeo(\'txt_blink\')',700);"<?php /*}*/}}}}?> >	
     <div id="set1">
 <?Php //
 /** 
@@ -1374,18 +1374,18 @@ if (isset($hdd_save) && !isset($hdd_volver))
         $campo="Cli_Cod";
 	?>
 	<script language="javascript">
-		<? if(isset($hdd_comprobante)){?>					
-		windows('<?php echo $hdd_comprobante;?>?Com_Num=<? echo $Com_Num; ?>&Com_Cod=<? echo $Com_Cod; ?>&codigo=<? echo $Com_Cod; ?>&tabla=<? echo $tabla; ?>&tipo=<? echo $op; ?>&campo=<? echo $campo; ?>&Pec_Cod=<?php echo $Pec;?>','',800,800,'no','yes','yes','yes'); 					
+		<?php if(isset($hdd_comprobante)){?>					
+		windows('<?php echo $hdd_comprobante;?>?Com_Num=<?php echo $Com_Num; ?>&Com_Cod=<?php echo $Com_Cod; ?>&codigo=<?php echo $Com_Cod; ?>&tabla=<?php echo $tabla; ?>&tipo=<?php echo $op; ?>&campo=<?php echo $campo; ?>&Pec_Cod=<?php echo $Pec;?>','',800,800,'no','yes','yes','yes'); 					
 		<?Php } ?>
 	</script>
 	<script language="javascript">
         windows('<?Php echo $hdd_documento;  ?>?Vet_Cod=<?Php echo $Vet_Cod; ?>','', 800,600,'yes', 'yes', 'yes', 'no');			
     </script>            
     
-	<?	
+	<?php	
 	if($Ses_Prs_Cod==1){?>
     	<script language="javascript"> //windows('/facturacion/chompipa/fac_pri_fac_chompipa_detalle_1.2.php?Vet_Cod=<?Php //echo $Vet_Cod; ?>','', 800,600,'yes', 'yes', 'yes', 'no');</script>            
-    <? }
+    <?php }
 		 
 }//Fin del if (isset($hdd_save))
 /**
@@ -1413,7 +1413,7 @@ if (count($row_rs_vendedor) > 0)
  </tr>
 <tr>
   <td colspan="3">
-  <?
+  <?php
 	$a=0;
 	if($hora >="18:00:00")
 	{
@@ -1440,7 +1440,7 @@ if (count($row_rs_vendedor) > 0)
   <table>
   	<tr>	  
 	   <td>
-		<? 
+		<?php 
 		 	if($a!=0)
 			{
 				echo blink("ALERTA(S) :","txt_blink","#FFFFFF","#FF0000");
@@ -1449,9 +1449,9 @@ if (count($row_rs_vendedor) > 0)
 			}
 		?>
 		</td>
-		<? for($j=1;$j<=$a;$j++){?>
-			<td class="Texto_Reporte_Rojo"><h3><? echo str_repeat("&nbsp;", 10)."* ".$alertas[$j];?></h3></td>
-		<? }?>	  
+		<?php for($j=1;$j<=$a;$j++){?>
+			<td class="Texto_Reporte_Rojo"><h3><?php echo str_repeat("&nbsp;", 10)."* ".$alertas[$j];?></h3></td>
+		<?php }?>	  
 	</tr>	
   </table>	
   </td>
@@ -1469,7 +1469,7 @@ if (count($row_rs_vendedor) > 0)
 	*/
 	$thisPost->startPost();
  ?>
-<input type="hidden" id="CajFec" name="CajFec" value="<? echo $CajFec;?>" />
+<input type="hidden" id="CajFec" name="CajFec" value="<?php echo $CajFec;?>" />
 <FIELDSET>
 <LEGEND>
 <label class="Titulos2">Datos del Cliente </label>
@@ -1525,15 +1525,15 @@ if (count($row_rs_vendedor) > 0)
 	 <table width="100%" border="0" cellpadding="0" cellspacing="0">
 	<tr>
 	  <td width="11%" class="Etiqueta1">R.U.C:</td>
-	  <td width="89%" class="LetraNegra">&nbsp;<? echo $row_rs_cliente['Cli_Ruf']; ?></td>
+	  <td width="89%" class="LetraNegra">&nbsp;<?php echo $row_rs_cliente['Cli_Ruf']; ?></td>
 	</tr>
 	<tr>  
 	  <td class="Etiqueta1">Representante:</td>
-	  <td colspan="3" class="LetraNegra">&nbsp;<? echo $row_rs_cliente['Cli_Fac']; ?></td>
+	  <td colspan="3" class="LetraNegra">&nbsp;<?php echo $row_rs_cliente['Cli_Fac']; ?></td>
 	</tr>
 	<tr>
 	  <td class="Etiqueta1">Direcci&oacute;n:</td>
-	  <td colspan="5" class="LetraNegra">&nbsp;<? echo $row_rs_cliente['Cli_Dir']; ?></td>
+	  <td colspan="5" class="LetraNegra">&nbsp;<?php echo $row_rs_cliente['Cli_Dir']; ?></td>
 	  </tr>
 		</table>
   </FIELDSET>
@@ -1558,7 +1558,7 @@ if (count($row_rs_vendedor) > 0)
 		$row_tipo_compr = $obBD_con1->getArrayConsulta(1036, '', $obBD_conexion);	
 	?>
         
-        <select name="Tic_Cod" id="Tic_Cod" style="width: 250px;" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mar_val=1&punto=<? echo $row_rs_apercaja['Pun_Cod']; ?>&SucCod=<? echo $Ses_Suc_Cod;?>&Tic_Cod='+ document.getElementById('Tic_Cod').value +'&fechaCja=<? echo $row_rs_apercaja['Caj_Fec'] ; ?>','contenedormarca')">
+        <select name="Tic_Cod" id="Tic_Cod" style="width: 250px;" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mar_val=1&punto=<?php echo $row_rs_apercaja['Pun_Cod']; ?>&SucCod=<?php echo $Ses_Suc_Cod;?>&Tic_Cod='+ document.getElementById('Tic_Cod').value +'&fechaCja=<?php echo $row_rs_apercaja['Caj_Fec'] ; ?>','contenedormarca')">
             <option value="">Seleccione...</option>
         <?Php
 	foreach($row_tipo_compr as $row)
@@ -1590,7 +1590,7 @@ if (count($row_rs_vendedor) > 0)
         <td width="8%"><input name="Vet_Num" type="text" id="Vet_Num" size="7" maxlength="7" value="<?Php echo $Vet_Num; ?>" style="text-align:right" onKeyPress="return validar_numeric(event)">
         </td>
         <td width="27%" class="Etiqueta1">Autorizaci&oacute;n:</td>
-        <td width="40%" class="LetraNegra"><? echo $row_rs_autorizaci['Aut_Sri']?><input name="Aut_Sri" type="text" id="Aut_Sri" value="<?Php echo $row_rs_autorizaci['Aut_Sri']; ?>"></td>
+        <td width="40%" class="LetraNegra"><?php echo $row_rs_autorizaci['Aut_Sri']?><input name="Aut_Sri" type="text" id="Aut_Sri" value="<?Php echo $row_rs_autorizaci['Aut_Sri']; ?>"></td>
         </tr>
       </table>
       </div>
@@ -1802,10 +1802,10 @@ if (count($row_rs_vendedor) > 0)
 		        <td width="1%" height="54">&nbsp;</td>
 		        <td width="40%"><button type="button" name="button2" id="button2" class="btn btn-success fileinput-button" title="Buscar Item" 
         onclick="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_rubro=1&amp;ajax_Cli_Cod=<?php echo $codigo ?>&Pec=<?php echo $Pec_Cod ?>','ajax_modal');"> <i class="icon-plus icon-white"></i> <span>Items</span> </button></td>
-		        <td width="41%"><? if(1==0){ ?>
+		        <td width="41%"><?php if(1==0){ ?>
 		          <button type="button" name="button1" id="button1" class="btn btn-success fileinput-button" title="Ver Deudas" 
         onclick="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?deudas=1&amp;ajax_Cli_Cod=<?php echo $codigo; ?>','ajax_modal');"> <i class="icon-plus icon-white"></i> <span>Deudas</span> </button>
-		          <? }?></td>
+		          <?php }?></td>
 		        <td width="18%"><input name="cantmodal" id="cantmodal" type="hidden" value="2" /></td>
 		        <input id="nfilas" name="nfilas" type="hidden" value="0" />
 		        </tr>
@@ -1863,9 +1863,9 @@ if (count($row_rs_vendedor) > 0)
   <tr>
     <td class="Etiqueta1" valign="top"><span class="Asterisco">* </span>Forma pago SRI:</td>
     <td colspan="2" valign="top" class="LetraNegra">
-    <? $rs_factForPagSri = $obBD_con1->getArrayConsulta(1307, '', $obBD_conexion);?>
+    <?php $rs_factForPagSri = $obBD_con1->getArrayConsulta(1307, '', $obBD_conexion);?>
     <select name="ForPagCodSri" id="ForPagCodSri">
-	<?	foreach($rs_factForPagSri as $row)
+	<?php	foreach($rs_factForPagSri as $row)
 		{ ?>
 		  <option value="<?Php echo $row['Tpc_Cod'];?>"><?Php echo $row['Tpc_Sri'].'  -  '.$row['Tpc_Des'];   ?></option>
 		  <?Php 
@@ -2127,7 +2127,7 @@ if (count($row_rs_vendedor) > 0)
 <script>
     $(document).ready(function(){
         if($('#Tic_Cod').val()>0){
-            ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mar_val=1&punto=<? echo $row_rs_apercaja['Pun_Cod']; ?>&SucCod=<? echo $Ses_Suc_Cod;?>&Tic_Cod='+ document.getElementById('Tic_Cod').value +'&fechaCja=<? echo $row_rs_apercaja['Caj_Fec'] ; ?>','contenedormarca');
+            ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mar_val=1&punto=<?php echo $row_rs_apercaja['Pun_Cod']; ?>&SucCod=<?php echo $Ses_Suc_Cod;?>&Tic_Cod='+ document.getElementById('Tic_Cod').value +'&fechaCja=<?php echo $row_rs_apercaja['Caj_Fec'] ; ?>','contenedormarca');
         }
         $('#Prs_Ced').focus();
     });
@@ -2202,7 +2202,7 @@ else
             if((response['Vet_Num']*1)>0) 
             {
                 alert('El número de factura ya esta REGISTRADO..A continuación el sistema proporcionará uno NUEVO..!!');
-                ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mar_val=1&punto=<? echo $row_rs_apercaja['Pun_Cod']; ?>&SucCod=<? echo $Ses_Suc_Cod;?>&Tic_Cod='+ document.getElementById('Tic_Cod').value +'&fechaCja=<? echo $row_rs_apercaja['Caj_Fec'] ; ?>','contenedormarca');
+                ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mar_val=1&punto=<?php echo $row_rs_apercaja['Pun_Cod']; ?>&SucCod=<?php echo $Ses_Suc_Cod;?>&Tic_Cod='+ document.getElementById('Tic_Cod').value +'&fechaCja=<?php echo $row_rs_apercaja['Caj_Fec'] ; ?>','contenedormarca');
                 $('#bt_guardar').attr('disabled',false);
             }else{
                 $("#form22").attr('action',"<?Php $_SERVER['PHP_SELF']; ?>");

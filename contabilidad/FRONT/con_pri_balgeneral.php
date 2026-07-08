@@ -79,13 +79,13 @@ $obBD_con1 =  new Class_Log_Datos_Con;
                       <td valign="top" align="left">__________________<br>        </td>
                     </tr>
                     <tr>
-                      <td height="9" align="left" valign="top">GERENTE<p></p><p style="margin:-1.5% 0;"><? echo $infoFirmas['Emp_Ren'];?></p><p></p><p style="margin:-1.5% 0;">CI:&nbsp;<? echo $infoFirmas['Emp_Rre'];?></p></td>
+                      <td height="9" align="left" valign="top">GERENTE<p></p><p style="margin:-1.5% 0;"><?php echo $infoFirmas['Emp_Ren'];?></p><p></p><p style="margin:-1.5% 0;">CI:&nbsp;<?php echo $infoFirmas['Emp_Rre'];?></p></td>
                       <td align="center" valign="top">&nbsp;</td>
                       <td align="left" valign="top">CONTADOR
                         <p></p>
-                        <p style="margin:-1.5% 0;"><? echo $infoFirmas['Emp_Con'];?></p>
+                        <p style="margin:-1.5% 0;"><?php echo $infoFirmas['Emp_Con'];?></p>
                         <p></p>
-                        <p style="margin:-1.5% 0;">RUC:&nbsp;<? echo $infoFirmas['Emp_Rco'];?></p></td>
+                        <p style="margin:-1.5% 0;">RUC:&nbsp;<?php echo $infoFirmas['Emp_Rco'];?></p></td>
                     </tr>
                     <tr>
                       <td height="10" colspan="3" align="left" valign="top"><hr /></td>

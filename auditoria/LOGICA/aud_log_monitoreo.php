@@ -38,7 +38,7 @@ class Class_Log_Datos extends MysqlDatos{
 	 * @param Class_Log_Conexion_Cli $obBD para realizar la conexcion correspondiente
 	 * @return result si existen datos de retorno
 	 */
-	function consultasobBD($sen_sql,$param, $obBD)
+	function consultasobBD($sen_sql,$param, $obBD = null)
 	{
 		$Par_Sql= $this->parametros($param);
 		return $this->consulta(sentencias($sen_sql,$Par_Sql), $obBD->conexion);
@@ -52,7 +52,7 @@ class Class_Log_Datos extends MysqlDatos{
 	 * @param Class_Log_Conexion_Cli $obBD para realizar la conexcion correspondiente
 	 * @return array $row fila de datos
 	 */
-	function getRowConsulta($sen_sql,$param,$obBD)
+	function getRowConsulta($sen_sql,$param,$obBD = null)
 	{
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);
 
@@ -71,7 +71,7 @@ class Class_Log_Datos extends MysqlDatos{
 	 * @param Class_Log_Datos_Cli $obDT para la abtraccion de los datos
 	 * @return array $array arreglo de datos asociados
 	 */
-	function getArrayConsulta($sen_sql,$param,$obBD)
+	function getArrayConsulta($sen_sql,$param,$obBD = null)
 	{
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);
 

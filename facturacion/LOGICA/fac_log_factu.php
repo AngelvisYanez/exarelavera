@@ -156,13 +156,13 @@ class Class_Log_Datos_Factu extends MysqlDatosContab
             }
             unset($row);
             $armado_xml .= "<" . $Eti_infoFac[0] . ">" . $rs_infoCliente['Ret_Fec'] . "</" . $Eti_infoFac[0] . ">" .             //<fechaEmision>
-                "<" . $Eti_infoFac[1] . ">" . utf8_encode($rs_infoEmpresa['Suc_Dir']) . "</" . $Eti_infoFac[1] . ">";       //<dirEstablecimiento>
+                "<" . $Eti_infoFac[1] . ">" . mb_convert_encoding($rs_infoEmpresa['Suc_Dir'], 'UTF-8', 'ISO-8859-1') . "</" . $Eti_infoFac[1] . ">";       //<dirEstablecimiento>
             if ($rs_infoEmpresa['Emp_Reg'] != '') {
                 $armado_xml .= "<" . $Eti_infoFac[2] . ">" . $rs_infoEmpresa['Emp_Reg'] . "</" . $Eti_infoFac[2] . ">";       //<contribuyenteEspecial>
             }
             $armado_xml .= "<" . $Eti_infoFac[3] . ">" . $rs_infoEmpresa['Emp_Cnt'] . "</" . $Eti_infoFac[3] . ">" .         //<obligadoContabilidad>
                 "<" . $Eti_infoFac[4] . ">" . $rs_infoCliente['Ide_Prv'] . "</" . $Eti_infoFac[4] . ">" .                  //<tipoIdentificacionSujetoRetenido>
-                "<" . $Eti_infoFac[5] . ">" . utf8_encode($rs_infoCliente['Prs_Nom'] . " " . $rs_infoCliente['Prs_Ape']) . "</" . $Eti_infoFac[5] . ">" . //<razonSocialSujetoRetenido> 
+                "<" . $Eti_infoFac[5] . ">" . mb_convert_encoding($rs_infoCliente['Prs_Nom'] . " " . $rs_infoCliente['Prs_Ape'], 'UTF-8', 'ISO-8859-1') . "</" . $Eti_infoFac[5] . ">" . //<razonSocialSujetoRetenido> 
                 "<" . $Eti_infoFac[6] . ">" . $rs_infoCliente['Prs_Ced'] . "</" . $Eti_infoFac[6] . ">" .               //<identificacionSujetoRetenido>
                 "<" . $Eti_infoFac[7] . ">" . $data['PeriodoFiscal'] . "</" . $Eti_infoFac[7] . ">"; //<periodoFiscal>
             $armado_xml .= "</" . $Eti_raiz[1] . ">";  //</infoCompRetencion> 	$rs_perContable['PerCon']
@@ -220,7 +220,7 @@ class Class_Log_Datos_Factu extends MysqlDatosContab
                     $Cod_infoAdicional[] = $row['Esq_Cod'];
                 }
                 if ($rs_infoCliente['Prs_Dir'] != '') {
-                    $armado_xml .= "<" . $Eti_infoAdicional[0] . " nombre='Direcci�n'>" . utf8_encode($rs_infoCliente['Prs_Dir']) . "</" . $Eti_infoAdicional[0] . ">";
+                    $armado_xml .= "<" . $Eti_infoAdicional[0] . " nombre='Direcci�n'>" . mb_convert_encoding($rs_infoCliente['Prs_Dir'], 'UTF-8', 'ISO-8859-1') . "</" . $Eti_infoAdicional[0] . ">";
                 }
                 if ($rs_infoCliente['Prs_Tel'] != '') {
                     $armado_xml .= "<" . $Eti_infoAdicional[0] . " nombre='Tel�fono'>" . $rs_infoCliente['Prs_Tel'] . "</" . $Eti_infoAdicional[0] . ">";
@@ -233,7 +233,7 @@ class Class_Log_Datos_Factu extends MysqlDatosContab
                 }
                 $armado_xml .= "</" . $Eti_raiz[3] . ">";  //</infoAdicional>
             }
-            if (!mb_detect_encoding($armado_xml, 'UTF-8', true)) $armado_xml = utf8_encode($armado_xml);
+            if (!mb_detect_encoding($armado_xml, 'UTF-8', true)) $armado_xml = mb_convert_encoding($armado_xml, 'UTF-8', 'ISO-8859-1');
             $armado_xml = '<comprobanteRetencion id="comprobante" version="1.0.0">' . $armado_xml . '</comprobanteRetencion>';
             $buffer = '<?xml version="1.0" encoding="UTF-8"?>' . $armado_xml;
             //var_dump($buffer);

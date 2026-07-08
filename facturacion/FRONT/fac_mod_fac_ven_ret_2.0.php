@@ -1863,7 +1863,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                                         foreach ($tipospago as $row) { ?>
                                         <option value="<?php echo $row['Pag_Cod']; ?>"
                                             data-forcod="<?php echo $row['For_Cod']; ?>">
-                                            <?php echo utf8_decode($row['Pag_Des']); ?>
+                                            <?php echo mb_convert_encoding($row['Pag_Des'], 'ISO-8859-1', 'UTF-8'); ?>
                                         </option><?php } ?>
                                 </select>
 
@@ -1873,7 +1873,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                                     <?php if (isset($bankos))
                                         foreach ($bankos as $row) { ?>
                                         <option value="<?php echo $row['Bak_Cod']; ?>">
-                                            <?php echo utf8_decode($row['Bak_Des']); ?>
+                                            <?php echo mb_convert_encoding($row['Bak_Des'], 'ISO-8859-1', 'UTF-8'); ?>
                                         </option><?php } ?>
                                 </select>
 

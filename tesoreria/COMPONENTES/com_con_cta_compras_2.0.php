@@ -10,7 +10,7 @@
                         <tbody id="tbusqueda">
                           <tr class="Busqueda_contenido_ajax">
                             <td width="20%"><div align="right"><strong>Descripci&oacute;n:</strong></div></td>
-                            <td width="69%"><? 
+                            <td width="69%"><?php 
 
 							?>
                               <input name="txtbuscadorcom" type="text" id="txtbuscadorcom" size="40" maxlength="40" style="text-transform:uppercase" onkeypress="

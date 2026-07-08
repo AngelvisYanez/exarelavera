@@ -38,10 +38,10 @@ if(isset($Adq)){ /*inicio if(isset($Adq)){ */
    if($num_row_rs_iva_bienes>0){ /* inicio if($num_row_rs_iva_bienes>0){  */
      do {  /* inicio do{ */  ?>
   <tr class="Cuerpo_ajax">
-    <td><div align="center"><? echo $row_rs_iva_bienes['Ren_Cod']; ?></div></td>
-    <td><div align="center"><? echo $row_rs_iva_bienes['Ren_Sri']; ?></div></td>
-    <td><div align="left"><? echo $row_rs_iva_bienes['Ren_Con']; ?></div></td>
-    <td width="16%"><div align="center"><? echo $row_rs_iva_bienes['Ren_Por']; ?>
+    <td><div align="center"><?php echo $row_rs_iva_bienes['Ren_Cod']; ?></div></td>
+    <td><div align="center"><?php echo $row_rs_iva_bienes['Ren_Sri']; ?></div></td>
+    <td><div align="left"><?php echo $row_rs_iva_bienes['Ren_Con']; ?></div></td>
+    <td width="16%"><div align="center"><?php echo $row_rs_iva_bienes['Ren_Por']; ?>
       
     </div></td>
     <td align="center">
@@ -49,15 +49,15 @@ if(isset($Adq)){ /*inicio if(isset($Adq)){ */
 onclick="document.getElementById(document.getElementById('Hdd_Ren_Con').value).value = '<?Php echo $row_rs_iva_bienes['Ren_Sri']; ?>'; document.getElementById(document.getElementById('Hdd_Ren_Ide').value).value = '<?Php echo $row_rs_iva_bienes['Ren_Cod']; ?>';
 document.getElementById(document.getElementById('Hdd_Ren_Por').value).value = '<?Php echo $row_rs_iva_bienes['Ren_Por']; ?>'; 
 document.getElementById(document.getElementById('Hdd_Ren_Con').value).focus(); 
-todo_check_renta(<? echo $row_rs_iva_bienes['Ren_Cod']; ?>,<? echo $row_rs_iva_bienes['Ren_Sri']; ?>, <? echo $row_rs_iva_bienes['Ren_Por']; ?>);
+todo_check_renta(<?php echo $row_rs_iva_bienes['Ren_Cod']; ?>,<?php echo $row_rs_iva_bienes['Ren_Sri']; ?>, <?php echo $row_rs_iva_bienes['Ren_Por']; ?>);
 " style="cursor:pointer"  ></td>
   </tr>
-  <?  } while ($row_rs_iva_bienes = mysqli_fetch_assoc($rs_iva_bienes)); /* fin  } while ($row_rs_iva_bienes = mysqli_fetch_assoc($rs_iva_bienes)); */
+  <?php  } while ($row_rs_iva_bienes = mysqli_fetch_assoc($rs_iva_bienes)); /* fin  } while ($row_rs_iva_bienes = mysqli_fetch_assoc($rs_iva_bienes)); */
 	  } else { ?>
   <tr>
     <td colspan="6" class="Alertas"><?Php echo error_alerta("No hay resultados que mostrar", 1); ?></td>
   </tr>
-  <? } /* fin if($num_row_rs_iva_bienes>0){  */ ?>
+  <?php } /* fin if($num_row_rs_iva_bienes>0){  */ ?>
 </table>
 </td>
 </tr>

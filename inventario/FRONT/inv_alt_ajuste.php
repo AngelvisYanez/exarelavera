@@ -66,7 +66,7 @@ if (isset($TiaSelect)) {
     $rs_tpaj = $obBD_con1->getArrayConsulta(3, $Ses_Emp_Cod . '*' . $TiaSelect, $obBD_conexion);
     echo "<option value=''>Selecione...</option>";
     foreach ($rs_tpaj as $row)
-        echo utf8_encode("<option value='$row[Tia_Cod]'>$row[Tia_Des]</option>");
+        echo mb_convert_encoding("<option value='$row[Tia_Cod]'>$row[Tia_Des]</option>", 'UTF-8', 'ISO-8859-1');
     exit();
 }
 if (isset($updateNumber)) {

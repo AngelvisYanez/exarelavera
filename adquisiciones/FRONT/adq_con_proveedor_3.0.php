@@ -103,7 +103,7 @@
    </tr>
    <tr>
     <td>
-   <?
+   <?php
   switch($op)
   {
 	  case 1:
@@ -139,7 +139,7 @@
     </tr>
     </thead>
     <tbody>
-    <?
+    <?php
 	
 	/*
 	 * Array de Proveedores resultante de la busqueda en la base de datos
@@ -161,24 +161,24 @@
       <td align="center"><?Php echo '&nbsp;'.$row['Prv_Cod']; ?></td>
       <td><?Php echo '&nbsp;'.$row['Prs_Ced']; ?></td>
       <td><?Php echo marcar_cadena($txt_busqueda, ($row['Prv_Tic']=='N')?$row['Prs_Ape']." ".$row['Prs_Nom']:$row['Prs_Ape'], '#FFFF00', 1); ?></td>
-      <td align="center"><form name='form' method='post'  action='<? echo $_SERVER['PHP_SELF'];?>'>
+      <td align="center"><form name='form' method='post'  action='<?php echo $_SERVER['PHP_SELF'];?>'>
         <button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="this.form.submit()"> <i class=" icon-arrow-right icon-white"></i> </button>
         <input name="Prv_Cod" id="Prv_Cod" type="hidden" value="<?Php echo $row['Prv_Cod']; ?>">
-        <input name="txt_busqueda2" value="<? echo $txt_busqueda;?>" type="hidden">
-        <input name="op_opciones2" value="<? echo $op_opciones;?>" type="hidden">
+        <input name="txt_busqueda2" value="<?php echo $txt_busqueda;?>" type="hidden">
+        <input name="op_opciones2" value="<?php echo $op_opciones;?>" type="hidden">
       </form></td>
     </tr>
-    <? }}else{?>
+    <?php }}else{?>
     <tr>
 	 <td width="7%" align="center">&nbsp;</td>
 	 <td align="center">&nbsp;</td>
 	 <td align="center"><?Php echo error_alerta(" ¡No hay resultados que mostrar!", 1);?></td>
 	 <td align="center" width="3%">&nbsp;</td>		
    </tr> 
-    <? }?>	
+    <?php }?>	
     </tbody>
   </table>
-  <?
+  <?php
    echo barra_estado($filas);
   ?>
   </FIELDSET>
@@ -195,8 +195,8 @@
 	<label class="Titulos2">Datos del Proveedor</label>
    </LEGEND>
    
-   <form method="post" name= "form" id="form" action="<? echo $_SERVER['PHP_SELF'];?>">
-   <?
+   <form method="post" name= "form" id="form" action="<?php echo $_SERVER['PHP_SELF'];?>">
+   <?php
    	$Row_Persona = $obBD_con1->getRowConsulta(11, $Prv_Cod, $obBD_conexion);
    ?>
    
@@ -225,12 +225,12 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-        <?
+        <?php
 		$Ide_Max = strlen($Row_Persona['Prs_Ced']);
 		$Ide_Max = ($Ide_Max != 10 && $Ide_Max != 13)?-1:$Ide_Max;
 		$Identifica = $obBD_con1->getRowConsulta(6, $Ide_Max, $obBD_conexion);
 		?>
-		<? echo $Identifica['Ide_Des'];?>
+		<?php echo $Identifica['Ide_Des'];?>
        
         </td>
        </tr>
@@ -258,7 +258,7 @@
        </td>
        </tr>
        
-      <?
+      <?php
 	  
       switch($opiden)
 	  {
@@ -272,7 +272,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-        <? echo $Row_Persona['Prs_Nom'];?>
+        <?php echo $Row_Persona['Prs_Nom'];?>
         
        </td>
       </tr>
@@ -284,11 +284,11 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-		<? echo $Row_Persona['Prs_Ape'];?>
+		<?php echo $Row_Persona['Prs_Ape'];?>
         
        </td>
       </tr>
-      <?
+      <?php
 		  break;
 		  case "J":
 	  ?>
@@ -298,11 +298,11 @@
          Raz&oacute;n Social: </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-		<? echo $Row_Persona['Prs_Ape'];?>
+		<?php echo $Row_Persona['Prs_Ape'];?>
         
        </td>
       </tr>
-	  <?
+	  <?php
 		  break;
 	  }
 	  ?>
@@ -314,7 +314,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-	     <? echo $Row_Persona['Prv_Com'];?>
+	     <?php echo $Row_Persona['Prv_Com'];?>
         
        </td>
       </tr>
@@ -326,7 +326,7 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-        <? echo($Row_Persona['Prv_Esp']=='S')? "SI":"NO";?>
+        <?php echo($Row_Persona['Prv_Esp']=='S')? "SI":"NO";?>
         
        </td>
       </tr>
@@ -338,13 +338,13 @@
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
         
-	     <? echo($Row_Persona['Prv_Con']=='S')? "SI":"NO";?>
+	     <?php echo($Row_Persona['Prv_Con']=='S')? "SI":"NO";?>
         
        </td>
       </tr>
       <tr>
         <td class="Etiqueta1">Representante Legal: </td>
-        <td class="LetraNegra">&nbsp;<? echo $Row_Persona['Prs_Rep'];?></td>
+        <td class="LetraNegra">&nbsp;<?php echo $Row_Persona['Prs_Rep'];?></td>
       </tr>
      </table>
     </FIELDSET>
@@ -608,7 +608,7 @@
     </tr>
      <tr>        	 
 	  <td width="5%">
-       <button type="button" class="btn btn-inverse fileinput-button" title="Atras" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*hdd_volver', '<? echo $_POST['txt_busqueda'].'*'.$_POST['op_opciones'].'*'.'1';?>')">
+       <button type="button" class="btn btn-inverse fileinput-button" title="Atras" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*hdd_volver', '<?php echo $_POST['txt_busqueda'].'*'.$_POST['op_opciones'].'*'.'1';?>')">
                <i class=" icon-arrow-left icon-white"></i>
                <span>&nbsp;&nbsp;Atras&nbsp;&nbsp;</span>
        		 </button>&nbsp;&nbsp;
@@ -618,12 +618,12 @@
    </form>
    </FIELDSET>
    </td></tr>
-  <?
+  <?php
    }
   ?> 
  </table>
  </div> 
-<?
+<?php
 	  break;
 	  case 2:
 	  $Arr_Proveedor = $obBD_con1->getArrayConsulta( 9,''.'*'.$Ses_Emp_Cod, $obBD_conexion);
@@ -646,7 +646,7 @@
         </tr>
         </thead>
         <tbody>
-   <?  if(count($Arr_Proveedor))
+   <?php  if(count($Arr_Proveedor))
        {
 		foreach($Arr_Proveedor as $row)
 		{
@@ -661,7 +661,7 @@
           <td ><?Php echo $row['Prs_Te2']; ?></td>
           <td ><?Php echo $row['Prs_Cor']; ?></td>
         </tr>
-        <? }}else{?>
+        <?php }}else{?>
         <tr >
     	<td >&nbsp;</td>
     	<td >&nbsp;</td>
@@ -671,7 +671,7 @@
     	<td >&nbsp;</td>
     	<td >&nbsp;</td>
     	</tr>     
-	<? }?>	
+	<?php }?>	
     </tbody>
         </table>
 </fieldset>
@@ -698,7 +698,7 @@
    </tr>
    </table>
 </div>
-<?
+<?php
 	  break;
   }
   ?>

@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?	
+<?php	
 /**
 * Descripción: Permite dar de baja un retencion
 * Fecha de actualización:	2013-05-13 
@@ -293,8 +293,8 @@ if (isset($txt_busqueda))
 	   ?>
 	  <form name="form3" method="post" action="<?Php echo $_SERVER['PHP_SELF']?>">      
       <tr>
-	    <td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php  $Ret_Int_Com=$row_rs_buscar['Ret_Cod']; echo $Ret_Int_Com; ?></FONT></td>
-	    <td align="center"><FONT COLOR="<? echo $rojo;?>">
+	    <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php  $Ret_Int_Com=$row_rs_buscar['Ret_Cod']; echo $Ret_Int_Com; ?></FONT></td>
+	    <td align="center"><FONT COLOR="<?php echo $rojo;?>">
 	      <?Php
 		
 		if($num_row_rs_compra_manual_automatica>0)
@@ -302,24 +302,24 @@ if (isset($txt_busqueda))
 		}else{ echo "Manual";}?>
         </FONT>	
         </td>
-	    <td align="center"><FONT COLOR="<? echo $rojo;?>">
+	    <td align="center"><FONT COLOR="<?php echo $rojo;?>">
 	      <?Php  $Ret_Com=$row_rs_buscar['Ret_Num']; echo $Ret_Com; ?>
         </FONT>
         </td>
-	    <td align="center"><FONT COLOR="<? echo $rojo;?>">
+	    <td align="center"><FONT COLOR="<?php echo $rojo;?>">
 	      <?Php $Cop_Num=$row_rs_buscar['Cop_Num']; echo $Cop_Num; ?>
         </FONT>
         </td>	
-	    <td align="center"><FONT COLOR="<? echo $rojo;?>">
+	    <td align="center"><FONT COLOR="<?php echo $rojo;?>">
 	      <?Php $Fec_Ret_Con=$row_rs_buscar['Ret_Fec'];  echo $Fec_Ret_Con;  ?>
         </FONT>
         </td>
-	    <td align="center"><FONT COLOR="<? echo $rojo;?>"><div align="left">
+	    <td align="center"><FONT COLOR="<?php echo $rojo;?>"><div align="left">
 	      <?Php echo marcar_cadena($txt_busqueda,$row_rs_buscar['Prs_Ape']." ".$row_rs_buscar['Prs_Nom'], '#FFFF00', 1); ?>	      
 	      </div>
           </FONT>
 	      </td>
-	    <td><FONT COLOR="<? echo $rojo;?>">
+	    <td><FONT COLOR="<?php echo $rojo;?>">
 	      <div align="right">
 	      <?php
 		  $row_base_impu=$obBD_con1->getRowConsulta(567,$row_rs_buscar['Ret_Cod'],$obBD_conexion);		 
@@ -331,7 +331,7 @@ if (isset($txt_busqueda))
             </FONT>
             </td>
 	    
-	    <td width="8%" align="right"><FONT COLOR="<? echo $rojo;?>">
+	    <td width="8%" align="right"><FONT COLOR="<?php echo $rojo;?>">
 	      <?Php	
 			$rs_detalle = $obBD_con1->getArrayConsulta(381,$row_rs_buscar['Ret_Cod'],$obBD_conexion);			
 			$Val_Ret=0;
@@ -342,14 +342,14 @@ if (isset($txt_busqueda))
 		    echo formato_numero($Val_Ret, 2, 1);
 		?>		
         </FONT></td>
-	    <td align="center"><button type="button" class="btn btn-success btn-mini" title="Detalle del registro" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_detalle=1&amp;ret_codigo=<? echo $row_rs_buscar['Ret_Cod'];?>','mostrar')"><i class="icon-info-sign icon-white"></i></button>
+	    <td align="center"><button type="button" class="btn btn-success btn-mini" title="Detalle del registro" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_detalle=1&amp;ret_codigo=<?php echo $row_rs_buscar['Ret_Cod'];?>','mostrar')"><i class="icon-info-sign icon-white"></i></button>
         </td>
 	    <td align="center">
 		<?Php //if($num_row_rs_existe_pagos==0){ 	
 		      if(1==1){ 	
 				if ($row_rs_buscar['Ret_Est'] == 'A') { ?>
          
-          <? $thisPost->startPost();	?>
+          <?php $thisPost->startPost();	?>
           <input type="hidden" id="Ret_Cod" name="Ret_Cod" value="<?php echo $row_rs_buscar['Ret_Cod']; ?>"/>
           <input type="hidden" id="Pec_Cod" name="Pec_Cod" value="<?php echo $Pec_Cod; ?>"/>
           <input type="hidden" id="hdd_Pec_Cod" name="hdd_Pec_Cod" value="1"/>

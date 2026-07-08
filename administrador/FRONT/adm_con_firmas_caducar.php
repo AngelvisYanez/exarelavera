@@ -478,7 +478,7 @@ if ($exportar) {
 					return;
 				}
 				
-				var $ = jQuery;
+				public $ = jQuery;
 				
 				// Ocultar loader/spinner cuando la página termine de cargar
 				$(document).ready(function() {

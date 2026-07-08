@@ -20,9 +20,9 @@ include($APP_REAL_PATH.'/tesoreria/FRONT/cheques/cheque_config.php');
         </style>
     </head>
     <body>
-        <span style="top:8px;left:20px;" class="flota"><? if($row_pri_cheque['Che_Ben']==''){echo $row_pri_cheque['Prs_Ape'].' '.$row_pri_cheque['Prs_Nom'];}else{echo $row_pri_cheque['Che_Ben'];} ?></span>
-        <span style="top:7px;left:380px;" class="flota"><b><? echo number_format($row_pri_cheque['Che_Val'],2); ?></b></span>
-        <span style="top:30px;left:20px;" class="flota"><? echo '<span style="letter-spacing:0.1em">'.num2letras($row_pri_cheque['Che_Val']);?></span>
+        <span style="top:8px;left:20px;" class="flota"><?php if($row_pri_cheque['Che_Ben']==''){echo $row_pri_cheque['Prs_Ape'].' '.$row_pri_cheque['Prs_Nom'];}else{echo $row_pri_cheque['Che_Ben'];} ?></span>
+        <span style="top:7px;left:380px;" class="flota"><b><?php echo number_format($row_pri_cheque['Che_Val'],2); ?></b></span>
+        <span style="top:30px;left:20px;" class="flota"><?php echo '<span style="letter-spacing:0.1em">'.num2letras($row_pri_cheque['Che_Val']);?></span>
         <span style="top:40px;left:0px;" class="flota"><?Php echo $row_institucion['Ciu_Des']?>, &nbsp;<?Php list($ann, $mes, $dia) = preg_split('![/.-]!', $fecha); echo $ann.'/'.str_pad($mes, 2, '0', STR_PAD_LEFT).'/'.$dia;?></span>   
     </body>
 </html>

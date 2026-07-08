@@ -160,7 +160,7 @@ $hoy = date("Y-m-d");
           </form>
           </FIELDSET>
           
-<? if (isset($txt_busqueda)){?>
+<?php if (isset($txt_busqueda)){?>
     <FIELDSET>
     <LEGEND>
     <label class="Titulos2">Resultados de la busqueda</label>
@@ -180,12 +180,12 @@ $hoy = date("Y-m-d");
                { $rojo='#FF0000'; $anulada++; }else{$rojo='';}
           ?>
           <tr>
-          <td align="center"><FONT COLOR="<? echo $rojo;?>"><?php echo $row_rs_buscar['Cus_Cod'];?></FONT></td>
-          <td><FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Prs_Ced'];?></FONT></td>
-          <td><p><FONT COLOR="<? echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Nombre'],'#FFFF00', 1);?>    
+          <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php echo $row_rs_buscar['Cus_Cod'];?></FONT></td>
+          <td><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Prs_Ced'];?></FONT></td>
+          <td><p><FONT COLOR="<?php echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Nombre'],'#FFFF00', 1);?>    
          </FONT></p>
          </td>
-          <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "frml" id="forml">
+          <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "frml" id="forml">
           <td align="center" width="8%">
           <?Php if($row_rs_buscar['Cus_Est']=='A')
              { 
@@ -196,7 +196,7 @@ $hoy = date("Y-m-d");
                     <input type="hidden" name="codigo" id="codigo" value="<?Php echo $row_rs_buscar['Cus_Cod'];?>"/>
                     <input type="hidden" name="hdd_aux" id="hdd_aux" value="1">
                     <input type="hidden" name="volver_busqueda" id="volver_busqueda" value="<?Php echo $txt_busqueda;?>"/>
-                    <input type="hidden" name="volver_opciones" id="volver_opciones" value="<? echo $op_opciones?>">
+                    <input type="hidden" name="volver_opciones" id="volver_opciones" value="<?php echo $op_opciones?>">
                  <?Php
              }
              else
@@ -216,11 +216,11 @@ $hoy = date("Y-m-d");
               <td align="center"><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
               <td> </td>
             </tr>
-          <? } // fin del if ($total_rs_buscar > 0)?>
+          <?php } // fin del if ($total_rs_buscar > 0)?>
           </tbody>
         </table> 
         <br>
-	<? 
+	<?php 
 	/**
 	 *  Muestra la barra de estados con la cantidad de registros encontrados 
 	 */
@@ -232,7 +232,7 @@ if(isset($codigo)){
 	 */ 
 	$rs_custodio = $obBD_con1->getRowConsulta(136,$codigo.'*'.$Ses_Emp_Cod, $obBD_conexion);
 ?>
-<? 
+<?php 
  /** 
   * Creacion del campo REPOST
   */
@@ -247,15 +247,15 @@ $thisPost->startPost();?>
 	<table width="100%" border="0" align="left" cellpadding="0" cellspacing="0">
       <tr>
         <td width="11%" class="Etiqueta1" ><span  class="Etiqueta1">Custodio:</span></td>
-        <td width="89%">&nbsp;<span class="LetraNegra"><? echo  $rs_custodio['Nombre'];?></span></td>
+        <td width="89%">&nbsp;<span class="LetraNegra"><?php echo  $rs_custodio['Nombre'];?></span></td>
       </tr> 
       <tr>
         <td width="11%" height="23" class="Etiqueta1" ><span class="Etiqueta1">Cédula: </span></td>
-        <td width="89%">&nbsp;<span class="LetraNegra"><? echo  $rs_custodio['Prs_Ced'];?></span></td>
+        <td width="89%">&nbsp;<span class="LetraNegra"><?php echo  $rs_custodio['Prs_Ced'];?></span></td>
        </tr>    
        <tr>
         <td width="11%" height="25"  class="Etiqueta1"><span class="Etiqueta1">&Aacute;rea: </span></td>
-        <td width="89%">&nbsp;<span class="LetraNegra"><? echo $rs_custodio['Dep_Des'];?></span></td>
+        <td width="89%">&nbsp;<span class="LetraNegra"><?php echo $rs_custodio['Dep_Des'];?></span></td>
        </tr> 
        <tr>
         <td width="11%" >&nbsp;</td>
@@ -272,7 +272,7 @@ $thisPost->startPost();?>
     <label class="Titulos2">Al Destino:</label>
     </LEGEND>   
     <table width="100%" border="0" align="left" cellpadding="0" cellspacing="0">
-     <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "formdes">
+     <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "formdes">
      <tr>
      
         <td width="24%" class="Etiqueta1"><span class="Asterisco">*</span>Custodio : </td>
@@ -329,35 +329,35 @@ $thisPost->startPost();?>
               <th width="38%">Activo seleccionado</th>           			 
        </thead>
        <tbody>
-                <? if( $total_rs_consultar > 0){
+                <?php if( $total_rs_consultar > 0){
                     $j= 0;
                     //print_r($rs_consultar);
                     foreach($rs_consultar as $row_rs_consultar){
                     $j++;
                 ?>                                             
             <tr>
-                <td class="LetraNegra" align="center"><? echo $j;?></td>
-                <td class="LetraNegra" align="center"><? echo $row_rs_consultar['Act_Cod'];?></td>
+                <td class="LetraNegra" align="center"><?php echo $j;?></td>
+                <td class="LetraNegra" align="center"><?php echo $row_rs_consultar['Act_Cod'];?></td>
                 <td class="LetraNegra">
-                    <label id="Ac[<? echo $j;?>]"> <? echo $row_rs_consultar['Act_Des'];?> </label>    
-                    <input name="Act_Cod[<? echo $j?>]" type="hidden" id="Act_Cod[<? echo $j?>]" value="<? echo $row_rs_consultar['Act_Cod']?>">       	
+                    <label id="Ac[<?php echo $j;?>]"> <?php echo $row_rs_consultar['Act_Des'];?> </label>    
+                    <input name="Act_Cod[<?php echo $j?>]" type="hidden" id="Act_Cod[<?php echo $j?>]" value="<?php echo $row_rs_consultar['Act_Cod']?>">       	
                 </td>           
                 <td class="LetraNegra" align="center">
-                    <input name="activo[<? echo $j?>]" type="hidden" id="activo[<? echo $j?>]" value="0">            
-                    <button type="image"  name="selecback[<? echo $j;?>]" id="selecback[<? echo $j?>]" width="22" height="22" title="No transferir activo"  class='btn btn-danger btn-mini' onClick="document.getElementById('activo[<? echo $j;?>]').value=0;Regresar_Activo(<? echo $j?>,<? echo $total_rs_consultar?>)">	
+                    <input name="activo[<?php echo $j?>]" type="hidden" id="activo[<?php echo $j?>]" value="0">            
+                    <button type="image"  name="selecback[<?php echo $j;?>]" id="selecback[<?php echo $j?>]" width="22" height="22" title="No transferir activo"  class='btn btn-danger btn-mini' onClick="document.getElementById('activo[<?php echo $j;?>]').value=0;Regresar_Activo(<?php echo $j?>,<?php echo $total_rs_consultar?>)">	
                     <i class='icon-arrow-left icon-white'></i>
                     </button>  
                             
-                    <button type="image" name="selec[<? echo $j?>]" id="selec[<? echo $j?>]"  width="22" height="22" title="Transferir activo"  class='btn btn-success btn-mini' onClick="document.getElementById('activo[<? echo $j;?>]').value=1;Pasar_Activo(<? echo $j?>,<? echo $total_rs_consultar?>)">	
+                    <button type="image" name="selec[<?php echo $j?>]" id="selec[<?php echo $j?>]"  width="22" height="22" title="Transferir activo"  class='btn btn-success btn-mini' onClick="document.getElementById('activo[<?php echo $j;?>]').value=1;Pasar_Activo(<?php echo $j?>,<?php echo $total_rs_consultar?>)">	
                     <i class='icon-arrow-right icon-white'>
                     </i>
                     </button>
                 </td>
                 <td class="LetraNegra" align="center">
-                <label id="AcOld[<? echo $j;?>]"> <? echo $row_rs_consultar['Act_Des'];?> </label>
+                <label id="AcOld[<?php echo $j;?>]"> <?php echo $row_rs_consultar['Act_Des'];?> </label>
                 </td>       
             </tr>  
-         <? 	
+         <?php 	
               }//fin foreach($rs_consultar as $row_rs_consultar){
             }//Fin if( $total_rs_consultar > 0){
             else
@@ -387,7 +387,7 @@ $thisPost->startPost();?>
    			<table width="100%" border="0" cellpadding="0" cellspacing="0">
            	<tr>
              	<td width="9%" >
-                 <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1"> 
+                 <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1"> 
                         <button type="button" name="btn_atras" id="btn_atras" value="Enviar" class="btn btn-inverse fileinput-button" title="Atr&aacute;s"
                         onClick="campos_hide(this.form, '<?Php echo "txt_busqueda*op_opciones*hdd_volver"; ?>','<?Php echo $volver_busqueda.'*'.$volver_opciones.'*'.'1'; ?>')">
                          <i class="icon-arrow-left icon-white"></i><span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
@@ -396,7 +396,7 @@ $thisPost->startPost();?>
              	</td> 
              	<td width="91%">
          
-                     <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form10" id= "form10" >     
+                     <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form10" id= "form10" >     
                                  <button name="boton_guardar" id="boton_guardar" title="Guardar" type="button" class="btn btn-primary fileinput-button" value="Guardar" onClick="validar_transfe(formdes,'Cus_CodN*razon_tranf*arr',1)">
                                  <i class=" icon-book icon-white"></i>
                                  <span>&nbsp;&nbsp;Guardar&nbsp;&nbsp;</span>
@@ -408,7 +408,7 @@ $thisPost->startPost();?>
     </td> 
    </tr>
 </table>
-  <? }// Fin if(isset($codigo)){?>
+  <?php }// Fin if(isset($codigo)){?>
   </fieldset>                
 </td>
 </tr>
@@ -419,8 +419,8 @@ $thisPost->startPost();?>
 
 <?Php for ($i = 0; $i<=$j; $i++){ ?> 
 	<script> 
-		ShowHide('AcOld[<? echo $i;?>]');
-		ShowHide('selecback[<? echo $i;?>]');
+		ShowHide('AcOld[<?php echo $i;?>]');
+		ShowHide('selecback[<?php echo $i;?>]');
 	</script>     
 <?Php }?>
 

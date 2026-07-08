@@ -59,9 +59,9 @@ if (isset($Cop_Cod))
             <td width="62%" valign="bottom">&nbsp;</td>
             <td width="35%" align="left" valign="bottom"><table width="95%" height="38" border="0" cellpadding="0" cellspacing="0" class="Letra_punto_venta_2">
               <tr>
-                <td width="35%" align="left" valign="middle">&nbsp;<? echo $dia;?></td>
-                <td width="34%" align="left" valign="middle">&nbsp;<? echo $mes;?></td>
-                <td width="31%" align="left" valign="middle">&nbsp;<? echo $anio;?></td>
+                <td width="35%" align="left" valign="middle">&nbsp;<?php echo $dia;?></td>
+                <td width="34%" align="left" valign="middle">&nbsp;<?php echo $mes;?></td>
+                <td width="31%" align="left" valign="middle">&nbsp;<?php echo $anio;?></td>
               </tr>
             </table></td>
           </tr>
@@ -69,7 +69,7 @@ if (isset($Cop_Cod))
           <td height="29" colspan="2" align="left" valign="bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0">
             <tr>
               <td width="17%">&nbsp;</td>
-              <td width="83%"><? echo $row_rs_proveedor[0]['Prs_Ape'].' '.$row_rs_proveedor[0]['Prs_Nom']; ?></td>
+              <td width="83%"><?php echo $row_rs_proveedor[0]['Prs_Ape'].' '.$row_rs_proveedor[0]['Prs_Nom']; ?></td>
             </tr>
           </table></td>
           <td width="35%" align="center" valign="top">&nbsp;</td>
@@ -78,7 +78,7 @@ if (isset($Cop_Cod))
           <td height="32" colspan="2"><table width="100%" border="0" cellspacing="0" cellpadding="0">
             <tr>
               <td width="14%">&nbsp;</td>
-              <td width="86%"><? echo $row_rs_proveedor['Prs_Dir'];?></td>
+              <td width="86%"><?php echo $row_rs_proveedor['Prs_Dir'];?></td>
             </tr>
           </table></td>
           <td width="35%" align="center" valign="top">&nbsp;</td>
@@ -87,7 +87,7 @@ if (isset($Cop_Cod))
           <td height="27" colspan="2"><table width="100%" border="0" cellspacing="0" cellpadding="0">
             <tr>
               <td width="14%">&nbsp;</td>
-              <td width="86%"><? echo $row_rs_proveedor[0]['Prs_Ced']; ?></td>
+              <td width="86%"><?php echo $row_rs_proveedor[0]['Prs_Ced']; ?></td>
             </tr>
           </table></td>
           <td width="35%" align="center" valign="middle"><?Php //echo $row_institucion['Ciu_Des']; ?></td>
@@ -110,7 +110,7 @@ if (isset($Cop_Cod))
 			
 			?>
             <table width="94%" border="0" cellpadding="0" cellspacing="0" class="Letra_punto_venta_2">
-              <? foreach($row_rs_proveedor as $row){
+              <?php foreach($row_rs_proveedor as $row){
 				  ?>
               <tr>
                 <td width="54" height="26" align="center"><?Php echo $row['Cop_Can']?></td>

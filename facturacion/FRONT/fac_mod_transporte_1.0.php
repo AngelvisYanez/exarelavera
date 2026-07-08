@@ -107,7 +107,7 @@ if (isset($_POST['hdd_save']))
     </tr>
     </thead>
     <tbody>
-    <?	
+    <?php	
 	$Arr_Transporte = $obBD_con1->getArrayConsulta($_POST['op_opciones'] == "d"? 9 : 10,$Ses_Emp_Cod.'*'.$_POST['txt_busqueda'], $obBD_conexion);
 	$total_row=count($Arr_Transporte);
 	if($total_row!=0)
@@ -126,17 +126,17 @@ if (isset($_POST['hdd_save']))
 		  <?Php echo marcar_cadena($_POST['txt_busqueda'], $row['Prs_Ape']." ".$row['Prs_Nom'], '#FFFF00', 1); ?>
 		 </td>
 		 <td width="3%" align="center">
-		 <form name='form6' method='post'  action='<? echo $_SERVER['PHP_SELF'];?>'>
+		 <form name='form6' method='post'  action='<?php echo $_SERVER['PHP_SELF'];?>'>
 			<button type="button" class="btn btn-success btn-mini" title="Elegir" onclick="this.form.submit()">
 				<i class=" icon-arrow-right icon-white"></i>
 			</button>
 			<input name="Tra_Cod" id="Tra_Cod" type="hidden" value="<?Php echo $row['Tra_Cod']; ?>">
-			<input name="txt_busqueda" value="<? echo $_POST['txt_busqueda'];?>" type="hidden">
-			<input name="op_opciones" value="<? echo $_POST['op_opciones'];?>" type="hidden">
+			<input name="txt_busqueda" value="<?php echo $_POST['txt_busqueda'];?>" type="hidden">
+			<input name="op_opciones" value="<?php echo $_POST['op_opciones'];?>" type="hidden">
 		</form>
 		</td>
 	   </tr>   
-		<?
+		<?php
 		}
 	}else{
 		?>
@@ -149,14 +149,14 @@ if (isset($_POST['hdd_save']))
 		 ?></td>
       <td width="3%" align="center">&nbsp;</td>
     </tr> 
-    <? }?>
+    <?php }?>
     </tbody>
   </table>
-  <?
+  <?php
    echo barra_estado(count($Arr_Transporte));
   ?>
    </FIELDSET>   
-   <?
+   <?php
   }   
   if(isset($_POST['Tra_Cod']) && !isset($_POST['hdd_volver']))
   {
@@ -165,13 +165,13 @@ if (isset($_POST['hdd_save']))
    <LEGEND>
 	<label class="Titulos2">Datos a Modificar</label>
    </LEGEND> 
-    <form method="post" name= "form" action="<? echo $_SERVER['PHP_SELF'];?>">
-   <? 
+    <form method="post" name= "form" action="<?php echo $_SERVER['PHP_SELF'];?>">
+   <?php 
    	 $thisPost->startPost();
 	 $row_rs_persona = $obBD_con1->getRowConsulta(11,$_POST['Tra_Cod'],$obBD_conexion);
    ?>
-    <input name="Prs_Cod" type="hidden" id="Prs_Cod" value="<? echo $row_rs_persona['Prs_Cod'];?>" />
-    <input name="Tra_Cod" type="hidden" id="Tra_Cod" value="<? echo $_POST['Tra_Cod'];?>" />
+    <input name="Prs_Cod" type="hidden" id="Prs_Cod" value="<?php echo $row_rs_persona['Prs_Cod'];?>" />
+    <input name="Tra_Cod" type="hidden" id="Tra_Cod" value="<?php echo $_POST['Tra_Cod'];?>" />
     
     <table width="100%" border="0" cellpadding="2" cellspacing="0">
   	<tr>
@@ -188,7 +188,7 @@ if (isset($_POST['hdd_save']))
 	    <td width="17%" class="Etiqueta1"><span class="Asterisco">*</span> C&eacute;dula/R.U.C.:</td>
 	    <td width="770" class="LetraNegra">&nbsp;
 	      <input name="Prs_Ced" type="text" id="Prs_Ced" value="<?php echo $row_rs_persona['Prs_Ced']; ?>" size="13" maxlength="13" readonly="readonly">
-	      <?
+	      <?php
 			/**
 			 * Total de caracteres
 			 * @var int
@@ -201,7 +201,7 @@ if (isset($_POST['hdd_save']))
 			 */
 			$Identifica = $obBD_con1->getRowConsulta(4,$Ide_Max,$obBD_conexion);
 		?>
-	      <input type="hidden" id="Ide_Cod" name="Ide_Cod" value="<? echo $Identifica['Ide_Cod'];?>">
+	      <input type="hidden" id="Ide_Cod" name="Ide_Cod" value="<?php echo $Identifica['Ide_Cod'];?>">
 	      </td>
 	    </tr>
 	  <tr id="Natural">
@@ -210,7 +210,7 @@ if (isset($_POST['hdd_save']))
 	      Nombre:        
 	      </td>
 	    <td  class="LetraNegra">&nbsp;
-	      <input name="Prs_Nom" type="text" id="Prs_Nom" style="text-transform:uppercase" value="<? echo $row_rs_persona['Prs_Nom'];?>" size="30" maxlength="80" />
+	      <input name="Prs_Nom" type="text" id="Prs_Nom" style="text-transform:uppercase" value="<?php echo $row_rs_persona['Prs_Nom'];?>" size="30" maxlength="80" />
 	      </td>
 	    </tr>
       <tr>
@@ -220,7 +220,7 @@ if (isset($_POST['hdd_save']))
          <label id="Juridico">Razon Social:</label>        
        </td>
        <td  class="LetraNegra">&nbsp;
-		<input name="Prs_Ape" type="text" id="Prs_Ape" style="text-transform:uppercase" value="<? echo $row_rs_persona['Prs_Ape'];?>" size="30" maxlength="80" />
+		<input name="Prs_Ape" type="text" id="Prs_Ape" style="text-transform:uppercase" value="<?php echo $row_rs_persona['Prs_Ape'];?>" size="30" maxlength="80" />
        </td>
       </tr>
       <tr>
@@ -246,7 +246,7 @@ if (isset($_POST['hdd_save']))
     <table width="300" border="0" cellpadding="0" cellspacing="0">
       <tr> 
       	<td width="110">
-      		 <button type="button" class="btn btn-inverse fileinput-button" title="Atrás" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*hdd_volver', '<? echo $_POST['txt_busqueda'].'*'.$_POST['op_opciones'].'*'.'1';?>')">
+      		 <button type="button" class="btn btn-inverse fileinput-button" title="Atrás" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*hdd_volver', '<?php echo $_POST['txt_busqueda'].'*'.$_POST['op_opciones'].'*'.'1';?>')">
                <i class=" icon-arrow-left icon-white"></i>
                <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
        		 </button>

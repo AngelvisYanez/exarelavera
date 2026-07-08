@@ -12,14 +12,14 @@
 // This file is part of TCPDF software library.
 //
 // TCPDF is free software: you can redistribute it and/or modify it
-// under the terms of the GNU Lesser General Public License as
+// under the terms of the GNU Lesser General public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 //
 // TCPDF is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-// See the GNU Lesser General Public License for more details.
+// See the GNU Lesser General public License for more details.
 //
 // You should have received a copy of the License
 // along with TCPDF. If not, see
@@ -279,7 +279,7 @@ class TCPDF_FILTERS {
 		// convert string to binary string
 		$bitstring = '';
 		for ($i = 0; $i < $data_length; ++$i) {
-			$bitstring .= sprintf('%08b', ord($data{$i}));
+			$bitstring .= sprintf('%08b', ord($data[$i]));
 		}
 		// get the number of bits
 		$data_length = strlen($bitstring);
@@ -376,7 +376,7 @@ class TCPDF_FILTERS {
 		$i = 0;
 		while($i < $data_length) {
 			// get current byte value
-			$byte = ord($data{$i});
+			$byte = ord($data[$i]);
 			if ($byte == 128) {
 				// a length value of 128 denote EOD
 				break;
@@ -389,7 +389,7 @@ class TCPDF_FILTERS {
 			} else {
 				// if length is in the range 129 to 255,
 				// the following single byte shall be copied 257 - length (2 to 128) times during decompression
-				$decoded .= str_repeat($data{($i + 1)}, (257 - $byte));
+				$decoded .= str_repeat($data[($i + 1)], (257 - $byte));
 				// move to next block
 				$i += 2;
 			}

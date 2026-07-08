@@ -43,7 +43,7 @@ class Class_Log_Datos_Elect extends MysqlDatos{
     // partir campo demasiado largo
     function utf8_change_param(&$input,$type=false){ /* agregado por erik para limpieza de caracteres especiales */
         if (is_string($input)) {
-            if(trim($input)!='') $input = trim($input); if((!!mb_detect_encoding($input, 'UTF-8', true))==$type) $input=call_user_func($type?'utf8_decode':'utf8_encode',$input);
+            if(trim($input)!='') $input = trim($input); if((!!mb_detect_encoding($input, 'UTF-8', true))==$type) $input=$type ? mb_convert_encoding($input, 'ISO-8859-1', 'UTF-8') : mb_convert_encoding($input, 'UTF-8', 'ISO-8859-1');
         } else if (is_array($input)) {
             foreach ($input as &$value) { $this->utf8_change_param($value, $type); } unset($value);
         } else if (is_object($input)) { $vars = array_keys(get_object_vars($input)); foreach ($vars as $var) { $this->utf8_change_param($input->$var, $type); } }

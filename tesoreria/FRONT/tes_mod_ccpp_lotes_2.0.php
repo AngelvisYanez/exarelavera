@@ -1130,7 +1130,7 @@ if (isset($migrado)) {
 														$row_rs_tipo_asien2 = $obBD_con1->getArrayConsulta(4, "ALL", $obBD_conexion);
 														foreach ($row_rs_tipo_asien2 as $row) { ?>
 															<option value="<?php echo $row['Tia_Cod']; ?>">
-																<?php echo  utf8_encode($row['Tia_Des']) ?>
+																<?php echo  mb_convert_encoding($row['Tia_Des'], 'UTF-8', 'ISO-8859-1') ?>
 															</option>
 														<?php } ?>
 													</select>
@@ -1193,7 +1193,7 @@ if (isset($migrado)) {
 														foreach ($row_rs_tipo_asien2 as $row) {
 															/*if ($row['Pag_Abr'] != 'ANT') {*/ ?>
 																<option value="<?php echo $row['Pag_Cod']; ?>" data-abr="<?php echo $row['Pag_Abr']; ?>">
-																	<?php echo utf8_encode($row['Pag_Des']) ?>
+																	<?php echo mb_convert_encoding($row['Pag_Des'], 'UTF-8', 'ISO-8859-1') ?>
 																</option>
 														<?php /*}*/
 														} ?>

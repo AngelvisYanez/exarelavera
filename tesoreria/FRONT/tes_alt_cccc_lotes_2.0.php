@@ -627,7 +627,7 @@ if (isset($loadAnticipos)) {
 																$row_rs_tipo_asien2 = $obBD_con_get->getArrayConsulta(6, "ALL", $obBD_conexion_get);
 																foreach ($row_rs_tipo_asien2 as $row) { ?>
 																	<option value="<?php echo $row['Tia_Cod']; ?>" data-abr="<?php echo $row['Tia_Abr']; ?>">
-																		<?php echo utf8_encode($row['Tia_Des']) ?>
+																		<?php echo mb_convert_encoding($row['Tia_Des'], 'UTF-8', 'ISO-8859-1') ?>
 																	</option>
 																<?php } ?>
 															</select>
@@ -705,7 +705,7 @@ if (isset($loadAnticipos)) {
 																$row_rs_tipo_asien2 = $obBD_con_get->getArrayConsulta(44, "", $obBD_conexion_get);
 																foreach ($row_rs_tipo_asien2 as $row) { ?>
 																	<option value="<?php echo $row['Pag_Cod']; ?>" data-abr="<?php echo $row['Pag_Abr']; ?>">
-																		<?php echo utf8_encode($row['Pag_Des']) ?>
+																		<?php echo mb_convert_encoding($row['Pag_Des'], 'UTF-8', 'ISO-8859-1') ?>
 																	</option>
 																<?php } ?>
 															</select>

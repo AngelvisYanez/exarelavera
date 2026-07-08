@@ -267,7 +267,7 @@ if(isset($deleteCuenta)){
                                 }
                         }
         ]);
-        var $listProds=$("#listCampos"), abr={I:'INGRESO',E:'EGRESO',T:'TOTALES',P:'PROVISIONES'};
+        public $listProds=$("#listCampos"), abr={I:'INGRESO',E:'EGRESO',T:'TOTALES',P:'PROVISIONES'};
         $listProds.createGrid({                                   
             height:315, caption:'Listado de Campos Rol', sortname:'Cam_Ord',
             colModel: [

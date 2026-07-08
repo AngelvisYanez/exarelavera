@@ -109,7 +109,7 @@ if ($total_rs_control !=0)
 	$_SESSION['Ses_Prs_Ape']=$row_rs_control['Prs_Ape'];
 	$_SESSION['Ses_Prs_Ced']=$row_rs_control['Prs_Ced'];
 	$_SESSION['Ses_Prs_Sex']=$row_rs_control['Prs_Sex'];
-	$_SESSION['Ses_Per_Fot']=$row_rs_foto['Per_Fot'];
+	$_SESSION['Ses_Per_Fot']= isset($row_rs_foto['Per_Fot']) ? $row_rs_foto['Per_Fot'] : null;
 
 	$apellido = explode(' ', $_SESSION['Ses_Prs_Ape']);
 	$nombre = explode(' ', $_SESSION['Ses_Prs_Nom']);

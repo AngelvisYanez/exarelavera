@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?
+<?php
 /**
 * Descripción: Consulta de facturas electronicas
 * Fecha de actualización:	16-11-2014 
@@ -93,7 +93,7 @@ if ($thisPost->postBlock($_POST['postID']))
 <tr>
  <td align="left" valign="top" height="400">
 
-   	<form method="post" name="form3" id="form3" enctype="multipart/form-data" action="<? echo $_SERVER['PHP_SELF'];?> ">
+   	<form method="post" name="form3" id="form3" enctype="multipart/form-data" action="<?php echo $_SERVER['PHP_SELF'];?> ">
     <?Php $thisPost->startPost(); ?>
     <FIELDSET>
     <LEGEND>
@@ -102,7 +102,7 @@ if ($thisPost->postBlock($_POST['postID']))
      <table width="560" border="0" cellpadding="0" cellspacing="0">
      <tr>	
        <td width="87" align="right" class="LetraNegra">Seleccione:</td> 
-       <td width="345">&nbsp;<input type="file" multiple name="archivo[]" id="archivo[]" value="<? echo $archivo;?>" accept="text/xml" /></td>
+       <td width="345">&nbsp;<input type="file" multiple name="archivo[]" id="archivo[]" value="<?php echo $archivo;?>" accept="text/xml" /></td>
        <td width="128">
          <button type="button" class="btn btn-primary start" onclick="this.form.submit();"><i class=" icon-ok-sign icon-white"></i> <span>Subir</span> </button>
          <input type="hidden" id="save" name="save" value="1" />
@@ -110,7 +110,7 @@ if ($thisPost->postBlock($_POST['postID']))
      </tr>   
      </table>
     </FIELDSET>
-   <? if(isset($save)){ ?>	
+   <?php if(isset($save)){ ?>	
 	<FIELDSET>
     <LEGEND>
     <label class="Titulos2">Archivos subidos</label>
@@ -128,7 +128,7 @@ if ($thisPost->postBlock($_POST['postID']))
         </tr>
       </thead>
       <tbody>
-        <? 
+        <?php 
 		
 		
 		$tot = count($_FILES["archivo"]["name"]);  										
@@ -166,9 +166,9 @@ if ($thisPost->postBlock($_POST['postID']))
 			}
 		?>
         <tr>
-          <td align="center"><? echo $i+1?></td>
+          <td align="center"><?php echo $i+1?></td>
           <td align="center">
-		  <? 
+		  <?php 
 		    if($sri->estado=="AUTORIZADO" && $subioXml=="SI")
 			{
 				$cadena =substr($xml->infoTributaria[0]->claveAcceso,0,8);			
@@ -190,7 +190,7 @@ if ($thisPost->postBlock($_POST['postID']))
 		  ?>
           </td>
           <td align="left" style="white-space: nowrap; overflow: hidden;">&nbsp;
-          <?          				  									
+          <?php          				  									
 			if($sri->estado=="AUTORIZADO" && $subioXml=="SI")
 			{	
 				if(substr($xml->infoTributaria[0]->claveAcceso,8,2)=="01") // Factura
@@ -222,9 +222,9 @@ if ($thisPost->postBlock($_POST['postID']))
 			}
 		  ?>
           </td>
-          <td align="center">&nbsp;<? echo $name; ?></td>
+          <td align="center">&nbsp;<?php echo $name; ?></td>
           <td align="center">
-            <? 		  	
+            <?php 		  	
 				if($sri->estado=="AUTORIZADO" && $subioXml=="SI")
 				{
 					$rs_nomCompr = $obBD_con1->getRowConsulta(3, substr($xml->infoTributaria[0]->claveAcceso,8,2), $obBD_conexion);
@@ -235,7 +235,7 @@ if ($thisPost->postBlock($_POST['postID']))
 		  ?>
           </td>
           <td align="center">
-          <?          				  		
+          <?php          				  		
 			if($sri->estado=="AUTORIZADO" && $subioXml=="SI")
 			{	
 				if(substr($xml->infoTributaria[0]->claveAcceso,8,2)=="01") // Factura
@@ -263,19 +263,19 @@ if ($thisPost->postBlock($_POST['postID']))
 		  ?>
           </td>
           <td align="center">
-          	<? if($sri->estado=="AUTORIZADO"){
+          	<?php if($sri->estado=="AUTORIZADO"){
 				  if($subioXml=="SI"){
 				?>
 	            	<img src="../../mascaras/model1/imagenes/ok-s.gif" width="16" height="16" title="Se subio correctamente..." />
-                <? }else{?>
+                <?php }else{?>
                 	<img src="../../mascaras/model1/imagenes/error.gif" width="16" height="16" title="El comprobante no existe en Exa" />
-                <? }?>
-            <? }else{ ?>
+                <?php }?>
+            <?php }else{ ?>
             	<img src="../../mascaras/model1/imagenes/error.gif" width="16" height="16" title="El comprobante no posee Autorizacion del SRI" />
-            <? }?>
+            <?php }?>
           </td>
         </tr>
-        <?  				
+        <?php  				
 		}	//fin del for ($i = 0; $i < $tot; $i++)			
 		?>		  
       </tbody>
@@ -287,7 +287,7 @@ if ($thisPost->postBlock($_POST['postID']))
 </td>
 </tr>
 </table>	
-<? } ?>		
+<?php } ?>		
 <div id="bgtransparent" class="bgtransparent" style="display:none" onClick="closeModal();"></div>
     <div id="bgmodal"  class="bgmodal" style="display:none" >
         <div id="ajax_modal">

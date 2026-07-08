@@ -1514,7 +1514,7 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
             $('#banco-paso2-formulario').hide();
             $('#banco-paso3-buscar').show();
             setTimeout(function() {
-                var $grid = $("#grid_buscar_cuenta_banco");
+                public $grid = $("#grid_buscar_cuenta_banco");
                 var containerWidth = $grid.closest('.exa-fieldset').width();
                 $grid.jqGrid('setGridWidth', containerWidth - 40);
             }, 100);
@@ -1526,7 +1526,7 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
             $('#banco-paso3-buscar').hide();
             $('#grid_bancos').trigger('reloadGrid');
             setTimeout(function() {
-                var $grid = $('#grid_bancos');
+                public $grid = $('#grid_bancos');
                 if ($grid.length && $grid.closest('.ui-jqgrid').parent().width() > 0) {
                     try {
                         $(window).trigger('resize');
@@ -1561,7 +1561,7 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
                 datatype: 'json'
             }).trigger('reloadGrid');
             setTimeout(function() {
-                var $grid = $("#grid_buscar_cuenta_banco");
+                public $grid = $("#grid_buscar_cuenta_banco");
                 var containerWidth = $grid.closest('.exa-fieldset').width();
                 $grid.jqGrid('setGridWidth', containerWidth - 40);
             }, 200);
@@ -1619,7 +1619,7 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
                     $.alert('Banco eliminado exitosamente', function() {
                         $('#grid_bancos').trigger('reloadGrid');
                         setTimeout(function() {
-                            var $grid = $('#grid_bancos');
+                            public $grid = $('#grid_bancos');
                             if ($grid.length && $grid.closest('.ui-jqgrid').parent().width() > 0) {
                                 try {
                                     $(window).trigger('resize');
@@ -2315,7 +2315,7 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
             // Redimensionamiento para tab bancos
             $(document).on('shown.bs.tab', 'a[href="#tab-bancos"]', function (e) {
                 setTimeout(function() {
-                    var $grid = $('#grid_bancos');
+                    public $grid = $('#grid_bancos');
                     if ($grid.length && $grid.closest('.ui-jqgrid').parent().width() > 0) {
                         try {
                             $(window).trigger('resize');
@@ -2369,7 +2369,7 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
                 $('.ui-jqgrid-btable:visible').each(function() {
                     var gridId = $(this).attr('id');
                     if (gridId) {
-                        var $grid = $('#' + gridId);
+                        public $grid = $('#' + gridId);
                         if ($grid.length) {
                             var parentWidth = $grid.closest('.ui-jqgrid').parent().width();
                             if (parentWidth > 0) {
@@ -2396,7 +2396,7 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
                 }
                 
                 grids.forEach(function(gridId) {
-                    var $grid = $(gridId);
+                    public $grid = $(gridId);
                     if ($grid.length && $grid.closest('.ui-jqgrid').parent().width() > 0) {
                         try {
                             $grid.jqGrid('setGridWidth', $grid.closest('.ui-jqgrid').parent().width(), true);

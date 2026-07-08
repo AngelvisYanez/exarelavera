@@ -90,7 +90,7 @@ if(isset($saveContainer)||isset($modContainer)||isset($delContainer)){
         </div>
         <div id="gestionarContainer" title="Gestionar Container">
             <form id="containerForm" class="form-horizontal normal" action="javascript:validarFormContainer(containerForm.data('tipo'));">
-                <input type="hidden" name="Emp_Cod" id="Emp_Cod" value="<? echo $Ses_Emp_Cod?>" />
+                <input type="hidden" name="Emp_Cod" id="Emp_Cod" value="<?php echo $Ses_Emp_Cod?>" />
                 <input type="hidden" name="Exc_Cod" id="Exc_Cod" value="" />
                 <div class="col-sm-12">
                 <div class="row">

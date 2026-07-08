@@ -180,7 +180,7 @@ exit();
         </FIELDSET>
 		</form>
 
-<? if(isset($txt_busqueda)){?>
+<?php if(isset($txt_busqueda)){?>
 <FIELDSET> 
 <LEGEND>
 <label class='Titulos2'>Resultados de la busqueda</label>
@@ -210,33 +210,33 @@ exit();
 	  $i++; 	  				 
 	  ?>      	 
       <tr>
-	    <td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php $Gui_Cod_Int=$row_rs_buscar['Gui_Cod']; echo $Gui_Cod_Int; ?></FONT></td>
-	    <td align="center"><FONT COLOR="<? echo $rojo;?>">
+	    <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php $Gui_Cod_Int=$row_rs_buscar['Gui_Cod']; echo $Gui_Cod_Int; ?></FONT></td>
+	    <td align="center"><FONT COLOR="<?php echo $rojo;?>">
 	      <?Php $Gui_Num=$row_rs_buscar['Gui_Num']; echo $Gui_Num; ?>
 	      </FONT>
 	      </td>
 	    <td align="center">
-	      <FONT COLOR="<? echo $rojo;?>">
+	      <FONT COLOR="<?php echo $rojo;?>">
 	        <?Php $Fecha_Fac=$row_rs_buscar['Gui_Fec'];  echo $Fecha_Fac; ?>
 	        </FONT>
 	      </td>
 	    <td align="left">
-	      <FONT COLOR="<? echo $rojo;?>">
+	      <FONT COLOR="<?php echo $rojo;?>">
 	        <?Php echo $row_rs_buscar['Prs_Ape']." ".$row_rs_buscar['Prs_Nom']; ?>
 	        </FONT>
 	      </td>
 	    <td align="center">
-        <? if($row_rs_buscar['Gui_Aut']=='S'){ ?>
+        <?php if($row_rs_buscar['Gui_Aut']=='S'){ ?>
         <form name="frm_pdf" id="frm_pdf" action="../COMPONENTES/tesPdfGuiaRemisionElectronica_1.0.php" method="post" target="_blank">
             <button type="button" class="btn btn-primary btn-mini" title="Pdf(Retenci&oacute;n electr&oacute;nica SRI)" onclick="this.form.submit()">
             <i class=" icon-download-alt icon-white"></i> <span></span> </button>
             <input name="urlXml" id="urlXml" type="hidden" value="<?Php echo '../FRONT/'.$Ses_Emp_Cod."/".$row_rs_buscar['Gui_Xml']."_A.xml";?>">
             <input name="op" id="op" type="hidden" value="I">
-            <input name="logoUrl" id="logoUrl" type="hidden" value="<? echo $Ses_Emp_Log;?>">            
+            <input name="logoUrl" id="logoUrl" type="hidden" value="<?php echo $Ses_Emp_Log;?>">            
         </form>        
-        <? }?>
+        <?php }?>
         </td>
-	    <td align="center"><button type="button" class="btn btn-info btn-mini" title="Detalle del registro" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_info=1&amp;com_codigo=<? echo $row_rs_buscar['Gui_Cod'];?>&amp;Ses_Emp_Cod=<? echo $Ses_Emp_Cod;?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>	
+	    <td align="center"><button type="button" class="btn btn-info btn-mini" title="Detalle del registro" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_info=1&amp;com_codigo=<?php echo $row_rs_buscar['Gui_Cod'];?>&amp;Ses_Emp_Cod=<?php echo $Ses_Emp_Cod;?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>	
 	    <td align="center">
 	      <?Php if ($row_rs_buscar['Gui_Est'] == 'A') { ?>
 	       <form method="post" name="pasar" action="<?Php echo $_SERVER['PHP_SELF']; ?>">
@@ -279,8 +279,8 @@ exit();
     </tbody>
   </table>    
 </FIELDSET>
-<? echo barra_estado(count($rs_buscar));?>
-<? }//if(isset($txt_busqueda))?>	                                           
+<?php echo barra_estado(count($rs_buscar));?>
+<?php }//if(isset($txt_busqueda))?>	                                           
 <br />
 <?Php 
 	if (isset($volver_busqueda) && !isset($op_busqueda)) { 
@@ -312,25 +312,25 @@ exit();
         <table width="100%" border="0" cellspacing="0" cellpadding="0">
           <tr>
             <td width="30%" class="Etiqueta1">&nbsp;C&eacute;dula/R.U.C.:</td>
-            <td width="20%" align="left" class="LetraNegra">&nbsp;<? echo $rs_guiasDestinatario['Prs_Ced']?></td>            
+            <td width="20%" align="left" class="LetraNegra">&nbsp;<?php echo $rs_guiasDestinatario['Prs_Ced']?></td>            
             </tr>
           <tr>
             <td class="Etiqueta1">Nombre/Raz&oacute;n Social:</td>
-            <td colspan="3" class="LetraNegra">&nbsp;<? echo $rs_guiasDestinatario['Prs_Ape'].' '.$rs_guiasDestinatario['Prs_Nom']?></td>
+            <td colspan="3" class="LetraNegra">&nbsp;<?php echo $rs_guiasDestinatario['Prs_Ape'].' '.$rs_guiasDestinatario['Prs_Nom']?></td>
             </tr>
           <tr>
             <td class="Etiqueta1">C&oacute;d. Establecimiento:</td>
-            <td align="left" class="LetraNegra">&nbsp;<? echo $rs_guiasDestinatario['Des_Sri']?></td>
+            <td align="left" class="LetraNegra">&nbsp;<?php echo $rs_guiasDestinatario['Des_Sri']?></td>
             <td width="16%" class="Etiqueta1">C&oacute;digo Aduana:</td>
-            <td width="34%" align="left" class="LetraNegra">&nbsp;<? echo $rs_guiasDestinatario['Des_Adu']?></td>
+            <td width="34%" align="left" class="LetraNegra">&nbsp;<?php echo $rs_guiasDestinatario['Des_Adu']?></td>
             </tr>
           <tr>
             <td class="Etiqueta1">Direcci&oacute;n de Llegada:</td>
-            <td colspan="3" align="left" class="LetraNegra">&nbsp;<? echo $rs_guiasDestinatario['Gui_Dar']?></td>
+            <td colspan="3" align="left" class="LetraNegra">&nbsp;<?php echo $rs_guiasDestinatario['Gui_Dar']?></td>
             </tr>
           <tr>
             <td class="Etiqueta1">Motivo:</td>
-            <td colspan="3" align="left" class="LetraNegra">&nbsp;<? echo $rs_guiasDestinatario['Gui_Mot']?></td>
+            <td colspan="3" align="left" class="LetraNegra">&nbsp;<?php echo $rs_guiasDestinatario['Gui_Mot']?></td>
             </tr>
         </table>       
         </FIELDSET>
@@ -343,31 +343,31 @@ exit();
         <table width="100%" border="0" cellspacing="0" cellpadding="0">
           <tr>
             <td width="31%" class="Etiqueta1">C&eacute;dula/R.U.C.:</td>
-            <td width="11%" class="LetraNegra">&nbsp;<? echo $rs_guiasTransporte['Prs_Ced'];?></td>            
+            <td width="11%" class="LetraNegra">&nbsp;<?php echo $rs_guiasTransporte['Prs_Ced'];?></td>            
             </tr>
           <tr>
             <td class="Etiqueta1">Nombre/Raz&oacute;n Social:</td>
-            <td colspan="2" class="LetraNegra">&nbsp;<? echo $rs_guiasTransporte['Prs_Ape'].' '.$rs_guiasTransporte['Prs_Nom'];?></td>
+            <td colspan="2" class="LetraNegra">&nbsp;<?php echo $rs_guiasTransporte['Prs_Ape'].' '.$rs_guiasTransporte['Prs_Nom'];?></td>
             </tr>
           <tr>
             <td class="Etiqueta1">Direcci&oacute;n de Salida:</td>
-            <td colspan="2" class="LetraNegra">&nbsp;<? echo $rs_guiasTransporte['Gui_Dsa'];?></td>
+            <td colspan="2" class="LetraNegra">&nbsp;<?php echo $rs_guiasTransporte['Gui_Dsa'];?></td>
             </tr>
           <tr>
             <td class="Etiqueta1">Placa:</td>
-            <td class="LetraNegra">&nbsp;<? echo $rs_guiasTransporte['Gui_Pla'];?></td>
+            <td class="LetraNegra">&nbsp;<?php echo $rs_guiasTransporte['Gui_Pla'];?></td>
             <td><table width="100%" border="0" cellspacing="0" cellpadding="0">
               <tr>
                 <td width="16%" class="Etiqueta1">Salida:</td>
-                <td width="26%" class="LetraNegra">&nbsp;<? echo $rs_guiasTransporte['Gui_Fsa'];?></td>
+                <td width="26%" class="LetraNegra">&nbsp;<?php echo $rs_guiasTransporte['Gui_Fsa'];?></td>
                 <td width="19%" class="Etiqueta1">Llegada:</td>
-                <td width="39%" class="LetraNegra">&nbsp;<? echo $rs_guiasTransporte['Gui_Far'];?></td>
+                <td width="39%" class="LetraNegra">&nbsp;<?php echo $rs_guiasTransporte['Gui_Far'];?></td>
               </tr>
             </table></td>
           </tr>
           <tr>
             <td class="Etiqueta1">Ruta de Traslado:</td>
-            <td colspan="2" class="LetraNegra">&nbsp;<? echo $rs_guiasTransporte['Gui_Rut'];?></td>
+            <td colspan="2" class="LetraNegra">&nbsp;<?php echo $rs_guiasTransporte['Gui_Rut'];?></td>
           </tr>
         </table>       
         </FIELDSET>
@@ -388,16 +388,16 @@ exit();
             </tr>
         </thead>
         <tbody>	
-        <? foreach($rs_guiasDetalle as $datos){?>
+        <?php foreach($rs_guiasDetalle as $datos){?>
         <tr>
-            <td align="center"><? echo $datos['Pro_Cod'];?></td>
-            <td align="center"><? echo $datos['Gui_Can'];?></td>
-            <td>&nbsp;<? echo $datos['Ite_Lar'].' '.$datos['Pro_Obs'];?></td>
+            <td align="center"><?php echo $datos['Pro_Cod'];?></td>
+            <td align="center"><?php echo $datos['Gui_Can'];?></td>
+            <td>&nbsp;<?php echo $datos['Ite_Lar'].' '.$datos['Pro_Obs'];?></td>
         </tr>
-        <? }?>
+        <?php }?>
         </tbody>          
        </table>
-       <? echo barra_estado(count($rs_guiasDetalle));?>                
+       <?php echo barra_estado(count($rs_guiasDetalle));?>                
     </FIELDSET>
     <br />
     <table border="0">
@@ -412,7 +412,7 @@ exit();
         </form>
         </td>
         <td width="136" align="left">
-		<?
+		<?php
           	/* 
 			* Consulta del reporte para impresion 
 			*/
@@ -433,7 +433,7 @@ exit();
       </td>
       </tr>
     </table>
-<? }?>
+<?php }?>
 <br />
 </td>
 </tr>

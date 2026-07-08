@@ -41,20 +41,20 @@
  * @license http://www.opensource.org/licenses/bsd-license.php BSD License
  */
 
-require_once 'PrivatePublic.php';
+require_once 'Privatepublic.php';
 /**
  * This class holds a security key and provides the necessary encryption,
  * decryption and certificate handling routines.
  *
  * @author Andreas Schamberger <mail@andreass.net>
  */
-class P12 extends PrivatePublic
+class P12 extends Privatepublic
 {
     public $active=false;
     /**
      * Loads the given cryptographic key for the class.
      *
-     * @param string  $keyType    \ass\XmlSecurity\Key::TYPE_PUBLIC | \ass\XmlSecurity\Key::TYPE_PRIVATE
+     * @param string  $keyType    \ass\XmlSecurity\Key::TYPE_public | \ass\XmlSecurity\Key::TYPE_PRIVATE
      * @param string  $key        Key string or filename
      * @param boolean $isFile     Is parameter key a filename
      * @param string  $passphrase Passphrase for given key
@@ -444,8 +444,8 @@ class P12 extends PrivatePublic
         // $modulus = new \phpseclib\Math\BigInteger(base64_decode($modulus), 256);
         // $exponent = new \phpseclib\Math\BigInteger(base64_decode($exponent), 256);
         // $rsa->loadKey(['n' => $modulus, 'e' => $exponent]);
-        // $rsa->setPublicKey();
-        // return $rsa->getPublicKey();
+        // $rsa->setpublicKey();
+        // return $rsa->getpublicKey();
     // }
     function filter_content($content)
 	 {

@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?
+<?php
 /**
 * @abstract Permite modificar los comprobantes contables
 * @author Lewis Chimarro
@@ -56,7 +56,7 @@ if (isset($buscod))
 		<td width="5%">&nbsp;</td>						
 		</tr>
       <tbody>  
-	  <?
+	  <?php
 	  if (count($row_rs_buscta) > 0) {
 	  foreach ($row_rs_buscta as $row)
 	  { 
@@ -65,13 +65,13 @@ if (isset($buscod))
 		/* Consulta del detallete de la CUENTA (OTRO) */
 		$row_rs_grupo = $obBD_con1->getRowConsulta(204, $row_rs_recur['Pld_Rec'], $obBD_conexion);
 	  ?>
-	  <tr <? echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo"); ?> class="Fondo">
-	    <td><? echo $row['Pld_Cod']; ?></td>
-		<td><div align="left"><? echo $row['Pld_Cdc']; ?></div></td>
+	  <tr <?php echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo"); ?> class="Fondo">
+	    <td><?php echo $row['Pld_Cod']; ?></td>
+		<td><div align="left"><?php echo $row['Pld_Cdc']; ?></div></td>
 		<td><div align="left"><?Php echo marcar_cadena($buscod, $row['Pld_Des'],'#FFFF00', 1);?></div></td>
-		<td><div align="center"><? if ($row_rs_recur['Pld_Des'] != ""){ echo $row_rs_recur['Pld_Des']." <strong>(".$row_rs_grupo['Pld_Des'].")</strong>"; }else{ echo "&nbsp;"; } ?></div></td>
-		<td align="center"><div align="center"><? echo $row['Pld_Tip']; ?></div></td>
-		<td align="center"><div align="center"><? echo $row['Pld_Est']; ?></div></td>
+		<td><div align="center"><?php if ($row_rs_recur['Pld_Des'] != ""){ echo $row_rs_recur['Pld_Des']." <strong>(".$row_rs_grupo['Pld_Des'].")</strong>"; }else{ echo "&nbsp;"; } ?></div></td>
+		<td align="center"><div align="center"><?php echo $row['Pld_Tip']; ?></div></td>
+		<td align="center"><div align="center"><?php echo $row['Pld_Est']; ?></div></td>
 		<td align="center"><img src="../../mascaras/model1/imagenes/32x32/Debe.PNG" width="22" height="24" title="Agregar cuenta al Debe" style="	
 		cursor:pointer" onClick="nueva_fila('c_contenido','debe','<?Php echo $_SERVER['PHP_SELF']; ?>?Pec_Cod=<?Php echo $Pec_Cod; ?>', '<?Php echo 
 		$row['Pld_Cod']; ?>', '<?Php echo $row['Pld_Cdc']; ?>', '<?Php echo $row['Pld_Des']; ?>')"
@@ -81,15 +81,15 @@ if (isset($buscod))
 		$row['Pld_Cod']; ?>', '<?Php echo $row['Pld_Cdc']; ?>', '<?Php echo $row['Pld_Des']; ?>')"
 		></td>				
 	  </tr>
-	  <? } //FIn del foreach ($row as $row)
+	  <?php } //FIn del foreach ($row as $row)
 	  } else { ?>
 		<tr><td colspan="9" class="Alertas"><?Php echo error_alerta("No hay resultados que mostrar", 1); ?></td>
 		</tr>
-	  <? }//Fin del if ($total_rs_buscta > 0)
+	  <?php }//Fin del if ($total_rs_buscta > 0)
 	  ?>
       </tbody>
 	</table>
-<? 
+<?php 
  echo barra_estado(count($row_rs_buscta));
 exit();
 }//if (isset($buscod))
@@ -114,7 +114,7 @@ if (isset($codigo))
 	}
 		
 	if (isset($cuenta)) { 
-	  $return_value = '<?xml version="1.0" standalone="yes"?><cuenta><descripcion>'.utf8_encode($cuenta).'</descripcion><codigo>'.$codigo.'</codigo></cuenta>';
+	  $return_value = '<?xml version="1.0" standalone="yes"?><cuenta><descripcion>'.mb_convert_encoding($cuenta, 'UTF-8', 'ISO-8859-1').'</descripcion><codigo>'.$codigo.'</codigo></cuenta>';
 	}
 	header('Content-Type: text/xml'); 
 	echo $return_value;	
@@ -361,12 +361,12 @@ exit();
   </tr>
 	<tr>
       <td height="389" align="left" valign="top">      
-	<?
+	<?php
 /* Control para la elección del periodo contable */
 if (!isset($hdd_save) && !isset($txt_busqueda) && !isset($Com_Cod))
 {
 ?>
-<form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1">
+<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1">
 <FIELDSET>
 	<LEGEND>
 		<label class="Titulos2">Selección Periodo Contable</label>
@@ -429,10 +429,10 @@ else
 	case 2:	$etiqueta="Buscar Comprobante de ".$array_asien[1]." a modificar: "; break; 
 	case 3:	$etiqueta="Buscar Comprobante de ".$array_asien[2]." a modificar: "; break; }
 	?>
-    <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1">
+    <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1">
 	<FIELDSET>
 	<LEGEND>
-	<label class="Titulos2"><? echo $etiqueta; ?></label>
+	<label class="Titulos2"><?php echo $etiqueta; ?></label>
 	</LEGEND>
 	<table width="501" height="27" border="0" cellpadding="0" cellspacing="0">
     <tr>
@@ -459,7 +459,7 @@ else
 		<tr>
 		  <td width="88" height="28" class="BarraBusqueda"><div align="right">Busqueda:</div></td>
 		  <td width="486" class="BarraBusqueda"><input name="txt_busqueda" type="text" id="txt_busqueda" value="" size="50" maxlength="50" onKeyUp="parametro_injection(this)">
-			<input name="op" type="hidden" id="op" value="<? echo $op; ?>" >
+			<input name="op" type="hidden" id="op" value="<?php echo $op; ?>" >
 			<input name="Pec_Cod" id="Pec_Cod" type="hidden" value="<?Php  echo $Pec_Cod; ?>"> 
 			<input name="Pec_Fei" id="Pec_Fei" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fei']; ?>">
           	<input name="Pec_Fef" id="Pec_Fef" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fef']; ?>">					
@@ -471,7 +471,7 @@ else
 	  </table>
 	</FIELDSET>
     </form>
-<? }//Fin del if (($op==1 || $op==2 || $op==3)) 
+<?php }//Fin del if (($op==1 || $op==2 || $op==3)) 
 
 if(isset($txt_busqueda))
 { ?>	
@@ -494,7 +494,7 @@ if(isset($txt_busqueda))
         </tr>
      </thead>
      <tbody>
-		<?
+		<?php
 	if (count($row_rs_cabcomp) > 0) 
 	{
 		$i=0;
@@ -510,18 +510,18 @@ if(isset($txt_busqueda))
 	   ?>
 	   <form method="post" name="form2" action="<?Php echo $_SERVER['PHP_SELF']; ?>">
 		<tr>
-		  <td align="center"><font color="<?php echo $rojo; ?>"><? echo $row['Com_Cod']; ?></font></td>
+		  <td align="center"><font color="<?php echo $rojo; ?>"><?php echo $row['Com_Cod']; ?></font></td>
 		  <td align="center"><font color="<?php echo $rojo; ?>"><?Php  if ($row['Com_Gen'] == 'M') echo "Manual"; else echo "Auto";
 		  ?></font></td>
-		  <td align="center"><font color="<?php echo $rojo; ?>">&nbsp;<? 
+		  <td align="center"><font color="<?php echo $rojo; ?>">&nbsp;<?php 
 	  	list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 		  echo $mes.'-'.$row['Com_Num']; ?></font></td>
-		  <td><font color="<?php echo $rojo; ?>"><? echo $row['Prs_Ced']; ?>&nbsp;</font></td>
+		  <td><font color="<?php echo $rojo; ?>"><?php echo $row['Prs_Ced']; ?>&nbsp;</font></td>
 		  <td><font color="<?php echo $rojo; ?>"><?Php echo marcar_cadena($_POST['txt_busqueda'], $row['Prs_Ape']." ".$row['Prs_Nom'], '#FFFF00', 1); ?></font></td>
-		  <td align="center"><font color="<?php echo $rojo; ?>">&nbsp;<? echo $row['Com_Fec']; ?></font></td>			
-		  <td align="right"><font color="<?php echo $rojo; ?>">&nbsp;<? echo $row['Com_Val']; ?></font></td>
-		  <td align="center"><button type="button" class="btn btn-success btn-mini" title="Detalle del registro" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_info=1&com_codigo=<? echo $row['Com_Cod'];?>&Ses_Emp_Cod=<? echo $Ses_Emp_Cod;?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>
-		  <td align="center"><? 		 
+		  <td align="center"><font color="<?php echo $rojo; ?>">&nbsp;<?php echo $row['Com_Fec']; ?></font></td>			
+		  <td align="right"><font color="<?php echo $rojo; ?>">&nbsp;<?php echo $row['Com_Val']; ?></font></td>
+		  <td align="center"><button type="button" class="btn btn-success btn-mini" title="Detalle del registro" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_info=1&com_codigo=<?php echo $row['Com_Cod'];?>&Ses_Emp_Cod=<?php echo $Ses_Emp_Cod;?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>
+		  <td align="center"><?php 		 
 		  /* Se permite modificar los comprobantes en caso de ser manuales */
 		  if ($row['Com_Gen']=='M') 
 		  { 		  
@@ -549,7 +549,7 @@ if(isset($txt_busqueda))
 		    <?Php } ?>		  </td>					
 		  </tr>
 		</form>
-        <?	  		
+        <?php	  		
 	  }//Fin del foreach
 		}//FIn del if ($row_rs_cabcomp > 0) {	
 		else
@@ -578,9 +578,9 @@ if(isset($txt_busqueda))
         }//Fin del if ($anulada > 0)
         ?>
         <br/>
-    <?
+    <?php
     require_once('../../componentes/FRONT/com_con_leyenda.php');?>  
-<? }
+<?php }
 
 if ($cod > 0 && !(isset($txt_busqueda)))
 {
@@ -597,7 +597,7 @@ if ($cod > 0 && !(isset($txt_busqueda)))
 			case 2:	$codigo=$Prv_Cod; $etiqueta=$array_asien[1]; break;
 			case 3:	$codigo=0; $etiqueta=$array_asien[2]; break; }
 	?>
-	<form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form2">
+	<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form2">
         <?Php	/* Creacion del campo repost */
 	$thisPost->startPost();	?>
 	<input name="Pec_Cod" id="Pec_Cod" type="hidden"  value="<?php echo $Pec_Cod; ?>">
@@ -606,12 +606,12 @@ if ($cod > 0 && !(isset($txt_busqueda)))
     <input name="Pla_Cod" id="Pla_Cod" type="hidden" value="<?php echo $Pla_Cod; ?>" />
 <FIELDSET>
   <LEGEND>
-	<label class="Titulos2">Datos del Comprobantes de <? echo $etiqueta; ?></label>
+	<label class="Titulos2">Datos del Comprobantes de <?php echo $etiqueta; ?></label>
 	</LEGEND>	
 	<FIELDSET>
 	<LEGEND>
 	<label class="Titulos2">Generales</label>
-	<input name="Com_Cod" type="hidden" id="Com_Cod" value="<? echo $Com_Cod;?>">
+	<input name="Com_Cod" type="hidden" id="Com_Cod" value="<?php echo $Com_Cod;?>">
 	</LEGEND>
 	<table width="100%" border="0" cellpadding="0" cellspacing="0">
   <tr>
@@ -622,26 +622,26 @@ if ($cod > 0 && !(isset($txt_busqueda)))
   </tr>
   <tr>
     <td class="Etiqueta1">No. Compr: </td>
-    <td class="LetraNegra"><div id="div_codigo">&nbsp;<input name="Com_Num" type="text" readonly="true" style="border:none" id="Com_Num" size="10" maxlength="10" value="<? echo $row_rs_codcompr['Com_Num']; ?>">
+    <td class="LetraNegra"><div id="div_codigo">&nbsp;<input name="Com_Num" type="text" readonly="true" style="border:none" id="Com_Num" size="10" maxlength="10" value="<?php echo $row_rs_codcompr['Com_Num']; ?>">
     </div></td>
     <td class="Etiqueta1"><span class="Asterisco">*</span> Fecha:</td>
     <td class="LetraNegra">
-	<input name="Com_Fec" type="text" id="Com_Fec" size="12" maxlength="10"  value="<? echo $row_rs_codcompr['Com_Fec']; ?>" onBlur="validar_fecha2(this)" onKeyUp="mascara(this,'-',patron,true);">	
+	<input name="Com_Fec" type="text" id="Com_Fec" size="12" maxlength="10"  value="<?php echo $row_rs_codcompr['Com_Fec']; ?>" onBlur="validar_fecha2(this)" onKeyUp="mascara(this,'-',patron,true);">	
 	         <input name="Hdd_Com_Fec" type="hidden" id="Hdd_Com_Fec" value="<?Php echo $row_rs_codcompr['Com_Fec'];  ?>"></td>
   </tr>
   <tr>
     <td class="Etiqueta1">Proveedor/Cliente:</td>
-    <td class="LetraNegra">&nbsp;<? echo $row_rs_codcompr['Prs_Ape'].' '.$row_rs_codcompr['Prs_Nom']; ?></td>
+    <td class="LetraNegra">&nbsp;<?php echo $row_rs_codcompr['Prs_Ape'].' '.$row_rs_codcompr['Prs_Nom']; ?></td>
     <td class="Etiqueta1">Valor:</td>
-    <td><input name="Com_Val" type="text" id="Com_Val" size="12" maxlength="12" value="<? echo $row_rs_codcompr['Com_Val']; ?>" onKeyPress="return validar_decimal(event)" style="text-align:right"></td>
+    <td><input name="Com_Val" type="text" id="Com_Val" size="12" maxlength="12" value="<?php echo $row_rs_codcompr['Com_Val']; ?>" onKeyPress="return validar_decimal(event)" style="text-align:right"></td>
   </tr>
   <tr>
     <td class="Etiqueta1"> <span class="Asterisco">*</span> Concepto:</td>
-    <td colspan="3"><textarea name="Com_Con" cols="71" id="Com_Con" style="text-transform:uppercase" onKeyUp="parametro_injection(this)"><? echo $row_rs_codcompr['Com_Con']; ?></textarea></td>
+    <td colspan="3"><textarea name="Com_Con" cols="71" id="Com_Con" style="text-transform:uppercase" onKeyUp="parametro_injection(this)"><?php echo $row_rs_codcompr['Com_Con']; ?></textarea></td>
     </tr>
   <tr>
     <td class="Etiqueta1">Observaci&oacute;n:</td>
-    <td colspan="3" rowspan="2" valign="top"><textarea name="Com_Obs" cols="71" style="text-transform:uppercase" id="Com_Obs" onKeyUp="parametro_injection(this)"><? echo $row_rs_codcompr['Com_Obs']; ?></textarea></td>
+    <td colspan="3" rowspan="2" valign="top"><textarea name="Com_Obs" cols="71" style="text-transform:uppercase" id="Com_Obs" onKeyUp="parametro_injection(this)"><?php echo $row_rs_codcompr['Com_Obs']; ?></textarea></td>
     </tr>
   <tr>
     <td>&nbsp;</td>
@@ -665,23 +665,23 @@ if ($cod > 0 && !(isset($txt_busqueda)))
 	</tr>
     </thead>
     <tbody id="c_contenido">
-	<? if (count($row_rs_cuentas) > 0)
+	<?php if (count($row_rs_cuentas) > 0)
 	{ 
 		foreach ($row_rs_cuentas as $row) 
 		{ 
 			$fila++;
 	?>
 	<tr>
-	  <td><input name="datos[<? echo $fila; ?>,1]" id="datos[<? echo $fila; ?>,1]" type="hidden" value="<? echo $row['Pld_Cod']; ?>"></td>
-	  <td><input name="datos[<? echo $fila; ?>,2]" type="text" id="datos[<? echo $fila; ?>,2]" onKeyUp="cargar_cuenta('<?php echo $_SERVER['PHP_SELF']; ?>?Pla_Cod=<?Php echo $Pla_Cod; ?>&Pec_Cod=<?Php echo $Pec_Cod; ?>&codigo=',this,document.getElementById('datos[<? echo $fila; ?>,3]'),document.getElementById('datos[<? echo $fila; ?>,1]'))" value="<? echo $row['Pld_Cdc']; ?>" size="7"></td>
-		<td><input name="datos[<? echo $fila; ?>,3]" id="datos[<? echo $fila; ?>,3]" type="text" size="20" maxlength="100" value="<? echo $row['Pld_Des']; ?>"></td>
-		<td><input name="datos[<? echo $fila; ?>,6]" id="datos[<? echo $fila; ?>,6]" type="text" size="23" maxlength="25" value="<? echo $row['Asi_Glo']; ?>"></td>
-		<td align="right"><? if ($row['Asi_Deh']=='D') { ?><input name="datos[<? echo $fila; ?>,4]" id="datos[<? echo $fila; ?>,4]" type="text" size="7" maxlength="10" value="<? echo $row['Asi_Val']; ?>" style="text-align:right" onBlur="numerico(this)" onKeyUp="sumar_totales()"><? } ?></td>
-		<td align="right"><? if ($row['Asi_Deh']=='H') { ?><input name="datos[<? echo $fila; ?>,5]" id="datos[<? echo $fila; ?>,5]" type="text" size="7" maxlength="10" value="<? echo $row['Asi_Val']; ?>" style="text-align:right" onBlur="numerico(this)" onKeyUp="sumar_totales()"><? } ?></td>
-		<td align="center"><input id="quitar_fila2" type="button" name="quitar_fila2" value="X" onClick="quitar_fila_st(this); elimin_asi(<? echo $row['Asi_Cod']; ?>)">
+	  <td><input name="datos[<?php echo $fila; ?>,1]" id="datos[<?php echo $fila; ?>,1]" type="hidden" value="<?php echo $row['Pld_Cod']; ?>"></td>
+	  <td><input name="datos[<?php echo $fila; ?>,2]" type="text" id="datos[<?php echo $fila; ?>,2]" onKeyUp="cargar_cuenta('<?php echo $_SERVER['PHP_SELF']; ?>?Pla_Cod=<?Php echo $Pla_Cod; ?>&Pec_Cod=<?Php echo $Pec_Cod; ?>&codigo=',this,document.getElementById('datos[<?php echo $fila; ?>,3]'),document.getElementById('datos[<?php echo $fila; ?>,1]'))" value="<?php echo $row['Pld_Cdc']; ?>" size="7"></td>
+		<td><input name="datos[<?php echo $fila; ?>,3]" id="datos[<?php echo $fila; ?>,3]" type="text" size="20" maxlength="100" value="<?php echo $row['Pld_Des']; ?>"></td>
+		<td><input name="datos[<?php echo $fila; ?>,6]" id="datos[<?php echo $fila; ?>,6]" type="text" size="23" maxlength="25" value="<?php echo $row['Asi_Glo']; ?>"></td>
+		<td align="right"><?php if ($row['Asi_Deh']=='D') { ?><input name="datos[<?php echo $fila; ?>,4]" id="datos[<?php echo $fila; ?>,4]" type="text" size="7" maxlength="10" value="<?php echo $row['Asi_Val']; ?>" style="text-align:right" onBlur="numerico(this)" onKeyUp="sumar_totales()"><?php } ?></td>
+		<td align="right"><?php if ($row['Asi_Deh']=='H') { ?><input name="datos[<?php echo $fila; ?>,5]" id="datos[<?php echo $fila; ?>,5]" type="text" size="7" maxlength="10" value="<?php echo $row['Asi_Val']; ?>" style="text-align:right" onBlur="numerico(this)" onKeyUp="sumar_totales()"><?php } ?></td>
+		<td align="center"><input id="quitar_fila2" type="button" name="quitar_fila2" value="X" onClick="quitar_fila_st(this); elimin_asi(<?php echo $row['Asi_Cod']; ?>)">
 		<input name="codasi<?php echo "[".$fila."]"; ?>" id="codasi<?php echo "[".$fila."]"; ?>" type="hidden" value="<?Php echo $row['Asi_Cod']; ?>">			  </td>
 	</tr>
-	<? } //Fin del foreach
+	<?php } //Fin del foreach
 	 } //Fin del if
 	 ?>
 	</tbody>
@@ -714,16 +714,16 @@ if ($cod > 0 && !(isset($txt_busqueda)))
            <i class="icon-list-alt icon-white"></i>
            <span>Haber</span>
     </button> </td>
-		<input id="nfilas" name="nfilas" type="hidden" value="<? echo $fila; ?>">
-		<input id="Com_Tip" name="Com_Tip" type="hidden" value="<? echo $tipo; ?>">
-		<input id="Com_Cod" name="Com_Cod" type="hidden" value="<? echo $row_rs_codcompr['Com_Cod']; ?>">
-		<input id="Asi_Cod" name="Asi_Cod" type="hidden" value="<? echo $row_rs_cuentas['Asi_Cod']; ?>">
+		<input id="nfilas" name="nfilas" type="hidden" value="<?php echo $fila; ?>">
+		<input id="Com_Tip" name="Com_Tip" type="hidden" value="<?php echo $tipo; ?>">
+		<input id="Com_Cod" name="Com_Cod" type="hidden" value="<?php echo $row_rs_codcompr['Com_Cod']; ?>">
+		<input id="Asi_Cod" name="Asi_Cod" type="hidden" value="<?php echo $row_rs_cuentas['Asi_Cod']; ?>">
 		<input id="Com_Tipo" name="Com_Tipo" type="hidden" value="C">
-		<input id="Codigo" name="Codigo" type="hidden" value="<? echo $codigo; ?>">
-		<input id="op" name="op" type="hidden" value="<? echo $op; ?>">
-		<? if ($row_rs_codcompr['Prs_Ape'] =="VARIOS") {?>
-		<input name="Prv_Cod"type="hidden" value="<? echo "3"; ?>">		
-		<? }?>
+		<input id="Codigo" name="Codigo" type="hidden" value="<?php echo $codigo; ?>">
+		<input id="op" name="op" type="hidden" value="<?php echo $op; ?>">
+		<?php if ($row_rs_codcompr['Prs_Ape'] =="VARIOS") {?>
+		<input name="Prv_Cod"type="hidden" value="<?php echo "3"; ?>">		
+		<?php }?>
 	  </tr>
 	</table>
 	<script language="javascript">
@@ -739,7 +739,7 @@ if ($cod > 0 && !(isset($txt_busqueda)))
 	<br>
 		<table width="312" border="0" cellpadding="0" cellspacing="0">
 		  <tr>
-		    <td width="101"><button type="button" class="btn btn-inverse fileinput-button" title="Atras" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*cmb_mes*Pec_Cod*op*hdd_volver', '<? echo $volver_busqueda.'*'.$volver_opciones.'*'.$volver_mes.'*'.$Pec_Cod.'*'.$op.'*1';?>')">
+		    <td width="101"><button type="button" class="btn btn-inverse fileinput-button" title="Atras" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*cmb_mes*Pec_Cod*op*hdd_volver', '<?php echo $volver_busqueda.'*'.$volver_opciones.'*'.$volver_mes.'*'.$Pec_Cod.'*'.$op.'*1';?>')">
                <i class=" icon-arrow-left icon-white"></i>
                <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
        		 </button>
@@ -765,7 +765,7 @@ if ($cod > 0 && !(isset($txt_busqueda)))
 <div id="bgtransparent" class="bgtransparent" style="display:none" onClick="closeModal()">
 </div>
 <div id="bgmodal"  class="bgmodal"   style="display:none">		
-<form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name="form2">
+<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name="form2">
 <?Php noEnterSubmit(); ?>   
 	<table width="100%" border="0" cellspacing="0" cellpadding="0">
       <tr>
@@ -803,7 +803,7 @@ if ($cod > 0 && !(isset($txt_busqueda)))
   </table>
 </form>
 </div>     
-	<? } 
+	<?php } 
 }////Fin del ELSE if (!isset($hdd_save) && !isset($txt_busqueda))
 } ?></td>
   </tr>

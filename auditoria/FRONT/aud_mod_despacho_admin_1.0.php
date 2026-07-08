@@ -1173,7 +1173,7 @@ $(function () {
     $('#backdropClienteDespacho').remove();
 
     function mostrarModalActividad() {
-        var $modal = $('#modalActividad');
+        public $modal = $('#modalActividad');
         $modal.appendTo('body').addClass('modal-in').attr('aria-hidden', 'false');
         if (!$('#backdropActividad').length) {
             $('body').append('<div class="modal-backdrop fade in" id="backdropActividad" style="z-index:1040;position:fixed;top:0;left:0;width:100%;height:100%;background:#000;opacity:0.5;"></div>');
@@ -1191,7 +1191,7 @@ $(function () {
     });
 
     $(document).on('click', '.editar-servicio', function () {
-        var $t = $(this);
+        public $t = $(this);
         $('#Ser_Cod').val($t.data('cod'));
         $('#Ser_Nombre').val($t.data('nom'));
         $('#Ser_Descripcion').val($t.data('desc'));
@@ -1274,7 +1274,7 @@ $(function () {
     });
 
     $(document).on('click', '.editar-actividad', function () {
-        var $t = $(this);
+        public $t = $(this);
         $('#Act_Cod').val($t.data('cod'));
         $('#Ser_Cod_Act').val($t.data('ser'));
         $('#Act_Nombre').val($t.data('nom'));
@@ -1309,7 +1309,7 @@ $(function () {
     $('#btnBuscarCliente').on('click', function () {
         var bus = $('#buscarCliente').val();
         $.get(urlBase, { buscarClientes: 1, search: bus }, function (r) {
-            var $sel = $('#selClienteAgregar');
+            public $sel = $('#selClienteAgregar');
             if ($sel.hasClass('select2-hidden-accessible')) $sel.select2('destroy');
             $sel.find('option:gt(0)').remove();
             $.each(r.rows || [], function (i, row) {
@@ -1332,7 +1332,7 @@ $(function () {
     });
 
     function mostrarModalClienteDespacho() {
-        var $modal = $('#modalEditarClienteDespacho');
+        public $modal = $('#modalEditarClienteDespacho');
         $modal.appendTo('body').addClass('modal-in');
         if (!$('#backdropClienteDespacho').length) {
             $('body').append('<div class="modal-backdrop fade in" id="backdropClienteDespacho" style="z-index:1040;position:fixed;top:0;left:0;width:100%;height:100%;background:#000;opacity:0.5;"></div>');
@@ -1345,7 +1345,7 @@ $(function () {
     }
 
     $(document).on('click', '.editar-cliente-despacho', function () {
-        var $t = $(this);
+        public $t = $(this);
         $('#editDcl_Cod').val($t.data('dcl'));
         $('#lblClienteEditar').text($t.data('nom'));
         $('#editReg_Cod').val($t.data('reg') || '');
@@ -1376,14 +1376,14 @@ $(function () {
     });
 
     function mostrarMsgPrecios(texto, esError) {
-        var $msg = $('#msgPrecios');
+        public $msg = $('#msgPrecios');
         $msg.removeClass('msg-success msg-error').addClass(esError ? 'msg-error' : 'msg-success').text(texto).show();
         if (!esError) setTimeout(function () { $msg.fadeOut(); }, 4000);
     }
 
     $('#btnGuardarTodosPrecios').on('click', function () {
-        var $btn = $(this);
-        var $rows = $('#gridPrecios tbody tr[data-act]').filter(':visible');
+        public $btn = $(this);
+        public $rows = $('#gridPrecios tbody tr[data-act]').filter(':visible');
         if ($rows.length === 0) {
             mostrarMsgPrecios('No hay actividades para guardar.', true);
             return;
@@ -1393,7 +1393,7 @@ $(function () {
         var pendientes = $rows.length;
         var errores = [];
         $rows.each(function () {
-            var $row = $(this);
+            public $row = $(this);
             var act = $row.data('act');
             var peq = parseFloat($row.find('.precio-pequeno').val().replace(',', '.')) || 0;
             var med = parseFloat($row.find('.precio-mediano').val().replace(',', '.')) || 0;
@@ -1432,7 +1432,7 @@ $(function () {
         if (!dcl) return;
         $.post(urlBase, { actualizarClienteDespacho: 1, Dcl_Cod: dcl, Dcl_Est: est, Reg_Cod: reg, Dcl_Tipo_Empresa: tipoEmp }, function (r) {
             if (r.success) {
-                var $row = $('tr[data-dcl="' + dcl + '"]');
+                public $row = $('tr[data-dcl="' + dcl + '"]');
                 $row.attr('data-reg', reg).attr('data-tipo', tipoEmp).attr('data-est', est);
                 $row.find('.cell-regimen').text($('#editReg_Cod option:selected').text() || '-- Sin régimen --');
                 $row.find('.cell-tipo').text($('#editDcl_Tipo_Empresa option:selected').text() || '-');
@@ -1444,7 +1444,7 @@ $(function () {
     });
 
     $(document).on('click', '.editar-regimen', function () {
-        var $t = $(this);
+        public $t = $(this);
         $('#Reg_Cod').val($t.data('cod'));
         $('#Reg_Nombre').val($t.data('nom'));
         $('#Reg_Descripcion').val($t.data('desc'));
@@ -1472,7 +1472,7 @@ $(function () {
 
     function cargarActividadesRegimen(reg) {
         $.get(urlBase, { actividadesRegimen: 1, Reg_Cod: reg }, function (r) {
-            var $tb = $('#gridActividadesRegimen tbody');
+            public $tb = $('#gridActividadesRegimen tbody');
             $tb.empty();
             $.each(r.rows || [], function (i, row) {
                 $tb.append('<tr><td>' + (row.Ser_Nombre || '') + '</td><td>' + (row.Act_Nombre || '') + '</td><td>' + (row.Act_Tipo || '') + '</td>' +
@@ -1506,7 +1506,7 @@ $(function () {
     $(document).on('click', '.eliminar-actividad', function () {
         var cod = $(this).data('cod'), nom = $(this).data('nom') || 'esta actividad';
         if (!confirm('¿Eliminar la actividad "' + nom + '"? Se marcará como inactiva y dejará de mostrarse en el catálogo.')) return;
-        var $btn = $(this);
+        public $btn = $(this);
         $btn.prop('disabled', true);
         $.post(urlBase, { eliminarActividad: 1, Act_Cod: cod }, function (r) {
             if (r.success) {
@@ -1526,7 +1526,7 @@ $(function () {
     $('a[href="#tab-actividades"]').on('shown.bs.tab', cargarActividadesFiltradas);
 
     function actualizarSelectActividadesRegimen(reg, ser) {
-        var $sel = $('#selActividadRegimen');
+        public $sel = $('#selActividadRegimen');
         if ($sel.hasClass('select2-hidden-accessible')) $sel.select2('destroy');
         $sel.find('option:gt(0)').remove();
         if (!reg || !ser) return;

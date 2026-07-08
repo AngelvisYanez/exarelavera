@@ -597,12 +597,12 @@ if (isset($saveDocument)) {
 
                                 <!--tipos_pago-->
                                 <select id="pag_cod" name="pag_cod" class="form-control input-xs" style="display: none;">
-                                    <?php foreach ($tipospago as $row) { ?><option value="<?php echo $row['Pag_Cod']; ?>" data-forcod="<?php echo $row['For_Cod']; ?>"><?php echo utf8_decode($row['Pag_Des']); ?></option><?php } ?>
+                                    <?php foreach ($tipospago as $row) { ?><option value="<?php echo $row['Pag_Cod']; ?>" data-forcod="<?php echo $row['For_Cod']; ?>"><?php echo mb_convert_encoding($row['Pag_Des'], 'ISO-8859-1', 'UTF-8'); ?></option><?php } ?>
                                 </select>
 
                                 <!--bancos-->
                                 <select id="bak_cod" name="bak_cod" class="form-control input-xs" style="display: none;">
-                                    <?php foreach ($bankos as $row) { ?><option value="<?php echo $row['Bak_Cod']; ?>"><?php echo utf8_decode($row['Bak_Des']); ?></option><?php } ?>
+                                    <?php foreach ($bankos as $row) { ?><option value="<?php echo $row['Bak_Cod']; ?>"><?php echo mb_convert_encoding($row['Bak_Des'], 'ISO-8859-1', 'UTF-8'); ?></option><?php } ?>
                                 </select>
 
                                 <!--cuentas contado=1, credito=2-->

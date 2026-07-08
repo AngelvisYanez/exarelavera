@@ -141,7 +141,7 @@ else
 	if(!($event > 0) or isset($_POST['hdd_volver']))
 	{
 	?>   
-     <form method="post" name= "form" action="<? echo $_SERVER['PHP_SELF'];?>">        
+     <form method="post" name= "form" action="<?php echo $_SERVER['PHP_SELF'];?>">        
       <fieldset>
       <legend>
       <label class="Titulos2">Comprobar registro</label>
@@ -198,7 +198,7 @@ else
        </fieldset>
       <input name="hdd_comprobar" type="hidden" id="hdd_comprobar" value="insertar"/>
      </form>
-   <? } 
+   <?php } 
   if($event > 0 && !isset($_POST['hdd_volver']))
   {
   ?>
@@ -206,9 +206,9 @@ else
 <LEGEND>
 <label class='Titulos2'>Datos a registrar</label>
 </LEGEND>
-	<form method="post" name="form" action="<? echo $_SERVER['PHP_SELF'];?>">
-	<? $thisPost->startPost();?>
-    <input type="hidden" value="<? echo $event;?>" name="event" id="event" >
+	<form method="post" name="form" action="<?php echo $_SERVER['PHP_SELF'];?>">
+	<?php $thisPost->startPost();?>
+    <input type="hidden" value="<?php echo $event;?>" name="event" id="event" >
     <?Php echo mensaje_requerido(); ?>
 	<FIELDSET>
 	<LEGEND>
@@ -225,7 +225,7 @@ else
 	  <tr>
 	    <td width="17%" class="Etiqueta1"><span class="Asterisco">*</span> Tipo de documento:</td>
 	    <td class="LetraNegra">&nbsp;
-	      <?
+	      <?php
 			/**
 			 * Total de caracteres
 			 * @var int
@@ -238,8 +238,8 @@ else
 			 */
 			$Identifica = $obBD_con1->getRowConsulta(4,$Ide_Max,$obBD_conexion);
 		?>
-	      <input type="hidden" id="Ide_Cod" name="Ide_Cod" value="<? echo $Identifica['Ide_Cod'];?>">
-	      <? echo $Identifica['Ide_Des'];?>			
+	      <input type="hidden" id="Ide_Cod" name="Ide_Cod" value="<?php echo $Identifica['Ide_Cod'];?>">
+	      <?php echo $Identifica['Ide_Des'];?>			
 	      </td>
 	    </tr>        
        <tr id="Natural">

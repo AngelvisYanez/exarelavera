@@ -69,7 +69,7 @@ if(isset($Com_Codigo))
 	</tbody>
     </table>
 	<div id="rubros"></div>	   
-<? 	
+<?php 	
 @ $obBD_con1->free_result($rs_semestre);
 		}//Fin del if(isset($Com_Hoy))
 		else

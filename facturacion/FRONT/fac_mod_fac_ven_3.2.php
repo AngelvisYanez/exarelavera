@@ -1371,7 +1371,7 @@ if (isset($saldoCCxCC)) {
                                         <select name="Tic_Cod" class="form-control input-xs">
                                             <option value=""> << TODOS>> </option>
                                             <?php foreach ($rs_tip_compr as $row) {
-                                                $row = array_map('utf8_encode', $row); // Convert each element to UTF-8
+                                                $row = array_map(function($v) { return mb_convert_encoding($v, 'UTF-8', 'ISO-8859-1'); }, $row); // Convert each element to UTF-8
                                                 if ($row['Tic_Sri'] != 4 && $row['Tic_Sri'] != 5 && $row['Tic_Sri'] != 7 && $row['Tic_Sri'] != 23 && $row['Tic_Sri'] != 24)
                                                     echo "<option value='$row[Tic_Cod]' data-ticsri='$row[Tic_Sri]'>$row[Tic_Sri] - $row[Tic_Des]</option>";
                                             } ?>
@@ -1868,12 +1868,12 @@ if (isset($saldoCCxCC)) {
 
                                 <!--tipos_pago-->
                                 <select id="pag_cod" name="pag_cod" class="form-control input-xs" style="display: none;">
-                                    <?php if (isset($tipospago)) foreach ($tipospago as $row) { ?><option value="<?php echo $row['Pag_Cod']; ?>" data-forcod="<?php echo $row['For_Cod']; ?>"><?php echo utf8_decode($row['Pag_Des']); ?></option><?php } ?>
+                                    <?php if (isset($tipospago)) foreach ($tipospago as $row) { ?><option value="<?php echo $row['Pag_Cod']; ?>" data-forcod="<?php echo $row['For_Cod']; ?>"><?php echo mb_convert_encoding($row['Pag_Des'], 'ISO-8859-1', 'UTF-8'); ?></option><?php } ?>
                                 </select>
 
                                 <!--bancos-->
                                 <select id="bak_cod" name="bak_cod" class="form-control input-xs" style="display: none;">
-                                    <?php if (isset($bankos)) foreach ($bankos as $row) { ?><option value="<?php echo $row['Bak_Cod']; ?>"><?php echo utf8_decode($row['Bak_Des']); ?></option><?php } ?>
+                                    <?php if (isset($bankos)) foreach ($bankos as $row) { ?><option value="<?php echo $row['Bak_Cod']; ?>"><?php echo mb_convert_encoding($row['Bak_Des'], 'ISO-8859-1', 'UTF-8'); ?></option><?php } ?>
                                 </select>
 
                                 <!--cuentas contado=1, credito=2-->
@@ -2895,7 +2895,7 @@ if (isset($saldoCCxCC)) {
         function ocultarCamposBusquedaImei() {
             // Ocultar todos los fieldsets que NO contengan "Tipo:"
             $('#imeiForm fieldset').each(function() {
-                var $fieldset = $(this);
+                public $fieldset = $(this);
                 var tieneTipo = $fieldset.find('label:contains("Tipo:")').length > 0;
                 var legend = $fieldset.find('legend').text().trim();
                 // Si NO tiene "Tipo:" Y el legend NO es "Filtros", ocultarlo
@@ -2910,7 +2910,7 @@ if (isset($saldoCCxCC)) {
             $('#imeiForm button:contains("Buscar")').closest('.form-group, fieldset').css('display', 'none !important').hide();
             // Ocultar radiosets que contengan "Apellido/Nombre" o "Cédula/R.U.C"
             $('#imeiForm .radioset').each(function() {
-                var $radioset = $(this);
+                public $radioset = $(this);
                 var html = $radioset.html();
                 if (html.indexOf('Apellido/Nombre') !== -1 || html.indexOf('Cédula/R.U.C') !== -1) {
                     $radioset.closest('.form-group, fieldset').css('display', 'none !important').hide();
@@ -2952,7 +2952,7 @@ if (isset($saldoCCxCC)) {
         
         // Agregar evento para recargar grid cuando cambie el filtro
         $('#imeiForm input[name="imei_tipo"]').on('change', function() {
-            var $grid = $('#imeiGrid');
+            public $grid = $('#imeiGrid');
             var Pro_Cod = $('#imeiForm input[name="Pro_Cod"]').val() || '';
             var Ime_Tip = $(this).val() || '';
             // Actualizar postData antes de recargar

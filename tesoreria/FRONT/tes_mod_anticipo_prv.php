@@ -336,7 +336,7 @@ if(isset($protestarChe)){
 				<label class="col-sm-2 control-label label-xs">Periodo:</label>
 				<div class="col-sm-4">
 					<select class="form-control input-xs" id="periodos" name="periodos" onchange="cambioPreiodoSearch('peri')" required="">
-						<?
+						<?php
                                                 $periodo_mm = $obBD_con1->getRowConsulta(11, "", $obBD_conexion);
                                                 echo "<option value='ini' data-inicio='$periodo_mm[minimo]' data-fin='$periodo_mm[maximo]'><< TODOS >></option>";
 
@@ -369,7 +369,7 @@ if(isset($protestarChe)){
 		<table id="searchGrid" name="searchGrid"></table>
 		<table id="searchGridPager"></table>
 		<br>
-		<button onclick="window.open('tes_pri_anticipo_Prov.php?Suc_Cod=<? echo $Ses_Suc_Cod; ?>&' + $.param($('#searchAnticipos').getData()));"
+		<button onclick="window.open('tes_pri_anticipo_Prov.php?Suc_Cod=<?php echo $Ses_Suc_Cod; ?>&' + $.param($('#searchAnticipos').getData()));"
 		 type="button" title="En prueba..." class="btn btn-primary start hidden">
 			<i class="glyphicon glyphicon-print"></i>
 			<span> Imprimir</span>

@@ -67,7 +67,7 @@ $hoy = date("Y-m-d");
     	<td>
            <table width="80%" border="0" cellpadding="0" cellspacing="0" align="center">
                 <tr align="center">
-                  <td colspan="4" ><? $obBD_con1->cabeceraReporteStandar($Ses_Suc_Cod,$Titulo,$Subtitulo,$obBD_conexion)?></td>
+                  <td colspan="4" ><?php $obBD_con1->cabeceraReporteStandar($Ses_Suc_Cod,$Titulo,$Subtitulo,$obBD_conexion)?></td>
                 </tr>
            </table>  
       </td>
@@ -82,19 +82,19 @@ $hoy = date("Y-m-d");
   </tr>
   <tr>
 		<td align="right"><span class="LetraNegra">Fecha:</span></td>
-	<td><span class="LetraNegra">&nbsp;<? echo $rs_ControlAud['Aud_Fec'];?></span></td>
+	<td><span class="LetraNegra">&nbsp;<?php echo $rs_ControlAud['Aud_Fec'];?></span></td>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
   </tr>
   <tr>
 		<td align="right"><span class="LetraNegra">Custodio :</span></td>
-		<td><span class="LetraNegra">&nbsp;<? echo $rs_ControlAud['Custodio']; ?></span></td>
+		<td><span class="LetraNegra">&nbsp;<?php echo $rs_ControlAud['Custodio']; ?></span></td>
 		<td align="right"><span class="LetraNegra">Cédula :</span></td>
-		<td><span class="LetraNegra">&nbsp;<? echo $rs_ControlAud['Prs_Ced'] ?></span></td>
+		<td><span class="LetraNegra">&nbsp;<?php echo $rs_ControlAud['Prs_Ced'] ?></span></td>
   </tr>
 </table>
  <p>
-<?		
+<?php		
 if (isset($Aud_Int)){
 	/**
 	 * Consulto los activos  del control por cod de audioria
@@ -142,7 +142,7 @@ foreach($rs_consultar as $row_rs_consultar){
 }// fin de if ($total_rs_buscar>0){
 ?>
 </table>  
-   <?	
+   <?php	
 }
 ?>
 <p>

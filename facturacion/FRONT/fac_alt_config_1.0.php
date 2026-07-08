@@ -70,22 +70,22 @@ if ($total_rs_buscaConfig!=0)
 		  <LEGEND>
 		    <label class="Titulos2">Configuraci&oacute;n de Contabilidad</label>
 		 </LEGEND>
-			<? 	/* Creacion del campo repost */
+			<?php 	/* Creacion del campo repost */
 				$thisPost->startPost();	
 			?>
 			<table width="100%" border="0" cellpadding="0" cellspacing="0">
   			 <tr>
     			<td width="15%" class="Etiqueta1"><p><span class="Asterisco">*</span> Llevar Contabilidad:&nbsp;&nbsp;</p></td>
     			<td width="6%" class="LetraNegra">
-                <input type="radio" name="opt_1" id="opt_1" value="S" <? if($llevarCont=='S'){ echo 'checked';}?>>
+                <input type="radio" name="opt_1" id="opt_1" value="S" <?php if($llevarCont=='S'){ echo 'checked';}?>>
                 <label for="opt_1">SI</label></td>
-   			   <td width="8%" class="LetraNegra"><input name="opt_1" type="radio" id="Opt_1" value="N" <? if($llevarCont=='N'){ echo 'checked';}?>>
+   			   <td width="8%" class="LetraNegra"><input name="opt_1" type="radio" id="Opt_1" value="N" <?php if($llevarCont=='N'){ echo 'checked';}?>>
 		       <label for="Opt_2">NO</label></td>
    			   <td width="71%" class="LetraNegra">&nbsp;</td>
              </tr>
   </table>
 		  <input name="hdd_save" type="hidden" id="hdd_save" value="insertar" />
-          <input name="hdd_total" type="hidden" id="hdd_total" value="<? echo $total_rs_buscaConfig;?>" />
+          <input name="hdd_total" type="hidden" id="hdd_total" value="<?php echo $total_rs_buscaConfig;?>" />
           
         </FIELDSET>
         <FIELDSET>
@@ -96,9 +96,9 @@ if ($total_rs_buscaConfig!=0)
   			 <tr>
     			<td width="15%" class="Etiqueta1"><p><span class="Asterisco">*</span> Generar Factura Electr&oacute;nica:&nbsp;&nbsp;</p></td>
     			<td width="6%" class="LetraNegra">
-                <input type="radio" name="opt_2" id="opt_2" value="S" <? if($factElect=='S'){ echo 'checked';}?>>
+                <input type="radio" name="opt_2" id="opt_2" value="S" <?php if($factElect=='S'){ echo 'checked';}?>>
                 <label for="opt_1">SI</label></td>
-   			   <td width="8%" class="LetraNegra"><input name="opt_2" type="radio" id="opt_2" value="N" <? if($factElect=='N'){ echo 'checked';}?>>
+   			   <td width="8%" class="LetraNegra"><input name="opt_2" type="radio" id="opt_2" value="N" <?php if($factElect=='N'){ echo 'checked';}?>>
 		       <label for="Opt_2">NO</label></td>
    			   <td width="71%" class="LetraNegra">&nbsp;</td>
              </tr>

@@ -155,7 +155,7 @@ if(isset($docBanco))
 		{	?><span class="Alertas3">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/gtk-no.gif" width="20" height="20" type="image"/><?Php
 			echo "&nbsp;&iexcl;Ya existe el n&uacute;mero de documento!"; ?></span><?Php	
 		}else{
-			?>&nbsp;<img src="../../mascaras/model1/imagenes/ok-s.gif"><?
+			?>&nbsp;<img src="../../mascaras/model1/imagenes/ok-s.gif"><?php
 		}
     }
 	exit();
@@ -171,7 +171,7 @@ if (isset($cmb))
 	?>	
 	<input type="hidden" id="add_auxi" value="<?Php echo $row_rs_facttipo['Pag_Cod']; ?>">
 	<select name="<?php echo $nom_pag; ?>" id="<?php echo $nom_pag; ?>" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?cmb_tipo=1&Pag_Cod=' + this.value + '&nom_ban=<?php echo $nom_ban; ?>','<?php echo $div_banco; ?>')">
-    	<? foreach($row_rs_facttipo as $row)
+    	<?php foreach($row_rs_facttipo as $row)
 		{ ?>
     		<option  value="<?Php echo $row['Pag_Cod']; ?>"><?PHP echo $row['Pag_Des']; ?></option>
     	<?PHP 
@@ -196,14 +196,14 @@ if (isset($cmb_tipo))
 	?>
     <select name="<?Php echo $nom_ban; ?>" id="<?Php echo $nom_ban; ?>">
 	   <option value="NULL">(Ninguno)</option>
-	   <? 
+	   <?php 
 	   foreach ($row_rs_bancos as $row)
 	   {?>
 			<option value="<?php echo $row['Ban_Cod']?>"><?php echo $row['Pld_Des']?></option>
-	   <? 
+	   <?php 
 	   } //Fin del $row_rs_bancos ?>
 	</select>	
-	<? 
+	<?php 
 	exit();
 }//Fin del if (isset($cmb))
 /** 
@@ -227,7 +227,7 @@ if (isset($deudas))
 	$Com_Tipo = 1;
 ?>	
 	<?php include("../COMPONENTES/tes_com_deudas.php");?>	
-<?
+<?php
   exit();
 }// Cierre de las deudas de los estudiantes 
 
@@ -456,7 +456,7 @@ else
         
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">       
 	</HEAD>
-    <BODY <? if ($total_rs_vendedor > 0){if ($total_rs_apercaja > 0){if ($total_rs_autorizaci > 0){if ($Vet_Num <= $row_rs_autorizaci['Aut_Fin']){ /*if ($codigo > 0){ */ ?> onLoad="setInterval('parpadeo(\'txt_blink\')',700);"<? /*}*/}}}}?> >	
+    <BODY <?php if ($total_rs_vendedor > 0){if ($total_rs_apercaja > 0){if ($total_rs_autorizaci > 0){if ($Vet_Num <= $row_rs_autorizaci['Aut_Fin']){ /*if ($codigo > 0){ */ ?> onLoad="setInterval('parpadeo(\'txt_blink\')',700);"<?php /*}*/}}}}?> >	
     <div id="set1">
 <?Php //
 /** 
@@ -498,7 +498,7 @@ if (count($row_rs_vendedor) > 0)
  </tr>
 <tr>
   <td colspan="3">
-  <?
+  <?php
 	$a=0;
 	if($hora >="18:00:00")
 	{
@@ -525,7 +525,7 @@ if (count($row_rs_vendedor) > 0)
   <table>
   	<tr>	  
 	   <td>
-		<? 
+		<?php 
 		 	if($a!=0)
 			{
 				echo blink("ALERTA(S) :","txt_blink","#FFFFFF","#FF0000");
@@ -534,16 +534,16 @@ if (count($row_rs_vendedor) > 0)
 			}
 		?>
 		</td>
-		<? for($j=1;$j<=$a;$j++){?>
-			<td class="Texto_Reporte_Rojo"><h3><? echo str_repeat("&nbsp;", 10)."* ".$alertas[$j];?></h3></td>
-		<? }?>	  
+		<?php for($j=1;$j<=$a;$j++){?>
+			<td class="Texto_Reporte_Rojo"><h3><?php echo str_repeat("&nbsp;", 10)."* ".$alertas[$j];?></h3></td>
+		<?php }?>	  
 	</tr>	
   </table>	
   </td>
 </tr>
 <tr>
    <td colspan="3" height="400" valign="top">	
-	<form action="<? echo $_SERVER['../LOGICA/PHP_SELF']; ?>" method="post" name= "form1" id="form1">
+	<form action="<?php echo $_SERVER['../LOGICA/PHP_SELF']; ?>" method="post" name= "form1" id="form1">
 		<?Php include("../../componentes/FRONT/com_con_persona.php"); ?>
     </form>
 <?Php  
@@ -583,7 +583,7 @@ if(isset($txt_busqueda))
         	<i class=" icon-arrow-right icon-white"></i>
         </button>
         </form>
-	<? } else { echo "&nbsp;"; } ?>	  
+	<?php } else { echo "&nbsp;"; } ?>	  
 	  </td>
 	  </tr>
 	  <?Php }//Fin del foreach
@@ -654,15 +654,15 @@ if(isset($txt_busqueda))
 	 <table width="100%" border="0" cellpadding="0" cellspacing="0">
 	<tr>
 	  <td width="11%" class="Etiqueta1">R.U.C:</td>
-	  <td width="89%" class="LetraNegra">&nbsp;<? echo $row_rs_cliente['Cli_Ruf']; ?></td>
+	  <td width="89%" class="LetraNegra">&nbsp;<?php echo $row_rs_cliente['Cli_Ruf']; ?></td>
 	</tr>
 	<tr>  
 	  <td class="Etiqueta1">Representante:</td>
-	  <td colspan="3" class="LetraNegra">&nbsp;<? echo $row_rs_cliente['Cli_Fac']; ?></td>
+	  <td colspan="3" class="LetraNegra">&nbsp;<?php echo $row_rs_cliente['Cli_Fac']; ?></td>
 	</tr>
 	<tr>
 	  <td class="Etiqueta1">Direcci&oacute;n:</td>
-	  <td colspan="5" class="LetraNegra">&nbsp;<? echo $row_rs_cliente['Cli_Dir']; ?></td>
+	  <td colspan="5" class="LetraNegra">&nbsp;<?php echo $row_rs_cliente['Cli_Dir']; ?></td>
 	  </tr>
 		</table>
   </FIELDSET>
@@ -686,7 +686,7 @@ if(isset($txt_busqueda))
 		*/
 		$row_tipo_compr = $obBD_con1->getArrayConsulta(1036, '', $obBD_conexion);	
 	?>
-    <select name="Tic_Cod" id="Tic_Cod" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mar_val=1&punto=<? echo $row_rs_apercaja['Pun_Cod']; ?>&Tic_Cod='+ document.getElementById('Tic_Cod').value +'&hoy<? echo $hoy; ?>','contenedormarca')">
+    <select name="Tic_Cod" id="Tic_Cod" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mar_val=1&punto=<?php echo $row_rs_apercaja['Pun_Cod']; ?>&Tic_Cod='+ document.getElementById('Tic_Cod').value +'&hoy<?php echo $hoy; ?>','contenedormarca')">
     <option  value="">Seleccione...</option>
     <?Php
 	foreach($row_tipo_compr as $row)
@@ -715,7 +715,7 @@ if(isset($txt_busqueda))
               <input name="Aut_Cod" type="hidden" id="Aut_Cod" value="<?Php echo $row_rs_autorizaci['Aut_Cod']; ?>">
         </td>
         <td width="27%" class="Etiqueta1">Autorizaci&oacute;n:</td>
-        <td width="40%" class="LetraNegra"><? echo $row_rs_autorizaci['Aut_Sri']?></td>
+        <td width="40%" class="LetraNegra"><?php echo $row_rs_autorizaci['Aut_Sri']?></td>
         </tr>
       </table>
       </div>
@@ -1000,13 +1000,13 @@ if(isset($txt_busqueda))
            </button> 
         </td>
 	    <td width="43%">
-         <? if(1==0){ ?>
+         <?php if(1==0){ ?>
          <button type="button" name="button1" id="button1" class="btn btn-success fileinput-button" title="Ver Deudas" 
         onclick="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?deudas=1&ajax_Cli_Cod=<?php echo $codigo; ?>','ajax_modal');">
            <i class="icon-plus icon-white"></i>
            <span>Deudas</span>
            </button> 
-        <? }?>           
+        <?php }?>           
         </td>
 	    <td width="18%"><input name="cantmodal" id="cantmodal" type="hidden" value="2" /></td>
 	    <input id="nfilas" name="nfilas" type="hidden" value="0">

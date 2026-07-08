@@ -63,8 +63,8 @@ if (isset($ajax_nuevo))
 		if (count($row_rs_con_tip) != 0)		
 		{ 			
 		?>        
-		<input name="Tip_Des" type="text" id="Tip_Des" value="<? echo $Tip_Des?>" size="30" maxlength="30" style="text-transform:uppercase" onblur="if (trim(this.value) != '')ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_nuevo=1&Tip_Des='+this.value+'&Tia_Ini='+ document.getElementById('Tia_Ini').value,'div_tipdes')">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/gtk-no.gif" width="22" height="22" />	<span class="Alertas3">¡La marca: <?php echo strtoupper($Tip_Des); ?> ya existe!</span>  	
-		<? }else{ ?>
+		<input name="Tip_Des" type="text" id="Tip_Des" value="<?php echo $Tip_Des?>" size="30" maxlength="30" style="text-transform:uppercase" onblur="if (trim(this.value) != '')ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_nuevo=1&Tip_Des='+this.value+'&Tia_Ini='+ document.getElementById('Tia_Ini').value,'div_tipdes')">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/gtk-no.gif" width="22" height="22" />	<span class="Alertas3">¡La marca: <?php echo strtoupper($Tip_Des); ?> ya existe!</span>  	
+		<?php }else{ ?>
 		<input name="Tip_Des" type="text" id="Tip_Des" value="<?Php echo $Tip_Des; ?>" size="30" maxlength="30" style="text-transform:uppercase" onblur="if (trim(this.value) != '')ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_nuevo=1&Tip_Des='+this.value+'&Tia_Ini='+document.getElementById('Tia_Ini').value,'div_tipdes')">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/aceptar.jpg" width="22" height="22" />	
 		<?php
 		}
@@ -92,7 +92,7 @@ exit();
     </tr>
 	<tr>
         <td height="340" valign="top">
-        <form method="post" name= "form1" action="<? echo $_SERVER['PHP_SELF'];?>">        
+        <form method="post" name= "form1" action="<?php echo $_SERVER['PHP_SELF'];?>">        
         <?Php 
         /** 
         * Creacion del campo repost 

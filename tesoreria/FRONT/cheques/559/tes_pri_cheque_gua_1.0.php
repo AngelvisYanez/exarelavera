@@ -21,16 +21,16 @@ include($APP_REAL_PATH.'/tesoreria/FRONT/cheques/cheque_config.php');
         </style>
     </head>
     <body>
-        <span style="top:42px;left:100px;" class="flota"><? if($row_pri_cheque['Che_Ben']==''){echo $row_pri_cheque['Prs_Ape'].' '.$row_pri_cheque['Prs_Nom'];}else{echo $row_pri_cheque['Che_Ben'];} ?></span>
-        <span style="top: 40px;px;left:480px;" class="flota_valor"><b><? echo number_format($row_pri_cheque['Che_Val'],2).'xxx'; ?></b></span>
-        <span style="top:66px;left:100px;" class="flota"><? echo num2letras($row_pri_cheque['Che_Val']).' xxxxxxxxxxxxxxxxxxx';?></span>
+        <span style="top:42px;left:100px;" class="flota"><?php if($row_pri_cheque['Che_Ben']==''){echo $row_pri_cheque['Prs_Ape'].' '.$row_pri_cheque['Prs_Nom'];}else{echo $row_pri_cheque['Che_Ben'];} ?></span>
+        <span style="top: 40px;px;left:480px;" class="flota_valor"><b><?php echo number_format($row_pri_cheque['Che_Val'],2).'xxx'; ?></b></span>
+        <span style="top:66px;left:100px;" class="flota"><?php echo num2letras($row_pri_cheque['Che_Val']).' xxxxxxxxxxxxxxxxxxx';?></span>
         <span style="top:108px;left:98px;" class="flota"><?Php echo $row_institucion['Ciu_Des']?>, &nbsp;<?Php echo str_replace('-','/',$row_pri_cheque['Che_Fec']);?></span>   
 
 
         <!-- CONFIGURACION DE BANCO DEL PACIFICO  -->
-        <!-- <span style="top:48px;left:50px;" class="flota"><? if($row_pri_cheque['Che_Ben']==''){echo $row_pri_cheque['Prs_Ape'].' '.$row_pri_cheque['Prs_Nom'];}else{echo $row_pri_cheque['Che_Ben'];} ?></span>
-        <span style="top:47px;left:392px;" class="flota_valor"><b><? echo number_format($row_pri_cheque['Che_Val'],2).'xxx'; ?></b></span>
-        <span style="top:75px;left:20px;" class="flota"><? echo num2letras($row_pri_cheque['Che_Val']).' xxxxxxxxxxxxxxxxxxx';?></span>
+        <!-- <span style="top:48px;left:50px;" class="flota"><?php if($row_pri_cheque['Che_Ben']==''){echo $row_pri_cheque['Prs_Ape'].' '.$row_pri_cheque['Prs_Nom'];}else{echo $row_pri_cheque['Che_Ben'];} ?></span>
+        <span style="top:47px;left:392px;" class="flota_valor"><b><?php echo number_format($row_pri_cheque['Che_Val'],2).'xxx'; ?></b></span>
+        <span style="top:75px;left:20px;" class="flota"><?php echo num2letras($row_pri_cheque['Che_Val']).' xxxxxxxxxxxxxxxxxxx';?></span>
         <span style="top:130px;left:0px;" class="flota"><?Php echo $row_institucion['Ciu_Des']?>, &nbsp;<?Php echo str_replace('-','/',$row_pri_cheque['Che_Fec']);?></span>    -->
     </body>
 </html>

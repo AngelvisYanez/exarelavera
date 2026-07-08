@@ -163,36 +163,11 @@ if (isset($ajaxTotales)) {
     $totalGlobal = $obBD_con1->getRowConsulta('ventas', array_merge($_GET, array('where' => array(), 'unsetCols' => array(/*'Vnd_Cod','Pun_Cod','Vendedor'*/), 'setWhere' => array_merge($FILTERS, array('setEmpCod',/*'setUsuario','setRetencion',*/ 'isSummary')))));
     $response['userdata'] = array_merge($totalGlobal, array('Vet_Obs' => '<div class="txtRight">TOTAL GLOBAL:</div>', 'Tot_Renta' => 0, 'Tot_Iva' => 0));
 
+    // [OPT] El N+1 se eliminó: comprobante, pagos y retenciones vienen desde el SQL principal
     foreach ($response['rows'] as &$row) {
-        //  $row['cliente']=$row['cliente'];
-        // $row['vendedor']=$row['Vendedor'];
-        $comprobante = $obBD_con1->getRowConsulta('comprobantes.getComprobanteByVetCod', $row['Vet_Cod']);
-        if (!is_null($comprobante)) {
-            $row['Com_Codigo'] = $comprobante['Com_Codigo'];
-            $row['Com_Exi'] = 'S';
-            $row['Com_Cod'] = $comprobante['Com_Cod'];
-            $row['Com_Est'] = $comprobante['Com_Est'];
-        } else {
-            $row['Com_Codigo'] = '0';
-            $row['Com_Exi'] = 'N';
-            $row['Com_Cod'] = '-';
-            $row['Com_Est'] = '';
-        }
-
-        $pagos = $obBD_con1->getRowConsulta("ventas.2", $row['Vet_Cod']);
-        $row['Forma_Pago'] = ($pagos['total'] > 0) ? 'Credito' : 'Contado';
-       
-         $tipos_pago = $obBD_con1->getRowConsulta("ventas.tipo_doc_pago", $row['Vet_Cod']);
-        $row['FormasPago'] =  $tipos_pago['FormasPago'];
-
-        $ret_data = $obBD_con1->getRowConsulta('ventas.getRetencionVet', $row['Vet_Cod']);
-        if (!empty($ret_data)) {            
-            $row = array_merge(array('Tot_Iva' => $ret_data['Tot_Iva'], 'Tot_Renta' => $ret_data['Tot_Renta']), $row);
-            // Aplicar factor de Nota de Crédito: restar si Tic_Sri = '04'
-            $factorNC = (isset($row['Tic_Sri']) && $row['Tic_Sri'] === '04') ? -1 : 1;
-            $response['userdata']['Tot_Renta'] += ($ret_data['Tot_Renta'] * 1 * $factorNC);
-            $response['userdata']['Tot_Iva'] += ($ret_data['Tot_Iva'] * 1 * $factorNC);
-        }
+        $factorNC = (isset($row['Tic_Sri']) && $row['Tic_Sri'] === '04') ? -1 : 1;
+        $response['userdata']['Tot_Renta'] += ($row['Tot_Renta'] * 1 * $factorNC);
+        $response['userdata']['Tot_Iva'] += ($row['Tot_Iva'] * 1 * $factorNC);
     }
     $obBD_con1->echoJson($response);
 }
@@ -1800,7 +1775,7 @@ if (isset($ajaxDetalleVentas)) {
                                                 function selFactura($v) {
                                                     return $v['Tic_Sri'] == 'T'; //antes estaba return $v['Tic_Sri'] == '01';
                                                 }
-                                                echo utf8_encode($obBD_con1->htmlOptions($rs_tip_compr, 'Tic_Cod', 'TicDes', false, 'selFactura'));
+                                                echo mb_convert_encoding($obBD_con1->htmlOptions($rs_tip_compr, 'Tic_Cod', 'TicDes', false, 'selFactura'), 'UTF-8', 'ISO-8859-1');
                                                 ?>
                                             </select>
                                         </div>
@@ -1899,7 +1874,7 @@ if (isset($ajaxDetalleVentas)) {
                                                 </option>
                                                 <?php foreach ($tipos_pago as $v) { ?>
                                                     <option value="<?php echo $v['Pag_Cod']; ?>">
-                                                        <?php echo  utf8_encode($v['Pag_Des']); ?>
+                                                        <?php echo  mb_convert_encoding($v['Pag_Des'], 'UTF-8', 'ISO-8859-1'); ?>
                                                     </option>
                                                 <?php } ?>
                                             </select>
@@ -2286,7 +2261,7 @@ if (isset($ajaxDetalleVentas)) {
                                         <div class="col-sm-5">
                                             <select name="Tic_Cod" class="form-control input-xs">
                                                 <!-- <option value="T" selected=""> << TODOS >> </option> -->
-                                                <?php echo utf8_encode($obBD_con1->htmlOptions($rs_tip_compr, 'Tic_Cod', 'TicDes', false, 'selFactura')); ?>
+                                                <?php echo mb_convert_encoding($obBD_con1->htmlOptions($rs_tip_compr, 'Tic_Cod', 'TicDes', false, 'selFactura'), 'UTF-8', 'ISO-8859-1'); ?>
                                             </select>
                                         </div>
                                     </div>
@@ -2501,7 +2476,7 @@ if (isset($ajaxDetalleVentas)) {
                         };
                         
                         // Crear un formulario temporal para enviar por POST al nuevo reporte 3.0
-                        var $form = $('<form>', {
+                        public $form = $('<form>', {
                             action: 'fac_pri_fac_total_3.0.php',
                             method: 'POST',
                             target: '_blank'
@@ -2636,7 +2611,7 @@ if (isset($ajaxDetalleVentas)) {
                     }
                 ],
                 loadComplete: function() {
-                    var $grid = $(this);
+                    public $grid = $(this);
                     var ids = $grid.jqGrid('getDataIDs');
                     ids.forEach(function(id) {
                         var rowData = $grid.jqGrid('getRowData', id);
@@ -2648,8 +2623,8 @@ if (isset($ajaxDetalleVentas)) {
                     });
                 },
                 footerrow: true,
-                rowNum: 1000,
-                rowList: [1000, 5000, 10000, 15000, 20000],
+                rowNum: 100,
+                rowList: [100, 250, 500, 1000, 5000],
                 userDataOnFooter: true,
                 totalPage: true,
                 totalCols: ['NoIVA','Sub_0', 'Sub_5', 'Sub_8', 'Sub_12', 'Sub_15', 'Descu', 'Ice_Tot', 'Iva_Tot', 'Irbpnr', 'Total', 'Tot_Renta', 'Tot_Iva'],

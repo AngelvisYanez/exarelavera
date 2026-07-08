@@ -53,7 +53,7 @@ if ($op==1)	//Edicion de la Apertura de Caja
 	*/
 	$row_rs_caja_activa = $obBD_con1->getRowConsulta(4, $codigo, $obBD_conexion);	
 ?>
-<form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1" id="form1">
+<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1" id="form1">
 <?Php 
 	/**
 	* Creación del campo repost 
@@ -221,7 +221,7 @@ $total_rs_caja = count($rs_caja);
             <LEGEND>
             <label class="Titulos2">Historial de cajas</label>
             </LEGEND>
-            <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1" id="form1">
+            <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1" id="form1">
               <table border="1" cellpadding="0" cellspacing="0" class="fixedHeader01" width="100%">
               <thead>
                 <tr>
@@ -281,11 +281,11 @@ $total_rs_caja = count($rs_caja);
             </FIELDSET>			
 <?Php echo barra_estado($total_rs_caja);?>
 
-<?
+<?php
 if ($open == 'C' or $total_rs_caja==0)
 {
 ?>
-	<form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1" id="form1">
+	<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1" id="form1">
 	  <br>	
 	<table width="155" border="0" cellpadding="0" cellspacing="0">
       <tr>
@@ -304,12 +304,12 @@ if ($open == 'C' or $total_rs_caja==0)
 </div>
 <div id="bgmodal"  class="bgmodal"   style="display:none">
 <div id="ajax_contenido">
-<?  /**
+<?php  /**
 	 * Apertura de la nueva Caja
 	 */
 		 
 	?>	
-		<form method="post" name= "form2" action="<? echo $_POST['form1'];?>">
+		<form method="post" name= "form2" action="<?php echo $_POST['form1'];?>">
 			 <FIELDSET>
 			  <LEGEND>
 				<label class="Titulos2">Datos a registrar</label>

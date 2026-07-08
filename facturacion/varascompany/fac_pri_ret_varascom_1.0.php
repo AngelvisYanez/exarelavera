@@ -55,30 +55,30 @@ if (isset($Ret_Cod))
 <?Php 
 $topcab="120";
 $Fec_Emi=explode('-',$row_prin_renta['Ret_Fec']); ?>
-<span style="top:<? echo $topcab;?>px;left:70px;" class="flota"><? echo $row_prin_renta['Prs_Ape'].' '.$row_prin_renta['Prs_Nom']; ?></span>
-<span style="top:<? echo $topcab+30;?>px;left:70px;" class="flota"><? echo $row_prin_renta['Prs_Ced']; ?></span>
-<span style="top:<? echo $topcab+30;?>px;left:630px;" class="flota"><? echo $Fec_Emi[2].' / '.$Fec_Emi[1].' / '.$Fec_Emi[0]; ?></span>
+<span style="top:<?php echo $topcab;?>px;left:70px;" class="flota"><?php echo $row_prin_renta['Prs_Ape'].' '.$row_prin_renta['Prs_Nom']; ?></span>
+<span style="top:<?php echo $topcab+30;?>px;left:70px;" class="flota"><?php echo $row_prin_renta['Prs_Ced']; ?></span>
+<span style="top:<?php echo $topcab+30;?>px;left:630px;" class="flota"><?php echo $Fec_Emi[2].' / '.$Fec_Emi[1].' / '.$Fec_Emi[0]; ?></span>
 
-<span style="top:<? echo $topcab+60;?>px;left:70px;" class="flota"><? echo $row_prin_renta['Prs_Dir']; ?></span>
-<span style="top:<? echo $topcab+42;?>px;left:730px;" class="flota"><? //echo $row_prin_renta['Ciu_Des']; ?></span>
+<span style="top:<?php echo $topcab+60;?>px;left:70px;" class="flota"><?php echo $row_prin_renta['Prs_Dir']; ?></span>
+<span style="top:<?php echo $topcab+42;?>px;left:730px;" class="flota"><?php //echo $row_prin_renta['Ciu_Des']; ?></span>
 
-<span style="top:<? echo $topcab+65;?>px;left:660px;" class="flota"><? echo $row_prin_renta['Tic_Des']; ?></span>
-<span style="top:<? echo $topcab+95;?>px;left:660px; " class="flota"><? echo $row_prin_renta['Cop_Num'];?></span>
-<span style="top:380px;left:700px;" class="flota"><? //echo $row_prin_renta['Cop_Fec']; ?></span>
+<span style="top:<?php echo $topcab+65;?>px;left:660px;" class="flota"><?php echo $row_prin_renta['Tic_Des']; ?></span>
+<span style="top:<?php echo $topcab+95;?>px;left:660px; " class="flota"><?php echo $row_prin_renta['Cop_Num'];?></span>
+<span style="top:380px;left:700px;" class="flota"><?php //echo $row_prin_renta['Cop_Fec']; ?></span>
 
-<span style="top:430px;left:30px;" class="flota"><? //echo $row_prin_renta['Cop_Aut'];  ?></span>
-<span style="top:440px;left:700px;" class="flota"><? //echo $row_prin_renta['Cop_Cad']; ?></span>
+<span style="top:430px;left:30px;" class="flota"><?php //echo $row_prin_renta['Cop_Aut'];  ?></span>
+<span style="top:440px;left:700px;" class="flota"><?php //echo $row_prin_renta['Cop_Cad']; ?></span>
 
 <?Php $Total_Ret=0; 
 $Eje_Fis=explode('-',$row_prin_renta['Ret_Fec']); 
 $fila="310";
 foreach($rs_prin_renta as $row)
 { ?>
-	<span style="top:<? echo $fila;?>px;left:30px;" class="flota"><?Php $Ejerci=$Eje_Fis[0]; echo $Ejerci;?></span>
-	<span style="top:<? echo $fila;?>px;left:180px;" class="flota"><? echo $row['Ren_Sri'].'-'.$row['Ret_Imp']?></span>	
-	<span style="top:<? echo $fila;?>px;left:380px;" class="flota"><? echo number_format($row['Ret_Bas'], 2,'.',',');  ?></span>
-	<span style="top:<? echo $fila;?>px;left:540px;" class="flota"><? echo $row['Ren_Por'].'%'; ?></span>
-	<span style="top:<? echo $fila;?>px;left:690px;" class="flota"><? echo $Val_Ret=formato_numero((formato_numero($row['Ret_Bas'],2,1)* $row['Ren_Por'])/100,2,1); $Total_Ret+=$Val_Ret;?></span>		
+	<span style="top:<?php echo $fila;?>px;left:30px;" class="flota"><?Php $Ejerci=$Eje_Fis[0]; echo $Ejerci;?></span>
+	<span style="top:<?php echo $fila;?>px;left:180px;" class="flota"><?php echo $row['Ren_Sri'].'-'.$row['Ret_Imp']?></span>	
+	<span style="top:<?php echo $fila;?>px;left:380px;" class="flota"><?php echo number_format($row['Ret_Bas'], 2,'.',',');  ?></span>
+	<span style="top:<?php echo $fila;?>px;left:540px;" class="flota"><?php echo $row['Ren_Por'].'%'; ?></span>
+	<span style="top:<?php echo $fila;?>px;left:690px;" class="flota"><?php echo $Val_Ret=formato_numero((formato_numero($row['Ret_Bas'],2,1)* $row['Ren_Por'])/100,2,1); $Total_Ret+=$Val_Ret;?></span>		
 <?Php unset($Ejerci); $fila+=20;}//Fin del foreach ?>
 <span style="top:512px;left:690px;" class="flota"><?Php echo number_format ($Total_Ret, 2,'.',''); ?></span>
 

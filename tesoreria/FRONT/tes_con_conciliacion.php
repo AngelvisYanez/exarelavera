@@ -226,7 +226,7 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
             height: 350px !important;
         }
     </style>
-    <script>var Usu_Adm=<? echo $Ses_Prs_Cod;?></script>
+    <script>var Usu_Adm=<?php echo $Ses_Prs_Cod;?></script>
     <BODY>
         <div id="buscaDiv" class="panel panel-main" style="display:none">
             <div class="panel-heading exa-header">

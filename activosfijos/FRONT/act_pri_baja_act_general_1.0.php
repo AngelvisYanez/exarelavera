@@ -76,7 +76,7 @@ $hoy = date("Y-m-d");
 				<td>
 				   <table width="80%" border="0" cellpadding="0" cellspacing="0" align="center">
 						<tr align="center">
-						  <td colspan="4" ><? $obBD_con1->cabeceraReporteStandar($Ses_Suc_Cod,$Titulo,$Subtitulo,$obBD_conexion)?></td>
+						  <td colspan="4" ><?php $obBD_con1->cabeceraReporteStandar($Ses_Suc_Cod,$Titulo,$Subtitulo,$obBD_conexion)?></td>
 						</tr>
 				   </table>  
 			  </td>
@@ -126,7 +126,7 @@ $hoy = date("Y-m-d");
 		?>	
 			</tbody>
 		</table>                    
-		<?
+		<?php
 	} //fin if(isset($Op_aux))     
    /**
     * Consulta los datos del usuario 

@@ -125,7 +125,7 @@ if (isset($codigo))
   </tr>
   <tr>
     <td height="389" valign="top">
-    <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" id="form1" name="form1">
+    <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" id="form1" name="form1">
     
       <table width="560" border="0" cellpadding="0" cellspacing="0" class="Pop">
         <tr>
@@ -200,22 +200,22 @@ if (isset($codigo))
 	  ?>
           <tr >
             <td align="center">
-            	<FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Pro_Cod']; ?></FONT>
+            	<FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Pro_Cod']; ?></FONT>
             </td>
             <td align="center">
-            	<FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Cat_Des']; ?></FONT>
+            	<FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Cat_Des']; ?></FONT>
             </td>
-            <td><FONT COLOR="<? echo $rojo;?>"><?Php echo  marcar_cadena($txt_busqueda,$row_rs_buscar['Ite_Lar'].' '.$row_rs_buscar['Pro_Obs'],'#FFFF00',1); ?></FONT></td>
+            <td><FONT COLOR="<?php echo $rojo;?>"><?Php echo  marcar_cadena($txt_busqueda,$row_rs_buscar['Ite_Lar'].' '.$row_rs_buscar['Pro_Obs'],'#FFFF00',1); ?></FONT></td>
             <td align="center"><?Php echo $row_rs_buscar['Ite_Cor'].' '.$row_rs_buscar['Pro_Obs']; ?></td>
             <td align="center">
-            	<FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Mar_Des']; ?></FONT>
+            	<FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Mar_Des']; ?></FONT>
             </td>
             <td align="center">
             	<?Php 
             		if ($row_rs_buscar['Pro_Est'] == 'A')
             		{ 
             	?>
-            			<form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" >
+            			<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" >
             			
             			<button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="this.form.submit()">
            					<i class=" icon-arrow-right icon-white"></i>
@@ -223,8 +223,8 @@ if (isset($codigo))
             			
                 			<!-- <input type="image" name="imageField" src="../../mascaras/model1/imagenes/32x32/forward.png" width="22" height="22"  title="Elegir"> -->
                 			<input name="codigo" id="codigo" type="hidden" value="<?Php echo $row_rs_buscar['Pro_Cod']; ?>">
-                			<input  type="hidden" id="txt_busqueda" name="txt_busqueda" value="<? echo $txt_busqueda; ?>">
-                			<input  type="hidden" id="op_opciones" name="op_opciones" value="<? echo $op_opciones; ?>">
+                			<input  type="hidden" id="txt_busqueda" name="txt_busqueda" value="<?php echo $txt_busqueda; ?>">
+                			<input  type="hidden" id="op_opciones" name="op_opciones" value="<?php echo $op_opciones; ?>">
                 		</form>
                 <?Php 
             		} 
@@ -238,7 +238,7 @@ if (isset($codigo))
             	?>
             </td>
           </tr>
-          <? } }else{?>
+          <?php } }else{?>
           <tr >
             <td align="center">&nbsp;</td>
             <td align="center">&nbsp;</td>
@@ -247,7 +247,7 @@ if (isset($codigo))
             <td align="center">&nbsp;</td>
             <td align="center">&nbsp;</td>
           </tr>
-     	  <? }?>
+     	  <?php }?>
           </tbody>
         </table>
 		</fieldset>
@@ -258,7 +258,7 @@ if (isset($codigo))
 ?>
 <form method="post" name="form2" action="<?Php  $_SERVER['PHP_SELF']; ?>">
 <?Php if (isset($codigo)){ ?>
-<? $thisPost->startPost();?>
+<?php $thisPost->startPost();?>
 	<FIELDSET>
        <legend>
        		<label class="Titulos2">Datos a registrar</label>
@@ -271,12 +271,12 @@ if (isset($codigo))
        <table border="0" cellpadding="0" cellspacing="0">
 		 <tr>
            <td width="140" class="Etiqueta1">Categoria:</td>
-           <td width="364" class="LetraNegra">&nbsp;<? echo $row_rs_consulta['Cat_Des']; ?>
+           <td width="364" class="LetraNegra">&nbsp;<?php echo $row_rs_consulta['Cat_Des']; ?>
               		<input name="Cat_Cod2" type="hidden" id="Cat_Cod2" value="<?Php echo $row_rs_consulta['Cat_Cod']; ?>">		   </td>
          </tr>
          <tr>
            <td class="Etiqueta1">Descripci&oacute;n Corta:</td>
-           <td class="LetraNegra">&nbsp;<? echo $row_rs_consulta['Ite_Cor']; ?></td>
+           <td class="LetraNegra">&nbsp;<?php echo $row_rs_consulta['Ite_Cor']; ?></td>
          </tr>
          <tr>
            <td class="Etiqueta1">Descripci&oacute;n Larga:</td>
@@ -286,7 +286,7 @@ if (isset($codigo))
          </tr>
          <tr>
            <td class="Etiqueta1">Marca:</td>
-           <td  class="LetraNegra">&nbsp;<? echo $row_rs_consulta['Mar_Des']; ?>
+           <td  class="LetraNegra">&nbsp;<?php echo $row_rs_consulta['Mar_Des']; ?>
               <input name="Mar_Cod2" type="hidden" id="Mar_Cod2" value="<?Php echo $row_rs_consulta['Mar_Cod']; ?>"></td>
          </tr>
 		 <tr>
@@ -358,12 +358,12 @@ if (isset($codigo))
         <tr><td>&nbsp;</td></tr>
           <tr>
           <td width="110">
-          <button type="button" class="btn btn-inverse fileinput-button" title="Atr&aacute;s" onClick="campos_hide(this.form, 'hdd_volver', '<? echo '1';?>')">
+          <button type="button" class="btn btn-inverse fileinput-button" title="Atr&aacute;s" onClick="campos_hide(this.form, 'hdd_volver', '<?php echo '1';?>')">
                <i class=" icon-arrow-left icon-white"></i>
                <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;&nbsp;</span>
        		 </button>
-       <input type="hidden" value="<? echo $txt_busqueda; ?>" name="txt_busqueda" id="txt_busqueda">
-       <input type="hidden" value="<? echo $op_opciones; ?>" name="op_opciones" id="op_opciones">
+       <input type="hidden" value="<?php echo $txt_busqueda; ?>" name="txt_busqueda" id="txt_busqueda">
+       <input type="hidden" value="<?php echo $op_opciones; ?>" name="op_opciones" id="op_opciones">
           </td>
             <td width="110" align="left"><font color="#3162a6" face="Arial, Helvetica, sans-serif">
             
@@ -402,7 +402,7 @@ if (isset($codigo))
           </tr>
           </thead>
           <tbody>
-	         <? 
+	         <?php 
 	            foreach($Arr_precios as $row_rs_precio) 
 	            {
 	            	if ($row_rs_precio['Pre_Est'] == 'I') { if(!isset($com_leyenda[1]))$com_leyenda[1]=1; }
@@ -432,22 +432,22 @@ if (isset($codigo))
 	        	<?Php if ($row_rs_precio['Pre_Est'] == 'I'){ echo "<font color='#FF0000'>"; } ?>
 	        	<?Php echo $row_rs_precio['Pre_Fec'];  if ($row_rs_precio['Pre_Est'] == 'I'){ echo "</font>"; } ?>  </td>
 	      </tr>
-	            <? 
+	            <?php 
 	            }
 	            ?>
         </tbody>
  		</table>
 	    </FIELDSET>
-	    <? echo barra_estado(count($Arr_precios));?>
+	    <?php echo barra_estado(count($Arr_precios));?>
  </FIELDSET> 
- <? } ?>
+ <?php } ?>
           <br>
 </form>
 </td>
 </tr>
 </table>
 <br/>
-<?
+<?php
 require_once('../../componentes/FRONT/com_con_leyenda.php');
 ?>
 </div>

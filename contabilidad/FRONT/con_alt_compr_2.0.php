@@ -217,7 +217,7 @@ if (isset($ajaxLiquidacionForm104)) {
                                                 <option value="">Seleccione...</option>
                                                 <?php foreach($tiasien as $row){  ?>
                                                 <!--option value="<?php echo $row['Tia_Cod']; ?>" style="display:none" data-type="<?php echo $row['Tia_Ini']; ?>" data--tia_-cod="<?php echo $row['Tia_Cod']; ?>"  data--tia_-abr="<?php echo $row['Tia_Abr']; ?>" data--tia_-des="<?php echo $row['Tia_Des']; ?>" ><?php echo $row['Tia_Abr'].' - '.$row['Tia_Des']; ?></option-->
-                                                <option value="<?php echo $row['Tia_Cod']; ?>" style="display:none" data-type="<?php echo $row['Tia_Ini']; ?>" data--tia_-cod="<?php echo $row['Tia_Cod']; ?>"  data--tia_-abr="<?php echo utf8_encode($row['Tia_Abr']); ?>" data--tia_-des="<?php echo utf8_encode($row['Tia_Des']); ?>" ><?php echo utf8_encode($row['Tia_Abr'].' - '.$row['Tia_Des']); ?></option>
+                                                <option value="<?php echo $row['Tia_Cod']; ?>" style="display:none" data-type="<?php echo $row['Tia_Ini']; ?>" data--tia_-cod="<?php echo $row['Tia_Cod']; ?>"  data--tia_-abr="<?php echo mb_convert_encoding($row['Tia_Abr'], 'UTF-8', 'ISO-8859-1'); ?>" data--tia_-des="<?php echo mb_convert_encoding($row['Tia_Des'], 'UTF-8', 'ISO-8859-1'); ?>" ><?php echo mb_convert_encoding($row['Tia_Abr'].' - '.$row['Tia_Des'], 'UTF-8', 'ISO-8859-1'); ?></option>
 
                                                 <?php } ?>
                                             </select>

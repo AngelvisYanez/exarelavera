@@ -42,7 +42,7 @@ if(isset($hdd_save))
 						/*actualizamos el registro*/
 						$obBD_ins1->operacionobBD(2, $opt_1.'*'.$name.'*'.$Ses_Emp_Cod,$obBD_conexion); 					
 					}else{
-						?><script language="javascript">alert("AVISO:\n¡No se pudo subir el archivo!");</script><?
+						?><script language="javascript">alert("AVISO:\n¡No se pudo subir el archivo!");</script><?php
 					}
 				}else{
 					/*actualizamos el registro*/
@@ -53,7 +53,7 @@ if(isset($hdd_save))
 			/* Fin de la transaccion */
 			$obBD_ins1->fin_transaccion($obBD_conexion->conexion);		 
 		 }else{
-			?><script language="javascript">alert("AVISO:\n¡El archivo no es compatible, (solo .txt)!");</script><?	 
+			?><script language="javascript">alert("AVISO:\n¡El archivo no es compatible, (solo .txt)!");</script><?php	 
 		 }
 	}
 }
@@ -87,53 +87,53 @@ if ($total_rs_buscaConfig!=0)
 		  <LEGEND>
 		    <label class="Titulos2">Tipo de Emisi&oacute;n Factura Electr&oacute;nica</label>
 		 </LEGEND>
-			<? 	/* Creacion del campo repost */
+			<?php 	/* Creacion del campo repost */
 				$thisPost->startPost();	
 			?>
 			<table width="100%" border="0" cellpadding="0" cellspacing="0">
   			 <tr>
   			   <td class="Etiqueta1">Generar Factura Electr&oacute;nica:&nbsp;&nbsp;</td>
-  			   <td class="LetraNegra" <? if($row_rs_buscaConfig['Cof_Gce']=='N'){ echo "style='color:#F00'";}?>><? if($row_rs_buscaConfig['Cof_Gce']=='S'){ echo 'ACTIVA';}else{ echo 'INACTIVA';}?></td>
+  			   <td class="LetraNegra" <?php if($row_rs_buscaConfig['Cof_Gce']=='N'){ echo "style='color:#F00'";}?>><?php if($row_rs_buscaConfig['Cof_Gce']=='S'){ echo 'ACTIVA';}else{ echo 'INACTIVA';}?></td>
   			   <td class="LetraNegra">&nbsp;</td>
   			   <td class="LetraNegra">&nbsp;</td>
 		      </tr>
   			 <tr>
     			<td width="15%" class="Etiqueta1"><p><span class="Asterisco">*</span> Tipo de Emisi&oacute;n:&nbsp;&nbsp;</p></td>
     			<td width="7%" class="LetraNegra">
-                <input type="radio" name="opt_1" id="opt_1" value="1"  <? if($emisionFE=='1'){ echo 'checked';}?> onClick=" document.getElementById('archivo').disabled=true; ">
+                <input type="radio" name="opt_1" id="opt_1" value="1"  <?php if($emisionFE=='1'){ echo 'checked';}?> onClick=" document.getElementById('archivo').disabled=true; ">
                 <label for="opt_1">NORMAL</label></td>
-   			   <td width="20%" class="LetraNegra"><input name="opt_1" type="radio" id="Opt_1" value="2" <? if($emisionFE=='2'){ echo 'checked';}?> onClick=" document.getElementById('archivo').disabled=false; ">
+   			   <td width="20%" class="LetraNegra"><input name="opt_1" type="radio" id="Opt_1" value="2" <?php if($emisionFE=='2'){ echo 'checked';}?> onClick=" document.getElementById('archivo').disabled=false; ">
 		       <label for="Opt_2">INDISPONIBILIDAD DEL SISTEMA</label></td>
    			   <td width="58%" class="LetraNegra">&nbsp;</td>
              </tr>
   			 <tr>
   			   <td height="22" class="Etiqueta1">Clave de Contingencia:&nbsp;&nbsp;</td>
-  			   <td colspan="2" class="LetraNegra" <? if($row_rs_buscaConfig['Cof_Clv']==''){ echo "style='color:#F00'";}?>>
-			   <input type="hidden" id="hdd_ClvCon" name="hdd_ClvCon" value="<? echo $row_rs_buscaConfig['Cof_Clv'];?>">
+  			   <td colspan="2" class="LetraNegra" <?php if($row_rs_buscaConfig['Cof_Clv']==''){ echo "style='color:#F00'";}?>>
+			   <input type="hidden" id="hdd_ClvCon" name="hdd_ClvCon" value="<?php echo $row_rs_buscaConfig['Cof_Clv'];?>">
 			   <em>
-			   <? if($row_rs_buscaConfig['Cof_Clv']!=''){ echo $row_rs_buscaConfig['Cof_Clv']."&nbsp;&nbsp;&nbsp;(".count(file($Ses_Emp_Cod."/".$row_rs_buscaConfig['Cof_Clv']))." c&oacute;digos)";}else{ echo 'NINGUNA';}?>
+			   <?php if($row_rs_buscaConfig['Cof_Clv']!=''){ echo $row_rs_buscaConfig['Cof_Clv']."&nbsp;&nbsp;&nbsp;(".count(file($Ses_Emp_Cod."/".$row_rs_buscaConfig['Cof_Clv']))." c&oacute;digos)";}else{ echo 'NINGUNA';}?>
 			   </em></td>
   			   <td class="LetraNegra">&nbsp;</td>
 		      </tr>
   			 <tr>
   			   <td height="22" class="Etiqueta1">&nbsp;</td>
-  			   <td colspan="2" class="LetraNegra"><input name="archivo" <? if($emisionFE=='1'){ echo 'disabled';}?> type="file" id="archivo" accept=".txt"></td>
+  			   <td colspan="2" class="LetraNegra"><input name="archivo" <?php if($emisionFE=='1'){ echo 'disabled';}?> type="file" id="archivo" accept=".txt"></td>
   			   <td width="58%" class="LetraNegra">&nbsp;</td>
 		      </tr>
           </table>
 		  <input name="hdd_save" type="hidden" id="hdd_save" value="insertar" />
-          <input name="hdd_total" type="hidden" id="hdd_total" value="<? echo $total_rs_buscaConfig;?>" />
+          <input name="hdd_total" type="hidden" id="hdd_total" value="<?php echo $total_rs_buscaConfig;?>" />
           
         </FIELDSET>
        <table width="119" border="0" cellpadding="0" cellspacing="0">
           <tr>
             <td width="108" height="28" align="left">
-            <? if($row_rs_buscaConfig['Cof_Gce']!='N'){?>
+            <?php if($row_rs_buscaConfig['Cof_Gce']!='N'){?>
             <button type="button" class="btn btn-primary start" title="Guardar" onclick="if(document.getElementById('archivo').value==1){ validar_requeridos(this.form, 'archivo', 1);}else{confirmacion(this.form);}">
            <i class="icon-book icon-white"></i>
            <span>Guardar</span>
     		</button>
-            <? }?>
+            <?php }?>
     		</td>
           </tr>
         </table>

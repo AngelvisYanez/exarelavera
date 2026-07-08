@@ -265,7 +265,7 @@ $pdf->SetY(-15);
 $pdf->SetFont('helvetica', 'I', 7);
 
 $nombre_usuario = $_SESSION['Ses_Prs_Nom'] . ' ' . $_SESSION['Ses_Prs_Ape'];
-$pdf->Cell(95, 10, 'Generado por: ' . utf8_decode($nombre_usuario), 0, 0, 'L');
+$pdf->Cell(95, 10, 'Generado por: ' . mb_convert_encoding($nombre_usuario, 'ISO-8859-1', 'UTF-8'), 0, 0, 'L');
 $pdf->Cell(95, 10, 'Generado el ' . date("d-m-Y") . ' en EXA [Software Contable]', 0, 0, 'R');
 
 // Salida

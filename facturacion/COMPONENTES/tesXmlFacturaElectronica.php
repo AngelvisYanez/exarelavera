@@ -1,4 +1,4 @@
-<?
+<?php
 	/**
 *	Componente para generar el xml del comprobante de venta
 *	Desarrollador: Jose Cumbicos

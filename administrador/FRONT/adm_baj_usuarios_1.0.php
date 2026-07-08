@@ -81,7 +81,7 @@ if ($thisPost->postBlock($_POST['postID']))
 			<input type="hidden" name="hdd_aux" id="hdd_aux" value="">
 			<input type="hidden" name="hdd_atras" id="hdd_atras" value="1">			
 		</form> 		
-<? if(isset($txt_busqueda)){ ?> 
+<?php if(isset($txt_busqueda)){ ?> 
 	<FIELDSET>
     <LEGEND>
     <label class="Titulos2">Resultados de la busqueda</label>
@@ -108,16 +108,16 @@ if ($thisPost->postBlock($_POST['postID']))
 	  	  if($row_rs_buscar['Usu_Est']=='I'){ $rojo='#FF0000'; $anulada++; }else{$rojo='';}	
 	  ?>
       <tr>
-        <td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Usu_Cod']; ?></FONT></td>
-		<td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Prs_Ced']; ?></FONT></td>
-        <td align="left">&nbsp;<FONT COLOR="<? echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Prs_Ape']." ".$row_rs_buscar['Prs_Nom'],'#FFFF00', 1); ?></FONT></td>
-        <td><FONT COLOR="<? echo $rojo;?>"><?php echo $row_rs_buscar['Suc_Des'];?></FONT></td>
+        <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Usu_Cod']; ?></FONT></td>
+		<td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Prs_Ced']; ?></FONT></td>
+        <td align="left">&nbsp;<FONT COLOR="<?php echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Prs_Ape']." ".$row_rs_buscar['Prs_Nom'],'#FFFF00', 1); ?></FONT></td>
+        <td><FONT COLOR="<?php echo $rojo;?>"><?php echo $row_rs_buscar['Suc_Des'];?></FONT></td>
 		<td align="center">
-			<form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "frml" id="frml">
+			<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "frml" id="frml">
 				<button type='button' class='btn btn-success btn-mini' title="Elegir" onclick="this.form.submit();"><i class='icon-arrow-right icon-white'></i></button>
 				<input type="hidden" name="codigo" id="codigo" value="<?Php echo $row_rs_buscar['Usu_Cod'];?>"/>
 				<input type="hidden" name="volver_busqueda" id="volver_txt_busqueda" value="<?Php echo $txt_busqueda;?>"/>
-				<input type="hidden" name="volver_opciones" id="volver_opciones" value="<? echo $op_opciones?>">
+				<input type="hidden" name="volver_opciones" id="volver_opciones" value="<?php echo $op_opciones?>">
 			</form>		
 		</td>		
       </tr>
@@ -125,13 +125,13 @@ if ($thisPost->postBlock($_POST['postID']))
     </tbody>
     </table>
     </FIELDSET> 
-<? 
+<?php 
 	echo barra_estado(count($Arr_Persona));
 } ?>
 	       
 <?Php if (isset($codigo) && !isset($hdd_atras)) {?>		  
  <form action="<?Php $_SERVER['PHP_SELF']?>" method="post" name="form2" id="form2">
-<?
+<?php
 	$thisPost->startPost();
 	/**
 	 * consulta de usuarios

@@ -41,16 +41,16 @@ if(isset($ajax_cst_cod))
 		    <td align="center"><?php echo $row_rs_costos['Pld_Cod'];?></td>
 			<td><?php echo $row_rs_costos['Pld_Cdc'];?></td>
 			<td align="left">
-			<? echo $row_rs_costos['Pld_Des']; ?>&nbsp;
+			<?php echo $row_rs_costos['Pld_Des']; ?>&nbsp;
 			<input name="hdd_Pld[<?php  echo $i?>]" type="hidden" value="<?php  echo $row_rs_costos['Pld_Des'];?>"  id="hdd_Pld[<?php  echo $i?>]">
 			<input name="Pld_Cod[<?php  echo $i?>]" type="hidden" value="<?php  echo $row_rs_costos['Pld_Cod'];?>"  id="Pld_Cod[<?php  echo $i?>]">			</td>
-			<td align="center"><? if ($row_rs_recur['Pld_Des'] != ""){ echo $row_rs_recur['Pld_Des']." <strong>(".$row_rs_grupo['Pld_Des'].")</strong>"; }else{ 
+			<td align="center"><?php if ($row_rs_recur['Pld_Des'] != ""){ echo $row_rs_recur['Pld_Des']." <strong>(".$row_rs_grupo['Pld_Des'].")</strong>"; }else{ 
 								echo "&nbsp;"; } ?></td>
 			<td align="right">
-			<input name="txt_por[<?php  echo $i?>]" type="text" id="txt_por[<?php  echo $i?>]" value="<? echo $row_rs_costos['Tdc_Por']; ?>" size="4" style="text-align:right" onkeyup="numerico(this), suma_porcentaje(<?php echo $total_rs_costos; ?>, 'txt_por', 'suma_porc')"> <?php $total_por=$total_por + $row_rs_costos['Tdc_Por']; ?>
+			<input name="txt_por[<?php  echo $i?>]" type="text" id="txt_por[<?php  echo $i?>]" value="<?php echo $row_rs_costos['Tdc_Por']; ?>" size="4" style="text-align:right" onkeyup="numerico(this), suma_porcentaje(<?php echo $total_rs_costos; ?>, 'txt_por', 'suma_porc')"> <?php $total_por=$total_por + $row_rs_costos['Tdc_Por']; ?>
 			<input name="hdd_cnt[<?php  echo $i?>]" type="hidden" value="<?php  echo $row_rs_costos['Pld_Cdc'];?>" id="hdd_cnt[<?php  echo $i?>]">			</td>
 	  </tr>
-		  <?  } while ($row_rs_costos = $obBD_con1->fetch_assoc($rs_costos)); /* fin  } while ($row_rs_iva_bienes = mysqli_fetch_assoc($rs_iva_bienes)); */?>
+		  <?php  } while ($row_rs_costos = $obBD_con1->fetch_assoc($rs_costos)); /* fin  } while ($row_rs_iva_bienes = mysqli_fetch_assoc($rs_iva_bienes)); */?>
 			<tr class="Cuerpo_ajax">
 			  <td colspan="4" align="right" class="Etiqueta1">
 			TOTAL <?php echo "%"; ?>:
@@ -64,7 +64,7 @@ if(isset($ajax_cst_cod))
 		  <tr>
 			<td colspan="6" class="Alertas"><?Php echo error_alerta("No hay resultados que mostrar", 1); ?></td>
 		  </tr>
-		  <? } /* fin if($num_row_rs_iva_bienes>0){  */ ?>
+		  <?php } /* fin if($num_row_rs_iva_bienes>0){  */ ?>
 </table>   
     <?Php
  	@$obBD_con1->free_result($row_rs_costos);

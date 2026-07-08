@@ -1,4 +1,4 @@
-<?
+<?php
 	require_once ("../../DATA/DAC.php");
 	require_once ("tes_sql_autorizador.php");
 

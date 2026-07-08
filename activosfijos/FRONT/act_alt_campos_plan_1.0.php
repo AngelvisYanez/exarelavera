@@ -33,13 +33,13 @@ if (isset($ajax_alt_PlanCam))
 	  { 
 	 	$rs_con_tip_act = $obBD_con1->getRowConsulta(416,$Tia_Des, $obBD_conexion);
 ?>
-<form method="post" name= "form2" action="<? echo $_SERVER['PHP_SELF'];?>">
+<form method="post" name= "form2" action="<?php echo $_SERVER['PHP_SELF'];?>">
     <label class="Titulos2">Tipo de Activo: <span class="LetraNegra"><?php echo $rs_con_tip_act["Tia_Des"];?></span></label>
     <fieldset>
     <LEGEND>
         <label class="Titulos2">Datos a registrar&nbsp;</label>
     </LEGEND>
-<? 
+<?php 
 	/**
 	 * Creacion del campo REPOST
 	 */
@@ -85,11 +85,11 @@ if (isset($ajax_alt_PlanCam))
 				$i++;
 			  ?>
                 <td><?php if($row_rs_con_camp['Cam_Est'] == 'I'){ $rojo='#FF0000'; $isact ='F';}else{$rojo=''; $isact ='T';} ?>
-				<input name="cam[<? echo $i ?>]" type="checkbox" id="cam[<? echo $i; ?>]" value="<? echo $row_rs_con_camp['Cam_Cod']; ?>" <?Php if($row_rs_con_camp['Cam_Cod'] == $rs_con_camp_act['Cam_Cod']){echo "checked style='background-color:#0F0'"; }?> <? if($isact =='F'){echo "disabled";}?>>
-                <span class="LetraNegra"><FONT COLOR="<? echo $rojo;?>"><? echo $row_rs_con_camp['Cam_Lar'];?></FONT></span>
-                <td><select name="sel[<? echo $i; ?>]" id="sel[<? echo $i; ?>]" <? if($isact =='F'){echo "disabled ";}?> >
-          			<option  <?php if ($rs_con_camp_act['Cam_Req']== 'N'){ echo "selected"; } ?> value="N" style="color:<? echo $rojo;?>">No requerido</option>
-                    <option  <?php if ($rs_con_camp_act['Cam_Req']== 'R'){ echo "selected"; } ?> value="R" style="color:<? echo $rojo;?>">Requerido</option>
+				<input name="cam[<?php echo $i ?>]" type="checkbox" id="cam[<?php echo $i; ?>]" value="<?php echo $row_rs_con_camp['Cam_Cod']; ?>" <?Php if($row_rs_con_camp['Cam_Cod'] == $rs_con_camp_act['Cam_Cod']){echo "checked style='background-color:#0F0'"; }?> <?php if($isact =='F'){echo "disabled";}?>>
+                <span class="LetraNegra"><FONT COLOR="<?php echo $rojo;?>"><?php echo $row_rs_con_camp['Cam_Lar'];?></FONT></span>
+                <td><select name="sel[<?php echo $i; ?>]" id="sel[<?php echo $i; ?>]" <?php if($isact =='F'){echo "disabled ";}?> >
+          			<option  <?php if ($rs_con_camp_act['Cam_Req']== 'N'){ echo "selected"; } ?> value="N" style="color:<?php echo $rojo;?>">No requerido</option>
+                    <option  <?php if ($rs_con_camp_act['Cam_Req']== 'R'){ echo "selected"; } ?> value="R" style="color:<?php echo $rojo;?>">Requerido</option>
 			    </select></td>
                 <?php
 				$cont++;
@@ -110,19 +110,19 @@ if (isset($ajax_alt_PlanCam))
  
 	<table width="100%" border="0" cellpadding="0" cellspacing="0">
     <tr>
-      <td  height="23"><button name="boton_guardar" id="boton_guardar" type="button" class="btn btn-primary fileinput-button" value="Guardar" title="Guardar" onClick="count_check(this.form,<? echo $nam;?> , 'cam', 1)">
+      <td  height="23"><button name="boton_guardar" id="boton_guardar" type="button" class="btn btn-primary fileinput-button" value="Guardar" title="Guardar" onClick="count_check(this.form,<?php echo $nam;?> , 'cam', 1)">
       <i class=" icon-book icon-white"></i>
 	  <span>&nbsp;Guardar&nbsp;</span>
       </button>
       </td>
     </tr>
     </table>
-    <input name="Tia_Des" type="hidden" id="Tia_Des" value="<? echo $Tia_Des; ?>">
-    <input name="txt_busqueda1" type="hidden" id="txt_busqueda1" value="<? echo $txt_busqueda; ?>">
+    <input name="Tia_Des" type="hidden" id="Tia_Des" value="<?php echo $Tia_Des; ?>">
+    <input name="txt_busqueda1" type="hidden" id="txt_busqueda1" value="<?php echo $txt_busqueda; ?>">
     <input name="hdd_save" type="hidden" id="hdd_save" value="insertar">
-    <input name="volver_opciones1" type="hidden" id="volver_opciones1" value="<? echo $volver_opciones; ?>">
+    <input name="volver_opciones1" type="hidden" id="volver_opciones1" value="<?php echo $volver_opciones; ?>">
     
-    <input name="i" type="hidden" id="i" value="<? echo $i; ?>">
+    <input name="i" type="hidden" id="i" value="<?php echo $i; ?>">
 </form>
 	
 

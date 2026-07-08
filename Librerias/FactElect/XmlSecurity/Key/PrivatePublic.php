@@ -60,7 +60,7 @@ require_once($vars_root.'/Key.php');
  * @author Andreas Schamberger <mail@andreass.net>
  * @author Robert Richards <rrichards@cdatazone.org>
  */
-abstract class PrivatePublic extends Key
+abstract class Privatepublic extends Key
 {
     protected $config; ///< Configuración de la firma electrónica
     protected $certs; ///< Certificados digitales de la firma
@@ -103,7 +103,7 @@ abstract class PrivatePublic extends Key
     /**
      * Loads the given cryptographic key for the class.
      *
-     * @param string  $keyType    \ass\XmlSecurity\Key::TYPE_PUBLIC | \ass\XmlSecurity\Key::TYPE_PRIVATE
+     * @param string  $keyType    \ass\XmlSecurity\Key::TYPE_public | \ass\XmlSecurity\Key::TYPE_PRIVATE
      * @param string  $key        Key string or filename
      * @param boolean $isFile     Is parameter key a filename
      * @param string  $passphrase Passphrase for given key
@@ -118,8 +118,8 @@ abstract class PrivatePublic extends Key
         if (!is_null($passphrase)) {
             $this->passphrase = $passphrase;
         }
-        if ($keyType == self::TYPE_PUBLIC) {
-            $this->keyType = self::TYPE_PUBLIC;
+        if ($keyType == self::TYPE_public) {
+            $this->keyType = self::TYPE_public;
             $this->opensslResource = openssl_get_publickey($this->key);
         } else {
             $this->keyType = self::TYPE_PRIVATE;
@@ -136,7 +136,7 @@ abstract class PrivatePublic extends Key
      */
     public function decryptData($data)
     {
-        if ($this->keyType == self::TYPE_PUBLIC) {
+        if ($this->keyType == self::TYPE_public) {
             if (false === openssl_public_decrypt($data, $decrypted, $this->opensslResource, $this->padding)) {
                 throw new DecryptionException($this->type, $this->getOpenSslErrorString());
             }
@@ -158,7 +158,7 @@ abstract class PrivatePublic extends Key
      */
     public function encryptData($data)
     {
-        if ($this->keyType == self::TYPE_PUBLIC) {
+        if ($this->keyType == self::TYPE_public) {
             if (false === openssl_public_encrypt($data, $encryptedData, $this->opensslResource, $this->padding)) {
                 throw new EncryptionException($this->type, $this->getOpenSslErrorString());
             }
@@ -198,7 +198,7 @@ abstract class PrivatePublic extends Key
      */
     public function getX509Certificate($singleLineString = false)
     {
-        if ($this->keyType != self::TYPE_PUBLIC) {
+        if ($this->keyType != self::TYPE_public) {
             return null;
         }
         if ($singleLineString === true) {
@@ -227,7 +227,7 @@ abstract class PrivatePublic extends Key
      */
     public function getX509SubjectKeyIdentifier()
     {
-        if ($this->keyType != self::TYPE_PUBLIC) {
+        if ($this->keyType != self::TYPE_public) {
             return null;
         }
         $x509 = openssl_x509_parse($this->key);
@@ -250,7 +250,7 @@ abstract class PrivatePublic extends Key
      */
     public function getX509Thumbprint()
     {
-        if ($this->keyType != self::TYPE_PUBLIC) {
+        if ($this->keyType != self::TYPE_public) {
             return null;
         }
         $certs = Pem::parseKeyFromPemFormat($this->key, Pem::PEM_TYPE_CERTIFICATE_X509);

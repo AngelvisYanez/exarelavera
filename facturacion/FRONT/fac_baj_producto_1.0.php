@@ -142,18 +142,18 @@ elseif (isset($codigo))
 	  	  { $rojo='#FF0000'; $anulada++; }else{$rojo='';}	
 	   ?>
          <tr>
-          <td width="11%" align="center"><FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Pro_Cod']; ?></FONT></td>
-          <td width="19%" align="left"><FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Cat_Des']; ?></FONT></td>
-		  <td><font color="<? echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda,$row_rs_buscar['Ite_Lar'],'#FFFF00',1).' '.marcar_cadena($txt_busqueda,$row_rs_buscar['Pro_Obs'],'#FFFF00',1); ?></font></td>
-		  <td width="18%" align="left"><font color="<? echo $rojo; ?>"><?Php echo $row_rs_buscar['Ite_Cor'].' '.marcar_cadena($txt_busqueda,$row_rs_buscar['Pro_Obs'],'#FFFF00',1); ?></font></td>
-		  <td width="11%" align="center"><FONT COLOR="<? echo $rojo;?>">
+          <td width="11%" align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Pro_Cod']; ?></FONT></td>
+          <td width="19%" align="left"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Cat_Des']; ?></FONT></td>
+		  <td><font color="<?php echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda,$row_rs_buscar['Ite_Lar'],'#FFFF00',1).' '.marcar_cadena($txt_busqueda,$row_rs_buscar['Pro_Obs'],'#FFFF00',1); ?></font></td>
+		  <td width="18%" align="left"><font color="<?php echo $rojo; ?>"><?Php echo $row_rs_buscar['Ite_Cor'].' '.marcar_cadena($txt_busqueda,$row_rs_buscar['Pro_Obs'],'#FFFF00',1); ?></font></td>
+		  <td width="11%" align="center"><FONT COLOR="<?php echo $rojo;?>">
 		  <?Php echo $row_rs_buscar['Mar_Des']; ?></FONT></td>
 		   <form name="form3" id="form3" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
           <td width="3%" align="center">
 		   <input name="codigo" id="codigo" type="hidden" value="<?Php echo $row_rs_buscar['Pro_Cod']; ?>">
 		   <button type="button" class="btn btn-success btn-mini" title="Elegir" onclick="this.form.submit()">
 		        	<i class=" icon-arrow-right icon-white"></i>            
-              <input  type="hidden" id="volver_busqueda" name="volver_busqueda" value="<? echo $txt_busqueda; ?>">            
+              <input  type="hidden" id="volver_busqueda" name="volver_busqueda" value="<?php echo $txt_busqueda; ?>">            
 			  </td></form>
         </tr>
 	  <?Php 
@@ -212,11 +212,11 @@ if (isset($codigo))
     </tr>  
   <tr>
     <td class="Etiqueta1">Categoria: </td>
-    <td colspan="5" class="LetraNegra"> <? echo $row_rs_consulta['Cat_Des']; ?>  </td>
+    <td colspan="5" class="LetraNegra"> <?php echo $row_rs_consulta['Cat_Des']; ?>  </td>
   </tr>
   <tr>
     <td class="Etiqueta1">C&oacute;d. Secuencial: </td>
-    <td colspan="5" class="LetraNegra"><? echo $row_rs_consulta['Pro_Cdc']; ?> </td>
+    <td colspan="5" class="LetraNegra"><?php echo $row_rs_consulta['Pro_Cdc']; ?> </td>
   </tr>
   
   <tr>
@@ -291,7 +291,7 @@ if (isset($codigo))
   </td>
       <td width="143" align="left">
       <button type="button" class="btn btn-primary start" title="Guardar" onclick="validar_requeridos(this.form, 'Pro_Cod*Pro_Est', 1)"> <i class="icon-book icon-white"></i> <span>Guardar</span></button>
-      <input  type="hidden" id="txt_busqueda" name="txt_busqueda" value="<? echo $volver_busqueda; ?>" /></td>
+      <input  type="hidden" id="txt_busqueda" name="txt_busqueda" value="<?php echo $volver_busqueda; ?>" /></td>
     </tr>
   </table>
   <br />

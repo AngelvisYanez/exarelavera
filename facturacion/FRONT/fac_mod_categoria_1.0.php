@@ -313,7 +313,7 @@ if(isset($_POST['cdc_nivel']))
 				{		?>			
                 <!--<form method='post' id='editar' name='editar' action='<?Php //echo $_SERVER['PHP_SELF']; ?>'>-->
                 						
-                <button type="button" class="btn btn-primary btn-mini" title="Editar" onclick="Muestra_Aparecer();ajax_datos('<?Php echo $_SERVER['PHP_SELF'];?>?ajaxEdit=1&Cat_Tip=<? echo $row_nivel['Cat_Tip'];?>&Cat_Cod=<? echo $row_nivel['Cat_Cod'];?>&cdc_nivel=<? echo $row_nivel['Cat_Cdc'];?>&nivel_actual=<? echo $nivel_actual;?>&nivel_superior=<? echo $nivel_superior;?>','bgmodal')"><i class="icon-edit icon-white"></i>
+                <button type="button" class="btn btn-primary btn-mini" title="Editar" onclick="Muestra_Aparecer();ajax_datos('<?Php echo $_SERVER['PHP_SELF'];?>?ajaxEdit=1&Cat_Tip=<?php echo $row_nivel['Cat_Tip'];?>&Cat_Cod=<?php echo $row_nivel['Cat_Cod'];?>&cdc_nivel=<?php echo $row_nivel['Cat_Cdc'];?>&nivel_actual=<?php echo $nivel_actual;?>&nivel_superior=<?php echo $nivel_superior;?>','bgmodal')"><i class="icon-edit icon-white"></i>
                 </button>
                <!-- </form>-->
                   <?Php          
@@ -360,7 +360,7 @@ if(isset($_POST['cdc_nivel']))
 		<!-- Boton para regresar a los niveles anteriores -->		   
    	 <table width="21%" border="0" cellspacing="0" cellpadding="0">
     	<tr>
-            <? if($nivel_actual != 0){ ?>
+            <?php if($nivel_actual != 0){ ?>
             <td width="50%" height="28">                   
             <form action='<?Php echo $_SERVER['PHP_SELF']; ?>' method='post'>
 			<input type='hidden' id='back' name='back' value='<?php echo $nivel_actual; ?>' />

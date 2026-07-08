@@ -373,9 +373,9 @@ if(isset($save)){
                             }
                         }
                         function clearFooter(){ 
-                            var $footRow = $("#grillaComp .ui-jqgrid-sdiv .footrow");   
-                            var $footRow = $("#grillaComp .ui-jqgrid-sdiv .footrow");
-                            var $name = $footRow.find('>td[aria-describedby="list_proveedor"]'),
+                            public $footRow = $("#grillaComp .ui-jqgrid-sdiv .footrow");   
+                            public $footRow = $("#grillaComp .ui-jqgrid-sdiv .footrow");
+                            public $name = $footRow.find('>td[aria-describedby="list_proveedor"]'),
                             $invdate = $footRow.find('>td[aria-describedby="list_act"]'),
                             width2 = $name.width()  + $invdate.outerWidth();
                             $invdate.css("display", "none");

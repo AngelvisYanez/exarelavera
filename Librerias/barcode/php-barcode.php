@@ -75,8 +75,8 @@ function barcode_outimage($text, $bars, $scale=1, $mode , $total_y=0, $space = '
 
  global $_SERVER;
  $chars=explode(" ", $text);
- reset($chars);
- while (list($n, $v)=each($chars)){
+ 
+ foreach($chars as $n => $v){
   if(trim($v)){
    $inf=explode(":", $v);
    $fontsize=$scale*($inf[1]/1.8);

@@ -33,7 +33,7 @@ if ($ajax_buscador=="F")
 		<td><strong>Estado</strong></td>
 		<td>&nbsp;</td>
 		</tr>
-	  <?
+	  <?php
 	  if ($total_rs_buscta > 0) {
 	  do { 
 		/* Consulta del detallete de la CUENTA */
@@ -46,13 +46,13 @@ if ($ajax_buscador=="F")
 		$row_rs_grupo = $obBD_con1->registros();					  						  
 	  ?>
 	  <tr class="Cuerpo_ajax">
-	    <td align="center"><? echo $row_rs_buscta['Pld_Cod']; ?></td>
-		<td align="left"><? echo $row_rs_buscta['Pld_Cdc']; ?></td>
-		<td align="left"><? echo $row_rs_buscta['Pld_Des']; ?></td>
-		<td><div align="center"><? if ($row_rs_recur['Pld_Des'] != ""){ echo $row_rs_recur['Pld_Des']." <strong>(".$row_rs_grupo['Pld_Des'].")</strong>"; }else{ 
+	    <td align="center"><?php echo $row_rs_buscta['Pld_Cod']; ?></td>
+		<td align="left"><?php echo $row_rs_buscta['Pld_Cdc']; ?></td>
+		<td align="left"><?php echo $row_rs_buscta['Pld_Des']; ?></td>
+		<td><div align="center"><?php if ($row_rs_recur['Pld_Des'] != ""){ echo $row_rs_recur['Pld_Des']." <strong>(".$row_rs_grupo['Pld_Des'].")</strong>"; }else{ 
 								echo "&nbsp;"; } ?></div></td>
-		<td align="center"><div align="center"><? echo $row_rs_buscta['Pld_Tip']; ?></div></td>
-		<td align="center"><div align="center"><? echo $row_rs_buscta['Pld_Est']; ?></div></td>
+		<td align="center"><div align="center"><?php echo $row_rs_buscta['Pld_Tip']; ?></div></td>
+		<td align="center"><div align="center"><?php echo $row_rs_buscta['Pld_Est']; ?></div></td>
 		<td align="center"><img src="../../mascaras/model1/imagenes/forward.png" width="16" height="16" title="Agregar cuenta" style="	
 		cursor:pointer" onClick=" 
 							ind_cta = document.getElementById('Hdd_Fila').value;
@@ -60,11 +60,11 @@ if ($ajax_buscador=="F")
 							document.getElementById(document.getElementById('Hdd_Pld_Cdc').value).value = '<?Php echo $row_rs_buscta['Pld_Cdc']; ?>';
 							document.getElementById(document.getElementById('Hdd_Pld_Des').value).value = '<?Php echo $row_rs_buscta['Pld_Des']; ?>';"></td>
 	  </tr>
-	  <? } while ($row_rs_buscta = $obBD_con1->fetch_assoc($rs_buscta));
+	  <?php } while ($row_rs_buscta = $obBD_con1->fetch_assoc($rs_buscta));
 	  } else { ?>
 		<tr><td colspan="8" class="Alertas"><?Php echo error_alerta("No hay resultados que mostrar", 1); ?></td>
 		</tr>
-	  <? }?>
+	  <?php }?>
 	</table>
 <?Php 
 @$obBD_con1->free_result($rs_buscta);

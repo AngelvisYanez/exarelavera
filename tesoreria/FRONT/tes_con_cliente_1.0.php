@@ -130,7 +130,7 @@ $obBD_con1 =  new Class_Log_Datos_Cli;
     </tr>
     </thead>
     <tbody>
-    <?
+    <?php
 	
 	$Arr_Cliente = $obBD_con1->getArrayConsulta($_POST['op_opciones'] == "d"? 9 : 10,$Ses_Emp_Cod.'*'.$_POST['txt_busqueda'], $obBD_conexion);
 	
@@ -148,28 +148,28 @@ $obBD_con1 =  new Class_Log_Datos_Cli;
 	  <?Php echo marcar_cadena($_POST['txt_busqueda'], $row['Prs_Ape']." ".$row['Prs_Nom'], '#FFFF00', 1); ?>
      </td>
 	 <td align="center" width="3%">
-	 <form name='form6' method='post'  action='<? echo $_SERVER['PHP_SELF'];?>'>
+	 <form name='form6' method='post'  action='<?php echo $_SERVER['PHP_SELF'];?>'>
 	 	<button type="button" class="btn btn-success btn-mini" title="Elegir" onclick="this.form.submit()">
         	<i class=" icon-arrow-right icon-white"></i>
         </button>
 		<input name="Cli_Cod" id="Cli_Cod" type="hidden" value="<?Php echo $row['Cli_Cod']; ?>">
-    	<input name="txt_busqueda" value="<? echo $_POST['txt_busqueda'];?>" type="hidden">
-    	<input name="op_opciones" value="<? echo $_POST['op_opciones'];?>" type="hidden">
+    	<input name="txt_busqueda" value="<?php echo $_POST['txt_busqueda'];?>" type="hidden">
+    	<input name="op_opciones" value="<?php echo $_POST['op_opciones'];?>" type="hidden">
     </form>
     </td>
    </tr> 
-	<?
+	<?php
 	}
 	?>
     </tbody>
   </table>
-  <?
+  <?php
    echo barra_estado(count($Arr_Cliente));
   ?>
  </FIELDSET>
    </td>
    </tr>
-   <?
+   <?php
   }
    ?>
   </table>
@@ -181,7 +181,7 @@ $obBD_con1 =  new Class_Log_Datos_Cli;
    <LEGEND>
 	<label class="Titulos2">Datos a Modificar</label>
    </LEGEND>
-   <? 
+   <?php 
 	 $row_rs_persona = $obBD_con1->getRowConsulta(14,$_POST['Cli_Cod'],$obBD_conexion);
    ?>
     <table width="100%" border="0" cellpadding="2" cellspacing="0">
@@ -208,7 +208,7 @@ $obBD_con1 =  new Class_Log_Datos_Cli;
         Tipo de Contribuyente:
        </td>
        <td class="LetraNegra">&nbsp;
-         <? 
+         <?php 
          if($row_rs_persona['Cli_Tic']=='N')
          {
          	echo "NATURAL";
@@ -227,7 +227,7 @@ $obBD_con1 =  new Class_Log_Datos_Cli;
         
        </td>
        <td  class="LetraNegra">&nbsp;
-        <? echo $row_rs_persona['Prs_Nom'];?>
+        <?php echo $row_rs_persona['Prs_Nom'];?>
        </td>
       </tr>
       <tr>
@@ -237,7 +237,7 @@ $obBD_con1 =  new Class_Log_Datos_Cli;
         
        </td>
        <td  class="LetraNegra">&nbsp;
-		<? echo $row_rs_persona['Prs_Ape'];?>
+		<?php echo $row_rs_persona['Prs_Ape'];?>
        </td>
       </tr>
 	 
@@ -363,8 +363,8 @@ $obBD_con1 =  new Class_Log_Datos_Cli;
     <table width="300" border="0" cellpadding="0" cellspacing="0">
       <tr> 
       	<td width="89">
-      	<form method="post" name= "form" action="<? echo $_SERVER['PHP_SELF'];?>">
-      		 <button type="button" class="btn btn-inverse fileinput-button" title="Atras" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*hdd_volver', '<? echo $_POST['txt_busqueda'].'*'.$_POST['op_opciones'].'*'.'1';?>')">
+      	<form method="post" name= "form" action="<?php echo $_SERVER['PHP_SELF'];?>">
+      		 <button type="button" class="btn btn-inverse fileinput-button" title="Atras" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*hdd_volver', '<?php echo $_POST['txt_busqueda'].'*'.$_POST['op_opciones'].'*'.'1';?>')">
                <i class=" icon-arrow-left icon-white"></i>
                <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
        		 </button>
@@ -395,7 +395,7 @@ $obBD_con1 =  new Class_Log_Datos_Cli;
     </tr>
     </thead>
     <tbody>
-    <?
+    <?php
 	
 	$Arr_Cliente = $obBD_con1->getArrayConsulta(9,$Ses_Emp_Cod.'*'.'', $obBD_conexion);
 	
@@ -413,7 +413,7 @@ $obBD_con1 =  new Class_Log_Datos_Cli;
 	  <?Php echo $row['Prs_Ape']." ".$row['Prs_Nom']; ?>
      </td>
    </tr> 
-	<?
+	<?php
 	}
 	?>
     </tbody>

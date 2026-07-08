@@ -82,18 +82,18 @@ if (isset($Vet_Cod))
                       </tr>
                       <tr>
                         <td width="13%" align="left">CLIENTE:</td>
-                        <td width="45%"><? if ($row_rs_representante['Cli_Fac'] != "")
+                        <td width="45%"><?php if ($row_rs_representante['Cli_Fac'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Fac'];  
 			}
 			else { echo $row_rs_cliente['Prs_Ape'].' '.$row_rs_cliente['Prs_Nom']; }
 		    ?></td>
                         <td width="16%" align="left">FECHA EMISION:</td>
-                        <td width="26%"><? echo $dia."/".$mes."/".$anio;?></td>
+                        <td width="26%"><?php echo $dia."/".$mes."/".$anio;?></td>
                       </tr>
                       <tr>
                         <td align="left">RUC:</td>
-                        <td ><? if ($row_rs_representante['Cli_Fac'] != "")
+                        <td ><?php if ($row_rs_representante['Cli_Fac'] != "")
 						{ 
 							echo $row_rs_representante['Cli_Ruf']; 
 						}
@@ -106,7 +106,7 @@ if (isset($Vet_Cod))
                       </tr>
                       <tr>
                         <td align="left">DIRECCI&Oacute;N:</td>
-                        <td><? if ($row_rs_representante['Cli_Dir'] != "")
+                        <td><?php if ($row_rs_representante['Cli_Dir'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Dir']; 
 			}
@@ -121,10 +121,10 @@ if (isset($Vet_Cod))
 						//echo $nom[0].' '.$ape[0]; 
 				?></td>
                       </tr>
-                      <? if($row_rs_cliente['Tic_Cod']=='4' or $row_rs_cliente['Tic_Cod']=='5'){?>
+                      <?php if($row_rs_cliente['Tic_Cod']=='4' or $row_rs_cliente['Tic_Cod']=='5'){?>
                       <tr>
                         <td align="left">MODIFICA A:&nbsp;</td>
-                        <td colspan="3" valign="top">&nbsp;<? echo $row_rs_cliente['Vet_Nns'];?></td>
+                        <td colspan="3" valign="top">&nbsp;<?php echo $row_rs_cliente['Vet_Nns'];?></td>
                       </tr>
                       <tr>
                         <td height="32" align="left">&nbsp;</td>
@@ -158,7 +158,7 @@ if (isset($Vet_Cod))
                 <tr>
                   <td colspan="4" align="left"><hr size=1></td>
                 </tr>
-                <? do{?>
+                <?php do{?>
                 <tr class="Letra_punto_venta_2">
                   <td width="14%" align="left"><?Php echo $row_rs_cliente['Vet_Can']?></td>
                   <td><?Php echo $row_rs_cliente['Ite_Lar'].' '.$row_rs_cliente['Pro_Obs']?></td>
@@ -229,7 +229,7 @@ if (isset($Vet_Cod))
                 <td width="59%" rowspan="6" align="left" valign="top">
                 <table width="426" height="108" border="0" cellpadding="0" cellspacing="0" class="Letra_punto_venta_2">
                   <tr>
-                    <td width="528" height="18" align="left" valign="top"><strong>OBSERVACIONES:</strong>&nbsp;<? echo $observacion;?></td>
+                    <td width="528" height="18" align="left" valign="top"><strong>OBSERVACIONES:</strong>&nbsp;<?php echo $observacion;?></td>
                   </tr>
                 </table></td>
                 <td width="29%" height="18" align="right">Tarifa <?=$resultados[3] ?>%&nbsp;&nbsp;</td>

@@ -15,17 +15,17 @@ if (isset($com_codigo))
     <table width="100%" border="0" cellspacing="0" cellpadding="0">
       <tr>
         <td class="Etiqueta1">C&eacute;dula/R.U.C.:</td>
-        <td colspan="3" class="LetraNegra">&nbsp;<? echo $rs_info['Prs_Ced'];?></td>
+        <td colspan="3" class="LetraNegra">&nbsp;<?php echo $rs_info['Prs_Ced'];?></td>
       </tr>
       <tr>
        <td class="Etiqueta1">Destinatario:</td>
-        <td colspan="3" class="LetraNegra">&nbsp;<? echo $rs_info['Prs_Ape'].' '.$rs_info['Prs_Nom'];?></td>
+        <td colspan="3" class="LetraNegra">&nbsp;<?php echo $rs_info['Prs_Ape'].' '.$rs_info['Prs_Nom'];?></td>
       </tr>
       <tr>
         <td width="10%" class="Etiqueta1">No. Docto:</td>
-        <td width="41%" class="LetraNegra">&nbsp;<? echo $rs_info['Gui_Num'];?></td>
+        <td width="41%" class="LetraNegra">&nbsp;<?php echo $rs_info['Gui_Num'];?></td>
         <td width="7%" class="Etiqueta1">Usuario:</td>
-        <td width="42%" class="LetraNegra">&nbsp;<? echo $rs_usuVendedor['Prs_Ape'].' '.$rs_usuVendedor['Prs_Nom']; ?></td>
+        <td width="42%" class="LetraNegra">&nbsp;<?php echo $rs_usuVendedor['Prs_Ape'].' '.$rs_usuVendedor['Prs_Nom']; ?></td>
       </tr>        
     </table>
 
@@ -46,12 +46,14 @@ if (isset($com_codigo))
       <tr height="20">
         <td align="center"><?Php echo $row_rs_detalle['Pro_Cod']; ?></td>
         <td align="center" ><?Php echo $row_rs_detalle['Gui_Can']; ?></td>
-        <td ><?Php echo $row_rs_detalle['Ite_Lar'].' '.$row_rs_detalle['Pro_Obs']; ?></td>
+        <td align="center"><?php echo $row_rs_detalle['Pro_Cod']; ?></td>
+        <td align="center" ><?php echo $row_rs_detalle['Gui_Can']; ?></td>
+        <td ><?php echo $row_rs_detalle['Ite_Lar'].' '.$row_rs_detalle['Pro_Obs']; ?></td>
       </tr>
-      <?Php } ?>      
+      <?php } ?>      
     </tbody>            
   </table>    
 </FIELDSET>
-<? echo barra_estado($rs_detalle);
+<?php echo barra_estado($rs_detalle);
 }//FIn del if (isset($com_codigo))   
 ?>

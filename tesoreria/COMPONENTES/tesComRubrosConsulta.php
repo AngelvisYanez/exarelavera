@@ -1,4 +1,4 @@
-<?
+<?php
 /* Alias: [--]
    Descripción: Componente que muestra los Rubros de un punto de imprecion.
    Fecha de actualización: 2010-06-29.
@@ -25,7 +25,7 @@ else
 ?>
 <br>
 <table width="100%" border="1" cellpadding="0" cellspacing="0" id="tbl_resultados">
-<?
+<?php
 	if ($total_rs_buscta > 0) {
 		$cont = 1;
 		do { 
@@ -49,14 +49,14 @@ else
 				<td width="4%"></td>
 			</tr>					
 			<?Php }//Fin del if ($cont == 1)?>
-			<tr <? echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Cuerpo_ajax");?> class="Cuerpo_ajax">
-				<td><div align="center"><? echo $row_rs_buscta['Pro_Cod']; ?></div></td>
-				<td><div align="center"><? echo $row_rs_buscta['Pro_Ide']; ?></div></td>
-				<td><div align="left">&nbsp;<? echo $row_rs_buscta['Ite_Lar']; ?></div></td>
-				<td align="right"><? echo formato_numero($row_rs_buscta['Pre_Pvp'],2,2); ?></td>	
+			<tr <?php echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Cuerpo_ajax");?> class="Cuerpo_ajax">
+				<td><div align="center"><?php echo $row_rs_buscta['Pro_Cod']; ?></div></td>
+				<td><div align="center"><?php echo $row_rs_buscta['Pro_Ide']; ?></div></td>
+				<td><div align="left">&nbsp;<?php echo $row_rs_buscta['Ite_Lar']; ?></div></td>
+				<td align="right"><?php echo formato_numero($row_rs_buscta['Pre_Pvp'],2,2); ?></td>	
 				<!-- <td align="center">
 				</td> -->
-				<!-- <td align="right"><? //echo number_format(($row_rs_buscta['Pre_Pvp']) - $valor_beca,2); ?>
+				<!-- <td align="right"><?php //echo number_format(($row_rs_buscta['Pre_Pvp']) - $valor_beca,2); ?>
 				</td> -->																													
 				<td>
 				<div align="center">
@@ -64,13 +64,13 @@ else
 				</div>						
 				</td>
 			</tr>
-		<? $cont++;
+		<?php $cont++;
 			} while ($row_rs_buscta = $obBD_con1->fetch_assoc($rs_buscta));
 	} else { ?>
 			<tr>
 				<td colspan="7"><?php echo error_alerta("No hay resultados que mostrar", 1)?></td>
 			</tr>
-	<? }?>
+	<?php }?>
 	<tr>
 		<td colspan="7" align="center"><img src="../../imagenes/ocultar2.jpg" height="12" style="cursor:pointer" alt="Ocultar" onClick="ShowHide('rubros_table')"></td>
 	</tr>

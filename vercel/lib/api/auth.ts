@@ -1,12 +1,29 @@
-import { api } from '@/lib/api-client';
 import type { AuthResponse } from '@/lib/api-types';
 
 export const authApi = {
-  getEmpresas(username: string): Promise<AuthResponse> {
-    return api.postRaw<AuthResponse>('/auth/empresas', { username });
+  async getEmpresas(username: string): Promise<AuthResponse> {
+    const res = await fetch('/api/auth/empresas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Error de conexión' }));
+      throw new Error(err.error || `HTTP ${res.status}`);
+    }
+    return res.json();
   },
 
-  login(username: string, password: string, empresa: string): Promise<AuthResponse> {
-    return api.postRaw<AuthResponse>('/auth/login', { username, password, empresa });
+  async login(username: string, password: string, empresa: string): Promise<AuthResponse> {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password, empresa }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Error de conexión' }));
+      throw new Error(err.error || `HTTP ${res.status}`);
+    }
+    return res.json();
   },
 };

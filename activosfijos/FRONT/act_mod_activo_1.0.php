@@ -182,10 +182,10 @@ if (isset($saveActivo)) {
                                                             <select name="Tia_Cod" id="Tia_Cod" class="form-control input-xs" data-placeholder="Seleccione una categor&iacute;a de activo">
                                                                 <option value=""></option>
                                                                     <?Php foreach ($row_rs_tia_tip as $row) { ?>
-                                                                    <optgroup label="<?Php echo utf8_decode($row['descripcion']); ?>">
+                                                                    <optgroup label="<?Php echo mb_convert_encoding($row['descripcion'], 'ISO-8859-1', 'UTF-8'); ?>">
                                                                             <?php $row_rs_tia_det = $obBD_con1->getArrayConsulta(14, $row['Tia_Cod'], $obBD_conexion); ?>
                                                                             <?Php foreach ($row_rs_tia_det as $row) { ?>
-                                                                            <option value="<?php echo $row['Tia_Cod']; ?>"><?Php echo utf8_decode($row['descripcion']); ?></option>
+                                                                            <option value="<?php echo $row['Tia_Cod']; ?>"><?Php echo mb_convert_encoding($row['descripcion'], 'ISO-8859-1', 'UTF-8'); ?></option>
                                                                             <?Php } ?>
                                                                     </optgroup>
                                                                     <?Php } ?>
@@ -291,7 +291,7 @@ if (isset($saveActivo)) {
                                                                     <?php $rs_porcentaje=$obBD_con1->getArrayConsulta(16,$Ses_Suc_Cod,$obBD_conexion);
                                                                     if(count($rs_porcentaje)>0){
                                                                         foreach ($rs_porcentaje as $valor){?>
-                                                                    <option value="<?php echo $valor['Apr_Por'];?>"><?php echo utf8_decode($valor['Apr_Des']);?></option>
+                                                                    <option value="<?php echo $valor['Apr_Por'];?>"><?php echo mb_convert_encoding($valor['Apr_Des'], 'ISO-8859-1', 'UTF-8');?></option>
                                                                     <?php }
                                                                     }
                                                                     ?>

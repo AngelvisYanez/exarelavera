@@ -41,7 +41,7 @@ if (isset($ajax_autorizaci))
 	*/
 	$row_rs_documento = $obBD_con1->getRowConsulta(510, $codigo, $obBD_conexion); 
   ?>
-<form method="post" name= "form2" action="<? echo $_SERVER['PHP_SELF'];?>">
+<form method="post" name= "form2" action="<?php echo $_SERVER['PHP_SELF'];?>">
 <FIELDSET>
 <LEGEND>
 <label class="Titulos2">Datos a registrar</label>
@@ -50,62 +50,62 @@ if (isset($ajax_autorizaci))
 <table width="100%" border="0" cellpadding="0" cellspacing="0" class="Azul">
   <tr>
     <td width="17%" class="Etiqueta1">Sucursal:</td>
-    <td colspan="2" class="LetraPlan">&nbsp;<? echo $cadena[2];?></td>
+    <td colspan="2" class="LetraPlan">&nbsp;<?php echo $cadena[2];?></td>
   </tr>
   <tr>
     <td valign="top" class="Etiqueta1">Punto de impresi&oacute;n:</td>
-    <td colspan="2" valign="top" class="LetraPlan">&nbsp;<? echo $cadena[1];?></td>
+    <td colspan="2" valign="top" class="LetraPlan">&nbsp;<?php echo $cadena[1];?></td>
   </tr>
   <tr>
     <td class="Etiqueta1"><span class="Asterisco">*</span> Tipo de Documento:</td>
-    <td colspan="2" class="LetraPlan">&nbsp;<? echo $Tic_Des;?>
-        <input type="hidden" id="Aut_Cod" name="Aut_Cod" value="<? echo $codigo?>">
+    <td colspan="2" class="LetraPlan">&nbsp;<?php echo $Tic_Des;?>
+        <input type="hidden" id="Aut_Cod" name="Aut_Cod" value="<?php echo $codigo?>">
     </td>
   </tr>
   <tr>
     <td class="Etiqueta1"><span class="Asterisco">*</span> N&ordm;  Tipo de Emisi&oacute;n:</td>
     <td colspan="2">
     <select name="Aut_Tem" id="Aut_Tem" style="width: 30%">
-      <option <? if($Aut_Tem=='N'){ echo 'selected';}?> value="N">Normal</option>
-      <option <? if($Aut_Tem=='E'){ echo 'selected';}?> value="E">Electr&oacute;nica</option>
+      <option <?php if($Aut_Tem=='N'){ echo 'selected';}?> value="N">Normal</option>
+      <option <?php if($Aut_Tem=='E'){ echo 'selected';}?> value="E">Electr&oacute;nica</option>
     </select>
     </td>
   </tr>
   <tr>
     <td class="Etiqueta1"><span class="Asterisco">*</span> N&ordm;  Autorizaci&oacute;n:</td>
-    <td colspan="2"><input id="Aut_Sri" name="Aut_Sri" type="text" size="9" maxlength="10" style="text-transform:uppercase; text-align:right" onKeyPress="return validar_numeric(event)" onBlur="if(this.value!=''){minimo(this,10)}" value="<? echo $row_rs_documento['Aut_Sri']?>"></td>
+    <td colspan="2"><input id="Aut_Sri" name="Aut_Sri" type="text" size="9" maxlength="10" style="text-transform:uppercase; text-align:right" onKeyPress="return validar_numeric(event)" onBlur="if(this.value!=''){minimo(this,10)}" value="<?php echo $row_rs_documento['Aut_Sri']?>"></td>
   </tr>
   <tr>
     <td class="Etiqueta1"><span class="Asterisco">*</span> Punto S.R.I.:</td>
-    <td width="2%"><input name="Pun_Sri" id="Pun_Sri" type="text" size="3" maxlength="3" style="text-transform:uppercase; text-align:right" onKeyPress="return validar_numeric(event)" value="<? echo $row_rs_documento['Pun_Sri']?>"></td>
+    <td width="2%"><input name="Pun_Sri" id="Pun_Sri" type="text" size="3" maxlength="3" style="text-transform:uppercase; text-align:right" onKeyPress="return validar_numeric(event)" value="<?php echo $row_rs_documento['Pun_Sri']?>"></td>
     <td width="81%" class="Texto_Reporte_Rojo">(Ejemplo: 001)</td>
   </tr>
   <tr>
     <td class="Etiqueta1"><span class="Asterisco">*</span> Fecha Inicio:</td>
-    <td colspan="2"><input name="Aut_Fci" type="text" id="Aut_Fci" value="<? echo $row_rs_documento['Aut_Fci']?>" size="8" onKeyUp="mascara(this,'-',patron,true)" onBlur="validar_fecha2(this)"></td>    
+    <td colspan="2"><input name="Aut_Fci" type="text" id="Aut_Fci" value="<?php echo $row_rs_documento['Aut_Fci']?>" size="8" onKeyUp="mascara(this,'-',patron,true)" onBlur="validar_fecha2(this)"></td>    
   </tr>
   <tr>
     <td class="Etiqueta1"><span class="Asterisco">*</span> Fecha Caducidad:</td>
-    <td colspan="2"><input name="Aut_Cad" type="text" id="Aut_Cad" value="<? echo $row_rs_documento['Aut_Cad']?>" size="8" onKeyUp="mascara(this,'-',patron,true)" onBlur="validar_fecha2(this)"></td>   
+    <td colspan="2"><input name="Aut_Cad" type="text" id="Aut_Cad" value="<?php echo $row_rs_documento['Aut_Cad']?>" size="8" onKeyUp="mascara(this,'-',patron,true)" onBlur="validar_fecha2(this)"></td>   
   </tr>
   <tr>
     <td class="Etiqueta1"><span class="Asterisco">*</span> Secuencia Inicial:</td>
-    <td colspan="2"><input id="Num_Ini" name="Num_Ini" type="text" size="5" maxlength="7" style="text-transform:uppercase;text-align:right" onKeyPress="return validar_numeric(event)" value="<? echo $row_rs_documento['Aut_Ini']?>" onBlur="numeroMenor_Msn(this,document.getElementById('Num_Fin'),'No puede ingresar valores mayores que')">
+    <td colspan="2"><input id="Num_Ini" name="Num_Ini" type="text" size="5" maxlength="7" style="text-transform:uppercase;text-align:right" onKeyPress="return validar_numeric(event)" value="<?php echo $row_rs_documento['Aut_Ini']?>" onBlur="numeroMenor_Msn(this,document.getElementById('Num_Fin'),'No puede ingresar valores mayores que')">
     </td>
   </tr>
   <tr>
     <td class="Etiqueta1"><span class="Asterisco">*</span> Secuencia Final:</td>
-    <td colspan="2"><input id="Num_Fin" name="Num_Fin" type="text" size="5" maxlength="7" style="text-transform:uppercase;text-align:right" onKeyPress="return validar_numeric(event)" value="<? echo $row_rs_documento['Aut_Fin']?>" onBlur="numeroMayor_Msn(this,document.getElementById('Num_Ini'),'No puede ingresar valores menores que')">
+    <td colspan="2"><input id="Num_Fin" name="Num_Fin" type="text" size="5" maxlength="7" style="text-transform:uppercase;text-align:right" onKeyPress="return validar_numeric(event)" value="<?php echo $row_rs_documento['Aut_Fin']?>" onBlur="numeroMayor_Msn(this,document.getElementById('Num_Ini'),'No puede ingresar valores menores que')">
     </td>
   </tr>
   <tr>
     <td class="Etiqueta1"><span class="Asterisco">*</span> Alerta 1:</td>
-    <td colspan="2"><input id="Alerta2" name="Alerta2" type="text" size="1" maxlength="4" style="text-transform:uppercase;text-align:right" onKeyPress="return validar_numeric(event)" value="<? echo $row_rs_documento['Aut_Ads']?>">
+    <td colspan="2"><input id="Alerta2" name="Alerta2" type="text" size="1" maxlength="4" style="text-transform:uppercase;text-align:right" onKeyPress="return validar_numeric(event)" value="<?php echo $row_rs_documento['Aut_Ads']?>">
     (N&uacute;mero de documentos m&iacute;nimos para mostrar una alerta antes que termine la secuencia final)</td>
   </tr>
   <tr>
     <td class="Etiqueta1"><span class="Asterisco">*</span> Alerta 2:</td>
-    <td><input id="Alerta" name="Alerta" type="text" size="1" maxlength="2" style="text-transform:uppercase;text-align:right" onKeyPress="return validar_numeric(event)" value="<? echo $row_rs_documento['Aut_Adv']?>"></td>
+    <td><input id="Alerta" name="Alerta" type="text" size="1" maxlength="2" style="text-transform:uppercase;text-align:right" onKeyPress="return validar_numeric(event)" value="<?php echo $row_rs_documento['Aut_Adv']?>"></td>
     <td class="Texto_Reporte_Rojo">(D&iacute;as para mostrar una alerta antes  que caduque  la autorizaci&oacute;n)</td>
   </tr>
 </table>
@@ -114,8 +114,8 @@ if (isset($ajax_autorizaci))
 <table width="154" height="54" border="0" class="Azul">
   <tr>
     <td width="100%" height="23">
-	<input name="Pun_Cod" type="hidden" id="Pun_Cod" value="<? echo $Punt_Cod;?>">
-	<input type="hidden" id="Pun_Cod" name="Pun_Cod" value="<? echo $Pun_Cod;?>">
+	<input name="Pun_Cod" type="hidden" id="Pun_Cod" value="<?php echo $Punt_Cod;?>">
+	<input type="hidden" id="Pun_Cod" name="Pun_Cod" value="<?php echo $Pun_Cod;?>">
 	<input name="hdd_save" type="hidden" id="hdd_save" value="0">
 	<input type="hidden" id="hdd_avilita_1" name="hdd_avilita_1" value="1">
 	<input type="hidden" id="hdd_avilita_2" name="hdd_avilita_2" value="1">
@@ -130,13 +130,13 @@ if (isset($ajax_autorizaci))
 <script>
     $(function() { 
                     $( '#Aut_Fci' ).datepicker({
-                      changeMonth: true,changeYear: true, dateFormat: 'yy-mm-dd',firstDay: 1,maxDate:'<? echo $row_rs_documento['Aut_Cad']?>',
+                      changeMonth: true,changeYear: true, dateFormat: 'yy-mm-dd',firstDay: 1,maxDate:'<?php echo $row_rs_documento['Aut_Cad']?>',
                       onClose: function( selectedDate ) {
                         $( '#Aut_Cad' ).datepicker( "option", "minDate", selectedDate );
                       }
                     });
                     $( '#Aut_Cad' ).datepicker({
-                      changeMonth: true,changeYear: true, dateFormat: 'yy-mm-dd',firstDay: 1,minDate:'<? echo $row_rs_documento['Aut_Fci']?>',
+                      changeMonth: true,changeYear: true, dateFormat: 'yy-mm-dd',firstDay: 1,minDate:'<?php echo $row_rs_documento['Aut_Fci']?>',
                       onClose: function( selectedDate ) {
                         $( '#Aut_Fci' ).datepicker( "option", "maxDate", selectedDate );
                       }
@@ -156,14 +156,14 @@ if($ajax_punto==1)
 	$row_rs_puntoImp = $obBD_con1->getArrayConsulta(508, $cadena_suc[0], $obBD_conexion); ?>
 	<select name="Pun_Cod" id="Pun_Cod">
 	<option value="">Seleccione...</option>
-	<? 
+	<?php 
 	foreach ($row_rs_puntoImp as $row)
 	{?>
-	<option value="<? echo $row['Pun_Cod']."*".$row['Pun_Des']."*".$cadena_suc[1];?>"><? echo $row['Pun_Des']?></option>
-	<? 
+	<option value="<?php echo $row['Pun_Cod']."*".$row['Pun_Des']."*".$cadena_suc[1];?>"><?php echo $row['Pun_Des']?></option>
+	<?php 
     }//Fin del foreach --> $row_rs_puntoImp ?>
     </select>
-<?
+<?php
 exit();
 }
 
@@ -235,8 +235,8 @@ if ($thisPost->postBlock($_POST['postID']))
   </tr>
 	<tr>
   	  <td height="400" valign="top">
-  <form method="post" name= "form1" action="<? echo $_SERVER['PHP_SELF'];?>">    
-<?  
+  <form method="post" name= "form1" action="<?php echo $_SERVER['PHP_SELF'];?>">    
+<?php  
 if (!isset($hdd_avilita_1)){ ?>
 <FIELDSET>
 <LEGEND>
@@ -247,18 +247,18 @@ if (!isset($hdd_avilita_1)){ ?>
       <tr>
         <td class="Etiqueta1"><span><span class="Asterisco">* </span> Sucursal:</span></td>
         <td>
-		<?
+		<?php
 		/** 
 		* Carga las sucursales de la empresa
 		*/
 		$row_rs_sucursal = $obBD_con1->getArrayConsulta(507, $Ses_Emp_Cod, $obBD_conexion);  ?>						
 		<select name="Suc_Cod" id="Suc_Cod" onChange="ajax_datos('<?pHP echo $_SERVER['PHP_SELF']; ?>?ajax_punto=1&Suc_Cod=' + this.value,'div_punImp')">
           <option >Seleccione...</option>
-		 <? 
+		 <?php 
 		  foreach ($row_rs_sucursal as $row)
 		  {?>
-		  	<option value="<? echo $row['Suc_Cod']."*".$row['Suc_Des'];?>"><? echo $row['Suc_Des']?></option>          
-		  <? } //fin del foreach $row_rs_sucursal ?>
+		  	<option value="<?php echo $row['Suc_Cod']."*".$row['Suc_Des'];?>"><?php echo $row['Suc_Des']?></option>          
+		  <?php } //fin del foreach $row_rs_sucursal ?>
         </select>		</td>
       </tr>
       <tr>
@@ -282,15 +282,15 @@ if (!isset($hdd_avilita_1)){ ?>
       </td>
     </tr>
   </table>
-<? }// fin del if (!isset($hdd_avilita_1)) ?>
+<?php }// fin del if (!isset($hdd_avilita_1)) ?>
 
 </form>
-<? if(isset($hdd_avilita_2)){ ?>
+<?php if(isset($hdd_avilita_2)){ ?>
 <FIELDSET>
 <LEGEND>
 <label class="Titulos2"> Resultado de la busqueda </label>
 </LEGEND>   
-  <? 
+  <?php 
   	$cadena=explode("*",$Pun_Cod);	
 	/**
 	*  Carga los tipos de documentos de un Punto de Impresion
@@ -300,11 +300,11 @@ if (!isset($hdd_avilita_1)){ ?>
   <table width="100%"  border="0" cellpadding="0" cellspacing="0">
   <tr>
 		<td width="13%" class="Etiqueta1"><span class="Etiqueta1">Sucursal:</span></td>	
-		<td width="87%" align="left" class="LetraPlan" >&nbsp;<? echo $cadena[2];?></td>	
+		<td width="87%" align="left" class="LetraPlan" >&nbsp;<?php echo $cadena[2];?></td>	
   </tr>
   <tr>    
 		<td width="13%" class="Etiqueta1"><span class="Etiqueta1">Punto de impresi&oacute;n:</span></td>	
-		<td width="87%" align="left" class="LetraPlan" >&nbsp;<? echo $cadena[1];?></td>		
+		<td width="87%" align="left" class="LetraPlan" >&nbsp;<?php echo $cadena[1];?></td>		
   </tr>  
   </table>
   <table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader01">
@@ -320,14 +320,14 @@ if (!isset($hdd_avilita_1)){ ?>
   </tr>
   </thead>
   <tbody>
-  <?   
+  <?php   
   if(count($row_rs_documentos)!=0)
   { $i=1;
   foreach($row_rs_documentos as $row)
   {?>
   
   <tr>  
-  <form method="post" name="form6[<? echo $i?>]" id="form6[<? echo $i?>]" action="<? echo $_SERVER['PHP_SELF'];?>">
+  <form method="post" name="form6[<?php echo $i?>]" id="form6[<?php echo $i?>]" action="<?php echo $_SERVER['PHP_SELF'];?>">
     <td><div align="center"><?php echo $row['Tic_Cod'];?></div></td>
 	<td >&nbsp;<?php echo $row['Tic_Des'];?></td>
     <td ><div align="center"><?php echo $row['Aut_Sri'];?></div></td>
@@ -347,7 +347,7 @@ if (!isset($hdd_avilita_1)){ ?>
 	</td>
 	 </form> 
   </tr>
-  <? $i++;
+  <?php $i++;
   	}//Fin del foreach -> $row_rs_documentos 
   }else{
   ?>
@@ -360,14 +360,14 @@ if (!isset($hdd_avilita_1)){ ?>
     <td>&nbsp;</td>
 	<input type="hidden" id="hdd_avilita_3" name="hdd_avilita_3">	
   </tr>	
-<? } //if($row_rs_numdocumentos!=0)?>
+<?php } //if($row_rs_numdocumentos!=0)?>
   </tbody>
 </table>
 </FIELDSET>
 	<table border="0" cellpadding="0" cellspacing="0">
 	 <tr>
 	   <td width="109">
-	   <form method="post" name= "form4" action="<? echo $_SERVER['PHP_SELF'];?>">
+	   <form method="post" name= "form4" action="<?php echo $_SERVER['PHP_SELF'];?>">
         <button type="button" class="btn btn-inverse fileinput-button" title="Atr�s" onClick="document.getElementById('hdd_avilita_3').value=0; this.form.submit()">
                     <i class=" icon-arrow-left icon-white"></i>
                     <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
@@ -377,7 +377,7 @@ if (!isset($hdd_avilita_1)){ ?>
 	 </tr>
 	</table>
 	<input name="cantmodal" id="cantmodal" type="hidden" value="<?php echo $i; ?>" />  
-<? } //if(isset($hdd_avilita_2)) ?>
+<?php } //if(isset($hdd_avilita_2)) ?>
  </td>
   </tr>
 </table>	

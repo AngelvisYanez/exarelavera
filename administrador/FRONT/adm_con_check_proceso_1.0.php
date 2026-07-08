@@ -35,5 +35,5 @@ else
 
 /* Input para el check */	
 $check="<font style='cursor:pointer'><input name=nomchk[".$rc."] type='checkbox' style='cursor:pointer' value='".$valchk."' ".(isset($estado)?$estado:'')."></font>";
-//$check=$check.$v2["Tipo"].": ".utf8_decode($v2["Pcs_Det"]);
+//$check=$check.$v2["Tipo"].": ".mb_convert_encoding($v2["Pcs_Det"], 'ISO-8859-1', 'UTF-8');
 ?>

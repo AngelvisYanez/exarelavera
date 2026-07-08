@@ -120,7 +120,7 @@ $observacion = $row_cliente['Vet_Obs'];
  <td><table width="650"  height="168" border="0" cellpadding="0" cellspacing="0">
    <tr>
      <td width="108" rowspan="11" valign="top"><img src="<?php echo $row_rs_cabecera['Emp_Log']; ?>" width="108" height="84"></td>
-     <td colspan="4" rowspan="7" valign="top" align="center" class="Estilo22"><label> <? echo	$row_rs_cabecera['Emp_Nom']; ?> </label></td>
+     <td colspan="4" rowspan="7" valign="top" align="center" class="Estilo22"><label> <?php echo	$row_rs_cabecera['Emp_Nom']; ?> </label></td>
      <td colspan="3"></td>
    </tr>
    <tr>
@@ -139,24 +139,24 @@ $observacion = $row_cliente['Vet_Obs'];
      <td colspan="3"></td>
    </tr>
    <tr>
-     <td height="15" colspan="3" align="center" class="tabla"><span class="Estilo14"><span class="style2 Estilo15">R.U.C.:</span></span><span class="Estilo16"><? echo	$row_rs_cabecera['Emp_Ruc']; ?></span></td>
+     <td height="15" colspan="3" align="center" class="tabla"><span class="Estilo14"><span class="style2 Estilo15">R.U.C.:</span></span><span class="Estilo16"><?php echo	$row_rs_cabecera['Emp_Ruc']; ?></span></td>
    </tr>
    <tr>
-     <td colspan="4" valign="top" align="center" class="Estilo23"><? echo	$row_rs_cabecera['Emp_Ren']; ?></td>
+     <td colspan="4" valign="top" align="center" class="Estilo23"><?php echo	$row_rs_cabecera['Emp_Ren']; ?></td>
      <td height="15" colspan="3" bgcolor="<?Php echo fix_color; ?>" class="tabla">
       <div align="center"><span class="Estilo17">&nbsp;FACTURA</span></div>
      </td>
    </tr>
    <tr>
-     <td colspan="4" class="Texto_Reporte" valign="top"><div align="center"><span class="style2">Direcci&oacute;n: <? echo	$row_rs_cabecera['Suc_Dir']; ?></span></div></td>
+     <td colspan="4" class="Texto_Reporte" valign="top"><div align="center"><span class="style2">Direcci&oacute;n: <?php echo	$row_rs_cabecera['Suc_Dir']; ?></span></div></td>
      <td colspan="5" bordercolor="0" valign="top" class="tabla">
      <div align="center" class="Estilo13">
-     <? echo $Suc_Sri.' - '.$Pun_Sri.' - '.$Vet_Num; ?>
+     <?php echo $Suc_Sri.' - '.$Pun_Sri.' - '.$Vet_Num; ?>
      </div><input name="Vet_Cod" type="hidden" id="Vet_Cod" value="<?Php echo $cliente; ?>" >
      </td>
    </tr>
    <tr>
-     <td colspan="4" rowspan="2" valign="top" class="Texto_Reporte"><div align="center"><span class="style2">Tel&eacute;fono: <? echo	$row_rs_cabecera['Suc_Te1']; ?></span></div>
+     <td colspan="4" rowspan="2" valign="top" class="Texto_Reporte"><div align="center"><span class="style2">Tel&eacute;fono: <?php echo	$row_rs_cabecera['Suc_Te1']; ?></span></div>
      <div align="center" class="style2"><?Php 
 if (count($row_provincia) > 0)
 {
@@ -172,12 +172,12 @@ echo $row_rs_cabecera['Ciu_Des'].$provincia;?></div>
    </tr>
    <tr>
      <td colspan="3" valign="top" bordercolor="0" class="Texto_Reporte tabla"><div align="center">
-       <? echo $Aut_Sri; ?>
+       <?php echo $Aut_Sri; ?>
      </div></td>
    </tr>
    <tr class="Texto_Reporte">
      <td class="style2"><div align="left">Se&ntilde;or(s):</div></td>
-     <td colspan="4"><span><? echo $row_cliente['Prs_Ape'].' '.$row_cliente['Prs_Nom']; ?></span></td>
+     <td colspan="4"><span><?php echo $row_cliente['Prs_Ape'].' '.$row_cliente['Prs_Nom']; ?></span></td>
      <td width="70" bgcolor="<?Php echo fix_color; ?>" class="Texto_Reporte tabla">
          <div align="center" class="Estilo19">
            A&Ntilde;O
@@ -196,7 +196,7 @@ echo $row_rs_cabecera['Ciu_Des'].$provincia;?></div>
    </tr>
    <tr class="Texto_Reporte">
      <td valign="top" class="style2"><div align="left">Direcci&oacute;n:</div></td>
-     <td colspan="4" valign="top"><? echo $row_cliente['Prs_Dir']; ?></td>
+     <td colspan="4" valign="top"><?php echo $row_cliente['Prs_Dir']; ?></td>
      <td valign="top" class="tabla"><div align="center">
          <?Php list($ann, $mes, $dia) = preg_split('![/.-]!', $row_cliente['Caj_Fec']); 
          echo $ann; ?>
@@ -207,11 +207,11 @@ echo $row_rs_cabecera['Ciu_Des'].$provincia;?></div>
    </tr>
    <tr class="Texto_Reporte">
      <td height="19" class="style2"><div align="left">R.U.C. &oacute; C.I. No.:</div></td>
-     <td width="138" class="Texto_Reporte"><? echo $row_cliente['Prs_Ced']; ?></td>
+     <td width="138" class="Texto_Reporte"><?php echo $row_cliente['Prs_Ced']; ?></td>
      <td width="6" class="Texto_Reporte">&nbsp;</td>
      <td width="23" class="Texto_Reporte"><span class="style2">Telf:</span></td>
-     <td width="180" class="Texto_Reporte"><? echo $row_cliente['Prs_Tel']; ?></td>
-     <td colspan="3" class="Texto_Reporte tabla"><span class="style2">LUGAR: </span>&nbsp;<? echo $row_rs_cabecera['Ciu_Des']; ?></td>
+     <td width="180" class="Texto_Reporte"><?php echo $row_cliente['Prs_Tel']; ?></td>
+     <td colspan="3" class="Texto_Reporte tabla"><span class="style2">LUGAR: </span>&nbsp;<?php echo $row_rs_cabecera['Ciu_Des']; ?></td>
    </tr>
    <tr>
      <td height="19" colspan="5">&nbsp;</td>

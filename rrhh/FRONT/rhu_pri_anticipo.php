@@ -107,17 +107,17 @@ list($anio, $mes, $dia) = preg_split('![-]!', $fechas_rol);
             <td colspan="6" align="center" class="LetraPlan">
               <table width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td width="13%" align="left"><img src="<? echo $Ses_Emp_Log; ?>" width="90" height="80"></td>
+                  <td width="13%" align="left"><img src="<?php echo $Ses_Emp_Log; ?>" width="90" height="80"></td>
                   <td width="87%">
                     <table width="100%" border="0" cellspacing="0" cellpadding="0">
                       <tr>
-                        <td align="center" class="tituloFact"><strong><? echo $Ses_Emp_Nom; ?></strong></td>
+                        <td align="center" class="tituloFact"><strong><?php echo $Ses_Emp_Nom; ?></strong></td>
                       </tr>
                       <tr>
-                        <td align="center" class="tituloFact2"><? echo "Tel&eacute;fono 1:" . $row_info_Empresa['Suc_Te1'] . "&nbsp;&nbsp;&nbsp;" . "Tel&eacute;fono 2:" . $row_info_Empresa['Suc_Te2'] ?></td>
+                        <td align="center" class="tituloFact2"><?php echo "Tel&eacute;fono 1:" . $row_info_Empresa['Suc_Te1'] . "&nbsp;&nbsp;&nbsp;" . "Tel&eacute;fono 2:" . $row_info_Empresa['Suc_Te2'] ?></td>
                       </tr>
                       <tr>
-                        <td align="center" class="tituloFact2"><? echo $row_info_Empresa['Suc_Dir']; ?></td>
+                        <td align="center" class="tituloFact2"><?php echo $row_info_Empresa['Suc_Dir']; ?></td>
                       </tr>
                     </table>
                   </td>
@@ -149,19 +149,19 @@ list($anio, $mes, $dia) = preg_split('![-]!', $fechas_rol);
           </tr>
           <tr>
             <td width="10%" align="left" class="etiquetaFact"><strong>R.U.C / C.I:</strong></td>
-            <td width="25%" class="etiquetaFact"><? echo $rs_datos[0]['Prs_Ced'] ?>&nbsp;</td>
+            <td width="25%" class="etiquetaFact"><?php echo $rs_datos[0]['Prs_Ced'] ?>&nbsp;</td>
             <td width="10%" align="left" class="etiquetaFact"><strong>EMISI&Oacute;N:</strong></td>
-            <td width="16%" align="left" class="etiquetaFact"><? echo $rs_datos[0]['Ant_Fec']; ?>&nbsp;</td>
+            <td width="16%" align="left" class="etiquetaFact"><?php echo $rs_datos[0]['Ant_Fec']; ?>&nbsp;</td>
             <td width="14%" align="left" class="etiquetaFact"><strong>MES:</strong></td>
             <td width="25%" align="left" class="etiquetaFact"><?php echo mes($mes, 1); ?></td>
           </tr>
           <tr>
             <td align="left" class="etiquetaFact"><strong>PERSONAL:</strong></td>
-            <td colspan="5" class="etiquetaFact"><? echo $rs_datos[0]['Personal']; ?>&nbsp;</td>
+            <td colspan="5" class="etiquetaFact"><?php echo $rs_datos[0]['Personal']; ?>&nbsp;</td>
           </tr>
           <tr>
             <td align="left" class="etiquetaFact"><strong>OBSERVACI&oacute;N:</strong></td>
-            <td colspan="5" align="left"><span class="etiquetaFact"><? echo $rs_datos[0]['Ant_Obs']; ?>&nbsp;</span></td>
+            <td colspan="5" align="left"><span class="etiquetaFact"><?php echo $rs_datos[0]['Ant_Obs']; ?>&nbsp;</span></td>
           </tr>
           <tr>
             <td height="94" colspan="6" align="left" valign="top"><?Php
@@ -182,29 +182,29 @@ list($anio, $mes, $dia) = preg_split('![-]!', $fechas_rol);
                     <hr style="border: 0; border-top: 1px solid #999; border-bottom: 1px solid #333; height:0;">
                   </td>
                 </tr>
-                <? $total = 0;
+                <?php $total = 0;
                 foreach ($rs_detail as $datos) { ?>
                   <tr class="tituloFact2">
-                    <td align="left">&nbsp;<? echo $datos['Pag_Des']; ?></td>
-                    <td align="center"><? if ($datos['Che_Fec'] != '') {
+                    <td align="left">&nbsp;<?php echo $datos['Pag_Des']; ?></td>
+                    <td align="center"><?php if ($datos['Che_Fec'] != '') {
                                           echo $datos['Che_Fec'];
                                         } else {
                                           echo '-';
                                         } ?></td>
-                    <td align="center"><? if ($datos['Che_Num'] != '') {
+                    <td align="center"><?php if ($datos['Che_Num'] != '') {
                                           echo $datos['Che_Num'];
                                         } else {
                                           echo '-';
                                         } ?></td>
-                    <td align="center"><? if ($datos['Che_Num'] != '' && $datos['Pld_Des'] != '') {
+                    <td align="center"><?php if ($datos['Che_Num'] != '' && $datos['Pld_Des'] != '') {
                                           echo $datos['Pld_Des'];
                                         } else {
                                           echo '-';
                                         } ?></td>
-                    <td align="right"><? echo formato_numero($datos['Ant_Val'], 2, 1);
+                    <td align="right"><?php echo formato_numero($datos['Ant_Val'], 2, 1);
                                       $total += $datos['Ant_Val']; ?></td>
                   </tr>
-                <? } ?>
+                <?php } ?>
                 <tr>
                   <td height="38">&nbsp;</td>
                   <td>&nbsp;</td>
@@ -215,7 +215,7 @@ list($anio, $mes, $dia) = preg_split('![-]!', $fechas_rol);
                 <tr>
                   <td colspan="3">&nbsp;</td>
                   <td align="right" class="tituloFact2"><strong>TOTAL:</strong></td>
-                  <td align="right" class="etiquetaFact"><strong><? echo formato_numero($total, 2, 1); ?></strong>&nbsp;</td>
+                  <td align="right" class="etiquetaFact"><strong><?php echo formato_numero($total, 2, 1); ?></strong>&nbsp;</td>
                 </tr>
                 <tr>
                   <td colspan="6">
@@ -251,11 +251,11 @@ list($anio, $mes, $dia) = preg_split('![-]!', $fechas_rol);
           </tr>
           <tr class="tituloFact2">
             <td>&nbsp;</td>
-            <td align="center"><? /*echo $rs_datos[0]['usuApe']//.' '.$rs_datos[0]['usuNom'];; */ ?></td>
+            <td align="center"><?php /*echo $rs_datos[0]['usuApe']//.' '.$rs_datos[0]['usuNom'];; */ ?></td>
             <td align="center">&nbsp;</td>
             <td align="center">&nbsp;</td>
             <td align="center">&nbsp;</td>
-            <td align="center"><? echo $rs_datos[0]['Personal'] //.' '.$rs_datos[0]['usuNom'];;
+            <td align="center"><?php echo $rs_datos[0]['Personal'] //.' '.$rs_datos[0]['usuNom'];;
                                 ?></td>
             <td>&nbsp;</td>
           </tr>

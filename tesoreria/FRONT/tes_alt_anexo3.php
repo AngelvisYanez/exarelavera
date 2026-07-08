@@ -100,9 +100,9 @@ if (isset($bt_save))
 	
 	$xml_identifica = "<".$identificacion[4].">R</".$identificacion[4].">".
 					"<".$identificacion[0].">".$row_rs_identifica['Emp_Ruc']."</".$identificacion[0].">".
-					"<".$identificacion[1].">".utf8_encode(strtoupper($row_rs_identifica['Emp_Nom']))."</".$identificacion[1].">".
-					"<".$identificacion[2].">".utf8_encode($anio)."</".$identificacion[2].">".
-					"<".$identificacion[3].">".utf8_encode($mes)."</".$identificacion[3].">".
+					"<".$identificacion[1].">".mb_convert_encoding(strtoupper($row_rs_identifica['Emp_Nom']), 'UTF-8', 'ISO-8859-1')."</".$identificacion[1].">".
+					"<".$identificacion[2].">".mb_convert_encoding($anio, 'UTF-8', 'ISO-8859-1')."</".$identificacion[2].">".
+					"<".$identificacion[3].">".mb_convert_encoding($mes, 'UTF-8', 'ISO-8859-1')."</".$identificacion[3].">".
 					"<".$identificacion[7].">".$puntos."</".$identificacion[7].">".
 					"<".$identificacion[5].">".$tot_ventas."</".$identificacion[5].">". //total ventas
 					"<".$identificacion[6].">IVA</".$identificacion[6].">";
@@ -919,28 +919,28 @@ if(isset($_POST['chk_Anulados']))
               <tr>
                 <td width="13%" class="Etiqueta1"><span class="Asterisco">* </span>A&ntilde;o:&nbsp; </td>
                 <td width="87%">
-				<? $rs_periodo = $obBD_con1->getArrayConsulta(860, $Ses_Emp_Cod, $obBD_conexion); ?>
+				<?php $rs_periodo = $obBD_con1->getArrayConsulta(860, $Ses_Emp_Cod, $obBD_conexion); ?>
                 <select name="anio" id="anio">                                   
-				  <? foreach($rs_periodo as $dato){?>
-                  <option <? if($anio==$dato['Pec_Fei']){ echo "selected";}?> value="<?Php echo $dato['Pec_Fei'];?>"><?Php echo $dato['Pec_Fei'];?></option>				                  <? } ?>
+				  <?php foreach($rs_periodo as $dato){?>
+                  <option <?php if($anio==$dato['Pec_Fei']){ echo "selected";}?> value="<?Php echo $dato['Pec_Fei'];?>"><?Php echo $dato['Pec_Fei'];?></option>				                  <?php } ?>
                 </select></td>
               </tr>
               <tr>
                 <td class="Etiqueta1"><span class="Asterisco">* </span>Mes:&nbsp;</td>
                 <td>
 				<select name="mes" id="mes">					
-					<option <? if($mes=="01"){ echo "selected";}?> value="01">Enero</option>
-					<option <? if($mes=="02"){ echo "selected";}?> value="02">Febrero</option>
-					<option <? if($mes=="03"){ echo "selected";}?> value="03">Marzo</option>
-					<option <? if($mes=="04"){ echo "selected";}?> value="04">Abril</option>
-					<option <? if($mes=="05"){ echo "selected";}?> value="05">Mayo</option>
-					<option <? if($mes=="06"){ echo "selected";}?> value="06">Junio</option>
-					<option <? if($mes=="07"){ echo "selected";}?> value="07">Julio</option>
-					<option <? if($mes=="08"){ echo "selected";}?> value="08">Agosto</option>
-					<option <? if($mes=="09"){ echo "selected";}?> value="09">Septiembre</option>
-					<option <? if($mes=="10"){ echo "selected";}?> value="10">Octubre</option>																																								
-					<option <? if($mes=="11"){ echo "selected";}?> value="11">Noviembre</option>																																								
-					<option <? if($mes=="12"){ echo "selected";}?> value="12">Diciembre</option>																																																																																															
+					<option <?php if($mes=="01"){ echo "selected";}?> value="01">Enero</option>
+					<option <?php if($mes=="02"){ echo "selected";}?> value="02">Febrero</option>
+					<option <?php if($mes=="03"){ echo "selected";}?> value="03">Marzo</option>
+					<option <?php if($mes=="04"){ echo "selected";}?> value="04">Abril</option>
+					<option <?php if($mes=="05"){ echo "selected";}?> value="05">Mayo</option>
+					<option <?php if($mes=="06"){ echo "selected";}?> value="06">Junio</option>
+					<option <?php if($mes=="07"){ echo "selected";}?> value="07">Julio</option>
+					<option <?php if($mes=="08"){ echo "selected";}?> value="08">Agosto</option>
+					<option <?php if($mes=="09"){ echo "selected";}?> value="09">Septiembre</option>
+					<option <?php if($mes=="10"){ echo "selected";}?> value="10">Octubre</option>																																								
+					<option <?php if($mes=="11"){ echo "selected";}?> value="11">Noviembre</option>																																								
+					<option <?php if($mes=="12"){ echo "selected";}?> value="12">Diciembre</option>																																																																																															
                 </select>                
 				</td>
               </tr>

@@ -61,7 +61,7 @@ $rs_usuVendedor = $obBD_con1->getRowConsulta(1252, $com_codigo, $obBD_conexion);
     <td width="8%" class="Etiqueta1">Forma pago:</td>
     <td width="46%" class="LetraNegra"><?php echo $For_Des;?></td>
 	<td width="20%" class="Etiqueta1">Usuario:</td>
-	<td width="26%" class="LetraNegra">&nbsp;<? echo $rs_usuVendedor['Prs_Ape'].' '.$rs_usuVendedor['Prs_Nom']; ?></td>
+	<td width="26%" class="LetraNegra">&nbsp;<?php echo $rs_usuVendedor['Prs_Ape'].' '.$rs_usuVendedor['Prs_Nom']; ?></td>
   </tr>
 </table><hr>
 <table width="100%" border="0" cellspacing="0" cellpadding="0">
@@ -191,7 +191,7 @@ $rs_usuVendedor = $obBD_con1->getRowConsulta(1252, $com_codigo, $obBD_conexion);
    </tbody> 		  
 </table>
 <br>
-<?
+<?php
 	 
 $rs_Info = $obBD_con1->getRowConsulta(1251,$com_codigo,$obBD_conexion);
 $total_Info=$rs_Info['Vet_Cod'] > 0? 1 : 0;
@@ -224,7 +224,7 @@ if($total_Info!=0)
             </tr>
         </thead>
       	  <tbody class="Fondo">
-         <? foreach($rs_detalle as $row_rs_detalle){
+         <?php foreach($rs_detalle as $row_rs_detalle){
 			 if($row_rs_detalle['Ren_Cod']!='')
 			 {
 				 $rs_impuesto = $obBD_con1->getRowConsulta(1250, $row_rs_detalle['Ren_Cod'],$obBD_conexion);	
@@ -239,8 +239,8 @@ if($total_Info!=0)
 		 ?>
               <tr height="20">
                 <td align="center"><?Php echo $rs_impuesto['Ren_Sri']; ?></td>
-                <td title="<? echo $det;?>"><?Php echo $detalle; ?></td>
-                <td align="center"><? echo $rs_impuesto['Impuesto'];?></td>
+                <td title="<?php echo $det;?>"><?Php echo $detalle; ?></td>
+                <td align="center"><?php echo $rs_impuesto['Impuesto'];?></td>
                 <td align="center"><?Php echo formato_numero($row_rs_detalle['Vet_Imp'],2,4); ?></td>
                 <td align="center"><?Php echo $rs_impuesto['Ren_Por']; ?></td>
                 <td align="right">
@@ -252,7 +252,7 @@ if($total_Info!=0)
 				?>
                 </td>
               </tr>
-          <? } 
+          <?php } 
 		  	 if($row_rs_detalle['Ren_Iva']!='')
 			 {
 				 $rs_impuesto = $obBD_con1->getRowConsulta(1250, $row_rs_detalle['Ren_Iva'],$obBD_conexion);	
@@ -260,7 +260,7 @@ if($total_Info!=0)
              <tr height="20">
                 <td align="center"><?Php echo $rs_impuesto['Ren_Sri']; ?></td>
                 <td><?Php echo $rs_impuesto['Ren_Con']; ?></td>
-                <td align="center"><? echo $rs_impuesto['Impuesto'];?></td>
+                <td align="center"><?php echo $rs_impuesto['Impuesto'];?></td>
                 <td align="center">
 				<?Php 
 				    $imp=$row_rs_detalle['Vet_Imp']-$row_rs_detalle['Vet_Dsc'];
@@ -278,7 +278,7 @@ if($total_Info!=0)
                 </td>
              </tr>
           
-		  <? } 
+		  <?php } 
 		 }
 		  ?>
           </tbody>
@@ -289,9 +289,9 @@ if($total_Info!=0)
     <td width="25%">&nbsp;</td>
     <td width="25%">&nbsp;</td>
     <td width="34%">&nbsp;</td>
-    <td width="16%" align="right"><strong>Total:&nbsp;&nbsp;<? echo formato_numero($impTotal,2,4);;?></strong></td>
+    <td width="16%" align="right"><strong>Total:&nbsp;&nbsp;<?php echo formato_numero($impTotal,2,4);;?></strong></td>
   </tr>
 </table>
 
-<? }?> 
+<?php }?> 
 </FIELDSET>

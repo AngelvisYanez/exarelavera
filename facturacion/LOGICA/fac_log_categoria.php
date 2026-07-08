@@ -183,16 +183,16 @@ class Class_Log_Datos_Tes extends MysqlDatos
         echo $row_institucion["Ciu_Des"] . $provincia;?></div></td>
 		  		  </tr>
 				  <tr align="center">
-				    <td align="center" valign="top" class="Texto_Reporte"><div align="center"><? echo $row_system['Sys_Tit'];?></div></td>
+				    <td align="center" valign="top" class="Texto_Reporte"><div align="center"><?php echo $row_system['Sys_Tit'];?></div></td>
 			      </tr>
 				  <tr align="center">
 				    <td colspan="2" valign="top"><hr /></td>
 		  		  </tr>
 				  <tr align="center">
-				    <td colspan="2" valign="top" class="TITULO_REPORTE"><? echo $titulo; ?></td>
+				    <td colspan="2" valign="top" class="TITULO_REPORTE"><?php echo $titulo; ?></td>
 		  		  </tr>
 				  <tr align="center">
-				    <td colspan="2" valign="top" class="TITULO_REPORTE"><? echo $subtitulo; ?></td>
+				    <td colspan="2" valign="top" class="TITULO_REPORTE"><?php echo $subtitulo; ?></td>
 			      </tr>
 			    </table>
 		<?php

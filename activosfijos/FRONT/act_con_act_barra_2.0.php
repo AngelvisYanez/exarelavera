@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<?	
+<?php	
 /**
 * Descripción: Reporte de codigo de barras de Activos
 * Fecha de actualización:	2011-08-02
@@ -194,14 +194,14 @@ if (isset($cadena))
 	<tr>
       <td height="389" align="left" valign="top">
       
-      <?
+      <?php
 		$descripcion = "Por Custodio*Por Activo";
   		$pag1= $_SERVER['PHP_SELF']."?op=1";
 		$pag2= $_SERVER['PHP_SELF']."?op=2";
 		tabs(2,$descripcion, $pag1.'*'.$pag2, $op);
 	?>
      
-     <?
+     <?php
 	if(!isset($op)){$op = 1;}
 	
 		if (($op==1 || $op==2)) {
@@ -291,7 +291,7 @@ if(isset($txt_busqueda2) || isset($Tia_Cod))
 	?>
 	<table width="200" border="1" cellspacing="5" >
     <tr>
-		<? 
+		<?php 
         foreach($rs_ite_pro as $row_rs_ite_pro)
 		{ 		
 		/**
@@ -303,22 +303,22 @@ if(isset($txt_busqueda2) || isset($Tia_Cod))
           <td>
                    <table width="192" border="0" cellpadding="0" cellspacing="0">
                         <tr>
-                            <td colspan="2" align="center"><?  $varcode=$row_rs_ite_pro['Act_Bar']; include("../../Librerias/barcode/generadorbarras.php"); ?></td>
+                            <td colspan="2" align="center"><?php  $varcode=$row_rs_ite_pro['Act_Bar']; include("../../Librerias/barcode/generadorbarras.php"); ?></td>
                         </tr>
                         <tr >
                             <td width="76" class="Etiqueta1"><div align="left">Departamento:</div></td>
-                            <td width="116" class="LetraNegra">&nbsp;<? echo $rs_DeparCust['Dep_Des'];?></td>
+                            <td width="116" class="LetraNegra">&nbsp;<?php echo $rs_DeparCust['Dep_Des'];?></td>
                         </tr>
                             <td width="76" class="Etiqueta1"><div align="left">Activo:</div></td>
-                            <td width="116" class="LetraNegra">&nbsp;<? echo $row_rs_ite_pro['Act_Des']; ?></td>
+                            <td width="116" class="LetraNegra">&nbsp;<?php echo $row_rs_ite_pro['Act_Des']; ?></td>
                         </tr>
                         <tr>
                             <td width="76" class="Etiqueta1"><div align="left">Secuencial:</div></td>
-                            <td width="116" class="LetraNegra">&nbsp;<? echo $row_rs_ite_pro['Act_Sec']; ?></td>
+                            <td width="116" class="LetraNegra">&nbsp;<?php echo $row_rs_ite_pro['Act_Sec']; ?></td>
                         </tr>
                   </table>
           </td>
-       <? 
+       <?php 
 		  if ($indicadorfila==5)
 		  {
 		   	echo "</tr>";
@@ -333,7 +333,7 @@ if(isset($txt_busqueda2) || isset($Tia_Cod))
        </tr>
       </table>
       <br>
-		<?
+		<?php
 		echo "<center>";	
 		if(($pagina - 1) > 0) 
 		{
@@ -358,23 +358,23 @@ if(isset($txt_busqueda2) || isset($Tia_Cod))
 	}?> 
 	<table width="314" border="0" cellpadding="0" cellspacing="0">
     <tr>
-  		<td width="204"><? if($total_rs_ite_pro1 > 0){
+  		<td width="204"><?php if($total_rs_ite_pro1 > 0){
 	  ?>
     <form name="form4" method="post" action="act_pri_act_barra_2.0.php" target="_blank">  
-      <input name="inicio" type="hidden" id="inicio" value="<? echo $inicio; ?>">
-      <input name="registros" type="hidden" id="registros" value="<? echo $registros; ?>">
-      <input name="txt_busqueda2" type="hidden" id="txt_busqueda2" value="<? echo $txt_busqueda2;?>">
-      <input name="Tia_Cod" type="hidden" id="Tia_Cod" value="<? echo $Tia_Cod; ?>">    
+      <input name="inicio" type="hidden" id="inicio" value="<?php echo $inicio; ?>">
+      <input name="registros" type="hidden" id="registros" value="<?php echo $registros; ?>">
+      <input name="txt_busqueda2" type="hidden" id="txt_busqueda2" value="<?php echo $txt_busqueda2;?>">
+      <input name="Tia_Cod" type="hidden" id="Tia_Cod" value="<?php echo $Tia_Cod; ?>">    
        <input name="tipo" type="hidden" id="tipo" value="0"> 
-       <input name="op_opciones" type="hidden" id="op_opciones" value="<? echo $op_opciones; ?>">
+       <input name="op_opciones" type="hidden" id="op_opciones" value="<?php echo $op_opciones; ?>">
       <button name="bnt_print" type="submit" class="btn btn-primary start" id="bnt_print" value="Imprimir" title="Imprimir">
         <i class='icon-print icon-white'></i> <span>Imprimir</span>
         </button>
-    </form> <? }?>
+    </form> <?php }?>
     	</td>
     </tr>
   	</table>
-	<? 
+	<?php 
 	} //Fin if(isset($cadena))
   	break;
 /**
@@ -415,7 +415,7 @@ if(isset($txt_busqueda2) || isset($Tia_Cod))
       </table>
   	</form>	
   
- <? 
+ <?php 
 /**
  * Si buscar por custodio 
  */ 
@@ -445,10 +445,10 @@ if (isset($txt_busqueda))
 	  	   { $rojo='#FF0000'; $anulada++; }else{$rojo='';}
 	  ?>
 	  <tr >
-	  <td align="center"><FONT COLOR="<? echo $rojo;?>"><?php echo $row_rs_buscar['Cus_Cod'];?></FONT></td>
-	  <td><FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Prs_Ced'];?></FONT></td>
-	 <td><FONT COLOR="<? echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Nombre'],'#FFFF00', 1);?></FONT></td>
-	  <form action="<? echo $_SERVER['PHP_SELF']."?op=1";?>" method="post" name= "frml" id="form3">
+	  <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php echo $row_rs_buscar['Cus_Cod'];?></FONT></td>
+	  <td><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Prs_Ced'];?></FONT></td>
+	 <td><FONT COLOR="<?php echo $rojo;?>"><?Php echo marcar_cadena($txt_busqueda, $row_rs_buscar['Nombre'],'#FFFF00', 1);?></FONT></td>
+	  <form action="<?php echo $_SERVER['PHP_SELF']."?op=1";?>" method="post" name= "frml" id="form3">
 	  <td align="center" width="4%">
       <?Php if($row_rs_buscar['Cus_Est']=='A')
 		    { ?>
@@ -458,8 +458,8 @@ if (isset($txt_busqueda))
                 <input type="hidden" name="codigo" id="codigo" value="<?Php echo $row_rs_buscar['Cus_Cod'];?>"/>
                 <input type="hidden" name="hdd_aux" id="hdd_aux" value="1">
                 <input type="hidden" name="volver_busqueda" id="volver_busqueda" value="<?Php echo $txt_busqueda;?>"/>
-                <input type="hidden" name="volver_opciones" id="volver_opciones" value="<? echo $op_opciones?>">
-                <input type="hidden" name="volver_custodio" id="volver_custodio" value="<? echo $row_rs_buscar['Nombre']; ?>">
+                <input type="hidden" name="volver_opciones" id="volver_opciones" value="<?php echo $op_opciones?>">
+                <input type="hidden" name="volver_custodio" id="volver_custodio" value="<?php echo $row_rs_buscar['Nombre']; ?>">
              <?Php
 		   }
 		 else
@@ -478,7 +478,7 @@ if (isset($txt_busqueda))
       	  <td><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
       	  <td>&nbsp;</td>
       	</tr>
-      <? } // fin del if ($total_rs_buscar > 0)?>
+      <?php } // fin del if ($total_rs_buscar > 0)?>
       </tbody>
 	</table>
     <?Php
@@ -488,7 +488,7 @@ if (isset($txt_busqueda))
 	echo barra_estado($total_rs_buscar+0);
 	?>
 </FIELDSET>
-<? 
+<?php 
   } 
 	/**
 	 * mostrar por custodio
@@ -505,7 +505,7 @@ if(isset($cadena))
 <p><?Php echo "Custodio: ".$volver_custodio; ?></p>
 	<table width="200" border="1" >
     <tr>
-		<? 
+		<?php 
         foreach($rs_ite_pro as $row_rs_ite_pro)
 		{ 
 		/**
@@ -517,22 +517,22 @@ if(isset($cadena))
           		<td>
            <table width="100" border="0" cellpadding="0" cellspacing="0">
               	<tr>
-                	<td colspan="2" align="center"><?  $varcode=$row_rs_ite_pro['Act_Bar']; include("../../Librerias/barcode/generadorbarras.php");?></td>
+                	<td colspan="2" align="center"><?php  $varcode=$row_rs_ite_pro['Act_Bar']; include("../../Librerias/barcode/generadorbarras.php");?></td>
               	</tr>
               	<tr >
                 	<td width="20" class="Etiqueta1"><div align="left">Departamento:</div></td>
-                	<td width="80" class="LetraNegra">&nbsp;<? echo $rs_DeparCust['Dep_Des'];?></td>
+                	<td width="80" class="LetraNegra">&nbsp;<?php echo $rs_DeparCust['Dep_Des'];?></td>
               	</tr>
                 	<td  width="20" class="Etiqueta1"><div align="left">Activo:</div></td>
-                	<td  width="80" class="LetraNegra">&nbsp;<? echo $row_rs_ite_pro['Act_Des']; ?></td>
+                	<td  width="80" class="LetraNegra">&nbsp;<?php echo $row_rs_ite_pro['Act_Des']; ?></td>
               	</tr>
               	<tr>
                 	<td  width="20" class="Etiqueta1"><div align="left">Secuencial:</div></td>
-                	<td  width="80" class="LetraNegra">&nbsp;<? echo $row_rs_ite_pro['Act_Sec']; ?></td>
+                	<td  width="80" class="LetraNegra">&nbsp;<?php echo $row_rs_ite_pro['Act_Sec']; ?></td>
               	</tr>
           </table>
           </td>
-          <? 
+          <?php 
 		  if ($indicadorfila==5)
 		  {
 		   	echo "</tr>";
@@ -546,7 +546,7 @@ if(isset($cadena))
        </tr>
       </table>
       <br>
-	<?
+	<?php
 		echo "<center>";	
 		if(($pagina - 1) > 0) 
 		{
@@ -572,26 +572,26 @@ if(isset($cadena))
 	<table width="314" border="0" cellpadding="0" cellspacing="0">
     <tr>
 	  <td width="110">
-	    <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form5"> 
+	    <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form5"> 
 	      <button type="button" name="btn_atras" id="btn_atras" value="Enviar"  class="btn btn-inverse fileinput-button" title="Atr&aacute;s"
       onClick="campos_hide(this.form, '<?Php echo "txt_busqueda*op_opciones*hdd_volver"; ?>','<?Php echo $volver_busqueda.'*'.$volver_opciones.'*'.'1'; ?>')">
 	        <i class="icon-arrow-left icon-white"></i><span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
 	        </button>
 	      </form></td>
-  <td width="204"><? if($total_rs_ite_pro1 > 0){
+  <td width="204"><?php if($total_rs_ite_pro1 > 0){
 	  ?>
     <form name="form4" method="post" action="act_pri_act_barra_2.0.php" target="_blank">  
-      <input name="inicio" type="hidden" id="inicio" value="<? echo $inicio; ?>">
-      <input name="registros" type="hidden" id="registros" value="<? echo $registros; ?>">
-      <input name="cadena" type="hidden" id="cadena" value="<? echo $cadena; ?>">
+      <input name="inicio" type="hidden" id="inicio" value="<?php echo $inicio; ?>">
+      <input name="registros" type="hidden" id="registros" value="<?php echo $registros; ?>">
+      <input name="cadena" type="hidden" id="cadena" value="<?php echo $cadena; ?>">
       <input name="tipo" type="hidden" id="tipo" value="1">
       <button name="bnt_print" type="submit" class="btn btn-primary start" id="bnt_print" value="Imprimir" title="Imprimir">
         <i class='icon-print icon-white'></i> <span>Imprimir</span>
         </button>
-    </form> <? }?></td>
+    </form> <?php }?></td>
     </tr>
   </table>
-	<? 
+	<?php 
 	} //Fin if(isset($cadena))
 	
   break; // Fin de consulta por custodio de etiquetas

@@ -1,4 +1,4 @@
-<?Php 
+﻿<?Php 
 /**
  * Logica de las paginas de reporte de cuentas
  *
@@ -28,7 +28,7 @@ class Class_Log_Datos_Con extends MysqlDatos{
 	* @param Class_Log_Conexion_Con $obBD para realizar la conexcion correspondiente
 	* @return result si existen datos de retorno
 	*/
-	function consultasobBD($sen_sql,$param, $obBD) {
+	function consultasobBD($sen_sql,$param, $obBD = null) {
 		$Par_Sql= $this->parametros($param);
 		return $this->consulta(sentencias_con($sen_sql,$Par_Sql), $obBD->conexion);
 	}
@@ -41,7 +41,7 @@ class Class_Log_Datos_Con extends MysqlDatos{
 	* @param Class_Log_Conexion_Con $obBD para realizar la conexcion correspondiente
 	* @return result si existen datos de retorno
 	*/
-	function operacionobBD($sen_sql,$param, $obBD) {
+	function operacionobBD($sen_sql,$param, $obBD = null) {
 		$Par_Sql= $this->parametros($param);
 		return $this->grabarv_registros(sentencias_con($sen_sql,$Par_Sql), $obBD->conexion);
 	}
@@ -84,7 +84,7 @@ class Class_Log_Datos_Con extends MysqlDatos{
 	 * @param Class_Log_Conexion_Con $obBD para realizar la conexcion correspondiente
 	 * @return array $row fila de datos
 	 */
-	function getRowConsulta($sen_sql,$param,$obBD) {
+	function getRowConsulta($sen_sql,$param,$obBD = null) {
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);
 		
 		$row =  $this->fetch_assoc($result);
@@ -102,7 +102,7 @@ class Class_Log_Datos_Con extends MysqlDatos{
 	 * @param Class_Log_Datos_Con $obDT para la abtraccion de los datos
 	 * @return array $array arreglo de datos asociados
 	 */ 
-	function getArrayConsulta($sen_sql,$param,$obBD) {
+	function getArrayConsulta($sen_sql,$param,$obBD = null) {
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);
 		
 		$array = array();
@@ -122,7 +122,7 @@ class Class_Log_Datos_Con extends MysqlDatos{
 	 * @param string $param cadena de datos
 	 * @param Class_Log_Datos_Con $obBD objeto de conexion
 	 */
-	function insertUpdateDelete($sen_sql,$param, $obBD) {		
+	function insertUpdateDelete($sen_sql,$param, $obBD = null) {		
 		$this->inicio_transaccion($obBD->conexion);
 		
 		//Realiza Insert, Update o Delete
@@ -133,8 +133,8 @@ class Class_Log_Datos_Con extends MysqlDatos{
 
 	/**
 	 * Formato standar para reportes
-	 * @param int $sucursal C�digo de la sucursal
-	 * @param string $titulo T�tulo del reporte
+	 * @param int $sucursal Cï¿½digo de la sucursal
+	 * @param string $titulo Tï¿½tulo del reporte
 	 * @param string $subtitulo Subtitulo del reporte
 	 */	
 	function cabeceraReporteStandar($sucursal, $titulo, $subtitulo,$obBD){
@@ -171,10 +171,10 @@ class Class_Log_Datos_Con extends MysqlDatos{
 				<td colspan="2" valign="top"><hr /></td>
 			</tr>
 			<tr align="center">
-				<td colspan="2" valign="top" class="TITULO_REPORTE"><? echo $titulo; ?></td>
+				<td colspan="2" valign="top" class="TITULO_REPORTE"><?php echo $titulo; ?></td>
 			</tr>
 			<tr align="center">
-				<td colspan="2" valign="top" class="TITULO_REPORTE"><? echo $subtitulo; ?></td>
+				<td colspan="2" valign="top" class="TITULO_REPORTE"><?php echo $subtitulo; ?></td>
 			</tr>
 		</table>
 	<?php

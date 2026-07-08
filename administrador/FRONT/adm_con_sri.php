@@ -76,7 +76,7 @@ if(isset($formPersona)){
                 $data['success']=false;
                 $data['message']=$ex->getMessage();
             }     
-            change_string_deep('utf8_encode',$data);
+            utf8_encode_deep($data);
             return $data;
         }
     }else
@@ -105,7 +105,7 @@ if(isset($formPersona)){
                 $data['success']=false;
                 $data['message']=$ex->getMessage();
             }     
-            change_string_deep('utf8_encode',$data);
+            utf8_encode_deep($data);
             return $data;
         }
     }else{
@@ -138,7 +138,7 @@ if(isset($formPersona)){
                 $data['success']=false;
                 $data['message']=$ex->getMessage();
             }   
-            change_string_deep('utf8_encode',$data);
+            utf8_encode_deep($data);
             return $data;
         }
     }
@@ -277,7 +277,7 @@ if(isset($formRuc)){
             $ruc['success']=false;
             $ruc['message']=$ex->getMessage();
         } 
-        change_string_deep('utf8_encode',$ruc);
+        utf8_encode_deep($ruc);
         return $ruc;
     }
     $data=(consultarRucSri($search));

@@ -1,4 +1,4 @@
-<?
+<?php
 /**
 * Descripci�n: Componente listado de productos
 * Fecha de actualizaci�n:	11-08-12
@@ -57,20 +57,20 @@ $ice_por=stripslashes($ice_por);
 			}			
 		?>
         <tr class="Fondo">
-            <td align="center"><? echo $row_rs_buscta['Pro_Cod']; ?></td>
-            <td id="set1" title="<? if (strlen($producto)>40){echo $producto;}?>"><?Php echo ucwords(strtolower(marcarCadenaColor($buscador, utf8_encode($item),'#FFFF00', '#000', 1))); ?>
+            <td align="center"><?php echo $row_rs_buscta['Pro_Cod']; ?></td>
+            <td id="set1" title="<?php if (strlen($producto)>40){echo $producto;}?>"><?Php echo ucwords(strtolower(marcarCadenaColor($buscador, mb_convert_encoding($item, 'UTF-8', 'ISO-8859-1'),'#FFFF00', '#000', 1))); ?>
 			</td>
-            <td>&nbsp;<? echo $row_rs_buscta['Iva_Por'].'%'?></td>
-            <td><? echo ucwords(strtolower($row_rs_buscta['Mar_Des'])); ?></td>
-            <td><? echo $row_rs_buscta['Adq_Des']; ?></td>
-            <td align="right"><? echo formato_numero($row_rs_buscta['Pre_Pvp'],2,2); ?></td>	
+            <td>&nbsp;<?php echo $row_rs_buscta['Iva_Por'].'%'?></td>
+            <td><?php echo ucwords(strtolower($row_rs_buscta['Mar_Des'])); ?></td>
+            <td><?php echo $row_rs_buscta['Adq_Des']; ?></td>
+            <td align="right"><?php echo formato_numero($row_rs_buscta['Pre_Pvp'],2,2); ?></td>	
             <td align="center">
-            <button type="button" class="btn btn-success btn-mini" title="Elegir" onclick="nueva_fila_com_ice('c_contenido',<?Php echo $row_rs_buscta['Iva_Por']//echo $iva_cod; ?>,<?Php echo $row_rs_buscta['Iva_Cod'];//echo $iva_por; ?>,<?Php echo $ice_cod; ?>, <?Php echo $ice_por; ?>,'<? echo $row_rs_buscta['Adq_Cor']; ?>',<? echo $row_rs_buscta['Adq_Cod']; ?>,'<?Php echo $_SERVER['PHP_SELF']; ?>?Pec_Cod=<?Php echo $Pec_Cod; ?>',{Pld_Cod:'<? echo $row_rs_buscta['Pld_Cod']; ?>',Pld_Cdc:'<? echo $row_rs_buscta['Pld_Cdc']; ?>',Pld_Des:'<? echo $row_rs_buscta['Pld_Des']; ?>'},'<? echo $row_rs_buscta['Ite_Lar']; ?>',<? echo $row_rs_buscta['Pro_Cod']; ?>,'S');">
+            <button type="button" class="btn btn-success btn-mini" title="Elegir" onclick="nueva_fila_com_ice('c_contenido',<?Php echo $row_rs_buscta['Iva_Por']//echo $iva_cod; ?>,<?Php echo $row_rs_buscta['Iva_Cod'];//echo $iva_por; ?>,<?Php echo $ice_cod; ?>, <?Php echo $ice_por; ?>,'<?php echo $row_rs_buscta['Adq_Cor']; ?>',<?php echo $row_rs_buscta['Adq_Cod']; ?>,'<?Php echo $_SERVER['PHP_SELF']; ?>?Pec_Cod=<?Php echo $Pec_Cod; ?>',{Pld_Cod:'<?php echo $row_rs_buscta['Pld_Cod']; ?>',Pld_Cdc:'<?php echo $row_rs_buscta['Pld_Cdc']; ?>',Pld_Des:'<?php echo $row_rs_buscta['Pld_Des']; ?>'},'<?php echo $row_rs_buscta['Ite_Lar']; ?>',<?php echo $row_rs_buscta['Pro_Cod']; ?>,'S');">
         	<i class=" icon-arrow-right icon-white"></i>
         	</button>
             </td>
         </tr>
-		<? 
+		<?php 
 		}
 	} 
 	else 
@@ -84,7 +84,7 @@ $ice_por=stripslashes($ice_por);
             <td>&nbsp;</td>
             <td>&nbsp;</td>
         </tr>
-<? }?>
+<?php }?>
 </tbody>
 </table>
 <?Php echo barra_estado(count($rs_buscta)); 

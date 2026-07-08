@@ -126,7 +126,7 @@ $cmb_sucursal = (isset($_POST['cmb_sucursal']) ? $_POST['cmb_sucursal'] : (isset
                   <tr>
                     <td height="9" align="left" valign="top">GERENTE
                       <p></p>
-                      <p style="margin:-1.5% 0;"><? echo $infoFirmas['Emp_Ren'];?></p>
+                      <p style="margin:-1.5% 0;"><?php echo $infoFirmas['Emp_Ren'];?></p>
                       <p></p>
                       <p style="margin:-1.5% 0;">CI:&nbsp;<?php echo $infoFirmas['Emp_Rre'];?></p>
                     </td>

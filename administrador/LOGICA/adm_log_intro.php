@@ -1,10 +1,10 @@
-<?Php 
+﻿<?Php 
 /**
  * Logica de las paginas que tienen que ver con el distributivo
  *
  * @author Lewis Chimarro
  * @version 1.0
- * Fecha de actualizaci�n:	2012-11-25
+ * Fecha de actualización:	2012-11-25
  *
  * @package administrador.LOGICA
  */
@@ -41,7 +41,7 @@ class Class_Log_Datos_Log extends Class_Datos{
 	* @param string $param cadena de valores para el filtrado de la busqueda
 	* @param Class_Log_Conexion_Con $obBD para realizar la conexcion correspondiente
 	*/
-	function consultasobBD($sen_sql,$param, $obBD)
+	function consultasobBD($sen_sql,$param, $obBD = null)
 	{
 		$Par_Sql= $this->parametros($param);
 		return $this->consulta(sentencias_log($sen_sql,$Par_Sql), $obBD->conexion);
@@ -56,7 +56,7 @@ class Class_Log_Datos_Log extends Class_Datos{
 	 * @param string $param cadena de valores para el filtrado de la busqueda
 	 * @param Class_Log_Conexion_Con $obBD para realizar la conexcion correspondiente
 	 */
-	function operacionobBD($sen_sql,$param, $obBD)
+	function operacionobBD($sen_sql,$param, $obBD = null)
 	{
 		$Par_Sql= $this->parametros($param);
 		return $this->grabarv_registros(sentencias_log($sen_sql,$Par_Sql), $obBD->conexion);
@@ -69,7 +69,7 @@ class Class_Log_Datos_Log extends Class_Datos{
 	 * @param string $param cadena de valores para el filtrado de la busqueda
 	 * @param Class_Log_Conexion_Con $obBD para realizar la conexcion correspondiente
 	 */
-	function getRowConsulta($sen_sql,$param,$obBD)
+	function getRowConsulta($sen_sql,$param,$obBD = null)
 	{
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);
 		
@@ -87,7 +87,7 @@ class Class_Log_Datos_Log extends Class_Datos{
 	 * @param string $param cadena de valores para el filtrado de la busqueda
 	 * @param Class_Log_Conexion_Con $obBD para realizar la conexcion correspondiente
 	 */ 
-	function getArrayConsulta($sen_sql,$param,$obBD)
+	function getArrayConsulta($sen_sql,$param,$obBD = null)
 	{
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);
 		
@@ -110,7 +110,7 @@ class Class_Log_Datos_Log extends Class_Datos{
 	 * @param string $param cadena de datos
 	 * @param Class_Log_Datos_Con $obBD objeto de conexion
 	 */
-	function insertUpdateDelete($sen_sql,$param, $obBD)
+	function insertUpdateDelete($sen_sql,$param, $obBD = null)
 	{
 		/**
 		 * Inicio de la transaccion

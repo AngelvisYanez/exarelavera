@@ -94,7 +94,7 @@ $comfec = current($row_rs_comfec);
         </tr>
       </thead>
       <tbody>
-        <? 
+        <?php 
 	if (count($row_rs_comfec) > 0)
 	{ 
 		$i=0;
@@ -106,7 +106,7 @@ $comfec = current($row_rs_comfec);
 	?>
         <tr>
           <?Php if(isset($Niv_Cod[1])){ ?>
-          <td align="center"><? echo $row['Com_Cod']; ?></td>
+          <td align="center"><?php echo $row['Com_Cod']; ?></td>
           <?Php } ?>
           <td align="center"><?Php 
 		  /* 
@@ -121,17 +121,17 @@ $comfec = current($row_rs_comfec);
 		  		echo "Manual";
 		  }
 		  ?></td>
-          <td align="center"><? 
+          <td align="center"><?php 
 		  list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 		  echo $mes.'-'.$row['Com_Num']; ?></td>
-          <td align="center"><? echo $row['Com_Fec']; ?></td>
-          <td><? echo $row['Prs_Ape'].' '.$row['Prs_Nom']; ?></td>
+          <td align="center"><?php echo $row['Com_Fec']; ?></td>
+          <td><?php echo $row['Prs_Ape'].' '.$row['Prs_Nom']; ?></td>
           <?Php if(isset($Niv_Cod[2])){ ?>
-          <td><? echo $row['Com_Con']; ?></td>
+          <td><?php echo $row['Com_Con']; ?></td>
           <?Php } ?>
-          <td align="right"><? echo $row['Com_Val']; ?></td>
+          <td align="right"><?php echo $row['Com_Val']; ?></td>
         </tr>
-        <?  $total_fin = $total_fin + $row['Com_Val'];
+        <?php  $total_fin = $total_fin + $row['Com_Val'];
 		}//Fin del if ($mostrar == $Com_Aut)
 	 }//Fin del if ($total_rs_comfec >0)
 	else

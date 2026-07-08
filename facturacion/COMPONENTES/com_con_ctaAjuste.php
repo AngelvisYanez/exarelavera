@@ -63,7 +63,7 @@ onKeyPress="
 											cadenacar=document.getElementById('<?Php //echo $Nombre_Buscador; ?>').value;
 										}
 											
-										if (trim(cadenacar) != ''){ ajax_datos('<?Php //echo $_SERVER['PHP_SELF']; ?>?ajax_buscador=<?Php //echo $tipo_busc; ?>&Cja_Tra=<? //echo $row_rs_reposicion['Cja_Tra'];?>&txtBusqueda='+cadenacar+'&Rec_Cod=<?Php //echo $Rec_Cod; ?>&opciones_cod='+vectoropc,'<?Php //echo $Capa; ?>')}
+										if (trim(cadenacar) != ''){ ajax_datos('<?Php //echo $_SERVER['PHP_SELF']; ?>?ajax_buscador=<?Php //echo $tipo_busc; ?>&Cja_Tra=<?php //echo $row_rs_reposicion['Cja_Tra'];?>&txtBusqueda='+cadenacar+'&Rec_Cod=<?Php //echo $Rec_Cod; ?>&opciones_cod='+vectoropc,'<?Php //echo $Capa; ?>')}
 									" -->                           
 							</td>
 							<td width="25%" align="center">
@@ -89,7 +89,7 @@ onKeyPress="
 						cadenacar=document.getElementById('<?Php echo $Nombre_Buscador; ?>').value;
 					}
 						
-						if (trim(cadenacar) != ''){ ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_buscador=<?Php echo $tipo_busc; ?>&Cja_Tra=<? echo $row_rs_reposicion['Cja_Tra'];?>&txtBusqueda='+cadenacar+'&Rec_Cod=<?Php echo $Rec_Cod; ?>&opciones_cod='+vectoropc,'<?Php echo $Capa; ?>')}">
+						if (trim(cadenacar) != ''){ ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_buscador=<?Php echo $tipo_busc; ?>&Cja_Tra=<?php echo $row_rs_reposicion['Cja_Tra'];?>&txtBusqueda='+cadenacar+'&Rec_Cod=<?Php echo $Rec_Cod; ?>&opciones_cod='+vectoropc,'<?Php echo $Capa; ?>')}">
 	    <i class="icon-search icon-white"></i>
 	    <span>&nbsp;&nbsp;Buscar&nbsp;&nbsp;</span>
 	    </button>

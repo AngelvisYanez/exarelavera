@@ -71,7 +71,7 @@ class TimeDataCollector extends DataCollector implements Renderable
      * Starts a measure
      *
      * @param string $name Internal name, used to stop the measure
-     * @param string|null $label Public name
+     * @param string|null $label public name
      * @param string|null $collector The source of the collector
      * @param string|null $group The group for aggregates
      */

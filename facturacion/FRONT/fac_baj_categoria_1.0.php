@@ -228,7 +228,7 @@ if(isset($_POST['cdc_nivel']))
 		if(isset($_POST['delete']))
 		{
 	?>
-	<form method="post" action="<? $_SERVER['PHP_SELF']; ?>" name="form" id="form">
+	<form method="post" action="<?php $_SERVER['PHP_SELF']; ?>" name="form" id="form">
 		<fieldset>
 			<legend class="Titulos2">Registro a Eliminar</legend>
 				<table width="100%" border="0" cellpadding="0" cellspacing="0">

@@ -97,7 +97,7 @@ $total_rs_suc_act = count($rs_suc_act);
 	</tr>
 	<tr>
 	  <td align="left" class="Texto_Reporte">Fecha de impresi&oacute;n:</td>
-	  <td width="75%" class="Texto_Reporte"><? echo $hoy;?></td>
+	  <td width="75%" class="Texto_Reporte"><?php echo $hoy;?></td>
 	  <td width="10%"></td>
 	  </tr>
 	<tr>
@@ -163,7 +163,7 @@ $total_rs_suc_act = count($rs_suc_act);
   </tr>
   <tr>
       <td width="15%" align="left" class="Texto_Reporte"> Custodio :</td>
-	  <td class="Texto_Reporte">&nbsp;<? 
+	  <td class="Texto_Reporte">&nbsp;<?php 
 	   /** 
 	    * Consulta el  Custodio 
 		*/
@@ -205,7 +205,7 @@ $total_rs_suc_act = count($rs_suc_act);
 	</tr>
   	<tr class="Etiqueta1">
 		<td></td>
-		<td colspan="2" ><div align="left"><? 
+		<td colspan="2" ><div align="left"><?php 
 	 		$varcode = $row_rs_consultar['Act_Bar'];
 	  include("../../Librerias/barcode/generadorbarras.php") ?></div></td>
 	</tr>
@@ -217,19 +217,19 @@ $total_rs_suc_act = count($rs_suc_act);
 	</tr>
     <tr>
         <td width="15%" align="left" class="Texto_Reporte"> Fecha Adquisición :</td>
-        <td width="85%" colspan="2" class="Texto_Reporte">&nbsp;<? echo $row_rs_consultar["Act_Fec"]; ?></td>
+        <td width="85%" colspan="2" class="Texto_Reporte">&nbsp;<?php echo $row_rs_consultar["Act_Fec"]; ?></td>
       </tr>
 	  <tr>
         <td width="15%" align="left" class="Texto_Reporte"> Valor Actual :</td>
-        <td width="85%" colspan="2" class="Texto_Reporte">&nbsp;<? echo $row_rs_consultar["Act_Val"]; ?></td>
+        <td width="85%" colspan="2" class="Texto_Reporte">&nbsp;<?php echo $row_rs_consultar["Act_Val"]; ?></td>
       </tr>
 		 <tr>
         <td width="15%" align="left" class="Texto_Reporte"> Valor Residual :</td>
-        <td width="85%" colspan="2" class="Texto_Reporte">&nbsp;<? echo $row_rs_consultar["Act_Res"]; ?></td>
+        <td width="85%" colspan="2" class="Texto_Reporte">&nbsp;<?php echo $row_rs_consultar["Act_Res"]; ?></td>
         </tr>
 		 <tr>
         <td width="15%" align="left" class="Texto_Reporte" > Vida Útil :</td>
-        <td width="85%" colspan="2" class="Texto_Reporte">&nbsp;<? echo $row_rs_consultar["Act_Ann"]; ?>&nbsp;&nbsp;Años </td>
+        <td width="85%" colspan="2" class="Texto_Reporte">&nbsp;<?php echo $row_rs_consultar["Act_Ann"]; ?>&nbsp;&nbsp;Años </td>
         </tr>
 	</table>
    
@@ -290,7 +290,7 @@ $total_rs_suc_act = count($rs_suc_act);
 			while($nam < $total_rs_con_camp && $cont < 1){
 			  ?>
                 <td width="100%" class="Texto_Reporte"><?php if($row_rs_con_camp['Cam_Est'] == 'I'){ $rojo='#FF0000'; $isact ='F';}else{$rojo=''; $isact ='T';} ?><?php if($row_rs_con_camp['Cam_Req'] == 'R'){ echo $row_rs_con_camp['Cam_Cor']." :"; ?>	
-                <td width="100%" class="Texto_Reporte"><? 
+                <td width="100%" class="Texto_Reporte"><?php 
 				
 				$rs_det_camp = $obBD_con1->getRowConsulta(430,$row_rs_con_camp['Cam_Cod'].'*'.$row_rs_consultar["Act_Cod"], $obBD_conexion);
 				$total_rs_det_camp = count($rs_det_camp);
@@ -305,7 +305,7 @@ $total_rs_suc_act = count($rs_suc_act);
 					$row_rs_det_camp  =$rs_det_camp;					
 					echo $row_rs_con_camp['Cam_Cor']." :"; ?>	
                 <td width="80%" class="Texto_Reporte">&nbsp;<?php echo $row_rs_det_camp["Act_Val"];?></td>
-				<?
+				<?php
 					$i++;
 				}
 					$cont++;

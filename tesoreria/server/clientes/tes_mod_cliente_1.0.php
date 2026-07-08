@@ -57,7 +57,7 @@ if(isset($searchCliente)){
 if(isset($guardarCliente)){    
     $pers=$obBD_con1->getRowConsulta('persona.selectWhere',array('clean'=>true, 'Prs_Cod'=>$Prs_Cod),$obBD_conexion);
     $obBD_con1->inicio_transaccion($obBD_conexion->conexion);                  
-    $obBD_con1->operacionobBD(12,utf8_decode($Prs_Ced.'*'.$Prs_Nom.'*'.$Prs_Ape.'*'.$Prs_Sex.'*'.$Prs_Dir.'*'.$Prs_Tel.'*'.$Prs_Te2.'*'.$Prs_Cel.'*'.$Ciu_Cod.'*'.$Ide_Cod.'*'.(!empty($Prs_Cor)?$Prs_Cor:'').'*'.$Prs_Cod),$obBD_conexion); 
+    $obBD_con1->operacionobBD(12,mb_convert_encoding($Prs_Ced.'*'.$Prs_Nom.'*'.$Prs_Ape.'*'.$Prs_Sex.'*'.$Prs_Dir.'*'.$Prs_Tel.'*'.$Prs_Te2.'*'.$Prs_Cel.'*'.$Ciu_Cod.'*'.$Ide_Cod.'*'.(!empty($Prs_Cor)?$Prs_Cor:'').'*'.$Prs_Cod, 'ISO-8859-1', 'UTF-8'),$obBD_conexion); 
     $obBD_con1->operacionobBD(26,$Prs_Cod.'*'.$Cli_Tic.'*'.$Cli_Con.'*'.$Cli_Cod.'*'.$Prs_Cor,$obBD_conexion); 
     $obBD_con1->fin_transaccion_nomsn($obBD_conexion->conexion);
     if ($obBD_con1->Error == 0) { $responce['success'] = true; }

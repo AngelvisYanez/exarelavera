@@ -751,7 +751,7 @@ if (isset($loadCruzeCuentas)) {
 												if (count($periodos_rows) > 0) {
 													foreach ($periodos_rows as $row) {
 														//echo "<option value='$row[Pec_Cod]' data-inicio='$row[Pec_Fei]' data-fin='$row[Pec_Fef]'>$row[anio]</option>";
-														echo "<option value='{$row['Pec_Cod']}' data-inicio='{$row['Pec_Fei']}' data-fin='{$row['Pec_Fef']}'>" . utf8_encode($row['anio']) . "</option>";
+														echo "<option value='{$row['Pec_Cod']}' data-inicio='{$row['Pec_Fei']}' data-fin='{$row['Pec_Fef']}'>" . mb_convert_encoding($row['anio'], 'UTF-8', 'ISO-8859-1') . "</option>";
 													}
 												}
 												?>
@@ -854,7 +854,7 @@ if (isset($loadCruzeCuentas)) {
 																	foreach ($rows_periodos as $row) {
 																?>
 																		<?php
-																		echo "<option value='{$row['Pec_Cod']}' data-pla-cod='{$row['Pla_Cod']}' data-pec-fei='{$row['Pec_Fei']}' data-pec-fef='{$row['Pec_Fef']}' data-periodo='" . utf8_encode($row['priodo_m']) . "'>" . utf8_encode($row['priodo_m']) . "</option>";
+																		echo "<option value='{$row['Pec_Cod']}' data-pla-cod='{$row['Pla_Cod']}' data-pec-fei='{$row['Pec_Fei']}' data-pec-fef='{$row['Pec_Fef']}' data-periodo='" . mb_convert_encoding($row['priodo_m'], 'UTF-8', 'ISO-8859-1') . "'>" . mb_convert_encoding($row['priodo_m'], 'UTF-8', 'ISO-8859-1') . "</option>";
 																		?>
 
 																		<!--? echo "<option value='$row[Pec_Cod]' data-pla-cod='$row[Pla_Cod]' data-pec-fei='$row[Pec_Fei]' data-pec-fef='$row[Pec_Fef]'  data-periodo='$row[priodo_m]'>$row[priodo_m]</option>"; ?-->
@@ -937,7 +937,7 @@ if (isset($loadCruzeCuentas)) {
 																foreach ($row_rs_tipo_asien2 as $row) { ?>
 																	<option value="<?php echo $row['Tia_Cod']; ?>" data-abr="<?php echo $row['Tia_Abr']; ?>">
 																		<!--?php echo $row['Tia_Des'] ?-->
-																		<?php echo utf8_encode($row['Tia_Des']); ?>
+																		<?php echo mb_convert_encoding($row['Tia_Des'], 'UTF-8', 'ISO-8859-1'); ?>
 																	</option>
 																<?php } ?>
 															</select>
@@ -954,7 +954,7 @@ if (isset($loadCruzeCuentas)) {
 																$row_rs_tipo_asien2 = $obBD_con1->getArrayConsulta(5, "", $obBD_conexion);
 																foreach ($row_rs_tipo_asien2 as $row) { ?>
 																	<option value="<?php echo $row['Pag_Cod']; ?>" data-abr="<?php echo $row['Pag_Abr']; ?>">
-																		<?php echo utf8_encode($row['Pag_Des']) ?>
+																		<?php echo mb_convert_encoding($row['Pag_Des'], 'UTF-8', 'ISO-8859-1') ?>
 																	</option>
 																<?php } ?>
 															</select>

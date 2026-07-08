@@ -34,24 +34,24 @@ if ($ajax_buscador=="F")
           </tr>
       </thead>
       <tbody>
-	  <?
+	  <?php
 	  if ($total_rs_buscta > 0) {
 		  foreach($rs_buscta as $row_rs_buscta) { 					  
 		  ?>
-		  <tr <? echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo");?> >
-			<td align="center"><? echo $row_rs_buscta['Pro_Cod']; ?></td>
-			<td align="left"><? echo marcar_cadena($txtBusqueda,$row_rs_buscta['Ite_Lar'].' '.$row_rs_buscta['Pro_Obs'],'#FFFF00', 1); ?></td>
-			<td align="left"><? echo $row_rs_buscta['Mar_Des']; ?></td>
-			<td align="left"><? echo $row_rs_buscta['Adq_Des']; ?></td>		
-			<td align="right"><? echo $row_rs_buscta['Pre_Pvp'];  ?></td>
-			<td align="right"><? echo $row_rs_buscta['Stk_Can']; ?></td>
+		  <tr <?php echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo");?> >
+			<td align="center"><?php echo $row_rs_buscta['Pro_Cod']; ?></td>
+			<td align="left"><?php echo marcar_cadena($txtBusqueda,$row_rs_buscta['Ite_Lar'].' '.$row_rs_buscta['Pro_Obs'],'#FFFF00', 1); ?></td>
+			<td align="left"><?php echo $row_rs_buscta['Mar_Des']; ?></td>
+			<td align="left"><?php echo $row_rs_buscta['Adq_Des']; ?></td>		
+			<td align="right"><?php echo $row_rs_buscta['Pre_Pvp'];  ?></td>
+			<td align="right"><?php echo $row_rs_buscta['Stk_Can']; ?></td>
 			<td align="center">
-			<button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="nueva_fila_ajuste('c_contenido','<? echo $row_rs_buscta['Pro_Cod']; ?>','<? echo $row_rs_buscta['Ite_Lar'].' '.$row_rs_buscta['Pro_Obs']; ?>','<? echo $row_rs_buscta['Pre_Pvp']; ?>','<? echo 400000;?>')">
+			<button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="nueva_fila_ajuste('c_contenido','<?php echo $row_rs_buscta['Pro_Cod']; ?>','<?php echo $row_rs_buscta['Ite_Lar'].' '.$row_rs_buscta['Pro_Obs']; ?>','<?php echo $row_rs_buscta['Pre_Pvp']; ?>','<?php echo 400000;?>')">
 						<i class=" icon-arrow-right icon-white"></i>
 					</button>
 				</td>
 		  </tr>
-		  <? }
+		  <?php }
 	  } else { ?>
 		<tr>
 			<td height="32%">&nbsp;</td>
@@ -62,7 +62,7 @@ if ($ajax_buscador=="F")
 			<td height="32%">&nbsp;</td>
 			<td height="32%">&nbsp;</td>
 		</tr>
-<? }?>
+<?php }?>
 	</tbody>
 </table>
 <?Php 

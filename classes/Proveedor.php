@@ -11,8 +11,8 @@
  */
 
 class ProveedorClass {
-    protected $_conexion = null;                  // Correo gerencial
-    protected $_datos = null;
+    protected $conexion = null;
+    protected $datos = null;
     
     function __construct($conexion, $datos){
         $this->conexion = $conexion;

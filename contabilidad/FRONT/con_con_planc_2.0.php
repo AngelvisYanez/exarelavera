@@ -1,4 +1,4 @@
-<?	
+<?php	
 /** 
  * Alias:	Consultar
  * Descripción: Permite modificar las cuentas del plan de cuentas
@@ -142,16 +142,16 @@ switch($op){
 							$color_d = '';	
 						}?>
 					  <tr>
-							<td align="center" <?php echo $color_d; ?>><? echo $row['Pld_Cod']; ?></td>
-							<td <?php echo $color_d; ?>><? echo $row['Pla_Obs']; ?></td>
-							<td <?php echo $color_d; ?>><? echo $row['Pld_Cdc']; ?></td>
+							<td align="center" <?php echo $color_d; ?>><?php echo $row['Pld_Cod']; ?></td>
+							<td <?php echo $color_d; ?>><?php echo $row['Pla_Obs']; ?></td>
+							<td <?php echo $color_d; ?>><?php echo $row['Pld_Cdc']; ?></td>
 							<td <?php echo $color_d; ?>><?Php echo marcar_cadena($_POST['txt_busqueda'], $row['Pld_Des'], '#FFFF00', 1); ?></td>
-							<td <?php echo $color_d; ?> align="center"><? echo $row['Pld_Tip']; ?></td>
-							<td <?php echo $color_d; ?> align="center"><? echo $row['Pld_Deb']; ?></td>
-							<td <?php echo $color_d; ?> align="center"><? echo $row['Pld_Cre']; ?></td>
-							<td <?php echo $color_d; ?> align="center"><? echo $row['Pld_Est']; ?></td>
+							<td <?php echo $color_d; ?> align="center"><?php echo $row['Pld_Tip']; ?></td>
+							<td <?php echo $color_d; ?> align="center"><?php echo $row['Pld_Deb']; ?></td>
+							<td <?php echo $color_d; ?> align="center"><?php echo $row['Pld_Cre']; ?></td>
+							<td <?php echo $color_d; ?> align="center"><?php echo $row['Pld_Est']; ?></td>
 					</tr>
-	  			<? }
+	  			<?php }
 	  				if(count($row_rs_nodos)==0){
 	  					?>
 	  					<tr><td>&nbsp;</td>
@@ -202,8 +202,8 @@ switch($op){
 						}			
 						?>
 					      <tr>
-					        	<td align="center"><FONT COLOR="<? echo $rojo;?>"><? echo $row['Pla_Cod']; ?></FONT></td>
-					        	<td><FONT COLOR="<? echo $rojo;?>"><? echo $row['Pla_Obs']; ?></FONT></td>
+					        	<td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php echo $row['Pla_Cod']; ?></FONT></td>
+					        	<td><FONT COLOR="<?php echo $rojo;?>"><?php echo $row['Pla_Obs']; ?></FONT></td>
 					        	<td align="center">
 						        	<?php 
 						        		if($row['Pla_Est'] == 'Inactivo'){
@@ -214,15 +214,15 @@ switch($op){
 						        			?>
 						        			<form action="con_pri_planc_2.0.php" method="post" name= "form1" target="_blank" style="display: inline;">
 										        <button type="button" class="btn btn-primary start" title="Imprimir Plan de Cuentas" onclick="this.form.submit()"> <i class="icon-print icon-white"></i> <span>Imprimir</span> </button>
-										        <input type="hidden" name="codigo" id="codigo" value="<? echo $row['Pla_Cod']; ?>" />
+										        <input type="hidden" name="codigo" id="codigo" value="<?php echo $row['Pla_Cod']; ?>" />
 									        </form> 
-                                                                                <button type="button" class="btn btn-primary start" title="Descargar Plan de Cuentas" onclick="exportExcel('<? echo $row['Pla_Cod']; ?>','<? echo $row['Pla_Obs']; ?>');"> <i class="icon-share icon-white"></i> <span>Excel</span> </button>    
+                                                                                <button type="button" class="btn btn-primary start" title="Descargar Plan de Cuentas" onclick="exportExcel('<?php echo $row['Pla_Cod']; ?>','<?php echo $row['Pla_Obs']; ?>');"> <i class="icon-share icon-white"></i> <span>Excel</span> </button>    
 						        			<?php
 						        		}
 						        	?>
 								</td>
 					      </tr>
-				      <? 
+				      <?php 
       				}
 					  /**
 					   * Mostrar un mensaje si no existen planes creados 

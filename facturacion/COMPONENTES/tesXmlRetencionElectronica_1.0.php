@@ -1,4 +1,4 @@
-<?
+<?php
 	/**
 *	Componente para generar el xml del comprobante de venta
 *	Desarrollador: Jose Cumbicos
@@ -85,15 +85,15 @@
 				}						
 				$armado_xml.="<".$Eti_infoTri[0].">".$TipoAmbienteCE."</".$Eti_infoTri[0].">".                         //<ambiente>
 							"<".$Eti_infoTri[1].">".$TipoEmisionCE."</".$Eti_infoTri[1].">".  						   //<tipoEmision>
-							"<".$Eti_infoTri[2].">".utf8_encode($rs_infoEmpresa['Emp_Nom'])."</".$Eti_infoTri[2].">".  //<razonSocial>
-							"<".$Eti_infoTri[3].">".utf8_encode($rs_infoEmpresa['Emp_Cor'])."</".$Eti_infoTri[3].">".  //<nombreComercial>
+							"<".$Eti_infoTri[2].">".mb_convert_encoding($rs_infoEmpresa['Emp_Nom'], 'UTF-8', 'ISO-8859-1')."</".$Eti_infoTri[2].">".  //<razonSocial>
+							"<".$Eti_infoTri[3].">".mb_convert_encoding($rs_infoEmpresa['Emp_Cor'], 'UTF-8', 'ISO-8859-1')."</".$Eti_infoTri[3].">".  //<nombreComercial>
 							"<".$Eti_infoTri[4].">".$rs_infoEmpresa['Emp_Ruc']."</".$Eti_infoTri[4].">".               //<ruc>
 							"<".$Eti_infoTri[5].">".$claveAcceso."</".$Eti_infoTri[5].">".  			               //<claveAcceso>
 							"<".$Eti_infoTri[6].">".'07'."</".$Eti_infoTri[6].">".               //<codDoc>
 							"<".$Eti_infoTri[7].">".$rs_infoEmpresa['Suc_Sri']."</".$Eti_infoTri[7].">".               //<estab> 
 							"<".$Eti_infoTri[8].">".$rs_infoCliente['Pun_Sri']."</".$Eti_infoTri[8].">".               //<ptoEmi>
 							"<".$Eti_infoTri[9].">".$ceroDoc.$rs_infoCliente['Ret_Num']."</".$Eti_infoTri[9].">".      //<secuencial>
-							"<".$Eti_infoTri[10].">".utf8_encode($rs_infoEmpresa['Suc_Dir'])."</".$Eti_infoTri[10].">";//<dirMatriz>						
+							"<".$Eti_infoTri[10].">".mb_convert_encoding($rs_infoEmpresa['Suc_Dir'], 'UTF-8', 'ISO-8859-1')."</".$Eti_infoTri[10].">";//<dirMatriz>						
 	$armado_xml .="</".$Eti_raiz[0].">"; //</infoTributaria>
 	$armado_xml .="<".$Eti_raiz[1].">";  //<infoCompRetencion> 				
 				
@@ -115,13 +115,13 @@
 					$Cod_infoFac[] = $row['Esq_Cod'];					
 				}							
 				$armado_xml.="<".$Eti_infoFac[0].">".$rs_infoCliente['fecha']."</".$Eti_infoFac[0].">".               //<fechaEmision>
-							"<".$Eti_infoFac[1].">".utf8_encode($rs_infoEmpresa['Suc_Dir'])."</".$Eti_infoFac[1].">"; //<dirEstablecimiento>
+							"<".$Eti_infoFac[1].">".mb_convert_encoding($rs_infoEmpresa['Suc_Dir'], 'UTF-8', 'ISO-8859-1')."</".$Eti_infoFac[1].">"; //<dirEstablecimiento>
 				if($rs_infoEmpresa['Emp_Reg']!=''){				
 				$armado_xml.="<".$Eti_infoFac[2].">".$rs_infoEmpresa['Emp_Reg']."</".$Eti_infoFac[2].">";            //<contribuyenteEspecial>
 				}
 				$armado_xml.="<".$Eti_infoFac[3].">".$rs_infoEmpresa['Emp_Cnt']."</".$Eti_infoFac[3].">". 	         //<obligadoContabilidad>
 							"<".$Eti_infoFac[4].">".$rs_infoCliente['Ide_Prv']."</".$Eti_infoFac[4].">".  	         //<tipoIdentificacionSujetoRetenido>
-							"<".$Eti_infoFac[5].">".utf8_encode($rs_infoCliente['Prs_Nom']." ".$rs_infoCliente['Prs_Ape'])."</".$Eti_infoFac[5].">".	//<razonSocialSujetoRetenido> 
+							"<".$Eti_infoFac[5].">".mb_convert_encoding($rs_infoCliente['Prs_Nom']." ".$rs_infoCliente['Prs_Ape'], 'UTF-8', 'ISO-8859-1')."</".$Eti_infoFac[5].">".	//<razonSocialSujetoRetenido> 
 							"<".$Eti_infoFac[6].">".$rs_infoCliente['Prs_Ced']."</".$Eti_infoFac[6].">".	  //<identificacionSujetoRetenido>
 							"<".$Eti_infoFac[7].">".date("m/Y",strtotime($rs_infoCliente['Ret_Fec']))."</".$Eti_infoFac[7].">";		  //<periodoFiscal>
 	$armado_xml .="</".$Eti_raiz[1].">";  //</infoCompRetencion> 	$rs_perContable['PerCon']																					
@@ -176,7 +176,7 @@
 				$Cod_infoAdicional[] = $row['Esq_Cod'];					
 			}
 			if($rs_infoCliente['Prs_Dir']!='')
-			{ $armado_xml.="<".$Eti_infoAdicional[0]." nombre='Direccion'>".utf8_encode($rs_infoCliente['Prs_Dir'])."</".$Eti_infoAdicional[0].">";	}
+			{ $armado_xml.="<".$Eti_infoAdicional[0]." nombre='Direccion'>".mb_convert_encoding($rs_infoCliente['Prs_Dir'], 'UTF-8', 'ISO-8859-1')."</".$Eti_infoAdicional[0].">";	}
 			if($rs_infoCliente['Prs_Tel']!='')
 			{ $armado_xml.="<".$Eti_infoAdicional[0]." nombre='Teléfono'>".$rs_infoCliente['Prs_Tel']."</".$Eti_infoAdicional[0].">"; }
 			if($rs_infoCliente['Prs_Cor']!='')

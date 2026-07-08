@@ -1,4 +1,4 @@
-<? 
+<?php 
 /**
 * Descripci�n: Componente que muestra los Rubros de un punto de imprecion.
 * Fecha de actualizaci�n: 2012-11-20
@@ -40,27 +40,27 @@ else
     </tr>		
  </thead>
  <tbody>
-<?
+<?php
 	if (count($rs_buscta) > 0) 
 	{
 		foreach($rs_buscta as $row_rs_buscta)	
 		{ 
 			$Pro_Cod = $row_rs_buscta['Pro_Cod']; ?>			
 			<tr>
-				<td align="center" width="10%"><? echo $row_rs_buscta['Pro_Cod']; ?></td>
+				<td align="center" width="10%"><?php echo $row_rs_buscta['Pro_Cod']; ?></td>
 				<td align="left" width="35%"><?Php echo marcarCadenaColor($busqueda,$row_rs_buscta['Ite_Lar'],'#FFFF00', '#000', 1); ?></td>
-				<td align="left" width="15%"><? echo $row_rs_buscta['Mar_Des']; ?></td>	
-				<td align="left" width="3%"><? echo $row_rs_buscta['Adq_Cor']; ?></td>
-				<td align="right" width="10%"><? echo $row_rs_buscta['Pre_Pvp']; ?></td>
+				<td align="left" width="15%"><?php echo $row_rs_buscta['Mar_Des']; ?></td>	
+				<td align="left" width="3%"><?php echo $row_rs_buscta['Adq_Cor']; ?></td>
+				<td align="right" width="10%"><?php echo $row_rs_buscta['Pre_Pvp']; ?></td>
 				<td align="right" width="10%"><?Php echo number_format($row_rs_buscta['Pre_Pvp'] + ($row_rs_buscta['Pre_Pvp'] * $row_rs_buscta['Iva_Por'])/100,2);?></td>
-				<td align="right" width="10%"><? echo $row_rs_buscta['Stk_Can']; ?></td>
+				<td align="right" width="10%"><?php echo $row_rs_buscta['Stk_Can']; ?></td>
 				<td align="center" width="7%"><button type="button" class="btn btn-success btn-mini" title="Elegir" onclick="			
 			nuevaFila('c_contenido','<?php echo $row_rs_buscta['Pro_Cod'];?>','<?php echo $row_rs_buscta['Ite_Lar'];?>','<?php if ($row_rs_buscta['Pre_Pvp'] > 0){ echo $row_rs_buscta['Pre_Pvp']; } ?>','<?php echo $row_rs_buscta['Iva_Por'];?>','<?php echo $row_rs_buscta['Iva_Cod'];?>','<?php echo $codigonota; ?>','','','<?php echo $bloc_cant; ?>','si','0','0','0','<?Php echo $row_rs_buscta['Pro_Uni']; ?>'); asignar_total_fac();">
         	<i class=" icon-arrow-right icon-white"></i>
         </button>			
             </td>
 			</tr>
-		<? 
+		<?php 
 		} //Fin del foreach
 	} else { ?>
 			<tr>
@@ -73,7 +73,7 @@ else
 				<td>&nbsp;</td>
 				<td>&nbsp;</td>
 			</tr>
-	<? }?>
+	<?php }?>
     </tbody>
 </table>
 <?php

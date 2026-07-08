@@ -324,7 +324,7 @@ if(isset($protestarChe)){
 									<label class="col-sm-2 control-label label-xs">Periodo:</label>
 									<div class="col-sm-4">
 										<select class="form-control input-xs" id="periodos" name="periodos" onchange="cambioPreiodoSearch('peri')"  required="">
-                      <?
+                      <?php
                       $periodo_mm = $obBD_con_get->getRowConsulta(8, "", $obBD_conexion_get);
                       echo "<option value='ini' data-inicio='$periodo_mm[minimo]' data-fin='$periodo_mm[maximo]'><< TODOS >></option>";
 

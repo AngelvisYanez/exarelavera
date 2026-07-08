@@ -93,29 +93,29 @@
              <td valign="top"><br><br><br><br><br><br><table width="310" border="0" cellpadding="0" cellspacing="0" class="Texto_Listados">
                <tr>
                    <td width="49">Se&ntilde;or(s):</td>
-                 <td width="133"><? if ($total_rs_representante > 0){ echo $row_rs_representante['Est_Fac']; }
+                 <td width="133"><?php if ($total_rs_representante > 0){ echo $row_rs_representante['Est_Fac']; }
 				 				else{ echo $row_rs_cliente['Prs_Ape'].' '.$row_rs_cliente['Prs_Nom']; } ?></td>
                  <td width="7">&nbsp;</td>
                  <td width="93" align="right">Fecha:<?Php echo ' '.$row_rs_cliente['Caj_Fec']; ?></td>
                </tr>
                  <tr>
                    <td>R.U.C.:</td>
-                   <td><? if ($total_rs_representante > 0){ echo $row_rs_representante['Est_Ruf']; }
+                   <td><?php if ($total_rs_representante > 0){ echo $row_rs_representante['Est_Ruf']; }
 				   			else 
 							{ echo $row_rs_cliente['Prs_Ced']; }
 				   ?></td>
                    <td>&nbsp;</td>
-                   <td align="right">Tel&eacute;fono:<? echo ' '.$row_rs_cliente['Prs_Tel']; ?></td>
+                   <td align="right">Tel&eacute;fono:<?php echo ' '.$row_rs_cliente['Prs_Tel']; ?></td>
                  </tr>
                  <tr>
                    <td>Alumno:</td>
-                   <td><? if ($total_rs_representante > 0){ echo $row_rs_cliente['Prs_Ape'].' '.$row_rs_cliente['Prs_Nom']; } ?></td>
+                   <td><?php if ($total_rs_representante > 0){ echo $row_rs_cliente['Prs_Ape'].' '.$row_rs_cliente['Prs_Nom']; } ?></td>
                    <td>&nbsp;</td>
-                   <td align="right">Lugar:<? echo ' '.$row_rs_cliente['Ciu_Des']; ?></td>
+                   <td align="right">Lugar:<?php echo ' '.$row_rs_cliente['Ciu_Des']; ?></td>
                  </tr>
                  <tr>
                    <td>Direcci&oacute;n:</td>
-                   <td><? echo $row_rs_cliente['Prs_Dir']; ?></td>
+                   <td><?php echo $row_rs_cliente['Prs_Dir']; ?></td>
                    <td>&nbsp;</td>
                    <td>&nbsp;</td>
                  </tr>

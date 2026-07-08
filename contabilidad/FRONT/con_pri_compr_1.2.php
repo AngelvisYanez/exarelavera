@@ -71,7 +71,7 @@ if(count($row_rs_cabcomp) > 0){
     <td colspan="4" align="center" valign="top">
 	<table width="80%" border="0" cellpadding="0" cellspacing="0">
 	  <tr align="center">
-      <td width="10"><img src="<? echo $Ses_Emp_Log?>" alt=""></td>
+      <td width="10"><img src="<?php echo $Ses_Emp_Log?>" alt=""></td>
 	    <td colspan="5" valign="top" class="Texto_Reporte">&nbsp;<?php
 		$tip = $row_rs_cabcomp['Tia_Abr'];
 		$num = $row_rs_cabcomp['Com_Num'];
@@ -88,24 +88,24 @@ if(count($row_rs_cabcomp) > 0){
         <td align="left">&nbsp;</td>
       </tr>
       <tr align="center">
-        <td colspan="2"><div align="left"><b><? echo $etiqueta2; ?></b></div></td>
-        <td width="59%" align="left" class="Texto_normal_10"><?
+        <td colspan="2"><div align="left"><b><?php echo $etiqueta2; ?></b></div></td>
+        <td width="59%" align="left" class="Texto_normal_10"><?php
 					echo $row_rs_cabcomp['Prs_Ape'].' '.$row_rs_cabcomp['Prs_Nom'];
 					?></td>
         <td width="7%" align="right" class="Texto_normal_10"><b>POR:</b></td>
-        <td width="18%" align="left">&nbsp;<span class="Texto_Reporte"><span class="Texto_normal_10">&nbsp;$<? echo number_format($row_rs_cabcomp['Com_Val'],2); ?></span></span></td>
+        <td width="18%" align="left">&nbsp;<span class="Texto_Reporte"><span class="Texto_normal_10">&nbsp;$<?php echo number_format($row_rs_cabcomp['Com_Val'],2); ?></span></span></td>
       </tr>
 
       <tr align="center">
         <td colspan="2"><div align="left" class="Texto_normal_10"><b>LA CANTIDAD DE: </b></div></td>
-        <td align="left" class="Texto_normal_10" style="text-transform:uppercase"><? echo num2letras($row_rs_cabcomp['Com_Val'],false).' DOLARES AMERICANOS'; ?></td>
+        <td align="left" class="Texto_normal_10" style="text-transform:uppercase"><?php echo num2letras($row_rs_cabcomp['Com_Val'],false).' DOLARES AMERICANOS'; ?></td>
         <td align="right" class="Texto_normal_10" style="text-transform:uppercase"><b>FECHA:</b></td>
         <td align="left" class="Texto_normal_10" style="text-transform:uppercase">&nbsp;          <?php
 		echo mes($mes,2).'/'.$dia.'/'.$ann; ?></td>
         </tr>
       <tr align="center">
         <td colspan="2"><div align="left" class="Texto_normal_10"><b>POR CONCEPTO :</b> </div></td>
-        <td colspan="3" align="left" class="Texto_normal_10"><? echo $row_rs_cabcomp['Com_Con']; ?></td>
+        <td colspan="3" align="left" class="Texto_normal_10"><?php echo $row_rs_cabcomp['Com_Con']; ?></td>
       </tr>
     </table>
 	</td>
@@ -119,7 +119,7 @@ if(count($row_rs_cabcomp) > 0){
         <td width="10%" align="right" class="TablaRepCompr"><font class="Letra_punto_venta_2">Debe</font></td>
         <td width="10%" align="right" class="TablaRepCompr"><font class="Letra_punto_venta_2">Haber</font></td>
       </tr>
-			<? $asientos = $obBD_con1->getArrayConsulta(31, $codigo, $obBD_conexion);
+			<?php $asientos = $obBD_con1->getArrayConsulta(31, $codigo, $obBD_conexion);
 	    foreach ($asientos as $asiento) {
 				if ($asiento['Asi_Deh']=='D') {
 					$total+=$asiento['Asi_Val'];
@@ -140,12 +140,12 @@ if(count($row_rs_cabcomp) > 0){
 			<?}?>
       <tr>
         <td colspan="3" class="TITULO_REPORTE TablaRepCompr"><div align="right"><strong>SUMAN:</strong></div></td>
-        <td class="TITULO_REPORTE TablaRepCompr"><font class="Letra_punto_venta_2"><div align="right"><? echo number_format($total,2); ?></div></font></td>
-        <td class="TITULO_REPORTE TablaRepCompr"><font class="Letra_punto_venta_2"><div align="right"><? echo number_format($total_h,2); ?></div></font></td>
+        <td class="TITULO_REPORTE TablaRepCompr"><font class="Letra_punto_venta_2"><div align="right"><?php echo number_format($total,2); ?></div></font></td>
+        <td class="TITULO_REPORTE TablaRepCompr"><font class="Letra_punto_venta_2"><div align="right"><?php echo number_format($total_h,2); ?></div></font></td>
       </tr>
     </table>
 
-	<?
+	<?php
 	/* Cargado de los cheques del comprobante */
 	$row_rs_carcheq = $obBD_con1->getArrayConsulta(334, $row_rs_cabcomp['Com_Cod'], $obBD_conexion);
 
@@ -162,24 +162,24 @@ if(count($row_rs_cabcomp) > 0){
             <td width="10%" align="center" class="TablaRepCompr">N&ordm; Ch.</td>
             <td width="10%" align="center" class="TablaRepCompr">Valor</td>
           </tr>
-          <? if(!isset($fila)) $fila=0;
+          <?php if(!isset($fila)) $fila=0;
 	 foreach ($row_rs_carcheq as $row){
 	 $fila++;
 	 $nombre=explode(" ",$row['Prs_Nom']);
 	 ?>
           <tr>
-            <td class="TablaRepComprLeft TablaRepComprBottom"><? echo $row['Pld_Des']; ?></td>
-            <td class="TablaRepComprLeft TablaRepComprBottom"><? echo $row['Prs_Ape'].' '.$nombre[0]; ?></td>
-            <td align="right" class="TablaRepComprLeft TablaRepComprBottom"><? echo $row['Che_Num']; ?></td>
-            <td align="right" class="TablaRepComprLeft TablaRepComprBottom TablaRepComprRight"><? echo number_format($row['Che_Val'],2); ?></td>
+            <td class="TablaRepComprLeft TablaRepComprBottom"><?php echo $row['Pld_Des']; ?></td>
+            <td class="TablaRepComprLeft TablaRepComprBottom"><?php echo $row['Prs_Ape'].' '.$nombre[0]; ?></td>
+            <td align="right" class="TablaRepComprLeft TablaRepComprBottom"><?php echo $row['Che_Num']; ?></td>
+            <td align="right" class="TablaRepComprLeft TablaRepComprBottom TablaRepComprRight"><?php echo number_format($row['Che_Val'],2); ?></td>
           </tr>
-     <? }//Fin del foreach ($row_rs_carcheq as $row)  ?>
+     <?php }//Fin del foreach ($row_rs_carcheq as $row)  ?>
         </tbody>
       </table>
-	  <?
+	  <?php
 	 }//Fin del if (count($row_rs_carcheq) > 0)
 	?>
-	<?
+	<?php
 	$tip=1;
 	switch ($tip){
 		case 1: ?>
@@ -199,7 +199,7 @@ if(count($row_rs_cabcomp) > 0){
 		  ?>
 	    <td align="center" valign="middle" class="TablaRepComprLeft TablaRepComprBottom">&nbsp;	      <?php //echo $recibido; ?></td>
 	    <td align="center" valign="middle" class="TablaRepComprLeft TablaRepComprBottom">&nbsp;	      <?php //echo $recibido; ?></td>
-	    <td valign="bottom" align="right" class="TablaRepComprLeft TablaRepComprBottom TablaRepComprRight">&nbsp;<div class="Letra_punto_venta_2"><? echo isset($recibi)?$recibi:''; ?></div></td>
+	    <td valign="bottom" align="right" class="TablaRepComprLeft TablaRepComprBottom TablaRepComprRight">&nbsp;<div class="Letra_punto_venta_2"><?php echo isset($recibi)?$recibi:''; ?></div></td>
 	    </tr>
 	  </table>
 	<?Php
@@ -232,7 +232,7 @@ if(count($row_rs_cabcomp) > 0){
 		  <td valign="middle" align="center" class="TablaRepCompr">&nbsp;		    <?php //echo $recibido; ?></td>
 	    </tr>
 	</table>
-	<? break;
+	<?php break;
 	   case 3: ?>
 	<table width="100%" border="0" align="center" cellpadding="2" cellspacing="0" class="">
 	  <tr>
@@ -258,7 +258,7 @@ if(count($row_rs_cabcomp) > 0){
 	    <td valign="middle" align="center" class="TablaRepCompr">&nbsp;	      <?php //echo $recibido; ?></td>
 	    </tr>
 	  </table>
-	<? break;
+	<?php break;
 	} //Fin del switch ($tipo){
 	?>
   </tr>

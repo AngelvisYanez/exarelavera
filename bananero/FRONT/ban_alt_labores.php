@@ -285,9 +285,9 @@ $periodos = $obBD_con1->getArrayConsulta('perio_cont.selectWhere', array('perio_
                                                 <div class="col-xs-10 input-group input-group-xs ret" style="margin:30px;padding-top: 1px;">
                                                     <select id="Tpg_Cod_D" name="Tpg_Cod_D" onchange="" class="form-control input-xs select_tipo_labor">
                                                         <?php foreach ($tipoPagos as $tip) { ?>
-	<?php echo utf8_decode($tip); ?>
+	<?php echo mb_convert_encoding($tip, 'ISO-8859-1', 'UTF-8'); ?>
 	<option value="<?php echo $tip['Tpg_Cod']; ?>" data-extra="<?php echo $tip['Tpg_Est']; ?>">
-		<?php echo utf8_decode($tip['Tpg_Des']); ?>
+		<?php echo mb_convert_encoding($tip['Tpg_Des'], 'ISO-8859-1', 'UTF-8'); ?>
 	</option>
 	<?php } ?>
 	</select>

@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?
+<?php
 /**
 * Descripción:Consuta RIDE comprobantes elctronicos.
 * Fecha de actualización:	09-06-2015 
@@ -150,21 +150,21 @@ $total_datos=count($row_rs_datos);
 </tr>
 <tr>
  <td align="left" valign="top" height="400">
- <form action="<? echo $_SERVER['PHP_SELF']; ?>" method="post" name= "form1" id="form1">
+ <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" name= "form1" id="form1">
  <FIELDSET>
 	<legend>
 	<label class="Titulos2">Tipo de documento:</label></legend>
-      <?  mensaje_requerido(); ?>
+      <?php  mensaje_requerido(); ?>
       <table width="604" border="0" cellpadding="0" cellspacing="0">
       <tr>
         <td width="116" class="Etiqueta1"><span class="Asterisco">*</span> Tipo documento:&nbsp;</td>
         <td width="488">            
         <select name="Tic_Cod" id="Tic_Cod" onchange="if(this.value==4 || this.value==6 || this.value==7){document.getElementById('td_consumidor').className = 'oculta'}else{document.getElementById('td_consumidor').className = 'muestra'}" >
             <option value="" selected="selected">Seleccione...</option>       
-          	<option value="01" <? if($Tic_Cod=='01'){ echo "selected";}?>>&raquo; FACTURA</option>
-            <option value="07" <? if($Tic_Cod=='07'){ echo "selected";}?>>&raquo; COMPROBANTE DE RETENCI&Oacute;N</option>
-            <option value="04" <? if($Tic_Cod=='04'){ echo "selected";}?>>&raquo; NOTA DE CR&Eacute;DITO</option>   
-            <option value="06" <? if($Tic_Cod=='06'){ echo "selected";}?>>&raquo; GU&Iacute;A DE REMISI&Oacute;N</option>   
+          	<option value="01" <?php if($Tic_Cod=='01'){ echo "selected";}?>>&raquo; FACTURA</option>
+            <option value="07" <?php if($Tic_Cod=='07'){ echo "selected";}?>>&raquo; COMPROBANTE DE RETENCI&Oacute;N</option>
+            <option value="04" <?php if($Tic_Cod=='04'){ echo "selected";}?>>&raquo; NOTA DE CR&Eacute;DITO</option>   
+            <option value="06" <?php if($Tic_Cod=='06'){ echo "selected";}?>>&raquo; GU&Iacute;A DE REMISI&Oacute;N</option>   
         </select>        
         </td>
       </tr>
@@ -222,17 +222,17 @@ $total_datos=count($row_rs_datos);
 <LEGEND>
 <label class="Titulos2">Resultados de la busqueda</label>
 </LEGEND>
-    <?
+    <?php
     	$row_rs_datosCliente = $obBD_con1->getRowConsulta(2, $Ses_Usu_Cod, $obBD_conexion);	
 	?>
 	<table width="427" border="0" cellpadding="0" cellspacing="0">
     <tr>
       <td width="114" class="Etiqueta1">C&eacute;dula/R.U.C:</td>
-      <td width="313" >&nbsp;<? echo $row_rs_datosCliente['Prs_Ced'];?></td>
+      <td width="313" >&nbsp;<?php echo $row_rs_datosCliente['Prs_Ced'];?></td>
     </tr>
     <tr> 
       <td class="Etiqueta1">Cliente:</td>
-      <td >&nbsp;<? echo $row_rs_datosCliente['Prs_Ape'].' '.$row_rs_datosCliente['Prs_Nom'];?></td>
+      <td >&nbsp;<?php echo $row_rs_datosCliente['Prs_Ape'].' '.$row_rs_datosCliente['Prs_Nom'];?></td>
       </table>
     <table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader01">
     <thead>
@@ -292,7 +292,7 @@ $total_datos=count($row_rs_datos);
 			<td align="center" ><strong><?Php echo $NumCop; ?></strong></td>
 			<td align="center">&nbsp;<?Php echo $Clv_Acc; ?></td>
 			<td align="center">
-			<? if($Num_Aut!='' && $estado=='S')
+			<?php if($Num_Aut!='' && $estado=='S')
 			{ 
 				echo $Num_Aut;
 			}else{ 
@@ -300,7 +300,7 @@ $total_datos=count($row_rs_datos);
 			} 
 			?></td>
 			<td align="center">
-			<? if($Num_Aut!='' && $estado=='S')
+			<?php if($Num_Aut!='' && $estado=='S')
 			{ 
 				$fechaAut=substr($Num_Aut,0,8);
 				$f1=substr($fechaAut,0,2);
@@ -317,25 +317,25 @@ $total_datos=count($row_rs_datos);
 			    <input name="Vet_Cod" id="Vet_Cod" type="hidden" value="<?Php echo $datos['Vet_Cod'];?>">										
 			    <input name="Ret_Cod" id="Ret_Cod" type="hidden" value="<?Php echo $datos['Ret_Cod'];?>">
                 <input name="Gui_Cod" id="Gui_Cod" type="hidden" value="<?Php echo $datos['Gui_Cod'];?>">										
-			    <button type="button" class="btn btn-success btn-mini" title="Bajar XML" onclick="downloadURI('<? echo $Ses_Emp_Cod;?>','<? echo $Clv_Acc.'_A'?>')"><i class=" icon-download-alt icon-white"></i>
+			    <button type="button" class="btn btn-success btn-mini" title="Bajar XML" onclick="downloadURI('<?php echo $Ses_Emp_Cod;?>','<?php echo $Clv_Acc.'_A'?>')"><i class=" icon-download-alt icon-white"></i>
 			      </button>
 			    </form>
-			  <? }else{?>
-              	 <button type="button" disabled="disabled" class="btn btn-success btn-mini" title="Bajar XML" onclick="downloadURI('<? echo $Ses_Emp_Cod;?>','<? echo $Clv_Acc.'_A'?>')"><i class=" icon-download-alt icon-white"></i>
+			  <?php }else{?>
+              	 <button type="button" disabled="disabled" class="btn btn-success btn-mini" title="Bajar XML" onclick="downloadURI('<?php echo $Ses_Emp_Cod;?>','<?php echo $Clv_Acc.'_A'?>')"><i class=" icon-download-alt icon-white"></i>
 			      </button> 
-              <? }?>
+              <?php }?>
 			  </td>
 			<td align="center">			
 			  <?Php if($Num_Aut!='' && $estado=='S'){?>
 			  <form name="form3" id="form3" method="post" target="_new" action="<?php echo $url_pdf; ?>">				
-			    <input name="op" id="op" type="hidden" value="<? echo "I";?>"> 
-			    <input name="logoUrl" id="logoUrl" type="hidden" value="<? echo $Ses_Emp_Log;?>"> 
+			    <input name="op" id="op" type="hidden" value="<?php echo "I";?>"> 
+			    <input name="logoUrl" id="logoUrl" type="hidden" value="<?php echo $Ses_Emp_Log;?>"> 
 			    <input name="urlXml" id="urlXml" type="hidden" value="<?Php echo '../FRONT/'.$Ses_Emp_Cod."/".$Clv_Acc."_A.xml";?>">																				
 			    <button type="button" class="btn btn-primary btn-mini" title="Bajar PDF" onclick="this.form.submit()"><i class=" icon-download-alt icon-white"></i></button>
 			    </form>			
-			  <? }else{?>
+			  <?php }else{?>
               	<button type="button" disabled="disabled" class="btn btn-primary btn-mini" title="Bajar PDF" onclick="this.form.submit()"><i class=" icon-download-alt icon-white"></i></button>
-              <? }?>
+              <?php }?>
 			  </td>
 		  </tr>
 	  <?Php }//Fin del foreach

@@ -26,16 +26,16 @@ if (isset($bt_save))
 	}while($row_rs_etiquetas = mysqli_fetch_assoc($rs_etiquetas));
 	
 	$xml_identifica = "<".$identificacion[0].">".$row_rs_identifica['Emp_Ruc']."</".$identificacion[0].">".
-					"<".$identificacion[1].">".utf8_encode(strtoupper($row_rs_identifica['Emp_Nom']))."</".$identificacion[1].">".
-					"<".$identificacion[2].">".utf8_encode(strtoupper($row_rs_identifica['Suc_Dir']))."</".$identificacion[2].">".
-					"<".$identificacion[3].">".utf8_encode($row_rs_identifica['Suc_Te1'])."</".$identificacion[3].">".
-					"<".$identificacion[4].">".utf8_encode($row_rs_identifica['Suc_Fax'])."</".$identificacion[4].">".
-					"<".$identificacion[5].">".utf8_encode($row_rs_identifica['Suc_Cor'])."</".$identificacion[5].">".
+					"<".$identificacion[1].">".mb_convert_encoding(strtoupper($row_rs_identifica['Emp_Nom']), 'UTF-8', 'ISO-8859-1')."</".$identificacion[1].">".
+					"<".$identificacion[2].">".mb_convert_encoding(strtoupper($row_rs_identifica['Suc_Dir']), 'UTF-8', 'ISO-8859-1')."</".$identificacion[2].">".
+					"<".$identificacion[3].">".mb_convert_encoding($row_rs_identifica['Suc_Te1'], 'UTF-8', 'ISO-8859-1')."</".$identificacion[3].">".
+					"<".$identificacion[4].">".mb_convert_encoding($row_rs_identifica['Suc_Fax'], 'UTF-8', 'ISO-8859-1')."</".$identificacion[4].">".
+					"<".$identificacion[5].">".mb_convert_encoding($row_rs_identifica['Suc_Cor'], 'UTF-8', 'ISO-8859-1')."</".$identificacion[5].">".
 					"<".$identificacion[6].">".$row_rs_identifica['Emp_Rce']."</".$identificacion[6].">".
 					"<".$identificacion[7].">".$row_rs_identifica['Emp_Rep']."</".$identificacion[7].">".
-					"<".$identificacion[8].">".utf8_encode($row_rs_identifica['Emp_Rco'])."</".$identificacion[8].">".
-					"<".$identificacion[9].">".utf8_encode($anio)."</".$identificacion[9].">".
-					"<".$identificacion[10].">".utf8_encode($mes)."</".$identificacion[10].">";
+					"<".$identificacion[8].">".mb_convert_encoding($row_rs_identifica['Emp_Rco'], 'UTF-8', 'ISO-8859-1')."</".$identificacion[8].">".
+					"<".$identificacion[9].">".mb_convert_encoding($anio, 'UTF-8', 'ISO-8859-1')."</".$identificacion[9].">".
+					"<".$identificacion[10].">".mb_convert_encoding($mes, 'UTF-8', 'ISO-8859-1')."</".$identificacion[10].">";
 	
 	/* C O M P R A S*/
 	/* Cargado de etiquetas de nivel cero */

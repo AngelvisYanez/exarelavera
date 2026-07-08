@@ -28,10 +28,10 @@ if (isset($tipo_busc))
 						  <tr class="Busqueda_contenido_ajax">
 							<td width="20%"><div align="right"><strong>Descripci&oacute;n:</strong></div></td>
 							<td width="69%">
-							<input name="<?Php echo $Nombre_Buscador; ?>" type="text" id="<?Php echo $Nombre_Buscador; ?>" size="40" maxlength="40" style="text-transform:uppercase" onKeyPress="if (trim(document.getElementById('<?Php echo $Nombre_Buscador; ?>').value) != ''){ enter_ajax('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_buscador=<?Php echo $tipo_busc; ?>&Cja_Tra=<? echo $row_rs_reposicion['Cja_Tra'];?>&txtBusqueda='+document.getElementById('<?Php echo $Nombre_Buscador; ?>').value,'<?Php echo $Capa; ?>')}">
+							<input name="<?Php echo $Nombre_Buscador; ?>" type="text" id="<?Php echo $Nombre_Buscador; ?>" size="40" maxlength="40" style="text-transform:uppercase" onKeyPress="if (trim(document.getElementById('<?Php echo $Nombre_Buscador; ?>').value) != ''){ enter_ajax('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_buscador=<?Php echo $tipo_busc; ?>&Cja_Tra=<?php echo $row_rs_reposicion['Cja_Tra'];?>&txtBusqueda='+document.getElementById('<?Php echo $Nombre_Buscador; ?>').value,'<?Php echo $Capa; ?>')}">
 							</td>
 							<td width="11%" align="center">
-							<input name="btn_buscarcta" type="button" class="Boton_Buscar" id="btn_buscarcta" onClick="if (trim(document.getElementById('<?Php echo $Nombre_Buscador; ?>').value) != ''){ ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_buscador=<?Php echo $tipo_busc; ?>&Cja_Tra=<? echo $row_rs_reposicion['Cja_Tra'];?>&txtBusqueda='+document.getElementById('<?Php echo $Nombre_Buscador; ?>').value,'<?Php echo $Capa; ?>')}"	value="Buscar">
+							<input name="btn_buscarcta" type="button" class="Boton_Buscar" id="btn_buscarcta" onClick="if (trim(document.getElementById('<?Php echo $Nombre_Buscador; ?>').value) != ''){ ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_buscador=<?Php echo $tipo_busc; ?>&Cja_Tra=<?php echo $row_rs_reposicion['Cja_Tra'];?>&txtBusqueda='+document.getElementById('<?Php echo $Nombre_Buscador; ?>').value,'<?Php echo $Capa; ?>')}"	value="Buscar">
 							</td>
 						  </tr>
 						</tbody>

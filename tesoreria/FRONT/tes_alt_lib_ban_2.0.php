@@ -348,7 +348,7 @@ if(isset($save)){
                                 <select class="form-control input-xs"  name="Tia_Cod"  class="isSelectMenu" required>
                                     <option value="">Seleccione...</option>
                                         <?Php $row_rs_tipo_asien3 = $obBD_con1->getArrayConsulta(373, "*D", $obBD_conexion);
-                                        foreach ($row_rs_tipo_asien3 as $row)  echo "<option value='{$row['Tia_Cod']}'>" . utf8_encode($row['Tia_Des']) . "</option>";?>
+                                        foreach ($row_rs_tipo_asien3 as $row)  echo "<option value='{$row['Tia_Cod']}'>" . mb_convert_encoding($row['Tia_Des'], 'UTF-8', 'ISO-8859-1') . "</option>";?>
                                 </select>
                             </div>
                         </div>

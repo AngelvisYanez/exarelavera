@@ -84,7 +84,7 @@ td[Attributes Style] {
         </tr>
         <tr>
           <td width="11%" height="25" align="right" valign="middle">&nbsp;</td>
-          <td colspan="2" valign="middle"><? if ($row_rs_representante['Cli_Fac'] != "")
+          <td colspan="2" valign="middle"><?php if ($row_rs_representante['Cli_Fac'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Fac'];  
 			}
@@ -93,7 +93,7 @@ td[Attributes Style] {
           </tr>
         <tr>
           <td height="25">&nbsp;</td>
-          <td colspan="2"><? if ($row_rs_representante['Cli_Dir'] != "")
+          <td colspan="2"><?php if ($row_rs_representante['Cli_Dir'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Dir']; 
 			}
@@ -104,7 +104,7 @@ td[Attributes Style] {
           </tr>
         <tr>
           <td height="25">&nbsp;</td>
-          <td width="38%"><? if ($row_rs_representante['Cli_Fac'] != "")
+          <td width="38%"><?php if ($row_rs_representante['Cli_Fac'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Ruf']; 
 			}
@@ -114,7 +114,7 @@ td[Attributes Style] {
 			} ?></td>
           <td width="51%" align="right" valign="bottom"><table width="32%" height="19" border="0" cellpadding="0" cellspacing="0" class="Letra_punto_venta_2">
             <tr>
-              <td width="42%" align="center" valign="top">&nbsp;<? echo $dia." / ".$mes." / ".$anio;?>&nbsp;</td>
+              <td width="42%" align="center" valign="top">&nbsp;<?php echo $dia." / ".$mes." / ".$anio;?>&nbsp;</td>
               </tr>
           </table></td>
           </tr>
@@ -141,7 +141,7 @@ td[Attributes Style] {
                 <td align="center">&nbsp;<!--PVP--></td>
                 <td align="center">&nbsp;<!--Total--></td>
               </tr>
-              <? do{?>
+              <?php do{?>
               <tr>
                 <td width="60" align="left"><div align="left"><?Php echo $row_rs_cliente['Vet_Can']?></div></td>
                 <td width="507"><div align="left">&nbsp;<?Php echo $row_rs_cliente['Ite_Lar'].' '.$row_rs_cliente['Pro_Obs']?></div></td>

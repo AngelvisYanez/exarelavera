@@ -63,7 +63,7 @@ if (isset($txt_bus)){
     	<td>
            <table width="80%" border="0" cellpadding="0" cellspacing="0" align="center">
                 <tr align="center">
-                  <td colspan="4" ><? $obBD_con1->cabeceraReporteStandar($Ses_Suc_Cod,$Titulo,$Subtitulo,$obBD_conexion)?></td>
+                  <td colspan="4" ><?php $obBD_con1->cabeceraReporteStandar($Ses_Suc_Cod,$Titulo,$Subtitulo,$obBD_conexion)?></td>
                 </tr>
            </table>  
       </td>
@@ -107,9 +107,9 @@ if (isset($txt_bus)){
 				foreach($rs_camp as $row_rs_camp){
 				?>
 					<td class="Texto_Reporte" width="9%">
-					<? echo $row_rs_camp['Cam_Cor']; $td +=1; ?>
+					<?php echo $row_rs_camp['Cam_Cor']; $td +=1; ?>
                     </td>
-			   <? }//if($total_rs_camp > 0){
+			   <?php }//if($total_rs_camp > 0){
 			}?>         
           	<td class="Texto_Reporte" width="8%">Estado</td>
           </tr>
@@ -132,7 +132,7 @@ if (isset($txt_bus)){
 					<td  class="LetraNegra" align="center" >
 						<?Php echo $rs_val_Camp['Act_Val'] ?>                
 					</td>
-					<?
+					<?php
 				}
 		 	 }
 		  ?>         
@@ -157,9 +157,9 @@ if (isset($txt_bus)){
 			?>          
            	<td  class="LetraNegra">&nbsp;</td>
         </tr>
-      <? } // fin del if ($total_rs_buscar > 0)?>
+      <?php } // fin del if ($total_rs_buscar > 0)?>
 	</table>                       	     
-<?	
+<?php	
 	}// fin de if(isset($txt_busqueda_pri))
 ?>	
 </body>

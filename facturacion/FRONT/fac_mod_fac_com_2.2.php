@@ -262,7 +262,7 @@ if (isset($ajax_cuenta))
 		$codigo=0;
 	}	
 	if(isset($cuenta))
-	{	$return_value = '<?xml version="1.0" standalone="yes"?><cuenta><descripcion>'.utf8_encode($cuenta).'</descripcion><codigo>'.$codigo.'</codigo></cuenta>';  	
+	{	$return_value = '<?xml version="1.0" standalone="yes"?><cuenta><descripcion>'.mb_convert_encoding($cuenta, 'UTF-8', 'ISO-8859-1').'</descripcion><codigo>'.$codigo.'</codigo></cuenta>';  	
 	}
 	header('Content-Type: text/xml'); 
 	echo $return_value;
@@ -1225,11 +1225,11 @@ if(isset($txt_busqueda) && !isset($hdd_mod))
 		 }
 		?>
 	   <form method="post" name="pasar" action="<?Php echo $_SERVER['PHP_SELF']; ?>">
-	     <tr <? //echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo");?>>
+	     <tr <?php //echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo");?>>
 	       <td width="6%" align="center">
-	         <FONT COLOR="<? echo $rojo;?>"><?Php  $Cop_Cod_Int=$row_rs_buscar['Cop_Cod']; echo $Cop_Cod_Int; ?></FONT>
+	         <FONT COLOR="<?php echo $rojo;?>"><?Php  $Cop_Cod_Int=$row_rs_buscar['Cop_Cod']; echo $Cop_Cod_Int; ?></FONT>
 	         </td>
-	       <td width="5%" align="center"><FONT COLOR="<? echo $rojo;?>">
+	       <td width="5%" align="center"><FONT COLOR="<?php echo $rojo;?>">
 	         <?Php 
 		/**
 		* Consultar si la factura se registro de forma autom�tica y tiene un comprobante contable
@@ -1242,24 +1242,24 @@ if(isset($txt_busqueda) && !isset($hdd_mod))
 			echo "No";																
 		?>
 	         </FONT></td>
-	       <td width="8%" align="left"><font color="<? echo $rojo;?>"><?
+	       <td width="8%" align="left"><font color="<?php echo $rojo;?>"><?php
            $rs_formaPago=$obBD_con1->getRowConsulta(362, $row_rs_buscar['Cop_Cod'], $obBD_conexion);
 		   if (count($rs_formaPago)>0)
 		   		echo "Cr&eacute;dito";
 		   else
 		   		echo "Contado";
 		   ?></FONT></td>
-	       <td width="15%" align="center" style="white-space: nowrap; overflow: hidden;"><font color="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Tic_Des']; ?></font></td>
+	       <td width="15%" align="center" style="white-space: nowrap; overflow: hidden;"><font color="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Tic_Des']; ?></font></td>
 	       <td width="11%" align="center">
-	         <FONT COLOR="<? echo $rojo;?>"><?Php  $Num_Fac=$row_rs_buscar['Cop_Num']; echo $Num_Fac; ?></FONT>
+	         <FONT COLOR="<?php echo $rojo;?>"><?Php  $Num_Fac=$row_rs_buscar['Cop_Num']; echo $Num_Fac; ?></FONT>
 	         </td>
 	       <td width="8%" align="center">
-	         <FONT COLOR="<? echo $rojo;?>"><?Php  $Fec_Com=$row_rs_buscar['Cop_Fec']; echo $Fec_Com; ?></FONT>
+	         <FONT COLOR="<?php echo $rojo;?>"><?Php  $Fec_Com=$row_rs_buscar['Cop_Fec']; echo $Fec_Com; ?></FONT>
 	         </td>	
 	       <td align="center">
-	         <FONT COLOR="<? echo $rojo;?>"><div align="left"><?Php echo marcar_cadena($txt_busqueda,$row_rs_buscar['Prs_Ape']." ".$row_rs_buscar['Prs_Nom'], '#FFFF00', 1); ?></div></FONT>
+	         <FONT COLOR="<?php echo $rojo;?>"><div align="left"><?Php echo marcar_cadena($txt_busqueda,$row_rs_buscar['Prs_Ape']." ".$row_rs_buscar['Prs_Nom'], '#FFFF00', 1); ?></div></FONT>
 	         </td>
-	       <td width="2%" align="center"><button type="button" class="btn btn-info btn-mini" title="Detalle del registro" onClick="multiple_capa('<? echo $_SERVER['PHP_SELF']; ?>',700,400,'bgtransparent2','bgmodal2','Detalle Documento','mostrar'); /*Muestra_Aparecer();*/ ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_info=1&amp;com_codigo=<? echo $row_rs_buscar['Cop_Cod'];?>&amp;Ses_Emp_Cod=<? echo $Ses_Emp_Cod;?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>
+	       <td width="2%" align="center"><button type="button" class="btn btn-info btn-mini" title="Detalle del registro" onClick="multiple_capa('<?php echo $_SERVER['PHP_SELF']; ?>',700,400,'bgtransparent2','bgmodal2','Detalle Documento','mostrar'); /*Muestra_Aparecer();*/ ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_info=1&amp;com_codigo=<?php echo $row_rs_buscar['Cop_Cod'];?>&amp;Ses_Emp_Cod=<?php echo $Ses_Emp_Cod;?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>
   <td width="5%" align="center">
     <?Php 
 	$num_row_rs_existe_pagos=0;
@@ -1293,10 +1293,10 @@ if(isset($txt_busqueda) && !isset($hdd_mod))
 					else 
 					{ echo "&nbsp;"; } 
 			  }else{ $existe_pagos++;
-			 ?><img src="../../mascaras/model1/imagenes/32x32/fac_ele.jpg" title="Posee Retenci&oacute;n electr&oacute;nica Autorizada" width="22" height="22"><?  
+			 ?><img src="../../mascaras/model1/imagenes/32x32/fac_ele.jpg" title="Posee Retenci&oacute;n electr&oacute;nica Autorizada" width="22" height="22"><?php  
 			  }
 	   }else{ $existe_pagos++;
-		   ?><img src="../../mascaras/model1/imagenes/32x32/caja_chica.jpg" title="Posee reposici&oacute;n de Caja Chica" width="22" height="22"><?
+		   ?><img src="../../mascaras/model1/imagenes/32x32/caja_chica.jpg" title="Posee reposici&oacute;n de Caja Chica" width="22" height="22"><?php
 	   } // fin del if ($tot_rs_recibo != 0)
 	}
 	else
@@ -1409,7 +1409,7 @@ if($existe_pagos>0){ /* inicio if($existe_pagos>0){  */ ?>
   <tr>
     <td width="15%" class="Etiqueta1" span>C&eacute;dula: </td>
     <td class="LetraNegra">&nbsp;<span id="CliRuc"><?Php echo $rs_proveed[0]['Prs_Ced'] ?></span>
-      <button type="button" name="button1e" id="button1e" class="btn btn-mini btn-success fileinput-button" title="Cambiar Cliente" onClick=" multiple_capa('<? $_SERVER['PHP_SELF']; ?>',600,300,'bgtransparent2','bgmodal2','Busqueda de Proveedor','ajax_modal2');  ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_cliente=1&Vet_Cod=<?php echo $rs_proveed[0]['Cop_Cod']; ?>','ajax_modal2');">
+      <button type="button" name="button1e" id="button1e" class="btn btn-mini btn-success fileinput-button" title="Cambiar Cliente" onClick=" multiple_capa('<?php $_SERVER['PHP_SELF']; ?>',600,300,'bgtransparent2','bgmodal2','Busqueda de Proveedor','ajax_modal2');  ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_cliente=1&Vet_Cod=<?php echo $rs_proveed[0]['Cop_Cod']; ?>','ajax_modal2');">
                         <i class="icon-edit icon-white"></i>                        
                  </button> 
     </td>
@@ -1732,8 +1732,8 @@ if($existe_pagos>0){ /* inicio if($existe_pagos>0){  */ ?>
         <td width="120" class="LetraNegra">
     
   <input size="5"   name="datos[<?Php echo $fila; ?>,16]" type="hidden"
- id="datos[<?Php echo $fila; ?>,16]" value="<? echo $row_rs_proveed['Adq_Cod']; ?>"   > 
- <input type="text"   name="datos[<?Php echo $fila; ?>,12]" id="datos[<?Php echo $fila; ?>,12]" size="1" readonly="readonly"  value="<? echo $row_rs_proveed['Adq_Cor']; ?>" />
+ id="datos[<?Php echo $fila; ?>,16]" value="<?php echo $row_rs_proveed['Adq_Cod']; ?>"   > 
+ <input type="text"   name="datos[<?Php echo $fila; ?>,12]" id="datos[<?Php echo $fila; ?>,12]" size="1" readonly="readonly"  value="<?php echo $row_rs_proveed['Adq_Cor']; ?>" />
  
  </td>
         <td width="120" align="left" class="LetraNegra">
@@ -1827,7 +1827,7 @@ value="<?Php echo $row_rs_proveed['Cop_Int']?>" size="3" maxlength="10" ></td>
       </tr>
        <?Php 
 	}//while ($row_rs_proveed = $obBD_con1->fetch_assoc($rs_proveed));?>
-    <? 
+    <?php 
 	/*  Retorno los calculos de las facturas */	
 	$cadena= $obBD_con1->calculosCompraIce($codigo, $obBD_conexion);
 	$resultados = explode('*',$cadena);
@@ -1979,7 +1979,7 @@ value="<?Php echo $row_rs_proveed['Cop_Int']?>" size="3" maxlength="10" ></td>
 		<td height="24" class="LetraNegra">&nbsp;</td>
       	<td colspan="2" class="Etiqueta1" align="right">TOTAL:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </td>
       <td align="right" class="LetraNegra"><input name="t_rubros" type="text" align="right" id="t_rubros" size="8" maxlength="8" readonly="true" 
-	  value="<?php echo round($resultados[5],2); ?>" style="text-align:right"></td><td class="LetraNegra">&nbsp;</td><td class="LetraNegra"><input id="nfilas" name="nfilas" type="hidden" value="<? echo $fila; ?>"></td><td class="LetraNegra">&nbsp;</td>
+	  value="<?php echo round($resultados[5],2); ?>" style="text-align:right"></td><td class="LetraNegra">&nbsp;</td><td class="LetraNegra"><input id="nfilas" name="nfilas" type="hidden" value="<?php echo $fila; ?>"></td><td class="LetraNegra">&nbsp;</td>
       <td class="LetraNegra">&nbsp;</td><td class="LetraNegra">&nbsp;</td><td class="LetraNegra">&nbsp;</td><td class="LetraNegra">&nbsp;</td><td class="LetraNegra">&nbsp;</td><td class="LetraNegra">&nbsp;</td>   <td class="LetraNegra">&nbsp;</td>
       <td class="LetraNegra">&nbsp;</td>
       <td class="LetraNegra">&nbsp;</td>
@@ -1995,7 +1995,7 @@ value="<?Php echo $row_rs_proveed['Cop_Int']?>" size="3" maxlength="10" ></td>
 		<table width="136" border="0" cellpadding="1" cellspacing="5">
 	  <tr>
 	    <td align="left">
-		<button type="button" class="btn btn-success fileinput-button" title="Agregar producto" onClick=" multiple_capa('<? $_SERVER['PHP_SELF']; ?>',600,300,'cont_fon_prod','cont_cua_prod','Busqueda de Producto','cont_tit_prod')
+		<button type="button" class="btn btn-success fileinput-button" title="Agregar producto" onClick=" multiple_capa('<?php $_SERVER['PHP_SELF']; ?>',600,300,'cont_fon_prod','cont_cua_prod','Busqueda de Producto','cont_tit_prod')
         
         document.getElementById('Tbl_Cuentas').className = 'oculta'; document.getElementById('Tbl_Rentas').className = 'oculta'; 
         
@@ -2089,23 +2089,23 @@ value="<?Php echo $row_rs_proveed['Cop_Int']?>" size="3" maxlength="10" ></td>
         <tr>
           <td width="12%" align="right"><span class="Asterisco">* </span>Pago SRI:</td>
           <td width="88%" align="left">
-		  <? 
+		  <?php 
             $row_rs_TipoPagoCom = $obBD_con1->getArrayConsulta(1047,'', $obBD_conexion); 
         ?>
             <select name="TipoPag" id="TipoPag"  onchange="document.getElementById('hdd_TipoSri').value=this.value">
               <option value="">Seleccione...</option>
               <?Php foreach($row_rs_TipoPagoCom as $row_rs_TipoPago)
           	  { ?>
-              <option value="<?Php echo $row_rs_TipoPago['Tpc_Cod'];?>" <? if($rs_proveed[0]['Tpc_Cod']==$row_rs_TipoPago['Tpc_Cod']){echo 'selected';}?>><?Php echo $row_rs_TipoPago['Tpc_Sri']."  -  ".$row_rs_TipoPago['Tpc_Des'];?></option>
-              <? }?>
+              <option value="<?Php echo $row_rs_TipoPago['Tpc_Cod'];?>" <?php if($rs_proveed[0]['Tpc_Cod']==$row_rs_TipoPago['Tpc_Cod']){echo 'selected';}?>><?Php echo $row_rs_TipoPago['Tpc_Sri']."  -  ".$row_rs_TipoPago['Tpc_Des'];?></option>
+              <?php }?>
             </select>
             </td>
         </tr>
       </table>
     </div>
-    <? if(round($resultados[5],2)<100){?>	
+    <?php if(round($resultados[5],2)<100){?>	
 		<script language="javascript">document.getElementById('pagoSri').style.display='none'; </script>
-    <? }?>    
+    <?php }?>    
     </td>
     </tr>
   <tr>
@@ -2120,7 +2120,7 @@ value="<?Php echo $row_rs_proveed['Cop_Int']?>" size="3" maxlength="10" ></td>
       <?Php } while($row_rs_pago=$obBD_con1->fetch_assoc($rs_pago));  ?>
     </select>
     <input name="For_Cod" id="For_Cod" value="<?Php echo $FCod; ?>" type="hidden" >
-	<input type="hidden" id="hdd_TipoSri" name="hdd_TipoSri" value="<? echo $Tpc_Cod;?>" /></td> 
+	<input type="hidden" id="hdd_TipoSri" name="hdd_TipoSri" value="<?php echo $Tpc_Cod;?>" /></td> 
 	<td width="72%" class="LetraNegra">
 	<?Php if($FCod==2){ /* inicio if($For_Cod==1){  */ ?>
 	 <?Php	/* Consulto el c�digo del detalle de la cuenta perteneciente al comprobante de compra */
@@ -2192,27 +2192,27 @@ value="<?Php echo $row_rs_proveed['Cop_Int']?>" size="3" maxlength="10" ></td>
       <tr>
         <td width="28%" align="right"><span class="Etiqueta1">Cod. documento:</span></td>
         <td width="4%" align="left">
-          <input name="Cop_Ntd" type="text" id="Cop_Ntd" size="3" maxlength="5" value="<? echo $Cop_Ntd;?>" onBlur="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_CodDoc=1&Tic_Sri=' + this.value,'div_CodDoc');"/>
+          <input name="Cop_Ntd" type="text" id="Cop_Ntd" size="3" maxlength="5" value="<?php echo $Cop_Ntd;?>" onBlur="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_CodDoc=1&Tic_Sri=' + this.value,'div_CodDoc');"/>
         </td>
         <td width="68%" colspan="2" class="Alertas"><em><div id="div_CodDoc"></div></em></td>
         </tr>
       <tr>
         <td width="28%" align="right"><span class="Etiqueta1">Num. Secuencia:</span></td>
         <td colspan="3" align="left">       
-          <input name="Cop_Nns" type="text" id="Cop_Nns" value="<? echo $Cop_Nns;?>" size="15" maxlength="20" />
+          <input name="Cop_Nns" type="text" id="Cop_Nns" value="<?php echo $Cop_Nns;?>" size="15" maxlength="20" />
         </td>
         </tr>
       <tr>
         <td width="28%" align="right"><span class="Etiqueta1">Num. Autorizaci&oacute;n:</span></td>
         <td colspan="3" align="left"><span class="LetraNegra">
-          <input name="Cop_Nna" type="text" id="Cop_Nna"  size="38" value="<? echo $Cop_Nna;?>" maxlength="49" />
+          <input name="Cop_Nna" type="text" id="Cop_Nna"  size="38" value="<?php echo $Cop_Nna;?>" maxlength="49" />
         </span></td>
         </tr>
     </table>    
 	<script language="javascript">
-		<? if($TicCod!=4 && $TicCod!=5){?>
+		<?php if($TicCod!=4 && $TicCod!=5){?>
 			ShowHide('NotasCredito');		  
-		<? }?>
+		<?php }?>
 	</script>
   </FIELDSET>         
 <FIELDSET>
@@ -2292,7 +2292,7 @@ value="<?Php echo $row_rs_proveed['Cop_Int']?>" size="3" maxlength="10" ></td>
 <table width="100%" border="0" cellspacing="0" cellpadding="0">
 <tr>
         <td width="27%" class="Etiqueta1">Autorizaci&oacute;n:</td>
-        <td class="LetraNegra">&nbsp;<font color="<? echo $rojo;?>"><?Php if($num_autorizacion_sri!=0){echo $row_autorizacion_sri['Aut_Sri'];}else{echo "�No se ha detectado Autorizaci&oacute;n para generar Retenciones!";} ?></font></td>
+        <td class="LetraNegra">&nbsp;<font color="<?php echo $rojo;?>"><?Php if($num_autorizacion_sri!=0){echo $row_autorizacion_sri['Aut_Sri'];}else{echo "�No se ha detectado Autorizaci&oacute;n para generar Retenciones!";} ?></font></td>
 </tr>
 </table>
 <?Php include('../COMPONENTES/tesComModNumRet.php');?>
@@ -2368,9 +2368,9 @@ value="<?Php echo $row_rs_proveed['Cop_Int']?>" size="3" maxlength="10" ></td>
   if($cuenta_renta==0 && $num_row_rs_retencion_modificar>0 ) /* inicio if($cuenta_renta==0)  */
   { echo error_alerta("La compra no puede ser modificada por que se encuentra registrada con el formato anterior.",2);}/* Fin if($cuenta_renta==0) */
 ?>
-         <? if($llevarContabilidad['Cof_Con']=='S'){?>
+         <?php if($llevarContabilidad['Cof_Con']=='S'){?>
 <?Php if($For_Cod==1)include('../COMPONENTES/tesComChequesCompra_1.0.php'); ?>
-<? }?><br/>
+<?php }?><br/>
  <table width="215" border="0" cellpadding="0" cellspacing="0" class="Azul">     
  <tr>
  <td width="48%">
@@ -2384,7 +2384,7 @@ value="<?Php echo $row_rs_proveed['Cop_Int']?>" size="3" maxlength="10" ></td>
  <td width="52%" height="23">
   
    <input name="hdd_save" type="hidden" id="hdd_save" value="insertar">   
-<input name="confi_fact" type="hidden" id="confi_fact" value="<? echo $llevarContabilidad['Cof_Con']?>" />
+<input name="confi_fact" type="hidden" id="confi_fact" value="<?php echo $llevarContabilidad['Cof_Con']?>" />
 <button name="btn_guardar" type="button" class="btn btn-primary start" id= "btn_guardar" 
    title= "Actualizar" onClick="if(document.getElementById('t_rubros').value<1000 ){validar_facturacion_compra(this.form);}else{if(document.getElementById('hdd_TipoSri').value!=''){validar_facturacion_compra(this.form);}else{alert('�Falta escoger Pago SRI!'); document.getElementById('TipoPag').focus();}}"  value="Actualizar" <?Php if($cuenta_renta==0 && $num_row_rs_retencion_modificar>0){ ?> disabled="disabled"  <?Php } ?> ><i class="icon-book icon-white"></i>
 	          <span>Guardar</span>
@@ -2397,7 +2397,7 @@ value="<?Php echo $row_rs_proveed['Cop_Int']?>" size="3" maxlength="10" ></td>
  </form>
      <table width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
-                    <td align="center"><? if(($Ses_Dat_Dis=='exa' || $Ses_Dat_Dis=='aaa')&& !isset($hdd_volver)  && isset($hdd_save)){echo "<br><span class='Texto_grande' style='color:blue;'>".mes($mese[1],1)."</span><br><span class='Texto_grande' style='color:teal;'><b style='color:darkgoldenrod;'>Sec:</b> ".$Cop_Sec.'</span><br><span class="Texto_grande"><b style="color: darkgoldenrod;">Cod:</b> '.$Cop_Cod."</span>";}?></td>
+                    <td align="center"><?php if(($Ses_Dat_Dis=='exa' || $Ses_Dat_Dis=='aaa')&& !isset($hdd_volver)  && isset($hdd_save)){echo "<br><span class='Texto_grande' style='color:blue;'>".mes($mese[1],1)."</span><br><span class='Texto_grande' style='color:teal;'><b style='color:darkgoldenrod;'>Sec:</b> ".$Cop_Sec.'</span><br><span class="Texto_grande"><b style="color: darkgoldenrod;">Cod:</b> '.$Cop_Cod."</span>";}?></td>
                 </tr>
                 </table>   
  <?Php

@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?	
+<?php	
 /**
 * Descripción: Permite anular facturas de compra, retenciones, el comprobante de egreso/diario y los cheques
 * Fecha de actualización:	2012-09-08  
@@ -238,13 +238,13 @@ if(isset($hdd_Pec_Cod))
 				?>         
 		  	<form name="form1" method="post" action="<?Php echo $_SERVER['PHP_SELF']?>"> 
             <tr>            
-		  		<td align="center"><FONT COLOR="<? echo $rojo;?>">
+		  		<td align="center"><FONT COLOR="<?php echo $rojo;?>">
 	  			  <?Php $Cop_Cod=$row_rs_buscar['Cop_Cod']; echo $Cop_Cod; ?>
 	  			  </FONT></td>
-	    		<td align="center"><font color="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Tic_Des']; ?></font></td>
-			    <td align="center"><FONT COLOR="<? echo $rojo;?>">
+	    		<td align="center"><font color="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Tic_Des']; ?></font></td>
+			    <td align="center"><FONT COLOR="<?php echo $rojo;?>">
 				<?Php  $Num_Fac=$row_rs_buscar['Cop_Num']; echo $Num_Fac; ?></FONT></td>
-				<td align="center"><FONT COLOR="<? echo $rojo;?>">
+				<td align="center"><FONT COLOR="<?php echo $rojo;?>">
 			  <?Php
     			/**
 				* Consulto el codigo de la retencion a modificar 
@@ -252,17 +252,17 @@ if(isset($hdd_Pec_Cod))
 				$row_rs_retencion_modificar=$obBD_con1->getRowConsulta(373, $row_rs_buscar['Cop_Cod'], $obBD_conexion);
 			     echo $row_rs_retencion_modificar['Ret_Num'];
 				?></FONT></td>
-				<td align="center"><FONT COLOR="<? echo $rojo;?>">
+				<td align="center"><FONT COLOR="<?php echo $rojo;?>">
 				<?Php 
 				/**
 				* Consultar el código del comprobante 
 				*/
 				$row_numero_comprobante=$obBD_con1->getRowConsulta(366, $row_rs_buscar['Cop_Cod'], $obBD_conexion);				
 				echo $row_numero_comprobante['Com_Num']; ?></FONT></td>
-				<td align="center"><FONT COLOR="<? echo $rojo;?>">
+				<td align="center"><FONT COLOR="<?php echo $rojo;?>">
 				<?Php  $Fec_Com=$row_rs_buscar['Cop_Fec']; echo $Fec_Com; ?></FONT></td>
-				<td align="left"><FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Prs_Ape'].' '.$row_rs_buscar['Prs_Nom']; ?></FONT></td>
-				<td align="center"><button type="button" class="btn btn-success btn-info" title="Detalle del registro" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_info=1&com_codigo=<? echo $row_rs_buscar['Cop_Cod'];?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>				
+				<td align="left"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Prs_Ape'].' '.$row_rs_buscar['Prs_Nom']; ?></FONT></td>
+				<td align="center"><button type="button" class="btn btn-success btn-info" title="Detalle del registro" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_info=1&com_codigo=<?php echo $row_rs_buscar['Cop_Cod'];?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>				
                 <td align="center">
                 
 				  <?Php 
@@ -301,7 +301,7 @@ if(isset($hdd_Pec_Cod))
 					  <img src="../../mascaras/model1/imagenes/finance_thumb_sm.png" title="La compra mantiene pagos asociados, para anular esta compra primero anule el pago asociado">	
 					  <?php	}
 					}else{ $existe_pagos++;
-		   				?><img src="../../mascaras/model1/imagenes/32x32/caja_chica.jpg" title="Posee reposici&oacute;n de Caja Chica" width="22" height="22"><?						
+		   				?><img src="../../mascaras/model1/imagenes/32x32/caja_chica.jpg" title="Posee reposici&oacute;n de Caja Chica" width="22" height="22"><?php						
 					}
 				}
 				else
@@ -352,7 +352,7 @@ if ($anulada > 0)
 }//Fin del if ($anulada > 0)
 ?>
 <br/>
-<? require_once('../../componentes/FRONT/com_con_leyenda.php');?>  
+<?php require_once('../../componentes/FRONT/com_con_leyenda.php');?>  
 <br>  
 <?Php 
 /**

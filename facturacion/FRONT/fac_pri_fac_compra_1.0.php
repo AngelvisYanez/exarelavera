@@ -1,4 +1,4 @@
-<?	
+<?php	
 /*
 * Descripción: Reporte de la opción Totales de documentos de compra
 * Fecha de actualización: 2012-09-16
@@ -234,24 +234,24 @@ $rs_sustento = $obBD_con1->getArrayConsulta(711, '', $obBD_conexion);
                       { $rojo='#FF0000'; $anulada++; }else{$rojo='';}		
                     ?>
     <tr class="Texto_Reporte">
-      <td align="center"><FONT COLOR="<? echo $rojo;?>"><?php echo $fila; ?></FONT></td>
-      <td align="center"><FONT COLOR="<? echo $rojo;?>">
+      <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php echo $fila; ?></FONT></td>
+      <td align="center"><FONT COLOR="<?php echo $rojo;?>">
         <?php $Cop_Cod=$row_rs_buscar['Cop_Cod']; echo $Cop_Cod; ?>
         </FONT></td>
-      <td align="center"><FONT COLOR="<? echo $rojo;?>"><?PHP echo $row_rs_buscar['Tic_Des']; ?></FONT></td>
-      <td align="center"><FONT COLOR="<? echo $rojo;?>">
+      <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?PHP echo $row_rs_buscar['Tic_Des']; ?></FONT></td>
+      <td align="center"><FONT COLOR="<?php echo $rojo;?>">
         <?php $Num_Fac=$row_rs_buscar['Cop_Num']; echo $Num_Fac; ?>
         </FONT></td>
-      <td align="center"><FONT COLOR="<? echo $rojo;?>">
+      <td align="center"><FONT COLOR="<?php echo $rojo;?>">
         <?php $Cop_Aut=$row_rs_buscar['Cop_Aut'];  echo substr($Cop_Aut,0,18)."<br>".substr($Cop_Aut,18,strlen($Cop_Aut)); ?>
         </FONT></td>
-      <td align="center"><FONT COLOR="<? echo $rojo;?>">
+      <td align="center"><FONT COLOR="<?php echo $rojo;?>">
         <?php $Fec_Com=$row_rs_buscar['Cop_Fec'];  echo $Fec_Com; ?>
         </FONT></td>
-      <td align="center"><FONT COLOR="<? echo $rojo;?>">
+      <td align="center"><FONT COLOR="<?php echo $rojo;?>">
         <?PHP $Prs_Ced= $row_rs_buscar['Prs_Ced']; echo $Prs_Ced; ?>
         </FONT></td>
-      <td colspan="3" align="center"><FONT COLOR="<? echo $rojo;?>"><?PHP echo $row_rs_buscar['Prs_Ape'].'&nbsp'.$row_rs_buscar['Prs_Nom']; ?></FONT></td>
+      <td colspan="3" align="center"><FONT COLOR="<?php echo $rojo;?>"><?PHP echo $row_rs_buscar['Prs_Ape'].'&nbsp'.$row_rs_buscar['Prs_Nom']; ?></FONT></td>
       <?php 			
                     if(count($rs_adquisio) > 0)
                     { 
@@ -270,7 +270,7 @@ $rs_sustento = $obBD_con1->getArrayConsulta(711, '', $obBD_conexion);
                             * $iva_codigo[0] representa el %0
                             */
                         ?>
-      <td align="right"><FONT COLOR="<? echo $rojo;?>">
+      <td align="right"><FONT COLOR="<?php echo $rojo;?>">
         <?php  
                         $row_importe_comp = $obBD_con1->getRowConsulta(323, $row_rs_buscar['Cop_Cod'].'*'.$row_rs_adquisio['Adq_Cod'].'*'.$iva_codigo[0], $obBD_conexion); 		
                        if ($row_importe_comp['Iva_Por']==0)
@@ -300,7 +300,7 @@ $rs_sustento = $obBD_con1->getArrayConsulta(711, '', $obBD_conexion);
                         */
                         ?>
       </FONT></td>
-      <td align="right"><FONT COLOR="<? echo $rojo;?>">
+      <td align="right"><FONT COLOR="<?php echo $rojo;?>">
         <?php	
                         $row_importe_comp = $obBD_con1->getRowConsulta(323, $row_rs_buscar['Cop_Cod'].'*'.$row_rs_adquisio['Adq_Cod'].'*'.$iva_codigo[1], $obBD_conexion); 
                          if ($row_importe_comp['Iva_Por']!=0)
@@ -355,7 +355,7 @@ $rs_sustento = $obBD_con1->getArrayConsulta(711, '', $obBD_conexion);
                     echo "&nbsp"; 
                 } ?>
         </FONT></td>
-      <td align="right"><FONT COLOR="<? echo $rojo;?>"><?php echo $resultados[5];
+      <td align="right"><FONT COLOR="<?php echo $rojo;?>"><?php echo $resultados[5];
                         /**
                         * Acumulo en tot_fac el total de las facturas de compras 
                         */		
@@ -502,38 +502,38 @@ else
 			  { $rojo='#FF0000'; $anulada++; }else{$rojo='';}		
 			?>
     <tr class="Texto_Reporte">
-      <td align="center"><FONT COLOR="<? echo $rojo;?>"><?php echo $fila; ?></FONT></td>
-      <td align="center"><FONT COLOR="<? echo $rojo;?>">
+      <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php echo $fila; ?></FONT></td>
+      <td align="center"><FONT COLOR="<?php echo $rojo;?>">
         <?php $Cop_Cod=$row_rs_buscar['Cop_Cod']; echo $Cop_Cod; ?>
         </FONT></td>
-      <td align="center"><FONT COLOR="<? echo $rojo;?>"><?PHP echo $row_rs_buscar['Tic_Des']; ?></FONT></td>
-      <td align="center"><FONT COLOR="<? echo $rojo;?>">
+      <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?PHP echo $row_rs_buscar['Tic_Des']; ?></FONT></td>
+      <td align="center"><FONT COLOR="<?php echo $rojo;?>">
         <?php $Num_Fac=$row_rs_buscar['Cop_Num']; echo $Num_Fac; ?>
         </FONT></td>
-      <td align="center"><FONT COLOR="<? echo $rojo;?>">
+      <td align="center"><FONT COLOR="<?php echo $rojo;?>">
         <?php $Cop_Aut=$row_rs_buscar['Cop_Aut'];  echo $Cop_Aut; ?>
         </FONT></td>
-      <td align="center"><FONT COLOR="<? echo $rojo;?>">
+      <td align="center"><FONT COLOR="<?php echo $rojo;?>">
         <?php $Fec_Com=$row_rs_buscar['Cop_Fec'];  echo $Fec_Com; ?>
         </FONT></td>
-      <td align="center"><FONT COLOR="<? echo $rojo;?>">
+      <td align="center"><FONT COLOR="<?php echo $rojo;?>">
         <?PHP $Prs_Ced= $row_rs_buscar['Prs_Ced']; echo $Prs_Ced; ?>
         </FONT></td>
-      <td  align="center"><FONT COLOR="<? echo $rojo;?>"><?PHP echo $row_rs_buscar['Prs_Ape'].' '.$row_rs_buscar['Prs_Nom']; ?></FONT></td>
-      <td align="right"><FONT COLOR="<? echo $rojo;?>">
+      <td  align="center"><FONT COLOR="<?php echo $rojo;?>"><?PHP echo $row_rs_buscar['Prs_Ape'].' '.$row_rs_buscar['Prs_Nom']; ?></FONT></td>
+      <td align="right"><FONT COLOR="<?php echo $rojo;?>">
         <?php  $resultados = explode('*', $obBD_con1->calculosCompraIce($Cop_Cod, $obBD_conexion));
 					$total_importe = $total_importe +  round($row_rs_buscar['Importe']-($row_rs_buscar['Importe']*$row_rs_buscar['Cop_Des']/100),2);
 					echo formato_numero($row_rs_buscar['Importe']-($row_rs_buscar['Importe']*$row_rs_buscar['Cop_Des']/100),2,1);			 	  
 			  ?>
         </FONT></td>
-      <td align="right"><FONT COLOR="<? echo $rojo;?>">
+      <td align="right"><FONT COLOR="<?php echo $rojo;?>">
         <?Php
 				   $iva_factura=formato_numero($resultados[3],2,1);
 				   //Total del iva
 				   $total_iva = $total_iva + round($resultados[3],2);
 				echo $iva_factura; ?>
         </FONT></td>
-      <td colspan="4" align="right"><FONT COLOR="<? echo $rojo;?>">
+      <td colspan="4" align="right"><FONT COLOR="<?php echo $rojo;?>">
         <?php
 					echo $resultados[5];
 					/**

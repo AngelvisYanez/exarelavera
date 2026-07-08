@@ -41,7 +41,7 @@
                             <?php foreach ($rs_tip_compr as $row) {
                                 if (isset($allTypes) || ($row['Tic_Sri'] != 4 && $row['Tic_Sri'] != 5 && $row['Tic_Sri'] != 7 && $row['Tic_Sri'] != 23 && $row['Tic_Sri'] != 24))
                                     // echo "<option value='$row[Tic_Cod]' data-ticsri='$row[Tic_Sri]'>$row[Tic_Sri] - $row[Tic_Des]</option>";
-                                    echo "<option value='{$row['Tic_Cod']}' data-ticsri='{$row['Tic_Sri']}'>" . utf8_encode($row['Tic_Sri']) . " - " . utf8_encode($row['Tic_Des']) . "</option>";
+                                    echo "<option value='{$row['Tic_Cod']}' data-ticsri='{$row['Tic_Sri']}'>" . mb_convert_encoding($row['Tic_Sri'], 'UTF-8', 'ISO-8859-1') . " - " . mb_convert_encoding($row['Tic_Des'], 'UTF-8', 'ISO-8859-1') . "</option>";
                             } ?>
                         </select>
                     </div>

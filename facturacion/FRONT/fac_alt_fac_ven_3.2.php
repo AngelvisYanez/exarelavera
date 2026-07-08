@@ -1325,12 +1325,12 @@ if (isset($cupoCredito)) {
 
                                 <!--tipos_pago-->
                                 <select id="pag_cod" name="pag_cod" class="form-control input-xs" style="display: none;">
-                                    <?php foreach ($tipospago as $row) { ?><option value="<?php echo $row['Pag_Cod']; ?>" data-forcod="<?php echo $row['For_Cod']; ?>"><?php echo utf8_decode($row['Pag_Des']); ?></option><?php } ?>
+                                    <?php foreach ($tipospago as $row) { ?><option value="<?php echo $row['Pag_Cod']; ?>" data-forcod="<?php echo $row['For_Cod']; ?>"><?php echo mb_convert_encoding($row['Pag_Des'], 'ISO-8859-1', 'UTF-8'); ?></option><?php } ?>
                                 </select>
 
                                 <!--bancos-->
                                 <select id="bak_cod" name="bak_cod" class="form-control input-xs" style="display: none;">
-                                    <?php foreach ($bankos as $row) { ?><option value="<?php echo $row['Bak_Cod']; ?>"><?php echo utf8_decode($row['Bak_Des']); ?></option><?php } ?>
+                                    <?php foreach ($bankos as $row) { ?><option value="<?php echo $row['Bak_Cod']; ?>"><?php echo mb_convert_encoding($row['Bak_Des'], 'ISO-8859-1', 'UTF-8'); ?></option><?php } ?>
                                 </select>
 
                                 <!--cuentas contado=1, credito=2-->
@@ -1661,12 +1661,12 @@ if (isset($cupoCredito)) {
                                                 <select id="Tpc_Cod" name="Tpc_Cod" defaultValue=1 class="form-control input-xs readOnly" required="" onchange="">
                                                     <option value="">Seleccione...</option>
                                                     <?php foreach ($rs_pag_sri as $row) {
-                                                        $row = array_map('utf8_encode', $row); // Convert each element to UTF-8
+                                                        $row = array_map(function($v) { return mb_convert_encoding($v, 'UTF-8', 'ISO-8859-1'); }, $row); // Convert each element to UTF-8
                                                         $selected = '';
                                                         if ($row[$Tpc_Sri] == 1) {
                                                             $selected = 'Selected';
                                                         }
-                                                        // echo "<option value='" . $row['Tpc_Cod'] . "' " . $selected .  " >" . utf8_encode($row['Tpc_Sri']) . " - " . utf8_encode($row['Tpc_Des']) . "</option>";
+                                                        // echo "<option value='" . $row['Tpc_Cod'] . "' " . $selected .  " >" . mb_convert_encoding($row['Tpc_Sri'], 'UTF-8', 'ISO-8859-1') . " - " . mb_convert_encoding($row['Tpc_Des'], 'UTF-8', 'ISO-8859-1') . "</option>";
                                                         echo "<option value='$row[Tpc_Cod]' " . $selected . "  >$row[Tpc_Sri] - $row[Tpc_Des]</option>";
                                                     } ?>
                                                 </select>
@@ -2443,7 +2443,7 @@ if (isset($cupoCredito)) {
         function ocultarCamposBusquedaImei() {
             // Ocultar todos los fieldsets que NO contengan "Tipo:"
             $('#imeiForm fieldset').each(function() {
-                var $fieldset = $(this);
+                public $fieldset = $(this);
                 var tieneTipo = $fieldset.find('label:contains("Tipo:")').length > 0;
                 var legend = $fieldset.find('legend').text().trim();
                 // Si NO tiene "Tipo:" Y el legend NO es "Filtros", ocultarlo
@@ -2458,7 +2458,7 @@ if (isset($cupoCredito)) {
             $('#imeiForm button:contains("Buscar")').closest('.form-group, fieldset').css('display', 'none !important').hide();
             // Ocultar radiosets que contengan "Apellido/Nombre" o "Cédula/R.U.C"
             $('#imeiForm .radioset').each(function() {
-                var $radioset = $(this);
+                public $radioset = $(this);
                 var html = $radioset.html();
                 if (html.indexOf('Apellido/Nombre') !== -1 || html.indexOf('Cédula/R.U.C') !== -1) {
                     $radioset.closest('.form-group, fieldset').css('display', 'none !important').hide();
@@ -2500,7 +2500,7 @@ if (isset($cupoCredito)) {
 
         // Agregar evento para recargar grid cuando cambie el filtro
         $('#imeiForm input[name="imei_tipo"]').on('change', function() {
-            var $grid = $('#imeiGrid');
+            public $grid = $('#imeiGrid');
             var Pro_Cod = $('#imeiForm input[name="Pro_Cod"]').val() || '';
             var Ime_Tip = $(this).val() || '';
             // Actualizar postData antes de recargar

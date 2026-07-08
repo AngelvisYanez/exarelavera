@@ -94,7 +94,7 @@ if(isset($hdd_save))
  </tr>
 	<tr>
 	<td height="400" valign="top">
-    <form method="post" name= "form" id= "form" action="<? echo $_SERVER['PHP_SELF'];?>">
+    <form method="post" name= "form" id= "form" action="<?php echo $_SERVER['PHP_SELF'];?>">
     <FIELDSET>
     <LEGEND>
     <label class="Titulos2">Datos a registrar</label>

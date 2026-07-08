@@ -164,6 +164,56 @@ class ventas extends AbstractModel
 
             case "setTotales":
                 $this->setTotalesCols($sql);
+                // [OPT] Elimina N+1 agregando datos de comprobante, pagos y retenciones como LEFT JOINs
+                // (a) Comprobante: LEFT JOIN ventas_compr -> comprobantes -> tipo_asien
+                if (!$sql->hasTable("ventas_compr")) {
+                    $sql->joinLeft('ventas_compr', "ventas_compr.Vet_Cod = $this->_name.Vet_Cod", array())
+                        ->joinLeft('comprobantes', "comprobantes.Com_Cod = ventas_compr.Com_Cod", array())
+                        ->joinLeft('tipo_asien', "comprobantes.Tia_Cod = tipo_asien.Tia_Cod", array());
+                }
+                // (b) Forma_Pago (Contado/Crédito): subconsulta de ccpp_cobrar
+                $subPagos = $this->select(false)
+                    ->from('ccpp_cobrar', array(
+                        'Vet_Cod',
+                        'total_pagos' => new Zend_Db_Expr('COUNT(*)')
+                    ))
+                    ->group('Vet_Cod');
+                $sql->joinLeft(
+                    array('pagos_resumen' => $subPagos),
+                    "pagos_resumen.Vet_Cod = $this->_name.Vet_Cod",
+                    array('Forma_Pago' => new Zend_Db_Expr("IF(pagos_resumen.total_pagos > 0, 'Credito', 'Contado')"))
+                );
+                // (c) FormasPago: subconsulta GROUP_CONCAT de pago_venta + tipos_pago
+                $subTiposPago = $this->select(false)
+                    ->from('pago_venta', array(
+                        'Vet_Cod',
+                        'FormasPago' => new Zend_Db_Expr("GROUP_CONCAT(DISTINCT tipos_pago.Pag_Des ORDER BY tipos_pago.Pag_Des SEPARATOR ', ')")
+                    ))
+                    ->joinLeft('tipos_pago', 'tipos_pago.Pag_Cod = pago_venta.Pag_Cod', array())
+                    ->group('Vet_Cod');
+                $sql->joinLeft(
+                    array('tipos_pago_agr' => $subTiposPago),
+                    "tipos_pago_agr.Vet_Cod = $this->_name.Vet_Cod",
+                    array('FormasPago')
+                );
+                // (d) Retenciones (Tot_Renta, Tot_Iva): LEFT JOIN a renta_iva + columnas calculadas
+                $sql->joinLeft(
+                    array('renta_imp' => 'renta_iva'),
+                    'renta_imp.Ren_Cod = ventas_det.Ren_Cod',
+                    array()
+                )->joinLeft(
+                    array('iva_imp' => 'renta_iva'),
+                    'iva_imp.Ren_Cod = ventas_det.Ren_Iva',
+                    array()
+                );
+                $sql->addCols(null, array(
+                    'Com_Codigo' => new Zend_Db_Expr("IFNULL(CONCAT(tipo_asien.Tia_Abr, '-', LPAD(MONTH(comprobantes.Com_Fec), 2, '0'), '-', comprobantes.Com_Num), '0')"),
+                    'Com_Exi'    => new Zend_Db_Expr("IF(comprobantes.Com_Cod IS NULL, 'N', 'S')"),
+                    'Com_Cod'    => new Zend_Db_Expr("IFNULL(comprobantes.Com_Cod, '-')"),
+                    'Com_Est'    => new Zend_Db_Expr("IFNULL(comprobantes.Com_Est, '')"),
+                    'Tot_Renta'  => new Zend_Db_Expr($this->castDecimal("SUM(IF(ventas_det.Ren_Cod IS NOT NULL, IF(renta_imp.Ren_Por > 0, ($this->Importe_Descu * renta_imp.Ren_Por / 100), 0), 0))")),
+                    'Tot_Iva'    => new Zend_Db_Expr($this->castDecimal("SUM(IF(ventas_det.Ren_Iva IS NOT NULL, IF(iva_imp.Ren_Por > 0 AND Iva_Por != 0, ($this->IVA * iva_imp.Ren_Por / 100), 0), 0))"))
+                ));
                 // $sql->group('ventas.Vet_Cod'); // comentada por reemplazo del CustomGroupBy, si da problema en totales descomentar
                 // Ordenamiento en base a la variable CustomOrderBy
                 $orderBy = isset($Par_Sql['CustomOrderBy']) && !empty($Par_Sql['CustomOrderBy']) ? $Par_Sql['CustomOrderBy'] : 'caja_aper.Caj_Fec ASC';

@@ -1,4 +1,4 @@
-<?	
+<?php	
 /*
 * Descripci�n: Reporte de la opci�n Totales, Detalle y Puntos de Impresi�n
 * Fecha de actualizaci�n: 2012-05-26
@@ -279,12 +279,12 @@ for ($x=0; $x<=count($carrera_cod)-1; $x++)
 			?>
 				<table width="100%" border="1" cellpadding="0" cellspacing="0">
 				  <tr class="TablaRepCompr">
-					<td width="10%" class="TablaRepCompr" align="center"><? if(isset($rubros)){ echo "Fecha";} if(isset($rubros_cli)){ echo "Cod. Int.";}?></td>
+					<td width="10%" class="TablaRepCompr" align="center"><?php if(isset($rubros)){ echo "Fecha";} if(isset($rubros_cli)){ echo "Cod. Int.";}?></td>
                                         <?php if(isset($rubros_cli)){ ?>
                                             <td width="10%" class="TablaRepCompr" align="center">C.I. / R.U.C.:</td>
                                         <?php }?>
 
-					<td class="TablaRepCompr" align="center"><? if(isset($rubros)){ echo "Rubros";} if(isset($rubros_cli)){ echo "Clientes";}?></td>
+					<td class="TablaRepCompr" align="center"><?php if(isset($rubros)){ echo "Rubros";} if(isset($rubros_cli)){ echo "Clientes";}?></td>
 					<td width="8%" class="TablaRepCompr" align="center">Total</td>
 				  </tr>
 				  <?php
@@ -400,8 +400,8 @@ for ($x=0; $x<=count($carrera_cod)-1; $x++)
 							  <td><?PHP echo $row_rs_buscarcarrera['Prs_Ced']; ?></td>
 							  <td style="white-space: nowrap; overflow: hidden;"><?PHP echo $row_rs_buscarcarrera['Prs_Ape'].' '.$row_rs_buscarcarrera['Prs_Nom']; ?></td>
 							  <td align="center"><?php echo $row_rs_buscarcarrera['Ret_Num']; ?></td>
-							  <td align="right"><? echo formato_numero($row_retencion['r_renta'],2,3);?></td>
-							  <td align="right"><? echo formato_numero($row_retencion['r_iva'],2,3);?></td>
+							  <td align="right"><?php echo formato_numero($row_retencion['r_renta'],2,3);?></td>
+							  <td align="right"><?php echo formato_numero($row_retencion['r_iva'],2,3);?></td>
 							  <td align="right"><?php echo formato_numero($row_rs_buscarcarrera['Vet_Tot'],2,2); ?></td>
 							  <td align="right"><?php echo formato_numero($row_rs_buscarcarrera['Descuento'],2,2); ?></td>
 							  <td align="right"><?php echo formato_numero($row_rs_buscarcarrera['Iva'],2,2); ?></td>
@@ -424,8 +424,8 @@ for ($x=0; $x<=count($carrera_cod)-1; $x++)
 	   					} while ($row_rs_buscarcarrera = $obBD_con1->fetch_assoc($rs_buscarcarrera)); ?>   
 				  <tr class="Texto_Reporte">
                       <td colspan="6" align="right"><strong>TOTALES:</strong></td>
-                      <td align="right" class="Texto_Listados"><div align="right"><b><? echo formato_numero($total_r_renta,2,2);?></b></div></td>
-                      <td align="right" class="Texto_Listados"><div align="right"><b><? echo formato_numero($total_r_iva,2,2);?></b></div></td>
+                      <td align="right" class="Texto_Listados"><div align="right"><b><?php echo formato_numero($total_r_renta,2,2);?></b></div></td>
+                      <td align="right" class="Texto_Listados"><div align="right"><b><?php echo formato_numero($total_r_iva,2,2);?></b></div></td>
                       <td align="right" class="Texto_Listados"><div align="right"><b><?Php echo formato_numero($total_imp,2,2);?></b></div></td>
                       <td align="right" class="Texto_Listados"><div align="right"><b><?Php echo formato_numero($total_des,2,2);?></b></div></td>
                       <td align="right" class="Texto_Listados"><div align="right"><b><?Php echo formato_numero($total_iva,2,2);?></b></div></td>

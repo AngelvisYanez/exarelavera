@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?
+<?php
 /**
  * Descripcion: Permite consultar la mayorizacion contable
  * Fecha de actualizacion:	2025-03-24
@@ -255,7 +255,7 @@ switch ($op) {
 													<td align="center"><?php echo $row['Pld_Des']; ?></td>
 													<td align="center"><?php echo $row['Com_Fec']; ?></td>
 													<td align="left" style="white-space: break-spaces; overflow: hidden;"><?php echo $row_proveedore['Prs_Ape'] . ' ' . $row_proveedore['Prs_Nom']; ?></td>
-													<td align="left" style="white-space: break-spaces; overflow: hidden;"><? echo ($row['Com_Con']); ?>&nbsp;</td>
+													<td align="left" style="white-space: break-spaces; overflow: hidden;"><?php echo ($row['Com_Con']); ?>&nbsp;</td>
 													<td align="right">
 														<?php
 														if ($row['Asi_Deh'] == 'D') {
@@ -399,7 +399,7 @@ switch ($op) {
 																	echo "style='color:#FF0000'";
 																} ?>><?php echo formato_numero($saldos, 2, 2); ?></td>
 										</tr>
-										<? $cont = 0;
+										<?php $cont = 0;
 										foreach ($rs_cuenta as $row) {
 											$cont++;
 											/* Consultamos datos Venta */
@@ -427,8 +427,8 @@ switch ($op) {
 												<td align="center"><?php echo $row['Pld_Des']; ?></td>
 												<td align="center"><?php echo $row['Com_Fec']; ?></td>
 												<td align="left" style="white-space: break-spaces; overflow: hidden;"><?php echo $row_proveedore['Prs_Ape'] . ' ' . $row_proveedore['Prs_Nom']; ?></td>
-												<td align="left" style="white-space: break-spaces; overflow: hidden;"><? echo ($row['Com_Con']); ?>&nbsp;</td>
-												<td align="right"><? if ($row['Asi_Deh'] == 'D') {
+												<td align="left" style="white-space: break-spaces; overflow: hidden;"><?php echo ($row['Com_Con']); ?>&nbsp;</td>
+												<td align="right"><?php if ($row['Asi_Deh'] == 'D') {
 																		echo formato_numero($row['Asi_Val'], 2, 2);
 																		$debe = $row['Asi_Val'];
 																		$total_debe = $total_debe + $debe;
@@ -436,7 +436,7 @@ switch ($op) {
 																		echo "0,00";
 																		$debe = 0;
 																	} ?></td>
-												<td align="right"><? if ($row['Asi_Deh'] == 'H') {
+												<td align="right"><?php if ($row['Asi_Deh'] == 'H') {
 																		echo formato_numero($row['Asi_Val'], 2, 2);
 																		$haber = $row['Asi_Val'];
 																		$total_haber = $total_haber + $haber;
@@ -480,7 +480,7 @@ switch ($op) {
 										<tr>
 											<td colspan="9"><?php echo error_alerta(" No hay resultados que mostrar", 1) ?></td>
 										</tr>
-							<? 		} //Fin del else
+							<?php 		} //Fin del else
 								}
 							} //Fin del if ($txt_busqueda)
 							?>

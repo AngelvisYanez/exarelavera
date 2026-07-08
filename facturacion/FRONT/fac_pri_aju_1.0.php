@@ -78,30 +78,30 @@ if (isset($Aju_Cod))
 	  <tr align="center">
 	    <td width="81" height="15" class="Texto_Reporte"><strong>NOMBRE:&nbsp;</strong></td>
 	    <td height="15" align="left" valign="bottom" class="Texto_Reporte">
-							<? echo $row_rs_cliente['Prs_Nom'].' '.$row_rs_cliente['Prs_Ape'];
+							<?php echo $row_rs_cliente['Prs_Nom'].' '.$row_rs_cliente['Prs_Ape'];
 		    ?></td>
 	    <td width="52" align="left" valign="bottom" class="Texto_Reporte"><strong>FECHA:&nbsp;</strong></td>
-	    <td width="154" height="15" align="left" valign="bottom" class="Texto_Reporte"><? echo $row_rs_cliente['Aju_Fec']; ?></td>
+	    <td width="154" height="15" align="left" valign="bottom" class="Texto_Reporte"><?php echo $row_rs_cliente['Aju_Fec']; ?></td>
 	  </tr>
 	  <tr align="center">
         <td   class="Texto_Reporte"><strong>CI/RUC:&nbsp;</strong></td>
-        <td width="446" align="left" valign="bottom" class="Texto_Reporte"><? echo $row_rs_cliente['Prs_Ced'];  ?></td>
+        <td width="446" align="left" valign="bottom" class="Texto_Reporte"><?php echo $row_rs_cliente['Prs_Ced'];  ?></td>
         <td align="left" class="Texto_Reporte"><strong>&nbsp;</strong></td>
         <td align="left" class="Texto_Reporte">&nbsp;</td>
         </tr>
       <tr align="center">
         <td align="left" class="Texto_Reporte"><strong>DIRECCI&Oacute;N:&nbsp;</strong></td>
-        <td align="left" class="Texto_Reporte"><? echo $row_rs_cliente['Prs_Dir'];  ?></td>
+        <td align="left" class="Texto_Reporte"><?php echo $row_rs_cliente['Prs_Dir'];  ?></td>
         <td align="left" class="Texto_Reporte">&nbsp;</td>
         <td align="left" class="Texto_Reporte">&nbsp;</td>
       </tr>
       <tr align="center">
         <td align="left"  class="Texto_Reporte"><strong>DETALLE:&nbsp;</strong></td>
-        <td colspan="3" align="left" class="Texto_Reporte"><? echo $row_rs_cliente['Aju_Det'];  ?></td>
+        <td colspan="3" align="left" class="Texto_Reporte"><?php echo $row_rs_cliente['Aju_Det'];  ?></td>
         </tr>
       <tr align="center">
         <td align="left"  class="Texto_Reporte"><strong>CONCEPTO:&nbsp;</strong></td>
-        <td colspan="3" align="left" class="Texto_Reporte"><? echo $row_rs_cliente['Aju_Obs'];  ?></td>
+        <td colspan="3" align="left" class="Texto_Reporte"><?php echo $row_rs_cliente['Aju_Obs'];  ?></td>
               </tr>
             </table></td>
           </tr>
@@ -157,7 +157,7 @@ if (isset($Aju_Cod))
               </tr>
               <tr>
                 <td class="Texto_bloques"><div align="center" ><?Php echo $row_rs_vendedor['Prs_Nom'].' '.$row_rs_vendedor['Prs_Ape']; ?></div></td>
-                <td class="Texto_bloques"><div align="center"><? echo $row_rs_cliente['Prs_Nom'].' '.$row_rs_cliente['Prs_Ape'];
+                <td class="Texto_bloques"><div align="center"><?php echo $row_rs_cliente['Prs_Nom'].' '.$row_rs_cliente['Prs_Ape'];
 		    ?></div></td>
               </tr>
               <tr>

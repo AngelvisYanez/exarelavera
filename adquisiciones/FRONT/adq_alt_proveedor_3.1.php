@@ -213,7 +213,7 @@ $obBD_con1->echoLog($busqueda);
                                         <select name="Ide_Cod" id="Ide_Cod" class="form-control input-xs readOnly" disabled="">
                                             <option value="">Seleccionar</option>
                                             <?php foreach ($rs_identi as $row) {
-                                                $row = array_map('utf8_encode', $row); // Convert each element to UTF-8
+                                                $row = array_map(function($v) { return mb_convert_encoding($v, 'UTF-8', 'ISO-8859-1'); }, $row); // Convert each element to UTF-8
                                                 echo "<option value='$row[Ide_Cod]'>$row[Ide_Des]</option>";
                                             } ?>
                                         </select>
@@ -342,7 +342,7 @@ $obBD_con1->echoLog($busqueda);
                                     <select name="Ide_Cod" id="Ide_Cod" class="form-control input-xs readOnly" disabled="">
                                         <option value="">Seleccionar</option>
                                         <?php foreach ($rs_identi as $row) {
-                                            $row = array_map('utf8_encode', $row); // Convert each element to UTF-8
+                                            $row = array_map(function($v) { return mb_convert_encoding($v, 'UTF-8', 'ISO-8859-1'); }, $row); // Convert each element to UTF-8
                                             echo "<option value='$row[Ide_Cod]'>$row[Ide_Des]</option>";
                                         } ?>
                                     </select>
@@ -433,7 +433,7 @@ $obBD_con1->echoLog($busqueda);
                                     <select name="Tri_Cod" class="form-control input-xs" tabindex="3">
                                         <option value="">Seleccione...</option>
                                         <?php foreach ($rs_sustento as $row) {
-                                            $row = array_map('utf8_encode', $row); // Convert each element to UTF-8
+                                            $row = array_map(function($v) { return mb_convert_encoding($v, 'UTF-8', 'ISO-8859-1'); }, $row); // Convert each element to UTF-8
                                             echo "<option value='{$row['Tri_Cod']}' " . ($row['Tri_Cod'] == 2 ? 'selected' : '') . ">$row[Tri_Sri] - $row[Tri_Des]</option>";
                                         } ?>
                                     </select>
@@ -446,7 +446,7 @@ $obBD_con1->echoLog($busqueda);
                                         <option value="">Seleccione...</option>
                                         <?php foreach ($rs_tip_compr as $row) {
                                             if ($row['Tic_Sri'] != 4 && $row['Tic_Sri'] != 5 && $row['Tic_Sri'] != 7 && $row['Tic_Sri'] != 23 && $row['Tic_Sri'] != 24)
-                                            $row = array_map('utf8_encode', $row); // Convert each element to UTF-8
+                                            $row = array_map(function($v) { return mb_convert_encoding($v, 'UTF-8', 'ISO-8859-1'); }, $row); // Convert each element to UTF-8
                                                 echo "<option value='$row[Tic_Cod]' data-ticsri='$row[Tic_Sri]'>$row[Tic_Sri] - $row[Tic_Des]</option>";
                                         } ?>
                                     </select>
@@ -487,7 +487,7 @@ $obBD_con1->echoLog($busqueda);
                                     <select name="Ciu_Cod_Aut" id="Ciu_Cod_Aut" class="form-control input-xs" data-placeholder="Seleccione..." tabIndex="7">
                                         <option value=""></option>
                                         <?php foreach ($rs_ciudad as $row) {
-                                            $row = array_map('utf8_encode', $row); // Convert each element to UTF-8
+                                            $row = array_map(function($v) { return mb_convert_encoding($v, 'UTF-8', 'ISO-8859-1'); }, $row); // Convert each element to UTF-8
                                             echo "<option value='$row[Ciu_Cod]' data-prov='$row[Pro_Nom]'>$row[Ciu_Des]</option>";
                                         } ?>
                                     </select>
@@ -777,7 +777,7 @@ $obBD_con1->echoLog($busqueda);
 
         // Funcion para activar de cédula a RUC
         function setTipoDoc() {
-            var $Prs_Ced = $('#Prs_Ced'),
+            public $Prs_Ced = $('#Prs_Ced'),
                 Prs_Ced = $Prs_Ced.val(),
                 isRuc = $('#isRuc').is(':checked');
 

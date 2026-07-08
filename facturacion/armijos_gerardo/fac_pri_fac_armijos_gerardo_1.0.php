@@ -83,30 +83,30 @@ $row=10;
 	<table style=" width: 100%;font-size: 12px; border: solid 1px; border-radius:15px; padding: 5px; font-family:Verdana, Geneva, sans-serif; font-size:12px;" >
 				<tr>
 					<td class='bold' align='left' style="font-size: 12px;">
-						<strong>CLIENTE: </strong><? if ($row_rs_representante['Cli_Fac'] != ""){echo $row_rs_representante['Cli_Fac'];}else{ echo $row_rs_cliente['Prs_Ape'].' '.$row_rs_cliente['Prs_Nom'];}?>
+						<strong>CLIENTE: </strong><?php if ($row_rs_representante['Cli_Fac'] != ""){echo $row_rs_representante['Cli_Fac'];}else{ echo $row_rs_cliente['Prs_Ape'].' '.$row_rs_cliente['Prs_Nom'];}?>
 						<td>
-							<strong> No: </strong><? if ($row_rs_representante['Cli_Fac'] != ""){echo $row_rs_representante['Cli_Fac'];}else{ echo $row_rs_cliente['Fac_Num'];}?>
+							<strong> No: </strong><?php if ($row_rs_representante['Cli_Fac'] != ""){echo $row_rs_representante['Cli_Fac'];}else{ echo $row_rs_cliente['Fac_Num'];}?>
 						</td>
 					</td>
 				</tr>
 				<tr>
 					<td class='bold' align='left' style="font-size: 12px;">
-						<strong>DIRECCI&Oacute;N: </strong> <? if ($row_rs_representante['Cli_Dir'] != ""){echo substr($row_rs_representante['Cli_Dir'],0,31);}else{echo substr($row_rs_cliente['Prs_Dir'],0,31);}?>
+						<strong>DIRECCI&Oacute;N: </strong> <?php if ($row_rs_representante['Cli_Dir'] != ""){echo substr($row_rs_representante['Cli_Dir'],0,31);}else{echo substr($row_rs_cliente['Prs_Dir'],0,31);}?>
 					</td>
 				</tr>
 				<tr>
 					<td class='bold' align='left' style="font-size: 12px;">
-						<strong>C&Eacute;DULA: </strong> <? if ($row_rs_representante['Cli_Fac'] != ""){echo $row_rs_representante['Cli_Ruf'];}else{echo $row_rs_cliente['Prs_Ced'];}?>
+						<strong>C&Eacute;DULA: </strong> <?php if ($row_rs_representante['Cli_Fac'] != ""){echo $row_rs_representante['Cli_Ruf'];}else{echo $row_rs_cliente['Prs_Ced'];}?>
 					</td>
 				</tr>
 				<tr>
 					<td class='bold' align='left' style="font-size: 12px;">
-						<strong>CIUDAD: </strong> <? echo $row_institucion['Ciu_Des'];?>
+						<strong>CIUDAD: </strong> <?php echo $row_institucion['Ciu_Des'];?>
 					</td>
 				</tr>
 				<tr>
 					<td class='bold' align='left' style="font-size: 12px;">
-						<strong>FECHA: </strong> <? echo $dia.'/'.$mes.'/'.$anio; ?>
+						<strong>FECHA: </strong> <?php echo $dia.'/'.$mes.'/'.$anio; ?>
 					</td>
 				</tr>
 			</table>
@@ -126,10 +126,10 @@ $row=10;
 						
 						<?php do{?>
 						<tr>
-							<td align='left'><? echo formato_numero($row_rs_cliente['Vet_Can'],1,1);?></td>
-							<td align='left'><? echo $row_rs_cliente['Ite_Lar'] ." " . $row_rs_cliente['Des_Adi'];?></td>
-							<td align='right'><? echo number_format($row_rs_cliente['Vet_Pru'], 2);?></td>
-							<td align='right'><? echo number_format($row_rs_cliente['Vet_Imp'], 2);?></td>
+							<td align='left'><?php echo formato_numero($row_rs_cliente['Vet_Can'],1,1);?></td>
+							<td align='left'><?php echo $row_rs_cliente['Ite_Lar'] ." " . $row_rs_cliente['Des_Adi'];?></td>
+							<td align='right'><?php echo number_format($row_rs_cliente['Vet_Pru'], 2);?></td>
+							<td align='right'><?php echo number_format($row_rs_cliente['Vet_Imp'], 2);?></td>
 						</tr>
 						<?php } while ($row_rs_cliente = $obBD_con1->fetch_assoc ($rs_cliente));
 							$resultados = explode('*',$obBD_con1->calculos($Vet_Cod, $obBD_conexion));	
@@ -139,7 +139,7 @@ $row=10;
 					<tbody class='noBorder' style="border-collapse: collapse;">
 
 						<tr>
-							<td rowspan="5" colspan="2"><strong>OBSERVACI&Oacute;N: </strong><? echo $observacion;?></td>
+							<td rowspan="5" colspan="2"><strong>OBSERVACI&Oacute;N: </strong><?php echo $observacion;?></td>
 							<td colspan="1" align="right" class="bold" style=" border-top: 1px solid; font-size: 12px;">
 								<strong>SUBTOTAL:</strong> 
 							</td>

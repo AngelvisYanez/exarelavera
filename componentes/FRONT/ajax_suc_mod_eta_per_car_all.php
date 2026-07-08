@@ -16,7 +16,7 @@ if(isset($ajax_suc_cod))
 	$row_rs_modalidad = $obBD_con1->registros();
 	$total_rs_modalidad = $obBD_con1->numregistros();
 	?>
-        <select name="Mod_Cod" id="Mod_Cod" style="text-transform:uppercase" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mod_cod=1&sql='+document.getElementById('hdd_sql').value+'&Mod_Cod=' + this.value+'&Com_Todos=<? echo $Com_Todos;?>&Suc_Cod=<?Php echo $Suc_Cod; ?>&Est_Int=<?Php echo $codigo ?>','div_etapa')"  >
+        <select name="Mod_Cod" id="Mod_Cod" style="text-transform:uppercase" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mod_cod=1&sql='+document.getElementById('hdd_sql').value+'&Mod_Cod=' + this.value+'&Com_Todos=<?php echo $Com_Todos;?>&Suc_Cod=<?Php echo $Suc_Cod; ?>&Est_Int=<?Php echo $codigo ?>','div_etapa')"  >
           <option></option>
           <?Php  do { ?>
           <option value="<?Php echo $row_rs_modalidad['Mod_Cod'];  ?>" ><?Php echo $row_rs_modalidad['Mod_Des'];  ?></option>
@@ -25,7 +25,7 @@ if(isset($ajax_suc_cod))
         </select>
         <input type="checkbox" name="checkbox" value="checkbox" onClick="if (this.checked){ document.getElementById('hdd_sql').value = 2; }
 																else { document.getElementById('hdd_sql').value = 3; }; 
-                                                                ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mod_cod=1&sql='+document.getElementById('hdd_sql').value+'&Mod_Cod=' + document.getElementById('Mod_Cod').value+'&Com_Todos=<? echo $Com_Todos;?>&Suc_Cod=<?Php echo $Suc_Cod; ?>&Est_Int=<?Php echo $codigo ?>','div_etapa')">
+                                                                ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mod_cod=1&sql='+document.getElementById('hdd_sql').value+'&Mod_Cod=' + document.getElementById('Mod_Cod').value+'&Com_Todos=<?php echo $Com_Todos;?>&Suc_Cod=<?Php echo $Suc_Cod; ?>&Est_Int=<?Php echo $codigo ?>','div_etapa')">
       Otras Etapas
       <!-- 
 2 = Etapas nivelacion
@@ -46,7 +46,7 @@ if(isset($ajax_mod_cod))
 	$row_rs_etapas = $obBD_con1->registros();
 	$total_rs_etapas = $obBD_con1->numregistros();
 ?>
-        <select name="Eta_Cod" id="Eta_Cod" style="text-transform:uppercase"  onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_periodo=1&Mod_Cod=<?Php echo $Mod_Cod; ?>&Eta_Cod='+this.value+'&Com_Todos=<? echo $Com_Todos;?>&Suc_Cod=<?Php echo $Suc_Cod; ?>&Est_Int=<?Php echo $Est_Int ?>','div_periodo')">
+        <select name="Eta_Cod" id="Eta_Cod" style="text-transform:uppercase"  onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_periodo=1&Mod_Cod=<?Php echo $Mod_Cod; ?>&Eta_Cod='+this.value+'&Com_Todos=<?php echo $Com_Todos;?>&Suc_Cod=<?Php echo $Suc_Cod; ?>&Est_Int=<?Php echo $Est_Int ?>','div_periodo')">
             <option></option>
             <?Php do { ?>
             <option value="<?Php echo $row_rs_etapas['Eta_Cod'].'*'.$row_rs_etapas['Eta_Rec']; ?>"><?Php echo $row_rs_etapas['Eta_Des'];  ?></option>
@@ -67,7 +67,7 @@ if(isset($ajax_periodo))
 	 $row_rs_periodo = $obBD_con1->registros();
 	 $total_rs_periodo = $obBD_con1->numregistros();
 	 ?>
-	 <select name="Per_Int" id="Per_Int" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_carrera=1&Suc_Cod=<?Php echo $Suc_Cod; ?>&Com_Todos=<? echo $Com_Todos;?>&Eta_Cod=<?Php echo $Eta_Cod; ?>&Mod_Cod=<?Php echo $Mod_Cod; ?>&Per_Int='+this.value+'&Est_Int=<?Php echo $Est_Int ?>', 'div_carrera')">
+	 <select name="Per_Int" id="Per_Int" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_carrera=1&Suc_Cod=<?Php echo $Suc_Cod; ?>&Com_Todos=<?php echo $Com_Todos;?>&Eta_Cod=<?Php echo $Eta_Cod; ?>&Mod_Cod=<?Php echo $Mod_Cod; ?>&Per_Int='+this.value+'&Est_Int=<?Php echo $Est_Int ?>', 'div_carrera')">
 	 <option></option>
 	 <?Php do{ ?>
 	  	 <option value="<?Php echo $row_rs_periodo['Per_Int']; ?>"><?Php if ($total_rs_periodo > 0) {
@@ -115,14 +115,14 @@ if(isset($ajax_carrera))
 	}	
 	?>
 	<select name="Car_Int" id="Car_Int">		   
-		   <? if($Com_Todos=="si"){?>
-		   <option value="<? echo $cadTodo;?>"><? echo"<< TODOS >>";?></option>
-		   <? }?>		   		   
-		   <? do { ?>
+		   <?php if($Com_Todos=="si"){?>
+		   <option value="<?php echo $cadTodo;?>"><?php echo"<< TODOS >>";?></option>
+		   <?php }?>		   		   
+		   <?php do { ?>
 		   <option value="<?Php echo $row_rs_carrera_etapa['Car_Int'];?>"><?Php echo $row_rs_carrera_etapa['Car_Nom'];?></option>
 		   <?Php }while($row_rs_carrera_etapa=mysqli_fetch_assoc($rs_carreras_etapa)); ?>		   
     </select>
-	<input type="hidden" id="Com_Todos" name="Com_Todos" value="<? echo $Com_Todos;?>">
+	<input type="hidden" id="Com_Todos" name="Com_Todos" value="<?php echo $Com_Todos;?>">
 	<?Php
 	@mysqli_free_result($rs_carreras_etapa);
 	exit();

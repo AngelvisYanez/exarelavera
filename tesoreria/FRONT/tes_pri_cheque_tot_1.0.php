@@ -1,4 +1,4 @@
-<?	
+<?php	
 	require_once('../../administrador/LOGICA/seguridad.php');
 	require_once('../LOGICA/tes_log_cheque.php');
 	require_once('../../Librerias/procedimientos/almacenados_standar.php');
@@ -56,22 +56,22 @@ $total_rs_tot_cheques = count($rs_tot_cheques);
     <td width="31%" align="center" bgcolor="#CCCCCC"><strong>Concepto</strong></td>
     <td width="8%" align="center" bgcolor="#CCCCCC"><strong>Valor</strong></td>
   </tr>
-  <? 
+  <?php 
 	if ($total_rs_tot_cheques!=0) {
 			$total = 0;
 			foreach($rs_tot_cheques as $row_rs_tot_cheques) { 
 				$total = $total + $row_rs_tot_cheques['Che_Val'];
 			?>
   <tr class="Texto_normal_10">
-    <td ><? echo $row_rs_tot_cheques['Tia_Abr'].'-'.$mes.'-'.$row_rs_tot_cheques['Com_Num']; ?> </td>
-    <td><? echo $row_rs_tot_cheques['Prs_Ape'].' '.$row_rs_tot_cheques['Prs_Nom']; ?> </td>
-    <td><? echo $row_rs_tot_cheques['Pld_Des']; ?> </td>
-    <td align="right"><? echo $row_rs_tot_cheques['Che_Num']; ?> </td>
-    <td width="15%" align="center"><? echo $row_rs_tot_cheques['Che_Fec']; ?> </td>
-    <td width="15%" align="left"><? echo $row_rs_tot_cheques['Com_Con']; ?></td>
-    <td align="right"><? echo "$".''.number_format($row_rs_tot_cheques['Che_Val'],2,'.',''); ?> </td>
+    <td ><?php echo $row_rs_tot_cheques['Tia_Abr'].'-'.$mes.'-'.$row_rs_tot_cheques['Com_Num']; ?> </td>
+    <td><?php echo $row_rs_tot_cheques['Prs_Ape'].' '.$row_rs_tot_cheques['Prs_Nom']; ?> </td>
+    <td><?php echo $row_rs_tot_cheques['Pld_Des']; ?> </td>
+    <td align="right"><?php echo $row_rs_tot_cheques['Che_Num']; ?> </td>
+    <td width="15%" align="center"><?php echo $row_rs_tot_cheques['Che_Fec']; ?> </td>
+    <td width="15%" align="left"><?php echo $row_rs_tot_cheques['Com_Con']; ?></td>
+    <td align="right"><?php echo "$".''.number_format($row_rs_tot_cheques['Che_Val'],2,'.',''); ?> </td>
   </tr>
-  <?  } 
+  <?php  } 
   }//Fin del if ($total_rs_tot_cheques) ?>
   <tr>
     <td colspan="6" class="Texto_normal_10"><div align="right"><strong>TOTAL</strong></div></td>

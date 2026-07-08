@@ -57,7 +57,7 @@ $obBD_con1 =  new Class_Log_Datos_Prv;
             <td bgcolor="#CCCCCC"><strong>Emial</strong></td>
           </tr>
 
-          <?
+          <?php
           $Arr_Proveedor = $obBD_con1->getArrayConsulta(9, '' . '*' . $Ses_Emp_Cod, $obBD_conexion);
           foreach ($Arr_Proveedor as $row) {
           ?>
@@ -71,7 +71,7 @@ $obBD_con1 =  new Class_Log_Datos_Prv;
               <td>&nbsp;<?Php echo $row['Prs_Te2']; ?></td>
               <td>&nbsp;<?Php echo $row['Prs_Cor']; ?></td>
             </tr>
-          <?
+          <?php
           }
           ?>
         </table>

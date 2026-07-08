@@ -195,7 +195,7 @@ if (isset($_POST['save']))
         <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">       
 	</HEAD>
 <BODY>
-<form method="post" name= "form1" action="<? echo $_SERVER['PHP_SELF'];?>">
+<form method="post" name= "form1" action="<?php echo $_SERVER['PHP_SELF'];?>">
   <input type="button" name="hdd_save" id="hdd_save" onclick="this.form.submit();" value="Enviar">
   <input type="hidden" id="save" name="save" value="1"  />
 </form>

@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?	
+<?php	
 /**
 * Descripción: Permite consultar la mayorizacion contable
 * Fecha de actualización:	2010-11-15 
@@ -202,7 +202,7 @@ switch ($op){
       <td align="right">&nbsp;</td>
       <td align="right" <?Php if ($saldos<0){ echo "style='color:#FF0000'"; } ?>><?Php echo formato_numero($saldos, 2, 2); ?></td>
     </tr>
-    <?	  
+    <?php	  
 	  do { 
 	  		/**
 			* Consulta del cliente o proveedor 
@@ -231,9 +231,9 @@ switch ($op){
       <td align="center"><?Php echo  "C".$row_rs_cuenta['Tia_Ini']."-".$mes."-".$row_rs_cuenta['Com_Num']; ?>&nbsp;</td>
       <td align="center"><?Php echo $row_rs_cuenta['Com_Fec']; ?>&nbsp;</td>
       <td align="left"><?Php echo $row_rs_proveedore['Prs_Ape'].' '.$row_rs_proveedore['Prs_Nom']; ?></td>
-      <td><? echo cadena_mas($row_rs_cuenta['Com_Con'], 35); ?>&nbsp;</td>	  	  
+      <td><?php echo cadena_mas($row_rs_cuenta['Com_Con'], 35); ?>&nbsp;</td>	  	  
    	  <td align="right">&nbsp;
-   	    <? if ($row_rs_cuenta['Asi_Deh'] == 'D')
+   	    <?php if ($row_rs_cuenta['Asi_Deh'] == 'D')
 	  					{
 							echo formato_numero($row_rs_cuenta['Asi_Val'], 2, 2); 
 							$debe = $row_rs_cuenta['Asi_Val'];
@@ -245,7 +245,7 @@ switch ($op){
 							$debe = 0;
 						}?></td>
       <td align="right">&nbsp;
-        <? if ($row_rs_cuenta['Asi_Deh'] == 'H')
+        <?php if ($row_rs_cuenta['Asi_Deh'] == 'H')
 	  					{
 							echo formato_numero($row_rs_cuenta['Asi_Val'], 2, 2); 
 							$haber = $row_rs_cuenta['Asi_Val'];
@@ -292,7 +292,7 @@ switch ($op){
     <tr>
       <td colspan="8"><?Php echo error_alerta(" No hay resultados que mostrar", 1) ?></td>
     </tr>
-    <? } //Fin del else	
+    <?php } //Fin del else	
 	} //Fin del if ($txt_busqueda)
 	?>
   </table>  
@@ -422,7 +422,7 @@ switch ($op){
 					      <td align="right" <?Php if ($saldos<0){ echo "style='color:#FF0000'"; } ?>><?Php 
 	  										echo formato_numero($saldos, 2, 2); ?></td>
 				    </tr>
-				    <?	  
+				    <?php	  
 					  do { 
 						/**
 						* Consulta del cliente o proveedor 
@@ -451,8 +451,8 @@ switch ($op){
 						      <td align="center"><?Php echo  "C".$row_rs_cuenta['Tia_Ini']."-".$mes."-".$row_rs_cuenta['Com_Num']; ?>&nbsp;</td>
 						      <td align="center"><?Php echo $row_rs_cuenta['Com_Fec']; ?>&nbsp;</td>	  	  
 						      <td align="left"><?Php echo $row_rs_proveedore['Prs_Ape'].' '.$row_rs_proveedore['Prs_Nom']; ?></td>
-						      <td><? echo cadena_mas($row_rs_cuenta['Com_Con'], 35); ?>&nbsp;</td>	  	  
-						   	  <td width="9%" align="right"><? if ($row_rs_cuenta['Asi_Deh'] == 'D')
+						      <td><?php echo cadena_mas($row_rs_cuenta['Com_Con'], 35); ?>&nbsp;</td>	  	  
+						   	  <td width="9%" align="right"><?php if ($row_rs_cuenta['Asi_Deh'] == 'D')
 							  					{
 													echo formato_numero($row_rs_cuenta['Asi_Val'], 2, 2); 
 													$debe = $row_rs_cuenta['Asi_Val'];
@@ -463,7 +463,7 @@ switch ($op){
 													echo "0.00"; 
 													$debe = 0;
 												}?></td>
-						      <td align="right"><? if ($row_rs_cuenta['Asi_Deh'] == 'H')
+						      <td align="right"><?php if ($row_rs_cuenta['Asi_Deh'] == 'H')
 	  											{
 													echo formato_numero($row_rs_cuenta['Asi_Val'], 2, 2); 
 													$haber = $row_rs_cuenta['Asi_Val'];

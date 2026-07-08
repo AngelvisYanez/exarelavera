@@ -22,7 +22,7 @@ if ((isset($hdd_save2)) && !(isset($proye)) || isset($proye))
 	<FIELDSET class="Busqueda_ajax">
 	<label class="Titulos2">Cuentas por cobrar</label>
 	<table width="100%" border="1" cellpadding="0" cellspacing="0">
-      <?
+      <?php
 		if ($total_rs_deuda > 0) {
 	  		  $leyenda = "no";
 			  $puntero_actual = $row_rs_deuda['Car_Int'];
@@ -164,13 +164,13 @@ if ((isset($hdd_save2)) && !(isset($proye)) || isset($proye))
 			}//Fin del if ($cont2==1)
 			?>
       <tr width="10%" <?Php if ($row_rs_deuda['Deu_Fec'] < $Fec_Act){  $leyenda = "si"; echo "class='LetraNegra' bgcolor='".$row_rs_confi_teso['Col_Cad']."'"; } else { ?> class="Cuerpo_ajax" <?php } ?>>
-        <td align="center" width="10%"><? echo $row_rs_deuda['Pro_Cod']; ?></td>
-        <td align="center" width="20%"><? echo $row_rs_deuda['Pro_Ide']; ?></td>
-        <td width="20%"><? echo $row_rs_deuda['Ite_Lar']; ?></td>
-        <td width="10%" align="center"><? echo $row_rs_deuda['Deu_Fec']; ?></td>
-        <td width="10%" align="right"><? echo formato_numero($row_rs_deuda['Deu_Val'] -  $row_rs_pagos['Vet_Imp'],2,4); ?></td>
+        <td align="center" width="10%"><?php echo $row_rs_deuda['Pro_Cod']; ?></td>
+        <td align="center" width="20%"><?php echo $row_rs_deuda['Pro_Ide']; ?></td>
+        <td width="20%"><?php echo $row_rs_deuda['Ite_Lar']; ?></td>
+        <td width="10%" align="center"><?php echo $row_rs_deuda['Deu_Fec']; ?></td>
+        <td width="10%" align="right"><?php echo formato_numero($row_rs_deuda['Deu_Val'] -  $row_rs_pagos['Vet_Imp'],2,4); ?></td>
         <td width="20%" align="center"><?Php echo $mensaje; ?></td>
-        <td width="20%" align="right"><? echo formato_numero($saldo,2,4); ?> </td>
+        <td width="20%" align="right"><?php echo formato_numero($saldo,2,4); ?> </td>
         <?php 	$rs_prod_inter = $obBD_con1->consulta(sentencias_tes(655, $obBD_con1->parametros('')), $obBD_conexion->conexion);
 				$row_rs_prod_inter = $obBD_con1->registros();
 				$total_rs_prod_inter = $obBD_con1->numregistros();
@@ -200,13 +200,13 @@ if ((isset($hdd_save2)) && !(isset($proye)) || isset($proye))
 		
 		?>
       <tr <?Php if ($row_rs_interes['Deu_Fec'] < $hoy){  $leyenda = "si"; echo "class='LetraNegra' bgcolor='".$row_rs_confi_teso['Col_Cad']."'"; } else { ?> class="Cuerpo_ajax" <?php } ?>>
-        <td align="center"><strong><? echo $row_rs_interes['Pro_Cod']; ?></strong></td>
-        <td align="center"><strong><? echo $row_rs_interes['Pro_Ide']; ?></strong></td>
-        <td><strong><? echo $row_rs_interes['Ite_Lar']; ?></strong></td>
-        <td align="center"><strong><? echo $row_rs_interes['Deu_Fec']; ?></strong></td>
-        <td align="right"><strong><? echo formato_numero($row_rs_interes['Deu_Val'] -  $row_rs_pagos_int['Vet_Imp'],2,4); ?></strong></td>
+        <td align="center"><strong><?php echo $row_rs_interes['Pro_Cod']; ?></strong></td>
+        <td align="center"><strong><?php echo $row_rs_interes['Pro_Ide']; ?></strong></td>
+        <td><strong><?php echo $row_rs_interes['Ite_Lar']; ?></strong></td>
+        <td align="center"><strong><?php echo $row_rs_interes['Deu_Fec']; ?></strong></td>
+        <td align="right"><strong><?php echo formato_numero($row_rs_interes['Deu_Val'] -  $row_rs_pagos_int['Vet_Imp'],2,4); ?></strong></td>
         <td align="center">&nbsp;</td>
-        <td align="right"><strong><? echo formato_numero($saldo_int,2,4);
+        <td align="right"><strong><?php echo formato_numero($saldo_int,2,4);
 		/* Calculo del total suma interes */ 
 	     $suma_interes= $suma_interes + $saldo_int; ?></strong></td>
         <td align="center" class="Cuerpo_ajax"><?Php //if ($row_rs_deuda['Pro_Cod'] == $row_rs_prod_inter['Pro_Cod']) { ?>
@@ -236,7 +236,7 @@ if ((isset($hdd_save2)) && !(isset($proye)) || isset($proye))
       <tr>
         <td colspan="8"><div align="center"><?php echo error_alerta("No hay resultados que mostrar", 1)?></div></td>
       </tr>
-      <? }?>
+      <?php }?>
 	  </table>
 	  
 	  	<br>
@@ -357,7 +357,7 @@ $rs_pagos = $obBD_con1->consulta(sentencias_tes(68, $obBD_con1->parametros($Cli_
     <td width="8%"><strong>Rubro:</strong></td>
 	<td width="68%"><?php echo $row_rs_deuda_pro['Ite_Lar']; ?></td>
     <td width="4%"><strong>Valor</strong></td>
-	<td width="20%"><? echo formato_numero($interes,2,2); ?></td>
+	<td width="20%"><?php echo formato_numero($interes,2,2); ?></td>
   </tr>
 </table>
 <?php  } ?>
@@ -409,7 +409,7 @@ for($j=0;$j<=10;$j++)
 	 ?></td>
 	 <?php //for ($i=0; $i=$interes; $i++){ ?>
 	 
-	<td width="10%"><? echo number_format($saldo + $tot_int,2); ?></td>
+	<td width="10%"><?php echo number_format($saldo + $tot_int,2); ?></td>
 	<?php //} ?>
  </tr>
  

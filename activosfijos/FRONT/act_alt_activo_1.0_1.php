@@ -483,7 +483,7 @@ if(isset($uploadfoto)){
                                                     <?Php                                         
                                                     foreach($row_rs_tia_tip as $row)
                                                         { ?>
-                                                    <option value="<?Php echo $row['Tia_Cod'];?>" ><?Php echo utf8_decode($row['descripcion']);?></option>
+                                                    <option value="<?Php echo $row['Tia_Cod'];?>" ><?Php echo mb_convert_encoding($row['descripcion'], 'ISO-8859-1', 'UTF-8');?></option>
                                                     <?Php 
                                                         } ?>
                                                 </select>
@@ -1120,7 +1120,7 @@ if(isset($uploadfoto)){
         });
         $("#tabs").tabs({
             activate:function (event, ui) {
-                var $activeTab = $('#tabs').tabs('option','active');
+                public $activeTab = $('#tabs').tabs('option','active');
                 if($activeTab === 4){calcula_depreciacion();}
             }
         });
@@ -1141,7 +1141,7 @@ if(isset($uploadfoto)){
             {label:'<center><i class="ui-icon ui-icon-circle-check"></i></center>', name: 'act', width: 18, align: 'center',viewable: false, 
                 formatter: function(cellvalue, options, rowObject)
                 {
-                    var $input=$('<input id="Chk_'+rowObject.llave+'" type="checkbox"'+(cellvalue?'checked="checked"':'')+' onclick="cargar($(this).data(\'orig\'))" />');                    
+                    public $input=$('<input id="Chk_'+rowObject.llave+'" type="checkbox"'+(cellvalue?'checked="checked"':'')+' onclick="cargar($(this).data(\'orig\'))" />');                    
                     return $('<div/>').append($input.attr('data-orig',$.jsonParser(rowObject))).html();
                 }   
             }

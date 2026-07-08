@@ -26,7 +26,7 @@ if (isset($CatSelect)) {
 	$Cat_Cod = $CatSelect;
 	echo "<option value=''>Todas</option>";
 	foreach ($rs_tpaj as $row)
-		echo utf8_encode("<option value='$row[Cat_Cod]'>$row[Cat_Des]</option>");
+		echo mb_convert_encoding("<option value='$row[Cat_Cod]'>$row[Cat_Des]</option>", 'UTF-8', 'ISO-8859-1');
 	exit();
 }
 

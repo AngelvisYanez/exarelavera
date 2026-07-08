@@ -1,4 +1,4 @@
-<?	
+<?php	
 /**
 * Descripci�n: Permite consultar facturas de compra
 * Fecha de actualizaci�n:	2012-09-13 
@@ -364,8 +364,8 @@ if(isset($txt_busqueda))
 	  $row_rs_comprobante_compra=$obBD_con1->getRowConsulta(345, $row_rs_buscar['Cop_Cod'], $obBD_conexion);			 
 	  ?>      	 
       <tr>
-	    <td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php $Cop_Cod_Int=$row_rs_buscar['Cop_Cod']; echo $Cop_Cod_Int; ?></FONT></td>
-	    <td align="center"><FONT COLOR="<? echo $rojo;?>">
+	    <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php $Cop_Cod_Int=$row_rs_buscar['Cop_Cod']; echo $Cop_Cod_Int; ?></FONT></td>
+	    <td align="center"><FONT COLOR="<?php echo $rojo;?>">
 	         <?Php 
 		/**
 		* Consultar si la factura se registro de forma autom�tica y tiene un comprobante contable
@@ -378,39 +378,39 @@ if(isset($txt_busqueda))
 			echo "No";																
 		?>
 	         </FONT></td>
-	    <td align="center"><font color="<? echo $rojo;?>"><?
+	    <td align="center"><font color="<?php echo $rojo;?>"><?php
            $rs_formaPago=$obBD_con1->getRowConsulta(362, $row_rs_buscar['Cop_Cod'], $obBD_conexion);
 		   if (count($rs_formaPago)>0)
 		   		echo "Cr&eacute;dito";
 		   else
 		   		echo "Contado";
 		   ?></FONT></td>
-	    <td align="center"><FONT COLOR="<? echo $rojo;?>">
+	    <td align="center"><FONT COLOR="<?php echo $rojo;?>">
 	      <?Php $Num_Fac=$row_rs_buscar['Cop_Num']; echo $Num_Fac; ?>
 	      </FONT>
 	      </td>
 	    <td align="center">
-	      <FONT COLOR="<? echo $rojo;?>">
+	      <FONT COLOR="<?php echo $rojo;?>">
 	        <?Php $Fecha_Fac=$row_rs_buscar['Cop_Fec'];  echo $Fecha_Fac; ?>
 	        </FONT>
 	      </td>
 	    <td align="left">
-	      <FONT COLOR="<? echo $rojo;?>">
+	      <FONT COLOR="<?php echo $rojo;?>">
 	        <?Php echo $row_rs_buscar['Prs_Ape']." ".$row_rs_buscar['Prs_Nom']; ?>
 	        </FONT>
 	      </td>
 	    <td align="center">
-        <? if($row_ret_compra['Ret_Aut']=='S'){ ?>
-        <form name="frm_pdf" id="frm_pdf" action="../COMPONENTES/tesPdfElectronicos.php?type=RETENC&Doc_Cod=<? echo $row_ret_compra['Ret_Cod'];?>" method="post" target="_blank">
+        <?php if($row_ret_compra['Ret_Aut']=='S'){ ?>
+        <form name="frm_pdf" id="frm_pdf" action="../COMPONENTES/tesPdfElectronicos.php?type=RETENC&Doc_Cod=<?php echo $row_ret_compra['Ret_Cod'];?>" method="post" target="_blank">
             <button type="button" class="btn btn-primary btn-mini" title="Pdf(Retenci&oacute;n electr&oacute;nica SRI)" onclick="this.form.submit()">
             <i class=" icon-download-alt icon-white"></i> <span></span> </button>
             <input name="urlXml" id="urlXml" type="hidden" value="<?Php echo '../FRONT/'.$Ses_Emp_Cod.'/'.$row_ret_compra['Ret_Xml'].'_A.xml';?>">
             <input name="op" id="op" type="hidden" value="I">
-            <input name="logoUrl" id="logoUrl" type="hidden" value="<? echo $Ses_Emp_Log;?>">            
+            <input name="logoUrl" id="logoUrl" type="hidden" value="<?php echo $Ses_Emp_Log;?>">            
         </form>        
-        <? }?>
+        <?php }?>
         </td>
-	    <td align="center"><button type="button" class="btn btn-info btn-mini" title="Detalle del registro" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_info=1&amp;com_codigo=<? echo $row_rs_buscar['Cop_Cod'];?>&Ses_Suc_Cod=<? echo $Ses_Suc_Cod;?>&Ses_Emp_Cod=<? echo $Ses_Emp_Cod;?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>	
+	    <td align="center"><button type="button" class="btn btn-info btn-mini" title="Detalle del registro" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_info=1&amp;com_codigo=<?php echo $row_rs_buscar['Cop_Cod'];?>&Ses_Suc_Cod=<?php echo $Ses_Suc_Cod;?>&Ses_Emp_Cod=<?php echo $Ses_Emp_Cod;?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>	
 	    <td align="center">
 	      <?Php if ($row_rs_buscar['Cop_Est'] == 'A') { ?>
 	       <form method="post" name="pasar" action="<?Php echo $_SERVER['PHP_SELF']; ?>">
@@ -599,7 +599,7 @@ if(isset($hdd))
     <label class="Titulos2">Resultados de la b&uacute;squeda:</label>
     </LEGEND>
      <div id="Exportar_a_Excel">
-    <? if($op_busqueda=='F'){?>
+    <?php if($op_busqueda=='F'){?>
     <table width="59%" border="0">
       <tr>
         <td width="13%" class="Etiqueta1"><div align="right">Desde:</div></td>
@@ -610,7 +610,7 @@ if(isset($hdd))
         <td width="34%" class="LetraNegra">&nbsp;<?Php if($optest=='A'){ echo "Activas";  }else { echo "Anuladas"; }  ?></td>
       </tr>
     </table>
-	<? }else{?>
+	<?php }else{?>
     <table width="60%" border="0">
       <tr>
         <td width="13%" class="Etiqueta1"><div align="right">C.I/R.U.C:</div></td>
@@ -626,7 +626,7 @@ if(isset($hdd))
         <td width="20%" class="LetraNegra">&nbsp;<?Php if($optest=='A'){ echo "Activas";  }else { echo "Anuladas"; }  ?></td>
       </tr>
     </table>
-    <? }?>
+    <?php }?>
     <table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader03">
     <thead>                           
     <tr>
@@ -717,7 +717,7 @@ if(isset($hdd))
           { ?>
             <th width="2%">Base 0%<br><font title="<?php echo $rs_adquisio[$j]['Adq_Des'];?>">[<?php echo $rs_adquisio[$j]['Adq_Cor'];?>]</font></th>
             <th width="2%">Base IVA<br><font title="<?php echo $rs_adquisio[$j]['Adq_Des'];?>">[<?php echo $rs_adquisio[$j]['Adq_Cor'];?>]</font></th>
-          <? }?>
+          <?php }?>
               <th width="3%">Desc.</th>
               <th width="3%">IVA</th>
               <th width="3%">ICE</th>
@@ -728,7 +728,7 @@ if(isset($hdd))
           </tr>
           </thead>
           <tbody>
-		  <?
+		  <?php
         /**
         * Recorrido de los tipos de sustentos tributarios 
         */
@@ -832,13 +832,13 @@ if(isset($hdd))
                       { $rojo='#FF0000'; $anulada++; }else{$rojo='';}		
                     ?>                     
                   <tr >
-                    <td align="center"><FONT COLOR="<? echo $rojo;?>"><?php $Cop_Cod=$row_rs_buscar['Cop_Cod']; echo $Cop_Cod; ?></FONT></td>
-                    <td align="center"><FONT COLOR="<? echo $rojo;?>"><?PHP echo $row_rs_buscar['Tic_Des']; ?></FONT></td>
-                    <td align="center"><FONT COLOR="<? echo $rojo;?>"><?php $Num_Fac=$row_rs_buscar['Cop_Num']; echo $Num_Fac; ?></FONT></td>
-                    <td align="center" style="mso-number-format:'@';" title="<? echo $row_rs_buscar['Cop_Aut'];?>"><FONT COLOR="<? echo $rojo;?>"><?php echo $AutNum; ?></FONT></td>
-                    <td align="center"><FONT COLOR="<? echo $rojo;?>"><?php $Fec_Com=$row_rs_buscar['Cop_Fec']; echo $Fec_Com; ?></FONT></td>
-                    <td align="center" style="mso-number-format:'@';"><FONT COLOR="<? echo $rojo;?>"><?PHP $Prs_Ced= $row_rs_buscar['Prs_Ced']; echo $Prs_Ced; ?></FONT></td>
-                    <td colspan="3" title="<? echo $row_rs_buscar['Prs_Ape'].'&nbsp'.$row_rs_buscar['Prs_Nom'];?>"><FONT COLOR="<? echo $rojo;?>"><?PHP echo $proveedor; ?></FONT>
+                    <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php $Cop_Cod=$row_rs_buscar['Cop_Cod']; echo $Cop_Cod; ?></FONT></td>
+                    <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?PHP echo $row_rs_buscar['Tic_Des']; ?></FONT></td>
+                    <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php $Num_Fac=$row_rs_buscar['Cop_Num']; echo $Num_Fac; ?></FONT></td>
+                    <td align="center" style="mso-number-format:'@';" title="<?php echo $row_rs_buscar['Cop_Aut'];?>"><FONT COLOR="<?php echo $rojo;?>"><?php echo $AutNum; ?></FONT></td>
+                    <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php $Fec_Com=$row_rs_buscar['Cop_Fec']; echo $Fec_Com; ?></FONT></td>
+                    <td align="center" style="mso-number-format:'@';"><FONT COLOR="<?php echo $rojo;?>"><?PHP $Prs_Ced= $row_rs_buscar['Prs_Ced']; echo $Prs_Ced; ?></FONT></td>
+                    <td colspan="3" title="<?php echo $row_rs_buscar['Prs_Ape'].'&nbsp'.$row_rs_buscar['Prs_Nom'];?>"><FONT COLOR="<?php echo $rojo;?>"><?PHP echo $proveedor; ?></FONT>
                     </td>
                     <?php 			
                     if(count($rs_adquisio) > 0)
@@ -857,7 +857,7 @@ if(isset($hdd))
                             /**
                             * $iva_codigo[0] representa el %0
                             */
-                        ?><td  align="right"><FONT COLOR="<? echo $rojo;?>"><?php  
+                        ?><td  align="right"><FONT COLOR="<?php echo $rojo;?>"><?php  
                         $row_importe_comp = $obBD_con1->getRowConsulta(323, $row_rs_buscar['Cop_Cod'].'*'.$row_rs_adquisio['Adq_Cod'].'*'.$iva_codigo[0], $obBD_conexion); 		
 						   if ($row_importe_comp['Iva_Por']==0)
 						   {  
@@ -886,7 +886,7 @@ if(isset($hdd))
                         */
                         ?>
                          </FONT></td>
-                        <td align="right"><FONT COLOR="<? echo $rojo;?>"><?php	
+                        <td align="right"><FONT COLOR="<?php echo $rojo;?>"><?php	
                         $row_importe_comp = $obBD_con1->getRowConsulta(323, $row_rs_buscar['Cop_Cod'].'*'.$row_rs_adquisio['Adq_Cod'].'*'.$iva_codigo[1], $obBD_conexion); 
                          if ($row_importe_comp['Iva_Por']!=0)
                           { 		   		 	  
@@ -944,7 +944,7 @@ if(isset($hdd))
                 </FONT>        
                 </td>
                 <td align="right"><FONT COLOR="<?php echo $rojo;?>"><?php echo empty($resultados['IceTot'])||$resultados['IceTot']*1==0?'&nbsp':formato_numero($resultados['IceTot'],2,1); $tot_ice+=formato_numero($resultados['IceTot'],2,1)*1; ?></FONT></td>
-                <td align="right"><FONT COLOR="<? echo $rojo;?>"><?php echo formato_numero($resultados['total'],2,1);
+                <td align="right"><FONT COLOR="<?php echo $rojo;?>"><?php echo formato_numero($resultados['total'],2,1);
                         /**
                         * Acumulo en tot_fac el total de las facturas de compras 
                         */		
@@ -952,17 +952,17 @@ if(isset($hdd))
                         ?></FONT> 
                 </td>
                 <td align="center">
-                <? if($row_ret_compra['Ret_Aut']=='S'){ ?>
+                <?php if($row_ret_compra['Ret_Aut']=='S'){ ?>
                 <form name="frm_pdf" id="frm_pdf" action="../COMPONENTES/tesPdfRetencionElectronica_1.0.php" method="post" target="_blank">
                     <button type="button" class="btn btn-primary btn-mini" title="Pdf(Retenci&oacute;n electr&oacute;nica SRI)" onclick="this.form.submit()">
                     <i class=" icon-download-alt icon-white"></i> <span></span> </button>
                     <input name="urlXml" id="urlXml" type="hidden" value="<?Php echo '../FRONT/'.$Ses_Emp_Cod."/".$row_ret_compra['Ret_Xml']."_A.xml";?>">
                     <input name="op" id="op" type="hidden" value="I">
-                    <input name="logoUrl" id="logoUrl" type="hidden" value="<? echo $Ses_Emp_Log;?>">            
+                    <input name="logoUrl" id="logoUrl" type="hidden" value="<?php echo $Ses_Emp_Log;?>">            
                 </form>
-                <? }?>
+                <?php }?>
                 </td>
-                <td align="center"><button type="button" class="btn btn-info btn-mini" title="Detalle del registro" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_detalle=1&amp;com_codigo=<? echo $row_rs_buscar['Cop_Cod'];?>&amp;Ses_Emp_Cod=<? echo $Ses_Emp_Cod;?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>
+                <td align="center"><button type="button" class="btn btn-info btn-mini" title="Detalle del registro" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_detalle=1&amp;com_codigo=<?php echo $row_rs_buscar['Cop_Cod'];?>&amp;Ses_Emp_Cod=<?php echo $Ses_Emp_Cod;?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>
                 <td align="center"><?Php 
                 if ($row_rs_buscar['Cop_Est'] == 'A') 
                 { ?>
@@ -992,7 +992,7 @@ if(isset($hdd))
                 </td>
                 </tr> 
                 
-             <? } //Fin del count($rs_buscar) ?>   
+             <?php } //Fin del count($rs_buscar) ?>   
 				
         <?Php 					 
          }//fin for ($x=0; $x<=count($sustento_cod)-1; $x++)
@@ -1145,37 +1145,37 @@ else
 			if($row_rs_buscar['Cop_Est']=='I')
 			  { $rojo='#FF0000'; $anulada++; }else{$rojo='';}		
 			?>				
-		  <tr <? echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo");?> class="Fondo">
-			<td align="center"><FONT COLOR="<? echo $rojo;?>"><?php $Cop_Cod=$row_rs_buscar['Cop_Cod']; echo $Cop_Cod; ?></FONT></td>
-			<td align="center"><FONT COLOR="<? echo $rojo;?>"><?PHP echo $row_rs_buscar['Tic_Des']; ?></FONT></td>
-			<td width="8%" align="center"><FONT COLOR="<? echo $rojo;?>"><?php $Num_Fac=$row_rs_buscar['Cop_Num']; echo $Num_Fac; ?>
+		  <tr <?php echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo");?> class="Fondo">
+			<td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php $Cop_Cod=$row_rs_buscar['Cop_Cod']; echo $Cop_Cod; ?></FONT></td>
+			<td align="center"><FONT COLOR="<?php echo $rojo;?>"><?PHP echo $row_rs_buscar['Tic_Des']; ?></FONT></td>
+			<td width="8%" align="center"><FONT COLOR="<?php echo $rojo;?>"><?php $Num_Fac=$row_rs_buscar['Cop_Num']; echo $Num_Fac; ?>
 			  </FONT></td>
-			<td align="center" style="mso-number-format:'@';"><FONT COLOR="<? echo $rojo;?>"><?php $Cop_Aut=$row_rs_buscar['Cop_Aut'];  echo $Cop_Aut; ?>
+			<td align="center" style="mso-number-format:'@';"><FONT COLOR="<?php echo $rojo;?>"><?php $Cop_Aut=$row_rs_buscar['Cop_Aut'];  echo $Cop_Aut; ?>
 			  </FONT></td>
-			<td align="center"><FONT COLOR="<? echo $rojo;?>"><?php $Fec_Com=$row_rs_buscar['Cop_Fec'];  echo $Fec_Com; ?>
+			<td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php $Fec_Com=$row_rs_buscar['Cop_Fec'];  echo $Fec_Com; ?>
 			  </FONT></td>
-			<td align="center" style="mso-number-format:'@';"><FONT COLOR="<? echo $rojo;?>"><?PHP $Prs_Ced= $row_rs_buscar['Prs_Ced']; echo $Prs_Ced; ?>
+			<td align="center" style="mso-number-format:'@';"><FONT COLOR="<?php echo $rojo;?>"><?PHP $Prs_Ced= $row_rs_buscar['Prs_Ced']; echo $Prs_Ced; ?>
 			  </FONT></td>
-			<td  align="center"><FONT COLOR="<? echo $rojo;?>"><?PHP echo $row_rs_buscar['Prs_Ape'].' '.$row_rs_buscar['Prs_Nom']; ?></FONT></td>
-			<td align="right" width="16%"><FONT COLOR="<? echo $rojo;?>">
+			<td  align="center"><FONT COLOR="<?php echo $rojo;?>"><?PHP echo $row_rs_buscar['Prs_Ape'].' '.$row_rs_buscar['Prs_Nom']; ?></FONT></td>
+			<td align="right" width="16%"><FONT COLOR="<?php echo $rojo;?>">
 			<?php  $resultados = explode('*', $obBD_con1->calculosCompraIce($Cop_Cod, $obBD_conexion));
 				   $total_importe = $total_importe +  round($row_rs_buscar['Importe']-($row_rs_buscar['Importe']*$row_rs_buscar['Cop_Des']/100),2);
 				   echo formato_numero($row_rs_buscar['Importe']-($row_rs_buscar['Importe']*$row_rs_buscar['Cop_Des']/100),2,1);			 	  
 			  ?></FONT></td>
-			<td align="right"><FONT COLOR="<? echo $rojo;?>"><?Php
+			<td align="right"><FONT COLOR="<?php echo $rojo;?>"><?Php
 				   $iva_factura=formato_numero($resultados[3],2,1);
 				   //Total del iva
 				   $total_iva = $total_iva + round($resultados[3],2);
 				echo $iva_factura; ?> 
 				</FONT></td>
-			<td align="right"><FONT COLOR="<? echo $rojo;?>"><?php
+			<td align="right"><FONT COLOR="<?php echo $rojo;?>"><?php
 					echo $resultados[5];
 					/**
 					* Acumulo en tot_fac el total de las facturas de compras 
 					*/		
 					$total_fac=$total_fac+$iva_factura+($row_rs_buscar['Importe']-($row_rs_buscar['Importe']*$row_rs_buscar['Cop_Des']/100));				   
 					?></FONT></td>
-			<td align="center"><button type="button" class="btn btn-info btn-mini" title="Detalle del registro" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_detalle=1&amp;com_codigo=<? echo $row_rs_buscar['Cop_Cod'];?>&amp;Ses_Emp_Cod=<? echo $$Ses_Emp_Cod;?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>
+			<td align="center"><button type="button" class="btn btn-info btn-mini" title="Detalle del registro" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_detalle=1&amp;com_codigo=<?php echo $row_rs_buscar['Cop_Cod'];?>&amp;Ses_Emp_Cod=<?php echo $$Ses_Emp_Cod;?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>
 			<td colspan="5" align="center"><?Php 
 				if ($row_rs_buscar['Cop_Est'] == 'A') 
 				{ ?>
@@ -1250,7 +1250,7 @@ else
 	<br>    
 </FIELDSET>
 	
-   <? } 
+   <?php } 
    		
 	/**
 	* Control para mostrar el boton imprimir
@@ -1389,7 +1389,7 @@ else
     </LEGEND>
         <table id="comp"></table><div id="listPager"></div>
     </FIELDSET>     
-    <? if(isset($hdd)){
+    <?php if(isset($hdd)){
 		
 		if($Tic_Cod!='T'){
 			$paramTipDoc=" AND Tic_Cod='".$Tic_Cod."'";
@@ -1471,17 +1471,17 @@ else
           $row_ret_compra = $obBD_con1->getRowConsulta(718, $row_rs_buscar['Cop_Cod'], $obBD_conexion);				 
           ?>      	 
           <tr>
-            <td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php $Cop_Cod_Int=$row_rs_buscar['Cop_Cod']; echo $Cop_Cod_Int; ?></FONT></td>
-            <td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Cop_Sec'];?></FONT></td>
-            <td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php $Fecha_Fac=$row_rs_buscar['Cop_Fec'];  echo $Fecha_Fac; ?></FONT></td>
-            <td align="left" title="<? echo $NomTicDes;?>"><FONT COLOR="<? echo $rojo;?>"><?Php echo $AuxNomTicDes;?>&nbsp;</FONT></td>
-            <td align="center"><FONT COLOR="<? echo $rojo;?>"><?Php $Num_Fac=$row_rs_buscar['Cop_Num']; echo $Num_Fac; ?></FONT></td>
-            <td align="center"><font color="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Prs_Ced'];?></font></td>
-            <td align="left" title="<? echo $NomPrvCop;?>"><FONT COLOR="<? echo $rojo;?>">&nbsp;<?Php echo $AuxNomPrvCop; ?></FONT></td>
-            <td align="right"><FONT COLOR="<? echo $rojo;?>"><?Php $sub0=$sub0+$row_rs_buscar['Sub0']; echo formato_numero($row_rs_buscar['Sub0'],2,2);?>&nbsp;</FONT></td>	
-            <td align="right"><FONT COLOR="<? echo $rojo;?>"><?Php $sub12=$sub12+$row_rs_buscar['Sub12']; echo formato_numero($row_rs_buscar['Sub12'],2,2);?>&nbsp;</FONT></td>
-            <td align="right"><FONT COLOR="<? echo $rojo;?>"><?Php $ivaTot=$ivaTot+$row_rs_buscar['IvaTot']; echo formato_numero($row_rs_buscar['IvaTot'],2,2);?>&nbsp;</FONT></td>
-            <td align="right"><FONT COLOR="<? echo $rojo;?>"><?Php $total=$total+($row_rs_buscar['IvaTot']+$row_rs_buscar['Sub12']+$row_rs_buscar['Sub0']); echo formato_numero($row_rs_buscar['IvaTot']+$row_rs_buscar['Sub12']+$row_rs_buscar['Sub0'],2,2);?>&nbsp;</FONT></td>            
+            <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php $Cop_Cod_Int=$row_rs_buscar['Cop_Cod']; echo $Cop_Cod_Int; ?></FONT></td>
+            <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Cop_Sec'];?></FONT></td>
+            <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php $Fecha_Fac=$row_rs_buscar['Cop_Fec'];  echo $Fecha_Fac; ?></FONT></td>
+            <td align="left" title="<?php echo $NomTicDes;?>"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $AuxNomTicDes;?>&nbsp;</FONT></td>
+            <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php $Num_Fac=$row_rs_buscar['Cop_Num']; echo $Num_Fac; ?></FONT></td>
+            <td align="center"><font color="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Prs_Ced'];?></font></td>
+            <td align="left" title="<?php echo $NomPrvCop;?>"><FONT COLOR="<?php echo $rojo;?>">&nbsp;<?Php echo $AuxNomPrvCop; ?></FONT></td>
+            <td align="right"><FONT COLOR="<?php echo $rojo;?>"><?Php $sub0=$sub0+$row_rs_buscar['Sub0']; echo formato_numero($row_rs_buscar['Sub0'],2,2);?>&nbsp;</FONT></td>	
+            <td align="right"><FONT COLOR="<?php echo $rojo;?>"><?Php $sub12=$sub12+$row_rs_buscar['Sub12']; echo formato_numero($row_rs_buscar['Sub12'],2,2);?>&nbsp;</FONT></td>
+            <td align="right"><FONT COLOR="<?php echo $rojo;?>"><?Php $ivaTot=$ivaTot+$row_rs_buscar['IvaTot']; echo formato_numero($row_rs_buscar['IvaTot'],2,2);?>&nbsp;</FONT></td>
+            <td align="right"><FONT COLOR="<?php echo $rojo;?>"><?Php $total=$total+($row_rs_buscar['IvaTot']+$row_rs_buscar['Sub12']+$row_rs_buscar['Sub0']); echo formato_numero($row_rs_buscar['IvaTot']+$row_rs_buscar['Sub12']+$row_rs_buscar['Sub0'],2,2);?>&nbsp;</FONT></td>            
             </tr>   
             
           <?Php } 
@@ -1511,10 +1511,10 @@ else
         <tfoot>
         <tr class="Cabecera1">
               <td colspan="7" align="right">Totales:&nbsp;</td>
-              <td align="right"><? echo formato_numero($sub0,2,2);?>&nbsp;</td>
-              <td align="right"><? echo formato_numero($sub12,2,2);?>&nbsp;</td>
-              <td align="right"><? echo formato_numero($ivaTot,2,2);?>&nbsp;</td>
-              <td align="right"><? echo formato_numero($total,2,2);?>&nbsp;</td>
+              <td align="right"><?php echo formato_numero($sub0,2,2);?>&nbsp;</td>
+              <td align="right"><?php echo formato_numero($sub12,2,2);?>&nbsp;</td>
+              <td align="right"><?php echo formato_numero($ivaTot,2,2);?>&nbsp;</td>
+              <td align="right"><?php echo formato_numero($total,2,2);?>&nbsp;</td>
         </tr>
         </tfoot>
       </table>
@@ -1587,23 +1587,23 @@ else
           $row_ret_compra = $obBD_con1->getRowConsulta(1088, $row_rs_buscar['Cop_Cod'], $obBD_conexion);				 
           ?>
     <tr>
-      <td align="center"><font color="<? echo $rojo;?>"><?Php $Cop_Cod_Int=$row_rs_buscar['Cop_Cod']; echo $Cop_Cod_Int; ?></font></td>
-      <td align="center"><font color="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Cop_Sec'];?></font></td>
-      <td align="center"><font color="<? echo $rojo;?>"><?Php $Fecha_Fac=$row_rs_buscar['Cop_Fec']; echo $Fecha_Fac; ?></font></td>
-      <td align="left"><font color="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Tic_Des'];?></font></td>
-      <td align="center"><font color="<? echo $rojo;?>"><?Php $Num_Fac=$row_rs_buscar['Cop_Num']; echo $Num_Fac; ?></font></td>
-      <td align="center" style="mso-number-format:'@'"><font color="<? echo $rojo;?>"><?Php  echo $row_rs_buscar['Cop_Aut']; ?></font></td>
-      <td align="center" style="white-space: nowrap; overflow: hidden;"><? if($row_ret_compra['Ret_Num']!=''){echo str_pad($row_ret_compra['Ret_Num'], 9, "0", STR_PAD_LEFT);}?></td>
-      <td align="center" style="mso-number-format:'@'"><? echo $row_ret_compra['Aut_Sri'];?></td>
-      <td align="center" style="mso-number-format:'@'"><font color="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Prs_Ced'];?></font></td>
-      <td align="left"><font color="<? echo $rojo;?>"><?Php echo $row_rs_buscar['Prs_Ape'].' '.$row_rs_buscar['Prs_Nom']; ?></font></td>
+      <td align="center"><font color="<?php echo $rojo;?>"><?Php $Cop_Cod_Int=$row_rs_buscar['Cop_Cod']; echo $Cop_Cod_Int; ?></font></td>
+      <td align="center"><font color="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Cop_Sec'];?></font></td>
+      <td align="center"><font color="<?php echo $rojo;?>"><?Php $Fecha_Fac=$row_rs_buscar['Cop_Fec']; echo $Fecha_Fac; ?></font></td>
+      <td align="left"><font color="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Tic_Des'];?></font></td>
+      <td align="center"><font color="<?php echo $rojo;?>"><?Php $Num_Fac=$row_rs_buscar['Cop_Num']; echo $Num_Fac; ?></font></td>
+      <td align="center" style="mso-number-format:'@'"><font color="<?php echo $rojo;?>"><?Php  echo $row_rs_buscar['Cop_Aut']; ?></font></td>
+      <td align="center" style="white-space: nowrap; overflow: hidden;"><?php if($row_ret_compra['Ret_Num']!=''){echo str_pad($row_ret_compra['Ret_Num'], 9, "0", STR_PAD_LEFT);}?></td>
+      <td align="center" style="mso-number-format:'@'"><?php echo $row_ret_compra['Aut_Sri'];?></td>
+      <td align="center" style="mso-number-format:'@'"><font color="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Prs_Ced'];?></font></td>
+      <td align="left"><font color="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Prs_Ape'].' '.$row_rs_buscar['Prs_Nom']; ?></font></td>
       <td align="right" style="mso-number-format:'0.00';"><?Php $sub0=$sub0+$row_rs_buscar['Sub0']; echo formato_numero($row_rs_buscar['Sub0'],2,2);?></td>
-      <td align="right"><font color="<? echo $rojo;?>"><?Php $sub12=$sub12+$row_rs_buscar['Sub12']; echo formato_numero($row_rs_buscar['Sub12'],2,2);?></font></td>
-      <td align="right"><font color="<? echo $rojo;?>"><?Php $ivaTot=$ivaTot+$row_rs_buscar['IvaTot']; echo formato_numero($row_rs_buscar['IvaTot'],2,2);?></font></td>
-      <td align="right"><font color="<? echo $rojo;?>"><?Php $total=$total+($row_rs_buscar['IvaTot']+$row_rs_buscar['Sub12']+$row_rs_buscar['Sub0']); echo formato_numero($row_rs_buscar['IvaTot']+$row_rs_buscar['Sub12']+$row_rs_buscar['Sub0'],2,2);?></font></td>
+      <td align="right"><font color="<?php echo $rojo;?>"><?Php $sub12=$sub12+$row_rs_buscar['Sub12']; echo formato_numero($row_rs_buscar['Sub12'],2,2);?></font></td>
+      <td align="right"><font color="<?php echo $rojo;?>"><?Php $ivaTot=$ivaTot+$row_rs_buscar['IvaTot']; echo formato_numero($row_rs_buscar['IvaTot'],2,2);?></font></td>
+      <td align="right"><font color="<?php echo $rojo;?>"><?Php $total=$total+($row_rs_buscar['IvaTot']+$row_rs_buscar['Sub12']+$row_rs_buscar['Sub0']); echo formato_numero($row_rs_buscar['IvaTot']+$row_rs_buscar['Sub12']+$row_rs_buscar['Sub0'],2,2);?></font></td>
       <td align="right"><?Php echo $row_ret_compra['TotRen'];?></td>
       <td align="right"><?Php echo $row_ret_compra['TotIva'];?></td>
-      <td align="right"><?
+      <td align="right"><?php
       	$row_detcompra = $obBD_con1->getArrayConsulta(1085, $row_rs_buscar['Cop_Cod'], $obBD_conexion);
 		$cadCon="";
 		foreach($row_detcompra as $datos)
@@ -1651,10 +1651,10 @@ else
   <tfoot>
     <tr class="Cabecera1">
       <td colspan="10" align="right"><strong>Totales:</strong>&nbsp;</td>
-      <td align="right"><strong><? echo formato_numero($sub0,2,2);?></strong></td>
-      <td align="right"><strong><? echo formato_numero($sub12,2,2);?></strong></td>
-      <td align="right"><strong><? echo formato_numero($ivaTot,2,2);?></strong></td>
-      <td align="right"><strong><? echo formato_numero($total,2,2);?></strong></td>
+      <td align="right"><strong><?php echo formato_numero($sub0,2,2);?></strong></td>
+      <td align="right"><strong><?php echo formato_numero($sub12,2,2);?></strong></td>
+      <td align="right"><strong><?php echo formato_numero($ivaTot,2,2);?></strong></td>
+      <td align="right"><strong><?php echo formato_numero($total,2,2);?></strong></td>
       <td align="right">&nbsp;</td>
       <td align="right">&nbsp;</td>
       <td align="right">&nbsp;</td>
@@ -1663,11 +1663,11 @@ else
 </table>
     
      </div>
- 	<? }
+ 	<?php }
 break;
 	?>
  
-<? case 4: 
+<?php case 4: 
    if($Ses_Prs_Cod=='1'){
 ?> 
   <form action="<?Php echo $_SERVER['PHP_SELF']; ?>" name="frm_buscar" id="frm_buscar">
@@ -1768,7 +1768,7 @@ break;
  
  
  
-<? 		 
+<?php 		 
    }else{
 		echo "En construcci&oacute;n...!";   
    }
@@ -1970,11 +1970,11 @@ if (isset($codigo) && $codigo>0)
          <td width="90">
          <form action="../FRONT/fac_pri_fac_detallecompras_1.0.php" method="post" target="_new" name= "Form5" >
          <button type="button" class="btn btn-primary start" title="Imprime Detalle" onclick="this.form.submit()"> <i class="icon-print icon-white"></i> <span>Detalle</span></button> 
-         <input type="hidden" id="com_codigo" name="com_codigo" value="<? echo $codigo;?>" />
+         <input type="hidden" id="com_codigo" name="com_codigo" value="<?php echo $codigo;?>" />
          </form>         
          </td>
          <td width="110">
-         <?
+         <?php
 			$rs_comprob = $obBD_con1->getRowConsulta(1076, $Tic_Cod,$obBD_conexion);
 			if($rs_comprob['Tic_Sri']=='3')
 			{
@@ -1989,9 +1989,9 @@ if (isset($codigo) && $codigo>0)
 		 ?>
          <form action="<?Php echo $hdd_liquidacion;?>" method="post" target="_new" name= "Form4" >
          <button type="button" class="btn btn-primary start" title="Imprime Liquidaci&oacute;n" onclick="this.form.submit()"> <i class="icon-print icon-white"></i> <span>Liquidaci&oacute;n</span></button> 
-         <input type="hidden" id="Cop_Cod" name="Cop_Cod" value="<? echo $codigo;?>" />
+         <input type="hidden" id="Cop_Cod" name="Cop_Cod" value="<?php echo $codigo;?>" />
          </form>
-         <? }?>
+         <?php }?>
          </td>         
        </tr>
      </table>
@@ -2000,14 +2000,14 @@ if (isset($codigo) && $codigo>0)
 }//FIn del if (isset($codigo) && !(isset($txt_busqueda)))
 echo "</div>";	  
  ?> 
- <?
+ <?php
 if (isset($anulada) && $anulada > 0)
 {		
 	$com_leyenda[1]=$anulada;
 }//Fin del if ($anulada > 0)
 ?>
 <br/>
-<?
+<?php
 require_once('../../componentes/FRONT/com_con_leyenda.php');
 ?>
 <br />

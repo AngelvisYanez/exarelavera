@@ -91,8 +91,8 @@ if (isset($bt_save)) {
     $xml_identifica = '<TipoIDInformante>R</TipoIDInformante>' .
         '<IdInformante>' . $row_rs_identifica['Emp_Ruc'] . '</IdInformante>' .
         '<razonSocial>' . strtoupper($row_rs_identifica['Emp_Nom']) . '</razonSocial>' .
-        '<Anio>' . utf8_encode($anio) . '</Anio>' .
-        '<Mes>' . utf8_encode($mes) . '</Mes>';
+        '<Anio>' . mb_convert_encoding($anio, 'UTF-8', 'ISO-8859-1') . '</Anio>' .
+        '<Mes>' . mb_convert_encoding($mes, 'UTF-8', 'ISO-8859-1') . '</Mes>';
 
     if (isset($chk_fechas)&&!empty($chk_fechas)) {
         $xml_identifica .= '<regimenMicroempresa>SI</regimenMicroempresa>';
@@ -1330,7 +1330,7 @@ if (isset($bt_save)) {
                     <table width="100%" border='0' cellpadding='0' cellspacing='0' class="LetraNegra">
                         <tr><td class="ats-download-list"><?php
                             $buffer = '<?xml version="1.0" encoding="UTF-8"?><!--Archivo XML generado por Exa (http://www.exa.ofsercont.com)--><iva>';
-                            $buffer = utf8_encode($buffer . $xml_identifica . $xml_compras . $xml_ventas . $xml_ventasEst . $xmlExportacion . $xml_anulados . '</iva>');
+                            $buffer = mb_convert_encoding($buffer . $xml_identifica . $xml_compras . $xml_ventas . $xml_ventasEst . $xmlExportacion . $xml_anulados . '</iva>', 'UTF-8', 'ISO-8859-1');
 
                             $path = "SRI/" . $Ses_Emp_Cod;
                             if (!is_dir($path))

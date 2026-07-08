@@ -31,7 +31,7 @@ class Class_Log_Datos_Despacho extends MysqlDatosContab
     /**
      * Consulta en BD usando sentencias_despacho
      */
-    function consultasobBD($sen_sql, $param, $obBD)
+    function consultasobBD($sen_sql, $param, $obBD = null)
     {
         $Par_Sql = $this->parametros($param);
         return $this->consulta(sentencias_despacho($sen_sql, $Par_Sql), $obBD->conexion);
@@ -40,7 +40,7 @@ class Class_Log_Datos_Despacho extends MysqlDatosContab
     /**
      * Obtiene una fila de consulta
      */
-    function getRowConsulta($sen_sql, $param, $obBD)
+    function getRowConsulta($sen_sql, $param, $obBD = null)
     {
         $result = $this->consultasobBD($sen_sql, $param, $obBD);
         $row = $this->fetch_assoc($result);
@@ -51,7 +51,7 @@ class Class_Log_Datos_Despacho extends MysqlDatosContab
     /**
      * Obtiene array de consulta
      */
-    function getArrayConsulta($sen_sql, $param, $obBD)
+    function getArrayConsulta($sen_sql, $param, $obBD = null)
     {
         $result = $this->consultasobBD($sen_sql, $param, $obBD);
         $array = array();
@@ -67,7 +67,7 @@ class Class_Log_Datos_Despacho extends MysqlDatosContab
     /**
      * Insert/Update/Delete usando sentencias_despacho
      */
-    function operacionobBD($sen_sql, $param, $obBD)
+    function operacionobBD($sen_sql, $param, $obBD = null)
     {
         $Par_Sql = $this->parametros($param);
         $sql = sentencias_despacho($sen_sql, $Par_Sql);

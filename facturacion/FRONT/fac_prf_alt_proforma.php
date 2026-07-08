@@ -492,8 +492,8 @@ $tituloImp = 'Proforma Nro- ' . ($numActualProf['total'] + 1);
 								<div class="form-group">
 									<label class="col-xs-2 control-label label-xs required" style="text-align:center;">Vendedor:</label>
 									<div class="col-xs-5">
-										<input type="text" id="Vendedor" name="Vendedor" class="form-control input-xs trigger" tabindex="2" style="text-align:center; background-color:powderblue;" value="<?php echo utf8_decode($vendedores['Vendedor']) ?>" readonly></input>
-										<input type="text" id="Vnd_Cod" name="Vnd_Cod" style="display: none;" value="<?php echo utf8_decode($vendedores['Vnd_Cod']) ?>" />
+										<input type="text" id="Vendedor" name="Vendedor" class="form-control input-xs trigger" tabindex="2" style="text-align:center; background-color:powderblue;" value="<?php echo mb_convert_encoding($vendedores['Vendedor'], 'ISO-8859-1', 'UTF-8') ?>" readonly></input>
+										<input type="text" id="Vnd_Cod" name="Vnd_Cod" style="display: none;" value="<?php echo mb_convert_encoding($vendedores['Vnd_Cod'], 'ISO-8859-1', 'UTF-8') ?>" />
 									</div>
 								</div>
 							</fieldset>

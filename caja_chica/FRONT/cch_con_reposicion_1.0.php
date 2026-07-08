@@ -1,4 +1,4 @@
-<?	  
+<?php	  
 /**
 * Descripcion: Registro de Reposicion Caja Chica
 * Fecha de actualizacion:	20-07-2016

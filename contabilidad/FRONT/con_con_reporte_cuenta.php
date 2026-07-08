@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?
+<?php
 /**
  * DescripciÃ³n: Permite consultar movimiento en cuentas contables (similar a la mayorizaciÃ³n)
  * Fecha de actualizaciÃ³n:	2025-03-24 
@@ -63,17 +63,17 @@ if (isset($buscod)) {
 						$rs_recur = $obBD_con1->getRowConsulta(204, $row['Pld_Rec'], $obBD_conexion);
 				?>
 						<tr class="Fondo">
-							<td><? echo $row['Pld_Cdc']; ?></td>
-							<td><?php echo utf8_encode($row['Pld_Des']); ?></td>
-							<td align="center"><? if ($rs_recur['Pld_Des'] != "") {
+							<td><?php echo $row['Pld_Cdc']; ?></td>
+							<td><?php echo mb_convert_encoding($row['Pld_Des'], 'UTF-8', 'ISO-8859-1'); ?></td>
+							<td align="center"><?php if ($rs_recur['Pld_Des'] != "") {
 													echo $rs_recur['Pld_Des'];
 												} else {
 													echo "&nbsp;";
 												} ?></td>
-							<td align="center"><? echo $row['Pld_Tip']; ?></td>
-							<td align="center"><? echo $row['Pld_Est']; ?></td>
+							<td align="center"><?php echo $row['Pld_Tip']; ?></td>
+							<td align="center"><?php echo $row['Pld_Est']; ?></td>
 							<td align="center"><?php if ($row['Pld_Est'] == 'Activa') { ?>
-									<button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="document.getElementById(document.getElementById('name_input').value).value='<? echo $row['Pld_Cdc']; ?>'">
+									<button type="button" class="btn btn-success btn-mini" title="Elegir" onClick="document.getElementById(document.getElementById('name_input').value).value='<?php echo $row['Pld_Cdc']; ?>'">
 										<i class="icon-arrow-right icon-white"></i>
 									</button>
 								<?php } else {
@@ -563,12 +563,12 @@ else {
 																	list($ann, $mes, $dia) = preg_split('![/.-]!', $row['Com_Fec']);
 															?>
 																	<tr>
-																		<td align="center"><? echo $row['Com_Cod']; ?></td>
+																		<td align="center"><?php echo $row['Com_Cod']; ?></td>
 																		<td align="center"><?php echo $row_cuenta['Pld_Cdc']; ?></td>
 																		<td align="center"><?php echo $row_cuenta['Pld_Des']; ?></td>
 																		<td align="center"><?php echo $row['Com_Fec']; ?></td>
 																		<td align="left" style="white-space: nowrap; overflow: hidden;" title="<?php $row_proveedore['Prs_Ape'] . ' ' . $row_proveedore['Prs_Nom']; ?>"><?php echo $row_proveedore['Prs_Ape'] . ' ' . $row_proveedore['Prs_Nom']; ?></td>
-																		<td style="white-space: nowrap; overflow: hidden;" title="<? echo $row['Com_Con']; ?>"><? echo $row['Com_Con'];  echo $tipo_documento_compra ;   ?></td>
+																		<td style="white-space: nowrap; overflow: hidden;" title="<?php echo $row['Com_Con']; ?>"><?php echo $row['Com_Con'];  echo $tipo_documento_compra ;   ?></td>
 																		<td align="right">
 																			<?php
 																			if ($row['Asi_Deh'] == 'D') {
@@ -742,13 +742,13 @@ else {
 																	$informacion_documentos = $documento_compra .' '.$documento_venta;
 																?>
 																	<tr>
-																		<td align="center"><? echo $row['Com_Cod']; ?></td>
+																		<td align="center"><?php echo $row['Com_Cod']; ?></td>
 																		<td align="center"><?php echo $row_cuenta['Pld_Cdc']; ?></td>
 																		<td align="center"><?php echo $row_cuenta['Pld_Des']; ?></td>
 																		<td align="center"><?php echo $row['Com_Fec']; ?></td>																		
 																		<td align="center"><?php echo $row_proveedore['Prs_Ced']; ?></td>
 																		<td align="left" style="white-space: nowrap; overflow: hidden;" title="<?php $row_proveedore['Prs_Ape'] . ' ' . $row_proveedore['Prs_Nom']; ?>"><?php echo $row_proveedore['Prs_Ape'] . ' ' . $row_proveedore['Prs_Nom']; ?></td>
-																		<td style="white-space: nowrap; overflow: hidden;" title="<? echo $row['Com_Con'] . (!empty($row['Com_Con']) && !empty($row['Com_Obs']) ? ' / ' : '') . $row['Com_Obs']; ?>"><? echo $row['Com_Con'] . (!empty($row['Com_Con']) && !empty($row['Com_Obs']) ? ' / ' : '') . $row['Com_Obs']; if (!empty($informacion_documentos)) { echo ' (' . $informacion_documentos . ')' ; } ?> </td> <!-- agregra el concepto del abono y la observacion en concreto--><td align="right"><? if ($row['Asi_Deh'] == 'D') {
+																		<td style="white-space: nowrap; overflow: hidden;" title="<?php echo $row['Com_Con'] . (!empty($row['Com_Con']) && !empty($row['Com_Obs']) ? ' / ' : '') . $row['Com_Obs']; ?>"><?php echo $row['Com_Con'] . (!empty($row['Com_Con']) && !empty($row['Com_Obs']) ? ' / ' : '') . $row['Com_Obs']; if (!empty($informacion_documentos)) { echo ' (' . $informacion_documentos . ')' ; } ?> </td> <!-- agregra el concepto del abono y la observacion en concreto--><td align="right"><?php if ($row['Asi_Deh'] == 'D') {
 																								echo formato_numero($row['Asi_Val'], 2, 2);
 																								$debe = $row['Asi_Val'];
 																								$total_debe = $total_debe + $debe;
@@ -756,7 +756,7 @@ else {
 																								echo "0,00";
 																								$debe = 0;
 																							} ?></td>
-																		<td align="right"><? if ($row['Asi_Deh'] == 'H') {
+																		<td align="right"><?php if ($row['Asi_Deh'] == 'H') {
 																								echo formato_numero($row['Asi_Val'], 2, 2);
 																								$haber = $row['Asi_Val'];
 																								$total_haber = $total_haber + $haber;
@@ -823,7 +823,7 @@ else {
 															<td>&nbsp;</td>
 															<td>&nbsp;</td>
 														</tr>
-											<? } //Fin del else	
+											<?php } //Fin del else	
 															/**
 															 * Muestra la barra de estados con la cantidad de registros encontrados 
 															 */

@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?	
+<?php	
 /**
 * Descripci�n: Permite consultar el balance de comprobaci�n
 * Fecha de actualizaci�n:	2012-10-24
@@ -204,7 +204,7 @@ if (isset($hdd_save))
       <br></td>
   </tr>
   <tr class="LetraNegra">
-    <td colspan="4"><? 
+    <td colspan="4"><?php 
 	/**
 	* Consulta de la cuenta de utilidades 
 	*/

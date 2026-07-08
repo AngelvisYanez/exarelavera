@@ -1600,7 +1600,7 @@ if (isset($generarFacturasAjax)) {
                                             },
                                             dataType: 'json',
                                             success: function(plantas) {
-                                                var $selectPla = $('select[name="Pla_Cod"]');
+                                                public $selectPla = $('select[name="Pla_Cod"]');
                                                 // Guardar el valor actual si existe
                                                 var valorActual = $selectPla.val();
                                                 // Limpiar opciones excepto "TODOS"
@@ -1639,7 +1639,7 @@ if (isset($generarFacturasAjax)) {
                                 actualizarInfoFacturacion();
 
                                 // Calcular y mostrar totales en el footer
-                                var $grid = $('#manifiestosGrid');
+                                public $grid = $('#manifiestosGrid');
                                 var subtotalSum = $grid.jqGrid('getCol', 'subtotal', false, 'sum') || 0;
                                 var ivaSum = $grid.jqGrid('getCol', 'total_iva', false, 'sum') || 0;
                                 var totalSum = $grid.jqGrid('getCol', 'total', false, 'sum') || 0;
@@ -1664,8 +1664,8 @@ if (isset($generarFacturasAjax)) {
 
                     // Aviso de manifiestos hoy a facturar (consulta 78): warning clickeable que abre tool con detalle por planta
                     $(function() {
-                        var $alert = $('#manifiestos_facturar_alert');
-                        var $content = $('#manifiestos_facturar_content');
+                        public $alert = $('#manifiestos_facturar_alert');
+                        public $content = $('#manifiestos_facturar_content');
                         $content.text('Cargando...');
                         $alert.show();
                         $.get('', {
@@ -1681,7 +1681,7 @@ if (isset($generarFacturasAjax)) {
                                     color: '#0044aa',
                                     fontWeight: '600'
                                 });
-                                var $tool = $('#manifiestos_facturar_tool');
+                                public $tool = $('#manifiestos_facturar_tool');
                                 $alert.off('click.manifiestos').on('click.manifiestos', function(e) {
                                     e.stopPropagation();
                                     if ($tool.is(':visible')) {
@@ -1723,9 +1723,9 @@ if (isset($generarFacturasAjax)) {
                         var op_opciones = $('#serachDocDorm input[name="op_opciones"]:checked').val();
                         var plaCod = $('select[name="Pla_Cod"]').val();
                         var searchVal = $('#serachDocDorm input[name="search"]').val();
-                        var $checkboxGrupo = $('#fac_group');
-                        var $checkboxIndividual = $('#fac_individual');
-                        var $btnRegister = $('#btn_register');
+                        public $checkboxGrupo = $('#fac_group');
+                        public $checkboxIndividual = $('#fac_individual');
+                        public $btnRegister = $('#btn_register');
 
                         // Habilitar solo si: búsqueda por Cliente (op_opciones == 'p') Y planta seleccionada (plaCod != '') Y hay un cliente escrito (searchVal != '')
                         if (op_opciones == 'p' && plaCod && plaCod !== '' && searchVal && searchVal.trim() !== '') {
@@ -1787,8 +1787,8 @@ if (isset($generarFacturasAjax)) {
                     function actualizarInfoFacturacion() {
                         var facGroupChecked = $('#fac_group').is(':checked');
                         var facIndividualChecked = $('#fac_individual').is(':checked');
-                        var $infoDiv = $('#infoFacturacionContent');
-                        var $infoTexto = $('#infoFacturacionTexto');
+                        public $infoDiv = $('#infoFacturacionContent');
+                        public $infoTexto = $('#infoFacturacionTexto');
 
                         if (facGroupChecked) {
                             var cantidadSeleccionados = $('.row-select:checked').length;
@@ -1906,13 +1906,13 @@ if (isset($generarFacturasAjax)) {
 
                     // Función para gestionar la exclusividad entre Periodo/Mes y Rango de Fechas
                     window.gestionarFiltrosFecha = function(select) {
-                        var $pec = $(select);
+                        public $pec = $(select);
                         var pecCod = $pec.val();
-                        var $cmbMes = $('#Cmb_Mes');
-                        var $fecIni = $('#Fec_Ini');
-                        var $fecFin = $('#Fec_Fin');
-                        var $hiddenIni = $('input[name="fecha_inicio"]');
-                        var $hiddenFin = $('input[name="fecha_fin"]');
+                        public $cmbMes = $('#Cmb_Mes');
+                        public $fecIni = $('#Fec_Ini');
+                        public $fecFin = $('#Fec_Fin');
+                        public $hiddenIni = $('input[name="fecha_inicio"]');
+                        public $hiddenFin = $('input[name="fecha_fin"]');
 
                         if (pecCod !== '') {
                             // Periodo seleccionado: habilitar mes, bloquear rango de fechas
@@ -1921,7 +1921,7 @@ if (isset($generarFacturasAjax)) {
                             $fecFin.prop('disabled', true).val('');
 
                             // Actualizar hidden inputs con el rango del periodo seleccionado
-                            var $opt = $pec.find('option:selected');
+                            public $opt = $pec.find('option:selected');
                             $hiddenIni.val($opt.data('inicio'));
                             $hiddenFin.val($opt.data('fin'));
                         } else {
@@ -1955,7 +1955,7 @@ if (isset($generarFacturasAjax)) {
                         $('#serachDocDorm input[name="search"]').val('');
 
                         // Restaurar el select de plantas a << TODOS >>
-                        var $selectPla = $('select[name="Pla_Cod"]');
+                        public $selectPla = $('select[name="Pla_Cod"]');
                         // Si el select fue modificado dinámicamente, podríamos querer restaurar todas las plantas activas
                         // pero según el requerimiento, basta con ponerlo en vacio (TODOS)
                         $selectPla.val('').trigger('change');
@@ -1979,7 +1979,7 @@ if (isset($generarFacturasAjax)) {
                     window.selectCliente = function(row) {
                         if (row && row.Prs_Ced) {
                             // Cambiar a búsqueda por Cliente (radsc1)
-                            var $radCliente = $('#radsc1');
+                            public $radCliente = $('#radsc1');
                             $radCliente.prop('checked', true);
 
                             // Llamar a setOpt para configurar búsqueda por cliente ('p')
@@ -2008,7 +2008,7 @@ if (isset($generarFacturasAjax)) {
                                     },
                                     dataType: 'json',
                                     success: function(plantas) {
-                                        var $selectPla = $('select[name="Pla_Cod"]');
+                                        public $selectPla = $('select[name="Pla_Cod"]');
                                         $selectPla.empty();
                                         $selectPla.append('<option value=""><< TODOS >></option>');
                                         if (plantas && plantas.length > 0) {
@@ -2133,7 +2133,7 @@ if (isset($generarFacturasAjax)) {
                                         var id = ids[i];
                                         var row = $('#sfGrid').jqGrid('getRowData', id) || {};
                                         var n = parseFloat(String(row.cant_manifiestos || '0').replace(/,/g, '')) || 0;
-                                        var $tds = $('#' + id + ' td:not(.jqgrid-rownum)');
+                                        public $tds = $('#' + id + ' td:not(.jqgrid-rownum)');
                                         if (n > 0) {
                                             $tds.addClass('cellRed2');
                                             $tds.removeClass('cellGreen2');

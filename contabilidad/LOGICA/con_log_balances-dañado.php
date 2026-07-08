@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 /**
  * Logica de las paginas de balances
@@ -38,7 +38,7 @@ class Class_Log_Datos_Con extends MysqlDatos
 	 * @param Class_Log_Conexion_Con $obBD para realizar la conexcion correspondiente
 	 * @return result si existen datos de retorno
 	 */
-	function consultasobBD($sen_sql, $param, $obBD)
+	function consultasobBD($sen_sql, $param, $obBD = null)
 	{
 		$Par_Sql = $this->parametros($param);
 		return $this->consulta(sentencias_con($sen_sql, $Par_Sql), $obBD->conexion);
@@ -52,7 +52,7 @@ class Class_Log_Datos_Con extends MysqlDatos
 	 * @param Class_Log_Conexion_Con $obBD para realizar la conexcion correspondiente
 	 * @return result si existen datos de retorno
 	 */
-	function operacionobBD($sen_sql, $param, $obBD)
+	function operacionobBD($sen_sql, $param, $obBD = null)
 	{
 		$Par_Sql = $this->parametros($param);
 		return $this->grabarv_registros(sentencias_con($sen_sql, $Par_Sql), $obBD->conexion);
@@ -65,7 +65,7 @@ class Class_Log_Datos_Con extends MysqlDatos
 	 * @param Class_Log_Conexion_Con $obBD para realizar la conexcion correspondiente
 	 * @return array $row fila de datos
 	 */
-	function getRowConsulta($sen_sql, $param, $obBD)
+	function getRowConsulta($sen_sql, $param, $obBD = null)
 	{
 		$result = $this->consultasobBD($sen_sql, $param, $obBD);
 
@@ -84,7 +84,7 @@ class Class_Log_Datos_Con extends MysqlDatos
 	 * @param Class_Log_Datos_Con $obDT para la abtraccion de los datos
 	 * @return array $array arreglo de datos asociados
 	 */
-	function getArrayConsulta($sen_sql, $param, $obBD)
+	function getArrayConsulta($sen_sql, $param, $obBD = null)
 	{
 		$result = $this->consultasobBD($sen_sql, $param, $obBD);
 
@@ -105,7 +105,7 @@ class Class_Log_Datos_Con extends MysqlDatos
 	 * @param string $param cadena de datos
 	 * @param Class_Log_Datos_Con $obBD objeto de conexion
 	 */
-	function insertUpdateDelete($sen_sql, $param, $obBD)
+	function insertUpdateDelete($sen_sql, $param, $obBD = null)
 	{
 		$this->inicio_transaccion($obBD->conexion);
 
@@ -117,8 +117,8 @@ class Class_Log_Datos_Con extends MysqlDatos
 
 	/**
 	 * Formato standar para reportes
-	 * @param int $sucursal C�digo de la sucursal
-	 * @param string $titulo T�tulo del reporte
+	 * @param int $sucursal Cï¿½digo de la sucursal
+	 * @param string $titulo Tï¿½tulo del reporte
 	 * @param string $subtitulo Subtitulo del reporte
 	 */
 	function cabeceraReporteStandar($sucursal, $titulo, $subtitulo, $obBD)
@@ -170,10 +170,10 @@ class Class_Log_Datos_Con extends MysqlDatos
 				</td>
 			</tr>
 			<tr align="center">
-				<td colspan="2" valign="top" class="TITULO_REPORTE"><? echo $titulo; ?></td>
+				<td colspan="2" valign="top" class="TITULO_REPORTE"><?php echo $titulo; ?></td>
 			</tr>
 			<tr align="center">
-				<td colspan="2" valign="top" class="TITULO_REPORTE"><? echo $subtitulo; ?></td>
+				<td colspan="2" valign="top" class="TITULO_REPORTE"><?php echo $subtitulo; ?></td>
 			</tr>
 		</table>
 	<?php
@@ -181,8 +181,8 @@ class Class_Log_Datos_Con extends MysqlDatos
 
 	/**
 	 * Formato standar para reportes
-	 * @param int $sucursal C�digo de la sucursal
-	 * @param string $usuario C�digo del usuario 
+	 * @param int $sucursal Cï¿½digo de la sucursal
+	 * @param string $usuario Cï¿½digo del usuario 
 	 */
 	function fechaImpresion($sucursal, $obBD)
 	{
@@ -305,17 +305,17 @@ class Class_Log_Datos_Con extends MysqlDatos
 		$filtro_sucursal = ($sucursal != '') ? "usuarios.Suc_Cod = '$sucursal'" : "";
 		$valores = $this->getArrayConsulta(240, $Pec_Cod . '*' . $ini . '*' . $fin . '*' . $filtro_sucursal, $obBD_conexion);
 
-		/* OPTIMIZACIÓN: Crear índice en memoria para acceso rápido */
+		/* OPTIMIZACIÃ“N: Crear Ã­ndice en memoria para acceso rÃ¡pido */
 		$valoresIndex = array();
 		foreach ($valores as $valor) {
 			$valoresIndex[$valor['Pld_Cod']] = $valor;
 		}
 
-		/* OPTIMIZACIÓN: Cargar plan de cuentas completo una sola vez para evitar consultas recursivas */
+		/* OPTIMIZACIÃ“N: Cargar plan de cuentas completo una sola vez para evitar consultas recursivas */
 		$gruposSQL_temp = "1=1"; // Cargar todas las cuentas activas
 		$planCompleto = $this->getArrayConsulta(243, $cod . '*' . $gruposSQL_temp, $obBD_conexion);
 		$planIndex = array();
-		$planIndexPorPadre = array(); // Índice adicional por padre para búsqueda rápida
+		$planIndexPorPadre = array(); // Ãndice adicional por padre para bÃºsqueda rÃ¡pida
 		foreach ($planCompleto as $cuenta) {
 			$planIndex[$cuenta['Pld_Cod']] = $cuenta;
 			if (!isset($planIndexPorPadre[$cuenta['Pld_Rec']])) {
@@ -430,17 +430,17 @@ class Class_Log_Datos_Con extends MysqlDatos
 		$filtro_sucursal = ($sucursal != '') ? "usuarios.Suc_Cod = '$sucursal'" : "";
 		$valores = $this->getArrayConsulta(240, $Pec_Cod . '*' . $ini . '*' . $fin . '*' . $filtro_sucursal, $obBD_conexion);
 
-		/* OPTIMIZACIÓN: Crear índice en memoria para acceso rápido */
+		/* OPTIMIZACIÃ“N: Crear Ã­ndice en memoria para acceso rÃ¡pido */
 		$valoresIndex = array();
 		foreach ($valores as $valor) {
 			$valoresIndex[$valor['Pld_Cod']] = $valor;
 		}
 
-		/* OPTIMIZACIÓN: Cargar plan de cuentas completo una sola vez para evitar consultas recursivas */
+		/* OPTIMIZACIÃ“N: Cargar plan de cuentas completo una sola vez para evitar consultas recursivas */
 		$gruposSQL_temp = "1=1"; // Cargar todas las cuentas activas
 		$planCompleto = $this->getArrayConsulta(243, $cod . '*' . $gruposSQL_temp, $obBD_conexion);
 		$planIndex = array();
-		$planIndexPorPadre = array(); // Índice adicional por padre para búsqueda rápida
+		$planIndexPorPadre = array(); // Ãndice adicional por padre para bÃºsqueda rÃ¡pida
 		foreach ($planCompleto as $cuenta) {
 			$planIndex[$cuenta['Pld_Cod']] = $cuenta;
 			if (!isset($planIndexPorPadre[$cuenta['Pld_Rec']])) {
@@ -514,19 +514,19 @@ class Class_Log_Datos_Con extends MysqlDatos
 					$esDetalle = ($cuenta['Pld_Tip'] == 'D');
 					$codigoCuentaHtml = '';
 					if ($esDetalle && $Pec_Cod2_completo !== null) {
-						// Limpiar el código de cuenta de etiquetas HTML para la URL
+						// Limpiar el cÃ³digo de cuenta de etiquetas HTML para la URL
 						$codigoCuentaLimpio = strip_tags($cuenta['Pld_Cdc']);
 
-						// Determinar si las fechas son personalizadas (diferentes al período completo)
+						// Determinar si las fechas son personalizadas (diferentes al perÃ­odo completo)
 						$fechasPersonalizadas = false;
 						if ($Pec_Fei_periodo !== null && $Pec_Fef_periodo !== null) {
-							// Si las fechas son diferentes a las del período, significa que se usó "Elegir fecha"
+							// Si las fechas son diferentes a las del perÃ­odo, significa que se usÃ³ "Elegir fecha"
 							if ($ini != $Pec_Fei_periodo || $fin != $Pec_Fef_periodo) {
 								$fechasPersonalizadas = true;
 							}
 						}
 
-						// Construir el enlace a mayorización con Pec_Cod2, código de cuenta y fechas
+						// Construir el enlace a mayorizaciÃ³n con Pec_Cod2, cÃ³digo de cuenta y fechas
 						$urlMayorizacion = 'con_con_mayorizacion_1.1.php?hdd_save2=1&txt_busqueda=' . urlencode($codigoCuentaLimpio) . '&Pec_Cod2=' . urlencode($Pec_Cod2_completo) . '&txt_fec_ini=' . urlencode($ini) . '&txt_fec_fin=' . urlencode($fin) . '&op=1';
 						// Si las fechas son personalizadas, agregar Chk_Fec=1 para activar el checkbox
 						if ($fechasPersonalizadas) {
@@ -534,14 +534,14 @@ class Class_Log_Datos_Con extends MysqlDatos
 						}
 						// Usar un target con nombre fijo para reutilizar la misma ventana
 						// Efecto hover: subrayado y cambio de color al pasar el mouse
-						$codigoCuentaHtml = '<a href="' . htmlspecialchars($urlMayorizacion, ENT_QUOTES, 'UTF-8') . '" target="mayorizacion_window" style="color: inherit; text-decoration: none; cursor: pointer;" onmouseover="this.style.textDecoration=\'underline\'; this.style.color=\'#0066cc\';" onmouseout="this.style.textDecoration=\'none\'; this.style.color=\'inherit\';" title="Ver mayorización de esta cuenta">' . $cuenta['Pld_Cdc'] . '</a>';
+						$codigoCuentaHtml = '<a href="' . htmlspecialchars($urlMayorizacion, ENT_QUOTES, 'UTF-8') . '" target="mayorizacion_window" style="color: inherit; text-decoration: none; cursor: pointer;" onmouseover="this.style.textDecoration=\'underline\'; this.style.color=\'#0066cc\';" onmouseout="this.style.textDecoration=\'none\'; this.style.color=\'inherit\';" title="Ver mayorizaciÃ³n de esta cuenta">' . $cuenta['Pld_Cdc'] . '</a>';
 					} else {
 						$codigoCuentaHtml = $cuenta['Pld_Cdc'];
 					}
 				?>
 					<tr>
 						<td width="2%"><?php echo $codigoCuentaHtml; ?></td>
-						<td><?php echo utf8_encode($cuenta['Pld_Des']); ?></td>
+						<td><?php echo mb_convert_encoding($cuenta['Pld_Des'], 'UTF-8', 'ISO-8859-1'); ?></td>
 						<?php
 						$tdTotal = '';
 						$tdLast = '';
@@ -1212,7 +1212,7 @@ class Class_Log_Datos_Con extends MysqlDatos
 		 * $grupo = identifica a que grupo pertenece la cuenta. Ejemplo: 1=activo
 		 */
 		/**
-		 * Versión optimizada que usa datos en memoria en lugar de consultas SQL individuales
+		 * VersiÃ³n optimizada que usa datos en memoria en lugar de consultas SQL individuales
 		 */
 		function calculoBalanceOptimizado($cod, $np, $ini, $fin, $obBD_conexion, $tipo, $total, $grupo, $valoresIndex, $planIndex, $planIndexPorPadre)
 		{
@@ -1220,7 +1220,7 @@ class Class_Log_Datos_Con extends MysqlDatos
 			$haber = 0;
 
 			/**
-			 * OPTIMIZACIÓN: Usar datos en memoria en lugar de consulta SQL
+			 * OPTIMIZACIÃ“N: Usar datos en memoria en lugar de consulta SQL
 			 */
 			if (isset($valoresIndex[$np])) {
 				$valor = $valoresIndex[$np];
@@ -1243,8 +1243,8 @@ class Class_Log_Datos_Con extends MysqlDatos
 			$total = $total + $saldos;
 
 			/**
-			 * OPTIMIZACIÓN: Usar plan de cuentas en memoria en lugar de consulta SQL
-			 * Acceso directo usando índice por padre
+			 * OPTIMIZACIÃ“N: Usar plan de cuentas en memoria en lugar de consulta SQL
+			 * Acceso directo usando Ã­ndice por padre
 			 */
 			$hijos = isset($planIndexPorPadre[$np]) ? $planIndexPorPadre[$np] : array();
 
@@ -1373,7 +1373,7 @@ class Class_Log_Datos_Con extends MysqlDatos
 		} //Fin del cargar_total_estados($cod, $np, $ini, $fin, $obBD_con1, $obBD_conexion)
 
 		/**
-		 * Versión optimizada que usa datos en memoria en lugar de consultas recursivas
+		 * VersiÃ³n optimizada que usa datos en memoria en lugar de consultas recursivas
 		 */
 		function cargarTotalEstadosOptimizado($cod, $np, $ini, $fin, $obBD_conexion, $tipo, $valoresIndex, $planIndex, $planIndexPorPadre)
 		{
@@ -1431,7 +1431,7 @@ class Class_Log_Datos_Con extends MysqlDatos
 			// } //Fin del cargar_total_estados optimizado
 			$totales = array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0, 6 => 0, 7 => 0, 8 => 0, 9 => 0);
 
-			/* Identificar las cuentas raíz (normalmente 1, 2, 3, 4, 5, 6, 7, 8, 9) */
+			/* Identificar las cuentas raÃ­z (normalmente 1, 2, 3, 4, 5, 6, 7, 8, 9) */
 			$cuentasRaiz = array();
 			if (isset($planIndexPorPadre[0])) {
 				foreach ($planIndexPorPadre[0] as $cuenta) {
@@ -1496,7 +1496,7 @@ class Class_Log_Datos_Con extends MysqlDatos
 				$debe = $debe + round($fila['debe'], 2);
 				$haber = $haber + round($fila['haber'], 2);
 				$html = $html . "<tr>
-            <td style='font-size: 10px;'>$fila[Pld_Cdc]&nbsp;&nbsp;&nbsp;  " .  utf8_encode($fila['Pld_Des']) . "  </td>
+            <td style='font-size: 10px;'>$fila[Pld_Cdc]&nbsp;&nbsp;&nbsp;  " .  mb_convert_encoding($fila['Pld_Des'], 'UTF-8', 'ISO-8859-1') . "  </td>
             <td align='right'><font class='LetraNegra'>" . ($fila['debe'] == 0 ? '&nbsp;' : formato_numero($fila['debe'], 2, $format)) . "</font></td>
             <td align='right'><font class='LetraNegra'>" . ($fila['haber'] == 0 ? '&nbsp;' : formato_numero($fila['haber'], 2, $format)) . "</font></td>
             <td align='" . ($fila['deudor'] == 0 && $fila['acreedor'] == 0 ? 'center' : 'right') . "'><font class='LetraNegra'>" . ($fila['deudor'] == 0 && $fila['acreedor'] == 0 ? '-------' : ($fila['deudor'] == 0 ? '&nbsp;' : formato_numero($fila['deudor'], 2, $format))) . "</font></td>
@@ -1543,14 +1543,14 @@ class Class_Log_Datos_Con extends MysqlDatos
 				$debe = $debe + round($fila['debe'], 2);
 				$haber = $haber + round($fila['haber'], 2);
 				// 	$html = $html . "<tr " . ("" . $cod != "" . $fila['Pla_Cod'] || $fila['Pld_Est'] == 'I' ? 'style="background-color:#ffc1c1;" title="' . ($fila['Pld_Est'] == 'I' ? 'Cuenta Inactiva' : 'Cuenta en Plan Incorrecto') . '"' : '') . ">
-				// <td style='font-size: 10px;'>$fila[Pld_Cdc]&nbsp;&nbsp;&nbsp; " .  utf8_encode($fila['Pld_Des']) . "   </td>
+				// <td style='font-size: 10px;'>$fila[Pld_Cdc]&nbsp;&nbsp;&nbsp; " .  mb_convert_encoding($fila['Pld_Des'], 'UTF-8', 'ISO-8859-1') . "   </td>
 				// <td align='right'><font class='LetraNegra'>" . ($fila['debe'] == 0 ? '&nbsp;' : formato_numero($fila['debe'], 2, $format)) . "</font></td>
 				// <td align='right'><font class='LetraNegra'>" . ($fila['haber'] == 0 ? '&nbsp;' : formato_numero($fila['haber'], 2, $format)) . "</font></td>
 				// <td align='" . ($fila['deudor'] == 0 && $fila['acreedor'] == 0 ? 'center' : 'right') . "'><font class='LetraNegra'>" . ($fila['deudor'] == 0 && $fila['acreedor'] == 0 ? '-------' : ($fila['deudor'] == 0 ? '&nbsp;' : formato_numero($fila['deudor'], 2, $format))) . "</font></td>
 				// <td align='" . ($fila['deudor'] == 0 && $fila['acreedor'] == 0 ? 'center' : 'right') . "'><font class='LetraNegra'>" . ($fila['acreedor'] == 0 && $fila['deudor'] == 0 ? '-------' : ($fila['acreedor'] == 0 ? '&nbsp;' : formato_numero($fila['acreedor'], 2, $format))) . "</font></td></tr>";
 				$html = $html . "<tr class='" . ("" . $cod != "" . $fila['Pla_Cod'] || $fila['Pld_Est'] == 'I' ? 'row-inactive' : 'row-active') . "' title='" . ($fila['Pld_Est'] == 'I' ? 'Cuenta Inactiva' : ("" . $cod != "" . $fila['Pla_Cod'] ? 'Cuenta en Plan Incorrecto' : '')) . "'>
             <td class='cell-code'><span class='code-text'>$fila[Pld_Cdc]</span></td>
-            <td class='cell-detail' style='text-align: left;'><span class='detail-text'>" . utf8_encode($fila['Pld_Des']) . "</span></td>
+            <td class='cell-detail' style='text-align: left;'><span class='detail-text'>" . mb_convert_encoding($fila['Pld_Des'], 'UTF-8', 'ISO-8859-1') . "</span></td>
             <td class='cell-number'>" . ($fila['debe'] == 0 ? '-' : formato_numero($fila['debe'], 2, $format)) . "</td>
             <td class='cell-number'>" . ($fila['haber'] == 0 ? '-' : formato_numero($fila['haber'], 2, $format)) . "</td>
             <td class='cell-number " . ($fila['deudor'] == 0 && $fila['acreedor'] == 0 ? 'cell-empty' : '') . "'>" . ($fila['deudor'] == 0 && $fila['acreedor'] == 0 ? '---' : ($fila['deudor'] == 0 ? '-' : formato_numero($fila['deudor'], 2, $format))) . "</td>
@@ -2047,8 +2047,8 @@ class Class_Log_Datos_Con extends MysqlDatos
 		/**
 		 * Carga los nodos (cuentas) en el balance general 
 		 * $nivel = Contador de los niveles que tiene el plan de cuentas
-		 * $max_nivel = M�ximo nivel a presentar 
-		 * $format = Formato de presentaci�n de los n�mero 
+		 * $max_nivel = Mï¿½ximo nivel a presentar 
+		 * $format = Formato de presentaciï¿½n de los nï¿½mero 
 		 */
 		function cargarNodosEfectivos($cod, $np, $ini, $fin, $obBD_conexion, $tipo, $Pec_Cod, $nivel, $max_nivel, $format)
 		{
@@ -2242,8 +2242,8 @@ class Class_Log_Datos_Con extends MysqlDatos
 		/**
 		 * Carga los nodos (cuentas) en el balance general 
 		 * $nivel = Contador de los niveles que tiene el plan de cuentas
-		 * $max_nivel = M�ximo nivel a presentar 
-		 * $format = Formato de presentaci�n de los n�mero 
+		 * $max_nivel = Mï¿½ximo nivel a presentar 
+		 * $format = Formato de presentaciï¿½n de los nï¿½mero 
 		 */
 		function cargarNodosConversion($cod, $np, $ini, $fin, $obBD_conexion, $tipo, $Pec_Cod, $format, $detalle)
 		{

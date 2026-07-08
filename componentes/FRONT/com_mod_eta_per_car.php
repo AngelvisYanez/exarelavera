@@ -21,7 +21,7 @@ Carreras = las que el director de escuela esta autorizado
 		$total_row_rs_sucursales = $obBD_con1->numregistros();
 	?>
     	
-    <select name="Suc_Cod" id="Suc_Cod" onchange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_suc_cod=1&Suc_Cod=' + this.value +'&Com_Todos=<? echo $Com_Todos;?>','div_modalidad')" style="text-transform:uppercase">
+    <select name="Suc_Cod" id="Suc_Cod" onchange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_suc_cod=1&Suc_Cod=' + this.value +'&Com_Todos=<?php echo $Com_Todos;?>','div_modalidad')" style="text-transform:uppercase">
       <option></option>
       <?Php do{ ?>
       <option value="<?Php echo $row_rs_sucursales['Suc_Cod']; ?>" ><?Php echo $row_rs_sucursales['Suc_Des']; ?></option>
@@ -35,7 +35,7 @@ Carreras = las que el director de escuela esta autorizado
 	<?Php
 		
 	?>
-        <select name="Mod_Cod" id="Mod_Cod" style="text-transform:uppercase" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mod_cod=1&sql='+document.getElementById('hdd_sql').value+'&Suc_Cod=<? echo $Suc_Cod;?>&Mod_Cod=' + this.value,'div_etapa')"  >
+        <select name="Mod_Cod" id="Mod_Cod" style="text-transform:uppercase" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mod_cod=1&sql='+document.getElementById('hdd_sql').value+'&Suc_Cod=<?php echo $Suc_Cod;?>&Mod_Cod=' + this.value,'div_etapa')"  >
           <option></option>
           <?Php  do { ?>
           <option value="<?Php echo $row_rs_modalidad['Mod_Cod'];  ?>" ><?Php echo $row_rs_modalidad['Mod_Des'];  ?></option>

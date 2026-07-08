@@ -88,7 +88,7 @@ body {
         <tr>
           <td width="13%" align="left">No<strong>:</strong></td>
           <td width="52%"><input name="Vet_Cod" type="hidden" id="Vet_Cod" value="<?Php echo $cliente; ?>" >
-		  <? 
+		  <?php 
 		  	$row_rs_punSri = $obBD_con1->getRowConsulta(1216,$row_rs_cliente[0]['Pun_Cod'],$obBD_conexion);			
 			echo $row_rs_punSri['Suc_Sri']."-".$row_rs_punSri['Pun_Sri']."-".str_pad($row_rs_cliente[0]['Vet_Num'],9,'0',STR_PAD_LEFT)."&nbsp;&nbsp; SIN VALOR TRIBUTARIO"; 
 		  ?>
@@ -96,13 +96,13 @@ body {
           <td align="left">FECHA:</td>
           <td align="left"><table width="47%" border="0" cellpadding="0" cellspacing="0" class="Letra_punto_venta_2" >
             <tr>
-              <td width="101" align="left">&nbsp;<? echo $dia."/".$mes."/".$anio;?></td>
+              <td width="101" align="left">&nbsp;<?php echo $dia."/".$mes."/".$anio;?></td>
             </tr>
           </table></td>
           </tr>
         <tr>
           <td align="left">CLIENTE<strong>:</strong></td>
-          <td><? if ($row_rs_representante['Cli_Fac'] != "")
+          <td><?php if ($row_rs_representante['Cli_Fac'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Fac'];  
 			}
@@ -113,7 +113,7 @@ body {
           </tr>
         <tr>
           <td align="left">R.U.C / C.I<strong>:</strong></td>
-          <td><? if ($row_rs_representante['Cli_Fac'] != "")
+          <td><?php if ($row_rs_representante['Cli_Fac'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Ruf']; 
 			}
@@ -122,7 +122,7 @@ body {
 				echo $row_rs_cliente[0]['Prs_Ced']; 
 			} ?></td>
           <td align="left">E-MAIL<strong>:</strong></td>
-          <td align="left"><? 
+          <td align="left"><?php 
 		  		if ($row_rs_cliente[0]['Prs_Cor']!="")
 				{
 					echo $row_rs_cliente[0]['Prs_Cor'];  
@@ -134,7 +134,7 @@ body {
           </tr>
         <tr>
           <td align="left">DIRECCI&Oacute;N:</td>
-          <td colspan="3"><? if ($row_rs_representante['Cli_Dir'] != "")
+          <td colspan="3"><?php if ($row_rs_representante['Cli_Dir'] != "")
 			{ 
 				echo $row_rs_representante['Cli_Dir']; 
 			}
@@ -163,7 +163,7 @@ body {
               <tr>
                 <td colspan="4" align="left"><hr size=1></td>
               </tr> 
-              <? foreach($row_rs_cliente as $row){?>
+              <?php foreach($row_rs_cliente as $row){?>
               <tr>
                 <td width="38" align="left"><?Php echo $row['Vet_Can']?></td>
                 <td>&nbsp;&nbsp;<?Php echo $row['Ite_Lar'].' '.$row['Pro_Obs']?></td>
@@ -237,7 +237,7 @@ body {
                 <td colspan="4" align="left"><hr size=1></td>
               </tr>
               <tr>
-                <td align="left"><? 
+                <td align="left"><?php 
 		     if ($row_rs_cliente[0]['Vet_Xml']!="")
 			 {
           		echo "CLAVE DE ACCESO: ".$row_rs_cliente[0]['Vet_Xml'];

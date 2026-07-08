@@ -1,10 +1,10 @@
-<?Php 
+﻿<?Php 
 /**
  * Logica de las paginas que tienen que ver con clientes
  *
  * @author Lewis Chimarro
  * @version 1.0
- * Fecha de actualizaci�n:	2012-07-19
+ * Fecha de actualizaciï¿½n:	2012-07-19
  *
  * @package tesoreria.LOGICA
  */
@@ -42,7 +42,7 @@ class Class_Log_Datos_Che extends MysqlDatos{
 	* @param Class_Log_Conexion_Cli $obBD para realizar la conexcion correspondiente
 	* @return result si existen datos de retorno
 	*/
-	function consultasobBD($sen_sql,$param, $obBD)
+	function consultasobBD($sen_sql,$param, $obBD = null)
 	{
 		$Par_Sql= $this->parametros($param);
 		return $this->consulta(sentencias_che($sen_sql,$Par_Sql), $obBD->conexion);
@@ -56,7 +56,7 @@ class Class_Log_Datos_Che extends MysqlDatos{
 	* @param Class_Log_Conexion_Cli $obBD para realizar la conexcion correspondiente
 	* @return result si existen datos de retorno
 	*/
-	function operacionobBD($sen_sql,$param, $obBD)
+	function operacionobBD($sen_sql,$param, $obBD = null)
 	{
 		$Par_Sql= $this->parametros($param);
 		return $this->grabarv_registros(sentencias_che($sen_sql,$Par_Sql), $obBD->conexion);
@@ -69,7 +69,7 @@ class Class_Log_Datos_Che extends MysqlDatos{
 	 * @param Class_Log_Conexion_Cli $obBD para realizar la conexcion correspondiente
 	 * @return array $row fila de datos
 	 */
-	function getRowConsulta($sen_sql,$param,$obBD)
+	function getRowConsulta($sen_sql,$param,$obBD = null)
 	{
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);
 		
@@ -88,7 +88,7 @@ class Class_Log_Datos_Che extends MysqlDatos{
 	 * @param Class_Log_Datos_Cli $obDT para la abtraccion de los datos
 	 * @return array $array arreglo de datos asociados
 	 */ 
-	function getArrayConsulta($sen_sql,$param,$obBD)
+	function getArrayConsulta($sen_sql,$param,$obBD = null)
 	{
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);
 		
@@ -110,7 +110,7 @@ class Class_Log_Datos_Che extends MysqlDatos{
 	 * @param string $param cadena de datos
 	 * @param Class_Log_Datos_Cli $obBD objeto de conexion
 	 */
-	function insertUpdateDelete($sen_sql,$param, $obBD)
+	function insertUpdateDelete($sen_sql,$param, $obBD = null)
 	{		
 		$this->inicio_transaccion($obBD->conexion);
 		
@@ -122,8 +122,8 @@ class Class_Log_Datos_Che extends MysqlDatos{
 
 	/**
 	 * Formato standar para reportes
-	 * @param int $sucursal C�digo de la sucursal
-	 * @param string $titulo T�tulo del reporte
+	 * @param int $sucursal Cï¿½digo de la sucursal
+	 * @param string $titulo Tï¿½tulo del reporte
 	 * @param string $subtitulo Subtitulo del reporte
 	 */	
 	function cabeceraReporteStandar($sucursal, $titulo, $subtitulo,$obBD)
@@ -168,10 +168,10 @@ class Class_Log_Datos_Che extends MysqlDatos{
 		    <td colspan="2" valign="top"><hr /></td>
   		  </tr>
 		  <tr align="center">
-		    <td colspan="2" valign="top" class="TITULO_REPORTE"><? echo $titulo; ?></td>
+		    <td colspan="2" valign="top" class="TITULO_REPORTE"><?php echo $titulo; ?></td>
   		  </tr>
 		  <tr align="center">
-		    <td colspan="2" valign="top" class="TITULO_REPORTE"><? echo $subtitulo; ?></td>
+		    <td colspan="2" valign="top" class="TITULO_REPORTE"><?php echo $subtitulo; ?></td>
 	      </tr>
 	    </table>
 <?php
@@ -179,8 +179,8 @@ class Class_Log_Datos_Che extends MysqlDatos{
 
 	/**
 	 * Formato standar para reportes
-	 * @param int $sucursal C�digo de la sucursal
-	 * @param string $usuario C�digo del usuario 
+	 * @param int $sucursal Cï¿½digo de la sucursal
+	 * @param string $usuario Cï¿½digo del usuario 
 	 */	
 	function pieReporteStandar($sucursal, $usuario, $obBD)
 	{ 
@@ -207,10 +207,10 @@ class Class_Log_Datos_Che extends MysqlDatos{
         function codigoComprAutomatic($Tia_Cod, $Pec_Cod, $mes, $obBD_conexion)
   	{			
 		/* 
-		* Codificaci�n numerica en base al periodo contable y mensualmente 
+		* Codificaciï¿½n numerica en base al periodo contable y mensualmente 
 		*/
 		$row_rs_numcom = $this->getRowConsulta(355, $Tia_Cod.'*'.$Pec_Cod.'*'.$mes, $obBD_conexion);
-		// Revisar la condici�n (todo funciona correctamente pero con artificio)
+		// Revisar la condiciï¿½n (todo funciona correctamente pero con artificio)
 		if ((count($row_rs_numcom) > 0) && ($row_rs_numcom['Com_Num'] != ''))
 		{
 			$Com_Num=$row_rs_numcom['Com_Num'];
@@ -222,10 +222,10 @@ class Class_Log_Datos_Che extends MysqlDatos{
         function codigoComprAuto($Tia_Cod, $Pec_Cod, $mes, $obBD_conexion)
   	{			
 		/* 
-		* Codificaci�n numerica en base al periodo contable y mensualmente 
+		* Codificaciï¿½n numerica en base al periodo contable y mensualmente 
 		*/
 		$row_rs_numcom = $this->getRowConsulta(374, $Tia_Cod.'*'.$Pec_Cod.'*'.$mes, $obBD_conexion);
-		// Revisar la condici�n (todo funciona correctamente pero con artificio)
+		// Revisar la condiciï¿½n (todo funciona correctamente pero con artificio)
 		if ((count($row_rs_numcom) > 0) && ($row_rs_numcom['Com_Num'] != ''))
 		{
 			$Com_Num=$row_rs_numcom['Com_Num'];

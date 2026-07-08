@@ -1,4 +1,4 @@
-<?
+<?php
 // BLOQUE DE ARCHIVOS REQUERIDOS
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/fac_log_compras.php');
@@ -81,7 +81,7 @@ if (count($row_rs_cabcomp) > 0) {
   <table width="95%" border="0" cellspacing="0" cellpadding="0">
     <tr>
       <td width="50%" valign="bottom" class="TEXTO_NORMAL_UPPER_18" style="font-size:14px">
-        <div align="left"><strong><? echo $rs_infoEmpresa['Emp_Nom']; ?></strong></div>
+        <div align="left"><strong><?php echo $rs_infoEmpresa['Emp_Nom']; ?></strong></div>
       </td>
       <td width="50%">&nbsp;</td>
     </tr>
@@ -91,7 +91,7 @@ if (count($row_rs_cabcomp) > 0) {
         <div align="left"> detalle de compras</div>
       </td>
       <td align="right" class="Texto_Listados" style="font-size:11px">
-        <div align="right"><? echo $hoy; ?></div>
+        <div align="right"><?php echo $hoy; ?></div>
       </td>
     </tr>
     <tr>
@@ -104,28 +104,28 @@ if (count($row_rs_cabcomp) > 0) {
   <table width="95%" border="0" cellspacing="0" cellpadding="0">
       <tr>
         <td class="Texto_Listados" style="font-size:11px"><strong>Proveedor</strong>:</td>
-        <td colspan="5" class="Texto_Listados" style="font-size:11px"><span class="Texto_Listados" style="font-size:11px"><? echo $rs_info['Prs_Ape'].' '.$rs_info['Prs_Nom'];?></span></td>
+        <td colspan="5" class="Texto_Listados" style="font-size:11px"><span class="Texto_Listados" style="font-size:11px"><?php echo $rs_info['Prs_Ape'].' '.$rs_info['Prs_Nom'];?></span></td>
   </tr>
       <tr>
         <td class="Texto_Listados" style="font-size:11px"><span class="Texto_Listados" style="font-size:11px"><strong>C&eacute;dula/R.U.C.:&nbsp;</strong></span></td>
-        <td class="Texto_Listados" style="font-size:11px"><span class="Texto_Listados" style="font-size:11px"><? echo $rs_info['Prs_Ced'];?>&nbsp;</span></td>
+        <td class="Texto_Listados" style="font-size:11px"><span class="Texto_Listados" style="font-size:11px"><?php echo $rs_info['Prs_Ced'];?>&nbsp;</span></td>
         <td class="Texto_Listados" style="font-size:11px"><div align="right"><strong>Tipo:&nbsp;</strong></div></td>
-        <td class="Texto_Listados" style="font-size:11px"><span class="Texto_Listados" style="font-size:11px"><? echo $rs_tipoCompr['Tic_Des'];?></span></td>
+        <td class="Texto_Listados" style="font-size:11px"><span class="Texto_Listados" style="font-size:11px"><?php echo $rs_tipoCompr['Tic_Des'];?></span></td>
         <td class="Texto_Listados" style="font-size:11px"><div align="right"><strong>Creado el:&nbsp;</strong></div></td>
-        <td class="Texto_Listados" style="font-size:11px"><? echo $rs_info['Cop_Sys']; ?>&nbsp;</td>
+        <td class="Texto_Listados" style="font-size:11px"><?php echo $rs_info['Cop_Sys']; ?>&nbsp;</td>
       </tr>
       <tr>
         <td width="10%" class="Texto_Listados" style="font-size:11px"><strong>No. Docto:</strong></td>
-        <td width="18%" class="Texto_Listados" style="font-size:11px"><? echo $rs_info['Cop_Num'];?>&nbsp;</td>
+        <td width="18%" class="Texto_Listados" style="font-size:11px"><?php echo $rs_info['Cop_Num'];?>&nbsp;</td>
         <td width="6%" class="Texto_Listados" style="font-size:11px"><div align="right"><strong>Autorizaci&oacute;n:&nbsp;</strong></div></td>
-        <td width="17%" class="Texto_Listados" style="font-size:11px"><span class="Texto_Listados" style="font-size:11px"><? echo $rs_info['Cop_Aut'];?></span></td>
+        <td width="17%" class="Texto_Listados" style="font-size:11px"><span class="Texto_Listados" style="font-size:11px"><?php echo $rs_info['Cop_Aut'];?></span></td>
         <td width="14%" class="Texto_Listados" style="font-size:11px"><div align="right"><strong>Emisi&oacute;n:&nbsp;</strong></div></td>
-        <td width="35%" class="Texto_Listados" style="font-size:11px"><span class="Texto_Listados" style="font-size:11px"><? echo $rs_info['Cop_Fec'];?></span>&nbsp;</td>
+        <td width="35%" class="Texto_Listados" style="font-size:11px"><span class="Texto_Listados" style="font-size:11px"><?php echo $rs_info['Cop_Fec'];?></span>&nbsp;</td>
       </tr>
       <tr>
         <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
         <td width="14%" class="Texto_Listados" style="font-size:11px"><div align="right"><strong>Usuario:</strong></div></td>
-        <td width="35%" class="Texto_Listados" style="font-size:11px">&nbsp;<? echo $rs_usuVendedor['Prs_Ape'].' '.$rs_usuVendedor['Prs_Nom']; ?></td>
+        <td width="35%" class="Texto_Listados" style="font-size:11px">&nbsp;<?php echo $rs_usuVendedor['Prs_Ape'].' '.$rs_usuVendedor['Prs_Nom']; ?></td>
       </tr>
 </table>
 
@@ -236,7 +236,7 @@ if (count($row_rs_cabcomp) > 0) {
     </tbody>
   </table>
   <br>
-  <?
+  <?php
 
       $rs_retCod = $obBD_con1->getRowConsulta(718, $com_codigo, $obBD_conexion);
       $rs_confiEmp = $obBD_con1->getRowConsulta(1049, $Ses_Suc_Cod, $obBD_conexion);
@@ -276,7 +276,7 @@ if (count($row_rs_cabcomp) > 0) {
         </tr>
       </thead>
       <tbody class="Fondo">
-        <? foreach ($rs_detalle as $row_rs_detalle) { ?>
+        <?php foreach ($rs_detalle as $row_rs_detalle) { ?>
           <tr height="20">
             <td align="center"><?Php echo $row_rs_detalle['Ren_Sri']; ?></td>
             <td><?Php echo $row_rs_detalle['Ren_Con']; ?></td>
@@ -286,7 +286,7 @@ if (count($row_rs_cabcomp) > 0) {
             <td align="right"><?Php $impTotal = $impTotal + $row_rs_detalle['Val_Ret'];
                               echo formato_numero($row_rs_detalle['Val_Ret'], 2, 4); ?></td>
           </tr>
-        <? } ?>
+        <?php } ?>
       </tbody>
     </table>
     <table width="100%" border="0" cellspacing="0" cellpadding="0">
@@ -294,13 +294,13 @@ if (count($row_rs_cabcomp) > 0) {
         <td width="25%">&nbsp;</td>
         <td width="25%">&nbsp;</td>
         <td width="37%">&nbsp;</td>
-        <td width="13%" align="right"><strong>Total:&nbsp;&nbsp;<? echo formato_numero($impTotal, 2, 4); ?></strong></td>
+        <td width="13%" align="right"><strong>Total:&nbsp;&nbsp;<?php echo formato_numero($impTotal, 2, 4); ?></strong></td>
       </tr>
     </table>
     <br />
-  <? } ?>
+  <?php } ?>
 
-  <? //echo barra_estado($tot_rs_detalle);
+  <?php //echo barra_estado($tot_rs_detalle);
   ?>
 <?Php
     } //FIn del if (isset($com_codigo))
@@ -361,24 +361,24 @@ $fila=0;
         <td id="imag" style="line-height:0;" width="10%" rowspan="4"><img src="<?php echo $row_institucion['Emp_Log']; ?>" width="100" height="100" /></td>
         <?php } ?>
         <div align="center"> ASIENTO CONTABLE </div>
-        <td width="57%" valign="top"><strong><? echo $row_institucion['Emp_Nom']; ?></strong></td>
+        <td width="57%" valign="top"><strong><?php echo $row_institucion['Emp_Nom']; ?></strong></td>
         <td width="33%" align="right" valign="top"><strong>COMPROBANTE</strong></td>
       </tr>
       <tr>
          <?php if($Ses_Suc_Cod != 334) { ?>
-        <td valign="top"><strong>RUC:</strong> <? echo $row_institucion['Emp_Ruc']; ?></td>
+        <td valign="top"><strong>RUC:</strong> <?php echo $row_institucion['Emp_Ruc']; ?></td>
         <?php } else{?>
           <td></td>
         <?php }?>
-        <td align="right" valign="top"><? echo $etiqueta; ?></td>
+        <td align="right" valign="top"><?php echo $etiqueta; ?></td>
       </tr>
       <tr>
          <?php if($Ses_Suc_Cod != 334) { ?>
-        <td valign="top"><strong>TELEFONO:</strong> <? echo $row_institucion['Suc_Te1']; ?></td>
+        <td valign="top"><strong>TELEFONO:</strong> <?php echo $row_institucion['Suc_Te1']; ?></td>
         <?php } else{?>
           <td></td>
         <?php }?>
-        <td align="right" valign="top"><strong>No. <? echo $tip.'-'.$mes.'-'.$num; ?></strong></td>
+        <td align="right" valign="top"><strong>No. <?php echo $tip.'-'.$mes.'-'.$num; ?></strong></td>
       </tr>
     </table></td>
   </tr>
@@ -386,20 +386,20 @@ $fila=0;
     <td height="40" valign="top">
     <table class="contenido" width="100%" border="0" cellpadding="0" cellspacing="0">
       <tr>
-        <td width="20%" valign="top"><strong><? echo $etiqueta2; ?></strong></td>
-        <td>&nbsp;<? echo substr($row_rs_cabcomp['Prs_Ape'].' '.$row_rs_cabcomp['Prs_Nom'],0,56); ?></td>
-        <td align="right" valign="top"><? echo "<strong>POR:</strong>&nbsp;$".number_format($row_rs_cabcomp['Com_Val'],2); ?></td>
+        <td width="20%" valign="top"><strong><?php echo $etiqueta2; ?></strong></td>
+        <td>&nbsp;<?php echo substr($row_rs_cabcomp['Prs_Ape'].' '.$row_rs_cabcomp['Prs_Nom'],0,56); ?></td>
+        <td align="right" valign="top"><?php echo "<strong>POR:</strong>&nbsp;$".number_format($row_rs_cabcomp['Com_Val'],2); ?></td>
         </tr>
       <tr>
         <td valign="top"><strong>LA CANTIDAD DE:</strong></td>
-        <td width="48%"><? echo strtoupper (num2letras($row_rs_cabcomp['Com_Val'],false)).' USD'; ?></td>
+        <td width="48%"><?php echo strtoupper (num2letras($row_rs_cabcomp['Com_Val'],false)).' USD'; ?></td>
         <td width="32%" align="right" valign="top"><?php echo "<strong>FECHA:&nbsp;</strong>".mes($mes,2).'/'.$dia.'/'.$ann; ?></td>
       </tr>
       <tr>       
         <td colspan="3" valign="top">
         <table class="contenido" width="100%" border="0" cellpadding="0" cellspacing="0">
           <tr>
-            <td><? echo "<strong>POR CONCEPTO:</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$row_rs_cabcomp['Com_Con']; ?></td>
+            <td><?php echo "<strong>POR CONCEPTO:</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$row_rs_cabcomp['Com_Con']; ?></td>
             </tr>
           </table></td>
       </tr>
@@ -415,7 +415,7 @@ $fila=0;
         <td class="linea" width="13%" align="right">DEBE</td>
         <td class="linea" width="11%" align="right">HABER</td>
       </tr>
-      <?
+      <?php
   $row_rs_grupos = $obBD_con2->getArrayConsulta(339, $codigo.'*'.'D'.'*'.'', $obBD_conexion1);		
 foreach ($row_rs_grupos as $row){
 /*  Etiqueta para cuenta de GRUPO DEBE */
@@ -444,8 +444,8 @@ foreach ($row_rs_cuentas as $row){
 	{
 	  ?>           
       <tr>
-        <td><? echo $row['Pld_Cdc']; ?></td>
-        <td><? 
+        <td><?php echo $row['Pld_Cdc']; ?></td>
+        <td><?php 
 		if ($row['Asi_Deh']=='D') { 
 			echo substr($row['Pld_Des'],0,38); 
 		}else{  
@@ -453,7 +453,7 @@ foreach ($row_rs_cuentas as $row){
 		}
 		 ?></td>
         <td style=""><?Php echo $row['Asi_Glo']; ?></td>
-        <td align="right"><? if ($row['Asi_Deh']=='D') { 
+        <td align="right"><?php if ($row['Asi_Deh']=='D') { 
 			echo number_format($row['Asi_Val'],2); 
 			/* Se uiliza round a 3 decimales para el detalle de cada calculo de las retenciones de renta e iva */
 			$total=$total + round($row['Asi_Val'],2); 
@@ -461,7 +461,7 @@ foreach ($row_rs_cuentas as $row){
 			echo '&nbsp'; 
 		} 
 		?></td>
-        <td align="right"><? if ($row['Asi_Deh']=='H'){ 
+        <td align="right"><?php if ($row['Asi_Deh']=='H'){ 
 			echo number_format($row['Asi_Val'],2);
 			/* Se uiliza round a 3 decimales para el detalle de cada calculo de las retenciones de renta e iva */
 			$total_h=$total_h + round($row['Asi_Val'],2); 
@@ -470,7 +470,7 @@ foreach ($row_rs_cuentas as $row){
 		} 		
 		?></td>
       </tr>
-<? }
+<?php }
 }
 
 $row_rs_grupos = $obBD_con2->getArrayConsulta(339, $codigo.'*'.'H'.'*'.'', $obBD_conexion1);		
@@ -501,8 +501,8 @@ foreach ($row_rs_grupos as $row){
 	{
 ?>
 	<tr>
-        <td><? echo $row['Pld_Cdc']; ?></td>
-        <td><? 
+        <td><?php echo $row['Pld_Cdc']; ?></td>
+        <td><?php 
 		if ($row['Asi_Deh']=='D') { 
 			echo substr($row['Pld_Des'],0,38);
 		}else{  
@@ -510,7 +510,7 @@ foreach ($row_rs_grupos as $row){
 		}
 		 ?></td>
         <td ><?Php echo $row['Asi_Glo']; ?></td>
-        <td align="right"><? if ($row['Asi_Deh']=='D') { 
+        <td align="right"><?php if ($row['Asi_Deh']=='D') { 
 			echo number_format($row['Asi_Val'],2); 
 			/* Se uiliza round a 3 decimales para el detalle de cada calculo de las retenciones de renta e iva */
 			$total=$total + round($row['Asi_Val'],2); 
@@ -518,7 +518,7 @@ foreach ($row_rs_grupos as $row){
 			echo '&nbsp'; 
 		} 
 		?></td>
-        <td align="right"><? if ($row['Asi_Deh']=='H'){ 
+        <td align="right"><?php if ($row['Asi_Deh']=='H'){ 
 			echo number_format($row['Asi_Val'],2);
 			/* Se uiliza round a 3 decimales para el detalle de cada calculo de las retenciones de renta e iva */
 			$total_h=$total_h + round($row['Asi_Val'],2); 
@@ -528,7 +528,7 @@ foreach ($row_rs_grupos as $row){
 		
 		?></td>
      </tr>
-<?
+<?php
 	}
 }
 ?>
@@ -536,14 +536,14 @@ foreach ($row_rs_grupos as $row){
 	   <td class="linea2">&nbsp;</td>
 	   <td class="linea2">&nbsp;</td>
 	   <td class="linea2" align="right">TOTAL:</td>
-	   <td class="linea2" align="right"><strong><? echo number_format($total,2); ?></strong></td>
-	   <td class="linea2" align="right"><strong><? echo number_format($total_h,2); ?></strong></td>
+	   <td class="linea2" align="right"><strong><?php echo number_format($total,2); ?></strong></td>
+	   <td class="linea2" align="right"><strong><?php echo number_format($total_h,2); ?></strong></td>
 	   </tr>
     </table></td>
   </tr>
   <tr>
     <td valign="top">
-    <?
+    <?php
 /* Cargado de los cheques del comprobante */
 $row_rs_carcheq = $obBD_con2->getArrayConsulta(334, $row_rs_cabcomp['Com_Cod'], $obBD_conexion1);
 $fila+=20;
@@ -560,7 +560,7 @@ if (count($row_rs_carcheq) > 0)
         <td class="linea" width="14%">CHEQUE</td>
         <td class="linea" width="9%" align="right">VALOR</td>
       </tr>
-      <? 
+      <?php 
 	$fila+=45;
 	if(!isset($fila)) $fila=0;
 	foreach ($row_rs_carcheq as $row){
@@ -568,13 +568,13 @@ if (count($row_rs_carcheq) > 0)
 		$nombre=explode(" ",$row['Prs_Nom']);
 	 ?>         
       <tr>
-        <td><? echo substr($row['Pld_Des'],0,38); ?></td>
-        <td><? echo substr($row['Prs_Ape'].' '.$nombre[0],0,44); ?></td>
-        <td><? echo $row['Che_Num']; ?></td>
-        <td align="right"><? echo number_format($row['Che_Val'],2); ?></td>
+        <td><?php echo substr($row['Pld_Des'],0,38); ?></td>
+        <td><?php echo substr($row['Prs_Ape'].' '.$nombre[0],0,44); ?></td>
+        <td><?php echo $row['Che_Num']; ?></td>
+        <td align="right"><?php echo number_format($row['Che_Val'],2); ?></td>
       </tr>
      
-	<? }?>
+	<?php }?>
       <tr>
         <td colspan="4">&nbsp;</td>
       </tr>
@@ -584,7 +584,7 @@ if (count($row_rs_carcheq) > 0)
       </table>
 
 	
-<? }
+<?php }
 $nombre=  explode(' ', $row_rs_cabcomp['Prs_Nom']);
 $recibi=$row_rs_cabcomp['Prs_Ape'].' '.$nombre[0];
 $tip=1;
@@ -616,7 +616,7 @@ $arr_nom=explode(' ',$row_rs_usuComp['Prs_Nom']);
         <td valign="top">DPTO. CONTABILIDAD</td>
         <td valign="top">APROBADO POR<br></td>
         <td valign="top">RECIBI CONFORME
-          <div><? echo isset($recibi)?$recibi:''; ?></div></td>
+          <div><?php echo isset($recibi)?$recibi:''; ?></div></td>
       </tr>
 	
       <tr>

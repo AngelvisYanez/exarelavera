@@ -1,4 +1,4 @@
-<?
+<?php
 /**
 * Descripcion: Componente que muestra los codigos ICE.
 * Fecha de actualizacion: 2015-17-28

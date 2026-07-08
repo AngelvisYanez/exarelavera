@@ -63,38 +63,38 @@ if ($total_rs_buscaConfig!=0)
 		<FIELDSET>
 		  <LEGEND>
 		    <label class="Titulos2">Tipo de Ambiente Facturacion Electr&oacute;nica</label></LEGEND>
-			<? 	/* Creacion del campo repost */
+			<?php 	/* Creacion del campo repost */
 				$thisPost->startPost();	
 			?>
 			<table width="100%" border="0" cellpadding="0" cellspacing="0">
   			 <tr>
   			   <td class="Etiqueta1"> Generar Factura Electr&oacute;nica:&nbsp;&nbsp;</td>
-  			   <td class="LetraNegra" <? if($row_rs_buscaConfig['Cof_Gce']=='N'){ echo "style='color:#F00'";}?>>&nbsp;<? if($row_rs_buscaConfig['Cof_Gce']=='S'){ echo 'ACTIVA';}else{ echo 'INACTIVA';}?></td>
+  			   <td class="LetraNegra" <?php if($row_rs_buscaConfig['Cof_Gce']=='N'){ echo "style='color:#F00'";}?>>&nbsp;<?php if($row_rs_buscaConfig['Cof_Gce']=='S'){ echo 'ACTIVA';}else{ echo 'INACTIVA';}?></td>
   			   <td class="LetraNegra">&nbsp;</td>
   			   <td class="LetraNegra">&nbsp;</td>
 		      </tr>
   			 <tr>
     			<td width="15%" class="Etiqueta1"><p><span class="Asterisco">*</span> Tipo de Ambiente:&nbsp;&nbsp;</p></td>
     			<td width="8%" class="LetraNegra">
-                <input type="radio" name="opt_1" id="opt_1" <? if($ambienteFE=='1'){ echo 'checked';} ?> value="1">
+                <input type="radio" name="opt_1" id="opt_1" <?php if($ambienteFE=='1'){ echo 'checked';} ?> value="1">
                 <label for="opt_1">Pruebas</label></td>
-   			   <td width="8%" class="LetraNegra"><input name="opt_1" type="radio" id="Opt_1" <? if($ambienteFE=='2'){ echo 'checked';}?> value="2">
+   			   <td width="8%" class="LetraNegra"><input name="opt_1" type="radio" id="Opt_1" <?php if($ambienteFE=='2'){ echo 'checked';}?> value="2">
 		       <label for="Opt_2">Producci&oacute;n</label></td>
    			   <td width="69%" class="LetraNegra">&nbsp;</td>
              </tr>
   </table>
 		  <input name="hdd_save" type="hidden" id="hdd_save" value="insertar" />
-          <input name="hdd_total" type="hidden" id="hdd_total" value="<? echo $total_rs_buscaConfig;?>" />          
+          <input name="hdd_total" type="hidden" id="hdd_total" value="<?php echo $total_rs_buscaConfig;?>" />          
         </FIELDSET>
         <table width="119" border="0" cellpadding="0" cellspacing="0">
           <tr>
             <td width="108" height="28" align="left">
-            <? if($row_rs_buscaConfig['Cof_Gce']!='N'){?>
+            <?php if($row_rs_buscaConfig['Cof_Gce']!='N'){?>
             <button type="button" class="btn btn-primary start" title="Guardar" onClick="confirmacion(this.form)">
            <i class="icon-book icon-white"></i>
            <span>Guardar</span>
     		</button>
-    		<? }?>
+    		<?php }?>
             </td>
           </tr>
         </table>

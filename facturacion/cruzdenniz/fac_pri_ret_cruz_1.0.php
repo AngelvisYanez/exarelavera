@@ -53,36 +53,36 @@ if (isset($Ret_Cod))
 </style></head>
 <body>
 <?Php $Fec_Emi=explode('-',$row_prin_renta['Ret_Fec']); ?>
-<span style="top:100px;left:530px;" class="flota"><? echo $Fec_Emi[2].'&nbsp;&nbsp;&nbsp;&nbsp;'.$Fec_Emi[1].'&nbsp;&nbsp;&nbsp;&nbsp;'.$Fec_Emi[0]; ?></span>
-<span style="top:115px;left:100px;" class="flota"><? echo $row_prin_renta['Prs_Ape'].' '.$row_prin_renta['Prs_Nom']; ?></span>
+<span style="top:100px;left:530px;" class="flota"><?php echo $Fec_Emi[2].'&nbsp;&nbsp;&nbsp;&nbsp;'.$Fec_Emi[1].'&nbsp;&nbsp;&nbsp;&nbsp;'.$Fec_Emi[0]; ?></span>
+<span style="top:115px;left:100px;" class="flota"><?php echo $row_prin_renta['Prs_Ape'].' '.$row_prin_renta['Prs_Nom']; ?></span>
 
 
-<span style="top:140px;left:70px;" class="flota"><? echo $row_prin_renta['Prs_Ced']; ?></span>
-<span style="top:140px;left:330px;" class="flota"><? echo $row_prin_renta['Cop_Num'];; ?></span>
+<span style="top:140px;left:70px;" class="flota"><?php echo $row_prin_renta['Prs_Ced']; ?></span>
+<span style="top:140px;left:330px;" class="flota"><?php echo $row_prin_renta['Cop_Num'];; ?></span>
 
-<span style="top:165px;left:70px;" class="flota"><? echo $row_prin_renta['Prs_Dir']; ?></span>
-<span style="top:165px;left:400px;" class="flota"><? echo $row_prin_renta['Cop_Fec']; ?></span>
+<span style="top:165px;left:70px;" class="flota"><?php echo $row_prin_renta['Prs_Dir']; ?></span>
+<span style="top:165px;left:400px;" class="flota"><?php echo $row_prin_renta['Cop_Fec']; ?></span>
 
-<span style="top:190px;left:150px;" class="flota"><? echo $row_prin_renta['Tic_Des']; ?></span>
-
-
+<span style="top:190px;left:150px;" class="flota"><?php echo $row_prin_renta['Tic_Des']; ?></span>
 
 
-<!--<span style="top:220px;left:730px;" class="flota"><? echo $row_prin_renta['Ciu_Des']; ?></span>-->
-<!-- <span style="top:335px;left:30px;" class="flota"><? echo $row_prin_renta['Cop_Aut'];  ?></span>
-<span style="top:335px;left:700px;" class="flota"><? echo $row_prin_renta['Cop_Cad']; ?></span> -->
+
+
+<!--<span style="top:220px;left:730px;" class="flota"><?php echo $row_prin_renta['Ciu_Des']; ?></span>-->
+<!-- <span style="top:335px;left:30px;" class="flota"><?php echo $row_prin_renta['Cop_Aut'];  ?></span>
+<span style="top:335px;left:700px;" class="flota"><?php echo $row_prin_renta['Cop_Cad']; ?></span> -->
 
 <?Php $Total_Ret=0; 
 $Eje_Fis=explode('-',$row_prin_renta['Ret_Fec']); 
 $fila="250";
 foreach($rs_prin_renta as $row)
 { ?>
-	<span style="top:<? echo $fila;?>px;left:20px;" class="flota"><?Php $Ejerci=$Eje_Fis[0]; echo $Ejerci;?></span>
-	<span style="top:<? echo $fila;?>px;left:110px;" class="flota"><? echo $row['Ren_Sri']?></span>
-	<span style="top:<? echo $fila;?>px;left:250px;" class="flota"><? echo $row['Ret_Imp']?></span>
-	<span style="top:<? echo $fila;?>px;left:400px;" class="flota"><? echo number_format($row['Ret_Bas'], 2,'.',',');  ?></span>
-	<span style="top:<? echo $fila;?>px;left:500px;" class="flota"><? echo $row['Ren_Por'].'%'; ?></span>
-	<span style="top:<? echo $fila;?>px;left:600px;" class="flota"><? echo $Val_Ret=formato_numero((formato_numero($row['Ret_Bas'],2,1)* $row['Ren_Por'])/100,2,1); $Total_Ret+=$Val_Ret; ?></span>
+	<span style="top:<?php echo $fila;?>px;left:20px;" class="flota"><?Php $Ejerci=$Eje_Fis[0]; echo $Ejerci;?></span>
+	<span style="top:<?php echo $fila;?>px;left:110px;" class="flota"><?php echo $row['Ren_Sri']?></span>
+	<span style="top:<?php echo $fila;?>px;left:250px;" class="flota"><?php echo $row['Ret_Imp']?></span>
+	<span style="top:<?php echo $fila;?>px;left:400px;" class="flota"><?php echo number_format($row['Ret_Bas'], 2,'.',',');  ?></span>
+	<span style="top:<?php echo $fila;?>px;left:500px;" class="flota"><?php echo $row['Ren_Por'].'%'; ?></span>
+	<span style="top:<?php echo $fila;?>px;left:600px;" class="flota"><?php echo $Val_Ret=formato_numero((formato_numero($row['Ret_Bas'],2,1)* $row['Ren_Por'])/100,2,1); $Total_Ret+=$Val_Ret; ?></span>
 <?Php unset($Ejerci); $fila+=20;}/*Fin del foreach*/?>
 <span style="top:390px;left:600px;" class="flota"><?Php echo number_format ($Total_Ret, 2,'.',''); ?></span>
 </body>

@@ -1,4 +1,4 @@
-<?
+<?php
 require_once ('../../../auditoria/LOGICA/aud_log_auditoria.php');
 require_once("../../sql/requisitores.php");
 
@@ -58,10 +58,10 @@ class Class_Log_Datos_Requisitores extends MysqlDatos{
                     echo $row_institucion['Ciu_Des'].$provincia;?></div></td>
                 </tr>
                 <tr align="center">
-                    <td colspan="<?php echo $colspan;?>" valign="top" class="TITULO_REPORTE"><b><? echo $titulo; ?></b></td>
+                    <td colspan="<?php echo $colspan;?>" valign="top" class="TITULO_REPORTE"><b><?php echo $titulo; ?></b></td>
                 </tr>
                 <tr align="center">
-                    <td colspan="<?php echo $colspan;?>" valign="top" class="TITULO_REPORTE"><? echo $subtitulo; ?></td>
+                    <td colspan="<?php echo $colspan;?>" valign="top" class="TITULO_REPORTE"><?php echo $subtitulo; ?></td>
                 </tr>
             </table>
     <?php

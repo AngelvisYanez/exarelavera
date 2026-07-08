@@ -1,5 +1,5 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<?     
+<?php     
 /* 
 * Alias:					Modificar
 * Descripción: 				Permite activar y desactivar los procesos
@@ -86,10 +86,10 @@ if (isset($ajax_op))
            <span>Guardar</span>
        </button>
 		
-	<input name="codigo" type="hidden" value="<? echo $ajax_op; ?>">
-	<input name="hdd_save" type="hidden" id="hdd_save" value="<? echo "1"; ?>">
+	<input name="codigo" type="hidden" value="<?php echo $ajax_op; ?>">
+	<input name="hdd_save" type="hidden" id="hdd_save" value="<?php echo "1"; ?>">
 	</form>
-<?	
+<?php	
 	exit();
 }
 
@@ -137,7 +137,7 @@ if ($thisPost->postBlock($_POST['postID']) && isset($hdd_save))
     </tr>
     <tr>
       <td height="296" valign="top">
-<?
+<?php
 /* 
 * Ingresa cuando se seleeciona el perfil 
 */	
@@ -175,7 +175,7 @@ if ($thisPost->postBlock($_POST['postID']) && isset($hdd_save))
     	<tr <?Php echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo");?> class="Fondo">
         	<td align="center"><?php  echo '<font color="'.$color.'">'.$row_rs_perfiles['Per_Cod'].'</font>'; ?></td>
         	<td><?Php echo '<font color="'.$color.'">'.$row_rs_perfiles['Per_Des'].'</font>'; ?></td>
-        	<form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form2" id="form2">
+        	<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form2" id="form2">
                 <td align="center">
                 <?Php 
                    if ($row_rs_perfiles['Per_Est'] == 'A') 
@@ -187,7 +187,7 @@ if ($thisPost->postBlock($_POST['postID']) && isset($hdd_save))
                    else
                    { ?>
                         <button type="button" class="btn btn-danger btn-mini" title="Activar" onClick= "ajax_datos('<?php echo $_SERVER['PHP_SELF'];?>?ajax_op=<?php echo $row_rs_perfiles['Per_Cod']; ?>','ajax_modal');Muestra_Aparecer();" ><i class="icon-ban-circle icon-white"></i></button>
-                        <?
+                        <?php
                    }//Fin del if ($row_rs_perfiles['Per_Est'] == 'A')  
 				?>
 				    <input type="hidden" name="codigo" id="codigo" value="<?php echo $row_rs_perfiles['Per_Cod'];?>"/>
@@ -199,7 +199,7 @@ if ($thisPost->postBlock($_POST['postID']) && isset($hdd_save))
     </tbody>
 </table>
 </fieldset>
-<? 
+<?php 
 	echo barra_estado(count($rs_perfiles));
 
  

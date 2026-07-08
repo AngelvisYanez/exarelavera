@@ -1,4 +1,4 @@
-<?
+<?php
 require_once('../LOGICA/tes_log_compras.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');	
 /* Creacion del Objeto de conexion */
@@ -28,7 +28,7 @@ $ice_por=stripslashes($ice_por);
 
 ?>
 <table width="100%" border="1" cellpadding="0" cellspacing="0" id="tbl_resultados">
-<?
+<?php
 	if ($total_rs_buscta > 0) {
 		$cont = 1;
 		do { 
@@ -53,16 +53,16 @@ $ice_por=stripslashes($ice_por);
 				<td width="4%"></td>
 			</tr>					
 			<?Php }//Fin del if ($cont == 1)?>
-			<tr <? echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Cuerpo_ajax");?> class="Cuerpo_ajax">
-				<td><div align="center"><? echo $row_rs_buscta['Pro_Cod']; ?></div></td>
-				<td><div align="center"><? echo $row_rs_buscta['Mar_Des']; ?></div></td>
-				<td><? echo $row_rs_buscta['Adq_Cor']; ?></td>
-				<td><div align="left">&nbsp;<? echo $row_rs_buscta['Ite_Lar']; ?></div></td>
-				<td align="right"><? echo $row_rs_buscta['Ubi_Des']; ?></td>
-				<td align="right"><? echo formato_numero($row_rs_buscta['Pre_Pvp'],2,2); ?></td>	
+			<tr <?php echo focus_row("resaltar_text", "resaltar_back", "undo_resaltar_text", "Cuerpo_ajax");?> class="Cuerpo_ajax">
+				<td><div align="center"><?php echo $row_rs_buscta['Pro_Cod']; ?></div></td>
+				<td><div align="center"><?php echo $row_rs_buscta['Mar_Des']; ?></div></td>
+				<td><?php echo $row_rs_buscta['Adq_Cor']; ?></td>
+				<td><div align="left">&nbsp;<?php echo $row_rs_buscta['Ite_Lar']; ?></div></td>
+				<td align="right"><?php echo $row_rs_buscta['Ubi_Des']; ?></td>
+				<td align="right"><?php echo formato_numero($row_rs_buscta['Pre_Pvp'],2,2); ?></td>	
 				<!-- <td align="center">
 				</td> -->
-				<!-- <td align="right"><? //echo number_format(($row_rs_buscta['Pre_Pvp']) - $valor_beca,2); ?>
+				<!-- <td align="right"><?php //echo number_format(($row_rs_buscta['Pre_Pvp']) - $valor_beca,2); ?>
 				</td> -->																													
 				<td>
 				<div align="center">
@@ -71,19 +71,19 @@ $ice_por=stripslashes($ice_por);
                 
                
                 
-                nueva_fila_com_ice('c_contenido',<?Php echo $iva_cod; ?>,<?Php echo $iva_por; ?>,<?Php echo $ice_cod; ?>, <?Php echo $ice_por; ?>,'<? echo $row_rs_buscta['Adq_Cor']; ?>',<? echo $row_rs_buscta['Adq_Cod']; ?>,'<?Php echo $_SERVER['PHP_SELF']; ?>?Pec_Cod=<?Php echo $Pec_Cod; ?>', '','<? echo $row_rs_buscta['Ite_Lar']; ?>',<? echo $row_rs_buscta['Pro_Cod']; ?>);
+                nueva_fila_com_ice('c_contenido',<?Php echo $iva_cod; ?>,<?Php echo $iva_por; ?>,<?Php echo $ice_cod; ?>, <?Php echo $ice_por; ?>,'<?php echo $row_rs_buscta['Adq_Cor']; ?>',<?php echo $row_rs_buscta['Adq_Cod']; ?>,'<?Php echo $_SERVER['PHP_SELF']; ?>?Pec_Cod=<?Php echo $Pec_Cod; ?>', '','<?php echo $row_rs_buscta['Ite_Lar']; ?>',<?php echo $row_rs_buscta['Pro_Cod']; ?>);
                 
                 
                 "></div>						
 				</td>
 			</tr>
-		<? $cont++;
+		<?php $cont++;
 			} while ($row_rs_buscta = $obBD_con2->fetch_assoc($rs_buscta));
 	} else { ?>
 			<tr>
 				<td colspan="9"><?php echo error_alerta("No hay resultados que mostrar", 1)?></td>
 			</tr>
-	<? }?>
+	<?php }?>
 	<tr>
 		<td colspan="9" align="center"><img src="../../imagenes/ocultar2.jpg" height="12" style="cursor:pointer" alt="Ocultar" onClick="ShowHide('rubros_table')"></td>
 	</tr>

@@ -109,7 +109,7 @@ if (isset($saveProduct)) {
   $row_rs_con_ide = $obBD_con1->getRowConsulta(19, $data['Cat_Cod'] . '*' . $Ses_Emp_Cod, $obBD_conexion);
   $data['Pro_Ide'] = $row_rs_con_ide['siguiente'];
   if ($row_rs_con_ide['siguiente'] == NULL || $row_rs_con_ide['siguiente'] == '') $data['Pro_Ide'] = 1;
-  change_string_deep('utf8_decode', $data);
+  if (is_string($data)) { $data = mb_convert_encoding($data, 'ISO-8859-1', 'UTF-8'); } else if (is_array($data)) { array_walk_recursive($data, function(&$v) { if (is_string($v)) $v = mb_convert_encoding($v, 'ISO-8859-1', 'UTF-8'); }); }
   //var_dump($data['Pro_Ide']);
   $row_rs_sucur = $obBD_con1->getArrayConsulta(17, $Ses_Emp_Cod, $obBD_conexion);
   //var_dump($row_rs_sucur);
@@ -748,7 +748,7 @@ if (isset($_POST['getMaterials'])) {
               dataType: 'json', // <-- muy importante
               success: function(materials) {
                 // Limpiar y actualizar el select Cod_Const
-                var $codConst = $('#Cod_Const');
+                public $codConst = $('#Cod_Const');
                 $codConst.empty().append('<option value="">-- NO APLICA --</option>');
 
                 $.each(materials, function(i, material) {

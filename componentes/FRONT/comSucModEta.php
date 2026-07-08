@@ -52,7 +52,7 @@ $Com_Hoy=  date("Y-m-d");
           <?Php 
           }
           ?>     
-        </select><?
+        </select><?php
          } ?>
 	</td>
   </tr>
@@ -60,7 +60,7 @@ $Com_Hoy=  date("Y-m-d");
     <td width="10%" class="Etiqueta1"><span class="Asterisco" >* </span>Modalidad:</td>
     <td width="90%" class="LetraNegra">
     <div id="div_sucursales" >
-            <? 
+            <?php 
           $rs_modalidad= $obBD_con2->getArrayConsulta(1, $Ses_Emp_Cod, $obBD_conexion2);
           if (count($rs_modalidad) == 1)
           {            
@@ -68,7 +68,7 @@ $Com_Hoy=  date("Y-m-d");
 			<input name="Mod_Des" id="Mod_Des" type="text" value="<?Php echo $rs_modalidad[0]['Mod_Des']; ?>" readonly="readonly" size="50" style="border:none; background:none" />       
         	<input name="Mod_Cod" id="Mod_Cod" type="text" value="<?Php echo $rs_modalidad[0]['Mod_Cod']; ?>" size="1" style="
             visibility:hidden" />
-       	<?
+       	<?php
           }
           else
           {
@@ -84,7 +84,7 @@ $Com_Hoy=  date("Y-m-d");
           }
           ?>
    	    </select>
-        <?
+        <?php
           }
           ?>
     </div>	</td>
@@ -92,7 +92,7 @@ $Com_Hoy=  date("Y-m-d");
   <tr>
     <td class="Etiqueta1"><span class="Asterisco" >* </span>Etapa:</td>
     <td class="LetraNegra"><div id="div_etapa">
- <? 
+ <?php 
           $rs_etapas= $obBD_con2->getArrayConsulta(3, '', $obBD_conexion2);
           if (count($rs_etapas) == 1)
           {            
@@ -103,7 +103,7 @@ $Com_Hoy=  date("Y-m-d");
            <?php 
             $Com_Hoy=  date("Y-m-d");
             ?>
-        <?
+        <?php
           }
           else
           {
@@ -120,7 +120,7 @@ $Com_Hoy=  date("Y-m-d");
           }
           ?>     
         </select>
-          <?
+          <?php
           }
           ?>
       </div></td>

@@ -25,8 +25,8 @@ class Class_Log_Conexion_Adm extends MysqlConexion{
 /******************************************************/
 
 class Class_Log_Datos_Adm extends MysqlDatos{
-    var $codigos='';
-    var $sentencias='';
+    public $codigos='';
+    public $sentencias='';
 	/**
 	 * Realiza una consulta en la base de datos -  STARDARD
 	 *

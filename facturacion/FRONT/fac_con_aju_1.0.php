@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?
+<?php
 /**
 * Descripci�n:Anulacion de Ajustes.
 * Fecha de actualizaci�n:	02-06-11 
@@ -47,7 +47,7 @@ if(isset($ajx_det)){
 		?>
 		<fieldset>
 			<LEGEND>
-				<label class="Titulos2">Detalle : <? echo $aju_det; ?></label>
+				<label class="Titulos2">Detalle : <?php echo $aju_det; ?></label>
 			</LEGEND>
 		 <table width="100%" border="0" cellpadding="0" cellspacing="0" class="fixedHeader01">
 			<thead>    
@@ -57,18 +57,18 @@ if(isset($ajx_det)){
 				  <th width="27%" align="right"><strong>Importe</strong></th>
 				</tr>
 			   <tbody>
-				<? foreach($rs_detalle as $row_detalle){?>
+				<?php foreach($rs_detalle as $row_detalle){?>
 				<tr >     
-				  <td align="center" ><? echo $row_detalle['Aju_Can']; ?></td>
-				  <td>&nbsp;<? echo $row_detalle['Ite_Lar']; ?></td>
-				  <td align="right"><? echo formato_numero($row_detalle['Aju_Pru'],2,1); ?>&nbsp;</td>
-				  <td align="right"><? echo formato_numero($row_detalle['Aju_Imp'],2,1); $Total=$Total+(isset($row_detalle['Rcb_Imp'])?$row_detalle['Rcb_Imp']:0);?>&nbsp;</td>
+				  <td align="center" ><?php echo $row_detalle['Aju_Can']; ?></td>
+				  <td>&nbsp;<?php echo $row_detalle['Ite_Lar']; ?></td>
+				  <td align="right"><?php echo formato_numero($row_detalle['Aju_Pru'],2,1); ?>&nbsp;</td>
+				  <td align="right"><?php echo formato_numero($row_detalle['Aju_Imp'],2,1); $Total=$Total+(isset($row_detalle['Rcb_Imp'])?$row_detalle['Rcb_Imp']:0);?>&nbsp;</td>
 				</tr>
 			<?php } ?>
 				</tbody>
 			</table>	
 		</fieldset>
-	<?
+	<?php
 			exit();	
 	}
 	
@@ -133,24 +133,24 @@ switch($op){
 <tr class="BarraTitulo">
 	  <td height="10">&raquo; Consultar Ajustes de Productos</td>
 </tr>
-<? if(count($rs_ann) > 0) {?>
+<?php if(count($rs_ann) > 0) {?>
 <tr>
  <td align="left" valign="top" height="400">
-  <?
+  <?php
 		$descripcion = "Individual*Grupal";
   		$pag1= $_SERVER['PHP_SELF']."?op=1";
 		$pag2= $_SERVER['PHP_SELF']."?op=2";
 		tabs(2,$descripcion, $pag1.'*'.$pag2, $op);
 	?>
 
-<?
+<?php
 	if(!isset($op)){$op = 1;}
 	
 		if ( $op==1 || $op==2 ) {
 		switch($op) {
 			case 1:
 ?>	
-   <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1">
+   <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1">
     <FIELDSET>
     <LEGEND>
     <label class="Titulos2">Buscar por:</label>
@@ -203,7 +203,7 @@ switch($op){
                <i class="icon-search icon-white"></i>
                <span>Buscar</span>
         </button> 
-         <input name="op" type="hidden" value="<? echo $op; ?>" >
+         <input name="op" type="hidden" value="<?php echo $op; ?>" >
             
           </div></td>
         </tr>
@@ -211,7 +211,7 @@ switch($op){
     </FIELDSET>
     </form>  
     
-    <? 
+    <?php 
 	if(isset($txt_busqueda))
 	{ 
 		if($cmb_mes != ''){
@@ -240,7 +240,7 @@ switch($op){
         </tr>
      </thead>
      <tbody>	    
-		<? 			
+		<?php 			
 	if (count($row_rs_cabcomp) > 0) 
 	{	  		
 		$i=0;
@@ -251,23 +251,23 @@ switch($op){
 	  		 { $rojo='#FF0000'; $anulada++; }else{$rojo='';}					
 		?>
 		<tr>
-		  <td align="center"><font color="<?php echo $rojo; ?>"><? echo $row['Aju_Cod']; ?></font></td>		  
-   		  <td><font color="<?php echo $rojo; ?>"><? echo $row['Prs_Ced']; ?>&nbsp;</font></td>
+		  <td align="center"><font color="<?php echo $rojo; ?>"><?php echo $row['Aju_Cod']; ?></font></td>		  
+   		  <td><font color="<?php echo $rojo; ?>"><?php echo $row['Prs_Ced']; ?>&nbsp;</font></td>
 		  <td><font color="<?php echo $rojo; ?>">
 		  <?Php echo marcar_cadena($_POST['txt_busqueda'], $row['Prs_Ape']." ".$row['Prs_Nom'], '#FFFF00', 1); ?></font></td>
-           <td align="center" width="9%"><font color="<?php echo $rojo; ?>"><? echo $row['Aju_Sec']; ?></font></td>
-		  <td align="center"><font color="<?php echo $rojo; ?>"><? echo $row['Aju_Fec']; ?></font></td>			
-		  <td align="center"><font color="<?php echo $rojo; ?>">&nbsp;<? echo $row['Tia_Des']; ?></font></td>
-      <td align="center"><font color="<?php echo $rojo; ?>">&nbsp;<? echo $row['Aju_Det']; ?></font></td>
+           <td align="center" width="9%"><font color="<?php echo $rojo; ?>"><?php echo $row['Aju_Sec']; ?></font></td>
+		  <td align="center"><font color="<?php echo $rojo; ?>"><?php echo $row['Aju_Fec']; ?></font></td>			
+		  <td align="center"><font color="<?php echo $rojo; ?>">&nbsp;<?php echo $row['Tia_Des']; ?></font></td>
+      <td align="center"><font color="<?php echo $rojo; ?>">&nbsp;<?php echo $row['Aju_Det']; ?></font></td>
 		  <td align="center" >          
-                <button type="button" class="btn btn-info btn-mini" title="Ver detalle" onClick="ajax_datos('<?php echo $_SERVER['PHP_SELF'];?>?ajx_det=<? echo $row['Aju_Cod'];?>&aju_det=<? echo $row['Aju_Det'];?>&op=<? echo $op;?>','ajax_modal'); Muestra_Aparecer();" style="height:22px">
+                <button type="button" class="btn btn-info btn-mini" title="Ver detalle" onClick="ajax_datos('<?php echo $_SERVER['PHP_SELF'];?>?ajx_det=<?php echo $row['Aju_Cod'];?>&aju_det=<?php echo $row['Aju_Det'];?>&op=<?php echo $op;?>','ajax_modal'); Muestra_Aparecer();" style="height:22px">
                         <i class="icon-info-sign icon-white"></i>
                     </button>	
                 </td>
          <td align="center">
                   <?Php if ($row['Aju_Est'] == 'A') { ?>
                   <form name='frm_personal' method='post' action="fac_pri_aju_1.0.php" target="_blank">
-                    <? $thisPost->startPost();?>
+                    <?php $thisPost->startPost();?>
                     <input type="hidden" name="Prv_Cod" id="Prv_Cod" value="<?Php echo $row['Prv_Cod'];?>">
                     <input type="hidden" name="Aju_Cod" id="Aju_Cod" value="<?Php echo $row['Aju_Cod'];?>">
                     <input type="hidden" name="hdd_save" id="hdd_save" value="">
@@ -275,7 +275,7 @@ switch($op){
                     </form>
                   <?Php } else { echo "&nbsp;"; }?>
                   </td>
-        <?
+        <?php
 	  	} // Fin del foreach
   		}//Fin del //Fin del if ($total_rs_cabcomp > 0)
 		else
@@ -303,15 +303,15 @@ switch($op){
         }//Fin del if ($anulada > 0)
         ?>
         <br/>
-    	<? require_once('../../componentes/FRONT/com_con_leyenda.php');?>  
-	<?  
+    	<?php require_once('../../componentes/FRONT/com_con_leyenda.php');?>  
+	<?php  
 	}//Fin del if(isset($txt_busqueda))  
 	
 	break;
 	
 	case 2: 
 ?>                
-    <form action="<? echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1"><FIELDSET>
+    <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1"><FIELDSET>
     <LEGEND>
         <label class="Titulos2">Buscar por:</label>
     </LEGEND>
@@ -345,7 +345,7 @@ switch($op){
                <span>Buscar</span>
         </button> 
           <input name="hdd_buscar" type="hidden" id="hdd_buscar" value="insertar" />
-          <input name="op" type="hidden" id="op" value="<? echo $op;?>" />
+          <input name="op" type="hidden" id="op" value="<?php echo $op;?>" />
         </td>
       </tr>
     </table>
@@ -372,7 +372,7 @@ switch($op){
               </tr>
              </thead>
              <tbody>
-              <?  
+              <?php  
               if(count($rs_buspro)!=0)
               {
               foreach($rs_buspro as $row_rs_buspro){ 
@@ -381,21 +381,21 @@ switch($op){
                  { $rojo='#FF0000'; $anulada++; }else{$rojo='';}
               ?>
               <tr>
-                <td align="center"><font color="<?php echo $rojo; ?>"><? echo $row_rs_buspro['Aju_Cod']; ?></font></td>
+                <td align="center"><font color="<?php echo $rojo; ?>"><?php echo $row_rs_buspro['Aju_Cod']; ?></font></td>
                 
-                <td align="center"><font color="<?php echo $rojo; ?>"><? echo $row_rs_buspro['Prs_Ced']; ?></font></td>
-                <td align="left"><font color="<?php echo $rojo; ?>">&nbsp;<? echo marcar_cadena($txt_busqueda,$row_rs_buspro['Prs_Ape'].' '.$row_rs_buspro['Prs_Nom'],'#FFFF00', 1) ?></font></td>
-                <td align="center"><font color="<?php echo $rojo; ?>"><? echo $row_rs_buspro['Aju_Sec']; ?></font></td>
-                <td align="center"><font color="<?php echo $rojo; ?>"><? echo $row_rs_buspro['Aju_Fec']; ?></font></td>
+                <td align="center"><font color="<?php echo $rojo; ?>"><?php echo $row_rs_buspro['Prs_Ced']; ?></font></td>
+                <td align="left"><font color="<?php echo $rojo; ?>">&nbsp;<?php echo marcar_cadena($txt_busqueda,$row_rs_buspro['Prs_Ape'].' '.$row_rs_buspro['Prs_Nom'],'#FFFF00', 1) ?></font></td>
+                <td align="center"><font color="<?php echo $rojo; ?>"><?php echo $row_rs_buspro['Aju_Sec']; ?></font></td>
+                <td align="center"><font color="<?php echo $rojo; ?>"><?php echo $row_rs_buspro['Aju_Fec']; ?></font></td>
                  <td align="center">                 
-                <button type="button" class="btn btn-info btn-mini" title="Ver detalle" onClick="ajax_datos('<?php echo $_SERVER['PHP_SELF'];?>?ajx_det=<? echo $row_rs_buspro['Aju_Cod'];?>&aju_det=<? echo $row_rs_buspro['Aju_Det'];?>&op=<? echo $op;?>','ajax_modal'); Muestra_Aparecer();" style="height:22px">
+                <button type="button" class="btn btn-info btn-mini" title="Ver detalle" onClick="ajax_datos('<?php echo $_SERVER['PHP_SELF'];?>?ajx_det=<?php echo $row_rs_buspro['Aju_Cod'];?>&aju_det=<?php echo $row_rs_buspro['Aju_Det'];?>&op=<?php echo $op;?>','ajax_modal'); Muestra_Aparecer();" style="height:22px">
                         <i class="icon-info-sign icon-white"></i>
                     </button>
                 </td>
                 <td align="center">
                   <?Php if ($row_rs_buspro['Aju_Est'] == 'A') { ?>
                   <form name='frm_personal' method='post' action="fac_pri_aju_1.0.php" target="_blank">
-                    <? $thisPost->startPost();?>
+                    <?php $thisPost->startPost();?>
                     <input type="hidden" name="Prv_Cod" id="Prv_Cod" value="<?Php echo $row_rs_buspro['Prv_Cod'];?>">
                     <input type="hidden" name="Aju_Cod" id="Aju_Cod" value="<?Php echo $row_rs_buspro['Aju_Cod'];?>">
                     <input type="hidden" name="hdd_save" id="hdd_save" value="">
@@ -415,10 +415,10 @@ switch($op){
                     <td><?Php echo error_alerta("!No hay resultados que mostrar!", 1) ?></td>
                     <td>&nbsp;</td>
                   </tr>
-              <? }?>
+              <?php }?>
               </tbody>
           </table>	  
-          <? echo barra_estado(count($rs_buspro));?>
+          <?php echo barra_estado(count($rs_buspro));?>
         </FIELDSET>  
        <?Php
         if ($anulada > 0)
@@ -427,13 +427,13 @@ switch($op){
             }//Fin del if ($anulada > 0)
             ?>
             <br/>
-        <?
+        <?php
         require_once('../../componentes/FRONT/com_con_leyenda.php');?> 
-    <? } ?>
- <? break;
+    <?php } ?>
+ <?php break;
  	}
 }?>
-<? } //fin if(count($rs_ann) > 0)?>
+<?php } //fin if(count($rs_ann) > 0)?>
 </td>
 </tr>
 </table>

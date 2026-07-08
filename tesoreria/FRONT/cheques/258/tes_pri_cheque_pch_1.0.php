@@ -52,14 +52,14 @@ $row_institucion = $obBD_con1->getRowConsulta(126, $Ses_Suc_Cod, $obBD_conexion)
       </tr>
       <tr>
 		<td width="25" height="32" valign="top" class="Texto_Reporte">&nbsp;</td>		
-		<td width="371" valign="middle" class="Texto_Reporte" style="font-size:14px;"><? if($row_pri_cheque['Che_Ben']==''){echo $row_pri_cheque['Prs_Ape'].' '.$row_pri_cheque['Prs_Nom'];}else{echo $row_pri_cheque['Che_Ben'];} ?></td>
-        <td width="195" valign="middle" style="color: #000000 !important;"><span class="Texto_Reporte" style="font-size:15px; "><? echo number_format($row_pri_cheque['Che_Val'],2); ?></span>xxx</td>
+		<td width="371" valign="middle" class="Texto_Reporte" style="font-size:14px;"><?php if($row_pri_cheque['Che_Ben']==''){echo $row_pri_cheque['Prs_Ape'].' '.$row_pri_cheque['Prs_Nom'];}else{echo $row_pri_cheque['Che_Ben'];} ?></td>
+        <td width="195" valign="middle" style="color: #000000 !important;"><span class="Texto_Reporte" style="font-size:15px; "><?php echo number_format($row_pri_cheque['Che_Val'],2); ?></span>xxx</td>
       </tr>
       <tr align="center">
         <td height="45"></td>
         <td height="45" colspan="2" align="left" valign="top" style="color: #000000 !important;"><span class="Texto_Reporte" style="font-size:14px;">
           
-          <? $v_absoluto=explode(".",$row_pri_cheque['Che_Val']);
+          <?php $v_absoluto=explode(".",$row_pri_cheque['Che_Val']);
 			echo strtoupper(num2letras($row_pri_cheque['Che_Val']));
 			//$row_pri_cheque['Che_Val'];
 			?></span> xxxxxxxxxxxxxxxxxxxxxxxxxxxx</td>

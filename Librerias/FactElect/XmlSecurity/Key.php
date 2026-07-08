@@ -63,7 +63,7 @@ $vars_exc=realpath(dirname(__FILE__). '\Exception');
  *
  * Usage example for \ass\XmlSecurity\Key:
  * <code>
- * $xmlSecurityKey = new \ass\XmlSecurity\KeyRsaSha1(\ass\XmlSecurity\Key::TYPE_PUBLIC, 'public.pem', true, true);
+ * $xmlSecurityKey = new \ass\XmlSecurity\KeyRsaSha1(\ass\XmlSecurity\Key::TYPE_public, 'public.pem', true, true);
  * $certificateInOneLine = $xmlSecurityKey->getX509Certificate(true);
  * $thumbprint = $xmlSecurityKey->getX509Thumbprint();
  * $signature = $xmlSecurityKey->sign('data');
@@ -82,7 +82,7 @@ abstract class Key
     /**
      * Key type public
      */
-    const TYPE_PUBLIC = 'public';
+    const TYPE_public = 'public';
 
     /**
      * Block Encryption algorithm TRIPLEDES
@@ -177,7 +177,7 @@ abstract class Key
      * @param string  $encryptionType Encryption algorithm
      * @param string  $key            Key string
      * @param boolean $keyIsFile      Key parameter is file name
-     * @param string  $keyType        Key::TYPE_PUBLIC | Key::TYPE_PRIVATE
+     * @param string  $keyType        Key::TYPE_public | Key::TYPE_PRIVATE
      * @param string  $passphrase     Passphrase for key
      *
      * @return Key
