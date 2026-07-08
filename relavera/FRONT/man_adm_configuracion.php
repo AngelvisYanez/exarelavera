@@ -23,6 +23,37 @@ $cliente_manifiesto = $obBD_con1->getRowConsulta('manifiesto_usuario.selectWhere
 $sqlValorMinimo = "SELECT COALESCE(Pla_Smi, 0) AS valor_minimo FROM manifiesto_plantas WHERE Pla_Est = 'A' LIMIT 1";
 $rowValorMinimo = $obBD_con1->fetch_assoc($obBD_con1->consulta($sqlValorMinimo, $obBD_conexion->conexion));
 $valorMinimo = isset($rowValorMinimo['valor_minimo']) ? (float)$rowValorMinimo['valor_minimo'] : 0.0;
+
+/* Perfiles y Permisos para lectura */
+$perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => array('Emp_Cod' => $Ses_Emp_Cod, 'Usu_Cod' => $Ses_Usu_Cod), 'setWhere' => array('getPerfil')), $obBD_conexion);
+$esPerfilLectura = false;
+if (is_array($perfil)) {
+    foreach ($perfil as $p) {
+        $per_desc = trim($p['Per_Des']);
+        if ($per_desc == 'Contador_Lectura' || $per_desc == 'Aux_Cont_Lectura') {
+            $esPerfilLectura = true;
+        }
+    }
+}
+
+if ($esPerfilLectura) {
+    $restrictedActions = array(
+        'saveGeneralManifiestoAjax', 'savePlantaAjax', 'anularPlantaAjax',
+        'saveEmpresaTransporteAjax', 'anularEmpresaTransporteAjax',
+        'saveChoferAjax', 'anularChoferAjax', 'saveVehiculoAjax',
+        'anularVehiculoAjax', 'saveSancionVehiculoAjax', 'saveSancionChoferAjax',
+        'saveSancionPlantaAjax', 'anularSancionAjax', 'suspenderSancionAjax',
+        'saveCeldaAjax', 'anularCeldaAjax', 'activarCeldaAjax',
+        'eliminarCeldaAjax', 'saveNuevoTipoSancionAjax'
+    );
+    
+    foreach ($restrictedActions as $action) {
+        if (isset($_REQUEST[$action]) || isset($$action)) {
+            $obBD_con1->echoJson(array('success' => false, 'message' => 'No tiene permisos para realizar esta accion (Perfil Lectura)'));
+            exit;
+        }
+    }
+}
 /* ==================== AJAX HANDLERS ==================== */
 if (isset($cliAjax)) {
     $obBD_con1->getPageGridJson('cliente.selectWhere', $_GET, $obBD_conexion);
@@ -1736,23 +1767,27 @@ $obBD_con1->utf8_change_param($transportes);
                             <i class="glyphicon glyphicon-ban-circle icon-tab"></i>Sanciones
                         </a>
                     </li>
+                    <?php if (!isset($esPerfilLectura) || !$esPerfilLectura) { ?>
                     <li role="presentation">
                         <a href="#tabGeneral" aria-controls="tabGeneral" role="tab" data-toggle="tab">
                             <i class="glyphicon glyphicon-cog icon-tab"></i>General
                         </a>
                     </li>
+                    <?php } ?>
                 </ul>
 
                 <div class="tab-content">
                     <!-- Tab Plantas -->
                     <div role="tabpanel" class="tab-pane active" id="tabPlantas">
                         <div class="btn-toolbar">
+                            <?php if (!isset($esPerfilLectura) || !$esPerfilLectura) { ?>
                             <button class="btn btn-success" onclick="abrirModalPlanta();">
                                 <i class="glyphicon glyphicon-plus"></i> Nueva Planta
                             </button>
                             <button class="btn btn-default" onclick="actualizarGridPlantas();">
                                 <i class="glyphicon glyphicon-refresh"></i> Actualizar
                             </button>
+                            <?php } ?>
                         </div>
                         <div class="row" style="margin-top: 10px; margin-bottom: 10px;">
                             <div class="col-xs-12">
@@ -1798,12 +1833,14 @@ $obBD_con1->utf8_change_param($transportes);
                     <!-- Tab Empresas Transporte -->
                     <div role="tabpanel" class="tab-pane" id="tabEmpresasTransporte">
                         <div class="btn-toolbar">
+                            <?php if (!isset($esPerfilLectura) || !$esPerfilLectura) { ?>
                             <button class="btn btn-success" onclick="abrirModalEmpresaTransporte();">
                                 <i class="glyphicon glyphicon-plus"></i> Nueva Empresa
                             </button>
                             <button class="btn btn-default" onclick="actualizarGridEmpresasTransporte();">
                                 <i class="glyphicon glyphicon-refresh"></i> Actualizar
                             </button>
+                            <?php } ?>
                         </div>
                         <div class="row" style="margin-top: 10px; margin-bottom: 10px;">
                             <div class="col-xs-12">
@@ -1843,12 +1880,14 @@ $obBD_con1->utf8_change_param($transportes);
                     <!-- Tab Choferes -->
                     <div role="tabpanel" class="tab-pane" id="tabChoferes">
                         <div class="btn-toolbar">
+                            <?php if (!isset($esPerfilLectura) || !$esPerfilLectura) { ?>
                             <button class="btn btn-success" onclick="abrirModalChofer();">
                                 <i class="glyphicon glyphicon-plus"></i> Nuevo Chofer
                             </button>
                             <button class="btn btn-default" onclick="actualizarGridChoferes();">
                                 <i class="glyphicon glyphicon-refresh"></i> Actualizar
                             </button>
+                            <?php } ?>
                         </div>
                         <div class="row" style="margin-top: 10px; margin-bottom: 10px;">
                             <div class="col-xs-12">
@@ -1892,12 +1931,14 @@ $obBD_con1->utf8_change_param($transportes);
                     <!-- Tab Vehículos -->
                     <div role="tabpanel" class="tab-pane" id="tabVehiculos">
                         <div class="btn-toolbar">
+                            <?php if (!isset($esPerfilLectura) || !$esPerfilLectura) { ?>
                             <button class="btn btn-success" onclick="abrirModalVehiculo();">
                                 <i class="glyphicon glyphicon-plus"></i> Nuevo Vehículo
                             </button>
                             <button class="btn btn-default" onclick="actualizarGridVehiculos();">
                                 <i class="glyphicon glyphicon-refresh"></i> Actualizar
                             </button>
+                            <?php } ?>
                         </div>
                         <div class="row" style="margin-top: 10px; margin-bottom: 10px;">
                             <div class="col-xs-12">
@@ -1941,12 +1982,14 @@ $obBD_con1->utf8_change_param($transportes);
                     <!-- Tab Celdas -->
                     <div role="tabpanel" class="tab-pane" id="tabCeldas">
                         <div class="btn-toolbar">
+                            <?php if (!isset($esPerfilLectura) || !$esPerfilLectura) { ?>
                             <button class="btn btn-success" onclick="abrirModalCelda();">
                                 <i class="glyphicon glyphicon-plus"></i> Nueva Celda
                             </button>
                             <button class="btn btn-default" onclick="actualizarGridCeldas();">
                                 <i class="glyphicon glyphicon-refresh"></i> Actualizar
                             </button>
+                            <?php } ?>
                         </div>
                         <div class="row" style="margin-top: 10px; margin-bottom: 10px;">
                             <div class="col-xs-12">
@@ -1985,12 +2028,14 @@ $obBD_con1->utf8_change_param($transportes);
                     <!-- Tab Sanciones -->
                     <div role="tabpanel" class="tab-pane" id="tabSanciones">
                         <div class="btn-toolbar">
-                            <button class="btn btn-success" onclick="abrirModalSancionUnificada();" title="Registrar sanción a vehículo, chofer o planta">
+                            <?php if (!isset($esPerfilLectura) || !$esPerfilLectura) { ?>
+                            <button class="btn btn-success" onclick="abrirSancionManual();" title="Registrar sanción a vehículo, chofer o planta">
                                 <i class="glyphicon glyphicon-plus"></i> Nueva sanción
                             </button>
                             <button class="btn btn-default" onclick="actualizarGridSanciones();">
                                 <i class="glyphicon glyphicon-refresh"></i> Actualizar
                             </button>
+                            <?php } ?>
                         </div>
                         <div class="row" style="margin-top: 10px; margin-bottom: 10px;">
                             <div class="col-xs-12">
@@ -2041,53 +2086,59 @@ $obBD_con1->utf8_change_param($transportes);
                         <table id="gridSanciones"></table>
                         <div id="gridSancionesPager"></div>
                     </div>
-                    <!-- Tab General: Configuraciones Base -->
+                    <?php if (!isset($esPerfilLectura) || !$esPerfilLectura) { ?>
                     <div role="tabpanel" class="tab-pane" id="tabGeneral">
                         <div class="row">
                             <div class="col-md-10 col-md-offset-1">
-                                <div class="config-card">
-                                    <h4 class="config-section-title">
-                                        <i class="glyphicon glyphicon-cog" style="font-size: 14px; margin-right: 8px; opacity: 0.7;"></i>
-                                        Configuraci&oacute;n Inicial del Sistema
+                                <div class="config-card" style="margin-top: 20px; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); background: #fff; border: 1px solid #e2e8f0;">
+                                    <h4 class="Titulos2" style="margin-top: 0; margin-bottom: 25px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; color: #1e293b; font-size: 18px; display: flex; align-items: center;">
+                                        <i class="glyphicon glyphicon-wrench" style="margin-right: 10px; color: #3b82f6;"></i>
+                                        Configuraciones Globales (Todas las Plantas)
                                     </h4>
 
                                     <form id="formGeneralManifiesto" class="form-horizontal normal" onsubmit="return false;">
                                         <div class="row">
                                             <!-- Columna Izquierda: Valor Mínimo -->
-                                            <div class="col-sm-4" style="border-right: 1px solid #f1f5f9; padding-right: 30px;">
-                                                <div class="form-group" style="margin: 0;">
-                                                    <label class="control-label" style="font-weight: 700; color: #334155; margin-bottom: 12px; display: block; text-align: left; padding-top: 0; font-size: 15px;">
-                                                        Valor m&iacute;nimo Anticipo (USD) 
-                                                        <i class="glyphicon glyphicon-info-sign" style="color: #94a3b8; margin-left: 5px; cursor: help;" title="Umbral m&iacute;nimo para permitir la creaci&oacute;n de manifiestos."></i>
+                                            <div class="col-md-6">
+                                                <div class="form-group" style="margin-bottom: 20px;">
+                                                    <label class="col-xs-12 control-label" style="text-align: left; color: #475569; font-weight: 600; margin-bottom: 8px; font-size: 13px;">
+                                                        <i class="glyphicon glyphicon-usd" style="color: #10b981; margin-right: 5px;"></i>
+                                                        Saldo M&iacute;nimo por Defecto
                                                     </label>
+                                                    <div class="col-xs-11">
                                                     <div class="input-group" style="margin-bottom: 10px; display: flex; align-items: stretch;">
                                                         <span class="input-group-addon" style="background: #f8fafc; border-color: #cbd5e1; color: #64748b; border-radius: 6px 0 0 6px; display: flex; align-items: center; justify-content: center; width: 40px; border-right: 0; font-size: 16px;">$</span>
                                                         <input type="text" class="form-control" id="cfg_pla_smi_general" name="cfg_pla_smi_general" value="<?php echo $valorMinimo; ?>" placeholder="0.00" autocomplete="off" style="border-color: #cbd5e1; font-weight: 700; height: 45px; font-size: 18px; border-radius: 0 6px 6px 0; box-shadow: none;" />
                                                     </div>
                                                     <p class="help-block" style="font-size: 11px; font-style: italic; color: #64748b; line-height: 1.4;">
-                                                        Monto base requerido para la validaci&oacute;n y emisi&oacute;n de manifiestos.
+                                                        Valor m&iacute;nimo requerido en el anticipo para permitir generar manifiestos. Se aplicar&aacute; a todas las plantas activas. Dejar en 0.00 para no exigir un m&iacute;nimo.
                                                     </p>
+                                                    </div>
                                                 </div>
                                             </div>
 
                                             <!-- Columna Derecha: Campaña -->
-                                            <div class="col-sm-8" style="padding-left: 30px;">
-                                                <div class="config-campaign-section" style="margin-top: 0;">
-                                                    <label style="font-weight: 700; color: #334155; margin-bottom: 12px; display: block; font-size: 15px;">Gesti&oacute;n de Campa&ntilde;a:</label>
-                                                    
-                                                    <div class="config-group-box" style="display: flex; align-items: center; justify-content: space-between; padding: 15px 20px;">
-                                                        <div style="flex: 1; padding-right: 20px;">
-                                                            <strong style="color: #1e293b; display: block; font-size: 16px; margin-bottom: 4px;">Lanzar campa&ntilde;a de actualizaci&oacute;n</strong>
-                                                            <span style="color: #64748b; font-size: 12px; font-weight: normal; line-height: 1.4; display: block;">
-                                                                Habilita el formulario de datos personales para usuarios con perfil de Planta.
-                                                            </span>
+                                            <div class="col-md-6">
+                                                <div class="form-group" style="margin-bottom: 20px;">
+                                                    <label class="col-xs-12 control-label" style="text-align: left; color: #475569; font-weight: 600; margin-bottom: 8px; font-size: 13px;">
+                                                        <i class="glyphicon glyphicon-leaf" style="color: #10b981; margin-right: 5px;"></i>
+                                                        Campa&ntilde;a
+                                                    </label>
+                                                    <div class="col-xs-11">
+                                                        <div style="display: flex; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 15px; margin-bottom: 10px;">
+                                                            <div style="margin-right: 15px; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: #e0f2fe; border-radius: 50%; color: #0284c7;">
+                                                                <i class="glyphicon glyphicon-user" style="font-size: 18px;"></i>
+                                                            </div>
+                                                            <div style="width: 160px;">
+                                                                <select id="cfg_pla_act_general" name="cfg_pla_act_general" class="form-control" style="font-weight: 800; border-radius: 6px; height: 45px; border-color: #cbd5e1; cursor: pointer; font-size: 15px; text-align: center;">
+                                                                    <option value="N" style="color: #ef4444; font-weight: bold;">INACTIVO</option>
+                                                                    <option value="S" style="color: #10b981; font-weight: bold;">ACTIVO</option>
+                                                                </select>
+                                                            </div>
                                                         </div>
-                                                        <div style="width: 160px;">
-                                                            <select id="cfg_pla_act_general" name="cfg_pla_act_general" class="form-control" style="font-weight: 800; border-radius: 6px; height: 45px; border-color: #cbd5e1; cursor: pointer; font-size: 15px; text-align: center;">
-                                                                <option value="N" style="color: #ef4444; font-weight: bold;">INACTIVO</option>
-                                                                <option value="S" style="color: #10b981; font-weight: bold;">ACTIVO</option>
-                                                            </select>
-                                                        </div>
+                                                        <p class="help-block" style="font-size: 11px; font-style: italic; color: #64748b; line-height: 1.4;">
+                                                            Habilita el formulario de datos personales para usuarios con perfil de Planta.
+                                                        </p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -2104,6 +2155,7 @@ $obBD_con1->utf8_change_param($transportes);
                             </div>
                         </div>
                     </div>
+                    <?php } ?>
                 </div>
             </div>
 
@@ -2928,9 +2980,11 @@ $obBD_con1->utf8_change_param($transportes);
                             </select>
                             <span class="input-group-addon" id="nivel_tipo_sancion"></span>
                             <span class="input-group-btn">
-                                <button type="button" class="btn btn-success btn-xs" title="Agregar tipo de sanción" onclick="abrirNuevoTipoSancion();">
-                                    <span class="glyphicon glyphicon-plus"></span>
+                                <?php if (!isset($esPerfilLectura) || !$esPerfilLectura) { ?>
+                                <button type="button" class="btn btn-success btn-xs" title="Agregar tipo de sanci&oacute;n" onclick="abrirNuevoTipoSancion();">
+                                    <i class="glyphicon glyphicon-plus"></i> Nuevo
                                 </button>
+                                <?php } ?>
                             </span>
                         </div>
                     </div>
@@ -3359,7 +3413,11 @@ $obBD_con1->utf8_change_param($transportes);
     </div>
 
 </body>
-<script type="text/javascript" src="../VALIDACIONES/man_adm_configuracion.js?x=52"></script>
+<script>
+    var esPerfilLectura = <?php echo (isset($esPerfilLectura) && $esPerfilLectura) ? 'true' : 'false'; ?>;
+</script>
+<script type="text/javascript" src="../VALIDACIONES/man_adm_configuracion.js?x=53"></script>
+
 
 </script>
 

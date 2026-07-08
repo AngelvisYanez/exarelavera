@@ -674,6 +674,7 @@ function createGridPlantas() {
                 width: 80,
                 align: 'center',
                 formatter: function (cellvalue, options, o) {
+                    if (typeof esPerfilLectura !== 'undefined' && esPerfilLectura) return '';
                     return $.getGridButton('editarPlanta', o, 'Editar', 'pencil', '', 'success') + '&nbsp;' +
                         $.getGridButton('anularPlanta', o.Pla_Cod, 'Anular', 'trash', '', 'danger');
                 }
@@ -1035,6 +1036,7 @@ function createGridEmpresasTransporte() {
                 width: 80,
                 align: 'center',
                 formatter: function (cellvalue, options, o) {
+                    if (typeof esPerfilLectura !== 'undefined' && esPerfilLectura) return '';
                     return $.getGridButton('editarEmpresaTransporte', o, 'Editar', 'pencil', '', 'success') + '&nbsp;' +
                         $.getGridButton('anularEmpresaTransporte', o.Mat_Cod, 'Anular', 'trash', '', 'danger');
                 }
@@ -1200,6 +1202,7 @@ function createGridChoferes() {
             width: 60,
             align: 'center',
             formatter: function (cellvalue, options, o) {
+                if (typeof esPerfilLectura !== 'undefined' && esPerfilLectura) return '';
                 return $.getGridButton('editarChofer', o, 'Editar', 'pencil', '', 'success') + '&nbsp;' +
                     $.getGridButton('anularChoferGrid', o.Cho_Cod, 'Anular', 'trash', '', 'danger');
             }
@@ -1518,6 +1521,7 @@ function createGridVehiculos() {
             width: 60,
             align: 'center',
             formatter: function (cellvalue, options, o) {
+                if (typeof esPerfilLectura !== 'undefined' && esPerfilLectura) return '';
                 return $.getGridButton('editarVehiculo', o, 'Editar', 'pencil', '', 'success') + '&nbsp;' +
                     $.getGridButton('anularVehiculoGrid', o.Veh_Cod, 'Anular', 'trash', '', 'danger');
             }
@@ -1736,6 +1740,7 @@ function createGridCeldas() {
                         width: 100,
                         align: 'center',
                         formatter: function (cellvalue, options, o) {
+                            if (typeof esPerfilLectura !== 'undefined' && esPerfilLectura) return '';
                             var botones = $.getGridButton('editarCelda', o, 'Editar', 'pencil', '', 'success') + '&nbsp;';
                             if (o.Cel_Est === 'A') {
                                 botones += $.getGridButton('anularCeldaGrid', o.Cel_Cod, 'Anular', 'remove', '', 'warning ') + '&nbsp;';
@@ -1836,6 +1841,7 @@ function createGridCeldas() {
                 width: 100,
                 align: 'center',
                 formatter: function (cellvalue, options, o) {
+                    if (typeof esPerfilLectura !== 'undefined' && esPerfilLectura) return '';
                     var botones = $.getGridButton('editarCelda', o, 'Editar', 'pencil', '', 'success') + '&nbsp;';
                     if (o.Cel_Est === 'A') {
                         botones += $.getGridButton('anularCeldaGrid', o.Cel_Cod, 'Anular', 'remove', '', 'warning ') + '&nbsp;';
@@ -2138,6 +2144,7 @@ function createGridSanciones() {
             {
                 label: 'Acciones', name: 'act', width: 90, align: 'center', sortable: false,
                 formatter: function (cellvalue, options, o) {
+                    if (typeof esPerfilLectura !== 'undefined' && esPerfilLectura) return '';
                     return $.getGridButton('editarSancionPorTipo', o, 'Editar', 'pencil', '', 'success') + '&nbsp;' +
                         $.getGridButton('suspenderSancionGrid', o.Msa_Cod, 'Suspender Sancion', 'minus-sign', '', 'info') + '&nbsp;' +
                         $.getGridButton('anularSancionGrid', o.Msa_Cod, 'Anular', 'trash', '', 'danger');
