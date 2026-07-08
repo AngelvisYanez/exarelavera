@@ -32,7 +32,12 @@ El filtro `FILTER_SANITIZE_STRING` fue deprecado en PHP 8.1.
 - **`administrador/FRONT/home.php`**: 
   - Se actualizó el uso de `filter_var(..., FILTER_SANITIZE_STRING)` a `filter_var(..., FILTER_SANITIZE_FULL_SPECIAL_CHARS)`.
 
-## 6. Deprecación de `each()` (PHP 7.2 / PHP 8.0)
+## 6. Configuración de Codificación (Acentos rotos)
+A partir de PHP 5.6, la directiva `default_charset` cambió por defecto a `UTF-8`. En PHP 8, esto causaba que PHP forzara el encabezado HTTP `Content-Type: text/html; charset=UTF-8`, anulando las meta-etiquetas `<meta charset="iso8859-1">` del frontend e invalidando los caracteres con tildes (como "Administración") provenientes de la base de datos (latin1).
+- **`DATA/MysqlConexion.php`**:
+  - Se añadió `ini_set('default_charset', 'iso-8859-1');` para obligar a PHP a respetar la codificación ISO-8859-1 en las cabeceras HTTP, restaurando la correcta visualización de eñes y acentos.
+
+## 7. Deprecación de `each()` (PHP 7.2 / PHP 8.0)
 La función `each()` fue eliminada en PHP 8.0.
 - Se ha refactorizado el uso residual de estructuras `while(list($key, $val) = each($array))` reemplazándolas por construcciones modernas `foreach($array as $key => $val)`.
 
