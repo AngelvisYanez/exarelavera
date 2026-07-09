@@ -88,7 +88,7 @@ $resultados_total = explode('*', $obBD_con1->calculosConsultaVentas($parametro, 
 	    </tr>
 		</table><br>
 
-	<?if ($total_rs_buscarcarrera != 0) { ?>
+	<?php if ($total_rs_buscarcarrera != 0) { ?>
     <style>.hide{display:none;} .cortarString{}</style>
 			<table width="100%" border="1" cellpadding="0" cellspacing="0" style="table-layout:fixed; border-collapse: collapse;">
 			  <tr class="TablaRepCompr">

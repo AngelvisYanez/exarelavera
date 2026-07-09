@@ -6,7 +6,6 @@ function matriculas()
 {
 	$rs_matriculas = cargar("SELECT Num_Asi, Num_Mat FROM confimatri WHERE Con_Cod = 1");
 	return $rs_matriculas;
-	mysqli_free_result ($rs_matriculas);
 }
 //***********Funcion utilizada al momento de presentar datos, como referencia de un estudiante*********************
 //function estudiante($codigo)
@@ -14,18 +13,14 @@ function matriculas()
 //	$rs_estudiante = cargar("SELECT Est_Int, persona.Prs_Ced, persona.Prs_Nom, persona.Prs_Ape FROM estudiante, persona WHERE persona.Prs_Cod = 
 //							estudiante.Prs_Cod AND persona.Prs_Ced = '$codigo'");
 //	return $rs_estudiante;
-//	mysqli_free_result ($rs_estudiante);
+//	
 //}
-
 function estudiante($codigo,$obBD_conexion,$obBD_con1)
 {	/**************** ********************************************************************/
 	$rs_estudiante = $obBD_con1->consulta(sentencias_mat(179, $obBD_con1->parametros($codigo)), $obBD_conexion->conexion);
 	return $rs_estudiante;
-	mysqli_free_result ($rs_estudiante);
 	/**************** ********************************************************************/
 }
-
-
 //***********Funcion utilizada al momento de presentar datos, como referencia de un estudiante*********************
 //***********con el código interno del estudiante******************************************************************
 function estudiante_int($codigo)
@@ -33,7 +28,6 @@ function estudiante_int($codigo)
 	$rs_estudiante = cargar("SELECT estudiante.Est_Int, persona.Prs_Ced, persona.Prs_Nom, persona.Prs_Ape FROM estudiante, persona 
 						WHERE persona.Prs_Cod = estudiante.Prs_Cod AND estudiante.Est_Int = '$codigo'");
 	return $rs_estudiante;
-	mysqli_free_result ($rs_estudiante);
 }
 //************Cuenta el numero de matriculas reprobadas que tiene una determinada asignatura***********************
 function contar_matricula($Prs_Cod, $Asi_Int)
@@ -45,9 +39,7 @@ function contar_matricula($Prs_Cod, $Asi_Int)
 						notasgedet.Nge_Est = 'R' AND notasgedet.Asi_Int = $Asi_Int AND matriculas.Mat_Est = 'A'");
 	$row_rs_numero_matricula = mysqli_fetch_assoc ($rs_numero_matricula);
 	return $row_rs_numero_matricula['Num_Matri'];
-	mysqli_free_result ($rs_numero_matricula);
 }
-
 //************Cuenta el numero de matriculas que tiene una determinada asignatura**********************************
 function contar_matricula_todas($Est_Ced, $Asi_Int)
 {
@@ -58,7 +50,6 @@ function contar_matricula_todas($Est_Ced, $Asi_Int)
 						AND notasgedet.Asi_Int = $Asi_Int");
 	$row_rs_numero_matricula = mysqli_fetch_assoc ($rs_numero_matricula);
 	return $row_rs_numero_matricula['Num_Matri'];
-	mysqli_free_result ($rs_numero_matricula);
 }
 //************Devuelve el estado de la asignatura evaluando si tiene prerequisitos**********************************
 function estado_prerequisito($Asi_Int, $array_arrastre)
@@ -88,7 +79,6 @@ function estado_prerequisito($Asi_Int, $array_arrastre)
 		}
 	}
 	return $estado;
-	mysqli_free_result ($rs_prerequisi);
 }	  
 //Devuelve los semestres de periodo ACTUAL y nivel (1ro, 2do, 3ero....10mo) y con el mismo código de malla curricular***********************
 function semestres_periodo($Per_Int, $Niv_Cod, $Mal_Cod)
@@ -98,11 +88,7 @@ function semestres_periodo($Per_Int, $Niv_Cod, $Mal_Cod)
 						periodos, promocione WHERE semestres.Niv_Cod = niveles.Niv_Cod AND periodos.Mod_Cod = modalidad.Mod_Cod AND 
 						periodos.Per_Int = semestres.Per_Int AND semestres.Per_Int = $Per_Int AND niveles.Niv_Cod = $Niv_Cod AND semestres.Pro_Cod = 
 						promocione.Pro_Cod AND promocione.Mal_Cod = $Mal_Cod AND semestres.Sem_Est = 'A' ORDER BY semestres.Niv_Cod, semestres.Sem_Par, Sem_Sec");
-	
-
 	return $rs_semestre;
-	
-	mysqli_free_result ($rs_semestre);
 }
 //Devuelve los semestres del periodo actual, nivel y PROMOCION******************************************************
 function semestres_promocione($Per_Int, $Niv_Cod, $Pro_Cod)
@@ -113,7 +99,6 @@ function semestres_promocione($Per_Int, $Niv_Cod, $Pro_Cod)
 							= modalidad.Mod_Cod AND periodos.Per_Int = semestres.Per_Int AND semestres.Per_Int = $Per_Int AND niveles.Niv_Cod
 							= $Niv_Cod AND semestres.Pro_Cod = $Pro_Cod AND semestres.Sem_Est = 'A' ORDER BY semestres.Niv_Cod, semestres.Sem_Par, Sem_Sec");
 	return $rs_semestre;
-	mysqli_free_result ($rs_semestres);
 }
 //Devuelve la promocion de un estudiante****************************************************************************
 function estudiante_promocion($Est_Ced)
@@ -122,14 +107,12 @@ function estudiante_promocion($Est_Ced)
 						AND persona.Prs_Ced = $Est_Ced AND matriculas.Sem_Cod = semestres.Sem_Cod AND semestres.Pro_Cod = promocione.Pro_Cod");
 	$row_rs_promocione = mysqli_fetch_assoc ($rs_promocione);					
 	return $row_rs_promocione['Pro_Cod'];
-	mysqli_free_result ($rs_promocione);					
 }
 //Funcion que devuelve el periodo actual en base a parametros: Sea de clases o de matricula
 function periodo_actual($ini, $fin, $tipo)
 {	
 	$rs_periodo = cargar("SELECT Per_Int FROM periodos WHERE now() >= $ini AND now() <= $fin AND Pem_Tip = '$tipo' AND Per_Est='A' ORDER BY $ini");
 	$row_rs_periodo = mysqli_fetch_assoc ($rs_periodo);
-
 	if ($row_rs_periodo['Per_Int'] != "")
 	{
 		return $row_rs_periodo['Per_Int'];
@@ -138,9 +121,7 @@ function periodo_actual($ini, $fin, $tipo)
 	{
 		return 0;
 	}
-	mysqli_free_result ($rs_periodo);
 }
-
 //Funcion que devuelve el nivel en el que se encuentra el estudiante, en una determinada carrera
 function nivel_actual($Prs_Cod, $Car_Int)
 {
@@ -150,12 +131,9 @@ function nivel_actual($Prs_Cod, $Car_Int)
 						promocione.Car_Int AND persona.Prs_Cod = '$Prs_Cod' AND promocione.Car_Int = $Car_Int ORDER BY 
 						semestres.Niv_Cod DESC"); //Se utiliza ORDER BY DESC para poder tener en el primer registro el codigo
 						// de la ultima malla en el ultimo semetre
-	
 	return $rs_existe;
-	mysqli_free_result ($rs_existe);		
 }
 //Funcion que devuelve el numero de asignaturas en proceso o  supletorio, en un determinado semestre
-
 //function asignaturas_proceso ($Prs_Cod, $Car_Int) //OJO SE DEBE ARREGLAR ESTA FUNCION PARA QUE BUSCA ASIGNATURA EN PROCESOS HACIENDO DISTINCION DE LA CARRERA
 //{
 //	$rs_existe = cargar("SELECT count(notasgedet.Asi_Int) as cant FROM notasgener, notasgedet, asignatura, matriculas, estudiante,
@@ -166,12 +144,8 @@ function nivel_actual($Prs_Cod, $Car_Int)
 //			AND matriculas.Est_Int = estudiante.Est_Int AND persona.Prs_Cod ='$Prs_Cod' AND (notasgedet.Nge_Est = 'P' OR notasgedet.Nge_Est = 'S')");			
 //	$row_rs_existe = mysqli_fetch_assoc ($rs_existe);		
 //	return 	$row_rs_existe['cant'];
-//	mysqli_free_result ($rs_existe);
+//	
 //}
-
-
-
-
 //**************Devuelve el detalle del un periodo actual***********************
 function detalle_periodo($Per_Int)//, $Tipo
 {
@@ -185,7 +159,6 @@ function detalle_periodo($Per_Int)//, $Tipo
 				'Octubre', IF (MONTH(Per_Fef)=11, 'Noviembre', 'Diciembre'))))))))))) as Mes_Fin, Pem_Ord, Pem_Ext, Pem_Exc, Pem_Fin FROM periodos
 				WHERE Per_Int = $Per_Int AND Per_Est = 'A'  ORDER BY Per_Fea");	//AND Pem_Tip = '$Tipo'							
 	return $rs_periodo;
-	mysqli_free_result ($rs_periodo);
 }
 //**************Devuelve todos los periodos de un tipo especifico Pem_Tip = Semestral o Pre-Universitario******************
 function todos_periodos($Tipo)
@@ -200,9 +173,7 @@ function todos_periodos($Tipo)
 					'Octubre', IF (MONTH(Per_Fef)=11, 'Noviembre', 'Diciembre'))))))))))) as Mes_Fin FROM periodos, modalidad
 					WHERE Per_Est = 'A' AND periodos.Mod_Cod=modalidad.Mod_Cod  AND Pem_Tip = '$Tipo' ORDER BY Per_Fea DESC");
 	return $rs_periodo;
-	mysqli_free_result ($rs_periodo);			
 }	
-	
 	//****************Consulta de los datos de la ficha de matricula del estudiante********************************************
 	//function detalle_matricula($Mat_Int)
 	//{
@@ -218,11 +189,8 @@ function todos_periodos($Tipo)
 	//				estudiante.Est_Int AND matriculas.Sem_Cod = semestres.Sem_Cod AND semestres.Niv_Cod = niveles.Niv_Cod AND persona.Prs_Cod = estudiante.Prs_Cod AND
 	//				promocione.Pro_Cod = semestres.Pro_Cod AND carreras.Car_Int = promocione.Car_Int AND matriculas.Mat_Int = $Mat_Int");	
 	//	return $rs_matriculas;
-	//	mysqli_free_result ($rs_matriculas);
+	//	
 	//}
-
-
-
 //*****************Consulta del detalle de las asignaturas en la ficha de matricula********************************
 function detalle_asignaturas($Mat_Int)
 {
@@ -234,10 +202,7 @@ function detalle_asignaturas($Mat_Int)
 					semestres.Sem_Cod AND semestres.Niv_Cod = niveles.Niv_Cod AND periodos.Mod_Cod = modalidad.Mod_Cod AND 
 					notasgener.Mat_Int = $Mat_Int AND semestres.Per_Int = periodos.Per_Int");
 	return $rs_asignaturas;
-	mysqli_free_result ($rs_asignaturas);
 }
-
-
 //*******************Devuelve el codigo de la matricula automáticamente generado**********************************************************
 //function codigo_matricula($Per_Int)
 //{
@@ -247,23 +212,19 @@ function detalle_asignaturas($Mat_Int)
 	//$row_rs_consulta = mysqli_fetch_assoc ($rs_consulta);
 	//$codigo = $row_rs_consulta['Mat_Cod'] + 1;
 	//return $codigo;
-	//mysqli_free_result ($rs_consulta);
+	//
 //}
-
 /* Devuelve el codigo del folio automáticamente generado */
 function codigo_folio($Per_Int, $Esc_Int)
 {
 	//*************Consulta para calcular el maximo número del folio en el periodo vigente y la carrera********************
-	
 	$rs_consulta = cargar ("SELECT max(Mat_Fol) as Mat_Fol FROM matriculas, semestres, periodos, promocione, carreras WHERE matriculas.Sem_Cod = 
 					semestres.Sem_Cod AND periodos.Per_Int = semestres.Per_Int AND semestres.Pro_Cod = promocione.Pro_Cod AND promocione.Car_Int =
 					carreras.Car_Int AND semestres.Per_Int = $Per_Int AND carreras.Esc_Int = $Esc_Int");
 	$row_rs_consulta = mysqli_fetch_assoc ($rs_consulta);
 	$codigo = $row_rs_consulta['Mat_Fol'] + 1;
 	return $codigo;
-	mysqli_free_result ($rs_consulta);
 }
-
 //****************Devuelve el tipo de matrícula dependiendo de la fecha actual***********************************************************
 function tipo_matricula($Per_Int)
 {
@@ -272,9 +233,7 @@ function tipo_matricula($Per_Int)
 					WHERE Per_Int = $Per_Int");
 	$row_rs_tipomatri = mysqli_fetch_assoc ($rs_tipomatri);
 	return $row_rs_tipomatri['Mat_Tip'];
-	mysqli_free_result ($rs_tipomatri);				
 }
-
 //***************Devuelve "true" si la signatura ha sido vista y "false" si la asignatura no ha sido vista********************************
 function asignatura_vista($Asi_Int, $Prs_Cod)
 {	
@@ -291,9 +250,7 @@ function asignatura_vista($Asi_Int, $Prs_Cod)
 	{
 		return false;
 	}
-	mysqli_free_result ($rs_vista);
 }
-
 /* Devuelve el estado de la asignatura cuando se trata de una asignatura reprobada 'R' o pendiente 'E' */
 function estado_asignatura($Asi_Int, $Est_Int, $Estados)
 {
@@ -328,7 +285,6 @@ function estado_asignatura($Asi_Int, $Est_Int, $Estados)
 								$Pre_Req AND (notasgedet.Nge_Est = '$Nge_Est[0]' OR notasgedet.Nge_Est = '$Nge_Est[1]')";*/
 								//pendiente 1 asignatura y 1 por secuencia ojo
 			$row_rs_pendiente = mysqli_fetch_assoc ($rs_pendiente);
-			
 			if ($row_rs_pendiente['Nge_Est'] == $Nge_Est[0] or $row_rs_pendiente['Nge_Est'] == $Nge_Est[1])//en caso de no servir borrar or $row_rs_pendiente['Nge_Est'] == 'H'
 			{
 				$estado = $Nge_Est[1];
@@ -341,11 +297,7 @@ function estado_asignatura($Asi_Int, $Est_Int, $Estados)
 		}while ($row_rs_prerequisi = mysqli_fetch_assoc($rs_prerequisi));				
 	}
 	return $estado;	
-	
-	@mysqli_free_result ($rs_prerequisi);
-	@mysqli_free_result ($rs_pendiente);
 }//Fin del function estado_asignatura($Asi_Int, $Est_Int, $Estados)
-
 //****************Devuelve el estado de la asignatura cuando se trata de una asignatura pendiente 'E'**************************************
 function estado_pendiente($Asi_Int, $Est_Int)
 {
@@ -370,7 +322,6 @@ function estado_pendiente($Asi_Int, $Est_Int)
 								$Pre_Req AND (notasgedet.Nge_Est = 'E' OR notasgedet.Nge_Est = 'H')"); // Ojo se debe controlar q solo se puede inhabilitar por 
 								//pendiente 1 asignatura y 1 por secuencia ojo
 			$row_rs_pendiente = mysqli_fetch_assoc ($rs_pendiente);
-			
 			if ($row_rs_pendiente['Nge_Est'] == 'E' or $row_rs_pendiente['Nge_Est'] == 'H')//en caso de no servir borrar or $row_rs_pendiente['Nge_Est'] == 'H'
 			{
 				$estado = 'H';
@@ -383,14 +334,10 @@ function estado_pendiente($Asi_Int, $Est_Int)
 		}while ($row_rs_prerequisi = mysqli_fetch_assoc($rs_prerequisi));				
 	}
 	return $estado;	
-	mysqli_free_result ($rs_prerequisi);
-	
 	if (isset($rs_pendiente))
 	{
-		mysqli_free_result ($rs_pendiente);
 	}		
 }
-
 //********************Funcion que devuelve los colores de los estados de una asignatura*********************************************
 function color_estado($estado)
 {
@@ -420,7 +367,6 @@ function color_estado($estado)
 	}
 	return $color;
 }
-
 // Devuelve los semestres de periodo ACTUAL y nivel (1ro, 2do, 3ero....10mo) y con el mismo código de malla curricular, pero sobre todo que las asignatura
 // function semestres_arrastre($Per_Int, $Niv_Cod, $Car_Int)
 // {
@@ -431,10 +377,8 @@ function color_estado($estado)
 //						periodos.Per_Int = semestres.Per_Int AND semestres.Per_Int ='$Per_Int' AND niveles.Niv_Cod='$Niv_Cod' AND semestres.Pro_Cod = 
 //						promocione.Pro_Cod AND semestres.Sem_Est = 'A' ORDER BY semestres.Niv_Cod, semestres.Sem_Par, Sem_Sec");
 //	return $rs_semestre;
-//	mysqli_free_result ($rs_semestre);
+//	
 // }
-
-
 //*************Funcion que vuelve true si la asignatura X esta actualmente activa en la malla curricular en su respectivo nivel**************************
 function asignatura_vigente($Asi_Int, $Niv_Cod, $Mal_Cod)
 {
@@ -442,7 +386,6 @@ function asignatura_vigente($Asi_Int, $Niv_Cod, $Mal_Cod)
 							AND disciplina.Mal_Cod = mallacurri.Mal_Cod AND asignatura.Niv_Cod = $Niv_Cod AND mallacurri.Mal_Cod = $Mal_Cod AND 
 							asignatura.Asi_Int = $Asi_Int AND asignatura.Asi_Est = 'A'");
 	$total_rs_asignatura = mysqli_num_rows ($rs_asignatura);
-	
 	if ($total_rs_asignatura > 0)
 	{
 		return "true";
@@ -451,7 +394,6 @@ function asignatura_vigente($Asi_Int, $Niv_Cod, $Mal_Cod)
 	{
 		return "false";
 	}
-	mysqli_free_result ($rs_asignatura);
 }
 //Funcion que devuelve el si el estudiante se encuentra en un semestres por arrastre
 function listado_estudiante ($Mat_Int, $Sem_Cod)
@@ -460,7 +402,6 @@ function listado_estudiante ($Mat_Int, $Sem_Cod)
 						notasgener.Mat_Int = $Mat_Int AND notasgener.Sem_Cod = $Sem_Cod GROUP BY notasgedet.Nge_Tip");
 	$row_rs_asterisco = mysqli_fetch_assoc ($rs_asterisco);
 	$total_rs_asterisco = mysqli_num_rows ($rs_asterisco);
-	
 	if ($total_rs_asterisco == 1)
 	{
 		switch ($row_rs_asterisco['Nge_Tip']){
@@ -478,9 +419,7 @@ function listado_estudiante ($Mat_Int, $Sem_Cod)
 	{
 		$asterisco = '';	
 	}
-	
 	return $asterisco;
-	mysqli_free_result ($rs_asterisco);
 }
 //Funcion que devuelve el si el estudiante se encuentra en una asignatura de un semestres por arrastre
 function listado_estudiante_asi ($Mat_Int, $Sem_Cod, $Asi_Int)
@@ -490,9 +429,6 @@ function listado_estudiante_asi ($Mat_Int, $Sem_Cod, $Asi_Int)
 						notasgener.Sem_Cod = $Sem_Cod AND notasgedet.Asi_Int = $Asi_Int GROUP by notasgedet.Nge_Tip");
 	$row_rs_asterisco = mysqli_fetch_assoc ($rs_asterisco);
 	$total_rs_asterisco = mysqli_num_rows ($rs_asterisco);
-	
 	return $row_rs_asterisco['Nge_Tip'];
-	mysqli_free_result ($rs_asterisco);
 }
-
 ?>

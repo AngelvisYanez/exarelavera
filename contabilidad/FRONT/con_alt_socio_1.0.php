@@ -829,7 +829,7 @@ if (isset($verificarParametrizada)) {
                                     foreach($tipos_pago_apo as $row){?>
 
                                       <option value="<?Php echo $row['Pag_Cod']; ?>" pagabr="<?Php echo $row['Pag_Abr']; ?>"><?Php echo $row['Pag_Des']; ?></option>
-                                    <?}?>
+                                    <?php } ?>
                                   </select>
                                 </div>
                               </div>
@@ -1040,7 +1040,7 @@ if (isset($verificarParametrizada)) {
                                   foreach($tipos_pago_apo as $row){?>
 
                                     <option value="<?Php echo $row['Pag_Cod']; ?>" pagabr="<?Php echo $row['Pag_Abr']; ?>"><?Php echo $row['Pag_Des']; ?></option>
-                                  <?}?>
+                                  <?php } ?>
                                 </select>
                               </div>
                             </div>

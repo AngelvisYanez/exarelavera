@@ -2,7 +2,6 @@
 	  require_once('../../Librerias/operacion.php'); 
   	  require_once('../LOGICA/logica.php');	  
    	  require_once('../../Librerias/procedimientos/almacenados_standar.php');	  
-	    
 //*********************Almacena los datos modificados***********************************************************************************
 	if (isset($hdd_save))
 	{
@@ -21,7 +20,6 @@
 		//*************************************************************** 	
         $codigo =0;
     }
-
 //*******************Busqueda de los datos de caja*************************************************************************
 if ($ann_ini != "" && $mes_ini != "" && $dia_ini != "")
 {
@@ -41,9 +39,7 @@ else
 /*Consulta del vendedor en base al codigo de la persona*/
 $rs_vendedor = consultas_tes(24, $Prs_Pee);
 $row_rs_vendedor = mysqli_fetch_assoc ($rs_vendedor);
-
 ?>
-
 <HTML>
 	<HEAD>
 		<TITLE>Ginus</TITLE>
@@ -165,7 +161,6 @@ $row_rs_vendedor = mysqli_fetch_assoc ($rs_vendedor);
 //********************Opcion 1 *********************************************************************************		
 if ($codigo>0)	//Edicion de la Apertura de Caja			
 {
-
 ?>
   <input type="hidden" name="hiddenField" value="<?PHP echo $row_rs_vendedor['Pun_Cod']; ?>">
   <br>
@@ -218,7 +213,6 @@ if ($codigo>0)	//Edicion de la Apertura de Caja
               </div>			  </td>
             </tr>
           </table>
-   
 <?Php
 } //Fin del if ($op==1)	
 ?>
@@ -229,10 +223,8 @@ if ($codigo>0)	//Edicion de la Apertura de Caja
 <?Php
 if (isset ($rs_buscar))
 	{
-		mysqli_free_result($rs_buscar);
 	}
 	if (isset($rs_consulta))
 	{
-		mysqli_free_result($rs_consulta); 
 	}
 ?>

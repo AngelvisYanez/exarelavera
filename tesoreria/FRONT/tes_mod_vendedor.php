@@ -20,7 +20,6 @@ echo $Pun_Cod;
 	else
 	{
 	//*********************Consulta realizada en base el proveedor seleccionado***********************************************
-
 		if (isset($codigo))
 		{
 			$rs_consulta = consultas_tes(424,$codigo);
@@ -29,12 +28,10 @@ echo $Pun_Cod;
 			//*********************Consulta de las ciudades****************************************************************************
 			$rs_ciudades = ciudad();
 			$row_rs_ciudades= mysqli_fetch_assoc($rs_ciudades);
-			
 			//Consulta del vendedor en base al punto de impresion
 	         $rs_ven_punto = consultas_tes(463,"");
 	         $row_rs_ven_punto = mysqli_fetch_assoc($rs_ven_punto); 
              $total_rs_ven_punto = mysqli_num_rows($rs_ven_punto);		
-	            
 		}
 	}
 //*********************Almacena los datos modificados********************************************************************************
@@ -43,15 +40,12 @@ echo $Pun_Cod;
     	$conexion=open_trans_tes();
 		insercionesv_tes(409, $Prs_Ced.'*'.$Prs_Nom.'*'.$Prs_Ape.'*'.$Prs_Sex.'*'.$Prs_Dir.'*'.$Ciu_Cod.'*'.$Prs_Tel.'*'.
 		$Prs_Cel.'*'.$codigo, $conexion);	
-						
 		insercionesv_tes(425, $Pun_Cod.'*'.$codigo, $conexion);		
 		close_trans_tes($conexion);
-		
 		unset($codigo);
 		unset($row_rs_consulta);
 	 }			
 ?>
-
 <HTML>
 	<HEAD>		
 		<link href="../../Estilos/Estilo1.css" rel="stylesheet" type="text/css">
@@ -59,10 +53,8 @@ echo $Pun_Cod;
 		<link href="../../mascaras/model1/estilos/estilo1.css" rel="stylesheet" type="text/css">
 		<link href="../../Estilos/Interfaz1.css" rel="stylesheet" type="text/css">	
 		<script language="javascript" src="../Librerias/java.js"></script>
-		
 		<script language="javascript" src="../VALIDACIONES/Validaciones.js"></script>
 		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 	<?php 
 if (isset($hdd_save)) 
@@ -105,7 +97,6 @@ if (isset($hdd_save))
     </tr>
   </table>
 </FIELDSET>
-  
   <?Php
   	if(isset($txt_busqueda))
 	{
@@ -143,7 +134,6 @@ if (isset($hdd_save))
   }
   ?>
 </form>
-  
 <form method="post" name="form2" action="<?Php $_SERVER['form1'] ?>">
 <?Php
 if (isset($codigo) && !(isset($txt_busqueda)))
@@ -266,17 +256,11 @@ if (isset($codigo) && !(isset($txt_busqueda)))
 <?Php
 	if (isset ($rs_buscar))
 	{
-		mysqli_free_result($rs_buscar);
 	}
-	
 	if (isset($rs_consulta))
 	{
-		mysqli_free_result($rs_consulta); 		
 	}
-	
 	if (isset($rs_ciudades))
 	{
-		mysqli_free_result($rs_ciudades);		
 	}
-		
 ?>

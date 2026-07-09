@@ -3,29 +3,22 @@
 	require_once('../LOGICA/tes_log_cheque.php');
 	require_once('../../Librerias/procedimientos/almacenados_standar.php');
 	require_once('../../Librerias/postclass.php');	
-	
 /**
 * Creacion del Objeto de conexion
 */
 $obBD_conexion = new Class_Log_Conexion_Che($Ses_Dat_Dis);
-	
 /** 
 * Creacion del objeto mysql para las consultas 
 */
 $obBD_con1 =  new Class_Log_Datos_Che;
 /***********************************************/
-
-
 /* Consulta de la cabecera del reporte */
 $row_rs_empresa = $obBD_con1->getRowConsulta(207,$Ses_Suc_Cod,$obBD_conexion);
-
 $hoy = date("Y-m-d");
-
 /* Consulta del detalle de la mayorizacion */
 //$rs_tot_cheques = $obBD_con1->consulta(sentencias_tes(163, $obBD_con1->parametros($ini.'*'.$fin.'*'.$opt_option)), 
 $rs_tot_cheques = $obBD_con1->getArrayConsulta(375,$ini.'*'.$fin.'*'.$opt_option.'*'.$Ses_Emp_Cod.'*'.$opt_est,$obBD_conexion);
 $total_rs_tot_cheques = count($rs_tot_cheques);	
-
 ?>
 <HTML>
 	<HEAD>
@@ -83,8 +76,6 @@ $total_rs_tot_cheques = count($rs_tot_cheques);
 </table>	  
 </BODY></HTML>
 <?Php 
-@mysqli_free_result($rs_empresa);
-@mysqli_free_result($rs_tot_cheques);
 $obBD_conexion->cerrar();
 @$obBD_con1->liberar();
 ?>

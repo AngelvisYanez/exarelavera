@@ -6,7 +6,6 @@ Modalidad	=	Todas
 Etapa		=	Todas
 Perido 		=	Actual
 Carrera		=   Solo las que se abren en el periodo
-
 Varible [$Com_Todos] nos permite ver en el select carrera la opcion "Todos"
 */
 if(isset($ajax_suc_cod))
@@ -32,12 +31,10 @@ if(isset($ajax_suc_cod))
 3 = Etapas semestrales -->
       <input name="hdd_sql" type="hidden" id="hdd_sql" value="3">
 <?Php
- 	@mysqli_free_result($rs_modalidad);
 	exit();
 }
 ?>
 <?Php
-
 /* Cargar datos con AJAX  */
 if(isset($ajax_mod_cod))
 {   /* Cargado de etapas */
@@ -54,10 +51,8 @@ if(isset($ajax_mod_cod))
 			 }while($row_rs_etapas=mysqli_fetch_assoc($rs_etapas));  ?>
           </select>
 <?Php
- 	@mysqli_free_result($rs_etapas);
 	exit();
 }//Fin del if(isset($ajax_mod_cod))
-
 /* Cargado de los periodo */
 if(isset($ajax_periodo))
 {	 //echo $Suc_Cod;
@@ -85,10 +80,8 @@ if(isset($ajax_periodo))
 			caducado!</span>";
 		 }//Fin del if ($total_rs_periodo == 0)
 	 }//Fin del if ($Eta_Cod != "")
-	 @mysqli_free_result($rs_periodo);
 	 exit();
 }//Fin del if(isset($ajax_periodo))
-
 /* Consulta las carreras en base a la etapa */
 if(isset($ajax_carrera))
 {	/* Control para saber las carreras de cada etapa */
@@ -99,12 +92,10 @@ if(isset($ajax_carrera))
 	}else{ 
 		$Cod_Eta=$Eta_Arr[0]; 
 	}
-	
 	/* Consultar las carreras por etapa a las cuales no se ha inscrito el estudiante */
 	$rs_carreras_etapa=$obBD_con1->consulta(sentencias_com(102, $obBD_con1->parametros($Cod_Eta.'*'.$Per_Int)), $obBD_conexion->conexion);
 	$row_rs_carrera_etapa = $obBD_con1->registros();
 	$Tot_rs_carrera_etapa = $obBD_con1->numregistros();	
-	
 	if($Com_Todos=="si")
 	{
 		do {
@@ -124,10 +115,8 @@ if(isset($ajax_carrera))
     </select>
 	<input type="hidden" id="Com_Todos" name="Com_Todos" value="<?php echo $Com_Todos;?>">
 	<?Php
-	@mysqli_free_result($rs_carreras_etapa);
 	exit();
 }//Fin del if(isset($ajax_carrera))
-
 /* Consultar los curso activos */	
 if(isset($ajax_nivel))
 {
@@ -151,7 +140,6 @@ if(isset($ajax_nivel))
 	 		echo "<span class='Texto_Reporte_Rojo'>¡No existen Cursos aperturados!</span>";
 		 }//Fin del if ($total_rs_periodo == 0)
 	 }//Fin del if ($Eta_Cod != "")	
-	@mysqli_free_result($rs_semestres);
 	 exit();
 }//Fin del if(isset($ajax_nivel))
 ?>

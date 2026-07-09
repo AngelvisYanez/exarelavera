@@ -2,7 +2,6 @@
   	  require_once('../LOGICA/logica.php');	  
       require_once('../../Librerias/procedimientos/almacenados_academico.php');
    	  require_once('../../Librerias/procedimientos/almacenados_standar.php');	  
-
 //*********************Almacena los datos modificados***********************************************************************************
 	if (isset($hdd_save))
 	{
@@ -12,7 +11,6 @@
 		//***************************************************************
 		unset($codigo); 	
     }
-	
 		//*******************Busqueda del banco ******************
 	if ($txt_busqueda != "")
 	{
@@ -61,7 +59,6 @@
     </tr>
   </table>
 </FIELDSET>
-  
   <?Php
   	if(isset($txt_busqueda))
 	{
@@ -99,9 +96,7 @@
 </form>
 <form method="post" name="form2" action="<?Php $_SERVER['form2'] ?>">
 <?Php 
-
 if ($total_rs_consultar > 0) { ?>
-
 <FIELDSET>
 <LEGEND>
 <label class="Titulos2">Datos a modificar</label>
@@ -131,16 +126,13 @@ if ($total_rs_consultar > 0) { ?>
 <?Php } ?>
 </form>      </td>
   </tr>
-
 </table>	   
 </BODY></HTML>
 <?Php
 if (isset ($rs_buscar))
 	{
-		mysqli_free_result($rs_buscar);
 	}
 	if (isset($rs_consultar))
 	{
-		mysqli_free_result($rs_consultar); 
 	}
 ?>

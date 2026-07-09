@@ -2,7 +2,6 @@
 	  require_once('../../Librerias/operacion.php'); 
   	  require_once('../LOGICA/logica.php');	  
    	  require_once('../../Librerias/procedimientos/almacenados_standar.php');	  
-	    
 		//*********************Almacena los datos modificados***********************************************************************************
 	if (isset($hdd_save))
 	{
@@ -37,7 +36,6 @@
 /*Consulta del vendedor en base al codigo de la persona*/
 $rs_vendedor = consultas_tes(24, $Prs_Pee);
 $row_rs_vendedor = mysqli_fetch_assoc ($rs_vendedor);
-
 ?>
 <HTML>
 	<HEAD>
@@ -164,10 +162,8 @@ $row_rs_vendedor = mysqli_fetch_assoc ($rs_vendedor);
 <?Php
 if (isset ($rs_buscar))
 	{
-		mysqli_free_result($rs_buscar);
 	}
 	if (isset($rs_consulta))
 	{
-		mysqli_free_result($rs_consulta); 
 	}
 ?>

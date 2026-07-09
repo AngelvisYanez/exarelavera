@@ -3,8 +3,6 @@
 	  require_once('../../Librerias/operacion.php'); 	    
       require_once('../../Librerias/procedimientos/almacenados_academico.php');
    	  require_once('../../Librerias/procedimientos/almacenados_standar.php');	  
-
-	  
 if (isset($Comprobar))
 {
 	//Consulta de verificacion en la tabla persona
@@ -12,17 +10,12 @@ if (isset($Comprobar))
 	$row_rs_persona = mysqli_fetch_assoc ($rs_persona);
 	$total_rs_persona = mysqli_num_rows ($rs_persona);
 	$Prs_Cod = $row_rs_persona['Prs_Cod'];
-	
-
 	//Consulta de la existencia del vendedor en la tabla persona
 	$rs_comprobar = consultas_tes(420, $Prs_Cod);
 	$total_rs_comprobar = mysqli_num_rows ($rs_comprobar);
 }	  
-
-	
 	if (isset($hdd_save)) 
 	{
-		
 			//***************Inicio de la transaccion***********************
 			$conexion=open_trans_tes();
 			//**************************************************************			
@@ -30,12 +23,10 @@ if (isset($Comprobar))
 				//********************************************
 				$rs_persona = consultas_tes(402, $Prs_Ced);
 				$total_rs_persona = mysqli_num_rows ($rs_persona);
-				
 				if ($total_rs_persona == 0) //Entra solo cuando la persona no este registrada
 				{			
 				insercionesv_tes(401, $Prs_Ced.'*'.$Prs_Nom.'*'.$Prs_Ape.'*'.$Prs_Sex.'*'.$Prs_Dir.'*'.$Prs_Tel.'*'.$Prs_Cel.'*'.$Ciu_Cod, $conexion);					
 					$Prs_Cod = mysqli_insert_id($conexion);
-					
 				}					
 				//**************Agregar Cliente******************************			
 				insercionesv_tes(421, $Prs_Cod.'*'.$Pun_Cod, $conexion);		
@@ -43,15 +34,10 @@ if (isset($Comprobar))
 			close_trans_tes($conexion);
 			//***************************************************************	
 			$Prs_Ced = "";			
-		
 ?>
-		
 <?Php
-		
 	}	  
 ?>
-
-
 <HTML>
 	<HEAD>
 		<TITLE>Ginus</TITLE>
@@ -62,7 +48,6 @@ if (isset($Comprobar))
 		<script language="javascript" src="../Librerias/java.js"></script>
 		<script language="javascript" src="../VALIDACIONES/Validaciones.js"></script>
 		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 	<?php 
 if (isset($hdd_save)) 
@@ -80,14 +65,12 @@ if (isset($hdd_save))
 	  <td height="10">&raquo; registro de vendedor </td>
   </tr>
 	<tr>
-	  	
         <td height="389" valign="top">
          <form method="post" name= "form1" action="<?php echo $_SERVER['PHP_SELF'];?>">
   <table width="100%" height="23"
    border="0" align="left" bgcolor="#C7E0CD" >
   </table>
   <br>
- 
 <FIELDSET>
 <LEGEND>
 <label class="Titulos2">Datos a registrar</label>
@@ -142,7 +125,6 @@ if (!(isset($Comprobar)) || $total_rs_comprobar > 0)
             <?php 
 				$row_rs_cod = array ("M","F");
 				$row_rs_des = array ("Masculino", "Femenino");
-
 				for ($i=0;$i<count($row_rs_cod);$i++) 
 			 	{  
 	  ?>
@@ -226,27 +208,19 @@ if (isset($Comprobar) && $total_rs_comprobar == 0)
     </table>
 	     </form>        </td>
   </tr>
-
 </table>	    
 </BODY></HTML>
 <?php
 if (isset($rs_persona))
 {
-	mysqli_free_result ($rs_persona);
 }
-
 if (isset($rs_comprobar))
 {
-	mysqli_free_result ($rs_comprobar);
 }
-
 if (isset($rs_ciudad))
 {
-	mysqli_free_result($rs_ciudad);
 }
-
 if (isset($rs_existe))
 {
-	mysqli_free_result($rs_existe);
 }
 ?>

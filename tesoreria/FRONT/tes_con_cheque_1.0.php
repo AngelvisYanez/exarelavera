@@ -12,7 +12,6 @@ require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/tes_log_cheque.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
 require_once('../../Librerias/postclass.php');	
-
 /**
 * Creacion del Objeto de conexion
 */
@@ -23,7 +22,6 @@ $obBD_conexion = new Class_Log_Conexion_Che($Ses_Dat_Dis);
 $obBD_con1 =  new Class_Log_Datos_Che;
 $hoy = date("Y-m-d");
 $mes = date("m");	
-
 if(isset($ajax)){
         $com_codigo = $ComCod;
 	include('../COMPONENTES/con_con_detalleCompr.php'); 
@@ -36,7 +34,6 @@ if (!(isset($op)))
 {
 	$op = 1;
 }	    
-
 /**
 * Consulta para la eleccion del periodo contable
 */
@@ -90,7 +87,6 @@ else
 										$Pec_Cod.'*'.'Prv_Cod')), $obBD_conexion->conexion);
 				$row_rs_cabcomp = $obBD_con1->registros();
 				$total_rs_cabcomp = $obBD_con1->numregistros();		
-				
 				/**
 				* Cargado de los cheques segï¿½n el nï¿½mero de comprobante de egreso
 				*/
@@ -114,7 +110,6 @@ else
 		}
 		break;       
 		}//FIn del case $op	
-
 	/**
 	* Divide la cadena del periodo contable 
 	*/
@@ -166,12 +161,10 @@ else
 				changeMonth: true, changeYear: true,
 				/* Permite asignar una imagen */
 				/*showOn: "button", buttonImage: imagen, buttonImageOnly: true,*/ dateFormat: "yy-mm-dd"});	
-					
 			$( "#fin" ).datepicker({
 				changeMonth: true, changeYear: true,
 				/* Permite asignar una imagen */
 				/*showOn: "button", buttonImage: imagen, buttonImageOnly: true,*/ dateFormat: "yy-mm-dd"});	
-							
 		}); 		
     	</script>   
     	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
@@ -378,7 +371,6 @@ No. de Cheque
 				if($row['Com_Est']=='I')
 				  { $rojo='#FF0000'; $anulada++; }else{$rojo='';} ?>
 				<tr>
-				  
 				  <td align="center"><font color="<?php echo $rojo;?>"><?php echo $row['Com_Cod']; ?></font></td>
                                   <td align="center"><font color="<?php echo $rojo;?>"><?php echo $row['Che_Num']; ?></font></td>
 				  <td align="center"><font color="<?php echo $rojo; ?>">
@@ -413,7 +405,6 @@ No. de Cheque
 				}else { echo "&nbsp;"; } ?>
                                   </td>
                                   <!--<td align="center"><img src="../../imagenes/edit_add.png" id="mas[<?php echo $i; ?>]" width="25" height="25" title="Ver detalle" style="cursor:pointer" onclick="mas_menos(1,'mas[<?php echo $i;?>]', 'menos[<?php echo $i;?>]', <?Php echo $i; ?>)" /><img src="../../imagenes/edit_remove.png" id="menos[<?php echo $i; ?>]" width="25" title="Ocultar detalle" style="cursor:pointer" height="25" onclick="mas_menos(2, 'mas[<?php echo $i;?>]', 'menos[<?php echo $i;?>]', <?Php echo $i; ?>)" /></td>-->
-                                  
 				  </tr>
 				<!--<tr id="detalle[<?Php echo $i; ?>]">
 				  <?php
@@ -424,11 +415,9 @@ No. de Cheque
 				  <td align="center">&nbsp;</td>
 				  <td colspan="7"><?Php //include('../../contabilidad/COMPONENTES/con_con_detalleCompr.php'); ?></td>
 				  <td align="center">&nbsp;</td>
-                                  
 				  </tr>-->
 				<?php	  		
 			   }//while ($row_rs_cabcompr = $obBD_con1->fetch_assoc($rs_cabcompr));  ?>
-                             
 				<?Php 
 		}//Fin del if ($total_rs_cabcompr > 0)
 		else
@@ -462,7 +451,6 @@ No. de Cheque
 		<?php
 		require_once('../../componentes/FRONT/com_con_leyenda.php');?> 
 	<?php }//FIn del if(isset($txt_busqueda))
-		
 	/**
 	* Control parte de la opcion 1 
 	*/
@@ -570,12 +558,10 @@ No. de Cheque
 		 do {
 			if($row_rs_concomp['Che_Est']=='I')
 			  { $rojo='#FF0000'; $anulada++; }else{$rojo='';}
-			 
 			$cod = $row_rs_concomp['Che_Cod'];
 			$asi = $row_rs_concomp['Asi_Cod'];
 			$ban = $row_rs_concomp['Ban_Cod'];
 			$pro = $row_rs_concomp['Prv_Cod'];
-                        
                         $ruta='.'.(file_exists ('cheques/'.$Ses_Emp_Cod)?'/cheques/'.$Ses_Emp_Cod:'');
 		 ?>
 			<tr>
@@ -781,7 +767,6 @@ No. de Cheque
 			do { 
 				if($row_rs_tot_cheques['Che_Est']=='I')
 				  { $rojo='#FF0000'; $anulada++; }else{$rojo='';}
-			
 				$total = $total + $row_rs_tot_cheques['Che_Val'];
 			?>
           <tr>
@@ -824,7 +809,6 @@ No. de Cheque
         </div>
 		<?php 
 		echo barra_estado($total_rs_tot_cheques);
-
     if ($anulada > 0)
         {		
             $com_leyenda[1]=$anulada;
@@ -891,13 +875,6 @@ No. de Cheque
 <script type="text/javascript" src="../../Librerias/textbox/main.js"></script>	
 </BODY></HTML>
 <?Php
-@mysqli_free_result($rs_concomp);
-@mysqli_free_result($rs_tot_cheques);
-@mysqli_free_result($rs_cuentas);
-@mysqli_free_result($rs_detalle);
-@mysqli_free_result($rs_periodo);
-@mysqli_free_result($rs_cabcomp);
-@mysqli_free_result($rs_periodos);
 @$obBD_conexion->cerrar();
 @$obBD_con1->liberar();
 ?>

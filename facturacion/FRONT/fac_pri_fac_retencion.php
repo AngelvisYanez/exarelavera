@@ -5,12 +5,10 @@
     require_once('../../Librerias/procedimientos/almacenados_standar.php');		
     require_once('../../Librerias/procedimientos/almacenados_matricula.php');	
 	require_once('../../Librerias/procedimientos/almacenados_academico.php');	
-	  
 /* Consulta de la cabecera del reporte */
 $rs_institucion = consultas_tes(207, $Ses_Suc_Cod);
 $row_rs_institucion= mysqli_fetch_assoc($rs_institucion);
 $total_rs_institucion = mysqli_num_rows ($rs_institucion);
-	  
   /*Consulta de las facturas totales*/
   if ($escu == 'checkbox')
 	{
@@ -41,11 +39,8 @@ $total_rs_institucion = mysqli_num_rows ($rs_institucion);
 		    $rs_buscarcarrera = consultas_tes(210, $ini.'*'.$fin.'*'.$option.'*'.'1');
 			$row_rs_buscarcarrera = mysqli_fetch_assoc($rs_buscarcarrera);
 			$total_rs_buscarcarrera = mysqli_num_rows($rs_buscarcarrera);
-
 	}	
-	
 ?>
-	  
 <html>
 <head>
 <title>Ginus</title>
@@ -126,8 +121,6 @@ $total_rs_institucion = mysqli_num_rows ($rs_institucion);
 $cont_todas=0;
 for ($x=0; $x<=count($carrera_cod)-1; $x++)
 {
-
- 
 if ($escu == 'checkbox')
 {
 /*Consulta de las facturas totales por rubros en base a la carrera y el periodo actual*/			
@@ -135,15 +128,12 @@ if ($escu == 'checkbox')
  $row_rs_buscarcarrera= mysqli_fetch_assoc($rs_buscarcarrera);
  echo $row_rs_buscarcarrera['Vet_Num']."Hola";
  $total_rs_buscarcarrera = mysqli_num_rows($rs_buscarcarrera);
-
 	?>
-       
 		  <table width="395" border="0" align="center" cellpadding="0" cellspacing="0">
             <tr>
               <td width="328" class="TITULO_REPORTE"><?php echo $row_rs_buscarcarrera['Car_Nom']; ?> </td>
             </tr>
           </table>
-      
           <?php
 	}//Fin del if ($Car_Int >0)
 	if ($total_rs_buscarcarrera > 0)
@@ -174,7 +164,6 @@ if ($escu == 'checkbox')
               <td><?Php echo $row_rs_buscarcarrera['Ite_Lar']; ?>&nbsp;</td>
               <td align="right"><?Php echo number_format($row_rs_buscarcarrera['Vet_Imp'],2); ?></td>
 			  <td align="right"><?Php echo number_format($row_rs_buscarcarrera['Prs_Nom'],2); ?></td>
-		
 			  <td align="right"><?Php echo number_format($row_rs_buscarcarrera['Vet_Imp'],2); ?></td>
             </tr>
             <?Php
@@ -209,10 +198,8 @@ if ($escu == 'checkbox')
 				do{
 						/* % de Descuento total */
 						$Vet_Des = $row_rs_detalle['Vet_Des'];
-		
 						/* Calculo del total de la factura */
 						$subtotal= $subtotal + $row_rs_detalle['Vet_Imp'];
-				
 						/* Calculo de las tarifas */
 						if ($row_rs_detalle['Iva_Por'] == 0)
 						{
@@ -232,7 +219,6 @@ if ($escu == 'checkbox')
 							$des = $des_0 + $des_12;
 							/* calculo del iva con descuento individual */
 							$iva = (($tarifa_12 - $des_12) * $iva_12)/100;
-
 							/* Calculo del descuento total */
 							if ($Vet_Des != 0)
 							{
@@ -240,10 +226,8 @@ if ($escu == 'checkbox')
 								$des_12 = ($tarifa_12 * $Vet_Des) / 100;
 								$iva = (($tarifa_12 - $des_12) * $iva_12)/100;		
 							}
-	
 								/*Calculo del total */
 								$total = ($subtotal - $des) + $iva;
-								
 								/*******************************************/
 								/*******************************************/
 								/*******************************************/
@@ -274,6 +258,4 @@ if ($escu == 'checkbox')
 </body>
 </html>
 <?Php
-@mysqli_free_result($rs_buscarcarrera);
-@mysqli_free_result($rs_detalle);
 ?>

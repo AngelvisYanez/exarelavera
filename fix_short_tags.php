@@ -1,26 +1,28 @@
 <?php
-$dir = new RecursiveDirectoryIterator(__DIR__, RecursiveDirectoryIterator::SKIP_DOTS);
-$files = new RecursiveIteratorIterator($dir);
+$dir = new RecursiveDirectoryIterator(__DIR__);
+$iterator = new RecursiveIteratorIterator($dir);
+$regex = new RegexIterator($iterator, '/^.+\.php$/i', RecursiveRegexIterator::GET_MATCH);
 
 $count = 0;
-foreach ($files as $file) {
-    if ($file->getExtension() !== 'php') continue;
-    $path = $file->getPathname();
-    if (strpos($path, 'fix_short_tags.php') !== false) continue;
-
-    $content = file_get_contents($path);
-    $orig = $content;
+foreach ($regex as $file) {
+    $filePath = $file[0];
+    if (strpos($filePath, 'vendor') !== false || strpos($filePath, '.git') !== false) {
+        continue;
+    }
+    $content = file_get_contents($filePath);
     
-    // Pattern: <? followed by whitespace, BUT NOT <?php or <?=
-    // The negative lookahead (?![pP][hH][pP]|=) ensures we don't match <?php or <?=
-    $content = preg_replace('/<\?(?![pP][hH][pP]|=)(\s+)/', '<?php$1', $content);
-    
-    // Also handle <? at the very end of the file
-    $content = preg_replace('/<\?(?![pP][hH][pP]|=)$/', '<?php', $content);
+    // Fix short tags like <?php } or <?php  }
+    $newContent = preg_replace('/<\?(\s*})\s*\?>/', '<?php $1 ?>', $content);
+    $newContent = preg_replace('/<\?(\s*})/', '<?php $1', $newContent);
+    // Fix short tags opening if blocks <?php  if(...)
+    $newContent = preg_replace('/<\?(\s*if\s*\()/', '<?php $1', $newContent);
+    // Fix short tags for else <?php  else
+    $newContent = preg_replace('/<\?(\s*else\s*\{?)/', '<?php $1', $newContent);
 
-    if ($orig !== $content) {
-        file_put_contents($path, $content);
+    if ($newContent !== $content) {
+        file_put_contents($filePath, $newContent);
+        echo "Fixed short tags in $filePath\n";
         $count++;
     }
 }
-echo "Modificados $count archivos arreglando etiquetas cortas.\n";
+echo "Total fixed files: $count\n";

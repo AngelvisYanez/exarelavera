@@ -1,10 +1,8 @@
 <?Php
 require_once('../../componentes/LOGICA/logica.php');
 /* Cargar datos con AJAX  */
-
 if(isset($ajax_suc_cod))
 {		
-	
 	$rs_modalidad = $obBD_con1->consulta(sentencias_com(1, ''), $obBD_conexion->conexion);
 	$row_rs_modalidad = $obBD_con1->registros();
 	$total_rs_modalidad = $obBD_con1->numregistros();
@@ -26,7 +24,6 @@ if(isset($ajax_suc_cod))
 <?php
 exit();
 }
-
 if(isset($ajax_mod_cod))
 {	
 	/* Cargado de etapas */
@@ -43,14 +40,11 @@ if(isset($ajax_mod_cod))
 			 }while($row_rs_etapas=mysqli_fetch_assoc($rs_etapas));  ?>
           </select>
 <?Php
- 	@mysqli_free_result($rs_etapas);
 	exit();
 }//Fin del if(isset($ajax_mod_cod))
-
 /* Cargado de los periodo */
 if(isset($ajax_periodo))
 {
-
 	 $hoy = date("Y-m-d");
      $Eta_Arr = explode('*',$Eta_Cod);
 	 $rs_periodos = $obBD_con1->consulta(sentencias_com(105, $obBD_con1->parametros($Eta_Arr[0].'*'.$Mod_Cod.'*'.$hoy.'*'.$Suc_Cod)), $obBD_conexion->conexion);
@@ -75,10 +69,8 @@ if(isset($ajax_periodo))
 			caducado!</span>";
 		 }//Fin del if ($total_rs_periodo == 0)
 	 }//Fin del if ($Eta_Cod != "")
-	 @mysqli_free_result($rs_periodo);
 	 exit();
 }//Fin del if(isset($ajax_periodo))
-
 /* Consulta las carreras en base a la etapa */
 if(isset($ajax_carrera))
 {	
@@ -93,7 +85,6 @@ if(isset($ajax_carrera))
 	/* Consultar las carreras por etapa para los directores */
 	$rs_carreras_etapa=$obBD_con1->consulta(sentencias_com(6, $obBD_con1->parametros($Cod_Eta.'*'.$Ses_Emp_Cod)), $obBD_conexion->conexion);
 	$row_rs_carrera_etapa = $obBD_con1->registros();
-	
 	?>
 	<select name="Car_Int" id="Car_Int">
            <option></option>
@@ -101,10 +92,8 @@ if(isset($ajax_carrera))
 		   <option value="<?Php echo $row_rs_carrera_etapa['Car_Int'];  ?>"> <?Php echo $row_rs_carrera_etapa['Car_Nom']; ?>
 		   </option>
 		   <?Php } while($row_rs_carrera_etapa=mysqli_fetch_assoc($rs_carreras_etapa)); ?>
-		   
     </select>
 	<?Php
-	@mysqli_free_result($rs_carreras_etapa);
 	exit();
 }//Fin del if(isset($ajax_carrera))
 ?>

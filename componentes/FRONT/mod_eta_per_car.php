@@ -1,12 +1,10 @@
 <?Php
 /* Libreria para la busqueda de la modalidad-etapa-periodo-carrera */
 require_once('../../componentes/LOGICA/logica_com.php');
-
 /* Creacion del Objeto de conexion */
 $obBD_conexion = new Class_Log_Conexion_Com;
 /* Cracion del objeto mysql para las consultas */
 $obBD_con1 =  new Class_Log_Datos_Com; 	  
-
 /*** Cargar datos con AJAX *************************************/
 if(isset($ajax_mod_cod)){
 /********* Cargado de etapas ***********************************/
@@ -22,10 +20,8 @@ if(isset($ajax_mod_cod)){
 			 }while($row_rs_etapas=mysqli_fetch_assoc($rs_etapas));  ?>
           </select>
 <?Php
- 	@mysqli_free_result($rs_etapas);
 	exit();
 }
-
 ?>
 <table width="100%" border="0">
   <tr>

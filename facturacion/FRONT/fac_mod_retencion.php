@@ -2,13 +2,10 @@
 	require_once('../LOGICA/logica.php');
     require_once('../../Librerias/procedimientos/almacenados_standar.php');	
 /** Actualizacion de datos de la retención ********************************************************/
-
 if(isset($hdd_save))
 {
     /** Inicio de la transacción *************/
-	  
 	   	$conexion=open_trans_tes();
-		
 		insercionesv_tes(502,$Ret_Cod.'*'.$Ret_Fec.'*'.trim($Ret_Con).'*'.$Ret_Num,$conexion);
 		$cont=0;	
 		$Cod_Upd= array();
@@ -43,11 +40,8 @@ if(isset($hdd_save))
 						    insercionesv_tes(524,$Int_Ret, $conexion);
 						 }}
 		close_trans_tes($conexion);
-		
 	    /** Fin de la transaccion **********************************************************************************************************/
 }
-
-
 /** Cargado de los porcentajes d retención *******************************************************************************************/
 if(isset($Ret_Cod))
 {
@@ -55,23 +49,17 @@ if(isset($Ret_Cod))
 	$rs_inf_retencion=consultas_tes(501,$Ret_Cod);
 	$row_car_detalle=mysqli_fetch_assoc($rs_inf_retencion);	
 }
-
 /*******************Busqueda del codigo de las facturas ******************/
-
 if (!(isset($op)))
 {
 	$op = 1;
 }	    
-
-
 /** Cargado de Iva Renta através de AJAX ********************/	
-   
 	if (isset($codigoret))
  {
 		$rs_xml = consultas_tes(490,$codigoret);
 		$row_rs_xml = mysqli_fetch_assoc($rs_xml);
 		$total_rs_xml = mysqli_num_rows($rs_xml);
-		
 		if ($total_rs_xml > 0)
 		{
 			$codigoret=$row_rs_xml['Ren_Sri'];
@@ -81,7 +69,6 @@ if (!(isset($op)))
 			$codigoret=0;
 			$porce_renta_sri="NO EXISTE";
 			$codinter="0";
-			
 		}		
 	if (isset($porce_renta_sri)){
 $return_value='<?xml version="1.0" standalone="yes"?><root><hijo>'.$porce_renta_sri.'</hijo><hijo>'.$codinter.'</hijo></root>';
@@ -90,10 +77,7 @@ $return_value='<?xml version="1.0" standalone="yes"?><root><hijo>'.$porce_renta_
 	echo $return_value;
 	exit();
 }
-
 /*****************OPCIONES*********************************************************************************************/
-
-
 switch ($op){
 	case 1: 
 	/* Cargado de los datos de la cabecera */
@@ -111,9 +95,6 @@ switch ($op){
 		$row_rs_buscar = mysqli_fetch_assoc($rs_buscar);
   	    $total_rs_buscar = mysqli_num_rows($rs_buscar); 
 	}
-	
-	
-	 
 	break;
 }//FIn del case $op
 ?>
@@ -138,15 +119,12 @@ switch ($op){
 <BODY>
 <?Php
 if(isset($hdd_save)){
-
 ?>
 <script language="javascript">
  ir('<?Php echo $_SERVER['PHP_SELF']; ?>');
 </script>
-
 <?Php
 }
-
 ?>
 <table width="100%" border="0" cellpadding="0" cellspacing="0">
 	 <tr class="BarraTitulo">
@@ -156,15 +134,12 @@ if(isset($hdd_save)){
 	<tr>
 	<tr>
       <td height="18" align="left" valign="top">
-      
   <tr>
         <td height="389" valign="top">
 		<form name="form1" method="post" action="<?Php $_SERVER['PHP_SELF']?>">
-		
 		<?Php
 switch ($op){
 	case 1: 
-	
 ?><FIELDSET>
 <legend>
 		<label class="Titulos2">Buscar por:</label></legend>
@@ -174,10 +149,8 @@ switch ($op){
         <span class="LetraNegra">Apellidos </span></td>
       <td width="242"><input name="op_opciones" type="radio" value="d">
         <span class="LetraNegra">No. Comprob. de retenci&oacute;n </span></td>
-      
     </tr>
   </table>
-
   <table width="495" height="36" border="0" cellpadding="0" cellspacing="0">
     <tr>
       <td width="90" height="28" class="BarraBusqueda"><div align="right"><span class="Asterisco">* </span>Búsqueda:</div></td>
@@ -206,7 +179,6 @@ switch ($op){
 		   <td width="51">No. Fact</td>	
            <td width="65">Fecha</td>
            <td width="145" align="center">Apellidos</td>
-         		  
 		  <td width="145" align="center">Nombres</td>
 		  <td width="50" align="center">Valor  </td>
 		  <td width="24">&nbsp;</td>
@@ -223,7 +195,6 @@ switch ($op){
 		<?Php $Ret_Fec=$row_rs_buscar['Ret_Fec']; echo $Ret_Fec; ?></td>
 		<td align="center" <?Php if ($row_rs_buscar['Cop_Est'] == 'I') { echo "bgcolor='#FF0000'"; } ?>>
 		<?Php echo $row_rs_buscar['Prs_Ape']; ?></td>
-			
 		<td align="center" <?Php if ($row_rs_buscar['Cop_Est'] == 'I') { echo "bgcolor='#FF0000'"; } ?>>
 		<?Php echo $row_rs_buscar['Prs_Nom']; ?></td>
 		<td align="center" <?Php if ($row_rs_buscar['Cop_Est'] == 'I') { echo "bgcolor='#FF0000'"; } ?>><?php
@@ -242,9 +213,7 @@ switch ($op){
 	  </tr>
 	  <?Php } while ($row_rs_buscar = mysqli_fetch_assoc($rs_buscar)); ?>
   </table>
-  
 </FIELDSET>
-
   <?Php 
   	}
 	else
@@ -256,13 +225,11 @@ switch ($op){
 	}
 	break;
 	}
-
 	?>
 </form>
 <?Php if(isset($Ret_Cod) && empty($txt_busqueda))
 		{  ?>
 <form action="<?Php  $_SERVER['form1']; ?>" method="post" name="form2" id="form2">
-
  <FIELDSET>
 <LEGEND>
 <label class="Titulos2">Datos del Proveedor </label>
@@ -334,7 +301,6 @@ switch ($op){
 		 $rs_fec_aut_liq_com=consultas_tes(523,$row_car_detalle['Aut_Cod']);
 		 $row_fec_aut_liq=mysqli_fetch_assoc($rs_fec_aut_liq_com);
 		 echo $row_fec_aut_liq['Aut_Cad'];
-		
 		 }else{ echo $Fcad; } 
 		 ?></td>
         </tr>
@@ -346,7 +312,6 @@ switch ($op){
         </tr>
     </table>
     <table width="559" height="41" border="0">
-    
     <tr>
       <td width="116"  class="Etiqueta1">Por concepto de: </td>
       <td width="433" colspan="5">
@@ -354,7 +319,6 @@ switch ($op){
     </tr>
   </table>
 </FIELDSET>
-
 <FIELDSET>
 <LEGEND>
 <label class="Titulos2">Detalle de la retención </label>
@@ -362,10 +326,8 @@ switch ($op){
   <table width="539" border="0">
 	<tbody id="c_contenido">
 	<tr>
-		
 		<td width="59" class="Cabecera1">Eje/Fiscal</td>
 		<td width="72" class="Cabecera1">C&oacute;d. imp. </td>
-		
 		<td width="118" class="Cabecera1">Impuesto</td>
 		<td width="94" class="Cabecera1">Base  </td>
 		<td width="74" class="Cabecera1">% de reten </td>
@@ -377,20 +339,16 @@ switch ($op){
 	<tbody id="c_contenido">
 	<?Php 
 	/* Año fiscal actual */	
-	
 	$total_retenido=0;
 	$ic=1;
-	
 	do
 	{
-		
 		$fila++;
 	$Fecha=explode('-',$row_car_detalle['Ret_Fec']);
 	?>
 	<input name="Ret_Int_Com[<?Php echo $ic; ?>]" id="Ret_Int_Com[<?Php echo $ic; ?>]" type="hidden" 
 	value="<?Php echo $row_car_detalle['Ret_Int']; ?>">
 	<tr>
-	 
 	  <td width="58" align="left" class="LetraNegra">
 <input name="datos[<?Php echo $fila; ?>,1]" type="text" id="datos[<?Php echo $fila; ?>,1]" 
 value="<?Php echo $Fecha[0];?>" size="5" maxlength="6" ></td>
@@ -398,7 +356,6 @@ value="<?Php echo $Fecha[0];?>" size="5" maxlength="6" ></td>
 	    <input name="datos[<?Php echo $fila; ?>,2]" type="text" id="datos[<?Php echo $fila; ?>,2]" 
 		value="<?Php echo $row_car_detalle['Ren_Sri'];  ?>" onKeyUp="ajax_xml_renta_iva('tes_mod_retencion.php?codigoret=' + escape(this.value), this)" style="text-transform:uppercase" size="8" maxlength="8" >
 	    </div></td>
-	 
 	  <td width="117" align="right" class="LetraNegra"><div align="center">
 	    <input name="datos[<?Php echo $fila; ?>,3]" type="text" readonly="true" id="datos[<?Php 
 	  					echo $fila; ?>,3]" value="<?Php echo $row_car_detalle['Ret_Imp']; ?>" size="15" maxlength="8" >
@@ -406,7 +363,6 @@ value="<?Php echo $Fecha[0];?>" size="5" maxlength="6" ></td>
 	    <input name="datos[<?Php echo $fila; ?>,4]" type="text" id="datos[<?Php echo $fila; ?>,4]" 
 		value="<?Php echo number_format($row_car_detalle['Ret_Bas'],2,'.',''); ?>" size="12" maxlength="24" class="LetraNegra" readonly="true">
 	    </div></td>
-	
 	  <td width="74" align="right" class="LetraNegra"><div align="center">
 	    <input name="datos[<?Php echo $fila; ?>,5]" type="text" id="datos[<?Php 
 	  					echo $fila; ?>,5]" readonly="true" size="8" maxlength="20" value="<?Php echo $row_car_detalle['Ren_Por'];  ?>" 
@@ -415,7 +371,6 @@ value="<?Php echo $Fecha[0];?>" size="5" maxlength="6" ></td>
 	  <td width="96" align="right" class="LetraNegra"><div align="center">
 	    <input name="datos[<?Php echo $fila; ?>,6]" type="text" id="datos[<?Php 
 	  					echo $fila; ?>,6]" value="<?Php echo ($row_car_detalle['Ret_Bas']*$row_car_detalle['Ren_Por'])/100; $total_retenido=$total_retenido+(($row_car_detalle['Ret_Bas']*$row_car_detalle['Ren_Por'])/100); ?>" size="12" maxlength="34" readonly="true">
-	    
 	    <input name="datos[<?Php echo $fila; ?>,7]" type="hidden" id="datos[<?Php	echo $fila; ?>,7]" 
 		value="<?Php echo $row_car_detalle['Ren_Cod'];  ?>">
 	    <input name="datos[<?Php echo $fila; ?>,8]" type="hidden" id="datos[<?Php	echo $fila; ?>,8]" 
@@ -428,8 +383,6 @@ value="<?Php echo $Fecha[0];?>" size="5" maxlength="6" ></td>
 	<?Php 
 	$ic++;
 	} while($row_car_detalle=mysqli_fetch_assoc($rs_inf_retencion));
-
-		
 	?>
 	</tbody>
 	<tr>
@@ -457,19 +410,11 @@ value="<?Php echo $Fecha[0];?>" size="5" maxlength="6" ></td>
      <input name="hdd_save" type="hidden" id="hdd_save" value="insertar"> </td>
  </tr>
  </table>
- 
-
  </form>
 <?Php } ?>
-
-
- 
 </td>
 </tr>
 </table>	  
 </BODY></HTML>
 <?Php
-@mysqli_free_result($rs_base_impuesto);
-@mysqli_free_result($rs_inf_retencion);
-@mysqli_free_result($rs_xml);
 ?>

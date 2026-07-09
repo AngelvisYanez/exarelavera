@@ -1,9 +1,9 @@
 <?php
 /**
- * @abstract AdministraciÃ³n de Plantas, Choferes y VehÃ­culos
+ * @abstract Administración de Plantas, Choferes y Vehículos
  * @author Sistema EXA
  * @version 1.0
- * Fecha de creaciÃ³n: <?php echo date('d/m/Y'); ?>
+ * Fecha de creación: <?php echo date('d/m/Y'); ?>
  */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/man_log_manifiesto.php');
@@ -75,7 +75,7 @@ if (isset($listChoferesGridAjax)) {
     $obBD_con1->echoJson($resultado);
 }
 
-// Buscar persona por cÃ©dula
+// Buscar persona por cédula
 if (isset($buscarPersonaCedulaAjax)) {
     $resp = array('success' => true, 'existe' => false);
     $prsAux = $Prs_Ced;
@@ -150,7 +150,7 @@ if (isset($anularChoferAjax)) {
     $obBD_con1->echoJson($resp);
 }
 
-// Listar VehÃ­culos
+// Listar Vehículos
 if (isset($listVehiculosGridAjax)) {
     $resultado = array('success' => true);
     $resultado['rows'] = $obBD_con1->getArrayConsulta('manifiesto_vehiculo.selectWhere', array_merge($_GET, array('where' => array('manifiesto_vehiculo.Cli_Cod' => $Cli_Cod))), $obBD_conexion, true);
@@ -164,7 +164,7 @@ if (isset($listTransportesAjax)) {
     $obBD_con1->echoJson($resp);
 }
 
-// Guardar VehÃ­culo
+// Guardar Vehículo
 if (isset($saveVehiculoAjax)) {
     $obBD_con1->inicio_transaccion($obBD_conexion);
     $resp = array('success' => false);
@@ -196,7 +196,7 @@ if (isset($saveVehiculoAjax)) {
     $obBD_con1->echoJson($resp);
 }
 
-// Anular VehÃ­culo
+// Anular Vehículo
 if (isset($anularVehiculoAjax)) {
     $resp = array('success' => false);
     $obBD_con1->inicio_transaccion($obBD_conexion);
@@ -225,7 +225,7 @@ if (!empty($cliente_manifiesto['Cli_Cod'])) {
 <!DOCTYPE html>
 <HTML>
 <HEAD>
-    <TITLE><?php echo "AdministraciÃ³n - ConfiguraciÃ³n [EXA]"; ?></TITLE>
+    <TITLE><?php echo "Administración - Configuración [EXA]"; ?></TITLE>
     <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
     <?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
@@ -304,18 +304,18 @@ if (!empty($cliente_manifiesto['Cli_Cod'])) {
 <BODY>
     <div class="panel panel-main panel-config">
         <div class="panel-heading exa-header">
-            <h3 class="panel-title">&raquo; AdministraciÃ³n de ConfiguraciÃ³n</h3>
+            <h3 class="panel-title">&raquo; Administración de Configuración</h3>
         </div>
         <div class="panel-body ui-widget-content ui-corner-bottom exa-body">
             
-            <!-- InformaciÃ³n del Cliente -->
+            <!-- Información del Cliente -->
             <div class="info-cliente">
                 <h4><i class="glyphicon glyphicon-user"></i> Cliente Asociado</h4>
-                <p><strong>CÃ³digo:</strong> <?php echo $cliente_manifiesto['Cli_Cod']; ?> | 
+                <p><strong>Código:</strong> <?php echo $cliente_manifiesto['Cli_Cod']; ?> | 
                    <strong>Nombre:</strong> <?php echo isset($cliente_manifiesto['nombre']) ? $cliente_manifiesto['nombre'] : 'N/A'; ?></p>
             </div>
 
-            <!-- PestaÃ±as -->
+            <!-- Pestañas -->
             <div class="nav-tabs-custom">
                 <ul class="nav nav-tabs" role="tablist">
                     <li role="presentation" class="active">
@@ -330,7 +330,7 @@ if (!empty($cliente_manifiesto['Cli_Cod'])) {
                     </li>
                     <li role="presentation">
                         <a href="#tabVehiculos" aria-controls="tabVehiculos" role="tab" data-toggle="tab">
-                            <i class="glyphicon glyphicon-road icon-tab"></i>VehÃ­culos
+                            <i class="glyphicon glyphicon-road icon-tab"></i>Vehículos
                         </a>
                     </li>
                 </ul>
@@ -364,11 +364,11 @@ if (!empty($cliente_manifiesto['Cli_Cod'])) {
                         <div id="gridChoferesPager"></div>
                     </div>
 
-                    <!-- Tab VehÃ­culos -->
+                    <!-- Tab Vehículos -->
                     <div role="tabpanel" class="tab-pane" id="tabVehiculos">
                         <div class="btn-toolbar">
                             <button class="btn btn-success" onclick="abrirModalVehiculo();">
-                                <i class="glyphicon glyphicon-plus"></i> Nuevo VehÃ­culo
+                                <i class="glyphicon glyphicon-plus"></i> Nuevo Vehículo
                             </button>
                             <button class="btn btn-default" onclick="actualizarGridVehiculos();">
                                 <i class="glyphicon glyphicon-refresh"></i> Actualizar
@@ -407,13 +407,13 @@ if (!empty($cliente_manifiesto['Cli_Cod'])) {
             <div class="form-group">
                 <label class="col-xs-4 control-label label-xs required">N&uacute;mero Licencia:</label>
                 <div class="col-xs-8">
-                    <input type="text" id="Pla_Lic" name="Pla_Lic" class="form-control input-xs" required placeholder="NÃºmero de licencia" maxlength="20">
+                    <input type="text" id="Pla_Lic" name="Pla_Lic" class="form-control input-xs" required placeholder="Número de licencia" maxlength="20">
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-xs-4 control-label label-xs required">DirecciÃ³n:</label>
+                <label class="col-xs-4 control-label label-xs required">Dirección:</label>
                 <div class="col-xs-8">
-                    <input type="text" id="Pla_Dir" name="Pla_Dir" class="form-control input-xs" required placeholder="DirecciÃ³n de la planta" maxlength="100">
+                    <input type="text" id="Pla_Dir" name="Pla_Dir" class="form-control input-xs" required placeholder="Dirección de la planta" maxlength="100">
                 </div>
             </div>
         </form>
@@ -429,10 +429,10 @@ if (!empty($cliente_manifiesto['Cli_Cod'])) {
             <input type="hidden" id="Cho_Cod" name="Cho_Cod">
             <input type="hidden" id="Prs_Cod" name="Prs_Cod">
             <div class="form-group">
-                <label class="col-xs-4 control-label label-xs required">CÃ©dula:</label>
+                <label class="col-xs-4 control-label label-xs required">Cédula:</label>
                 <div class="col-xs-8">
                     <div class="input-group input-group-xs">
-                        <input type="text" id="Cho_Ced" name="Cho_Ced" class="form-control input-xs" required placeholder="NÃºmero de cÃ©dula" maxlength="13" onchange="buscarPersonaPorCedula(this.value)">
+                        <input type="text" id="Cho_Ced" name="Cho_Ced" class="form-control input-xs" required placeholder="Número de cédula" maxlength="13" onchange="buscarPersonaPorCedula(this.value)">
                         <span class="input-group-addon validate"><i id="Cho_Ced_Est"></i></span>
                     </div>
                 </div>
@@ -470,9 +470,9 @@ if (!empty($cliente_manifiesto['Cli_Cod'])) {
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-xs-4 control-label label-xs required">TelÃ©fono:</label>
+                <label class="col-xs-4 control-label label-xs required">Teléfono:</label>
                 <div class="col-xs-8">
-                    <input type="text" id="Cho_Tel" name="Cho_Tel" class="form-control input-xs" required placeholder="TelÃ©fono" maxlength="20">
+                    <input type="text" id="Cho_Tel" name="Cho_Tel" class="form-control input-xs" required placeholder="Teléfono" maxlength="20">
                 </div>
             </div>
             <div class="form-group">
@@ -504,8 +504,8 @@ if (!empty($cliente_manifiesto['Cli_Cod'])) {
         </div>
     </div>
 
-    <!-- Modal VehÃ­culo -->
-    <div id="vehiculoDialog" title="Registrar VehÃ­culo" style="display: none;">
+    <!-- Modal Vehículo -->
+    <div id="vehiculoDialog" title="Registrar Vehículo" style="display: none;">
         <form id="vehiculoForm" class="form-horizontal normal">
             <input type="hidden" id="Veh_Cod" name="Veh_Cod">
             <div class="form-group">
@@ -547,7 +547,7 @@ if (!empty($cliente_manifiesto['Cli_Cod'])) {
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-xs-4 control-label label-xs required">Tipo VehÃ­culo:</label>
+                <label class="col-xs-4 control-label label-xs required">Tipo Vehículo:</label>
                 <div class="col-xs-8">
                     <select id="Veh_Tit" name="Veh_Tit" class="form-control input-xs" required>
                         <option value="V">VOLQUETA</option>
@@ -566,7 +566,7 @@ if (!empty($cliente_manifiesto['Cli_Cod'])) {
     <script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>
     <script>
     $(function() {
-        // Inicializar diÃ¡logos
+        // Inicializar diálogos
         $("#plantaDialog").createDialog({ width: 500, height: 280, icon: 'home' });
         $("#choferDialog").createDialog({ width: 550, height: 420, icon: 'user' });
         $("#vehiculoDialog").createDialog({ width: 450, height: 350, icon: 'road' });
@@ -575,7 +575,7 @@ if (!empty($cliente_manifiesto['Cli_Cod'])) {
         $('.datepicker').createDatePickers({ checkAvailability: true, hideMsg: false }).mask('9999-99-99', { placeholder: '_' });
         
         // Inicializar Chosen
-        $('.chosen-select').chosen({ width: '100%', no_results_text: 'No se encontrÃ³: ' });
+        $('.chosen-select').chosen({ width: '100%', no_results_text: 'No se encontró: ' });
         
         // Crear grids
         createGridPlantas();
@@ -595,11 +595,11 @@ if (!empty($cliente_manifiesto['Cli_Cod'])) {
             url: '' ,
             height: 250,
             colModel: [
-                { label: 'CÃ³digo', name: 'Pla_Cod', key: true, width: 50, align: "center" },
+                { label: 'Código', name: 'Pla_Cod', key: true, width: 50, align: "center" },
                 { label: 'Nombre', name: 'Pla_Nom', width: 150 },
                 { label: 'Ciudad', name: 'Ciu_Des', width: 100 },
                 { label: 'Licencia', name: 'Pla_Lic', width: 80, align: "center" },
-                { label: 'DirecciÃ³n', name: 'Pla_Dir', width: 150 },
+                { label: 'Dirección', name: 'Pla_Dir', width: 150 },
                 { label: 'Estado', name: 'Pla_Est', width: 50, align: "center", formatter: function(v) { return v === 'A' ? '<span class="label label-success">Activo</span>' : '<span class="label label-danger">Inactivo</span>'; } },
                 {
                     label: '<center><i class="glyphicon glyphicon-cog"></i></center>',
@@ -642,7 +642,7 @@ if (!empty($cliente_manifiesto['Cli_Cod'])) {
         let data = $('#plantaForm').getData();
         data.savePlantaAjax = true;
         data.Cli_Cod = Cli_Cod;
-        $.createDialogConfirm('Â¿EstÃ¡ seguro que desea guardar los datos?', data, function(d) {
+        $.createDialogConfirm('¿Está seguro que desea guardar los datos?', data, function(d) {
             $.saveDataJson('', d, function(r) {
                 if (r.success) {
                     $('#plantaDialog').dialog('close');
@@ -656,7 +656,7 @@ if (!empty($cliente_manifiesto['Cli_Cod'])) {
     }
 
     function anularPlanta(Pla_Cod) {
-        $.createDialogConfirm('Â¿EstÃ¡ seguro que desea anular esta planta?', { Pla_Cod: Pla_Cod }, function(d) {
+        $.createDialogConfirm('¿Está seguro que desea anular esta planta?', { Pla_Cod: Pla_Cod }, function(d) {
             $.post('', { anularPlantaAjax: true, Pla_Cod: d.Pla_Cod }, function(r) {
                 if (r.success) {
                     actualizarGridPlantas();
@@ -675,12 +675,12 @@ if (!empty($cliente_manifiesto['Cli_Cod'])) {
             url: '',
             height: 250,
             colModel: [
-                { label: 'CÃ³digo', name: 'Cho_Cod', key: true, width: 50, align: "center" },
-                { label: 'CÃ©dula', name: 'Prs_Ced', width: 80, align: "center" },
+                { label: 'Código', name: 'Cho_Cod', key: true, width: 50, align: "center" },
+                { label: 'Cédula', name: 'Prs_Ced', width: 80, align: "center" },
                 { label: 'Nombre', name: 'nombre', width: 150 },
                 { label: 'Licencia', name: 'Cho_Tli', width: 60, align: "center" },
                 { label: 'Caducidad', name: 'Cho_Cli', width: 80, align: "center" },
-                { label: 'TelÃ©fono', name: 'Cho_Tel', width: 80, align: "center" },
+                { label: 'Teléfono', name: 'Cho_Tel', width: 80, align: "center" },
                 { label: 'Sangre', name: 'Cho_Tsa', width: 50, align: "center" },
                 {
                     label: '<center><i class="glyphicon glyphicon-cog"></i></center>',
@@ -745,7 +745,7 @@ if (!empty($cliente_manifiesto['Cli_Cod'])) {
         let data = $('#choferForm').getData();
         data.saveChoferAjax = true;
         data.Cli_Cod = Cli_Cod;
-        $.createDialogConfirm('Â¿EstÃ¡ seguro que desea guardar los datos?', data, function(d) {
+        $.createDialogConfirm('¿Está seguro que desea guardar los datos?', data, function(d) {
             $.saveDataJson('', d, function(r) {
                 if (r.success) {
                     $('#choferDialog').dialog('close');
@@ -759,7 +759,7 @@ if (!empty($cliente_manifiesto['Cli_Cod'])) {
     }
 
     function anularChoferGrid(Cho_Cod) {
-        $.createDialogConfirm('Â¿EstÃ¡ seguro que desea anular este chofer?', { Cho_Cod: Cho_Cod }, function(d) {
+        $.createDialogConfirm('¿Está seguro que desea anular este chofer?', { Cho_Cod: Cho_Cod }, function(d) {
             $.post('', { anularChoferAjax: true, Cho_Cod: d.Cho_Cod }, function(r) {
                 if (r.success) {
                     actualizarGridChoferes();
@@ -774,17 +774,17 @@ if (!empty($cliente_manifiesto['Cli_Cod'])) {
     // ==================== GRID VEHICULOS ====================
     function createGridVehiculos() {
         $('#gridVehiculos').createGrid({
-            caption: 'Listado de VehÃ­culos',
+            caption: 'Listado de Vehículos',
             url: '',
             height: 250,
             colModel: [
-                { label: 'CÃ³digo', name: 'Veh_Cod', key: true, width: 50, align: "center" },
+                { label: 'Código', name: 'Veh_Cod', key: true, width: 50, align: "center" },
                 { label: 'Placa', name: 'Veh_Pla', width: 80, align: "center" },
                 { label: 'Marca', name: 'Veh_Mar', width: 100 },
                 { label: 'Color', name: 'Veh_Col', width: 70, align: "center" },
                 { label: 'Capacidad (Kg)', name: 'Veh_Cap', width: 80, align: "right" },
                 { label: 'Tipo', name: 'Veh_Tit', width: 80, align: "center", formatter: function(v) {
-                    let tipos = { 'V': 'Volqueta', 'D': 'Dumper', 'C': 'CamiÃ³n' };
+                    let tipos = { 'V': 'Volqueta', 'D': 'Dumper', 'C': 'Camión' };
                     return tipos[v] || v;
                 }},
                 { label: 'Transporte', name: 'Mat_Des', width: 120 },
@@ -827,12 +827,12 @@ if (!empty($cliente_manifiesto['Cli_Cod'])) {
         let data = $('#vehiculoForm').getData();
         data.saveVehiculoAjax = true;
         data.Cli_Cod = Cli_Cod;
-        $.createDialogConfirm('Â¿EstÃ¡ seguro que desea guardar los datos?', data, function(d) {
+        $.createDialogConfirm('¿Está seguro que desea guardar los datos?', data, function(d) {
             $.saveDataJson('', d, function(r) {
                 if (r.success) {
                     $('#vehiculoDialog').dialog('close');
                     actualizarGridVehiculos();
-                    $.alert('VehÃ­culo guardado correctamente.');
+                    $.alert('Vehículo guardado correctamente.');
                 } else {
                     $.alert(r.message || 'Error al guardar');
                 }
@@ -841,11 +841,11 @@ if (!empty($cliente_manifiesto['Cli_Cod'])) {
     }
 
     function anularVehiculoGrid(Veh_Cod) {
-        $.createDialogConfirm('Â¿EstÃ¡ seguro que desea anular este vehÃ­culo?', { Veh_Cod: Veh_Cod }, function(d) {
+        $.createDialogConfirm('¿Está seguro que desea anular este vehículo?', { Veh_Cod: Veh_Cod }, function(d) {
             $.post('', { anularVehiculoAjax: true, Veh_Cod: d.Veh_Cod }, function(r) {
                 if (r.success) {
                     actualizarGridVehiculos();
-                    $.alert('VehÃ­culo anulado correctamente.');
+                    $.alert('Vehículo anulado correctamente.');
                 } else {
                     $.alert(r.message || 'Error al anular');
                 }

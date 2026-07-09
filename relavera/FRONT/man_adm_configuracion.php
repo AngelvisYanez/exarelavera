@@ -1,10 +1,10 @@
 <?php
 
 /**
- * @abstract Administraci√≥n de Plantas, Choferes, Veh√≠culos y Celdas
+ * @abstract AdministraciÛn de Plantas, Choferes, VehÌculos y Celdas
  * @author Sistema EXA
  * @version 1.0
- * Fecha de creaci√≥n: <?php echo date('d/m/Y'); ?>
+ * Fecha de creaciÛn: <?php echo date('d/m/Y'); ?>
  */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/man_log_manifiesto.php');
@@ -25,10 +25,10 @@ if (isset($cliAjax)) {
 // Listar Plantas
 if (isset($listPlantasGridAjax)) {
     // require_once('../../Librerias/procedimientos/almacenados_standar.php');
-    ChromePhp::log("listPlantasGridAjax ejecut√°ndose");
+    ChromePhp::log("listPlantasGridAjax ejecut·ndose");
     $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
     $rows = isset($_GET['rows']) ? (int)$_GET['rows'] : 20;
-    // Obtener par√°metros de filtro
+    // Obtener par·metros de filtro
     $op_opciones = isset($_GET['op_opciones']) ? $_GET['op_opciones'] : 'd';
     $search = isset($_GET['search']) ? $_GET['search'] : '';
     ChromePhp::log("page: " . $page . ", rows: " . $rows . ", op_opciones: " . $op_opciones . ", search: " . $search);
@@ -41,7 +41,7 @@ if (isset($listPlantasGridAjax)) {
     $pagination = pages($contar['total'], $page, $rows);
     $response = $pagination['data'];
     if ($contar['total'] > 0) {
-        // Obtener registros con paginaci√≥n (con limits)
+        // Obtener registros con paginaciÛn (con limits)
         $data['limits'] = $pagination['limits'];
         ChromePhp::log("Llamando getArrayConsulta con id=3, data: ", $data);
         $response['rows'] = $obBD_con1->getArrayConsulta(3, $data, $obBD_conexion);
@@ -56,10 +56,10 @@ if (isset($listPlantasGridAjax)) {
 
 
 
-// Funci√≥n auxiliar para obtener o crear persona
+// FunciÛn auxiliar para obtener o crear persona
 function obtenerOCrearPersona($obBD_con1, $obBD_conexion, $Prs_Ced, $datosPersona)
 {
-    // Si es RUC de 13 d√≠gitos, extraer la c√©dula (primeros 10)
+    // Si es RUC de 13 dÌgitos, extraer la cÈdula (primeros 10)
     $prsAux = $Prs_Ced;
     $longitud = strlen($prsAux);
     if ($longitud == 13) {
@@ -70,7 +70,7 @@ function obtenerOCrearPersona($obBD_con1, $obBD_conexion, $Prs_Ced, $datosPerson
     $persona = $obBD_con1->getRowConsulta('persona.selectWhere', array('where' => array('Prs_Ced' => $prsAux)), $obBD_conexion);
 
     if (!empty($persona)) {
-        // Si existe, retornar su c√≥digo
+        // Si existe, retornar su cÛdigo
         return $persona['Prs_Cod'];
     } else {
         // Si no existe, crear nueva persona
@@ -80,11 +80,11 @@ function obtenerOCrearPersona($obBD_con1, $obBD_conexion, $Prs_Ced, $datosPerson
     }
 }
 
-// Funci√≥n auxiliar para guardar personal de planta
+// FunciÛn auxiliar para guardar personal de planta
 function guardarPersonalPlanta($obBD_con1, $obBD_conexion, $Pla_Cod, $Prs_Ced, $datosPersonal, $Pep_Tip, $datosPersona = array())
 {
     if (empty($Prs_Ced)) {
-        return; // Si no hay c√©dula, no se guarda
+        return; // Si no hay cÈdula, no se guarda
     }
     // Obtener o crear la persona
     $Prs_Cod = obtenerOCrearPersona($obBD_con1, $obBD_conexion, $Prs_Ced, $datosPersona);
@@ -157,7 +157,7 @@ if (isset($savePlantaAjax)) {
             $resp['Pla_Cod_New'] = $Pla_Cod_New;
         }
 
-        // Guardar personal tanto para nuevas plantas como para edici√≥n
+        // Guardar personal tanto para nuevas plantas como para ediciÛn
         if (!empty($Pla_Cod_New)) {
             // Guardar Administrador de Planta (AP)
             if (isset($Prs_Ced) && !empty($Prs_Ced)) {
@@ -340,7 +340,7 @@ if (isset($listEmpresasTransporteGridAjax)) {
     //require_once('../../Librerias/procedimientos/almacenados_standar.php');
     $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
     $rows = isset($_GET['rows']) ? (int)$_GET['rows'] : 20;
-    // Obtener par√°metros de filtro
+    // Obtener par·metros de filtro
     $op_opciones = isset($_GET['op_opciones']) ? $_GET['op_opciones'] : 'n';
     $search = isset($_GET['search']) ? $_GET['search'] : '';
 
@@ -358,7 +358,7 @@ if (isset($listEmpresasTransporteGridAjax)) {
     $response = $pagination['data'];
 
     if ($contar['total'] > 0) {
-        // Obtener registros con paginaci√≥n (con limits)
+        // Obtener registros con paginaciÛn (con limits)
         $data['limits'] = $pagination['limits'];
         $response['rows'] = $obBD_con1->getArrayConsulta(4, $data, $obBD_conexion);
         $obBD_con1->utf8_change_param($response['rows']);
@@ -418,7 +418,7 @@ if (isset($listChoferesGridAjax)) {
     //require_once('../../Librerias/procedimientos/almacenados_standar.php');
     $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
     $rows = isset($_GET['rows']) ? (int)$_GET['rows'] : 20;
-    // Obtener par√°metros de filtro
+    // Obtener par·metros de filtro
     $op_opciones = isset($_GET['op_opciones']) ? $_GET['op_opciones'] : 'd';
     $search = isset($_GET['search']) ? $_GET['search'] : '';
 
@@ -436,7 +436,7 @@ if (isset($listChoferesGridAjax)) {
     $response = $pagination['data'];
 
     if ($contar['total'] > 0) {
-        // Obtener registros con paginaci√≥n (con limits)
+        // Obtener registros con paginaciÛn (con limits)
         $params['limits'] = $pagination['limits'];
         $response['rows'] = $obBD_con1->getArrayConsulta(5, $params, $obBD_conexion);
         $obBD_con1->utf8_change_param($response['rows']);
@@ -446,7 +446,7 @@ if (isset($listChoferesGridAjax)) {
     $obBD_con1->echoJson($response);
 }
 
-// Buscar persona por c√©dula
+// Buscar persona por cÈdula
 if (isset($buscarPersonaCedulaAjax)) {
     $resp = array('success' => true, 'existe' => false, 'choferExiste' => false);
     $prsAux = $Prs_Ced;
@@ -485,11 +485,11 @@ if (isset($buscarPersonaCedulaAjax)) {
                 $resp['chofer']['Prs_Nom'] = isset($persona['Prs_Nom']) ? $persona['Prs_Nom'] : '';
                 $resp['chofer']['Prs_Ape'] = isset($persona['Prs_Ape']) ? $persona['Prs_Ape'] : '';
                 $resp['chofer']['Prs_Cod'] = isset($persona['Prs_Cod']) ? $persona['Prs_Cod'] : '';
-                // Asegurar que Prs_Tel est√© disponible
+                // Asegurar que Prs_Tel estÈ disponible
                 if (isset($persona['Prs_Tel'])) {
                     $resp['chofer']['Prs_Tel'] = $persona['Prs_Tel'];
                 }
-                // Aplicar utf8_change_param despu√©s de agregar todos los campos
+                // Aplicar utf8_change_param despuÈs de agregar todos los campos
                 $obBD_con1->utf8_change_param($resp['chofer']);
             }
         }
@@ -532,7 +532,7 @@ if (isset($saveChoferAjax)) {
                 throw new Exception("El chofer ya existe en " . $plantaNombre . ". No se puede registrar nuevamente.");
             }
         }
-        // Si est√° editando, permitir continuar sin validaci√≥n de duplicados
+        // Si est· editando, permitir continuar sin validaciÛn de duplicados
 
         if (!empty($Prs_Cod)) {
             $Prs_Cod_New = $Prs_Cod;
@@ -558,22 +558,22 @@ if (isset($saveChoferAjax)) {
             'Cho_Cli' => $Cho_Cli,
             'Cho_Tel' => $Cho_Tel,
             'Cho_Tsa' => $Cho_Tsa,
-            'Cho_Mae' => '' // Campo oculto, siempre se guarda vac√≠o
+            'Cho_Mae' => '' // Campo oculto, siempre se guarda vacÌo
         );
 
         if (!empty($Cho_Cod)) {
             // Editar chofer existente
             $datosChofer['where'] = array('Cho_Cod' => $Cho_Cod);
             $obBD_con1->operacionobBD('chofer.update', $datosChofer, $obBD_conexion, true);
-            // Actualizar la relaci√≥n con la planta (manifiesto_chofer tiene clave primaria compuesta Cho_Cod, Pla_Cod)
+            // Actualizar la relaciÛn con la planta (manifiesto_chofer tiene clave primaria compuesta Cho_Cod, Pla_Cod)
             $existeRelacion = $obBD_con1->getRowConsulta('manifiesto_chofer.selectWhere', array('where' => array('manifiesto_chofer.Cho_Cod' => $Cho_Cod, 'manifiesto_chofer.Pla_Cod' => $Pla_Cod)), $obBD_conexion, true);
 
 
             if (empty($existeRelacion)) {
-                // Si no existe la relaci√≥n, crearla
+                // Si no existe la relaciÛn, crearla
                 $obBD_con1->operacionobBD('manifiesto_chofer.insert', array('Cho_Cod' => $Cho_Cod, 'Pla_Cod' => $Pla_Cod), $obBD_conexion);
             }
-            // Si ya existe la relaci√≥n, no hacer nada (ya est√° asociado a esa planta)
+            // Si ya existe la relaciÛn, no hacer nada (ya est· asociado a esa planta)
         } else {
             $obBD_con1->operacionobBD('chofer.insert', $datosChofer, $obBD_conexion, true);
             $resp['Cho_Cod_New'] = $obBD_con1->insercionid($obBD_conexion);
@@ -607,10 +607,10 @@ if (isset($anularChoferAjax)) {
     $obBD_con1->echoJson($resp);
 }
 
-// Listar Veh√≠culos
+// Listar VehÌculos
 if (isset($listVehiculosGridAjax)) {
     $data = array_merge($_GET, array('where' => array('vehiculo.Veh_Est' => 'A')));
-    // Agregar filtros de b√∫squeda si existen
+    // Agregar filtros de b˙squeda si existen
     if (isset($_GET['op_opciones']) && isset($_GET['search']) && !empty($_GET['search'])) {
         $data['op_opciones'] = $_GET['op_opciones'];
         $data['search'] = $_GET['search'];
@@ -618,12 +618,12 @@ if (isset($listVehiculosGridAjax)) {
     $obBD_con1->getPageGridJson('manifiesto_vehiculo.selectWhere', $data, $obBD_conexion, true);
 }
 
-// Buscar veh√≠culo por placa (para sanciones - b√∫squeda directa)
+// Buscar vehÌculo por placa (para sanciones - b˙squeda directa)
 if (isset($busqVehiculoPorPlacaAjax)) {
     $placa = isset($_POST['Veh_Pla']) ? trim($Veh_Pla) : '';
     $resp = array('success' => false);
     if (empty($placa)) {
-        $resp['message'] = 'Ingrese el n√∫mero de placa.';
+        $resp['message'] = 'Ingrese el n˙mero de placa.';
         $obBD_con1->echoJson($resp);
         exit;
     }
@@ -638,7 +638,7 @@ if (isset($busqVehiculoPorPlacaAjax)) {
     if (!empty($rows) && isset($rows[0])) {
         $v = $rows[0];
         $Veh_Cod = (int)$v['Veh_Cod'];
-        // Contar sanciones del veh√≠culo en el a√±o actual
+        // Contar sanciones del vehÌculo en el aÒo actual
         $anioActual = date('Y');
         $countSan = $obBD_con1->getArrayConsultaSql(
             "SELECT COUNT(*) as total FROM manifiesto_sanciones WHERE Msa_Tip = 'VE' AND Veh_Cod = $Veh_Cod AND Msa_Est = 'A' AND YEAR(Msa_Fei) = $anioActual",
@@ -654,13 +654,13 @@ if (isset($busqVehiculoPorPlacaAjax)) {
             'Anio' => $anioActual
         );
     } else {
-        $resp['message'] = 'Veh√≠culo no encontrado.';
+        $resp['message'] = 'VehÌculo no encontrado.';
     }
     $obBD_con1->echoJson($resp);
     exit;
 }
 
-// Obtener cantidad de sanciones de un veh√≠culo en el a√±o actual (para mostrar al editar)
+// Obtener cantidad de sanciones de un vehÌculo en el aÒo actual (para mostrar al editar)
 if (isset($getCountSancionesVehiculoAjax)) {
     $Veh_Cod = isset($_POST['Veh_Cod']) ? (int)$_POST['Veh_Cod'] : 0;
     $resp = array('success' => false, 'SancionesAnio' => 0, 'Anio' => date('Y'));
@@ -680,7 +680,7 @@ if (isset($getCountSancionesVehiculoAjax)) {
     exit;
 }
 
-// Obtener cantidad de sanciones de un chofer en el a√±o actual (para mostrar al buscar/editar)
+// Obtener cantidad de sanciones de un chofer en el aÒo actual (para mostrar al buscar/editar)
 if (isset($getCountSancionesChoferAjax)) {
     $Cho_Cod = isset($_POST['Cho_Cod']) ? (int)$_POST['Cho_Cod'] : 0;
     $resp = array('success' => false, 'SancionesAnio' => 0, 'Anio' => date('Y'));
@@ -700,7 +700,7 @@ if (isset($getCountSancionesChoferAjax)) {
     exit;
 }
 
-// Obtener cantidad de sanciones de una planta en el a√±o actual (para mostrar al buscar/editar)
+// Obtener cantidad de sanciones de una planta en el aÒo actual (para mostrar al buscar/editar)
 if (isset($getCountSancionesPlantaAjax)) {
     $Pla_Cod = isset($_POST['Pla_Cod']) ? (int)$_POST['Pla_Cod'] : 0;
     $resp = array('success' => false, 'SancionesAnio' => 0, 'Anio' => date('Y'));
@@ -720,7 +720,7 @@ if (isset($getCountSancionesPlantaAjax)) {
     exit;
 }
 
-// Listar Sanciones (unificado: VE, CH, PL) ‚Äî SQL directo. Tipo "Todos" + filtro_nombres vac√≠o = todos los registros activos.
+// Listar Sanciones (unificado: VE, CH, PL) ? SQL directo. Tipo "Todos" + filtro_nombres vacÌo = todos los registros activos.
 if (isset($_REQUEST['listSancionesGridAjax']) || isset($listSancionesGridAjax)) {
     $req = array_merge($_GET, $_POST);
     $page = isset($req['page']) ? (int)$req['page'] : 1;
@@ -746,7 +746,7 @@ if (isset($_REQUEST['listSancionesGridAjax']) || isset($listSancionesGridAjax)) 
     if ($filtroVigentes) {
         $where[] = "NOW() >= $nm.Msa_Fei AND NOW() <= $nm.Msa_Fef";
     }
-    // Filtros de b√∫squeda: por tipo (CH/VE/PL) se usan columnas expl√≠citas; siempre se aplica LIKE (incluso con b√∫squeda vac√≠a)
+    // Filtros de b˙squeda: por tipo (CH/VE/PL) se usan columnas explÌcitas; siempre se aplica LIKE (incluso con b˙squeda vacÌa)
     $escId  = $filtroId !== '' ? mysqli_real_escape_string($con, $filtroId) : '';
     $escNom = $filtroNom !== '' ? mysqli_real_escape_string($con, $filtroNom) : '';
     $condSearch = array();
@@ -832,7 +832,7 @@ if (isset($_REQUEST['listSancionesGridAjax']) || isset($listSancionesGridAjax)) 
     exit;
 }
 
-// Guardar Sanci√≥n Veh√≠culo
+// Guardar SanciÛn VehÌculo
 if (isset($saveSancionVehiculoAjax)) {
     $obBD_con1->inicio_transaccion($obBD_conexion);
     $resp = array('success' => false);
@@ -843,7 +843,7 @@ if (isset($saveSancionVehiculoAjax)) {
         $Msa_Fef = isset($_POST['Msa_Fef']) ? $_POST['Msa_Fef'] : '';
         $Msa_Obs = isset($_POST['Msa_Obs']) ? trim($_POST['Msa_Obs']) : '';
         if (empty($Veh_Cod)) {
-            throw new Exception('Debe seleccionar un veh√≠culo.');
+            throw new Exception('Debe seleccionar un vehÌculo.');
         }
         if (empty($Msa_Fei) || empty($Msa_Fef)) {
             throw new Exception('Fecha inicio y fin son obligatorias.');
@@ -870,7 +870,7 @@ if (isset($saveSancionVehiculoAjax)) {
     $obBD_con1->echoJson($resp);
 }
 
-// Guardar Sanci√≥n Chofer
+// Guardar SanciÛn Chofer
 if (isset($saveSancionChoferAjax)) {
     $obBD_con1->inicio_transaccion($obBD_conexion);
     $resp = array('success' => false);
@@ -908,7 +908,7 @@ if (isset($saveSancionChoferAjax)) {
     $obBD_con1->echoJson($resp);
 }
 
-// Guardar Sanci√≥n Planta
+// Guardar SanciÛn Planta
 if (isset($saveSancionPlantaAjax)) {
     $obBD_con1->inicio_transaccion($obBD_conexion);
     $resp = array('success' => false);
@@ -946,12 +946,12 @@ if (isset($saveSancionPlantaAjax)) {
     $obBD_con1->echoJson($resp);
 }
 
-// Anular Sanci√≥n
+// Anular SanciÛn
 if (isset($anularSancionAjax)) {
     $resp = array('success' => false);
     $Msa_Cod = isset($_POST['Msa_Cod']) ? trim($_POST['Msa_Cod']) : '';
     if (empty($Msa_Cod)) {
-        $resp['message'] = 'C√≥digo de sanci√≥n no v√°lido.';
+        $resp['message'] = 'CÛdigo de sanciÛn no v·lido.';
         $obBD_con1->echoJson($resp);
         exit;
     }
@@ -983,7 +983,7 @@ if (isset($listClientesAjax)) {
     $obBD_con1->echoJson($resultado);
 }
 
-// Guardar Veh√≠culo
+// Guardar VehÌculo
 if (isset($saveVehiculoAjax)) {
     $obBD_con1->inicio_transaccion($obBD_conexion);
     $resp = array('success' => false);
@@ -1015,7 +1015,7 @@ if (isset($saveVehiculoAjax)) {
     $obBD_con1->echoJson($resp);
 }
 
-// Anular Veh√≠culo
+// Anular VehÌculo
 if (isset($anularVehiculoAjax)) {
     $resp = array('success' => false);
     $obBD_con1->inicio_transaccion($obBD_conexion);
@@ -1048,7 +1048,7 @@ if (isset($listCeldasGridAjax)) {
         return isset($g['Cel_Est']) && $g['Cel_Est'] != 'E';
     });
 
-    // Aplicar filtros de b√∫squeda si existen
+    // Aplicar filtros de b˙squeda si existen
     if (isset($_GET['op_opciones']) && isset($_GET['search']) && !empty($_GET['search'])) {
         $searchTerm = $_GET['search'];
         $op_opciones = $_GET['op_opciones'];
@@ -1186,7 +1186,7 @@ if (isset($saveCeldaAjax)) {
     $obBD_con1->echoJson($resp);
 }
 
-// Listar Plantas para dropdowns (Chofer y Veh√≠culo)
+// Listar Plantas para dropdowns (Chofer y VehÌculo)
 if (isset($listPlantasSelectAjax)) {
     $resp = array('success' => true);
     $plantas = $obBD_con1->getArrayConsulta(
@@ -1258,7 +1258,7 @@ $obBD_con1->utf8_change_param($transportes);
 <HTML>
 
 <HEAD>
-    <TITLE><?php echo "Administraci√≥n - Configuraci√≥n [EXA]"; ?></TITLE>
+    <TITLE><?php echo "AdministraciÛn - ConfiguraciÛn [EXA]"; ?></TITLE>
     <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
     <?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
@@ -1292,7 +1292,7 @@ $obBD_con1->utf8_change_param($transportes);
             color: #777 !important;
         }
 
-        /* Asegurar que los detalles tengan indentaci√≥n visual */
+        /* Asegurar que los detalles tengan indentaciÛn visual */
         #gridCeldas tr.fila-detalle td {
             padding-left: 25px !important;
         }
@@ -1386,19 +1386,19 @@ $obBD_con1->utf8_change_param($transportes);
 <body>
     <div class="panel panel-main panel-config">
         <div class="panel-heading exa-header">
-            <h3 class="panel-title">&raquo; Administraci√≥n de Configuraci√≥n</h3>
+            <h3 class="panel-title">&raquo; AdministraciÛn de ConfiguraciÛn</h3>
         </div>
         <div class="panel-body ui-widget-content ui-corner-bottom exa-body">
 
-            <!-- Informaci√≥n del Cliente -->
+            <!-- InformaciÛn del Cliente -->
             <!--div class="info-cliente">
                 <h4><i class="glyphicon glyphicon-user"></i> Cliente Asociado</h4>
-                <p><strong>C√≥digo:</strong> <span id="codigoClienteHeader"><?php echo $cliente_manifiesto['Cli_Cod']; ?></span> |
+                <p><strong>CÛdigo:</strong> <span id="codigoClienteHeader"><?php echo $cliente_manifiesto['Cli_Cod']; ?></span> |
                     <strong>Nombre:</strong> <span id="nombreClienteHeader"><?php echo isset($cliente_manifiesto['nombre']) ? $cliente_manifiesto['nombre'] : 'N/A'; ?></span>
                 </p>
             </div-->
 
-            <!-- Pesta√±as -->
+            <!-- PestaÒas -->
             <div class="nav-tabs-custom">
                 <ul class="nav nav-tabs" role="tablist">
                     <li role="presentation" class="active">
@@ -1418,7 +1418,7 @@ $obBD_con1->utf8_change_param($transportes);
                     </li>
                     <li role="presentation">
                         <a href="#tabVehiculos" aria-controls="tabVehiculos" role="tab" data-toggle="tab">
-                            <i class="glyphicon glyphicon-road icon-tab"></i>Veh√≠culos
+                            <i class="glyphicon glyphicon-road icon-tab"></i>VehÌculos
                         </a>
                     </li>
                     <li role="presentation">
@@ -1447,7 +1447,7 @@ $obBD_con1->utf8_change_param($transportes);
                         <div class="row" style="margin-top: 10px; margin-bottom: 10px;">
                             <div class="col-xs-12">
                                 <fieldset class="exa-fieldset">
-                                    <legend class="Titulos2">Filtro de B√∫squeda</legend>
+                                    <legend class="Titulos2">Filtro de B˙squeda</legend>
                                     <form id="filtroPlantasForm" class="form-horizontal normal">
                                         <div class="form-group">
                                             <label class="col-xs-2 control-label label-xs">Filtrar Por:</label>
@@ -1455,7 +1455,7 @@ $obBD_con1->utf8_change_param($transportes);
                                                 <input id="radPlanta1" name="op_opciones" type="radio" value="d" checked="" onclick="setfocus(this.form.search)" />
                                                 <label for="radPlanta1">Nombres Cliente</label>
                                                 <input id="radPlanta2" name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" />
-                                                <label for="radPlanta2">C√©dula/RUC</label>
+                                                <label for="radPlanta2">CÈdula/RUC</label>
                                                 <input id="radPlanta3" name="op_opciones" type="radio" value="n" onclick="setfocus(this.form.search)" />
                                                 <label for="radPlanta3">Nombre Planta</label>
                                                 <input id="radPlanta4" name="op_opciones" type="radio" value="l" onclick="setfocus(this.form.search)" />
@@ -1463,10 +1463,10 @@ $obBD_con1->utf8_change_param($transportes);
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label class="col-xs-2 control-label label-xs">B√∫squeda:</label>
+                                            <label class="col-xs-2 control-label label-xs">B˙squeda:</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group input-group-xs">
-                                                    <input name="search" type="text" size="50" maxlength="50" placeholder="Ingrese b√∫squeda..." class="form-control input-xs clearable" onkeydown="if (event.keyCode === 13) { event.preventDefault(); actualizarGridPlantas(); }" />
+                                                    <input name="search" type="text" size="50" maxlength="50" placeholder="Ingrese b˙squeda..." class="form-control input-xs clearable" onkeydown="if (event.keyCode === 13) { event.preventDefault(); actualizarGridPlantas(); }" />
                                                     <span class="input-group-btn">
                                                         <button type="button" onclick="actualizarGridPlantas();" class="btn btn-success btn-xs" title="Buscar">
                                                             <span class="glyphicon glyphicon-search"></span> Buscar
@@ -1498,7 +1498,7 @@ $obBD_con1->utf8_change_param($transportes);
                         <div class="row" style="margin-top: 10px; margin-bottom: 10px;">
                             <div class="col-xs-12">
                                 <fieldset class="exa-fieldset">
-                                    <legend class="Titulos2">Filtro de B√∫squeda</legend>
+                                    <legend class="Titulos2">Filtro de B˙squeda</legend>
                                     <form id="filtroEmpresasTransporteForm" class="form-horizontal normal">
                                         <div class="form-group">
                                             <label class="col-xs-2 control-label label-xs">Filtrar Por:</label>
@@ -1510,10 +1510,10 @@ $obBD_con1->utf8_change_param($transportes);
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label class="col-xs-2 control-label label-xs">B√∫squeda:</label>
+                                            <label class="col-xs-2 control-label label-xs">B˙squeda:</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group input-group-xs">
-                                                    <input name="search" type="text" size="50" maxlength="50" placeholder="Ingrese b√∫squeda..." class="form-control input-xs clearable" onkeydown="if (event.keyCode === 13) { event.preventDefault(); actualizarGridEmpresasTransporte(); }" />
+                                                    <input name="search" type="text" size="50" maxlength="50" placeholder="Ingrese b˙squeda..." class="form-control input-xs clearable" onkeydown="if (event.keyCode === 13) { event.preventDefault(); actualizarGridEmpresasTransporte(); }" />
                                                     <span class="input-group-btn">
                                                         <button type="button" onclick="actualizarGridEmpresasTransporte();" class="btn btn-success btn-xs" title="Buscar">
                                                             <span class="glyphicon glyphicon-search"></span> Buscar
@@ -1543,7 +1543,7 @@ $obBD_con1->utf8_change_param($transportes);
                         <div class="row" style="margin-top: 10px; margin-bottom: 10px;">
                             <div class="col-xs-12">
                                 <fieldset class="exa-fieldset">
-                                    <legend class="Titulos2">Filtro de B√∫squeda</legend>
+                                    <legend class="Titulos2">Filtro de B˙squeda</legend>
                                     <form id="filtroChoferesForm" class="form-horizontal normal">
                                         <div class="form-group">
                                             <label class="col-xs-2 control-label label-xs">Filtrar Por:</label>
@@ -1551,7 +1551,7 @@ $obBD_con1->utf8_change_param($transportes);
                                                 <input id="radChofer1" name="op_opciones" type="radio" value="d" checked="" onclick="setfocus(this.form.search)" />
                                                 <label for="radChofer1">Nombre Chofer</label>
                                                 <input id="radChofer2" name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" />
-                                                <label for="radChofer2">C√©dula</label>
+                                                <label for="radChofer2">CÈdula</label>
                                                 <input id="radChofer3" name="op_opciones" type="radio" value="pn" onclick="setfocus(this.form.search)" />
                                                 <label for="radChofer3">Nombre Planta</label>
                                                 <input id="radChofer4" name="op_opciones" type="radio" value="pl" onclick="setfocus(this.form.search)" />
@@ -1559,10 +1559,10 @@ $obBD_con1->utf8_change_param($transportes);
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label class="col-xs-2 control-label label-xs">B√∫squeda:</label>
+                                            <label class="col-xs-2 control-label label-xs">B˙squeda:</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group input-group-xs">
-                                                    <input name="search" type="text" size="50" maxlength="50" placeholder="Ingrese b√∫squeda..." class="form-control input-xs clearable" onkeydown="if (event.keyCode === 13) { event.preventDefault(); actualizarGridChoferes(); }" />
+                                                    <input name="search" type="text" size="50" maxlength="50" placeholder="Ingrese b˙squeda..." class="form-control input-xs clearable" onkeydown="if (event.keyCode === 13) { event.preventDefault(); actualizarGridChoferes(); }" />
                                                     <span class="input-group-btn">
                                                         <button type="button" onclick="actualizarGridChoferes();" class="btn btn-success btn-xs" title="Buscar">
                                                             <span class="glyphicon glyphicon-search"></span> Buscar
@@ -1579,11 +1579,11 @@ $obBD_con1->utf8_change_param($transportes);
                         <div id="gridChoferesPager"></div>
                     </div>
 
-                    <!-- Tab Veh√≠culos -->
+                    <!-- Tab VehÌculos -->
                     <div role="tabpanel" class="tab-pane" id="tabVehiculos">
                         <div class="btn-toolbar">
                             <button class="btn btn-success" onclick="abrirModalVehiculo();">
-                                <i class="glyphicon glyphicon-plus"></i> Nuevo Veh√≠culo
+                                <i class="glyphicon glyphicon-plus"></i> Nuevo VehÌculo
                             </button>
                             <button class="btn btn-default" onclick="actualizarGridVehiculos();">
                                 <i class="glyphicon glyphicon-refresh"></i> Actualizar
@@ -1592,7 +1592,7 @@ $obBD_con1->utf8_change_param($transportes);
                         <div class="row" style="margin-top: 10px; margin-bottom: 10px;">
                             <div class="col-xs-12">
                                 <fieldset class="exa-fieldset">
-                                    <legend class="Titulos2">Filtro de B√∫squeda</legend>
+                                    <legend class="Titulos2">Filtro de B˙squeda</legend>
                                     <form id="filtroVehiculosForm" class="form-horizontal normal">
                                         <div class="form-group">
                                             <label class="col-xs-2 control-label label-xs">Filtrar Por:</label>
@@ -1604,14 +1604,14 @@ $obBD_con1->utf8_change_param($transportes);
                                                 <input id="radVehiculo3" name="op_opciones" type="radio" value="pl" onclick="setfocus(this.form.search)" />
                                                 <label for="radVehiculo3">Licencia Planta</label>
                                                 <input id="radVehiculo4" name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" />
-                                                <label for="radVehiculo4">C√©dula/RUC Cliente</label>
+                                                <label for="radVehiculo4">CÈdula/RUC Cliente</label>
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label class="col-xs-2 control-label label-xs">B√∫squeda:</label>
+                                            <label class="col-xs-2 control-label label-xs">B˙squeda:</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group input-group-xs">
-                                                    <input name="search" type="text" size="50" maxlength="50" placeholder="Ingrese b√∫squeda..." class="form-control input-xs clearable" onkeydown="if (event.keyCode === 13) { event.preventDefault(); actualizarGridVehiculos(); }" />
+                                                    <input name="search" type="text" size="50" maxlength="50" placeholder="Ingrese b˙squeda..." class="form-control input-xs clearable" onkeydown="if (event.keyCode === 13) { event.preventDefault(); actualizarGridVehiculos(); }" />
                                                     <span class="input-group-btn">
                                                         <button type="button" onclick="actualizarGridVehiculos();" class="btn btn-success btn-xs" title="Buscar">
                                                             <span class="glyphicon glyphicon-search"></span> Buscar
@@ -1641,7 +1641,7 @@ $obBD_con1->utf8_change_param($transportes);
                         <div class="row" style="margin-top: 10px; margin-bottom: 10px;">
                             <div class="col-xs-12">
                                 <fieldset class="exa-fieldset">
-                                    <legend class="Titulos2">Filtro de B√∫squeda</legend>
+                                    <legend class="Titulos2">Filtro de B˙squeda</legend>
                                     <form id="filtroCeldasForm" class="form-horizontal normal">
                                         <div class="form-group">
                                             <label class="col-xs-2 control-label label-xs">Filtrar Por:</label>
@@ -1649,14 +1649,14 @@ $obBD_con1->utf8_change_param($transportes);
                                                 <input id="radCelda1" name="op_opciones" type="radio" value="n" checked="" onclick="setfocus(this.form.search)" />
                                                 <label for="radCelda1">Nombre</label>
                                                 <input id="radCelda2" name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" />
-                                                <label for="radCelda2">C√≥digo/N√∫mero</label>
+                                                <label for="radCelda2">CÛdigo/N˙mero</label>
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label class="col-xs-2 control-label label-xs">B√∫squeda:</label>
+                                            <label class="col-xs-2 control-label label-xs">B˙squeda:</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group input-group-xs">
-                                                    <input name="search" type="text" size="50" maxlength="50" placeholder="Ingrese b√∫squeda..." class="form-control input-xs clearable" onkeydown="if (event.keyCode === 13) { event.preventDefault(); actualizarGridCeldas(); }" />
+                                                    <input name="search" type="text" size="50" maxlength="50" placeholder="Ingrese b˙squeda..." class="form-control input-xs clearable" onkeydown="if (event.keyCode === 13) { event.preventDefault(); actualizarGridCeldas(); }" />
                                                     <span class="input-group-btn">
                                                         <button type="button" onclick="actualizarGridCeldas();" class="btn btn-success btn-xs" title="Buscar">
                                                             <span class="glyphicon glyphicon-search"></span> Buscar
@@ -1676,13 +1676,13 @@ $obBD_con1->utf8_change_param($transportes);
                     <div role="tabpanel" class="tab-pane" id="tabSanciones">
                         <div class="btn-toolbar">
                             <button class="btn btn-success" onclick="abrirModalSancionVehiculo();">
-                                <i class="glyphicon glyphicon-plus"></i> Nueva Sanci√≥n Veh√≠culo
+                                <i class="glyphicon glyphicon-plus"></i> Nueva SanciÛn VehÌculo
                             </button>
                             <button class="btn btn-success" onclick="abrirModalSancionChofer();">
-                                <i class="glyphicon glyphicon-plus"></i> Nueva Sanci√≥n Chofer
+                                <i class="glyphicon glyphicon-plus"></i> Nueva SanciÛn Chofer
                             </button>
                             <button class="btn btn-success" onclick="abrirModalSancionPlanta();">
-                                <i class="glyphicon glyphicon-plus"></i> Nueva Sanci√≥n Planta
+                                <i class="glyphicon glyphicon-plus"></i> Nueva SanciÛn Planta
                             </button>
                             <button class="btn btn-default" onclick="actualizarGridSanciones();">
                                 <i class="glyphicon glyphicon-refresh"></i> Actualizar
@@ -1691,14 +1691,14 @@ $obBD_con1->utf8_change_param($transportes);
                         <div class="row" style="margin-top: 10px; margin-bottom: 10px;">
                             <div class="col-xs-12">
                                 <fieldset class="exa-fieldset">
-                                    <legend class="Titulos2">Filtro de B√∫squeda</legend>
+                                    <legend class="Titulos2">Filtro de B˙squeda</legend>
                                     <form id="filtroSancionesForm" class="form-horizontal normal">
                                         <div class="form-group">
                                             <label class="col-xs-2 control-label label-xs">Tipo:</label>
                                             <div class="col-xs-3">
                                                 <select name="filtro_tipo" id="filtro_tipo_sanciones" class="form-control input-xs">
                                                     <option value="T">Todos</option>
-                                                    <option value="VE">Veh√≠culos</option>
+                                                    <option value="VE">VehÌculos</option>
                                                     <option value="CH">Choferes</option>
                                                     <option value="PL">Plantas</option>
                                                 </select>
@@ -1706,16 +1706,16 @@ $obBD_con1->utf8_change_param($transportes);
                                             <label class="col-xs-2 control-label label-xs">Filtrar Por:</label>
                                             <div class="col-xs-3 radioset opt_search">
                                                 <input id="radSancion1" name="op_opciones" type="radio" value="i" checked="checked" onclick="setfocus(this.form.search)" />
-                                                <label for="radSancion1">Identificaci√≥n</label>
+                                                <label for="radSancion1">IdentificaciÛn</label>
                                                 <input id="radSancion2" name="op_opciones" type="radio" value="n" onclick="setfocus(this.form.search)" />
                                                 <label for="radSancion2">Nombre/Apellido</label>
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label class="col-xs-2 control-label label-xs">B√∫squeda:</label>
+                                            <label class="col-xs-2 control-label label-xs">B˙squeda:</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group input-group-xs">
-                                                    <input name="search" type="text" id="search_sanciones" size="50" maxlength="80" placeholder="Ingrese b√∫squeda..." class="form-control input-xs clearable" onkeydown="if (event.keyCode === 13) { event.preventDefault(); actualizarGridSanciones(); }" />
+                                                    <input name="search" type="text" id="search_sanciones" size="50" maxlength="80" placeholder="Ingrese b˙squeda..." class="form-control input-xs clearable" onkeydown="if (event.keyCode === 13) { event.preventDefault(); actualizarGridSanciones(); }" />
                                                     <span class="input-group-btn">
                                                         <button type="button" onclick="actualizarGridSanciones();" class="btn btn-success btn-xs" title="Buscar">
                                                             <span class="glyphicon glyphicon-search"></span> Buscar
@@ -1760,7 +1760,7 @@ $obBD_con1->utf8_change_param($transportes);
 
                         <legend class="Titulos2">Datos del Cliente</legend>
                         <div class="form-group">
-                            <label class="col-xs-4 control-label label-xs">C√©dula/RUC:</label>
+                            <label class="col-xs-4 control-label label-xs">CÈdula/RUC:</label>
                             <div class="col-xs-8">
                                 <input name="Cli_Cod" data-name="Cli_Cod" type="text" style="display:none;" />
                                 <input name="op_opciones" data-name="op_opciones" type="text" value="c" style="display: none;">
@@ -1808,13 +1808,13 @@ $obBD_con1->utf8_change_param($transportes);
                         <div class="form-group">
                             <label class="col-xs-4 control-label label-xs required">Nro. Licencia Ambiental:</label>
                             <div class="col-xs-8">
-                                <input type="text" id="Pla_Lic" name="Pla_Lic" class="form-control input-xs" required placeholder="N√∫mero de licencia" maxlength="20">
+                                <input type="text" id="Pla_Lic" name="Pla_Lic" class="form-control input-xs" required placeholder="N˙mero de licencia" maxlength="20">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-xs-4 control-label label-xs required">Direcci√≥n:</label>
+                            <label class="col-xs-4 control-label label-xs required">DirecciÛn:</label>
                             <div class="col-xs-8">
-                                <input type="text" id="Pla_Dir" name="Pla_Dir" class="form-control input-xs" required placeholder="Direcci√≥n de la planta" maxlength="100">
+                                <input type="text" id="Pla_Dir" name="Pla_Dir" class="form-control input-xs" required placeholder="DirecciÛn de la planta" maxlength="100">
                             </div>
                         </div>
 
@@ -1877,7 +1877,7 @@ $obBD_con1->utf8_change_param($transportes);
                         </div>
 
                         <div class="form-group">
-                            <label class="col-xs-4 control-label label-xs">Periodo de Facturaci√≥n:</label>
+                            <label class="col-xs-4 control-label label-xs">Periodo de FacturaciÛn:</label>
                             <div class="col-xs-8">
                                 <select id="Pla_Pfa" name="Pla_Pfa" class="form-control input-xs">
                                     <option value="">-- Seleccione --</option>
@@ -1893,7 +1893,7 @@ $obBD_con1->utf8_change_param($transportes);
                             <div class="col-xs-8">
                                 <select id="Pla_Wat" name="Pla_Wat" class="form-control input-xs">
                                     <option value="N">No</option>
-                                    <option value="S">S√≠</option>
+                                    <option value="S">SÌ</option>
                                 </select>
                             </div>
                         </div>
@@ -1909,7 +1909,7 @@ $obBD_con1->utf8_change_param($transportes);
                         <label class="col-xs-4 control-label label-xs">Identificacion Admin:</label>
                         <div class="col-xs-8">
                             <div class="input-group input-group-xs">
-                                <input type="text" id="Prs_Ced" name="Prs_Ced" class="form-control input-xs" placeholder="C√©dula o RUC" maxlength="13" onchange="buscarPersonaAdminPlanta(this.value)" onkeypress="return validar_numeric(event);">
+                                <input type="text" id="Prs_Ced" name="Prs_Ced" class="form-control input-xs" placeholder="CÈdula o RUC" maxlength="13" onchange="buscarPersonaAdminPlanta(this.value)" onkeypress="return validar_numeric(event);">
                                 <span class="input-group-addon validate"><i id="Prs_Ced_Est"></i></span>
                             </div>
                         </div>
@@ -1973,7 +1973,7 @@ $obBD_con1->utf8_change_param($transportes);
                     <div class="form-group">
                         <label class="col-xs-4 control-label label-xs" for="Pep_Tel">Tel&eacute;fono 2:</label>
                         <div class="col-xs-8">
-                            <input type="text" id="Pep_Tel" name="Pep_Tel" class="form-control input-xs" placeholder="Tel√©fono del administrador" maxlength="20">
+                            <input type="text" id="Pep_Tel" name="Pep_Tel" class="form-control input-xs" placeholder="TelÈfono del administrador" maxlength="20">
                         </div>
                     </div>
                     <div class="form-group">
@@ -2006,7 +2006,7 @@ $obBD_con1->utf8_change_param($transportes);
                         <label class="col-xs-4 control-label label-xs">Identificacion Contador:</label>
                         <div class="col-xs-8">
                             <div class="input-group input-group-xs">
-                                <input type="text" id="Trb_Prs_Ced" name="Trb_Prs_Ced" class="form-control input-xs" placeholder="C√©dula o RUC" maxlength="13" onchange="buscarPersonaTributario(this.value)" onkeypress="return validar_numeric(event);">
+                                <input type="text" id="Trb_Prs_Ced" name="Trb_Prs_Ced" class="form-control input-xs" placeholder="CÈdula o RUC" maxlength="13" onchange="buscarPersonaTributario(this.value)" onkeypress="return validar_numeric(event);">
                                 <span class="input-group-addon validate"><i id="Trb_Prs_Ced_Est"></i></span>
                             </div>
                         </div>
@@ -2068,9 +2068,9 @@ $obBD_con1->utf8_change_param($transportes);
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-xs-4 control-label label-xs">Tel√©fono 2:</label>
+                        <label class="col-xs-4 control-label label-xs">TelÈfono 2:</label>
                         <div class="col-xs-8">
-                            <input type="text" id="Trb_Pep_Tel" name="Trb_Pep_Tel" class="form-control input-xs" placeholder="Tel√©fono del administrador" maxlength="20">
+                            <input type="text" id="Trb_Pep_Tel" name="Trb_Pep_Tel" class="form-control input-xs" placeholder="TelÈfono del administrador" maxlength="20">
                         </div>
                     </div>
                     <div class="form-group">
@@ -2103,7 +2103,7 @@ $obBD_con1->utf8_change_param($transportes);
                         <label class="col-xs-4 control-label label-xs">Identificacion Ing.Ambiental:</label>
                         <div class="col-xs-8">
                             <div class="input-group input-group-xs">
-                                <input type="text" id="Amb_Prs_Ced" name="Amb_Prs_Ced" class="form-control input-xs" placeholder="C√©dula o RUC" maxlength="13" onchange="buscarPersonaAmbiental(this.value)" onkeypress="return validar_numeric(event);">
+                                <input type="text" id="Amb_Prs_Ced" name="Amb_Prs_Ced" class="form-control input-xs" placeholder="CÈdula o RUC" maxlength="13" onchange="buscarPersonaAmbiental(this.value)" onkeypress="return validar_numeric(event);">
                                 <span class="input-group-addon validate"><i id="Amb_Prs_Ced_Est"></i></span>
                             </div>
                         </div>
@@ -2165,9 +2165,9 @@ $obBD_con1->utf8_change_param($transportes);
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-xs-4 control-label label-xs">Tel√©fono 2:</label>
+                        <label class="col-xs-4 control-label label-xs">TelÈfono 2:</label>
                         <div class="col-xs-8">
-                            <input type="text" id="Amb_Pep_Tel" name="Amb_Pep_Tel" class="form-control input-xs" placeholder="Tel√©fono del administrador" maxlength="20">
+                            <input type="text" id="Amb_Pep_Tel" name="Amb_Pep_Tel" class="form-control input-xs" placeholder="TelÈfono del administrador" maxlength="20">
                         </div>
                     </div>
                     <div class="form-group">
@@ -2195,7 +2195,7 @@ $obBD_con1->utf8_change_param($transportes);
 
             <!-- TAB TRIBUTARIO -->
             <div class="tab-pane fade" id="tabTributario">
-                <!-- Aqu√≠ puedes agregar los campos para la secci√≥n Tributario -->
+                <!-- AquÌ puedes agregar los campos para la secciÛn Tributario -->
                 <form id="plantaTributarioForm" class="form-horizontal normal">
                     <div class="form-group">
                         <label class="col-xs-4 control-label label-xs">RUC:</label>
@@ -2213,7 +2213,7 @@ $obBD_con1->utf8_change_param($transportes);
             </div>
             <!-- TAB AMBIENTAL -->
             <div class="tab-pane fade" id="tabAmbiental">
-                <!-- Aqu√≠ puedes agregar los campos para la secci√≥n Ambiental -->
+                <!-- AquÌ puedes agregar los campos para la secciÛn Ambiental -->
                 <form id="plantaAmbientalForm" class="form-horizontal normal">
                     <div class="form-group">
                         <label class="col-xs-4 control-label label-xs">Licencia Ambiental:</label>
@@ -2231,7 +2231,7 @@ $obBD_con1->utf8_change_param($transportes);
             </div>
         </div>
         <div id="plantaErrorMessages" style="display: none; margin-top: 15px; padding: 10px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; color: #721c24;">
-            <strong><i class="glyphicon glyphicon-exclamation-sign"></i> Errores de validaci√≥n:</strong>
+            <strong><i class="glyphicon glyphicon-exclamation-sign"></i> Errores de validaciÛn:</strong>
             <ul id="plantaErrorList" style="margin-bottom: 0; padding-left: 20px;"></ul>
         </div>
         <div style="text-align: center; margin-top: 15px; padding: 10px; border-top: 1px solid #ddd;">
@@ -2269,21 +2269,21 @@ $obBD_con1->utf8_change_param($transportes);
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-xs-4 control-label label-xs">Tel√©fono:</label>
+                <label class="col-xs-4 control-label label-xs">TelÈfono:</label>
                 <div class="col-xs-8">
-                    <input type="text" id="Mat_Tel" name="Mat_Tel" class="form-control input-xs" placeholder="Tel√©fono" maxlength="10" onkeypress="return validar_numeric(event);">
+                    <input type="text" id="Mat_Tel" name="Mat_Tel" class="form-control input-xs" placeholder="TelÈfono" maxlength="10" onkeypress="return validar_numeric(event);">
                 </div>
             </div>
             <div class="form-group">
                 <label class="col-xs-4 control-label label-xs">Nro. Plan de Contingencia:</label>
                 <div class="col-xs-8">
-                    <input type="text" id="Mat_Pco" name="Mat_Pco" class="form-control input-xs" placeholder="N√∫mero Plan de Contingencia" maxlength="30">
+                    <input type="text" id="Mat_Pco" name="Mat_Pco" class="form-control input-xs" placeholder="N˙mero Plan de Contingencia" maxlength="30">
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-xs-4 control-label label-xs">Direcci√≥n:</label>
+                <label class="col-xs-4 control-label label-xs">DirecciÛn:</label>
                 <div class="col-xs-8">
-                    <textarea id="Mat_Dir" name="Mat_Dir" class="form-control input-xs" rows="3" placeholder="Direcci√≥n"></textarea>
+                    <textarea id="Mat_Dir" name="Mat_Dir" class="form-control input-xs" rows="3" placeholder="DirecciÛn"></textarea>
                 </div>
             </div>
         </form>
@@ -2314,10 +2314,10 @@ $obBD_con1->utf8_change_param($transportes);
             <input type="hidden" id="Cho_Cod" name="Cho_Cod">
             <input type="hidden" id="Prs_Cod" name="Prs_Cod">
             <div class="form-group">
-                <label class="col-xs-4 control-label label-xs required">C√©dula:</label>
+                <label class="col-xs-4 control-label label-xs required">CÈdula:</label>
                 <div class="col-xs-8">
                     <div class="input-group input-group-xs">
-                        <input type="text" id="Cho_Ced" name="Cho_Ced" class="form-control input-xs" required placeholder="C√©dula o RUC" maxlength="13" onchange="buscarPersonaPorCedula(this.value)" onkeypress="return validar_numeric(event);">
+                        <input type="text" id="Cho_Ced" name="Cho_Ced" class="form-control input-xs" required placeholder="CÈdula o RUC" maxlength="13" onchange="buscarPersonaPorCedula(this.value)" onkeypress="return validar_numeric(event);">
                         <span class="input-group-addon validate"><i id="Cho_Ced_Est"></i></span>
                     </div>
                 </div>
@@ -2355,9 +2355,9 @@ $obBD_con1->utf8_change_param($transportes);
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-xs-4 control-label label-xs required">Tel√©fono:</label>
+                <label class="col-xs-4 control-label label-xs required">TelÈfono:</label>
                 <div class="col-xs-8">
-                    <input type="text" id="Cho_Tel" name="Cho_Tel" class="form-control input-xs" required placeholder="Tel√©fono" maxlength="20">
+                    <input type="text" id="Cho_Tel" name="Cho_Tel" class="form-control input-xs" required placeholder="TelÈfono" maxlength="20">
                 </div>
             </div>
             <div class="form-group">
@@ -2389,8 +2389,8 @@ $obBD_con1->utf8_change_param($transportes);
         </div>
     </div>
 
-    <!-- Modal Veh√≠culo -->
-    <div id="vehiculoDialog" title="Registrar Veh√≠culo" style="display: none;">
+    <!-- Modal VehÌculo -->
+    <div id="vehiculoDialog" title="Registrar VehÌculo" style="display: none;">
         <form id="vehiculoForm" class="form-horizontal normal">
             <input type="hidden" id="Veh_Cod" name="Veh_Cod">
             <div class="form-group">
@@ -2447,7 +2447,7 @@ $obBD_con1->utf8_change_param($transportes);
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-xs-4 control-label label-xs required">Tipo Veh√≠culo:</label>
+                <label class="col-xs-4 control-label label-xs required">Tipo VehÌculo:</label>
                 <div class="col-xs-8">
                     <select id="Veh_Tit" name="Veh_Tit" class="form-control input-xs" required>
                         <option value="V">VOLQUETA</option>
@@ -2508,13 +2508,13 @@ $obBD_con1->utf8_change_param($transportes);
                 </div>
             </div>
             <div class="form-group campos-detalle" style="display: none;">
-                <label class="col-xs-4 control-label label-xs required">N√∫mero/C√≥digo:</label>
+                <label class="col-xs-4 control-label label-xs required">N˙mero/CÛdigo:</label>
                 <div class="col-xs-8">
-                    <input type="text" id="Cel_Num" name="Cel_Num" class="form-control input-xs" placeholder="N√∫mero o c√≥digo de celda" maxlength="8">
+                    <input type="text" id="Cel_Num" name="Cel_Num" class="form-control input-xs" placeholder="N˙mero o cÛdigo de celda" maxlength="8">
                 </div>
             </div>
             <div class="form-group campos-detalle" style="display: none;">
-                <label class="col-xs-4 control-label label-xs required">Ubicaci√≥n:</label>
+                <label class="col-xs-4 control-label label-xs required">UbicaciÛn:</label>
                 <div class="col-xs-8">
                     <input type="text" id="Cel_Ubi" name="Cel_Ubi" class="form-control input-xs" placeholder="X,Y" maxlength="20">
                 </div>
@@ -2526,17 +2526,17 @@ $obBD_con1->utf8_change_param($transportes);
         </div>
     </div>
 
-    <!-- Di√°logos de b√∫squeda para Sanciones -->
-    <div id="vehSancionDialog" title="Buscar Veh√≠culo"></div>
+    <!-- Di·logos de b˙squeda para Sanciones -->
+    <div id="vehSancionDialog" title="Buscar VehÌculo"></div>
     <div id="choferSancionDialog" title="Buscar Chofer"></div>
     <div id="plantaSancionDialog" title="Buscar Planta"></div>
 
-    <!-- Modal Sanci√≥n Veh√≠culo -->
-    <div id="sancionVehiculoDialog" title="Sanci√≥n - Veh√≠culo" style="display: none;">
+    <!-- Modal SanciÛn VehÌculo -->
+    <div id="sancionVehiculoDialog" title="SanciÛn - VehÌculo" style="display: none;">
         <form id="sancionVehiculoForm" class="form-horizontal normal">
             <input type="hidden" id="sancionVeh_Msa_Cod" name="Msa_Cod">
             <div class="form-group">
-                <label class="col-xs-4 control-label label-xs required">Placa Veh√≠culo:</label>
+                <label class="col-xs-4 control-label label-xs required">Placa VehÌculo:</label>
                 <div class="col-xs-8">
                     <div class="input-group input-group-xs">
                         <input name="Veh_Pla" id="search_veh_sancion" type="text" placeholder="Ingrese placa (ej: ABC-1234)" class="form-control input-xs" maxlength="8" onkeydown="if (event.keyCode === 13) { event.preventDefault(); buscarVehiculoPorPlacaSancion(); }" onkeyup="this.value = this.value.toUpperCase();" />
@@ -2546,7 +2546,7 @@ $obBD_con1->utf8_change_param($transportes);
                     </div>
                     <input type="hidden" id="sancionVeh_Veh_Cod" name="Veh_Cod" />
                 </div>
-                <label class="col-xs-4 control-label label-xs required">Veh√≠culo:</label>
+                <label class="col-xs-4 control-label label-xs required">VehÌculo:</label>
                 <div class="col-xs-8">
                     <span id="sancionVeh_Veh_Pla" class="form-control input-xs databind help-block" style="margin: 2px 0 0 0; font-size: 11px;"></span>
                     <span id="sancionVeh_sancionesAnio" class="help-block" style="margin: 2px 0 0 0; font-size: 11px;"></span>
@@ -2565,9 +2565,9 @@ $obBD_con1->utf8_change_param($transportes);
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-xs-4 control-label label-xs">Observaci√≥n:</label>
+                <label class="col-xs-4 control-label label-xs">ObservaciÛn:</label>
                 <div class="col-xs-8">
-                    <textarea id="sancionVeh_Msa_Obs" name="Msa_Obs" class="form-control input-xs" rows="2" maxlength="500" placeholder="Observaci√≥n"></textarea>
+                    <textarea id="sancionVeh_Msa_Obs" name="Msa_Obs" class="form-control input-xs" rows="2" maxlength="500" placeholder="ObservaciÛn"></textarea>
                 </div>
             </div>
         </form>
@@ -2577,8 +2577,8 @@ $obBD_con1->utf8_change_param($transportes);
         </div>
     </div>
 
-    <!-- Modal Sanci√≥n Chofer -->
-    <div id="sancionChoferDialog" title="Sanci√≥n - Chofer" style="display: none;">
+    <!-- Modal SanciÛn Chofer -->
+    <div id="sancionChoferDialog" title="SanciÛn - Chofer" style="display: none;">
         <form id="sancionChoferForm" class="form-horizontal normal">
             <input type="hidden" id="sancionCho_Msa_Cod" name="Msa_Cod">
             <div class="form-group">
@@ -2594,7 +2594,7 @@ $obBD_con1->utf8_change_param($transportes);
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-xs-4 control-label label-xs">C√©dula:</label>
+                <label class="col-xs-4 control-label label-xs">CÈdula:</label>
                 <div class="col-xs-8">
                     <span id="sancionCho_Prs_Ced" class="form-control input-xs databind"></span>
                     <span id="sancionCho_sancionesAnio" class="help-block" style="margin: 2px 0 0 0; font-size: 11px;"></span>
@@ -2614,9 +2614,9 @@ $obBD_con1->utf8_change_param($transportes);
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-xs-4 control-label label-xs">Observaci√≥n:</label>
+                <label class="col-xs-4 control-label label-xs">ObservaciÛn:</label>
                 <div class="col-xs-8">
-                    <textarea id="sancionCho_Msa_Obs" name="Msa_Obs" class="form-control input-xs" rows="2" maxlength="500" placeholder="Observaci√≥n"></textarea>
+                    <textarea id="sancionCho_Msa_Obs" name="Msa_Obs" class="form-control input-xs" rows="2" maxlength="500" placeholder="ObservaciÛn"></textarea>
                 </div>
             </div>
         </form>
@@ -2626,8 +2626,8 @@ $obBD_con1->utf8_change_param($transportes);
         </div>
     </div>
 
-    <!-- Modal Sanci√≥n Planta -->
-    <div id="sancionPlantaDialog" title="Sanci√≥n - Planta" style="display: none;">
+    <!-- Modal SanciÛn Planta -->
+    <div id="sancionPlantaDialog" title="SanciÛn - Planta" style="display: none;">
         <form id="sancionPlantaForm" class="form-horizontal normal">
             <input type="hidden" id="sancionPla_Msa_Cod" name="Msa_Cod">
             <div class="form-group">
@@ -2643,7 +2643,7 @@ $obBD_con1->utf8_change_param($transportes);
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-xs-4 control-label label-xs">C√©dula cliente:</label>
+                <label class="col-xs-4 control-label label-xs">CÈdula cliente:</label>
                 <div class="col-xs-8">
                     <span id="sancionPla_Prs_Ced" class="form-control input-xs databind"></span>
                     <span id="sancionPla_sancionesAnio" class="help-block" style="margin: 2px 0 0 0; font-size: 11px;"></span>
@@ -2662,9 +2662,9 @@ $obBD_con1->utf8_change_param($transportes);
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-xs-4 control-label label-xs">Observaci√≥n:</label>
+                <label class="col-xs-4 control-label label-xs">ObservaciÛn:</label>
                 <div class="col-xs-8">
-                    <textarea id="sancionPla_Msa_Obs" name="Msa_Obs" class="form-control input-xs" rows="2" maxlength="500" placeholder="Observaci√≥n"></textarea>
+                    <textarea id="sancionPla_Msa_Obs" name="Msa_Obs" class="form-control input-xs" rows="2" maxlength="500" placeholder="ObservaciÛn"></textarea>
                 </div>
             </div>
         </form>
@@ -2704,10 +2704,10 @@ $obBD_con1->utf8_change_param($transportes);
         </div>
     </div>
 
-    <!-- Div oculto para imprimir veh√≠culos -->
+    <!-- Div oculto para imprimir vehÌculos -->
     <div id="imprimirVehiculos" style="display: none;">
         <div style="width: 1030px;">
-            <?php echo $obBD_con1->getReportHeader($Ses_Suc_Cod, 'REPORTE DE VEH√çCULOS', '<span class="subtitle">Listado de Veh√≠culos</span>', $obBD_conexion) ?>
+            <?php echo $obBD_con1->getReportHeader($Ses_Suc_Cod, 'REPORTE DE VEHÕCULOS', '<span class="subtitle">Listado de VehÌculos</span>', $obBD_conexion) ?>
             <table id="tablaReporteVehiculos" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse;table-layout:auto;font-size:12px;"></table>
             <?php echo $obBD_con1->getReportFooter($Ses_Suc_Cod, $Ses_Usu_Cod, $obBD_conexion); ?>
         </div>

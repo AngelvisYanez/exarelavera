@@ -17,10 +17,8 @@ if(isset($ajax_mod_cod))
 			 }while($row_rs_etapas=mysqli_fetch_assoc($rs_etapas));  ?>
           </select>
 <?Php
- 	@mysqli_free_result($rs_etapas);
 	exit();
 }//Fin del if(isset($ajax_mod_cod))
-
 /* Cargado de los periodo */
 if(isset($ajax_periodo))
 {
@@ -48,10 +46,8 @@ if(isset($ajax_periodo))
 			caducado!</span>";
 		 }//Fin del if ($total_rs_periodo == 0)
 	 }//Fin del if ($Eta_Cod != "")
-	 @mysqli_free_result($rs_periodo);
 	 exit();
 }//Fin del if(isset($ajax_periodo))
-
 /* Consulta las carreras en base a la etapa */
 if(isset($ajax_carrera))
 {	
@@ -66,7 +62,6 @@ if(isset($ajax_carrera))
 	/* Consultar las carreras por etapa a las cuales no se ha inscrito el estudiante */
 	$rs_carreras_etapa=$obBD_con1->consulta(sentencias_com(5, $obBD_con1->parametros($Cod_Eta.'*'.$Est_Int.'*'.$Per_Int)), $obBD_conexion->conexion);
 	$row_rs_carrera_etapa = $obBD_con1->registros();
-	
 	?>
 	<select name="Car_Int" id="Car_Int" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_nivel=1&Eta_Cod=<?Php echo $Eta_Cod; ?>&Mod_Cod=<?Php echo $Mod_Cod; ?>&Per_Int=<?Php echo $Per_Int; ?>&Car_Int='+this.value, 'div_curso')">
            <option></option>
@@ -74,13 +69,10 @@ if(isset($ajax_carrera))
 		   <option value="<?Php echo $row_rs_carrera_etapa['Car_Int'];  ?>"> <?Php echo $row_rs_carrera_etapa['Car_Nom']; ?>
 		   </option>
 		   <?Php } while($row_rs_carrera_etapa=mysqli_fetch_assoc($rs_carreras_etapa)); ?>
-		   
     </select>
 	<?Php
-	@mysqli_free_result($rs_carreras_etapa);
 	exit();
 }//Fin del if(isset($ajax_carrera))
-
 /* Consultar los curso activos */	
 if(isset($ajax_nivel))
 {
@@ -105,7 +97,6 @@ if(isset($ajax_nivel))
 	 		echo "<span class='Texto_Reporte_Rojo'>¡No existen Cursos aperturados!</span>";
 		 }//Fin del if ($total_rs_periodo == 0)
 	 }//Fin del if ($Eta_Cod != "")	
-	@mysqli_free_result($rs_semestres);
 	 exit();
 }//Fin del if(isset($ajax_nivel))
 ?>

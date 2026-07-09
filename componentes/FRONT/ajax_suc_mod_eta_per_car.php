@@ -30,12 +30,10 @@ if(isset($ajax_suc_cod))
 3 = Etapas semestrales -->
       <input name="hdd_sql" type="hidden" id="hdd_sql" value="3">
 <?Php
- 	@mysqli_free_result($rs_modalidad);
 	exit();
 }
 ?>
 <?Php
-
 /* Cargar datos con AJAX  */
 if(isset($ajax_mod_cod))
 {   /* Cargado de etapas */
@@ -52,16 +50,13 @@ if(isset($ajax_mod_cod))
 			 }while($row_rs_etapas=mysqli_fetch_assoc($rs_etapas));  ?>
           </select>
 <?Php
- 	@mysqli_free_result($rs_etapas);
 	exit();
 }//Fin del if(isset($ajax_mod_cod))
-
 /* Cargado de los periodo */
 if(isset($ajax_periodo))
 {	 //echo $Suc_Cod;
 	 $hoy = date("Y-m-d");
 	 //$hoy='2008-07-25';
-	 
      $Eta_Arr = explode('*',$Eta_Cod);
 	 $rs_periodos = $obBD_con1->consulta(sentencias_com(105, $obBD_con1->parametros($Eta_Arr[0].'*'.$Mod_Cod.'*'.$hoy.'*'.$Suc_Cod)), $obBD_conexion->conexion);
 	 $row_rs_periodo = $obBD_con1->registros();
@@ -85,10 +80,8 @@ if(isset($ajax_periodo))
 			caducado!</span>";
 		 }//Fin del if ($total_rs_periodo == 0)
 	 }//Fin del if ($Eta_Cod != "")
-	 @mysqli_free_result($rs_periodo);
 	 exit();
 }//Fin del if(isset($ajax_periodo))
-
 /* Consulta las carreras en base a la etapa */
 if(isset($ajax_carrera))
 {	/* Control para saber las carreras de cada etapa */
@@ -99,27 +92,21 @@ if(isset($ajax_carrera))
 	}else{ 
 		$Cod_Eta=$Eta_Arr[0]; 
 	}
-
 	/* Consultar las carreras por etapa a las cuales no se ha inscrito el estudiante */
 	$rs_carreras_etapa=$obBD_con1->consulta(sentencias_com(102, $obBD_con1->parametros($Cod_Eta.'*'.$Per_Int)), $obBD_conexion->conexion);
 	$row_rs_carrera_etapa = $obBD_con1->registros();
-	
 	?>
 	<select name="Car_Int" id="Car_Int" 
-    
     >
            <option></option>
 		   <?Php do { ?>
 		   <option value="<?Php echo $row_rs_carrera_etapa['Car_Int'];  ?>"> <?Php echo $row_rs_carrera_etapa['Car_Nom']; ?>
 		   </option>
 		   <?Php } while($row_rs_carrera_etapa=mysqli_fetch_assoc($rs_carreras_etapa)); ?>
-		   
     </select>
 	<?Php
-	@mysqli_free_result($rs_carreras_etapa);
 	exit();
 }//Fin del if(isset($ajax_carrera))
-
 /* Consultar los curso activos */	
 if(isset($ajax_nivel))
 {
@@ -144,7 +131,6 @@ if(isset($ajax_nivel))
 	 		echo "<span class='Texto_Reporte_Rojo'>¡No existen Cursos aperturados!</span>";
 		 }//Fin del if ($total_rs_periodo == 0)
 	 }//Fin del if ($Eta_Cod != "")	
-	@mysqli_free_result($rs_semestres);
 	 exit();
 }//Fin del if(isset($ajax_nivel))
 ?>

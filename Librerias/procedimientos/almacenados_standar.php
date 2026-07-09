@@ -1,5 +1,4 @@
 <?Php
-
 /*Configuracion de la zona horaria de Ecuador*/
 date_default_timezone_set("America/Lima");
 if(!isset($hoy)) $hoy = date("Y-m-d");
@@ -17,7 +16,6 @@ function simplexml_insert_after(SimpleXMLElement $insert, SimpleXMLElement $targ
         return $target_dom->parentNode->insertBefore($insert_dom, $target_dom->nextSibling);
     } else {return $target_dom->parentNode->appendChild($insert_dom); }
 }
-
 function convertirMoneda($from,$to,$amount){
 	 $url = "http://www.google.com/finance/converter?a=1&from=$from&to=$to";
 	 $regularExpression     = '#\<span class=bld\>(.+?)\<\/span\>#s'; $request = curl_init(); $timeOut = 0;
@@ -34,8 +32,6 @@ function convertirMoneda($from,$to,$amount){
 	 $change['result']=$amount*$change['rate'];
 	 return $change;
 }
-
-
 function reporteHtml($params,$templatePath){
 	if (!is_file($templatePath)){ throw new Exception('No se ha encontrado la plantilla!'); }
 	$templateTxt = file_get_contents($templatePath);
@@ -44,8 +40,6 @@ function reporteHtml($params,$templatePath){
 	} 
 	return $templateTxt;
 }
-
-
 function reporteArray($params,$templateTxt){
 	foreach ($params as $key => $value) {
 		$templateTxt = str_replace($key, $value, $templateTxt);
@@ -88,7 +82,6 @@ function utf8_encode_trim_deep(&$input){
         foreach ($vars as $var) { utf8_encode_trim_deep($input->$var); }
     }
 }
-
 function sql_conjunction($list, $prefix, $conjunction = 'OR', $init='AND') {
   if(is_string($list)) $list=array(0=>$list);
   if (is_array($list)&&count($list)>0) {
@@ -103,13 +96,11 @@ function pages($count,$page,$limit){
         $start = $limit * $page - $limit;
         if($start < 0) {$start = 0;}
         $limits=" LIMIT {$start}, {$limit}";
-
 		$responce['data']['rows']=NULL;
         $responce['data']['page'] = $page;
         $responce['data']['total'] = $total_pages;
         $responce['data']['records'] = $count;
         $responce['limits'] = $limits;
-
 		return $responce;
 }
 function startsWith($haystack, $needle) { // search backwards starting from haystack length characters from the end
@@ -184,7 +175,6 @@ function baseUrl($page=NULL,$atRoot=FALSE,$parse=FALSE){
         $http = ($httpsVar || strlen($httpsVar) >0) && strtolower(filter_input(INPUT_SERVER,'HTTPS')) !== 'off' ? 'https' : 'http';
         $hostname = filter_input(INPUT_SERVER,'HTTP_HOST');
         $dir =  str_replace(basename(filter_input(INPUT_SERVER,'SCRIPT_NAME')), '', filter_input(INPUT_SERVER,'SCRIPT_NAME'));
-
         $tmplt = $atRoot ? ("%s://%s/") : ("%s://%s%s");
         $end = $atRoot ? ($hostname) : ($dir);
         $base_url = sprintf( $tmplt, $http, $hostname, $end );
@@ -204,7 +194,6 @@ function days_360($fecha1,$fecha2,$europeo=true) {
   list($yy1, $mm1, $dd1) = explode('-', $fecha1); // get day month year...
   list($yy2, $mm2, $dd2) = explode('-', $fecha2); //
   if (!checkdate($mm1,$dd1,$yy1)||!checkdate($mm2,$dd2,$yy2)){return(-1);} // invalid date
-
   if( $dd1==31) { $dd1 = 30; }
   if(!$europeo) { //checks according standars: 30E/360 or 30/360.
     if( ($dd1==30) && ($dd2==31) ) {  $dd2=30; }
@@ -215,7 +204,6 @@ function days_360($fecha1,$fecha2,$europeo=true) {
       ($yy1>$yy2) ) { return(-1); } //check for invalid
   if( ($yy1==$yy2) && ($mm1>$mm2) ) { return(-1); } // error
   if( ($yy1==$yy2) && ($mm1==$mm2) && ($dd1>$dd2) ) { return(-1); } // error
-
   $yy = $yy2-$yy1; //Calc
   $mm = $mm2-$mm1; //
   $dd = $dd2-$dd1; //
@@ -260,7 +248,6 @@ function cortar_cadena($ini, $fin, $cadena){
 		$cortar = $cortar.$cadena[$i];
 	} return $cortar;
 }
-
 //funcion que permite cortar una cadena de texto en base a un parametro
 function cortar_cadena_param($param, $cadena)
 {
@@ -271,7 +258,6 @@ function cortar_cadena_param($param, $cadena)
 	}
 	return $cortar;
 }
-
 /* Funcion que devuelve la cantidad de registros encontrados */
 function barra_estado($can_registros)
 {
@@ -296,7 +282,6 @@ function mensaje_lista()
 		  </tr>
   		</table>";
 }
-
 /* Funcion que cambia el semestre de letras a numeros */
 function semestre_num($sem)
 {
@@ -337,7 +322,6 @@ function semestre_num($sem)
 	}
 	return $nivel;
 }
-
 /* Funcion que devuelve un mensaje de error aplicando una imagen */
 function error_alerta($mensaje, $tipo, $new_alert=false, $title=''){
 	switch ($tipo){
@@ -359,8 +343,6 @@ function error_alerta($mensaje, $tipo, $new_alert=false, $title=''){
                         <span class="info-tab" title="'.$tooltip.'"><i class="fa fa-'.$icon.'"></i>&nbsp;</span><span '.(!$new_alert&&empty($title)?'style="font-weight: bold;padding: 0 10px; font-size: 13px; line-height: 2.7em;"':'').'><strong>'.(empty($title)?($new_alert?'SISTEMA: ':''):$title.': ').'</strong>'.$mensaje.'</span></div></div>';
 	return $err;
 }
-
-
 //Funcion que devuelve los semestres en base a una carrera y periodo
 function semestres_car_per($Car_Int, $Per_Int)
 {
@@ -371,7 +353,6 @@ function semestres_car_per($Car_Int, $Per_Int)
 						$Car_Int AND promocione.Pro_Dis = 'V' AND semestres.Per_Int = $Per_Int AND semestres.Per_Int =
 						periodos.Per_Int ORDER BY semestres.Niv_Cod, semestres.Sem_Par, Sem_Sec");
 	return $rs_semestres;
-	mysqli_free_result ($rs_semestres);
 }
 //Funcion que devuelve las carreras las cuales esta cursando el estudiante
 function estudiante_carreras($Est_Ced)
@@ -382,20 +363,15 @@ function estudiante_carreras($Est_Ced)
 						AND persona.Prs_Ced = '$Est_Ced' AND persona.Prs_Cod = estudiante.Prs_Cod AND estudiante.Est_Est = 'A' GROUP BY Car_Int,
 						Car_Nom, Est_Int, persona.Prs_Ced, persona.Prs_Nom, persona.Prs_Ape");
 	return $rs_existe;
-	mysqli_free_result($rs_existe);
 }
-
 function centimos()
 {
 global $importe_parcial;
-
 $importe_parcial = number_format($importe_parcial, 2, ".", "") * 100;
-
 if ($importe_parcial > 0)
 $num_letra = " con ".decena_centimos($importe_parcial);
 else
 $num_letra = "";
-
 return $num_letra;
 } function unidad_centimos($numero)
 {
@@ -606,49 +582,42 @@ return $num;
 if ($numero >= 90 && $numero <= 99)
 {
 $num_letra = "noventa ";
-
 if ($numero > 90)
 $num_letra = $num_letra."y ".unidad($numero - 90);
 }
 else if ($numero >= 80 && $numero <= 89)
 {
 $num_letra = "ochenta ";
-
 if ($numero > 80)
 $num_letra = $num_letra."y ".unidad($numero - 80);
 }
 else if ($numero >= 70 && $numero <= 79)
 {
 $num_letra = "setenta ";
-
 if ($numero > 70)
 $num_letra = $num_letra."y ".unidad($numero - 70);
 }
 else if ($numero >= 60 && $numero <= 69)
 {
 $num_letra = "sesenta ";
-
 if ($numero > 60)
 $num_letra = $num_letra."y ".unidad($numero - 60);
 }
 else if ($numero >= 50 && $numero <= 59)
 {
 $num_letra = "cincuenta ";
-
 if ($numero > 50)
 $num_letra = $num_letra."y ".unidad($numero - 50);
 }
 else if ($numero >= 40 && $numero <= 49)
 {
 $num_letra = "cuarenta ";
-
 if ($numero > 40)
 $num_letra = $num_letra."y ".unidad($numero - 40);
 }
 else if ($numero >= 30 && $numero <= 39)
 {
 $num_letra = "treinta ";
-
 if ($numero > 30)
 $num_letra = $num_letra."y ".unidad($numero - 30);
 }
@@ -717,7 +686,6 @@ break;
 }
 else
 $num_letra = unidad($numero);
-
 return $num_letra;
 } function centena($numero)
 {
@@ -726,56 +694,48 @@ if ($numero >= 100)
 if ($numero >= 900 & $numero <= 999)
 {
 $num_letra = "novecientos ";
-
 if ($numero > 900)
 $num_letra = $num_letra.decena($numero - 900);
 }
 else if ($numero >= 800 && $numero <= 899)
 {
 $num_letra = "ochocientos ";
-
 if ($numero > 800)
 $num_letra = $num_letra.decena($numero - 800);
 }
 else if ($numero >= 700 && $numero <= 799)
 {
 $num_letra = "setecientos ";
-
 if ($numero > 700)
 $num_letra = $num_letra.decena($numero - 700);
 }
 else if ($numero >= 600 && $numero <= 699)
 {
 $num_letra = "seiscientos ";
-
 if ($numero > 600)
 $num_letra = $num_letra.decena($numero - 600);
 }
 else if ($numero >= 500 && $numero <= 599)
 {
 $num_letra = "quinientos ";
-
 if ($numero > 500)
 $num_letra = $num_letra.decena($numero - 500);
 }
 else if ($numero >= 400 && $numero <= 499)
 {
 $num_letra = "cuatrocientos ";
-
 if ($numero > 400)
 $num_letra = $num_letra.decena($numero - 400);
 }
 else if ($numero >= 300 && $numero <= 399)
 {
 $num_letra = "trescientos ";
-
 if ($numero > 300)
 $num_letra = $num_letra.decena($numero - 300);
 }
 else if ($numero >= 200 && $numero <= 299)
 {
 $num_letra = "doscientos ";
-
 if ($numero > 200)
 $num_letra = $num_letra.decena($numero - 200);
 }
@@ -789,49 +749,37 @@ $num_letra = "ciento ".decena($numero - 100);
 }
 else
 $num_letra = decena($numero);
-
 return $num_letra;
 } function cien()
 {
 global $importe_parcial;
-
 $parcial = 0; $car = 0;
-
 while (substr($importe_parcial, 0, 1) == 0)
 $importe_parcial = substr($importe_parcial, 1, strlen($importe_parcial) - 1);
-
 if ($importe_parcial >= 1 && $importe_parcial <= 9.99)
 $car = 1;
 else if ($importe_parcial >= 10 && $importe_parcial <= 99.99)
 $car = 2;
 else if ($importe_parcial >= 100 && $importe_parcial <= 999.99)
 $car = 3;
-
 $parcial = substr($importe_parcial, 0, $car);
 $importe_parcial = substr($importe_parcial, $car);
-
 $num_letra = centena($parcial).centimos();
-
 return $num_letra;
 } function cien_mil()
 {
 global $importe_parcial;
-
 $parcial = 0; $car = 0;
-
 while (substr($importe_parcial, 0, 1) == 0)
 $importe_parcial = substr($importe_parcial, 1, strlen($importe_parcial) - 1);
-
 if ($importe_parcial >= 1000 && $importe_parcial <= 9999.99)
 $car = 1;
 else if ($importe_parcial >= 10000 && $importe_parcial <= 99999.99)
 $car = 2;
 else if ($importe_parcial >= 100000 && $importe_parcial <= 999999.99)
 $car = 3;
-
 $parcial = substr($importe_parcial, 0, $car);
 $importe_parcial = substr($importe_parcial, $car);
-
 if ($parcial > 0)
 {
 if ($parcial == 1)
@@ -839,39 +787,30 @@ $num_letra = "mil ";
 else
 $num_letra = centena($parcial)." mil ";
 }
-
 return $num_letra;
 } function millon()
 {
 global $importe_parcial;
-
 $parcial = 0; $car = 0;
-
 while (substr($importe_parcial, 0, 1) == 0)
 $importe_parcial = substr($importe_parcial, 1, strlen($importe_parcial) - 1);
-
 if ($importe_parcial >= 1000000 && $importe_parcial <= 9999999.99)
 $car = 1;
 else if ($importe_parcial >= 10000000 && $importe_parcial <= 99999999.99)
 $car = 2;
 else if ($importe_parcial >= 100000000 && $importe_parcial <= 999999999.99)
 $car = 3;
-
 $parcial = substr($importe_parcial, 0, $car);
 $importe_parcial = substr($importe_parcial, $car);
-
 if ($parcial == 1)
 $num_letras = "un millï¿½n ";
 else
 $num_letras = centena($parcial)." millones ";
-
 return $num_letras;
 } function convertir_a_letras($numero)
 {
 global $importe_parcial;
-
 $importe_parcial = $numero;
-
 if ($numero < 1000000000)
 {
 if ($numero >= 1000000 && $numero <= 999999999.99)
@@ -890,8 +829,6 @@ $num_letras = convertir_a_letras(($numero * 100)."/100")." centavos";
 }
 return $num_letras;
 }
-
-
 /*!
   @function num2letras ()
   @abstract Dado un n?mero lo devuelve escrito.
@@ -899,7 +836,6 @@ return $num_letras;
   @param $fem bool - Forma femenina (true) o no (false).
   @param $dec bool - Con decimales (true) o no (false).
   @result string - Devuelve el n?mero escrito en letra.
-
 */
 function num2letras($num, $fem = false, $dec = false) {
    if(empty($num)) return '';
@@ -923,7 +859,6 @@ function num2letras($num, $fem = false, $dec = false) {
    $matuni[18] = "dieciocho";
    $matuni[19] = "diecinueve";
    $matuni[20] = "veinte";
-
    if(is_numeric($num)) $num = trim((string)$num);
    if ($num[0] == '-') { $neg = 'menos '; $num = substr($num, 1); }else $neg = '';
    while ($num[0] == '0'){ $num = substr($num, 1); }
@@ -978,7 +913,6 @@ function num2letras($num, $fem = false, $dec = false) {
    $tex = $neg . substr($tex, 1) . $fin;
    return mb_convert_encoding(ucfirst($tex), 'UTF-8', 'ISO-8859-1');
 }
-
 /* Funcion que mueve el apuntador de la consulta al inicio */
 function first_last($rs, $row_rs, $pos)
 {
@@ -989,7 +923,6 @@ function first_last($rs, $row_rs, $pos)
 	}
 	return $row_rs;
 }
-
 //Funcion que devuelve una cadena de parametros para iniciar la busqueda de un sql
 function envio_parametros($cant, $Niv_Cod)
 {
@@ -1003,7 +936,6 @@ function envio_parametros($cant, $Niv_Cod)
 	}
 	return $cod2;
 }
-
 /* Funcion que crea pestaï¿½as diamicas */
 function links($tamaï¿½o, $nombres, $vinculo)
 {
@@ -1019,7 +951,6 @@ function links($tamaï¿½o, $nombres, $vinculo)
     echo   "</tr>
           </table>";
 }//background='../../layers/model1/pestanas/pestana1.JPG' style='background-repeat:no-repeat'
-
 /* Funcion que crea pestaï¿½as diamicas */
 function tabs($tamaï¿½o, $nombres, $vinculo, $activo)
 {
@@ -1035,7 +966,6 @@ function tabs($tamaï¿½o, $nombres, $vinculo, $activo)
 			 }
     echo   "</ul>";
 }
-
 /*funcioin para detectar que es celular*/
 function detectar_acceso()
 {
@@ -1047,7 +977,6 @@ function detectar_acceso()
 	  }
 	  else {
 		$browser=isset($HTTP_USER_AGENT)?substr(trim($HTTP_USER_AGENT),0,4):'';
-
 		if($browser=="Noki" || // Telï¿½fonos Nokia y emuladores
 		  $browser=="Eric" || // Ericsson WAP telï¿½fonos y emuladores
 		  $browser=="WapI" || // Ericsson WapIDE 2.0
@@ -1079,7 +1008,6 @@ function detectar_acceso()
 	  }
 	 return $Br;
 }
-
 /* Funcion que cambia de numeros decimales a romanos */
 function decimal_romano($numero)
 {
@@ -1094,7 +1022,6 @@ $numerosromanos=array(1000,500,100,50,10,5,1);
 $numeroletrasromanas=array("M"=>1000,"D"=>500,"C"=>100,"L"=>
 50,"X"=>10,"V"=>5,"I"=>1);
 $letrasromanas=array_keys($numeroletrasromanas);
-
 while($numero)
 {
 for($pos=0;$pos<=6;$pos++)
@@ -1142,7 +1069,6 @@ $var=str_replace($cadenaant,$cadenanueva,$var);
 } }
 return $var;
 }
-
 function busqueda($cadenanueva,$array)
 {
 foreach($array as $contenido)
@@ -1153,7 +1079,6 @@ return $pos;
 }
 $pos++;
 } }
-
 function paleta($campo)
 {
 ?>
@@ -1376,11 +1301,9 @@ function paleta($campo)
   href="javascript:showColor('<?Php echo $campo ?>','#FF00FF')"></MAP>
 <?Php
 }
-
 /*Esta funciï¿½n calcula el nï¿½mero de dï¿½a de la semana de una fecha indicada por parï¿½metro. El nï¿½mero de dï¿½a
 de la semana que devuelve corresponde con 0 en el caso de que la fecha sea un lunes, 1 en caso de ser martes, y asï¿½ hasta
 llegar al 6, que corresponde con el domingo. */
-
 function calcula_numero_dia_semana($dia,$mes,$ano){
     $numerodiasemana = date('w', mktime(0,0,0,$mes,$dia,$ano));
     if ($numerodiasemana == 0)
@@ -1389,7 +1312,6 @@ function calcula_numero_dia_semana($dia,$mes,$ano){
        $numerodiasemana--;
     return $numerodiasemana;
 }
-
 //*********************Devuelve el dia en palabras de acuerdo al numero de dia***************************************
 function dias($dias, $tipo){
     if($dias<0||$meses>6) return '';
@@ -1405,10 +1327,8 @@ function dias($dias, $tipo){
 	}
 	return $array_dias1[$dias];
 }
-
 /*Sirve para devolver el ï¿½ltimo dï¿½a de un mes y aï¿½o indicados por parï¿½metro. El ï¿½ltimo dï¿½a del mes se refiere al nï¿½mero de
 dï¿½as que tiene un mes. Por ejemplo en enero 31, febrero 28 ï¿½ 29, ... diciembre 31. */
-
 function ultimoDia($mes,$anio){
     $ultimo_dia=28;
     while (checkdate($mes,$ultimo_dia + 1,$anio)){
@@ -1416,7 +1336,6 @@ function ultimoDia($mes,$anio){
     }
     return $ultimo_dia;
 }
-
 /* Funcion que quita la coma decimal del un valor */
 function ndecimal($valor)
 {
@@ -1427,7 +1346,6 @@ function ndecimal($valor)
 	}
 	return $base;
 }
-
 /* Funcion que formatea los numeros segun el formato */
 function formato_numero($numero, $decimales, $tipo)
 {
@@ -1448,13 +1366,9 @@ function formato_numero($numero, $decimales, $tipo)
 				Ejemplo : 5.000,45 */
 			$f_numero = number_format($numero,$decimales,',','.');
 		break;
-
-
 	}//Fin del switch ($tipo)
-
 	return $f_numero;
 }
-
 /* Funcion para marcar las palabras buscadas en una cadena de texto */
 /* $busqueda = texto buscado
    $cadena = texto encontrado para poder marcarlo de color
@@ -1472,7 +1386,6 @@ function marcar_cadena($busqueda, $cadena, $color, $cambio)
 		$no_cadena=explode(' ',trim($cadena));
 		/* Divide la cadena en arreglos */
 		$a_busqueda=explode(' ',strtolower(trim($busqueda)));
-
 		$texto_final = "";
 		$i=0;
 		//foreach($a_cadena as $valor_c)
@@ -1495,7 +1408,6 @@ function marcar_cadena($busqueda, $cadena, $color, $cambio)
 							{
 								$valor_c = cambio_cadena($cambio,$valor_c);
 							}
-
 							$texto_color[$i] = "<font style='background:".$color."'>".$valor_c."</font>";
 							break;
 						}
@@ -1507,7 +1419,6 @@ function marcar_cadena($busqueda, $cadena, $color, $cambio)
 				}//Fin del foreach($busqueda_texto as $valor_c)
 			}//Fin del if (trim($valor_c) != "")
 		}//Fin del foreach($a_busqueda as $valor_b)
-
 		if (isset($texto_color))
 		{
 			foreach($texto_color as $valor)
@@ -1522,7 +1433,6 @@ function marcar_cadena($busqueda, $cadena, $color, $cambio)
 		return $cadena;
 	}
 }//Fin del function marcar_cadena($busqueda, $cadena, $color)
-
 /* Funcion que cambia caracteres especiales de MAYUSCULAS -> minusculas y
 viceversa */
 function caracteres_especiales($cadena, $tipo)
@@ -1530,7 +1440,6 @@ function caracteres_especiales($cadena, $tipo)
 	/* Tipo de cambio
 	1 = MAYUSCULA -> minuscula
 	2 = minuscula -> MAYUSCULA */
-
 	/* Caracteres especiales minusculas*/
 	$caracter[]="ï¿½";
 	$caracter[]="ï¿½";
@@ -1545,8 +1454,6 @@ function caracteres_especiales($cadena, $tipo)
 	$CARACTER[]="ï¿½";
 	$CARACTER[]="ï¿½";
 	$CARACTER[]="ï¿½";
-
-
 	for ($i=0; $i<=count($caracter)-1; $i++)
 	{
 		switch ($tipo){
@@ -1558,10 +1465,8 @@ function caracteres_especiales($cadena, $tipo)
 		  break;
 		 }//Fin del switch ($tipo)
 	}//Fin de for ($i=0; $i<=count($caracter)-1; $i++)
-
 	return $cadena;
 }//Fin del function caracteres_especiales($cadena)
-
 /* Pemirte cambiar el aspecto de cadena de texto */
 function cambio_cadena($tipo, $cadena)
 {
@@ -1586,7 +1491,6 @@ function cambio_cadena($tipo, $cadena)
 	}//Fin del switch ($tipo)
 	return $retorno;
 }
-
 /* Funcion que determina la edad de una persona */
 function edad($anio_nac, $mes_nac, $dia_nac)
 {
@@ -1609,7 +1513,6 @@ function edad($anio_nac, $mes_nac, $dia_nac)
 	$an1=$an1-$anio_nac;
 	return $an1.' aï¿½os '.$mss.' mes(es)';
 }//Fin del edad($anio_nac, $mes_nac, $dia_nac)
-
 /* Funcion que devuelve una cadena de parametros para iniciar la busqueda de un sql */
 function submit_parametros($cant, $arreglo)
 {
@@ -1624,7 +1527,6 @@ function submit_parametros($cant, $arreglo)
 	}//Fin del for ($i=1;$i<=$cant;$i++)
 	return $cod2;
 }//Fin del function submit_parametros($cant, $arreglo)
-
 /*Funcion que devuelve fechas futuras a partir de una fecha y un incremento*/
 function fechas_futuras($fecha, $incremento)
 {
@@ -1632,21 +1534,17 @@ function fechas_futuras($fecha, $incremento)
 	$fecha_fut = date( "Y-m-d", mktime(0,0,0,$mes, $dia + $incremento, $ann));
 	return $fecha_fut;
 }//Fin del function fechas_futuras($fecha, $incremento)
-
 /* Funcion que corta una cadena y agrega al final 3 puntos suspesivos */
 function cadena_mas($cadena, $cant_caracter)
 {
 	$cadena_total = strlen($cadena);
 	$cortar_cadena = substr ($cadena, 0, $cant_caracter);
-
 	if ($cadena_total > $cant_caracter)
 	{
 	  	$cortar_cadena = $cortar_cadena."...";
 	}//Fin del  if ($cadena_total > $cant_cadena)
-
 	return $cortar_cadena;
 }//FIn del function cadena_mas()
-
 /* Funcion que muestra un mesaje parpadenado */
 /*
 mensaje = Texto a mostrar
@@ -1672,7 +1570,6 @@ function blink($mensaje, $elemento, $color_fondo, $color_letra)
 	    </table>
 		</span>";
 }//Fin del blink($mensaje, $elemento, $color_fondo, $color_letra)
-
 //Efecto de marcado de una fila de la table al pasar el cursor x la superficie
 function focus_row($resaltar_text, $resaltar_back, $undo_resaltar_text, $undo_resaltar_back)
 {
@@ -1680,14 +1577,12 @@ function focus_row($resaltar_text, $resaltar_back, $undo_resaltar_text, $undo_re
    $Evento="onMouseOver=".'"this.className='."'".$resaltar_text."'; "." this.className='".$resaltar_back."'".'" '."onMouseOut=".'"this.className='."'".$undo_resaltar_text."'; "." this.className='".$undo_resaltar_back."'".'"';
  return $Evento;
 }
-
 /* Funcion que crear una caja de texto y la oculta, con el fin de evitar el submit, cuando en un formulario existe una sola
 caja de texto */
 function noEnterSubmit()
 {
 	echo "<input name='evitar_envio' type='text' id='evitar_envio' size='1' maxlength='1' readonly style='display:none'>";
 }
-
 /* Funciï¿½n que permite la resta entre dos horas o fechas
 time_date_cox: Hora o fecha de avance del tiempo de conexion al sistema. Ejemplo: 11:55 am
 time_date_log: hora o fecha de conexion al sistema. Ejemplo: 10:30 am
@@ -1702,7 +1597,6 @@ function difenciaTimeDate($time_date_cox, $time_date_log, $op)
 	$s -= $h*3600;
 	$m = intval($s/60);
 	$s -= $m*60;
-
 	/* Evalua cuando son horas */
 	if ($op == 0)
 	{
@@ -1714,25 +1608,19 @@ function difenciaTimeDate($time_date_cox, $time_date_log, $op)
 	}//Fin del if ($op == 0)
 	return $dif;
 }//Fin del function difenciaTimeDate()
-
 // Funcion para subir imagenes
 function upLoadImg($archivo, $nombreup, $sizeup, $directorioup)
 {
 		//Tamaï¿½o de la imagen
 		$size=$_FILES['archivo']['size'];
-
 		//variable de control para sacar la extencion real de la imagen
 		$extImg=explode(".",$_FILES['archivo']['name']);
 		$extension=strtolower($extImg[1]);
-
 		//ruta fisica de la imagen
 		$archivo= $_FILES['archivo']['tmp_name'];
-
 		if($extension=="jpg" || $extension=="jpeg" || $extension=="png"
-
 )//valida la extensiï¿½n del archivo
 		{
-
 			if($size < $sizeup) //valida el tamaï¿½o del archivo en bytes
 			{
 				$archivo_name = $nombreup.".".strtolower($extImg[1]);
@@ -1763,7 +1651,6 @@ function upLoadImg($archivo, $nombreup, $sizeup, $directorioup)
 <?Php		return "0";
 		}
 }
-
 /* cantidad de imagenes a generar, $num= Muestra el numero de proceso actual) */
 function wizard($cant,$num)
 {
@@ -1777,24 +1664,18 @@ function wizard($cant,$num)
   }
  }
 }
-
 /* Funcion para subir imagenes de cualquier objeto file, y mantiene el nombre original */
 function upLoadImg_2($input, $archivo, $nombreup, $sizeup, $directorioup)
 {
 		//Tamaï¿½o de la imagen
 		$size=$_FILES[$input]['size'];
-
 		//variable de control para sacar la extencion real de la imagen
 		$extImg=explode(".",$_FILES[$input]['name']);
-
 		$extension=strtolower($extImg[1]);
-
 		//ruta fisica de la imagen
 		$archivo= $_FILES[$input]['tmp_name'];
-
 		if($extension=="jpg" || $extension=="jpeg" || $extension=="png" || $extension=="gif")//valida la extensiï¿½n del archivo
 		{
-
 			if($size < $sizeup) //valida el tamaï¿½o del archivo en bytes
 			{
 				/* Control para asignar el nombre original al archivo */
@@ -1804,7 +1685,6 @@ function upLoadImg_2($input, $archivo, $nombreup, $sizeup, $directorioup)
 				}
 				$archivo_name = $nombreup.".".strtolower($extImg[1]);
 				$directorioFinal=$directorioup.$archivo_name;
-
 				if(!copy($archivo, $directorioFinal))
 				{ ?>
 					<script LANGUAGE="JavaScript"> alert ("Error al copiar el archivo")</script>
@@ -1831,15 +1711,12 @@ function upLoadImg_2($input, $archivo, $nombreup, $sizeup, $directorioup)
 <?Php		return "0";
 		}
 }
-
-
 //foreach($_POST as $nombre_campo => $valor){
 //   $asignacion = "\$" . $nombre_campo . "='" . $valor . "';";
 //   //echo $asignacion."<br>";
 //   eval($asignacion);
 //}
 ////extract($_POST);
-
 /* Funcion que marca la fila donde se encuentra el cursor */
 function focus_row_select_id($name, $resaltar_text, $resaltar_back, $undo_resaltar_text, $undo_resaltar_back)
 {
@@ -1849,7 +1726,6 @@ function focus_row_select_id($name, $resaltar_text, $resaltar_back, $undo_resalt
 ".'"'." style.backgroundColor = 'transparent' ; ".'document.getElementById('."'".$name."'".').className='."'".$undo_resaltar_text."'; "." document.getElementById("."'".$name."'".").className='".$undo_resaltar_back."'".'"';
 	return $Evento;
 }
-
 /* Funcion para generar una ventana flotante
 Para usar esta funcion es necesario llamar a la libreria
 - ventana_flot.js
@@ -1874,7 +1750,6 @@ function windowsFlotFrame($width, $height, $left, $top, $pagina, $title, $cerrar
 		</td>
    	  <td width="20" align="right" valign="top">
       <img src="../../mascaras/model1/imagenes/32x32/btn_minimizar.png" id="id_min" width="16" height="16" title="Minimizar" style="cursor:pointer" onclick="document.getElementById('floatbody').style.visibility='hidden';
-
            document.getElementById('floatwin').style.bottom=0;
            document.getElementById('floatwin').width=250;
            document.getElementById('id_min').style.visibility='hidden';
@@ -1896,11 +1771,9 @@ function windowsFlotFrame($width, $height, $left, $top, $pagina, $title, $cerrar
 </table>
 <script language="javascript">
 document.getElementById('id_max').disabled=true;
-
 </script>
 <?php
 }
-
 /* Funciones que detectan la codificaciï¿½n de un string y de esta manera realizan la conversiï¿½n de codificaciï¿½n sï¿½lo si es necesario. */
 //Funciï¿½n que converte un string a ISO-8859-1 (LATIN1)
 function latin1($txt)
@@ -1909,7 +1782,6 @@ function latin1($txt)
 	if ($encoding == "UTF-8") {
 		$txt = mb_convert_encoding($txt, 'ISO-8859-1', 'UTF-8'); } return $txt;
 	}
-
 //Funciï¿½n que converte un string a UTF-8
 function utf8($txt)
 {
@@ -1917,7 +1789,6 @@ function utf8($txt)
 	if ($encoding == "ISO-8859-1") {
 		$txt = mb_convert_encoding($txt, 'UTF-8', 'ISO-8859-1'); } return $txt;
 	}
-
 /* Funcion para marcar las palabras buscadas en una cadena de texto */
 /* $busqueda = texto buscado
    $cadena = texto encontrado para poder marcarlo de color
@@ -1936,7 +1807,6 @@ function marcarCadenaColor($busqueda, $cadena, $color, $colortext, $cambio)
 		$no_cadena=explode(' ',trim($cadena));
 		/* Divide la cadena en arreglos */
 		$a_busqueda=explode(' ',strtolower(trim($busqueda)));
-
 		$texto_final = "";
 		$i=0;
 		//foreach($a_cadena as $valor_c)
@@ -1959,7 +1829,6 @@ function marcarCadenaColor($busqueda, $cadena, $color, $colortext, $cambio)
 							{
 								$valor_c = cambio_cadena($cambio,$valor_c);
 							}
-
 							$texto_color[$i] = "<font style='background:".$color."; color:".$colortext."'>".$valor_c."</font>";
 							break;
 						}
@@ -1971,7 +1840,6 @@ function marcarCadenaColor($busqueda, $cadena, $color, $colortext, $cambio)
 				}//Fin del foreach($busqueda_texto as $valor_c)
 			}//Fin del if (trim($valor_c) != "")
 		}//Fin del foreach($a_busqueda as $valor_b)
-
 		if (isset($texto_color))
 		{
 			foreach($texto_color as $valor)
@@ -1986,7 +1854,6 @@ function marcarCadenaColor($busqueda, $cadena, $color, $colortext, $cambio)
 		return $cadena;
 	}
 }//Fin del function marcar_cadena($busqueda, $cadena, $color)
-
 /*
 Funcion que oculta las filas del detalle de una consulta, la cual empieza siempre en el elemento 1 */
 function ocultarDetalle($cant)
@@ -2000,7 +1867,6 @@ function ocultarDetalle($cant)
 	<?Php
 	}
 }
-
 /* Funcion para subir cualquier objeto file, y mantiene el nombre original */
 function upLoadFile($input, $archivo, $nombreup, $sizeup, $directorioup)
 {
@@ -2009,15 +1875,11 @@ function upLoadFile($input, $archivo, $nombreup, $sizeup, $directorioup)
 //print_r ($_FILES[$input]);
 		//variable de control para sacar la extencion real de la imagen
 		$extImg=explode(".",$_FILES[$input]['name']);
-
 		$extension=strtolower($extImg[count($extImg)-1]);
-
 		//ruta fisica de la imagen
 		$archivo= $_FILES[$input]['tmp_name'];
-
 		//if($extension=="jpg" || $extension=="jpeg" || $extension=="png" || $extension=="gif")//valida la extensiï¿½n del archivo
 		//{
-
 			if($size <= $sizeup) //valida el tamaï¿½o del archivo en bytes
 			{
 				/* Control para asignar el nombre original al archivo */
@@ -2027,7 +1889,6 @@ function upLoadFile($input, $archivo, $nombreup, $sizeup, $directorioup)
 				}
 				$archivo_name = $nombreup.".".strtolower($extImg[count($extImg)-1]);
 				$directorioFinal=$directorioup.$archivo_name;
-
 				if(!copy($archivo, $directorioFinal))
 				{ ?>
 					<script LANGUAGE="JavaScript"> alert ("Error al copiar el archivo")</script>
@@ -2054,6 +1915,4 @@ function upLoadFile($input, $archivo, $nombreup, $sizeup, $directorioup)
 <?Php		//return "0";
 		//}
 }
-
-
 ?>

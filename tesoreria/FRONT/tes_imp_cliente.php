@@ -2,12 +2,9 @@
 	  require_once('../../Librerias/operacion.php');
   	  require_once('../LOGICA/logica.php');
       require_once('../../Librerias/procedimientos/almacenados_academico.php');	 
-
 //*********************Separa la cadena de caracteres y forma un arreglo********************************************************************
 $nivel = explode("-",$niv); 
-
 ?>				
-
 <html>
 <head>
 <title>Ginus</title>
@@ -15,9 +12,7 @@ $nivel = explode("-",$niv);
 <link href="../../Estilos/Estilo1.css" rel="stylesheet" type="text/css">
 <script language="javascript" src="../Librerias/validaciones/validacion.js"></script>
 </head>
-
 <body class="Cuerpo">
-
 <table width="652"  height="968" border="0" align="center">
   <tr>
     <td width="646" height="100" valign="top">	  
@@ -49,10 +44,8 @@ $nivel = explode("-",$niv);
             <?php
 		  $j=0; //Inicializa la variable para el ITEM
 		  $nota = 0; //Inicializa la variable contador
-	      
 		  $j=0; //Inicializa la variable para el ITEM
 		  $nota = 0; //Inicializa la variable contador
-	      
 		  for ($i=0;$i<=count($nivel)-2;$i++)
 			{?>
 			<label class="TITULO_REPORTE"><?php echo $nivel[$i]; 
@@ -68,10 +61,8 @@ $nivel = explode("-",$niv);
                   <td width="32%">estado</td>
                 </tr>
               <?Php
-		
 				$rs_reporte=consultas_tes(451,$nivel[$i]);
 				$row_rs_reporte = mysqli_fetch_assoc ($rs_reporte);		
-			
 		 		 if ($row_rs_reporte!=NULL)
 		  		{
 				  do{
@@ -88,7 +79,6 @@ $nivel = explode("-",$niv);
                 </tr>
               <?php
 		  } while ($row_rs_reporte = mysqli_fetch_assoc ($rs_reporte));		  		  
-		  
 		  }
 		  ?>
             </table>
@@ -103,5 +93,4 @@ $nivel = explode("-",$niv);
 </body>
 </html>
 <?Php
-	mysqli_free_result($rs_reporte);	
 ?>	

@@ -99,7 +99,7 @@ $claveacceso=$row_rs_cliente['Vet_Xml'];
 <span style="top:<?php echo $topCab+50;?>px;left:0px;" class="mini"><?php echo "<strong>RUC:</strong> ".$row_institucion['Emp_Ruc']?></span>
 <?php if($row_institucion['Emp_Cnt']=='S'){?>
 <span style="top:<?php echo $topCab+65;?>px;left:0px;" class="mini"><?php echo "OBLIGADO A LLEVAR CONTABILIDAD"?></span>
-<?}?>
+<?php } ?>
 <span style="top:<?php echo $topCab+75;?>px;left:20px;" class="mini">
 	<div>
 		<img id="barcode6"/>

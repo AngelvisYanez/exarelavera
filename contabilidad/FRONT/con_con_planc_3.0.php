@@ -93,7 +93,7 @@ $obBD_con1->getPageGridJson(354,$_GET, $obBD_conexion,true);
                                       <button onclick="verRepetidos()" type="button" class="btn btn-primary btn-xs" title="ver"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></button>
                                       <button onclick="ocultarRepetidos()" id="ocultar" type="button" class="btn btn-danger btn-xs hidden" title="ocultar"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
                                   </div>
-                                  <?}?>
+                                  <?php } ?>
                               </div>
                           </fieldset>
                       </form>

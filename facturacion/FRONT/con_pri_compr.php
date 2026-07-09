@@ -2,29 +2,24 @@
 	  require_once('../LOGICA/logica.php');
   	  require_once('../../tesoreria/LOGICA/tes_log_ccpp.php');
 	  require_once('../../Librerias/procedimientos/almacenados_standar.php');
-	  	
 /* Creacion del Objeto de conexion */
 $obBD_conexion = new Class_Mysql;
 /* Cracion del objeto mysql para las consultas */
 $obBD_con1 =  new Class_Datos;
 /***********************************************/
 $hoy = date("Y-m-d");
-	  
 	  if (isset($codigo))
 	  {
 		/* Consulta de la cabecera del reporte */
 		$rs_institucion = $obBD_con1->consulta(sentencias_tes(207, $obBD_con1->parametros($Ses_Suc_Cod)), $obBD_conexion->conexion);
 		$row_rs_institucion= $obBD_con1->registros();
 		$total_rs_institucion = $obBD_con1->numregistros();
-
 		/* Cargado de la cabecera */
 		$rs_cabcomp = $obBD_con1->consulta(sentencias_con(333, $obBD_con1->parametros($tabla.'*'.$codigo.'*'.$tipo.'*'.$Pec_Cod.'*'.$campo))
 									, $obBD_conexion->conexion);//Antes $op
 		$row_rs_cabcomp = $obBD_con1->registros();
 		$total_rs_cabcomp = $obBD_con1->numregistros();
-
 		list($ann, $mes, $dia) = preg_split('![/.-]!', $row_rs_cabcomp['Com_Fec']);
-		
 	  }
 ?>				
 <html>
@@ -48,12 +43,10 @@ $hoy = date("Y-m-d");
 	$rs_tipo_asien = $obBD_con1->consulta(sentencias_con(210, ''), $obBD_conexion->conexion);
 	$row_rs_tipo_asien = $obBD_con1->registros();
 	$total_rs_tipo_asien = $obBD_con1->numregistros();
-
 	do {
 		$descripcion = $descripcion.$row_rs_tipo_asien['Tia_Des'].'*';
 		$array_asien[] = $row_rs_tipo_asien['Tia_Des'];
 	}while($row_rs_tipo_asien = mysqli_fetch_assoc($rs_tipo_asien));
-	
 	switch($tipo) {
 	case 1: $etiqueta=$array_asien[0];
 			  $etiqueta2="RECIBIDO DE:";
@@ -116,14 +109,12 @@ $hoy = date("Y-m-d");
 					echo $row_rs_cabcomp['Prs_Ape'].' '.$row_rs_cabcomp['Prs_Nom'];  
 					?></div>          <div align="left"></div></td>
         </tr>
-	  
       <tr align="center">
         <td colspan="2" class="TITULO_REPORTE"><div align="left">LA cantidad DE :</div></td>
         <td colspan="3" class="Texto_Reporte" style="text-transform:uppercase"><?php //echo $row_rs_cabcomp['Com_Val']; 
 			$v_absoluto=explode(".",$row_rs_cabcomp['Com_Val']);
 			echo num2letras($v_absoluto[0],false,true).', '.$v_absoluto[1].' /100 DOLARES AMERICANOS'; ?></td>
         </tr>
-      
       <tr align="center">
         <td colspan="2" class="TITULO_REPORTE"><div align="left">POR CONCEPTO :</div></td>
         <td colspan="3" class="Texto_Reporte"><?php echo $row_rs_cabcomp['Com_Con']; ?></td>
@@ -146,7 +137,6 @@ $hoy = date("Y-m-d");
 		$obBD_conexion->conexion);
 		$row_rs_grupos = $obBD_con1->registros();
 		$total_rs_grupos = $obBD_con1->numregistros();
-		
 	$total=0;
 	do{
 	  	/* Etiqueta para cuenta de GRUPO DEBE */
@@ -154,14 +144,12 @@ $hoy = date("Y-m-d");
 		$obBD_conexion->conexion);
 		$row_rs_etiquetas_g = $obBD_con1->registros();
 		$total_rs_etiquetas_g = $obBD_con1->numregistros();
-	
 		$Pld_Cod = $row_rs_grupos['Pld_Cod'];
 		/* Cargado del detalle DEBE */
 		$rs_cuentas = $obBD_con1->consulta(sentencias_con(336,$obBD_con1->parametros($codigo.'*'.'D'.'*'.'ORDER BY Pld_Cdc'.'*'.
 										"AND det_plan.Pld_Rec ='$Pld_Cod'")), $obBD_conexion->conexion);
 		$row_rs_cuentas = $obBD_con1->registros();
 		$total_rs_cuentas = $obBD_con1->numregistros();
-	
 	  ?>
 	  <tr>
 	    <td class="LetraNegra" align="left"><?php echo $row_rs_grupos['Pld_Cdc']; ?></td>
@@ -172,7 +160,6 @@ $hoy = date("Y-m-d");
 	    </tr>
 	  <tr>	  
       <?php
-	  
 	  do {
 	  ?>
         <td class="LetraNegra" align="left"><?php echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$row_rs_cuentas['Pld_Cdc']; ?></td>
@@ -197,7 +184,6 @@ $hoy = date("Y-m-d");
 	$rs_grupos = $obBD_con1->consulta(sentencias_con(339, $obBD_con1->parametros($codigo.'*'.'H'.'*'.'')), $obBD_conexion->conexion);
 	$row_rs_grupos = $obBD_con1->registros();
 	$total_rs_grupos = $obBD_con1->numregistros();
-	
 	do{ 
 	  	/* Etiqueta para cuenta de GRUPO HABER */
 		$rs_etiquetas_g = $obBD_con1->consulta(sentencias_con(204, $obBD_con1->parametros($row_rs_grupos['Pld_Rec'])), 
@@ -218,7 +204,6 @@ $hoy = date("Y-m-d");
 		$rs_cuentas = $obBD_con1->consulta(sentencias_con(336,$obBD_con1->parametros($codigo.'*'.'H'.'*'.''.'*'."AND det_plan.Pld_Rec ='$Pld_Cod'")), $obBD_conexion->conexion);
 		$row_rs_cuentas = mysqli_fetch_assoc($rs_cuentas);
 		$total_rs_cuentas = mysqli_num_rows ($rs_cuentas);
-	  
 	  do {
 	  ?>
 	  <tr>
@@ -241,26 +226,22 @@ $hoy = date("Y-m-d");
 	  } while($row_rs_cuentas=mysqli_fetch_assoc($rs_cuentas)); 
 	 }while($row_rs_grupos = mysqli_fetch_assoc($rs_grupos));
 	  ?>
-	  
 	  <tr>
         <td colspan="3" class="TITULO_REPORTE"><div align="right"><strong>SUMAN:</strong></div></td>
         <td class="TITULO_REPORTE"><div align="right"><?php echo number_format($total,2); ?></div>          </td>
 		<td class="TITULO_REPORTE"><div align="right"><?php echo number_format($total,2); ?></div>		  </td>
       </tr>
-	  
     </table>
 	<?php
 	/* Cargado de los cheques del comprobante */
 	$rs_carcheq = $obBD_con1->consulta(sentencias_con(334, $obBD_con1->parametros($row_rs_cabcomp['Com_Cod'])), $obBD_conexion->conexion);
 	$row_rs_carcheq = $obBD_con1->registros();
 	$total_rs_carcheq = $obBD_con1->numregistros();
-	
 	if ($total_rs_carcheq > 0) {
 	?>
 	<span class="TITULO_REPORTE">CHEQUES DEL COMPROBANTE</span> <br>
 	  <table width="100%" border="0" cellpadding="0" cellspacing="0">
         <tbody id="contenido">
-          
           <tr>
             <td width="20%" align="center" class="TablaRepCompr">Banco</td>
             <td width="60%" align="center" class="TablaRepCompr">Proveedor</td>
@@ -320,7 +301,6 @@ $hoy = date("Y-m-d");
 		break;	
 		case 2: ?>
 	<table width="100%" border="0" align="center" cellpadding="2" cellspacing="0" class="Texto_Reporte">
-		
 		<tr>
 		  <td valign="top" align="center">&nbsp;</td>
 		  <td valign="top" align="center">&nbsp;</td>
@@ -395,11 +375,5 @@ $hoy = date("Y-m-d");
 </body>
 </html>
 <?Php 
-@mysqli_free_result($rs_institucion);
-@mysqli_free_result($rs_carperc);
-@mysqli_free_result($rs_cabcomp);
-@mysqli_free_result($rs_cuentas);
-@mysqli_free_result($rs_tipo_asien);
-@mysqli_free_result($rs_carcheq);
 $obBD_conexion->cerrar();
 ?>

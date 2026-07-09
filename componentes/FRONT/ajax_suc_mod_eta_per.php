@@ -22,12 +22,10 @@ if(isset($ajax_suc_cod))
 3 = Etapas semestrales -->
       <input name="hdd_sql" type="hidden" id="hdd_sql" value="3">
 <?Php
- 	@mysqli_free_result($rs_modalidad);
 	exit();
 }
 ?>
 <?Php
-
 /* Cargar datos con AJAX  */
 if(isset($ajax_mod_cod))
 {   /* Cargado de etapas */
@@ -44,10 +42,8 @@ if(isset($ajax_mod_cod))
 			 }while($row_rs_etapas=mysqli_fetch_assoc($rs_etapas));  ?>
           </select>
 <?Php
- 	@mysqli_free_result($rs_etapas);
 	exit();
 }//Fin del if(isset($ajax_mod_cod))
-
 /* Cargado de los periodo */
 if(isset($ajax_periodo))
 {	 //echo $Suc_Cod;
@@ -75,11 +71,6 @@ if(isset($ajax_periodo))
 			caducado!</span>";
 		 }//Fin del if ($total_rs_periodo == 0)
 	 }//Fin del if ($Eta_Cod != "")
-	 @mysqli_free_result($rs_periodo);
 	 exit();
 }//Fin del if(isset($ajax_periodo))
-
-
-
-
 ?>

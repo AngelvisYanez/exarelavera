@@ -2,23 +2,17 @@
 	  require_once('../../Librerias/operacion.php'); 
 	  require_once('../LOGICA/logica.php');
       require_once('../../Librerias/procedimientos/almacenados_academico.php');	
-		
 ?>
-
 <HTML>
 	<HEAD>		
 		<link href="../../Estilos/Estilo1.css" rel="stylesheet" type="text/css">
 		<link href="../../Estilos/Interfaz1.css" rel="stylesheet" type="text/css">
 		<link href="../../mascaras/model1/estilos/interfaz.css" rel="stylesheet" type="text/css">
 		<link href="../../mascaras/model1/estilos/estilo1.css" rel="stylesheet" type="text/css">
-		
-		
 		<script language="javascript" src="../Librerias/java.js"></script>
 		<script language="javascript" src="../Librerias/validaciones/validacion.js"></script>
 		<script language="javascript" src="../../Librerias/validaciones/matricula.js"></script>
 		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		
-		
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 	</HEAD>
 <BODY>
@@ -122,7 +116,6 @@
 						    <td><div align="center">
 								<a href="tes_imp_cliente.php?niv=<?Php echo "$cod2";?>" target="_blank" class="href">
 									<< Imprimir>></a>
-						      
 					        </div></td>
 						</tr>
 	  		  </table>
@@ -131,28 +124,19 @@
 			}//if (isset($hdd_save3))
 			?>
 		  </form>
-  
         </td>
 	</tr>
-
 </table>
-
 </BODY>
 </HTML>
 <?Php
 	if (isset ($rs_buscar))
 	{
-		mysqli_free_result($rs_buscar);
 	}
-	
 	if (isset($rs_consulta))
 	{
-		mysqli_free_result($rs_consulta); 		
 	}
-	
 	if (isset($rs_ciudades))
 	{
-		mysqli_free_result($rs_ciudades);		
 	}
-		
 ?>

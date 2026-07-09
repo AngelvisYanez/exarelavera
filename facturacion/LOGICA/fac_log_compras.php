@@ -10,7 +10,6 @@
  */
 require_once ('../../auditoria/LOGICA/aud_log_auditoria.php');
 require_once("fac_sql_compras.php");
-
 /**
  * Clase para conexion a la capa de acceso a datos
  * 
@@ -18,19 +17,14 @@ require_once("fac_sql_compras.php");
  *
  * @package tesoreria.LOGICA
 */
-
 class Class_Log_Conexion_Comt extends MysqlConexion{
-
 }//Fin de clase Class_Log_Conexion
-
 /**
  * Clase para acceder a los datos
  * @author Lewis Chimarro
  *
  */
-
 class Class_Log_Datos_Comt extends MysqlDatos{
-	
 	/**
 	* Realiza una consulta en la base de datos -  STARDARD
 	*
@@ -44,7 +38,6 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 		$Par_Sql= $this->parametros($param);
 		return $this->consulta(sentencias_comf($sen_sql,$Par_Sql), $obBD->conexion);
 	}
-
 	/**
 	* Realiza una consulta en la base de datos -  STARDARD
 	*
@@ -59,7 +52,6 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 		$Par_Sql= $this->parametros($param);
 		return $this->grabarv_registros(sentencias_comf($sen_sql,$Par_Sql), $obBD->conexion);
 	}
-	
 	/**
 	 * Ejecuta cualquier consulta a la base de datos -  STARDARD
 	 * @param int $sen_sql numero de la sql
@@ -70,14 +62,10 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 	function getRowConsulta($sen_sql,$param,$obBD = null)
 	{
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);
-		
 		$row =  $this->fetch_assoc($result);
-		
 		$this->free_result($result);
-		
 		return $row;
 	}
-
 	/**
 	 * Ejecuta cualquier consulta a la base de datos -  STARDARD
 	 * @param int $sen_sql numero de la sql
@@ -89,19 +77,14 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 	function getArrayConsulta($sen_sql,$param,$obBD = null)
 	{
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);
-		
 		$array = array();
-		
 		while($row_rs = $this->fetch_assoc($result))
 		{
 			$array[] = $row_rs;
 		}
-		
 		$this->free_result($result);
-		
 		return $array;
 	}
-
 	/**
 	 * Inserta o actualiza o elimina los datos de una sola transacccion -  STARDARD
 	 * @param int $sen_sql numero de la sql
@@ -111,13 +94,10 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 	function insertUpdateDelete($sen_sql,$param, $obBD = null)
 	{		
 		$this->inicio_transaccion($obBD->conexion);
-		
 		//Realiza Insert, Update o Delete
 		$this->operacionobBD($sen_sql,$param,$obBD);
-			
 		$this->fin_transaccion($obBD->conexion);		
 	}
-	
 	/**
 	 * graba en la base de datos auditoria
 	 * @param string $Request_Uri pagina donde se estan modificando valores
@@ -128,9 +108,7 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 	function grabarAuditoria($Request_Uri, $Ses_Usu_Cod, $obBD_conexion){
 		if($this->Error == 0){
 			$objAud = new Class_Log_Datos_Aud;
-				
 			$aux = explode('*', $objAud->grabarAuditoria($Request_Uri, $Ses_Usu_Cod, $this, $obBD_conexion));
-	
 			foreach ($aux as $row){
 				$this->grabarv_registros($row,$obBD_conexion->conexion);
 				if($this->Error > 0){
@@ -142,7 +120,6 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 			return $this->Error;
 		}
 	}
-	
 	/**
 	 * Formato standar para reportes
 	 * @param int $sucursal CÃ³digo de la sucursal
@@ -199,7 +176,6 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 	    </table>
 <?php
 	} 
-
 	/**
 	 * Formato standar para reportes
 	 * @param int $sucursal CÃ³digo de la sucursal
@@ -211,10 +187,8 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 		$row_institucion = $this->getRowConsulta(126, $sucursal, $obBD);	
 		/* Consulta los datos del usuario */
 		$row_usuario = $this->getRowConsulta(4, $usuario, $obBD);
-		
 		$fecha=explode("-",date("Y-m-d"));	
    	    $fechaHoy =	$row_institucion['Ciu_Des'].", ".$fecha[2]." de ".mes($fecha[1],1)." ".$fecha[0].", ".date("H:m:s") ;	
-			
 	?>
 		<table width="90%" border="0" cellpadding="0" cellspacing="0">
    		  <tr align="center">
@@ -227,7 +201,6 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 	    </table>
 <?php
 	} 	
-
 	/**
 	 * Codigo de los comprobantes
 	 * @param int $Tia_Cod Tipo de comprobante
@@ -270,7 +243,6 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 		}					
 		return $Com_Num;
   	}
-
 	/** 
 	* Funcion que devuelve un arreglo de los reportes del proceso 
 	*/
@@ -279,7 +251,6 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 		$pag = explode("/", $pagina);
 		$row_rs_proceso = $this->getRowConsulta(12, $pag[count($pag)-1], $obBD_conexion);			
 		$row_rs_reporte = $this->getArrayConsulta(13, $row_rs_proceso['Pcs_Cod'].'*'.$empresa, $obBD_conexion);
-		
 		$i=0;
 		foreach ($row_rs_reporte as $row)
 		{
@@ -288,7 +259,6 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 		}		
 		return $reporte;
 	}	
-	
 	/**
 	* Anular compras
 	* @Cop_Cod: CÃ³digo de la compra
@@ -309,9 +279,7 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 		* Inactivo el KARDEX
 		*/
 		$this->operacionobBD(1101, $Cop_Cod.'*'.'I', $obBD_conexion);
-				
 		$row_detalle = $this->getArrayConsulta(723, $Cop_Cod, $obBD_conexion);
-		
 		/**
 		* Control de inventario
 		*/
@@ -327,7 +295,6 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 			*/
 			$this->operacionobBD(1204, $tstock.'*'.$row['Pro_Cod'].'*'.$SesSucCod, $obBD_conexion);	
 		}
-		
 		/**
 		* Verifica si tiene una retencion asociada
 		*/
@@ -350,7 +317,6 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 		}
 		$this->fin_transaccion($obBD_conexion->conexion);		
 	}
-	
     /** 
 	* CÃ¡lculos compras con I.C.E. 
 	*/
@@ -367,7 +333,6 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 		* 6= ICE
 		*/
 		$rs_calculos_comp = $this->getArrayConsulta(473, $Cop_Cod, $obBD_conexion);
-
 		$Imp_Ice=0; $subtotal=0;
 		$total=0;
 		$iva_12=0; $Ice_Comp=0;
@@ -427,18 +392,14 @@ class Class_Log_Datos_Comt extends MysqlDatos{
 					$Imp_Ice=$Imp_Ice+$bas_ice;
 				}
 			}
-			
 		/*if(isset($rs_porciento_ice))
 		{
-			mysqli_free_result($rs_porciento_ice);			
 		}*/
-						
 		}//FIn del foreach
 		/**
 		* Suma del descuento 
 		*/
 		$des = $des_0 + $des_12;
-
 		/**
 		* calculo del iva con descuento individual 
 		*/

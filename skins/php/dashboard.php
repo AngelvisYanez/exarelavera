@@ -3,24 +3,19 @@
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
 require_once('../../Librerias/config.php/register_globals.php');
 require_once('../../administrador/LOGICA/logica.php');
-
 // require_once('../../administrador/LOGICA/TreeMenu.php');
-
 /* Creacion del Objeto de conexion */
 $obBD_conexion = new Class_Log_Conexion_Adm($_SESSION['Ses_Dat_Dis']);
 /* Creacion del objeto mysql para las consultas */
 $obBD_con1 =  new Class_Log_Datos_Adm;
-
 // ==================== AJAX: CONSULTAS DEL DASHBOARD ====================
 if (isset($_POST['getDashboardData'])) {
     header('Content-Type: application/json');
-    
     $periodo = isset($_POST['periodo']) ? $_POST['periodo'] : 'anio';
     $fechaInicio = isset($_POST['fechaInicio']) ? $_POST['fechaInicio'] : date('Y-01-01');
     $fechaFin = isset($_POST['fechaFin']) ? $_POST['fechaFin'] : date('Y-12-31');
     $empCod = intval($_SESSION['Ses_Emp_Cod']);
     $sucCod = intval($_SESSION['Ses_Suc_Cod']);
-    
     // Ajustar fechas según el período seleccionado
     switch($periodo) {
         case 'hoy':
@@ -49,12 +44,10 @@ if (isset($_POST['getDashboardData'])) {
             // Usar las fechas enviadas
             break;
     }
-    
     // Usar conexion directa con mysqli
     $conexion = $obBD_conexion->conexion;
     $baseDatos = isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : 'NO_DEFINIDA';
     $errores = array();
-    
     // ========== CONSULTA VENTAS - CON FILTRO DE EMPRESA ==========
     // Nota: Tic_Sri=4 es Nota de Crédito y debe RESTAR del total
     // Importe = (Precio * Cantidad) - Descuento línea - Descuento global
@@ -90,14 +83,12 @@ if (isset($_POST['getDashboardData'])) {
     WHERE v.Vet_Est = 'A' 
     AND ca.Caj_Fec BETWEEN '$fechaInicio' AND '$fechaFin 23:59:59'
     AND su.Emp_Cod = $empCod";
-    
     $resultVentas = mysqli_query($conexion, $sqlVentas);
     if(!$resultVentas) {
         $errores['ventas'] = mysqli_error($conexion);
     }
     $rsVentas = $resultVentas ? mysqli_fetch_assoc($resultVentas) : null;
-    if ($resultVentas) mysqli_free_result($resultVentas);
-    
+    if ($resultVentas) 
     // Si no hay resultados, inicializar con ceros
     if (!$rsVentas || !isset($rsVentas['subtotal'])) {
         $rsVentas = array('total' => 0, 'cantidad' => 0, 'subtotal' => 0, 'iva' => 0);
@@ -110,7 +101,6 @@ if (isset($_POST['getDashboardData'])) {
         $rsVentas['iva'] = round($iva, 2);
         $rsVentas['total'] = round($subtotal + $iva + $ice, 2);
     }
-    
     // ========== CONSULTA COMPRAS - FILTRO POR PROVEEDOR DE EMPRESA ==========
     // Nota: Tic_Sri=4 es Nota de Crédito Proveedor y debe RESTAR del total
     // Importe = (Precio * Cantidad) - Descuento línea - Descuento global
@@ -143,14 +133,12 @@ if (isset($_POST['getDashboardData'])) {
     WHERE c.Cop_Est = 'A'
     AND c.Cop_Fec BETWEEN '$fechaInicio' AND '$fechaFin 23:59:59'
     AND p.Emp_Cod = $empCod";
-    
     $resultCompras = mysqli_query($conexion, $sqlCompras);
     if(!$resultCompras) {
         $errores['compras'] = mysqli_error($conexion);
     }
     $rsCompras = $resultCompras ? mysqli_fetch_assoc($resultCompras) : null;
-    if ($resultCompras) mysqli_free_result($resultCompras);
-    
+    if ($resultCompras) 
     // Si no hay resultados, inicializar con ceros
     if (!$rsCompras || !isset($rsCompras['subtotal'])) {
         $rsCompras = array('total' => 0, 'cantidad' => 0, 'subtotal' => 0, 'iva' => 0);
@@ -163,22 +151,17 @@ if (isset($_POST['getDashboardData'])) {
         $rsCompras['iva'] = round($iva, 2);
         $rsCompras['total'] = round($subtotal + $iva + $ice, 2);
     }
-    
     // ========== CONSULTA CLIENTES - CON FILTRO DE EMPRESA ==========
     $sqlClientes = "SELECT COUNT(DISTINCT Cli_Cod) AS nuevos FROM cliente WHERE Emp_Cod = $empCod AND Cli_Fec BETWEEN '$fechaInicio' AND '$fechaFin 23:59:59'";
-    
     $resultClientes = mysqli_query($conexion, $sqlClientes);
     $rsClientes = $resultClientes ? mysqli_fetch_assoc($resultClientes) : null;
-    if ($resultClientes) mysqli_free_result($resultClientes);
-    
+    if ($resultClientes) 
     // ========== DATOS PARA GRÁFICOS - SIMPLIFICADOS ==========
     $ventasPorPeriodo = array();
     $comprasPorPeriodo = array();
     $labels = array();
-    
     // Determinar granularidad según el período
     $diffDays = (strtotime($fechaFin) - strtotime($fechaInicio)) / (60 * 60 * 24);
-    
     if ($diffDays <= 31) {
         // Por día - CON FILTRO DE EMPRESA - Con notas de crédito restando
         $sqlVentasDia = "SELECT DATE(ca.Caj_Fec) AS fecha, 
@@ -200,7 +183,6 @@ if (isset($_POST['getDashboardData'])) {
         WHERE v.Vet_Est = 'A' AND ca.Caj_Fec BETWEEN '$fechaInicio' AND '$fechaFin 23:59:59'
         AND su.Emp_Cod = $empCod
         GROUP BY DATE(ca.Caj_Fec) ORDER BY fecha";
-        
         $sqlComprasDia = "SELECT DATE(c.Cop_Fec) AS fecha, 
         COALESCE(SUM(
             IF(tc.Tic_Sri = 4, -1, 1) * (
@@ -217,20 +199,16 @@ if (isset($_POST['getDashboardData'])) {
         WHERE c.Cop_Est = 'A' AND c.Cop_Fec BETWEEN '$fechaInicio' AND '$fechaFin 23:59:59'
         AND p.Emp_Cod = $empCod
         GROUP BY DATE(c.Cop_Fec) ORDER BY fecha";
-        
         $resultVD = mysqli_query($conexion, $sqlVentasDia);
         $rsVentasDia = array();
-        if ($resultVD) { while($row = mysqli_fetch_assoc($resultVD)) $rsVentasDia[] = $row; mysqli_free_result($resultVD); }
-        
+        if ($resultVD) { while($row = mysqli_fetch_assoc($resultVD)) $rsVentasDia[] = $row;  }
         $resultCD = mysqli_query($conexion, $sqlComprasDia);
         $rsComprasDia = array();
-        if ($resultCD) { while($row = mysqli_fetch_assoc($resultCD)) $rsComprasDia[] = $row; mysqli_free_result($resultCD); }
-        
+        if ($resultCD) { while($row = mysqli_fetch_assoc($resultCD)) $rsComprasDia[] = $row;  }
         $ventasIndex = array();
         $comprasIndex = array();
         if(is_array($rsVentasDia)) foreach($rsVentasDia as $row) $ventasIndex[$row['fecha']] = floatval($row['total']);
         if(is_array($rsComprasDia)) foreach($rsComprasDia as $row) $comprasIndex[$row['fecha']] = floatval($row['total']);
-        
         $currentDate = strtotime($fechaInicio);
         $endDate = strtotime($fechaFin);
         while($currentDate <= $endDate) {
@@ -261,7 +239,6 @@ if (isset($_POST['getDashboardData'])) {
         WHERE v.Vet_Est = 'A' AND ca.Caj_Fec BETWEEN '$fechaInicio' AND '$fechaFin 23:59:59'
         AND su.Emp_Cod = $empCod
         GROUP BY DATE_FORMAT(ca.Caj_Fec, '%Y-%m') ORDER BY mes";
-        
         $sqlComprasMes = "SELECT DATE_FORMAT(c.Cop_Fec, '%Y-%m') AS mes, 
         COALESCE(SUM(
             IF(tc.Tic_Sri = 4, -1, 1) * (
@@ -278,21 +255,17 @@ if (isset($_POST['getDashboardData'])) {
         WHERE c.Cop_Est = 'A' AND c.Cop_Fec BETWEEN '$fechaInicio' AND '$fechaFin 23:59:59'
         AND p.Emp_Cod = $empCod
         GROUP BY DATE_FORMAT(c.Cop_Fec, '%Y-%m') ORDER BY mes";
-        
         $resultVM = mysqli_query($conexion, $sqlVentasMes);
         $rsVentasMes = array();
-        if ($resultVM) { while($row = mysqli_fetch_assoc($resultVM)) $rsVentasMes[] = $row; mysqli_free_result($resultVM); }
-        
+        if ($resultVM) { while($row = mysqli_fetch_assoc($resultVM)) $rsVentasMes[] = $row;  }
         $resultCM = mysqli_query($conexion, $sqlComprasMes);
         $rsComprasMes = array();
-        if ($resultCM) { while($row = mysqli_fetch_assoc($resultCM)) $rsComprasMes[] = $row; mysqli_free_result($resultCM); }
-        
+        if ($resultCM) { while($row = mysqli_fetch_assoc($resultCM)) $rsComprasMes[] = $row;  }
         $nombresMeses = array('ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC');
         $ventasIndex = array();
         $comprasIndex = array();
         if(is_array($rsVentasMes)) foreach($rsVentasMes as $row) $ventasIndex[$row['mes']] = floatval($row['total']);
         if(is_array($rsComprasMes)) foreach($rsComprasMes as $row) $comprasIndex[$row['mes']] = floatval($row['total']);
-        
         $currentDate = strtotime($fechaInicio);
         $endDate = strtotime($fechaFin);
         while($currentDate <= $endDate) {
@@ -304,7 +277,6 @@ if (isset($_POST['getDashboardData'])) {
             $currentDate = strtotime('+1 month', $currentDate);
         }
     }
-    
     // ========== TOP 5 PRODUCTOS - CON FILTRO POR CATEGORIA/EMPRESA ==========
     $sqlTopProductos = "SELECT 
         IFNULL(NULLIF(i.Ite_Cor,''), SUBSTRING(i.Ite_Lar,1,25)) AS nombre,
@@ -321,11 +293,9 @@ if (isset($_POST['getDashboardData'])) {
     AND ca.Caj_Fec BETWEEN '$fechaInicio' AND '$fechaFin 23:59:59'
     AND cat.Emp_Cod = $empCod
     GROUP BY p.Pro_Cod ORDER BY total DESC LIMIT 5";
-    
     $resultTP = mysqli_query($conexion, $sqlTopProductos);
     $rsTopProductos = array();
-    if ($resultTP) { while($row = mysqli_fetch_assoc($resultTP)) $rsTopProductos[] = $row; mysqli_free_result($resultTP); }
-    
+    if ($resultTP) { while($row = mysqli_fetch_assoc($resultTP)) $rsTopProductos[] = $row;  }
     // ========== TOP 5 CLIENTES - CON FILTRO DE EMPRESA ==========
     $sqlTopClientes = "SELECT CONCAT(IFNULL(pe.Prs_Nom,''), ' ', IFNULL(pe.Prs_Ape,'')) AS nombre,
         COUNT(DISTINCT v.Vet_Cod) AS facturas, ROUND(SUM(vd.Vet_Imp), 2) AS total
@@ -340,17 +310,14 @@ if (isset($_POST['getDashboardData'])) {
     WHERE v.Vet_Est = 'A' AND ca.Caj_Fec BETWEEN '$fechaInicio' AND '$fechaFin 23:59:59'
     AND su.Emp_Cod = $empCod
     GROUP BY cl.Cli_Cod ORDER BY total DESC LIMIT 5";
-    
     $resultTC = mysqli_query($conexion, $sqlTopClientes);
     $rsTopClientes = array();
-    if ($resultTC) { while($row = mysqli_fetch_assoc($resultTC)) $rsTopClientes[] = $row; mysqli_free_result($resultTC); }
-    
+    if ($resultTC) { while($row = mysqli_fetch_assoc($resultTC)) $rsTopClientes[] = $row;  }
     // ========== TOTAL CLIENTES - CON FILTRO DE EMPRESA ==========
     $sqlClientesTotal = "SELECT COUNT(DISTINCT Cli_Cod) AS total FROM cliente WHERE Emp_Cod = $empCod";
     $resultCT = mysqli_query($conexion, $sqlClientesTotal);
     $rsClientesTotal = $resultCT ? mysqli_fetch_assoc($resultCT) : null;
-    if ($resultCT) mysqli_free_result($resultCT);
-    
+    if ($resultCT) 
     // ========== DOCUMENTOS ELECTRÓNICOS AUTORIZADOS - CON FILTRO DE FECHAS ==========
     // Facturas autorizadas (Tic_Sri = 01) con Vet_Sri no vacío
     $sqlFacturas = "SELECT COUNT(DISTINCT v.Vet_Cod) AS total
@@ -367,7 +334,6 @@ if (isset($_POST['getDashboardData'])) {
         AND su.Emp_Cod = $empCod";
     $rsFacturas = mysqli_query($conexion, $sqlFacturas);
     $docFacturas = $rsFacturas ? mysqli_fetch_assoc($rsFacturas) : array('total' => 0);
-    if ($rsFacturas) mysqli_free_result($rsFacturas);
     
     // Notas de Crédito autorizadas (Tic_Sri = 04)
     $sqlNC = "SELECT COUNT(DISTINCT v.Vet_Cod) AS total
@@ -384,7 +350,6 @@ if (isset($_POST['getDashboardData'])) {
         AND su.Emp_Cod = $empCod";
     $rsNC = mysqli_query($conexion, $sqlNC);
     $docNotasCredito = $rsNC ? mysqli_fetch_assoc($rsNC) : array('total' => 0);
-    if ($rsNC) mysqli_free_result($rsNC);
     
     // Retenciones autorizadas - de compras
     $sqlRet = "SELECT COUNT(DISTINCT r.Ret_Cod) AS total
@@ -397,7 +362,6 @@ if (isset($_POST['getDashboardData'])) {
         AND p.Emp_Cod = $empCod";
     $rsRet = mysqli_query($conexion, $sqlRet);
     $docRetenciones = $rsRet ? mysqli_fetch_assoc($rsRet) : array('total' => 0);
-    if ($rsRet) mysqli_free_result($rsRet);
     
     // Liquidación de compras (Tic_Sri = 03)
     $sqlLiq = "SELECT COUNT(DISTINCT c.Cop_Cod) AS total
@@ -411,7 +375,6 @@ if (isset($_POST['getDashboardData'])) {
         AND p.Emp_Cod = $empCod";
     $rsLiq = mysqli_query($conexion, $sqlLiq);
     $docLiquidaciones = $rsLiq ? mysqli_fetch_assoc($rsLiq) : array('total' => 0);
-    if ($rsLiq) mysqli_free_result($rsLiq);
     
     // Guías de Remisión (Tic_Sri = 06)
     $sqlGuia = "SELECT COUNT(DISTINCT g.Gui_Cod) AS total
@@ -423,22 +386,18 @@ if (isset($_POST['getDashboardData'])) {
         AND su.Emp_Cod = $empCod";
     $rsGuia = mysqli_query($conexion, $sqlGuia);
     $docGuias = $rsGuia ? mysqli_fetch_assoc($rsGuia) : array('total' => 0);
-    if ($rsGuia) mysqli_free_result($rsGuia);
     
     // Manejar valores nulos de forma segura
     $ventasTotal = isset($rsVentas['total']) ? floatval($rsVentas['total']) : 0;
     $ventasCantidad = isset($rsVentas['cantidad']) ? intval($rsVentas['cantidad']) : 0;
     $ventasSubtotal = isset($rsVentas['subtotal']) ? floatval($rsVentas['subtotal']) : 0;
     $ventasIva = isset($rsVentas['iva']) ? floatval($rsVentas['iva']) : 0;
-    
     $comprasTotal = isset($rsCompras['total']) ? floatval($rsCompras['total']) : 0;
     $comprasCantidad = isset($rsCompras['cantidad']) ? intval($rsCompras['cantidad']) : 0;
     $comprasSubtotal = isset($rsCompras['subtotal']) ? floatval($rsCompras['subtotal']) : 0;
     $comprasIva = isset($rsCompras['iva']) ? floatval($rsCompras['iva']) : 0;
-    
     $clientesNuevos = isset($rsClientes['nuevos']) ? intval($rsClientes['nuevos']) : 0;
     $clientesTotal = isset($rsClientesTotal['total']) ? intval($rsClientesTotal['total']) : 0;
-    
     $response = array(
         'success' => true,
         'ventas' => array(
@@ -484,13 +443,10 @@ if (isset($_POST['getDashboardData'])) {
             'rsComprasRaw' => $rsCompras
         )
     );
-    
     echo json_encode($response);
     exit;
 }
 // ==================== FIN AJAX ====================
-
-
 // Construir condición de perfiles (Par_Sql[0])
 $cond_perfiles = '1=1'; // Valor por defecto
 if (!empty($_SESSION['Ses_Lis_Per'])) {
@@ -502,7 +458,6 @@ if (!empty($_SESSION['Ses_Lis_Per'])) {
         $cond_perfiles = implode(" OR ", $perfiles);
     }
 }
-
 // Construir condición adicional (Par_Sql[1]) — puedes usar otro filtro o también 1=1
 $cond_extra = '1=1'; // Esto evita que se genere una condición vacía
 // Crear arreglo con ambos parámetros
@@ -518,7 +473,6 @@ $accesosDir = $obBD_con1->consulta(sentencias_adm(120, $obBD_con1->parametros($p
 // $AccDirInsert = $obBD_con1->consulta(sentencias_adm(122,));
 // consulta los documentos electronicos activos de la empresa - sucursal
 $docElect = $obBD_con1->getArrayConsulta(123,  $_SESSION['Ses_Suc_Cod'] . '*' . $_SESSION['Ses_Prs_Cod'], $obBD_conexion);
-
 // Obtiene el Tic_Cod y Pun_Cod de los documentos electrónicos
 $ticCods = array();
 $punCods = array();
@@ -532,18 +486,14 @@ if (is_array($docElect)) {
         }
     }
 }
-
 // Muestra la cantidad de documentos electrónicos que tiene la empresa - sucursal
 $docCount = $obBD_con1->getArrayConsulta(124,  array($ticCods, $punCods, $_SESSION['Ses_Prs_Cod'],$_SESSION['Ses_Suc_Cod']), $obBD_conexion);
-
 // enrutamiento de boton registrar ventas
 $hrefRuta = '';
 $total = $obBD_con1->num_rows($rs_procesos);
-
 if ($total > 0) {
     while ($fila = $obBD_con1->fetch_array($rs_procesos)) {
         $ruta = trim($fila['Rut_Des']) . trim($fila['Pcs_Nom']);
-
         // Si solo hay un registro, usa ese
         if ($total == 1) {
             $hrefRuta = $ruta;
@@ -556,9 +506,7 @@ if ($total > 0) {
         }
     }
 }
-
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <!-- <html> -->
@@ -587,7 +535,6 @@ if ($total > 0) {
                 Bienvenidos a EXA Software Contable
             </h1>
         </div>
-
         <style>
             .custom-btn {
                 display: flex;
@@ -650,7 +597,6 @@ if ($total > 0) {
                     margin-right: 0 !important;
                 }
             }
-
             @media (max-width: 991px) {
                 .row.justify-center {
                     flex-direction: column !important;
@@ -663,7 +609,6 @@ if ($total > 0) {
                     max-width: 98vw !important;
                 }
             }
-            
             /* Estilos para el Dashboard */
             fieldset.scheduler-border {
                 border: 2px solid rgba(255,255,255,0.3) !important;
@@ -768,7 +713,6 @@ if ($total > 0) {
                 }
             }
         </style>
-
         <fieldset class="scheduler-border dashboard-fieldset">
             <legend class="scheduler-border" style="color: white; font-size: 1.2rem; font-weight: 600; margin-bottom: 20px; text-align: left;">Mis Accesos Directos</legend>
             <div class="container-fluid">
@@ -801,7 +745,6 @@ if ($total > 0) {
                             <i class="fa fa-send text-primary"></i>  Documentos Autorizados
                         </a>
                     </div>
-
                     <?php
                     // Generar estructura de accesos directos agrupados por Org_Des y Pcs_Lin
                     $accesosAgrupados = array();
@@ -829,7 +772,6 @@ if ($total > 0) {
                         </div>
                     </div>
         </fieldset>
-
         <!-- ==================== DASHBOARD INTERACTIVO DE VENTAS Y COMPRAS ==================== -->
         <fieldset class="scheduler-border dashboard-fieldset" style="margin-top: 20px;">
             <legend class="scheduler-border" style="color: white; font-size: 1.2rem; font-weight: 600; margin-bottom: 10px; text-align: left;">
@@ -838,7 +780,6 @@ if ($total > 0) {
                     <i class="fa fa-spinner fa-spin"></i>
                 </span>
             </legend>
-            
             <!-- Filtros de Período -->
             <div class="container-fluid">
                 <div class="row" style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 12px;">
@@ -857,7 +798,6 @@ if ($total > 0) {
                         <button class="btn-refresh" onclick="actualizarDashboard()" title="Actualizar"><i class="fa fa-refresh"></i></button>
                 </div>
             </div>
-                
                 <!-- Tarjetas Principales -->
                 <div class="row" style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;">
                     <!-- Tarjeta de Ventas -->
@@ -883,7 +823,6 @@ if ($total > 0) {
                             </div>
             </div>
         </div>
-
                     <!-- Tarjeta de Compras -->
                     <div class="dashboard-card compras-card" id="card-compras">
                         <div class="card-decoration"></div>
@@ -907,7 +846,6 @@ if ($total > 0) {
                             </div>
                         </div>
                     </div>
-                    
                     <!-- Tarjeta de Balance -->
                     <div class="dashboard-card balance-card" id="card-balance">
                         <div class="card-decoration"></div>
@@ -930,7 +868,6 @@ if ($total > 0) {
                             </div>
                         </div>
                     </div>
-                    
                     <!-- Tarjeta de Clientes -->
                     <div class="dashboard-card clientes-card" id="card-clientes">
                         <div class="card-decoration"></div>
@@ -954,7 +891,6 @@ if ($total > 0) {
                         </div>
                     </div>
                 </div>
-                
                 <!-- Gráficos y Tablas -->
                 <div class="row" style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 10px;">
                     <!-- Gráfico Principal -->
@@ -970,7 +906,6 @@ if ($total > 0) {
                             <canvas id="chartVentasCompras"></canvas>
                         </div>
                     </div>
-                    
                     <!-- Gráfico de Distribución -->
                     <div class="chart-container" style="flex: 1; min-width: 220px; max-width: 300px; overflow: hidden; padding: 20px;">
                         <h4 style="text-align: center; margin-bottom: 15px; font-size: 14px;"><i class="fa fa-pie-chart" style="color: #43a047;"></i> Distribución</h4>
@@ -979,7 +914,6 @@ if ($total > 0) {
                         </div>
                     </div>
                 </div>
-                
                 <!-- Top Productos y Clientes -->
                 <div class="row" style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 15px;">
                     <!-- Top Productos -->
@@ -999,7 +933,6 @@ if ($total > 0) {
                             </tbody>
                         </table>
                     </div>
-                    
                     <!-- Top Clientes -->
                     <div class="table-container" style="flex: 1; min-width: 280px; max-width: 400px;">
                         <h4 style="font-size: 14px;"><i class="fa fa-star" style="color: #1e88e5;"></i> Top 5 Clientes</h4>
@@ -1020,7 +953,6 @@ if ($total > 0) {
                 </div>
             </div>
         </fieldset>
-        
         <!-- Estilos del Dashboard -->
         <style>
             .dashboard-fieldset {
@@ -1177,18 +1109,15 @@ if ($total > 0) {
                 .chart-container, .table-container { min-width: 100% !important; }
             }
         </style>
-        
         <!-- Chart.js CDN -->
         <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
         <script>
             var chartVentasCompras = null;
             var chartDistribucion = null;
             var periodoActual = 'anio';
-            
             function formatMoney(value) {
                 return parseFloat(value).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2});
             }
-            
             function cambiarPeriodo(periodo, btn) {
                 periodoActual = periodo;
                 if (btn) {
@@ -1197,7 +1126,6 @@ if ($total > 0) {
                 }
                 actualizarDashboard();
             }
-            
             function cambiarTipoGrafico(tipo, btn) {
                 document.querySelectorAll('.chart-type-btn').forEach(function(b) { b.classList.remove('active'); });
                 btn.classList.add('active');
@@ -1206,17 +1134,14 @@ if ($total > 0) {
                     chartVentasCompras.update();
                 }
             }
-            
             function actualizarDashboard() {
                 var loading = document.getElementById('dashboard-loading');
                 loading.style.display = 'inline';
-                
                 var formData = new FormData();
                 formData.append('getDashboardData', '1');
                 formData.append('periodo', periodoActual);
                 formData.append('fechaInicio', document.getElementById('fechaInicio').value);
                 formData.append('fechaFin', document.getElementById('fechaFin').value);
-                
                 fetch(window.location.href, {
                     method: 'POST',
                     body: formData
@@ -1237,13 +1162,11 @@ if ($total > 0) {
                         document.getElementById('ventas-cantidad').textContent = data.ventas.cantidad;
                         document.getElementById('ventas-iva').textContent = formatMoney(data.ventas.iva);
                         document.getElementById('ventas-periodo').textContent = data.periodo.inicio + ' - ' + data.periodo.fin;
-                        
                         // Actualizar Compras
                         document.getElementById('compras-total').textContent = '$' + formatMoney(data.compras.total);
                         document.getElementById('compras-cantidad').textContent = data.compras.cantidad;
                         document.getElementById('compras-iva').textContent = formatMoney(data.compras.iva);
                         document.getElementById('compras-periodo').textContent = data.periodo.inicio + ' - ' + data.periodo.fin;
-                        
                         // Actualizar Balance
                         var balance = data.ventas.total - data.compras.total;
                         var balanceCard = document.getElementById('card-balance');
@@ -1259,21 +1182,16 @@ if ($total > 0) {
                             balanceCard.classList.add('negativo');
                             balanceIndicador.innerHTML = '<i class="fa fa-arrow-down"></i> Negativo';
                         }
-                        
                         // Actualizar Clientes
                         document.getElementById('clientes-cantidad').textContent = data.clientesTotal || data.clientesNuevos || 0;
                         document.getElementById('clientes-periodo').textContent = 'Total Registrados';
-                        
                         // Actualizar Gráfico Principal
                         actualizarGraficoPrincipal(data.grafico);
-                        
                         // Actualizar Gráfico de Distribución
                         actualizarGraficoDistribucion(data.ventas.total, data.compras.total);
-                        
                         // Actualizar Tablas
                         actualizarTablaProductos(data.topProductos);
                         actualizarTablaClientes(data.topClientes);
-                        
                         // Actualizar Documentos Autorizados
                         if (data.documentos) {
                             actualizarDocumentosAutorizados(data.documentos, data.periodo);
@@ -1286,10 +1204,8 @@ if ($total > 0) {
                     loading.style.display = 'none';
                 });
             }
-            
             function actualizarGraficoPrincipal(datosGrafico) {
                 var ctx = document.getElementById('chartVentasCompras').getContext('2d');
-                
                 if (chartVentasCompras) {
                     chartVentasCompras.data.labels = datosGrafico.labels;
                     chartVentasCompras.data.datasets[0].data = datosGrafico.ventas;
@@ -1350,10 +1266,8 @@ if ($total > 0) {
                     });
                 }
             }
-            
             function actualizarGraficoDistribucion(ventas, compras) {
                 var ctx = document.getElementById('chartDistribucion').getContext('2d');
-                
                 if (chartDistribucion) {
                     chartDistribucion.data.datasets[0].data = [ventas, compras];
                     chartDistribucion.update();
@@ -1394,7 +1308,6 @@ if ($total > 0) {
                     });
                 }
             }
-            
             function actualizarTablaProductos(productos) {
                 var tbody = document.getElementById('tbody-productos');
                 if (!productos || productos.length === 0) {
@@ -1415,7 +1328,6 @@ if ($total > 0) {
                 });
                 tbody.innerHTML = html;
             }
-            
             function actualizarTablaClientes(clientes) {
                 var tbody = document.getElementById('tbody-clientes');
                 if (!clientes || clientes.length === 0) {
@@ -1434,7 +1346,6 @@ if ($total > 0) {
                 });
                 tbody.innerHTML = html;
             }
-            
             function actualizarDocumentosAutorizados(docs, periodo) {
                 // Actualizar cada tipo de documento
                 document.getElementById('doc-facturas').textContent = (docs.facturas || 0).toLocaleString('es-ES');
@@ -1442,26 +1353,21 @@ if ($total > 0) {
                 document.getElementById('doc-notas-credito').textContent = (docs.notasCredito || 0).toLocaleString('es-ES');
                 document.getElementById('doc-liquidaciones').textContent = (docs.liquidaciones || 0).toLocaleString('es-ES');
                 document.getElementById('doc-guias').textContent = (docs.guias || 0).toLocaleString('es-ES');
-                
                 // Calcular y actualizar total
                 var total = (docs.facturas || 0) + (docs.retenciones || 0) + (docs.notasCredito || 0) + (docs.liquidaciones || 0) + (docs.guias || 0);
                 document.getElementById('doc-total').textContent = total.toLocaleString('es-ES');
-                
                 // Actualizar label de período
                 var labelPeriodo = document.getElementById('docs-periodo-label');
                 if (labelPeriodo && periodo) {
                     labelPeriodo.textContent = periodo.inicio + ' al ' + periodo.fin;
                 }
             }
-            
             // Cargar datos al iniciar
             document.addEventListener('DOMContentLoaded', function() {
                 actualizarDashboard();
             });
         </script>
         <!-- ==================== FIN DASHBOARD ==================== -->
-
-        
         <!-- ==================== INFORMACIÓN DEL USUARIO ==================== -->
         <fieldset class="scheduler-border dashboard-fieldset" style="margin-top: 20px; margin-bottom: 30px;">
             <legend class="scheduler-border" style="color: white; font-size: 1.2rem; font-weight: 600; margin-bottom: 10px; text-align: left;">
@@ -1505,7 +1411,6 @@ if ($total > 0) {
                             </div>
                         </div>
                     </div>
-                    
                     <!-- Tarjeta Informativa de Documentos Electrónicos Autorizados - INTERACTIVA -->
                     <div style="background: #e6e6e6; border-radius: 18px; box-shadow: 0 4px 18px rgba(39,70,162,0.10); padding: 28px 24px; display: flex; align-items: center; min-width: 320px; max-width: 480px; flex: 1;">
                         <div style="width:100%;">

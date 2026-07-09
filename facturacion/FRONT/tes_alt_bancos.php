@@ -2,11 +2,9 @@
 	  require_once('../../Librerias/operacion.php'); 
 	  require_once('../LOGICA/logica.php');	  
    	  require_once('../../Librerias/procedimientos/almacenados_standar.php');	  
-
  if (isset($hdd_save)) { 
  	  $rs_consultar = consultas_tes(102, $Bak_Des);
 	  $total_rs_consultar = mysqli_num_rows($rs_consultar);
-	  
 	  if ($total_rs_consultar == 0) {
 	  	    $rs_insbancos = insercionesu_tes(101, $Bak_Des);
 	  }
@@ -18,13 +16,8 @@
 			</script>
 <?Php
 		}
-
-			
 }
-	  
 ?>
-
-
 <HTML>
 	<HEAD>
 		<TITLE>Ginus</TITLE>
@@ -46,7 +39,6 @@
    border="0" align="left" bgcolor="#C7E0CD" >
   </table>
   <br>
- 
 <FIELDSET>
 <LEGEND>
 <label class="Titulos2">Datos a registrar</label>
@@ -62,7 +54,6 @@
         <td width="306"><input name="Bak_Des" type="text" size="30" maxlength="30" style="text-transform:uppercase" value=""></td>
         </tr>
     </table>
- 
 </FIELDSET>	 
 <table width="100%" border="0" class="Azul">
     <tr>
@@ -76,12 +67,10 @@
   </table>
 </form>        </td>
   </tr>
-
 </table>	    
 </BODY></HTML>
 <?php
 if (isset($rs_insbancos))
 {
-	mysqli_free_result ($rs_insbancos);
 }
 ?>

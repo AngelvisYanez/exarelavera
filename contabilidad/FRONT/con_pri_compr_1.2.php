@@ -137,7 +137,7 @@ if(count($row_rs_cabcomp) > 0){
 				<td class="TablaRepComprLeft" align="right"><font class="Letra_punto_venta_2"><?echo $asiento['Debe'];?></font></td>
 				<td class="TablaRepComprLeft TablaRepComprRight" align="right"><font class="Letra_punto_venta_2"><?echo $asiento['Haber'];?></font></td>
 			</tr>
-			<?}?>
+			<?php } ?>
       <tr>
         <td colspan="3" class="TITULO_REPORTE TablaRepCompr"><div align="right"><strong>SUMAN:</strong></div></td>
         <td class="TITULO_REPORTE TablaRepCompr"><font class="Letra_punto_venta_2"><div align="right"><?php echo number_format($total,2); ?></div></font></td>
