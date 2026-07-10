@@ -20,7 +20,7 @@ class manifiesto extends AbstractModel{
                 DATE_FORMAT($this->_name.Man_Sys, '%Y-%m-%d %H:%i:%s') AS Man_Sys_Formatted"))
             ->join('cliente', "cliente.Cli_Cod = $this->_name.Cli_Cod")
             ->join(array('prs_cli'=>'persona'),"prs_cli.Prs_Cod = cliente.Prs_Cod", array('*', 'cliente'=>"concat(prs_cli.Prs_Nom,' ',prs_cli.Prs_Ape)", 'Cli_Ced'=>'prs_cli.Prs_Ced'))            
-            ->joinLeft('manifiesto_chofer',"manifiesto_chofer.Cho_Cod = $this->_name.Cho_Cod", array(''))
+            // ->joinLeft('manifiesto_chofer',"manifiesto_chofer.Cho_Cod = $this->_name.Cho_Cod", array(''))
             ->join('chofer',"chofer.Cho_Cod = $this->_name.Cho_Cod", array(''))
             ->join(array('prs_cho'=>'persona'),"prs_cho.Prs_Cod = chofer.Prs_Cod", array('chofer'=>"concat(prs_cho.Prs_Nom,' ',prs_cho.Prs_Ape)", 'Cho_Cor'=>'prs_cho.Prs_Cor'))
             ->join('vehiculo',"vehiculo.Veh_Cod = $this->_name.Veh_Cod", array('Veh_Pla'))
