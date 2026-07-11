@@ -1148,6 +1148,29 @@ if (isset($getDashboardEjecutivoAjax)) {
     $total_anterior = isset($row_ant['total']) ? intval($row_ant['total']) : 0;
     $variacion_pct = $total_anterior > 0 ? (($total_manifiestos - $total_anterior) / $total_anterior) * 100 : ($total_manifiestos > 0 ? 100 : 0);
 
+    // 2.0) Tonelaje
+    $sql_toneladas = "SELECT
+        COALESCE(SUM(manifiesto.Man_Pes/1000), 0) as total_recibidas,
+        COALESCE(SUM(CASE WHEN manifiesto.Man_Tip = 'F' THEN manifiesto.Man_Pes/1000 ELSE 0 END), 0) as total_facturadas,
+        COALESCE(SUM(CASE WHEN (manifiesto.Man_Tip != 'F' OR manifiesto.Man_Tip IS NULL) AND (manifiesto.Vet_Cod IS NULL OR manifiesto.Vet_Cod = 0) THEN manifiesto.Man_Pes/1000 ELSE 0 END), 0) as total_por_facturar
+        FROM manifiesto
+        INNER JOIN manifiesto_turnos_det ON manifiesto_turnos_det.Tud_Cod = manifiesto.Tud_Cod
+        INNER JOIN manifiesto_turnos_cab ON manifiesto_turnos_cab.Tur_Cod = manifiesto_turnos_det.Tur_Cod
+        INNER JOIN cliente ON cliente.Cli_Cod = manifiesto.Cli_Cod
+        WHERE manifiesto_turnos_det.Tud_Fec BETWEEN '$fecha_inicio_esc' AND '$fecha_fin_esc' AND $base_where";
+    $res_ton = $obBD_con1->consulta($sql_toneladas, $conexion);
+    $total_toneladas_recibidas = 0;
+    $total_toneladas_facturadas = 0;
+    $total_toneladas_por_facturar = 0;
+    if ($res_ton !== false) {
+        if ($row_ton = $obBD_con1->fetch_assoc($res_ton)) {
+            $total_toneladas_recibidas = isset($row_ton['total_recibidas']) ? floatval($row_ton['total_recibidas']) : 0;
+            $total_toneladas_facturadas = isset($row_ton['total_facturadas']) ? floatval($row_ton['total_facturadas']) : 0;
+            $total_toneladas_por_facturar = isset($row_ton['total_por_facturar']) ? floatval($row_ton['total_por_facturar']) : 0;
+        }
+    }
+    $promedio_tonelaje_diario = $dias_periodo > 0 ? ($total_toneladas_recibidas / $dias_periodo) : 0;
+
     // 2.1) Tiempo promedio global (Relavera)
     $sql_tiempo_prom = "SELECT manifiesto.Man_Usu FROM manifiesto
         INNER JOIN manifiesto_turnos_det ON manifiesto_turnos_det.Tud_Cod = manifiesto.Tud_Cod
@@ -1599,7 +1622,11 @@ if (isset($getDashboardEjecutivoAjax)) {
         'indice_dependencia_top2' => round($indice_dependencia_top2, 1),
         'desviacion_estandar' => round($desv_chofer, 1),
         'utilizacion_flota' => round($utilizacion_flota, 1),
-        'tiempo_relavera_prom' => round($tiempo_relavera_prom, 1)
+        'tiempo_relavera_prom' => round($tiempo_relavera_prom, 1),
+        'total_toneladas_recibidas' => round($total_toneladas_recibidas, 2),
+        'total_toneladas_facturadas' => round($total_toneladas_facturadas, 2),
+        'total_toneladas_por_facturar' => round($total_toneladas_por_facturar, 2),
+        'promedio_tonelaje_diario' => round($promedio_tonelaje_diario, 2)
     );
     $resultado['top10_plantas'] = $top10_plantas;
     $sum_top10 = 0;
@@ -3037,6 +3064,6 @@ if (isset($_GET['getInactivosDetallePlantaAjax']) || isset($getInactivosDetalleP
             soloTabChoferPlaca: <?php echo $soloTabChoferPlaca ? 'true' : 'false'; ?>
         };
     </script>
-	<script src="../VALIDACIONES/man_val_dashboard_turnos.js?a=34"></script>
+	<script src="../VALIDACIONES/man_val_dashboard_turnos.js?a=35"></script>
 </BODY>
 </HTML>
