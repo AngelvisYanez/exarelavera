@@ -3064,6 +3064,6 @@ if (isset($_GET['getInactivosDetallePlantaAjax']) || isset($getInactivosDetalleP
             soloTabChoferPlaca: <?php echo $soloTabChoferPlaca ? 'true' : 'false'; ?>
         };
     </script>
-	<script src="../VALIDACIONES/man_val_dashboard_turnos.js?a=35"></script>
+	<script src="../VALIDACIONES/man_val_dashboard_turnos.js?a=36"></script>
 </BODY>
 </HTML>

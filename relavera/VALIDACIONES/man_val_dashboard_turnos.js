@@ -40,10 +40,16 @@ $(function () {
         var parts = val.split('-');
         var year = parseInt(parts[0], 10);
         var month = parseInt(parts[1], 10);
-        var lastDay = new Date(year, month, 0).getDate();
+        var now = new Date();
+        var finDia;
+        if (now.getFullYear() === year && (now.getMonth() + 1) === month) {
+            finDia = String(now.getDate()).padStart(2, '0');
+        } else {
+            finDia = String(new Date(year, month, 0).getDate()).padStart(2, '0');
+        }
         var mesStr = String(month).padStart(2, '0');
         $('#fecha_inicio_rango').val(year + '-' + mesStr + '-01');
-        $('#fecha_fin_rango').val(year + '-' + mesStr + '-' + String(lastDay).padStart(2, '0'));
+        $('#fecha_fin_rango').val(year + '-' + mesStr + '-' + finDia);
     });
     
     // Re-render al cambiar checkbox omitir días sin manifiestos (tab rango)
@@ -145,9 +151,15 @@ function sincronizarFechasDesdeMesEjecutivo(mesVal) {
     var year = parseInt(parts[0], 10);
     var month = parseInt(parts[1], 10);
     var mesStr = String(month).padStart(2, '0');
-    var lastDay = new Date(year, month, 0).getDate();
+    var now = new Date();
+    var finDia;
+    if (now.getFullYear() === year && (now.getMonth() + 1) === month) {
+        finDia = String(now.getDate()).padStart(2, '0');
+    } else {
+        finDia = String(new Date(year, month, 0).getDate()).padStart(2, '0');
+    }
     $('#fecha_inicio_ejecutivo').val(year + '-' + mesStr + '-01');
-    $('#fecha_fin_ejecutivo').val(year + '-' + mesStr + '-' + String(lastDay).padStart(2, '0'));
+    $('#fecha_fin_ejecutivo').val(year + '-' + mesStr + '-' + finDia);
 }
 
 function sincronizarFechasDesdeMesChoferPlaca(mesVal) {
@@ -156,9 +168,15 @@ function sincronizarFechasDesdeMesChoferPlaca(mesVal) {
     var year = parseInt(parts[0], 10);
     var month = parseInt(parts[1], 10);
     var mesStr = String(month).padStart(2, '0');
-    var lastDay = new Date(year, month, 0).getDate();
+    var now = new Date();
+    var finDia;
+    if (now.getFullYear() === year && (now.getMonth() + 1) === month) {
+        finDia = String(now.getDate()).padStart(2, '0');
+    } else {
+        finDia = String(new Date(year, month, 0).getDate()).padStart(2, '0');
+    }
     $('#fecha_inicio_chofer_placa').val(year + '-' + mesStr + '-01');
-    $('#fecha_fin_chofer_placa').val(year + '-' + mesStr + '-' + String(lastDay).padStart(2, '0'));
+    $('#fecha_fin_chofer_placa').val(year + '-' + mesStr + '-' + finDia);
 }
 
 function formatearFechaRango(f) {
@@ -4197,10 +4215,10 @@ function renderDashboardEjecutivo(data) {
     html += '<p>Promedio diario en el rango: <strong>' + promDia + '</strong> manifiestos' + (txtRango ? '<span class="text-muted">' + txtRango + '</span>' : '') + '</p>';
     html += '<div class="ceo-chart-wrap"><canvas id="chartEjecutivoTendencia"></canvas></div></div>';
 
-    var tonRecibidas = data.kpis.total_toneladas_recibidas || 0;
-    var tonFacturadas = data.kpis.total_toneladas_facturadas || 0;
-    var tonPorFacturar = data.kpis.total_toneladas_por_facturar || 0;
-    var tonPromedioDiario = data.kpis.promedio_tonelaje_diario || 0;
+    var tonRecibidas = Number(data.kpis.total_toneladas_recibidas || 0).toLocaleString('es-ES');
+    var tonFacturadas = Number(data.kpis.total_toneladas_facturadas || 0).toLocaleString('es-ES');
+    var tonPorFacturar = Number(data.kpis.total_toneladas_por_facturar || 0).toLocaleString('es-ES');
+    var tonPromedioDiario = Number(data.kpis.promedio_tonelaje_diario || 0).toLocaleString('es-ES');
 
     html += '<div class="ceo-bloque"><h4><i class="fa fa-balance-scale"></i> Resumen de Tonelaje</h4>';
     html += '<div class="ceo-kpi-row">';
