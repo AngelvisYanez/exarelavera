@@ -185,12 +185,12 @@ ob_end_flush();
                 font-weight: 600;
                 border-radius: 6px;
                 border: none;
-                background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
-                box-shadow: 0 1px 2px rgba(37, 99, 235, 0.35);
+                background: linear-gradient(180deg, #5cb85c 0%, #449d44 100%);
+                box-shadow: 0 1px 2px rgba(68, 157, 68, 0.35);
             }
             .desc-btn-search:hover,
             .desc-btn-search:focus {
-                background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+                background: linear-gradient(180deg, #449d44 0%, #398439 100%);
             }
             .desc-grid-wrap { min-height: 250px; margin-top: 4px; }
 
@@ -253,7 +253,7 @@ ob_end_flush();
                             </div>
                         </div>
                         <div class="desc-filter-actions">
-                            <button type="submit" class="btn btn-primary desc-btn-search">
+                            <button type="submit" class="btn btn-success desc-btn-search">
                                 <i class="glyphicon glyphicon-search"></i> Buscar
                             </button>
                         </div>
@@ -273,7 +273,7 @@ ob_end_flush();
 
             var model = [
                 { label: 'C&oacute;d.', name: 'Ant_Cod', key: true, width: 50, align: "center" },
-                { label: 'C&oacute;d. Com.', name: 'Com_Cod', width: 80, align: "center" },
+                { label: 'C&oacute;d. Com.', name: 'Com_Cod', width: 80, align: "center", hidden: true },
                 { label: 'Fecha', name: 'Ant_Fec', width: 80, align: "center" },
                 { label: 'C&eacute;dula', name: 'Prs_Ced', width: 90, align: "center" },
                 { label: 'Apellidos', name: 'Prs_Ape', width: 130 },
@@ -335,7 +335,7 @@ ob_end_flush();
         }
 
         function anularDescuento(Ant_Cod) {
-            $.createDialogConfirm('ùEstù seguro que desea anular este Descuento y su Comprobante Contable?',
+            $.createDialogConfirm('ÔøΩEstÔøΩ seguro que desea anular este Descuento y su Comprobante Contable?',
                 { anularDescuento: true, Ant_Cod: Ant_Cod },
                 function(data) {
                     $.saveDataJson("rhu_baj_descuento.php", data, function(resp) {
