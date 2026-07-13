@@ -631,9 +631,9 @@ function sentencias_rol($id, $Par_Sql)
             }
 
             $rolApl = isset($Par_Sql['Rol_Apl']) ? $Par_Sql['Rol_Apl'] : 'P';
-            $filtroRol = "AND det_an_rol.Rol_Cod IS NULL";
+            $filtroRol = "AND (det_an_rol.Rol_Cod IS NULL OR rol_pagos.Rol_Est = 'I')";
             if ($rolApl == 'A') {
-                $filtroRol = "AND det_an_rol.Rol_Cod IS NOT NULL";
+                $filtroRol = "AND det_an_rol.Rol_Cod IS NOT NULL AND rol_pagos.Rol_Est = 'A'";
             } elseif ($rolApl == 'T') {
                 $filtroRol = "";
             }
