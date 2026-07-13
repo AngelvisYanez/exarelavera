@@ -640,7 +640,7 @@ function sentencias_rol($id, $Par_Sql)
 
             $Emp_Cod = isset($_SESSION['Ses_Emp_Cod']) ? (int)$_SESSION['Ses_Emp_Cod'] : 0;
 
-            $sql = "SELECT DISTINCT antici_rol.Ant_Cod, antici_rol.Con_Cod, Ant_Fec, Ant_Val, CAST(Ant_Obs AS CHAR) as Ant_Obs, Ant_Est,
+            $sql = "SELECT DISTINCT antici_rol.Ant_Cod, antici_rol.Con_Cod, antici_rol.Ant_Fec, antici_rol.Ant_Val, CAST(antici_rol.Ant_Obs AS CHAR) as Ant_Obs, antici_rol.Ant_Est,
                     det_an_rol.Rol_Cod, rol_pagos.Rol_Est,
                     Prs_Ced, Prs_Ape, Prs_Nom, CONCAT(Prs_Ape, ' ', Prs_Nom) as Personal,
                     (SELECT Com_Cod FROM compr_arol WHERE compr_arol.Ant_Cod = antici_rol.Ant_Cod LIMIT 1) as Com_Cod,
