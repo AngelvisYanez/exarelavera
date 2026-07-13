@@ -335,7 +335,7 @@ ob_end_flush();
         }
 
         function anularDescuento(Ant_Cod) {
-            $.createDialogConfirm('�Est� seguro que desea anular este Descuento y su Comprobante Contable?',
+            $.createDialogConfirm('¿Esta seguro que desea anular este Descuento y su Comprobante Contable?',
                 { anularDescuento: true, Ant_Cod: Ant_Cod },
                 function(data) {
                     $.saveDataJson("rhu_baj_descuento.php", data, function(resp) {
