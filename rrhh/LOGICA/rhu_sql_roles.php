@@ -116,16 +116,6 @@ function sentencias_rol($id, $Par_Sql)
             $sql = "SELECT * FROM map_system WHERE Map_Est='A' AND Emp_Cod='$Par_Sql[0]';";
             //echo $sql . '<br/>';
             break;
-        case 72:
-            // Listar plantillas de todas las empresas (para cargar como plantilla base)
-            // Buscar plantillas que tengan campos de rol (existe campo_rol con ese Map_Cod)
-            $sql = "SELECT DISTINCT MS.*, EMP.Emp_Nom FROM map_system MS 
-                    INNER JOIN empresas EMP ON MS.Emp_Cod = EMP.Emp_Cod 
-                    INNER JOIN campo_rol CR ON MS.Map_Cod = CR.Map_Cod
-                    WHERE MS.Map_Est='A' 
-                    ORDER BY EMP.Emp_Nom, MS.Map_Des;";
-            //echo $sql . '<br/>';
-            break;
         case 11:
             $sql = "SELECT * FROM areas_rrhh WHERE Are_Est='A' AND Emp_Cod=$Par_Sql[0]";
             //echo $sql.'<br/>';
@@ -506,57 +496,7 @@ function sentencias_rol($id, $Par_Sql)
                     AND DP.ROL_VAL > 0
                 GROUP BY 
                     PER.PRS_CED;";
-            break;
-        case 74:
-            $AreaCodigo = '';
-            if ($Par_Sql['Are_Cod'] == 1) {
-                $AreaCodigo = 'RP.ARE_COD';
-            } else {
-                $AreaCodigo = $Par_Sql['Are_Cod'];
-            }
-            $fechaini = "RP.ROL_FEI >= '" . $Par_Sql['dateRolini'] . "'";
-            $fechafin = "RP.ROL_FEF <= '" . $Par_Sql['dateRolfin'] . "'";
-            $periodo = "'" . $Par_Sql['Month'] . "-01'";
-
-            $sql = "SELECT 
-                    EMP.EMP_RUC,  MS.MAP_DES,
-                    CONCAT(Prs_Nom,' ' ,Prs_Ape) AS nombres,
-                    '0001' AS SUCURSAL_IESS, 
-                    YEAR(PC.PEC_FEI) AS ANIO, 
-                    LPAD(MONTH($periodo), 2, '0') AS PERIODO, 
-                    'INS' AS TIPO, 
-                    PER.PRS_CED,
-                    Prs_Sex,
-                    TC.Tic_Des AS car_des,
-                    PG.Pag_Con_Cue,
-                    AF.Afi_Dte,
-                    SUM(CASE WHEN CR.CAM_VAR = 'dias' THEN DP.ROL_VAL ELSE 0 END) AS rol_dias,
-                    SUM(CASE WHEN CR.CAM_VAR = 'sueldo_dias' THEN DP.ROL_VAL ELSE 0 END) AS ROL_VAL,
-                    'O' AS O,
-                    SUM(CASE WHEN CR.CAM_DES = 'EXTRAS APORTE' THEN DP.ROL_VAL ELSE 0 END) AS extra_aporte,
-                    ROUND((SUM(CASE WHEN CR.CAM_VAR = 'aporte_extras_rol_p' THEN DP.ROL_VAL ELSE 0 END) + SUM(CASE WHEN CR.CAM_VAR = 'sueldo_dias' THEN DP.ROL_VAL ELSE 0 END)) / 12  , 3) AS decimo
-                FROM  map_system MS
-                JOIN  empresas EMP ON EMP.EMP_COD = MS.EMP_COD
-                JOIN  campo_rol CR ON CR.MAP_COD = MS.MAP_COD 
-                JOIN  det_rpagos DP ON DP.CAM_COD = CR.CAM_COD
-                JOIN  rol_pagos RP ON RP.ROL_COD = DP.ROL_COD
-                JOIN  contratos_lab CL ON CL.CON_COD = DP.CON_COD
-                JOIN  tiposcargo TC ON CL.Tic_Cod = TC.Tic_Cod
-                JOIN  sueldos su ON su.Con_Cod = CL.Con_Cod
-                JOIN  personal PR ON PR.PER_COD = CL.PER_COD
-                JOIN  persona PER ON PER.PRS_COD = PR.PRS_COD
-                LEFT JOIN afiliacion AF ON AF.Con_Cod = CL.Con_Cod AND AF.Afi_Est = 'A'
-                LEFT JOIN pago_contrato PG ON CL.Con_Cod = PG.Con_Cod AND PG.Pag_Con_Est = 'A'
-                JOIN  perio_cont PC ON PC.PEC_COD = RP.PEC_COD
-                WHERE  MS.MAP_COD = $Par_Sql[Map_Cod]
-                    AND  $fechaini
-                    AND  $fechafin 
-                    AND RP.Rol_Est = 'A'
-                    AND RP.ARE_COD = $AreaCodigo
-                    AND DP.ROL_VAL > 0
-                GROUP BY 
-                    PER.PRS_CED;";
-            break;
+            break;        
         case 69:
             $sql="INSERT INTO proveedore(Prs_Cod,Emp_Cod) VALUES ('$Par_Sql[Prs_Cod]','$Par_Sql[Emp_Cod]')";
             //echo $sql;
@@ -573,8 +513,15 @@ function sentencias_rol($id, $Par_Sql)
         case 71:
             $sql = "UPDATE antici_rol SET Ant_Est='I' WHERE Ant_Cod=$Par_Sql[0]";
             break;
-        case 75:
-            $sql = "SELECT Com_Cod FROM compr_arol WHERE Ant_Cod=$Par_Sql[0] LIMIT 1";
+        case 72:
+            // Listar plantillas de todas las empresas (para cargar como plantilla base)
+            // Buscar plantillas que tengan campos de rol (existe campo_rol con ese Map_Cod)
+            $sql = "SELECT DISTINCT MS.*, EMP.Emp_Nom FROM map_system MS 
+                    INNER JOIN empresas EMP ON MS.Emp_Cod = EMP.Emp_Cod 
+                    INNER JOIN campo_rol CR ON MS.Map_Cod = CR.Map_Cod
+                    WHERE MS.Map_Est='A' 
+                    ORDER BY EMP.Emp_Nom, MS.Map_Des;";
+            //echo $sql . '<br/>';
             break;
         case 73:
             $fini = $Par_Sql['fini'];
@@ -609,6 +556,113 @@ function sentencias_rol($id, $Par_Sql)
                     AND personal.Emp_Cod = $Emp_Cod
                     $search
                     ORDER BY Ant_Fec DESC";
+            break;
+            case 74:
+                $AreaCodigo = '';
+                if ($Par_Sql['Are_Cod'] == 1) {
+                    $AreaCodigo = 'RP.ARE_COD';
+                } else {
+                    $AreaCodigo = $Par_Sql['Are_Cod'];
+                }
+                $fechaini = "RP.ROL_FEI >= '" . $Par_Sql['dateRolini'] . "'";
+                $fechafin = "RP.ROL_FEF <= '" . $Par_Sql['dateRolfin'] . "'";
+                $periodo = "'" . $Par_Sql['Month'] . "-01'";
+    
+                $sql = "SELECT 
+                        EMP.EMP_RUC,  MS.MAP_DES,
+                        CONCAT(Prs_Nom,' ' ,Prs_Ape) AS nombres,
+                        '0001' AS SUCURSAL_IESS, 
+                        YEAR(PC.PEC_FEI) AS ANIO, 
+                        LPAD(MONTH($periodo), 2, '0') AS PERIODO, 
+                        'INS' AS TIPO, 
+                        PER.PRS_CED,
+                        Prs_Sex,
+                        TC.Tic_Des AS car_des,
+                        PG.Pag_Con_Cue,
+                        AF.Afi_Dte,
+                        SUM(CASE WHEN CR.CAM_VAR = 'dias' THEN DP.ROL_VAL ELSE 0 END) AS rol_dias,
+                        SUM(CASE WHEN CR.CAM_VAR = 'sueldo_dias' THEN DP.ROL_VAL ELSE 0 END) AS ROL_VAL,
+                        'O' AS O,
+                        SUM(CASE WHEN CR.CAM_DES = 'EXTRAS APORTE' THEN DP.ROL_VAL ELSE 0 END) AS extra_aporte,
+                        ROUND((SUM(CASE WHEN CR.CAM_VAR = 'aporte_extras_rol_p' THEN DP.ROL_VAL ELSE 0 END) + SUM(CASE WHEN CR.CAM_VAR = 'sueldo_dias' THEN DP.ROL_VAL ELSE 0 END)) / 12  , 3) AS decimo
+                    FROM  map_system MS
+                    JOIN  empresas EMP ON EMP.EMP_COD = MS.EMP_COD
+                    JOIN  campo_rol CR ON CR.MAP_COD = MS.MAP_COD 
+                    JOIN  det_rpagos DP ON DP.CAM_COD = CR.CAM_COD
+                    JOIN  rol_pagos RP ON RP.ROL_COD = DP.ROL_COD
+                    JOIN  contratos_lab CL ON CL.CON_COD = DP.CON_COD
+                    JOIN  tiposcargo TC ON CL.Tic_Cod = TC.Tic_Cod
+                    JOIN  sueldos su ON su.Con_Cod = CL.Con_Cod
+                    JOIN  personal PR ON PR.PER_COD = CL.PER_COD
+                    JOIN  persona PER ON PER.PRS_COD = PR.PRS_COD
+                    LEFT JOIN afiliacion AF ON AF.Con_Cod = CL.Con_Cod AND AF.Afi_Est = 'A'
+                    LEFT JOIN pago_contrato PG ON CL.Con_Cod = PG.Con_Cod AND PG.Pag_Con_Est = 'A'
+                    JOIN  perio_cont PC ON PC.PEC_COD = RP.PEC_COD
+                    WHERE  MS.MAP_COD = $Par_Sql[Map_Cod]
+                        AND  $fechaini
+                        AND  $fechafin 
+                        AND RP.Rol_Est = 'A'
+                        AND RP.ARE_COD = $AreaCodigo
+                        AND DP.ROL_VAL > 0
+                    GROUP BY 
+                        PER.PRS_CED;";
+                break;
+        case 75:
+            $sql = "SELECT Com_Cod FROM compr_arol WHERE Ant_Cod=$Par_Sql[0] LIMIT 1";
+            break;                
+        case 78:
+            $fini = $Par_Sql['fini'];
+            $ffin = $Par_Sql['ffin'];
+            $cedula = "";
+            $apellidos = "";
+            if (!empty($Par_Sql['cedula'])) {
+                $term = str_replace("'", "", $Par_Sql['cedula']);
+                $cedula = " AND Prs_Ced LIKE '%$term%'";
+            }
+            if (!empty($Par_Sql['apellidos'])) {
+                $term = str_replace("'", "", $Par_Sql['apellidos']);
+                $apellidos = " AND Prs_Ape LIKE '%$term%'";
+            }
+
+            $estado = isset($Par_Sql['Ant_Est']) ? $Par_Sql['Ant_Est'] : 'A';
+            $filtroEstado = "AND Ant_Est = '$estado'";
+            if ($estado == 'T') {
+                $filtroEstado = "";
+            }
+
+            $rolApl = isset($Par_Sql['Rol_Apl']) ? $Par_Sql['Rol_Apl'] : 'P';
+            $filtroRol = "AND det_an_rol.Rol_Cod IS NULL";
+            if ($rolApl == 'A') {
+                $filtroRol = "AND det_an_rol.Rol_Cod IS NOT NULL";
+            } elseif ($rolApl == 'T') {
+                $filtroRol = "";
+            }
+
+            $Emp_Cod = isset($_SESSION['Ses_Emp_Cod']) ? (int)$_SESSION['Ses_Emp_Cod'] : 0;
+
+            $sql = "SELECT DISTINCT antici_rol.Ant_Cod, antici_rol.Con_Cod, Ant_Fec, Ant_Val, CAST(Ant_Obs AS CHAR) as Ant_Obs, Ant_Est,
+                    det_an_rol.Rol_Cod, rol_pagos.Rol_Est,
+                    Prs_Ced, Prs_Ape, Prs_Nom, CONCAT(Prs_Ape, ' ', Prs_Nom) as Personal,
+                    (SELECT Com_Cod FROM compr_arol WHERE compr_arol.Ant_Cod = antici_rol.Ant_Cod LIMIT 1) as Com_Cod,
+                    (SELECT Com_Num FROM comprobantes WHERE comprobantes.Com_Cod = (SELECT Com_Cod FROM compr_arol WHERE compr_arol.Ant_Cod = antici_rol.Ant_Cod LIMIT 1)) as Com_Num
+                    FROM antici_rol
+                    INNER JOIN det_an_rol ON det_an_rol.Ant_Cod = antici_rol.Ant_Cod
+                    LEFT JOIN rol_pagos ON rol_pagos.Rol_Cod = det_an_rol.Rol_Cod
+                    INNER JOIN contratos_lab ON antici_rol.Con_Cod = contratos_lab.Con_Cod
+                    INNER JOIN personal ON contratos_lab.Per_Cod = personal.Per_Cod
+                    INNER JOIN persona ON personal.Prs_Cod = persona.Prs_Cod
+                    WHERE 1=1
+                    $filtroEstado
+                    AND Ant_Tip = 'D'
+                    $filtroRol
+                    AND Ant_Fec BETWEEN '$fini' AND '$ffin'
+                    AND personal.Emp_Cod = $Emp_Cod
+                    $cedula
+                    $apellidos
+                    ORDER BY Ant_Fec DESC, Prs_Ape ASC, Prs_Nom ASC";
+            break;
+        case 79:
+            $sql = "UPDATE antici_rol SET Ant_Est='I' WHERE Ant_Cod=$Par_Sql[0] AND Ant_Tip='D'";
             break;
     }
     //echo $sql."<br/>";
