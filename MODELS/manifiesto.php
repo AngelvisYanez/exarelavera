@@ -20,7 +20,7 @@ class manifiesto extends AbstractModel{
                 DATE_FORMAT($this->_name.Man_Sys, '%Y-%m-%d %H:%i:%s') AS Man_Sys_Formatted"))
             ->join('cliente', "cliente.Cli_Cod = $this->_name.Cli_Cod")
             ->join(array('prs_cli'=>'persona'),"prs_cli.Prs_Cod = cliente.Prs_Cod", array('*', 'cliente'=>"concat(prs_cli.Prs_Nom,' ',prs_cli.Prs_Ape)", 'Cli_Ced'=>'prs_cli.Prs_Ced'))            
-            // ->joinLeft('manifiesto_chofer',"manifiesto_chofer.Cho_Cod = $this->_name.Cho_Cod", array(''))
+            ->joinLeft('manifiesto_chofer',"manifiesto_chofer.Cho_Cod = $this->_name.Cho_Cod", array(''))
             ->join('chofer',"chofer.Cho_Cod = $this->_name.Cho_Cod", array(''))
             ->join(array('prs_cho'=>'persona'),"prs_cho.Prs_Cod = chofer.Prs_Cod", array('chofer'=>"concat(prs_cho.Prs_Nom,' ',prs_cho.Prs_Ape)", 'Cho_Cor'=>'prs_cho.Prs_Cor'))
             ->join('vehiculo',"vehiculo.Veh_Cod = $this->_name.Veh_Cod", array('Veh_Pla'))
@@ -33,7 +33,8 @@ class manifiesto extends AbstractModel{
             ->joinLeft(array('prs_usu'=>'persona'), "prs_usu.Prs_Cod = usu.Prs_Cod",array( 'usuario_creador'=>"concat(prs_usu.Prs_Nom,' ',prs_usu.Prs_Ape)"))
             ->joinLeft('manifiesto_tecnico', "manifiesto_tecnico.Man_Cod = $this->_name.Man_Cod AND manifiesto_tecnico.Mat_Est = 'A'", array(''))
             ->joinLeft(array('usu_tec'=>'usuarios'), "usu_tec.Usu_Cod = manifiesto_tecnico.Usu_Cod", array(''))
-            ->joinLeft(array('prs_tec'=>'persona'), "prs_tec.Prs_Cod = usu_tec.Prs_Cod", array('tecnico'=>"concat(prs_tec.Prs_Nom,' ',prs_tec.Prs_Ape)"));
+            ->joinLeft(array('prs_tec'=>'persona'), "prs_tec.Prs_Cod = usu_tec.Prs_Cod", array('tecnico'=>"concat(prs_tec.Prs_Nom,' ',prs_tec.Prs_Ape)"))
+            ->group('manifiesto.Man_Cod');
     }
     /* crea una sql standart para jqgrid, condiciones incluidas */
     public function _selectBasicGrid($cond=null){
@@ -61,6 +62,9 @@ class manifiesto extends AbstractModel{
             }if($cond['op_opciones']=='pl'){
                 $sel->where("UPPER(vehiculo.Veh_Pla) LIKE UPPER(?)","%$cond[search]%");
                 $sel->where("Man_Fec BETWEEN '$cond[txt_fec_ini] 00:00:00' AND '$cond[txt_fec_fin] 23:59:59'",null);
+            }if($cond['op_opciones']=='g'){
+                $sel->where("REPLACE(REPLACE(UPPER(manifiesto.Man_Gui), '-', ''), ' ', '') LIKE UPPER(?)", "%" . str_replace(array('-', ' '), '', $cond['search']) . "%");
+                $sel->where("Man_Fec BETWEEN '$cond[txt_fec_ini] 00:00:00' AND '$cond[txt_fec_fin] 23:59:59'",null);
             }
         }
         
@@ -81,6 +85,9 @@ class manifiesto extends AbstractModel{
                     break;
                 case 'hora_llegada':
                     $sel->order('manifiesto.Man_Fea ASC');
+                    break;
+                case 'guia':
+                    $sel->order('manifiesto.Man_Gui ASC');
                     break;
                 default:
                     $sel->order('manifiesto.Man_Cod ASC, manifiesto.Man_Fec ASC');

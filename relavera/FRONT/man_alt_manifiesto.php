@@ -2295,104 +2295,110 @@ if (isset($anularAnticipo)) {
 				<div class="row">
 					<form name="searchManifiesto" id="searchManifiesto" class="form-horizontal normal" action="javascript:$('#searchGrid').Search('#searchManifiesto','manifiestoAjax');">
 						<input type="hidden" id="ordenar_por_hidden" name="ordenar_por" value="" />
-						<div class="col-xs-4">
+						<div class="col-xs-5">
 							<fieldset class="exa-fieldset">
-								<legend class="Titulos2">B&uacute;squeda</legend>
-								<div class="form-group">
-									<label class="col-xs-3 control-label label-xs">Filtrar Por:</label>
-									<div class="col-xs-9 radioset opt_search">
-										<input id="radsc1" name="op_opciones" type="radio" value="p" checked="" onclick="setfocus(this.form.search)" />
-										<label for="radsc1">Cliente</label>
-										<input id="radsc2" name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" alt="" />
-										<label for="radsc2">C&eacute;dula/RUC</label>
-										<input id="radsc3" name="op_opciones" type="radio" value="m" onclick="setfocus(this.form.search)" alt="" />
-										<label for="radsc3">No. Manifiesto</label>
-										<input id="radsc4" name="op_opciones" type="radio" value="pl" onclick="setfocus(this.form.search)" alt="" />
-										<label for="radsc4">Placa</label>
-									</div>
-								</div>
-								<div class="form-group">
-									<label class="col-xs-3 control-label">B&uacute;squeda:</label>
-									<div class="col-xs-8">
-										<div class="input-group">
-											<input name="search" onkeydown="if (event.keyCode === 13)
-                                            this.form.submit()" type="text" size="50" maxlength="50" placeholder="Ingrese b&uacute;squeda..." autofocus class="form-control input-xs clearable submit" />
-											<span class="input-group-btn">
-												<button type="button" onclick="buscarYActualizarSaldos()" class="btn btn-success btn-xs" title="Buscar Documento" tabindex="-1">
-													<span class="glyphicon glyphicon-search"></span>
-													<span>Buscar</span>
-												</button>
-											</span>
-										</div>
-									</div>
-									<input type="text" tabindex="-1" style="display:none;" />
-								</div>
-							</fieldset>
+  								<legend class="Titulos2">B&uacute;squeda</legend>
+  								<div class="form-group" style="margin-bottom: 5px;">
+  									<label class="col-xs-3 control-label label-xs">Filtrar Por:</label>
+  									<div class="col-xs-9 radioset opt_search">
+  										<input id="radsc1" name="op_opciones" type="radio" value="p" checked="" onclick="setfocus(this.form.search)" />
+  										<label for="radsc1">Cliente</label>
+  										<input id="radsc2" name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" alt="" />
+  										<label for="radsc2">C&eacute;dula/RUC</label>
+  										<input id="radsc3" name="op_opciones" type="radio" value="m" onclick="setfocus(this.form.search)" alt="" />
+  										<label for="radsc3">No. Manif.</label>
+  										<input id="radsc4" name="op_opciones" type="radio" value="pl" onclick="setfocus(this.form.search)" alt="" />
+  										<label for="radsc4">Placa</label>
+                                        <input id="radsc5" name="op_opciones" type="radio" value="g" onclick="setfocus(this.form.search)" alt="" />
+  										<label for="radsc5">Guia</label>
+  									</div>
+  								</div>
+  								<div class="form-group" style="margin-bottom: 5px;">
+  									<label class="col-xs-3 control-label">B&uacute;squeda:</label>
+  									<div class="col-xs-9">
+  										<div class="input-group">
+  											<input name="search" onkeydown="if (event.keyCode === 13) this.form.submit()" type="text" size="50" maxlength="50" placeholder="Ingrese b&uacute;squeda..." autofocus class="form-control input-xs clearable submit" />
+  											<span class="input-group-btn">
+  												<button type="button" onclick="buscarYActualizarSaldos()" class="btn btn-success btn-xs" title="Buscar Documento" tabindex="-1">
+  													<span class="glyphicon glyphicon-search"></span>
+  													<span>Buscar</span>
+  												</button>
+  											</span>
+  										</div>
+  									</div>
+  									<input type="text" tabindex="-1" style="display:none;" />
+  								</div>
+  							</fieldset>
 						</div>
-						<div class="col-sm-8">
-							<fieldset class="exa-fieldset">
-								<legend class="Titulos2">Filtros</legend>
-								<div class="form-group" style="display: flex; align-items: center; flex-wrap: nowrap; gap: 10px; margin-bottom: 0;">
-									<label class="control-label label-xs" style="margin: 0; flex-shrink: 0;">Periodo:</label>
-									<div style="flex-shrink: 0; width: 140px;">
-										<select id="Pec_Cod" name="Pec_Cod" class="form-control input-xs">
-											<!--<option data-year='2018' data-inicio='2018-01-01' data-fin='2030-12-31' value="T">Todos</option>-->
-											<?php $a = 1;
-											foreach ($periodos as $p) { ?>
-												<option data-year="<?php echo $p['Year']; ?>" <?php echo ($a == 1 ? 'selected' : ''); ?> data-inicio="<?php echo $p['Pec_Fei']; ?>" data-fin="<?php echo $p['Pec_Fef']; ?>" data-pec-cod="<?php echo $p['Pec_Cod']; ?>" value="<?php echo $p['Pec_Cod']; ?>">Periodo <?php echo $p['Year']; ?></option>
-											<?php $a++;
-											} ?>
-										</select>
-									</div>
-									<div id="btnFiltroCorte" style="display: none; flex-shrink: 0; margin-left: -5px;">
-										<button type="button" class="btn btn-info btn-xs" style="height: 22px; width: 22px; padding: 0; display: flex; align-items: center; justify-content: center;" title="Filtro Fecha Corte Activo: se esta visualizando todos los anticipos de clientes hasta la fecha elegida">
-											<i class="glyphicon glyphicon-info-sign" style="font-size: 12px;"></i>
-										</button>
-									</div>
-									<label class="control-label label-xs" style="margin: 0 0 0 5px; flex-shrink: 0;">Estados:</label>
-									<div style="flex-shrink: 0; width: 120px;">
-									<select id="filtro_factura" name="filtro_factura" class="form-control input-xs">
-										<option value="">Todos</option>
-										<option value="FACTURADOS">Facturados</option>
-										<option value="SIN FACTURAR">Sin Facturar</option>
-										<option value="P">Pendiente</option>
-										<option value="GE">Garita In</option>
-										<option value="A">Aprobado</option>
-										<option value="GS">Garita Out</option>
-										<option value="F">Facturado</option>
-										<option value="R">Rechazado</option>
-									</select>
-									</div>
-									<div class="input-group input-group-xs" style="flex-shrink: 0; width: auto;">
-										<span class="input-group-addon bold alert-info">Desde:</span>
-										<input onchange="cambioPreiodoSearch('txt')" name="txt_fec_ini" type="text" id="txt_fec_ini" size="6" class="form-control input-xs datepicker databind" style="text-align: center; width: 100px;" />
-										<span class="input-group-addon bold alert-info">Hasta:</span>
-										<input name="txt_fec_fin" type="text" id="txt_fec_fin" size="6" class="form-control input-xs datepicker databind" style="text-align: center; width: 100px;" />
-										<input type="hidden" id="letra" name="letra" value="Activos" />
-									</div>
-									<nav style="margin: 0; flex-shrink: 0;">
-										<?php $valores = array("Activos", "Anulados"); ?>
-										<ul class="pagination pagination-centered" style="margin: 0;">
-											<?php foreach ($valores as $val) { ?>
-												<li <?php if ($val == 'Activos') echo 'class="active"'; ?>>
-													<a><?php echo $val ?></a>
-												</li>
-											<?php } ?>
-										</ul>
-									</nav>
-									<script>
-										document.getElementById('Pec_Cod').addEventListener('change', function() {
-											var btnFiltroCorte = document.getElementById('btnFiltroCorte');
-											if (this.value === 'Corte') {
-												btnFiltroCorte.style.display = 'block';
-											} else {
-												btnFiltroCorte.style.display = 'none';
-											}
-										});
-									</script>
-								</div>
-							</fieldset>
-							<div id="saldo_total_container" class="form-group" style="margin-right: 10px; margin-bottom: 10px;">
+						<div class="col-xs-7">
+  							<fieldset class="exa-fieldset" style="margin-left: auto; width: max-content; margin-right: 65px; padding-left: 15px; padding-right: 15px;">
+  								<legend class="Titulos2">Filtros</legend>
+    								<div style="display: flex; flex-direction: column; align-items: flex-start; gap: 5px; margin-bottom: 0;">
+                                    <div style="display: flex; align-items: center; flex-wrap: nowrap; gap: 10px;">
+                                        <label class="label-xs" style="margin: 0; flex-shrink: 0; font-weight: bold; padding-top: 5px;">Periodo:</label>
+  									    <div style="flex-shrink: 0; width: 110px;">
+  										    <select id="Pec_Cod" name="Pec_Cod" class="form-control input-xs">
+  											    <!--<option data-year='2018' data-inicio='2018-01-01' data-fin='2030-12-31' value="T">Todos</option>-->
+  											    <?php $a = 1;
+  											    foreach ($periodos as $p) { ?>
+  												    <option data-year="<?php echo $p['Year']; ?>" <?php echo ($a == 1 ? 'selected' : ''); ?> data-inicio="<?php echo $p['Pec_Fei']; ?>" data-fin="<?php echo $p['Pec_Fef']; ?>" data-pec-cod="<?php echo $p['Pec_Cod']; ?>" value="<?php echo $p['Pec_Cod']; ?>">Periodo <?php echo $p['Year']; ?></option>
+  											    <?php $a++;
+  											    } ?>
+  										    </select>
+  									    </div>
+  									    <div id="btnFiltroCorte" style="display: none; flex-shrink: 0; margin-left: -5px;">
+  										    <button type="button" class="btn btn-info btn-xs" style="height: 22px; width: 22px; padding: 0; display: flex; align-items: center; justify-content: center;" title="Filtro Fecha Corte Activo: se esta visualizando todos los anticipos de clientes hasta la fecha elegida">
+  											    <i class="glyphicon glyphicon-info-sign" style="font-size: 12px;"></i>
+  										    </button>
+  									    </div>
+  									    <label class="label-xs" style="margin: 0 0 0 5px; flex-shrink: 0; font-weight: bold; padding-top: 5px;">Estados:</label>
+  									    <div style="flex-shrink: 0; width: 120px;">
+  									        <select id="filtro_factura" name="filtro_factura" class="form-control input-xs">
+  										        <option value="">Todos</option>
+  										        <option value="FACTURADOS">Facturados</option>
+  										        <option value="SIN FACTURAR">Sin Facturar</option>
+  										        <option value="P">Pendiente</option>
+  										        <option value="GE">Garita In</option>
+  										        <option value="A">Aprobado</option>
+  										        <option value="GS">Garita Out</option>
+  										        <option value="F">Facturado</option>
+  										        <option value="R">Rechazado</option>
+  									        </select>
+  									    </div>
+                                        <nav style="margin: 0; flex-shrink: 0;">
+  										    <?php $valores = array("Activos", "Anulados"); ?>
+  										    <ul class="pagination pagination-centered" style="margin: 0;">
+  											    <?php foreach ($valores as $val) { ?>
+  												    <li <?php if ($val == 'Activos') echo 'class="active"'; ?>>
+                                                        <a style="padding: 2px 5px;" href="javascript:setLetra('<?php echo $val; ?>')"><?php echo $val ?></a>
+  												    </li>
+  											    <?php } ?>
+  										    </ul>
+  									    </nav>
+                                    </div>
+                                    <div style="display: flex; align-items: center; flex-wrap: nowrap; gap: 10px;">
+                                        <label class="label-xs" style="margin: 0; flex-shrink: 0; font-weight: bold; padding-top: 5px;">Rango:</label>
+  									    <div class="input-group input-group-xs" style="flex-shrink: 0; width: auto;">
+  										    <span class="input-group-addon bold alert-info">Desde:</span>
+  										    <input onchange="cambioPreiodoSearch('txt')" name="txt_fec_ini" type="text" id="txt_fec_ini" size="6" class="form-control input-xs datepicker databind" style="text-align: center; width: 100px;" />
+  										    <span class="input-group-addon bold alert-info">Hasta:</span>
+  										    <input name="txt_fec_fin" type="text" id="txt_fec_fin" size="6" class="form-control input-xs datepicker databind" style="text-align: center; width: 100px;" />
+  										    <input type="hidden" id="letra" name="letra" value="Activos" />
+  									    </div>
+                                    </div>
+                                    <script>
+  										document.getElementById('Pec_Cod').addEventListener('change', function() {
+  											var btnFiltroCorte = document.getElementById('btnFiltroCorte');
+  											if (this.value === 'Corte') {
+  												btnFiltroCorte.style.display = 'block';
+  											} else {
+  												btnFiltroCorte.style.display = 'none';
+  											}
+  										});
+  									</script>
+                                </div>
+  							</fieldset>
+							<div id="saldo_total_container" class="form-group" style="margin-right: 10px; margin-bottom: 10px;" style="margin-right: 10px; margin-bottom: 10px;">
 								<input type="hidden" id="pla_smi_saldo_min" value="<?php echo htmlspecialchars(number_format($pla_smi_saldo_min, 2, '.', ''), ENT_QUOTES, 'UTF-8'); ?>" />
 								<div class="col-sm-12" style="display: flex; align-items: center; justify-content: flex-end; gap: 15px;">
 									<div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
@@ -2499,7 +2505,7 @@ if (isset($anularAnticipo)) {
 						<form class="form-horizontal normal" id="manifiestoForm" name="manifiestoForm" action="javascript:preSaveManifiesto()">
 							<div class="col-sm-12">
 								<div class="row">
-									<div class="col-sm-8">
+									<div class="col-xs-7">
 										<fieldset class="exa-fieldset">
 											<legend class="Titulos2">Datos del Manifiesto</legend>
 											<div class="form-group">
@@ -2530,7 +2536,7 @@ if (isset($anularAnticipo)) {
 											</div>
 											<div class="form-group">
 												<label class="col-sm-2 control-label label-sm required">Generadora Desecho:</label>
-												<div class="col-sm-5">
+												<div class="col-xs-5">
 
 													<?php $plantas = $obBD_con1->getRowConsulta('manifiesto_plantas.selectWhere', array('where' => array('Cli_Cod' => $cliente_manifiesto['Cli_Cod'], 'Pla_Cod' => $cliente_manifiesto['Pla_Cod'], 'Pla_Est' => 'A')), $obBD_conexion);
 													$obBD_con1->utf8_change_param($plantas);
@@ -2550,7 +2556,7 @@ if (isset($anularAnticipo)) {
 											</div>
 											<div class="form-group">
 												<label class="col-xs-2 control-label label-xs required" title="Numero de Registro Generador del Desecho">Fecha Manifiesto:</label>
-												<div class="col-xs-4">
+												<div class="col-xs-5">
 													<div class="input-group input-group-xs">
 														<input type="text" name="Man_Fec" id="Man_Fec" class="form-control /*datepicker*/" value="<?php echo date('Y-m-d'); ?>" size="10" readonly required />
 														<span class="input-group-addon bold alert-info">&nbsp;Hora:</span>
@@ -2655,7 +2661,7 @@ if (isset($anularAnticipo)) {
 											</div>
 											<div class="form-group">
 												<label class="col-sm-2 control-label label-sm required">Vehiculo:</label>
-												<div class="col-sm-8">
+												<div class="col-xs-7">
 													<?php
 													/*$man_pendiente = $obBD_con1->getArrayConsulta("manifiesto.2", array('Pla_Cod' => $cliente_manifiesto['Pla_Cod'],'Emp_Cod' => $Ses_Emp_Cod), $obBD_conexion);
 													$obBD_con1->utf8_change_param($man_pendiente);
@@ -2757,7 +2763,7 @@ if (isset($anularAnticipo)) {
 											</div>
 											<div class="form-group">
 												<label class="col-sm-2 control-label label-sm required">Chofer:</label>
-												<div class="col-sm-5">
+												<div class="col-xs-5">
 													<div class="input-group input-group-xs">
 														<span id="Prs_Ced_Cho" name="Prs_Ced_Cho" class="input-group-addon bold alert-info"> - </span>
 														<?php

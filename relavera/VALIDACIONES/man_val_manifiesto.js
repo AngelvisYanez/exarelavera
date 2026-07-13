@@ -174,7 +174,7 @@ $(function () {
 
 function createGrid() {
     grid.createGrid({
-        caption: 'Manifiestos Generados <div class="pull-right"><b>Ordenar por:</b>&nbsp;<select id="ordenar_por" onchange="cargarSelect();"><option value="">Por defecto</option><option value="manifiesto">Nº Manif</option><option value="cliente">Cliente</option><option value="fecha">Fecha</option><option value="placa">Placa</option><option value="hora_llegada">H. Llegada</option></select>&nbsp;</div>',
+        caption: 'Manifiestos Generados <div class="pull-right"><b>Ordenar por:</b>&nbsp;<select id="ordenar_por" onchange="cargarSelect();"><option value="">Por defecto</option><option value="manifiesto">Nº Manif</option><option value="cliente">Cliente</option><option value="fecha">Fecha</option><option value="placa">Placa</option><option value="hora_llegada">H. Llegada</option><option value="guia">No. Guia</option></select>&nbsp;</div>',
         height: 350,datatype: 'local',
         jsonReader: { root: "rows", id: "Man_Cod" },
         colModel: [
@@ -185,7 +185,7 @@ function createGrid() {
             { label: 'Man_Sys', name: 'Man_Sys_Formatted', hidden: true },
             { label: 'Usuario Creador', name: 'usuario_creador', hidden: true },
             { label: 'No Manif.', name: 'ManNum', width: 30, align: "center" },
-           // { label: 'Guia', name: 'Man_Gui', width: 30, align: "center" },
+            { label: 'Guia', name: 'Man_Gui', width: 40, align: "center" },
             { label: 'C&eacute;dula', name: 'Prs_Ced', width: 40, align: "center", cellattr: function () { return 'style="' + excelFormats.text + '"'; } },
             { label: 'Cliente', name: 'cliente', width: 100, align: "left" },
             { label: 'Planta', name: 'Pla_Nom', width: 70, align: "left" },
