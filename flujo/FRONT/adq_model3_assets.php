@@ -300,44 +300,328 @@ require_once('../../mascaras/model3/estilos/estilos.php');
     }
 
     /* Estilos Modernizados para Modales de Detalle (adq_bandeja.php) */
+    #mdlResolution .modal-dialog.adq-resolution-dialog,
     #mdlResolution .modal-dialog {
-        width: 90%;
-        max-width: 950px;
+        width: 94%;
+        max-width: 1320px;
+        margin: 24px auto;
     }
+    #mdlResolution .modal-content.adq-resolution-content,
+    #mdlResolution .modal-content {
+        border: none;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 24px 48px rgba(15, 23, 42, 0.22);
+    }
+    #mdlResolution .modal-header.adq-resolution-header,
     #mdlResolution .modal-header, #mdlSeguimiento .modal-header {
-        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #3b82f6 100%);
         color: #ffffff;
-        border-top-left-radius: 6px;
-        border-top-right-radius: 6px;
-        padding: 8px 14px;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+        padding: 16px 20px;
         min-height: 0;
+        border-bottom: none;
+    }
+    #mdlResolution .adq-resolution-header-text {
+        padding-right: 28px;
+    }
+    #mdlResolution .adq-modal-subtitle {
+        margin: 4px 0 0;
+        font-size: 13px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.88);
+        line-height: 1.4;
     }
     #mdlResolution .modal-header .close, #mdlSeguimiento .modal-header .close {
         color: #ffffff;
-        opacity: 0.8;
-        font-size: 20px;
+        opacity: 0.85;
+        font-size: 26px;
         line-height: 1;
-        margin-top: 0;
+        margin-top: -2px;
         padding: 0;
+        text-shadow: none;
     }
     #mdlResolution .modal-header .close:hover, #mdlSeguimiento .modal-header .close:hover {
         opacity: 1;
     }
     #mdlResolution .modal-title, #mdlSeguimiento .modal-title {
         font-weight: 700;
-        font-size: 14px;
-        line-height: 1.25;
+        font-size: 18px;
+        line-height: 1.3;
         margin: 0;
-        padding-right: 24px;
+        padding-right: 0;
         color: #ffffff;
     }
+    #mdlResolution .modal-body.adq-resolution-body,
     #mdlResolution .modal-body, #mdlSeguimiento .modal-body {
-        padding: 12px 16px;
-        background-color: #f8fafc;
+        padding: 18px 22px;
+        background-color: #f1f5f9;
     }
     #mdlResolution .modal-body {
-        max-height: 85vh;
+        max-height: 82vh;
         overflow-y: auto;
+    }
+    #mdlResolution .modal-footer.adq-resolution-footer {
+        background: #ffffff;
+        border-top: 1px solid #e2e8f0;
+        padding: 12px 20px;
+        text-align: right;
+    }
+    #mdlResolution .adq-resolution-layout {
+        margin-left: -8px;
+        margin-right: -8px;
+    }
+    #mdlResolution .adq-resolution-layout > [class*="col-"] {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    #mdlResolution .adq-detail-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-bottom: 14px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    }
+    #mdlResolution .adq-section-header {
+        font-size: 13px;
+        font-weight: 700;
+        color: #1e3a8a;
+        margin: 0 0 10px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #e2e8f0;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    #mdlResolution .adq-section-header i {
+        margin-right: 6px;
+    }
+    #mdlResolution .adq-detail-kv td {
+        padding: 7px 10px !important;
+        border: none;
+        vertical-align: top;
+        font-size: 13px !important;
+    }
+    #mdlResolution .adq-detail-kv .adq-detail-kv-label {
+        width: 118px;
+        font-weight: 600;
+        color: #64748b;
+        white-space: nowrap;
+    }
+    #mdlResolution .adq-scroll-items {
+        max-height: 260px;
+        overflow-y: auto;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: #fff;
+    }
+    #mdlResolution #tblDetItems {
+        font-size: 13px !important;
+        margin-bottom: 0;
+    }
+    #mdlResolution #tblDetItems thead th {
+        font-size: 12px !important;
+        padding: 8px 10px !important;
+        background-color: #f8fafc !important;
+        color: #475569;
+        font-weight: 700;
+        border-bottom: 2px solid #cbd5e1 !important;
+    }
+    #mdlResolution #tblDetItems tbody td {
+        padding: 8px 10px !important;
+        vertical-align: middle;
+    }
+    #mdlResolution .adq-scroll-cotizaciones {
+        max-height: 240px;
+        overflow-y: auto;
+    }
+    #mdlResolution .adq-cot-sustento-table {
+        font-size: 12px;
+        margin-bottom: 0;
+    }
+    #mdlResolution .adq-cot-sustento-table thead th {
+        font-size: 11px;
+        font-weight: 700;
+        color: #475569;
+        background: #f8fafc;
+        border-bottom: 2px solid #cbd5e1;
+        padding: 8px 10px;
+        white-space: nowrap;
+    }
+    #mdlResolution .adq-cot-sustento-table tbody td {
+        padding: 8px 10px;
+        vertical-align: middle;
+        border-color: #e2e8f0;
+    }
+    #mdlResolution .adq-cot-sustento-table tr.adq-cot-row-ganadora {
+        background-color: #f0fdf4;
+    }
+    #mdlResolution .adq-cot-sustento-table tr.adq-cot-row-ganadora td {
+        border-color: #bbf7d0;
+    }
+    #mdlResolution .adq-cot-jus-cell {
+        color: #475569;
+        line-height: 1.35;
+        max-width: 280px;
+        word-break: break-word;
+    }
+    #mdlResolution .adq-scroll-historial {
+        max-height: 480px;
+        overflow-y: auto;
+        padding-right: 6px;
+    }
+    #mdlResolution .adq-cot-card {
+        padding: 12px 14px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+    }
+    #mdlResolution .adq-cot-card .fw-bold {
+        font-size: 14px !important;
+    }
+    #mdlResolution #flowTracker.adq-flow-tracker-host {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+        gap: 10px;
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 12px 10px;
+        overflow-x: auto;
+        min-height: 80px;
+        width: 100%;
+    }
+    #mdlResolution #flowTracker.adq-flow-tracker-host .tracker-node {
+        font-size: 13px !important;
+        min-width: 132px;
+        max-width: 200px;
+        padding: 8px 10px !important;
+        flex-shrink: 0;
+    }
+    #mdlResolution #flowTracker.adq-flow-tracker-host .tracker-arrow {
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+    #mdlResolution #flowTracker.adq-flow-tracker-host .tracker-actor {
+        font-size: 10px;
+    }
+    #mdlSeguimiento .adq-seg-flow-tracker,
+    #mdlSeguimiento .tracker-wrapper.adq-seg-flow-tracker {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+        gap: 10px;
+        overflow-x: auto;
+        min-height: 88px;
+        width: 100%;
+        padding: 10px 8px;
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+    }
+    #mdlSeguimiento .adq-seg-flow-tracker .tracker-node {
+        font-size: 13px !important;
+        min-width: 132px;
+        max-width: 210px;
+        padding: 8px 10px !important;
+        flex-shrink: 0;
+        white-space: normal;
+    }
+    #mdlSeguimiento .adq-seg-flow-tracker .tracker-arrow {
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+    #mdlSeguimiento .adq-seg-flow-tracker .tracker-actor {
+        font-size: 10px;
+    }
+    #mdlSeguimiento .adq-seg-flow-tracker .tracker-node-clickable {
+        cursor: pointer;
+        transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+    }
+    #mdlSeguimiento .adq-seg-flow-tracker .tracker-node-clickable:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
+    }
+    #mdlSeguimiento .adq-seg-flow-tracker .tracker-node-selected {
+        outline: 2px solid #1e3a8a;
+        outline-offset: 2px;
+        box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.15);
+    }
+    #mdlSeguimiento .adq-seg-nodo-tareas-card {
+        border-color: #bfdbfe;
+        background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+        padding: 10px 12px;
+    }
+    #mdlSeguimiento .adq-seg-nodo-tareas-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 8px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid #dbeafe;
+    }
+    #mdlSeguimiento #segNodoTareasBody {
+        max-height: 280px;
+        overflow-y: auto;
+        padding-right: 4px;
+    }
+    #mdlResolution .adq-timeline-title {
+        font-size: 13px;
+    }
+    #mdlResolution .adq-timeline-date {
+        font-size: 11px;
+    }
+    #mdlResolution .adq-timeline-body {
+        font-size: 12px;
+    }
+    #mdlResolution .adq-timeline-comment {
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+    #mdlResolution .adq-timeline-content {
+        padding: 10px 12px;
+        border-radius: 8px;
+    }
+    #mdlResolution .adq-action-buttons .btn {
+        font-size: 13px !important;
+        padding: 9px 14px !important;
+        border-radius: 8px;
+    }
+    #mdlResolution #actionComentario {
+        font-size: 13px !important;
+        padding: 10px 12px !important;
+        min-height: 72px;
+        border-radius: 8px;
+    }
+    #mdlResolution .adq-wf-progress-card {
+        background-color: #f8fafc;
+        border-color: #e2e8f0;
+    }
+    #mdlResolution .adq-wf-progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    #mdlResolution .adq-wf-progress-header .form-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    #mdlResolution .adq-wf-progress-header .btn {
+        background-color: #1e3a8a;
+        border-color: #1e3a8a;
+        font-size: 11px;
+        padding: 4px 10px;
+    }
+    #mdlResolution #panelDecision {
+        padding: 14px 16px !important;
     }
     .adq-detail-card {
         background: #ffffff;
@@ -450,6 +734,30 @@ require_once('../../mascaras/model3/estilos/estilos.php');
         font-size: 11px;
         font-weight: 700;
         color: #1e293b;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .adq-timeline-step-num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 22px;
+        height: 22px;
+        padding: 0 6px;
+        border-radius: 999px;
+        background-color: #1e3a8a;
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1;
+        flex-shrink: 0;
+    }
+    #mdlResolution .adq-timeline-step-num {
+        min-width: 24px;
+        height: 24px;
+        font-size: 12px;
     }
     .adq-timeline-date {
         font-size: 10px;
@@ -482,5 +790,167 @@ require_once('../../mascaras/model3/estilos/estilos.php');
         padding: 6px 10px;
         border-radius: 5px;
         margin: 0;
+    }
+    #mdlResolution .adq-action-buttons .btn-adq-devolver {
+        background-color: #4f46e5 !important;
+        border-color: #4338ca !important;
+        color: #ffffff !important;
+    }
+    #mdlResolution .adq-action-buttons .btn-adq-devolver:hover,
+    #mdlResolution .adq-action-buttons .btn-adq-devolver:focus,
+    #mdlResolution .adq-action-buttons .btn-adq-devolver:active {
+        background-color: #4338ca !important;
+        border-color: #3730a3 !important;
+        color: #ffffff !important;
+    }
+
+    /* Modales Model3 - Departamentos / Configuracion */
+    #mdlDepto .modal-dialog,
+    #mdlDeptoUsuarios .modal-dialog,
+    #mdlMensajeExa .modal-dialog {
+        margin: 28px auto;
+    }
+    #mdlDepto .modal-content,
+    #mdlDeptoUsuarios .modal-content,
+    #mdlMensajeExa .modal-content {
+        border: none;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 24px 48px rgba(15, 23, 42, 0.22);
+    }
+    #mdlDepto .modal-header,
+    #mdlDeptoUsuarios .modal-header {
+        background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #3b82f6 100%);
+        color: #ffffff;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+        padding: 16px 20px;
+        min-height: 0;
+        border-bottom: none;
+    }
+    #mdlDepto .modal-header .close,
+    #mdlDeptoUsuarios .modal-header .close {
+        color: #ffffff;
+        opacity: 0.85;
+        font-size: 26px;
+        line-height: 1;
+        margin-top: -2px;
+        padding: 0;
+        text-shadow: none;
+    }
+    #mdlDepto .modal-header .close:hover,
+    #mdlDeptoUsuarios .modal-header .close:hover {
+        opacity: 1;
+    }
+    #mdlDepto .modal-title,
+    #mdlDeptoUsuarios .modal-title {
+        font-weight: 700;
+        font-size: 18px;
+        line-height: 1.3;
+        margin: 0;
+        padding-right: 28px;
+        color: #ffffff;
+    }
+    #mdlDeptoUsuarios .adq-modal-subtitle {
+        margin: 4px 0 0;
+        font-size: 13px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.88);
+        line-height: 1.4;
+    }
+    #mdlDepto .modal-body,
+    #mdlDeptoUsuarios .modal-body {
+        padding: 18px 22px;
+        background-color: #f1f5f9;
+    }
+    #mdlDepto .modal-footer,
+    #mdlDeptoUsuarios .modal-footer {
+        background: #ffffff;
+        border-top: 1px solid #e2e8f0;
+        padding: 12px 20px;
+        text-align: right;
+    }
+    #mdlDepto .select2-container {
+        width: 100% !important;
+    }
+    #mdlDepto .select2-container--default .select2-selection--single {
+        height: 34px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+    }
+    #mdlDepto .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 32px;
+        padding-left: 10px;
+    }
+    #mdlDepto .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 32px;
+    }
+    #mdlDeptoUsuarios .adq-depto-users-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 14px 16px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    }
+    #mdlDeptoUsuarios .adq-depto-users-card .adq-section-header {
+        margin-bottom: 12px;
+    }
+    #mdlDeptoUsuarios .adq-depto-users-search {
+        margin-bottom: 12px;
+    }
+    #mdlDeptoUsuarios .adq-depto-users-scroll {
+        max-height: 320px;
+        overflow-y: auto;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: #fff;
+    }
+    #mdlDeptoUsuarios .item-usuario-depto {
+        cursor: pointer;
+        padding: 9px 12px;
+        margin: 0;
+        border: none;
+        border-bottom: 1px solid #e2e8f0;
+        display: block;
+        background: #fff;
+        transition: background-color 0.15s ease;
+    }
+    #mdlDeptoUsuarios .item-usuario-depto:last-child {
+        border-bottom: none;
+    }
+    #mdlDeptoUsuarios .item-usuario-depto:hover {
+        background-color: #f8fafc;
+    }
+    #mdlDeptoUsuarios .item-usuario-depto .form-check {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    #mdlDeptoUsuarios .item-usuario-depto .lbl-usuario-nom {
+        font-size: 13px;
+        color: #1e293b;
+        font-weight: 500;
+    }
+    #mdlDeptoUsuarios .adq-depto-users-empty {
+        padding: 24px 16px;
+        text-align: center;
+        color: #64748b;
+        font-size: 13px;
+    }
+    #mdlMensajeExa .modal-header {
+        border-bottom: none;
+        padding: 14px 16px;
+    }
+    #mdlMensajeExa .modal-body {
+        padding: 20px 24px;
+        font-size: 14px;
+        background: #f8fafc;
+    }
+    #mdlMensajeExa .modal-footer {
+        text-align: center;
+        border-top: 1px solid #e5e7eb;
+        padding: 12px 16px;
+        background: #fff;
     }
 </style>

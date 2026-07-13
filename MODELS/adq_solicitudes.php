@@ -28,7 +28,7 @@ class adq_solicitudes extends AbstractModel {
             $sel->where("$this->_name.Suc_Cod = ?", $cond['Suc_Cod']);
         }
         if (isset($cond['search']) && !empty($cond['search'])) {
-            $sel->where("($this->_name.Sol_Num = ? OR persona.Prs_Nom LIKE ? OR persona.Prs_Ape LIKE ?)", array($cond['search'], "%{$cond['search']}%", "%{$cond['search']}%"));
+            $sel->where("($this->_name.Sol_Num = ? OR $this->_name.Sol_Num LIKE ? OR persona.Prs_Nom LIKE ? OR persona.Prs_Ape LIKE ?)", array($cond['search'], "%{$cond['search']}%", "%{$cond['search']}%", "%{$cond['search']}%"));
         }
         return $sel;
     }

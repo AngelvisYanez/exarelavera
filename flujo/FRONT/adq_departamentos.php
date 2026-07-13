@@ -34,7 +34,7 @@ if (!$wf_mgr->verificarAccesoVentana('configuracion')) {
 
 // Redirecci�n segura para navegaci�n directa del navegador (no AJAX)
 $request_method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : '';
-$is_ajax_get = isset($_GET['ajax_get_deptos']) || isset($_GET['ajax_get_depto_req']) || isset($_GET['ajax_get_depto_users']);
+$is_ajax_get = isset($_GET['ajax_get_deptos']) || isset($_GET['ajax_get_depto_req']) || isset($_GET['ajax_get_deptos_rrhh']) || isset($_GET['ajax_get_depto_users']);
 if ($request_method === 'GET' && !$is_ajax_get) {
     header("Location: adq_configuracion.php?tab=departamentos");
     exit;
@@ -43,24 +43,21 @@ if ($request_method === 'GET' && !$is_ajax_get) {
 // --- AJAX: Guardar Departamento (Crear o Editar) ---
 if (isset($ajax_save_depto_req)) {
     $dep_cod = !empty($_POST['Dep_Cod']) ? intval($_POST['Dep_Cod']) : null;
-    $dep_des = mysqli_real_escape_string($obBD_conexion->conexion, $_POST['Dep_Des']);
-    
-    if (empty($dep_des)) {
+    $dep_rrhh_cod = !empty($_POST['Dep_Rrhh_Cod']) ? intval($_POST['Dep_Rrhh_Cod']) : null;
+    $dep_des = isset($_POST['Dep_Des']) ? mysqli_real_escape_string($obBD_conexion->conexion, $_POST['Dep_Des']) : '';
+
+    if (empty($dep_cod) && empty($dep_rrhh_cod)) {
+        $obBD_con1->echoJson(array('success' => false, 'message' => 'Debe seleccionar un departamento de Recursos Humanos.'));
+        exit;
+    }
+    if (!empty($dep_cod) && $dep_des === '') {
         $obBD_con1->echoJson(array('success' => false, 'message' => 'El nombre del departamento es obligatorio.'));
         exit;
     }
 
     try {
         $emp_id = isset($Ses_Emp_Cod) ? intval($Ses_Emp_Cod) : (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0);
-        if ($dep_cod) {
-            // Actualizar en wf_departamentos
-            $sql = "UPDATE wf_departamentos SET Wde_Des = '$dep_des' WHERE Wde_Cod = $dep_cod AND Emp_Cod = $emp_id;";
-        } else {
-            // Crear en wf_departamentos
-            $sql = "INSERT INTO wf_departamentos (Emp_Cod, Wde_Des, Wde_Est) 
-                    VALUES ($emp_id, '$dep_des', 'A');";
-        }
-        $obBD_con1->grabarv_registros($sql, $obBD_conexion);
+        $wf_mgr->guardarDepartamentoWorkflow($emp_id, $dep_cod, $dep_des, $dep_rrhh_cod);
         $obBD_con1->echoJson(array('success' => true));
     } catch (Exception $e) {
         $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
@@ -87,16 +84,41 @@ if (isset($ajax_toggle_depto_req)) {
 if (isset($ajax_get_depto_req)) {
     $dep_cod = intval($_GET['Dep_Cod']);
     $emp_id = isset($Ses_Emp_Cod) ? intval($Ses_Emp_Cod) : (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0);
-    $row = $obBD_con1->getRowConsultaSql("SELECT Wde_Cod AS Dep_Cod, Wde_Des AS Dep_Des, Wde_Est AS Dep_Est FROM wf_departamentos WHERE Wde_Cod = $dep_cod AND Emp_Cod = $emp_id;", $obBD_conexion);
+    $row = $obBD_con1->getRowConsultaSql("
+        SELECT w.Wde_Cod AS Dep_Cod, w.Dep_Cod AS Dep_Rrhh_Cod,
+               COALESCE(r.Dep_Des, w.Wde_Des) AS Dep_Des, w.Wde_Est AS Dep_Est
+        FROM wf_departamentos w
+        LEFT JOIN departamen r ON r.Dep_Cod = w.Dep_Cod AND r.Emp_Cod = w.Emp_Cod
+        WHERE w.Wde_Cod = $dep_cod AND w.Emp_Cod = $emp_id;", $obBD_conexion);
+    if (!empty($row) && function_exists('utf8_encode_deep')) {
+        utf8_encode_deep($row);
+    }
     $obBD_con1->echoJson(array('success' => true, 'data' => $row));
+    exit;
+}
+
+// --- AJAX: Listar departamentos RRHH disponibles para registrar en workflow ---
+if (isset($_GET['ajax_get_deptos_rrhh'])) {
+    $emp_id = isset($Ses_Emp_Cod) ? intval($Ses_Emp_Cod) : (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0);
+    $deptos_rrhh = $wf_mgr->listarDepartamentosRrhh($emp_id);
+    if (function_exists('utf8_encode_deep')) {
+        utf8_encode_deep($deptos_rrhh);
+    }
+    $obBD_con1->echoJson(array('success' => true, 'data' => $deptos_rrhh));
     exit;
 }
 
 // --- AJAX: Obtener usuarios de la empresa con flag de asignaci�n al departamento ---
 if (isset($ajax_get_depto_users) || isset($_GET['ajax_get_depto_users'])) {
-    $dep_cod = intval($_GET['dep_cod']);
+    $wde_cod = intval($_GET['dep_cod']);
     $emp_id = isset($Ses_Emp_Cod) ? intval($Ses_Emp_Cod) : (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0);
+    if (!$wf_mgr->validarWdeCodWorkflow($wde_cod, $emp_id)) {
+        $obBD_con1->echoJson(array('success' => false, 'message' => 'Departamento de workflow no valido.'));
+        exit;
+    }
     try {
+        $wf_mgr->ensureWfDepartamentoUsuariosWdeCod($emp_id);
+        $filtro_du = $wf_mgr->sqlDuPorWdeCod($wde_cod, 'du2');
         $usuarios = $obBD_con1->getArrayConsultaSql("
             SELECT base.Usu_Cod,
                    base.Usuario_Nom,
@@ -104,8 +126,10 @@ if (isset($ajax_get_depto_users) || isset($_GET['ajax_get_depto_users'])) {
                        SELECT 1
                        FROM usuarios ux
                        INNER JOIN sucursal sx ON sx.Suc_Cod = ux.Suc_Cod
-                       INNER JOIN wf_departamento_usuarios du2 ON du2.Usu_Cod = ux.Usu_Cod AND du2.Dep_Cod = $dep_cod
-                       WHERE sx.Emp_Cod = $emp_id AND ux.Usu_Ced = base.Usu_Ced AND ux.Usu_Est = 'A' AND ux.Usu_Wf = 'S'
+                       INNER JOIN wf_departamento_usuarios du2 ON du2.Usu_Cod = ux.Usu_Cod
+                       WHERE sx.Emp_Cod = $emp_id AND ux.Usu_Ced = base.Usu_Ced
+                         AND ux.Usu_Est = 'A' AND ux.Usu_Wf = 'S'
+                         AND $filtro_du
                    ), 1, 0) AS asignado
             FROM (
                 SELECT MIN(u.Usu_Cod) AS Usu_Cod,
@@ -122,6 +146,9 @@ if (isset($ajax_get_depto_users) || isset($_GET['ajax_get_depto_users'])) {
         if ($usuarios === false || $usuarios === null) {
             $usuarios = array();
         }
+        if (function_exists('utf8_encode_deep')) {
+            utf8_encode_deep($usuarios);
+        }
         $obBD_con1->echoJson(array('success' => true, 'usuarios' => $usuarios));
     } catch (Exception $e) {
         $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
@@ -131,32 +158,16 @@ if (isset($ajax_get_depto_users) || isset($_GET['ajax_get_depto_users'])) {
 
 // --- AJAX: Guardar asignaciones de usuarios a un departamento ---
 if (isset($ajax_save_depto_users)) {
-    $dep_cod = intval($_POST['dep_cod']);
-    $usuarios_ids = isset($_POST['usuarios']) ? $_POST['usuarios'] : array();
-    
-    $obBD_con1->inicio_transaccion($obBD_conexion);
+    $wde_cod = intval($_POST['dep_cod']);
+    $usuarios_ids = array();
+    if (isset($_POST['usuarios'])) {
+        $usuarios_ids = is_array($_POST['usuarios']) ? $_POST['usuarios'] : array($_POST['usuarios']);
+    }
+    $emp_id = isset($Ses_Emp_Cod) ? intval($Ses_Emp_Cod) : (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0);
     try {
-        $obBD_con1->grabarv_registros("DELETE FROM wf_departamento_usuarios WHERE Dep_Cod = $dep_cod;", $obBD_conexion);
-        $emp_id = isset($Ses_Emp_Cod) ? intval($Ses_Emp_Cod) : (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0);
-        foreach ($usuarios_ids as $u_id) {
-            $u_id = intval($u_id);
-            $cuentas = $obBD_con1->getArrayConsultaSql("
-                SELECT ux.Usu_Cod
-                FROM usuarios ux
-                INNER JOIN sucursal sx ON sx.Suc_Cod = ux.Suc_Cod
-                WHERE sx.Emp_Cod = $emp_id AND ux.Usu_Est = 'A' AND ux.Usu_Wf = 'S'
-                  AND ux.Usu_Ced = (SELECT u0.Usu_Ced FROM usuarios u0 WHERE u0.Usu_Cod = $u_id LIMIT 1);", $obBD_conexion);
-            if ($cuentas === false || $cuentas === null) {
-                $cuentas = array();
-            }
-            foreach ($cuentas as $cuenta) {
-                $obBD_con1->grabarv_registros("INSERT INTO wf_departamento_usuarios (Dep_Cod, Usu_Cod) VALUES ($dep_cod, {$cuenta['Usu_Cod']});", $obBD_conexion);
-            }
-        }
-        $obBD_con1->commit_nomsn($obBD_conexion);
-        $obBD_con1->echoJson(array('success' => true));
+        $result = $wf_mgr->guardarUsuariosDepartamentoWorkflow($wde_cod, $emp_id, $usuarios_ids);
+        $obBD_con1->echoJson(array('success' => true, 'data' => $result));
     } catch (Exception $e) {
-        $obBD_con1->rollBack_nomsn($obBD_conexion);
         $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
     }
     exit;
@@ -166,20 +177,30 @@ if (isset($ajax_save_depto_users)) {
 $emp_id = isset($Ses_Emp_Cod) ? intval($Ses_Emp_Cod) : (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0);
 $wf_mgr->syncDepartamentosFromRrhh($emp_id);
 $deptos = $obBD_con1->getArrayConsultaSql("
-    SELECT d.Wde_Cod AS Dep_Cod, d.Wde_Des AS Dep_Des, d.Wde_Est AS Dep_Est, d.Wde_Est AS Wfd_Est,
+    SELECT d.Wde_Cod AS Dep_Cod, d.Dep_Cod AS Dep_Rrhh_Cod,
+           COALESCE(r.Dep_Des, d.Wde_Des) AS Dep_Des,
+           d.Wde_Est AS Dep_Est, d.Wde_Est AS Wfd_Est,
            (SELECT COUNT(DISTINCT u.Usu_Ced)
             FROM wf_departamento_usuarios du
             INNER JOIN usuarios u ON u.Usu_Cod = du.Usu_Cod
             INNER JOIN sucursal s ON s.Suc_Cod = u.Suc_Cod
-            WHERE du.Dep_Cod = d.Wde_Cod AND s.Emp_Cod = $emp_id AND u.Usu_Wf = 'S') as Cant_Usuarios
+            WHERE s.Emp_Cod = $emp_id AND u.Usu_Wf = 'S'
+              AND (du.Wde_Cod = d.Wde_Cod
+                   OR (du.Wde_Cod IS NULL AND du.Dep_Cod = d.Dep_Cod))) as Cant_Usuarios
     FROM wf_departamentos d
+    LEFT JOIN departamen r ON r.Dep_Cod = d.Dep_Cod AND r.Emp_Cod = d.Emp_Cod
     WHERE d.Emp_Cod = $emp_id
-    ORDER BY (d.Wde_Est = 'A') DESC, Cant_Usuarios DESC, d.Wde_Des ASC;", $obBD_conexion);
+    ORDER BY d.Wde_Cod DESC;", $obBD_conexion);
 if ($deptos === false || $deptos === null) {
     $deptos = array();
 }
+$deptos_rrhh = $wf_mgr->listarDepartamentosRrhh($emp_id);
 
 if (isset($ajax_get_deptos)) {
+    if (function_exists('utf8_encode_deep')) {
+        utf8_encode_deep($deptos);
+        utf8_encode_deep($deptos_rrhh);
+    }
     ?>
     <style>
         #tblDeptos tr.wf-depto-inactivo {
@@ -194,9 +215,12 @@ if (isset($ajax_get_deptos)) {
         }
     </style>
     <div class="p-1">
-        <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
-            <h4 class="fw-bold m-0 text-primary"><i class="bi bi-building"></i> Gesti�n de Departamentos</h4>
-            <button class="btn btn-sm btn-success" onclick="abrirFormularioDepto()"><i class="bi bi-plus-lg"></i> Nuevo Departamento</button>
+        <div class="adq-tipos-toolbar">
+            <h4 class="fw-bold text-primary adq-tipos-toolbar-title"><i class="bi bi-building"></i> Gesti&oacute;n de Departamentos</h4>
+            <div class="adq-tipos-toolbar-actions">
+                <span class="text-muted small adq-tipos-toolbar-count"><?php echo count($deptos); ?> departamento(s)</span>
+                <button type="button" class="btn btn-sm btn-success" onclick="abrirFormularioDepto()"><i class="bi bi-plus-lg"></i> Nuevo Departamento</button>
+            </div>
         </div>
 
         <!-- Listado de Departamentos -->
@@ -218,7 +242,7 @@ if (isset($ajax_get_deptos)) {
                         foreach ($deptos as $d) { ?>
                             <tr class="text-center <?php echo $d['Wfd_Est'] === 'I' ? 'wf-depto-inactivo' : ''; ?>" id="row_dep_<?php echo $d['Dep_Cod']; ?>" data-wfd-est="<?php echo $d['Wfd_Est']; ?>">
                                 <td class="fw-bold"><?php echo $d['Dep_Cod']; ?></td>
-                                <td class="text-start"><?php echo $d['Dep_Des']; ?></td>
+                                <td class="text-start"><?php echo htmlspecialchars($d['Dep_Des'], ENT_QUOTES, 'UTF-8'); ?></td>
                                 <td class="fw-bold text-primary">
                                     <span class="badge bg-info text-dark" id="cant_usu_<?php echo $d['Dep_Cod']; ?>">
                                         <?php echo $d['Cant_Usuarios']; ?> usuarios
@@ -231,9 +255,9 @@ if (isset($ajax_get_deptos)) {
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-xs">
-                                        <button class="btn btn-sm btn-outline-primary" onclick="editarDepto(<?php echo $d['Dep_Cod']; ?>)" title="Editar Nombre"><i class="bi bi-pencil"></i></button>
-                                        <button class="btn btn-sm btn-outline-info" onclick="abrirDeptoUsuarios(<?php echo $d['Dep_Cod']; ?>, '<?php echo addslashes($d['Dep_Des']); ?>')" title="Asignar Usuarios"><i class="bi bi-people"></i></button>
-                                        <button class="btn btn-sm btn-outline-<?php echo $d['Wfd_Est'] === 'A' ? 'danger' : 'success'; ?>" id="btn_toggle_dep_<?php echo $d['Dep_Cod']; ?>" onclick="toggleEstadoDepto(<?php echo $d['Dep_Cod']; ?>)" title="<?php echo $d['Wfd_Est'] === 'A' ? 'Desactivar en Workflow' : 'Activar en Workflow'; ?>">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="editarDepto(<?php echo $d['Dep_Cod']; ?>)" title="Editar Nombre"><i class="bi bi-pencil"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-info btn-abrir-depto-usuarios" data-wde-cod="<?php echo intval($d['Dep_Cod']); ?>" data-dep-nom="<?php echo htmlspecialchars($d['Dep_Des'], ENT_QUOTES, 'UTF-8'); ?>" title="Asignar Usuarios"><i class="bi bi-people"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-<?php echo $d['Wfd_Est'] === 'A' ? 'danger' : 'success'; ?>" id="btn_toggle_dep_<?php echo $d['Dep_Cod']; ?>" onclick="toggleEstadoDepto(<?php echo $d['Dep_Cod']; ?>)" title="<?php echo $d['Wfd_Est'] === 'A' ? 'Desactivar en Workflow' : 'Activar en Workflow'; ?>">
                                             <i class="bi bi-power"></i>
                                         </button>
                                     </div>
@@ -245,216 +269,6 @@ if (isset($ajax_get_deptos)) {
             </table>
         </div>
     </div>
-
-    <!-- Modal para Crear/Editar Departamento -->
-    <div class="modal fade" id="mdlDepto" tabindex="-1" aria-labelledby="mdlDeptoTitle" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="frmDepto" onsubmit="guardarDepto(event)">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title fw-bold" id="mdlDeptoTitle">Nuevo Departamento</h5>
-                        <button type="button" class="btn-close btn-close-white" data-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" id="Dep_Cod" name="Dep_Cod">
-                        <div class="mb-3">
-                            <label for="Dep_Des" class="form-label fw-bold">Nombre del Departamento *</label>
-                            <input type="text" class="form-control" id="Dep_Des" name="Dep_Des" required placeholder="Ej. Departamento de Compras, Sistemas, etc.">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Guardar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal para Asignar Usuarios -->
-    <div class="modal fade" id="mdlDeptoUsuarios" tabindex="-1" aria-labelledby="mdlDeptoUsuariosTitle" aria-hidden="true">
-        <div class="modal-dialog modal-md">
-            <div class="modal-content">
-                <div class="modal-header bg-info text-dark">
-                    <h5 class="modal-title fw-bold" id="mdlDeptoUsuariosTitle"><i class="bi bi-people"></i> Asignar Usuarios</h5>
-                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="depto_users_dep_cod">
-                    <p class="text-muted small">Seleccione los usuarios que pertenecen al departamento <strong id="depto_users_dep_nom"></strong>:</p>
-                    <div class="mb-3">
-                        <input type="text" class="form-control form-control-sm" id="txtBuscarUsuarioDepto" placeholder="Buscar usuario..." onkeyup="filtrarUsuariosDepto()">
-                    </div>
-                    <div id="deptoUsersList" class="list-group" style="max-height: 300px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 4px;">
-                        <!-- Lista de usuarios con checkboxes -->
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" onclick="guardarUsuariosDepto()"><i class="bi bi-save"></i> Guardar Cambios</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function msgExa(tipo, mensaje, onAceptar) {
-            if (typeof mostrarMensajeModal === 'function') {
-                mostrarMensajeModal(tipo, mensaje, onAceptar);
-            } else {
-                alert(mensaje);
-                if (typeof onAceptar === 'function') {
-                    onAceptar();
-                }
-            }
-        }
-
-        function cerrarModalDepto(selector) {
-            $(selector).modal('hide');
-            $('body').removeClass('modal-open');
-            $('.modal-backdrop').remove();
-        }
-
-        function abrirFormularioDepto() {
-            $('#frmDepto')[0].reset();
-            $('#Dep_Cod').val('');
-            $('#mdlDeptoTitle').text('Nuevo Departamento');
-            $('#mdlDepto').modal('show');
-        }
-
-        function editarDepto(id) {
-            $.getJSON('adq_configuracion.php', { ajax_get_depto_req: true, Dep_Cod: id }, function(res) {
-                if (res.success) {
-                    const d = res.data;
-                    $('#Dep_Cod').val(d.Dep_Cod);
-                    $('#Dep_Des').val(d.Dep_Des);
-                    $('#mdlDeptoTitle').text('Editar Departamento');
-                    $('#mdlDepto').modal('show');
-                } else {
-                    msgExa('danger', 'Error al cargar datos: ' + res.message);
-                }
-            });
-        }
-
-        function guardarDepto(e) {
-            e.preventDefault();
-            const data = $('#frmDepto').serialize();
-            $.post('adq_configuracion.php?ajax_save_depto_req=1', data, function(res) {
-                if (res.success) {
-                    cerrarModalDepto('#mdlDepto');
-                    msgExa('success', 'Departamento guardado con &eacute;xito.', function() {
-                        if (typeof cargarDepartamentos === 'function') {
-                            cargarDepartamentos();
-                        }
-                    });
-                } else {
-                    msgExa('danger', 'Error al guardar: ' + (res.message || 'Error desconocido'));
-                }
-            }, 'json').fail(function() {
-                msgExa('danger', 'Error de red al guardar el departamento.');
-            });
-        }
-
-        function toggleEstadoDepto(id) {
-            const row = $('#row_dep_' + id);
-            const currentEst = row.data('wfd-est') || 'A';
-            $.post('adq_configuracion.php?ajax_toggle_depto_req=1', { Dep_Cod: id, Wfd_Est: currentEst }, function(res) {
-                if (res.success) {
-                    if (typeof cargarDepartamentos === 'function') {
-                        cargarDepartamentos();
-                    } else {
-                        location.reload();
-                    }
-                } else {
-                    msgExa('danger', 'Error al cambiar estado: ' + (res.message || 'Error desconocido'));
-                }
-            }, 'json');
-        }
-
-        function abrirDeptoUsuarios(depCod, depNom) {
-            $('#depto_users_dep_cod').val(depCod);
-            $('#depto_users_dep_nom').text(depNom);
-            $('#txtBuscarUsuarioDepto').val('');
-            $('#deptoUsersList').html('<div class="text-center p-3"><div class="spinner-border spinner-border-sm text-secondary" role="status"></div> Cargando usuarios...</div>');
-            $('#mdlDeptoUsuarios').modal('show');
-
-            $.getJSON('adq_configuracion.php', { ajax_get_depto_users: true, dep_cod: depCod }, function(res) {
-                if (res.success) {
-                    const usuarios = res.usuarios.slice().sort(function(a, b) {
-                        const aa = parseInt(a.asignado) === 1 ? 0 : 1;
-                        const bb = parseInt(b.asignado) === 1 ? 0 : 1;
-                        if (aa !== bb) return aa - bb;
-                        return (a.Usuario_Nom || '').localeCompare(b.Usuario_Nom || '', 'es');
-                    });
-                    let html = '';
-                    usuarios.forEach(function(u) {
-                        const checked = parseInt(u.asignado) === 1 ? 'checked' : '';
-                        html += `
-                            <label class="list-group-item d-flex justify-content-between align-items-center item-usuario-depto" style="cursor: pointer; padding: 8px 12px; margin-bottom: 0; border: none; border-bottom: 1px solid #dee2e6;">
-                                <div class="form-check m-0">
-                                    <input class="form-check-input me-2 chk-depto-usu" type="checkbox" value="${u.Usu_Cod}" ${checked} id="chk_u_${u.Usu_Cod}">
-                                    <span class="lbl-usuario-nom">${u.Usuario_Nom}</span>
-                                </div>
-                            </label>
-                        `;
-                    });
-                    if (usuarios.length === 0) {
-                        html = '<div class="text-center p-3 text-muted">No hay usuarios habilitados para workflow (Usu_Wf = S) en esta empresa.</div>';
-                    }
-                    $('#deptoUsersList').html(html);
-                } else {
-                    $('#deptoUsersList').html(`<div class="alert alert-danger p-2 small">${res.message || 'No se pudo cargar la lista de usuarios.'}</div>`);
-                }
-            }).fail(function(xhr, status, error) {
-                $('#deptoUsersList').html(`<div class="alert alert-danger p-2 small">Error al cargar usuarios: ${error || status} (${xhr.status})</div>`);
-            });
-        }
-
-        function filtrarUsuariosDepto() {
-            const query = $('#txtBuscarUsuarioDepto').val().toLowerCase();
-            $('.item-usuario-depto').each(function() {
-                const nombre = $(this).find('.lbl-usuario-nom').text().toLowerCase();
-                if (nombre.indexOf(query) !== -1) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
-            });
-        }
-
-        function guardarUsuariosDepto() {
-            const depCod = $('#depto_users_dep_cod').val();
-            const selectedUsers = [];
-            $('.chk-depto-usu:checked').each(function() {
-                selectedUsers.push($(this).val());
-            });
-
-            const btnGuardar = $('#mdlDeptoUsuarios .modal-footer button.btn-primary');
-            const originalHtml = btnGuardar.html();
-            btnGuardar.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...');
-
-            $.post('adq_configuracion.php', {
-                ajax_save_depto_users: true,
-                dep_cod: depCod,
-                usuarios: selectedUsers
-            }, function(res) {
-                btnGuardar.prop('disabled', false).html(originalHtml);
-                if (res.success) {
-                    cerrarModalDepto('#mdlDeptoUsuarios');
-                    msgExa('success', 'Usuarios asignados con &eacute;xito.', function() {
-                        if (typeof cargarDepartamentos === 'function') {
-                            cargarDepartamentos();
-                        }
-                    });
-                } else {
-                    msgExa('danger', 'Error al guardar usuarios: ' + (res.message || 'Error desconocido'));
-                }
-            }, 'json').fail(function(xhr, status, error) {
-                btnGuardar.prop('disabled', false).html(originalHtml);
-                msgExa('danger', 'Error de red al guardar usuarios: ' + error);
-            });
-        }
-    </script>
     <?php
     exit;
 }

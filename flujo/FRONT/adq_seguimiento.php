@@ -14,9 +14,12 @@ $obBD_conexion = new Class_Log_Conexion_Global($Ses_Dat_Dis);
 $obBD_con1 = new MysqlDatos($obBD_conexion);
 $adq_log = new adq_adquisiciones_log($obBD_conexion);
 $wf_mgr = new wf_manager_log($Ses_Dat_Dis);
+$wf_ctx = $wf_mgr->resolverContextoUsuario($Ses_Emp_Cod);
 
 $sol_cod = isset($_GET['sol_cod']) ? intval($_GET['sol_cod']) : 0;
-$usu_cod = $_SESSION['Ses_Usu_Cod'];
+$usu_cod = $wf_ctx['usu_cod'];
+$dep_cod = $wf_ctx['dep_cod'];
+$perfiles_ids = $wf_ctx['perfiles_ids'];
 
 if ($sol_cod <= 0) {
     echo "<div class='alert alert-danger m-2 small'>No se encontro el requerimiento solicitado.</div>";
@@ -49,35 +52,9 @@ if (empty($sol)) {
 
 $sol = $adq_log->aplicarRequisitosEfectivos($sol);
 
-$es_creador = ($sol['Usu_Sol'] == $usu_cod);
 $es_gerencial_admin = ($usu_cod == 1) || count(array_intersect(array(1, 2), $_SESSION['Ses_Lis_Per'])) > 0;
 
-$es_participante_turno = false;
-if (!empty($sol['Nod_Act'])) {
-    $nodo_act = $obBD_con1->getRowConsultaSql("SELECT Dep_Cod, Per_Cod, Nod_Usu_Asig FROM wf_nodos WHERE Nod_Cod = {$sol['Nod_Act']};", $obBD_conexion);
-    if (!empty($nodo_act)) {
-        $perfiles_ids = $_SESSION['Ses_Lis_Per'];
-        $dep_cod_usu = $_SESSION['Ses_Dep_Cod'];
-
-        $pertenece_depto = false;
-        if (!empty($nodo_act['Dep_Cod'])) {
-            $check_dep_names = $obBD_con1->getRowConsultaSql("
-                SELECT COUNT(*) as Q
-                FROM departamen d1
-                INNER JOIN departamen d2 ON d2.Dep_Des = d1.Dep_Des
-                WHERE d1.Dep_Cod = {$nodo_act['Dep_Cod']} AND d2.Dep_Cod = $dep_cod_usu;", $obBD_conexion);
-            $pertenece_depto = (!empty($check_dep_names) && $check_dep_names['Q'] > 0);
-        }
-        $pertenece_perfil = in_array($nodo_act['Per_Cod'], $perfiles_ids);
-        $es_usuario_asignado = ($nodo_act['Nod_Usu_Asig'] === 'TODOS' || $nodo_act['Nod_Usu_Asig'] === '' || $nodo_act['Nod_Usu_Asig'] === null || in_array($usu_cod, explode(',', $nodo_act['Nod_Usu_Asig'])));
-
-        if ($es_usuario_asignado && (($pertenece_depto) || $pertenece_perfil)) {
-            $es_participante_turno = true;
-        }
-    }
-}
-
-if (!$es_creador && !$es_gerencial_admin && !$es_participante_turno) {
+if (!$wf_mgr->puedeUsuarioVerSeguimientoSolicitud($sol, $usu_cod, $dep_cod, $perfiles_ids, $es_gerencial_admin)) {
     echo "<div class='alert alert-danger m-2 small'><i class='bi bi-shield-slash'></i> Acceso denegado. No tiene permisos para visualizar el seguimiento de esta solicitud.</div>";
     exit;
 }
@@ -94,19 +71,53 @@ if ($items === false || $items === null) {
 }
 $cotizaciones = $obBD_con1->getArrayConsultaSql("SELECT c.*, p.Prs_Nom, p.Prs_Ape, pr.Prv_Com FROM adq_solicitudes_cotizaciones c INNER JOIN proveedore pr ON pr.Prv_Cod = c.Prv_Cod INNER JOIN persona p ON p.Prs_Cod = pr.Prs_Cod WHERE c.Sol_Cod = $sol_cod;", $obBD_conexion);
 $historial = array();
+$historial_vista = array();
 if (!empty($sol['Ins_Cod'])) {
     $historial = $obBD_con1->getArrayConsultaSql("
         SELECT h.*,
                COALESCE(n.Nod_Nom, CONCAT('Nodo #', h.Nod_Cod)) AS Nod_Nom,
                COALESCE(n.Nod_Tip, 'PASO') AS Nod_Tip,
+               n.Dep_Cod AS Nodo_Dep_Cod,
+               n.Per_Cod AS Nodo_Per_Cod,
+               n.Nod_Usu_Asig AS Nodo_Usu_Asig,
                p.Prs_Nom, p.Prs_Ape, d.Wde_Des AS Dep_Des
         FROM wf_instancias_nodos h
         LEFT JOIN wf_nodos n ON n.Nod_Cod = h.Nod_Cod
         LEFT JOIN usuarios u ON u.Usu_Cod = h.Usu_Cod
         LEFT JOIN persona p ON p.Prs_Cod = u.Prs_Cod
-        LEFT JOIN wf_departamentos d ON d.Wde_Cod = h.Dep_Cod
+        LEFT JOIN wf_departamentos d ON d.Dep_Cod = h.Dep_Cod
         WHERE h.Ins_Cod = {$sol['Ins_Cod']}
-        ORDER BY h.Isn_Fec ASC;", $obBD_conexion);
+        ORDER BY h.Isn_Fec ASC, h.Isn_Cod ASC;", $obBD_conexion);
+    if ($historial === false || $historial === null) {
+        $historial = array();
+    }
+    $historial = $wf_mgr->normalizarHistorialFirmas(
+        $historial,
+        isset($sol['Ins_Est']) ? $sol['Ins_Est'] : '',
+        isset($sol['Nod_Act']) ? intval($sol['Nod_Act']) : 0
+    );
+    $historial = $wf_mgr->agregarNodoPendienteHistorial(
+        $historial,
+        isset($sol['Ins_Est']) ? $sol['Ins_Est'] : '',
+        isset($sol['Nod_Act']) ? intval($sol['Nod_Act']) : 0,
+        0
+    );
+    $historial = $wf_mgr->agregarRechazoHistorialSiFalta(
+        $historial,
+        intval($sol['Ins_Cod']),
+        isset($sol['Sol_Est']) ? $sol['Sol_Est'] : '',
+        isset($sol['Ins_Est']) ? $sol['Ins_Est'] : ''
+    );
+    $historial = $adq_log->enriquecerHistorialConArchivos($historial, $sol_cod);
+    $historial_vista = $historial;
+    usort($historial_vista, function ($a, $b) {
+        $fa = isset($a['Isn_Fec']) ? $a['Isn_Fec'] : '';
+        $fb = isset($b['Isn_Fec']) ? $b['Isn_Fec'] : '';
+        if ($fa === $fb) {
+            return intval(isset($b['Isn_Cod']) ? $b['Isn_Cod'] : 0) - intval(isset($a['Isn_Cod']) ? $a['Isn_Cod'] : 0);
+        }
+        return strcmp($fb, $fa);
+    });
 }
 
 $requisitos_faltantes = array();
@@ -139,6 +150,189 @@ if ($sol['Ins_Est'] === 'P') {
 
 function adq_h($text) {
     return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+}
+
+function adq_render_historial_archivos($archivos) {
+    if (empty($archivos) || !is_array($archivos)) {
+        return '';
+    }
+    $html = '<div class="adq-hist-archivos" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">';
+    foreach ($archivos as $arch) {
+        if (empty($arch['path'])) {
+            continue;
+        }
+        $label = !empty($arch['label']) ? $arch['label'] : 'Archivo';
+        $ext = strtolower(pathinfo($arch['path'], PATHINFO_EXTENSION));
+        $icon = ($ext === 'pdf') ? 'bi-file-earmark-pdf' : 'bi-paperclip';
+        $html .= '<a href="../../DATA/' . adq_h($arch['path']) . '" target="_blank" class="btn btn-xs btn-outline-primary" style="font-size:11px;padding:3px 8px;">'
+            . '<i class="bi ' . $icon . '"></i> ' . adq_h($label) . '</a>';
+    }
+    $html .= '</div>';
+    return $html;
+}
+
+function adq_render_historial_facturas($facturas) {
+    if (empty($facturas) || !is_array($facturas)) {
+        return '';
+    }
+    $html = '<div class="adq-hist-facturas mt-2">';
+    foreach ($facturas as $f) {
+        $numero = !empty($f['numero']) ? $f['numero'] : ('#' . intval(isset($f['cop_cod']) ? $f['cop_cod'] : 0));
+        $proveedor = !empty($f['proveedor']) ? $f['proveedor'] : 'Proveedor';
+        $fecha = !empty($f['fecha']) ? '<span class="text-muted">(' . adq_h($f['fecha']) . ')</span>' : '';
+        $total = (isset($f['total']) && floatval($f['total']) > 0)
+            ? '<span class="fw-bold font-monospace ms-1">$ ' . number_format(floatval($f['total']), 2, '.', '') . '</span>'
+            : '';
+        $pdf = !empty($f['link'])
+            ? '<a href="' . adq_h($f['link']) . '" target="_blank" class="btn btn-xs btn-outline-primary ms-2" style="font-size:11px;padding:2px 8px;"><i class="bi bi-file-earmark-pdf"></i> Ver PDF</a>'
+            : '';
+        $des = !empty($f['des'])
+            ? '<div class="text-muted mt-1" style="font-size:11px;">' . adq_h($f['des']) . '</div>'
+            : '';
+        $html .= '<div class="border rounded p-2 mb-1 bg-white small">'
+            . '<strong><i class="bi bi-receipt-cutoff"></i> Factura # ' . adq_h($numero) . '</strong> - ' . adq_h($proveedor)
+            . ' ' . $fecha . $total . $pdf . $des
+            . '</div>';
+    }
+    $html .= '</div>';
+    return $html;
+}
+
+function adq_render_historial_badge($h) {
+    $actionBadge = '';
+    $itemClass = '';
+    if (!empty($h['Fin_Pendiente'])) {
+        $actionBadge = '<span class="badge bg-info" style="background-color: #0ea5e9 !important; color: #ffffff !important;">Pendiente cierre</span>';
+        $itemClass = 'active';
+    } elseif (!empty($h['Pendiente_Aprobacion']) || $h['Isn_Acc'] === 'PENDIENTE') {
+        $pendTxt = 'Pendiente de aprobaci&oacute;n';
+        if (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'TAREA') {
+            $pendTxt = 'Tarea pendiente';
+        } elseif (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'FIN') {
+            $pendTxt = 'Pendiente cierre';
+        } elseif (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'AVANCE') {
+            $pendTxt = 'Pendiente de avance';
+        } elseif (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'FACTURA') {
+            $pendTxt = 'Pendiente de factura';
+        }
+        $actionBadge = '<span class="badge bg-primary" style="background-color: #2563eb !important; color: #ffffff !important;">' . $pendTxt . '</span>';
+        $itemClass = 'active';
+    } elseif ($h['Isn_Acc'] === 'CREAR') {
+        $actionBadge = '<span class="badge bg-secondary" style="background-color: #64748b !important; color: #ffffff !important;">Inici&oacute; Pedido</span>';
+        $itemClass = 'active';
+    } elseif ($h['Isn_Acc'] === 'APROBAR') {
+        $actionBadge = '<span class="badge bg-success" style="background-color: #10b981 !important; color: #ffffff !important;">Aprob&oacute;</span>';
+        $itemClass = 'success';
+    } elseif ($h['Isn_Acc'] === 'COMPLETAR') {
+        $actionBadge = '<span class="badge bg-success" style="background-color: #059669 !important; color: #ffffff !important;">Complet&oacute; tarea</span>';
+        $itemClass = 'success';
+    } elseif ($h['Isn_Acc'] === 'OBSERVAR') {
+        $actionBadge = '<span class="badge bg-warning text-dark" style="background-color: #f59e0b !important; color: #1e293b !important;">Observ&oacute;</span>';
+        $itemClass = 'warning';
+    } elseif ($h['Isn_Acc'] === 'DEVOLVER') {
+        $actionBadge = '<span class="badge bg-secondary" style="background-color: #4b5563 !important; color: #ffffff !important;">Devolvi&oacute;</span>';
+        $itemClass = 'active';
+    } elseif ($h['Isn_Acc'] === 'RECHAZAR') {
+        $actionBadge = '<span class="badge bg-danger" style="background-color: #ef4444 !important; color: #ffffff !important;">Rechazado</span>';
+        $itemClass = 'danger';
+    } elseif ($h['Isn_Acc'] === 'REENVIAR') {
+        $actionBadge = '<span class="badge bg-info text-dark" style="background-color: #38bdf8 !important; color: #0f172a !important;">Reenvi&oacute; correcci&oacute;n</span>';
+        $itemClass = 'active';
+    } elseif ($h['Isn_Acc'] === 'AVANCE') {
+        $actionBadge = '<span class="badge bg-info" style="background-color: #0ea5e9 !important; color: #ffffff !important;">Carg&oacute; documentos</span>';
+        $itemClass = 'active';
+    } elseif ($h['Isn_Acc'] === 'COTIZAR') {
+        $actionBadge = '<span class="badge bg-primary" style="background-color: #2563eb !important; color: #ffffff !important;">Carg&oacute; proformas</span>';
+        $itemClass = 'active';
+    }
+    return array('badge' => $actionBadge, 'class' => $itemClass);
+}
+
+function adq_render_historial_item($h, $num_proceso, $mostrar_etapa) {
+    $actor = !empty($h['Actor_Nom']) ? $h['Actor_Nom'] : ($h['Prs_Nom'] ? trim($h['Prs_Nom'] . ' ' . $h['Prs_Ape']) : ($h['Dep_Des'] ?: 'Sistema'));
+    $actor_modo = !empty($h['Actor_Modo']) ? $h['Actor_Modo'] : 'Por';
+    $badge = adq_render_historial_badge($h);
+    $actionBadge = $badge['badge'];
+    $itemClass = $badge['class'];
+    $titulo_etapa = $mostrar_etapa
+        ? (' en etapa: <strong>' . adq_h($h['Nod_Nom']) . '</strong>')
+        : '';
+    ob_start();
+    ?>
+    <div class="adq-timeline-item <?php echo $itemClass; ?>">
+        <div class="adq-timeline-content">
+            <div class="adq-timeline-header">
+                <span class="adq-timeline-title"><span class="adq-timeline-step-num" title="Paso <?php echo intval($num_proceso); ?>"><?php echo intval($num_proceso); ?></span><?php echo $actionBadge; ?><?php echo $titulo_etapa; ?></span>
+                <span class="adq-timeline-date"><i class="bi bi-clock"></i> <?php echo date('Y-m-d H:i', strtotime($h['Isn_Fec'])); ?></span>
+            </div>
+            <div class="adq-timeline-body">
+                <?php echo adq_h($actor_modo); ?>: <span class="text-primary fw-bold"><?php echo adq_h($actor); ?></span>
+                <?php if ($h['Isn_Com']) { ?>
+                    <div class="adq-timeline-comment">"<?php echo adq_h($h['Isn_Com']); ?>"</div>
+                <?php } ?>
+                <?php echo adq_render_historial_facturas(isset($h['facturas']) ? $h['facturas'] : array()); ?>
+                <?php echo adq_render_historial_archivos(isset($h['archivos']) ? $h['archivos'] : array()); ?>
+            </div>
+        </div>
+    </div>
+    <?php
+    return ob_get_clean();
+}
+
+$flow_visual = array('nodos' => array());
+$historial_por_nodo = array();
+$historial_nodo_html = array();
+$nodos_meta = array();
+
+if (!empty($sol['Ins_Cod'])) {
+    $flow_visual = $wf_mgr->getVisualFlowData($sol['Ins_Cod']);
+    if (!empty($flow_visual['nodos'])) {
+        foreach ($flow_visual['nodos'] as $node) {
+            $nid = intval($node['id']);
+            $historial_por_nodo[$nid] = array();
+            $nodos_meta[$nid] = array(
+                'nombre' => $node['nombre'],
+                'tipo' => $node['tipo'],
+                'color' => $node['color']
+            );
+        }
+    }
+    foreach ($historial as $h) {
+        $etapa_cod = intval(isset($h['Etapa_Nod_Cod']) ? $h['Etapa_Nod_Cod'] : (isset($h['Nod_Cod']) ? $h['Nod_Cod'] : 0));
+        if ($etapa_cod <= 0) {
+            continue;
+        }
+        if (!isset($historial_por_nodo[$etapa_cod])) {
+            $historial_por_nodo[$etapa_cod] = array();
+            $nodos_meta[$etapa_cod] = array(
+                'nombre' => isset($h['Nod_Nom']) ? $h['Nod_Nom'] : ('Nodo #' . $etapa_cod),
+                'tipo' => isset($h['Nod_Tip']) ? $h['Nod_Tip'] : 'PASO',
+                'color' => 'grey'
+            );
+        }
+        $historial_por_nodo[$etapa_cod][] = $h;
+    }
+    foreach ($historial_por_nodo as $nid => $items) {
+        usort($items, function ($a, $b) {
+            $fa = isset($a['Isn_Fec']) ? $a['Isn_Fec'] : '';
+            $fb = isset($b['Isn_Fec']) ? $b['Isn_Fec'] : '';
+            if ($fa === $fb) {
+                return intval(isset($a['Isn_Cod']) ? $a['Isn_Cod'] : 0) - intval(isset($b['Isn_Cod']) ? $b['Isn_Cod'] : 0);
+            }
+            return strcmp($fa, $fb);
+        });
+        $total = count($items);
+        $html_items = '';
+        $idx_item = 0;
+        foreach ($items as $item) {
+            $idx_item++;
+            $html_items .= adq_render_historial_item($item, $idx_item, false);
+        }
+        if ($html_items === '') {
+            $html_items = '<div class="text-center text-muted py-3 small">No hay tareas registradas en esta etapa.</div>';
+        }
+        $historial_nodo_html[$nid] = $html_items;
+    }
 }
 ?>
 <div class="row">
@@ -198,11 +392,10 @@ function adq_h($text) {
 
     <div class="col-xs-12 col-md-12" style="margin-top: 5px; margin-bottom: 10px; clear: both; float: left;">
         <div class="adq-detail-card" style="padding: 8px 12px;">
-            <h5 class="adq-section-header" style="color: #475569; border-bottom-color: #cbd5e1; margin-bottom: 6px; padding-bottom: 4px;"><i class="bi bi-clock-history"></i> L&iacute;nea de Tiempo del Proceso (SLA)</h5>
-            <div class="tracker-wrapper">
+            <h5 class="adq-section-header" style="color: #475569; border-bottom-color: #cbd5e1; margin-bottom: 6px; padding-bottom: 4px;"><i class="bi bi-clock-history"></i> L&iacute;nea de Tiempo del Proceso (SLA) <small class="text-muted" style="font-weight: normal;">— clic en un nodo para ver sus tareas</small></h5>
+            <div class="tracker-wrapper adq-seg-flow-tracker" id="segFlowTracker">
                 <?php
-                if (!empty($sol['Ins_Cod'])) {
-                    $flow_visual = $wf_mgr->getVisualFlowData($sol['Ins_Cod']);
+                if (!empty($flow_visual['nodos'])) {
                     foreach ($flow_visual['nodos'] as $idx => $node) {
                         if ($idx > 0) {
                             echo '<div class="tracker-arrow"><i class="bi bi-arrow-right-short"></i></div>';
@@ -258,18 +451,39 @@ function adq_h($text) {
                         }
 
                         echo "
-                        <div class='tracker-node color-{$node['color']}'>
+                        <div class='tracker-node tracker-node-clickable color-{$node['color']}' data-nod-id='" . intval($node['id']) . "' data-nod-nom='" . adq_h($node['nombre']) . "' data-nod-tip='" . adq_h($node['tipo']) . "' title='Ver tareas de esta etapa'>
                             <i class='bi bi-circle-fill'></i> " . adq_h($node['nombre']) . "<br>
                             <span style='font-size: 9px; font-weight: normal; opacity: 0.8;'>[" . adq_h($node['tipo']) . "]</span>
                             $actor_html
                             $tiempo_nodo
                         </div>";
                     }
+                } else {
+                    echo "<div class='text-muted small text-center py-2'>La solicitud aun no tiene una instancia de workflow activa.</div>";
                 }
                 ?>
             </div>
         </div>
     </div>
+
+    <div class="col-xs-12 col-md-12" id="segNodoTareasPanel" style="margin-top: 10px; margin-bottom: 10px; clear: both; float: left; display: none;">
+        <div class="adq-detail-card adq-seg-nodo-tareas-card">
+            <div class="adq-seg-nodo-tareas-header">
+                <h5 class="adq-section-header m-0" style="border: none; padding: 0; margin: 0;">
+                    <i class="bi bi-list-task"></i> Tareas de la etapa: <span id="segNodoTareasTitulo"></span>
+                    <small class="text-muted" id="segNodoTareasSub" style="font-weight: normal;"></small>
+                </h5>
+                <button type="button" class="btn btn-xs btn-default" id="btnSegNodoTareasCerrar"><i class="bi bi-x-lg"></i> Cerrar</button>
+            </div>
+            <div class="adq-timeline" id="segNodoTareasBody"></div>
+        </div>
+    </div>
+
+    <script type="application/json" id="segHistorialNodoHtml"><?php
+    $json_flags = defined('JSON_HEX_TAG') ? (JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) : 0;
+    echo json_encode($historial_nodo_html, $json_flags);
+    ?></script>
+    <script type="application/json" id="segNodosMeta"><?php echo json_encode($nodos_meta, $json_flags); ?></script>
 
     <div class="col-xs-12 col-md-12" style="margin-top: 20px; margin-bottom: 20px; clear: both; float: left;">
         <div class="adq-detail-card">
@@ -278,47 +492,13 @@ function adq_h($text) {
                 <?php if (empty($historial)) { ?>
                     <div class="text-center text-muted py-3 small">No se registran movimientos en el workflow todav&iacute;a.</div>
                 <?php } else {
-                    foreach ($historial as $h) {
-                        $actor = $h['Prs_Nom'] ? trim($h['Prs_Nom'] . ' ' . $h['Prs_Ape']) : ($h['Dep_Des'] ?: 'Sistema');
-                        $actionBadge = '';
-                        $itemClass = '';
-                        if ($h['Isn_Acc'] === 'CREAR') {
-                            $actionBadge = '<span class="badge bg-secondary" style="background-color: #64748b !important; color: #ffffff !important;">Inici&oacute; Pedido</span>';
-                            $itemClass = 'active';
-                        } elseif ($h['Isn_Acc'] === 'APROBAR') {
-                            $actionBadge = '<span class="badge bg-success" style="background-color: #10b981 !important; color: #ffffff !important;">Aprob&oacute;</span>';
-                            $itemClass = 'success';
-                        } elseif ($h['Isn_Acc'] === 'OBSERVAR') {
-                            $actionBadge = '<span class="badge bg-warning text-dark" style="background-color: #f59e0b !important; color: #1e293b !important;">Observ&oacute;</span>';
-                            $itemClass = 'warning';
-                        } elseif ($h['Isn_Acc'] === 'DEVOLVER') {
-                            $actionBadge = '<span class="badge bg-secondary" style="background-color: #4b5563 !important; color: #ffffff !important;">Devolvi&oacute;</span>';
-                            $itemClass = 'active';
-                        } elseif ($h['Isn_Acc'] === 'RECHAZAR') {
-                            $actionBadge = '<span class="badge bg-danger" style="background-color: #ef4444 !important; color: #ffffff !important;">Rechaz&oacute;</span>';
-                            $itemClass = 'danger';
-                        }
-                        ?>
-                        <div class="adq-timeline-item <?php echo $itemClass; ?>">
-                            <div class="adq-timeline-content">
-                                <div class="adq-timeline-header">
-                                    <span class="adq-timeline-title"><?php echo $actionBadge; ?> en etapa: <strong><?php echo adq_h($h['Nod_Nom']); ?></strong></span>
-                                    <span class="adq-timeline-date"><i class="bi bi-clock"></i> <?php echo date('Y-m-d H:i', strtotime($h['Isn_Fec'])); ?></span>
-                                </div>
-                                <div class="adq-timeline-body">
-                                    Por: <span class="text-primary fw-bold"><?php echo adq_h($actor); ?></span>
-                                    <?php if ($h['Isn_Com']) { ?>
-                                        <div class="adq-timeline-comment">"<?php echo adq_h($h['Isn_Com']); ?>"</div>
-                                    <?php } ?>
-                                    <?php if ($h['Isn_Adj']) { ?>
-                                        <div style="margin-top: 6px;">
-                                            <a href="../../DATA/<?php echo adq_h($h['Isn_Adj']); ?>" target="_blank" class="btn btn-xs btn-default" style="font-size: 10px; padding: 1px 6px;"><i class="bi bi-paperclip"></i> Ver Adjunto</a>
-                                        </div>
-                                    <?php } ?>
-                                </div>
-                            </div>
-                        </div>
-                <?php }
+                    $total_hist = count($historial_vista);
+                    $idx_hist = 0;
+                    foreach ($historial_vista as $h) {
+                        $num_proceso = $total_hist - $idx_hist;
+                        $idx_hist++;
+                        echo adq_render_historial_item($h, $num_proceso, true);
+                    }
                 } ?>
             </div>
         </div>

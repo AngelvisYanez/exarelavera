@@ -91,15 +91,25 @@ if (isset($ajax_load_workflow)) {
                 'id' => $nodo['Nod_Cod'],
                 'tipo' => $nodo['Nod_Tip'],
                 'nombre' => $nodo['Nod_Nom'],
-                'descripcion' => $nodo['Nod_Des'],
-                'dep_cod' => $nodo['Dep_Cod'],
+                'descripcion' => isset($nodo['Nod_Des']) ? (string)$nodo['Nod_Des'] : '',
+                'dep_cod' => $wf_mgr->resolverWdeCodDisenador($nodo['Dep_Cod'], $Ses_Emp_Cod),
                 'per_cod' => $nodo['Per_Cod'],
                 'sla' => $nodo['Nod_Sla'],
                 'com_obl' => $nodo['Nod_Com_Obl'],
                 'adj_obl' => $nodo['Nod_Adj_Obl'],
+                'cot_edit' => !empty($nodo['Nod_Cot_Edit']) ? 1 : 0,
+                'not_wa' => !empty($nodo['Nod_Not_Wa']) ? 1 : 0,
+                'not_em' => !empty($nodo['Nod_Not_Em']) ? 1 : 0,
+                'not_asunto' => isset($nodo['Nod_Not_Asunto']) ? (string)$nodo['Nod_Not_Asunto'] : '',
+                'not_texto' => isset($nodo['Nod_Not_Texto']) ? (string)$nodo['Nod_Not_Texto'] : '',
                 'x' => $nodo['Nod_Vis_X'],
                 'y' => $nodo['Nod_Vis_Y'],
-                'usu_asig' => !empty($nodo['Nod_Usu_Asig']) ? $nodo['Nod_Usu_Asig'] : 'TODOS'
+                'usu_asig' => !empty($nodo['Nod_Usu_Asig']) ? $nodo['Nod_Usu_Asig'] : 'TODOS',
+                'asig_nombres' => $wf_mgr->resolverTextoAsignadosDisenador(
+                    $nodo['Dep_Cod'],
+                    !empty($nodo['Nod_Usu_Asig']) ? $nodo['Nod_Usu_Asig'] : 'TODOS',
+                    $nodo['Per_Cod']
+                )
             );
         }
 
@@ -115,7 +125,7 @@ if (isset($ajax_load_workflow)) {
         }
 
         $estado = $flujo['Wfm_Est'];
-        $obBD_con1->echoJson(array(
+        $payload = array(
             'success' => true,
             'flujo' => array(
                 'id' => $flujo['Wfm_Cod'],
@@ -130,7 +140,11 @@ if (isset($ajax_load_workflow)) {
             ),
             'nodos' => $payload_nodos,
             'conexiones' => $payload_conexiones
-        ));
+        );
+        if (function_exists('utf8_encode_deep')) {
+            utf8_encode_deep($payload);
+        }
+        $obBD_con1->echoJson($payload);
     } catch (Exception $e) {
         $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
     }
@@ -138,8 +152,13 @@ if (isset($ajax_load_workflow)) {
 
 // --- AJAX: Obtener usuarios de la empresa con flag de asignación al departamento ---
 if (isset($ajax_get_department_users)) {
-    $dep_cod = intval($_GET['dep_cod']);
+    $wde_cod = intval($_GET['dep_cod']);
+    if (!$wf_mgr->validarWdeCodWorkflow($wde_cod, $Ses_Emp_Cod)) {
+        $obBD_con1->echoJson(array('success' => false, 'message' => 'Departamento de workflow no valido.'));
+        exit;
+    }
     try {
+        $filtro_du = $wf_mgr->sqlDuPorWdeCod($wde_cod, 'du2');
         $usuarios = $obBD_con1->getArrayConsultaSql("
             SELECT base.Usu_Cod,
                    base.Usuario_Nom,
@@ -147,8 +166,10 @@ if (isset($ajax_get_department_users)) {
                        SELECT 1
                        FROM usuarios ux
                        INNER JOIN sucursal sx ON sx.Suc_Cod = ux.Suc_Cod
-                       INNER JOIN wf_departamento_usuarios du2 ON du2.Usu_Cod = ux.Usu_Cod AND du2.Dep_Cod = $dep_cod
-                       WHERE sx.Emp_Cod = $Ses_Emp_Cod AND ux.Usu_Ced = base.Usu_Ced AND ux.Usu_Est = 'A' AND ux.Usu_Wf = 'S'
+                       INNER JOIN wf_departamento_usuarios du2 ON du2.Usu_Cod = ux.Usu_Cod
+                       WHERE sx.Emp_Cod = $Ses_Emp_Cod AND ux.Usu_Ced = base.Usu_Ced
+                         AND ux.Usu_Est = 'A' AND ux.Usu_Wf = 'S'
+                         AND $filtro_du
                    ), 1, 0) AS asignado
             FROM (
                 SELECT MIN(u.Usu_Cod) AS Usu_Cod,
@@ -161,6 +182,9 @@ if (isset($ajax_get_department_users)) {
                 GROUP BY u.Usu_Ced, p.Prs_Nom, p.Prs_Ape
             ) base
             ORDER BY asignado DESC, Usuario_Nom;", $obBD_conexion);
+        if (function_exists('utf8_encode_deep') && $usuarios) {
+            utf8_encode_deep($usuarios);
+        }
         $obBD_con1->echoJson(array('success' => true, 'usuarios' => $usuarios));
     } catch (Exception $e) {
         $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
@@ -170,31 +194,12 @@ if (isset($ajax_get_department_users)) {
 
 // --- AJAX: Guardar asignaciones de usuarios a un departamento ---
 if (isset($ajax_save_department_users)) {
-    $dep_cod = intval($_POST['dep_cod']);
+    $wde_cod = intval($_POST['dep_cod']);
     $usuarios_ids = isset($_POST['usuarios']) ? $_POST['usuarios'] : array();
-    
-    $obBD_con1->inicio_transaccion($obBD_conexion);
     try {
-        $obBD_con1->grabarv_registros("DELETE FROM wf_departamento_usuarios WHERE Dep_Cod = $dep_cod;", $obBD_conexion);
-        foreach ($usuarios_ids as $u_id) {
-            $u_id = intval($u_id);
-            $cuentas = $obBD_con1->getArrayConsultaSql("
-                SELECT ux.Usu_Cod
-                FROM usuarios ux
-                INNER JOIN sucursal sx ON sx.Suc_Cod = ux.Suc_Cod
-                WHERE sx.Emp_Cod = $Ses_Emp_Cod AND ux.Usu_Est = 'A' AND ux.Usu_Wf = 'S'
-                  AND ux.Usu_Ced = (SELECT u0.Usu_Ced FROM usuarios u0 WHERE u0.Usu_Cod = $u_id LIMIT 1);", $obBD_conexion);
-            if ($cuentas === false || $cuentas === null) {
-                $cuentas = array();
-            }
-            foreach ($cuentas as $cuenta) {
-                $obBD_con1->grabarv_registros("INSERT INTO wf_departamento_usuarios (Dep_Cod, Usu_Cod) VALUES ($dep_cod, {$cuenta['Usu_Cod']});", $obBD_conexion);
-            }
-        }
-        $obBD_con1->commit_nomsn($obBD_conexion);
-        $obBD_con1->echoJson(array('success' => true));
+        $result = $wf_mgr->guardarUsuariosDepartamentoWorkflow($wde_cod, $Ses_Emp_Cod, $usuarios_ids);
+        $obBD_con1->echoJson(array('success' => true, 'data' => $result));
     } catch (Exception $e) {
-        $obBD_con1->rollBack_nomsn($obBD_conexion);
         $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
     }
     exit;
@@ -202,22 +207,15 @@ if (isset($ajax_save_department_users)) {
 
 // --- AJAX: Obtener usuarios asignados a un departamento (uno por persona/cédula) ---
 if (isset($ajax_get_users_by_department)) {
-    $dep_cod = intval($_GET['dep_cod']);
+    $wde_cod = intval($_GET['dep_cod']);
+    if (!$wf_mgr->validarWdeCodWorkflow($wde_cod, $Ses_Emp_Cod)) {
+        $obBD_con1->echoJson(array('success' => false, 'message' => 'Departamento de workflow no valido.'));
+        exit;
+    }
     try {
-        $usuarios = $obBD_con1->getArrayConsultaSql("
-            SELECT MIN(u.Usu_Cod) AS Usu_Cod,
-                   TRIM(CONCAT(p.Prs_Nom, ' ', p.Prs_Ape)) AS Usuario_Nom,
-                   GROUP_CONCAT(u.Usu_Cod ORDER BY u.Usu_Cod) AS Usu_Cods
-            FROM wf_departamento_usuarios du
-            INNER JOIN usuarios u ON u.Usu_Cod = du.Usu_Cod
-            INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
-            INNER JOIN sucursal s ON s.Suc_Cod = u.Suc_Cod
-            WHERE du.Dep_Cod = $dep_cod AND s.Emp_Cod = $Ses_Emp_Cod
-              AND u.Usu_Est = 'A' AND u.Usu_Wf = 'S'
-            GROUP BY u.Usu_Ced, p.Prs_Nom, p.Prs_Ape
-            ORDER BY Usuario_Nom;", $obBD_conexion);
-        if ($usuarios === false || $usuarios === null) {
-            $usuarios = array();
+        $usuarios = $wf_mgr->listarUsuariosAsignacionDepartamento($wde_cod, $Ses_Emp_Cod);
+        if (function_exists('utf8_encode_deep') && $usuarios) {
+            utf8_encode_deep($usuarios);
         }
         $obBD_con1->echoJson(array('success' => true, 'usuarios' => $usuarios));
     } catch (Exception $e) {
@@ -227,23 +225,25 @@ if (isset($ajax_get_users_by_department)) {
 }
 
 // Cargar catálogos para configuración de nodos
-$wf_mgr->syncDepartamentosFromRrhh($Ses_Emp_Cod);
-$departamentos = $obBD_con1->getArrayConsultaSql("
-    SELECT d.Wde_Cod AS Dep_Cod, d.Wde_Des AS Dep_Des
-    FROM wf_departamentos d
-    WHERE d.Emp_Cod = $Ses_Emp_Cod AND d.Wde_Est = 'A'
-      AND EXISTS (
-          SELECT 1
-          FROM wf_departamento_usuarios du
-          INNER JOIN usuarios u ON u.Usu_Cod = du.Usu_Cod
-          INNER JOIN sucursal s ON s.Suc_Cod = u.Suc_Cod
-          WHERE du.Dep_Cod = d.Wde_Cod AND s.Emp_Cod = $Ses_Emp_Cod
-            AND u.Usu_Est = 'A' AND u.Usu_Wf = 'S'
-      )
-    ORDER BY d.Wde_Des;", $obBD_conexion);
+$departamentos = $wf_mgr->listarDepartamentosDisenador($Ses_Emp_Cod);
 $perfiles = $obBD_con1->getArrayConsultaSql("SELECT Per_Cod, Per_Des FROM perfiles WHERE Emp_Cod = $Ses_Emp_Cod AND Per_Est = 'A' ORDER BY Per_Des;", $obBD_conexion);
 $wf_mgr->ensureVersioningSchema();
-$flujos_existentes = $wf_mgr->listarFlujosPublicados($Ses_Emp_Cod);
+$flujos_existentes = $wf_mgr->listarFlujosDisenador($Ses_Emp_Cod);
+if (function_exists('utf8_encode_deep')) {
+    if ($departamentos) {
+        utf8_encode_deep($departamentos);
+    }
+    if ($perfiles) {
+        utf8_encode_deep($perfiles);
+    }
+    if ($flujos_existentes) {
+        utf8_encode_deep($flujos_existentes);
+    }
+}
+
+if (!isset($wf_builder_nodos_ocultos) || !is_array($wf_builder_nodos_ocultos)) {
+    $wf_builder_nodos_ocultos = array();
+}
 
 if (isset($ajax_get_builder)) {
     ?>
@@ -281,6 +281,13 @@ if (isset($ajax_get_builder)) {
             user-select: none;
             font-size: 12px;
         }
+        .toolbox-item > .bi {
+            font-size: 1.45rem;
+            line-height: 1;
+            flex-shrink: 0;
+            width: 1.5rem;
+            text-align: center;
+        }
         .canvas-area {
             flex: 1 1 auto;
             position: relative;
@@ -295,6 +302,12 @@ if (isset($ajax_get_builder)) {
                 radial-gradient(circle, rgba(74, 136, 181, 0.45) 1.5px, transparent 1.5px);
             background-size: 24px 24px, 24px 24px, 24px 24px;
             background-position: -1px -1px, -1px -1px, 0 0;
+        }
+        .canvas-surface {
+            position: relative;
+            min-width: 100%;
+            min-height: 100%;
+            box-sizing: border-box;
         }
         .wf-node {
             position: absolute;
@@ -317,10 +330,90 @@ if (isset($ajax_get_builder)) {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: relative;
+        }
+        .wf-node-header > button {
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            border: none;
+            border-radius: 50%;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+            z-index: 3;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .wf-node-header > button .bi {
+            font-size: 15px;
+            font-weight: 900;
+            color: #dc3545 !important;
+            line-height: 1;
+            -webkit-text-stroke: 0.35px #dc3545;
+            paint-order: stroke fill;
+        }
+        .wf-node-header > button:hover .bi {
+            color: #b02a37 !important;
+            -webkit-text-stroke: 0.35px #b02a37;
+        }
+        .wf-node-header > span {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            min-width: 0;
+            flex: 1;
+            text-align: center;
+        }
+        .wf-node-header .wf-node-type-icon {
+            font-size: 2rem;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .wf-node-header .wf-node-title-label {
+            display: block;
+            max-width: 100%;
+            font-size: 11px;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .wf-node-body .wf-node-tipo-label {
+            display: block;
+            font-size: 10px;
+            font-weight: 600;
+            color: #6c757d;
+            margin-bottom: 2px;
         }
         .wf-node-body {
             padding: 10px;
             text-align: center;
+        }
+        .wf-node-body .wf-node-desc {
+            display: block;
+            margin-top: 4px;
+            font-size: 11px;
+            line-height: 1.35;
+            color: #495057;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+        .wf-node-body .wf-node-asig {
+            display: block;
+            margin-top: 4px;
+            font-size: 10px;
+            line-height: 1.35;
+            color: #0d6efd;
+            word-break: break-word;
         }
         .node-port {
             position: absolute;
@@ -349,8 +442,6 @@ if (isset($ajax_get_builder)) {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
             pointer-events: none;
             z-index: 1;
         }
@@ -358,14 +449,113 @@ if (isset($ajax_get_builder)) {
             pointer-events: auto;
             cursor: pointer;
         }
-        .node-INICIO { border-color: #198754; }
-        .node-INICIO .wf-node-header { background-color: #d1e7dd; color: #198754; }
-        .node-FIN { border-color: #dc3545; }
-        .node-FIN .wf-node-header { background-color: #f8d7da; color: #dc3545; }
+        .node-INICIO,
+        .node-FIN {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            overflow: visible;
+            padding: 0;
+            user-select: none;
+        }
+        .node-INICIO { border-color: #198754; background-color: #d1e7dd; color: #198754; }
+        .node-FIN { border-color: #dc3545; background-color: #f8d7da; color: #dc3545; }
+        .node-INICIO .wf-node-header,
+        .node-FIN .wf-node-header {
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            padding: 8px 10px;
+            flex: 1 1 auto;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            flex-direction: column;
+            gap: 2px;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            cursor: move;
+        }
+        .node-INICIO .wf-node-header span,
+        .node-FIN .wf-node-header span {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            font-size: 10px;
+            line-height: 1.15;
+            width: 100%;
+        }
+        .node-INICIO .wf-node-header span > .bi,
+        .node-FIN .wf-node-header span > .bi {
+            font-size: 34px;
+        }
+        .node-INICIO .wf-node-header button .bi,
+        .node-FIN .wf-node-header button .bi {
+            font-size: 12px;
+            font-weight: 900;
+            -webkit-text-stroke: 0.3px #dc3545;
+        }
+        .node-INICIO .wf-node-body,
+        .node-FIN .wf-node-body {
+            display: none;
+        }
+        .node-INICIO .wf-node-header button,
+        .node-FIN .wf-node-header button {
+            top: 3px;
+            right: 3px;
+        }
+        .node-INICIO .node-port-in { display: none; }
+        .node-FIN .node-port-out { display: none; }
         .node-APROBACION { border-color: #0d6efd; }
         .node-APROBACION .wf-node-header { background-color: #cfe2ff; color: #0d6efd; }
         .node-DECISION { border-color: #ffc107; }
         .node-DECISION .wf-node-header { background-color: #fff3cd; color: #ffc107; }
+        .node-NOTIFICACION { border-color: #495057; }
+        .node-NOTIFICACION .wf-node-header { background-color: #e9ecef; color: #212529; }
+        .node-FACTURA {
+            border-color: #ffc107;
+            background-color: #fffbeb;
+        }
+        .node-FACTURA .wf-node-header {
+            background-color: #fff3cd;
+            color: #856404;
+            border-bottom: 1px solid #ffc107;
+        }
+        .node-TAREA {
+            border-color: #198754;
+            background-color: #f4fbf6;
+        }
+        .node-TAREA .wf-node-header {
+            background-color: #d1e7dd;
+            color: #198754;
+            border-bottom: 1px solid #198754;
+        }
+        .node-RECEPCION {
+            border-color: #6f42c1;
+            background-color: #faf8ff;
+        }
+        .node-RECEPCION .wf-node-header {
+            background-color: #e9dffc;
+            color: #5a32a3;
+            border-bottom: 1px solid #6f42c1;
+        }
+        .node-AVANCE {
+            border-color: #0dcaf0;
+            background-color: #f0fcff;
+        }
+        .node-AVANCE .wf-node-header {
+            background-color: #cff4fc;
+            color: #087990;
+            border-bottom: 1px solid #0dcaf0;
+        }
+        .text-purple { color: #6f42c1 !important; }
         
         .properties-drawer {
             position: fixed;
@@ -406,7 +596,7 @@ if (isset($ajax_get_builder)) {
             <select id="selWorkflow" class="form-control form-control-sm" style="width: 200px; display: inline-block;">
                 <option value="">-- Seleccionar un Flujo --</option>
                 <?php foreach ($flujos_existentes as $flow) { ?>
-                    <option value="<?php echo intval($flow['Wfm_Fam_Cod']); ?>"><?php echo htmlspecialchars($flow['Wfm_Nom'], ENT_QUOTES, 'UTF-8'); ?> (v<?php echo intval($flow['Wfm_Version']); ?>)</option>
+                    <option value="<?php echo intval($flow['Wfm_Fam_Cod']); ?>"><?php echo htmlspecialchars($wf_mgr->etiquetaFlujoListado($flow), ENT_QUOTES, 'UTF-8'); ?></option>
                 <?php } ?>
             </select>
             <button class="btn btn-sm btn-info text-white fw-bold" onclick="cargarFlujo()"><i class="bi bi-folder-2-open"></i> Abrir</button>
@@ -434,20 +624,27 @@ if (isset($ajax_get_builder)) {
             <div class="toolbox-item" draggable="true" data-type="APROBACION">
                 <i class="bi bi-check-circle text-primary"></i> Aprobación
             </div>
+            <?php if (!in_array('DECISION', $wf_builder_nodos_ocultos, true)) { ?>
             <div class="toolbox-item" draggable="true" data-type="DECISION">
                 <i class="bi bi-shuffle text-warning"></i> Decisión
             </div>
+            <?php } ?>
             <div class="toolbox-item" draggable="true" data-type="RECEPCION">
-                <i class="bi bi-box-seam text-secondary"></i> Recepción
+                <i class="bi bi-box-seam text-purple"></i> Recepción
             </div>
             <div class="toolbox-item" draggable="true" data-type="FACTURA">
-                <i class="bi bi-receipt text-info"></i> Factura
+                <i class="bi bi-receipt text-warning"></i> Factura
             </div>
+            <?php if (!in_array('NOTIFICACION', $wf_builder_nodos_ocultos, true)) { ?>
             <div class="toolbox-item" draggable="true" data-type="NOTIFICACION">
                 <i class="bi bi-envelope text-dark"></i> Notificación
             </div>
+            <?php } ?>
             <div class="toolbox-item" draggable="true" data-type="TAREA">
-                <i class="bi bi-card-checklist text-muted"></i> Tarea
+                <i class="bi bi-card-checklist text-success"></i> Tarea
+            </div>
+            <div class="toolbox-item" draggable="true" data-type="AVANCE">
+                <i class="bi bi-folder-plus text-info"></i> Avance
             </div>
             <div class="toolbox-item" draggable="true" data-type="FIN">
                 <i class="bi bi-stop-circle text-danger"></i> Fin
@@ -456,7 +653,9 @@ if (isset($ajax_get_builder)) {
 
         <!-- Canvas -->
         <div class="canvas-area" id="canvas">
-            <svg class="svg-canvas" id="svgCanvas"></svg>
+            <div class="canvas-surface" id="canvasSurface">
+                <svg class="svg-canvas" id="svgCanvas"></svg>
+            </div>
         </div>
     </div>
 
@@ -485,23 +684,27 @@ if (isset($ajax_get_builder)) {
                 <div class="input-group input-group-sm">
                     <select id="nodeDep" class="form-control form-control-sm" onchange="onDepartmentChange(this.value)">
                         <option value="">[Cualquiera/Solicitante]</option>
-                        <?php foreach ($departamentos as $dep) { ?>
-                            <option value="<?php echo $dep['Dep_Cod']; ?>"><?php echo $dep['Dep_Des']; ?></option>
+                        <?php foreach ($departamentos as $dep) {
+                            $cant_dep_usu = isset($dep['Cant_Usuarios']) ? intval($dep['Cant_Usuarios']) : 0;
+                            $dep_label = $dep['Dep_Des'] . ($cant_dep_usu > 0 ? (' (' . $cant_dep_usu . ' usuario' . ($cant_dep_usu === 1 ? '' : 's') . ')') : ' (sin usuarios WF)');
+                            ?>
+                            <option value="<?php echo intval($dep['Dep_Cod']); ?>"><?php echo htmlspecialchars($dep_label, ENT_QUOTES, 'UTF-8'); ?></option>
                         <?php } ?>
                     </select>
                     <button class="btn btn-outline-secondary" type="button" id="btnManageDepUsers" onclick="abrirGestionUsuarios()" title="Gestionar Usuarios de este Departamento" style="display: none;">
                         <i class="bi bi-people-fill"></i>
                     </button>
                 </div>
+                <small class="text-muted d-block mt-1" id="lblNodeDepHint">Seleccione un departamento para habilitar la asignacion de usuarios.</small>
             </div>
             <div class="mb-3 sec-responsabilidad sec-asignacion-usuarios" style="display: none;">
-                <label class="form-label d-block">Asignación de Usuarios</label>
+                <label class="form-label d-block">Asignacion de Usuarios</label>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="userAsigType" id="asigTodos" value="TODOS" checked onchange="toggleAsigType(this.value)">
+                    <input class="form-check-input" type="radio" name="userAsigType" id="asigTodos" value="TODOS" checked onchange="toggleAsigType(this.value)" disabled>
                     <label class="form-check-label" for="asigTodos">Todos los del depto</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="userAsigType" id="asigEspecificos" value="ESPECIFICOS" onchange="toggleAsigType(this.value)">
+                    <input class="form-check-input" type="radio" name="userAsigType" id="asigEspecificos" value="ESPECIFICOS" onchange="toggleAsigType(this.value)" disabled>
                     <label class="form-check-label" for="asigEspecificos">Usuarios específicos</label>
                 </div>
                 
@@ -514,13 +717,33 @@ if (isset($ajax_get_builder)) {
                 <select id="nodePer" class="form-control form-control-sm">
                     <option value="">[Cualquiera]</option>
                     <?php foreach ($perfiles as $perf) { ?>
-                        <option value="<?php echo $perf['Per_Cod']; ?>"><?php echo $perf['Per_Des']; ?></option>
+                        <option value="<?php echo $perf['Per_Cod']; ?>"><?php echo htmlspecialchars($perf['Per_Des'], ENT_QUOTES, 'UTF-8'); ?></option>
                     <?php } ?>
                 </select>
             </div>
             <div class="mb-3 sec-sla">
                 <label class="form-label">Tiempo Límite (Días SLA)</label>
                 <input type="number" id="nodeSla" class="form-control form-control-sm" min="0">
+            </div>
+            <div class="mb-3 sec-notificaciones" style="display: none;">
+                <label class="form-label d-block fw-semibold">Al completar esta etapa, notificar al siguiente responsable</label>
+                <p class="text-muted small mb-2">Se envía WhatsApp o correo a quien debe atender la siguiente tarea. En la primera etapa humana, también aplica al enviar la solicitud.</p>
+                <div class="form-check mb-1">
+                    <input type="checkbox" id="nodeNotWa" class="form-check-input">
+                    <label class="form-check-label" for="nodeNotWa"><i class="bi bi-whatsapp text-success"></i> WhatsApp</label>
+                </div>
+                <div class="form-check mb-2">
+                    <input type="checkbox" id="nodeNotEm" class="form-check-input">
+                    <label class="form-check-label" for="nodeNotEm"><i class="bi bi-envelope text-primary"></i> Correo electrónico</label>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="nodeNotAsunto">Asunto del correo (opcional)</label>
+                    <input type="text" id="nodeNotAsunto" class="form-control form-control-sm" maxlength="200" placeholder="Si se deja vacío se usa un asunto por defecto">
+                </div>
+                <div>
+                    <label class="form-label" for="nodeNotTexto">Mensaje adicional (opcional)</label>
+                    <textarea id="nodeNotTexto" class="form-control form-control-sm" rows="2" maxlength="500" placeholder="Texto que se añade al final del mensaje"></textarea>
+                </div>
             </div>
             <div class="mb-3 form-check sec-checks">
                 <input type="checkbox" id="nodeComObl" class="form-check-input">
@@ -529,6 +752,11 @@ if (isset($ajax_get_builder)) {
             <div class="mb-3 form-check sec-checks">
                 <input type="checkbox" id="nodeAdjObl" class="form-check-input">
                 <label class="form-check-label">Archivos adjuntos obligatorios</label>
+            </div>
+            <div class="mb-3 form-check sec-checks">
+                <input type="checkbox" id="nodeCotEdit" class="form-check-input">
+                <label class="form-check-label" for="nodeCotEdit">Permitir cargar cotizaciones en esta etapa</label>
+                <p class="text-muted small mb-0">El responsable de esta etapa podrá abrir la solicitud y adjuntar proformas/cotizaciones.</p>
             </div>
         </div>
     </div>
@@ -587,23 +815,21 @@ if (isset($ajax_get_builder)) {
 }
 
 // Cargar catálogos para configuración de nodos
-$wf_mgr->syncDepartamentosFromRrhh($Ses_Emp_Cod);
-$departamentos = $obBD_con1->getArrayConsultaSql("
-    SELECT d.Wde_Cod AS Dep_Cod, d.Wde_Des AS Dep_Des
-    FROM wf_departamentos d
-    WHERE d.Emp_Cod = $Ses_Emp_Cod AND d.Wde_Est = 'A'
-      AND EXISTS (
-          SELECT 1
-          FROM wf_departamento_usuarios du
-          INNER JOIN usuarios u ON u.Usu_Cod = du.Usu_Cod
-          INNER JOIN sucursal s ON s.Suc_Cod = u.Suc_Cod
-          WHERE du.Dep_Cod = d.Wde_Cod AND s.Emp_Cod = $Ses_Emp_Cod
-            AND u.Usu_Est = 'A' AND u.Usu_Wf = 'S'
-      )
-    ORDER BY d.Wde_Des;", $obBD_conexion);
+$departamentos = $wf_mgr->listarDepartamentosDisenador($Ses_Emp_Cod);
 $perfiles = $obBD_con1->getArrayConsultaSql("SELECT Per_Cod, Per_Des FROM perfiles WHERE Emp_Cod = $Ses_Emp_Cod AND Per_Est = 'A' ORDER BY Per_Des;", $obBD_conexion);
 $wf_mgr->ensureVersioningSchema();
-$flujos_existentes = $wf_mgr->listarFlujosPublicados($Ses_Emp_Cod);
+$flujos_existentes = $wf_mgr->listarFlujosDisenador($Ses_Emp_Cod);
+if (function_exists('utf8_encode_deep')) {
+    if ($departamentos) {
+        utf8_encode_deep($departamentos);
+    }
+    if ($perfiles) {
+        utf8_encode_deep($perfiles);
+    }
+    if ($flujos_existentes) {
+        utf8_encode_deep($flujos_existentes);
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -653,6 +879,13 @@ $flujos_existentes = $wf_mgr->listarFlujosPublicados($Ses_Emp_Cod);
             user-select: none;
             font-size: 12px;
         }
+        .toolbox-item > .bi {
+            font-size: 1.45rem;
+            line-height: 1;
+            flex-shrink: 0;
+            width: 1.5rem;
+            text-align: center;
+        }
         .canvas-area {
             flex: 1 1 auto;
             position: relative;
@@ -668,6 +901,12 @@ $flujos_existentes = $wf_mgr->listarFlujosPublicados($Ses_Emp_Cod);
             background-size: 24px 24px, 24px 24px, 24px 24px;
             background-position: -1px -1px, -1px -1px, 0 0;
         }
+        .canvas-surface {
+            position: relative;
+            min-width: 100%;
+            min-height: 100%;
+            box-sizing: border-box;
+        }
         .wf-node {
             position: absolute;
             width: 180px;
@@ -678,12 +917,112 @@ $flujos_existentes = $wf_mgr->listarFlujosPublicados($Ses_Emp_Cod);
             cursor: move;
             z-index: 10;
         }
-        .wf-node.node-INICIO { border-color: #198754; }
-        .wf-node.node-FIN { border-color: #dc3545; }
+        .wf-node.node-INICIO,
+        .wf-node.node-FIN {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            overflow: visible;
+            padding: 0;
+            user-select: none;
+        }
+        .wf-node.node-INICIO { border-color: #198754; background-color: #d1e7dd; color: #198754; }
+        .wf-node.node-FIN { border-color: #dc3545; background-color: #f8d7da; color: #dc3545; }
+        .wf-node.node-INICIO .wf-node-header,
+        .wf-node.node-FIN .wf-node-header {
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            padding: 8px 10px;
+            flex: 1 1 auto;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            flex-direction: column;
+            gap: 2px;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            cursor: move;
+        }
+        .wf-node.node-INICIO .wf-node-header span,
+        .wf-node.node-FIN .wf-node-header span {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            font-size: 10px;
+            line-height: 1.15;
+            width: 100%;
+        }
+        .wf-node.node-INICIO .wf-node-header span > .bi,
+        .wf-node.node-FIN .wf-node-header span > .bi {
+            font-size: 34px;
+        }
+        .wf-node.node-INICIO .wf-node-header button .bi,
+        .wf-node.node-FIN .wf-node-header button .bi {
+            font-size: 12px;
+            font-weight: 900;
+            -webkit-text-stroke: 0.3px #dc3545;
+        }
+        .wf-node.node-INICIO .wf-node-body,
+        .wf-node.node-FIN .wf-node-body {
+            display: none;
+        }
+        .wf-node.node-INICIO .wf-node-header button,
+        .wf-node.node-FIN .wf-node-header button {
+            top: 3px;
+            right: 3px;
+        }
+        .wf-node.node-INICIO .node-port-in { display: none; }
+        .wf-node.node-FIN .node-port-out { display: none; }
         .wf-node.node-APROBACION { border-color: #0d6efd; }
         .wf-node.node-DECISION { border-color: #fd7e14; }
-        .wf-node.node-RECEPCION { border-color: #6f42c1; }
-        .wf-node.node-FACTURA { border-color: #20c997; }
+        .wf-node.node-DECISION .wf-node-header { background-color: #fff3cd; color: #fd7e14; }
+        .wf-node.node-NOTIFICACION { border-color: #495057; }
+        .wf-node.node-NOTIFICACION .wf-node-header { background-color: #e9ecef; color: #212529; }
+        .wf-node.node-RECEPCION {
+            border-color: #6f42c1;
+            background-color: #faf8ff;
+        }
+        .wf-node.node-RECEPCION .wf-node-header {
+            background-color: #e9dffc;
+            color: #5a32a3;
+            border-bottom: 1px solid #6f42c1;
+        }
+        .wf-node.node-AVANCE {
+            border-color: #0dcaf0;
+            background-color: #f0fcff;
+        }
+        .wf-node.node-AVANCE .wf-node-header {
+            background-color: #cff4fc;
+            color: #087990;
+            border-bottom: 1px solid #0dcaf0;
+        }
+        .wf-node.node-FACTURA {
+            border-color: #ffc107;
+            background-color: #fffbeb;
+        }
+        .wf-node.node-FACTURA .wf-node-header {
+            background-color: #fff3cd;
+            color: #856404;
+            border-bottom: 1px solid #ffc107;
+        }
+        .wf-node.node-TAREA {
+            border-color: #198754;
+            background-color: #f4fbf6;
+        }
+        .wf-node.node-TAREA .wf-node-header {
+            background-color: #d1e7dd;
+            color: #198754;
+            border-bottom: 1px solid #198754;
+        }
+        .text-purple { color: #6f42c1 !important; }
         .wf-node-header {
             padding: 8px 10px;
             border-bottom: 1px solid #dee2e6;
@@ -694,11 +1033,91 @@ $flujos_existentes = $wf_mgr->listarFlujosPublicados($Ses_Emp_Cod);
             align-items: center;
             border-radius: 8px 8px 0 0;
             background-color: #f8f9fa;
+            position: relative;
+        }
+        .wf-node-header > button {
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            border: none;
+            border-radius: 50%;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+            z-index: 3;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .wf-node-header > button .bi {
+            font-size: 15px;
+            font-weight: 900;
+            color: #dc3545 !important;
+            line-height: 1;
+            -webkit-text-stroke: 0.35px #dc3545;
+            paint-order: stroke fill;
+        }
+        .wf-node-header > button:hover .bi {
+            color: #b02a37 !important;
+            -webkit-text-stroke: 0.35px #b02a37;
+        }
+        .wf-node-header > span {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            min-width: 0;
+            flex: 1;
+            text-align: center;
+        }
+        .wf-node-header .wf-node-type-icon {
+            font-size: 2rem;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .wf-node-header .wf-node-title-label {
+            display: block;
+            max-width: 100%;
+            font-size: 11px;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .wf-node-body .wf-node-tipo-label {
+            display: block;
+            font-size: 10px;
+            font-weight: 600;
+            color: #6c757d;
+            margin-bottom: 2px;
         }
         .wf-node-body {
             padding: 8px 10px;
             font-size: 11px;
             color: #6c757d;
+        }
+        .wf-node-body .wf-node-desc {
+            display: block;
+            margin-top: 4px;
+            font-size: 11px;
+            line-height: 1.35;
+            color: #495057;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+        .wf-node-body .wf-node-asig {
+            display: block;
+            margin-top: 4px;
+            font-size: 10px;
+            line-height: 1.35;
+            color: #0d6efd;
+            word-break: break-word;
         }
         .node-port {
             width: 12px;
@@ -716,8 +1135,6 @@ $flujos_existentes = $wf_mgr->listarFlujosPublicados($Ses_Emp_Cod);
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
             pointer-events: none;
             z-index: 1;
         }
@@ -748,7 +1165,7 @@ $flujos_existentes = $wf_mgr->listarFlujosPublicados($Ses_Emp_Cod);
                 <select id="selWorkflow" class="form-control form-control-sm" style="width: 180px; display: inline-block;">
                     <option value="">-- Seleccionar un Flujo --</option>
                     <?php foreach ($flujos_existentes as $flow) { ?>
-                        <option value="<?php echo intval($flow['Wfm_Fam_Cod']); ?>"><?php echo htmlspecialchars($flow['Wfm_Nom'], ENT_QUOTES, 'UTF-8'); ?> (v<?php echo intval($flow['Wfm_Version']); ?>)</option>
+                        <option value="<?php echo intval($flow['Wfm_Fam_Cod']); ?>"><?php echo htmlspecialchars($wf_mgr->etiquetaFlujoListado($flow), ENT_QUOTES, 'UTF-8'); ?></option>
                     <?php } ?>
                 </select>
                 <button class="btn btn-sm btn-info text-white fw-bold" onclick="cargarFlujo()"><i class="bi bi-folder-2-open"></i> Abrir</button>
@@ -774,20 +1191,27 @@ $flujos_existentes = $wf_mgr->listarFlujosPublicados($Ses_Emp_Cod);
             <div class="toolbox-item" draggable="true" data-type="APROBACION">
                 <i class="bi bi-check-circle text-primary"></i> Aprobación
             </div>
+            <?php if (!in_array('DECISION', $wf_builder_nodos_ocultos, true)) { ?>
             <div class="toolbox-item" draggable="true" data-type="DECISION">
                 <i class="bi bi-shuffle text-warning"></i> Decisión
             </div>
+            <?php } ?>
             <div class="toolbox-item" draggable="true" data-type="RECEPCION">
-                <i class="bi bi-box-seam text-secondary"></i> Recepción
+                <i class="bi bi-box-seam text-purple"></i> Recepción
             </div>
             <div class="toolbox-item" draggable="true" data-type="FACTURA">
-                <i class="bi bi-receipt text-info"></i> Factura
+                <i class="bi bi-receipt text-warning"></i> Factura
             </div>
+            <?php if (!in_array('NOTIFICACION', $wf_builder_nodos_ocultos, true)) { ?>
             <div class="toolbox-item" draggable="true" data-type="NOTIFICACION">
                 <i class="bi bi-envelope text-dark"></i> Notificación
             </div>
+            <?php } ?>
             <div class="toolbox-item" draggable="true" data-type="TAREA">
-                <i class="bi bi-card-checklist text-muted"></i> Tarea
+                <i class="bi bi-card-checklist text-success"></i> Tarea
+            </div>
+            <div class="toolbox-item" draggable="true" data-type="AVANCE">
+                <i class="bi bi-folder-plus text-info"></i> Avance
             </div>
             <div class="toolbox-item" draggable="true" data-type="FIN">
                 <i class="bi bi-stop-circle text-danger"></i> Fin
@@ -796,7 +1220,9 @@ $flujos_existentes = $wf_mgr->listarFlujosPublicados($Ses_Emp_Cod);
 
         <!-- Canvas -->
         <div class="canvas-area" id="canvas">
-            <svg class="svg-canvas" id="svgCanvas"></svg>
+            <div class="canvas-surface" id="canvasSurface">
+                <svg class="svg-canvas" id="svgCanvas"></svg>
+            </div>
         </div>
     </div>
 
@@ -825,23 +1251,27 @@ $flujos_existentes = $wf_mgr->listarFlujosPublicados($Ses_Emp_Cod);
                 <div class="input-group input-group-sm">
                     <select id="nodeDep" class="form-control form-control-sm" onchange="onDepartmentChange(this.value)">
                         <option value="">[Cualquiera/Solicitante]</option>
-                        <?php foreach ($departamentos as $dep) { ?>
-                            <option value="<?php echo $dep['Dep_Cod']; ?>"><?php echo $dep['Dep_Des']; ?></option>
+                        <?php foreach ($departamentos as $dep) {
+                            $cant_dep_usu = isset($dep['Cant_Usuarios']) ? intval($dep['Cant_Usuarios']) : 0;
+                            $dep_label = $dep['Dep_Des'] . ($cant_dep_usu > 0 ? (' (' . $cant_dep_usu . ' usuario' . ($cant_dep_usu === 1 ? '' : 's') . ')') : ' (sin usuarios WF)');
+                            ?>
+                            <option value="<?php echo intval($dep['Dep_Cod']); ?>"><?php echo htmlspecialchars($dep_label, ENT_QUOTES, 'UTF-8'); ?></option>
                         <?php } ?>
                     </select>
                     <button class="btn btn-outline-secondary" type="button" id="btnManageDepUsers" onclick="abrirGestionUsuarios()" title="Gestionar Usuarios de este Departamento" style="display: none;">
                         <i class="bi bi-people-fill"></i>
                     </button>
                 </div>
+                <small class="text-muted d-block mt-1" id="lblNodeDepHint">Seleccione un departamento para habilitar la asignacion de usuarios.</small>
             </div>
             <div class="mb-3 sec-responsabilidad sec-asignacion-usuarios" style="display: none;">
-                <label class="form-label d-block">Asignación de Usuarios</label>
+                <label class="form-label d-block">Asignacion de Usuarios</label>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="userAsigType" id="asigTodos" value="TODOS" checked onchange="toggleAsigType(this.value)">
+                    <input class="form-check-input" type="radio" name="userAsigType" id="asigTodos" value="TODOS" checked onchange="toggleAsigType(this.value)" disabled>
                     <label class="form-check-label" for="asigTodos">Todos los del depto</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="userAsigType" id="asigEspecificos" value="ESPECIFICOS" onchange="toggleAsigType(this.value)">
+                    <input class="form-check-input" type="radio" name="userAsigType" id="asigEspecificos" value="ESPECIFICOS" onchange="toggleAsigType(this.value)" disabled>
                     <label class="form-check-label" for="asigEspecificos">Usuarios específicos</label>
                 </div>
                 
@@ -854,13 +1284,33 @@ $flujos_existentes = $wf_mgr->listarFlujosPublicados($Ses_Emp_Cod);
                 <select id="nodePer" class="form-control form-control-sm">
                     <option value="">[Cualquiera]</option>
                     <?php foreach ($perfiles as $perf) { ?>
-                        <option value="<?php echo $perf['Per_Cod']; ?>"><?php echo $perf['Per_Des']; ?></option>
+                        <option value="<?php echo $perf['Per_Cod']; ?>"><?php echo htmlspecialchars($perf['Per_Des'], ENT_QUOTES, 'UTF-8'); ?></option>
                     <?php } ?>
                 </select>
             </div>
             <div class="mb-3 sec-sla">
                 <label class="form-label">Tiempo Límite (Días SLA)</label>
                 <input type="number" id="nodeSla" class="form-control form-control-sm" min="0">
+            </div>
+            <div class="mb-3 sec-notificaciones" style="display: none;">
+                <label class="form-label d-block fw-semibold">Al completar esta etapa, notificar al siguiente responsable</label>
+                <p class="text-muted small mb-2">Se envía WhatsApp o correo a quien debe atender la siguiente tarea. En la primera etapa humana, también aplica al enviar la solicitud.</p>
+                <div class="form-check mb-1">
+                    <input type="checkbox" id="nodeNotWa" class="form-check-input">
+                    <label class="form-check-label" for="nodeNotWa"><i class="bi bi-whatsapp text-success"></i> WhatsApp</label>
+                </div>
+                <div class="form-check mb-2">
+                    <input type="checkbox" id="nodeNotEm" class="form-check-input">
+                    <label class="form-check-label" for="nodeNotEm"><i class="bi bi-envelope text-primary"></i> Correo electrónico</label>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="nodeNotAsunto">Asunto del correo (opcional)</label>
+                    <input type="text" id="nodeNotAsunto" class="form-control form-control-sm" maxlength="200" placeholder="Si se deja vacío se usa un asunto por defecto">
+                </div>
+                <div>
+                    <label class="form-label" for="nodeNotTexto">Mensaje adicional (opcional)</label>
+                    <textarea id="nodeNotTexto" class="form-control form-control-sm" rows="2" maxlength="500" placeholder="Texto que se añade al final del mensaje"></textarea>
+                </div>
             </div>
             <div class="mb-3 form-check sec-checks">
                 <input type="checkbox" id="nodeComObl" class="form-check-input">
@@ -869,6 +1319,11 @@ $flujos_existentes = $wf_mgr->listarFlujosPublicados($Ses_Emp_Cod);
             <div class="mb-3 form-check sec-checks">
                 <input type="checkbox" id="nodeAdjObl" class="form-check-input">
                 <label class="form-check-label">Archivos adjuntos obligatorios</label>
+            </div>
+            <div class="mb-3 form-check sec-checks">
+                <input type="checkbox" id="nodeCotEdit" class="form-check-input">
+                <label class="form-check-label" for="nodeCotEdit">Permitir cargar cotizaciones en esta etapa</label>
+                <p class="text-muted small mb-0">El responsable de esta etapa podrá abrir la solicitud y adjuntar proformas/cotizaciones.</p>
             </div>
         </div>
     </div>
