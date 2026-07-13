@@ -89,8 +89,9 @@ Para desplegar el ERP en un entorno de producción utilizando **Plesk Panel**:
 
 ## 📖 Documentación Adicional
 
-- [`MIGRACION_PHP8_RESUMEN.md`](MIGRACION_PHP8_RESUMEN.md) - Correcciones clave en la transición a PHP 8.2.
-- [`docs/MIGRACION_PHP_8.md`](docs/MIGRACION_PHP_8.md) - Bitácora detallada y registro técnico.
+- [`docs/MIGRACION.md`](docs/MIGRACION.md) - Documento maestro de migración PHP (plan, cambios, mejoras, pendientes).
+- [`docs/optimizacion-grid-ventas-N+1.md`](docs/optimizacion-grid-ventas-N+1.md) - Eliminación de N+1 en grid de ventas.
+- [`docs/relaciones-modulos-optimizacion.md`](docs/relaciones-modulos-optimizacion.md) - Relaciones entre módulos y reglas de optimización.
 
 ## 📦 Módulos Principales (Resumen)
 
