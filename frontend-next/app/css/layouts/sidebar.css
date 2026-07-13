@@ -1,0 +1,45 @@
+.sidebar-nav .AMMenuItem a {
+  border-radius: 8px;
+  margin: 0 12px 4px;
+  padding: 10px 12px;
+  font-size: 14px;
+  transition: 0.15s ease;
+}
+
+.sidebar-nav .AMMenuItem a:hover {
+  background: var(--color-lightprimary);
+  color: var(--color-primary);
+}
+
+.sidebar-nav .AMMenuItem.active a {
+  background: var(--color-primary);
+  color: white;
+  box-shadow: 0 3px 8px rgba(20, 167, 235, 0.3);
+}
+
+.sidebar-nav .AMSubmenu .AMMenuItem a {
+  padding-left: 36px;
+}
+
+.sidebar-nav .AMSubmenu .AMMenuItem.active a {
+  background: var(--color-lightprimary);
+  color: var(--color-primary);
+  box-shadow: none;
+}
+
+.sidebar-nav .AMMenu.subHeading span {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-sidebar-muted);
+  padding: 16px 20px 8px;
+  display: block;
+}
+
+.sidebar-nav .badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 600;
+}

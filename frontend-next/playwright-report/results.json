@@ -1,0 +1,253 @@
+{
+  "config": {
+    "configFile": "C:\\Users\\ismaa\\OneDrive\\Documentos\\GitHub\\exa-contable-relavera\\frontend-next\\playwright.config.ts",
+    "rootDir": "C:/Users/ismaa/OneDrive/Documentos/GitHub/exa-contable-relavera/frontend-next/tests/monitoring",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/ismaa/OneDrive/Documentos/GitHub/exa-contable-relavera/frontend-next/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/Users/ismaa/OneDrive/Documentos/GitHub/exa-contable-relavera/frontend-next/tests/monitoring",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "html",
+        {
+          "outputFolder": "playwright-report",
+          "open": "never"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "playwright-report/results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.60.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "modules.spec.ts",
+      "file": "modules.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Monitoreo Sintético - Portal Exa Contable Relavera",
+          "file": "modules.spec.ts",
+          "line": 6,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Flujo de Autenticación Completo y Acceso al Dashboard",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 22126,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/.*dashboard.*/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:3000/login\"\u001b[39m\nTimeout: 15000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 15000ms\u001b[22m\n\u001b[2m    33 × unexpected value \"http://localhost:3000/login\"\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/.*dashboard.*/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:3000/login\"\u001b[39m\nTimeout: 15000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 15000ms\u001b[22m\n\u001b[2m    33 × unexpected value \"http://localhost:3000/login\"\u001b[22m\n\n    at C:\\Users\\ismaa\\OneDrive\\Documentos\\GitHub\\exa-contable-relavera\\frontend-next\\tests\\monitoring\\modules.spec.ts:58:24",
+                        "location": {
+                          "file": "C:\\Users\\ismaa\\OneDrive\\Documentos\\GitHub\\exa-contable-relavera\\frontend-next\\tests\\monitoring\\modules.spec.ts",
+                          "column": 24,
+                          "line": 58
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 56 |\u001b[39m\n \u001b[90m 57 |\u001b[39m     \u001b[90m// 6. Validar que redirija exitosamente al dashboard\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 58 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page)\u001b[33m.\u001b[39mtoHaveURL(\u001b[35m/.*dashboard.*/\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m15000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 59 |\u001b[39m\n \u001b[90m 60 |\u001b[39m     \u001b[90m// Informar de posibles fallos no bloqueantes pero sospechosos\u001b[39m\n \u001b[90m 61 |\u001b[39m     \u001b[36mif\u001b[39m (consoleErrors\u001b[33m.\u001b[39mlength \u001b[33m>\u001b[39m \u001b[35m0\u001b[39m) {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\ismaa\\OneDrive\\Documentos\\GitHub\\exa-contable-relavera\\frontend-next\\tests\\monitoring\\modules.spec.ts",
+                            "column": 24,
+                            "line": 58
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/.*dashboard.*/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:3000/login\"\u001b[39m\nTimeout: 15000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 15000ms\u001b[22m\n\u001b[2m    33 × unexpected value \"http://localhost:3000/login\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 56 |\u001b[39m\n \u001b[90m 57 |\u001b[39m     \u001b[90m// 6. Validar que redirija exitosamente al dashboard\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 58 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page)\u001b[33m.\u001b[39mtoHaveURL(\u001b[35m/.*dashboard.*/\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m15000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 59 |\u001b[39m\n \u001b[90m 60 |\u001b[39m     \u001b[90m// Informar de posibles fallos no bloqueantes pero sospechosos\u001b[39m\n \u001b[90m 61 |\u001b[39m     \u001b[36mif\u001b[39m (consoleErrors\u001b[33m.\u001b[39mlength \u001b[33m>\u001b[39m \u001b[35m0\u001b[39m) {\u001b[0m\n\u001b[2m    at C:\\Users\\ismaa\\OneDrive\\Documentos\\GitHub\\exa-contable-relavera\\frontend-next\\tests\\monitoring\\modules.spec.ts:58:24\u001b[22m"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Información: No se requirió o no cargó selección de empresa (usuario único o sin empresas asociadas).\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-04T09:54:22.324Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\ismaa\\OneDrive\\Documentos\\GitHub\\exa-contable-relavera\\frontend-next\\test-results\\modules-Monitoreo-Sintétic-9e48f-pleto-y-Acceso-al-Dashboard-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\ismaa\\OneDrive\\Documentos\\GitHub\\exa-contable-relavera\\frontend-next\\test-results\\modules-Monitoreo-Sintétic-9e48f-pleto-y-Acceso-al-Dashboard-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\ismaa\\OneDrive\\Documentos\\GitHub\\exa-contable-relavera\\frontend-next\\test-results\\modules-Monitoreo-Sintétic-9e48f-pleto-y-Acceso-al-Dashboard-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\ismaa\\OneDrive\\Documentos\\GitHub\\exa-contable-relavera\\frontend-next\\test-results\\modules-Monitoreo-Sintétic-9e48f-pleto-y-Acceso-al-Dashboard-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\ismaa\\OneDrive\\Documentos\\GitHub\\exa-contable-relavera\\frontend-next\\tests\\monitoring\\modules.spec.ts",
+                        "column": 24,
+                        "line": 58
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "c30cd39e1c87f9ff656a-03bf3488ae389b2b539c",
+              "file": "modules.spec.ts",
+              "line": 16,
+              "column": 7
+            },
+            {
+              "title": "Chequeo de Disponibilidad de la API Pública de Autenticación",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 748,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m500\u001b[39m\nReceived:   \u001b[31m500\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m500\u001b[39m\nReceived:   \u001b[31m500\u001b[39m\n    at C:\\Users\\ismaa\\OneDrive\\Documentos\\GitHub\\exa-contable-relavera\\frontend-next\\tests\\monitoring\\modules.spec.ts:79:31",
+                        "location": {
+                          "file": "C:\\Users\\ismaa\\OneDrive\\Documentos\\GitHub\\exa-contable-relavera\\frontend-next\\tests\\monitoring\\modules.spec.ts",
+                          "column": 31,
+                          "line": 79
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 77 |\u001b[39m\n \u001b[90m 78 |\u001b[39m     \u001b[90m// Esperamos cualquier respuesta que no sea un error interno del servidor (500)\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 79 |\u001b[39m     expect(response\u001b[33m.\u001b[39mstatus())\u001b[33m.\u001b[39mtoBeLessThan(\u001b[35m500\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 80 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 81 |\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 82 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\ismaa\\OneDrive\\Documentos\\GitHub\\exa-contable-relavera\\frontend-next\\tests\\monitoring\\modules.spec.ts",
+                            "column": 31,
+                            "line": 79
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m500\u001b[39m\nReceived:   \u001b[31m500\u001b[39m\n\n\u001b[0m \u001b[90m 77 |\u001b[39m\n \u001b[90m 78 |\u001b[39m     \u001b[90m// Esperamos cualquier respuesta que no sea un error interno del servidor (500)\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 79 |\u001b[39m     expect(response\u001b[33m.\u001b[39mstatus())\u001b[33m.\u001b[39mtoBeLessThan(\u001b[35m500\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 80 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 81 |\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 82 |\u001b[39m\u001b[0m\n\u001b[2m    at C:\\Users\\ismaa\\OneDrive\\Documentos\\GitHub\\exa-contable-relavera\\frontend-next\\tests\\monitoring\\modules.spec.ts:79:31\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-04T09:54:45.305Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\ismaa\\OneDrive\\Documentos\\GitHub\\exa-contable-relavera\\frontend-next\\test-results\\modules-Monitoreo-Sintétic-7ea0b-PI-Pública-de-Autenticación-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\ismaa\\OneDrive\\Documentos\\GitHub\\exa-contable-relavera\\frontend-next\\test-results\\modules-Monitoreo-Sintétic-7ea0b-PI-Pública-de-Autenticación-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\ismaa\\OneDrive\\Documentos\\GitHub\\exa-contable-relavera\\frontend-next\\test-results\\modules-Monitoreo-Sintétic-7ea0b-PI-Pública-de-Autenticación-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\ismaa\\OneDrive\\Documentos\\GitHub\\exa-contable-relavera\\frontend-next\\test-results\\modules-Monitoreo-Sintétic-7ea0b-PI-Pública-de-Autenticación-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\ismaa\\OneDrive\\Documentos\\GitHub\\exa-contable-relavera\\frontend-next\\tests\\monitoring\\modules.spec.ts",
+                        "column": 31,
+                        "line": 79
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "c30cd39e1c87f9ff656a-3c4e765615b4ffa3b4ad",
+              "file": "modules.spec.ts",
+              "line": 69,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-06-04T09:54:21.647Z",
+    "duration": 24624.42,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  }
+}
