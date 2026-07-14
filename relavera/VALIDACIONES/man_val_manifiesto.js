@@ -39,10 +39,9 @@ $(function () {
             $btn.prop('disabled', false).removeClass('is-loading');
         });
     });
-    $('.pagination').find('li a').click(function () {
-        $('.pagination').find('li').removeClass('active');
-        $(this).parent().addClass('active');
-        $('#letra').val($(this).text());
+    // Evento para cambiar de estado (Activos / Anulados)
+    $(document).on('change', 'input[name="letra_radio"]', function () {
+        $('#letra').val($(this).val());
         busquedaAjax();
     });
     // Evento para el filtro de factura
@@ -171,6 +170,24 @@ $(function () {
     aplicarEstiloOpcionesEnRuta($('#Cho_Cod'));
 
 });
+
+// Función para cambiar de estado programáticamente y actualizar la UI
+function setLetra(val) {
+    $('#letra').val(val);
+    if (val === 'Activos') {
+        $('#rad_activos').prop('checked', true);
+        $('#rad_anulados').prop('checked', false);
+    } else {
+        $('#rad_anulados').prop('checked', true);
+        $('#rad_activos').prop('checked', false);
+    }
+    try {
+        $('.radioset').buttonset('refresh');
+    } catch (e) {
+        console.log('Error al refrescar buttonset:', e);
+    }
+    busquedaAjax();
+}
 
 function createGrid() {
     grid.createGrid({

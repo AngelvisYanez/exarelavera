@@ -2304,7 +2304,7 @@ if (isset($anularAnticipo)) {
   										<input id="radsc1" name="op_opciones" type="radio" value="p" checked="" onclick="setfocus(this.form.search)" />
   										<label for="radsc1">Cliente</label>
   										<input id="radsc2" name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" alt="" />
-  										<label for="radsc2">C&eacute;dula/RUC</label>
+  										<label for="radsc2">Cédula/RUC</label>
   										<input id="radsc3" name="op_opciones" type="radio" value="m" onclick="setfocus(this.form.search)" alt="" />
   										<label for="radsc3">No. Manif.</label>
   										<input id="radsc4" name="op_opciones" type="radio" value="pl" onclick="setfocus(this.form.search)" alt="" />
@@ -2331,76 +2331,87 @@ if (isset($anularAnticipo)) {
   							</fieldset>
 						</div>
 						<div class="col-xs-7">
-  							<fieldset class="exa-fieldset" style="margin-left: auto; width: max-content; margin-right: 65px; padding-left: 15px; padding-right: 15px;">
+  							<fieldset class="exa-fieldset" style="margin-left: auto; width: 100%; max-width: 610px; margin-right: 10px; padding-left: 15px; padding-right: 15px;">
   								<legend class="Titulos2">Filtros</legend>
-    								<div style="display: flex; flex-direction: column; align-items: flex-start; gap: 5px; margin-bottom: 0;">
-                                    <div style="display: flex; align-items: center; flex-wrap: nowrap; gap: 10px;">
-                                        <label class="label-xs" style="margin: 0; flex-shrink: 0; font-weight: bold; padding-top: 5px;">Periodo:</label>
-  									    <div style="flex-shrink: 0; width: 110px;">
-  										    <select id="Pec_Cod" name="Pec_Cod" class="form-control input-xs">
-  											    <!--<option data-year='2018' data-inicio='2018-01-01' data-fin='2030-12-31' value="T">Todos</option>-->
-  											    <?php $a = 1;
-  											    foreach ($periodos as $p) { ?>
-  												    <option data-year="<?php echo $p['Year']; ?>" <?php echo ($a == 1 ? 'selected' : ''); ?> data-inicio="<?php echo $p['Pec_Fei']; ?>" data-fin="<?php echo $p['Pec_Fef']; ?>" data-pec-cod="<?php echo $p['Pec_Cod']; ?>" value="<?php echo $p['Pec_Cod']; ?>">Periodo <?php echo $p['Year']; ?></option>
-  											    <?php $a++;
-  											    } ?>
-  										    </select>
-  									    </div>
-  									    <div id="btnFiltroCorte" style="display: none; flex-shrink: 0; margin-left: -5px;">
-  										    <button type="button" class="btn btn-info btn-xs" style="height: 22px; width: 22px; padding: 0; display: flex; align-items: center; justify-content: center;" title="Filtro Fecha Corte Activo: se esta visualizando todos los anticipos de clientes hasta la fecha elegida">
-  											    <i class="glyphicon glyphicon-info-sign" style="font-size: 12px;"></i>
-  										    </button>
-  									    </div>
-  									    <label class="label-xs" style="margin: 0 0 0 5px; flex-shrink: 0; font-weight: bold; padding-top: 5px;">Estados:</label>
-  									    <div style="flex-shrink: 0; width: 120px;">
-  									        <select id="filtro_factura" name="filtro_factura" class="form-control input-xs">
-  										        <option value="">Todos</option>
-  										        <option value="FACTURADOS">Facturados</option>
-  										        <option value="SIN FACTURAR">Sin Facturar</option>
-  										        <option value="P">Pendiente</option>
-  										        <option value="GE">Garita In</option>
-  										        <option value="A">Aprobado</option>
-  										        <option value="GS">Garita Out</option>
-  										        <option value="F">Facturado</option>
-  										        <option value="R">Rechazado</option>
-  									        </select>
-  									    </div>
-                                        <nav style="margin: 0; flex-shrink: 0;">
-  										    <?php $valores = array("Activos", "Anulados"); ?>
-  										    <ul class="pagination pagination-centered" style="margin: 0;">
-  											    <?php foreach ($valores as $val) { ?>
-  												    <li <?php if ($val == 'Activos') echo 'class="active"'; ?>>
-                                                        <a style="padding: 2px 5px;" href="javascript:setLetra('<?php echo $val; ?>')"><?php echo $val ?></a>
-  												    </li>
-  											    <?php } ?>
-  										    </ul>
-  									    </nav>
-                                    </div>
-                                    <div style="display: flex; align-items: center; flex-wrap: nowrap; gap: 10px;">
-                                        <label class="label-xs" style="margin: 0; flex-shrink: 0; font-weight: bold; padding-top: 5px;">Rango:</label>
-  									    <div class="input-group input-group-xs" style="flex-shrink: 0; width: auto;">
-  										    <span class="input-group-addon bold alert-info">Desde:</span>
-  										    <input onchange="cambioPreiodoSearch('txt')" name="txt_fec_ini" type="text" id="txt_fec_ini" size="6" class="form-control input-xs datepicker databind" style="text-align: center; width: 100px;" />
-  										    <span class="input-group-addon bold alert-info">Hasta:</span>
-  										    <input name="txt_fec_fin" type="text" id="txt_fec_fin" size="6" class="form-control input-xs datepicker databind" style="text-align: center; width: 100px;" />
-  										    <input type="hidden" id="letra" name="letra" value="Activos" />
-  									    </div>
-                                    </div>
-                                    <script>
-  										document.getElementById('Pec_Cod').addEventListener('change', function() {
-  											var btnFiltroCorte = document.getElementById('btnFiltroCorte');
-  											if (this.value === 'Corte') {
-  												btnFiltroCorte.style.display = 'block';
-  											} else {
-  												btnFiltroCorte.style.display = 'none';
-  											}
-  										});
-  									</script>
-                                </div>
+								<div style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-bottom: 0; width: 100%;">
+									<!-- Fila 1: Estado y Filtrado -->
+									<div style="display: flex; align-items: center; justify-content: flex-start; width: 100%; gap: 20px;">
+										<div style="display: flex; align-items: center; gap: 8px; width: 195px; flex-shrink: 0;">
+											<label class="label-xs" style="margin: 0; flex-shrink: 0; font-weight: bold; padding-top: 2px;">Estado:</label>
+											<div class="radioset" style="display: inline-flex; vertical-align: middle;">
+												<input id="rad_activos" name="letra_radio" type="radio" value="Activos" checked />
+												<label for="rad_activos">Activos</label>
+												<input id="rad_anulados" name="letra_radio" type="radio" value="Anulados" />
+												<label for="rad_anulados">Anulados</label>
+											</div>
+										</div>
+										<div style="display: flex; align-items: center; gap: 8px;">
+											<label class="label-xs" style="margin: 0; flex-shrink: 0; font-weight: bold; padding-top: 2px;">Filtrado:</label>
+											<div style="flex-shrink: 0; width: 125px;">
+												<select id="filtro_factura" name="filtro_factura" class="form-control input-xs" style="text-align: center;">
+													<option value=""><&lt; No filtrar &gt;&gt;</option>
+													<option value="FACTURADOS">Facturados</option>
+													<option value="SIN FACTURAR">Sin Facturar</option>
+													<option value="P">Pendiente</option>
+													<option value="GE">Garita In</option>
+													<option value="A">Aprobado</option>
+													<option value="GS">Garita Out</option>
+													<option value="F">Facturado</option>
+													<option value="R">Rechazado</option>
+												</select>
+											</div>
+										</div>
+									</div>
+									
+									<!-- Fila 2: Periodo y Rango de Fechas -->
+									<div style="display: flex; align-items: center; justify-content: flex-start; width: 100%; gap: 20px;">
+										<!-- Periodo (Izquierda) -->
+										<div style="display: flex; align-items: center; gap: 8px; width: 195px; flex-shrink: 0;">
+											<label class="label-xs" style="margin: 0; flex-shrink: 0; font-weight: bold; padding-top: 2px;">Periodo:</label>
+											<div style="flex-shrink: 0; width: 110px;">
+												<select id="Pec_Cod" name="Pec_Cod" class="form-control input-xs" style="text-align: center;">
+													<?php $a = 1;
+													foreach ($periodos as $p) { ?>
+														<option data-year="<?php echo $p['Year']; ?>" <?php echo ($a == 1 ? 'selected' : ''); ?> data-inicio="<?php echo $p['Pec_Fei']; ?>" data-fin="<?php echo $p['Pec_Fef']; ?>" data-pec-cod="<?php echo $p['Pec_Cod']; ?>" value="<?php echo $p['Pec_Cod']; ?>">Periodo <?php echo $p['Year']; ?></option>
+													<?php $a++;
+													} ?>
+												</select>
+											</div>
+											<div id="btnFiltroCorte" style="display: none; flex-shrink: 0; margin-left: -5px;">
+												<button type="button" class="btn btn-info btn-xs" style="height: 22px; width: 22px; padding: 0; display: flex; align-items: center; justify-content: center;" title="Filtro Fecha Corte Activo: se esta visualizando todos los anticipos de clientes hasta la fecha elegida">
+													<i class="glyphicon glyphicon-info-sign" style="font-size: 12px;"></i>
+												</button>
+											</div>
+										</div>
+										
+										<!-- Rango de Fechas (Derecha) -->
+										<div style="display: flex; align-items: center; gap: 8px;">
+											<label class="label-xs" style="margin: 0; flex-shrink: 0; font-weight: bold; padding-top: 2px;">Rango:</label>
+											<div class="input-group input-group-xs" style="flex-shrink: 0; width: auto;">
+												<span class="input-group-addon bold alert-info" style="padding: 2px 7px;">Desde</span>
+												<input onchange="cambioPreiodoSearch('txt')" name="txt_fec_ini" type="text" id="txt_fec_ini" size="6" class="form-control input-xs datepicker databind" style="text-align: center; width: 100px; height: 22px;" />
+												<span class="input-group-addon bold alert-info" style="padding: 2px 7px;">Hasta</span>
+												<input name="txt_fec_fin" type="text" id="txt_fec_fin" size="6" class="form-control input-xs datepicker databind" style="text-align: center; width: 100px; height: 22px;" />
+												<input type="hidden" id="letra" name="letra" value="Activos" />
+											</div>
+										</div>
+									</div>
+									<script>
+										document.getElementById('Pec_Cod').addEventListener('change', function() {
+											var btnFiltroCorte = document.getElementById('btnFiltroCorte');
+											if (this.value === 'Corte') {
+												btnFiltroCorte.style.display = 'block';
+											} else {
+												btnFiltroCorte.style.display = 'none';
+											}
+										});
+									</script>
+								</div>
   							</fieldset>
-							<div id="saldo_total_container" class="form-group" style="margin-right: 10px; margin-bottom: 10px;" style="margin-right: 10px; margin-bottom: 10px;">
-								<input type="hidden" id="pla_smi_saldo_min" value="<?php echo htmlspecialchars(number_format($pla_smi_saldo_min, 2, '.', ''), ENT_QUOTES, 'UTF-8'); ?>" />
-								<div class="col-sm-12" style="display: flex; align-items: center; justify-content: flex-end; gap: 15px;">
+						</div>
+						<div id="saldo_total_container" class="form-group" style="margin-right: 10px; margin-bottom: 10px;">
+							<input type="hidden" id="pla_smi_saldo_min" value="<?php echo htmlspecialchars(number_format($pla_smi_saldo_min, 2, '.', ''), ENT_QUOTES, 'UTF-8'); ?>" />
+							<div class="col-sm-12" style="display: flex; align-items: center; justify-content: flex-end; gap: 15px;">
 									<div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
 										<?php if ($mostrarBotonSelectorPlantaSaldos) { ?>
 											<div class="saldos-toolbar">
@@ -3536,7 +3547,7 @@ if (isset($anularAnticipo)) {
 		
 	</div>
 
-	<script src="../VALIDACIONES/man_val_manifiesto.js?a=323"></script>
+	<script src="../VALIDACIONES/man_val_manifiesto.js?a=324"></script>
 	<script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>
 	<script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=2"></script>
 	<script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>

@@ -168,7 +168,26 @@ class AbstractModel {
             $sql=$sel."\n$where\n$group\n$order\n$limits;";
         } return $obj?$sel:$sql;
     }
-    public function setCount($sel){ $count=array('total'=>$this->expr('COUNT(*)')); $sel->unsetCols()->addCols(null,$count); if(!empty($this->_detail)){ $data=$sel->getDataSelect(); $detail=""; foreach($this->_detail as $d){ if(array_key_exists($d,$data['from'])){ $detail=$d; break; } } if($detail!=""){ $total=$this->select(false)->from(array('tbl'=>$this->expr('('.$this->getSqlString($sel).')')),$count); $sel->setDataSelect($total->getDataSelect()); } } }
+    public function setCount($sel){ 
+        $count=array('total'=>$this->expr('COUNT(*)')); 
+        $sel->unsetCols()->addCols(null,$count); 
+        $data=$sel->getDataSelect(); 
+        if(!empty($this->_detail) || !empty($data['group'])){ 
+            $detail=""; 
+            if(!empty($this->_detail)){
+                foreach($this->_detail as $d){ 
+                    if(array_key_exists($d,$data['from'])){ 
+                        $detail=$d; 
+                        break; 
+                    } 
+                } 
+            }
+            if($detail!="" || !empty($data['group'])){ 
+                $total=$this->select(false)->from(array('tbl'=>$this->expr('('.$this->getSqlString($sel).')')),$count); 
+                $sel->setDataSelect($total->getDataSelect()); 
+            } 
+        } 
+    }
     public function selectCountWhere($cond){ $sel=$this->selectWhere($cond,true); $this->setCount($sel); return $sel; }
     public function getSqlString($sel){ return is_object($sel)?$sel->__toString()." ":$sel; } function toStr($sel){ return $this->getSqlString($sel); }
     public function setEstado($pk,$est){  if(empty($this->_state) || $this->_state==null) throw new Exception ("Error seteando campo estado"); return "UPDATE ".$this->_name." SET ".$this->_state."='".$est."'"." WHERE ".$this->setUpPK($pk).";"; }
