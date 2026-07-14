@@ -109,20 +109,35 @@ var modoActual = 'individual';
 
 function cambiarModo(modo) {
     modoActual = modo;
+    
+    // Explicitly handle button active states
+    $('#btn_modo_ind').removeClass('active');
+    $('#btn_modo_mas').removeClass('active');
+    
     if (modo === 'individual') {
+        $('#btn_modo_ind').addClass('active');
+        $('#btn_modo_ind input').prop('checked', true);
+        
         $('#div_filtros_individual').show();
         $('#div_kpis_individual').show();
         $('#div_tabs_individual').show();
+        $('#hlp_modo_ind').show();
         
         $('#div_filtros_masivo').hide();
         $('#div_tabla_masiva').hide();
+        $('#hlp_modo_mas').hide();
     } else {
+        $('#btn_modo_mas').addClass('active');
+        $('#btn_modo_mas input').prop('checked', true);
+        
         $('#div_filtros_individual').hide();
         $('#div_kpis_individual').hide();
         $('#div_tabs_individual').hide();
+        $('#hlp_modo_ind').hide();
         
         $('#div_filtros_masivo').show();
         $('#div_tabla_masiva').show();
+        $('#hlp_modo_mas').show();
     }
 }
 
@@ -567,7 +582,173 @@ function ejecutarGuardar() {
 }
 
 function imprimirPre() {
-    if (typeof $.alert !== 'undefined') $.alert("Reporte en construcción.");
+    var vehiculo = $('#res_vehiculo').text();
+    var operador = $('#res_operador').text();
+    var periodo = $('#res_periodo').text();
+    var nroPreliq = $('#res_num_doc').text();
+    
+    var valHora = parseFloat($('#res_val_hora').text()) || 0;
+    var hrsTrab = parseFloat($('#res_horas_trab').text()) || 0;
+    var subHoras = parseFloat($('#res_subtotal').text()) || 0;
+    
+    var glsComb = parseFloat($('#res_gls_com').text()) || 0;
+    var subComb = parseFloat($('#res_cost_com').text().replace('$','')) || 0;
+    
+    var valCompras = parseFloat($('#res_cost_gas').text().replace('$','')) || 0;
+    
+    var dctoHora = parseFloat($('#inp_descuento_hora').val()) || 0;
+    var dctoBase = dctoHora * hrsTrab;
+    
+    var totCobrar = parseFloat($('#res_tot_cobrar').text()) || 0;
+    
+    var observaciones = $('#inp_observaciones').val();
+    var estado = $('#lblEstadoVisual').text().trim() || 'PENDIENTE';
+
+    var html = `
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>Preliquidación - ${nroPreliq}</title>
+        <style>
+            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 20px; font-size: 14px; color: #333; margin: 0; }
+            .header { text-align: center; border-bottom: 2px solid #333; margin-bottom: 15px; padding-bottom: 10px; }
+            .header h2 { margin: 0; font-size: 20px; color: #1e293b; }
+            .header p { margin: 5px 0 0 0; color: #64748b; font-size: 13px; }
+            
+            .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+            .info-box { border: 1px solid #cbd5e1; padding: 12px; border-radius: 6px; background: #f8fafc; }
+            .info-box h4 { margin: 0 0 8px 0; font-size: 12px; text-transform: uppercase; color: #64748b; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
+            .info-item { margin-bottom: 6px; font-size: 13px; }
+            .info-item strong { display: inline-block; width: 120px; }
+            
+            .table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
+            .table th, .table td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; }
+            .table th { background: #f1f5f9; color: #334155; font-size: 11px; text-transform: uppercase; }
+            .text-right { text-align: right; }
+            
+            .totales { width: 300px; float: right; border: 2px solid #0f172a; border-radius: 6px; padding: 12px; background: #f8fafc; }
+            .totales-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; }
+            .totales-row.gran-total { font-size: 18px; font-weight: bold; border-top: 2px solid #cbd5e1; padding-top: 8px; margin-top: 4px; color: #0f172a; }
+            .totales-row.descuento { color: #ef4444; }
+            
+            .clearfix::after { content: ""; display: table; clear: both; }
+            .observaciones { margin-top: 30px; border-top: 1px dashed #cbd5e1; padding-top: 15px; font-size: 13px; }
+            
+            @media print {
+                @page { margin: 1cm; }
+                body { padding: 0; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h2>REPORTE DE PRELIQUIDACIÓN</h2>
+            <p>Documento: <strong>${nroPreliq}</strong> | Estado: <strong>${estado}</strong></p>
+        </div>
+        
+        <div class="info-grid">
+            <div class="info-box">
+                <h4>Datos Generales</h4>
+                <div class="info-item"><strong>Vehículo/Maq:</strong> ${vehiculo}</div>
+                <div class="info-item"><strong>Operador/Chofer:</strong> ${operador}</div>
+                <div class="info-item"><strong>Período:</strong> ${periodo}</div>
+            </div>
+            <div class="info-box">
+                <h4>Resumen Horas y Combustible</h4>
+                <div class="info-item"><strong>Horas Totales:</strong> ${hrsTrab.toFixed(2)} hrs</div>
+                <div class="info-item"><strong>Valor x Hora:</strong> $${valHora.toFixed(2)}</div>
+                <div class="info-item"><strong>Total Galones:</strong> ${glsComb.toFixed(2)} Gls</div>
+            </div>
+        </div>
+        
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Concepto</th>
+                    <th class="text-right">Cantidad / Base</th>
+                    <th class="text-right">Valor Unitario</th>
+                    <th class="text-right">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Ingresos por Horas Trabajadas</td>
+                    <td class="text-right">${hrsTrab.toFixed(2)} hrs</td>
+                    <td class="text-right">$${valHora.toFixed(2)}</td>
+                    <td class="text-right">$${subHoras.toFixed(2)}</td>
+                </tr>
+                <tr>
+                    <td>Deducción por Combustible</td>
+                    <td class="text-right">${glsComb.toFixed(2)} Gls</td>
+                    <td class="text-right">-</td>
+                    <td class="text-right">-$${subComb.toFixed(2)}</td>
+                </tr>
+                <tr>
+                    <td>Compras y Gastos Adicionales</td>
+                    <td class="text-right">-</td>
+                    <td class="text-right">-</td>
+                    <td class="text-right">-$${valCompras.toFixed(2)}</td>
+                </tr>
+                <tr>
+                    <td>Descuento General</td>
+                    <td class="text-right">${hrsTrab.toFixed(2)} hrs</td>
+                    <td class="text-right">$${dctoHora.toFixed(2)} /h</td>
+                    <td class="text-right">-$${dctoBase.toFixed(2)}</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="clearfix">
+            <div class="totales">
+                <div class="totales-row">
+                    <span>Subtotal Ingresos:</span>
+                    <span>$${subHoras.toFixed(2)}</span>
+                </div>
+                <div class="totales-row descuento">
+                    <span>(-) Total Descuentos:</span>
+                    <span>-$${(subComb + valCompras + dctoBase).toFixed(2)}</span>
+                </div>
+                <div class="totales-row gran-total">
+                    <span>TOTAL A COBRAR:</span>
+                    <span>$${totCobrar.toFixed(2)}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="observaciones">
+            <strong>Observaciones del Documento:</strong><br>
+            <p>${observaciones || 'Ninguna observación ingresada.'}</p>
+        </div>
+        
+        <div style="margin-top: 60px; text-align: center;">
+            <div style="display:inline-block; width:40%; border-top: 1px solid #333; margin:0 5%; padding-top: 5px;">Firma de Conformidad (Operador)</div>
+            <div style="display:inline-block; width:40%; border-top: 1px solid #333; margin:0 5%; padding-top: 5px;">Autorizado por</div>
+        </div>
+    </body>
+    </html>
+    `;
+
+    var printIframe = document.getElementById('print-iframe-pre');
+    if (!printIframe) {
+        printIframe = document.createElement('iframe');
+        printIframe.id = 'print-iframe-pre';
+        printIframe.style.position = 'absolute';
+        printIframe.style.width = '0px';
+        printIframe.style.height = '0px';
+        printIframe.style.border = 'none';
+        document.body.appendChild(printIframe);
+    }
+    
+    var doc = printIframe.contentWindow.document;
+    doc.open();
+    doc.write(html);
+    doc.close();
+
+    setTimeout(function() {
+        printIframe.contentWindow.focus();
+        printIframe.contentWindow.print();
+    }, 500);
 }
 
 function cargarRealizadas() {
@@ -707,7 +888,7 @@ function buscarPendientesMasivo() {
                         chk = '<input type="checkbox" class="chkMasivoRow" value="'+row.Veh_Cod+'_'+row.Cho_Cod+'">';
                     }
 
-                    var tr = '<tr>'+
+                    var tr = '<tr style="cursor:pointer;" onclick="toggleRowCheckbox(this, event)">'+
                         '<td class="text-center">'+chk+'</td>'+
                         '<td>'+(row.vehiculo_desc||'--')+'</td>'+
                         '<td>'+(row.chofer_desc||'--')+'</td>'+
@@ -725,7 +906,8 @@ function buscarPendientesMasivo() {
                     '<tr id="det_'+row.Veh_Cod+'_'+row.Cho_Cod+'" style="display:none; background:#f8fafc;"><td colspan="13" class="p-0"><div style="padding:15px;" class="det-content">Cargando...</div></td></tr>';
                     tbody.append(tr);
                 });
-                $('#btnGuardarMasivo').prop('disabled', false);
+                $('#btnGuardarMasivo').html('<i class="fa fa-cogs"></i> Generar Documentos Seleccionados');
+                actualizarBotonGenerarMasivo();
             } else {
                 tbody.html('<tr><td colspan="13" class="text-center text-muted">No se encontraron preliquidaciones pendientes.</td></tr>');
                 $('#btnGuardarMasivo').prop('disabled', true);
@@ -740,6 +922,30 @@ function buscarPendientesMasivo() {
 
 function toggleMasivoAll(source) {
     $('.chkMasivoRow:not(:disabled)').prop('checked', source.checked);
+    actualizarBotonGenerarMasivo();
+}
+
+function toggleRowCheckbox(row, e) {
+    // Ignorar clics en botones u otros inputs para no duplicar acciones
+    var tag = e.target.tagName.toLowerCase();
+    if (tag === 'button' || tag === 'i') {
+        return;
+    }
+    
+    // Si no hizo clic directamente en el checkbox, lo cambiamos nosotros
+    if (tag !== 'input') {
+        var chk = $(row).find('.chkMasivoRow');
+        if (!chk.prop('disabled')) {
+            chk.prop('checked', !chk.prop('checked'));
+        }
+    }
+    
+    actualizarBotonGenerarMasivo();
+}
+
+function actualizarBotonGenerarMasivo() {
+    var seleccionados = $('.chkMasivoRow:checked').length;
+    $('#btnGuardarMasivo').prop('disabled', seleccionados === 0);
 }
 
 function guardarMasivoAjax() {
@@ -776,7 +982,7 @@ function guardarMasivoAjax() {
             dataType: 'json',
             success: function(res) {
                 if (typeof $.carga === 'function') { $.carga('hide'); }
-                $('#btnGuardarMasivo').prop('disabled', false).html('<i class="fa fa-cogs"></i> Generar Preliquidaciones Seleccionadas');
+                $('#btnGuardarMasivo').prop('disabled', false).html('<i class="fa fa-cogs"></i> Generar Documentos Seleccionados');
                 
                 if (res.success) {
                     if (typeof $.alert !== 'undefined') {
@@ -794,7 +1000,7 @@ function guardarMasivoAjax() {
             },
             error: function() {
                 if (typeof $.carga === 'function') { $.carga('hide'); }
-                $('#btnGuardarMasivo').prop('disabled', false).html('<i class="fa fa-cogs"></i> Generar Preliquidaciones Seleccionadas');
+                $('#btnGuardarMasivo').prop('disabled', false).html('<i class="fa fa-cogs"></i> Generar Documentos Seleccionados');
                 if (typeof $.alert !== 'undefined') $.alert('Error al guardar el lote masivo.');
             }
         });

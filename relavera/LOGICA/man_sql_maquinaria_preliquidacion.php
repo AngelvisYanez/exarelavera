@@ -245,19 +245,27 @@ function sentencias_maquinaria_preliquidacion($id, $Par_Sql)
             $sql = "SELECT
                         h.Veh_Cod,
                         h.Cho_Cod,
-                        COUNT(h.Hor_Cod) AS total_registros_horometro,
-                        SUM(IFNULL(h.Hor_Cal,0)) AS total_horas,
-                        IFNULL(v.Veh_Val,0) AS valor_hora,
+                          COUNT(h.Hor_Cod) AS total_registros_horometro,
+                          SUM(CASE
+                              WHEN h.Hor_Cal IS NOT NULL THEN h.Hor_Cal
+                              WHEN h.Hor_Ini IS NOT NULL AND h.Hor_Fin IS NOT NULL THEN (h.Hor_Fin - h.Hor_Ini)
+                              ELSE 0
+                          END) AS total_horas,
+                          IFNULL(v.Veh_Val,0) AS valor_hora,
                         MAX(CONCAT(IFNULL(v.Veh_Pla,''), ' - ', IFNULL(v.Veh_Mar,''))) AS vehiculo_desc,
                         MAX(CONCAT(IFNULL(p.Prs_Nom,''), ' ', IFNULL(p.Prs_Ape,''))) AS chofer_desc
                     FROM maquinaria_horometro h
                     INNER JOIN vehiculo v ON v.Veh_Cod = h.Veh_Cod
                     LEFT JOIN chofer c ON c.Cho_Cod = h.Cho_Cod
                     LEFT JOIN persona p ON p.Prs_Cod = c.Prs_Cod
-                    WHERE h.Mal_Cod IS NULL
-                      AND DATE(h.Hor_Fec) BETWEEN '" . $Par_Sql['fecha_ini'] . "' AND '" . $Par_Sql['fecha_fin'] . "'
-                      AND IFNULL(h.Hor_Cal,0) > 0
-                      AND (h.Hor_Est IN ('F','A') OR h.Hor_Est IS NULL OR h.Hor_Est = '')
+                      WHERE (h.Mal_Cod IS NULL OR h.Mal_Cod = 0)
+                        AND DATE(h.Hor_Fec) BETWEEN '" . $Par_Sql['fecha_ini'] . "' AND '" . $Par_Sql['fecha_fin'] . "'
+                        AND (CASE
+                              WHEN h.Hor_Cal IS NOT NULL THEN h.Hor_Cal
+                              WHEN h.Hor_Ini IS NOT NULL AND h.Hor_Fin IS NOT NULL THEN (h.Hor_Fin - h.Hor_Ini)
+                              ELSE 0
+                            END) > 0
+                        AND (h.Hor_Est IN ('F','A') OR h.Hor_Est IS NULL OR h.Hor_Est = '')
                     GROUP BY h.Veh_Cod, h.Cho_Cod, v.Veh_Val";
             break;
 
@@ -270,7 +278,7 @@ function sentencias_maquinaria_preliquidacion($id, $Par_Sql)
                         SUM(IFNULL(d.Did_Can,0)) AS combustible_cargado,
                         SUM(IFNULL(d.Did_Can,0) * IFNULL(d.Did_Pun,0)) AS costo_combustible
                     FROM maquinaria_dispensador_det d
-                    WHERE d.Mal_Cod IS NULL
+                    WHERE (d.Mal_Cod IS NULL OR d.Mal_Cod = 0)
                       AND d.Did_Tip = 'SA'
                       AND d.Did_Est = 'A'
                       AND DATE(d.Did_Fec) BETWEEN '" . $Par_Sql['fecha_ini'] . "' AND '" . $Par_Sql['fecha_fin'] . "'
