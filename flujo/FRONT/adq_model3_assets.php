@@ -467,9 +467,24 @@ require_once('../../mascaras/model3/estilos/estilos.php');
         word-break: break-word;
     }
     #mdlResolution .adq-scroll-historial {
-        max-height: 480px;
+        max-height: 520px;
         overflow-y: auto;
-        padding-right: 6px;
+        padding: 6px 8px 10px 4px;
+        background: linear-gradient(180deg, #f8fafc 0%, #ffffff 56px);
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+    }
+    #mdlResolution .adq-hist-empty {
+        padding: 28px 16px;
+        text-align: center;
+        color: #64748b;
+        font-size: 12px;
+    }
+    #mdlResolution .adq-hist-empty i {
+        display: block;
+        font-size: 22px;
+        color: #94a3b8;
+        margin-bottom: 8px;
     }
     #mdlResolution .adq-cot-card {
         padding: 12px 14px;
@@ -671,73 +686,113 @@ require_once('../../mascaras/model3/estilos/estilos.php');
     }
     .adq-timeline {
         position: relative;
-        padding-left: 18px;
-        margin-top: 10px;
+        padding-left: 22px;
+        margin-top: 6px;
     }
     .adq-timeline::before {
         content: '';
         position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 4px;
+        top: 6px;
+        bottom: 6px;
+        left: 7px;
         width: 2px;
-        background-color: #e2e8f0;
+        background: linear-gradient(180deg, #94a3b8 0%, #e2e8f0 100%);
+        border-radius: 2px;
     }
     .adq-timeline-item {
         position: relative;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
+    }
+    .adq-timeline-item:last-child {
+        margin-bottom: 2px;
     }
     .adq-timeline-item::before {
         content: '';
         position: absolute;
-        left: -18px;
-        top: 10px;
-        width: 8px;
-        height: 8px;
+        left: -19px;
+        top: 14px;
+        width: 12px;
+        height: 12px;
         border-radius: 50%;
-        background-color: #cbd5e1;
+        background-color: #94a3b8;
         border: 2px solid #ffffff;
-        box-shadow: 0 0 0 2px #e2e8f0;
+        box-shadow: 0 0 0 2px #cbd5e1;
         z-index: 2;
     }
     .adq-timeline-item.active::before {
-        background-color: #3b82f6;
-        box-shadow: 0 0 0 2px #93c5fd;
+        background-color: #2563eb;
+        box-shadow: 0 0 0 3px #bfdbfe;
     }
     .adq-timeline-item.success::before {
-        background-color: #10b981;
-        box-shadow: 0 0 0 2px #a7f3d0;
+        background-color: #059669;
+        box-shadow: 0 0 0 3px #a7f3d0;
     }
     .adq-timeline-item.danger::before {
-        background-color: #ef4444;
-        box-shadow: 0 0 0 2px #fca5a5;
+        background-color: #dc2626;
+        box-shadow: 0 0 0 3px #fecaca;
     }
     .adq-timeline-item.warning::before {
-        background-color: #f59e0b;
-        box-shadow: 0 0 0 2px #fde68a;
+        background-color: #d97706;
+        box-shadow: 0 0 0 3px #fde68a;
     }
     .adq-timeline-content {
-        background-color: #f8fafc;
+        background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 5px;
-        padding: 6px 10px;
+        border-left: 3px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 10px 12px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .adq-timeline-item.active .adq-timeline-content {
+        border-left-color: #2563eb;
+        background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+    }
+    .adq-timeline-item.success .adq-timeline-content {
+        border-left-color: #059669;
+        background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%);
+    }
+    .adq-timeline-item.danger .adq-timeline-content {
+        border-left-color: #dc2626;
+        background: linear-gradient(180deg, #fef2f2 0%, #ffffff 100%);
+    }
+    .adq-timeline-item.warning .adq-timeline-content {
+        border-left-color: #d97706;
+        background: linear-gradient(180deg, #fffbeb 0%, #ffffff 100%);
     }
     .adq-timeline-header {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2px;
+        align-items: flex-start;
+        margin-bottom: 8px;
         flex-wrap: wrap;
-        gap: 4px;
+        gap: 6px 10px;
     }
     .adq-timeline-title {
-        font-size: 11px;
+        font-size: 12px;
         font-weight: 700;
-        color: #1e293b;
+        color: #0f172a;
         display: flex;
         align-items: center;
         flex-wrap: wrap;
-        gap: 6px;
+        gap: 6px 8px;
+        line-height: 1.35;
+        flex: 1 1 180px;
+        min-width: 0;
+    }
+    .adq-timeline-step {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        flex: 0 1 auto;
+    }
+    .adq-timeline-stage {
+        display: inline;
+        font-size: 13px;
+        font-weight: 700;
+        color: #1e3a8a;
+        letter-spacing: 0.01em;
     }
     .adq-timeline-step-num {
         display: inline-flex;
@@ -746,7 +801,7 @@ require_once('../../mascaras/model3/estilos/estilos.php');
         min-width: 22px;
         height: 22px;
         padding: 0 6px;
-        border-radius: 999px;
+        border-radius: 6px;
         background-color: #1e3a8a;
         color: #ffffff;
         font-size: 11px;
@@ -760,23 +815,102 @@ require_once('../../mascaras/model3/estilos/estilos.php');
         font-size: 12px;
     }
     .adq-timeline-date {
-        font-size: 10px;
-        font-family: monospace;
+        font-size: 11px;
+        font-family: Consolas, "Courier New", monospace;
         color: #64748b;
+        white-space: nowrap;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 999px;
+        padding: 2px 8px;
     }
     .adq-timeline-body {
-        font-size: 11px;
+        font-size: 12px;
         color: #475569;
     }
+    .adq-hist-actor {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 2px;
+    }
+    .adq-hist-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #1e3a8a;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        flex-shrink: 0;
+    }
+    .adq-timeline-item.success .adq-hist-avatar { background: #059669; }
+    .adq-timeline-item.danger .adq-hist-avatar { background: #dc2626; }
+    .adq-timeline-item.warning .adq-hist-avatar { background: #d97706; }
+    .adq-timeline-item.active .adq-hist-avatar { background: #2563eb; }
+    .adq-hist-actor-meta {
+        min-width: 0;
+        line-height: 1.25;
+    }
+    .adq-hist-actor-mode {
+        display: block;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #94a3b8;
+        font-weight: 600;
+    }
+    .adq-hist-actor-name {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        color: #1e293b;
+    }
     .adq-timeline-comment {
-        font-size: 10.5px;
-        font-style: italic;
-        background-color: #ffffff;
-        border-left: 3px solid #cbd5e1;
-        padding: 3px 6px;
-        margin-top: 4px;
-        border-radius: 0 3px 3px 0;
-        color: #64748b;
+        font-size: 12px;
+        font-style: normal;
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-left: 3px solid #94a3b8;
+        padding: 8px 10px;
+        margin-top: 8px;
+        border-radius: 0 6px 6px 0;
+        color: #475569;
+        line-height: 1.4;
+    }
+    .adq-timeline-comment::before {
+        content: 'Comentario';
+        display: block;
+        font-size: 9px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #94a3b8;
+        margin-bottom: 3px;
+    }
+    .adq-hist-archivos,
+    .adq-hist-facturas {
+        margin-top: 8px;
+    }
+    .adq-hist-archivos .btn,
+    .adq-hist-facturas .btn {
+        border-radius: 6px;
+    }
+    .adq-hist-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.02em;
+        padding: 3px 8px !important;
+        border-radius: 999px !important;
+        border: none !important;
+        line-height: 1.2 !important;
     }
     .adq-action-buttons {
         display: flex;

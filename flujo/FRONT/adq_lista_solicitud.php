@@ -7,9 +7,11 @@
 
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/wf_manager_log.php');
+require_once('../LOGICA/adq_adquisiciones_log.php');
 
 $obBD_conexion = new Class_Log_Conexion_Global($Ses_Dat_Dis);
 $obBD_con1 = new MysqlDatos($obBD_conexion);
+$obBD_adq = new adq_adquisiciones_log($obBD_conexion);
 $wf_mgr = new wf_manager_log($Ses_Dat_Dis);
 
 $ajax_get_solicitud_flow = isset($_GET['ajax_get_solicitud_flow']) ? $_GET['ajax_get_solicitud_flow'] : null;
@@ -21,6 +23,175 @@ if (!$wf_mgr->verificarAccesoVentana('bandeja')) {
     }
     echo "<div class='alert alert-danger m-3'>Acceso denegado. No tiene permisos para ver esta ventana.</div>";
     exit;
+}
+
+function adqListaEsc($text) {
+    return htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
+}
+
+function adqListaEtiquetaAccion($h) {
+    if (!empty($h['Fin_Pendiente'])) {
+        return array('Pendiente cierre', 'info', 'active');
+    }
+    if (!empty($h['Pendiente_Aprobacion']) || (isset($h['Isn_Acc']) && $h['Isn_Acc'] === 'PENDIENTE')) {
+        $txt = 'Pendiente de aprobacion';
+        if (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'TAREA') {
+            $txt = 'Tarea pendiente';
+        } elseif (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'FIN') {
+            $txt = 'Pendiente cierre';
+        } elseif (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'AVANCE') {
+            $txt = 'Pendiente de avance';
+        }
+        return array($txt, 'primary', 'active');
+    }
+    $acc = isset($h['Isn_Acc']) ? $h['Isn_Acc'] : '';
+    $map = array(
+        'CREAR' => array('Inicio pedido', 'secondary', 'active'),
+        'APROBAR' => array('Aprobado', 'success', 'success'),
+        'COMPLETAR' => array('Tarea completada', 'success', 'success'),
+        'OBSERVAR' => array('Observado', 'warning', 'warning'),
+        'DEVOLVER' => array('Devuelto', 'secondary', 'active'),
+        'RECHAZAR' => array('Rechazado', 'danger', 'danger'),
+        'REENVIAR' => array('Reenvio correccion', 'info', 'active'),
+        'AVANCE' => array('Documentos cargados', 'info', 'active'),
+        'COTIZAR' => array('Proformas cargadas', 'primary', 'active')
+    );
+    if (isset($map[$acc])) {
+        return $map[$acc];
+    }
+    return array($acc !== '' ? $acc : 'Movimiento', 'secondary', 'active');
+}
+
+function adqListaConstruirDetalleNodos($wf_mgr, $obBD_adq, $obBD_con1, $obBD_conexion, $sol_cod, $ins_cod, $flow_visual) {
+    $sol_cod = intval($sol_cod);
+    $ins_cod = intval($ins_cod);
+    $nodos_detalle = array();
+    if ($sol_cod <= 0 || $ins_cod <= 0) {
+        return $nodos_detalle;
+    }
+
+    $inst = $obBD_con1->getRowConsultaSql(
+        "SELECT Ins_Est, Nod_Act FROM wf_instancias WHERE Ins_Cod = $ins_cod LIMIT 1;",
+        $obBD_conexion
+    );
+    $historial = $obBD_con1->getArrayConsultaSql("
+        SELECT h.*,
+               COALESCE(n.Nod_Nom, CONCAT('Nodo #', h.Nod_Cod)) AS Nod_Nom,
+               COALESCE(n.Nod_Tip, 'PASO') AS Nod_Tip,
+               TRIM(CONCAT(IFNULL(p.Prs_Nom, ''), ' ', IFNULL(p.Prs_Ape, ''))) AS Usuario_Nom,
+               p.Prs_Nom, p.Prs_Ape,
+               d.Wde_Des AS Dep_Des
+        FROM wf_instancias_nodos h
+        LEFT JOIN wf_nodos n ON n.Nod_Cod = h.Nod_Cod
+        LEFT JOIN usuarios u ON u.Usu_Cod = h.Usu_Cod
+        LEFT JOIN persona p ON p.Prs_Cod = u.Prs_Cod
+        LEFT JOIN wf_departamentos d ON d.Dep_Cod = h.Dep_Cod
+        WHERE h.Ins_Cod = $ins_cod
+        ORDER BY h.Isn_Fec ASC, h.Isn_Cod ASC;", $obBD_conexion);
+    if ($historial === false || $historial === null) {
+        $historial = array();
+    }
+
+    $historial = $wf_mgr->normalizarHistorialFirmas(
+        $historial,
+        isset($inst['Ins_Est']) ? $inst['Ins_Est'] : '',
+        isset($inst['Nod_Act']) ? intval($inst['Nod_Act']) : 0
+    );
+    $historial = $wf_mgr->agregarNodoPendienteHistorial(
+        $historial,
+        isset($inst['Ins_Est']) ? $inst['Ins_Est'] : '',
+        isset($inst['Nod_Act']) ? intval($inst['Nod_Act']) : 0,
+        0
+    );
+    $historial = $wf_mgr->agregarRechazoHistorialSiFalta(
+        $historial,
+        $ins_cod,
+        '',
+        isset($inst['Ins_Est']) ? $inst['Ins_Est'] : ''
+    );
+    $historial = $obBD_adq->enriquecerHistorialConArchivos($historial, $sol_cod);
+
+    $orden_nodo = array();
+    $idx = 0;
+    if (!empty($flow_visual['nodos']) && is_array($flow_visual['nodos'])) {
+        foreach ($flow_visual['nodos'] as $node) {
+            $nid = intval($node['id']);
+            if ($nid <= 0) {
+                continue;
+            }
+            $idx++;
+            $orden_nodo[$nid] = $idx;
+            $nodos_detalle[(string)$nid] = array(
+                'orden' => $idx,
+                'nombre' => isset($node['nombre']) ? $node['nombre'] : ('Nodo #' . $nid),
+                'tipo' => isset($node['tipo']) ? $node['tipo'] : 'PASO',
+                'movimientos' => array()
+            );
+        }
+    }
+
+    foreach ($historial as $h) {
+        $nid = intval(isset($h['Etapa_Nod_Cod']) ? $h['Etapa_Nod_Cod'] : (isset($h['Nod_Cod']) ? $h['Nod_Cod'] : 0));
+        if ($nid <= 0) {
+            continue;
+        }
+        $key = (string)$nid;
+        if (!isset($nodos_detalle[$key])) {
+            $orden = isset($orden_nodo[$nid]) ? $orden_nodo[$nid] : $nid;
+            $nodos_detalle[$key] = array(
+                'orden' => $orden,
+                'nombre' => isset($h['Nod_Nom']) ? $h['Nod_Nom'] : ('Nodo #' . $nid),
+                'tipo' => isset($h['Nod_Tip']) ? $h['Nod_Tip'] : 'PASO',
+                'movimientos' => array()
+            );
+        }
+        list($acc_lbl, $acc_badge, $acc_class) = adqListaEtiquetaAccion($h);
+        $actor = !empty($h['Actor_Nom']) ? $h['Actor_Nom'] : (!empty($h['Usuario_Nom']) ? $h['Usuario_Nom'] : (!empty($h['Dep_Des']) ? $h['Dep_Des'] : 'Sistema'));
+        $archivos = array();
+        if (!empty($h['archivos']) && is_array($h['archivos'])) {
+            foreach ($h['archivos'] as $arch) {
+                if (empty($arch['path'])) {
+                    continue;
+                }
+                $archivos[] = array(
+                    'path' => $arch['path'],
+                    'label' => !empty($arch['label']) ? $arch['label'] : 'Archivo',
+                    'es_expediente' => !empty($arch['es_expediente']) ? 1 : 0,
+                    'es_expediente_firmado' => !empty($arch['es_expediente_firmado']) ? 1 : 0
+                );
+            }
+        }
+        $facturas = array();
+        if (!empty($h['facturas']) && is_array($h['facturas'])) {
+            foreach ($h['facturas'] as $f) {
+                $facturas[] = array(
+                    'numero' => isset($f['numero']) ? $f['numero'] : '',
+                    'proveedor' => isset($f['proveedor']) ? $f['proveedor'] : '',
+                    'fecha' => isset($f['fecha']) ? $f['fecha'] : '',
+                    'total' => isset($f['total']) ? $f['total'] : 0,
+                    'link' => isset($f['link']) ? $f['link'] : '',
+                    'des' => isset($f['des']) ? $f['des'] : '',
+                    'comprobantes' => !empty($f['comprobantes']) && is_array($f['comprobantes']) ? $f['comprobantes'] : array()
+                );
+            }
+        }
+        $fec = !empty($h['Isn_Fec']) ? $h['Isn_Fec'] : '';
+        $fec_fmt = $fec !== '' ? date('d/m/Y H:i', strtotime($fec)) : 'Sin movimiento';
+        $nodos_detalle[$key]['movimientos'][] = array(
+            'accion' => isset($h['Isn_Acc']) ? $h['Isn_Acc'] : '',
+            'accion_label' => $acc_lbl,
+            'badge' => $acc_badge,
+            'item_class' => $acc_class,
+            'actor' => $actor,
+            'actor_modo' => !empty($h['Actor_Modo']) ? $h['Actor_Modo'] : 'Por',
+            'fecha' => $fec_fmt,
+            'comentario' => isset($h['Isn_Com']) ? $h['Isn_Com'] : '',
+            'archivos' => $archivos,
+            'facturas' => $facturas
+        );
+    }
+
+    return $nodos_detalle;
 }
 
 if (isset($ajax_get_solicitud_flow)) {
@@ -65,10 +236,21 @@ if (isset($ajax_get_solicitud_flow)) {
         $flow_visual = $wf_mgr->getVisualFlowData(intval($sol['Ins_Cod']));
     }
 
+    $nodos_detalle = adqListaConstruirDetalleNodos(
+        $wf_mgr,
+        $obBD_adq,
+        $obBD_con1,
+        $obBD_conexion,
+        $sol_cod,
+        !empty($sol['Ins_Cod']) ? intval($sol['Ins_Cod']) : 0,
+        $flow_visual
+    );
+
     $obBD_con1->echoJson(array(
         'success' => true,
         'solicitud' => $sol,
-        'flow_visual' => $flow_visual
+        'flow_visual' => $flow_visual,
+        'nodos_detalle' => $nodos_detalle
     ));
     exit;
 }
@@ -600,6 +782,154 @@ function adqListaEtiquetaEstado($sol_est)
         #mdlFlujoTrackerWrap .tracker-arrow {
             font-size: 26px;
         }
+
+        #mdlFlujoTrackerWrap .tracker-node-clickable {
+            cursor: pointer;
+            transition: box-shadow 0.15s ease, transform 0.15s ease;
+        }
+
+        #mdlFlujoTrackerWrap .tracker-node-clickable:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.14);
+        }
+
+        #mdlFlujoTrackerWrap .tracker-node-selected {
+            outline: 2px solid #1e3a8a;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.15);
+        }
+
+        #mdlFlujoTrackerHint {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        #mdlSegNodoDetalle {
+            z-index: 1060;
+        }
+
+        #mdlSegNodoDetalle .modal-dialog {
+            margin-top: 60px;
+        }
+
+        #mdlSegNodoDetalle .adq-lista-nodo-header {
+            background: linear-gradient(180deg, #5f7ea3 0%, #4b678a 100%);
+            color: #ffffff;
+            border-bottom: 1px solid #3a516e;
+        }
+
+        #mdlSegNodoDetalle .adq-lista-nodo-header .modal-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        #mdlSegNodoDetalle .adq-lista-nodo-header .text-muted {
+            color: #dbeafe !important;
+        }
+
+        #mdlSegNodoDetalle .adq-lista-nodo-header .close {
+            color: #ffffff;
+            opacity: 0.85;
+            text-shadow: none;
+        }
+
+        #mdlSegNodoDetalle .modal-body {
+            background: #f8fafc;
+            padding: 14px 16px;
+            max-height: 65vh;
+            overflow-y: auto;
+        }
+
+        body.modal-open .modal-backdrop.adq-lista-nodo-backdrop {
+            z-index: 1055;
+        }
+
+        .adq-lista-mov {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-left: 3px solid #94a3b8;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 10px;
+        }
+
+        .adq-lista-mov.is-success { border-left-color: #059669; }
+        .adq-lista-mov.is-danger { border-left-color: #dc2626; }
+        .adq-lista-mov.is-warning { border-left-color: #d97706; }
+        .adq-lista-mov.is-active { border-left-color: #2563eb; }
+
+        .adq-lista-mov-head {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .adq-lista-mov-title {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .adq-lista-mov-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            height: 24px;
+            padding: 0 6px;
+            border-radius: 6px;
+            background: #4b678a;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .adq-lista-mov-fecha {
+            font-size: 11px;
+            color: #64748b;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 999px;
+            padding: 2px 8px;
+        }
+
+        .adq-lista-mov-actor {
+            font-size: 12px;
+            color: #334155;
+            margin-bottom: 6px;
+        }
+
+        .adq-lista-mov-actor strong {
+            color: #0f172a;
+        }
+
+        .adq-lista-mov-com {
+            font-size: 12px;
+            color: #475569;
+            background: #f8fafc;
+            border-left: 3px solid #94a3b8;
+            padding: 8px 10px;
+            margin: 6px 0;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .adq-lista-archivos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .adq-lista-archivos .btn {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
     </style>
 </head>
 
@@ -720,6 +1050,7 @@ function adqListaEtiquetaEstado($sol_est)
                             <i class="glyphicon glyphicon-refresh glyphicon-spin"></i> Cargando flujo...
                         </div>
                     </div>
+                    <div id="mdlFlujoTrackerHint" class="adq-lista-hint" style="display:none;"><i class="bi bi-hand-index-thumb"></i> Haga clic en un nodo para ver su historial y archivos.</div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cerrar</button>
@@ -728,13 +1059,45 @@ function adqListaEtiquetaEstado($sol_est)
         </div>
     </div>
 
+    <div class="modal fade" id="mdlSegNodoDetalle" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg" style="width:90%;max-width:900px;">
+            <div class="modal-content">
+                <div class="modal-header adq-lista-nodo-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">
+                        <i class="bi bi-list-task"></i>
+                        <span id="listaNodoTitulo">Detalle de etapa</span>
+                        <small class="text-muted" id="listaNodoSub"></small>
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <div id="listaNodoBody"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default btn-sm" data-dismiss="modal"><i class="bi bi-x-lg"></i> Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        let currentNodosDetalle = {};
+
+        function escHtmlLista(text) {
+            return String(text == null ? '' : text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         function renderTrackerHtml(flowVisual) {
             const flowNodos = (flowVisual && flowVisual.nodos) ? flowVisual.nodos : [];
             if (!flowNodos.length) {
                 return '<span class="text-muted small">Sin workflow</span>';
             }
-            let html = '<div class="tracker-wrapper">';
+            let html = '<div class="tracker-wrapper adq-lista-flow-tracker">';
             flowNodos.forEach(function(node, index) {
                 if (index > 0) {
                     html += '<div class="tracker-arrow"><i class="bi bi-arrow-right-short"></i></div>';
@@ -743,25 +1106,146 @@ function adqListaEtiquetaEstado($sol_est)
                 if (node.pendiente_meta) {
                     const pm = node.pendiente_meta;
                     let lines = ['<span><i class="bi bi-hourglass-split"></i> ' + (node.tipo === 'TAREA' ? 'Tarea pendiente' : 'Pendiente de aprobacion') + '</span>'];
-                    if (pm.depto) lines.push('<span>Depto: ' + pm.depto + '</span>');
-                    if (pm.asignados) lines.push('<span>Asignado: ' + pm.asignados + '</span>');
-                    if (pm.enviado_por) lines.push('<span>Enviado por: ' + pm.enviado_por + '</span>');
+                    if (pm.depto) lines.push('<span>Depto: ' + escHtmlLista(pm.depto) + '</span>');
+                    if (pm.asignados) lines.push('<span>Asignado: ' + escHtmlLista(pm.asignados) + '</span>');
+                    if (pm.enviado_por) lines.push('<span>Enviado por: ' + escHtmlLista(pm.enviado_por) + '</span>');
                     actorLine = '<br><span class="tracker-actor tracker-pendiente">' + lines.join('') + '</span>';
                 } else if (node.actor_label) {
-                    actorLine = '<br><span class="tracker-actor"><i class="bi bi-person-check"></i> ' + node.actor_label + '</span>';
+                    actorLine = '<br><span class="tracker-actor"><i class="bi bi-person-check"></i> ' + escHtmlLista(node.actor_label) + '</span>';
                 }
-                html += '<div class="tracker-node color-' + node.color + '">' +
-                    '<i class="bi bi-circle-fill"></i> ' + node.nombre +
-                    '<span class="tracker-node-tipo">[' + node.tipo + ']</span>' +
-                    actorLine +
-                    '</div>';
+                const orden = index + 1;
+                html += '<div class="tracker-node tracker-node-clickable color-' + escHtmlLista(node.color) + '"'
+                    + ' data-nod-id="' + parseInt(node.id, 10) + '"'
+                    + ' data-nod-orden="' + orden + '"'
+                    + ' data-nod-nom="' + escHtmlLista(node.nombre) + '"'
+                    + ' data-nod-tip="' + escHtmlLista(node.tipo) + '"'
+                    + ' title="Ver historial y archivos de esta etapa">'
+                    + '<i class="bi bi-circle-fill"></i> <strong>' + orden + '.</strong> ' + escHtmlLista(node.nombre)
+                    + '<span class="tracker-node-tipo">[' + escHtmlLista(node.tipo) + ']</span>'
+                    + actorLine
+                    + '</div>';
             });
             html += '</div>';
             return html;
         }
 
+        function renderArchivosNodo(archivos) {
+            if (!archivos || !archivos.length) {
+                return '';
+            }
+            let html = '<div class="adq-lista-archivos">';
+            archivos.forEach(function(a) {
+                if (!a.path) return;
+                const firmado = parseInt(a.es_expediente_firmado || 0, 10) === 1;
+                const exp = firmado || parseInt(a.es_expediente || 0, 10) === 1;
+                let btn = 'btn-outline-primary';
+                let icon = 'bi-file-earmark-pdf';
+                if (firmado) {
+                    btn = 'btn-outline-success';
+                    icon = 'bi-file-earmark-check';
+                } else if (exp) {
+                    btn = 'btn-outline-secondary';
+                    icon = 'bi-file-earmark-lock2';
+                }
+                html += '<a href="../../DATA/' + escHtmlLista(a.path) + '" target="_blank" class="btn btn-xs ' + btn + '">'
+                    + '<i class="bi ' + icon + '"></i> ' + escHtmlLista(a.label || 'Archivo')
+                    + '</a>';
+            });
+            html += '</div>';
+            return html;
+        }
+
+        function renderFacturasNodo(facturas) {
+            if (!facturas || !facturas.length) {
+                return '';
+            }
+            let html = '';
+            facturas.forEach(function(f) {
+                const numero = escHtmlLista(f.numero || '');
+                const proveedor = escHtmlLista(f.proveedor || 'Proveedor');
+                const pdf = f.link
+                    ? '<a href="' + escHtmlLista(f.link) + '" target="_blank" class="btn btn-xs btn-outline-primary" style="margin-left:6px;"><i class="bi bi-file-earmark-pdf"></i> Ver PDF</a>'
+                    : '';
+                html += '<div class="border rounded p-2 mb-1 bg-white small" style="margin-top:6px;">'
+                    + '<strong><i class="bi bi-receipt-cutoff"></i> Factura # ' + numero + '</strong> - ' + proveedor + pdf
+                    + '</div>';
+            });
+            return html;
+        }
+
+        function renderDetalleNodoHtml(detalle, ordenFallback) {
+            if (!detalle || !detalle.movimientos || !detalle.movimientos.length) {
+                return '<div class="text-center text-muted py-3 small">No hay movimientos ni archivos registrados en esta etapa.</div>';
+            }
+            const ordenBase = parseInt(detalle.orden || ordenFallback || 0, 10) || 0;
+            const total = detalle.movimientos.length;
+            let html = '';
+            detalle.movimientos.forEach(function(m, idx) {
+                const num = total > 1 ? (ordenBase + '.' + (idx + 1)) : String(ordenBase || (idx + 1));
+                const cls = m.item_class ? (' is-' + m.item_class) : '';
+                html += '<div class="adq-lista-mov' + cls + '">'
+                    + '<div class="adq-lista-mov-head">'
+                    + '<div class="adq-lista-mov-title">'
+                    + '<span class="adq-lista-mov-num">' + escHtmlLista(num) + '</span>'
+                    + '<span class="badge bg-' + escHtmlLista(m.badge || 'secondary') + '">' + escHtmlLista(m.accion_label || m.accion || '') + '</span>'
+                    + '<strong>' + escHtmlLista(detalle.nombre || 'Etapa') + '</strong>'
+                    + '</div>'
+                    + '<span class="adq-lista-mov-fecha"><i class="bi bi-calendar3"></i> ' + escHtmlLista(m.fecha || '') + '</span>'
+                    + '</div>'
+                    + '<div class="adq-lista-mov-actor">' + escHtmlLista(m.actor_modo || 'Por') + ': <strong>' + escHtmlLista(m.actor || 'Sistema') + '</strong></div>'
+                    + (m.comentario ? ('<div class="adq-lista-mov-com">' + escHtmlLista(m.comentario) + '</div>') : '')
+                    + renderFacturasNodo(m.facturas)
+                    + renderArchivosNodo(m.archivos)
+                    + '</div>';
+            });
+            return html;
+        }
+
+        function mostrarDetalleNodo(nodId, $nodeEl) {
+            nodId = String(nodId);
+            const detalle = currentNodosDetalle[nodId] || null;
+            const orden = detalle && detalle.orden
+                ? detalle.orden
+                : ($nodeEl ? parseInt($nodeEl.data('nod-orden'), 10) : 0);
+            const nom = (detalle && detalle.nombre)
+                ? detalle.nombre
+                : ($nodeEl ? $nodeEl.data('nod-nom') : 'Etapa');
+            const tip = (detalle && detalle.tipo)
+                ? detalle.tipo
+                : ($nodeEl ? $nodeEl.data('nod-tip') : '');
+
+            $('#mdlFlujoTrackerWrap .tracker-node-clickable').removeClass('tracker-node-selected');
+            if ($nodeEl && $nodeEl.length) {
+                $nodeEl.addClass('tracker-node-selected');
+            }
+
+            $('#listaNodoTitulo').text((orden ? (orden + '. ') : '') + nom);
+            $('#listaNodoSub').text(tip ? (' [' + tip + ']') : '');
+            $('#listaNodoBody').html(renderDetalleNodoHtml(detalle, orden));
+
+            const $modal = $('#mdlSegNodoDetalle');
+            $modal.off('shown.bs.modal.listaNodo hidden.bs.modal.listaNodo');
+            $modal.on('shown.bs.modal.listaNodo', function() {
+                $('.modal-backdrop').not('.adq-lista-nodo-backdrop').last().addClass('adq-lista-nodo-backdrop');
+            });
+            $modal.on('hidden.bs.modal.listaNodo', function() {
+                $('#mdlFlujoTrackerWrap .tracker-node-clickable').removeClass('tracker-node-selected');
+                $('body').addClass('modal-open');
+            });
+            $modal.modal('show');
+        }
+
+        function initNodosClickables() {
+            $('#mdlFlujoTrackerWrap .tracker-node-clickable').off('click.listaNodo').on('click.listaNodo', function() {
+                mostrarDetalleNodo($(this).data('nod-id'), $(this));
+            });
+        }
+
         function abrirModalFlujo(solCod) {
+            currentNodosDetalle = {};
+            $('#mdlSegNodoDetalle').modal('hide');
             $('#mdlFlujoResumen').empty();
+            $('#mdlFlujoTrackerHint').hide();
             $('#mdlFlujoTracker').html('<i class="glyphicon glyphicon-refresh glyphicon-spin"></i> Cargando flujo...');
             $('#mdlFlujoSolicitud').modal('show');
 
@@ -770,26 +1254,31 @@ function adqListaEtiquetaEstado($sol_est)
                 sol_cod: solCod
             }, function(res) {
                 if (!res.success) {
-                    $('#mdlFlujoTracker').html('<span class="text-danger">' + (res.message || 'Error al cargar') + '</span>');
+                    $('#mdlFlujoTracker').html('<span class="text-danger">' + escHtmlLista(res.message || 'Error al cargar') + '</span>');
                     return;
                 }
                 const s = res.solicitud;
-                $('#mdlFlujoTitle').html('<i class="bi bi-diagram-3"></i> Solicitud N&ordm; ' + s.Sol_Num + ' &mdash; Flujo del Workflow');
+                currentNodosDetalle = res.nodos_detalle || {};
+                $('#mdlFlujoTitle').html('<i class="bi bi-diagram-3"></i> Solicitud N&ordm; ' + escHtmlLista(s.Sol_Num) + ' &mdash; Flujo del Workflow');
 
-                const fecha = s.Sol_Fec ? s.Sol_Fec.replace('T', ' ').substring(0, 16) : '';
+                const fecha = s.Sol_Fec ? String(s.Sol_Fec).replace('T', ' ').substring(0, 16) : '';
                 $('#mdlFlujoResumen').html(
                     '<div class="adq-kv-row">' +
-                    '<div class="adq-kv-item"><span class="adq-kv-label">Solicitante</span><span class="adq-kv-value">' + (s.Solicitante_Nom || 'N/D') + '</span></div>' +
-                    '<div class="adq-kv-item"><span class="adq-kv-label">Flujo</span><span class="adq-kv-value">' + (s.Wfm_Nom || 'Sin flujo') + '</span></div>' +
-                    '<div class="adq-kv-item"><span class="adq-kv-label">Fecha</span><span class="adq-kv-value">' + fecha + '</span></div>' +
-                    '<div class="adq-kv-item"><span class="adq-kv-label">Tipo pedido</span><span class="adq-kv-value">' + (s.Trq_Des || '') + '</span></div>' +
-                    '<div class="adq-kv-item"><span class="adq-kv-label">Prioridad</span><span class="adq-kv-value">' + (s.Sol_Pri || '') + '</span></div>' +
-                    '<div class="adq-kv-item"><span class="adq-kv-label">Estado</span><span class="adq-kv-value"><span class="badge bg-' + s.Estado_Badge + '">' + s.Estado_Label + '</span></span></div>' +
-                    (s.Etapa_Actual ? '<div class="adq-kv-item"><span class="adq-kv-label">Etapa actual</span><span class="adq-kv-value">' + s.Etapa_Actual + '</span></div>' : '') +
+                    '<div class="adq-kv-item"><span class="adq-kv-label">Solicitante</span><span class="adq-kv-value">' + escHtmlLista(s.Solicitante_Nom || 'N/D') + '</span></div>' +
+                    '<div class="adq-kv-item"><span class="adq-kv-label">Flujo</span><span class="adq-kv-value">' + escHtmlLista(s.Wfm_Nom || 'Sin flujo') + '</span></div>' +
+                    '<div class="adq-kv-item"><span class="adq-kv-label">Fecha</span><span class="adq-kv-value">' + escHtmlLista(fecha) + '</span></div>' +
+                    '<div class="adq-kv-item"><span class="adq-kv-label">Tipo pedido</span><span class="adq-kv-value">' + escHtmlLista(s.Trq_Des || '') + '</span></div>' +
+                    '<div class="adq-kv-item"><span class="adq-kv-label">Prioridad</span><span class="adq-kv-value">' + escHtmlLista(s.Sol_Pri || '') + '</span></div>' +
+                    '<div class="adq-kv-item"><span class="adq-kv-label">Estado</span><span class="adq-kv-value"><span class="badge bg-' + escHtmlLista(s.Estado_Badge) + '">' + escHtmlLista(s.Estado_Label) + '</span></span></div>' +
+                    (s.Etapa_Actual ? '<div class="adq-kv-item"><span class="adq-kv-label">Etapa actual</span><span class="adq-kv-value">' + escHtmlLista(s.Etapa_Actual) + '</span></div>' : '') +
                     '</div>'
                 );
 
                 $('#mdlFlujoTracker').html(renderTrackerHtml(res.flow_visual));
+                if (res.flow_visual && res.flow_visual.nodos && res.flow_visual.nodos.length) {
+                    $('#mdlFlujoTrackerHint').show();
+                }
+                initNodosClickables();
             }).fail(function() {
                 $('#mdlFlujoTracker').html('<span class="text-danger">Error de red al cargar el flujo.</span>');
             });

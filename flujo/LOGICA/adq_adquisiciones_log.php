@@ -250,6 +250,18 @@ class adq_adquisiciones_log extends MysqlDatosContab {
     private function facturaDesdeAvanceRow($av) {
         if (!empty($av['compra']) && is_array($av['compra'])) {
             $c = $av['compra'];
+            $comprobantes = array();
+            if (!empty($c['Comprobantes']) && is_array($c['Comprobantes'])) {
+                foreach ($c['Comprobantes'] as $comp) {
+                    $comprobantes[] = array(
+                        'codigo' => isset($comp['Codigo']) ? $comp['Codigo'] : '',
+                        'fecha' => isset($comp['Pag_Fec']) ? $comp['Pag_Fec'] : '',
+                        'valor' => isset($comp['Pag_Val']) ? floatval($comp['Pag_Val']) : 0,
+                        'forma' => isset($comp['Forma']) ? $comp['Forma'] : '',
+                        'link' => isset($comp['Link']) ? $comp['Link'] : ''
+                    );
+                }
+            }
             return array(
                 'cop_cod' => intval($c['Cop_Cod']),
                 'numero' => isset($c['Cop_Num']) ? $c['Cop_Num'] : '',
@@ -257,7 +269,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 'fecha' => isset($c['Cop_Fec']) ? $c['Cop_Fec'] : '',
                 'total' => isset($c['Total']) ? floatval($c['Total']) : 0,
                 'link' => isset($c['Link_Factura']) ? $c['Link_Factura'] : '',
-                'des' => isset($av['Sav_Des']) ? trim($av['Sav_Des']) : ''
+                'des' => isset($av['Sav_Des']) ? trim($av['Sav_Des']) : '',
+                'comprobantes' => $comprobantes
             );
         }
         $cop_cod = isset($av['Sav_Cop_Cod']) ? intval($av['Sav_Cop_Cod']) : 0;
@@ -271,7 +284,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             'fecha' => '',
             'total' => 0,
             'link' => '',
-            'des' => isset($av['Sav_Des']) ? trim($av['Sav_Des']) : ''
+            'des' => isset($av['Sav_Des']) ? trim($av['Sav_Des']) : '',
+            'comprobantes' => array()
         );
     }
 
@@ -434,41 +448,49 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $historial[$idx]['facturas'] = $facturas;
         }
 
-        return $this->adjuntarExpedienteFirmadoAlHistorial($historial, $sol_cod);
+        return $this->adjuntarExpedienteAlHistorial($historial, $sol_cod);
     }
 
     /**
-     * Adjunta el PDF firmado del expediente a la etapa FIN del Historial de Firmas.
+     * Resuelve el indice del nodo FIN (pendiente o cerrado) en el Historial de Firmas.
      */
-    public function adjuntarExpedienteFirmadoAlHistorial($historial, $sol_cod) {
-        if (empty($historial) || !is_array($historial)) {
-            return is_array($historial) ? $historial : array();
-        }
-
-        $estado = $this->obtenerEstadoExpedienteSolicitud(intval($sol_cod));
-        $path_firmado = !empty($estado['firmado']) ? trim($estado['firmado']) : '';
-        if ($path_firmado === '') {
-            return $historial;
-        }
-
-        $abs = $this->rutaAbsolutaData($path_firmado);
-        if ($abs === '' || !is_file($abs)) {
-            return $historial;
-        }
-
+    private function resolverIndiceHistorialFin($historial, $sol_cod = 0) {
         $idx_target = -1;
         $idx_pendiente = -1;
         $idx_cierre = -1;
         $idx_otro_fin = -1;
+        $idx_por_nod = -1;
+
+        $nod_fin = 0;
+        $sol_cod = intval($sol_cod);
+        if ($sol_cod > 0) {
+            $row = $this->getRowConsultaSql(
+                "SELECT n.Nod_Cod
+                 FROM wf_instancias i
+                 INNER JOIN wf_nodos n ON n.Wfm_Cod = i.Wfm_Cod AND n.Nod_Tip = 'FIN' AND n.Nod_Est = 'A'
+                 WHERE i.Ins_Ent_Typ = 'adq_solicitudes' AND i.Ins_Ent_Cod = $sol_cod
+                 ORDER BY i.Ins_Cod DESC, n.Nod_Cod ASC
+                 LIMIT 1;",
+                $this->conexion
+            );
+            if (!empty($row['Nod_Cod'])) {
+                $nod_fin = intval($row['Nod_Cod']);
+            }
+        }
 
         foreach ($historial as $idx => $h) {
+            $nod_cod = intval(isset($h['Etapa_Nod_Cod']) ? $h['Etapa_Nod_Cod'] : (isset($h['Nod_Cod']) ? $h['Nod_Cod'] : 0));
             $es_fin = (!empty($h['Fin_Pendiente']))
-                || (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'FIN');
+                || (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'FIN')
+                || ($nod_fin > 0 && $nod_cod === $nod_fin);
             if (!$es_fin) {
                 continue;
             }
 
             $idx_otro_fin = $idx;
+            if ($nod_fin > 0 && $nod_cod === $nod_fin) {
+                $idx_por_nod = $idx;
+            }
             if (!empty($h['Fin_Pendiente'])
                 || !empty($h['Pendiente_Aprobacion'])
                 || (isset($h['Isn_Acc']) && $h['Isn_Acc'] === 'PENDIENTE')
@@ -484,10 +506,64 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $idx_target = $idx_pendiente;
         } elseif ($idx_cierre >= 0) {
             $idx_target = $idx_cierre;
+        } elseif ($idx_por_nod >= 0) {
+            $idx_target = $idx_por_nod;
         } else {
             $idx_target = $idx_otro_fin;
         }
 
+        return $idx_target;
+    }
+
+    /**
+     * Adjunta el expediente (firmado si existe; si no, el PDF cargado) a la etapa FIN
+     * del Historial de Firmas para poder descargarlo.
+     */
+    public function adjuntarExpedienteAlHistorial($historial, $sol_cod) {
+        if (empty($historial) || !is_array($historial)) {
+            return is_array($historial) ? $historial : array();
+        }
+
+        $estado = $this->obtenerEstadoExpedienteSolicitud(intval($sol_cod));
+        $path_firmado = !empty($estado['firmado']) ? trim((string)$estado['firmado']) : '';
+        $path_cargado = !empty($estado['pdf']) ? trim((string)$estado['pdf']) : '';
+
+        $path = '';
+        $label = '';
+        $flags = array();
+
+        if ($path_firmado !== '') {
+            $abs = $this->rutaAbsolutaData($path_firmado);
+            if ($abs !== '' && is_file($abs)) {
+                $path = $path_firmado;
+                $label = 'Expediente firmado';
+                if (!empty($estado['firm_nom'])) {
+                    $label .= ' (' . $estado['firm_nom'] . ')';
+                }
+                $flags = array(
+                    'es_expediente' => 1,
+                    'es_expediente_firmado' => 1
+                );
+            }
+        }
+
+        if ($path === '' && $path_cargado !== '') {
+            $abs = $this->rutaAbsolutaData($path_cargado);
+            if ($abs !== '' && is_file($abs)) {
+                $path = $path_cargado;
+                $label = 'Expediente PDF (sin firmar)';
+                $flags = array(
+                    'es_expediente' => 1,
+                    'es_expediente_firmado' => 0
+                );
+            }
+        }
+
+        if ($path === '') {
+            return $historial;
+        }
+
+        $idx_target = $this->resolverIndiceHistorialFin($historial, intval($sol_cod));
         if ($idx_target < 0) {
             return $historial;
         }
@@ -496,27 +572,32 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $historial[$idx_target]['archivos'] = array();
         }
 
+        $filtrados = array();
         foreach ($historial[$idx_target]['archivos'] as $arch) {
-            if (!empty($arch['path']) && $arch['path'] === $path_firmado) {
-                return $historial;
+            if (!empty($arch['es_expediente']) || !empty($arch['es_expediente_firmado'])) {
+                continue;
             }
-            if (!empty($arch['es_expediente_firmado'])) {
-                return $historial;
+            if (!empty($arch['path']) && ($arch['path'] === $path_firmado || $arch['path'] === $path_cargado)) {
+                continue;
             }
+            $filtrados[] = $arch;
         }
 
-        $label = 'Expediente firmado';
-        if (!empty($estado['firm_nom'])) {
-            $label .= ' (' . $estado['firm_nom'] . ')';
-        }
-
-        $historial[$idx_target]['archivos'][] = array(
-            'path' => $path_firmado,
-            'label' => $label,
-            'es_expediente_firmado' => 1
-        );
+        $arch_nuevo = array_merge(array(
+            'path' => $path,
+            'label' => $label
+        ), $flags);
+        $filtrados[] = $arch_nuevo;
+        $historial[$idx_target]['archivos'] = $filtrados;
 
         return $historial;
+    }
+
+    /**
+     * @deprecated Usar adjuntarExpedienteAlHistorial
+     */
+    public function adjuntarExpedienteFirmadoAlHistorial($historial, $sol_cod) {
+        return $this->adjuntarExpedienteAlHistorial($historial, $sol_cod);
     }
 
     private function ensureSolicitudRequisitosColumns() {
@@ -2247,10 +2328,19 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         }
 
         $sol = $this->getRowConsultaSql(
-            "SELECT s.Sol_Cod, s.Sol_Num, s.Emp_Cod, e.Emp_Nom, e.Emp_Log, t.Trq_Des
+            "SELECT s.Sol_Cod, s.Sol_Num, s.Sol_Fec, s.Sol_Pri, s.Sol_Val_Est, s.Sol_Jus, s.Sol_Est,
+                    s.Emp_Cod, e.Emp_Nom, e.Emp_Log, t.Trq_Des,
+                    TRIM(CONCAT(IFNULL(p.Prs_Nom, ''), ' ', IFNULL(p.Prs_Ape, ''))) AS Solicitante_Nom,
+                    d.Dep_Des AS Dep_Nom,
+                    f.Wfm_Nom
              FROM adq_solicitudes s
              LEFT JOIN empresas e ON e.Emp_Cod = s.Emp_Cod
              LEFT JOIN adq_tipos_requerimientos t ON t.Trq_Cod = s.Trq_Cod
+             LEFT JOIN usuarios u ON u.Usu_Cod = s.Usu_Sol
+             LEFT JOIN persona p ON p.Prs_Cod = u.Prs_Cod
+             LEFT JOIN departamen d ON d.Dep_Cod = s.Dep_Sol
+             LEFT JOIN wf_instancias i ON i.Ins_Cod = $ins_cod
+             LEFT JOIN wf_flujos_modelos f ON f.Wfm_Cod = i.Wfm_Cod
              WHERE s.Sol_Cod = $sol_cod
              LIMIT 1;",
             $this->conexion
@@ -2260,13 +2350,27 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         }
 
         $logo_abs = $this->resolverRutaLogoEmpresa(isset($sol['Emp_Log']) ? $sol['Emp_Log'] : '');
+        $sol_fec = !empty($sol['Sol_Fec']) ? $sol['Sol_Fec'] : '';
+        $sol_fec_fmt = $sol_fec !== '' ? date('d/m/Y H:i', strtotime($sol_fec)) : '';
+        $val_est = isset($sol['Sol_Val_Est']) ? floatval($sol['Sol_Val_Est']) : 0;
         return array(
             'sol_cod' => $sol_cod,
             'sol_num' => isset($sol['Sol_Num']) ? $sol['Sol_Num'] : '',
+            'sol_fec' => $sol_fec,
+            'sol_fec_fmt' => $sol_fec_fmt,
+            'sol_pri' => isset($sol['Sol_Pri']) ? $sol['Sol_Pri'] : '',
+            'sol_val_est' => $val_est,
+            'sol_val_est_fmt' => number_format($val_est, 2, '.', ','),
+            'sol_jus' => isset($sol['Sol_Jus']) ? $sol['Sol_Jus'] : '',
+            'sol_est' => isset($sol['Sol_Est']) ? $sol['Sol_Est'] : '',
             'req_nom' => isset($sol['Trq_Des']) ? $sol['Trq_Des'] : '',
             'emp_nom' => isset($sol['Emp_Nom']) ? $sol['Emp_Nom'] : '',
+            'solicitante' => isset($sol['Solicitante_Nom']) ? trim($sol['Solicitante_Nom']) : '',
+            'dep_nom' => isset($sol['Dep_Nom']) ? $sol['Dep_Nom'] : '',
+            'wfm_nom' => isset($sol['Wfm_Nom']) ? $sol['Wfm_Nom'] : '',
             'logo_abs' => $logo_abs,
             'fecha' => date('Y-m-d H:i:s'),
+            'fecha_fmt' => date('d/m/Y H:i'),
             'aprobador_fin' => $this->resolverAprobadorNodoFinal($ins_cod),
             'ins_cod' => $ins_cod
         );
@@ -2399,57 +2503,160 @@ class adq_adquisiciones_log extends MysqlDatosContab {
 
     private function coloresExpedientePdf() {
         return array(
-            'titulo' => '#2c4a6b',
-            'texto' => '#6b8cae',
-            'borde' => '#2c4a6b'
+            'primario' => '#1e3a5f',
+            'secundario' => '#2f6fed',
+            'acento' => '#0f766e',
+            'titulo' => '#1e293b',
+            'texto' => '#475569',
+            'suave' => '#64748b',
+            'borde' => '#cbd5e1',
+            'fondo' => '#f8fafc',
+            'linea' => '#e2e8f0',
+            'blanco' => '#ffffff'
         );
+    }
+
+    private function etiquetaPrioridadExpediente($pri) {
+        $pri = strtoupper(trim((string)$pri));
+        $map = array(
+            'A' => 'Alta',
+            'ALTA' => 'Alta',
+            'M' => 'Media',
+            'MEDIA' => 'Media',
+            'B' => 'Baja',
+            'BAJA' => 'Baja',
+            'U' => 'Urgente',
+            'URGENTE' => 'Urgente'
+        );
+        if (isset($map[$pri])) {
+            return $map[$pri];
+        }
+        return $pri !== '' ? $pri : 'N/D';
+    }
+
+    private function htmlFilaDatoExpediente($label, $valor, $c) {
+        $valor = trim((string)$valor);
+        if ($valor === '') {
+            $valor = 'N/D';
+        }
+        return '<tr>
+            <td width="32%" style="padding:7px 10px;background:' . $c['fondo'] . ';border:1px solid ' . $c['linea'] . ';font-size:9px;text-transform:uppercase;letter-spacing:.4px;color:' . $c['suave'] . ';font-weight:bold;">' . $this->htmlEscExpediente($label) . '</td>
+            <td width="68%" style="padding:7px 12px;border:1px solid ' . $c['linea'] . ';font-size:11px;color:' . $c['titulo'] . ';font-weight:bold;">' . $this->htmlEscExpediente($valor) . '</td>
+        </tr>';
     }
 
     private function htmlPortadaExpediente($meta, $secciones) {
         $c = $this->coloresExpedientePdf();
         $emp_nom = $this->htmlEscExpediente(isset($meta['emp_nom']) ? $meta['emp_nom'] : '');
         $sol_num = $this->htmlEscExpediente(isset($meta['sol_num']) ? $meta['sol_num'] : '');
-        $req_nom = $this->htmlEscExpediente(isset($meta['req_nom']) ? $meta['req_nom'] : '');
-        $fecha = $this->htmlEscExpediente(isset($meta['fecha']) ? $meta['fecha'] : date('Y-m-d H:i:s'));
+        $req_nom = isset($meta['req_nom']) ? trim((string)$meta['req_nom']) : '';
+        $fecha_gen = $this->htmlEscExpediente(isset($meta['fecha_fmt']) ? $meta['fecha_fmt'] : date('d/m/Y H:i'));
         $logo = !empty($meta['logo_abs']) && is_file($meta['logo_abs'])
-            ? '<img src="' . $this->htmlEscExpediente($meta['logo_abs']) . '" style="max-height:70px;max-width:160px;" />'
-            : '';
+            ? '<img src="' . $this->htmlEscExpediente($meta['logo_abs']) . '" style="max-height:64px;max-width:150px;" />'
+            : '<div style="width:56px;height:56px;background:' . $c['primario'] . ';color:' . $c['blanco'] . ';text-align:center;line-height:56px;font-size:18px;font-weight:bold;">EXP</div>';
 
+        $total_docs = 0;
         $lista = '';
         $num = 1;
         foreach ($secciones as $sec) {
+            $n_docs = count($sec['documentos']);
+            $total_docs += $n_docs;
+            $bg = ($num % 2 === 0) ? $c['fondo'] : $c['blanco'];
             $lista .= '<tr>
-                <td style="width:28px;text-align:center;font-weight:bold;color:' . $c['titulo'] . ';">' . $num . '</td>
-                <td style="padding:4px 0;color:' . $c['titulo'] . ';">' . $this->htmlEscExpediente($sec['titulo']) . '</td>
-                <td style="text-align:right;color:' . $c['texto'] . ';">' . count($sec['documentos']) . ' doc.</td>
+                <td width="10%" style="padding:8px 6px;background:' . $bg . ';border-bottom:1px solid ' . $c['linea'] . ';text-align:center;">
+                    <div style="display:inline-block;width:22px;height:22px;line-height:22px;background:' . $c['primario'] . ';color:' . $c['blanco'] . ';font-size:10px;font-weight:bold;text-align:center;">' . $num . '</div>
+                </td>
+                <td width="70%" style="padding:8px 8px;background:' . $bg . ';border-bottom:1px solid ' . $c['linea'] . ';font-size:11px;color:' . $c['titulo'] . ';font-weight:bold;">' . $this->htmlEscExpediente($sec['titulo']) . '</td>
+                <td width="20%" style="padding:8px 8px;background:' . $bg . ';border-bottom:1px solid ' . $c['linea'] . ';text-align:right;font-size:10px;color:' . $c['suave'] . ';">' . $n_docs . ' documento' . ($n_docs === 1 ? '' : 's') . '</td>
             </tr>';
             $num++;
         }
+        if ($lista === '') {
+            $lista = '<tr><td colspan="3" style="padding:12px;color:' . $c['suave'] . ';font-size:11px;">Sin procesos registrados.</td></tr>';
+        }
 
-        $bloque_req = $req_nom !== ''
-            ? '<div style="font-size:11px;color:' . $c['texto'] . ';text-transform:uppercase;letter-spacing:.5px;margin-top:8px;">Requerimiento</div>
-                <div style="font-size:15px;font-weight:bold;color:' . $c['titulo'] . ';margin-top:2px;">' . $req_nom . '</div>'
+        $jus = isset($meta['sol_jus']) ? trim((string)$meta['sol_jus']) : '';
+        if (function_exists('mb_strlen') && function_exists('mb_substr') && mb_strlen($jus, 'UTF-8') > 280) {
+            $jus = mb_substr($jus, 0, 277, 'UTF-8') . '...';
+        } elseif (strlen($jus) > 280) {
+            $jus = substr($jus, 0, 277) . '...';
+        }
+        $bloque_jus = $jus !== ''
+            ? '<div style="margin-top:14px;padding:12px 14px;background:' . $c['fondo'] . ';border-left:3px solid ' . $c['secundario'] . ';">
+                    <div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:' . $c['suave'] . ';font-weight:bold;margin-bottom:4px;">Justificaci&oacute;n</div>
+                    <div style="font-size:11px;color:' . $c['texto'] . ';line-height:1.45;">' . $this->htmlEscExpediente($jus) . '</div>
+               </div>'
             : '';
 
+        $filas = '';
+        $filas .= $this->htmlFilaDatoExpediente('No. solicitud', isset($meta['sol_num']) ? $meta['sol_num'] : '', $c);
+        $filas .= $this->htmlFilaDatoExpediente('Tipo de requerimiento', $req_nom, $c);
+        $filas .= $this->htmlFilaDatoExpediente('Solicitante', isset($meta['solicitante']) ? $meta['solicitante'] : '', $c);
+        $filas .= $this->htmlFilaDatoExpediente('Departamento', isset($meta['dep_nom']) ? $meta['dep_nom'] : '', $c);
+        $filas .= $this->htmlFilaDatoExpediente('Fecha solicitud', isset($meta['sol_fec_fmt']) ? $meta['sol_fec_fmt'] : '', $c);
+        $filas .= $this->htmlFilaDatoExpediente('Prioridad', $this->etiquetaPrioridadExpediente(isset($meta['sol_pri']) ? $meta['sol_pri'] : ''), $c);
+        if (!empty($meta['sol_val_est']) && floatval($meta['sol_val_est']) > 0) {
+            $filas .= $this->htmlFilaDatoExpediente('Valor estimado', '$ ' . (isset($meta['sol_val_est_fmt']) ? $meta['sol_val_est_fmt'] : number_format(floatval($meta['sol_val_est']), 2, '.', ',')), $c);
+        }
+        if (!empty($meta['wfm_nom'])) {
+            $filas .= $this->htmlFilaDatoExpediente('Flujo de trabajo', $meta['wfm_nom'], $c);
+        }
+
         return '
-        <div style="font-family:helvetica,arial,sans-serif;color:' . $c['titulo'] . ';">
-            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:18px;border-bottom:2px solid ' . $c['borde'] . ';padding-bottom:12px;">
+        <div style="font-family:dejavusans,helvetica,arial,sans-serif;color:' . $c['titulo'] . ';">
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 0 0;">
                 <tr>
-                    <td width="22%" align="left" valign="middle">' . $logo . '</td>
-                    <td width="78%" align="right" valign="middle">
-                        <div style="font-size:18px;font-weight:bold;color:' . $c['titulo'] . ';">' . $emp_nom . '</div>
-                        <div style="font-size:12px;color:' . $c['texto'] . ';margin-top:4px;text-transform:uppercase;letter-spacing:.3px;">Expediente de solicitud de adquisicion</div>
+                    <td style="height:6px;background:' . $c['primario'] . ';"></td>
+                </tr>
+            </table>
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin:18px 0 10px 0;">
+                <tr>
+                    <td width="28%" valign="middle">' . $logo . '</td>
+                    <td width="72%" align="right" valign="middle">
+                        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1.2px;color:' . $c['secundario'] . ';font-weight:bold;">Documento oficial</div>
+                        <div style="font-size:20px;font-weight:bold;color:' . $c['primario'] . ';margin-top:3px;">Expediente de adquisiciones</div>
+                        <div style="font-size:12px;color:' . $c['texto'] . ';margin-top:3px;">' . $emp_nom . '</div>
                     </td>
                 </tr>
             </table>
-            <div style="border:1px solid ' . $c['borde'] . ';border-radius:8px;padding:14px 16px;margin-bottom:16px;">
-                <div style="font-size:11px;color:' . $c['texto'] . ';text-transform:uppercase;letter-spacing:.5px;">Solicitud</div>
-                <div style="font-size:20px;font-weight:bold;color:' . $c['titulo'] . ';margin-top:4px;">' . $sol_num . '</div>
-                ' . $bloque_req . '
-                <div style="font-size:11px;color:' . $c['texto'] . ';margin-top:6px;">Generado: ' . $fecha . '</div>
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 16px 0;">
+                <tr>
+                    <td style="height:2px;background:' . $c['secundario'] . ';"></td>
+                </tr>
+            </table>
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:14px;">
+                <tr>
+                    <td width="62%" valign="top">
+                        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:' . $c['suave'] . ';font-weight:bold;">Identificaci&oacute;n del expediente</div>
+                        <div style="font-size:22px;font-weight:bold;color:' . $c['primario'] . ';margin-top:4px;">' . $sol_num . '</div>
+                    </td>
+                    <td width="38%" align="right" valign="top">
+                        <div style="display:inline-block;padding:8px 12px;background:' . $c['fondo'] . ';border:1px solid ' . $c['borde'] . ';">
+                            <div style="font-size:8px;text-transform:uppercase;letter-spacing:.5px;color:' . $c['suave'] . ';">Generado el</div>
+                            <div style="font-size:11px;font-weight:bold;color:' . $c['titulo'] . ';margin-top:2px;">' . $fecha_gen . '</div>
+                            <div style="font-size:9px;color:' . $c['suave'] . ';margin-top:4px;">' . intval(count($secciones)) . ' etapas &middot; ' . intval($total_docs) . ' PDF</div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:6px;">' . $filas . '</table>
+            ' . $bloque_jus . '
+            <div style="margin-top:18px;margin-bottom:8px;">
+                <div style="font-size:12px;font-weight:bold;color:' . $c['primario'] . ';">&Iacute;ndice de procesos</div>
+                <div style="font-size:9px;color:' . $c['suave'] . ';margin-top:2px;">Documentaci&oacute;n consolidada por etapa del flujo de aprobaci&oacute;n</div>
             </div>
-            <div style="font-size:13px;font-weight:bold;color:' . $c['titulo'] . ';margin-bottom:8px;">Procesos incluidos</div>
-            <table width="100%" cellpadding="0" cellspacing="0" style="font-size:12px;border-collapse:collapse;color:' . $c['titulo'] . ';">' . $lista . '</table>
+            <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ' . $c['borde'] . ';border-collapse:collapse;">
+                <tr>
+                    <td width="10%" style="padding:7px 6px;background:' . $c['primario'] . ';color:' . $c['blanco'] . ';font-size:8px;text-transform:uppercase;letter-spacing:.4px;text-align:center;font-weight:bold;">No.</td>
+                    <td width="70%" style="padding:7px 8px;background:' . $c['primario'] . ';color:' . $c['blanco'] . ';font-size:8px;text-transform:uppercase;letter-spacing:.4px;font-weight:bold;">Proceso / etapa</td>
+                    <td width="20%" style="padding:7px 8px;background:' . $c['primario'] . ';color:' . $c['blanco'] . ';font-size:8px;text-transform:uppercase;letter-spacing:.4px;text-align:right;font-weight:bold;">Anexos</td>
+                </tr>
+                ' . $lista . '
+            </table>
+            <div style="margin-top:22px;padding-top:10px;border-top:1px solid ' . $c['linea'] . ';font-size:8px;color:' . $c['suave'] . ';line-height:1.4;">
+                Documento generado electr&oacute;nicamente por el m&oacute;dulo de Adquisiciones. Uso interno y confidencial.
+                La informaci&oacute;n aqu&iacute; consolidada corresponde a los anexos cargados en cada etapa del workflow.
+            </div>
         </div>';
     }
 
@@ -2465,17 +2672,65 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         return intval($indice) . '. ' . $titulo;
     }
 
+    private function htmlSeparadorProcesoExpediente($indice, $titulo, $num_docs, $meta = array()) {
+        $c = $this->coloresExpedientePdf();
+        $emp_nom = $this->htmlEscExpediente(isset($meta['emp_nom']) ? $meta['emp_nom'] : '');
+        $sol_num = $this->htmlEscExpediente(isset($meta['sol_num']) ? $meta['sol_num'] : '');
+        $titulo_esc = $this->htmlEscExpediente($titulo);
+        $n = intval($indice);
+        $docs = intval($num_docs);
+        $docs_txt = $docs <= 0
+            ? 'Sin documentos PDF en esta etapa'
+            : ($docs . ' documento' . ($docs === 1 ? '' : 's') . ' PDF');
+
+        return '
+        <div style="font-family:dejavusans,helvetica,arial,sans-serif;color:' . $c['titulo'] . ';">
+            <table width="100%" cellpadding="0" cellspacing="0">
+                <tr><td style="height:5px;background:' . $c['primario'] . ';"></td></tr>
+            </table>
+            <div style="padding:28px 8px 10px 8px;">
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:' . $c['secundario'] . ';font-weight:bold;">Secci&oacute;n del expediente</div>
+                <div style="font-size:10px;color:' . $c['suave'] . ';margin-top:6px;">' . $emp_nom . ' &middot; Solicitud ' . $sol_num . '</div>
+                <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;">
+                    <tr>
+                        <td width="18%" valign="top">
+                            <div style="width:54px;height:54px;background:' . $c['primario'] . ';color:' . $c['blanco'] . ';text-align:center;line-height:54px;font-size:20px;font-weight:bold;">' . $n . '</div>
+                        </td>
+                        <td width="82%" valign="middle">
+                            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:' . $c['suave'] . ';font-weight:bold;">Proceso / etapa</div>
+                            <div style="font-size:18px;font-weight:bold;color:' . $c['primario'] . ';margin-top:4px;line-height:1.25;">' . $titulo_esc . '</div>
+                            <div style="margin-top:10px;font-size:11px;color:' . $c['texto'] . ';">' . $this->htmlEscExpediente($docs_txt) . '</div>
+                        </td>
+                    </tr>
+                </table>
+                <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:26px;">
+                    <tr><td style="height:2px;background:' . $c['secundario'] . ';"></td></tr>
+                </table>
+                <div style="margin-top:12px;font-size:9px;color:' . $c['suave'] . ';">
+                    A continuaci&oacute;n se anexan los documentos correspondientes a esta etapa del flujo.
+                </div>
+            </div>
+        </div>';
+    }
+
     private function htmlSoloTituloProcesoExpediente($etiqueta) {
         $c = $this->coloresExpedientePdf();
         $texto = $this->htmlEscExpediente($etiqueta);
-        return '<div style="font-family:helvetica,arial,sans-serif;font-size:11px;font-weight:bold;color:' . $c['titulo'] . ';margin:0;padding:0;line-height:1.2;white-space:nowrap;">' . $texto . '</div>';
+        return '<div style="font-family:dejavusans,helvetica,arial,sans-serif;margin:0;padding:0;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                <tr>
+                    <td width="4" style="background:' . $c['secundario'] . ';"></td>
+                    <td style="background:' . $c['primario'] . ';padding:4px 10px;color:' . $c['blanco'] . ';font-size:10px;font-weight:bold;white-space:nowrap;">' . $texto . '</td>
+                </tr>
+            </table>
+        </div>';
     }
 
     private function generarPdfSoloTituloProceso($etiqueta) {
         if (!class_exists('mPDF')) {
             include_once(dirname(__FILE__) . '/../../Librerias/MPDF57/mpdf.php');
         }
-        $mpdf = new mPDF('c', array(210, 14), '', '', 10, 10, 2, 2, 0, 0);
+        $mpdf = new mPDF('c', array(210, 14), '', '', 8, 8, 2, 2, 0, 0);
         $mpdf->SetAutoPageBreak(false);
         $mpdf->WriteHTML($this->htmlSoloTituloProcesoExpediente($etiqueta));
         $tmp = tempnam(sys_get_temp_dir(), 'adq_exp_t_');
@@ -2488,12 +2743,31 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         return is_file($ruta) ? $ruta : '';
     }
 
-    private function generarPdfHtmlTemporal($html) {
+    private function generarPdfSeparadorProceso($indice, $titulo, $num_docs, $meta = array()) {
+        return $this->generarPdfHtmlTemporal(
+            $this->htmlSeparadorProcesoExpediente($indice, $titulo, $num_docs, $meta),
+            array(
+                'title' => 'Proceso ' . intval($indice) . ' - ' . $titulo,
+                'author' => isset($meta['emp_nom']) ? $meta['emp_nom'] : 'Adquisiciones'
+            )
+        );
+    }
+
+    private function generarPdfHtmlTemporal($html, $props = array()) {
         if (!class_exists('mPDF')) {
             include_once(dirname(__FILE__) . '/../../Librerias/MPDF57/mpdf.php');
         }
-        $mpdf = new mPDF('c', 'A4', '', '', 12, 12, 14, 14, 8, 8);
+        $mpdf = new mPDF('c', 'A4', '', '', 16, 16, 16, 18, 8, 8);
         $mpdf->SetAutoPageBreak(false);
+        if (!empty($props['title'])) {
+            $mpdf->SetTitle($props['title']);
+        }
+        if (!empty($props['author'])) {
+            $mpdf->SetAuthor($props['author']);
+        }
+        if (!empty($props['subject'])) {
+            $mpdf->SetSubject($props['subject']);
+        }
         $mpdf->WriteHTML($html);
         $tmp = tempnam(sys_get_temp_dir(), 'adq_exp_');
         if ($tmp === false) {
@@ -2764,29 +3038,77 @@ class adq_adquisiciones_log extends MysqlDatosContab {
     private function estamparTituloProcesoPagina($mpdf, $titulo) {
         $c = $this->coloresExpedientePdf();
         $texto = $this->htmlEscExpediente($titulo);
-        $html = '<div style="font-family:helvetica,arial,sans-serif;font-size:11px;font-weight:bold;color:' . $c['titulo'] . ';white-space:nowrap;">' . $texto . '</div>';
-        // Banda superior con el nombre del proceso, sin desplazar el contenido del PDF.
-        $mpdf->WriteFixedPosHTML($html, 4, 3, 200, 8, 'visible');
+        $html = '<table width="100%" cellpadding="0" cellspacing="0" style="font-family:dejavusans,helvetica,arial,sans-serif;border-collapse:collapse;">
+            <tr>
+                <td width="4" style="background:' . $c['secundario'] . ';"></td>
+                <td style="background:' . $c['primario'] . ';padding:3px 10px;color:' . $c['blanco'] . ';font-size:9px;font-weight:bold;white-space:nowrap;">' . $texto . '</td>
+            </tr>
+        </table>';
+        $mpdf->WriteFixedPosHTML($html, 0, 0, 210, 10, 'visible');
     }
 
     private function htmlCierreExpediente($meta) {
         $c = $this->coloresExpedientePdf();
         $aprobador = $this->htmlEscExpediente(
-            !empty($meta['aprobador_fin']) ? $meta['aprobador_fin'] : 'Pendiente de aprobacion final'
+            !empty($meta['aprobador_fin']) ? $meta['aprobador_fin'] : 'Pendiente de aprobaci&oacute;n final'
         );
         $sol_num = $this->htmlEscExpediente(isset($meta['sol_num']) ? $meta['sol_num'] : '');
         $req_nom = $this->htmlEscExpediente(isset($meta['req_nom']) ? $meta['req_nom'] : '');
+        $emp_nom = $this->htmlEscExpediente(isset($meta['emp_nom']) ? $meta['emp_nom'] : '');
+        $fecha_gen = $this->htmlEscExpediente(isset($meta['fecha_fmt']) ? $meta['fecha_fmt'] : date('d/m/Y H:i'));
         $bloque_req = $req_nom !== ''
-            ? '<div style="font-size:13px;font-weight:bold;color:' . $c['titulo'] . ';margin-top:4px;">' . $req_nom . '</div>'
+            ? '<div style="font-size:11px;color:' . $c['texto'] . ';margin-top:4px;">' . $req_nom . '</div>'
             : '';
+
         return '
-        <div style="font-family:helvetica,arial,sans-serif;padding:20px 16px;text-align:center;color:' . $c['titulo'] . ';">
-            <div style="border:2px solid ' . $c['borde'] . ';border-radius:8px;padding:18px 20px;display:inline-block;min-width:70%;">
-                <div style="font-size:12px;color:' . $c['texto'] . ';font-weight:bold;text-transform:uppercase;letter-spacing:.3px;">Cierre del expediente</div>
-                <div style="font-size:15px;font-weight:bold;color:' . $c['titulo'] . ';margin-top:8px;">Solicitud ' . $sol_num . '</div>
-                ' . $bloque_req . '
-                <div style="font-size:11px;color:' . $c['texto'] . ';margin-top:12px;text-transform:uppercase;letter-spacing:.3px;">Aprobacion del proceso final</div>
-                <div style="font-size:16px;font-weight:bold;color:' . $c['titulo'] . ';margin-top:6px;">' . $aprobador . '</div>
+        <div style="font-family:dejavusans,helvetica,arial,sans-serif;color:' . $c['titulo'] . ';">
+            <table width="100%" cellpadding="0" cellspacing="0">
+                <tr><td style="height:6px;background:' . $c['primario'] . ';"></td></tr>
+            </table>
+            <div style="padding-top:28px;text-align:center;">
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:1.2px;color:' . $c['secundario'] . ';font-weight:bold;">Cierre documental</div>
+                <div style="font-size:20px;font-weight:bold;color:' . $c['primario'] . ';margin-top:6px;">Expediente de adquisiciones</div>
+                <div style="font-size:12px;color:' . $c['texto'] . ';margin-top:4px;">' . $emp_nom . '</div>
+            </div>
+            <table width="88%" cellpadding="0" cellspacing="0" align="center" style="margin:26px auto 0 auto;border:1px solid ' . $c['borde'] . ';">
+                <tr>
+                    <td style="padding:16px 18px;background:' . $c['fondo'] . ';border-bottom:1px solid ' . $c['linea'] . ';">
+                        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:' . $c['suave'] . ';font-weight:bold;">Solicitud</div>
+                        <div style="font-size:16px;font-weight:bold;color:' . $c['primario'] . ';margin-top:3px;">' . $sol_num . '</div>
+                        ' . $bloque_req . '
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:18px;">
+                        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:' . $c['suave'] . ';font-weight:bold;">Responsable de cierre / aprobaci&oacute;n final</div>
+                        <div style="font-size:15px;font-weight:bold;color:' . $c['titulo'] . ';margin-top:6px;">' . $aprobador . '</div>
+                        <div style="font-size:10px;color:' . $c['suave'] . ';margin-top:4px;">Fecha de generaci&oacute;n del expediente: ' . $fecha_gen . '</div>
+                    </td>
+                </tr>
+            </table>
+            <table width="88%" cellpadding="0" cellspacing="0" align="center" style="margin:36px auto 0 auto;">
+                <tr>
+                    <td width="46%" valign="top" style="padding-right:12px;">
+                        <div style="border-top:1px solid ' . $c['titulo'] . ';padding-top:8px;text-align:center;">
+                            <div style="font-size:10px;font-weight:bold;color:' . $c['titulo'] . ';">Firma digital / manuscrita</div>
+                            <div style="font-size:8px;color:' . $c['suave'] . ';margin-top:3px;">Aprobador final</div>
+                        </div>
+                    </td>
+                    <td width="8%"></td>
+                    <td width="46%" valign="top" style="padding-left:12px;">
+                        <div style="border-top:1px solid ' . $c['titulo'] . ';padding-top:8px;text-align:center;">
+                            <div style="font-size:10px;font-weight:bold;color:' . $c['titulo'] . ';">Nombre y cargo</div>
+                            <div style="font-size:8px;color:' . $c['suave'] . ';margin-top:3px;">Aclaraci&oacute;n</div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            <div style="margin-top:48px;padding:12px 14px;background:' . $c['fondo'] . ';border-left:3px solid ' . $c['acento'] . ';font-size:9px;color:' . $c['texto'] . ';line-height:1.45;">
+                Este expediente consolida los anexos cargados durante el ciclo de vida de la solicitud.
+                La firma electr&oacute;nica posterior valida la integridad del documento unificado para archivo institucional.
+            </div>
+            <div style="margin-top:18px;font-size:8px;color:' . $c['suave'] . ';text-align:center;">
+                Uso interno y confidencial &middot; M&oacute;dulo de Adquisiciones
             </div>
         </div>';
     }
@@ -2835,8 +3157,21 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         $nombre = 'expediente_sol_' . $this->slugSolNumArchivo($sol_num) . '_' . date('Ymd_His') . '.pdf';
         $ruta_salida = $dir_abs . '/' . $nombre;
 
-        $tmp_portada = $this->generarPdfHtmlTemporal($this->htmlPortadaExpediente($meta, $secciones));
-        $tmp_cierre = $this->generarPdfHtmlTemporal($this->htmlCierreExpediente($meta));
+        $tmp_portada = $this->generarPdfHtmlTemporal(
+            $this->htmlPortadaExpediente($meta, $secciones),
+            array(
+                'title' => 'Expediente ' . $sol_num,
+                'author' => !empty($meta['emp_nom']) ? $meta['emp_nom'] : 'Adquisiciones',
+                'subject' => 'Expediente de adquisiciones'
+            )
+        );
+        $tmp_cierre = $this->generarPdfHtmlTemporal(
+            $this->htmlCierreExpediente($meta),
+            array(
+                'title' => 'Cierre expediente ' . $sol_num,
+                'author' => !empty($meta['emp_nom']) ? $meta['emp_nom'] : 'Adquisiciones'
+            )
+        );
         if ($tmp_portada === '' || $tmp_cierre === '') {
             if ($tmp_portada !== '') {
                 @unlink($tmp_portada);
@@ -2874,27 +3209,20 @@ class adq_adquisiciones_log extends MysqlDatosContab {
 
             $num_proceso++;
             $titulo_sec = !empty($sec['titulo']) ? $sec['titulo'] : ('Proceso ' . $num_proceso);
-            $etiqueta = $this->tituloCortoProcesoExpediente($titulo_sec, $num_proceso);
-
-            if (empty($preparados_sec)) {
-                $tmp_titulo = $this->generarPdfSoloTituloProceso($etiqueta);
-                if ($tmp_titulo !== '') {
-                    $tmp_html_paginas[] = $tmp_titulo;
-                    $titulo_ok = $this->prepararPdfParaExpediente($tmp_titulo, $tmp_generados);
-                    if ($titulo_ok !== '') {
-                        $lista_unir[] = array('ruta' => $titulo_ok, 'titulo' => '');
-                    }
+            $tmp_sep = $this->generarPdfSeparadorProceso($num_proceso, $titulo_sec, count($preparados_sec), $meta);
+            if ($tmp_sep !== '') {
+                $tmp_html_paginas[] = $tmp_sep;
+                $sep_ok = $this->prepararPdfParaExpediente($tmp_sep, $tmp_generados);
+                if ($sep_ok !== '') {
+                    $lista_unir[] = array('ruta' => $sep_ok, 'titulo' => '');
                 }
-                continue;
             }
 
-            $primero = true;
             foreach ($preparados_sec as $preparado) {
                 $lista_unir[] = array(
                     'ruta' => $preparado,
-                    'titulo' => $primero ? $etiqueta : ''
+                    'titulo' => ''
                 );
-                $primero = false;
             }
         }
 

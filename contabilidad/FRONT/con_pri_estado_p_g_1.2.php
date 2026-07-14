@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?	
+<?php	
 /**
 * Descripci�n: Permite imprimir el balance de Resultados
 * Fecha de actualizaci�n:	2012-10-06
@@ -30,9 +30,9 @@ $obBD_con1 =  new Class_Log_Datos_Con;
 ?>
 <HTML>
 	<HEAD>
-		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
+		<TITLE><?php echo $Ses_Sys_Nom; ?></TITLE>
     <meta charset="UTF-8">
-		<?Php require_once("../../mascaras/model1/estilos/print.php"); ?>
+		<?php require_once("../../mascaras/model1/estilos/print.php"); ?>
 		<meta http-equiv="Content-Type" content="text/html;">
         <style type="text/css">
 			.LetraNegra {
@@ -50,7 +50,7 @@ $obBD_con1 =  new Class_Log_Datos_Con;
 <BODY>
      <table width="590" border="0" align="center" cellpadding="0" cellspacing="0">
 	 <tr class="Titulos3">
-	   <td width="100%" colspan="2" align="center"><?Php 	   
+	   <td width="100%" colspan="2" align="center"><?php 	   
 	   $titulo = "<strong><span class='TITULO_REPORTE_2'>Estado de Resultado Integral</span></strong>";
 		$subtitulo = "<strong><span class='TITULO_REPORTE'>Desde el ".$txt_fec_ini." Hasta el ".$txt_fec_fin." </span></strong>";
 	   $obBD_con1->cabeceraReporteStandar($Ses_Suc_Cod, $titulo, $subtitulo, $obBD_conexion);  ?></td>
@@ -64,7 +64,7 @@ $obBD_con1 =  new Class_Log_Datos_Con;
         <td valign="top">
 <table width="100%" border="0" cellspacing="0" cellpadding="0">
   <tr class="LetraNegra">
-    <td colspan="4"><? 	
+    <td colspan="4"><?php 	
 	/**
 	* Carga los nodos del plan de cuentas 
 	*/
@@ -129,7 +129,7 @@ $obBD_con1 =  new Class_Log_Datos_Con;
   </tr>
 </table>	  
 </BODY></HTML>
-<?Php 
+<?php 
 /**
 * Cierra la conexion
 */

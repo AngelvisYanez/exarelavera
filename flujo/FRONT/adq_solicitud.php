@@ -1057,8 +1057,8 @@ if (isset($ajax_get_form)) {
         }
         .adq-cot-pdfs-inline {
             display: flex;
-            flex-wrap: nowrap;
-            gap: 6px;
+            flex-wrap: wrap;
+            gap: 8px;
             align-items: center;
             flex: 0 0 auto;
         }
@@ -1066,6 +1066,7 @@ if (isset($ajax_get_form)) {
             white-space: nowrap;
             padding: 4px 10px;
             font-size: 12px;
+            margin: 0;
         }
         .adq-cot-pdf-compact .adq-file-drop {
             min-height: 38px;

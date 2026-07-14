@@ -927,27 +927,327 @@ function adqEtiquetaMiAccion($accion) {
         .adq-bandj-page.exa-ui-panel > .panel-heading .panel-title {
             font-size: 18px;
         }
-        .adq-bandj-page .exa-ui-nav-tabs > li > a {
-            font-size: 14px;
-            padding: 11px 20px;
+
+        /* Tabs profesionales (solo bandeja) */
+        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: stretch;
+            gap: 8px;
+            margin: 0;
+            padding: 10px 12px;
+            background: #f1f5f9;
+            border: 1px solid #94a3b8;
+            border-radius: 10px 10px 0 0;
+            box-shadow: inset 0 1px 0 #ffffff;
         }
-        .adq-bandj-page .exa-ui-nav-tabs > li > a .badge {
+        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li {
+            float: none;
+            margin: 0;
+        }
+        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li > a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0 !important;
+            padding: 10px 16px !important;
+            border: 1px solid #64748b !important;
+            border-radius: 8px !important;
+            background: #ffffff !important;
+            color: #334155 !important;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            line-height: 1.2;
+            text-decoration: none;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+            transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li > a > i {
+            font-size: 15px;
+            color: #475569;
+            transition: color 0.15s ease;
+        }
+        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li > a > span:not(.badge) {
+            white-space: nowrap;
+        }
+        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li > a:hover,
+        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li > a:focus {
+            background: #eff6ff !important;
+            color: #1e3a8a !important;
+            border-color: #2563eb !important;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.18);
+        }
+        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li > a:hover > i,
+        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li > a:focus > i {
+            color: #1e3a8a;
+        }
+        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li.active > a,
+        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li.active > a:hover,
+        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li.active > a:focus {
+            background: #1e3a8a !important;
+            color: #ffffff !important;
+            border-color: #1e3a8a !important;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(30, 58, 138, 0.35);
+        }
+        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li.active > a > i {
+            color: #ffffff;
+        }
+        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs .adq-tab-count,
+        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li > a .badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 22px;
+            height: 20px;
+            padding: 0 7px;
+            margin-left: 2px;
+            border-radius: 999px;
+            background: #e2e8f0 !important;
+            color: #1e293b !important;
+            font-size: 11px !important;
+            font-weight: 700;
+            line-height: 1;
+            border: 1px solid #94a3b8;
+        }
+        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li.active > a .adq-tab-count,
+        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li.active > a .badge {
+            background: #ffffff !important;
+            color: #1e3a8a !important;
+            border-color: #ffffff;
+        }
+        .adq-bandj-page .exa-ui-tab-content.panels-area {
+            border: 1px solid #94a3b8;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            background: #ffffff !important;
+            padding: 16px 16px 20px;
+        }
+        @media (max-width: 767px) {
+            .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs {
+                gap: 6px;
+                padding: 8px;
+            }
+            .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li > a {
+                padding: 9px 12px !important;
+                font-size: 12px;
+                gap: 6px;
+            }
+        }
+
+        .adq-bandj-page .adq-table-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        .adq-bandj-page .exa-adq-table-wrap {
+            border: 1px solid #64748b;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+            background: #ffffff;
+            overflow: auto;
+        }
+        .adq-bandj-page .adq-table-panel .exa-adq-table-wrap {
+            border-radius: 10px 10px 0 0;
+            box-shadow: none;
+        }
+        .adq-bandj-page .adq-table-pager {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 12px;
+            margin-top: -1px;
+            background: #f8fafc;
+            border: 1px solid #64748b;
+            border-top: 1px solid #cbd5e1;
+            border-radius: 0 0 10px 10px;
+        }
+        .adq-bandj-page .adq-table-pager-info {
             font-size: 12px;
+            color: #475569;
+            font-weight: 600;
+        }
+        .adq-bandj-page .adq-table-pager-controls {
+            display: inline-flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+        .adq-bandj-page .adq-table-pager-pages {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .adq-bandj-page .adq-table-pager .btn {
+            min-width: 34px;
+            height: 32px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: 6px;
+            border: 1px solid #64748b;
+            background: #ffffff;
+            color: #334155;
+        }
+        .adq-bandj-page .adq-table-pager .btn:hover:not(:disabled) {
+            background: #eff6ff;
+            border-color: #3b82f6;
+            color: #1e3a8a;
+        }
+        .adq-bandj-page .adq-table-pager .btn.active,
+        .adq-bandj-page .adq-table-pager .btn.active:hover {
+            background: #4b678a;
+            border-color: #3a516e;
+            color: #ffffff;
+        }
+        .adq-bandj-page .adq-table-pager .btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+        .adq-bandj-page .adq-table-pager-size {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .adq-bandj-page .adq-table-pager-size select {
+            height: 32px;
+            font-size: 12px;
+            border-radius: 6px;
+            border: 1px solid #64748b;
+            padding: 2px 8px;
+            background: #ffffff;
+            color: #1e293b;
+        }
+        .adq-bandj-page .adq-row-solicitud.adq-filtro-oculto {
+            display: none !important;
         }
         .adq-bandj-page .exa-adq-table {
-            font-size: 14px;
+            font-size: 13px;
+            width: 100%;
+            margin: 0;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: #ffffff;
         }
         .adq-bandj-page .exa-adq-table > thead > tr > th {
-            font-size: 13px;
-            padding: 11px 12px !important;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: linear-gradient(180deg, #5f7ea3 0%, #4b678a 100%) !important;
+            background-color: #4b678a !important;
+            color: #ffffff !important;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 12px 12px !important;
+            border: none !important;
+            border-bottom: 2px solid #3a516e !important;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
         }
         .adq-bandj-page .exa-adq-table > tbody > tr > td {
-            font-size: 14px;
-            padding: 10px 12px !important;
+            font-size: 13px;
+            padding: 11px 12px !important;
+            border-color: #cbd5e1 !important;
+            border-left: none !important;
+            border-right: none !important;
+            color: #1e293b;
+            vertical-align: middle !important;
+            background: #ffffff;
+        }
+        .adq-bandj-page .exa-adq-table > tbody > tr > td:first-child {
+            font-weight: 700;
+            color: #1e3a8a;
+        }
+        .adq-bandj-page .exa-adq-table > tbody > tr:nth-child(even) > td {
+            background: #f8fafc;
+        }
+        .adq-bandj-page .exa-adq-table > tbody > tr:hover > td {
+            background: #eff6ff !important;
+        }
+        .adq-bandj-page .exa-adq-table tbody tr.text-center td.text-muted,
+        .adq-bandj-page .exa-adq-table tbody td.text-muted {
+            font-size: 13px !important;
+            font-style: italic;
+            color: #64748b !important;
+            padding: 28px 16px !important;
+            background: #f8fafc !important;
         }
         .adq-bandj-page .exa-adq-table .badge {
-            font-size: 12px;
-            padding: 4px 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 9px;
+            border-radius: 999px;
+            letter-spacing: 0.02em;
+            border: 1px solid transparent;
+            line-height: 1.2;
+        }
+        .adq-bandj-page .exa-adq-table .badge-alta {
+            background: #fee2e2 !important;
+            color: #b91c1c !important;
+            border-color: #fca5a5;
+        }
+        .adq-bandj-page .exa-adq-table .badge-media {
+            background: #ffedd5 !important;
+            color: #c2410c !important;
+            border-color: #fdba74;
+        }
+        .adq-bandj-page .exa-adq-table .badge-baja {
+            background: #dcfce7 !important;
+            color: #15803d !important;
+            border-color: #86efac;
+        }
+        .adq-bandj-page .exa-adq-table .badge.bg-primary,
+        .adq-bandj-page .exa-adq-table .badge-primary {
+            background: #dbeafe !important;
+            color: #1e40af !important;
+            border-color: #93c5fd;
+        }
+        .adq-bandj-page .exa-adq-table .badge.bg-success,
+        .adq-bandj-page .exa-adq-table .badge-success {
+            background: #dcfce7 !important;
+            color: #166534 !important;
+            border-color: #86efac;
+        }
+        .adq-bandj-page .exa-adq-table .badge.bg-danger,
+        .adq-bandj-page .exa-adq-table .badge-danger {
+            background: #fee2e2 !important;
+            color: #b91c1c !important;
+            border-color: #fca5a5;
+        }
+        .adq-bandj-page .exa-adq-table .badge.bg-warning,
+        .adq-bandj-page .exa-adq-table .badge-warning {
+            background: #fef3c7 !important;
+            color: #92400e !important;
+            border-color: #fcd34d;
+        }
+        .adq-bandj-page .exa-adq-table .badge.bg-secondary,
+        .adq-bandj-page .exa-adq-table .badge-secondary {
+            background: #e2e8f0 !important;
+            color: #334155 !important;
+            border-color: #94a3b8;
+        }
+        .adq-bandj-page .exa-adq-table .badge.bg-info,
+        .adq-bandj-page .exa-adq-table .badge-info {
+            background: #e0f2fe !important;
+            color: #0369a1 !important;
+            border-color: #7dd3fc;
+        }
+        .adq-bandj-page .exa-adq-table .font-monospace {
+            font-family: Consolas, "Courier New", monospace;
+            font-weight: 700;
+            color: #0f172a;
         }
         .adq-bandj-page .btn-sm {
             font-size: 13px;
@@ -968,21 +1268,28 @@ function adqEtiquetaMiAccion($accion) {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 8px 10px;
-            min-width: 38px;
-            min-height: 38px;
+            padding: 7px 9px;
+            min-width: 36px;
+            min-height: 36px;
             line-height: 1;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
         }
         .adq-bandj-page .adq-btn-icon-only i {
-            font-size: 18px;
+            font-size: 16px;
             line-height: 1;
+        }
+        .adq-bandj-page .adq-btn-icon-only.btn-primary {
+            background: #1e3a8a;
+            border-color: #1e3a8a;
+        }
+        .adq-bandj-page .adq-btn-icon-only.btn-info {
+            background: #0369a1;
+            border-color: #0369a1;
+            color: #fff;
         }
         .adq-bandj-page p.text-muted,
         .adq-bandj-page .text-muted.small {
-            font-size: 14px !important;
-        }
-        .adq-bandj-page .exa-adq-table tbody tr.text-muted td,
-        .adq-bandj-page .exa-adq-table tbody td.text-muted {
             font-size: 14px !important;
         }
         #mdlResolution .modal-title,
@@ -992,6 +1299,40 @@ function adqEtiquetaMiAccion($accion) {
         #mdlResolution .modal-body,
         #mdlSeguimiento .modal-body {
             font-size: 14px;
+        }
+        #mdlSegNodoDetalle {
+            z-index: 1060;
+        }
+        #mdlSegNodoDetalle .modal-dialog {
+            margin-top: 60px;
+        }
+        #mdlSegNodoDetalle .adq-seg-nodo-modal-header {
+            background: linear-gradient(180deg, #5f7ea3 0%, #4b678a 100%);
+            color: #ffffff;
+            border-bottom: 1px solid #3a516e;
+        }
+        #mdlSegNodoDetalle .adq-seg-nodo-modal-header .modal-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        #mdlSegNodoDetalle .adq-seg-nodo-modal-header .text-muted {
+            color: #dbeafe !important;
+        }
+        #mdlSegNodoDetalle .adq-seg-nodo-modal-header .close {
+            color: #ffffff;
+            opacity: 0.85;
+            text-shadow: none;
+        }
+        #mdlSegNodoDetalle .adq-seg-nodo-modal-header .close:hover {
+            opacity: 1;
+        }
+        #mdlSegNodoDetalle .modal-body {
+            background: #f8fafc;
+            padding: 14px 16px;
+        }
+        body.modal-open .modal-backdrop.adq-seg-nodo-backdrop {
+            z-index: 1055;
         }
         #create-panel {
             margin-left: -16px;
@@ -1223,23 +1564,30 @@ function adqEtiquetaMiAccion($accion) {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 10px 4px 8px;
+            padding: 12px 14px;
             flex-wrap: wrap;
-            border-bottom: 1px solid #e2e8f0;
-            margin-bottom: 4px;
+            margin: 0;
+            background: #ffffff;
+            border-left: 1px solid #94a3b8;
+            border-right: 1px solid #94a3b8;
+            border-bottom: 1px solid #cbd5e1;
         }
         .adq-bandj-filters label {
             margin: 0;
-            font-size: 13px;
-            font-weight: 600;
-            color: #475569;
+            font-size: 12px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
             white-space: nowrap;
         }
         .adq-bandj-filters select {
             max-width: 320px;
             min-width: 200px;
             font-size: 13px;
-            height: 32px;
+            height: 34px;
+            border-radius: 8px;
+            border-color: #cbd5e1;
         }
         /* Vista de resolucion embebida (reemplaza la tabla, ocupa todo el ancho) */
         .adq-resolution-embed {
@@ -1268,6 +1616,26 @@ function adqEtiquetaMiAccion($accion) {
             padding: 4px 10px;
             line-height: 1.3;
         }
+        .adq-cot-pdf-cell .adq-cot-pdf-links {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        .adq-cot-pdf-cell .adq-cot-pdf-link {
+            background-color: #1e3a8a !important;
+            border-color: #1e3a8a !important;
+            color: #fff !important;
+            margin: 0;
+            white-space: nowrap;
+        }
+        #create-panel-content .adq-cot-pdfs-inline {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
         .adq-avance-factura-header {
             display: flex;
             align-items: flex-start;
@@ -1282,6 +1650,7 @@ function adqEtiquetaMiAccion($accion) {
         .adq-avance-quitar-wrap {
             flex: 0 0 auto;
             margin-left: auto;
+            padding-top: 10px;
         }
         .adq-btn-quitar-factura:hover,
         .adq-btn-quitar-factura:focus {
@@ -1450,11 +1819,22 @@ function adqEtiquetaMiAccion($accion) {
         }
         #panelExpedienteFin .adq-exp-steps {
             display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+            width: 100%;
+            padding-top: 2px;
+        }
+        #panelExpedienteFin .adq-exp-steps-row {
+            display: flex;
             flex-wrap: nowrap;
             align-items: center;
             gap: 10px 14px;
             width: 100%;
-            padding-top: 2px;
+        }
+        #panelExpedienteFin .adq-exp-steps-firma {
+            padding-top: 8px;
+            border-top: 1px dashed #e9d5ff;
         }
         #panelExpedienteFin .adq-exp-step {
             display: flex;
@@ -1487,21 +1867,24 @@ function adqEtiquetaMiAccion($accion) {
             flex-shrink: 0;
         }
         #panelExpedienteFin .adq-exp-step-firma {
-            flex: 2 1 0;
+            flex: 1 1 100%;
+            width: 100%;
             min-width: 0;
+            flex-wrap: wrap;
         }
         #panelExpedienteFin #expLlaveP12,
         #panelExpedienteFin .adq-exp-clave {
-            flex: 1 1 0;
-            width: 0;
-            min-width: 110px;
+            flex: 1 1 140px;
+            width: auto;
+            min-width: 120px;
             max-width: none;
             height: 30px;
             font-size: 12px;
             padding: 5px 10px;
             line-height: 1.3;
         }
-        #panelExpedienteFin .adq-exp-step.is-disabled {
+        #panelExpedienteFin .adq-exp-step.is-disabled,
+        #panelExpedienteFin #expFirmaBlock.is-disabled {
             opacity: .55;
             pointer-events: none;
         }
@@ -1546,7 +1929,7 @@ function adqEtiquetaMiAccion($accion) {
             margin: 0 2px;
         }
         @media (max-width: 767px) {
-            #panelExpedienteFin .adq-exp-steps {
+            #panelExpedienteFin .adq-exp-steps-row {
                 flex-wrap: wrap;
                 gap: 10px;
             }
@@ -1566,8 +1949,8 @@ function adqEtiquetaMiAccion($accion) {
             }
             #panelExpedienteFin #expLlaveP12,
             #panelExpedienteFin .adq-exp-clave {
-                flex: 1 1 0;
-                width: auto;
+                flex: 1 1 100%;
+                width: 100%;
                 min-width: 0;
             }
         }
@@ -1581,21 +1964,35 @@ function adqEtiquetaMiAccion($accion) {
         </div>
         <div class="panel-body exa-body">
             <div class="exa-ui-page-view">
-        <ul class="nav nav-tabs exa-ui-nav-tabs" id="inboxTabs" role="tablist">
+        <ul class="nav nav-tabs exa-ui-nav-tabs adq-bandj-tabs" id="inboxTabs" role="tablist">
             <li role="presentation">
-                <a href="#create-panel" id="create-tab" role="tab" data-toggle="tab"><i class="bi bi-file-earmark-plus"></i> Crear Solicitud</a>
+                <a href="#create-panel" id="create-tab" role="tab" data-toggle="tab">
+                    <i class="bi bi-file-earmark-plus"></i><span>Crear Solicitud</span>
+                </a>
             </li>
             <li role="presentation" class="active">
-                <a href="#pending-panel" id="pending-tab" role="tab" data-toggle="tab"><i class="bi bi-clipboard-check"></i> Mis Pendientes <span class="badge"><?php echo count($pendientes); ?></span></a>
+                <a href="#pending-panel" id="pending-tab" role="tab" data-toggle="tab">
+                    <i class="bi bi-clipboard-check"></i><span>Mis Pendientes</span>
+                    <span class="badge adq-tab-count"><?php echo count($pendientes); ?></span>
+                </a>
             </li>
             <li role="presentation">
-                <a href="#my-panel" id="my-tab" role="tab" data-toggle="tab"><i class="bi bi-person-workspace"></i> Mis Solicitudes <span class="badge"><?php echo count($mis_solicitudes); ?></span></a>
+                <a href="#my-panel" id="my-tab" role="tab" data-toggle="tab">
+                    <i class="bi bi-person-workspace"></i><span>Mis Solicitudes</span>
+                    <span class="badge adq-tab-count"><?php echo count($mis_solicitudes); ?></span>
+                </a>
             </li>
             <li role="presentation">
-                <a href="#managed-panel" id="managed-tab" role="tab" data-toggle="tab"><i class="bi bi-check2-square"></i> Gestion&eacute; <span class="badge"><?php echo count($gestionadas); ?></span></a>
+                <a href="#managed-panel" id="managed-tab" role="tab" data-toggle="tab">
+                    <i class="bi bi-check2-square"></i><span>Gestion&eacute;</span>
+                    <span class="badge adq-tab-count"><?php echo count($gestionadas); ?></span>
+                </a>
             </li>
             <li role="presentation">
-                <a href="#history-panel" id="history-tab" role="tab" data-toggle="tab"><i class="bi bi-clock-history"></i> Historial <span class="badge"><?php echo count($historico); ?></span></a>
+                <a href="#history-panel" id="history-tab" role="tab" data-toggle="tab">
+                    <i class="bi bi-clock-history"></i><span>Historial</span>
+                    <span class="badge adq-tab-count"><?php echo count($historico); ?></span>
+                </a>
             </li>
         </ul>
 
@@ -1612,11 +2009,12 @@ function adqEtiquetaMiAccion($accion) {
         <div class="tab-content exa-ui-tab-content panels-area" id="inboxTabsContent">
             <!-- 1. MIS PENDIENTES -->
             <div class="tab-pane active" id="pending-panel" role="tabpanel">
+                <div class="adq-table-panel" data-page-size="20">
                 <div class="exa-adq-table-wrap">
-                    <table class="table table-bordered exa-adq-table">
+                    <table class="table table-bordered exa-adq-table adq-table-paginated">
                         <thead>
                             <tr>
-                                <th style="width: 100px;">N? Sol.</th>
+                                <th style="width: 100px;">N&deg; Sol.</th>
                                 <th>Flujo</th>
                                 <th style="width: 150px;">Fecha</th>
                                 <th>Solicitante</th>
@@ -1625,12 +2023,12 @@ function adqEtiquetaMiAccion($accion) {
                                 <th style="width: 100px;">Prioridad</th>
                                 <th style="width: 150px;">Valor Est.</th>
                                 <th>Paso Actual Workflow</th>
-                                <th style="width: 90px;">Acci?n</th>
+                                <th style="width: 90px;">Acci&oacute;n</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($pendientes)) { ?>
-                                <tr class="text-center"><td colspan="10" class="text-muted py-4">No posee requerimientos de adquisiciones pendientes de aprobaci?n en este momento.</td></tr>
+                                <tr class="text-center"><td colspan="10" class="text-muted py-4">No posee requerimientos de adquisiciones pendientes de aprobaci&oacute;n en este momento.</td></tr>
                             <?php } else { 
                                 foreach ($pendientes as $p) { ?>
                                     <tr class="text-center adq-row-solicitud" data-wfm-fam="<?php echo intval($p['Wfm_Fam_Cod']); ?>">
@@ -1660,15 +2058,18 @@ function adqEtiquetaMiAccion($accion) {
                         </tbody>
                     </table>
                 </div>
+                <div class="adq-table-pager"></div>
+                </div>
             </div>
 
             <!-- 2. MIS SOLICITUDES -->
             <div class="tab-pane" id="my-panel" role="tabpanel">
+                <div class="adq-table-panel" data-page-size="20">
                 <div class="exa-adq-table-wrap">
-                    <table class="table table-bordered exa-adq-table">
+                    <table class="table table-bordered exa-adq-table adq-table-paginated">
                         <thead>
                             <tr>
-                                <th style="width: 100px;">N? Sol.</th>
+                                <th style="width: 100px;">N&deg; Sol.</th>
                                 <th>Flujo</th>
                                 <th style="width: 150px;">Fecha</th>
                                 <th>Tipo Pedido</th>
@@ -1676,12 +2077,12 @@ function adqEtiquetaMiAccion($accion) {
                                 <th style="width: 150px;">Valor Est.</th>
                                 <th>Estado Solicitud</th>
                                 <th>Etapa Workflow</th>
-                                <th style="width: 120px;">Acci?n</th>
+                                <th style="width: 120px;">Acci&oacute;n</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($mis_solicitudes)) { ?>
-                                <tr class="text-center"><td colspan="9" class="text-muted py-4">No ha iniciado requerimientos de adquisici?n a?n.</td></tr>
+                                <tr class="text-center"><td colspan="9" class="text-muted py-4">No ha iniciado requerimientos de adquisici&oacute;n a&uacute;n.</td></tr>
                             <?php } else { 
                                 foreach ($mis_solicitudes as $ms) { 
                                     $est = 'Borrador'; $badge = 'secondary';
@@ -1718,16 +2119,19 @@ function adqEtiquetaMiAccion($accion) {
                         </tbody>
                     </table>
                 </div>
+                <div class="adq-table-pager"></div>
+                </div>
             </div>
 
             <!-- 3. GESTION? / PARTICIP? -->
             <div class="tab-pane" id="managed-panel" role="tabpanel">
                 <p class="text-muted small mb-2" style="padding: 0 4px;">Solicitudes de otros usuarios en las que usted ya registro una decision en el workflow. Siguen visibles aunque ya no esten en sus pendientes.</p>
+                <div class="adq-table-panel" data-page-size="20">
                 <div class="exa-adq-table-wrap">
-                    <table class="table table-bordered exa-adq-table">
+                    <table class="table table-bordered exa-adq-table adq-table-paginated">
                         <thead>
                             <tr>
-                                <th style="width: 100px;">N? Sol.</th>
+                                <th style="width: 100px;">N&deg; Sol.</th>
                                 <th>Flujo</th>
                                 <th style="width: 130px;">Mi gestion</th>
                                 <th style="width: 130px;">Fecha gestion</th>
@@ -1775,16 +2179,19 @@ function adqEtiquetaMiAccion($accion) {
                         </tbody>
                     </table>
                 </div>
+                <div class="adq-table-pager"></div>
+                </div>
             </div>
 
             <!-- 4. HISTORIAL (cerrados) -->
             <div class="tab-pane" id="history-panel" role="tabpanel">
                 <p class="text-muted small mb-2" style="padding: 0 4px;"><?php if ($es_gerencial_admin) { ?>Solicitudes finalizadas (aprobadas o rechazadas) de toda la empresa.<?php } else { ?>Solicitudes finalizadas que usted creo o en las que participo en el workflow.<?php } ?></p>
+                <div class="adq-table-panel" data-page-size="20">
                 <div class="exa-adq-table-wrap">
-                    <table class="table table-bordered exa-adq-table">
+                    <table class="table table-bordered exa-adq-table adq-table-paginated">
                         <thead>
                             <tr>
-                                <th style="width: 100px;">N? Sol.</th>
+                                <th style="width: 100px;">N&deg; Sol.</th>
                                 <th>Flujo</th>
                                 <th style="width: 150px;">Fecha</th>
                                 <th>Solicitante</th>
@@ -1823,6 +2230,8 @@ function adqEtiquetaMiAccion($accion) {
                             } ?>
                         </tbody>
                     </table>
+                </div>
+                <div class="adq-table-pager"></div>
                 </div>
             </div>
 
@@ -1939,7 +2348,7 @@ function adqEtiquetaMiAccion($accion) {
                                                 <th class="text-end">Subtotal</th>
                                                 <th class="text-end">IVA</th>
                                                 <th class="text-end">Total</th>
-                                                <th class="text-center" style="width: 60px;">Acci?n</th>
+                                                <th class="text-center" style="width: 60px;">Acci&oacute;n</th>
                                             </tr>
                                         </thead>
                                         <tbody id="tblBuscarCompras"></tbody>
@@ -1978,7 +2387,7 @@ function adqEtiquetaMiAccion($accion) {
                                                 <th class="text-end">Subtotal</th>
                                                 <th class="text-end">IVA</th>
                                                 <th class="text-end">Total</th>
-                                                <th class="text-center" style="width: 60px;">Acci?n</th>
+                                                <th class="text-center" style="width: 60px;">Acci&oacute;n</th>
                                             </tr>
                                         </thead>
                                         <tbody id="tblBuscarComprasAvance"></tbody>
@@ -2007,29 +2416,33 @@ function adqEtiquetaMiAccion($accion) {
                                     </div>
                                 </div>
                                 <div class="adq-exp-steps">
-                                    <div class="adq-exp-step adq-exp-step-upload">
-                                        <span class="adq-exp-step-num">1</span>
-                                        <span class="adq-exp-step-label">Descargar y revisar</span>
+                                    <div class="adq-exp-steps-row">
+                                        <div class="adq-exp-step adq-exp-step-upload">
+                                            <span class="adq-exp-step-num">1</span>
+                                            <span class="adq-exp-step-label">Descargar y revisar</span>
+                                        </div>
+                                        <span class="adq-exp-sep"></span>
+                                        <div class="adq-exp-step adq-exp-step-upload">
+                                            <span class="adq-exp-step-num">2</span>
+                                            <input type="file" name="expediente_pdf" id="expPdfUpload" class="form-control adq-exp-file" accept=".pdf" title="Seleccionar PDF revisado">
+                                            <button type="button" class="btn btn-default btn-xs adq-exp-btn" id="btnSubirExpediente" onclick="subirExpedienteFin()">
+                                                <i class="bi bi-upload"></i> Cargar revisado
+                                            </button>
+                                        </div>
                                     </div>
-                                    <span class="adq-exp-sep"></span>
-                                    <div class="adq-exp-step adq-exp-step-upload">
-                                        <span class="adq-exp-step-num">2</span>
-                                        <input type="file" name="expediente_pdf" id="expPdfUpload" class="form-control adq-exp-file" accept=".pdf" title="Seleccionar PDF revisado">
-                                        <button type="button" class="btn btn-default btn-xs adq-exp-btn" id="btnSubirExpediente" onclick="subirExpedienteFin()">
-                                            <i class="bi bi-upload"></i> Cargar revisado
-                                        </button>
-                                    </div>
-                                    <span class="adq-exp-sep"></span>
-                                    <div class="adq-exp-step adq-exp-step-firma" id="expFirmaBlock">
-                                        <span class="adq-exp-step-num">3</span>
-                                        <input type="file" name="llave_p12" id="expLlaveP12" class="form-control adq-exp-file" accept=".p12" title="Llave .p12">
-                                        <label id="expUsarLlaveEmpresaWrap" class="adq-exp-check" style="display: none;">
-                                            <input type="checkbox" id="expUsarLlaveEmpresa" onchange="toggleLlaveEmpresaExpediente()"> Llave empresa
-                                        </label>
-                                        <input type="password" class="form-control adq-exp-clave" id="expLlaveClave" placeholder="Clave" autocomplete="off">
-                                        <button type="button" class="btn btn-success btn-xs adq-exp-btn" id="btnFirmarExpediente" onclick="firmarExpedienteFin()">
-                                            <i class="bi bi-pen"></i> Firmar
-                                        </button>
+                                    <div class="adq-exp-steps-row adq-exp-steps-firma" id="expFirmaBlock">
+                                        <div class="adq-exp-step adq-exp-step-firma">
+                                            <span class="adq-exp-step-num">3</span>
+                                            <span class="adq-exp-step-label">Firma electronica</span>
+                                            <input type="file" name="llave_p12" id="expLlaveP12" class="form-control adq-exp-file" accept=".p12" title="Elegir archivo de firma (.p12)">
+                                            <label id="expUsarLlaveEmpresaWrap" class="adq-exp-check" style="display: none;">
+                                                <input type="checkbox" id="expUsarLlaveEmpresa" onchange="toggleLlaveEmpresaExpediente()"> Llave empresa
+                                            </label>
+                                            <input type="password" class="form-control adq-exp-clave" id="expLlaveClave" placeholder="Clave" autocomplete="off">
+                                            <button type="button" class="btn btn-success btn-xs adq-exp-btn" id="btnFirmarExpediente" onclick="firmarExpedienteFin()">
+                                                <i class="bi bi-pen"></i> Firmar
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                                 <div id="expFinAyuda" class="adq-exp-msg" style="display:none;margin-top:6px;"></div>
@@ -2087,7 +2500,7 @@ function adqEtiquetaMiAccion($accion) {
                         <div class="col-md-5 col-sm-12">
                             <div class="adq-detail-card">
                                 <div class="adq-wf-progress-header">
-                                    <h5 class="adq-section-header m-0" style="border: none; padding: 0; margin: 0;"><i class="bi bi-list-stars"></i> Historial de Firmas</h5>
+                                    <h5 class="adq-section-header m-0" style="border: none; padding: 0; margin: 0;"><i class="bi bi-pen"></i> Historial de Firmas</h5>
                                     <button class="btn btn-xs btn-primary" type="button" onclick="abrirSeguimientoDetallado()"><i class="bi bi-clock-history"></i> Ver linea de tiempo</button>
                                 </div>
                                 <div class="adq-scroll-historial">
@@ -2117,6 +2530,30 @@ function adqEtiquetaMiAccion($accion) {
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default btn-sm" onclick="volverAResolucion()"><i class="bi bi-arrow-left"></i> Volver al Detalle</button>
                     <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DETALLE DE NODO (linea de tiempo) -->
+    <div class="modal fade" id="mdlSegNodoDetalle" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="true">
+        <div class="modal-dialog modal-lg" style="width:90%;max-width:900px;">
+            <div class="modal-content adq-seg-nodo-modal">
+                <div class="modal-header adq-seg-nodo-modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">
+                        <i class="bi bi-list-task"></i> Tareas de la etapa:
+                        <span id="segNodoTareasTitulo"></span>
+                        <small class="text-muted" id="segNodoTareasSub" style="font-weight:normal;"></small>
+                    </h4>
+                </div>
+                <div class="modal-body" style="max-height:65vh;overflow-y:auto;">
+                    <div class="adq-timeline" id="segNodoTareasBody"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default btn-sm" data-dismiss="modal" id="btnSegNodoTareasCerrar">
+                        <i class="bi bi-x-lg"></i> Cerrar
+                    </button>
                 </div>
             </div>
         </div>
@@ -2397,6 +2834,19 @@ let currentInsCod = null;
                     $('#expPdfUpload').val('');
                     renderPanelExpedienteFin();
                     mostrarExpAccionMsg('Cargado correctamente.');
+                    if (currentSolCod) {
+                        $.getJSON('adq_bandeja.php', { ajax_get_solicitud_detail: true, sol_cod: currentSolCod }, function(det) {
+                            if (det && det.success) {
+                                if (det.historial) {
+                                    renderHistorialPanel(det.historial);
+                                }
+                                if (det.expediente) {
+                                    currentExpedienteEstado = det.expediente;
+                                    renderPanelExpedienteFin();
+                                }
+                            }
+                        });
+                    }
                 } else {
                     alert('Error: ' + (res.message || 'No se pudo cargar el expediente.'));
                 }
@@ -2863,9 +3313,19 @@ let currentInsCod = null;
             let html = '<div class="adq-hist-archivos" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">';
             lista.forEach(function(a) {
                 const ext = String(a.path || '').split('.').pop().toLowerCase();
-                const icon = ext === 'pdf' ? 'bi-file-earmark-pdf' : 'bi-paperclip';
+                const esExpFirmado = parseInt(a.es_expediente_firmado || 0, 10) === 1;
+                const esExp = esExpFirmado || parseInt(a.es_expediente || 0, 10) === 1;
+                let icon = ext === 'pdf' ? 'bi-file-earmark-pdf' : 'bi-paperclip';
+                let btnClass = 'btn-outline-primary';
+                if (esExpFirmado) {
+                    icon = 'bi-file-earmark-check';
+                    btnClass = 'btn-outline-success';
+                } else if (esExp) {
+                    icon = 'bi-file-earmark-lock2';
+                    btnClass = 'btn-outline-secondary';
+                }
                 const label = escHtmlHist(a.label || 'Archivo');
-                html += `<a href="../../DATA/${a.path}" target="_blank" class="btn btn-xs btn-outline-primary" style="font-size:11px;padding:3px 8px;"><i class="bi ${icon}"></i> ${label}</a>`;
+                html += `<a href="../../DATA/${a.path}" target="_blank" class="btn btn-xs ${btnClass}" style="font-size:11px;padding:3px 8px;"><i class="bi ${icon}"></i> ${label}</a>`;
             });
             html += '</div>';
             return html;
@@ -2887,10 +3347,28 @@ let currentInsCod = null;
                     ? `<a href="${f.link}" target="_blank" class="btn btn-xs btn-outline-primary ms-2" style="font-size:11px;padding:2px 8px;"><i class="bi bi-file-earmark-pdf"></i> Ver PDF</a>`
                     : '';
                 const des = f.des ? `<div class="text-muted mt-1" style="font-size:11px;">${escHtmlHist(f.des)}</div>` : '';
+                let compsHtml = '';
+                if (f.comprobantes && f.comprobantes.length) {
+                    compsHtml = '<div class="adq-hist-comprobantes mt-1" style="padding-left:8px;border-left:2px solid #cbd5e1;">'
+                        + '<div class="text-muted" style="font-size:11px;margin-bottom:2px;"><i class="bi bi-journal-text"></i> Comprobantes de pago:</div>';
+                    f.comprobantes.forEach(function(c) {
+                        const codigo = escHtmlHist(c.codigo || ('#' + (c.com_cod || '')));
+                        const cFecha = c.fecha ? `<span class="text-muted">(${escHtmlHist(c.fecha)})</span>` : '';
+                        const cVal = parseFloat(c.valor || 0) > 0
+                            ? `<span class="font-monospace ms-1">$ ${parseFloat(c.valor).toFixed(2)}</span>`
+                            : '';
+                        const cForma = c.forma ? `<span class="text-muted ms-1">${escHtmlHist(c.forma)}</span>` : '';
+                        const cLink = c.link
+                            ? `<a href="${c.link}" target="_blank" class="btn btn-xs btn-outline-secondary ms-1" style="font-size:10px;padding:1px 6px;"><i class="bi bi-box-arrow-up-right"></i> ${codigo}</a>`
+                            : `<span class="fw-semibold">${codigo}</span>`;
+                        compsHtml += `<div style="font-size:11px;margin-bottom:2px;">${cLink} ${cFecha}${cVal}${cForma}</div>`;
+                    });
+                    compsHtml += '</div>';
+                }
                 html += `
                     <div class="border rounded p-2 mb-1 bg-white small">
                         <strong><i class="bi bi-receipt-cutoff"></i> Factura # ${numero}</strong> - ${proveedor}
-                        ${fecha}${total}${pdf}${des}
+                        ${fecha}${total}${pdf}${des}${compsHtml}
                     </div>
                 `;
             });
@@ -2936,25 +3414,55 @@ let currentInsCod = null;
                 });
         }
 
+        function inicialesActorHist(nombre) {
+            const parts = String(nombre || '').trim().split(/\s+/).filter(Boolean);
+            if (!parts.length) {
+                return 'SY';
+            }
+            if (parts.length === 1) {
+                return parts[0].substring(0, 2).toUpperCase();
+            }
+            return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+        }
+
+        function formatearFechaHist(fec) {
+            const raw = String(fec || '').trim();
+            if (!raw || raw === 'Sin movimiento') {
+                return 'Sin movimiento';
+            }
+            const d = new Date(raw.replace(' ', 'T'));
+            if (isNaN(d.getTime())) {
+                return raw;
+            }
+            const pad = function(n) { return (n < 10 ? '0' : '') + n; };
+            return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear()
+                + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+        }
+
+        function badgeHistorialHtml(texto, color) {
+            return '<span class="badge adq-hist-badge" style="background-color:' + color + ' !important;color:#ffffff !important;">' + texto + '</span>';
+        }
+
         function renderHistorialPanel(historial) {
             const $hist = $('#lstHistorial').empty();
             const historialOrdenado = ordenarHistorialDesc(historial);
             if (!historialOrdenado.length) {
-                $hist.append('<div class="text-center text-muted py-3 small">No se registran movimientos en el workflow todav&iacute;a.</div>');
+                $hist.append('<div class="adq-hist-empty"><i class="bi bi-journal-text"></i>No se registran movimientos en el workflow todav&iacute;a.</div>');
                 return;
             }
             historialOrdenado.forEach(function(h, idx) {
-                // Con orden desc: arriba = mas reciente (ultimo paso), abajo = inicio (paso 1)
                 const numProceso = historialOrdenado.length - idx;
-                const actor = escHtmlHist(h.Actor_Nom || h.Usuario_Nom || h.Dep_Des || 'Sistema');
+                const actor = h.Actor_Nom || h.Usuario_Nom || h.Dep_Des || 'Sistema';
+                const actorEsc = escHtmlHist(actor);
                 const actorModo = escHtmlHist(h.Actor_Modo || 'Por');
-                const nodNom = escHtmlHist(h.Nod_Nom || '');
-                const fechaHist = escHtmlHist(h.Isn_Fec || 'Sin movimiento');
+                const nodNom = escHtmlHist(h.Nod_Nom || 'Etapa');
+                const fechaHist = escHtmlHist(formatearFechaHist(h.Isn_Fec));
+                const initials = escHtmlHist(inicialesActorHist(actor));
                 let actionBadge = '';
                 let itemClass = '';
 
                 if (parseInt(h.Fin_Pendiente || 0, 10) === 1) {
-                    actionBadge = '<span class="badge bg-info" style="background-color: #0ea5e9 !important; color: #ffffff !important;">Pendiente cierre</span>';
+                    actionBadge = badgeHistorialHtml('Pendiente cierre', '#0284c7');
                     itemClass = 'active';
                 } else if (parseInt(h.Pendiente_Aprobacion || 0, 10) === 1 || h.Isn_Acc === 'PENDIENTE') {
                     let pendTxt = 'Pendiente de aprobaci&oacute;n';
@@ -2967,50 +3475,69 @@ let currentInsCod = null;
                     } else if (h.Nod_Tip === 'FACTURA') {
                         pendTxt = 'Pendiente de factura';
                     }
-                    actionBadge = '<span class="badge bg-primary" style="background-color: #2563eb !important; color: #ffffff !important;">' + pendTxt + '</span>';
+                    actionBadge = badgeHistorialHtml(pendTxt, '#2563eb');
                     itemClass = 'active';
                 } else if (parseInt(h.Sin_Registro || 0, 10) === 1 || h.Isn_Acc === 'SIN_REGISTRO') {
-                    actionBadge = '<span class="badge bg-secondary" style="background-color: #94a3b8 !important; color: #ffffff !important;">Sin registro</span>';
+                    actionBadge = badgeHistorialHtml('Sin registro', '#94a3b8');
                     itemClass = '';
                 } else if (h.Isn_Acc === 'CREAR') {
-                    actionBadge = '<span class="badge bg-secondary" style="background-color: #64748b !important; color: #ffffff !important;">Inici&oacute; Pedido</span>';
+                    actionBadge = badgeHistorialHtml('Inici&oacute; pedido', '#64748b');
                     itemClass = 'active';
                 } else if (h.Isn_Acc === 'APROBAR') {
-                    actionBadge = '<span class="badge bg-success" style="background-color: #10b981 !important; color: #ffffff !important;">Aprob&oacute;</span>';
+                    actionBadge = badgeHistorialHtml('Aprobado', '#059669');
                     itemClass = 'success';
                 } else if (h.Isn_Acc === 'COMPLETAR') {
-                    actionBadge = '<span class="badge bg-success" style="background-color: #059669 !important; color: #ffffff !important;">Complet&oacute; tarea</span>';
+                    actionBadge = badgeHistorialHtml('Tarea completada', '#059669');
                     itemClass = 'success';
                 } else if (h.Isn_Acc === 'OBSERVAR') {
-                    actionBadge = '<span class="badge bg-warning text-dark" style="background-color: #f59e0b !important; color: #1e293b !important;">Observ&oacute;</span>';
+                    actionBadge = '<span class="badge adq-hist-badge" style="background-color:#d97706 !important;color:#fffbeb !important;">Observado</span>';
                     itemClass = 'warning';
                 } else if (h.Isn_Acc === 'DEVOLVER') {
-                    actionBadge = '<span class="badge bg-secondary" style="background-color: #4b5563 !important; color: #ffffff !important;">Devolvi&oacute;</span>';
+                    actionBadge = badgeHistorialHtml('Devuelto', '#4b5563');
                     itemClass = 'active';
                 } else if (h.Isn_Acc === 'RECHAZAR') {
-                    actionBadge = '<span class="badge bg-danger" style="background-color: #ef4444 !important; color: #ffffff !important;">Rechazado</span>';
+                    actionBadge = badgeHistorialHtml('Rechazado', '#dc2626');
                     itemClass = 'danger';
                 } else if (h.Isn_Acc === 'REENVIAR') {
-                    actionBadge = '<span class="badge bg-info text-dark" style="background-color: #38bdf8 !important; color: #0f172a !important;">Reenvi&oacute; correcci&oacute;n</span>';
+                    actionBadge = badgeHistorialHtml('Reenvi&oacute; correcci&oacute;n', '#0284c7');
                     itemClass = 'active';
                 } else if (h.Isn_Acc === 'AVANCE') {
-                    actionBadge = '<span class="badge bg-info" style="background-color: #0ea5e9 !important; color: #ffffff !important;">Carg&oacute; documentos</span>';
+                    actionBadge = badgeHistorialHtml('Documentos cargados', '#0284c7');
                     itemClass = 'active';
                 } else if (h.Isn_Acc === 'COTIZAR') {
-                    actionBadge = '<span class="badge bg-primary" style="background-color: #2563eb !important; color: #ffffff !important;">Carg&oacute; proformas</span>';
+                    actionBadge = badgeHistorialHtml('Proformas cargadas', '#2563eb');
+                    itemClass = 'active';
+                } else if (h.Isn_Acc) {
+                    actionBadge = badgeHistorialHtml(escHtmlHist(h.Isn_Acc), '#64748b');
                     itemClass = 'active';
                 }
+
+                const commentHtml = h.Isn_Com
+                    ? `<div class="adq-timeline-comment">${escHtmlHist(h.Isn_Com)}</div>`
+                    : '';
 
                 $hist.append(`
                     <div class="adq-timeline-item ${itemClass}">
                         <div class="adq-timeline-content">
                             <div class="adq-timeline-header">
-                                <span class="adq-timeline-title"><span class="adq-timeline-step-num" title="Paso ${numProceso}">${numProceso}</span>${actionBadge} en etapa: <strong>${nodNom}</strong></span>
-                                <span class="adq-timeline-date"><i class="bi bi-clock"></i> ${fechaHist}</span>
+                                <span class="adq-timeline-title">
+                                    <span class="adq-timeline-step">
+                                        <span class="adq-timeline-step-num" title="Paso ${numProceso}">${numProceso}</span>
+                                        <span class="adq-timeline-stage">${nodNom}</span>
+                                    </span>
+                                    ${actionBadge}
+                                </span>
+                                <span class="adq-timeline-date"><i class="bi bi-calendar3"></i> ${fechaHist}</span>
                             </div>
                             <div class="adq-timeline-body">
-                                ${actorModo}: <span class="text-primary fw-bold">${actor}</span>
-                                ${h.Isn_Com ? `<div class="adq-timeline-comment">"${escHtmlHist(h.Isn_Com)}"</div>` : ''}
+                                <div class="adq-hist-actor">
+                                    <span class="adq-hist-avatar" aria-hidden="true">${initials}</span>
+                                    <span class="adq-hist-actor-meta">
+                                        <span class="adq-hist-actor-mode">${actorModo}</span>
+                                        <span class="adq-hist-actor-name">${actorEsc}</span>
+                                    </span>
+                                </div>
+                                ${commentHtml}
                                 ${renderHistorialFacturas(h.facturas)}
                                 ${renderHistorialArchivos(h.archivos, h.Isn_Adj)}
                             </div>
@@ -3148,10 +3675,10 @@ let currentInsCod = null;
                                 }
                             }
                             const pdfLinks = adjuntos.length
-                                ? adjuntos.map(function(path, i) {
+                                ? `<div class="adq-cot-pdf-links">${adjuntos.map(function(path, i) {
                                     const label = adjuntos.length > 1 ? ('PDF ' + (i + 1)) : 'Ver PDF';
-                                    return `<a href="../../DATA/${path}" target="_blank" class="btn btn-xs btn-primary" style="background-color:#1e3a8a;border-color:#1e3a8a;color:#fff;margin-right:3px;"><i class="bi bi-file-earmark-pdf"></i> ${label}</a>`;
-                                }).join('')
+                                    return `<a href="../../DATA/${path}" target="_blank" class="btn btn-xs btn-primary adq-cot-pdf-link"><i class="bi bi-file-earmark-pdf"></i> ${label}</a>`;
+                                }).join('')}</div>`
                                 : '<span class="text-muted" style="font-size:11px;">Sin PDF</span>';
                             const jusTexto = c.Cot_Jus
                                 ? $('<div>').text(c.Cot_Jus).html()
@@ -3160,7 +3687,7 @@ let currentInsCod = null;
                                 <tr class="${ganadorClass}">
                                     <td class="align-middle"><span class="fw-bold text-dark">${$('<div>').text(proveedor).html()}</span>${badgeGanador}</td>
                                     <td class="text-end align-middle font-monospace text-success fw-bold">$ ${parseFloat(c.Cot_Val || 0).toFixed(2)}</td>
-                                    <td class="text-center align-middle">${pdfLinks}</td>
+                                    <td class="text-center align-middle adq-cot-pdf-cell">${pdfLinks}</td>
                                     <td class="align-middle adq-cot-jus-cell" style="font-size:12px;">${jusTexto}</td>
                                 </tr>
                             `);
@@ -3581,29 +4108,36 @@ let currentInsCod = null;
                 const meta = metaMap[nodId] || {};
                 const nom = meta.nombre || ($nodeEl ? $nodeEl.data('nod-nom') : '') || 'Etapa';
                 const tip = meta.tipo || ($nodeEl ? $nodeEl.data('nod-tip') : '') || '';
+                const orden = meta.orden ? parseInt(meta.orden, 10) : 0;
                 const itemsHtml = htmlMap[nodId] || '<div class="text-center text-muted py-3 small">No hay tareas registradas en esta etapa.</div>';
-                $('#segNodoTareasTitulo').text(nom);
+                $('#segNodoTareasTitulo').text((orden > 0 ? (orden + '. ') : '') + nom);
                 $('#segNodoTareasSub').text(tip ? (' [' + tip + ']') : '');
                 $('#segNodoTareasBody').html(itemsHtml);
-                $('#segNodoTareasPanel').show();
-                const panel = document.getElementById('segNodoTareasPanel');
-                if (panel && panel.scrollIntoView) {
-                    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                }
+
+                const $nodoModal = $('#mdlSegNodoDetalle');
+                $nodoModal.off('shown.bs.modal.segNodo hidden.bs.modal.segNodo');
+                $nodoModal.on('shown.bs.modal.segNodo', function() {
+                    $('.modal-backdrop').not('.adq-seg-nodo-backdrop').last().addClass('adq-seg-nodo-backdrop');
+                });
+                $nodoModal.on('hidden.bs.modal.segNodo', function() {
+                    $body.find('.tracker-node-clickable').removeClass('tracker-node-selected');
+                    $('body').addClass('modal-open');
+                });
+                $nodoModal.modal('show');
             }
 
             $body.find('.adq-seg-flow-tracker .tracker-node-clickable').off('click.segNodo').on('click.segNodo', function() {
                 mostrarTareasNodo($(this).data('nod-id'), $(this));
             });
 
-            $body.find('#btnSegNodoTareasCerrar').off('click.segNodo').on('click.segNodo', function() {
-                $body.find('.tracker-node-clickable').removeClass('tracker-node-selected');
-                $('#segNodoTareasPanel').hide();
+            $('#btnSegNodoTareasCerrar').off('click.segNodo').on('click.segNodo', function() {
+                $('#mdlSegNodoDetalle').modal('hide');
             });
         }
 
         function abrirSeguimientoDetallado() {
             if (!currentSolCod) return;
+            $('#mdlSegNodoDetalle').modal('hide');
             $('#lblSeguimientoTitle').text('Seguimiento de Requerimiento #' + currentSolCod);
             const trackerPreview = buildSeguimientoTrackerPreview();
             $('#seguimientoModalBody').html(
@@ -3647,6 +4181,7 @@ let currentInsCod = null;
         }
 
         function volverAResolucion() {
+            $('#mdlSegNodoDetalle').modal('hide');
             $('#mdlSeguimiento').modal('hide');
             mostrarResolucionView();
         }
@@ -3779,7 +4314,8 @@ let currentInsCod = null;
             const fam = $('#filtroFlujo').val();
             $('.adq-row-solicitud').each(function() {
                 const rowFam = String($(this).data('wfm-fam') || '');
-                $(this).toggle(!fam || rowFam === fam);
+                const match = !fam || rowFam === fam;
+                $(this).toggleClass('adq-filtro-oculto', !match);
             });
             const params = new URLSearchParams(window.location.search);
             if (fam) {
@@ -3790,6 +4326,89 @@ let currentInsCod = null;
             const qs = params.toString();
             const nuevaUrl = window.location.pathname + (qs ? '?' + qs : '') + window.location.hash;
             window.history.replaceState({}, '', nuevaUrl);
+            inicializarPaginacionTablas(1);
+        }
+
+        function getVisibleRowsTabla($panel) {
+            return $panel.find('tbody tr.adq-row-solicitud').not('.adq-filtro-oculto');
+        }
+
+        function renderPagerTabla($panel, page, pages, total, pageSize) {
+            const $pager = $panel.find('.adq-table-pager');
+            if (!$pager.length) {
+                return;
+            }
+            if (total <= 0) {
+                $pager.html('<div class="adq-table-pager-info">Sin registros para mostrar</div>');
+                return;
+            }
+            const from = ((page - 1) * pageSize) + 1;
+            const to = Math.min(page * pageSize, total);
+            let pagesHtml = '';
+            const maxBtns = 5;
+            let start = Math.max(1, page - Math.floor(maxBtns / 2));
+            let end = Math.min(pages, start + maxBtns - 1);
+            if (end - start < maxBtns - 1) {
+                start = Math.max(1, end - maxBtns + 1);
+            }
+            for (let i = start; i <= end; i++) {
+                pagesHtml += '<button type="button" class="btn' + (i === page ? ' active' : '') + '" data-page="' + i + '">' + i + '</button>';
+            }
+            $pager.html(
+                '<div class="adq-table-pager-info">Mostrando ' + from + '-' + to + ' de ' + total + '</div>'
+                + '<div class="adq-table-pager-controls">'
+                + '<label class="adq-table-pager-size">Filas '
+                + '<select class="adq-table-page-size">'
+                + '<option value="10"' + (pageSize === 10 ? ' selected' : '') + '>10</option>'
+                + '<option value="20"' + (pageSize === 20 ? ' selected' : '') + '>20</option>'
+                + '<option value="25"' + (pageSize === 25 ? ' selected' : '') + '>25</option>'
+                + '<option value="50"' + (pageSize === 50 ? ' selected' : '') + '>50</option>'
+                + '</select></label>'
+                + '<div class="adq-table-pager-pages">'
+                + '<button type="button" class="btn" data-page="prev" title="Anterior"' + (page <= 1 ? ' disabled' : '') + '><i class="bi bi-chevron-left"></i></button>'
+                + pagesHtml
+                + '<button type="button" class="btn" data-page="next" title="Siguiente"' + (page >= pages ? ' disabled' : '') + '><i class="bi bi-chevron-right"></i></button>'
+                + '</div></div>'
+            );
+        }
+
+        function paginarTablaPanel($panel, pageForce) {
+            if (!$panel || !$panel.length) {
+                return;
+            }
+            let pageSize = parseInt($panel.attr('data-page-size'), 10) || 20;
+            if (pageSize < 1) {
+                pageSize = 20;
+            }
+            const $allRows = $panel.find('tbody tr.adq-row-solicitud');
+            const $emptyRows = $panel.find('tbody tr').not('.adq-row-solicitud');
+            const $visible = getVisibleRowsTabla($panel);
+            const total = $visible.length;
+            const pages = Math.max(1, Math.ceil(total / pageSize) || 1);
+            let page = pageForce != null ? parseInt(pageForce, 10) : (parseInt($panel.data('page'), 10) || 1);
+            if (isNaN(page) || page < 1) {
+                page = 1;
+            }
+            if (page > pages) {
+                page = pages;
+            }
+            $panel.data('page', page);
+
+            $allRows.hide();
+            if (total > 0) {
+                $emptyRows.hide();
+                const start = (page - 1) * pageSize;
+                $visible.slice(start, start + pageSize).show();
+            } else {
+                $emptyRows.show();
+            }
+            renderPagerTabla($panel, page, pages, total, pageSize);
+        }
+
+        function inicializarPaginacionTablas(pageForce) {
+            $('.adq-table-panel').each(function() {
+                paginarTablaPanel($(this), pageForce);
+            });
         }
 
         function actualizarVisibilidadFiltroFlujo() {
@@ -3798,12 +4417,44 @@ let currentInsCod = null;
         }
 
         $(document).ready(function() {
-            $('a[data-toggle="tab"]').on('shown.bs.tab', actualizarVisibilidadFiltroFlujo);
+            $('a[data-toggle="tab"]').on('shown.bs.tab', function() {
+                actualizarVisibilidadFiltroFlujo();
+                inicializarPaginacionTablas();
+            });
             actualizarVisibilidadFiltroFlujo();
+
+            $(document).on('click', '.adq-table-pager [data-page]', function() {
+                const $btn = $(this);
+                if ($btn.is(':disabled')) {
+                    return;
+                }
+                const $panel = $btn.closest('.adq-table-panel');
+                let page = parseInt($panel.data('page'), 10) || 1;
+                const pages = Math.max(1, Math.ceil(getVisibleRowsTabla($panel).length / (parseInt($panel.attr('data-page-size'), 10) || 20)));
+                const accion = String($btn.data('page'));
+                if (accion === 'prev') {
+                    page -= 1;
+                } else if (accion === 'next') {
+                    page += 1;
+                } else {
+                    page = parseInt(accion, 10) || 1;
+                }
+                page = Math.min(Math.max(1, page), pages);
+                paginarTablaPanel($panel, page);
+            });
+
+            $(document).on('change', '.adq-table-pager .adq-table-page-size', function() {
+                const $panel = $(this).closest('.adq-table-panel');
+                const size = parseInt($(this).val(), 10) || 20;
+                $panel.attr('data-page-size', size);
+                paginarTablaPanel($panel, 1);
+            });
 
             $('#filtroFlujo').on('change', aplicarFiltroFlujo);
             if ($('#filtroFlujo').val()) {
                 aplicarFiltroFlujo();
+            } else {
+                inicializarPaginacionTablas(1);
             }
 
             $('a[data-toggle="tab"][href="#create-panel"]').on('shown.bs.tab', function() {
