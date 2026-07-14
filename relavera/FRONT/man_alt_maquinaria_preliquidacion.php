@@ -507,14 +507,23 @@ if (isset($_GET['getDetalleHistoricoAjax'])) {
                     <!-- SELECTOR DE MODO -->
                     <div class="row" style="margin: 0 0 15px 0;">
                         <div class="col-sm-12 text-center">
-                            <div class="btn-group" data-toggle="buttons">
-                                <label class="btn btn-primary active" id="btn_modo_ind" onclick="cambiarModo('individual')">
-                                    <input type="radio" name="modo_generacion" autocomplete="off" checked> <i class="fa fa-file-text-o"></i> Modo Individual
+                            <style>
+                                .mode-selector label.btn { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; font-weight: bold; transition: all 0.2s; }
+                                .mode-selector label.btn:hover { background: #e2e8f0; }
+                                .mode-selector label.btn.active { background: #2563eb; color: #fff; border-color: #1d4ed8; box-shadow: 0 2px 4px rgba(37,99,235,0.3); }
+                                .mode-selector label.btn.active i { color: #fff; }
+                                .mode-selector label.btn i { color: #64748b; }
+                            </style>
+                            <div class="btn-group mode-selector" data-toggle="buttons">
+                                <label class="btn active" id="btn_modo_ind" onclick="cambiarModo('individual')">
+                                    <input type="radio" name="modo_generacion" autocomplete="off" checked> <i class="fa fa-file-text-o"></i> Individual
                                 </label>
-                                <label class="btn btn-default" id="btn_modo_mas" onclick="cambiarModo('masivo')">
-                                    <input type="radio" name="modo_generacion" autocomplete="off"> <i class="fa fa-copy"></i> Modo Masivo
+                                <label class="btn" id="btn_modo_mas" onclick="cambiarModo('masivo')">
+                                    <input type="radio" name="modo_generacion" autocomplete="off"> <i class="fa fa-copy"></i> Por Lotes
                                 </label>
                             </div>
+                            <div id="hlp_modo_ind" style="margin-top: 8px; font-size: 13px; color: #64748b;">Permite revisar detalladamente una sola maquinaria y generar una preliquidación individual.</div>
+                            <div id="hlp_modo_mas" style="margin-top: 8px; font-size: 13px; color: #64748b; display: none;">Busca automáticamente todas las maquinarias con registros pendientes dentro del período seleccionado y permite generar múltiples preliquidaciones independientes.</div>
                         </div>
                     </div>
 
@@ -542,8 +551,8 @@ if (isset($_GET['getDetalleHistoricoAjax'])) {
                         </div>
                         <div class="col-sm-2 text-right">
                             <label>&nbsp;</label><br>
-                            <button class="btn btn-sm btn-primary" onclick="generarPreliquidacion()"><i class="fa fa-search"></i> Generar</button>
-                            <button class="btn btn-sm btn-default" onclick="limpiarFiltros()"><i class="fa fa-eraser"></i> Limpiar</button>
+                            <button type="button" class="btn btn-sm btn-primary" onclick="generarPreliquidacion()"><i class="fa fa-search"></i> Generar</button>
+                            <button type="button" class="btn btn-sm btn-default" onclick="limpiarFiltros()"><i class="fa fa-eraser"></i> Limpiar</button>
                         </div>
                     </div>
 
@@ -560,6 +569,7 @@ if (isset($_GET['getDetalleHistoricoAjax'])) {
                         <div class="col-sm-2">
                             <label>Dcto x Hora ($):</label>
                             <input type="number" id="fil_mas_desc" class="form-control input-sm text-right" value="0.00" step="0.01" min="0">
+                            <small style="color:#64748b; font-size:11px; display:block; margin-top:4px; line-height:1.2;">Valor que se aplicará inicialmente a todas las preliquidaciones generadas.</small>
                         </div>
                         <div class="col-sm-4">
                             <label>Observación General (opcional):</label>
@@ -567,8 +577,8 @@ if (isset($_GET['getDetalleHistoricoAjax'])) {
                         </div>
                         <div class="col-sm-2 text-right">
                             <label>&nbsp;</label><br>
-                            <button class="btn btn-sm btn-primary" onclick="buscarPendientesMasivo()"><i class="fa fa-search"></i> Buscar Lote</button>
-                            <button class="btn btn-sm btn-default" onclick="location.reload();"><i class="fa fa-eraser"></i> Limpiar</button>
+                            <button type="button" class="btn btn-sm btn-primary" onclick="buscarPendientesMasivo()"><i class="fa fa-search"></i> Buscar Pendientes</button>
+                            <button type="button" class="btn btn-sm btn-default" onclick="location.reload();"><i class="fa fa-eraser"></i> Limpiar</button>
                         </div>
                     </div>
 
@@ -605,15 +615,16 @@ if (isset($_GET['getDetalleHistoricoAjax'])) {
                             </div>
                         </div>
                     </div>
-
+                    
                     <!-- TABLA MASIVA (SOLO MASIVO) -->
                     <div id="div_tabla_masiva" style="display:none; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                        <h4 style="margin-top:0; border-bottom: 2px solid #3b82f6; padding-bottom:10px;"><i class="fa fa-users text-primary"></i> Preliquidaciones Lote Pendientes</h4>
+                        <h4 style="margin-top:0; border-bottom: 2px solid #3b82f6; padding-bottom:4px;"><i class="fa fa-users text-primary"></i> Preliquidaciones Pendientes</h4>
+                        <small style="color:#64748b; display:block; margin-bottom:10px; font-size:13px;">Cada fila representa una preliquidación que puede generarse de forma independiente.</small>
                         <div class="table-responsive">
                             <table class="table table-bordered table-hover" id="tblMasivo">
                                 <thead style="background:#f1f5f9;">
                                     <tr>
-                                        <th width="40"><input type="checkbox" id="chkMasivoAll" onclick="toggleMasivoAll(this)"></th>
+                                        <th width="60" class="text-center">Generar<br><input type="checkbox" id="chkMasivoAll" onclick="toggleMasivoAll(this)"></th>
                                         <th>Vehículo / Máquina</th>
                                         <th>Operador / Chofer</th>
                                         <th class="text-right">Hrs Incs</th>
@@ -636,7 +647,14 @@ if (isset($_GET['getDetalleHistoricoAjax'])) {
                             </table>
                         </div>
                         <div class="text-center" style="margin-top: 15px;">
-                            <button class="btn btn-success btn-lg" id="btnGuardarMasivo" disabled onclick="guardarMasivoAjax()"><i class="fa fa-cogs"></i> Generar Preliquidaciones Seleccionadas</button>
+                            <button class="btn btn-success btn-lg" id="btnGuardarMasivo" disabled onclick="guardarMasivoAjax()"><i class="fa fa-cogs"></i> Generar Lotes</button>
+                            <small style="color:#64748b; display:block; margin-top:8px; font-size:13px;">Se creará una preliquidación independiente por cada maquinaria seleccionada.</small>
+                        </div>
+                        <div class="alert alert-info text-left" style="margin-top:25px; font-size:13px; line-height:1.5; background-color:#e0f2fe; border-color:#bae6fd; color:#0369a1;">
+                            <strong><i class="fa fa-info-circle"></i> Información Importante:</strong><br>
+                            Las preliquidaciones generadas por lote son documentos independientes.<br>
+                            Cada maquinaria conserva su propio número de preliquidación, total de horas, descuento aplicado y total a cobrar.<br>
+                            La generación por lote únicamente automatiza el proceso de creación de múltiples documentos.
                         </div>
                     </div>
 
@@ -958,7 +976,7 @@ if (isset($_GET['getDetalleHistoricoAjax'])) {
     </div>
 
     <!-- Script del Módulo -->
-    <script type="text/javascript" src="../VALIDACIONES/man_val_maquinaria_preliquidacion.js?v=1"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_maquinaria_preliquidacion.js?v=2"></script>
 
     <!-- Liberacion y Cierre de conexiones -->
     <?php
