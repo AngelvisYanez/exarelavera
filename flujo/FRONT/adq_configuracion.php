@@ -515,11 +515,17 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
             $obBD_con1->echoJson(array('success' => false, 'message' => 'Usuario invalido.'));
             exit;
         }
-        if ($telefono === '' || $correo === '') {
-            $obBD_con1->echoJson(array('success' => false, 'message' => 'Debe ingresar telefono y correo para registrar.'));
-            exit;
-        }
-        if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+        // Telefono/correo obligatorios solo al activar (Usu_Wf = S)
+        if ($usu_wf === 'S') {
+            if ($telefono === '' || $correo === '') {
+                $obBD_con1->echoJson(array('success' => false, 'message' => 'Debe ingresar telefono y correo para activar el usuario.'));
+                exit;
+            }
+            if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+                $obBD_con1->echoJson(array('success' => false, 'message' => 'El correo electronico no es valido.'));
+                exit;
+            }
+        } elseif ($correo !== '' && !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
             $obBD_con1->echoJson(array('success' => false, 'message' => 'El correo electronico no es valido.'));
             exit;
         }
@@ -544,14 +550,24 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
         $ced_esc = mysqli_real_escape_string($obBD_conexion->conexion, $usu_ced);
 
         try {
-            $ok_prs = $obBD_con1->grabarv_registros(
-                "UPDATE persona
-                 SET Prs_Tel = '$tel_esc', Prs_Cor = '$cor_esc'
-                 WHERE Prs_Cod = $prs_cod;",
-                $obBD_conexion
-            );
-            if (!$ok_prs) {
-                throw new Exception('No se pudo actualizar los datos de persona.');
+            // Al inactivar no se obligan datos: solo actualizar persona si hay valor nuevo
+            if ($usu_wf === 'S' || $telefono !== '' || $correo !== '') {
+                $sets_prs = array();
+                if ($usu_wf === 'S' || $telefono !== '') {
+                    $sets_prs[] = "Prs_Tel = '$tel_esc'";
+                }
+                if ($usu_wf === 'S' || $correo !== '') {
+                    $sets_prs[] = "Prs_Cor = '$cor_esc'";
+                }
+                if (!empty($sets_prs)) {
+                    $ok_prs = $obBD_con1->grabarv_registros(
+                        "UPDATE persona SET " . implode(', ', $sets_prs) . " WHERE Prs_Cod = $prs_cod;",
+                        $obBD_conexion
+                    );
+                    if (!$ok_prs) {
+                        throw new Exception('No se pudo actualizar los datos de persona.');
+                    }
+                }
             }
 
             if ($ced_esc !== '') {
@@ -572,9 +588,12 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
                 throw new Exception('No se pudo actualizar el estado del usuario en workflow.');
             }
 
+            $msg_ok = ($usu_wf === 'S')
+                ? 'Usuario activado correctamente.'
+                : 'Usuario inactivado correctamente.';
             $obBD_con1->echoJson(array(
                 'success' => true,
-                'message' => 'Usuario registrado correctamente.',
+                'message' => $msg_ok,
                 'Usu_Wf' => $usu_wf
             ));
         } catch (Exception $e) {
@@ -1417,13 +1436,19 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
                 msgUsuariosWf('danger', 'Usuario invalido.');
                 return;
             }
-            if (telefono === '' || correo === '') {
-                msgUsuariosWf('danger', 'Debe ingresar telefono y correo para registrar.');
-                $row.find(telefono === '' ? '.input-usu-tel' : '.input-usu-cor').focus();
-                return;
-            }
-            const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
-            if (!emailOk) {
+            // Telefono/correo obligatorios solo al activar (Usu_Wf = S)
+            if (activo) {
+                if (telefono === '' || correo === '') {
+                    msgUsuariosWf('danger', 'Debe ingresar telefono y correo para activar el usuario.');
+                    $row.find(telefono === '' ? '.input-usu-tel' : '.input-usu-cor').focus();
+                    return;
+                }
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+                    msgUsuariosWf('danger', 'El correo electronico no es valido.');
+                    $row.find('.input-usu-cor').focus();
+                    return;
+                }
+            } else if (correo !== '' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
                 msgUsuariosWf('danger', 'El correo electronico no es valido.');
                 $row.find('.input-usu-cor').focus();
                 return;
@@ -1443,13 +1468,13 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
                 Usu_Wf: activo ? 'S' : 'N'
             }, function(res) {
                 if (res.success) {
-                    msgUsuariosWf('success', res.message || 'Usuario registrado correctamente.');
+                    msgUsuariosWf('success', res.message || 'Usuario actualizado correctamente.');
                     actualizarLblEstadoUsu($row);
                 } else {
-                    msgUsuariosWf('danger', res.message || 'No se pudo registrar el usuario.');
+                    msgUsuariosWf('danger', res.message || 'No se pudo actualizar el usuario.');
                 }
             }, 'json').fail(function() {
-                msgUsuariosWf('danger', 'Error de red al registrar el usuario.');
+                msgUsuariosWf('danger', 'Error de red al actualizar el usuario.');
             }).always(function() {
                 $btn.prop('disabled', false).html(htmlOriginal);
             });
