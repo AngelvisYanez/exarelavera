@@ -86,6 +86,7 @@ if (is_array($perfil)) {
         }
     }
 }
+$puedeModificarGuia = ((int)$Ses_Prs_Cod === 1) || in_array((int)$Ses_Usu_Cod, array(2, 3), true);
 
 /* Periodos */
 $periodos = $obBD_con1->getArrayConsulta('perio_cont.selectWhere', array('perio_cont.Pec_Est' => 'A', 'setWhere' => array('setEmpCod'), 'order' => 'perio_cont.Pec_Fei DESC'), $obBD_conexion);
@@ -349,6 +350,79 @@ if (isset($modificarTiempoLlegadaAjax)) {
 	$resp['success'] = $obBD_con1->fin_transaccion_nomsn($obBD_conexion);
 	if (!$resp['success']) {
 		$resp['error'] = $obBD_con1->MsgError;
+	}
+	$obBD_con1->echoJson($resp);
+}
+
+// Modificar número de guía del manifiesto desde el grid
+if (isset($modificarManGuiAjax)) {
+	$resp = array('success' => false);
+	if (isset($esPerfilLectura) && $esPerfilLectura) {
+		$resp['message'] = 'No tiene permisos para modificar manifiestos (Perfil Lectura)';
+		$obBD_con1->echoJson($resp);
+		exit;
+	}
+	if (!$puedeModificarGuia) {
+		$resp['message'] = 'No tiene permisos para modificar el número de guía.';
+		$obBD_con1->echoJson($resp);
+		exit;
+	}
+	$obBD_con1->inicio_transaccion($obBD_conexion);
+	try {
+		$man_cod_gui = isset($_POST['Man_Cod']) ? intval($_POST['Man_Cod']) : 0;
+		$man_gui_raw = isset($_POST['Man_Gui']) ? trim($_POST['Man_Gui']) : '';
+		if ($man_cod_gui <= 0) {
+			throw new Exception('Código de manifiesto no válido');
+		}
+		if ($man_gui_raw === '') {
+			throw new Exception('El número de Guía de Remisión es requerido');
+		}
+		$man_gui_norm = preg_replace('/\D+/', '', $man_gui_raw);
+		if (strlen($man_gui_norm) < 15) {
+			throw new Exception('Complete la Guía de Remisión (15 dígitos)');
+		}
+
+		$manifiesto = $obBD_con1->getRowConsulta('manifiesto.selectWhere', array('where' => array('manifiesto.Man_Cod' => $man_cod_gui)), $obBD_conexion, true);
+		if (empty($manifiesto)) {
+			throw new Exception('No se encontró el manifiesto seleccionado');
+		}
+		if (isset($manifiesto['Man_Est']) && $manifiesto['Man_Est'] === 'I') {
+			throw new Exception('No se puede modificar la guía de un manifiesto anulado');
+		}
+
+		$pla_cod_gui = isset($manifiesto['Pla_Cod']) ? intval($manifiesto['Pla_Cod']) : 0;
+		if ($pla_cod_gui <= 0) {
+			throw new Exception('No se encontró la planta del manifiesto');
+		}
+
+		$sql_dup_guia = "SELECT COUNT(*) AS total
+						FROM manifiesto
+						WHERE Pla_Cod = $pla_cod_gui
+						  AND IFNULL(TRIM(Man_Gui), '') <> ''
+						  AND REPLACE(REPLACE(TRIM(Man_Gui), '-', ''), ' ', '') = '$man_gui_norm'
+						  AND Man_Cod <> $man_cod_gui";
+		$row_dup_guia = $obBD_con1->fetch_assoc($obBD_con1->consulta($sql_dup_guia, $obBD_conexion->conexion));
+		$total_dup_guia = isset($row_dup_guia['total']) ? intval($row_dup_guia['total']) : 0;
+		if ($total_dup_guia > 0) {
+			throw new Exception('La guía ya existe para esta planta');
+		}
+
+		$datos = array(
+			'Man_Gui' => $man_gui_raw,
+			'where' => array('Man_Cod' => $man_cod_gui)
+		);
+		$obBD_con1->operacionobBD('manifiesto.update', $datos, $obBD_conexion);
+		$resp['success'] = true;
+		$resp['message'] = 'Número de guía actualizado correctamente';
+	} catch (Exception $e) {
+		$obBD_con1->rollBack_nomsn($obBD_conexion);
+		$resp['message'] = $e->getMessage();
+		$obBD_con1->echoJson($resp);
+		return;
+	}
+	$resp['success'] = $obBD_con1->fin_transaccion_nomsn($obBD_conexion);
+	if (!$resp['success']) {
+		$resp['message'] = $obBD_con1->MsgError;
 	}
 	$obBD_con1->echoJson($resp);
 }
@@ -1830,6 +1904,7 @@ if (isset($anularAnticipo)) {
 		var plantasSaldosModal = <?php echo json_encode($plantas_saldos_modal); ?>;
 		var hoy= <?php echo json_encode($hoy); ?>;	
 		var esPerfilLectura = <?php echo (isset($esPerfilLectura) && $esPerfilLectura) ? 'true' : 'false'; ?>;
+		var puedeModificarGuia = <?php echo !empty($puedeModificarGuia) ? 'true' : 'false'; ?>;
 	</script>
 	<style>
 		.pagination>li>a,
@@ -1865,6 +1940,17 @@ if (isset($anularAnticipo)) {
 		@keyframes exaReloadSpin {
 			from { transform: rotate(0deg); }
 			to { transform: rotate(360deg); }
+		}
+
+		#Man_Gui_Mod_Group.gui-mod-bloqueado .form-control {
+			background-color: #f2f2f2 !important;
+			color: #6c757d !important;
+			cursor: not-allowed;
+			box-shadow: none;
+		}
+		#Man_Gui_Mod_Group.gui-mod-bloqueado .input-group-addon.validate {
+			background-color: #f2f2f2;
+			cursor: not-allowed;
 		}
 
 		.pagination {
@@ -2482,30 +2568,30 @@ if (isset($anularAnticipo)) {
 
 						</div>
 						<div id="searchGridPager"></div>
-					</div>
-				</div>
-				<br>
-				<div>
-					<?php if (!(isset($esPerfilLectura) && $esPerfilLectura)) { ?>
-						<?php if( empty($plaSanciones[0]['Msa_Cod']) ) { 
-							$disabled_nuevo = '';
-							$title_nuevo = '';
-							$onclick_nuevo = 'abrirModalTurno();';
-							if ($saldo_total_insuficiente) {
-								$disabled_nuevo = 'disabled';
-								$title_nuevo = 'title="No se puede generar manifiesto: saldo total en cero o insuficiente (m&iacute;nimo: ' . number_format($pla_smi_saldo_min, 2, '.', ',') . ')"';
-								$onclick_nuevo = '';
-							}
-						?>
-							<button class="btn btn-sm btn-success" id="btnNuevo" type="button" onclick="<?php echo $onclick_nuevo; ?>" <?php echo $disabled_nuevo; ?> <?php echo $title_nuevo; ?>><i class="glyphicon glyphicon-plus"></i> Nuevo</button>
-						<?php } else { ?>
-							<button class="btn btn-sm btn-warning" id="btnNuevoSancion" type="button" onclick="$('#sancionPlantaDialog').dialog('open');" title="La planta tiene una sanción activa"><i class="glyphicon glyphicon-alert"></i> Nuevo</button>
-						<?php } ?>
-					<?php } ?>
-					<?php if ($mostrarBotonCertificado) { ?>
-						<button class="btn btn-sm btn-info" id="btnGenerarCertificado" type="button" onclick="abrirCertificadoModal();"><i class="glyphicon glyphicon-certificate"></i> Generar Certificado</button>
-					<?php } ?>
-				</div>
+						<br>
+						<div>
+							<?php if (!(isset($esPerfilLectura) && $esPerfilLectura)) { ?>
+								<?php if( empty($plaSanciones[0]['Msa_Cod']) ) { 
+									$disabled_nuevo = '';
+									$title_nuevo = '';
+									$onclick_nuevo = 'abrirModalTurno();';
+									if ($saldo_total_insuficiente) {
+										$disabled_nuevo = 'disabled';
+										$title_nuevo = 'title="No se puede generar manifiesto: saldo total en cero o insuficiente (m&iacute;nimo: ' . number_format($pla_smi_saldo_min, 2, '.', ',') . ')"';
+										$onclick_nuevo = '';
+									}
+								?>
+									<button class="btn btn-sm btn-success" id="btnNuevo" type="button" onclick="<?php echo $onclick_nuevo; ?>" <?php echo $disabled_nuevo; ?> <?php echo $title_nuevo; ?>><i class="glyphicon glyphicon-plus"></i> Nuevo</button>
+								<?php } else { ?>
+									<button class="btn btn-sm btn-warning" id="btnNuevoSancion" type="button" onclick="$('#sancionPlantaDialog').dialog('open');" title="La planta tiene una sanción activa"><i class="glyphicon glyphicon-alert"></i> Nuevo</button>
+								<?php } ?>
+							<?php } ?>
+							<?php if ($mostrarBotonCertificado) { ?>
+								<button class="btn btn-sm btn-info" id="btnGenerarCertificado" type="button" onclick="abrirCertificadoModal();"><i class="glyphicon glyphicon-certificate"></i> Generar Certificado</button>
+							<?php } ?>
+						</div>
+					</div>					
+				</div>								
 			</div>
 
 
@@ -2918,7 +3004,7 @@ if (isset($anularAnticipo)) {
 							<div class="col-sm-12">
 								<button class="btn btn-sm btn-inverse no" onclick="moveToMain()"><i class="glyphicon glyphicon-arrow-left"></i> Atras</button>
 								<?php if (!$saldo_total_insuficiente && !(isset($esPerfilLectura) && $esPerfilLectura)) { ?>
-									<button class="btn btn-sm btn-primary no" onclick="$('#manifiestoForm').formSubmit();"><i class="glyphicon glyphicon-floppy-disk"></i> Guardar</button>
+									<button type="button" id="btnGuardarManifiesto" class="btn btn-sm btn-primary no" onclick="$('#manifiestoForm').formSubmit();"><i class="glyphicon glyphicon-floppy-disk"></i> Guardar</button>
 								<?php } ?>
 							</div>
 						</div>
@@ -3307,6 +3393,40 @@ if (isset($anularAnticipo)) {
 		</form>
 	</div>
 
+	<!-- Modal para modificar número de guía desde el grid -->
+	<div id="modalModificarGuia" title="Modificar Número de Guía" style="display: none;">
+		<form id="modificarGuiaForm" class="form-horizontal normal">
+			<input type="hidden" id="Man_Cod_Gui_Mod" name="Man_Cod" />
+			<input type="hidden" id="Pla_Cod_Gui_Mod" name="Pla_Cod" />
+			<div class="alert alert-info" style="margin-bottom: 12px; padding: 10px 12px;">
+				<strong><i class="glyphicon glyphicon-info-sign"></i> Registro seleccionado</strong>
+				<div style="margin-top: 8px; font-size: 12px; line-height: 1.6;">
+					<div><strong>Cód. Int.:</strong> <span id="infoGuiManCod">-</span></div>
+					<div><strong>Nº Manifiesto:</strong> <span id="infoGuiManNum">-</span></div>
+					<div><strong>Cliente:</strong> <span id="infoGuiCliente">-</span></div>
+					<div><strong>Planta:</strong> <span id="infoGuiPlanta">-</span></div>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-xs-4 control-label label-xs required">No Guía:</label>
+				<div class="col-xs-8">
+					<div class="input-group input-group-xs" id="Man_Gui_Mod_Group">
+						<input type="text" class="form-control input-xs required" id="Man_Gui_Mod" name="Man_Gui" placeholder="000-000-000000000" maxlength="17" autocomplete="off" required>
+						<span class="input-group-addon validate"><i id="Man_Gui_Mod_Est"></i></span>
+					</div>
+				</div>
+			</div>
+			<div style="text-align: center; margin-top: 15px;">
+				<button type="button" id="btnGuardarModificarGuia" class="btn btn-sm btn-primary" onclick="guardarModificacionGuia();">
+					<i class="glyphicon glyphicon-floppy-disk"></i> Guardar
+				</button>
+				<button type="button" class="btn btn-sm btn-default" onclick="$('#modalModificarGuia').dialog('close');" style="margin-left: 10px;">
+					<i class="glyphicon glyphicon-remove"></i> Cancelar
+				</button>
+			</div>
+		</form>
+	</div>
+
 	<!-- Modal para Información del Manifiesto (Usuario Creador y Fecha de Creación) -->
 	<div id="infoManifiestoDialog" title="Información del Registro" style="display: none;">
 		<div style="padding: 12px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 6px;">
@@ -3547,7 +3667,7 @@ if (isset($anularAnticipo)) {
 		
 	</div>
 
-	<script src="../VALIDACIONES/man_val_manifiesto.js?a=324"></script>
+	<script src="../VALIDACIONES/man_val_manifiesto.js?a=331"></script>
 	<script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>
 	<script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=2"></script>
 	<script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>

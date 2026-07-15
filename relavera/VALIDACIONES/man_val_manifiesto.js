@@ -10,6 +10,13 @@ var perCodAct = 0,
 var turnoSeleccionado = null;
 var plantaSaldosSeleccionada = null;
 var gridManifiestoInicializado = false;
+var manGuiModValidacionSeq = 0;
+var manGuiModDebounceTimer = null;
+var manGuiModXHR = null;
+var manGuiModUltimaClave = '';
+var manGuiModUltimaValida = null;
+var manGuiModSuprimirEvento = false;
+var manGuiModOriginal = '';
 
 $(function () {
     $("#successDialog").createDialog({ width: 500, height: 200, icon: 'print' });
@@ -20,6 +27,7 @@ $(function () {
     $("#plantaDialog").createDialog({ width: 450, height: 230, icon: 'home' });
     $("#turnoDialog").createDialog({ width: 500, height: 520, icon: 'time' });
     $("#modalModificarTiempoLlegada").createDialog({ width: 450, height: 250, icon: 'time' });
+    $("#modalModificarGuia").createDialog({ width: 520, height: 340, icon: 'edit' });
     $("#infoManifiestoDialog").createDialog({ width: 380, height: 400, icon: 'info-sign' });
     $("#sancionPlantaDialog").createDialog({ width: 480, height: 380, icon: 'alert' });
     $("#modalSelectorPlantaSaldos").createDialog({ width: 900, height: 520, icon: 'home', autoOpen: false, modal: true });
@@ -28,8 +36,34 @@ $(function () {
     });
     $('.datepicker').createDatePickers({ checkAvailability: true, hideMsg: false }).mask('9999-99-99', { placeholder: '_' });
     $('#Man_Gui').mask('999-999-999999999', { placeholder: '_' });
-    $('#Man_Gui').on('keyup change blur', function () {
+    $('#Man_Gui_Mod').mask('999-999-999999999', { placeholder: '_' });
+    $('#Man_Gui').on('keyup change blur input', function () {
         validarManGui($(this).val());
+    });
+    setBtnGuardarManifiestoPorGuia(false, 'Ingrese y valide el número de guía');
+    $('#modificarGuiaForm').on('submit', function (e) {
+        e.preventDefault();
+        return false;
+    });
+    $('#Man_Gui_Mod').on('input keyup', function () {
+        programarValidarManGuiModal();
+    }).on('blur', function () {
+        if (manGuiModSuprimirEvento) {
+            return;
+        }
+        if (manGuiModDebounceTimer) {
+            clearTimeout(manGuiModDebounceTimer);
+            manGuiModDebounceTimer = null;
+            validarManGuiModal($(this).val());
+        }
+    }).on('keydown', function (e) {
+        if (e.which === 13 || e.keyCode === 13) {
+            e.preventDefault();
+            clearTimeout(manGuiModDebounceTimer);
+            manGuiModDebounceTimer = null;
+            validarManGuiModal($(this).val(), true);
+            return false;
+        }
     });
     $(document).on('click', '#btnRecargarChoferes', function () {
         var $btn = $(this);
@@ -196,6 +230,7 @@ function createGrid() {
         jsonReader: { root: "rows", id: "Man_Cod" },
         colModel: [
             { label: 'Cod. Int.', name: 'Man_Cod', key: true, width: 25, align: "center" },
+            { label: 'Pla_Cod', name: 'Pla_Cod', hidden: true },
             { label: 'Fecha', name: 'Man_Fec', width: 30, align: "center" },
             { label: 'Man_Est', name: 'Man_Est', hidden: true },
             { label: 'Usu_Cod', name: 'Usu_Cod', hidden: true },
@@ -296,8 +331,37 @@ function createGrid() {
             }
             $('.ui-pg-selbox option[value=10000]').text('Todos');
         }, footerrow: true, userDataOnFooter: true, headertitles: true, rowNum: 250, rowList: [250, 500, 1000, 2000, 10000], gridview: true, viewrecords: true
-    }, false, '#searchGridPager', { refresh: true, view: false }).gridButtonsAdd([
-        { caption: 'Exportar Excel', buttonicon: 'glyphicon glyphicon-download',
+    }, false, '#searchGridPager', { refresh: true, view: false }).gridButtonsAdd((function () {
+        var botonesGrid = [];
+        if (typeof puedeModificarGuia !== 'undefined' && puedeModificarGuia) {
+            botonesGrid.push({
+                caption: 'Modificar Guía',
+                buttonicon: 'glyphicon glyphicon-edit',
+                onClickButton: function () {
+                    if (typeof esPerfilLectura !== 'undefined' && esPerfilLectura) {
+                        $.alert('No tiene permisos para modificar manifiestos (Perfil Lectura).');
+                        return;
+                    }
+                    var rowId = grid.jqGrid('getGridParam', 'selrow');
+                    if (!rowId) {
+                        $.alert('Debe seleccionar un manifiesto del listado.');
+                        return;
+                    }
+                    var row = grid.jqGrid('getRowData', rowId);
+                    if (!row || !row.Man_Cod) {
+                        $.alert('No se pudo obtener el manifiesto seleccionado.');
+                        return;
+                    }
+                    if (row.Man_Est === 'I') {
+                        $.alert('No se puede modificar la guía de un manifiesto anulado.');
+                        return;
+                    }
+                    abrirModalModificarGuia(row);
+                }
+            });
+        }
+        botonesGrid.push({
+            caption: 'Exportar Excel', buttonicon: 'glyphicon glyphicon-download',
             onClickButton: function () {
                 grid.jqGrid('exportGridExcel', {
                     nombre: 'Manifiesto',
@@ -307,8 +371,11 @@ function createGrid() {
                     // removeCols: [1, 10]
                 });
             }
-        }
-    ]);
+        });
+        return botonesGrid;
+    })());
+
+    $('#searchGridPager table.navtable').find('td.ui-pg-button.ui-corner-all').unbind('mouseenter mouseleave').removeClass('ui-pg-button').addClass('btn btn-xs btn-success').find('.ui-pg-div span').removeClass('ui-icon').addClass('glyphicon');
 
     $('#searchGridPager table.navtable').find('td.ui-pg-button.ui-corner-all').unbind('mouseenter mouseleave').removeClass('ui-pg-button').addClass('btn btn-xs btn-success').find('.ui-pg-div span').removeClass('ui-icon').addClass('glyphicon');
 
@@ -441,6 +508,197 @@ function modificarTiempoLlegada(data) {
     }, 'json')
     .fail(function(error) {
         $.alert("Error de conexión con el servidor al modificar el tiempo de llegada.");
+    });
+}
+
+function claveManGuiMod(guiClean, plaCod, manCod) {
+    return String(plaCod) + '|' + String(manCod) + '|' + String(guiClean);
+}
+
+function programarValidarManGuiModal() {
+    if (manGuiModSuprimirEvento) {
+        return;
+    }
+    clearTimeout(manGuiModDebounceTimer);
+    var guiClean = $.trim($('#Man_Gui_Mod').val() || '').replace(/\D/g, '');
+    var delay = guiClean.length >= 15 ? 80 : 400;
+    manGuiModDebounceTimer = setTimeout(function () {
+        manGuiModDebounceTimer = null;
+        validarManGuiModal($('#Man_Gui_Mod').val());
+    }, delay);
+}
+
+function resetManGuiModValidacionCache() {
+    clearTimeout(manGuiModDebounceTimer);
+    manGuiModDebounceTimer = null;
+    if (manGuiModXHR && manGuiModXHR.abort) {
+        manGuiModXHR.abort();
+    }
+    manGuiModXHR = null;
+    manGuiModUltimaClave = '';
+    manGuiModUltimaValida = null;
+}
+
+function setManGuiModValidacionUI(validando) {
+    var $input = $('#Man_Gui_Mod');
+    var $group = $('#Man_Gui_Mod_Group');
+    var $btn = $('#btnGuardarModificarGuia');
+    $input.prop('disabled', !!validando);
+    $group.toggleClass('gui-mod-bloqueado', !!validando);
+    $btn.prop('disabled', !!validando);
+}
+
+function marcarManGuiModInvalida($estado, mensaje) {
+    manGuiModUltimaValida = false;
+    $estado.removeClass('fa fa-check fa-spinner fa-spin').addClass('fa fa-close').css('color', 'red').attr('title', mensaje || 'Guía no válida');
+    $('#btnGuardarModificarGuia').prop('disabled', true).attr('title', mensaje || 'Guía no disponible');
+}
+
+function abrirModalModificarGuia(row) {
+    manGuiModValidacionSeq++;
+    resetManGuiModValidacionCache();
+    manGuiModOriginal = $.trim(row.Man_Gui || '');
+    $('#modificarGuiaForm')[0].reset();
+    $('#Man_Gui_Mod_Est').removeClass('fa fa-check fa fa-close fa-spinner fa-spin').css('color', '').attr('title', '');
+    setManGuiModValidacionUI(false);
+    $('#Man_Cod_Gui_Mod').val(row.Man_Cod);
+    $('#Pla_Cod_Gui_Mod').val(row.Pla_Cod || '');
+    manGuiModSuprimirEvento = true;
+    $('#Man_Gui_Mod').val(row.Man_Gui || '');
+    manGuiModSuprimirEvento = false;
+    $('#infoGuiManCod').text(row.Man_Cod || '-');
+    $('#infoGuiManNum').text(row.ManNum || '-');
+    $('#infoGuiCliente').text(row.cliente || '-');
+    $('#infoGuiPlanta').text(row.Pla_Nom || '-');
+    $('#modalModificarGuia').dialog('open');
+    if ($.trim(row.Man_Gui || '') !== '') {
+        validarManGuiModal(row.Man_Gui, true);
+    }
+}
+
+function validarManGuiModal(manGui, forzar) {
+    var $estado = $('#Man_Gui_Mod_Est');
+    var gui = $.trim(manGui || '');
+    var guiClean = gui.replace(/\D/g, '');
+    var plaCod = $('#Pla_Cod_Gui_Mod').val();
+    var manCod = $('#Man_Cod_Gui_Mod').val() || 0;
+    var clave = claveManGuiMod(guiClean, plaCod, manCod);
+
+    if (!forzar && clave === manGuiModUltimaClave && manGuiModXHR) {
+        return false;
+    }
+    if (!forzar && clave === manGuiModUltimaClave && manGuiModUltimaValida !== null && !$estado.hasClass('fa-spinner') && manGuiModUltimaValida === true) {
+        return false;
+    }
+
+    manGuiModValidacionSeq++;
+    var seq = manGuiModValidacionSeq;
+
+    if (!gui || guiClean.length < 15) {
+        setManGuiModValidacionUI(false);
+        manGuiModUltimaClave = '';
+        manGuiModUltimaValida = null;
+        marcarManGuiModInvalida($estado, 'Complete la guía para validar');
+        return false;
+    }
+    if ($.isEmpty(plaCod)) {
+        setManGuiModValidacionUI(false);
+        manGuiModUltimaClave = '';
+        manGuiModUltimaValida = null;
+        marcarManGuiModInvalida($estado, 'No se encontró la planta para validar');
+        return false;
+    }
+
+    if (manGuiModXHR && manGuiModXHR.abort) {
+        manGuiModXHR.abort();
+        manGuiModXHR = null;
+    }
+
+    manGuiModUltimaClave = clave;
+    manGuiModUltimaValida = null;
+    setManGuiModValidacionUI(true);
+    $estado.removeClass('fa fa-check fa-close').addClass('fa fa-spinner fa-spin').css('color', '#337ab7').attr('title', 'Validando guía...');
+
+    manGuiModXHR = $.post('', { validarManGuiAjax: true, Pla_Cod: plaCod, Man_Cod: manCod, Man_Gui: gui }, function (r) {
+        if (seq !== manGuiModValidacionSeq) {
+            return;
+        }
+        setManGuiModValidacionUI(false);
+        if (r && r.success === true && r.valido === true) {
+            manGuiModUltimaValida = true;
+            $estado.removeClass('fa fa-close fa-spinner fa-spin').addClass('fa fa-check').css('color', 'green').attr('title', r.message || 'Guía disponible');
+            $('#btnGuardarModificarGuia').prop('disabled', false).removeAttr('title');
+        } else {
+            marcarManGuiModInvalida($estado, (r && r.message) ? r.message : 'Guía no válida');
+            $('#Man_Gui_Mod').focus();
+        }
+    }, 'json').fail(function (xhr, status) {
+        if (seq !== manGuiModValidacionSeq || status === 'abort') {
+            return;
+        }
+        setManGuiModValidacionUI(false);
+        marcarManGuiModInvalida($estado, 'No se pudo validar la guía');
+    }).always(function () {
+        manGuiModXHR = null;
+    });
+}
+
+function guardarModificacionGuia() {
+    var Man_Cod = $('#Man_Cod_Gui_Mod').val();
+    var Man_Gui = $.trim($('#Man_Gui_Mod').val() || '');
+    var guiClean = Man_Gui.replace(/\D/g, '');
+
+    if ($('#Man_Gui_Mod_Est').hasClass('fa-spinner')) {
+        $.alert('Espere mientras se valida la guía.');
+        return;
+    }
+    if (!Man_Cod) {
+        $.alert('Error: No se identificó el manifiesto.');
+        return;
+    }
+    if (!Man_Gui) {
+        $.alert('Ingrese el número de guía de remisión.');
+        $('#Man_Gui_Mod').focus();
+        return;
+    }
+    if (guiClean.length < 15) {
+        $.alert('Complete la Guía de Remisión (15 dígitos) antes de guardar.');
+        $('#Man_Gui_Mod').focus();
+        validarManGuiModal(Man_Gui);
+        return;
+    }
+    if ($('#Man_Gui_Mod_Est').hasClass('fa-close')) {
+        $.alert($('#Man_Gui_Mod_Est').attr('title') || 'La guía ingresada no es válida.');
+        return;
+    }
+
+    $.createDialogConfirm('¿Está seguro que desea modificar el número de guía del manifiesto seleccionado?',
+        { Man_Cod: Man_Cod, Man_Gui: Man_Gui },
+        function (data) {
+            modificarGuiaManifiesto(data);
+        }
+    );
+}
+
+function modificarGuiaManifiesto(data) {
+    setManGuiModValidacionUI(true);
+    $.post('', {
+        modificarManGuiAjax: true,
+        Man_Cod: data.Man_Cod,
+        Man_Gui: data.Man_Gui
+    }, function (r) {
+        setManGuiModValidacionUI(false);
+        if (r && r.success === true) {
+            $.alert(r.message || 'Número de guía actualizado correctamente', function () {
+                $('#modalModificarGuia').dialog('close');
+                $('#searchGrid').trigger('reloadGrid');
+            });
+        } else {
+            $.alert('Error al modificar la guía: ' + ((r && (r.message || r.error)) ? (r.message || r.error) : 'Error desconocido'));
+        }
+    }, 'json').fail(function () {
+        setManGuiModValidacionUI(false);
+        $.alert('Error de conexión con el servidor al modificar la guía.');
     });
 }
 
@@ -970,6 +1228,21 @@ function numeroManifiesto(num) {
         });
 }
 
+function setBtnGuardarManifiestoPorGuia(habilitar, title) {
+    var $btn = $('#btnGuardarManifiesto');
+    if (!$btn.length) {
+        return;
+    }
+    if (habilitar) {
+        $btn.prop('disabled', false).removeAttr('title');
+    } else {
+        $btn.prop('disabled', true).attr('title', title || 'Guía no disponible');
+    }
+}
+
+var manGuiValidacionXHR = null;
+var manGuiValidacionSeq = 0;
+
 function validarManGui(manGui) {
     var $estado = $("#Man_Gui_Est");
     var gui = $.trim(manGui || '');
@@ -977,23 +1250,50 @@ function validarManGui(manGui) {
     var plaCod = $('#Pla_Cod').val();
     var manCod = $('#Man_Cod').val() || 0;
 
+    manGuiValidacionSeq++;
+    var seq = manGuiValidacionSeq;
+
+    if (manGuiValidacionXHR && manGuiValidacionXHR.abort) {
+        manGuiValidacionXHR.abort();
+        manGuiValidacionXHR = null;
+    }
+
     if (!gui || guiClean.length < 15) {
-        $estado.removeClass("fa fa-check").addClass("fa fa-close").css("color", "red").attr('title', 'Complete la guía para validar');
+        $estado.removeClass("fa fa-check fa-spinner fa-spin").addClass("fa fa-close").css("color", "red").attr('title', 'Complete la guía para validar');
+        setBtnGuardarManifiestoPorGuia(false, 'Complete la guía de remisión (15 dígitos)');
         return false;
     }
     if ($.isEmpty(plaCod)) {
-        $estado.removeClass("fa fa-check").addClass("fa fa-close").css("color", "red").attr('title', 'No se encontró la planta para validar');
+        $estado.removeClass("fa fa-check fa-spinner fa-spin").addClass("fa fa-close").css("color", "red").attr('title', 'No se encontró la planta para validar');
+        setBtnGuardarManifiestoPorGuia(false, 'No se encontró la planta para validar la guía');
         return false;
     }
 
-    $.post('', { validarManGuiAjax: true, Pla_Cod: plaCod, Man_Cod: manCod, Man_Gui: gui }, function (r) {
-        if (r && r.success === true && r.valido === true) {
-            $estado.removeClass("fa fa-close").addClass("fa fa-check").css("color", "green").attr('title', r.message || 'Guía disponible');
-        } else {
-            $estado.removeClass("fa fa-check").addClass("fa fa-close").css("color", "red").attr('title', (r && r.message) ? r.message : 'Guía no válida');
+    $estado.removeClass("fa fa-check fa-close").addClass("fa fa-spinner fa-spin").css("color", "#337ab7").attr('title', 'Validando guía...');
+    setBtnGuardarManifiestoPorGuia(false, 'Validando guía...');
+
+    manGuiValidacionXHR = $.post('', { validarManGuiAjax: true, Pla_Cod: plaCod, Man_Cod: manCod, Man_Gui: gui }, function (r) {
+        if (seq !== manGuiValidacionSeq) {
+            return;
         }
-    }, 'json').fail(function () {
-        $estado.removeClass("fa fa-check").addClass("fa fa-close").css("color", "red").attr('title', 'No se pudo validar la guía');
+        if (r && r.success === true && r.valido === true) {
+            $estado.removeClass("fa fa-close fa-spinner fa-spin").addClass("fa fa-check").css("color", "green").attr('title', r.message || 'Guía disponible');
+            setBtnGuardarManifiestoPorGuia(true);
+        } else {
+            var msg = (r && r.message) ? r.message : 'Guía no disponible';
+            $estado.removeClass("fa fa-check fa-spinner fa-spin").addClass("fa fa-close").css("color", "red").attr('title', msg);
+            setBtnGuardarManifiestoPorGuia(false, msg);
+        }
+    }, 'json').fail(function (xhr, status) {
+        if (seq !== manGuiValidacionSeq || status === 'abort') {
+            return;
+        }
+        $estado.removeClass("fa fa-check fa-spinner fa-spin").addClass("fa fa-close").css("color", "red").attr('title', 'No se pudo validar la guía');
+        setBtnGuardarManifiestoPorGuia(false, 'No se pudo validar la guía');
+    }).always(function () {
+        if (seq === manGuiValidacionSeq) {
+            manGuiValidacionXHR = null;
+        }
     });
 }
 
@@ -1996,7 +2296,7 @@ function autocompletarPrefijoManGui() {
         if (!resp || resp.success !== true || $.isEmpty(resp.prefijo)) {
             return;
         }
-        $manGui.val(resp.prefijo + '-').trigger('input');
+        $manGui.val(resp.prefijo + '-').trigger('input').trigger('change');
     }, 'json');
 }
 
