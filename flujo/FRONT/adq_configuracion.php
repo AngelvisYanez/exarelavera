@@ -29,7 +29,9 @@ if (!$wf_mgr->verificarAccesoVentana('configuracion')) {
         isset($ajax_save_workflow) || isset($ajax_publish_workflow) || isset($ajax_load_workflow) || isset($ajax_get_department_users) ||
         isset($ajax_save_department_users) || isset($ajax_get_users_by_department) ||
         isset($ajax_save_depto_req) || isset($ajax_toggle_depto_req) || isset($ajax_get_depto_req) ||
-        isset($ajax_get_depto_users) || isset($ajax_save_depto_users) || isset($_GET['ajax_get_builder'])) {
+        isset($ajax_get_depto_users) || isset($ajax_save_depto_users) ||
+        isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']) ||
+        isset($_GET['ajax_get_builder'])) {
         $obBD_con1->echoJson(array('success' => false, 'message' => 'Acceso denegado. No tiene permisos para realizar esta acción.'));
         exit;
     } else {
@@ -432,6 +434,155 @@ if (isset($_GET['ajax_get_deptos']) || isset($_GET['ajax_get_depto_req']) || iss
     include('adq_departamentos.php');
     exit;
 }
+
+function adq_cfg_ensure_usu_wf_column($obBD_con1, $conexion) {
+    $row = $obBD_con1->getRowConsultaSql(
+        "SELECT COUNT(*) AS cnt
+         FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = 'usuarios'
+           AND COLUMN_NAME = 'Usu_Wf';",
+        $conexion
+    );
+    if (empty($row['cnt'])) {
+        $obBD_con1->grabarv_registros(
+            "ALTER TABLE usuarios
+             ADD COLUMN Usu_Wf CHAR(1) NOT NULL DEFAULT 'N'
+             COMMENT 'S=habilitado workflow, N=no habilitado' AFTER Usu_Est;",
+            $conexion
+        );
+    }
+}
+
+// --- ENDPOINTS AJAX: Usuarios Workflow ---
+if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf'])) {
+    $emp_id = isset($Ses_Emp_Cod) ? intval($Ses_Emp_Cod) : (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0);
+    adq_cfg_ensure_usu_wf_column($obBD_con1, $obBD_conexion);
+
+    if (isset($_GET['ajax_get_usuarios_wf'])) {
+        $usuarios = $obBD_con1->getArrayConsultaSql("
+            SELECT base.Usu_Cod,
+                   base.Prs_Cod,
+                   base.Usu_Ced,
+                   base.Nombres,
+                   base.Prs_Tel,
+                   base.Prs_Cel,
+                   base.Prs_Cor,
+                   base.Usu_Wf
+            FROM (
+                SELECT MIN(u.Usu_Cod) AS Usu_Cod,
+                       MIN(p.Prs_Cod) AS Prs_Cod,
+                       u.Usu_Ced,
+                       TRIM(CONCAT(IFNULL(p.Prs_Nom, ''), ' ', IFNULL(p.Prs_Ape, ''))) AS Nombres,
+                       MAX(IFNULL(p.Prs_Tel, '')) AS Prs_Tel,
+                       MAX(IFNULL(p.Prs_Cel, '')) AS Prs_Cel,
+                       MAX(IFNULL(p.Prs_Cor, '')) AS Prs_Cor,
+                       MAX(CASE WHEN IFNULL(u.Usu_Wf, 'N') = 'S' THEN 'S' ELSE 'N' END) AS Usu_Wf
+                FROM usuarios u
+                INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
+                INNER JOIN sucursal s ON s.Suc_Cod = u.Suc_Cod
+                WHERE s.Emp_Cod = $emp_id AND u.Usu_Est = 'A'
+                GROUP BY u.Usu_Ced, p.Prs_Nom, p.Prs_Ape
+            ) base
+            ORDER BY base.Nombres ASC;", $obBD_conexion);
+        if ($usuarios === false || $usuarios === null) {
+            $usuarios = array();
+        }
+        foreach ($usuarios as &$u) {
+            $tel = trim(isset($u['Prs_Tel']) ? $u['Prs_Tel'] : '');
+            if ($tel === '' && !empty($u['Prs_Cel'])) {
+                $tel = trim($u['Prs_Cel']);
+            }
+            $u['Telefono'] = $tel;
+            $u['Correo'] = trim(isset($u['Prs_Cor']) ? $u['Prs_Cor'] : '');
+            $u['Usu_Wf'] = (isset($u['Usu_Wf']) && strtoupper($u['Usu_Wf']) === 'S') ? 'S' : 'N';
+        }
+        unset($u);
+        adq_cfg_utf8_deep($usuarios);
+        $obBD_con1->echoJson(array('success' => true, 'usuarios' => $usuarios));
+        exit;
+    }
+
+    if (isset($_POST['ajax_save_usuario_wf'])) {
+        $usu_cod = intval(isset($_POST['Usu_Cod']) ? $_POST['Usu_Cod'] : 0);
+        $prs_cod = intval(isset($_POST['Prs_Cod']) ? $_POST['Prs_Cod'] : 0);
+        $usu_ced = trim(isset($_POST['Usu_Ced']) ? $_POST['Usu_Ced'] : '');
+        $telefono = trim(isset($_POST['Telefono']) ? $_POST['Telefono'] : '');
+        $correo = trim(isset($_POST['Correo']) ? $_POST['Correo'] : '');
+        $usu_wf = (!empty($_POST['Usu_Wf']) && strtoupper($_POST['Usu_Wf']) === 'S') ? 'S' : 'N';
+
+        if ($usu_cod <= 0 || $prs_cod <= 0) {
+            $obBD_con1->echoJson(array('success' => false, 'message' => 'Usuario invalido.'));
+            exit;
+        }
+        if ($telefono === '' || $correo === '') {
+            $obBD_con1->echoJson(array('success' => false, 'message' => 'Debe ingresar telefono y correo para registrar.'));
+            exit;
+        }
+        if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+            $obBD_con1->echoJson(array('success' => false, 'message' => 'El correo electronico no es valido.'));
+            exit;
+        }
+
+        $chk = $obBD_con1->getRowConsultaSql("
+            SELECT u.Usu_Cod, u.Usu_Ced, u.Prs_Cod
+            FROM usuarios u
+            INNER JOIN sucursal s ON s.Suc_Cod = u.Suc_Cod
+            WHERE u.Usu_Cod = $usu_cod AND s.Emp_Cod = $emp_id AND u.Usu_Est = 'A'
+            LIMIT 1;", $obBD_conexion);
+        if (empty($chk)) {
+            $obBD_con1->echoJson(array('success' => false, 'message' => 'El usuario no pertenece a esta empresa.'));
+            exit;
+        }
+        if ($usu_ced === '') {
+            $usu_ced = isset($chk['Usu_Ced']) ? $chk['Usu_Ced'] : '';
+        }
+        $prs_cod = !empty($chk['Prs_Cod']) ? intval($chk['Prs_Cod']) : $prs_cod;
+
+        $tel_esc = mysqli_real_escape_string($obBD_conexion->conexion, $telefono);
+        $cor_esc = mysqli_real_escape_string($obBD_conexion->conexion, $correo);
+        $ced_esc = mysqli_real_escape_string($obBD_conexion->conexion, $usu_ced);
+
+        try {
+            $ok_prs = $obBD_con1->grabarv_registros(
+                "UPDATE persona
+                 SET Prs_Tel = '$tel_esc', Prs_Cor = '$cor_esc'
+                 WHERE Prs_Cod = $prs_cod;",
+                $obBD_conexion
+            );
+            if (!$ok_prs) {
+                throw new Exception('No se pudo actualizar los datos de persona.');
+            }
+
+            if ($ced_esc !== '') {
+                $ok_usu = $obBD_con1->grabarv_registros(
+                    "UPDATE usuarios u
+                     INNER JOIN sucursal s ON s.Suc_Cod = u.Suc_Cod
+                     SET u.Usu_Wf = '$usu_wf'
+                     WHERE s.Emp_Cod = $emp_id AND u.Usu_Est = 'A' AND u.Usu_Ced = '$ced_esc';",
+                    $obBD_conexion
+                );
+            } else {
+                $ok_usu = $obBD_con1->grabarv_registros(
+                    "UPDATE usuarios SET Usu_Wf = '$usu_wf' WHERE Usu_Cod = $usu_cod;",
+                    $obBD_conexion
+                );
+            }
+            if (!$ok_usu) {
+                throw new Exception('No se pudo actualizar el estado del usuario en workflow.');
+            }
+
+            $obBD_con1->echoJson(array(
+                'success' => true,
+                'message' => 'Usuario registrado correctamente.',
+                'Usu_Wf' => $usu_wf
+            ));
+        } catch (Exception $e) {
+            $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
+        }
+        exit;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es" class="exa-ui-fill-root">
@@ -481,6 +632,69 @@ if (isset($_GET['ajax_get_deptos']) || isset($_GET['ajax_get_depto_req']) || iss
             flex: 0 0 auto;
             white-space: nowrap;
         }
+        .adq-usuarios-toolbar {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .adq-usuarios-filters {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .adq-usuarios-filters .form-group {
+            margin: 0;
+            min-width: 180px;
+            flex: 1 1 180px;
+            max-width: 280px;
+        }
+        .adq-usuarios-filters .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #475569;
+        }
+        .adq-usuarios-filters .form-control {
+            height: 34px;
+            font-size: 13px;
+        }
+        .adq-usuarios-filters .adq-usuarios-filter-actions {
+            display: flex;
+            gap: 8px;
+            flex: 0 0 auto;
+            padding-bottom: 1px;
+        }
+        .adq-usuarios-table-wrap {
+            max-height: calc(100vh - 300px);
+            overflow: auto;
+        }
+        #tblUsuariosWf input.form-control {
+            height: 32px;
+            font-size: 12px;
+            padding: 4px 8px;
+        }
+        #tblUsuariosWf .adq-usu-estado-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        #tblUsuariosWf .adq-usu-estado-lbl.is-on {
+            color: #15803d;
+        }
+        #tblUsuariosWf .adq-usu-estado-lbl.is-off {
+            color: #64748b;
+        }
     </style>
 </head>
 <body class="exa-ui-fill-root">
@@ -499,6 +713,9 @@ if (isset($_GET['ajax_get_deptos']) || isset($_GET['ajax_get_depto_req']) || iss
                     </li>
                     <li role="presentation">
                         <a href="#deptos-panel" id="deptos-tab" role="tab" data-toggle="tab" onclick="cargarDepartamentos()"><i class="bi bi-building"></i> Departamentos</a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#usuarios-panel" id="usuarios-tab" role="tab" data-toggle="tab" onclick="cargarUsuariosWf()"><i class="bi bi-people"></i> Usuarios</a>
                     </li>
                 </ul>
 
@@ -527,6 +744,50 @@ if (isset($_GET['ajax_get_deptos']) || isset($_GET['ajax_get_depto_req']) || iss
                                 <i class="glyphicon glyphicon-refresh glyphicon-spin" style="font-size:24px;"></i>
                                 <div>Cargando departamentos...</div>
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="usuarios-panel" role="tabpanel">
+                        <div class="adq-usuarios-toolbar">
+                            <div>
+                                <h5 class="adq-section-header" style="margin:0;border:none;padding:0;"><i class="bi bi-people"></i> Usuarios del sistema</h5>
+                                <p class="text-muted small" style="margin:6px 0 0;">Configure telefono, correo y habilite el usuario para workflow (<strong>Usu_Wf = S</strong>). Telefono y correo se guardan en <strong>persona</strong>.</p>
+                            </div>
+                            <button type="button" class="btn btn-default btn-sm" onclick="cargarUsuariosWf()"><i class="bi bi-arrow-clockwise"></i> Actualizar</button>
+                        </div>
+                        <div class="adq-usuarios-filters">
+                            <div class="form-group">
+                                <label for="txtFiltroUsuNombres">Nombres</label>
+                                <input type="text" class="form-control" id="txtFiltroUsuNombres" placeholder="Buscar por nombres..." autocomplete="off">
+                            </div>
+                            <div class="form-group">
+                                <label for="txtFiltroUsuCedula">Cedula</label>
+                                <input type="text" class="form-control" id="txtFiltroUsuCedula" placeholder="Buscar por cedula..." autocomplete="off">
+                            </div>
+                            <div class="adq-usuarios-filter-actions">
+                                <button type="button" class="btn btn-primary btn-sm" id="btnFiltrarUsuariosWf"><i class="bi bi-funnel"></i> Filtrar</button>
+                                <button type="button" class="btn btn-default btn-sm" id="btnLimpiarFiltroUsuariosWf"><i class="bi bi-x-circle"></i> Limpiar</button>
+                            </div>
+                        </div>
+                        <div id="adqUsuariosMsg" style="display:none;"></div>
+                        <div class="exa-adq-table-wrap adq-usuarios-table-wrap">
+                            <table class="table table-bordered exa-adq-table" id="tblUsuariosWf">
+                                <thead>
+                                    <tr>
+                                        <th>Nombres</th>
+                                        <th style="width:120px;">Cedula</th>
+                                        <th style="width:140px;">Telefono</th>
+                                        <th style="width:220px;">Email</th>
+                                        <th style="width:100px;">Estado</th>
+                                        <th style="width:120px;">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tblUsuariosWfBody">
+                                    <tr class="text-center">
+                                        <td colspan="6" class="text-muted">Seleccione el tab Usuarios para cargar el listado.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -1032,9 +1293,190 @@ if (isset($_GET['ajax_get_deptos']) || isset($_GET['ajax_get_depto_req']) || iss
             });
         }
 
+        let usuariosWfLoaded = false;
+        let usuariosWfCache = [];
+
+        function msgUsuariosWf(tipo, mensaje) {
+            const $box = $('#adqUsuariosMsg');
+            $box.removeClass('alert-success alert-danger alert-warning alert-info')
+                .addClass('alert alert-' + tipo)
+                .html(mensaje)
+                .show();
+            setTimeout(function() { $box.fadeOut(200); }, 4000);
+        }
+
+        function escUsuariosWf(text) {
+            return String(text == null ? '' : text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function actualizarLblEstadoUsu($row) {
+            const activo = $row.find('.chk-usu-wf').is(':checked');
+            const $lbl = $row.find('.adq-usu-estado-lbl');
+            $lbl.text(activo ? 'ACTIVO' : 'NO ACTIVO')
+                .toggleClass('is-on', activo)
+                .toggleClass('is-off', !activo);
+        }
+
+        function filtrarUsuariosWf() {
+            const nom = $.trim($('#txtFiltroUsuNombres').val() || '').toLowerCase();
+            const ced = $.trim($('#txtFiltroUsuCedula').val() || '').toLowerCase();
+            let lista = usuariosWfCache.slice();
+            if (nom !== '') {
+                lista = lista.filter(function(u) {
+                    return String(u.Nombres || '').toLowerCase().indexOf(nom) !== -1;
+                });
+            }
+            if (ced !== '') {
+                lista = lista.filter(function(u) {
+                    return String(u.Usu_Ced || '').toLowerCase().indexOf(ced) !== -1;
+                });
+            }
+            renderUsuariosWf(lista, nom !== '' || ced !== '');
+        }
+
+        function renderUsuariosWf(usuarios, esFiltro) {
+            const $tb = $('#tblUsuariosWfBody').empty();
+            if (!usuarios || !usuarios.length) {
+                const msg = esFiltro
+                    ? 'No se encontraron usuarios con los filtros indicados.'
+                    : 'No hay usuarios activos en esta empresa.';
+                $tb.append('<tr class="text-center"><td colspan="6" class="text-muted">' + msg + '</td></tr>');
+                return;
+            }
+            usuarios.forEach(function(u) {
+                const usuCod = parseInt(u.Usu_Cod, 10) || 0;
+                const prsCod = parseInt(u.Prs_Cod, 10) || 0;
+                const activo = String(u.Usu_Wf || 'N').toUpperCase() === 'S';
+                const tel = u.Telefono || u.Prs_Tel || '';
+                const correo = u.Correo || u.Prs_Cor || '';
+                const $tr = $('<tr class="adq-usu-row">')
+                    .attr('data-usu-cod', usuCod)
+                    .attr('data-prs-cod', prsCod)
+                    .attr('data-usu-ced', u.Usu_Ced || '');
+                $tr.append($('<td class="text-start">').text(u.Nombres || ''));
+                $tr.append($('<td>').text(u.Usu_Ced || ''));
+                $tr.append(
+                    $('<td>').append(
+                        $('<input type="text" class="form-control input-usu-tel" maxlength="20" placeholder="Telefono">').val(tel)
+                    )
+                );
+                $tr.append(
+                    $('<td>').append(
+                        $('<input type="email" class="form-control input-usu-cor" maxlength="120" placeholder="correo@empresa.com">').val(correo)
+                    )
+                );
+                $tr.append(
+                    $('<td class="text-center">').append(
+                        $('<label class="adq-usu-estado-wrap">')
+                            .append($('<input type="checkbox" class="chk-usu-wf">').prop('checked', activo))
+                            .append($('<span class="adq-usu-estado-lbl">'))
+                    )
+                );
+                $tr.append(
+                    $('<td class="text-center">').append(
+                        $('<button type="button" class="btn btn-sm btn-primary btn-registrar-usu-wf">')
+                            .html('<i class="bi bi-save"></i> Actualizar')
+                    )
+                );
+                actualizarLblEstadoUsu($tr);
+                $tb.append($tr);
+            });
+        }
+
+        function cargarUsuariosWf() {
+            const $tb = $('#tblUsuariosWfBody');
+            $tb.html('<tr class="text-center"><td colspan="6" class="text-muted"><i class="glyphicon glyphicon-refresh glyphicon-spin"></i> Cargando usuarios...</td></tr>');
+            $.getJSON('adq_configuracion.php', { ajax_get_usuarios_wf: 1 }, function(res) {
+                if (!res.success) {
+                    $tb.html('<tr class="text-center"><td colspan="6" class="text-danger">' + escUsuariosWf(res.message || 'Error al cargar') + '</td></tr>');
+                    return;
+                }
+                usuariosWfLoaded = true;
+                usuariosWfCache = res.usuarios || [];
+                filtrarUsuariosWf();
+            }).fail(function() {
+                usuariosWfCache = [];
+                $tb.html('<tr class="text-center"><td colspan="6" class="text-danger">Error de red al cargar usuarios.</td></tr>');
+            });
+        }
+
+        function registrarUsuarioWf($row) {
+            const usuCod = parseInt($row.data('usu-cod'), 10) || 0;
+            const prsCod = parseInt($row.data('prs-cod'), 10) || 0;
+            const usuCed = String($row.data('usu-ced') || '');
+            const telefono = $.trim($row.find('.input-usu-tel').val() || '');
+            const correo = $.trim($row.find('.input-usu-cor').val() || '');
+            const activo = $row.find('.chk-usu-wf').is(':checked');
+
+            if (!usuCod || !prsCod) {
+                msgUsuariosWf('danger', 'Usuario invalido.');
+                return;
+            }
+            if (telefono === '' || correo === '') {
+                msgUsuariosWf('danger', 'Debe ingresar telefono y correo para registrar.');
+                $row.find(telefono === '' ? '.input-usu-tel' : '.input-usu-cor').focus();
+                return;
+            }
+            const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
+            if (!emailOk) {
+                msgUsuariosWf('danger', 'El correo electronico no es valido.');
+                $row.find('.input-usu-cor').focus();
+                return;
+            }
+
+            const $btn = $row.find('.btn-registrar-usu-wf');
+            const htmlOriginal = $btn.html();
+            $btn.prop('disabled', true).html('<i class="glyphicon glyphicon-refresh glyphicon-spin"></i>');
+
+            $.post('adq_configuracion.php', {
+                ajax_save_usuario_wf: 1,
+                Usu_Cod: usuCod,
+                Prs_Cod: prsCod,
+                Usu_Ced: usuCed,
+                Telefono: telefono,
+                Correo: correo,
+                Usu_Wf: activo ? 'S' : 'N'
+            }, function(res) {
+                if (res.success) {
+                    msgUsuariosWf('success', res.message || 'Usuario registrado correctamente.');
+                    actualizarLblEstadoUsu($row);
+                } else {
+                    msgUsuariosWf('danger', res.message || 'No se pudo registrar el usuario.');
+                }
+            }, 'json').fail(function() {
+                msgUsuariosWf('danger', 'Error de red al registrar el usuario.');
+            }).always(function() {
+                $btn.prop('disabled', false).html(htmlOriginal);
+            });
+        }
+
         $(document).ready(function() {
             $('#btnGuardarUsuariosDepto').on('click', guardarUsuariosDepto);
             $('#txtBuscarUsuarioDepto').on('keyup', filtrarUsuariosDepto);
+
+            $(document).on('change', '#tblUsuariosWf .chk-usu-wf', function() {
+                actualizarLblEstadoUsu($(this).closest('tr'));
+            });
+            $(document).on('click', '#tblUsuariosWf .btn-registrar-usu-wf', function() {
+                registrarUsuarioWf($(this).closest('tr'));
+            });
+            $('#btnFiltrarUsuariosWf').on('click', filtrarUsuariosWf);
+            $('#btnLimpiarFiltroUsuariosWf').on('click', function() {
+                $('#txtFiltroUsuNombres').val('');
+                $('#txtFiltroUsuCedula').val('');
+                filtrarUsuariosWf();
+            });
+            $('#txtFiltroUsuNombres, #txtFiltroUsuCedula').on('keydown', function(e) {
+                if (e.keyCode === 13) {
+                    e.preventDefault();
+                    filtrarUsuariosWf();
+                }
+            });
 
             $(document).on('click', '.btn-abrir-depto-usuarios', function(e) {
                 e.preventDefault();
@@ -1052,6 +1494,9 @@ if (isset($_GET['ajax_get_deptos']) || isset($_GET['ajax_get_depto_req']) || iss
             } else if (tab === 'departamentos') {
                 $('a[href="#deptos-panel"]').tab('show');
                 cargarDepartamentos();
+            } else if (tab === 'usuarios') {
+                $('a[href="#usuarios-panel"]').tab('show');
+                cargarUsuariosWf();
             } else if (tab === 'tipos') {
                 $('a[href="#tipos-panel"]').tab('show');
                 cargarTiposConfiguracion();
