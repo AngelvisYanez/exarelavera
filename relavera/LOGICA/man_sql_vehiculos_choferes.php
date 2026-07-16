@@ -34,14 +34,14 @@ function sentencias_vehiculos_choferes($id, $Par_Sql)
                         FROM chofer
                         INNER JOIN persona ON persona.Prs_Cod = chofer.Prs_Cod
                         WHERE chofer.Emp_Cod = '$Par_Sql[0]' 
-                          AND chofer.Cho_Est = 'A' AND IFNULL(chofer.Cho_Tip, '') != 'CM' $search";
+                          AND chofer.Cho_Est = 'A' AND IFNULL(chofer.Cho_Tip, '') = 'OP' $search";
             } else {
                 $sql = "SELECT chofer.*, persona.Prs_Cod, persona.Prs_Nom, persona.Prs_Ape, persona.Prs_Ced,
                                CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape) as nombre
                         FROM chofer
                         INNER JOIN persona ON persona.Prs_Cod = chofer.Prs_Cod
                         WHERE chofer.Emp_Cod = '$Par_Sql[0]' 
-                          AND chofer.Cho_Est = 'A' AND IFNULL(chofer.Cho_Tip, '') != 'CM' $search
+                          AND chofer.Cho_Est = 'A' AND IFNULL(chofer.Cho_Tip, '') = 'OP' $search
                         GROUP BY chofer.Prs_Cod
                         ORDER BY persona.Prs_Ape ASC, persona.Prs_Nom ASC " . $Par_Sql['limits'];
             }
@@ -92,14 +92,14 @@ function sentencias_vehiculos_choferes($id, $Par_Sql)
 
         case 6:
             // INSERT Chofer
-            $sql = "INSERT INTO chofer (Prs_Cod, Emp_Cod, Cho_Tli, Cho_Cli, Cho_Tel, Cho_Tsa, Cho_Mae, Cho_Est)
-                    VALUES ('$Par_Sql[0]', '$Par_Sql[1]', '$Par_Sql[2]', '$Par_Sql[3]', '$Par_Sql[4]', '$Par_Sql[5]', '', 'A')";
+            $sql = "INSERT INTO chofer (Prs_Cod, Emp_Cod, Cho_Tli, Cho_Cli, Cho_Tel, Cho_Tsa, Cho_Mae, Cho_Est, Cho_Tip)
+                    VALUES ('$Par_Sql[0]', '$Par_Sql[1]', '$Par_Sql[2]', '$Par_Sql[3]', '$Par_Sql[4]', '$Par_Sql[5]', '', 'A', 'OP')";
             break;
 
         case 7:
             // UPDATE Chofer
             $sql = "UPDATE chofer 
-                    SET Cho_Tli = '$Par_Sql[1]', Cho_Cli = '$Par_Sql[2]', Cho_Tel = '$Par_Sql[3]', Cho_Tsa = '$Par_Sql[4]'
+                    SET Cho_Tli = '$Par_Sql[1]', Cho_Cli = '$Par_Sql[2]', Cho_Tel = '$Par_Sql[3]', Cho_Tsa = '$Par_Sql[4]', Cho_Tip = 'OP'
                     WHERE Cho_Cod = '$Par_Sql[0]'";
             break;
 
