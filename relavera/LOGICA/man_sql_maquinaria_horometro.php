@@ -19,7 +19,7 @@ function sentencias_maquinaria_horometro($id, $Par_Sql)
             $sql = "SELECT MIN(c.Cho_Cod) as Cho_Cod, CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) as nombre, p.Prs_Ced 
                     FROM chofer c 
                     INNER JOIN persona p ON p.Prs_Cod = c.Prs_Cod 
-                    WHERE c.Cho_Est = 'A' AND c.Emp_Cod = " . (int)$Par_Sql['Emp_Cod'] . " AND (c.Cho_Tip != 'CM' OR c.Cho_Tip IS NULL)
+                    WHERE c.Cho_Est = 'A' AND c.Emp_Cod = " . (int)$Par_Sql['Emp_Cod'] . " AND c.Cho_Tip = 'OP'
                     GROUP BY p.Prs_Cod, p.Prs_Nom, p.Prs_Ape, p.Prs_Ced
                     ORDER BY p.Prs_Ape ASC, p.Prs_Nom ASC";
             break;
@@ -99,8 +99,8 @@ function sentencias_maquinaria_horometro($id, $Par_Sql)
 
         case 4:
             // INSERT Lectura de Horómetro (Inicial)
-            $sql = "INSERT INTO maquinaria_horometro (Usu_Cod, Veh_Cod, Cho_Cod, Hor_Fec, Hor_Ini, Hor_Fin, Hor_Set, Hor_Obs, Hor_Hini, Hor_Img_Ini, Hor_Hfin, Hor_Img_Fin, Hor_Est)
-                    VALUES (" . (int)$Par_Sql[0] . ", " . (int)$Par_Sql[1] . ", " . (int)$Par_Sql[2] . ", '" . $Par_Sql[3] . "', " . (float)$Par_Sql[4] . ", " . (float)$Par_Sql[5] . ", '" . addslashes($Par_Sql[6]) . "', '" . addslashes($Par_Sql[7]) . "', '" . $Par_Sql[8] . "', '" . addslashes($Par_Sql[9]) . "', '" . $Par_Sql[10] . "', '" . addslashes($Par_Sql[11]) . "', 'P')";
+            $sql = "INSERT INTO maquinaria_horometro (Usu_Cod, Veh_Cod, Cho_Cod, Hor_Fec, Hor_Ini, Hor_Fin, Hor_Set, Hor_Obs, Hor_Hini, Hor_Img_Ini, Hor_Hfin, Hor_Img_Fin, Hor_Est, Hor_Cal)
+                    VALUES (" . (int)$Par_Sql[0] . ", " . (int)$Par_Sql[1] . ", " . (int)$Par_Sql[2] . ", '" . $Par_Sql[3] . "', " . (float)$Par_Sql[4] . ", " . (float)$Par_Sql[5] . ", '" . addslashes($Par_Sql[6]) . "', '" . addslashes($Par_Sql[7]) . "', '" . $Par_Sql[8] . "', '" . addslashes($Par_Sql[9]) . "', '" . $Par_Sql[10] . "', '" . addslashes($Par_Sql[11]) . "', 'P', IF(" . (float)$Par_Sql[5] . " > 0, " . (float)$Par_Sql[5] . " - " . (float)$Par_Sql[4] . ", NULL))";
             break;
 
         case 5:
@@ -133,7 +133,8 @@ function sentencias_maquinaria_horometro($id, $Par_Sql)
                         Hor_Obs = '" . addslashes($Par_Sql[5]) . "',
                         Hor_Img_Ini = IF('" . addslashes($Par_Sql[6]) . "' != '', '" . addslashes($Par_Sql[6]) . "', Hor_Img_Ini),
                         Hor_Img_Fin = IF('" . addslashes($Par_Sql[7]) . "' != '', '" . addslashes($Par_Sql[7]) . "', Hor_Img_Fin),
-                        Hor_Est = IF(" . (float)$Par_Sql[2] . " > 0, 'F', Hor_Est)
+                        Hor_Est = IF(" . (float)$Par_Sql[2] . " > 0, 'F', Hor_Est),
+                        Hor_Cal = IF(" . (float)$Par_Sql[2] . " > 0, " . (float)$Par_Sql[2] . " - " . (float)$Par_Sql[1] . ", NULL)
                     WHERE Hor_Cod = " . (int)$Par_Sql[0];
             break;
 
