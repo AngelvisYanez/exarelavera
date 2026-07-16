@@ -37,7 +37,24 @@ if($total_rs_organizado_dos > 0)
 			}//FIn del while($v2=$obBD_con1->fetch_array($rs_procesos))
 		}//FIn del if($total_rs_procesos > 0)
 	}//Fin del while($v3=mysqli_fetch_array($rs_organizado_dos))
-}//Fin del if($total_rs_organizado_dos > 0)	
+}//Fin del if($total_rs_organizado_dos > 0)
+else
+{
+	$rs_procesos_directo = $obBD_con1->consulta(sentencias_adm(18, $obBD_con1->parametros(trim($v0["Org_Cod"]).'*'.trim(substr($mperf,1,count($mperf)-3)).'*P')), $obBD_conexion->conexion);
+	$total_rs_procesos_directo = $obBD_con1->numregistros();
+
+	if($total_rs_procesos_directo > 0)
+	{
+		while($v2=$obBD_con1->fetch_array($rs_procesos_directo))
+		{
+			$band=" ".$v2["Pcs_Lin"];
+			$url=$v2["Rut_Des"].$v2["Pcs_Nom"];
+			$icon2=$v2["Pcs_Img"];
+			$expandedIcon='';
+			$node1_1_3 = &$node1[$c]->addItem(new HTML_TreeNode(array('text' => $band, 'link' => $url, 'icon' => $icon2, 'expandedIcon' => $expandedIcon)));
+		}
+	}
+}
 /********************************************************************/
 /* ESTE CONTROL ES EN CASO DE EXISTIR SOLO Y UNCIAMENTE DOS NIVELES */
 /********************************************************************/

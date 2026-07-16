@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRI Scraper - Descarga Masiva</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+        
+        .header { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-bottom: 1px solid #334155; padding: 20px 32px; display: flex; align-items: center; gap: 16px; }
+        .header h1 { font-size: 24px; font-weight: 700; color: #f8fafc; }
+        .header .badge { background: #22c55e; color: #000; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 32px; }
+        
+        .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+        .card h2 { font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #f1f5f9; }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 13px; font-weight: 500; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+        .form-group input, .form-group select { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 10px 14px; color: #f1f5f9; font-size: 14px; outline: none; transition: border-color 0.2s; }
+        .form-group input:focus, .form-group select:focus { border-color: #3b82f6; }
+        .form-group select { cursor: pointer; }
+        
+        .btn { padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+        .btn-primary { background: #3b82f6; color: #fff; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-danger { background: #ef4444; color: #fff; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-sm { padding: 6px 14px; font-size: 12px; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .actions { display: flex; gap: 12px; margin-top: 16px; }
+        
+        .jobs-list { display: flex; flex-direction: column; gap: 12px; }
+        .job-card { background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 16px 20px; display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; transition: border-color 0.2s; }
+        .job-card:hover { border-color: #475569; }
+        
+        .status-badge { padding: 4px 12px; border-radius: 9999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+        .status-pending { background: #854d0e33; color: #fbbf24; border: 1px solid #854d0e; }
+        .status-running { background: #1d4ed833; color: #60a5fa; border: 1px solid #1d4ed8; animation: pulse 2s infinite; }
+        .status-completed { background: #16653433; color: #4ade80; border: 1px solid #166534; }
+        .status-failed { background: #991b1b33; color: #f87171; border: 1px solid #991b1b; }
+        .status-cancelled { background: #374151; color: #9ca3af; border: 1px solid #4b5563; }
+        
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        
+        .job-info { display: flex; flex-direction: column; gap: 4px; }
+        .job-info .ruc { font-weight: 600; font-size: 15px; color: #f1f5f9; }
+        .job-info .dates { font-size: 13px; color: #64748b; }
+        .job-info .progress { font-size: 13px; color: #94a3b8; margin-top: 4px; }
+        
+        .job-stats { display: flex; gap: 16px; align-items: center; }
+        .stat { text-align: center; }
+        .stat .value { font-size: 20px; font-weight: 700; color: #f1f5f9; }
+        .stat .label { font-size: 11px; color: #64748b; text-transform: uppercase; }
+        
+        .job-actions { display: flex; gap: 8px; }
+        
+        .progress-bar { width: 100%; height: 4px; background: #334155; border-radius: 2px; overflow: hidden; margin-top: 8px; }
+        .progress-bar .fill { height: 100%; background: #3b82f6; border-radius: 2px; transition: width 0.3s; }
+        
+        .empty-state { text-align: center; padding: 48px; color: #64748b; }
+        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+        .empty-state p { font-size: 14px; }
+        
+        .files-panel { background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 16px; margin-top: 12px; display: none; }
+        .files-panel.visible { display: block; }
+        .files-panel h3 { font-size: 14px; margin-bottom: 12px; color: #94a3b8; }
+        .file-list { display: flex; flex-direction: column; gap: 6px; max-height: 300px; overflow-y: auto; }
+        .file-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #1e293b; border-radius: 6px; font-size: 13px; }
+        .file-item .name { color: #e2e8f0; font-family: monospace; }
+        .file-item .size { color: #64748b; }
+        .file-item a { color: #3b82f6; text-decoration: none; font-size: 12px; }
+        .file-item a:hover { text-decoration: underline; }
+        
+        .toast { position: fixed; bottom: 24px; right: 24px; background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 12px 20px; font-size: 14px; z-index: 1000; transform: translateY(100px); opacity: 0; transition: all 0.3s; }
+        .toast.visible { transform: translateY(0); opacity: 1; }
+        .toast.success { border-color: #22c55e; color: #4ade80; }
+        .toast.error { border-color: #ef4444; color: #f87171; }
+        
+        .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #3b82f6; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 6px; vertical-align: middle; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>SRI Scraper</h1>
+    <span class="badge">Descarga Masiva</span>
+</div>
+
+<div class="container">
+    <!-- Formulario de nuevo job -->
+    <div class="card">
+        <h2>Nueva Descarga Masiva</h2>
+        <form id="jobForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>RUC</label>
+                    <input type="text" id="ruc" placeholder="0991234567890" maxlength="13" required>
+                </div>
+                <div class="form-group">
+                    <label>Clave de Acceso / Contraseña</label>
+                    <input type="password" id="clave" placeholder="Contraseña del SRI" required>
+                </div>
+                <div class="form-group">
+                    <label>Tipo Comprobante</label>
+                    <select id="tipo_comprobante">
+                        <option value="todos">Todos</option>
+                        <option value="1">Factura</option>
+                        <option value="2">Liquidación</option>
+                        <option value="3">Nota de Crédito</option>
+                        <option value="4">Nota de Débito</option>
+                        <option value="6">Retención</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Fecha Desde</label>
+                    <input type="date" id="fecha_desde" required>
+                </div>
+                <div class="form-group">
+                    <label>Fecha Hasta</label>
+                    <input type="date" id="fecha_hasta" required>
+                </div>
+                <div class="form-group">
+                    <label>Base de Datos</label>
+                    <select id="bdd">
+                        <option value="exa_master">exa_master</option>
+                        <option value="exa">exa</option>
+                    </select>
+                </div>
+            </div>
+            <div class="actions">
+                <button type="submit" class="btn btn-primary" id="startBtn">
+                    Iniciar Descarga
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Lista de jobs -->
+    <div class="card">
+        <h2>Jobs de Descarga</h2>
+        <div id="jobsContainer" class="jobs-list">
+            <div class="empty-state">
+                <div class="icon">&#128229;</div>
+                <p>No hay jobs de descarga. Crea uno nuevo arriba.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API_BASE = '/api/v1/facturacion/sri-scraper';
+let pollingIntervals = {};
+
+// ─── Form submit ───
+document.getElementById('jobForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('startBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Creando job...';
+
+    try {
+        const data = {
+            ruc: document.getElementById('ruc').value,
+            clave: document.getElementById('clave').value,
+            fecha_desde: document.getElementById('fecha_desde').value,
+            fecha_hasta: document.getElementById('fecha_hasta').value,
+            tipo_comprobante: document.getElementById('tipo_comprobante').value,
+            Bdd: document.getElementById('bdd').value,
+        };
+
+        const resp = await fetch(API_BASE + '/jobs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        const result = await resp.json();
+
+        if (result.status || result.success) {
+            showToast('Job creado exitosamente', 'success');
+            document.getElementById('jobForm').reset();
+            loadJobs();
+        } else {
+            showToast(result.error || 'Error al crear job', 'error');
+        }
+    } catch (err) {
+        showToast('Error de conexión: ' + err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Iniciar Descarga';
+    }
+});
+
+// ─── Load jobs ───
+async function loadJobs() {
+    const container = document.getElementById('jobsContainer');
+    try {
+        const resp = await fetch(API_BASE + '/jobs', {
+            headers: { 'Content-Type': 'application/json' },
+        });
+        const result = await resp.json();
+        const jobs = result.data?.rows || [];
+
+        if (jobs.length === 0) {
+            container.innerHTML = '<div class="empty-state"><div class="icon">&#128229;</div><p>No hay jobs de descarga. Crea uno nuevo arriba.</p></div>';
+            return;
+        }
+
+        container.innerHTML = jobs.map(job => renderJob(job)).join('');
+
+        // Start polling for running jobs
+        jobs.forEach(job => {
+            if (job.status === 'running' || job.status === 'pending') {
+                startPolling(job.id);
+            }
+        });
+    } catch (err) {
+        container.innerHTML = '<div class="empty-state"><p>Error cargando jobs</p></div>';
+    }
+}
+
+function renderJob(job) {
+    const stats = `
+        <div class="job-stats">
+            <div class="stat"><div class="value">${job.total_found || 0}</div><div class="label">Encontrados</div></div>
+            <div class="stat"><div class="value">${job.xmls_downloaded || 0}</div><div class="label">XMLs</div></div>
+            <div class="stat"><div class="value">${job.pdfs_downloaded || 0}</div><div class="label">PDFs</div></div>
+        </div>`;
+
+    const actions = `
+        <div class="job-actions">
+            ${job.status === 'running' || job.status === 'pending' ? `<button class="btn btn-danger btn-sm" onclick="cancelJob(${job.id})">Cancelar</button>` : ''}
+            ${job.status === 'completed' || job.xmls_downloaded > 0 ? `<button class="btn btn-sm" style="background:#334155;color:#e2e8f0" onclick="showFiles(${job.id})">Archivos</button>` : ''}
+        </div>`;
+
+    const progress = (job.status === 'running' || job.status === 'pending') ? `
+        <div class="progress-bar"><div class="fill" style="width: ${Math.min(100, (job.total_found || 0) * 2)}%"></div></div>` : '';
+
+    return `
+        <div class="job-card" id="job-${job.id}">
+            <span class="status-badge status-${job.status}">${job.status}</span>
+            <div class="job-info">
+                <div class="ruc">RUC: ${job.ruc} &middot; ${job.tipo_comprobante === 'todos' ? 'Todos los tipos' : 'Tipo ' + job.tipo_comprobante}</div>
+                <div class="dates">${job.fecha_desde} al ${job.fecha_hasta} &middot; ${job.flow || 'recibidos'}</div>
+                <div class="progress">${job.progress_msg || ''}</div>
+                ${progress}
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+                ${stats}
+                ${actions}
+            </div>
+        </div>
+        <div class="files-panel" id="files-${job.id}"></div>`;
+}
+
+// ─── Cancel job ───
+async function cancelJob(id) {
+    if (!confirm('¿Cancelar este job de descarga?')) return;
+    try {
+        await fetch(API_BASE + '/jobs/' + id, { method: 'DELETE' });
+        showToast('Job cancelado', 'success');
+        loadJobs();
+    } catch (err) {
+        showToast('Error cancelando: ' + err.message, 'error');
+    }
+}
+
+// ─── Show files ───
+async function showFiles(id) {
+    const panel = document.getElementById('files-' + id);
+    if (panel.classList.contains('visible')) {
+        panel.classList.remove('visible');
+        return;
+    }
+    
+    try {
+        const resp = await fetch(API_BASE + '/jobs/' + id + '/files');
+        const result = await resp.json();
+        const data = result.data || result;
+        
+        let html = `<h3>Archivos descargados (${(data.total_xml || 0) + (data.total_pdf || 0)} total)</h3><div class="file-list">`;
+        
+        (data.xml || []).forEach(f => {
+            html += `<div class="file-item"><span class="name">${f.name}</span><span class="size">${formatSize(f.size)}</span><a href="${API_BASE}/jobs/${id}/xml/${f.name.replace('.xml','')}">Descargar</a></div>`;
+        });
+        (data.pdf || []).forEach(f => {
+            html += `<div class="file-item"><span class="name">${f.name}</span><span class="size">${formatSize(f.size)}</span><a href="${API_BASE}/jobs/${id}/pdf/${f.name.replace('.pdf','')}">Descargar</a></div>`;
+        });
+        
+        html += '</div>';
+        panel.innerHTML = html;
+        panel.classList.add('visible');
+    } catch (err) {
+        panel.innerHTML = '<p style="color:#f87171">Error cargando archivos</p>';
+        panel.classList.add('visible');
+    }
+}
+
+function formatSize(bytes) {
+    if (!bytes) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+// ─── Polling ───
+function startPolling(jobId) {
+    if (pollingIntervals[jobId]) return;
+    pollingIntervals[jobId] = setInterval(async () => {
+        try {
+            const resp = await fetch(API_BASE + '/jobs/' + jobId);
+            const result = await resp.json();
+            const job = result.data;
+            
+            if (!job) return;
+            
+            // Update job card in place
+            const card = document.getElementById('job-' + jobId);
+            if (card) {
+                card.outerHTML = renderJob(job);
+                const newFilesPanel = document.getElementById('files-' + jobId);
+                if (newFilesPanel) newFilesPanel.outerHTML = `<div class="files-panel" id="files-${jobId}"></div>`;
+            }
+            
+            if (job.status !== 'running' && job.status !== 'pending') {
+                clearInterval(pollingIntervals[jobId]);
+                delete pollingIntervals[jobId];
+                showToast(`Job #${jobId} finalizado: ${job.status}`, job.status === 'completed' ? 'success' : 'error');
+            }
+        } catch (err) {
+            // Ignore polling errors
+        }
+    }, 3000);
+}
+
+// ─── Toast ───
+function showToast(msg, type) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = 'toast visible ' + type;
+    setTimeout(() => toast.className = 'toast', 4000);
+}
+
+// ─── Init ───
+loadJobs();
+</script>
+</body>
+</html>

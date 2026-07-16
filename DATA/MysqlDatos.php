@@ -288,7 +288,7 @@ class MysqlDatos
         if (empty($sql)) return $this->setErrorEmpty($this->getDB($conexion));
         DebugBar::startQueryMeasure();
         $con = $this->getMyCon($conexion);
-        if (is_null($con)) {
+        if (!($con instanceof \mysqli)) {
             $this->setError(0, 'No hay conexión a la base de datos');
             return false;
         }
@@ -303,7 +303,7 @@ class MysqlDatos
         if (!is_string($sql)) $sql = '';
         DebugBar::startQueryMeasure();
         $con = $this->getMyCon($conexion);
-        if (is_null($con)) {
+        if (!($con instanceof \mysqli)) {
             $this->setError(0, 'No hay conexión a la base de datos');
             return false;
         }

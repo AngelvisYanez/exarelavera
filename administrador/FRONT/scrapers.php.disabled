@@ -1,0 +1,286 @@
+<?php
+/**
+ * Scraper SRI - Descarga masiva de comprobantes electrónicos.
+ * Interfaz integrada al panel de administración del ERP.
+ *
+ * @package administrador.FRONT
+ */
+require_once('../../administrador/LOGICA/seguridad.php');
+require_once('../../Librerias/procedimientos/almacenados_standar.php');
+require_once('../../Librerias/config.php/register_globals.php');
+
+$apiBase = '/v1/facturacion/sri-scraper';
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <TITLE><?php echo $Ses_Sys_Nom; ?> - Scraper SRI</TITLE>
+    <meta charset="UTF-8">
+    <?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
+    <style>
+        .scraper-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .scraper-card .title {
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .scraper-card .subtitle {
+            color: #6b7280;
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+        .badge-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            border: 1px solid;
+        }
+        .badge-running { background: #dbeafe; color: #2563eb; border-color: #93c5fd; }
+        .badge-completed { background: #d1fae5; color: #059669; border-color: #6ee7b7; }
+        .badge-error { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+        .badge-pending { background: #f3f4f6; color: #6b7280; border-color: #d1d5db; }
+        .progress-bar-custom {
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        .progress-bar-custom .fill {
+            height: 100%;
+            background: #3b82f6;
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+<div id="documentoSearch" class="panel panel-main">
+    <div class="panel-heading exa-header">
+        <h3 class="panel-title">&raquo; Scraper SRI - Descarga Masiva de Comprobantes</h3>
+    </div>
+    <div class="panel-body ui-widget-content ui-corner-bottom exa-body">
+        <div class="row">
+            <!-- Formulario nueva descarga -->
+            <div class="col-sm-4">
+                <div class="scraper-card">
+                    <div class="title"><i class="ace-icon fa fa-plus-circle"></i> Nueva Descarga</div>
+                    <div class="subtitle">Configura los parámetros para iniciar la descarga masiva.</div>
+                    <form id="frmScraper" name="frmScraper" autocomplete="off">
+                        <div class="form-group">
+                            <label class="control-label label-xs required" for="scr_ruc">RUC</label>
+                            <input type="text" id="scr_ruc" name="ruc" class="form-control input-xs" placeholder="Ej: 1790000000001" maxlength="13" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label label-xs required" for="scr_clave">Clave SRI</label>
+                            <input type="password" id="scr_clave" name="clave" class="form-control input-xs" placeholder="Clave de acceso al SRI" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label label-xs required" for="scr_fecha_desde">Fecha Desde</label>
+                            <input type="date" id="scr_fecha_desde" name="fecha_desde" class="form-control input-xs" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label label-xs required" for="scr_fecha_hasta">Fecha Hasta</label>
+                            <input type="date" id="scr_fecha_hasta" name="fecha_hasta" class="form-control input-xs" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label label-xs" for="scr_tipo">Tipo Comprobante</label>
+                            <select id="scr_tipo" name="tipo_comprobante" class="form-control input-xs">
+                                <option value="todos">Todos</option>
+                                <option value="factura">Factura</option>
+                                <option value="nota_credito">Nota de Crédito</option>
+                                <option value="nota_debito">Nota de Débito</option>
+                                <option value="retencion">Retención</option>
+                                <option value="guia_remision">Guía de Remisión</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label label-xs" for="scr_flow">Flujo</label>
+                            <select id="scr_flow" name="flow" class="form-control input-xs">
+                                <option value="recibidos">Recibidos</option>
+                                <option value="emitidos">Emitidos</option>
+                            </select>
+                        </div>
+                        <button type="submit" id="btnIniciar" class="btn btn-sm btn-danger">
+                            <i class="ace-icon fa fa-play"></i> Iniciar Descarga
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Lista de trabajos -->
+            <div class="col-sm-8">
+                <div class="scraper-card">
+                    <div class="title">
+                        <i class="ace-icon fa fa-list"></i> Trabajos Recientes
+                        <button id="btnRefresh" class="btn btn-xs btn-info pull-right" title="Actualizar">
+                            <i class="ace-icon fa fa-refresh"></i>
+                        </button>
+                    </div>
+                    <div class="subtitle">Monitorea el progreso de las descargas masivas.</div>
+                    <table id="tableJobs"></table>
+                    <div id="tableJobsPager"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+var apiBase = '<?php echo $apiBase; ?>';
+var token = '<?php echo $_SESSION['Ses_Usu_Ced'] ?? ''; ?>';
+
+function getAuthHeaders() {
+    return { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+}
+
+// ─── Crear job ────────────────────────────────────────
+$('#frmScraper').on('submit', function(e) {
+    e.preventDefault();
+    var data = {
+        ruc: $('#scr_ruc').val(),
+        clave: $('#scr_clave').val(),
+        fecha_desde: $('#scr_fecha_desde').val(),
+        fecha_hasta: $('#scr_fecha_hasta').val(),
+        tipo_comprobante: $('#scr_tipo').val(),
+        flow: $('#scr_flow').val()
+    };
+    if (!data.ruc || !data.clave || !data.fecha_desde || !data.fecha_hasta) {
+        bootbox.alert('Por favor, completa todos los campos obligatorios.');
+        return;
+    }
+    $('#btnIniciar').prop('disabled', true).html('<i class="ace-icon fa fa-spinner fa-spin"></i> Iniciando...');
+
+    $.ajax({
+        url: apiBase + '/jobs',
+        method: 'POST',
+        headers: getAuthHeaders(),
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        success: function(res) {
+            if (res.success) {
+                bootbox.alert('Trabajo de descarga iniciado correctamente.');
+                $('#frmScraper')[0].reset();
+                loadJobs();
+            } else {
+                bootbox.alert('Error: ' + (res.error || 'No se pudo iniciar el trabajo'));
+            }
+        },
+        error: function(xhr) {
+            var msg = 'Error al conectar con el servidor';
+            try { msg = JSON.parse(xhr.responseText).error || msg; } catch(e) {}
+            bootbox.alert(msg);
+        },
+        complete: function() {
+            $('#btnIniciar').prop('disabled', false).html('<i class="ace-icon fa fa-play"></i> Iniciar Descarga');
+        }
+    });
+});
+
+// ─── Cargar jobs en jqGrid ────────────────────────────
+function loadJobs() {
+    $.ajax({
+        url: apiBase + '/jobs',
+        method: 'GET',
+        headers: getAuthHeaders(),
+        success: function(res) {
+            var jobs = res.jobs || [];
+            var grid = $('#tableJobs');
+            grid.jqGrid('clearGridData');
+            for (var i = 0; i < jobs.length; i++) {
+                var j = jobs[i];
+                var statusBadge = getStatusBadge(j.status);
+                var progressBar = '<div class="progress-bar-custom"><div class="fill" style="width:' + j.progress + '%"></div></div>';
+                var actions = '';
+                if (j.status === 'running') {
+                    actions = '<button class="btn btn-xs btn-danger" onclick="cancelarJob(\'' + j.id + '\')" title="Cancelar"><i class="ace-icon fa fa-times-circle"></i></button>';
+                }
+                grid.jqGrid('addRowData', j.id, {
+                    created_at: new Date(j.created_at).toLocaleString(),
+                    status: statusBadge,
+                    progress: j.progress + '% (' + j.files_downloaded + '/' + j.total_files + ') ' + progressBar,
+                    message: j.message || '-',
+                    actions: actions
+                });
+            }
+        },
+        error: function() {
+            bootbox.alert('Error al cargar los trabajos del scraper.');
+        }
+    });
+}
+
+function getStatusBadge(status) {
+    var cls = 'badge-pending';
+    var label = status;
+    if (status === 'running') { cls = 'badge-running'; label = 'En progreso'; }
+    else if (status === 'completed') { cls = 'badge-completed'; label = 'Completado'; }
+    else if (status === 'error' || status === 'failed') { cls = 'badge-error'; label = 'Error'; }
+    return '<span class="badge-status ' + cls + '">' + label + '</span>';
+}
+
+// ─── Cancelar job ─────────────────────────────────────
+function cancelarJob(id) {
+    bootbox.confirm('¿Estás seguro de cancelar este trabajo?', function(result) {
+        if (!result) return;
+        $.ajax({
+            url: apiBase + '/jobs/' + id,
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+            success: function(res) {
+                if (res.success) {
+                    bootbox.alert('Trabajo cancelado correctamente.');
+                    loadJobs();
+                } else {
+                    bootbox.alert('Error al cancelar: ' + (res.message || ''));
+                }
+            },
+            error: function() {
+                bootbox.alert('Error al cancelar el trabajo.');
+            }
+        });
+    });
+}
+
+// ─── Init jqGrid ──────────────────────────────────────
+$(function() {
+    $('#tableJobs').jqGrid({
+        datatype: 'local',
+        colNames: ['Fecha Creación', 'Estado', 'Progreso', 'Mensaje', 'Acciones'],
+        colModel: [
+            { name: 'created_at', index: 'created_at', width: 150 },
+            { name: 'status', index: 'status', width: 100, align: 'center' },
+            { name: 'progress', index: 'progress', width: 220 },
+            { name: 'message', index: 'message', width: 200 },
+            { name: 'actions', index: 'actions', width: 60, align: 'center', sortable: false }
+        ],
+        pager: '#tableJobsPager',
+        rowNum: 10,
+        rowList: [10, 20, 50],
+        height: 'auto',
+        autowidth: true,
+        caption: 'Historial de Trabajos Scraper SRI',
+        viewrecords: true,
+        emptyrecords: 'No hay trabajos registrados',
+        loadComplete: function() {}
+    });
+
+    $('#btnRefresh').on('click', function() { loadJobs(); });
+    loadJobs();
+
+    // Auto-refresh cada 5 segundos
+    setInterval(loadJobs, 5000);
+});
+</script>
+</body>
+</html>

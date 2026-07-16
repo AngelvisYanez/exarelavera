@@ -29,4 +29,21 @@
         $producto_api = new ProductoClass($obBD_conexion, $obBD_con1);
         $producto_api->updateProducto($body);
     });
+
+    $app->post('/v1/productos/eliminar', function () {
+        $body = getBody();
+        require_once(__DIR__ . '/../../../classes/DataAPI.php');
+        try {
+            $api = new DataAPI($body['Bdd']);
+            $proCod = $body['Pro_Cod'] ?? null;
+            if (!$proCod) {
+                echo json_encode(['success' => false, 'error' => 'Pro_Cod es requerido']);
+                return;
+            }
+            $api->delete('producto', 'Pro_Cod', $proCod);
+            echo json_encode(['success' => true, 'message' => 'Producto eliminado exitosamente']);
+        } catch (\Throwable $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    });
 ?>

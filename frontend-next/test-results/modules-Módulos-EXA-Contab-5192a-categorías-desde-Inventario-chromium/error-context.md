@@ -48,6 +48,7 @@ Call log:
 - button "¿Olvidaste tu contraseña?"
 - button "Ingresar al Portal"
 - paragraph: Sistema protegido. El acceso no autorizado está prohibido.
+- region "Notifications alt+T"
 - alert
 ```
 

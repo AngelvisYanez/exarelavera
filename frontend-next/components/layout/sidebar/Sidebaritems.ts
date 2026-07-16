@@ -20,6 +20,9 @@ import {
   Fish,
   Landmark,
   UserCog,
+  Bot,
+  ClipboardCheck,
+  Database,
 } from "lucide-react";
 
 export interface SidebarItem {
@@ -77,6 +80,11 @@ export const sidebarItems: (SidebarItem | { subheading: string })[] = [
     title: "Tareas",
     href: "/dashboard/tareas",
     iconComponent: ClipboardList,
+  },
+  {
+    title: "Auditorías",
+    href: "/auditorias/tareas",
+    iconComponent: ClipboardCheck,
   },
   { subheading: "MÓDULOS" },
   {
@@ -136,9 +144,14 @@ export const sidebarItems: (SidebarItem | { subheading: string })[] = [
   },
   { subheading: "SISTEMA" },
   {
+    title: "SRI Scraper",
+    href: "/dashboard/sri-scraper",
+    iconComponent: Bot,
+  },
+  {
     title: "Conexión BD",
     href: "/dashboard/admin/conexion",
-    iconComponent: Settings,
+    iconComponent: Database,
   },
   {
     title: "Login",

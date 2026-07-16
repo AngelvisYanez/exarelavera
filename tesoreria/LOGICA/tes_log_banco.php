@@ -1,4 +1,4 @@
-﻿<?php 
+<?php 
 /**
  * Logica de las paginas que tienen que ver con clientes
  *

@@ -13,4 +13,8 @@ export const clientesApi = {
   modificar(data: Partial<Cliente>): Promise<ApiResponse<Cliente>> {
     return api.post<ApiResponse<Cliente>>('/clientes/modificar', data as Record<string, unknown>);
   },
+
+  eliminar(Cli_Cod: string): Promise<ApiResponse<void>> {
+    return api.post<ApiResponse<void>>('/clientes/eliminar', { Cli_Cod });
+  },
 };

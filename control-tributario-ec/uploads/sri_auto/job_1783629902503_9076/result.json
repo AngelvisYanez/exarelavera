@@ -1,0 +1,35 @@
+{
+  "status": "ok",
+  "msg": "Sincronización con SRI completada para ats año 2025.",
+  "sustitutiva_aplicada": false,
+  "meses_procesados": [
+    12,
+    5,
+    3,
+    4,
+    10,
+    11,
+    7,
+    8,
+    12,
+    6,
+    5,
+    9
+  ],
+  "datos_meses": {},
+  "total_pagado": 0,
+  "archivos": [
+    "Anexo_ATS_2025_DICIEMBRE_2025_0791844248001.zip",
+    "Anexo_ATS_2025_MAYO_2025_0791844248001.zip",
+    "Anexo_ATS_2025_MARZO_2025_0791844248001.zip",
+    "Anexo_ATS_2025_ABRIL_2025_0791844248001.zip",
+    "Anexo_ATS_2025_OCTUBRE_2025_0791844248001.zip",
+    "Anexo_ATS_2025_NOVIEMBRE_2025_0791844248001.zip",
+    "Anexo_ATS_2025_JULIO_2025_0791844248001.zip",
+    "Anexo_ATS_2025_AGOSTO_2025_0791844248001.zip",
+    "Anexo_ATS_2025_DICIEMBRE_2025_0791844248001 (1).zip",
+    "Anexo_ATS_2025_JUNIO_2025_0791844248001.zip",
+    "Anexo_ATS_2025_MAYO_2025_0791844248001 (1).zip",
+    "Anexo_ATS_2025_SEPTIEMBRE_2025_0791844248001.zip"
+  ]
+}

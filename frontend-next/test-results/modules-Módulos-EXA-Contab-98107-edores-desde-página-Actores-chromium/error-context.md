@@ -20,6 +20,7 @@ Error: expect(page).toHaveURL(expected) failed
 
 Expected pattern: /.*dashboard.*/
 Received string:  "http://localhost:3000/login"
+Timeout: 20000ms
 
 Call log:
   - Expect "toHaveURL" with timeout 20000ms
@@ -47,6 +48,7 @@ Call log:
 - button "¿Olvidaste tu contraseña?"
 - button "Ingresar al Portal"
 - paragraph: Sistema protegido. El acceso no autorizado está prohibido.
+- region "Notifications alt+T"
 - alert
 ```
 

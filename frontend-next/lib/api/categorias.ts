@@ -17,4 +17,8 @@ export const categoriasApi = {
   modificar(data: Partial<Categoria>): Promise<ApiResponse<Categoria>> {
     return api.post<ApiResponse<Categoria>>('/categorias/modificar', data as Record<string, unknown>);
   },
+
+  eliminar(Cat_Cod: string): Promise<ApiResponse<void>> {
+    return api.post<ApiResponse<void>>('/categorias/eliminar', { Cat_Cod });
+  },
 };

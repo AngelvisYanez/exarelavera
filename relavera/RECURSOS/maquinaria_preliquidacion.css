@@ -1,0 +1,49 @@
+/* Estilos específicos para el módulo de Preliquidación de Maquinaria */
+
+.exa-header {
+    background: #334a5f !important;
+    color: #fff !important;
+    border-radius: 8px 8px 0 0;
+    padding: 15px 20px;
+}
+
+.kpi-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
+}
+
+.nav-tabs-custom > .nav-tabs {
+    border-bottom-color: #3c8dbc;
+}
+
+.nav-tabs-custom > .nav-tabs > li > a {
+    color: #444;
+    font-weight: 600;
+}
+
+.nav-tabs-custom > .nav-tabs > li.active > a,
+.nav-tabs-custom > .nav-tabs > li.active > a:hover,
+.nav-tabs-custom > .nav-tabs > li.active > a:focus {
+    border-top: 3px solid #3c8dbc;
+    border-left-color: #ddd;
+    border-right-color: #ddd;
+    color: #3c8dbc;
+}
+
+.nav-tabs-custom > .nav-tabs > li > a > .badge {
+    margin-left: 5px;
+    font-size: 11px;
+}
+
+.table > thead > tr > th {
+    vertical-align: middle;
+    border-bottom: 2px solid rgba(0,0,0,0.1);
+}
+
+.table-hover > tbody > tr:hover {
+    background-color: #f1f5f9;
+}

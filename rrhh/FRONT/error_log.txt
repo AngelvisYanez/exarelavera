@@ -69,3 +69,9 @@
 [08-Jul-2026 13:13:34 America/Lima] PHP Warning:  Undefined array key "QUERY_STRING" in C:\Users\ismaa\OneDrive\Documentos\GitHub\exa-contable-relavera\rrhh\FRONT\rhu_baj_anticipo.php on line 36
 [08-Jul-2026 13:13:34 America/Lima] PHP Deprecated:  strpos(): Passing null to parameter #1 ($haystack) of type string is deprecated in C:\Users\ismaa\OneDrive\Documentos\GitHub\exa-contable-relavera\rrhh\FRONT\rhu_baj_anticipo.php on line 36
 [08-Jul-2026 13:13:34 America/Lima] PHP Deprecated:  Constant FILTER_SANITIZE_STRING is deprecated in C:\Users\ismaa\OneDrive\Documentos\GitHub\exa-contable-relavera\mascaras\model1\estilos\jqgrid5.php on line 37
+[15-Jul-2026 10:42:47 America/Lima] PHP Warning:  Undefined array key "QUERY_STRING" in C:\Users\ismaa\OneDrive\Documentos\GitHub\exa-contable-relavera\rrhh\FRONT\rhu_baj_anticipo.php on line 36
+[15-Jul-2026 10:42:47 America/Lima] PHP Deprecated:  strpos(): Passing null to parameter #1 ($haystack) of type string is deprecated in C:\Users\ismaa\OneDrive\Documentos\GitHub\exa-contable-relavera\rrhh\FRONT\rhu_baj_anticipo.php on line 36
+[15-Jul-2026 10:42:47 America/Lima] PHP Deprecated:  Constant FILTER_SANITIZE_STRING is deprecated in C:\Users\ismaa\OneDrive\Documentos\GitHub\exa-contable-relavera\mascaras\model1\estilos\jqgrid5.php on line 37
+[15-Jul-2026 10:42:47 America/Lima] PHP Warning:  Undefined array key "QUERY_STRING" in C:\Users\ismaa\OneDrive\Documentos\GitHub\exa-contable-relavera\rrhh\FRONT\rhu_baj_anticipo.php on line 36
+[15-Jul-2026 10:42:47 America/Lima] PHP Deprecated:  strpos(): Passing null to parameter #1 ($haystack) of type string is deprecated in C:\Users\ismaa\OneDrive\Documentos\GitHub\exa-contable-relavera\rrhh\FRONT\rhu_baj_anticipo.php on line 36
+[15-Jul-2026 10:42:47 America/Lima] PHP Deprecated:  Constant FILTER_SANITIZE_STRING is deprecated in C:\Users\ismaa\OneDrive\Documentos\GitHub\exa-contable-relavera\mascaras\model1\estilos\jqgrid5.php on line 37

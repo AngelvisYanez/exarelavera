@@ -1,0 +1,278 @@
+/* Estilos para Módulo de Control de Dispensador de Combustible */
+
+.header-exa {
+    background-color: var(--v2-brand-dark);
+    color: white;
+}
+
+.btn-exa-success {
+    background-color: var(--v2-brand);
+    color: white;
+    border-color: var(--v2-brand-dark);
+}
+
+.btn-exa-success:hover {
+    background-color: var(--v2-brand-dark);
+    color: white;
+}
+
+.jqgrid-altrow {
+    background-color: var(--v2-surface-alt);
+}
+
+/* ======================================================================
+   DASHBOARD V2 (MODEL 3 DESIGN SYSTEM)
+   ====================================================================== */
+
+/* Contenedores Principales */
+.v2-dashboard-container {
+    padding: 10px 0;
+}
+
+.v2-panel {
+    background: var(--v2-bg-panel);
+    border: var(--v2-elev-border);
+    border-radius: var(--v2-radius);
+    box-shadow: var(--v2-elev-shadow);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.v2-panel-header {
+    padding: 12px 15px;
+    background: var(--v2-bg-grid);
+    border-bottom: var(--v2-elev-border);
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--v2-brand-dark);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.v2-panel-body {
+    padding: 15px;
+}
+
+/* Tarjetas de Métricas (Metric Cards) */
+.v2-metric-card {
+    background: var(--v2-bg-panel);
+    border: var(--v2-elev-border);
+    border-radius: var(--v2-radius);
+    box-shadow: var(--v2-elev-shadow);
+    padding: 15px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.v2-metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.v2-metric-icon {
+    position: absolute;
+    right: -10px;
+    bottom: -10px;
+    font-size: 60px;
+    color: var(--v2-brand-soft);
+    opacity: 0.5;
+    z-index: 1;
+}
+
+.v2-metric-content {
+    position: relative;
+    z-index: 2;
+}
+
+.v2-metric-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--v2-text);
+    margin: 0 0 5px 0;
+    line-height: 1;
+}
+
+.v2-metric-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--v2-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin: 0;
+}
+
+/* Colores específicos para métricas */
+.v2-metric-card.brand .v2-metric-value { color: var(--v2-brand-dark); }
+.v2-metric-card.brand .v2-metric-icon { color: var(--v2-brand-soft); }
+
+.v2-metric-card.success .v2-metric-value { color: #27ae60; }
+.v2-metric-card.success .v2-metric-icon { color: #dcefe2; opacity: 0.8; }
+
+.v2-metric-card.info .v2-metric-value { color: #2980b9; }
+.v2-metric-card.info .v2-metric-icon { color: #e1f0fa; opacity: 0.8; }
+
+.v2-metric-card.warning .v2-metric-value { color: #f39c12; }
+.v2-metric-card.warning .v2-metric-icon { color: #fcf1db; opacity: 0.8; }
+
+.v2-metric-card.danger .v2-metric-value { color: #c0392b; }
+.v2-metric-card.danger .v2-metric-icon { color: #f3dede; opacity: 0.8; }
+
+.v2-metric-card.purple .v2-metric-value { color: #8e44ad; }
+.v2-metric-card.purple .v2-metric-icon { color: #f3e9f6; opacity: 0.8; }
+
+/* Tablas nativas V2 */
+.v2-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--v2-bg-panel);
+}
+
+.v2-table th {
+    background: var(--v2-bg-grid);
+    color: var(--v2-brand-dark);
+    padding: 10px;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    border-bottom: var(--v2-elev-border);
+}
+
+.v2-table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--v2-border-light);
+    color: var(--v2-text);
+    font-size: 13px;
+}
+
+.v2-table tbody tr:hover {
+    background-color: var(--v2-surface-hover);
+}
+
+/* Componente de Cierre */
+.v2-cierre-status {
+    text-align: center;
+    padding: 20px 10px;
+}
+.v2-cierre-fecha {
+    font-size: 16px;
+    color: var(--v2-text-muted);
+    margin-bottom: 10px;
+}
+.v2-cierre-valor {
+    font-size: 32px;
+    font-weight: bold;
+    color: var(--v2-brand-dark);
+    margin-bottom: 10px;
+}
+
+/* Filtros */
+.v2-filters {
+    background: var(--v2-surface);
+    padding: 15px;
+    border-radius: var(--v2-radius);
+    border: var(--v2-elev-border);
+    margin-bottom: 20px;
+}
+
+.v2-filters label {
+    font-size: 12px;
+    color: var(--v2-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+/* Spinner Loaders */
+.exa-loader {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+}
+
+/* Layout & Form elements (model 3 Tabs) */
+.nav-tabs-custom {
+    margin-bottom: 15px;
+}
+.nav-tabs-custom > .nav-tabs {
+    border-bottom: 3px solid #334a5f;
+}
+.nav-tabs-custom > .nav-tabs > li {
+    margin-right: 4px;
+}
+.nav-tabs-custom > .nav-tabs > li > a {
+    font-weight: bold;
+    color: #475569;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-bottom: none;
+    padding: 10px 18px;
+    border-radius: 4px 4px 0 0;
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+.nav-tabs-custom > .nav-tabs > li.active > a {
+    background: #334a5f;
+    color: #fff;
+    border-color: #334a5f;
+}
+.nav-tabs-custom > .nav-tabs > li > a:hover {
+    background: #e2e8f0;
+    color: #334a5f;
+}
+.nav-tabs-custom > .nav-tabs > li.active > a:hover {
+    background: #253646;
+    color: #fff;
+}
+.tab-content-custom {
+    padding: 15px 0;
+}
+
+/* Modificaciones solicitadas */
+.exa-ui-panel, 
+.panel-body.exa-ui-page-view, 
+.tab-content-custom {
+    background-color: #DFE9F6 !important;
+}
+
+/* Background para tarjeta de dispensadores disponibles */
+.v2-metric-card.info {
+    background-color: #eef3f8 !important;
+}
+
+/* Row selection highlight in jqGrid */
+tr.ui-state-highlight,
+tr.ui-state-highlight td,
+.ui-jqgrid-btable tr.ui-state-highlight td,
+.ui-jqgrid-btable tr.success td,
+.ui-jqgrid-btable tr.active td,
+.ui-jqgrid-btable tr.info td,
+tr[aria-selected="true"] td {
+    background-color: #337ab7 !important;
+    background-image: none !important;
+    color: #ffffff !important;
+}
+
+/* Forzar centrado absoluto del paginador */
+.ui-jqgrid .ui-jqgrid-pager .ui-pager-control > table.ui-pg-table {
+    width: 100% !important;
+    table-layout: fixed !important;
+}
+.ui-jqgrid .ui-jqgrid-pager .ui-pager-control > table.ui-pg-table > tbody > tr > td[id$="_left"] {
+    width: 33.33% !important;
+    text-align: left !important;
+}
+.ui-jqgrid .ui-jqgrid-pager .ui-pager-control > table.ui-pg-table > tbody > tr > td[id$="_center"] {
+    width: 33.33% !important;
+    text-align: center !important;
+}
+.ui-jqgrid .ui-jqgrid-pager .ui-pager-control > table.ui-pg-table > tbody > tr > td[id$="_center"] > table {
+    margin: 0 auto !important;
+}
+.ui-jqgrid .ui-jqgrid-pager .ui-pager-control > table.ui-pg-table > tbody > tr > td[id$="_right"] {
+    width: 33.33% !important;
+    text-align: right !important;
+}

@@ -1,0 +1,1183 @@
+/* ===================================================
+   EXA Control Tributario — Design System v2.0
+   Paleta: Deep Navy + Electric Blue + Vivid Accents
+   =================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    /* Core Brand */
+    --exa-navy: #0d1b2a;
+    --exa-navy-mid: #1a2d45;
+    --exa-navy-light: #243b55;
+    --exa-electric: #2563eb;
+    --exa-electric-glow: #3b82f6;
+    --exa-electric-light: #60a5fa;
+
+    /* Accent Colors */
+    --exa-amber: #f59e0b;
+    --exa-amber-dark: #d97706;
+    --exa-emerald: #10b981;
+    --exa-emerald-dark: #059669;
+    --exa-rose: #f43f5e;
+    --exa-rose-dark: #e11d48;
+    --exa-violet: #8b5cf6;
+    --exa-cyan: #06b6d4;
+
+    /* UI Surfaces */
+    --exa-bg: #f0f4f8;
+    --exa-surface: #ffffff;
+    --exa-surface-2: #f8fafc;
+    --exa-border: #e2e8f0;
+    --exa-border-dark: #cbd5e1;
+
+    /* Text */
+    --exa-text: #0f172a;
+    --exa-text-2: #334155;
+    --exa-text-muted: #64748b;
+    --exa-text-light: #94a3b8;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(13, 27, 42, 0.08), 0 1px 2px rgba(13, 27, 42, 0.06);
+    --shadow-md: 0 4px 12px rgba(13, 27, 42, 0.10), 0 2px 4px rgba(13, 27, 42, 0.06);
+    --shadow-lg: 0 10px 30px rgba(13, 27, 42, 0.12), 0 4px 8px rgba(13, 27, 42, 0.08);
+    --shadow-glow: 0 0 20px rgba(37, 99, 235, 0.25);
+}
+
+/* ── Base ── */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--exa-bg);
+    color: var(--exa-text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--exa-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--exa-border-dark);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--exa-text-muted);
+}
+
+/* ── Navbar ── */
+.navbar,
+.exa-navbar {
+    background: var(--exa-navy) !important;
+    background: linear-gradient(135deg, #1f3e5f 0%, #375f8f 50%, #183d6e 100%) !important;
+    border-bottom: 1px solid rgba(37, 99, 235, 0.3);
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(10px);
+    padding: 0 1rem;
+    min-height: 58px;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    color: #ffffff !important;
+    letter-spacing: 0.3px;
+}
+
+/* Logo Badge */
+.exa-logo {
+    background: linear-gradient(135deg, var(--exa-electric) 0%, var(--exa-electric-glow) 100%);
+    color: #fff;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+}
+
+.app-title {
+    color: #e2e8f0;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+/* Contribuyente Pill */
+.contribuyente-pill {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 5px 14px;
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    transition: background 0.2s;
+}
+
+.contribuyente-pill:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.contribuyente-pill .text-dark,
+.contribuyente-pill .ruc,
+.contribuyente-pill .separator {
+    color: #ffffff !important;
+}
+
+.contribuyente-pill .nombre,
+.contribuyente-pill .text-muted {
+    color: #94a3b8 !important;
+}
+
+.contribuyente-pill .btn-outline-dark {
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #e2e8f0;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    padding: 3px 12px;
+    transition: all 0.2s;
+}
+
+.contribuyente-pill .btn-outline-dark:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Glass Select (Navbar) */
+.glass-select,
+.navbar .form-select,
+.navbar .form-select-sm {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    /* fix Chrome */
+    border-radius: 8px !important;
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 5px 28px 5px 10px;
+    backdrop-filter: blur(4px);
+    min-width: 100px;
+    transition: all 0.2s;
+}
+
+.glass-select:hover,
+.glass-select:focus {
+    background: rgba(255, 255, 255, 0.18) !important;
+    border-color: rgba(37, 99, 235, 0.6) !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2) !important;
+    outline: none;
+}
+
+.glass-select option {
+    background: #1a2d45;
+    color: #fff;
+}
+
+/* Action Buttons */
+.btn-glow {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.25s ease !important;
+    border-radius: 8px !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+}
+
+.btn-glow::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.4s, height 0.4s;
+}
+
+.btn-glow:active::after {
+    width: 200px;
+    height: 200px;
+}
+
+.btn-glow.btn-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    border: none !important;
+    color: #0d1b2a !important;
+    box-shadow: 0 3px 12px rgba(245, 158, 11, 0.35);
+}
+
+.btn-glow.btn-warning:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(245, 158, 11, 0.45) !important;
+}
+
+.btn-glow.btn-primary,
+.btn-primary.btn-glow {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+    border: none !important;
+    color: #fff !important;
+    box-shadow: 0 3px 12px rgba(37, 99, 235, 0.35);
+}
+
+.btn-glow.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.45) !important;
+}
+
+/* ── Tabs ── */
+#tabsLabores .nav-tabs,
+#mainTab.nav-tabs {
+    border-bottom: 2px solid var(--exa-border) !important;
+    background: var(--exa-surface) !important;
+    border-radius: 10px 10px 0 0;
+    padding: 6px 8px 0;
+    gap: 2px;
+}
+
+#tabsLabores .nav-tabs .nav-item,
+#mainTab .nav-item {
+    margin-right: 2px;
+}
+
+#tabsLabores .nav-tabs .nav-link,
+#mainTab .nav-link {
+    padding: 8px 16px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--exa-text-muted) !important;
+    background: var(--exa-surface-2) !important;
+    border: 1px solid var(--exa-border) !important;
+    border-radius: 8px 8px 0 0 !important;
+    border-bottom: none !important;
+    margin-bottom: -2px;
+    transition: color 0.15s, background 0.15s;
+    letter-spacing: 0.01em;
+}
+
+#tabsLabores .nav-tabs .nav-link:hover,
+#mainTab .nav-link:hover {
+    background: #eef2ff !important;
+    color: var(--exa-electric) !important;
+    border-color: #c7d2fe !important;
+}
+
+#tabsLabores .nav-tabs .nav-link.active,
+#mainTab .nav-link.active {
+    font-weight: 700;
+    background: var(--exa-surface) !important;
+    color: var(--exa-electric) !important;
+    border: 1px solid var(--exa-border) !important;
+    border-bottom-color: var(--exa-surface) !important;
+    box-shadow: 0 -2px 0 0 var(--exa-electric) inset;
+}
+
+/* ── Tab Content Area ── */
+.panel-body,
+.exa-body,
+.main-content {
+    background: var(--exa-surface) !important;
+    border-top: none;
+}
+
+/* ── Cards ── */
+.card,
+.glass-card {
+    background: var(--exa-surface);
+    border: 1px solid var(--exa-border) !important;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    margin-bottom: 20px;
+}
+
+.card:hover,
+.glass-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.card-header {
+    background: var(--exa-surface-2) !important;
+    color: var(--exa-text) !important;
+    font-weight: 700;
+    border-bottom: 1px solid var(--exa-border) !important;
+    border-radius: 12px 12px 0 0 !important;
+    padding: 12px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    /* <-- evita que el subtitulo se amontone */
+    align-items: center;
+    gap: 2px 8px;
+    font-size: 13.5px;
+}
+
+/* Card title siempre negro — sin importar qué clase text-* tenga */
+.card-title,
+.card-title.text-primary,
+.card-title.text-danger,
+.card-title.text-warning,
+.card-title.text-success,
+.card-title.text-info {
+    color: var(--exa-text) !important;
+    margin-bottom: 0;
+    flex-basis: 100%;
+    /* <-- ocupa toda la línea, subtitulo cae abajo */
+    flex-shrink: 0;
+}
+
+.card-header .text-muted.small {
+    flex-basis: 100%;
+    /* subtitulo en su propia línea */
+    font-size: 0.8rem;
+    color: var(--exa-text-muted) !important;
+    margin-top: 2px;
+}
+
+.card-header i {
+    margin-right: 8px;
+    font-size: 1em;
+}
+
+/* Card Header accent colors — all dark */
+.card-header h6.text-primary i,
+.card-header h6.text-primary {
+    color: var(--exa-text) !important;
+}
+
+.card-header h6.text-danger i,
+.card-header h6.text-danger {
+    color: var(--exa-text) !important;
+}
+
+.card-header h6.text-warning i,
+.card-header h6.text-warning {
+    color: var(--exa-text) !important;
+}
+
+.card-header h6[style*="a855f7"] {
+    color: var(--exa-text) !important;
+}
+
+/* ── KPI Dashboard Cards ── */
+.glass-card.p-3.rounded h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin-bottom: 4px !important;
+}
+
+.glass-card.p-3.rounded .small.text-muted {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--exa-text-muted) !important;
+}
+
+/* ── Text color global override — ALL to dark black ── */
+.text-success,
+h2.text-success,
+h4.text-success {
+    color: var(--exa-text) !important;
+}
+
+.text-warning,
+h2.text-warning,
+h4.text-warning {
+    color: var(--exa-text) !important;
+}
+
+.text-primary,
+h2.text-primary,
+h4.text-primary {
+    color: var(--exa-text) !important;
+}
+
+.text-danger,
+h2.text-danger,
+h4.text-danger {
+    color: var(--exa-text) !important;
+}
+
+.text-info,
+h2.text-info,
+h4.text-info {
+    color: var(--exa-text) !important;
+}
+
+.text-secondary,
+h2.text-secondary,
+h4.text-secondary {
+    color: var(--exa-text-2) !important;
+}
+
+/* Keep muted/light text as subtle gray */
+.text-muted {
+    color: var(--exa-text-muted) !important;
+}
+
+/* ── KPI Row in Dashboard ── */
+#tab-dashboard .row.g-3.mb-4 .glass-card {
+    border: 1px solid var(--exa-border);
+    border-top: 3px solid var(--exa-border-dark);
+    border-radius: 12px;
+    padding: 16px !important;
+    background: var(--exa-surface);
+    position: relative;
+    overflow: hidden;
+}
+
+/* KPI top border — all neutral dark */
+#tab-dashboard .row.g-3.mb-4 .col:nth-child(1) .glass-card {
+    border-top-color: var(--exa-navy-mid);
+}
+
+#tab-dashboard .row.g-3.mb-4 .col:nth-child(2) .glass-card {
+    border-top-color: var(--exa-navy-mid);
+}
+
+#tab-dashboard .row.g-3.mb-4 .col:nth-child(3) .glass-card {
+    border-top-color: var(--exa-navy-mid);
+}
+
+#tab-dashboard .row.g-3.mb-4 .col:nth-child(4) .glass-card {
+    border-top-color: var(--exa-navy-mid);
+}
+
+#tab-dashboard .row.g-3.mb-4 .col:nth-child(5) .glass-card {
+    border-top-color: var(--exa-navy-mid);
+}
+
+/* ── ATS Summary Cards ── */
+.glass-card.p-3.rounded.border-start {
+    border-left-width: 4px !important;
+    border-radius: 10px;
+}
+
+.border-primary.border-start {
+    border-color: #0d1b2a !important;
+}
+
+.border-warning.border-start {
+    border-color: #0d1b2a !important;
+}
+
+.border-info.border-start {
+    border-color: #0d1b2a !important;
+}
+
+.border-success.border-start {
+    border-color: #0d1b2a !important;
+}
+
+.border-secondary.border-start {
+    border-color: #0d1b2a !important;
+}
+
+/* Cualquier border-start coloreado → navy */
+[class*="border-start"] {
+    border-left-color: #0d1b2a !important;
+}
+
+/* ── Dropzone ── */
+.dropzone,
+.drop-zone {
+    border: 2px dashed var(--exa-border-dark);
+    border-radius: 12px;
+    background: var(--exa-surface-2);
+    padding: 28px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    color: var(--exa-text-muted);
+    font-weight: 500;
+}
+
+.dropzone:hover,
+.drop-zone:hover {
+    background: #eff6ff;
+    border-color: var(--exa-electric);
+    color: var(--exa-electric);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.06);
+}
+
+.drop-icon {
+    font-size: 1.8rem;
+    color: var(--exa-text-light);
+    margin-bottom: 8px;
+    transition: all 0.25s;
+}
+
+.drop-zone:hover .drop-icon {
+    color: var(--exa-electric);
+    transform: translateY(-4px);
+}
+
+/* ── Buttons ── */
+.btn-primary {
+    background: linear-gradient(135deg, var(--exa-electric) 0%, #1d4ed8 100%);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 8px 20px;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+    transition: all 0.2s;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--exa-rose) 0%, var(--exa-rose-dark) 100%);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 8px 20px;
+    box-shadow: 0 2px 8px rgba(244, 63, 94, 0.3);
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, var(--exa-rose-dark) 0%, #be123c 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(244, 63, 94, 0.4);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, var(--exa-amber) 0%, var(--exa-amber-dark) 100%);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    color: #0d1b2a;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--exa-emerald) 0%, var(--exa-emerald-dark) 100%);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+/* ── Tables ── */
+.table {
+    color: var(--exa-text);
+    font-size: 13px;
+}
+
+.table thead th {
+    background: var(--exa-navy) !important;
+    background: linear-gradient(135deg, #0d1b2a 0%, #1a2d45 100%) !important;
+    color: #e2e8f0 !important;
+    border: 1px solid #243b55 !important;
+    font-weight: 600;
+    font-size: 12px;
+    padding: 10px 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #eff6ff;
+}
+
+.table td {
+    vertical-align: middle;
+    border-color: var(--exa-border);
+    padding: 8px 12px;
+}
+
+/* ── Gradient BG Utilities ── */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, var(--exa-electric) 0%, #1d4ed8 100%);
+    color: white;
+}
+
+.bg-gradient-success {
+    background: linear-gradient(135deg, var(--exa-emerald) 0%, var(--exa-emerald-dark) 100%);
+    color: white;
+}
+
+.bg-gradient-danger {
+    background: linear-gradient(135deg, var(--exa-rose) 0%, var(--exa-rose-dark) 100%);
+    color: white;
+}
+
+.bg-gradient-warning {
+    background: linear-gradient(135deg, var(--exa-amber) 0%, var(--exa-amber-dark) 100%);
+    color: white;
+}
+
+/* ── Forms ── */
+.form-select,
+.form-control {
+    border: 1px solid var(--exa-border-dark);
+    border-radius: 8px;
+    padding: 8px 12px;
+    background: var(--exa-surface);
+    color: var(--exa-text);
+    font-size: 13.5px;
+    transition: all 0.2s;
+}
+
+.form-select:focus,
+.form-control:focus {
+    border-color: var(--exa-electric);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    outline: none;
+}
+
+.input-group-text {
+    background-color: var(--exa-surface-2);
+    border-color: var(--exa-border-dark);
+    color: var(--exa-text-2);
+    border-radius: 8px 0 0 8px;
+}
+
+/* ── Badges & Pills ── */
+.badge {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border-radius: 6px;
+}
+
+.pill-cumplida {
+    background-color: var(--exa-emerald) !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    padding: 4px 12px;
+    font-size: 0.72rem;
+    border-radius: 20px;
+    letter-spacing: 0.02em;
+}
+
+.pill-falta {
+    background-color: var(--exa-surface-2) !important;
+    color: var(--exa-text-muted) !important;
+    border: 1px solid var(--exa-border-dark) !important;
+    font-weight: 500;
+    padding: 4px 12px;
+    font-size: 0.72rem;
+    border-radius: 20px;
+}
+
+/* ── Loader ── */
+#loader {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(4px);
+}
+
+.spinner-border {
+    color: var(--exa-electric) !important;
+}
+
+/* ── Layout Utilities ── */
+.right-controls {
+    flex-shrink: 0;
+    gap: 6px;
+    flex-wrap: nowrap;
+    align-items: center;
+}
+
+.right-controls > * {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* Selects en navbar más compactos para dejar espacio a los botones */
+.right-controls .glass-select,
+.right-controls .form-select {
+    min-width: 70px;
+    max-width: 160px;
+    width: auto;
+}
+
+/* Botones de acción en navbar: siempre muestran su texto completo */
+.right-controls .btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+    overflow: visible;
+    text-overflow: clip;
+}
+
+/* ── Align Drop Zones perfectly ── */
+
+/* Todas las filas de tarjetas estiran sus hijos a igual altura */
+.row.g-4.mt-2 {
+    align-items: stretch;
+}
+
+/* Altura fija en el header para que todas las drop-zones arranquen al mismo nivel */
+.drop-zone-card .card-header {
+    min-height: 76px;
+    display: block !important;
+    padding-top: 14px;
+    padding-bottom: 14px;
+}
+
+.drop-zone-card .card-header .card-title {
+    display: block !important;
+    margin-bottom: 3px;
+}
+
+.card-subtitle-hint {
+    display: block !important;
+    font-size: 0.71rem;
+    color: #94a3b8;
+    margin: 0;
+    padding: 0;
+    line-height: 1.3;
+    white-space: normal;
+}
+
+.drop-zone-card .card-body {
+    display: flex;
+    flex-direction: column;
+    padding-top: 12px;
+}
+
+.drop-zone-card .drop-zone {
+    flex-grow: 1;
+    min-height: 110px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.sticky-col-mes {
+    position: sticky !important;
+    left: 0;
+    z-index: 50 !important;
+    background-color: #fff !important;
+    border-right: 2px solid var(--exa-border) !important;
+}
+
+.sticky-header-mes {
+    position: sticky !important;
+    left: 0;
+    z-index: 60 !important;
+    border-right: 2px solid var(--exa-border) !important;
+}
+
+/* ── Tab Panel Collapse Fix ── */
+.tab-pane:not(.active) {
+    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    visibility: hidden !important;
+    top: 0;
+    left: 0;
+}
+
+html {
+    background-color: var(--exa-bg) !important;
+}
+
+body {
+    background-color: transparent !important;
+}
+
+.exa-ui-panel,
+.main-content,
+.exa-body {
+    height: fit-content !important;
+    min-height: auto !important;
+    padding-bottom: 2rem !important;
+}
+
+/* ── Tab Content Panel Background ── */
+#mainTabContent {
+    background: var(--exa-surface);
+    border-radius: 0 0 12px 12px;
+    border: 1px solid var(--exa-border);
+    border-top: none;
+    padding: 16px;
+}
+
+/* ── Tabla Maestra Headers ── */
+#tab-tabla thead tr:first-child th {
+    background: linear-gradient(135deg, var(--exa-navy) 0%, var(--exa-navy-mid) 100%) !important;
+    color: #ffffff !important;
+    border-color: var(--exa-navy-light) !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    font-size: 11px;
+}
+
+#tab-tabla thead tr:nth-child(2) th {
+    background: var(--exa-navy-mid) !important;
+    color: #cbd5e1 !important;
+    border-color: var(--exa-navy-light) !important;
+    font-weight: 500;
+    font-size: 11px;
+}
+
+#tab-tabla .sticky-header-mes {
+    background-color: var(--exa-surface-2) !important;
+    color: var(--exa-text) !important;
+    border-right: 2px solid var(--exa-border-dark) !important;
+    font-weight: 700;
+}
+
+#tab-tabla tbody td,
+#tab-tabla tfoot td {
+    border-color: var(--exa-border) !important;
+    color: var(--exa-text-2) !important;
+    background-color: transparent !important;
+}
+
+#tab-tabla tbody td.fw-bold,
+#tab-tabla tfoot td.fw-bold {
+    color: var(--exa-text) !important;
+    font-weight: 800 !important;
+}
+
+/* ── Resumen IR ── */
+#tab-ir .legend-pills .badge {
+    background-color: var(--exa-surface-2) !important;
+    color: var(--exa-text-2) !important;
+    border: 1px solid var(--exa-border-dark) !important;
+    font-weight: 600;
+}
+
+#tab-ir .kpi-val,
+#tab-ir .kpi-card .text-danger,
+#tab-ir .kpi-card .text-warning,
+#tab-ir .kpi-card .border-danger {
+    color: var(--exa-text) !important;
+    border-color: var(--exa-border-dark) !important;
+    font-weight: 800 !important;
+}
+
+#ir-inputs-col .table-primary {
+    background-color: #eff6ff !important;
+    color: var(--exa-text) !important;
+}
+
+#ir-inputs-col .table-primary td {
+    background-color: transparent !important;
+}
+
+#ir-inputs-col thead th {
+    background: linear-gradient(135deg, var(--exa-navy) 0%, var(--exa-navy-mid) 100%) !important;
+    color: #ffffff !important;
+    border-color: var(--exa-navy-light) !important;
+}
+
+#ir-inputs-col .bg-primary.bg-opacity-10 {
+    background-color: #eff6ff !important;
+}
+
+#ir-inputs-col .border-primary {
+    border-color: var(--exa-electric-light) !important;
+}
+
+#ir-inputs-col .text-primary,
+#tab-ir .text-danger,
+#tab-ir .text-success,
+#tab-ir .text-warning,
+#tab-ir .text-info {
+    color: var(--exa-text) !important;
+}
+
+#tab-ir tr[style*="#eff6ff"] {
+    background-color: #dbeafe !important;
+    border-top: 2px solid var(--exa-electric) !important;
+}
+
+#tab-ir tr[style*="#eff6ff"] td {
+    color: var(--exa-text) !important;
+}
+
+/* ── Glass Panel ── */
+.glass-panel {
+    background: var(--exa-surface-2);
+    border: 1px solid var(--exa-border);
+    border-radius: 10px;
+}
+
+/* ── Animations ── */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tab-pane.active {
+    animation: slideUp 0.25s ease;
+}
+
+/* ── Display utilities ── */
+.display-6 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+/* ── Alert Overrides ── */
+.alert-warning {
+    background: #fef3c7;
+    border-color: var(--exa-amber);
+    color: #92400e;
+    border-radius: 8px;
+}
+
+.alert-danger {
+    background: #fff1f2;
+    border-color: var(--exa-rose);
+    color: #9f1239;
+    border-radius: 8px;
+}
+
+.alert-success {
+    background: #ecfdf5;
+    border-color: var(--exa-emerald);
+    color: #065f46;
+    border-radius: 8px;
+}
+
+/* ── Th accent header ── */
+.th-rojo {
+    background: linear-gradient(135deg, var(--exa-navy) 0%, var(--exa-navy-mid) 100%) !important;
+    color: #fff !important;
+    border-color: var(--exa-navy-light) !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   OVERRIDE NUCLEAR FINAL — TODO EN NEGRO #0f172a
+   Alta especificidad para ganar sobre Bootstrap y exa-ui.css
+   ══════════════════════════════════════════════════════════ */
+
+/* 1. CARD HEADERS — títulos e iconos siempre negro */
+body .card-header .card-title,
+body .card-header h1,
+body .card-header h2,
+body .card-header h3,
+body .card-header h4,
+body .card-header h5,
+body .card-header h6,
+body .card-header .card-title i,
+body .card-header h5 i,
+body .card-header h6 i,
+body .card-header h5.text-primary,
+body .card-header h5.text-danger,
+body .card-header h5.text-warning,
+body .card-header h5.text-success,
+body .card-header h5.text-info,
+body .card-header h6.text-primary,
+body .card-header h6.text-danger,
+body .card-header h6.text-warning,
+body .card-header h6.text-success,
+body .card-header h6.text-info,
+body .card-header h6[style],
+body .card-header *[style*="color"] {
+    color: #0f172a !important;
+}
+
+/* 2. TEXTO DENTRO DE CARDS (body) — negro */
+body .card-body .text-primary,
+body .card-body .text-success,
+body .card-body .text-danger,
+body .card-body .text-warning,
+body .card-body .text-info,
+body .card-body a.text-primary,
+body .card-body a.text-info,
+body .card-body a.text-success,
+body .card-body a.text-danger,
+body .card-body a.text-warning {
+    color: #0f172a !important;
+}
+
+/* 3. CLASES Bootstrap de color fuera de navbar/botones */
+body .tab-pane .text-primary,
+body .tab-pane .text-success,
+body .tab-pane .text-danger,
+body .tab-pane .text-warning,
+body .tab-pane .text-info {
+    color: #0f172a !important;
+}
+
+/* 4. INLINE STYLES — colores inyectados por JS */
+body .tab-pane [style*="color: #"],
+body .tab-pane [style*="color:#"],
+body .tab-pane [style*="color: rgb"] {
+    color: #0f172a !important;
+}
+
+/* 5. LINKS de color */
+body a.text-primary,
+body a.text-info,
+body a.text-success,
+body a.text-danger,
+body a.text-warning {
+    color: #0f172a !important;
+}
+
+body a {
+    color: #334155;
+}
+
+body a:hover {
+    color: #0f172a;
+    text-decoration: none;
+}
+
+/* 6. text-muted → gris suave */
+body .text-muted {
+    color: #64748b !important;
+}
+
+/* ── EXCEPCIONES (mantienen su color) ── */
+
+/* Navbar blanco */
+.navbar,
+.navbar *,
+.navbar .navbar-brand,
+.navbar .exa-logo,
+.navbar .app-title,
+.navbar i,
+.navbar .bi,
+.navbar .glass-select,
+.navbar .form-select,
+.navbar .contribuyente-pill .ruc,
+.navbar .contribuyente-pill .separator {
+    color: #ffffff !important;
+}
+
+.navbar .contribuyente-pill .nombre {
+    color: #94a3b8 !important;
+}
+
+/* Botones */
+.btn-primary,
+.btn-primary * {
+    color: #ffffff !important;
+}
+
+.btn-danger,
+.btn-danger * {
+    color: #ffffff !important;
+}
+
+.btn-success,
+.btn-success * {
+    color: #ffffff !important;
+}
+
+.btn-warning,
+.btn-warning * {
+    color: #0d1b2a !important;
+}
+
+.btn-secondary,
+.btn-secondary * {
+    color: #ffffff !important;
+}
+
+.btn-dark,
+.btn-dark * {
+    color: #ffffff !important;
+}
+
+.btn-outline-primary {
+    color: #2563eb !important;
+}
+
+.btn-outline-danger {
+    color: #f43f5e !important;
+}
+
+.btn-outline-success {
+    color: #059669 !important;
+}
+
+.btn-outline-warning {
+    color: #d97706 !important;
+}
+
+.btn-outline-dark {
+    color: #0f172a !important;
+}
+
+/* Badges */
+.badge {
+    color: #ffffff !important;
+}
+
+.badge.bg-warning {
+    color: #0d1b2a !important;
+}
+
+.bg-warning.text-dark {
+    color: #0d1b2a !important;
+}
+
+/* Encabezados de tabla → blanco */
+.table thead th,
+.table thead th * {
+    color: #e2e8f0 !important;
+}
+
+.th-rojo,
+.th-rojo * {
+    color: #ffffff !important;
+}
+
+/* Pills de estado */
+.pill-cumplida {
+    color: #ffffff !important;
+}
+
+.pill-falta {
+    color: #64748b !important;
+}
+
+/* Alerts */
+.alert-warning {
+    color: #92400e !important;
+}
+
+.alert-danger {
+    color: #9f1239 !important;
+}
+
+.alert-success {
+    color: #065f46 !important;
+}
+
+.alert-info {
+    color: #075985 !important;
+}
+
+/* Spinner */
+.spinner-border {
+    color: #2563eb !important;
+}

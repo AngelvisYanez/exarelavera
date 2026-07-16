@@ -191,7 +191,7 @@ function conectarConTimeout($host, $user, $pass, $port, $database = null, $timeo
     $connected = @mysqli_real_connect($conn, $host, $user, $pass, $database, $port);
     if (!$connected) {
         $err = @mysqli_connect_error() ?: 'Conexión fallida (timeout o servidor no accesible)';
-        @mysqli_close($this->conexion)
+        @mysqli_close($conn);
         return [null, $err];
     }
     return [$conn, null];
@@ -213,7 +213,7 @@ $app->post('/v1/admin/conexion/test', function () use ($app) {
             return;
         }
         $serverInfo = @mysqli_get_server_info($conn);
-        @mysqli_close($this->conexion)
+        @mysqli_close($conn);
         echo json_encode([
             'success' => true,
             'message' => 'Conexión exitosa',

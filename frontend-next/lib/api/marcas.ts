@@ -13,4 +13,8 @@ export const marcasApi = {
   modificar(data: Partial<Marca>): Promise<ApiResponse<Marca>> {
     return api.post<ApiResponse<Marca>>('/marcas/modificar', data as Record<string, unknown>);
   },
+
+  eliminar(Mar_Cod: string): Promise<ApiResponse<void>> {
+    return api.post<ApiResponse<void>>('/marcas/eliminar', { Mar_Cod });
+  },
 };

@@ -86,6 +86,9 @@ if(isset($saveData)||isset($anulaData)||isset($savePermisos)){
         }else if(isset($anulaData)){
             $obBD_con_set->operacionobBD('perfiles.update', array('Per_Est'=>'I','where'=>array('Per_Cod'=>$id)), $obBD_conexion_set); 
         }else if(isset($savePermisos)){
+            $permisos = isset($_REQUEST['permisos']) ? $_REQUEST['permisos'] : (isset($permisos) ? $permisos : array());
+            $perfiles = isset($_REQUEST['perfiles']) ? $_REQUEST['perfiles'] : (isset($perfiles) ? $perfiles : array());
+
             if($savePermisos=='Individuales'){
                 $obBD_con_set->operacionobBD('perfiorgan.deleteWhere', array('Per_Cod'=>$Per_Cod), $obBD_conexion_set);
                 if(isset($permisos)) foreach ($permisos as $p) {

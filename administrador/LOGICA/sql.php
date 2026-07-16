@@ -188,7 +188,11 @@ organizado.Org_Ime FROM organizado WHERE organizado.Org_Cod IN (SELECT organizad
  (SELECT organizado.Org_Det, organizado.Org_Ord, organizado.Org_Des, organizado.Org_Niv, organizado.Org_Cod, organizado.Org_Img, 
 organizado.Org_Ime FROM organizado WHERE organizado.Org_Cod IN  
 (SELECT organizado.Org_Niv FROM procesos INNER JOIN perfiorgan ON (procesos.Pcs_Cod = perfiorgan.Pcs_Cod) INNER JOIN organizado ON
- (procesos.Org_Cod = organizado.Org_Cod) WHERE (" . $Par_Sql[0] . ")) AND organizado.Org_Niv = 0 ORDER BY organizado.Org_Ord)";
+ (procesos.Org_Cod = organizado.Org_Cod) WHERE (" . $Par_Sql[0] . ")) AND organizado.Org_Niv = 0 ORDER BY organizado.Org_Ord)
+ UNION DISTINCT
+ (SELECT organizado.Org_Det, organizado.Org_Ord, organizado.Org_Des, organizado.Org_Niv, organizado.Org_Cod, organizado.Org_Img, 
+organizado.Org_Ime FROM organizado WHERE organizado.Org_Cod IN  
+(SELECT procesos.Org_Cod FROM procesos INNER JOIN perfiorgan ON (procesos.Pcs_Cod = perfiorgan.Pcs_Cod) WHERE (" . $Par_Sql[0] . ")) AND organizado.Org_Niv = 0 ORDER BY organizado.Org_Ord)";
       //echo $perfiles_16; 
       return $perfiles_16;
       break;

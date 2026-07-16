@@ -1,0 +1,9 @@
+{
+    "name": "exa/control-tributario",
+    "description": "EXA Control Tributario",
+    "require": {
+        "smalot/pdfparser": "^2.0",
+        "phpoffice/phpspreadsheet": "^1.29",
+        "setasign/fpdf": "^1.8"
+    }
+}

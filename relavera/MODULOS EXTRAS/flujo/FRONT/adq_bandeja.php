@@ -1,0 +1,844 @@
+<?php
+/**
+ * EXA Adquisiciones - Bandeja de Trabajo de Usuarios
+ * @author Oz <oz-agent@warp.dev>
+ */
+
+require_once('../../administrador/LOGICA/seguridad.php');
+require_once('../LOGICA/wf_manager_log.php');
+
+$obBD_conexion = new Class_Log_Conexion_Global($Ses_Dat_Dis);
+$obBD_con1 = new MysqlDatos($obBD_conexion);
+$wf_mgr = new wf_manager_log($Ses_Dat_Dis);
+
+// Verificar acceso a la ventana 'bandeja'
+if (!$wf_mgr->verificarAccesoVentana('bandeja')) {
+    if (isset($ajax_workflow_action) || isset($ajax_buscar_compras) || isset($ajax_vincular_compra) || isset($ajax_desvincular_compra) || isset($ajax_get_solicitud_detail)) {
+        $obBD_con1->echoJson(array('success' => false, 'message' => 'Acceso denegado. No tiene permisos para realizar esta acci�n.'));
+        exit;
+    } else {
+        echo "<div class='alert alert-danger m-3'>Acceso denegado. No tiene permisos para ver esta ventana.</div>";
+        exit;
+    }
+}
+
+// 1. Procesar Acciones de Workflow (Aprobar, Rechazar, Observar, Devolver)
+if (isset($ajax_workflow_action)) {
+    $ins_cod = intval($_POST['Ins_Cod']);
+    $accion = mysqli_real_escape_string($obBD_conexion->conexion, $_POST['Action']);
+    $comentario = mysqli_real_escape_string($obBD_conexion->conexion, $_POST['Comentario']);
+    
+    // Validar si el usuario tiene permiso para procesar este paso del workflow
+    $usu_cod = $_SESSION['Ses_Usu_Cod'];
+    $dep_cod = $_SESSION['Ses_Dep_Cod'];
+    $perfiles_ids = implode(",", $_SESSION['Ses_Lis_Per']);
+    
+    $check_perm = $obBD_con1->getRowConsultaSql("
+        SELECT n.Nod_Cod 
+        FROM wf_instancias i
+        INNER JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act
+        WHERE i.Ins_Cod = $ins_cod AND i.Ins_Est = 'P' AND (
+            (
+                n.Dep_Cod IN (SELECT Dep_Cod FROM wf_departamento_usuarios WHERE Usu_Cod = $usu_cod)
+                AND (n.Nod_Usu_Asig IS NULL OR n.Nod_Usu_Asig = 'TODOS' OR n.Nod_Usu_Asig = '' OR FIND_IN_SET($usu_cod, n.Nod_Usu_Asig) > 0)
+            )
+            OR (n.Dep_Cod IN (SELECT d2.Dep_Cod FROM departamen d1 INNER JOIN departamen d2 ON d2.Dep_Des = d1.Dep_Des WHERE d1.Dep_Cod = $dep_cod) OR n.Per_Cod IN ($perfiles_ids))
+        );", $obBD_conexion);
+        
+    if (empty($check_perm)) {
+        $obBD_con1->echoJson(array('success' => false, 'message' => 'Acceso denegado. No tiene permisos para procesar esta etapa del requerimiento.'));
+        exit;
+    }
+    
+    // Carga de adjunto opcional
+    $adjunto_db_path = null;
+    if (isset($_FILES['adjunto']) && $_FILES['adjunto']['error'] == 0) {
+        $target_dir = "../../DATA/adquisiciones_sustentos/";
+        if (!file_exists($target_dir)) {
+            mkdir($target_dir, 0777, true);
+        }
+        $name = $_FILES['adjunto']['name'];
+        $ext = pathinfo($name, PATHINFO_EXTENSION);
+        $unique_name = "action_" . uniqid() . "." . $ext;
+        if (move_uploaded_file($_FILES['adjunto']['tmp_name'], $target_dir . $unique_name)) {
+            $adjunto_db_path = "adquisiciones_sustentos/" . $unique_name;
+        }
+    }
+
+    $resp = $wf_mgr->procesarAccionUsuario($ins_cod, $accion, $comentario, $adjunto_db_path);
+    $obBD_con1->echoJson($resp);
+}
+
+// 2. Buscar facturas de compra para vincular a solicitud
+if (isset($ajax_buscar_compras)) {
+    $search = mysqli_real_escape_string($obBD_conexion->conexion, $_GET['search']);
+    $compras = $obBD_con1->getArrayConsultaSql("
+        SELECT c.Cop_Cod, c.Cop_Num, c.Cop_Fec, CONCAT(p.Prs_Ape, ' ', p.Prs_Nom) as Proveedor,
+               ROUND((SELECT SUM(dc.Cop_Imp - (dc.Cop_Imp * dc.Cop_Dec / 100)) FROM det_compra dc WHERE dc.Cop_Cod = c.Cop_Cod), 2) as Total
+        FROM compras c
+        INNER JOIN proveedore pr ON pr.Prv_Cod = c.Prv_Cod
+        INNER JOIN persona p ON p.Prs_Cod = pr.Prs_Cod
+        WHERE c.Cop_Est = 'A' AND pr.Emp_Cod = $Ses_Emp_Cod
+          AND (c.Cop_Num LIKE '%$search%' OR p.Prs_Ape LIKE '%$search%' OR p.Prs_Nom LIKE '%$search%')
+        ORDER BY c.Cop_Fec DESC LIMIT 20;", $obBD_conexion);
+    $obBD_con1->echoJson(array('success' => true, 'compras' => $compras));
+}
+
+// 3. Vincular factura de compra a solicitud
+if (isset($ajax_vincular_compra)) {
+    $sol_cod = intval($_POST['Sol_Cod']);
+    $cop_cod = intval($_POST['Cop_Cod']);
+    $resp = $wf_mgr->vincularCompra($sol_cod, $cop_cod);
+    $obBD_con1->echoJson($resp);
+}
+
+// 4. Desvincular factura de compra
+if (isset($ajax_desvincular_compra)) {
+    $scm_cod = intval($_POST['Scm_Cod']);
+    $resp = $wf_mgr->desvincularCompra($scm_cod);
+    $obBD_con1->echoJson($resp);
+}
+
+// 5. Obtener Detalle Completo de una Solicitud
+if (isset($ajax_get_solicitud_detail)) {
+    $sol_cod = intval($_GET['sol_cod']);
+    
+    $sol = $obBD_con1->getRowConsultaSql("
+        SELECT s.*, tr.Trq_Des, u.Usu_Ced as Usu_Nom, d.Dep_Des,
+               IFNULL(p.Prs_Nom, '') as Sol_Nom, IFNULL(p.Prs_Ape, '') as Sol_Ape,
+               i.Ins_Cod, i.Nod_Act, i.Ins_Est,
+               n.Nod_Nom, n.Nod_Tip, n.Nod_Com_Obl, n.Nod_Adj_Obl
+        FROM adq_solicitudes s
+        INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
+        INNER JOIN usuarios u ON u.Usu_Cod = s.Usu_Sol
+        INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
+        INNER JOIN departamen d ON d.Dep_Cod = s.Dep_Sol
+        LEFT JOIN wf_instancias i ON i.Ins_Ent_Typ = 'adq_solicitudes' AND i.Ins_Ent_Cod = s.Sol_Cod
+        LEFT JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act
+        WHERE s.Sol_Cod = $sol_cod;", $obBD_conexion);
+        
+    $items = $obBD_con1->getArrayConsultaSql("SELECT id.*, pr.Pro_Nom FROM adq_solicitudes_det id LEFT JOIN producto pr ON pr.Pro_Cod = id.Pro_Cod WHERE id.Sol_Cod = $sol_cod ORDER BY id.Sde_Int;", $obBD_conexion);
+    $cotizaciones = $obBD_con1->getArrayConsultaSql("SELECT c.*, p.Prs_Nom, p.Prs_Ape, pr.Prv_Com FROM adq_solicitudes_cotizaciones c INNER JOIN proveedore pr ON pr.Prv_Cod = c.Prv_Cod INNER JOIN persona p ON p.Prs_Cod = pr.Prs_Cod WHERE c.Sol_Cod = $sol_cod;", $obBD_conexion);
+    $historial = $obBD_con1->getArrayConsultaSql("SELECT h.*, n.Nod_Nom, n.Nod_Tip, p.Prs_Nom, p.Prs_Ape, d.Dep_Des FROM wf_instancias_nodos h INNER JOIN wf_nodos n ON n.Nod_Cod = h.Nod_Cod LEFT JOIN usuarios u ON u.Usu_Cod = h.Usu_Cod LEFT JOIN persona p ON p.Prs_Cod = u.Prs_Cod LEFT JOIN departamen d ON d.Dep_Cod = h.Dep_Cod WHERE h.Ins_Cod = {$sol['Ins_Cod']} ORDER BY h.Isn_Fec DESC;", $obBD_conexion);
+    
+    // Obtener �rbol visual
+    $flow_visual = $wf_mgr->getVisualFlowData($sol['Ins_Cod']);
+
+    // Obtener compras vinculadas
+    $compras_vinculadas = $wf_mgr->getComprasVinculadas($sol_cod);
+
+    $obBD_con1->echoJson(array(
+        'success' => true,
+        'solicitud' => $sol,
+        'items' => $items,
+        'cotizaciones' => $cotizaciones,
+        'historial' => $historial,
+        'flow_visual' => $flow_visual,
+        'compras_vinculadas' => $compras_vinculadas
+    ));
+}
+
+// Consultar listas de solicitudes
+$usu_cod = $_SESSION['Ses_Usu_Cod'];
+$dep_cod = $_SESSION['Ses_Dep_Cod'];
+$perfiles_ids = implode(",", $_SESSION['Ses_Lis_Per']);
+
+// A. PENDIENTES DE MI APROBACI�N (Etapa activa asignada a mi depto o mis perfiles)
+$pendientes = $obBD_con1->getArrayConsultaSql("
+    SELECT s.*, tr.Trq_Des, CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) as Solicitante_Nom, d.Dep_Des, i.Ins_Cod, n.Nod_Nom, n.Nod_Sla
+    FROM adq_solicitudes s
+    INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
+    INNER JOIN usuarios u ON u.Usu_Cod = s.Usu_Sol
+    INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
+    INNER JOIN departamen d ON d.Dep_Cod = s.Dep_Sol
+    INNER JOIN wf_instancias i ON i.Ins_Ent_Typ = 'adq_solicitudes' AND i.Ins_Ent_Cod = s.Sol_Cod AND i.Ins_Est = 'P'
+    INNER JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act AND (
+        (
+            n.Dep_Cod IN (SELECT Dep_Cod FROM wf_departamento_usuarios WHERE Usu_Cod = $usu_cod)
+            AND (n.Nod_Usu_Asig IS NULL OR n.Nod_Usu_Asig = 'TODOS' OR n.Nod_Usu_Asig = '' OR FIND_IN_SET($usu_cod, n.Nod_Usu_Asig) > 0)
+        )
+        OR (n.Dep_Cod IN (SELECT d2.Dep_Cod FROM departamen d1 INNER JOIN departamen d2 ON d2.Dep_Des = d1.Dep_Des WHERE d1.Dep_Cod = $dep_cod) OR n.Per_Cod IN ($perfiles_ids))
+    )
+    WHERE s.Emp_Cod = $Ses_Emp_Cod AND s.Sol_Est IN ('E', 'O')
+    ORDER BY s.Sol_Pri DESC, s.Sol_Fec ASC;", $obBD_conexion);
+
+// B. MIS SOLICITUDES EN CURSO (Creadas por m�)
+$mis_solicitudes = $obBD_con1->getArrayConsultaSql("
+    SELECT s.*, tr.Trq_Des, i.Ins_Cod, n.Nod_Nom
+    FROM adq_solicitudes s
+    INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
+    LEFT JOIN wf_instancias i ON i.Ins_Ent_Typ = 'adq_solicitudes' AND i.Ins_Ent_Cod = s.Sol_Cod
+    LEFT JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act
+    WHERE s.Emp_Cod = $Ses_Emp_Cod AND s.Usu_Sol = $usu_cod AND s.Sol_Est IN ('E', 'O', 'P')
+    ORDER BY s.Sol_Fec DESC;", $obBD_conexion);
+
+// C. HIST�RICO / CERRADOS (Aprobadas, rechazadas o finalizadas)
+$historico = $obBD_con1->getArrayConsultaSql("
+    SELECT s.*, tr.Trq_Des, CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) as Solicitante_Nom, d.Dep_Des
+    FROM adq_solicitudes s
+    INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
+    INNER JOIN usuarios u ON u.Usu_Cod = s.Usu_Sol
+    INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
+    INNER JOIN departamen d ON d.Dep_Cod = s.Dep_Sol
+    WHERE s.Emp_Cod = $Ses_Emp_Cod AND (s.Usu_Sol = $usu_cod OR s.Sol_Est IN ('A', 'R'))
+    ORDER BY s.Sol_Fec DESC LIMIT 100;", $obBD_conexion);
+?>
+<!DOCTYPE html>
+<html lang="es" class="exa-ui-fill-root">
+<head>
+    <meta charset="UTF-8">
+    <title>Bandeja de Adquisiciones</title>
+    <?php require_once('adq_model3_assets.php'); ?>
+</head>
+<body class="exa-ui-fill-root">
+    <div class="panel panel-main exa-ui-panel exa-ui-fill-page">
+        <div class="panel-heading exa-header exa-header-flex">
+            <h3 class="panel-title"><i class="bi bi-inboxes"></i> Bandeja de Adquisiciones</h3>
+            <div class="exa-header-actions">
+                <button type="button" class="btn btn-success btn-sm" onclick="activarTabCrear()"><i class="bi bi-plus-lg"></i> Crear Requerimiento</button>
+                <a href="adq_dashboard.php" class="btn btn-primary btn-sm"><i class="bi bi-graph-up-arrow"></i> Dashboard</a>
+                <a href="adq_configuracion.php" class="btn btn-default btn-sm"><i class="bi bi-gear"></i> Configuraci�n</a>
+            </div>
+        </div>
+        <div class="panel-body exa-body">
+            <div class="exa-ui-page-view">
+        <ul class="nav nav-tabs exa-ui-nav-tabs" id="inboxTabs" role="tablist">
+            <li role="presentation" class="active">
+                <a href="#pending-panel" id="pending-tab" role="tab" data-toggle="tab"><i class="bi bi-clipboard-check"></i> Mis Pendientes <span class="badge"><?php echo count($pendientes); ?></span></a>
+            </li>
+            <li role="presentation">
+                <a href="#my-panel" id="my-tab" role="tab" data-toggle="tab"><i class="bi bi-person-workspace"></i> Mis Requerimientos <span class="badge"><?php echo count($mis_solicitudes); ?></span></a>
+            </li>
+            <li role="presentation">
+                <a href="#history-panel" id="history-tab" role="tab" data-toggle="tab"><i class="bi bi-clock-history"></i> Historial General</a>
+            </li>
+            <li role="presentation">
+                <a href="#create-panel" id="create-tab" role="tab" data-toggle="tab" onclick="cargarFormularioCreacion()"><i class="bi bi-file-earmark-plus"></i> Crear Solicitud</a>
+            </li>
+        </ul>
+
+        <div class="tab-content exa-ui-tab-content panels-area" id="inboxTabsContent">
+            <!-- 1. MIS PENDIENTES -->
+            <div class="tab-pane active" id="pending-panel" role="tabpanel">
+                <div class="exa-adq-table-wrap">
+                    <table class="table table-bordered exa-adq-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 100px;">N� Sol.</th>
+                                <th style="width: 150px;">Fecha</th>
+                                <th>Solicitante</th>
+                                <th>Departamento</th>
+                                <th>Tipo Pedido</th>
+                                <th style="width: 100px;">Prioridad</th>
+                                <th style="width: 150px;">Valor Est.</th>
+                                <th>Paso Actual Workflow</th>
+                                <th style="width: 120px;">Acci�n</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($pendientes)) { ?>
+                                <tr class="text-center"><td colspan="9" class="text-muted py-4">No posee requerimientos de adquisiciones pendientes de aprobaci�n en este momento.</td></tr>
+                            <?php } else { 
+                                foreach ($pendientes as $p) { ?>
+                                    <tr class="text-center">
+                                        <td class="fw-bold"><?php echo $p['Sol_Num']; ?></td>
+                                        <td><?php echo date('Y-m-d H:i', strtotime($p['Sol_Fec'])); ?></td>
+                                        <td class="text-start"><?php echo $p['Solicitante_Nom']; ?></td>
+                                        <td><?php echo $p['Dep_Des']; ?></td>
+                                        <td class="text-start"><?php echo $p['Trq_Des']; ?></td>
+                                        <td><span class="badge badge-<?php echo strtolower($p['Sol_Pri']); ?>"><?php echo $p['Sol_Pri']; ?></span></td>
+                                        <td class="text-end fw-bold font-monospace">$ <?php echo number_format($p['Sol_Val_Est'], 2); ?></td>
+                                        <td><span class="badge bg-primary fs-6"><i class="bi bi-clock"></i> <?php echo $p['Nod_Nom']; ?></span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary" onclick="abrirResolucion(<?php echo $p['Sol_Cod']; ?>, true)"><i class="bi bi-shield-check"></i> Resolver</button>
+                                        </td>
+                                    </tr>
+                            <?php } 
+                            } ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 2. MIS REQUERIMIENTOS -->
+            <div class="tab-pane" id="my-panel" role="tabpanel">
+                <div class="exa-adq-table-wrap">
+                    <table class="table table-bordered exa-adq-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 100px;">N� Sol.</th>
+                                <th style="width: 150px;">Fecha</th>
+                                <th>Tipo Pedido</th>
+                                <th style="width: 100px;">Prioridad</th>
+                                <th style="width: 150px;">Valor Est.</th>
+                                <th>Estado Solicitud</th>
+                                <th>Etapa Workflow</th>
+                                <th style="width: 100px;">Acci�n</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($mis_solicitudes)) { ?>
+                                <tr class="text-center"><td colspan="8" class="text-muted py-4">No ha iniciado requerimientos de adquisici�n a�n.</td></tr>
+                            <?php } else { 
+                                foreach ($mis_solicitudes as $ms) { 
+                                    $est = 'Borrador'; $badge = 'secondary';
+                                    if ($ms['Sol_Est'] == 'E') { $est = 'En Workflow'; $badge = 'primary'; }
+                                    elseif ($ms['Sol_Est'] == 'A') { $est = 'Aprobada'; $badge = 'success'; }
+                                    elseif ($ms['Sol_Est'] == 'R') { $est = 'Rechazada'; $badge = 'danger'; }
+                                    elseif ($ms['Sol_Est'] == 'O') { $est = 'Observada'; $badge = 'warning text-dark'; }
+                                    ?>
+                                    <tr class="text-center">
+                                        <td class="fw-bold"><?php echo $ms['Sol_Num']; ?></td>
+                                        <td><?php echo date('Y-m-d H:i', strtotime($ms['Sol_Fec'])); ?></td>
+                                        <td class="text-start"><?php echo $ms['Trq_Des']; ?></td>
+                                        <td><span class="badge badge-<?php echo strtolower($ms['Sol_Pri']); ?>"><?php echo $ms['Sol_Pri']; ?></span></td>
+                                        <td class="text-end fw-bold font-monospace">$ <?php echo number_format($ms['Sol_Val_Est'], 2); ?></td>
+                                        <td><span class="badge bg-<?php echo $badge; ?>"><?php echo $est; ?></span></td>
+                                        <td><span class="text-dark fw-bold"><?php echo $ms['Nod_Nom'] ?: '[Inactivo]'; ?></span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-dark" onclick="abrirResolucion(<?php echo $ms['Sol_Cod']; ?>, false)"><i class="bi bi-eye"></i> Detalle</button>
+                                        </td>
+                                    </tr>
+                            <?php } 
+                            } ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 3. HISTORIAL GENERAL -->
+            <div class="tab-pane" id="history-panel" role="tabpanel">
+                <div class="exa-adq-table-wrap">
+                    <table class="table table-bordered exa-adq-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 100px;">N� Sol.</th>
+                                <th style="width: 150px;">Fecha</th>
+                                <th>Solicitante</th>
+                                <th>Departamento</th>
+                                <th>Tipo Pedido</th>
+                                <th style="width: 100px;">Prioridad</th>
+                                <th style="width: 150px;">Valor Est.</th>
+                                <th>Estado</th>
+                                <th style="width: 100px;">Acci�n</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($historico as $h) { 
+                                $est = 'Borrador'; $badge = 'secondary';
+                                if ($h['Sol_Est'] == 'E') { $est = 'En Proceso'; $badge = 'primary'; }
+                                elseif ($h['Sol_Est'] == 'A') { $est = 'Aprobada'; $badge = 'success'; }
+                                elseif ($h['Sol_Est'] == 'R') { $est = 'Rechazada'; $badge = 'danger'; }
+                                elseif ($h['Sol_Est'] == 'O') { $est = 'Observada'; $badge = 'warning text-dark'; }
+                                ?>
+                                <tr class="text-center">
+                                    <td class="fw-bold"><?php echo $h['Sol_Num']; ?></td>
+                                    <td><?php echo date('Y-m-d H:i', strtotime($h['Sol_Fec'])); ?></td>
+                                    <td class="text-start"><?php echo $h['Solicitante_Nom']; ?></td>
+                                    <td><?php echo $h['Dep_Des']; ?></td>
+                                    <td class="text-start"><?php echo $h['Trq_Des']; ?></td>
+                                    <td><span class="badge badge-<?php echo strtolower($h['Sol_Pri']); ?>"><?php echo $h['Sol_Pri']; ?></span></td>
+                                    <td class="text-end fw-bold font-monospace">$ <?php echo number_format($h['Sol_Val_Est'], 2); ?></td>
+                                    <td><span class="badge bg-<?php echo $badge; ?>"><?php echo $est; ?></span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-dark" onclick="abrirResolucion(<?php echo $h['Sol_Cod']; ?>, false)"><i class="bi bi-eye"></i> Detalle</button>
+                                    </td>
+                                </tr>
+                            <?php } ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 4. CREAR SOLICITUD -->
+            <div class="tab-pane" id="create-panel" role="tabpanel">
+                <div id="create-panel-content">
+                    <div class="text-center p-5 text-muted">
+                        <i class="glyphicon glyphicon-refresh glyphicon-spin" style="font-size:24px;"></i>
+                        <div>Cargando formulario de registro...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESOLUTION MODAL -->
+    <div class="modal fade" id="mdlResolution" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="lblModalTitle">Detalle de Solicitud</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <!-- COLUMNA IZQUIERDA: Datos, �tems, Cotizaciones, Acciones -->
+                        <div class="col-md-7 col-sm-12">
+                            <!-- Datos Generales -->
+                            <div class="adq-detail-card" style="padding: 8px 12px; margin-bottom: 10px;">
+                                <h5 class="adq-section-header" style="color: #1e3a8a; border-bottom-color: #cbd5e1; margin-bottom: 6px; padding-bottom: 4px;"><i class="bi bi-file-earmark-text"></i> Datos del Requerimiento</h5>
+                                <table class="table table-condensed table-borderless small mb-0" style="font-size: 11px; margin-bottom: 0;">
+                                    <tr>
+                                        <td class="fw-bold text-muted" style="width: 80px; padding: 2px 4px; border:none;">Solicitante:</td>
+                                        <td id="detSolicitante" class="fw-bold text-dark" style="padding: 2px 4px; border:none;"></td>
+                                        <td class="fw-bold text-muted" style="width: 80px; padding: 2px 4px; border:none;">Depto:</td>
+                                        <td id="detDepartamento" style="padding: 2px 4px; border:none;"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold text-muted" style="padding: 2px 4px; border:none;">Tipo Pedido:</td>
+                                        <td id="detTipo" class="fw-semibold text-primary" style="padding: 2px 4px; border:none;"></td>
+                                        <td class="fw-bold text-muted" style="padding: 2px 4px; border:none;">Valor Est:</td>
+                                        <td id="detTotal" class="fw-bold font-monospace text-success" style="padding: 2px 4px; border:none;"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold text-muted" style="padding: 2px 4px; border:none; vertical-align: top;">Justificación:</td>
+                                        <td colspan="3" id="detJustificacion" class="text-muted" style="font-size: 10.5px; padding: 2px 4px; border:none; line-height: 1.2; font-style: italic;"></td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <!-- �tems Solicitados -->
+                            <div class="adq-detail-card">
+                                <h5 class="adq-section-header" style="margin-bottom: 6px; padding-bottom: 4px;"><i class="bi bi-cart3"></i> �tems Requeridos</h5>
+                                <div class="table-responsive" style="border: none; margin-bottom: 0; max-height: 180px; overflow-y: auto;">
+                                    <table class="table table-striped table-hover align-middle mb-0" style="font-size: 11px; border: 1px solid #e2e8f0; border-radius: 4px; overflow: hidden;" id="tblDetItems">
+                                        <thead style="background-color: #f8fafc; border-bottom: 2px solid #cbd5e1;">
+                                            <tr>
+                                                <th class="text-center" style="width: 30px; padding: 4px; color: #475569; font-weight: 700;">#</th>
+                                                <th style="padding: 4px; color: #475569; font-weight: 700;">Descripci�n / Art�culo</th>
+                                                <th class="text-center" style="width: 50px; padding: 4px; color: #475569; font-weight: 700;">IVA</th>
+                                                <th class="text-center" style="width: 60px; padding: 4px; color: #475569; font-weight: 700;">Cant.</th>
+                                                <th class="text-end" style="width: 90px; padding: 4px; color: #475569; font-weight: 700;">V. Unit.</th>
+                                                <th class="text-end" style="width: 90px; padding: 4px; color: #475569; font-weight: 700;">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Cotizaciones de Sustento -->
+                            <div class="adq-detail-card" id="divDetCotizaciones">
+                                <h5 class="adq-section-header" style="margin-bottom: 6px; padding-bottom: 4px;"><i class="bi bi-file-earmark-pdf"></i> Cotizaciones de Sustento</h5>
+                                <div class="row" id="detCotizacionesList" style="margin-left: -6px; margin-right: -10px; max-height: 160px; overflow-y: auto;"></div>
+                            </div>
+
+                            <!-- Compras Vinculadas -->
+                            <div class="adq-detail-card" id="divComprasVinculadas" style="display: none;">
+                                <h5 class="adq-section-header" style="margin-bottom: 6px; padding-bottom: 4px;"><i class="bi bi-link-45deg"></i> Facturas de Compra Vinculadas</h5>
+                                <div id="lstComprasVinculadas" style="max-height: 120px; overflow-y: auto;"></div>
+                            </div>
+
+                            <!-- Panel de Vinculaci�n de Compra (solo en nodo FACTURA) -->
+                            <div class="adq-detail-card" id="panelVincularCompra" style="display: none; border-color: #0ea5e9; background-color: #f0f9ff; padding: 8px 12px;">
+                                <h5 class="adq-section-header" style="color: #0369a1; border-bottom-color: #bae6fd; margin-bottom: 6px; padding-bottom: 4px;"><i class="bi bi-receipt"></i> Vincular Factura de Compra EXA</h5>
+                                <div style="margin-bottom: 8px;">
+                                    <input type="text" id="txtBuscarCompra" class="form-control input-sm" placeholder="Buscar factura por N� o Proveedor..." oninput="buscarComprasVincular()" style="height: 26px; font-size: 11px; padding: 3px 8px;">
+                                </div>
+                                <div class="table-responsive" id="divResultCompras" style="display: none; border: 1px solid #bae6fd; border-radius: 4px; background-color: #ffffff; max-height: 120px; overflow-y: auto;">
+                                    <table class="table table-condensed table-hover mb-0" style="font-size: 11px;">
+                                        <thead style="background-color: #f0f9ff;">
+                                            <tr>
+                                                <th class="text-center">N� Factura</th>
+                                                <th class="text-center">Fecha</th>
+                                                <th>Proveedor</th>
+                                                <th class="text-end">Total</th>
+                                                <th class="text-center" style="width: 60px;">Acci�n</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tblBuscarCompras"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Panel de Decisi�n del Aprobador -->
+                            <div class="adq-detail-card" id="panelDecision" style="display: none; border-color: #3b82f6; background-color: #f0f7ff; padding: 8px 12px;">
+                                <h5 class="adq-section-header" style="color: #1d4ed8; border-bottom-color: #bfdbfe; margin-bottom: 6px; padding-bottom: 4px;"><i class="bi bi-check2-all"></i> Decisi�n en esta Etapa (<span id="lblNodeActionName"></span>)</h5>
+                                <form id="frmWorkflowAction" method="POST" enctype="multipart/form-data">
+                                    <input type="hidden" name="Ins_Cod" id="actionInsCod">
+                                    <input type="hidden" name="Action" id="actionName">
+                                    <div style="margin-bottom: 8px;">
+                                        <textarea class="form-control" name="Comentario" id="actionComentario" rows="2" placeholder="Redacte el motivo de su decisi�n..." style="border-radius: 4px; border-color: #bfdbfe; font-size: 11px; padding: 4px 8px;"></textarea>
+                                    </div>
+                                    <div style="margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                                        <label class="form-label fw-semibold" style="font-size: 11px; color: #1d4ed8; margin: 0; white-space: nowrap;">Sustento Adjunto <span id="lblAdjReq" class="text-danger" style="display: none;">*</span></label>
+                                        <input type="file" class="form-control input-sm" name="adjunto" id="actionAdjunto" style="border-radius: 4px; border-color: #bfdbfe; background-color: #ffffff; height: 26px; font-size: 11px; padding: 2px 6px; width: auto; max-width: 200px;">
+                                    </div>
+                                    <div class="adq-action-buttons">
+                                        <button type="button" class="btn btn-success" onclick="enviarAccion('APROBAR')"><i class="bi bi-check-circle"></i> Aprobar</button>
+                                        <button type="button" class="btn btn-warning text-dark" style="background-color: #f59e0b; border-color: #f59e0b; color: #ffffff;" onclick="enviarAccion('OBSERVAR')"><i class="bi bi-exclamation-triangle"></i> Observar</button>
+                                        <button type="button" class="btn btn-default" style="background-color: #64748b; border-color: #64748b; color: #ffffff;" onclick="enviarAccion('DEVOLVER')"><i class="bi bi-reply"></i> Devolver</button>
+                                        <button type="button" class="btn btn-danger" onclick="enviarAccion('RECHAZAR')"><i class="bi bi-x-circle"></i> Rechazar</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- COLUMNA DERECHA: Progreso y Historial -->
+                        <div class="col-md-5 col-sm-12">
+                            <!-- Tracker Visual de Progreso por Colores -->
+                            <div class="adq-detail-card" style="background-color: #f8fafc; border-color: #e2e8f0;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 4px;">
+                                    <label class="form-label fw-bold text-muted m-0" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;"><i class="bi bi-activity"></i> Progreso del Workflow</label>
+                                    <button class="btn btn-xs btn-primary" style="background-color: #1e3a8a; border-color: #1e3a8a; font-size: 9.5px; padding: 1px 6px;" onclick="abrirSeguimientoDetallado()"><i class="bi bi-clock-history"></i> Ver SLA</button>
+                                </div>
+                                <div class="tracker-wrapper" id="flowTracker" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px; justify-content: flex-start; overflow-x: auto; white-space: nowrap;">
+                                    <!-- Los pasos del workflow din�micos se inyectan aqu� -->
+                                </div>
+                            </div>
+
+                            <!-- Historial del Workflow -->
+                            <div class="adq-detail-card">
+                                <h5 class="adq-section-header" style="margin-bottom: 6px; padding-bottom: 4px;"><i class="bi bi-list-stars"></i> Historial de Firmas</h5>
+                                <div style="max-height: 380px; overflow-y: auto; padding-right: 4px;">
+                                    <div class="adq-timeline" id="lstHistorial"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SEGUIMIENTO DETALLADO (SLA) -->
+    <div class="modal fade" id="mdlSeguimiento" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg" style="width:95%;max-width:1200px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="lblSeguimientoTitle">Seguimiento de Requerimiento</h4>
+                </div>
+                <div class="modal-body" id="seguimientoModalBody" style="max-height:75vh;overflow-y:auto;">
+                    <!-- Contenido AJAX se inyecta aqu� -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default btn-sm" onclick="volverAResolucion()"><i class="bi bi-arrow-left"></i> Volver al Detalle</button>
+                    <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentInsCod = null;
+        let currentSolCod = null;
+        let isComObl = false;
+        let isAdjObl = false;
+        let searchTimer = null;
+
+        function abrirResolucion(solCod, renderPanelAction) {
+            $.getJSON('', { ajax_get_solicitud_detail: true, sol_cod: solCod }, function(res) {
+                if (res.success) {
+                    const sol = res.solicitud;
+                    currentInsCod = sol.Ins_Cod;
+
+                    // Cabecera
+                    $('#lblModalTitle').text(`Solicitud de Adquisici�n N� ${sol.Sol_Num}`);
+                    $('#detSolicitante').text(`${sol.Sol_Nom} ${sol.Sol_Ape}`);
+                    $('#detDepartamento').text(sol.Dep_Des);
+                    $('#detTipo').text(sol.Trq_Des);
+                    $('#detTotal').text(`$ ${parseFloat(sol.Sol_Val_Est).toFixed(2)}`);
+                    $('#detJustificacion').text(sol.Sol_Jus);
+
+                    // �tems
+                    const $tbody = $('#tblDetItems tbody').empty();
+                    res.items.forEach(function(item, idx) {
+                        const ivaBadge = parseInt(item.Sde_Iva) === 1 ? '<span class="badge bg-success" style="background-color: #10b981 !important; color: #ffffff !important; font-size: 9px; padding: 2px 4px;">SÍ</span>' : '<span class="badge bg-secondary" style="background-color: #6b7280 !important; color: #ffffff !important; font-size: 9px; padding: 2px 4px;">NO</span>';
+                        $tbody.append(`
+                            <tr class="text-center">
+                                <td>${idx + 1}</td>
+                                <td class="text-start">${item.Sde_Des}</td>
+                                <td>${ivaBadge}</td>
+                                <td>${parseFloat(item.Sde_Can).toFixed(4)}</td>
+                                <td class="text-end">$ ${parseFloat(item.Sde_Pru).toFixed(2)}</td>
+                                <td class="text-end fw-bold">$ ${(parseFloat(item.Sde_Can) * parseFloat(item.Sde_Pru)).toFixed(2)}</td>
+                            </tr>
+                        `);
+                    });
+
+                    // Cotizaciones
+                    const $cotList = $('#detCotizacionesList').empty();
+                    if (res.cotizaciones.length > 0) {
+                        $('#divDetCotizaciones').show();
+                        res.cotizaciones.forEach(function(c) {
+                            const ganadorClass = c.Cot_Sel == 1 ? 'ganadora' : '';
+                            const badgeGanador = c.Cot_Sel == 1 ? '<span class="badge bg-success pull-right" style="background-color: #10b981 !important; color: #ffffff !important; margin-top: 2px;"><i class="bi bi-trophy"></i> Seleccionada</span>' : '';
+                            $cotList.append(`
+                                <div class="col-sm-6" style="padding-left: 10px; padding-right: 10px;">
+                                    <div class="adq-cot-card ${ganadorClass}">
+                                        <div style="margin-bottom: 6px; overflow: hidden;">
+                                            <span class="fw-bold text-dark" style="font-size: 13px;">${c.Prv_Com || (c.Prs_Nom + ' ' + c.Prs_Ape)}</span>
+                                            ${badgeGanador}
+                                        </div>
+                                        <div style="color: #64748b; margin-bottom: 8px; font-size: 12px;">
+                                            Valor: <strong class="text-success" style="font-size: 14px;">$ ${parseFloat(c.Cot_Val).toFixed(2)}</strong>
+                                        </div>
+                                        <a href="../../DATA/${c.Cot_Adj}" target="_blank" class="btn btn-xs btn-primary" style="background-color: #1e3a8a; border-color: #1e3a8a; color: #ffffff;"><i class="bi bi-file-earmark-pdf"></i> Ver Sustento PDF</a>
+                                        ${c.Cot_Sel == 1 && c.Cot_Jus ? `<div class="mt-2 text-muted" style="font-size: 11px; margin-top: 8px; border-top: 1px dashed #cbd5e1; padding-top: 6px;"><strong>Justificaci�n:</strong> ${c.Cot_Jus}</div>` : ''}
+                                    </div>
+                                </div>
+                            `);
+                        });
+                    } else {
+                        $('#divDetCotizaciones').hide();
+                    }
+
+                    // Historial
+                    const $hist = $('#lstHistorial').empty();
+                    res.historial.forEach(function(h) {
+                        const actor = h.Usuario_Nom || h.Dep_Des || 'Sistema';
+                        let actionBadge = '';
+                        let itemClass = '';
+                        
+                        if (h.Isn_Acc === 'CREAR') {
+                            actionBadge = '<span class="badge bg-secondary" style="background-color: #64748b !important; color: #ffffff !important;">Inici� Pedido</span>';
+                            itemClass = 'active';
+                        } else if (h.Isn_Acc === 'APROBAR') {
+                            actionBadge = '<span class="badge bg-success" style="background-color: #10b981 !important; color: #ffffff !important;">Aprob�</span>';
+                            itemClass = 'success';
+                        } else if (h.Isn_Acc === 'OBSERVAR') {
+                            actionBadge = '<span class="badge bg-warning text-dark" style="background-color: #f59e0b !important; color: #1e293b !important;">Observ�</span>';
+                            itemClass = 'warning';
+                        } else if (h.Isn_Acc === 'DEVOLVER') {
+                            actionBadge = '<span class="badge bg-secondary" style="background-color: #4b5563 !important; color: #ffffff !important;">Devolvi�</span>';
+                            itemClass = 'active';
+                        } else if (h.Isn_Acc === 'RECHAZAR') {
+                            actionBadge = '<span class="badge bg-danger" style="background-color: #ef4444 !important; color: #ffffff !important;">Rechaz�</span>';
+                            itemClass = 'danger';
+                        }
+
+                        $hist.append(`
+                            <div class="adq-timeline-item ${itemClass}">
+                                <div class="adq-timeline-content">
+                                    <div class="adq-timeline-header">
+                                        <span class="adq-timeline-title">${actionBadge} en etapa: <strong>${h.Nod_Nom}</strong></span>
+                                        <span class="adq-timeline-date"><i class="bi bi-clock"></i> ${h.Isn_Fec}</span>
+                                    </div>
+                                    <div class="adq-timeline-body">
+                                        Por: <span class="text-primary fw-bold">${actor}</span>
+                                        ${h.Isn_Com ? `<div class="adq-timeline-comment">"${h.Isn_Com}"</div>` : ''}
+                                        ${h.Isn_Adj ? `<div style="margin-top: 6px;"><a href="../../DATA/${h.Isn_Adj}" target="_blank" class="btn btn-xs btn-default" style="font-size: 10px; padding: 1px 6px;"><i class="bi bi-paperclip"></i> Ver Adjunto</a></div>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        `);
+                    });
+
+                    // Progreso Visual del Workflow por Colores (Fase 3.2 tracker)
+                    const $tracker = $('#flowTracker').empty();
+                    res.flow_visual.nodos.forEach(function(node, index) {
+                        if (index > 0) {
+                            $tracker.append('<div class="tracker-arrow"><i class="bi bi-arrow-right-short"></i></div>');
+                        }
+                        $tracker.append(`
+                            <div class="tracker-node color-${node.color}">
+                                <i class="bi bi-circle-fill"></i> ${node.nombre}<br>
+                                <span style="font-size: 9px; font-weight: normal; opacity: 0.8;">[${node.tipo}]</span>
+                            </div>
+                        `);
+                    });
+
+                    // Compras vinculadas
+                    currentSolCod = sol.Sol_Cod;
+                    const comprasV = res.compras_vinculadas || [];
+                    const $comprasList = $('#lstComprasVinculadas').empty();
+                    if (comprasV.length > 0) {
+                        $('#divComprasVinculadas').show();
+                        comprasV.forEach(function(cv) {
+                            $comprasList.append(`
+                                <div class="card p-2 mb-2 border-success bg-success-subtle d-flex flex-row justify-content-between align-items-center" style="font-size: 12px;">
+                                    <div>
+                                        <strong><i class="bi bi-receipt-cutoff"></i> Factura # ${cv.Cop_Num}</strong> - ${cv.Proveedor} 
+                                        <span class="text-muted">(${cv.Cop_Fec})</span>
+                                        <span class="fw-bold font-monospace text-dark ms-2">$ ${parseFloat(cv.Total_Compra || 0).toFixed(2)}</span>
+                                    </div>
+                                    <button class="btn btn-xs btn-outline-danger p-1 py-0 border-0" onclick="desvincularCompra(${cv.Scm_Cod}, ${sol.Sol_Cod})"><i class="bi bi-x-lg"></i></button>
+                                </div>
+                            `);
+                        });
+                    } else {
+                        $('#divComprasVinculadas').hide();
+                    }
+
+                    // Panel de vinculaci�n de compra (solo en nodos FACTURA)
+                    if (renderPanelAction && sol.Nod_Tip === 'FACTURA' && sol.Ins_Est === 'P') {
+                        $('#panelVincularCompra').show();
+                        $('#txtBuscarCompra').val('');
+                        $('#divResultCompras').hide();
+                    } else {
+                        $('#panelVincularCompra').hide();
+                    }
+
+                    // Panel de acci�n
+                    if (renderPanelAction && sol.Ins_Est === 'P') {
+                        isComObl = parseInt(sol.Nod_Com_Obl) === 1;
+                        isAdjObl = parseInt(sol.Nod_Adj_Obl) === 1;
+
+                        $('#lblNodeActionName').text(sol.Nod_Nom);
+                        $('#actionInsCod').val(sol.Ins_Cod);
+                        $('#actionComentario').val('');
+                        $('#actionAdjunto').val('');
+
+                        $('#lblComReq').toggle(isComObl);
+                        $('#lblAdjReq').toggle(isAdjObl);
+
+                        $('#panelDecision').show();
+                    } else {
+                        $('#panelDecision').hide();
+                    }
+
+                    // Abrir modal
+                    $('#mdlResolution').modal('show');
+                } else {
+                    alert('No se pudo cargar el detalle: ' + res.message);
+                }
+            });
+        }
+
+        function buscarComprasVincular() {
+            clearTimeout(searchTimer);
+            const term = $('#txtBuscarCompra').val().trim();
+            if (term.length < 2) {
+                $('#divResultCompras').hide();
+                return;
+            }
+            searchTimer = setTimeout(function() {
+                $.getJSON('', { ajax_buscar_compras: true, search: term }, function(res) {
+                    if (res.success) {
+                        const $tbody = $('#tblBuscarCompras').empty();
+                        if (res.compras.length === 0) {
+                            $tbody.append('<tr><td colspan="5" class="text-center text-muted">No se encontraron facturas.</td></tr>');
+                        } else {
+                            res.compras.forEach(function(c) {
+                                $tbody.append(`
+                                    <tr class="text-center">
+                                        <td class="fw-bold">${c.Cop_Num}</td>
+                                        <td>${c.Cop_Fec}</td>
+                                        <td class="text-start">${c.Proveedor}</td>
+                                        <td class="text-end font-monospace">$ ${parseFloat(c.Total || 0).toFixed(2)}</td>
+                                        <td><button class="btn btn-xs btn-success p-1 py-0" onclick="vincularCompra(${c.Cop_Cod})"><i class="bi bi-link-45deg"></i></button></td>
+                                    </tr>
+                                `);
+                            });
+                        }
+                        $('#divResultCompras').show();
+                    }
+                });
+            }, 350);
+        }
+
+        function vincularCompra(copCod) {
+            $.post('?ajax_vincular_compra=1', { Sol_Cod: currentSolCod, Cop_Cod: copCod }, function(res) {
+                if (res.success) {
+                    alert('Factura vinculada correctamente a la solicitud.');
+                    abrirResolucion(currentSolCod, true);
+                } else {
+                    alert('Error: ' + res.message);
+                }
+            }, 'json');
+        }
+
+        function desvincularCompra(scmCod, solCod) {
+            if (!confirm('�Desea desvincular esta factura de compra?')) return;
+            $.post('?ajax_desvincular_compra=1', { Scm_Cod: scmCod }, function(res) {
+                if (res.success) {
+                    abrirResolucion(solCod, true);
+                } else {
+                    alert('Error: ' + res.message);
+                }
+            }, 'json');
+        }
+
+        function enviarAccion(accion) {
+            if (accion === 'APROBAR') {
+                if (isComObl && !$('#actionComentario').val().trim()) {
+                    alert('El comentario es obligatorio para aprobar en esta etapa.');
+                    return;
+                }
+                if (isAdjObl && !$('#actionAdjunto').val()) {
+                    alert('Cargar un archivo adjunto de soporte es obligatorio en esta etapa.');
+                    return;
+                }
+            }
+
+            $('#actionName').val(accion);
+            const formData = new FormData($('#frmWorkflowAction')[0]);
+
+            $.ajax({
+                url: '?ajax_workflow_action=1',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                dataType: 'json',
+                success: function(res) {
+                    if (res.success) {
+                        alert(`�Acci�n '${accion}' procesada correctamente en el Workflow!`);
+                        window.location.reload();
+                    } else {
+                        alert('Error al procesar acci�n: ' + res.message);
+                    }
+                },
+                error: function() {
+                    alert('Error cr�tico de red al comunicarse con el servidor.');
+                }
+            });
+        }
+
+        let formLoaded = false;
+        function cargarFormularioCreacion(callback) {
+            if (formLoaded) {
+                if (callback) callback();
+                return;
+            }
+            $.get('adq_solicitud.php', { ajax_get_form: 1 }, function(html) {
+                $('#create-panel-content').html(html);
+                formLoaded = true;
+                if (callback) callback();
+            }).fail(function(xhr, status, error) {
+                alert('Error al cargar el formulario de creaci�n: ' + error + ' (Status: ' + xhr.status + ')');
+            });
+        }
+
+        function activarTabCrear() {
+            $('a[href="#create-panel"]').tab('show');
+            cargarFormularioCreacion();
+        }
+
+        function abrirSeguimientoDetallado() {
+            if (!currentSolCod) return;
+            $('#lblSeguimientoTitle').text('Seguimiento de Requerimiento #' + currentSolCod);
+            $('#seguimientoModalBody').html('<div class="text-center p-4"><i class="glyphicon glyphicon-refresh glyphicon-spin" style="font-size:24px;"></i><div class="mt-2">Cargando seguimiento...</div></div>');
+            
+            // Ocultar modal de resoluci�n para no encimar
+            $('#mdlResolution').modal('hide');
+            $('#mdlSeguimiento').modal('show');
+            
+            $.get('adq_seguimiento.php', { sol_cod: currentSolCod }, function(html) {
+                $('#seguimientoModalBody').html(html);
+            });
+        }
+
+        function volverAResolucion() {
+            $('#mdlSeguimiento').modal('hide');
+            if ($('#mdlResolution').data('bs.modal')) {
+                $('#mdlResolution').modal('show');
+            } else {
+                abrirResolucion(currentSolCod, true);
+            }
+        }
+
+        $(document).ready(function() {
+            // Verificar si se solicit� activar una pesta�a espec�fica por URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const tab = urlParams.get('tab');
+            if (tab === 'crear_solicitud') {
+                activarTabCrear();
+            }
+        });
+    </script>
+</body>
+</html>

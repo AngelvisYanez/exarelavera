@@ -1,0 +1,9 @@
+{
+    "ruc": "1790000000001",
+    "clave": "1234",
+    "fecha_desde": "2023-01-01",
+    "fecha_hasta": "2023-01-31",
+    "tipo_comprobante": "todos",
+    "flow": "recibidos",
+    "Emp_Cod": "1"
+}

@@ -210,6 +210,7 @@ require_once __DIR__ . "/v1/inventario/productos.php";
 require_once __DIR__ . "/v1/relavera/manifiestos.php";
 require_once __DIR__ . "/v1/facturacion/comprobantes.php";
 require_once __DIR__ . "/v1/facturacion/emitir.php";
+require_once __DIR__ . "/v1/facturacion/sri-scraper.php";
 require_once __DIR__ . "/v1/auditoria/tareas.php";
 require_once __DIR__ . "/v1/admin/conexion.php";
 
@@ -227,6 +228,7 @@ require_once __DIR__ . "/v1/camaronera/index.php";
 require_once __DIR__ . "/v1/tesoreria/bancos.php";
 require_once __DIR__ . "/v1/admin/soporte.php";
 require_once __DIR__ . "/v1/admin/modulo-uso.php";
+require_once __DIR__ . "/v1/admin/directorio.php";
 
 $app->get("/v1/test", function () {
     echo json_encode(["mysqli" => function_exists("mysqli_connect")]);

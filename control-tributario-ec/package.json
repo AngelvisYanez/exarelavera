@@ -1,0 +1,18 @@
+{
+  "name": "control-tributario-ec",
+  "version": "1.0.0",
+  "description": "Herramienta profesional para contadores: IVA (Form. 104), retenciones (Form. 103), Impuesto a la Renta, planillas IESS, semáforo de obligaciones y comprobantes SRI.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "playwright": "^1.61.1",
+    "playwright-extra": "^4.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  }
+}

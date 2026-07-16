@@ -13,4 +13,8 @@ export const proveedoresApi = {
   modificar(data: Partial<Proveedor>): Promise<ApiResponse<Proveedor>> {
     return api.post<ApiResponse<Proveedor>>('/proveedores/modificar', data as Record<string, unknown>);
   },
+
+  eliminar(Prv_Cod: string): Promise<ApiResponse<void>> {
+    return api.post<ApiResponse<void>>('/proveedores/eliminar', { Prv_Cod });
+  },
 };

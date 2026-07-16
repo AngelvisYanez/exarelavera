@@ -19,9 +19,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTab, TabsPanel } from "@/components/ui/tabs";
-import { Plus, Search, Pencil, Loader2, X, AlertCircle } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Loader2, X, AlertCircle } from "lucide-react";
 import { clientesApi, proveedoresApi } from "@/lib/api";
 import { useQuery } from "@/lib/use-query";
+import { toast } from "sonner";
+import { useConfirm } from "@/lib/hooks/use-confirm";
 import type { Cliente, Proveedor } from "@/lib/api-types";
 
 function ClientesTab() {
@@ -42,6 +44,7 @@ function ClientesTab() {
   });
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
+  const { confirm, ConfirmDialog } = useConfirm();
 
   const filtered = Array.isArray(data?.data)
     ? data.data.filter(
@@ -72,6 +75,22 @@ function ClientesTab() {
     setIsEdit(true);
     setModalError(null);
     setShowModal(true);
+  };
+
+  const handleDelete = async (cliente: Cliente) => {
+    const ok = await confirm("¿Estás seguro de eliminar este cliente?");
+    if (!ok) return;
+    try {
+      const res = await clientesApi.eliminar(cliente.Cli_Cod!);
+      if (res.status) {
+        toast.success("Cliente eliminado correctamente");
+        refetch();
+      } else {
+        toast.error(res.error || "Error al eliminar el cliente");
+      }
+    } catch {
+      toast.error("Error de conexión al eliminar");
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -112,6 +131,7 @@ function ClientesTab() {
   };
 
   return (
+    <>
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
@@ -163,13 +183,22 @@ function ClientesTab() {
                   <TableCell>{c.Cli_Cel || "-"}</TableCell>
                   <TableCell>{c.Cli_Mail || "-"}</TableCell>
                   <TableCell className="text-center">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleOpenEdit(c)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center justify-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleOpenEdit(c)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(c)}
+                      >
+                        <Trash2 className="h-4 w-4 text-error" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -321,6 +350,8 @@ function ClientesTab() {
         </div>
       )}
     </Card>
+    {ConfirmDialog}
+    </>
   );
 }
 
@@ -341,6 +372,7 @@ function ProveedoresTab() {
   });
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
+  const { confirm, ConfirmDialog } = useConfirm();
 
   const filtered = Array.isArray(data?.data)
     ? data.data.filter(
@@ -370,6 +402,22 @@ function ProveedoresTab() {
     setIsEdit(true);
     setModalError(null);
     setShowModal(true);
+  };
+
+  const handleDelete = async (proveedor: Proveedor) => {
+    const ok = await confirm("¿Estás seguro de eliminar este proveedor?");
+    if (!ok) return;
+    try {
+      const res = await proveedoresApi.eliminar(proveedor.Prv_Cod!);
+      if (res.status) {
+        toast.success("Proveedor eliminado correctamente");
+        refetch();
+      } else {
+        toast.error(res.error || "Error al eliminar el proveedor");
+      }
+    } catch {
+      toast.error("Error de conexión al eliminar");
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -410,6 +458,7 @@ function ProveedoresTab() {
   };
 
   return (
+    <>
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
@@ -461,13 +510,22 @@ function ProveedoresTab() {
                   <TableCell>{p.Prv_Cel || "-"}</TableCell>
                   <TableCell>{p.Prv_Mail || "-"}</TableCell>
                   <TableCell className="text-center">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleOpenEdit(p)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center justify-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleOpenEdit(p)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(p)}
+                      >
+                        <Trash2 className="h-4 w-4 text-error" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -607,6 +665,8 @@ function ProveedoresTab() {
         </div>
       )}
     </Card>
+    {ConfirmDialog}
+    </>
   );
 }
 

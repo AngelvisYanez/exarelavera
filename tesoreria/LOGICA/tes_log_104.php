@@ -28,8 +28,8 @@ class Class_Log_Datos_Anx extends MysqlDatos{
 ?>
 			<table width="80%" border="0" cellpadding="0" cellspacing="0">
 			  <tr align="center">
-			    <td width="5%" rowspan="5" valign="top"><img src="<?php echo $row_institucion['../../administrador/LOGICA/Emp_Log']; ?>" width="83" height="67" /></td>
-			    <td width="75%" class="TITULO_REPORTE_2"><?phpPhp echo $row_institucion['Emp_Nom']; ?></td>
+			    <td width="5%" rowspan="5" valign="top"><img src="<?php echo $row_institucion['Emp_Log']; ?>" width="83" height="67" /></td>
+			    <td width="75%" class="TITULO_REPORTE_2"><?php echo $row_institucion['Emp_Nom']; ?></td>
 			  </tr>
 			  <tr align="center">
 			    <td valign="top" class="Texto_Reporte"><div align="center"><strong>R.U.C.:</strong> &nbsp;<?php echo $row_institucion['Emp_Ruc']; ?>&nbsp;		      <strong>TELEFONO:</strong>&nbsp;<?php echo $row_institucion['Suc_Te1']; ?></div></td>
@@ -42,7 +42,7 @@ class Class_Log_Datos_Anx extends MysqlDatos{
 		      </tr>
 			  <tr align="center">
 			    <td align="center" valign="top" class="Texto_Reporte"><div align="center">
-			<?phpPhp 
+			<?php
 				if (count($row_provincia) > 0)
 				{
 					$provincia = " - ".$row_provincia['Pro_Nom'].' - '.$row_provincia['Pas_Nom'];

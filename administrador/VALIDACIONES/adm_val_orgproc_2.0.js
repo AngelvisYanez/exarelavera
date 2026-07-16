@@ -212,7 +212,7 @@ function saveForm(data) {
     });
 }
 function anulaProcess(data){
-    $.createDialogConfirm('¿Est&aacute; seguro que desea desactivar el link, no se podra reversar?',{anulaData:true, id:data.id, type:data.type},function(data){
+    $.createDialogConfirm('¿Est&aacute; seguro que desea eliminar el registro, no se podra reversar?',{anulaData:true, id:data.id, type:data.type},function(data){
         $.saveDataJson("", data, function (r){
             $treeview.nodeItemEnabled(selected.id,false);
             $('.formNone').hide();

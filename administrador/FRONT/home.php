@@ -121,7 +121,16 @@ if (isset($setSucu)) {
     $_SESSION['Ses_Usu_Cad'] = $row_rs_control['Usu_Cad'];
     $_SESSION['Ses_Usu_Men'] = $row_rs_control['Usu_Men'];
     $_SESSION['Ses_Per_Cod'] = isset($row_rs_control['Per_Cod']) ? $row_rs_control['Per_Cod'] : '';
-    //var_dump($row_rs_control);
+    $_SESSION['Ses_Prs_Cod'] = isset($row_rs_control['Prs_Cod']) ? $row_rs_control['Prs_Cod'] : '';
+    $rs_perfiles = $obBD_con->getArrayConsulta(21, $row_rs_control['Usu_Cod'], $obBD_conexion);
+    $lperf = array();
+    $Per_Des = array();
+    foreach ($rs_perfiles as $v0) {
+        $lperf[] = $v0['Per_Cod'];
+        $Per_Des[] = $v0['Per_Des'];
+    }
+    $_SESSION['Ses_Lis_Per'] = $lperf;
+    $_SESSION['Ses_Per_Des'] = $Per_Des;
     echo json_encode(array('success' => true, 'ver' => $row_rs_control));
     exit();
 }
@@ -430,7 +439,7 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
                             <li><a href="./adm_pas_usuarios_2.0.php" target="contenido">
                                 <i class="ace-icon fa fa-key"></i>Cambiar clave
                             </a></li>
-                            <?php if (count($rs_empresas) > 1) { ?>
+                            <?php if ($Ses_Usu_Tip == 'A' && count($rs_empresas) > 1) { ?>
                                 <li><a data-toggle="modal" data-target="#myModal">
                                     <i class="ace-icon fa fa-user"></i>Cambiar empresa
                                 </a></li><?php } ?>
@@ -465,7 +474,7 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
             <div class="sidebar-shortcuts" id="sidebar-shortcuts">
                 <div class="sidebar-shortcuts-large" id="sidebar-shortcuts-large">
                     <button class="btn btn-success" style="display:none;"><i class="ace-icon fa fa-signal"></i></button>
-                    <button class="btn btn-info" <?php if (count($rs_empresas) == 1) { ?>style="display:none;" <?php } ?> data-toggle="modal" data-target="#myModal" data-tooltip="tooltip" data-placement="right" title="Cambiar Empresa"><i class="ace-icon fa fa-sign-in"></i></button>
+                    <button class="btn btn-info" <?php if ($Ses_Usu_Tip != 'A' || count($rs_empresas) == 1) { ?>style="display:none;" <?php } ?> data-toggle="modal" data-target="#myModal" data-tooltip="tooltip" data-placement="right" title="Cambiar Empresa"><i class="ace-icon fa fa-sign-in"></i></button>
                     <a href="./adm_pas_usuarios_1.0.php" style="display:none;" target="contenido" class="btn btn-warning" data-tooltip="tooltip" data-placement="right" title="Cambiar Clave"><i class="ace-icon fa fa-key"></i></a>
                     <a href="../LOGICA/logout.php" class="btn btn-danger" data-tooltip="tooltip" data-placement="right" title="Cerrar Sesion"><i class="ace-icon fa fa-sign-out"></i></a>
                 </div>
@@ -829,7 +838,7 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
                                     <select id="Emp_Cod" name="Emp_Cod" class="form-control" data-placeholder="Seleccione Empresa...">
                                         <option value=""></option>
                                         <?php foreach ($rs_empresas as $row_rs_empresas) {
-                                            if ($row_rs_empresas['Emp_Cod'] !== $Ses_Emp_Cod) echo '<option value="' . $row_rs_empresas['Emp_Cod'] . '" data-Emp_Nom="' . $row_rs_empresas['Emp_Nom'] . '"  data--suc_-cod="' . $row_rs_empresas['Suc_Cod'] . '">' . $row_rs_empresas['Emp_Cor'] . ' (' . mb_convert_encoding($row_rs_empresas['Suc_Des'], 'UTF-8', 'ISO-8859-1') . ")" . '</option>';
+                                            if ($row_rs_empresas['Emp_Cod'] !== $Ses_Emp_Cod) echo '<option value="' . $row_rs_empresas['Emp_Cod'] . '" data-Emp_Nom="' . $row_rs_empresas['Emp_Nom'] . '"  data-suc-cod="' . $row_rs_empresas['Suc_Cod'] . '">' . $row_rs_empresas['Emp_Cor'] . ' (' . mb_convert_encoding($row_rs_empresas['Suc_Des'], 'UTF-8', 'ISO-8859-1') . ")" . '</option>';
                                         } ?>
                                     </select>
                                     <!--<input id="Emp_Des" name="Emp_Des" class="form-control" placeholder="" type="text" readonly="readonly">                                -->
@@ -1052,31 +1061,31 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
         //     }, 1000); */
         // });
         function loginAjax() {
-            public $msg;
+            var msg;
             $.post("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_FULL_SPECIAL_CHARS); ?>", {
             loginAjax: true,
             Emp_Cod: $('#Emp_Cod').val(),
-            Suc_Cod: $('#Emp_Cod option:selected').data('Suc_Cod'),
+            Suc_Cod: $('#Emp_Cod option:selected').data('suc-cod'),
             user_name: $('#Usu_Ced').val(),
             encryptor: md5($('#Usu_Pas').val())
             }, function(response) {
             if (response['success'] === true) {
-                $msg =
+                msg =
                 '<div class="alert alert-success fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[SISTEMA]</strong> &nbsp;&nbsp;Login Correcto. Direccionando....</div>';
                 setTimeout(function() {
                 window.location.href =
                     "<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_FULL_SPECIAL_CHARS); ?>";
                 }, 2500);
             } else {
-                $msg =
+                msg =
                 '<div class="alert alert-warning fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[ERROR]</strong> &nbsp;&nbsp;Contrase&ntilde;a Incorrecta.</div>';
             }
             }, 'json').fail(function(error) {
-            $msg =
+            msg =
                 '<div class="alert alert-danger fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[ERROR]</strong> &nbsp;&nbsp;El Servidor ha fallado en responder!.</div>';
             })
             .always(function() {
-                $('#msgAlert').html($msg);
+                $('#msgAlert').html(msg);
                 $('#msgAlert .alert').hide();
                 $('#msgAlert .alert').show();
                 setTimeout(function() {

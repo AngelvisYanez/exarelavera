@@ -19,9 +19,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTab, TabsPanel } from "@/components/ui/tabs";
-import { Plus, Search, Pencil, Loader2, X, AlertCircle } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Loader2, X, AlertCircle } from "lucide-react";
 import { categoriasApi, marcasApi, productosApi } from "@/lib/api";
 import { useQuery } from "@/lib/use-query";
+import { toast } from "sonner";
+import { useConfirm } from "@/lib/hooks/use-confirm";
 import type { Categoria, Marca, Producto } from "@/lib/api-types";
 
 function CategoriasTab() {
@@ -37,6 +39,7 @@ function CategoriasTab() {
   });
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
+  const { confirm, ConfirmDialog } = useConfirm();
 
   const items = Array.isArray(data?.data) ? (data.data as Categoria[]) : [];
   const filtered = items.filter(
@@ -55,6 +58,22 @@ function CategoriasTab() {
     setIsEdit(true);
     setModalError(null);
     setShowModal(true);
+  };
+
+  const handleDelete = async (cat: Categoria) => {
+    const ok = await confirm("¿Estás seguro de eliminar esta categoría?");
+    if (!ok) return;
+    try {
+      const res = await categoriasApi.eliminar(cat.Cat_Cod!);
+      if (res.status) {
+        toast.success("Categoría eliminada correctamente");
+        refetch();
+      } else {
+        toast.error(res.error || "Error al eliminar la categoría");
+      }
+    } catch {
+      toast.error("Error de conexión al eliminar");
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -95,6 +114,7 @@ function CategoriasTab() {
   };
 
   return (
+    <>
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
@@ -142,13 +162,22 @@ function CategoriasTab() {
                   <TableCell className="font-medium">{c.Cat_Des}</TableCell>
                   <TableCell>{c.Cat_Obs || "-"}</TableCell>
                   <TableCell className="text-center">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleOpenEdit(c)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center justify-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleOpenEdit(c)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(c)}
+                      >
+                        <Trash2 className="h-4 w-4 text-error" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -233,6 +262,8 @@ function CategoriasTab() {
         </div>
       )}
     </Card>
+    {ConfirmDialog}
+    </>
   );
 }
 
@@ -249,6 +280,7 @@ function MarcasTab() {
   });
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
+  const { confirm, ConfirmDialog } = useConfirm();
 
   const items = Array.isArray(data?.data) ? (data.data as Marca[]) : [];
   const filtered = items.filter(
@@ -267,6 +299,22 @@ function MarcasTab() {
     setIsEdit(true);
     setModalError(null);
     setShowModal(true);
+  };
+
+  const handleDelete = async (mar: Marca) => {
+    const ok = await confirm("¿Estás seguro de eliminar esta marca?");
+    if (!ok) return;
+    try {
+      const res = await marcasApi.eliminar(mar.Mar_Cod!);
+      if (res.status) {
+        toast.success("Marca eliminada correctamente");
+        refetch();
+      } else {
+        toast.error(res.error || "Error al eliminar la marca");
+      }
+    } catch {
+      toast.error("Error de conexión al eliminar");
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -307,6 +355,7 @@ function MarcasTab() {
   };
 
   return (
+    <>
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
@@ -354,13 +403,22 @@ function MarcasTab() {
                   <TableCell className="font-medium">{m.Mar_Des}</TableCell>
                   <TableCell>{m.Mar_Obs || "-"}</TableCell>
                   <TableCell className="text-center">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleOpenEdit(m)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center justify-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleOpenEdit(m)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(m)}
+                      >
+                        <Trash2 className="h-4 w-4 text-error" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -445,6 +503,8 @@ function MarcasTab() {
         </div>
       )}
     </Card>
+    {ConfirmDialog}
+    </>
   );
 }
 
@@ -470,6 +530,7 @@ function ProductosTab() {
   });
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
+  const { confirm, ConfirmDialog } = useConfirm();
 
   const items = Array.isArray(data?.data) ? (data.data as Producto[]) : [];
   const categorias = Array.isArray(categoriasData?.data)
@@ -507,6 +568,22 @@ function ProductosTab() {
     setIsEdit(true);
     setModalError(null);
     setShowModal(true);
+  };
+
+  const handleDelete = async (prod: Producto) => {
+    const ok = await confirm("¿Estás seguro de eliminar este producto?");
+    if (!ok) return;
+    try {
+      const res = await productosApi.eliminar(prod.Pro_Cod!);
+      if (res.status) {
+        toast.success("Producto eliminado correctamente");
+        refetch();
+      } else {
+        toast.error(res.error || "Error al eliminar el producto");
+      }
+    } catch {
+      toast.error("Error de conexión al eliminar");
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -547,6 +624,7 @@ function ProductosTab() {
   };
 
   return (
+    <>
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
@@ -598,13 +676,22 @@ function ProductosTab() {
                   <TableCell>{getCategoriaNombre(p.Cat_Cod)}</TableCell>
                   <TableCell>{getMarcaNombre(p.Mar_Cod)}</TableCell>
                   <TableCell className="text-center">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleOpenEdit(p)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center justify-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleOpenEdit(p)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(p)}
+                      >
+                        <Trash2 className="h-4 w-4 text-error" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -729,6 +816,8 @@ function ProductosTab() {
         </div>
       )}
     </Card>
+    {ConfirmDialog}
+    </>
   );
 }
 

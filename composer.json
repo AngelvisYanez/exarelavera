@@ -3,7 +3,7 @@
     "description": "Exa Contable Relavera",
     "type": "project",
     "require": {
-        "php": "^7.1.14",
+        "php": "^8.1",
         "php-debugbar/php-debugbar": "^1.21",
         "monolog/monolog": "^1.25",
         "filp/whoops": "^2.1",
@@ -11,11 +11,11 @@
         "phpmailer/phpmailer": ">=6.0 <6.5",
         "econea/nusoap": "^0.9.14",
         "tecnickcom/tcpdf": "^6.7",
-        "mpdf/mpdf": "^7.0"
+        "mpdf/mpdf": "^8.0"
     },
     "config": {
         "platform": {
-            "php": "7.1.14"
+            "php": "8.1"
         },
         "policy": {
             "advisories": {

@@ -1,5 +1,5 @@
 <?Php
-ini_set('default_charset', 'iso-8859-1');
+ini_set('default_charset', 'utf-8');
 require_once __DIR__ . '/../debugbar/vendor/autoload.php';
 if (!class_exists('DebugBar', false)) {
     class_alias('DebugBar\DebugHelper', 'DebugBar');

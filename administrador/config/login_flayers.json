@@ -1,0 +1,34 @@
+[
+    {
+        "titulo": "Disposici\u00f3n final autorizada",
+        "descripcion": "Gesti\u00f3n de relaves alineada con la normativa ambiental y el control de las autoridades.",
+        "imagen": "0",
+        "orden": 1,
+        "activo": true,
+        "ruta_imagen": ""
+    },
+    {
+        "titulo": "Certificados y trazabilidad",
+        "descripcion": "Portal para clientes: consulte documentaci\u00f3n y el seguimiento de sus entregas de forma segura.",
+        "imagen": "0",
+        "orden": 2,
+        "activo": true,
+        "ruta_imagen": ""
+    },
+    {
+        "titulo": "Relavera Comunitaria El Tabl\u00f3n",
+        "descripcion": "Soluci\u00f3n autorizada para el distrito minero Zaruma \u2013 Portovelo. Operaci\u00f3n bajo licencia ambiental.",
+        "imagen": "0",
+        "orden": 3,
+        "activo": true,
+        "ruta_imagen": ""
+    },
+    {
+        "titulo": "Agradeciminiento",
+        "descripcion": "Este es una prueba de flayer.\nprooooooooooooBANDOOOOOOOO",
+        "imagen": "0",
+        "orden": 4,
+        "activo": true,
+        "ruta_imagen": "administrador\/config\/images\/flayer_1776895199_3.png"
+    }
+]
