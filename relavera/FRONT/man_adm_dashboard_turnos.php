@@ -994,11 +994,18 @@ if (isset($getDashboardManifiestosAjax)) {
         // Conteo de plantas distintas por chofer
         foreach ($agrupado as $k => $grupo) {
             $plantas_unicas = array();
+            $nombres_plantas = array();
             foreach ($grupo['manifiestos'] as $m) {
                 $pk = isset($m['Pla_Cod']) ? $m['Pla_Cod'] : (isset($m['Pla_Nom']) ? $m['Pla_Nom'] : '');
-                if ($pk !== '' && $pk !== null) $plantas_unicas[$pk] = true;
+                if ($pk !== '' && $pk !== null) {
+                    $plantas_unicas[$pk] = true;
+                    if (isset($m['Pla_Nom']) && $m['Pla_Nom'] !== '') {
+                        $nombres_plantas[$m['Pla_Nom']] = true;
+                    }
+                }
             }
             $agrupado[$k]['total_plantas'] = count($plantas_unicas);
+            $agrupado[$k]['nombres_plantas'] = implode(', ', array_keys($nombres_plantas));
             $agrupado[$k]['tiempo_promedio'] = ($grupo['conteo_tiempos'] > 0) ? ($grupo['total_minutos'] / $grupo['conteo_tiempos']) : 0;
         }
         $resultado['agrupado'] = array_values($agrupado);
@@ -1022,11 +1029,18 @@ if (isset($getDashboardManifiestosAjax)) {
         // Conteo de plantas distintas por placa
         foreach ($agrupado as $k => $grupo) {
             $plantas_unicas = array();
+            $nombres_plantas = array();
             foreach ($grupo['manifiestos'] as $m) {
                 $pk = isset($m['Pla_Cod']) ? $m['Pla_Cod'] : (isset($m['Pla_Nom']) ? $m['Pla_Nom'] : '');
-                if ($pk !== '' && $pk !== null) $plantas_unicas[$pk] = true;
+                if ($pk !== '' && $pk !== null) {
+                    $plantas_unicas[$pk] = true;
+                    if (isset($m['Pla_Nom']) && $m['Pla_Nom'] !== '') {
+                        $nombres_plantas[$m['Pla_Nom']] = true;
+                    }
+                }
             }
             $agrupado[$k]['total_plantas'] = count($plantas_unicas);
+            $agrupado[$k]['nombres_plantas'] = implode(', ', array_keys($nombres_plantas));
             $agrupado[$k]['tiempo_promedio'] = ($grupo['conteo_tiempos'] > 0) ? ($grupo['total_minutos'] / $grupo['conteo_tiempos']) : 0;
         }
         $resultado['agrupado'] = array_values($agrupado);
@@ -3064,6 +3078,6 @@ if (isset($_GET['getInactivosDetallePlantaAjax']) || isset($getInactivosDetalleP
             soloTabChoferPlaca: <?php echo $soloTabChoferPlaca ? 'true' : 'false'; ?>
         };
     </script>
-	<script src="../VALIDACIONES/man_val_dashboard_turnos.js?a=36"></script>
+	<script src="../VALIDACIONES/man_val_dashboard_turnos.js?a=37"></script>
 </BODY>
 </HTML>

@@ -3297,10 +3297,19 @@ function renderDashboardChoferPlaca(plantas, agrupado, tipoVista) {
                 var tProm = g.tiempo_promedio || 0;
                 var tFmt = tProm >= 60 ? (Math.floor(tProm / 60) + 'h ' + Math.round(tProm % 60) + 'm') : (Math.round(tProm) + ' min');
                 html += '<tr><td>' + (idx + 1) + '</td>';
+                
+                var tooltipText = "";
+                if (g.nombres_plantas) {
+                    var arrayPlantas = g.nombres_plantas.split(', ');
+                    tooltipText = "Plantas vinculadas:&#10;• " + arrayPlantas.join("&#10;• ");
+                }
+                var tooltipPlantas = tooltipText ? ' title="' + tooltipText + '"' : '';
+                var stylePlantas = ' style="cursor: help; color: #2C5D94; font-weight: bold; text-decoration: underline dotted #2C5D94; text-decoration-thickness: 2px; text-underline-offset: 3px;"';
+                
                 if (tipoVista === 'chofer') {
-                    html += '<td>' + (g.chofer_nombre || 'Sin asignar') + '</td><td>' + (g.chofer_cedula || '') + '</td><td>' + (g.total_manifiestos || 0) + '</td><td>' + (g.total_plantas != null ? g.total_plantas : '0') + '</td><td>' + tFmt + '</td>';
+                    html += '<td>' + (g.chofer_nombre || 'Sin asignar') + '</td><td>' + (g.chofer_cedula || '') + '</td><td>' + (g.total_manifiestos || 0) + '</td><td' + tooltipPlantas + stylePlantas + '>' + (g.total_plantas != null ? g.total_plantas : '0') + '</td><td>' + tFmt + '</td>';
                 } else {
-                    html += '<td>' + (g.Veh_Pla || 'Sin placa') + '</td><td>' + (g.total_manifiestos || 0) + '</td><td>' + (g.total_plantas != null ? g.total_plantas : '0') + '</td><td>' + tFmt + '</td>';
+                    html += '<td>' + (g.Veh_Pla || 'Sin placa') + '</td><td>' + (g.total_manifiestos || 0) + '</td><td' + tooltipPlantas + stylePlantas + '>' + (g.total_plantas != null ? g.total_plantas : '0') + '</td><td>' + tFmt + '</td>';
                 }
                 html += '<td><button type="button" class="btn btn-xs btn-default btn-ver-manifiestos" onclick="verManifiestosChoferPlaca(' + idx + ');"><span class="glyphicon glyphicon-list"></span> Ver manifiestos</button></td></tr>';
             });
@@ -3392,17 +3401,18 @@ function exportarExcelChoferPlaca() {
     } else {
         // Solo sección Manifiestos por chofer o por placa — igual que el cuadro en pantalla (sin listados de manifiestos ni fechas/plantas)
         if (datosDashboardChoferPlaca && datosDashboardChoferPlaca.agrupado && datosDashboardChoferPlaca.agrupado.length > 0) {
-            htmlExcel += '<tr class="xl-cp-header"><td colspan="' + (tipoVista === 'chofer' ? 6 : 5) + '">Manifiestos por ' + (tipoVista === 'chofer' ? 'chofer' : 'placa') + '</td></tr>';
-            if (tipoVista === 'chofer') htmlExcel += '<tr class="xl-cp-header"><td>#</td><td>Chofer</td><td>Cédula</td><td>Total manifiestos</td><td>Plantas</td><td>Tiempo Prom.</td></tr>';
-            else htmlExcel += '<tr class="xl-cp-header"><td>#</td><td>Placa</td><td>Total manifiestos</td><td>Plantas</td><td>Tiempo Prom.</td></tr>';
+            htmlExcel += '<tr class="xl-cp-header"><td colspan="' + (tipoVista === 'chofer' ? 7 : 6) + '">Manifiestos por ' + (tipoVista === 'chofer' ? 'chofer' : 'placa') + '</td></tr>';
+            if (tipoVista === 'chofer') htmlExcel += '<tr class="xl-cp-header"><td>#</td><td>Chofer</td><td>Cédula</td><td>Total manifiestos</td><td>Plantas</td><td>Plantas Asoc.</td><td>Tiempo Prom.</td></tr>';
+            else htmlExcel += '<tr class="xl-cp-header"><td>#</td><td>Placa</td><td>Total manifiestos</td><td>Plantas</td><td>Plantas Asoc.</td><td>Tiempo Prom.</td></tr>';
             datosDashboardChoferPlaca.agrupado.forEach(function(g, i) {
                 var totalPlantas = g.total_plantas != null ? g.total_plantas : 0;
+                var plantasAsoc = g.nombres_plantas || '';
                 var tProm = g.tiempo_promedio || 0;
                 var tFmt = tProm >= 60 ? (Math.floor(tProm / 60) + 'h ' + Math.round(tProm % 60) + 'm') : (Math.round(tProm) + ' min');
                 if (tipoVista === 'chofer') {
-                    htmlExcel += '<tr><td>' + (i + 1) + '</td><td>' + (g.chofer_nombre || '') + '</td><td>' + (g.chofer_cedula || '') + '</td><td>' + (g.total_manifiestos || 0) + '</td><td>' + totalPlantas + '</td><td>' + tFmt + '</td></tr>';
+                    htmlExcel += '<tr><td>' + (i + 1) + '</td><td>' + (g.chofer_nombre || '') + '</td><td>' + (g.chofer_cedula || '') + '</td><td>' + (g.total_manifiestos || 0) + '</td><td>' + totalPlantas + '</td><td>' + plantasAsoc + '</td><td>' + tFmt + '</td></tr>';
                 } else {
-                    htmlExcel += '<tr><td>' + (i + 1) + '</td><td>' + (g.Veh_Pla || '') + '</td><td>' + (g.total_manifiestos || 0) + '</td><td>' + totalPlantas + '</td><td>' + tFmt + '</td></tr>';
+                    htmlExcel += '<tr><td>' + (i + 1) + '</td><td>' + (g.Veh_Pla || '') + '</td><td>' + (g.total_manifiestos || 0) + '</td><td>' + totalPlantas + '</td><td>' + plantasAsoc + '</td><td>' + tFmt + '</td></tr>';
                 }
             });
         }
