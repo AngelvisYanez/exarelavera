@@ -1154,6 +1154,7 @@ if (isset($getDashboardEjecutivoAjax)) {
     $total_toneladas_recibidas = 0;
     $total_toneladas_facturadas = 0;
     $total_toneladas_por_facturar = 0;
+
     if ($res_ton !== false) {
         if ($row_ton = $obBD_con1->fetch_assoc($res_ton)) {
             $total_toneladas_recibidas = isset($row_ton['total_recibidas']) ? floatval($row_ton['total_recibidas']) : 0;
@@ -3037,4 +3038,7 @@ if (isset($_GET['getInactivosDetallePlantaAjax']) || isset($getInactivosDetalleP
 	<script src="../VALIDACIONES/man_val_dashboard_turnos.js?a=41"></script>
 </BODY>
 </HTML>
+
+
+
 
