@@ -1,4 +1,4 @@
-var todasConfiguraciones = [];
+﻿var todasConfiguraciones = [];
 var modoVistaBarras = false; // false = tabla, true = barras (tab Por Configuración)
 var modoVistaBarrasRango = false; // false = tabla, true = barras (tab Por Rango de Fechas)
 var datosDashboardActual = null; // Almacenar datos del dashboard actual para filtrado por fecha
@@ -4180,6 +4180,19 @@ function renderDashboardEjecutivo(data) {
     html += '<p>Promedio diario en el rango: <strong>' + promDia + '</strong> manifiestos' + (txtRango ? '<span class="text-muted">' + txtRango + '</span>' : '') + '</p>';
     html += '<div class="ceo-chart-wrap"><canvas id="chartEjecutivoTendencia"></canvas></div></div>';
 
+    var tonRecibidas = Number(data.kpis.total_toneladas_recibidas || 0).toLocaleString('es-ES');
+    var tonFacturadas = Number(data.kpis.total_toneladas_facturadas || 0).toLocaleString('es-ES');
+    var tonPorFacturar = Number(data.kpis.total_toneladas_por_facturar || 0).toLocaleString('es-ES');
+    var tonPromedioDiario = Number(data.kpis.promedio_tonelaje_diario || 0).toLocaleString('es-ES');
+
+    html += '<div class="ceo-bloque"><h4><i class="fa fa-balance-scale"></i> Resumen de Tonelaje</h4>';
+    html += '<div class="ceo-kpi-row">';
+    html += '<div class="ceo-kpi-card semaforo-verde"><div class="ceo-kpi-icon"><i class="fa fa-download"></i></div><div class="ceo-kpi-label">Total Recibidas</div><div class="ceo-kpi-value">' + tonRecibidas + ' Tn</div><div class="ceo-kpi-tendencia">Toneladas</div></div>';
+    html += '<div class="ceo-kpi-card semaforo-verde"><div class="ceo-kpi-icon"><i class="fa fa-file-text"></i></div><div class="ceo-kpi-label">Total Facturadas</div><div class="ceo-kpi-value">' + tonFacturadas + ' Tn</div><div class="ceo-kpi-tendencia">Toneladas</div></div>';
+    html += '<div class="ceo-kpi-card semaforo-amarillo"><div class="ceo-kpi-icon"><i class="fa fa-clock-o"></i></div><div class="ceo-kpi-label">Por Facturar</div><div class="ceo-kpi-value">' + tonPorFacturar + ' Tn</div><div class="ceo-kpi-tendencia">Toneladas</div></div>';
+    html += '<div class="ceo-kpi-card semaforo-verde"><div class="ceo-kpi-icon"><i class="fa fa-line-chart"></i></div><div class="ceo-kpi-label">Promedio Diario</div><div class="ceo-kpi-value">' + tonPromedioDiario + ' Tn</div><div class="ceo-kpi-tendencia">Toneladas / día</div></div>';
+    html += '</div></div>';
+
     var top10 = data.top10_plantas || [];
     var concPct = data.concentracion_top10_pct != null ? data.concentracion_top10_pct : (data.concentracion_pct || 0);
     html += '<div class="ceo-bloque"><h4><i class="fa fa-industry"></i> Concentración operativa</h4>';
@@ -4748,3 +4761,4 @@ function exportarExcelInactivos() {
         }
     });
 }
+
