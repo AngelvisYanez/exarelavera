@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * @abstract Dashboard de Turnos - Reporte completo de configuraciones, turnos y manifiestos
  * @author Sistema EXA
@@ -1616,7 +1616,11 @@ if (isset($getDashboardEjecutivoAjax)) {
         'indice_dependencia_top2' => round($indice_dependencia_top2, 1),
         'desviacion_estandar' => round($desv_chofer, 1),
         'utilizacion_flota' => round($utilizacion_flota, 1),
-        'tiempo_relavera_prom' => round($tiempo_relavera_prom, 1)
+        'tiempo_relavera_prom' => round($tiempo_relavera_prom, 1),
+        'total_toneladas_recibidas' => round($total_toneladas_recibidas, 2),
+        'total_toneladas_facturadas' => round($total_toneladas_facturadas, 2),
+        'total_toneladas_por_facturar' => round($total_toneladas_por_facturar, 2),
+        'promedio_tonelaje_diario' => round($promedio_tonelaje_diario, 2)
     );
     $resultado['top10_plantas'] = $top10_plantas;
     $sum_top10 = 0;
