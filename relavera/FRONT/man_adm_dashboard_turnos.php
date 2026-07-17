@@ -12,36 +12,6 @@ require_once('../../Librerias/procedimientos/almacenados_standar.php');
 $obBD_conexion = new Class_Log_Conexion_Global($Ses_Dat_Dis);
 $obBD_con1 = new Class_Log_Datos_Mani; 
 
-// Planta asignada al usuario (perfil plantero u operador restringido por planta)
-$pla_asignada = $obBD_con1->getArrayConsulta(75, array('Usu_Cod' => $Ses_Usu_Cod), $obBD_conexion);
-$Pla_Cod_Asignada = (is_array($pla_asignada) && count($pla_asignada) > 0) ? intval($pla_asignada[0]['Pla_Cod']) : 0;
-$Pla_Nom_Asignada = '';
-if ($Pla_Cod_Asignada <= 0) {
-    $row_usuario_manifiesto = $obBD_con1->getRowConsulta(
-        'manifiesto_usuario.selectWhere',
-        array('where' => array('manifiesto_usuario.Usu_Cod' => $Ses_Usu_Cod)),
-        $obBD_conexion
-    );
-    if (is_array($row_usuario_manifiesto) && isset($row_usuario_manifiesto['Pla_Cod'])) {
-        $Pla_Cod_Asignada = intval($row_usuario_manifiesto['Pla_Cod']);
-    }
-}
-// Perfil de plantas/plantero (misma validación usada en otros módulos)
-$row_perfil_plantas = $obBD_con1->getRowConsulta(8, array('Usu_Cod' => $Ses_Usu_Cod), $obBD_conexion);
-$es_perfil_plantas = (isset($row_perfil_plantas['count']) && intval($row_perfil_plantas['count']) > 0);
-$soloTabChoferPlaca = ($Pla_Cod_Asignada > 0 || $es_perfil_plantas);
-if ($Pla_Cod_Asignada > 0) {
-    $sqlPlaAsignada = "SELECT Pla_Nom FROM manifiesto_plantas WHERE Pla_Cod = $Pla_Cod_Asignada LIMIT 1";
-    $resPlaAsignada = $obBD_con1->consulta($sqlPlaAsignada, $obBD_conexion->conexion);
-    if ($resPlaAsignada) {
-        $rowPlaAsignada = $obBD_con1->fetch_assoc($resPlaAsignada);
-        if ($rowPlaAsignada && isset($rowPlaAsignada['Pla_Nom'])) {
-            $obBD_con1->utf8_change_param($rowPlaAsignada);
-            $Pla_Nom_Asignada = $rowPlaAsignada['Pla_Nom'];
-        }
-    }
-}
-
 /* ==================== AJAX HANDLERS ==================== */
 
 // Obtener lista de configuraciones disponibles
@@ -415,7 +385,7 @@ if (isset($getManifiestosDashboardAjax)) {
                 DATE(manifiesto.Man_Fec) as Man_Fec,
                 DATE_FORMAT(manifiesto.Man_Fec, '%H:%i') as Man_Hor,
                 DATE(manifiesto.Man_Fes) as Man_Fes,
-                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, GREATEST(4, LENGTH(manifiesto.Man_Num)), '0')) as ManNum,
+                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, 4, 0)) as ManNum,
                 CONCAT(persona_cli.Prs_Nom, ' ', persona_cli.Prs_Ape) as Cliente,
                 manifiesto_plantas.Pla_Nom,
                 manifiesto.Man_Est,
@@ -493,7 +463,7 @@ if (isset($getManifiestosDiaAjax)) {
                 DATE(manifiesto.Man_Fec) as Man_Fec,
                 DATE_FORMAT(manifiesto.Man_Fec, '%H:%i') as Man_Hor,
                 DATE(manifiesto.Man_Fes) as Man_Fes,
-                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, GREATEST(4, LENGTH(manifiesto.Man_Num)), '0')) as ManNum,
+                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, 4, 0)) as ManNum,
                 CONCAT(persona_cli.Prs_Nom, ' ', persona_cli.Prs_Ape) as Cliente,
                 manifiesto_plantas.Pla_Nom,
                 manifiesto.Man_Est,
@@ -561,7 +531,7 @@ if (isset($getManifiestosConfiguracionAjax)) {
                 manifiesto_turnos_det.Tud_Fec,
                 manifiesto_turnos_det.Tud_Hin,
                 manifiesto_turnos_det.Tud_Hfi,
-                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, GREATEST(4, LENGTH(manifiesto.Man_Num)), '0')) as ManNum,
+                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, 4, 0)) as ManNum,
                 CONCAT(persona_cli.Prs_Nom, ' ', persona_cli.Prs_Ape) as Cliente,
                 manifiesto_plantas.Pla_Nom,
                 manifiesto.Man_Est,
@@ -634,7 +604,7 @@ if (isset($getManifiestosPorRangoSlotAjax)) {
     $turnoInfo = array('fecha' => $fechaFormato, 'horario' => $horarioTexto);
     
     $sql = "SELECT manifiesto.Man_Cod, manifiesto.Man_Num, DATE(manifiesto.Man_Fec) as Man_Fec, DATE_FORMAT(manifiesto.Man_Fec, '%H:%i') as Man_Hor, DATE(manifiesto.Man_Fes) as Man_Fes,
-                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, GREATEST(4, LENGTH(manifiesto.Man_Num)), '0')) as ManNum,
+                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, 4, 0)) as ManNum,
                 CONCAT(persona_cli.Prs_Nom, ' ', persona_cli.Prs_Ape) as Cliente, manifiesto_plantas.Pla_Nom, manifiesto.Man_Est,
                 if(LOCATE('GE', manifiesto.Man_Tes) > 0,'GE','') as Man_Tip_1, if(LOCATE('A', manifiesto.Man_Tes) > 0,'A','') as Man_Tip_2,
                 if(LOCATE('GS', manifiesto.Man_Tes) > 0,'GS','') as Man_Tip_3, if(LOCATE('F', manifiesto.Man_Tes) > 0,'F','') as Man_Tip_4, if(LOCATE('R', manifiesto.Man_Tes) > 0,'R','') as Man_Tip_5,
@@ -684,7 +654,7 @@ if (isset($getManifiestosPorRangoDiaAjax)) {
     
     $sql = "SELECT manifiesto.Man_Cod, manifiesto.Man_Num, DATE(manifiesto.Man_Fec) as Man_Fec, DATE_FORMAT(manifiesto.Man_Fec, '%H:%i') as Man_Hor, DATE(manifiesto.Man_Fes) as Man_Fes,
                 manifiesto_turnos_det.Tud_Hin, manifiesto_turnos_det.Tud_Hfi,
-                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, GREATEST(4, LENGTH(manifiesto.Man_Num)), '0')) as ManNum,
+                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, 4, 0)) as ManNum,
                 CONCAT(persona_cli.Prs_Nom, ' ', persona_cli.Prs_Ape) as Cliente, manifiesto_plantas.Pla_Nom, manifiesto.Man_Est,
                 if(LOCATE('GE', manifiesto.Man_Tes) > 0,'GE','') as Man_Tip_1, if(LOCATE('A', manifiesto.Man_Tes) > 0,'A','') as Man_Tip_2,
                 if(LOCATE('GS', manifiesto.Man_Tes) > 0,'GS','') as Man_Tip_3, if(LOCATE('F', manifiesto.Man_Tes) > 0,'F','') as Man_Tip_4, if(LOCATE('R', manifiesto.Man_Tes) > 0,'R','') as Man_Tip_5,
@@ -742,7 +712,7 @@ if (isset($getManifiestosPorRangoCompletoAjax)) {
     
     $sql = "SELECT manifiesto.Man_Cod, manifiesto.Man_Num, DATE(manifiesto.Man_Fec) as Man_Fec, DATE_FORMAT(manifiesto.Man_Fec, '%H:%i') as Man_Hor, DATE(manifiesto.Man_Fes) as Man_Fes,
                 manifiesto_turnos_det.Tud_Fec, manifiesto_turnos_det.Tud_Hin, manifiesto_turnos_det.Tud_Hfi,
-                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, GREATEST(4, LENGTH(manifiesto.Man_Num)), '0')) as ManNum,
+                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, 4, 0)) as ManNum,
                 CONCAT(persona_cli.Prs_Nom, ' ', persona_cli.Prs_Ape) as Cliente, manifiesto_plantas.Pla_Nom, manifiesto.Man_Est,
                 if(LOCATE('GE', manifiesto.Man_Tes) > 0,'GE','') as Man_Tip_1, if(LOCATE('A', manifiesto.Man_Tes) > 0,'A','') as Man_Tip_2,
                 if(LOCATE('GS', manifiesto.Man_Tes) > 0,'GS','') as Man_Tip_3, if(LOCATE('F', manifiesto.Man_Tes) > 0,'F','') as Man_Tip_4, if(LOCATE('R', manifiesto.Man_Tes) > 0,'R','') as Man_Tip_5,
@@ -800,7 +770,6 @@ if (isset($getPlantasRankingAjax)) {
     $fecha_inicio_esc = mysqli_real_escape_string($obBD_conexion->conexion, $fecha_inicio);
     $fecha_fin_esc = mysqli_real_escape_string($obBD_conexion->conexion, $fecha_fin);
     // $sql = "SELECT manifiesto.Pla_Cod, manifiesto_plantas.Pla_Nom, COUNT(*) as total
-    $condPlaUsuario = ($Pla_Cod_Asignada > 0) ? " AND manifiesto.Pla_Cod = $Pla_Cod_Asignada " : "";
     $sql = "SELECT manifiesto.Pla_Cod, manifiesto_plantas.Pla_Nom, manifiesto.Man_Usu
             FROM manifiesto
             INNER JOIN manifiesto_turnos_det ON manifiesto_turnos_det.Tud_Cod = manifiesto.Tud_Cod
@@ -812,7 +781,6 @@ if (isset($getPlantasRankingAjax)) {
             AND (manifiesto_turnos_det.Tud_Est = 'A' OR (manifiesto_turnos_det.Tud_Est = 'S' AND EXISTS (SELECT 1 FROM manifiesto m2 WHERE m2.Tud_Cod = manifiesto_turnos_det.Tud_Cod AND m2.Man_Est = 'A')))
             AND manifiesto.Man_Est = 'A' AND (manifiesto.Man_Tes IS NULL OR LOCATE('R', manifiesto.Man_Tes) = 0)
             AND cliente.Emp_Cod = $Ses_Emp_Cod
-            $condPlaUsuario
             GROUP BY manifiesto.Pla_Cod, manifiesto_plantas.Pla_Nom
             ORDER BY total DESC";
     $result = $obBD_con1->consulta($sql, $obBD_conexion->conexion);
@@ -886,10 +854,9 @@ if (isset($getDashboardManifiestosAjax)) {
     }
     $fecha_inicio_esc = mysqli_real_escape_string($obBD_conexion->conexion, $fecha_inicio);
     $fecha_fin_esc = mysqli_real_escape_string($obBD_conexion->conexion, $fecha_fin);
-    $condPlaUsuario = ($Pla_Cod_Asignada > 0) ? " AND manifiesto.Pla_Cod = $Pla_Cod_Asignada " : "";
     $sql = "SELECT manifiesto.Man_Cod, manifiesto.Man_Num, manifiesto.Cho_Cod, manifiesto.Veh_Cod, manifiesto.Pla_Cod, manifiesto.Man_Usu, manifiesto.Man_Tes,
                 DATE(manifiesto.Man_Fec) as Man_Fec, COALESCE(DATE_FORMAT(manifiesto.Man_Fea, '%H:%i'), DATE_FORMAT(manifiesto.Man_Fes, '%H:%i'), DATE_FORMAT(manifiesto.Man_Sys, '%H:%i'), DATE_FORMAT(manifiesto.Man_Fec, '%H:%i')) as Man_Hor,
-                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, GREATEST(4, LENGTH(manifiesto.Man_Num)), '0')) as ManNum,
+                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, 4, 0)) as ManNum,
                 manifiesto_plantas.Pla_Nom,
                 COALESCE(CONCAT(persona_chofer.Prs_Nom, ' ', persona_chofer.Prs_Ape), '') as chofer_nombre,
                 COALESCE(persona_chofer.Prs_Ced, '') as chofer_cedula,
@@ -912,7 +879,6 @@ if (isset($getDashboardManifiestosAjax)) {
             AND (manifiesto_turnos_det.Tud_Est = 'A' OR (manifiesto_turnos_det.Tud_Est = 'S' AND EXISTS (SELECT 1 FROM manifiesto m2 WHERE m2.Tud_Cod = manifiesto_turnos_det.Tud_Cod AND m2.Man_Est = 'A')))
             AND manifiesto.Man_Est = 'A' AND (manifiesto.Man_Tes IS NULL OR LOCATE('R', manifiesto.Man_Tes) = 0)
             AND cliente.Emp_Cod = $Ses_Emp_Cod
-            $condPlaUsuario
             ORDER BY " . ($tipo_vista === 'chofer' ? "chofer_nombre ASC, manifiesto.Man_Fec ASC" : ($tipo_vista === 'placa' ? "Veh_Pla ASC, manifiesto.Man_Fec ASC" : "manifiesto_plantas.Pla_Nom ASC, manifiesto.Man_Fec ASC"));
     $result = $obBD_con1->consulta($sql, $obBD_conexion->conexion);
     $filas = array();
@@ -975,14 +941,29 @@ if (isset($getDashboardManifiestosAjax)) {
             $cedula = isset($f['chofer_cedula']) ? trim($f['chofer_cedula']) : '';
             $nombre = isset($f['chofer_nombre']) ? trim($f['chofer_nombre']) : '';
             if ($nombre === '') $nombre = 'Sin asignar';
-            // Agrupar por persona (cédula o nombre), no por Cho_Cod, para que un mismo chofer no se repita
+            $plaCod = isset($f['Pla_Cod']) ? $f['Pla_Cod'] : 0;
+            $plaNom = isset($f['Pla_Nom']) ? trim($f['Pla_Nom']) : '';
+            if ($plaNom === '') $plaNom = 'Sin planta';
+            // Un registro por chofer + planta
             if ($cedula !== '') {
-                $key = 'cedula_' . $cedula;
+                $key = 'cedula_' . $cedula . '_pla_' . $plaCod;
             } else {
-                $key = 'nombre_' . $nombre;
+                $key = 'nombre_' . $nombre . '_pla_' . $plaCod;
             }
             if (!isset($agrupado[$key])) {
-                $agrupado[$key] = array('Cho_Cod' => $f['Cho_Cod'], 'chofer_nombre' => $nombre, 'chofer_cedula' => $cedula, 'total_manifiestos' => 0, 'manifiestos' => array(), 'total_minutos' => 0, 'conteo_tiempos' => 0);
+                $agrupado[$key] = array(
+                    'Cho_Cod' => $f['Cho_Cod'],
+                    'chofer_nombre' => $nombre,
+                    'chofer_cedula' => $cedula,
+                    'Pla_Cod' => $plaCod,
+                    'Pla_Nom' => $plaNom,
+                    'plantas_nombres' => $plaNom,
+                    'total_plantas' => 1,
+                    'total_manifiestos' => 0,
+                    'manifiestos' => array(),
+                    'total_minutos' => 0,
+                    'conteo_tiempos' => 0
+                );
             }
             $agrupado[$key]['total_manifiestos']++;
             $agrupado[$key]['manifiestos'][] = $f;
@@ -991,21 +972,7 @@ if (isset($getDashboardManifiestosAjax)) {
                 $agrupado[$key]['conteo_tiempos']++;
             }
         }
-        // Conteo de plantas distintas por chofer
         foreach ($agrupado as $k => $grupo) {
-            $plantas_unicas = array();
-            $nombres_plantas = array();
-            foreach ($grupo['manifiestos'] as $m) {
-                $pk = isset($m['Pla_Cod']) ? $m['Pla_Cod'] : (isset($m['Pla_Nom']) ? $m['Pla_Nom'] : '');
-                if ($pk !== '' && $pk !== null) {
-                    $plantas_unicas[$pk] = true;
-                    if (isset($m['Pla_Nom']) && $m['Pla_Nom'] !== '') {
-                        $nombres_plantas[$m['Pla_Nom']] = true;
-                    }
-                }
-            }
-            $agrupado[$k]['total_plantas'] = count($plantas_unicas);
-            $agrupado[$k]['nombres_plantas'] = implode(', ', array_keys($nombres_plantas));
             $agrupado[$k]['tiempo_promedio'] = ($grupo['conteo_tiempos'] > 0) ? ($grupo['total_minutos'] / $grupo['conteo_tiempos']) : 0;
         }
         $resultado['agrupado'] = array_values($agrupado);
@@ -1026,21 +993,21 @@ if (isset($getDashboardManifiestosAjax)) {
                 $agrupado[$key]['conteo_tiempos']++;
             }
         }
-        // Conteo de plantas distintas por placa
+        // Conteo de plantas distintas por placa + nombres
         foreach ($agrupado as $k => $grupo) {
             $plantas_unicas = array();
             $nombres_plantas = array();
             foreach ($grupo['manifiestos'] as $m) {
-                $pk = isset($m['Pla_Cod']) ? $m['Pla_Cod'] : (isset($m['Pla_Nom']) ? $m['Pla_Nom'] : '');
+                $pk = isset($m['Pla_Cod']) ? $m['Pla_Cod'] : '';
+                $pn = isset($m['Pla_Nom']) ? trim($m['Pla_Nom']) : '';
                 if ($pk !== '' && $pk !== null) {
-                    $plantas_unicas[$pk] = true;
-                    if (isset($m['Pla_Nom']) && $m['Pla_Nom'] !== '') {
-                        $nombres_plantas[$m['Pla_Nom']] = true;
-                    }
+                    $plantas_unicas[$pk] = ($pn !== '') ? $pn : ('Planta ' . $pk);
+                } elseif ($pn !== '') {
+                    $plantas_unicas[$pn] = $pn;
                 }
             }
             $agrupado[$k]['total_plantas'] = count($plantas_unicas);
-            $agrupado[$k]['nombres_plantas'] = implode(', ', array_keys($nombres_plantas));
+            $agrupado[$k]['plantas_nombres'] = implode(', ', array_values($plantas_unicas));
             $agrupado[$k]['tiempo_promedio'] = ($grupo['conteo_tiempos'] > 0) ? ($grupo['total_minutos'] / $grupo['conteo_tiempos']) : 0;
         }
         $resultado['agrupado'] = array_values($agrupado);
@@ -1065,10 +1032,21 @@ if (isset($getDashboardManifiestosAjax)) {
         }
         $resultado['agrupado'] = array_values($agrupado);
     }
-    // Ordenar de mayor a menor por total de manifiestos
-    usort($resultado['agrupado'], function($a, $b) {
-        return ($b['total_manifiestos'] - $a['total_manifiestos']);
-    });
+    if ($tipo_vista === 'chofer') {
+        // Orden alfabético por chofer y, si se repite, por planta.
+        usort($resultado['agrupado'], function($a, $b) {
+            $comparacion = strcasecmp($a['chofer_nombre'], $b['chofer_nombre']);
+            if ($comparacion !== 0) {
+                return $comparacion;
+            }
+            return strcasecmp($a['Pla_Nom'], $b['Pla_Nom']);
+        });
+    } else {
+        // Para las demás vistas, conservar el orden por cantidad.
+        usort($resultado['agrupado'], function($a, $b) {
+            return ($b['total_manifiestos'] - $a['total_manifiestos']);
+        });
+    }
     $resultado['tipo_vista'] = $tipo_vista;
     $obBD_con1->echoJson($resultado);
 }
@@ -1161,29 +1139,6 @@ if (isset($getDashboardEjecutivoAjax)) {
     $row_ant = $obBD_con1->fetch_assoc($res_ant);
     $total_anterior = isset($row_ant['total']) ? intval($row_ant['total']) : 0;
     $variacion_pct = $total_anterior > 0 ? (($total_manifiestos - $total_anterior) / $total_anterior) * 100 : ($total_manifiestos > 0 ? 100 : 0);
-
-    // 2.0) Tonelaje
-    $sql_toneladas = "SELECT
-        COALESCE(SUM(manifiesto.Man_Pes/1000), 0) as total_recibidas,
-        COALESCE(SUM(CASE WHEN manifiesto.Man_Tip = 'F' THEN manifiesto.Man_Pes/1000 ELSE 0 END), 0) as total_facturadas,
-        COALESCE(SUM(CASE WHEN (manifiesto.Man_Tip != 'F' OR manifiesto.Man_Tip IS NULL) AND (manifiesto.Vet_Cod IS NULL OR manifiesto.Vet_Cod = 0) THEN manifiesto.Man_Pes/1000 ELSE 0 END), 0) as total_por_facturar
-        FROM manifiesto
-        INNER JOIN manifiesto_turnos_det ON manifiesto_turnos_det.Tud_Cod = manifiesto.Tud_Cod
-        INNER JOIN manifiesto_turnos_cab ON manifiesto_turnos_cab.Tur_Cod = manifiesto_turnos_det.Tur_Cod
-        INNER JOIN cliente ON cliente.Cli_Cod = manifiesto.Cli_Cod
-        WHERE manifiesto_turnos_det.Tud_Fec BETWEEN '$fecha_inicio_esc' AND '$fecha_fin_esc' AND $base_where";
-    $res_ton = $obBD_con1->consulta($sql_toneladas, $conexion);
-    $total_toneladas_recibidas = 0;
-    $total_toneladas_facturadas = 0;
-    $total_toneladas_por_facturar = 0;
-    if ($res_ton !== false) {
-        if ($row_ton = $obBD_con1->fetch_assoc($res_ton)) {
-            $total_toneladas_recibidas = isset($row_ton['total_recibidas']) ? floatval($row_ton['total_recibidas']) : 0;
-            $total_toneladas_facturadas = isset($row_ton['total_facturadas']) ? floatval($row_ton['total_facturadas']) : 0;
-            $total_toneladas_por_facturar = isset($row_ton['total_por_facturar']) ? floatval($row_ton['total_por_facturar']) : 0;
-        }
-    }
-    $promedio_tonelaje_diario = $dias_periodo > 0 ? ($total_toneladas_recibidas / $dias_periodo) : 0;
 
     // 2.1) Tiempo promedio global (Relavera)
     $sql_tiempo_prom = "SELECT manifiesto.Man_Usu FROM manifiesto
@@ -1636,11 +1591,7 @@ if (isset($getDashboardEjecutivoAjax)) {
         'indice_dependencia_top2' => round($indice_dependencia_top2, 1),
         'desviacion_estandar' => round($desv_chofer, 1),
         'utilizacion_flota' => round($utilizacion_flota, 1),
-        'tiempo_relavera_prom' => round($tiempo_relavera_prom, 1),
-        'total_toneladas_recibidas' => round($total_toneladas_recibidas, 2),
-        'total_toneladas_facturadas' => round($total_toneladas_facturadas, 2),
-        'total_toneladas_por_facturar' => round($total_toneladas_por_facturar, 2),
-        'promedio_tonelaje_diario' => round($promedio_tonelaje_diario, 2)
+        'tiempo_relavera_prom' => round($tiempo_relavera_prom, 1)
     );
     $resultado['top10_plantas'] = $top10_plantas;
     $sum_top10 = 0;
@@ -1735,7 +1686,7 @@ if (isset($_GET['getListadoInactivosExcelAjax']) || isset($getListadoInactivosEx
         $total_activos = isset($row_act['total']) ? intval($row_act['total']) : 0;
     }
     $sql = "SELECT manifiesto_plantas.Pla_Nom,
-        CONCAT('M', manifiesto.Pla_Cod, '-', LPAD(manifiesto.Man_Num, GREATEST(4, LENGTH(manifiesto.Man_Num)), '0')) as ManNum,
+        CONCAT('M', manifiesto.Pla_Cod, '-', LPAD(manifiesto.Man_Num, 4, 0)) as ManNum,
         COALESCE(vehiculo.Veh_Pla, 'Sin placa') as placa,
         COALESCE(CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape), 'Sin asignar') as chofer_nombre
         FROM manifiesto
@@ -1812,7 +1763,7 @@ if (isset($_GET['getInactivosDetallePlantaAjax']) || isset($getInactivosDetalleP
     $sql_detalle = "SELECT COALESCE(vehiculo.Veh_Pla, 'Sin placa') as placa,
         COALESCE(CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape), 'Sin asignar') as chofer_nombre,
         COUNT(*) as inactivos,
-        GROUP_CONCAT(CONCAT('M', manifiesto.Pla_Cod, '-', LPAD(manifiesto.Man_Num, GREATEST(4, LENGTH(manifiesto.Man_Num)), '0')) ORDER BY manifiesto.Man_Fec ASC, manifiesto.Man_Num ASC SEPARATOR ', ') as numeros_manifiesto
+        GROUP_CONCAT(CONCAT('M', manifiesto.Pla_Cod, '-', LPAD(manifiesto.Man_Num, 4, 0)) ORDER BY manifiesto.Man_Fec ASC, manifiesto.Man_Num ASC SEPARATOR ', ') as numeros_manifiesto
         FROM manifiesto
         INNER JOIN manifiesto_turnos_det ON manifiesto_turnos_det.Tud_Cod = manifiesto.Tud_Cod
         INNER JOIN manifiesto_turnos_cab ON manifiesto_turnos_cab.Tur_Cod = manifiesto_turnos_det.Tur_Cod
@@ -2831,48 +2782,36 @@ if (isset($_GET['getInactivosDetallePlantaAjax']) || isset($getInactivosDetalleP
 <BODY>
 	<div class="panel panel-default panel-main">
 		<div class="exa-header">
-			<h3>
-                <i class="fa fa-dashboard"></i> Reporte de Manifiestos
-                <?php if (!empty($Pla_Nom_Asignada)) { ?>
-                    <small style="margin-left: 10px; color: #d7ebff;">| Planta: <?php echo htmlspecialchars($Pla_Nom_Asignada); ?></small>
-                <?php } ?>
-            </h3>
+			<h3><i class="fa fa-dashboard"></i> Reporte de Manifiestos</h3>
 		</div>
 		<div class="panel-body">
             
             <!-- Tabs -->
             <ul class="nav nav-tabs" role="tablist" style="margin-bottom: 15px; border-bottom: 2px solid #2C5D94;">
-                <?php if (!$soloTabChoferPlaca) { ?>
                 <li role="presentation" class="active">
                     <a href="#tab_configuracion" aria-controls="tab_configuracion" role="tab" data-toggle="tab">
                         <i class="fa fa-cog"></i> Por Configuración
                     </a>
                 </li>
-                <?php } ?>
-                <?php if (!$soloTabChoferPlaca) { ?>
                 <li role="presentation">
                     <a href="#tab_rango" aria-controls="tab_rango" role="tab" data-toggle="tab">
                         <i class="fa fa-calendar"></i> Por Rango de Fechas
                     </a>
                 </li>
-                <?php } ?>
-                <li role="presentation" class="<?php echo $soloTabChoferPlaca ? 'active' : ''; ?>">
+                <li role="presentation">
                     <a href="#tab_chofer_placa" aria-controls="tab_chofer_placa" role="tab" data-toggle="tab">
                         <i class="fa fa-users"></i> Por Chofer / Placa
                     </a>
                 </li>
-                <?php if (!$soloTabChoferPlaca) { ?>
                 <li role="presentation">
                     <a href="#tab_ejecutivo" aria-controls="tab_ejecutivo" role="tab" data-toggle="tab">
                         <i class="fa fa-line-chart"></i> Vista Ejecutiva Global
                     </a>
                 </li>
-                <?php } ?>
             </ul>
             
             <div class="tab-content">
                 <!-- Tab 1: Por Configuración -->
-                <?php if (!$soloTabChoferPlaca) { ?>
                 <div role="tabpanel" class="tab-pane active" id="tab_configuracion">
                     <div class="filtros-container">
                         <div class="form-group">
@@ -2912,10 +2851,8 @@ if (isset($_GET['getInactivosDetallePlantaAjax']) || isset($getInactivosDetalleP
                         </div>
                     </div>
                 </div>
-                <?php } ?>
                 
                 <!-- Tab 2: Por Rango de Fechas -->
-                <?php if (!$soloTabChoferPlaca) { ?>
                 <div role="tabpanel" class="tab-pane" id="tab_rango">
                     <div class="filtros-container">
                         <div class="form-group">
@@ -2964,10 +2901,9 @@ if (isset($_GET['getInactivosDetallePlantaAjax']) || isset($getInactivosDetalleP
                         </div>
                     </div>
                 </div>
-                <?php } ?>
                 
                 <!-- Tab 3: Por Chofer / Placa -->
-                <div role="tabpanel" class="tab-pane <?php echo $soloTabChoferPlaca ? 'active' : ''; ?>" id="tab_chofer_placa">
+                <div role="tabpanel" class="tab-pane" id="tab_chofer_placa">
                     <div class="filtros-container">
                         <div class="form-group">
                             <label class="control-label">Mes:</label>
@@ -2986,9 +2922,7 @@ if (isset($_GET['getInactivosDetallePlantaAjax']) || isset($getInactivosDetalleP
                             <select id="tipo_vista_chofer_placa" class="form-control" style="width: 180px; display: inline-block;">
                                 <option value="chofer">Por chofer</option>
                                 <option value="placa">Por placa</option>
-                                <?php if (!$soloTabChoferPlaca) { ?>
                                 <option value="planta">Por planta</option>
-                                <?php } ?>
                             </select>
                         </div>
                         <div class="form-group">
@@ -3013,7 +2947,6 @@ if (isset($_GET['getInactivosDetallePlantaAjax']) || isset($getInactivosDetalleP
                 </div>
 
                 <!-- Tab 4: Vista Ejecutiva Global (CEO) -->
-                <?php if (!$soloTabChoferPlaca) { ?>
                 <div role="tabpanel" class="tab-pane" id="tab_ejecutivo">
                     <div class="filtros-container">
                         <div class="form-group">
@@ -3045,7 +2978,6 @@ if (isset($_GET['getInactivosDetallePlantaAjax']) || isset($getInactivosDetalleP
                         </div>
                     </div>
                 </div>
-                <?php } ?>
             </div>
         </div>
     </div>
@@ -3078,6 +3010,6 @@ if (isset($_GET['getInactivosDetallePlantaAjax']) || isset($getInactivosDetalleP
             soloTabChoferPlaca: <?php echo $soloTabChoferPlaca ? 'true' : 'false'; ?>
         };
     </script>
-	<script src="../VALIDACIONES/man_val_dashboard_turnos.js?a=37"></script>
+	<script src="../VALIDACIONES/man_val_dashboard_turnos.js?a=40"></script>
 </BODY>
 </HTML>

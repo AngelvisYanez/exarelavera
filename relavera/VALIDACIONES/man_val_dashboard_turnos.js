@@ -12,16 +12,13 @@ var datosModalManifiestosChoferPlaca = null; // { manifiestos, turnoInfo, tipoVi
 var datosRankingPlantasChoferPlaca = null; // [ { Pla_Cod, Pla_Nom, total } ] para imprimir/Excel
 var fechaInicioChoferPlaca = '';
 var fechaFinChoferPlaca = '';
-var contextoDashboardTurnos = window.dashboardTurnosContext || { plaCodAsignada: 0, plaNomAsignada: '' };
 var datosDashboardEjecutivo = null; // Datos del tab Vista Ejecutiva (CEO) para imprimir informe gerencial
 var datosTurnosPorDia = {}; // { fechaId: turnosFecha[] } para gráfico tendencia por día
 var modoVistaConfig = 'tabla'; // 'tabla' | 'barras' | 'tendencia' - aplica a todos los días
 var primeraCargaConfig = true; // true = solo día actual expandido; false = al hacer clic en Tabla/Barras/Tendencia se expande todo
 
 $(function () {
-    aplicarRestriccionTabsPlantero();
     cargarConfiguraciones();
-    inicializarFechasChoferPlacaSiAplica();
     
     // Cargar plantas cuando se muestra el tab de rango; inicializar mes actual si no hay fechas
     $('a[href="#tab_rango"]').on('shown.bs.tab', function() {
@@ -40,16 +37,10 @@ $(function () {
         var parts = val.split('-');
         var year = parseInt(parts[0], 10);
         var month = parseInt(parts[1], 10);
-        var now = new Date();
-        var finDia;
-        if (now.getFullYear() === year && (now.getMonth() + 1) === month) {
-            finDia = String(now.getDate()).padStart(2, '0');
-        } else {
-            finDia = String(new Date(year, month, 0).getDate()).padStart(2, '0');
-        }
+        var lastDay = new Date(year, month, 0).getDate();
         var mesStr = String(month).padStart(2, '0');
         $('#fecha_inicio_rango').val(year + '-' + mesStr + '-01');
-        $('#fecha_fin_rango').val(year + '-' + mesStr + '-' + finDia);
+        $('#fecha_fin_rango').val(year + '-' + mesStr + '-' + String(lastDay).padStart(2, '0'));
     });
     
     // Re-render al cambiar checkbox omitir días sin manifiestos (tab rango)
@@ -75,7 +66,6 @@ $(function () {
             $('#mes_chofer_placa').val(mesVal);
         }
         sincronizarFechasDesdeMesChoferPlaca(mesVal);
-        mostrarAvisoPlantaPlanteroChoferPlaca();
     });
     
     // Mes Chofer/Placa: al elegir mes, autocompletar Desde y Hasta (1º al último día del mes)
@@ -105,61 +95,15 @@ $(function () {
     $(document).on('click', '#btnBuscarChoferPlaca', function() { cargarDashboardChoferPlaca(); });
 });
 
-function inicializarFechasChoferPlacaSiAplica() {
-    var $tabChoferPlaca = $('#tab_chofer_placa');
-    if (!$tabChoferPlaca.length) return;
-    var tabActiva = $tabChoferPlaca.hasClass('active') || $tabChoferPlaca.hasClass('in');
-    if (!tabActiva) return;
-    if ($('#fecha_inicio_chofer_placa').val() && $('#fecha_fin_chofer_placa').val()) return;
-    var mesVal = $('#mes_chofer_placa').val();
-    if (!mesVal) {
-        var now = new Date();
-        mesVal = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-        $('#mes_chofer_placa').val(mesVal);
-    }
-    sincronizarFechasDesdeMesChoferPlaca(mesVal);
-}
-
-function aplicarRestriccionTabsPlantero() {
-    if (!contextoDashboardTurnos || !contextoDashboardTurnos.soloTabChoferPlaca) return;
-    var $tabs = $('ul.nav.nav-tabs[role="tablist"]');
-    if (!$tabs.length) return;
-
-    $tabs.find('li').removeClass('active');
-    $tabs.find('a[href="#tab_configuracion"]').closest('li').hide();
-    $tabs.find('a[href="#tab_rango"]').closest('li').hide();
-    $tabs.find('a[href="#tab_ejecutivo"]').closest('li').hide();
-    $tabs.find('a[href="#tab_chofer_placa"]').closest('li').show().addClass('active');
-
-    $('#tab_configuracion, #tab_rango, #tab_ejecutivo').removeClass('active in').hide();
-    $('#tab_chofer_placa').show().addClass('active in');
-    $('#tipo_vista_chofer_placa option[value="planta"]').remove();
-    if ($('#tipo_vista_chofer_placa').val() === 'planta') {
-        $('#tipo_vista_chofer_placa').val('chofer');
-    }
-}
-
-function limpiarOpcionesPlanteroEnModales() {
-    if (!contextoDashboardTurnos || !contextoDashboardTurnos.soloTabChoferPlaca) return;
-    $('#ordenManifiestosDetalle option[value="plantero"]').remove();
-    $('#ordenManifiestosCPDetalle option[value="plantero"]').remove();
-}
-
 function sincronizarFechasDesdeMesEjecutivo(mesVal) {
     if (!mesVal) return;
     var parts = mesVal.split('-');
     var year = parseInt(parts[0], 10);
     var month = parseInt(parts[1], 10);
     var mesStr = String(month).padStart(2, '0');
-    var now = new Date();
-    var finDia;
-    if (now.getFullYear() === year && (now.getMonth() + 1) === month) {
-        finDia = String(now.getDate()).padStart(2, '0');
-    } else {
-        finDia = String(new Date(year, month, 0).getDate()).padStart(2, '0');
-    }
+    var lastDay = new Date(year, month, 0).getDate();
     $('#fecha_inicio_ejecutivo').val(year + '-' + mesStr + '-01');
-    $('#fecha_fin_ejecutivo').val(year + '-' + mesStr + '-' + finDia);
+    $('#fecha_fin_ejecutivo').val(year + '-' + mesStr + '-' + String(lastDay).padStart(2, '0'));
 }
 
 function sincronizarFechasDesdeMesChoferPlaca(mesVal) {
@@ -168,15 +112,9 @@ function sincronizarFechasDesdeMesChoferPlaca(mesVal) {
     var year = parseInt(parts[0], 10);
     var month = parseInt(parts[1], 10);
     var mesStr = String(month).padStart(2, '0');
-    var now = new Date();
-    var finDia;
-    if (now.getFullYear() === year && (now.getMonth() + 1) === month) {
-        finDia = String(now.getDate()).padStart(2, '0');
-    } else {
-        finDia = String(new Date(year, month, 0).getDate()).padStart(2, '0');
-    }
+    var lastDay = new Date(year, month, 0).getDate();
     $('#fecha_inicio_chofer_placa').val(year + '-' + mesStr + '-01');
-    $('#fecha_fin_chofer_placa').val(year + '-' + mesStr + '-' + finDia);
+    $('#fecha_fin_chofer_placa').val(year + '-' + mesStr + '-' + String(lastDay).padStart(2, '0'));
 }
 
 function formatearFechaRango(f) {
@@ -1329,7 +1267,6 @@ function aplicarOrdenManifiestosDetalle(tipo) {
 }
 
 function mostrarManifiestosModal(manifiestos, Tud_Cod, turnoInfo) {
-    var esPlanteroRestringido = !!(contextoDashboardTurnos && contextoDashboardTurnos.soloTabChoferPlaca);
     var titulo;
     if (turnoInfo && turnoInfo.horario === 'Acumulado de la configuración') {
         titulo = '<i class="fa fa-calendar-check-o"></i> Manifiestos - Configuración completa (' + (turnoInfo.fecha || '') + ')';
@@ -1362,11 +1299,9 @@ function mostrarManifiestosModal(manifiestos, Tud_Cod, turnoInfo) {
         html += '<li role="presentation" class="active">';
         html += '<a href="#tabManifiestosDetalle" aria-controls="tabManifiestosDetalle" role="tab" data-toggle="tab">';
         html += '<i class="fa fa-list-alt"></i> Detallado</a></li>';
-        if (!esPlanteroRestringido) {
-            html += '<li role="presentation">';
-            html += '<a href="#tabManifiestosPlanta" aria-controls="tabManifiestosPlanta" role="tab" data-toggle="tab">';
-            html += '<i class="fa fa-industry"></i> Por Planta</a></li>';
-        }
+        html += '<li role="presentation">';
+        html += '<a href="#tabManifiestosPlanta" aria-controls="tabManifiestosPlanta" role="tab" data-toggle="tab">';
+        html += '<i class="fa fa-industry"></i> Por Planta</a></li>';
         html += '</ul>';
         
         html += '<div class="tab-content">';
@@ -1378,9 +1313,7 @@ function mostrarManifiestosModal(manifiestos, Tud_Cod, turnoInfo) {
         html += '<label style="margin: 0; font-weight: normal;">Ordenar por:</label>';
         html += '<select id="ordenManifiestosDetalle" class="form-control input-sm" style="width: auto; display: inline-block;" onchange="aplicarOrdenManifiestosDetalle(this.value);">';
         html += '<option value="fecha" selected>Por fecha</option>';
-        if (!contextoDashboardTurnos || !contextoDashboardTurnos.soloTabChoferPlaca) {
-            html += '<option value="plantero">Por plantero</option>';
-        }
+        html += '<option value="plantero">Por plantero</option>';
         html += '</select>';
         html += '</div>';
         html += '<div>';
@@ -1434,65 +1367,63 @@ function mostrarManifiestosModal(manifiestos, Tud_Cod, turnoInfo) {
         html += '</table>';
         html += '</div>';
         
-        if (!esPlanteroRestringido) {
-            // Tab 2: Por Planta (agrupado por Planta + Cliente)
-            html += '<div role="tabpanel" class="tab-pane" id="tabManifiestosPlanta">';
-            html += '<div class="no-print" style="margin-bottom: 10px; text-align: right;">';
-            html += '<button type="button" class="btn btn-primary btn-sm" onclick="imprimirModalManifiestos();" style="margin-right: 5px;"><i class="fa fa-print"></i> Imprimir</button>';
-            html += '<button type="button" class="btn btn-success btn-sm" onclick="exportModalManifiestosExcel(\'planta\');" style="margin-right: 5px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); border-color: #1e7e34;">';
-            html += '<i class="fa fa-file-excel-o"></i> Excel</button>';
-            html += '<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cerrar</button>';
-            html += '</div>';
-            
-            var porPlantaCliente = {};
-            manifiestos.forEach(function(man) {
-                var planta = man.Pla_Nom || '(Sin planta)';
-                var cliente = man.Cliente || '(Sin cliente)';
-                var key = planta + '\u0001' + cliente;
-                if (!porPlantaCliente[key]) {
-                    porPlantaCliente[key] = { planta: planta, cliente: cliente, cantidad: 0 };
-                }
-                porPlantaCliente[key].cantidad++;
-            });
-            
-            var filas = Object.keys(porPlantaCliente).map(function(k) { return porPlantaCliente[k]; });
-            filas.sort(function(a, b) { return (b.cantidad || 0) - (a.cantidad || 0); });
-            
-            html += '<table class="table table-bordered table-striped table-condensed tabla-modal-planta" style="font-size: 11px;">';
-            html += '<thead>';
+        // Tab 2: Por Planta (agrupado por Planta + Cliente)
+        html += '<div role="tabpanel" class="tab-pane" id="tabManifiestosPlanta">';
+        html += '<div class="no-print" style="margin-bottom: 10px; text-align: right;">';
+        html += '<button type="button" class="btn btn-primary btn-sm" onclick="imprimirModalManifiestos();" style="margin-right: 5px;"><i class="fa fa-print"></i> Imprimir</button>';
+        html += '<button type="button" class="btn btn-success btn-sm" onclick="exportModalManifiestosExcel(\'planta\');" style="margin-right: 5px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); border-color: #1e7e34;">';
+        html += '<i class="fa fa-file-excel-o"></i> Excel</button>';
+        html += '<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cerrar</button>';
+        html += '</div>';
+        
+        var porPlantaCliente = {};
+        manifiestos.forEach(function(man) {
+            var planta = man.Pla_Nom || '(Sin planta)';
+            var cliente = man.Cliente || '(Sin cliente)';
+            var key = planta + '\u0001' + cliente;
+            if (!porPlantaCliente[key]) {
+                porPlantaCliente[key] = { planta: planta, cliente: cliente, cantidad: 0 };
+            }
+            porPlantaCliente[key].cantidad++;
+        });
+        
+        var filas = Object.keys(porPlantaCliente).map(function(k) { return porPlantaCliente[k]; });
+        filas.sort(function(a, b) { return (b.cantidad || 0) - (a.cantidad || 0); });
+        
+        html += '<table class="table table-bordered table-striped table-condensed tabla-modal-planta" style="font-size: 11px;">';
+        html += '<thead>';
+        html += '<tr>';
+        html += '<th style="width: 40px;">#</th>';
+        html += '<th>Planta</th>';
+        html += '<th>Cliente</th>';
+        html += '<th style="width: 120px; text-align: center;">Cantidad Manifiestos</th>';
+        html += '<th style="width: 100px; text-align: center;"><span style="display: block;">%</span><span style="display: block;">Participación</span></th>';
+        html += '</tr>';
+        html += '</thead>';
+        html += '<tbody>';
+        
+        var totalManifiestos = filas.reduce(function(s, f) { return s + (f.cantidad || 0); }, 0);
+        filas.forEach(function(item, index) {
+            var pct = totalManifiestos > 0 ? ((item.cantidad / totalManifiestos) * 100).toFixed(2) : '0.00';
             html += '<tr>';
-            html += '<th style="width: 40px;">#</th>';
-            html += '<th>Planta</th>';
-            html += '<th>Cliente</th>';
-            html += '<th style="width: 120px; text-align: center;">Cantidad Manifiestos</th>';
-            html += '<th style="width: 100px; text-align: center;"><span style="display: block;">%</span><span style="display: block;">Participación</span></th>';
+            html += '<td style="text-align: center; font-weight: bold;">' + (index + 1) + '</td>';
+            html += '<td>' + item.planta + '</td>';
+            html += '<td>' + item.cliente + '</td>';
+            html += '<td style="text-align: center;"><strong>' + item.cantidad + '</strong></td>';
+            html += '<td style="text-align: center;">' + pct + '%</td>';
             html += '</tr>';
-            html += '</thead>';
-            html += '<tbody>';
-            
-            var totalManifiestos = filas.reduce(function(s, f) { return s + (f.cantidad || 0); }, 0);
-            filas.forEach(function(item, index) {
-                var pct = totalManifiestos > 0 ? ((item.cantidad / totalManifiestos) * 100).toFixed(2) : '0.00';
-                html += '<tr>';
-                html += '<td style="text-align: center; font-weight: bold;">' + (index + 1) + '</td>';
-                html += '<td>' + item.planta + '</td>';
-                html += '<td>' + item.cliente + '</td>';
-                html += '<td style="text-align: center;"><strong>' + item.cantidad + '</strong></td>';
-                html += '<td style="text-align: center;">' + pct + '%</td>';
-                html += '</tr>';
-            });
-            
-            html += '</tbody>';
-            html += '<tfoot>';
-            html += '<tr style="background-color: #2C5D94; color: white; font-weight: bold;">';
-            html += '<td colspan="3" style="text-align: right; padding-right: 15px;">TOTAL:</td>';
-            html += '<td style="text-align: center;">' + totalManifiestos + '</td>';
-            html += '<td style="text-align: center;">100%</td>';
-            html += '</tr>';
-            html += '</tfoot>';
-            html += '</table>';
-            html += '</div>';
-        }
+        });
+        
+        html += '</tbody>';
+        html += '<tfoot>';
+        html += '<tr style="background-color: #2C5D94; color: white; font-weight: bold;">';
+        html += '<td colspan="3" style="text-align: right; padding-right: 15px;">TOTAL:</td>';
+        html += '<td style="text-align: center;">' + totalManifiestos + '</td>';
+        html += '<td style="text-align: center;">100%</td>';
+        html += '</tr>';
+        html += '</tfoot>';
+        html += '</table>';
+        html += '</div>';
         
         html += '</div>';
     }
@@ -1512,7 +1443,6 @@ function mostrarManifiestosModal(manifiestos, Tud_Cod, turnoInfo) {
     
     // Mostrar modal
     $('#modalManifiestos').modal('show');
-    limpiarOpcionesPlanteroEnModales();
     
     // Limpiar modal al cerrar
     $('#modalManifiestos').on('hidden.bs.modal', function() {
@@ -1522,7 +1452,6 @@ function mostrarManifiestosModal(manifiestos, Tud_Cod, turnoInfo) {
 }
 
 function abrirModalManifiestosChoferPlaca(manifiestos, turnoInfo, tipoVista) {
-    var esPlanteroRestringido = !!(contextoDashboardTurnos && contextoDashboardTurnos.soloTabChoferPlaca);
     var titulo = '<i class="fa fa-list"></i> Manifiestos - ' + (turnoInfo.horario || '') + ' (' + (turnoInfo.fecha || '') + ')';
     datosModalManifiestosChoferPlaca = { manifiestos: manifiestos || [], turnoInfo: turnoInfo || {}, tipoVista: tipoVista || 'chofer' };
     var html = '<div class="modal fade" id="modalManifiestosChoferPlaca" tabindex="-1" role="dialog">';
@@ -1542,7 +1471,7 @@ function abrirModalManifiestosChoferPlaca(manifiestos, turnoInfo, tipoVista) {
         if (tipoVista === 'planta') {
             html += '<li role="presentation"><a href="#tabManifiestosCPChofer" aria-controls="tabManifiestosCPChofer" role="tab" data-toggle="tab"><i class="fa fa-user"></i> Por Chofer</a></li>';
             html += '<li role="presentation"><a href="#tabManifiestosCPPlaca" aria-controls="tabManifiestosCPPlaca" role="tab" data-toggle="tab"><i class="fa fa-car"></i> Por Placa</a></li>';
-        } else if (!esPlanteroRestringido) {
+        } else {
             html += '<li role="presentation"><a href="#tabManifiestosCPPlanta" aria-controls="tabManifiestosCPPlanta" role="tab" data-toggle="tab"><i class="fa fa-industry"></i> Por Planta</a></li>';
         }
         html += '</ul>';
@@ -1553,9 +1482,7 @@ function abrirModalManifiestosChoferPlaca(manifiestos, turnoInfo, tipoVista) {
         html += '<label style="margin: 0; font-weight: normal;">Ordenar por:</label>';
         html += '<select id="ordenManifiestosCPDetalle" class="form-control input-sm" style="width: auto;" onchange="aplicarOrdenManifiestosChoferPlaca(this.value);">';
         html += '<option value="fecha" selected>Por fecha</option>';
-        if (!contextoDashboardTurnos || !contextoDashboardTurnos.soloTabChoferPlaca) {
-            html += '<option value="plantero">Por plantero</option>';
-        }
+        html += '<option value="plantero">Por plantero</option>';
         html += '</select>';
         html += '</div>';
         html += '<div>';
@@ -1648,7 +1575,7 @@ function abrirModalManifiestosChoferPlaca(manifiestos, turnoInfo, tipoVista) {
             html += '</tbody><tfoot><tr style="background-color: #2C5D94; color: white; font-weight: bold;">';
             html += '<td colspan="3" style="text-align: right; padding-right: 15px;">TOTAL:</td><td style="text-align: center;">' + totalManPlaca + '</td><td style="text-align: center;">100%</td></tr></tfoot></table>';
             html += '</div>';
-        } else if (!esPlanteroRestringido) {
+        } else {
             var porPlanta = {};
             manifiestos.forEach(function(man) {
                 var planta = man.Pla_Nom || '(Sin planta)';
@@ -1680,7 +1607,6 @@ function abrirModalManifiestosChoferPlaca(manifiestos, turnoInfo, tipoVista) {
     $('#modalManifiestosChoferPlaca').remove();
     $('body').append(html);
     $('#modalManifiestosChoferPlaca').modal('show');
-    limpiarOpcionesPlanteroEnModales();
     $('#modalManifiestosChoferPlaca').on('hidden.bs.modal', function() {
         datosModalManifiestosChoferPlaca = null;
         $(this).remove();
@@ -1719,7 +1645,9 @@ function verManifiestosChoferPlaca(idx) {
     var tituloRango = formatearFechaRango(fechaInicioChoferPlaca) + ' - ' + formatearFechaRango(fechaFinChoferPlaca);
     var turnoInfo = {
         fecha: tituloRango,
-        horario: tipoVista === 'chofer' ? ('Chofer: ' + (grupo.chofer_nombre || 'Sin asignar')) : (tipoVista === 'planta' ? ('Planta: ' + (grupo.Pla_Nom || 'Sin planta')) : ('Placa: ' + (grupo.Veh_Pla || 'Sin placa')))
+        horario: tipoVista === 'chofer'
+            ? ('Chofer: ' + (grupo.chofer_nombre || 'Sin asignar') + (grupo.Pla_Nom ? (' | Planta: ' + grupo.Pla_Nom) : ''))
+            : (tipoVista === 'planta' ? ('Planta: ' + (grupo.Pla_Nom || 'Sin planta')) : ('Placa: ' + (grupo.Veh_Pla || 'Sin placa')))
     };
     abrirModalManifiestosChoferPlaca(grupo.manifiestos || [], turnoInfo, tipoVista);
 }
@@ -2465,8 +2393,30 @@ function exportarExcelRango() {
 
 // --- Dashboard Por Chofer / Placa ---
 // Calcula KPIs estratégicos por vista.
+function agruparDatosChoferParaGraficos(agrupado) {
+    var map = {};
+    (agrupado || []).forEach(function(g) {
+        var cedula = (g.chofer_cedula || '').trim();
+        var nombre = (g.chofer_nombre || '').trim() || 'Sin asignar';
+        var key = cedula !== '' ? ('cedula_' + cedula) : ('nombre_' + nombre);
+        if (!map[key]) {
+            map[key] = {
+                Cho_Cod: g.Cho_Cod,
+                chofer_nombre: nombre,
+                chofer_cedula: cedula,
+                total_manifiestos: 0
+            };
+        }
+        map[key].total_manifiestos += (g.total_manifiestos || 0);
+    });
+    return Object.keys(map).map(function(k) { return map[k]; });
+}
+
 function calcularKPIsEstrategicos(agrupado, tipoVista, plantasOptional) {
     var src = (agrupado && agrupado.length > 0) ? agrupado : (tipoVista === 'planta' && plantasOptional && plantasOptional.length > 0 ? plantasOptional : []);
+    if (tipoVista === 'chofer') {
+        src = agruparDatosChoferParaGraficos(src);
+    }
     var getVal = function(g) {
         if (tipoVista === 'planta') return g.total_manifiestos != null ? g.total_manifiestos : (g.total || 0);
         return g.total_manifiestos || 0;
@@ -2543,6 +2493,9 @@ function prepararDatosPareto(agrupado, tipoVista, plantasOptional) {
         return g.total_manifiestos || 0;
     };
     var src = (agrupado && agrupado.length > 0) ? agrupado : (tipoVista === 'planta' && plantasOptional && plantasOptional.length > 0 ? plantasOptional : []);
+    if (tipoVista === 'chofer') {
+        src = agruparDatosChoferParaGraficos(src);
+    }
     src.forEach(function(g) {
         items.push({ nombre: getNombre(g), cantidad: getCantidad(g) });
     });
@@ -3129,9 +3082,10 @@ function generarGraficoChoferPlaca(tipoVista, agrupado, plantas) {
         });
     } else if (tipoVista === 'chofer') {
         titulo = 'Manifiestos por chofer';
-        (agrupado || []).forEach(function(g) {
+        agruparDatosChoferParaGraficos(agrupado).forEach(function(g) {
             items.push({ label: (g.chofer_nombre || '').trim() || 'Sin asignar', value: g.total_manifiestos || 0 });
         });
+        items.sort(function(a, b) { return b.value - a.value; });
     } else {
         titulo = 'Manifiestos por placa';
         (agrupado || []).forEach(function(g) {
@@ -3192,7 +3146,6 @@ function cargarDashboardChoferPlaca() {
     fechaFinChoferPlaca = ff;
     $('#dashboardContentChoferPlaca').html('<div class="loading"><i class="fa fa-spinner fa-spin"></i><p>Cargando...</p></div>');
     var params = { getPlantasRankingAjax: true, fecha_inicio: fi, fecha_fin: ff };
-    if (contextoDashboardTurnos.plaCodAsignada > 0) params.Pla_Cod = contextoDashboardTurnos.plaCodAsignada;
     $.get('', params, function(resPlantas) {
         if (!resPlantas.success) {
             $('#dashboardContentChoferPlaca').html('<div class="alert alert-danger">' + (resPlantas.message || 'Error al cargar ranking de plantas') + '</div>');
@@ -3200,7 +3153,6 @@ function cargarDashboardChoferPlaca() {
         }
         datosRankingPlantasChoferPlaca = resPlantas.plantas || [];
         var paramsMan = { getDashboardManifiestosAjax: true, fecha_inicio: fi, fecha_fin: ff, tipo_vista: tipoVista };
-        if (contextoDashboardTurnos.plaCodAsignada > 0) paramsMan.Pla_Cod = contextoDashboardTurnos.plaCodAsignada;
         $.ajax({ url: '', type: 'GET', data: paramsMan, dataType: 'json', cache: false,
             success: function(resMan) {
                 if (!resMan.success) {
@@ -3221,16 +3173,20 @@ function cargarDashboardChoferPlaca() {
     });
 }
 
-function mostrarAvisoPlantaPlanteroChoferPlaca() {
-    $('#avisoPlantaPlanteroChoferPlaca').remove();
-    if (!(contextoDashboardTurnos.plaCodAsignada > 0)) return;
-    var nombrePlanta = (contextoDashboardTurnos.plaNomAsignada || '').trim();
-    var textoPlanta = nombrePlanta !== '' ? nombrePlanta : ('Código ' + contextoDashboardTurnos.plaCodAsignada);
-    var html = ''
-        + '<div id="avisoPlantaPlanteroChoferPlaca" class="alert alert-info" style="margin-top:10px; margin-bottom:0;">'
-        + '<i class="fa fa-building-o"></i> Vista restringida a la planta del usuario logueado: <strong>' + textoPlanta + '</strong>.'
-        + '</div>';
-    $('#tab_chofer_placa .filtros-container').append(html);
+function formatearCeldaPlantasChoferPlaca(g) {
+    if (g && g.Pla_Nom && String(g.Pla_Nom).trim() !== '') {
+        return String(g.Pla_Nom).trim();
+    }
+    var nombres = (g && g.plantas_nombres) ? String(g.plantas_nombres).trim() : '';
+    return nombres !== '' ? nombres : '-';
+}
+
+function formatearTextoPlantasChoferPlaca(g) {
+    if (g && g.Pla_Nom && String(g.Pla_Nom).trim() !== '') {
+        return String(g.Pla_Nom).trim();
+    }
+    var nombres = (g && g.plantas_nombres) ? String(g.plantas_nombres).trim() : '';
+    return nombres !== '' ? nombres : '-';
 }
 
 function renderDashboardChoferPlaca(plantas, agrupado, tipoVista) {
@@ -3289,7 +3245,7 @@ function renderDashboardChoferPlaca(plantas, agrupado, tipoVista) {
             html += '<table class="turnos-table" id="tablaAgrupadoChoferPlaca"><thead><tr>';
             html += '<th>#</th>';
             if (tipoVista === 'chofer') {
-                html += '<th>Chofer</th><th>Cédula</th><th>Total manifiestos</th><th>Plantas</th><th>Tiempo Prom.</th><th></th></tr></thead><tbody>';
+                html += '<th>Chofer</th><th>Cédula</th><th>Total manifiestos</th><th>Planta</th><th>Tiempo Prom.</th><th></th></tr></thead><tbody>';
             } else {
                 html += '<th>Placa</th><th>Total manifiestos</th><th>Plantas</th><th>Tiempo Prom.</th><th></th></tr></thead><tbody>';
             }
@@ -3307,9 +3263,9 @@ function renderDashboardChoferPlaca(plantas, agrupado, tipoVista) {
                 var stylePlantas = ' style="cursor: help; color: #2C5D94; font-weight: bold; text-decoration: underline dotted #2C5D94; text-decoration-thickness: 2px; text-underline-offset: 3px;"';
                 
                 if (tipoVista === 'chofer') {
-                    html += '<td>' + (g.chofer_nombre || 'Sin asignar') + '</td><td>' + (g.chofer_cedula || '') + '</td><td>' + (g.total_manifiestos || 0) + '</td><td' + tooltipPlantas + stylePlantas + '>' + (g.total_plantas != null ? g.total_plantas : '0') + '</td><td>' + tFmt + '</td>';
+                    html += '<td>' + (g.chofer_nombre || 'Sin asignar') + '</td><td>' + (g.chofer_cedula || '') + '</td><td>' + (g.total_manifiestos || 0) + '</td><td>' + formatearCeldaPlantasChoferPlaca(g) + '</td><td>' + tFmt + '</td>';
                 } else {
-                    html += '<td>' + (g.Veh_Pla || 'Sin placa') + '</td><td>' + (g.total_manifiestos || 0) + '</td><td' + tooltipPlantas + stylePlantas + '>' + (g.total_plantas != null ? g.total_plantas : '0') + '</td><td>' + tFmt + '</td>';
+                    html += '<td>' + (g.Veh_Pla || 'Sin placa') + '</td><td>' + (g.total_manifiestos || 0) + '</td><td>' + formatearCeldaPlantasChoferPlaca(g) + '</td><td>' + tFmt + '</td>';
                 }
                 html += '<td><button type="button" class="btn btn-xs btn-default btn-ver-manifiestos" onclick="verManifiestosChoferPlaca(' + idx + ');"><span class="glyphicon glyphicon-list"></span> Ver manifiestos</button></td></tr>';
             });
@@ -3358,13 +3314,13 @@ function imprimirReporteChoferPlaca() {
         // Solo sección Manifiestos por chofer o por placa
         if (datosDashboardChoferPlaca && datosDashboardChoferPlaca.agrupado && datosDashboardChoferPlaca.agrupado.length > 0) {
             html += '<table class="turnos-table"><thead><tr>';
-            if (tipoVista === 'chofer') html += '<th>Chofer</th><th>Cédula</th><th>Total</th><th>Plantas</th><th>Tiempo Prom.</th></tr></thead><tbody>';
+            if (tipoVista === 'chofer') html += '<th>Chofer</th><th>Cédula</th><th>Total</th><th>Planta</th><th>Tiempo Prom.</th></tr></thead><tbody>';
             else html += '<th>Placa</th><th>Total</th><th>Plantas</th><th>Tiempo Prom.</th></tr></thead><tbody>';
             datosDashboardChoferPlaca.agrupado.forEach(function(g) {
                 var tProm = g.tiempo_promedio || 0;
                 var tFmt = tProm >= 60 ? (Math.floor(tProm / 60) + 'h ' + Math.round(tProm % 60) + 'm') : (Math.round(tProm) + ' min');
-                if (tipoVista === 'chofer') html += '<tr><td>' + (g.chofer_nombre || '') + '</td><td>' + (g.chofer_cedula || '') + '</td><td>' + (g.total_manifiestos || 0) + '</td><td>' + (g.total_plantas != null ? g.total_plantas : 0) + '</td><td>' + tFmt + '</td></tr>';
-                else html += '<tr><td>' + (g.Veh_Pla || '') + '</td><td>' + (g.total_manifiestos || 0) + '</td><td>' + (g.total_plantas != null ? g.total_plantas : 0) + '</td><td>' + tFmt + '</td></tr>';
+                if (tipoVista === 'chofer') html += '<tr><td>' + (g.chofer_nombre || '') + '</td><td>' + (g.chofer_cedula || '') + '</td><td>' + (g.total_manifiestos || 0) + '</td><td>' + formatearTextoPlantasChoferPlaca(g) + '</td><td>' + tFmt + '</td></tr>';
+                else html += '<tr><td>' + (g.Veh_Pla || '') + '</td><td>' + (g.total_manifiestos || 0) + '</td><td>' + formatearTextoPlantasChoferPlaca(g) + '</td><td>' + tFmt + '</td></tr>';
             });
             html += '</tbody></table>';
         }
@@ -3401,18 +3357,17 @@ function exportarExcelChoferPlaca() {
     } else {
         // Solo sección Manifiestos por chofer o por placa — igual que el cuadro en pantalla (sin listados de manifiestos ni fechas/plantas)
         if (datosDashboardChoferPlaca && datosDashboardChoferPlaca.agrupado && datosDashboardChoferPlaca.agrupado.length > 0) {
-            htmlExcel += '<tr class="xl-cp-header"><td colspan="' + (tipoVista === 'chofer' ? 7 : 6) + '">Manifiestos por ' + (tipoVista === 'chofer' ? 'chofer' : 'placa') + '</td></tr>';
-            if (tipoVista === 'chofer') htmlExcel += '<tr class="xl-cp-header"><td>#</td><td>Chofer</td><td>Cédula</td><td>Total manifiestos</td><td>Plantas</td><td>Plantas Asoc.</td><td>Tiempo Prom.</td></tr>';
-            else htmlExcel += '<tr class="xl-cp-header"><td>#</td><td>Placa</td><td>Total manifiestos</td><td>Plantas</td><td>Plantas Asoc.</td><td>Tiempo Prom.</td></tr>';
+            htmlExcel += '<tr class="xl-cp-header"><td colspan="' + (tipoVista === 'chofer' ? 6 : 5) + '">Manifiestos por ' + (tipoVista === 'chofer' ? 'chofer' : 'placa') + '</td></tr>';
+            if (tipoVista === 'chofer') htmlExcel += '<tr class="xl-cp-header"><td>#</td><td>Chofer</td><td>Cédula</td><td>Total manifiestos</td><td>Planta</td><td>Tiempo Prom.</td></tr>';
+            else htmlExcel += '<tr class="xl-cp-header"><td>#</td><td>Placa</td><td>Total manifiestos</td><td>Plantas</td><td>Tiempo Prom.</td></tr>';
             datosDashboardChoferPlaca.agrupado.forEach(function(g, i) {
-                var totalPlantas = g.total_plantas != null ? g.total_plantas : 0;
-                var plantasAsoc = g.nombres_plantas || '';
+                var totalPlantasTxt = formatearTextoPlantasChoferPlaca(g);
                 var tProm = g.tiempo_promedio || 0;
                 var tFmt = tProm >= 60 ? (Math.floor(tProm / 60) + 'h ' + Math.round(tProm % 60) + 'm') : (Math.round(tProm) + ' min');
                 if (tipoVista === 'chofer') {
-                    htmlExcel += '<tr><td>' + (i + 1) + '</td><td>' + (g.chofer_nombre || '') + '</td><td>' + (g.chofer_cedula || '') + '</td><td>' + (g.total_manifiestos || 0) + '</td><td>' + totalPlantas + '</td><td>' + plantasAsoc + '</td><td>' + tFmt + '</td></tr>';
+                    htmlExcel += '<tr><td>' + (i + 1) + '</td><td>' + (g.chofer_nombre || '') + '</td><td>' + (g.chofer_cedula || '') + '</td><td>' + (g.total_manifiestos || 0) + '</td><td>' + totalPlantasTxt + '</td><td>' + tFmt + '</td></tr>';
                 } else {
-                    htmlExcel += '<tr><td>' + (i + 1) + '</td><td>' + (g.Veh_Pla || '') + '</td><td>' + (g.total_manifiestos || 0) + '</td><td>' + totalPlantas + '</td><td>' + plantasAsoc + '</td><td>' + tFmt + '</td></tr>';
+                    htmlExcel += '<tr><td>' + (i + 1) + '</td><td>' + (g.Veh_Pla || '') + '</td><td>' + (g.total_manifiestos || 0) + '</td><td>' + totalPlantasTxt + '</td><td>' + tFmt + '</td></tr>';
                 }
             });
         }
@@ -4224,19 +4179,6 @@ function renderDashboardEjecutivo(data) {
     html += '<div class="ceo-bloque"><h4><i class="fa fa-calendar"></i> Tendencia temporal (período seleccionado)</h4>';
     html += '<p>Promedio diario en el rango: <strong>' + promDia + '</strong> manifiestos' + (txtRango ? '<span class="text-muted">' + txtRango + '</span>' : '') + '</p>';
     html += '<div class="ceo-chart-wrap"><canvas id="chartEjecutivoTendencia"></canvas></div></div>';
-
-    var tonRecibidas = Number(data.kpis.total_toneladas_recibidas || 0).toLocaleString('es-ES');
-    var tonFacturadas = Number(data.kpis.total_toneladas_facturadas || 0).toLocaleString('es-ES');
-    var tonPorFacturar = Number(data.kpis.total_toneladas_por_facturar || 0).toLocaleString('es-ES');
-    var tonPromedioDiario = Number(data.kpis.promedio_tonelaje_diario || 0).toLocaleString('es-ES');
-
-    html += '<div class="ceo-bloque"><h4><i class="fa fa-balance-scale"></i> Resumen de Tonelaje</h4>';
-    html += '<div class="ceo-kpi-row">';
-    html += '<div class="ceo-kpi-card semaforo-verde"><div class="ceo-kpi-icon"><i class="fa fa-download"></i></div><div class="ceo-kpi-label">Total Recibidas</div><div class="ceo-kpi-value">' + tonRecibidas + ' Tn</div><div class="ceo-kpi-tendencia">Toneladas</div></div>';
-    html += '<div class="ceo-kpi-card semaforo-verde"><div class="ceo-kpi-icon"><i class="fa fa-file-text"></i></div><div class="ceo-kpi-label">Total Facturadas</div><div class="ceo-kpi-value">' + tonFacturadas + ' Tn</div><div class="ceo-kpi-tendencia">Toneladas</div></div>';
-    html += '<div class="ceo-kpi-card semaforo-amarillo"><div class="ceo-kpi-icon"><i class="fa fa-clock-o"></i></div><div class="ceo-kpi-label">Por Facturar</div><div class="ceo-kpi-value">' + tonPorFacturar + ' Tn</div><div class="ceo-kpi-tendencia">Toneladas</div></div>';
-    html += '<div class="ceo-kpi-card semaforo-verde"><div class="ceo-kpi-icon"><i class="fa fa-line-chart"></i></div><div class="ceo-kpi-label">Promedio Diario</div><div class="ceo-kpi-value">' + tonPromedioDiario + ' Tn</div><div class="ceo-kpi-tendencia">Toneladas / día</div></div>';
-    html += '</div></div>';
 
     var top10 = data.top10_plantas || [];
     var concPct = data.concentracion_top10_pct != null ? data.concentracion_top10_pct : (data.concentracion_pct || 0);
