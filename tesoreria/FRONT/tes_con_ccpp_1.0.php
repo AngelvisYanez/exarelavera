@@ -717,6 +717,82 @@ if (isset($getReportAbono)) {
       $.alert("El Servidor ha fallado en responder!");
     });
   }
+    
+    $(document).ready(function() {
+        var urlParams = new URLSearchParams(window.location.search);
+        var auto_ruc = urlParams.get('auto_ruc');
+        var auto_doc = urlParams.get('auto_doc');
+        if (auto_ruc) {
+            setTimeout(function() {
+                // Expand dates
+                if($('#txt_fec_ini').length > 0) {
+                    var now = new Date();
+                    $('#txt_fec_ini').datepicker('setDate', new Date(now.getFullYear(), 0, 1));
+                }
+                
+                // Buscar y seleccionar proveedor en cxpp
+                if (typeof selectProveedor === 'function') {
+                    $.SearchOrDialogArray("proveedoresDialog", selectProveedor, { searchPrv: auto_ruc, op_opciones: 'c' }, 'searchPrv');
+                } else {
+                    var el = $('#docu');
+                    if(el.length === 0) el = $('#docu2');
+                    if(el.length > 0) {
+                        el.val(auto_ruc);
+                        var e = jQuery.Event("keydown");
+                        e.keyCode = 13;
+                        el.trigger(e);
+                    }
+                }
+                
+                if (auto_doc) {
+                    setTimeout(function() {
+                        var searchInput = $('#gs_no_documento');
+                        if (searchInput.length === 0) searchInput = $('#FilterBy');
+                        if (searchInput.length > 0) {
+                            searchInput.val(auto_doc).trigger('keyup').change();
+                            var e = jQuery.Event("keydown"); e.keyCode = 13; searchInput.trigger(e);
+                        }
+                        
+                        var tryExpand = function(attempts) {
+                            if (attempts <= 0) return;
+                            var grid = $('#list').length > 0 ? $('#list') : $('#searchGrid');
+                            if (grid.length > 0) {
+                                var foundTr = null;
+                                grid.find('tr.jqgrow').each(function() {
+                                    if ($(this).text().indexOf(auto_doc) !== -1) {
+                                        foundTr = $(this);
+                                        return false; // break
+                                    }
+                                });
+                                
+                                if (foundTr) {
+                                    if (foundTr.find('td.sgexpanded').length > 0) {
+                                        return; // ya está expandido
+                                    }
+                                    
+                                    var rowId = foundTr.attr('id');
+                                    if (rowId) {
+                                        grid.jqGrid('expandSubGridRow', rowId);
+                                        
+                                        // Fallback manual si el API de jqGrid falló (esperar 300ms a ver si se abrió)
+                                        setTimeout(function() {
+                                            if (foundTr.find('td.sgexpanded').length === 0) {
+                                                foundTr.find('td.sgcollapsed').find('a').trigger('click');
+                                            }
+                                        }, 300);
+                                        
+                                        return; // listo
+                                    }
+                                }
+                            }
+                            setTimeout(function() { tryExpand(attempts - 1); }, 1000);
+                        };
+                        setTimeout(function() { tryExpand(20); }, 1000); // Dar más tiempo a que el grid cargue
+                    }, 1000);
+                }
+            }, 800);
+        }
+    });
 </script>
 
 </html>
