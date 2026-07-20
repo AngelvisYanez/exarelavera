@@ -648,38 +648,13 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
 
       //Cargar todas las notificaciones
     case 224:
-      $sql = "SELECT * FROM (
-                SELECT * FROM servicios.tickets WHERE Tic_Est = '0' LIMIT 10
-                -- UNION ALL
-                -- SELECT * FROM test_prueba.tickets WHERE Tic_Est = '0' LIMIT 10
-                UNION ALL
-                SELECT * FROM agrofertil.tickets WHERE Tic_Est = '0' LIMIT 10
-                UNION ALL
-                SELECT * FROM agronuevo.tickets WHERE Tic_Est = '0' LIMIT 10
-                UNION ALL
-                SELECT * FROM exa.tickets WHERE Tic_Est = '0' LIMIT 10
-                -- UNION ALL
-                -- SELECT * FROM orquideas.tickets WHERE Tic_Est = '0' LIMIT 10
-            ) AS all_tickets 
-            ORDER BY Tic_Cod DESC";
+      $sql = "SELECT * FROM tickets WHERE Tic_Est = '0' ORDER BY Tic_Cod DESC LIMIT 10";
       return $sql;
       break;
 
       // Contar notificaciones
     case 225:
-      $sql = "SELECT SUM(TOTAL) AS TOTAL FROM (
-                SELECT COUNT(Tic_Cod) AS TOTAL FROM servicios.tickets WHERE Tic_Est = '0'
-                -- UNION ALL
-                -- SELECT COUNT(Tic_Cod) AS TOTAL FROM test_prueba.tickets WHERE Tic_Est = '0'
-                UNION ALL
-                SELECT COUNT(Tic_Cod) AS TOTAL FROM agrofertil.tickets WHERE Tic_Est = '0'
-                UNION ALL
-                SELECT COUNT(Tic_Cod) AS TOTAL FROM agronuevo.tickets WHERE Tic_Est = '0'
-                UNION ALL
-                SELECT COUNT(Tic_Cod) AS TOTAL FROM exa.tickets WHERE Tic_Est = '0'
-                -- UNION ALL
-                -- SELECT COUNT(Tic_Cod) AS TOTAL FROM orquideas.tickets WHERE Tic_Est = '0'
-              ) AS all_counts;";
+      $sql = "SELECT COUNT(Tic_Cod) AS TOTAL FROM tickets WHERE Tic_Est = '0'";
       return $sql;
       break;
 

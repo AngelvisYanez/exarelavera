@@ -143,12 +143,34 @@ $bd_nombre = $bd['Dat_Dis'];
 $obBD_conexion = new Class_Log_Conexion_Adm($_SESSION['Ses_Dat_Dis']);
 
 
-//Traer 10 notificaciones (WB)
-$data_tickets = $obBD_con1->getArrayConsulta(224, $Ses_Emp_Cod, $obBD_conexion1);
-//var_dump($data_tickets);
-//Contar las notificaciones que no se han atendidos
-$Cantidad_tickets = $obBD_con1->getRowConsulta(225, $Ses_Emp_Cod, $obBD_conexion1);
-//echo ($Cantidad_tickets["TOTAL"]);
+$esAdministradorSistemas = false;
+if (isset($_SESSION['Ses_Per_Des'])) {
+    $perfilesArray = is_array($_SESSION['Ses_Per_Des']) ? $_SESSION['Ses_Per_Des'] : array($_SESSION['Ses_Per_Des']);
+    foreach ($perfilesArray as $perfil) {
+        if (stripos($perfil, 'Administrador de sistemas') !== false || strtoupper(trim($perfil)) === 'ADMINISTRADOR' || stripos($perfil, 'Sistemas') !== false) {
+            $esAdministradorSistemas = true;
+            break;
+        }
+    }
+}
+if (isset($_SESSION['Ses_Lis_Per'])) {
+    $perfilesCod = is_array($_SESSION['Ses_Lis_Per']) ? $_SESSION['Ses_Lis_Per'] : array($_SESSION['Ses_Lis_Per']);
+    if (in_array(1, $perfilesCod)) {
+        $esAdministradorSistemas = true;
+    }
+}
+
+$data_tickets = array();
+$Cantidad_tickets = array("TOTAL" => 0);
+
+if ($esAdministradorSistemas) {
+    //Traer 10 notificaciones (WB)
+    $data_tickets = $obBD_con1->getArrayConsulta(224, $Ses_Emp_Cod, $obBD_conexion1);
+    //var_dump($data_tickets);
+    //Contar las notificaciones que no se han atendidos
+    $Cantidad_tickets = $obBD_con1->getRowConsulta(225, $Ses_Emp_Cod, $obBD_conexion1);
+    //echo ($Cantidad_tickets["TOTAL"]);
+}
 //Traer documentos sin autorizar
 $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_Cod, $obBD_conexion1);
 
@@ -330,7 +352,7 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
                         }
                     </style>
 
-                    <?php if ($_SESSION['Ses_Emp_Cod'] == 1) { //Solo Ofsercom puede ver este apartado 
+                    <?php if ($esAdministradorSistemas) { //Solo administrador de sistemas puede ver este apartado 
                     ?>
                         <li data-tooltip="tooltip" data-placement="bottom" title="Verificar tikets" id="notificaciones_trigger">
                             <a>
