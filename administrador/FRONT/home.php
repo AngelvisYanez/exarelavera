@@ -165,10 +165,10 @@ $Cantidad_tickets = array("TOTAL" => 0);
 
 if ($esAdministradorSistemas) {
     //Traer 10 notificaciones (WB)
-    $data_tickets = $obBD_con1->getArrayConsulta(224, $Ses_Emp_Cod, $obBD_conexion1);
+    $data_tickets = $obBD_con1->getArrayConsulta(224, $Ses_Emp_Cod, $obBD_conexion);
     //var_dump($data_tickets);
     //Contar las notificaciones que no se han atendidos
-    $Cantidad_tickets = $obBD_con1->getRowConsulta(225, $Ses_Emp_Cod, $obBD_conexion1);
+    $Cantidad_tickets = $obBD_con1->getRowConsulta(225, $Ses_Emp_Cod, $obBD_conexion);
     //echo ($Cantidad_tickets["TOTAL"]);
 }
 //Traer documentos sin autorizar
