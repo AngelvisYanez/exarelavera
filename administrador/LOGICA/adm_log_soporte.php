@@ -34,15 +34,15 @@ class Class_Log_Datos_Spt extends MysqlDatos{
         $this->conexion = $conexion;
     }
 
-    function tomarTicket($_POST, $Ses_Usu_Cod){
-        //ChromePhp::log('Tomando ticket', $_POST);
-        $_POST['Ase_Cod'] = $Ses_Usu_Cod;
+    function tomarTicket($postData, $Ses_Usu_Cod){
+        //ChromePhp::log('Tomando ticket', $postData);
+        $postData['Ase_Cod'] = $Ses_Usu_Cod;
         $this->inicio_transaccion($this->conexion->conexion);
-        $db = $this->getRowConsulta(20,$_POST,$this->conexion);
+        $db = $this->getRowConsulta(20,$postData,$this->conexion);
         //ChromePhp::log('DAT_DIS',$db['Dat_Dis']);
-        $_POST['db'] = $db['Dat_Dis'];
+        $postData['db'] = $db['Dat_Dis'];
         // //ChromePhp::log('DAT_DIS',$db['Dat_Dis']);
-        $this->operacionobBD(18,$_POST,$this->conexion);
+        $this->operacionobBD(18,$postData,$this->conexion);
         //ChromePhp::log('Transaccion ticket');
         if ($this->fin_transaccion_nomsn($this->conexion->conexion)) { 
           $responce['success'] = true;
