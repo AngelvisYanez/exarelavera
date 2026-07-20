@@ -1,18 +1,16 @@
 <?php
+if (php_sapi_name() !== 'cli') { http_response_code(403); exit('CLI only'); }
 /**
  * Script de verificación del menú
  * Ejecutar desde línea de comandos: php sql/verificar_menu.php
  */
 
-$host = 'localhost';
-$user = 'root';
-$pass = '';
-$db = 'exa';
+require_once __DIR__ . '/../config_db.php';
 
 echo "=== VERIFICACIÓN DEL MENÚ ===\n\n";
 
 try {
-    $conn = new mysqli($host, $user, $pass, $db);
+    $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
     if ($conn->connect_error) {
         die("Error de conexión: " . $conn->connect_error);
     }

@@ -661,7 +661,7 @@ $lista_actividades = $obBD_con1->getArrayConsulta(2, array('Emp_Cod' => $Ses_Emp
 
 <script type="text/javascript">
 $(function () {
-    var urlBase = '<?php echo str_replace("'", "\\'", $_SERVER['PHP_SELF']); ?>';
+    var urlBase = <?php echo json_encode($_SERVER['PHP_SELF']); ?>;
     var todasActividades = <?php echo json_encode($lista_actividades); ?>;
     var select2Opts = { language: { noResults: function() { return 'No se encontraron resultados'; }, searching: function() { return 'Buscando...'; } }, allowClear: true };
     function initSelect2Buscable($el, extra) {

@@ -156,7 +156,7 @@ if (isset($savePersonal)) {
             $(function () {
                 //Se declara el jqgris para presentar informaci�n de los empleados registrados
                 $("#list").jqGrid({
-                    url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                    url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                     mtype: "GET", datatype: "json", regional: 'es',responsive:true,
                     postData: $("#formBuscar").getData("personalAjax"),
                     autowidth: true, shrinkToFit: true, height: 295,
@@ -226,7 +226,7 @@ if (isset($savePersonal)) {
                     var formData = new FormData(document.getElementById("formPersonal"));
                     formData.append("savePersonal", true);
                     $.ajax({
-                        url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                        url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                         type: "post",
                         dataType: "json",
                         data: formData,

@@ -1,4 +1,6 @@
 <?php
+// DEBUG TOOL - DISABLED
+if (false) {
 /**
  * DIAGNÓSTICO COMPLETO DEL MENÚ
  * Ejecutar desde el navegador estando logueado en el admin.
@@ -242,3 +244,4 @@ echo "</pre>";
 <br><a href="home.php" style="color:#569cd6">← Volver a home.php</a>
 </body>
 </html>
+<?php } ?>

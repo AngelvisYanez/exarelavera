@@ -67,7 +67,6 @@ if (file_exists($filePath)) {
 $flayers = array();
 if (isset($_POST['flayers_data'])) {
     $dataRaw = $_POST['flayers_data'];
-    if (get_magic_quotes_gpc()) { $dataRaw = stripslashes($dataRaw); }
     $flayers = json_decode($dataRaw, true);
 }
 if (!is_array($flayers)) $flayers = array();

@@ -46,7 +46,7 @@ if(isset($ajaxSubgrid)){
 	try {
 		$resp=$obBD_con1->getPageGrid(27, $data, $obBD_conexion);
 	} catch (Exception $e) {
-		$obBD_con1->echoLog($exc->getTraceAsString());
+		$obBD_con1->echoLog($e->getTraceAsString());
 	}
 	$obBD_con1->echoJson($resp);
 }
@@ -69,7 +69,7 @@ if(isset($ajaxSubgrid)){
 	</HEAD>
 	<BODY>
 		<script type="text/javascript">
-			var name_file="<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>";
+			var name_file="<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>";
 		</script>
 		<div class="panel panel-main">
 			<div class="panel-heading exa-header"><h3 class="panel-title">&raquo;Estado de Productos</h3></div>

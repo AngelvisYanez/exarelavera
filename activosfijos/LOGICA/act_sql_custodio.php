@@ -39,7 +39,6 @@ function sentencias_cch($id,$Par_Sql)
 			INNER JOIN `tiposcargo` ON `contratos_lab`.`Tic_Cod` = `tiposcargo`.`Tic_Cod`
 			WHERE `personal`.`Emp_Cod` = '$Par_Sql[0]' AND `persona`.`Prs_Ced` = '$Par_Sql[1]'
 			AND `contratos_lab`.`Con_Est` = 'A'";
-			echo $sql;
 			return $sql;			
 		break;	*/
 		
@@ -131,7 +130,7 @@ function sentencias_cch($id,$Par_Sql)
 			return $sql;
 			break;				
 		/**
-		 * Consulta la información la ciudada en base a la sucursal
+		 * Consulta la informaciï¿½n la ciudada en base a la sucursal
 		 */
 		case 22:
 			$sql="SELECT empresas.Emp_Nom, Emp_Ruc, ciudad.Ciu_Des, sucursal.Ciu_Cod, sucursal.Suc_Dir, sucursal.Suc_Te1, sucursal.Suc_Te2, sucursal.Suc_Fax,
@@ -152,7 +151,7 @@ function sentencias_cch($id,$Par_Sql)
 		
 	    case 134:
 			/**
-			 * Consultar sucursal en base al código 
+			 * Consultar sucursal en base al cï¿½digo 
 			 */
 			$cons_codsuc = "SELECT empresas.Emp_Cod, empresas.Emp_Nom, empresas.Emp_Ruc, ciudad.Ciu_Cod, ciudad.Ciu_Des, sucursal.Suc_Sri, sucursal.Suc_Dir, sucursal.Suc_Des, sucursal.Suc_Te1, sucursal.Suc_Te2, sucursal.Suc_Fax, sucursal.Suc_Cor, sucursal.Suc_Web ,Emp_Log
 			FROM empresas,ciudad,sucursal
@@ -321,7 +320,7 @@ FROM
 	   break;
      
 	   /**
-	   *  Consulta la información la ciudada en base a la sucursal
+	   *  Consulta la informaciï¿½n la ciudada en base a la sucursal
 	   */
 	   case 5001:
 		$sql="SELECT empresas.Emp_Nom, Emp_Ruc, ciudad.Ciu_Des, sucursal.Ciu_Cod, sucursal.Suc_Dir, sucursal.Suc_Te1, sucursal.Suc_Te2, sucursal.Suc_Fax,

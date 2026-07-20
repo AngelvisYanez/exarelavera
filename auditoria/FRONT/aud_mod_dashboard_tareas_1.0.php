@@ -1272,7 +1272,7 @@ $rendimiento_promedio = $total_tareas > 0 ? round(100 * $completadas / $total_ta
 
 <script type="text/javascript">
 (function () {
-    var urlBase = '<?php echo str_replace("'", "\\'", $_SERVER['PHP_SELF']); ?>';
+    var urlBase = <?php echo json_encode($_SERVER['PHP_SELF']); ?>;
     var sesEmpCod = '<?php echo $Ses_Emp_Cod; ?>';
 
     function estadoCellHtml(estadoRaw) {

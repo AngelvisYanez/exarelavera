@@ -887,11 +887,11 @@ if(isset($uploadfoto)){
                 Tia_Cod:id,
                 buscarCamposCategoria:true
             };
-            $.post('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',codigo, function( response ){
+            $.post('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',codigo, function( response ){
                 
                 if($('#rad_si').is(':checked')){
                     var porcentaje={Tia_Cod:id,buscarPorcentaje:true};
-                    $.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',porcentaje, function(response){
+                    $.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',porcentaje, function(response){
                         if(response){
                             var anios = Math.round(100/parseFloat(response['Apr_Por']));
                             $("#Act_Ann").val(anios);
@@ -915,7 +915,7 @@ if(isset($uploadfoto)){
         $('#Are_Cod').on('change', function() {
             var id = this.value; 
             var codigo={Dep_Cod:id,buscarCuentaDep:true};
-            $.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',codigo, function(response){
+            $.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',codigo, function(response){
                 //Buscar y setear la cuenta del departamento en la tabla 
                 $("#depreciacion").jqGrid('clearGridData',true).trigger('reloadGrid');
                 $("#depreciacion").jqGrid("addRowData", 0, response);
@@ -1190,7 +1190,7 @@ if(isset($uploadfoto)){
             $("#div_nofaccompra").show();
 
             var data={compra_prov:true};
-            $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function(response) 
+            $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function(response) 
             {
                 $("#Prv_Cod").val(response['row']['Prv_Cod']);  
             },'json').fail(function(error) { $.alert();}); 
@@ -1246,7 +1246,7 @@ if(isset($uploadfoto)){
         $("#Pri_Cod").val(activo.Pri_Cod);
 
         var codigo={Act_Cod:activo.Act_Cod,buscarDepartamento:true};
-        $.post('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',codigo, function( response ){
+        $.post('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',codigo, function( response ){
             $("#Are_Cod option[value='" + response['Dep_Cod'] + "']").prop("selected", true);
             $("#Are_Cod_chosen a span").text(response['Dep_Des']);
             $("#Are_Cod_chosen a").removeClass("chosen-default");
@@ -1275,7 +1275,7 @@ if(isset($uploadfoto)){
 
     function pestanaDetalle(activo){
         var codigo={Act_Cod:activo.Act_Cod,buscarCampos:true};
-        $.post('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',codigo, function( response ){
+        $.post('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',codigo, function( response ){
             campos_nuevos=response;
             addcampos(); 
         },'json');
@@ -1283,7 +1283,7 @@ if(isset($uploadfoto)){
 
     function pestanaCuentaContable(activo){
         var codigo={Act_Cod:activo.Act_Cod,buscarCuentaContable:true};
-        $.post('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',codigo, function(response){
+        $.post('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',codigo, function(response){
             addCuentaAut(response[0]['Pld_Cod'],response[0]['Pld_Cdc'],response[0]['Pld_Des'],response[0]['Acc_Tip']); 
             addCuentaAut(response[1]['Pld_Cod'],response[1]['Pld_Cdc'],response[1]['Pld_Des'],response[1]['Acc_Tip']); 
         },'json');
@@ -1406,7 +1406,7 @@ if(isset($uploadfoto)){
     $(document).ready(function() { 
         var Tipo='D';
         $("#depreciacion").jqGrid({
-            url:'<?PHP echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING)?>',
+            url:'<?PHP echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8')?>',
             mtype:'GET',
             datatype:'local',
             regional:'es',
@@ -1430,7 +1430,7 @@ if(isset($uploadfoto)){
     $(document).ready(function(){
         var Tipo='DA';
         $("#depreciacion_acum").jqGrid({
-            url:'<?PHP echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING)?>',
+            url:'<?PHP echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8')?>',
             mtype:'GET',
             datatype:'local',
             regional:'es',
@@ -1557,7 +1557,7 @@ if(isset($uploadfoto)){
             formData.append(detalle[i].name, detalle[i].value);
         }
         $.ajax({
-            url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+            url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
             type: "post",
             dataType: "json",
             data: formData,

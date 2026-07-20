@@ -1224,7 +1224,7 @@ class wf_manager_log {
             // 2. Crear registro en wf_instancias
             $fecha_actual = date('Y-m-d H:i:s');
             $sqlInsertInstancia = "INSERT INTO wf_instancias (Wfm_Cod, Ins_Ent_Typ, Ins_Ent_Cod, Nod_Act, Ins_Est, Ins_Fec_Ini) 
-                                   VALUES ($Wfm_Cod, '$Ent_Typ', $Ent_Cod, $nodoInicio[Nod_Cod], 'P', '$fecha_actual');";
+                                   VALUES ($Wfm_Cod, '$Ent_Typ', $Ent_Cod, {$nodoInicio['Nod_Cod']}, 'P', '$fecha_actual');";
             $this->obBD_datos->grabarv_registros($sqlInsertInstancia, $this->obBD_conexion);
             $Ins_Cod = $this->obBD_datos->insercionid($this->obBD_conexion);
 
@@ -1302,7 +1302,7 @@ class wf_manager_log {
                 );
                 $this->obBD_datos->grabarv_registros("UPDATE wf_instancias SET Ins_Est = 'F', Ins_Fec_Fin = '$fecha_actual' WHERE Ins_Cod = $Ins_Cod;", $this->obBD_conexion);
                 if ($instancia['Ins_Ent_Typ'] == 'adq_solicitudes') {
-                    $this->obBD_datos->grabarv_registros("UPDATE adq_solicitudes SET Sol_Est = 'A' WHERE Sol_Cod = $instancia[Ins_Ent_Cod];", $this->obBD_conexion);
+                    $this->obBD_datos->grabarv_registros("UPDATE adq_solicitudes SET Sol_Est = 'A' WHERE Sol_Cod = {$instancia['Ins_Ent_Cod']};", $this->obBD_conexion);
                 }
                 return true;
             }
@@ -1525,7 +1525,7 @@ class wf_manager_log {
 
                 // Actualizar estado de solicitud a Observado
                 if ($instancia['Ins_Ent_Typ'] == 'adq_solicitudes') {
-                    $this->obBD_datos->grabarv_registros("UPDATE adq_solicitudes SET Sol_Est = 'O' WHERE Sol_Cod = $instancia[Ins_Ent_Cod];", $this->obBD_conexion);
+                    $this->obBD_datos->grabarv_registros("UPDATE adq_solicitudes SET Sol_Est = 'O' WHERE Sol_Cod = {$instancia['Ins_Ent_Cod']};", $this->obBD_conexion);
                 }
 
                 $this->obBD_datos->commit_nomsn($this->obBD_conexion);
@@ -1556,7 +1556,7 @@ class wf_manager_log {
 
                 if ($instancia['Ins_Ent_Typ'] == 'adq_solicitudes') {
                     $this->obBD_datos->grabarv_registros(
-                        "UPDATE adq_solicitudes SET Sol_Est = 'E' WHERE Sol_Cod = $instancia[Ins_Ent_Cod];",
+                        "UPDATE adq_solicitudes SET Sol_Est = 'E' WHERE Sol_Cod = {$instancia['Ins_Ent_Cod']};",
                         $this->obBD_conexion
                     );
                 }
@@ -1573,7 +1573,7 @@ class wf_manager_log {
                     $nuevo_est_sol = 'R';
                     $this->obBD_datos->grabarv_registros("UPDATE wf_instancias SET Ins_Est = 'R', Ins_Fec_Fin = '$fecha_actual' WHERE Ins_Cod = $Ins_Cod;", $this->obBD_conexion);
                 }
-                $this->obBD_datos->grabarv_registros("UPDATE adq_solicitudes SET Sol_Est = '$nuevo_est_sol' WHERE Sol_Cod = $instancia[Ins_Ent_Cod];", $this->obBD_conexion);
+                $this->obBD_datos->grabarv_registros("UPDATE adq_solicitudes SET Sol_Est = '$nuevo_est_sol' WHERE Sol_Cod = {$instancia['Ins_Ent_Cod']};", $this->obBD_conexion);
             }
 
             // Rechazo: registrar movimiento en historial de la etapa actual (sin avanzar)

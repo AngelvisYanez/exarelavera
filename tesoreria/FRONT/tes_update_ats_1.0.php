@@ -1,8 +1,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php
 /**
-* Descripción: Consulta de facturas electronicas
-* Fecha de actualización:	16-11-2014 
+* Descripciï¿½n: Consulta de facturas electronicas
+* Fecha de actualizaciï¿½n:	16-11-2014 
 * Desarrollador:	Jose Cumbicos
 */	  
 
@@ -56,9 +56,7 @@ if(isset($save))
 					simplexml_insert_after($insert, $target);
 					
 				}  //fin for($x=0;$x<$totCom;$x++)
-				var_dump( $load->asXML());	
-												
-			}
+		}
 		}
 	  			
 }

@@ -122,7 +122,7 @@ if (isset($guardarPeriodo)) {
                                 <?php $rs_plan = $obBD_con1->getArrayConsulta(7,$Ses_Emp_Cod, $obBD_conexion); ?>
                                 <select name="Pla_Cod" id="Pla_Cod" class="form-control input-xs readOnly" required>
                                     <?php foreach ($rs_plan as $row) {
-                                        echo "<option value='$row[Pla_Cod]'>$row[Pla_Obs] ($row[Pla_Fec])</option>";
+                                        echo "<option value='{$row['Pla_Cod']}'>{$row['Pla_Obs']} ({$row['Pla_Fec']})</option>";
                                     } ?>
                                 </select>
                             </div>

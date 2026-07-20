@@ -85,21 +85,13 @@ function comprimirImagenVoucher($img_path, $temp_dir) {
 $Fec_Des = $_POST['Fec_Des'];
 $Fec_Has = $_POST['Fec_Has'];
 
-// LIMPIEZA PARA PHP 5.3 (Magic Quotes) y entornos que escapan el POST
 $json_raw = isset($_POST['seleccionados']) ? $_POST['seleccionados'] : '';
 
-// Evitar colisión con register_globals usando un nombre de variable interno diferente
 $items_procesar = json_decode($json_raw, true);
 
-// Si falla, probar con stripslashes (necesario si magic_quotes_gpc está ON)
 if ($items_procesar === NULL || $items_procesar === false) {
-    if (function_exists('get_magic_quotes_gpc') && get_magic_quotes_gpc()) {
-        $items_procesar = json_decode(stripslashes($json_raw), true);
-    } else {
-        // Intento desesperado: intentar stripslashes de todas formas si parece JSON escapado
-        if (strpos($json_raw, '\"') !== false) {
-             $items_procesar = json_decode(stripslashes($json_raw), true);
-        }
+    if (strpos($json_raw, '\"') !== false) {
+         $items_procesar = json_decode(stripslashes($json_raw), true);
     }
 }
 

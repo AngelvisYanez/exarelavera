@@ -3,7 +3,7 @@
  * @abstract Permite realizar el registro de productores de fruta
  * @author Erik Niebla
  * @version 1.0
- * Fecha de creación  2018-05-18
+ * Fecha de creaciï¿½n  2018-05-18
  */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/ban_log_liquidacion.php');
@@ -30,7 +30,7 @@ if(isset($deleteLib)){
     $obBD_ins1->inicio_transaccion($obBD_conexionIns);
     try{
         $obBD_ins1->operacionobBD('productor_tarja.update', array('where'=>array('Prt_Cod'=>$Prt_Cod),'Prt_Est'=>"I"), $obBD_conexionIns);
-    } catch(Exception $e){ $obBD_con_set->rollBack_nomsn($obBD_conexionIns); $resp['message']=$e->getMessage(); $obBD_ins1->echoJson($resp); }
+    } catch(Exception $e){ $obBD_ins1->rollBack_nomsn($obBD_conexionIns); $resp['message']=$e->getMessage(); $obBD_ins1->echoJson($resp); }
     // finalizo la transaccion y compruebo errores
     $resp['success']=$obBD_ins1->fin_transaccion_nomsn($obBD_conexionIns);
     if(!$resp['success']) $resp['error']=$obBD_ins1->MsgError;
@@ -61,7 +61,7 @@ $linkLiqui=baseUrl("../../bananero/FRONT/ban_pri_liquidacion.php?Lib_Cod=");
                     <form id="formDocumento" class="form-horizontal normal formDatos" action="javascript:liquidaciones.Search('#formDocumento','searchLiquid');">
                         <input name="order" type="hidden" value="" />
                         <fieldset class="exa-fieldset" id="provFormTemp">
-                            <legend class="Titulos2">Consulta de Información</legend>
+                            <legend class="Titulos2">Consulta de Informaciï¿½n</legend>
                         <div class="col-sm-4">
 
                             <div class="form-group">
@@ -92,7 +92,7 @@ $linkLiqui=baseUrl("../../bananero/FRONT/ban_pri_liquidacion.php?Lib_Cod=");
                         </div>
                         <div class="col-sm-4">
                             <div class="form-group">
-                                <label class="col-xs-3 control-label label-xs">Cédula/RUC:</label>
+                                <label class="col-xs-3 control-label label-xs">Cï¿½dula/RUC:</label>
                                 <div class="col-xs-9" >
                                   <input name="Prd_Cod" data-name="Prd_Cod" type="text" style="display:none;" />
                                   <input name="Prv_Cod" data-name="Prv_Cod" type="text" style="display:none;" />

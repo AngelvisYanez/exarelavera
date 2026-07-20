@@ -1,4 +1,4 @@
-<?php	
+﻿<?php	
 /**
 * @abstract Permite registrar los cheques 
 * @author Erik Niebla
@@ -129,7 +129,7 @@ if(isset($save)){
                                 batch.push(data);                                   
                         }
                         if(batch.length>0){ 
-                            $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{save:batch}, function( response ) {
+                            $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{save:batch}, function( response ) {
                                 if(response['success']===true){
                                     $.alert("Transaccion Realizada con &Eacute;xito!");$('#list').Search('#form1','gridAjax');
                                 }else{$.alert(response['message']);}                                   
@@ -140,7 +140,7 @@ if(isset($save)){
                         $.datepicker.setDefaults($.datepicker.regional["es"]);
                         public $list=$("#list");
                         $list.jqGrid({
-                            url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                            url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                             mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },
                             //postData: $("#form1").getData("ajaxGrid"),
                             autowidth : true, shrinkToFit: true, height: 270,caption:' ',hidegrid:false,

@@ -5,7 +5,7 @@
  *
  * @author : Didimo Zamora  :)
  * @version 1.0
- * @Fecha de actualización:	25-04-2013
+ * @Fecha de actualizaciï¿½n:	25-04-2013
  *
  * @package cajachica.FRONT
  */
@@ -36,7 +36,7 @@ if (isset($_POST['hdd_save']))
 	if ($thisPost->postBlock($_POST['postID']))
 	{
 		/**
-		 * Iniciar transacción
+		 * Iniciar transacciï¿½n
 		 */
 		$obBD_con1->inicio_transaccion($obBD_conexion->conexion);
 		$obBD_con1->operacionobBD(477, $_POST['conCodigo'].'*'. $_POST['observacion'].'*'. $_POST['especialidad'], $obBD_conexion);
@@ -83,8 +83,8 @@ if (isset($_POST['hdd_save']))
 			<table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader01">
 			   <thead>
 			      <tr>
-					<th width="6%" >Cód. Int. </th>
-					<th width="12%" >Cédula</th>
+					<th width="6%" >Cï¿½d. Int. </th>
+					<th width="12%" >Cï¿½dula</th>
 					<th width="79%" >Persona</th>
 					<th width="3%" >&nbsp;</th>
 				  </tr>
@@ -98,7 +98,7 @@ if (isset($_POST['hdd_save']))
 					 <td align="center">
 					 <?php 
 					 		/**
-							 * Consultar si  ya está registrado  este codigo de persona.
+							 * Consultar si  ya estï¿½ registrado  este codigo de persona.
 					 		 */
 					 		$aut = $obBD_con1->getRowConsulta(478, $row['Prs_Cod'], $obBD_conexion);
 					 		if($aut['count'] == 0){
@@ -146,7 +146,7 @@ if (isset($_POST['hdd_save']))
 			    </LEGEND>
 	    		 <table width="100%" cellpadding="0" cellspacing="0">
 				    <tr>
-				    	<td width="10%" class="Etiqueta1"><span class="Asterisco">*</span>&nbsp;Código:</td>
+				    	<td width="10%" class="Etiqueta1"><span class="Asterisco">*</span>&nbsp;Cï¿½digo:</td>
 				    	<td class="LetraNegra">&nbsp;<input type="text" name="conCodigo" id="conCodigo" value="" size="6" readonly="readonly" style="border: none;"></td>
 				    </tr>
 				    <tr>
@@ -154,7 +154,7 @@ if (isset($_POST['hdd_save']))
 				    	<td class="LetraNegra">&nbsp;<input type="text" name="nombre" id="nombre" value="" size="50" readonly="readonly" style="border: none;"></td>
 				    </tr>
                      <tr>
-				    	<td class="Etiqueta1"><span class="Asterisco">*</span>&nbsp;Observación:</td>
+				    	<td class="Etiqueta1"><span class="Asterisco">*</span>&nbsp;Observaciï¿½n:</td>
 				    	<td class="LetraNegra">&nbsp;<input type="text" name="observacion" id="observacion" value="" size="50"  ></td>
 				    </tr>
                     
@@ -170,8 +170,8 @@ if (isset($_POST['hdd_save']))
 		   		<td width="110">
 		   			<button type="button" class="btn btn-primary fileinput-button" onclick="validar_requeridos(this.form,'conCodigo*nombre*observacion*especialidad',1);"><i class=" icon-book icon-white"></i><span>&nbsp;&nbsp;Guardar&nbsp;&nbsp;</span></button>
 		   			<input type="hidden" name="hdd_save" value="1">
-		   			<input type="hidden" name="op_opciones" value="<?php echo $_POST['op_opciones'];?>">
-					<input type="hidden" name="txt_busqueda" value="<?php echo $_POST['txt_busqueda'];?>">
+		   			<input type="hidden" name="op_opciones" value="<?php echo htmlspecialchars($_POST['op_opciones'], ENT_QUOTES, 'UTF-8');?>">
+					<input type="hidden" name="txt_busqueda" value="<?php echo htmlspecialchars($_POST['txt_busqueda'], ENT_QUOTES, 'UTF-8');?>">
 		   		</td>
 		   	</tr>
 		   </table>

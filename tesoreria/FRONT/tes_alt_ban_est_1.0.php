@@ -1,4 +1,4 @@
-<?php	
+﻿<?php	
 /**
 * @abstract Permite registrar los cheques 
 * @author Erik Niebla
@@ -175,7 +175,7 @@ if(isset($save)){
       <td height="389" align="left" valign="top">
           
 <!-- INICIO FORMULARIO BUSQUEDA -->
-        <form enctype="multipart/form-data" action="<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>" method="post" name= "form1" id= "form1">
+        <form enctype="multipart/form-data" action="<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>" method="post" name= "form1" id= "form1">
             <table width="100%" border="0" cellpadding="0" cellspacing="0">
                 <tr>  
                      <td width="50%">
@@ -258,7 +258,7 @@ if(isset($save)){
                 </div>
                  <script type="text/javascript"> 
                     function cobroCheque(id) {    
-                            $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{chequeCobro:$('#list').jqGrid ('getRowData', id),Pld_Cod:getBanco()["Pld_Cod"]}, function( response ) {
+                            $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{chequeCobro:$('#list').jqGrid ('getRowData', id),Pld_Cod:getBanco()["Pld_Cod"]}, function( response ) {
                                  if(response['success']===true){
                                      $.alert("Transaccion Realizada con &Eacute;xito!");
                                      $('#list').jqGrid('delRowData',id);                                     
@@ -270,7 +270,7 @@ if(isset($save)){
                             formData.append("uploadCsv", true);
                             //formData.append(f.attr("name"), $(this)[0].files[0]);
                             $.ajax({
-                                url: "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",
+                                url: "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",
                                 type: "post", dataType: "json", data: formData, cache: false, contentType: false, processData: false
                             }).done(function(response){
                                 if(response['success']===true){
@@ -285,7 +285,7 @@ if(isset($save)){
                     $(document).ready(function () {                        
                         var gridList=$("#list");
                         gridList.jqGrid({
-                            url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                            url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                             mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },  
                             postData: {},
                             autowidth : true, shrinkToFit: true, height: 270,
@@ -415,7 +415,7 @@ foreach ($row_rs_tipo_asien as $row)
                                     if(batch.length>0){ 
                                         var data=$('#formComp').serializeObject();
                                         data["save"]=batch;
-                                        $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function( response ) {
+                                        $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( response ) {
                                             if(response['success']===true){
                                                 $.alert("Transaccion Realizada con &Eacute;xito!");
                                                 $('#comprobante').prev('#grilla');
@@ -462,7 +462,7 @@ foreach ($row_rs_tipo_asien as $row)
                     $(document).ready(function () {  
                         var gridComp=$("#comp");
                         gridComp.jqGrid({
-                            url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                            url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                             mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },                             
                             autowidth : true, shrinkToFit: true, height: 63,
                             cmTemplate: {sortable:false},

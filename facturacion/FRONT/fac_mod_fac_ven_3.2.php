@@ -1617,7 +1617,7 @@ if (isset($saldoCCxCC)) {
                         caption: 'Resultado de la Búsqueda',
                         height: 270,
                         datatype: "local",
-                        caption: 'Resultados <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy"><option value="">No ordenar</option><option value="order by caja_aper.Caj_Fec DESC ">Fecha Venta</option><option value="order by Vet_Num DESC ">Num. Documento</option><select>&nbsp;</div>',
+                        caption: 'Resultados <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy"><option value="">No ordenar</option><option value="order by caja_aper.Caj_Fec DESC ">Fecha Venta</option><option value="order by Vet_Num DESC ">Num. Documento</option></select>&nbsp;</div>',
                         colModel: [
                             { label: 'Cód. Int.', name: 'Vet_Cod', width: 30, align: "center", key: true },
                             { label: 'Compr.', name: 'Com_Exi', width: 20, align: "center", formatter: 'truefalse',
@@ -3862,7 +3862,7 @@ if (isset($saldoCCxCC)) {
                                             var valorClave = $('#empresaClaveInput').val();
                                             // Lógica AJAX para validar la clave
                                             $.ajax({
-                                                url: '<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                                url: '<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                                 type: 'POST',
                                                 data: {
                                                     'validarClaveAjax': true,

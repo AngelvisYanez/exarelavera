@@ -1130,23 +1130,23 @@ if (isset($hdd_Pec_Cod))
 					require '../../Librerias/PHPMail/class.phpmailer.php';
 					// Crear una nueva  instancia de PHPMailer habilitando el tratamiento de excepciones
 					$mail = new PHPMailer(true); 
-					// Configuramos el protocolo SMTP con autenticación
+					// Configuramos el protocolo SMTP con autenticaciï¿½n
 					$mail->IsSMTP();
 					$mail->SMTPAuth = true;
 					$mail->IsHTML(true);
-					// Configuración del servidor SMTP
+					// Configuraciï¿½n del servidor SMTP
 					$mail->Port = 25;
 					$mail->Host = 'ofsercont.com';
 					$mail->Username = "facturacion.electronica@ofsercont.com";
 					$mail->Password = "p.123456";
-					// Configuración cabeceras del mensaje
+					// Configuraciï¿½n cabeceras del mensaje
 					$mail->From = "facturacion.electronica@ofsercont.com";
 					$mail->FromName = $Ses_Emp_Nom;
 					$mail->AddAddress(trim($PrsCorPrv),strtoupper($PrsNomPrv));
 					//$mail->AddAddress("destino2@correo.com","Nombre 2");
 					//$mail->AddCC("copia1@correo.com","Nombre copia 1");
 					//$mail->AddBCC("copia1@correo.com","Nombre copia 1");
-					$mail->Subject = "Comprobante Electrónico";
+					$mail->Subject = "Comprobante Electrï¿½nico";
 					// Creamos en una variable el cuerpo, contenido HMTL, del correo
 					
 					//$body  = "Proebando los correos con un tutorial<br>";
@@ -1223,8 +1223,8 @@ else
 			$ice_cod[]=$row_rs_ice['Ice_Int'];
 			$ice_por[]=$row_rs_ice['Ice_Por'];
 		}
-		$ice_cod = 'Array(\'' . @implode('\', \'', $ice_cod) . '\')';
-		$ice_por = 'Array(\'' . @implode('\', \'', $ice_por) . '\')';		
+		$ice_cod = 'Array(\'' . implode('\', \'', $ice_cod) . '\')';
+		$ice_por = 'Array(\'' . implode('\', \'', $ice_por) . '\')';		
 		/**
 		* Consulta datos de los proveedores
 		*/
@@ -1618,7 +1618,7 @@ if(isset($txt_busqueda))
          var codigos=<?php if (count($rs_tip_compr) > 0) echo json_encode($rs_tip_compr); else echo 'new Array()';?>,liquida={limite:false,maximo:13000,actual:0}; 
          function checkFechaIva(data){
              var TicCod=$('#Tic_Cod').val();
-             $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{Cop_Fec:data,Check_Iva:true,Tic_Cod:TicCod,Tic_Sri:getSriCod(TicCod)}, function( response ) {
+             $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{Cop_Fec:data,Check_Iva:true,Tic_Cod:TicCod,Tic_Sri:getSriCod(TicCod)}, function( response ) {
                             if(response['success']===true){                                 
                                 if(response['total']>0){
                                     ivas_rows=response['ivas'];
@@ -1642,7 +1642,7 @@ if(isset($txt_busqueda))
                 }
          }
          function checkLiquidacion(data){
-             $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function( response ) {
+             $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( response ) {
                             if(response['success']===true&&response['total']!==null){                                 
                                 if((response['total']['total'])*1>=11000){
                                     liquida['actual']=(response['total']['total'])*1;liquida['limite']=true;
@@ -2205,7 +2205,7 @@ onClick="ShowHide('Tbl_Costos')" align="left"> esta oendiente por mejorar--></td
               <input type="text" name="Ret_Pld_Cod" value="<?php if(count($row_rs_RetPld)>0) echo $row_rs_RetPld[0]['Pld_Cod']; ?>" style="display: none" />
              <?php } ?> 
               <?php if($llevarContabilidad['Cof_Con']=='N'||($llevarContabilidad['Cof_Con']=='S'&&count($row_rs_RetPld)!=0)){ ?>  
-              <div id="Reten_Asum" style="display:inline-block;"><div style="width:20px;display:inline-block;height: 16px;"><input id="Ret_Asu" name="Ret_Asu"  type="checkbox" value="S" style="position: absolute;margin-top: 5px;"/></div><b> Asumir Retención </b></div> 
+              <div id="Reten_Asum" style="display:inline-block;"><div style="width:20px;display:inline-block;height: 16px;"><input id="Ret_Asu" name="Ret_Asu"  type="checkbox" value="S" style="position: absolute;margin-top: 5px;"/></div><b> Asumir Retenciï¿½n </b></div> 
               <?php } ?> 
             </div> 
             

@@ -784,7 +784,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 Cdc_Cod, Pry_Cod, Prv_Sug, Sol_Jus, Sol_Det, Sol_Est,
                 Sol_Req_Fac, Sol_Per_Cie, Sol_Req_Cot, Sol_Min_Cot, Sol_Req_Pre, Sol_Req_Adj, Sol_Req_Pro, Sol_Tiempo_Est
             ) VALUES (
-                $data[Emp_Cod], $data[Suc_Cod], $trq_cod, '$sol_num_sql', '$fecha_actual', $usu_sol, $dep_sol, '$sol_pri', $sol_val_est,
+                {$data['Emp_Cod']}, {$data['Suc_Cod']}, $trq_cod, '$sol_num_sql', '$fecha_actual', $usu_sol, $dep_sol, '$sol_pri', $sol_val_est,
                 $cdc_cod, $pry_cod, $prv_sug, '$sol_jus', '$sol_det', 'P',
                 {$req['Sol_Req_Fac']}, {$req['Sol_Per_Cie']}, {$req['Sol_Req_Cot']}, {$req['Sol_Min_Cot']},
                 {$req['Sol_Req_Pre']}, {$req['Sol_Req_Adj']}, {$req['Sol_Req_Pro']}, $sol_tiempo_sql

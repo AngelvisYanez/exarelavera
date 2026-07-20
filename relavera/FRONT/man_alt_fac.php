@@ -1323,7 +1323,7 @@ if (isset($generarFacturasAjax)) {
                         footerrow: true,
                         userDataOnFooter: false,
                         datatype: "local",
-                        caption: 'Resultados <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy"><option value="">No ordenar </option><option value="order by manifiesto.Man_Fes DESC ">Fecha Creacion</option><option value="order by Man_Num DESC ">Num. Documento DESC</option><select>&nbsp;</div>',
+                        caption: 'Resultados <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy"><option value="">No ordenar </option><option value="order by manifiesto.Man_Fes DESC ">Fecha Creacion</option><option value="order by Man_Num DESC ">Num. Documento DESC</option></select>&nbsp;</div>',
                         colModel: [{
                                 label: 'Cód. Int.',
                                 name: 'Man_Cod',

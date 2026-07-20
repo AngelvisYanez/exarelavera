@@ -38,8 +38,7 @@
 			FROM periodos INNER JOIN perio_matr ON (periodos.Per_Int = perio_matr.Per_Int) INNER JOIN sucursal ON (periodos.Suc_Cod = 
 			sucursal.Suc_Cod) WHERE periodos.Eta_Cod = $Par_Sql[0] AND periodos.Mod_Cod = $Par_Sql[1] AND ('$Par_Sql[2]' BETWEEN 
 			perio_matr.Pem_Ini AND perio_matr.Pem_Fin) AND periodos.Suc_Cod = $Par_Sql[3]";
-			echo $sql;
-		return $sql;
+			return $sql;
 		break;
 
 		/* Seleccion de la carrera en base a la etapa para la inscripci�n omitiendo a las que se inscribio */
@@ -355,7 +354,6 @@ GROUP BY carreras.Car_Int ORDER BY carreras.Car_Nom";
 		* Consulta del cliente si es una persona por apellidos 
 		*/
 		$sql = "SELECT personal.Per_Cod, personal.Per_Tit, persona.Prs_Nom, persona.Prs_Ape, persona.Prs_Ced FROM persona, personal WHERE personal.Prs_Cod = persona.Prs_Cod AND persona.Prs_Ape LIKE '%$Par_Sql[0]%' ORDER BY persona.Prs_Ape ASC";
-		echo $sql;
 		return $sql;
 		break;
 

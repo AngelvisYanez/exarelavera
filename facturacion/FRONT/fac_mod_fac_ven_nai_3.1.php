@@ -29,7 +29,7 @@ if(isset($getDateServ)){
 }
 
 
-//Sección para listar los clientes registrados en la empresa
+//Secciï¿½n para listar los clientes registrados en la empresa
 //if(isset($clieAjax)){ $obBD_con1->getPageGridJson(1,  $Prs_Ced.'*'.$Ses_Emp_Cod.'*'.$op_opciones, $obBD_conexion,$page, $rows); }
 if(isset($clieAjax)){
     $response=$obBD_con1->getPageGrid(1, $Prs_Ced.'*'.$Ses_Emp_Cod.'*'.$op_opciones, $obBD_conexion, $page, $rows);
@@ -42,7 +42,7 @@ if(isset($clieAjax)){
     $obBD_con1->echoJson($response);
 }
 
-//Sección para obtener el número de secuencia
+//Secciï¿½n para obtener el nï¿½mero de secuencia
 if(isset($numeroSec)){
     $response=$obBD_con1->getRowConsulta(9,$Ses_Prs_Cod.'*'.$Ses_Suc_Cod.'*'.$Tic_Cod.'*'.$Aut_Cod,$obBD_conexion);
     if(isset($Aut_Sri)) $response['Aut_Sri']=$Aut_Sri;
@@ -102,7 +102,7 @@ if(isset($guardaClieAjax)){
         $data['Cli_Cod'] = $obBD_con1->insercionid ($obBD_conexion->conexion);
         $data['cliente'] = trim($data['Prs_Ape'].' '.$data['Prs_Nom']);
     $obBD_con1->fin_transaccion_nomsn($obBD_conexion->conexion);
-    if($obBD_con1->Error==0) {$responce=array('success'=>true,'clie'=>$data);} else {$responce=array('success'=>false,'message'=>'No se pudo realizar la transacción!','error'=>$obBD_con1->MsgError);}
+    if($obBD_con1->Error==0) {$responce=array('success'=>true,'clie'=>$data);} else {$responce=array('success'=>false,'message'=>'No se pudo realizar la transacciï¿½n!','error'=>$obBD_con1->MsgError);}
     utf8_encode_deep($responce); echo json_encode($responce);exit();
 }
 /* Consulta datos del documento si existe */
@@ -127,7 +127,7 @@ if(isset($liquida)){
     $obBD_con1->echoJson($responce);
 }
 
- $ivas= $obBD_con1->getArrayConsulta(16,"",$obBD_conexion);      //Sección para obtener los ivas de la tabla iva
+ $ivas= $obBD_con1->getArrayConsulta(16,"",$obBD_conexion);      //Secciï¿½n para obtener los ivas de la tabla iva
 
 
 /* Configuraciones de la Empresa */
@@ -269,7 +269,7 @@ if(isset($docDetalle)){
     $obBD_con1->echoJson($resp);
 }
 
-//Sección para extraer el Pun_Cod y Vnd_Cod del usuario sobre la tabla vendedor
+//Secciï¿½n para extraer el Pun_Cod y Vnd_Cod del usuario sobre la tabla vendedor
 $rs_Punto = $obBD_con1->getRowConsulta(7,$Ses_Prs_Cod.'*'.$Ses_Suc_Cod, $obBD_conexion);
 
 if(isset($getDataPunto)){
@@ -277,7 +277,7 @@ if(isset($getDataPunto)){
     $obBD_con1->echoJson($resp);
 }
 
-/* Valida numero de retención */
+/* Valida numero de retenciï¿½n */
 if(isset($validaRetNum)){
     $autoriz=$obBD_con1->getRowConsulta(48, $vendedor['Pun_Cod'].'*'.$tipo_compr, $obBD_conexion); //Consulta las autorizaciones de las retenciones
     //$rs_infEmpFacElec = $obBD_con1->getRowConsulta(49, $Ses_Suc_Cod, $obBD_conexion);
@@ -290,7 +290,7 @@ if(isset($validaRetNum)){
         if(!empty($Ret_Num)){
             $num_existe_gencod=$obBD_con1->getRowConsulta(50, $Ses_Suc_Cod.'*'.$autoriz['Aut_Sri'].'*'.$Ret_Num.'*'.$Ret_Cod, $obBD_conexion); //Consulto si ya existe un codigo generado en las retenciones basado en una autorizacion otorgada por el SRI
             if($num_existe_gencod['total']*1>0){
-                $resp['success']=false; $resp['message']="La Retención Número $Ret_Num ya Existe en el Sistema!";
+                $resp['success']=false; $resp['message']="La Retenciï¿½n Nï¿½mero $Ret_Num ya Existe en el Sistema!";
             }
         }else $resp['success']=false;
         $resp['Aut_Sri']=($electronica?'Electronica':$autoriz['Aut_Sri']);
@@ -375,7 +375,7 @@ if(isset($cargarReportes)){
 
 
 
-/* Sección para realizar el guardado */
+/* Secciï¿½n para realizar el guardado */
 if(isset($saveDocument)){
     $obBD_con1->validaCierrePeriodo('ventas','Caj_Fec','Vet_Cod',$Caj_Fec,$editDoc['Vet_Cod'],$obBD_conexion);
 	/* Creacion de Objetos de Conexiones para Proceso de Guardado de Venta*/
@@ -417,8 +417,8 @@ if(isset($saveDocument)){
              $obBD_elect =  new Class_Log_Datos_Factura_Elect();
              //$claveAcceso=$obBD_con1->getDocClaveAcceso($Ses_Emp_Cod, $Ses_Suc_Cod, $Tic_Sri, $Aut_Cod, $Caj_Fec, $Vet_Num, $obBD_conexion);
              $claveAcceso = $obBD_elect->getClaveAcceso($Aut_Cod, $Caj_Fec, $Vet_Num, $obBD_conexion);
-             if(empty($claveAcceso)) $responce['message']="Error al generar <u>Clave de Acceso</u> del <i>Comprobante Electrónico</i>!";
-             //if(!$obBD_con1->createUsuCliente($Ses_Emp_Cod, $Ses_Suc_Cod, $Prs_Cod, $Prs_Ced, $obBD_conexion)) $responce['message']='Error al crear usuario de <u>Comprobantes Electrónicos</u>!';
+             if(empty($claveAcceso)) $responce['message']="Error al generar <u>Clave de Acceso</u> del <i>Comprobante Electrï¿½nico</i>!";
+             //if(!$obBD_con1->createUsuCliente($Ses_Emp_Cod, $Ses_Suc_Cod, $Prs_Cod, $Prs_Ced, $obBD_conexion)) $responce['message']='Error al crear usuario de <u>Comprobantes Electrï¿½nicos</u>!';
          }
          if (!empty($input_autorizacion)) {
             $Vet_Aut='S';
@@ -735,7 +735,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
 
                         <div class="col-xs-6">
                             <fieldset class="exa-fieldset">
-                                <legend class="Titulos2">Búsqueda</legend>
+                                <legend class="Titulos2">Bï¿½squeda</legend>
                                 <div class="form-group">
 
                                 <label class="col-xs-2 control-label label-xs">Filtrar Por:</label>
@@ -749,7 +749,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                                 <label class="col-xs-2 control-label">B&uacute;squeda:</label>
                                 <div class="col-xs-7" >
                                     <div class="input-group">
-                                    <input name="search" onkeydown="if (event.keyCode === 13) this.form.submit()" type="text" size="50" maxlength="50" placeholder="Ingrese búsqueda..." autofocus  class="form-control input-sm clearable submit"/>
+                                    <input name="search" onkeydown="if (event.keyCode === 13) this.form.submit()" type="text" size="50" maxlength="50" placeholder="Ingrese bï¿½squeda..." autofocus  class="form-control input-sm clearable submit"/>
                                     <span class="input-group-btn"><button type="button" onclick="this.form.submit()" class="btn btn-success btn-sm" title="Buscar Documento"  tabindex="-1"><span class="glyphicon glyphicon-search"></span> <span>Buscar</span></button></span>
                                   </div><!-- /input-group -->
                                 </div><input type="text" tabindex="-1" style="display:none;" />
@@ -799,7 +799,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                 <div style="min-height: 300px;">
                     <table id="searchGrid"></table>
                     <table id="searchGridPager"></table>
-                    <div class="Titulos2"><span id="plan-footer"><strong>Leyenda:</strong> <span class="glyphicon glyphicon-stop green"></span> Contiene Pagos | <span class="glyphicon glyphicon-remove red"></span> Anulados/Inactivos | <span class="fa fa-globe green"></span> Retención Electronica Validada | <span class="glyphicon glyphicon-lock orange"></span> Formato Anterior</div>
+                    <div class="Titulos2"><span id="plan-footer"><strong>Leyenda:</strong> <span class="glyphicon glyphicon-stop green"></span> Contiene Pagos | <span class="glyphicon glyphicon-remove red"></span> Anulados/Inactivos | <span class="fa fa-globe green"></span> Retenciï¿½n Electronica Validada | <span class="glyphicon glyphicon-lock orange"></span> Formato Anterior</div>
                 </div>
                 <script>
                     function setOpt(val){
@@ -894,9 +894,9 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                     });
                     }
                         $('#searchGrid').createGrid({
-                            caption:'Resultado de la Búsqueda',height: 270, datatype: "local",caption:'Resultados <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy"><option value="">No ordenar</option><option value="order by caja_aper.Caj_Fec DESC ">Fecha Venta</option><option value="order by Vet_Num DESC ">Num. Documento</option><select>&nbsp;</div>',
+                            caption:'Resultado de la Bï¿½squeda',height: 270, datatype: "local",caption:'Resultados <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy"><option value="">No ordenar</option><option value="order by caja_aper.Caj_Fec DESC ">Fecha Venta</option><option value="order by Vet_Num DESC ">Num. Documento</option></select>&nbsp;</div>',
                             colModel: [
-                                { label: 'Cód. Int.', name: 'Vet_Cod', width: 30 ,align:"center", key:true},
+                                { label: 'Cï¿½d. Int.', name: 'Vet_Cod', width: 30 ,align:"center", key:true},
                                 { label: 'Compr.', name: 'Com_Exi', width: 20 ,align:"center", formatter:'truefalse', formatoptions:{yesMsg:'Tiene Comprobante',noMsg:' '}, title:false},
                                 { label: 'Reten.', name: 'Ret_Exi', width: 20 ,align:"center", formatter:'truefalse', formatoptions:{yesMsg:'Tiene Retencion',noMsg:' '}, title:false},
                                 { label: 'Pago', name: 'Pago', width: 35, align:"center"},
@@ -1009,7 +1009,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                                         </div>
                                     </div>
                                     <div class="form-group cuen_ban" style="display: none;">
-                                          <label class="col-xs-3 control-label label-xs required">Número:</label>
+                                          <label class="col-xs-3 control-label label-xs required">Nï¿½mero:</label>
                                           <div class="col-xs-6">
                                               <div class="input-group input-group-xs">
                                                   <input type="text" id="Vet_Che" name="Vet_Che" onchange="" class="form-control input-xs">
@@ -1026,7 +1026,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                                           </div>
                                       </div>
                                       <div class="form-group pagoCredito obs_credito" style="display: none;">
-                                          <label class="col-xs-3 control-label label-xs">Observación:</label>
+                                          <label class="col-xs-3 control-label label-xs">Observaciï¿½n:</label>
                                           <div class="col-xs-9">
                                               <textarea name="Cpc_Obs" class="form-control input-xs"></textarea>
                                           </div>
@@ -1097,7 +1097,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                                         <fieldset class="exa-fieldset" id="clieFormTemp">
                                             <legend class="Titulos2">Datos del Cliente</legend>
                                             <div class="form-group">
-                                                <label class="col-xs-2 control-label label-xs required">Cédula/RUC:</label>
+                                                <label class="col-xs-2 control-label label-xs required">Cï¿½dula/RUC:</label>
                                                 <div class="col-xs-7" >
                                                   <input name="Prs_Cod" type="text" style="display:none;" />
                                                   <input name="Prs_Cor" type="text" style="display:none;" />
@@ -1118,7 +1118,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                                                 <div class="col-xs-10" ><span name="cliente" class="form-control input-xs databind datatitle"></span></div>
                                             </div>
                                             <div class="form-group">
-                                                <label class="col-xs-2 control-label label-xs">Dirección:</label>
+                                                <label class="col-xs-2 control-label label-xs">Direcciï¿½n:</label>
                                                 <div class="col-xs-4" ><span name="Prs_Dir" type="text" class="form-control input-xs databind datatitle"></span></div>
                                                 <label class="col-xs-1 control-label label-xs">Correo:</label>
                                                 <div class="col-xs-5" ><span name="Prs_Cor" type="text" class="form-control input-xs databind datatitle"></span></div>
@@ -1169,7 +1169,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                                                 </div>
                                             </div>
                                             <div class="form-group">
-                                                <label class="col-xs-2 control-label label-xs required">Número:</label>
+                                                <label class="col-xs-2 control-label label-xs required">Nï¿½mero:</label>
                                                 <div class="col-xs-5" >
                                                     <div class="input-group input-group-xs">
                                                         <span id="Pun_Sri" name="Pun_Sri" class="input-group-addon alert-info"></span>
@@ -1202,7 +1202,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                                 <div class="col-md-7 col-xs-12">
                                     <form id="reteFormTemp" action="javascript:" class="formDatos form-horizontal normal">
                                     <fieldset class="exa-fieldset">
-                                        <legend class="Titulos2">Datos de la Retención</legend>
+                                        <legend class="Titulos2">Datos de la Retenciï¿½n</legend>
                                         <input type="text" name="Ret_Cod" style="display: none;" id="Ret_Cod" />
                                         <input type="text" name="Ret_Xml" style="display: none;"  />
                                         <input type="text" name="Aut_Cod" style="display: none;" id="Aut_Cod_Old" />
@@ -1227,7 +1227,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                                             <div class="col-xs-4">
                                               <div class="input-group">
                                                   <input id="Ret_Fec" name="Ret_Fec" type="text" class="form-control input-xs readOnly ret_field datepickers"  required=""  pattern="[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|1[0-9]|2[0-9]|3[01])" />
-                                                  <span class="input-group-addon input-xs" title="Fecha de la Retención"><i class="glyphicon glyphicon-info-sign blue"></i></span>
+                                                  <span class="input-group-addon input-xs" title="Fecha de la Retenciï¿½n"><i class="glyphicon glyphicon-info-sign blue"></i></span>
                                               </div>
                                             </div>
                                         </div>
@@ -1254,7 +1254,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                                                     <span class="input-group-addon bold alert-info">=&nbsp;Retenido:</span>
                                                     <input id="Ren_Tot" name="Ren_Tot" type="text" class="form-control span" style="text-align: right;" readonly=""  />
                                                     <span class="input-group-btn">
-                                                        <button type="button" onclick="$('#retDetaDialog').dialog('open')" class="btn btn-info" title="Ver Detalle Retención" tabindex="-1"><span class="glyphicon glyphicon-eye-open"></span></button>
+                                                        <button type="button" onclick="$('#retDetaDialog').dialog('open')" class="btn btn-info" title="Ver Detalle Retenciï¿½n" tabindex="-1"><span class="glyphicon glyphicon-eye-open"></span></button>
                                                     </span>
                                                 </div>
                                             </div>
@@ -1351,9 +1351,9 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                 <div class="row">
                     <div class="col-xs-6" id="resultContent">
                         <fieldset class="exa-fieldset">
-                            <legend class="Titulos2">Resultado De la Transacción</legend>
+                            <legend class="Titulos2">Resultado De la Transacciï¿½n</legend>
                             <div>
-                                <h4 style="text-align: center; font-weight: 900;">El Documento se guardo con Éxito!</h4>
+                                <h4 style="text-align: center; font-weight: 900;">El Documento se guardo con ï¿½xito!</h4>
                                 <p class="form-control-static resp" data-name="Tic_Des"></p>
                                 <p class="resp"><span>&raquo;Fec:</span><span style="color:coral;" class="databind" data-name="Vet_Fec"></span></p>
                                 <p class="resp"><span>&raquo;Num:</span><span style="color:teal;" class="databind" data-name="Vet_Num"></span></p>
@@ -1387,7 +1387,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                             <div class="form-group">
                                 <label class="col-xs-3 control-label label-xs">Numero:</label>
                                 <div class="col-xs-4"><span name="Vet_Num" type="text" class="form-control input-xs "></span></div>
-                                <label class="col-xs-2 control-label label-xs">Autorización:</label>
+                                <label class="col-xs-2 control-label label-xs">Autorizaciï¿½n:</label>
                                 <div class="col-xs-3"><span name="Vet_Aut" type="text" class="form-control input-xs "></span></div>
                             </div>
                             <div class="form-group">
@@ -1417,7 +1417,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                 <div class="row">
                     <div class="col-xs-6">
                         <fieldset class="exa-fieldset" id="retForm">
-                            <legend class="Titulos2">Datos de la Retención</legend>
+                            <legend class="Titulos2">Datos de la Retenciï¿½n</legend>
                             <div class="form-group">
                                 <label class="col-xs-2 control-label label-xs">Numero:</label>
                                 <div class="col-xs-4" ><span name="Ret_Num"  class="form-control input-xs" ></span></div>
@@ -1450,7 +1450,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                         <fieldset class="exa-fieldset" >
                             <legend class="Titulos2">Datos del Comprobante</legend>
                             <div class="form-group">
-                                <label class="col-xs-3 control-label label-xs">Cód. Comp.:</label>
+                                <label class="col-xs-3 control-label label-xs">Cï¿½d. Comp.:</label>
                                 <div class="col-xs-3"><span name="Codigo" type="text" class="form-control input-xs "></span></div>
                                 <label class="col-xs-3 control-label label-xs">Fecha:</label>
                                 <div class="col-xs-3"><span name="Com_Fec" type="text" class="form-control input-xs "></span></div>
@@ -1462,7 +1462,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                                 <div class="col-xs-3"><span name="Com_Val" type="text" class="form-control input-xs "></span></div>
                             </div>
                             <div class="form-group">
-                                <label class="col-xs-3 control-label label-xs">Observación:</label>
+                                <label class="col-xs-3 control-label label-xs">Observaciï¿½n:</label>
                                 <div class="col-xs-9"><span name="Com_Con" type="text" class="form-control input-xs "></span></div>
                             </div>
                             <table id="asiento"></table>
@@ -1472,9 +1472,9 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                                 height:75,postData: {CheListAjax:true},caption:'Asiento Contable <button id="btnComPrint" onclick="$.imprimirUrl($(this).data(\'url\'))" class="btn btn-success btn-xs pull-right" style="margin-top: -2px;"><i class="glyphicon glyphicon-print"></i> Imprimir</button>',
                                 rowNum: 10000, footerrow: true, userDataOnFooter: true,
                                 colModel: [
-                                    { label: 'Cód.Int.', name: 'Asi_Cod', key: true, width: 15,align:"center", hidden:true },
+                                    { label: 'Cï¿½d.Int.', name: 'Asi_Cod', key: true, width: 15,align:"center", hidden:true },
                                     { label: 'Tipo', name: 'Asi_Deh', hidden:true },
-                                    { label: 'Código', name: 'Pld_Cdc', width: 45 },
+                                    { label: 'Cï¿½digo', name: 'Pld_Cdc', width: 45 },
                                     { label: 'Cuenta', name: 'Pld_Des', width: 130  },
                                     { label: 'Glosa', name: 'Glosa', width: 130},
                                     { label: 'Debe', name: 'Debe', width: 65, align: 'right', formatter:'currency', formatoptions: {prefix:'$ ', thousandsSeparator:',',decimalSeparator:'.',defaultValue:''},summaryType: "sum"},
@@ -1490,13 +1490,13 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
         </div>
     </div>
 
-    <!-- Inicio del diálogo para buscar clientes -->
+    <!-- Inicio del diï¿½logo para buscar clientes -->
         <div id="clieDialog" title="B&uacute;squeda de Cliente" style="display: none;"><form class="form-horizontal normal"> </form></div>
         <script>
             //Dialog buscar clientes
             $.createSearchDialog('clieDialog',[
                 { label: 'C&oacute;d.Int.', name: 'Cli_Cod', key: true, width: 15,align:"center",hidden:true },
-                { label: 'Cédula/RUC', name: 'Prs_Ced', width: 50 },
+                { label: 'Cï¿½dula/RUC', name: 'Prs_Ced', width: 50 },
                 { label: 'Cliente', name: 'cliente', width: 100},
                 { label: 'Direcc.', name: 'Prs_Dir', width: 60 },
                 { label:'&nbsp;', name: 'act1', width: 20, align: 'center',viewable: false, formatter:'gridButton', formatoptions:{action:selectCliente} }
@@ -1515,7 +1515,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
         </div>
 
 
-        <div id="changeReteDialog" title="Cambiar valor de Retención" style="display:none;">
+        <div id="changeReteDialog" title="Cambiar valor de Retenciï¿½n" style="display:none;">
             <form class="form-horizontal normal" id='form_change_rete' action="javascript:CambiarRetencion(this)">
                 <input type="text" name="index" class="hidden">
 
@@ -1535,14 +1535,14 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
 
 
 
-        <!-- Inicio del diálogo para registrar clientes -->
+        <!-- Inicio del diï¿½logo para registrar clientes -->
         <div id="clieCreateDialog" title="Registrar Cliente" style="display:none;">
             <form class="form-horizontal normal" id="clieCreateForm" action="javascript:if(validaNoIdentif($('#Prs_Ced').val())['success']){ guardaCliente(); }else{ $('#Prs_Ced').flyout('show').focus() }">
                 <input name="Prs_Cod" type="text" class="hidden" />
                 <fieldset class="exa-fieldset" >
                     <legend class="Titulos2">Datos del Cliente</legend>
                     <div class="form-group">
-                        <label class="col-xs-3 control-label label-xs required">Cédula/RUC:</label>
+                        <label class="col-xs-3 control-label label-xs required">Cï¿½dula/RUC:</label>
                         <div class="col-xs-5" >
                             <div class="input-group input-group-xs">
                                 <input id="Prs_Ced" name="Prs_Ced" type="text" class="form-control input-xs" onchange="if(validaNoIdentif(this.value)['success']){ $('#Ide_Cod').val(this.value.length===10?2:1); $('#Cli_Tic').val(validaNoIdentif(this.value)['tipo_abrev']==='NA'?'N':'J').trigger('change'); $(this).fieldValid(true); searchCliente(this.value); }else{ $('#Ide_Cod').val(''); $('#Cli_Tic').val(''); $(this).fieldValid(false,validaNoIdentif(this.value)['message']); };" required="" />
@@ -1575,7 +1575,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-xs-3 control-label label-xs required"><span class='natural'>Apellidos:</span><span class='juridico' style="display: none;">Razón Social:</span></label>
+                        <label class="col-xs-3 control-label label-xs required"><span class='natural'>Apellidos:</span><span class='juridico' style="display: none;">Razï¿½n Social:</span></label>
                         <div class="col-xs-9" ><input name="Prs_Ape" type="text" class="form-control input-xs" required="" /></div>
                     </div>
                     <div class="form-group natural">
@@ -1597,7 +1597,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                     </div>
                 </fieldset>
                 <fieldset class="exa-fieldset" >
-                    <legend class="Titulos2">Datos de Ubicación</legend>
+                    <legend class="Titulos2">Datos de Ubicaciï¿½n</legend>
                     <div class="form-group">
                         <label class="col-xs-3 control-label label-xs required">Ciudad:</label>
                         <div class="col-xs-4" >
@@ -1609,11 +1609,11 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-xs-3 control-label label-xs required">Dirección:</label>
+                        <label class="col-xs-3 control-label label-xs required">Direcciï¿½n:</label>
                         <div class="col-xs-9" ><input name="Prs_Dir" type="text" class="form-control input-xs" required="" /></div>
                     </div>
                     <div class="form-group">
-                        <label class="col-xs-3 control-label label-xs required">Teléfono:</label>
+                        <label class="col-xs-3 control-label label-xs required">Telï¿½fono:</label>
                         <div class="col-xs-4" ><input name="Prs_Tel" type="text" class="form-control input-xs" required="" pattern="\d*" /></div>
                     </div>
                     <div class="form-group">
@@ -1645,7 +1645,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
             // Dialog para buscar productos
            $.createSearchDialog('proDialog',[
             { label: 'C&oacute;d.Int.', name: 'Pro_Cod', key: true, width: 20,align:"center",hidden:false },
-            { label: 'Descripción', name: 'Ite_Lar', width: 110 },
+            { label: 'Descripciï¿½n', name: 'Ite_Lar', width: 110 },
             { label: 'Marca', name: 'Mar_Des', width: 40},
             { label: 'Categoria', name: 'Cat_Des', width: 90,align:"center" },
             { label: 'IVA', name: 'Iva_Por', width: 20, align:"center",formatter:'truefalse', formatoptions:{yesMsg:'Grava IVA',noMsg:'No Grava IVA'}, title:false },
@@ -1665,7 +1665,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
 
         </script>
     <!-- FIN DEL DIALOGO PRODUCTO-->
-    <!-- Inicio del diálogo para buscar viajes -->
+    <!-- Inicio del diï¿½logo para buscar viajes -->
     <div id="viajesDialog" title="B&uacute;squeda de Viajes" style="display: none;">
         <form id="viajesForm" class="form-horizontal normal" action="javascript:$.Search('viajes')">
             <input type="text" name="Cli_Cod" class="hidden" />
@@ -1695,7 +1695,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
             </fieldset>
         </form>
     </div>
-    <!-- Inicio del diálogo para buscar viajes -->
+    <!-- Inicio del diï¿½logo para buscar viajes -->
     <div id="viajesSelectedDialog" title="Viajes Seleccionados"></div>
     <!--INICIO DEL DIALOGO BUSCAR PROVEEDOR-->
     <div id="provDialog" title="B&uacute;squeda de Proveedor" style="display: none;"><form class="form-horizontal normal"> </form></div>
@@ -1703,7 +1703,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
         // DIALOG BUSCAR proveedor
         $.createSearchDialog('provDialog',[
             { label: 'C&oacute;d.Int.', name: 'Prv_Cod', key: true, width: 15,align:"center",hidden:true },
-            { label: 'Cédula/RUC', name: 'Prs_Ced', width: 50 },
+            { label: 'Cï¿½dula/RUC', name: 'Prs_Ced', width: 50 },
             { label: 'Proveedor', name: 'proveedor', width: 100},
             { label: 'Cont.', name: 'Prv_Con', width: 20,align:"center", labelLong:'Obligado a Llevar Contabilidad', formatter:'truefalse', formatoptions:{msg:false}  },
             { label: 'Espe.', name: 'Prv_Esp', width: 20,align:"center", labelLong:'Contribuyente Especial', formatter:'truefalse', formatoptions:{msg:false} },
@@ -1722,7 +1722,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
         }
     </script>
     <!--INICIO DEL DIALOGO BUSCAR CUENTA-->
-    <div id="codiDialog" title="B&uacute;squeda de Códigos Retención">
+    <div id="codiDialog" title="B&uacute;squeda de Cï¿½digos Retenciï¿½n">
         <form class="form-horizontal normal"><input type="text" name="Pla_Cod" class="placod" style="display: none;"/>
             <fieldset class="exa-fieldset">
                     <legend class="Titulos2">Filtros</legend>
@@ -1746,9 +1746,9 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
     </div>
     <script>
             $.createSearchDialog('codiDialog',[
-                { label: 'Cód.Int.', name: 'Ren_Cod', key: true, width: 25,align:"center" },
-                { label: 'Código', name: 'Ren_Sri', width: 25, align:"center" },
-                { label: 'Descripción', name: 'Ren_Con', width: 100 },
+                { label: 'Cï¿½d.Int.', name: 'Ren_Cod', key: true, width: 25,align:"center" },
+                { label: 'Cï¿½digo', name: 'Ren_Sri', width: 25, align:"center" },
+                { label: 'Descripciï¿½n', name: 'Ren_Con', width: 100 },
                 { label: 'Porc.(%)', name: 'Ren_Por', width: 25,align:"center" },
                 { label: 'Adq.', name: 'Ren_Tipo', width: 30,align:"center" },
                 { label: 'Tipo', name: 'Ren_Rete', width: 30,align:"center"},
@@ -1761,7 +1761,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                     }
                   }
                 }
-            ],null,null,null,null,{ title:'Búsqueda', options:[] });
+            ],null,null,null,null,{ title:'Bï¿½squeda', options:[] });
 
 
         </script>
@@ -1772,7 +1772,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
             <fieldset class="exa-fieldset" >
                 <legend class="Titulos2">Datos del Proveedor</legend>
                 <div class="form-group">
-                    <label class="col-xs-3 control-label label-xs required">Cédula/RUC:</label>
+                    <label class="col-xs-3 control-label label-xs required">Cï¿½dula/RUC:</label>
                     <div class="col-xs-5" >
                         <div class="input-group input-group-xs">
                             <input id="Prs_Ced" name="Prs_Ced" type="text" class="form-control input-xs" onchange="if(validaNoIdentif(this.value)['success']){ $('#Ide_Cod').val(this.value.length===10?2:1); $('#Prv_Tic').val(validaNoIdentif(this.value)['tipo_abrev']==='NA'?'N':'J').trigger('change'); $(this).fieldValid(true); searchProvee(this.value); }else{ $('#Ide_Cod').val(''); $('#Prv_Tic').val(''); $(this).fieldValid(false,validaNoIdentif(this.value)['message']); };" required="" />
@@ -1806,7 +1806,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-xs-3 control-label label-xs required"><span class='natural'>Apellidos:</span><span class='juridico' style="display: none;">Razón Social:</span></label>
+                    <label class="col-xs-3 control-label label-xs required"><span class='natural'>Apellidos:</span><span class='juridico' style="display: none;">Razï¿½n Social:</span></label>
                     <div class="col-xs-9" ><input name="Prs_Ape" type="text" class="form-control input-xs" required="" /></div>
                 </div>
                 <div class="form-group natural">
@@ -1828,7 +1828,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                 </div>
             </fieldset>
             <fieldset class="exa-fieldset" >
-                <legend class="Titulos2">Datos de Ubicación</legend>
+                <legend class="Titulos2">Datos de Ubicaciï¿½n</legend>
                 <div class="form-group">
                     <label class="col-xs-3 control-label label-xs required">Ciudad:</label>
                     <div class="col-xs-4" >
@@ -1839,11 +1839,11 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-xs-3 control-label label-xs required">Dirección:</label>
+                    <label class="col-xs-3 control-label label-xs required">Direcciï¿½n:</label>
                     <div class="col-xs-9" ><input name="Prs_Dir" type="text" class="form-control input-xs" required="" /></div>
                 </div>
                 <div class="form-group">
-                    <label class="col-xs-3 control-label label-xs required">Teléfono:</label>
+                    <label class="col-xs-3 control-label label-xs required">Telï¿½fono:</label>
                     <div class="col-xs-4" ><input name="Prs_Tel" type="text" class="form-control input-xs" required="" pattern="\d*" /></div>
                 </div>
                 <div class="form-group">
@@ -1861,7 +1861,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
     -->
     <!-- FIN DEL DIALOGO PROVEEDOR-->
     <!-- DIALOGO DETALLE RETENCION -->
-    <div id="retDetaDialog" title="Retención"><div class="condensed-header"><table id="retencion"></table></div></div>
+    <div id="retDetaDialog" title="Retenciï¿½n"><div class="condensed-header"><table id="retencion"></table></div></div>
     <script>
 
 
@@ -1870,11 +1870,11 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
             // Buscar una persona
         $(function() {
             var asie={
-                height:75,caption:'Detalle Retención', sortable:true, sortname: 'Ren_Rete', sortorder: "desc", footerrow:true,
+                height:75,caption:'Detalle Retenciï¿½n', sortable:true, sortname: 'Ren_Rete', sortorder: "desc", footerrow:true,
                 colModel: [
-                                    { label: 'Cód.Int.', name: 'Asi_Cod', key: true, width: 15,align:"center", hidden:true },
+                                    { label: 'Cï¿½d.Int.', name: 'Asi_Cod', key: true, width: 15,align:"center", hidden:true },
                                     { label: 'Tipo', name: 'Asi_Deh', hidden:true },
-                                    { label: 'Código', name: 'Pld_Cdc', width: 45 },
+                                    { label: 'Cï¿½digo', name: 'Pld_Cdc', width: 45 },
                                     { label: 'Cuenta', name: 'Pld_Des', width: 130  },
                                     { label: 'Glosa', name: 'Glosa', width: 130},
                                     { label: 'Debe', name: 'Debe', width: 65, align: 'right', formatter:'currency', formatoptions: {prefix:'$ ', thousandsSeparator:',',decimalSeparator:'.',defaultValue:''},summaryType: "sum"},
@@ -1890,22 +1890,22 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
 
 
             var opts={
-                height:75,caption:'Detalle Retención', sortable:true, sortname: 'Ren_Rete', sortorder: "desc", footerrow:true,
+                height:75,caption:'Detalle Retenciï¿½n', sortable:true, sortname: 'Ren_Rete', sortorder: "desc", footerrow:true,
                 colModel: [
-                    { label: 'Cód.Int.', name: 'Ren_Cod', key: true, width: 15, align:"center", hidden:true },
-                    { label: 'Cód.Int.', name: 'Ren_Ret', width: 15, align:"center", hidden:true },
+                    { label: 'Cï¿½d.Int.', name: 'Ren_Cod', key: true, width: 15, align:"center", hidden:true },
+                    { label: 'Cï¿½d.Int.', name: 'Ren_Ret', width: 15, align:"center", hidden:true },
                     { label: 'Ret.', name: 'Ren_Rete', width: 15, align: 'center' },
-                    { label: 'Código ', name: 'Ren_Sri', width: 15, align: 'center' },
-                    { label: 'Descripción ', name: 'Ren_Con', width: 50 },
+                    { label: 'Cï¿½digo ', name: 'Ren_Sri', width: 15, align: 'center' },
+                    { label: 'Descripciï¿½n ', name: 'Ren_Con', width: 50 },
                     { label: 'Importe', name: 'Ren_Imp', width: 30, align: 'right', formatter:'currency', formatoptions: {prefix:'$ ', thousandsSeparator:',',decimalSeparator:'.',defaultValue:''},summaryType: "sum"},
                     { label: 'Porc.(%)', name: 'Ren_Por', width: 20, align: 'right' },
-                    { label: 'Retención.', name: 'Ren_Val', width: 30, align: 'right', formatter:'currency', formatoptions: {prefix:'$ ', thousandsSeparator:',',decimalSeparator:'.',defaultValue:''},summaryType: "sum"}
+                    { label: 'Retenciï¿½n.', name: 'Ren_Val', width: 30, align: 'right', formatter:'currency', formatoptions: {prefix:'$ ', thousandsSeparator:',',decimalSeparator:'.',defaultValue:''},summaryType: "sum"}
                 ],
                 loadComplete: function (){ $(this).setGridSummary(['Ren_Val'],{Ren_Por:"<div style='text-align:right;'>TOTAL:</div>"}); }
             };
-            $('#reteresult').createGrid($.extend(opts,{caption:'Detalle Retención'}),true);
+            $('#reteresult').createGrid($.extend(opts,{caption:'Detalle Retenciï¿½n'}),true);
             $('#reteresult').getFootRow(true);
-            $('#retencion').createGrid($.extend(opts,{height:219,width:593,responsive:false,caption:'Detalle Retención <button type="button" role="button" tabindex="-1" class="ui-button ui-widget ui-state-default ui-corner-all pull-right" title="Cerrar Ventana" onclick="$(\'#retDetaDialog\').dialog(\'close\')"><span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span></button>'}),true);
+            $('#retencion').createGrid($.extend(opts,{height:219,width:593,responsive:false,caption:'Detalle Retenciï¿½n <button type="button" role="button" tabindex="-1" class="ui-button ui-widget ui-state-default ui-corner-all pull-right" title="Cerrar Ventana" onclick="$(\'#retDetaDialog\').dialog(\'close\')"><span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span></button>'}),true);
             $('#retencion').getFootRow(true);
             $('#detaReten').createGrid($.extend(opts,{height:'auto',width:550,responsive:false,caption:null,rownumbers:false}),true);
             $('#detaReten').getFootRow(true);
@@ -1923,7 +1923,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
             <legend class="Titulos2">Documento:</legend>
             <div class="form-horizontal normal" style="padding: 0 4px;">
             <div class="form-group">
-                <label class="col-xs-2 control-label label-xs">Cédula/RUC:</label>
+                <label class="col-xs-2 control-label label-xs">Cï¿½dula/RUC:</label>
                 <div class="col-xs-4" ><span name="Prs_Ced"  class="form-control input-xs"></span></div>
                 <label class="col-xs-2 control-label label-xs">Doc.Num.:</label>
                 <div class="col-xs-4" ><span name="Vet_Num"  class="form-control input-xs"></span></div>
@@ -1936,7 +1936,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
             </div>
             <div class="form-group condensed">
                 <div class="col-xs-12"><div class="pull-right"><table id="detaDocu"></table></div></div>
-                <div class="col-xs-12" style="text-align: right;font-size: 8px;padding-top: 2px;"><b>CREACIÓN:</b> <span name="Vet_Sys" class="databind"></span> &nbsp;&nbsp;-&nbsp;&nbsp; <b>USUARIO:</b> <span name="vendedor_per" class="databind"></span></div>
+                <div class="col-xs-12" style="text-align: right;font-size: 8px;padding-top: 2px;"><b>CREACIï¿½N:</b> <span name="Vet_Sys" class="databind"></span> &nbsp;&nbsp;-&nbsp;&nbsp; <b>USUARIO:</b> <span name="vendedor_per" class="databind"></span></div>
             </div>
             </div>
         </fieldset>
@@ -1948,7 +1948,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                 <div class="col-xs-3" ><span name="Ret_Num"  class="form-control input-xs"></span></div>
                 <label class="col-xs-1 control-label label-xs">Fecha:</label>
                 <div class="col-xs-3" ><span name="Ret_Fec"  class="form-control input-xs"></span></div>
-                <label class="col-xs-2 control-label label-xs">Autorización.:</label>
+                <label class="col-xs-2 control-label label-xs">Autorizaciï¿½n.:</label>
                 <div class="col-xs-1" ><span name="Ret_Aut"  class="form-control input-xs"></span></div>
             </div>
             <div class="form-group condensed">
@@ -1963,7 +1963,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
             var opts={
                 height:75, postData: {CheListAjax:true},caption:'Detalle Venta',
                 colModel: [
-                    { label: 'Cód.Int.', name: 'Vet_Int', key: true, width: 15,align:"center", hidden:true },
+                    { label: 'Cï¿½d.Int.', name: 'Vet_Int', key: true, width: 15,align:"center", hidden:true },
                     { label: 'Cantidad ', name: 'Vet_Can', width: 45, align: 'right' },
                     { label: 'Item', name: 'Ite_Lar', width: 130  },
                     { label: 'P. Unit.', name: 'Vet_Pru', width: 65, align: 'right'},

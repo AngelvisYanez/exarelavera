@@ -288,7 +288,7 @@ $rs_sucursales = $obBD_con1->getArrayConsulta(214, $Ses_Emp_Cod.'*'.$Ses_Usu_Ced
                 <link rel="stylesheet" href="../../framework/jquery/ChatJs/css/jquery.chatjs.css?x=0"/>
                 <style>.chat-window-title.decored {    background: -webkit-linear-gradient(top, #87add4 0%,#1d354d 100%); background: linear-gradient(to bottom, #87add4 0%,#1d354d 100%);} .chat-window-title { color: #eab2b2;text-shadow: #6d2020 1px 1px 1px;}</style>
                 <script type="text/javascript">
-                   var adapter=new DemoAdapter('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>');
+                   var adapter=new DemoAdapter('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>');
                    DemoAdapterConstants.DEFAULT_ROOM_ID='<?php echo '1'; //$Ses_Emp_Cod; ?>';
                    DemoAdapterConstants.DEFAULT_ROOM_NAME='<?php echo $Ses_Emp_Nom; ?>';
                    DemoAdapterConstants.CURRENT_USER.Id='<?php echo $Ses_Prs_Cod; ?>';
@@ -374,10 +374,10 @@ $rs_sucursales = $obBD_con1->getArrayConsulta(214, $Ses_Emp_Cod.'*'.$Ses_Usu_Ced
                 function resizeMain(){ $('#contenido').css('min-height',( window.innerHeight-50)+'px'); }   $(window).on('resize' ,resizeMain);
                 function loginAjax(){   
                     var msg;
-                    $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{loginAjax:true,Emp_Cod:$('#Emp_Cod').val(),Suc_Cod:$('#Suc_Cod').val(),user_name:$('#Usu_Ced').val(),encryptor:md5($('#Usu_Pas').val())}, function( response ) {
+                    $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{loginAjax:true,Emp_Cod:$('#Emp_Cod').val(),Suc_Cod:$('#Suc_Cod').val(),user_name:$('#Usu_Ced').val(),encryptor:md5($('#Usu_Pas').val())}, function( response ) {
                         if(response['success']===true){
                              msg='<div class="alert alert-success fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[SISTEMA]</strong> &nbsp;&nbsp;Login Correcto. Direccionando....</div>';
-                             setTimeout(function (){window.location.href ="<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>";},2500);
+                             setTimeout(function (){window.location.href ="<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>";},2500);
                         }else{ msg='<div class="alert alert-warning fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[ERROR]</strong> &nbsp;&nbsp;Contrase&ntilde;a Incorrecta.</div>';}                                   
                      },'json').fail(function(error) { msg='<div class="alert alert-danger fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[ERROR]</strong> &nbsp;&nbsp;El Servidor ha fallado en responder!.</div>'; })
                          .always(function() {$('#msgAlert').html(msg);$('#msgAlert .alert').hide();$('#msgAlert .alert').show();setTimeout(function (){$('#msgAlert .alert').removeClass('in').addClass('out');},4000);});

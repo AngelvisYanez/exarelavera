@@ -21,7 +21,7 @@ function clave_inicial()
 {	
 	if (document.form2.Usu_Pal.value==document.form2.Usu_Ced2.value)
 	{
-		alert ("¡Ingrese una contraseña diferente al usuario!");
+		$.alert("ï¿½Ingrese una contraseï¿½a diferente al usuario!",null,'warning');
 		document.form2.Usu_Pal.focus()
 		return false;
 	}
@@ -107,7 +107,7 @@ function tiene_numeros(texto){
 }
 
 function tiene_letras(texto){
-   var letras="abcdefghyjklmnñopqrstuvwxyz";
+   var letras="abcdefghyjklmnï¿½opqrstuvwxyz";
    texto = texto.toLowerCase();
    for(i=0; i<texto.length; i++){
       if (letras.indexOf(texto.charAt(i),0)!=-1){
@@ -118,7 +118,7 @@ function tiene_letras(texto){
 } 
 
 function tiene_minusculas(texto){
-   var letras="abcdefghyjklmnñopqrstuvwxyz"; 
+   var letras="abcdefghyjklmnï¿½opqrstuvwxyz"; 
    for(i=0; i<texto.length; i++){
       if (letras.indexOf(texto.charAt(i),0)!=-1){
          return 1;
@@ -128,7 +128,7 @@ function tiene_minusculas(texto){
 } 
 
 function tiene_mayusculas(texto){
-   var letras_mayusculas="ABCDEFGHYJKLMNÑOPQRSTUVWXYZ"; 
+   var letras_mayusculas="ABCDEFGHYJKLMNï¿½OPQRSTUVWXYZ"; 
    for(i=0; i<texto.length; i++){
       if (letras_mayusculas.indexOf(texto.charAt(i),0)!=-1){
          return 1;
@@ -165,7 +165,7 @@ function IsChk(form)
 	
 	if (found)
 	{
-		op= confirm("¿Está seguro de realizar esta operación?");
+		op= confirm("ï¿½Estï¿½ seguro de realizar esta operaciï¿½n?");
 		  
 		if (op == true)
 		{
@@ -174,7 +174,7 @@ function IsChk(form)
 	} 
 	else 
 	{
-		alert ("¡Es necesario que seleccione al menos una opción!");
+		$.alert("ï¿½Es necesario que seleccione al menos una opciï¿½n!",null,'warning');
 		return false;
 	}
 }
@@ -194,7 +194,7 @@ function IsChk2(form)
   
   if (found)
   {
-   op= confirm("¿Está seguro de realizar esta operación?");
+   op= confirm("ï¿½Estï¿½ seguro de realizar esta operaciï¿½n?");
      
    if (op == true)
    {
@@ -203,7 +203,7 @@ function IsChk2(form)
   } 
   else 
   {
-   alert ("¡Es necesario que seleccione al menos una opción!");
+   $.alert("ï¿½Es necesario que seleccione al menos una opciï¿½n!",null,'warning');
    return false;
   }
  }

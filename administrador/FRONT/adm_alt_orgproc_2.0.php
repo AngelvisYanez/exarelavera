@@ -1112,7 +1112,7 @@ if(isset($saveRuta)){
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script> 
     <script type="text/javascript" src="../../framework/jquery/chosen/chosenIcon/chosenIcon.js"></script> 
     <link rel="stylesheet" href="../../skins/fonts/fontelo/fontello.css?x=0" />
-    <script type="text/javascript">var urlTree='<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>?treeAjax=true';</script>
+    <script type="text/javascript">var urlTree='<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?treeAjax=true';</script>
     <script type="text/javascript" src="../VALIDACIONES/adm_val_orgproc_2.0.js?e=2"></script> 
     <style>.panel-body{padding: 5px 5px 0px 5px;} .jstree-icon:not(.glyphicon):not(.fa){font-family:"fontello"; font-style: normal; font-weight: normal;} .jstree-anchor.jstree-disabled .glyphicon.glyphicon-info-sign{color: #666 !important;} /*.hidden{display: inherit !important}*/
     </style>

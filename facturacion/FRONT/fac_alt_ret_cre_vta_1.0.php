@@ -353,7 +353,7 @@ utf8_encode_deep($detallePlan);
         <script src="../../framework/jquery/bootstrap/popover/jquery.flyout.js"></script>
         <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
         <script type="text/javascript" src="../../framework/jquery/chosen/chosenDesc/chosenDesc.js"></script>
-		  <script> var Cof_Con='<?php echo $configs['Cof_Con'];?>', detPlanCuenta=<?php echo json_encode($detallePlan) ?>; </script>
+		  <script> var Cof_Con=<?php echo json_encode($configs['Cof_Con']);?>, detPlanCuenta=<?php echo json_encode($detallePlan) ?>; </script>
         <style>
 		  		.footerFact{ text-align:right;width: 100%; }
             .footerFact input[type=text],.footerFact label,.footerFact textarea,.footerFact select{height:19px;width:100% !important;display: block;margin-bottom:0px !important;margin-top:0px !important;text-align:right;}

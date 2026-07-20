@@ -102,7 +102,7 @@ if(isset($usuAjax)){
                                     <input name="fin" type="text" id="finProd" class="form-control input-sm" value="<?php echo $hoy; ?>" required/>                              
                                 </div>
                                 <div class="col-xs-2">
-                                  <div class=""><button type="button"  onclick="/*if($('#Pro_Cod').val()!==''){*/this.form.submit();$('#listProd').jqGrid('setCaption', 'Salidas de Mercaderia '+' - '+($('#producto').val()!==''?$('#producto').val()+' - ':'')+'Desde '+ $('#iniProd').val()+' Hasta '+$('#finProd').val());/*}else{$.alert('Seleccione el Producto');}*/" class="btn btn-sm btn-success" title="Ejecutar Búsqueda"><span class="glyphicon glyphicon-search"></span> &nbsp;Filtrar</button></div>
+                                  <div class=""><button type="button"  onclick="/*if($('#Pro_Cod').val()!==''){*/this.form.submit();$('#listProd').jqGrid('setCaption', 'Salidas de Mercaderia '+' - '+($('#producto').val()!==''?$('#producto').val()+' - ':'')+'Desde '+ $('#iniProd').val()+' Hasta '+$('#finProd').val());/*}else{$.alert('Seleccione el Producto');}*/" class="btn btn-sm btn-success" title="Ejecutar Bï¿½squeda"><span class="glyphicon glyphicon-search"></span> &nbsp;Filtrar</button></div>
                                 </div>
                                </div>
                            </form>
@@ -247,7 +247,7 @@ if(isset($usuAjax)){
         }
         function findUsuarios() {  
             $("#loader").show();
-            $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",$('#formParam').serializeObject(),function(response){
+            $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",$('#formParam').serializeObject(),function(response){
                 $("#loader").fadeOut("slow");
                 if(response['success']===true){
                     usuaGrid.setRows(response['rows']);
@@ -309,7 +309,7 @@ if(isset($usuAjax)){
             }
         </script>
         <div id="formatoReporte" style="width: 700px;display: none;">
-            <?php echo $obBD_con1->getReportHeader($Ses_Suc_Cod, 'REPORTE DE DIGITACIÓN', '<span id="titleReporte">Digitaciones por Usuarios</span>',$obBD_conexion); ?>
+            <?php echo $obBD_con1->getReportHeader($Ses_Suc_Cod, 'REPORTE DE DIGITACIï¿½N', '<span id="titleReporte">Digitaciones por Usuarios</span>',$obBD_conexion); ?>
             <table id="tablaReporte" cellspacing="0" cellpadding="0" style="border-collapse: collapse;table-layout: fixed;"></table>
             <div style="margin-left:20%;margin-right:20%;margin-top: 20px;"><img id="imgChart1" style="width: 100%;"/></div>
             <?php echo $obBD_con1->getReportFooter($Ses_Suc_Cod,$Ses_Usu_Cod,$obBD_conexion); ?>

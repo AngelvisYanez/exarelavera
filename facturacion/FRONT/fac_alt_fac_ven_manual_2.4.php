@@ -191,7 +191,7 @@ if(isset($ajax_notif))
 	{		
 	?>
     	<img src='../../mascaras/model1/imagenes/32x32/cancel.gif' width='16' height='16' type='image'/>
-        <script language="javascript">alert("¿Ya existe el numero "+ <?php echo $NumFact;?> +"!"); document.getElementById("Vet_Num").selectionStart = 0;document.getElementById("Vet_Num").value='<?php echo $Vet_Num; ?>';</script>
+        <script language="javascript">alert("ï¿½Ya existe el numero "+ <?php echo $NumFact;?> +"!"); document.getElementById("Vet_Num").selectionStart = 0;document.getElementById("Vet_Num").value='<?php echo $Vet_Num; ?>';</script>
 	<?php		
 	}else{
 		if($SecIni<=$NumFact && $SecFin>=$NumFact)
@@ -204,7 +204,7 @@ if(isset($ajax_notif))
 		}else{
 			?>
               <img src='../../mascaras/model1/imagenes/32x32/cancel.gif' width='16' height='16' type='image'/>
-              <script language="javascript">alert("¿N&uacute;mero fuera de rango (Rango valido: "+ <?php echo $SecIni;?> +" al "+ <?php echo $SecFin;?> +")!"); document.getElementById("Vet_Num").value='';
+              <script language="javascript">alert("ï¿½N&uacute;mero fuera de rango (Rango valido: "+ <?php echo $SecIni;?> +" al "+ <?php echo $SecFin;?> +")!"); document.getElementById("Vet_Num").value='';
 			  document.getElementById("Vet_Num").selectionStart = 0;document.getElementById("Vet_Num").value='<?php echo $Vet_Num; ?>'; 
               $('#bt_guardar').attr('disabled',true);
               </script>
@@ -363,11 +363,11 @@ if($total_rs_apercaja!=0)
 		$Pec_Cod=$row_rs_codPlaPeri['Pec_Cod'];
 	}else{
 		$correcto=0;
-		?><script language="javascript">alert("¡La fecha de Caja, no esta dentro del rango de la Autorización de ventas!");</script> <?php
+		?><script language="javascript">alert("ï¿½La fecha de Caja, no esta dentro del rango de la Autorizaciï¿½n de ventas!");</script> <?php
 	}
 }else{
 	$correcto=0;
-	?><script language="javascript">alert("¡No existe apertura de Caja!");</script><?php
+	?><script language="javascript">alert("ï¿½No existe apertura de Caja!");</script><?php
 }
 
 
@@ -377,7 +377,7 @@ if($total_rs_apercaja!=0)
 $row_rs_autorizaci = $obBD_con1->getRowConsulta(30, $Tic_Cod.'*'.$row_rs_apercaja['Pun_Cod'].'*'.$hoy, $obBD_conexion);
 $total_rs_autorizaci=$row_rs_autorizaci['Aut_Cod'] > 0? 1 : 0;
 
-//Sección para verificar si el número de factura existe
+//Secciï¿½n para verificar si el nï¿½mero de factura existe
 if(isset($verificar_VetNum))
 {
     $response=$obBD_con1->getRowConsulta(1314,$Ses_Emp_Cod.'*'.$vet_num1.'*'.$aut_sri.'*1',$obBD_conexion);
@@ -883,23 +883,23 @@ if (isset($_POST['postID'])&&!empty($_POST['postID'])&&$thisPost->postBlock($_PO
 					require '../../Librerias/PHPMail/class.phpmailer.php';
 					// Crear una nueva  instancia de PHPMailer habilitando el tratamiento de excepciones
 					$mail = new PHPMailer(true); 
-					// Configuramos el protocolo SMTP con autenticación
+					// Configuramos el protocolo SMTP con autenticaciï¿½n
 					$mail->IsSMTP();
 					$mail->SMTPAuth = true;
 					$mail->IsHTML(true);
-					// Configuración del servidor SMTP
+					// Configuraciï¿½n del servidor SMTP
 					$mail->Port = 25;
 					$mail->Host = 'ofsercont.com';
 					$mail->Username = "facturacion.electronica@ofsercont.com";
 					$mail->Password = "p.123456";
-					// Configuración cabeceras del mensaje
+					// Configuraciï¿½n cabeceras del mensaje
 					$mail->From = "facturacion.electronica@ofsercont.com";
 					$mail->FromName = $Ses_Emp_Nom;
 					$mail->AddAddress(trim($PrsCorCli),strtoupper($PrsNomCli));
 					//$mail->AddAddress("destino2@correo.com","Nombre 2");
 					//$mail->AddCC("copia1@correo.com","Nombre copia 1");
 					//$mail->AddBCC("copia1@correo.com","Nombre copia 1");
-					$mail->Subject = "Comprobante Electrónico";
+					$mail->Subject = "Comprobante Electrï¿½nico";
 					// Creamos en una variable el cuerpo, contenido HMTL, del correo
 					
 					//$body  = "Proebando los correos con un tutorial<br>";
@@ -951,7 +951,7 @@ else{ $oooooo=true; }
 * Busqueda de los datos del cliente 
 */
 
-/*Sección para obtener el cliente CONSUMIDOR FINAL = > José Ambuludí*/
+/*Secciï¿½n para obtener el cliente CONSUMIDOR FINAL = > Josï¿½ Ambuludï¿½*/
 $row_codigo = $obBD_con1->getRowConsulta(1301, $Ses_Emp_Cod, $obBD_conexion);
 $codigo=$row_codigo['Cli_Cod'];
 $row_rs_cliente = $obBD_con1->getRowConsulta(23, $codigo, $obBD_conexion);
@@ -996,7 +996,7 @@ else
 	}//Fin del if (isset($codigo))	
 }//Fin del if ($txt_busqueda != "")	
 
-//Sección para buscar un cliente por cédula por José Ambuludí
+//Secciï¿½n para buscar un cliente por cï¿½dula por Josï¿½ Ambuludï¿½
 if(isset($existeCliente)){
     /** 
     * Consulta del cliente en base de la cedula 
@@ -1011,7 +1011,7 @@ if(isset($existeCliente)){
     exit();
 }
 
-//Sección para guardar un cliente
+//Secciï¿½n para guardar un cliente
 if(isset($guardarCliente)){
     $response = $obBD_con1->getRowConsulta(1303,$prs_ced,$obBD_conexion);
     $per_cod=$response['Prs_Cod'];
@@ -1135,7 +1135,7 @@ if (isset($ajax_cliente_registrar))
                                 if(value.length===10)
                                 {
                                     var data={existeCliente:true,Prs_Ced:value};
-                                    $.post("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING);?>",data,function(response){
+                                    $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8');?>",data,function(response){
                                         if(response['Cliente']===true)
                                         {
                                             alert('Cliente ya se encuentra registrado..!!');
@@ -1172,7 +1172,7 @@ if (isset($ajax_cliente_registrar))
                                 
                                 if(respuesta==true){
                                     var data={prs_ced:$('#prs_ced').val(),prs_nom:$('#prs_nom').val(),prs_ape:$('#prs_ape').val(),prs_sex:$('#prs_sex').val(),prs_dir:$('#prs_dir').val(),ciu_cod:$('#ciu_cod').val(),prs_cor:$('#prs_cor').val(),cli_tic:$('#cli_tic').val(),guardarCliente:true};
-                                    $.post("<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING); ?>",data,function(response){
+                                    $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data,function(response){
                                         if(response['Persona']===true)
                                         {
                                             alert('Persona Registrada');
@@ -1196,7 +1196,7 @@ if (isset($ajax_cliente_registrar))
 exit();	
 }
 
-/*Sección que permite buscar clientes por cédula o por apellido mediante la presentación de un DIALOG*/
+/*Secciï¿½n que permite buscar clientes por cï¿½dula o por apellido mediante la presentaciï¿½n de un DIALOG*/
 if (isset($ajax_cliente_buscar))
 { 
     /**
@@ -1245,7 +1245,7 @@ if (isset($ajax_cliente_buscar))
 exit();	
 }
 
-/*Sección para efectuar la búsqueda dentro del Dialog en lo que respecta a búsqueda de clientes*/
+/*Secciï¿½n para efectuar la bï¿½squeda dentro del Dialog en lo que respecta a bï¿½squeda de clientes*/
 if (isset($buscodcli))
 {
     if ($op_opciones=='d')
@@ -2077,7 +2077,7 @@ if (count($row_rs_vendedor) > 0)
 <div id="cont_cua_338_titu"></div>
 <FIELDSET>
 		<LEGEND>
-			<label class="Titulos2">PORCENTAJE DE RETENCÍON (338)</label>
+			<label class="Titulos2">PORCENTAJE DE RETENCï¿½ON (338)</label>
 		</LEGEND>
     <table style="width: 100%">
         <tr><td style="width: 30%"></td><td></td></tr>
@@ -2198,10 +2198,10 @@ else
         var num=$('#Vet_Num').val();var Aut_Sri=$('#Aut_Sri').val();
         var data={vet_num1:num,aut_sri:Aut_Sri,verificar_VetNum:true};
         $('#bt_guardar').attr('disabled',true);
-        $.post("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data,function(response){
+        $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data,function(response){
             if((response['Vet_Num']*1)>0) 
             {
-                alert('El número de factura ya esta REGISTRADO..A continuación el sistema proporcionará uno NUEVO..!!');
+                alert('El nï¿½mero de factura ya esta REGISTRADO..A continuaciï¿½n el sistema proporcionarï¿½ uno NUEVO..!!');
                 ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mar_val=1&punto=<?php echo $row_rs_apercaja['Pun_Cod']; ?>&SucCod=<?php echo $Ses_Suc_Cod;?>&Tic_Cod='+ document.getElementById('Tic_Cod').value +'&fechaCja=<?php echo $row_rs_apercaja['Caj_Fec'] ; ?>','contenedormarca');
                 $('#bt_guardar').attr('disabled',false);
             }else{
@@ -2211,7 +2211,7 @@ else
         },'json').fail(function(error) {alert('El servidor fallo');$('#bt_guardar').attr('disabled',false);});
     }
     
-    //Función realizada, para buscar clientes por cédula
+    //Funciï¿½n realizada, para buscar clientes por cï¿½dula
     function registrarCliente()
     {
         ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_cliente_registrar=1','ajax_modal');

@@ -167,6 +167,8 @@ exit();
             <script type="text/ecmascript" src="../../framework/jquery/jqgrid/jqgrid-5.0.0/js/jquery.jqGrid.min.js"></script>
             <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.basics-1.0.js"></script>
             <script type="text/ecmascript" src="../../Librerias/scripts/generales/jqgrid.ExcelExport.js"></script>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+            <script type="text/ecmascript" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
             
         <?php }; ?>
         <!--Librerias para modal -->       
@@ -2029,7 +2031,7 @@ require_once('../../componentes/FRONT/com_con_leyenda.php');
 <script type="text/javascript" >
     var gridComp=$("#comp");  
     gridComp.jqGrid({
-            url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+            url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
             mtype: "GET", datatype: "local", regional : 'es',hidegrid:false,//ajaxRowOptions: { async: true }, 
             //postData: $("#searchForm").getData("consAjax"),
             autowidth : true, shrinkToFit: false, height: 250,responsive:true,

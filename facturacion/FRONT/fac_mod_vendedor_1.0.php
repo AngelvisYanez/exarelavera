@@ -170,7 +170,7 @@ if (isset($hdd_save) && !isset($hdd_volver)) {
 	<script>
 		$(function() {
 			$("#list").jqGrid({
-				url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+				url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
 				mtype: "GET",
 				datatype: "json",
 				regional: 'es',

@@ -8,7 +8,7 @@ if(isset($_GET['clave']))
 <!DOCTYPE html>
 <HTML>
 <HEAD>		
-    <TITLE>EXA - Facturacion Electrónica</TITLE>
+    <TITLE>EXA - Facturacion Electrï¿½nica</TITLE>
     <meta charset="iso-8859-1" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -34,6 +34,8 @@ if(isset($_GET['clave']))
     <!--[if !IE]> -->
             <link type="text/css" rel="stylesheet" href="./framework/plugins/animate/animate-3.4.0.min.css" />			
     <!-- <![endif]-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+    <script type="text/ecmascript" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script type="text/javascript"> 
         var UrlSaveJson="";
             $(document).ready(function () {

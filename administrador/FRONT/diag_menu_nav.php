@@ -114,7 +114,8 @@ if (!$foundOld) {
 }
 echo '</pre>';
 
-<h2>5. HTML generado por el menú ACTUAL</h2>
+echo '<h2>5. HTML generado por el menú ACTUAL</h2>';
+?>
 <pre class="<?php echo ($hasFlujo && $hasScraper) ? 'found' : 'notfound'; ?>">
 <?php
 if ($hasFlujo || $hasScraper) {

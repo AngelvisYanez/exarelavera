@@ -268,7 +268,6 @@ class Class_Log_Datos_Deu extends MysqlDatos{
 					}
 				}
 			}
-			echo mysqli_error($obBD_conexion->conexion);
 			$this->fin_transaccion_nomsn($obBD_conexion->conexion);
 		}
 	}

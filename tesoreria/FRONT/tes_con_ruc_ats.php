@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/tes_log_anexo.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');	
@@ -180,7 +180,7 @@ if(isset($uploadXML)){
 			$("#loader").show();
 			//formData.append(f.attr("name"), $(this)[0].files[0]);
 			$.ajax({
-				url: "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",
+				url: "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",
 				type: "post", dataType: "json", data: formData, cache: false, contentType: false, processData: false
 			}).done(function(response){
 				$("#loader").fadeOut("slow");
@@ -203,7 +203,7 @@ if(isset($uploadXML)){
 				}
 			});
 			jgrid.jqGrid({
-				url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+				url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
 				mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },
 				autowidth : true, shrinkToFit: true, height: 350,caption:'&nbsp;',
 				colModel: [

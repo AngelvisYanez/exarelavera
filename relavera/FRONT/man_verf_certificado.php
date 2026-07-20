@@ -60,7 +60,7 @@ function man_verf_resolve_dat_dis($vet_cod, $emp_cod = 0) {
             $dat = trim($row['Dat_Dis']);
             $conn = new Class_Log_Conexion_manifiesto($dat);
             if (!empty($conn->conexion) && function_exists('mysqli_set_charset')) {
-                @mysqli_set_charset($conn->conexion, 'utf8mb4');
+                mysqli_set_charset($conn->conexion, 'utf8mb4');
             }
             $chk = $obBD_adm->getRowConsultaSql(
                 'SELECT Vet_Cod FROM ventas WHERE Vet_Cod = ' . $vet_cod . " AND Vet_Est = 'A' LIMIT 1",
@@ -84,7 +84,7 @@ function man_verf_resolve_dat_dis($vet_cod, $emp_cod = 0) {
         $dat = trim($b['Dat_Dis']);
         $conn = new Class_Log_Conexion_manifiesto($dat);
         if (!empty($conn->conexion) && function_exists('mysqli_set_charset')) {
-            @mysqli_set_charset($conn->conexion, 'utf8mb4');
+            mysqli_set_charset($conn->conexion, 'utf8mb4');
         }
         $chk = $obBD_adm->getRowConsultaSql(
             'SELECT Vet_Cod FROM ventas WHERE Vet_Cod = ' . $vet_cod . " AND Vet_Est = 'A' LIMIT 1",
@@ -124,7 +124,7 @@ if ($cod_ven <= 0) {
     } else {
         $obBD_conexion = new Class_Log_Conexion_manifiesto($dat_dis);
         if (!empty($obBD_conexion->conexion) && function_exists('mysqli_set_charset')) {
-            @mysqli_set_charset($obBD_conexion->conexion, 'utf8mb4');
+            mysqli_set_charset($obBD_conexion->conexion, 'utf8mb4');
         }
         $obBD_con1 = new Class_Log_Datos_manifiesto;
         $row = $obBD_con1->getRowConsulta(90, array('Vet_Cod' => $cod_ven), $obBD_conexion);

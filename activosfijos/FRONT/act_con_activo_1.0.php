@@ -177,7 +177,7 @@ if(isset($allActivos)){
         //Funci�n para listar los datos de los activos fijos registrados en la tabla activo
         function listarActivos(){
             var dep_men=0,dep_acm=0,act_cod=0,val_lib=0;    
-            $.post("<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING);?>",$('#formActivo').getData('allActivos'),function(response){
+            $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8');?>",$('#formActivo').getData('allActivos'),function(response){
                 if(response.length>0){
                     var activos_dep=new Array();
                     activos_dep=response;

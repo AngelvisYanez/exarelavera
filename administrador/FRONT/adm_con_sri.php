@@ -146,11 +146,7 @@ if(isset($formPersona)){
     if($data['success']){
         if($filtro=='c')
             $data['data']['posseeRuc']=(isRuc($search."001")?"SI":"NO");
-        $data['html'] = ("<pre>".sprintf("%s",print_r($data['data'],TRUE))."</pre>");  
-        $data['html'] = preg_replace('/    \[(\d+)\] => Array\n/i', '', $data['html']);
-        $data['html'] = preg_replace('/Array\n/i', '', $data['html']);
-        $data['html'] = preg_replace('/\)\n(.?)\n(.*)\(/i', '),(', $data['html']);
-        $data['html'] = preg_replace('/\)\n/i', ')', $data['html']);
+        $data['html'] = "";
     }
     echo json_encode($data);
     exit();
@@ -283,11 +279,7 @@ if(isset($formRuc)){
     $data=(consultarRucSri($search));
     $data['html1']="ver";
     if($data['success'] && $data['isRuc'] && $data['hasData']){
-        $data['html']="<pre>".sprintf("%s",print_r($data['rucData'],TRUE))."</pre>";
-        $data['html'] = preg_replace('/    \[(\d+)\] => Array\n/i', '', $data['html']);
-        $data['html'] = preg_replace('/Array\n/i', '', $data['html']);
-        $data['html'] = preg_replace('/\)\n(.?)\n(.*)\(/i', '),(', $data['html']);
-        $data['html'] = preg_replace('/\)\n/i', ')', $data['html']);
+        $data['html'] = "";
     }
     echo json_encode($data);
     exit();

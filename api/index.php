@@ -78,7 +78,7 @@ $app->hook("slim.before.router", function () use ($app) {
     if ($requestMethod === "OPTIONS") {
         return;
     }
-    if (preg_match("#^/v1/test|^/v1/auth/|^/v1/facturacion/#", $resourceUri)) {
+    if (preg_match("#^/v1/test|^/v1/auth/|^/v1/facturacion/|^/v1/docs#", $resourceUri)) {
         return;
     }
 
@@ -110,6 +110,7 @@ $app->hook("slim.before.router", function () use ($app) {
 
     [$tokenUser, $tokenEmpresa, $tokenTime] = explode(":", $decoded, 3);
 
+    // Validar expiración (24 h)
     if ((int) $tokenTime < time() - 86400) {
         $app->response->setStatus(401);
         $app->response->body(
@@ -119,33 +120,6 @@ $app->hook("slim.before.router", function () use ($app) {
             ])
         );
         $app->stop();
-    }
-
-    $token = substr($authHeader, 7); // quitar "Bearer "
-    $decoded = base64_decode($token, true);
-    if ($decoded === false || substr_count($decoded, ":") < 2) {
-        $app->response->setStatus(401);
-        $app->response->body(
-            json_encode([
-                "success" => false,
-                "error" => "Token inválido"
-            ])
-        );
-        return;
-    }
-
-    [$tokenUser, $tokenEmpresa, $tokenTime] = explode(":", $decoded, 3);
-
-    // Opcional: validar expiración (24 h)
-    if ((int) $tokenTime < time() - 86400) {
-        $app->response->setStatus(401);
-        $app->response->body(
-            json_encode([
-                "success" => false,
-                "error" => "Sesión expirada"
-            ])
-        );
-        return;
     }
 
     // Inyectar Emp_Cod en body si la ruta lo necesita
@@ -213,6 +187,7 @@ require_once __DIR__ . "/v1/facturacion/emitir.php";
 require_once __DIR__ . "/v1/facturacion/sri-scraper.php";
 require_once __DIR__ . "/v1/auditoria/tareas.php";
 require_once __DIR__ . "/v1/admin/conexion.php";
+require_once __DIR__ . "/v1/admin/dashboard.php";
 
 // Nuevos módulos legacy con API REST
 require_once __DIR__ . "/v1/data/index.php";
@@ -229,6 +204,38 @@ require_once __DIR__ . "/v1/tesoreria/bancos.php";
 require_once __DIR__ . "/v1/admin/soporte.php";
 require_once __DIR__ . "/v1/admin/modulo-uso.php";
 require_once __DIR__ . "/v1/admin/directorio.php";
+require_once __DIR__ . "/v1/flujo/index.php";
+
+// Swagger UI - Documentación de la API
+$app->get('/v1/docs', function () use ($app) {
+    $app->response->headers->set('Content-Type', 'text/html; charset=utf-8');
+    echo '<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>EXA Contable API - Documentación</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
+    <style>body{margin:0;padding:0;}</style>
+</head>
+<body>
+    <div id="swagger-ui"></div>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+    <script>
+        SwaggerUIBundle({
+            url: "' . $app->request->getUrl() . $app->request->getRootUri() . '/v1/docs/openapi.json",
+            dom_id: "#swagger-ui",
+            presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
+            layout: "BaseLayout"
+        });
+    </script>
+</body>
+</html>';
+});
+
+$app->get('/v1/docs/openapi.json', function () use ($app) {
+    $spec = json_decode(file_get_contents(__DIR__ . '/openapi.json'), true);
+    echo json_encode($spec);
+});
 
 $app->get("/v1/test", function () {
     echo json_encode(["mysqli" => function_exists("mysqli_connect")]);

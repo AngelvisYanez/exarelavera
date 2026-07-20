@@ -209,7 +209,7 @@ class Class_Log_Datos_Cch extends MysqlDatosContab{
 		$row_usuario = $this->getRowConsulta(19, $usuario, $obBD);
 		
 		$fecha=explode("-",date("Y-m-d"));	
-   	    $fechaHoy =	$row_institucion['Ciu_Des'].", ".$fecha[2]." de ".mes($fecha[1],1)." ".$fecha[0].", ".date("H:m:s") ;	
+   	    $fechaHoy =	$row_institucion['Ciu_Des'].", ".$fecha[2]." de ".mes($fecha[1],1)." ".$fecha[0].", ".date("H:i:s") ;	
 			
 	?>
 		<table width="90%" border="0" cellpadding="0" cellspacing="0">

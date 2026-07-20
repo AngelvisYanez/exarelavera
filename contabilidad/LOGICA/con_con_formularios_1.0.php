@@ -132,7 +132,7 @@ if(isset($ajaxSubgrid)){
             height: 250,caption:'&nbsp;Codigos',
             sortname:'Foc_Num',
             colModel: [
-                { label: 'Cód.Int.', name: 'Foc_Cod', key: true, width: 20,align:"center", hidden:false },
+                { label: 'Cï¿½d.Int.', name: 'Foc_Cod', key: true, width: 20,align:"center", hidden:false },
                 { label: 'Grupo', name: 'GrupoOrd', width: 50, sortable:false, hidden:true },
                 { label: 'Grupo', name: 'Grupo', width: 50, sortable:false, hidden:false },
                 { label: 'SubGrupo', name: 'SubGrupo', width: 50, sortable:false },
@@ -155,7 +155,7 @@ if(isset($ajaxSubgrid)){
                     var subgrid_table_id = subgrid_id+"_t";         
                     $("#"+subgrid_id).addClass('condensed jqSecond').html("<table id='"+subgrid_table_id+"' class='scroll'></table>");
                     $("#"+subgrid_table_id).createGrid({
-                        //url:"<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>?ajaxSubgrid="+row_id, datatype: "json",regional : 'es',
+                        //url:"<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?ajaxSubgrid="+row_id, datatype: "json",regional : 'es',
                         postData:$.extend({ajaxSubgrid:true,Foc_Cod:row_id},config),
                         colModel: [
                                 {label:'Cod.Int.',name:"Pld_Cod",width:80,key:true,align:"center",hidden:true},

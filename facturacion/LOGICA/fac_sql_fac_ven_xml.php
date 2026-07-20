@@ -66,8 +66,7 @@
 					  persona
 					WHERE
 					  Prs_Ced='$Par_Sql[0]'";
-			echo $sql;
-			return $sql;
+				return $sql;
 			break;
 			
 			case 5: 

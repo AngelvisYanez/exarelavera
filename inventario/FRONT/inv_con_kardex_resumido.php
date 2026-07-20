@@ -99,9 +99,9 @@ if (isset($productos)) {
 	} catch (Exception $e) {
 		$response = array('success' => false, 'message' => 'No se logrÃ³ obtener informaciÃ³n del Kardex!', 'error' => $e->getMessage());
 	}
-	$responce['rows'] = array_values($array);
-	utf8_encode_deep($responce['rows']);
-	echo json_encode($responce);
+	$response['rows'] = array_values($array);
+	utf8_encode_deep($response['rows']);
+	echo json_encode($response);
 	exit();
 }
 
@@ -138,7 +138,7 @@ if (isset($productos)) {
 				}
 				$kardex[$i]['Stock'] = $kardex[$i - 1]['Stock'] * 1 + $kardex[$i]['Kar_Can'] * 1 - $kardex[$i]['Kar_Sal'];
 				$kardex[$i]['Saldo'] = round($kardex[$i - 1]['Saldo'] * 1 + $kardex[$i]['Kar_Ims'] * 1 - $kardex[$i]['Kar_Ime'], 2);
-				$kardex[$i]['Promedio'] = $kardex[$i]['Saldo'] / $kardex[$i]['Stock'];
+				$kardex[$i]['Promedio'] = ($kardex[$i]['Stock'] != 0 ? round($kardex[$i]['Saldo'] / $kardex[$i]['Stock'], 2) : $kardex[$i - 1]['Promedio']);
 			}
 
 			$row['Kar_Stk'] = (string)(empty($kardex[$x - 1]['Stock']) ? 0.00 : $kardex[$x - 1]['Stock']);
@@ -271,7 +271,7 @@ if (isset($productos)) {
 							$('#ini').val('2015-01-01'); //$('#ini').datepicker("setDate", new Date(today.getTime() - (30 * 24 * 3600 * 1000)));
 							$('#fin').datepicker("setDate", new Date());
 							kardexGrid.createGrid({
-								url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+								url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
 								mtype: "GET",
 								datatype: "json",
 								regional: 'es', //ajaxRowOptions: { async: true },

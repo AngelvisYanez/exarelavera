@@ -527,7 +527,7 @@ if (isset($saveActivo)) {
             function cargarCampos(Tia_Cod, Act_Cod) {
                 var cam_new=[];
                 var data = {Tia_Cod: Tia_Cod, Act_Cod: Act_Cod, buscarCampos: true};
-                $.post('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>', data, function (response) {
+                $.post('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>', data, function (response) {
                     cam_new = response;
                     $('#cam_new').html('');
                     for (var i = 0; i < cam_new.length; i++) {
@@ -547,7 +547,7 @@ if (isset($saveActivo)) {
             function inicializar_input_file(vari, variobj) {
                 $('#Act_Fot').fileinput('destroy');
                 $("#Act_Fot").fileinput({
-                    uploadUrl: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                    uploadUrl: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                     showCaption: false,
                     showRemove: false,
                     showCancel: false,
@@ -566,7 +566,7 @@ if (isset($saveActivo)) {
                     initialPreviewAsData: true,
                     initialPreviewFileType: 'image',
                     initialPreviewConfig: variobj,
-                    deleteUrl: "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",
+                    deleteUrl: "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",
                     disable: function () {
                         var self = this;
                         self.isDisabled = false;
@@ -610,7 +610,7 @@ if (isset($saveActivo)) {
                     formData.append(depreciacion[i].name, depreciacion[i].value);
                 }
                 $.ajax({
-                    url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                    url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                     type: "post", dataType: "json", data: formData, cache: false, contentType: false, processData: false
                 })
                         .done(function (responce) {

@@ -55,12 +55,12 @@ if(isset($ajaxKardex)){
                        <form id="formProdu" class="form-horizontal normal"  action="javascript:$('#listProd').Search('#formProdu','ajaxKardex');"   >
   
                         <fieldset class="exa-fieldset">                           
-                           <legend class="Titulos2">Descripción Producto:</legend> <!-- Form Name -->
+                           <legend class="Titulos2">Descripciï¿½n Producto:</legend> <!-- Form Name -->
                               <div class="row">                                  
                                   <div class="col-xs-4">
                                       <!-- static input-->
                                         <div class="form-group">
-                                          <label class="col-xs-3 control-label label-xs ">Descripción:</label>  
+                                          <label class="col-xs-3 control-label label-xs ">Descripciï¿½n:</label>  
                                           <div class="col-xs-7">  
                                             <div class="input-group input-group-xs">                                                
                                                 <input type="text" name="Pro_Cod" id="Pro_Cod" value="" style="display: none" />  
@@ -116,7 +116,7 @@ if(isset($ajaxKardex)){
                                   <div class="col-xs-4">
                                       <!-- static input-->
                                         <div class="form-group">
-                                          <label class="col-xs-3 control-label label-xs ">Adquisición:</label>  
+                                          <label class="col-xs-3 control-label label-xs ">Adquisiciï¿½n:</label>  
                                           <div class="col-xs-8">                                    
                                               <span  class="form-control input-xs" id="pro_adq"></span>                              
                                           </div>                                  
@@ -183,7 +183,7 @@ if(isset($ajaxKardex)){
                                 $.createDateRange('#iniProd','#finProd');
                                 var kardexGrid=$("#listProd");
                                 kardexGrid.jqGrid({
-                                    url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                    url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                     mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },
                                     //postData: $("#form1").getData("ajaxGrid"),
                                     autowidth : true, shrinkToFit: true, height: 270,responsive:true,
@@ -264,7 +264,7 @@ if(isset($ajaxKardex)){
                     <label class="col-md-2 control-label">B&uacute;squeda:</label>  
                     <div class="col-md-7" >
                         <div class="input-group">                        
-                        <input name="search" onkeydown="if (event.keyCode === 13) this.form.submit()" type="text" size="50" maxlength="50" placeholder="Ingrese búsqueda..." autofocus  class="form-control input-sm "/>
+                        <input name="search" onkeydown="if (event.keyCode === 13) this.form.submit()" type="text" size="50" maxlength="50" placeholder="Ingrese bï¿½squeda..." autofocus  class="form-control input-sm "/>
                         <span class="input-group-btn"><button type="button" onclick="this.form.submit()" class="btn btn-success btn-sm" title="Buscar Producto" ><span class="glyphicon glyphicon-search"></span> <span>Buscar</span></button></span>
                       </div><!-- /input-group --> 
                     </div>                    
@@ -277,7 +277,7 @@ if(isset($ajaxKardex)){
         // DIALOG BUSCAR CUENTAS            
              $.createSearchDialog('proDialog',[
                     { label: 'C&oacute;d.Int.', name: 'Pro_Cod', key: true, width: 15,align:"center",hidden:true },                                
-                    { label: 'Descripción', name: 'Ite_Lar', width: 110 },                      
+                    { label: 'Descripciï¿½n', name: 'Ite_Lar', width: 110 },                      
                     { label: 'Marca', name: 'Mar_Des', width: 40},
                     { label: 'Tipo', name: 'Cat_Des', width: 110,align:"center" },                    
                         { label:'<center><i class="ui-icon ui-icon-gear"></i></center>', name: 'act1', width: 20, align: 'center',viewable: false,
@@ -285,7 +285,7 @@ if(isset($ajaxKardex)){
                                 return  '<span class="btn btn-success btn-xs" title="Enviar al Cr&eacute;dito" onclick="SelectProd(\''+rowObject.Pro_Cod+'\',\''+rowObject.Ite_Lar+'\');"><i class="glyphicon glyphicon-arrow-right"></i></span>'; 
                             }
                         }
-                ],null,null,true,'<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>');
+                ],null,null,true,'<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>');
             function SelectProd(id,desc){
                 $('#Pro_Cod').val(id);
                 $('#producto').val(desc);
@@ -293,7 +293,7 @@ if(isset($ajaxKardex)){
                 //$('#ini').datepicker("setDate", new Date(today.getTime() - (30 * 24 * 3600 * 1000)));
                 //$('#fin').datepicker("setDate", today);
                 $('#proDialog').dialog('close');
-                $.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',{'Pro_Cod':id,'ajaxProd':true}, function(response){
+                $.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',{'Pro_Cod':id,'ajaxProd':true}, function(response){
                     if(response['success']===true){
                         $('#pro_cat').html(response['prod']['Cat_Des']);
                         $('#lin_des').html(response['prod']['Lin_Des']);
@@ -306,7 +306,7 @@ if(isset($ajaxKardex)){
                         $('#pro_bar').html(response['prod']['Pro_Bar']);
                         $('#pro_ubi').html(response['prod']['Ubi_Des']);
 
-                    }else {$.alert("No se logro obtener informacion deñ Producto!");}                                
+                    }else {$.alert("No se logro obtener informacion deï¿½ Producto!");}                                
                 },'json').fail(function(error) { $.alert("El Servidor ha fallado en responder!");});;
                 $('#listProd').jqGrid('setCaption', 'Salidas de Mercaderia '+' - '+desc+' - '+'Desde '+ $('#iniProd').val()+' Hasta '+$('#finProd').val());
                 $('#listProd').Search('#formProdu','ajaxKardex');

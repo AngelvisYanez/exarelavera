@@ -1,10 +1,10 @@
 <?php	
 /** 
  * Alias:	Consultar
- * Descripción: Permite modificar las cuentas del plan de cuentas
- * Fecha de actualización:	2012-04-20
+ * Descripciï¿½n: Permite modificar las cuentas del plan de cuentas
+ * Fecha de actualizaciï¿½n:	2012-04-20
  * Desarrollador:	Lewis Chimarro
- * Fecha de actualización:	2015-03-07
+ * Fecha de actualizaciï¿½n:	2015-03-07
  * Desarrollador:	Lewis Chimarro
  */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -64,7 +64,7 @@ if(isset($excel)){ ?>
 <?php
 if(!isset($op)) $op = 1;
 
-$descripcion = "Cuentas*Impresión";
+$descripcion = "Cuentas*Impresiï¿½n";
 $pag1= $_SERVER['PHP_SELF']."?op=1";
 $pag2= $_SERVER['PHP_SELF']."?op=2";
 tabs(2,$descripcion, $pag1.'*'.$pag2, $op);
@@ -86,11 +86,11 @@ switch($op){
 				  <tr>
 					<td width="164"><input name="op_opciones" type="radio" value="d"   
 					onClick="setfocus(this.form.txt_busqueda)" style="cursor:pointer"  checked>
-					<span class="Etiqueta1">Descripción</span></td>
+					<span class="Etiqueta1">Descripciï¿½n</span></td>
 					<td width="341">
 					<input type="radio" name="op_opciones"  
 					onClick="setfocus(this.form.txt_busqueda)" style="cursor:pointer" value="r">
-					<span class="Etiqueta1">Código</span></td>
+					<span class="Etiqueta1">Cï¿½digo</span></td>
 				  </tr>
 				</table>
 				<table width="572" border="0" cellpadding="0" cellspacing="0" class="BarraBusqueda">
@@ -232,7 +232,7 @@ switch($op){
 						?>
 							<tr>
 								<td>&nbsp;</td>
-					  	  		<td><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
+					  	  		<td><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1) ?></td>
 					  	  		<td>&nbsp;</td>
 					  		</tr>
 						<?php
@@ -259,7 +259,7 @@ switch($op){
 <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js"></script>
 <script type="text/javascript">
 function exportExcel(Pla_Cod,Pla_Obs){
-    $.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',{'excel':true,'codigo':Pla_Cod,'descrip':Pla_Obs}, function(response){
+    $.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',{'excel':true,'codigo':Pla_Cod,'descrip':Pla_Obs}, function(response){
         $.downloadFile($.exportarExcelBlob(response,'Plan de Cuentas'),'PlanCuentas.xls');
     }).fail(function(error) { $.alert("El Servidor ha fallado en responder!");});
     

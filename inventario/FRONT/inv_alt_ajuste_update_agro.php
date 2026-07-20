@@ -32,9 +32,9 @@ if(isset($productos)){
                 $kardex[$i]['Kar_Pre']=  empty($kardex[$i-1]['Promedio'])?0:$kardex[$i-1]['Promedio'];
                 $kardex[$i]['Kar_Ime']= round($kardex[$i]['Kar_Pre']*$kardex[$i]['Kar_Sal'],2);
             }
-            $kardex[$i]['Stock']=$kardex[($i-1)]['Stock']*1+$kardex[$i]['Kar_Can']*1-$kardex[$i]['Kar_Sal'];
-            $kardex[$i]['Saldo']=round($kardex[$i-1]['Saldo']*1+$kardex[$i]['Kar_Ims']*1-$kardex[$i]['Kar_Ime'],2);            
-            $kardex[$i]['Promedio']=$kardex[$i]['Saldo']/$kardex[$i]['Stock'];
+            $kardex[$i]['Stock']=($i > 0 ? $kardex[($i-1)]['Stock']*1 : 0)+$kardex[$i]['Kar_Can']*1-$kardex[$i]['Kar_Sal'];
+            $kardex[$i]['Saldo']=round(($i > 0 ? $kardex[$i-1]['Saldo']*1 : 0)+$kardex[$i]['Kar_Ims']*1-$kardex[$i]['Kar_Ime'],2);            
+            $kardex[$i]['Promedio']=($kardex[$i]['Stock']!=0?round($kardex[$i]['Saldo']/$kardex[$i]['Stock'],2):($i > 0 ? $kardex[$i-1]['Promedio'] : 0));
         }        
         $row['Kar_Stk']=(string)(empty($kardex[$x-1]['Stock'])?0.00:$kardex[$x-1]['Stock']);
 		$row['Real']=$row['Kar_Stk'];
@@ -90,14 +90,14 @@ if(isset($saveStock)){
                                 $.createDialog('#successDialog',150,550);
                                 
                                 kardexGrid.jqGrid({
-                                    url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                    url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                     mtype: "GET", datatype: "json", regional : 'es',//ajaxRowOptions: { async: true },
                                     postData: {productos:true},
                                     autowidth : true, shrinkToFit: true, height: 270,responsive:true,footerRow:true,
                                     caption:'Listado de Productos',hidegrid:false,
                                     cmTemplate: {sortable:false /*,editrules: {edithidden: true}*/},
                                     colModel: [                               
-                                        { label: 'Cód.Int.', name: 'Pro_Cod', key: true, hidden:false,viewable:true, width: 25,align:'center' },                                        
+                                        { label: 'Cï¿½d.Int.', name: 'Pro_Cod', key: true, hidden:false,viewable:true, width: 25,align:'center' },                                        
                                         { label: 'Detalle',name: 'Ite_Lar', width: 150},                                        
                                         { label: 'Stock',name: 'Pro_Stk', width: 30,classes:'columnHighlight3',align:'center',formatter:'number'},
                                         { label: 'P. Promedio',name: 'Pro_Prp', width: 40,classes:'columnHighlight3',align:'right'},
@@ -147,7 +147,7 @@ if(isset($saveStock)){
         }
         function guardar(data){            
             $('.btn-frm').attr('disabled','disabled');
-            $.saveDataJson("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{saveStock:true,stocks:data},
+            $.saveDataJson("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{saveStock:true,stocks:data},
                 function (response){kardexGrid.trigger('reloadGrid', [{ page: 1 }]);},null,null,
                 function (){$('.btn-frm').removeAttr('disabled');}
             );

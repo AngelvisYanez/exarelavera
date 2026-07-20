@@ -31,6 +31,9 @@ class SriScraperManager
         $jobDir = $this->getScraperDir();
         if (!is_dir($jobDir)) {
             @mkdir($jobDir, 0775, true);
+            if (!is_dir($jobDir)) {
+                return ['success' => false, 'error' => 'No se pudo crear directorio de trabajo: ' . $jobDir];
+            }
         }
 
         $job = SriScraperJob::create($this->conexion, $this->datos, $params);
@@ -41,6 +44,9 @@ class SriScraperManager
         $outputDir = $jobDir . DIRECTORY_SEPARATOR . 'downloads' . DIRECTORY_SEPARATOR . $job->id;
         if (!is_dir($outputDir)) {
             @mkdir($outputDir, 0775, true);
+            if (!is_dir($outputDir)) {
+                return ['success' => false, 'error' => 'No se pudo crear directorio de salida: ' . $outputDir];
+            }
         }
         $job->update(['output_dir' => $outputDir]);
 

@@ -39,16 +39,11 @@ if ($thisPost->postBlock($_POST['postID']))
 	if ( isset($editor1) )
 	{
 		if ( isset( $_POST ) )
-			$postArray = &$_POST ;			// 4.1.0 or later, use $_POST
-		else
-			$postArray = &$HTTP_POST_VARS ;	// prior to 4.1.0, use HTTP_POST_VARS
+			$postArray = &$_POST ;
 		
 		foreach ( $postArray as $sForm => $value )
 		{
-			if ( get_magic_quotes_gpc() )
-				$postedValue = htmlspecialchars( stripslashes( $value ) ) ;
-			else
-				$postedValue = htmlspecialchars( $value ) ;
+			$postedValue = htmlspecialchars( $value, ENT_QUOTES, 'UTF-8' ) ;
 		}
 	
 		/**

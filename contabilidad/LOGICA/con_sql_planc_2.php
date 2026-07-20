@@ -457,7 +457,7 @@ function sentencias_con($id, $Par_Sql) {
 			//echo $sql;
 			return $sql;
 		case 343:
-			$sql = "SELECT Tpa_Cod, Tpa_Abr FROM tipo_param WHERE Tpa_Abr='$Par_Sql[0]' AND Tpa_Est='A''";
+			$sql = "SELECT Tpa_Cod, Tpa_Abr FROM tipo_param WHERE Tpa_Abr='$Par_Sql[0]' AND Tpa_Est='A'";
 			//echo $sql;
 			break;
 		case 344:

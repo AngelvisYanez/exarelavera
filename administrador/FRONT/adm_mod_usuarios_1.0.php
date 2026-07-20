@@ -5,10 +5,10 @@
  *
  * @author car.87cod :)
  * @version 1.0
- * Fecha de actualización:	2012-04-18
+ * Fecha de actualizaciï¿½n:	2012-04-18
  * @author lewis.chimarro
  * @version 1.0
- * Fecha de actualización:	2014-05-21 
+ * Fecha de actualizaciï¿½n:	2014-05-21 
  *
  * @package administrador.FRONT
  */
@@ -63,7 +63,7 @@ if (isset($_POST['hdd_save']))
 		$obBD_con1->inicio_transaccion($obBD_conexion->conexion);
 				
 		/**
-		 * Inserción de datos de la inscripción 
+		 * Inserciï¿½n de datos de la inscripciï¿½n 
 		 */
 		$obBD_con1->operacionobBD(18, $_POST['Usu_Cod'], $obBD_conexion);
 		
@@ -97,7 +97,7 @@ if (isset($_POST['hdd_save']))
 		//$obBD_con1->grabarAuditoria($_SERVER['PHP_SELF'], $Ses_Usu_Cod, $obBD_conexion);
 		
 		/**
-		 * Cierre de la transacción 
+		 * Cierre de la transacciï¿½n 
 		 */
 		$obBD_con1->fin_transaccion($obBD_conexion->conexion);
 		
@@ -145,7 +145,7 @@ if(isset($_POST['txt_busqueda']) && !isset($_POST['Usu_Cod']))
 	    <thead>
 	      <tr>
 	        <th width="5%" >Cod. Int. </th>
-	        <th width="8%" >Cédula</th>
+	        <th width="8%" >Cï¿½dula</th>
 	        <th>Apellidos y Nombres </th>
 	        <th>Sucursal</th>
 			<th width="3%" >&nbsp;</th>
@@ -195,7 +195,7 @@ if(isset($_POST['txt_busqueda']) && !isset($_POST['Usu_Cod']))
 	           	</button>					
 	            <input type="hidden" name="Usu_Cod" id="Usu_Cod" value="<?Php echo $row['Usu_Cod'];?>">
 				<input type="hidden" name="txt_busqueda" id="txt_busqueda" value="<?Php echo $_POST['txt_busqueda'];?>"/>
-				<input type="hidden" name="op_opciones" id="op_opciones" value="<?php echo $_POST['op_opciones']?>">
+				<input type="hidden" name="op_opciones" id="op_opciones" value="<?php echo htmlspecialchars($_POST['op_opciones'], ENT_QUOTES, 'UTF-8')?>">
 			</form>
 <?php
 		}

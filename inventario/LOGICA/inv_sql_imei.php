@@ -18,7 +18,7 @@ function sentencias_imei($id, $Par_Sql){
                     FROM producto p
                     INNER JOIN item i ON i.Ite_Cod = p.Ite_Cod
                     INNER JOIN categorias c ON c.Cat_Cod = i.Cat_Cod
-                    LEFT JOIN marca m ON m.Mar_Cod = p.Ite_Cod
+                    LEFT JOIN marca m ON m.Mar_Cod = p.Mar_Cod
                     LEFT JOIN stock s ON s.Pro_Cod = p.Pro_Cod AND s.Suc_Cod = $Par_Sql[0]
                     WHERE p.Pro_Est = 'A' AND c.Emp_Cod = $Par_Sql[1]
                     ORDER BY i.Ite_Lar";
@@ -57,7 +57,7 @@ function sentencias_imei($id, $Par_Sql){
                     FROM imei i
                     INNER JOIN producto p ON p.Pro_Cod = i.Pro_Cod
                     INNER JOIN item it ON it.Ite_Cod = p.Ite_Cod
-                    LEFT JOIN marca m ON m.Mar_Cod = p.Ite_Cod
+                    LEFT JOIN marca m ON m.Mar_Cod = p.Mar_Cod
                     LEFT JOIN stock s ON s.Pro_Cod = p.Pro_Cod AND s.Suc_Cod = $Par_Sql[0]
                     WHERE i.Suc_Cod = $Par_Sql[0]";
             if (!empty($Par_Sql[2])) {
@@ -75,7 +75,7 @@ function sentencias_imei($id, $Par_Sql){
                     FROM imei i
                     INNER JOIN producto p ON p.Pro_Cod = i.Pro_Cod
                     INNER JOIN item it ON it.Ite_Cod = p.Ite_Cod
-                    LEFT JOIN marca m ON m.Mar_Cod = p.Ite_Cod
+                    LEFT JOIN marca m ON m.Mar_Cod = p.Mar_Cod
                     WHERE i.Ime_Cod = $Par_Sql[0]";
             break;
         case 6:
@@ -101,7 +101,7 @@ function sentencias_imei($id, $Par_Sql){
                     FROM producto p
                         INNER JOIN item i ON i.Ite_Cod = p.Ite_Cod
                         INNER JOIN categorias c ON c.Cat_Cod = i.Cat_Cod
-                        LEFT JOIN marca m ON m.Mar_Cod = p.Ite_Cod
+                        LEFT JOIN marca m ON m.Mar_Cod = p.Mar_Cod
                         LEFT JOIN stock s ON s.Pro_Cod = p.Pro_Cod AND s.Suc_Cod = $Par_Sql[0]
                     WHERE p.Pro_Cod = $Par_Sql[1] AND p.Pro_Est = 'A'";
             break;
@@ -116,7 +116,7 @@ function sentencias_imei($id, $Par_Sql){
                     FROM producto p
                         INNER JOIN item i ON i.Ite_Cod = p.Ite_Cod
                         INNER JOIN categorias c ON c.Cat_Cod = i.Cat_Cod
-                        LEFT JOIN marca m ON m.Mar_Cod = p.Ite_Cod
+                        LEFT JOIN marca m ON m.Mar_Cod = p.Mar_Cod
                         LEFT JOIN stock s ON s.Pro_Cod = p.Pro_Cod AND s.Suc_Cod = $Par_Sql[0]
                     WHERE p.Pro_Est = 'A' AND c.Emp_Cod = $Par_Sql[1]";
             if (!empty($Par_Sql[2])) {
@@ -239,7 +239,7 @@ function sentencias_imei($id, $Par_Sql){
                     FROM producto p
                     INNER JOIN item i ON i.Ite_Cod = p.Ite_Cod
                     INNER JOIN categorias c ON c.Cat_Cod = i.Cat_Cod
-                    LEFT JOIN marca m ON m.Mar_Cod = p.Ite_Cod
+                    LEFT JOIN marca m ON m.Mar_Cod = p.Mar_Cod
                     WHERE p.Pro_Est = 'A' AND c.Emp_Cod = $Par_Sql[1]";
             if (!empty($Par_Sql[2])) {
                 $search = addslashes($Par_Sql[2]);

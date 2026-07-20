@@ -1,4 +1,4 @@
-<?php	
+﻿<?php	
 /**
 * @abstract Permite registrar los cheques 
 * @author Erik Niebla
@@ -93,7 +93,7 @@ if(isset($gridAjax)){
         </tr>
       <tr>
       <td height="389" align="left" valign="top">
-        <form action="<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>" method="post" name= "form1" id= "form1">
+        <form action="<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>" method="post" name= "form1" id= "form1">
             <table width="100%" border="0" cellpadding="0" cellspacing="0">
                 <tr>                                   
                     <td width="50%">
@@ -186,7 +186,7 @@ if(isset($gridAjax)){
 ////                        }
 //                    }                   
                     function Search(){	
-                         $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",$("#form1").getData('gridAjax'), function( response ) {
+                         $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",$("#form1").getData('gridAjax'), function( response ) {
                                 if(response['success']===true){
                                     var jgrid=$("#list");
                                     jgrid.clearGrid();
@@ -208,7 +208,7 @@ if(isset($gridAjax)){
                         $.createDateRange('#txt_fec_ini','#txt_fec_fin');
                         var jgrid=$("#list");
                         jgrid.jqGrid({
-                            url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                            url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                             mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },
                             autowidth : true, shrinkToFit: true, height: 220,
                             colModel: [

@@ -1,9 +1,9 @@
-<?php	
+ï»¿<?php	
 /**
 * @abstract Permite realizar la cancelacion de comprobantes por abonos
 * @author Erik Niebla
 * @version 1.0
-* Fecha de creación  2015-07-22
+* Fecha de creaciï¿½n  2015-07-22
 */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/tes_log_banco.php');
@@ -253,7 +253,7 @@ $periodo = $periodos[0];
             var tip = $('#Ban_Tip').val();
             if(!cod=="" && !obs==""){
                 $.post( "",{guardarBanco:true, Pld_Cod:cod, Ban_Cue:num, Ban_Obs:obs, Ban_Tip:tip }, function(response){
-                        $.alert('Transaccion Realizada con Éxito');
+                        $.alert('Transaccion Realizada con ï¿½xito');
                         document.getElementById("empForm").reset();
                 }).fail(function() { 
                     $.alert("El servidor ha fallado en responder!"); 
@@ -266,7 +266,7 @@ $periodo = $periodos[0];
 
         var tipo='';
         function deleteCuenta(cuenta){  
-            $.saveDataJson("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",$.extend({Ren_Cod:$('#Ren_Cod').val()},cuenta), 
+            $.saveDataJson("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",$.extend({Ren_Cod:$('#Ren_Cod').val()},cuenta), 
                 function( r ) { $("#"+(r['tipo']==='C'?'compras':'ventas')).jqGrid().trigger("reloadGrid", [{ page: 1 }]); }
             );
         }
@@ -276,7 +276,7 @@ $periodo = $periodos[0];
             $('#cuenDialog').dialog('close');
         }
         function saveCod(){
-            $.saveDataJson( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",$('#codForm').getData('saveCod'), 
+            $.saveDataJson( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",$('#codForm').getData('saveCod'), 
                 function(r){ $("#list").jqGrid().trigger("reloadGrid", [{ page: 1 }]); }
             );
         }
@@ -296,7 +296,7 @@ $periodo = $periodos[0];
                     { label: 'Cod. Int.', name: 'Ren_Cod', key: true, width: 20,align:"center", hidden:false },  
                     { label: 'Cod. Int.', name: 'Adq_Cod', width: 20,align:"center", hidden:true },  
                     { label: 'Cod. SRI', name: 'Ren_Sri', width: 35,align:"center" }, 
-                    { label: 'Descripción', name: 'Ren_Con', width: 180,align:"left" },
+                    { label: 'Descripciï¿½n', name: 'Ren_Con', width: 180,align:"left" },
                     { label: 'Porcentaje(%)', name: 'Ren_Por', width: 35,align:"right",formatter:'number',formatoptions: {suffix:' %'} },
                     { label: 'Bienes/Servicios', name: 'Ren_Tip', width: 50 ,align:"center" },
                     { label: 'Renta/IVA', name: 'Ren_Ret', width: 50 ,align:"center" },

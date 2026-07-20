@@ -1,8 +1,7 @@
 <?php
 // require_once('../../../administrador/LOGICA/seguridad.php');
-require_once(__DIR__.'/../../Librerias/config.php/register_globals.php'); 
-require_once($APP_REAL_PATH.'../../LOGICA/requisiciones/index.php');
-require_once('../../LOGICA/requisiciones/index.php');
+require_once(__DIR__.'/../../../Librerias/config.php/register_globals.php'); 
+require_once($APP_REAL_PATH.'/compras/LOGICA/requisiciones/index.php');
 require_once('../../../Librerias/procedimientos/almacenados_standar.php');
 
 

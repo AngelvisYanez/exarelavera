@@ -141,9 +141,9 @@ if (isset($productos)) {
 	} catch (Exception $e) {
 		$response = array('success' => false, 'message' => 'No se logró obtener información del Kardex!', 'error' => $e->getMessage());
 	}
-	$responce['rows'] = array_values($array);
-	utf8_encode_deep($responce['rows']);
-	echo json_encode($responce);
+	$response['rows'] = array_values($array);
+	utf8_encode_deep($response['rows']);
+	echo json_encode($response);
 	exit();
 }
 
@@ -266,7 +266,7 @@ if (isset($productos)) {
 							$('#ini').val('2015-01-01'); //$('#ini').datepicker("setDate", new Date(today.getTime() - (30 * 24 * 3600 * 1000)));
 							$('#fin').datepicker("setDate", new Date());
 							kardexGrid.createGrid({
-								url: '<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+								url: '<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
 								mtype: "GET",
 								datatype: "json",
 								regional: 'es', //ajaxRowOptions: { async: true },

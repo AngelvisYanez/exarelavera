@@ -262,6 +262,7 @@ if(isset($proAjax)){
 }
 $ivas= $obBD_con1->getArrayConsulta(16,"",$obBD_conexion);      //SecciÃ³n para obtener los ivas de la tabla iva
 $bankos= $obBD_con1->getArrayConsulta(18,"",$obBD_conexion);    //SecciÃ³n para obtener los bancos de la tabla bancos
+$tipospago= $obBD_con1->getArrayConsulta(69,"",$obBD_conexion);    //SecciÃ³n para obtener los tipos de pago
 
 if(isset($buscarCuentas)){
     $contado1=$obBD_con1->getArrayConsulta(19,$Pla_Cod.'*'.$Ses_Emp_Cod,$obBD_conexion);
@@ -684,7 +685,7 @@ if(isset($comprasReembolsoAjax)){
         $('.panel-main').show();
         //setTimeout(function(){ $("#Pec_Cod").trigger('change'); }, 1000);
         var docs, items, pagos, data=[],vet_num_ant=0,tic_cod_ant=0, Vet_Index=1, Vet_Selected, index, Cof_Con='<?php echo $configs['Cof_Con']; ?>';
-            <?php $array_documentos=$obBD_con1->getArrayConsulta(8,$rs_Punto['Pun_Cod'],$obBD_conexion);?>
+            <?php $array_documentos=(!empty($rs_Punto))?$obBD_con1->getArrayConsulta(8,$rs_Punto['Pun_Cod'],$obBD_conexion):array();?>
         var array_documentos=<?php echo json_encode($array_documentos);?>, ivas_venta=<?php echo json_encode($ivas)?>;
 
         </script>
@@ -1027,11 +1028,11 @@ if(isset($comprasReembolsoAjax)){
                                                     <option value="">Seleccione...</option>
                                                    <?php foreach($rs_pag_sri as $row){
                                                      $selected='';
-                                                      if ($row[Tpc_Sri]==1) {
+                                                      if ($row['Tpc_Sri']==1) {
                                                         $selected='Selected';
                                                       }
-                                                       echo "<option value='$row[Tpc_Cod]' ".$selected."  >$row[Tpc_Sri] - $row[Tpc_Des]</option>";
-                                                    } ?>
+                                                       echo "<option value='".$row['Tpc_Cod']."' ".$selected."  >".$row['Tpc_Sri']." - ".$row['Tpc_Des']."</option>";
+                                                   } ?>
                                                 </select>
                                             </div>
                                         </div>

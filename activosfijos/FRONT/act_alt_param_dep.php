@@ -1,9 +1,9 @@
 <?php
 /**
-* @abstract Permite realizar el registro de áreas,departamentos y subdepartamentos
-* @author José Ambuludí
+* @abstract Permite realizar el registro de ï¿½reas,departamentos y subdepartamentos
+* @author Josï¿½ Ambuludï¿½
 * @version 1.0
-* Fecha de creación  2016-10-21
+* Fecha de creaciï¿½n  2016-10-21
 */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/act_log_param_dep.php');
@@ -21,7 +21,7 @@ if(isset($areaAjax)){
     echo json_encode($response);exit();
 }
 
-//Complemento ajax para obtener el nuevo código
+//Complemento ajax para obtener el nuevo cï¿½digo
 if (isset($ajaxCodigo))
 {
     if($case=='D'){$num=4;}else{$num=6;}
@@ -181,17 +181,17 @@ $periodo = $periodos[0];
                         }
                 ]);
 
-                //Llamo a la función updateTipoActivo desde aqui para que cargue el jstree al momento de cargar la página
+                //Llamo a la funciï¿½n updateTipoActivo desde aqui para que cargue el jstree al momento de cargar la pï¿½gina
                 updateTipoActivo();
 
             });
             
 
             $("#list_1").createGrid({    
-                height: 200, rowNum: 10000000, pgbuttons: false,pgtext: null, caption:'Cuenta Depreciación',            
+                height: 200, rowNum: 10000000, pgbuttons: false,pgtext: null, caption:'Cuenta Depreciaciï¿½n',            
                 colModel: [
-                    { label: 'Dep.Cód', name: 'Dep_Cod', width: 40, align:"center", hidden:false },
-                    { label: 'Cód.Int.', name: 'Pld_Cod', key: true, width: 40,align:"center", hidden:false },                                
+                    { label: 'Dep.Cï¿½d', name: 'Dep_Cod', width: 40, align:"center", hidden:false },
+                    { label: 'Cï¿½d.Int.', name: 'Pld_Cod', key: true, width: 40,align:"center", hidden:false },                                
                     { label: 'Cod. Cuenta', name: 'Pld_Cdc', width: 100 },                      
                     { label: 'Cuenta Contable', name: 'Pld_Des', width: 250  },                               
                     { label:'&nbsp;', name: 'act1', width: 30, align: 'center',viewable: false,
@@ -206,7 +206,7 @@ $periodo = $periodos[0];
             Dep_Des='';
 
             function updateTipoActivo(){
-                $treeview.jstree(true).settings.core.data = {'url': '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>?areaAjax=true',"dataType": "json" };
+                $treeview.jstree(true).settings.core.data = {'url': '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?areaAjax=true',"dataType": "json" };
                 $treeview.jstree(true).refresh();
             } 
 
@@ -223,7 +223,7 @@ $periodo = $periodos[0];
                     
                     if(type==='D'){
                         Dep_Cod=data.node.id;
-                        $.get('<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING)?>',{'Dep_Cod':Dep_Cod,'cargarCuenta':true},
+                        $.get('<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8')?>',{'Dep_Cod':Dep_Cod,'cargarCuenta':true},
                             function(response){
                                 if(Dep_Cod){
                                     $("#list_1").jqGrid("addRowData", 0, response["rows"]);
@@ -243,10 +243,10 @@ $periodo = $periodos[0];
              function addCuenta(a2){ 
                  $('#cuenDialog').dialog('close');
                  if(!Dep_Cod){$.alert('Seleccione un Departamento!');return;}                       
-                 $.saveDataJson("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{Pld_Cod:a2 ,Dep_Cod:Dep_Cod ,addCuenta:true},
+                 $.saveDataJson("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{Pld_Cod:a2 ,Dep_Cod:Dep_Cod ,addCuenta:true},
                     function(r){
                         $("#list_1").jqGrid("clearGridData");
-                        $.get('<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING)?>',{'Dep_Cod':Dep_Cod,'cargarCuenta':true},
+                        $.get('<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8')?>',{'Dep_Cod':Dep_Cod,'cargarCuenta':true},
                             function(response){
                                 if(Dep_Cod){
                                     $("#list_1").jqGrid("addRowData", 0, response["rows"]);
@@ -261,11 +261,11 @@ $periodo = $periodos[0];
             function deleteCuenta(Dep_Cod)
             {
                 var data={eliminarCuenta:true, Depar_Cod:Dep_Cod};
-                $.createDialogConfirm('¿Está seguro que desea eliminar esta cuenta?',data,deleteCta);
+                $.createDialogConfirm('ï¿½Estï¿½ seguro que desea eliminar esta cuenta?',data,deleteCta);
             }
             function deleteCta(data)
             {   
-                $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function(response) {
+                $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function(response) {
                     if(response['success']===true){
                         $.alert("Transaccion Realizada con &Eacute;xito!"); 
                         $("#list_1").jqGrid("clearGridData");                         

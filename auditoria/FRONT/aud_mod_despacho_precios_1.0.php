@@ -207,7 +207,7 @@ $embed = !empty($_GET['embed']);
 
 <script type="text/javascript">
 $(function () {
-    var urlBase = '<?php echo str_replace("'", "\\'", $_SERVER['PHP_SELF']); ?>';
+    var urlBase = <?php echo json_encode($_SERVER['PHP_SELF']); ?>;
 
     $(document).on('click', '.btn-guardar-fila', function () {
         var act = $(this).data('act');

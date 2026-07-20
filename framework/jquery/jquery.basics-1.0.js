@@ -257,12 +257,19 @@ $.SearchOrDialogArray=function(name,callback,array,field){ field=field||'search'
 $.getDialogGrid=function(name){var id=name.replace("Dialog","");return $(id+"Grid");};
 $.fn.getDialogGrid=function(){if(this.length===1){ if($.vv(this.attr('role'))) return this; var id=this.attr('id').replace("Dialog","");return $('#'+id+"Grid");} return null;};
 $.alert=function(message,action,icon){
-	icon=icon||($.vv(message)?'info-sign':'alert');message=message||'El Servidor ha fallado en responder!'; var dialog=$('<div title="MENSAJE DEL SISTEMA">'+'<div style="font-size:14px;"><center><b>'+message+'</b></center></div></div>');	//$("body").append(dialog);
-	dialog.dialog({
-	  dialogClass: 'dialog-alert-test', closeText:"Cerrar Mensaje", modal: true,autoOpen: true,resizable: false,position:{my: "center",at: "center",of: $('body')}, buttons: [{text: "Aceptar",click:function(){$(this).dialog( "close" );}, icons:{ primary: "ui-icon-check" }}],
-	  close: function(){$($(this).parent()[0].nextSibling).unbind('click');$(this).remove();if($.vv(action))action();},show: {effect: "fade",duration: 500},
-	  open: function(){ var dg=$(this); $(dg.parent()[0].nextSibling).bind('click', function (){ dg.dialog('close'); });}
-    }).parent().children(".ui-dialog-titlebar").prepend($.createIcon(icon)); return false;
+	if(typeof Swal!=='undefined'){
+		var iconMap={'ok':'success','remove':'error','alert':'warning','info-sign':'info','info':'info'};
+		var swalIcon=iconMap[icon]||icon||'info';
+		message=message||'El Servidor ha fallado en responder!';
+		Swal.fire({title:'MENSAJE DEL SISTEMA',html:'<b>'+message+'</b>',icon:swalIcon,confirmButtonText:'Aceptar',customClass:{confirmButton:'btn btn-primary'},buttonsStyling:false}).then(function(){if($.vv(action))action();});
+	}else{
+		icon=icon||($.vv(message)?'info-sign':'alert');message=message||'El Servidor ha fallado en responder!'; var dialog=$('<div title="MENSAJE DEL SISTEMA">'+'<div style="font-size:14px;"><center><b>'+message+'</b></center></div></div>');
+		dialog.dialog({
+		  dialogClass: 'dialog-alert-test', closeText:"Cerrar Mensaje", modal: true,autoOpen: true,resizable: false,position:{my: "center",at: "center",of: $('body')}, buttons: [{text: "Aceptar",click:function(){$(this).dialog( "close" );}, icons:{ primary: "ui-icon-check" }}],
+		  close: function(){$($(this).parent()[0].nextSibling).unbind('click');$(this).remove();if($.vv(action))action();},show: {effect: "fade",duration: 500},
+		  open: function(){ var dg=$(this); $(dg.parent()[0].nextSibling).bind('click', function (){ dg.dialog('close'); });}
+		}).parent().children(".ui-dialog-titlebar").prepend($.createIcon(icon)); return false;
+	}
 };
 $.fn.alertDiv= function(msg,animate,time){
 	msg=msg||{header:'SISTEMA:',message:'No se pudo completar la acci&oacute;n.',type:2,max:1,unique:true}; msg.type=msg.type||2;var type='danger';msg.max=msg.max||1;msg.unique=($.vv(msg.unique)?msg.unique:true);time=time||5000;var id='alert_id_'+(Math.round(Math.random() * 99999)).toString(),timeExtra=550;animate=animate||false;
@@ -383,3 +390,47 @@ $.getCookie=function(cname){ var na=cname+"=",dc=decodeURIComponent(document.coo
 $.removeCookie=function(key,value){ var t = new Date();	t.setMilliseconds(t.getMilliseconds() + -1 * 864e+5); document.cookie=[encodeURIComponent(key),'=',String(value),'; expires=' + t.toUTCString()].join(''); };
 /* require jquer.validate */
 //$.clearValidate=function(){$.validator.prototype.showErrors=function(){}; $.validator.setDefaults({debug:false,onsubmit:false});};
+// VALIDACION CUSTOM - Reemplaza popups nativos del navegador con SweetAlert2
+$(document).on('invalid','input[required],select[required],textarea[required],input[pattern],select[pattern],textarea[pattern]',function(e){
+	e.preventDefault();e.stopImmediatePropagation();
+	var $t=$(this),msg=$t.data('msg'),tag=$t[0].tagName.toUpperCase();
+	if(!msg){
+		var nombre=$t.attr('placeholder')||$t.attr('name')||'Este campo';
+		if($t.attr('required')) msg='El campo "'+nombre+'" es obligatorio.';
+		else if($t.attr('pattern')) msg='El campo "'+nombre+'" tiene un formato invalido.';
+		else msg='El campo "'+nombre+'" es invalido.';
+	}
+	if(typeof Swal!=='undefined'){
+		Swal.fire({title:'Validacion',html:'<b>'+msg+'</b>',icon:'warning',confirmButtonText:'Aceptar',customClass:{confirmButton:'btn btn-primary'},buttonsStyling:false}).then(function(){$t.focus();});
+	}else if(typeof $.alert==='function'){
+		$.alert(msg,function(){$t.focus();},'warning');
+	}else{
+		alert(msg);$t.focus();
+	}
+	return false;
+});
+$(document).on('submit','form',function(e){
+	var $form=$(this),invalidos=[];
+	$form.find('input[required],select[required],textarea[required],input[pattern],select[pattern],textarea[pattern]').each(function(){
+		var $t=$(this),val=$t.val();
+		if($t.attr('required')&&(val===undefined||val===null||$.trim(val)==='')) invalidos.push($t);
+		else if($t.attr('pattern')&&val&&!new RegExp($t.attr('pattern')).test(val)) invalidos.push($t);
+	});
+	if(invalidos.length>0){
+		e.preventDefault();e.stopImmediatePropagation();
+		var $primero=invalidos[0],msg=$primero.data('msg');
+		if(!msg){
+			var nombre=$primero.attr('placeholder')||$primero.attr('name')||'Este campo';
+			if($primero.attr('required')) msg='El campo "'+nombre+'" es obligatorio.';
+			else msg='El campo "'+nombre+'" tiene un formato invalido.';
+		}
+		if(typeof Swal!=='undefined'){
+			Swal.fire({title:'Validacion',html:'<b>'+msg+'</b>',icon:'warning',confirmButtonText:'Aceptar',customClass:{confirmButton:'btn btn-primary'},buttonsStyling:false}).then(function(){$primero.focus();});
+		}else if(typeof $.alert==='function'){
+			$.alert(msg,function(){$primero.focus();},'warning');
+		}else{
+			alert(msg);$primero.focus();
+		}
+		return false;
+	}
+});

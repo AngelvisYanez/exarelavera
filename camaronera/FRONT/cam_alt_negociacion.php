@@ -38,7 +38,7 @@ if (isset($saveNegociacion)) {
         $obBD_con1->operacionobBD(3, $encabezado_negociacion, $obBD_conexion);
         $response = array('success' => true, 'message' => "Transaccion realizada con exito");
     } catch (Exception $e) {
-        $response = array('success' => false, 'message' => "No se ha logrado realizar la Transaccion", 'error' => $obBD_conIns->MsgError);
+        $response = array('success' => false, 'message' => "No se ha logrado realizar la Transaccion", 'error' => $obBD_con1->MsgError);
     }
     echo json_encode($response);
     exit();

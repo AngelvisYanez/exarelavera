@@ -32,9 +32,11 @@ Desarrollador:	Erik Niebla
     <!--[if !IE]> -->
     <link type="text/css" rel="stylesheet" href="../../framework/plugins/animate/animate-3.4.0.min.css" />
     <!-- <![endif]-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+    <script type="text/ecmascript" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script type="text/javascript">
     var socketVentanas;
-    var UrlSaveJson="<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", Ses_Emp_Cod=<?php echo isset($_SESSION['Ses_Emp_Cod'])?$_SESSION['Ses_Emp_Cod']:"''"; ?>, Ses_Suc_Cod=<?php echo isset($_SESSION['Ses_Suc_Cod'])?$_SESSION['Ses_Suc_Cod']:"''"; ?>, Ses_Usu_Cod=<?php echo isset($_SESSION['Ses_Usu_Cod'])?$_SESSION['Ses_Usu_Cod']:"''"; ?>, Ses_Prs_Cod=<?php echo isset($_SESSION['Ses_Prs_Cod'])?$_SESSION['Ses_Prs_Cod']:"''"; ?>;
+    var UrlSaveJson="<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>", Ses_Emp_Cod=<?php echo isset($_SESSION['Ses_Emp_Cod'])?$_SESSION['Ses_Emp_Cod']:"''"; ?>, Ses_Suc_Cod=<?php echo isset($_SESSION['Ses_Suc_Cod'])?$_SESSION['Ses_Suc_Cod']:"''"; ?>, Ses_Usu_Cod=<?php echo isset($_SESSION['Ses_Usu_Cod'])?$_SESSION['Ses_Usu_Cod']:"''"; ?>, Ses_Prs_Cod=<?php echo isset($_SESSION['Ses_Prs_Cod'])?$_SESSION['Ses_Prs_Cod']:"''"; ?>;
     $(document).ready(function () {
         //$.jgrid.defaults.styleUI='Bootstrap';
         $.jgrid.defaults.regional="es";

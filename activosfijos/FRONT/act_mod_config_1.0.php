@@ -1,15 +1,15 @@
 <?php
 /**
- * @abstract Permite realizar la edición de la configuración de activos.
- * @author José Ambuludí
+ * @abstract Permite realizar la ediciï¿½n de la configuraciï¿½n de activos.
+ * @author Josï¿½ Ambuludï¿½
  * @version 1.0
- * Fecha de creación  2016-12-08
+ * Fecha de creaciï¿½n  2016-12-08
  */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/act_log_config.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
 /**
-* Creacion del Objeto de conexión
+* Creacion del Objeto de conexiï¿½n
 */
 $obBD_conexion = new Class_Log_Conexion_Config($Ses_Dat_Dis);
 /**
@@ -17,7 +17,7 @@ $obBD_conexion = new Class_Log_Conexion_Config($Ses_Dat_Dis);
 */
 $obBD_con1 =  new Class_Log_Datos_Config;
 
-//Sección para verificar si ya se registro un ingreso en la tabla config_activo
+//Secciï¿½n para verificar si ya se registro un ingreso en la tabla config_activo
 if(isset($verificarConfig)){
     $rs_verificar=$obBD_con1->getRowConsulta(8, $Ses_Suc_Cod, $obBD_conexion);
     if(count($rs_verificar)>0){
@@ -26,7 +26,7 @@ if(isset($verificarConfig)){
     echo json_encode($response);
     exit();
 }
-//Sección para comprobar de que no exista una configuración ya registrada
+//Secciï¿½n para comprobar de que no exista una configuraciï¿½n ya registrada
 if(isset($comprobar)){
     $rs_comprobar=$obBD_con1->getArrayConsulta(9, $Ses_Suc_Cod, $obBD_conexion);
     if(count($rs_comprobar)>0){
@@ -35,14 +35,14 @@ if(isset($comprobar)){
     echo json_encode($response);
     exit();
 }
-//Sección para cargar datos registrados
+//Secciï¿½n para cargar datos registrados
 if(isset($cargar)){
     $response['config']=$obBD_con1->getRowConsulta(8, $Ses_Suc_Cod, $obBD_conexion);
     $response['porcent']=$obBD_con1->getArrayConsulta(5, $Ses_Suc_Cod, $obBD_conexion);
     echo json_encode($response);
     exit();
 }
-//Sección para insertar un registro 
+//Secciï¿½n para insertar un registro 
 if(isset($updateConfiguracion)){
     $responce['success']=false;$responce['message']="No se ha logrado realizar la Transaccion"; 
     $obBD_con1->inicio_transaccion($obBD_conexion->conexion);
@@ -66,7 +66,7 @@ if(isset($updateConfiguracion)){
     echo json_encode($responce);
     exit();
 }
-//Sección para eliminar un registro de porcentaje de la tabla activo_poorcent
+//Secciï¿½n para eliminar un registro de porcentaje de la tabla activo_poorcent
 if(isset($deletePorcentaje)){
     $response['success']=false;$response['message']="No se ha logrado realizar la transacci&oacute;n";
     $obBD_con1->inicio_transaccion($obBD_conexion->conexion);
@@ -100,7 +100,7 @@ if(isset($deletePorcentaje)){
                                 <div id="modificar">
                                     <!--Clave primaria de la tabla config_activo-->
                                     <input type="hidden" id="Cfg_Cod" name="Cfg_Cod">
-                                    <!--Campo que especifica que se hará un insert en la tabla activo_porcent-->
+                                    <!--Campo que especifica que se harï¿½ un insert en la tabla activo_porcent-->
                                     <input type="hidden" id="Insert" name="Insert" value="0">
                                     <div class="form-group">
                                         <label class="col-sm-2 control-label label-xs">D&iacute;as de depreciar&oacute;n:</label>
@@ -124,7 +124,7 @@ if(isset($deletePorcentaje)){
                                             <fieldset class="exa-fieldset">
                                                 <legend class="Titulos2">Registro de porcentajes de depreciaci&oacute;n</legend>
                                                 <table id="tbl_por"></table><!--tbl_por=>tabla_porcentajes-->
-                                                <div id="pag_tpo"></div><!--pag_tpo=>paginación de la tabla porcentaje-->
+                                                <div id="pag_tpo"></div><!--pag_tpo=>paginaciï¿½n de la tabla porcentaje-->
                                             </fieldset>
                                         </div>
                                     </div>
@@ -193,7 +193,7 @@ if(isset($deletePorcentaje)){
                     position:"last"
                 });
                 $("#tbl_por").jqGrid('resizeGrid');
-                //SECCIÓN PARA MANEJO DE RADIO BUTTONS
+                //SECCIï¿½N PARA MANEJO DE RADIO BUTTONS
                 $('#rad_ba1').change(function(){
                     $('#dm').hide();
                     $('#dt').show();
@@ -203,30 +203,30 @@ if(isset($deletePorcentaje)){
                     $('#dt').hide();
                 });
             });
-            //INICIO DE LA SECCIÓN DE FUNCIONES NECESARIAS PARA EL MANEJO DE DATOS
-            //Función para verificar si existe un registro la tabla config_activo
+            //INICIO DE LA SECCIï¿½N DE FUNCIONES NECESARIAS PARA EL MANEJO DE DATOS
+            //Funciï¿½n para verificar si existe un registro la tabla config_activo
             function verificar(){
-                $.post("<?Php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING);?>",{verificarConfig:true},function(response){
+                $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8');?>",{verificarConfig:true},function(response){
                     if(response['existe']===true){
                         $('#modificar').show();
                         $('#alerta').hide();
                     }
                 },'json').fail(function(){$.alert();});
             }
-            //Función para comprobar de que no exista al menos un registro en la tabla activo_deprecia
+            //Funciï¿½n para comprobar de que no exista al menos un registro en la tabla activo_deprecia
             function comprobar(){
-                $.post("<?Php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING);?>",{comprobar:true},function(response){
+                $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8');?>",{comprobar:true},function(response){
                     if(response['existe']===true){
                         $('#btn_gua').attr('disabled',true);
                         $("input[type=radio]").attr('disabled', true);
                         $("#tbl_por").stopGridEdit();
                         $('#btn_agr').addClass('ui-state-disabled');
-                        $.alert('El proceso de depreciaci&oacute;n ya se encuentra iniciado, por tal motivo no se puede modificar la configuración..!!');
+                        $.alert('El proceso de depreciaci&oacute;n ya se encuentra iniciado, por tal motivo no se puede modificar la configuraciï¿½n..!!');
                     }
                 },'json').fail(function(){$.alert();});
             }
             function cargar(){
-                $.post("<?Php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING);?>",{cargar:true},function(response){
+                $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8');?>",{cargar:true},function(response){
                     if(response['porcent'].length>0){
                         $("#tbl_por").setRows(response['porcent']);
                     }else{$("#tbl_por").setRowsByIndex(arrayPorcentaje,'Apr_Cod');$('#Insert').val(1);}
@@ -235,19 +235,19 @@ if(isset($deletePorcentaje)){
                     $('#Cfg_Cod').val(response['config']['Cfg_Cod']);
                 },'json').fail(function(){$.alert();});
             }
-            //Función para eliminar una fila del jqgrid
+            //Funciï¿½n para eliminar una fila del jqgrid
             function eliminarFila(index,Apr_Cod){
                 $.createDialogConfirm('Desea ELIMINAR el registro seleccionado',null,function(){
                     $('#tbl_por').jqGrid('delRowData',index);
-                    $.post("<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING);?>",{'Apr_Cod':Apr_Cod,'deletePorcentaje':true},function(){},'json').fail(function(){$.alert();});
+                    $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8');?>",{'Apr_Cod':Apr_Cod,'deletePorcentaje':true},function(){},'json').fail(function(){$.alert();});
                 });
             }
-            //Función para guardar un registro
+            //Funciï¿½n para guardar un registro
             function saveForm(){
                 var data=$('#frm_Con').serializeObject();
                 data['porcentaje']=$("#tbl_por").getGridBatch();
                 data['updateConfiguracion']=true;
-                $.post("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data,function(response){
+                $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data,function(response){
                     if(response['success']===true){
                         $.alert("Transaccion Realizada con &Eacute;xito!");
                         cargar();

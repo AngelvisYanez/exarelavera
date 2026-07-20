@@ -470,7 +470,7 @@ function sentencias_inv($id, $Par_Sql) {
                                 LEFT JOIN sucursal ON sucursal.Suc_Cod=puntos_imp.Suc_Cod 
                 WHERE 
                     Kar_Est='A' AND 
-                    Pro_Cod=$Par_Sql[2]  AND 
+                    Pro_Cod=$Par_Sql[2]
                 ORDER BY orden";
             //echo $sql;
             return $sql;

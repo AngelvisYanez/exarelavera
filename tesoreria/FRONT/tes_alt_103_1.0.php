@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
 * Descripci�n: Permite generar archivo XML del formulario 104
 * Fecha de creaci�n:	2015-05-21
@@ -310,7 +310,7 @@ if (isset($html))
 
        function generaHtml(){
             $('#Html103').html('');
-            $.get("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",$("#form1").serializeArray(), function(response){	
+            $.get("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",$("#form1").serializeArray(), function(response){	
                 if(response['success']===true){$('#Html103').html(response['html_103']);}
 		else{alert("No se logro generar el Xml!");}
             },'json').fail(function(error) {alert("El Servidor ha fallado en responder!");});

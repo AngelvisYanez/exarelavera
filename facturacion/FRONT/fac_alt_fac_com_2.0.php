@@ -1094,8 +1094,8 @@ else
 			$ice_cod[]=$row_rs_ice['Ice_Int'];
 			$ice_por[]=$row_rs_ice['Ice_Por'];
 		}
-		$ice_cod = 'Array(\'' . @implode('\', \'', $ice_cod) . '\')';
-		$ice_por = 'Array(\'' . @implode('\', \'', $ice_por) . '\')';		
+		$ice_cod = 'Array(\'' . implode('\', \'', $ice_cod) . '\')';
+		$ice_por = 'Array(\'' . implode('\', \'', $ice_por) . '\')';		
 		/**
 		* Consulta datos de los proveedores
 		*/

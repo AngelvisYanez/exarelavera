@@ -699,7 +699,7 @@ if (!empty($usuarioActual['Usuario'])) {
 }
 
 $listaCiudades = array();
-$resCiu = @mysqli_query($obBD_conexion->conexion, "SELECT Ciu_Cod, Ciu_Des FROM ciudad WHERE Ciu_Des != '' ORDER BY Ciu_Des");
+$resCiu = mysqli_query($obBD_conexion->conexion, "SELECT Ciu_Cod, Ciu_Des FROM ciudad WHERE Ciu_Des != '' ORDER BY Ciu_Des");
 if ($resCiu) {
     while ($rowC = mysqli_fetch_assoc($resCiu)) {
         $listaCiudades[] = $rowC;

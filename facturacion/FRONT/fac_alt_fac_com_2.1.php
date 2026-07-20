@@ -1106,8 +1106,8 @@ else
 			$ice_cod[]=$row_rs_ice['Ice_Int'];
 			$ice_por[]=$row_rs_ice['Ice_Por'];
 		}
-		$ice_cod = 'Array(\'' . @implode('\', \'', $ice_cod) . '\')';
-		$ice_por = 'Array(\'' . @implode('\', \'', $ice_por) . '\')';		
+		$ice_cod = 'Array(\'' . implode('\', \'', $ice_cod) . '\')';
+		$ice_por = 'Array(\'' . implode('\', \'', $ice_por) . '\')';		
 		/**
 		* Consulta datos de los proveedores
 		*/
@@ -1456,7 +1456,7 @@ if(isset($txt_busqueda))
  <script>
          var codigos=<?php if (count($rs_tip_compr) > 0) echo json_encode($rs_tip_compr); else echo 'new Array()';?>,liquida={limite:false,maximo:13000,actual:0}; 
          function checkLiquidacion(data){
-             $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function(response) {
+             $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function(response) {
                             if(response['success']===true&&response['total']!==null){                                 
                                 if((response['total']['total'])*1>=11000){
                                     liquida['actual']=(response['total']['total'])*1;liquida['limite']=true;

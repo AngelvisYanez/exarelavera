@@ -243,7 +243,7 @@ function setNumAutElectronica() {
     if ($('#Aut_Tem').val() === 'E') {
         var Tic_Sri = '' + $('#Tic_Cod_n option:selected').data('Tic_Sri');
         var Suc_Cod = '' + $('#Suc_Cod').val();
-        $('#Aut_Sri').val(Suc_Cod + (0).padLeft(10 - Suc_Cod.length - Tic_Sri.length) + Tic_Sri).prop('readonly', true)
+        $('#Aut_Sri').val(Suc_Cod + (0).toString().padStart(10 - Suc_Cod.length - Tic_Sri.length, '0') + Tic_Sri).prop('readonly', true)
     } else {
         $('#Aut_Sri').val('').prop('readonly', false)
     }

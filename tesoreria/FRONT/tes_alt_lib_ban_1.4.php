@@ -1,4 +1,4 @@
-<?php	
+﻿<?php	
 /**
 * @abstract Permite registrar los cheques 
 * @author Erik Niebla
@@ -169,7 +169,7 @@ if(isset($save)){
       <td height="389" align="left" valign="top">
           
 <!-- INICIO FORMULARIO BUSQUEDA -->
-        <form enctype="multipart/form-data" action="<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>" method="post" name= "form1" id= "form1">
+        <form enctype="multipart/form-data" action="<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>" method="post" name= "form1" id= "form1">
             <table width="100%" border="0" cellpadding="0" cellspacing="0">
                 <tr>  
                      <td width="350">
@@ -515,7 +515,7 @@ if(isset($save)){
                     function validaCheque(){  
                         var numAnt=$("#NumChe").val();
                          if(tipo==="Egresos"&&$("#periodos").val()!==''){
-                            $.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',{'Ban_Cod':getPeriodo()["Ban_Cod"],'valChe': numAnt}, function(response){
+                            $.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',{'Ban_Cod':getPeriodo()["Ban_Cod"],'valChe': numAnt}, function(response){
                                 if(response['success']===true){
                                     if(response['valid']===false){
                                         numChe=(response['Che_Num']*1)+1;
@@ -568,7 +568,7 @@ if(isset($save)){
                                     if(batch.length>0){ 
                                         var data=$('#formIngreso').serializeObject();
                                         data["save"]=batch;
-                                        $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function( response ) {
+                                        $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( response ) {
                                             if(response['success']===true){
                                                 $('#impCompr').attr('href',response['link']);
                                                 $('#successDialog').dialog("option", "height", 150);
@@ -595,7 +595,7 @@ if(isset($save)){
                                     if(batch.length>0){ 
                                         var data=$('#formComp').serializeObject();
                                         data["save"]=batch;
-                                        $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function( response ) {
+                                        $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( response ) {
                                             if(response['success']===true){
                                                 $('#impCompr').attr('href',response['link']);
                                                 if(typeof response['cheque']==='undefined'||response['cheque']===''){
@@ -630,7 +630,7 @@ if(isset($save)){
                                     if(batch.length>0){ 
                                         var data=$('#formDiario').serializeObject();
                                         data["save"]=batch;
-                                        $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function( response ) {
+                                        $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( response ) {
                                             if(response['success']===true){
                                                 $('#impCompr').attr('href',response['link']);
                                                 $('#successDialog').dialog("option", "height", 150);
@@ -666,7 +666,7 @@ if(isset($save)){
                         $('#Che_Fec').toggleClass('disabled').find('input').toggleAttr('disabled');
                         var gridComp=$("#comp");
                         gridComp.jqGrid({
-                            url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                            url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                             mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },                             
                             autowidth : true, shrinkToFit: true, height: 120,
                             cmTemplate: {sortable:false},
@@ -904,7 +904,7 @@ if(isset($save)){
     }
     function setChequeNum(){
         if(tipo==="Egresos"&&$("#periodos").val()!==''&&$('#es_cheque').is(':checked')){
-            $.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',{'Ban_Cod':getPeriodo()["Ban_Cod"],'cheNum':true}, function(response){
+            $.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',{'Ban_Cod':getPeriodo()["Ban_Cod"],'cheNum':true}, function(response){
                 if(response['success']===true){
                     numChe=(response['Che_Num']*1)+1;
                     $("#NumChe").val(numChe).alertMsg();                                  
@@ -913,7 +913,7 @@ if(isset($save)){
         }else{ $("#NumChe").val(0).parent().find('.lblMsg').html('').end().find('.imgMsg').removeAttr('src'); }    
     }
     function saveBene() {
-         $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{saveBene:true,apel:$('#beneApe').val(),nomb:$('#beneNom').val()}, function( response ) {
+         $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{saveBene:true,apel:$('#beneApe').val(),nomb:$('#beneNom').val()}, function( response ) {
             if(response['success']===true){
                 $('#apellido').val($('#beneApe').val());$('#nombre').val($('#beneNom').val());$('#Bene_Id').val(response['id']);
                 $('#addBenef').dialog('close');$('#beneDialog').dialog('close');

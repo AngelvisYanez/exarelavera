@@ -119,7 +119,7 @@ if(isset($productos)){
             }
             $kardex[$i]['Stock']=$kardex[($i-1)]['Stock']*1+$kardex[$i]['Kar_Can']*1-$kardex[$i]['Kar_Sal'];
             $kardex[$i]['Saldo']=round($kardex[$i-1]['Saldo']*1+$kardex[$i]['Kar_Ims']*1-$kardex[$i]['Kar_Ime'],2);            
-            $kardex[$i]['Promedio']=$kardex[$i]['Saldo']/$kardex[$i]['Stock'];
+            $kardex[$i]['Promedio']=($kardex[$i]['Stock']!=0?round($kardex[$i]['Saldo']/$kardex[$i]['Stock'],2):$kardex[$i-1]['Promedio']);
         }        
         $row['Kar_Stk']=(string)(empty($kardex[$x-1]['Stock'])?0.00:$kardex[$x-1]['Stock']);
         $row['Kar_Prp']=(string)round((empty($kardex[$x-1]['Promedio'])?0.00:$kardex[$x-1]['Promedio']),8);
@@ -172,7 +172,7 @@ if(isset($productos)){
 												<?php foreach($sucursales as $datos){?>
 														<option value="<?php echo $datos['Suc_Cod'];?>"><?php echo $datos['Suc_Des'];?></option>
 												<?php }?>
-											<select>
+											</select>
 											</div>
 										</div>
 									</div>	
@@ -233,7 +233,7 @@ if(isset($productos)){
 								$('#ini').val('2000-01-01'); //$('#ini').datepicker("setDate", new Date(today.getTime() - (30 * 24 * 3600 * 1000)));
 								$('#fin').datepicker("setDate", new Date()); 
                                 kardexGrid.createGrid({
-                                    url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                    url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                     mtype: "GET", datatype: "json", regional : 'es',//ajaxRowOptions: { async: true },
                                     postData: $('#formFiltros').getData('productos'),
                                     autowidth : true, shrinkToFit: true, height: 270,responsive:true,footerRow:true,

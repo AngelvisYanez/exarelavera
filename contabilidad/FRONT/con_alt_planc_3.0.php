@@ -245,7 +245,7 @@ if (isset($ajaxCodigo)) {
                 des_plan: $('#PlanCuen').val()
             }, function(r) {
                 $('#PlanCuen').val('');
-                $("#Pla_Cod").load('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>', {
+                $("#Pla_Cod").load('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>', {
                     listaPlanes: true
                 }, function(resp) {
                     $('#planDialog').dialog('close');
@@ -271,7 +271,7 @@ if (isset($ajaxCodigo)) {
         }
 
         function updateCodigo() {
-            $.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>', {
+            $.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>', {
                 'Pld_Cod': $('#prefijo').html() + $('#cod_cuenta').val(),
                 'pre': $('#prefijo').html(),
                 'Pld_Rec': $('#cod_padre').val(),
@@ -286,7 +286,7 @@ if (isset($ajaxCodigo)) {
 
         function validaCodigo() {
             $('.btn-guarda').attr('disabled', 'disabled');
-            $.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>', {
+            $.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>', {
                     'Pld_Cod': $('#prefijo').html() + $('#cod_cuenta').val(),
                     'pre': $('#prefijo').html(),
                     'Pld_Rec': $('#cod_padre').val(),
@@ -313,7 +313,7 @@ if (isset($ajaxCodigo)) {
             $('#btn_expandir').show();
             $('#plan-tittle').html($('#Pla_Cod option:selected').text());
             $treeview.jstree(true).settings.core.data = {
-                'url': '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>?planAjax=true&Pla_Cod=' + $('#Pla_Cod option:selected').val(),
+                'url': '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?planAjax=true&Pla_Cod=' + $('#Pla_Cod option:selected').val(),
                 "dataType": "json"
             };
             $treeview.jstree(true).refresh();

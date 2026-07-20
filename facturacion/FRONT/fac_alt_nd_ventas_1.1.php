@@ -146,7 +146,7 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(133, $Tic_Cod.'*'.$row_rs_vended
                            </div> 
                               <div class="col-sm-12" style="padding-top:10px">
                                   
-                                  <button type="button" class="btn btn-inverse btn-sm" title="Atrás" onclick="window.history.back();" >
+                                  <button type="button" class="btn btn-inverse btn-sm" title="Atrï¿½s" onclick="window.history.back();" >
                                                 <i class="glyphicon glyphicon-arrow-left"></i>
                                                 <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
                                    </button>
@@ -180,7 +180,7 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(133, $Tic_Cod.'*'.$row_rs_vended
                                          autowidth : true, shrinkToFit: true, height: 100,responsive:true,
                                          //colNames:['Inv No','Date', 'Client', 'Amount','Tax','Total','Notes'],
                                          colModel:[
-                                                 {name:'Pro_Cod',label:'Cód. Int', width:60, sorttype:"int",align:'center'},
+                                                 {name:'Pro_Cod',label:'Cï¿½d. Int', width:60, sorttype:"int",align:'center'},
                                                  {name:'Iva_Cod',label:'CodIva', width:20,hidden:true},
                                                  {name:'Producto',label:'Producto', width:200},                                                 
                                                  {name:'Vet_Can',label:'Cant.', width:40, align:"right"},
@@ -211,7 +211,7 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(133, $Tic_Cod.'*'.$row_rs_vended
                              function saveForm(){
                                 var data={'saveForm':true, 'Ventas_ND': $("#ventas_cambio").val()};
                                 
-                                $.saveDataJson('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',data, function(response){   
+                                $.saveDataJson('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',data, function(response){   
                                         $.alert('El Registro se Guardo Con Exito!');
                                         $('#btnGuardar').attr('disabled','disabled');
                                         return false;
@@ -242,7 +242,7 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(133, $Tic_Cod.'*'.$row_rs_vended
                                         <!-- Form Name -->
                                         <legend class="Titulos2">Seleccione Cliente</legend>
                                         <div class="form-group">
-                                            <label class="col-xs-2 control-label label-xs" for="cliente">Cédula/R.U.C:</label>  
+                                            <label class="col-xs-2 control-label label-xs" for="cliente">Cï¿½dula/R.U.C:</label>  
                                             <div class="col-xs-6">
                                                   <div class="input-group input-group-xs">                                                
                                                       <input type="text" id="Cli_Cod" name="Cli_Cod" data-cliente='Cli_Cod' value="" style="display: none" />
@@ -260,7 +260,7 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(133, $Tic_Cod.'*'.$row_rs_vended
                                             <div class="col-xs-10"><span id="cliente" data-cliente='cliente' class="form-control input-xs"></span></div>
                                           </div>
                                           <div class="form-group">  
-                                            <label class="col-xs-2 control-label label-xs" for="direccion">Dirección:</label>  
+                                            <label class="col-xs-2 control-label label-xs" for="direccion">Direcciï¿½n:</label>  
                                             <div class="col-xs-10"><span id="direccion" data-cliente='Prs_Dir' class="form-control input-xs"></span></div>                                 
                                           </div>                                
                                     </fieldset>
@@ -302,7 +302,7 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(133, $Tic_Cod.'*'.$row_rs_vended
                                               </div>
                                              </div>
                                               <div class="col-md-3" style="padding-top: 10px;">
-                                                  <div class=""><button type="button"  onclick="this.form.submit()" class="btn btn-sm btn-success" title="Ejecutar Búsqueda"><span class="glyphicon glyphicon-search"></span> &nbsp;Filtrar</button></div>
+                                                  <div class=""><button type="button"  onclick="this.form.submit()" class="btn btn-sm btn-success" title="Ejecutar Bï¿½squeda"><span class="glyphicon glyphicon-search"></span> &nbsp;Filtrar</button></div>
                                               </div>
                                     </fieldset>
                                     <fieldset class="exa-fieldset">
@@ -314,7 +314,7 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(133, $Tic_Cod.'*'.$row_rs_vended
                                                 <input name="Max" id="Max" type="text" class="form-control input-xs max" value="" disabled=""/>
                                             </div>                                 
                                             <div class="col-xs-4">                                    
-                                                <button type="button"  onclick="select()" class="btn btn-xs btn-primary max" title="Ejecutar Selección" disabled=""><span class="glyphicon glyphicon-check"></span> &nbsp;Seleccionar</button>
+                                                <button type="button"  onclick="select()" class="btn btn-xs btn-primary max" title="Ejecutar Selecciï¿½n" disabled=""><span class="glyphicon glyphicon-check"></span> &nbsp;Seleccionar</button>
                                             </div>                                 
                                         </div>
                                     </fieldset>    
@@ -367,11 +367,11 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(133, $Tic_Cod.'*'.$row_rs_vended
                         compGrid=$("#list").createGrid({    
                             postData:$('#formCompTemp').getData('ajaxND_Ventas'),
                             colModel: [                               
-                                { label: 'Cód.Int.', name: 'Vet_Cod', key: true, hidden:true,viewable:true }, 
+                                { label: 'Cï¿½d.Int.', name: 'Vet_Cod', key: true, hidden:true,viewable:true }, 
                                 { label: 'Fecha', name: 'Caj_Fec',align:"center", width: 40  },  
-                                { label: 'Cédula/R.U.C.', name: 'Prs_Ced', width: 55, align:"center", classes:'bgNoRight'},
+                                { label: 'Cï¿½dula/R.U.C.', name: 'Prs_Ced', width: 55, align:"center", classes:'bgNoRight'},
                                 { label: 'Cliente', name: 'cliente', width: 100, classes:'bgNoRight'},
-                                { label: 'Observación', name: 'Vet_Obs', width: 80, classes:'bgNoRight'},
+                                { label: 'Observaciï¿½n', name: 'Vet_Obs', width: 80, classes:'bgNoRight'},
                                 { label: 'Pago', name: 'Vet_Pag', width: 80,hidden:true, classes:'bgNoRight'},
                                 { label: 'Valor', name: 'Vet_Tot', width: 40, align: 'right', decimalPlaces: '2', summaryRound: 2,formatter:"currency",
                                         formatoptions: {prefix:'', thousandsSeparator:',',decimalSeparator:'.'},summaryTpl: "Total: {0}",summaryType: "sum" , classes:'bgNoRight'
@@ -409,7 +409,7 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(133, $Tic_Cod.'*'.$row_rs_vended
                                 var subgrid_table_id = subgrid_id+"_t";         
                                 $("#"+subgrid_id).html("<table id='"+subgrid_table_id+"' class='scroll'></table>");
                                 $("#"+subgrid_table_id).jqGrid({
-                                        url:"<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>?ajaxSubgrid="+row_id,datatype: "json",regional : 'es',
+                                        url:"<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?ajaxSubgrid="+row_id,datatype: "json",regional : 'es',
                                         autowidth : true, shrinkToFit: true,cmTemplate: {sortable:false},//colNames: ['No','Item','Qty','Unit','Line Total'],
                                         colModel: [
                                                 {label:'Cod.Int.',name:"Cpp_Cod",width:80,key:true,align:"center",hidden:true},
@@ -417,7 +417,7 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(133, $Tic_Cod.'*'.$row_rs_vended
                                                 {label:'No. Compr.',name:"Com_Codigo",width:45,align:"center"},
                                                 {label:'Fecha',name:"Pag_Fec",width:45,align:"center"},
                                                 {label:'Valor',name:"Pag_Val",width:45, align: 'right', formatter:'currency', decimalPlaces: '2', formatoptions: {prefix:'$ ', thousandsSeparator:',',decimalSeparator:'.'}},
-                                                {label:'Observación',name:"Pag_Obs",width:100},
+                                                {label:'Observaciï¿½n',name:"Pag_Obs",width:100},
                                                 {label:'Tipo',name:"Pag_Des",width:50,align:"center"},                      
                                                     { label:'<center><i class="ui-icon ui-icon-gear"></i></center>', name: 'act1', width: 18, align: 'center',viewable: false,
                                                         formatter:function (cellvalue, options, rowObject) { 
@@ -460,17 +460,17 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(133, $Tic_Cod.'*'.$row_rs_vended
         </div>
     </div>
     <!--INICIO DEL DIALOGO BUSCAR CLIENTE--> 
-    <div id="cliDialog" title="Búsqueda de Clientes"></div>
-    <div id="cliFactDialog" title="Búsqueda de Clientes"></div>
+    <div id="cliDialog" title="Bï¿½squeda de Clientes"></div>
+    <div id="cliFactDialog" title="Bï¿½squeda de Clientes"></div>
     <script type="text/javascript">
         $(document).ready(function() {
             let model=[
-                { label: 'Cód.Int.', name: 'Cli_Cod', key: true,hidden:true,viewable: true },                
-                { label: 'Cédula/R.U.C.', name: 'Prs_Ced', width: 50 },                      
+                { label: 'Cï¿½d.Int.', name: 'Cli_Cod', key: true,hidden:true,viewable: true },                
+                { label: 'Cï¿½dula/R.U.C.', name: 'Prs_Ced', width: 50 },                      
                 { label: 'Cliente', name: 'cliente', width: 190, cellattr: function (rowId, tv, rawObject, cm, rdata) { return 'style="white-space: normal;"'; }},                   
-                { label: 'Dirección', name: 'Prs_Dir',hidden:true,viewable: true },                      
+                { label: 'Direcciï¿½n', name: 'Prs_Dir',hidden:true,viewable: true },                      
                 { label:'<center><i class="ui-icon ui-icon-gear"></i></center>', name: 'act1', width: 18, align: 'center',viewable: false,formatter:'gridButton',formatoptions:{action:'selectCliente',data:'Cli_Cod'}},
-                { label: 'Cód.Int.', name: 'Prs_Cod', hidden:true,viewable: true }
+                { label: 'Cï¿½d.Int.', name: 'Prs_Cod', hidden:true,viewable: true }
             ];
             $('#cliDialog').createSearchDialog({colModel:model},{title:'Cliente'});
             model[4]['formatoptions']['action']='selectClienteFact';

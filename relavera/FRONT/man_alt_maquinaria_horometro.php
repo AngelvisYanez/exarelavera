@@ -187,6 +187,9 @@ if (isset($_POST['saveHorometroAjax'])) {
         $ruta_destino = "../../imagenes/" . $emp_cod . "/horometro/";
         if (!file_exists($ruta_destino)) {
             @mkdir($ruta_destino, 0777, true);
+            if (!is_dir($ruta_destino)) {
+                error_log("No se pudo crear directorio: $ruta_destino");
+            }
         }
 
         // Subida de imagen Inicial (opcional)
@@ -610,7 +613,7 @@ if (isset($_GET['getEvidenciasAjax'])) {
     <script language="javascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
     <link rel="stylesheet" type="text/css" href="../RECURSOS/maquinaria_horometro.css" />
     <script>
-        var user_role = '<?php echo $user_role; ?>';
+        var user_role = <?php echo json_encode($user_role); ?>;
     </script>
 
 </HEAD>

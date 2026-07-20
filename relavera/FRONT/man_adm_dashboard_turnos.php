@@ -1087,7 +1087,7 @@ if (isset($getDashboardEjecutivoAjax)) {
         WHERE manifiesto_turnos_det.Tud_Fec BETWEEN '$fecha_inicio_esc' AND '$fecha_fin_esc' AND $base_where";
     $res = $obBD_con1->consulta($sql_total, $conexion);
     if ($res === false) {
-        $obBD_con1->echoJson(array('success' => false, 'message' => 'Error SQL (total): ' . (is_object($conexion) ? mysqli_error($conexion) : 'sin conexión')));
+        $obBD_con1->echoJson(array('success' => false, 'message' => 'Error de base de datos'));
         exit;
     }
     $row = $obBD_con1->fetch_assoc($res);
@@ -1101,7 +1101,7 @@ if (isset($getDashboardEjecutivoAjax)) {
         WHERE manifiesto_turnos_det.Tud_Fec BETWEEN '$fecha_ant_ini_esc' AND '$fecha_ant_fin_esc' AND $base_where";
     $res_ant = $obBD_con1->consulta($sql_ant, $conexion);
     if ($res_ant === false) {
-        $obBD_con1->echoJson(array('success' => false, 'message' => 'Error SQL (anterior): ' . (is_object($conexion) ? mysqli_error($conexion) : '')));
+        $obBD_con1->echoJson(array('success' => false, 'message' => 'Error de base de datos'));
         exit;
     }
     $row_ant = $obBD_con1->fetch_assoc($res_ant);
@@ -1155,7 +1155,7 @@ if (isset($getDashboardEjecutivoAjax)) {
         GROUP BY manifiesto.Pla_Cod, manifiesto_plantas.Pla_Nom ORDER BY total DESC";
     $res_pla = $obBD_con1->consulta($sql_plantas, $conexion);
     if ($res_pla === false) {
-        $obBD_con1->echoJson(array('success' => false, 'message' => 'Error SQL (plantas): ' . (is_object($conexion) ? mysqli_error($conexion) : '')));
+        $obBD_con1->echoJson(array('success' => false, 'message' => 'Error de base de datos'));
         exit;
     }
     $plantas_list = array();
@@ -1183,7 +1183,7 @@ if (isset($getDashboardEjecutivoAjax)) {
         GROUP BY COALESCE(chofer.Prs_Cod, 0), COALESCE(CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape), 'Sin asignar') ORDER BY total DESC";
     $res_ch = $obBD_con1->consulta($sql_chofer, $conexion);
     if ($res_ch === false) {
-        $obBD_con1->echoJson(array('success' => false, 'message' => 'Error SQL (choferes): ' . (is_object($conexion) ? mysqli_error($conexion) : '')));
+        $obBD_con1->echoJson(array('success' => false, 'message' => 'Error de base de datos'));
         exit;
     }
     $choferes_list = array();
@@ -1228,7 +1228,7 @@ if (isset($getDashboardEjecutivoAjax)) {
         GROUP BY COALESCE(manifiesto.Veh_Cod, 0), COALESCE(vehiculo.Veh_Pla, 'Sin placa') ORDER BY total DESC";
     $res_pl = $obBD_con1->consulta($sql_placa, $conexion);
     if ($res_pl === false) {
-        $obBD_con1->echoJson(array('success' => false, 'message' => 'Error SQL (placas): ' . (is_object($conexion) ? mysqli_error($conexion) : '')));
+        $obBD_con1->echoJson(array('success' => false, 'message' => 'Error de base de datos'));
         exit;
     }
     $placas_list = array();
@@ -1264,7 +1264,7 @@ if (isset($getDashboardEjecutivoAjax)) {
         GROUP BY DATE(manifiesto_turnos_det.Tud_Fec) ORDER BY dia ASC";
     $res_d = $obBD_con1->consulta($sql_dias, $conexion);
     if ($res_d === false) {
-        $obBD_con1->echoJson(array('success' => false, 'message' => 'Error SQL (días): ' . (is_object($conexion) ? mysqli_error($conexion) : '')));
+        $obBD_con1->echoJson(array('success' => false, 'message' => 'Error de base de datos'));
         exit;
     }
     $por_dia = array();

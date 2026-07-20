@@ -419,7 +419,7 @@ if (isset($obtenerPromedio)) {
               pgtext: 'Página {0} de {1}', // Texto del paginador
               datatype: "json",
               mtype: "POST",
-              url: "<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",
+              url: "<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",
               postData: {
                   ajaxKardex: true,
                 Pro_Cod: function() { return $('#Pro_Cod').val(); },
@@ -822,7 +822,7 @@ if (isset($obtenerPromedio)) {
       $('#fin').datepicker("setDate", new Date());
       }
       $('#kardex').jqGrid('setCaption', data['Ite_Lar'] + ' - ' + 'Desde ' + $('#ini').val() + ' Hasta ' + $('#fin').val());
-      $.getDataJson('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>', {
+      $.getDataJson('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>', {
       Pro_Cod: data['Pro_Cod'],
       ajaxProd: true
       }, function(response) {

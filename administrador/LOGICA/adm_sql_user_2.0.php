@@ -419,15 +419,6 @@ function sentencias_cli($id,$Par_Sql) {
 					$sql="DELETE FROM access WHERE Dat_Cod=$Par_Sql[Dat_Cod] AND Acc_Usr='$Par_Sql[Acc_Usr]'";
 					return $sql;
 					break;
-                case 53:
-                    $estado="AND usu.Usu_Est='A'";
-                    if(isset($Par_Sql['Sin_Est']))
-                        $estado="";
-                    $sql="SELECT * FROM sucursal AS suc
-                        INNER JOIN usuarios AS usu ON usu.Prs_Cod =$Par_Sql[Prs_Cod]
-                        where Emp_Cod=$_SESSION[Ses_Emp_Cod] $estado";
-                    return $sql;
-                break;
 				case 55:
 					// Determinar el tipo de búsqueda
 					$op_opciones = isset($Par_Sql['op_opciones']) ? $Par_Sql['op_opciones'] : '';
@@ -462,12 +453,12 @@ function sentencias_cli($id,$Par_Sql) {
 								AND cliente.Cli_Est = 'A'
 							$limits";
 					return $sql;
-					// break;
+					break;
 				case 56:
 					$Pla_Cod_value = (isset($Par_Sql['Pla_Cod']) && $Par_Sql['Pla_Cod'] !== '' && $Par_Sql['Pla_Cod'] !== null) ? $Par_Sql['Pla_Cod'] : 'NULL';
 					$sql="INSERT INTO manifiesto_usuario (Usu_Cod, Cli_Cod, Pla_Cod) VALUES ($Par_Sql[Usu_Cod], $Par_Sql[Cli_Cod], $Pla_Cod_value)";
 					return $sql;
-					//break
+					break;
 				case 57://  Obtener cliente asignado a un usuario desde manifiesto_usuario
 					$sql="SELECT mu.Cli_Cod, mu.Usu_Cod, mu.Pla_Cod, cliente.Prs_Cod, persona.Prs_Ced, 
 							IF(persona.Prs_Nom=persona.Prs_Ape, persona.Prs_Nom, CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape)) AS nombre

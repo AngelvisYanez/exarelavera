@@ -1,4 +1,4 @@
-<?php
+ï»¿<?php
 /**
 * @abstract Permite registrar los cheques
 * @author Erik Niebla
@@ -109,7 +109,7 @@ if(isset($save)){
             var grid = $("#list"), data = new Array(), batch=grid.getGridBatch(function(val){ return (val['Che_Cob']!==""&&val['Che_Est']!=="A"&&val['Che_Est']!==""); });
             if(batch.length===0){ $("#list").startGridEdit(); $.alert("No has Realizado Cambios!"); return; }
             $.each(batch,function(i,v){ data.push({id:v['id'],cobro:v['Che_Cob'],estado:v['Che_Est'],ext:(v['t_type']==='EXT'?'EXT':'')}); });
-            $.saveDataJson("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{save:data},
+            $.saveDataJson("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{save:data},
                  function(){ $('#list').Search('#form1','gridAjax'); },
                  function(){ $("#list").startGridEdit(); },
                  function(){ $("#list").startGridEdit(); }
@@ -120,7 +120,7 @@ if(isset($save)){
            $("#list").createGrid({
                height: 270,caption:' ',footerrow:true,pgbuttons: false,pgtext: null,
                colModel: [
-                   { label: 'Cód.Int.', name: 'id', key: true, width: 15,align:"center", hidden:true },
+                   { label: 'Cï¿½d.Int.', name: 'id', key: true, width: 15,align:"center", hidden:true },
                    { label: 'Beneficiario', name: 'proveedor', width: 175,classes:'bgNoRight bgNoColor'},
                    { label: 'Banco', name: 'banco', width: 150, classes:'bgNoColor' },
                    { label: 'No. Che.', name: 'Che_Num', width: 40, align:"center",classes:'bgNoRight'},

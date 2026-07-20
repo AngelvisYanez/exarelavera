@@ -970,8 +970,8 @@ elseif(isset($codigo))
 		$ice_cod[]=$row_rs_ice['Ice_Int'];
 		$ice_por[]=$row_rs_ice['Ice_Por'];
 	}
-	$ice_cod = 'Array(\'' . @implode('\', \'', $ice_cod) . '\')';
-	$ice_por = 'Array(\'' . @implode('\', \'', $ice_por) . '\')';
+	$ice_cod = 'Array(\'' . implode('\', \'', $ice_cod) . '\')';
+	$ice_por = 'Array(\'' . implode('\', \'', $ice_por) . '\')';
 	
 	/** 
 	* Consulta el sustento 
@@ -1441,7 +1441,7 @@ if($existe_pagos>0){ /* inicio if($existe_pagos>0){  */ ?>
         var codigos=<?php if (count($rs_tip_compr) > 0) echo json_encode($rs_tip_compr); else echo 'new Array()';?>,liquida={limite:false,maximo:13000,actual:0}; 
          function checkFechaIva(data){
              var TicCod=$('#Tic_Cod').val();
-             $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{Cop_Fec:data,Check_Iva:true,Tic_Cod:TicCod,Tic_Sri:getSriCod(TicCod)}, function( response ) {
+             $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{Cop_Fec:data,Check_Iva:true,Tic_Cod:TicCod,Tic_Sri:getSriCod(TicCod)}, function( response ) {
                             if(response['success']===true){                                 
                                 if(response['total']>0){
                                     ivas_rows=response['ivas'];
@@ -1499,12 +1499,8 @@ if($existe_pagos>0){ /* inicio if($existe_pagos>0){  */ ?>
               <td height="24" class="Etiqueta1"><span class="Asterisco">* </span>Tipo de Documento:</td>
               <td colspan="3"><span class="LetraNegra">
 			  <?Php 
-			  /* Envia el parï¿½metro SQL,  */
-			  $sql = "AND Cop_Num<>";
-			  //echo $sql;
-			 
-			   ?>
-                <select name="Tic_Cod" id="Tic_Cod" onChange="if(this.value===4 && this.value===5){document.getElementById('NotasCredito').className = 'muestra';}else{document.getElementById('NotasCredito').className = 'oculta';}; checkImportacion(this.value);/*ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_con_numcom=1&Prv_Cod=' + document.getElementById('Prv_Cod').value +'&Cop_Bus=<?Php echo $rs_proveed[0]['Cop_Num'];  ?>&Cop_Num=' + document.getElementById('Cop_Num').value +'&Tic_Cod=' + this.value + '&Ins_Mod=<?Php echo $sql; ?>','div_con_num_com'); */ /*if(getSriCod($('#Tic_Cod').val())==='4') checkFechaIva($('#Cop_Fec').val());*/"  >
+			  ?>
+                <select name="Tic_Cod" id="Tic_Cod" onChange="if(this.value===4 && this.value===5){document.getElementById('NotasCredito').className = 'muestra';}else{document.getElementById('NotasCredito').className = 'oculta';}; checkImportacion(this.value);/*ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_con_numcom=1&Prv_Cod=' + document.getElementById('Prv_Cod').value +'&Cop_Bus=<?Php echo $rs_proveed[0]['Cop_Num'];  ?>&Cop_Num=' + document.getElementById('Cop_Num').value +'&Tic_Cod=' + this.value + '&Ins_Mod=AND Cop_Num<>','div_con_num_com'); */ /*if(getSriCod($('#Tic_Cod').val())==='4') checkFechaIva($('#Cop_Fec').val());*/"  >
                   <option ></option>
                   <?Php foreach($rs_tip_compr as $row_rs_tip_compr){ ?>
                   <option <?Php if($rs_proveed[0]['Tic_Cod'] == $row_rs_tip_compr['Tic_Cod']){echo "selected";}?>  value="<?php echo $row_rs_tip_compr['Tic_Cod']?>"><?php echo $row_rs_tip_compr['Tic_Des'];?></option>
@@ -1530,7 +1526,7 @@ if($existe_pagos>0){ /* inicio if($existe_pagos>0){  */ ?>
               <td width="15%" height="24" class="Etiqueta1"><span class="Asterisco">* </span>N&ordm;. Documento :</td>
             <td><span class="LetraNegra">
               <input name="Cop_Num" type="text" id="Cop_Num" size="17" maxlength="17" value="<?Php echo $rs_proveed[0]['Cop_Num'] ?>" 
-			  onblur="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_con_numcom=1&Prv_Cod=' + document.getElementById('Prv_Cod').value +'&Tic_Cod=' + document.getElementById('Tic_Cod').value +'&Cop_Bus=<?Php echo $rs_proveed[0]['Cop_Num'];  ?>&Cop_Num=' + this.value+ '&Ins_Mod=<?Php echo $sql; ?>','div_con_num_com');">
+			  onblur="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_con_numcom=1&Prv_Cod=' + document.getElementById('Prv_Cod').value +'&Tic_Cod=' + document.getElementById('Tic_Cod').value +'&Cop_Bus=<?Php echo $rs_proveed[0]['Cop_Num'];  ?>&Cop_Num=' + this.value+ '&Ins_Mod=AND Cop_Num<>','div_con_num_com');">
               <script language="javascript">
 			  //document.getElementById("Cop_Num").value = '333-333-333333333';
 			  </script>
@@ -2334,7 +2330,7 @@ value="<?Php echo $row_rs_proveed['Cop_Int']?>" size="3" maxlength="10" ></td>
               <input type="text" name="Ret_Pld_Cod" value="<?php if(count($row_rs_RetPld)>0) echo $row_rs_RetPld[0]['Pld_Cod']; ?>" style="display: none" />
              <?php } ?> 
               <?php if($llevarContabilidad['Cof_Con']=='N'||($llevarContabilidad['Cof_Con']=='S'&&count($row_rs_RetPld)>0)){ ?>  
-              <div id="Reten_Asum" style="display:inline-block;"><div style="width:20px;display:inline-block;height: 16px;"><input id="Ret_Asu" name="Ret_Asu"  type="checkbox" value="S" style="position: absolute;margin-top: 5px;" <?php if($Asumida['Ret_Asu']=='S') echo 'checked'; ?>/></div><b> Asumir Retención </b></div> 
+              <div id="Reten_Asum" style="display:inline-block;"><div style="width:20px;display:inline-block;height: 16px;"><input id="Ret_Asu" name="Ret_Asu"  type="checkbox" value="S" style="position: absolute;margin-top: 5px;" <?php if($Asumida['Ret_Asu']=='S') echo 'checked'; ?>/></div><b> Asumir Retenciï¿½n </b></div> 
               <?php } ?> 
         </div>
             

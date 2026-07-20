@@ -1072,7 +1072,7 @@ if (isset($cargarAsiento)) {
         //Funci�n para cargar el detalle de la factura
         function cargarDetalle(factura) {
             $('#detfacturaDialog').dialog('open');
-            $.post("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", {
+            $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>", {
                 cargarAsiento: true,
                 Com_Cod: 0,
                 Vet_Cod: factura.Vet_Cod
@@ -1092,7 +1092,7 @@ if (isset($cargarAsiento)) {
 
         function cargarFactura(factura) {
             $("#Det_Fac").jqGrid('resizeGrid');
-            $.post("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", {
+            $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>", {
                 cargarFactura: true,
                 Vet_Cod: factura.Vet_Cod
             }, function(response) {
@@ -1163,7 +1163,7 @@ if (isset($cargarAsiento)) {
             var data = $("[id^='frm_']").getData('saveFactura');
             data['Det_Fac'] = $("#Det_Fac").getGridBatch();
 
-            $.saveDataJson("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", data, function(response) {
+            $.saveDataJson("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>", data, function(response) {
                 asientos($('#Com_Cod').val(), $('#Vet_Cod').val());
                 $('#frm_cab')[0].reset();
                 $('#frm_dat')[0].reset();

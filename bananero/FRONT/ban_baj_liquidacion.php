@@ -33,7 +33,7 @@ if(isset($deleteLib)){
         $obBD_ins1->operacionobBD('productor_tarja.update', array('where'=>array('Lib_Cod'=>$Lib_Cod),'Lib_Cod'=>null), $obBD_conexionIns);
         if(!is_null($Com_Cod)&&!empty($Com_Cod))
             $obBD_ins1->operacionobBD('comprobantes.update', array('where'=>array('Com_Cod'=>$Com_Cod),'Com_Est'=>"I"), $obBD_conexionIns);
-    } catch(Exception $e){ $obBD_con_set->rollBack_nomsn($obBD_conexionIns); $resp['message']=$e->getMessage(); $obBD_ins1->echoJson($resp); }
+    } catch(Exception $e){ $obBD_ins1->rollBack_nomsn($obBD_conexionIns); $resp['message']=$e->getMessage(); $obBD_ins1->echoJson($resp); }
     // finalizo la transaccion y compruebo errores
     $resp['success']=$obBD_ins1->fin_transaccion_nomsn($obBD_conexionIns);
     if(!$resp['success']) $resp['error']=$obBD_ins1->MsgError;

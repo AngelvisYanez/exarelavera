@@ -4,10 +4,10 @@
  *
  * @author car.87cod :)
  * @version 1.0
- * Fecha de actualización:	2012-04-18
+ * Fecha de actualizaciï¿½n:	2012-04-18
  * @author lewis.chimarro
  * @version 1.0
- * Fecha de actualización:	2014-05-21 
+ * Fecha de actualizaciï¿½n:	2014-05-21 
  *
  * @package administrador.FRONT
  */
@@ -126,7 +126,7 @@ if(isset($_POST['txt_busqueda']) && !isset($_POST['Usu_Cod']))
     <thead>
       <tr>
         <th width="6%" >Cod. Int. </th>
-        <th width="8%" >Cédula</th>
+        <th width="8%" >Cï¿½dula</th>
         <th >Apellidos y Nombres </th>
         <th>Sucursal</th>
 		<th width="3%" >&nbsp;</th>
@@ -177,7 +177,7 @@ if(isset($_POST['txt_busqueda']) && !isset($_POST['Usu_Cod']))
            	</button>					
             <input type="hidden" name="Usu_Cod" id="Usu_Cod" value="<?Php echo $row['Usu_Cod'];?>">
 			<input type="hidden" name="txt_busqueda" id="txt_busqueda" value="<?Php echo $_POST['txt_busqueda'];?>"/>
-			<input type="hidden" name="op_opciones" id="op_opciones" value="<?php echo $_POST['op_opciones']?>">
+			<input type="hidden" name="op_opciones" id="op_opciones" value="<?php echo htmlspecialchars($_POST['op_opciones'], ENT_QUOTES, 'UTF-8')?>">
 			</form>
 <?php
 		}
@@ -325,7 +325,7 @@ if (isset($_POST['Usu_Cod']))
     <thead>
       <tr>
         <th width="6%" >Cod. Int. </th>
-        <th width="8%" >Cédula</th>
+        <th width="8%" >Cï¿½dula</th>
         <th >Apellidos y Nombres </th>
         <th>Sucursal</th>
       </tr>

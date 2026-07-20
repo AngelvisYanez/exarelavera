@@ -14,7 +14,7 @@ function validar_cal(form,div_1,div_2,valor_1,valor_2,confir)
 	{
 		if(document.getElementById(valor_1).value == "")
 		{
-			alert("Debe seleccionar un item del Combo");
+			$.alert("Debe seleccionar un item del Combo",null,'warning');
 		}
 		else
 		{
@@ -26,7 +26,7 @@ function validar_cal(form,div_1,div_2,valor_1,valor_2,confir)
 	{
 		if(document.getElementById(valor_2).value == "")
 		{
-			alert("Debe seleccionar un item del Combo");
+			$.alert("Debe seleccionar un item del Combo",null,'warning');
 		}
 		else
 		{

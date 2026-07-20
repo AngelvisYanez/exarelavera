@@ -1,9 +1,12 @@
 <?php
+// DEBUG ONLY - NOT FOR PRODUCTION
+if (php_sapi_name() !== 'cli') { http_response_code(403); exit('CLI only'); }
 /**
  * Debug: verificar exa_master.data y la consulta de loadBasesDatosDirectorio
  */
+require_once __DIR__ . '/../config_db.php';
 echo "=== 1. Verificar tabla exa_master.data ===" . PHP_EOL;
-$conn = new mysqli('localhost', 'root', '', 'exa_master', 3306);
+$conn = new mysqli(DB_HOST, DB_USER, DB_PASS, 'exa_master', 3306);
 $conn->set_charset('utf8');
 
 $r = $conn->query("SHOW TABLES LIKE 'data'");
@@ -54,7 +57,7 @@ if ($r) {
 }
 
 echo PHP_EOL . "=== 3. Verificar base exa (donde estan los datos) ===" . PHP_EOL;
-$conn2 = new mysqli('localhost', 'root', '', 'exa', 3306);
+$conn2 = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME, 3306);
 $conn2->set_charset('utf8');
 
 $r = $conn2->query("SHOW TABLES LIKE 'data'");

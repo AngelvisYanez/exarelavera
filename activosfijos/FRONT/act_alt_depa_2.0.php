@@ -279,7 +279,7 @@ if (isset($saveAsignacion)) {
             //Grid de activos a asignar
             $(function () {
                 $("#grid_activo").jqGrid({
-                    url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                    url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                     mtype: "GET", datatype: "local", regional: 'es',
                     responsive: true,
                     autowidth: true, shrinkToFit: true, height: 150,
@@ -315,7 +315,7 @@ if (isset($saveAsignacion)) {
                 data['saveAsignacion'] = true;
 
                 if (my_array.length > 0) {
-                    $.post("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING) ?>", data, function (response) {
+                    $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8') ?>", data, function (response) {
                         if (response['success'] === true) {
                             $.alert("Transaccion Realizada con &Eacute;xito!");
                             Dep_Cod=response['Dep_Cod'];

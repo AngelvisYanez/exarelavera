@@ -1,7 +1,7 @@
 <?php	
 /**
 * @abstract Permite realizar el registro de un perito
-* @author José Ambuludí
+* @author Josï¿½ Ambuludï¿½
 * @version 1.0
 * Fecha de creaci?n  2016-06-03
 */
@@ -40,7 +40,7 @@ if(isset($existePersona)){
         $responce['perito']=false;
     }
     
-    /* Esta sección comprueba si la persona existe o no, si existe enviará true caso contrario false*/
+    /* Esta secciï¿½n comprueba si la persona existe o no, si existe enviarï¿½ true caso contrario false*/
     if(isset($responce['data']['Prs_Ced']))
     {
         $responce['persona']=true;
@@ -53,7 +53,7 @@ if(isset($existePersona)){
     exit();
 }
 
-/*Sección ajax para guardar un nuevo perito*/
+/*Secciï¿½n ajax para guardar un nuevo perito*/
 if(isset($savePerito)){   
     $responce['success']=false;$responce['message']="No se ha logrado realizar la Transaccion"; 
     $obBD_con1->inicio_transaccion($obBD_conexion->conexion);
@@ -61,7 +61,7 @@ if(isset($savePerito)){
     {
         /*En caso de la persona no estar registrada primero la registra y luego inserta en la tabla perito*/
         $obBD_con1->operacionobBD(606, $Prs_Ced.'*'.$Prs_Nom.'*'.$Prs_Ape.'*'.$Prs_Sex.'*'.$Ciu_Cod.'*'.$Prs_Dir.'*'.$Prs_Tel.'*'.$Prs_Cel.'*'.$Ide_Cod, $obBD_conexion);
-        /*Sección para obtener el código de la última inserción en la tabla persona*/
+        /*Secciï¿½n para obtener el cï¿½digo de la ï¿½ltima inserciï¿½n en la tabla persona*/
         $Prs_Cod = $obBD_con1->insercionid($obBD_conexion->conexion);
         $obBD_con1->operacionobBD(602, $Pri_Esp.'*'.$Pri_Obs.'*'.$Prs_Cod.'*'.$Ses_Emp_Cod, $obBD_conexion);
     }
@@ -114,7 +114,7 @@ if(isset($savePerito)){
                                         </div>
                                     </div>
                                 </div>
-                                <!-- Sección para visualizar el tipo de documento -->
+                                <!-- Secciï¿½n para visualizar el tipo de documento -->
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label label-sm">Tipo de Documento:</label>
                                     <div class="col-sm-6">
@@ -220,14 +220,14 @@ if(isset($savePerito)){
              
     <script type="text/javascript">
    
-    //Sección para el choosen
+    //Secciï¿½n para el choosen
     $(document).ready(function(){
         $("#Ciu_Cod").createChosen();                
     });
     
-    /*Función para registrar un perito*/
+    /*Funciï¿½n para registrar un perito*/
     function saveForm(){
-        $.post("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",
+        $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",
         $('#FormPerito').getData('savePerito'), 
         function(response){	
             if(response['success']===true){
@@ -238,7 +238,7 @@ if(isset($savePerito)){
         },'json').fail(function(error) {$('#FormPerito')[0].reset();$.alert("El Servidor ha fallado en responder!");});
     }
       
-    /*Función para comprobar de que un perito existe o no*/
+    /*Funciï¿½n para comprobar de que un perito existe o no*/
     function comprobarForm()
     { 
         var cedula=$('#Prs_Ced').val();
@@ -247,7 +247,7 @@ if(isset($savePerito)){
         if(respuesta===true)
         {
             var data={Prs_Ced:cedula,existePersona:true};
-            $.post("<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING); ?>",data,function(response){
+            $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data,function(response){
                 
                 if(response['perito']===true)
                 {

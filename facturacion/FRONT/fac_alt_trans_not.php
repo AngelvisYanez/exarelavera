@@ -610,7 +610,7 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(133, $Tic_Cod.'*'.$row_rs_vended
               var codigo = $('#For_Cod').val();
               $( "#Caj_Fec" ).datepicker( "option", "minDate",periodo[2] );
               $( "#Caj_Fec" ).datepicker( "option", "maxDate",periodo[3] );
-              $.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',{cuentas:true,Pla_Cod:periodo[1],Pec_Cod:periodo[0],For_Cod:codigo}, function(response){
+              $.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',{cuentas:true,Pla_Cod:periodo[1],Pec_Cod:periodo[0],For_Cod:codigo}, function(response){
                     $("#Pag_Pld").html(response['html']);
               },'json').fail(function(error) { console.log(error); $.alert("El Servidor ha fallado en responder!");});
           }
@@ -635,7 +635,7 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(133, $Tic_Cod.'*'.$row_rs_vended
           function validaVetNum(){  
                 var numAnt=$("#Vet_Num").val();
                 if(numAnt!==''&&numAnt!=='0'){                                       
-                    $.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',{'Caj_Fec':$('#Caj_Fec').val(),'valVetNum': numAnt}, function(response){
+                    $.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',{'Caj_Fec':$('#Caj_Fec').val(),'valVetNum': numAnt}, function(response){
                         if(response['success']===true){
                             $("#Vet_Num").alertMsg();
                             if(response['valid']===false){
@@ -657,7 +657,7 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(133, $Tic_Cod.'*'.$row_rs_vended
                 data['Vet_Tot']=$('#total').val();
                 data['Iva_Tot']=$('#iva').val();
                 data['items'] = $("#items").getGridBatch();
-                $.saveDataJson('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',data, function(response){                                       
+                $.saveDataJson('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',data, function(response){                                       
                         <?php if($rs_infoEmpresa['Cof_Con']=='S'){ ?>                                                
                             $('#impCompr').data('url',response['Com_Link']);
                             $('#successDialog').dialog('open');
@@ -674,7 +674,7 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(133, $Tic_Cod.'*'.$row_rs_vended
             }
 
             var codigo = $('#For_Cod').val();
-            $.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',{tiposPago:true, For_Cod:codigo}, function(response){
+            $.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',{tiposPago:true, For_Cod:codigo}, function(response){
                      $("#Pag_Cod").html(response['html']);
               },'json').fail(function(error) { $.alert("El Servidor ha fallado en responder!");});
 
@@ -683,7 +683,7 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(133, $Tic_Cod.'*'.$row_rs_vended
                 var codigo = $('#For_Cod').val();
                 var Pec_Val= $('#Pec_Cod').val();
 
-                $.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',{tiposPago:true, For_Cod:codigo}, function(response){
+                $.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',{tiposPago:true, For_Cod:codigo}, function(response){
                          $("#Pag_Cod").html(response['html']);
                   },'json').fail(function(error) { $.alert("El Servidor ha fallado en responder!");});
 

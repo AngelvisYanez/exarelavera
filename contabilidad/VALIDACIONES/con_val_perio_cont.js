@@ -13,6 +13,6 @@ function validar_perio_cont(form)
     }
 	else
 	{
-		alert ("La fecha de inicio debe ser menor a la fecha de fin del periodo contable");
+		$.alert("La fecha de inicio debe ser menor a la fecha de fin del periodo contable",null,'warning');
 	}
 }

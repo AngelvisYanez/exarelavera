@@ -200,7 +200,7 @@ if(isset($saveDepreciacion)){
 
             $('#Tia_Cod').val(4);//Seteamos valor de DIARIO DE DEPRECIACION en el combobox por defecto
             //Secci�n para cargar el comobobox del periodo contable v�a ajax
-            $.post("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{periodoContable:true}, function( response ) {
+            $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{periodoContable:true}, function( response ) {
                 if(response.length>0){
                     var options="";
                     options+="<option>Seleccione</option>";
@@ -290,7 +290,7 @@ if(isset($saveDepreciacion)){
         });
         //Secci�n para cargar los meses
         function cargar_meses(){
-            $.post("<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING); ?>",{allActivos:true},function(response){
+            $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{allActivos:true},function(response){
                 if(response['activos'].length>0){
                     activos_dep=response['activos'];
                     activos_dep.sort(function (a, b) {
@@ -318,7 +318,7 @@ if(isset($saveDepreciacion)){
             var data=$('#formDepreciacion').serializeObject();
             data['depreciacion']=depreciacion;
             data['saveDepreciacion']=true;
-            $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function( response ) {
+            $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( response ) {
                 if(response['success']===true){
                     $.alert("Transaccion Realizada con &Eacute;xito!");
                     asiento(response['Com_Cod'],response['Tia_Cod'],response['Pec_Cod']);

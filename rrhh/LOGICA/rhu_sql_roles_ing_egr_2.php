@@ -4,7 +4,7 @@
  * 
  * @author Erik Niebla
  * @version 1.0
- * Fecha de actualización:	2016-06-28
+ * Fecha de actualizaciï¿½n:	2016-06-28
  *
  * @param int $id
  * @param array $Par_Sql
@@ -79,7 +79,6 @@ function sentencias_rol($id,$Par_Sql)
             break;
         case 10:
             $sql="SELECT * FROM map_system WHERE Map_Est='A' AND Emp_Cod='$Par_Sql[0]';";
-            echo $sql.'<br/>';
             break;
         case 11:
             $sql="SELECT * FROM areas_rrhh WHERE Are_Est='A' AND Emp_Cod=$Par_Sql[0]";

@@ -1,5 +1,5 @@
 <?php require_once('../../administrador/LOGICA/seguridad.php');
-	  require_once('../LOGICA/logica.php');
+	  require_once('../../componentes/LOGICA/logica.php');
   	  require_once('../../tesoreria/LOGICA/tes_log_ccpp.php');
 	  require_once('../../Librerias/procedimientos/almacenados_standar.php');
 /* Creacion del Objeto de conexion */

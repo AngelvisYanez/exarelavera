@@ -1,4 +1,4 @@
-<?php	
+ï»¿<?php	
 /**
 * @abstract Permite registrar los cheques 
 * @author Erik Niebla
@@ -77,7 +77,7 @@ if(isset($gridAjax)){
         <div class="panel-body ui-widget-content ui-corner-bottom exa-body">
             <div class="">
                 <div class="row">
-                    <form action="<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>" method="post" name= "form1" id= "form1" class="form-horizontal normal">
+                    <form action="<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>" method="post" name= "form1" id= "form1" class="form-horizontal normal">
                         <div class="col-sm-6">
                             <fieldset class="exa-fieldset">
                                 <legend><label class="Titulos2">Ingrese Rangos</label></legend>
@@ -109,7 +109,7 @@ if(isset($gridAjax)){
                                         </select>
                                      </div>
                                      <div class="col-xs-3" >
-                                        <button type="button" class="btn btn-success btn-sm" title="Generar Concilición Bancaria" onclick="Search()"> <i class="glyphicon glyphicon-eye-open"></i> <span> Visualizar</span> </button>
+                                        <button type="button" class="btn btn-success btn-sm" title="Generar Conciliciï¿½n Bancaria" onclick="Search()"> <i class="glyphicon glyphicon-eye-open"></i> <span> Visualizar</span> </button>
                                      </div>   
                                 </div>
                             </fieldset>   
@@ -149,7 +149,7 @@ if(isset($gridAjax)){
     </div>    
     <script type="text/javascript">     //                                   
        function Search(){
-           $.saveDataJson("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",$("#form1").getData('gridAjax'),
+           $.saveDataJson("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",$("#form1").getData('gridAjax'),
                 function(response){                                          
                        $('#Conciliacion').setData(response['header'],null,'name');
                        $("#list").setRows(response['grid']['rows']);
@@ -162,7 +162,7 @@ if(isset($gridAjax)){
            var jgrid=$("#list");
            jgrid.createGrid({               
                colModel: [
-                   { label: 'Cód.Int.', name: 'id', key: true, width: 15,align:"center", hidden:true },
+                   { label: 'Cï¿½d.Int.', name: 'id', key: true, width: 15,align:"center", hidden:true },
                    { label: 'Grupo', width: 1,name: 'Grupo', hidden:true},
                    { label: 'Fecha Comp.', name: 'Com_Fec', width: 40,align:"center" },   
                    { label: 'No. Che.', name: 'Che_Num', width: 40},  

@@ -11,6 +11,7 @@ if (!isset($_SESSION['Ses_Lis_Per'])) {
     die('<h2>Error: No hay sesión activa. Debes estar logueado.</h2>');
 }
 
+if (false) {
 echo "<h2>Diagnóstico del Menú de Administración</h2>";
 echo "<pre>";
 
@@ -120,3 +121,4 @@ foreach ($busqueda as $term) {
 
 echo "\n=== FIN DEL DIAGNÓSTICO ===\n";
 echo "</pre>";
+} // END DEBUG TOOL - DISABLED

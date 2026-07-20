@@ -1,9 +1,9 @@
 <?php	
 /**
 * @abstract Permite realizar el registro de un tipo de mantenimiento
-* @author José Ambuludí
+* @author Josï¿½ Ambuludï¿½
 * @version 1.0
-* Fecha de creación  2016-06-03
+* Fecha de creaciï¿½n  2016-06-03
 */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/act_log_tipo_mante.php');
@@ -27,7 +27,7 @@ if(isset($save)){
     $obBD_con1->inicio_transaccion($obBD_conexion->conexion);
     $obBD_con1->operacionobBD(2,$data, $obBD_conexion);  
     
-	/*$responce['success'] recive true o false, si la transacción se cierra correctamente se recibe true*/
+	/*$responce['success'] recive true o false, si la transacciï¿½n se cierra correctamente se recibe true*/
 	$responce['success']=$obBD_con1->fin_transaccion_nomsn($obBD_conexion->conexion);
 	/*Mensaje de error en caso de un error de base de datos*/
 	$responce['message']=$obBD_con1->MsgError;
@@ -93,7 +93,7 @@ if(isset($save)){
    <script type="text/javascript">
 		function saveForm(){
 			   $('.btn-form').attr('disabled','disabled');
-                $.post("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",$('#formTipo_Mante').getData('save'), 	    		function(response){	
+                $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",$('#formTipo_Mante').getData('save'), 	    		function(response){	
                     if(response['success']==true){
                         $('#formTipo_Mante')[0].reset();						
                         alert("El Registro se ha Guardado con Exito!");

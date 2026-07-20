@@ -16,7 +16,6 @@ function sentencias_ubi($id,$Par_Sql)
 		*/
 		case 10:
 		$sql = "SELECT Ubi_Cod, Ubi_Rec, Ubi_Des, Ubi_Obs, Ubi_Est FROM ubicacion, empresas WHERE empresas.Emp_Cod = ubicacion.Emp_Cod AND empresas.Emp_Cod = $Par_Sql[0] AND Ubi_Cod = $Par_Sql[1];";
-		echo $sql.'<br>';
 		return $sql;
 		break;	
 		

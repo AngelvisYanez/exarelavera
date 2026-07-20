@@ -308,12 +308,12 @@ if(isset($deleteParam)){
         $.getDialogGrid('#cuenDialog').jqGrid("clearGridData").trigger('reloadGrid', [{ page: 1 }]);;
     }
     function saveParam(Pld_Cod){ 						
-        $.saveDataJson( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{saveParam:true,Pld_Cod:Pld_Cod,Tpa_Cod:$('#Tpa_Cod').val(),Pec_Cod:$('#Pec_Cod_Tpa').val()},function(response){ $("#list_1").trigger('reloadGrid', [{ page: 1 }]); $("#list_2").trigger('reloadGrid'); });
+        $.saveDataJson( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{saveParam:true,Pld_Cod:Pld_Cod,Tpa_Cod:$('#Tpa_Cod').val(),Pec_Cod:$('#Pec_Cod_Tpa').val()},function(response){ $("#list_1").trigger('reloadGrid', [{ page: 1 }]); $("#list_2").trigger('reloadGrid'); });
         $('#cuenDialog').dialog('close');
     }
     function deleteParam(data){            
         $.extend(data,{deleteParam:true,Pec_Cod:$('#Pec_Cod_Tpa').val()});
-        $.saveDataJson("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data,function(response){  $("#list_1").trigger('reloadGrid', [{ page: 1 }]); $("#list_2").trigger('reloadGrid', [{ page: 1 }]); });            
+        $.saveDataJson("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data,function(response){  $("#list_1").trigger('reloadGrid', [{ page: 1 }]); $("#list_2").trigger('reloadGrid', [{ page: 1 }]); });            
     }
     </script>
     <!--INICIO DEL DIALOGO BUSCAR CUENTA parametros --> 

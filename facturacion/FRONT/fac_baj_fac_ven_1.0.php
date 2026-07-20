@@ -1,10 +1,10 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php
 /*
-* Descripción: Anula las facturas de ventas en base al vendedor y su punto de impresión
-* Fecha de actualización: 2012-03-15
+* Descripciï¿½n: Anula las facturas de ventas en base al vendedor y su punto de impresiï¿½n
+* Fecha de actualizaciï¿½n: 2012-03-15
 * Desarrollador: Lewis Chimarro
-* Fecha de actualización: 2012-05-22
+* Fecha de actualizaciï¿½n: 2012-05-22
 * Desarrollador: Lewis Chimarro
 */	
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -170,7 +170,7 @@ if ($total_rs_vendedor > 0)
 <?Php
 switch ($op){
 	case 1: ?>
-<form name="form1" method="post" action="<?Php $_SERVER['../LOGICA/PHP_SELF']?>">   
+<form name="form1" method="post" action="<?Php $_SERVER['PHP_SELF']?>">   
 <FIELDSET>
 	<legend>
 	<label class="Titulos2">Tipo de documento:</label></legend>
@@ -239,7 +239,7 @@ switch ($op){
 	  if($row_rs_buscar['Vet_Est']=='I')
 	  		  { $rojo='#FF0000'; $anulada++; }else{$rojo='';}
 	  ?>
-      <form name="form1" method="post" action="<?Php $_SERVER['../LOGICA/PHP_SELF']?>">
+      <form name="form1" method="post" action="<?Php $_SERVER['PHP_SELF']?>">
 	  <tr>
 	    <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Vet_Cod']; ?></FONT></td>
 		<td align="center"><FONT COLOR="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Vet_Num']; ?></FONT></td>
@@ -270,7 +270,7 @@ switch ($op){
           <tr>
             <td align="center">&nbsp;</td>
             <td align="center">&nbsp;</td>
-            <td align="center"><?Php echo error_alerta("¡No hay resultados que mostrar, en la caja [".$row_rs_CajFec['Pun_Des']."] del día [".$row_rs_CajFec['Caj_Fec']."] !", 1); ?></td>
+            <td align="center"><?Php echo error_alerta("ï¿½No hay resultados que mostrar, en la caja [".$row_rs_CajFec['Pun_Des']."] del dï¿½a [".$row_rs_CajFec['Caj_Fec']."] !", 1); ?></td>
             <td align="center">&nbsp;</td>
             <td align="center">&nbsp;</td>
             </tr>    
@@ -289,7 +289,7 @@ case 2:
 $txt_fec_ini = $hoy;
 $txt_fec_fin = $hoy;
 ?> 
-<form action="<?Php echo $_SERVER['../LOGICA/PHP_SELF']; ?>" name="form2" id="form2">
+<form action="<?Php echo $_SERVER['PHP_SELF']; ?>" name="form2" id="form2">
 <FIELDSET>
 	<legend>
 	<label class="Titulos2">Tipo de documento:</label></legend>
@@ -344,7 +344,7 @@ if (isset($hdd_fec))
 			if($row_rs_buscar['Vet_Est']=='I')
 	  		  { $rojo='#FF0000'; $anulada++; }else{$rojo='';}
 		?> 		
-        <form name="form1" method="post" action="<?Php $_SERVER['../LOGICA/PHP_SELF']?>">
+        <form name="form1" method="post" action="<?Php $_SERVER['PHP_SELF']?>">
     	<tr>
 		  <td align="center"><FONT COLOR="<?php echo $rojo;?>"><?php echo $row_rs_buscar['Vet_Cod']; ?></FONT></td>
 		  <td align="center"><font color="<?php echo $rojo;?>"><?Php echo $row_rs_buscar['Vet_Num']; ?></font></td>

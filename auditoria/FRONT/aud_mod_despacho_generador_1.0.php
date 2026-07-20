@@ -1079,7 +1079,7 @@ if (!empty($_REQUEST['generarTareas'])) {
 <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 <script type="text/javascript">
 $(function () {
-    var urlBase = '<?php echo str_replace("'", "\\'", $_SERVER['PHP_SELF']); ?>';
+    var urlBase = <?php echo json_encode($_SERVER['PHP_SELF']); ?>;
     var listaPersonal = [];
     var listaActividades = [];
     var listaTareasAsig = [];

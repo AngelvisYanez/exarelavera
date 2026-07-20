@@ -130,7 +130,7 @@ if($delete){
         });
         //Funci�n para guardar los registros del jqgrid 
         function saveData(){
-            $.post("<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING);?>",{'saveDedicacion':true,'campos':$("#list").getGridBatch()},function(response){
+            $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8');?>",{'saveDedicacion':true,'campos':$("#list").getGridBatch()},function(response){
                 if(response['success']===true){
                     $.alert('Transaccion Realizada con &Eacute;xito!');
                     var ids = $("#list").jqGrid('getDataIDs');
@@ -145,7 +145,7 @@ if($delete){
         function deleteFila(index){
             $.createDialogConfirm('Desea ELIMINAR el registro seleccionado..!!',null,function(){
                $('#list').jqGrid('delRowData',index);
-                $.post("<?php echo filter_input(INPUT_SERVER,'PHP_SELF', FILTER_SANITIZE_STRING)?>",{delete:true,Ded_Cod:index},function(response){
+                $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8')?>",{delete:true,Ded_Cod:index},function(response){
                     if(response['success']===true){console.log('Elimino l�gicamente');}
                     else{$.alert(response['message']);}
                 },'json').fail(function (){$.alert();}); 

@@ -4,7 +4,7 @@
  * 
  * @author car.87cod :)
  * @version 2.0
- * Fecha de actualización:	2012-04-18
+ * Fecha de actualizaciï¿½n:	2012-04-18
  * 
  * @param int $id
  * @param array $Par_Sql
@@ -89,8 +89,7 @@
 			case 11:
 			/* Elimina los perfiles que contengan un perfil */
 			$sql = "DELETE FROM perfiorgan WHERE Pcs_Cod = $Par_Sql[0]";
-			echo $sql."<br>";
-			return $sql;
+				return $sql;
 			break;
 		}
 	}

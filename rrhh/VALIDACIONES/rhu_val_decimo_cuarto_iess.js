@@ -49,7 +49,7 @@ function handleFileIess(ev) {
         var wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
         var ws = wb.Sheets[wb.SheetNames[0]];
         matConsolidadoIess = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
-        alert("Consolidado IESS cargado. Ahora presione Cargar para procesar.");
+        $.alert("Consolidado IESS cargado. Ahora presione Cargar para procesar.",null,'success');
     };
     rd.readAsArrayBuffer(f);
 }
@@ -71,7 +71,7 @@ function handleFilePagoIess(ev) {
             fusionarFormasPagoIess(rows);
             crearGridDecimoCuartoIess(rows);
         }
-        alert("Archivo de formas de pago cargado.");
+        $.alert("Archivo de formas de pago cargado.",null,'success');
     };
     rd.readAsArrayBuffer(f);
 }
@@ -92,7 +92,7 @@ function procesarDecimoCuartoIess() {
     enriquecerConDatosBDCuarto(resumen, function (rowsCompletos) {
         fusionarFormasPagoIess(rowsCompletos);
         crearGridDecimoCuartoIess(rowsCompletos);
-        alert("Cargados " + rowsCompletos.length + " registros de personas.");
+        $.alert("Cargados " + rowsCompletos.length + " registros de personas.",null,'success');
     });
 }
 
@@ -116,7 +116,7 @@ function calcularDecimoCuartoDesdeConsolidado(mat) {
 
     var headerRowIdx = encontrarFilaHeader(mat);
     if (headerRowIdx === -1) {
-        alert("No se encontró encabezado válido (Periodo, Cédula, Nombre, Días).");
+        $.alert("No se encontró encabezado válido (Periodo, Cédula, Nombre, Días).",null,'warning');
         return [];
     }
 
@@ -133,7 +133,7 @@ function calcularDecimoCuartoDesdeConsolidado(mat) {
     });
 
     if (idxPeriodo === -1 || idxCedula === -1 || idxNombre === -1 || idxDias === -1) {
-        alert("No se pudieron identificar todas las columnas necesarias (Periodo, Cédula, Nombre, Días).");
+        $.alert("No se pudieron identificar todas las columnas necesarias (Periodo, Cédula, Nombre, Días).",null,'warning');
         return [];
     }
 

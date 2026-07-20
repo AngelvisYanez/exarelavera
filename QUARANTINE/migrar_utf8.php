@@ -1,4 +1,5 @@
 ﻿<?php
+if (php_sapi_name() !== 'cli') { http_response_code(403); exit('CLI only'); }
 /**
  * Script de Migración a UTF-8
  * Convierte bases de datos y tablas de latin1 a UTF-8
@@ -8,9 +9,9 @@
  * IMPORTANTE: Hacer backup de la base de datos antes de ejecutar
  */
 
-$host = 'localhost;
-$user = 'root;
-$pass = ';
+$host = 'localhost';
+$user = 'root';
+$pass = '';
 $port = 3306;
 
 $databases = ['exa_master, 'servicios, 'db_sri];

@@ -1408,7 +1408,7 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
     <script>
         // Variables globales
         var tipoIva = '', tipoCcpp = '', tipoSri = '';
-        var UrlSelf = "<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>";
+        var UrlSelf = "<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>";
 
         // Crear diálogos de búsqueda
         $.createSearchDialog('ivaDialog', [

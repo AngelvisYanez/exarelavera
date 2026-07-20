@@ -1,4 +1,4 @@
-<?php	
+ï»¿<?php	
 /**
 * @abstract Permite CONSULTAR de comprobantes por abonos
 * @author Erik Niebla
@@ -74,7 +74,7 @@ if(isset($ajaxComprobante)){
                                         <legend class="Titulos2">Seleccione Cliente</legend>
                                         <!-- SEARCH -->
                                         <div class="form-group">
-                                            <label class="col-md-3 control-label label-xs" for="radios">Cédula/R.U.C.:</label>
+                                            <label class="col-md-3 control-label label-xs" for="radios">Cï¿½dula/R.U.C.:</label>
                                             <div class="col-md-6">      
                                               <div class="input-group input-group-xs">
                                                 <input type="text" name="op_opciones" value="c" style="display: none;" /> 
@@ -94,7 +94,7 @@ if(isset($ajaxComprobante)){
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label class="col-md-3 control-label label-xs">Dirección:</label>  
+                                            <label class="col-md-3 control-label label-xs">Direcciï¿½n:</label>  
                                             <div class="col-md-9">
                                                 <input id="lblDirec" name="textinput" type="text" class="form-control input-xs " readonly>
                                             </div>
@@ -153,7 +153,7 @@ if(isset($ajaxComprobante)){
                                             </div>   
                                         </div>
                                         <div class="col-md-2" style="padding-top: 20px;">
-                                             <div class=""><button type="button"  onclick="this.form.submit()" class="btn btn-sm btn-success" title="Ejecutar Búsqueda"><span class="glyphicon glyphicon-search"></span> &nbsp;Filtrar</button></div>
+                                             <div class=""><button type="button"  onclick="this.form.submit()" class="btn btn-sm btn-success" title="Ejecutar Bï¿½squeda"><span class="glyphicon glyphicon-search"></span> &nbsp;Filtrar</button></div>
                                         </div>
                                       
                                     </fieldset>
@@ -171,7 +171,7 @@ if(isset($ajaxComprobante)){
                                 $('#rangeDates').addClass('disabled').find('input').attr('disabled','disabled');
                                 var kardexGrid=$("#list");
                                 kardexGrid.jqGrid({
-                                    url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                    url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                     mtype: "GET", datatype: "json", regional : 'es',//ajaxRowOptions: { async: true },
                                     postData: $("#form1").getData("ajaxGrid"),
                                     autowidth : true, shrinkToFit: true, height: 270,responsive:true,
@@ -225,7 +225,7 @@ if(isset($ajaxComprobante)){
 
    
 <!--INICIO DEL DIALOGO BUSCAR PROVEEDOR--> 
-    <div id="provDialog" title="Búsqueda de Clientes">  
+    <div id="provDialog" title="Bï¿½squeda de Clientes">  
      <form class="form-horizontal normal"> 
         <fieldset class="exa-fieldset">
 		<legend class="Titulos2">Filtros</legend>
@@ -237,7 +237,7 @@ if(isset($ajaxComprobante)){
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-md-2 control-label">Búsqueda:</label>
+                    <label class="col-md-2 control-label">Bï¿½squeda:</label>
                     <div class="col-md-7" >                 
                       <div class="input-group">                        
                         <input name="search" onkeydown="if (event.keyCode === 13) this.form.submit()" type="text" size="50" maxlength="50" placeholder="Ingrese cliente a buscar..." autofocus class="form-control input-sm " /><input type="text" style="display:none"/>
@@ -251,10 +251,10 @@ if(isset($ajaxComprobante)){
     <script type="text/javascript">
         $(document).ready(function() {               
                 $.createSearchDialog('#provDialog',[
-                        { label: 'Cód.Int.', name: 'Prv_Cod', key: true,hidden:true,viewable: true },                                
-                        { label: 'Cédula/R.U.C.', name: 'Prs_Ced', width: 50 },                      
+                        { label: 'Cï¿½d.Int.', name: 'Prv_Cod', key: true,hidden:true,viewable: true },                                
+                        { label: 'Cï¿½dula/R.U.C.', name: 'Prs_Ced', width: 50 },                      
                         { label: 'Proveedor', name: 'proveedor', width: 190, cellattr: function (rowId, tv, rawObject, cm, rdata) { return 'style="white-space: normal;"'; }},                   
-                        { label: 'Dirección', name: 'Prs_Dir',hidden:true,viewable: true },                      
+                        { label: 'Direcciï¿½n', name: 'Prs_Dir',hidden:true,viewable: true },                      
                             { label:'<center><i class="ui-icon ui-icon-gear"></i></center>', name: 'act1', width: 18, align: 'center',viewable: false,
                                 formatter:function (cellvalue, options, rowObject) { 
                                     var clic='selectProvee($("#provGrid").jqGrid("getRowData",'+rowObject.Prv_Cod+'))';

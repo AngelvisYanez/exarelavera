@@ -313,7 +313,7 @@ if (isset($getSiguienteNumeroAjax)) {
     <script type="text/javascript">
         function generarNumeroSecuencial() {
             $('#btnGenerarCodigo').attr('disabled', 'disabled').html('<i class="icon-refresh"></i> Generando...');
-            $.post("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", 
+            $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>", 
                 { getSiguienteNumeroAjax: true }, 
                 function(response) {
                     if (response && response.success && response.numero) {
@@ -335,7 +335,7 @@ if (isset($getSiguienteNumeroAjax)) {
             data["saveClaveAccesoAjax"] = true;
             
             $('#btnGuardarClave').attr('disabled', 'disabled');
-            $.post("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", data, 
+            $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>", data, 
                 function(response) {
                     if (response['success'] === true) {
                         $.alert("Transaccion Realizada con Exito!");
@@ -362,7 +362,7 @@ if (isset($getSiguienteNumeroAjax)) {
         }
         
         function editarClaveAcceso(Cod_Cla) {
-            $.post("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", 
+            $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>", 
                 { editClaveAccesoAjax: true, Cod_Cla: Cod_Cla }, 
                 function(response) {
                     if (response && response.success && response.rows) {
@@ -387,7 +387,7 @@ if (isset($getSiguienteNumeroAjax)) {
             $.createDialogConfirm('Esta seguro que desea anular esta clave de acceso?', 
                 { anularClaveAccesoAjax: true, Cod_Cla: Cod_Cla },
                 function(data) {
-                    $.post("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", data, 
+                    $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>", data, 
                         function(response) {
                             if (response['success'] === true) {
                                 $.alert("Clave anulada correctamente!");
@@ -404,7 +404,7 @@ if (isset($getSiguienteNumeroAjax)) {
         
         $(document).ready(function() {
             $("#list").jqGrid({
-                url: '<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                url: '<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                 mtype: "GET",
                 datatype: "json",
                 regional: 'es',

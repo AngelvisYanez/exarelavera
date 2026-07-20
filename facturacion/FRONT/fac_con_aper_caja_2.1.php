@@ -147,7 +147,7 @@ $rs_vendedores = $obBD_con1->getArrayConsulta(26, $Ses_Suc_Cod, $obBD_conexion);
 			}
 	});
 	jgrid.jqGrid({
-		url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+		url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
 		mtype: "GET", datatype: "json", regional : 'es',//ajaxRowOptions: { async: true },
 		postData: $("#formReposi").getData("ajaxSubgrid"),
 		autowidth : true, shrinkToFit: true, height: 250,caption:'Cajas existentes',responsive:true,hidegrid:false,

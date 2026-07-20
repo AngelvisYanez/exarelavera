@@ -103,7 +103,7 @@ if (isset($saveAguaje)) {
         $obBD_con1->operacionobBD(9, $encabezado_aguaje, $obBD_conexion);
         $response = array('success' => true, 'message' => "Transaccion realizada con exito");
     } catch (Exception $e) {
-        $response = array('success' => false, 'message' => "No se ha logrado realizar la Transaccion", 'error' => $obBD_conIns->MsgError);
+        $response = array('success' => false, 'message' => "No se ha logrado realizar la Transaccion", 'error' => $obBD_con1->MsgError);
     }
     echo json_encode($response);
     exit();
@@ -118,7 +118,7 @@ if (isset($saveAguaje)) {
             $response = array(
                 'success' => false,
                 'message' => "No se ha registrado el aguaje. Por favor, intente nuevamente.",
-                'error' => isset($obBD_conIns->MsgError) ? $obBD_conIns->MsgError : 'Error desconocido'
+                'error' => isset($obBD_con1->MsgError) ? $obBD_con1->MsgError : 'Error desconocido'
             );
         } else {
             $response = array('success' => true, 'message' => "Transaccion realizada con exito");
@@ -127,7 +127,7 @@ if (isset($saveAguaje)) {
         $response = array(
             'success' => false,
             'message' => "No se ha logrado realizar la Transaccion",
-            'error' => isset($obBD_conIns->MsgError) ? $obBD_conIns->MsgError : $e->getMessage()
+            'error' => isset($obBD_con1->MsgError) ? $obBD_con1->MsgError : $e->getMessage()
         );
     }
     echo json_encode($response);
@@ -245,7 +245,7 @@ if (isset($saveNegociacion)) {
             $response = array('success' => true, 'message' => "Error al registrar datos");
         }
     } catch (Exception $e) {
-        $response = array('success' => false, 'message' => "No se ha logrado realizar la Transaccion", 'error' => $obBD_conIns->MsgError);
+        $response = array('success' => false, 'message' => "No se ha logrado realizar la Transaccion", 'error' => $obBD_con1->MsgError);
     }
     echo json_encode($response);
     exit();
@@ -268,7 +268,7 @@ if (isset($saveLiqAjax)) {
             $response = array('success' => false, 'message' => "No se ha logrado realizar la Transaccion", 'error' => $obBD_con1->MsgError);
         }
     } catch (Exception $e) {
-        $response = array('success' => false, 'message' => "No se ha logrado realizar la Transaccion", 'error' => $obBD_conIns->MsgError);
+        $response = array('success' => false, 'message' => "No se ha logrado realizar la Transaccion", 'error' => $obBD_con1->MsgError);
     }
     echo json_encode($response);
     exit();
@@ -280,7 +280,7 @@ if (isset($editLiqAjax)) {
         $obBD_con1->operacionobBD(40, $data_liquidacion, $obBD_conexion);
         $response = array('success' => true, 'message' => "Transaccion realizada con &eacute;xito");
     } catch (Exception $e) {
-        $response = array('success' => false, 'message' => "No se ha logrado realizar la Transaccion", 'error' => $obBD_conIns->MsgError);
+        $response = array('success' => false, 'message' => "No se ha logrado realizar la Transaccion", 'error' => $obBD_con1->MsgError);
     }
     echo json_encode($response);
     exit();
@@ -662,7 +662,7 @@ if (isset($anularNegAjax)) {
         $obBD_con1->operacionobBD(32, $Cod_Neg, $obBD_conexion);
         $response = array('success' => true, 'message' => "Transaccion realizada con éxito");
     } catch (Exception $e) {
-        $response = array('success' => false, 'message' => "No se ha logrado realizar la Transaccion", 'error' => $obBD_conIns->MsgError);
+        $response = array('success' => false, 'message' => "No se ha logrado realizar la Transaccion", 'error' => $obBD_con1->MsgError);
     }
     echo json_encode($response);
     exit();
@@ -674,7 +674,7 @@ if (isset($anularLiqAjax)) {
         $obBD_con1->operacionobBD(33, $Liq_Cod, $obBD_conexion);
         $response = array('success' => true, 'message' => "Transaccion realizada con éxito");
     } catch (Exception $e) {
-        $response = array('success' => false, 'message' => "No se ha logrado realizar la Transaccion", 'error' => $obBD_conIns->MsgError);
+        $response = array('success' => false, 'message' => "No se ha logrado realizar la Transaccion", 'error' => $obBD_con1->MsgError);
     }
     echo json_encode($response);
     exit();
@@ -686,7 +686,7 @@ if (isset($saveNegociacion)) {
         $obBD_con1->operacionobBD(3, $encabezado_negociacion, $obBD_conexion);
         $response = array('success' => true, 'message' => "Transaccion realizada con exito");
     } catch (Exception $e) {
-        $response = array('success' => false, 'message' => "No se ha logrado realizar la Transaccion", 'error' => $obBD_conIns->MsgError);
+        $response = array('success' => false, 'message' => "No se ha logrado realizar la Transaccion", 'error' => $obBD_con1->MsgError);
     }
     echo json_encode($response);
     exit();

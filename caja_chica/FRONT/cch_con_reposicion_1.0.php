@@ -191,7 +191,7 @@ if(isset($reposiAjax)){
 	}
 	
 	function buscaNumCheque(numero){
-		$.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',{'Che_Num':numero,'ajaxBuscaNumChe':true}, function(response){
+		$.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',{'Che_Num':numero,'ajaxBuscaNumChe':true}, function(response){
 			if(response['success']===true){
 				
 			}else {numChe=0;$("#Che_Num").val(numChe);$.alert("No se logro obtener n&uacutemero del cheque");}
@@ -200,7 +200,7 @@ if(isset($reposiAjax)){
 	
 	function setCheques(Ban_Cod){ 
 		 var datBan=Ban_Cod.split('*');
-		 $.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',{'Ban_Cod':datBan[0],'numCheIni':true}, function(response){
+		 $.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',{'Ban_Cod':datBan[0],'numCheIni':true}, function(response){
 			if(response['success']===true){
 				var numChe=(response['Che_Num']*1)+1;
 				$("#Che_Num").val(numChe).alertMsg();
@@ -211,7 +211,7 @@ if(isset($reposiAjax)){
 	function validaCheque(numero){  
 		var valBanco=$("#bancos").val();
 		var numAnt=$("#Che_Num").val();				 
-		$.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',{'numero':numero,'valBanco':valBanco,'valChe': numAnt}, function(response){
+		$.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',{'numero':numero,'valBanco':valBanco,'valChe': numAnt}, function(response){
 			if(response['success']===true){
 				if(response['valid']===false){
 					numChe=(response['Che_Num']*1)+1;
@@ -264,7 +264,7 @@ if(isset($reposiAjax)){
 		$("#loader").show();
 		//formData.append(f.attr("name"), $(this)[0].files[0]);
 		$.ajax({
-			url: "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",
+			url: "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",
 			type: "post", dataType: "json", data: formData, cache: false, contentType: false, processData: false
 		}).done(function(response){
 			$("#loader").fadeOut("slow");
@@ -288,7 +288,7 @@ if(isset($reposiAjax)){
 			}
 	});
 	jgrid.jqGrid({
-		url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+		url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
 		mtype: "get", datatype: "json", regional : 'es',//ajaxRowOptions: { async: true },
 		postData: $("#formReposi").getData("ajaxSubgrid"),
 		autowidth : true, shrinkToFit: true, height: 250,caption:'Reposiciones',responsive:true,hidegrid:false,

@@ -28,12 +28,12 @@ function validar_buscar_cuenta(form, campo)
 		}
 		else
 		{
-			alert ("Las fechas deben estar en el rango del periodo contable seleccionado \n Inicio: " + Pec_Fei + " \n Fin    : " + Pec_Fef);	
+			$.alert("Las fechas deben estar en el rango del periodo contable seleccionado <br> Inicio: " + Pec_Fei + " <br> Fin    : " + Pec_Fef,null,'warning');
 		}
 	}
 	else
 	{
-		alert ("¡Debe ingresar datos!");
+		$.alert("¡Debe ingresar datos!",null,'warning');
 		document.getElementById(campo).focus();
 	}
 }//Fin del function validar_buscar_cuenta(form, campo)

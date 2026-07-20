@@ -1007,7 +1007,7 @@ if(isset($txt_busqueda))
 		<td align="center"><?Php echo $row_rs_buscar['Prs_Ced']; ?></td>
 		<td align="left">&nbsp;<?Php echo marcarCadenaColor($txt_busqueda,$row_rs_buscar['Prs_Ape'].' '.$row_rs_buscar['Prs_Nom'],'#FFFF00', '#000', 1); ?></td>
 		<td align="center"><?Php if ($row_rs_buscar['Cli_Est'] == 'Activo') { ?>
-        <form name="form3" id="form3" method="post" action="<?php echo $_SERVER['../LOGICA/PHP_SELF'] ?>">
+        <form name="form3" id="form3" method="post" action="<?php echo $_SERVER['PHP_SELF'] ?>">
             <input name="Pec_Cod" type="hidden" value="<?php echo $Pec_Cod; ?>" />
 		<input name="codigo" id="codigo" type="hidden" value="<?Php echo $row_rs_buscar['Cli_Cod'];?>">
         <input name="PrsCodCli" id="PrsCodCli" type="hidden" value="<?Php echo $row_rs_buscar['Prs_Cod'];?>">
@@ -1038,7 +1038,7 @@ if(isset($txt_busqueda))
 	echo barra_estado(count($rs_buscar));
 }//Fin del if(isset($txt_busqueda)) ?>
 
- <form action="<?Php $_SERVER['../LOGICA/PHP_SELF']; ?>" method="post" name="form2" id="form2">
+ <form action="<?Php $_SERVER['PHP_SELF']; ?>" method="post" name="form2" id="form2">
  <?Php if ($codigo > 0 && !(isset($hdd_save)))
  { 
 	/**

@@ -15,10 +15,10 @@
     function getDataReposicion() {
         $.getDataJson('',{getTotal:true},function(res){
             var total = 0;
-            var monto_caja = Number.parseFloat($('#monto').val());
+            var monto_caja = parseFloat($('#monto').val());
             if (res.data.length > 0){
                 $.each(res.data, function (i, item){
-                    total += Number.parseFloat(item.total);
+                    total += parseFloat(item.total);
                 });
                 $('#sal_act').val((monto_caja - total).toFixed(2));
             } else {
@@ -29,7 +29,7 @@
     
     function saveForm() {
         if($('#docu').val()!='') {
-            if( Number.parseFloat($('#monto_rep').val())=== Number.parseFloat(valorActual)) {
+            if( parseFloat($('#monto_rep').val())=== parseFloat(valorActual)) {
                 $.alert("No ha seleccionado comprobantes para la reposici&oacute;n!");
             } else {
                 var datos=$('#formReposi').getData('hdd_save');
@@ -265,7 +265,7 @@
 			suma = 0;
 			for (i = 0; i < c; i++) {
                 if ( i < row.length){
-                    suma += Number.parseFloat(row[i].total);
+                    suma += parseFloat(row[i].total);
                 }
                 $(rows[i].cells[iCol]).click(function (e){
                         updateSaldos(grid,$(this).parent().attr('id'));
@@ -294,7 +294,7 @@
                     sumaT= sumaT + parseFloat('0'+rows[i].total);
                 } else {					
                     $("#list").jqGrid("setCell", el, "act","No");                    
-                    alert("La reposicion no puede sobrepasar los $" + $("#monto").val());
+                    $.alert("La reposicion no puede sobrepasar los $" + $("#monto").val(),null,'warning');
                     return;
                 }
             }

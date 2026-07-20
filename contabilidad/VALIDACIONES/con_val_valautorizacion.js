@@ -59,7 +59,7 @@ function cargarDatos(sucu){
 				});
 
 		},function(err){
-			rej(err);
+			console.error(err);
 		});
 }
 
@@ -72,7 +72,7 @@ function cargarDatosAutorizacion(sucu, tipo){
 				});
 
 		},function(err){
-			rej(err);
+			console.error(err);
 		});
 }
 
@@ -85,7 +85,7 @@ function cargarDatosPuntos(sucu, tipo, aut_sri){
 				});
 
 		},function(err){
-			rej(err);
+			console.error(err);
 		});
 }
 
@@ -95,7 +95,7 @@ function buscarAuts(sucu, tipo, Aut_Sri, Pun_Sri){
 				var autoriza = resp['autorizaciones'];
 				buscarVacios(autoriza);
 		},function(err){
-			rej(err);
+			console.error(err);
 		});
 }
 
@@ -114,7 +114,7 @@ function buscarVacios(autCodigos){
 	if(tipo == "COMPROBANTE DE RETENCION"){
 		valor = "R";
 	}
-	if(tipo == "GUÍA DE REMISIÓN"){
+	if(tipo == "GUï¿½A DE REMISIï¿½N"){
 		valor = "G";
 	}
 	codigoTexto = "(" + codigoTexto + ")";
@@ -135,7 +135,7 @@ function buscarVacios(autCodigos){
 				}
 
 		},function(err){
-			rej(err);
+			console.error(err);
 		});
 }
 

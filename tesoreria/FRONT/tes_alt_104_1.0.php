@@ -1,4 +1,4 @@
-<?Php
+﻿<?Php
 /**
  * Descripción: Permite generar archivo XML del formulario 104
  * Fecha de creación:   2015-05-21
@@ -1389,7 +1389,7 @@ if (isset($xml) || isset($html)) {
 
         function generaXml() {
             var data = $("#form1").getData('xml');
-            $.get("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", data, function(response) {
+            $.get("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>", data, function(response) {
                 if (response['success'] === true) {
                     $.downloadFile(response['xml_104'], response['name']);
                 } else {
@@ -1404,7 +1404,7 @@ if (isset($xml) || isset($html)) {
             var data = $("#form1").getData('html');
             //$('#Html104').html('');
             $('#loader').show();
-            $.get("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", data, function(response) {
+            $.get("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>", data, function(response) {
                 if (response['success'] === true) {
                     //$('#Html104').html(response['html_104']);
                     //const filas = document.querySelectorAll("#miTabla tbody tr");

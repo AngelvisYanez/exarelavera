@@ -100,7 +100,7 @@ if (isset($productos)) {
 												<?php foreach ($sucursales as $datos) { ?>
 													<option value="<?php echo $datos['Suc_Cod']; ?>"><?php echo $datos['Suc_Des']; ?></option>
 												<?php } ?>
-												<select>
+												</select>
 										</div>
 									</div>
 								</div>

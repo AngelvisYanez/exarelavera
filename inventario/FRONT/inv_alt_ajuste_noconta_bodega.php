@@ -36,12 +36,12 @@ if(isset($proAjax)){
         $x=COUNT($saldoInicial);
         for($i=1;$i<$x;$i++){
             if($saldoInicial[$i]['Kar_Sal']*1!=0){
-                $saldoInicial[$i]['Kar_Pre']=$saldoInicial[$i-1]['Promedio'];
+                $saldoInicial[$i]['Kar_Pre']=($i > 0 ? $saldoInicial[$i-1]['Promedio'] : 0);
                 $saldoInicial[$i]['Kar_Ime']=$saldoInicial[$i]['Kar_Pre']*$saldoInicial[$i]['Kar_Sal'];
             }
-            $saldoInicial[$i]['Stock']=$saldoInicial[($i-1)]['Stock']*1+$saldoInicial[$i]['Kar_Can']*1-$saldoInicial[$i]['Kar_Sal'];
-            $saldoInicial[$i]['Saldo']= ($saldoInicial[($i-1)]['Saldo']*1) + ($saldoInicial[$i]['Kar_Ims']*1) - ($saldoInicial[$i]['Kar_Ime']);
-            $saldoInicial[$i]['Promedio']=($saldoInicial[$i]['Stock']!=0?$saldoInicial[$i]['Saldo']/$saldoInicial[$i]['Stock']:$saldoInicial[($i-1)]['Promedio']);
+            $saldoInicial[$i]['Stock']=($i > 0 ? $saldoInicial[($i-1)]['Stock']*1 : 0)+$saldoInicial[$i]['Kar_Can']*1-$saldoInicial[$i]['Kar_Sal'];
+            $saldoInicial[$i]['Saldo']= ($i > 0 ? ($saldoInicial[($i-1)]['Saldo']*1) : 0) + ($saldoInicial[$i]['Kar_Ims']*1) - ($saldoInicial[$i]['Kar_Ime']);
+            $saldoInicial[$i]['Promedio']=($saldoInicial[$i]['Stock']!=0?$saldoInicial[$i]['Saldo']/$saldoInicial[$i]['Stock']:($i > 0 ? $saldoInicial[($i-1)]['Promedio'] : 0));
             }
             $kardex1[0]['Promedio'] = $saldoInicial[$x-1]['Promedio'];
             $kardex1[0]['Saldo'] = $saldoInicial[$x-1]['Saldo'];

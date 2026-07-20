@@ -186,7 +186,7 @@ $tipos = $obBD_con1->getTiposCaja();
                                 <div class="form-group">
                                     <label class="col-xs-3 control-label label-xs">Marca:</label>
                                     <div class="col-xs-9">
-                                        <select name="Bam_Cod" class="form-control input-xs getData ins" s>
+                                        <select name="Bam_Cod" class="form-control input-xs getData ins">
                                             <?php if (count($marcas) != 1) { ?><option value="">Selecione Marca...</option><?php } ?>
                                             <?php foreach ($marcas as $m) {
                                                 echo "<option value='$m[Bam_Cod]' data--bam_-cod='$m[Bam_Cod]' data--bam_-tam='$m[Bam_Tam]'>$m[Bam_Nom] $m[Bam_Tam]</option>";

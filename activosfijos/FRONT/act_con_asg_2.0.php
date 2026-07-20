@@ -152,7 +152,7 @@ if(isset($allActivos)){
         function listarActivos()
         {
             var dep_men=0,dep_acm=0,act_cod=0,val_lib=0;    
-            $.post("<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING);?>",$('#formActivo').getData('allActivos'),function(response){
+            $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8');?>",$('#formActivo').getData('allActivos'),function(response){
                 if(response.length>0){
                     $('#dep_mensual').setRows(response);
                 }

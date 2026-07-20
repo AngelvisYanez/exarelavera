@@ -61,7 +61,7 @@ if (isset($clienteAjax)) {
     exit();
 }
 
-//Sección para cargar datos en el Jqgrid referente a los clientes registrados
+//Secciï¿½n para cargar datos en el Jqgrid referente a los clientes registrados
 if (isset($clientefacturaAjax)) {
     $data = filter_input_array(INPUT_GET);
     $data["Emp_Cod"] = $Ses_Emp_Cod;
@@ -77,7 +77,7 @@ if (isset($clientefacturaAjax)) {
     exit();
 }
 
-//Sección para cargar los viajes sin facturar de un cliente seleccionado
+//Secciï¿½n para cargar los viajes sin facturar de un cliente seleccionado
 if(isset($cargarViajes)){
     $response=$obBD_con1->getArrayConsulta(2,$Cli_Cod,$obBD_conexion);
 	utf8_encode_deep($response);	
@@ -255,7 +255,7 @@ if(isset($saveFactura)){
         $response['url_com']=$url_com;
         $url_fac=$imprimir[3].'?Vet_Cod='.$Vet_Cod;
         $response['url_gru']=$url_fac;
-        //Sección para imprimir detalle de factura
+        //Secciï¿½n para imprimir detalle de factura
         $response['url_dfa']='tca_pri_detfactura_1.0.php?Vet_Cod='.$Vet_Cod;
         
     } catch (Exception $e) {
@@ -625,7 +625,7 @@ if(isset($cargarAsiento)){
             
             //Funciï¿½n para cargar la configuraciï¿½n de la factura tabla confi_fact para saber si la empresa lleva o no contabilidad
             function cargarDatos(){
-                $.post("<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING);?>",{cargarConfi:true},function(response){
+                $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8');?>",{cargarConfi:true},function(response){
                     if(response.Cof_Con==='S'){$('#periodo').show();}
                     $("[id^='frm_']").setData(response,false);
                     $('#Fac_Fec').dateLimits($('#Pec_Cod').find('option:selected').data('inicio'),$('#Pec_Cod').find('option:selected').data('fin'));
@@ -635,26 +635,26 @@ if(isset($cargarAsiento)){
                 },'json').fail(function(){$.alert();});
             }
             
-            //Función para guardar una factura de venta
+            //Funciï¿½n para guardar una factura de venta
             function saveFactura() {
                 var data=$("[id^='frm_']").getData('saveFactura');
                 data['Det_Fac']=$("#Det_Fac").getGridBatch();
                 if($("#Cli_Cod").val()==='0'){$.alert('Debe seleccionar un cliente..!!');return;}
                 if(arreglo.length<=0){$.alert('Debe agregar items al detalle de factura..!!');return;}
                 
-                //Se verifica que el número de documento no se repita
+                //Se verifica que el nï¿½mero de documento no se repita
                 var data1={verificarNrosecuencia:true,Vet_Num:$('#Vet_Num').val(),Tic_Cod:$('#Tic_Cod').val()};
-                $.post("<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING);?>",data1,function(response){
+                $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8');?>",data1,function(response){
                     if(response['existe']===true){
                         $.alert('N&uacute;mero de secuencia '+$('#Vet_Num').val()+' ya se encuentra registrado..!!');
                     }else{
                         //Se verifica que no registre un viaje dos veces
                         var data2={verificarViajes:true,Det_Fac:$("#Det_Fac").getGridBatch()};
-                        $.post("<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING);?>",data2,function(response){
+                        $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8');?>",data2,function(response){
                             if(response['existe']*1>0){
                                 $.alert('Algunos viajes ya se encuentran registrados..!!');
                             }else{
-                                $.saveDataJson("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", data, function (response) {
+                                $.saveDataJson("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>", data, function (response) {
                                     $('.formulario')[0].reset();
                                     $('#frm_dat')[0].reset();
                                     $('#Fac_Fec').val('<?php echo $hoy; ?>');

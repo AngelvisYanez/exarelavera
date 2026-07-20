@@ -760,7 +760,7 @@ if(isset($get_documentos)){
                             
                     } 
                         $('#searchGrid').createGrid({
-                            caption:'Resultado de la B&uacute;squeda',height: 270, datatype: "local",caption:'Resultados <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy"><option value="">No ordenar</option><option value="order by caja_aper.Caj_Fec DESC ">Fecha Venta</option><option value="order by Vet_Num DESC ">Num. Documento</option><select>&nbsp;</div>',
+                            caption:'Resultado de la B&uacute;squeda',height: 270, datatype: "local",caption:'Resultados <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy"><option value="">No ordenar</option><option value="order by caja_aper.Caj_Fec DESC ">Fecha Venta</option><option value="order by Vet_Num DESC ">Num. Documento</option></select>&nbsp;</div>',
                             colModel: [  
                                 { label: 'C&oacute;d. Int.', name: 'Vet_Cod', width: 30 ,align:"center", key:true},  
                                 { label: 'Compr.', name: 'Com_Exi', width: 20 ,align:"center", formatter:'truefalse', formatoptions:{yesMsg:'Tiene Comprobante',noMsg:' '}, title:false},

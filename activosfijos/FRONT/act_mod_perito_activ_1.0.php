@@ -1,7 +1,7 @@
 <?php	
 /**
-* @abstract Permite realizar la modificación de los datos de un perito
-* @author José Ambuludí
+* @abstract Permite realizar la modificaciï¿½n de los datos de un perito
+* @author Josï¿½ Ambuludï¿½
 * @version 1.0
 * Fecha de creaci?n  2016-08-08
 */
@@ -22,7 +22,7 @@ $obBD_con1 =  new Class_Log_Datos_Per;
 */
 $thisPost = new Post_Block;
 
-/*Sección para cargar datos en el Jqgrid referente a los peritos*/
+/*Secciï¿½n para cargar datos en el Jqgrid referente a los peritos*/
 if(isset($peritoAjax)){ 
     $data=filter_input_array(INPUT_GET);
     $data["Emp_Cod"]=$Ses_Emp_Cod;   
@@ -36,7 +36,7 @@ if(isset($peritoAjax)){
     echo json_encode($responce);exit();
 }
 
-/*Sección ajax para editar los datos del perito seleccionado*/
+/*Secciï¿½n ajax para editar los datos del perito seleccionado*/
 if(isset($editPerito)){   
     $responce['success']=false;$responce['message']="No se ha logrado realizar la Transaccion"; 
     $obBD_con1->inicio_transaccion($obBD_conexion->conexion);
@@ -89,7 +89,7 @@ if(isset($editPerito)){
                                         </div>
                                     </div>
                                 </div>
-                                <!-- Sección para visualizar el tipo de documento -->
+                                <!-- Secciï¿½n para visualizar el tipo de documento -->
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label label-sm">Tipo de Documento:</label>
                                     <div class="col-sm-6">
@@ -193,7 +193,7 @@ if(isset($editPerito)){
         </div>
     </div>
     
-    <!-- Inicio del diálogo para buscar peritos --> 
+    <!-- Inicio del diï¿½logo para buscar peritos --> 
     <div id="peritoDialog" title="B&uacute;squeda de Peritos">  
       <form class="form-horizontal normal"> 
         <fieldset>
@@ -220,7 +220,7 @@ if(isset($editPerito)){
     
     <script type="text/javascript">
    
-    //Sección para el choosen
+    //Secciï¿½n para el choosen
     $(document).ready(function(){
         $("#Ciu_Cod").createChosen();                
     });
@@ -228,7 +228,7 @@ if(isset($editPerito)){
     
     $(document).ready(function() {               
         $.createSearchDialog('#peritoDialog',[
-            { label: 'Cód.Int.', name: 'Pri_Cod', key: true,hidden:true,viewable: true },                                
+            { label: 'Cï¿½d.Int.', name: 'Pri_Cod', key: true,hidden:true,viewable: true },                                
             { label: 'C&eacutedula', name: 'Prs_Ced', width: 50 },
             { label: 'Perito', name: 'perito', width: 100 },                      
             { label: 'Especialidad', name: 'Pri_Esp', width: 100, cellattr: function (rowId, tv, rawObject, cm, rdata) { return 'style="white-space: normal;"'; }},                                     
@@ -254,9 +254,9 @@ if(isset($editPerito)){
         ]);  
     }); 
    
-    /*Función para editar datos de persona y perito*/
+    /*Funciï¿½n para editar datos de persona y perito*/
     function editForm(){
-        $.post("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",
+        $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",
         $('#FormPerito').getData('editPerito'), 
         function(response){	
             if(response['success']===true){

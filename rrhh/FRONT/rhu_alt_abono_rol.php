@@ -450,7 +450,7 @@ if($configs['Cof_Con']=='S'){  $Pec_Cod = $obBD_con1->getRowConsulta(36,$Ses_Emp
 
     function setPagoEmpleado(id){
         
-        $.post("<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING)?>",{'Con_Cod':id,'setPagoEmpleado':true},function(response){
+        $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8')?>",{'Con_Cod':id,'setPagoEmpleado':true},function(response){
             if(response['success']){
                 if(response['rows'].Pag_Con_For == 'T'){
                     $('.cuen_ban,.che_num,.banco,.bancos,.obs_credito').find(':input').removeAttr('required').end().hide().setData({});
@@ -562,7 +562,7 @@ if($configs['Cof_Con']=='S'){  $Pec_Cod = $obBD_con1->getRowConsulta(36,$Ses_Emp
     // Crear una funci�n que devuelve una promesa para setPagoEmpleado
     function setPagoEmpleadoPromise(id) {
       return new Promise(function(resolve, reject) {
-        $.post("<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING)?>", {'Con_Cod': id, 'setPagoEmpleado': true}, function(response) {
+        $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8')?>", {'Con_Cod': id, 'setPagoEmpleado': true}, function(response) {
           if (response['success']) {
             if(response['rows'].Pag_Con_For == 'T')
             {

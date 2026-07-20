@@ -474,7 +474,7 @@ if (isset($ajaxDetalleVentas)) {
         var es_fac_con_fac_ven = true;
     </script>
      <script>
-        var Ses_Emp_Cod = "<?php echo $Ses_Emp_Cod; ?>";
+        var Ses_Emp_Cod = <?php echo json_encode($Ses_Emp_Cod); ?>;
     </script>
     <script type="text/ecmascript" src="../VALIDACIONES/fac_val_factura.js?x=0"></script>
     <style></style>
@@ -2060,7 +2060,7 @@ if (isset($ajaxDetalleVentas)) {
                                     $.createDateRange('#Fec_Ini_Tab4', '#Fec_Fin_Tab4');
                                     var kardexGrid = $("#kardex");
                                     kardexGrid.jqGrid({
-                                        url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                        url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                         mtype: "GET",
                                         datatype: "local",
                                         regional: 'es',
@@ -2327,7 +2327,7 @@ if (isset($ajaxDetalleVentas)) {
             //$('#ini').datepicker("setDate", new Date(today.getTime() - (30 * 24 * 3600 * 1000)));
             //$('#fin').datepicker("setDate", today);
             $('#proDialog').dialog('close');
-            $.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>', {
+            $.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>', {
                 'Pro_Cod': id,
                 'ajaxProd': true
             }, function(response) {

@@ -746,8 +746,8 @@ elseif(isset($codigo))
 		$ice_cod[]=$row_rs_ice['Ice_Int'];
 		$ice_por[]=$row_rs_ice['Ice_Por'];
 	}
-	$ice_cod = 'Array(\'' . @implode('\', \'', $ice_cod) . '\')';
-	$ice_por = 'Array(\'' . @implode('\', \'', $ice_por) . '\')';
+	$ice_cod = 'Array(\'' . implode('\', \'', $ice_cod) . '\')';
+	$ice_por = 'Array(\'' . implode('\', \'', $ice_por) . '\')';
 	
 	/** 
 	* Consulta el sustento 
@@ -1159,12 +1159,8 @@ if($existe_pagos>0){ /* inicio if($existe_pagos>0){  */ ?>
               <td height="24" class="Etiqueta1"><span class="Asterisco">* </span>Tipo de Documento:</td>
               <td colspan="3"><span class="LetraNegra">
 			  <?Php 
-			  /* Envia el par�metro SQL,  */
-			  $sql = "AND Cop_Num<>";
-			  //echo $sql;
-			 
-			   ?>
-                <select name="Tic_Cod" id="Tic_Cod" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_con_numcom=1&Prv_Cod=' + document.getElementById('Prv_Cod').value +'&Cop_Bus=<?Php echo $rs_proveed[0]['Cop_Num'];  ?>&Cop_Num=' + document.getElementById('Cop_Num').value +'&Tic_Cod=' + this.value + '&Ins_Mod=<?Php echo $sql; ?>','div_con_num_com'); "  >
+			  ?>
+                <select name="Tic_Cod" id="Tic_Cod" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_con_numcom=1&Prv_Cod=' + document.getElementById('Prv_Cod').value +'&Cop_Bus=<?Php echo $rs_proveed[0]['Cop_Num'];  ?>&Cop_Num=' + document.getElementById('Cop_Num').value +'&Tic_Cod=' + this.value + '&Ins_Mod=AND Cop_Num<>','div_con_num_com'); "  >
                   <option ></option>
                   <?Php foreach($rs_tip_compr as $row_rs_tip_compr){ ?>
                   <option <?Php if($rs_proveed[0]['Tic_Cod'] == $row_rs_tip_compr['Tic_Cod']){echo "selected";}?>  value="<?php echo $row_rs_tip_compr['Tic_Cod']?>"><?php echo $row_rs_tip_compr['Tic_Des'];?></option>
@@ -1190,7 +1186,7 @@ if($existe_pagos>0){ /* inicio if($existe_pagos>0){  */ ?>
               <td width="15%" height="24" class="Etiqueta1"><span class="Asterisco">* </span>N&ordm;. Documento :</td>
             <td><span class="LetraNegra">
               <input name="Cop_Num" type="text" id="Cop_Num" size="17" maxlength="17" value="<?Php echo $rs_proveed[0]['Cop_Num'] ?>" 
-			  onblur="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_con_numcom=1&Prv_Cod=' + document.getElementById('Prv_Cod').value +'&Tic_Cod=' + document.getElementById('Tic_Cod').value +'&Cop_Bus=<?Php echo $rs_proveed[0]['Cop_Num'];  ?>&Cop_Num=' + this.value+ '&Ins_Mod=<?Php echo $sql; ?>','div_con_num_com');">
+			  onblur="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_con_numcom=1&Prv_Cod=' + document.getElementById('Prv_Cod').value +'&Tic_Cod=' + document.getElementById('Tic_Cod').value +'&Cop_Bus=<?Php echo $rs_proveed[0]['Cop_Num'];  ?>&Cop_Num=' + this.value+ '&Ins_Mod=AND Cop_Num<>','div_con_num_com');">
               <script language="javascript">
 			  //document.getElementById("Cop_Num").value = '333-333-333333333';
 			  </script>

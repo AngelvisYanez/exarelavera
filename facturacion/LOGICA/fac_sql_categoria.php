@@ -89,14 +89,12 @@
 
 		case 1033:
 		$sql = "SELECT MAX(Pro_Sec) as Pro_Sec FROM producto,item,categorias WHERE producto.Ite_Cod=item.Ite_Cod AND item.Cat_Cod=categorias.Cat_Cod AND categorias.Cat_Cod=$Par_Sql[0] ";
-		echo $sql;
 
 		return $sql;
 		break;
 
 		case 1034:
 		$sql = "SELECT Cat_Cdc FROM categorias WHERE categorias.Cat_Cod=$Par_Sql[0]";
-		echo $sql;
 		return $sql;
 		break;
 		  

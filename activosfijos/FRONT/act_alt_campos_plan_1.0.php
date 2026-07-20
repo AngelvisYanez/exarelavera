@@ -1,10 +1,10 @@
 <?php 
 /** 
  * Alias:	Insetar
- * Descripción: Permite el ingreso de los campos de los tipos de activos
+ * Descripciï¿½n: Permite el ingreso de los campos de los tipos de activos
  * Desarrollador:	Fabian Gallardo
 					Didimo Zamora 
- * Fecha de actualización:	2013-06-03
+ * Fecha de actualizaciï¿½n:	2013-06-03
  */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/act_log_campos_det.php');	
@@ -20,7 +20,7 @@ require_once('../../Librerias/postclass.php');
  */
 	$obBD_con1 =  new Class_Log_Datos_Con;
 /**
- * Creación del objeto para evitar el reenvio 
+ * Creaciï¿½n del objeto para evitar el reenvio 
  */
 	$thisPost = new Post_Block;  
 
@@ -157,7 +157,7 @@ exit();
 			if (isset($cam[$j]))
 			{		
 				/**
-				 * Inserción de cada campo
+				 * Inserciï¿½n de cada campo
 				 */
 				$obBD_con1->operacionobBD(418, $cam[$j].'*'.$Tia_Des.'*'.$j.'*'.$sel[$j], $obBD_conexion);
 				/**
@@ -299,7 +299,7 @@ exit();
 	  	</LEGEND>
 	  <table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader01">
 	     <thead>
-			  <th width="5%" >Cód. Int. </th>
+			  <th width="5%" >Cï¿½d. Int. </th>
               <th width="25%">Grupo</th>
 			  <th width="30%">SubGrupo</th>
 			  <th width="25%">Nombre</th>
@@ -332,7 +332,7 @@ exit();
 					  <button type='button' class='btn btn-success btn-mini' title="Elegir" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_alt_PlanCam=1&Tia_Des=<?php echo $row['Tia_Cod'];?>&txt_busqueda=<?php echo $_POST['txt_busqueda'];?>&volver_opciones=<?Php echo $op_opciones; ?>','ajax_modal');"><i class='icon-arrow-right icon-white'></i></button>
 					  <input type="hidden" name="pag" value="1">
 					  <input name="Tia_Des" type="hidden" id="Tia_Des" value="<?php echo $row['Tia_Cod']; ?>">
-					  <input type="hidden" name="volver_txt_busqueda" value="<?php echo $_POST['txt_busqueda'];?>">
+					  <input type="hidden" name="volver_txt_busqueda" value="<?php echo htmlspecialchars($_POST['txt_busqueda'], ENT_QUOTES, 'UTF-8');?>">
 			      </form>
 				  <?php 						
 					}else{

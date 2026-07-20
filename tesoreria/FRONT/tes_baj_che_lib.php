@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
 * @abstract Permite listar los cheques postfechados
 * @author Erik Niebla
@@ -242,7 +242,7 @@ if(isset($save)){
             $('#lblCheFeCob2').createDatePickers();
             $('#fechDialog').createDialog({height:300,width:650,icon:'pencil'});
         });
-        function saveFech(){$.saveDataJson("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",$('#formFecha').getData(),function(){ $('#fechDialog').dialog('close');LoadCheque(); }); }
+        function saveFech(){$.saveDataJson("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",$('#formFecha').getData(),function(){ $('#fechDialog').dialog('close');LoadCheque(); }); }
     </script>
 
 <!--INICIO DEL DIALOGO DETALLE PAGO -->

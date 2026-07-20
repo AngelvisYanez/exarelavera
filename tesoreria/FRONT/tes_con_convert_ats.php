@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once('../../Librerias/procedimientos/almacenados_standar.php');	
 //var_dump($uploadXML);    
 if(isset($_FILES)&&!empty($_FILES)){
@@ -200,7 +200,7 @@ if(isset($_FILES)&&!empty($_FILES)){
         //formData.append(f.attr("name"), $(this)[0].files[0]);
         $("#loader").show();
 		$.ajax({
-            url: "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",
+            url: "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",
             type: "post", dataType: "json", data: formData, cache: false, contentType: false, processData: false
         }).done(function(response){
 			$("#loader").fadeOut("slow");

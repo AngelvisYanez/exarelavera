@@ -1,4 +1,4 @@
-<?php	
+﻿<?php	
 /**
 * @abstract Permite realizar el control tributario
 * @author Erik Niebla
@@ -527,7 +527,7 @@ if(isset($save)){
            data['fromMonth']=$('#From').monthpicker('getMonth');
            data['toMonth']=$('#To').monthpicker('getMonth');
            $("#loader").show();
-           $.post("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function(response){	
+           $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function(response){	
                     if(response['success']===true){
                        $('#ver').html(response['tabla']);
                        $('#btnExport').show();

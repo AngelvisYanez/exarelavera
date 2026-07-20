@@ -1142,7 +1142,7 @@ try {
 
 <script type="text/javascript">
 $(function () {
-    var urlBase = '<?php echo str_replace("'", "\\'", $_SERVER['PHP_SELF']); ?>';
+    var urlBase = <?php echo json_encode($_SERVER['PHP_SELF']); ?>;
     var select2Opts = { language: { noResults: function() { return 'No se encontraron resultados'; }, searching: function() { return 'Buscando...'; } }, allowClear: true };
     function initSelect2Buscable($el, extra) {
         if (!$el.length || typeof $el.select2 !== 'function') return;

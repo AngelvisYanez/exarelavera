@@ -37,10 +37,10 @@ function sentencias_bananero($id,$Par_Sql){
       $sql="INSERT INTO productor_banano(Prd_Mag,Prd_Nom,Prv_Cod) VALUES('$Par_Sql[Prd_Mag]','$Par_Sql[Prd_Nom]',$Par_Sql[Prv_Cod])";
       break;
     case 5:
-      $sql="UPDATE proveedor SET Prv_Com='$Par_Sql[Prv_Com]',Prv_Cor='$Par_Sql[Prv_Cor]'";
+      $sql="UPDATE proveedor SET Prv_Com='$Par_Sql[Prv_Com]',Prv_Cor='$Par_Sql[Prv_Cor]' WHERE Prv_Cod='$Par_Sql[Prv_Cod]'";
       break;
     case 6:
-      $sql="INSERT INTO ";
+      $sql="INSERT INTO banano_marca (Bam_Nom, Bam_Des, Bam_Tam, Emp_Cod) VALUES ('$Par_Sql[Bam_Nom]', '$Par_Sql[Bam_Des]', '$Par_Sql[Bam_Tam]', '$Par_Sql[Emp_Cod]')";
       break;
     case 7:
       $sql="SELECT ciudad.* FROM ciudad INNER JOIN pais on pais.Pas_Cod= ciudad.Pas_Cod WHERE Ciu_Est='A' AND Pas_Est='A'";

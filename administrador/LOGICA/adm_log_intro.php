@@ -17,7 +17,7 @@ require_once("adm_sql_intro.php");
 */
 
 class Class_Log_Conexion_Log extends Class_Mysql{
-	function Class_Log_Conexion_Log($bd = "storage", $host = "localhost", $user = "user", $pass = "lj2002"){	
+	function __construct($bd = "storage", $host = "localhost", $user = "user", $pass = "lj2002"){	
 //	function Class_Log_Conexion_Log($bd = "storage", $host = "localhost", $user = "userMacros", $pass = "lynxsc6"){
 		$this->BaseDatos = $bd;
 		$this->Servidor = $host;

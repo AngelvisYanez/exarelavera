@@ -26,10 +26,8 @@ imagenes2/*
 imagenes2/[0-9]*
 /ofsercont-backend
 
-DATA/
-#DATA/MysqlConexion.php
-!DATA/TablesStructure
-!DATA/EstructureExport.php
+control-tributario-ec/
+frontend-next/
 
 administrador/tareas
 administrador/tareasRealizadas

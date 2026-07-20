@@ -35,7 +35,7 @@ if (isset($URL[3])){
         $obBD_con1 =  new Class_Log_Datos_Adm; 	  
          
         /* Consulta que realiza la autenticacion del usuario */
-        $rs_procesos = $obBD_con1->consulta(sentencias_adm(19, $obBD_con1->parametros(trim(substr($mperf,1,count($mperf)-3)).'*'.trim($fcon))), $obBD_conexion->conexion);
+        $rs_procesos = $obBD_con1->consulta(sentencias_adm(19, $obBD_con1->parametros(trim(substr($mperf,1,strlen($mperf)-3)).'*'.trim($fcon))), $obBD_conexion->conexion);
         $total_rs_procesos = $obBD_con1->num_rows($rs_procesos);
         $obBD_con1->liberar(); $obBD_conexion->cerrar(); //unset($obBD_conexion); unset($obBD_con1);
     }else $total_rs_procesos=0;

@@ -93,7 +93,6 @@ function sentencias_cod($id,$Par_Sql)
 		*/
 		case 8:
 		$sql= "INSERT INTO reniva_pla (Ren_Cod,Pld_Cod) VALUES ('$Par_Sql[0]','$Par_Sql[1]')";		
-		echo $sql;
 		return $sql;
 		break;
 		

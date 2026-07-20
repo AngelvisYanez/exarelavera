@@ -1,9 +1,0 @@
-Options -Indexes
-<FilesMatch "\.(pdf|xml|json|html|txt|xlsx|xls|png|jpg)$">
-    Order Allow,Deny
-    Allow from all
-</FilesMatch>
-<FilesMatch "\.(php|php3|php4|php5|phtml|pl|py|jsp|asp|sh|cgi)$">
-    Order Deny,Allow
-    Deny from all
-</FilesMatch>

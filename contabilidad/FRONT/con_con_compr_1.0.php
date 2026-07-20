@@ -598,7 +598,6 @@ else
           <select name="Com_Tip" id="Com_Tip">
             <?Php
 			$tip = explode("*", $Com_Tip);
-			print_r($row_rs_tipo_asien);
 			foreach ($row_rs_tipo_asien as $row)
 			{
 			?>

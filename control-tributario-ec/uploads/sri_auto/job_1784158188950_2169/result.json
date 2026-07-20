@@ -1,4 +1,0 @@
-{
-  "status": "error",
-  "error": "page.goto: net::ERR_CONNECTION_RESET at https://srienlinea.sri.gob.ec/sri-en-linea/contribuyente/perfil\nCall log:\n\u001b[2m  - navigating to \"https://srienlinea.sri.gob.ec/sri-en-linea/contribuyente/perfil\", waiting until \"domcontentloaded\"\u001b[22m\n"
-}

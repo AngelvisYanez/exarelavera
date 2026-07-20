@@ -1427,7 +1427,7 @@ function gestionarPago() {
 function validar_fecha_comprobante() {
     $.post("", { getAnticipoCantAjax: true, Prv_Cod: $("#agg_Prv_Cod").val() }, function (responce) {
         if ($("#Com_Fec").val() < responce['Atp_Fec']) {
-            alert("No existen anticipos para estas fechas");
+            $.alert("No existen anticipos para estas fechas",null,'warning');
 
             $("#Com_Fec").val(responce['Atp_Fec']);
         }

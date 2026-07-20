@@ -217,18 +217,18 @@ function imprimirReporteKardexAnticipos() {
     var g = $('#searchGrid');
     if (!g.length || !g[0].grid) {
         if (typeof $.alert === 'function') {
-            $.alert('La grilla no está lista. Pulse Buscar primero.');
+            $.alert('La grilla no está lista. Pulse Buscar primero.',null,'warning');
         } else {
-            window.alert('La grilla no está lista. Pulse Buscar primero.');
+            $.alert('La grilla no está lista. Pulse Buscar primero.',null,'warning');
         }
         return;
     }
     var n = parseInt(g.jqGrid('getGridParam', 'records'), 10) || 0;
     if (n < 1) {
         if (typeof $.alert === 'function') {
-            $.alert('No hay datos en el reporte para imprimir.');
+            $.alert('No hay datos en el reporte para imprimir.',null,'warning');
         } else {
-            window.alert('No hay datos en el reporte para imprimir.');
+            $.alert('No hay datos en el reporte para imprimir.',null,'warning');
         }
         return;
     }
@@ -251,15 +251,15 @@ function exportarExcelKardexAnticipos() {
     var g = $('#searchGrid');
     if (!g.length || !g[0].grid) {
         if (typeof $.alert === 'function') {
-            $.alert('La grilla no está lista. Pulse Buscar primero.');
+            $.alert('La grilla no está lista. Pulse Buscar primero.',null,'warning');
         } else {
-            window.alert('La grilla no está lista. Pulse Buscar primero.');
+            $.alert('La grilla no está lista. Pulse Buscar primero.',null,'warning');
         }
         return;
     }
     var n = parseInt(g.jqGrid('getGridParam', 'records'), 10) || 0;
     if (n < 1) {
-        $.alert('No hay datos en el reporte para exportar.');
+        $.alert('No hay datos en el reporte para exportar.',null,'warning');
         return;
     }
     getKardexRowsTodasLasPaginas().then(function (rows) {

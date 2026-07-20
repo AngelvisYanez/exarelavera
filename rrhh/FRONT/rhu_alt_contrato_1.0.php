@@ -488,7 +488,7 @@ $bancos = $obBD_con1->getArrayConsulta(19,"", $obBD_conexion);
                 $("#Tic_Cod").createChosen('input-xs');
                 //Secci�n para asignar popup
                 $('#Tic_Cod').on('change', function () {
-                    $.post("<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING)?>",{'Tic_Cod':$('#Tic_Cod').val(),'buscarTipocargo':true},function(response){
+                    $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8')?>",{'Tic_Cod':$('#Tic_Cod').val(),'buscarTipocargo':true},function(response){
                         cargarPop(response.Tic_Des,response.Tic_Per);
                     },'json');
                 });
@@ -551,11 +551,11 @@ $bancos = $obBD_con1->getArrayConsulta(19,"", $obBD_conexion);
                 $('#empleado').val(empleado['empleado']);
                 $('#list').jqGrid('setCaption','Listado de Contratos Efectuados');
                 $('#list_afi').jqGrid('setCaption','Listado de Afiliaciones Efectuadas');
-                $.post('<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING)?>',{contratosEmpleado:true,Per_Cod:empleado['Per_Cod']},function(response){
+                $.post('<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8')?>',{contratosEmpleado:true,Per_Cod:empleado['Per_Cod']},function(response){
                     $('#list').setRows(response);
                     if(response.length>0){$('#tit_con').html('Historico de Contratos: '+empleado.empleado);}else{$('#tit_con').html('No Registra Antecedentes de Contratos');}
                 },'json').fail(function(){alert();});
-                $.post('<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING)?>',{afiliacionEmpleado:true,Per_Cod:empleado['Per_Cod']},function(response){
+                $.post('<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8')?>',{afiliacionEmpleado:true,Per_Cod:empleado['Per_Cod']},function(response){
                     $('#list_afi').setRows(response);
                     if(response.length>0){$('#tit_afi').html('Historico de Afiliaciones: '+empleado.empleado);}else{$('#tit_afi').html('No Registra Antecedentes de Afiliaci&oacute;n');}
                 },'json').fail(function(){alert();});
@@ -568,7 +568,7 @@ $bancos = $obBD_con1->getArrayConsulta(19,"", $obBD_conexion);
                 }
                 var data=$('#formContrato').getData('saveContrato');
                 $.extend(data,$('#formAfiliacion').getData());
-                $.post('<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING)?>',data,function(response){
+                $.post('<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8')?>',data,function(response){
                     if(response['success']===true){
                         $.alert("Transaccion Realizada con &Eacute;xito!");
                         limpiar();                        

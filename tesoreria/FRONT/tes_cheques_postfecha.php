@@ -1,4 +1,4 @@
-<?php	
+﻿<?php	
 /**
 * @abstract Permite listar los cheques postfechados
 * @author Erik Niebla
@@ -174,7 +174,7 @@ if(isset($save)){
                         function LoadCheque(){	                            
                                 var formData = $("#form1").getData('cheqAjax');                                
                                 //formData.append(f.attr("name"), $(this)[0].files[0]);
-                                $.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',formData, function(response){		
+                                $.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',formData, function(response){		
                                         setCaption();
                                         $("#list").jqGrid("clearGridData");                                    
                                         $("#list").jqGrid('setGridParam',{rowNum:response['records']});
@@ -186,7 +186,7 @@ if(isset($save)){
                              $('#rangeDates').toggleClass('disabled').find('input').toggleAttr('disabled');
                             var gridList=$("#list");
                             gridList.jqGrid({
-                                url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                 mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },  
                                 postData: {},caption:' ',hidegrid: false,
                                 autowidth : true, shrinkToFit: true, height: 270,
@@ -261,7 +261,7 @@ if(isset($save)){
                             $.createDialog('#fechDialog',300,650); 
                         });  
             function saveFech(){
-                 $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{save:$("#lblCheCod2").val(),fecha:$("#lblCheFeCob2").val()}, function( response ) {
+                 $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{save:$("#lblCheCod2").val(),fecha:$("#lblCheFeCob2").val()}, function( response ) {
                                 if(response['success']===true){
                                     $('#fechDialog').dialog('close');
                                     $.alert("Transaccion Realizada con &Eacute;xito!"); LoadCheque();

@@ -1,5 +1,13 @@
 <?php
 
+function _sqlq($val) {
+    return "'" . addslashes((string)$val) . "'";
+}
+
+function _sqlint($val) {
+    return (int)$val;
+}
+
 function sentencias_adm($id, $Par_Sql)
 {
   switch ($id) {
@@ -18,8 +26,8 @@ FROM
   INNER JOIN usuarios ON (persona.Prs_Cod = usuarios.Prs_Cod)
   INNER JOIN sucursal ON (usuarios.Suc_Cod = sucursal.Suc_Cod)
 WHERE
-  sucursal.Emp_Cod = $Par_Sql[0] AND 
-  Prs_Ape LIKE  '%$Par_Sql[1]%' ORDER BY Prs_Ape, Prs_Nom ASC";
+  sucursal.Emp_Cod = " . _sqlint($Par_Sql[0]) . " AND 
+  Prs_Ape LIKE  '%" . addslashes($Par_Sql[1]) . "%' ORDER BY Prs_Ape, Prs_Nom ASC";
       //echo $bucar_persona;  
       return $bucar_persona;
       break;
@@ -39,72 +47,72 @@ FROM
   INNER JOIN usuarios ON (persona.Prs_Cod = usuarios.Prs_Cod)
   INNER JOIN sucursal ON (usuarios.Suc_Cod = sucursal.Suc_Cod)
 WHERE
-  sucursal.Emp_Cod = $Par_Sql[0] AND 
-  Prs_Ced = '$Par_Sql[1]' ORDER BY Prs_Ape, Prs_Nom ASC";
+  sucursal.Emp_Cod = " . _sqlint($Par_Sql[0]) . " AND 
+  Prs_Ced = " . _sqlq($Par_Sql[1]) . " ORDER BY Prs_Ape, Prs_Nom ASC";
       //echo $bucar_persona_2;
       return $bucar_persona_2;
       break;
 
       /* Busqueda de usuarios dependiendo del codigo */
     case 3:
-      $consulta = "SELECT usuarios.Usu_Cod, persona.Prs_Ced as Usu_Ced, persona.Prs_Ape, persona.Prs_Nom, persona.Prs_Est, usuarios.Suc_Cod, usuarios.Usu_Est, sucursal.Suc_Des, usuarios.Usu_Cad FROM persona, usuarios, sucursal WHERE persona.Prs_Cod=usuarios.Prs_Cod AND usuarios.Suc_Cod = sucursal.Suc_Cod AND usuarios.Usu_Cod = $Par_Sql[0]";
+      $consulta = "SELECT usuarios.Usu_Cod, persona.Prs_Ced as Usu_Ced, persona.Prs_Ape, persona.Prs_Nom, persona.Prs_Est, usuarios.Suc_Cod, usuarios.Usu_Est, sucursal.Suc_Des, usuarios.Usu_Cad FROM persona, usuarios, sucursal WHERE persona.Prs_Cod=usuarios.Prs_Cod AND usuarios.Suc_Cod = sucursal.Suc_Cod AND usuarios.Usu_Cod = " . _sqlint($Par_Sql[0]);
       //echo $onsulta;
       return $consulta;
       break;
 
       /* Busqueda los perifles del usuario */
     case 4:
-      $consulta_2 = "SELECT perfiles.Per_Cod, perfiles.Per_Des, perfiles.Per_Est FROM perfiles WHERE perfiles.Emp_Cod = $Par_Sql[0] ORDER BY perfiles.Per_Des";
+      $consulta_2 = "SELECT perfiles.Per_Cod, perfiles.Per_Des, perfiles.Per_Est FROM perfiles WHERE perfiles.Emp_Cod = " . _sqlint($Par_Sql[0]) . " ORDER BY perfiles.Per_Des";
       return   $consulta_2;
       break;
 
       /* Busqueda de los usuarios depiendo del codigo de la persona */
     case 5:
-      $consulta_5 = "SELECT usuarperfi.Per_Cod, concat(usuarperfi.Per_Cod,perfiles.Per_Est) as Per_Est2, perfiles.Per_Est, perfiles.Per_Des FROM usuarperfi, perfiles WHERE usuarperfi.Per_Cod = perfiles.Per_Cod AND usuarperfi.Usu_Cod=(SELECT Usu_Cod FROM usuarios WHERE Usu_Cod=$Par_Sql[0])";
+      $consulta_5 = "SELECT usuarperfi.Per_Cod, concat(usuarperfi.Per_Cod,perfiles.Per_Est) as Per_Est2, perfiles.Per_Est, perfiles.Per_Des FROM usuarperfi, perfiles WHERE usuarperfi.Per_Cod = perfiles.Per_Cod AND usuarperfi.Usu_Cod=(SELECT Usu_Cod FROM usuarios WHERE Usu_Cod=" . _sqlint($Par_Sql[0]) . ")";
       //echo $consulta_5;
       return $consulta_5;
       break;
 
     case 6:
-      $rs_codigo = "SELECT Usu_Cod FROM usuarios WHERE Prs_Cod='$Par_Sql[0]'";
+      $rs_codigo = "SELECT Usu_Cod FROM usuarios WHERE Prs_Cod=" . _sqlq($Par_Sql[0]);
       return $rs_codigo;
       break;
 
       //BORRADO
     case 7:
-      $rs_borrado = "DELETE FROM usuarperfi WHERE Usu_Cod='$Par_Sql[0]'";
+      $rs_borrado = "DELETE FROM usuarperfi WHERE Usu_Cod=" . _sqlq($Par_Sql[0]);
       return $rs_borrado;
       break;
 
       ///INSERTAR DATOS
     case 8:
-      $rs_guardar = "INSERT INTO usuarperfi (Usu_Cod) VALUES ($Par_Sql[0])";
+      $rs_guardar = "INSERT INTO usuarperfi (Usu_Cod) VALUES (" . _sqlint($Par_Sql[0]) . ")";
       return $rs_guardar;
       break;
 
       ///actualizar
     case 9:
-      $rs_usuarios = "UPDATE usuarios SET Usu_Tip = '$Par_Sql[0]' WHERE Usu_Ced = '$Par_Sql[1]'";
+      $rs_usuarios = "UPDATE usuarios SET Usu_Tip = " . _sqlq($Par_Sql[0]) . " WHERE Usu_Ced = " . _sqlq($Par_Sql[1]);
       return $rs_usuarios;
       break;
 
       ///actualiza la clave del ususario
 
     case 10:
-      $rs_clave = "UPDATE usuarios SET Usu_Pal='" . md5($Par_Sql[0]) . "', Usu_Tip = '$Par_Sql[1]' WHERE Usu_Ced = '$Par_Sql[2]'";
+      $rs_clave = "UPDATE usuarios SET Usu_Pal='" . md5($Par_Sql[0]) . "', Usu_Tip = " . _sqlq($Par_Sql[1]) . " WHERE Usu_Ced = " . _sqlq($Par_Sql[2]);
       return $rs_clave;
       break;
       ///Consultar sucursales////
 
     case 11:
       /* Modifica o actualiza los cambios realizados en la tabla de autorozaciones */
-      $cons_suc_11 = "SELECT Suc_Cod, Suc_Des FROM sucursal WHERE Emp_Cod = '$Par_Sql[0]' ORDER BY Suc_Des";
+      $cons_suc_11 = "SELECT Suc_Cod, Suc_Des FROM sucursal WHERE Emp_Cod = " . _sqlq($Par_Sql[0]) . " ORDER BY Suc_Des";
       return $cons_suc_11;
       break;
 
     case 12:
       /* Consulta el codigo del proceso */
-      $consulta_proceso_12 = "SELECT Pcs_Cod FROM procesos WHERE Pcs_Nom = '$Par_Sql[0]'";
+      $consulta_proceso_12 = "SELECT Pcs_Cod FROM procesos WHERE Pcs_Nom = " . _sqlq($Par_Sql[0]);
       //echo $consulta_proceso_12;
       return $consulta_proceso_12;
       break;
@@ -112,7 +120,7 @@ WHERE
     case 13:
       /* Consulta el reporte recursivo */
       $consulta_proceso_13 = "SELECT reportes.Rep_Cod, procesos.Pcs_Nom, reportes.Rep_Ord FROM procesos INNER JOIN reportes ON 
-							(procesos.Pcs_Cod = reportes.Rep_Req) WHERE reportes.Pcs_Cod = $Par_Sql[0] ORDER BY
+							(procesos.Pcs_Cod = reportes.Rep_Req) WHERE reportes.Pcs_Cod = " . _sqlint($Par_Sql[0]) . " ORDER BY
 							reportes.Rep_Ord ";
       //echo $consulta_proceso_13;
       return $consulta_proceso_13;
@@ -145,8 +153,8 @@ FROM
   INNER JOIN persona ON (usuarios.Prs_Cod = persona.Prs_Cod)
   INNER JOIN empresas ON (sucursal.Emp_Cod = empresas.Emp_Cod)
 WHERE
-  Usu_Ced = '$Par_Sql[0]' AND 
-  Usu_Pal = '" . md5($Par_Sql[1]) . "' AND empresas.Emp_Cod = $Par_Sql[2] AND 
+  Usu_Ced = " . _sqlq($Par_Sql[0]) . " AND 
+  Usu_Pal = '" . md5($Par_Sql[1]) . "' AND empresas.Emp_Cod = " . _sqlint($Par_Sql[2]) . " AND 
   usuarios.Usu_Est = 'A' AND sucursal.Suc_Est = 'A'";
       //echo $valida_usuario_14;
       return $valida_usuario_14;
@@ -260,7 +268,7 @@ FROM
   INNER JOIN sucursal ON (usuarios.Suc_Cod = sucursal.Suc_Cod)
   INNER JOIN empresas ON (sucursal.Emp_Cod = empresas.Emp_Cod)
 WHERE
-  Usu_Ced = '$Par_Sql[0]'";
+  Usu_Ced = " . _sqlq($Par_Sql[0]) . "";
       // echo $empresas_20;
       return $empresas_20;
       break;
@@ -273,21 +281,21 @@ FROM
   perfiles
   INNER JOIN usuarperfi ON (perfiles.Per_Cod = usuarperfi.Per_Cod)
 WHERE
-  usuarperfi.Usu_Cod = $Par_Sql[0] AND perfiles.Per_Est = 'A'";
+  usuarperfi.Usu_Cod = " . _sqlint($Par_Sql[0]) . " AND perfiles.Per_Est = 'A'";
       //echo $usuarios_21;
       return $usuarios_21;
       break;
 
     case 22:
       /* Consulta los perfiles por empresa */
-      $perfiles_22 = "SELECT perfiles.Per_Cod, perfiles.Per_Des, perfiles.Per_Est FROM perfiles WHERE perfiles.Emp_Cod = $Par_Sql[0] ORDER BY perfiles.Per_Des";
+      $perfiles_22 = "SELECT perfiles.Per_Cod, perfiles.Per_Des, perfiles.Per_Est FROM perfiles WHERE perfiles.Emp_Cod = " . _sqlint($Par_Sql[0]) . " ORDER BY perfiles.Per_Des";
       //echo $perfiles_22;
       return $perfiles_22;
       break;
 
     case 23:
       /* Consulta los perfiles de manera individual */
-      $perfiles_23 = "SELECT perfiles.Per_Des FROM perfiles WHERE perfiles.Per_Cod = $Par_Sql[0]";
+      $perfiles_23 = "SELECT perfiles.Per_Des FROM perfiles WHERE perfiles.Per_Cod = " . _sqlint($Par_Sql[0]);
       //echo $perfiles_23;
       return $perfiles_23;
       break;
@@ -304,7 +312,7 @@ WHERE
 FROM
   organizado
 WHERE
-  organizado.Org_Niv=$Par_Sql[0]
+  organizado.Org_Niv=" . _sqlint($Par_Sql[0]) . "
 ORDER BY
   organizado.Org_Ord";
       //echo $perfiles_24;
@@ -313,7 +321,7 @@ ORDER BY
 
     case 25:
       /* Consulta los procesos de cada organizador para administracion */
-      $organizado_25 = "SELECT Pcs_Cod,Pcs_Lin,Rut_Des,Pcs_Nom,Pcs_Tip,Pcs_Det, IF (Pcs_Tip = 'P', 'PROCESO', IF (Pcs_Tip = 'R', 'REPORTE', '')) as Tipo, Pcs_Ord, Rut_Des, Pcs_Det FROM procesos, rutas WHERE procesos.Rut_Cod=rutas.Rut_Cod AND Pcs_Est='A' AND Org_Cod=" . $Par_Sql[0] . " ORDER BY Pcs_Ord";
+      $organizado_25 = "SELECT Pcs_Cod,Pcs_Lin,Rut_Des,Pcs_Nom,Pcs_Tip,Pcs_Det, IF (Pcs_Tip = 'P', 'PROCESO', IF (Pcs_Tip = 'R', 'REPORTE', '')) as Tipo, Pcs_Ord, Rut_Des, Pcs_Det FROM procesos, rutas WHERE procesos.Rut_Cod=rutas.Rut_Cod AND Pcs_Est='A' AND Org_Cod=" . _sqlint($Par_Sql[0]) . " ORDER BY Pcs_Ord";
       //echo $organizado_25."<br>";
       return $organizado_25;
       break;
@@ -324,35 +332,35 @@ ORDER BY
   Pcs_Cod
 FROM 
   perfiorgan
-WHERE perfiorgan.Per_Cod = $Par_Sql[0] AND perfiorgan.Pcs_Cod = $Par_Sql[1]";
+WHERE perfiorgan.Per_Cod = " . _sqlint($Par_Sql[0]) . " AND perfiorgan.Pcs_Cod = " . _sqlint($Par_Sql[1]);
       //echo $procesos_26."<br>";
       return $procesos_26;
       break;
 
     case 27:
       /* Elimina los procesos de un perfil */
-      $procesos_27 = "DELETE FROM perfiorgan WHERE Per_Cod = $Par_Sql[0]";
+      $procesos_27 = "DELETE FROM perfiorgan WHERE Per_Cod = " . _sqlint($Par_Sql[0]);
       //echo $procesos_27."<br>";
       return $procesos_27;
       break;
 
     case 28:
       /* Inserta los procesos de un perfil */
-      $procesos_28 = "INSERT INTO perfiorgan(Per_Cod,Pcs_Cod) VALUES ($Par_Sql[0], $Par_Sql[1])";
+      $procesos_28 = "INSERT INTO perfiorgan(Per_Cod,Pcs_Cod) VALUES (" . _sqlint($Par_Sql[0]) . ", " . _sqlint($Par_Sql[1]) . ")";
       //echo $procesos_28."<br>";
       return $procesos_28;
       break;
 
     case 29:
       /* Actualiza es estado del usuario */
-      $usuarios_29 = "UPDATE usuarios SET Usu_Est='$Par_Sql[0]' WHERE Usu_Cod = $Par_Sql[1]";
+      $usuarios_29 = "UPDATE usuarios SET Usu_Est=" . _sqlq($Par_Sql[0]) . " WHERE Usu_Cod = " . _sqlint($Par_Sql[1]);
       //echo $usuarios_29."<br>";
       return $usuarios_29;
       break;
 
     case 30:
       /* Inserta nuevos perfiles */
-      $perfil_30 = "INSERT INTO perfiles(Per_Des,Emp_Cod) VALUES ('$Par_Sql[0]',$Par_Sql[1])";
+      $perfil_30 = "INSERT INTO perfiles(Per_Des,Emp_Cod) VALUES (" . _sqlq($Par_Sql[0]) . "," . _sqlint($Par_Sql[1]) . ")";
       //echo $perfil_30."<br>";
       return $perfil_30;
       break;
@@ -373,7 +381,7 @@ FROM
   INNER JOIN perfiorgan ON (procesos.Pcs_Cod = perfiorgan.Pcs_Cod)
   INNER JOIN organizado ON (procesos.Org_Cod = organizado.Org_Cod)
 WHERE
-  organizado.Org_Niv = $Par_Sql[0]"; // (".$Par_Sql[0].") AND
+  organizado.Org_Niv = " . _sqlint($Par_Sql[0]) . ""; // (".$Par_Sql[0].") AND
 
       //echo $organizado_31."<br>";
       return $organizado_31;
@@ -381,7 +389,7 @@ WHERE
 
     case 32:
       /* Consulta los organizados */
-      $organizado_32 = "SELECT Org_Cod, Org_Des, Org_Mod, Org_Img, Org_Ime FROM organizado WHERE Org_Niv=$Par_Sql[0]";
+      $organizado_32 = "SELECT Org_Cod, Org_Des, Org_Mod, Org_Img, Org_Ime FROM organizado WHERE Org_Niv=" . _sqlint($Par_Sql[0]);
 
       //echo $organizado_32."<br>";
       return $organizado_32;
@@ -389,7 +397,7 @@ WHERE
 
     case 33:
       /* Consulta los organizados en base al codigo */
-      $organizado_33 = "SELECT Org_Cod, Org_Des, Org_Mod, Org_Niv FROM organizado WHERE Org_Cod=$Par_Sql[0]";
+      $organizado_33 = "SELECT Org_Cod, Org_Des, Org_Mod, Org_Niv FROM organizado WHERE Org_Cod=" . _sqlint($Par_Sql[0]);
 
       //echo $organizado_33."<br>";
       return $organizado_33;
@@ -398,7 +406,7 @@ WHERE
       /*  Insercion de los directorios */
     case 34:
       $direc_34 = "INSERT INTO organizado (Org_Niv, Org_Det, Org_Des, Org_Img, Org_Ime)  
-			VALUE ($Par_Sql[0], '$Par_Sql[1]', '$Par_Sql[2]', '$Par_Sql[3]', '$Par_Sql[4]')";
+			VALUE (" . _sqlint($Par_Sql[0]) . ", " . _sqlq($Par_Sql[1]) . ", " . _sqlq($Par_Sql[2]) . ", " . _sqlq($Par_Sql[3]) . ", " . _sqlq($Par_Sql[4]) . ")";
       //echo $direc_34;
       return $direc_34;
       break;
@@ -413,7 +421,7 @@ WHERE
       /*  Insercion de los directorios */
     case 36:
       $direc_36 = "INSERT INTO procesos (Org_Cod, Pcs_Lin, Pcs_Nom, Rut_Cod, Pcs_Tip, Pcs_Det, Tpr_Cod, Pcs_Ord)  
-			VALUE ($Par_Sql[0], '$Par_Sql[1]', '$Par_Sql[2]', $Par_Sql[3], '$Par_Sql[4]', '$Par_Sql[5]', $Par_Sql[6], $Par_Sql[7])";
+			VALUE (" . _sqlint($Par_Sql[0]) . ", " . _sqlq($Par_Sql[1]) . ", " . _sqlq($Par_Sql[2]) . ", " . _sqlint($Par_Sql[3]) . ", " . _sqlq($Par_Sql[4]) . ", " . _sqlq($Par_Sql[5]) . ", " . _sqlint($Par_Sql[6]) . ", " . _sqlint($Par_Sql[7]) . ")";
       //echo $direc_36;
       return $direc_36;
       break;
@@ -428,7 +436,7 @@ WHERE
       /*  Actualiza la fecha de conexion del usuario */
     case 38:
       $time_online = time();
-      $online_38 = "UPDATE usuarios SET usuarios.Usu_Cox = '$time_online' WHERE usuarios.Usu_Cod = '$Par_Sql[1]'";
+      $online_38 = "UPDATE usuarios SET usuarios.Usu_Cox = '$time_online' WHERE usuarios.Usu_Cod = " . _sqlq($Par_Sql[1]);
       //echo $online_38;
       return $online_38;
       break;
@@ -438,7 +446,7 @@ WHERE
       $online_39 = "SELECT persona.Prs_Cod,
                     persona.Prs_Ced, LOWER(persona.Prs_Nom) AS Prs_Nom, LOWER(persona.Prs_Ape) AS Prs_Ape, Prs_Cor,MAX(usuarios.Usu_Cox) AS Usu_Cox FROM persona 
                     INNER JOIN usuarios ON (persona.Prs_Cod = usuarios.Prs_Cod)
-                    WHERE /*usuarios.Usu_Cox >='$Par_Sql[0]' AND sucursal.Emp_Cod = $Par_Sql[2] AND*/ persona.Prs_Cod != $Par_Sql[1] AND Usu_Tip != 'C' AND Usu_Est='A' AND Usu_Cox IS NOT NULL GROUP BY persona.Prs_Cod ORDER BY MAX(usuarios.Usu_Cox) DESC";
+                    WHERE /*usuarios.Usu_Cox >='$Par_Sql[0]' AND sucursal.Emp_Cod = $Par_Sql[2] AND*/ persona.Prs_Cod != " . _sqlint($Par_Sql[1]) . " AND Usu_Tip != 'C' AND Usu_Est='A' AND Usu_Cox IS NOT NULL GROUP BY persona.Prs_Cod ORDER BY MAX(usuarios.Usu_Cox) DESC";
       //echo $online_39;
       return $online_39;
       break;
@@ -446,7 +454,7 @@ WHERE
 
 
     case 101:
-      $rs_clave = "UPDATE usuarios SET Usu_Pal='" . md5($Par_Sql[0]) . "' WHERE Usu_Cod ='$Par_Sql[1]'";
+      $rs_clave = "UPDATE usuarios SET Usu_Pal='" . md5($Par_Sql[0]) . "' WHERE Usu_Cod =" . _sqlq($Par_Sql[1]);
       return $rs_clave;
       break;
 
@@ -460,72 +468,72 @@ WHERE
 
     case 103:
       /* Consulta un solo registro de persona para el web serice que necesita la aplicacion auxiliar de KOHA (via WebService) */
-      $buscar_persona = "SELECT usuarios.Prs_Cod AS codigo,Prs_Ced AS cedula, Prs_Nom AS nombre,Prs_Ape AS apellido,ciudad.Ciu_Des AS ciudad, Prs_Dir AS direccion,Prs_Tel AS telefono,Prs_Cor AS correo,usuarios.Usu_Tip AS categoria,Prs_Sex AS sexo FROM persona,usuarios,ciudad WHERE persona.Prs_Cod = usuarios.Prs_Cod AND persona.Ciu_Cod = ciudad.Ciu_Cod AND persona.Prs_Ced='$Par_Sql[0]';";
+      $buscar_persona = "SELECT usuarios.Prs_Cod AS codigo,Prs_Ced AS cedula, Prs_Nom AS nombre,Prs_Ape AS apellido,ciudad.Ciu_Des AS ciudad, Prs_Dir AS direccion,Prs_Tel AS telefono,Prs_Cor AS correo,usuarios.Usu_Tip AS categoria,Prs_Sex AS sexo FROM persona,usuarios,ciudad WHERE persona.Prs_Cod = usuarios.Prs_Cod AND persona.Ciu_Cod = ciudad.Ciu_Cod AND persona.Prs_Ced=" . _sqlq($Par_Sql[0]) . ";";
       return $buscar_persona;
       break;
 
     case 104:
       /* Consulta un solo registro de persona para el web serice que necesita la aplicacion auxiliar de KOHA (via WebService) */
-      $buscar_persona = "SELECT usuarios.Prs_Cod AS codigo,Prs_Ced AS cedula, Prs_Nom AS nombre,Prs_Ape AS apellido,ciudad.Ciu_Des AS ciudad, Prs_Dir AS direccion,Prs_Tel AS telefono,Prs_Cor AS correo,usuarios.Usu_Tip AS categoria,Prs_Sex AS sexo FROM persona,usuarios,ciudad WHERE persona.Prs_Cod = usuarios.Prs_Cod AND persona.Ciu_Cod = ciudad.Ciu_Cod AND persona.Prs_Ape='$Par_Sql[0]';";
+      $buscar_persona = "SELECT usuarios.Prs_Cod AS codigo,Prs_Ced AS cedula, Prs_Nom AS nombre,Prs_Ape AS apellido,ciudad.Ciu_Des AS ciudad, Prs_Dir AS direccion,Prs_Tel AS telefono,Prs_Cor AS correo,usuarios.Usu_Tip AS categoria,Prs_Sex AS sexo FROM persona,usuarios,ciudad WHERE persona.Prs_Cod = usuarios.Prs_Cod AND persona.Ciu_Cod = ciudad.Ciu_Cod AND persona.Prs_Ape=" . _sqlq($Par_Sql[0]) . ";";
       return $buscar_persona;
       break;
 
 
     case 201: //borrar
-      $Sql_201 = "SELECT Usu_Cod FROM usuarios WHERE Prs_Cod=$Par_Sql[0]";
+      $Sql_201 = "SELECT Usu_Cod FROM usuarios WHERE Prs_Cod=" . _sqlint($Par_Sql[0]);
       return $Sql_201;
       break;
 
     case 202:
-      $Sql_202 = "DELETE FROM usuarperfi WHERE Usu_Cod=$Par_Sql[0]";
+      $Sql_202 = "DELETE FROM usuarperfi WHERE Usu_Cod=" . _sqlint($Par_Sql[0]);
       return $Sql_202;
       break;
 
     case 203:
-      $Sql_203 = "INSERT INTO usuarperfi VALUES ($Par_Sql[0], $Par_Sql[1])";
+      $Sql_203 = "INSERT INTO usuarperfi VALUES (" . _sqlint($Par_Sql[0]) . ", " . _sqlint($Par_Sql[1]) . ")";
       return $Sql_203;
       break;
 
     case 204:
-      $Sql_204 = "UPDATE usuarios SET Usu_Ced = '$Par_Sql[0]', Usu_Cad = '$Par_Sql[2]'  WHERE Usu_Cod =$Par_Sql[1]";
+      $Sql_204 = "UPDATE usuarios SET Usu_Ced = " . _sqlq($Par_Sql[0]) . ", Usu_Cad = " . _sqlq($Par_Sql[2]) . "  WHERE Usu_Cod =" . _sqlint($Par_Sql[1]);
       return $Sql_204;
       break;
 
     case 205:
-      $Sql_205 = "UPDATE usuarios SET Usu_Pal='" . md5($Par_Sql[0]) . "', Usu_Ced = '$Par_Sql[1]', Usu_Cad = '$Par_Sql[3]' WHERE Usu_Cod = $Par_Sql[2]";
+      $Sql_205 = "UPDATE usuarios SET Usu_Pal='" . md5($Par_Sql[0]) . "', Usu_Ced = " . _sqlq($Par_Sql[1]) . ", Usu_Cad = " . _sqlq($Par_Sql[3]) . " WHERE Usu_Cod = " . _sqlint($Par_Sql[2]);
       return $Sql_205;
       break;
 
     case 206:
-      $Sql_206 = "UPDATE usuarios SET Usu_Pal='" . md5($Par_Sql[0]) . "' WHERE Usu_Cod =$Par_Sql[1]";
+      $Sql_206 = "UPDATE usuarios SET Usu_Pal='" . md5($Par_Sql[0]) . "' WHERE Usu_Cod =" . _sqlint($Par_Sql[1]);
       return $Sql_206;
       break;
 
     case 207:
-      $Sql_207 = "SELECT Usu_Cod, usuarios.Usu_Ced, Prs_Ape, Prs_Nom, Prs_Est, usuarios.Usu_Tip, usuarios.Usu_Est FROM persona, usuarios WHERE persona.Prs_Ced=usuarios.Usu_Ced AND persona.Prs_Cod = $Par_Sql[0]";
+      $Sql_207 = "SELECT Usu_Cod, usuarios.Usu_Ced, Prs_Ape, Prs_Nom, Prs_Est, usuarios.Usu_Tip, usuarios.Usu_Est FROM persona, usuarios WHERE persona.Prs_Ced=usuarios.Usu_Ced AND persona.Prs_Cod = " . _sqlint($Par_Sql[0]);
       return $Sql_207;
       break;
 
     case 208:
-      $Sql_208 = "SELECT Nge_Cod, Asi_Int, Nge_Cre FROM notasgedet LIMIT $Par_Sql[0],$Par_Sql[1]";
+      $Sql_208 = "SELECT Nge_Cod, Asi_Int, Nge_Cre FROM notasgedet LIMIT " . _sqlint($Par_Sql[0]) . "," . _sqlint($Par_Sql[1]);
       //echo $Sql_208."<br>";
       return $Sql_208;
       break;
 
     case 209:
-      $Sql_209 = "SELECT Asi_Int, Asi_Des, Asi_Cre FROM asignatura WHERE Asi_Int=$Par_Sql[0]";
+      $Sql_209 = "SELECT Asi_Int, Asi_Des, Asi_Cre FROM asignatura WHERE Asi_Int=" . _sqlint($Par_Sql[0]);
       // echo $Sql_209."<br>";
       return $Sql_209;
       break;
 
     case 210:
-      $Sql_210 = "UPDATE notasgedet SET Nge_Cre = $Par_Sql[0] WHERE Nge_Cod=$Par_Sql[1] AND Asi_Int =$Par_Sql[2]";
+      $Sql_210 = "UPDATE notasgedet SET Nge_Cre = " . _sqlint($Par_Sql[0]) . " WHERE Nge_Cod=" . _sqlint($Par_Sql[1]) . " AND Asi_Int =" . _sqlint($Par_Sql[2]);
       echo $Sql_210 . "<br>";
       return $Sql_210;
       break;
 
     case 211:
-      $Sql_211 = "SELECT Per_Cod, Per_Fot FROM personal WHERE Prs_Cod=$Par_Sql[0] AND Emp_Cod = $Par_Sql[1]";
+      $Sql_211 = "SELECT Per_Cod, Per_Fot FROM personal WHERE Prs_Cod=" . _sqlint($Par_Sql[0]) . " AND Emp_Cod = " . _sqlint($Par_Sql[1]);
       //echo $Sql_211;
       return $Sql_211;
       break;
@@ -542,7 +550,7 @@ FROM
   sucursal
   INNER JOIN empresas ON (sucursal.Emp_Cod = empresas.Emp_Cod)
 WHERE
-  sucursal.Emp_Cod = $Par_Sql[0] AND sucursal.Suc_Est='A'";
+  sucursal.Emp_Cod = " . _sqlint($Par_Sql[0]) . " AND sucursal.Suc_Est='A'";
       return $sql;
       break;
 
@@ -552,7 +560,7 @@ WHERE
        */
       $sql = "SELECT DISTINCT empresas.Emp_Cod,Emp_Nom,Emp_Cor FROM sucursal 
 INNER JOIN empresas ON sucursal.Emp_Cod=empresas.Emp_Cod 
-INNER JOIN access ON access.Suc_Cod=sucursal.Suc_Cod WHERE empresas.Emp_Est='A' AND access.Acc_Usr='$Par_Sql[0]' AND Acc_Est='A' Order By Emp_Nom  Asc";
+INNER JOIN access ON access.Suc_Cod=sucursal.Suc_Cod WHERE empresas.Emp_Est='A' AND access.Acc_Usr=" . _sqlq($Par_Sql[0]) . " AND Acc_Est='A' Order By Emp_Nom  Asc";
       //echo $sql;
       return $sql;
 
@@ -563,7 +571,7 @@ INNER JOIN access ON access.Suc_Cod=sucursal.Suc_Cod WHERE empresas.Emp_Est='A' 
       $sql = "SELECT DISTINCT sucursal.Suc_Cod,Emp_Cor,Suc_Des FROM sucursal INNER JOIN empresas ON empresas.Emp_Cod=sucursal.Emp_Cod
 INNER JOIN data ON data.Emp_Cod=empresas.Emp_Cod 
 INNER JOIN access ON access.Suc_Cod=sucursal.Suc_Cod  
-WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Est='A'";
+WHERE sucursal.Emp_Cod=" . _sqlq($Par_Sql[0]) . " AND access.Acc_Usr=" . _sqlq($Par_Sql[1]) . " AND Acc_Est='A'";
       //echo $sql.'<br/>';
       return $sql;
 
@@ -572,35 +580,35 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
       /**
        * ingresar mensaje de chat
        */        //var_dump($Par_Sql);
-      $sql = "INSERT INTO chats (UserFromId,UserToId,Message,Sended) VALUES ($Par_Sql[UserFromId],$Par_Sql[UserToId],'$Par_Sql[Message]',NOW());";
+      $sql = "INSERT INTO chats (UserFromId,UserToId,Message,Sended) VALUES (" . _sqlint($Par_Sql[UserFromId]) . "," . _sqlint($Par_Sql[UserToId]) . "," . _sqlq($Par_Sql[Message]) . ",NOW());";
       //echo $sql.'<br/>';
       return $sql;
     case 216:
       /**
        * Leer historial de chat
        */        //var_dump($Par_Sql);
-      $sql = "SELECT * FROM chats WHERE ((UserFromId=$Par_Sql[UserFromId] AND UserToId=$Par_Sql[UserToId]) OR (UserToId=$Par_Sql[UserFromId] AND UserFromId=$Par_Sql[UserToId]) AND State=1) ORDER BY Sended; ";
+      $sql = "SELECT * FROM chats WHERE ((UserFromId=" . _sqlint($Par_Sql[UserFromId]) . " AND UserToId=" . _sqlint($Par_Sql[UserToId]) . ") OR (UserToId=" . _sqlint($Par_Sql[UserFromId]) . " AND UserFromId=" . _sqlint($Par_Sql[UserToId]) . ") AND State=1) ORDER BY Sended; ";
       //echo $sql.'<br/>';
       return $sql;
     case 217:
       /**
        * Leer mensajes nuevos para mi
        */        //var_dump($Par_Sql);
-      $sql = "SELECT * FROM chats WHERE (UserToId=$Par_Sql[0]) AND State=0  ORDER BY Sended; ";
+      $sql = "SELECT * FROM chats WHERE (UserToId=" . _sqlint($Par_Sql[0]) . ") AND State=0  ORDER BY Sended; ";
       //echo $sql.'<br/>';
       return $sql;
     case 218:
       /**
        * actualizar visto
        */        //var_dump($Par_Sql);
-      $sql = "UPDATE chats SET State=1,Viewed=NOW() WHERE (ChatId=$Par_Sql[ChatId]);  ";
+      $sql = "UPDATE chats SET State=1,Viewed=NOW() WHERE (ChatId=" . _sqlint($Par_Sql[ChatId]) . ");  ";
       //*echo $sql.'<br/>';
       return $sql;
     case 219:
       /**
        * envio de señal scribiendo
        */        //var_dump($Par_Sql);
-      $sql = "INSERT INTO chat_signals (UserFromId,UserToId) VALUES ($Par_Sql[UserFromId],$Par_Sql[UserToId]); ";
+      $sql = "INSERT INTO chat_signals (UserFromId,UserToId) VALUES (" . _sqlint($Par_Sql[UserFromId]) . "," . _sqlint($Par_Sql[UserToId]) . "); ";
       //echo $sql.'<br/>';
 
       return $sql;
@@ -608,14 +616,14 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
       /**
        * eliminacion de señal escribiendo
        */        //var_dump($Par_Sql);
-      $sql = "DELETE FROM chat_signals WHERE UserFromId=$Par_Sql[UserFromId] AND UserToId=$Par_Sql[UserToId];";
+      $sql = "DELETE FROM chat_signals WHERE UserFromId=" . _sqlint($Par_Sql[UserFromId]) . " AND UserToId=" . _sqlint($Par_Sql[UserToId]) . ";";
       //echo $sql.'<br/>';
       return $sql;
     case 221:
       /**
        * Leer mensajes nuevos para mi
        */        //var_dump($Par_Sql);
-      $sql = "SELECT * FROM chat_signals WHERE (UserToId=$Par_Sql[0]);  ";
+      $sql = "SELECT * FROM chat_signals WHERE (UserToId=" . _sqlint($Par_Sql[0]) . ");  ";
       //echo $sql.'<br/>';
 
       return $sql;
@@ -636,7 +644,7 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
       INNER JOIN sucursal ON (access.Suc_Cod = sucursal.Suc_Cod)
       INNER JOIN empresas ON (sucursal.Emp_Cod = empresas.Emp_Cod)
     WHERE
-      Acc_Usr = '$Par_Sql[0]' AND 
+      Acc_Usr = " . _sqlq($Par_Sql[0]) . " AND 
       empresas.Emp_Est = 'A' AND access.Acc_Est='A' order by empresas.Emp_Cor Asc";
       return $sql;
 
@@ -645,7 +653,7 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
       /**
        * Leer mensajes nuevos para mi
        */        //var_dump($Par_Sql);
-      $sql = "SELECT Dat_Dis FROM exa_master.data WHERE Emp_Cod = $Par_Sql[0]; ";
+      $sql = "SELECT Dat_Dis FROM exa_master.data WHERE Emp_Cod = " . _sqlint($Par_Sql[0]) . "; ";
       //echo $sql.'<br/>';
       return $sql;
       break;
@@ -716,7 +724,7 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
                         INNER JOIN servicios.persona ON persona.Prs_Cod = cliente.Prs_Cod
                         INNER JOIN servicios.caja_aper ON caja_aper.Caj_Cod = ventas.Caj_Cod
                         INNER JOIN servicios.tipo_compr ON tipo_compr.Tic_Cod = ventas.Tic_Cod
-                    WHERE Vet_Est = 'A' AND Tic_Sri!=0 AND Vet_Aut = 'N' AND Vet_Xml is not null AND Emp_Cod = '$Par_Sql[0]'
+                    WHERE Vet_Est = 'A' AND Tic_Sri!=0 AND Vet_Aut = 'N' AND Vet_Xml is not null AND Emp_Cod = " . _sqlq($Par_Sql[0]) . "
             UNION ALL
                     SELECT 
                         'RETENCIONES' AS Tipo, 
@@ -742,7 +750,7 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
                         INNER JOIN servicios.compras ON retencion.Cop_Cod = compras.Cop_Cod
                         INNER JOIN servicios.proveedore ON proveedore.Prv_Cod = compras.Prv_Cod  
                         INNER JOIN servicios.persona ON persona.Prs_Cod = proveedore.Prs_Cod
-                    WHERE Ret_Est = 'A' AND Ret_Aut = 'N' AND TRIM(coalesce(Ret_Xml, ''))<>'' AND Emp_Cod = '$Par_Sql[0]'
+                    WHERE Ret_Est = 'A' AND Ret_Aut = 'N' AND TRIM(coalesce(Ret_Xml, ''))<>'' AND Emp_Cod = " . _sqlq($Par_Sql[0]) . "
             UNION ALL
                     SELECT 
                         'GUIAS' AS Tipo, 
@@ -764,7 +772,7 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
                         '' AS Email 
                     FROM servicios.guias_remis                 
                         INNER JOIN servicios.guia_persona ON guia_persona.Gpe_Cod = guias_remis.Gpe_Cod  
-                    WHERE Gui_Est = 'A' AND Gui_Aut = 'N' AND Emp_Cod = '$Par_Sql[0]'
+                    WHERE Gui_Est = 'A' AND Gui_Aut = 'N' AND Emp_Cod = " . _sqlq($Par_Sql[0]) . "
             UNION ALL
                     SELECT 
                     'LIQUIDACION' AS Tipo, 
@@ -789,7 +797,7 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
                         INNER JOIN servicios.proveedore ON compras.Prv_Cod=proveedore.Prv_Cod
                         INNER JOIN servicios.persona ON proveedore.Prs_Cod = persona.Prs_Cod
                     WHERE Cop_Est='A'  AND  Aut_Cop='N' AND TRIM(coalesce(Cop_Aut, ''))<>'' AND 
-                          Emp_Cod='$Par_Sql[0]' AND Aut_Cod IS NOT NULL
+                          Emp_Cod=" . _sqlq($Par_Sql[0]) . " AND Aut_Cod IS NOT NULL
 
             UNION ALL
                                     /*BASE DE DATOS EXA*/
@@ -818,7 +826,7 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
                         INNER JOIN exa.persona ON persona.Prs_Cod = cliente.Prs_Cod
                         INNER JOIN exa.caja_aper ON caja_aper.Caj_Cod = ventas.Caj_Cod
                         INNER JOIN exa.tipo_compr ON tipo_compr.Tic_Cod = ventas.Tic_Cod
-                    WHERE Vet_Est = 'A' AND Tic_Sri!=0 AND Vet_Aut = 'N' AND Vet_Xml is not null AND Emp_Cod = '$Par_Sql[0]'
+                    WHERE Vet_Est = 'A' AND Tic_Sri!=0 AND Vet_Aut = 'N' AND Vet_Xml is not null AND Emp_Cod = " . _sqlq($Par_Sql[0]) . "
 
             UNION ALL
 
@@ -846,7 +854,7 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
                         INNER JOIN exa.compras ON retencion.Cop_Cod = compras.Cop_Cod
                         INNER JOIN exa.proveedore ON proveedore.Prv_Cod = compras.Prv_Cod  
                         INNER JOIN exa.persona ON persona.Prs_Cod = proveedore.Prs_Cod
-                    WHERE Ret_Est = 'A' AND Ret_Aut = 'N' AND TRIM(coalesce(Ret_Xml, ''))<>'' AND Emp_Cod = '$Par_Sql[0]'
+                    WHERE Ret_Est = 'A' AND Ret_Aut = 'N' AND TRIM(coalesce(Ret_Xml, ''))<>'' AND Emp_Cod = " . _sqlq($Par_Sql[0]) . "
 
             UNION ALL
 
@@ -870,7 +878,7 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
                         '' AS Email 
                     FROM exa.guias_remis                 
                         INNER JOIN exa.guia_persona ON guia_persona.Gpe_Cod = guias_remis.Gpe_Cod  
-                    WHERE Gui_Est = 'A' AND Gui_Aut = 'N' AND Emp_Cod = '$Par_Sql[0]'
+                    WHERE Gui_Est = 'A' AND Gui_Aut = 'N' AND Emp_Cod = " . _sqlq($Par_Sql[0]) . "
 
                             UNION ALL
                                         /*BASE DE DATOS GASOLNERA*/
@@ -899,7 +907,7 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
                             INNER JOIN gsl_chavez.persona ON persona.Prs_Cod = cliente.Prs_Cod
                             INNER JOIN gsl_chavez.caja_aper ON caja_aper.Caj_Cod = ventas.Caj_Cod
                             INNER JOIN gsl_chavez.tipo_compr ON tipo_compr.Tic_Cod = ventas.Tic_Cod
-                        WHERE Vet_Est = 'A' AND Tic_Sri!=0 AND Vet_Aut = 'N' AND Emp_Cod = '$Par_Sql[0]'
+                        WHERE Vet_Est = 'A' AND Tic_Sri!=0 AND Vet_Aut = 'N' AND Emp_Cod = " . _sqlq($Par_Sql[0]) . "
 
                 UNION ALL
 
@@ -927,7 +935,7 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
                             INNER JOIN gsl_chavez.compras ON retencion.Cop_Cod = compras.Cop_Cod
                             INNER JOIN gsl_chavez.proveedore ON proveedore.Prv_Cod = compras.Prv_Cod  
                             INNER JOIN gsl_chavez.persona ON persona.Prs_Cod = proveedore.Prs_Cod
-                        WHERE Ret_Est = 'A' AND Ret_Aut = 'N' AND Emp_Cod = '$Par_Sql[0]'
+                        WHERE Ret_Est = 'A' AND Ret_Aut = 'N' AND Emp_Cod = " . _sqlq($Par_Sql[0]) . "
 
                 UNION ALL
 
@@ -951,7 +959,7 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
                             '' AS Email 
                         FROM gsl_chavez.guias_remis                 
                             INNER JOIN gsl_chavez.guia_persona ON guia_persona.Gpe_Cod = guias_remis.Gpe_Cod  
-                        WHERE Gui_Est = 'A' AND Gui_Aut = 'N' AND Emp_Cod = '$Par_Sql[0]'
+                        WHERE Gui_Est = 'A' AND Gui_Aut = 'N' AND Emp_Cod = " . _sqlq($Par_Sql[0]) . "
             -- UNION ALL
             --         SELECT 
             --         'LIQUIDACION' AS Tipo, 
@@ -1002,7 +1010,7 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
       break;
     /* consulta de caducidad de llave electronica */
     case 119:
-      $sql = "SELECT Lla_Rut, Lla_Cla, Lla_Cad FROM llave_elect WHERE Lla_Est = 'A' AND Emp_Cod = $Par_Sql[0]";
+      $sql = "SELECT Lla_Rut, Lla_Cla, Lla_Cad FROM llave_elect WHERE Lla_Est = 'A' AND Emp_Cod = " . _sqlint($Par_Sql[0]);
       //echo $sql;
       return $sql;
       break;
@@ -1027,11 +1035,11 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
 
       /* Consulta para optener el registro especifico de los accesos directos*/
       case 121:
-        $sql = "SELECT * FROM shortcut WHERE Emp_Cod = $Par_Sql[0] AND Prs_Cod = $Par_Sql[1]";
+        $sql = "SELECT * FROM shortcut WHERE Emp_Cod = " . _sqlint($Par_Sql[0]) . " AND Prs_Cod = " . _sqlint($Par_Sql[1]);
 
       /* inserta los accesos directos del usuario a la base de datos */
       case 122:
-        $sql = "INSERT INTO shortcut (Emp_Cod, Prs_Cod, Acc_1, Acc_2, Acc_3, Acc_4) VALUES ($Par_Sql[0], $Par_Sql[1], '$Par_Sql[2]', '$Par_Sql[3]', '$Par_Sql[4]', '$Par_Sql[5]');";
+        $sql = "INSERT INTO shortcut (Emp_Cod, Prs_Cod, Acc_1, Acc_2, Acc_3, Acc_4) VALUES (" . _sqlint($Par_Sql[0]) . ", " . _sqlint($Par_Sql[1]) . ", " . _sqlq($Par_Sql[2]) . ", " . _sqlq($Par_Sql[3]) . ", " . _sqlq($Par_Sql[4]) . ", " . _sqlq($Par_Sql[5]) . ");";
         return $sql;
         break;
       /* Get Tipo de Documento by Punto */
@@ -1129,8 +1137,7 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
           INNER JOIN puntos_imp pi ON au.Pun_Cod = pi.Pun_Cod
           INNER JOIN sucursal su ON pi.Suc_Cod = su.Suc_Cod
         WHERE v.Vet_Est = 'A' 
-          AND ca.Caj_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2] 23:59:59'
-          AND su.Emp_Cod = $Par_Sql[0]";
+          AND ca.Caj_Fec BETWEEN " . _sqlq($Par_Sql[1]) . " AND " . _sqlq($Par_Sql[2] . " 23:59:59") . " AND su.Emp_Cod = " . _sqlint($Par_Sql[0]);
         return $sql;
         break;
 
@@ -1162,14 +1169,13 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
           INNER JOIN tipo_compr tc ON c.Tic_Cod = tc.Tic_Cod
           INNER JOIN proveedore p ON c.Prv_Cod = p.Prv_Cod
         WHERE c.Cop_Est = 'A'
-          AND c.Cop_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2] 23:59:59'
-          AND p.Emp_Cod = $Par_Sql[0]";
+          AND c.Cop_Fec BETWEEN " . _sqlq($Par_Sql[1]) . " AND " . _sqlq($Par_Sql[2] . " 23:59:59") . " AND p.Emp_Cod = " . _sqlint($Par_Sql[0]);
         return $sql; 
         break; 
 
       /* Consulta de clientes nuevos con filtro de empresa y fechas */
       case 127: 
-        $sql = "SELECT COUNT(DISTINCT Cli_Cod) AS nuevos FROM cliente WHERE Emp_Cod = $Par_Sql[0] AND Cli_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2] 23:59:59'";
+        $sql = "SELECT COUNT(DISTINCT Cli_Cod) AS nuevos FROM cliente WHERE Emp_Cod = " . _sqlint($Par_Sql[0]) . " AND Cli_Fec BETWEEN " . _sqlq($Par_Sql[1]) . " AND " . _sqlq($Par_Sql[2] . " 23:59:59");
         return $sql;
         break; 
 
@@ -1192,8 +1198,8 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
               INNER JOIN puntos_imp pi ON au.Pun_Cod = pi.Pun_Cod
               INNER JOIN sucursal su ON pi.Suc_Cod = su.Suc_Cod
             WHERE v.Vet_Est = 'A' AND 
-                  ca.Caj_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2] 23:59:59' AND
-                  su.Emp_Cod = $Par_Sql[0]
+                  ca.Caj_Fec BETWEEN " . _sqlq($Par_Sql[1]) . " AND " . _sqlq($Par_Sql[2] . " 23:59:59") . " AND
+                  su.Emp_Cod = " . _sqlint($Par_Sql[0]) . "
             GROUP BY DATE(ca.Caj_Fec)
             ORDER BY fecha";
         return $sql; 
@@ -1215,8 +1221,8 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
               INNER JOIN tipo_compr tc ON c.Tic_Cod = tc.Tic_Cod
               INNER JOIN proveedore p ON c.Prv_Cod = p.Prv_Cod
             WHERE c.Cop_Est = 'A' AND
-                  c.Cop_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2] 23:59:59' AND
-                  p.Emp_Cod = $Par_Sql[0]
+                  c.Cop_Fec BETWEEN " . _sqlq($Par_Sql[1]) . " AND " . _sqlq($Par_Sql[2] . " 23:59:59") . " AND
+                  p.Emp_Cod = " . _sqlint($Par_Sql[0]) . "
             GROUP BY DATE(c.Cop_Fec)
             ORDER BY fecha";
         return $sql; 
@@ -1241,8 +1247,8 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
               INNER JOIN puntos_imp pi ON au.Pun_Cod = pi.Pun_Cod
               INNER JOIN sucursal su ON pi.Suc_Cod = su.Suc_Cod
             WHERE v.Vet_Est = 'A' AND
-                  ca.Caj_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2] 23:59:59' AND
-                  su.Emp_Cod = $Par_Sql[0]
+                  ca.Caj_Fec BETWEEN " . _sqlq($Par_Sql[1]) . " AND " . _sqlq($Par_Sql[2] . " 23:59:59") . " AND
+                  su.Emp_Cod = " . _sqlint($Par_Sql[0]) . "
             GROUP BY DATE_FORMAT(ca.Caj_Fec, '%Y-%m')
             ORDER BY mes";
         return $sql;
@@ -1264,8 +1270,8 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
               INNER JOIN tipo_compr tc ON c.Tic_Cod = tc.Tic_Cod
               INNER JOIN proveedore p ON c.Prv_Cod = p.Prv_Cod
             WHERE c.Cop_Est = 'A' AND
-                c.Cop_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2] 23:59:59' AND
-                p.Emp_Cod = $Par_Sql[0]
+                c.Cop_Fec BETWEEN " . _sqlq($Par_Sql[1]) . " AND " . _sqlq($Par_Sql[2] . " 23:59:59") . " AND
+                p.Emp_Cod = " . _sqlint($Par_Sql[0]) . "
             GROUP BY DATE_FORMAT(c.Cop_Fec, '%Y-%m') ORDER BY mes";
         return $sql;
         break; 
@@ -1284,8 +1290,8 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
           INNER JOIN categorias cat ON i.Cat_Cod = cat.Cat_Cod
           INNER JOIN caja_aper ca ON v.Caj_Cod = ca.Caj_Cod
         WHERE v.Vet_Est = 'A' AND
-              ca.Caj_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2] 23:59:59' AND
-              cat.Emp_Cod = $Par_Sql[0]
+              ca.Caj_Fec BETWEEN " . _sqlq($Par_Sql[1]) . " AND " . _sqlq($Par_Sql[2] . " 23:59:59") . " AND
+              cat.Emp_Cod = " . _sqlint($Par_Sql[0]) . "
         GROUP BY p.Pro_Cod 
         ORDER BY total DESC LIMIT 5";
         return $sql;
@@ -1304,8 +1310,8 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
           INNER JOIN puntos_imp pi ON au.Pun_Cod = pi.Pun_Cod
           INNER JOIN sucursal su ON pi.Suc_Cod = su.Suc_Cod
         WHERE v.Vet_Est = 'A' AND
-              ca.Caj_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2] 23:59:59' AND
-              su.Emp_Cod = $Par_Sql[0]
+              ca.Caj_Fec BETWEEN " . _sqlq($Par_Sql[1]) . " AND " . _sqlq($Par_Sql[2] . " 23:59:59") . " AND
+              su.Emp_Cod = " . _sqlint($Par_Sql[0]) . "
         GROUP BY cl.Cli_Cod
         ORDER BY total DESC LIMIT 5";
         return $sql;
@@ -1313,7 +1319,7 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
 
       /* Consulta Total Clientes */
       case 134:
-        $sql = "SELECT COUNT(DISTINCT Cli_Cod) AS total FROM cliente WHERE Emp_Cod = $Par_Sql[0]";
+        $sql = "SELECT COUNT(DISTINCT Cli_Cod) AS total FROM cliente WHERE Emp_Cod = " . _sqlint($Par_Sql[0]);
         return $sql;
         break; 
 
@@ -1329,8 +1335,8 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
             WHERE v.Vet_Est = 'A' 
                   AND tc.Tic_Sri = 1
                   AND v.Vet_Sri IS NOT NULL AND TRIM(v.Vet_Sri) != ''
-                  AND ca.Caj_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2] 23:59:59'
-                  AND su.Emp_Cod = $Par_Sql[0]";
+                  AND ca.Caj_Fec BETWEEN " . _sqlq($Par_Sql[1]) . " AND " . _sqlq($Par_Sql[2] . " 23:59:59") . "
+                  AND su.Emp_Cod = " . _sqlint($Par_Sql[0]) . "";
         return $sql;
         break; 
 
@@ -1346,8 +1352,8 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
             WHERE v.Vet_Est = 'A' 
               AND tc.Tic_Sri = 4
               AND v.Vet_Sri IS NOT NULL AND TRIM(v.Vet_Sri) != ''
-              AND ca.Caj_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2] 23:59:59'
-              AND su.Emp_Cod = $Par_Sql[0]";
+              AND ca.Caj_Fec BETWEEN " . _sqlq($Par_Sql[1]) . " AND " . _sqlq($Par_Sql[2] . " 23:59:59") . "
+              AND su.Emp_Cod = " . _sqlint($Par_Sql[0]);
         return $sql;
         break; 
 
@@ -1359,8 +1365,8 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
               INNER JOIN proveedore p ON c.Prv_Cod = p.Prv_Cod
             WHERE r.Ret_Est = 'A'
               AND r.Ret_Sri IS NOT NULL AND TRIM(r.Ret_Sri) != ''
-              AND r.Ret_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2] 23:59:59'
-              AND p.Emp_Cod = $Par_Sql[0]";
+              AND r.Ret_Fec BETWEEN " . _sqlq($Par_Sql[1]) . " AND " . _sqlq($Par_Sql[2] . " 23:59:59") . "
+              AND p.Emp_Cod = " . _sqlint($Par_Sql[0]);
         return $sql;
         break; 
 
@@ -1382,8 +1388,8 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
             INNER JOIN proveedore p ON c.Prv_Cod = p.Prv_Cod
             WHERE c.Cop_Est = 'A'
             AND tc.Tic_Sri = 3
-            AND c.Cop_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2] 23:59:59'
-            AND p.Emp_Cod = $Par_Sql[0]";
+            AND c.Cop_Fec BETWEEN " . _sqlq($Par_Sql[1]) . " AND " . _sqlq($Par_Sql[2] . " 23:59:59") . "
+            AND p.Emp_Cod = " . _sqlint($Par_Sql[0]);
         return $sql;
         break; 
 
@@ -1401,8 +1407,8 @@ WHERE sucursal.Emp_Cod='$Par_Sql[0]' AND access.Acc_Usr='$Par_Sql[1]' AND Acc_Es
             FROM guias_remis g
             INNER JOIN guia_persona gp ON g.Gpe_Cod = gp.Gpe_Cod
             WHERE g.Gui_Est = 'A'
-            AND g.Gui_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2] 23:59:59'
-            AND gp.Emp_Cod = $Par_Sql[0]";
+            AND g.Gui_Fec BETWEEN " . _sqlq($Par_Sql[1]) . " AND " . _sqlq($Par_Sql[2] . " 23:59:59") . "
+            AND gp.Emp_Cod = " . _sqlint($Par_Sql[0]);
         return $sql;
         break;
   }

@@ -247,10 +247,10 @@ if(isset($loginAjax)){
                             }
                             function loginAjax(){
                                 var msg;
-                                $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{loginAjax:true,Emp_Cod:$('#Emp_Cod').val(),Suc_Cod:$('#Suc_Cod').val(),user_name:$('#Usu_Ced').val(),encryptor:md5($('#Usu_Pas').val())}, function( response ) {
+                                $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{loginAjax:true,Emp_Cod:$('#Emp_Cod').val(),Suc_Cod:$('#Suc_Cod').val(),user_name:$('#Usu_Ced').val(),encryptor:md5($('#Usu_Pas').val())}, function( response ) {
                                     if(response['success']===true){
                                          msg='<div class="alert alert-success fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[SISTEMA]</strong> &nbsp;&nbsp;Login Correcto. Direccionando....</div>';
-                                         setTimeout(function (){window.location.href ="<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>";},2500);
+                                         setTimeout(function (){window.location.href ="<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>";},2500);
                                     }else{ msg='<div class="alert alert-error"><button type="button" class="close" data-dismiss="alert">x</button><strong>[ERROR]</strong> &nbsp;&nbsp;Usuario o Contrase&ntilde;a Incorrectos.</div>';}                                   
                                  },'json').fail(function(error) { msg='<div class="alert alert-error fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[ERROR]</strong> &nbsp;&nbsp;El Servidor ha fallado en responder!.</div>'; })
                                      .always(function() {$('#msgAlert').html(msg);$('#msgAlert .alert').hide();$('#msgAlert .alert').show('bounce',{},350);setTimeout(function (){$('#msgAlert .alert').hide('pulsate',{},250);},4000);});

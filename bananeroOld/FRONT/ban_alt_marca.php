@@ -3,7 +3,7 @@
  * @abstract Permite realizar el registro de productores de fruta
  * @author Erik Niebla
  * @version 1.0
- * Fecha de creación  2018-05-18
+ * Fecha de creaciï¿½n  2018-05-18
  */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/ban_log_marca.php');
@@ -18,7 +18,7 @@ $obBD_conexion_set = new Class_Log_Conexion_Global($Ses_Dat_Dis);
 $obBD_con_set = new Class_Log_Datos_Marca;
 
 if(isset($marcasAjax)){
-    if($_GET['op_opciones']=="n") {$search="(Bam_Nom LIKE '%$_GET[search]%')";} else {$search="Bam_Tam LIKE '%$_GET[search]%'";}
+    if($_GET['op_opciones']=="n") {$search="(Bam_Nom LIKE '%".mysqli_real_escape_string($obBD_conexion_get->conexion, $_GET['search'])."%')";} else {$search="Bam_Tam LIKE '%".mysqli_real_escape_string($obBD_conexion_get->conexion, $_GET['search'])."%'";}
     $_GET['where']="$search and Bam_Est='A' and Emp_Cod=$Ses_Emp_Cod";
     $obBD_con_get->getPageGridJson('banano_marca.selectWhere', $_GET, $obBD_conexion_get);
 }
@@ -28,7 +28,7 @@ if(isset($saveMarca)){
     $obBD_con_set->inicio_transaccion($obBD_conexion_set);
     try{
         $obBD_con_set->operacionobBD('banano_marca.insert', array('Bam_Nom'=>$Bam_Nom,'Bam_Des'=>$Bam_Des,'Bam_Tam'=>$Bam_Tam,'Emp_Cod'=>$Ses_Emp_Cod), $obBD_conexion_set);
-    } catch(Exception $e){ $obBD_con_set->rollBack_nomsn($obBD_conexion_set); $resp['message']=$e->getMessage(); $obBD_con1->echoJson($resp); }
+    } catch(Exception $e){ $obBD_con_set->rollBack_nomsn($obBD_conexion_set); $resp['message']=$e->getMessage(); $obBD_con_set->echoJson($resp); }
     // finalizo la transaccion y compruebo errores
     $resp['success']=$obBD_con_set->fin_transaccion_nomsn($obBD_conexion_set);
     if(!$resp['success']) $resp['error']=$obBD_con_set->MsgError;
@@ -40,7 +40,7 @@ if(isset($modMarca)){
     $obBD_con_set->inicio_transaccion($obBD_conexion_set);
     try{
         $obBD_con_set->operacionobBD('banano_marca.update', array('Bam_Cod'=>$Bam_Cod,'Bam_Nom'=>$mod_Bam_Nom,'Bam_Des'=>$mod_Bam_Des,'Bam_Tam'=>$mod_Bam_Tam), $obBD_conexion_set);
-    } catch(Exception $e){ $obBD_con_set->rollBack_nomsn($obBD_conexion_set); $resp['message']=$e->getMessage(); $obBD_con1->echoJson($resp); }
+    } catch(Exception $e){ $obBD_con_set->rollBack_nomsn($obBD_conexion_set); $resp['message']=$e->getMessage(); $obBD_con_set->echoJson($resp); }
     // finalizo la transaccion y compruebo errores
     $resp['success']=$obBD_con_set->fin_transaccion_nomsn($obBD_conexion_set);
     if(!$resp['success']) $resp['error']=$obBD_con_set->MsgError;
@@ -52,7 +52,7 @@ if(isset($delMarca)){
     $obBD_con_set->inicio_transaccion($obBD_conexion_set);
     try{
         $obBD_con_set->operacionobBD('banano_marca.update', array('Bam_Cod'=>$Bam_Cod,'Bam_Est'=>"I"), $obBD_conexion_set);
-    } catch(Exception $e){ $obBD_con_set->rollBack_nomsn($obBD_conexion_set); $resp['message']=$e->getMessage(); $obBD_con1->echoJson($resp); }
+    } catch(Exception $e){ $obBD_con_set->rollBack_nomsn($obBD_conexion_set); $resp['message']=$e->getMessage(); $obBD_con_set->echoJson($resp); }
     // finalizo la transaccion y compruebo errores
     $resp['success']=$obBD_con_set->fin_transaccion_nomsn($obBD_conexion_set);
     if(!$resp['success']) $resp['error']=$obBD_con_set->MsgError;

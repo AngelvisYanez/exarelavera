@@ -3,7 +3,7 @@
  * @abstract Permite realizar el registro de productores de fruta
  * @author Erik Niebla
  * @version 1.0
- * Fecha de creación  2018-05-18
+ * Fecha de creaciï¿½n  2018-05-18
  */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/adm_log_orgproc_cliente.php');
@@ -123,7 +123,7 @@ if(isset($saveData)||isset($anulaData)||isset($savePermisos)){
     <script type="text/javascript" src="../../framework/jquery/chosen/chosenIcon/chosenIcon.js"></script> 
     <script type="text/javascript" src="../../framework/jquery/bootstrap/jqboot.checkbox.buttons.js"></script>
     <link rel="stylesheet" href="../../skins/fonts/fontelo/fontello.css?x=0" />
-    <script type="text/javascript">var urlTree='<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>?treeAjax=true';</script>
+    <script type="text/javascript">var urlTree='<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?treeAjax=true';</script>
     <script type="text/javascript" src="../VALIDACIONES/adm_val_perfil_cliente.js"></script> 
     <style>.panel-body{padding: 5px 5px 0px 5px;} .jstree-icon:not(.glyphicon):not(.fa){font-family: "fontello";  font-style: normal;  font-weight: normal;} /*.hidden{display: inherit !important}*/</style>
 </HEAD>
@@ -161,7 +161,7 @@ if(isset($saveData)||isset($anulaData)||isset($savePermisos)){
                             <button onclick="javascript:validaPermisos('add');" type="button" class="btn btn-xs btn-success none group"><i class="glyphicon glyphicon-plus"></i> Agregar</button> 
                             <button onclick="javascript:validaPermisos('remove');" type="button" class="btn btn-xs btn-danger none group"><i class="glyphicon glyphicon-remove"></i> Remover</button> <i class="glyphicon glyphicon-option-vertical grey"></i>
                             <button onclick="clean(); updateTree();" type="button" class="btn btn-xs btn-success" title="Recargar Lista"><i class="glyphicon glyphicon-refresh"></i></button>
-                            <button onclick="clean(); " type="button" class="btn btn-xs btn-success" title="Limpiar Selección"><i class="glyphicon glyphicon-unchecked"></i></button>
+                            <button onclick="clean(); " type="button" class="btn btn-xs btn-success" title="Limpiar Selecciï¿½n"><i class="glyphicon glyphicon-unchecked"></i></button>
                         </span>
                     </div>
                     <div class="panel-body noHighlight backWhiteSquare">
@@ -178,8 +178,8 @@ if(isset($saveData)||isset($anulaData)||isset($savePermisos)){
         </div> 
     </div>
 </div>
-<div id="perfilDialog" title='Edición de Perfil'>
-    <form id="perfilForm" action="javascript:$.createDialogConfirm('¿Est&aacute; seguro que desea guardar los cambios?',$('#perfilForm').getData('saveData'),saveForm);" class="form-horizontal normal">
+<div id="perfilDialog" title='Ediciï¿½n de Perfil'>
+    <form id="perfilForm" action="javascript:$.createDialogConfirm('ï¿½Est&aacute; seguro que desea guardar los cambios?',$('#perfilForm').getData('saveData'),saveForm);" class="form-horizontal normal">
         <input type="text" name="Per_Cod" class="hidden" />        
         <fieldset class="exa-fieldset">
             <legend class="Titulos2">Datos Perfil</legend>            

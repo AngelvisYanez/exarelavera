@@ -2,12 +2,12 @@
 
 <?php 
 /**
-* Descripción: Alta de facturas de ventas
-* Fecha de actualización:	2010-06-21 
+* Descripciï¿½n: Alta de facturas de ventas
+* Fecha de actualizaciï¿½n:	2010-06-21 
 * Desarrollador:	Jose Cumbicos
-* Fecha de actualización: 2011-06-09
+* Fecha de actualizaciï¿½n: 2011-06-09
 * Desarrollador: Nebil Oyola
-* Fecha de actualización: 2012-02-17
+* Fecha de actualizaciï¿½n: 2012-02-17
 * Desarrollador: Lewis Chimarro
 * Fecha de actualizacion: 2014-06-03
 * Desarrollador Jose Cumbicos
@@ -144,7 +144,7 @@ if($ajax_mar_val==1)
 	$rs_infoEmpresa = $obBD_con1->getRowConsulta(1211, $SucCod, $obBD_conexion);
 	if($rs_infoEmpresa['Cof_Gce']=='S')
 	{ 
-		$info="Comprobante Electrónico";
+		$info="Comprobante Electrï¿½nico";
 	}
 	else 
 	{
@@ -169,7 +169,7 @@ if($ajax_mar_val==1)
 	}
 	else
 	{
-		echo "<span class='Alertas3'>No existes registro de autorización para el tipo de comprobante</span>";
+		echo "<span class='Alertas3'>No existes registro de autorizaciï¿½n para el tipo de comprobante</span>";
 	}
 	exit();
 }
@@ -182,7 +182,7 @@ if(isset($ajax_notif))
 	{		
 	?>
     	<img src='../../mascaras/model1/imagenes/32x32/cancel.gif' width='16' height='16' type='image'/>
-        <script language="javascript">alert("¡Ya exíste el número "+ <?php echo $NumFact;?> +"!"); document.getElementById("Vet_Num").selectionStart = 0;</script>
+        <script language="javascript">alert("ï¿½Ya exï¿½ste el nï¿½mero "+ <?php echo $NumFact;?> +"!"); document.getElementById("Vet_Num").selectionStart = 0;</script>
 	<?php		
 	}else{
 		if($SecIni<=$NumFact && $SecFin>=$NumFact)
@@ -191,7 +191,7 @@ if(isset($ajax_notif))
 		}else{
 			?>
               <img src='../../mascaras/model1/imagenes/32x32/cancel.gif' width='16' height='16' type='image'/>
-              <script language="javascript">alert("¡Número fuera de rango (Rango valido: "+ <?php echo $SecIni;?> +" al "+ <?php echo $SecFin;?> +")!"); 
+              <script language="javascript">alert("ï¿½Nï¿½mero fuera de rango (Rango valido: "+ <?php echo $SecIni;?> +" al "+ <?php echo $SecFin;?> +")!"); 
 			  document.getElementById("Vet_Num").selectionStart = 0;</script>
             <?php		
 		}	
@@ -264,7 +264,7 @@ if (isset($cmb_tipo))
 	exit();
 }//Fin del if (isset($cmb))
 /** 
-* Cargado AJAX de los resultados de la búsqueda del semestre 
+* Cargado AJAX de los resultados de la bï¿½squeda del semestre 
 */
 if (isset($sem))
 { 
@@ -276,7 +276,7 @@ exit();
 }//Fin del if (isset($sem))
 
 /**
-* Cargado AJAX de los resultados de la búsqueda
+* Cargado AJAX de los resultados de la bï¿½squeda
 */
 if (isset($deudas))
 { 	
@@ -289,7 +289,7 @@ if (isset($deudas))
 }// Cierre de las deudas de los estudiantes 
 
 /**
-* Cargado Ajax de la proyección del Interes 
+* Cargado Ajax de la proyecciï¿½n del Interes 
 */
 if (isset($Ajax_Proye))
 {
@@ -311,7 +311,7 @@ if (isset($Ajax_Proye))
 }//Fin del if (isset($Ajax_Proye))
 
 /** 
-* Cargado AJAX de los resultados de la búsqueda del rubro 
+* Cargado AJAX de los resultados de la bï¿½squeda del rubro 
 */
 if (isset($buscod))
 {
@@ -361,7 +361,7 @@ if(isset($CajFec))
 		}	
 	}else{
 		$correcto=0;
-		?><script language="javascript">alert("¡No hay Autorización para la fecha ingresada!");</script> <?php
+		?><script language="javascript">alert("ï¿½No hay Autorizaciï¿½n para la fecha ingresada!");</script> <?php
 	}
 }
 
@@ -430,7 +430,7 @@ if ($thisPost->postBlock($_POST['postID']))
 		}
 		
 		/**
-		* Inserción de la cabecera de la factura 
+		* Inserciï¿½n de la cabecera de la factura 
 		*/
 		$obBD_ins1->operacionobBD(20, $Tic_Cod.'*'.$codigo.'*'.$Ciu_Cod.'*'.$Caj_Cod.'*'.$Vnd_Cod.'*'.	
 		$Vet_Num.'*'.$Vet_Obs.'*'.$Aut_Cod.'*'.$Vet_Des.'*'.$hora.'*'.$url.'*'.$Vet_Aut.'*'.$Num_Ret.'*'.$Ret_Fec.'*'.$Num_Aut, $obBD_conexion);	
@@ -573,7 +573,7 @@ else
 	if (isset($codigo))
 	{
 		/** 
-		* Incremento del numero manual de la factura dependiendo del punto de impresión
+		* Incremento del numero manual de la factura dependiendo del punto de impresiï¿½n
 		*/
 		$Vet_Num = $obBD_con1->codigoSiguiente($row_rs_autorizaci['Aut_Cod'], $row_rs_autorizaci['Aut_Ini'], $obBD_conexion);		
 		/**
@@ -581,7 +581,7 @@ else
 		*/
 		$row_rs_cliente = $obBD_con1->getRowConsulta(23, $codigo, $obBD_conexion);
 		/**
-		* Consulta de la ciudad de emisión de la factura 
+		* Consulta de la ciudad de emisiï¿½n de la factura 
 		*/
 		$row_rs_ciudad = $obBD_con1->getRowConsulta(26, $Ses_Usu_Cod, $obBD_conexion);
 		/**
@@ -755,8 +755,8 @@ if(isset($txt_busqueda))
 	<table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader01">
     <thead>
 	  <tr>
-	  <th width="8%">Cód. Int. </th>
-          <th width="8%">Cédula/R.U.C.</th>
+	  <th width="8%">Cï¿½d. Int. </th>
+          <th width="8%">Cï¿½dula/R.U.C.</th>
           <th>Clientes</th>
           <th width="4%">&nbsp;</th>
       </tr>
@@ -772,7 +772,7 @@ if(isset($txt_busqueda))
 		<td align="center"><?Php echo $row_rs_buscar['Prs_Ced']; ?></td>
 		<td align="left">&nbsp;<?Php echo marcarCadenaColor($txt_busqueda,$row_rs_buscar['Prs_Ape'].' '.$row_rs_buscar['Prs_Nom'],'#FFFF00', '#000', 1); ?></td>
 		<td align="center"><?Php if ($row_rs_buscar['Cli_Est'] == 'Activo') { ?>
-        <form name="form3" id="form3" method="post" action="<?php echo $_SERVER['../LOGICA/PHP_SELF'] ?>">
+        <form name="form3" id="form3" method="post" action="<?php echo $_SERVER['PHP_SELF'] ?>">
 		<input name="codigo" id="codigo" type="hidden" value="<?Php echo $row_rs_buscar['Cli_Cod'];?>">
 		<input name="volver_busqueda" id="volver_busqueda" type="hidden" value="<?Php echo $txt_busqueda;?>">
 		<input name="volver_op" id="volver_op" type="hidden" value="<?Php echo $op_opciones;?>">						
@@ -804,7 +804,7 @@ if(isset($txt_busqueda))
 	echo barra_estado(count($rs_buscar));
 }//Fin del if(isset($txt_busqueda)) ?>
 
- <form action="<?Php $_SERVER['../LOGICA/PHP_SELF']; ?>" method="post" name="form2" id="form2">
+ <form action="<?Php $_SERVER['PHP_SELF']; ?>" method="post" name="form2" id="form2">
  <?Php if ($codigo > 0 && !(isset($hdd_save)))
  { 
 	/**
@@ -819,7 +819,7 @@ if(isset($txt_busqueda))
 </LEGEND>
 <table width="95%" border="0" cellpadding="0" cellspacing="0">
   <tr>
-    <td width="12%" class="Etiqueta1">Cédula/R.U.C.:</td>
+    <td width="12%" class="Etiqueta1">Cï¿½dula/R.U.C.:</td>
     <td width="88%" class="LetraNegra">&nbsp;<?Php echo $row_rs_cliente['Prs_Ced'] ?>
       <input name="codigo" id="codigo" type="hidden" value="<?Php echo $codigo;?>"></td>
   </tr>
@@ -828,7 +828,7 @@ if(isset($txt_busqueda))
     <td class="LetraNegra">&nbsp;<?Php echo $row_rs_cliente['Prs_Ape'].' '.$row_rs_cliente['Prs_Nom'] ?></td>
   </tr>
   <tr>
-    <td width="12%" class="Etiqueta1">Dirección:</td>
+    <td width="12%" class="Etiqueta1">Direcciï¿½n:</td>
     <td colspan="3" class="LetraNegra">&nbsp;<?php echo $row_rs_cliente['Prs_Dir']?></td>
 	</tr>
 	<?Php 
@@ -1096,7 +1096,7 @@ if(isset($txt_busqueda))
 	<tr class="Cabecera1" height="35">
 	    <th width="4%">C&oacute;d.</th>	  
 		<th width="4%">Cant.</th>
-		<th width="33%">Descripción</th>
+		<th width="33%">Descripciï¿½n</th>
 		<th width="16%">P. Unitario </th>
 		<th width="9%">Importe</th>
 		<th width="4%">Desc.</th>
@@ -1323,7 +1323,7 @@ if(isset($txt_busqueda))
  <table width="290" border="0" cellpadding="0" cellspacing="0" class="Azul">
  <tr>
    <td width="109">
-   <button type="button" class="btn btn-inverse fileinput-button" title="Atrás" onClick="campos_hide(this.form, '<?Php echo "txt_busqueda*op_opciones*hdd_volver"; ?>', '<?Php echo $volver_busqueda.'*'.$volver_op.'*'; ?>')">
+   <button type="button" class="btn btn-inverse fileinput-button" title="Atrï¿½s" onClick="campos_hide(this.form, '<?Php echo "txt_busqueda*op_opciones*hdd_volver"; ?>', '<?Php echo $volver_busqueda.'*'.$volver_op.'*'; ?>')">
                     <i class=" icon-arrow-left icon-white"></i>
                     <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
        </button></td>
@@ -1361,7 +1361,7 @@ if(isset($txt_busqueda))
 			}
 			else
 			{   
-				echo error_alerta ("&iexcl;No se puede generar el Documento: [".$Vet_Num."], la Autorización [".$row_rs_autorizaci['Aut_Sri']."] permite facturas entre [".$row_rs_autorizaci['Aut_Ini']."] y [".$row_rs_autorizaci['Aut_Fin']."]!", 2);
+				echo error_alerta ("&iexcl;No se puede generar el Documento: [".$Vet_Num."], la Autorizaciï¿½n [".$row_rs_autorizaci['Aut_Sri']."] permite facturas entre [".$row_rs_autorizaci['Aut_Ini']."] y [".$row_rs_autorizaci['Aut_Fin']."]!", 2);
 			}
 		}
 		else
@@ -1377,7 +1377,7 @@ else
 </HTML>
 <?php
 /**
-* Cierra la conexión
+* Cierra la conexiï¿½n
 */
 @$obBD_conexion->cerrar();
 ?>

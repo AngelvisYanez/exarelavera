@@ -3,7 +3,7 @@
  * @abstract Permite realizar el registro de productores de fruta
  * @author Edison Moya
  * @version 1.0
- * Fecha de creación  2018-05-24
+ * Fecha de creaciï¿½n  2018-05-24
  */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/ban_log_exportacion_container.php');
@@ -33,7 +33,7 @@ if(isset($saveContainer)||isset($modContainer)||isset($delContainer)){
             $obBD_con_set->operacionobBD('exportacion_container.update', $form, $obBD_conexion_set);
         if(isset($delContainer))
             $obBD_con_set->operacionobBD('exportacion_container.setInactive', array('Exc_Cod'=>$Exc_Cod), $obBD_conexion_set);
-    } catch(Exception $e){ $obBD_con_set->rollBack_nomsn($obBD_conexion_set); $resp['message']=$e->getMessage(); $obBD_con1->echoJson($resp); }
+    } catch(Exception $e){ $obBD_con_set->rollBack_nomsn($obBD_conexion_set); $resp['message']=$e->getMessage(); $obBD_con_set->echoJson($resp); }
     // finalizo la transaccion y compruebo errores
     $resp['success']=$obBD_con_set->fin_transaccion_nomsn($obBD_conexion_set);
     if(!$resp['success']) $resp['error']=$obBD_con_set->MsgError;

@@ -88,8 +88,7 @@ FROM
 		$sql = "INSERT INTO ventas_det SET Vet_Cod=$Par_Sql[0], Pro_Cod=$Par_Sql[1], Vet_Can=$Par_Sql[2], 
 				Iva_Cod=$Par_Sql[3], Vet_Pru=$Par_Sql[4], Vet_Imp=$Par_Sql[5], Vet_Dec='$Par_Sql[6]', Nge_Cod = $Par_Sql[7],
 				Asi_Int=$Par_Sql[8], Vet_Rec=$Par_Sql[9], Cnt_Cod=$Par_Sql[10], Vet_Int=$Par_Sql[11], Vet_Uni=$Par_Sql[12], Ren_Cod=$Par_Sql[13], Ren_Iva=$Par_Sql[14]"; //,Vet_Ite='$Par_Sql[15]'
-		echo $sql."<br>";
-		return $sql;
+			return $sql;
 		break;
 
 		case 6: 

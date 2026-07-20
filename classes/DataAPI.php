@@ -37,7 +37,10 @@ class DataAPI
             }
             $sql .= " WHERE " . implode(" AND ", $parts);
         }
-        if ($order) $sql .= " ORDER BY $order";
+        if ($order) {
+            $order = preg_replace('/[^a-zA-Z0-9_.,\s]/', '', $order);
+            $sql .= " ORDER BY $order";
+        }
         $sql .= " LIMIT $offset, $limit";
         return $this->query($sql);
     }
@@ -115,5 +118,88 @@ class DataAPI
         }
         $row = $this->queryRow($sql);
         return $row ? (int)$row['total'] : 0;
+    }
+
+    public function exists($table, $where)
+    {
+        return $this->count($table, $where) > 0;
+    }
+
+    public function listPaged($table, $where = [], $order = '', $page = 1, $perPage = 50)
+    {
+        $page = max(1, (int)$page);
+        $perPage = max(1, min(500, (int)$perPage));
+        $offset = ($page - 1) * $perPage;
+        $total = $this->count($table, $where);
+        $data = $this->list($table, $where, $order, $perPage, $offset);
+        return ['data' => $data, 'total' => $total, 'page' => $page, 'perPage' => $perPage, 'pages' => (int)ceil($total / $perPage)];
+    }
+
+    public function listPagedSql($sql, $countSql, $page = 1, $perPage = 50)
+    {
+        $page = max(1, (int)$page);
+        $perPage = max(1, min(500, (int)$perPage));
+        $offset = ($page - 1) * $perPage;
+        $countRow = $this->queryRow($countSql);
+        $total = $countRow ? (int)$countRow['total'] : 0;
+        $sql .= " LIMIT $offset, $perPage";
+        $data = $this->query($sql);
+        return ['data' => $data, 'total' => $total, 'page' => $page, 'perPage' => $perPage, 'pages' => (int)ceil($total / $perPage)];
+    }
+
+    public function queryScalar($sql)
+    {
+        $row = $this->queryRow($sql);
+        if (!$row) return null;
+        return reset($row);
+    }
+
+    public function beginTransaction()
+    {
+        mysqli_autocommit($this->conexion->conexion, false);
+    }
+
+    public function commit()
+    {
+        mysqli_commit($this->conexion->conexion);
+        mysqli_autocommit($this->conexion->conexion, true);
+    }
+
+    public function rollback()
+    {
+        mysqli_rollback($this->conexion->conexion);
+        mysqli_autocommit($this->conexion->conexion, true);
+    }
+
+    public function getError()
+    {
+        return $this->datos->Error;
+    }
+
+    public function getErrorMsg()
+    {
+        return $this->datos->MsgError;
+    }
+
+    public function softDelete($table, $idField, $idValue, $stateField, $deletedValue = 'I')
+    {
+        return $this->update($table, [$stateField => $deletedValue], $idField, $idValue);
+    }
+
+    public function insertBatch($table, $rows)
+    {
+        if (empty($rows)) return true;
+        $this->beginTransaction();
+        $ids = [];
+        foreach ($rows as $row) {
+            $id = $this->insert($table, $row);
+            if ($id === false) {
+                $this->rollback();
+                return false;
+            }
+            $ids[] = $id;
+        }
+        $this->commit();
+        return $ids;
     }
 }

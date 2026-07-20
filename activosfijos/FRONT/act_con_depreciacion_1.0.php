@@ -263,7 +263,7 @@ if (isset($buscarCom_Cod)) {
                 //Secci�n para buscar Com_Cod
                 $('#btn_bus').click(function(){
                     var descomponer=$("#Pec_Cod2").val().split('*');
-                    $.post("<?Php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING); ?>",{buscarCom_Cod:true,anio:descomponer[1],mes:$("#mes").val()},function(response){
+                    $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{buscarCom_Cod:true,anio:descomponer[1],mes:$("#mes").val()},function(response){
                         var descomponer1=response.split('*');
                         if(descomponer1[0]!=''){
                             window.open('../../contabilidad/FRONT/con_pri_compr_1.1.php?codigo='+descomponer1[0]+'&tabla=proveedore&campo=Prv_Cod&tipo='+descomponer1[1]+'&Pec_Cod='+descomponer[0],'_blank');    
@@ -273,7 +273,7 @@ if (isset($buscarCom_Cod)) {
                     });
                 });
                 //Secci�n para cargar el comobobox del periodo contable v�a ajax
-                $.post("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", {periodoContable:true}, function(response) {
+                $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>", {periodoContable:true}, function(response) {
                     if (response.length > 0){
                     var options = "";
                         options += "<option value='0'>Todos</option>";
@@ -302,7 +302,7 @@ if (isset($buscarCom_Cod)) {
                 var descomponer_pini=$('#Pec_Cod').val().split('*');var pecCod_pini=descomponer_pini[0];var anio_pini=descomponer_pini[1];
                 //Se descompone el periodo de fin
                 var descomponer_pfin=$('#Pec_Cod1').val().split('*');var pecCod_pfin=descomponer_pfin[0];var anio_pfin=descomponer_pfin[1];
-                $.post("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", $('#formDepreciacion').getData('allActivos'), function(response){
+                $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>", $('#formDepreciacion').getData('allActivos'), function(response){
                     if (response['activos'].length > 0){
                         activos_dep = new Array();
                         activos_dep = response['activos'];
@@ -359,7 +359,7 @@ if (isset($buscarCom_Cod)) {
             function cargarGrid(){
                 $('#dep_mensual').jqGrid('clearGridData', true);
                 $('#dep_mensual').jqGrid({
-                    url:'<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                    url:'<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                         mtype:'GET',datatype:'local',regional:'es',autowidth:true,shrinkToFit:false,hidegrid:false,
                         responsive:true,height:250,cmTemplate:{sortable:false},caption:'DEPRECIACI&Oacute;N MENSUAL',
                         colModel:[

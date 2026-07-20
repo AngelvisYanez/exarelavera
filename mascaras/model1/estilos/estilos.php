@@ -28,7 +28,9 @@ Desarrollador:	Lewis Chimarro
 
 <!-- INICIO J Q U E R Y    L O A D E R -->
 <link rel="stylesheet" href="../../Librerias/loader/jquery.loader.css" />
-<!-- FIN J Q U E R Y    L O A D E R -->
+ <!-- FIN J Q U E R Y    L O A D E R -->
+ <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+ <script type="text/ecmascript" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
 /*.btn-success {
     color: #ffffff;
