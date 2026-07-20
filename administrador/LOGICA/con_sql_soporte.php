@@ -43,56 +43,45 @@ function sentencias_con($id,$Par_Sql) {
 		break;
 
 		case 4:
-			// $hoy = date("Y-m-d H:i:s");
-			$sql = '';
 			$filtro = '';
-			$dbs = array('1'=>'servicios','2'=>'gsl_chavez','3'=>'coopsb','4'=>'agrofertil','5'=>'agronuevo','6'=>'exa');
-			
-			foreach ($dbs as $key => $value) {
-		
-				$filtro = '';
-				if($Par_Sql['Ase_Cod'] == 1){
-					$filtro = "WHERE Tic_Fec_Cre between '$Par_Sql[fechaIni]' AND '$Par_Sql[fechaFin] 23:59:59'";
-				}else{
-					$filtro = "WHERE Tic_Fec_Cre between '$Par_Sql[fechaIni]' AND '$Par_Sql[fechaFin] 23:59:59' AND ($value.tickets.Ase_Cod = '$Par_Sql[Ase_Cod]' OR $value.tickets.Ase_Cod IS NULL)";
-				}
-				
-				if($Par_Sql['estado'] != '9'){
-					$filtro = $filtro." AND $value.tickets.Tic_Est = '$Par_Sql[estado]' ";
-				}
-
-				if($Par_Sql['modCod'] != 'T'){
-					// Escapar el valor para manejar comillas y caracteres especiales
-					$modCodEscapado = addslashes($Par_Sql['modCod']);
-					// Comparar con Org_Des del módulo padre (donde Org_Cod = Org_Niv del registro actual)
-					$filtro = $filtro." AND EXISTS (
-						SELECT 1 FROM $value.organizado AS org_mod 
-						WHERE org_mod.Org_Cod = $value.organizado.Org_Niv 
-						AND org_mod.Org_Des = '$modCodEscapado'
-					) ";
-				}
-				
-				$sql .= "SELECT 
-					$value.tickets.*,
-					$value.tickets.Tic_Des,
-					exa_master.empresas.Emp_Nom,
-					exa_master.empresas.Emp_Cod,
-					IF(Tic_Est='0', 'Pendiente', IF(Tic_Est = '1', 'En Proceso', IF(Tic_Est = '2', 'Reabierto', 'Solucionado'))) as Tic_Est,
-					IF(Tic_Est='0', 'Pendiente', IF(Tic_Est = '1', 'En Proceso', IF(Tic_Est = '2', 'Reabierto', 'Solucionado'))) as Tic_Est,
-					$value.organizado.Org_Des as Org_Sec,
-					$value.organizado.Org_Niv as codigo,
-					(SELECT CONCAT(Prs_Nom, ' ', Prs_Ape) from $value.persona INNER JOIN $value.usuarios ON ($value.persona.Prs_Cod = $value.usuarios.Prs_Cod) WHERE $value.usuarios.Usu_Cod = $value.tickets.Usu_Cod)as Prs_Nom,
-					IF($value.tickets.Ase_Cod IS NOT NULL, (SELECT CONCAT(Prs_Nom, ' ', Prs_Ape) from exa.persona INNER JOIN exa.usuarios ON (exa.persona.Prs_Cod = exa.usuarios.Prs_Cod) WHERE exa.usuarios.Usu_Cod = $value.tickets.Ase_Cod), NULL) as Ase_Cod,
-					(SELECT Org_Des from $value.organizado Where Org_Cod = codigo) as Org_Mod
-					FROM $value.tickets
-					INNER JOIN exa_master.empresas ON (exa_master.empresas.Emp_Cod = $value.tickets.Emp_Cod)
-					INNER JOIN $value.organizado ON ($value.organizado.Org_Cod = $value.tickets.Org_Cod)
-					$filtro
-					UNION ";
-					
+			if($Par_Sql['Ase_Cod'] == 1){
+				$filtro = "WHERE Tic_Fec_Cre between '$Par_Sql[fechaIni]' AND '$Par_Sql[fechaFin] 23:59:59'";
+			}else{
+				$filtro = "WHERE Tic_Fec_Cre between '$Par_Sql[fechaIni]' AND '$Par_Sql[fechaFin] 23:59:59' AND (tickets.Ase_Cod = '$Par_Sql[Ase_Cod]' OR tickets.Ase_Cod IS NULL)";
 			}
-			$sql = substr($sql, 0, -6);
-			$sql .= ' order by Tic_Fec_Cre';
+			
+			if($Par_Sql['estado'] != '9'){
+				$filtro = $filtro." AND tickets.Tic_Est = '$Par_Sql[estado]' ";
+			}
+
+			if($Par_Sql['modCod'] != 'T'){
+				// Escapar el valor para manejar comillas y caracteres especiales
+				$modCodEscapado = addslashes($Par_Sql['modCod']);
+				// Comparar con Org_Des del módulo padre (donde Org_Cod = Org_Niv del registro actual)
+				$filtro = $filtro." AND EXISTS (
+					SELECT 1 FROM organizado AS org_mod 
+					WHERE org_mod.Org_Cod = organizado.Org_Niv 
+					AND org_mod.Org_Des = '$modCodEscapado'
+				) ";
+			}
+			
+			$sql = "SELECT 
+				tickets.*,
+				tickets.Tic_Des,
+				exa_master.empresas.Emp_Nom,
+				exa_master.empresas.Emp_Cod,
+				IF(Tic_Est='0', 'Pendiente', IF(Tic_Est = '1', 'En Proceso', IF(Tic_Est = '2', 'Reabierto', 'Solucionado'))) as Tic_Est,
+				IF(Tic_Est='0', 'Pendiente', IF(Tic_Est = '1', 'En Proceso', IF(Tic_Est = '2', 'Reabierto', 'Solucionado'))) as Tic_Est,
+				organizado.Org_Des as Org_Sec,
+				organizado.Org_Niv as codigo,
+				(SELECT CONCAT(Prs_Nom, ' ', Prs_Ape) from persona INNER JOIN usuarios ON (persona.Prs_Cod = usuarios.Prs_Cod) WHERE usuarios.Usu_Cod = tickets.Usu_Cod)as Prs_Nom,
+				IF(tickets.Ase_Cod IS NOT NULL, (SELECT CONCAT(Prs_Nom, ' ', Prs_Ape) from persona INNER JOIN usuarios ON (persona.Prs_Cod = usuarios.Prs_Cod) WHERE usuarios.Usu_Cod = tickets.Ase_Cod), NULL) as Ase_Cod,
+				(SELECT Org_Des from organizado Where Org_Cod = codigo) as Org_Mod
+				FROM tickets
+				INNER JOIN exa_master.empresas ON (exa_master.empresas.Emp_Cod = tickets.Emp_Cod)
+				INNER JOIN organizado ON (organizado.Org_Cod = tickets.Org_Cod)
+				$filtro
+				order by Tic_Fec_Cre";
 			return $sql;
 			break;
 
