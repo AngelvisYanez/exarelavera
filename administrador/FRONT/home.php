@@ -1161,7 +1161,7 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
              }
          });*/
 
-        <?php if ($_SESSION['Ses_Emp_Cod'] == 1) { //Solo Ofsercom puede ver este apartado 
+        <?php if ($esAdministradorSistemas) { //Solo administrador de sistemas puede ver este apartado 
 
         ?>
             // //NUEVAS FUNCIONES PARA APARECER EL MODAL DE TICKETS (WB)
