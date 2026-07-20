@@ -934,9 +934,11 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
                 port_printers = local['port_printers'] || '80';
             var link = "http://" + ip_printers + ":" + port_printers + "/exa/printers/getPrinters.php";
             $.setLocalStore('printers', undefined);
+            /* 
+            // Comentado temporalmente por error CORS y falta de uso
             $.get(link, function(data) {
                 if (data.success === true) {
-                    if (Ses_Prs_Cod === 1) /*console.log(data);*/
+                    if (Ses_Prs_Cod === 1) //console.log(data);
                     $.setLocalStore('printers', {
                         has_printers: data.printers.length > 0,
                         ip_printers: ip_printers,
@@ -945,6 +947,7 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
                     });
                 }
             }, 'json');
+            */
         }
     </script>
     <script type="text/javascript">
