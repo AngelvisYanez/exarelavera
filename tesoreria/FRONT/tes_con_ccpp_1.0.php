@@ -322,7 +322,7 @@ if (isset($getReportAbono)) {
   <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
   <?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
   <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
-  <script src="../VALIDACIONES/tes_val_con_ccpp.js?a=6"></script>
+  <script src="../VALIDACIONES/tes_val_con_ccpp.js?a=8"></script>
   <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js"></script>
   <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
   <script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>
@@ -563,6 +563,15 @@ if (isset($getReportAbono)) {
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div id="comprobanteCcppConDialog" title="Comprobante de transferencia">
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;padding:12px;background:#f3f5f7;border-radius:6px;">
+      <img id="comprobanteCcppConImagen" alt="Comprobante de transferencia" style="display:block;max-width:100%;max-height:72vh;border-radius:5px;box-shadow:0 5px 20px rgba(0,0,0,.2);">
+      <a id="comprobanteCcppConDescargar" class="btn btn-success btn-sm" href="#" download style="margin-top:12px;">
+        <span class="glyphicon glyphicon-download-alt"></span> Descargar imagen
+      </a>
     </div>
   </div>
 

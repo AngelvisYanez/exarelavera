@@ -11,9 +11,10 @@ if (!function_exists('relavera_notif_enviar_correo_notif')) {
      * @param string $asunto
      * @param string $mensajePlano Mismo texto plano que se envía por WhatsApp
      * @param array|null $imagenAdj
+     * @param array|null $archivoAdj Archivo local: ruta, nombre y mime opcional
      * @return bool
      */
-    function relavera_notif_enviar_correo_notif($para, $nombreDestinatario, $asunto, $mensajePlano, $imagenAdj = null)
+    function relavera_notif_enviar_correo_notif($para, $nombreDestinatario, $asunto, $mensajePlano, $imagenAdj = null, $archivoAdj = null)
     {
         $asuntoLinea = trim(str_replace(array("\r", "\n"), ' ', $asunto));
         $html = '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5;color:#222;">'
@@ -59,6 +60,10 @@ if (!function_exists('relavera_notif_enviar_correo_notif')) {
                     $mail->addStringAttachment($bin, $fname, 'base64', $mime);
                 }
             }
+            if (is_array($archivoAdj) && !empty($archivoAdj['ruta']) && is_file($archivoAdj['ruta'])) {
+                $nombreAdj = !empty($archivoAdj['nombre']) ? (string)$archivoAdj['nombre'] : basename($archivoAdj['ruta']);
+                $mail->addAttachment($archivoAdj['ruta'], $nombreAdj);
+            }
 
             try {
                 $mail->send();
@@ -84,6 +89,12 @@ if (!function_exists('relavera_notif_enviar_correo_notif')) {
                     );
                 }
             }
+        }
+        if (is_array($archivoAdj) && !empty($archivoAdj['ruta']) && is_file($archivoAdj['ruta'])) {
+            $adjuntos[] = array(
+                'ruta' => $archivoAdj['ruta'],
+                'nombre' => !empty($archivoAdj['nombre']) ? (string)$archivoAdj['nombre'] : basename($archivoAdj['ruta']),
+            );
         }
         $ok = $mailer->enviarComprobante($para, $nombre, $html, 'Relavera', $adjuntos, $asuntoLinea);
         if ($tmpFile && is_file($tmpFile)) {

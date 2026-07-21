@@ -522,6 +522,197 @@ require_once('../../mascaras/model3/estilos/estilos.php');
     #mdlResolution #flowTracker.adq-flow-tracker-host .tracker-actor {
         font-size: 10px;
     }
+    #mdlSeguimiento .adq-seg-modal-dialog {
+        width: 96%;
+        max-width: 1180px;
+        margin: 24px auto;
+    }
+    #mdlSeguimiento .adq-seg-modal-content {
+        border: none;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 24px 48px rgba(15, 23, 42, 0.28);
+    }
+    #mdlSeguimiento .adq-seg-modal-header {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2f5278 55%, #3d6a94 100%);
+        color: #ffffff;
+        border-bottom: none;
+        padding: 16px 20px;
+        position: relative;
+    }
+    #mdlSeguimiento .adq-seg-modal-header::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #38bdf8 0%, #2f6fed 50%, #1e3a5f 100%);
+    }
+    #mdlSeguimiento .adq-seg-modal-heading {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding-right: 28px;
+    }
+    #mdlSeguimiento .adq-seg-modal-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.14);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex: 0 0 auto;
+    }
+    #mdlSeguimiento .adq-seg-modal-header .modal-title {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 700;
+        color: #ffffff;
+        letter-spacing: 0.01em;
+        line-height: 1.25;
+    }
+    #mdlSeguimiento .adq-seg-modal-sub {
+        margin: 3px 0 0;
+        font-size: 12px;
+        color: rgba(226, 232, 240, 0.92);
+        font-weight: 400;
+    }
+    #mdlSeguimiento .adq-seg-modal-header .close {
+        color: #ffffff;
+        opacity: 0.85;
+        text-shadow: none;
+        margin-top: 2px;
+        font-size: 26px;
+    }
+    #mdlSeguimiento .adq-seg-modal-header .close:hover {
+        opacity: 1;
+        color: #ffffff;
+    }
+    #mdlSeguimiento .adq-seg-modal-body {
+        background: linear-gradient(180deg, #f1f5f9 0%, #f8fafc 28%, #ffffff 100%);
+        padding: 16px 18px 12px;
+        max-height: 72vh;
+        overflow-y: auto;
+    }
+    #mdlSeguimiento .adq-seg-modal-footer {
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        padding: 10px 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    #mdlSeguimiento .adq-seg-modal-hint {
+        font-size: 11.5px;
+    }
+    #mdlSeguimiento .adq-seg-modal-footer .btn {
+        min-width: 88px;
+    }
+    #mdlSeguimiento .adq-seg-loading {
+        text-align: center;
+        padding: 48px 20px;
+        color: #475569;
+    }
+    #mdlSeguimiento .adq-seg-loading-spinner {
+        width: 36px;
+        height: 36px;
+        margin: 0 auto 14px;
+        border: 3px solid #dbeafe;
+        border-top-color: #1e3a8a;
+        border-radius: 50%;
+        animation: adqSegSpin 0.8s linear infinite;
+    }
+    @keyframes adqSegSpin {
+        to { transform: rotate(360deg); }
+    }
+    #mdlSeguimiento .adq-seg-loading-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 4px;
+    }
+    #mdlSeguimiento .adq-seg-loading-text {
+        font-size: 12px;
+        color: #64748b;
+    }
+    #mdlSeguimiento .adq-seg-error {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin: 12px;
+        padding: 14px 16px;
+        border-radius: 10px;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+        font-size: 13px;
+    }
+    #mdlSeguimiento .adq-seg-error .bi {
+        font-size: 20px;
+        margin-top: 1px;
+    }
+    #mdlSeguimiento .adq-seg-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 4px 0 12px;
+        padding: 10px 12px;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        border: 1px solid #dbe3ef;
+        border-radius: 10px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+    #mdlSeguimiento .adq-seg-toolbar-copy {
+        min-width: 0;
+        flex: 1 1 220px;
+    }
+    #mdlSeguimiento .adq-seg-toolbar-copy strong {
+        display: block;
+        font-size: 12.5px;
+        color: #1e293b;
+        margin-bottom: 2px;
+    }
+    #mdlSeguimiento .adq-seg-toolbar-copy span {
+        font-size: 11.5px;
+        color: #64748b;
+    }
+    #mdlSeguimiento #btnDescargarDocsZip {
+        background: linear-gradient(180deg, #059669 0%, #047857 100%);
+        border: 1px solid #065f46;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 12px;
+        padding: 7px 14px;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(4, 120, 87, 0.28);
+        white-space: nowrap;
+    }
+    #mdlSeguimiento #btnDescargarDocsZip:hover,
+    #mdlSeguimiento #btnDescargarDocsZip:focus {
+        background: linear-gradient(180deg, #047857 0%, #065f46 100%);
+        color: #ffffff;
+    }
+    #mdlSeguimiento #btnDescargarDocsZip:disabled {
+        opacity: 0.75;
+    }
+    #mdlSeguimiento .adq-detail-card {
+        border-radius: 10px;
+        border-color: #dbe3ef;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+        background: #ffffff;
+    }
+    #mdlSeguimiento .adq-section-header {
+        font-size: 11px;
+        letter-spacing: 0.05em;
+    }
     #mdlSeguimiento .adq-seg-flow-tracker,
     #mdlSeguimiento .tracker-wrapper.adq-seg-flow-tracker {
         display: flex;
@@ -532,10 +723,10 @@ require_once('../../mascaras/model3/estilos/estilos.php');
         overflow-x: auto;
         min-height: 88px;
         width: 100%;
-        padding: 10px 8px;
-        background-color: #ffffff;
+        padding: 12px 10px;
+        background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
         border: 1px solid #e2e8f0;
-        border-radius: 8px;
+        border-radius: 10px;
     }
     #mdlSeguimiento .adq-seg-flow-tracker .tracker-node {
         font-size: 13px !important;

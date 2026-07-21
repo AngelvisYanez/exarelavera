@@ -325,8 +325,8 @@ if (isset($getSubGridAsient)) {
 			$atpCod = intval($anticipoInfo['Atp_Cod']);
 			
 			// Consulta SQL directa optimizada para cargar todos los datos de una vez
-			$sqlTipoPagos = "SELECT 
-				pap.Pap_Est, pap.Pap_Cto, pap.Pag_Cod, pap.Asi_Cod, pap.Atp_Cod,
+			$sqlTipoPagos = "SELECT
+				pap.Pap_Est, pap.Pap_Cto, pap.Pap_img, pap.Pag_Cod, pap.Asi_Cod, pap.Atp_Cod,
 				tpsPg.Pag_Abr, tpsPg.Pag_Des,tpsPg.*,
 				chq.Che_Cod, chq.Che_Fec, chq.Che_Num, chq.Ban_Cod, chq.Che_Est
 			FROM pago_anticipo_proveedores AS pap
@@ -373,8 +373,29 @@ if (isset($getAsientos)) {
 		'dataASiento' => $obBD_con1->getArrayConsulta('anticipos_proveedores.selectWhere', array('where' => array('anticipos_proveedores.Com_Cod' => $Com_Cod), 'setWhere' => array('byAsiento', 'pagoAnticipo', 'tipoPago')), $obBD_conexion),
 	);
 	foreach ($resultado['dataASiento'] as &$resp) {
-		$tipoPago = $obBD_con1->getRowConsulta('anticipos_proveedores.selectWhere', array('Asi_Cod' => $resp['Asi_Cod'], 'where' => array('pagosantprv.Atp_Cod' => $resp['Atp_Cod']), 'setWhere' => array('pagoAnticipo2')), $obBD_conexion, true);
-		if (!empty($tipoPago['Atp_Cod'])) $resp = array_merge($resp, $tipoPago);
+		$asi_cod = intval(isset($resp['Asi_Cod']) ? $resp['Asi_Cod'] : 0);
+		$atp_cod = intval(isset($resp['Atp_Cod']) ? $resp['Atp_Cod'] : 0);
+		if ($asi_cod <= 0) {
+			continue;
+		}
+		$filtro_atp = $atp_cod > 0 ? " AND pap.Atp_Cod = $atp_cod" : '';
+		$tipoPago = $obBD_con1->getRowConsultaSql(
+			"SELECT pap.Pap_Cod, pap.Atp_Cod, pap.Pap_Cto, pap.Pap_Ctd,
+			        pap.Pap_Val, pap.Pap_Est, pap.Pap_img, pap.Pag_Cod,
+			        tpg.Pag_Abr, tpg.Pag_Des,
+			        che.Che_Cod, che.Che_Fec, che.Che_Num, che.Ban_Cod, che.Che_Est
+			 FROM pago_anticipo_proveedores pap
+			 LEFT JOIN tipos_pago tpg ON tpg.Pag_Cod = pap.Pag_Cod
+			 LEFT JOIN cheques che ON che.Asi_Cod = pap.Asi_Cod
+			 WHERE pap.Asi_Cod = $asi_cod
+			   $filtro_atp
+			 ORDER BY pap.Pap_Cod DESC
+			 LIMIT 1",
+			$obBD_conexion
+		);
+		if (is_array($tipoPago) && !empty($tipoPago['Pap_Cod'])) {
+			$resp = array_merge($resp, $tipoPago);
+		}
 	}
 	unset($resp);
 	$obBD_con1->echoJson($resultado);
@@ -1179,6 +1200,15 @@ if (isset($saveNego)) {
 		</form>
 	</div>
 
+	<div id="comprobantePagoDialog" title="Comprobante de transferencia">
+		<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;padding:12px;background:#f3f5f7;border-radius:6px;">
+			<img id="comprobantePagoImagen" alt="Comprobante de transferencia" style="display:block;max-width:100%;max-height:72vh;border-radius:5px;box-shadow:0 5px 20px rgba(0,0,0,.2);">
+			<a id="comprobantePagoDescargar" class="btn btn-success btn-sm" href="#" download style="margin-top:12px;">
+				<i class="glyphicon glyphicon-download-alt"></i> Descargar imagen
+			</a>
+		</div>
+	</div>
+
 	<div id="successDialog" title="Mensaje del Sistema">
 		<center>
 			<h2>El Comprobante se ha registrado con Exito!</h2>
@@ -1551,7 +1581,7 @@ if (isset($saveNego)) {
 			$('#negDialog').dialog('close');
 		}
 	</script>
-	<script src="../VALIDACIONES/tes_val_anticipo_mod_prv_3.0.js?a=3"></script>
+	<script src="../VALIDACIONES/tes_val_anticipo_mod_prv_3.0.js?a=5"></script>
 	<script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>
 	<script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=2"></script>
 	<script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>

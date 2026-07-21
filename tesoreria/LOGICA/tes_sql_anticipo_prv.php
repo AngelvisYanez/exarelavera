@@ -85,8 +85,8 @@ function sentencias_anticipo_prv($id, $Par_Sql)
 			return $sql;
 			//insertar un registro en la tabla pagos_anticipo_proveedores
 		case 8:
-			$sql = "INSERT INTO pago_anticipo_proveedores (Pap_Cto, Pap_Ctd, Pap_Val, Atp_Cod, Pag_Cod, Asi_Cod)
-							VALUES('$Par_Sql[Pap_Cto]', '$Par_Sql[Pap_Ctd]', '$Par_Sql[Pap_Val]', $Par_Sql[Atp_Cod], $Par_Sql[Pag_Cod], '$Par_Sql[Asi_Cod]');";
+			$sql = "INSERT INTO pago_anticipo_proveedores (Pap_Cto, Pap_Ctd, Pap_Val, Atp_Cod, Pag_Cod, Asi_Cod, Pap_img)
+							VALUES('$Par_Sql[Pap_Cto]', '$Par_Sql[Pap_Ctd]', '$Par_Sql[Pap_Val]', $Par_Sql[Atp_Cod], $Par_Sql[Pag_Cod], '$Par_Sql[Asi_Cod]', '$Par_Sql[Pap_img]');";
 			// echo $sql;
 			return $sql;
 			//insertar un registro en la tabla asientos

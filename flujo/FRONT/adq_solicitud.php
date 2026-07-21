@@ -9,12 +9,17 @@ require_once('../LOGICA/adq_adquisiciones_log.php');
 
 $obBD_conexion = new Class_Log_Conexion_Global($Ses_Dat_Dis);
 $obBD_con1 = new adq_adquisiciones_log($obBD_conexion);
+$obBD_con1->ensureSolicitudTituloColumn();
+$obBD_con1->ensureDecisionValsTable();
 require_once('../LOGICA/wf_manager_log.php');
 $wf_mgr = new wf_manager_log($Ses_Dat_Dis);
 
 $ajax_save_solicitud = isset($_GET['ajax_save_solicitud']) ? $_GET['ajax_save_solicitud'] : (isset($_POST['ajax_save_solicitud']) ? $_POST['ajax_save_solicitud'] : null);
 $ajax_save_borrador = isset($_GET['ajax_save_borrador']) ? $_GET['ajax_save_borrador'] : (isset($_POST['ajax_save_borrador']) ? $_POST['ajax_save_borrador'] : null);
 $ajax_save_cotizaciones = isset($_GET['ajax_save_cotizaciones']) ? $_GET['ajax_save_cotizaciones'] : (isset($_POST['ajax_save_cotizaciones']) ? $_POST['ajax_save_cotizaciones'] : null);
+$ajax_save_solicitud_corta = isset($_GET['ajax_save_solicitud_corta']) ? $_GET['ajax_save_solicitud_corta'] : (isset($_POST['ajax_save_solicitud_corta']) ? $_POST['ajax_save_solicitud_corta'] : null);
+$ajax_completar_solicitud = isset($_GET['ajax_completar_solicitud']) ? $_GET['ajax_completar_solicitud'] : (isset($_POST['ajax_completar_solicitud']) ? $_POST['ajax_completar_solicitud'] : null);
+$ajax_get_decisiones_flujo = isset($_GET['ajax_get_decisiones_flujo']) ? $_GET['ajax_get_decisiones_flujo'] : null;
 $ajax_get_trq_details = isset($_GET['ajax_get_trq_details']) ? $_GET['ajax_get_trq_details'] : null;
 $ajax_get_borrador = isset($_GET['ajax_get_borrador']) ? $_GET['ajax_get_borrador'] : null;
 $ajax_get_solicitud_cot = isset($_GET['ajax_get_solicitud_cot']) ? $_GET['ajax_get_solicitud_cot'] : null;
@@ -108,7 +113,7 @@ function adq_normalizar_cot_adjuntos_existentes(&$cotizaciones_existentes, $file
 
 // Verificar acceso a la ventana 'bandeja' y pestaña 'crear_solicitud'
 if (!$wf_mgr->verificarAccesoVentana('bandeja', 'crear_solicitud')) {
-    if (isset($ajax_save_solicitud) || isset($ajax_save_borrador) || isset($ajax_save_cotizaciones) || isset($ajax_get_trq_details) || isset($ajax_get_borrador) || isset($ajax_get_solicitud_cot) || isset($ajax_search_proveedores) || isset($ajax_lookup_proveedor) || isset($ajax_save_proveedor)) {
+    if (isset($ajax_save_solicitud) || isset($ajax_save_borrador) || isset($ajax_save_cotizaciones) || isset($ajax_save_solicitud_corta) || isset($ajax_completar_solicitud) || isset($ajax_get_trq_details) || isset($ajax_get_borrador) || isset($ajax_get_solicitud_cot) || isset($ajax_search_proveedores) || isset($ajax_lookup_proveedor) || isset($ajax_save_proveedor) || isset($ajax_get_decisiones_flujo)) {
         $obBD_con1->echoJson(array('success' => false, 'message' => 'Acceso denegado. No tiene permisos para realizar esta acción.'));
         exit;
     } else {
@@ -118,13 +123,26 @@ if (!$wf_mgr->verificarAccesoVentana('bandeja', 'crear_solicitud')) {
 }
 
 // Redirección segura para navegación directa del navegador (no AJAX)
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['ajax_get_form']) && !isset($_GET['ajax_get_trq_details']) && !isset($_GET['ajax_get_borrador']) && !isset($_GET['ajax_get_solicitud_cot']) && !isset($_GET['ajax_search_proveedores']) && !isset($_GET['ajax_lookup_proveedor']) && !isset($_GET['ajax_save_proveedor']) && !isset($_GET['ajax_save_solicitud']) && !isset($_GET['ajax_save_borrador']) && !isset($_GET['ajax_save_cotizaciones'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['ajax_get_form']) && !isset($_GET['ajax_get_trq_details']) && !isset($_GET['ajax_get_borrador']) && !isset($_GET['ajax_get_solicitud_cot']) && !isset($_GET['ajax_search_proveedores']) && !isset($_GET['ajax_lookup_proveedor']) && !isset($_GET['ajax_save_proveedor']) && !isset($_GET['ajax_save_solicitud']) && !isset($_GET['ajax_save_borrador']) && !isset($_GET['ajax_save_cotizaciones']) && !isset($_GET['ajax_save_solicitud_corta']) && !isset($_GET['ajax_completar_solicitud']) && !isset($_GET['ajax_get_decisiones_flujo'])) {
     header("Location: adq_bandeja.php?tab=crear_solicitud");
     exit;
 }
 
 // Manejo de llamadas AJAX
-if (isset($ajax_save_solicitud) || isset($ajax_save_borrador) || isset($ajax_save_cotizaciones)) {
+if (isset($ajax_get_decisiones_flujo)) {
+    $trq_cod = intval(isset($_GET['trq_cod']) ? $_GET['trq_cod'] : 0);
+    $obBD_con1->echoJson($wf_mgr->obtenerDecisionesFlujoPorTipo($trq_cod, intval($Ses_Emp_Cod)));
+    exit;
+}
+
+if (isset($ajax_save_solicitud_corta)) {
+    $_POST['Emp_Cod'] = $Ses_Emp_Cod;
+    $_POST['Suc_Cod'] = $Ses_Suc_Cod;
+    $obBD_con1->echoJson($obBD_con1->registrarSolicitudCorta($_POST));
+    exit;
+}
+
+if (isset($ajax_save_solicitud) || isset($ajax_save_borrador) || isset($ajax_save_cotizaciones) || isset($ajax_completar_solicitud)) {
     $items = array();
     if (isset($_POST['items'])) {
         $items = $_POST['items'];
@@ -171,16 +189,59 @@ if (isset($ajax_save_solicitud) || isset($ajax_save_borrador) || isset($ajax_sav
         adq_normalizar_cot_adjuntos_existentes($cotizaciones_existentes, $files_existentes, $target_dir, $obBD_con1);
     }
 
+    $adjuntos_nuevos = array();
+    if (isset($_POST['adjuntos']) && is_array($_POST['adjuntos'])) {
+        foreach ($_POST['adjuntos'] as $idx => $adj) {
+            $des = isset($adj['Sad_Des']) ? trim($adj['Sad_Des']) : '';
+            $ruta = null;
+            if (isset($_FILES['adjunto_archivos']['name'][$idx]) && $_FILES['adjunto_archivos']['name'][$idx] !== '') {
+                $ruta = adq_validar_y_guardar_pdf_cot(
+                    $_FILES['adjunto_archivos']['tmp_name'][$idx],
+                    $_FILES['adjunto_archivos']['name'][$idx],
+                    $target_dir
+                );
+            }
+            if ($ruta) {
+                $adjuntos_nuevos[] = array('Sad_Des' => $des, 'Sad_Adj' => $ruta);
+            }
+        }
+    }
+
+    $adjuntos_existentes = array();
+    if (isset($_POST['adjuntos_existentes']) && is_array($_POST['adjuntos_existentes'])) {
+        $adjuntos_existentes = $_POST['adjuntos_existentes'];
+        foreach ($adjuntos_existentes as $sad_cod => &$adj_ex) {
+            if (isset($_FILES['adjunto_archivos_existentes']['name'][$sad_cod]) && $_FILES['adjunto_archivos_existentes']['name'][$sad_cod] !== '') {
+                $ruta = adq_validar_y_guardar_pdf_cot(
+                    $_FILES['adjunto_archivos_existentes']['tmp_name'][$sad_cod],
+                    $_FILES['adjunto_archivos_existentes']['name'][$sad_cod],
+                    $target_dir
+                );
+                if ($ruta) {
+                    $adj_ex['Sad_Adj'] = $ruta;
+                }
+            }
+        }
+        unset($adj_ex);
+    }
+
+    $adj_eliminar = array();
+    if (isset($_POST['adj_eliminar'])) {
+        $adj_eliminar = is_array($_POST['adj_eliminar']) ? $_POST['adj_eliminar'] : array($_POST['adj_eliminar']);
+    }
+
     $_POST['Emp_Cod'] = $Ses_Emp_Cod;
     $_POST['Suc_Cod'] = $Ses_Suc_Cod;
 
     if (isset($ajax_save_cotizaciones)) {
         $sol_cod = intval(isset($_POST['Sol_Cod']) ? $_POST['Sol_Cod'] : 0);
         $resp = $obBD_con1->guardarCotizacionesEtapa($sol_cod, $cotizaciones, $cotizaciones_existentes, $cot_eliminar);
+    } elseif (isset($ajax_completar_solicitud)) {
+        $resp = $obBD_con1->completarSolicitudNodo($_POST, $items, $cotizaciones, $cotizaciones_existentes, $cot_eliminar, $adjuntos_nuevos, $adjuntos_existentes, $adj_eliminar);
     } elseif (isset($ajax_save_borrador)) {
-        $resp = $obBD_con1->guardarBorrador($_POST, $items, $cotizaciones, $cotizaciones_existentes, $cot_eliminar);
+        $resp = $obBD_con1->guardarBorrador($_POST, $items, $cotizaciones, $cotizaciones_existentes, $cot_eliminar, $adjuntos_nuevos, $adjuntos_existentes, $adj_eliminar);
     } else {
-        $resp = $obBD_con1->guardarSolicitud($_POST, $items, $cotizaciones, $cotizaciones_existentes, $cot_eliminar);
+        $resp = $obBD_con1->guardarSolicitud($_POST, $items, $cotizaciones, $cotizaciones_existentes, $cot_eliminar, $adjuntos_nuevos, $adjuntos_existentes, $adj_eliminar);
     }
     $obBD_con1->echoJson($resp);
     exit;
@@ -189,7 +250,8 @@ if (isset($ajax_save_solicitud) || isset($ajax_save_borrador) || isset($ajax_sav
 if (isset($ajax_get_borrador)) {
     $sol_cod = intval($_GET['sol_cod']);
     $usu_sol = isset($Ses_Usu_Cod) ? intval($Ses_Usu_Cod) : 0;
-    $resp = $obBD_con1->obtenerBorradorParaEdicion($sol_cod, $Ses_Emp_Cod, $usu_sol);
+    $por_nodo = !empty($_GET['por_nodo']);
+    $resp = $obBD_con1->obtenerBorradorParaEdicion($sol_cod, $Ses_Emp_Cod, $usu_sol, $por_nodo);
     $obBD_con1->echoJson($resp);
     exit;
 }
@@ -409,17 +471,250 @@ if (isset($ajax_save_proveedor)) {
     exit;
 }
 
-// Cargar catálogos iniciales
-$tipos_req = $obBD_con1->getArrayConsultaSql("
-    SELECT t.Trq_Cod, t.Trq_Des, w.Wfm_Nom
-    FROM adq_tipos_requerimientos t
-    INNER JOIN wf_flujos_modelos w ON w.Wfm_Cod = t.Wfm_Cod
-    WHERE t.Emp_Cod = $Ses_Emp_Cod AND t.Trq_Est = 'A'
-    ORDER BY t.Trq_Des;", $obBD_conexion);
+// Cargar catálogos iniciales (filtrados por permiso de crear en nodo INICIO)
+$tipos_req = $wf_mgr->listarTiposRequerimientoParaCrear($Ses_Emp_Cod);
 $centros_costo = $obBD_con1->getArrayConsultaSql("SELECT DISTINCT Dep_Cdc AS Cdc_Cod FROM departamen WHERE Emp_Cod = $Ses_Emp_Cod AND Dep_Cdc IS NOT NULL AND Dep_Cdc <> '';", $obBD_conexion);
 
 if (isset($ajax_get_form)) {
     header('Content-Type: text/html; charset=UTF-8');
+    $modo_form = isset($_GET['modo']) ? trim($_GET['modo']) : 'corto';
+    if ($modo_form !== 'completar') {
+        ?>
+        <div class="adq-step-card" style="max-width:760px;margin:24px auto;background:#fff;border:1px solid #dbe4ee;border-radius:14px;padding:28px;box-shadow:0 8px 28px rgba(15,43,70,.08);">
+            <div class="d-flex align-items-center mb-4" style="gap:14px;">
+                <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white" style="width:46px;height:46px;font-size:21px;"><i class="bi bi-file-earmark-plus"></i></span>
+                <div>
+                    <h4 class="fw-bold text-primary mb-1">Crear solicitud</h4>
+                    <p class="text-muted mb-0">Registre los datos iniciales. El responsable de la primera etapa completará la información técnica y comercial.</p>
+                </div>
+            </div>
+            <form id="frmSolicitudCorta" autocomplete="off">
+                <div class="mb-4">
+                    <label class="form-label fw-bold" for="Sol_Tit_Corto">Nombre de la solicitud *</label>
+                    <input type="text" class="form-control" id="Sol_Tit_Corto" name="Sol_Tit" maxlength="255" required placeholder="Ej. Adquisición de equipos para laboratorio">
+                    <small class="text-muted">Use un nombre breve y claro que identifique la necesidad.</small>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-bold" for="Trq_Cod_Corto">Tipo de requerimiento *</label>
+                    <select class="form-control" id="Trq_Cod_Corto" name="Trq_Cod" required>
+                        <option value="">[Seleccione un Tipo]</option>
+                        <?php foreach ($tipos_req as $tr) { ?>
+                            <option value="<?php echo intval($tr['Trq_Cod']); ?>"><?php echo htmlspecialchars($tr['Trq_Des'] . ' — ' . $tr['Wfm_Nom'], ENT_QUOTES, 'UTF-8'); ?></option>
+                        <?php } ?>
+                    </select>
+                    <small class="text-muted">Se listan todos los tipos Activos. El tipo determina el flujo y el responsable del primer nodo.</small>
+                </div>
+                <div id="panelValorEstimadoCorta" class="mb-4" style="display:none;">
+                    <label class="form-label fw-bold" for="Sol_Val_Est_Corto">Valor estimado *</label>
+                    <input type="number" class="form-control" id="Sol_Val_Est_Corto" min="0.01" step="0.01" placeholder="0.00">
+                    <small class="text-muted">Ingrese el monto estimado de la solicitud.</small>
+                </div>
+                <div id="panelDecisionesCorta" class="mb-4" style="display:none;">
+                    <div class="p-3 rounded border" style="background:#f8fafc; border-color:#cbd5e1 !important;">
+                        <h6 class="fw-bold text-primary mb-1" style="font-size:13px;"><i class="bi bi-signpost-split"></i> Valores para nodos de decisión</h6>
+                        <p class="text-muted small mb-3 mb-md-2">Este flujo tiene ramas condicionales. Indique los valores para determinar qué tareas se ejecutarán.</p>
+                        <div id="camposDecisionesCorta" class="row g-2"></div>
+                        <div id="previewRamasCorta" class="mt-3"></div>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary px-4" id="btnCrearSolicitudCorta"><i class="bi bi-arrow-right-circle"></i> Registrar para iniciar los procesos</button>
+                </div>
+            </form>
+        </div>
+        <script>
+        (function() {
+            var decisionesCacheCorta = { decisiones: [], campos: [] };
+
+            function evalCondicionLocal(cond, valores) {
+                if (!cond || !cond.campo) return true;
+                var campo = cond.campo === 'Dep_Cod' ? 'Dep_Sol' : cond.campo;
+                var real = valores[campo];
+                if (real === undefined || real === null || real === '') return false;
+                var op = cond.operador || '=';
+                var esperado = cond.valor;
+                var nReal = parseFloat(real);
+                var nEsp = parseFloat(esperado);
+                var numOk = !isNaN(nReal) && !isNaN(nEsp);
+                switch (op) {
+                    case '>': return numOk ? nReal > nEsp : false;
+                    case '<': return numOk ? nReal < nEsp : false;
+                    case '>=': return numOk ? nReal >= nEsp : false;
+                    case '<=': return numOk ? nReal <= nEsp : false;
+                    case '!=': return String(real) !== String(esperado);
+                    case '=':
+                    default: return String(real) === String(esperado);
+                }
+            }
+
+            function leerValoresDecisionCorta() {
+                var vals = {};
+                $('#camposDecisionesCorta [data-decision-campo]').each(function() {
+                    vals[$(this).data('decision-campo')] = $(this).val();
+                });
+                return vals;
+            }
+
+            function actualizarPreviewRamasCorta() {
+                var $box = $('#previewRamasCorta').empty();
+                if (!decisionesCacheCorta.decisiones || !decisionesCacheCorta.decisiones.length) return;
+                var vals = leerValoresDecisionCorta();
+                var html = '<div class="small"><strong>Ruta estimada:</strong><ul class="mb-0 mt-1">';
+                decisionesCacheCorta.decisiones.forEach(function(dec) {
+                    var elegida = null;
+                    var defecto = null;
+                    (dec.ramas || []).forEach(function(r) {
+                        if (parseInt(r.es_default, 10) === 1) {
+                            defecto = r;
+                            return;
+                        }
+                        if (!elegida && evalCondicionLocal(r.condicion, vals)) {
+                            elegida = r;
+                        }
+                    });
+                    var rama = elegida || defecto;
+                    var destino = rama ? (rama.Destino_Nom || ('Nodo ' + rama.Nod_Des)) : '(sin destino)';
+                    var texto = rama ? rama.texto : 'Sin coincidencia';
+                    html += '<li><span class="fw-bold">' + $('<div>').text(dec.Nod_Nom).html() + '</span>: ' +
+                        $('<div>').text(texto).html() + ' → <em>' + $('<div>').text(destino).html() + '</em></li>';
+                });
+                html += '</ul></div>';
+                $box.html(html);
+            }
+
+            function renderCamposDecisionCorta(info) {
+                decisionesCacheCorta = info || { decisiones: [], campos: [] };
+                var $panel = $('#panelDecisionesCorta');
+                var $campos = $('#camposDecisionesCorta').empty();
+                if (!$('#Trq_Cod_Corto').val()) {
+                    $panel.hide();
+                    $('#panelValorEstimadoCorta').hide();
+                    $('#previewRamasCorta').empty();
+                    return;
+                }
+                if (!info || !info.decisiones || !info.decisiones.length) {
+                    $panel.hide();
+                    $('#panelValorEstimadoCorta').show();
+                    $('#previewRamasCorta').empty();
+                    return;
+                }
+                $('#panelValorEstimadoCorta').hide();
+                var campos = (info && info.campos ? info.campos.slice() : []);
+                var tieneValorEstimado = campos.some(function(c) {
+                    return c.campo === 'Sol_Val_Est';
+                });
+                if (!tieneValorEstimado) {
+                    campos.unshift({
+                        campo: 'Sol_Val_Est',
+                        etiqueta: 'Valor estimado / monto',
+                        tipo: 'number',
+                        opciones: []
+                    });
+                }
+                campos.forEach(function(c) {
+                    if (c.campo === 'Sol_Cod' || c.campo === 'Trq_Cod') return;
+                    var $col = $('<div class="col-md-6"></div>');
+                    var $lab = $('<label class="form-label small fw-bold"></label>').text(c.etiqueta + ' *');
+                    var $input;
+                    if (c.opciones && c.opciones.length) {
+                        $input = $('<select class="form-control form-control-sm" required></select>');
+                        $input.append('<option value="">[Seleccione]</option>');
+                        c.opciones.forEach(function(op) {
+                            $input.append($('<option></option>').val(op).text(op));
+                        });
+                    } else {
+                        $input = $('<input class="form-control form-control-sm" required />');
+                        $input.attr('type', c.tipo === 'number' ? 'number' : 'text');
+                        if (c.tipo === 'number') {
+                            $input.attr({ step: '0.01', min: '0' });
+                            if (c.campo === 'Sol_Val_Est') {
+                                $input.attr('min', '0.01');
+                            }
+                        }
+                    }
+                    $input.attr({
+                        name: 'decision_vals[' + c.campo + ']',
+                        'data-decision-campo': c.campo,
+                        id: 'dec_corta_' + c.campo
+                    });
+                    $input.on('input change', actualizarPreviewRamasCorta);
+                    $col.append($lab).append($input);
+                    $campos.append($col);
+                });
+                // Mostrar resumen de ramas configuradas
+                if (info.decisiones && info.decisiones.length) {
+                    var resumen = '<div class="mt-2 small text-muted">Nodos de decisión en el flujo: ';
+                    resumen += info.decisiones.map(function(d) { return d.Nod_Nom; }).join(', ');
+                    resumen += '</div>';
+                    $campos.append('<div class="col-12">' + resumen + '</div>');
+                }
+                $panel.show();
+                actualizarPreviewRamasCorta();
+            }
+
+            $('#Trq_Cod_Corto').off('change.adqDec').on('change.adqDec', function() {
+                var trq = $(this).val();
+                if (!trq) {
+                    renderCamposDecisionCorta({ decisiones: [], campos: [] });
+                    return;
+                }
+                $.getJSON('adq_solicitud.php', { ajax_get_decisiones_flujo: 1, trq_cod: trq }, function(res) {
+                    renderCamposDecisionCorta(res && res.success ? res : { decisiones: [], campos: [] });
+                }).fail(function() {
+                    renderCamposDecisionCorta({ decisiones: [], campos: [] });
+                });
+            });
+
+            $('#frmSolicitudCorta').off('submit.adqCorta').on('submit.adqCorta', function(e) {
+                e.preventDefault();
+                const titulo = $('#Sol_Tit_Corto').val().trim();
+                const tipo = $('#Trq_Cod_Corto').val();
+                if (!titulo || !tipo) {
+                    alert('Ingrese el nombre y seleccione el tipo de requerimiento.');
+                    return;
+                }
+                var payload = { Sol_Tit: titulo, Trq_Cod: tipo, decision_vals: {} };
+                var faltante = null;
+                $('#camposDecisionesCorta [data-decision-campo]').each(function() {
+                    var campo = $(this).data('decision-campo');
+                    var val = $(this).val();
+                    if (val === '' || val === null) {
+                        faltante = campo;
+                        return false;
+                    }
+                    payload.decision_vals[campo] = val;
+                });
+                if (faltante) {
+                    alert('Complete todos los valores de decisión del flujo antes de registrar.');
+                    return;
+                }
+                if (!decisionesCacheCorta.decisiones || !decisionesCacheCorta.decisiones.length) {
+                    payload.decision_vals.Sol_Val_Est = $('#Sol_Val_Est_Corto').val();
+                }
+                if ((parseFloat(payload.decision_vals.Sol_Val_Est) || 0) <= 0) {
+                    alert('Debe ingresar un valor estimado mayor que cero.');
+                    return;
+                }
+                const $btn = $('#btnCrearSolicitudCorta');
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Registrando...');
+                $.post('adq_solicitud.php?ajax_save_solicitud_corta=1', payload, function(res) {
+                    if (res.success) {
+                        alert('Solicitud ' + res.Num + ' registrada. Se asignó al responsable del primer nodo para completar la información.');
+                        window.location.href = 'adq_bandeja.php';
+                    } else {
+                        alert('No se pudo registrar: ' + (res.message || 'Error desconocido'));
+                        $btn.prop('disabled', false).html('<i class="bi bi-arrow-right-circle"></i> Registrar para iniciar los procesos');
+                    }
+                }, 'json').fail(function() {
+                    alert('Error de comunicación al registrar la solicitud.');
+                    $btn.prop('disabled', false).html('<i class="bi bi-arrow-right-circle"></i> Registrar para iniciar los procesos');
+                });
+            });
+        })();
+        </script>
+        <?php
+        exit;
+    }
     ?>
     <style>
         /* Estilos de mejora visual para el formulario de creación */
@@ -917,8 +1212,101 @@ if (isset($ajax_get_form)) {
             margin-bottom: 0;
         }
         .adq-cot-top-prov {
-            flex: 2 1 300px;
+            flex: 1 1 100%;
             min-width: 240px;
+        }
+        .adq-cot-provider-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .adq-cot-provider-row .select-wrap {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        .adq-proformas-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .adq-proformas-head .adq-cot-label {
+            margin-bottom: 0;
+        }
+        .adq-proformas-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+        .adq-proforma-row {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+        .adq-proforma-row.adq-proforma-ganadora {
+            border-color: #86efac;
+            background: #f0fdf4;
+        }
+        .adq-proforma-fields {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 10px 12px;
+        }
+        .adq-proforma-pdf {
+            flex: 1 1 200px;
+            min-width: 180px;
+            max-width: 280px;
+        }
+        .adq-proforma-pdf .adq-file-upload,
+        .adq-proforma-pdf .adq-cot-pdfs-inline {
+            width: 100%;
+        }
+        .adq-proforma-val {
+            flex: 0 0 130px;
+            min-width: 120px;
+        }
+        .adq-proforma-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+        }
+        .adq-proforma-jus {
+            width: 100%;
+            margin-top: 8px;
+        }
+        .adq-proforma-remove {
+            color: #dc2626;
+            padding: 4px 6px;
+        }
+        .adq-btn-add-pdf-cot {
+            min-height: 34px;
+            height: 34px;
+            min-width: auto;
+            padding: 4px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            white-space: nowrap;
+            flex: 0 0 auto;
+            background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+            border: 1px solid #1e40af;
+            color: #ffffff;
+            box-shadow: 0 1px 4px rgba(37, 99, 235, 0.3);
+        }
+        .adq-btn-add-pdf-cot:hover,
+        .adq-btn-add-pdf-cot:focus {
+            background: linear-gradient(180deg, #1d4ed8 0%, #1e3a8a 100%);
+            border-color: #1e3a8a;
+            color: #ffffff;
         }
         .adq-cot-top-val {
             flex: 0 0 130px;
@@ -1007,6 +1395,7 @@ if (isset($ajax_get_form)) {
             align-items: center;
             justify-content: center;
             gap: 4px;
+            white-space: nowrap;
             background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
             border: 1px solid #1e40af;
             color: #ffffff;
@@ -1172,6 +1561,10 @@ if (isset($ajax_get_form)) {
             <i class="bi bi-pencil-square"></i> <strong>Completando borrador</strong> <span id="lblBorradorNum"></span>.
             Puede guardar sin cotizaciones y enviar a aprobacion cuando este listo.
         </div>
+        <div id="bannerCompletarNodo" class="alert alert-primary py-2 px-3 mb-3" style="display: none; font-size: 12px;">
+            <i class="bi bi-clipboard-check"></i> <strong>Tarea del primer nodo:</strong>
+            complete toda la información de la solicitud. Al guardar, avanzará automáticamente a la siguiente etapa.
+        </div>
         <div id="bannerEdicionObservada" class="alert alert-warning py-2 px-3 mb-3" style="display: none; font-size: 12px;">
             <i class="bi bi-exclamation-triangle-fill"></i> <strong>Solicitud observada</strong> <span id="lblObservadaNum"></span>.
             <span id="lblObservadaDetalle"></span>
@@ -1193,6 +1586,10 @@ if (isset($ajax_get_form)) {
                 <h5 class="adq-step-title"><i class="bi bi-info-circle-fill"></i> Información General de la Solicitud</h5>
                 
                 <div class="row g-3 adq-row-general">
+                    <div class="col-12 adq-field-block">
+                        <label class="form-label-req" for="Sol_Tit">Nombre de la solicitud *</label>
+                        <input type="text" class="form-control form-control-adq" id="Sol_Tit" name="Sol_Tit" maxlength="255" required>
+                    </div>
                     <!-- Tipo de Requerimiento -->
                     <div class="col-12 col-md-6 adq-field-block">
                         <label class="form-label-req" for="Trq_Cod">Tipo de Requerimiento *</label>
@@ -1309,6 +1706,15 @@ if (isset($ajax_get_form)) {
                 </div>
             </div>
 
+            <!-- PASO 1B: Valores de decisión del flujo -->
+            <div class="adq-step-card" id="panelDecisionesCompleta" style="display:none;">
+                <span class="adq-step-badge">Paso 1B</span>
+                <h5 class="adq-step-title"><i class="bi bi-signpost-split"></i> Valores para nodos de decisión</h5>
+                <p class="adq-field-hint mb-3">Indique los valores que definen qué rama del flujo se ejecutará (ej. monto &gt; 10000). Si el valor estimado se calcula con los ítems, se sincronizará automáticamente.</p>
+                <div id="camposDecisionesCompleta" class="row g-3"></div>
+                <div id="previewRamasCompleta" class="mt-3"></div>
+            </div>
+
             <!-- PASO 2: Cotizaciones de Sustento -->
             <div class="adq-step-card" id="divCotizaciones">
                 <span class="adq-step-badge">Paso 2</span>
@@ -1316,7 +1722,7 @@ if (isset($ajax_get_form)) {
                 <div class="adq-cot-headline">
                     <div>
                         <div class="headline-title">Carga y compara las cotizaciones del requerimiento</div>
-                        <p class="headline-copy">Registre proveedor, monto y sustento PDF o imagen. Marque la cotizacion ganadora cuando corresponda.</p>
+                        <p class="headline-copy">Registre proveedor y monto. El sustento PDF es opcional. Marque la cotizacion ganadora cuando corresponda.</p>
                     </div>
                     <span class="headline-icon"><i class="bi bi-files"></i></span>
                 </div>
@@ -1337,12 +1743,24 @@ if (isset($ajax_get_form)) {
                 </div>
             </div>
 
+            <!-- PASO 2B: Otros archivos PDF de soporte -->
+            <div class="adq-step-card" id="divAdjuntosSolicitud">
+                <span class="adq-step-badge">Paso 2B</span>
+                <h5 class="adq-step-title"><i class="bi bi-paperclip"></i> Otros archivos PDF de soporte</h5>
+                <p class="adq-field-hint mb-3">Además de las proformas, puede adjuntar otros PDF (especificaciones, órdenes, memorandos, etc.) e indicar una descripción para cada uno.</p>
+                <div id="adjuntosList"></div>
+                <div class="mt-3">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="agregarAdjuntoSolicitud()"><i class="bi bi-plus-circle"></i> Agregar PDF</button>
+                </div>
+                <div id="adjEliminarContainer"></div>
+            </div>
+
             <!-- PASO 3: Artículos o Servicios -->
             <div class="adq-step-card">
                 <span class="adq-step-badge">Paso 3</span>
                 <h5 class="adq-step-title">
                     <i class="bi bi-cart-fill"></i> Artículos / Servicios Requeridos
-                    <span class="adq-step-title-note">(Valor de la cotización ganadora) Opcional</span>
+                    <span class="adq-step-title-note">(Debe registrar un valor estimado mayor que cero)</span>
                 </h5>
                 
                 <div class="table-responsive">
@@ -1379,7 +1797,7 @@ if (isset($ajax_get_form)) {
             <div class="d-flex justify-content-end gap-2 mt-4 mb-3" id="adqFormActionsDefault">
                 <button type="button" class="btn btn-default" onclick="limpiarFormulario()"><i class="bi bi-trash"></i> Limpiar Todo</button>
                 <button type="button" class="btn btn-outline-secondary fw-bold p-3 py-2" style="font-size: 14px;" onclick="guardarBorrador()"><i class="bi bi-save"></i> Guardar Borrador</button>
-                <button type="submit" class="btn btn-success fw-bold p-3 py-2" style="font-size: 14px;"><i class="bi bi-send-check"></i> Enviar Solicitud a Aprobación</button>
+                <button type="submit" class="btn btn-success fw-bold p-3 py-2" id="btnEnviarSolicitud" style="font-size: 14px;"><i class="bi bi-send-check"></i> Enviar Solicitud a Aprobación</button>
             </div>
             <div class="d-flex justify-content-end gap-2 mt-4 mb-3" id="adqFormActionsObservada" style="display: none;">
                 <button type="button" class="btn btn-outline-secondary fw-bold p-3 py-2" style="font-size: 14px;" onclick="guardarBorrador()"><i class="bi bi-save"></i> Guardar Corrección</button>

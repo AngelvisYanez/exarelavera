@@ -12,6 +12,7 @@ $(function () {
     $("#successDialog").createDialog({ width: 500, height: 200, icon: 'print' });
     $("#verPagosDialog").createDialog({ width: 400, height: 290, icon: 'info-sign' });
     $("#verPagosDialogMod").createDialog({ width: 700, height: 450, icon: 'info-sign' });
+    $("#comprobantePagoDialog").createDialog({ width: 760, height: 540, icon: 'picture' });
     $("#verAsientoDialogMod").createDialog({ width: 700, height: 350, icon: 'info-data' });
     $("#cruceDialog").createDialog({ width: 900, height: 485, icon: 'info-sign' });
     $('#pagosDialog').createDialog({ height: 325, icon: 'usd' });
@@ -1113,6 +1114,8 @@ function crearGridShowPagosAsi() {
         colModel: [
             { label: 'index', name: 'index', hidden: true, classes: 'bgNoRight' },
             { label: '', name: 'Pap_Est', hidden: true },
+            { label: '', name: 'Pag_Abr', hidden: true },
+            { label: '', name: 'Pap_img', hidden: true },
             { label: 'Codigo', name: 'Pld_Cdc', width: 10, align: "left" },
             { label: 'Cuenta', name: 'Pld_Des', width: 30, align: "left" },
             { label: 'Glosa', name: 'Asi_Glo', width: 25, align: "left" },
@@ -1123,9 +1126,39 @@ function crearGridShowPagosAsi() {
             {
                 label: 'Haber', name: 'Haber', width: 10, align: 'right', formatter: 'currency', editable: true,
                 formatoptions: { prefix: '$ ', thousandsSeparator: ',', decimalSeparator: '.', defaultValue: '' }
+            },
+            {
+                label: '<center><i class="glyphicon glyphicon-picture"></i></center>',
+                name: 'Pap_img_accion',
+                width: 8,
+                align: 'center',
+                viewable: false,
+                formatter: function (cellvalue, options, rowObject) {
+                    if (rowObject.Pag_Abr === 'TRF' && rowObject.Pap_img && String(rowObject.Pap_img).trim() !== '') {
+                        return $.getGridButton(verComprobantePago, rowObject, 'Visualizar comprobante', 'eye-open', '', 'info');
+                    }
+                    return '-';
+                },
+                title: false
             }
         ]
     }, true, '', { view: false });
+}
+
+function verComprobantePago(row) {
+    var ruta = row && row.Pap_img ? String(row.Pap_img).trim().replace(/\\/g, '/') : '';
+    if (!ruta) {
+        return $.alert('Este pago no tiene un comprobante registrado.');
+    }
+    if (!/^(https?:\/\/|\/)/i.test(ruta) && ruta.indexOf('../../') !== 0) {
+        ruta = '../../' + ruta.replace(/^\.?\//, '');
+    }
+    $('#comprobantePagoImagen').attr('src', ruta);
+    $('#comprobantePagoDescargar').attr({
+        href: ruta,
+        download: ruta.split('/').pop() || 'comprobante_transferencia'
+    });
+    $('#comprobantePagoDialog').dialog('open');
 }
 
 function crearGridshowPagosChe() {

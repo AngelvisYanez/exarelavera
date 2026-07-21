@@ -26,7 +26,7 @@ function adq_cfg_utf8_deep(&$data) {
 // Verificar acceso a la ventana 'configuracion'
 if (!$wf_mgr->verificarAccesoVentana('configuracion')) {
     if (isset($ajax_save_tipo_req) || isset($ajax_toggle_tipo_req) || isset($ajax_get_tipo_req) ||
-        isset($ajax_save_workflow) || isset($ajax_publish_workflow) || isset($ajax_load_workflow) || isset($ajax_get_department_users) ||
+        isset($ajax_save_workflow) || isset($ajax_publish_workflow) || isset($ajax_load_workflow) || isset($_GET['ajax_duplicate_workflow']) || isset($ajax_get_department_users) ||
         isset($ajax_save_department_users) || isset($ajax_get_users_by_department) ||
         isset($ajax_save_depto_req) || isset($ajax_toggle_depto_req) || isset($ajax_get_depto_req) ||
         isset($ajax_get_depto_users) || isset($ajax_save_depto_users) ||
@@ -41,11 +41,11 @@ if (!$wf_mgr->verificarAccesoVentana('configuracion')) {
 }
 
 // --- ENDPOINTS AJAX: Tipos de Requerimientos ---
-if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset($_GET['ajax_save_tipo_req']) || isset($_POST['ajax_save_tipo_req']) || isset($_POST['ajax_toggle_tipo_req'])) {
+if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset($_GET['ajax_save_tipo_req']) || isset($_POST['ajax_save_tipo_req']) || isset($_GET['ajax_toggle_tipo_req']) || isset($_POST['ajax_toggle_tipo_req'])) {
     $ajax_get_tipos = isset($_GET['ajax_get_tipos']) ? $_GET['ajax_get_tipos'] : null;
     $ajax_get_tipo_req = isset($_GET['ajax_get_tipo_req']) ? $_GET['ajax_get_tipo_req'] : null;
     $ajax_save_tipo_req = isset($_GET['ajax_save_tipo_req']) ? $_GET['ajax_save_tipo_req'] : (isset($_POST['ajax_save_tipo_req']) ? $_POST['ajax_save_tipo_req'] : null);
-    $ajax_toggle_tipo_req = isset($_POST['ajax_toggle_tipo_req']) ? $_POST['ajax_toggle_tipo_req'] : null;
+    $ajax_toggle_tipo_req = isset($_GET['ajax_toggle_tipo_req']) ? $_GET['ajax_toggle_tipo_req'] : (isset($_POST['ajax_toggle_tipo_req']) ? $_POST['ajax_toggle_tipo_req'] : null);
 
     // --- AJAX: Guardar Tipo de Requerimiento (Crear o Editar) ---
     if (isset($ajax_save_tipo_req)) {
@@ -59,6 +59,14 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
         $trq_req_pre = !empty($_POST['Trq_Req_Pre']) ? 1 : 0;
         $trq_req_adj = !empty($_POST['Trq_Req_Adj']) ? 1 : 0;
         $trq_req_pro = !empty($_POST['Trq_Req_Pro']) ? 1 : 0;
+        // Los tipos solo manejan Activo (A) e Inactivo (I).
+        if ($trq_cod) {
+            $row_est = $obBD_con1->getRowConsultaSql("SELECT Trq_Est FROM adq_tipos_requerimientos WHERE Trq_Cod = $trq_cod;", $obBD_conexion);
+            $est_actual_bd = !empty($row_est['Trq_Est']) ? strtoupper($row_est['Trq_Est']) : 'A';
+            $trq_est = $est_actual_bd === 'I' ? 'I' : 'A';
+        } else {
+            $trq_est = 'A';
+        }
         
         // SLA / Tiempo Estimado
         $define_sla = !empty($_POST['chkDefineSla']) ? true : false;
@@ -81,14 +89,16 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
                     Wfm_Cod = $wfm_cod, Trq_Des = '$trq_des', Trq_Req_Fac = $trq_req_fac, 
                     Trq_Per_Cie = $trq_per_cie, Trq_Req_Cot = $trq_req_cot, Trq_Min_Cot = $trq_min_cot, 
                     Trq_Req_Pre = $trq_req_pre, Trq_Req_Adj = $trq_req_adj, Trq_Req_Pro = $trq_req_pro,
-                    Trq_Tiempo_Est = $trq_tiempo_est
+                    Trq_Tiempo_Est = $trq_tiempo_est, Trq_Est = '$trq_est'
                     WHERE Trq_Cod = $trq_cod;";
             } else {
-                // Crear
                 $sql = "INSERT INTO adq_tipos_requerimientos (Emp_Cod, Wfm_Cod, Trq_Des, Trq_Req_Fac, Trq_Per_Cie, Trq_Req_Cot, Trq_Min_Cot, Trq_Req_Pre, Trq_Req_Adj, Trq_Req_Pro, Trq_Tiempo_Est, Trq_Est) 
-                        VALUES ($Ses_Emp_Cod, $wfm_cod, '$trq_des', $trq_req_fac, $trq_per_cie, $trq_req_cot, $trq_min_cot, $trq_req_pre, $trq_req_adj, $trq_req_pro, $trq_tiempo_est, 'A');";
+                        VALUES ($Ses_Emp_Cod, $wfm_cod, '$trq_des', $trq_req_fac, $trq_per_cie, $trq_req_cot, $trq_min_cot, $trq_req_pre, $trq_req_adj, $trq_req_pro, $trq_tiempo_est, '$trq_est');";
             }
             $obBD_con1->grabarv_registros($sql, $obBD_conexion);
+            if (!$trq_cod && !empty($obBD_conexion->conexion)) {
+                $trq_cod = intval(mysqli_insert_id($obBD_conexion->conexion));
+            }
             $obBD_con1->echoJson(array('success' => true));
         } catch (Exception $e) {
             $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
@@ -96,10 +106,23 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
         exit;
     }
 
-    // --- AJAX: Cambiar estado (Activar/Desactivar) ---
+    // --- AJAX: Activar / Inactivar tipo (A <-> I) ---
     if (isset($ajax_toggle_tipo_req)) {
         $trq_cod = intval($_POST['Trq_Cod']);
-        $nuevo_est = $_POST['Trq_Est'] === 'A' ? 'I' : 'A';
+        $row_est = $obBD_con1->getRowConsultaSql("SELECT Trq_Est FROM adq_tipos_requerimientos WHERE Trq_Cod = $trq_cod;", $obBD_conexion);
+        $est_actual = !empty($row_est['Trq_Est']) ? strtoupper($row_est['Trq_Est']) : (isset($_POST['Trq_Est']) ? strtoupper(trim($_POST['Trq_Est'])) : '');
+        $est_destino = isset($_POST['Trq_Est_Dest']) ? strtoupper(trim($_POST['Trq_Est_Dest'])) : '';
+        $accion = isset($_POST['accion']) ? trim($_POST['accion']) : '';
+
+        if ($accion === 'inactivar') {
+            $nuevo_est = ($est_actual === 'I') ? 'A' : 'I';
+        } elseif (in_array($est_destino, array('A', 'I'), true)) {
+            $nuevo_est = $est_destino;
+        } else {
+            // Por defecto: inactivar (I) / activar (A)
+            $nuevo_est = ($est_actual === 'I') ? 'A' : 'I';
+        }
+
         $obBD_con1->grabarv_registros("UPDATE adq_tipos_requerimientos SET Trq_Est = '$nuevo_est' WHERE Trq_Cod = $trq_cod;", $obBD_conexion);
         $obBD_con1->echoJson(array('success' => true, 'nuevo_estado' => $nuevo_est));
         exit;
@@ -134,7 +157,7 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
             FROM adq_tipos_requerimientos t 
             INNER JOIN wf_flujos_modelos w ON w.Wfm_Cod = t.Wfm_Cod 
             WHERE t.Emp_Cod = $Ses_Emp_Cod $where_flujo
-            ORDER BY w.Wfm_Nom, t.Trq_Des;", $obBD_conexion);
+            ORDER BY t.Trq_Cod DESC;", $obBD_conexion);
 
         $flujos = $wf_mgr->listarFlujosDisenador($Ses_Emp_Cod);
         adq_cfg_utf8_deep($tipos);
@@ -175,16 +198,25 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
                             <th style="width: 80px;">Presup.</th>
                             <th style="width: 80px;">Proveedor</th>
                             <th style="width: 100px;">Tiempo Est.</th>
-                            <th style="width: 80px;">Estado</th>
-                            <th style="width: 100px;">Acción</th>
+                            <th style="width: 100px;">Estado</th>
+                            <th style="width: 140px;">Acción</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($tipos)) { ?>
                             <tr class="text-center"><td colspan="12" class="text-muted py-3"><?php echo $filtro_fam > 0 ? 'No hay tipos de requerimientos asociados a este flujo modelo.' : 'No hay tipos de requerimientos configurados.'; ?></td></tr>
                         <?php } else { 
-                            foreach ($tipos as $t) { ?>
-                                <tr class="text-center <?php echo $t['Trq_Est'] === 'I' ? 'table-light text-muted' : ''; ?>" id="row_trq_<?php echo $t['Trq_Cod']; ?>">
+                            foreach ($tipos as $t) {
+                                $est = isset($t['Trq_Est']) ? $t['Trq_Est'] : 'A';
+                                if ($est === 'I') {
+                                    $badge_cls = 'secondary';
+                                    $badge_txt = 'Inactivo';
+                                } else {
+                                    $badge_cls = 'success';
+                                    $badge_txt = 'Activo';
+                                }
+                                ?>
+                                <tr class="text-center <?php echo $est === 'I' ? 'table-light text-muted' : ''; ?>" id="row_trq_<?php echo $t['Trq_Cod']; ?>" data-trq-est="<?php echo htmlspecialchars($est, ENT_QUOTES, 'UTF-8'); ?>">
                                     <td class="fw-bold"><?php echo $t['Trq_Cod']; ?></td>
                                     <td class="text-start"><?php echo adq_cfg_h($t['Trq_Des']); ?></td>
                                     <td class="text-start fw-semibold text-primary"><?php echo adq_cfg_h($t['Wfm_Nom']); ?></td>
@@ -196,15 +228,19 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
                                     <td><?php echo $t['Trq_Req_Pro'] ? '<i class="bi bi-check-lg text-success"></i>' : '<i class="bi bi-x-lg text-danger"></i>'; ?></td>
                                     <td class="fw-bold text-secondary"><?php echo $t['Trq_Tiempo_Est'] !== null ? $t['Trq_Tiempo_Est'] . ' días' : '<span class="text-muted">-</span>'; ?></td>
                                     <td>
-                                        <span class="badge bg-<?php echo $t['Trq_Est'] === 'A' ? 'success' : 'secondary'; ?>" id="badge_trq_<?php echo $t['Trq_Cod']; ?>">
-                                            <?php echo $t['Trq_Est'] === 'A' ? 'Activo' : 'Inactivo'; ?>
+                                        <span class="badge bg-<?php echo $badge_cls; ?>" id="badge_trq_<?php echo $t['Trq_Cod']; ?>">
+                                            <?php echo $badge_txt; ?>
                                         </span>
                                     </td>
                                     <td>
-                                        <div class="d-flex gap-1 justify-content-center">
+                                        <div class="d-flex gap-1 justify-content-center flex-wrap align-items-center">
                                             <button class="btn btn-xs btn-outline-primary" onclick="editarTipo(<?php echo $t['Trq_Cod']; ?>)" title="Editar"><i class="bi bi-pencil"></i></button>
-                                            <button class="btn btn-xs btn-outline-<?php echo $t['Trq_Est'] === 'A' ? 'danger' : 'success'; ?>" id="btn_toggle_<?php echo $t['Trq_Cod']; ?>" onclick="toggleEstado(<?php echo $t['Trq_Cod']; ?>)" title="<?php echo $t['Trq_Est'] === 'A' ? 'Desactivar' : 'Activar'; ?>">
-                                                <i class="bi bi-power"></i>
+                                            <button type="button"
+                                                    class="btn btn-xs btn-outline-<?php echo $est === 'I' ? 'success' : 'danger'; ?>"
+                                                    id="btn_toggle_<?php echo $t['Trq_Cod']; ?>"
+                                                    onclick="toggleEstado(<?php echo $t['Trq_Cod']; ?>)"
+                                                    title="<?php echo $est === 'I' ? 'Activar (estado A)' : 'Inactivar (estado I)'; ?>">
+                                                <i class="bi bi-power" id="ico_power_<?php echo $t['Trq_Cod']; ?>"></i>
                                             </button>
                                         </div>
                                     </td>
@@ -287,9 +323,10 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
                             </div>
 
                             <div class="mb-3 ms-4" id="divSlaDays" style="display: none;">
-                                <label class="form-label small fw-semibold">Días estimados de resolución</label>
+                                <label class="form-label small fw-semibold">Días estimados del Proyecto</label>
                                 <input type="number" class="form-control form-control-sm" id="Trq_Tiempo_Est" name="Trq_Tiempo_Est" min="1" style="width: 120px;">
                             </div>
+
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
@@ -319,7 +356,7 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
                         $('#Trq_Cod').val(d.Trq_Cod);
                         $('#Trq_Des').val(d.Trq_Des);
                         $('#Wfm_Cod').val(d.Wfm_Cod);
-                        
+
                         $('#Trq_Req_Fac').prop('checked', parseInt(d.Trq_Req_Fac) === 1);
                         $('#Trq_Per_Cie').prop('checked', parseInt(d.Trq_Per_Cie) === 1);
                         $('#Trq_Req_Cot').prop('checked', parseInt(d.Trq_Req_Cot) === 1);
@@ -371,27 +408,57 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
                 }, 'json');
             }
 
-            function toggleEstado(id) {
-                $.post('adq_configuracion.php?ajax_toggle_tipo_req=1', { Trq_Cod: id, Trq_Est: $('#badge_trq_' + id).text().trim() === 'Activo' ? 'A' : 'I' }, function(res) {
-                    if (res.success) {
-                        const badge = $('#badge_trq_' + id);
-                        const btn = $('#btn_toggle_' + id);
-                        const row = $('#row_trq_' + id);
-                        
-                        if (res.nuevo_estado === 'A') {
-                            badge.removeClass('bg-secondary').addClass('bg-success').text('Activo');
-                            btn.removeClass('btn-outline-success').addClass('btn-outline-danger').attr('title', 'Desactivar');
-                            row.removeClass('table-light text-muted');
-                        } else {
-                            badge.removeClass('bg-success').addClass('bg-secondary').text('Inactivo');
-                            btn.removeClass('btn-outline-danger').addClass('btn-outline-success').attr('title', 'Activar');
-                            row.addClass('table-light text-muted');
-                        }
-                    } else {
-                        mostrarNotificacion('danger', 'Error al cambiar estado: ' + res.message);
-                    }
-                }, 'json');
+            function aplicarEstadoTipoUi(id, nuevoEst) {
+                const badge = $('#badge_trq_' + id);
+                const row = $('#row_trq_' + id);
+                let btn = $('#btn_toggle_' + id);
+
+                badge.removeClass('bg-success bg-secondary');
+                row.attr('data-trq-est', nuevoEst);
+
+                if (nuevoEst === 'A') {
+                    badge.addClass('bg-success').text('Activo');
+                    btn.removeClass('btn-outline-success').addClass('btn-outline-danger').attr('title', 'Inactivar (estado I)');
+                    row.removeClass('table-light text-muted');
+                } else {
+                    badge.addClass('bg-secondary').text('Inactivo');
+                    btn.removeClass('btn-outline-danger').addClass('btn-outline-success').attr('title', 'Activar (estado A)');
+                    row.addClass('table-light text-muted');
+                }
             }
+
+            function toggleEstado(id) {
+                const estActual = $('#row_trq_' + id).attr('data-trq-est') || 'A';
+                const vaActivar = (estActual === 'I');
+                const titulo = vaActivar ? 'Activar tipo de requerimiento' : 'Inactivar tipo de requerimiento';
+                const mensaje = vaActivar
+                    ? 'Esta accion activara el tipo seleccionado y cambiara su estado a Activo (A). Desea continuar?'
+                    : 'Esta accion inactivara el tipo seleccionado y cambiara su estado a Inactivo (I). Desea continuar?';
+
+                mostrarConfirmacionCentro(titulo, mensaje, function() {
+                    $.post('adq_configuracion.php?ajax_toggle_tipo_req=1', {
+                        ajax_toggle_tipo_req: 1,
+                        Trq_Cod: id,
+                        Trq_Est: estActual,
+                        accion: 'inactivar'
+                    }, function(res) {
+                        if (res && res.success) {
+                            aplicarEstadoTipoUi(id, res.nuevo_estado);
+                            if (res.nuevo_estado === 'I') {
+                                mostrarNotificacion('success', 'Tipo inactivado (estado I).');
+                            } else {
+                                mostrarNotificacion('success', 'Tipo activado (estado A).');
+                            }
+                        } else {
+                            mostrarNotificacion('danger', 'Error al cambiar estado: ' + ((res && res.message) || ''));
+                        }
+                    }, 'json').fail(function(xhr) {
+                        mostrarNotificacion('danger', 'Error de comunicación al cambiar el estado.');
+                        console.error('toggleEstado fail', xhr && xhr.responseText);
+                    });
+                }, vaActivar ? 'success' : 'danger', vaActivar ? 'bi-power' : 'bi-power');
+            }
+
         </script>
         <?php
         exit;
@@ -399,7 +466,7 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
 }
 
 // Nodos no disponibles en el diseñador embebido de configuracion
-$wf_builder_nodos_ocultos = array('DECISION', 'NOTIFICACION');
+$wf_builder_nodos_ocultos = array('NOTIFICACION');
 
 if (isset($_GET['ajax_get_builder'])) {
     header('Content-Type: text/html; charset=UTF-8');
@@ -410,10 +477,12 @@ if (isset($_GET['ajax_get_builder'])) {
 
 if (isset($_GET['ajax_load_workflow']) || isset($_GET['ajax_save_workflow']) || isset($_POST['ajax_save_workflow']) ||
     isset($_GET['ajax_publish_workflow']) || isset($_POST['ajax_publish_workflow']) ||
+    isset($_GET['ajax_duplicate_workflow']) || isset($_POST['ajax_duplicate_workflow']) ||
     isset($_GET['ajax_get_department_users']) || isset($_POST['ajax_save_department_users']) || isset($_GET['ajax_get_users_by_department'])) {
     $ajax_load_workflow = isset($_GET['ajax_load_workflow']) ? $_GET['ajax_load_workflow'] : null;
     $ajax_save_workflow = isset($_GET['ajax_save_workflow']) ? $_GET['ajax_save_workflow'] : (isset($_POST['ajax_save_workflow']) ? $_POST['ajax_save_workflow'] : null);
     $ajax_publish_workflow = isset($_GET['ajax_publish_workflow']) ? $_GET['ajax_publish_workflow'] : (isset($_POST['ajax_publish_workflow']) ? $_POST['ajax_publish_workflow'] : null);
+    $ajax_duplicate_workflow = isset($_GET['ajax_duplicate_workflow']) ? $_GET['ajax_duplicate_workflow'] : (isset($_POST['ajax_duplicate_workflow']) ? $_POST['ajax_duplicate_workflow'] : null);
     $ajax_get_department_users = isset($_GET['ajax_get_department_users']) ? $_GET['ajax_get_department_users'] : null;
     $ajax_save_department_users = isset($_POST['ajax_save_department_users']) ? $_POST['ajax_save_department_users'] : null;
     $ajax_get_users_by_department = isset($_GET['ajax_get_users_by_department']) ? $_GET['ajax_get_users_by_department'] : null;
@@ -883,6 +952,27 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
         </div>
     </div>
 
+    <!-- Modal de confirmacion -->
+    <div class="modal fade" id="mdlConfirmacionExa" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
+        <div class="modal-dialog modal-sm" style="margin-top: 12%;">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white" id="mdlConfirmacionExaHeader">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title m-0" id="mdlConfirmacionExaHeaderTitle"><i class="bi bi-exclamation-triangle-fill"></i> Confirmar accion</h4>
+                </div>
+                <div class="modal-body text-center">
+                    <div style="font-size: 2.3rem; line-height: 1;" id="mdlConfirmacionExaIconoWrap"><i class="bi bi-power" id="mdlConfirmacionExaIcono"></i></div>
+                    <p class="fw-bold mt-2 mb-1" id="mdlConfirmacionExaTitulo">Inactivar tipo de requerimiento</p>
+                    <p class="text-muted mb-0" id="mdlConfirmacionExaMensaje">Esta accion cambiara el estado a Inactivo (I).</p>
+                </div>
+                <div class="modal-footer text-center">
+                    <button type="button" class="btn btn-default" data-dismiss="modal" style="min-width: 110px;">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btnConfirmacionExaAceptar" style="min-width: 110px;"><i class="bi bi-check-lg"></i> Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal de mensajes (exito / error) -->
     <div class="modal fade" id="mdlMensajeExa" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
         <div class="modal-dialog modal-sm" style="margin-top: 10%;">
@@ -899,7 +989,7 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
         </div>
     </div>
 
-    <script src="../VALIDACIONES/wf_builder.js"></script>
+    <script src="../VALIDACIONES/wf_builder.js?v=40"></script>
     <script>
         function limpiarBackdropModal() {
             $('body').removeClass('modal-open');
@@ -953,6 +1043,52 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
             });
 
             $modal.off('hidden.bs.modal.mensajeExa').on('hidden.bs.modal.mensajeExa', function() {
+                limpiarBackdropModal();
+            });
+
+            limpiarBackdropModal();
+            $modal.modal('show');
+        }
+
+        function mostrarConfirmacionCentro(titulo, mensaje, onConfirmar, tipo, icono) {
+            const $modal = $('#mdlConfirmacionExa');
+            const $header = $('#mdlConfirmacionExaHeader');
+            const $btn = $('#btnConfirmacionExaAceptar');
+            const $ico = $('#mdlConfirmacionExaIcono');
+            const estilo = tipo || 'danger';
+            const icoCls = icono || 'bi-exclamation-triangle-fill';
+
+            $header.removeClass('bg-danger bg-success bg-warning bg-primary text-white text-dark');
+            $btn.removeClass('btn-danger btn-success btn-warning btn-primary');
+            $ico.removeClass('bi-power bi-play-fill bi-stop-fill bi-exclamation-triangle-fill bi-check-circle-fill');
+
+            if (estilo === 'success') {
+                $header.addClass('bg-success text-white');
+                $btn.addClass('btn-success');
+                $('#mdlConfirmacionExaIconoWrap').css('color', '#198754');
+            } else if (estilo === 'warning') {
+                $header.addClass('bg-warning text-dark');
+                $btn.addClass('btn-warning');
+                $('#mdlConfirmacionExaIconoWrap').css('color', '#ffc107');
+            } else {
+                $header.addClass('bg-danger text-white');
+                $btn.addClass('btn-danger');
+                $('#mdlConfirmacionExaIconoWrap').css('color', '#dc3545');
+            }
+
+            $ico.addClass(icoCls);
+            $('#mdlConfirmacionExaTitulo').text(titulo || 'Confirmar accion');
+            $('#mdlConfirmacionExaMensaje').text(mensaje || 'Desea continuar?');
+
+            $btn.off('click.confirmacionExa').on('click.confirmacionExa', function() {
+                $modal.modal('hide');
+                limpiarBackdropModal();
+                if (typeof onConfirmar === 'function') {
+                    onConfirmar();
+                }
+            });
+
+            $modal.off('hidden.bs.modal.confirmacionExa').on('hidden.bs.modal.confirmacionExa', function() {
                 limpiarBackdropModal();
             });
 

@@ -32576,7 +32576,8 @@ function SetSourceFile($filename) {
 		// $this->parsers[$fn] =& new fpdi_pdf_parser($fn,$this);
 		$this->parsers[$fn] = new fpdi_pdf_parser($fn,$this);
 	if (!$this->parsers[$fn]->success) {
-		$this->Error($this->parsers[$fn]->errormsg);	// Delete this line to return false on fail
+		// No usar Error()/die: permite saltar PDFs incompatibles (xref 1.5+, cifrados, etc.)
+		// $this->Error($this->parsers[$fn]->errormsg);
 		return false;
 	}
 	$this->current_parser =& $this->parsers[$fn];

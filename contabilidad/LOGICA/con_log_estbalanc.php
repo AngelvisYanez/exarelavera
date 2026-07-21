@@ -123,9 +123,7 @@ class Class_Log_Datos_Con extends MysqlDatos {
 		/**
 		 * Consulta la provicia y pais de la sucursal 
 		 */
-		$row_provincia = $this->getRowConsulta(3, $row_institucion['Ciu_Cod'], $obBD);
-
-?>
+		$row_provincia = $this->getRowConsulta(3, $row_institucion['Ciu_Cod'], $obBD); ?>
 		<table width="98%" border="0" cellpadding="0" cellspacing="0">
 			<tr align="center">
 				<td width="12%" rowspan="5" valign="top"><img src="<?php echo $row_institucion['Emp_Log']; ?>" width="83" height="67" /></td>

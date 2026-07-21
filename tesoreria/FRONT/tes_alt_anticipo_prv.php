@@ -87,6 +87,67 @@ if (isset($saveAnticipo)) {
   $response['arrayche'] = array();
   $response['message'] = "No se ha logrado realizar la Transaccion";
   $response['bnd_che'] = false;
+  $imagenes_pagos = array();
+  $archivos_guardados = array();
+
+  // Los comprobantes son opcionales y solo se aceptan para pagos por transferencia.
+  if (!empty($_FILES['Pap_img_archivos']['name']) && is_array($_FILES['Pap_img_archivos']['name'])) {
+    $tipos_permitidos = array(
+      'image/jpeg' => 'jpg',
+      'image/png' => 'png',
+      'image/webp' => 'webp',
+      'image/gif' => 'gif'
+    );
+    $directorio_abs = dirname(__FILE__) . '/../../facturacion/FRONT/' . intval($Ses_Emp_Cod) . '/compr_prov';
+    $directorio_rel = 'facturacion/FRONT/' . intval($Ses_Emp_Cod) . '/compr_prov';
+
+    foreach ($_FILES['Pap_img_archivos']['name'] as $pago_idx => $nombre_original) {
+      $error_archivo = isset($_FILES['Pap_img_archivos']['error'][$pago_idx])
+        ? intval($_FILES['Pap_img_archivos']['error'][$pago_idx])
+        : UPLOAD_ERR_NO_FILE;
+      if ($error_archivo === UPLOAD_ERR_NO_FILE || trim((string)$nombre_original) === '') {
+        continue;
+      }
+      if ($error_archivo !== UPLOAD_ERR_OK) {
+        $response['message'] = 'No se pudo cargar el comprobante de transferencia.';
+        $obBD_con1->echoJson($response);
+        exit();
+      }
+
+      $pago_post = isset($pago_anticipo_proveedores[$pago_idx])
+        ? $pago_anticipo_proveedores[$pago_idx]
+        : array();
+      if (empty($pago_post['Pag_Abr']) || $pago_post['Pag_Abr'] !== 'TRF') {
+        continue;
+      }
+
+      $tmp_archivo = $_FILES['Pap_img_archivos']['tmp_name'][$pago_idx];
+      $tam_archivo = intval($_FILES['Pap_img_archivos']['size'][$pago_idx]);
+      $info_imagen = @getimagesize($tmp_archivo);
+      $mime_imagen = ($info_imagen && !empty($info_imagen['mime'])) ? $info_imagen['mime'] : '';
+      if (!is_uploaded_file($tmp_archivo) || $tam_archivo <= 0 || $tam_archivo > 5242880 || !isset($tipos_permitidos[$mime_imagen])) {
+        $response['message'] = 'El comprobante debe ser una imagen JPG, PNG, WEBP o GIF de máximo 5 MB.';
+        $obBD_con1->echoJson($response);
+        exit();
+      }
+      if (!is_dir($directorio_abs) && !@mkdir($directorio_abs, 0777, true) && !is_dir($directorio_abs)) {
+        $response['message'] = 'No se pudo crear la carpeta para guardar los comprobantes.';
+        $obBD_con1->echoJson($response);
+        exit();
+      }
+
+      $nombre_archivo = 'transferencia_' . date('Ymd_His') . '_' . uniqid() . '.' . $tipos_permitidos[$mime_imagen];
+      $destino_abs = $directorio_abs . '/' . $nombre_archivo;
+      if (!move_uploaded_file($tmp_archivo, $destino_abs)) {
+        $response['message'] = 'No se pudo guardar el comprobante de transferencia.';
+        $obBD_con1->echoJson($response);
+        exit();
+      }
+      $imagenes_pagos[$pago_idx] = $directorio_rel . '/' . $nombre_archivo;
+      $archivos_guardados[] = $destino_abs;
+    }
+  }
+
   $obBD_con1->inicio_transaccion($obBD_conexion->conexion);
 
   $Pec_Cod = $obBD_con1->getRowConsulta(5, $Atp_Fec, $obBD_conexion);
@@ -108,18 +169,19 @@ if (isset($saveAnticipo)) {
   }
   // insertamos los pagos y sus respectivos asientos
   $contador_cheque = 0;
-  foreach ($pago_anticipo_proveedores as $pago) {
+  foreach ($pago_anticipo_proveedores as $pago_idx => $pago) {
     if ($pago['grid_tipp'] == 'pago') {
       // insertamos un asiento por cada pago
       $obBD_con1->operacionobBD(9, array('Com_Cod' => $ultimo_comprobate, 'Asi_Deh' => 'H', 'Asi_Glo' => $pago['Glosa'], 'Asi_Val' => $pago['Haber'], 'Pld_Cod' => $pago['Pld_Cod']), $obBD_conexion);
       $ultimo_asiento = $obBD_con1->insercionid($obBD_conexion);
+      $pap_img = isset($imagenes_pagos[$pago_idx]) ? $imagenes_pagos[$pago_idx] : '';
 
       if ($pago['Pag_Abr'] == 'EFE' || $pago['Pag_Abr'] == 'DEP') {
         // insertamos un pago de anticipo a proveedores
-        $obBD_con1->operacionobBD(8, array('Pap_Cto' => '', 'Pap_Ctd' => $pago['Pap_Ctd'], 'Pap_Val' => $pago['Haber'], 'Atp_Cod' => $ultimo_anticipo, 'Pag_Cod' => $pago['Pag_Cod'], 'Asi_Cod' => $ultimo_asiento), $obBD_conexion);
+        $obBD_con1->operacionobBD(8, array('Pap_Cto' => '', 'Pap_Ctd' => $pago['Pap_Ctd'], 'Pap_Val' => $pago['Haber'], 'Atp_Cod' => $ultimo_anticipo, 'Pag_Cod' => $pago['Pag_Cod'], 'Asi_Cod' => $ultimo_asiento, 'Pap_img' => $pap_img), $obBD_conexion);
       } else {
         // insertamos un pago de anticipo a proveedores
-        $obBD_con1->operacionobBD(8, array('Pap_Cto' => $pago['Pap_Cto'], 'Pap_Ctd' => $pago['Pap_Ctd'], 'Pap_Val' => $pago['Haber'], 'Atp_Cod' => $ultimo_anticipo, 'Pag_Cod' => $pago['Pag_Cod'], 'Asi_Cod' => $ultimo_asiento), $obBD_conexion);
+        $obBD_con1->operacionobBD(8, array('Pap_Cto' => $pago['Pap_Cto'], 'Pap_Ctd' => $pago['Pap_Ctd'], 'Pap_Val' => $pago['Haber'], 'Atp_Cod' => $ultimo_anticipo, 'Pag_Cod' => $pago['Pag_Cod'], 'Asi_Cod' => $ultimo_asiento, 'Pap_img' => $pap_img), $obBD_conexion);
       }
 
       if ($pago['Pag_Abr'] == 'CHE') {
@@ -142,6 +204,12 @@ if (isset($saveAnticipo)) {
   $obBD_con1->fin_transaccion_nomsn($obBD_conexion->conexion);
   if ($obBD_con1->Error == 0) {
     $response['success'] = true;
+  } else {
+    foreach ($archivos_guardados as $archivo_guardado) {
+      if (is_file($archivo_guardado)) {
+        @unlink($archivo_guardado);
+      }
+    }
   }
   $obBD_con1->echoJson($response);
   exit();
@@ -183,7 +251,7 @@ if (isset($verificarCheNum)) {
   <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
   <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
   <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
-  <script src="../VALIDACIONES/tes_val_anticipo_prv.js?a=19"></script>
+  <script src="../VALIDACIONES/tes_val_anticipo_prv.js?a=22"></script>
   <style>
     .pagination>li>a,
     .pagination>li>span {
@@ -203,6 +271,74 @@ if (isset($verificarCheNum)) {
 
     .chosen-single span {
       padding-left: 5px;
+    }
+
+    .tes-comprobante-control {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tes-comprobante-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin: 0;
+      padding: 4px 8px;
+      border: 1px solid #b8c0c7;
+      border-radius: 4px;
+      background: linear-gradient(180deg, #fff 0%, #eef1f3 100%);
+      color: #4f5b64;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(45, 55, 65, .12);
+    }
+
+    .tes-comprobante-btn:hover,
+    .tes-comprobante-btn:focus {
+      border-color: #929da6;
+      color: #303940;
+      background: #e4e8eb;
+    }
+
+    .tes-comprobante-nombre {
+      overflow: hidden;
+      max-width: 105px;
+      color: #5f6b76;
+      font-size: 11px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tes-comprobante-preview {
+      display: none;
+      width: 58px;
+      height: 58px;
+      border: 1px solid #cbd5df;
+      border-radius: 4px;
+      object-fit: cover;
+      background: #fff;
+    }
+
+    .tes-comprobante-accion {
+      display: none;
+      padding: 2px 5px;
+      border: 0;
+      background: transparent;
+      color: #2878b8;
+    }
+
+    .tes-comprobante-quitar {
+      color: #c0392b;
+    }
+
+    .tes-comprobante-ayuda {
+      display: block;
+      margin-top: 5px;
+      color: #7b8792;
+      font-size: 10px;
     }
   </style>
 </HEAD>
@@ -398,6 +534,28 @@ if (isset($verificarCheNum)) {
             </div>
           </div>
 
+          <div class="form-group Transferencia" id="grupoPapImg">
+            <label class="col-xs-4 control-label label-xs">Comprobante:</label>
+            <div class="col-xs-7">
+              <div class="tes-comprobante-control">
+                <label for="Pap_img_archivo" class="tes-comprobante-btn" title="Seleccionar comprobante de pago">
+                  <i class="glyphicon glyphicon-picture"></i>
+                  <span>Cargar imagen</span>
+                </label>
+                <input type="file" id="Pap_img_archivo" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;" onchange="seleccionarComprobanteTransferencia(this)">
+                <span id="Pap_img_nombre" class="tes-comprobante-nombre">Ningún archivo</span>
+                <img id="Pap_img_preview" class="tes-comprobante-preview" alt="Vista previa del comprobante">
+                <button type="button" id="Pap_img_ver" class="tes-comprobante-accion" onclick="verComprobanteTransferenciaActual()" title="Ampliar imagen">
+                  <i class="glyphicon glyphicon-eye-open"></i>
+                </button>
+                <button type="button" id="Pap_img_quitar" class="tes-comprobante-accion tes-comprobante-quitar" onclick="quitarComprobanteTransferencia()" title="Quitar imagen">
+                  <i class="glyphicon glyphicon-remove"></i>
+                </button>
+              </div>
+              <small class="tes-comprobante-ayuda">Opcional · JPG, PNG, WEBP o GIF · máximo 5 MB</small>
+            </div>
+          </div>
+
           <div class="form-group Cheque">
             <label class="col-xs-4 control-label label-xs required">Fecha:</label>
             <div class="col-xs-6">
@@ -431,6 +589,15 @@ if (isset($verificarCheNum)) {
             <a class="btn btn-sm btn-primary" onclick="AgregarPago()"><i class="glyphicon glyphicon-floppy-disk"></i> Agregar</a>
           </div>
         </form>
+      </div>
+
+      <div id="comprobantePreviewDialog" title="Comprobante de transferencia">
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:280px;background:#f4f6f8;border-radius:6px;padding:10px;">
+          <img id="comprobantePreviewGrande" alt="Comprobante de transferencia" style="display:block;max-width:100%;max-height:70vh;border-radius:5px;box-shadow:0 5px 18px rgba(0,0,0,.18);">
+          <a id="comprobantePreviewDescargar" class="btn btn-success btn-sm" href="#" download style="margin-top:12px;">
+            <i class="glyphicon glyphicon-download-alt"></i> Descargar imagen
+          </a>
+        </div>
       </div>
 
 

@@ -5,6 +5,8 @@
 
 let lineIndex = 0;
 let cotIndex = 0;
+let adjIndex = 0;
+let decisionesFlujoCache = { decisiones: [], campos: [] };
 let reqConfig = {
     Sol_Req_Fac: 1,
     Sol_Req_Cot: 1,
@@ -88,7 +90,7 @@ function aplicarReglasCotizaciones() {
         $('#cotizacionesAlert')
             .removeClass('alert-info')
             .addClass('alert-warning')
-            .html(`<i class="bi bi-info-circle-fill text-warning" style="font-size: 14px; margin-right: 6px;"></i> <strong>AL ${accionEnviar.toUpperCase()}:</strong> debera adjuntar al menos <strong>${min}</strong> cotizacion(es) con PDF. Hay <strong>${total}</strong> formulario(s) en pantalla; puede <strong>anadir mas</strong> o <strong>${accionGuardar}</strong> ahora y completarlas despues.`);
+            .html(`<i class="bi bi-info-circle-fill text-warning" style="font-size: 14px; margin-right: 6px;"></i> <strong>AL ${accionEnviar.toUpperCase()}:</strong> debera registrar al menos <strong>${min}</strong> cotizacion(es) con proveedor y monto. El PDF es opcional. Hay <strong>${total}</strong> formulario(s) en pantalla; puede <strong>anadir mas</strong> o <strong>${accionGuardar}</strong> ahora y completarlas despues.`);
     } else {
         $('#cotizacionesAlert')
             .removeClass('alert-warning')
@@ -98,7 +100,7 @@ function aplicarReglasCotizaciones() {
 }
 
 function contarCotizacionesEnFormulario() {
-    return $('#cotizacionesList .adq-cot-col').length;
+    return $('#cotizacionesList .adq-proforma-row').length;
 }
 
 function asegurarCotizacionesMinimas() {
@@ -138,14 +140,152 @@ function aplicarRequisitosDesdeSolicitud(s) {
     syncReqConfigFromForm();
 }
 
+function evalCondicionDecisionLocal(cond, valores) {
+    if (!cond || !cond.campo) return true;
+    var campo = cond.campo === 'Dep_Cod' ? 'Dep_Sol' : cond.campo;
+    var real = valores[campo];
+    if (real === undefined || real === null || real === '') return false;
+    var op = cond.operador || '=';
+    var esperado = cond.valor;
+    var nReal = parseFloat(real);
+    var nEsp = parseFloat(esperado);
+    var numOk = !isNaN(nReal) && !isNaN(nEsp);
+    switch (op) {
+        case '>': return numOk ? nReal > nEsp : false;
+        case '<': return numOk ? nReal < nEsp : false;
+        case '>=': return numOk ? nReal >= nEsp : false;
+        case '<=': return numOk ? nReal <= nEsp : false;
+        case '!=': return String(real) !== String(esperado);
+        case '=':
+        default: return String(real) === String(esperado);
+    }
+}
+
+function leerValoresDecisionCompleta() {
+    var vals = {};
+    $('#camposDecisionesCompleta [data-decision-campo]').each(function() {
+        vals[$(this).data('decision-campo')] = $(this).val();
+    });
+    if (vals.Sol_Val_Est === undefined || vals.Sol_Val_Est === '') {
+        vals.Sol_Val_Est = $('#Sol_Val_Est').val() || '';
+    }
+    if (vals.Sol_Pri === undefined || vals.Sol_Pri === '') {
+        vals.Sol_Pri = $('#Sol_Pri').val() || '';
+    }
+    if (vals.Sol_Tiempo_Est === undefined || vals.Sol_Tiempo_Est === '') {
+        vals.Sol_Tiempo_Est = $('#Sol_Tiempo_Est').val() || '';
+    }
+    return vals;
+}
+
+function actualizarPreviewRamasCompleta() {
+    var $box = $('#previewRamasCompleta').empty();
+    if (!decisionesFlujoCache.decisiones || !decisionesFlujoCache.decisiones.length) return;
+    var vals = leerValoresDecisionCompleta();
+    var html = '<div class="small"><strong>Ruta estimada:</strong><ul class="mb-0 mt-1">';
+    decisionesFlujoCache.decisiones.forEach(function(dec) {
+        var elegida = null;
+        var defecto = null;
+        (dec.ramas || []).forEach(function(r) {
+            if (parseInt(r.es_default, 10) === 1) {
+                defecto = r;
+                return;
+            }
+            if (!elegida && evalCondicionDecisionLocal(r.condicion, vals)) {
+                elegida = r;
+            }
+        });
+        var rama = elegida || defecto;
+        var destino = rama ? (rama.Destino_Nom || ('Nodo ' + rama.Nod_Des)) : '(sin destino)';
+        var texto = rama ? rama.texto : 'Sin coincidencia';
+        html += '<li><span class="fw-bold">' + $('<div>').text(dec.Nod_Nom).html() + '</span>: ' +
+            $('<div>').text(texto).html() + ' → <em>' + $('<div>').text(destino).html() + '</em></li>';
+    });
+    html += '</ul></div>';
+    $box.html(html);
+}
+
+function renderCamposDecisionCompleta(info, valoresPrevios) {
+    decisionesFlujoCache = info || { decisiones: [], campos: [] };
+    valoresPrevios = valoresPrevios || {};
+    var $panel = $('#panelDecisionesCompleta');
+    var $campos = $('#camposDecisionesCompleta').empty();
+    if (!info || !info.campos || !info.campos.length) {
+        $panel.hide();
+        $('#previewRamasCompleta').empty();
+        return;
+    }
+    info.campos.forEach(function(c) {
+        if (c.campo === 'Sol_Cod' || c.campo === 'Trq_Cod') return;
+        var $col = $('<div class="col-md-6 adq-field-block"></div>');
+        var $lab = $('<label class="form-label-req"></label>').text(c.etiqueta + ' *');
+        var $input;
+        if (c.opciones && c.opciones.length) {
+            $input = $('<select class="form-control form-control-adq" required></select>');
+            $input.append('<option value="">[Seleccione]</option>');
+            c.opciones.forEach(function(op) {
+                $input.append($('<option></option>').val(op).text(op));
+            });
+        } else {
+            $input = $('<input class="form-control form-control-adq" required />');
+            $input.attr('type', c.tipo === 'number' ? 'number' : 'text');
+            if (c.tipo === 'number') {
+                $input.attr({ step: '0.01', min: '0' });
+                if (c.campo === 'Sol_Val_Est') {
+                    $input.attr('min', '0.01');
+                }
+            }
+        }
+        $input.attr({
+            name: 'decision_vals[' + c.campo + ']',
+            'data-decision-campo': c.campo,
+            id: 'dec_completa_' + c.campo
+        });
+        var prev = valoresPrevios[c.campo];
+        if (prev === undefined || prev === null || prev === '') {
+            if (c.campo === 'Sol_Val_Est') prev = $('#Sol_Val_Est').val();
+            if (c.campo === 'Sol_Pri') prev = $('#Sol_Pri').val();
+            if (c.campo === 'Sol_Tiempo_Est') prev = $('#Sol_Tiempo_Est').val();
+        }
+        if (prev !== undefined && prev !== null && prev !== '') {
+            $input.val(prev);
+        }
+        $input.on('input change', function() {
+            if (c.campo === 'Sol_Val_Est') {
+                sincronizarItemEstimadoDesdeValor($(this).val());
+            }
+            actualizarPreviewRamasCompleta();
+        });
+        $col.append($lab).append($input);
+        $campos.append($col);
+    });
+    $panel.show();
+    actualizarPreviewRamasCompleta();
+}
+
+function cargarDecisionesFlujo(trqCod, valoresPrevios) {
+    if (!trqCod) {
+        renderCamposDecisionCompleta({ decisiones: [], campos: [] });
+        return;
+    }
+    $.getJSON('adq_solicitud.php', { ajax_get_decisiones_flujo: 1, trq_cod: trqCod }, function(res) {
+        renderCamposDecisionCompleta(res && res.success ? res : { decisiones: [], campos: [] }, valoresPrevios || {});
+    }).fail(function() {
+        renderCamposDecisionCompleta({ decisiones: [], campos: [] });
+    });
+}
+
 function cargarConfiguracionTipo(trqCod) {
     if (!trqCod) {
         $('#divRequisitosSolicitud').hide();
         $('#divProveedorSugerido').hide();
         $('#cotizacionesStateInitial').show();
         $('#cotizacionesStateActive').hide();
+        renderCamposDecisionCompleta({ decisiones: [], campos: [] });
         return;
     }
+
+    cargarDecisionesFlujo(trqCod);
 
     if ($('#Sol_Cod').val()) {
         aplicarReglasCotizaciones();
@@ -181,6 +321,7 @@ function cargarConfiguracionTipo(trqCod) {
             cotIndex = 0;
         }
         aplicarReglasCotizaciones();
+        actualizarPreviewRamasCompleta();
     });
 }
 
@@ -188,19 +329,28 @@ function setModoEdicionFormulario(modo, solNum, observacion) {
     modo = modo || '';
     const esObservada = (modo === 'observada');
     const esCotizaciones = (modo === 'cotizaciones');
+    const esCompletarNodo = (modo === 'completar_nodo');
     $('#Sol_Modo_Edicion').val(modo);
     $('#bannerEdicionBorrador').toggle(modo === 'borrador');
     $('#bannerEdicionObservada').toggle(esObservada);
     $('#bannerEdicionCotizaciones').toggle(esCotizaciones);
+    $('#bannerCompletarNodo').toggle(esCompletarNodo);
     $('#adqFormActionsDefault').toggle(!esObservada && !esCotizaciones);
     $('#adqFormActionsObservada').toggle(esObservada);
     $('#adqFormActionsCotizaciones').toggle(esCotizaciones);
+    if (esCompletarNodo) {
+        $('#adqFormActionsDefault button').not('#btnEnviarSolicitud').hide();
+        $('#btnEnviarSolicitud').html('<i class="bi bi-check2-circle"></i> Completar y avanzar solicitud');
+    } else {
+        $('#adqFormActionsDefault button').show();
+        $('#btnEnviarSolicitud').html('<i class="bi bi-send-check"></i> Enviar Solicitud a Aprobación');
+    }
     if (esCotizaciones) {
         $('#lblCotizacionesNum').text(solNum ? ('# ' + solNum) : '');
     }
 
     const $trq = $('#Trq_Cod');
-    if (esObservada) {
+    if (esObservada || esCompletarNodo) {
         const trqVal = $trq.val();
         $trq.prop('disabled', false).addClass('adq-trq-readonly').attr('tabindex', '-1');
         if (!$('#Trq_Cod_Locked').length) {
@@ -253,8 +403,16 @@ function habilitarEdicionCotizacionesObservada() {
 }
 
 function validarFormularioBase() {
+    if (!$('#Sol_Tit').val().trim()) {
+        alert('Debe ingresar el nombre de la solicitud.');
+        return false;
+    }
     if ($('#tblItems tbody tr').length === 0) {
         alert('Debe registrar al menos un articulo/servicio en el pedido.');
+        return false;
+    }
+    if ((parseFloat($('#Sol_Val_Est').val()) || 0) <= 0) {
+        alert('Debe ingresar un valor estimado mayor que cero.');
         return false;
     }
     if (!$('#Trq_Cod').val()) {
@@ -281,21 +439,23 @@ function validarRequisitosEnvioFormulario() {
         const stats = contarCotizacionesParaEnvio();
         const minRequired = parseInt(reqConfig.Sol_Min_Cot, 10) || 1;
         if (stats.total < minRequired) {
-            let msg = `Para enviar a aprobacion se requieren al menos ${minRequired} cotizacion(es) completas (proveedor, monto y PDF). Completas detectadas: ${stats.total}.`;
+            let msg = `Para enviar a aprobacion se requieren al menos ${minRequired} cotizacion(es) completas (proveedor y monto). El PDF es opcional. Completas detectadas: ${stats.total}.`;
             if (stats.detalle.sinProveedor) {
                 msg += `\n- Falta proveedor en ${stats.detalle.sinProveedor} cotizacion(es).`;
             }
             if (stats.detalle.sinMonto) {
                 msg += `\n- Falta monto en ${stats.detalle.sinMonto} cotizacion(es).`;
             }
-            if (stats.detalle.sinPdf) {
-                msg += `\n- Falta PDF en ${stats.detalle.sinPdf} cotizacion(es).`;
-            }
             alert(msg);
             return false;
         }
         if (!stats.ganadora) {
             alert('Debe marcar cual de las cotizaciones cargadas es la ganadora/seleccionada.');
+            return false;
+        }
+    }
+    if (parseInt(reqConfig.Sol_Req_Adj, 10) === 1) {
+        if (!validarAdjuntosSolicitudFormulario(true)) {
             return false;
         }
     }
@@ -321,13 +481,13 @@ function construirFormDataSolicitud() {
     return formData;
 }
 
-function cargarBorradorEnFormulario(solCod) {
+function cargarBorradorEnFormulario(solCod, porNodo) {
     if (!$('#frmSolicitud').length) {
         alert('El formulario de solicitud no esta disponible en pantalla.');
         return;
     }
 
-    $.getJSON('adq_solicitud.php', { ajax_get_borrador: true, sol_cod: solCod }, function(res) {
+    $.getJSON('adq_solicitud.php', { ajax_get_borrador: true, sol_cod: solCod, por_nodo: porNodo ? 1 : 0 }, function(res) {
         if (!res.success) {
             alert('No se pudo cargar la solicitud: ' + (res.message || 'Error desconocido'));
             return;
@@ -335,9 +495,12 @@ function cargarBorradorEnFormulario(solCod) {
         const s = res.solicitud;
         const modo = res.modo_edicion || (s.Sol_Est === 'O' ? 'observada' : 'borrador');
         $('#Sol_Cod').val(s.Sol_Cod);
-        setModoEdicionFormulario(modo, s.Sol_Num, res.ultima_observacion || null);
-
         $('#Trq_Cod').val(s.Trq_Cod);
+        $('#Sol_Tit').val(s.Sol_Tit || '');
+        setModoEdicionFormulario(modo, s.Sol_Num, res.ultima_observacion || null);
+        if ($('#Trq_Cod_Locked').length) {
+            $('#Trq_Cod_Locked').val(s.Trq_Cod);
+        }
 
         if (s.Prv_Sug && res.prv_sug_text) {
             $('#Prv_Sug').empty().append(new Option(res.prv_sug_text, s.Prv_Sug, true, true));
@@ -359,7 +522,7 @@ function cargarBorradorEnFormulario(solCod) {
                 agregarLinea(item);
             });
         } else {
-            agregarLinea();
+            agregarLinea(itemEstimadoDesdeValor(s.Sol_Val_Est));
         }
         recalcularTotalGeneral();
 
@@ -372,15 +535,30 @@ function cargarBorradorEnFormulario(solCod) {
             });
         }
 
+        $('#adjuntosList').empty();
+        $('#adjEliminarContainer').empty();
+        adjIndex = 0;
+        if (res.adjuntos && res.adjuntos.length) {
+            res.adjuntos.forEach(function(a) {
+                agregarAdjuntoExistente(a);
+            });
+        }
+
         $('#cotizacionesStateInitial').hide();
         $('#cotizacionesStateActive').show();
         aplicarReglasCotizaciones();
         if (modo === 'observada') {
             habilitarEdicionCotizacionesObservada();
         }
+
+        cargarDecisionesFlujo(s.Trq_Cod, res.decision_vals || {});
     }).fail(function() {
         alert('Error de red al cargar la solicitud.');
     });
+}
+
+function cargarSolicitudParaCompletar(solCod) {
+    cargarBorradorEnFormulario(solCod, true);
 }
 
 function bloquearFormularioSoloCotizaciones() {
@@ -430,6 +608,8 @@ function cargarSolicitudParaCotizaciones(solCod) {
             res.items.forEach(function(item) {
                 agregarLinea(item);
             });
+        } else {
+            agregarLinea(itemEstimadoDesdeValor(s.Sol_Val_Est));
         }
         recalcularTotalGeneral();
 
@@ -494,16 +674,17 @@ function guardarCotizacionesEtapa() {
 function contarCotizacionesParaEnvio() {
     let total = 0;
     let ganadora = false;
-    const detalle = { sinProveedor: 0, sinMonto: 0, sinPdf: 0 };
+    const detalle = { sinProveedor: 0, sinMonto: 0 };
 
-    $('#cotizacionesList .adq-cot-col').each(function() {
-        const $box = $(this);
+    $('#cotizacionesList .adq-proforma-row').each(function() {
+        const $row = $(this);
+        const $box = $row.closest('.adq-cot-col');
         const prv = obtenerValorProveedorCot($box);
-        const val = obtenerMontoCot($box);
-        const hasPdf = cotizacionTieneAdjuntoEnFormulario($box);
+        const val = obtenerMontoProforma($row);
+        const hasPdf = proformaTieneAdjunto($row);
         const parcial = !!(prv || val > 0 || hasPdf);
 
-        if (prv && val > 0 && hasPdf) {
+        if (prv && val > 0) {
             total++;
         } else if (parcial) {
             if (!prv) {
@@ -512,12 +693,9 @@ function contarCotizacionesParaEnvio() {
             if (!(val > 0)) {
                 detalle.sinMonto++;
             }
-            if (!hasPdf) {
-                detalle.sinPdf++;
-            }
         }
 
-        if ($box.find('.chk-cot-sel').is(':checked')) {
+        if ($row.find('.chk-cot-sel').is(':checked')) {
             ganadora = true;
         }
     });
@@ -530,10 +708,19 @@ function obtenerValorProveedorCot($box) {
     if ($sel.length) {
         return $sel.val();
     }
-    return $box.find('select[name*="[Prv_Cod]"]').val();
+    return $box.find('.cot-prv-hidden').first().val() || '';
+}
+
+function obtenerMontoProforma($row) {
+    const raw = $row.find('input[name*="[Cot_Val]"]').val();
+    return parseFloat(String(raw || '').replace(',', '.')) || 0;
 }
 
 function obtenerMontoCot($box) {
+    const $row = $box.find('.adq-proforma-row').first();
+    if ($row.length) {
+        return obtenerMontoProforma($row);
+    }
     const raw = $box.find('input[name*="[Cot_Val]"]').val();
     return parseFloat(String(raw || '').replace(',', '.')) || 0;
 }
@@ -555,6 +742,10 @@ function initAdqSolicitudForm() {
         e.preventDefault();
         if ($('#Sol_Modo_Edicion').val() === 'observada') {
             guardarBorrador();
+            return;
+        }
+        if ($('#Sol_Modo_Edicion').val() === 'completar_nodo') {
+            procesarSolicitud(false);
             return;
         }
         toggleMinCotizaciones();
@@ -733,6 +924,45 @@ function setupProveedorSugeridoSelect() {
     });
 }
 
+function itemEstimadoDesdeValor(valor) {
+    const monto = parseFloat(valor) || 0;
+    if (monto <= 0) {
+        return null;
+    }
+    return {
+        Sde_Des: 'Monto estimado',
+        Sde_Can: '1.0000',
+        Sde_Pru: monto.toFixed(2),
+        Sde_Iva: 0,
+        Pro_Cod: ''
+    };
+}
+
+function sincronizarItemEstimadoDesdeValor(valor) {
+    const monto = parseFloat(valor) || 0;
+    if (monto <= 0) {
+        return;
+    }
+    const $filas = $('#tblItems tbody tr');
+    if ($filas.length !== 1) {
+        return;
+    }
+    const $fila = $filas.first();
+    const descripcion = $.trim($fila.find('[name*="[Sde_Des]"]').val() || '');
+    const producto = $fila.find('[name*="[Pro_Cod]"]').val() || '';
+    if (producto || (descripcion !== '' && descripcion.toLowerCase() !== 'estimado' && descripcion.toLowerCase() !== 'monto estimado')) {
+        return;
+    }
+    $fila.find('[name*="[Sde_Des]"]').val('Monto estimado');
+    $fila.find('.txt-cant').val('1.0000');
+    $fila.find('.txt-pru').val(monto.toFixed(2));
+    $fila.find('.chk-iva').prop('checked', false);
+    const idx = parseInt(($fila.attr('id') || '').replace('row_item_', ''), 10);
+    if (!isNaN(idx)) {
+        calcularFila(idx);
+    }
+}
+
 function agregarLinea(itemData) {
     const $tbody = $('#tblItems tbody');
     const idx = lineIndex;
@@ -754,7 +984,7 @@ function agregarLinea(itemData) {
                 <input type="number" class="form-control form-control-sm text-center txt-cant form-control-adq" name="items[${idx}][Sde_Can]" min="0.0001" step="any" value="${can}" required oninput="calcularFila(${idx})">
             </td>
             <td>
-                <input type="number" class="form-control form-control-sm text-end txt-pru form-control-adq" name="items[${idx}][Sde_Pru]" min="0.00" step="any" value="${pru}" required oninput="calcularFila(${idx})">
+                <input type="number" class="form-control form-control-sm text-end txt-pru form-control-adq" name="items[${idx}][Sde_Pru]" min="0.01" step="any" value="${pru}" required oninput="calcularFila(${idx})">
             </td>
             <td class="text-center">
                 <input type="checkbox" class="form-check-input chk-iva" name="items[${idx}][Sde_Iva]" value="1" ${ivaChecked} onchange="calcularFila(${idx})">
@@ -807,6 +1037,11 @@ function recalcularTotalGeneral() {
     });
     $('#lblTotalEstimado').text(totalG.toFixed(2));
     $('#Sol_Val_Est').val(totalG.toFixed(2));
+    var $decVal = $('#camposDecisionesCompleta [data-decision-campo="Sol_Val_Est"]');
+    if ($decVal.length) {
+        $decVal.val(totalG.toFixed(2));
+    }
+    actualizarPreviewRamasCompleta();
 }
 
 function htmlAdqFileUpload(name, inputId, helpText, compact) {
@@ -824,6 +1059,94 @@ function htmlAdqFileUpload(name, inputId, helpText, compact) {
             </label>
         </div>
     `;
+}
+
+function agregarAdjuntoSolicitud(datos) {
+    const idx = adjIndex++;
+    const des = datos && datos.Sad_Des ? datos.Sad_Des : '';
+    const html = `
+        <div class="adq-adjunto-row border rounded p-3 mb-2" data-adj-idx="${idx}" style="background:#f8fafc;">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <strong style="font-size:13px;"><i class="bi bi-file-earmark-pdf text-danger"></i> Archivo de soporte</strong>
+                <button type="button" class="btn btn-xs btn-outline-danger" onclick="quitarAdjuntoSolicitud(this)" title="Quitar"><i class="bi bi-trash"></i></button>
+            </div>
+            <div class="mb-2">
+                <label class="form-label-req small mb-1">Descripción del PDF *</label>
+                <input type="text" class="form-control form-control-adq" name="adjuntos[${idx}][Sad_Des]" value="${$('<div>').text(des).html()}" maxlength="500" placeholder="Ej. Especificaciones técnicas, memorando, orden de compra...">
+            </div>
+            <div>
+                <label class="form-label-req small mb-1">Archivo PDF *</label>
+                ${htmlAdqFileUpload('adjunto_archivos[' + idx + ']', 'adj_pdf_' + idx, 'Solo archivos PDF', false)}
+            </div>
+        </div>
+    `;
+    $('#adjuntosList').append(html);
+    setupAdqFileUpload($('#adjuntosList .adq-adjunto-row').last());
+}
+
+function agregarAdjuntoExistente(adj) {
+    const sadCod = adj.Sad_Cod;
+    const des = adj.Sad_Des || '';
+    const path = adj.Sad_Adj || '';
+    const fileName = path ? path.split('/').pop() : '';
+    const html = `
+        <div class="adq-adjunto-row border rounded p-3 mb-2" data-sad-cod="${sadCod}" style="background:#f8fafc;">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <strong style="font-size:13px;"><i class="bi bi-file-earmark-pdf text-danger"></i> Archivo de soporte</strong>
+                <button type="button" class="btn btn-xs btn-outline-danger" onclick="quitarAdjuntoExistente(this, ${sadCod})" title="Quitar"><i class="bi bi-trash"></i></button>
+            </div>
+            <div class="mb-2">
+                <label class="form-label-req small mb-1">Descripción del PDF *</label>
+                <input type="text" class="form-control form-control-adq" name="adjuntos_existentes[${sadCod}][Sad_Des]" value="${$('<div>').text(des).html()}" maxlength="500">
+            </div>
+            <div class="mb-2">
+                <input type="hidden" name="adjuntos_existentes[${sadCod}][Sad_Adj_Keep]" value="${$('<div>').text(path).html()}">
+                <a href="../../DATA/${$('<div>').text(path).html()}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-file-earmark-pdf"></i> ${$('<div>').text(fileName || 'Ver PDF').html()}</a>
+            </div>
+            <div>
+                <label class="form-label-req small mb-1">Reemplazar PDF (opcional)</label>
+                ${htmlAdqFileUpload('adjunto_archivos_existentes[' + sadCod + ']', 'adj_pdf_ex_' + sadCod, 'Dejar vacío para conservar el actual', false)}
+            </div>
+        </div>
+    `;
+    $('#adjuntosList').append(html);
+    setupAdqFileUpload($('#adjuntosList .adq-adjunto-row').last());
+}
+
+function quitarAdjuntoSolicitud(btn) {
+    $(btn).closest('.adq-adjunto-row').remove();
+}
+
+function quitarAdjuntoExistente(btn, sadCod) {
+    $('#adjEliminarContainer').append('<input type="hidden" name="adj_eliminar[]" value="' + sadCod + '">');
+    $(btn).closest('.adq-adjunto-row').remove();
+}
+
+function validarAdjuntosSolicitudFormulario(obligatorio) {
+    const $rows = $('#adjuntosList .adq-adjunto-row');
+    if (obligatorio && !$rows.length) {
+        alert('Debe cargar al menos un archivo PDF de soporte con su descripcion.');
+        return false;
+    }
+    let ok = true;
+    $rows.each(function() {
+        const $row = $(this);
+        const des = $.trim($row.find('input[name*="[Sad_Des]"]').val() || '');
+        const hasKeep = $row.find('input[name*="[Sad_Adj_Keep]"]').length > 0;
+        const fileInput = $row.find('input[type="file"]')[0];
+        const hasNewFile = fileInput && fileInput.files && fileInput.files.length > 0;
+        if (!des) {
+            alert('Cada PDF de soporte debe tener una descripcion.');
+            ok = false;
+            return false;
+        }
+        if (!hasKeep && !hasNewFile) {
+            alert('Seleccione el archivo PDF para cada fila de soporte.');
+            ok = false;
+            return false;
+        }
+    });
+    return ok;
 }
 
 function adqParseCotAdjuntos(cotAdj) {
@@ -853,21 +1176,50 @@ function adqEsArchivoPdf(file) {
     return nombre.endsWith('.pdf') || file.type === 'application/pdf' || file.type === 'application/x-pdf';
 }
 
-function htmlAdqCotPdfUploads(fieldName, inputIdBase, compact) {
-    const compactClass = compact ? ' adq-cot-pdf-compact' : '';
-    const addBtn = compact
-        ? `<button type="button" class="btn btn-xs btn-primary adq-btn-add-pdf-cot" onclick="agregarPdfCotizacionFila(this)" title="Agregar otro PDF"><i class="bi bi-plus-lg"></i><span class="adq-btn-add-pdf-label">PDF</span></button>`
-        : `<button type="button" class="btn btn-sm btn-primary mt-1 adq-btn-add-pdf-cot" onclick="agregarPdfCotizacionFila(this)"><i class="bi bi-plus-circle"></i> Agregar otro PDF</button>
-           <small class="text-muted d-block mt-1">Solo se permiten archivos PDF.</small>`;
+function htmlAdqProformaRow(opts) {
+    const idx = opts.idx;
+    const isExisting = !!opts.isExisting;
+    const scoCod = opts.scoCod || '';
+    const nameBase = isExisting
+        ? ('cotizaciones_existentes[' + scoCod + ']')
+        : ('cotizaciones[' + idx + ']');
+    const fileBase = isExisting
+        ? ('cotizacion_archivos_existentes[' + scoCod + ']')
+        : ('cotizacion_archivos[' + idx + ']');
+    const inputIdBase = isExisting ? ('cot_file_ex_' + scoCod) : ('cot_file_' + idx);
+    const chkId = 'chk_sel_cot_' + idx;
+    const valor = (opts.valor !== undefined && opts.valor !== null) ? opts.valor : '';
+    const selChecked = parseInt(opts.sel, 10) === 1 ? ' checked' : '';
+    const jusShow = parseInt(opts.sel, 10) === 1 ? 'block' : 'none';
+    const cotJus = adqEscHtml(opts.jus || '');
+    const pdfsGuardados = opts.pdfsGuardadosHtml || '';
+    const rowClass = 'adq-proforma-row' + (parseInt(opts.sel, 10) === 1 ? ' adq-proforma-ganadora' : '');
+    const scoAttr = isExisting ? (' data-sco-cod="' + scoCod + '"') : '';
+
     return `
-        <div class="adq-cot-pdf-zone${compactClass}">
-            <div class="adq-cot-pdf-rows">
-                <div class="adq-cot-pdf-row">
-                    ${htmlAdqFileUpload(fieldName + '[]', inputIdBase + '_0', compact ? 'PDF' : 'Solo archivos PDF', compact)}
-                    <button type="button" class="btn btn-link adq-pdf-row-remove" style="display:none;" title="Quitar archivo" onclick="quitarPdfCotizacionFila(this)"><i class="bi bi-x-lg"></i></button>
+        <div class="${rowClass}" data-cot-key="${idx}"${scoAttr}>
+            <input type="hidden" class="cot-prv-hidden" name="${nameBase}[Prv_Cod]" value="${adqEscHtml(opts.prvCod || '')}">
+            <div class="adq-proforma-fields">
+                <div class="adq-proforma-pdf">
+                    ${pdfsGuardados}
+                    ${htmlAdqFileUpload(fileBase + '[]', inputIdBase + '_0', 'PDF opcional', true)}
+                </div>
+                <div class="adq-proforma-val adq-cot-field">
+                    <label class="adq-cot-label">Valor ($)</label>
+                    <input type="number" class="form-control text-end form-control-adq adq-cot-control" name="${nameBase}[Cot_Val]" value="${valor}" min="0.01" step="any" placeholder="0.00">
+                </div>
+                <div class="adq-proforma-actions">
+                    <div class="form-check adq-cot-winner">
+                        <input type="checkbox" class="form-check-input chk-cot-sel" name="${nameBase}[Cot_Sel]" value="1" id="${chkId}" data-cot-key="${idx}"${selChecked} onchange="seleccionarCotizacionUnica('${idx}')">
+                        <label class="form-check-label fw-bold text-success" for="${chkId}" title="Proforma ganadora"><i class="bi bi-trophy"></i></label>
+                    </div>
+                    <button type="button" class="btn btn-link adq-proforma-remove" title="Quitar proforma" onclick="quitarProformaFila(this)"><i class="bi bi-x-lg"></i></button>
                 </div>
             </div>
-            ${addBtn}
+            <div class="adq-proforma-jus div-just-cot adq-cot-field" style="display: ${jusShow};">
+                <label class="adq-cot-label text-danger">Justificacion</label>
+                <textarea class="form-control form-control-adq adq-cot-control" name="${nameBase}[Cot_Jus]" rows="2" placeholder="Por que se eligio esta cotizacion...">${cotJus}</textarea>
+            </div>
         </div>
     `;
 }
@@ -918,66 +1270,128 @@ function setupAdqFileUpload($scope) {
 
 function setupAdqCotPdfUploads($scope) {
     setupAdqFileUpload($scope);
-    $scope.find('.adq-cot-pdf-zone').each(function() {
-        actualizarBotonesPdfCotizacion($(this));
-    });
+    actualizarBotonesProforma($scope.closest('.adq-cot-col').length ? $scope.closest('.adq-cot-col') : $scope);
+}
+
+function syncProveedorGrupo($box) {
+    if (!$box || !$box.length) {
+        return;
+    }
+    const val = $box.find('select.select2-prov-cot').val() || '';
+    $box.find('.cot-prv-hidden').val(val);
+}
+
+/**
+ * Agrega otra proforma debajo del mismo proveedor (PDF + valor + ganadora).
+ */
+function agregarProformaMismoProveedor(btn) {
+    const $box = $(btn).closest('.adq-cot-col');
+    if (!$box.length) {
+        agregarCotizacionHTML();
+        return;
+    }
+
+    const prv = obtenerValorProveedorCot($box);
+    if (!prv) {
+        alert('Seleccione primero el proveedor.');
+        const $sel = $box.find('select.select2-prov-cot');
+        if ($sel.hasClass('select2-hidden-accessible')) {
+            $sel.select2('open');
+        }
+        return;
+    }
+
+    const idx = cotIndex++;
+    const $row = $(htmlAdqProformaRow({
+        idx: idx,
+        isExisting: false,
+        prvCod: prv,
+        valor: '',
+        sel: 0,
+        jus: ''
+    }));
+    $box.find('.adq-proformas-list').append($row);
+    setupAdqFileUpload($row);
+    syncProveedorGrupo($box);
+    actualizarBotonesProforma($box);
+    actualizarEstadoAdjuntoCotizacion($box);
+
+    const $valor = $row.find('input[name*="[Cot_Val]"]').first();
+    if ($valor.length) {
+        $valor.focus();
+    }
 }
 
 function agregarPdfCotizacionFila(btn) {
-    const $zone = $(btn).closest('.adq-cot-pdf-zone');
-    const compact = $zone.hasClass('adq-cot-pdf-compact');
-    const $rows = $zone.find('.adq-cot-pdf-rows');
-    const fieldName = $rows.find('input[type="file"]').first().attr('name');
-    const baseId = 'cot_pdf_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-    const $row = $(`
-        <div class="adq-cot-pdf-row">
-            ${htmlAdqFileUpload(fieldName, baseId, compact ? 'PDF' : 'Solo archivos PDF', compact)}
-            <button type="button" class="btn btn-link adq-pdf-row-remove" title="Quitar archivo" onclick="quitarPdfCotizacionFila(this)"><i class="bi bi-x-lg"></i></button>
-        </div>
-    `);
-    $rows.append($row);
-    setupAdqFileUpload($row);
-    actualizarBotonesPdfCotizacion($zone);
+    agregarProformaMismoProveedor(btn);
 }
 
-function quitarPdfCotizacionFila(btn) {
-    const $zone = $(btn).closest('.adq-cot-pdf-zone');
-    const $rows = $zone.find('.adq-cot-pdf-row');
+function quitarProformaFila(btn) {
+    const $row = $(btn).closest('.adq-proforma-row');
+    const $box = $row.closest('.adq-cot-col');
+    const $rows = $box.find('.adq-proforma-row');
+
     if ($rows.length <= 1) {
-        const $input = $rows.find('input[type="file"]');
-        $input.val('');
-        $input.closest('.adq-file-upload').find('.adq-file-main').text('Seleccionar PDF');
-        $input.closest('.adq-file-upload').find('.adq-file-name').text('Solo archivos PDF');
-    } else {
-        $(btn).closest('.adq-cot-pdf-row').remove();
+        const groupKey = $box.attr('data-group-key') || $box.attr('id').replace('cot_box_', '');
+        eliminarCotizacion(groupKey);
+        return;
     }
-    actualizarBotonesPdfCotizacion($zone);
-    actualizarEstadoAdjuntoCotizacion($zone.closest('.adq-cot-col'));
+
+    const scoCod = $row.attr('data-sco-cod');
+    if (scoCod) {
+        $('#cotEliminarContainer').append('<input type="hidden" name="cot_eliminar[]" value="' + scoCod + '">');
+    }
+    $row.remove();
+    actualizarBotonesProforma($box);
+    actualizarEstadoAdjuntoCotizacion($box);
+    $('.adq-cot-card').each(function() {
+        $(this).toggleClass('adq-cot-card-ganadora', $(this).find('.chk-cot-sel:checked').length > 0);
+    });
 }
 
-function actualizarBotonesPdfCotizacion($zone) {
-    const $rows = $zone.find('.adq-cot-pdf-row');
-    $rows.find('.adq-pdf-row-remove').toggle($rows.length > 1);
+function actualizarBotonesProforma($box) {
+    if (!$box || !$box.length) {
+        return;
+    }
+    const $rows = $box.find('.adq-proforma-row');
+    $rows.find('.adq-proforma-remove').toggle($rows.length > 1);
 }
 
 function quitarPdfGuardado(btn) {
     const $box = $(btn).closest('.adq-cot-col');
-    $(btn).closest('.adq-pdf-guardado-item').remove();
-    if ($box.find('.adq-cot-pdfs-guardados .adq-pdf-guardado-item').length === 0) {
-        $box.find('.adq-cot-pdfs-guardados').remove();
+    const $item = $(btn).closest('.adq-pdf-guardado-item');
+    if ($item.length) {
+        $item.remove();
     }
+    const $wrap = $box.find('.adq-cot-pdfs-guardados').filter(function() {
+        return $(this).find('input[name*="[Cot_Adj_Keep]"]').length === 0 && $(this).find('a').length === 0;
+    });
+    $wrap.remove();
     actualizarEstadoAdjuntoCotizacion($box);
 }
 
-function cotizacionTieneAdjuntoEnFormulario($box) {
-    const kept = $box.find('input[name*="[Cot_Adj_Keep]"]').length;
+function proformaTieneAdjunto($row) {
+    if ($row.find('input[name*="[Cot_Adj_Keep]"]').length > 0) {
+        return true;
+    }
     let nuevos = 0;
-    $box.find('input[type="file"]').each(function() {
+    $row.find('input[type="file"]').each(function() {
         if (this.files && this.files.length > 0) {
             nuevos++;
         }
     });
-    if (kept > 0 || nuevos > 0) {
+    return nuevos > 0;
+}
+
+function cotizacionTieneAdjuntoEnFormulario($box) {
+    let ok = false;
+    $box.find('.adq-proforma-row').each(function() {
+        if (proformaTieneAdjunto($(this))) {
+            ok = true;
+            return false;
+        }
+    });
+    if (ok) {
         return true;
     }
     return parseInt($box.attr('data-has-adj'), 10) === 1;
@@ -987,12 +1401,19 @@ function actualizarEstadoAdjuntoCotizacion($box) {
     if (!$box || !$box.length) {
         return;
     }
-    $box.attr('data-has-adj', cotizacionTieneAdjuntoEnFormulario($box) ? 1 : 0);
+    let has = false;
+    $box.find('.adq-proforma-row').each(function() {
+        if (proformaTieneAdjunto($(this))) {
+            has = true;
+            return false;
+        }
+    });
+    $box.attr('data-has-adj', has ? 1 : 0);
 }
 
 function validarPdfsCotizacionesFormulario() {
     let invalido = false;
-    $('#cotizacionesList .adq-cot-pdf-zone input[type="file"]').each(function() {
+    $('#cotizacionesList .adq-proforma-row input[type="file"]').each(function() {
         if (!this.files || !this.files.length) {
             return;
         }
@@ -1016,38 +1437,29 @@ function agregarCotizacionHTML() {
     cotIndex++;
 
     const $cotEl = $(`
-        <div class="adq-cot-col cot-nueva" id="cot_box_${idx}" data-has-adj="0">
+        <div class="adq-cot-col cot-nueva" id="cot_box_${idx}" data-group-key="${idx}" data-has-adj="0">
             <div class="adq-cot-card card adq-cot-card-inline">
                 <div class="adq-cot-main-row">
                     <div class="adq-cot-top-prov adq-cot-field">
                         <label class="adq-cot-label">Proveedor</label>
                         <div class="adq-cot-provider-row">
                             <div class="select-wrap">
-                                <select class="form-control adq-cot-control select2-prov-cot" name="cotizaciones[${idx}][Prv_Cod]" style="width: 100%;"><option value=""></option></select>
+                                <select class="form-control adq-cot-control select2-prov-cot adq-cot-prov-select" style="width: 100%;"><option value=""></option></select>
                             </div>
                             <button type="button" class="btn btn-success adq-cot-add-provider" onclick="abrirModalNuevoProveedor('${idx}')" title="Agregar proveedor"><i class="bi bi-plus-lg"></i></button>
+                            <button type="button" class="btn btn-link adq-cot-remove" onclick="eliminarCotizacion('${idx}')" title="Quitar cotizacion"><i class="bi bi-x-lg"></i></button>
                         </div>
-                    </div>
-                    <div class="adq-cot-top-val adq-cot-field">
-                        <label class="adq-cot-label">Valor ($)</label>
-                        <input type="number" class="form-control text-end form-control-adq adq-cot-control" name="cotizaciones[${idx}][Cot_Val]" min="0.01" step="any" placeholder="0.00">
-                    </div>
-                    <div class="adq-cot-top-jus div-just-cot adq-cot-field" style="display: none;">
-                        <label class="adq-cot-label text-danger">Justificacion</label>
-                        <textarea class="form-control form-control-adq adq-cot-control" name="cotizaciones[${idx}][Cot_Jus]" rows="2" placeholder="Por que se eligio esta cotizacion..."></textarea>
-                    </div>
-                    <div class="adq-cot-top-actions">
-                        <div class="form-check adq-cot-winner">
-                            <input type="checkbox" class="form-check-input chk-cot-sel" name="cotizaciones[${idx}][Cot_Sel]" value="1" id="chk_sel_cot_${idx}" onchange="seleccionarCotizacionUnica(${idx})">
-                            <label class="form-check-label fw-bold text-success" for="chk_sel_cot_${idx}" title="Cotizacion ganadora"><i class="bi bi-trophy"></i></label>
-                        </div>
-                        <button type="button" class="btn btn-link adq-cot-remove" onclick="eliminarCotizacion(${idx})" title="Quitar cotizacion"><i class="bi bi-x-lg"></i></button>
                     </div>
                 </div>
                 <div class="adq-cot-pdf-section">
-                    <label class="adq-cot-label"><i class="bi bi-file-earmark-pdf"></i> Proformas PDF</label>
-                    <div class="adq-cot-pdf-strip">
-                        ${htmlAdqCotPdfUploads('cotizacion_archivos[' + idx + ']', 'cot_file_' + idx, true)}
+                    <div class="adq-proformas-head">
+                        <label class="adq-cot-label"><i class="bi bi-file-earmark-pdf"></i> Proformas</label>
+                        <button type="button" class="btn btn-xs btn-primary adq-btn-add-pdf-cot" onclick="agregarProformaMismoProveedor(this)" title="Agregar otra proforma del mismo proveedor">
+                            <i class="bi bi-plus-lg"></i><span class="adq-btn-add-pdf-label">Proforma</span>
+                        </button>
+                    </div>
+                    <div class="adq-proformas-list">
+                        ${htmlAdqProformaRow({ idx: idx, isExisting: false, prvCod: '', valor: '', sel: 0, jus: '' })}
                     </div>
                 </div>
             </div>
@@ -1055,7 +1467,8 @@ function agregarCotizacionHTML() {
     `);
     $list.append($cotEl);
     setupProveedorCotSelect($cotEl.find('.select2-prov-cot'));
-    setupAdqCotPdfUploads($cotEl);
+    setupAdqFileUpload($cotEl);
+    actualizarBotonesProforma($cotEl);
 }
 
 function adqEscHtml(value) {
@@ -1073,44 +1486,43 @@ function agregarCotizacionExistente(cot) {
     const adjuntos = adqParseCotAdjuntos(cot.Cot_Adj);
     const hasAdj = adjuntos.length ? 1 : 0;
     const pdfsGuardados = htmlAdqPdfsGuardados('cotizaciones_existentes[' + scoCod + '][Cot_Adj_Keep]', adjuntos, true);
-    const cotJus = adqEscHtml(cot.Cot_Jus || '');
+    const isGanadora = parseInt(cot.Cot_Sel, 10) === 1;
 
     const $cotEl = $(`
-        <div class="adq-cot-col cot-existente" id="cot_box_${idx}" data-has-adj="${hasAdj}" data-sco-cod="${scoCod}">
-            <div class="adq-cot-card card adq-cot-card-inline${parseInt(cot.Cot_Sel, 10) === 1 ? ' adq-cot-card-ganadora' : ''}">
+        <div class="adq-cot-col cot-existente" id="cot_box_${idx}" data-group-key="${idx}" data-has-adj="${hasAdj}" data-sco-cod="${scoCod}">
+            <div class="adq-cot-card card adq-cot-card-inline${isGanadora ? ' adq-cot-card-ganadora' : ''}">
                 <div class="adq-cot-main-row">
                     <div class="adq-cot-top-prov adq-cot-field">
                         <label class="adq-cot-label">Proveedor</label>
                         <div class="adq-cot-provider-row">
                             <div class="select-wrap">
-                                <select class="form-control adq-cot-control select2-prov-cot" name="cotizaciones_existentes[${scoCod}][Prv_Cod]" style="width: 100%;">
+                                <select class="form-control adq-cot-control select2-prov-cot adq-cot-prov-select" style="width: 100%;">
                                     <option value="${cot.Prv_Cod}" selected>${nombreProv}</option>
                                 </select>
                             </div>
                             <button type="button" class="btn btn-success adq-cot-add-provider" onclick="abrirModalNuevoProveedor('${idx}')" title="Agregar proveedor"><i class="bi bi-plus-lg"></i></button>
+                            <button type="button" class="btn btn-link adq-cot-remove" onclick="eliminarCotizacionExistente(${scoCod}, '${idx}')" title="Quitar cotizacion"><i class="bi bi-x-lg"></i></button>
                         </div>
-                    </div>
-                    <div class="adq-cot-top-val adq-cot-field">
-                        <label class="adq-cot-label">Valor ($)</label>
-                        <input type="number" class="form-control text-end form-control-adq adq-cot-control" name="cotizaciones_existentes[${scoCod}][Cot_Val]" value="${cot.Cot_Val}" min="0.01" step="any">
-                    </div>
-                    <div class="adq-cot-top-jus div-just-cot adq-cot-field" style="display: ${parseInt(cot.Cot_Sel, 10) === 1 ? 'block' : 'none'};">
-                        <label class="adq-cot-label text-danger">Justificacion</label>
-                        <textarea class="form-control form-control-adq adq-cot-control" name="cotizaciones_existentes[${scoCod}][Cot_Jus]" rows="2" placeholder="Por que se eligio esta cotizacion...">${cotJus}</textarea>
-                    </div>
-                    <div class="adq-cot-top-actions">
-                        <div class="form-check adq-cot-winner">
-                            <input type="checkbox" class="form-check-input chk-cot-sel" name="cotizaciones_existentes[${scoCod}][Cot_Sel]" value="1" id="chk_sel_cot_${idx}" ${parseInt(cot.Cot_Sel, 10) === 1 ? 'checked' : ''} onchange="seleccionarCotizacionUnica('${idx}')">
-                            <label class="form-check-label fw-bold text-success" for="chk_sel_cot_${idx}" title="Cotizacion ganadora"><i class="bi bi-trophy"></i></label>
-                        </div>
-                        <button type="button" class="btn btn-link adq-cot-remove" onclick="eliminarCotizacionExistente(${scoCod}, '${idx}')" title="Quitar cotizacion"><i class="bi bi-x-lg"></i></button>
                     </div>
                 </div>
                 <div class="adq-cot-pdf-section">
-                    <label class="adq-cot-label"><i class="bi bi-file-earmark-pdf"></i> Proformas PDF</label>
-                    <div class="adq-cot-pdf-strip">
-                        ${pdfsGuardados}
-                        ${htmlAdqCotPdfUploads('cotizacion_archivos_existentes[' + scoCod + ']', 'cot_file_ex_' + scoCod, true)}
+                    <div class="adq-proformas-head">
+                        <label class="adq-cot-label"><i class="bi bi-file-earmark-pdf"></i> Proformas</label>
+                        <button type="button" class="btn btn-xs btn-primary adq-btn-add-pdf-cot" onclick="agregarProformaMismoProveedor(this)" title="Agregar otra proforma del mismo proveedor">
+                            <i class="bi bi-plus-lg"></i><span class="adq-btn-add-pdf-label">Proforma</span>
+                        </button>
+                    </div>
+                    <div class="adq-proformas-list">
+                        ${htmlAdqProformaRow({
+                            idx: idx,
+                            isExisting: true,
+                            scoCod: scoCod,
+                            prvCod: cot.Prv_Cod,
+                            valor: cot.Cot_Val,
+                            sel: cot.Cot_Sel,
+                            jus: cot.Cot_Jus || '',
+                            pdfsGuardadosHtml: pdfsGuardados
+                        })}
                     </div>
                 </div>
             </div>
@@ -1118,16 +1530,24 @@ function agregarCotizacionExistente(cot) {
     `);
     $('#cotizacionesList').append($cotEl);
     setupProveedorCotSelect($cotEl.find('.select2-prov-cot'));
-    setupAdqCotPdfUploads($cotEl);
+    setupAdqFileUpload($cotEl);
+    actualizarBotonesProforma($cotEl);
+    syncProveedorGrupo($cotEl);
 }
 
 function eliminarCotizacion(idx) {
-    $(`#cot_box_${idx}`).remove();
+    const $box = $(`#cot_box_${idx}`);
+    $box.find('.adq-proforma-row[data-sco-cod]').each(function() {
+        const scoCod = $(this).attr('data-sco-cod');
+        if (scoCod) {
+            $('#cotEliminarContainer').append('<input type="hidden" name="cot_eliminar[]" value="' + scoCod + '">');
+        }
+    });
+    $box.remove();
 }
 
 function eliminarCotizacionExistente(scoCod, idx) {
-    $(`#cot_box_${idx}`).remove();
-    $('#cotEliminarContainer').append(`<input type="hidden" name="cot_eliminar[]" value="${scoCod}">`);
+    eliminarCotizacion(idx);
 }
 
 function setupProveedorCotSelect($el) {
@@ -1156,25 +1576,30 @@ function setupProveedorCotSelect($el) {
             cache: true
         }
     });
+    $el.off('change.adqProvSync').on('change.adqProvSync', function() {
+        syncProveedorGrupo($(this).closest('.adq-cot-col'));
+    });
 }
 
-function seleccionarCotizacionUnica(activeIdx) {
-    const activeId = 'cot_box_' + activeIdx;
+function seleccionarCotizacionUnica(activeKey) {
     $('.chk-cot-sel').each(function() {
         const $chk = $(this);
-        const $box = $chk.closest('[id^="cot_box_"]');
-        const $card = $chk.closest('.adq-cot-card');
-        if ($box.attr('id') !== activeId) {
+        const key = String($chk.attr('data-cot-key') || '');
+        const $row = $chk.closest('.adq-proforma-row');
+        if (key !== String(activeKey)) {
             $chk.prop('checked', false);
-            $card.find('.div-just-cot').hide();
-            $card.removeClass('adq-cot-card-ganadora');
+            $row.find('.div-just-cot').hide();
+            $row.removeClass('adq-proforma-ganadora');
         } else if ($chk.is(':checked')) {
-            $card.find('.div-just-cot').show();
-            $card.addClass('adq-cot-card-ganadora');
+            $row.find('.div-just-cot').show();
+            $row.addClass('adq-proforma-ganadora');
         } else {
-            $card.find('.div-just-cot').hide();
-            $card.removeClass('adq-cot-card-ganadora');
+            $row.find('.div-just-cot').hide();
+            $row.removeClass('adq-proforma-ganadora');
         }
+    });
+    $('.adq-cot-card').each(function() {
+        $(this).toggleClass('adq-cot-card-ganadora', $(this).find('.chk-cot-sel:checked').length > 0);
     });
 }
 
@@ -1190,6 +1615,10 @@ function limpiarFormulario() {
         cotIndex = 0;
         agregarLinea();
         $('#cotizacionesList').empty();
+        $('#adjuntosList').empty();
+        $('#adjEliminarContainer').empty();
+        adjIndex = 0;
+        renderCamposDecisionCompleta({ decisiones: [], campos: [] });
         recalcularTotalGeneral();
     }
 }
@@ -1302,8 +1731,12 @@ function procesarSolicitud(esBorrador) {
         $btnSubmit.html('<span class="spinner-border spinner-border-sm"></span> Enviando...');
     }
 
+    const completarNodo = $('#Sol_Modo_Edicion').val() === 'completar_nodo';
+    if (completarNodo) {
+        formData.set('_completar_nodo', '1');
+    }
     $.ajax({
-        url: esBorrador ? 'adq_solicitud.php?ajax_save_borrador=1' : 'adq_solicitud.php?ajax_save_solicitud=1',
+        url: completarNodo ? 'adq_solicitud.php?ajax_completar_solicitud=1' : (esBorrador ? 'adq_solicitud.php?ajax_save_borrador=1' : 'adq_solicitud.php?ajax_save_solicitud=1'),
         type: 'POST',
         data: formData,
         contentType: false,
@@ -1312,6 +1745,11 @@ function procesarSolicitud(esBorrador) {
         success: function(res) {
             if (res.success) {
                 const esObservada = $('#Sol_Modo_Edicion').val() === 'observada';
+                if (completarNodo) {
+                    alert(`Solicitud # ${res.Num} completada. El workflow avanzó a la siguiente etapa.`);
+                    window.location.href = 'adq_bandeja.php';
+                    return;
+                }
                 if (esBorrador) {
                     if (esObservada) {
                         alert(`Correccion guardada correctamente.\nSolicitud # ${res.Num}. Cuando este listo pulse Reenviar correccion.`);

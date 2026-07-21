@@ -6,10 +6,55 @@
 
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/wf_manager_log.php');
+require_once('../LOGICA/adq_adquisiciones_log.php');
 
 $obBD_conexion = new Class_Log_Conexion_Global($Ses_Dat_Dis);
 $obBD_con1 = new MysqlDatos($obBD_conexion);
 $wf_mgr = new wf_manager_log($Ses_Dat_Dis);
+$obBD_adq = new adq_adquisiciones_log($obBD_conexion);
+
+// Descargar ZIP con todos los documentos de la solicitud (modal seguimiento)
+if (isset($_GET['ajax_descargar_docs_zip'])) {
+    $sol_cod = intval(isset($_GET['sol_cod']) ? $_GET['sol_cod'] : 0);
+    if ($sol_cod <= 0) {
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode(array('success' => false, 'message' => 'Codigo de solicitud invalido.'));
+        exit;
+    }
+    if (!$wf_mgr->verificarAccesoVentana('dashboard', 'dashboard_general')) {
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode(array('success' => false, 'message' => 'Acceso denegado.'));
+        exit;
+    }
+    $sol_emp = $obBD_con1->getRowConsultaSql(
+        "SELECT Emp_Cod FROM adq_solicitudes WHERE Sol_Cod = $sol_cod LIMIT 1;",
+        $obBD_conexion
+    );
+    if (empty($sol_emp) || intval($sol_emp['Emp_Cod']) !== intval($Ses_Emp_Cod)) {
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode(array('success' => false, 'message' => 'No tiene acceso a esta solicitud.'));
+        exit;
+    }
+
+    $resultado = $obBD_adq->generarZipDocumentosSolicitud($sol_cod);
+    if (empty($resultado['success']) || empty($resultado['path']) || !is_file($resultado['path'])) {
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode(array(
+            'success' => false,
+            'message' => !empty($resultado['message']) ? $resultado['message'] : 'No se pudo generar el ZIP.'
+        ));
+        exit;
+    }
+
+    $filename = !empty($resultado['filename']) ? $resultado['filename'] : ('documentos_sol_' . $sol_cod . '.zip');
+    header('Content-Type: application/zip');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('Content-Length: ' . filesize($resultado['path']));
+    header('Cache-Control: no-store, no-cache, must-revalidate');
+    readfile($resultado['path']);
+    @unlink($resultado['path']);
+    exit;
+}
 
 // Verificar acceso a la ventana 'dashboard' y pestaña 'dashboard_general'
 if (!$wf_mgr->verificarAccesoVentana('dashboard', 'dashboard_general')) {
@@ -459,16 +504,23 @@ if ($es_gerencial_admin) {
 
 <!-- MODAL SEGUIMIENTO DETALLADO (SLA) -->
 <div class="modal fade" id="mdlSeguimiento" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg" style="width:95%;max-width:1200px;">
-        <div class="modal-content">
-            <div class="modal-header">
+    <div class="modal-dialog modal-lg adq-seg-modal-dialog">
+        <div class="modal-content adq-seg-modal-content">
+            <div class="modal-header adq-seg-modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="lblSeguimientoTitle">Seguimiento de Requerimiento</h4>
+                <div class="adq-seg-modal-heading">
+                    <div class="adq-seg-modal-icon"><i class="bi bi-diagram-3"></i></div>
+                    <div>
+                        <h4 class="modal-title" id="lblSeguimientoTitle">Seguimiento de requerimiento</h4>
+                        <p class="adq-seg-modal-sub" id="lblSeguimientoSub">L&iacute;nea de tiempo, SLA y documentos del proceso</p>
+                    </div>
+                </div>
             </div>
-            <div class="modal-body" id="seguimientoModalBody" style="max-height:75vh;overflow-y:auto;">
+            <div class="modal-body adq-seg-modal-body" id="seguimientoModalBody">
                 <!-- Contenido AJAX se inyecta aquí -->
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer adq-seg-modal-footer">
+                <span class="adq-seg-modal-hint text-muted"><i class="bi bi-info-circle"></i> Clic en un nodo de la l&iacute;nea de tiempo para ver sus tareas</span>
                 <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cerrar</button>
             </div>
         </div>
@@ -481,15 +533,65 @@ if ($es_gerencial_admin) {
     function abrirSeguimiento(solCod, solNum) {
         currentSolCod = solCod;
         const tituloNum = solNum || solCod;
-        $('#lblSeguimientoTitle').text('Seguimiento de Requerimiento #' + tituloNum);
-        $('#seguimientoModalBody').html('<div class="text-center p-4"><i class="glyphicon glyphicon-refresh glyphicon-spin" style="font-size:24px;"></i><div class="mt-2">Cargando seguimiento...</div></div>');
-        
+        $('#lblSeguimientoTitle').text('Requerimiento #' + tituloNum);
+        $('#lblSeguimientoSub').text('Seguimiento operativo · SLA · Documentos del proceso');
+        $('#seguimientoModalBody').html(
+            '<div class="adq-seg-loading">'
+            + '<div class="adq-seg-loading-spinner"></div>'
+            + '<div class="adq-seg-loading-title">Cargando seguimiento</div>'
+            + '<div class="adq-seg-loading-text">Obteniendo l&iacute;nea de tiempo y documentos...</div>'
+            + '</div>'
+        );
+
         $('#mdlSeguimiento').modal('show');
-        
+
         $.get('adq_seguimiento.php', { sol_cod: solCod }, function(html) {
             $('#seguimientoModalBody').html(html);
         }).fail(function() {
-            $('#seguimientoModalBody').html('<div class="alert alert-danger m-2 small">No se pudo cargar el seguimiento del requerimiento.</div>');
+            $('#seguimientoModalBody').html(
+                '<div class="adq-seg-error">'
+                + '<i class="bi bi-exclamation-triangle"></i>'
+                + '<div><strong>No se pudo cargar el seguimiento</strong><br>'
+                + '<span>Intente nuevamente en unos segundos.</span></div>'
+                + '</div>'
+            );
+        });
+    }
+
+    function descargarDocumentosZip(solCod) {
+        const cod = solCod || currentSolCod;
+        if (!cod) {
+            alert('No se identifico la solicitud.');
+            return;
+        }
+        const $btn = $('#btnDescargarDocsZip');
+        const original = $btn.html();
+        $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Generando ZIP...');
+        const url = 'adq_dashboard.php?ajax_descargar_docs_zip=1&sol_cod=' + encodeURIComponent(cod);
+        fetch(url, { credentials: 'same-origin' }).then(function(resp) {
+            const ctype = (resp.headers.get('Content-Type') || '').toLowerCase();
+            if (ctype.indexOf('application/json') !== -1) {
+                return resp.json().then(function(res) {
+                    throw new Error((res && res.message) ? res.message : 'No se pudo generar el ZIP.');
+                });
+            }
+            if (!resp.ok) {
+                throw new Error('Error al generar el ZIP.');
+            }
+            return resp.blob().then(function(blob) {
+                const a = document.createElement('a');
+                const objUrl = window.URL.createObjectURL(blob);
+                a.href = objUrl;
+                a.download = 'documentos_solicitud_' + cod + '.zip';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(objUrl);
+            });
+        }).catch(function(err) {
+            alert(err && err.message ? err.message : 'No se pudo descargar el ZIP.');
+        }).then(function() {
+            $btn.prop('disabled', false).html(original);
         });
     }
 

@@ -3,6 +3,8 @@ var Lista_Anticipos;
 var list_facturas_cruze;
 var pendingAntPago = null;
 var anticiposEstado = { prvCod: null, seleccion: {}, cargado: false };
+var comprobantesCcpp = {};
+var comprobanteCcppActual = null;
 $(function () {
     Lista_Anticipos = $("#Lista_Anticipos");
     list_facturas_cruze = $("#lista_facturas_cruze");
@@ -24,6 +26,7 @@ $(function () {
     $("#altr_ant").createDialog({ width: 420, height: 150, icon: 'info' });
     $("#anular_abo_dialog").createDialog({ width: 300, height: 150, icon: 'warning-sign' });
     $("#verPagosDialogMod").createDialog({ width: 700, height: 435, icon: 'info-sign' });
+    $("#comprobanteCcppDialog").createDialog({ width: 760, height: 540, icon: 'picture' });
     $('#agregar_anticipos').appendTo('body').createDialog({
         width: Math.min($(window).width() - 40, 900),
         height: Math.min($(window).height() - 80, 500),
@@ -340,6 +343,8 @@ $(function () {
         onSelectRow: function (rowid, e) { $(this).resetSelection(); },
         colModel: [
             { label: 'index', name: 'index', hidden: true, classes: 'bgNoRight' },
+            { label: '', name: 'Pag_Abr', hidden: true },
+            { label: '', name: 'Pag_img', hidden: true },
             { label: 'Codigo', name: 'Pld_Cdc', width: 10, align: "left" },
             { label: 'Cuenta', name: 'Pld_Des', width: 30, align: "left" },
             { label: 'Glosa', name: 'Glosa', width: 25, align: "left" },
@@ -370,6 +375,20 @@ $(function () {
                     decimalSeparator: '.',
                     defaultValue: ''
                 }
+            },
+            {
+                label: '<center><span class="glyphicon glyphicon-picture"></span></center>',
+                name: 'Pag_img_accion',
+                width: 8,
+                align: 'center',
+                viewable: false,
+                formatter: function (cellvalue, options, rowObject) {
+                    if (rowObject.Pag_Abr === 'TRF' && rowObject.Pag_img && String(rowObject.Pag_img).trim() !== '') {
+                        return $.getGridButton(verComprobanteCcppGuardado, rowObject, 'Ver comprobante', 'eye-open', '', 'info');
+                    }
+                    return '-';
+                },
+                title: false
             }
         ]
     }, true, '', { view: false });
@@ -509,6 +528,7 @@ function createPagosGrid() {
         { label: 'Asi_Cod', name: 'Asi_Cod', hidden: true, classes: 'bgNoRight' },
         { label: 'Pag_Cod', name: 'Pag_Cod', hidden: true, classes: 'bgNoRight' },
         { label: 'Pag_Abr', name: 'Pag_Abr', hidden: true, classes: 'bgNoRight' },
+        { label: 'Pag_img_token', name: 'Pag_img_token', hidden: true, classes: 'bgNoRight' },
         { label: 'Tipo', name: 'Pag_Des', width: 10, align: "center", classes: 'bgNoRight' },
         { label: 'Ban_Cod', name: 'Ban_Cod', hidden: true, classes: 'bgNoRight' },
         { label: 'No. che.', name: 'Che_Num', width: 10, classes: 'bgNoRight' },
@@ -623,7 +643,9 @@ function verAbono(row) {
                     Pld_Des: responce['data'][i].Pld_Des,
                     Glosa: responce['data'][i].Asi_Glo,
                     Debe: a_deb,
-                    Haber: a_hab
+                    Haber: a_hab,
+                    Pag_Abr: responce['data'][i].Pag_Abr || '',
+                    Pag_img: responce['data'][i].Pag_img || ''
                 }, "last");
             }
 
@@ -721,6 +743,13 @@ function enableDisableCampos() {
 
     $("#cont_anticipo_info").attr("hidden", "");
     $("#cont_ccc_info").attr("hidden", "");
+    var tipoPagoAbr = $("#Pag_Cod option:selected").attr("data-abr");
+    if (tipoPagoAbr === 'TRF') {
+        $("#grupoPagImg").removeAttr("hidden");
+    } else {
+        $("#grupoPagImg").attr("hidden", "");
+        quitarComprobanteCcpp();
+    }
 
     if ($("#Pag_Cod option:selected").attr("data-abr") === 'ANT') {
 
@@ -764,6 +793,95 @@ function enableDisableCampos() {
     } else {
         $("#Com_Val_pago").val(getRestanteHaber().toFixed(2));
     }
+}
+
+function seleccionarComprobanteCcpp(input) {
+    var archivo = input && input.files && input.files[0] ? input.files[0] : null;
+    if (!archivo) {
+        quitarComprobanteCcpp();
+        return;
+    }
+    var tiposPermitidos = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (tiposPermitidos.indexOf(archivo.type) === -1) {
+        $.alert('Seleccione una imagen JPG, PNG, WEBP o GIF.');
+        quitarComprobanteCcpp();
+        return;
+    }
+    if (archivo.size > 5242880) {
+        $.alert('La imagen no puede superar los 5 MB.');
+        quitarComprobanteCcpp();
+        return;
+    }
+    comprobanteCcppActual = archivo;
+    $('#Pag_img_nombre').text(archivo.name).attr('title', archivo.name);
+    var lector = new FileReader();
+    lector.onload = function (evento) {
+        if (comprobanteCcppActual === archivo) {
+            $('#Pag_img_preview').attr('src', evento.target.result).show();
+        }
+    };
+    lector.readAsDataURL(archivo);
+    $('#Pag_img_ver, #Pag_img_quitar').show();
+}
+
+function quitarComprobanteCcpp() {
+    comprobanteCcppActual = null;
+    $('#Pag_img_archivo').val('');
+    $('#Pag_img_nombre').text('Ningún archivo').removeAttr('title');
+    $('#Pag_img_preview').removeAttr('src').hide();
+    $('#Pag_img_ver, #Pag_img_quitar').hide();
+}
+
+function abrirComprobanteCcpp(archivo) {
+    if (!archivo) {
+        return $.alert('No existe una imagen para visualizar.');
+    }
+    var lector = new FileReader();
+    lector.onload = function (evento) {
+        $('#comprobanteCcppGrande').attr('src', evento.target.result);
+        $('#comprobanteCcppDescargar').attr({
+            href: evento.target.result,
+            download: archivo.name || 'comprobante_transferencia.jpg'
+        });
+        $('#comprobanteCcppDialog').dialog('open');
+    };
+    lector.readAsDataURL(archivo);
+}
+
+function verComprobanteCcppActual() {
+    abrirComprobanteCcpp(comprobanteCcppActual);
+}
+
+function verComprobanteCcppPago(row) {
+    var archivo = row && row.Pag_img_token ? comprobantesCcpp[row.Pag_img_token] : null;
+    abrirComprobanteCcpp(archivo);
+}
+
+function verComprobanteCcppGuardado(row) {
+    var ruta = row && row.Pag_img ? String(row.Pag_img).trim().replace(/\\/g, '/') : '';
+    if (!ruta) {
+        return $.alert('Este pago no tiene un comprobante registrado.');
+    }
+    if (!/^(https?:\/\/|\/)/i.test(ruta) && ruta.indexOf('../../') !== 0) {
+        ruta = '../../' + ruta.replace(/^\.?\//, '');
+    }
+    $('#comprobanteCcppGrande').attr('src', ruta);
+    $('#comprobanteCcppDescargar').attr({
+        href: ruta,
+        download: ruta.split('/').pop() || 'comprobante_transferencia'
+    });
+    $('#comprobanteCcppDialog').dialog('open');
+}
+
+function agregarDatoFormData(formData, clave, valor) {
+    if (valor !== null && typeof valor === 'object' && !(valor instanceof File)) {
+        $.each(valor, function (subClave, subValor) {
+            var claveCompleta = clave ? clave + '[' + subClave + ']' : subClave;
+            agregarDatoFormData(formData, claveCompleta, subValor);
+        });
+        return;
+    }
+    formData.append(clave, valor == null ? '' : valor);
 }
 
 function cambioValPago(elemento) {
@@ -877,8 +995,9 @@ function incrementarSaldoInfo(monto) {
 
 function addPagoConSaldo(prm_array) {
     if (incrementarSaldoInfo()) {
-        addPago(prm_array);
+        return addPago(prm_array);
     }
+    return false;
 }
 
 function getMontoTotalAnt() {
@@ -1119,6 +1238,10 @@ function preAddPago() {
         }
     }
     if ($("#Pag_Cod option:selected").attr("data-abr") === "TDC" || $("#Pag_Cod option:selected").attr("data-abr") === "TRF" || $("#Pag_Cod option:selected").attr("data-abr") === "NDD") {
+        var comprobanteToken = '';
+        if ($("#Pag_Cod option:selected").attr("data-abr") === "TRF" && comprobanteCcppActual) {
+            comprobanteToken = 'pag_img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+        }
         prm_array = [
             "H", "pago", "", "",
             $("#Pag_Cod").val(),
@@ -1131,10 +1254,15 @@ function preAddPago() {
             $("#Ban_Cod option:selected").attr("data-des"),
             "",
             $("#Com_Val_pago").val(),
-            $("#Com_Con").val()
+            $("#Com_Con").val(),
+            "last", "",
+            "",
+            comprobanteToken
         ],
             "last", "";
-        addPagoConSaldo(prm_array);
+        if (addPagoConSaldo(prm_array) && comprobanteToken) {
+            comprobantesCcpp[comprobanteToken] = comprobanteCcppActual;
+        }
     }
 }
 
@@ -1177,7 +1305,8 @@ function addPago(prm_array) {
         Haber: prm_array[16],
         Pag_Item: "",
         Che_Est: prm_array[19],
-        Cop_Cod: prm_array[20]
+        Cop_Cod: prm_array[20],
+        Pag_img_token: prm_array[21] || ''
     }, "" + prm_array[18]);
     // $("#1_Debe").trigger("onChange");
     $('#pagosGrid').startGridEdit();
@@ -1185,6 +1314,7 @@ function addPago(prm_array) {
     if (prm_array[0] === 'D') $("#" + ids_pagos + "_Debe").prop('readonly', true);
     totalPagos();
     disableDebe();
+    return true;
 }
 
 function guardarPago() {
@@ -1261,7 +1391,21 @@ function guardarPago() {
                     }
                 }
                 console.log(data);
-                $.post("", data, function (responce) {
+                var formData = new FormData();
+                agregarDatoFormData(formData, '', data);
+                $.each(data.save_p || [], function (indice, pago) {
+                    if (pago.Pag_img_token && comprobantesCcpp[pago.Pag_img_token]) {
+                        formData.append('Pag_img_archivos[' + indice + ']', comprobantesCcpp[pago.Pag_img_token]);
+                    }
+                });
+                $.ajax({
+                    url: '',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: 'json'
+                }).done(function (responce) {
                     if (responce['success'] === true) {
                         if (responce['bnd_che'] === true) {
                             $("#successDialog").dialog({ width: 500, height: 355 });
@@ -1282,8 +1426,7 @@ function guardarPago() {
                     } else {
                         $.alert(responce['message']);
                     }
-                }, 'json')
-                    .fail(function (error) {
+                }).fail(function (error) {
                         $.alert("El Servidor ha fallado en responder!");
                     });
             }
@@ -1302,6 +1445,9 @@ function setFecPeriodoCom() {
 
 // borra el pago seleccionado y actualiza los totales AbrirCuentas
 function delPago(row) {
+    if (row.Pag_img_token && comprobantesCcpp[row.Pag_img_token]) {
+        delete comprobantesCcpp[row.Pag_img_token];
+    }
     // $('#protAnuChe').dialog('open');
     let saldo_info = parseFloat($("#saldo_info2").text());
     saldo_info = saldo_info - parseFloat(row.Haber);
@@ -1413,6 +1559,9 @@ function limpiarPagos() {
 
     $("#cont_anticipo_info").attr("hidden", "");
     $("#cont_ccc_info").attr("hidden", "");
+    $("#grupoPagImg").attr("hidden", "");
+    comprobantesCcpp = {};
+    quitarComprobanteCcpp();
 
     $("#lim_val_pago").val("none");
     $("#lim_val_pago_cc").val("none");
@@ -1714,7 +1863,10 @@ function loadAnticipos() {
                 if (rowObject.grid_tipp === 'inicial' || rowObject.Che_Est === "P") {
                     return "-";
                 } else {
-                    return $.getGridButton(delPago, rowObject, 'Borrar pago', 'remove', '', 'danger');
+                    var botonImagen = rowObject.Pag_Abr === 'TRF' && rowObject.Pag_img_token
+                        ? $.getGridButton(verComprobanteCcppPago, rowObject, 'Ver comprobante', 'eye-open', '', 'info') + '&nbsp;'
+                        : '';
+                    return botonImagen + $.getGridButton(delPago, rowObject, 'Borrar pago', 'remove', '', 'danger');
                 }
             },
             title: false

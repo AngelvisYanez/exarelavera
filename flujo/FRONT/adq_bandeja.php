@@ -11,6 +11,7 @@ require_once('../LOGICA/adq_adquisiciones_log.php');
 $obBD_conexion = new Class_Log_Conexion_Global($Ses_Dat_Dis);
 $obBD_con1 = new MysqlDatos($obBD_conexion);
 $obBD_adq = new adq_adquisiciones_log($obBD_conexion);
+$obBD_adq->ensureSolicitudTituloColumn();
 $wf_mgr = new wf_manager_log($Ses_Dat_Dis);
 $wf_mgr->ensureVersioningSchema();
 $wf_ctx = $wf_mgr->resolverContextoUsuario($Ses_Emp_Cod);
@@ -70,6 +71,15 @@ function adq_ensure_utf8_string($text) {
     }
 
     return function_exists('utf8_encode') ? utf8_encode($text) : $text;
+}
+
+/** Texto de departamento solicitante; si no hay, "Sin departamento". */
+function adqTextoDepartamentoSolicitante($dep_des) {
+    $dep_des = is_string($dep_des) ? trim($dep_des) : '';
+    if ($dep_des === '') {
+        return 'Sin departamento';
+    }
+    return $dep_des;
 }
 
 function adq_utf8_deep(&$data) {
@@ -161,18 +171,62 @@ if (isset($ajax_workflow_action)) {
         }
     }
     
-    // Carga de adjunto opcional
+    // Carga de uno o varios adjuntos opcionales
     $adjunto_db_path = null;
-    if (isset($_FILES['adjunto']) && $_FILES['adjunto']['error'] == 0) {
+    $archivos_accion = array();
+    if (isset($_FILES['adjuntos']) && is_array($_FILES['adjuntos']['name'])) {
+        foreach ($_FILES['adjuntos']['name'] as $i => $nombre) {
+            $archivos_accion[] = array(
+                'name' => $nombre,
+                'tmp_name' => isset($_FILES['adjuntos']['tmp_name'][$i]) ? $_FILES['adjuntos']['tmp_name'][$i] : '',
+                'error' => isset($_FILES['adjuntos']['error'][$i]) ? intval($_FILES['adjuntos']['error'][$i]) : UPLOAD_ERR_NO_FILE,
+                'size' => isset($_FILES['adjuntos']['size'][$i]) ? intval($_FILES['adjuntos']['size'][$i]) : 0
+            );
+        }
+    } elseif (isset($_FILES['adjunto'])) {
+        $archivos_accion[] = $_FILES['adjunto'];
+    }
+
+    $extensiones_permitidas = array('pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx', 'xls', 'xlsx');
+    foreach ($archivos_accion as $archivo) {
+        if (intval($archivo['error']) === UPLOAD_ERR_NO_FILE) {
+            continue;
+        }
+        if (intval($archivo['error']) !== UPLOAD_ERR_OK) {
+            $obBD_con1->echoJson(array('success' => false, 'message' => 'No se pudo cargar uno de los archivos seleccionados.'));
+            exit;
+        }
+        $ext = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, $extensiones_permitidas, true)) {
+            $obBD_con1->echoJson(array('success' => false, 'message' => 'Tipo de archivo no permitido: ' . $archivo['name']));
+            exit;
+        }
+        if (intval($archivo['size']) > 10 * 1024 * 1024) {
+            $obBD_con1->echoJson(array('success' => false, 'message' => 'El archivo ' . $archivo['name'] . ' supera el limite de 10 MB.'));
+            exit;
+        }
+    }
+
+    if (!empty($archivos_accion)) {
         $target_dir = "../../DATA/adquisiciones_sustentos/";
         if (!file_exists($target_dir)) {
             mkdir($target_dir, 0777, true);
         }
-        $name = $_FILES['adjunto']['name'];
-        $ext = pathinfo($name, PATHINFO_EXTENSION);
-        $unique_name = "action_" . uniqid() . "." . $ext;
-        if (move_uploaded_file($_FILES['adjunto']['tmp_name'], $target_dir . $unique_name)) {
-            $adjunto_db_path = "adquisiciones_sustentos/" . $unique_name;
+        $paths_adjuntos = array();
+        foreach ($archivos_accion as $archivo) {
+            if (intval($archivo['error']) !== UPLOAD_ERR_OK) {
+                continue;
+            }
+            $ext = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
+            $unique_name = "action_" . uniqid('', true) . "." . $ext;
+            if (!move_uploaded_file($archivo['tmp_name'], $target_dir . $unique_name)) {
+                $obBD_con1->echoJson(array('success' => false, 'message' => 'No se pudo guardar el archivo ' . $archivo['name'] . '.'));
+                exit;
+            }
+            $paths_adjuntos[] = "adquisiciones_sustentos/" . $unique_name;
+        }
+        if (!empty($paths_adjuntos)) {
+            $adjunto_db_path = json_encode($paths_adjuntos);
         }
     }
 
@@ -266,6 +320,45 @@ if (isset($ajax_save_avance_docs)) {
                     }
                 }
             }
+        }
+    }
+
+    if (isset($_POST['fiscal_docs']) && is_array($_POST['fiscal_docs'])) {
+        foreach ($_POST['fiscal_docs'] as $fi => $fiscal_doc) {
+            $titulo = trim(isset($fiscal_doc['titulo']) ? $fiscal_doc['titulo'] : '');
+            $name = isset($_FILES['fiscal_archivos']['name'][$fi]) ? $_FILES['fiscal_archivos']['name'][$fi] : '';
+            $error = isset($_FILES['fiscal_archivos']['error'][$fi]) ? intval($_FILES['fiscal_archivos']['error'][$fi]) : UPLOAD_ERR_NO_FILE;
+
+            if ($titulo === '' && ($name === '' || $error === UPLOAD_ERR_NO_FILE)) {
+                continue;
+            }
+            if ($titulo === '') {
+                $obBD_con1->echoJson(array('success' => false, 'message' => 'Cada PDF de fiscalizacion debe tener un titulo.'));
+                exit;
+            }
+            if ($name === '' || $error !== UPLOAD_ERR_OK) {
+                $obBD_con1->echoJson(array('success' => false, 'message' => 'Seleccione el PDF correspondiente al titulo "' . $titulo . '".'));
+                exit;
+            }
+
+            $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+            $tmp_name = $_FILES['fiscal_archivos']['tmp_name'][$fi];
+            $header = @file_get_contents($tmp_name, false, null, 0, 5);
+            if ($ext !== 'pdf' || $header !== '%PDF-') {
+                $obBD_con1->echoJson(array('success' => false, 'message' => 'El archivo "' . $name . '" no es un PDF valido.'));
+                exit;
+            }
+
+            $unique_name = "fiscal_" . uniqid() . ".pdf";
+            if (!move_uploaded_file($tmp_name, $target_dir . $unique_name)) {
+                $obBD_con1->echoJson(array('success' => false, 'message' => 'No se pudo guardar el PDF "' . $name . '".'));
+                exit;
+            }
+            $docs_nuevos[] = array(
+                'Sav_Des' => $titulo,
+                'Sav_Cop_Cod' => 0,
+                'Sav_Fac_Adj' => 'adquisiciones_sustentos/' . $unique_name
+            );
         }
     }
 
@@ -596,7 +689,7 @@ if (isset($ajax_get_solicitud_detail)) {
     ) ? 1 : 0;
 
     $avances = array();
-    if (!empty($sol['Ins_Cod']) && !empty($sol['Nod_Act']) && $sol['Nod_Tip'] === 'AVANCE') {
+    if (!empty($sol['Ins_Cod']) && !empty($sol['Nod_Act']) && in_array($sol['Nod_Tip'], array('AVANCE', 'FISCALIZACION'), true)) {
         $avances = $obBD_adq->listarAvancesSolicitud($sol_cod, intval($sol['Ins_Cod']), intval($sol['Nod_Act']));
     } elseif (!empty($sol['Ins_Cod'])) {
         $avances = $obBD_adq->listarAvancesSolicitud($sol_cod);
@@ -617,6 +710,7 @@ if (isset($ajax_get_solicitud_detail)) {
     if ($cotizaciones === false || $cotizaciones === null) {
         $cotizaciones = array();
     }
+    $adjuntos = $obBD_adq->listarAdjuntosSolicitud($sol_cod);
 
     $historial = array();
     $ins_cod_hist = !empty($sol['Ins_Cod']) ? intval($sol['Ins_Cod']) : 0;
@@ -708,6 +802,7 @@ if (isset($ajax_get_solicitud_detail)) {
         'solicitud' => $sol,
         'items' => $items,
         'cotizaciones' => $cotizaciones,
+        'adjuntos' => $adjuntos,
         'avances' => $avances,
         'historial' => $historial,
         'flow_visual' => $flow_visual,
@@ -750,7 +845,7 @@ $pendientes = $obBD_con1->getArrayConsultaSql("
     WHERE s.Emp_Cod = $emp_cod AND s.Sol_Est IN ('E', 'P')
       AND n.Nod_Tip NOT IN ('INICIO')
       AND $filtro_pendiente_sin_auto
-    ORDER BY s.Sol_Pri DESC, s.Sol_Fec ASC;", $obBD_conexion);
+    ORDER BY s.Sol_Fec DESC, s.Sol_Cod DESC;", $obBD_conexion);
 if ($pendientes === false || $pendientes === null) {
     $pendientes = array();
 }
@@ -793,7 +888,7 @@ $mis_solicitudes = $obBD_con1->getArrayConsultaSql("
     LEFT JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act
     LEFT JOIN wf_flujos_modelos wfm ON wfm.Wfm_Cod = COALESCE(i.Wfm_Cod, tr.Wfm_Cod)
     WHERE s.Emp_Cod = $Ses_Emp_Cod AND s.Usu_Sol = $usu_cod AND s.Sol_Est IN ('E', 'O', 'P')
-    ORDER BY s.Sol_Fec DESC;", $obBD_conexion);
+    ORDER BY s.Sol_Fec DESC, s.Sol_Cod DESC;", $obBD_conexion);
 
 // C. GESTION? / PARTICIP? (solicitudes de otros en las que actu? en el workflow)
 $gestionadas = $obBD_con1->getArrayConsultaSql("
@@ -827,7 +922,7 @@ $gestionadas = $obBD_con1->getArrayConsultaSql("
     LEFT JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act
     LEFT JOIN wf_nodos hn ON hn.Nod_Cod = h_last.Nod_Cod
     WHERE s.Emp_Cod = $emp_cod
-    ORDER BY h_last.Isn_Fec DESC
+    ORDER BY h_last.Isn_Fec DESC, s.Sol_Fec DESC, s.Sol_Cod DESC
     LIMIT 100;", $obBD_conexion);
 if ($gestionadas === false || $gestionadas === null) {
     $gestionadas = array();
@@ -876,7 +971,7 @@ $historico = $obBD_con1->getArrayConsultaSql("
     )
     LEFT JOIN wf_flujos_modelos wfm ON wfm.Wfm_Cod = COALESCE(i_hist.Wfm_Cod, tr.Wfm_Cod)
     WHERE s.Emp_Cod = $Ses_Emp_Cod AND s.Sol_Est IN ('A', 'R') $historico_filtro_usuario
-    ORDER BY s.Sol_Fec DESC LIMIT 100;", $obBD_conexion);
+    ORDER BY s.Sol_Fec DESC, s.Sol_Cod DESC LIMIT 100;", $obBD_conexion);
 if ($historico === false || $historico === null) {
     $historico = array();
 }
@@ -1425,35 +1520,64 @@ function adqEtiquetaMiAccion($accion) {
             padding-top: 12px;
             border-top: 1px solid #e2e8f0;
         }
-        #create-panel-content .adq-cot-pdf-strip {
+        #create-panel-content .adq-proformas-head {
             display: flex;
-            flex-wrap: nowrap;
-            align-items: stretch;
+            align-items: center;
+            justify-content: space-between;
             gap: 8px;
-            width: 100%;
-            overflow-x: auto;
-            overflow-y: hidden;
-            padding-bottom: 4px;
+            margin-bottom: 8px;
         }
-        #create-panel-content .adq-cot-pdf-strip .adq-cot-pdf-zone {
-            display: flex;
-            flex-wrap: nowrap;
-            align-items: stretch;
-            gap: 8px;
-            flex: 0 0 auto;
-        }
-        #create-panel-content .adq-cot-pdf-strip .adq-cot-pdf-rows {
-            display: flex;
-            flex-wrap: nowrap;
-            gap: 8px;
-            flex: 0 0 auto;
-        }
-        #create-panel-content .adq-cot-pdf-strip .adq-cot-pdf-row {
-            flex: 0 0 180px;
-            width: 180px;
-            min-width: 180px;
-            max-width: 180px;
+        #create-panel-content .adq-proformas-head .adq-cot-label {
             margin-bottom: 0;
+        }
+        #create-panel-content .adq-proformas-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+        #create-panel-content .adq-proforma-row {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+        #create-panel-content .adq-proforma-row.adq-proforma-ganadora {
+            border-color: #86efac;
+            background: #f0fdf4;
+        }
+        #create-panel-content .adq-proforma-fields {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 10px 12px;
+        }
+        #create-panel-content .adq-proforma-pdf {
+            flex: 1 1 200px;
+            min-width: 180px;
+            max-width: 280px;
+        }
+        #create-panel-content .adq-proforma-pdf .adq-file-upload,
+        #create-panel-content .adq-proforma-pdf .adq-cot-pdfs-inline {
+            width: 100%;
+        }
+        #create-panel-content .adq-proforma-val {
+            flex: 0 0 130px;
+            min-width: 120px;
+        }
+        #create-panel-content .adq-proforma-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+        }
+        #create-panel-content .adq-proforma-jus {
+            width: 100%;
+            margin-top: 8px;
+        }
+        #create-panel-content .adq-proforma-remove {
+            color: #dc2626;
+            padding: 4px 6px;
         }
         #create-panel-content .adq-cot-main-row {
             display: flex;
@@ -1462,14 +1586,19 @@ function adqEtiquetaMiAccion($accion) {
             gap: 10px 12px;
         }
         #create-panel-content .adq-cot-top-prov {
-            flex: 2 1 300px;
+            flex: 1 1 100%;
             min-width: 240px;
         }
-        #create-panel-content .adq-cot-top-val {
-            flex: 0 0 130px;
-            min-width: 120px;
+        #create-panel-content .adq-cot-provider-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        #create-panel-content .adq-cot-pdf-strip .adq-btn-add-pdf-cot {
+        #create-panel-content .adq-cot-provider-row .select-wrap {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        #create-panel-content .adq-btn-add-pdf-cot {
             min-height: 34px;
             height: 34px;
             min-width: auto;
@@ -1481,13 +1610,15 @@ function adqEtiquetaMiAccion($accion) {
             align-items: center;
             justify-content: center;
             gap: 4px;
+            white-space: nowrap;
+            flex: 0 0 auto;
             background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
             border: 1px solid #1e40af;
             color: #ffffff;
             box-shadow: 0 1px 4px rgba(37, 99, 235, 0.3);
         }
-        #create-panel-content .adq-cot-pdf-strip .adq-btn-add-pdf-cot:hover,
-        #create-panel-content .adq-cot-pdf-strip .adq-btn-add-pdf-cot:focus {
+        #create-panel-content .adq-btn-add-pdf-cot:hover,
+        #create-panel-content .adq-btn-add-pdf-cot:focus {
             background: linear-gradient(180deg, #1d4ed8 0%, #1e3a8a 100%);
             border-color: #1e3a8a;
             color: #ffffff;
@@ -1658,6 +1789,86 @@ function adqEtiquetaMiAccion($accion) {
             border-color: #b02a37 !important;
             color: #ffffff !important;
         }
+        .adq-fiscal-file-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 32px;
+            padding: 4px;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+        }
+        .adq-fiscal-file-native {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .adq-fiscal-file-btn {
+            margin: 0;
+            padding: 5px 10px;
+            border-radius: 6px;
+            background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+            border: 1px solid #1e40af;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
+        }
+        .adq-fiscal-file-btn:hover,
+        .adq-fiscal-file-btn:focus {
+            color: #ffffff;
+            background: linear-gradient(180deg, #1d4ed8 0%, #1e3a8a 100%);
+        }
+        .adq-fiscal-file-name {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #64748b;
+            font-size: 11px;
+        }
+        .adq-fiscal-file-control.has-file {
+            border-color: #86efac;
+            background: #f0fdf4;
+        }
+        .adq-fiscal-file-control.has-file .adq-fiscal-file-name {
+            color: #166534;
+            font-weight: 600;
+        }
+        .adq-avance-save-message {
+            margin: 0 0 10px;
+            padding: 10px 14px;
+            border: 1px solid #047857;
+            border-left: 5px solid #064e3b;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.35;
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.28);
+        }
+        .adq-avance-save-message::before {
+            content: "\2713";
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            border-radius: 50%;
+            background: #ffffff;
+            color: #047857;
+            font-size: 13px;
+            font-weight: 900;
+            vertical-align: middle;
+        }
         .adq-file-native {
             position: absolute;
             width: 1px;
@@ -1710,9 +1921,25 @@ function adqEtiquetaMiAccion($accion) {
         }
         .adq-dropzone-file {
             display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 6px;
+            text-align: left;
+        }
+        .adq-selected-file {
+            display: flex;
             align-items: center;
             gap: 10px;
-            text-align: left;
+            padding: 7px 8px;
+            border: 1px solid #bfdbfe;
+            border-radius: 7px;
+            background: #ffffff;
+        }
+        .adq-selected-files-summary {
+            margin-bottom: 2px;
+            color: #1d4ed8;
+            font-size: 11px;
+            font-weight: 700;
         }
         .adq-file-icon {
             font-size: 26px;
@@ -2015,6 +2242,7 @@ function adqEtiquetaMiAccion($accion) {
                         <thead>
                             <tr>
                                 <th style="width: 100px;">N&deg; Sol.</th>
+                                <th>Nombre</th>
                                 <th>Flujo</th>
                                 <th style="width: 150px;">Fecha</th>
                                 <th>Solicitante</th>
@@ -2023,27 +2251,32 @@ function adqEtiquetaMiAccion($accion) {
                                 <th style="width: 100px;">Prioridad</th>
                                 <th style="width: 150px;">Valor Est.</th>
                                 <th>Paso Actual Workflow</th>
-                                <th style="width: 90px;">Acci&oacute;n</th>
+                                <th style="width: 110px;">Acci&oacute;n</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($pendientes)) { ?>
-                                <tr class="text-center"><td colspan="10" class="text-muted py-4">No posee requerimientos de adquisiciones pendientes de aprobaci&oacute;n en este momento.</td></tr>
+                                <tr class="text-center"><td colspan="11" class="text-muted py-4">No posee requerimientos de adquisiciones pendientes de aprobaci&oacute;n en este momento.</td></tr>
                             <?php } else { 
                                 foreach ($pendientes as $p) { ?>
                                     <tr class="text-center adq-row-solicitud" data-wfm-fam="<?php echo intval($p['Wfm_Fam_Cod']); ?>">
                                         <td class="fw-bold"><?php echo $p['Sol_Num']; ?></td>
+                                        <td class="text-start"><?php echo htmlspecialchars(isset($p['Sol_Tit']) ? $p['Sol_Tit'] : '', ENT_QUOTES, 'UTF-8'); ?></td>
                                         <td class="text-start"><?php echo htmlspecialchars($p['Wfm_Nom']); ?></td>
                                         <td><?php echo date('Y-m-d H:i', strtotime($p['Sol_Fec'])); ?></td>
                                         <td class="text-start"><?php echo $p['Solicitante_Nom']; ?></td>
-                                        <td><?php echo $p['Dep_Des']; ?></td>
+                                        <td><?php echo htmlspecialchars(adqTextoDepartamentoSolicitante(isset($p['Dep_Des']) ? $p['Dep_Des'] : ''), ENT_QUOTES, 'UTF-8'); ?></td>
                                         <td class="text-start"><?php echo $p['Trq_Des']; ?></td>
                                         <td><span class="badge badge-<?php echo strtolower($p['Sol_Pri']); ?>"><?php echo $p['Sol_Pri']; ?></span></td>
                                         <td class="text-end fw-bold font-monospace">$ <?php echo number_format($p['Sol_Val_Est'], 2); ?></td>
                                         <td><span class="badge bg-primary fs-6"><i class="bi bi-clock"></i> <?php echo $p['Nod_Nom']; ?></span></td>
                                         <td class="adq-col-acciones">
                                             <div class="adq-acciones-row">
+                                                <?php if ($p['Sol_Est'] === 'P') { ?>
+                                                <button type="button" class="btn btn-sm btn-warning text-dark adq-btn-icon-only" title="Completar solicitud" onclick="abrirCompletarSolicitud(<?php echo $p['Sol_Cod']; ?>)"><i class="bi bi-clipboard-check"></i></button>
+                                                <?php } else { ?>
                                                 <button type="button" class="btn btn-sm btn-primary adq-btn-icon-only" title="Resolver" onclick="abrirResolucion(<?php echo $p['Sol_Cod']; ?>, true)"><i class="bi bi-shield-check"></i></button>
+                                                <?php } ?>
                                                 <?php if (!empty($p['Puede_Cargar_Cotizaciones'])) { ?>
                                                 <button type="button" class="btn btn-sm btn-info adq-btn-icon-only" title="Cargar cotizaciones / proformas" onclick="abrirEdicionCotizaciones(<?php echo $p['Sol_Cod']; ?>)"><i class="bi bi-file-earmark-pdf"></i></button>
                                                 <?php } ?>
@@ -2070,6 +2303,7 @@ function adqEtiquetaMiAccion($accion) {
                         <thead>
                             <tr>
                                 <th style="width: 100px;">N&deg; Sol.</th>
+                                <th>Nombre</th>
                                 <th>Flujo</th>
                                 <th style="width: 150px;">Fecha</th>
                                 <th>Tipo Pedido</th>
@@ -2082,18 +2316,19 @@ function adqEtiquetaMiAccion($accion) {
                         </thead>
                         <tbody>
                             <?php if (empty($mis_solicitudes)) { ?>
-                                <tr class="text-center"><td colspan="9" class="text-muted py-4">No ha iniciado requerimientos de adquisici&oacute;n a&uacute;n.</td></tr>
+                                <tr class="text-center"><td colspan="10" class="text-muted py-4">No ha iniciado requerimientos de adquisici&oacute;n a&uacute;n.</td></tr>
                             <?php } else { 
                                 foreach ($mis_solicitudes as $ms) { 
-                                    $est = 'Borrador'; $badge = 'secondary';
+                                    $est = 'En espera de completar'; $badge = 'secondary';
                                     if ($ms['Sol_Est'] == 'E') { $est = 'En Workflow'; $badge = 'primary'; }
                                     elseif ($ms['Sol_Est'] == 'A') { $est = 'Aprobada'; $badge = 'success'; }
                                     elseif ($ms['Sol_Est'] == 'R') { $est = 'Rechazada'; $badge = 'danger'; }
                                     elseif ($ms['Sol_Est'] == 'O') { $est = 'Observada'; $badge = 'warning text-dark'; }
-                                    $etapa = !empty($ms['Nod_Nom']) ? $ms['Nod_Nom'] : (($ms['Sol_Est'] == 'P') ? 'Sin enviar' : '[Inactivo]');
+                                    $etapa = !empty($ms['Nod_Nom']) ? $ms['Nod_Nom'] : (($ms['Sol_Est'] == 'P') ? 'Pendiente de completar' : '[Inactivo]');
                                     ?>
                                     <tr class="text-center adq-row-solicitud" data-wfm-fam="<?php echo intval($ms['Wfm_Fam_Cod']); ?>">
                                         <td class="fw-bold"><?php echo $ms['Sol_Num']; ?></td>
+                                        <td class="text-start"><?php echo htmlspecialchars(isset($ms['Sol_Tit']) ? $ms['Sol_Tit'] : '', ENT_QUOTES, 'UTF-8'); ?></td>
                                         <td class="text-start"><?php echo htmlspecialchars($ms['Wfm_Nom']); ?></td>
                                         <td><?php echo date('Y-m-d H:i', strtotime($ms['Sol_Fec'])); ?></td>
                                         <td class="text-start"><?php echo $ms['Trq_Des']; ?></td>
@@ -2104,10 +2339,7 @@ function adqEtiquetaMiAccion($accion) {
                                         <td class="adq-col-acciones">
                                             <div class="adq-acciones-row">
                                                 <button type="button" class="btn btn-sm btn-outline-dark adq-btn-icon-only" title="Detalle" onclick="abrirResolucion(<?php echo $ms['Sol_Cod']; ?>, false)"><i class="bi bi-eye"></i></button>
-                                            <?php if ($ms['Sol_Est'] == 'P') { ?>
-                                                <button type="button" class="btn btn-sm btn-warning text-dark adq-btn-icon-only" title="Completar" onclick="abrirEdicionBorrador(<?php echo $ms['Sol_Cod']; ?>)"><i class="bi bi-pencil"></i></button>
-                                                <button type="button" class="btn btn-sm btn-success adq-btn-icon-only" title="Enviar" onclick="enviarBorrador(<?php echo $ms['Sol_Cod']; ?>, '<?php echo htmlspecialchars($ms['Sol_Num'], ENT_QUOTES, 'UTF-8'); ?>')"><i class="bi bi-send-check"></i></button>
-                                            <?php } elseif ($ms['Sol_Est'] == 'O') { ?>
+                                            <?php if ($ms['Sol_Est'] == 'O') { ?>
                                                 <button type="button" class="btn btn-sm btn-warning text-dark adq-btn-icon-only" title="Corregir" onclick="abrirEdicionBorrador(<?php echo $ms['Sol_Cod']; ?>)"><i class="bi bi-pencil"></i></button>
                                                 <button type="button" class="btn btn-sm btn-success adq-btn-icon-only" title="Reenviar correccion" onclick="reenviarObservada(<?php echo $ms['Sol_Cod']; ?>, '<?php echo htmlspecialchars($ms['Sol_Num'], ENT_QUOTES, 'UTF-8'); ?>')"><i class="bi bi-send-check"></i></button>
                                             <?php } ?>
@@ -2215,7 +2447,7 @@ function adqEtiquetaMiAccion($accion) {
                                     <td class="text-start"><?php echo htmlspecialchars($h['Wfm_Nom']); ?></td>
                                     <td><?php echo date('Y-m-d H:i', strtotime($h['Sol_Fec'])); ?></td>
                                     <td class="text-start"><?php echo $h['Solicitante_Nom']; ?></td>
-                                    <td><?php echo $h['Dep_Des']; ?></td>
+                                    <td><?php echo htmlspecialchars(adqTextoDepartamentoSolicitante(isset($h['Dep_Des']) ? $h['Dep_Des'] : ''), ENT_QUOTES, 'UTF-8'); ?></td>
                                     <td class="text-start"><?php echo $h['Trq_Des']; ?></td>
                                     <td><span class="badge badge-<?php echo strtolower($h['Sol_Pri']); ?>"><?php echo $h['Sol_Pri']; ?></span></td>
                                     <td class="text-end fw-bold font-monospace">$ <?php echo number_format($h['Sol_Val_Est'], 2); ?></td>
@@ -2326,6 +2558,22 @@ function adqEtiquetaMiAccion($accion) {
                                 </div>
                             </div>
 
+                            <!-- Otros adjuntos PDF -->
+                            <div class="adq-detail-card" id="divDetAdjuntos" style="display: none;">
+                                <h5 class="adq-section-header"><i class="bi bi-paperclip"></i> Otros archivos PDF de soporte</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-condensed table-hover mb-0" style="font-size: 12px;">
+                                        <thead>
+                                            <tr>
+                                                <th>Descripci&oacute;n</th>
+                                                <th class="text-center" style="width: 120px;">Archivo</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="detAdjuntosList"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
                             <!-- Compras Vinculadas -->
                             <div class="adq-detail-card" id="divComprasVinculadas" style="display: none;">
                                 <h5 class="adq-section-header" style="margin-bottom: 6px; padding-bottom: 4px;"><i class="bi bi-link-45deg"></i> Facturas de Compra Vinculadas</h5>
@@ -2370,18 +2618,18 @@ function adqEtiquetaMiAccion($accion) {
                                 <button type="button" class="btn btn-primary btn-sm" id="btnCargarCotizaciones" onclick="abrirEdicionCotizaciones(currentSolCod)"><i class="bi bi-file-earmark-pdf"></i> Cargar cotizaciones</button>
                             </div>
 
-                            <!-- Panel: documentos de avance en etapa AVANCE -->
+                            <!-- Panel: documentos de avance / fiscalizacion -->
                             <div class="adq-detail-card" id="panelAvanceEtapa" style="display: none; border-color: #0dcaf0; background-color: #f0fcff; padding: 10px 12px;">
-                                <h5 class="adq-section-header" style="color: #087990; border-bottom-color: #9eeaf9; margin-bottom: 8px; padding-bottom: 4px;"><i class="bi bi-receipt-cutoff"></i> Facturas de Avance</h5>
-                                <p class="mb-2" style="font-size: 12px; color: #055160;">Etapa <strong id="lblAvanceEtapaNodo"></strong>: seleccione facturas de compra del sistema EXA. Use <strong>Guardar</strong> para registrar y seguir cargando mas facturas. Cuando termine, pulse <strong>Finalizar proceso</strong>.</p>
+                                <h5 class="adq-section-header" style="color: #087990; border-bottom-color: #9eeaf9; margin-bottom: 8px; padding-bottom: 4px;"><i class="bi bi-receipt-cutoff" id="icoAvanceEtapa"></i> <span id="lblAvanceEtapaTitulo">Facturas de Avance</span></h5>
+                                <p class="mb-2" id="lblAvanceEtapaAyuda" style="font-size: 12px; color: #055160;">Etapa <strong id="lblAvanceEtapaNodo"></strong>: seleccione facturas de compra del sistema EXA. Use <strong>Guardar</strong> para registrar y seguir cargando mas facturas. Cuando termine, pulse <strong>Finalizar proceso</strong>.</p>
                                 <div style="margin-bottom: 8px;">
-                                    <input type="text" id="txtBuscarCompraAvance" class="form-control input-sm" placeholder="Buscar factura por N? o Proveedor..." oninput="buscarComprasAvance()" style="height: 26px; font-size: 11px; padding: 3px 8px;">
+                                    <input type="text" id="txtBuscarCompraAvance" class="form-control input-sm" placeholder="Buscar factura por N&deg; o Proveedor..." oninput="buscarComprasAvance()" style="height: 26px; font-size: 11px; padding: 3px 8px;">
                                 </div>
                                 <div class="table-responsive mb-2" id="divResultComprasAvance" style="display: none; border: 1px solid #9eeaf9; border-radius: 4px; background-color: #ffffff; max-height: 120px; overflow-y: auto;">
                                     <table class="table table-condensed table-hover mb-0" style="font-size: 11px;">
                                         <thead style="background-color: #e7f9fc;">
                                             <tr>
-                                                <th class="text-center">N? Factura</th>
+                                                <th class="text-center">N&deg; Factura</th>
                                                 <th class="text-center">Fecha</th>
                                                 <th>Proveedor</th>
                                                 <th class="text-end">Subtotal</th>
@@ -2397,6 +2645,16 @@ function adqEtiquetaMiAccion($accion) {
                                     <input type="hidden" name="Sol_Cod" id="avanceSolCod" value="">
                                     <div id="lstAvanceDocsExistentes" class="mb-2"></div>
                                     <div id="lstAvanceDocsNuevos" class="mb-2"></div>
+                                    <div id="secFiscalArchivos" class="mb-2" style="display: none; border-top: 1px dashed #9eeaf9; padding-top: 8px;">
+                                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+                                            <div>
+                                                <label class="form-label fw-semibold" style="font-size: 12px; color: #087990; display: block; margin-bottom: 2px;"><i class="bi bi-file-earmark-pdf"></i> Documentos de fiscalizaci&oacute;n</label>
+                                                <span class="text-muted small">Agregue uno o varios PDF; cada archivo debe tener un t&iacute;tulo.</span>
+                                            </div>
+                                            <button type="button" class="btn btn-primary btn-xs" onclick="agregarFiscalDocumento()"><i class="bi bi-plus-lg"></i> Agregar PDF</button>
+                                        </div>
+                                        <div id="lstFiscalDocsNuevos"></div>
+                                    </div>
                                 </form>
                             </div>
 
@@ -2458,25 +2716,20 @@ function adqEtiquetaMiAccion($accion) {
                                         <textarea class="form-control" name="Comentario" id="actionComentario" rows="3" placeholder="Redacte el motivo de su decision..."></textarea>
                                     </div>
                                     <div style="margin-bottom: 10px;">
-                                        <label class="form-label fw-semibold" style="font-size: 11px; color: #1d4ed8; margin: 0 0 4px 0; display: block;"><i class="bi bi-paperclip"></i> Sustento Adjunto <span id="lblAdjReq" class="text-danger" style="display: none;">*</span></label>
-                                        <input type="file" name="adjunto" id="actionAdjunto" class="adq-file-native" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">
+                                        <label class="form-label fw-semibold" style="font-size: 11px; color: #1d4ed8; margin: 0 0 4px 0; display: block;"><i class="bi bi-paperclip"></i> Sustentos adjuntos <span id="lblAdjReq" class="text-danger" style="display: none;">*</span></label>
+                                        <input type="file" name="adjuntos[]" id="actionAdjunto" class="adq-file-native" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx" multiple>
                                         <div class="adq-dropzone" id="adqDropzone" role="button" tabindex="0" onclick="document.getElementById('actionAdjunto').click();" onkeypress="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('actionAdjunto').click();}">
                                             <div class="adq-dropzone-empty" id="adqDropzoneEmpty">
                                                 <i class="bi bi-cloud-arrow-up-fill adq-dropzone-icon"></i>
-                                                <div class="adq-dropzone-text"><strong>Seleccionar archivo</strong> o arrastrar aqu&iacute;</div>
-                                                <div class="adq-dropzone-hint">PDF, imagen o documento (m&aacute;x. 10 MB)</div>
+                                                <div class="adq-dropzone-text"><strong>Seleccionar uno o varios archivos</strong> o arrastrarlos aqu&iacute;</div>
+                                                <div class="adq-dropzone-hint">PDF, imagen o documento (m&aacute;x. 10 MB por archivo)</div>
                                             </div>
-                                            <div class="adq-dropzone-file" id="adqDropzoneFile" style="display: none;">
-                                                <i class="bi adq-file-icon" id="adqFileIcon"></i>
-                                                <div class="adq-file-info">
-                                                    <div class="adq-file-name" id="adqFileName"></div>
-                                                    <div class="adq-file-size" id="adqFileSize"></div>
-                                                </div>
-                                                <button type="button" class="adq-file-remove" id="adqFileRemove" title="Quitar archivo" onclick="event.stopPropagation(); quitarSustentoAdjunto();"><i class="bi bi-x-lg"></i></button>
-                                            </div>
+                                            <div class="adq-dropzone-file" id="adqDropzoneFile" style="display: none;"></div>
                                         </div>
                                     </div>
+                                    <div id="avanceGuardadoMsg" class="adq-avance-save-message" role="status" aria-live="polite" style="display: none;"></div>
                                     <div class="adq-action-buttons">
+                                        <button type="button" class="btn btn-primary" id="btnGuardarAvance" style="display: none;" onclick="guardarAvanceDocs()"><i class="bi bi-save"></i> Guardar</button>
                                         <button type="button" class="btn btn-success" id="btnAccionAprobar" onclick="enviarAccion('APROBAR')"><i class="bi bi-check-circle"></i> Aprobar</button>
                                         <button type="button" class="btn btn-success" id="btnAccionCompletar" style="display: none;" onclick="enviarAccion('COMPLETAR')"><i class="bi bi-card-checklist"></i> Completar tarea</button>
                                         <button type="button" class="btn btn-warning text-dark" style="background-color: #f59e0b; border-color: #f59e0b; color: #ffffff;" onclick="enviarAccion('OBSERVAR')"><i class="bi bi-exclamation-triangle"></i> Observar</button>
@@ -2489,9 +2742,7 @@ function adqEtiquetaMiAccion($accion) {
                             <!-- Acciones finales de avance (al final de todo el panel izquierdo) -->
                             <div id="panelAvanceAccionesFin" class="adq-detail-card" style="display: none; border-color: #0dcaf0; background-color: #f0fcff; padding: 10px 12px; margin-top: 8px;">
                                 <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
-                                    <button type="button" class="btn btn-primary btn-sm" id="btnGuardarAvance" onclick="guardarAvanceDocs()"><i class="bi bi-save"></i> Guardar</button>
                                     <button type="button" class="btn btn-success btn-sm" id="btnFinalizarAvance" style="display: none;" onclick="finalizarAvanceProceso()"><i class="bi bi-check-circle"></i> Finalizar proceso</button>
-                                    <span id="avanceGuardadoMsg" class="text-success small" style="display: none;"></span>
                                 </div>
                             </div>
                         </div>
@@ -2581,7 +2832,7 @@ let currentInsCod = null;
         let isAdjObl = false;
         let searchTimer = null;
 
-        const NODOS_RESOLUBLES = ['APROBACION', 'RECEPCION', 'FACTURA', 'TAREA', 'AVANCE', 'FIN'];
+        const NODOS_RESOLUBLES = ['APROBACION', 'RECEPCION', 'FACTURA', 'TAREA', 'AVANCE', 'FISCALIZACION', 'FIN'];
         let currentNodTip = null;
         let currentExpedienteEstado = null;
         let currentTieneLlaveEmpresa = false;
@@ -2717,15 +2968,20 @@ let currentInsCod = null;
             const esTarea = currentNodTip === 'TAREA';
             const esFin = currentNodTip === 'FIN';
             const esAvance = currentNodTip === 'AVANCE';
-            $('#lblPanelDecisionTitulo').text(esFin ? 'Cierre del expediente' : (esTarea ? 'Tarea pendiente' : (esAvance ? 'Otras acciones' : 'Decisi\u00f3n en esta Etapa')));
-            $('#icoPanelDecision').attr('class', esFin ? 'bi bi-file-earmark-pdf' : (esTarea ? 'bi bi-card-checklist' : (esAvance ? 'bi bi-sliders' : 'bi bi-check2-all')));
+            const esFiscal = currentNodTip === 'FISCALIZACION';
+            $('#btnGuardarAvance').toggle(esAvance || esFiscal);
+            $('#lblPanelDecisionTitulo').text(esFin ? 'Cierre del expediente' : (esTarea ? 'Tarea pendiente' : (esAvance ? 'Otras acciones' : (esFiscal ? 'Fiscalizaci\u00f3n' : 'Decisi\u00f3n en esta Etapa'))));
+            $('#icoPanelDecision').attr('class', esFin ? 'bi bi-file-earmark-pdf' : (esTarea ? 'bi bi-card-checklist' : (esAvance ? 'bi bi-sliders' : (esFiscal ? 'bi bi-shield-check' : 'bi bi-check2-all'))));
             $('#actionComentario').attr('placeholder', esFin
                 ? 'Comentario de cierre del expediente...'
                 : (esTarea
                     ? 'Describa el resultado de la tarea o el trabajo realizado...'
                     : (esAvance
                         ? 'Comentario para observar, devolver o rechazar...'
-                        : 'Redacte el motivo de su decisi\u00f3n...')));
+                        : (esFiscal
+                            ? 'Redacte el comentario o justificaci\u00f3n de la fiscalizaci\u00f3n...'
+                            : 'Redacte el motivo de su decisi\u00f3n...'))));
+            // Fiscalizacion mantiene Aprobar (a diferencia de Avance)
             $('#btnAccionAprobar').toggle(!esTarea && !esAvance).html(esFin
                 ? '<i class="bi bi-check-circle"></i> Finalizar expediente'
                 : '<i class="bi bi-check-circle"></i> Aprobar');
@@ -2736,6 +2992,26 @@ let currentInsCod = null;
             } else {
                 $('#panelExpedienteFin').hide();
                 $('#btnAccionAprobar').prop('disabled', false).attr('title', '');
+            }
+        }
+
+        function configurarTextosPanelAvance(nodTip) {
+            const esFiscal = nodTip === 'FISCALIZACION';
+            if (esFiscal) {
+                $('#lblAvanceEtapaTitulo').text('Facturas y archivos de fiscalizaci\u00f3n');
+                $('#icoAvanceEtapa').attr('class', 'bi bi-shield-check');
+                $('#lblAvanceEtapaAyuda').html('Etapa <strong id="lblAvanceEtapaNodo"></strong>: vincule facturas EXA y/o cargue varios archivos. Use <strong>Guardar</strong> para registrar. Luego complete el comentario/justificaci\u00f3n y pulse <strong>Aprobar</strong>.');
+                $('#secFiscalArchivos').show();
+                $('#panelAvanceEtapa').css({ 'border-color': '#6c757d', 'background-color': '#f8f9fa' });
+                $('#panelAvanceAccionesFin').css({ 'border-color': '#6c757d', 'background-color': '#f8f9fa' });
+            } else {
+                $('#lblAvanceEtapaTitulo').text('Facturas de Avance');
+                $('#icoAvanceEtapa').attr('class', 'bi bi-receipt-cutoff');
+                $('#lblAvanceEtapaAyuda').html('Etapa <strong id="lblAvanceEtapaNodo"></strong>: seleccione facturas de compra del sistema EXA. Use <strong>Guardar</strong> para registrar y seguir cargando mas facturas. Cuando termine, pulse <strong>Finalizar proceso</strong>.');
+                $('#secFiscalArchivos').hide();
+                $('#lstFiscalDocsNuevos').empty();
+                $('#panelAvanceEtapa').css({ 'border-color': '#0dcaf0', 'background-color': '#f0fcff' });
+                $('#panelAvanceAccionesFin').css({ 'border-color': '#0dcaf0', 'background-color': '#f0fcff' });
             }
         }
 
@@ -2992,6 +3268,7 @@ let currentInsCod = null;
         }
 
         let avanceDocNuevoIdx = 0;
+        let fiscalDocNuevoIdx = 0;
         let avanceSearchTimer = null;
         const avanceCopCodSeleccionados = new Set();
 
@@ -3004,6 +3281,67 @@ let currentInsCod = null;
 
         function avanceEsc(text) {
             return $('<div>').text(text == null ? '' : String(text)).html();
+        }
+
+        function htmlFiscalDocumentoNuevo(idx) {
+            return `
+                <div class="border rounded p-2 mb-2 bg-white adq-fiscal-doc-nuevo" data-fiscal-nuevo="${idx}">
+                    <div style="display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;">
+                        <div style="flex:1 1 260px;">
+                            <label class="small fw-semibold mb-1">T&iacute;tulo del documento *</label>
+                            <input type="text" class="form-control input-sm" name="fiscal_docs[${idx}][titulo]" maxlength="250" required placeholder="Ej. Informe de fiscalizaci&oacute;n">
+                        </div>
+                        <div style="flex:1 1 280px;">
+                            <label class="small fw-semibold mb-1">Archivo PDF *</label>
+                            <div class="adq-fiscal-file-control">
+                                <input type="file" class="adq-fiscal-file-native" id="fiscal_pdf_${idx}" name="fiscal_archivos[${idx}]" accept=".pdf,application/pdf" required onchange="actualizarFiscalArchivo(this)">
+                                <label class="adq-fiscal-file-btn" for="fiscal_pdf_${idx}"><i class="bi bi-file-earmark-arrow-up"></i> Seleccionar PDF</label>
+                                <span class="adq-fiscal-file-name">Ning&uacute;n archivo seleccionado</span>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-danger btn-xs" onclick="quitarFiscalDocumentoNuevo(${idx})" title="Quitar PDF"><i class="bi bi-trash"></i></button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function agregarFiscalDocumento() {
+            const idx = fiscalDocNuevoIdx++;
+            $('#lstFiscalDocsNuevos').append(htmlFiscalDocumentoNuevo(idx));
+            $('#lstFiscalDocsNuevos [data-fiscal-nuevo="' + idx + '"] input[type="text"]').focus();
+        }
+
+        function quitarFiscalDocumentoNuevo(idx) {
+            $('#lstFiscalDocsNuevos [data-fiscal-nuevo="' + idx + '"]').remove();
+        }
+
+        function actualizarFiscalArchivo(input) {
+            const $control = $(input).closest('.adq-fiscal-file-control');
+            const file = input.files && input.files[0] ? input.files[0] : null;
+            $control.toggleClass('has-file', !!file);
+            $control.find('.adq-fiscal-file-name').text(file ? file.name : 'Ningun archivo seleccionado');
+        }
+
+        function htmlTarjetaFiscalExistente(doc) {
+            const savCod = parseInt(doc.Sav_Cod, 10) || 0;
+            const titulo = doc.Sav_Des || '';
+            const path = doc.Sav_Fac_Adj || doc.Sav_Adj || doc.Sav_Ret_Adj || doc.Sav_Com_Adj || '';
+            const usuario = doc.Usuario_Nom ? doc.Usuario_Nom.trim() : '';
+            return `
+                <div class="border rounded p-2 mb-2 bg-white adq-fiscal-doc-guardado" data-sav-cod="${savCod}" data-sav-cop-cod="0">
+                    <div style="display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;">
+                        <div style="flex:1 1 300px;">
+                            <label class="small fw-semibold mb-1">T&iacute;tulo del documento</label>
+                            <input type="text" class="form-control input-sm" name="avance_docs_existentes[${savCod}][Sav_Des]" value="${avanceEsc(titulo)}" maxlength="250">
+                        </div>
+                        <div style="flex:1 1 240px;padding-bottom:4px;">
+                            ${avanceFileLink(path, titulo || 'Ver PDF')}
+                        </div>
+                        <button type="button" class="btn btn-danger btn-xs" onclick="marcarEliminarAvanceDoc(${savCod}, this)" title="Quitar PDF"><i class="bi bi-trash"></i></button>
+                    </div>
+                    ${usuario ? `<div class="text-muted small mt-1">Registrado por: ${avanceEsc(usuario)}</div>` : ''}
+                </div>
+            `;
         }
 
         function obtenerCopCodsAvanceSeleccionados() {
@@ -3114,14 +3452,22 @@ let currentInsCod = null;
         function renderAvanceDocs(avances) {
             const $exist = $('#lstAvanceDocsExistentes').empty();
             $('#lstAvanceDocsNuevos').empty();
+            $('#lstFiscalDocsNuevos').empty();
             avanceDocNuevoIdx = 0;
+            fiscalDocNuevoIdx = 0;
             avanceCopCodSeleccionados.clear();
             if (!avances || avances.length === 0) {
-                $exist.html('<div class="text-muted small mb-2">No hay facturas registradas en esta etapa.</div>');
+                $exist.html(currentNodTip === 'FISCALIZACION'
+                    ? '<div class="text-muted small mb-2">No hay facturas ni documentos PDF registrados en esta fiscalizaci&oacute;n.</div>'
+                    : '<div class="text-muted small mb-2">No hay facturas registradas en esta etapa.</div>');
             } else {
                 avances.forEach(function(doc) {
                     const copCod = parseInt(doc.Sav_Cop_Cod, 10) || 0;
                     if (copCod > 0) { avanceCopCodSeleccionados.add(copCod); }
+                    if (currentNodTip === 'FISCALIZACION' && copCod <= 0) {
+                        $exist.append(htmlTarjetaFiscalExistente(doc));
+                        return;
+                    }
                     const legacy = (!doc.compra && (doc.Sav_Fac_Adj || doc.Sav_Adj || doc.Sav_Ret_Adj || doc.Sav_Com_Adj))
                         ? { fac: doc.Sav_Fac_Adj || doc.Sav_Adj || '', ret: doc.Sav_Ret_Adj || '', com: doc.Sav_Com_Adj || '' }
                         : null;
@@ -3228,6 +3574,42 @@ let currentInsCod = null;
                 alert('No se identifico la solicitud.');
                 return;
             }
+            if (currentNodTip === 'FISCALIZACION') {
+                let fiscalInvalido = '';
+                $('#lstAvanceDocsExistentes .adq-fiscal-doc-guardado').each(function() {
+                    if ($(this).find('input[name="sav_eliminar[]"]').length) {
+                        return;
+                    }
+                    const titulo = $(this).find('input[name*="[Sav_Des]"]').val().trim();
+                    if (!titulo) {
+                        fiscalInvalido = 'Todos los PDF guardados deben tener un titulo.';
+                        return false;
+                    }
+                });
+                if (!fiscalInvalido) {
+                    $('#lstFiscalDocsNuevos .adq-fiscal-doc-nuevo').each(function() {
+                        const titulo = $(this).find('input[type="text"]').val().trim();
+                        const input = $(this).find('input[type="file"]')[0];
+                        const file = input && input.files && input.files[0] ? input.files[0] : null;
+                        if (!titulo) {
+                            fiscalInvalido = 'Ingrese un titulo para cada PDF de fiscalizacion.';
+                            return false;
+                        }
+                        if (!file) {
+                            fiscalInvalido = 'Seleccione el archivo correspondiente a cada titulo.';
+                            return false;
+                        }
+                        if (!/\.pdf$/i.test(file.name)) {
+                            fiscalInvalido = 'Solo se permiten archivos PDF en fiscalizacion.';
+                            return false;
+                        }
+                    });
+                }
+                if (fiscalInvalido) {
+                    alert(fiscalInvalido);
+                    return;
+                }
+            }
             const fd = new FormData($('#frmAvanceDocs')[0]);
             fd.append('ajax_save_avance_docs', '1');
             fd.set('Sol_Cod', solCod);
@@ -3251,10 +3633,13 @@ let currentInsCod = null;
                         onSuccess();
                     } else {
                         const $msg = $('#avanceGuardadoMsg');
-                        $msg.text('Guardado. Puede seguir agregando facturas.').show().delay(3500).fadeOut();
+                        const msgOk = (currentNodTip === 'FISCALIZACION')
+                            ? 'Documentos guardados correctamente. Puede seguir agregando archivos.'
+                            : 'Facturas guardadas correctamente. Puede seguir agregando facturas.';
+                        $msg.stop(true, true).text(msgOk).fadeIn(180).delay(4500).fadeOut(350);
                     }
                 } else {
-                    alert('Error: ' + (res.message || 'No se pudieron guardar las facturas.'));
+                    alert('Error: ' + (res.message || 'No se pudieron guardar los documentos.'));
                 }
             }).fail(function() {
                 alert('Error de red al guardar las facturas de avance.');
@@ -3464,6 +3849,9 @@ let currentInsCod = null;
                 if (parseInt(h.Fin_Pendiente || 0, 10) === 1) {
                     actionBadge = badgeHistorialHtml('Pendiente cierre', '#0284c7');
                     itemClass = 'active';
+                } else if (h.Nod_Tip === 'DECISION') {
+                    actionBadge = badgeHistorialHtml('Decisi&oacute;n', '#d97706');
+                    itemClass = 'warning';
                 } else if (parseInt(h.Pendiente_Aprobacion || 0, 10) === 1 || h.Isn_Acc === 'PENDIENTE') {
                     let pendTxt = 'Pendiente de aprobaci&oacute;n';
                     if (h.Nod_Tip === 'TAREA') {
@@ -3472,6 +3860,8 @@ let currentInsCod = null;
                         pendTxt = 'Pendiente cierre';
                     } else if (h.Nod_Tip === 'AVANCE') {
                         pendTxt = 'Pendiente de avance';
+                    } else if (h.Nod_Tip === 'FISCALIZACION') {
+                        pendTxt = 'Pendiente de fiscalizaci&oacute;n';
                     } else if (h.Nod_Tip === 'FACTURA') {
                         pendTxt = 'Pendiente de factura';
                     }
@@ -3507,14 +3897,27 @@ let currentInsCod = null;
                 } else if (h.Isn_Acc === 'COTIZAR') {
                     actionBadge = badgeHistorialHtml('Proformas cargadas', '#2563eb');
                     itemClass = 'active';
+                } else if (h.Isn_Acc === 'CONDICIONAL') {
+                    actionBadge = badgeHistorialHtml('Rama', '#d97706');
+                    itemClass = 'warning';
                 } else if (h.Isn_Acc) {
                     actionBadge = badgeHistorialHtml(escHtmlHist(h.Isn_Acc), '#64748b');
                     itemClass = 'active';
                 }
 
+                const esDecision = (h.Nod_Tip === 'DECISION');
                 const commentHtml = h.Isn_Com
                     ? `<div class="adq-timeline-comment">${escHtmlHist(h.Isn_Com)}</div>`
                     : '';
+                const actorHtml = esDecision
+                    ? ''
+                    : `<div class="adq-hist-actor">
+                                    <span class="adq-hist-avatar" aria-hidden="true">${initials}</span>
+                                    <span class="adq-hist-actor-meta">
+                                        <span class="adq-hist-actor-mode">${actorModo}</span>
+                                        <span class="adq-hist-actor-name">${actorEsc}</span>
+                                    </span>
+                                </div>`;
 
                 $hist.append(`
                     <div class="adq-timeline-item ${itemClass}">
@@ -3530,16 +3933,10 @@ let currentInsCod = null;
                                 <span class="adq-timeline-date"><i class="bi bi-calendar3"></i> ${fechaHist}</span>
                             </div>
                             <div class="adq-timeline-body">
-                                <div class="adq-hist-actor">
-                                    <span class="adq-hist-avatar" aria-hidden="true">${initials}</span>
-                                    <span class="adq-hist-actor-meta">
-                                        <span class="adq-hist-actor-mode">${actorModo}</span>
-                                        <span class="adq-hist-actor-name">${actorEsc}</span>
-                                    </span>
-                                </div>
+                                ${actorHtml}
                                 ${commentHtml}
-                                ${renderHistorialFacturas(h.facturas)}
-                                ${renderHistorialArchivos(h.archivos, h.Isn_Adj)}
+                                ${esDecision ? '' : renderHistorialFacturas(h.facturas)}
+                                ${esDecision ? '' : renderHistorialArchivos(h.archivos, h.Isn_Adj)}
                             </div>
                         </div>
                     </div>
@@ -3617,7 +4014,7 @@ let currentInsCod = null;
                     $('#lblModalSubtitle').text([tipoTxt, etapaTxt].filter(Boolean).join(' ? '));
                     const solicitante = (sol.Sol_Nom || sol.Sol_Ape) ? `${sol.Sol_Nom} ${sol.Sol_Ape}`.trim() : (sol.Usu_Nom || 'N/D');
                     $('#detSolicitante').text(solicitante);
-                    $('#detDepartamento').text(sol.Dep_Des);
+                    $('#detDepartamento').text((sol.Dep_Des && String(sol.Dep_Des).trim() !== '') ? sol.Dep_Des : 'Sin departamento');
                     $('#detTipo').text(sol.Trq_Des);
                     $('#detTotal').text(`$ ${parseFloat(sol.Sol_Val_Est).toFixed(2)}`);
                     $('#detJustificacion').text(sol.Sol_Jus);
@@ -3696,6 +4093,27 @@ let currentInsCod = null;
                         $('#divDetCotizaciones').hide();
                     }
 
+                    const $adjList = $('#detAdjuntosList').empty();
+                    const adjuntos = res.adjuntos || [];
+                    if (adjuntos.length > 0) {
+                        $('#divDetAdjuntos').show();
+                        adjuntos.forEach(function(a) {
+                            const des = $('<div>').text(a.Sad_Des || 'Sin descripcion').html();
+                            const path = a.Sad_Adj || '';
+                            const pdf = path
+                                ? `<a href="../../DATA/${path}" target="_blank" class="btn btn-xs btn-primary"><i class="bi bi-file-earmark-pdf"></i> Ver PDF</a>`
+                                : '<span class="text-muted">Sin archivo</span>';
+                            $adjList.append(`
+                                <tr>
+                                    <td class="align-middle text-start">${des}</td>
+                                    <td class="text-center align-middle">${pdf}</td>
+                                </tr>
+                            `);
+                        });
+                    } else {
+                        $('#divDetAdjuntos').hide();
+                    }
+
                     // Historial (mas reciente arriba, inicio del flujo abajo)
                     renderHistorialPanel(res.historial || []);
 
@@ -3750,13 +4168,18 @@ let currentInsCod = null;
                     }
 
                     if (puedeAvance) {
+                        configurarTextosPanelAvance(sol.Nod_Tip);
                         $('#lblAvanceEtapaNodo').text(sol.Nod_Nom || 'Etapa actual');
                         $('#avanceSolCod').val(sol.Sol_Cod);
                         renderAvanceDocs(res.avances || []);
-                        $('#btnFinalizarAvance').toggle(puedeResolver);
+                        // En Fiscalizacion se aprueba desde el panel de decision (no Finalizar proceso)
+                        $('#btnFinalizarAvance').toggle(puedeResolver && sol.Nod_Tip === 'AVANCE');
                         $('#avanceGuardadoMsg').hide().text('');
                         $('#panelAvanceEtapa').show();
-                        $('#panelAvanceAccionesFin').show();
+                        $('#panelAvanceAccionesFin').toggle(puedeResolver && sol.Nod_Tip === 'AVANCE');
+                    } else {
+                        $('#secFiscalArchivos').hide();
+                        $('#lstFiscalDocsNuevos').empty();
                     }
 
                     if (sol.Sol_Est === 'O') {
@@ -3958,40 +4381,81 @@ let currentInsCod = null;
             return { icon: 'bi-file-earmark-fill', color: '#64748b' };
         }
 
-        function mostrarSustentoSeleccionado(file) {
-            const info = adqIconoPorExtension(file.name);
-            $('#adqFileIcon').attr('class', 'bi adq-file-icon ' + info.icon).css('color', info.color);
-            $('#adqFileName').text(file.name);
-            $('#adqFileSize').text(adqFormatFileSize(file.size));
-            $('#adqDropzoneEmpty').hide();
-            $('#adqDropzoneFile').css('display', 'flex');
-        }
+        let actionAdjuntosSeleccionados = [];
 
-        function quitarSustentoAdjunto() {
+        function sincronizarInputSustentos() {
             const input = document.getElementById('actionAdjunto');
-            if (input) { input.value = ''; }
-            $('#adqDropzoneFile').hide();
-            $('#adqDropzoneEmpty').show();
-            $('#adqDropzone').removeClass('adq-dropzone-invalid');
+            if (!input) { return; }
+            const dt = new DataTransfer();
+            actionAdjuntosSeleccionados.forEach(function(file) {
+                dt.items.add(file);
+            });
+            input.files = dt.files;
         }
 
-        function procesarSustentoArchivo(file) {
-            if (!file) { return; }
-            if (file.size > ADQ_ADJ_MAX_BYTES) {
-                $('#adqDropzone').addClass('adq-dropzone-invalid');
-                alert('El archivo supera el limite de 10 MB. Seleccione uno mas liviano.');
-                quitarSustentoAdjunto();
+        function mostrarSustentosSeleccionados() {
+            const $lista = $('#adqDropzoneFile').empty();
+            if (!actionAdjuntosSeleccionados.length) {
+                $lista.hide();
+                $('#adqDropzoneEmpty').show();
                 return;
             }
+            $lista.append('<div class="adq-selected-files-summary">' + actionAdjuntosSeleccionados.length + ' archivo(s) seleccionado(s)</div>');
+            actionAdjuntosSeleccionados.forEach(function(file, index) {
+                const info = adqIconoPorExtension(file.name);
+                const nombre = $('<div>').text(file.name).html();
+                $lista.append(
+                    '<div class="adq-selected-file">' +
+                        '<i class="bi adq-file-icon ' + info.icon + '" style="color:' + info.color + '"></i>' +
+                        '<div class="adq-file-info">' +
+                            '<div class="adq-file-name">' + nombre + '</div>' +
+                            '<div class="adq-file-size">' + adqFormatFileSize(file.size) + '</div>' +
+                        '</div>' +
+                        '<button type="button" class="adq-file-remove" title="Quitar archivo" onclick="event.stopPropagation(); quitarSustentoAdjunto(' + index + ');"><i class="bi bi-x-lg"></i></button>' +
+                    '</div>'
+                );
+            });
+            $('#adqDropzoneEmpty').hide();
+            $lista.show();
+        }
+
+        function quitarSustentoAdjunto(indice) {
+            if (typeof indice === 'number') {
+                actionAdjuntosSeleccionados.splice(indice, 1);
+            } else {
+                actionAdjuntosSeleccionados = [];
+            }
+            sincronizarInputSustentos();
+            mostrarSustentosSeleccionados();
             $('#adqDropzone').removeClass('adq-dropzone-invalid');
-            mostrarSustentoSeleccionado(file);
+        }
+
+        function procesarSustentoArchivos(files) {
+            const nuevos = Array.from(files || []);
+            let excedidos = [];
+            nuevos.forEach(function(file) {
+                if (file.size > ADQ_ADJ_MAX_BYTES) {
+                    excedidos.push(file.name);
+                    return;
+                }
+                const repetido = actionAdjuntosSeleccionados.some(function(actual) {
+                    return actual.name === file.name && actual.size === file.size && actual.lastModified === file.lastModified;
+                });
+                if (!repetido) {
+                    actionAdjuntosSeleccionados.push(file);
+                }
+            });
+            sincronizarInputSustentos();
+            mostrarSustentosSeleccionados();
+            $('#adqDropzone').toggleClass('adq-dropzone-invalid', excedidos.length > 0);
+            if (excedidos.length) {
+                alert('Estos archivos superan el limite de 10 MB y no fueron agregados: ' + excedidos.join(', '));
+            }
         }
 
         $(document).on('change', '#actionAdjunto', function() {
             if (this.files && this.files.length > 0) {
-                procesarSustentoArchivo(this.files[0]);
-            } else {
-                quitarSustentoAdjunto();
+                procesarSustentoArchivos(this.files);
             }
         });
 
@@ -4015,9 +4479,7 @@ let currentInsCod = null;
             dz.addEventListener('drop', function(e) {
                 const dt = e.dataTransfer;
                 if (dt && dt.files && dt.files.length > 0) {
-                    const input = document.getElementById('actionAdjunto');
-                    try { input.files = dt.files; } catch (err) { /* algunos navegadores */ }
-                    procesarSustentoArchivo(dt.files[0]);
+                    procesarSustentoArchivos(dt.files);
                 }
             });
         });
@@ -4036,7 +4498,7 @@ let currentInsCod = null;
                         : 'El comentario es obligatorio para aprobar en esta etapa.');
                     return;
                 }
-                if (isAdjObl && !$('#actionAdjunto').val()) {
+                if (isAdjObl && actionAdjuntosSeleccionados.length === 0) {
                     alert('Cargar un archivo adjunto de soporte es obligatorio en esta etapa.');
                     return;
                 }
@@ -4198,6 +4660,8 @@ let currentInsCod = null;
             if (targetSol) {
                 if (formModo === 'cotizaciones' && typeof cargarSolicitudParaCotizaciones === 'function') {
                     cargarSolicitudParaCotizaciones(targetSol);
+                } else if (formModo === 'completar_nodo' && typeof cargarSolicitudParaCompletar === 'function') {
+                    cargarSolicitudParaCompletar(targetSol);
                 } else if (typeof cargarBorradorEnFormulario === 'function') {
                     cargarBorradorEnFormulario(targetSol);
                 }
@@ -4218,7 +4682,7 @@ let currentInsCod = null;
             }
 
             $('#create-panel-content').data('sol-cod', targetSol || '');
-            $.get('adq_solicitud.php', { ajax_get_form: 1 }, function(html) {
+            $.get('adq_solicitud.php', { ajax_get_form: 1, modo: targetSol ? 'completar' : 'corto' }, function(html) {
                 if (requestId !== formLoadRequestId) {
                     return;
                 }
@@ -4257,6 +4721,20 @@ let currentInsCod = null;
             const targetSol = parseInt(solCod, 10);
             const $tab = $('a[href="#create-panel"]');
             if ($tab.parent().hasClass('active')) {
+                cargarFormularioCreacion(targetSol);
+            } else {
+                $('#create-panel-content').data('pending-sol-cod', targetSol);
+                $tab.tab('show');
+            }
+        }
+
+        function abrirCompletarSolicitud(solCod) {
+            formLoaded = false;
+            formSolCod = null;
+            formModo = 'completar_nodo';
+            const targetSol = parseInt(solCod, 10);
+            const $tab = $('a[href="#create-panel"]');
+            if ($tab.parent().hasClass('active') || $('#create-panel').hasClass('active')) {
                 cargarFormularioCreacion(targetSol);
             } else {
                 $('#create-panel-content').data('pending-sol-cod', targetSol);

@@ -41,6 +41,8 @@ function adqListaEtiquetaAccion($h) {
             $txt = 'Pendiente cierre';
         } elseif (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'AVANCE') {
             $txt = 'Pendiente de avance';
+        } elseif (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'FISCALIZACION') {
+            $txt = 'Pendiente de fiscalizaci&oacute;n';
         }
         return array($txt, 'primary', 'active');
     }
@@ -54,6 +56,7 @@ function adqListaEtiquetaAccion($h) {
         'RECHAZAR' => array('Rechazado', 'danger', 'danger'),
         'REENVIAR' => array('Reenvio correccion', 'info', 'active'),
         'AVANCE' => array('Documentos cargados', 'info', 'active'),
+        'FISCALIZACION' => array('Fiscalizaci&oacute;n', 'secondary', 'active'),
         'COTIZAR' => array('Proformas cargadas', 'primary', 'active')
     );
     if (isset($map[$acc])) {

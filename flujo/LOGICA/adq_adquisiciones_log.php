@@ -134,17 +134,20 @@ class adq_adquisiciones_log extends MysqlDatosContab {
      */
     private function archivosDesdeAvanceRow($av) {
         $archivos = array();
+        $titulo_doc = (!empty($av['Sav_Des']) && empty($av['Sav_Cop_Cod']))
+            ? trim($av['Sav_Des'])
+            : '';
         if (!empty($av['Sav_Fac_Adj'])) {
-            $archivos[] = array('path' => $av['Sav_Fac_Adj'], 'label' => 'Factura');
+            $archivos[] = array('path' => $av['Sav_Fac_Adj'], 'label' => $titulo_doc !== '' ? $titulo_doc : 'Factura');
         }
         if (!empty($av['Sav_Ret_Adj'])) {
-            $archivos[] = array('path' => $av['Sav_Ret_Adj'], 'label' => 'Retencion');
+            $archivos[] = array('path' => $av['Sav_Ret_Adj'], 'label' => $titulo_doc !== '' ? $titulo_doc : 'Retencion');
         }
         if (!empty($av['Sav_Com_Adj'])) {
-            $archivos[] = array('path' => $av['Sav_Com_Adj'], 'label' => 'Comprobante pago');
+            $archivos[] = array('path' => $av['Sav_Com_Adj'], 'label' => $titulo_doc !== '' ? $titulo_doc : 'Comprobante pago');
         }
         if (!empty($av['Sav_Adj'])) {
-            $archivos[] = array('path' => $av['Sav_Adj'], 'label' => 'Documento');
+            $archivos[] = array('path' => $av['Sav_Adj'], 'label' => $titulo_doc !== '' ? $titulo_doc : 'Documento');
         }
         return $archivos;
     }
@@ -200,46 +203,48 @@ class adq_adquisiciones_log extends MysqlDatosContab {
     }
 
     /**
-     * Asigna proformas a movimientos COTIZAR/CREAR/REENVIAR.
+     * Asigna todas las proformas al movimiento del nodo INICIO.
+     * Las proformas pertenecen a la edición inicial de la solicitud, aunque
+     * hayan sido agregadas o modificadas posteriormente.
      */
     private function resolverArchivosCotizacionPorHistorial($historial, $cotizaciones) {
         $mapa = array();
         if (empty($historial) || empty($cotizaciones)) {
             return $mapa;
         }
+
+        $isn_inicio = 0;
         foreach ($historial as $h) {
-            if (empty($h['Isn_Cod']) || empty($h['Isn_Acc'])) {
+            if (empty($h['Isn_Cod'])) {
                 continue;
             }
-            $acc = $h['Isn_Acc'];
-            if (!in_array($acc, array('COTIZAR', 'CREAR', 'REENVIAR'), true)) {
-                continue;
+            if (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'INICIO') {
+                $isn_inicio = intval($h['Isn_Cod']);
+                break;
             }
-            $isn_cod = intval($h['Isn_Cod']);
-            $archivos = array();
-            if ($acc === 'CREAR') {
-                foreach ($cotizaciones as $cot) {
-                    if (!empty($h['Isn_Fec']) && !empty($cot['Cot_Fec'])) {
-                        $fec_cot = strtotime(substr($cot['Cot_Fec'], 0, 10));
-                        $fec_hist = strtotime(date('Y-m-d', strtotime($h['Isn_Fec'])));
-                        if ($fec_cot > $fec_hist) {
-                            continue;
-                        }
-                    }
-                    foreach ($this->archivosDesdeCotizacionRow($cot) as $arch) {
-                        $archivos[] = $arch;
-                    }
-                }
-            } else {
-                foreach ($cotizaciones as $cot) {
-                    foreach ($this->archivosDesdeCotizacionRow($cot) as $arch) {
-                        $archivos[] = $arch;
-                    }
+        }
+
+        // Compatibilidad con historiales que no incluyen Nod_Tip.
+        if ($isn_inicio <= 0) {
+            foreach ($historial as $h) {
+                if (!empty($h['Isn_Cod']) && isset($h['Isn_Acc']) && $h['Isn_Acc'] === 'CREAR') {
+                    $isn_inicio = intval($h['Isn_Cod']);
+                    break;
                 }
             }
-            if (!empty($archivos)) {
-                $mapa[$isn_cod] = $archivos;
+        }
+        if ($isn_inicio <= 0) {
+            return $mapa;
+        }
+
+        $archivos = array();
+        foreach ($cotizaciones as $cot) {
+            foreach ($this->archivosDesdeCotizacionRow($cot) as $arch) {
+                $archivos[] = $arch;
             }
+        }
+        if (!empty($archivos)) {
+            $mapa[$isn_inicio] = $archivos;
         }
         return $mapa;
     }
@@ -314,8 +319,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
 
             if ($acc === 'AVANCE') {
                 $entries_avance[] = array('isn' => $isn, 'ins' => $ins, 'nod' => $nod_hist, 'fec' => $fec);
-            } elseif (in_array($acc, array('APROBAR', 'COMPLETAR'), true) && $nod_tip === 'AVANCE') {
-                $entries_aprobar[] = array('isn' => $isn, 'ins' => $ins, 'nod' => $etapa, 'fec' => $fec);
+            } elseif (in_array($acc, array('APROBAR', 'COMPLETAR'), true) && in_array($nod_tip, array('AVANCE', 'FISCALIZACION'), true)) {
+                $entries_aprobar[] = array('isn' => $isn, 'ins' => $ins, 'nod' => $etapa, 'fec' => $fec, 'tip' => $nod_tip);
             }
         }
 
@@ -324,6 +329,21 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         });
 
         $assigned = array();
+        // Registros nuevos: la relacion explicita garantiza que cada PDF aparezca
+        // exactamente en el punto del historial donde fue cargado.
+        foreach ($avances as $av) {
+            $sav = intval(isset($av['Sav_Cod']) ? $av['Sav_Cod'] : 0);
+            $isn = intval(isset($av['Sav_Isn_Cod']) ? $av['Sav_Isn_Cod'] : 0);
+            if ($sav <= 0 || $isn <= 0) {
+                continue;
+            }
+            if (!isset($mapa[$isn])) {
+                $mapa[$isn] = array();
+            }
+            $mapa[$isn][] = $av;
+            $assigned[$sav] = true;
+        }
+
         foreach ($entries_avance as $i => $entry) {
             $curr_ts = !empty($entry['fec']) ? strtotime($entry['fec']) : 0;
             $prev_ts = 0;
@@ -342,12 +362,12 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 }
                 $av_ts = !empty($av['Sav_Fec']) ? strtotime($av['Sav_Fec']) : 0;
                 if ($i === 0) {
-                    if ($curr_ts > 0 && $av_ts > $curr_ts + 120) {
+                    if ($curr_ts > 0 && $av_ts > $curr_ts + 2) {
                         continue;
                     }
                 } elseif ($av_ts <= $prev_ts) {
                     continue;
-                } elseif ($curr_ts > 0 && $av_ts > $curr_ts + 120) {
+                } elseif ($curr_ts > 0 && $av_ts > $curr_ts + 2) {
                     continue;
                 }
                 $batch[] = $av;
@@ -363,6 +383,13 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $batch = array();
             foreach ($avances as $av) {
                 if (intval($av['Ins_Cod']) !== $entry['ins'] || intval($av['Nod_Cod']) !== $entry['nod']) {
+                    continue;
+                }
+                $sav = intval(isset($av['Sav_Cod']) ? $av['Sav_Cod'] : 0);
+                // En Fiscalizacion cada carga ya tiene su propio punto AVANCE.
+                // La aprobacion solo recibe archivos antiguos que no pudieron
+                // asociarse a un registro de carga, evitando repetirlos todos.
+                if ($entry['tip'] === 'FISCALIZACION' && isset($assigned[$sav])) {
                     continue;
                 }
                 $batch[] = $av;
@@ -381,7 +408,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 continue;
             }
             $vistos[$arch['path']] = true;
-            if (!empty($av['Sav_Des'])) {
+            if (!empty($av['Sav_Des']) && $arch['label'] !== trim($av['Sav_Des'])) {
                 $arch['label'] .= ' - ' . $av['Sav_Des'];
             }
             $archivos[] = $arch;
@@ -431,10 +458,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 }
             }
 
-            if (isset($h['Isn_Acc']) && in_array($h['Isn_Acc'], array('COTIZAR', 'CREAR', 'REENVIAR'), true)) {
-                $lista_cot = ($isn_cod > 0 && isset($cot_archivos_por_isn[$isn_cod]))
-                    ? $cot_archivos_por_isn[$isn_cod]
-                    : array();
+            if ($isn_cod > 0 && isset($cot_archivos_por_isn[$isn_cod])) {
+                $lista_cot = $cot_archivos_por_isn[$isn_cod];
                 foreach ($lista_cot as $arch) {
                     if (isset($vistos[$arch['path']])) {
                         continue;
@@ -639,6 +664,264 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         );
     }
 
+    public function ensureSolicitudTituloColumn() {
+        $row = $this->getRowConsultaSql(
+            "SELECT COUNT(*) AS cnt FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'adq_solicitudes' AND COLUMN_NAME = 'Sol_Tit';",
+            $this->conexion
+        );
+        if (empty($row['cnt']) && !$this->grabarv_registros(
+            "ALTER TABLE adq_solicitudes ADD COLUMN Sol_Tit VARCHAR(255) NULL AFTER Sol_Num;",
+            $this->conexion
+        )) {
+            throw new Exception('No se pudo preparar el nombre de la solicitud: ' . $this->getMsgError());
+        }
+    }
+
+    public function ensureSolicitudAdjuntosTable() {
+        $sql = "CREATE TABLE IF NOT EXISTS adq_solicitudes_adjuntos (
+            Sad_Cod BIGINT NOT NULL AUTO_INCREMENT,
+            Sol_Cod BIGINT NOT NULL,
+            Sad_Des VARCHAR(500) NOT NULL DEFAULT '',
+            Sad_Adj VARCHAR(500) NOT NULL,
+            Sad_Fec DATETIME NOT NULL,
+            Usu_Cod BIGINT NULL,
+            PRIMARY KEY (Sad_Cod),
+            KEY idx_sol_adj (Sol_Cod)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+        if (!$this->grabarv_registros($sql, $this->conexion)) {
+            throw new Exception('No se pudo preparar la tabla de adjuntos de solicitud: ' . $this->getMsgError());
+        }
+    }
+
+    public function ensureDecisionValsTable() {
+        $sql = "CREATE TABLE IF NOT EXISTS adq_solicitudes_decision_vals (
+            Sdv_Cod BIGINT NOT NULL AUTO_INCREMENT,
+            Sol_Cod BIGINT NOT NULL,
+            Sdv_Campo VARCHAR(80) NOT NULL,
+            Sdv_Valor VARCHAR(255) NOT NULL DEFAULT '',
+            Sdv_Fec DATETIME NOT NULL,
+            Usu_Cod BIGINT NULL,
+            PRIMARY KEY (Sdv_Cod),
+            UNIQUE KEY uk_sol_campo (Sol_Cod, Sdv_Campo),
+            KEY idx_sdv_sol (Sol_Cod)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+        if (!$this->grabarv_registros($sql, $this->conexion)) {
+            throw new Exception('No se pudo preparar la tabla de valores de decision: ' . $this->getMsgError());
+        }
+    }
+
+    public function extraerDecisionValsDesdePost($data) {
+        $vals = array();
+        if (empty($data['decision_vals']) || !is_array($data['decision_vals'])) {
+            return $vals;
+        }
+        foreach ($data['decision_vals'] as $campo => $valor) {
+            $campo = preg_replace('/[^A-Za-z0-9_]/', '', (string)$campo);
+            if ($campo === '') {
+                continue;
+            }
+            if ($campo === 'Dep_Cod') {
+                $campo = 'Dep_Sol';
+            }
+            $vals[$campo] = is_array($valor) ? '' : trim((string)$valor);
+        }
+        return $vals;
+    }
+
+    public function listarDecisionVals($sol_cod) {
+        $this->ensureDecisionValsTable();
+        $sol_cod = intval($sol_cod);
+        $rows = $this->getArrayConsultaSql(
+            "SELECT Sdv_Campo, Sdv_Valor FROM adq_solicitudes_decision_vals WHERE Sol_Cod = $sol_cod;",
+            $this->conexion
+        );
+        $map = array();
+        if (is_array($rows)) {
+            foreach ($rows as $row) {
+                $map[$row['Sdv_Campo']] = $row['Sdv_Valor'];
+            }
+        }
+        return $map;
+    }
+
+    /**
+     * Persiste variables de nodos DECISION y sincroniza columnas conocidas de adq_solicitudes.
+     */
+    public function guardarDecisionVals($sol_cod, $vals) {
+        $this->ensureDecisionValsTable();
+        $sol_cod = intval($sol_cod);
+        if ($sol_cod <= 0 || !is_array($vals) || empty($vals)) {
+            return;
+        }
+        $usu_cod = isset($_SESSION['Ses_Usu_Cod']) ? intval($_SESSION['Ses_Usu_Cod']) : 0;
+        $fecha = date('Y-m-d H:i:s');
+        $columnas_sync = array('Sol_Val_Est', 'Sol_Tiempo_Est', 'Sol_Pri', 'Dep_Sol');
+        $sets = array();
+
+        foreach ($vals as $campo => $valor) {
+            $campo = preg_replace('/[^A-Za-z0-9_]/', '', (string)$campo);
+            if ($campo === '' || $campo === 'Dep_Cod') {
+                if ($campo === 'Dep_Cod') {
+                    $campo = 'Dep_Sol';
+                } else {
+                    continue;
+                }
+            }
+            $valor_sql = $this->escapeSql($valor);
+            $campo_sql = $this->escapeSql($campo);
+            $existe = $this->getRowConsultaSql(
+                "SELECT Sdv_Cod FROM adq_solicitudes_decision_vals
+                 WHERE Sol_Cod = $sol_cod AND Sdv_Campo = '$campo_sql' LIMIT 1;",
+                $this->conexion
+            );
+            if (!empty($existe['Sdv_Cod'])) {
+                $ok = $this->grabarv_registros(
+                    "UPDATE adq_solicitudes_decision_vals
+                     SET Sdv_Valor = '$valor_sql', Sdv_Fec = '$fecha', Usu_Cod = $usu_cod
+                     WHERE Sdv_Cod = " . intval($existe['Sdv_Cod']) . ";",
+                    $this->conexion
+                );
+            } else {
+                $ok = $this->grabarv_registros(
+                    "INSERT INTO adq_solicitudes_decision_vals (Sol_Cod, Sdv_Campo, Sdv_Valor, Sdv_Fec, Usu_Cod)
+                     VALUES ($sol_cod, '$campo_sql', '$valor_sql', '$fecha', $usu_cod);",
+                    $this->conexion
+                );
+            }
+            if (!$ok) {
+                throw new Exception('No se pudo guardar el valor de decision (' . $campo . '): ' . $this->getMsgError());
+            }
+
+            if (in_array($campo, $columnas_sync, true)) {
+                if ($campo === 'Sol_Val_Est') {
+                    $sets[] = "Sol_Val_Est = " . floatval($valor);
+                } elseif ($campo === 'Sol_Tiempo_Est') {
+                    $sets[] = "Sol_Tiempo_Est = " . intval($valor);
+                } elseif ($campo === 'Sol_Pri') {
+                    $sets[] = "Sol_Pri = '" . $this->escapeSql($valor) . "'";
+                } elseif ($campo === 'Dep_Sol') {
+                    $sets[] = "Dep_Sol = " . intval($valor);
+                }
+            }
+        }
+
+        if (!empty($sets)) {
+            $this->grabarv_registros(
+                "UPDATE adq_solicitudes SET " . implode(', ', $sets) . " WHERE Sol_Cod = $sol_cod;",
+                $this->conexion
+            );
+        }
+    }
+
+    public function validarDecisionValsObligatorios($trq_cod, $emp_cod, $vals) {
+        $trq_cod = intval($trq_cod);
+        $emp_cod = intval($emp_cod);
+        if ($trq_cod <= 0) {
+            return;
+        }
+        $wf_mgr = new wf_manager_log(isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null, $this->conexion);
+        $info = $wf_mgr->obtenerDecisionesFlujoPorTipo($trq_cod, $emp_cod);
+        if (empty($info['campos']) || !is_array($info['campos'])) {
+            return;
+        }
+        $faltantes = array();
+        foreach ($info['campos'] as $campo_meta) {
+            $campo = isset($campo_meta['campo']) ? $campo_meta['campo'] : '';
+            if ($campo === '' || $campo === 'Sol_Cod' || $campo === 'Trq_Cod') {
+                continue;
+            }
+            $valor = isset($vals[$campo]) ? trim((string)$vals[$campo]) : '';
+            if ($valor === '') {
+                $faltantes[] = isset($campo_meta['etiqueta']) ? $campo_meta['etiqueta'] : $campo;
+            }
+        }
+        if (!empty($faltantes)) {
+            throw new Exception('Complete los valores de decision del flujo: ' . implode(', ', $faltantes) . '.');
+        }
+    }
+
+    public function listarAdjuntosSolicitud($sol_cod) {
+        $this->ensureSolicitudAdjuntosTable();
+        $sol_cod = intval($sol_cod);
+        $rows = $this->getArrayConsultaSql(
+            "SELECT Sad_Cod, Sol_Cod, Sad_Des, Sad_Adj, Sad_Fec, Usu_Cod
+             FROM adq_solicitudes_adjuntos
+             WHERE Sol_Cod = $sol_cod
+             ORDER BY Sad_Cod ASC;",
+            $this->conexion
+        );
+        return ($rows === false || $rows === null) ? array() : $rows;
+    }
+
+    public function sincronizarAdjuntosSolicitud($sol_cod, $adjuntos_nuevos = array(), $adjuntos_existentes = array(), $adj_eliminar = array()) {
+        $this->ensureSolicitudAdjuntosTable();
+        $sol_cod = intval($sol_cod);
+        $usu_cod = isset($_SESSION['Ses_Usu_Cod']) ? intval($_SESSION['Ses_Usu_Cod']) : 0;
+        $fecha = date('Y-m-d H:i:s');
+
+        if (!is_array($adj_eliminar)) {
+            $adj_eliminar = ($adj_eliminar === null || $adj_eliminar === '') ? array() : array($adj_eliminar);
+        }
+        foreach ($adj_eliminar as $sad_cod) {
+            $sad_cod = intval($sad_cod);
+            if ($sad_cod <= 0) {
+                continue;
+            }
+            $this->grabarv_registros(
+                "DELETE FROM adq_solicitudes_adjuntos WHERE Sad_Cod = $sad_cod AND Sol_Cod = $sol_cod;",
+                $this->conexion
+            );
+        }
+
+        if (!is_array($adjuntos_existentes)) {
+            $adjuntos_existentes = array();
+        }
+        foreach ($adjuntos_existentes as $sad_cod => $adj) {
+            $sad_cod = intval($sad_cod);
+            if ($sad_cod <= 0) {
+                continue;
+            }
+            $des = $this->escapeSql(isset($adj['Sad_Des']) ? trim($adj['Sad_Des']) : '');
+            $path = '';
+            if (!empty($adj['Sad_Adj'])) {
+                $path = trim((string)$adj['Sad_Adj']);
+            } elseif (!empty($adj['Sad_Adj_Keep'])) {
+                $path = is_array($adj['Sad_Adj_Keep']) ? trim((string)$adj['Sad_Adj_Keep'][0]) : trim((string)$adj['Sad_Adj_Keep']);
+            }
+            if ($path === '' || strpos($path, '..') !== false) {
+                continue;
+            }
+            $path_sql = $this->escapeSql($path);
+            $this->grabarv_registros(
+                "UPDATE adq_solicitudes_adjuntos
+                 SET Sad_Des = '$des', Sad_Adj = '$path_sql'
+                 WHERE Sad_Cod = $sad_cod AND Sol_Cod = $sol_cod;",
+                $this->conexion
+            );
+        }
+
+        if (!is_array($adjuntos_nuevos)) {
+            $adjuntos_nuevos = array();
+        }
+        foreach ($adjuntos_nuevos as $adj) {
+            $path = isset($adj['Sad_Adj']) ? trim((string)$adj['Sad_Adj']) : '';
+            if ($path === '' || strpos($path, '..') !== false) {
+                continue;
+            }
+            $des = $this->escapeSql(isset($adj['Sad_Des']) ? trim($adj['Sad_Des']) : '');
+            $path_sql = $this->escapeSql($path);
+            $usu_sql = $usu_cod > 0 ? $usu_cod : 'NULL';
+            if (!$this->grabarv_registros(
+                "INSERT INTO adq_solicitudes_adjuntos (Sol_Cod, Sad_Des, Sad_Adj, Sad_Fec, Usu_Cod)
+                 VALUES ($sol_cod, '$des', '$path_sql', '$fecha', $usu_sql);",
+                $this->conexion
+            )) {
+                throw new Exception('No se pudo guardar un adjunto PDF: ' . $this->getMsgError());
+            }
+        }
+    }
+
     /**
      * Normaliza requisitos efectivos de una solicitud (snapshot Sol_* con fallback al tipo).
      */
@@ -747,29 +1030,46 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 return intval($dep['Dep_Cod']);
             }
         }
-        $dep = $this->getRowConsultaSql(
-            "SELECT MIN(Dep_Cod) AS Dep_Cod FROM departamen WHERE Emp_Cod = $emp_cod AND Dep_Est = 'A';",
-            $this->conexion
-        );
-        return !empty($dep['Dep_Cod']) ? intval($dep['Dep_Cod']) : 0;
+        // Sin asignación de departamento: no inventar uno de la empresa
+        return 0;
     }
 
     /**
      * Inserta cabecera, detalle y cotizaciones. Deja la solicitud en estado Borrador (P).
      */
-    private function persistirSolicitudNueva($data, $items, $cotizaciones = array()) {
+    private function persistirSolicitudNueva($data, $items, $cotizaciones = array(), $adjuntos_nuevos = array()) {
         $this->ensureSdeIvaColumn();
         $this->ensureSolicitudRequisitosColumns();
+        $this->ensureSolicitudTituloColumn();
+        $this->ensureSolicitudAdjuntosTable();
+        $this->ensureDecisionValsTable();
         $fecha_actual = date('Y-m-d H:i:s');
         $usu_sol = isset($_SESSION['Ses_Usu_Cod']) ? intval($_SESSION['Ses_Usu_Cod']) : 0;
-        $dep_sol = $this->resolverDepSolicitante($data['Emp_Cod'], $usu_sol);
+        $dep_sol_cod = $this->resolverDepSolicitante($data['Emp_Cod'], $usu_sol);
+        if ($dep_sol_cod <= 0) {
+            throw new Exception('El usuario debe tener un departamento asignado para registrar la solicitud. Asigne el usuario a un departamento en Configuracion > Departamentos.');
+        }
+        $dep_sol = $dep_sol_cod;
+
+        $trq_cod = intval($data['Trq_Cod']);
+        $emp_cod = isset($data['Emp_Cod']) ? intval($data['Emp_Cod']) : (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0);
+        $wf_mgr = new wf_manager_log(isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null, $this->conexion);
+        if (!$wf_mgr->puedeUsuarioCrearTipoRequerimiento($trq_cod, $emp_cod, $usu_sol)) {
+            throw new Exception('No tiene permiso para crear solicitudes de este tipo. Verifique la asignacion del nodo Inicio del flujo.');
+        }
 
         $sol_num = $this->generarSiguienteSolNum($data['Emp_Cod'], $data['Suc_Cod']);
         $sol_num_sql = $this->escapeSql($sol_num);
+        $sol_tit = $this->escapeSql(isset($data['Sol_Tit']) ? trim($data['Sol_Tit']) : '');
+        if ($sol_tit === '') {
+            $sol_tit = 'Solicitud ' . $sol_num_sql;
+        }
 
-        $trq_cod = intval($data['Trq_Cod']);
         $sol_pri = $this->escapeSql($data['Sol_Pri']);
         $sol_val_est = floatval($data['Sol_Val_Est']);
+        if ($sol_val_est <= 0) {
+            throw new Exception('Debe ingresar un valor estimado mayor que cero.');
+        }
         $cdc_cod = !empty($data['Cdc_Cod']) ? "'" . $this->escapeSql($data['Cdc_Cod']) . "'" : 'NULL';
         $pry_cod = !empty($data['Pry_Cod']) ? intval($data['Pry_Cod']) : 'NULL';
         $prv_sug = !empty($data['Prv_Sug']) ? intval($data['Prv_Sug']) : 'NULL';
@@ -780,11 +1080,11 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         $sol_tiempo_sql = $req['Sol_Tiempo_Est'] !== null ? intval($req['Sol_Tiempo_Est']) : 'NULL';
 
         $sqlInsert = "INSERT INTO adq_solicitudes (
-                Emp_Cod, Suc_Cod, Trq_Cod, Sol_Num, Sol_Fec, Usu_Sol, Dep_Sol, Sol_Pri, Sol_Val_Est,
+                Emp_Cod, Suc_Cod, Trq_Cod, Sol_Num, Sol_Tit, Sol_Fec, Usu_Sol, Dep_Sol, Sol_Pri, Sol_Val_Est,
                 Cdc_Cod, Pry_Cod, Prv_Sug, Sol_Jus, Sol_Det, Sol_Est,
                 Sol_Req_Fac, Sol_Per_Cie, Sol_Req_Cot, Sol_Min_Cot, Sol_Req_Pre, Sol_Req_Adj, Sol_Req_Pro, Sol_Tiempo_Est
             ) VALUES (
-                $data[Emp_Cod], $data[Suc_Cod], $trq_cod, '$sol_num_sql', '$fecha_actual', $usu_sol, $dep_sol, '$sol_pri', $sol_val_est,
+                $data[Emp_Cod], $data[Suc_Cod], $trq_cod, '$sol_num_sql', '$sol_tit', '$fecha_actual', $usu_sol, $dep_sol, '$sol_pri', $sol_val_est,
                 $cdc_cod, $pry_cod, $prv_sug, '$sol_jus', '$sol_det', 'P',
                 {$req['Sol_Req_Fac']}, {$req['Sol_Per_Cie']}, {$req['Sol_Req_Cot']}, {$req['Sol_Min_Cot']},
                 {$req['Sol_Req_Pre']}, {$req['Sol_Req_Adj']}, {$req['Sol_Req_Pro']}, $sol_tiempo_sql
@@ -825,6 +1125,10 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             if (!$this->grabarv_registros($sqlCot, $this->conexion)) {
                 throw new Exception('No se pudo guardar una cotizacion: ' . $this->getMsgError());
             }
+        }
+
+        if (!empty($adjuntos_nuevos)) {
+            $this->sincronizarAdjuntosSolicitud($sol_cod, $adjuntos_nuevos);
         }
 
         return array('Sol_Cod' => $sol_cod, 'Num' => $sol_num, 'Trq_Cod' => $trq_cod);
@@ -1139,7 +1443,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             'Sav_Fac_Adj' => "ALTER TABLE adq_solicitudes_avances ADD COLUMN Sav_Fac_Adj VARCHAR(500) NULL AFTER Sav_Adj;",
             'Sav_Ret_Adj' => "ALTER TABLE adq_solicitudes_avances ADD COLUMN Sav_Ret_Adj VARCHAR(500) NULL AFTER Sav_Fac_Adj;",
             'Sav_Com_Adj' => "ALTER TABLE adq_solicitudes_avances ADD COLUMN Sav_Com_Adj VARCHAR(500) NULL AFTER Sav_Ret_Adj;",
-            'Sav_Cop_Cod' => "ALTER TABLE adq_solicitudes_avances ADD COLUMN Sav_Cop_Cod BIGINT NULL AFTER Sav_Com_Adj;"
+            'Sav_Cop_Cod' => "ALTER TABLE adq_solicitudes_avances ADD COLUMN Sav_Cop_Cod BIGINT NULL AFTER Sav_Com_Adj;",
+            'Sav_Isn_Cod' => "ALTER TABLE adq_solicitudes_avances ADD COLUMN Sav_Isn_Cod BIGINT NULL AFTER Nod_Cod;"
         );
         foreach ($cols as $col => $sqlAlt) {
             $row = $this->getRowConsultaSql(
@@ -1189,8 +1494,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         if (empty($row)) {
             return array('success' => false, 'message' => 'La solicitud no tiene un workflow activo.');
         }
-        if ($row['Nod_Tip'] !== 'AVANCE') {
-            return array('success' => false, 'message' => 'La etapa actual no es de avance.');
+        if ($row['Nod_Tip'] !== 'AVANCE' && $row['Nod_Tip'] !== 'FISCALIZACION') {
+            return array('success' => false, 'message' => 'La etapa actual no permite cargar facturas ni archivos.');
         }
         if (in_array($row['Sol_Est'], array('A', 'R'), true)) {
             return array('success' => false, 'message' => 'La solicitud ya fue finalizada.');
@@ -1305,6 +1610,106 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             'Descuento' => round($des, 2),
             'Ice' => round($imp_ice, 2),
             'Total' => round($total, 2)
+        );
+    }
+
+    /**
+     * Valida que la proforma ganadora, el valor del Paso 3 y la suma de las
+     * facturas registradas para la solicitud coincidan a nivel de centavos.
+     */
+    public function validarCoincidenciaTotalesFacturas($sol_cod) {
+        $this->ensureAvancesTable();
+        $sol_cod = intval($sol_cod);
+        if ($sol_cod <= 0) {
+            return array('success' => false, 'message' => 'Solicitud invalida para validar los totales.');
+        }
+
+        $facturas = $this->getArrayConsultaSql(
+            "SELECT DISTINCT Sav_Cop_Cod
+             FROM adq_solicitudes_avances
+             WHERE Sol_Cod = $sol_cod
+               AND Sav_Cop_Cod IS NOT NULL
+               AND Sav_Cop_Cod > 0
+             ORDER BY Sav_Cop_Cod ASC;",
+            $this->conexion
+        );
+        if (empty($facturas)) {
+            return array(
+                'success' => true,
+                'omitida' => true,
+                'message' => 'Validacion de totales omitida porque no existen facturas registradas.'
+            );
+        }
+
+        $sol = $this->getRowConsultaSql(
+            "SELECT Sol_Val_Est FROM adq_solicitudes WHERE Sol_Cod = $sol_cod LIMIT 1;",
+            $this->conexion
+        );
+        $cot = $this->getRowConsultaSql(
+            "SELECT Sco_Cod, Cot_Val
+             FROM adq_solicitudes_cotizaciones
+             WHERE Sol_Cod = $sol_cod AND Cot_Sel = 1
+             ORDER BY Sco_Cod ASC
+             LIMIT 1;",
+            $this->conexion
+        );
+        if (empty($cot['Sco_Cod'])) {
+            return array(
+                'success' => false,
+                'message' => 'No se puede finalizar: la solicitud no tiene una proforma ganadora seleccionada.'
+            );
+        }
+
+        $valor_paso3 = round(floatval(isset($sol['Sol_Val_Est']) ? $sol['Sol_Val_Est'] : 0), 2);
+        $valor_proforma = round(floatval($cot['Cot_Val']), 2);
+        if ($valor_paso3 <= 0 || $valor_proforma <= 0) {
+            return array(
+                'success' => false,
+                'message' => 'No se puede finalizar: la proforma ganadora y el valor estimado del Paso 3 deben ser mayores que cero.'
+            );
+        }
+        if (abs($valor_proforma - $valor_paso3) > 0.01) {
+            return array(
+                'success' => false,
+                'message' => 'Los valores no coinciden: la proforma ganadora es $ ' . number_format($valor_proforma, 2)
+                    . ' y el valor registrado en el Paso 3 es $ ' . number_format($valor_paso3, 2)
+                    . '. Corrija la solicitud antes de finalizar.'
+            );
+        }
+
+        $suma_facturas = 0;
+        $facturas_contadas = 0;
+        foreach ($facturas as $factura) {
+            $cop_cod = intval($factura['Sav_Cop_Cod']);
+            if ($cop_cod <= 0) {
+                continue;
+            }
+            $totales = $this->calcularTotalesCompraExa($cop_cod);
+            $suma_facturas += floatval($totales['Total']);
+            $facturas_contadas++;
+        }
+        $suma_facturas = round($suma_facturas, 2);
+        $diferencia = round($suma_facturas - $valor_proforma, 2);
+        if (abs($diferencia) > 0.01) {
+            return array(
+                'success' => false,
+                'message' => 'Los valores no coinciden. Total de la proforma ganadora y Paso 3: $ '
+                    . number_format($valor_proforma, 2)
+                    . '. Suma de las facturas: $ ' . number_format($suma_facturas, 2)
+                    . '. Diferencia: $ ' . number_format(abs($diferencia), 2) . '.',
+                'valor_esperado' => $valor_proforma,
+                'suma_facturas' => $suma_facturas,
+                'diferencia' => $diferencia,
+                'facturas' => $facturas_contadas
+            );
+        }
+
+        return array(
+            'success' => true,
+            'valor_esperado' => $valor_proforma,
+            'suma_facturas' => $suma_facturas,
+            'diferencia' => 0,
+            'facturas' => $facturas_contadas
         );
     }
 
@@ -1680,12 +2085,39 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             }
             $comentario = !empty($nums)
                 ? $this->escapeSql('Facturas registradas: ' . implode(', ', $nums))
-                : $this->escapeSql('Carga/actualizacion de documentos de avance.');
-            $this->grabarv_registros(
+                : $this->escapeSql('Carga/actualizacion de documentos de avance/fiscalizacion.');
+            $historial_guardado = $this->grabarv_registros(
                 "INSERT INTO wf_instancias_nodos (Ins_Cod, Nod_Cod, Usu_Cod, Dep_Cod, Isn_Acc, Isn_Com, Isn_Fec, Isn_Ip, Isn_Ses)
                  VALUES ({$auth['Ins_Cod']}, {$auth['Nod_Cod']}, $usu_cod, $dep_cod, 'AVANCE', '$comentario', '$fecha', '$ip', '$ses');",
                 $this->conexion
             );
+            if ($historial_guardado) {
+                $mov = $this->getRowConsultaSql(
+                    "SELECT Isn_Cod
+                     FROM wf_instancias_nodos
+                     WHERE Ins_Cod = {$auth['Ins_Cod']}
+                       AND Nod_Cod = {$auth['Nod_Cod']}
+                       AND Usu_Cod = $usu_cod
+                       AND Isn_Acc = 'AVANCE'
+                       AND Isn_Fec = '$fecha'
+                     ORDER BY Isn_Cod DESC
+                     LIMIT 1;",
+                    $this->conexion
+                );
+                $isn_cod = intval(isset($mov['Isn_Cod']) ? $mov['Isn_Cod'] : 0);
+                if ($isn_cod > 0) {
+                    $this->grabarv_registros(
+                        "UPDATE adq_solicitudes_avances
+                         SET Sav_Isn_Cod = $isn_cod
+                         WHERE Sol_Cod = $sol_cod
+                           AND Ins_Cod = {$auth['Ins_Cod']}
+                           AND Nod_Cod = {$auth['Nod_Cod']}
+                           AND Sav_Fec = '$fecha'
+                           AND (Sav_Isn_Cod IS NULL OR Sav_Isn_Cod = 0);",
+                        $this->conexion
+                    );
+                }
+            }
         } catch (Exception $e) {
             // Historial informativo.
         }
@@ -1715,6 +2147,9 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         if (empty($items['cnt'])) {
             $faltantes[] = 'Debe registrar al menos un articulo o servicio.';
         }
+        if (floatval(isset($sol['Sol_Val_Est']) ? $sol['Sol_Val_Est'] : 0) <= 0) {
+            $faltantes[] = 'Debe registrar un valor estimado mayor que cero.';
+        }
         $sol_jus_trim = trim($sol['Sol_Jus']);
         if ($sol_jus_trim === '') {
             $faltantes[] = 'Debe ingresar la justificacion de la solicitud.';
@@ -1732,7 +2167,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $validas = 0;
             $ganadora = false;
             foreach ($cots as $c) {
-                if (!empty($c['Prv_Cod']) && floatval($c['Cot_Val']) > 0 && $this->cotizacionTieneAdjunto($c['Cot_Adj'])) {
+                if (!empty($c['Prv_Cod']) && floatval($c['Cot_Val']) > 0) {
                     $validas++;
                 }
                 if (!empty($c['Cot_Sel'])) {
@@ -1740,9 +2175,19 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 }
             }
             if ($validas < $min_cot) {
-                $faltantes[] = "Se requieren al menos $min_cot cotizacion(es) con proveedor, monto y archivo PDF (tiene $validas). Puede guardar borrador y completarlas antes de enviar.";
+                $faltantes[] = "Se requieren al menos $min_cot cotizacion(es) con proveedor y monto (tiene $validas). El archivo PDF es opcional. Puede guardar borrador y completarlas antes de enviar.";
             } elseif (!$ganadora) {
                 $faltantes[] = 'Debe marcar cual cotizacion es la ganadora/seleccionada.';
+            }
+        }
+        if (intval($sol['Sol_Req_Adj']) === 1) {
+            $this->ensureSolicitudAdjuntosTable();
+            $adj_cnt = $this->getRowConsultaSql(
+                "SELECT COUNT(*) AS cnt FROM adq_solicitudes_adjuntos WHERE Sol_Cod = $sol_cod;",
+                $this->conexion
+            );
+            if (empty($adj_cnt['cnt'])) {
+                $faltantes[] = 'Debe cargar al menos un archivo PDF de soporte con su descripcion.';
             }
         }
         if (!empty($faltantes)) {
@@ -1763,8 +2208,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 if (!is_array($cot)) {
                     continue;
                 }
-                $cot_adj = isset($cot['Cot_Adj']) ? $cot['Cot_Adj'] : '';
-                if (!empty($cot['Prv_Cod']) && floatval($cot['Cot_Val']) > 0 && $this->cotizacionTieneAdjunto($cot_adj)) {
+                if (!empty($cot['Prv_Cod']) && floatval($cot['Cot_Val']) > 0) {
                     $validas++;
                 }
                 if (!empty($cot['Cot_Sel'])) {
@@ -1775,10 +2219,13 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         return array('validas' => $validas, 'ganadora' => $ganadora);
     }
 
-    private function validarRequisitosEnvioDesdePost($req, $data, $items, $cotizaciones, $cotizaciones_existentes = array()) {
+    private function validarRequisitosEnvioDesdePost($req, $data, $items, $cotizaciones, $cotizaciones_existentes = array(), $adjuntos_nuevos = array(), $adjuntos_existentes = array()) {
         $faltantes = array();
         if (empty($items)) {
             $faltantes[] = 'Debe registrar al menos un articulo o servicio.';
+        }
+        if (floatval(isset($data['Sol_Val_Est']) ? $data['Sol_Val_Est'] : 0) <= 0) {
+            $faltantes[] = 'Debe registrar un valor estimado mayor que cero.';
         }
         $sol_jus_post = trim(isset($data['Sol_Jus']) ? $data['Sol_Jus'] : '');
         if ($sol_jus_post === '') {
@@ -1793,9 +2240,29 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $validas = $resumen['validas'];
             $ganadora = $resumen['ganadora'];
             if ($validas < $min_cot) {
-                $faltantes[] = "Se requieren al menos $min_cot cotizacion(es) con proveedor, monto y archivo PDF (completas: $validas).";
+                $faltantes[] = "Se requieren al menos $min_cot cotizacion(es) con proveedor y monto (completas: $validas). El archivo PDF es opcional.";
             } elseif (!$ganadora) {
                 $faltantes[] = 'Debe marcar cual cotizacion es la ganadora/seleccionada.';
+            }
+        }
+        if (intval($req['Sol_Req_Adj']) === 1) {
+            $cnt_adj = 0;
+            if (is_array($adjuntos_nuevos)) {
+                foreach ($adjuntos_nuevos as $a) {
+                    if (!empty($a['Sad_Adj'])) {
+                        $cnt_adj++;
+                    }
+                }
+            }
+            if (is_array($adjuntos_existentes)) {
+                foreach ($adjuntos_existentes as $a) {
+                    if (!empty($a['Sad_Adj']) || !empty($a['Sad_Adj_Keep'])) {
+                        $cnt_adj++;
+                    }
+                }
+            }
+            if ($cnt_adj <= 0) {
+                $faltantes[] = 'Debe cargar al menos un archivo PDF de soporte con su descripcion.';
             }
         }
         if (!empty($faltantes)) {
@@ -1803,10 +2270,25 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         }
     }
 
-    public function obtenerBorradorParaEdicion($sol_cod, $emp_cod, $usu_sol) {
+    public function obtenerBorradorParaEdicion($sol_cod, $emp_cod, $usu_sol, $por_nodo = false) {
         $sol_cod = intval($sol_cod);
         $emp_cod = intval($emp_cod);
         $usu_sol = intval($usu_sol);
+        $filtro_permiso = "s.Usu_Sol = $usu_sol AND s.Sol_Est IN ('P', 'O')";
+        if ($por_nodo) {
+            $wf_mgr = new wf_manager_log(isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null, $this->conexion);
+            $ctx = $wf_mgr->resolverContextoUsuario($emp_cod);
+            $inst = $this->getRowConsultaSql(
+                "SELECT Ins_Cod FROM wf_instancias
+                 WHERE Ins_Ent_Typ = 'adq_solicitudes' AND Ins_Ent_Cod = $sol_cod AND Ins_Est = 'P'
+                 ORDER BY Ins_Cod DESC LIMIT 1;",
+                $this->conexion
+            );
+            if (empty($inst) || !$wf_mgr->puedeResolverInstancia(intval($inst['Ins_Cod']), $ctx['usu_cod'], $ctx['dep_cod'], $ctx['perfiles_ids'])) {
+                return array('success' => false, 'message' => 'La solicitud no está asignada a su usuario.');
+            }
+            $filtro_permiso = "s.Sol_Est = 'P'";
+        }
         $sol = $this->getRowConsultaSql(
             "SELECT s.*, tr.Trq_Des,
                     tr.Trq_Req_Fac, tr.Trq_Per_Cie, tr.Trq_Req_Cot, tr.Trq_Min_Cot,
@@ -1816,7 +2298,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
              INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
              LEFT JOIN proveedore pr ON pr.Prv_Cod = s.Prv_Sug
              LEFT JOIN persona per ON per.Prs_Cod = pr.Prs_Cod
-             WHERE s.Sol_Cod = $sol_cod AND s.Emp_Cod = $emp_cod AND s.Usu_Sol = $usu_sol AND s.Sol_Est IN ('P', 'O')
+             WHERE s.Sol_Cod = $sol_cod AND s.Emp_Cod = $emp_cod AND $filtro_permiso
              LIMIT 1;",
             $this->conexion
         );
@@ -1859,35 +2341,52 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             'solicitud' => $sol,
             'items' => ($items === false || $items === null) ? array() : $items,
             'cotizaciones' => ($cotizaciones === false || $cotizaciones === null) ? array() : $cotizaciones,
+            'adjuntos' => $this->listarAdjuntosSolicitud($sol_cod),
+            'decision_vals' => $this->listarDecisionVals($sol_cod),
             'prv_sug_text' => $prv_sug_text,
-            'modo_edicion' => ($sol['Sol_Est'] === 'O') ? 'observada' : 'borrador',
+            'modo_edicion' => $por_nodo ? 'completar_nodo' : (($sol['Sol_Est'] === 'O') ? 'observada' : 'borrador'),
             'ultima_observacion' => $this->obtenerUltimaObservacionWorkflow($sol_cod)
         );
     }
 
-    public function actualizarBorrador($sol_cod, $data, $items, $cotizaciones_nuevas = array(), $cotizaciones_existentes = array(), $cot_eliminar = array()) {
+    public function actualizarBorrador($sol_cod, $data, $items, $cotizaciones_nuevas = array(), $cotizaciones_existentes = array(), $cot_eliminar = array(), $adjuntos_nuevos = array(), $adjuntos_existentes = array(), $adj_eliminar = array()) {
         $emp_cod = intval($data['Emp_Cod']);
         $usu_sol = isset($_SESSION['Ses_Usu_Cod']) ? intval($_SESSION['Ses_Usu_Cod']) : 0;
         $this->ensureSolicitudRequisitosColumns();
-        $editable = $this->assertSolicitudEditablePorSolicitante($sol_cod, $emp_cod, $usu_sol, array('P', 'O'));
+        $this->ensureSolicitudTituloColumn();
+        $completar_nodo = !empty($data['_completar_nodo']);
+        if ($completar_nodo) {
+            $carga = $this->obtenerBorradorParaEdicion($sol_cod, $emp_cod, $usu_sol, true);
+            if (empty($carga['success'])) {
+                return array('success' => false, 'message' => isset($carga['message']) ? $carga['message'] : 'No puede completar esta solicitud.');
+            }
+            $editable = $carga['solicitud'];
+        } else {
+            $editable = $this->assertSolicitudEditablePorSolicitante($sol_cod, $emp_cod, $usu_sol, array('P', 'O'));
+        }
         $sol_cod = intval($editable['Sol_Cod']);
         $es_observada = ($editable['Sol_Est'] === 'O');
-        $trq_cod = $es_observada ? intval($editable['Trq_Cod']) : intval($data['Trq_Cod']);
+        $trq_cod = ($es_observada || $completar_nodo) ? intval($editable['Trq_Cod']) : intval($data['Trq_Cod']);
 
         $this->inicio_transaccion($this->conexion);
         try {
             $req = $this->construirRequisitosDesdePost($data, $trq_cod);
             $sol_pri = $this->escapeSql($data['Sol_Pri']);
             $sol_val_est = floatval($data['Sol_Val_Est']);
+            if ($sol_val_est <= 0) {
+                throw new Exception('Debe ingresar un valor estimado mayor que cero.');
+            }
             $cdc_cod = !empty($data['Cdc_Cod']) ? "'" . $this->escapeSql($data['Cdc_Cod']) . "'" : 'NULL';
             $pry_cod = !empty($data['Pry_Cod']) ? intval($data['Pry_Cod']) : 'NULL';
             $prv_sug = !empty($data['Prv_Sug']) ? intval($data['Prv_Sug']) : 'NULL';
             $sol_jus = $this->escapeSql($data['Sol_Jus']);
             $sol_det = $this->escapeSql(isset($data['Sol_Det']) ? $data['Sol_Det'] : '');
+            $sol_tit_src = isset($data['Sol_Tit']) ? trim($data['Sol_Tit']) : (isset($editable['Sol_Tit']) ? $editable['Sol_Tit'] : '');
+            $sol_tit = $this->escapeSql($sol_tit_src);
             $sol_tiempo_sql = $req['Sol_Tiempo_Est'] !== null ? intval($req['Sol_Tiempo_Est']) : 'NULL';
 
             $sqlUpd = "UPDATE adq_solicitudes SET
-                Trq_Cod = $trq_cod, Sol_Pri = '$sol_pri', Sol_Val_Est = $sol_val_est,
+                Trq_Cod = $trq_cod, Sol_Tit = '$sol_tit', Sol_Pri = '$sol_pri', Sol_Val_Est = $sol_val_est,
                 Cdc_Cod = $cdc_cod, Pry_Cod = $pry_cod, Prv_Sug = $prv_sug,
                 Sol_Jus = '$sol_jus', Sol_Det = '$sol_det',
                 Sol_Req_Fac = {$req['Sol_Req_Fac']}, Sol_Per_Cie = {$req['Sol_Per_Cie']},
@@ -1901,8 +2400,25 @@ class adq_adquisiciones_log extends MysqlDatosContab {
 
             $this->guardarDetalleSolicitud($sol_cod, $items);
             $this->sincronizarCotizacionesBorrador($sol_cod, $cotizaciones_nuevas, $cotizaciones_existentes, $cot_eliminar);
+            $this->sincronizarAdjuntosSolicitud($sol_cod, $adjuntos_nuevos, $adjuntos_existentes, $adj_eliminar);
 
-            if (!$es_observada && $trq_cod > 0) {
+            $decision_vals = $this->extraerDecisionValsDesdePost($data);
+            // El valor estimado de ítems / prioridad del formulario prevalecen sobre lo capturado antes.
+            if (isset($data['Sol_Val_Est']) && $data['Sol_Val_Est'] !== '') {
+                $decision_vals['Sol_Val_Est'] = (string)$data['Sol_Val_Est'];
+            }
+            if (!empty($data['Sol_Pri'])) {
+                $decision_vals['Sol_Pri'] = $data['Sol_Pri'];
+            }
+            if (isset($data['Sol_Tiempo_Est']) && $data['Sol_Tiempo_Est'] !== '') {
+                $decision_vals['Sol_Tiempo_Est'] = (string)$data['Sol_Tiempo_Est'];
+            }
+            $this->validarDecisionValsObligatorios($trq_cod, $emp_cod, $decision_vals);
+            if (!empty($decision_vals)) {
+                $this->guardarDecisionVals($sol_cod, $decision_vals);
+            }
+
+            if (!$es_observada && !$completar_nodo && $trq_cod > 0) {
                 $this->activarWorkflowEnBorrador($sol_cod, $trq_cod);
             }
 
@@ -1969,17 +2485,105 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         return $wf_res;
     }
 
+    public function registrarSolicitudCorta($data) {
+        try {
+            $titulo = trim(isset($data['Sol_Tit']) ? $data['Sol_Tit'] : '');
+            $trq_cod = intval(isset($data['Trq_Cod']) ? $data['Trq_Cod'] : 0);
+            if ($titulo === '' || $trq_cod <= 0) {
+                throw new Exception('El nombre y el tipo de requerimiento son obligatorios.');
+            }
+            $emp_cod = isset($data['Emp_Cod']) ? intval($data['Emp_Cod']) : (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0);
+            $decision_vals = $this->extraerDecisionValsDesdePost($data);
+            $this->validarDecisionValsObligatorios($trq_cod, $emp_cod, $decision_vals);
+
+            $data['Sol_Tit'] = $titulo;
+            $data['Sol_Pri'] = (!empty($decision_vals['Sol_Pri'])) ? $decision_vals['Sol_Pri'] : 'MEDIA';
+            $data['Sol_Val_Est'] = isset($decision_vals['Sol_Val_Est']) ? floatval($decision_vals['Sol_Val_Est']) : 0;
+            if ($data['Sol_Val_Est'] <= 0) {
+                throw new Exception('Debe ingresar un valor estimado mayor que cero.');
+            }
+            if (isset($decision_vals['Sol_Tiempo_Est']) && $decision_vals['Sol_Tiempo_Est'] !== '') {
+                $data['Sol_Tiempo_Est'] = intval($decision_vals['Sol_Tiempo_Est']);
+            }
+            $data['Sol_Jus'] = '';
+            $data['Sol_Det'] = '';
+            $data['Cdc_Cod'] = '';
+            $data['Pry_Cod'] = '';
+            $data['Prv_Sug'] = '';
+
+            $this->inicio_transaccion($this->conexion);
+            $item_estimado = array(
+                'Sde_Des' => 'Monto estimado',
+                'Sde_Can' => 1,
+                'Sde_Pru' => $data['Sol_Val_Est'],
+                'Sde_Iva' => 0,
+                'Pro_Cod' => ''
+            );
+            $resultado = $this->persistirSolicitudNueva($data, array($item_estimado), array());
+            if (!empty($decision_vals)) {
+                $this->guardarDecisionVals($resultado['Sol_Cod'], $decision_vals);
+            }
+            $this->activarWorkflowEnBorrador($resultado['Sol_Cod'], $resultado['Trq_Cod'], 'Solicitud registrada; pendiente de completar en la primera etapa.');
+            $this->commit_nomsn($this->conexion);
+            return array('success' => true, 'Sol_Cod' => $resultado['Sol_Cod'], 'Num' => $resultado['Num']);
+        } catch (Exception $e) {
+            $this->rollBack_nomsn($this->conexion);
+            return array('success' => false, 'message' => $e->getMessage());
+        }
+    }
+
+    public function completarSolicitudNodo($data, $items, $cotizaciones = array(), $cotizaciones_existentes = array(), $cot_eliminar = array(), $adjuntos_nuevos = array(), $adjuntos_existentes = array(), $adj_eliminar = array()) {
+        $sol_cod = intval(isset($data['Sol_Cod']) ? $data['Sol_Cod'] : 0);
+        if ($sol_cod <= 0) {
+            return array('success' => false, 'message' => 'Solicitud inválida.');
+        }
+        $data['_completar_nodo'] = 1;
+        $upd = $this->actualizarBorrador($sol_cod, $data, $items, $cotizaciones, $cotizaciones_existentes, $cot_eliminar, $adjuntos_nuevos, $adjuntos_existentes, $adj_eliminar);
+        if (empty($upd['success'])) {
+            return $upd;
+        }
+        try {
+            $validacion = $this->validarRequisitosParaEnvio($sol_cod);
+            if (empty($validacion['success'])) {
+                return $validacion;
+            }
+            $inst = $this->getRowConsultaSql(
+                "SELECT Ins_Cod, Nod_Act FROM wf_instancias
+                 WHERE Ins_Ent_Typ = 'adq_solicitudes' AND Ins_Ent_Cod = $sol_cod AND Ins_Est = 'P'
+                 ORDER BY Ins_Cod DESC LIMIT 1;",
+                $this->conexion
+            );
+            if (empty($inst)) {
+                throw new Exception('No se encontró la instancia activa de la solicitud.');
+            }
+            $this->inicio_transaccion($this->conexion);
+            if (!$this->grabarv_registros("UPDATE adq_solicitudes SET Sol_Est = 'E' WHERE Sol_Cod = $sol_cod;", $this->conexion)) {
+                throw new Exception('No se pudo activar la solicitud.');
+            }
+            $wf_mgr = new wf_manager_log(isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null, $this->conexion);
+            $avance = $wf_mgr->avanzarSiguientePaso(intval($inst['Ins_Cod']), intval($inst['Nod_Act']), 'COMPLETAR', 'Formulario completo registrado por el responsable de la primera etapa.');
+            if (!$avance) {
+                throw new Exception('La solicitud se guardó, pero no pudo avanzar al siguiente nodo.');
+            }
+            $this->commit_nomsn($this->conexion);
+            return array('success' => true, 'Sol_Cod' => $sol_cod, 'Num' => $upd['Num']);
+        } catch (Exception $e) {
+            $this->rollBack_nomsn($this->conexion);
+            return array('success' => false, 'message' => $e->getMessage());
+        }
+    }
+
     /**
      * Guarda la solicitud como borrador e inicia el workflow si hay tipo/flujo seleccionado.
      */
-    public function guardarBorrador($data, $items, $cotizaciones = array(), $cotizaciones_existentes = array(), $cot_eliminar = array()) {
+    public function guardarBorrador($data, $items, $cotizaciones = array(), $cotizaciones_existentes = array(), $cot_eliminar = array(), $adjuntos_nuevos = array(), $adjuntos_existentes = array(), $adj_eliminar = array()) {
         $sol_cod_edit = !empty($data['Sol_Cod']) ? intval($data['Sol_Cod']) : 0;
         if ($sol_cod_edit > 0) {
-            return $this->actualizarBorrador($sol_cod_edit, $data, $items, $cotizaciones, $cotizaciones_existentes, $cot_eliminar);
+            return $this->actualizarBorrador($sol_cod_edit, $data, $items, $cotizaciones, $cotizaciones_existentes, $cot_eliminar, $adjuntos_nuevos, $adjuntos_existentes, $adj_eliminar);
         }
         $this->inicio_transaccion($this->conexion);
         try {
-            $resultado = $this->persistirSolicitudNueva($data, $items, $cotizaciones);
+            $resultado = $this->persistirSolicitudNueva($data, $items, $cotizaciones, $adjuntos_nuevos);
             if (!empty($resultado['Trq_Cod'])) {
                 $this->activarWorkflowEnBorrador($resultado['Sol_Cod'], intval($resultado['Trq_Cod']));
             }
@@ -1999,11 +2603,11 @@ class adq_adquisiciones_log extends MysqlDatosContab {
     /**
      * Guarda una solicitud de adquisición e inicia su respectivo workflow.
      */
-    public function guardarSolicitud($data, $items, $cotizaciones = array(), $cotizaciones_existentes = array(), $cot_eliminar = array()) {
+    public function guardarSolicitud($data, $items, $cotizaciones = array(), $cotizaciones_existentes = array(), $cot_eliminar = array(), $adjuntos_nuevos = array(), $adjuntos_existentes = array(), $adj_eliminar = array()) {
         try {
             $sol_cod_edit = !empty($data['Sol_Cod']) ? intval($data['Sol_Cod']) : 0;
             if ($sol_cod_edit > 0) {
-                $upd = $this->actualizarBorrador($sol_cod_edit, $data, $items, $cotizaciones, $cotizaciones_existentes, $cot_eliminar);
+                $upd = $this->actualizarBorrador($sol_cod_edit, $data, $items, $cotizaciones, $cotizaciones_existentes, $cot_eliminar, $adjuntos_nuevos, $adjuntos_existentes, $adj_eliminar);
                 if (!$upd['success']) {
                     return $upd;
                 }
@@ -2023,10 +2627,10 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             }
 
             $req = $this->construirRequisitosDesdePost($data, intval($data['Trq_Cod']));
-            $this->validarRequisitosEnvioDesdePost($req, $data, $items, $cotizaciones, $cotizaciones_existentes);
+            $this->validarRequisitosEnvioDesdePost($req, $data, $items, $cotizaciones, $cotizaciones_existentes, $adjuntos_nuevos, $adjuntos_existentes);
 
             $this->inicio_transaccion($this->conexion);
-            $resultado = $this->persistirSolicitudNueva($data, $items, $cotizaciones);
+            $resultado = $this->persistirSolicitudNueva($data, $items, $cotizaciones, $adjuntos_nuevos);
             $sol_cod = $resultado['Sol_Cod'];
             $this->iniciarWorkflowBorrador($sol_cod, $resultado['Trq_Cod']);
             $this->commit_nomsn($this->conexion);
@@ -2455,9 +3059,9 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 }
             }
 
-            if ($nod_tip === 'AVANCE') {
+            if ($nod_tip === 'AVANCE' || $nod_tip === 'FISCALIZACION') {
                 $avances = $this->getArrayConsultaSql(
-                    "SELECT Sav_Fac_Adj, Sav_Ret_Adj, Sav_Com_Adj, Sav_Adj
+                    "SELECT Sav_Des, Sav_Cop_Cod, Sav_Fac_Adj, Sav_Ret_Adj, Sav_Com_Adj, Sav_Adj
                      FROM adq_solicitudes_avances
                      WHERE Sol_Cod = " . intval($sol_cod) . " AND Nod_Cod = $nod_cod
                      ORDER BY Sav_Fec ASC, Sav_Cod ASC;",
@@ -2465,10 +3069,11 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 );
                 if (!empty($avances)) {
                     foreach ($avances as $av) {
-                        $this->agregarPdfSeccionExpediente($documentos, $vistos, $vistos_global, isset($av['Sav_Fac_Adj']) ? $av['Sav_Fac_Adj'] : '', 'Factura');
-                        $this->agregarPdfSeccionExpediente($documentos, $vistos, $vistos_global, isset($av['Sav_Ret_Adj']) ? $av['Sav_Ret_Adj'] : '', 'Retencion');
-                        $this->agregarPdfSeccionExpediente($documentos, $vistos, $vistos_global, isset($av['Sav_Com_Adj']) ? $av['Sav_Com_Adj'] : '', 'Comprobante');
-                        $this->agregarPdfSeccionExpediente($documentos, $vistos, $vistos_global, isset($av['Sav_Adj']) ? $av['Sav_Adj'] : '', 'Documento');
+                        $titulo_doc = (!empty($av['Sav_Des']) && empty($av['Sav_Cop_Cod'])) ? trim($av['Sav_Des']) : '';
+                        $this->agregarPdfSeccionExpediente($documentos, $vistos, $vistos_global, isset($av['Sav_Fac_Adj']) ? $av['Sav_Fac_Adj'] : '', $titulo_doc !== '' ? $titulo_doc : 'Factura');
+                        $this->agregarPdfSeccionExpediente($documentos, $vistos, $vistos_global, isset($av['Sav_Ret_Adj']) ? $av['Sav_Ret_Adj'] : '', $titulo_doc !== '' ? $titulo_doc : 'Retencion');
+                        $this->agregarPdfSeccionExpediente($documentos, $vistos, $vistos_global, isset($av['Sav_Com_Adj']) ? $av['Sav_Com_Adj'] : '', $titulo_doc !== '' ? $titulo_doc : 'Comprobante');
+                        $this->agregarPdfSeccionExpediente($documentos, $vistos, $vistos_global, isset($av['Sav_Adj']) ? $av['Sav_Adj'] : '', $titulo_doc !== '' ? $titulo_doc : 'Documento');
                     }
                 }
             }
@@ -2499,6 +3104,201 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         }
 
         return array('meta' => $meta, 'secciones' => $secciones);
+    }
+
+    private function slugNombreZip($texto) {
+        $texto = trim((string)$texto);
+        if ($texto === '') {
+            return 'documento';
+        }
+        if (function_exists('iconv')) {
+            $conv = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $texto);
+            if ($conv !== false && $conv !== null) {
+                $texto = $conv;
+            }
+        }
+        $texto = preg_replace('/[^A-Za-z0-9_\-]+/', '_', $texto);
+        $texto = trim($texto, '_');
+        if ($texto === '') {
+            $texto = 'documento';
+        }
+        return substr($texto, 0, 80);
+    }
+
+    private function agregarEntradaZipDocumentos(&$items, &$vistos, &$nombres_zip, $ruta_relativa, $carpeta, $etiqueta) {
+        $ruta_relativa = trim((string)$ruta_relativa);
+        if ($ruta_relativa === '' || strpos($ruta_relativa, '..') !== false) {
+            return;
+        }
+        $abs = $this->rutaAbsolutaData($ruta_relativa);
+        if ($abs === '' || !is_file($abs) || isset($vistos[$abs])) {
+            return;
+        }
+        $vistos[$abs] = true;
+
+        $ext = strtolower(pathinfo($abs, PATHINFO_EXTENSION));
+        $base = $this->slugNombreZip($etiqueta !== '' ? $etiqueta : pathinfo($abs, PATHINFO_FILENAME));
+        $nombre = $base . ($ext !== '' ? ('.' . $ext) : '');
+        $carpeta = trim(str_replace(array('\\', '..'), array('/', ''), (string)$carpeta), '/');
+        if ($carpeta === '') {
+            $carpeta = 'documentos';
+        }
+        $zip_name = $carpeta . '/' . $nombre;
+        $n = 2;
+        while (isset($nombres_zip[$zip_name])) {
+            $zip_name = $carpeta . '/' . $base . '_' . $n . ($ext !== '' ? ('.' . $ext) : '');
+            $n++;
+        }
+        $nombres_zip[$zip_name] = true;
+        $items[] = array(
+            'abs' => $abs,
+            'zip' => $zip_name
+        );
+    }
+
+    /**
+     * Genera un ZIP con todos los documentos cargados en los procesos de la solicitud.
+     */
+    public function generarZipDocumentosSolicitud($sol_cod) {
+        if (!class_exists('ZipArchive')) {
+            return array('success' => false, 'message' => 'La extension ZipArchive no esta disponible en el servidor.');
+        }
+
+        $sol_cod = intval($sol_cod);
+        if ($sol_cod <= 0) {
+            return array('success' => false, 'message' => 'Solicitud invalida.');
+        }
+
+        $sol = $this->getRowConsultaSql(
+            "SELECT s.Sol_Cod, s.Sol_Num, s.Emp_Cod,
+                    i.Ins_Cod
+             FROM adq_solicitudes s
+             LEFT JOIN wf_instancias i ON i.Ins_Cod = (
+                SELECT MAX(i2.Ins_Cod)
+                FROM wf_instancias i2
+                WHERE i2.Ins_Ent_Typ = 'adq_solicitudes' AND i2.Ins_Ent_Cod = s.Sol_Cod
+             )
+             WHERE s.Sol_Cod = $sol_cod
+             LIMIT 1;",
+            $this->conexion
+        );
+        if (empty($sol)) {
+            return array('success' => false, 'message' => 'No se encontro la solicitud.');
+        }
+
+        $ins_cod = !empty($sol['Ins_Cod']) ? intval($sol['Ins_Cod']) : 0;
+        $data = $this->recolectarSeccionesExpedienteSolicitud($sol_cod, $ins_cod);
+        $secciones = isset($data['secciones']) ? $data['secciones'] : array();
+
+        $items = array();
+        $vistos = array();
+        $nombres_zip = array();
+
+        $num = 1;
+        foreach ($secciones as $sec) {
+            $titulo = !empty($sec['titulo']) ? $sec['titulo'] : ('Proceso_' . $num);
+            $carpeta = sprintf('%02d_%s', $num, $this->slugNombreZip($titulo));
+            if (!empty($sec['documentos']) && is_array($sec['documentos'])) {
+                foreach ($sec['documentos'] as $doc) {
+                    $rel = isset($doc['rel']) ? $doc['rel'] : '';
+                    $eti = isset($doc['etiqueta']) ? $doc['etiqueta'] : 'Documento';
+                    $this->agregarEntradaZipDocumentos($items, $vistos, $nombres_zip, $rel, $carpeta, $eti);
+                }
+            }
+            $num++;
+        }
+
+        // Incluir archivos no-PDF u omitidos: historial enriquecido + soportes iniciales.
+        if ($ins_cod > 0) {
+            $historial = $this->getArrayConsultaSql(
+                "SELECT h.*, COALESCE(n.Nod_Nom, CONCAT('Nodo #', h.Nod_Cod)) AS Nod_Nom
+                 FROM wf_instancias_nodos h
+                 LEFT JOIN wf_nodos n ON n.Nod_Cod = h.Nod_Cod
+                 WHERE h.Ins_Cod = $ins_cod
+                 ORDER BY h.Isn_Fec ASC, h.Isn_Cod ASC;",
+                $this->conexion
+            );
+            if ($historial === false || $historial === null) {
+                $historial = array();
+            }
+            $historial = $this->enriquecerHistorialConArchivos($historial, $sol_cod);
+            foreach ($historial as $h) {
+                $titulo = !empty($h['Nod_Nom']) ? $h['Nod_Nom'] : 'Proceso';
+                $carpeta = 'extra_' . $this->slugNombreZip($titulo);
+                if (!empty($h['archivos']) && is_array($h['archivos'])) {
+                    foreach ($h['archivos'] as $arch) {
+                        if (empty($arch['path'])) {
+                            continue;
+                        }
+                        $eti = !empty($arch['label']) ? $arch['label'] : 'Archivo';
+                        $this->agregarEntradaZipDocumentos($items, $vistos, $nombres_zip, $arch['path'], $carpeta, $eti);
+                    }
+                }
+                if (!empty($h['facturas']) && is_array($h['facturas'])) {
+                    foreach ($h['facturas'] as $f) {
+                        $ruta_fac = '';
+                        if (!empty($f['path'])) {
+                            $ruta_fac = $f['path'];
+                        } elseif (!empty($f['link'])) {
+                            $link = str_replace('\\', '/', (string)$f['link']);
+                            if (preg_match('#(?:^|/)DATA/(.+)$#i', $link, $m)) {
+                                $ruta_fac = $m[1];
+                            }
+                        }
+                        if ($ruta_fac === '') {
+                            continue;
+                        }
+                        $eti = 'Factura_' . (!empty($f['numero']) ? $f['numero'] : 'doc');
+                        $this->agregarEntradaZipDocumentos($items, $vistos, $nombres_zip, $ruta_fac, $carpeta, $eti);
+                    }
+                }
+            }
+        }
+
+        $adjuntos = $this->listarAdjuntosSolicitud($sol_cod);
+        foreach ($adjuntos as $adj) {
+            if (empty($adj['Sad_Adj'])) {
+                continue;
+            }
+            $eti = !empty($adj['Sad_Des']) ? $adj['Sad_Des'] : 'Soporte';
+            $this->agregarEntradaZipDocumentos($items, $vistos, $nombres_zip, $adj['Sad_Adj'], '00_Soportes_solicitud', $eti);
+        }
+
+        if (empty($items)) {
+            return array('success' => false, 'message' => 'No hay documentos cargados en los procesos de esta solicitud.');
+        }
+
+        $tmp = tempnam(sys_get_temp_dir(), 'adq_zip_');
+        if ($tmp === false) {
+            return array('success' => false, 'message' => 'No se pudo crear el archivo temporal.');
+        }
+        $ruta_zip = $tmp . '.zip';
+        @unlink($tmp);
+
+        $zip = new ZipArchive();
+        if ($zip->open($ruta_zip, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            return array('success' => false, 'message' => 'No se pudo crear el archivo ZIP.');
+        }
+
+        foreach ($items as $it) {
+            $zip->addFile($it['abs'], $it['zip']);
+        }
+        $zip->close();
+
+        if (!is_file($ruta_zip) || filesize($ruta_zip) <= 0) {
+            @unlink($ruta_zip);
+            return array('success' => false, 'message' => 'El ZIP generado esta vacio.');
+        }
+
+        $sol_num = !empty($sol['Sol_Num']) ? $sol['Sol_Num'] : ('SOL-' . $sol_cod);
+        $filename = 'documentos_' . $this->slugSolNumArchivo($sol_num) . '.zip';
+
+        return array(
+            'success' => true,
+            'path' => $ruta_zip,
+            'filename' => $filename,
+            'total' => count($items)
+        );
     }
 
     private function coloresExpedientePdf() {
@@ -2862,6 +3662,160 @@ class adq_adquisiciones_log extends MysqlDatosContab {
     }
 
     /**
+     * Carga mPDF y los parsers FPDI necesarios para importar paginas.
+     */
+    private function cargarMpdfConImport() {
+        if (!class_exists('mPDF')) {
+            include_once(dirname(__FILE__) . '/../../Librerias/MPDF57/mpdf.php');
+        }
+        $probe = new mPDF('c', 'A4', '', '', 0, 0, 0, 0, 0, 0);
+        $probe->SetImportUse();
+        return $probe;
+    }
+
+    /**
+     * Cuenta paginas importables sin llamar a mPDF::Error() (que hace die).
+     * Evita el fallo "Unable to find xref table".
+     */
+    private function contarPaginasImportablesMpdf($ruta) {
+        $ruta = trim((string)$ruta);
+        if ($ruta === '' || !is_file($ruta) || filesize($ruta) < 8) {
+            return 0;
+        }
+        $fh = @fopen($ruta, 'rb');
+        if (!$fh) {
+            return 0;
+        }
+        $cab = fread($fh, 5);
+        fclose($fh);
+        if ($cab !== '%PDF-') {
+            return 0;
+        }
+
+        $probe = $this->cargarMpdfConImport();
+        $parser = new fpdi_pdf_parser($ruta, $probe);
+        if (empty($parser->success)) {
+            return 0;
+        }
+        $n = method_exists($parser, 'getPageCount') ? intval($parser->getPageCount()) : 0;
+        return $n > 0 ? $n : 0;
+    }
+
+    private function resolverBinarioGhostscript() {
+        static $cache = false;
+        if ($cache !== false) {
+            return $cache;
+        }
+        $cache = '';
+        $candidatos = array('gswin64c', 'gswin32c', 'gs');
+        $gsRoot = 'C:\\Program Files\\gs';
+        if (is_dir($gsRoot)) {
+            $dirs = @scandir($gsRoot);
+            if (is_array($dirs)) {
+                rsort($dirs);
+                foreach ($dirs as $d) {
+                    if ($d === '.' || $d === '..') {
+                        continue;
+                    }
+                    $exe64 = $gsRoot . '\\' . $d . '\\bin\\gswin64c.exe';
+                    $exe32 = $gsRoot . '\\' . $d . '\\bin\\gswin32c.exe';
+                    if (is_file($exe64)) {
+                        $candidatos[] = $exe64;
+                    }
+                    if (is_file($exe32)) {
+                        $candidatos[] = $exe32;
+                    }
+                }
+            }
+        }
+        foreach ($candidatos as $bin) {
+            $cmd = '"' . str_replace('"', '', $bin) . '" -v';
+            $out = @shell_exec($cmd . ' 2>&1');
+            if (is_string($out) && stripos($out, 'Ghostscript') !== false) {
+                $cache = $bin;
+                return $cache;
+            }
+        }
+        return $cache;
+    }
+
+    /**
+     * Reescribe el PDF a compatibilidad 1.4 (soportada por FPDI/mPDF 5.7).
+     */
+    private function convertirPdfConGhostscript($ruta_origen) {
+        $gs = $this->resolverBinarioGhostscript();
+        if ($gs === '') {
+            return '';
+        }
+        $tmp = tempnam(sys_get_temp_dir(), 'adq_gs_');
+        if ($tmp === false) {
+            return '';
+        }
+        $ruta_out = $tmp . '.pdf';
+        @unlink($tmp);
+
+        $cmd = '"' . str_replace('"', '', $gs) . '"'
+            . ' -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/prepress'
+            . ' -dNOPAUSE -dQUIET -dBATCH -dDetectDuplicateImages=true'
+            . ' -sOutputFile=' . escapeshellarg($ruta_out)
+            . ' ' . escapeshellarg($ruta_origen)
+            . ' 2>&1';
+        @shell_exec($cmd);
+
+        if (!is_file($ruta_out) || filesize($ruta_out) < 8) {
+            @unlink($ruta_out);
+            return '';
+        }
+        return $ruta_out;
+    }
+
+    private function generarPdfPlaceholderNoImportable($ruta_origen) {
+        $nombre = basename((string)$ruta_origen);
+        $html = '<div style="font-family:dejavusans,helvetica,arial,sans-serif;padding:24px;">'
+            . '<h2 style="color:#b91c1c;margin:0 0 12px 0;font-size:16px;">Documento no incluido en la union</h2>'
+            . '<p style="font-size:12px;color:#334155;line-height:1.5;">'
+            . 'El archivo <strong>' . $this->htmlEscExpediente($nombre) . '</strong> '
+            . 'no pudo importarse (formato PDF incompatible con el motor de union, cifrado o danado).'
+            . '</p>'
+            . '<p style="font-size:11px;color:#64748b;">Descargue el documento original desde la solicitud e incorporelo manualmente si es necesario.</p>'
+            . '</div>';
+        return $this->generarPdfHtmlTemporal($html, array(
+            'title' => 'Documento no importable',
+            'author' => 'Adquisiciones'
+        ));
+    }
+
+    /**
+     * Garantiza un PDF legible por mPDF/FPDI. Si falla, convierte o genera placeholder.
+     */
+    private function asegurarPdfImportableExpediente($ruta_origen, &$tmp_generados) {
+        $ruta_origen = trim((string)$ruta_origen);
+        if ($ruta_origen === '' || !is_file($ruta_origen)) {
+            return '';
+        }
+        if ($this->contarPaginasImportablesMpdf($ruta_origen) > 0) {
+            return $ruta_origen;
+        }
+
+        $convertido = $this->convertirPdfConGhostscript($ruta_origen);
+        if ($convertido !== '' && is_file($convertido)) {
+            $tmp_generados[] = $convertido;
+            if ($this->contarPaginasImportablesMpdf($convertido) > 0) {
+                return $convertido;
+            }
+            @unlink($convertido);
+            array_pop($tmp_generados);
+        }
+
+        $placeholder = $this->generarPdfPlaceholderNoImportable($ruta_origen);
+        if ($placeholder !== '' && is_file($placeholder)) {
+            $tmp_generados[] = $placeholder;
+            return $placeholder;
+        }
+        return '';
+    }
+
+    /**
      * Genera un PDF temporal solo con las paginas que tienen contenido visible.
      */
     private function filtrarPaginasBlancasPdf($ruta_origen) {
@@ -2873,16 +3827,21 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             return '';
         }
 
+        // No usar SetSourceFile si FPDI no puede leer el PDF (mPDF hace die()).
+        if ($this->contarPaginasImportablesMpdf($ruta_origen) <= 0) {
+            return $ruta_origen;
+        }
+
         $lector = new mPDF('c', 'A4', '', '', 0, 0, 0, 0, 0, 0);
         $lector->SetImportUse();
         $total = 0;
         try {
             $total = intval($lector->SetSourceFile($ruta_origen));
         } catch (Exception $e) {
-            return '';
+            return $ruta_origen;
         }
         if ($total <= 0) {
-            return '';
+            return $ruta_origen;
         }
 
         $paginas_validas = array();
@@ -2900,6 +3859,10 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             return $ruta_origen;
         }
         if (count($paginas_validas) === $total) {
+            return $ruta_origen;
+        }
+
+        if ($this->contarPaginasImportablesMpdf($ruta_origen) <= 0) {
             return $ruta_origen;
         }
 
@@ -2942,11 +3905,15 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         if ($ruta_origen === '' || !is_file($ruta_origen)) {
             return '';
         }
-        $filtrado = $this->filtrarPaginasBlancasPdf($ruta_origen);
+        $importable = $this->asegurarPdfImportableExpediente($ruta_origen, $tmp_generados);
+        if ($importable === '') {
+            return '';
+        }
+        $filtrado = $this->filtrarPaginasBlancasPdf($importable);
         if ($filtrado === '') {
             return '';
         }
-        if ($filtrado !== $ruta_origen) {
+        if ($filtrado !== $ruta_origen && $filtrado !== $importable) {
             $tmp_generados[] = $filtrado;
         }
         return $filtrado;
@@ -2978,6 +3945,10 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 $titulo = '';
             }
             if ($archivo === '' || !is_file($archivo)) {
+                continue;
+            }
+            // Evitar mPDF::Error()/die por PDFs con xref incompatible.
+            if ($this->contarPaginasImportablesMpdf($archivo) <= 0) {
                 continue;
             }
             $pagecount = 0;

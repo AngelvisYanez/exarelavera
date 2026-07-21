@@ -255,6 +255,9 @@ function adq_render_historial_badge($h) {
     if (!empty($h['Fin_Pendiente'])) {
         $actionBadge = $mk('Pendiente cierre', '#0284c7');
         $itemClass = 'active';
+    } elseif (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'DECISION') {
+        $actionBadge = $mk('Decisi&oacute;n', '#d97706');
+        $itemClass = 'warning';
     } elseif (!empty($h['Pendiente_Aprobacion']) || $h['Isn_Acc'] === 'PENDIENTE') {
         $pendTxt = 'Pendiente de aprobaci&oacute;n';
         if (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'TAREA') {
@@ -263,6 +266,8 @@ function adq_render_historial_badge($h) {
             $pendTxt = 'Pendiente cierre';
         } elseif (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'AVANCE') {
             $pendTxt = 'Pendiente de avance';
+        } elseif (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'FISCALIZACION') {
+            $pendTxt = 'Pendiente de fiscalizaci&oacute;n';
         } elseif (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'FACTURA') {
             $pendTxt = 'Pendiente de factura';
         }
@@ -295,6 +300,9 @@ function adq_render_historial_badge($h) {
     } elseif ($h['Isn_Acc'] === 'COTIZAR') {
         $actionBadge = $mk('Proformas cargadas', '#2563eb');
         $itemClass = 'active';
+    } elseif ($h['Isn_Acc'] === 'CONDICIONAL') {
+        $actionBadge = $mk('Rama', '#d97706');
+        $itemClass = 'warning';
     }
     return array('badge' => $actionBadge, 'class' => $itemClass);
 }
@@ -312,6 +320,7 @@ function adq_render_historial_item($h, $num_proceso, $mostrar_etapa) {
     if ($num_label === '') {
         $num_label = '0';
     }
+    $es_decision = (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'DECISION');
     ob_start();
     ?>
     <div class="adq-timeline-item <?php echo $itemClass; ?>">
@@ -329,6 +338,7 @@ function adq_render_historial_item($h, $num_proceso, $mostrar_etapa) {
                 <span class="adq-timeline-date"><i class="bi bi-calendar3"></i> <?php echo adq_h($fecha); ?></span>
             </div>
             <div class="adq-timeline-body">
+                <?php if (!$es_decision) { ?>
                 <div class="adq-hist-actor">
                     <span class="adq-hist-avatar" aria-hidden="true"><?php echo adq_h($iniciales); ?></span>
                     <span class="adq-hist-actor-meta">
@@ -336,11 +346,14 @@ function adq_render_historial_item($h, $num_proceso, $mostrar_etapa) {
                         <span class="adq-hist-actor-name"><?php echo adq_h($actor); ?></span>
                     </span>
                 </div>
+                <?php } ?>
                 <?php if (!empty($h['Isn_Com'])) { ?>
                     <div class="adq-timeline-comment"><?php echo adq_h($h['Isn_Com']); ?></div>
                 <?php } ?>
-                <?php echo adq_render_historial_facturas(isset($h['facturas']) ? $h['facturas'] : array()); ?>
-                <?php echo adq_render_historial_archivos(isset($h['archivos']) ? $h['archivos'] : array()); ?>
+                <?php if (!$es_decision) {
+                    echo adq_render_historial_facturas(isset($h['facturas']) ? $h['facturas'] : array());
+                    echo adq_render_historial_archivos(isset($h['archivos']) ? $h['archivos'] : array());
+                } ?>
             </div>
         </div>
     </div>
@@ -470,9 +483,21 @@ if (!empty($sol['Ins_Cod'])) {
 
     <div style="clear: both;"></div>
 
-    <div class="col-xs-12 col-md-12" style="margin-top: 5px; margin-bottom: 10px; clear: both; float: left;">
-        <div class="adq-detail-card" style="padding: 8px 12px;">
-            <h5 class="adq-section-header" style="color: #475569; border-bottom-color: #cbd5e1; margin-bottom: 6px; padding-bottom: 4px;"><i class="bi bi-clock-history"></i> L&iacute;nea de Tiempo del Proceso (SLA) <small class="text-muted" style="font-weight: normal;">— clic en un nodo para ver sus tareas</small></h5>
+    <div class="col-xs-12 col-md-12" style="clear: both; float: left;">
+        <div class="adq-seg-toolbar">
+            <div class="adq-seg-toolbar-copy">
+                <strong><i class="bi bi-archive"></i> Expediente documental</strong>
+                <span>Descarga en un solo ZIP todos los archivos cargados en los procesos de este requerimiento.</span>
+            </div>
+            <button type="button" class="btn btn-success btn-sm" id="btnDescargarDocsZip" onclick="descargarDocumentosZip(<?php echo intval($sol_cod); ?>)">
+                <i class="bi bi-file-earmark-zip"></i> Descargar todos los documentos generados
+            </button>
+        </div>
+    </div>
+
+    <div class="col-xs-12 col-md-12" style="margin-top: 0; margin-bottom: 10px; clear: both; float: left;">
+        <div class="adq-detail-card" style="padding: 10px 14px;">
+            <h5 class="adq-section-header" style="color: #475569; border-bottom-color: #cbd5e1; margin-bottom: 8px; padding-bottom: 6px;"><i class="bi bi-clock-history"></i> L&iacute;nea de Tiempo del Proceso (SLA) <small class="text-muted" style="font-weight: normal; text-transform: none; letter-spacing: 0;">— clic en un nodo para ver sus tareas</small></h5>
             <div class="tracker-wrapper adq-seg-flow-tracker" id="segFlowTracker">
                 <?php
                 if (!empty($flow_visual['nodos'])) {
@@ -482,32 +507,25 @@ if (!empty($sol['Ins_Cod'])) {
                         }
 
                         $tiempo_nodo = '';
-                        $fecha_entrada = null;
-                        $fecha_salida = null;
-
-                        foreach ($historial as $h) {
-                            if ($h['Nod_Cod'] == $node['id']) {
-                                if ($h['Isn_Acc'] === 'CREAR' || $h['Isn_Acc'] === 'APROBAR' || $h['Isn_Acc'] === 'OBSERVAR' || $h['Isn_Acc'] === 'DEVOLVER') {
-                                    $fecha_entrada = $h['Isn_Fec'];
-                                }
+                        $sla_dias = intval(isset($node['sla_dias']) ? $node['sla_dias'] : 0);
+                        $sla_estado = isset($node['sla_estado']) ? $node['sla_estado'] : 'sin_tiempo';
+                        if ($sla_estado === 'sin_tiempo') {
+                            $tiempo_nodo = "<br><span style='display:inline-block;margin-top:5px;padding:2px 6px;border-radius:10px;background:#e2e8f0;color:#475569;font-size:8px;font-weight:700;'><i class='bi bi-dash-circle'></i> Sin tiempo determinado</span>";
+                        } elseif ($sla_estado === 'no_iniciado') {
+                            $tiempo_nodo = "<br><span style='display:inline-block;margin-top:5px;padding:2px 6px;border-radius:10px;background:#f1f5f9;color:#64748b;font-size:8px;font-weight:700;'><i class='bi bi-clock'></i> SLA: {$sla_dias} d&iacute;as &middot; A&uacute;n no iniciado</span>";
+                        } else {
+                            $transcurridos = number_format(floatval($node['sla_dias_transcurridos']), 1);
+                            $limite = !empty($node['sla_fecha_limite'])
+                                ? date('d/m/Y H:i', strtotime($node['sla_fecha_limite']))
+                                : '';
+                            if ($sla_estado === 'retrasado') {
+                                $retraso = number_format(floatval($node['sla_dias_retraso']), 1);
+                                $tiempo_nodo = "<br><span style='display:inline-block;margin-top:5px;padding:3px 7px;border-radius:10px;background:#fee2e2;color:#b91c1c;font-size:8px;font-weight:800;'><i class='bi bi-exclamation-triangle-fill'></i> Retraso: {$retraso} d&iacute;as</span>";
+                            } else {
+                                $tiempo_nodo = "<br><span style='display:inline-block;margin-top:5px;padding:3px 7px;border-radius:10px;background:#dcfce7;color:#166534;font-size:8px;font-weight:800;'><i class='bi bi-check-circle-fill'></i> En plazo: {$transcurridos} / {$sla_dias} d&iacute;as</span>";
                             }
-                        }
-
-                        if ($fecha_entrada) {
-                            foreach ($historial as $h) {
-                                if ($h['Isn_Fec'] > $fecha_entrada) {
-                                    $fecha_salida = $h['Isn_Fec'];
-                                    break;
-                                }
-                            }
-                            if (!$fecha_salida && $node['color'] === 'blue') {
-                                $fecha_salida = date('Y-m-d H:i:s');
-                            }
-
-                            if ($fecha_salida) {
-                                $diff = strtotime($fecha_salida) - strtotime($fecha_entrada);
-                                $dias = round($diff / 86400, 1);
-                                $tiempo_nodo = "<br><span class='text-muted' style='font-size: 8px;'><i class='bi bi-hourglass-split'></i> $dias d&iacute;as</span>";
+                            if ($limite !== '') {
+                                $tiempo_nodo .= "<br><span style='font-size:8px;color:#64748b;'><i class='bi bi-calendar-check'></i> L&iacute;mite: {$limite}</span>";
                             }
                         }
 

@@ -1,5 +1,6 @@
 $(function () {
   $( "#verPagosDialogMod" ).createDialog({width:700,height:435,icon:'info-sign'});
+  $( "#comprobanteCcppConDialog" ).createDialog({width:760,height:540,icon:'picture'});
   $("#tabs_abo_det").tabs();
   $('.datepicker').createDatePickers({checkAvailability:true,hideMsg:false}).mask('9999-99-99',{placeholder:'_'});
 
@@ -40,6 +41,8 @@ $(function () {
     onSelectRow: function(rowid, e) { $(this).resetSelection();},
     colModel:[
       { label: 'index', name: 'index',hidden:true, classes:'bgNoRight' },
+      { label: '', name: 'Pag_Abr', hidden:true },
+      { label: '', name: 'Pag_img', hidden:true },
       { label: 'Codigo', name: 'Pld_Cdc', width: 10, align:"left"},
       { label: 'Cuenta', name: 'Pld_Des', width: 30, align:"left"},
       { label: 'Glosa', name: 'Glosa', width: 20, align:"left"},
@@ -52,6 +55,20 @@ $(function () {
         formatoptions: {
           prefix:'$ ', thousandsSeparator:',',decimalSeparator:'.',defaultValue:''
         }
+      },
+      {
+        label: '<center><span class="glyphicon glyphicon-picture"></span></center>',
+        name: 'Pag_img_accion',
+        width: 8,
+        align: 'center',
+        viewable: false,
+        formatter: function(cellvalue, options, rowObject) {
+          if (rowObject.Pag_Abr === 'TRF' && rowObject.Pag_img && String(rowObject.Pag_img).trim() !== '') {
+            return $.getGridButton(verComprobanteCcppCon, rowObject, 'Ver comprobante', 'eye-open', '', 'info');
+          }
+          return '-';
+        },
+        title: false
       }
     ]
   },true,'',{view:false});
@@ -197,6 +214,22 @@ function cargarSelect(){
   $('#searchGrid').submit();
 }
 
+function verComprobanteCcppCon(row) {
+  var ruta = row && row.Pag_img ? String(row.Pag_img).trim().replace(/\\/g, '/') : '';
+  if (!ruta) {
+    return $.alert('Este pago no tiene un comprobante registrado.');
+  }
+  if (!/^(https?:\/\/|\/)/i.test(ruta) && ruta.indexOf('../../') !== 0) {
+    ruta = '../../' + ruta.replace(/^\.?\//, '');
+  }
+  $('#comprobanteCcppConImagen').attr('src', ruta);
+  $('#comprobanteCcppConDescargar').attr({
+    href: ruta,
+    download: ruta.split('/').pop() || 'comprobante_transferencia'
+  });
+  $('#comprobanteCcppConDialog').dialog('open');
+}
+
 function verAbono(row){
   $("#showPagosAsi").updateGridsSizes();$("#showPagosChe").updateGridsSizes();
   $("#showPagosAsi").jqGrid("clearGridData").trigger("reloadGrid");
@@ -228,15 +261,17 @@ function verAbono(row){
         }
 
         $('#showPagosAsi').jqGrid('addRowData', ids_pg,
-  			{
-  				index:ids_pg,
+        {
+          index:ids_pg,
           tip_pago:responce['data'][i].tip_pago,
           Pld_Cdc:responce['data'][i].Pld_Cdc,
-  				Pld_Des:responce['data'][i].Pld_Des,
-  				Glosa:responce['data'][i].Asi_Glo,
-  				Debe:a_deb,
-  				Haber:a_hab
-  			},"last");
+          Pld_Des:responce['data'][i].Pld_Des,
+          Glosa:responce['data'][i].Asi_Glo,
+          Debe:a_deb,
+          Haber:a_hab,
+          Pag_Abr:responce['data'][i].Pag_Abr || '',
+          Pag_img:responce['data'][i].Pag_img || ''
+        },"last");
       }
 
       $('#showPagosAsi').jqGrid('footerData', 'set', {

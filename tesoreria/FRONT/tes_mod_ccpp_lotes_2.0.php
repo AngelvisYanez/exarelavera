@@ -926,7 +926,7 @@ if (isset($migrado)) {
 	<link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
 	<?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
 	<script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
-	<script src="../VALIDACIONES/tes_val_mod_ccpp_lotes.js?a=39"></script>
+	<script src="../VALIDACIONES/tes_val_mod_ccpp_lotes.js?a=41"></script>
 	<script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js"></script>
 	<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
 	<script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>
@@ -1331,6 +1331,15 @@ if (isset($migrado)) {
 	</div>
 	<div id="proveedoresDialog" title="B&uacute;squeda de Proveedores">
 		<form class="form-horizontal normal"> </form>
+	</div>
+
+	<div id="comprobanteCcppModDialog" title="Comprobante de transferencia">
+		<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;padding:12px;background:#f3f5f7;border-radius:6px;">
+			<img id="comprobanteCcppModImagen" alt="Comprobante de transferencia" style="display:block;max-width:100%;max-height:72vh;border-radius:5px;box-shadow:0 5px 20px rgba(0,0,0,.2);">
+			<a id="comprobanteCcppModDescargar" class="btn btn-success btn-sm" href="#" download style="margin-top:12px;">
+				<span class="glyphicon glyphicon-download-alt"></span> Descargar imagen
+			</a>
+		</div>
 	</div>
 
 	<div id="successDialog" title="Mensaje del Sistema">

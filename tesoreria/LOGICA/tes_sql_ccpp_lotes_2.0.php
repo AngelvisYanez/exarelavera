@@ -272,8 +272,9 @@ function sentencias_ccpp($id, $Par_Sql)
 			// echo $sql;
 			return $sql;
 		case 15:
-			$sql = "INSERT INTO det_ccpp_p (Cpp_Cod, Pag_Cod, Com_Cod, Pag_Fec, Pag_Val, Pag_Est, Pag_Obs, Asi_Cod)
-						VALUES($Par_Sql[Cpp_Cod], $Par_Sql[Pag_Cod], $Par_Sql[Com_Cod], '$Par_Sql[Pag_Fec]', '$Par_Sql[Pag_Val]', 'A', '$Par_Sql[Pag_Obs]', '$Par_Sql[Asi_Cod]');";
+			$pag_img = isset($Par_Sql['Pag_img']) ? $Par_Sql['Pag_img'] : '';
+			$sql = "INSERT INTO det_ccpp_p (Cpp_Cod, Pag_Cod, Com_Cod, Pag_Fec, Pag_Val, Pag_Est, Pag_Obs, Asi_Cod, Pag_img)
+						VALUES($Par_Sql[Cpp_Cod], $Par_Sql[Pag_Cod], $Par_Sql[Com_Cod], '$Par_Sql[Pag_Fec]', '$Par_Sql[Pag_Val]', 'A', '$Par_Sql[Pag_Obs]', '$Par_Sql[Asi_Cod]', '$pag_img');";
 			// echo $sql;
 			return $sql;
 		case 16:
@@ -500,7 +501,16 @@ function sentencias_ccpp($id, $Par_Sql)
 							asientos.Asi_Deh,
 							asientos.Asi_Val,
 							asientos.Asi_Con,
-							asientos.Asi_Glo
+							asientos.Asi_Glo,
+							(SELECT MAX(dcp.Pag_img)
+							 FROM det_ccpp_p dcp
+							 WHERE dcp.Asi_Cod = asientos.Asi_Cod
+							   AND dcp.Com_Cod = $Par_Sql[Com_Cod]) AS Pag_img,
+							(SELECT MAX(tp.Pag_Abr)
+							 FROM det_ccpp_p dcp
+							 INNER JOIN tipos_pago tp ON tp.Pag_Cod = dcp.Pag_Cod
+							 WHERE dcp.Asi_Cod = asientos.Asi_Cod
+							   AND dcp.Com_Cod = $Par_Sql[Com_Cod]) AS Pag_Abr
 						from asientos, det_plan
 						where
 							asientos.Com_Cod = $Par_Sql[Com_Cod] and

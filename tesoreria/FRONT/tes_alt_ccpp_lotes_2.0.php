@@ -135,6 +135,63 @@ if (isset($savePago)) {
 	$response['arrayche'] = array();
 	$response['bnd_che'] = false;
 	$contAct = 0;
+	$imagenes_pagos = array();
+	$archivos_guardados = array();
+
+	if (!empty($_FILES['Pag_img_archivos']['name']) && is_array($_FILES['Pag_img_archivos']['name'])) {
+		$tipos_permitidos = array(
+			'image/jpeg' => 'jpg',
+			'image/png' => 'png',
+			'image/webp' => 'webp',
+			'image/gif' => 'gif'
+		);
+		$directorio_abs = dirname(__FILE__) . '/../../facturacion/FRONT/' . intval($Ses_Emp_Cod) . '/compr_prov';
+		$directorio_rel = 'facturacion/FRONT/' . intval($Ses_Emp_Cod) . '/compr_prov';
+
+		foreach ($_FILES['Pag_img_archivos']['name'] as $pago_idx => $nombre_original) {
+			$error_archivo = isset($_FILES['Pag_img_archivos']['error'][$pago_idx])
+				? intval($_FILES['Pag_img_archivos']['error'][$pago_idx])
+				: UPLOAD_ERR_NO_FILE;
+			if ($error_archivo === UPLOAD_ERR_NO_FILE || trim((string)$nombre_original) === '') {
+				continue;
+			}
+			$pago_post = isset($save_p[$pago_idx]) ? $save_p[$pago_idx] : array();
+			if (empty($pago_post['Pag_Abr']) || $pago_post['Pag_Abr'] !== 'TRF') {
+				continue;
+			}
+			if ($error_archivo !== UPLOAD_ERR_OK) {
+				$response['message'] = 'No se pudo cargar el comprobante de transferencia.';
+				$obBD_con1->echoJson($response);
+				exit();
+			}
+
+			$tmp_archivo = $_FILES['Pag_img_archivos']['tmp_name'][$pago_idx];
+			$tam_archivo = intval($_FILES['Pag_img_archivos']['size'][$pago_idx]);
+			$info_imagen = @getimagesize($tmp_archivo);
+			$mime_imagen = ($info_imagen && !empty($info_imagen['mime'])) ? $info_imagen['mime'] : '';
+			if (!is_uploaded_file($tmp_archivo) || $tam_archivo <= 0 || $tam_archivo > 5242880 || !isset($tipos_permitidos[$mime_imagen])) {
+				$response['message'] = 'El comprobante debe ser una imagen JPG, PNG, WEBP o GIF de máximo 5 MB.';
+				$obBD_con1->echoJson($response);
+				exit();
+			}
+			if (!is_dir($directorio_abs) && !@mkdir($directorio_abs, 0777, true) && !is_dir($directorio_abs)) {
+				$response['message'] = 'No se pudo crear la carpeta para guardar los comprobantes.';
+				$obBD_con1->echoJson($response);
+				exit();
+			}
+
+			$nombre_archivo = 'transferencia_ccpp_' . date('Ymd_His') . '_' . uniqid() . '.' . $tipos_permitidos[$mime_imagen];
+			$destino_abs = $directorio_abs . '/' . $nombre_archivo;
+			if (!move_uploaded_file($tmp_archivo, $destino_abs)) {
+				$response['message'] = 'No se pudo guardar el comprobante de transferencia.';
+				$obBD_con1->echoJson($response);
+				exit();
+			}
+			$imagenes_pagos[$pago_idx] = $directorio_rel . '/' . $nombre_archivo;
+			$archivos_guardados[] = $destino_abs;
+		}
+	}
+
 	$obBD_con1->inicio_transaccion($obBD_conexion->conexion);
 	//generamos el numero de comprobante
 	$var_mes = explode('-', $Com_Fec);
@@ -156,7 +213,7 @@ if (isset($savePago)) {
 
 	
 
-	foreach ($save_p as $pago) {
+	foreach ($save_p as $pago_idx => $pago) {
 
 
 
@@ -164,6 +221,7 @@ if (isset($savePago)) {
 			// insertamos un asiento por cada pago
 			$obBD_con1->operacionobBD(14, array('Com_Cod' => $ultimo_comprobate, 'Asi_Deh' => 'H', 'Asi_Con' => $pago['concepto'], 'Asi_Glo' => $pago['Glosa'], 'Asi_Val' => $pago['Haber'], 'Pld_Cod' => $pago['Pld_Cod']), $obBD_conexion);
 			$ultimo_asiento = $obBD_con1->insercionid($obBD_conexion);
+			$pag_img = isset($imagenes_pagos[$pago_idx]) ? $imagenes_pagos[$pago_idx] : '';
 			//********************************************************************************************************************
 			$var_pag = (float)$pago['Haber']; //Es el pago que yo ingreso
 			while ($var_pag != "none") {
@@ -171,15 +229,15 @@ if (isset($savePago)) {
 				if ($save_cp['' . intval($cntcpp)]['Pag_Val'] == 0) {
 					$var_pag = "none";
 				} elseif ($var_pag < (float)$save_cp['' . intval($cntcpp)]['Pag_Val']) {
-					$obBD_con1->operacionobBD(15, array('Cpp_Cod' => $save_cp['' . intval($cntcpp)]['Cpp_Cod'], 'Pag_Cod' => $pago['Pag_Cod'], 'Com_Cod' => $ultimo_comprobate, 'Pag_Fec' => $Com_Fec, 'Pag_Val' => $var_pag, 'Pag_Obs' => $pago['Glosa'], 'Asi_Cod' => $ultimo_asiento), $obBD_conexion);
+					$obBD_con1->operacionobBD(15, array('Cpp_Cod' => $save_cp['' . intval($cntcpp)]['Cpp_Cod'], 'Pag_Cod' => $pago['Pag_Cod'], 'Com_Cod' => $ultimo_comprobate, 'Pag_Fec' => $Com_Fec, 'Pag_Val' => $var_pag, 'Pag_Obs' => $pago['Glosa'], 'Asi_Cod' => $ultimo_asiento, 'Pag_img' => $pag_img), $obBD_conexion);
 					$save_cp['' . intval($cntcpp)]['Pag_Val'] = (float)((float)$save_cp['' . intval($cntcpp)]['Pag_Val'] - $var_pag);
 					$var_pag = "none";
 				} elseif ($var_pag == (float)$save_cp['' . intval($cntcpp)]['Pag_Val']) {
-					$obBD_con1->operacionobBD(15, array('Cpp_Cod' => $save_cp['' . $cntcpp]['Cpp_Cod'], 'Pag_Cod' => $pago['Pag_Cod'], 'Com_Cod' => $ultimo_comprobate, 'Pag_Fec' => $Com_Fec, 'Pag_Val' => $var_pag, 'Pag_Obs' => $pago['Glosa'], 'Asi_Cod' => $ultimo_asiento), $obBD_conexion);
+					$obBD_con1->operacionobBD(15, array('Cpp_Cod' => $save_cp['' . $cntcpp]['Cpp_Cod'], 'Pag_Cod' => $pago['Pag_Cod'], 'Com_Cod' => $ultimo_comprobate, 'Pag_Fec' => $Com_Fec, 'Pag_Val' => $var_pag, 'Pag_Obs' => $pago['Glosa'], 'Asi_Cod' => $ultimo_asiento, 'Pag_img' => $pag_img), $obBD_conexion);
 					$var_pag = "none";
 					$cntcpp++;
 				} elseif ($var_pag > (float)$save_cp['' . intval($cntcpp)]['Pag_Val']) {
-					$obBD_con1->operacionobBD(15, array('Cpp_Cod' => $save_cp['' . intval($cntcpp)]['Cpp_Cod'], 'Pag_Cod' => $pago['Pag_Cod'], 'Com_Cod' => $ultimo_comprobate, 'Pag_Fec' => $Com_Fec, 'Pag_Val' => ($var_pag - ($var_pag - (float)$save_cp['' . intval($cntcpp)]['Pag_Val'])), 'Pag_Obs' => $pago['Glosa'], 'Asi_Cod' => $ultimo_asiento), $obBD_conexion);
+					$obBD_con1->operacionobBD(15, array('Cpp_Cod' => $save_cp['' . intval($cntcpp)]['Cpp_Cod'], 'Pag_Cod' => $pago['Pag_Cod'], 'Com_Cod' => $ultimo_comprobate, 'Pag_Fec' => $Com_Fec, 'Pag_Val' => ($var_pag - ($var_pag - (float)$save_cp['' . intval($cntcpp)]['Pag_Val'])), 'Pag_Obs' => $pago['Glosa'], 'Asi_Cod' => $ultimo_asiento, 'Pag_img' => $pag_img), $obBD_conexion);
 					$var_pag = $var_pag - (float)$save_cp['' . intval($cntcpp)]['Pag_Val'];
 					$cntcpp++;
 				}
@@ -333,8 +391,14 @@ if (isset($savePago)) {
 	$obBD_con1->fin_transaccion_nomsn($obBD_conexion->conexion);
 	if ($obBD_con1->Error == 0) {
 		$response['success'] = true;
-	} else
+	} else {
 		$response['error'] = $obBD_con1->MsgError;
+		foreach ($archivos_guardados as $archivo_guardado) {
+			if (is_file($archivo_guardado)) {
+				@unlink($archivo_guardado);
+			}
+		}
+	}
 	$obBD_con1->echoJson($response);
 	exit();
 }
@@ -645,7 +709,7 @@ if (isset($loadCruzeCuentas)) {
 	<link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
 	<?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
 	<script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
-	<script src="../VALIDACIONES/tes_val_alt_ccpp_lotes.js?a=42"></script>
+	<script src="../VALIDACIONES/tes_val_alt_ccpp_lotes.js?a=46"></script>
 	<script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js"></script>
 	<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
 	<script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>
@@ -690,6 +754,52 @@ if (isset($loadCruzeCuentas)) {
 		#searchGrid input[type="text"]:read-only {
 			background-color: #a2a2a2;
 			border: none;
+		}
+
+		.ccpp-comprobante-control {
+			display: flex;
+			align-items: center;
+			flex-wrap: wrap;
+			gap: 8px;
+		}
+
+		.ccpp-comprobante-btn {
+			display: inline-flex;
+			align-items: center;
+			gap: 5px;
+			margin: 0;
+			padding: 4px 8px;
+			border: 1px solid #b8c0c7;
+			border-radius: 4px;
+			background: linear-gradient(180deg, #fff 0%, #eef1f3 100%);
+			color: #4f5b64;
+			font-size: 11px;
+			font-weight: 600;
+			cursor: pointer;
+			box-shadow: 0 1px 2px rgba(45, 55, 65, .12);
+		}
+
+		.ccpp-comprobante-btn:hover {
+			border-color: #929da6;
+			color: #303940;
+			background: #e4e8eb;
+		}
+
+		.ccpp-comprobante-preview {
+			display: none;
+			width: 58px;
+			height: 58px;
+			border: 1px solid #cbd5df;
+			border-radius: 4px;
+			object-fit: cover;
+		}
+
+		.ccpp-comprobante-accion {
+			display: none;
+			padding: 2px 5px;
+			border: 0;
+			background: transparent;
+			color: #54636e;
 		}
 	</style>
 </head>
@@ -995,6 +1105,29 @@ if (isset($loadCruzeCuentas)) {
 													</div>
 												</div>
 
+												<div class="row" id="grupoPagImg" hidden>
+													<div class="form-group">
+														<label class="col-sm-3 control-label label-xs">Comprobante:</label>
+														<div class="col-sm-7">
+															<div class="ccpp-comprobante-control">
+																<label for="Pag_img_archivo" class="ccpp-comprobante-btn">
+																	<span class="glyphicon glyphicon-picture"></span> Cargar imagen
+																</label>
+																<input type="file" id="Pag_img_archivo" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;" onchange="seleccionarComprobanteCcpp(this)">
+																<span id="Pag_img_nombre" class="text-muted" style="font-size:11px;">Ningún archivo</span>
+																<img id="Pag_img_preview" class="ccpp-comprobante-preview" alt="Vista previa del comprobante">
+																<button type="button" id="Pag_img_ver" class="ccpp-comprobante-accion" onclick="verComprobanteCcppActual()" title="Ampliar imagen">
+																	<span class="glyphicon glyphicon-eye-open"></span>
+																</button>
+																<button type="button" id="Pag_img_quitar" class="ccpp-comprobante-accion" onclick="quitarComprobanteCcpp()" title="Quitar imagen" style="color:#c0392b;">
+																	<span class="glyphicon glyphicon-remove"></span>
+																</button>
+															</div>
+															<small class="text-muted">Opcional · JPG, PNG, WEBP o GIF · máximo 5 MB</small>
+														</div>
+													</div>
+												</div>
+
 												<div class="row">
 													<div class="form-group">
 														<label class="col-sm-3 control-label label-xs required" for="Che_Fec">Fecha del cheque:</label>
@@ -1203,6 +1336,14 @@ if (isset($loadCruzeCuentas)) {
 		</form>
 	</div>
 	<div id="cuentasDialog" title="B&uacute;squeda de Cuentas" style="display: none"></div>
+	<div id="comprobanteCcppDialog" title="Comprobante de transferencia">
+		<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;padding:12px;background:#f3f5f7;border-radius:6px;">
+			<img id="comprobanteCcppGrande" alt="Comprobante de transferencia" style="display:block;max-width:100%;max-height:72vh;border-radius:5px;box-shadow:0 5px 20px rgba(0,0,0,.2);">
+			<a id="comprobanteCcppDescargar" class="btn btn-success btn-sm" href="#" download style="margin-top:12px;">
+				<span class="glyphicon glyphicon-download-alt"></span> Descargar imagen
+			</a>
+		</div>
+	</div>
 	<div id="successDialog" title="Mensaje del Sistema">
 		<center>
 			<h2>El Comprobante se ha registrado con Exito!</h2>

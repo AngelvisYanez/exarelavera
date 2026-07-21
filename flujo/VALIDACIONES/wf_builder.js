@@ -37,6 +37,7 @@ function setupNodeDrag() {
         }
         isDraggingNode = true;
         draggedElement = $(this);
+        wfHideNodeTip();
         const pt = wfPointInCanvas(e.pageX, e.pageY);
         const nodeLeft = parseFloat(draggedElement.css('left')) || 0;
         const nodeTop = parseFloat(draggedElement.css('top')) || 0;
@@ -77,6 +78,7 @@ function setupNodeDrag() {
 }
 let workflowBuilderReady = false;
 let pendingSaveAfterModal = false;
+let pendingDuplicateFlowId = null;
 
 // Puerto de conexión temporal para dibujo de cable
 let drawingConnection = false;
@@ -112,7 +114,7 @@ function wfNodeSize($node) {
     };
 }
 
-function wfPortCanvasPoint(nodeId, portType) {
+function wfPortCanvasPoint(nodeId, side) {
     const $node = wfNodeEl(nodeId);
     if (!$node.length) {
         return null;
@@ -120,11 +122,95 @@ function wfPortCanvasPoint(nodeId, portType) {
     const x = parseFloat($node.css('left')) || 0;
     const y = parseFloat($node.css('top')) || 0;
     const size = wfNodeSize($node);
+    const cx = x + (size.w / 2);
     const cy = y + (size.h / 2);
-    if (portType === 'out') {
-        return { x: x + size.w + 6, y: cy };
+    const s = wfNormalizePortSide(side);
+
+    if (s === 'right' || s === 'out') {
+        return { x: x + size.w + 6, y: cy, side: 'right' };
     }
-    return { x: x - 6, y: cy };
+    if (s === 'top') {
+        return { x: cx, y: y - 6, side: 'top' };
+    }
+    if (s === 'bottom') {
+        return { x: cx, y: y + size.h + 6, side: 'bottom' };
+    }
+    // left / in
+    return { x: x - 6, y: cy, side: 'left' };
+}
+
+function wfNormalizePortSide(side) {
+    const s = String(side || '').toLowerCase();
+    if (s === 'out' || s === 'right') return 'right';
+    if (s === 'in' || s === 'left') return 'left';
+    if (s === 'top' || s === 'bottom') return s;
+    return 'right';
+}
+
+function wfNodeCenter(nodeId) {
+    const $node = wfNodeEl(nodeId);
+    if (!$node.length) {
+        return null;
+    }
+    const x = parseFloat($node.css('left')) || 0;
+    const y = parseFloat($node.css('top')) || 0;
+    const size = wfNodeSize($node);
+    return { x: x + size.w / 2, y: y + size.h / 2 };
+}
+
+/** Elige lados de salida/entrada segun la posicion relativa de los nodos. */
+function wfBestPortSides(origenId, destinoId) {
+    const c1 = wfNodeCenter(origenId);
+    const c2 = wfNodeCenter(destinoId);
+    if (!c1 || !c2) {
+        return { from: 'right', to: 'left' };
+    }
+    const dx = c2.x - c1.x;
+    const dy = c2.y - c1.y;
+    if (Math.abs(dx) >= Math.abs(dy)) {
+        return dx >= 0
+            ? { from: 'right', to: 'left' }
+            : { from: 'left', to: 'right' };
+    }
+    return dy >= 0
+        ? { from: 'bottom', to: 'top' }
+        : { from: 'top', to: 'bottom' };
+}
+
+function wfPortControlOffset(side, amount) {
+    const s = wfNormalizePortSide(side);
+    if (s === 'left') return { x: -amount, y: 0 };
+    if (s === 'right') return { x: amount, y: 0 };
+    if (s === 'top') return { x: 0, y: -amount };
+    return { x: 0, y: amount };
+}
+
+function wfBezierPath(p1, p2, sideFrom, sideTo) {
+    const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+    const amount = Math.max(40, Math.min(120, dist * 0.45));
+    const o1 = wfPortControlOffset(sideFrom || p1.side || 'right', amount);
+    const o2 = wfPortControlOffset(sideTo || p2.side || 'left', amount);
+    const c1x = p1.x + o1.x;
+    const c1y = p1.y + o1.y;
+    const c2x = p2.x + o2.x;
+    const c2y = p2.y + o2.y;
+    return 'M ' + p1.x + ' ' + p1.y + ' C ' + c1x + ' ' + c1y + ', ' + c2x + ' ' + c2y + ', ' + p2.x + ' ' + p2.y;
+}
+
+function wfConnectionPoints(con) {
+    let sideFrom = con.side_ori ? wfNormalizePortSide(con.side_ori) : null;
+    let sideTo = con.side_des ? wfNormalizePortSide(con.side_des) : null;
+    if (!sideFrom || !sideTo) {
+        const best = wfBestPortSides(con.origen, con.destino);
+        sideFrom = sideFrom || best.from;
+        sideTo = sideTo || best.to;
+        // Persistir en memoria para que no cambie al mover nodos o guardar
+        con.side_ori = sideFrom;
+        con.side_des = sideTo;
+    }
+    const p1 = wfPortCanvasPoint(con.origen, sideFrom);
+    const p2 = wfPortCanvasPoint(con.destino, sideTo);
+    return { p1: p1, p2: p2, sideFrom: sideFrom, sideTo: sideTo };
 }
 
 function updateCanvasBounds() {
@@ -238,6 +324,10 @@ function initWorkflowBuilder() {
     updateCanvasBounds();
     workflowBuilderReady = true;
     wfSetUserAsigControls(false);
+    $(document).off('change.wfCondDefault', '#modalConnectionCondition #condDefault')
+        .on('change.wfCondDefault', '#modalConnectionCondition #condDefault', function() {
+            wfModalCondicionCampo('#condFields').toggle(!this.checked);
+        });
 }
 
 $(document).ready(function() {
@@ -284,10 +374,102 @@ function setupCanvas() {
     });
 }
 
+const WF_NODE_TIPO_AYUDA = {
+    INICIO: 'Punto de partida del flujo. Configure quién puede crear solicitudes, asigne departamento/usuarios y active notificaciones WhatsApp/correo al poner el requerimiento en ejecución.',
+    APROBACION: 'Etapa de revisión y aprobación. El responsable puede aprobar, observar, devolver o rechazar la solicitud.',
+    DECISION: 'Bifurca el flujo según condiciones o reglas definidas entre caminos posibles.',
+    RECEPCION: 'Etapa para confirmar la recepción de bienes o servicios solicitados.',
+    FACTURA: 'Permite vincular facturas de compra del sistema a la solicitud.',
+    NOTIFICACION: 'Envía notificaciones (correo o WhatsApp) según la configuración del nodo.',
+    TAREA: 'Asigna una tarea pendiente que debe completarse para continuar el flujo.',
+    AVANCE: 'Permite cargar documentos o facturas de avance durante el proceso.',
+    FISCALIZACION: 'Etapa de fiscalización: permite aprobar con comentario/justificación, vincular facturas y cargar varios archivos de sustento.',
+    FIN: 'Cierra el flujo. Genera o firma el expediente final de la solicitud.'
+};
+
+function wfNodeTipoAyuda(tipo) {
+    const key = String(tipo || '').toUpperCase();
+    return WF_NODE_TIPO_AYUDA[key] || 'Nodo del flujo de adquisiciones.';
+}
+
+function wfEnsureNodeTipEl() {
+    let $tip = $('#wfNodeTip');
+    if (!$tip.length) {
+        $tip = $('<div id="wfNodeTip" class="wf-node-tip" role="tooltip"></div>').appendTo('body');
+    }
+    return $tip;
+}
+
+function wfShowNodeTip(text, clientX, clientY) {
+    const msg = $.trim(String(text || ''));
+    if (!msg) {
+        wfHideNodeTip();
+        return;
+    }
+    const $tip = wfEnsureNodeTipEl();
+    $tip.text(msg).addClass('is-visible');
+    const tipW = $tip.outerWidth() || 240;
+    const tipH = $tip.outerHeight() || 40;
+    let left = clientX + 14;
+    let top = clientY + 16;
+    const maxL = $(window).width() - tipW - 10;
+    const maxT = $(window).height() - tipH - 10;
+    if (left > maxL) left = Math.max(8, clientX - tipW - 14);
+    if (top > maxT) top = Math.max(8, clientY - tipH - 12);
+    $tip.css({ left: left + 'px', top: top + 'px' });
+}
+
+function wfHideNodeTip() {
+    $('#wfNodeTip').removeClass('is-visible').text('');
+}
+
+function wfNodeTooltipText(node) {
+    if (!node) {
+        return '';
+    }
+    const ayuda = wfNodeTipoAyuda(node.tipo);
+    const desc = node.descripcion ? String(node.descripcion).trim() : '';
+    if (desc) {
+        return ayuda + ' | ' + desc;
+    }
+    return ayuda;
+}
+
 function setupToolbox() {
-    $('.toolbox-item').on('dragstart', function(e) {
-        e.originalEvent.dataTransfer.setData('node-type', $(this).data('type'));
+    $('.toolbox-item').each(function() {
+        const tipo = $(this).data('type');
+        const ayuda = wfNodeTipoAyuda(tipo);
+        $(this).attr('data-wf-tip', ayuda).removeAttr('title');
     });
+
+    $('.toolbox-item').off('dragstart.wfTip mouseenter.wfTip mousemove.wfTip mouseleave.wfTip')
+        .on('dragstart.wfTip', function(e) {
+            wfHideNodeTip();
+            e.originalEvent.dataTransfer.setData('node-type', $(this).data('type'));
+        })
+        .on('mouseenter.wfTip mousemove.wfTip', function(e) {
+            wfShowNodeTip($(this).attr('data-wf-tip') || wfNodeTipoAyuda($(this).data('type')), e.clientX, e.clientY);
+        })
+        .on('mouseleave.wfTip', function() {
+            wfHideNodeTip();
+        });
+
+    // Tooltip al pasar el mouse sobre nodos del lienzo
+    const $canvas = $('#canvas');
+    $canvas.off('mouseenter.wfTip mousemove.wfTip mouseleave.wfTip', '.wf-node')
+        .on('mouseenter.wfTip mousemove.wfTip', '.wf-node', function(e) {
+            if (isDraggingNode || drawingConnection) {
+                wfHideNodeTip();
+                return;
+            }
+            const nodeId = this.id;
+            const node = nodes.find(function(n) { return sameId(n.id, nodeId); });
+            const tip = node ? wfNodeTooltipText(node) : ($(this).attr('data-wf-tip') || '');
+            wfShowNodeTip(tip, e.clientX, e.clientY);
+        })
+        .on('mouseleave.wfTip', '.wf-node', function() {
+            wfHideNodeTip();
+        });
 }
 
 function setupSVG() {
@@ -299,7 +481,7 @@ function setupSVG() {
 }
 
 function isNodoNotificable(tipo) {
-    return ['APROBACION', 'RECEPCION', 'FACTURA', 'TAREA', 'AVANCE', 'FIN'].indexOf(tipo) >= 0;
+    return ['APROBACION', 'RECEPCION', 'FACTURA', 'TAREA', 'AVANCE', 'FISCALIZACION', 'FIN'].indexOf(tipo) >= 0;
 }
 
 function createNode(type, name, x, y, id = null, props = null) {
@@ -315,6 +497,7 @@ function createNode(type, name, x, y, id = null, props = null) {
         com_obl: false,
         adj_obl: false,
         cot_edit: false,
+        cre_sol: (type === 'INICIO'),
         not_wa: false,
         not_em: false,
         not_asunto: '',
@@ -354,6 +537,9 @@ function wfNodeHeaderIcon(tipo) {
     if (tipo === 'AVANCE') {
         return 'bi-folder-plus text-info';
     }
+    if (tipo === 'FISCALIZACION') {
+        return 'bi-shield-check text-secondary';
+    }
     if (tipo === 'DECISION') {
         return 'bi-shuffle text-warning';
     }
@@ -372,7 +558,7 @@ function wfNodeAsigHtml(node) {
 }
 
 function wfUpdateNodeAsigNombres(node) {
-    if (!node || node.tipo === 'INICIO') {
+    if (!node || node.tipo === 'FIN') {
         if (node) {
             node.asig_nombres = '';
         }
@@ -425,6 +611,9 @@ function refreshNodeView(node) {
     if (!$el.length) {
         return;
     }
+    const tipText = wfNodeTooltipText(node);
+    $el.attr('data-wf-tip', tipText).removeAttr('title');
+
     if (isNodoTerminal(node.tipo)) {
         const icon = node.tipo === 'INICIO' ? 'bi-play-fill' : 'bi-stop-fill';
         const color = node.tipo === 'INICIO' ? 'text-success' : 'text-danger';
@@ -432,9 +621,17 @@ function refreshNodeView(node) {
             '<i class="bi ' + icon + ' ' + color + '"></i>' +
             '<span class="wf-node-terminal-label">' + wfEscHtml(node.nombre) + '</span>'
         );
-        $el.find('.wf-node-body').empty();
-        $el.find('.node-port-in').toggle(node.tipo !== 'INICIO');
-        $el.find('.node-port-out').toggle(node.tipo !== 'FIN');
+        if (node.tipo === 'INICIO') {
+            const creOk = node.cre_sol !== false && node.cre_sol !== 0 && node.cre_sol !== '0';
+            $el.find('.wf-node-body').html(
+                '<span class="wf-node-tipo-label">INICIO</span>' +
+                '<span class="wf-node-desc">' + (creOk ? 'Puede crear solicitud' : 'Crear solicitud desactivado') + '</span>' +
+                wfNodeAsigHtml(node)
+            );
+        } else {
+            $el.find('.wf-node-body').empty();
+        }
+        $el.find('.node-port').show();
         return;
     }
 
@@ -449,7 +646,7 @@ function refreshNodeView(node) {
         '<span class="wf-node-desc">' + (desc ? wfEscHtml(desc) : 'Sin descripción') + '</span>' +
         wfNodeAsigHtml(node)
     );
-    $el.find('.node-port-in, .node-port-out').show();
+    $el.find('.node-port').show();
 }
 
 function renderNode(node) {
@@ -460,8 +657,10 @@ function renderNode(node) {
                 <button type="button" class="btn btn-xs p-0 border-0 wf-node-delete-btn" onclick="deleteNode('${node.id}', event)"><i class="bi bi-x-lg text-danger"></i></button>
             </div>
             <div class="wf-node-body"></div>
-            <div class="node-port node-port-in" data-node-id="${node.id}"></div>
-            <div class="node-port node-port-out" data-node-id="${node.id}"></div>
+            <div class="node-port node-port-left" data-node-id="${node.id}" data-side="left"></div>
+            <div class="node-port node-port-right" data-node-id="${node.id}" data-side="right"></div>
+            <div class="node-port node-port-top" data-node-id="${node.id}" data-side="top"></div>
+            <div class="node-port node-port-bottom" data-node-id="${node.id}" data-side="bottom"></div>
         </div>
     `);
 
@@ -470,20 +669,28 @@ function renderNode(node) {
         openNodeProperties(node.id);
     });
 
-    // Configurar puertos de conexión
-    $nodeEl.find('.node-port-out').on('mousedown', function(e) {
+    // Cualquier punto puede iniciar o recibir la conexion (salvo reglas de INICIO/FIN)
+    $nodeEl.find('.node-port').on('mousedown', function(e) {
+        if (node.tipo === 'FIN') {
+            return;
+        }
         drawingConnection = true;
         connStartPort = $(this);
         e.stopPropagation();
         e.preventDefault();
     });
 
-    $nodeEl.find('.node-port-in').on('mouseup', function(e) {
+    $nodeEl.find('.node-port').on('mouseup', function(e) {
         if (drawingConnection && connStartPort) {
+            if (node.tipo === 'INICIO') {
+                return;
+            }
             const startNodeId = connStartPort.data('node-id');
             const endNodeId = $(this).data('node-id');
+            const sideOri = connStartPort.data('side') || 'right';
+            const sideDes = $(this).data('side') || 'left';
             if (startNodeId !== endNodeId) {
-                createConnection(startNodeId, endNodeId);
+                createConnection(startNodeId, endNodeId, sideOri, sideDes);
             }
         }
     });
@@ -510,17 +717,57 @@ function openNodeProperties(id) {
     $('#nodeNotEm').prop('checked', !!activeNode.not_em);
     $('#nodeNotAsunto').val(activeNode.not_asunto || '');
     $('#nodeNotTexto').val(activeNode.not_texto || '');
+    $('.node-not-wa-label').text('WhatsApp');
+    $('.node-not-em-label').text('Correo electrónico');
 
     // Ocultar/Mostrar campos según tipo de nodo
+    $('.sec-inicio-crear').hide();
     if (activeNode.tipo === 'INICIO') {
-        $('.sec-responsabilidad, .sec-sla, .sec-checks, .sec-notificaciones').hide();
+        $('.sec-sla, .sec-checks').hide();
+        $('.sec-responsabilidad').show();
+        $('.sec-inicio-crear').show();
+        $('.sec-notificaciones').show();
+        $('#lblNodeNotTitle').text('Al poner en ejecución el requerimiento, notificar a los usuarios de este nodo');
+        $('#lblNodeNotHelp').text('Configure los avisos del flujo que se enviarán cuando una nueva solicitud ingrese a la primera etapa.');
+        $('#nodeCreSol').prop('checked', activeNode.cre_sol !== false && activeNode.cre_sol !== 0 && activeNode.cre_sol !== '0');
+        // Cargar comportamiento de departamento y asignación de usuarios
+        if (activeNode.dep_cod) {
+            $('#btnManageDepUsers').show();
+            $('.sec-asignacion-usuarios').show();
+            $('#secNodePer').hide();
+            wfSetUserAsigControls(true);
+            const isTodos = !activeNode.usu_asig || activeNode.usu_asig === 'TODOS';
+            if (isTodos) {
+                $('#asigTodos').prop('checked', true);
+                $('#secAsigEspecificosList').hide();
+            } else {
+                $('#asigEspecificos').prop('checked', true);
+                $('#secAsigEspecificosList').show();
+            }
+            cargarUsuariosAsignacionNodo(activeNode.dep_cod);
+        } else {
+            $('#btnManageDepUsers').hide();
+            $('.sec-asignacion-usuarios').hide();
+            $('#secNodePer').show();
+            wfSetUserAsigControls(false);
+        }
     } else if (activeNode.tipo === 'DECISION') {
         $('.sec-responsabilidad, .sec-sla, .sec-checks, .sec-notificaciones').hide();
     } else if (activeNode.tipo === 'NOTIFICACION') {
+        $('#lblNodeNotTitle').text('Al completar esta etapa, notificar al siguiente responsable');
+        $('#lblNodeNotHelp').text('Se envía WhatsApp o correo a quien debe atender la siguiente tarea. En la primera etapa humana, también aplica al enviar la solicitud.');
         $('.sec-responsabilidad, .sec-checks, .sec-notificaciones').hide();
         $('.sec-sla').show();
     } else {
         $('.sec-responsabilidad, .sec-sla, .sec-checks').show();
+        if (activeNode.tipo === 'FIN') {
+            $('#lblNodeNotTitle').text('Notificación final del esquema');
+            $('#lblNodeNotHelp').text('Al marcar cualquiera de estas opciones, se enviará por correo el expediente final y el comentario de cierre a todos los usuarios asignados al esquema.');
+            $('.node-not-wa-label, .node-not-em-label').text('Notificar a todos los usuarios');
+        } else {
+            $('#lblNodeNotTitle').text('Al completar esta etapa, notificar al siguiente responsable');
+            $('#lblNodeNotHelp').text('Se envía WhatsApp o correo a quien debe atender la siguiente tarea. En la primera etapa humana, también aplica al enviar la solicitud.');
+        }
         if (isNodoNotificable(activeNode.tipo)) {
             $('.sec-notificaciones').show();
         } else {
@@ -556,7 +803,7 @@ function openNodeProperties(id) {
     $('#propertiesDrawer').addClass('open');
 
     // Escuchar cambios en los inputs para actualizar el nodo en vivo
-    $('#nodeName, #nodeDesc, #nodeDep, #nodePer, #nodeSla, #nodeComObl, #nodeAdjObl, #nodeCotEdit, #nodeNotWa, #nodeNotEm, #nodeNotAsunto, #nodeNotTexto').off('change input').on('change input', function() {
+    $('#nodeName, #nodeDesc, #nodeDep, #nodePer, #nodeSla, #nodeComObl, #nodeAdjObl, #nodeCotEdit, #nodeCreSol, #nodeNotWa, #nodeNotEm, #nodeNotAsunto, #nodeNotTexto').off('change input').on('change input', function() {
         activeNode.nombre = $('#nodeName').val();
         activeNode.descripcion = $('#nodeDesc').val();
         activeNode.dep_cod = $('#nodeDep').val();
@@ -565,6 +812,7 @@ function openNodeProperties(id) {
         activeNode.com_obl = $('#nodeComObl').is(':checked');
         activeNode.adj_obl = $('#nodeAdjObl').is(':checked');
         activeNode.cot_edit = $('#nodeCotEdit').is(':checked');
+        activeNode.cre_sol = $('#nodeCreSol').is(':checked');
         activeNode.not_wa = $('#nodeNotWa').is(':checked');
         activeNode.not_em = $('#nodeNotEm').is(':checked');
         activeNode.not_asunto = $('#nodeNotAsunto').val();
@@ -797,7 +1045,7 @@ function deleteNode(id, e) {
     redrawConnections();
 }
 
-function createConnection(origenId, destinoId) {
+function createConnection(origenId, destinoId, sideOri, sideDes) {
     // Validar si ya existe
     const duplicada = connections.find(c => sameId(c.origen, origenId) && sameId(c.destino, destinoId));
     if (duplicada) return;
@@ -808,14 +1056,25 @@ function createConnection(origenId, destinoId) {
         accion = 'CONDICIONAL';
     }
 
-    connections.push({
+    const sides = (sideOri && sideDes)
+        ? { from: wfNormalizePortSide(sideOri), to: wfNormalizePortSide(sideDes) }
+        : wfBestPortSides(origenId, destinoId);
+
+    const nuevaConexion = {
         origen: origenId,
         destino: destinoId,
         accion: accion,
-        condicion: null
-    });
+        condicion: null,
+        comentario: '',
+        side_ori: sides.from,
+        side_des: sides.to
+    };
+    connections.push(nuevaConexion);
 
     redrawConnections();
+    if (nodoOri && nodoOri.tipo === 'DECISION') {
+        openConnectionCondition(nuevaConexion);
+    }
 }
 
 function drawTempCable(toX, toY) {
@@ -824,13 +1083,14 @@ function drawTempCable(toX, toY) {
         return;
     }
     const startNodeId = connStartPort.data('node-id');
-    const p1 = wfPortCanvasPoint(startNodeId, 'out');
+    const sideFrom = connStartPort.data('side') || 'right';
+    const p1 = wfPortCanvasPoint(startNodeId, sideFrom);
     if (!p1) {
         return;
     }
 
     const pt = wfPointInCanvas(toX, toY);
-    const pathString = `M ${p1.x} ${p1.y} C ${(p1.x + pt.x) / 2} ${p1.y}, ${(p1.x + pt.x) / 2} ${pt.y}, ${pt.x} ${pt.y}`;
+    const pathString = wfBezierPath(p1, { x: pt.x, y: pt.y, side: 'left' }, sideFrom, 'left');
     
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path.setAttribute("id", "tempCable");
@@ -842,6 +1102,180 @@ function drawTempCable(toX, toY) {
     path.setAttribute("opacity", "0.35");
     
     document.getElementById('svgCanvas').appendChild(path);
+}
+
+function deleteConnection(origenId, destinoId, e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    connections = connections.filter(function(c) {
+        return !(sameId(c.origen, origenId) && sameId(c.destino, destinoId));
+    });
+    if (activeConnection && sameId(activeConnection.origen, origenId) && sameId(activeConnection.destino, destinoId)) {
+        activeConnection = null;
+    }
+    redrawConnections();
+}
+
+function wfConnectionMidpoint(p1, p2) {
+    return {
+        x: (p1.x + p2.x) / 2,
+        y: (p1.y + p2.y) / 2
+    };
+}
+
+function wfGetNode(nodeId) {
+    return nodes.find(function(n) { return sameId(n.id, nodeId); }) || null;
+}
+
+function wfIsDecisionConnection(con) {
+    const ori = con ? wfGetNode(con.origen) : null;
+    return !!ori && ori.tipo === 'DECISION';
+}
+
+function wfFindConnection(origenId, destinoId) {
+    return connections.find(function(c) {
+        return sameId(c.origen, origenId) && sameId(c.destino, destinoId);
+    }) || null;
+}
+
+function wfCloneCondicion(cond) {
+    if (!cond || typeof cond !== 'object') {
+        return null;
+    }
+    try {
+        return JSON.parse(JSON.stringify(cond));
+    } catch (e) {
+        return null;
+    }
+}
+
+function wfLeerComentarioConexion(con) {
+    if (!con) {
+        return '';
+    }
+    if (con.comentario != null && String(con.comentario).trim() !== '') {
+        return String(con.comentario).trim();
+    }
+    if (con.condicion && con.condicion.comentario != null) {
+        return String(con.condicion.comentario).trim();
+    }
+    return '';
+}
+
+function wfIsDecisionDefaultConnection(con) {
+    if (!con) {
+        return false;
+    }
+    if (con.accion === 'APROBAR') {
+        return !(con.condicion && con.condicion.campo);
+    }
+    return !!(con.condicion && !con.condicion.campo);
+}
+
+function wfCondicionTexto(con) {
+    if (!wfIsDecisionConnection(con)) {
+        return '';
+    }
+    const comentario = wfLeerComentarioConexion(con);
+    if (wfIsDecisionDefaultConnection(con)) {
+        return comentario || 'Por defecto';
+    }
+    if (con.condicion && con.condicion.campo) {
+        if (comentario) {
+            return comentario;
+        }
+        return String(con.condicion.campo) + ' ' +
+            String(con.condicion.operador || '=') + ' ' +
+            String(con.condicion.valor == null ? '' : con.condicion.valor);
+    }
+    return comentario || 'Configurar condición';
+}
+
+function wfModalCondicionCampo(selector) {
+    return $('#modalConnectionCondition').find(selector);
+}
+
+function openConnectionCondition(con) {
+    if (!wfIsDecisionConnection(con)) {
+        return;
+    }
+    activeConnection = con;
+    wfModalCondicionCampo('#condOrigen').val(con.origen);
+    wfModalCondicionCampo('#condDestino').val(con.destino);
+    const esDefault = wfIsDecisionDefaultConnection(con);
+    wfModalCondicionCampo('#condDefault').prop('checked', esDefault);
+    wfModalCondicionCampo('#condFields').toggle(!esDefault);
+    const cond = con.condicion || {};
+    // Comentario propio de ESTA flecha/rama (no se comparte con otras)
+    wfModalCondicionCampo('#condComentario').val(wfLeerComentarioConexion(con));
+    wfModalCondicionCampo('#condCampo').val(cond.campo || 'Sol_Val_Est');
+    wfModalCondicionCampo('#condOperador').val(cond.operador || '>');
+    wfModalCondicionCampo('#condValor').val(cond.valor == null ? '' : cond.valor);
+    $('#modalConnectionCondition').modal('show');
+}
+
+function guardarCondicionConexion() {
+    const origenId = wfModalCondicionCampo('#condOrigen').val();
+    const destinoId = wfModalCondicionCampo('#condDestino').val();
+    let con = activeConnection;
+    if (!con || !sameId(con.origen, origenId) || !sameId(con.destino, destinoId)) {
+        con = wfFindConnection(origenId, destinoId);
+    }
+    if (!con) {
+        alert('No se encontró la conexión.');
+        return;
+    }
+    const comentario = $.trim(wfModalCondicionCampo('#condComentario').val() || '');
+    // Siempre propio de esta conexión
+    con.comentario = comentario;
+
+    if (wfModalCondicionCampo('#condDefault').is(':checked')) {
+        con.accion = 'APROBAR';
+        con.condicion = comentario !== '' ? { comentario: comentario } : null;
+    } else {
+        const campo = wfModalCondicionCampo('#condCampo').val();
+        const operador = wfModalCondicionCampo('#condOperador').val();
+        const valor = $.trim(wfModalCondicionCampo('#condValor').val() || '');
+        if (!campo || valor === '') {
+            alert('Ingrese el campo, operador y valor de la condición.');
+            return;
+        }
+        const nuevaCond = {
+            campo: campo,
+            operador: operador,
+            valor: valor
+        };
+        if (comentario !== '') {
+            nuevaCond.comentario = comentario;
+        }
+        con.condicion = nuevaCond;
+    }
+    $('#modalConnectionCondition').modal('hide');
+    activeConnection = con;
+    redrawConnections();
+}
+
+function limpiarCondicionConexion() {
+    const origenId = wfModalCondicionCampo('#condOrigen').val();
+    const destinoId = wfModalCondicionCampo('#condDestino').val();
+    let con = activeConnection;
+    if (!con || !sameId(con.origen, origenId) || !sameId(con.destino, destinoId)) {
+        con = wfFindConnection(origenId, destinoId);
+    }
+    if (!con) {
+        return;
+    }
+    con.accion = 'CONDICIONAL';
+    con.condicion = null;
+    con.comentario = '';
+    wfModalCondicionCampo('#condDefault').prop('checked', false);
+    wfModalCondicionCampo('#condComentario').val('');
+    wfModalCondicionCampo('#condValor').val('');
+    wfModalCondicionCampo('#condFields').show();
+    activeConnection = con;
+    redrawConnections();
 }
 
 function redrawConnections() {
@@ -859,70 +1293,158 @@ function redrawConnections() {
     `;
     $svg[0].appendChild(defs);
 
-    connections.forEach(function(con, index) {
-        const p1 = wfPortCanvasPoint(con.origen, 'out');
-        const p2 = wfPortCanvasPoint(con.destino, 'in');
+    connections.forEach(function(con) {
+        const pts = wfConnectionPoints(con);
+        const p1 = pts.p1;
+        const p2 = pts.p2;
 
-        if (p1 && p2) {
-            const midX = (p1.x + p2.x) / 2;
-            const pathString = `M ${p1.x} ${p1.y} C ${midX} ${p1.y}, ${midX} ${p2.y}, ${p2.x} ${p2.y}`;
+        if (!p1 || !p2) {
+            return;
+        }
 
-            // Dibujar flecha dirigida
-            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            path.setAttribute("d", pathString);
-            path.setAttribute("fill", "none");
-            
-            // Si la conexión está activa/seleccionada, la destacamos con color azul brillante, mayor grosor y opacidad de 0.3
-            const isSelected = (activeConnection && sameId(activeConnection.origen, con.origen) && sameId(activeConnection.destino, con.destino));
-            if (isSelected) {
-                path.setAttribute("stroke", "#0d6efd");
-                path.setAttribute("stroke-width", "4");
-                path.setAttribute("opacity", "0.3");
-                path.setAttribute("marker-end", "url(#arrow-selected)");
-            } else {
-                path.setAttribute("stroke", "#495057");
-                path.setAttribute("stroke-width", "3");
-                path.setAttribute("opacity", "1.0");
-                path.setAttribute("marker-end", "url(#arrow)");
-            }
-            
-            // Añadir efectos de hover (cursor pointer y cambio de color sutil)
-            path.style.cursor = "pointer";
-            $(path).hover(
-                function() { 
-                    if (!isSelected) {
-                        path.setAttribute("stroke", "#0d6efd"); 
-                        path.setAttribute("stroke-width", "3.5");
-                    }
-                },
-                function() { 
-                    if (!isSelected) {
-                        path.setAttribute("stroke", "#495057"); 
-                        path.setAttribute("stroke-width", "3");
-                    }
-                }
-            );
+        const pathString = wfBezierPath(p1, p2, pts.sideFrom, pts.sideTo);
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('class', 'wf-conn-group');
+        g.setAttribute('data-ori', con.origen);
+        g.setAttribute('data-des', con.destino);
 
-            // Al hacer clic izquierdo, seleccionamos la conexión
-            $(path).on('click', function(e) {
-                e.stopPropagation();
-                $('#propertiesDrawer').removeClass('open');
-                activeNode = null;
-                activeConnection = con;
-                redrawConnections();
-            });
+        const isSelected = (activeConnection && sameId(activeConnection.origen, con.origen) && sameId(activeConnection.destino, con.destino));
 
-            document.getElementById('svgCanvas').appendChild(path);
+        // Hit area mas ancha para facilitar el clic
+        const hit = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        hit.setAttribute('d', pathString);
+        hit.setAttribute('fill', 'none');
+        hit.setAttribute('stroke', 'transparent');
+        hit.setAttribute('stroke-width', '16');
+        hit.style.cursor = 'pointer';
+        g.appendChild(hit);
 
-            // Añadir manejador de eliminación de cable por clic derecho
-            $(path).on('contextmenu', function(e) {
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', pathString);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('class', 'wf-conn-line');
+        if (isSelected) {
+            path.setAttribute('stroke', '#0d6efd');
+            path.setAttribute('stroke-width', '4');
+            path.setAttribute('opacity', '0.55');
+            path.setAttribute('marker-end', 'url(#arrow-selected)');
+            g.classList.add('is-selected');
+        } else {
+            path.setAttribute('stroke', '#495057');
+            path.setAttribute('stroke-width', '3');
+            path.setAttribute('opacity', '1');
+            path.setAttribute('marker-end', 'url(#arrow)');
+        }
+        path.style.cursor = 'pointer';
+        g.appendChild(path);
+
+        const mid = wfConnectionMidpoint(p1, p2);
+        const esDecision = wfIsDecisionConnection(con);
+        const btnDeleteX = esDecision ? 14 : 0;
+
+        if (esDecision) {
+            const condText = wfCondicionTexto(con);
+            const condBtn = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            condBtn.setAttribute('class', 'wf-conn-condition');
+            condBtn.setAttribute('transform', 'translate(' + (mid.x - 14) + ',' + mid.y + ')');
+            condBtn.style.cursor = 'pointer';
+
+            const condCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            condCircle.setAttribute('r', '9');
+            condCircle.setAttribute('cx', '0');
+            condCircle.setAttribute('cy', '0');
+            condCircle.setAttribute('fill', '#0d6efd');
+            condCircle.setAttribute('stroke', '#ffffff');
+            condCircle.setAttribute('stroke-width', '2');
+            condBtn.appendChild(condCircle);
+
+            const condIcon = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            condIcon.setAttribute('x', '0');
+            condIcon.setAttribute('y', '1');
+            condIcon.setAttribute('text-anchor', 'middle');
+            condIcon.setAttribute('dominant-baseline', 'middle');
+            condIcon.setAttribute('fill', '#ffffff');
+            condIcon.setAttribute('font-size', '12');
+            condIcon.setAttribute('font-weight', '700');
+            condIcon.setAttribute('font-family', 'Arial, sans-serif');
+            condIcon.setAttribute('pointer-events', 'none');
+            condIcon.textContent = '?';
+            condBtn.appendChild(condIcon);
+            g.appendChild(condBtn);
+
+            const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            label.setAttribute('x', mid.x);
+            label.setAttribute('y', mid.y - 16);
+            label.setAttribute('text-anchor', 'middle');
+            label.setAttribute('fill', wfLeerComentarioConexion(con) || (con.condicion && con.condicion.campo) || con.accion === 'APROBAR' ? '#0f172a' : '#dc3545');
+            label.setAttribute('font-size', '11');
+            label.setAttribute('font-weight', '700');
+            label.setAttribute('font-family', 'Arial, sans-serif');
+            label.setAttribute('paint-order', 'stroke');
+            label.setAttribute('stroke', '#ffffff');
+            label.setAttribute('stroke-width', '3');
+            label.textContent = condText.length > 32 ? condText.substring(0, 29) + '...' : condText;
+            g.appendChild(label);
+
+            $(condBtn).on('click', function(e) {
                 e.preventDefault();
-                if (confirm('¿Desea eliminar esta conexión?')) {
-                    connections.splice(index, 1);
-                    redrawConnections();
-                }
+                e.stopPropagation();
+                openConnectionCondition(con);
             });
         }
+
+        const btn = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        btn.setAttribute('class', 'wf-conn-delete');
+        btn.setAttribute('transform', 'translate(' + (mid.x + btnDeleteX) + ',' + mid.y + ')');
+        btn.style.cursor = 'pointer';
+
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('r', '9');
+        circle.setAttribute('cx', '0');
+        circle.setAttribute('cy', '0');
+        circle.setAttribute('fill', '#dc3545');
+        circle.setAttribute('stroke', '#ffffff');
+        circle.setAttribute('stroke-width', '2');
+        btn.appendChild(circle);
+
+        const cross = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        cross.setAttribute('x', '0');
+        cross.setAttribute('y', '1');
+        cross.setAttribute('text-anchor', 'middle');
+        cross.setAttribute('dominant-baseline', 'middle');
+        cross.setAttribute('fill', '#ffffff');
+        cross.setAttribute('font-size', '11');
+        cross.setAttribute('font-weight', '700');
+        cross.setAttribute('font-family', 'Arial, sans-serif');
+        cross.setAttribute('pointer-events', 'none');
+        cross.textContent = '×';
+        btn.appendChild(cross);
+
+        g.appendChild(btn);
+        $svg[0].appendChild(g);
+
+        $(hit).add(path).on('click', function(e) {
+            e.stopPropagation();
+            $('#propertiesDrawer').removeClass('open');
+            activeNode = null;
+            activeConnection = con;
+            redrawConnections();
+        });
+
+        $(hit).add(path).on('dblclick', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            openConnectionCondition(con);
+        });
+
+        $(btn).on('click', function(e) {
+            deleteConnection(con.origen, con.destino, e);
+        });
+
+        $(g).on('contextmenu', function(e) {
+            e.preventDefault();
+            deleteConnection(con.origen, con.destino, e);
+        });
     });
 }
 
@@ -995,6 +1517,9 @@ function cargarFlujo() {
                     com_obl: (parseInt(n.com_obl, 10) === 1),
                     adj_obl: (parseInt(n.adj_obl, 10) === 1),
                     cot_edit: (parseInt(n.cot_edit, 10) === 1),
+                    cre_sol: (n.tipo === 'INICIO')
+                        ? (n.cre_sol === undefined || n.cre_sol === null || parseInt(n.cre_sol, 10) === 1)
+                        : false,
                     not_wa: (parseInt(n.not_wa, 10) === 1),
                     not_em: (parseInt(n.not_em, 10) === 1),
                     not_asunto: n.not_asunto || '',
@@ -1006,13 +1531,33 @@ function cargarFlujo() {
             });
 
             // Recrear conexiones (mapear IDs de BD al prefijo del lienzo)
+            // Clonar condicion por conexión para que cada rama tenga su propio comentario
             connections = res.conexiones.map(function(c) {
+                const cond = wfCloneCondicion(c.condicion);
+                let comentario = (c.comentario != null) ? String(c.comentario).trim() : '';
+                if (!comentario && cond && cond.comentario != null) {
+                    comentario = String(cond.comentario).trim();
+                }
                 return {
                     origen: wfNodeId(c.origen),
                     destino: wfNodeId(c.destino),
                     accion: c.accion,
-                    condicion: c.condicion
+                    condicion: cond,
+                    comentario: comentario,
+                    side_ori: c.side_ori || null,
+                    side_des: c.side_des || null
                 };
+            });
+            // Fijar puertos una sola vez si no vienen guardados (no recalcular al mover/guardar)
+            connections.forEach(function(c) {
+                if (!c.side_ori || !c.side_des) {
+                    const best = wfBestPortSides(c.origen, c.destino);
+                    c.side_ori = c.side_ori || best.from;
+                    c.side_des = c.side_des || best.to;
+                } else {
+                    c.side_ori = wfNormalizePortSide(c.side_ori);
+                    c.side_des = wfNormalizePortSide(c.side_des);
+                }
             });
             redrawConnections();
             updateCanvasBounds();
@@ -1026,10 +1571,74 @@ function cargarFlujo() {
 
 function abrirModalNuevoFlujo() {
     pendingSaveAfterModal = false;
+    pendingDuplicateFlowId = null;
     $('#modalFlowName').val('');
     $('#modalFlowDesc').val('');
     $('#modalWorkflowDataLabel').text('Crear Nuevo Flujo Modelo');
     $('#modalWorkflowData').modal('show');
+}
+
+function abrirModalDuplicarFlujo() {
+    const selectorId = $('#selWorkflow').val();
+    if (!selectorId) {
+        wfNotify('warning', 'Seleccione el esquema que desea duplicar.');
+        return;
+    }
+    pendingSaveAfterModal = false;
+    pendingDuplicateFlowId = selectorId;
+    let nombreBase = $('#selWorkflow option:selected').text() || 'Esquema';
+    nombreBase = nombreBase.replace(/\s*\(v\d+\)\s*(\[Borrador\])?\s*$/i, '').trim();
+    if (workflowFamilyId && String(workflowFamilyId) === String(selectorId) && $('#flowName').val().trim()) {
+        nombreBase = $('#flowName').val().trim();
+        $('#modalFlowDesc').val($('#flowDesc').val() || '');
+    } else {
+        $('#modalFlowDesc').val('');
+    }
+    $('#modalFlowName').val('Copia de ' + nombreBase);
+    $('#modalWorkflowDataLabel').text('Duplicar Esquema');
+    $('#modalWorkflowData').modal('show');
+}
+
+function duplicarFlujoServidor(selectorId, nombre, descripcion) {
+    fetch('adq_configuracion.php?ajax_duplicate_workflow=1', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            id: selectorId,
+            nombre: nombre,
+            descripcion: descripcion
+        })
+    })
+    .then(function(r) {
+        return r.text().then(function(text) {
+            let res;
+            try {
+                res = JSON.parse(text);
+            } catch (e) {
+                throw new Error('Respuesta invalida del servidor.');
+            }
+            return res;
+        });
+    })
+    .then(function(res) {
+        if (!res.success) {
+            throw new Error(res.message || 'No se pudo duplicar el esquema.');
+        }
+        const famId = res.familia_cod || res.id;
+        const label = wfFlowOptionLabel(res.nombre || nombre, res.version || 1, true);
+        let $option = $('#selWorkflow option[value="' + famId + '"]');
+        if (!$option.length) {
+            $option = $('<option></option>').val(String(famId)).appendTo('#selWorkflow');
+        }
+        $option.text(label);
+        $('#selWorkflow').val(String(famId));
+        wfNotify('success', res.message || 'Esquema duplicado correctamente.', function() {
+            cargarFlujo();
+        });
+    })
+    .catch(function(err) {
+        wfNotify('danger', 'No se pudo duplicar el esquema: ' + (err.message || 'Error de red'));
+    });
 }
 
 function aceptarDatosFlujo() {
@@ -1040,7 +1649,16 @@ function aceptarDatosFlujo() {
     }
 
     const esGuardadoPendiente = pendingSaveAfterModal;
+    const duplicarId = pendingDuplicateFlowId;
     pendingSaveAfterModal = false;
+    pendingDuplicateFlowId = null;
+
+    if (duplicarId) {
+        const descripcion = $('#modalFlowDesc').val();
+        $('#modalWorkflowData').modal('hide');
+        duplicarFlujoServidor(duplicarId, nombre, descripcion);
+        return;
+    }
 
     $('#flowName').val(nombre);
     $('#flowDesc').val($('#modalFlowDesc').val());
@@ -1074,6 +1692,33 @@ function wfFlowOptionLabel(nombre, version, esBorrador) {
     return label;
 }
 
+/** Serializa conexiones con comentario independiente por cada flecha/rama. */
+function wfConexionesPayloadParaGuardar() {
+    return connections.map(function(c) {
+        const copia = {
+            origen: c.origen,
+            destino: c.destino,
+            accion: c.accion,
+            condicion: wfCloneCondicion(c.condicion),
+            comentario: wfLeerComentarioConexion(c),
+            side_ori: c.side_ori || null,
+            side_des: c.side_des || null
+        };
+        if (copia.comentario) {
+            if (!copia.condicion) {
+                copia.condicion = {};
+            }
+            copia.condicion.comentario = copia.comentario;
+        } else if (copia.condicion && Object.prototype.hasOwnProperty.call(copia.condicion, 'comentario')) {
+            delete copia.condicion.comentario;
+            if (!copia.condicion.campo && Object.keys(copia.condicion).length === 0) {
+                copia.condicion = null;
+            }
+        }
+        return copia;
+    });
+}
+
 function guardarFlujo() {
     const nombre = $('#flowName').val().trim();
     if (!nombre) {
@@ -1095,7 +1740,7 @@ function guardarFlujo() {
         nombre: nombre,
         descripcion: $('#flowDesc').val() || '',
         nodos: nodes,
-        conexiones: connections
+        conexiones: wfConexionesPayloadParaGuardar()
     };
 
     fetch('adq_configuracion.php?ajax_save_workflow=1', {
@@ -1221,7 +1866,7 @@ function guardarFlujoInterno(onDone) {
         nombre: nombre,
         descripcion: $('#flowDesc').val() || '',
         nodos: nodes,
-        conexiones: connections
+        conexiones: wfConexionesPayloadParaGuardar()
     };
 
     return fetch('adq_configuracion.php?ajax_save_workflow=1', {

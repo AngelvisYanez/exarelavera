@@ -1,3 +1,6 @@
+var comprobantesTransferencia = {};
+var comprobanteTransferenciaActual = null;
+
 /*function onload*/
 $(function () {
 
@@ -27,6 +30,7 @@ $(function () {
 
 	$( "#successDialog" ).createDialog({width:500,height:355,icon:'print'});
 	$( "#verPagosDialog" ).createDialog({width:400,height:270,icon:'info-sign'});
+	$( "#comprobantePreviewDialog" ).createDialog({width:760,height:520,icon:'picture'});
 
 	$.post( "", {obtenerPeriodoMinMax:true}, function( responce ) {
 		if(responce['success']===true){
@@ -43,7 +47,7 @@ $(function () {
 	$('.datepicker').createDatePickers({checkAvailability:true,hideMsg:false}).mask('9999-99-99',{placeholder:'_'});
 
 	// inicializa el dialog de registrar pagos de anticipo
-	$('#pagosDialog').createDialog({height:325,icon:'usd'});
+	$('#pagosDialog').createDialog({height:405,icon:'usd'});
 		$('#pagos').createGrid({viewrecords:false,
 			data:[], rowNum: 10000000, height: 150, footerrow:true,
 			onSelectRow: function(rowid, e) { $(this).resetSelection();},
@@ -82,6 +86,7 @@ $(function () {
 				{ label: 'Che_Fec', name: 'Che_Fec',hidden:true, classes:'bgNoRight' },
 				{ label: 'Pap_Cto', name: 'Pap_Cto',hidden:true, classes:'bgNoRight' },
 				{ label: 'Pap_Ctd', name: 'Pap_Ctd',hidden:true, classes:'bgNoRight' },
+				{ label: 'Pap_img_token', name: 'Pap_img_token',hidden:true, classes:'bgNoRight' },
 				{ label: 'Cuenta_Pld', name: 'Pld_Cod', width: 30,hidden:true, classes:'bgNoRight' },
 				{ label: 'C&oacute;digo', name: 'Pld_Cdc', width: 10, classes:'bgNoRight'},
 				{ label: 'Cuenta', name: 'Pld_Des', width: 30, classes:'bgNoRight'},
@@ -100,7 +105,11 @@ $(function () {
 						if (rowObject.grid_tipp==='inicial') {
 							return "-";
 						}else {
-							return $.getGridButton(mostrarPago, rowObject, 'Ver pago', 'info-sign','','info')+"&nbsp;"+
+							var botonImagen = rowObject.Pap_img_token
+								? $.getGridButton(verComprobanteTransferencia, rowObject, 'Ver comprobante', 'eye-open','','primary')+"&nbsp;"
+								: "";
+							return botonImagen+
+							$.getGridButton(mostrarPago, rowObject, 'Ver pago', 'info-sign','','info')+"&nbsp;"+
 							$.getGridButton(borrarPago, rowObject, 'Borrar pago', 'remove','','danger');;
 						}
 					},
@@ -203,9 +212,75 @@ function openDialogPagos(){
 	// console.log(window.location.href); $("#save_bnd").val("n");
 	if($("#bandera_prov").val()!=="sel"){return $.alert("Primero debe seleccionar un proveedor!");}
 	if($("#save_bnd").val()!=="s"){return $.alert("Primero Verifique que esten parametrizadas las cuentas necesarias!");}
+	quitarComprobanteTransferencia();
 	$('#Pag_Cod').trigger('change');
 	$('#pagosDialog').dialog('open');
 	$('#pagosForm').removeData();
+}
+
+function seleccionarComprobanteTransferencia(input){
+	var archivo = input && input.files && input.files[0] ? input.files[0] : null;
+	if (!archivo) {
+		quitarComprobanteTransferencia();
+		return;
+	}
+	var tiposPermitidos = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+	if (tiposPermitidos.indexOf(archivo.type) === -1) {
+		$.alert('Seleccione una imagen JPG, PNG, WEBP o GIF.');
+		quitarComprobanteTransferencia();
+		return;
+	}
+	if (archivo.size > 5242880) {
+		$.alert('La imagen no puede superar los 5 MB.');
+		quitarComprobanteTransferencia();
+		return;
+	}
+	comprobanteTransferenciaActual = archivo;
+	$('#Pap_img_nombre').text(archivo.name).attr('title', archivo.name);
+	var lector = new FileReader();
+	lector.onload = function(evento) {
+		if (comprobanteTransferenciaActual === archivo) {
+			$('#Pap_img_preview').attr('src', evento.target.result).show();
+		}
+	};
+	lector.readAsDataURL(archivo);
+	$('#Pap_img_ver, #Pap_img_quitar').show();
+}
+
+function quitarComprobanteTransferencia(){
+	comprobanteTransferenciaActual = null;
+	$('#Pap_img_archivo').val('');
+	$('#Pap_img_nombre').text('Ningún archivo').removeAttr('title');
+	$('#Pap_img_preview').removeAttr('src').hide();
+	$('#Pap_img_ver, #Pap_img_quitar').hide();
+}
+
+function abrirComprobanteTransferencia(archivo){
+	if (!archivo) {
+		return $.alert('No existe una imagen para visualizar.');
+	}
+	var lector = new FileReader();
+	lector.onload = function(evento) {
+		$('#comprobantePreviewGrande').attr('src', evento.target.result);
+		$('#comprobantePreviewDescargar').attr({
+			href: evento.target.result,
+			download: archivo.name || 'comprobante_transferencia.jpg'
+		});
+		$('#comprobantePreviewDialog').dialog('open');
+	};
+	lector.onerror = function() {
+		$.alert('No se pudo leer la imagen seleccionada.');
+	};
+	lector.readAsDataURL(archivo);
+}
+
+function verComprobanteTransferenciaActual(){
+	abrirComprobanteTransferencia(comprobanteTransferenciaActual);
+}
+
+function verComprobanteTransferencia(row){
+	var archivo = row && row.Pap_img_token ? comprobantesTransferencia[row.Pap_img_token] : null;
+	abrirComprobanteTransferencia(archivo);
 }
 
 //muestra los datos del pago ingresado
@@ -354,6 +429,11 @@ function AgregarPago(){
 				} else if($("#Pag_Cod option:selected").attr("data-abr")=="TRF"){
 					$("#Atp_Val").val(total.toFixed(2));
 					$("#1_Debe").val(total.toFixed(2));
+					var comprobanteToken = '';
+					if (comprobanteTransferenciaActual) {
+						comprobanteToken = 'pap_img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+						comprobantesTransferencia[comprobanteToken] = comprobanteTransferenciaActual;
+					}
 					var glosaText = 'Ant. prov. ' + $("#Pag_Cod option:selected").text();
 					if ($("#Num_Doc").length && $("#Num_Doc").val() && $("#Num_Doc").val().trim() !== "") {
 						glosaText += ". Doc. #" + $("#Num_Doc").val();
@@ -372,6 +452,7 @@ function AgregarPago(){
 						Che_Num: $("#Che_Num").val(),
 						Che_Fec: $("#Che_Fec").val(),
 						Pap_Cto: $("#Ban_Cod option:selected").attr("data-cue"),
+						Pap_img_token: comprobanteToken,
 						Pld_Cod: $("#Ban_Cod option:selected").attr("data-pla"),
 						Det_Tip: 'H',
 						Glosa: glosaText,
@@ -381,6 +462,7 @@ function AgregarPago(){
 					}, "last");
 					$('#pagos').startGridEdit();
 					$('#pagos').updateGridDiario();
+					quitarComprobanteTransferencia();
 					$('#pagosDialog').dialog('close');
 				}else {
 					$("#Atp_Val").val(total.toFixed(2));
@@ -424,6 +506,9 @@ function AgregarPago(){
 // habilita y deshabilita campos dependiendo del tipo de pago seleccionado, recive el tipo de pago y su abrebiatura
 function cambiarCamposPagos(tipo_pago,tipo_pago_abr){
 	$("#Pap_Ctd").val("");
+	if (tipo_pago_abr !== 'TRF') {
+		quitarComprobanteTransferencia();
+	}
 	var data = new Object();
 	data['tipo'] = tipo_pago_abr;
 	data['cargar_cuentas_pagos'] = true;
@@ -452,6 +537,9 @@ function cambiarCamposPagos(tipo_pago,tipo_pago_abr){
 
 // borra el pago seleccionado y actualiza los totales
 function borrarPago(row){
+	if (row.Pap_img_token && comprobantesTransferencia[row.Pap_img_token]) {
+		delete comprobantesTransferencia[row.Pap_img_token];
+	}
 	$('#pagos').jqGrid('delRowData',''+row.index+'');
 	$('#pagos').updateGridDiario();
 	var totalesgrid = actualizarTotales();
@@ -482,6 +570,8 @@ function limpiarFormAnticipos(){
 	$("#NumDocPv").val("");
 	$("#Num_Neg").val("");
 	$("#Cod_Neg").val("");
+	comprobantesTransferencia = {};
+	quitarComprobanteTransferencia();
 	$("#pagos").jqGrid("clearGridData").trigger("reloadGrid");
 	$('#pagos').updateGridDiario();
 }
@@ -517,13 +607,26 @@ function guardar_anticipo(){
 	
 	if(deb.toFixed(4)===hab.toFixed(4) && (deb!="0" && hab!="0")){
 		$("#Atp_Val").val(parseFloat(deb).toFixed(2));
-		var data=$('#AnticipoPrvForm').serializeObject();
-		data["saveAnticipo"]=true;
-
 		var batch = $('#pagos').getGridBatch();
-		data["pago_anticipo_proveedores"]=batch;
+		var data = new FormData(document.getElementById('AnticipoPrvForm'));
+		data.append('saveAnticipo', '1');
+		$.each(batch, function(indice, pago) {
+			$.each(pago, function(campo, valor) {
+				data.append('pago_anticipo_proveedores[' + indice + '][' + campo + ']', valor == null ? '' : valor);
+			});
+			if (pago.Pap_img_token && comprobantesTransferencia[pago.Pap_img_token]) {
+				data.append('Pap_img_archivos[' + indice + ']', comprobantesTransferencia[pago.Pap_img_token]);
+			}
+		});
 
-		$.post( "", data, function( responce ) {
+		$.ajax({
+			url: '',
+			type: 'POST',
+			data: data,
+			processData: false,
+			contentType: false,
+			dataType: 'json'
+		}).done(function( responce ) {
 			if(responce['success']===true){
 				//
 				limpiarFormAnticipos();
@@ -547,7 +650,7 @@ function guardar_anticipo(){
 				$.alert(responce['message']);
 				$('#pagos').startGridEdit();
 			}
-		},'json')
+		})
 		.fail(function(error) {
 			$.alert("El Servidor ha fallado en responder!");
 			$('#pagos').startGridEdit();

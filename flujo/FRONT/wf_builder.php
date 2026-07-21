@@ -13,7 +13,7 @@ $wf_mgr = new wf_manager_log($Ses_Dat_Dis);
 
 // Verificar acceso a la ventana 'configuracion' y pestaña 'disenador_flujos'
 if (!$wf_mgr->verificarAccesoVentana('configuracion', 'disenador_flujos')) {
-    if (isset($ajax_save_workflow) || isset($ajax_publish_workflow) || isset($ajax_load_workflow) || isset($ajax_get_department_users) || isset($ajax_save_department_users) || isset($ajax_get_users_by_department)) {
+    if (isset($ajax_save_workflow) || isset($ajax_publish_workflow) || isset($ajax_duplicate_workflow) || isset($ajax_load_workflow) || isset($ajax_get_department_users) || isset($ajax_save_department_users) || isset($ajax_get_users_by_department)) {
         $obBD_con1->echoJson(array('success' => false, 'message' => 'Acceso denegado. No tiene permisos para realizar esta acción.'));
         exit;
     } else {
@@ -80,6 +80,22 @@ if (isset($ajax_publish_workflow)) {
     }
 }
 
+if (isset($ajax_duplicate_workflow)) {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $selector_cod = !empty($data['id']) ? intval($data['id']) : 0;
+    $nombre = isset($data['nombre']) ? trim($data['nombre']) : '';
+    $descripcion = array_key_exists('descripcion', $data) ? $data['descripcion'] : null;
+    $obBD_con1->inicio_transaccion($obBD_conexion);
+    try {
+        $result = $wf_mgr->duplicarFlujoDisenador($selector_cod, $Ses_Emp_Cod, $nombre, $descripcion);
+        $obBD_con1->commit_nomsn($obBD_conexion);
+        $obBD_con1->echoJson(array_merge(array('success' => true, 'message' => 'Esquema duplicado correctamente.'), $result));
+    } catch (Exception $e) {
+        $obBD_con1->rollBack_nomsn($obBD_conexion);
+        $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
+    }
+}
+
 if (isset($ajax_load_workflow)) {
     $wfm_cod = intval($_GET['id']);
     try {
@@ -98,6 +114,7 @@ if (isset($ajax_load_workflow)) {
                 'com_obl' => $nodo['Nod_Com_Obl'],
                 'adj_obl' => $nodo['Nod_Adj_Obl'],
                 'cot_edit' => !empty($nodo['Nod_Cot_Edit']) ? 1 : 0,
+                'cre_sol' => !isset($nodo['Nod_Cre_Sol']) ? 1 : (!empty($nodo['Nod_Cre_Sol']) ? 1 : 0),
                 'not_wa' => !empty($nodo['Nod_Not_Wa']) ? 1 : 0,
                 'not_em' => !empty($nodo['Nod_Not_Em']) ? 1 : 0,
                 'not_asunto' => isset($nodo['Nod_Not_Asunto']) ? (string)$nodo['Nod_Not_Asunto'] : '',
@@ -116,11 +133,33 @@ if (isset($ajax_load_workflow)) {
         $payload_conexiones = array();
         foreach ($pack['conexiones'] as $con) {
             $condicion = !empty($con['Con_Con_Exp']) ? json_decode($con['Con_Con_Exp'], true) : null;
+            $side_ori = isset($con['Con_Side_Ori']) ? $con['Con_Side_Ori'] : null;
+            $side_des = isset($con['Con_Side_Des']) ? $con['Con_Side_Des'] : null;
+            // Compatibilidad: puertos embebidos en JSON de condicion
+            if ((empty($side_ori) || empty($side_des)) && is_array($condicion) && !empty($condicion['_ports'])) {
+                if (empty($side_ori) && !empty($condicion['_ports']['ori'])) {
+                    $side_ori = $condicion['_ports']['ori'];
+                }
+                if (empty($side_des) && !empty($condicion['_ports']['des'])) {
+                    $side_des = $condicion['_ports']['des'];
+                }
+                unset($condicion['_ports']);
+                if (empty($condicion)) {
+                    $condicion = null;
+                }
+            }
+            $comentario = '';
+            if (is_array($condicion) && isset($condicion['comentario'])) {
+                $comentario = trim((string)$condicion['comentario']);
+            }
             $payload_conexiones[] = array(
                 'origen' => $con['Nod_Ori'],
                 'destino' => $con['Nod_Des'],
                 'accion' => $con['Con_Acc'],
-                'condicion' => $condicion
+                'condicion' => $condicion,
+                'comentario' => $comentario,
+                'side_ori' => $side_ori,
+                'side_des' => $side_des
             );
         }
 
@@ -288,6 +327,28 @@ if (isset($ajax_get_builder)) {
             width: 1.5rem;
             text-align: center;
         }
+        .wf-node-tip {
+            position: fixed;
+            z-index: 10050;
+            max-width: 280px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            background: #1e293b;
+            color: #f8fafc;
+            font-size: 12px;
+            line-height: 1.35;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.28);
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity .12s ease;
+            white-space: normal;
+            word-break: break-word;
+        }
+        .wf-node-tip.is-visible {
+            opacity: 1;
+            visibility: visible;
+        }
         .canvas-area {
             flex: 1 1 auto;
             position: relative;
@@ -422,22 +483,36 @@ if (isset($ajax_get_builder)) {
             background-color: #6c757d;
             border-radius: 50%;
             border: 2px solid #ffffff;
-            cursor: pointer;
+            cursor: crosshair;
+            z-index: 5;
         }
         .node-port:hover {
             background-color: #0d6efd;
-            transform: scale(1.2);
+            transform: scale(1.25);
         }
-        .node-port-in {
+        .node-port-left {
             top: 50%;
             left: -6px;
             margin-top: -6px;
         }
-        .node-port-out {
+        .node-port-right {
             top: 50%;
             right: -6px;
             margin-top: -6px;
         }
+        .node-port-top {
+            top: -6px;
+            left: 50%;
+            margin-left: -6px;
+        }
+        .node-port-bottom {
+            bottom: -6px;
+            left: 50%;
+            margin-left: -6px;
+        }
+        /* Compatibilidad con clases antiguas */
+        .node-port-in { top: 50%; left: -6px; margin-top: -6px; }
+        .node-port-out { top: 50%; right: -6px; margin-top: -6px; }
         .svg-canvas {
             position: absolute;
             top: 0;
@@ -445,9 +520,25 @@ if (isset($ajax_get_builder)) {
             pointer-events: none;
             z-index: 1;
         }
-        .svg-canvas path {
+        .svg-canvas path,
+        .svg-canvas .wf-conn-group,
+        .svg-canvas .wf-conn-delete {
             pointer-events: auto;
             cursor: pointer;
+        }
+        .wf-conn-group .wf-conn-delete {
+            opacity: 0.85;
+        }
+        .wf-conn-group:hover .wf-conn-line {
+            stroke: #0d6efd !important;
+            stroke-width: 3.5px;
+        }
+        .wf-conn-group:hover .wf-conn-delete,
+        .wf-conn-group.is-selected .wf-conn-delete {
+            opacity: 1;
+        }
+        .wf-conn-delete:hover circle {
+            fill: #b02a37;
         }
         .node-INICIO,
         .node-FIN {
@@ -502,7 +593,12 @@ if (isset($ajax_get_builder)) {
             font-weight: 900;
             -webkit-text-stroke: 0.3px #dc3545;
         }
-        .node-INICIO .wf-node-body,
+        .node-INICIO .wf-node-body {
+            display: block;
+            padding: 4px 8px 8px;
+            text-align: center;
+            font-size: 10px;
+        }
         .node-FIN .wf-node-body {
             display: none;
         }
@@ -511,8 +607,6 @@ if (isset($ajax_get_builder)) {
             top: 3px;
             right: 3px;
         }
-        .node-INICIO .node-port-in { display: none; }
-        .node-FIN .node-port-out { display: none; }
         .node-APROBACION { border-color: #0d6efd; }
         .node-APROBACION .wf-node-header { background-color: #cfe2ff; color: #0d6efd; }
         .node-DECISION { border-color: #ffc107; }
@@ -554,6 +648,15 @@ if (isset($ajax_get_builder)) {
             background-color: #cff4fc;
             color: #087990;
             border-bottom: 1px solid #0dcaf0;
+        }
+        .node-FISCALIZACION {
+            border-color: #6c757d;
+            background-color: #f8f9fa;
+        }
+        .node-FISCALIZACION .wf-node-header {
+            background-color: #e9ecef;
+            color: #495057;
+            border-bottom: 1px solid #6c757d;
         }
         .text-purple { color: #6f42c1 !important; }
         
@@ -601,6 +704,7 @@ if (isset($ajax_get_builder)) {
             </select>
             <button class="btn btn-sm btn-info text-white fw-bold" onclick="cargarFlujo()"><i class="bi bi-folder-2-open"></i> Abrir</button>
             <button class="btn btn-sm btn-primary fw-bold" onclick="abrirModalNuevoFlujo()"><i class="bi bi-plus-lg"></i> Nuevo</button>
+            <button class="btn btn-sm btn-secondary fw-bold" onclick="abrirModalDuplicarFlujo()"><i class="bi bi-copy"></i> Duplicar</button>
             <button class="btn btn-sm btn-success fw-bold" onclick="guardarFlujo()"><i class="bi bi-save"></i> Guardar borrador</button>
             <button class="btn btn-sm btn-warning fw-bold text-dark" onclick="publicarFlujo()"><i class="bi bi-cloud-upload"></i> Publicar</button>
         </div>
@@ -645,6 +749,9 @@ if (isset($ajax_get_builder)) {
             </div>
             <div class="toolbox-item" draggable="true" data-type="AVANCE">
                 <i class="bi bi-folder-plus text-info"></i> Avance
+            </div>
+            <div class="toolbox-item" draggable="true" data-type="FISCALIZACION">
+                <i class="bi bi-shield-check text-secondary"></i> Fiscalización
             </div>
             <div class="toolbox-item" draggable="true" data-type="FIN">
                 <i class="bi bi-stop-circle text-danger"></i> Fin
@@ -726,15 +833,15 @@ if (isset($ajax_get_builder)) {
                 <input type="number" id="nodeSla" class="form-control form-control-sm" min="0">
             </div>
             <div class="mb-3 sec-notificaciones" style="display: none;">
-                <label class="form-label d-block fw-semibold">Al completar esta etapa, notificar al siguiente responsable</label>
-                <p class="text-muted small mb-2">Se envía WhatsApp o correo a quien debe atender la siguiente tarea. En la primera etapa humana, también aplica al enviar la solicitud.</p>
+                <label class="form-label d-block fw-semibold" id="lblNodeNotTitle">Al completar esta etapa, notificar al siguiente responsable</label>
+                <p class="text-muted small mb-2" id="lblNodeNotHelp">Se envía WhatsApp o correo a quien debe atender la siguiente tarea. En la primera etapa humana, también aplica al enviar la solicitud.</p>
                 <div class="form-check mb-1">
                     <input type="checkbox" id="nodeNotWa" class="form-check-input">
-                    <label class="form-check-label" for="nodeNotWa"><i class="bi bi-whatsapp text-success"></i> WhatsApp</label>
+                    <label class="form-check-label" for="nodeNotWa"><i class="bi bi-whatsapp text-success"></i> <span class="node-not-wa-label">WhatsApp</span></label>
                 </div>
                 <div class="form-check mb-2">
                     <input type="checkbox" id="nodeNotEm" class="form-check-input">
-                    <label class="form-check-label" for="nodeNotEm"><i class="bi bi-envelope text-primary"></i> Correo electrónico</label>
+                    <label class="form-check-label" for="nodeNotEm"><i class="bi bi-envelope text-primary"></i> <span class="node-not-em-label">Correo electrónico</span></label>
                 </div>
                 <div class="mb-2">
                     <label class="form-label" for="nodeNotAsunto">Asunto del correo (opcional)</label>
@@ -757,6 +864,11 @@ if (isset($ajax_get_builder)) {
                 <input type="checkbox" id="nodeCotEdit" class="form-check-input">
                 <label class="form-check-label" for="nodeCotEdit">Permitir cargar cotizaciones en esta etapa</label>
                 <p class="text-muted small mb-0">El responsable de esta etapa podrá abrir la solicitud y adjuntar proformas/cotizaciones.</p>
+            </div>
+            <div class="mb-3 form-check sec-inicio-crear" style="display: none;">
+                <input type="checkbox" id="nodeCreSol" class="form-check-input">
+                <label class="form-check-label" for="nodeCreSol">Permitir crear solicitud</label>
+                <p class="text-muted small mb-0">Los usuarios asignados a este nodo Inicio podrán crear solicitudes de los tipos ligados a este flujo.</p>
             </div>
         </div>
     </div>
@@ -805,6 +917,63 @@ if (isset($ajax_get_builder)) {
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-success" onclick="aceptarDatosFlujo()"><i class="bi bi-check-lg"></i> Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalConnectionCondition" tabindex="-1" role="dialog" aria-labelledby="modalConnectionConditionLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title fw-bold" id="modalConnectionConditionLabel"><i class="bi bi-shuffle"></i> Condición de Decisión</h4>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="condOrigen">
+                    <input type="hidden" id="condDestino">
+                    <p class="text-muted small">Configure la regla para esta flecha. Si marca rama por defecto, se usará cuando ninguna otra condición se cumpla.</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="condComentario">Comentario</label>
+                        <input type="text" id="condComentario" class="form-control" maxlength="120" placeholder="Ej. Mayor, Menor (único por cada flecha/rama)" autocomplete="off">
+                    </div>
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="condDefault">
+                        <label class="form-check-label" for="condDefault">Rama por defecto / caso contrario</label>
+                    </div>
+                    <div id="condFields">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" for="condCampo">Campo</label>
+                            <select id="condCampo" class="form-control">
+                                <option value="Sol_Val_Est">Valor estimado de la solicitud</option>
+                                <option value="Sol_Tiempo_Est">Días estimados del proyecto</option>
+                                <option value="Sol_Pri">Prioridad</option>
+                                <option value="Trq_Cod">Tipo de requerimiento</option>
+                                <option value="Dep_Cod">Departamento solicitante</option>
+                                <option value="Sol_Cod">Código de solicitud</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" for="condOperador">Operador</label>
+                            <select id="condOperador" class="form-control">
+                                <option value=">">Mayor que (&gt;)</option>
+                                <option value="<">Menor que (&lt;)</option>
+                                <option value="=">Igual (=)</option>
+                                <option value=">=">Mayor o igual (&gt;=)</option>
+                                <option value="<=">Menor o igual (&lt;=)</option>
+                                <option value="!=">Diferente (!=)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" for="condValor">Valor</label>
+                            <input type="text" id="condValor" class="form-control" placeholder="Ej. 5000, ALTA, 30">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" onclick="limpiarCondicionConexion()"><i class="bi bi-trash"></i> Limpiar</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="guardarCondicionConexion()"><i class="bi bi-check-lg"></i> Guardar condición</button>
                 </div>
             </div>
         </div>
@@ -885,6 +1054,28 @@ if (function_exists('utf8_encode_deep')) {
             flex-shrink: 0;
             width: 1.5rem;
             text-align: center;
+        }
+        .wf-node-tip {
+            position: fixed;
+            z-index: 10050;
+            max-width: 280px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            background: #1e293b;
+            color: #f8fafc;
+            font-size: 12px;
+            line-height: 1.35;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.28);
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity .12s ease;
+            white-space: normal;
+            word-break: break-word;
+        }
+        .wf-node-tip.is-visible {
+            opacity: 1;
+            visibility: visible;
         }
         .canvas-area {
             flex: 1 1 auto;
@@ -970,7 +1161,12 @@ if (function_exists('utf8_encode_deep')) {
             font-weight: 900;
             -webkit-text-stroke: 0.3px #dc3545;
         }
-        .wf-node.node-INICIO .wf-node-body,
+        .wf-node.node-INICIO .wf-node-body {
+            display: block;
+            padding: 4px 8px 8px;
+            text-align: center;
+            font-size: 10px;
+        }
         .wf-node.node-FIN .wf-node-body {
             display: none;
         }
@@ -979,8 +1175,6 @@ if (function_exists('utf8_encode_deep')) {
             top: 3px;
             right: 3px;
         }
-        .wf-node.node-INICIO .node-port-in { display: none; }
-        .wf-node.node-FIN .node-port-out { display: none; }
         .wf-node.node-APROBACION { border-color: #0d6efd; }
         .wf-node.node-DECISION { border-color: #fd7e14; }
         .wf-node.node-DECISION .wf-node-header { background-color: #fff3cd; color: #fd7e14; }
@@ -1003,6 +1197,15 @@ if (function_exists('utf8_encode_deep')) {
             background-color: #cff4fc;
             color: #087990;
             border-bottom: 1px solid #0dcaf0;
+        }
+        .wf-node.node-FISCALIZACION {
+            border-color: #6c757d;
+            background-color: #f8f9fa;
+        }
+        .wf-node.node-FISCALIZACION .wf-node-header {
+            background-color: #e9ecef;
+            color: #495057;
+            border-bottom: 1px solid #6c757d;
         }
         .wf-node.node-FACTURA {
             border-color: #ffc107;
@@ -1127,16 +1330,41 @@ if (function_exists('utf8_encode_deep')) {
             position: absolute;
             border: 2px solid #ffffff;
             cursor: crosshair;
+            z-index: 5;
         }
+        .node-port-left { left: -6px; top: calc(50% - 6px); }
+        .node-port-right { right: -6px; top: calc(50% - 6px); }
+        .node-port-top { top: -6px; left: calc(50% - 6px); }
+        .node-port-bottom { bottom: -6px; left: calc(50% - 6px); }
         .node-port-in { left: -6px; top: calc(50% - 6px); }
         .node-port-out { right: -6px; top: calc(50% - 6px); }
-        .node-port:hover { background-color: #495057; transform: scale(1.2); }
+        .node-port:hover { background-color: #0d6efd; transform: scale(1.25); }
         .svg-canvas {
             position: absolute;
             top: 0;
             left: 0;
             pointer-events: none;
             z-index: 1;
+        }
+        .svg-canvas path,
+        .svg-canvas .wf-conn-group,
+        .svg-canvas .wf-conn-delete {
+            pointer-events: auto;
+            cursor: pointer;
+        }
+        .wf-conn-group .wf-conn-delete {
+            opacity: 0.85;
+        }
+        .wf-conn-group:hover .wf-conn-line {
+            stroke: #0d6efd !important;
+            stroke-width: 3.5px;
+        }
+        .wf-conn-group:hover .wf-conn-delete,
+        .wf-conn-group.is-selected .wf-conn-delete {
+            opacity: 1;
+        }
+        .wf-conn-delete:hover circle {
+            fill: #b02a37;
         }
         .properties-drawer {
             position: fixed;
@@ -1170,6 +1398,7 @@ if (function_exists('utf8_encode_deep')) {
                 </select>
                 <button class="btn btn-sm btn-info text-white fw-bold" onclick="cargarFlujo()"><i class="bi bi-folder-2-open"></i> Abrir</button>
                 <button class="btn btn-sm btn-primary fw-bold" onclick="abrirModalNuevoFlujo()"><i class="bi bi-plus-lg"></i> Nuevo</button>
+                <button class="btn btn-sm btn-secondary fw-bold" onclick="abrirModalDuplicarFlujo()"><i class="bi bi-copy"></i> Duplicar</button>
                 <button class="btn btn-sm btn-success fw-bold" onclick="guardarFlujo()"><i class="bi bi-save"></i> Guardar borrador</button>
             <button class="btn btn-sm btn-warning fw-bold text-dark" onclick="publicarFlujo()"><i class="bi bi-cloud-upload"></i> Publicar</button>
 
@@ -1212,6 +1441,9 @@ if (function_exists('utf8_encode_deep')) {
             </div>
             <div class="toolbox-item" draggable="true" data-type="AVANCE">
                 <i class="bi bi-folder-plus text-info"></i> Avance
+            </div>
+            <div class="toolbox-item" draggable="true" data-type="FISCALIZACION">
+                <i class="bi bi-shield-check text-secondary"></i> Fiscalización
             </div>
             <div class="toolbox-item" draggable="true" data-type="FIN">
                 <i class="bi bi-stop-circle text-danger"></i> Fin
@@ -1293,15 +1525,15 @@ if (function_exists('utf8_encode_deep')) {
                 <input type="number" id="nodeSla" class="form-control form-control-sm" min="0">
             </div>
             <div class="mb-3 sec-notificaciones" style="display: none;">
-                <label class="form-label d-block fw-semibold">Al completar esta etapa, notificar al siguiente responsable</label>
-                <p class="text-muted small mb-2">Se envía WhatsApp o correo a quien debe atender la siguiente tarea. En la primera etapa humana, también aplica al enviar la solicitud.</p>
+                <label class="form-label d-block fw-semibold" id="lblNodeNotTitle">Al completar esta etapa, notificar al siguiente responsable</label>
+                <p class="text-muted small mb-2" id="lblNodeNotHelp">Se envía WhatsApp o correo a quien debe atender la siguiente tarea. En la primera etapa humana, también aplica al enviar la solicitud.</p>
                 <div class="form-check mb-1">
                     <input type="checkbox" id="nodeNotWa" class="form-check-input">
-                    <label class="form-check-label" for="nodeNotWa"><i class="bi bi-whatsapp text-success"></i> WhatsApp</label>
+                    <label class="form-check-label" for="nodeNotWa"><i class="bi bi-whatsapp text-success"></i> <span class="node-not-wa-label">WhatsApp</span></label>
                 </div>
                 <div class="form-check mb-2">
                     <input type="checkbox" id="nodeNotEm" class="form-check-input">
-                    <label class="form-check-label" for="nodeNotEm"><i class="bi bi-envelope text-primary"></i> Correo electrónico</label>
+                    <label class="form-check-label" for="nodeNotEm"><i class="bi bi-envelope text-primary"></i> <span class="node-not-em-label">Correo electrónico</span></label>
                 </div>
                 <div class="mb-2">
                     <label class="form-label" for="nodeNotAsunto">Asunto del correo (opcional)</label>
@@ -1324,6 +1556,11 @@ if (function_exists('utf8_encode_deep')) {
                 <input type="checkbox" id="nodeCotEdit" class="form-check-input">
                 <label class="form-check-label" for="nodeCotEdit">Permitir cargar cotizaciones en esta etapa</label>
                 <p class="text-muted small mb-0">El responsable de esta etapa podrá abrir la solicitud y adjuntar proformas/cotizaciones.</p>
+            </div>
+            <div class="mb-3 form-check sec-inicio-crear" style="display: none;">
+                <input type="checkbox" id="nodeCreSol" class="form-check-input">
+                <label class="form-check-label" for="nodeCreSol">Permitir crear solicitud</label>
+                <p class="text-muted small mb-0">Los usuarios asignados a este nodo Inicio podrán crear solicitudes de los tipos ligados a este flujo.</p>
             </div>
         </div>
     </div>
@@ -1377,7 +1614,64 @@ if (function_exists('utf8_encode_deep')) {
         </div>
     </div>
 
+    <div class="modal fade" id="modalConnectionCondition" tabindex="-1" role="dialog" aria-labelledby="modalConnectionConditionLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title fw-bold" id="modalConnectionConditionLabel"><i class="bi bi-shuffle"></i> Condición de Decisión</h4>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="condOrigen">
+                    <input type="hidden" id="condDestino">
+                    <p class="text-muted small">Configure la regla para esta flecha. Si marca rama por defecto, se usará cuando ninguna otra condición se cumpla.</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="condComentario">Comentario</label>
+                        <input type="text" id="condComentario" class="form-control" maxlength="120" placeholder="Ej. Mayor, Menor (único por cada flecha/rama)" autocomplete="off">
+                    </div>
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="condDefault">
+                        <label class="form-check-label" for="condDefault">Rama por defecto / caso contrario</label>
+                    </div>
+                    <div id="condFields">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" for="condCampo">Campo</label>
+                            <select id="condCampo" class="form-control">
+                                <option value="Sol_Val_Est">Valor estimado de la solicitud</option>
+                                <option value="Sol_Tiempo_Est">Días estimados del proyecto</option>
+                                <option value="Sol_Pri">Prioridad</option>
+                                <option value="Trq_Cod">Tipo de requerimiento</option>
+                                <option value="Dep_Cod">Departamento solicitante</option>
+                                <option value="Sol_Cod">Código de solicitud</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" for="condOperador">Operador</label>
+                            <select id="condOperador" class="form-control">
+                                <option value=">">Mayor que (&gt;)</option>
+                                <option value="<">Menor que (&lt;)</option>
+                                <option value="=">Igual (=)</option>
+                                <option value=">=">Mayor o igual (&gt;=)</option>
+                                <option value="<=">Menor o igual (&lt;=)</option>
+                                <option value="!=">Diferente (!=)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" for="condValor">Valor</label>
+                            <input type="text" id="condValor" class="form-control" placeholder="Ej. 5000, ALTA, 30">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" onclick="limpiarCondicionConexion()"><i class="bi bi-trash"></i> Limpiar</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="guardarCondicionConexion()"><i class="bi bi-check-lg"></i> Guardar condición</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../VALIDACIONES/wf_builder.js"></script>
+    <script src="../VALIDACIONES/wf_builder.js?v=40"></script>
 </body>
 </html>
