@@ -62,10 +62,10 @@ $periodo = $periodos[0];
 <HTML>
 
 <HEAD>
-    <!--TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE-->
-    <TITLE><?Php echo "Parametrización Prov. Cli. [EXA]"; ?></TITLE>
+    <!--TITLE><?php echo $Ses_Sys_Nom; ?></TITLE-->
+    <TITLE><?php echo "Parametrización Prov. Cli. [EXA]"; ?></TITLE>
     <meta charset="UTF-8">
-    <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
+    <?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
     <style></style>
 </HEAD>
 
@@ -129,8 +129,8 @@ $periodo = $periodos[0];
                         <input id="radc2" name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" alt="" /><label for="radc2">&nbsp;&nbsp;C&oacute;digo&nbsp;&nbsp;</label>
                     </div>
                     <div class="col-md-4"> <label class="control-label label-xs">Plan de Cuentas:</label>
-                        <input name="periodo" type="text" size="6" value="<? echo $periodo['Pla_Fec'] ?>" readonly style="text-align: center;display: inline-block;width: auto;" class="form-control input-xs" />
-                        <input name="Pec_Cod" type="hidden" value="<? echo $periodo['Pec_Cod'] ?>" />
+                        <input name="periodo" type="text" size="6" value="<?php echo $periodo['Pla_Fec'] ?>" readonly style="text-align: center;display: inline-block;width: auto;" class="form-control input-xs" />
+                        <input name="Pec_Cod" type="hidden" value="<?php echo $periodo['Pec_Cod'] ?>" />
                     </div>
                 </div>
                 <div class="form-group">
@@ -209,7 +209,7 @@ $periodo = $periodos[0];
                 $.alert('La Cuenta ya esta Registrada!');
                 return;
             }
-            $.saveDataJson("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", {
+            $.saveDataJson("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", {
                     Pld_Cod: a2,
                     addCuenta: tipo
                 },
@@ -223,7 +223,7 @@ $periodo = $periodos[0];
 
         function deleteCuenta(data) {
             $.alert('Para realizar cambios comuniquese con el administrador!');
-            //            $.saveDataJson("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{Pld_Cod:data['Pld_Cod'],deleteCuenta:data['tipo']}, 
+            //            $.saveDataJson("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{Pld_Cod:data['Pld_Cod'],deleteCuenta:data['tipo']}, 
             //                  function( r ) { $("#list_"+(r['tipo']==='Deudor'?'1':'2')).jqGrid().trigger("reloadGrid", [{ page: 1 }]); }
             //             );
         }
