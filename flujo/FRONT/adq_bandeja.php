@@ -3957,7 +3957,7 @@ let currentInsCod = null;
             const fd = new FormData($('#frmAvanceDocs')[0]);
             fd.append('ajax_save_avance_docs', '1');
             fd.set('Sol_Cod', solCod);
-            $('#btnGuardarAvance').prop('disabled', true);
+            adqMostrarLoaderAccion('Guardando...', 'Registrando documentos. Espere un momento.');
             $.ajax({
                 url: 'adq_bandeja.php',
                 type: 'POST',
@@ -3974,8 +3974,10 @@ let currentInsCod = null;
                         renderHistorialPanel(res.historial);
                     }
                     if (typeof onSuccess === 'function') {
+                        // Encadena a Finalizar/Aprobar: enviarAccion actualiza el loader.
                         onSuccess();
                     } else {
+                        adqOcultarLoaderAccion();
                         const $msg = $('#avanceGuardadoMsg');
                         const msgOk = (currentNodTip === 'FISCALIZACION')
                             ? 'Documentos guardados. La solicitud permanece en este nodo; para avanzar complete el comentario y pulse Aprobar.'
@@ -3983,12 +3985,12 @@ let currentInsCod = null;
                         $msg.stop(true, true).text(msgOk).fadeIn(180).delay(5500).fadeOut(350);
                     }
                 } else {
+                    adqOcultarLoaderAccion();
                     alert('Error: ' + (res.message || 'No se pudieron guardar los documentos.'));
                 }
             }).fail(function() {
+                adqOcultarLoaderAccion();
                 alert('Error de red al guardar las facturas de avance.');
-            }).always(function() {
-                $('#btnGuardarAvance').prop('disabled', false);
             });
         }
 
@@ -4649,6 +4651,28 @@ let currentInsCod = null;
             return 'info';
         }
 
+        function adqMostrarLoaderAccion(titulo, detalle) {
+            const $loader = $('#adqLoaderAccion');
+            if (!$loader.length) {
+                return;
+            }
+            if ($loader.parent()[0] !== document.body) {
+                $loader.appendTo(document.body);
+            }
+            $('#adqLoaderAccionTitulo').text(titulo || 'Procesando...');
+            $('#adqLoaderAccionDetalle').text(detalle || 'Por favor espere mientras se registra la tarea.');
+            $('.adq-action-buttons button').prop('disabled', true);
+            $loader.css('display', 'flex').attr('aria-busy', 'true');
+        }
+
+        function adqOcultarLoaderAccion() {
+            const $loader = $('#adqLoaderAccion');
+            if ($loader.length) {
+                $loader.hide().attr('aria-busy', 'false');
+            }
+            $('.adq-action-buttons button').prop('disabled', false);
+        }
+
         function mostrarMensajeCentrado(mensaje, callback, tipo) {
             const tipoFinal = tipo || adqInferirTipoMensaje(mensaje);
             const iconos = {
@@ -4903,6 +4927,19 @@ let currentInsCod = null;
 
             $('#actionName').val(accion);
             const formData = new FormData($('#frmWorkflowAction')[0]);
+            const textosLoader = {
+                APROBAR: { titulo: 'Finalizando...', detalle: 'Registrando la aprobacion. Espere un momento.' },
+                COMPLETAR: { titulo: 'Completando tarea...', detalle: 'Registrando la tarea. Espere un momento.' },
+                OBSERVAR: { titulo: 'Registrando observacion...', detalle: 'Guardando la observacion. Espere un momento.' },
+                DEVOLVER: { titulo: 'Devolviendo...', detalle: 'Registrando la devolucion. Espere un momento.' },
+                RECHAZAR: { titulo: 'Rechazando...', detalle: 'Registrando el rechazo. Espere un momento.' }
+            };
+            const loaderTxt = textosLoader[accion] || { titulo: 'Procesando...', detalle: 'Registrando la tarea. Espere un momento.' };
+            if (accion === 'APROBAR' && (currentNodTip === 'AVANCE' || currentNodTip === 'FIN')) {
+                loaderTxt.titulo = 'Finalizando...';
+                loaderTxt.detalle = 'Cerrando la etapa. Espere un momento.';
+            }
+            adqMostrarLoaderAccion(loaderTxt.titulo, loaderTxt.detalle);
 
             $.ajax({
                 url: 'adq_bandeja.php?ajax_workflow_action=1',
@@ -4925,14 +4962,17 @@ let currentInsCod = null;
                                         : (accion === 'COMPLETAR')
                                             ? 'Tarea completada correctamente'
                                             : ('Accion "' + accion + '" procesada correctamente');
+                        adqOcultarLoaderAccion();
                         mostrarMensajeCentrado(msgOk, function() {
                             window.location.reload();
                         }, accion === 'RECHAZAR' ? 'warning' : 'success');
                     } else {
+                        adqOcultarLoaderAccion();
                         alert('Error al procesar accion: ' + res.message);
                     }
                 },
                 error: function() {
+                    adqOcultarLoaderAccion();
                     alert('Error critico de red al comunicarse con el servidor.');
                 }
             });
@@ -5352,5 +5392,12 @@ let currentInsCod = null;
             }
         });
     </script>
+    <div id="adqLoaderAccion" aria-live="polite" aria-busy="false" style="display:none;position:fixed;inset:0;z-index:4000;background:rgba(15,23,42,0.55);align-items:center;justify-content:center;padding:20px;">
+        <div style="background:#ffffff;border-radius:12px;padding:28px 36px;text-align:center;box-shadow:0 20px 40px rgba(15,23,42,0.25);min-width:260px;max-width:360px;">
+            <div class="spinner-border text-primary" role="status" style="width:2.6rem;height:2.6rem;"></div>
+            <div id="adqLoaderAccionTitulo" style="margin-top:16px;font-size:16px;font-weight:700;color:#0f172a;">Procesando...</div>
+            <div id="adqLoaderAccionDetalle" style="margin-top:6px;font-size:13px;color:#64748b;">Por favor espere mientras se registra la tarea.</div>
+        </div>
+    </div>
 </body>
 </html>
