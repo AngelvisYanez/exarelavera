@@ -211,10 +211,24 @@ if (isset($ajax_workflow_action)) {
     }
 
     if (!empty($archivos_accion)) {
-        $target_dir = "../../DATA/adquisiciones_sustentos/";
-        if (!file_exists($target_dir)) {
-            mkdir($target_dir, 0777, true);
+        $sol_row = $obBD_con1->getRowConsultaSql(
+            "SELECT i.Ins_Ent_Cod AS Sol_Cod, s.Sol_Tit
+             FROM wf_instancias i
+             LEFT JOIN adq_solicitudes s ON s.Sol_Cod = i.Ins_Ent_Cod AND i.Ins_Ent_Typ = 'adq_solicitudes'
+             WHERE i.Ins_Cod = $ins_cod
+             LIMIT 1;",
+            $obBD_conexion
+        );
+        $sol_cod_adj = !empty($sol_row['Sol_Cod']) ? intval($sol_row['Sol_Cod']) : 0;
+        $sol_tit_adj = !empty($sol_row['Sol_Tit']) ? $sol_row['Sol_Tit'] : '';
+        try {
+            $dir_info = $obBD_adq->asegurarDirectorioDocumentosSolicitud($sol_cod_adj, $sol_tit_adj);
+        } catch (Exception $e) {
+            $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
+            exit;
         }
+        $target_dir = $dir_info['abs'] . '/';
+        $rel_dir = $dir_info['rel'];
         $paths_adjuntos = array();
         foreach ($archivos_accion as $archivo) {
             if (intval($archivo['error']) !== UPLOAD_ERR_OK) {
@@ -226,7 +240,7 @@ if (isset($ajax_workflow_action)) {
                 $obBD_con1->echoJson(array('success' => false, 'message' => 'No se pudo guardar el archivo ' . $archivo['name'] . '.'));
                 exit;
             }
-            $paths_adjuntos[] = "adquisiciones_sustentos/" . $unique_name;
+            $paths_adjuntos[] = $rel_dir . '/' . $unique_name;
         }
         if (!empty($paths_adjuntos)) {
             $adjunto_db_path = json_encode($paths_adjuntos);
@@ -279,10 +293,14 @@ if (isset($ajax_save_avance_docs)) {
         'avance_comprobante_nuevos' => 'Sav_Com_Adj'
     );
 
-    $target_dir = "../../DATA/adquisiciones_sustentos/";
-    if (!file_exists($target_dir)) {
-        mkdir($target_dir, 0777, true);
+    try {
+        $dir_info = $obBD_adq->asegurarDirectorioDocumentosSolicitud($sol_cod);
+    } catch (Exception $e) {
+        $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
+        exit;
     }
+    $target_dir = $dir_info['abs'] . '/';
+    $rel_dir = $dir_info['rel'];
 
     foreach ($mapa_campos as $input_name => $db_field) {
         if (isset($_FILES[$input_name]) && is_array($_FILES[$input_name]['name'])) {
@@ -294,7 +312,7 @@ if (isset($ajax_save_avance_docs)) {
                         if (!isset($docs_nuevos[$idx])) {
                             $docs_nuevos[$idx] = array('Sav_Des' => '');
                         }
-                        $docs_nuevos[$idx][$db_field] = "adquisiciones_sustentos/" . $unique_name;
+                        $docs_nuevos[$idx][$db_field] = $rel_dir . '/' . $unique_name;
                     }
                 }
             }
@@ -320,7 +338,7 @@ if (isset($ajax_save_avance_docs)) {
                         if (!isset($docs_existentes[$sav_cod])) {
                             $docs_existentes[$sav_cod] = array();
                         }
-                        $docs_existentes[$sav_cod][$db_field] = "adquisiciones_sustentos/" . $unique_name;
+                        $docs_existentes[$sav_cod][$db_field] = $rel_dir . '/' . $unique_name;
                     }
                 }
             }
@@ -361,7 +379,7 @@ if (isset($ajax_save_avance_docs)) {
             $docs_nuevos[] = array(
                 'Sav_Des' => $titulo,
                 'Sav_Cop_Cod' => 0,
-                'Sav_Fac_Adj' => 'adquisiciones_sustentos/' . $unique_name
+                'Sav_Fac_Adj' => $rel_dir . '/' . $unique_name
             );
         }
     }
@@ -510,8 +528,8 @@ if (isset($ajax_descargar_expediente)) {
             $obBD_con1->echoJson(array('success' => false, 'message' => 'No hay expediente firmado disponible.'));
             exit;
         }
-        $path_abs = dirname(__FILE__) . '/../../DATA/' . ltrim($estado['firmado'], '/');
-        if (!is_file($path_abs)) {
+        $path_abs = $obBD_adq->rutaAbsolutaDocumento($estado['firmado']);
+        if ($path_abs === '' || !is_file($path_abs)) {
             $obBD_con1->echoJson(array('success' => false, 'message' => 'No se encontro el archivo firmado.'));
             exit;
         }
@@ -528,8 +546,8 @@ if (isset($ajax_descargar_expediente)) {
             $obBD_con1->echoJson(array('success' => false, 'message' => 'Aun no se ha cargado el expediente PDF.'));
             exit;
         }
-        $path_abs = dirname(__FILE__) . '/../../DATA/' . ltrim($estado['pdf'], '/');
-        if (!is_file($path_abs)) {
+        $path_abs = $obBD_adq->rutaAbsolutaDocumento($estado['pdf']);
+        if ($path_abs === '' || !is_file($path_abs)) {
             $obBD_con1->echoJson(array('success' => false, 'message' => 'No se encontro el expediente cargado.'));
             exit;
         }
@@ -654,7 +672,7 @@ if (isset($ajax_firmar_expediente)) {
             $obBD_con1->echoJson(array('success' => false, 'message' => 'La llave electronica debe ser un archivo .p12'));
             exit;
         }
-        $tmp_dir = dirname(__FILE__) . '/../../DATA/adquisiciones_sustentos/tmp_llaves/';
+        $tmp_dir = dirname(__FILE__) . '/../documentos_flujo/_tmp_llaves/';
         if (!is_dir($tmp_dir)) {
             mkdir($tmp_dir, 0777, true);
         }
@@ -3405,7 +3423,7 @@ let currentInsCod = null;
             if (!path) {
                 return `<span class="text-muted small d-inline-block me-2">${label}: sin archivo</span>`;
             }
-            return `<a href="../../DATA/${path}" target="_blank" class="small d-inline-block me-2"><i class="bi bi-download"></i> ${label}</a>`;
+            return `<a href="${adqUrlDocumento(path)}" target="_blank" class="small d-inline-block me-2"><i class="bi bi-download"></i> ${label}</a>`;
         }
 
         function avanceEsc(text) {
@@ -4052,7 +4070,7 @@ let currentInsCod = null;
                     btnClass = 'btn-outline-secondary';
                 }
                 const label = escHtmlHist(a.label || 'Archivo');
-                html += `<a href="../../DATA/${a.path}" target="_blank" class="btn btn-xs ${btnClass}" style="font-size:11px;padding:3px 8px;"><i class="bi ${icon}"></i> ${label}</a>`;
+                html += `<a href="${adqUrlDocumento(a.path)}" target="_blank" class="btn btn-xs ${btnClass}" style="font-size:11px;padding:3px 8px;"><i class="bi ${icon}"></i> ${label}</a>`;
             });
             html += '</div>';
             return html;
@@ -4422,7 +4440,7 @@ let currentInsCod = null;
                             const pdfLinks = adjuntos.length
                                 ? `<div class="adq-cot-pdf-links">${adjuntos.map(function(path, i) {
                                     const label = adjuntos.length > 1 ? ('PDF ' + (i + 1)) : 'Ver PDF';
-                                    return `<a href="../../DATA/${path}" target="_blank" class="btn btn-xs btn-primary adq-cot-pdf-link"><i class="bi bi-file-earmark-pdf"></i> ${label}</a>`;
+                                    return `<a href="${adqUrlDocumento(path)}" target="_blank" class="btn btn-xs btn-primary adq-cot-pdf-link"><i class="bi bi-file-earmark-pdf"></i> ${label}</a>`;
                                 }).join('')}</div>`
                                 : '<span class="text-muted" style="font-size:11px;">Sin PDF</span>';
                             const jusTexto = c.Cot_Jus
@@ -4449,7 +4467,7 @@ let currentInsCod = null;
                             const des = $('<div>').text(a.Sad_Des || 'Sin descripcion').html();
                             const path = a.Sad_Adj || '';
                             const pdf = path
-                                ? `<a href="../../DATA/${path}" target="_blank" class="btn btn-xs btn-primary"><i class="bi bi-file-earmark-pdf"></i> Ver PDF</a>`
+                                ? `<a href="${adqUrlDocumento(path)}" target="_blank" class="btn btn-xs btn-primary"><i class="bi bi-file-earmark-pdf"></i> Ver PDF</a>`
                                 : '<span class="text-muted">Sin archivo</span>';
                             $adjList.append(`
                                 <tr>

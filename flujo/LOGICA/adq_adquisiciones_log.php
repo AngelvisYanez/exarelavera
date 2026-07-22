@@ -78,6 +78,171 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         return $slug !== '' ? $slug : 'sol';
     }
 
+    /**
+     * Nombre de carpeta seguro a partir del titulo/numero de solicitud.
+     */
+    public function slugCarpetaSolicitud($texto) {
+        $texto = trim((string)$texto);
+        if ($texto === '') {
+            return 'solicitud';
+        }
+        if (function_exists('iconv')) {
+            $conv = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $texto);
+            if ($conv !== false && $conv !== null) {
+                $texto = $conv;
+            }
+        }
+        $texto = preg_replace('/[^A-Za-z0-9_\-]+/', '_', $texto);
+        $texto = trim($texto, '_');
+        if ($texto === '') {
+            $texto = 'solicitud';
+        }
+        if (function_exists('mb_substr')) {
+            $texto = mb_substr($texto, 0, 80, 'UTF-8');
+        } else {
+            $texto = substr($texto, 0, 80);
+        }
+        return $texto;
+    }
+
+    /**
+     * Raiz absoluta: flujo/documentos_flujo
+     */
+    public function rutaBaseDocumentosFlujo() {
+        $base = dirname(__FILE__) . '/../documentos_flujo';
+        if (!is_dir($base)) {
+            @mkdir($base, 0777, true);
+        }
+        return str_replace('\\', '/', $base);
+    }
+
+    /**
+     * Resuelve nombre de carpeta por solicitud (titulo preferido).
+     */
+    public function nombreCarpetaSolicitud($sol_cod, $nombre_hint = '') {
+        $sol_cod = intval($sol_cod);
+        $titulo = trim((string)$nombre_hint);
+        $sol_num = '';
+        if ($sol_cod > 0) {
+            $row = $this->getRowConsultaSql(
+                "SELECT Sol_Num, Sol_Tit FROM adq_solicitudes WHERE Sol_Cod = $sol_cod LIMIT 1;",
+                $this->conexion
+            );
+            if (!empty($row)) {
+                if ($titulo === '' && !empty($row['Sol_Tit'])) {
+                    $titulo = trim($row['Sol_Tit']);
+                }
+                $sol_num = isset($row['Sol_Num']) ? trim($row['Sol_Num']) : '';
+            }
+        }
+        $slug_tit = $this->slugCarpetaSolicitud($titulo !== '' ? $titulo : $sol_num);
+        if ($sol_num !== '') {
+            $slug = $this->slugSolNumArchivo($sol_num) . '_' . $slug_tit;
+        } else {
+            $slug = $slug_tit;
+        }
+        if ($sol_cod > 0) {
+            $slug .= '_' . $sol_cod;
+        }
+        return $slug;
+    }
+
+    /**
+     * Crea/obtiene carpeta: flujo/documentos_flujo/{nombre_solicitud}/
+     * @return array{abs:string,rel:string,slug:string}
+     */
+    public function asegurarDirectorioDocumentosSolicitud($sol_cod, $nombre_hint = '') {
+        $slug = $this->nombreCarpetaSolicitud($sol_cod, $nombre_hint);
+        $rel = 'documentos_flujo/' . $slug;
+        $abs = $this->rutaBaseDocumentosFlujo() . '/' . $slug;
+        if (!is_dir($abs) && !@mkdir($abs, 0777, true) && !is_dir($abs)) {
+            throw new Exception('No se pudo crear la carpeta de documentos de la solicitud.');
+        }
+        $idx = $abs . '/index.html';
+        if (!is_file($idx)) {
+            @file_put_contents($idx, '');
+        }
+        return array(
+            'abs' => $abs,
+            'rel' => $rel,
+            'slug' => $slug
+        );
+    }
+
+    /**
+     * Guarda un archivo subido en la carpeta de la solicitud.
+     * @return string ruta relativa documentos_flujo/.../archivo.ext
+     */
+    public function guardarArchivoSolicitud($sol_cod, $tmp_name, $original_name, $prefijo = 'doc', $nombre_hint = '') {
+        $sol_cod = intval($sol_cod);
+        if ($tmp_name === '' || !is_uploaded_file($tmp_name)) {
+            return '';
+        }
+        $ext = strtolower(pathinfo($original_name, PATHINFO_EXTENSION));
+        if ($ext === '') {
+            $ext = 'bin';
+        }
+        $dir = $this->asegurarDirectorioDocumentosSolicitud($sol_cod, $nombre_hint);
+        $unique = preg_replace('/[^A-Za-z0-9_-]+/', '_', (string)$prefijo) . '_' . uniqid('', true) . '.' . $ext;
+        $dest = $dir['abs'] . '/' . $unique;
+        if (!@move_uploaded_file($tmp_name, $dest)) {
+            return '';
+        }
+        return $dir['rel'] . '/' . $unique;
+    }
+
+    /**
+     * Resuelve ruta absoluta de un documento (nuevo en documentos_flujo o legado en DATA).
+     */
+    public function rutaAbsolutaDocumento($ruta_relativa) {
+        $ruta_relativa = str_replace('\\', '/', trim((string)$ruta_relativa));
+        if ($ruta_relativa === '' || strpos($ruta_relativa, '..') !== false) {
+            return '';
+        }
+        $ruta_relativa = ltrim($ruta_relativa, '/');
+
+        // Nuevo esquema: flujo/documentos_flujo/...
+        if (stripos($ruta_relativa, 'documentos_flujo/') === 0) {
+            $base = realpath($this->rutaBaseDocumentosFlujo());
+            if ($base === false) {
+                return '';
+            }
+            $ruta = $base . '/' . substr($ruta_relativa, strlen('documentos_flujo/'));
+            $real = realpath($ruta);
+            if ($real === false || strpos(str_replace('\\', '/', $real), str_replace('\\', '/', $base)) !== 0) {
+                // Archivo recien creado: realpath puede fallar si no existe; validar prefijo
+                $norm = str_replace('\\', '/', $ruta);
+                $base_n = str_replace('\\', '/', $base);
+                if (strpos($norm, $base_n) === 0 && is_file($ruta)) {
+                    return $ruta;
+                }
+                return is_file($ruta) ? $ruta : '';
+            }
+            return $real;
+        }
+
+        // Legado: DATA/adquisiciones_sustentos/...
+        return $this->rutaAbsolutaData($ruta_relativa);
+    }
+
+    /**
+     * URL relativa desde flujo/FRONT hacia el documento.
+     */
+    public function urlDocumentoDesdeFront($ruta_relativa) {
+        $ruta_relativa = str_replace('\\', '/', trim((string)$ruta_relativa));
+        if ($ruta_relativa === '') {
+            return '';
+        }
+        $ruta_relativa = ltrim($ruta_relativa, '/');
+        if (stripos($ruta_relativa, 'documentos_flujo/') === 0) {
+            return '../' . $ruta_relativa;
+        }
+        if (stripos($ruta_relativa, 'DATA/') === 0) {
+            return '../../' . $ruta_relativa;
+        }
+        return '../../DATA/' . $ruta_relativa;
+    }
+
     public function parseCotAdjuntos($cot_adj) {
         if ($cot_adj === null || $cot_adj === '') {
             return array();
@@ -559,7 +724,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         $flags = array();
 
         if ($path_firmado !== '') {
-            $abs = $this->rutaAbsolutaData($path_firmado);
+            $abs = $this->rutaAbsolutaDocumento($path_firmado);
             if ($abs !== '' && is_file($abs)) {
                 $path = $path_firmado;
                 $label = 'Expediente firmado';
@@ -574,7 +739,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         }
 
         if ($path === '' && $path_cargado !== '') {
-            $abs = $this->rutaAbsolutaData($path_cargado);
+            $abs = $this->rutaAbsolutaDocumento($path_cargado);
             if ($abs !== '' && is_file($abs)) {
                 $path = $path_cargado;
                 $label = 'Expediente PDF (sin firmar)';
@@ -2723,6 +2888,11 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             }
             $this->activarWorkflowEnBorrador($resultado['Sol_Cod'], $resultado['Trq_Cod'], 'Solicitud registrada; pendiente de completar en la primera etapa.');
             $this->commit_nomsn($this->conexion);
+            try {
+                $this->asegurarDirectorioDocumentosSolicitud(intval($resultado['Sol_Cod']), $titulo);
+            } catch (Exception $eDir) {
+                // La solicitud ya quedo registrada; el directorio se creara al subir el primer archivo.
+            }
             return array('success' => true, 'Sol_Cod' => $resultado['Sol_Cod'], 'Num' => $resultado['Num']);
         } catch (Exception $e) {
             $this->rollBack_nomsn($this->conexion);
@@ -2966,7 +3136,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         if (!$this->esArchivoPdf($ruta_relativa)) {
             return;
         }
-        $abs = $this->rutaAbsolutaData($ruta_relativa);
+        $abs = $this->rutaAbsolutaDocumento($ruta_relativa);
         if ($abs === '' || !is_file($abs) || isset($vistos[$abs])) {
             return;
         }
@@ -2983,7 +3153,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         if (!$this->esArchivoPdf($ruta_relativa)) {
             return;
         }
-        $abs = $this->rutaAbsolutaData($ruta_relativa);
+        $abs = $this->rutaAbsolutaDocumento($ruta_relativa);
         if ($abs === '' || !is_file($abs) || isset($vistos[$abs]) || isset($vistos_global[$abs])) {
             return;
         }
@@ -3137,7 +3307,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         }
 
         $sol = $this->getRowConsultaSql(
-            "SELECT s.Sol_Cod, s.Sol_Num, s.Sol_Fec, s.Sol_Pri, s.Sol_Val_Est, s.Sol_Jus, s.Sol_Est,
+            "SELECT s.Sol_Cod, s.Sol_Num, s.Sol_Tit, s.Sol_Fec, s.Sol_Pri, s.Sol_Val_Est, s.Sol_Jus, s.Sol_Est,
                     s.Emp_Cod, e.Emp_Nom, e.Emp_Log, t.Trq_Des,
                     TRIM(CONCAT(IFNULL(p.Prs_Nom, ''), ' ', IFNULL(p.Prs_Ape, ''))) AS Solicitante_Nom,
                     d.Dep_Des AS Dep_Nom,
@@ -3165,6 +3335,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         return array(
             'sol_cod' => $sol_cod,
             'sol_num' => isset($sol['Sol_Num']) ? $sol['Sol_Num'] : '',
+            'sol_tit' => isset($sol['Sol_Tit']) ? $sol['Sol_Tit'] : '',
             'sol_fec' => $sol_fec,
             'sol_fec_fmt' => $sol_fec_fmt,
             'sol_pri' => isset($sol['Sol_Pri']) ? $sol['Sol_Pri'] : '',
@@ -3508,7 +3679,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         if ($ruta_relativa === '' || strpos($ruta_relativa, '..') !== false) {
             return;
         }
-        $abs = $this->rutaAbsolutaData($ruta_relativa);
+        $abs = $this->rutaAbsolutaDocumento($ruta_relativa);
         if ($abs === '' || !is_file($abs) || isset($vistos[$abs])) {
             return;
         }
@@ -4509,11 +4680,13 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         }
 
         $sol_num = !empty($meta['sol_num']) ? $meta['sol_num'] : ('SOL-' . $sol_cod);
-        $dir_rel = 'adquisiciones_sustentos/expedientes';
-        $dir_abs = dirname(__FILE__) . '/../../DATA/' . $dir_rel;
-        if (!is_dir($dir_abs) && !mkdir($dir_abs, 0777, true) && !is_dir($dir_abs)) {
-            return array('success' => false, 'message' => 'No se pudo crear el directorio de expedientes.');
+        try {
+            $dir_info = $this->asegurarDirectorioDocumentosSolicitud($sol_cod, !empty($meta['sol_tit']) ? $meta['sol_tit'] : '');
+        } catch (Exception $e) {
+            return array('success' => false, 'message' => $e->getMessage());
         }
+        $dir_rel = $dir_info['rel'];
+        $dir_abs = $dir_info['abs'];
 
         $nombre = 'expediente_sol_' . $this->slugSolNumArchivo($sol_num) . '_' . date('Ymd_His') . '.pdf';
         $ruta_salida = $dir_abs . '/' . $nombre;
@@ -4626,6 +4799,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             return array(
                 'success' => true,
                 'path' => $ruta_salida,
+                'path_rel' => $dir_rel . '/' . $nombre,
                 'filename' => $nombre,
                 'paginas' => intval($resultado['paginas']),
                 'archivos' => $archivos_docs,
@@ -4682,7 +4856,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 'message' => 'Debe descargar el expediente, revisarlo y volver a cargarlo antes de finalizar.'
             );
         }
-        $pdf_abs = $this->rutaAbsolutaData($estado['pdf']);
+        $pdf_abs = $this->rutaAbsolutaDocumento($estado['pdf']);
         if ($pdf_abs === '' || !is_file($pdf_abs)) {
             return array(
                 'success' => false,
@@ -4755,7 +4929,9 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         if (empty($resultado['success'])) {
             return $resultado;
         }
-        $rel = 'adquisiciones_sustentos/expedientes/' . $resultado['filename'];
+        $rel = !empty($resultado['path_rel'])
+            ? $resultado['path_rel']
+            : ($this->nombreCarpetaSolicitud($sol_cod) ? ('documentos_flujo/' . $this->nombreCarpetaSolicitud($sol_cod) . '/' . $resultado['filename']) : $resultado['filename']);
         $fecha = date('Y-m-d H:i:s');
         $rel_esc = $this->escapeSql($rel);
         $this->grabarv_registros(
@@ -4812,11 +4988,13 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             return array('success' => false, 'message' => 'No se encontro la solicitud.');
         }
 
-        $dir_rel = 'adquisiciones_sustentos/expedientes';
-        $dir_abs = dirname(__FILE__) . '/../../DATA/' . $dir_rel;
-        if (!is_dir($dir_abs) && !mkdir($dir_abs, 0777, true) && !is_dir($dir_abs)) {
-            return array('success' => false, 'message' => 'No se pudo preparar el directorio de expedientes.');
+        try {
+            $dir_info = $this->asegurarDirectorioDocumentosSolicitud($sol_cod);
+        } catch (Exception $e) {
+            return array('success' => false, 'message' => $e->getMessage());
         }
+        $dir_rel = $dir_info['rel'];
+        $dir_abs = $dir_info['abs'];
 
         $nombre = 'expediente_sol_' . $this->slugSolNumArchivo($sol['Sol_Num']) . '_cargado_' . date('Ymd_His') . '.pdf';
         $dest_abs = $dir_abs . '/' . $nombre;
@@ -4907,7 +5085,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             return array('success' => false, 'message' => 'Debe descargar el expediente, volver a cargarlo y luego firmarlo.');
         }
 
-        $unsigned_abs = $this->rutaAbsolutaData($estado['pdf']);
+        $unsigned_abs = $this->rutaAbsolutaDocumento($estado['pdf']);
         if ($unsigned_abs === '' || !is_file($unsigned_abs)) {
             return array('success' => false, 'message' => 'No se encontro el expediente cargado. Vuelva a subir el archivo PDF.');
         }
@@ -4925,11 +5103,13 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         $entidad = !empty($llave['cert_info']['issuer']['O']) ? $llave['cert_info']['issuer']['O'] : 'Entidad certificadora';
         $fecha_firma = date('Y-m-d H:i:s');
 
-        $dir_rel = 'adquisiciones_sustentos/expedientes';
-        $dir_abs = dirname(__FILE__) . '/../../DATA/' . $dir_rel;
-        if (!is_dir($dir_abs) && !mkdir($dir_abs, 0777, true) && !is_dir($dir_abs)) {
-            return array('success' => false, 'message' => 'No se pudo preparar el directorio de expedientes.');
+        try {
+            $dir_info = $this->asegurarDirectorioDocumentosSolicitud($sol_cod);
+        } catch (Exception $e) {
+            return array('success' => false, 'message' => $e->getMessage());
         }
+        $dir_rel = $dir_info['rel'];
+        $dir_abs = $dir_info['abs'];
 
         $nombre_firmado = 'expediente_sol_' . $this->slugSolNumArchivo($sol['Sol_Num']) . '_firmado_' . date('Ymd_His') . '.pdf';
         $ruta_firmada_abs = $dir_abs . '/' . $nombre_firmado;

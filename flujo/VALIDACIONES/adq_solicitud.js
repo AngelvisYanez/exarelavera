@@ -16,6 +16,27 @@ let reqConfig = {
     Sol_Tiempo_Est: null
 };
 
+/** URL de documento desde flujo/FRONT (nuevo documentos_flujo o legado DATA). */
+function adqUrlDocumento(path) {
+    path = String(path || '').replace(/\\/g, '/').replace(/^\/+/, '');
+    if (!path) {
+        return '';
+    }
+    if (path.indexOf('documentos_flujo/') === 0) {
+        return '../' + path;
+    }
+    if (path.indexOf('DATA/') === 0) {
+        return '../../' + path;
+    }
+    if (path.indexOf('adquisiciones_sustentos/') === 0) {
+        return '../../DATA/' + path;
+    }
+    if (path.indexOf('../') === 0 || path.indexOf('http') === 0) {
+        return path;
+    }
+    return '../documentos_flujo/' + path;
+}
+
 function syncReqConfigFromForm() {
     reqConfig.Sol_Req_Fac = $('#Sol_Req_Fac').is(':checked') ? 1 : 0;
     reqConfig.Sol_Req_Cot = $('#Sol_Req_Cot').is(':checked') ? 1 : 0;
@@ -1106,7 +1127,7 @@ function agregarAdjuntoExistente(adj) {
             </div>
             <div class="mb-2">
                 <input type="hidden" name="adjuntos_existentes[${sadCod}][Sad_Adj_Keep]" value="${$('<div>').text(path).html()}">
-                <a href="../../DATA/${$('<div>').text(path).html()}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-file-earmark-pdf"></i> ${$('<div>').text(fileName || 'Ver PDF').html()}</a>
+                <a href="${adqUrlDocumento(path)}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-file-earmark-pdf"></i> ${$('<div>').text(fileName || 'Ver PDF').html()}</a>
             </div>
             <div>
                 <label class="form-label-req small mb-1">Reemplazar PDF (opcional)</label>
@@ -1242,7 +1263,7 @@ function htmlAdqPdfsGuardados(fieldName, adjuntos, inline) {
             const safePath = adqEscHtml(path);
             const label = adjuntos.length > 1 ? ('PDF ' + (i + 1)) : 'Ver PDF';
             return `<input type="hidden" name="${fieldName}[]" value="${safePath}">
-                <a href="../../DATA/${safePath}" target="_blank" class="btn btn-sm btn-outline-primary adq-cot-pdf-btn"><i class="bi bi-file-earmark-pdf"></i> ${label}</a>`;
+                <a href="${adqUrlDocumento(safePath)}" target="_blank" class="btn btn-sm btn-outline-primary adq-cot-pdf-btn"><i class="bi bi-file-earmark-pdf"></i> ${label}</a>`;
         }).join('');
         return `<div class="adq-cot-pdfs-guardados adq-cot-pdfs-inline">${btns}</div>`;
     }
@@ -1252,7 +1273,7 @@ function htmlAdqPdfsGuardados(fieldName, adjuntos, inline) {
         return `
             <div class="adq-pdf-guardado-item">
                 <input type="hidden" name="${fieldName}[]" value="${safePath}">
-                <a href="../../DATA/${safePath}" target="_blank"><i class="bi bi-file-earmark-pdf"></i> ${fileName}</a>
+                <a href="${adqUrlDocumento(safePath)}" target="_blank"><i class="bi bi-file-earmark-pdf"></i> ${fileName}</a>
                 <button type="button" class="adq-pdf-guardado-remove" title="Quitar PDF" onclick="quitarPdfGuardado(this)"><i class="bi bi-x-lg"></i></button>
             </div>
         `;

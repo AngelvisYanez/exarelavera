@@ -152,6 +152,21 @@ function adq_h($text) {
     return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
 }
 
+function adq_url_doc_front($path) {
+    global $adq_log;
+    if (isset($adq_log) && is_object($adq_log) && method_exists($adq_log, 'urlDocumentoDesdeFront')) {
+        return $adq_log->urlDocumentoDesdeFront($path);
+    }
+    $path = ltrim(str_replace('\\', '/', (string)$path), '/');
+    if (strpos($path, 'documentos_flujo/') === 0) {
+        return '../' . $path;
+    }
+    if (strpos($path, 'DATA/') === 0) {
+        return '../../' . $path;
+    }
+    return '../../DATA/' . $path;
+}
+
 function adq_render_historial_archivos($archivos) {
     if (empty($archivos) || !is_array($archivos)) {
         return '';
@@ -174,7 +189,7 @@ function adq_render_historial_archivos($archivos) {
             $icon = 'bi-file-earmark-lock2';
             $btn = 'btn-outline-secondary';
         }
-        $html .= '<a href="../../DATA/' . adq_h($arch['path']) . '" target="_blank" class="btn btn-xs ' . $btn . '" style="font-size:11px;padding:3px 8px;">'
+        $html .= '<a href="' . adq_h(adq_url_doc_front($arch['path'])) . '" target="_blank" class="btn btn-xs ' . $btn . '" style="font-size:11px;padding:3px 8px;">'
             . '<i class="bi ' . $icon . '"></i> ' . adq_h($label) . '</a>';
     }
     $html .= '</div>';

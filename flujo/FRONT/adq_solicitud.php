@@ -27,7 +27,7 @@ $ajax_search_proveedores = isset($_GET['ajax_search_proveedores']) ? $_GET['ajax
 $ajax_lookup_proveedor = isset($_GET['ajax_lookup_proveedor']) ? $_GET['ajax_lookup_proveedor'] : null;
 $ajax_save_proveedor = isset($_POST['ajax_save_proveedor']) ? $_POST['ajax_save_proveedor'] : null;
 
-function adq_validar_y_guardar_pdf_cot($tmp_name, $original_name, $target_dir) {
+function adq_validar_y_guardar_pdf_cot($tmp_name, $original_name, $target_dir, $rel_dir) {
     if (empty($tmp_name) || !is_uploaded_file($tmp_name)) {
         return null;
     }
@@ -55,10 +55,10 @@ function adq_validar_y_guardar_pdf_cot($tmp_name, $original_name, $target_dir) {
     if (!move_uploaded_file($tmp_name, $target_file)) {
         return null;
     }
-    return 'adquisiciones_sustentos/' . $unique_name;
+    return rtrim(str_replace('\\', '/', (string)$rel_dir), '/') . '/' . $unique_name;
 }
 
-function adq_procesar_pdfs_multiples($files_field, $key, $target_dir) {
+function adq_procesar_pdfs_multiples($files_field, $key, $target_dir, $rel_dir) {
     $guardados = array();
     if (!isset($files_field['name'][$key])) {
         return $guardados;
@@ -76,7 +76,7 @@ function adq_procesar_pdfs_multiples($files_field, $key, $target_dir) {
             continue;
         }
         $tmp_name = is_array($files_field['tmp_name'][$key]) ? $files_field['tmp_name'][$key][$i] : $files_field['tmp_name'][$key];
-        $ruta = adq_validar_y_guardar_pdf_cot($tmp_name, $name, $target_dir);
+        $ruta = adq_validar_y_guardar_pdf_cot($tmp_name, $name, $target_dir, $rel_dir);
         if ($ruta !== null) {
             $guardados[] = $ruta;
         }
@@ -84,7 +84,7 @@ function adq_procesar_pdfs_multiples($files_field, $key, $target_dir) {
     return $guardados;
 }
 
-function adq_normalizar_cot_adjuntos_existentes(&$cotizaciones_existentes, $files_existentes, $target_dir, $obBD_con1) {
+function adq_normalizar_cot_adjuntos_existentes(&$cotizaciones_existentes, $files_existentes, $target_dir, $obBD_con1, $rel_dir) {
     if (!is_array($cotizaciones_existentes)) {
         return;
     }
@@ -100,7 +100,7 @@ function adq_normalizar_cot_adjuntos_existentes(&$cotizaciones_existentes, $file
             }
         }
         if (!empty($files_existentes)) {
-            $nuevos = adq_procesar_pdfs_multiples($files_existentes, $sco_cod, $target_dir);
+            $nuevos = adq_procesar_pdfs_multiples($files_existentes, $sco_cod, $target_dir, $rel_dir);
             if (!empty($nuevos)) {
                 $paths = array_merge($paths, $nuevos);
             }
@@ -163,16 +163,22 @@ if (isset($ajax_save_solicitud) || isset($ajax_save_borrador) || isset($ajax_sav
         $cot_eliminar = is_array($_POST['cot_eliminar']) ? $_POST['cot_eliminar'] : array($_POST['cot_eliminar']);
     }
 
-    $target_dir = "../../DATA/adquisiciones_sustentos/";
-    if (!file_exists($target_dir)) {
-        mkdir($target_dir, 0777, true);
+    $sol_cod_files = isset($_POST['Sol_Cod']) ? intval($_POST['Sol_Cod']) : 0;
+    $sol_tit_hint = isset($_POST['Sol_Tit']) ? trim((string)$_POST['Sol_Tit']) : '';
+    try {
+        $dir_info = $obBD_con1->asegurarDirectorioDocumentosSolicitud($sol_cod_files, $sol_tit_hint);
+    } catch (Exception $e) {
+        $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
+        exit;
     }
+    $target_dir = $dir_info['abs'] . '/';
+    $rel_dir = $dir_info['rel'];
 
     if (isset($_FILES['cotizacion_archivos'])) {
         $names = $_FILES['cotizacion_archivos']['name'];
         if (is_array($names)) {
             foreach ($names as $cot_idx => $dummy) {
-                $nuevos = adq_procesar_pdfs_multiples($_FILES['cotizacion_archivos'], $cot_idx, $target_dir);
+                $nuevos = adq_procesar_pdfs_multiples($_FILES['cotizacion_archivos'], $cot_idx, $target_dir, $rel_dir);
                 if (!empty($nuevos)) {
                     if (!isset($cotizaciones[$cot_idx])) {
                         $cotizaciones[$cot_idx] = array();
@@ -186,7 +192,7 @@ if (isset($ajax_save_solicitud) || isset($ajax_save_borrador) || isset($ajax_sav
 
     if (!empty($cotizaciones_existentes)) {
         $files_existentes = isset($_FILES['cotizacion_archivos_existentes']) ? $_FILES['cotizacion_archivos_existentes'] : null;
-        adq_normalizar_cot_adjuntos_existentes($cotizaciones_existentes, $files_existentes, $target_dir, $obBD_con1);
+        adq_normalizar_cot_adjuntos_existentes($cotizaciones_existentes, $files_existentes, $target_dir, $obBD_con1, $rel_dir);
     }
 
     $adjuntos_nuevos = array();
@@ -198,7 +204,8 @@ if (isset($ajax_save_solicitud) || isset($ajax_save_borrador) || isset($ajax_sav
                 $ruta = adq_validar_y_guardar_pdf_cot(
                     $_FILES['adjunto_archivos']['tmp_name'][$idx],
                     $_FILES['adjunto_archivos']['name'][$idx],
-                    $target_dir
+                    $target_dir,
+                    $rel_dir
                 );
             }
             if ($ruta) {
@@ -215,7 +222,8 @@ if (isset($ajax_save_solicitud) || isset($ajax_save_borrador) || isset($ajax_sav
                 $ruta = adq_validar_y_guardar_pdf_cot(
                     $_FILES['adjunto_archivos_existentes']['tmp_name'][$sad_cod],
                     $_FILES['adjunto_archivos_existentes']['name'][$sad_cod],
-                    $target_dir
+                    $target_dir,
+                    $rel_dir
                 );
                 if ($ruta) {
                     $adj_ex['Sad_Adj'] = $ruta;

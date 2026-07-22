@@ -1095,6 +1095,15 @@ function adqListaEtiquetaEstado($sol_est)
                 .replace(/'/g, '&#39;');
         }
 
+        function adqUrlDocLista(path) {
+            path = String(path || '').replace(/\\/g, '/').replace(/^\/+/, '');
+            if (!path) return '';
+            if (path.indexOf('documentos_flujo/') === 0) return '../' + path;
+            if (path.indexOf('DATA/') === 0) return '../../' + path;
+            if (path.indexOf('adquisiciones_sustentos/') === 0) return '../../DATA/' + path;
+            return '../../DATA/' + path;
+        }
+
         function renderTrackerHtml(flowVisual) {
             const flowNodos = (flowVisual && flowVisual.nodos) ? flowVisual.nodos : [];
             if (!flowNodos.length) {
@@ -1150,7 +1159,7 @@ function adqListaEtiquetaEstado($sol_est)
                     btn = 'btn-outline-secondary';
                     icon = 'bi-file-earmark-lock2';
                 }
-                html += '<a href="../../DATA/' + escHtmlLista(a.path) + '" target="_blank" class="btn btn-xs ' + btn + '">'
+                html += '<a href="' + adqUrlDocLista(a.path) + '" target="_blank" class="btn btn-xs ' + btn + '">'
                     + '<i class="bi ' + icon + '"></i> ' + escHtmlLista(a.label || 'Archivo')
                     + '</a>';
             });
