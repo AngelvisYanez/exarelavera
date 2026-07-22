@@ -466,7 +466,7 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
 }
 
 // Nodos no disponibles en el diseñador embebido de configuracion
-$wf_builder_nodos_ocultos = array('NOTIFICACION');
+$wf_builder_nodos_ocultos = array('NOTIFICACION', 'FACTURA');
 
 if (isset($_GET['ajax_get_builder'])) {
     header('Content-Type: text/html; charset=UTF-8');

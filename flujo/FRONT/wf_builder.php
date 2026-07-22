@@ -736,9 +736,11 @@ if (isset($ajax_get_builder)) {
             <div class="toolbox-item" draggable="true" data-type="RECEPCION">
                 <i class="bi bi-box-seam text-purple"></i> Recepción
             </div>
+            <?php if (!in_array('FACTURA', $wf_builder_nodos_ocultos, true)) { ?>
             <div class="toolbox-item" draggable="true" data-type="FACTURA">
                 <i class="bi bi-receipt text-warning"></i> Factura
             </div>
+            <?php } ?>
             <?php if (!in_array('NOTIFICACION', $wf_builder_nodos_ocultos, true)) { ?>
             <div class="toolbox-item" draggable="true" data-type="NOTIFICACION">
                 <i class="bi bi-envelope text-dark"></i> Notificación
@@ -1428,9 +1430,11 @@ if (function_exists('utf8_encode_deep')) {
             <div class="toolbox-item" draggable="true" data-type="RECEPCION">
                 <i class="bi bi-box-seam text-purple"></i> Recepción
             </div>
+            <?php if (!in_array('FACTURA', $wf_builder_nodos_ocultos, true)) { ?>
             <div class="toolbox-item" draggable="true" data-type="FACTURA">
                 <i class="bi bi-receipt text-warning"></i> Factura
             </div>
+            <?php } ?>
             <?php if (!in_array('NOTIFICACION', $wf_builder_nodos_ocultos, true)) { ?>
             <div class="toolbox-item" draggable="true" data-type="NOTIFICACION">
                 <i class="bi bi-envelope text-dark"></i> Notificación
