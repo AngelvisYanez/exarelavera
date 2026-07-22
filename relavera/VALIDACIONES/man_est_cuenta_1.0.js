@@ -6,10 +6,17 @@
 
 var gridEstadoCuenta = $("#gridEstadoCuenta");
 var gridPlantas = $("#gridPlantas");
+window._manEstPlantaTarget = 'ind';
 
 $(document).ready(function() {
     // Inicializar datepickers
     $("#Fec_IniM, #Fec_FinM").datepicker({
+        dateFormat: 'yy-mm-dd',
+        changeMonth: true,
+        changeYear: true,
+        yearRange: "-10:+1"
+    });
+    $("#Fec_IniM_Cons, #Fec_FinM_Cons").datepicker({
         dateFormat: 'yy-mm-dd',
         changeMonth: true,
         changeYear: true,
@@ -22,6 +29,8 @@ $(document).ready(function() {
     
     $("#Fec_IniM").val($.datepicker.formatDate('yy-mm-dd', firstDayOfYear));
     $("#Fec_FinM").val($.datepicker.formatDate('yy-mm-dd', today));
+    $("#Fec_IniM_Cons").val($.datepicker.formatDate('yy-mm-dd', firstDayOfYear));
+    $("#Fec_FinM_Cons").val($.datepicker.formatDate('yy-mm-dd', today));
 
     // Inicializar Grid Principal
     gridEstadoCuenta.createGrid({
@@ -194,6 +203,7 @@ $(document).ready(function() {
 
     // Planta search listeners
     $("#btnBuscarPlanta").click(function() {
+        window._manEstPlantaTarget = 'ind';
         $("#plantaDialog").dialog("open");
         gridPlantas.trigger("reloadGrid");
     });
@@ -202,6 +212,36 @@ $(document).ready(function() {
         $("#Pla_Cod").val("");
         $("#Pla_Nom").val("");
         gridEstadoCuenta.trigger("reloadGrid");
+    });
+
+    $("#btnBuscarPlantaCons").click(function() {
+        window._manEstPlantaTarget = 'cons';
+        $("#plantaDialog").dialog("open");
+        gridPlantas.trigger("reloadGrid");
+    });
+
+    $("#btnLimpiarPlantaCons").click(function() {
+        $("#Pla_Cod_Cons").val("");
+        $("#Pla_Nom_Cons").val("");
+        $("#Cli_Cod_Cons").val("");
+        $("#Cli_Nom_Cons").val("");
+        $("#detalle_consolidado_container").empty();
+    });
+
+    $("#btnBuscarPlantaVirt").click(function() {
+        window._manEstPlantaTarget = 'virt';
+        $("#plantaDialog").dialog("open");
+        gridPlantas.trigger("reloadGrid");
+    });
+
+    $("#btnLimpiarPlantaVirt").click(function() {
+        $("#Pla_Cod_Virt").val("");
+        $("#Pla_Nom_Virt").val("");
+        $("#Cli_Cod_Virt").val("");
+        $("#Cli_Nom_Virt").val("");
+        if ($("#gridSaldosVirtual").length && $("#gridSaldosVirtual")[0].grid) {
+            $("#gridSaldosVirtual").jqGrid("clearGridData");
+        }
     });
 
     // Enter en búsqueda plantas
@@ -214,6 +254,7 @@ $(document).ready(function() {
 
     // Acción botón Buscar principal (redundancia por seguridad)
     $("#btnBuscar").click(function() { buscarEstadoCuenta(); });
+    $("#btnBuscarConsolidado").click(function() { buscarEstadoCuentaConsolidado(); });
 });
 
 function buscarEstadoCuenta() {
@@ -252,13 +293,24 @@ function seleccionarPlantaBtn(rowid) {
 }
 
 function seleccionarPlanta(row) {
-    $("#Pla_Cod").val(row.Pla_Cod);
-    $("#Pla_Nom").val(row.Pla_Nom);
-    $("#Cli_Cod").val(row.Cli_Cod);
-    $("#Cli_Nom").val(row.Cliente);
+    var t = window._manEstPlantaTarget || 'ind';
+    if (t === 'cons') {
+        $("#Pla_Cod_Cons").val(row.Pla_Cod);
+        $("#Pla_Nom_Cons").val(row.Pla_Nom);
+        $("#Cli_Cod_Cons").val(row.Cli_Cod);
+        $("#Cli_Nom_Cons").val(row.Cliente);
+    } else if (t === 'virt') {
+        $("#Pla_Cod_Virt").val(row.Pla_Cod);
+        $("#Pla_Nom_Virt").val(row.Pla_Nom);
+        $("#Cli_Cod_Virt").val(row.Cli_Cod);
+        $("#Cli_Nom_Virt").val(row.Cliente);
+    } else {
+        $("#Pla_Cod").val(row.Pla_Cod);
+        $("#Pla_Nom").val(row.Pla_Nom);
+        $("#Cli_Cod").val(row.Cli_Cod);
+        $("#Cli_Nom").val(row.Cliente);
+    }
     $("#plantaDialog").dialog("close");
-    // gridEstadoCuenta.trigger("reloadGrid"); // OLD
-    // buscarEstadoCuenta(); // Call search which will load detail - REMOVED per user request
 }
 
 /* Cambiar período y habilitar/deshabilitar campos de fecha */
@@ -338,6 +390,363 @@ function intercambiarFechas() {
     var fecFin = $("#Fec_FinM").val();
     $("#Fec_IniM").val(fecFin);
     $("#Fec_FinM").val(fecIni);
+}
+
+/* Período / fechas — pestaña Consolidado */
+function cambiarPeriodoCons() {
+    if (!$("#Pec_Cod_Cons").length) {
+        return;
+    }
+    var pec_cod = $("#Pec_Cod_Cons").val();
+    var mes_cod = $("#Mes_Cod_Cons").val();
+
+    if (pec_cod === 'PF') {
+        $("#Fec_IniM_Cons, #Fec_FinM_Cons").prop('disabled', false);
+        $("#Mes_Cod_Cons").prop('disabled', true);
+        $("#Mes_Cod_Cons").val('00');
+        if ($("#Fec_IniM_Cons").val() === '') {
+            var today = new Date();
+            var firstDayOfYear = new Date(today.getFullYear(), 0, 1);
+            $("#Fec_IniM_Cons").val($.datepicker.formatDate('yy-mm-dd', firstDayOfYear));
+            $("#Fec_FinM_Cons").val($.datepicker.formatDate('yy-mm-dd', today));
+        }
+    } else if (pec_cod === 'T') {
+        $("#Fec_IniM_Cons, #Fec_FinM_Cons").prop('disabled', true);
+        $("#Mes_Cod_Cons").prop('disabled', true);
+        $("#Mes_Cod_Cons").val('00');
+        var minDate = '';
+        var maxDate = $.datepicker.formatDate('yy-mm-dd', new Date());
+        $("#Pec_Cod_Cons option").each(function() {
+            var start = $(this).data('inicio');
+            if (start && (!minDate || start < minDate)) {
+                minDate = start;
+            }
+        });
+        if (minDate) {
+            var minYear = minDate.substring(0, 4);
+            $("#Fec_IniM_Cons").val(minYear + '-01-01');
+        } else {
+            $("#Fec_IniM_Cons").val('2020-01-01');
+        }
+        $("#Fec_FinM_Cons").val(maxDate);
+    } else {
+        $("#Fec_IniM_Cons, #Fec_FinM_Cons").prop('disabled', true);
+        $("#Mes_Cod_Cons").prop('disabled', false);
+        var selectedOption = $("#Pec_Cod_Cons option:selected");
+        var fecIniAnio = selectedOption.data('inicio');
+        var year = fecIniAnio.substring(0, 4);
+        if (mes_cod === '00') {
+            $("#Fec_IniM_Cons").val(year + '-01-01');
+            $("#Fec_FinM_Cons").val(year + '-12-31');
+        } else {
+            var mesIndex = parseInt(mes_cod, 10) - 1;
+            var firstDay = new Date(year, mesIndex, 1);
+            var lastDay = new Date(year, mesIndex + 1, 0);
+            $("#Fec_IniM_Cons").val($.datepicker.formatDate('yy-mm-dd', firstDay));
+            $("#Fec_FinM_Cons").val($.datepicker.formatDate('yy-mm-dd', lastDay));
+        }
+    }
+}
+
+function intercambiarFechasCons() {
+    var fecIni = $("#Fec_IniM_Cons").val();
+    var fecFin = $("#Fec_FinM_Cons").val();
+    $("#Fec_IniM_Cons").val(fecFin);
+    $("#Fec_FinM_Cons").val(fecIni);
+}
+
+function mapMatEarDesc(v) {
+    var m = { TR: 'Transporte', AT: 'Almacenamiento Temporal', EL: 'Eliminación', DF: 'Disposición Final', CT: 'Cierre Técnico' };
+    return m[v] || v || '';
+}
+
+function mapManTipTecLabel(tip) {
+    var u = (tip || '').toString().toUpperCase();
+    if (u === 'F') return 'Facturado';
+    if (u === 'GS') return 'Salida (técnico)';
+    if (u === 'GE') return 'Entrada (garita)';
+    if (u === 'P') return 'Pendiente';
+    return tip || '';
+}
+
+function formatManTecCodigoRow(row) {
+    var pla = row.Pla_Cod != null ? String(row.Pla_Cod) : '';
+    var mn = row.Man_Num != null ? parseInt(row.Man_Num, 10) : (row.Man_Cod != null ? parseInt(row.Man_Cod, 10) : 0);
+    if (isNaN(mn)) mn = 0;
+    var s = String(mn);
+    while (s.length < 4) s = '0' + s;
+    return 'M' + pla + '-' + s;
+}
+
+function buscarEstadoCuentaConsolidado() {
+    var cliCod = $("#Cli_Cod_Cons").val();
+    if (!cliCod) {
+        alert('Seleccione una planta con cliente asociado.');
+        return;
+    }
+    var fi = $("#Fec_IniM_Cons").val();
+    var ff = $("#Fec_FinM_Cons").val();
+    var filtro = $("input[name='op_opciones']:checked").val() || '';
+    var search = ($("#searchEstCuenta").val() || '').trim();
+    if (!fi || !ff) {
+        alert('Defina el rango de fechas del período.');
+        return;
+    }
+    var pla = $("#Pla_Cod_Cons").val() || '';
+    $.ajax({
+        url: window.location.pathname,
+        type: 'GET',
+        data: {
+            loadConsolidadoTecAjax: true,
+            Cli_Cod: cliCod,
+            Pla_Cod: pla,
+            Fec_IniM: fi,
+            Fec_FinM: ff,
+            filtro: filtro,
+            search: search
+        },
+        dataType: 'json',
+        beforeSend: function() {
+            $("#detalle_consolidado_container").html('<div class="text-center"><i class="fa fa-spinner fa-spin fa-2x"></i><p>Cargando manifiestos técnicos...</p></div>').show();
+        },
+        success: function(response) {
+            if (response.success) {
+                renderConsolidadoTecHTML(response.rows || [], response);
+            } else {
+                $("#detalle_consolidado_container").html('<div class="alert alert-warning">' + (response.message || 'No se pudo cargar el consolidado.') + '</div>');
+            }
+        },
+        error: function() {
+            $("#detalle_consolidado_container").html('<div class="alert alert-danger">Error al cargar el consolidado.</div>');
+        }
+    });
+}
+
+function limpiarFiltrosConsolidado() {
+    $("#searchEstCuenta").val('');
+    $("#Pec_Cod_Cons").val('T');
+    $("#Pla_Cod_Cons").val("");
+    $("#Pla_Nom_Cons").val("");
+    $("#Cli_Cod_Cons").val("");
+    $("#Cli_Nom_Cons").val("");
+    $("#Fec_IniM_Cons, #Fec_FinM_Cons").prop('disabled', true).val('');
+    $("#detalle_consolidado_container").empty();
+    cambiarPeriodoCons();
+}
+
+/** Fecha yyyy-mm-dd → dd/mm/yyyy (como en Excel del estado de cuenta) */
+function fecIsoADMY(fecIso) {
+    if (!fecIso || String(fecIso).length < 10) return '';
+    var p = String(fecIso).substring(0, 10).split('-');
+    if (p.length !== 3) return '';
+    return p[2] + '/' + p[1] + '/' + p[0];
+}
+
+/** Texto "SALDO AL dd, de Mes, yyyy" para el día anterior al inicio del período */
+function etiquetaSaldoInicialDesde(fecIniIso) {
+    if (!fecIniIso || String(fecIniIso).length < 10) return 'SALDO INICIAL';
+    var p = String(fecIniIso).substring(0, 10).split('-');
+    var d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+    d.setDate(d.getDate() - 1);
+    var meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    return 'SALDO AL ' + d.getDate() + ', de ' + meses[d.getMonth()] + ', ' + d.getFullYear();
+}
+
+/* Consolidado: formato Detalle/Concepto como estado de cuenta (igual referencia Excel) */
+function renderConsolidadoTecHTML(rows, response) {
+    var cliente = response.cliente || $("#Cli_Nom_Cons").val() || '';
+    var ruc = response.cliente_ruc || '';
+    var fecIni = $("#Fec_IniM_Cons").val();
+    var fecFin = $("#Fec_FinM_Cons").val();
+    var empresaEmisora = $("#Ses_Emp_Nom").val() || 'RELA VERA S.A.';
+    var pendMonto = parseFloat(response.manif_pend_monto) || 0;
+    var pendCnt = parseInt(response.manif_pend_cnt, 10) || 0;
+    var ultFecFact = (response.ult_fec_fact || '').toString().substring(0, 10);
+    var ultFecManGen = (response.ult_fec_man_gen || '').toString().substring(0, 10);
+    var saldoInicial = response.saldo_inicial != null ? parseFloat(response.saldo_inicial) : 0;
+    if (isNaN(saldoInicial)) saldoInicial = 0;
+    var movimientos = $.isArray(response.detalle_ec) ? response.detalle_ec : [];
+
+    function sumarDiaIso(fecIso) {
+        if (!fecIso || fecIso.length < 10) return '';
+        var p = fecIso.substring(0, 10).split('-');
+        if (p.length !== 3) return '';
+        var d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+        d.setDate(d.getDate() + 1);
+        var mm = String(d.getMonth() + 1);
+        var dd = String(d.getDate());
+        if (mm.length < 2) mm = '0' + mm;
+        if (dd.length < 2) dd = '0' + dd;
+        return d.getFullYear() + '-' + mm + '-' + dd;
+    }
+
+    function formatearNumeroFactura(v) {
+        var s = (v || '').toString().trim();
+        if (!s || s.toUpperCase() === 'S/N') return 'S/N';
+        if (/^\d{3}-\d{3}-\d{8}$/.test(s)) return s;
+        var solo = s.replace(/\D/g, '');
+        if (!solo) return s;
+        while (solo.length < 14) solo = '0' + solo;
+        if (solo.length > 14) solo = solo.substring(solo.length - 14);
+        return solo.substring(0, 3) + '-' + solo.substring(3, 6) + '-' + solo.substring(6);
+    }
+
+    var html = '';
+    html += '<div class="text-right" style="margin-bottom: 10px;">';
+    html += '<button type="button" class="btn btn-success btn-sm" onclick="exportarExcelConsolidadoTec()" title="Exportar a Excel"><i class="glyphicon glyphicon-download-alt"></i> Excel</button> ';
+    html += '<button type="button" class="btn btn-primary btn-sm" onclick="imprimirConsolidadoTec()" title="Imprimir / PDF"><i class="glyphicon glyphicon-print"></i> PDF / Imprimir</button>';
+    html += '</div>';
+    html += '<div id="reporte-content-consolidado" style="max-width: 95%; margin: 0 auto;">';
+    html += '<div class="panel panel-default" style="border: 2px solid #ccc; border-radius: 10px; overflow: hidden;">';
+    html += '<table id="header_exportacion_cons" style="width: 100%; display: none; margin-bottom: 20px; border: none;">';
+    html += '<tr><td colspan="7" align="center" style="text-align: center; border: none;">';
+    html += '<h3 style="margin: 0; font-weight: bold; color: #000; text-transform: uppercase; font-size: 18px;">' + $('<div/>').text(empresaEmisora).html() + '</h3>';
+    html += '<h4 style="margin: 5px 0; font-weight: bold; color: #333; letter-spacing: 2px; font-size: 16px;">ESTADO DE CUENTA</h4>';
+    html += '<div style="font-size: 14px; color: #000;">Desde: <b>' + fecIni + '</b> &nbsp;|&nbsp; Hasta: <b>' + fecFin + '</b></div>';
+    html += '</td></tr></table>';
+    html += '<div class="panel-heading" style="background-color: #f8f9fa; border-top: 2px solid #333; border-bottom: 2px solid #333; padding: 10px 15px;">';
+    html += '<h4 style="margin: 0; font-weight: bold; font-size: 15px; color: #333; text-transform: uppercase;">' + $('<div/>').text(cliente).html() + '</h4>';
+    html += '<h5 style="margin: 2px 0 0 0; font-weight: bold; font-size: 14px; color: #333;">RUC: ' + $('<div/>').text(ruc).html() + '</h5>';
+    html += '</div>';
+    html += '<div class="table-responsive" style="margin-top: 10px;">';
+    html += '<table class="table table-striped table-bordered table-condensed" border="1" style="margin-bottom: 0; border-collapse: collapse; width: 100%; border: 1px solid #ddd; font-size: 14px;">';
+    html += '<thead><tr style="background-color: #34495e;">';
+    html += '<th class="text-center" style="background-color: #34495e; border: 1px solid #ddd; padding: 6px; font-weight: bold; color: #fff;">Nº</th>';
+    html += '<th class="text-center" style="background-color: #34495e; border: 1px solid #ddd; padding: 6px; font-weight: bold; color: #fff;">No. Compr.</th>';
+    html += '<th class="text-center" style="background-color: #34495e; border: 1px solid #ddd; padding: 6px; font-weight: bold; color: #fff;">Fecha</th>';
+    html += '<th class="text-center" style="background-color: #34495e; border: 1px solid #ddd; padding: 6px; font-weight: bold; color: #fff;">Detalle/Concepto</th>';
+    html += '<th style="text-align: right; background-color: #34495e; border: 1px solid #ddd; padding: 6px; font-weight: bold; color: #fff;">Ingreso</th>';
+    html += '<th style="text-align: right; background-color: #34495e; border: 1px solid #ddd; padding: 6px; font-weight: bold; color: #fff;">Egresos</th>';
+    html += '<th style="text-align: right; background-color: #34495e; border: 1px solid #ddd; padding: 6px; font-weight: bold; color: #fff;">Saldo</th>';
+    html += '</tr></thead><tbody>';
+
+    var saldoAcumulado = saldoInicial;
+    var contador = 1;
+    var totalIngresos = 0;
+    var totalEgresos = 0;
+
+    html += '<tr>';
+    html += '<td class="text-center" style="border: 1px solid #ccc; padding: 5px;">' + (contador++) + '</td>';
+    html += '<td class="text-center" style="border: 1px solid #ccc; padding: 5px;"></td>';
+    html += '<td class="text-center" style="border: 1px solid #ccc; padding: 5px;"></td>';
+    html += '<td style="border: 1px solid #ccc; padding: 5px; text-align: center; font-weight: bold;">' + $('<div/>').text(etiquetaSaldoInicialDesde(fecIni)).html() + '</td>';
+    html += '<td style="text-align: right; border: 1px solid #ccc; padding: 5px;">0.00</td>';
+    html += '<td style="text-align: right; border: 1px solid #ccc; padding: 5px;">0.00</td>';
+    html += '<td style="text-align: right; font-weight: bold; border: 1px solid #ccc; padding: 5px;">$ ' + formatNumber(saldoAcumulado, 2) + '</td>';
+    html += '</tr>';
+
+    $.each(movimientos, function(idx, row) {
+        var ingreso = parseFloat(row.Valor || 0);
+        var egreso = parseFloat(row.Abono || 0);
+        if (ingreso === 0 && egreso === 0) return;
+
+        saldoAcumulado = parseFloat((saldoAcumulado + ingreso - egreso).toFixed(2));
+        totalIngresos += ingreso;
+        totalEgresos += egreso;
+
+        var noCompr = row.codigoAnti || row.Documento || '';
+        var detalle = '';
+        if (row.FormaPago === 'Comprobante') {
+            var nf = formatearNumeroFactura(row.Documento || noCompr);
+            var cantViajes = parseInt(row.CantViajes, 10) || 0;
+            if (nf === 'S/N') {
+                detalle = 'Comprobante: S/N';
+            } else {
+                detalle = 'Factura ' + nf + (cantViajes > 0 ? (' (' + cantViajes + ' viaje' + (cantViajes === 1 ? '' : 's') + ')') : '');
+            }
+        } else {
+            detalle = (row.FormaPago || 'Transferencia') + ' / Doc,Num: ' + (row.Documento || '');
+        }
+
+        html += '<tr>';
+        html += '<td class="text-center" style="border: 1px solid #ccc; padding: 5px;">' + (contador++) + '</td>';
+        html += '<td class="text-center" style="border: 1px solid #ccc; padding: 5px;">' + $('<div/>').text(noCompr).html() + '</td>';
+        html += '<td class="text-center" style="border: 1px solid #ccc; padding: 5px;">' + $('<div/>').text(fecIsoADMY((row.Fecha || '').toString().substring(0, 10))).html() + '</td>';
+        html += '<td style="border: 1px solid #ccc; padding: 5px;">' + $('<div/>').text(detalle).html() + '</td>';
+        html += '<td style="text-align: right; color: ' + (ingreso > 0 ? '#28a745' : '#000') + '; font-weight: ' + (ingreso > 0 ? 'bold' : 'normal') + '; border: 1px solid #ccc; padding: 5px;">' + (ingreso > 0 ? '$ ' + formatNumber(ingreso, 2) : '0.00') + '</td>';
+        html += '<td style="text-align: right; color: ' + (egreso > 0 ? '#1f5fbf' : '#000') + '; font-weight: ' + (egreso > 0 ? 'bold' : 'normal') + '; border: 1px solid #ccc; padding: 5px;">' + (egreso > 0 ? '$ ' + formatNumber(egreso, 2) : '0.00') + '</td>';
+        html += '<td style="text-align: right; font-weight: bold; border: 1px solid #ccc; padding: 5px;">$ ' + formatNumber(saldoAcumulado, 2) + '</td>';
+        html += '</tr>';
+    });
+
+    saldoAcumulado = parseFloat((saldoAcumulado - pendMonto).toFixed(2));
+    totalEgresos += pendMonto;
+    html += '<tr>';
+    html += '<td class="text-center" style="border: 1px solid #ccc; padding: 5px;">' + (contador++) + '</td>';
+    html += '<td class="text-center" style="border: 1px solid #ccc; padding: 5px;"></td>';
+    html += '<td class="text-center" style="border: 1px solid #ccc; padding: 5px;"></td>';
+    var fecDesdePend = sumarDiaIso(ultFecFact) || fecIni;
+    var fecHastaPend = ultFecManGen || fecFin;
+    html += '<td style="border: 1px solid #ccc; padding: 5px; color: #d60000; font-weight: bold;">POR FACTURAR (' + pendCnt + ' VIAJES) DEL ' + $('<div/>').text(fecDesdePend).html() + ' AL ' + $('<div/>').text(fecHastaPend).html() + '</td>';
+    html += '<td style="text-align: right; border: 1px solid #ccc; padding: 5px;">0.00</td>';
+    html += '<td style="text-align: right; color: #d60000; font-weight: bold; border: 1px solid #ccc; padding: 5px;">$ ' + formatNumber(pendMonto, 2) + '</td>';
+    html += '<td style="text-align: right; color: #d60000; font-weight: bold; border: 1px solid #ccc; padding: 5px;">$ ' + formatNumber(saldoAcumulado, 2) + '</td>';
+    html += '</tr>';
+
+    html += '<tr style="font-weight: bold;">';
+    html += '<td colspan="4" style="text-align: right; border: 1px solid #ccc; padding: 5px;">Totales</td>';
+    html += '<td style="text-align: right; border: 1px solid #ccc; padding: 5px;">$ ' + formatNumber(totalIngresos, 2) + '</td>';
+    html += '<td style="text-align: right; border: 1px solid #ccc; padding: 5px;">$ ' + formatNumber(totalEgresos, 2) + '</td>';
+    html += '<td style="text-align: right; border: 1px solid #ccc; padding: 5px;">$ ' + formatNumber(saldoAcumulado, 2) + '</td>';
+    html += '</tr>';
+
+    html += '</tbody></table></div>';
+    var fechaGen = new Date();
+    var fechaGenStr = fechaGen.getDate() + '/' + (fechaGen.getMonth() + 1) + '/' + fechaGen.getFullYear() + ' ' + fechaGen.getHours() + ':' + (fechaGen.getMinutes() < 10 ? '0' : '') + fechaGen.getMinutes();
+    html += '<table id="footer_exportacion_cons" style="width: 100%; display: none; margin-top: 10px; border: none;">';
+    html += '<tr><td colspan="7" style="text-align: right; font-size: 10px; font-style: italic; color: #555; border: none;">Generado por: EXA [Software Contable] el ' + fechaGenStr + '</td></tr></table>';
+    html += '</div></div>';
+    $("#detalle_consolidado_container").html(html);
+}
+
+function exportarExcelConsolidadoTec() {
+    var $clone = $('#reporte-content-consolidado').clone();
+    if (!$clone.length) {
+        alert('No hay datos para exportar.');
+        return;
+    }
+    $clone.find('#header_exportacion_cons').css('display', 'table');
+    $clone.find('#footer_exportacion_cons').css('display', 'table');
+    var contenido = $clone.html();
+    var cliNom = $("#Cli_Nom_Cons").val() || 'Cliente';
+    var fecha = new Date();
+    var fechaStr = fecha.getDate() + '-' + (fecha.getMonth() + 1) + '-' + fecha.getFullYear();
+    var nombreArchivo = 'Estado_Cuenta_Consolidado_Tec_' + cliNom.replace(/[^a-zA-Z0-9]/g, '_') + '_' + fechaStr;
+    var form = $('<form>', { method: 'POST', action: '../../Librerias/exportar/ficheroExcel.php', target: '_blank' });
+    form.append($('<input>', { type: 'hidden', name: 'datos_a_enviar', value: contenido }));
+    form.append($('<input>', { type: 'hidden', name: 'nombre', value: nombreArchivo }));
+    form.append($('<input>', { type: 'hidden', name: 'hoja', value: 'Consolidado Técnico' }));
+    $('body').append(form);
+    form.submit();
+    form.remove();
+}
+
+function imprimirConsolidadoTec() {
+    var $clone = $('#reporte-content-consolidado').clone();
+    if (!$clone.length) {
+        alert('No hay datos para imprimir.');
+        return;
+    }
+    $clone.find('#header_exportacion_cons').css('display', 'table');
+    $clone.find('#footer_exportacion_cons').css('display', 'table');
+    var contenido = $clone.html();
+    var ventana = window.open('', '_blank');
+    ventana.document.write('<html><head><title>Estado de Cuenta</title>');
+    ventana.document.write('<style>');
+    ventana.document.write('body { font-family: Arial, sans-serif; font-size: 12px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }');
+    ventana.document.write('@media print { body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }');
+    ventana.document.write('.panel { border: 1px solid #ccc; margin-bottom: 20px; }');
+    ventana.document.write('.table { width: 100%; border-collapse: collapse; margin-bottom: 0; }');
+    ventana.document.write('.table th, .table td { padding: 8px; line-height: 1.42857143; vertical-align: top; border: 1px solid #ddd; }');
+    ventana.document.write('.text-center { text-align: center; }');
+    ventana.document.write('.text-right { text-align: right; }');
+    ventana.document.write('h4, h5 { margin: 5px 0; }');
+    ventana.document.write('</style></head><body>');
+    ventana.document.write(contenido);
+    ventana.document.write('</body></html>');
+    ventana.document.close();
+    ventana.focus();
+    ventana.print();
 }
 
 /* Cargar detalle/balance de un cliente */
@@ -793,6 +1202,17 @@ $(document).ready(function() {
     
     $("#Fec_IniM_Grupal").val($.datepicker.formatDate('yy-mm-dd', firstDayOfYear));
     $("#Fec_FinM_Grupal").val($.datepicker.formatDate('yy-mm-dd', today));
+
+    if ($("#Fec_IniM_Comp").length) {
+        $("#Fec_IniM_Comp, #Fec_FinM_Comp").datepicker({
+            dateFormat: 'yy-mm-dd',
+            changeMonth: true,
+            changeYear: true,
+            yearRange: "-10:+1"
+        });
+        $("#Fec_IniM_Comp").val($.datepicker.formatDate('yy-mm-dd', firstDayOfYear));
+        $("#Fec_FinM_Comp").val($.datepicker.formatDate('yy-mm-dd', today));
+    }
 });
 
 /* Cambiar período Grupal y habilitar/deshabilitar campos de fecha */
@@ -1318,3 +1738,718 @@ function exportarPDFGrupal() {
         ventana.print();
     }, 500);
 }
+
+// ========================================
+// PESTAÑA COMPARACIÓN (solo administradores)
+// ========================================
+
+function cambiarPeriodoComp() {
+    if (!$("#Pec_Cod_Comp").length) {
+        return;
+    }
+    var pec_cod = $("#Pec_Cod_Comp").val();
+    var mes_cod = $("#Mes_Cod_Comp").val();
+
+    if (pec_cod === 'PF') {
+        $("#Fec_IniM_Comp, #Fec_FinM_Comp").prop('disabled', false);
+        $("#Mes_Cod_Comp").prop('disabled', true);
+        $("#Mes_Cod_Comp").val('00');
+
+        if ($("#Fec_IniM_Comp").val() === '') {
+            var today = new Date();
+            var firstDayOfYear = new Date(today.getFullYear(), 0, 1);
+            $("#Fec_IniM_Comp").val($.datepicker.formatDate('yy-mm-dd', firstDayOfYear));
+            $("#Fec_FinM_Comp").val($.datepicker.formatDate('yy-mm-dd', today));
+        }
+    } else if (pec_cod === 'T') {
+        $("#Fec_IniM_Comp, #Fec_FinM_Comp").prop('disabled', true);
+        $("#Mes_Cod_Comp").prop('disabled', true);
+        $("#Mes_Cod_Comp").val('00');
+
+        var minDate = '';
+        var maxDate = $.datepicker.formatDate('yy-mm-dd', new Date());
+
+        $("#Pec_Cod_Comp option").each(function() {
+            var start = $(this).data('inicio');
+            if (start && (!minDate || start < minDate)) {
+                minDate = start;
+            }
+        });
+
+        if (minDate) {
+            var minYear = minDate.substring(0, 4);
+            $("#Fec_IniM_Comp").val(minYear + '-01-01');
+        } else {
+            $("#Fec_IniM_Comp").val('2020-01-01');
+        }
+        $("#Fec_FinM_Comp").val(maxDate);
+
+    } else {
+        $("#Fec_IniM_Comp, #Fec_FinM_Comp").prop('disabled', true);
+        $("#Mes_Cod_Comp").prop('disabled', false);
+
+        var selectedOption = $("#Pec_Cod_Comp option:selected");
+        var fecIniAnio = selectedOption.data('inicio');
+        var year = fecIniAnio ? fecIniAnio.substring(0, 4) : new Date().getFullYear().toString();
+
+        if (mes_cod === '00') {
+            $("#Fec_IniM_Comp").val(year + '-01-01');
+            $("#Fec_FinM_Comp").val(year + '-12-31');
+        } else {
+            var mesIndex = parseInt(mes_cod, 10) - 1;
+            var firstDay = new Date(year, mesIndex, 1);
+            var lastDay = new Date(year, mesIndex + 1, 0);
+
+            $("#Fec_IniM_Comp").val($.datepicker.formatDate('yy-mm-dd', firstDay));
+            $("#Fec_FinM_Comp").val($.datepicker.formatDate('yy-mm-dd', lastDay));
+        }
+    }
+}
+
+function intercambiarFechasComp() {
+    var fecIni = $("#Fec_IniM_Comp").val();
+    var fecFin = $("#Fec_FinM_Comp").val();
+    $("#Fec_IniM_Comp").val(fecFin);
+    $("#Fec_FinM_Comp").val(fecIni);
+}
+
+function buscarComparacionSaldos() {
+    var todas = $("#comp_todas_plantas").length && $("#comp_todas_plantas").is(":checked");
+    var plaCod = $("#Pla_Cod_Comp").val();
+    if (!todas && (!plaCod || plaCod === "")) {
+        alert("Seleccione una planta o marque «Todas las plantas».");
+        return;
+    }
+    var fecIni = $("#Fec_IniM_Comp").val();
+    var fecFin = $("#Fec_FinM_Comp").val();
+
+    var postData = {
+        loadComparacionSaldosAjax: true,
+        Fec_IniM: fecIni,
+        Fec_FinM: fecFin
+    };
+    if (todas) {
+        postData.comparar_todas = 1;
+    } else {
+        postData.Pla_Cod = plaCod;
+    }
+
+    $.ajax({
+        url: window.location.pathname,
+        type: "POST",
+        data: postData,
+        dataType: "json",
+        beforeSend: function() {
+            var msg = todas ? "Calculando comparación para todas las plantas..." : "Calculando comparación...";
+            $("#detalle_comparacion_container").html('<div class="text-center"><i class="fa fa-spinner fa-spin fa-2x"></i><p>' + msg + "</p></div>");
+        },
+        success: function(response) {
+            if (response.success) {
+                if (response.modo === "todas") {
+                    renderComparacionTodasHTML(response);
+                } else {
+                    renderComparacionHTML(response, fecIni, fecFin);
+                }
+            } else {
+                $("#detalle_comparacion_container").html('<div class="alert alert-warning">' + (response.message || "No se pudo obtener la comparación.") + "</div>");
+            }
+        },
+        error: function() {
+            $("#detalle_comparacion_container").html('<div class="alert alert-danger">Error al cargar la comparación.</div>');
+        }
+    });
+}
+
+function renderComparacionHTML(data, fecIni, fecFin) {
+    var planta = data.planta || '';
+    var sec = data.detalle_ec || {};
+    var saldoEc = parseFloat(data.saldo_estado_cuenta) || 0;
+    var anticipo = parseFloat(data.anticipo) || 0;
+    var sinF = parseFloat(data.sin_facturar) || 0;
+    var saldoCab = parseFloat(data.saldo_cabecera_manifiesto) || 0;
+    var dif = parseFloat(data.diferencia) || 0;
+
+    var difClass = Math.abs(dif) < 0.01 ? '#198754' : '#dc3545';
+    var difLabel = Math.abs(dif) < 0.01 ? 'Sin diferencia' : 'Diferencia';
+
+    var html = '';
+    html += '<div class="row">';
+    html += '<div class="col-sm-10 col-sm-offset-1">';
+    html += '<p style="font-size: 13px;"><strong>Planta:</strong> ' + $('<div/>').text(planta).html() + ' &nbsp;|&nbsp; <strong>Período:</strong> ' + fecIni + ' al ' + fecFin + '</p>';
+
+    html += '<div class="row" style="margin-bottom: 15px;">';
+    html += '<div class="col-sm-4">';
+    html += '<div style="border: 2px solid #0a58ca; border-radius: 8px; padding: 12px; background: #f0f7ff;">';
+    html += '<div style="font-size: 10px; font-weight: 600; color: #0a58ca; text-transform: uppercase;">Anticipos (A) — cabecera</div>';
+    html += '<div style="font-size: 20px; font-weight: 800;">$ ' + formatNumber(anticipo, 2) + '</div></div></div>';
+    html += '<div class="col-sm-4">';
+    html += '<div style="border: 2px solid #b8860b; border-radius: 8px; padding: 12px; background: #fffbf0;">';
+    html += '<div style="font-size: 10px; font-weight: 600; color: #856404; text-transform: uppercase;">Sin facturar (B) — cabecera</div>';
+    html += '<div style="font-size: 20px; font-weight: 800;">$ ' + formatNumber(sinF, 2) + '</div></div></div>';
+    html += '<div class="col-sm-4">';
+    html += '<div style="border: 2px solid #198754; border-radius: 8px; padding: 12px; background: #f4fff8;">';
+    html += '<div style="font-size: 10px; font-weight: 600; color: #0f5132; text-transform: uppercase;">Saldo total (A−B) manifiesto</div>';
+    html += '<div style="font-size: 20px; font-weight: 800; color: #198754;">$ ' + formatNumber(saldoCab, 2) + '</div></div></div>';
+    html += '</div>';
+
+    html += '<div style="border: 1px solid #dee2e6; border-radius: 6px; padding: 15px; margin-bottom: 15px; background: #fafafa;">';
+    html += '<strong style="color: #254463;">Desglose estado de cuenta (mismo período que reporte grupal)</strong>';
+    html += '<table class="table table-condensed" style="margin-top: 10px; margin-bottom: 0;"><tbody>';
+    html += '<tr><td>Saldo inicial</td><td style="text-align: right;">$ ' + formatNumber(parseFloat(sec.saldo_inicial) || 0, 2) + '</td></tr>';
+    html += '<tr><td>Depósitos</td><td style="text-align: right; color: #28a745;">+ $ ' + formatNumber(parseFloat(sec.depositos) || 0, 2) + '</td></tr>';
+    html += '<tr><td>Retenciones</td><td style="text-align: right; color: #28a745;">+ $ ' + formatNumber(parseFloat(sec.retenciones) || 0, 2) + '</td></tr>';
+    html += '<tr><td>Manifiestos facturados</td><td style="text-align: right; color: #dc3545;">− $ ' + formatNumber(parseFloat(sec.manifiestos_fact) || 0, 2) + '</td></tr>';
+    html += '<tr><td>Manifiestos pendientes</td><td style="text-align: right; color: #dc3545;">− $ ' + formatNumber(parseFloat(sec.manifiestos_pend) || 0, 2) + '</td></tr>';
+    html += '<tr style="font-weight: bold; background: #e9ecef;"><td>Saldo final estado de cuenta</td><td style="text-align: right;">$ ' + formatNumber(saldoEc, 2) + '</td></tr>';
+    html += '</tbody></table></div>';
+
+    html += '<div style="border: 2px solid ' + difClass + '; border-radius: 8px; padding: 16px; text-align: center; background: ' + (Math.abs(dif) < 0.01 ? '#d1e7dd' : '#f8d7da') + ';">';
+    html += '<div style="font-size: 11px; font-weight: 700; color: ' + difClass + '; text-transform: uppercase;">' + difLabel + ' (EC − cabecera)</div>';
+    html += '<div style="font-size: 24px; font-weight: 800; color: ' + difClass + ';">$ ' + formatNumber(dif, 2) + '</div>';
+    html += '</div>';
+
+    html += '</div></div>';
+
+    $("#detalle_comparacion_container").html(html);
+}
+
+function renderComparacionTodasHTML(data) {
+    var rows = data.rows || [];
+    var fecIni = data.fec_ini || "";
+    var fecFin = data.fec_fin || "";
+    var n = rows.length;
+    var conDif = 0;
+    var i, r, dif, rowBg;
+
+    var html = "";
+    html += '<div class="row">';
+    html += '<div class="col-sm-12">';
+    html += '<p style="font-size: 13px;"><strong>Período:</strong> ' + fecIni + " al " + fecFin + " &nbsp;|&nbsp; <strong>Plantas incluidas:</strong> " + n + "</p>";
+    html += '<div style="overflow-x: auto;">';
+    html += '<table class="table table-bordered table-hover" style="font-size: 12px; margin-bottom: 0; border-collapse: collapse;">';
+    var thGrp = 'text-align: center; vertical-align: middle; background-color: #34495e; color: #fff; border: 1px solid #2c3e50; font-weight: 700; padding: 6px 4px;';
+    var thSub = 'text-align: center; background-color: #34495e; color: #fff; border: 1px solid #2c3e50; font-weight: 700; padding: 5px 4px;';
+    html += '<thead>';
+    html += '<tr>';
+    html += '<th rowspan="2" style="' + thGrp + ' width: 38px;">N°</th>';
+    html += '<th rowspan="2" style="' + thGrp + ' min-width: 180px;">Planta</th>';
+    html += '<th colspan="3" style="' + thGrp + '">PLATAFORMA DE PLANTAS</th>';
+    html += '<th colspan="1" style="' + thGrp + '">ADMINISTRACIÓN</th>';
+    html += '<th rowspan="2" style="' + thGrp + ' width: 90px;">Diferencia</th>';
+    html += '</tr><tr>';
+    html += '<th style="' + thSub + '">Anticipos (A)</th>';
+    html += '<th style="' + thSub + '">Sin fact. (B)</th>';
+    html += '<th style="' + thSub + '">Saldo A–B manif.</th>';
+    html += '<th style="' + thSub + '">Saldo final EC</th>';
+    html += '</tr></thead><tbody>';
+
+    if (n === 0) {
+        html += '<tr><td colspan="7" class="text-center text-muted">No hay plantas con cliente en esta empresa para comparar.</td></tr>';
+    } else {
+        for (i = 0; i < n; i++) {
+            r = rows[i];
+            dif = parseFloat(r.diferencia) || 0;
+            if (Math.abs(dif) >= 0.01) {
+                conDif++;
+            }
+            rowBg = Math.abs(dif) >= 0.01 ? "background-color: #fff3cd;" : "";
+            html += '<tr style="' + rowBg + '">';
+            html += '<td style="text-align: center; border: 1px solid #ccc;">' + (i + 1) + "</td>";
+            html += '<td style="text-align: center; border: 1px solid #ccc;">' + $("<div/>").text(r.planta || "").html() + "</td>";
+            html += '<td style="text-align: center; border: 1px solid #ccc;">$ ' + formatNumber(parseFloat(r.anticipo) || 0, 2) + "</td>";
+            html += '<td style="text-align: center; border: 1px solid #ccc;">$ ' + formatNumber(parseFloat(r.sin_facturar) || 0, 2) + "</td>";
+            html += '<td style="text-align: center; border: 1px solid #ccc; font-weight: 600; color: #198754;">$ ' + formatNumber(parseFloat(r.saldo_cabecera_manifiesto) || 0, 2) + "</td>";
+            html += '<td style="text-align: center; border: 1px solid #ccc; font-weight: 700;">$ ' + formatNumber(parseFloat(r.saldo_estado_cuenta) || 0, 2) + "</td>";
+            html += '<td style="text-align: center; border: 1px solid #ccc; font-weight: 700; color: ' + (Math.abs(dif) < 0.01 ? "#198754" : "#c0392b") + ';">$ ' + formatNumber(dif, 2) + "</td>";
+            html += "</tr>";
+        }
+    }
+
+    html += "</tbody></table></div>";
+    if (n > 0) {
+        html += '<p style="margin-top: 10px; font-size: 12px; color: #555;">Filas con diferencia distinta de cero (±0,01): <strong>' + conDif + "</strong> de " + n + "</p>";
+    }
+    html += "</div></div>";
+
+    $("#detalle_comparacion_container").html(html);
+}
+
+
+/* ===================== Saldos Virtual ===================== */
+var gridSaldosVirtual = null;
+var gridSaldosVirtualGrupal = null;
+var svGridsReady = false;
+
+function tipoConceptoSaldosVirtual(concepto) {
+    var c = String(concepto || "");
+    if (c === "Saldo Inicial") return "initial";
+    if (c.indexOf("Manifiesto") === 0) return "manifest";
+    if (c.indexOf("Transferencia") === 0) return "transfer";
+    if (c.indexOf("Retencion") === 0) return "retention";
+    return "default";
+}
+
+function contarRegistrosSaldosVirtual(rows) {
+    var cnt = { transfer: 0, retention: 0, manifest: 0, total: 0 };
+    if (!$.isArray(rows)) {
+        return cnt;
+    }
+    $.each(rows, function (_, row) {
+        var concepto = String((row && row.Concepto) || "");
+        var tipo = tipoConceptoSaldosVirtual(concepto);
+        if (tipo === "initial" || tipo === "default") {
+            return;
+        }
+        var n = 1;
+        if (tipo === "manifest") {
+            var m = concepto.match(/^Manifiestos\s*\(Total:\s*(\d+)/i);
+            if (m) {
+                n = parseInt(m[1], 10) || 0;
+            }
+        }
+        cnt[tipo] += n;
+        cnt.total += n;
+    });
+    return cnt;
+}
+
+function actualizarResumenSaldosVirtual(rows) {
+    var cnt = contarRegistrosSaldosVirtual(rows);
+    $("#svCntTransfer").text(cnt.transfer);
+    $("#svCntRetention").text(cnt.retention);
+    $("#svCntManifest").text(cnt.manifest);
+    $("#svCntTotal").text(cnt.total);
+}
+
+function formatConceptoSaldosVirtual(value) {
+    var texto = String(value || "");
+    var seguro = $("<div>").text(texto).html();
+    return '<span class="sv-concept sv-concept-' + tipoConceptoSaldosVirtual(texto) + '">' + seguro + "</span>";
+}
+
+function exportarExcelSaldosVirtual(grid, nombre, hoja) {
+    if (!grid || !grid[0] || !grid[0].grid || !grid.jqGrid("getDataIDs").length) {
+        $.alert("No hay datos para exportar. Realice una búsqueda primero.");
+        return;
+    }
+    grid.jqGrid("exportGridExcel", {
+        nombre: nombre,
+        hoja: hoja,
+        caption: true,
+        footer: true,
+        generated: true,
+        removeHiddens: true,
+        removeCols: [0]
+    });
+}
+
+function imprimirSaldosVirtual(grid, nombre) {
+    if (!grid || !grid[0] || !grid[0].grid || !grid.jqGrid("getDataIDs").length) {
+        $.alert("No hay datos para imprimir. Realice una búsqueda primero.");
+        return;
+    }
+    grid.jqGrid("printGrid", {
+        nombre: nombre,
+        caption: true,
+        footer: true,
+        generated: true,
+        removeHiddens: true,
+        removeCols: [0]
+    });
+}
+
+function initSaldosVirtualGrids() {
+    if (svGridsReady || !$("#gridSaldosVirtual").length) {
+        return;
+    }
+    svGridsReady = true;
+
+    $(".datepicker-virt, .datepicker-virtg").datepicker({
+        dateFormat: "yy-mm-dd",
+        changeMonth: true,
+        changeYear: true,
+        yearRange: "-10:+1"
+    });
+
+    $("#Tip_Mov_Virt").off("change.svTipo").on("change.svTipo", "input[type=checkbox]", function () {
+        var $chip = $(this).closest(".sv-tipo-chip");
+        $chip.toggleClass("is-on", this.checked);
+        if (!$("#Tip_Mov_Virt input:checked").length) {
+            this.checked = true;
+            $chip.addClass("is-on");
+        }
+    });
+
+    gridSaldosVirtual = $("#gridSaldosVirtual");
+    gridSaldosVirtual.createGrid({
+        caption: "Saldos Virtual — Movimientos",
+        datatype: "local",
+        colModel: [
+            { label: "ID", name: "IdMov", width: 55, align: "center" },
+            { label: "Fecha", name: "Fecha", width: 80, align: "center" },
+            { label: "Concepto", name: "Concepto", width: 180, align: "left", formatter: formatConceptoSaldosVirtual },
+            { label: "+ Anticipos", name: "Ingresos", width: 90, align: "right", formatter: "currency", formatoptions: { prefix: "$ ", thousandsSeparator: ",", decimalPlaces: 2 },
+                cellattr: function () { return 'style="color:#198754;font-weight:600;"'; } },
+            { label: "− Manifiestos", name: "Egresos", width: 90, align: "right", formatter: "currency", formatoptions: { prefix: "$ ", thousandsSeparator: ",", decimalPlaces: 2 },
+                cellattr: function () { return 'style="color:#c0392b;font-weight:600;"'; } },
+            { label: "Saldo", name: "Saldo", width: 95, align: "right", formatter: "currency", formatoptions: { prefix: "$ ", thousandsSeparator: ",", decimalPlaces: 2 },
+                cellattr: function () { return 'style="font-weight:700;color:#1d4ed8;"'; } }
+        ],
+        rowNum: 100,
+        rowList: [50, 100, 200, 500],
+        height: 360,
+        autowidth: true,
+        shrinkToFit: true,
+        viewrecords: true,
+        pgbuttons: true,
+        pginput: true,
+        pgtext: "Pág. {0} de {1}",
+        pager: "#pagerSaldosVirtual",
+        footerrow: true,
+        userDataOnFooter: false,
+        rowattr: function (rd) {
+            return { "class": "sv-row-" + tipoConceptoSaldosVirtual(rd.Concepto) };
+        }
+    }, true, "pagerSaldosVirtual", { view: false, refresh: false }).gridButtonsAdd([
+        {
+            caption: "Excel",
+            buttonicon: "glyphicon glyphicon-download-alt",
+            onClickButton: function () {
+                exportarExcelSaldosVirtual(gridSaldosVirtual, "Saldos_Virtual_Individual", "Movimientos");
+            }
+        },
+        {
+            caption: "Imprimir",
+            buttonicon: "glyphicon glyphicon-print",
+            onClickButton: function () {
+                imprimirSaldosVirtual(gridSaldosVirtual, "Saldos Virtual - Individual");
+            }
+        }
+    ]);
+
+    if ($("#gridSaldosVirtualGrupal").length) {
+        gridSaldosVirtualGrupal = $("#gridSaldosVirtualGrupal");
+        gridSaldosVirtualGrupal.createGrid({
+            caption: "Saldos Virtual — Resumen por planta",
+            datatype: "local",
+            colModel: [
+                { label: "Planta", name: "Planta", width: 180 },
+                { label: "Saldo Inicial", name: "Saldo_Inicial", width: 95, align: "right", formatter: "currency", formatoptions: { prefix: "$ ", thousandsSeparator: ",", decimalPlaces: 2 } },
+                { label: "Anticipos", name: "Anticipos", width: 90, align: "right", formatter: "currency", formatoptions: { prefix: "$ ", thousandsSeparator: ",", decimalPlaces: 2 } },
+                { label: "Ant. Retención", name: "Anticipo_Retencion", width: 100, align: "right", formatter: "currency", formatoptions: { prefix: "$ ", thousandsSeparator: ",", decimalPlaces: 2 } },
+                { label: "Ingresos", name: "Ingresos", width: 90, align: "right", formatter: "currency", formatoptions: { prefix: "$ ", thousandsSeparator: ",", decimalPlaces: 2 } },
+                { label: "Egresos", name: "Manifiestos", width: 90, align: "right", formatter: "currency", formatoptions: { prefix: "$ ", thousandsSeparator: ",", decimalPlaces: 2 } },
+                { label: "Saldo", name: "Saldo", width: 95, align: "right", formatter: "currency", formatoptions: { prefix: "$ ", thousandsSeparator: ",", decimalPlaces: 2 } }
+            ],
+            rowNum: 50,
+            rowList: [25, 50, 100, 200],
+            height: 360,
+            autowidth: true,
+            shrinkToFit: true,
+            viewrecords: true,
+            pgbuttons: true,
+            pginput: true,
+            pgtext: "Pág. {0} de {1}",
+            pager: "#pagerSaldosVirtualGrupal",
+            footerrow: true
+        }, true, "pagerSaldosVirtualGrupal", { view: false, refresh: false }).gridButtonsAdd([
+            {
+                caption: "Excel",
+                buttonicon: "glyphicon glyphicon-download-alt",
+                onClickButton: function () {
+                    exportarExcelSaldosVirtual(gridSaldosVirtualGrupal, "Saldos_Virtual_Grupal", "Resumen");
+                }
+            },
+            {
+                caption: "Imprimir",
+                buttonicon: "glyphicon glyphicon-print",
+                onClickButton: function () {
+                    imprimirSaldosVirtual(gridSaldosVirtualGrupal, "Saldos Virtual - Grupal");
+                }
+            }
+        ]);
+    }
+
+    $('a[href="#tabVirtual"]').on("shown.bs.tab", function () {
+        if (gridSaldosVirtual && gridSaldosVirtual[0] && gridSaldosVirtual[0].grid) {
+            gridSaldosVirtual.jqGrid("setGridWidth", gridSaldosVirtual.closest(".sv-grid-wrap").width());
+        }
+        if (gridSaldosVirtualGrupal && gridSaldosVirtualGrupal[0] && gridSaldosVirtualGrupal[0].grid) {
+            gridSaldosVirtualGrupal.jqGrid("setGridWidth", gridSaldosVirtualGrupal.closest(".sv-grid-wrap").width());
+        }
+    });
+}
+
+function cambiarModoSaldosVirtual() {
+    var modo = $('input[name="sv_modo"]:checked').val() || "individual";
+    $(".sv-mode-opt").removeClass("is-active");
+    $('input[name="sv_modo"]:checked').closest(".sv-mode-opt").addClass("is-active");
+    $("#svFilterTitle").text(modo === "grupal" ? "Filtros grupal" : "Filtros individual");
+    if (modo === "grupal") {
+        $("#svPanelIndividual").hide();
+        $("#svPanelIndividualGrid").hide();
+        $("#svResumenTipos").hide();
+        $("#svPanelGrupal").show();
+        $("#svPanelGrupalGrid").show();
+        if (gridSaldosVirtualGrupal && gridSaldosVirtualGrupal[0] && gridSaldosVirtualGrupal[0].grid) {
+            setTimeout(function () {
+                gridSaldosVirtualGrupal.jqGrid("setGridWidth", gridSaldosVirtualGrupal.closest(".sv-grid-wrap").width());
+            }, 50);
+        }
+    } else {
+        $("#svPanelGrupal").hide();
+        $("#svPanelGrupalGrid").hide();
+        $("#svPanelIndividual").show();
+        $("#svResumenTipos").show();
+        $("#svPanelIndividualGrid").show();
+        if (gridSaldosVirtual && gridSaldosVirtual[0] && gridSaldosVirtual[0].grid) {
+            setTimeout(function () {
+                gridSaldosVirtual.jqGrid("setGridWidth", gridSaldosVirtual.closest(".sv-grid-wrap").width());
+            }, 50);
+        }
+    }
+}
+
+function aplicarRangoPeriodoVirt(pecSel, mesSel, fecIniSel, fecFinSel) {
+    var mes = $(mesSel).val();
+    var opt = $(pecSel + " option:selected");
+    var year = String(opt.data("inicio") || "").substring(0, 4);
+    $(mesSel).prop("disabled", false);
+
+    // Por Fechas (opción en Mes): habilitar rango manual
+    if (mes === "PF") {
+        $(fecIniSel + ", " + fecFinSel).prop("disabled", false);
+        if ($(fecIniSel).val() === "" || !year) {
+            var today = new Date();
+            var y = year || String(today.getFullYear());
+            $(fecIniSel).val(y + "-01-01");
+            $(fecFinSel).val($.datepicker.formatDate("yy-mm-dd", today));
+        }
+        return;
+    }
+
+    $(fecIniSel + ", " + fecFinSel).prop("disabled", true);
+    if (!year) return;
+    if (mes === "00") {
+        $(fecIniSel).val(year + "-01-01");
+        $(fecFinSel).val(year + "-12-31");
+    } else {
+        var lastDay = new Date(parseInt(year, 10), parseInt(mes, 10), 0).getDate();
+        $(fecIniSel).val(year + "-" + mes + "-01");
+        $(fecFinSel).val(year + "-" + mes + "-" + (lastDay < 10 ? "0" + lastDay : lastDay));
+    }
+}
+
+function cambiarPeriodoVirt() {
+    if (!$("#Pec_Cod_Virt").length) return;
+    aplicarRangoPeriodoVirt("#Pec_Cod_Virt", "#Mes_Cod_Virt", "#Fec_IniM_Virt", "#Fec_FinM_Virt");
+}
+
+function cambiarPeriodoVirtG() {
+    if (!$("#Pec_Cod_VirtG").length) return;
+    aplicarRangoPeriodoVirt("#Pec_Cod_VirtG", "#Mes_Cod_VirtG", "#Fec_IniM_VirtG", "#Fec_FinM_VirtG");
+}
+
+function intercambiarFechasVirt() {
+    var a = $("#Fec_IniM_Virt").val();
+    var b = $("#Fec_FinM_Virt").val();
+    $("#Fec_IniM_Virt").val(b);
+    $("#Fec_FinM_Virt").val(a);
+}
+
+function limpiarFiltrosVirtual() {
+    if (!$("#svPlantaBtns").is(":hidden")) {
+        $("#Pla_Cod_Virt,#Pla_Nom_Virt,#Cli_Cod_Virt,#Cli_Nom_Virt").val("");
+    }
+    $("#Mes_Cod_Virt").val("00");
+    cambiarPeriodoVirt();
+    if (gridSaldosVirtual && gridSaldosVirtual[0] && gridSaldosVirtual[0].grid) {
+        gridSaldosVirtual.jqGrid("clearGridData");
+        gridSaldosVirtual.jqGrid("footerData", "set", { Concepto: "", Ingresos: 0, Egresos: 0, Saldo: 0 });
+    }
+}
+
+function setSvBtnBuscarLoading($btn, loading) {
+    if (!$btn || !$btn.length) return;
+    if (loading) {
+        if (!$btn.data("sv-html")) {
+            $btn.data("sv-html", $btn.html());
+        }
+        $btn.prop("disabled", true)
+            .addClass("disabled")
+            .html('<i class="fa fa-spinner fa-spin"></i> Buscando...');
+    } else {
+        $btn.prop("disabled", false)
+            .removeClass("disabled")
+            .html($btn.data("sv-html") || '<span class="glyphicon glyphicon-search"></span> Buscar');
+    }
+}
+
+function reloadSaldosVirtualGrid(grid, rows, footerData) {
+    if (!grid || !grid[0] || !grid[0].grid) return;
+    var data = rows || [];
+    grid.jqGrid("clearGridData", true);
+    grid.jqGrid("setGridParam", { datatype: "local", data: data, page: 1 });
+    grid.trigger("reloadGrid", [{ page: 1 }]);
+    if (footerData) {
+        grid.jqGrid("footerData", "set", footerData);
+    }
+    grid.jqGrid("setGridWidth", grid.closest(".sv-grid-wrap").width());
+}
+
+function buscarSaldosVirtual() {
+    initSaldosVirtualGrids();
+    var $btn = $("#searchSaldosVirtual .sv-btn-search");
+    if ($btn.prop("disabled")) return;
+
+    var cli = $("#Cli_Cod_Virt").val();
+    var pla = $("#Pla_Cod_Virt").val();
+    var fi = $("#Fec_IniM_Virt").val();
+    var ff = $("#Fec_FinM_Virt").val();
+    if (!cli) {
+        $.alert("Seleccione una planta / cliente.");
+        return;
+    }
+    if (!fi || !ff) {
+        $.alert("Indique el rango de fechas.");
+        return;
+    }
+    var tipVal = [];
+    $("#Tip_Mov_Virt input[type=checkbox]:checked").each(function () {
+        tipVal.push($(this).val());
+    });
+    if (!tipVal.length) {
+        tipVal = ["MAN", "TRF", "RET"];
+    }
+
+    setSvBtnBuscarLoading($btn, true);
+    if (gridSaldosVirtual && gridSaldosVirtual[0] && gridSaldosVirtual[0].grid) {
+        gridSaldosVirtual.jqGrid("clearGridData", true);
+        $("#load_gridSaldosVirtual").show();
+    }
+
+    $.get("", {
+        loadSaldosVirtualAjax: true,
+        Cli_Cod: cli,
+        Pla_Cod: pla,
+        Fec_Ini: fi,
+        Fec_Fin: ff,
+        Tip_Mov: tipVal.join(","),
+        Agrupar_Man_Dia: $("#Agrupar_Man_Dia_Virt").prop("checked") ? 1 : 0
+    }, function (resp) {
+        if (!resp || !resp.success) {
+            $.alert((resp && resp.message) ? resp.message : "No se pudo cargar Saldos Virtual.");
+            actualizarResumenSaldosVirtual([]);
+            reloadSaldosVirtualGrid(gridSaldosVirtual, [], {
+                Concepto: "TOTALES",
+                Ingresos: 0,
+                Egresos: 0,
+                Saldo: 0
+            });
+            return;
+        }
+        var rows = resp.rows || [];
+        var tot = resp.totales || {};
+        var saldoFinal = rows.length ? rows[rows.length - 1].Saldo : 0;
+        actualizarResumenSaldosVirtual(rows);
+        reloadSaldosVirtualGrid(gridSaldosVirtual, rows, {
+            Concepto: "TOTALES",
+            Ingresos: tot.Ingresos || 0,
+            Egresos: tot.Egresos || 0,
+            Saldo: tot.Saldo != null ? tot.Saldo : saldoFinal
+        });
+    }, "json").fail(function () {
+        $.alert("Error de comunicación al cargar Saldos Virtual.");
+        actualizarResumenSaldosVirtual([]);
+        reloadSaldosVirtualGrid(gridSaldosVirtual, [], {
+            Concepto: "TOTALES",
+            Ingresos: 0,
+            Egresos: 0,
+            Saldo: 0
+        });
+    }).always(function () {
+        $("#load_gridSaldosVirtual").hide();
+        setSvBtnBuscarLoading($btn, false);
+    });
+}
+
+function buscarSaldosVirtualGrupal() {
+    initSaldosVirtualGrids();
+    if (!gridSaldosVirtualGrupal) return;
+    var $btn = $("#searchSaldosVirtualGrupal .sv-btn-search");
+    if ($btn.prop("disabled")) return;
+
+    var fi = $("#Fec_IniM_VirtG").val();
+    var ff = $("#Fec_FinM_VirtG").val();
+    if (!fi || !ff) {
+        $.alert("Indique el rango de fechas.");
+        return;
+    }
+
+    setSvBtnBuscarLoading($btn, true);
+    if (gridSaldosVirtualGrupal[0] && gridSaldosVirtualGrupal[0].grid) {
+        gridSaldosVirtualGrupal.jqGrid("clearGridData", true);
+        $("#load_gridSaldosVirtualGrupal").show();
+    }
+
+    $.get("", {
+        loadSaldosVirtualGrupalAjax: true,
+        Fec_Ini: fi,
+        Fec_Fin: ff,
+        search: $("#searchPlantaVirtG").val() || ""
+    }, function (resp) {
+        if (!resp || !resp.success) {
+            $.alert((resp && resp.message) ? resp.message : "No se pudo cargar el resumen grupal.");
+            reloadSaldosVirtualGrid(gridSaldosVirtualGrupal, [], {
+                Planta: "TOTALES",
+                Saldo_Inicial: 0,
+                Anticipos: 0,
+                Anticipo_Retencion: 0,
+                Ingresos: 0,
+                Manifiestos: 0,
+                Saldo: 0
+            });
+            return;
+        }
+        var rows = resp.rows || [];
+        var tSi = 0, tAnt = 0, tRet = 0, tIng = 0, tEgr = 0, tSal = 0;
+        for (var i = 0; i < rows.length; i++) {
+            var r = rows[i];
+            tSi += parseFloat(r.Saldo_Inicial) || 0;
+            tAnt += parseFloat(r.Anticipos) || 0;
+            tRet += parseFloat(r.Anticipo_Retencion) || 0;
+            tIng += parseFloat(r.Ingresos) || 0;
+            tEgr += parseFloat(r.Manifiestos) || 0;
+            tSal += parseFloat(r.Saldo) || 0;
+        }
+        reloadSaldosVirtualGrid(gridSaldosVirtualGrupal, rows, {
+            Planta: "TOTALES",
+            Saldo_Inicial: tSi,
+            Anticipos: tAnt,
+            Anticipo_Retencion: tRet,
+            Ingresos: tIng,
+            Manifiestos: tEgr,
+            Saldo: tSal
+        });
+    }, "json").fail(function () {
+        $.alert("Error de comunicación al cargar resumen grupal.");
+        reloadSaldosVirtualGrid(gridSaldosVirtualGrupal, [], {
+            Planta: "TOTALES",
+            Saldo_Inicial: 0,
+            Anticipos: 0,
+            Anticipo_Retencion: 0,
+            Ingresos: 0,
+            Manifiestos: 0,
+            Saldo: 0
+        });
+    }).always(function () {
+        $("#load_gridSaldosVirtualGrupal").hide();
+        setSvBtnBuscarLoading($btn, false);
+    });
+}
+
+$(document).ready(function () {
+    initSaldosVirtualGrids();
+    if (typeof cambiarPeriodoVirt === "function") cambiarPeriodoVirt();
+    if (typeof cambiarPeriodoVirtG === "function" && $("#Pec_Cod_VirtG").length) cambiarPeriodoVirtG();
+});
