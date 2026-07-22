@@ -904,71 +904,63 @@ $es_gerencial_admin = ($usu_cod == 1) || (isset($_SESSION['Ses_Lis_Per']) && cou
 $es_gerencial_sql = $es_gerencial_admin ? '1' : '0';
 $filtro_pendiente_sin_auto = $wf_mgr->sqlFiltroPendienteSinAutoaprobacion($usu_cod, $es_gerencial_sql);
 
-// A. PENDIENTES DE MI APROBACI?N (Etapa activa asignada a mi depto o mis perfiles)
+// A. PENDIENTES DE MI APROBACION (Etapa activa asignada a mi depto o mis perfiles)
 $pendientes = $obBD_con1->getArrayConsultaSql("
-    SELECT s.*, tr.Trq_Des,
+    SELECT s.Sol_Cod, s.Sol_Num, s.Sol_Tit, s.Sol_Fec, s.Sol_Est, s.Sol_Pri, s.Sol_Val_Est, s.Usu_Sol, s.Emp_Cod,
+           tr.Trq_Des,
            IFNULL(wfm.Wfm_Nom, 'Sin flujo') AS Wfm_Nom,
            COALESCE(wfm.Wfm_Fam_Cod, wfm.Wfm_Cod, tr.Wfm_Cod) AS Wfm_Fam_Cod,
-           CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) as Solicitante_Nom, d.Dep_Des, i.Ins_Cod, n.Nod_Nom, n.Nod_Sla
+           CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) AS Solicitante_Nom,
+           d.Dep_Des,
+           i.Ins_Cod,
+           n.Nod_Nom, n.Nod_Sla, n.Nod_Tip, IFNULL(n.Nod_Cot_Edit, 0) AS Nod_Cot_Edit
     FROM adq_solicitudes s
     INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
     INNER JOIN usuarios u ON u.Usu_Cod = s.Usu_Sol
     INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
     LEFT JOIN departamen d ON d.Dep_Cod = s.Dep_Sol
     INNER JOIN wf_instancias i ON i.Ins_Ent_Typ = 'adq_solicitudes' AND i.Ins_Ent_Cod = s.Sol_Cod AND i.Ins_Est = 'P'
-    INNER JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act AND $clausula_nodo_usuario
+    INNER JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act
     LEFT JOIN wf_flujos_modelos wfm ON wfm.Wfm_Cod = COALESCE(i.Wfm_Cod, tr.Wfm_Cod)
-    WHERE s.Emp_Cod = $emp_cod AND s.Sol_Est IN ('E', 'P')
-      AND n.Nod_Tip NOT IN ('INICIO')
+    WHERE s.Emp_Cod = $emp_cod
+      AND s.Sol_Est IN ('E', 'P')
+      AND n.Nod_Tip <> 'INICIO'
+      AND $clausula_nodo_usuario
       AND $filtro_pendiente_sin_auto
-    ORDER BY s.Sol_Fec DESC, s.Sol_Cod DESC;", $obBD_conexion);
+    ORDER BY s.Sol_Fec DESC, s.Sol_Cod DESC
+    LIMIT 500;", $obBD_conexion);
 if ($pendientes === false || $pendientes === null) {
     $pendientes = array();
 }
 foreach ($pendientes as $idx => $p) {
-    $pendientes[$idx]['Puede_Cargar_Cotizaciones'] = $wf_mgr->puedeUsuarioCargarCotizaciones(
-        array(
-            'Ins_Cod' => $p['Ins_Cod'],
-            'Ins_Est' => 'P',
-            'Sol_Est' => $p['Sol_Est']
-        ),
-        $wf_ctx['usu_cod'],
-        $wf_ctx['dep_cod'],
-        $wf_ctx['perfiles_ids']
-    ) ? 1 : 0;
-    $pendientes[$idx]['Puede_Cargar_Avance'] = $wf_mgr->puedeUsuarioCargarAvance(
-        array(
-            'Ins_Cod' => $p['Ins_Cod'],
-            'Ins_Est' => 'P',
-            'Sol_Est' => $p['Sol_Est']
-        ),
-        $wf_ctx['usu_cod'],
-        $wf_ctx['dep_cod'],
-        $wf_ctx['perfiles_ids']
-    ) ? 1 : 0;
+    $sol_est_ok = !in_array($p['Sol_Est'], array('A', 'R'), true);
+    $pendientes[$idx]['Puede_Cargar_Cotizaciones'] = ($sol_est_ok && intval($p['Nod_Cot_Edit']) === 1) ? 1 : 0;
+    $pendientes[$idx]['Puede_Cargar_Avance'] = ($sol_est_ok && in_array($p['Nod_Tip'], array('AVANCE', 'FISCALIZACION'), true)) ? 1 : 0;
 }
 
-// B. MIS SOLICITUDES EN CURSO (Creadas por m?)
+// B. MIS SOLICITUDES EN CURSO (Creadas por mi)
 $mis_solicitudes = $obBD_con1->getArrayConsultaSql("
-    SELECT s.*, tr.Trq_Des,
+    SELECT s.Sol_Cod, s.Sol_Num, s.Sol_Tit, s.Sol_Fec, s.Sol_Est, s.Sol_Pri, s.Sol_Val_Est, s.Usu_Sol,
+           tr.Trq_Des,
            IFNULL(wfm.Wfm_Nom, 'Sin flujo') AS Wfm_Nom,
            COALESCE(wfm.Wfm_Fam_Cod, wfm.Wfm_Cod, tr.Wfm_Cod) AS Wfm_Fam_Cod,
            i.Ins_Cod, n.Nod_Nom
     FROM adq_solicitudes s
     INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
-    LEFT JOIN wf_instancias i ON i.Ins_Cod = (
-        SELECT MAX(i2.Ins_Cod)
-        FROM wf_instancias i2
-        WHERE i2.Ins_Ent_Typ = 'adq_solicitudes' AND i2.Ins_Ent_Cod = s.Sol_Cod AND i2.Ins_Est = 'P'
-    )
+    LEFT JOIN wf_instancias i ON i.Ins_Ent_Typ = 'adq_solicitudes' AND i.Ins_Ent_Cod = s.Sol_Cod AND i.Ins_Est = 'P'
     LEFT JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act
     LEFT JOIN wf_flujos_modelos wfm ON wfm.Wfm_Cod = COALESCE(i.Wfm_Cod, tr.Wfm_Cod)
-    WHERE s.Emp_Cod = $Ses_Emp_Cod AND s.Usu_Sol = $usu_cod AND s.Sol_Est IN ('E', 'O', 'P')
-    ORDER BY s.Sol_Fec DESC, s.Sol_Cod DESC;", $obBD_conexion);
+    WHERE s.Emp_Cod = $emp_cod AND s.Usu_Sol = $usu_cod AND s.Sol_Est IN ('E', 'O', 'P')
+    ORDER BY s.Sol_Fec DESC, s.Sol_Cod DESC
+    LIMIT 300;", $obBD_conexion);
+if ($mis_solicitudes === false || $mis_solicitudes === null) {
+    $mis_solicitudes = array();
+}
 
-// C. GESTION? / PARTICIP? (solicitudes de otros en las que actu? en el workflow)
+// C. GESTIONE / PARTICIPE (solicitudes de otros en las que actue en el workflow)
 $gestionadas = $obBD_con1->getArrayConsultaSql("
-    SELECT s.*, tr.Trq_Des,
+    SELECT s.Sol_Cod, s.Sol_Num, s.Sol_Tit, s.Sol_Fec, s.Sol_Est, s.Sol_Pri, s.Sol_Val_Est, s.Usu_Sol,
+           tr.Trq_Des,
            IFNULL(wfm.Wfm_Nom, 'Sin flujo') AS Wfm_Nom,
            COALESCE(wfm.Wfm_Fam_Cod, wfm.Wfm_Cod, tr.Wfm_Cod) AS Wfm_Fam_Cod,
            CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) AS Solicitante_Nom,
@@ -977,7 +969,27 @@ $gestionadas = $obBD_con1->getArrayConsultaSql("
            n.Nod_Nom AS Etapa_Actual,
            h_last.Isn_Acc AS Mi_Accion,
            h_last.Isn_Fec AS Mi_Fecha,
-           hn.Nod_Nom AS Mi_Etapa
+           hn.Nod_Nom AS Mi_Etapa,
+           CASE
+             WHEN i.Ins_Est = 'P'
+              AND s.Sol_Est <> 'O'
+              AND ($clausula_nodo_usuario)
+              AND (
+                    s.Usu_Sol <> $usu_cod
+                    OR $es_gerencial_sql = 1
+                    OR (
+                        n.Nod_Usu_Asig IS NOT NULL
+                        AND n.Nod_Usu_Asig != ''
+                        AND n.Nod_Usu_Asig != 'TODOS'
+                        AND FIND_IN_SET($usu_cod, n.Nod_Usu_Asig) > 0
+                    )
+                    OR EXISTS (
+                        SELECT 1 FROM wf_instancias_nodos hr
+                        WHERE hr.Ins_Cod = i.Ins_Cod AND hr.Isn_Acc = 'REENVIAR'
+                    )
+              )
+             THEN 1 ELSE 0
+           END AS Puede_Resolver
     FROM adq_solicitudes s
     INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
     INNER JOIN usuarios u ON u.Usu_Cod = s.Usu_Sol
@@ -994,6 +1006,7 @@ $gestionadas = $obBD_con1->getArrayConsultaSql("
             WHERE Usu_Cod = $usu_cod AND Isn_Acc IN ('APROBAR', 'COMPLETAR', 'OBSERVAR', 'DEVOLVER', 'RECHAZAR')
             GROUP BY Ins_Cod
         ) hmx ON hmx.Ins_Cod = h1.Ins_Cod AND hmx.max_fec = h1.Isn_Fec AND h1.Usu_Cod = $usu_cod
+        WHERE h1.Isn_Acc IN ('APROBAR', 'COMPLETAR', 'OBSERVAR', 'DEVOLVER', 'RECHAZAR')
     ) h_last ON h_last.Ins_Cod = i.Ins_Cod
     LEFT JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act
     LEFT JOIN wf_nodos hn ON hn.Nod_Cod = h_last.Nod_Cod
@@ -1002,15 +1015,6 @@ $gestionadas = $obBD_con1->getArrayConsultaSql("
     LIMIT 100;", $obBD_conexion);
 if ($gestionadas === false || $gestionadas === null) {
     $gestionadas = array();
-}
-foreach ($gestionadas as $idx => $g) {
-    $gestionadas[$idx]['Puede_Resolver'] = $wf_mgr->puedeUsuarioResolverSolicitud(
-        $g,
-        $usu_cod,
-        $dep_cod,
-        $perfiles_ids,
-        $es_gerencial_admin
-    ) ? 1 : 0;
 }
 
 // D. HISTORIAL (cerrados: propios + donde participo; gerencia ve todos)
@@ -1031,23 +1035,21 @@ if (!$es_gerencial_admin) {
 }
 
 $historico = $obBD_con1->getArrayConsultaSql("
-    SELECT s.*, tr.Trq_Des,
+    SELECT s.Sol_Cod, s.Sol_Num, s.Sol_Tit, s.Sol_Fec, s.Sol_Est, s.Sol_Pri, s.Sol_Val_Est, s.Usu_Sol,
+           tr.Trq_Des,
            IFNULL(wfm.Wfm_Nom, 'Sin flujo') AS Wfm_Nom,
            COALESCE(wfm.Wfm_Fam_Cod, wfm.Wfm_Cod, tr.Wfm_Cod) AS Wfm_Fam_Cod,
-           CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) as Solicitante_Nom, d.Dep_Des
+           CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) AS Solicitante_Nom,
+           d.Dep_Des
     FROM adq_solicitudes s
     INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
     INNER JOIN usuarios u ON u.Usu_Cod = s.Usu_Sol
     INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
     LEFT JOIN departamen d ON d.Dep_Cod = s.Dep_Sol
-    LEFT JOIN wf_instancias i_hist ON i_hist.Ins_Cod = (
-        SELECT MAX(i2.Ins_Cod)
-        FROM wf_instancias i2
-        WHERE i2.Ins_Ent_Typ = 'adq_solicitudes' AND i2.Ins_Ent_Cod = s.Sol_Cod
-    )
-    LEFT JOIN wf_flujos_modelos wfm ON wfm.Wfm_Cod = COALESCE(i_hist.Wfm_Cod, tr.Wfm_Cod)
-    WHERE s.Emp_Cod = $Ses_Emp_Cod AND s.Sol_Est IN ('A', 'R') $historico_filtro_usuario
-    ORDER BY s.Sol_Fec DESC, s.Sol_Cod DESC LIMIT 100;", $obBD_conexion);
+    LEFT JOIN wf_flujos_modelos wfm ON wfm.Wfm_Cod = tr.Wfm_Cod
+    WHERE s.Emp_Cod = $emp_cod AND s.Sol_Est IN ('A', 'R') $historico_filtro_usuario
+    ORDER BY s.Sol_Fec DESC, s.Sol_Cod DESC
+    LIMIT 100;", $obBD_conexion);
 if ($historico === false || $historico === null) {
     $historico = array();
 }

@@ -14,6 +14,8 @@ require_once(dirname(__FILE__) . '/../../DATA/MysqlDatos.php');
 class wf_manager_log {
     public $obBD_conexion;
     public $obBD_datos;
+    /** @var array Cache de Dep_Cod efectivos por usuario/sesion para clausulas de bandeja */
+    private $cacheDepCodsAsignacion = array();
 
     public function __construct($Ses_Dat_Dis = null, $conexion = null) {
         if ($conexion !== null) {
@@ -299,50 +301,99 @@ class wf_manager_log {
         }
 
         $perfiles_ids = !empty($_SESSION['Ses_Lis_Per']) ? implode(',', array_map('intval', $_SESSION['Ses_Lis_Per'])) : '-1';
+        $dep_cods = $this->listarDepCodsAsignacionUsuario($usu_cod, $dep_cod);
 
         return array(
             'usu_cod' => $usu_cod,
             'dep_cod' => $dep_cod,
             'emp_cod' => $emp_cod,
-            'perfiles_ids' => $perfiles_ids
+            'perfiles_ids' => $perfiles_ids,
+            'dep_cods_csv' => !empty($dep_cods) ? implode(',', $dep_cods) : '-1'
         );
+    }
+
+    /**
+     * Precalcula Dep_Cod del usuario (WF + homonimos RRHH + sesion) una sola vez.
+     * Evita subconsultas correlacionadas en la bandeja que provocan Lost connection.
+     */
+    public function listarDepCodsAsignacionUsuario($usu_cod, $dep_cod) {
+        $usu_cod = intval($usu_cod);
+        $dep_cod = intval($dep_cod);
+        $cache_key = $usu_cod . ':' . $dep_cod;
+        if (isset($this->cacheDepCodsAsignacion[$cache_key])) {
+            return $this->cacheDepCodsAsignacion[$cache_key];
+        }
+
+        $deps = array();
+        if ($dep_cod > 0) {
+            $deps[$dep_cod] = $dep_cod;
+        }
+
+        if ($usu_cod > 0) {
+            $rows_wf = $this->obBD_datos->getArrayConsultaSql(
+                "SELECT DISTINCT w.Dep_Cod
+                 FROM wf_departamento_usuarios du
+                 INNER JOIN wf_departamentos w ON w.Wde_Cod = du.Wde_Cod AND w.Wde_Est = 'A'
+                 WHERE du.Usu_Cod = $usu_cod AND du.Wde_Cod IS NOT NULL AND w.Dep_Cod IS NOT NULL",
+                $this->obBD_conexion
+            );
+            if (is_array($rows_wf)) {
+                foreach ($rows_wf as $r) {
+                    $d = intval($r['Dep_Cod']);
+                    if ($d > 0) {
+                        $deps[$d] = $d;
+                    }
+                }
+            }
+        }
+
+        if ($dep_cod > 0) {
+            $rows_rrhh = $this->obBD_datos->getArrayConsultaSql(
+                "SELECT d2.Dep_Cod
+                 FROM departamen d1
+                 INNER JOIN departamen d2 ON d2.Dep_Des = d1.Dep_Des
+                 WHERE d1.Dep_Cod = $dep_cod",
+                $this->obBD_conexion
+            );
+            if (is_array($rows_rrhh)) {
+                foreach ($rows_rrhh as $r) {
+                    $d = intval($r['Dep_Cod']);
+                    if ($d > 0) {
+                        $deps[$d] = $d;
+                    }
+                }
+            }
+        }
+
+        $this->cacheDepCodsAsignacion[$cache_key] = array_values($deps);
+        return $this->cacheDepCodsAsignacion[$cache_key];
     }
 
     public function sqlClausulaNodoAsignadoAUsuario($usu_cod, $dep_cod, $perfiles_ids) {
         $usu_cod = intval($usu_cod);
         $dep_cod = intval($dep_cod);
-        $dep_sesion_sql = $dep_cod > 0
-            ? "n.Dep_Cod IN (SELECT d2.Dep_Cod FROM departamen d1 INNER JOIN departamen d2 ON d2.Dep_Des = d1.Dep_Des WHERE d1.Dep_Cod = $dep_cod)"
-            : '0=1';
+        $perfiles_ids = preg_replace('/[^0-9,\-]/', '', (string)$perfiles_ids);
+        if ($perfiles_ids === '' || $perfiles_ids === null) {
+            $perfiles_ids = '-1';
+        }
 
-        $dep_wf_sql = $dep_cod > 0
-            ? "n.Dep_Cod IN (
-                SELECT wd.Dep_Cod FROM wf_departamentos wd
-                WHERE wd.Dep_Cod = $dep_cod AND wd.Wde_Est = 'A'
-            )"
-            : '0=1';
+        $dep_cods = $this->listarDepCodsAsignacionUsuario($usu_cod, $dep_cod);
+        $deps_csv = !empty($dep_cods) ? implode(',', array_map('intval', $dep_cods)) : '-1';
 
-        // Usuario(s) asignado(s) explicitamente en el nodo (ej. cierre FIN): no exige depto/perfil.
+        // Asignacion explicita por lista CSV de usuarios (FIND_IN_SET inevitable con el modelo actual).
         $asignacion_explicita = "(
             n.Nod_Usu_Asig IS NOT NULL
-            AND TRIM(n.Nod_Usu_Asig) != ''
+            AND n.Nod_Usu_Asig != ''
             AND n.Nod_Usu_Asig != 'TODOS'
             AND FIND_IN_SET($usu_cod, n.Nod_Usu_Asig) > 0
         )";
 
-        // Asignacion por departamento o perfil cuando el nodo es para TODOS o sin lista de usuarios.
+        // Depto/perfil: IN fijo precalculado (sin subselects correlacionados).
         $asignacion_por_rol = "(
-            (n.Nod_Usu_Asig IS NULL OR TRIM(n.Nod_Usu_Asig) = '' OR n.Nod_Usu_Asig = 'TODOS')
+            (n.Nod_Usu_Asig IS NULL OR n.Nod_Usu_Asig = '' OR n.Nod_Usu_Asig = 'TODOS')
             AND (
                 n.Dep_Cod IS NULL
-                OR n.Dep_Cod IN (
-                    SELECT w.Dep_Cod
-                    FROM wf_departamento_usuarios du
-                    INNER JOIN wf_departamentos w ON w.Wde_Cod = du.Wde_Cod AND w.Wde_Est = 'A'
-                    WHERE du.Usu_Cod = $usu_cod AND du.Wde_Cod IS NOT NULL
-                )
-                OR $dep_sesion_sql
-                OR $dep_wf_sql
+                OR n.Dep_Cod IN ($deps_csv)
                 OR (n.Per_Cod IS NOT NULL AND n.Per_Cod > 0 AND n.Per_Cod IN ($perfiles_ids))
             )
         )";
@@ -380,17 +431,18 @@ class wf_manager_log {
      */
     public function sqlFiltroPendienteSinAutoaprobacion($usu_cod, $es_gerencial_sql) {
         $usu_cod = intval($usu_cod);
-        $es_gerencial_sql = ($es_gerencial_sql === '1' || $es_gerencial_sql === 1) ? '1' : '0';
+        if ($es_gerencial_sql === '1' || $es_gerencial_sql === 1 || $es_gerencial_sql === true) {
+            return '1=1';
+        }
         return "(
             s.Usu_Sol != $usu_cod
-            OR $es_gerencial_sql = 1
             OR EXISTS (
                 SELECT 1 FROM wf_instancias_nodos hr
                 WHERE hr.Ins_Cod = i.Ins_Cod AND hr.Isn_Acc = 'REENVIAR'
             )
             OR (
                 n.Nod_Usu_Asig IS NOT NULL
-                AND TRIM(n.Nod_Usu_Asig) != ''
+                AND n.Nod_Usu_Asig != ''
                 AND n.Nod_Usu_Asig != 'TODOS'
                 AND FIND_IN_SET($usu_cod, n.Nod_Usu_Asig) > 0
             )

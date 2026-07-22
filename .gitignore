@@ -31,6 +31,10 @@ DATA/
 !DATA/TablesStructure
 !DATA/EstructureExport.php
 
+# Documentos PDF/expedientes de solicitudes (flujo)
+flujo/documentos_flujo/
+flujo/documentos_flujo/**
+
 administrador/tareas
 administrador/tareasRealizadas
 administrador/tickets
