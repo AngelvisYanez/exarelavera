@@ -2032,6 +2032,13 @@ class wf_manager_log {
                     throw new Exception("Se requiere cargar al menos un archivo adjunto como sustento de esta etapa.");
                 }
                 if ($Accion === 'APROBAR' && isset($nodoActual['Nod_Tip']) && in_array($nodoActual['Nod_Tip'], array('AVANCE', 'FISCALIZACION'), true)) {
+                    // En estos nodos Guardar solo persiste; avanzar exige justificacion (docs) + comentario.
+                    if ($trimmed_comment === '') {
+                        $msg_com = ($nodoActual['Nod_Tip'] === 'FISCALIZACION')
+                            ? 'Debe ingresar el comentario/justificacion antes de aprobar la fiscalizacion.'
+                            : 'Debe ingresar el comentario/justificacion antes de finalizar el avance.';
+                        throw new Exception($msg_com);
+                    }
                     $cnt_av = $this->obBD_datos->getRowConsultaSql(
                         "SELECT COUNT(*) AS cnt
                          FROM adq_solicitudes_avances
@@ -2042,8 +2049,8 @@ class wf_manager_log {
                     );
                     if (empty($cnt_av['cnt'])) {
                         $msg_req = ($nodoActual['Nod_Tip'] === 'FISCALIZACION')
-                            ? 'Debe registrar al menos una factura o archivo de fiscalizacion antes de aprobar.'
-                            : 'Debe registrar al menos una factura antes de finalizar el proceso de avance.';
+                            ? 'Debe registrar al menos una factura, anticipo o archivo de fiscalizacion antes de aprobar.'
+                            : 'Debe registrar al menos una factura o anticipo antes de finalizar el proceso de avance.';
                         throw new Exception($msg_req);
                     }
 

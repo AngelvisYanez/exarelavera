@@ -90,7 +90,7 @@ function aplicarReglasCotizaciones() {
         $('#cotizacionesAlert')
             .removeClass('alert-info')
             .addClass('alert-warning')
-            .html(`<i class="bi bi-info-circle-fill text-warning" style="font-size: 14px; margin-right: 6px;"></i> <strong>AL ${accionEnviar.toUpperCase()}:</strong> debera registrar al menos <strong>${min}</strong> cotizacion(es) con proveedor y monto. El PDF es opcional. Hay <strong>${total}</strong> formulario(s) en pantalla; puede <strong>anadir mas</strong> o <strong>${accionGuardar}</strong> ahora y completarlas despues.`);
+            .html(`<i class="bi bi-info-circle-fill text-warning" style="font-size: 14px; margin-right: 6px;"></i> <strong>AL ${accionEnviar.toUpperCase()}:</strong> debera registrar al menos <strong>${min}</strong> cotizacion(es) con proveedor, monto y <strong>PDF obligatorio</strong>. Hay <strong>${total}</strong> formulario(s) en pantalla; puede <strong>anadir mas</strong> o <strong>${accionGuardar}</strong> ahora y completarlas despues.`);
     } else {
         $('#cotizacionesAlert')
             .removeClass('alert-warning')
@@ -340,7 +340,7 @@ function setModoEdicionFormulario(modo, solNum, observacion) {
     $('#adqFormActionsCotizaciones').toggle(esCotizaciones);
     if (esCompletarNodo) {
         $('#adqFormActionsDefault button').not('#btnEnviarSolicitud').hide();
-        $('#btnEnviarSolicitud').html('<i class="bi bi-check2-circle"></i> Completar y avanzar solicitud');
+        $('#btnEnviarSolicitud').html('<i class="bi bi-check2-circle"></i> Completar solicitud');
     } else {
         $('#adqFormActionsDefault button').show();
         $('#btnEnviarSolicitud').html('<i class="bi bi-send-check"></i> Enviar Solicitud a Aprobación');
@@ -428,7 +428,7 @@ function validarFormularioBase() {
 
 function validarRequisitosEnvioFormulario() {
     syncReqConfigFromForm();
-    if (!validarPdfsCotizacionesFormulario()) {
+    if (!validarPdfsCotizacionesFormulario(true)) {
         return false;
     }
     if (parseInt(reqConfig.Sol_Req_Pro, 10) === 1 && !$('#Prv_Sug').val()) {
@@ -439,12 +439,15 @@ function validarRequisitosEnvioFormulario() {
         const stats = contarCotizacionesParaEnvio();
         const minRequired = parseInt(reqConfig.Sol_Min_Cot, 10) || 1;
         if (stats.total < minRequired) {
-            let msg = `Para enviar a aprobacion se requieren al menos ${minRequired} cotizacion(es) completas (proveedor y monto). El PDF es opcional. Completas detectadas: ${stats.total}.`;
+            let msg = `Para enviar a aprobacion se requieren al menos ${minRequired} cotizacion(es) completas (proveedor, monto y PDF). Completas detectadas: ${stats.total}.`;
             if (stats.detalle.sinProveedor) {
                 msg += `\n- Falta proveedor en ${stats.detalle.sinProveedor} cotizacion(es).`;
             }
             if (stats.detalle.sinMonto) {
                 msg += `\n- Falta monto en ${stats.detalle.sinMonto} cotizacion(es).`;
+            }
+            if (stats.detalle.sinPdf) {
+                msg += `\n- Falta PDF en ${stats.detalle.sinPdf} cotizacion(es).`;
             }
             alert(msg);
             return false;
@@ -454,10 +457,9 @@ function validarRequisitosEnvioFormulario() {
             return false;
         }
     }
-    if (parseInt(reqConfig.Sol_Req_Adj, 10) === 1) {
-        if (!validarAdjuntosSolicitudFormulario(true)) {
-            return false;
-        }
+    // Paso 2B: los PDF de soporte son opcionales; solo se valida si hay filas agregadas.
+    if (!validarAdjuntosSolicitudFormulario(false)) {
+        return false;
     }
     return true;
 }
@@ -637,7 +639,7 @@ function guardarCotizacionesEtapa() {
         alert('No se encontro la solicitud.');
         return;
     }
-    if (!validarPdfsCotizacionesFormulario()) {
+    if (!validarPdfsCotizacionesFormulario(true)) {
         return;
     }
 
@@ -674,7 +676,7 @@ function guardarCotizacionesEtapa() {
 function contarCotizacionesParaEnvio() {
     let total = 0;
     let ganadora = false;
-    const detalle = { sinProveedor: 0, sinMonto: 0 };
+    const detalle = { sinProveedor: 0, sinMonto: 0, sinPdf: 0 };
 
     $('#cotizacionesList .adq-proforma-row').each(function() {
         const $row = $(this);
@@ -684,7 +686,7 @@ function contarCotizacionesParaEnvio() {
         const hasPdf = proformaTieneAdjunto($row);
         const parcial = !!(prv || val > 0 || hasPdf);
 
-        if (prv && val > 0) {
+        if (prv && val > 0 && hasPdf) {
             total++;
         } else if (parcial) {
             if (!prv) {
@@ -692,6 +694,9 @@ function contarCotizacionesParaEnvio() {
             }
             if (!(val > 0)) {
                 detalle.sinMonto++;
+            }
+            if (!hasPdf) {
+                detalle.sinPdf++;
             }
         }
 
@@ -1076,7 +1081,7 @@ function agregarAdjuntoSolicitud(datos) {
             </div>
             <div>
                 <label class="form-label-req small mb-1">Archivo PDF *</label>
-                ${htmlAdqFileUpload('adjunto_archivos[' + idx + ']', 'adj_pdf_' + idx, 'Solo archivos PDF', false)}
+                ${htmlAdqFileUpload('adjunto_archivos[' + idx + ']', 'adj_pdf_' + idx, 'Solo archivos PDF (si agrega esta fila)', false)}
             </div>
         </div>
     `;
@@ -1124,9 +1129,13 @@ function quitarAdjuntoExistente(btn, sadCod) {
 
 function validarAdjuntosSolicitudFormulario(obligatorio) {
     const $rows = $('#adjuntosList .adq-adjunto-row');
-    if (obligatorio && !$rows.length) {
-        alert('Debe cargar al menos un archivo PDF de soporte con su descripcion.');
-        return false;
+    // Sin filas es válido: el Paso 2B es opcional.
+    if (!$rows.length) {
+        if (obligatorio) {
+            alert('Debe cargar al menos un archivo PDF de soporte con su descripcion.');
+            return false;
+        }
+        return true;
     }
     let ok = true;
     $rows.each(function() {
@@ -1141,7 +1150,7 @@ function validarAdjuntosSolicitudFormulario(obligatorio) {
             return false;
         }
         if (!hasKeep && !hasNewFile) {
-            alert('Seleccione el archivo PDF para cada fila de soporte.');
+            alert('Seleccione el archivo PDF para cada fila de soporte, o quite la fila si no desea adjuntarlo.');
             ok = false;
             return false;
         }
@@ -1202,7 +1211,7 @@ function htmlAdqProformaRow(opts) {
             <div class="adq-proforma-fields">
                 <div class="adq-proforma-pdf">
                     ${pdfsGuardados}
-                    ${htmlAdqFileUpload(fileBase + '[]', inputIdBase + '_0', 'PDF opcional', true)}
+                    ${htmlAdqFileUpload(fileBase + '[]', inputIdBase + '_0', 'PDF obligatorio', true)}
                 </div>
                 <div class="adq-proforma-val adq-cot-field">
                     <label class="adq-cot-label">Valor ($)</label>
@@ -1411,7 +1420,7 @@ function actualizarEstadoAdjuntoCotizacion($box) {
     $box.attr('data-has-adj', has ? 1 : 0);
 }
 
-function validarPdfsCotizacionesFormulario() {
+function validarPdfsCotizacionesFormulario(exigirAdjunto) {
     let invalido = false;
     $('#cotizacionesList .adq-proforma-row input[type="file"]').each(function() {
         if (!this.files || !this.files.length) {
@@ -1427,6 +1436,23 @@ function validarPdfsCotizacionesFormulario() {
     if (invalido) {
         alert('Solo se permiten archivos PDF en las proformas.');
         return false;
+    }
+    if (exigirAdjunto) {
+        let faltaPdf = false;
+        $('#cotizacionesList .adq-proforma-row').each(function() {
+            const $row = $(this);
+            const $box = $row.closest('.adq-cot-col');
+            const prv = obtenerValorProveedorCot($box);
+            const val = obtenerMontoProforma($row);
+            if ((prv || val > 0) && !proformaTieneAdjunto($row)) {
+                faltaPdf = true;
+                return false;
+            }
+        });
+        if (faltaPdf) {
+            alert('Cada cotizacion debe incluir el archivo PDF de sustento.');
+            return false;
+        }
     }
     return true;
 }
@@ -1746,7 +1772,7 @@ function procesarSolicitud(esBorrador) {
             if (res.success) {
                 const esObservada = $('#Sol_Modo_Edicion').val() === 'observada';
                 if (completarNodo) {
-                    alert(`Solicitud # ${res.Num} completada. El workflow avanzó a la siguiente etapa.`);
+                    alert(`Solicitud # ${res.Num} completada. Permanece en la misma etapa; use Resolver para continuar el proceso del nodo.`);
                     window.location.href = 'adq_bandeja.php';
                     return;
                 }

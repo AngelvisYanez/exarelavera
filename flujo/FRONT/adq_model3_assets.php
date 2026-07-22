@@ -147,6 +147,16 @@ require_once('../../mascaras/model3/estilos/estilos.php');
     .exa-adq-kpi.kpi-success { border-left-color: #198754; }
     .exa-adq-kpi.kpi-warning { border-left-color: #fd7e14; }
     .exa-adq-kpi.kpi-danger  { border-left-color: #dc3545; }
+    a.exa-adq-kpi {
+        cursor: pointer;
+        transition: transform .15s ease, box-shadow .15s ease;
+    }
+    a.exa-adq-kpi:hover,
+    a.exa-adq-kpi:focus {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+        outline: none;
+    }
     .exa-adq-kpi.kpi-muted   { border-left-color: #6c757d; }
     .exa-adq-kpi .kpi-label {
         display: block;

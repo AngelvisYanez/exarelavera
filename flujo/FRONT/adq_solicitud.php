@@ -491,8 +491,8 @@ if (isset($ajax_get_form)) {
             <form id="frmSolicitudCorta" autocomplete="off">
                 <div class="mb-4">
                     <label class="form-label fw-bold" for="Sol_Tit_Corto">Nombre de la solicitud *</label>
-                    <input type="text" class="form-control" id="Sol_Tit_Corto" name="Sol_Tit" maxlength="255" required placeholder="Ej. Adquisición de equipos para laboratorio">
-                    <small class="text-muted">Use un nombre breve y claro que identifique la necesidad.</small>
+                    <input type="text" class="form-control" id="Sol_Tit_Corto" name="Sol_Tit" maxlength="255" required placeholder="EJ. ADQUISICIÓN DE EQUIPOS PARA LABORATORIO" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();">
+                    <small class="text-muted">Use un nombre breve y claro que identifique la necesidad. Se registra siempre en mayúsculas.</small>
                 </div>
                 <div class="mb-4">
                     <label class="form-label fw-bold" for="Trq_Cod_Corto">Tipo de requerimiento *</label>
@@ -521,6 +521,13 @@ if (isset($ajax_get_form)) {
                     <button type="submit" class="btn btn-primary px-4" id="btnCrearSolicitudCorta"><i class="bi bi-arrow-right-circle"></i> Registrar para iniciar los procesos</button>
                 </div>
             </form>
+        </div>
+        <div id="adqLoaderRegistro" aria-live="polite" aria-busy="false" style="display:none;position:fixed;inset:0;z-index:4000;background:rgba(15,23,42,0.55);align-items:center;justify-content:center;padding:20px;">
+            <div style="background:#ffffff;border-radius:12px;padding:28px 36px;text-align:center;box-shadow:0 20px 40px rgba(15,23,42,0.25);min-width:260px;max-width:360px;">
+                <div class="spinner-border text-primary" role="status" style="width:2.6rem;height:2.6rem;"></div>
+                <div id="adqLoaderRegistroTitulo" style="margin-top:16px;font-size:16px;font-weight:700;color:#0f172a;">Registrando solicitud...</div>
+                <div id="adqLoaderRegistroDetalle" style="margin-top:6px;font-size:13px;color:#64748b;">Por favor espere mientras se guarda el registro.</div>
+            </div>
         </div>
         <script>
         (function() {
@@ -667,7 +674,8 @@ if (isset($ajax_get_form)) {
 
             $('#frmSolicitudCorta').off('submit.adqCorta').on('submit.adqCorta', function(e) {
                 e.preventDefault();
-                const titulo = $('#Sol_Tit_Corto').val().trim();
+                const titulo = $('#Sol_Tit_Corto').val().trim().toUpperCase();
+                $('#Sol_Tit_Corto').val(titulo);
                 const tipo = $('#Trq_Cod_Corto').val();
                 if (!titulo || !tipo) {
                     alert('Ingrese el nombre y seleccione el tipo de requerimiento.');
@@ -696,16 +704,27 @@ if (isset($ajax_get_form)) {
                     return;
                 }
                 const $btn = $('#btnCrearSolicitudCorta');
+                const $loader = $('#adqLoaderRegistro');
+                if ($loader.length && $loader.parent()[0] !== document.body) {
+                    $loader.appendTo(document.body);
+                }
                 $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Registrando...');
+                $('#adqLoaderRegistroTitulo').text('Registrando solicitud...');
+                $('#adqLoaderRegistroDetalle').text('Por favor espere mientras se guarda el registro.');
+                $loader.css('display', 'flex').attr('aria-busy', 'true');
                 $.post('adq_solicitud.php?ajax_save_solicitud_corta=1', payload, function(res) {
                     if (res.success) {
+                        $('#adqLoaderRegistroTitulo').text('Solicitud registrada');
+                        $('#adqLoaderRegistroDetalle').text('Redirigiendo a la bandeja...');
                         alert('Solicitud ' + res.Num + ' registrada. Se asignó al responsable del primer nodo para completar la información.');
                         window.location.href = 'adq_bandeja.php';
                     } else {
+                        $loader.hide().attr('aria-busy', 'false');
                         alert('No se pudo registrar: ' + (res.message || 'Error desconocido'));
                         $btn.prop('disabled', false).html('<i class="bi bi-arrow-right-circle"></i> Registrar para iniciar los procesos');
                     }
                 }, 'json').fail(function() {
+                    $loader.hide().attr('aria-busy', 'false');
                     alert('Error de comunicación al registrar la solicitud.');
                     $btn.prop('disabled', false).html('<i class="bi bi-arrow-right-circle"></i> Registrar para iniciar los procesos');
                 });
@@ -1562,8 +1581,8 @@ if (isset($ajax_get_form)) {
             Puede guardar sin cotizaciones y enviar a aprobacion cuando este listo.
         </div>
         <div id="bannerCompletarNodo" class="alert alert-primary py-2 px-3 mb-3" style="display: none; font-size: 12px;">
-            <i class="bi bi-clipboard-check"></i> <strong>Tarea del primer nodo:</strong>
-            complete toda la información de la solicitud. Al guardar, avanzará automáticamente a la siguiente etapa.
+            <i class="bi bi-clipboard-check"></i> <strong>Tarea del nodo actual:</strong>
+            complete toda la información de la solicitud. Al guardar permanece en esta etapa; luego use <strong>Resolver</strong> para continuar el proceso del nodo.
         </div>
         <div id="bannerEdicionObservada" class="alert alert-warning py-2 px-3 mb-3" style="display: none; font-size: 12px;">
             <i class="bi bi-exclamation-triangle-fill"></i> <strong>Solicitud observada</strong> <span id="lblObservadaNum"></span>.
@@ -1659,7 +1678,7 @@ if (isset($ajax_get_form)) {
                                     </div>
                                     <div class="form-check mb-1">
                                         <input class="form-check-input" type="checkbox" id="Sol_Req_Adj" name="Sol_Req_Adj" value="1" onchange="syncReqConfigFromForm()">
-                                        <label class="form-check-label small" for="Sol_Req_Adj">Archivos adjuntos obligatorios</label>
+                                        <label class="form-check-label small" for="Sol_Req_Adj">Archivos adjuntos de soporte (opcionales)</label>
                                     </div>
                                     <div class="form-check mb-1">
                                         <input class="form-check-input" type="checkbox" id="Sol_Req_Pro" name="Sol_Req_Pro" value="1" onchange="toggleProveedorSugerido(); syncReqConfigFromForm();">
@@ -1722,7 +1741,7 @@ if (isset($ajax_get_form)) {
                 <div class="adq-cot-headline">
                     <div>
                         <div class="headline-title">Carga y compara las cotizaciones del requerimiento</div>
-                        <p class="headline-copy">Registre proveedor y monto. El sustento PDF es opcional. Marque la cotizacion ganadora cuando corresponda.</p>
+                        <p class="headline-copy">Registre proveedor, monto y el PDF de sustento (obligatorio). Marque la cotizacion ganadora cuando corresponda.</p>
                     </div>
                     <span class="headline-icon"><i class="bi bi-files"></i></span>
                 </div>
@@ -1743,11 +1762,11 @@ if (isset($ajax_get_form)) {
                 </div>
             </div>
 
-            <!-- PASO 2B: Otros archivos PDF de soporte -->
+            <!-- PASO 2B: Otros archivos PDF de soporte (opcionales) -->
             <div class="adq-step-card" id="divAdjuntosSolicitud">
                 <span class="adq-step-badge">Paso 2B</span>
-                <h5 class="adq-step-title"><i class="bi bi-paperclip"></i> Otros archivos PDF de soporte</h5>
-                <p class="adq-field-hint mb-3">Además de las proformas, puede adjuntar otros PDF (especificaciones, órdenes, memorandos, etc.) e indicar una descripción para cada uno.</p>
+                <h5 class="adq-step-title"><i class="bi bi-paperclip"></i> Otros archivos PDF de soporte <span class="adq-step-title-note">(Opcional)</span></h5>
+                <p class="adq-field-hint mb-3">Opcional: además de las proformas, puede adjuntar otros PDF (especificaciones, órdenes, memorandos, etc.) e indicar una descripción para cada uno. No es obligatorio para completar o enviar la solicitud.</p>
                 <div id="adjuntosList"></div>
                 <div class="mt-3">
                     <button type="button" class="btn btn-sm btn-outline-primary" onclick="agregarAdjuntoSolicitud()"><i class="bi bi-plus-circle"></i> Agregar PDF</button>

@@ -263,7 +263,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                         'fecha' => isset($comp['Pag_Fec']) ? $comp['Pag_Fec'] : '',
                         'valor' => isset($comp['Pag_Val']) ? floatval($comp['Pag_Val']) : 0,
                         'forma' => isset($comp['Forma']) ? $comp['Forma'] : '',
-                        'link' => isset($comp['Link']) ? $comp['Link'] : ''
+                        'link' => isset($comp['Link']) ? $comp['Link'] : '',
+                        'pag_img' => isset($comp['Pag_img']) ? $comp['Pag_img'] : ''
                     );
                 }
             }
@@ -1444,6 +1445,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             'Sav_Ret_Adj' => "ALTER TABLE adq_solicitudes_avances ADD COLUMN Sav_Ret_Adj VARCHAR(500) NULL AFTER Sav_Fac_Adj;",
             'Sav_Com_Adj' => "ALTER TABLE adq_solicitudes_avances ADD COLUMN Sav_Com_Adj VARCHAR(500) NULL AFTER Sav_Ret_Adj;",
             'Sav_Cop_Cod' => "ALTER TABLE adq_solicitudes_avances ADD COLUMN Sav_Cop_Cod BIGINT NULL AFTER Sav_Com_Adj;",
+            'Sav_Atp_Cod' => "ALTER TABLE adq_solicitudes_avances ADD COLUMN Sav_Atp_Cod BIGINT NULL AFTER Sav_Cop_Cod;",
             'Sav_Isn_Cod' => "ALTER TABLE adq_solicitudes_avances ADD COLUMN Sav_Isn_Cod BIGINT NULL AFTER Nod_Cod;"
         );
         foreach ($cols as $col => $sqlAlt) {
@@ -1495,7 +1497,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             return array('success' => false, 'message' => 'La solicitud no tiene un workflow activo.');
         }
         if ($row['Nod_Tip'] !== 'AVANCE' && $row['Nod_Tip'] !== 'FISCALIZACION') {
-            return array('success' => false, 'message' => 'La etapa actual no permite cargar facturas ni archivos.');
+            return array('success' => false, 'message' => 'La etapa actual no permite cargar facturas, anticipos ni archivos.');
         }
         if (in_array($row['Sol_Est'], array('A', 'R'), true)) {
             return array('success' => false, 'message' => 'La solicitud ya fue finalizada.');
@@ -1801,8 +1803,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
 
         $comprobantes = array();
         $pagos = $this->getArrayConsultaSql(
-            "SELECT dcp.Com_Cod, dcp.Pag_Fec, dcp.Pag_Val, cp.Com_Num, cp.Com_Fec, cp.Tia_Cod, cp.Pec_Cod,
-                    ta.Tia_Abr, COALESCE(tp.Pag_Des, 'Pago') AS Pag_Des
+            "SELECT dcp.Com_Cod, dcp.Pag_Fec, dcp.Pag_Val, dcp.Pag_img, cp.Com_Num, cp.Com_Fec, cp.Tia_Cod, cp.Pec_Cod,
+                    ta.Tia_Abr, COALESCE(tp.Pag_Des, 'Pago') AS Pag_Des, COALESCE(tp.Pag_Abr, '') AS Pag_Abr
              FROM ccpp_pagar cpp
              INNER JOIN det_ccpp_p dcp ON dcp.Cpp_Cod = cpp.Cpp_Cod AND dcp.Pag_Est = 'A'
              INNER JOIN comprobantes cp ON cp.Com_Cod = dcp.Com_Cod AND cp.Com_Est = 'A'
@@ -1820,12 +1822,21 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $tia_cod = intval($p['Tia_Cod']);
             $pec_cod = intval($p['Pec_Cod']);
             $mes = !empty($p['Com_Fec']) ? date('m', strtotime($p['Com_Fec'])) : '01';
+            $pag_img = '';
+            if (!empty($p['Pag_img'])) {
+                $pag_img = trim(str_replace('\\', '/', (string)$p['Pag_img']));
+                if ($pag_img !== '' && !preg_match('#^(https?://|/)#i', $pag_img) && strpos($pag_img, '../../') !== 0) {
+                    $pag_img = '../../' . ltrim(preg_replace('#^\./#', '', $pag_img), '/');
+                }
+            }
             $comprobantes[] = array(
                 'Com_Cod' => $com_cod,
                 'Codigo' => trim($p['Tia_Abr']) . '-' . $mes . '-' . $p['Com_Num'],
                 'Pag_Fec' => $p['Pag_Fec'],
                 'Pag_Val' => floatval($p['Pag_Val']),
                 'Forma' => $p['Pag_Des'],
+                'Pag_Abr' => isset($p['Pag_Abr']) ? $p['Pag_Abr'] : '',
+                'Pag_img' => $pag_img,
                 'Link' => '../../contabilidad/FRONT/con_pri_compr_2.1.php?codigo=' . $com_cod . '&tabla=proveedore&campo=Prv_Cod&tipo=' . $tia_cod . '&Pec_Cod=' . $pec_cod
             );
         }
@@ -1866,6 +1877,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 'Pag_Fec' => $p['Com_Fec'],
                 'Pag_Val' => floatval($p['Com_Val']),
                 'Forma' => $p['Pag_Des'],
+                'Pag_Abr' => '',
+                'Pag_img' => '',
                 'Link' => '../../contabilidad/FRONT/con_pri_compr_2.1.php?codigo=' . $com_cod . '&tabla=proveedore&campo=Prv_Cod&tipo=' . $tia_cod . '&Pec_Cod=' . $pec_cod
             );
         }
@@ -1894,7 +1907,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
     }
 
     /**
-     * Agrega datos de compra EXA a filas de avance guardadas.
+     * Agrega datos de compra EXA y anticipos de proveedores a filas de avance guardadas.
      */
     public function enriquecerAvancesConCompras($avances, $emp_cod) {
         $emp_cod = intval($emp_cod);
@@ -1909,8 +1922,168 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                     $avances[$idx]['compra'] = $det['compra'];
                 }
             }
+            $atp_cod = isset($av['Sav_Atp_Cod']) ? intval($av['Sav_Atp_Cod']) : 0;
+            if ($atp_cod > 0) {
+                $det_ant = $this->obtenerDetalleAnticipoAvance($atp_cod, $emp_cod);
+                if (!empty($det_ant['success'])) {
+                    $avances[$idx]['anticipo'] = $det_ant['anticipo'];
+                }
+            }
         }
         return $avances;
+    }
+
+    /**
+     * Busca anticipos de proveedores disponibles para vincular en AVANCE/FISCALIZACION.
+     */
+    public function buscarAnticiposProveedorAvance($emp_cod, $search, $limit = 20) {
+        $emp_cod = intval($emp_cod);
+        $limit = max(1, min(50, intval($limit)));
+        $search = trim((string)$search);
+        if ($emp_cod <= 0 || strlen($search) < 2) {
+            return array();
+        }
+        $like = $this->escapeSql($search);
+        $rows = $this->getArrayConsultaSql(
+            "SELECT anp.Atp_Cod, anp.Atp_Fec, anp.Atp_Val, anp.Atp_Est, anp.Atp_Obs, anp.Prv_Cod, anp.Com_Cod,
+                    TRIM(CONCAT(IFNULL(p.Prs_Ape, ''), ' ', IFNULL(p.Prs_Nom, ''))) AS Proveedor,
+                    p.Prs_Ced,
+                    ROUND(anp.Atp_Val - COALESCE(SUM(daccp.Dac_Val), 0), 2) AS Saldo
+             FROM anticipos_proveedores anp
+             INNER JOIN proveedore pr ON pr.Prv_Cod = anp.Prv_Cod
+             INNER JOIN persona p ON p.Prs_Cod = pr.Prs_Cod
+             LEFT JOIN det_ant_ccpp daccp ON daccp.Atp_Cod = anp.Atp_Cod
+             WHERE pr.Emp_Cod = $emp_cod
+               AND anp.Atp_Est NOT IN ('C', 'I')
+               AND (
+                    CAST(anp.Atp_Cod AS CHAR) LIKE '%$like%'
+                    OR IFNULL(anp.Atp_Obs, '') LIKE '%$like%'
+                    OR p.Prs_Ape LIKE '%$like%'
+                    OR p.Prs_Nom LIKE '%$like%'
+                    OR IFNULL(p.Prs_Ced, '') LIKE '%$like%'
+               )
+             GROUP BY anp.Atp_Cod
+             HAVING (anp.Atp_Val - COALESCE(SUM(daccp.Dac_Val), 0)) > 0
+                OR anp.Atp_Est IN ('A', 'U')
+             ORDER BY anp.Atp_Fec DESC, anp.Atp_Cod DESC
+             LIMIT $limit;",
+            $this->conexion
+        );
+        if ($rows === false || $rows === null) {
+            return array();
+        }
+        foreach ($rows as $i => $r) {
+            $rows[$i]['Atp_Val'] = round(floatval($r['Atp_Val']), 2);
+            $rows[$i]['Saldo'] = round(floatval($r['Saldo']), 2);
+        }
+        return $rows;
+    }
+
+    /**
+     * Detalle de un anticipo de proveedor EXA para el nodo AVANCE/FISCALIZACION.
+     */
+    public function obtenerDetalleAnticipoAvance($atp_cod, $emp_cod) {
+        $atp_cod = intval($atp_cod);
+        $emp_cod = intval($emp_cod);
+        if ($atp_cod <= 0 || $emp_cod <= 0) {
+            return array('success' => false, 'message' => 'Datos invalidos.');
+        }
+        $row = $this->getRowConsultaSql(
+            "SELECT anp.Atp_Cod, anp.Atp_Fec, anp.Atp_Val, anp.Atp_Est, anp.Atp_Obs, anp.Prv_Cod, anp.Com_Cod,
+                    TRIM(CONCAT(IFNULL(p.Prs_Ape, ''), ' ', IFNULL(p.Prs_Nom, ''))) AS Proveedor,
+                    p.Prs_Ced,
+                    ROUND(anp.Atp_Val - COALESCE((
+                        SELECT SUM(d.Dac_Val) FROM det_ant_ccpp d WHERE d.Atp_Cod = anp.Atp_Cod
+                    ), 0), 2) AS Saldo,
+                    cp.Com_Num, cp.Com_Fec, cp.Tia_Cod, cp.Pec_Cod, ta.Tia_Abr
+             FROM anticipos_proveedores anp
+             INNER JOIN proveedore pr ON pr.Prv_Cod = anp.Prv_Cod
+             INNER JOIN persona p ON p.Prs_Cod = pr.Prs_Cod
+             LEFT JOIN comprobantes cp ON cp.Com_Cod = anp.Com_Cod
+             LEFT JOIN tipo_asien ta ON ta.Tia_Cod = cp.Tia_Cod
+             WHERE anp.Atp_Cod = $atp_cod AND pr.Emp_Cod = $emp_cod
+             LIMIT 1;",
+            $this->conexion
+        );
+        if (empty($row)) {
+            return array('success' => false, 'message' => 'Anticipo no encontrado o no pertenece a la empresa.');
+        }
+        if (in_array($row['Atp_Est'], array('C', 'I'), true)) {
+            return array('success' => false, 'message' => 'El anticipo no esta disponible (consumido o anulado).');
+        }
+
+        $link_com = '';
+        $com_codigo = '';
+        if (!empty($row['Com_Cod'])) {
+            $com_cod = intval($row['Com_Cod']);
+            $tia_cod = intval($row['Tia_Cod']);
+            $pec_cod = intval($row['Pec_Cod']);
+            $mes = !empty($row['Com_Fec']) ? date('m', strtotime($row['Com_Fec'])) : '01';
+            $abr = trim(isset($row['Tia_Abr']) ? $row['Tia_Abr'] : '');
+            $com_codigo = ($abr !== '' ? $abr . '-' : '') . $mes . '-' . $row['Com_Num'];
+            $link_com = '../../contabilidad/FRONT/con_pri_compr_2.1.php?codigo=' . $com_cod
+                . '&tabla=proveedore&campo=Prv_Cod&tipo=' . $tia_cod . '&Pec_Cod=' . $pec_cod;
+        }
+
+        $comprobantes_img = array();
+        $pagos_img = $this->getArrayConsultaSql(
+            "SELECT pap.Pap_Cod, pap.Pap_img, pap.Pap_Val, pap.Pap_Est, pap.Pag_Cod,
+                    COALESCE(tp.Pag_Des, 'Pago') AS Pag_Des, COALESCE(tp.Pag_Abr, '') AS Pag_Abr
+             FROM pago_anticipo_proveedores pap
+             LEFT JOIN tipos_pago tp ON tp.Pag_Cod = pap.Pag_Cod
+             WHERE pap.Atp_Cod = $atp_cod
+               AND IFNULL(pap.Pap_Est, '') <> 'I'
+               AND pap.Pap_img IS NOT NULL
+               AND TRIM(pap.Pap_img) <> ''
+             ORDER BY pap.Pap_Cod ASC;",
+            $this->conexion
+        );
+        if ($pagos_img === false || $pagos_img === null) {
+            $pagos_img = array();
+        }
+        foreach ($pagos_img as $pi) {
+            $ruta = trim(str_replace('\\', '/', (string)$pi['Pap_img']));
+            if ($ruta === '') {
+                continue;
+            }
+            if (!preg_match('#^(https?://|/)#i', $ruta) && strpos($ruta, '../../') !== 0) {
+                $ruta = '../../' . ltrim(preg_replace('#^\./#', '', $ruta), '/');
+            }
+            $comprobantes_img[] = array(
+                'Pap_Cod' => intval($pi['Pap_Cod']),
+                'Pap_img' => $ruta,
+                'Pap_Val' => round(floatval($pi['Pap_Val']), 2),
+                'Pag_Des' => isset($pi['Pag_Des']) ? $pi['Pag_Des'] : 'Pago',
+                'Pag_Abr' => isset($pi['Pag_Abr']) ? $pi['Pag_Abr'] : ''
+            );
+        }
+
+        $est_lbl = 'Activo';
+        if ($row['Atp_Est'] === 'U') {
+            $est_lbl = 'Usado';
+        } elseif ($row['Atp_Est'] === 'A') {
+            $est_lbl = 'Activo';
+        }
+
+        return array(
+            'success' => true,
+            'anticipo' => array(
+                'Atp_Cod' => $atp_cod,
+                'Atp_Fec' => $row['Atp_Fec'],
+                'Atp_Val' => round(floatval($row['Atp_Val']), 2),
+                'Saldo' => round(floatval($row['Saldo']), 2),
+                'Atp_Est' => $row['Atp_Est'],
+                'Estado' => $est_lbl,
+                'Atp_Obs' => isset($row['Atp_Obs']) ? $row['Atp_Obs'] : '',
+                'Prv_Cod' => intval($row['Prv_Cod']),
+                'Proveedor' => trim($row['Proveedor']),
+                'Prs_Ced' => isset($row['Prs_Ced']) ? $row['Prs_Ced'] : '',
+                'Com_Cod' => !empty($row['Com_Cod']) ? intval($row['Com_Cod']) : 0,
+                'Com_Codigo' => $com_codigo,
+                'Link_Comprobante' => $link_com,
+                'Comprobantes_Img' => $comprobantes_img
+            )
+        );
     }
 
     private function compraYaEnAvanceEtapa($sol_cod, $ins_cod, $nod_cod, $cop_cod, $exclude_sav = 0) {
@@ -1931,6 +2104,29 @@ class adq_adquisiciones_log extends MysqlDatosContab {
              FROM adq_solicitudes_avances
              WHERE Sol_Cod = $sol_cod AND Ins_Cod = $ins_cod AND Nod_Cod = $nod_cod
                AND Sav_Cop_Cod = $cop_cod $filtro;",
+            $this->conexion
+        );
+        return !empty($row['cnt']) && intval($row['cnt']) > 0;
+    }
+
+    private function anticipoYaEnAvanceEtapa($sol_cod, $ins_cod, $nod_cod, $atp_cod, $exclude_sav = 0) {
+        $sol_cod = intval($sol_cod);
+        $ins_cod = intval($ins_cod);
+        $nod_cod = intval($nod_cod);
+        $atp_cod = intval($atp_cod);
+        $exclude_sav = intval($exclude_sav);
+        if ($atp_cod <= 0) {
+            return false;
+        }
+        $filtro = '';
+        if ($exclude_sav > 0) {
+            $filtro = " AND Sav_Cod <> $exclude_sav";
+        }
+        $row = $this->getRowConsultaSql(
+            "SELECT COUNT(*) AS cnt
+             FROM adq_solicitudes_avances
+             WHERE Sol_Cod = $sol_cod AND Ins_Cod = $ins_cod AND Nod_Cod = $nod_cod
+               AND Sav_Atp_Cod = $atp_cod $filtro;",
             $this->conexion
         );
         return !empty($row['cnt']) && intval($row['cnt']) > 0;
@@ -1971,6 +2167,13 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                     }
                     $set_extra .= ', Sav_Cop_Cod = ' . ($cop_cod > 0 ? $cop_cod : 'NULL');
                 }
+                if (array_key_exists('Sav_Atp_Cod', $doc)) {
+                    $atp_cod = intval($doc['Sav_Atp_Cod']);
+                    if ($atp_cod > 0 && $this->anticipoYaEnAvanceEtapa($sol_cod, $ins_cod, $nod_cod, $atp_cod, $sav_cod)) {
+                        throw new Exception('El anticipo #' . $atp_cod . ' ya esta registrado en esta etapa.');
+                    }
+                    $set_extra .= ', Sav_Atp_Cod = ' . ($atp_cod > 0 ? $atp_cod : 'NULL');
+                }
                 if (array_key_exists('Sav_Fac_Adj', $doc) && !empty($doc['Sav_Fac_Adj'])) {
                     $adj = $this->escapeSql($doc['Sav_Fac_Adj']);
                     $set_extra .= ", Sav_Fac_Adj = '$adj'";
@@ -1995,15 +2198,16 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         if (!empty($docs_nuevos) && is_array($docs_nuevos)) {
             foreach ($docs_nuevos as $doc) {
                 $cop_cod = !empty($doc['Sav_Cop_Cod']) ? intval($doc['Sav_Cop_Cod']) : 0;
+                $atp_cod = !empty($doc['Sav_Atp_Cod']) ? intval($doc['Sav_Atp_Cod']) : 0;
                 $fac_adj = !empty($doc['Sav_Fac_Adj']) ? $doc['Sav_Fac_Adj'] : '';
                 $ret_adj = !empty($doc['Sav_Ret_Adj']) ? $doc['Sav_Ret_Adj'] : '';
                 $com_adj = !empty($doc['Sav_Com_Adj']) ? $doc['Sav_Com_Adj'] : '';
                 $des_raw = isset($doc['Sav_Des']) ? trim($doc['Sav_Des']) : '';
-                if ($cop_cod <= 0 && $fac_adj === '' && $ret_adj === '' && $com_adj === '' && $des_raw === '') {
+                if ($cop_cod <= 0 && $atp_cod <= 0 && $fac_adj === '' && $ret_adj === '' && $com_adj === '' && $des_raw === '') {
                     continue;
                 }
+                $emp_cod = isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0;
                 if ($cop_cod > 0) {
-                    $emp_cod = isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0;
                     $det = $this->obtenerDetalleCompraAvance($cop_cod, $emp_cod);
                     if (empty($det['success'])) {
                         throw new Exception(isset($det['message']) ? $det['message'] : 'Factura de compra no valida.');
@@ -2012,14 +2216,24 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                         throw new Exception('La factura ' . $det['compra']['Cop_Num'] . ' ya esta registrada en esta etapa.');
                     }
                 }
+                if ($atp_cod > 0) {
+                    $det_ant = $this->obtenerDetalleAnticipoAvance($atp_cod, $emp_cod);
+                    if (empty($det_ant['success'])) {
+                        throw new Exception(isset($det_ant['message']) ? $det_ant['message'] : 'Anticipo de proveedor no valido.');
+                    }
+                    if ($this->anticipoYaEnAvanceEtapa($sol_cod, $ins_cod, $nod_cod, $atp_cod)) {
+                        throw new Exception('El anticipo #' . $atp_cod . ' ya esta registrado en esta etapa.');
+                    }
+                }
                 $des = $this->escapeSql($des_raw);
                 $fac_sql = $fac_adj !== '' ? "'" . $this->escapeSql($fac_adj) . "'" : 'NULL';
                 $ret_sql = $ret_adj !== '' ? "'" . $this->escapeSql($ret_adj) . "'" : 'NULL';
                 $com_sql = $com_adj !== '' ? "'" . $this->escapeSql($com_adj) . "'" : 'NULL';
                 $cop_sql = $cop_cod > 0 ? $cop_cod : 'NULL';
+                $atp_sql = $atp_cod > 0 ? $atp_cod : 'NULL';
                 $sql = "INSERT INTO adq_solicitudes_avances
-                        (Sol_Cod, Ins_Cod, Nod_Cod, Sav_Cop_Cod, Sav_Des, Sav_Fac_Adj, Sav_Ret_Adj, Sav_Com_Adj, Usu_Cod, Sav_Fec)
-                        VALUES ($sol_cod, $ins_cod, $nod_cod, $cop_sql, '$des', $fac_sql, $ret_sql, $com_sql, $usu_cod, '$fecha');";
+                        (Sol_Cod, Ins_Cod, Nod_Cod, Sav_Cop_Cod, Sav_Atp_Cod, Sav_Des, Sav_Fac_Adj, Sav_Ret_Adj, Sav_Com_Adj, Usu_Cod, Sav_Fec)
+                        VALUES ($sol_cod, $ins_cod, $nod_cod, $cop_sql, $atp_sql, '$des', $fac_sql, $ret_sql, $com_sql, $usu_cod, '$fecha');";
                 if (!$this->grabarv_registros($sql, $this->conexion)) {
                     throw new Exception('No se pudo registrar un documento de avance: ' . $this->getMsgError());
                 }
@@ -2063,8 +2277,9 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $ses = session_id() ?: 'CLI-SESSION';
             $dep_cod = isset($_SESSION['Ses_Dep_Cod']) ? intval($_SESSION['Ses_Dep_Cod']) : 0;
             $nums = array();
+            $ants = array();
             $rows = $this->getArrayConsultaSql(
-                "SELECT a.Sav_Cop_Cod, c.Cop_Num
+                "SELECT a.Sav_Cop_Cod, a.Sav_Atp_Cod, c.Cop_Num
                  FROM adq_solicitudes_avances a
                  LEFT JOIN compras c ON c.Cop_Cod = a.Sav_Cop_Cod
                  WHERE a.Sol_Cod = $sol_cod
@@ -2081,10 +2296,20 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                     } elseif (!empty($row['Sav_Cop_Cod'])) {
                         $nums[] = '#' . intval($row['Sav_Cop_Cod']);
                     }
+                    if (!empty($row['Sav_Atp_Cod'])) {
+                        $ants[] = '#' . intval($row['Sav_Atp_Cod']);
+                    }
                 }
             }
-            $comentario = !empty($nums)
-                ? $this->escapeSql('Facturas registradas: ' . implode(', ', $nums))
+            $partes = array();
+            if (!empty($nums)) {
+                $partes[] = 'Facturas: ' . implode(', ', $nums);
+            }
+            if (!empty($ants)) {
+                $partes[] = 'Anticipos: ' . implode(', ', $ants);
+            }
+            $comentario = !empty($partes)
+                ? $this->escapeSql(implode(' | ', $partes))
                 : $this->escapeSql('Carga/actualizacion de documentos de avance/fiscalizacion.');
             $historial_guardado = $this->grabarv_registros(
                 "INSERT INTO wf_instancias_nodos (Ins_Cod, Nod_Cod, Usu_Cod, Dep_Cod, Isn_Acc, Isn_Com, Isn_Fec, Isn_Ip, Isn_Ses)
@@ -2167,7 +2392,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $validas = 0;
             $ganadora = false;
             foreach ($cots as $c) {
-                if (!empty($c['Prv_Cod']) && floatval($c['Cot_Val']) > 0) {
+                if (!empty($c['Prv_Cod']) && floatval($c['Cot_Val']) > 0 && $this->cotizacionTieneAdjunto(isset($c['Cot_Adj']) ? $c['Cot_Adj'] : '')) {
                     $validas++;
                 }
                 if (!empty($c['Cot_Sel'])) {
@@ -2175,21 +2400,12 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 }
             }
             if ($validas < $min_cot) {
-                $faltantes[] = "Se requieren al menos $min_cot cotizacion(es) con proveedor y monto (tiene $validas). El archivo PDF es opcional. Puede guardar borrador y completarlas antes de enviar.";
+                $faltantes[] = "Se requieren al menos $min_cot cotizacion(es) con proveedor, monto y PDF (tiene $validas). Puede guardar borrador y completarlas antes de enviar.";
             } elseif (!$ganadora) {
                 $faltantes[] = 'Debe marcar cual cotizacion es la ganadora/seleccionada.';
             }
         }
-        if (intval($sol['Sol_Req_Adj']) === 1) {
-            $this->ensureSolicitudAdjuntosTable();
-            $adj_cnt = $this->getRowConsultaSql(
-                "SELECT COUNT(*) AS cnt FROM adq_solicitudes_adjuntos WHERE Sol_Cod = $sol_cod;",
-                $this->conexion
-            );
-            if (empty($adj_cnt['cnt'])) {
-                $faltantes[] = 'Debe cargar al menos un archivo PDF de soporte con su descripcion.';
-            }
-        }
+        // Paso 2B: los PDF de soporte son opcionales (no se exige Sol_Req_Adj).
         if (!empty($faltantes)) {
             return array('success' => false, 'message' => implode(' ', $faltantes), 'faltantes' => $faltantes);
         }
@@ -2208,7 +2424,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 if (!is_array($cot)) {
                     continue;
                 }
-                if (!empty($cot['Prv_Cod']) && floatval($cot['Cot_Val']) > 0) {
+                if (!empty($cot['Prv_Cod']) && floatval($cot['Cot_Val']) > 0
+                    && $this->cotizacionTieneAdjunto(isset($cot['Cot_Adj']) ? $cot['Cot_Adj'] : '')) {
                     $validas++;
                 }
                 if (!empty($cot['Cot_Sel'])) {
@@ -2240,31 +2457,12 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $validas = $resumen['validas'];
             $ganadora = $resumen['ganadora'];
             if ($validas < $min_cot) {
-                $faltantes[] = "Se requieren al menos $min_cot cotizacion(es) con proveedor y monto (completas: $validas). El archivo PDF es opcional.";
+                $faltantes[] = "Se requieren al menos $min_cot cotizacion(es) con proveedor, monto y PDF (completas: $validas).";
             } elseif (!$ganadora) {
                 $faltantes[] = 'Debe marcar cual cotizacion es la ganadora/seleccionada.';
             }
         }
-        if (intval($req['Sol_Req_Adj']) === 1) {
-            $cnt_adj = 0;
-            if (is_array($adjuntos_nuevos)) {
-                foreach ($adjuntos_nuevos as $a) {
-                    if (!empty($a['Sad_Adj'])) {
-                        $cnt_adj++;
-                    }
-                }
-            }
-            if (is_array($adjuntos_existentes)) {
-                foreach ($adjuntos_existentes as $a) {
-                    if (!empty($a['Sad_Adj']) || !empty($a['Sad_Adj_Keep'])) {
-                        $cnt_adj++;
-                    }
-                }
-            }
-            if ($cnt_adj <= 0) {
-                $faltantes[] = 'Debe cargar al menos un archivo PDF de soporte con su descripcion.';
-            }
-        }
+        // Paso 2B: los PDF de soporte son opcionales (no se exige Sol_Req_Adj).
         if (!empty($faltantes)) {
             throw new Exception(implode(' ', $faltantes));
         }
@@ -2557,14 +2755,21 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 throw new Exception('No se encontró la instancia activa de la solicitud.');
             }
             $this->inicio_transaccion($this->conexion);
+            // Completar el formulario es una tarea del nodo actual: no avanza el workflow.
             if (!$this->grabarv_registros("UPDATE adq_solicitudes SET Sol_Est = 'E' WHERE Sol_Cod = $sol_cod;", $this->conexion)) {
                 throw new Exception('No se pudo activar la solicitud.');
             }
-            $wf_mgr = new wf_manager_log(isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null, $this->conexion);
-            $avance = $wf_mgr->avanzarSiguientePaso(intval($inst['Ins_Cod']), intval($inst['Nod_Act']), 'COMPLETAR', 'Formulario completo registrado por el responsable de la primera etapa.');
-            if (!$avance) {
-                throw new Exception('La solicitud se guardó, pero no pudo avanzar al siguiente nodo.');
-            }
+            $fecha = date('Y-m-d H:i:s');
+            $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '127.0.0.1';
+            $ses = session_id() ?: 'CLI-SESSION';
+            $usu_cod = isset($_SESSION['Ses_Usu_Cod']) ? intval($_SESSION['Ses_Usu_Cod']) : 0;
+            $dep_cod = isset($_SESSION['Ses_Dep_Cod']) ? intval($_SESSION['Ses_Dep_Cod']) : 0;
+            $com = $this->escapeSql('Formulario de solicitud completado. La etapa permanece pendiente de resolucion.');
+            $this->grabarv_registros(
+                "INSERT INTO wf_instancias_nodos (Ins_Cod, Nod_Cod, Usu_Cod, Dep_Cod, Isn_Acc, Isn_Com, Isn_Fec, Isn_Ip, Isn_Ses)
+                 VALUES (" . intval($inst['Ins_Cod']) . ", " . intval($inst['Nod_Act']) . ", $usu_cod, $dep_cod, 'ACTUALIZAR', '$com', '$fecha', '$ip', '$ses');",
+                $this->conexion
+            );
             $this->commit_nomsn($this->conexion);
             return array('success' => true, 'Sol_Cod' => $sol_cod, 'Num' => $upd['Num']);
         } catch (Exception $e) {
@@ -3012,7 +3217,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         }
 
         $historial = $this->getArrayConsultaSql(
-            "SELECT h.*, COALESCE(n.Nod_Nom, CONCAT('Nodo #', h.Nod_Cod)) AS Nod_Nom
+            "SELECT h.*, COALESCE(n.Nod_Nom, CONCAT('Nodo #', h.Nod_Cod)) AS Nod_Nom,
+                    n.Nod_Tip
              FROM wf_instancias_nodos h
              LEFT JOIN wf_nodos n ON n.Nod_Cod = h.Nod_Cod
              WHERE h.Ins_Cod = $ins_cod
@@ -3026,6 +3232,9 @@ class adq_adquisiciones_log extends MysqlDatosContab {
 
         $this->ensureAvancesTable();
         $vistos_global = array();
+        $idx_primera = -1;
+        $idx_formulario = -1;
+        $idx_cot_edit = -1;
 
         foreach ($nodos as $nodo) {
             $nod_tip = isset($nodo['Nod_Tip']) ? $nodo['Nod_Tip'] : '';
@@ -3049,7 +3258,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 }
                 if (!empty($h['archivos']) && is_array($h['archivos'])) {
                     foreach ($h['archivos'] as $arch) {
-                        if (!empty($arch['es_expediente_firmado'])) {
+                        // No re-incluir el expediente generado/firmado dentro del nuevo expediente.
+                        if (!empty($arch['es_expediente']) || !empty($arch['es_expediente_firmado'])) {
                             continue;
                         }
                         $path = isset($arch['path']) ? $arch['path'] : '';
@@ -3057,42 +3267,55 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                         $this->agregarPdfSeccionExpediente($documentos, $vistos, $vistos_global, $path, $lbl);
                     }
                 }
+                // PDFs de facturas/comprobantes EXA vinculados al movimiento (si la ruta es archivo PDF).
+                if (!empty($h['facturas']) && is_array($h['facturas'])) {
+                    foreach ($h['facturas'] as $fac) {
+                        $this->agregarPdfsFacturaExpediente($documentos, $vistos, $vistos_global, $fac);
+                    }
+                }
+                if (isset($h['Isn_Acc']) && $h['Isn_Acc'] === 'ACTUALIZAR' && $idx_formulario < 0) {
+                    $idx_formulario = count($secciones);
+                }
             }
 
             if ($nod_tip === 'AVANCE' || $nod_tip === 'FISCALIZACION') {
                 $avances = $this->getArrayConsultaSql(
-                    "SELECT Sav_Des, Sav_Cop_Cod, Sav_Fac_Adj, Sav_Ret_Adj, Sav_Com_Adj, Sav_Adj
+                    "SELECT Sav_Des, Sav_Cop_Cod, Sav_Atp_Cod, Sav_Fac_Adj, Sav_Ret_Adj, Sav_Com_Adj, Sav_Adj
                      FROM adq_solicitudes_avances
                      WHERE Sol_Cod = " . intval($sol_cod) . " AND Nod_Cod = $nod_cod
                      ORDER BY Sav_Fec ASC, Sav_Cod ASC;",
                     $this->conexion
                 );
                 if (!empty($avances)) {
+                    $emp_cod = isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0;
+                    $avances = $this->enriquecerAvancesConCompras($avances, $emp_cod);
                     foreach ($avances as $av) {
-                        $titulo_doc = (!empty($av['Sav_Des']) && empty($av['Sav_Cop_Cod'])) ? trim($av['Sav_Des']) : '';
+                        $titulo_doc = (!empty($av['Sav_Des']) && empty($av['Sav_Cop_Cod']) && empty($av['Sav_Atp_Cod']))
+                            ? trim($av['Sav_Des'])
+                            : '';
                         $this->agregarPdfSeccionExpediente($documentos, $vistos, $vistos_global, isset($av['Sav_Fac_Adj']) ? $av['Sav_Fac_Adj'] : '', $titulo_doc !== '' ? $titulo_doc : 'Factura');
                         $this->agregarPdfSeccionExpediente($documentos, $vistos, $vistos_global, isset($av['Sav_Ret_Adj']) ? $av['Sav_Ret_Adj'] : '', $titulo_doc !== '' ? $titulo_doc : 'Retencion');
                         $this->agregarPdfSeccionExpediente($documentos, $vistos, $vistos_global, isset($av['Sav_Com_Adj']) ? $av['Sav_Com_Adj'] : '', $titulo_doc !== '' ? $titulo_doc : 'Comprobante');
                         $this->agregarPdfSeccionExpediente($documentos, $vistos, $vistos_global, isset($av['Sav_Adj']) ? $av['Sav_Adj'] : '', $titulo_doc !== '' ? $titulo_doc : 'Documento');
+                        if (!empty($av['compra']) && is_array($av['compra'])) {
+                            $this->agregarPdfsFacturaExpediente($documentos, $vistos, $vistos_global, array(
+                                'numero' => isset($av['compra']['Cop_Num']) ? $av['compra']['Cop_Num'] : '',
+                                'link' => isset($av['compra']['Link_Factura']) ? $av['compra']['Link_Factura'] : '',
+                                'comprobantes' => isset($av['compra']['Comprobantes']) ? $av['compra']['Comprobantes'] : array()
+                            ));
+                        }
+                        if (!empty($av['anticipo']) && is_array($av['anticipo'])) {
+                            $this->agregarPdfsAnticipoExpediente($documentos, $vistos, $vistos_global, $av['anticipo']);
+                        }
                     }
                 }
             }
 
+            if ($idx_primera < 0) {
+                $idx_primera = count($secciones);
+            }
             if (intval($nodo['Nod_Cot_Edit']) === 1) {
-                $cotizaciones = $this->listarCotizacionesConProveedor(intval($sol_cod));
-                if (!empty($cotizaciones)) {
-                    foreach ($cotizaciones as $cot) {
-                        $adjuntos = $this->parseCotAdjuntos(isset($cot['Cot_Adj']) ? $cot['Cot_Adj'] : '');
-                        $prv = !empty($cot['Prv_Com']) ? $cot['Prv_Com'] : 'Proveedor';
-                        foreach ($adjuntos as $i => $path) {
-                            $lbl = 'Cotizacion - ' . $prv;
-                            if (count($adjuntos) > 1) {
-                                $lbl .= ' (' . ($i + 1) . ')';
-                            }
-                            $this->agregarPdfSeccionExpediente($documentos, $vistos, $vistos_global, $path, $lbl);
-                        }
-                    }
-                }
+                $idx_cot_edit = count($secciones);
             }
 
             $secciones[] = array(
@@ -3103,7 +3326,162 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             );
         }
 
+        // Soportes PDF del formulario (Paso 2B) → nodo ACTUALIZAR o primera etapa.
+        $idx_soportes = ($idx_formulario >= 0) ? $idx_formulario : $idx_primera;
+        if ($idx_soportes >= 0 && isset($secciones[$idx_soportes])) {
+            $vistos_sop = array();
+            $adjuntos_sol = $this->listarAdjuntosSolicitud($sol_cod);
+            foreach ($adjuntos_sol as $adj) {
+                if (empty($adj['Sad_Adj'])) {
+                    continue;
+                }
+                $eti = !empty($adj['Sad_Des']) ? $adj['Sad_Des'] : 'Soporte';
+                $this->agregarPdfSeccionExpediente(
+                    $secciones[$idx_soportes]['documentos'],
+                    $vistos_sop,
+                    $vistos_global,
+                    $adj['Sad_Adj'],
+                    $eti
+                );
+            }
+        }
+
+        // Cotizaciones/proformas: siempre (dedupe global). Preferir nodo Cot_Edit, luego formulario, luego primera etapa.
+        $idx_cots = ($idx_cot_edit >= 0) ? $idx_cot_edit : (($idx_formulario >= 0) ? $idx_formulario : $idx_primera);
+        if ($idx_cots >= 0 && isset($secciones[$idx_cots])) {
+            $vistos_cot = array();
+            $cotizaciones = $this->listarCotizacionesConProveedor(intval($sol_cod));
+            foreach ($cotizaciones as $cot) {
+                $adjuntos = $this->parseCotAdjuntos(isset($cot['Cot_Adj']) ? $cot['Cot_Adj'] : '');
+                $prv = !empty($cot['Prv_Com']) ? $cot['Prv_Com'] : 'Proveedor';
+                foreach ($adjuntos as $i => $path) {
+                    $lbl = 'Cotizacion - ' . $prv;
+                    if (count($adjuntos) > 1) {
+                        $lbl .= ' (' . ($i + 1) . ')';
+                    }
+                    $this->agregarPdfSeccionExpediente(
+                        $secciones[$idx_cots]['documentos'],
+                        $vistos_cot,
+                        $vistos_global,
+                        $path,
+                        $lbl
+                    );
+                }
+            }
+        }
+
         return array('meta' => $meta, 'secciones' => $secciones);
+    }
+
+    /**
+     * Intenta agregar PDF de factura/comprobantes EXA si la ruta apunta a un archivo PDF.
+     */
+    private function agregarPdfsFacturaExpediente(&$documentos, &$vistos, &$vistos_global, $fac) {
+        if (!is_array($fac)) {
+            return;
+        }
+        $numero = !empty($fac['numero']) ? trim((string)$fac['numero']) : 'Factura';
+        $candidatos = array();
+        if (!empty($fac['path'])) {
+            $candidatos[] = array('ruta' => $fac['path'], 'lbl' => 'Factura ' . $numero);
+        }
+        if (!empty($fac['link'])) {
+            $ruta = $this->extraerRutaDataDesdeLink($fac['link']);
+            if ($ruta !== '') {
+                $candidatos[] = array('ruta' => $ruta, 'lbl' => 'Factura ' . $numero);
+            }
+        }
+        if (!empty($fac['comprobantes']) && is_array($fac['comprobantes'])) {
+            foreach ($fac['comprobantes'] as $comp) {
+                $img = '';
+                if (!empty($comp['pag_img'])) {
+                    $img = $comp['pag_img'];
+                } elseif (!empty($comp['Pag_img'])) {
+                    $img = $comp['Pag_img'];
+                }
+                $ruta = $this->normalizarRutaArchivoExpediente($img);
+                if ($ruta === '' && !empty($comp['link'])) {
+                    $ruta = $this->extraerRutaDataDesdeLink($comp['link']);
+                } elseif ($ruta === '' && !empty($comp['Link'])) {
+                    $ruta = $this->extraerRutaDataDesdeLink($comp['Link']);
+                }
+                if ($ruta === '') {
+                    continue;
+                }
+                $lbl = 'Comprobante pago';
+                if (!empty($comp['codigo'])) {
+                    $lbl .= ' ' . $comp['codigo'];
+                } elseif (!empty($comp['Codigo'])) {
+                    $lbl .= ' ' . $comp['Codigo'];
+                }
+                $candidatos[] = array('ruta' => $ruta, 'lbl' => $lbl);
+            }
+        }
+        foreach ($candidatos as $c) {
+            $this->agregarPdfSeccionExpediente($documentos, $vistos, $vistos_global, $c['ruta'], $c['lbl']);
+        }
+    }
+
+    /**
+     * PDFs de pagos de anticipo (Pap_img) cuando el archivo es PDF.
+     */
+    private function agregarPdfsAnticipoExpediente(&$documentos, &$vistos, &$vistos_global, $anticipo) {
+        if (!is_array($anticipo)) {
+            return;
+        }
+        $atp = !empty($anticipo['Atp_Cod']) ? ('#' . intval($anticipo['Atp_Cod'])) : '';
+        $lista = array();
+        if (!empty($anticipo['Comprobantes_Img']) && is_array($anticipo['Comprobantes_Img'])) {
+            $lista = $anticipo['Comprobantes_Img'];
+        } elseif (!empty($anticipo['comprobantes_img']) && is_array($anticipo['comprobantes_img'])) {
+            $lista = $anticipo['comprobantes_img'];
+        }
+        foreach ($lista as $pi) {
+            $img = '';
+            if (!empty($pi['Pap_img'])) {
+                $img = $pi['Pap_img'];
+            } elseif (!empty($pi['path'])) {
+                $img = $pi['path'];
+            }
+            $ruta = $this->normalizarRutaArchivoExpediente($img);
+            if ($ruta === '') {
+                continue;
+            }
+            $lbl = 'Anticipo' . ($atp !== '' ? (' ' . $atp) : '');
+            if (!empty($pi['Pag_Des'])) {
+                $lbl .= ' - ' . $pi['Pag_Des'];
+            }
+            $this->agregarPdfSeccionExpediente($documentos, $vistos, $vistos_global, $ruta, $lbl);
+        }
+    }
+
+    private function extraerRutaDataDesdeLink($link) {
+        $link = str_replace('\\', '/', trim((string)$link));
+        if ($link === '') {
+            return '';
+        }
+        if (preg_match('#(?:^|/)DATA/(.+)$#i', $link, $m)) {
+            return $m[1];
+        }
+        return $this->normalizarRutaArchivoExpediente($link);
+    }
+
+    private function normalizarRutaArchivoExpediente($ruta) {
+        $ruta = trim(str_replace('\\', '/', (string)$ruta));
+        if ($ruta === '' || preg_match('#^https?://#i', $ruta)) {
+            return '';
+        }
+        $ruta = preg_replace('#^\./#', '', $ruta);
+        while (strpos($ruta, '../') === 0) {
+            $ruta = substr($ruta, 3);
+        }
+        if (stripos($ruta, 'DATA/') === 0) {
+            $ruta = substr($ruta, 5);
+        }
+        if ($ruta === '' || strpos($ruta, '..') !== false) {
+            return '';
+        }
+        return $ruta;
     }
 
     private function slugNombreZip($texto) {
@@ -3483,8 +3861,10 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             ? 'Sin documentos PDF en esta etapa'
             : ($docs . ' documento' . ($docs === 1 ? '' : 's') . ' PDF');
 
+        // mPDF 5.7: position:absolute con top en mm SÍ centra; height/valign/SetY no.
+        // top ~115mm ≈ centro visual del bloque en A4 (297mm).
         return '
-        <div style="font-family:dejavusans,helvetica,arial,sans-serif;color:' . $c['titulo'] . ';">
+        <div style="position:absolute; top:115mm; left:16mm; width:178mm; font-family:dejavusans,helvetica,arial,sans-serif;color:' . $c['titulo'] . ';">
             <table width="100%" cellpadding="0" cellspacing="0">
                 <tr><td style="height:5px;background:' . $c['primario'] . ';"></td></tr>
             </table>
@@ -3544,13 +3924,23 @@ class adq_adquisiciones_log extends MysqlDatosContab {
     }
 
     private function generarPdfSeparadorProceso($indice, $titulo, $num_docs, $meta = array()) {
-        return $this->generarPdfHtmlTemporal(
-            $this->htmlSeparadorProcesoExpediente($indice, $titulo, $num_docs, $meta),
-            array(
-                'title' => 'Proceso ' . intval($indice) . ' - ' . $titulo,
-                'author' => isset($meta['emp_nom']) ? $meta['emp_nom'] : 'Adquisiciones'
-            )
-        );
+        if (!class_exists('mPDF')) {
+            include_once(dirname(__FILE__) . '/../../Librerias/MPDF57/mpdf.php');
+        }
+        // Márgenes 0: el bloque se ubica con position:absolute (probado en mPDF 5.7).
+        $mpdf = new mPDF('c', 'A4', '', '', 0, 0, 0, 0, 0, 0);
+        $mpdf->SetAutoPageBreak(false);
+        $mpdf->SetTitle('Proceso ' . intval($indice) . ' - ' . $titulo);
+        $mpdf->SetAuthor(!empty($meta['emp_nom']) ? $meta['emp_nom'] : 'Adquisiciones');
+        $mpdf->WriteHTML($this->htmlSeparadorProcesoExpediente($indice, $titulo, $num_docs, $meta));
+        $tmp = tempnam(sys_get_temp_dir(), 'adq_exp_sep_');
+        if ($tmp === false) {
+            return '';
+        }
+        $ruta = $tmp . '.pdf';
+        @unlink($tmp);
+        $mpdf->Output($ruta, 'F');
+        return is_file($ruta) ? $ruta : '';
     }
 
     private function generarPdfHtmlTemporal($html, $props = array()) {

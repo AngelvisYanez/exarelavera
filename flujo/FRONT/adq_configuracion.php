@@ -309,7 +309,7 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
 
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" id="Trq_Req_Adj" name="Trq_Req_Adj" value="1">
-                                <label class="form-check-label" for="Trq_Req_Adj">Archivos adjuntos de soporte obligatorios</label>
+                                <label class="form-check-label" for="Trq_Req_Adj">Archivos adjuntos de soporte (opcionales)</label>
                             </div>
 
                             <div class="form-check mb-2">

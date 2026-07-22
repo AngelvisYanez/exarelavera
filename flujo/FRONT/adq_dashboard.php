@@ -8,6 +8,77 @@ require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/wf_manager_log.php');
 require_once('../LOGICA/adq_adquisiciones_log.php');
 
+/**
+ * Calcula categoria SLA de un proceso (misma logica del semaforo de la tabla).
+ * @return array{cat:string,elapsed:float,limit:?float,ratio:?float,semaforo:string,label:string}
+ */
+function adq_dashboard_calcular_sla_proceso($p) {
+    $elapsed_days = 0.0;
+    $limit_days = (isset($p['Sla_Dias']) && $p['Sla_Dias'] !== null && $p['Sla_Dias'] !== '')
+        ? floatval($p['Sla_Dias'])
+        : null;
+    $fec_ini = !empty($p['Ins_Fec_Ini']) ? strtotime($p['Ins_Fec_Ini']) : false;
+    if ($fec_ini === false) {
+        return array(
+            'cat' => 'sin_sla',
+            'elapsed' => 0.0,
+            'limit' => $limit_days,
+            'ratio' => null,
+            'semaforo' => 'bg-semaforo-gris',
+            'label' => 'Sin SLA'
+        );
+    }
+    if (isset($p['Ins_Est']) && $p['Ins_Est'] === 'P') {
+        $elapsed_days = (time() - $fec_ini) / 86400.0;
+    } else {
+        $fec_fin = !empty($p['Ins_Fec_Fin']) ? strtotime($p['Ins_Fec_Fin']) : time();
+        $elapsed_days = ($fec_fin - $fec_ini) / 86400.0;
+    }
+    if ($limit_days === null || $limit_days <= 0) {
+        return array(
+            'cat' => 'sin_sla',
+            'elapsed' => $elapsed_days,
+            'limit' => null,
+            'ratio' => null,
+            'semaforo' => 'bg-semaforo-gris',
+            'label' => 'Sin SLA'
+        );
+    }
+    $ratio = $elapsed_days / $limit_days;
+    if ($ratio < 0.8) {
+        return array(
+            'cat' => 'a_tiempo',
+            'elapsed' => $elapsed_days,
+            'limit' => $limit_days,
+            'ratio' => $ratio,
+            'semaforo' => 'bg-semaforo-verde',
+            'label' => 'A tiempo'
+        );
+    }
+    if ($ratio <= 1.0) {
+        return array(
+            'cat' => 'en_riesgo',
+            'elapsed' => $elapsed_days,
+            'limit' => $limit_days,
+            'ratio' => $ratio,
+            'semaforo' => 'bg-semaforo-amarillo',
+            'label' => 'En riesgo'
+        );
+    }
+    return array(
+        'cat' => 'vencido',
+        'elapsed' => $elapsed_days,
+        'limit' => $limit_days,
+        'ratio' => $ratio,
+        'semaforo' => 'bg-semaforo-rojo',
+        'label' => 'Vencido'
+    );
+}
+
+function adq_dashboard_esc($text) {
+    return htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
+}
+
 $obBD_conexion = new Class_Log_Conexion_Global($Ses_Dat_Dis);
 $obBD_con1 = new MysqlDatos($obBD_conexion);
 $wf_mgr = new wf_manager_log($Ses_Dat_Dis);
@@ -118,6 +189,11 @@ $tipos_req = array();
 $filtro_estado = isset($_GET['filtro_estado']) ? $_GET['filtro_estado'] : '';
 $filtro_depto = isset($_GET['filtro_depto']) ? intval($_GET['filtro_depto']) : 0;
 $filtro_tipo = isset($_GET['filtro_tipo']) ? intval($_GET['filtro_tipo']) : 0;
+$filtro_sla = isset($_GET['filtro_sla']) ? trim((string)$_GET['filtro_sla']) : '';
+$sla_filtros_ok = array('a_tiempo', 'en_riesgo', 'vencido', 'sin_sla');
+if (!in_array($filtro_sla, $sla_filtros_ok, true)) {
+    $filtro_sla = '';
+}
 
 if ($es_gerencial_admin) {
     // Calcular métricas de SLA generales para todos los procesos activos
@@ -194,6 +270,170 @@ if ($es_gerencial_admin) {
         ORDER BY s.Sol_Fec DESC;";
         
     $procesos = $obBD_con1->getArrayConsultaSql($sql_table, $obBD_conexion);
+    if ($procesos === false || $procesos === null) {
+        $procesos = array();
+    }
+
+    $procesos_filtrados = array();
+    foreach ($procesos as $p) {
+        $sla = adq_dashboard_calcular_sla_proceso($p);
+        $p['_sla'] = $sla;
+        if ($filtro_sla !== '' && $sla['cat'] !== $filtro_sla) {
+            continue;
+        }
+        $procesos_filtrados[] = $p;
+    }
+    $procesos = $procesos_filtrados;
+}
+
+if (isset($_GET['ajax_exportar_procesos_pdf'])) {
+    if (empty($es_gerencial_admin)) {
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode(array('success' => false, 'message' => 'Acceso denegado.'));
+        exit;
+    }
+    if (!class_exists('mPDF')) {
+        include_once(dirname(__FILE__) . '/../../Librerias/MPDF57/mpdf.php');
+    }
+
+    $map_estado = array(
+        'P' => 'En Proceso (Activos)',
+        'F' => 'Aprobados (Finalizados)',
+        'R' => 'Rechazados',
+        'O' => 'Observados'
+    );
+    $map_sla = array(
+        'a_tiempo' => 'A tiempo (<80%)',
+        'en_riesgo' => 'En riesgo (80%-100%)',
+        'vencido' => 'Vencidos (>100%)',
+        'sin_sla' => 'Sin SLA definido'
+    );
+    $lbl_estado = ($filtro_estado !== '' && isset($map_estado[$filtro_estado])) ? $map_estado[$filtro_estado] : 'Todos';
+    $lbl_sla = ($filtro_sla !== '' && isset($map_sla[$filtro_sla])) ? $map_sla[$filtro_sla] : 'Todos';
+    $lbl_depto = 'Todos';
+    if ($filtro_depto > 0) {
+        foreach ($departamentos as $d) {
+            if (intval($d['Dep_Cod']) === $filtro_depto) {
+                $lbl_depto = $d['Dep_Des'];
+                break;
+            }
+        }
+    }
+    $lbl_tipo = 'Todos';
+    if ($filtro_tipo > 0) {
+        foreach ($tipos_req as $tr) {
+            if (intval($tr['Trq_Cod']) === $filtro_tipo) {
+                $lbl_tipo = $tr['Trq_Des'];
+                break;
+            }
+        }
+    }
+
+    $filas = '';
+    $n = 0;
+    foreach ($procesos as $p) {
+        $n++;
+        $sla = isset($p['_sla']) ? $p['_sla'] : adq_dashboard_calcular_sla_proceso($p);
+        $solicitante = !empty($p['Prs_Nom'])
+            ? trim($p['Prs_Nom'] . ' ' . $p['Prs_Ape'])
+            : (isset($p['Usu_Nom']) ? $p['Usu_Nom'] : '-');
+        if ($p['Ins_Est'] === 'F') {
+            $est_txt = 'Aprobado';
+        } elseif ($p['Ins_Est'] === 'R') {
+            $est_txt = 'Rechazado';
+        } elseif (isset($p['Sol_Est']) && $p['Sol_Est'] === 'O') {
+            $est_txt = 'Observado';
+        } else {
+            $est_txt = 'En Proceso';
+        }
+        $elapsed_fmt = number_format($sla['elapsed'], 1);
+        $limit_fmt = $sla['limit'] !== null ? number_format($sla['limit'], 0) : '-';
+        $color_sla = '#64748b';
+        if ($sla['cat'] === 'a_tiempo') {
+            $color_sla = '#198754';
+        } elseif ($sla['cat'] === 'en_riesgo') {
+            $color_sla = '#d97706';
+        } elseif ($sla['cat'] === 'vencido') {
+            $color_sla = '#dc3545';
+        }
+        $bg = ($n % 2 === 0) ? '#f8fafc' : '#ffffff';
+        $filas .= '<tr style="background:' . $bg . ';">
+            <td style="padding:5px 6px;border:1px solid #cbd5e1;font-size:8px;">' . adq_dashboard_esc($p['Sol_Num']) . '</td>
+            <td style="padding:5px 6px;border:1px solid #cbd5e1;font-size:8px;">' . adq_dashboard_esc(!empty($p['Sol_Fec']) ? date('Y-m-d H:i', strtotime($p['Sol_Fec'])) : '-') . '</td>
+            <td style="padding:5px 6px;border:1px solid #cbd5e1;font-size:8px;">' . adq_dashboard_esc($solicitante) . '</td>
+            <td style="padding:5px 6px;border:1px solid #cbd5e1;font-size:8px;">' . adq_dashboard_esc($p['Trq_Des']) . '</td>
+            <td style="padding:5px 6px;border:1px solid #cbd5e1;font-size:8px;text-align:right;">$ ' . number_format(floatval($p['Sol_Val_Est']), 2) . '</td>
+            <td style="padding:5px 6px;border:1px solid #cbd5e1;font-size:8px;">' . adq_dashboard_esc(!empty($p['Nod_Nom']) ? $p['Nod_Nom'] : '-') . '</td>
+            <td style="padding:5px 6px;border:1px solid #cbd5e1;font-size:8px;">' . adq_dashboard_esc(!empty($p['Dep_Des']) ? $p['Dep_Des'] : 'General') . '</td>
+            <td style="padding:5px 6px;border:1px solid #cbd5e1;font-size:8px;">' . adq_dashboard_esc($est_txt) . '</td>
+            <td style="padding:5px 6px;border:1px solid #cbd5e1;font-size:8px;color:' . $color_sla . ';font-weight:bold;">'
+                . adq_dashboard_esc($sla['label']) . ' (' . $elapsed_fmt . '/' . $limit_fmt . 'd)</td>
+        </tr>';
+    }
+    if ($filas === '') {
+        $filas = '<tr><td colspan="9" style="padding:12px;border:1px solid #cbd5e1;text-align:center;color:#64748b;font-size:9px;">No hay procesos con los filtros seleccionados.</td></tr>';
+    }
+
+    $html = '
+    <div style="font-family:dejavusans,helvetica,arial,sans-serif;color:#0f172a;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
+            <tr>
+                <td>
+                    <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#2563eb;font-weight:bold;">Dashboard gerencial</div>
+                    <div style="font-size:16px;font-weight:bold;color:#1e3a5f;margin-top:2px;">Reporte de procesos de adquisiciones</div>
+                    <div style="font-size:9px;color:#64748b;margin-top:3px;">Generado: ' . adq_dashboard_esc(date('d/m/Y H:i')) . ' &middot; ' . intval(count($procesos)) . ' registro(s)</div>
+                </td>
+            </tr>
+        </table>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;border-collapse:collapse;">
+            <tr>
+                <td width="25%" style="padding:6px 8px;background:#f1f5f9;border:1px solid #cbd5e1;font-size:8px;"><strong>Estado:</strong> ' . adq_dashboard_esc($lbl_estado) . '</td>
+                <td width="25%" style="padding:6px 8px;background:#f1f5f9;border:1px solid #cbd5e1;font-size:8px;"><strong>SLA:</strong> ' . adq_dashboard_esc($lbl_sla) . '</td>
+                <td width="25%" style="padding:6px 8px;background:#f1f5f9;border:1px solid #cbd5e1;font-size:8px;"><strong>Depto:</strong> ' . adq_dashboard_esc($lbl_depto) . '</td>
+                <td width="25%" style="padding:6px 8px;background:#f1f5f9;border:1px solid #cbd5e1;font-size:8px;"><strong>Tipo:</strong> ' . adq_dashboard_esc($lbl_tipo) . '</td>
+            </tr>
+        </table>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;border-collapse:collapse;">
+            <tr>
+                <td width="20%" style="padding:7px;background:#1e3a5f;color:#fff;text-align:center;font-size:8px;border:1px solid #1e3a5f;">Activos<br><span style="font-size:14px;font-weight:bold;">' . intval($total_activos) . '</span></td>
+                <td width="20%" style="padding:7px;background:#198754;color:#fff;text-align:center;font-size:8px;border:1px solid #198754;">A tiempo<br><span style="font-size:14px;font-weight:bold;">' . intval($total_a_tiempo) . '</span></td>
+                <td width="20%" style="padding:7px;background:#d97706;color:#fff;text-align:center;font-size:8px;border:1px solid #d97706;">En riesgo<br><span style="font-size:14px;font-weight:bold;">' . intval($total_en_riesgo) . '</span></td>
+                <td width="20%" style="padding:7px;background:#dc3545;color:#fff;text-align:center;font-size:8px;border:1px solid #dc3545;">Vencidos<br><span style="font-size:14px;font-weight:bold;">' . intval($total_vencidos) . '</span></td>
+                <td width="20%" style="padding:7px;background:#64748b;color:#fff;text-align:center;font-size:8px;border:1px solid #64748b;">Sin SLA<br><span style="font-size:14px;font-weight:bold;">' . intval($total_sin_sla) . '</span></td>
+            </tr>
+        </table>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+            <thead>
+                <tr>
+                    <th style="padding:6px;background:#1e3a5f;color:#fff;font-size:8px;border:1px solid #1e3a5f;text-align:left;">N&ordm; Sol.</th>
+                    <th style="padding:6px;background:#1e3a5f;color:#fff;font-size:8px;border:1px solid #1e3a5f;text-align:left;">Fecha</th>
+                    <th style="padding:6px;background:#1e3a5f;color:#fff;font-size:8px;border:1px solid #1e3a5f;text-align:left;">Solicitante</th>
+                    <th style="padding:6px;background:#1e3a5f;color:#fff;font-size:8px;border:1px solid #1e3a5f;text-align:left;">Tipo</th>
+                    <th style="padding:6px;background:#1e3a5f;color:#fff;font-size:8px;border:1px solid #1e3a5f;text-align:right;">Monto</th>
+                    <th style="padding:6px;background:#1e3a5f;color:#fff;font-size:8px;border:1px solid #1e3a5f;text-align:left;">Etapa</th>
+                    <th style="padding:6px;background:#1e3a5f;color:#fff;font-size:8px;border:1px solid #1e3a5f;text-align:left;">Responsable</th>
+                    <th style="padding:6px;background:#1e3a5f;color:#fff;font-size:8px;border:1px solid #1e3a5f;text-align:left;">Estado</th>
+                    <th style="padding:6px;background:#1e3a5f;color:#fff;font-size:8px;border:1px solid #1e3a5f;text-align:left;">SLA</th>
+                </tr>
+            </thead>
+            <tbody>' . $filas . '</tbody>
+        </table>
+        <div style="margin-top:10px;font-size:7px;color:#94a3b8;">Documento generado electr&oacute;nicamente desde el Dashboard Gerencial de Adquisiciones. Uso interno.</div>
+    </div>';
+
+    $mpdf = new mPDF('c', 'A4-L', '', '', 10, 10, 12, 12, 6, 6);
+    $mpdf->SetTitle('Reporte de procesos - Adquisiciones');
+    $mpdf->SetAuthor('EXA Adquisiciones');
+    $mpdf->WriteHTML($html);
+    $filename = 'reporte_procesos_' . date('Ymd_His') . '.pdf';
+    $pdfBinary = $mpdf->Output($filename, 'S');
+    header('Content-Type: application/pdf');
+    header('Content-Disposition: inline; filename="' . $filename . '"');
+    header('Content-Length: ' . strlen($pdfBinary));
+    header('Cache-Control: private, max-age=0, must-revalidate');
+    header('Pragma: public');
+    echo $pdfBinary;
+    exit;
 }
 ?>
 <!DOCTYPE html>
@@ -348,15 +588,25 @@ if ($es_gerencial_admin) {
         <?php } else { ?>
             <!-- Tarjetas de Resumen SLA -->
             <div class="exa-adq-kpi-row">
-                <div class="exa-adq-kpi kpi-muted"><span class="kpi-label">Procesos activos</span><span class="kpi-value"><?php echo $total_activos; ?></span></div>
-                <div class="exa-adq-kpi kpi-success"><span class="kpi-label">A tiempo (&lt;80%)</span><span class="kpi-value"><?php echo $total_a_tiempo; ?></span></div>
-                <div class="exa-adq-kpi kpi-warning"><span class="kpi-label">En riesgo (80%-100%)</span><span class="kpi-value"><?php echo $total_en_riesgo; ?></span></div>
-                <div class="exa-adq-kpi kpi-danger"><span class="kpi-label">Vencidos (&gt;100%)</span><span class="kpi-value"><?php echo $total_vencidos; ?></span></div>
-                <div class="exa-adq-kpi kpi-muted"><span class="kpi-label">Sin SLA definido</span><span class="kpi-value"><?php echo $total_sin_sla; ?></span></div>
+                <a class="exa-adq-kpi kpi-muted" href="adq_dashboard.php?tab=todos_procesos&filtro_estado=P" style="text-decoration:none;color:inherit;">
+                    <span class="kpi-label">Procesos activos</span><span class="kpi-value"><?php echo $total_activos; ?></span>
+                </a>
+                <a class="exa-adq-kpi kpi-success" href="adq_dashboard.php?tab=todos_procesos&filtro_estado=P&filtro_sla=a_tiempo" style="text-decoration:none;color:inherit;">
+                    <span class="kpi-label">A tiempo (&lt;80%)</span><span class="kpi-value"><?php echo $total_a_tiempo; ?></span>
+                </a>
+                <a class="exa-adq-kpi kpi-warning" href="adq_dashboard.php?tab=todos_procesos&filtro_estado=P&filtro_sla=en_riesgo" style="text-decoration:none;color:inherit;">
+                    <span class="kpi-label">En riesgo (80%-100%)</span><span class="kpi-value"><?php echo $total_en_riesgo; ?></span>
+                </a>
+                <a class="exa-adq-kpi kpi-danger" href="adq_dashboard.php?tab=todos_procesos&filtro_estado=P&filtro_sla=vencido" style="text-decoration:none;color:inherit;" title="Ver tareas vencidas">
+                    <span class="kpi-label">Vencidos (&gt;100%)</span><span class="kpi-value"><?php echo $total_vencidos; ?></span>
+                </a>
+                <a class="exa-adq-kpi kpi-muted" href="adq_dashboard.php?tab=todos_procesos&filtro_estado=P&filtro_sla=sin_sla" style="text-decoration:none;color:inherit;">
+                    <span class="kpi-label">Sin SLA definido</span><span class="kpi-value"><?php echo $total_sin_sla; ?></span>
+                </a>
             </div>
 
             <!-- Formulario de Filtros -->
-            <form method="GET" action="adq_dashboard.php" class="exa-adq-filter-bar">
+            <form method="GET" action="adq_dashboard.php" class="exa-adq-filter-bar" id="frmFiltrosProcesos">
                     <input type="hidden" name="tab" value="todos_procesos">
                     
                     <div class="filter-item">
@@ -369,13 +619,24 @@ if ($es_gerencial_admin) {
                             <option value="O" <?php echo $filtro_estado === 'O' ? 'selected' : ''; ?>>Observados</option>
                         </select>
                     </div>
+
+                    <div class="filter-item">
+                        <label>SLA / Vencimiento</label>
+                        <select class="form-control input-sm" name="filtro_sla">
+                            <option value="">-- Todos los SLA --</option>
+                            <option value="a_tiempo" <?php echo $filtro_sla === 'a_tiempo' ? 'selected' : ''; ?>>A tiempo (&lt;80%)</option>
+                            <option value="en_riesgo" <?php echo $filtro_sla === 'en_riesgo' ? 'selected' : ''; ?>>En riesgo (80%-100%)</option>
+                            <option value="vencido" <?php echo $filtro_sla === 'vencido' ? 'selected' : ''; ?>>Tareas vencidas (&gt;100%)</option>
+                            <option value="sin_sla" <?php echo $filtro_sla === 'sin_sla' ? 'selected' : ''; ?>>Sin SLA definido</option>
+                        </select>
+                    </div>
                     
                     <div class="filter-item">
                         <label>Departamento Responsable</label>
                         <select class="form-control input-sm" name="filtro_depto">
                             <option value="0">-- Todos los Departamentos --</option>
                             <?php foreach ($departamentos as $d) { ?>
-                                <option value="<?php echo $d['Dep_Cod']; ?>" <?php echo $filtro_depto == $d['Dep_Cod'] ? 'selected' : ''; ?>><?php echo $d['Dep_Des']; ?></option>
+                                <option value="<?php echo $d['Dep_Cod']; ?>" <?php echo $filtro_depto == $d['Dep_Cod'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($d['Dep_Des'], ENT_QUOTES, 'UTF-8'); ?></option>
                             <?php } ?>
                         </select>
                     </div>
@@ -385,7 +646,7 @@ if ($es_gerencial_admin) {
                         <select class="form-control input-sm" name="filtro_tipo">
                             <option value="0">-- Todos los Tipos --</option>
                             <?php foreach ($tipos_req as $tr) { ?>
-                                <option value="<?php echo $tr['Trq_Cod']; ?>" <?php echo $filtro_tipo == $tr['Trq_Cod'] ? 'selected' : ''; ?>><?php echo $tr['Trq_Des']; ?></option>
+                                <option value="<?php echo $tr['Trq_Cod']; ?>" <?php echo $filtro_tipo == $tr['Trq_Cod'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($tr['Trq_Des'], ENT_QUOTES, 'UTF-8'); ?></option>
                             <?php } ?>
                         </select>
                     </div>
@@ -393,8 +654,19 @@ if ($es_gerencial_admin) {
                     <div class="filter-actions">
                         <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-funnel"></i> Filtrar</button>
                         <a href="adq_dashboard.php?tab=todos_procesos" class="btn btn-default btn-sm"><i class="bi bi-x-circle"></i> Limpiar</a>
+                        <button type="button" class="btn btn-danger btn-sm" id="btnExportarProcesosPdf" onclick="abrirReporteProcesosPdf()">
+                            <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
+                        </button>
                     </div>
                 </form>
+
+            <?php if ($filtro_sla === 'vencido') { ?>
+                <div class="alert alert-danger" style="margin:0 0 12px 0;padding:10px 14px;">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    Mostrando solo <strong>tareas vencidas</strong> (consumo de SLA mayor al 100%).
+                    <?php echo intval(count($procesos)); ?> registro(s).
+                </div>
+            <?php } ?>
 
             <!-- Tabla de Procesos -->
             <div class="exa-adq-table-wrap">
@@ -420,35 +692,18 @@ if ($es_gerencial_admin) {
                                 </tr>
                             <?php } else {
                                 foreach ($procesos as $p) {
-                                    // Calcular SLA y Semáforo
-                                    $elapsed_days = 0;
-                                    $limit_days = !empty($p['Sla_Dias']) ? floatval($p['Sla_Dias']) : null;
-                                    
-                                    $fec_ini = strtotime($p['Ins_Fec_Ini']);
-                                    if ($p['Ins_Est'] === 'P') {
-                                        $elapsed_days = (time() - $fec_ini) / 86400.0;
+                                    $sla = isset($p['_sla']) ? $p['_sla'] : adq_dashboard_calcular_sla_proceso($p);
+                                    $elapsed_days_fmt = number_format($sla['elapsed'], 1);
+                                    $limit_days = $sla['limit'];
+                                    $semaforo_class = $sla['semaforo'];
+                                    if ($sla['cat'] === 'a_tiempo') {
+                                        $sla_badge = '<span class="badge bg-success">A tiempo</span>';
+                                    } elseif ($sla['cat'] === 'en_riesgo') {
+                                        $sla_badge = '<span class="badge bg-warning text-dark">En riesgo</span>';
+                                    } elseif ($sla['cat'] === 'vencido') {
+                                        $sla_badge = '<span class="badge bg-danger">Vencido</span>';
                                     } else {
-                                        $fec_fin = strtotime($p['Ins_Fec_Fin']);
-                                        $elapsed_days = ($fec_fin - $fec_ini) / 86400.0;
-                                    }
-                                    
-                                    $elapsed_days_fmt = number_format($elapsed_days, 1);
-                                    
-                                    $semaforo_class = 'bg-semaforo-gris';
-                                    $sla_badge = '<span class="badge bg-secondary">Sin SLA</span>';
-                                    
-                                    if ($limit_days !== null && $limit_days > 0) {
-                                        $ratio = $elapsed_days / $limit_days;
-                                        if ($ratio < 0.8) {
-                                            $semaforo_class = 'bg-semaforo-verde';
-                                            $sla_badge = '<span class="badge bg-success">A tiempo</span>';
-                                        } elseif ($ratio >= 0.8 && $ratio <= 1.0) {
-                                            $semaforo_class = 'bg-semaforo-amarillo';
-                                            $sla_badge = '<span class="badge bg-warning text-dark">En riesgo</span>';
-                                        } else {
-                                            $semaforo_class = 'bg-semaforo-rojo';
-                                            $sla_badge = '<span class="badge bg-danger">Vencido</span>';
-                                        }
+                                        $sla_badge = '<span class="badge bg-secondary">Sin SLA</span>';
                                     }
                                     
                                     // Estado de la solicitud
@@ -467,14 +722,14 @@ if ($es_gerencial_admin) {
                                     
                                     $solicitante_nom = $p['Prs_Nom'] ? ($p['Prs_Nom'] . ' ' . $p['Prs_Ape']) : $p['Usu_Nom'];
                                     ?>
-                                    <tr class="text-center">
-                                        <td class="fw-bold"><?php echo $p['Sol_Num']; ?></td>
+                                    <tr class="text-center<?php echo $sla['cat'] === 'vencido' ? ' table-danger' : ''; ?>">
+                                        <td class="fw-bold"><?php echo htmlspecialchars($p['Sol_Num'], ENT_QUOTES, 'UTF-8'); ?></td>
                                         <td><?php echo date('Y-m-d H:i', strtotime($p['Sol_Fec'])); ?></td>
-                                        <td class="text-start"><?php echo $solicitante_nom; ?></td>
-                                        <td class="text-start fw-semibold text-primary"><?php echo $p['Trq_Des']; ?></td>
+                                        <td class="text-start"><?php echo htmlspecialchars($solicitante_nom, ENT_QUOTES, 'UTF-8'); ?></td>
+                                        <td class="text-start fw-semibold text-primary"><?php echo htmlspecialchars($p['Trq_Des'], ENT_QUOTES, 'UTF-8'); ?></td>
                                         <td class="fw-bold font-monospace text-success text-end">$ <?php echo number_format($p['Sol_Val_Est'], 2); ?></td>
-                                        <td class="text-start"><?php echo $p['Nod_Nom'] ?: '<span class="text-muted">-</span>'; ?></td>
-                                        <td><?php echo $p['Dep_Des'] ?: '<span class="text-muted">[General]</span>'; ?></td>
+                                        <td class="text-start"><?php echo $p['Nod_Nom'] ? htmlspecialchars($p['Nod_Nom'], ENT_QUOTES, 'UTF-8') : '<span class="text-muted">-</span>'; ?></td>
+                                        <td><?php echo $p['Dep_Des'] ? htmlspecialchars($p['Dep_Des'], ENT_QUOTES, 'UTF-8') : '<span class="text-muted">[General]</span>'; ?></td>
                                         <td><?php echo $est_badge; ?></td>
                                         <td class="text-start">
                                             <span class="semaforo-dot <?php echo $semaforo_class; ?>"></span>
@@ -527,9 +782,159 @@ if ($es_gerencial_admin) {
     </div>
 </div>
 
+<!-- MODAL REPORTE PDF -->
+<div class="modal fade" id="mdlReportePdf" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" style="width:95%;max-width:1180px;margin:20px auto;">
+        <div class="modal-content" style="border:0;border-radius:12px;overflow:hidden;box-shadow:0 20px 50px rgba(15,23,42,.28);">
+            <div class="modal-header" style="background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%);color:#fff;border:0;padding:14px 18px;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar" style="color:#fff;opacity:.9;text-shadow:none;"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" style="font-size:16px;font-weight:700;margin:0;">
+                    <i class="bi bi-file-earmark-pdf"></i> Vista previa del reporte PDF
+                </h4>
+                <p class="mb-0" style="font-size:12px;opacity:.85;margin-top:4px;">Revise el reporte con los filtros actuales. Luego puede descargarlo o imprimirlo.</p>
+            </div>
+            <div class="modal-body" style="padding:0;background:#0f172a;position:relative;min-height:70vh;">
+                <div id="reportePdfLoading" style="display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;position:absolute;inset:0;background:rgba(15,23,42,.92);z-index:2;color:#fff;">
+                    <div class="spinner-border text-light" role="status" style="width:2.4rem;height:2.4rem;"></div>
+                    <div style="font-weight:700;">Generando reporte...</div>
+                    <div style="font-size:12px;opacity:.75;">Esto puede tomar unos segundos</div>
+                </div>
+                <div id="reportePdfError" style="display:none;padding:40px 24px;text-align:center;color:#fecaca;">
+                    <i class="bi bi-exclamation-triangle" style="font-size:28px;"></i>
+                    <div id="reportePdfErrorText" style="margin-top:10px;font-weight:600;"></div>
+                </div>
+                <iframe id="reportePdfFrame" title="Vista previa reporte PDF" style="display:none;width:100%;height:70vh;border:0;background:#525659;"></iframe>
+            </div>
+            <div class="modal-footer" style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:12px 16px;">
+                <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary btn-sm" id="btnImprimirReportePdf" disabled onclick="imprimirReporteProcesosPdf()">
+                    <i class="bi bi-printer"></i> Imprimir
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" id="btnDescargarReportePdf" disabled onclick="descargarReporteProcesosPdf()">
+                    <i class="bi bi-download"></i> Descargar PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
     let currentSolCod = null;
+    let reportePdfBlobUrl = null;
+    let reportePdfFilename = 'reporte_procesos.pdf';
+
+    function construirUrlReporteProcesosPdf() {
+        const params = new URLSearchParams();
+        params.set('ajax_exportar_procesos_pdf', '1');
+        params.set('tab', 'todos_procesos');
+        const $form = $('#frmFiltrosProcesos');
+        if ($form.length) {
+            params.set('filtro_estado', $form.find('[name="filtro_estado"]').val() || '');
+            params.set('filtro_sla', $form.find('[name="filtro_sla"]').val() || '');
+            params.set('filtro_depto', $form.find('[name="filtro_depto"]').val() || '0');
+            params.set('filtro_tipo', $form.find('[name="filtro_tipo"]').val() || '0');
+        }
+        return 'adq_dashboard.php?' + params.toString();
+    }
+
+    function liberarReportePdfBlob() {
+        if (reportePdfBlobUrl) {
+            window.URL.revokeObjectURL(reportePdfBlobUrl);
+            reportePdfBlobUrl = null;
+        }
+    }
+
+    function abrirReporteProcesosPdf() {
+        const $btn = $('#btnExportarProcesosPdf');
+        const original = $btn.html();
+        $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Generando...');
+
+        liberarReportePdfBlob();
+        $('#reportePdfFrame').hide().attr('src', 'about:blank');
+        $('#reportePdfError').hide();
+        $('#reportePdfLoading').css('display', 'flex');
+        $('#btnImprimirReportePdf, #btnDescargarReportePdf').prop('disabled', true);
+        $('#mdlReportePdf').modal('show');
+
+        fetch(construirUrlReporteProcesosPdf(), { credentials: 'same-origin' })
+            .then(function(resp) {
+                const ctype = (resp.headers.get('Content-Type') || '').toLowerCase();
+                if (ctype.indexOf('application/json') !== -1) {
+                    return resp.json().then(function(res) {
+                        throw new Error((res && res.message) ? res.message : 'No se pudo generar el PDF.');
+                    });
+                }
+                if (!resp.ok) {
+                    throw new Error('Error al generar el reporte PDF.');
+                }
+                const disp = resp.headers.get('Content-Disposition') || '';
+                const m = /filename="?([^"]+)"?/i.exec(disp);
+                if (m && m[1]) {
+                    reportePdfFilename = m[1];
+                } else {
+                    reportePdfFilename = 'reporte_procesos_' + Date.now() + '.pdf';
+                }
+                return resp.blob();
+            })
+            .then(function(blob) {
+                if (!blob || blob.size <= 0) {
+                    throw new Error('El PDF generado esta vacio.');
+                }
+                const pdfBlob = (blob.type && blob.type.indexOf('pdf') !== -1)
+                    ? blob
+                    : new Blob([blob], { type: 'application/pdf' });
+                reportePdfBlobUrl = window.URL.createObjectURL(pdfBlob);
+                $('#reportePdfLoading').hide();
+                $('#reportePdfFrame').attr('src', reportePdfBlobUrl).show();
+                $('#btnImprimirReportePdf, #btnDescargarReportePdf').prop('disabled', false);
+            })
+            .catch(function(err) {
+                $('#reportePdfLoading').hide();
+                $('#reportePdfErrorText').text(err && err.message ? err.message : 'No se pudo generar el reporte.');
+                $('#reportePdfError').show();
+            })
+            .then(function() {
+                $btn.prop('disabled', false).html(original);
+            });
+    }
+
+    function descargarReporteProcesosPdf() {
+        if (!reportePdfBlobUrl) {
+            alert('Primero genere el reporte.');
+            return;
+        }
+        const a = document.createElement('a');
+        a.href = reportePdfBlobUrl;
+        a.download = reportePdfFilename || 'reporte_procesos.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    }
+
+    function imprimirReporteProcesosPdf() {
+        const frame = document.getElementById('reportePdfFrame');
+        if (!frame || !reportePdfBlobUrl) {
+            alert('Primero genere el reporte.');
+            return;
+        }
+        try {
+            if (frame.contentWindow) {
+                frame.contentWindow.focus();
+                frame.contentWindow.print();
+                return;
+            }
+        } catch (e) { /* fallback */ }
+        const w = window.open(reportePdfBlobUrl, '_blank');
+        if (w) {
+            w.addEventListener('load', function() {
+                try { w.print(); } catch (err) {}
+            });
+        } else {
+            alert('Permita ventanas emergentes para imprimir, o use Descargar PDF.');
+        }
+    }
+
     function abrirSeguimiento(solCod, solNum) {
         currentSolCod = solCod;
         const tituloNum = solNum || solCod;
@@ -602,6 +1007,14 @@ if ($es_gerencial_admin) {
         if (tab === 'todos_procesos') {
             $('a[href="#all-processes-panel"]').tab('show');
         }
+
+        $('#mdlReportePdf').on('hidden.bs.modal', function() {
+            liberarReportePdfBlob();
+            $('#reportePdfFrame').hide().attr('src', 'about:blank');
+            $('#reportePdfError').hide();
+            $('#reportePdfLoading').css('display', 'flex');
+            $('#btnImprimirReportePdf, #btnDescargarReportePdf').prop('disabled', true);
+        });
     });
 </script>
 </body>
