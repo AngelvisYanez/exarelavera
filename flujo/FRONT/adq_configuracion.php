@@ -490,7 +490,7 @@ if (isset($_GET['ajax_load_workflow']) || isset($_GET['ajax_save_workflow']) || 
     exit;
 }
 
-if (isset($_GET['ajax_get_deptos']) || isset($_GET['ajax_get_depto_req']) || isset($_GET['ajax_get_deptos_rrhh']) || isset($_GET['ajax_save_depto_req']) || isset($_POST['ajax_save_depto_req']) || isset($_GET['ajax_toggle_depto_req']) || isset($_POST['ajax_toggle_depto_req']) || isset($_GET['ajax_get_depto_users']) || isset($_POST['ajax_save_depto_users'])) {
+if (isset($_GET['ajax_get_deptos']) || isset($_GET['ajax_get_depto_req']) || isset($_GET['ajax_save_depto_req']) || isset($_POST['ajax_save_depto_req']) || isset($_GET['ajax_toggle_depto_req']) || isset($_POST['ajax_toggle_depto_req']) || isset($_GET['ajax_get_depto_users']) || isset($_POST['ajax_save_depto_users'])) {
     if (isset($_GET['ajax_get_deptos'])) {
         header('Content-Type: text/html; charset=UTF-8');
     }
@@ -895,22 +895,10 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
                     <div class="modal-body">
                         <div class="adq-detail-card">
                             <input type="hidden" id="Dep_Cod" name="Dep_Cod">
-                            <div id="divDeptoNuevo">
-                                <h5 class="adq-section-header"><i class="bi bi-diagram-3"></i> Vincular con RRHH</h5>
-                                <div class="form-group">
-                                    <label for="Dep_Rrhh_Cod" class="control-label">Departamento (Recursos Humanos) *</label>
-                                    <select class="form-control select2-depto-rrhh" id="Dep_Rrhh_Cod" name="Dep_Rrhh_Cod" style="width: 100%;">
-                                        <option value="">[Seleccione un departamento]</option>
-                                    </select>
-                                    <p class="help-block small text-muted" style="margin-top: 8px; margin-bottom: 0;">Los departamentos se registran en el m&oacute;dulo de Recursos Humanos.</p>
-                                </div>
-                            </div>
-                            <div id="divDeptoEditar" style="display: none;">
-                                <h5 class="adq-section-header"><i class="bi bi-pencil-square"></i> Editar nombre</h5>
-                                <div class="form-group">
-                                    <label for="Dep_Des" class="control-label">Nombre del Departamento *</label>
-                                    <input type="text" class="form-control" id="Dep_Des" name="Dep_Des" placeholder="Ej. Departamento de Compras, Sistemas, etc." autocomplete="off">
-                                </div>
+                            <h5 class="adq-section-header"><i class="bi bi-pencil-square"></i> Datos del departamento</h5>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="Dep_Des" class="control-label">Nombre del Departamento *</label>
+                                <input type="text" class="form-control" id="Dep_Des" name="Dep_Des" placeholder="EJ. DEPARTAMENTO DE COMPRAS, SISTEMAS, ETC." autocomplete="off" required maxlength="150" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();">
                             </div>
                         </div>
                     </div>
@@ -989,7 +977,7 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
         </div>
     </div>
 
-    <script src="../VALIDACIONES/wf_builder.js?v=40"></script>
+    <script src="../VALIDACIONES/wf_builder.js?v=48"></script>
     <script>
         function limpiarBackdropModal() {
             $('body').removeClass('modal-open');
@@ -1188,9 +1176,6 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
         }
 
         function cerrarModalDepto(selector) {
-            if (selector === '#mdlDepto') {
-                destroyDeptoRrhhSelect();
-            }
             const $modal = $(selector);
             if ($modal.length) {
                 $modal.modal('hide');
@@ -1201,81 +1186,28 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
             }, 200);
         }
 
-        function destroyDeptoRrhhSelect() {
-            const $el = $('#Dep_Rrhh_Cod');
-            if ($el.length && $el.hasClass('select2-hidden-accessible')) {
-                $el.select2('destroy');
-            }
-        }
-
-        function initDeptoRrhhSelect() {
-            const $el = $('#Dep_Rrhh_Cod');
-            if (!$el.length || typeof $.fn.select2 !== 'function') {
-                return;
-            }
-            destroyDeptoRrhhSelect();
-            $el.select2({
-                placeholder: '[Seleccione un departamento]',
-                allowClear: true,
-                width: '100%',
-                dropdownParent: $('#mdlDepto'),
-                language: {
-                    noResults: function() { return 'Sin resultados'; },
-                    searching: function() { return 'Buscando...'; }
-                }
-            });
-        }
-
-        function cargarOpcionesDeptoRrhh() {
-            return $.getJSON('adq_configuracion.php', { ajax_get_deptos_rrhh: 1 }).then(function(res) {
-                const $sel = $('#Dep_Rrhh_Cod');
-                $sel.empty().append($('<option>', { value: '', text: '[Seleccione un departamento]' }));
-                if (res.success && res.data && res.data.length) {
-                    res.data.forEach(function(d) {
-                        $sel.append($('<option>', {
-                            value: String(d.Dep_Cod),
-                            text: (d.Dep_Des || ('Depto ' + d.Dep_Cod)) + ' (ID ' + d.Dep_Cod + ')'
-                        }));
-                    });
-                } else {
-                    $sel.append($('<option>', { value: '', text: 'No hay departamentos activos en Recursos Humanos', disabled: true }));
-                }
-            }).fail(function(xhr, status, error) {
-                msgExaDepto('danger', 'No se pudo cargar departamentos de RRHH: ' + (error || status || xhr.status));
-            });
-        }
-
         function abrirFormularioDepto() {
-            destroyDeptoRrhhSelect();
             $('#frmDepto')[0].reset();
             $('#Dep_Cod').val('');
-            $('#Dep_Rrhh_Cod').prop('required', true);
-            $('#Dep_Des').prop('required', false).val('');
-            $('#divDeptoNuevo').show();
-            $('#divDeptoEditar').hide();
+            $('#Dep_Des').val('').prop('required', true);
             $('#mdlDeptoTitle').html('<i class="bi bi-building"></i> Nuevo Departamento');
-            cargarOpcionesDeptoRrhh().always(function() {
-                $('#mdlDepto')
-                    .off('shown.bs.modal.deptoRrhh')
-                    .on('shown.bs.modal.deptoRrhh', function() {
-                        initDeptoRrhhSelect();
-                    })
-                    .modal('show');
-            });
+            $('#mdlDepto').modal('show');
+            setTimeout(function() {
+                $('#Dep_Des').focus();
+            }, 300);
         }
 
         function editarDepto(id) {
             $.getJSON('adq_configuracion.php', { ajax_get_depto_req: true, Dep_Cod: id }, function(res) {
                 if (res.success) {
-                    destroyDeptoRrhhSelect();
                     const d = res.data;
                     $('#Dep_Cod').val(d.Dep_Cod);
-                    $('#Dep_Des').val(d.Dep_Des).prop('required', true);
-                    $('#Dep_Rrhh_Cod').prop('required', false).val('');
-                    $('#divDeptoNuevo').hide();
-                    $('#divDeptoEditar').show();
+                    $('#Dep_Des').val(String(d.Dep_Des || '').toUpperCase()).prop('required', true);
                     $('#mdlDeptoTitle').html('<i class="bi bi-pencil-square"></i> Editar Departamento');
                     $('#mdlDepto').modal('show');
+                    setTimeout(function() {
+                        $('#Dep_Des').focus().select();
+                    }, 300);
                 } else {
                     msgExaDepto('danger', 'Error al cargar datos: ' + (res.message || ''));
                 }
@@ -1284,9 +1216,11 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
 
         function guardarDepto(e) {
             e.preventDefault();
-            const depCod = $('#Dep_Cod').val();
-            if (!depCod && !$('#Dep_Rrhh_Cod').val()) {
-                msgExaDepto('danger', 'Debe seleccionar un departamento de Recursos Humanos.');
+            const nombre = $.trim($('#Dep_Des').val() || '').toUpperCase();
+            $('#Dep_Des').val(nombre);
+            if (!nombre) {
+                msgExaDepto('danger', 'Debe ingresar el nombre del departamento.');
+                $('#Dep_Des').focus();
                 return;
             }
             $.post('adq_configuracion.php?ajax_save_depto_req=1', $('#frmDepto').serialize(), function(res) {

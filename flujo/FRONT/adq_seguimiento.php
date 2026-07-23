@@ -85,7 +85,7 @@ if (!empty($sol['Ins_Cod'])) {
         LEFT JOIN wf_nodos n ON n.Nod_Cod = h.Nod_Cod
         LEFT JOIN usuarios u ON u.Usu_Cod = h.Usu_Cod
         LEFT JOIN persona p ON p.Prs_Cod = u.Prs_Cod
-        LEFT JOIN wf_departamentos d ON d.Dep_Cod = h.Dep_Cod
+        LEFT JOIN wf_departamentos d ON d.Wde_Cod = h.Dep_Cod
         WHERE h.Ins_Cod = {$sol['Ins_Cod']}
         ORDER BY h.Isn_Fec ASC, h.Isn_Cod ASC;", $obBD_conexion);
     if ($historial === false || $historial === null) {

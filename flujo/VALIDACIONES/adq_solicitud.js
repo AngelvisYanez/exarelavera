@@ -381,9 +381,12 @@ function setModoEdicionFormulario(modo, solNum, observacion) {
         $trq.removeAttr('name');
         $trq.off('mousedown.adqLock change.adqLock').on('mousedown.adqLock change.adqLock', function(e) {
             e.preventDefault();
-            $(this).val(trqVal);
+            $(this).val(trqVal).trigger('change.select2');
             return false;
         });
+        if ($trq.hasClass('select2-hidden-accessible')) {
+            $trq.prop('disabled', true);
+        }
     } else {
         $trq.off('mousedown.adqLock change.adqLock');
         $trq.prop('disabled', false).removeClass('adq-trq-readonly').removeAttr('tabindex');
@@ -391,6 +394,7 @@ function setModoEdicionFormulario(modo, solNum, observacion) {
             $trq.attr('name', 'Trq_Cod');
         }
         $('#Trq_Cod_Locked').remove();
+        setupTipoRequerimientoSelect();
     }
 
     if (modo === 'borrador') {
@@ -751,6 +755,31 @@ function obtenerMontoCot($box) {
     return parseFloat(String(raw || '').replace(',', '.')) || 0;
 }
 
+function setupTipoRequerimientoSelect() {
+    const $el = $('#Trq_Cod');
+    if (!$el.length || typeof $.fn.select2 !== 'function') {
+        return;
+    }
+    if ($el.hasClass('select2-hidden-accessible')) {
+        $el.select2('destroy');
+    }
+    $el.select2({
+        placeholder: '[Seleccione un Tipo]',
+        allowClear: true,
+        width: '100%',
+        dropdownCssClass: 'adq-select2-dropdown',
+        language: {
+            noResults: function() { return 'Sin resultados'; },
+            searching: function() { return 'Buscando...'; }
+        }
+    });
+    $el.off('change.adqTrqCfg').on('change.adqTrqCfg', function() {
+        if (typeof cargarConfiguracionTipo === 'function') {
+            cargarConfiguracionTipo($(this).val());
+        }
+    });
+}
+
 function initAdqSolicitudForm() {
     if (!$('#frmSolicitud').length) {
         return;
@@ -760,6 +789,7 @@ function initAdqSolicitudForm() {
         $('#Prv_Sug').select2('destroy');
     }
 
+    setupTipoRequerimientoSelect();
     toggleMinCotizaciones();
     toggleSlaDias();
     toggleProveedorSugerido();
@@ -1812,7 +1842,7 @@ function procesarSolicitud(esBorrador) {
                 } else {
                     alert(`Solicitud registrada correctamente.\nSolicitud # ${res.Num} enviada a aprobacion.`);
                 }
-                window.location.href = 'adq_bandeja.php';
+                window.location.href = 'adq_bandeja.php?tab=mis_solicitudes';
             } else {
                 alert('Error: ' + res.message);
                 $btnSubmit.html(originalSubmit).prop('disabled', false);

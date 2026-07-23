@@ -138,7 +138,21 @@ if (isset($ajax_get_decisiones_flujo)) {
 if (isset($ajax_save_solicitud_corta)) {
     $_POST['Emp_Cod'] = $Ses_Emp_Cod;
     $_POST['Suc_Cod'] = $Ses_Suc_Cod;
-    $obBD_con1->echoJson($obBD_con1->registrarSolicitudCorta($_POST));
+    $resCorta = $obBD_con1->registrarSolicitudCorta($_POST);
+    // Responder al navegador; notificaciones (WhatsApp/correo) van despues.
+    if (session_id() !== '') {
+        session_write_close();
+    }
+    @ob_end_clean();
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($resCorta);
+    if (function_exists('flush')) {
+        @flush();
+    }
+    if (!empty($resCorta['success']) && class_exists('wf_manager_log') && wf_manager_log::hayNotificacionesPendientes()) {
+        ignore_user_abort(true);
+        $wf_mgr->flushPendingNotificaciones();
+    }
     exit;
 }
 
@@ -504,13 +518,13 @@ if (isset($ajax_get_form)) {
                 </div>
                 <div class="mb-4">
                     <label class="form-label fw-bold" for="Trq_Cod_Corto">Tipo de requerimiento *</label>
-                    <select class="form-control" id="Trq_Cod_Corto" name="Trq_Cod" required>
+                    <select class="form-control" id="Trq_Cod_Corto" name="Trq_Cod" required style="width: 100%;">
                         <option value="">[Seleccione un Tipo]</option>
                         <?php foreach ($tipos_req as $tr) { ?>
                             <option value="<?php echo intval($tr['Trq_Cod']); ?>"><?php echo htmlspecialchars($tr['Trq_Des'] . ' — ' . $tr['Wfm_Nom'], ENT_QUOTES, 'UTF-8'); ?></option>
                         <?php } ?>
                     </select>
-                    <small class="text-muted">Se listan todos los tipos Activos. El tipo determina el flujo y el responsable del primer nodo.</small>
+                    <small class="text-muted">Se listan todos los tipos Activos. Puede escribir para buscar. El tipo determina el flujo y el responsable del primer nodo.</small>
                 </div>
                 <div id="panelValorEstimadoCorta" class="mb-4" style="display:none;">
                     <label class="form-label fw-bold" for="Sol_Val_Est_Corto">Valor estimado *</label>
@@ -680,6 +694,21 @@ if (isset($ajax_get_form)) {
                 });
             });
 
+            if (typeof $.fn.select2 === 'function' && $('#Trq_Cod_Corto').length) {
+                if ($('#Trq_Cod_Corto').hasClass('select2-hidden-accessible')) {
+                    $('#Trq_Cod_Corto').select2('destroy');
+                }
+                $('#Trq_Cod_Corto').select2({
+                    placeholder: '[Seleccione un Tipo]',
+                    allowClear: true,
+                    width: '100%',
+                    language: {
+                        noResults: function() { return 'Sin resultados'; },
+                        searching: function() { return 'Buscando...'; }
+                    }
+                });
+            }
+
             $('#frmSolicitudCorta').off('submit.adqCorta').on('submit.adqCorta', function(e) {
                 e.preventDefault();
                 const titulo = $('#Sol_Tit_Corto').val().trim().toUpperCase();
@@ -723,9 +752,8 @@ if (isset($ajax_get_form)) {
                 $.post('adq_solicitud.php?ajax_save_solicitud_corta=1', payload, function(res) {
                     if (res.success) {
                         $('#adqLoaderRegistroTitulo').text('Solicitud registrada');
-                        $('#adqLoaderRegistroDetalle').text('Redirigiendo a la bandeja...');
-                        alert('Solicitud ' + res.Num + ' registrada. Se asignó al responsable del primer nodo para completar la información.');
-                        window.location.href = 'adq_bandeja.php';
+                        $('#adqLoaderRegistroDetalle').text('Redirigiendo a Mis solicitudes...');
+                        window.location.href = 'adq_bandeja.php?tab=mis_solicitudes';
                     } else {
                         $loader.hide().attr('aria-busy', 'false');
                         alert('No se pudo registrar: ' + (res.message || 'Error desconocido'));
@@ -1620,7 +1648,7 @@ if (isset($ajax_get_form)) {
                     <!-- Tipo de Requerimiento -->
                     <div class="col-12 col-md-6 adq-field-block">
                         <label class="form-label-req" for="Trq_Cod">Tipo de Requerimiento *</label>
-                        <select class="form-control form-control-adq adq-trq-select" id="Trq_Cod" name="Trq_Cod" required onchange="cargarConfiguracionTipo(this.value);">
+                        <select class="form-control form-control-adq adq-trq-select" id="Trq_Cod" name="Trq_Cod" required style="width: 100%;">
                             <option value="">[Seleccione un Tipo]</option>
                             <?php foreach ($tipos_req as $tr) {
                                 $wfm_nom = htmlspecialchars($tr['Wfm_Nom'], ENT_QUOTES, 'UTF-8');

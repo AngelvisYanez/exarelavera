@@ -110,7 +110,7 @@ function wfEnsureCanvasSurface() {
 function wfNodeSize($node) {
     return {
         w: $node.outerWidth() || 180,
-        h: $node.outerHeight() || 90
+        h: $node.outerHeight() || 150
     };
 }
 
@@ -347,7 +347,7 @@ function setupCanvas() {
         if (!type) return;
 
         const pt = wfPointInCanvas(e.originalEvent.pageX, e.originalEvent.pageY);
-        createNode(type, 'Nuevo ' + type, pt.x, pt.y);
+        createNode(type, wfNodeTipoLabel(type), pt.x, pt.y);
     });
 
     // Deseleccionar al hacer clic en el fondo del lienzo
@@ -484,6 +484,13 @@ function isNodoNotificable(tipo) {
     return ['APROBACION', 'RECEPCION', 'FACTURA', 'TAREA', 'AVANCE', 'FISCALIZACION', 'FIN'].indexOf(tipo) >= 0;
 }
 
+function wfNodeTipoLabel(tipo) {
+    if (tipo === 'AVANCE') {
+        return 'Avance/Facturas';
+    }
+    return tipo || '';
+}
+
 function createNode(type, name, x, y, id = null, props = null) {
     const nodeId = wfNodeId(id);
     const nodeObj = {
@@ -522,6 +529,12 @@ function isNodoTerminal(tipo) {
 }
 
 function wfNodeHeaderIcon(tipo) {
+    if (tipo === 'INICIO') {
+        return 'bi-play-fill text-success';
+    }
+    if (tipo === 'FIN') {
+        return 'bi-stop-fill text-danger';
+    }
     if (tipo === 'FACTURA') {
         return 'bi-receipt text-warning';
     }
@@ -558,10 +571,7 @@ function wfNodeAsigHtml(node) {
 }
 
 function wfUpdateNodeAsigNombres(node) {
-    if (!node || node.tipo === 'FIN') {
-        if (node) {
-            node.asig_nombres = '';
-        }
+    if (!node) {
         return;
     }
 
@@ -615,21 +625,25 @@ function refreshNodeView(node) {
     $el.attr('data-wf-tip', tipText).removeAttr('title');
 
     if (isNodoTerminal(node.tipo)) {
-        const icon = node.tipo === 'INICIO' ? 'bi-play-fill' : 'bi-stop-fill';
-        const color = node.tipo === 'INICIO' ? 'text-success' : 'text-danger';
+        const icon = node.tipo === 'INICIO' ? 'bi-play-fill text-success' : 'bi-stop-fill text-danger';
         $el.find('.wf-node-header span').html(
-            '<i class="bi ' + icon + ' ' + color + '"></i>' +
+            '<i class="bi ' + icon + ' wf-node-type-icon"></i>' +
             '<span class="wf-node-terminal-label">' + wfEscHtml(node.nombre) + '</span>'
         );
         if (node.tipo === 'INICIO') {
             const creOk = node.cre_sol !== false && node.cre_sol !== 0 && node.cre_sol !== '0';
             $el.find('.wf-node-body').html(
                 '<span class="wf-node-tipo-label">INICIO</span>' +
-                '<span class="wf-node-desc">' + (creOk ? 'Puede crear solicitud' : 'Crear solicitud desactivado') + '</span>' +
+                '<span class="wf-node-desc">' + (creOk ? 'Puede modificar solicitud' : 'Modificar solicitud desactivado') + '</span>' +
                 wfNodeAsigHtml(node)
             );
         } else {
-            $el.find('.wf-node-body').empty();
+            const desc = node.descripcion ? String(node.descripcion).trim() : '';
+            $el.find('.wf-node-body').html(
+                '<span class="wf-node-tipo-label">FIN</span>' +
+                '<span class="wf-node-desc">' + (desc ? wfEscHtml(desc) : 'Cierre del flujo') + '</span>' +
+                wfNodeAsigHtml(node)
+            );
         }
         $el.find('.node-port').show();
         return;
@@ -642,7 +656,7 @@ function refreshNodeView(node) {
         '<span class="wf-node-title-label">' + wfEscHtml(node.nombre) + '</span>'
     );
     $el.find('.wf-node-body').html(
-        '<span class="wf-node-tipo-label">' + wfEscHtml(node.tipo) + '</span>' +
+        '<span class="wf-node-tipo-label">' + wfEscHtml(wfNodeTipoLabel(node.tipo)) + '</span>' +
         '<span class="wf-node-desc">' + (desc ? wfEscHtml(desc) : 'Sin descripción') + '</span>' +
         wfNodeAsigHtml(node)
     );
@@ -723,12 +737,13 @@ function openNodeProperties(id) {
     // Ocultar/Mostrar campos según tipo de nodo
     $('.sec-inicio-crear').hide();
     if (activeNode.tipo === 'INICIO') {
-        $('.sec-sla, .sec-checks').hide();
-        $('.sec-responsabilidad').show();
+        $('.sec-checks').show();
+        $('.sec-cot-edit').show();
+        $('.sec-sla, .sec-responsabilidad').show();
         $('.sec-inicio-crear').show();
         $('.sec-notificaciones').show();
         $('#lblNodeNotTitle').text('Al poner en ejecución el requerimiento, notificar a los usuarios de este nodo');
-        $('#lblNodeNotHelp').text('Configure los avisos del flujo que se enviarán cuando una nueva solicitud ingrese a la primera etapa.');
+        $('#lblNodeNotHelp').text('Configure los avisos que se enviarán cuando una nueva solicitud quede en el nodo Inicio para ser atendida.');
         $('#nodeCreSol').prop('checked', activeNode.cre_sol !== false && activeNode.cre_sol !== 0 && activeNode.cre_sol !== '0');
         // Cargar comportamiento de departamento y asignación de usuarios
         if (activeNode.dep_cod) {
@@ -764,9 +779,13 @@ function openNodeProperties(id) {
             $('#lblNodeNotTitle').text('Notificación final del esquema');
             $('#lblNodeNotHelp').text('Al marcar cualquiera de estas opciones, se enviará por correo el expediente final y el comentario de cierre a todos los usuarios asignados al esquema.');
             $('.node-not-wa-label, .node-not-em-label').text('Notificar a todos los usuarios');
+            $('.sec-cot-edit').hide();
+            $('#nodeCotEdit').prop('checked', false);
+            activeNode.cot_edit = false;
         } else {
             $('#lblNodeNotTitle').text('Al completar esta etapa, notificar al siguiente responsable');
             $('#lblNodeNotHelp').text('Se envía WhatsApp o correo a quien debe atender la siguiente tarea. En la primera etapa humana, también aplica al enviar la solicitud.');
+            $('.sec-cot-edit').show();
         }
         if (isNodoNotificable(activeNode.tipo)) {
             $('.sec-notificaciones').show();
@@ -811,7 +830,7 @@ function openNodeProperties(id) {
         activeNode.sla = $('#nodeSla').val();
         activeNode.com_obl = $('#nodeComObl').is(':checked');
         activeNode.adj_obl = $('#nodeAdjObl').is(':checked');
-        activeNode.cot_edit = $('#nodeCotEdit').is(':checked');
+        activeNode.cot_edit = (activeNode.tipo === 'FIN') ? false : $('#nodeCotEdit').is(':checked');
         activeNode.cre_sol = $('#nodeCreSol').is(':checked');
         activeNode.not_wa = $('#nodeNotWa').is(':checked');
         activeNode.not_em = $('#nodeNotEm').is(':checked');
@@ -1516,7 +1535,7 @@ function cargarFlujo() {
                     sla: n.sla || '',
                     com_obl: (parseInt(n.com_obl, 10) === 1),
                     adj_obl: (parseInt(n.adj_obl, 10) === 1),
-                    cot_edit: (parseInt(n.cot_edit, 10) === 1),
+                    cot_edit: (n.tipo === 'FIN') ? false : (parseInt(n.cot_edit, 10) === 1),
                     cre_sol: (n.tipo === 'INICIO')
                         ? (n.cre_sol === undefined || n.cre_sol === null || parseInt(n.cre_sol, 10) === 1)
                         : false,
@@ -1719,6 +1738,16 @@ function wfConexionesPayloadParaGuardar() {
     });
 }
 
+function wfNodosPayloadParaGuardar() {
+    return nodes.map(function(n) {
+        const copia = Object.assign({}, n);
+        if (copia.tipo === 'FIN') {
+            copia.cot_edit = false;
+        }
+        return copia;
+    });
+}
+
 function guardarFlujo() {
     const nombre = $('#flowName').val().trim();
     if (!nombre) {
@@ -1739,7 +1768,7 @@ function guardarFlujo() {
         id: workflowId,
         nombre: nombre,
         descripcion: $('#flowDesc').val() || '',
-        nodos: nodes,
+        nodos: wfNodosPayloadParaGuardar(),
         conexiones: wfConexionesPayloadParaGuardar()
     };
 
@@ -1865,7 +1894,7 @@ function guardarFlujoInterno(onDone) {
         id: workflowId,
         nombre: nombre,
         descripcion: $('#flowDesc').val() || '',
-        nodos: nodes,
+        nodos: wfNodosPayloadParaGuardar(),
         conexiones: wfConexionesPayloadParaGuardar()
     };
 

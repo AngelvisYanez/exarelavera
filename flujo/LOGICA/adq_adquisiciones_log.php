@@ -792,6 +792,10 @@ class adq_adquisiciones_log extends MysqlDatosContab {
     }
 
     private function ensureSolicitudRequisitosColumns() {
+        static $ready = false;
+        if ($ready) {
+            return;
+        }
         $cols = array(
             'Sol_Req_Fac' => "TINYINT(1) NULL DEFAULT NULL AFTER Sol_Est",
             'Sol_Per_Cie' => "TINYINT(1) NULL DEFAULT NULL AFTER Sol_Req_Fac",
@@ -802,35 +806,49 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             'Sol_Req_Pro' => "TINYINT(1) NULL DEFAULT NULL AFTER Sol_Req_Adj",
             'Sol_Tiempo_Est' => "INT(11) NULL DEFAULT NULL AFTER Sol_Req_Pro"
         );
-        foreach ($cols as $col => $def) {
-            $row = $this->getRowConsultaSql(
-                "SELECT COUNT(*) AS cnt FROM information_schema.COLUMNS
-                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'adq_solicitudes' AND COLUMN_NAME = '$col';",
-                $this->conexion
-            );
-            if (empty($row['cnt'])) {
-                if (!$this->grabarv_registros("ALTER TABLE adq_solicitudes ADD COLUMN $col $def;", $this->conexion)) {
-                    throw new Exception('No se pudo preparar la tabla de solicitudes (' . $col . '): ' . $this->getMsgError());
+        $existing = array();
+        $rows = $this->getArrayConsultaSql("SHOW COLUMNS FROM adq_solicitudes;", $this->conexion);
+        if (is_array($rows)) {
+            foreach ($rows as $r) {
+                if (!empty($r['Field'])) {
+                    $existing[$r['Field']] = true;
                 }
             }
         }
-        $this->grabarv_registros(
-            "UPDATE adq_solicitudes s
-             INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
-             SET s.Sol_Req_Fac = tr.Trq_Req_Fac,
-                 s.Sol_Per_Cie = tr.Trq_Per_Cie,
-                 s.Sol_Req_Cot = tr.Trq_Req_Cot,
-                 s.Sol_Min_Cot = tr.Trq_Min_Cot,
-                 s.Sol_Req_Pre = tr.Trq_Req_Pre,
-                 s.Sol_Req_Adj = tr.Trq_Req_Adj,
-                 s.Sol_Req_Pro = tr.Trq_Req_Pro,
-                 s.Sol_Tiempo_Est = tr.Trq_Tiempo_Est
-             WHERE s.Sol_Req_Fac IS NULL;",
-            $this->conexion
-        );
+        $added = false;
+        foreach ($cols as $col => $def) {
+            if (empty($existing[$col])) {
+                if (!$this->grabarv_registros("ALTER TABLE adq_solicitudes ADD COLUMN $col $def;", $this->conexion)) {
+                    throw new Exception('No se pudo preparar la tabla de solicitudes (' . $col . '): ' . $this->getMsgError());
+                }
+                $added = true;
+            }
+        }
+        // Solo rellenar requisitos heredados si se acaba de crear alguna columna.
+        if ($added) {
+            $this->grabarv_registros(
+                "UPDATE adq_solicitudes s
+                 INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
+                 SET s.Sol_Req_Fac = tr.Trq_Req_Fac,
+                     s.Sol_Per_Cie = tr.Trq_Per_Cie,
+                     s.Sol_Req_Cot = tr.Trq_Req_Cot,
+                     s.Sol_Min_Cot = tr.Trq_Min_Cot,
+                     s.Sol_Req_Pre = tr.Trq_Req_Pre,
+                     s.Sol_Req_Adj = tr.Trq_Req_Adj,
+                     s.Sol_Req_Pro = tr.Trq_Req_Pro,
+                     s.Sol_Tiempo_Est = tr.Trq_Tiempo_Est
+                 WHERE s.Sol_Req_Fac IS NULL;",
+                $this->conexion
+            );
+        }
+        $ready = true;
     }
 
     public function ensureSolicitudTituloColumn() {
+        static $ready = false;
+        if ($ready) {
+            return;
+        }
         $row = $this->getRowConsultaSql(
             "SELECT COUNT(*) AS cnt FROM information_schema.COLUMNS
              WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'adq_solicitudes' AND COLUMN_NAME = 'Sol_Tit';",
@@ -842,9 +860,14 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         )) {
             throw new Exception('No se pudo preparar el nombre de la solicitud: ' . $this->getMsgError());
         }
+        $ready = true;
     }
 
     public function ensureSolicitudAdjuntosTable() {
+        static $ready = false;
+        if ($ready) {
+            return;
+        }
         $sql = "CREATE TABLE IF NOT EXISTS adq_solicitudes_adjuntos (
             Sad_Cod BIGINT NOT NULL AUTO_INCREMENT,
             Sol_Cod BIGINT NOT NULL,
@@ -858,9 +881,14 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         if (!$this->grabarv_registros($sql, $this->conexion)) {
             throw new Exception('No se pudo preparar la tabla de adjuntos de solicitud: ' . $this->getMsgError());
         }
+        $ready = true;
     }
 
     public function ensureDecisionValsTable() {
+        static $ready = false;
+        if ($ready) {
+            return;
+        }
         $sql = "CREATE TABLE IF NOT EXISTS adq_solicitudes_decision_vals (
             Sdv_Cod BIGINT NOT NULL AUTO_INCREMENT,
             Sol_Cod BIGINT NOT NULL,
@@ -875,6 +903,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         if (!$this->grabarv_registros($sql, $this->conexion)) {
             throw new Exception('No se pudo preparar la tabla de valores de decision: ' . $this->getMsgError());
         }
+        $ready = true;
     }
 
     public function extraerDecisionValsDesdePost($data) {
@@ -1156,6 +1185,10 @@ class adq_adquisiciones_log extends MysqlDatosContab {
     }
 
     private function ensureSdeIvaColumn() {
+        static $ready = false;
+        if ($ready) {
+            return;
+        }
         $row = $this->getRowConsultaSql(
             "SELECT COUNT(*) AS cnt FROM information_schema.COLUMNS
              WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'adq_solicitudes_det' AND COLUMN_NAME = 'Sde_Iva';",
@@ -1169,6 +1202,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 throw new Exception('No se pudo preparar la tabla de detalle (Sde_Iva): ' . $this->getMsgError());
             }
         }
+        $ready = true;
     }
 
     private function resolverDepSolicitante($emp_cod, $usu_cod) {
@@ -1186,7 +1220,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         }
         if ($usu_cod > 0) {
             $dep = $this->getRowConsultaSql(
-                "SELECT MIN(w.Dep_Cod) AS Dep_Cod
+                "SELECT MIN(w.Wde_Cod) AS Dep_Cod
                  FROM wf_departamento_usuarios du
                  INNER JOIN wf_departamentos w ON w.Wde_Cod = du.Wde_Cod AND w.Emp_Cod = $emp_cod AND w.Wde_Est = 'A'
                  WHERE du.Usu_Cod = $usu_cod AND du.Wde_Cod IS NOT NULL;",
@@ -1207,7 +1241,9 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         $this->ensureSdeIvaColumn();
         $this->ensureSolicitudRequisitosColumns();
         $this->ensureSolicitudTituloColumn();
-        $this->ensureSolicitudAdjuntosTable();
+        if (!empty($adjuntos_nuevos)) {
+            $this->ensureSolicitudAdjuntosTable();
+        }
         $this->ensureDecisionValsTable();
         $fecha_actual = date('Y-m-d H:i:s');
         $usu_sol = isset($_SESSION['Ses_Usu_Cod']) ? intval($_SESSION['Ses_Usu_Cod']) : 0;
@@ -1720,6 +1756,20 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             return array('Subtotal' => 0, 'Iva' => 0, 'Descuento' => 0, 'Ice' => 0, 'Total' => 0);
         }
 
+        $ice_por_linea = array();
+        $ices = $this->getArrayConsultaSql(
+            "SELECT dc.Cop_Int, ice.Ice_Por
+             FROM det_compra dc
+             INNER JOIN ice ON ice.Ice_Int = dc.Ice_Int
+             WHERE dc.Cop_Cod = $cop_cod AND ice.Ice_Por IS NOT NULL AND ice.Ice_Por > 0;",
+            $this->conexion
+        );
+        if (!empty($ices)) {
+            foreach ($ices as $ice_row) {
+                $ice_por_linea[intval($ice_row['Cop_Int'])] = floatval($ice_row['Ice_Por']);
+            }
+        }
+
         $imp_ice = 0;
         $subtotal = 0;
         $iva_por = 0;
@@ -1733,6 +1783,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $cop_imp = floatval($row['Cop_Imp']);
             $cop_dec = floatval($row['Cop_Dec']);
             $iva_linea = floatval($row['Iva_Por']);
+            $cop_int = intval($row['Cop_Int']);
 
             $subtotal += $cop_imp;
 
@@ -1744,16 +1795,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 $iva_por = $iva_linea;
             }
 
-            $ice_row = $this->getRowConsultaSql(
-                "SELECT ice.Ice_Por
-                 FROM ice
-                 INNER JOIN det_compra dc ON dc.Ice_Int = ice.Ice_Int AND dc.Cop_Cod = $cop_cod
-                 WHERE dc.Cop_Int = " . intval($row['Cop_Int']) . "
-                 LIMIT 1;",
-                $this->conexion
-            );
-            if (!empty($ice_row['Ice_Por']) && floatval($ice_row['Ice_Por']) > 0) {
-                $ice_por = floatval($ice_row['Ice_Por']);
+            if (!empty($ice_por_linea[$cop_int]) && floatval($ice_por_linea[$cop_int]) > 0) {
+                $ice_por = floatval($ice_por_linea[$cop_int]);
                 if ($cop_des == 0) {
                     $des_ice = ($cop_imp * $cop_dec) / 100;
                 } else {
@@ -1857,12 +1900,24 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         }
         $suma_facturas = round($suma_facturas, 2);
         $diferencia = round($suma_facturas - $valor_proforma, 2);
+        if ($diferencia > 0.01) {
+            return array(
+                'success' => false,
+                'message' => 'El valor de la factura es mayor al valor de la solicitud. Total de facturas: $ '
+                    . number_format($suma_facturas, 2)
+                    . '. Valor de la solicitud/proforma: $ ' . number_format($valor_proforma, 2) . '.',
+                'valor_esperado' => $valor_proforma,
+                'suma_facturas' => $suma_facturas,
+                'diferencia' => $diferencia,
+                'facturas' => $facturas_contadas
+            );
+        }
         if (abs($diferencia) > 0.01) {
             return array(
                 'success' => false,
-                'message' => 'Los valores no coinciden. Total de la proforma ganadora y Paso 3: $ '
+                'message' => 'La suma de las facturas debe ser igual al valor de la proforma. Proforma: $ '
                     . number_format($valor_proforma, 2)
-                    . '. Suma de las facturas: $ ' . number_format($suma_facturas, 2)
+                    . '. Suma de facturas: $ ' . number_format($suma_facturas, 2)
                     . '. Diferencia: $ ' . number_format(abs($diferencia), 2) . '.',
                 'valor_esperado' => $valor_proforma,
                 'suma_facturas' => $suma_facturas,
@@ -2251,6 +2306,23 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         );
     }
 
+    private function compraExisteActivaEmpresa($cop_cod, $emp_cod) {
+        $cop_cod = intval($cop_cod);
+        $emp_cod = intval($emp_cod);
+        if ($cop_cod <= 0 || $emp_cod <= 0) {
+            return false;
+        }
+        $row = $this->getRowConsultaSql(
+            "SELECT c.Cop_Cod
+             FROM compras c
+             INNER JOIN proveedore pr ON pr.Prv_Cod = c.Prv_Cod
+             WHERE c.Cop_Cod = $cop_cod AND c.Cop_Est = 'A' AND pr.Emp_Cod = $emp_cod
+             LIMIT 1;",
+            $this->conexion
+        );
+        return !empty($row['Cop_Cod']);
+    }
+
     private function compraYaEnAvanceEtapa($sol_cod, $ins_cod, $nod_cod, $cop_cod, $exclude_sav = 0) {
         $sol_cod = intval($sol_cod);
         $ins_cod = intval($ins_cod);
@@ -2373,12 +2445,11 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 }
                 $emp_cod = isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0;
                 if ($cop_cod > 0) {
-                    $det = $this->obtenerDetalleCompraAvance($cop_cod, $emp_cod);
-                    if (empty($det['success'])) {
-                        throw new Exception(isset($det['message']) ? $det['message'] : 'Factura de compra no valida.');
+                    if (!$this->compraExisteActivaEmpresa($cop_cod, $emp_cod)) {
+                        throw new Exception('Factura de compra no valida o no pertenece a la empresa.');
                     }
                     if ($this->compraYaEnAvanceEtapa($sol_cod, $ins_cod, $nod_cod, $cop_cod)) {
-                        throw new Exception('La factura ' . $det['compra']['Cop_Num'] . ' ya esta registrada en esta etapa.');
+                        throw new Exception('La factura #' . $cop_cod . ' ya esta registrada en esta etapa.');
                     }
                 }
                 if ($atp_cod > 0) {
@@ -2431,6 +2502,16 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 $sav_eliminar,
                 $fecha
             );
+            // Al guardar no exige igualdad exacta, pero no permite superar el valor de la solicitud/proforma.
+            $validacion = $this->validarCoincidenciaTotalesFacturas($sol_cod);
+            if (empty($validacion['success']) && empty($validacion['omitida'])) {
+                $dif = isset($validacion['diferencia']) ? floatval($validacion['diferencia']) : 0;
+                if ($dif > 0.01) {
+                    throw new Exception(isset($validacion['message'])
+                        ? $validacion['message']
+                        : 'El valor de la factura es mayor al valor de la solicitud.');
+                }
+            }
             $this->commit_nomsn($this->conexion);
         } catch (Exception $e) {
             $this->rollBack_nomsn($this->conexion);
@@ -2482,19 +2563,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 $this->conexion
             );
             if ($historial_guardado) {
-                $mov = $this->getRowConsultaSql(
-                    "SELECT Isn_Cod
-                     FROM wf_instancias_nodos
-                     WHERE Ins_Cod = {$auth['Ins_Cod']}
-                       AND Nod_Cod = {$auth['Nod_Cod']}
-                       AND Usu_Cod = $usu_cod
-                       AND Isn_Acc = 'AVANCE'
-                       AND Isn_Fec = '$fecha'
-                     ORDER BY Isn_Cod DESC
-                     LIMIT 1;",
-                    $this->conexion
-                );
-                $isn_cod = intval(isset($mov['Isn_Cod']) ? $mov['Isn_Cod'] : 0);
+                $isn_cod = intval($this->insercionid($this->conexion));
                 if ($isn_cod > 0) {
                     $this->grabarv_registros(
                         "UPDATE adq_solicitudes_avances
@@ -2512,7 +2581,12 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             // Historial informativo.
         }
 
-        return array('success' => true, 'Sol_Cod' => $sol_cod);
+        return array(
+            'success' => true,
+            'Sol_Cod' => $sol_cod,
+            'Ins_Cod' => intval($auth['Ins_Cod']),
+            'Nod_Cod' => intval($auth['Nod_Cod'])
+        );
     }
 
     /**
@@ -2816,9 +2890,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         );
         if (empty($instancia)) {
             $this->iniciarWorkflowSolicitud($trq_cod, $sol_cod, $wf_mgr);
-        } elseif ($instancia['Nod_Tip'] === 'INICIO') {
-            $wf_mgr->avanzarSiEstaEnInicio($instancia['Ins_Cod'], $comentario);
         }
+        // Si ya esta en INICIO, se deja ahi: el primer usuario completa esa etapa.
     }
 
     private function iniciarWorkflowBorrador($sol_cod, $trq_cod) {
@@ -2888,11 +2961,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             }
             $this->activarWorkflowEnBorrador($resultado['Sol_Cod'], $resultado['Trq_Cod'], 'Solicitud registrada; pendiente de completar en la primera etapa.');
             $this->commit_nomsn($this->conexion);
-            try {
-                $this->asegurarDirectorioDocumentosSolicitud(intval($resultado['Sol_Cod']), $titulo);
-            } catch (Exception $eDir) {
-                // La solicitud ya quedo registrada; el directorio se creara al subir el primer archivo.
-            }
+            // Carpeta de documentos: se crea bajo demanda al subir el primer archivo.
             return array('success' => true, 'Sol_Cod' => $resultado['Sol_Cod'], 'Num' => $resultado['Num']);
         } catch (Exception $e) {
             $this->rollBack_nomsn($this->conexion);

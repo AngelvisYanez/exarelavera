@@ -387,63 +387,11 @@ if (isset($ajax_save_avance_docs)) {
     $docs_nuevos = array_values($docs_nuevos);
     $resp = $obBD_adq->guardarAvanceEtapa($sol_cod, $docs_nuevos, $docs_existentes, $sav_eliminar);
     if (!empty($resp['success'])) {
-        $auth = $obBD_adq->autorizarAvanceEtapa($sol_cod, intval($Ses_Emp_Cod), intval($wf_ctx['usu_cod']));
-        if (!empty($auth['success'])) {
-            $avances = $obBD_adq->listarAvancesSolicitud($sol_cod, intval($auth['Ins_Cod']), intval($auth['Nod_Cod']));
+        $ins_cod = !empty($resp['Ins_Cod']) ? intval($resp['Ins_Cod']) : 0;
+        $nod_cod = !empty($resp['Nod_Cod']) ? intval($resp['Nod_Cod']) : 0;
+        if ($ins_cod > 0 && $nod_cod > 0) {
+            $avances = $obBD_adq->listarAvancesSolicitud($sol_cod, $ins_cod, $nod_cod);
             $resp['avances'] = $obBD_adq->enriquecerAvancesConCompras($avances, intval($Ses_Emp_Cod));
-
-            $ins_cod_hist = intval($auth['Ins_Cod']);
-            $inst = $obBD_con1->getRowConsultaSql(
-                "SELECT Ins_Est, Nod_Act FROM wf_instancias WHERE Ins_Cod = $ins_cod_hist LIMIT 1;",
-                $obBD_conexion
-            );
-            $historial = $obBD_con1->getArrayConsultaSql("
-                SELECT h.*,
-                       COALESCE(n.Nod_Nom, CONCAT('Nodo #', h.Nod_Cod)) AS Nod_Nom,
-                       COALESCE(n.Nod_Tip, 'PASO') AS Nod_Tip,
-                       n.Dep_Cod AS Nodo_Dep_Cod,
-                       n.Per_Cod AS Nodo_Per_Cod,
-                       n.Nod_Usu_Asig AS Nodo_Usu_Asig,
-                       TRIM(CONCAT(IFNULL(p.Prs_Nom, ''), ' ', IFNULL(p.Prs_Ape, ''))) AS Usuario_Nom,
-                       p.Prs_Nom, p.Prs_Ape,
-                       d.Wde_Des AS Dep_Des
-                FROM wf_instancias_nodos h
-                LEFT JOIN wf_nodos n ON n.Nod_Cod = h.Nod_Cod
-                LEFT JOIN usuarios u ON u.Usu_Cod = h.Usu_Cod
-                LEFT JOIN persona p ON p.Prs_Cod = u.Prs_Cod
-                LEFT JOIN wf_departamentos d ON d.Dep_Cod = h.Dep_Cod
-                WHERE h.Ins_Cod = $ins_cod_hist
-                ORDER BY h.Isn_Fec DESC, h.Isn_Cod DESC;", $obBD_conexion);
-            if ($historial === false || $historial === null) {
-                $historial = array();
-            }
-            $puede_resolver = $wf_mgr->puedeUsuarioResolverSolicitud(
-                array('Ins_Cod' => $ins_cod_hist, 'Ins_Est' => $inst['Ins_Est'], 'Sol_Est' => 'P', 'Usu_Sol' => 0),
-                $wf_ctx['usu_cod'],
-                $wf_ctx['dep_cod'],
-                $wf_ctx['perfiles_ids'],
-                ($wf_ctx['usu_cod'] == 1) || (isset($_SESSION['Ses_Lis_Per']) && count(array_intersect(array(1, 2), $_SESSION['Ses_Lis_Per'])) > 0)
-            );
-            $historial = $wf_mgr->normalizarHistorialFirmas(
-                $historial,
-                isset($inst['Ins_Est']) ? $inst['Ins_Est'] : '',
-                isset($inst['Nod_Act']) ? intval($inst['Nod_Act']) : 0
-            );
-            $historial = $wf_mgr->agregarNodoPendienteHistorial(
-                $historial,
-                isset($inst['Ins_Est']) ? $inst['Ins_Est'] : '',
-                isset($inst['Nod_Act']) ? intval($inst['Nod_Act']) : 0,
-                $puede_resolver ? intval($wf_ctx['usu_cod']) : 0
-            );
-            $historial = $wf_mgr->agregarRechazoHistorialSiFalta(
-                $historial,
-                $ins_cod_hist,
-                '',
-                isset($inst['Ins_Est']) ? $inst['Ins_Est'] : ''
-            );
-            $historial = $obBD_adq->enriquecerHistorialConArchivos($historial, $sol_cod);
-            adq_preparar_historial_json_utf8($historial);
-            $resp['historial'] = $historial;
         }
     }
     adq_preparar_payload_utf8($resp);
@@ -825,7 +773,7 @@ if (isset($ajax_get_solicitud_detail)) {
             LEFT JOIN wf_nodos n ON n.Nod_Cod = h.Nod_Cod
             LEFT JOIN usuarios u ON u.Usu_Cod = h.Usu_Cod
             LEFT JOIN persona p ON p.Prs_Cod = u.Prs_Cod
-            LEFT JOIN wf_departamentos d ON d.Dep_Cod = h.Dep_Cod
+            LEFT JOIN wf_departamentos d ON d.Wde_Cod = h.Dep_Cod
             WHERE h.Ins_Cod = $ins_cod_hist
             ORDER BY h.Isn_Fec DESC, h.Isn_Cod DESC;", $obBD_conexion);
         if ($historial === false || $historial === null) {
@@ -924,7 +872,6 @@ $pendientes = $obBD_con1->getArrayConsultaSql("
     LEFT JOIN wf_flujos_modelos wfm ON wfm.Wfm_Cod = COALESCE(i.Wfm_Cod, tr.Wfm_Cod)
     WHERE s.Emp_Cod = $emp_cod
       AND s.Sol_Est IN ('E', 'P')
-      AND n.Nod_Tip <> 'INICIO'
       AND $clausula_nodo_usuario
       AND $filtro_pendiente_sin_auto
     ORDER BY s.Sol_Fec DESC, s.Sol_Cod DESC
@@ -2700,6 +2647,11 @@ function adqEtiquetaMiAccion($accion) {
                             <div class="adq-detail-card" id="panelAvanceEtapa" style="display: none; border-color: #0dcaf0; background-color: #f0fcff; padding: 10px 12px;">
                                 <h5 class="adq-section-header" style="color: #087990; border-bottom-color: #9eeaf9; margin-bottom: 8px; padding-bottom: 4px;"><i class="bi bi-receipt-cutoff" id="icoAvanceEtapa"></i> <span id="lblAvanceEtapaTitulo">Facturas de Avance</span></h5>
                                 <p class="mb-2" id="lblAvanceEtapaAyuda" style="font-size: 12px; color: #055160;">Etapa <strong id="lblAvanceEtapaNodo"></strong>: seleccione facturas de compra o anticipos de proveedores del sistema EXA. Use <strong>Guardar</strong> para registrar. Cuando termine, pulse <strong>Finalizar proceso</strong>.</p>
+                                <div id="avanceTotalesResumen" class="mb-2" style="display:none;font-size:12px;padding:8px 10px;border-radius:6px;background:#e0f2fe;border:1px solid #7dd3fc;color:#0c4a6e;">
+                                    <span class="me-3"><strong>Proforma/solicitud:</strong> $ <span id="avanceTotRef">0.00</span></span>
+                                    <span class="me-3"><strong>Facturas:</strong> $ <span id="avanceTotSum">0.00</span></span>
+                                    <span><strong>Diferencia:</strong> $ <span id="avanceTotDif">0.00</span></span>
+                                </div>
                                 <div class="row" style="margin-left:0;margin-right:0;margin-bottom:8px;">
                                     <div class="col-sm-6" style="padding-left:0;padding-right:4px;">
                                         <label class="small fw-semibold" style="color:#087990;margin-bottom:2px;display:block;"><i class="bi bi-receipt"></i> Facturas de compra</label>
@@ -2744,6 +2696,7 @@ function adqEtiquetaMiAccion($accion) {
                                 </div>
                                 <form id="frmAvanceDocs" enctype="multipart/form-data">
                                     <input type="hidden" name="Sol_Cod" id="avanceSolCod" value="">
+                                    <div id="avanceDocsEliminar"></div>
                                     <div id="lstAvanceDocsExistentes" class="mb-2"></div>
                                     <div id="lstAvanceDocsNuevos" class="mb-2"></div>
                                     <div id="secFiscalArchivos" class="mb-2" style="display: none; border-top: 1px dashed #9eeaf9; padding-top: 8px;">
@@ -2837,8 +2790,8 @@ function adqEtiquetaMiAccion($accion) {
                                         <button type="button" class="btn btn-success" id="btnFinalizarAvance" style="display: none;" onclick="finalizarAvanceProceso()"><i class="bi bi-check-circle"></i> Finalizar proceso</button>
                                         <button type="button" class="btn btn-success" id="btnAccionAprobar" onclick="enviarAccion('APROBAR')"><i class="bi bi-check-circle"></i> Aprobar</button>
                                         <button type="button" class="btn btn-success" id="btnAccionCompletar" style="display: none;" onclick="enviarAccion('COMPLETAR')"><i class="bi bi-card-checklist"></i> Completar tarea</button>
-                                        <button type="button" class="btn btn-warning text-dark" style="background-color: #f59e0b; border-color: #f59e0b; color: #ffffff;" onclick="enviarAccion('OBSERVAR')"><i class="bi bi-exclamation-triangle"></i> Observar</button>
-                                        <button type="button" class="btn btn-adq-devolver" onclick="enviarAccion('DEVOLVER')"><i class="bi bi-reply"></i> Devolver</button>
+                                        <button type="button" class="btn btn-warning text-dark" id="btnAccionObservar" style="background-color: #f59e0b; border-color: #f59e0b; color: #ffffff;" onclick="enviarAccion('OBSERVAR')"><i class="bi bi-exclamation-triangle"></i> Observar</button>
+                                        <button type="button" class="btn btn-adq-devolver" id="btnAccionDevolver" onclick="enviarAccion('DEVOLVER')"><i class="bi bi-reply"></i> Devolver</button>
                                         <button type="button" class="btn btn-danger" id="btnAccionRechazar" onclick="enviarAccion('RECHAZAR')"><i class="bi bi-x-circle"></i> Rechazar</button>
                                     </div>
                                 </form>
@@ -2930,7 +2883,7 @@ let currentInsCod = null;
         let isAdjObl = false;
         let searchTimer = null;
 
-        const NODOS_RESOLUBLES = ['APROBACION', 'RECEPCION', 'FACTURA', 'TAREA', 'AVANCE', 'FISCALIZACION', 'FIN'];
+        const NODOS_RESOLUBLES = ['INICIO', 'APROBACION', 'RECEPCION', 'FACTURA', 'TAREA', 'AVANCE', 'FISCALIZACION', 'FIN'];
         let currentNodTip = null;
         let currentExpedienteEstado = null;
         let currentTieneLlaveEmpresa = false;
@@ -3063,22 +3016,25 @@ let currentInsCod = null;
             currentExpedienteEstado = expedienteEstado || null;
             currentTieneLlaveEmpresa = !!tieneLlaveEmpresa;
             currentExpedientePdfsCount = parseInt(expedientePdfs, 10) || 0;
+            const esInicio = currentNodTip === 'INICIO';
             const esTarea = currentNodTip === 'TAREA';
             const esFin = currentNodTip === 'FIN';
             const esAvance = currentNodTip === 'AVANCE';
             const esFiscal = currentNodTip === 'FISCALIZACION';
             $('#btnGuardarAvance').toggle(esAvance || esFiscal);
-            $('#lblPanelDecisionTitulo').text(esFin ? 'Cierre del expediente' : (esTarea ? 'Tarea pendiente' : (esAvance ? 'Otras acciones' : (esFiscal ? 'Fiscalizaci\u00f3n' : 'Decisi\u00f3n en esta Etapa'))));
-            $('#icoPanelDecision').attr('class', esFin ? 'bi bi-file-earmark-pdf' : (esTarea ? 'bi bi-card-checklist' : (esAvance ? 'bi bi-sliders' : (esFiscal ? 'bi bi-shield-check' : 'bi bi-check2-all'))));
+            $('#lblPanelDecisionTitulo').text(esFin ? 'Cierre del expediente' : (esInicio ? 'Completar etapa Inicio' : (esTarea ? 'Tarea pendiente' : (esAvance ? 'Otras acciones' : (esFiscal ? 'Fiscalizaci\u00f3n' : 'Decisi\u00f3n en esta Etapa')))));
+            $('#icoPanelDecision').attr('class', esFin ? 'bi bi-file-earmark-pdf' : (esInicio ? 'bi bi-play-circle' : (esTarea ? 'bi bi-card-checklist' : (esAvance ? 'bi bi-sliders' : (esFiscal ? 'bi bi-shield-check' : 'bi bi-check2-all')))));
             $('#actionComentario').attr('placeholder', esFin
                 ? 'Comentario de cierre del expediente...'
-                : (esTarea
+                : (esInicio
+                    ? 'Comentario de la etapa Inicio (cotizaciones / sustento)...'
+                    : (esTarea
                     ? 'Describa el resultado de la tarea o el trabajo realizado...'
                     : (esAvance
                         ? 'Comentario obligatorio para finalizar el avance (Guardar solo registra facturas)...'
                         : (esFiscal
                             ? 'Comentario obligatorio de fiscalizaci\u00f3n (Guardar solo registra archivos)...'
-                            : 'Redacte el motivo de su decisi\u00f3n...'))));
+                            : 'Redacte el motivo de su decisi\u00f3n...')))));
             // En AVANCE/FISCALIZACION el comentario es obligatorio para avanzar (no al Guardar).
             if (esAvance || esFiscal) {
                 $('#lblComReq').show();
@@ -3086,9 +3042,13 @@ let currentInsCod = null;
             // Fiscalizacion mantiene Aprobar (a diferencia de Avance)
             $('#btnAccionAprobar').toggle(!esTarea && !esAvance).html(esFin
                 ? '<i class="bi bi-check-circle"></i> Finalizar expediente'
-                : '<i class="bi bi-check-circle"></i> Aprobar');
+                : (esInicio
+                    ? '<i class="bi bi-check-circle"></i> Continuar proceso'
+                    : '<i class="bi bi-check-circle"></i> Aprobar'));
             $('#btnAccionCompletar').toggle(esTarea);
-            $('#btnAccionRechazar').toggle(!esTarea);
+            $('#btnAccionRechazar').toggle(!esTarea && !esInicio);
+            $('#btnAccionObservar').toggle(!esTarea && !esInicio && !esFin);
+            $('#btnAccionDevolver').toggle(!esTarea && !esInicio && !esFin);
             if (esFin) {
                 renderPanelExpedienteFin();
             } else {
@@ -3420,6 +3380,103 @@ let currentInsCod = null;
         let anticipoSearchTimer = null;
         const avanceCopCodSeleccionados = new Set();
         const avanceAtpCodSeleccionados = new Set();
+        let avanceValorReferencia = 0;
+
+        function roundMoney(v) {
+            return Math.round((parseFloat(v) || 0) * 100) / 100;
+        }
+
+        function configurarValorReferenciaAvance(sol, cotizaciones) {
+            let proforma = 0;
+            (cotizaciones || []).forEach(function(c) {
+                if (parseInt(c.Cot_Sel, 10) === 1) {
+                    proforma = roundMoney(c.Cot_Val);
+                }
+            });
+            const solVal = roundMoney(sol && sol.Sol_Val_Est !== undefined ? sol.Sol_Val_Est : 0);
+            avanceValorReferencia = proforma > 0 ? proforma : solVal;
+            actualizarResumenTotalesAvance();
+        }
+
+        function obtenerTotalFacturasAvanceSeleccionadas() {
+            let sum = 0;
+            $('#lstAvanceDocsExistentes .adq-avance-factura-card').each(function() {
+                if ($(this).attr('data-eliminado') === '1' || $(this).hasClass('adq-avance-eliminado')) {
+                    return;
+                }
+                sum += roundMoney($(this).attr('data-factura-total'));
+            });
+            $('#lstAvanceDocsNuevos .adq-avance-factura-card').each(function() {
+                sum += roundMoney($(this).attr('data-factura-total'));
+            });
+            return roundMoney(sum);
+        }
+
+        function actualizarResumenTotalesAvance() {
+            const ref = roundMoney(avanceValorReferencia);
+            const sum = obtenerTotalFacturasAvanceSeleccionadas();
+            const dif = roundMoney(sum - ref);
+            $('#avanceTotRef').text(ref.toFixed(2));
+            $('#avanceTotSum').text(sum.toFixed(2));
+            $('#avanceTotDif').text(dif.toFixed(2));
+            const $box = $('#avanceTotalesResumen');
+            if (ref > 0 || sum > 0) {
+                $box.show();
+                if (Math.abs(dif) <= 0.01) {
+                    $box.css({ background: '#dcfce7', borderColor: '#86efac', color: '#166534' });
+                } else if (dif > 0.01) {
+                    $box.css({ background: '#fee2e2', borderColor: '#fca5a5', color: '#991b1b' });
+                } else {
+                    $box.css({ background: '#e0f2fe', borderColor: '#7dd3fc', color: '#0c4a6e' });
+                }
+            } else {
+                $box.hide();
+            }
+        }
+
+        function validarAgregarFacturaAvance(totalFactura) {
+            const ref = roundMoney(avanceValorReferencia);
+            const tot = roundMoney(totalFactura);
+            if (ref <= 0) {
+                return { ok: false, message: 'La solicitud no tiene un valor de proforma/solicitud de referencia.' };
+            }
+            if (tot > ref + 0.01) {
+                return { ok: false, message: 'El valor de la factura es mayor al valor de la solicitud.' };
+            }
+            const suma = obtenerTotalFacturasAvanceSeleccionadas();
+            if (roundMoney(suma + tot) > ref + 0.01) {
+                return {
+                    ok: false,
+                    message: 'El valor de la factura es mayor al valor de la solicitud. Suma actual $ '
+                        + suma.toFixed(2) + ' + factura $ ' + tot.toFixed(2)
+                        + ' supera $ ' + ref.toFixed(2) + '.'
+                };
+            }
+            return { ok: true };
+        }
+
+        function validarTotalesAvanceParaFinalizar() {
+            const ref = roundMoney(avanceValorReferencia);
+            const suma = obtenerTotalFacturasAvanceSeleccionadas();
+            if (ref <= 0) {
+                return { ok: false, message: 'No se puede finalizar: falta el valor de la proforma/solicitud.' };
+            }
+            if (suma <= 0) {
+                return { ok: false, message: 'Debe registrar al menos una factura antes de finalizar el proceso.' };
+            }
+            const dif = roundMoney(suma - ref);
+            if (dif > 0.01) {
+                return { ok: false, message: 'El valor de la factura es mayor al valor de la solicitud.' };
+            }
+            if (Math.abs(dif) > 0.01) {
+                return {
+                    ok: false,
+                    message: 'La suma de las facturas debe ser igual al valor de la proforma. Proforma: $ '
+                        + ref.toFixed(2) + '. Facturas: $ ' + suma.toFixed(2) + '.'
+                };
+            }
+            return { ok: true };
+        }
 
         function avanceFileLink(path, label) {
             if (!path) {
@@ -3665,7 +3722,9 @@ let currentInsCod = null;
             const compra = opts.compra || null;
             const usuario = opts.usuario || '';
             const esNuevo = !!opts.esNuevo;
-            const dataAttr = esNuevo ? `data-avance-nuevo="${idx}"` : `data-sav-cod="${savCod}" data-sav-cop-cod="${copCod}"`;
+            const dataAttr = esNuevo
+                ? `data-avance-nuevo="${idx}" data-factura-total="${roundMoney(compra && compra.Total !== undefined ? compra.Total : 0).toFixed(2)}"`
+                : `data-sav-cod="${savCod}" data-sav-cop-cod="${copCod}" data-factura-total="${roundMoney(compra && compra.Total !== undefined ? compra.Total : 0).toFixed(2)}"`;
             const namePrefix = esNuevo ? `avance_docs_nuevos[${idx}]` : `avance_docs_existentes[${savCod}]`;
             const legacy = opts.legacy || null;
             let legacyHtml = '';
@@ -3710,6 +3769,7 @@ let currentInsCod = null;
             fiscalDocNuevoIdx = 0;
             avanceCopCodSeleccionados.clear();
             avanceAtpCodSeleccionados.clear();
+            $('#avanceDocsEliminar').empty();
             if (!avances || avances.length === 0) {
                 $exist.html(currentNodTip === 'FISCALIZACION'
                     ? '<div class="text-muted small mb-2">No hay facturas, anticipos ni documentos PDF registrados en esta fiscalizaci&oacute;n.</div>'
@@ -3751,27 +3811,55 @@ let currentInsCod = null;
             $('#txtBuscarAnticipoAvance').val('');
             $('#divResultComprasAvance').hide();
             $('#divResultAnticiposAvance').hide();
+            actualizarResumenTotalesAvance();
         }
 
         function marcarEliminarAvanceDoc(savCod, btn) {
+            savCod = parseInt(savCod, 10) || 0;
             const $row = $(btn).closest('[data-sav-cod]');
+            if (!$row.length) {
+                return;
+            }
             const cop = parseInt($row.attr('data-sav-cop-cod'), 10);
             const atp = parseInt($row.attr('data-sav-atp-cod'), 10);
             if (cop > 0) { avanceCopCodSeleccionados.delete(cop); }
             if (atp > 0) { avanceAtpCodSeleccionados.delete(atp); }
-            if ($row.find('input[name="sav_eliminar[]"]').length) { $row.remove(); return; }
-            $row.append(`<input type="hidden" name="sav_eliminar[]" value="${savCod}">`);
-            $row.css('opacity', '0.45');
+            // Quitar visualmente al instante y registrar la baja para el siguiente Guardar/Finalizar.
+            if (savCod > 0 && $('#avanceDocsEliminar input[data-sav-elim="' + savCod + '"]').length === 0) {
+                $('#avanceDocsEliminar').append(
+                    '<input type="hidden" name="sav_eliminar[]" data-sav-elim="' + savCod + '" value="' + savCod + '">'
+                );
+            }
+            $row.remove();
+            actualizarResumenTotalesAvance();
+            if (typeof buscarComprasAvance === 'function') {
+                const term = ($('#txtBuscarCompraAvance').val() || '').trim();
+                if (term.length >= 2) {
+                    buscarComprasAvance();
+                }
+            }
+        }
+
+        function tieneAvancePendienteGuardar() {
+            return $('#lstAvanceDocsNuevos [data-avance-nuevo]').length > 0
+                || $('#lstFiscalDocsNuevos .adq-fiscal-doc-nuevo').length > 0
+                || $('#avanceDocsEliminar input[data-sav-elim]').length > 0;
         }
 
         function quitarCompraAvanceNueva(idx, copCod) {
             if (copCod > 0) { avanceCopCodSeleccionados.delete(copCod); }
             $(`[data-avance-nuevo="${idx}"]`).remove();
+            actualizarResumenTotalesAvance();
+            const term = ($('#txtBuscarCompraAvance').val() || '').trim();
+            if (term.length >= 2) {
+                buscarComprasAvance();
+            }
         }
 
         function quitarAnticipoAvanceNuevo(idx, atpCod) {
             if (atpCod > 0) { avanceAtpCodSeleccionados.delete(atpCod); }
             $(`[data-avance-nuevo="${idx}"]`).remove();
+            actualizarResumenTotalesAvance();
         }
 
         function htmlFilaBusquedaCompra(c, btnHtml) {
@@ -3805,9 +3893,16 @@ let currentInsCod = null;
                     } else {
                         res.compras.forEach(function(c) {
                             const ya = seleccionados.has(parseInt(c.Cop_Cod, 10));
-                            const btn = ya
-                                ? '<span class="badge bg-secondary">Agregada</span>'
-                                : `<button type="button" class="btn btn-xs btn-success p-1 py-0" onclick="agregarCompraAvance(${c.Cop_Cod})"><i class="bi bi-plus-lg"></i></button>`;
+                            const tot = roundMoney(c.Total);
+                            const check = validarAgregarFacturaAvance(tot);
+                            let btn;
+                            if (ya) {
+                                btn = '<span class="badge bg-secondary">Agregada</span>';
+                            } else if (!check.ok) {
+                                btn = '<span class="badge bg-danger" title="' + avanceEsc(check.message) + '">Excede</span>';
+                            } else {
+                                btn = `<button type="button" class="btn btn-xs btn-success p-1 py-0" onclick="agregarCompraAvance(${c.Cop_Cod})"><i class="bi bi-plus-lg"></i></button>`;
+                            }
                             $tbody.append(htmlFilaBusquedaCompra(c, btn));
                         });
                     }
@@ -3828,6 +3923,12 @@ let currentInsCod = null;
                     alert(res.message || 'No se pudo obtener el detalle de la factura.');
                     return;
                 }
+                const totalFactura = roundMoney(res.compra && res.compra.Total !== undefined ? res.compra.Total : 0);
+                const check = validarAgregarFacturaAvance(totalFactura);
+                if (!check.ok) {
+                    alert(check.message);
+                    return;
+                }
                 const idx = avanceDocNuevoIdx++;
                 avanceCopCodSeleccionados.add(copCod);
                 $('#lstAvanceDocsNuevos').append(htmlTarjetaAvanceCompra({
@@ -3837,6 +3938,7 @@ let currentInsCod = null;
                     compra: res.compra,
                     esNuevo: true
                 }));
+                actualizarResumenTotalesAvance();
                 buscarComprasAvance();
             }).fail(function() {
                 alert('Error de red al consultar la factura.');
@@ -3974,7 +4076,8 @@ let currentInsCod = null;
                         renderHistorialPanel(res.historial);
                     }
                     if (typeof onSuccess === 'function') {
-                        // Encadena a Finalizar/Aprobar: enviarAccion actualiza el loader.
+                        // Quitar loader del guardado; el siguiente paso (validar/finalizar) muestra el suyo si aplica.
+                        adqOcultarLoaderAccion();
                         onSuccess();
                     } else {
                         adqOcultarLoaderAccion();
@@ -3995,21 +4098,26 @@ let currentInsCod = null;
         }
 
         function tieneFacturasAvanceSinGuardar() {
-            return $('#lstAvanceDocsNuevos [data-avance-nuevo]').length > 0;
+            return tieneAvancePendienteGuardar();
         }
 
         function contarFacturasAvanceGuardadas() {
-            return $('#lstAvanceDocsExistentes [data-sav-cod]').filter(function() {
-                return $(this).find('input[name="sav_eliminar[]"]').length === 0;
-            }).length;
+            return $('#lstAvanceDocsExistentes [data-sav-cod]').length
+                + $('#lstAvanceDocsNuevos [data-avance-nuevo]').length;
         }
 
         function finalizarAvanceProceso() {
-            if (tieneFacturasAvanceSinGuardar()) {
-                confirmarCentrado('Hay facturas o anticipos agregados que aun no se han guardado. Desea guardarlos antes de finalizar?', function() {
-                    guardarAvanceDocs(function() {
-                        finalizarAvanceProcesoConfirmado();
-                    });
+            // Validar montos ANTES de guardar/mostrar loader, incluyendo facturas recien agregadas.
+            const checkTot = validarTotalesAvanceParaFinalizar();
+            if (!checkTot.ok) {
+                adqOcultarLoaderAccion();
+                alert(checkTot.message);
+                return;
+            }
+            if (tieneAvancePendienteGuardar()) {
+                // Persistir altas/bajas pendientes para que el backend no sume facturas ya quitadas.
+                guardarAvanceDocs(function() {
+                    finalizarAvanceProcesoConfirmado();
                 });
                 return;
             }
@@ -4017,8 +4125,14 @@ let currentInsCod = null;
         }
 
         function finalizarAvanceProcesoConfirmado() {
+            adqOcultarLoaderAccion();
             if (contarFacturasAvanceGuardadas() <= 0) {
                 alert('Debe registrar al menos una factura o anticipo antes de finalizar el proceso.');
+                return;
+            }
+            const checkTot = validarTotalesAvanceParaFinalizar();
+            if (!checkTot.ok) {
+                alert(checkTot.message);
                 return;
             }
             if (!$('#actionComentario').val().trim()) {
@@ -4032,14 +4146,12 @@ let currentInsCod = null;
         }
 
         function contarDocsFiscalGuardados() {
-            return $('#lstAvanceDocsExistentes [data-sav-cod]').filter(function() {
-                return $(this).find('input[name="sav_eliminar[]"]').length === 0;
-            }).length;
+            return $('#lstAvanceDocsExistentes [data-sav-cod]').length
+                + $('#lstFiscalDocsNuevos .adq-fiscal-doc-nuevo').length;
         }
 
         function tieneDocsFiscalSinGuardar() {
-            return $('#lstFiscalDocsNuevos .adq-fiscal-doc-nuevo').length > 0
-                || $('#lstAvanceDocsNuevos [data-avance-nuevo]').length > 0;
+            return tieneAvancePendienteGuardar();
         }
 
         function renderHistorialArchivos(archivos, isnAdjFallback) {
@@ -4538,6 +4650,7 @@ let currentInsCod = null;
 
                     if (puedeAvance) {
                         configurarTextosPanelAvance(sol.Nod_Tip);
+                        configurarValorReferenciaAvance(sol, res.cotizaciones || []);
                         $('#lblAvanceEtapaNodo').text(sol.Nod_Nom || 'Etapa actual');
                         $('#avanceSolCod').val(sol.Sol_Cod);
                         renderAvanceDocs(res.avances || []);
@@ -4883,11 +4996,9 @@ let currentInsCod = null;
             }
             // AVANCE / FISCALIZACION: Guardar no avanza; Aprobar/Finalizar exige justificacion + comentario.
             if (accion === 'APROBAR' && (currentNodTip === 'AVANCE' || currentNodTip === 'FISCALIZACION')) {
-                if (currentNodTip === 'FISCALIZACION' && tieneDocsFiscalSinGuardar()) {
-                    confirmarCentrado('Hay documentos sin guardar. Desea guardarlos antes de aprobar?', function() {
-                        guardarAvanceDocs(function() {
-                            enviarAccion('APROBAR');
-                        });
+                if (tieneAvancePendienteGuardar()) {
+                    guardarAvanceDocs(function() {
+                        enviarAccion('APROBAR');
                     });
                     return;
                 }
@@ -4898,6 +5009,13 @@ let currentInsCod = null;
                 if (currentNodTip === 'AVANCE' && contarFacturasAvanceGuardadas() <= 0) {
                     alert('Debe registrar al menos una factura o anticipo antes de finalizar el proceso de avance.');
                     return;
+                }
+                if (currentNodTip === 'AVANCE') {
+                    const checkTot = validarTotalesAvanceParaFinalizar();
+                    if (!checkTot.ok) {
+                        alert(checkTot.message);
+                        return;
+                    }
                 }
                 if (!$('#actionComentario').val().trim()) {
                     alert(currentNodTip === 'FISCALIZACION'
@@ -5385,6 +5503,8 @@ let currentInsCod = null;
                     formModo = 'cotizaciones';
                 }
                 activarTabCrear();
+            } else if (tab === 'mis_solicitudes') {
+                $('a[href="#my-panel"]').tab('show');
             }
             const detalleSol = urlParams.get('detalle_sol');
             if (detalleSol) {

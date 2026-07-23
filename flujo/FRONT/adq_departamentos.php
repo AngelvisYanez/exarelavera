@@ -34,7 +34,7 @@ if (!$wf_mgr->verificarAccesoVentana('configuracion')) {
 
 // Redirecci�n segura para navegaci�n directa del navegador (no AJAX)
 $request_method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : '';
-$is_ajax_get = isset($_GET['ajax_get_deptos']) || isset($_GET['ajax_get_depto_req']) || isset($_GET['ajax_get_deptos_rrhh']) || isset($_GET['ajax_get_depto_users']);
+$is_ajax_get = isset($_GET['ajax_get_deptos']) || isset($_GET['ajax_get_depto_req']) || isset($_GET['ajax_get_depto_users']);
 if ($request_method === 'GET' && !$is_ajax_get) {
     header("Location: adq_configuracion.php?tab=departamentos");
     exit;
@@ -43,21 +43,16 @@ if ($request_method === 'GET' && !$is_ajax_get) {
 // --- AJAX: Guardar Departamento (Crear o Editar) ---
 if (isset($ajax_save_depto_req)) {
     $dep_cod = !empty($_POST['Dep_Cod']) ? intval($_POST['Dep_Cod']) : null;
-    $dep_rrhh_cod = !empty($_POST['Dep_Rrhh_Cod']) ? intval($_POST['Dep_Rrhh_Cod']) : null;
-    $dep_des = isset($_POST['Dep_Des']) ? mysqli_real_escape_string($obBD_conexion->conexion, $_POST['Dep_Des']) : '';
+    $dep_des = isset($_POST['Dep_Des']) ? strtoupper(trim($_POST['Dep_Des'])) : '';
 
-    if (empty($dep_cod) && empty($dep_rrhh_cod)) {
-        $obBD_con1->echoJson(array('success' => false, 'message' => 'Debe seleccionar un departamento de Recursos Humanos.'));
-        exit;
-    }
-    if (!empty($dep_cod) && $dep_des === '') {
+    if ($dep_des === '') {
         $obBD_con1->echoJson(array('success' => false, 'message' => 'El nombre del departamento es obligatorio.'));
         exit;
     }
 
     try {
         $emp_id = isset($Ses_Emp_Cod) ? intval($Ses_Emp_Cod) : (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0);
-        $wf_mgr->guardarDepartamentoWorkflow($emp_id, $dep_cod, $dep_des, $dep_rrhh_cod);
+        $wf_mgr->guardarDepartamentoWorkflow($emp_id, $dep_cod, $dep_des);
         $obBD_con1->echoJson(array('success' => true));
     } catch (Exception $e) {
         $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
@@ -85,10 +80,8 @@ if (isset($ajax_get_depto_req)) {
     $dep_cod = intval($_GET['Dep_Cod']);
     $emp_id = isset($Ses_Emp_Cod) ? intval($Ses_Emp_Cod) : (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0);
     $row = $obBD_con1->getRowConsultaSql("
-        SELECT w.Wde_Cod AS Dep_Cod, w.Dep_Cod AS Dep_Rrhh_Cod,
-               COALESCE(r.Dep_Des, w.Wde_Des) AS Dep_Des, w.Wde_Est AS Dep_Est
+        SELECT w.Wde_Cod AS Dep_Cod, w.Wde_Des AS Dep_Des, w.Wde_Est AS Dep_Est
         FROM wf_departamentos w
-        LEFT JOIN departamen r ON r.Dep_Cod = w.Dep_Cod AND r.Emp_Cod = w.Emp_Cod
         WHERE w.Wde_Cod = $dep_cod AND w.Emp_Cod = $emp_id;", $obBD_conexion);
     if (!empty($row) && function_exists('utf8_encode_deep')) {
         utf8_encode_deep($row);
@@ -97,18 +90,7 @@ if (isset($ajax_get_depto_req)) {
     exit;
 }
 
-// --- AJAX: Listar departamentos RRHH disponibles para registrar en workflow ---
-if (isset($_GET['ajax_get_deptos_rrhh'])) {
-    $emp_id = isset($Ses_Emp_Cod) ? intval($Ses_Emp_Cod) : (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0);
-    $deptos_rrhh = $wf_mgr->listarDepartamentosRrhh($emp_id);
-    if (function_exists('utf8_encode_deep')) {
-        utf8_encode_deep($deptos_rrhh);
-    }
-    $obBD_con1->echoJson(array('success' => true, 'data' => $deptos_rrhh));
-    exit;
-}
-
-// --- AJAX: Obtener usuarios de la empresa con flag de asignaci�n al departamento ---
+// --- AJAX: Obtener usuarios de la empresa con flag de asignacion al departamento ---
 if (isset($ajax_get_depto_users) || isset($_GET['ajax_get_depto_users'])) {
     $wde_cod = intval($_GET['dep_cod']);
     $emp_id = isset($Ses_Emp_Cod) ? intval($Ses_Emp_Cod) : (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0);
@@ -173,33 +155,28 @@ if (isset($ajax_save_depto_users)) {
     exit;
 }
 
-// Cargar datos para la vista (sincroniza RRHH -> wf_departamentos y luego lista)
+// Cargar datos para la vista
 $emp_id = isset($Ses_Emp_Cod) ? intval($Ses_Emp_Cod) : (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0);
-$wf_mgr->syncDepartamentosFromRrhh($emp_id);
 $deptos = $obBD_con1->getArrayConsultaSql("
-    SELECT d.Wde_Cod AS Dep_Cod, d.Dep_Cod AS Dep_Rrhh_Cod,
-           COALESCE(r.Dep_Des, d.Wde_Des) AS Dep_Des,
+    SELECT d.Wde_Cod AS Dep_Cod,
+           d.Wde_Des AS Dep_Des,
            d.Wde_Est AS Dep_Est, d.Wde_Est AS Wfd_Est,
            (SELECT COUNT(DISTINCT u.Usu_Ced)
             FROM wf_departamento_usuarios du
             INNER JOIN usuarios u ON u.Usu_Cod = du.Usu_Cod
             INNER JOIN sucursal s ON s.Suc_Cod = u.Suc_Cod
             WHERE s.Emp_Cod = $emp_id AND u.Usu_Wf = 'S'
-              AND (du.Wde_Cod = d.Wde_Cod
-                   OR (du.Wde_Cod IS NULL AND du.Dep_Cod = d.Dep_Cod))) as Cant_Usuarios
+              AND (du.Wde_Cod = d.Wde_Cod OR du.Dep_Cod = d.Wde_Cod)) as Cant_Usuarios
     FROM wf_departamentos d
-    LEFT JOIN departamen r ON r.Dep_Cod = d.Dep_Cod AND r.Emp_Cod = d.Emp_Cod
     WHERE d.Emp_Cod = $emp_id
     ORDER BY d.Wde_Cod DESC;", $obBD_conexion);
 if ($deptos === false || $deptos === null) {
     $deptos = array();
 }
-$deptos_rrhh = $wf_mgr->listarDepartamentosRrhh($emp_id);
 
 if (isset($ajax_get_deptos)) {
     if (function_exists('utf8_encode_deep')) {
         utf8_encode_deep($deptos);
-        utf8_encode_deep($deptos_rrhh);
     }
     ?>
     <style>
@@ -231,13 +208,13 @@ if (isset($ajax_get_deptos)) {
                         <th style="width: 80px;">ID</th>
                         <th>Nombre del Departamento</th>
                         <th style="width: 150px;">Usuarios Asignados</th>
-                        <th style="width: 140px;">Estado Workflow</th>
+                        <th style="width: 140px;">Estado</th>
                         <th style="width: 180px;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($deptos)) { ?>
-                        <tr class="text-center"><td colspan="5" class="text-muted py-3">No hay departamentos activos en RRHH para esta empresa<?php echo $emp_id <= 0 ? ' (sesi&oacute;n sin Emp_Cod)' : ''; ?>.</td></tr>
+                        <tr class="text-center"><td colspan="5" class="text-muted py-3">No hay departamentos registrados. Use <strong>Nuevo Departamento</strong> para crear uno.</td></tr>
                     <?php } else { 
                         foreach ($deptos as $d) { ?>
                             <tr class="text-center <?php echo $d['Wfd_Est'] === 'I' ? 'wf-depto-inactivo' : ''; ?>" id="row_dep_<?php echo $d['Dep_Cod']; ?>" data-wfd-est="<?php echo $d['Wfd_Est']; ?>">
@@ -250,14 +227,14 @@ if (isset($ajax_get_deptos)) {
                                 </td>
                                 <td>
                                     <span class="badge bg-<?php echo $d['Wfd_Est'] === 'A' ? 'success' : 'danger'; ?>" id="badge_dep_<?php echo $d['Dep_Cod']; ?>">
-                                        <?php echo $d['Wfd_Est'] === 'A' ? 'Activo en WF' : 'Inactivo en WF'; ?>
+                                        <?php echo $d['Wfd_Est'] === 'A' ? 'Activo' : 'Desactivado'; ?>
                                     </span>
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-xs">
                                         <button type="button" class="btn btn-sm btn-outline-primary" onclick="editarDepto(<?php echo $d['Dep_Cod']; ?>)" title="Editar Nombre"><i class="bi bi-pencil"></i></button>
                                         <button type="button" class="btn btn-sm btn-outline-info btn-abrir-depto-usuarios" data-wde-cod="<?php echo intval($d['Dep_Cod']); ?>" data-dep-nom="<?php echo htmlspecialchars($d['Dep_Des'], ENT_QUOTES, 'UTF-8'); ?>" title="Asignar Usuarios"><i class="bi bi-people"></i></button>
-                                        <button type="button" class="btn btn-sm btn-outline-<?php echo $d['Wfd_Est'] === 'A' ? 'danger' : 'success'; ?>" id="btn_toggle_dep_<?php echo $d['Dep_Cod']; ?>" onclick="toggleEstadoDepto(<?php echo $d['Dep_Cod']; ?>)" title="<?php echo $d['Wfd_Est'] === 'A' ? 'Desactivar en Workflow' : 'Activar en Workflow'; ?>">
+                                        <button type="button" class="btn btn-sm btn-outline-<?php echo $d['Wfd_Est'] === 'A' ? 'danger' : 'success'; ?>" id="btn_toggle_dep_<?php echo $d['Dep_Cod']; ?>" onclick="toggleEstadoDepto(<?php echo $d['Dep_Cod']; ?>)" title="<?php echo $d['Wfd_Est'] === 'A' ? 'Desactivar' : 'Activar'; ?>">
                                             <i class="bi bi-power"></i>
                                         </button>
                                     </div>

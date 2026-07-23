@@ -149,7 +149,7 @@ $cuellos = $obBD_con1->getArrayConsultaSql("
     SELECT n.Nod_Nom, d.Wde_Des AS Dep_Des, COUNT(i.Ins_Cod) as Total
     FROM wf_instancias i
     INNER JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act
-    LEFT JOIN wf_departamentos d ON d.Dep_Cod = n.Dep_Cod
+    LEFT JOIN wf_departamentos d ON d.Wde_Cod = n.Dep_Cod
     WHERE i.Ins_Est = 'P' AND n.Wfm_Cod IN (SELECT Wfm_Cod FROM wf_flujos_modelos WHERE Emp_Cod = $Ses_Emp_Cod)
     GROUP BY n.Nod_Nom, d.Wde_Des
     ORDER BY Total DESC;", $obBD_conexion);
@@ -161,7 +161,7 @@ $departamentos_ranking = $obBD_con1->getArrayConsultaSql("
            IFNULL(AVG(TIMESTAMPDIFF(HOUR, h.Isn_Fec, (SELECT MIN(h2.Isn_Fec) FROM wf_instancias_nodos h2 WHERE h2.Ins_Cod = h.Ins_Cod AND h2.Isn_Cod > h.Isn_Cod)) / 24.0), 0) as Tiempo_Atencion
     FROM wf_instancias_nodos h
     INNER JOIN wf_nodos n ON n.Nod_Cod = h.Nod_Cod
-    INNER JOIN wf_departamentos d ON d.Dep_Cod = h.Dep_Cod
+    INNER JOIN wf_departamentos d ON d.Wde_Cod = h.Dep_Cod
     WHERE h.Isn_Acc IN ('APROBAR', 'OBSERVAR', 'DEVOLVER') AND d.Emp_Cod = $Ses_Emp_Cod
     GROUP BY d.Wde_Des
     ORDER BY Tiempo_Atencion ASC;", $obBD_conexion);
@@ -263,7 +263,7 @@ if ($es_gerencial_admin) {
         INNER JOIN adq_solicitudes s ON i.Ins_Ent_Typ = 'adq_solicitudes' AND i.Ins_Ent_Cod = s.Sol_Cod
         INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
         LEFT JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act
-        LEFT JOIN wf_departamentos d ON d.Dep_Cod = n.Dep_Cod
+        LEFT JOIN wf_departamentos d ON d.Wde_Cod = n.Dep_Cod
         LEFT JOIN usuarios u ON u.Usu_Cod = s.Usu_Sol
         LEFT JOIN persona p ON p.Prs_Cod = u.Prs_Cod
         WHERE " . implode(" AND ", $where_clauses) . "

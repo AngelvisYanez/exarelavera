@@ -85,27 +85,9 @@ class wf_manager_log {
     }
 
     public function repararInstanciasEnInicio($ent_typ = 'adq_solicitudes') {
-        $ent_typ = mysqli_real_escape_string($this->obBD_conexion->conexion, $ent_typ);
-        $atascadas = $this->obBD_datos->getArrayConsultaSql(
-            "SELECT i.Ins_Cod, i.Nod_Act
-             FROM wf_instancias i
-             INNER JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act AND n.Nod_Tip = 'INICIO'
-             WHERE i.Ins_Est = 'P' AND i.Ins_Ent_Typ = '$ent_typ';",
-            $this->obBD_conexion
-        );
-        if (empty($atascadas)) {
-            return 0;
-        }
-        $reparadas = 0;
-        foreach ($atascadas as $row) {
-            try {
-                if ($this->avanzarDesdeNodoInicio($row['Ins_Cod'], $row['Nod_Act'], 'Reparacion automatica: salida desde Inicio.')) {
-                    $reparadas++;
-                }
-            } catch (Exception $e) {
-            }
-        }
-        return $reparadas;
+        // Ya no se auto-avanza desde INICIO: el primer responsable trabaja en ese nodo
+        // (cotizaciones, comentario y PDF) antes de continuar el flujo.
+        return 0;
     }
 
     /**
@@ -153,9 +135,10 @@ class wf_manager_log {
         }
         if ($emp_cod > 0) {
             $this->obBD_datos->setError(0, '');
+            // Migracion legacy: si Dep_Cod guardaba Wde_Cod por error historico.
             $this->obBD_datos->grabarv_registros(
                 "UPDATE wf_departamento_usuarios du
-                 INNER JOIN wf_departamentos w ON w.Dep_Cod = du.Dep_Cod AND w.Emp_Cod = $emp_cod
+                 INNER JOIN wf_departamentos w ON w.Wde_Cod = du.Dep_Cod AND w.Emp_Cod = $emp_cod
                  SET du.Wde_Cod = w.Wde_Cod
                  WHERE du.Wde_Cod IS NULL;",
                 $this->obBD_conexion
@@ -173,26 +156,25 @@ class wf_manager_log {
 
     /**
      * SQL de insercion de usuario en departamento workflow.
-     * Dep_Cod = RRHH (parte del UNIQUE uq_dep_usu), Wde_Cod = FK a wf_departamentos.
+     * Dep_Cod se reutiliza con el Wde_Cod (UNIQUE uq_dep_usu) porque wf_departamentos ya no vincula RRHH.
      */
-    private function sqlInsertDepartamentoUsuario($wde_cod, $usu_cod, $dep_rrhh_cod) {
+    private function sqlInsertDepartamentoUsuario($wde_cod, $usu_cod, $dep_rrhh_cod = null) {
         $wde_cod = intval($wde_cod);
         $usu_cod = intval($usu_cod);
-        $dep_rrhh_cod = intval($dep_rrhh_cod);
-        if ($dep_rrhh_cod <= 0) {
-            throw new Exception('Dep_Cod de RRHH invalido para insertar usuario en departamento.');
+        if ($wde_cod <= 0) {
+            throw new Exception('Wde_Cod invalido para insertar usuario en departamento.');
         }
         return "INSERT INTO wf_departamento_usuarios (Dep_Cod, Usu_Cod, Wde_Cod)
-                VALUES ($dep_rrhh_cod, $usu_cod, $wde_cod)
+                VALUES ($wde_cod, $usu_cod, $wde_cod)
                 ON DUPLICATE KEY UPDATE Wde_Cod = VALUES(Wde_Cod);";
     }
 
     /**
      * Guarda usuarios asignados a un departamento de workflow.
      * Tabla destino: wf_departamento_usuarios
-     *  - Dep_Cod = departamen.Dep_Cod (RRHH)  [UNIQUE con Usu_Cod]
+     *  - Dep_Cod = Wde_Cod (clave unica con Usu_Cod; ya no es FK a RRHH)
      *  - Usu_Cod = usuarios.Usu_Cod
-     *  - Wde_Cod = wf_departamentos.Wde_Cod    [FK]
+     *  - Wde_Cod = wf_departamentos.Wde_Cod
      */
     public function guardarUsuariosDepartamentoWorkflow($wde_cod, $emp_cod, $usuarios_ids) {
         $this->ensureWfDepartamentosTable();
@@ -202,11 +184,6 @@ class wf_manager_log {
         $emp_cod = intval($emp_cod);
         if (!$this->validarWdeCodWorkflow($wde_cod, $emp_cod)) {
             throw new Exception('Departamento de workflow no valido.');
-        }
-
-        $dep_rrhh = $this->resolverDepRrhhDesdeWf($wde_cod, $emp_cod);
-        if ($dep_rrhh <= 0) {
-            throw new Exception('El departamento workflow no tiene Dep_Cod de RRHH vinculado. Verifique wf_departamentos.Dep_Cod.');
         }
 
         if (!is_array($usuarios_ids)) {
@@ -223,15 +200,12 @@ class wf_manager_log {
 
         $this->obBD_datos->inicio_transaccion($this->obBD_conexion);
         try {
-            // Limpiar asignaciones previas de este departamento WF / RRHH
-            $this->ejecutarSql("DELETE FROM wf_departamento_usuarios WHERE Wde_Cod = $wde_cod;");
-            $this->ejecutarSql("DELETE FROM wf_departamento_usuarios WHERE Dep_Cod = $dep_rrhh;");
+            $this->ejecutarSql("DELETE FROM wf_departamento_usuarios WHERE Wde_Cod = $wde_cod OR Dep_Cod = $wde_cod;");
 
             $insertados = 0;
             $usu_insertados = array();
 
             foreach ($ids_base as $u_id) {
-                // Todas las cuentas activas WF de la misma cedula en la empresa
                 $cuentas = $this->obBD_datos->getArrayConsultaSql(
                     "SELECT ux.Usu_Cod
                      FROM usuarios ux
@@ -243,7 +217,6 @@ class wf_manager_log {
                     $this->obBD_conexion
                 );
                 if ($cuentas === false || $cuentas === null || empty($cuentas)) {
-                    // Fallback: insertar el Usu_Cod seleccionado si es valido en la empresa
                     $cuenta = $this->obBD_datos->getRowConsultaSql(
                         "SELECT ux.Usu_Cod
                          FROM usuarios ux
@@ -261,7 +234,7 @@ class wf_manager_log {
                         continue;
                     }
                     $this->ejecutarSql(
-                        $this->sqlInsertDepartamentoUsuario($wde_cod, $usu_cod, $dep_rrhh)
+                        $this->sqlInsertDepartamentoUsuario($wde_cod, $usu_cod)
                     );
                     $usu_insertados[$usu_cod] = true;
                     $insertados++;
@@ -271,7 +244,6 @@ class wf_manager_log {
             $this->obBD_datos->commit_nomsn($this->obBD_conexion);
             return array(
                 'insertados' => $insertados,
-                'dep_rrhh' => $dep_rrhh,
                 'wde_cod' => $wde_cod,
                 'recibidos' => count($ids_base)
             );
@@ -288,7 +260,7 @@ class wf_manager_log {
 
         if ($dep_cod <= 0 && $usu_cod > 0 && $emp_cod > 0) {
             $dep_row = $this->obBD_datos->getRowConsultaSql(
-                "SELECT MIN(w.Dep_Cod) AS Dep_Cod
+                "SELECT MIN(w.Wde_Cod) AS Dep_Cod
                  FROM wf_departamento_usuarios du
                  INNER JOIN wf_departamentos w ON w.Wde_Cod = du.Wde_Cod AND w.Emp_Cod = $emp_cod AND w.Wde_Est = 'A'
                  WHERE du.Usu_Cod = $usu_cod AND du.Wde_Cod IS NOT NULL",
@@ -313,8 +285,7 @@ class wf_manager_log {
     }
 
     /**
-     * Precalcula Dep_Cod del usuario (WF + homonimos RRHH + sesion) una sola vez.
-     * Evita subconsultas correlacionadas en la bandeja que provocan Lost connection.
+     * Precalcula codigos de departamento WF del usuario (Wde_Cod) una sola vez.
      */
     public function listarDepCodsAsignacionUsuario($usu_cod, $dep_cod) {
         $usu_cod = intval($usu_cod);
@@ -331,10 +302,10 @@ class wf_manager_log {
 
         if ($usu_cod > 0) {
             $rows_wf = $this->obBD_datos->getArrayConsultaSql(
-                "SELECT DISTINCT w.Dep_Cod
+                "SELECT DISTINCT w.Wde_Cod AS Dep_Cod
                  FROM wf_departamento_usuarios du
                  INNER JOIN wf_departamentos w ON w.Wde_Cod = du.Wde_Cod AND w.Wde_Est = 'A'
-                 WHERE du.Usu_Cod = $usu_cod AND du.Wde_Cod IS NOT NULL AND w.Dep_Cod IS NOT NULL",
+                 WHERE du.Usu_Cod = $usu_cod AND du.Wde_Cod IS NOT NULL",
                 $this->obBD_conexion
             );
             if (is_array($rows_wf)) {
@@ -345,18 +316,16 @@ class wf_manager_log {
                     }
                 }
             }
-        }
-
-        if ($dep_cod > 0) {
-            $rows_rrhh = $this->obBD_datos->getArrayConsultaSql(
-                "SELECT d2.Dep_Cod
-                 FROM departamen d1
-                 INNER JOIN departamen d2 ON d2.Dep_Des = d1.Dep_Des
-                 WHERE d1.Dep_Cod = $dep_cod",
+            // Compatibilidad: filas legacy solo con Dep_Cod = Wde_Cod
+            $rows_legacy = $this->obBD_datos->getArrayConsultaSql(
+                "SELECT DISTINCT du.Dep_Cod
+                 FROM wf_departamento_usuarios du
+                 INNER JOIN wf_departamentos w ON w.Wde_Cod = du.Dep_Cod AND w.Wde_Est = 'A'
+                 WHERE du.Usu_Cod = $usu_cod AND (du.Wde_Cod IS NULL OR du.Wde_Cod = 0)",
                 $this->obBD_conexion
             );
-            if (is_array($rows_rrhh)) {
-                foreach ($rows_rrhh as $r) {
+            if (is_array($rows_legacy)) {
+                foreach ($rows_legacy as $r) {
                     $d = intval($r['Dep_Cod']);
                     if ($d > 0) {
                         $deps[$d] = $d;
@@ -672,7 +641,7 @@ class wf_manager_log {
              INNER JOIN wf_nodos n ON n.Nod_Cod = h.Nod_Cod
              WHERE h.Ins_Cod = $Ins_Cod
                AND h.Nod_Cod != $nod_actual_cod
-               AND n.Nod_Tip NOT IN ('INICIO', 'DECISION', 'NOTIFICACION', 'FIN')
+               AND n.Nod_Tip NOT IN ('DECISION', 'NOTIFICACION', 'FIN')
              GROUP BY h.Nod_Cod
              ORDER BY ult_fec DESC",
             $this->obBD_conexion
@@ -789,11 +758,41 @@ class wf_manager_log {
         return ($tipos === false || $tipos === null) ? array() : $tipos;
     }
 
-    private $versioningReady = false;
-    private $notificationSchemaReady = false;
+    private static $versioningReadyStatic = false;
+    private static $notificationSchemaReadyStatic = false;
+    /** @var array Notificaciones a enviar tras responder al cliente */
+    private static $pendingNotificaciones = array();
+
+    public static function hayNotificacionesPendientes() {
+        return !empty(self::$pendingNotificaciones);
+    }
+
+    /**
+     * Envia notificaciones encoladas (p.ej. tras flush de la respuesta JSON).
+     */
+    public function flushPendingNotificaciones() {
+        if (empty(self::$pendingNotificaciones)) {
+            return;
+        }
+        $pendientes = self::$pendingNotificaciones;
+        self::$pendingNotificaciones = array();
+        foreach ($pendientes as $item) {
+            try {
+                $this->enviarNotificacionEtapaInstancia(
+                    $item['Ins_Cod'],
+                    $item['nodoConfig'],
+                    $item['nodoDestino'],
+                    $item['instancia'],
+                    isset($item['opciones']) ? $item['opciones'] : array()
+                );
+            } catch (Exception $eNot) {
+                // No afectar el registro ya confirmado al cliente.
+            }
+        }
+    }
 
     public function ensureVersioningSchema() {
-        if ($this->versioningReady) {
+        if (self::$versioningReadyStatic) {
             return;
         }
         $cols = $this->obBD_datos->getArrayConsultaSql(
@@ -810,7 +809,7 @@ class wf_manager_log {
             $this->ejecutarSql("UPDATE wf_flujos_modelos SET Wfm_Fam_Cod = Wfm_Cod WHERE Wfm_Fam_Cod IS NULL;");
             $this->ejecutarSql("UPDATE wf_flujos_modelos SET Wfm_Est = 'P' WHERE Wfm_Est = 'A';");
         }
-        $this->versioningReady = true;
+        self::$versioningReadyStatic = true;
         $this->ensureNotificationSchema();
         $this->ensureConnectionPortsSchema();
     }
@@ -855,7 +854,7 @@ class wf_manager_log {
      * Columnas de notificacion por nodo y tabla de auditoria de envios.
      */
     public function ensureNotificationSchema() {
-        if ($this->notificationSchemaReady) {
+        if (self::$notificationSchemaReadyStatic) {
             return;
         }
         $cols = $this->obBD_datos->getArrayConsultaSql(
@@ -919,7 +918,7 @@ class wf_manager_log {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
             );
         }
-        $this->notificationSchemaReady = true;
+        self::$notificationSchemaReadyStatic = true;
     }
 
     private function esNodoNotificableEntrada($nod_tip) {
@@ -927,7 +926,7 @@ class wf_manager_log {
     }
 
     private function esNodoResolubleHumano($nod_tip) {
-        return in_array($nod_tip, array('APROBACION', 'RECEPCION', 'FACTURA', 'TAREA', 'AVANCE', 'FISCALIZACION', 'FIN'), true);
+        return in_array($nod_tip, array('INICIO', 'APROBACION', 'RECEPCION', 'FACTURA', 'TAREA', 'AVANCE', 'FISCALIZACION', 'FIN'), true);
     }
 
     private function esEstadoPublicado($est) {
@@ -1355,9 +1354,6 @@ class wf_manager_log {
                 $not_texto = 'NULL';
                 $cot_edit = 0;
             }
-            if ($nod_tip === 'INICIO') {
-                $cot_edit = 0;
-            }
             // Solo INICIO usa Nod_Cre_Sol; otros nodos lo dejan en 0
             if ($nod_tip !== 'INICIO') {
                 $cre_sol = 0;
@@ -1538,7 +1534,24 @@ class wf_manager_log {
                                    VALUES ($Ins_Cod, $nod_ini, {$fk['usu']}, {$fk['dep']}, 'CREAR', '" . mysqli_real_escape_string($this->obBD_conexion->conexion, $comentario_crear) . "', '$fecha_actual', '$ip_usuario', '$session_id');";
             $this->ejecutarSql($sqlInsertHistorial);
 
-            $this->avanzarDesdeNodoInicio($Ins_Cod, $nod_ini, 'Avance autom' . "\xC3\xA1" . 'tico desde Inicio.');
+            // La instancia permanece en INICIO para que el primer responsable complete
+            // cotizaciones / comentario / PDF antes de avanzar.
+            $instanciaNueva = array(
+                'Ins_Cod' => $Ins_Cod,
+                'Wfm_Cod' => $Wfm_Cod,
+                'Ins_Ent_Typ' => $Ent_Typ,
+                'Ins_Ent_Cod' => $Ent_Cod,
+                'Nod_Act' => $nod_ini,
+                'Ins_Est' => 'P'
+            );
+            // Encolar notificacion: se envia despues de responder al navegador.
+            self::$pendingNotificaciones[] = array(
+                'Ins_Cod' => $Ins_Cod,
+                'nodoConfig' => $nodoInicio,
+                'nodoDestino' => $nodoInicio,
+                'instancia' => $instanciaNueva,
+                'opciones' => array()
+            );
 
             if ($manageTransaction) {
                 $this->obBD_datos->commit_nomsn($this->obBD_conexion);
@@ -1665,10 +1678,14 @@ class wf_manager_log {
 
         // Comentario de historial: el detalle de la rama queda SOLO en el nodo DECISION
         // (no repetir en el nodo destino al salir de la decisión).
+        // Si aun hubiera un avance automatico con CREAR desde INICIO, no escribir historial
+        // en el destino (evita un segundo "Inicio"). Al APROBAR desde INICIO si se registra.
         $comentarioHist = $Comentario;
         $nodoActualTip = !empty($nodoSaliente['Nod_Tip']) ? $nodoSaliente['Nod_Tip'] : '';
         $omitirHistorialDestino = false;
-        if ($Accion === 'CONDICIONAL' && $nodoActualTip === 'DECISION') {
+        if ($nodoActualTip === 'INICIO' && $Accion === 'CREAR') {
+            $omitirHistorialDestino = true;
+        } elseif ($Accion === 'CONDICIONAL' && $nodoActualTip === 'DECISION') {
             $comentarioHist = '';
             $omitirHistorialDestino = true;
         }
@@ -2513,7 +2530,7 @@ class wf_manager_log {
         }
 
         $dep_row = $this->obBD_datos->getRowConsultaSql(
-            "SELECT Dep_Des FROM departamen WHERE Dep_Cod = $dep_cod LIMIT 1;",
+            "SELECT Wde_Des AS Dep_Des FROM wf_departamentos WHERE Wde_Cod = $dep_cod LIMIT 1;",
             $this->obBD_conexion
         );
         $depto = !empty($dep_row['Dep_Des']) ? trim($dep_row['Dep_Des']) : '';
@@ -2538,7 +2555,7 @@ class wf_manager_log {
              INNER JOIN wf_departamentos w ON w.Wde_Cod = du.Wde_Cod AND w.Wde_Est = 'A'
              INNER JOIN usuarios u ON u.Usu_Cod = du.Usu_Cod AND u.Usu_Est = 'A'
              INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
-             WHERE w.Dep_Cod = $dep_cod
+             WHERE w.Wde_Cod = $dep_cod
              $filtro_usu
              ORDER BY p.Prs_Ape, p.Prs_Nom
              LIMIT 6;",
@@ -2673,6 +2690,7 @@ class wf_manager_log {
         $conteo_avance_nodo = array();
         $ultimo_avance = null;
         $correcciones = array();
+        $ocultar_isn = array();
 
         foreach ($asc as $h) {
             $isn = intval(isset($h['Isn_Cod']) ? $h['Isn_Cod'] : 0);
@@ -2686,6 +2704,26 @@ class wf_manager_log {
             }
 
             $nod = intval(isset($h['Nod_Cod']) ? $h['Nod_Cod'] : 0);
+            $tip = isset($h['Nod_Tip']) ? $h['Nod_Tip'] : '';
+
+            // Un solo "Inicio": el CREAR del nodo INICIO. Cualquier otro CREAR
+            // (llegada automatica a la 1.a etapa) no debe verse ni remapearse como segundo Inicio.
+            if ($acc === 'CREAR') {
+                if ($tip === 'INICIO') {
+                    $correcciones[$isn] = array(
+                        'Nod_Nom' => isset($h['Nod_Nom']) ? $h['Nod_Nom'] : '',
+                        'Nod_Tip' => 'INICIO',
+                        'Etapa_Nod_Cod' => $nod,
+                        'Actor_Nom' => $this->resolverNombreActorHistorial($h),
+                        'Actor_Modo' => 'Por',
+                        'Fin_Pendiente' => 0
+                    );
+                } else {
+                    $ocultar_isn[$isn] = true;
+                }
+                continue;
+            }
+
             $prev_en_mismo = isset($conteo_avance_nodo[$nod]) ? intval($conteo_avance_nodo[$nod]) : 0;
             $conteo_avance_nodo[$nod] = $prev_en_mismo + 1;
 
@@ -2756,6 +2794,18 @@ class wf_manager_log {
             if (empty($historial[$idx]['Actor_Modo'])) {
                 $historial[$idx]['Actor_Modo'] = 'Por';
             }
+        }
+
+        if (!empty($ocultar_isn)) {
+            $filtrado = array();
+            foreach ($historial as $h) {
+                $isn = intval(isset($h['Isn_Cod']) ? $h['Isn_Cod'] : 0);
+                if ($isn > 0 && isset($ocultar_isn[$isn])) {
+                    continue;
+                }
+                $filtrado[] = $h;
+            }
+            return $filtrado;
         }
 
         return $historial;
@@ -2907,7 +2957,7 @@ class wf_manager_log {
              LIMIT 1;",
             $this->obBD_conexion
         );
-        if (empty($nodo) || (isset($nodo['Nod_Tip']) && $nodo['Nod_Tip'] === 'INICIO')) {
+        if (empty($nodo)) {
             return $historial;
         }
 
@@ -3093,7 +3143,7 @@ class wf_manager_log {
                  INNER JOIN usuarios u ON u.Usu_Cod = du.Usu_Cod AND u.Usu_Est = 'A'
                  INNER JOIN sucursal s ON s.Suc_Cod = u.Suc_Cod AND s.Emp_Cod = $emp_cod
                  INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
-                 WHERE w.Dep_Cod = $dep_cod
+                 WHERE w.Wde_Cod = $dep_cod
                  $filtro_usu",
                 $this->obBD_conexion
             );
@@ -3820,7 +3870,7 @@ class wf_manager_log {
              LEFT JOIN wf_nodos n ON n.Nod_Cod = h.Nod_Cod
              LEFT JOIN usuarios u ON u.Usu_Cod = h.Usu_Cod
              LEFT JOIN persona p ON p.Prs_Cod = u.Prs_Cod
-             LEFT JOIN wf_departamentos wd ON wd.Dep_Cod = h.Dep_Cod
+             LEFT JOIN wf_departamentos wd ON wd.Wde_Cod = h.Dep_Cod
              LEFT JOIN departamen dep ON dep.Dep_Cod = h.Dep_Cod
              WHERE h.Ins_Cod = $Ins_Cod
              ORDER BY h.Isn_Fec ASC, h.Isn_Cod ASC;",
@@ -3863,7 +3913,12 @@ class wf_manager_log {
                     $actor = $this->resolverUltimoActorNodo($historial_actores, $nod_id, array('APROBAR', 'COMPLETAR'));
                 }
             }
-            $es_pendiente = ($color === 'blue' && empty($actor['usuario']) && in_array($nodo['Nod_Tip'], array('APROBACION', 'RECEPCION', 'FACTURA', 'TAREA', 'AVANCE', 'FISCALIZACION', 'DECISION', 'FIN'), true));
+            $es_pendiente = ($color === 'blue' && empty($actor['usuario']) && in_array($nodo['Nod_Tip'], array('INICIO', 'APROBACION', 'RECEPCION', 'FACTURA', 'TAREA', 'AVANCE', 'FISCALIZACION', 'DECISION', 'FIN'), true));
+            if ($color === 'blue' && $nodo['Nod_Tip'] === 'INICIO' && $instancia['Ins_Est'] === 'P') {
+                // En INICIO el CREAR ya tiene actor (quien registro), pero la etapa sigue pendiente de completar.
+                $es_pendiente = true;
+                $actor = array('usuario' => '', 'accion' => '', 'fecha' => '');
+            }
             $pendiente_meta = null;
             if ($es_pendiente) {
                 $resp = $this->obtenerResponsablesPendientes($nodo);
@@ -3920,43 +3975,16 @@ class wf_manager_log {
             Emp_Cod INT NOT NULL,
             Wde_Des VARCHAR(150) NOT NULL,
             Wde_Est CHAR(1) NOT NULL DEFAULT 'A',
-            Dep_Cod BIGINT DEFAULT NULL COMMENT 'llave foranea de departamentos',
             PRIMARY KEY (Wde_Cod),
-            KEY idx_wf_dep_emp (Emp_Cod),
-            KEY Dep_Cod (Dep_Cod)
+            KEY idx_wf_dep_emp (Emp_Cod)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
         $this->obBD_datos->grabarv_registros($sql, $this->obBD_conexion);
-        $this->ensureWfDepartamentosDepCodColumn();
         $this->ensureWfDepartamentoUsuariosWdeCod();
     }
 
     /**
-     * Agrega Dep_Cod (FK a departamen) en instalaciones previas.
-     */
-    private function ensureWfDepartamentosDepCodColumn() {
-        $col = $this->obBD_datos->getRowConsultaSql(
-            "SHOW COLUMNS FROM wf_departamentos LIKE 'Dep_Cod';",
-            $this->obBD_conexion
-        );
-        if (!empty($col)) {
-            return;
-        }
-        $this->obBD_datos->setError(0, '');
-        $this->obBD_datos->grabarv_registros(
-            "ALTER TABLE wf_departamentos
-             ADD COLUMN Dep_Cod BIGINT DEFAULT NULL COMMENT 'llave foranea de departamentos' AFTER Wde_Est,
-             ADD KEY Dep_Cod (Dep_Cod);",
-            $this->obBD_conexion
-        );
-        $this->obBD_datos->setError(0, '');
-        $this->obBD_datos->grabarv_registros(
-            "UPDATE wf_departamentos SET Dep_Cod = Wde_Cod WHERE Dep_Cod IS NULL;",
-            $this->obBD_conexion
-        );
-    }
-
-    /**
-     * Obtiene Dep_Cod de RRHH a partir del Wde_Cod del workflow.
+     * Obtiene el codigo de departamento a persistir en nodos (Wde_Cod).
+     * Compatibilidad: si llega un codigo legacy de RRHH, intenta mapearlo por nombre.
      */
     public function resolverDepRrhhDesdeWf($wde_cod, $emp_cod) {
         $wde_cod = intval($wde_cod);
@@ -3965,14 +3993,14 @@ class wf_manager_log {
             return 0;
         }
         $row = $this->obBD_datos->getRowConsultaSql(
-            "SELECT Dep_Cod FROM wf_departamentos WHERE Wde_Cod = $wde_cod AND Emp_Cod = $emp_cod LIMIT 1;",
+            "SELECT Wde_Cod FROM wf_departamentos WHERE Wde_Cod = $wde_cod AND Emp_Cod = $emp_cod LIMIT 1;",
             $this->obBD_conexion
         );
-        return !empty($row['Dep_Cod']) ? intval($row['Dep_Cod']) : 0;
+        return !empty($row['Wde_Cod']) ? intval($row['Wde_Cod']) : 0;
     }
 
     /**
-     * Convierte el codigo del combo del disenador (Wde_Cod) al Dep_Cod valido en departamen (RRHH).
+     * Convierte el codigo del combo del disenador al valor a guardar en wf_nodos.Dep_Cod (Wde_Cod).
      */
     public function resolverDepCodRrhh($codigo_ui, $emp_cod) {
         $codigo_ui = intval($codigo_ui);
@@ -3982,40 +4010,18 @@ class wf_manager_log {
         }
 
         $wf = $this->obBD_datos->getRowConsultaSql(
-            "SELECT Wde_Cod, Dep_Cod, Wde_Des FROM wf_departamentos WHERE Wde_Cod = $codigo_ui AND Emp_Cod = $emp_cod LIMIT 1;",
+            "SELECT Wde_Cod FROM wf_departamentos WHERE Wde_Cod = $codigo_ui AND Emp_Cod = $emp_cod LIMIT 1;",
             $this->obBD_conexion
         );
-        if (!empty($wf['Dep_Cod'])) {
-            return intval($wf['Dep_Cod']);
-        }
-
-        $row = $this->obBD_datos->getRowConsultaSql(
-            "SELECT Dep_Cod FROM departamen WHERE Dep_Cod = $codigo_ui AND Emp_Cod = $emp_cod AND Dep_Est = 'A' LIMIT 1;",
-            $this->obBD_conexion
-        );
-        if (!empty($row['Dep_Cod'])) {
-            return intval($row['Dep_Cod']);
-        }
-
-        if (!empty($wf['Wde_Des'])) {
-            $des = $this->escapeWf($wf['Wde_Des']);
-            $rrhh = $this->obBD_datos->getRowConsultaSql(
-                "SELECT MIN(Dep_Cod) AS Dep_Cod FROM departamen WHERE Emp_Cod = $emp_cod AND Dep_Est = 'A' AND Dep_Des = '$des' LIMIT 1;",
-                $this->obBD_conexion
-            );
-            if (!empty($rrhh['Dep_Cod'])) {
-                return intval($rrhh['Dep_Cod']);
-            }
-            throw new Exception(
-                "El departamento '" . $wf['Wde_Des'] . "' no existe en RRHH. Registrelo en Recursos Humanos o sincronice el catalogo."
-            );
+        if (!empty($wf['Wde_Cod'])) {
+            return intval($wf['Wde_Cod']);
         }
 
         throw new Exception('El departamento seleccionado no es valido para el flujo.');
     }
 
     /**
-     * Convierte Dep_Cod de RRHH al Wde_Cod usado por el disenador en el combo de departamentos.
+     * Convierte un codigo de nodo al Wde_Cod del combo del disenador.
      */
     public function resolverWdeCodDisenador($dep_cod_rrhh, $emp_cod) {
         $dep_cod_rrhh = intval($dep_cod_rrhh);
@@ -4024,10 +4030,8 @@ class wf_manager_log {
             return '';
         }
 
-        $this->syncDepartamentosFromRrhh($emp_cod);
-
         $wf = $this->obBD_datos->getRowConsultaSql(
-            "SELECT Wde_Cod FROM wf_departamentos WHERE Dep_Cod = $dep_cod_rrhh AND Emp_Cod = $emp_cod AND Wde_Est = 'A' LIMIT 1;",
+            "SELECT Wde_Cod FROM wf_departamentos WHERE Wde_Cod = $dep_cod_rrhh AND Emp_Cod = $emp_cod LIMIT 1;",
             $this->obBD_conexion
         );
         if (!empty($wf['Wde_Cod'])) {
@@ -4039,11 +4043,9 @@ class wf_manager_log {
 
     /**
      * Lista departamentos del disenador registrados en wf_departamentos (activos en WF).
-     * Incluye todos los departamentos vinculados a RRHH, tengan o no usuarios asignados.
      */
     public function listarDepartamentosDisenador($emp_cod) {
         $this->ensureWfDepartamentosTable();
-        $this->syncDepartamentosFromRrhh($emp_cod);
         $emp_cod = intval($emp_cod);
         if ($emp_cod <= 0) {
             return array();
@@ -4051,30 +4053,27 @@ class wf_manager_log {
 
         return $this->obBD_datos->getArrayConsultaSql(
             "SELECT w.Wde_Cod AS Dep_Cod,
-                    COALESCE(r.Dep_Des, w.Wde_Des) AS Dep_Des,
-                    w.Dep_Cod AS Dep_Rrhh_Cod,
+                    w.Wde_Des AS Dep_Des,
                     (SELECT COUNT(DISTINCT u.Usu_Ced)
                      FROM wf_departamento_usuarios du
                      INNER JOIN usuarios u ON u.Usu_Cod = du.Usu_Cod
                      INNER JOIN sucursal s ON s.Suc_Cod = u.Suc_Cod
                      WHERE s.Emp_Cod = $emp_cod AND u.Usu_Est = 'A' AND u.Usu_Wf = 'S'
-                       AND (du.Wde_Cod = w.Wde_Cod
-                            OR (du.Wde_Cod IS NULL AND du.Dep_Cod = w.Dep_Cod))
+                       AND (du.Wde_Cod = w.Wde_Cod OR du.Dep_Cod = w.Wde_Cod)
                     ) AS Cant_Usuarios
              FROM wf_departamentos w
-             LEFT JOIN departamen r ON r.Dep_Cod = w.Dep_Cod AND r.Emp_Cod = w.Emp_Cod AND r.Dep_Est = 'A'
-             WHERE w.Emp_Cod = $emp_cod AND w.Wde_Est = 'A' AND w.Dep_Cod IS NOT NULL
-             ORDER BY COALESCE(r.Dep_Des, w.Wde_Des) ASC, w.Wde_Cod DESC;",
+             WHERE w.Emp_Cod = $emp_cod AND w.Wde_Est = 'A'
+             ORDER BY w.Wde_Des ASC, w.Wde_Cod DESC;",
             $this->obBD_conexion
         );
     }
 
     /**
-     * Clausula SQL para filas legacy/nuevas de wf_departamento_usuarios por Wde_Cod.
+     * Clausula SQL para filas de wf_departamento_usuarios por Wde_Cod.
      */
     public function sqlDuPorWdeCod($wde_cod, $du_alias = 'du') {
         $wde_cod = intval($wde_cod);
-        return "($du_alias.Wde_Cod = $wde_cod OR ($du_alias.Wde_Cod IS NULL AND $du_alias.Dep_Cod = (SELECT w.Dep_Cod FROM wf_departamentos w WHERE w.Wde_Cod = $wde_cod LIMIT 1)))";
+        return "($du_alias.Wde_Cod = $wde_cod OR $du_alias.Dep_Cod = $wde_cod)";
     }
 
     /**
@@ -4125,93 +4124,61 @@ class wf_manager_log {
     }
 
     /**
-     * Crea o actualiza un departamento de workflow vinculado a RRHH.
+     * Crea o actualiza un departamento de workflow (solo nombre, sin vinculo a RRHH).
      */
     public function guardarDepartamentoWorkflow($emp_cod, $dep_cod, $dep_des, $dep_rrhh_cod = null) {
         $this->ensureWfDepartamentosTable();
         $emp_cod = intval($emp_cod);
-        $dep_des_esc = $this->escapeWf(trim($dep_des));
+        $dep_des_norm = strtoupper(trim($dep_des));
+        $dep_des_esc = $this->escapeWf($dep_des_norm);
+        if ($dep_des_esc === '') {
+            throw new Exception('El nombre del departamento es obligatorio.');
+        }
+        if ($emp_cod <= 0) {
+            throw new Exception('Empresa no valida.');
+        }
 
-        if (!empty($dep_cod)) {
-            if ($dep_des_esc === '') {
-                throw new Exception('El nombre del departamento es obligatorio.');
+        $wde = !empty($dep_cod) ? intval($dep_cod) : 0;
+        $excluir = $wde > 0 ? " AND Wde_Cod <> $wde" : '';
+        $dup = $this->obBD_datos->getRowConsultaSql(
+            "SELECT Wde_Cod, Wde_Est FROM wf_departamentos
+             WHERE Emp_Cod = $emp_cod AND UPPER(TRIM(Wde_Des)) = '$dep_des_esc'
+             $excluir
+             LIMIT 1;",
+            $this->obBD_conexion
+        );
+        if (!empty($dup['Wde_Cod'])) {
+            throw new Exception('Ya existe un departamento con ese nombre.');
+        }
+
+        if ($wde > 0) {
+            if (!$this->validarWdeCodWorkflow($wde, $emp_cod)) {
+                throw new Exception('Departamento no encontrado.');
             }
-            $wde = intval($dep_cod);
             $this->ejecutarSql(
                 "UPDATE wf_departamentos SET Wde_Des = '$dep_des_esc' WHERE Wde_Cod = $wde AND Emp_Cod = $emp_cod;"
             );
             return $wde;
         }
 
-        $dep_rrhh = 0;
-        if (!empty($dep_rrhh_cod)) {
-            $dep_rrhh = intval($dep_rrhh_cod);
-            $rrhh = $this->obBD_datos->getRowConsultaSql(
-                "SELECT Dep_Cod, Dep_Des FROM departamen WHERE Dep_Cod = $dep_rrhh AND Emp_Cod = $emp_cod AND Dep_Est = 'A' LIMIT 1;",
-                $this->obBD_conexion
-            );
-            if (empty($rrhh['Dep_Cod'])) {
-                throw new Exception('El departamento seleccionado no existe o no está activo en Recursos Humanos.');
-            }
-            $dep_rrhh = intval($rrhh['Dep_Cod']);
-            $dep_des_esc = $this->escapeWf(trim($rrhh['Dep_Des']));
-        } else {
-            if ($dep_des_esc === '') {
-                throw new Exception('Debe seleccionar un departamento de Recursos Humanos.');
-            }
-            $rrhh = $this->obBD_datos->getRowConsultaSql(
-                "SELECT MIN(Dep_Cod) AS Dep_Cod FROM departamen WHERE Emp_Cod = $emp_cod AND Dep_Est = 'A' AND Dep_Des = '$dep_des_esc' LIMIT 1;",
-                $this->obBD_conexion
-            );
-            if (empty($rrhh['Dep_Cod'])) {
-                throw new Exception(
-                    "No existe el departamento '$dep_des' en RRHH. Debe registrarlo primero en Recursos Humanos."
-                );
-            }
-            $dep_rrhh = intval($rrhh['Dep_Cod']);
-        }
-
-        $existing = $this->obBD_datos->getRowConsultaSql(
-            "SELECT Wde_Cod FROM wf_departamentos WHERE Dep_Cod = $dep_rrhh AND Emp_Cod = $emp_cod LIMIT 1;",
-            $this->obBD_conexion
-        );
-        if (!empty($existing['Wde_Cod'])) {
-            $wde = intval($existing['Wde_Cod']);
-            $this->ejecutarSql(
-                "UPDATE wf_departamentos SET Wde_Des = '$dep_des_esc', Wde_Est = 'A', Dep_Cod = $dep_rrhh WHERE Wde_Cod = $wde AND Emp_Cod = $emp_cod;"
-            );
-            return $wde;
-        }
-
         $this->ejecutarSql(
-            "INSERT INTO wf_departamentos (Emp_Cod, Wde_Des, Wde_Est, Dep_Cod) VALUES ($emp_cod, '$dep_des_esc', 'A', $dep_rrhh);"
+            "INSERT INTO wf_departamentos (Emp_Cod, Wde_Des, Wde_Est) VALUES ($emp_cod, '$dep_des_esc', 'A');"
         );
         $nuevo = $this->obBD_datos->getRowConsultaSql(
-            "SELECT Wde_Cod FROM wf_departamentos WHERE Dep_Cod = $dep_rrhh AND Emp_Cod = $emp_cod ORDER BY Wde_Cod DESC LIMIT 1;",
+            "SELECT Wde_Cod FROM wf_departamentos
+             WHERE Emp_Cod = $emp_cod AND UPPER(TRIM(Wde_Des)) = '$dep_des_esc'
+             ORDER BY Wde_Cod DESC LIMIT 1;",
             $this->obBD_conexion
         );
-        return !empty($nuevo['Wde_Cod']) ? intval($nuevo['Wde_Cod']) : $dep_rrhh;
+        return !empty($nuevo['Wde_Cod']) ? intval($nuevo['Wde_Cod']) : 0;
     }
 
     /**
-     * Sincroniza descripciones de wf_departamentos con RRHH (no importa masivamente).
+     * Compatibilidad: ya no se sincroniza con RRHH (wf_departamentos es independiente).
      */
     public function syncDepartamentosFromRrhh($emp_id) {
         $this->ensureWfDepartamentosTable();
-        $emp_id = intval($emp_id);
-        if ($emp_id <= 0) {
-            return 0;
-        }
-
-        $this->obBD_datos->setError(0, '');
-        $this->obBD_datos->grabarv_registros(
-            "UPDATE wf_departamentos w
-             INNER JOIN departamen d ON d.Dep_Cod = w.Dep_Cod AND d.Emp_Cod = w.Emp_Cod
-             SET w.Wde_Des = d.Dep_Des
-             WHERE w.Emp_Cod = $emp_id AND d.Dep_Est = 'A' AND w.Wde_Des <> d.Dep_Des;",
-            $this->obBD_conexion
-        );
-        return true;
+        return 0;
     }
 
     /**
@@ -4722,12 +4689,8 @@ class wf_manager_log {
             return;
         }
 
-        $origenTip = isset($nodoOrigen['Nod_Tip']) ? $nodoOrigen['Nod_Tip'] : '';
-        if ($origenTip === 'INICIO') {
-            $nodoConfig = $nodoSiguiente;
-        } else {
-            $nodoConfig = $nodoOrigen;
-        }
+        // Configuracion de aviso en el nodo que se completa (incluye INICIO como etapa de trabajo).
+        $nodoConfig = $nodoOrigen;
 
         $this->enviarNotificacionEtapaInstancia($Ins_Cod, $nodoConfig, $nodoSiguiente, $instancia, $opciones);
     }
@@ -4743,7 +4706,11 @@ class wf_manager_log {
                 return;
             }
             $nodo = $nodoConfig;
-            if ($Ins_Cod <= 0 || empty($nodoDestino) || !$this->esNodoNotificableEntrada($nodoDestino['Nod_Tip'])) {
+            if ($Ins_Cod <= 0 || empty($nodoDestino)) {
+                return;
+            }
+            $destinoTip = isset($nodoDestino['Nod_Tip']) ? $nodoDestino['Nod_Tip'] : '';
+            if ($destinoTip !== 'INICIO' && !$this->esNodoNotificableEntrada($destinoTip)) {
                 return;
             }
             if (empty($instancia)) {
@@ -4975,22 +4942,21 @@ class wf_manager_log {
                  INNER JOIN wf_departamentos w ON w.Wde_Cod = du.Wde_Cod AND w.Wde_Est = 'A' AND w.Emp_Cod = $emp_cod
                  INNER JOIN usuarios u ON u.Usu_Cod = du.Usu_Cod AND u.Usu_Est = 'A'
                  INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
-                 WHERE w.Dep_Cod = $dep_cod
+                 WHERE w.Wde_Cod = $dep_cod
                  $filtro_usu",
                 $this->obBD_conexion
             );
             if (!empty($rows)) {
                 $usuarios = array_merge($usuarios, $rows);
             } else {
-                // Fallback por Dep_Cod RRHH directo
                 $rows = $this->obBD_datos->getArrayConsultaSql(
                     "SELECT DISTINCT u.Usu_Cod,
                             TRIM(CONCAT(IFNULL(p.Prs_Nom, ''), ' ', IFNULL(p.Prs_Ape, ''))) AS Nombre,
                             p.Prs_Tel, p.Prs_Cel, p.Prs_Cor
                      FROM wf_departamento_usuarios du
-                     INNER JOIN usuarios u ON u.Usu_Cod = du.Usu_Cod AND u.Usu_Est = 'A' AND u.Emp_Cod = $emp_cod
+                     INNER JOIN usuarios u ON u.Usu_Cod = du.Usu_Cod AND u.Usu_Est = 'A'
                      INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
-                     WHERE du.Dep_Cod = $dep_cod
+                     WHERE (du.Wde_Cod = $dep_cod OR du.Dep_Cod = $dep_cod)
                      $filtro_usu",
                     $this->obBD_conexion
                 );

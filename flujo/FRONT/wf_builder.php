@@ -542,8 +542,8 @@ if (isset($ajax_get_builder)) {
         }
         .node-INICIO,
         .node-FIN {
-            width: 90px;
-            height: 90px;
+            width: 150px;
+            height: 150px;
             border-radius: 50%;
             display: flex;
             flex-direction: column;
@@ -551,8 +551,9 @@ if (isset($ajax_get_builder)) {
             justify-content: center;
             text-align: center;
             overflow: visible;
-            padding: 0;
+            padding: 10px 12px;
             user-select: none;
+            box-sizing: border-box;
         }
         .node-INICIO { border-color: #198754; background-color: #d1e7dd; color: #198754; }
         .node-FIN { border-color: #dc3545; background-color: #f8d7da; color: #dc3545; }
@@ -560,11 +561,11 @@ if (isset($ajax_get_builder)) {
         .node-FIN .wf-node-header {
             background: transparent;
             border: none;
+            border-bottom: none;
             border-radius: 0;
-            padding: 8px 10px;
-            flex: 1 1 auto;
+            padding: 4px 8px 0;
+            flex: 0 0 auto;
             width: 100%;
-            height: 100%;
             min-height: 0;
             flex-direction: column;
             gap: 2px;
@@ -578,14 +579,31 @@ if (isset($ajax_get_builder)) {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 2px;
-            font-size: 10px;
-            line-height: 1.15;
+            gap: 4px;
+            font-size: 12px;
+            line-height: 1.2;
             width: 100%;
+            font-weight: 700;
         }
+        .node-INICIO .wf-node-header .wf-node-type-icon,
+        .node-FIN .wf-node-header .wf-node-type-icon,
         .node-INICIO .wf-node-header span > .bi,
         .node-FIN .wf-node-header span > .bi {
-            font-size: 34px;
+            font-size: 28px;
+            line-height: 1;
+        }
+        .node-INICIO .wf-node-header .wf-node-title-label,
+        .node-FIN .wf-node-header .wf-node-title-label,
+        .node-INICIO .wf-node-header .wf-node-terminal-label,
+        .node-FIN .wf-node-header .wf-node-terminal-label {
+            display: block;
+            max-width: 120px;
+            font-size: 12px;
+            line-height: 1.25;
+            white-space: normal;
+            word-break: break-word;
+            overflow: visible;
+            text-overflow: clip;
         }
         .node-INICIO .wf-node-header button .bi,
         .node-FIN .wf-node-header button .bi {
@@ -593,19 +611,34 @@ if (isset($ajax_get_builder)) {
             font-weight: 900;
             -webkit-text-stroke: 0.3px #dc3545;
         }
-        .node-INICIO .wf-node-body {
-            display: block;
-            padding: 4px 8px 8px;
-            text-align: center;
-            font-size: 10px;
-        }
+        .node-INICIO .wf-node-body,
         .node-FIN .wf-node-body {
-            display: none;
+            display: block;
+            padding: 4px 10px 8px;
+            text-align: center;
+            font-size: 11px;
+            line-height: 1.3;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .node-INICIO .wf-node-body .wf-node-tipo-label,
+        .node-FIN .wf-node-body .wf-node-tipo-label {
+            font-size: 11px;
+            margin-bottom: 2px;
+        }
+        .node-INICIO .wf-node-body .wf-node-desc,
+        .node-FIN .wf-node-body .wf-node-desc,
+        .node-INICIO .wf-node-body .wf-node-asig,
+        .node-FIN .wf-node-body .wf-node-asig {
+            font-size: 10px;
+            max-width: 120px;
+            margin-left: auto;
+            margin-right: auto;
         }
         .node-INICIO .wf-node-header button,
         .node-FIN .wf-node-header button {
-            top: 3px;
-            right: 3px;
+            top: 8px;
+            right: 14px;
         }
         .node-APROBACION { border-color: #0d6efd; }
         .node-APROBACION .wf-node-header { background-color: #cfe2ff; color: #0d6efd; }
@@ -750,7 +783,7 @@ if (isset($ajax_get_builder)) {
                 <i class="bi bi-card-checklist text-success"></i> Tarea
             </div>
             <div class="toolbox-item" draggable="true" data-type="AVANCE">
-                <i class="bi bi-folder-plus text-info"></i> Avance
+                <i class="bi bi-folder-plus text-info"></i> Avance/Facturas
             </div>
             <div class="toolbox-item" draggable="true" data-type="FISCALIZACION">
                 <i class="bi bi-shield-check text-secondary"></i> Fiscalización
@@ -845,14 +878,6 @@ if (isset($ajax_get_builder)) {
                     <input type="checkbox" id="nodeNotEm" class="form-check-input">
                     <label class="form-check-label" for="nodeNotEm"><i class="bi bi-envelope text-primary"></i> <span class="node-not-em-label">Correo electrónico</span></label>
                 </div>
-                <div class="mb-2">
-                    <label class="form-label" for="nodeNotAsunto">Asunto del correo (opcional)</label>
-                    <input type="text" id="nodeNotAsunto" class="form-control form-control-sm" maxlength="200" placeholder="Si se deja vacío se usa un asunto por defecto">
-                </div>
-                <div>
-                    <label class="form-label" for="nodeNotTexto">Mensaje adicional (opcional)</label>
-                    <textarea id="nodeNotTexto" class="form-control form-control-sm" rows="2" maxlength="500" placeholder="Texto que se añade al final del mensaje"></textarea>
-                </div>
             </div>
             <div class="mb-3 form-check sec-checks">
                 <input type="checkbox" id="nodeComObl" class="form-check-input">
@@ -862,15 +887,15 @@ if (isset($ajax_get_builder)) {
                 <input type="checkbox" id="nodeAdjObl" class="form-check-input">
                 <label class="form-check-label">Archivos adjuntos obligatorios</label>
             </div>
-            <div class="mb-3 form-check sec-checks">
+            <div class="mb-3 form-check sec-checks sec-cot-edit">
                 <input type="checkbox" id="nodeCotEdit" class="form-check-input">
                 <label class="form-check-label" for="nodeCotEdit">Permitir cargar cotizaciones en esta etapa</label>
                 <p class="text-muted small mb-0">El responsable de esta etapa podrá abrir la solicitud y adjuntar proformas/cotizaciones.</p>
             </div>
             <div class="mb-3 form-check sec-inicio-crear" style="display: none;">
                 <input type="checkbox" id="nodeCreSol" class="form-check-input">
-                <label class="form-check-label" for="nodeCreSol">Permitir crear solicitud</label>
-                <p class="text-muted small mb-0">Los usuarios asignados a este nodo Inicio podrán crear solicitudes de los tipos ligados a este flujo.</p>
+                <label class="form-check-label" for="nodeCreSol">Permitir modificar solicitud</label>
+                <p class="text-muted small mb-0">Los usuarios asignados a este nodo Inicio podrán modificar solicitudes de los tipos ligados a este flujo.</p>
             </div>
         </div>
     </div>
@@ -1112,8 +1137,8 @@ if (function_exists('utf8_encode_deep')) {
         }
         .wf-node.node-INICIO,
         .wf-node.node-FIN {
-            width: 90px;
-            height: 90px;
+            width: 150px;
+            height: 150px;
             border-radius: 50%;
             display: flex;
             flex-direction: column;
@@ -1121,8 +1146,9 @@ if (function_exists('utf8_encode_deep')) {
             justify-content: center;
             text-align: center;
             overflow: visible;
-            padding: 0;
+            padding: 10px 12px;
             user-select: none;
+            box-sizing: border-box;
         }
         .wf-node.node-INICIO { border-color: #198754; background-color: #d1e7dd; color: #198754; }
         .wf-node.node-FIN { border-color: #dc3545; background-color: #f8d7da; color: #dc3545; }
@@ -1130,11 +1156,11 @@ if (function_exists('utf8_encode_deep')) {
         .wf-node.node-FIN .wf-node-header {
             background: transparent;
             border: none;
+            border-bottom: none;
             border-radius: 0;
-            padding: 8px 10px;
-            flex: 1 1 auto;
+            padding: 4px 8px 0;
+            flex: 0 0 auto;
             width: 100%;
-            height: 100%;
             min-height: 0;
             flex-direction: column;
             gap: 2px;
@@ -1148,14 +1174,31 @@ if (function_exists('utf8_encode_deep')) {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 2px;
-            font-size: 10px;
-            line-height: 1.15;
+            gap: 4px;
+            font-size: 12px;
+            line-height: 1.2;
             width: 100%;
+            font-weight: 700;
         }
+        .wf-node.node-INICIO .wf-node-header .wf-node-type-icon,
+        .wf-node.node-FIN .wf-node-header .wf-node-type-icon,
         .wf-node.node-INICIO .wf-node-header span > .bi,
         .wf-node.node-FIN .wf-node-header span > .bi {
-            font-size: 34px;
+            font-size: 28px;
+            line-height: 1;
+        }
+        .wf-node.node-INICIO .wf-node-header .wf-node-title-label,
+        .wf-node.node-FIN .wf-node-header .wf-node-title-label,
+        .wf-node.node-INICIO .wf-node-header .wf-node-terminal-label,
+        .wf-node.node-FIN .wf-node-header .wf-node-terminal-label {
+            display: block;
+            max-width: 120px;
+            font-size: 12px;
+            line-height: 1.25;
+            white-space: normal;
+            word-break: break-word;
+            overflow: visible;
+            text-overflow: clip;
         }
         .wf-node.node-INICIO .wf-node-header button .bi,
         .wf-node.node-FIN .wf-node-header button .bi {
@@ -1163,19 +1206,34 @@ if (function_exists('utf8_encode_deep')) {
             font-weight: 900;
             -webkit-text-stroke: 0.3px #dc3545;
         }
-        .wf-node.node-INICIO .wf-node-body {
-            display: block;
-            padding: 4px 8px 8px;
-            text-align: center;
-            font-size: 10px;
-        }
+        .wf-node.node-INICIO .wf-node-body,
         .wf-node.node-FIN .wf-node-body {
-            display: none;
+            display: block;
+            padding: 4px 10px 8px;
+            text-align: center;
+            font-size: 11px;
+            line-height: 1.3;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .wf-node.node-INICIO .wf-node-body .wf-node-tipo-label,
+        .wf-node.node-FIN .wf-node-body .wf-node-tipo-label {
+            font-size: 11px;
+            margin-bottom: 2px;
+        }
+        .wf-node.node-INICIO .wf-node-body .wf-node-desc,
+        .wf-node.node-FIN .wf-node-body .wf-node-desc,
+        .wf-node.node-INICIO .wf-node-body .wf-node-asig,
+        .wf-node.node-FIN .wf-node-body .wf-node-asig {
+            font-size: 10px;
+            max-width: 120px;
+            margin-left: auto;
+            margin-right: auto;
         }
         .wf-node.node-INICIO .wf-node-header button,
         .wf-node.node-FIN .wf-node-header button {
-            top: 3px;
-            right: 3px;
+            top: 8px;
+            right: 14px;
         }
         .wf-node.node-APROBACION { border-color: #0d6efd; }
         .wf-node.node-DECISION { border-color: #fd7e14; }
@@ -1444,7 +1502,7 @@ if (function_exists('utf8_encode_deep')) {
                 <i class="bi bi-card-checklist text-success"></i> Tarea
             </div>
             <div class="toolbox-item" draggable="true" data-type="AVANCE">
-                <i class="bi bi-folder-plus text-info"></i> Avance
+                <i class="bi bi-folder-plus text-info"></i> Avance/Facturas
             </div>
             <div class="toolbox-item" draggable="true" data-type="FISCALIZACION">
                 <i class="bi bi-shield-check text-secondary"></i> Fiscalización
@@ -1539,14 +1597,6 @@ if (function_exists('utf8_encode_deep')) {
                     <input type="checkbox" id="nodeNotEm" class="form-check-input">
                     <label class="form-check-label" for="nodeNotEm"><i class="bi bi-envelope text-primary"></i> <span class="node-not-em-label">Correo electrónico</span></label>
                 </div>
-                <div class="mb-2">
-                    <label class="form-label" for="nodeNotAsunto">Asunto del correo (opcional)</label>
-                    <input type="text" id="nodeNotAsunto" class="form-control form-control-sm" maxlength="200" placeholder="Si se deja vacío se usa un asunto por defecto">
-                </div>
-                <div>
-                    <label class="form-label" for="nodeNotTexto">Mensaje adicional (opcional)</label>
-                    <textarea id="nodeNotTexto" class="form-control form-control-sm" rows="2" maxlength="500" placeholder="Texto que se añade al final del mensaje"></textarea>
-                </div>
             </div>
             <div class="mb-3 form-check sec-checks">
                 <input type="checkbox" id="nodeComObl" class="form-check-input">
@@ -1556,15 +1606,15 @@ if (function_exists('utf8_encode_deep')) {
                 <input type="checkbox" id="nodeAdjObl" class="form-check-input">
                 <label class="form-check-label">Archivos adjuntos obligatorios</label>
             </div>
-            <div class="mb-3 form-check sec-checks">
+            <div class="mb-3 form-check sec-checks sec-cot-edit">
                 <input type="checkbox" id="nodeCotEdit" class="form-check-input">
                 <label class="form-check-label" for="nodeCotEdit">Permitir cargar cotizaciones en esta etapa</label>
                 <p class="text-muted small mb-0">El responsable de esta etapa podrá abrir la solicitud y adjuntar proformas/cotizaciones.</p>
             </div>
             <div class="mb-3 form-check sec-inicio-crear" style="display: none;">
                 <input type="checkbox" id="nodeCreSol" class="form-check-input">
-                <label class="form-check-label" for="nodeCreSol">Permitir crear solicitud</label>
-                <p class="text-muted small mb-0">Los usuarios asignados a este nodo Inicio podrán crear solicitudes de los tipos ligados a este flujo.</p>
+                <label class="form-check-label" for="nodeCreSol">Permitir modificar solicitud</label>
+                <p class="text-muted small mb-0">Los usuarios asignados a este nodo Inicio podrán modificar solicitudes de los tipos ligados a este flujo.</p>
             </div>
         </div>
     </div>
@@ -1676,6 +1726,6 @@ if (function_exists('utf8_encode_deep')) {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../VALIDACIONES/wf_builder.js?v=40"></script>
+    <script src="../VALIDACIONES/wf_builder.js?v=49"></script>
 </body>
 </html>
