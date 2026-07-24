@@ -627,7 +627,12 @@ if (isset($_POST['saveVehiculoAjax'])) {
                                         <div class="form-group">
                                             <label class="col-sm-4 control-label label-sm">Placa (Ej: ABC-1234):<span class="text-danger">*</span></label>
                                             <div class="col-sm-6">
-                                                <input id="Veh_Pla" name="Veh_Pla" type="text" class="form-control" placeholder="Ej: ABC-1234" maxlength="8" />
+                                                <div class="input-group">
+                                                    <input id="Veh_Pla" name="Veh_Pla" type="text" class="form-control" placeholder="Ej: ABC-1234" maxlength="8" />
+                                                    <span class="input-group-btn">
+                                                        <button class="btn btn-default" type="button" onclick="generarPlacaProvisional();" title="Generar placa provisional"><i class="fa fa-random"></i></button>
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -887,7 +892,7 @@ if (isset($_POST['saveVehiculoAjax'])) {
         </div>
     </div>
 
-    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_vehiculos_choferes.js?v=8"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_vehiculos_choferes.js?v=9"></script>
 </BODY>
 
 </HTML>

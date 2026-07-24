@@ -622,3 +622,16 @@ function guardarProveedorRapido() {
         }
     });
 }
+
+/**
+ * Genera una placa provisional en el formato XXX-0000
+ */
+function generarPlacaProvisional() {
+    var numeros = '0123456789';
+    var placa = 'XXX-';
+    for (var i = 0; i < 4; i++) {
+        placa += numeros.charAt(Math.floor(Math.random() * numeros.length));
+    }
+    // Almacenar y forzar el evento blur por si hay un autocompletar adjunto
+    $('#Veh_Pla').val(placa).trigger('blur');
+}
