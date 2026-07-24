@@ -737,7 +737,7 @@ function sentencias_manifiesto($id, $Par_Sql)
                     INNER JOIN ventas v ON v.Vet_Cod = vd.Vet_Cod
                     GROUP BY vd.Vet_Cod
                 ) sm ON sm.Vet_Cod = ventas.Vet_Cod
-                LEFT JOIN (
+                INNER JOIN (
                     SELECT Vet_Cod, COUNT(Man_Cod) AS cant_manifiestos
                     FROM manifiesto
                     WHERE Man_Est = 'A' AND Vet_Cod IS NOT NULL AND Vet_Cod > 0 $filter_planta
@@ -751,7 +751,8 @@ function sentencias_manifiesto($id, $Par_Sql)
                     GROUP BY m2.Vet_Cod
                 ) pl ON pl.Vet_Cod = ventas.Vet_Cod
                 WHERE cliente.Emp_Cod = $Emp_Cod AND ventas.Vet_Est = 'A'
-                AND (tipo_compr.Tic_Sri = '1' OR tipo_compr.Tic_Sri = '4')
+                AND tipo_compr.Tic_Sri = '1'
+                AND m.cant_manifiestos > 0
                 $filter_ventas_planta $search $group ";
             $orderRaw = (isset($Par_Sql['order']) && trim($Par_Sql['order']) !== '') ? trim($Par_Sql['order']) : 'ORDER BY caja_aper.Caj_Fec DESC, ventas.Vet_Num DESC';
             $order = (stripos($orderRaw, 'ORDER BY') === 0) ? $orderRaw : 'ORDER BY ' . $orderRaw;
@@ -890,6 +891,79 @@ function sentencias_manifiesto($id, $Par_Sql)
                             ORDER BY bodega, cliente " . $Par_Sql['limits'];
                 }
                 break;
+
+        case 82: // Totales footer grid facturas/manifiestos (man_fac_man.php) — mismos filtros que case 73
+            $Emp_Cod = isset($Par_Sql['Emp_Cod']) ? intval($Par_Sql['Emp_Cod']) : 0;
+            $Pla_Cod_Usuario = isset($Par_Sql['Pla_Cod_Usuario']) ? intval($Par_Sql['Pla_Cod_Usuario']) : 0;
+            $Pla_Cod_Usuario = ($Pla_Cod_Usuario > 0) ? $Pla_Cod_Usuario : 0;
+            $filter_planta = ($Pla_Cod_Usuario > 0) ? " AND EXISTS (SELECT 1 FROM manifiesto_plantas mpf WHERE mpf.Cli_Cod = manifiesto.Cli_Cod AND mpf.Pla_Cod = " . $Pla_Cod_Usuario . ")" : "";
+            $filter_ventas_planta = ($Pla_Cod_Usuario > 0) ? " AND EXISTS (SELECT 1 FROM manifiesto m2 INNER JOIN manifiesto_plantas mpf2 ON mpf2.Cli_Cod = m2.Cli_Cod AND mpf2.Pla_Cod = " . $Pla_Cod_Usuario . " WHERE m2.Vet_Cod = ventas.Vet_Cod AND m2.Man_Est = 'A')" : "";
+            $search = '';
+            if (!empty($Par_Sql['Num_Factura'])) {
+                $num_fac = addslashes(trim($Par_Sql['Num_Factura']));
+                $search .= " AND (ventas.Vet_Num = '" . $num_fac . "' OR CONCAT(LPAD(sucursal.Suc_Sri, 4, '0'), '-', LPAD(autorizaci.Pun_Sri, 4, '0'), '-', LPAD(ventas.Vet_Num, 9, '0')) LIKE '%" . $num_fac . "%')";
+            }
+            if (!empty($Par_Sql['search'])) {
+                $busqueda = addslashes(trim($Par_Sql['search']));
+                $op = isset($Par_Sql['op_opciones']) ? $Par_Sql['op_opciones'] : '';
+                if ($op == 'n') {
+                    $search .= " AND (ventas.Vet_Num = '" . $busqueda . "' OR CONCAT(LPAD(sucursal.Suc_Sri, 4, '0'), '-', LPAD(autorizaci.Pun_Sri, 4, '0'), '-', LPAD(ventas.Vet_Num, 9, '0')) LIKE '%" . $busqueda . "%')";
+                } elseif ($op == 'c') {
+                    $search .= " AND persona.Prs_Ced LIKE '" . $busqueda . "%'";
+                } else {
+                    $search .= " AND (CONCAT(persona.Prs_Ape, ' ', persona.Prs_Nom) LIKE '%" . $busqueda . "%' OR CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape) LIKE '%" . $busqueda . "%')";
+                }
+            }
+            if (!empty($Par_Sql['Fec_Ini']) && !empty($Par_Sql['Fec_Fin'])) {
+                $fec_ini = trim($Par_Sql['Fec_Ini']);
+                $fec_fin = trim($Par_Sql['Fec_Fin']);
+                if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $fec_ini) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $fec_fin)) {
+                    $search .= " AND caja_aper.Caj_Fec BETWEEN '" . $fec_ini . "' AND '" . $fec_fin . "'";
+                }
+            }
+            $sql = "SELECT
+                    COALESCE(SUM(t.cant_manifiestos), 0) AS sum_cant_manifiestos,
+                    COALESCE(SUM(t.subtotal_factura), 0) AS sum_subtotal_factura,
+                    COALESCE(SUM(t.iva_factura), 0) AS sum_iva_factura,
+                    COALESCE(SUM(t.total_factura), 0) AS sum_total_factura
+                FROM (
+                    SELECT ventas.Vet_Cod,
+                        COALESCE(m.cant_manifiestos, 0) AS cant_manifiestos,
+                        COALESCE(sm.subtotal_factura, 0) AS subtotal_factura,
+                        COALESCE(sm.iva_factura, 0) AS iva_factura,
+                        COALESCE(MAX(comprobantes.Com_Val), 0) AS total_factura
+                    FROM ventas
+                    INNER JOIN cliente ON ventas.Cli_Cod = cliente.Cli_Cod
+                    INNER JOIN persona ON cliente.Prs_Cod = persona.Prs_Cod
+                    INNER JOIN autorizaci ON ventas.Aut_Cod = autorizaci.Aut_Cod
+                    INNER JOIN tipo_compr ON autorizaci.Tic_Cod = tipo_compr.Tic_Cod
+                    LEFT JOIN caja_aper ON caja_aper.Caj_Cod = ventas.Caj_Cod
+                    LEFT JOIN puntos_imp ON puntos_imp.Pun_Cod = caja_aper.Pun_Cod
+                    LEFT JOIN sucursal ON sucursal.Suc_Cod = puntos_imp.Suc_Cod
+                    LEFT JOIN ventas_compr ON ventas_compr.Vet_Cod = ventas.Vet_Cod
+                    LEFT JOIN comprobantes ON comprobantes.Com_Cod = ventas_compr.Com_Cod
+                    LEFT JOIN (
+                        SELECT vd.Vet_Cod,
+                               SUM(ROUND((vd.Vet_Imp - (vd.Vet_Imp * vd.Vet_Dec / 100)) * (1 - COALESCE(v.Vet_Des, 0) / 100), 2)) AS subtotal_factura,
+                               SUM(ROUND(((vd.Vet_Imp - (vd.Vet_Imp * vd.Vet_Dec / 100)) * (1 - COALESCE(v.Vet_Des, 0) / 100) + COALESCE(vd.Vet_Ice, 0)) * i.Iva_Por / 100, 2)) AS iva_factura
+                        FROM ventas_det vd
+                        INNER JOIN iva i ON i.Iva_Cod = vd.Iva_Cod
+                        INNER JOIN ventas v ON v.Vet_Cod = vd.Vet_Cod
+                        GROUP BY vd.Vet_Cod
+                    ) sm ON sm.Vet_Cod = ventas.Vet_Cod
+                    INNER JOIN (
+                        SELECT Vet_Cod, COUNT(Man_Cod) AS cant_manifiestos
+                        FROM manifiesto
+                        WHERE Man_Est = 'A' AND Vet_Cod IS NOT NULL AND Vet_Cod > 0 $filter_planta
+                        GROUP BY Vet_Cod
+                    ) m ON m.Vet_Cod = ventas.Vet_Cod
+                    WHERE cliente.Emp_Cod = $Emp_Cod AND ventas.Vet_Est = 'A'
+                    AND tipo_compr.Tic_Sri = '1'
+                    AND m.cant_manifiestos > 0
+                    $filter_ventas_planta $search
+                    GROUP BY ventas.Vet_Cod
+                ) t";
+            break;
 
         case 87: // Cabecera reporte / certificado por factura (Vet_Cod)
             $Vet_Cod = isset($Par_Sql['Vet_Cod']) ? intval($Par_Sql['Vet_Cod']) : 0;
@@ -1044,7 +1118,7 @@ function sentencias_manifiesto($id, $Par_Sql)
                         GROUP BY Vet_Cod
                     ) fr ON fr.Vet_Cod = ventas.Vet_Cod
                     WHERE ventas.Vet_Cod = $Vet_Cod AND ventas.Vet_Est = 'A'
-                    AND (tipo_compr.Tic_Sri = '1' OR tipo_compr.Tic_Sri = '4')
+                    AND tipo_compr.Tic_Sri = '1'
                     GROUP BY ventas.Vet_Cod";
             break;
 
