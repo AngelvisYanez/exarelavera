@@ -153,7 +153,14 @@ class SriScraperManager
         if (!$job || !$job->output_dir) return null;
 
         $ext = ($type === 'xml') ? 'xml' : 'pdf';
+        $clave = preg_replace('/[^a-zA-Z0-9_\-]/', '', $clave);
         $filePath = $job->output_dir . DIRECTORY_SEPARATOR . $ext . DIRECTORY_SEPARATOR . $clave . '.' . $ext;
+
+        $realBase = realpath($job->output_dir);
+        $realPath = realpath($filePath);
+        if ($realBase === false || $realPath === false || strpos($realPath, $realBase) !== 0) {
+            return null;
+        }
 
         return file_exists($filePath) ? $filePath : null;
     }

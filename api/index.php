@@ -12,8 +12,9 @@ register_shutdown_function(function () {
     ) {
         header("Content-Type: application/json");
         http_response_code(500);
+        error_log("Fatal error: {$e["message"]} in {$e["file"]}:{$e["line"]}");
         echo json_encode([
-            "error" => "Fatal: {$e["message"]} in {$e["file"]}:{$e["line"]}",
+            "error" => "Error interno del servidor",
         ]);
     }
 });
@@ -34,11 +35,18 @@ require "framework/Slim/Slim.php";
 \Slim\Slim::registerAutoloader();
 
 $app = new \Slim\Slim([
-    "debug" => true,
+    "debug" => false,
 ]);
 
 // Habilitar CORS para permitir llamadas desde el frontend de React
-$app->response->headers->set("Access-Control-Allow-Origin", "*");
+$allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'https://exa-contable.vercel.app',
+];
+$origin = $app->request->headers->get('Origin');
+$allowedOrigin = in_array($origin, $allowedOrigins) ? $origin : $allowedOrigins[0];
+$app->response->headers->set("Access-Control-Allow-Origin", $allowedOrigin);
 $app->response->headers->set(
     "Access-Control-Allow-Methods",
     "GET, POST, PUT, DELETE, OPTIONS"
@@ -96,8 +104,8 @@ $app->hook("slim.before.router", function () use ($app) {
     }
 
     $token = substr($authHeader, 7);
-    $decoded = base64_decode($token, true);
-    if ($decoded === false || substr_count($decoded, ":") < 2) {
+    $tokenData = validateAuthToken($token);
+    if ($tokenData === false) {
         $app->response->setStatus(401);
         $app->response->body(
             json_encode([
@@ -108,7 +116,9 @@ $app->hook("slim.before.router", function () use ($app) {
         $app->stop();
     }
 
-    [$tokenUser, $tokenEmpresa, $tokenTime] = explode(":", $decoded, 3);
+    $tokenUser = $tokenData['username'];
+    $tokenEmpresa = $tokenData['empresa'];
+    $tokenTime = $tokenData['time'];
 
     // Validar expiración (24 h)
     if ((int) $tokenTime < time() - 86400) {
@@ -222,7 +232,7 @@ $app->get('/v1/docs', function () use ($app) {
     <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
     <script>
         SwaggerUIBundle({
-            url: "' . $app->request->getUrl() . $app->request->getRootUri() . '/v1/docs/openapi.json",
+            url: <?= json_encode($app->request->getUrl() . $app->request->getRootUri() . '/v1/docs/openapi.json') ?>,
             dom_id: "#swagger-ui",
             presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
             layout: "BaseLayout"

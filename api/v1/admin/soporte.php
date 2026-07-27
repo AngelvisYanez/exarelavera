@@ -94,7 +94,7 @@ $app->post('/v1/admin/usuarios/crear', function () use ($app) {
         }
         $usuarioData = [
             'Usu_Ced' => $body['Usu_Ced'] ?? $body['Prs_Ced'] ?? '',
-            'Usu_Con' => password_hash($body['Usu_Con'] ?? '123456', PASSWORD_DEFAULT),
+            'Usu_Con' => password_hash($body['Usu_Con'] ?? bin2hex(random_bytes(16)), PASSWORD_DEFAULT),
             'Usu_Est' => 'A',
             'Per_Cod' => $body['Per_Cod'] ?? 1,
             'Suc_Cod' => $body['Suc_Cod'] ?? 1,

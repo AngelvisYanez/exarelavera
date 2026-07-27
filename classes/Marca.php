@@ -35,10 +35,8 @@ class MarcaClass {
 
     public function setMarca($body){
         $data=$body;
-        // $this->datos->inicio_transaccion($this->conexion);
         $this->datos->inicio_transaccion($this->conexion);				
 		$this->datos->operacionobBD(1026,$data['Cat_Cdc']."*".$data['Cat_Des']."*".$data['Cat_Tip']."*".$data['Cat_Rec']."*".$data['Emp_Cod'],$this->conexion);
-		// $this->datos->fin_transaccion($this->conexion);
         $this->datos->fin_transaccion_nomsn($this->conexion);
         if($this->datos->Error==0) {
             $response['status'] = true;

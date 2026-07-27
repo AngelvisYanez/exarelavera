@@ -20,8 +20,7 @@ class ProveedorClass {
     }
 
     public function getProveedores($body){
-        $data=$body;
-        $consulta = $this->datos->getArrayConsulta( 1001,''.'*'.$data['Emp_Cod'], $this->conexion);
+        $consulta = $this->datos->getArrayConsulta( 1001,''.'*'.$body['Emp_Cod'], $this->conexion);
         $response['data'] = $consulta;
         if ($this->datos->Error == 0) {
             $response['status'] = true;
