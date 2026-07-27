@@ -13,7 +13,7 @@ $wf_mgr = new wf_manager_log($Ses_Dat_Dis);
 
 // Verificar acceso a la ventana 'configuracion' y pestaña 'disenador_flujos'
 if (!$wf_mgr->verificarAccesoVentana('configuracion', 'disenador_flujos')) {
-    if (isset($ajax_save_workflow) || isset($ajax_publish_workflow) || isset($ajax_duplicate_workflow) || isset($ajax_load_workflow) || isset($ajax_get_department_users) || isset($ajax_save_department_users) || isset($ajax_get_users_by_department)) {
+    if (isset($ajax_save_workflow) || isset($ajax_publish_workflow) || isset($ajax_duplicate_workflow) || isset($ajax_load_workflow) || isset($ajax_get_department_users) || isset($ajax_save_department_users) || isset($ajax_get_users_by_department) || isset($ajax_get_departamentos_disenador)) {
         $obBD_con1->echoJson(array('success' => false, 'message' => 'Acceso denegado. No tiene permisos para realizar esta acción.'));
         exit;
     } else {
@@ -23,7 +23,7 @@ if (!$wf_mgr->verificarAccesoVentana('configuracion', 'disenador_flujos')) {
 }
 
 // Redirección segura para navegación directa del navegador (no AJAX)
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['ajax_get_builder']) && !isset($_GET['ajax_load_workflow']) && !isset($_GET['ajax_get_department_users']) && !isset($_GET['ajax_get_users_by_department'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['ajax_get_builder']) && !isset($_GET['ajax_load_workflow']) && !isset($_GET['ajax_get_department_users']) && !isset($_GET['ajax_get_users_by_department']) && !isset($_GET['ajax_get_departamentos_disenador'])) {
     header("Location: adq_configuracion.php?tab=disenador");
     exit;
 }
@@ -257,6 +257,23 @@ if (isset($ajax_get_users_by_department)) {
             utf8_encode_deep($usuarios);
         }
         $obBD_con1->echoJson(array('success' => true, 'usuarios' => $usuarios));
+    } catch (Exception $e) {
+        $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
+    }
+    exit;
+}
+
+// --- AJAX: Listar departamentos activos del diseñador (combo nodo) ---
+if (isset($ajax_get_departamentos_disenador)) {
+    try {
+        $departamentos = $wf_mgr->listarDepartamentosDisenador($Ses_Emp_Cod);
+        if (!is_array($departamentos)) {
+            $departamentos = array();
+        }
+        if (function_exists('utf8_encode_deep') && $departamentos) {
+            utf8_encode_deep($departamentos);
+        }
+        $obBD_con1->echoJson(array('success' => true, 'departamentos' => $departamentos));
     } catch (Exception $e) {
         $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
     }
@@ -1726,6 +1743,6 @@ if (function_exists('utf8_encode_deep')) {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../VALIDACIONES/wf_builder.js?v=49"></script>
+    <script src="../VALIDACIONES/wf_builder.js?v=50"></script>
 </body>
 </html>

@@ -714,8 +714,67 @@ function renderNode(node) {
     updateCanvasBounds();
 }
 
+/**
+ * Actualiza el combo de departamentos del nodo sin recargar la pagina.
+ * Se usa al volver al diseñador o al abrir propiedades tras crear un departamento.
+ */
+function refreshNodeDepartments(done, preferredValue) {
+    const $sel = $('#nodeDep');
+    if (!$sel.length) {
+        if (typeof done === 'function') {
+            done();
+        }
+        return;
+    }
+    const selected = (preferredValue !== undefined && preferredValue !== null && preferredValue !== '')
+        ? String(preferredValue)
+        : String($sel.val() || '');
+
+    $.getJSON('adq_configuracion.php', { ajax_get_departamentos_disenador: 1 }, function(res) {
+        if (!res || !res.success) {
+            if (typeof done === 'function') {
+                done();
+            }
+            return;
+        }
+        $sel.empty().append($('<option></option>').val('').text('[Cualquiera/Solicitante]'));
+        const deps = res.departamentos || [];
+        for (let i = 0; i < deps.length; i++) {
+            const dep = deps[i];
+            const cant = parseInt(dep.Cant_Usuarios, 10) || 0;
+            const label = String(dep.Dep_Des || '')
+                + (cant > 0
+                    ? (' (' + cant + ' usuario' + (cant === 1 ? '' : 's') + ')')
+                    : ' (sin usuarios WF)');
+            $sel.append($('<option></option>').val(String(dep.Dep_Cod)).text(label));
+        }
+        if (selected) {
+            $sel.val(selected);
+            if ($sel.val() !== selected) {
+                // Si el valor ya no existe (inactivo), dejar en blanco
+                $sel.val('');
+            }
+        }
+        if (typeof done === 'function') {
+            done();
+        }
+    }).fail(function() {
+        if (typeof done === 'function') {
+            done();
+        }
+    });
+}
+
 function openNodeProperties(id) {
     activeNode = nodes.find(item => sameId(item.id, id));
+    if (!activeNode) return;
+
+    refreshNodeDepartments(function() {
+        fillNodePropertiesForm();
+    }, activeNode.dep_cod);
+}
+
+function fillNodePropertiesForm() {
     if (!activeNode) return;
 
     $('#nodeId').val(activeNode.id);

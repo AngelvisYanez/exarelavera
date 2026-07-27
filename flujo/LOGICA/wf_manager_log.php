@@ -48,8 +48,12 @@ class wf_manager_log {
             }
         }
         if ($dep > 0) {
-            $row = $this->obBD_datos->getRowConsultaSql("SELECT Dep_Cod FROM departamen WHERE Dep_Cod = $dep LIMIT 1;", $this->obBD_conexion);
-            if (!empty($row)) {
+            // Dep_Cod en historial/nodos guarda Wde_Cod de wf_departamentos (ya no RRHH).
+            $row = $this->obBD_datos->getRowConsultaSql(
+                "SELECT Wde_Cod FROM wf_departamentos WHERE Wde_Cod = $dep LIMIT 1;",
+                $this->obBD_conexion
+            );
+            if (!empty($row['Wde_Cod'])) {
                 $dep_sql = $dep;
             }
         }
@@ -1269,6 +1273,7 @@ class wf_manager_log {
 
     public function guardarFlujoDisenador($data, $emp_cod) {
         $this->ensureVersioningSchema();
+        $this->ensureWfDepartamentosTable();
         $emp_cod = intval($emp_cod);
         if (!is_array($data) || empty($data['nodos']) || !is_array($data['nodos'])) {
             throw new Exception('Datos de flujo incompletos o invalidos.');
@@ -1332,11 +1337,14 @@ class wf_manager_log {
             if ($nod_tip === '' || $nod_nom === '') {
                 throw new Exception('Cada nodo debe tener tipo y nombre.');
             }
-            $dep_rrhh = null;
+            // Dep_Cod del nodo = Wde_Cod (wf_departamentos). Ya no se usa departamen/RRHH.
+            $dep_cod = 'NULL';
             if (!empty($nodo['dep_cod'])) {
-                $dep_rrhh = $this->resolverDepCodRrhh($nodo['dep_cod'], $emp_cod);
+                $wde_cod = $this->resolverDepCodRrhh($nodo['dep_cod'], $emp_cod);
+                if ($wde_cod !== null && $wde_cod > 0) {
+                    $dep_cod = intval($wde_cod);
+                }
             }
-            $dep_cod = ($dep_rrhh !== null && $dep_rrhh > 0) ? intval($dep_rrhh) : 'NULL';
             $per_cod = !empty($nodo['per_cod']) ? intval($nodo['per_cod']) : 'NULL';
             $sla = (isset($nodo['sla']) && $nodo['sla'] !== '' && $nodo['sla'] !== null) ? intval($nodo['sla']) : 'NULL';
             $com_obl = !empty($nodo['com_obl']) ? 1 : 0;
@@ -3980,6 +3988,54 @@ class wf_manager_log {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
         $this->obBD_datos->grabarv_registros($sql, $this->obBD_conexion);
         $this->ensureWfDepartamentoUsuariosWdeCod();
+        $this->ensureWfDepCodSinFkRrhh();
+    }
+
+    /**
+     * Elimina FKs legacy Dep_Cod -> departamen (RRHH).
+     * wf_nodos.Dep_Cod y wf_instancias_nodos.Dep_Cod guardan Wde_Cod de wf_departamentos.
+     */
+    public function ensureWfDepCodSinFkRrhh() {
+        static $ready = false;
+        if ($ready) {
+            return;
+        }
+        // Nombres historicos conocidos (por si information_schema no los reporta).
+        $drops_conocidos = array(
+            "ALTER TABLE `wf_nodos` DROP FOREIGN KEY `wf_nodos_departamen_FK`",
+            "ALTER TABLE `wf_instancias_nodos` DROP FOREIGN KEY `wf_instancias_nodos_departamen_FK`",
+            "ALTER TABLE `wf_departamento_usuarios` DROP FOREIGN KEY `wf_departamento_usuarios_ibfk_2`"
+        );
+        foreach ($drops_conocidos as $sqlDrop) {
+            @$this->obBD_datos->grabarv_registros($sqlDrop . ';', $this->obBD_conexion);
+        }
+
+        $tablas = array('wf_nodos', 'wf_instancias_nodos', 'wf_departamento_usuarios');
+        foreach ($tablas as $tabla) {
+            $fks = $this->obBD_datos->getArrayConsultaSql(
+                "SELECT DISTINCT CONSTRAINT_NAME
+                 FROM information_schema.KEY_COLUMN_USAGE
+                 WHERE TABLE_SCHEMA = DATABASE()
+                   AND TABLE_NAME = '$tabla'
+                   AND COLUMN_NAME = 'Dep_Cod'
+                   AND REFERENCED_TABLE_NAME = 'departamen';",
+                $this->obBD_conexion
+            );
+            if (!is_array($fks)) {
+                continue;
+            }
+            foreach ($fks as $fk) {
+                $nombre = isset($fk['CONSTRAINT_NAME']) ? trim((string)$fk['CONSTRAINT_NAME']) : '';
+                if ($nombre === '') {
+                    continue;
+                }
+                @$this->obBD_datos->grabarv_registros(
+                    "ALTER TABLE `$tabla` DROP FOREIGN KEY `$nombre`;",
+                    $this->obBD_conexion
+                );
+            }
+        }
+        $ready = true;
     }
 
     /**

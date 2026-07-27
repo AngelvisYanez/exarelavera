@@ -27,7 +27,7 @@ function adq_cfg_utf8_deep(&$data) {
 if (!$wf_mgr->verificarAccesoVentana('configuracion')) {
     if (isset($ajax_save_tipo_req) || isset($ajax_toggle_tipo_req) || isset($ajax_get_tipo_req) ||
         isset($ajax_save_workflow) || isset($ajax_publish_workflow) || isset($ajax_load_workflow) || isset($_GET['ajax_duplicate_workflow']) || isset($ajax_get_department_users) ||
-        isset($ajax_save_department_users) || isset($ajax_get_users_by_department) ||
+        isset($ajax_save_department_users) || isset($ajax_get_users_by_department) || isset($_GET['ajax_get_departamentos_disenador']) ||
         isset($ajax_save_depto_req) || isset($ajax_toggle_depto_req) || isset($ajax_get_depto_req) ||
         isset($ajax_get_depto_users) || isset($ajax_save_depto_users) ||
         isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']) ||
@@ -478,7 +478,8 @@ if (isset($_GET['ajax_get_builder'])) {
 if (isset($_GET['ajax_load_workflow']) || isset($_GET['ajax_save_workflow']) || isset($_POST['ajax_save_workflow']) ||
     isset($_GET['ajax_publish_workflow']) || isset($_POST['ajax_publish_workflow']) ||
     isset($_GET['ajax_duplicate_workflow']) || isset($_POST['ajax_duplicate_workflow']) ||
-    isset($_GET['ajax_get_department_users']) || isset($_POST['ajax_save_department_users']) || isset($_GET['ajax_get_users_by_department'])) {
+    isset($_GET['ajax_get_department_users']) || isset($_POST['ajax_save_department_users']) || isset($_GET['ajax_get_users_by_department']) ||
+    isset($_GET['ajax_get_departamentos_disenador'])) {
     $ajax_load_workflow = isset($_GET['ajax_load_workflow']) ? $_GET['ajax_load_workflow'] : null;
     $ajax_save_workflow = isset($_GET['ajax_save_workflow']) ? $_GET['ajax_save_workflow'] : (isset($_POST['ajax_save_workflow']) ? $_POST['ajax_save_workflow'] : null);
     $ajax_publish_workflow = isset($_GET['ajax_publish_workflow']) ? $_GET['ajax_publish_workflow'] : (isset($_POST['ajax_publish_workflow']) ? $_POST['ajax_publish_workflow'] : null);
@@ -486,6 +487,7 @@ if (isset($_GET['ajax_load_workflow']) || isset($_GET['ajax_save_workflow']) || 
     $ajax_get_department_users = isset($_GET['ajax_get_department_users']) ? $_GET['ajax_get_department_users'] : null;
     $ajax_save_department_users = isset($_POST['ajax_save_department_users']) ? $_POST['ajax_save_department_users'] : null;
     $ajax_get_users_by_department = isset($_GET['ajax_get_users_by_department']) ? $_GET['ajax_get_users_by_department'] : null;
+    $ajax_get_departamentos_disenador = isset($_GET['ajax_get_departamentos_disenador']) ? $_GET['ajax_get_departamentos_disenador'] : null;
     include('wf_builder.php');
     exit;
 }
@@ -977,7 +979,7 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
         </div>
     </div>
 
-    <script src="../VALIDACIONES/wf_builder.js?v=48"></script>
+    <script src="../VALIDACIONES/wf_builder.js?v=50"></script>
     <script>
         function limpiarBackdropModal() {
             $('body').removeClass('modal-open');
@@ -1135,7 +1137,12 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
 
         let builderLoaded = false;
         function cargarDisenadorFlujos() {
-            if (builderLoaded) return;
+            if (builderLoaded) {
+                if (typeof refreshNodeDepartments === 'function') {
+                    refreshNodeDepartments();
+                }
+                return;
+            }
             $.get('adq_configuracion.php', { ajax_get_builder: 1 }, function(html) {
                 $('#builder-panel-content').html(html);
                 builderLoaded = true;
@@ -1229,6 +1236,9 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
                         limpiarBackdropModal();
                         msgExaDepto('success', 'Departamento guardado con exito.', function() {
                             cargarDepartamentos();
+                            if (typeof refreshNodeDepartments === 'function') {
+                                refreshNodeDepartments();
+                            }
                         });
                     }).modal('hide');
                 } else {
@@ -1245,6 +1255,9 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
             $.post('adq_configuracion.php?ajax_toggle_depto_req=1', { Dep_Cod: id, Wfd_Est: currentEst }, function(res) {
                 if (res.success) {
                     cargarDepartamentos();
+                    if (typeof refreshNodeDepartments === 'function') {
+                        refreshNodeDepartments();
+                    }
                 } else {
                     msgExaDepto('danger', 'Error al cambiar estado: ' + (res.message || 'Error desconocido'));
                 }
@@ -1350,6 +1363,9 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
                         limpiarBackdropModal();
                         msgExaDepto('success', 'Usuarios asignados con exito (' + n + ').', function() {
                             cargarDepartamentos();
+                            if (typeof refreshNodeDepartments === 'function') {
+                                refreshNodeDepartments();
+                            }
                         });
                     }).modal('hide');
                 } else {
