@@ -156,21 +156,131 @@ class wf_manager_log {
              WHERE du.Wde_Cod IS NULL;",
             $this->obBD_conexion
         );
+        $this->ensureWfDepartamentoUsuariosContactoColumns();
+    }
+
+    /**
+     * Columnas de contacto workflow en wf_departamento_usuarios (no en persona).
+     */
+    public function ensureWfDepartamentoUsuariosContactoColumns() {
+        static $ready = false;
+        if ($ready) {
+            return;
+        }
+        $cols = array(
+            'Wde_Tel' => "VARCHAR(20) NULL DEFAULT NULL COMMENT 'Telefono del usuario' AFTER Wde_Cod",
+            'Wde_Cor' => "VARCHAR(40) NULL DEFAULT NULL COMMENT 'Correo electronico' AFTER Wde_Tel"
+        );
+        foreach ($cols as $col => $def) {
+            $row = $this->obBD_datos->getRowConsultaSql(
+                "SHOW COLUMNS FROM wf_departamento_usuarios LIKE '$col';",
+                $this->obBD_conexion
+            );
+            if (empty($row)) {
+                $this->obBD_datos->setError(0, '');
+                $this->obBD_datos->grabarv_registros(
+                    "ALTER TABLE wf_departamento_usuarios ADD COLUMN $col $def;",
+                    $this->obBD_conexion
+                );
+            }
+        }
+        $ready = true;
+    }
+
+    /**
+     * Obtiene telefono/correo workflow desde usuarios (Usu_Tel / Usu_Cor).
+     */
+    public function obtenerContactoUsuarioWorkflow($usu_cod) {
+        $usu_cod = intval($usu_cod);
+        if ($usu_cod <= 0) {
+            return array('Telefono' => '', 'Correo' => '');
+        }
+        $row = $this->obBD_datos->getRowConsultaSql(
+            "SELECT IFNULL(Usu_Tel, '') AS Usu_Tel, IFNULL(Usu_Cor, '') AS Usu_Cor
+             FROM usuarios
+             WHERE Usu_Cod = $usu_cod
+             LIMIT 1;",
+            $this->obBD_conexion
+        );
+        return array(
+            'Telefono' => trim(isset($row['Usu_Tel']) ? $row['Usu_Tel'] : ''),
+            'Correo' => trim(isset($row['Usu_Cor']) ? $row['Usu_Cor'] : '')
+        );
+    }
+
+    /**
+     * Guarda telefono/correo en usuarios.Usu_Tel y usuarios.Usu_Cor
+     * (todas las cuentas activas de la misma cedula en la empresa).
+     */
+    public function guardarContactoUsuarioWorkflow($usu_cod, $telefono, $correo, $emp_cod = 0) {
+        $usu_cod = intval($usu_cod);
+        $emp_cod = intval($emp_cod);
+        if ($usu_cod <= 0) {
+            throw new Exception('Usuario invalido para guardar contacto workflow.');
+        }
+        $telefono = trim((string)$telefono);
+        $correo = trim((string)$correo);
+        if (strlen($telefono) > 15) {
+            $telefono = substr($telefono, 0, 15);
+        }
+        if (strlen($correo) > 60) {
+            $correo = substr($correo, 0, 60);
+        }
+        $tel_esc = $this->escapeWf($telefono);
+        $cor_esc = $this->escapeWf($correo);
+
+        $ids = array($usu_cod => $usu_cod);
+        if ($emp_cod > 0) {
+            $rows = $this->obBD_datos->getArrayConsultaSql(
+                "SELECT ux.Usu_Cod
+                 FROM usuarios ux
+                 INNER JOIN sucursal sx ON sx.Suc_Cod = ux.Suc_Cod
+                 WHERE sx.Emp_Cod = $emp_cod AND ux.Usu_Est = 'A'
+                   AND ux.Usu_Ced = (SELECT u0.Usu_Ced FROM usuarios u0 WHERE u0.Usu_Cod = $usu_cod LIMIT 1);",
+                $this->obBD_conexion
+            );
+            if (is_array($rows)) {
+                foreach ($rows as $r) {
+                    $id = intval($r['Usu_Cod']);
+                    if ($id > 0) {
+                        $ids[$id] = $id;
+                    }
+                }
+            }
+        }
+        $ids_csv = implode(',', array_map('intval', array_values($ids)));
+        if ($ids_csv === '') {
+            $ids_csv = (string)$usu_cod;
+        }
+
+        $this->ejecutarSql(
+            "UPDATE usuarios
+             SET Usu_Tel = '$tel_esc', Usu_Cor = '$cor_esc'
+             WHERE Usu_Cod IN ($ids_csv);"
+        );
+        return true;
     }
 
     /**
      * SQL de insercion de usuario en departamento workflow.
      * Dep_Cod se reutiliza con el Wde_Cod (UNIQUE uq_dep_usu) porque wf_departamentos ya no vincula RRHH.
      */
-    private function sqlInsertDepartamentoUsuario($wde_cod, $usu_cod, $dep_rrhh_cod = null) {
+    private function sqlInsertDepartamentoUsuario($wde_cod, $usu_cod, $tel = '', $cor = '') {
         $wde_cod = intval($wde_cod);
         $usu_cod = intval($usu_cod);
         if ($wde_cod <= 0) {
             throw new Exception('Wde_Cod invalido para insertar usuario en departamento.');
         }
-        return "INSERT INTO wf_departamento_usuarios (Dep_Cod, Usu_Cod, Wde_Cod)
-                VALUES ($wde_cod, $usu_cod, $wde_cod)
-                ON DUPLICATE KEY UPDATE Wde_Cod = VALUES(Wde_Cod);";
+        $tel_esc = $this->escapeWf(trim((string)$tel));
+        $cor_esc = $this->escapeWf(trim((string)$cor));
+        $tel_sql = ($tel_esc === '') ? 'NULL' : "'$tel_esc'";
+        $cor_sql = ($cor_esc === '') ? 'NULL' : "'$cor_esc'";
+        return "INSERT INTO wf_departamento_usuarios (Dep_Cod, Usu_Cod, Wde_Cod, Wde_Tel, Wde_Cor)
+                VALUES ($wde_cod, $usu_cod, $wde_cod, $tel_sql, $cor_sql)
+                ON DUPLICATE KEY UPDATE
+                    Wde_Cod = VALUES(Wde_Cod),
+                    Wde_Tel = COALESCE(VALUES(Wde_Tel), Wde_Tel),
+                    Wde_Cor = COALESCE(VALUES(Wde_Cor), Wde_Cor);";
     }
 
     /**
@@ -204,6 +314,51 @@ class wf_manager_log {
 
         $this->obBD_datos->inicio_transaccion($this->obBD_conexion);
         try {
+            // Preservar telefono/correo antes de recrear asignaciones del departamento.
+            $contactos = array();
+            $prev = $this->obBD_datos->getArrayConsultaSql(
+                "SELECT Usu_Cod, Wde_Tel, Wde_Cor
+                 FROM wf_departamento_usuarios
+                 WHERE Wde_Cod = $wde_cod OR Dep_Cod = $wde_cod
+                    OR Usu_Cod IN (" . (empty($ids_base) ? '0' : implode(',', array_map('intval', array_values($ids_base)))) . ");",
+                $this->obBD_conexion
+            );
+            if (is_array($prev)) {
+                foreach ($prev as $p) {
+                    $uid = intval($p['Usu_Cod']);
+                    if ($uid <= 0) {
+                        continue;
+                    }
+                    $tel = trim(isset($p['Wde_Tel']) ? $p['Wde_Tel'] : '');
+                    $cor = trim(isset($p['Wde_Cor']) ? $p['Wde_Cor'] : '');
+                    if (!isset($contactos[$uid])) {
+                        $contactos[$uid] = array('tel' => '', 'cor' => '');
+                    }
+                    if ($tel !== '' && $contactos[$uid]['tel'] === '') {
+                        $contactos[$uid]['tel'] = $tel;
+                    }
+                    if ($cor !== '' && $contactos[$uid]['cor'] === '') {
+                        $contactos[$uid]['cor'] = $cor;
+                    }
+                }
+            }
+            // Contacto de filas "stub" u otras asignaciones del mismo usuario.
+            foreach ($ids_base as $u_id) {
+                if (!empty($contactos[$u_id]['tel']) && !empty($contactos[$u_id]['cor'])) {
+                    continue;
+                }
+                $c = $this->obtenerContactoUsuarioWorkflow($u_id);
+                if (!isset($contactos[$u_id])) {
+                    $contactos[$u_id] = array('tel' => '', 'cor' => '');
+                }
+                if ($contactos[$u_id]['tel'] === '' && $c['Telefono'] !== '') {
+                    $contactos[$u_id]['tel'] = $c['Telefono'];
+                }
+                if ($contactos[$u_id]['cor'] === '' && $c['Correo'] !== '') {
+                    $contactos[$u_id]['cor'] = $c['Correo'];
+                }
+            }
+
             $this->ejecutarSql("DELETE FROM wf_departamento_usuarios WHERE Wde_Cod = $wde_cod OR Dep_Cod = $wde_cod;");
 
             $insertados = 0;
@@ -237,8 +392,19 @@ class wf_manager_log {
                     if ($usu_cod <= 0 || isset($usu_insertados[$usu_cod])) {
                         continue;
                     }
+                    $tel = isset($contactos[$u_id]['tel']) ? $contactos[$u_id]['tel'] : (isset($contactos[$usu_cod]['tel']) ? $contactos[$usu_cod]['tel'] : '');
+                    $cor = isset($contactos[$u_id]['cor']) ? $contactos[$u_id]['cor'] : (isset($contactos[$usu_cod]['cor']) ? $contactos[$usu_cod]['cor'] : '');
+                    if (($tel === '' || $cor === '') && !isset($contactos[$usu_cod])) {
+                        $c2 = $this->obtenerContactoUsuarioWorkflow($usu_cod);
+                        if ($tel === '') {
+                            $tel = $c2['Telefono'];
+                        }
+                        if ($cor === '') {
+                            $cor = $c2['Correo'];
+                        }
+                    }
                     $this->ejecutarSql(
-                        $this->sqlInsertDepartamentoUsuario($wde_cod, $usu_cod)
+                        $this->sqlInsertDepartamentoUsuario($wde_cod, $usu_cod, $tel, $cor)
                     );
                     $usu_insertados[$usu_cod] = true;
                     $insertados++;
@@ -3229,11 +3395,18 @@ class wf_manager_log {
             if ($excluir_usu_cod > 0 && $usu_cod === $excluir_usu_cod) {
                 continue;
             }
-            $tel = trim(isset($u['Prs_Tel']) ? $u['Prs_Tel'] : '');
-            if ($tel === '' && !empty($u['Prs_Cel'])) {
-                $tel = trim($u['Prs_Cel']);
+            $contacto_wf = $this->obtenerContactoUsuarioWorkflow($usu_cod);
+            $tel = $contacto_wf['Telefono'];
+            $correo = $contacto_wf['Correo'];
+            if ($tel === '') {
+                $tel = trim(isset($u['Prs_Tel']) ? $u['Prs_Tel'] : '');
+                if ($tel === '' && !empty($u['Prs_Cel'])) {
+                    $tel = trim($u['Prs_Cel']);
+                }
             }
-            $correo = trim(isset($u['Prs_Cor']) ? $u['Prs_Cor'] : '');
+            if ($correo === '') {
+                $correo = trim(isset($u['Prs_Cor']) ? $u['Prs_Cor'] : '');
+            }
             if ($tel === '' && $correo === '') {
                 continue;
             }
@@ -4669,16 +4842,24 @@ class wf_manager_log {
         if (empty($row['Usu_Sol'])) {
             return array();
         }
-        $tel = trim(isset($row['Prs_Tel']) ? $row['Prs_Tel'] : '');
-        if ($tel === '' && !empty($row['Prs_Cel'])) {
-            $tel = trim($row['Prs_Cel']);
+        $usu_sol = intval($row['Usu_Sol']);
+        $contacto_wf = $this->obtenerContactoUsuarioWorkflow($usu_sol);
+        $tel = $contacto_wf['Telefono'];
+        $correo = $contacto_wf['Correo'];
+        if ($tel === '') {
+            $tel = trim(isset($row['Prs_Tel']) ? $row['Prs_Tel'] : '');
+            if ($tel === '' && !empty($row['Prs_Cel'])) {
+                $tel = trim($row['Prs_Cel']);
+            }
         }
-        $correo = trim(isset($row['Prs_Cor']) ? $row['Prs_Cor'] : '');
+        if ($correo === '') {
+            $correo = trim(isset($row['Prs_Cor']) ? $row['Prs_Cor'] : '');
+        }
         if ($tel === '' && $correo === '') {
             return array();
         }
         return array(array(
-            'Usu_Cod' => intval($row['Usu_Sol']),
+            'Usu_Cod' => $usu_sol,
             'Nombre' => trim($row['Nombre']),
             'Telefono' => $tel,
             'Correo' => $correo
@@ -4698,18 +4879,27 @@ class wf_manager_log {
              FROM usuarios u
              INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
              WHERE u.Usu_Cod = $usu_cod AND u.Usu_Est = 'A'
-               AND ($emp_cod <= 0 OR u.Emp_Cod = $emp_cod)
+               AND ($emp_cod <= 0 OR u.Emp_Cod = $emp_cod OR EXISTS (
+                    SELECT 1 FROM sucursal s WHERE s.Suc_Cod = u.Suc_Cod AND s.Emp_Cod = $emp_cod
+               ))
              LIMIT 1;",
             $this->obBD_conexion
         );
         if (empty($row['Usu_Cod'])) {
             return null;
         }
-        $tel = trim(isset($row['Prs_Tel']) ? $row['Prs_Tel'] : '');
-        if ($tel === '' && !empty($row['Prs_Cel'])) {
-            $tel = trim($row['Prs_Cel']);
+        $contacto_wf = $this->obtenerContactoUsuarioWorkflow($usu_cod);
+        $tel = $contacto_wf['Telefono'];
+        $correo = $contacto_wf['Correo'];
+        if ($tel === '') {
+            $tel = trim(isset($row['Prs_Tel']) ? $row['Prs_Tel'] : '');
+            if ($tel === '' && !empty($row['Prs_Cel'])) {
+                $tel = trim($row['Prs_Cel']);
+            }
         }
-        $correo = trim(isset($row['Prs_Cor']) ? $row['Prs_Cor'] : '');
+        if ($correo === '') {
+            $correo = trim(isset($row['Prs_Cor']) ? $row['Prs_Cor'] : '');
+        }
         if ($tel === '' && $correo === '') {
             return null;
         }
@@ -5073,11 +5263,18 @@ class wf_manager_log {
             if ($excluir_usu_cod > 0 && $usu_cod === $excluir_usu_cod) {
                 continue;
             }
-            $tel = trim(isset($u['Prs_Tel']) ? $u['Prs_Tel'] : '');
-            if ($tel === '' && !empty($u['Prs_Cel'])) {
-                $tel = trim($u['Prs_Cel']);
+            $contacto_wf = $this->obtenerContactoUsuarioWorkflow($usu_cod);
+            $tel = $contacto_wf['Telefono'];
+            $correo = $contacto_wf['Correo'];
+            if ($tel === '') {
+                $tel = trim(isset($u['Prs_Tel']) ? $u['Prs_Tel'] : '');
+                if ($tel === '' && !empty($u['Prs_Cel'])) {
+                    $tel = trim($u['Prs_Cel']);
+                }
             }
-            $correo = trim(isset($u['Prs_Cor']) ? $u['Prs_Cor'] : '');
+            if ($correo === '') {
+                $correo = trim(isset($u['Prs_Cor']) ? $u['Prs_Cor'] : '');
+            }
             if ($tel === '' && $correo === '') {
                 continue;
             }

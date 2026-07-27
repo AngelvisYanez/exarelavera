@@ -536,23 +536,30 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
                    base.Prs_Cod,
                    base.Usu_Ced,
                    base.Nombres,
-                   base.Prs_Tel,
-                   base.Prs_Cel,
-                   base.Prs_Cor,
-                   base.Usu_Wf
+                   base.Usu_Wf,
+                   base.Usu_Tel,
+                   base.Usu_Cor
             FROM (
                 SELECT MIN(u.Usu_Cod) AS Usu_Cod,
                        MIN(p.Prs_Cod) AS Prs_Cod,
                        u.Usu_Ced,
                        TRIM(CONCAT(IFNULL(p.Prs_Nom, ''), ' ', IFNULL(p.Prs_Ape, ''))) AS Nombres,
-                       MAX(IFNULL(p.Prs_Tel, '')) AS Prs_Tel,
-                       MAX(IFNULL(p.Prs_Cel, '')) AS Prs_Cel,
-                       MAX(IFNULL(p.Prs_Cor, '')) AS Prs_Cor,
-                       MAX(CASE WHEN IFNULL(u.Usu_Wf, 'N') = 'S' THEN 'S' ELSE 'N' END) AS Usu_Wf
+                       MAX(CASE WHEN IFNULL(u.Usu_Wf, 'N') = 'S' THEN 'S' ELSE 'N' END) AS Usu_Wf,
+                       MAX(IFNULL(u.Usu_Tel, '')) AS Usu_Tel,
+                       MAX(IFNULL(u.Usu_Cor, '')) AS Usu_Cor
                 FROM usuarios u
                 INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
                 INNER JOIN sucursal s ON s.Suc_Cod = u.Suc_Cod
                 WHERE s.Emp_Cod = $emp_id AND u.Usu_Est = 'A'
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM usuarperfi up
+                      INNER JOIN perfiles pf ON pf.Per_Cod = up.Per_Cod
+                      INNER JOIN usuarios ux ON ux.Usu_Cod = up.Usu_Cod
+                      WHERE ux.Usu_Ced = u.Usu_Ced
+                        AND pf.Emp_Cod = $emp_id
+                        AND pf.Per_Des = 'Plantas'
+                  )
                 GROUP BY u.Usu_Ced, p.Prs_Nom, p.Prs_Ape
             ) base
             ORDER BY base.Nombres ASC;", $obBD_conexion);
@@ -560,12 +567,8 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
             $usuarios = array();
         }
         foreach ($usuarios as &$u) {
-            $tel = trim(isset($u['Prs_Tel']) ? $u['Prs_Tel'] : '');
-            if ($tel === '' && !empty($u['Prs_Cel'])) {
-                $tel = trim($u['Prs_Cel']);
-            }
-            $u['Telefono'] = $tel;
-            $u['Correo'] = trim(isset($u['Prs_Cor']) ? $u['Prs_Cor'] : '');
+            $u['Telefono'] = trim(isset($u['Usu_Tel']) ? $u['Usu_Tel'] : '');
+            $u['Correo'] = trim(isset($u['Usu_Cor']) ? $u['Usu_Cor'] : '');
             $u['Usu_Wf'] = (isset($u['Usu_Wf']) && strtoupper($u['Usu_Wf']) === 'S') ? 'S' : 'N';
         }
         unset($u);
@@ -582,7 +585,7 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
         $correo = trim(isset($_POST['Correo']) ? $_POST['Correo'] : '');
         $usu_wf = (!empty($_POST['Usu_Wf']) && strtoupper($_POST['Usu_Wf']) === 'S') ? 'S' : 'N';
 
-        if ($usu_cod <= 0 || $prs_cod <= 0) {
+        if ($usu_cod <= 0) {
             $obBD_con1->echoJson(array('success' => false, 'message' => 'Usuario invalido.'));
             exit;
         }
@@ -614,31 +617,13 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
         if ($usu_ced === '') {
             $usu_ced = isset($chk['Usu_Ced']) ? $chk['Usu_Ced'] : '';
         }
-        $prs_cod = !empty($chk['Prs_Cod']) ? intval($chk['Prs_Cod']) : $prs_cod;
 
-        $tel_esc = mysqli_real_escape_string($obBD_conexion->conexion, $telefono);
-        $cor_esc = mysqli_real_escape_string($obBD_conexion->conexion, $correo);
         $ced_esc = mysqli_real_escape_string($obBD_conexion->conexion, $usu_ced);
 
         try {
-            // Al inactivar no se obligan datos: solo actualizar persona si hay valor nuevo
+            // Contacto workflow: usuarios.Usu_Tel / usuarios.Usu_Cor. No tocar persona ni wf_departamento_usuarios.
             if ($usu_wf === 'S' || $telefono !== '' || $correo !== '') {
-                $sets_prs = array();
-                if ($usu_wf === 'S' || $telefono !== '') {
-                    $sets_prs[] = "Prs_Tel = '$tel_esc'";
-                }
-                if ($usu_wf === 'S' || $correo !== '') {
-                    $sets_prs[] = "Prs_Cor = '$cor_esc'";
-                }
-                if (!empty($sets_prs)) {
-                    $ok_prs = $obBD_con1->grabarv_registros(
-                        "UPDATE persona SET " . implode(', ', $sets_prs) . " WHERE Prs_Cod = $prs_cod;",
-                        $obBD_conexion
-                    );
-                    if (!$ok_prs) {
-                        throw new Exception('No se pudo actualizar los datos de persona.');
-                    }
-                }
+                $wf_mgr->guardarContactoUsuarioWorkflow($usu_cod, $telefono, $correo, $emp_id);
             }
 
             if ($ced_esc !== '') {
@@ -841,7 +826,7 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
                         <div class="adq-usuarios-toolbar">
                             <div>
                                 <h5 class="adq-section-header" style="margin:0;border:none;padding:0;"><i class="bi bi-people"></i> Usuarios del sistema</h5>
-                                <p class="text-muted small" style="margin:6px 0 0;">Configure telefono, correo y habilite el usuario para workflow (<strong>Usu_Wf = S</strong>). Telefono y correo se guardan en <strong>persona</strong>.</p>
+                                <p class="text-muted small" style="margin:6px 0 0;">Configure telefono, correo y habilite el usuario para workflow (<strong>Usu_Wf = S</strong>). Telefono y correo se guardan en <strong>usuarios</strong> (<strong>Usu_Tel</strong> / <strong>Usu_Cor</strong>). No se listan usuarios con perfil <strong>Plantas</strong>.</p>
                             </div>
                             <button type="button" class="btn btn-default btn-sm" onclick="cargarUsuariosWf()"><i class="bi bi-arrow-clockwise"></i> Actualizar</button>
                         </div>
@@ -1457,8 +1442,8 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
                 const usuCod = parseInt(u.Usu_Cod, 10) || 0;
                 const prsCod = parseInt(u.Prs_Cod, 10) || 0;
                 const activo = String(u.Usu_Wf || 'N').toUpperCase() === 'S';
-                const tel = u.Telefono || u.Prs_Tel || '';
-                const correo = u.Correo || u.Prs_Cor || '';
+                const tel = u.Telefono || u.Usu_Tel || '';
+                const correo = u.Correo || u.Usu_Cor || '';
                 const $tr = $('<tr class="adq-usu-row">')
                     .attr('data-usu-cod', usuCod)
                     .attr('data-prs-cod', prsCod)
