@@ -4867,23 +4867,6 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                     </td>
                 </tr>
             </table>
-            <table width="88%" cellpadding="0" cellspacing="0" align="center" style="margin:36px auto 0 auto;">
-                <tr>
-                    <td width="46%" valign="top" style="padding-right:12px;">
-                        <div style="border-top:1px solid ' . $c['titulo'] . ';padding-top:8px;text-align:center;">
-                            <div style="font-size:10px;font-weight:bold;color:' . $c['titulo'] . ';">Firma digital / manuscrita</div>
-                            <div style="font-size:8px;color:' . $c['suave'] . ';margin-top:3px;">Aprobador final</div>
-                        </div>
-                    </td>
-                    <td width="8%"></td>
-                    <td width="46%" valign="top" style="padding-left:12px;">
-                        <div style="border-top:1px solid ' . $c['titulo'] . ';padding-top:8px;text-align:center;">
-                            <div style="font-size:10px;font-weight:bold;color:' . $c['titulo'] . ';">Nombre y cargo</div>
-                            <div style="font-size:8px;color:' . $c['suave'] . ';margin-top:3px;">Aclaraci&oacute;n</div>
-                        </div>
-                    </td>
-                </tr>
-            </table>
             <div style="margin-top:48px;padding:12px 14px;background:' . $c['fondo'] . ';border-left:3px solid ' . $c['acento'] . ';font-size:9px;color:' . $c['texto'] . ';line-height:1.45;">
                 Este expediente consolida los anexos cargados durante el ciclo de vida de la solicitud.
                 La firma electr&oacute;nica posterior valida la integridad del documento unificado para archivo institucional.
@@ -5271,6 +5254,50 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         );
     }
 
+    /**
+     * Genera un PNG de codigo QR para estampar en el expediente firmado.
+     * Se ejecuta ANTES de instanciar mPDF para evitar conflicto de clase QRcode.
+     * @return string Ruta absoluta del PNG, o vacio si no se pudo generar.
+     */
+    private function generarArchivoQrFirma($texto, $dir_abs) {
+        $texto = trim((string)$texto);
+        $dir_abs = rtrim(str_replace('\\', '/', (string)$dir_abs), '/');
+        if ($texto === '' || $dir_abs === '' || !is_dir($dir_abs)) {
+            return '';
+        }
+
+        if (!class_exists('QRcode')) {
+            $cands = array(
+                dirname(__FILE__) . '/../../Librerias/qrcode/phpqrcode.php',
+                dirname(__FILE__) . '/../../Librerias/phpqrcode/phpqrcode.php'
+            );
+            foreach ($cands as $ruta) {
+                if (is_file($ruta)) {
+                    require_once($ruta);
+                    break;
+                }
+            }
+        }
+
+        $qr_path = $dir_abs . '/qr_firma_' . date('Ymd_His') . '_' . mt_rand(1000, 9999) . '.png';
+        if (class_exists('QRcode') && method_exists('QRcode', 'png')) {
+            @QRcode::png($texto, $qr_path, 0, 6, 2);
+            if (is_file($qr_path) && filesize($qr_path) > 100) {
+                return $qr_path;
+            }
+        }
+
+        // Fallback online (misma estrategia que certificados).
+        $api = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . rawurlencode($texto);
+        $bin = @file_get_contents($api);
+        if (!empty($bin) && strlen($bin) > 100) {
+            if (@file_put_contents($qr_path, $bin) && is_file($qr_path)) {
+                return $qr_path;
+            }
+        }
+        return '';
+    }
+
     private function resolverLlaveElectronicaFirma($emp_cod, $clave, $p12_tmp = '', $usar_empresa = true) {
         global $APP_REAL_PATH;
         $emp_cod = intval($emp_cod);
@@ -5351,6 +5378,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         $nombre_firmante = $llave['nombre'] !== '' ? $llave['nombre'] : 'Firmante autorizado';
         $entidad = !empty($llave['cert_info']['issuer']['O']) ? $llave['cert_info']['issuer']['O'] : 'Entidad certificadora';
         $fecha_firma = date('Y-m-d H:i:s');
+        $emp_nom = isset($_SESSION['Ses_Emp_Nom']) ? $_SESSION['Ses_Emp_Nom'] : '';
 
         try {
             $dir_info = $this->asegurarDirectorioDocumentosSolicitud($sol_cod);
@@ -5364,6 +5392,15 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         $ruta_firmada_abs = $dir_abs . '/' . $nombre_firmado;
         $ruta_firmada_rel = $dir_rel . '/' . $nombre_firmado;
 
+        // QR ANTES de mPDF (evita choque de clase QRcode phpqrcode vs mPDF).
+        $qr_sig_data = "Firmado electronicamente por: $nombre_firmante\nFecha: $fecha_firma\nEntidad: $entidad\nValidar en: www.firmadigital.gob.ec";
+        $qr_path = $this->generarArchivoQrFirma($qr_sig_data, $dir_abs);
+        $qr_html = '';
+        if ($qr_path !== '') {
+            $qr_src = htmlspecialchars(str_replace('\\', '/', $qr_path), ENT_QUOTES, 'UTF-8');
+            $qr_html = '<img src="' . $qr_src . '" width="110" height="110" alt="QR firma" />';
+        }
+
         if (!class_exists('mPDF')) {
             include_once(dirname(__FILE__) . '/../../Librerias/MPDF57/mpdf.php');
         }
@@ -5373,6 +5410,9 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $mpdf->SetImportUse();
             $pagecount = $mpdf->SetSourceFile($unsigned_abs);
             if ($pagecount <= 0) {
+                if ($qr_path !== '' && is_file($qr_path)) {
+                    @unlink($qr_path);
+                }
                 return array('success' => false, 'message' => 'No se pudieron leer las paginas del expediente.');
             }
             for ($i = 1; $i <= $pagecount; $i++) {
@@ -5382,18 +5422,40 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             }
 
             $mpdf->AddPage();
+            $nom_h = htmlspecialchars(strtoupper($nombre_firmante), ENT_QUOTES, 'UTF-8');
+            $fec_h = htmlspecialchars($fecha_firma, ENT_QUOTES, 'UTF-8');
+            $ent_h = htmlspecialchars($entidad, ENT_QUOTES, 'UTF-8');
+            $emp_h = htmlspecialchars($emp_nom, ENT_QUOTES, 'UTF-8');
             $html_firma = '
-                <div style="border:2px solid #1d4ed8;border-radius:8px;padding:16px;font-family:helvetica,sans-serif;">
-                    <h3 style="color:#1d4ed8;margin:0 0 10px 0;">Firma electronica del expediente</h3>
-                    <p style="font-size:11px;margin:4px 0;"><strong>Firmado electronicamente por:</strong><br>' . htmlspecialchars(strtoupper($nombre_firmante), ENT_QUOTES, 'UTF-8') . '</p>
-                    <p style="font-size:11px;margin:4px 0;"><strong>Fecha:</strong> ' . htmlspecialchars($fecha_firma, ENT_QUOTES, 'UTF-8') . '</p>
-                    <p style="font-size:11px;margin:4px 0;"><strong>Entidad certificadora:</strong> ' . htmlspecialchars($entidad, ENT_QUOTES, 'UTF-8') . '</p>
-                    <p style="font-size:10px;color:#475569;margin-top:10px;">Documento firmado con llave electronica (.p12). Valide en www.firmadigital.gob.ec</p>
+                <div style="border:2px solid #1d4ed8;border-radius:8px;padding:14px;font-family:helvetica,sans-serif;">
+                    <h3 style="color:#1d4ed8;margin:0 0 12px 0;">Firma electronica del expediente</h3>
+                    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                        <tr>
+                            <td width="130" valign="top" style="padding-right:14px;text-align:center;">
+                                ' . ($qr_html !== '' ? $qr_html : '<div style="width:110px;height:110px;border:1px dashed #94a3b8;line-height:110px;font-size:10px;color:#64748b;">Sin QR</div>') . '
+                                <div style="font-size:9px;color:#64748b;margin-top:4px;">QR de firma</div>
+                            </td>
+                            <td valign="top" style="padding-left:6px;">
+                                <p style="font-size:11px;margin:4px 0;"><strong>Firmado electronicamente por:</strong><br>' . $nom_h . '</p>
+                                <p style="font-size:11px;margin:4px 0;"><strong>Fecha:</strong> ' . $fec_h . '</p>
+                                <p style="font-size:11px;margin:4px 0;"><strong>Entidad certificadora:</strong> ' . $ent_h . '</p>
+                                ' . ($emp_h !== '' ? '<p style="font-size:11px;margin:4px 0;"><strong>Empresa:</strong> ' . $emp_h . '</p>' : '') . '
+                                <p style="font-size:10px;color:#475569;margin-top:10px;">Documento firmado con llave electronica (.p12). Valide en www.firmadigital.gob.ec</p>
+                            </td>
+                        </tr>
+                    </table>
                 </div>';
             $mpdf->WriteHTML($html_firma);
             $mpdf->Output($ruta_firmada_abs, 'F');
         } catch (Exception $e) {
+            if ($qr_path !== '' && is_file($qr_path)) {
+                @unlink($qr_path);
+            }
             return array('success' => false, 'message' => 'Error al firmar expediente: ' . $e->getMessage());
+        }
+
+        if ($qr_path !== '' && is_file($qr_path)) {
+            @unlink($qr_path);
         }
 
         if (!is_file($ruta_firmada_abs)) {
