@@ -16,6 +16,26 @@ let reqConfig = {
     Sol_Tiempo_Est: null
 };
 
+/** false = etapa actual NO permite editar/cargar proformas (Nod_Cot_Edit = 0). */
+let adqEtapaPermiteCotizaciones = true;
+
+function adqSetEtapaPermiteCotizaciones(permite) {
+    adqEtapaPermiteCotizaciones = !!permite;
+    if (typeof window !== 'undefined') {
+        window.adqEtapaPermiteCotizaciones = adqEtapaPermiteCotizaciones;
+    }
+    if (!adqEtapaPermiteCotizaciones) {
+        $('#divCotizaciones').hide();
+        $('#cotizacionesStateInitial').hide();
+        $('#cotizacionesStateActive').hide();
+        $('#divBtnAddCot').hide();
+        $('#cotizacionesList').empty();
+        $('#cotEliminarContainer').empty();
+    } else {
+        $('#divCotizaciones').show();
+    }
+}
+
 /** URL de documento desde flujo/FRONT (nuevo documentos_flujo o legado DATA). */
 function adqUrlDocumento(path) {
     path = String(path || '').replace(/\\/g, '/').replace(/^\/+/, '');
@@ -96,9 +116,16 @@ function toggleProveedorSugerido() {
 }
 
 function aplicarReglasCotizaciones() {
+    // Si la etapa no tiene "Permitir cargar cotizaciones", no mostrar ni forzar proformas.
+    if (!adqEtapaPermiteCotizaciones) {
+        adqSetEtapaPermiteCotizaciones(false);
+        return;
+    }
     syncReqConfigFromForm();
+    $('#divCotizaciones').show();
     $('#cotizacionesStateInitial').hide();
     $('#cotizacionesStateActive').show();
+    $('#divBtnAddCot').show();
 
     const esObservada = $('#Sol_Modo_Edicion').val() === 'observada';
     const accionGuardar = esObservada ? 'guardar correccion' : 'guardar borrador';
@@ -125,6 +152,9 @@ function contarCotizacionesEnFormulario() {
 }
 
 function asegurarCotizacionesMinimas() {
+    if (!adqEtapaPermiteCotizaciones) {
+        return;
+    }
     if (parseInt(reqConfig.Sol_Req_Cot, 10) !== 1) {
         return;
     }
@@ -300,8 +330,12 @@ function cargarConfiguracionTipo(trqCod) {
     if (!trqCod) {
         $('#divRequisitosSolicitud').hide();
         $('#divProveedorSugerido').hide();
-        $('#cotizacionesStateInitial').show();
-        $('#cotizacionesStateActive').hide();
+        if (adqEtapaPermiteCotizaciones) {
+            $('#cotizacionesStateInitial').show();
+            $('#cotizacionesStateActive').hide();
+        } else {
+            adqSetEtapaPermiteCotizaciones(false);
+        }
         renderCamposDecisionCompleta({ decisiones: [], campos: [] });
         return;
     }
@@ -346,7 +380,7 @@ function cargarConfiguracionTipo(trqCod) {
     });
 }
 
-function setModoEdicionFormulario(modo, solNum, observacion) {
+function setModoEdicionFormulario(modo, solNum, observacion, trqCodForzado) {
     modo = modo || '';
     const esObservada = (modo === 'observada');
     const esCotizaciones = (modo === 'cotizaciones');
@@ -371,8 +405,13 @@ function setModoEdicionFormulario(modo, solNum, observacion) {
     }
 
     const $trq = $('#Trq_Cod');
-    if (esObservada || esCompletarNodo) {
-        const trqVal = $trq.val();
+    if (esObservada || esCompletarNodo || esCotizaciones) {
+        const trqVal = (trqCodForzado !== undefined && trqCodForzado !== null && trqCodForzado !== '')
+            ? String(trqCodForzado)
+            : String($trq.val() || '');
+        if (trqVal) {
+            $trq.val(trqVal);
+        }
         $trq.prop('disabled', false).addClass('adq-trq-readonly').attr('tabindex', '-1');
         if (!$('#Trq_Cod_Locked').length) {
             $trq.after('<input type="hidden" id="Trq_Cod_Locked" name="Trq_Cod" value="">');
@@ -385,6 +424,8 @@ function setModoEdicionFormulario(modo, solNum, observacion) {
             return false;
         });
         if ($trq.hasClass('select2-hidden-accessible')) {
+            $trq.prop('disabled', true).trigger('change.select2');
+        } else {
             $trq.prop('disabled', true);
         }
     } else {
@@ -453,14 +494,14 @@ function validarFormularioBase() {
 
 function validarRequisitosEnvioFormulario() {
     syncReqConfigFromForm();
-    if (!validarPdfsCotizacionesFormulario(true)) {
+    if (adqEtapaPermiteCotizaciones && !validarPdfsCotizacionesFormulario(true)) {
         return false;
     }
     if (parseInt(reqConfig.Sol_Req_Pro, 10) === 1 && !$('#Prv_Sug').val()) {
         alert('Debe seleccionar un proveedor sugerido para enviar esta solicitud.');
         return false;
     }
-    if (parseInt(reqConfig.Sol_Req_Cot, 10) === 1) {
+    if (adqEtapaPermiteCotizaciones && parseInt(reqConfig.Sol_Req_Cot, 10) === 1) {
         const stats = contarCotizacionesParaEnvio();
         const minRequired = parseInt(reqConfig.Sol_Min_Cot, 10) || 1;
         if (stats.total < minRequired) {
@@ -522,9 +563,10 @@ function cargarBorradorEnFormulario(solCod, porNodo) {
         const s = res.solicitud;
         const modo = res.modo_edicion || (s.Sol_Est === 'O' ? 'observada' : 'borrador');
         $('#Sol_Cod').val(s.Sol_Cod);
-        $('#Trq_Cod').val(s.Trq_Cod);
         $('#Sol_Tit').val(s.Sol_Tit || '');
-        setModoEdicionFormulario(modo, s.Sol_Num, res.ultima_observacion || null);
+        adqAsegurarTipoRequerimiento(s.Trq_Cod, s.Trq_Des);
+        setModoEdicionFormulario(modo, s.Sol_Num, res.ultima_observacion || null, s.Trq_Cod);
+        adqAsegurarTipoRequerimiento(s.Trq_Cod, s.Trq_Des);
         if ($('#Trq_Cod_Locked').length) {
             $('#Trq_Cod_Locked').val(s.Trq_Cod);
         }
@@ -571,10 +613,26 @@ function cargarBorradorEnFormulario(solCod, porNodo) {
             });
         }
 
-        $('#cotizacionesStateInitial').hide();
-        $('#cotizacionesStateActive').show();
-        aplicarReglasCotizaciones();
+        const puedeCotEtapa = (modo === 'observada')
+            ? true
+            : (modo === 'completar_nodo'
+                ? (parseInt(res.puede_cargar_cotizaciones, 10) === 1)
+                : true);
+        adqSetEtapaPermiteCotizaciones(puedeCotEtapa);
+
+        if (!puedeCotEtapa) {
+            // Completar en etapa sin "Permitir cargar cotizaciones": no editar proformas.
+            adqSetEtapaPermiteCotizaciones(false);
+        } else {
+            $('#cotizacionesStateInitial').hide();
+            $('#cotizacionesStateActive').show();
+            aplicarReglasCotizaciones();
+        }
         if (modo === 'observada') {
+            adqSetEtapaPermiteCotizaciones(true);
+            $('#cotizacionesStateInitial').hide();
+            $('#cotizacionesStateActive').show();
+            aplicarReglasCotizaciones();
             habilitarEdicionCotizacionesObservada();
         }
 
@@ -612,10 +670,16 @@ function cargarSolicitudParaCotizaciones(solCod) {
         }
         const s = res.solicitud;
         $('#Sol_Cod').val(s.Sol_Cod);
-        setModoEdicionFormulario('cotizaciones', s.Sol_Num, null);
+        $('#Sol_Tit').val(s.Sol_Tit || '');
+        adqAsegurarTipoRequerimiento(s.Trq_Cod, s.Trq_Des);
+        setModoEdicionFormulario('cotizaciones', s.Sol_Num, null, s.Trq_Cod);
+        adqSetEtapaPermiteCotizaciones(true);
         $('#lblCotizacionesEtapa').text(res.etapa_nombre ? ('Etapa actual: ' + res.etapa_nombre + '. ') : '');
 
-        $('#Trq_Cod').val(s.Trq_Cod);
+        // Reaplicar titulo/tipo tras setModo (bloqueo/Select2).
+        $('#Sol_Tit').val(s.Sol_Tit || '');
+        adqAsegurarTipoRequerimiento(s.Trq_Cod, s.Trq_Des);
+
         if (s.Prv_Sug && res.prv_sug_text) {
             $('#Prv_Sug').empty().append(new Option(res.prv_sug_text, s.Prv_Sug, true, true));
         } else {
@@ -653,6 +717,14 @@ function cargarSolicitudParaCotizaciones(solCod) {
         $('#cotizacionesStateActive').show();
         aplicarReglasCotizaciones();
         bloquearFormularioSoloCotizaciones();
+
+        // Mantener visibles titulo y tipo aunque el resto quede bloqueado.
+        $('#Sol_Tit').prop('disabled', true);
+        adqAsegurarTipoRequerimiento(s.Trq_Cod, s.Trq_Des);
+        $('#Trq_Cod').prop('disabled', true);
+        if ($('#Trq_Cod').hasClass('select2-hidden-accessible')) {
+            $('#Trq_Cod').trigger('change.select2');
+        }
     }).fail(function() {
         alert('Error de red al cargar la solicitud.');
     });
@@ -780,9 +852,44 @@ function setupTipoRequerimientoSelect() {
     });
 }
 
+/**
+ * Asegura que el tipo exista en el combo y quede seleccionado (incluye Select2).
+ * Necesario al editar: el listado de creacion puede no incluir el Trq de la solicitud.
+ */
+function adqAsegurarTipoRequerimiento(trqCod, trqDes) {
+    const $trq = $('#Trq_Cod');
+    if (!$trq.length || !trqCod) {
+        return;
+    }
+    const val = String(trqCod);
+    let $opt = $trq.find('option[value="' + val.replace(/"/g, '\\"') + '"]');
+    if (!$opt.length) {
+        const label = (trqDes && String(trqDes).trim() !== '') ? String(trqDes) : ('Tipo #' + val);
+        $trq.append(new Option(label, val, true, true));
+    }
+    $trq.val(val);
+    if ($('#Trq_Cod_Locked').length) {
+        $('#Trq_Cod_Locked').val(val);
+    }
+    if (typeof $.fn.select2 === 'function') {
+        if (!$trq.hasClass('select2-hidden-accessible')) {
+            setupTipoRequerimientoSelect();
+        }
+        $trq.val(val).trigger('change.select2');
+    } else {
+        $trq.trigger('change');
+    }
+}
+
 function initAdqSolicitudForm() {
     if (!$('#frmSolicitud').length) {
         return;
+    }
+
+    // Respetar flag del HTML (server) si la etapa no permite cotizaciones.
+    const cotEditAttr = $('#divCotizaciones').attr('data-adq-cot-edit');
+    if (cotEditAttr === '0') {
+        adqSetEtapaPermiteCotizaciones(false);
     }
 
     if ($('#Prv_Sug').length && $('#Prv_Sug').hasClass('select2-hidden-accessible')) {
@@ -1472,6 +1579,9 @@ function actualizarEstadoAdjuntoCotizacion($box) {
 }
 
 function validarPdfsCotizacionesFormulario(exigirAdjunto) {
+    if (!adqEtapaPermiteCotizaciones) {
+        return true;
+    }
     let invalido = false;
     $('#cotizacionesList .adq-proforma-row input[type="file"]').each(function() {
         if (!this.files || !this.files.length) {
@@ -1781,7 +1891,7 @@ function procesarSolicitud(esBorrador) {
     toggleProveedorSugerido();
     syncReqConfigFromForm();
 
-    if (!validarPdfsCotizacionesFormulario()) {
+    if (adqEtapaPermiteCotizaciones && !validarPdfsCotizacionesFormulario()) {
         return;
     }
 
