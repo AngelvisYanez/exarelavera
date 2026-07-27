@@ -1063,112 +1063,70 @@ function adqEtiquetaMiAccion($accion) {
             font-size: 18px;
         }
 
-        /* Tabs profesionales (solo bandeja) */
-        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: stretch;
-            gap: 8px;
-            margin: 0;
-            padding: 10px 12px;
-            background: #f1f5f9;
-            border: 1px solid #94a3b8;
-            border-radius: 10px 10px 0 0;
-            box-shadow: inset 0 1px 0 #ffffff;
+        /* Tabs estilo man_adm_configuracion (nav-tabs-custom) */
+        .adq-bandj-page .nav-tabs-custom {
+            margin-bottom: 0;
         }
-        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li {
-            float: none;
-            margin: 0;
+        .adq-bandj-page .nav-tabs-custom > .nav-tabs {
+            border-bottom: 3px solid #3c8dbc;
+            margin-bottom: 0;
         }
-        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li > a {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin: 0 !important;
-            padding: 10px 16px !important;
-            border: 1px solid #64748b !important;
-            border-radius: 8px !important;
-            background: #ffffff !important;
-            color: #334155 !important;
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: 0.01em;
-            line-height: 1.2;
-            text-decoration: none;
-            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
-            transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+        .adq-bandj-page .nav-tabs-custom > .nav-tabs > li {
+            margin-right: 5px;
         }
-        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li > a > i {
-            font-size: 15px;
-            color: #475569;
-            transition: color 0.15s ease;
+        .adq-bandj-page .nav-tabs-custom > .nav-tabs > li > a {
+            border-radius: 5px 5px 0 0;
+            color: #444;
+            background: #f4f4f4;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            padding: 10px 20px;
+            font-weight: bold;
+            margin-right: 0;
         }
-        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li > a > span:not(.badge) {
-            white-space: nowrap;
+        .adq-bandj-page .nav-tabs-custom > .nav-tabs > li.active > a,
+        .adq-bandj-page .nav-tabs-custom > .nav-tabs > li.active > a:hover,
+        .adq-bandj-page .nav-tabs-custom > .nav-tabs > li.active > a:focus {
+            background: #3c8dbc;
+            color: #fff;
+            border-color: #3c8dbc;
         }
-        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li > a:hover,
-        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li > a:focus {
-            background: #eff6ff !important;
-            color: #1e3a8a !important;
-            border-color: #2563eb !important;
-            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.18);
+        .adq-bandj-page .nav-tabs-custom > .nav-tabs > li > a:hover {
+            background: #e9ecef;
         }
-        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li > a:hover > i,
-        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li > a:focus > i {
-            color: #1e3a8a;
+        .adq-bandj-page .nav-tabs-custom > .nav-tabs > li.active > a:hover {
+            background: #367fa9;
+            color: #fff;
         }
-        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li.active > a,
-        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li.active > a:hover,
-        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li.active > a:focus {
-            background: #1e3a8a !important;
-            color: #ffffff !important;
-            border-color: #1e3a8a !important;
-            font-weight: 700;
-            box-shadow: 0 2px 8px rgba(30, 58, 138, 0.35);
+        .adq-bandj-page .nav-tabs-custom .icon-tab {
+            margin-right: 8px;
+            font-size: 16px;
         }
-        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li.active > a > i {
-            color: #ffffff;
-        }
-        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs .adq-tab-count,
-        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li > a .badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 22px;
-            height: 20px;
-            padding: 0 7px;
-            margin-left: 2px;
-            border-radius: 999px;
-            background: #e2e8f0 !important;
-            color: #1e293b !important;
+        .adq-bandj-page .nav-tabs-custom > .nav-tabs > li > a .adq-tab-count,
+        .adq-bandj-page .nav-tabs-custom > .nav-tabs > li > a .badge {
+            display: inline-block;
+            min-width: 18px;
+            padding: 2px 6px;
+            margin-left: 6px;
+            border-radius: 10px;
+            background: #dde4ea !important;
+            color: #333 !important;
             font-size: 11px !important;
-            font-weight: 700;
-            line-height: 1;
-            border: 1px solid #94a3b8;
+            font-weight: bold;
+            line-height: 1.2;
+            vertical-align: middle;
         }
-        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li.active > a .adq-tab-count,
-        .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li.active > a .badge {
-            background: #ffffff !important;
-            color: #1e3a8a !important;
-            border-color: #ffffff;
+        .adq-bandj-page .nav-tabs-custom > .nav-tabs > li.active > a .adq-tab-count,
+        .adq-bandj-page .nav-tabs-custom > .nav-tabs > li.active > a .badge {
+            background: #fff !important;
+            color: #3c8dbc !important;
         }
         .adq-bandj-page .exa-ui-tab-content.panels-area {
-            border: 1px solid #94a3b8;
+            padding: 20px;
+            border: 1px solid #ddd;
             border-top: none;
-            border-radius: 0 0 10px 10px;
-            background: #ffffff !important;
-            padding: 16px 16px 20px;
-        }
-        @media (max-width: 767px) {
-            .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs {
-                gap: 6px;
-                padding: 8px;
-            }
-            .adq-bandj-page .exa-ui-nav-tabs.adq-bandj-tabs > li > a {
-                padding: 9px 12px !important;
-                font-size: 12px;
-                gap: 6px;
-            }
+            border-radius: 0 0 5px 5px;
+            background: #fff !important;
         }
 
         .adq-bandj-page .adq-table-panel {
@@ -1739,9 +1697,9 @@ function adqEtiquetaMiAccion($accion) {
             flex-wrap: wrap;
             margin: 0;
             background: #ffffff;
-            border-left: 1px solid #94a3b8;
-            border-right: 1px solid #94a3b8;
-            border-bottom: 1px solid #cbd5e1;
+            border-left: 1px solid #ddd;
+            border-right: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
         }
         .adq-bandj-filters label {
             margin: 0;
@@ -2231,37 +2189,39 @@ function adqEtiquetaMiAccion($accion) {
         </div>
         <div class="panel-body exa-body">
             <div class="exa-ui-page-view">
-        <ul class="nav nav-tabs exa-ui-nav-tabs adq-bandj-tabs" id="inboxTabs" role="tablist">
+        <div class="nav-tabs-custom">
+        <ul class="nav nav-tabs" id="inboxTabs" role="tablist">
             <li role="presentation">
-                <a href="#create-panel" id="create-tab" role="tab" data-toggle="tab">
-                    <i class="bi bi-file-earmark-plus"></i><span>Crear Solicitud</span>
+                <a href="#create-panel" id="create-tab" aria-controls="create-panel" role="tab" data-toggle="tab">
+                    <i class="bi bi-file-earmark-plus icon-tab"></i>Crear Solicitud
                 </a>
             </li>
             <li role="presentation" class="active">
-                <a href="#pending-panel" id="pending-tab" role="tab" data-toggle="tab">
-                    <i class="bi bi-clipboard-check"></i><span>Mis Pendientes</span>
+                <a href="#pending-panel" id="pending-tab" aria-controls="pending-panel" role="tab" data-toggle="tab">
+                    <i class="bi bi-clipboard-check icon-tab"></i>Mis Pendientes
                     <span class="badge adq-tab-count"><?php echo count($pendientes); ?></span>
                 </a>
             </li>
             <li role="presentation">
-                <a href="#my-panel" id="my-tab" role="tab" data-toggle="tab">
-                    <i class="bi bi-person-workspace"></i><span>Mis Solicitudes</span>
+                <a href="#my-panel" id="my-tab" aria-controls="my-panel" role="tab" data-toggle="tab">
+                    <i class="bi bi-person-workspace icon-tab"></i>Mis Solicitudes
                     <span class="badge adq-tab-count"><?php echo count($mis_solicitudes); ?></span>
                 </a>
             </li>
             <li role="presentation">
-                <a href="#managed-panel" id="managed-tab" role="tab" data-toggle="tab">
-                    <i class="bi bi-check2-square"></i><span>Gestion&eacute;</span>
+                <a href="#managed-panel" id="managed-tab" aria-controls="managed-panel" role="tab" data-toggle="tab">
+                    <i class="bi bi-check2-square icon-tab"></i>Gestion&eacute;
                     <span class="badge adq-tab-count"><?php echo count($gestionadas); ?></span>
                 </a>
             </li>
             <li role="presentation">
-                <a href="#history-panel" id="history-tab" role="tab" data-toggle="tab">
-                    <i class="bi bi-clock-history"></i><span>Historial</span>
+                <a href="#history-panel" id="history-tab" aria-controls="history-panel" role="tab" data-toggle="tab">
+                    <i class="bi bi-clock-history icon-tab"></i>Historial
                     <span class="badge adq-tab-count"><?php echo count($historico); ?></span>
                 </a>
             </li>
         </ul>
+        </div>
 
         <div class="adq-bandj-filters" id="adqBandjFiltersFlujo">
             <label for="filtroFlujo"><i class="bi bi-diagram-3"></i> Filtrar por flujo:</label>
