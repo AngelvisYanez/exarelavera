@@ -727,7 +727,7 @@ class wf_manager_log {
 
     /**
      * Indica si la etapa activa permite cargar cotizaciones/proformas.
-     * Usa el nodo de la instancia y, si aplica, el flujo publicado de la misma familia.
+     * Solo el Nod_Cot_Edit del nodo actual de la instancia (sin heredar de otras versiones).
      */
     public function resolverNodCotEditInstancia($ins_cod) {
         $this->ensureNotificationSchema();
@@ -736,7 +736,7 @@ class wf_manager_log {
             return 0;
         }
         $row = $this->obBD_datos->getRowConsultaSql(
-            "SELECT i.Wfm_Cod, n.Nod_Nom, n.Nod_Tip, IFNULL(n.Nod_Cot_Edit, 0) AS Nod_Cot_Edit
+            "SELECT IFNULL(n.Nod_Cot_Edit, 0) AS Nod_Cot_Edit
              FROM wf_instancias i
              INNER JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act
              WHERE i.Ins_Cod = $ins_cod AND i.Ins_Est = 'P'
@@ -746,13 +746,7 @@ class wf_manager_log {
         if (empty($row)) {
             return 0;
         }
-        if (intval($row['Nod_Cot_Edit']) === 1) {
-            return 1;
-        }
-        $wfm_cod = intval($row['Wfm_Cod']);
-        $nod_nom = $row['Nod_Nom'];
-        $nod_tip = $row['Nod_Tip'];
-        return $this->resolverNodCotEditPublicado($wfm_cod, $nod_nom, $nod_tip);
+        return (intval($row['Nod_Cot_Edit']) === 1) ? 1 : 0;
     }
 
     /**
@@ -765,7 +759,7 @@ class wf_manager_log {
             return 0;
         }
         $row = $this->obBD_datos->getRowConsultaSql(
-            "SELECT n.Wfm_Cod, n.Nod_Nom, n.Nod_Tip, IFNULL(n.Nod_Cot_Edit, 0) AS Nod_Cot_Edit
+            "SELECT IFNULL(n.Nod_Cot_Edit, 0) AS Nod_Cot_Edit
              FROM wf_nodos n
              WHERE n.Nod_Cod = $nod_cod
              LIMIT 1;",
@@ -774,33 +768,7 @@ class wf_manager_log {
         if (empty($row)) {
             return 0;
         }
-        if (intval($row['Nod_Cot_Edit']) === 1) {
-            return 1;
-        }
-        return $this->resolverNodCotEditPublicado(intval($row['Wfm_Cod']), $row['Nod_Nom'], $row['Nod_Tip']);
-    }
-
-    private function resolverNodCotEditPublicado($wfm_cod, $nod_nom, $nod_tip) {
-        $wfm_cod = intval($wfm_cod);
-        if ($wfm_cod <= 0) {
-            return 0;
-        }
-        $nod_nom = $this->escapeWf($nod_nom);
-        $nod_tip = $this->escapeWf($nod_tip);
-        $pub = $this->obBD_datos->getRowConsultaSql(
-            "SELECT IFNULL(n2.Nod_Cot_Edit, 0) AS Nod_Cot_Edit
-             FROM wf_flujos_modelos w_inst
-             INNER JOIN wf_flujos_modelos w_pub ON w_pub.Emp_Cod = w_inst.Emp_Cod
-                AND COALESCE(w_pub.Wfm_Fam_Cod, w_pub.Wfm_Cod) = COALESCE(w_inst.Wfm_Fam_Cod, w_inst.Wfm_Cod)
-                AND w_pub.Wfm_Est = 'P'
-             INNER JOIN wf_nodos n2 ON n2.Wfm_Cod = w_pub.Wfm_Cod
-                AND n2.Nod_Nom = '$nod_nom' AND n2.Nod_Tip = '$nod_tip' AND n2.Nod_Est = 'A'
-             WHERE w_inst.Wfm_Cod = $wfm_cod
-             ORDER BY w_pub.Wfm_Cod DESC
-             LIMIT 1;",
-            $this->obBD_conexion
-        );
-        return (!empty($pub) && intval($pub['Nod_Cot_Edit']) === 1) ? 1 : 0;
+        return (intval($row['Nod_Cot_Edit']) === 1) ? 1 : 0;
     }
 
     /**

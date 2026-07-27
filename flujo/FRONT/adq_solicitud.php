@@ -510,6 +510,20 @@ $centros_costo = $obBD_con1->getArrayConsultaSql("SELECT DISTINCT Dep_Cdc AS Cdc
 if (isset($ajax_get_form)) {
     header('Content-Type: text/html; charset=UTF-8');
     $modo_form = isset($_GET['modo']) ? trim($_GET['modo']) : 'corto';
+    $sol_form_cod = isset($_GET['sol_cod']) ? intval($_GET['sol_cod']) : 0;
+    $adq_ocultar_cotizaciones = false;
+    if ($modo_form === 'completar' && $sol_form_cod > 0) {
+        $ins_form = $obBD_con1->getRowConsultaSql(
+            "SELECT i.Ins_Cod
+             FROM wf_instancias i
+             WHERE i.Ins_Ent_Typ = 'adq_solicitudes' AND i.Ins_Ent_Cod = $sol_form_cod AND i.Ins_Est = 'P'
+             ORDER BY i.Ins_Cod DESC LIMIT 1;",
+            $obBD_conexion
+        );
+        if (!empty($ins_form['Ins_Cod']) && $wf_mgr->resolverNodCotEditInstancia(intval($ins_form['Ins_Cod'])) !== 1) {
+            $adq_ocultar_cotizaciones = true;
+        }
+    }
     if ($modo_form !== 'completar') {
         ?>
         <div class="adq-step-card" style="max-width:760px;margin:24px auto;background:#fff;border:1px solid #dbe4ee;border-radius:14px;padding:28px;box-shadow:0 8px 28px rgba(15,43,70,.08);">
@@ -1781,7 +1795,7 @@ if (isset($ajax_get_form)) {
             </div>
 
             <!-- PASO 2: Cotizaciones de Sustento -->
-            <div class="adq-step-card" id="divCotizaciones">
+            <div class="adq-step-card" id="divCotizaciones" data-adq-cot-edit="<?php echo !empty($adq_ocultar_cotizaciones) ? '0' : '1'; ?>"<?php echo !empty($adq_ocultar_cotizaciones) ? ' style="display:none;"' : ''; ?>>
                 <span class="adq-step-badge">Paso 2</span>
                 <h5 class="adq-step-title"><i class="bi bi-file-earmark-pdf-fill"></i> Sustento de Cotizaciones Físicas</h5>
                 <div class="adq-cot-headline">
@@ -1920,7 +1934,7 @@ if (isset($ajax_get_form)) {
         </div>
     </div>
     <script src="../../framework/plugins/cedulaRuc.js" charset="UTF-8"></script>
-    <script src="../VALIDACIONES/adq_solicitud.js" charset="UTF-8"></script>
+    <script src="../VALIDACIONES/adq_solicitud.js?v=20260727e" charset="UTF-8"></script>
     <?php
     exit;
 }
@@ -1950,6 +1964,6 @@ if (isset($ajax_get_form)) {
 
     <!-- Script del validador de adquisición -->
     <script src="../../framework/plugins/cedulaRuc.js" charset="UTF-8"></script>
-    <script src="../VALIDACIONES/adq_solicitud.js" charset="UTF-8"></script>
+    <script src="../VALIDACIONES/adq_solicitud.js?v=20260727e" charset="UTF-8"></script>
 </body>
 </html>

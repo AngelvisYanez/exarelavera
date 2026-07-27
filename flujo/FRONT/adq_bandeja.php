@@ -892,7 +892,11 @@ if ($pendientes === false || $pendientes === null) {
 }
 foreach ($pendientes as $idx => $p) {
     $sol_est_ok = !in_array($p['Sol_Est'], array('A', 'R'), true);
-    $pendientes[$idx]['Puede_Cargar_Cotizaciones'] = ($sol_est_ok && intval($p['Nod_Cot_Edit']) === 1) ? 1 : 0;
+    $cot_ok = $sol_est_ok && !empty($p['Ins_Cod'])
+        ? ($wf_mgr->resolverNodCotEditInstancia(intval($p['Ins_Cod'])) === 1)
+        : false;
+    $pendientes[$idx]['Nod_Cot_Edit'] = $cot_ok ? 1 : 0;
+    $pendientes[$idx]['Puede_Cargar_Cotizaciones'] = $cot_ok ? 1 : 0;
     $pendientes[$idx]['Puede_Cargar_Avance'] = ($sol_est_ok && in_array($p['Nod_Tip'], array('AVANCE', 'FISCALIZACION'), true)) ? 1 : 0;
 }
 
@@ -3038,7 +3042,7 @@ let currentInsCod = null;
             $('#actionComentario').attr('placeholder', esFin
                 ? 'Comentario de cierre del expediente...'
                 : (esInicio
-                    ? 'Comentario de la etapa Inicio (cotizaciones / sustento)...'
+                    ? 'Comentario de la etapa Inicio...'
                     : (esTarea
                     ? 'Describa el resultado de la tarea o el trabajo realizado...'
                     : (esAvance
@@ -5243,7 +5247,7 @@ let currentInsCod = null;
             }
 
             $('#create-panel-content').data('sol-cod', targetSol || '');
-            $.get('adq_solicitud.php', { ajax_get_form: 1, modo: targetSol ? 'completar' : 'corto' }, function(html) {
+            $.get('adq_solicitud.php', { ajax_get_form: 1, modo: targetSol ? 'completar' : 'corto', sol_cod: targetSol || '' }, function(html) {
                 if (requestId !== formLoadRequestId) {
                     return;
                 }
@@ -5258,7 +5262,7 @@ let currentInsCod = null;
                 } else {
                     $.getScript('../../framework/plugins/cedulaRuc.js')
                         .done(function() {
-                            return $.getScript('../VALIDACIONES/adq_solicitud.js');
+                            return $.getScript('../VALIDACIONES/adq_solicitud.js?v=20260727e');
                         })
                         .done(function() {
                             if (requestId !== formLoadRequestId) {

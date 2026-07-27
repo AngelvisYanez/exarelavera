@@ -2631,15 +2631,15 @@ class adq_adquisiciones_log extends MysqlDatosContab {
     /**
      * Valida requisitos al enviar a aprobacion (gate AL_ENVIAR).
      */
-    public function validarRequisitosParaEnvio($sol_cod) {
+    public function validarRequisitosParaEnvio($sol_cod, $validar_cotizaciones = true) {
         $sol = $this->obtenerSolicitudConTipo($sol_cod);
         if (empty($sol)) {
             return array('success' => false, 'message' => 'Solicitud no encontrada.', 'faltantes' => array('Solicitud no encontrada.'));
         }
-        return $this->validarRequisitosDesdeSolicitud($sol);
+        return $this->validarRequisitosDesdeSolicitud($sol, $validar_cotizaciones);
     }
 
-    private function validarRequisitosDesdeSolicitud($sol) {
+    private function validarRequisitosDesdeSolicitud($sol, $validar_cotizaciones = true) {
         $faltantes = array();
         $sol_cod = intval($sol['Sol_Cod']);
 
@@ -2660,7 +2660,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         if (intval($sol['Sol_Req_Pro']) === 1 && empty($sol['Prv_Sug'])) {
             $faltantes[] = 'Debe seleccionar un proveedor sugerido.';
         }
-        if (intval($sol['Sol_Req_Cot']) === 1) {
+        if ($validar_cotizaciones && intval($sol['Sol_Req_Cot']) === 1) {
             $min_cot = max(1, intval($sol['Sol_Min_Cot']));
             $cots = $this->getArrayConsultaSql(
                 "SELECT * FROM adq_solicitudes_cotizaciones WHERE Sol_Cod = $sol_cod;",
@@ -2751,6 +2751,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         $emp_cod = intval($emp_cod);
         $usu_sol = intval($usu_sol);
         $filtro_permiso = "s.Usu_Sol = $usu_sol AND s.Sol_Est IN ('P', 'O')";
+        $ins_cod_activo = 0;
+        $wf_mgr = null;
         if ($por_nodo) {
             $wf_mgr = new wf_manager_log(isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null, $this->conexion);
             $ctx = $wf_mgr->resolverContextoUsuario($emp_cod);
@@ -2763,6 +2765,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             if (empty($inst) || !$wf_mgr->puedeResolverInstancia(intval($inst['Ins_Cod']), $ctx['usu_cod'], $ctx['dep_cod'], $ctx['perfiles_ids'])) {
                 return array('success' => false, 'message' => 'La solicitud no está asignada a su usuario.');
             }
+            $ins_cod_activo = intval($inst['Ins_Cod']);
             $filtro_permiso = "s.Sol_Est = 'P'";
         }
         $sol = $this->getRowConsultaSql(
@@ -2812,6 +2815,10 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             }
             $prv_sug_text = $nombre;
         }
+        $puede_cot = 0;
+        if ($por_nodo && $ins_cod_activo > 0 && $wf_mgr !== null) {
+            $puede_cot = ($wf_mgr->resolverNodCotEditInstancia($ins_cod_activo) === 1) ? 1 : 0;
+        }
         return array(
             'success' => true,
             'solicitud' => $sol,
@@ -2821,6 +2828,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             'decision_vals' => $this->listarDecisionVals($sol_cod),
             'prv_sug_text' => $prv_sug_text,
             'modo_edicion' => $por_nodo ? 'completar_nodo' : (($sol['Sol_Est'] === 'O') ? 'observada' : 'borrador'),
+            'puede_cargar_cotizaciones' => $puede_cot,
             'ultima_observacion' => $this->obtenerUltimaObservacionWorkflow($sol_cod)
         );
     }
@@ -2831,6 +2839,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         $this->ensureSolicitudRequisitosColumns();
         $this->ensureSolicitudTituloColumn();
         $completar_nodo = !empty($data['_completar_nodo']);
+        $carga = null;
         if ($completar_nodo) {
             $carga = $this->obtenerBorradorParaEdicion($sol_cod, $emp_cod, $usu_sol, true);
             if (empty($carga['success'])) {
@@ -2878,7 +2887,14 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             }
 
             $this->guardarDetalleSolicitud($sol_cod, $items);
-            $this->sincronizarCotizacionesBorrador($sol_cod, $cotizaciones_nuevas, $cotizaciones_existentes, $cot_eliminar);
+            // Cotizaciones solo si la etapa lo permite (o es correccion observada / borrador del solicitante).
+            $permitir_cot = true;
+            if ($completar_nodo) {
+                $permitir_cot = (!empty($carga) && !empty($carga['puede_cargar_cotizaciones']));
+            }
+            if ($permitir_cot) {
+                $this->sincronizarCotizacionesBorrador($sol_cod, $cotizaciones_nuevas, $cotizaciones_existentes, $cot_eliminar);
+            }
             $this->sincronizarAdjuntosSolicitud($sol_cod, $adjuntos_nuevos, $adjuntos_existentes, $adj_eliminar);
 
             $decision_vals = $this->extraerDecisionValsDesdePost($data);
@@ -3026,10 +3042,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             return $upd;
         }
         try {
-            $validacion = $this->validarRequisitosParaEnvio($sol_cod);
-            if (empty($validacion['success'])) {
-                return $validacion;
-            }
+            $wf_mgr = new wf_manager_log(isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null, $this->conexion);
             $inst = $this->getRowConsultaSql(
                 "SELECT Ins_Cod, Nod_Act FROM wf_instancias
                  WHERE Ins_Ent_Typ = 'adq_solicitudes' AND Ins_Ent_Cod = $sol_cod AND Ins_Est = 'P'
@@ -3038,6 +3051,12 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             );
             if (empty($inst)) {
                 throw new Exception('No se encontró la instancia activa de la solicitud.');
+            }
+            // Solo exigir cotizaciones si la etapa actual tiene Nod_Cot_Edit activo.
+            $exige_cot = ($wf_mgr->resolverNodCotEditInstancia(intval($inst['Ins_Cod'])) === 1);
+            $validacion = $this->validarRequisitosParaEnvio($sol_cod, $exige_cot);
+            if (empty($validacion['success'])) {
+                return $validacion;
             }
             $this->inicio_transaccion($this->conexion);
             // Completar el formulario es una tarea del nodo actual: no avanza el workflow.
