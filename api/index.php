@@ -232,7 +232,7 @@ $app->get('/v1/docs', function () use ($app) {
     <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
     <script>
         SwaggerUIBundle({
-            url: <?= json_encode($app->request->getUrl() . $app->request->getRootUri() . '/v1/docs/openapi.json') ?>,
+            url: ' . json_encode($app->request->getUrl() . $app->request->getRootUri() . '/v1/docs/openapi.json') . ',
             dom_id: "#swagger-ui",
             presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
             layout: "BaseLayout"

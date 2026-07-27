@@ -113,9 +113,29 @@ $app->post("/v1/auth/login", function () use ($app) {
         $obBD_conexion = new Class_Log_Conexion_Auth();
         $obBD_con1 = new Class_Log_Datos_Auth();
 
+        $empresaNombre = $obBD_conexion->conexion
+            ? $obBD_conexion->conexion->real_escape_string($empresa)
+            : addslashes($empresa);
+        $rs_emp = $obBD_con1->consulta(
+            "SELECT Emp_Cod FROM empresas WHERE Emp_Nom='$empresaNombre' AND Emp_Est='A' LIMIT 1",
+            $obBD_conexion->conexion
+        );
+        $emp_row = $obBD_con1->fetch_assoc($rs_emp);
+        $obBD_con1->free_result($rs_emp);
+
+        if (empty($emp_row)) {
+            echo json_encode([
+                "success" => false,
+                "error" => "Usuario o empresa no encontrados",
+            ]);
+            return;
+        }
+
+        $empCod = (int) $emp_row["Emp_Cod"];
+
         $row_data = $obBD_con1->getRowConsulta(
             2,
-            $empresa . "*" . $username,
+            $empCod . "*" . $username,
             $obBD_conexion
         );
 
@@ -127,7 +147,7 @@ $app->post("/v1/auth/login", function () use ($app) {
 
             $user_data = $obBD_con1->getRowConsulta(
                 14,
-                $username . "*" . $encryptor . "*" . $empresa,
+                $username . "*" . $encryptor . "*" . $empCod,
                 $obBD_conexion_dist
             );
 
