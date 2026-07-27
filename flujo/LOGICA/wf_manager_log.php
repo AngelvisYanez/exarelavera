@@ -47,15 +47,39 @@ class wf_manager_log {
                 $usu_sql = $usu;
             }
         }
-        if ($dep > 0) {
-            // Dep_Cod en historial/nodos guarda Wde_Cod de wf_departamentos (ya no RRHH).
-            $row = $this->obBD_datos->getRowConsultaSql(
+        // Dep_Cod en historial guarda Wde_Cod (wf_departamentos), NUNCA Ses_Dep_Cod (RRHH):
+        // los IDs pueden coincidir y reventar la FK legacy a departamen.
+        $wde = 0;
+        if ($usu > 0) {
+            $asig = $this->obBD_datos->getRowConsultaSql(
+                "SELECT du.Wde_Cod
+                 FROM wf_departamento_usuarios du
+                 INNER JOIN wf_departamentos w ON w.Wde_Cod = du.Wde_Cod AND w.Wde_Est = 'A'
+                 WHERE du.Usu_Cod = $usu AND du.Wde_Cod IS NOT NULL
+                 ORDER BY du.Wdu_Cod ASC
+                 LIMIT 1;",
+                $this->obBD_conexion
+            );
+            if (!empty($asig['Wde_Cod'])) {
+                $wde = intval($asig['Wde_Cod']);
+            }
+        }
+        if ($wde <= 0 && $dep > 0) {
+            // Solo aceptar $dep si es Wde_Cod real y NO existe como Dep_Cod RRHH (evita colision).
+            $wf = $this->obBD_datos->getRowConsultaSql(
                 "SELECT Wde_Cod FROM wf_departamentos WHERE Wde_Cod = $dep LIMIT 1;",
                 $this->obBD_conexion
             );
-            if (!empty($row['Wde_Cod'])) {
-                $dep_sql = $dep;
+            $rrhh = $this->obBD_datos->getRowConsultaSql(
+                "SELECT Dep_Cod FROM departamen WHERE Dep_Cod = $dep LIMIT 1;",
+                $this->obBD_conexion
+            );
+            if (!empty($wf['Wde_Cod']) && empty($rrhh['Dep_Cod'])) {
+                $wde = $dep;
             }
+        }
+        if ($wde > 0) {
+            $dep_sql = $wde;
         }
         return array('usu' => $usu_sql, 'dep' => $dep_sql);
     }
@@ -474,28 +498,12 @@ class wf_manager_log {
             $rows_wf = $this->obBD_datos->getArrayConsultaSql(
                 "SELECT DISTINCT w.Wde_Cod AS Dep_Cod
                  FROM wf_departamento_usuarios du
-                 INNER JOIN wf_departamentos w ON w.Wde_Cod = du.Wde_Cod AND w.Wde_Est = 'A'
-                 WHERE du.Usu_Cod = $usu_cod AND du.Wde_Cod IS NOT NULL",
+                 INNER JOIN wf_departamentos w ON w.Wde_Cod = COALESCE(NULLIF(du.Wde_Cod, 0), du.Dep_Cod) AND w.Wde_Est = 'A'
+                 WHERE du.Usu_Cod = $usu_cod",
                 $this->obBD_conexion
             );
             if (is_array($rows_wf)) {
                 foreach ($rows_wf as $r) {
-                    $d = intval($r['Dep_Cod']);
-                    if ($d > 0) {
-                        $deps[$d] = $d;
-                    }
-                }
-            }
-            // Compatibilidad: filas legacy solo con Dep_Cod = Wde_Cod
-            $rows_legacy = $this->obBD_datos->getArrayConsultaSql(
-                "SELECT DISTINCT du.Dep_Cod
-                 FROM wf_departamento_usuarios du
-                 INNER JOIN wf_departamentos w ON w.Wde_Cod = du.Dep_Cod AND w.Wde_Est = 'A'
-                 WHERE du.Usu_Cod = $usu_cod AND (du.Wde_Cod IS NULL OR du.Wde_Cod = 0)",
-                $this->obBD_conexion
-            );
-            if (is_array($rows_legacy)) {
-                foreach ($rows_legacy as $r) {
                     $d = intval($r['Dep_Cod']);
                     if ($d > 0) {
                         $deps[$d] = $d;
@@ -965,6 +973,11 @@ class wf_manager_log {
         if (self::$versioningReadyStatic) {
             return;
         }
+        if (!empty($_SESSION['wf_schema_versioning_ok'])) {
+            self::$versioningReadyStatic = true;
+            self::$notificationSchemaReadyStatic = true;
+            return;
+        }
         $cols = $this->obBD_datos->getArrayConsultaSql(
             "SHOW COLUMNS FROM wf_flujos_modelos LIKE 'Wfm_Fam_Cod';",
             $this->obBD_conexion
@@ -982,6 +995,9 @@ class wf_manager_log {
         self::$versioningReadyStatic = true;
         $this->ensureNotificationSchema();
         $this->ensureConnectionPortsSchema();
+        if (isset($_SESSION)) {
+            $_SESSION['wf_schema_versioning_ok'] = 1;
+        }
     }
 
     /**
@@ -1674,6 +1690,7 @@ class wf_manager_log {
 
     public function iniciarInstancia($Wfm_Cod, $Ent_Typ, $Ent_Cod, $manageTransaction = true) {
         $this->ensureVersioningSchema();
+        $this->ensureWfDepCodSinFkRrhh();
         $emp_cod = isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0;
         $Wfm_Cod = $this->resolverFlujoParaNuevaInstancia($Wfm_Cod, $emp_cod);
         if ($manageTransaction) {
@@ -4165,33 +4182,78 @@ class wf_manager_log {
     }
 
     /**
-     * Elimina FKs legacy Dep_Cod -> departamen (RRHH).
-     * wf_nodos.Dep_Cod y wf_instancias_nodos.Dep_Cod guardan Wde_Cod de wf_departamentos.
+     * Dep_Cod de nodos/historial = Wde_Cod de wf_departamentos (ya no departamen/RRHH).
+     * Quita FKs legacy a departamen y asegura FK hacia wf_departamentos.
+     * Fast-path: si la sesion/BD ya esta migrada, no ejecuta ALTER ni information_schema pesado.
      */
     public function ensureWfDepCodSinFkRrhh() {
         static $ready = false;
         if ($ready) {
             return;
         }
-        // Nombres historicos conocidos (por si information_schema no los reporta).
+        if (!empty($_SESSION['wf_dep_fk_wf_ok'])) {
+            $ready = true;
+            return;
+        }
+
+        // Chequeo rapido: ¿ya esta migrado?
+        $chk = $this->obBD_datos->getRowConsultaSql(
+            "SELECT
+                SUM(CASE WHEN REFERENCED_TABLE_NAME = 'departamen' THEN 1 ELSE 0 END) AS rrhh_cnt,
+                SUM(CASE WHEN TABLE_NAME = 'wf_nodos' AND REFERENCED_TABLE_NAME = 'wf_departamentos' THEN 1 ELSE 0 END) AS nodos_ok,
+                SUM(CASE WHEN TABLE_NAME = 'wf_instancias_nodos' AND REFERENCED_TABLE_NAME = 'wf_departamentos' THEN 1 ELSE 0 END) AS hist_ok
+             FROM information_schema.KEY_COLUMN_USAGE
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME IN ('wf_nodos', 'wf_instancias_nodos')
+               AND COLUMN_NAME = 'Dep_Cod'
+               AND REFERENCED_TABLE_NAME IS NOT NULL;",
+            $this->obBD_conexion
+        );
+        if (!empty($chk)
+            && intval($chk['rrhh_cnt']) === 0
+            && intval($chk['nodos_ok']) > 0
+            && intval($chk['hist_ok']) > 0
+        ) {
+            $ready = true;
+            if (isset($_SESSION)) {
+                $_SESSION['wf_dep_fk_wf_ok'] = 1;
+            }
+            return;
+        }
+
+        $mysqli = null;
+        if (isset($this->obBD_conexion->conexion) && $this->obBD_conexion->conexion) {
+            $mysqli = $this->obBD_conexion->conexion;
+        }
+
+        // 1) Quitar FKs legacy Dep_Cod -> departamen
         $drops_conocidos = array(
             "ALTER TABLE `wf_nodos` DROP FOREIGN KEY `wf_nodos_departamen_FK`",
             "ALTER TABLE `wf_instancias_nodos` DROP FOREIGN KEY `wf_instancias_nodos_departamen_FK`",
             "ALTER TABLE `wf_departamento_usuarios` DROP FOREIGN KEY `wf_departamento_usuarios_ibfk_2`"
         );
         foreach ($drops_conocidos as $sqlDrop) {
-            @$this->obBD_datos->grabarv_registros($sqlDrop . ';', $this->obBD_conexion);
+            if ($mysqli) {
+                @mysqli_query($mysqli, $sqlDrop);
+            } else {
+                @$this->obBD_datos->grabarv_registros($sqlDrop . ';', $this->obBD_conexion);
+            }
         }
 
         $tablas = array('wf_nodos', 'wf_instancias_nodos', 'wf_departamento_usuarios');
         foreach ($tablas as $tabla) {
             $fks = $this->obBD_datos->getArrayConsultaSql(
-                "SELECT DISTINCT CONSTRAINT_NAME
-                 FROM information_schema.KEY_COLUMN_USAGE
-                 WHERE TABLE_SCHEMA = DATABASE()
-                   AND TABLE_NAME = '$tabla'
-                   AND COLUMN_NAME = 'Dep_Cod'
-                   AND REFERENCED_TABLE_NAME = 'departamen';",
+                "SELECT DISTINCT k.CONSTRAINT_NAME
+                 FROM information_schema.KEY_COLUMN_USAGE k
+                 INNER JOIN information_schema.TABLE_CONSTRAINTS t
+                   ON t.CONSTRAINT_SCHEMA = k.CONSTRAINT_SCHEMA
+                  AND t.CONSTRAINT_NAME = k.CONSTRAINT_NAME
+                  AND t.TABLE_NAME = k.TABLE_NAME
+                  AND t.CONSTRAINT_TYPE = 'FOREIGN KEY'
+                 WHERE k.TABLE_SCHEMA = DATABASE()
+                   AND k.TABLE_NAME = '$tabla'
+                   AND k.COLUMN_NAME = 'Dep_Cod'
+                   AND k.REFERENCED_TABLE_NAME = 'departamen';",
                 $this->obBD_conexion
             );
             if (!is_array($fks)) {
@@ -4202,13 +4264,119 @@ class wf_manager_log {
                 if ($nombre === '') {
                     continue;
                 }
-                @$this->obBD_datos->grabarv_registros(
-                    "ALTER TABLE `$tabla` DROP FOREIGN KEY `$nombre`;",
-                    $this->obBD_conexion
-                );
+                $sqlDrop = "ALTER TABLE `$tabla` DROP FOREIGN KEY `$nombre`";
+                if ($mysqli) {
+                    @mysqli_query($mysqli, $sqlDrop);
+                } else {
+                    @$this->obBD_datos->grabarv_registros($sqlDrop . ';', $this->obBD_conexion);
+                }
             }
         }
-        $ready = true;
+
+        // 2) Limpiar Dep_Cod huerfanos (codigos RRHH) para poder crear FK a wf_departamentos
+        if ($mysqli) {
+            @mysqli_query(
+                $mysqli,
+                "UPDATE wf_instancias_nodos h
+                 LEFT JOIN wf_departamentos w ON w.Wde_Cod = h.Dep_Cod
+                 SET h.Dep_Cod = NULL
+                 WHERE h.Dep_Cod IS NOT NULL AND w.Wde_Cod IS NULL"
+            );
+            @mysqli_query(
+                $mysqli,
+                "UPDATE wf_nodos n
+                 LEFT JOIN wf_departamentos w ON w.Wde_Cod = n.Dep_Cod
+                 SET n.Dep_Cod = NULL
+                 WHERE n.Dep_Cod IS NOT NULL AND w.Wde_Cod IS NULL"
+            );
+        } else {
+            @$this->obBD_datos->grabarv_registros(
+                "UPDATE wf_instancias_nodos h
+                 LEFT JOIN wf_departamentos w ON w.Wde_Cod = h.Dep_Cod
+                 SET h.Dep_Cod = NULL
+                 WHERE h.Dep_Cod IS NOT NULL AND w.Wde_Cod IS NULL;",
+                $this->obBD_conexion
+            );
+            @$this->obBD_datos->grabarv_registros(
+                "UPDATE wf_nodos n
+                 LEFT JOIN wf_departamentos w ON w.Wde_Cod = n.Dep_Cod
+                 SET n.Dep_Cod = NULL
+                 WHERE n.Dep_Cod IS NOT NULL AND w.Wde_Cod IS NULL;",
+                $this->obBD_conexion
+            );
+        }
+
+        // 3) Asegurar FK Dep_Cod -> wf_departamentos.Wde_Cod
+        $this->ensureFkDepCodAWfDepartamentos('wf_nodos', 'wf_nodos_wf_departamentos_FK', $mysqli);
+        $this->ensureFkDepCodAWfDepartamentos('wf_instancias_nodos', 'wf_instancias_nodos_wf_departamentos_FK', $mysqli);
+
+        $restantes_rrhh = $this->obBD_datos->getArrayConsultaSql(
+            "SELECT CONSTRAINT_NAME
+             FROM information_schema.KEY_COLUMN_USAGE
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME IN ('wf_nodos', 'wf_instancias_nodos')
+               AND COLUMN_NAME = 'Dep_Cod'
+               AND REFERENCED_TABLE_NAME = 'departamen';",
+            $this->obBD_conexion
+        );
+        $ok_nodos = $this->obBD_datos->getRowConsultaSql(
+            "SELECT CONSTRAINT_NAME
+             FROM information_schema.KEY_COLUMN_USAGE
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = 'wf_nodos'
+               AND COLUMN_NAME = 'Dep_Cod'
+               AND REFERENCED_TABLE_NAME = 'wf_departamentos'
+             LIMIT 1;",
+            $this->obBD_conexion
+        );
+        $ok_hist = $this->obBD_datos->getRowConsultaSql(
+            "SELECT CONSTRAINT_NAME
+             FROM information_schema.KEY_COLUMN_USAGE
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = 'wf_instancias_nodos'
+               AND COLUMN_NAME = 'Dep_Cod'
+               AND REFERENCED_TABLE_NAME = 'wf_departamentos'
+             LIMIT 1;",
+            $this->obBD_conexion
+        );
+        if (empty($restantes_rrhh) && !empty($ok_nodos['CONSTRAINT_NAME']) && !empty($ok_hist['CONSTRAINT_NAME'])) {
+            $ready = true;
+            if (isset($_SESSION)) {
+                $_SESSION['wf_dep_fk_wf_ok'] = 1;
+            }
+        }
+    }
+
+    /**
+     * Crea FK Dep_Cod -> wf_departamentos.Wde_Cod si aun no existe.
+     */
+    private function ensureFkDepCodAWfDepartamentos($tabla, $constraint_name, $mysqli = null) {
+        $tabla = preg_replace('/[^a-z0-9_]/i', '', (string)$tabla);
+        $constraint_name = preg_replace('/[^a-z0-9_]/i', '', (string)$constraint_name);
+        if ($tabla === '' || $constraint_name === '') {
+            return;
+        }
+        $existe = $this->obBD_datos->getRowConsultaSql(
+            "SELECT CONSTRAINT_NAME
+             FROM information_schema.KEY_COLUMN_USAGE
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = '$tabla'
+               AND COLUMN_NAME = 'Dep_Cod'
+               AND REFERENCED_TABLE_NAME = 'wf_departamentos'
+             LIMIT 1;",
+            $this->obBD_conexion
+        );
+        if (!empty($existe['CONSTRAINT_NAME'])) {
+            return;
+        }
+        $sql = "ALTER TABLE `$tabla`
+                ADD CONSTRAINT `$constraint_name`
+                FOREIGN KEY (`Dep_Cod`) REFERENCES `wf_departamentos` (`Wde_Cod`)";
+        if ($mysqli) {
+            @mysqli_query($mysqli, $sql);
+        } else {
+            @$this->obBD_datos->grabarv_registros($sql . ';', $this->obBD_conexion);
+        }
     }
 
     /**

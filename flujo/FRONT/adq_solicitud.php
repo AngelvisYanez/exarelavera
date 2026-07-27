@@ -9,8 +9,6 @@ require_once('../LOGICA/adq_adquisiciones_log.php');
 
 $obBD_conexion = new Class_Log_Conexion_Global($Ses_Dat_Dis);
 $obBD_con1 = new adq_adquisiciones_log($obBD_conexion);
-$obBD_con1->ensureSolicitudTituloColumn();
-$obBD_con1->ensureDecisionValsTable();
 require_once('../LOGICA/wf_manager_log.php');
 $wf_mgr = new wf_manager_log($Ses_Dat_Dis);
 
@@ -26,6 +24,18 @@ $ajax_get_solicitud_cot = isset($_GET['ajax_get_solicitud_cot']) ? $_GET['ajax_g
 $ajax_search_proveedores = isset($_GET['ajax_search_proveedores']) ? $_GET['ajax_search_proveedores'] : null;
 $ajax_lookup_proveedor = isset($_GET['ajax_lookup_proveedor']) ? $_GET['ajax_lookup_proveedor'] : null;
 $ajax_save_proveedor = isset($_POST['ajax_save_proveedor']) ? $_POST['ajax_save_proveedor'] : null;
+$ajax_get_form = isset($_GET['ajax_get_form']) ? $_GET['ajax_get_form'] : null;
+
+// Ensures solo cuando hacen falta (escritura o render del formulario).
+$necesita_ensure_schema = (
+    isset($ajax_save_solicitud) || isset($ajax_save_borrador) || isset($ajax_save_cotizaciones)
+    || isset($ajax_save_solicitud_corta) || isset($ajax_completar_solicitud) || isset($ajax_get_form)
+    || isset($ajax_get_borrador) || isset($ajax_get_solicitud_cot) || isset($ajax_save_proveedor)
+);
+if ($necesita_ensure_schema) {
+    $obBD_con1->ensureSolicitudTituloColumn();
+    $obBD_con1->ensureDecisionValsTable();
+}
 
 function adq_validar_y_guardar_pdf_cot($tmp_name, $original_name, $target_dir, $rel_dir) {
     if (empty($tmp_name) || !is_uploaded_file($tmp_name)) {

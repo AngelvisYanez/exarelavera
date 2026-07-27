@@ -11,9 +11,38 @@ require_once('../LOGICA/adq_adquisiciones_log.php');
 $obBD_conexion = new Class_Log_Conexion_Global($Ses_Dat_Dis);
 $obBD_con1 = new MysqlDatos($obBD_conexion);
 $obBD_adq = new adq_adquisiciones_log($obBD_conexion);
-$obBD_adq->ensureSolicitudTituloColumn();
 $wf_mgr = new wf_manager_log($Ses_Dat_Dis);
-$wf_mgr->ensureVersioningSchema();
+
+$ajax_workflow_action = isset($_GET['ajax_workflow_action']) ? $_GET['ajax_workflow_action'] : (isset($_POST['ajax_workflow_action']) ? $_POST['ajax_workflow_action'] : null);
+$ajax_enviar_borrador = isset($_POST['ajax_enviar_borrador']) ? $_POST['ajax_enviar_borrador'] : null;
+$ajax_reenviar_observada = isset($_POST['ajax_reenviar_observada']) ? $_POST['ajax_reenviar_observada'] : null;
+$ajax_buscar_compras = isset($_GET['ajax_buscar_compras']) ? $_GET['ajax_buscar_compras'] : null;
+$ajax_vincular_compra = isset($_GET['ajax_vincular_compra']) ? $_GET['ajax_vincular_compra'] : (isset($_POST['ajax_vincular_compra']) ? $_POST['ajax_vincular_compra'] : null);
+$ajax_desvincular_compra = isset($_POST['ajax_desvincular_compra']) ? $_POST['ajax_desvincular_compra'] : null;
+$ajax_get_solicitud_detail = isset($_GET['ajax_get_solicitud_detail']) ? $_GET['ajax_get_solicitud_detail'] : null;
+$ajax_save_avance_docs = isset($_POST['ajax_save_avance_docs']) ? $_POST['ajax_save_avance_docs'] : null;
+$ajax_get_compra_avance = isset($_GET['ajax_get_compra_avance']) ? $_GET['ajax_get_compra_avance'] : null;
+$ajax_buscar_anticipos = isset($_GET['ajax_buscar_anticipos']) ? $_GET['ajax_buscar_anticipos'] : null;
+$ajax_get_anticipo_avance = isset($_GET['ajax_get_anticipo_avance']) ? $_GET['ajax_get_anticipo_avance'] : null;
+$ajax_descargar_expediente = isset($_GET['ajax_descargar_expediente']) ? $_GET['ajax_descargar_expediente'] : null;
+$ajax_descargar_docs_zip = isset($_GET['ajax_descargar_docs_zip']) ? $_GET['ajax_descargar_docs_zip'] : null;
+$ajax_subir_expediente = isset($_POST['ajax_subir_expediente']) ? $_POST['ajax_subir_expediente'] : null;
+$ajax_firmar_expediente = isset($_POST['ajax_firmar_expediente']) ? $_POST['ajax_firmar_expediente'] : null;
+
+$es_ajax_bandeja = (
+    isset($ajax_workflow_action) || isset($ajax_enviar_borrador) || isset($ajax_reenviar_observada)
+    || isset($ajax_buscar_compras) || isset($ajax_vincular_compra) || isset($ajax_desvincular_compra)
+    || isset($ajax_get_solicitud_detail) || isset($ajax_save_avance_docs) || isset($ajax_get_compra_avance)
+    || isset($ajax_buscar_anticipos) || isset($ajax_get_anticipo_avance) || isset($ajax_descargar_expediente)
+    || isset($ajax_descargar_docs_zip) || isset($ajax_subir_expediente) || isset($ajax_firmar_expediente)
+);
+
+// Ensures de esquema solo en carga HTML (o escrituras que ya los invocan internamente).
+if (!$es_ajax_bandeja) {
+    $obBD_adq->ensureSolicitudTituloColumn();
+    $wf_mgr->ensureVersioningSchema();
+}
+
 $wf_ctx = $wf_mgr->resolverContextoUsuario($Ses_Emp_Cod);
 $clausula_nodo_usuario = $wf_mgr->sqlClausulaNodoAsignadoAUsuario($wf_ctx['usu_cod'], $wf_ctx['dep_cod'], $wf_ctx['perfiles_ids']);
 
@@ -106,22 +135,6 @@ function adq_preparar_payload_utf8(&$payload) {
         adq_utf8_deep($payload);
     }
 }
-
-$ajax_workflow_action = isset($_GET['ajax_workflow_action']) ? $_GET['ajax_workflow_action'] : (isset($_POST['ajax_workflow_action']) ? $_POST['ajax_workflow_action'] : null);
-$ajax_enviar_borrador = isset($_POST['ajax_enviar_borrador']) ? $_POST['ajax_enviar_borrador'] : null;
-$ajax_reenviar_observada = isset($_POST['ajax_reenviar_observada']) ? $_POST['ajax_reenviar_observada'] : null;
-$ajax_buscar_compras = isset($_GET['ajax_buscar_compras']) ? $_GET['ajax_buscar_compras'] : null;
-$ajax_vincular_compra = isset($_GET['ajax_vincular_compra']) ? $_GET['ajax_vincular_compra'] : (isset($_POST['ajax_vincular_compra']) ? $_POST['ajax_vincular_compra'] : null);
-$ajax_desvincular_compra = isset($_POST['ajax_desvincular_compra']) ? $_POST['ajax_desvincular_compra'] : null;
-$ajax_get_solicitud_detail = isset($_GET['ajax_get_solicitud_detail']) ? $_GET['ajax_get_solicitud_detail'] : null;
-$ajax_save_avance_docs = isset($_POST['ajax_save_avance_docs']) ? $_POST['ajax_save_avance_docs'] : null;
-$ajax_get_compra_avance = isset($_GET['ajax_get_compra_avance']) ? $_GET['ajax_get_compra_avance'] : null;
-$ajax_buscar_anticipos = isset($_GET['ajax_buscar_anticipos']) ? $_GET['ajax_buscar_anticipos'] : null;
-$ajax_get_anticipo_avance = isset($_GET['ajax_get_anticipo_avance']) ? $_GET['ajax_get_anticipo_avance'] : null;
-$ajax_descargar_expediente = isset($_GET['ajax_descargar_expediente']) ? $_GET['ajax_descargar_expediente'] : null;
-$ajax_descargar_docs_zip = isset($_GET['ajax_descargar_docs_zip']) ? $_GET['ajax_descargar_docs_zip'] : null;
-$ajax_subir_expediente = isset($_POST['ajax_subir_expediente']) ? $_POST['ajax_subir_expediente'] : null;
-$ajax_firmar_expediente = isset($_POST['ajax_firmar_expediente']) ? $_POST['ajax_firmar_expediente'] : null;
 
 // Verificar acceso a la ventana 'bandeja'
 if (!$wf_mgr->verificarAccesoVentana('bandeja')) {
@@ -846,8 +859,6 @@ $dep_cod = $wf_ctx['dep_cod'];
 $perfiles_ids = $wf_ctx['perfiles_ids'];
 $emp_cod = intval($Ses_Emp_Cod);
 
-$wf_mgr->repararInstanciasEnInicio('adq_solicitudes');
-
 $es_gerencial_admin = ($usu_cod == 1) || (isset($_SESSION['Ses_Lis_Per']) && count(array_intersect(array(1, 2), $_SESSION['Ses_Lis_Per'])) > 0);
 $es_gerencial_sql = $es_gerencial_admin ? '1' : '0';
 $filtro_pendiente_sin_auto = $wf_mgr->sqlFiltroPendienteSinAutoaprobacion($usu_cod, $es_gerencial_sql);
@@ -875,7 +886,7 @@ $pendientes = $obBD_con1->getArrayConsultaSql("
       AND $clausula_nodo_usuario
       AND $filtro_pendiente_sin_auto
     ORDER BY s.Sol_Fec DESC, s.Sol_Cod DESC
-    LIMIT 500;", $obBD_conexion);
+    LIMIT 200;", $obBD_conexion);
 if ($pendientes === false || $pendientes === null) {
     $pendientes = array();
 }
@@ -899,7 +910,7 @@ $mis_solicitudes = $obBD_con1->getArrayConsultaSql("
     LEFT JOIN wf_flujos_modelos wfm ON wfm.Wfm_Cod = COALESCE(i.Wfm_Cod, tr.Wfm_Cod)
     WHERE s.Emp_Cod = $emp_cod AND s.Usu_Sol = $usu_cod AND s.Sol_Est IN ('E', 'O', 'P')
     ORDER BY s.Sol_Fec DESC, s.Sol_Cod DESC
-    LIMIT 300;", $obBD_conexion);
+    LIMIT 150;", $obBD_conexion);
 if ($mis_solicitudes === false || $mis_solicitudes === null) {
     $mis_solicitudes = array();
 }

@@ -849,6 +849,10 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         if ($ready) {
             return;
         }
+        if (!empty($_SESSION['adq_schema_sol_tit_ok'])) {
+            $ready = true;
+            return;
+        }
         $row = $this->getRowConsultaSql(
             "SELECT COUNT(*) AS cnt FROM information_schema.COLUMNS
              WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'adq_solicitudes' AND COLUMN_NAME = 'Sol_Tit';",
@@ -861,6 +865,9 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             throw new Exception('No se pudo preparar el nombre de la solicitud: ' . $this->getMsgError());
         }
         $ready = true;
+        if (isset($_SESSION)) {
+            $_SESSION['adq_schema_sol_tit_ok'] = 1;
+        }
     }
 
     public function ensureSolicitudAdjuntosTable() {
@@ -889,6 +896,10 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         if ($ready) {
             return;
         }
+        if (!empty($_SESSION['adq_schema_decision_vals_ok'])) {
+            $ready = true;
+            return;
+        }
         $sql = "CREATE TABLE IF NOT EXISTS adq_solicitudes_decision_vals (
             Sdv_Cod BIGINT NOT NULL AUTO_INCREMENT,
             Sol_Cod BIGINT NOT NULL,
@@ -904,6 +915,9 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             throw new Exception('No se pudo preparar la tabla de valores de decision: ' . $this->getMsgError());
         }
         $ready = true;
+        if (isset($_SESSION)) {
+            $_SESSION['adq_schema_decision_vals_ok'] = 1;
+        }
     }
 
     public function extraerDecisionValsDesdePost($data) {
@@ -1232,6 +1246,31 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         }
         // Sin asignación de departamento: no inventar uno de la empresa
         return 0;
+    }
+
+    /**
+     * Dep_Cod para wf_instancias_nodos = Wde_Cod del usuario (no Ses_Dep_Cod RRHH).
+     * Devuelve 'NULL' o el entero listo para SQL.
+     */
+    private function resolverDepCodHistorialSql($usu_cod) {
+        $usu_cod = intval($usu_cod);
+        if ($usu_cod <= 0) {
+            return 'NULL';
+        }
+        $wf = new wf_manager_log(isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null, $this->conexion);
+        $wf->ensureWfDepCodSinFkRrhh();
+        $row = $this->getRowConsultaSql(
+            "SELECT du.Wde_Cod
+             FROM wf_departamento_usuarios du
+             INNER JOIN wf_departamentos w ON w.Wde_Cod = du.Wde_Cod AND w.Wde_Est = 'A'
+             WHERE du.Usu_Cod = $usu_cod AND du.Wde_Cod IS NOT NULL
+             ORDER BY du.Wdu_Cod ASC LIMIT 1;",
+            $this->conexion
+        );
+        if (empty($row['Wde_Cod'])) {
+            return 'NULL';
+        }
+        return intval($row['Wde_Cod']);
     }
 
     /**
@@ -1606,11 +1645,11 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $fecha = date('Y-m-d H:i:s');
             $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '127.0.0.1';
             $ses = session_id() ?: 'CLI-SESSION';
-            $dep_cod = isset($_SESSION['Ses_Dep_Cod']) ? intval($_SESSION['Ses_Dep_Cod']) : 0;
+            $dep_cod_sql = $this->resolverDepCodHistorialSql($usu_cod);
             $comentario = $this->escapeSql('Carga/actualizacion de cotizaciones en la etapa.');
             $this->grabarv_registros(
                 "INSERT INTO wf_instancias_nodos (Ins_Cod, Nod_Cod, Usu_Cod, Dep_Cod, Isn_Acc, Isn_Com, Isn_Fec, Isn_Ip, Isn_Ses)
-                 VALUES ({$auth['Ins_Cod']}, {$auth['Nod_Cod']}, $usu_cod, $dep_cod, 'COTIZAR', '$comentario', '$fecha', '$ip', '$ses');",
+                 VALUES ({$auth['Ins_Cod']}, {$auth['Nod_Cod']}, $usu_cod, $dep_cod_sql, 'COTIZAR', '$comentario', '$fecha', '$ip', '$ses');",
                 $this->conexion
             );
         } catch (Exception $e) {
@@ -2521,7 +2560,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         try {
             $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '127.0.0.1';
             $ses = session_id() ?: 'CLI-SESSION';
-            $dep_cod = isset($_SESSION['Ses_Dep_Cod']) ? intval($_SESSION['Ses_Dep_Cod']) : 0;
+            $dep_cod_sql = $this->resolverDepCodHistorialSql($usu_cod);
             $nums = array();
             $ants = array();
             $rows = $this->getArrayConsultaSql(
@@ -2559,7 +2598,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 : $this->escapeSql('Carga/actualizacion de documentos de avance/fiscalizacion.');
             $historial_guardado = $this->grabarv_registros(
                 "INSERT INTO wf_instancias_nodos (Ins_Cod, Nod_Cod, Usu_Cod, Dep_Cod, Isn_Acc, Isn_Com, Isn_Fec, Isn_Ip, Isn_Ses)
-                 VALUES ({$auth['Ins_Cod']}, {$auth['Nod_Cod']}, $usu_cod, $dep_cod, 'AVANCE', '$comentario', '$fecha', '$ip', '$ses');",
+                 VALUES ({$auth['Ins_Cod']}, {$auth['Nod_Cod']}, $usu_cod, $dep_cod_sql, 'AVANCE', '$comentario', '$fecha', '$ip', '$ses');",
                 $this->conexion
             );
             if ($historial_guardado) {
@@ -2805,6 +2844,9 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         $es_observada = ($editable['Sol_Est'] === 'O');
         $trq_cod = ($es_observada || $completar_nodo) ? intval($editable['Trq_Cod']) : intval($data['Trq_Cod']);
 
+        $wf_pre = new wf_manager_log(isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null, $this->conexion);
+        $wf_pre->ensureWfDepCodSinFkRrhh();
+
         $this->inicio_transaccion($this->conexion);
         try {
             $req = $this->construirRequisitosDesdePost($data, $trq_cod);
@@ -2947,6 +2989,10 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $data['Pry_Cod'] = '';
             $data['Prv_Sug'] = '';
 
+            // ALTER TABLE (DROP FK) hace commit implicito en MySQL: debe ir ANTES de la transaccion.
+            $wf_pre = new wf_manager_log(isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null, $this->conexion);
+            $wf_pre->ensureWfDepCodSinFkRrhh();
+
             $this->inicio_transaccion($this->conexion);
             $item_estimado = array(
                 'Sde_Des' => 'Monto estimado',
@@ -3002,11 +3048,11 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '127.0.0.1';
             $ses = session_id() ?: 'CLI-SESSION';
             $usu_cod = isset($_SESSION['Ses_Usu_Cod']) ? intval($_SESSION['Ses_Usu_Cod']) : 0;
-            $dep_cod = isset($_SESSION['Ses_Dep_Cod']) ? intval($_SESSION['Ses_Dep_Cod']) : 0;
+            $dep_cod_sql = $this->resolverDepCodHistorialSql($usu_cod);
             $com = $this->escapeSql('Formulario de solicitud completado. La etapa permanece pendiente de resolucion.');
             $this->grabarv_registros(
                 "INSERT INTO wf_instancias_nodos (Ins_Cod, Nod_Cod, Usu_Cod, Dep_Cod, Isn_Acc, Isn_Com, Isn_Fec, Isn_Ip, Isn_Ses)
-                 VALUES (" . intval($inst['Ins_Cod']) . ", " . intval($inst['Nod_Act']) . ", $usu_cod, $dep_cod, 'ACTUALIZAR', '$com', '$fecha', '$ip', '$ses');",
+                 VALUES (" . intval($inst['Ins_Cod']) . ", " . intval($inst['Nod_Act']) . ", $usu_cod, $dep_cod_sql, 'ACTUALIZAR', '$com', '$fecha', '$ip', '$ses');",
                 $this->conexion
             );
             $this->commit_nomsn($this->conexion);
@@ -3025,6 +3071,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         if ($sol_cod_edit > 0) {
             return $this->actualizarBorrador($sol_cod_edit, $data, $items, $cotizaciones, $cotizaciones_existentes, $cot_eliminar, $adjuntos_nuevos, $adjuntos_existentes, $adj_eliminar);
         }
+        $wf_pre = new wf_manager_log(isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null, $this->conexion);
+        $wf_pre->ensureWfDepCodSinFkRrhh();
         $this->inicio_transaccion($this->conexion);
         try {
             $resultado = $this->persistirSolicitudNueva($data, $items, $cotizaciones, $adjuntos_nuevos);
@@ -3064,6 +3112,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                     );
                 }
                 $borrador = $this->assertBorradorEditable($sol_cod_edit, intval($data['Emp_Cod']), intval($_SESSION['Ses_Usu_Cod']));
+                $wf_pre = new wf_manager_log(isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null, $this->conexion);
+                $wf_pre->ensureWfDepCodSinFkRrhh();
                 $this->inicio_transaccion($this->conexion);
                 $this->iniciarWorkflowBorrador($sol_cod_edit, intval($borrador['Trq_Cod']));
                 $this->commit_nomsn($this->conexion);
@@ -3073,6 +3123,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $req = $this->construirRequisitosDesdePost($data, intval($data['Trq_Cod']));
             $this->validarRequisitosEnvioDesdePost($req, $data, $items, $cotizaciones, $cotizaciones_existentes, $adjuntos_nuevos, $adjuntos_existentes);
 
+            $wf_pre = new wf_manager_log(isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null, $this->conexion);
+            $wf_pre->ensureWfDepCodSinFkRrhh();
             $this->inicio_transaccion($this->conexion);
             $resultado = $this->persistirSolicitudNueva($data, $items, $cotizaciones, $adjuntos_nuevos);
             $sol_cod = $resultado['Sol_Cod'];
@@ -3111,6 +3163,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             );
         }
 
+        $wf_pre = new wf_manager_log(isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null, $this->conexion);
+        $wf_pre->ensureWfDepCodSinFkRrhh();
         $this->inicio_transaccion($this->conexion);
         try {
             $this->iniciarWorkflowBorrador($sol_cod, intval($sol['Trq_Cod']));
