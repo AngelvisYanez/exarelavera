@@ -114,6 +114,7 @@ if (isset($ajax_load_workflow)) {
                 'com_obl' => $nodo['Nod_Com_Obl'],
                 'adj_obl' => $nodo['Nod_Adj_Obl'],
                 'cot_edit' => !empty($nodo['Nod_Cot_Edit']) ? 1 : 0,
+                'cot_sel' => !empty($nodo['Nod_Cot_Sel']) ? 1 : 0,
                 'cre_sol' => !isset($nodo['Nod_Cre_Sol']) ? 1 : (!empty($nodo['Nod_Cre_Sol']) ? 1 : 0),
                 'not_wa' => !empty($nodo['Nod_Not_Wa']) ? 1 : 0,
                 'not_em' => !empty($nodo['Nod_Not_Em']) ? 1 : 0,
@@ -909,6 +910,11 @@ if (isset($ajax_get_builder)) {
                 <label class="form-check-label" for="nodeCotEdit">Permitir cargar cotizaciones en esta etapa</label>
                 <p class="text-muted small mb-0">El responsable de esta etapa podrá abrir la solicitud y adjuntar proformas/cotizaciones.</p>
             </div>
+            <div class="mb-3 form-check sec-checks sec-cot-edit sec-cot-sel">
+                <input type="checkbox" id="nodeCotSel" class="form-check-input">
+                <label class="form-check-label" for="nodeCotSel">Permitir seleccionar cotización ganadora</label>
+                <p class="text-muted small mb-0">Independiente de quien carga las cotizaciones: el responsable de esta etapa podrá marcar cuál es la ganadora.</p>
+            </div>
             <div class="mb-3 form-check sec-inicio-crear" style="display: none;">
                 <input type="checkbox" id="nodeCreSol" class="form-check-input">
                 <label class="form-check-label" for="nodeCreSol">Permitir modificar solicitud</label>
@@ -1627,6 +1633,11 @@ if (function_exists('utf8_encode_deep')) {
                 <input type="checkbox" id="nodeCotEdit" class="form-check-input">
                 <label class="form-check-label" for="nodeCotEdit">Permitir cargar cotizaciones en esta etapa</label>
                 <p class="text-muted small mb-0">El responsable de esta etapa podrá abrir la solicitud y adjuntar proformas/cotizaciones.</p>
+            </div>
+            <div class="mb-3 form-check sec-checks sec-cot-edit sec-cot-sel">
+                <input type="checkbox" id="nodeCotSel" class="form-check-input">
+                <label class="form-check-label" for="nodeCotSel">Permitir seleccionar cotización ganadora</label>
+                <p class="text-muted small mb-0">Independiente de quien carga las cotizaciones: el responsable de esta etapa podrá marcar cuál es la ganadora.</p>
             </div>
             <div class="mb-3 form-check sec-inicio-crear" style="display: none;">
                 <input type="checkbox" id="nodeCreSol" class="form-check-input">

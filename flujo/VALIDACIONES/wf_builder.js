@@ -504,6 +504,7 @@ function createNode(type, name, x, y, id = null, props = null) {
         com_obl: false,
         adj_obl: false,
         cot_edit: false,
+        cot_sel: false,
         cre_sol: (type === 'INICIO'),
         not_wa: false,
         not_em: false,
@@ -766,6 +767,10 @@ function refreshNodeDepartments(done, preferredValue) {
 }
 
 function openNodeProperties(id) {
+    // Persistir el nodo actual antes de cambiar (evita que Cot_Sel/Cot_Edit se "peguen" al siguiente).
+    if (activeNode) {
+        syncFormToActiveNode();
+    }
     activeNode = nodes.find(item => sameId(item.id, id));
     if (!activeNode) return;
 
@@ -774,22 +779,68 @@ function openNodeProperties(id) {
     }, activeNode.dep_cod);
 }
 
+/** Copia el formulario de propiedades al nodo activo en memoria (por nodo, sin heredar). */
+function syncFormToActiveNode() {
+    if (!activeNode) {
+        return;
+    }
+    const $drawer = $('.properties-drawer').first();
+    const readCheck = function(id) {
+        const $el = $drawer.find('[id="' + id + '"]').first();
+        if ($el.length) {
+            return $el.is(':checked');
+        }
+        return $('[id="' + id + '"]').first().is(':checked');
+    };
+    const readVal = function(id) {
+        const $el = $drawer.find('[id="' + id + '"]').first();
+        if ($el.length) {
+            return $el.val();
+        }
+        return $('[id="' + id + '"]').first().val();
+    };
+    activeNode.nombre = readVal('nodeName');
+    activeNode.descripcion = readVal('nodeDesc');
+    activeNode.dep_cod = readVal('nodeDep');
+    activeNode.per_cod = readVal('nodePer');
+    activeNode.sla = readVal('nodeSla');
+    activeNode.com_obl = readCheck('nodeComObl');
+    activeNode.adj_obl = readCheck('nodeAdjObl');
+    if (activeNode.tipo === 'FIN') {
+        activeNode.cot_edit = false;
+        activeNode.cot_sel = false;
+    } else {
+        activeNode.cot_edit = readCheck('nodeCotEdit');
+        activeNode.cot_sel = readCheck('nodeCotSel');
+    }
+    activeNode.cre_sol = readCheck('nodeCreSol');
+    activeNode.not_wa = readCheck('nodeNotWa');
+    activeNode.not_em = readCheck('nodeNotEm');
+    activeNode.not_asunto = readVal('nodeNotAsunto');
+    activeNode.not_texto = readVal('nodeNotTexto');
+}
+
 function fillNodePropertiesForm() {
     if (!activeNode) return;
 
-    $('#nodeId').val(activeNode.id);
-    $('#nodeName').val(activeNode.nombre);
-    $('#nodeDesc').val(activeNode.descripcion || '');
-    $('#nodeDep').val(activeNode.dep_cod);
-    $('#nodePer').val(activeNode.per_cod);
-    $('#nodeSla').val(activeNode.sla);
-    $('#nodeComObl').prop('checked', activeNode.com_obl);
-    $('#nodeAdjObl').prop('checked', activeNode.adj_obl);
-    $('#nodeCotEdit').prop('checked', !!activeNode.cot_edit);
-    $('#nodeNotWa').prop('checked', !!activeNode.not_wa);
-    $('#nodeNotEm').prop('checked', !!activeNode.not_em);
-    $('#nodeNotAsunto').val(activeNode.not_asunto || '');
-    $('#nodeNotTexto').val(activeNode.not_texto || '');
+    // Evitar que al rellenar el form se escriba el valor viejo en otro nodo.
+    $('[id="nodeName"], [id="nodeDesc"], [id="nodeDep"], [id="nodePer"], [id="nodeSla"], [id="nodeComObl"], [id="nodeAdjObl"], [id="nodeCotEdit"], [id="nodeCotSel"], [id="nodeCreSol"], [id="nodeNotWa"], [id="nodeNotEm"], [id="nodeNotAsunto"], [id="nodeNotTexto"]').off('change.adqNode input.adqNode');
+
+    $('[id="nodeId"]').val(activeNode.id);
+    $('[id="nodeName"]').val(activeNode.nombre);
+    $('[id="nodeDesc"]').val(activeNode.descripcion || '');
+    $('[id="nodeDep"]').val(activeNode.dep_cod);
+    $('[id="nodePer"]').val(activeNode.per_cod);
+    $('[id="nodeSla"]').val(activeNode.sla);
+    $('[id="nodeComObl"]').prop('checked', !!activeNode.com_obl);
+    $('[id="nodeAdjObl"]').prop('checked', !!activeNode.adj_obl);
+    // Flags independientes por nodo (no compartir entre Aprobacion/Tarea).
+    $('[id="nodeCotEdit"]').prop('checked', !!activeNode.cot_edit);
+    $('[id="nodeCotSel"]').prop('checked', !!activeNode.cot_sel);
+    $('[id="nodeNotWa"]').prop('checked', !!activeNode.not_wa);
+    $('[id="nodeNotEm"]').prop('checked', !!activeNode.not_em);
+    $('[id="nodeNotAsunto"]').val(activeNode.not_asunto || '');
+    $('[id="nodeNotTexto"]').val(activeNode.not_texto || '');
     $('.node-not-wa-label').text('WhatsApp');
     $('.node-not-em-label').text('Correo electrónico');
 
@@ -803,7 +854,7 @@ function fillNodePropertiesForm() {
         $('.sec-notificaciones').show();
         $('#lblNodeNotTitle').text('Al poner en ejecución el requerimiento, notificar a los usuarios de este nodo');
         $('#lblNodeNotHelp').text('Configure los avisos que se enviarán cuando una nueva solicitud quede en el nodo Inicio para ser atendida.');
-        $('#nodeCreSol').prop('checked', activeNode.cre_sol !== false && activeNode.cre_sol !== 0 && activeNode.cre_sol !== '0');
+        $('[id="nodeCreSol"]').prop('checked', activeNode.cre_sol !== false && activeNode.cre_sol !== 0 && activeNode.cre_sol !== '0');
         // Cargar comportamiento de departamento y asignación de usuarios
         if (activeNode.dep_cod) {
             $('#btnManageDepUsers').show();
@@ -839,8 +890,10 @@ function fillNodePropertiesForm() {
             $('#lblNodeNotHelp').text('Al marcar cualquiera de estas opciones, se enviará por correo el expediente final y el comentario de cierre a todos los usuarios asignados al esquema.');
             $('.node-not-wa-label, .node-not-em-label').text('Notificar a todos los usuarios');
             $('.sec-cot-edit').hide();
-            $('#nodeCotEdit').prop('checked', false);
+            $('[id="nodeCotEdit"]').prop('checked', false);
+            $('[id="nodeCotSel"]').prop('checked', false);
             activeNode.cot_edit = false;
+            activeNode.cot_sel = false;
         } else {
             $('#lblNodeNotTitle').text('Al completar esta etapa, notificar al siguiente responsable');
             $('#lblNodeNotHelp').text('Se envía WhatsApp o correo a quien debe atender la siguiente tarea. En la primera etapa humana, también aplica al enviar la solicitud.');
@@ -876,25 +929,27 @@ function fillNodePropertiesForm() {
         }
     }
 
-    $('#flujoProps').hide();
-    $('#nodeProps').show();
-    $('#propertiesDrawer').addClass('open');
+    $('.flujoProps, [id="flujoProps"]').hide();
+    $('[id="nodeProps"]').show();
+    $('.properties-drawer').first().addClass('open');
 
     // Escuchar cambios en los inputs para actualizar el nodo en vivo
-    $('#nodeName, #nodeDesc, #nodeDep, #nodePer, #nodeSla, #nodeComObl, #nodeAdjObl, #nodeCotEdit, #nodeCreSol, #nodeNotWa, #nodeNotEm, #nodeNotAsunto, #nodeNotTexto').off('change input').on('change input', function() {
-        activeNode.nombre = $('#nodeName').val();
-        activeNode.descripcion = $('#nodeDesc').val();
-        activeNode.dep_cod = $('#nodeDep').val();
-        activeNode.per_cod = $('#nodePer').val();
-        activeNode.sla = $('#nodeSla').val();
-        activeNode.com_obl = $('#nodeComObl').is(':checked');
-        activeNode.adj_obl = $('#nodeAdjObl').is(':checked');
-        activeNode.cot_edit = (activeNode.tipo === 'FIN') ? false : $('#nodeCotEdit').is(':checked');
-        activeNode.cre_sol = $('#nodeCreSol').is(':checked');
-        activeNode.not_wa = $('#nodeNotWa').is(':checked');
-        activeNode.not_em = $('#nodeNotEm').is(':checked');
-        activeNode.not_asunto = $('#nodeNotAsunto').val();
-        activeNode.not_texto = $('#nodeNotTexto').val();
+    // Usar [id=...] porque el HTML del builder tiene IDs duplicados.
+    $('[id="nodeName"], [id="nodeDesc"], [id="nodeDep"], [id="nodePer"], [id="nodeSla"], [id="nodeComObl"], [id="nodeAdjObl"], [id="nodeCotEdit"], [id="nodeCotSel"], [id="nodeCreSol"], [id="nodeNotWa"], [id="nodeNotEm"], [id="nodeNotAsunto"], [id="nodeNotTexto"]').off('change.adqNode input.adqNode').on('change.adqNode input.adqNode', function() {
+        if (!activeNode) return;
+        const $t = $(this);
+        const id = $t.attr('id');
+        // Sincronizar solo clones del mismo control (drawers duplicados), no otros nodos.
+        if (id) {
+            $('[id="' + id + '"]').not($t).each(function() {
+                if ($t.is(':checkbox') || $t.is(':radio')) {
+                    $(this).prop('checked', $t.is(':checked'));
+                } else {
+                    $(this).val($t.val());
+                }
+            });
+        }
+        syncFormToActiveNode();
         wfUpdateNodeAsigNombres(activeNode);
         refreshNodeView(activeNode);
     });
@@ -1595,6 +1650,7 @@ function cargarFlujo() {
                     com_obl: (parseInt(n.com_obl, 10) === 1),
                     adj_obl: (parseInt(n.adj_obl, 10) === 1),
                     cot_edit: (n.tipo === 'FIN') ? false : (parseInt(n.cot_edit, 10) === 1),
+                    cot_sel: (n.tipo === 'FIN') ? false : (parseInt(n.cot_sel, 10) === 1),
                     cre_sol: (n.tipo === 'INICIO')
                         ? (n.cre_sol === undefined || n.cre_sol === null || parseInt(n.cre_sol, 10) === 1)
                         : false,
@@ -1802,12 +1858,16 @@ function wfNodosPayloadParaGuardar() {
         const copia = Object.assign({}, n);
         if (copia.tipo === 'FIN') {
             copia.cot_edit = false;
+            copia.cot_sel = false;
         }
         return copia;
     });
 }
 
 function guardarFlujo() {
+    if (activeNode) {
+        syncFormToActiveNode();
+    }
     const nombre = $('#flowName').val().trim();
     if (!nombre) {
         pendingSaveAfterModal = true;
@@ -1948,6 +2008,9 @@ function publicarFlujo() {
 }
 
 function guardarFlujoInterno(onDone) {
+    if (activeNode) {
+        syncFormToActiveNode();
+    }
     const nombre = $('#flowName').val().trim();
     const payload = {
         id: workflowId,

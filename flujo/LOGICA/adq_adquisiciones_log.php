@@ -1467,7 +1467,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         }
     }
 
-    private function sincronizarCotizacionesBorrador($sol_cod, $cotizaciones_nuevas, $cotizaciones_existentes, $cot_eliminar) {
+    private function sincronizarCotizacionesBorrador($sol_cod, $cotizaciones_nuevas, $cotizaciones_existentes, $cot_eliminar, $actualizar_sel = true) {
         $sol_cod = intval($sol_cod);
         if (!empty($cot_eliminar)) {
             foreach ($cot_eliminar as $sco_cod) {
@@ -1488,27 +1488,90 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 }
                 $prv_cod = intval($cot['Prv_Cod']);
                 $cot_val = floatval($cot['Cot_Val']);
-                $cot_sel = !empty($cot['Cot_Sel']) ? 1 : 0;
                 $cot_jus = $this->escapeSql(isset($cot['Cot_Jus']) ? $cot['Cot_Jus'] : '');
                 $set_adj = '';
                 if (array_key_exists('Cot_Adj', $cot)) {
                     $cot_adj = $this->escapeSql($cot['Cot_Adj']);
                     $set_adj = ", Cot_Adj = '$cot_adj'";
                 }
+                $set_sel = '';
+                if ($actualizar_sel) {
+                    $cot_sel = !empty($cot['Cot_Sel']) ? 1 : 0;
+                    $set_sel = ", Cot_Sel = $cot_sel, Cot_Jus = '$cot_jus'";
+                }
                 $sqlUpd = "UPDATE adq_solicitudes_cotizaciones
-                           SET Prv_Cod = $prv_cod, Cot_Val = $cot_val, Cot_Sel = $cot_sel, Cot_Jus = '$cot_jus' $set_adj
+                           SET Prv_Cod = $prv_cod, Cot_Val = $cot_val$set_sel $set_adj
                            WHERE Sco_Cod = $sco_cod AND Sol_Cod = $sol_cod;";
                 if (!$this->grabarv_registros($sqlUpd, $this->conexion)) {
                     throw new Exception('No se pudo actualizar una cotizacion: ' . $this->getMsgError());
                 }
             }
         }
-        $this->insertarCotizacionesNuevas($sol_cod, $cotizaciones_nuevas);
+        if ($actualizar_sel) {
+            $this->insertarCotizacionesNuevas($sol_cod, $cotizaciones_nuevas);
+        } else {
+            // Al insertar sin permiso de ganadora, forzar Cot_Sel = 0.
+            $nuevas = array();
+            if (!empty($cotizaciones_nuevas) && is_array($cotizaciones_nuevas)) {
+                foreach ($cotizaciones_nuevas as $cot) {
+                    if (!is_array($cot)) {
+                        continue;
+                    }
+                    $cot['Cot_Sel'] = 0;
+                    $cot['Cot_Jus'] = '';
+                    $nuevas[] = $cot;
+                }
+            }
+            $this->insertarCotizacionesNuevas($sol_cod, $nuevas);
+        }
     }
 
     /**
-     * Verifica si el usuario puede cargar cotizaciones en la etapa actual del workflow
-     * (nodo con Nod_Cot_Edit = 1 asignado al usuario).
+     * Solo actualiza la marca de cotizacion ganadora (y su justificacion),
+     * sin permitir alta/baja ni cambio de proveedor/monto/PDF.
+     */
+    private function sincronizarSeleccionGanadora($sol_cod, $cotizaciones_existentes) {
+        $sol_cod = intval($sol_cod);
+        if (empty($cotizaciones_existentes) || !is_array($cotizaciones_existentes)) {
+            // Si no viene ninguna seleccion, limpiar marcas.
+            $this->grabarv_registros(
+                "UPDATE adq_solicitudes_cotizaciones SET Cot_Sel = 0, Cot_Jus = '' WHERE Sol_Cod = $sol_cod;",
+                $this->conexion
+            );
+            return;
+        }
+        $ganadora_sco = 0;
+        $ganadora_jus = '';
+        foreach ($cotizaciones_existentes as $sco_cod => $cot) {
+            $sco_cod = intval($sco_cod);
+            if ($sco_cod <= 0 || !is_array($cot)) {
+                continue;
+            }
+            if (!empty($cot['Cot_Sel'])) {
+                $ganadora_sco = $sco_cod;
+                $ganadora_jus = $this->escapeSql(isset($cot['Cot_Jus']) ? $cot['Cot_Jus'] : '');
+                break;
+            }
+        }
+        $this->grabarv_registros(
+            "UPDATE adq_solicitudes_cotizaciones SET Cot_Sel = 0, Cot_Jus = '' WHERE Sol_Cod = $sol_cod;",
+            $this->conexion
+        );
+        if ($ganadora_sco > 0) {
+            if (!$this->grabarv_registros(
+                "UPDATE adq_solicitudes_cotizaciones
+                 SET Cot_Sel = 1, Cot_Jus = '$ganadora_jus'
+                 WHERE Sco_Cod = $ganadora_sco AND Sol_Cod = $sol_cod;",
+                $this->conexion
+            )) {
+                throw new Exception('No se pudo guardar la cotizacion ganadora: ' . $this->getMsgError());
+            }
+        }
+    }
+
+    /**
+     * Verifica si el usuario puede cargar cotizaciones y/o seleccionar ganadora
+     * en la etapa actual (Nod_Cot_Edit y/o Nod_Cot_Sel).
      */
     public function autorizarCotizacionesEtapa($sol_cod, $emp_cod, $usu_cod) {
         $sol_cod = intval($sol_cod);
@@ -1531,8 +1594,10 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         if (empty($row)) {
             return array('success' => false, 'message' => 'La solicitud no tiene un workflow activo.');
         }
-        if ($wf_mgr->resolverNodCotEditInstancia(intval($row['Ins_Cod'])) !== 1) {
-            return array('success' => false, 'message' => 'La etapa actual no permite cargar cotizaciones.');
+        $puede_edit = ($wf_mgr->resolverNodCotEditInstancia(intval($row['Ins_Cod'])) === 1) ? 1 : 0;
+        $puede_sel = ($wf_mgr->resolverNodCotSelInstancia(intval($row['Ins_Cod'])) === 1) ? 1 : 0;
+        if ($puede_edit !== 1 && $puede_sel !== 1) {
+            return array('success' => false, 'message' => 'La etapa actual no permite cargar cotizaciones ni seleccionar ganadora.');
         }
         if (in_array($row['Sol_Est'], array('A', 'R'), true)) {
             return array('success' => false, 'message' => 'La solicitud ya fue finalizada.');
@@ -1545,7 +1610,9 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             'success' => true,
             'Ins_Cod' => intval($row['Ins_Cod']),
             'Nod_Cod' => intval($row['Nod_Act']),
-            'Nod_Nom' => $row['Nod_Nom']
+            'Nod_Nom' => $row['Nod_Nom'],
+            'puede_cargar_cotizaciones' => $puede_edit,
+            'puede_seleccionar_ganadora' => $puede_sel
         );
     }
 
@@ -1600,6 +1667,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             }
             $prv_sug_text = $nombre;
         }
+        $puede_edit = !empty($auth['puede_cargar_cotizaciones']) ? 1 : 0;
+        $puede_sel = !empty($auth['puede_seleccionar_ganadora']) ? 1 : 0;
         return array(
             'success' => true,
             'solicitud' => $sol,
@@ -1607,7 +1676,9 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             'cotizaciones' => ($cotizaciones === false || $cotizaciones === null) ? array() : $cotizaciones,
             'prv_sug_text' => $prv_sug_text,
             'modo_edicion' => 'cotizaciones',
-            'etapa_nombre' => $auth['Nod_Nom']
+            'etapa_nombre' => $auth['Nod_Nom'],
+            'puede_cargar_cotizaciones' => $puede_edit,
+            'puede_seleccionar_ganadora' => $puede_sel
         );
     }
 
@@ -1632,9 +1703,16 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             return array('success' => false, 'message' => 'La solicitud no existe.');
         }
 
+        $puede_edit = !empty($auth['puede_cargar_cotizaciones']);
+        $actualizar_sel = !empty($auth['puede_seleccionar_ganadora']);
+
         $this->inicio_transaccion($this->conexion);
         try {
-            $this->sincronizarCotizacionesBorrador($sol_cod, $cotizaciones_nuevas, $cotizaciones_existentes, $cot_eliminar);
+            if ($puede_edit) {
+                $this->sincronizarCotizacionesBorrador($sol_cod, $cotizaciones_nuevas, $cotizaciones_existentes, $cot_eliminar, $actualizar_sel);
+            } elseif ($actualizar_sel) {
+                $this->sincronizarSeleccionGanadora($sol_cod, $cotizaciones_existentes);
+            }
             $this->commit_nomsn($this->conexion);
         } catch (Exception $e) {
             $this->rollBack_nomsn($this->conexion);
@@ -2630,16 +2708,21 @@ class adq_adquisiciones_log extends MysqlDatosContab {
 
     /**
      * Valida requisitos al enviar a aprobacion (gate AL_ENVIAR).
+     * @param bool $validar_cotizaciones Exige minimo de cotizaciones completas (Nod_Cot_Edit).
+     * @param bool|null $validar_ganadora Exige marca de ganadora. null = mismo valor que $validar_cotizaciones (compat).
      */
-    public function validarRequisitosParaEnvio($sol_cod, $validar_cotizaciones = true) {
+    public function validarRequisitosParaEnvio($sol_cod, $validar_cotizaciones = true, $validar_ganadora = null) {
         $sol = $this->obtenerSolicitudConTipo($sol_cod);
         if (empty($sol)) {
             return array('success' => false, 'message' => 'Solicitud no encontrada.', 'faltantes' => array('Solicitud no encontrada.'));
         }
-        return $this->validarRequisitosDesdeSolicitud($sol, $validar_cotizaciones);
+        if ($validar_ganadora === null) {
+            $validar_ganadora = $validar_cotizaciones;
+        }
+        return $this->validarRequisitosDesdeSolicitud($sol, $validar_cotizaciones, $validar_ganadora);
     }
 
-    private function validarRequisitosDesdeSolicitud($sol, $validar_cotizaciones = true) {
+    private function validarRequisitosDesdeSolicitud($sol, $validar_cotizaciones = true, $validar_ganadora = true) {
         $faltantes = array();
         $sol_cod = intval($sol['Sol_Cod']);
 
@@ -2660,26 +2743,42 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         if (intval($sol['Sol_Req_Pro']) === 1 && empty($sol['Prv_Sug'])) {
             $faltantes[] = 'Debe seleccionar un proveedor sugerido.';
         }
-        if ($validar_cotizaciones && intval($sol['Sol_Req_Cot']) === 1) {
-            $min_cot = max(1, intval($sol['Sol_Min_Cot']));
+        $cots = null;
+        if (($validar_cotizaciones || $validar_ganadora) && intval($sol['Sol_Req_Cot']) === 1) {
             $cots = $this->getArrayConsultaSql(
                 "SELECT * FROM adq_solicitudes_cotizaciones WHERE Sol_Cod = $sol_cod;",
                 $this->conexion
             );
             $cots = ($cots === false || $cots === null) ? array() : $cots;
+        }
+        if ($validar_cotizaciones && intval($sol['Sol_Req_Cot']) === 1) {
+            $min_cot = max(1, intval($sol['Sol_Min_Cot']));
             $validas = 0;
-            $ganadora = false;
             foreach ($cots as $c) {
                 if (!empty($c['Prv_Cod']) && floatval($c['Cot_Val']) > 0 && $this->cotizacionTieneAdjunto(isset($c['Cot_Adj']) ? $c['Cot_Adj'] : '')) {
                     $validas++;
                 }
-                if (!empty($c['Cot_Sel'])) {
-                    $ganadora = true;
-                }
             }
             if ($validas < $min_cot) {
                 $faltantes[] = "Se requieren al menos $min_cot cotizacion(es) con proveedor, monto y PDF (tiene $validas). Puede guardar borrador y completarlas antes de enviar.";
-            } elseif (!$ganadora) {
+            }
+        }
+        if ($validar_ganadora && intval($sol['Sol_Req_Cot']) === 1) {
+            if ($cots === null) {
+                $cots = $this->getArrayConsultaSql(
+                    "SELECT * FROM adq_solicitudes_cotizaciones WHERE Sol_Cod = $sol_cod;",
+                    $this->conexion
+                );
+                $cots = ($cots === false || $cots === null) ? array() : $cots;
+            }
+            $ganadora = false;
+            foreach ($cots as $c) {
+                if (!empty($c['Cot_Sel'])) {
+                    $ganadora = true;
+                    break;
+                }
+            }
+            if (!$ganadora) {
                 $faltantes[] = 'Debe marcar cual cotizacion es la ganadora/seleccionada.';
             }
         }
@@ -2816,8 +2915,10 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $prv_sug_text = $nombre;
         }
         $puede_cot = 0;
+        $puede_sel = 0;
         if ($por_nodo && $ins_cod_activo > 0 && $wf_mgr !== null) {
             $puede_cot = ($wf_mgr->resolverNodCotEditInstancia($ins_cod_activo) === 1) ? 1 : 0;
+            $puede_sel = ($wf_mgr->resolverNodCotSelInstancia($ins_cod_activo) === 1) ? 1 : 0;
         }
         return array(
             'success' => true,
@@ -2829,6 +2930,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             'prv_sug_text' => $prv_sug_text,
             'modo_edicion' => $por_nodo ? 'completar_nodo' : (($sol['Sol_Est'] === 'O') ? 'observada' : 'borrador'),
             'puede_cargar_cotizaciones' => $puede_cot,
+            'puede_seleccionar_ganadora' => $puede_sel,
             'ultima_observacion' => $this->obtenerUltimaObservacionWorkflow($sol_cod)
         );
     }
@@ -2887,13 +2989,17 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             }
 
             $this->guardarDetalleSolicitud($sol_cod, $items);
-            // Cotizaciones solo si la etapa lo permite (o es correccion observada / borrador del solicitante).
+            // Cotizaciones: cargar/editar y/o solo marcar ganadora según flags del nodo.
             $permitir_cot = true;
+            $permitir_sel = true;
             if ($completar_nodo) {
                 $permitir_cot = (!empty($carga) && !empty($carga['puede_cargar_cotizaciones']));
+                $permitir_sel = (!empty($carga) && !empty($carga['puede_seleccionar_ganadora']));
             }
             if ($permitir_cot) {
-                $this->sincronizarCotizacionesBorrador($sol_cod, $cotizaciones_nuevas, $cotizaciones_existentes, $cot_eliminar);
+                $this->sincronizarCotizacionesBorrador($sol_cod, $cotizaciones_nuevas, $cotizaciones_existentes, $cot_eliminar, $permitir_sel);
+            } elseif ($permitir_sel) {
+                $this->sincronizarSeleccionGanadora($sol_cod, $cotizaciones_existentes);
             }
             $this->sincronizarAdjuntosSolicitud($sol_cod, $adjuntos_nuevos, $adjuntos_existentes, $adj_eliminar);
 
@@ -3052,9 +3158,10 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             if (empty($inst)) {
                 throw new Exception('No se encontró la instancia activa de la solicitud.');
             }
-            // Solo exigir cotizaciones si la etapa actual tiene Nod_Cot_Edit activo.
+            // Exigir carga de cotizaciones y/o selección ganadora según flags del nodo.
             $exige_cot = ($wf_mgr->resolverNodCotEditInstancia(intval($inst['Ins_Cod'])) === 1);
-            $validacion = $this->validarRequisitosParaEnvio($sol_cod, $exige_cot);
+            $exige_sel = ($wf_mgr->resolverNodCotSelInstancia(intval($inst['Ins_Cod'])) === 1);
+            $validacion = $this->validarRequisitosParaEnvio($sol_cod, $exige_cot, $exige_sel);
             if (empty($validacion['success'])) {
                 return $validacion;
             }

@@ -512,6 +512,8 @@ if (isset($ajax_get_form)) {
     $modo_form = isset($_GET['modo']) ? trim($_GET['modo']) : 'corto';
     $sol_form_cod = isset($_GET['sol_cod']) ? intval($_GET['sol_cod']) : 0;
     $adq_ocultar_cotizaciones = false;
+    $adq_cot_edit = 1;
+    $adq_cot_sel = 1;
     if ($modo_form === 'completar' && $sol_form_cod > 0) {
         $ins_form = $obBD_con1->getRowConsultaSql(
             "SELECT i.Ins_Cod
@@ -520,8 +522,12 @@ if (isset($ajax_get_form)) {
              ORDER BY i.Ins_Cod DESC LIMIT 1;",
             $obBD_conexion
         );
-        if (!empty($ins_form['Ins_Cod']) && $wf_mgr->resolverNodCotEditInstancia(intval($ins_form['Ins_Cod'])) !== 1) {
-            $adq_ocultar_cotizaciones = true;
+        if (!empty($ins_form['Ins_Cod'])) {
+            $adq_cot_edit = ($wf_mgr->resolverNodCotEditInstancia(intval($ins_form['Ins_Cod'])) === 1) ? 1 : 0;
+            $adq_cot_sel = ($wf_mgr->resolverNodCotSelInstancia(intval($ins_form['Ins_Cod'])) === 1) ? 1 : 0;
+            if ($adq_cot_edit !== 1 && $adq_cot_sel !== 1) {
+                $adq_ocultar_cotizaciones = true;
+            }
         }
     }
     if ($modo_form !== 'completar') {
@@ -1795,7 +1801,7 @@ if (isset($ajax_get_form)) {
             </div>
 
             <!-- PASO 2: Cotizaciones de Sustento -->
-            <div class="adq-step-card" id="divCotizaciones" data-adq-cot-edit="<?php echo !empty($adq_ocultar_cotizaciones) ? '0' : '1'; ?>"<?php echo !empty($adq_ocultar_cotizaciones) ? ' style="display:none;"' : ''; ?>>
+            <div class="adq-step-card" id="divCotizaciones" data-adq-cot-edit="<?php echo intval($adq_cot_edit); ?>" data-adq-cot-sel="<?php echo intval($adq_cot_sel); ?>"<?php echo !empty($adq_ocultar_cotizaciones) ? ' style="display:none;"' : ''; ?>>
                 <span class="adq-step-badge">Paso 2</span>
                 <h5 class="adq-step-title"><i class="bi bi-file-earmark-pdf-fill"></i> Sustento de Cotizaciones Físicas</h5>
                 <div class="adq-cot-headline">
@@ -1934,7 +1940,7 @@ if (isset($ajax_get_form)) {
         </div>
     </div>
     <script src="../../framework/plugins/cedulaRuc.js" charset="UTF-8"></script>
-    <script src="../VALIDACIONES/adq_solicitud.js?v=20260727e" charset="UTF-8"></script>
+    <script src="../VALIDACIONES/adq_solicitud.js?v=20260727g" charset="UTF-8"></script>
     <?php
     exit;
 }
@@ -1964,6 +1970,6 @@ if (isset($ajax_get_form)) {
 
     <!-- Script del validador de adquisición -->
     <script src="../../framework/plugins/cedulaRuc.js" charset="UTF-8"></script>
-    <script src="../VALIDACIONES/adq_solicitud.js?v=20260727e" charset="UTF-8"></script>
+    <script src="../VALIDACIONES/adq_solicitud.js?v=20260727g" charset="UTF-8"></script>
 </body>
 </html>

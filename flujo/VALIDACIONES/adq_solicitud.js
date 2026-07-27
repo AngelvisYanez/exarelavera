@@ -18,21 +18,74 @@ let reqConfig = {
 
 /** false = etapa actual NO permite editar/cargar proformas (Nod_Cot_Edit = 0). */
 let adqEtapaPermiteCotizaciones = true;
+/** false = etapa actual NO permite marcar cotizacion ganadora (Nod_Cot_Sel = 0). */
+let adqEtapaPermiteSeleccionarGanadora = true;
+
+function adqSetEtapaPermiteSeleccionarGanadora(permite) {
+    adqEtapaPermiteSeleccionarGanadora = !!permite;
+    if (typeof window !== 'undefined') {
+        window.adqEtapaPermiteSeleccionarGanadora = adqEtapaPermiteSeleccionarGanadora;
+    }
+    adqAplicarModoCotizacionesUi();
+}
 
 function adqSetEtapaPermiteCotizaciones(permite) {
     adqEtapaPermiteCotizaciones = !!permite;
     if (typeof window !== 'undefined') {
         window.adqEtapaPermiteCotizaciones = adqEtapaPermiteCotizaciones;
     }
-    if (!adqEtapaPermiteCotizaciones) {
+    adqAplicarModoCotizacionesUi();
+}
+
+/** Muestra/oculta y bloquea controles según cargar cotizaciones vs seleccionar ganadora. */
+function adqAplicarModoCotizacionesUi() {
+    const verSeccion = adqEtapaPermiteCotizaciones || adqEtapaPermiteSeleccionarGanadora;
+    if (!verSeccion) {
         $('#divCotizaciones').hide();
         $('#cotizacionesStateInitial').hide();
         $('#cotizacionesStateActive').hide();
         $('#divBtnAddCot').hide();
-        $('#cotizacionesList').empty();
-        $('#cotEliminarContainer').empty();
+        return;
+    }
+    $('#divCotizaciones').show();
+    $('#cotizacionesStateInitial').hide();
+    $('#cotizacionesStateActive').show();
+    $('#divCotizaciones').attr('data-adq-cot-edit', adqEtapaPermiteCotizaciones ? '1' : '0');
+    $('#divCotizaciones').attr('data-adq-cot-sel', adqEtapaPermiteSeleccionarGanadora ? '1' : '0');
+
+    if (adqEtapaPermiteCotizaciones) {
+        $('#divBtnAddCot').show();
+        $('#cotizacionesList').find('input, select, textarea, button').prop('disabled', false).removeAttr('disabled');
+        $('#cotizacionesList').find('.select2-hidden-accessible').prop('disabled', false);
+        $('#cotizacionesList .adq-proforma-remove, #cotizacionesList .adq-btn-add-pdf-cot, #cotizacionesList .adq-cot-remove').show();
+        $('#cotizacionesList .adq-file-upload').show();
     } else {
-        $('#divCotizaciones').show();
+        // Solo seleccionar ganadora: ver proformas existentes, sin alta/edicion.
+        $('#divBtnAddCot').hide();
+        $('#cotizacionesList').find('input, select, textarea, button').prop('disabled', true);
+        $('#cotizacionesList').find('.select2-hidden-accessible').prop('disabled', true);
+        $('#cotizacionesList .adq-proforma-remove, #cotizacionesList .adq-btn-add-pdf-cot, #cotizacionesList .adq-cot-remove').hide();
+        $('#cotizacionesList .adq-file-upload input[type="file"]').closest('.adq-file-upload').hide();
+    }
+
+    if (adqEtapaPermiteSeleccionarGanadora) {
+        $('#cotizacionesList .adq-cot-winner')
+            .removeClass('adq-cot-winner-off')
+            .addClass('adq-cot-winner-on')
+            .css('display', 'inline-flex')
+            .show();
+        $('#cotizacionesList .chk-cot-sel')
+            .prop('disabled', false)
+            .removeAttr('disabled')
+            .css({ 'pointer-events': 'auto', opacity: 1 });
+        $('#cotizacionesList .div-just-cot textarea').prop('disabled', false).removeAttr('disabled');
+    } else {
+        $('#cotizacionesList .adq-cot-winner')
+            .removeClass('adq-cot-winner-on')
+            .addClass('adq-cot-winner-off')
+            .hide();
+        $('#cotizacionesList .chk-cot-sel').prop('disabled', true);
+        $('#cotizacionesList .div-just-cot textarea').prop('disabled', true);
     }
 }
 
@@ -116,29 +169,38 @@ function toggleProveedorSugerido() {
 }
 
 function aplicarReglasCotizaciones() {
-    // Si la etapa no tiene "Permitir cargar cotizaciones", no mostrar ni forzar proformas.
-    if (!adqEtapaPermiteCotizaciones) {
-        adqSetEtapaPermiteCotizaciones(false);
+    // Si la etapa no permite cargar ni seleccionar ganadora, ocultar seccion.
+    if (!adqEtapaPermiteCotizaciones && !adqEtapaPermiteSeleccionarGanadora) {
+        adqAplicarModoCotizacionesUi();
         return;
     }
     syncReqConfigFromForm();
-    $('#divCotizaciones').show();
-    $('#cotizacionesStateInitial').hide();
-    $('#cotizacionesStateActive').show();
-    $('#divBtnAddCot').show();
+    adqAplicarModoCotizacionesUi();
 
     const esObservada = $('#Sol_Modo_Edicion').val() === 'observada';
     const accionGuardar = esObservada ? 'guardar correccion' : 'guardar borrador';
     const accionEnviar = esObservada ? 'reenviar correccion' : 'enviar a aprobacion';
+    const soloGanadora = !adqEtapaPermiteCotizaciones && adqEtapaPermiteSeleccionarGanadora;
+
+    if (soloGanadora) {
+        $('#cotizacionesAlert')
+            .removeClass('alert-info')
+            .addClass('alert-warning')
+            .html(`<i class="bi bi-trophy-fill text-warning" style="font-size: 14px; margin-right: 6px;"></i> <strong>SELECCIONAR GANADORA:</strong> marque con el trofeo la cotizacion ganadora. No puede cargar ni editar proformas en esta etapa.`);
+        return;
+    }
 
     if (parseInt(reqConfig.Sol_Req_Cot, 10) === 1) {
         asegurarCotizacionesMinimas();
         const min = parseInt(reqConfig.Sol_Min_Cot, 10) || 1;
         const total = contarCotizacionesEnFormulario();
+        let msgGanadora = adqEtapaPermiteSeleccionarGanadora
+            ? ' Marque tambien la <strong>cotizacion ganadora</strong>.'
+            : ' La seleccion de ganadora se realiza en otra etapa.';
         $('#cotizacionesAlert')
             .removeClass('alert-info')
             .addClass('alert-warning')
-            .html(`<i class="bi bi-info-circle-fill text-warning" style="font-size: 14px; margin-right: 6px;"></i> <strong>AL ${accionEnviar.toUpperCase()}:</strong> debera registrar al menos <strong>${min}</strong> cotizacion(es) con proveedor, monto y <strong>PDF obligatorio</strong>. Hay <strong>${total}</strong> formulario(s) en pantalla; puede <strong>anadir mas</strong> o <strong>${accionGuardar}</strong> ahora y completarlas despues.`);
+            .html(`<i class="bi bi-info-circle-fill text-warning" style="font-size: 14px; margin-right: 6px;"></i> <strong>AL ${accionEnviar.toUpperCase()}:</strong> debera registrar al menos <strong>${min}</strong> cotizacion(es) con proveedor, monto y <strong>PDF obligatorio</strong>. Hay <strong>${total}</strong> formulario(s) en pantalla; puede <strong>anadir mas</strong> o <strong>${accionGuardar}</strong> ahora y completarlas despues.${msgGanadora}`);
     } else {
         $('#cotizacionesAlert')
             .removeClass('alert-warning')
@@ -518,7 +580,10 @@ function validarRequisitosEnvioFormulario() {
             alert(msg);
             return false;
         }
-        if (!stats.ganadora) {
+    }
+    if (adqEtapaPermiteSeleccionarGanadora && parseInt(reqConfig.Sol_Req_Cot, 10) === 1) {
+        const statsSel = contarCotizacionesParaEnvio();
+        if (!statsSel.ganadora) {
             alert('Debe marcar cual de las cotizaciones cargadas es la ganadora/seleccionada.');
             return false;
         }
@@ -618,18 +683,22 @@ function cargarBorradorEnFormulario(solCod, porNodo) {
             : (modo === 'completar_nodo'
                 ? (parseInt(res.puede_cargar_cotizaciones, 10) === 1)
                 : true);
+        const puedeSelEtapa = (modo === 'observada')
+            ? true
+            : (modo === 'completar_nodo'
+                ? (parseInt(res.puede_seleccionar_ganadora, 10) === 1)
+                : true);
         adqSetEtapaPermiteCotizaciones(puedeCotEtapa);
+        adqSetEtapaPermiteSeleccionarGanadora(puedeSelEtapa);
 
-        if (!puedeCotEtapa) {
-            // Completar en etapa sin "Permitir cargar cotizaciones": no editar proformas.
-            adqSetEtapaPermiteCotizaciones(false);
-        } else {
+        if (puedeCotEtapa || puedeSelEtapa) {
             $('#cotizacionesStateInitial').hide();
             $('#cotizacionesStateActive').show();
             aplicarReglasCotizaciones();
         }
         if (modo === 'observada') {
             adqSetEtapaPermiteCotizaciones(true);
+            adqSetEtapaPermiteSeleccionarGanadora(true);
             $('#cotizacionesStateInitial').hide();
             $('#cotizacionesStateActive').show();
             aplicarReglasCotizaciones();
@@ -652,9 +721,9 @@ function bloquearFormularioSoloCotizaciones() {
     $form.find('button').prop('disabled', true);
     const $cotZone = $('#cotizacionesList, #divBtnAddCot, #cotizacionesStateActive');
     $cotZone.find('input, select, textarea, button').prop('disabled', false);
-    $('#divBtnAddCot').show().find('button').prop('disabled', false);
     $('#adqFormActionsCotizaciones button').prop('disabled', false);
     $('#Sol_Cod').prop('disabled', false);
+    adqAplicarModoCotizacionesUi();
 }
 
 function cargarSolicitudParaCotizaciones(solCod) {
@@ -673,7 +742,8 @@ function cargarSolicitudParaCotizaciones(solCod) {
         $('#Sol_Tit').val(s.Sol_Tit || '');
         adqAsegurarTipoRequerimiento(s.Trq_Cod, s.Trq_Des);
         setModoEdicionFormulario('cotizaciones', s.Sol_Num, null, s.Trq_Cod);
-        adqSetEtapaPermiteCotizaciones(true);
+        adqSetEtapaPermiteCotizaciones(parseInt(res.puede_cargar_cotizaciones, 10) === 1);
+        adqSetEtapaPermiteSeleccionarGanadora(parseInt(res.puede_seleccionar_ganadora, 10) === 1);
         $('#lblCotizacionesEtapa').text(res.etapa_nombre ? ('Etapa actual: ' + res.etapa_nombre + '. ') : '');
 
         // Reaplicar titulo/tipo tras setModo (bloqueo/Select2).
@@ -886,11 +956,16 @@ function initAdqSolicitudForm() {
         return;
     }
 
-    // Respetar flag del HTML (server) si la etapa no permite cotizaciones.
+    // Respetar flags del HTML (server) si la etapa no permite cotizaciones / ganadora.
     const cotEditAttr = $('#divCotizaciones').attr('data-adq-cot-edit');
-    if (cotEditAttr === '0') {
-        adqSetEtapaPermiteCotizaciones(false);
+    const cotSelAttr = $('#divCotizaciones').attr('data-adq-cot-sel');
+    if (cotEditAttr === '0' || cotEditAttr === '1') {
+        adqEtapaPermiteCotizaciones = (cotEditAttr === '1');
     }
+    if (cotSelAttr === '0' || cotSelAttr === '1') {
+        adqEtapaPermiteSeleccionarGanadora = (cotSelAttr === '1');
+    }
+    adqAplicarModoCotizacionesUi();
 
     if ($('#Prv_Sug').length && $('#Prv_Sug').hasClass('select2-hidden-accessible')) {
         $('#Prv_Sug').select2('destroy');
@@ -1376,9 +1451,11 @@ function htmlAdqProformaRow(opts) {
                     <input type="number" class="form-control text-end form-control-adq adq-cot-control" name="${nameBase}[Cot_Val]" value="${valor}" min="0.01" step="any" placeholder="0.00">
                 </div>
                 <div class="adq-proforma-actions">
-                    <div class="form-check adq-cot-winner">
+                    <div class="form-check adq-cot-winner adq-cot-winner-on">
                         <input type="checkbox" class="form-check-input chk-cot-sel" name="${nameBase}[Cot_Sel]" value="1" id="${chkId}" data-cot-key="${idx}"${selChecked} onchange="seleccionarCotizacionUnica('${idx}')">
-                        <label class="form-check-label fw-bold text-success" for="${chkId}" title="Proforma ganadora"><i class="bi bi-trophy"></i></label>
+                        <label class="form-check-label fw-bold text-success" for="${chkId}" title="Marcar cotizacion ganadora">
+                            <i class="bi bi-trophy-fill"></i> <span class="adq-cot-winner-text">Ganadora</span>
+                        </label>
                     </div>
                     <button type="button" class="btn btn-link adq-proforma-remove" title="Quitar proforma" onclick="quitarProformaFila(this)"><i class="bi bi-x-lg"></i></button>
                 </div>
@@ -1656,6 +1733,7 @@ function agregarCotizacionHTML() {
     setupProveedorCotSelect($cotEl.find('.select2-prov-cot'));
     setupAdqFileUpload($cotEl);
     actualizarBotonesProforma($cotEl);
+    adqAplicarModoCotizacionesUi();
 }
 
 function adqEscHtml(value) {
@@ -1720,6 +1798,7 @@ function agregarCotizacionExistente(cot) {
     setupAdqFileUpload($cotEl);
     actualizarBotonesProforma($cotEl);
     syncProveedorGrupo($cotEl);
+    adqAplicarModoCotizacionesUi();
 }
 
 function eliminarCotizacion(idx) {

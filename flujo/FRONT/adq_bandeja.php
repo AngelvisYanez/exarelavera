@@ -669,7 +669,9 @@ if (isset($ajax_get_solicitud_detail)) {
                IFNULL(d.Dep_Des, '') as Dep_Des,
                IFNULL(p.Prs_Nom, '') as Sol_Nom, IFNULL(p.Prs_Ape, '') as Sol_Ape,
                i.Ins_Cod, i.Nod_Act, i.Ins_Est,
-               n.Nod_Nom, n.Nod_Tip, n.Nod_Com_Obl, n.Nod_Adj_Obl, IFNULL(n.Nod_Cot_Edit, 0) AS Nod_Cot_Edit
+               n.Nod_Nom, n.Nod_Tip, n.Nod_Com_Obl, n.Nod_Adj_Obl,
+               IFNULL(n.Nod_Cot_Edit, 0) AS Nod_Cot_Edit,
+               IFNULL(n.Nod_Cot_Sel, 0) AS Nod_Cot_Sel
         FROM adq_solicitudes s
         INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
         LEFT JOIN usuarios u ON u.Usu_Cod = s.Usu_Sol
@@ -713,6 +715,12 @@ if (isset($ajax_get_solicitud_detail)) {
         $sol['Nod_Cot_Edit'] = 0;
     }
     $sol['Puede_Cargar_Cotizaciones'] = $wf_mgr->puedeUsuarioCargarCotizaciones(
+        $sol,
+        $wf_ctx['usu_cod'],
+        $wf_ctx['dep_cod'],
+        $wf_ctx['perfiles_ids']
+    ) ? 1 : 0;
+    $sol['Puede_Seleccionar_Ganadora'] = $wf_mgr->puedeUsuarioSeleccionarGanadora(
         $sol,
         $wf_ctx['usu_cod'],
         $wf_ctx['dep_cod'],
@@ -892,11 +900,16 @@ if ($pendientes === false || $pendientes === null) {
 }
 foreach ($pendientes as $idx => $p) {
     $sol_est_ok = !in_array($p['Sol_Est'], array('A', 'R'), true);
-    $cot_ok = $sol_est_ok && !empty($p['Ins_Cod'])
+    $cot_edit = $sol_est_ok && !empty($p['Ins_Cod'])
         ? ($wf_mgr->resolverNodCotEditInstancia(intval($p['Ins_Cod'])) === 1)
         : false;
-    $pendientes[$idx]['Nod_Cot_Edit'] = $cot_ok ? 1 : 0;
-    $pendientes[$idx]['Puede_Cargar_Cotizaciones'] = $cot_ok ? 1 : 0;
+    $cot_sel = $sol_est_ok && !empty($p['Ins_Cod'])
+        ? ($wf_mgr->resolverNodCotSelInstancia(intval($p['Ins_Cod'])) === 1)
+        : false;
+    $pendientes[$idx]['Nod_Cot_Edit'] = $cot_edit ? 1 : 0;
+    $pendientes[$idx]['Nod_Cot_Sel'] = $cot_sel ? 1 : 0;
+    $pendientes[$idx]['Puede_Cargar_Cotizaciones'] = $cot_edit ? 1 : 0;
+    $pendientes[$idx]['Puede_Seleccionar_Ganadora'] = $cot_sel ? 1 : 0;
     $pendientes[$idx]['Puede_Cargar_Avance'] = ($sol_est_ok && in_array($p['Nod_Tip'], array('AVANCE', 'FISCALIZACION'), true)) ? 1 : 0;
 }
 
@@ -1643,6 +1656,30 @@ function adqEtiquetaMiAccion($accion) {
             background: #b91c1c;
             border-color: #991b1b;
         }
+        #create-panel-content .adq-cot-winner.adq-cot-winner-on {
+            display: inline-flex !important;
+            align-items: center;
+            gap: 4px;
+            min-height: 32px;
+            cursor: pointer;
+            pointer-events: auto !important;
+            opacity: 1 !important;
+        }
+        #create-panel-content .adq-cot-winner .chk-cot-sel {
+            pointer-events: auto !important;
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            position: static;
+            opacity: 1 !important;
+        }
+        #create-panel-content .adq-cot-winner-text {
+            font-size: 11px;
+            font-weight: 700;
+        }
+        #create-panel-content .adq-cot-winner.adq-cot-winner-off {
+            display: none !important;
+        }
         .adq-msg-overlay {
             display: none;
             position: fixed;
@@ -2277,8 +2314,15 @@ function adqEtiquetaMiAccion($accion) {
                                                 <?php } else { ?>
                                                 <button type="button" class="btn btn-sm btn-primary adq-btn-icon-only" title="Resolver" onclick="abrirResolucion(<?php echo $p['Sol_Cod']; ?>, true)"><i class="bi bi-shield-check"></i></button>
                                                 <?php } ?>
-                                                <?php if (!empty($p['Puede_Cargar_Cotizaciones'])) { ?>
-                                                <button type="button" class="btn btn-sm btn-info adq-btn-icon-only" title="Cargar cotizaciones / proformas" onclick="abrirEdicionCotizaciones(<?php echo $p['Sol_Cod']; ?>)"><i class="bi bi-file-earmark-pdf"></i></button>
+                                                <?php if (!empty($p['Puede_Cargar_Cotizaciones']) || !empty($p['Puede_Seleccionar_Ganadora'])) {
+                                                    $titulo_cot = !empty($p['Puede_Cargar_Cotizaciones'])
+                                                        ? 'Cargar cotizaciones / proformas'
+                                                        : 'Seleccionar cotizacion ganadora';
+                                                    $ico_cot = !empty($p['Puede_Cargar_Cotizaciones'])
+                                                        ? 'bi-file-earmark-pdf'
+                                                        : 'bi-trophy';
+                                                ?>
+                                                <button type="button" class="btn btn-sm btn-info adq-btn-icon-only" title="<?php echo htmlspecialchars($titulo_cot, ENT_QUOTES, 'UTF-8'); ?>" onclick="abrirEdicionCotizaciones(<?php echo $p['Sol_Cod']; ?>)"><i class="bi <?php echo $ico_cot; ?>"></i></button>
                                                 <?php } ?>
                                                 <?php if (!empty($p['Puede_Cargar_Avance'])) { ?>
                                                 <button type="button" class="btn btn-sm btn-info adq-btn-icon-only" title="Cargar documentos de avance" onclick="abrirResolucion(<?php echo $p['Sol_Cod']; ?>, true)"><i class="bi bi-folder-plus"></i></button>
@@ -2611,11 +2655,11 @@ function adqEtiquetaMiAccion($accion) {
                                 <button type="button" class="btn btn-warning text-dark btn-sm" id="btnIrCorregirObservada" style="display: none;" onclick="irCorregirDesdeModal()"><i class="bi bi-pencil"></i> Ir a corregir solicitud</button>
                             </div>
 
-                            <!-- Panel: cargar cotizaciones/proformas en etapa -->
+                            <!-- Panel: cargar cotizaciones/proformas o seleccionar ganadora en etapa -->
                             <div class="adq-detail-card" id="panelCotizacionesEtapa" style="display: none; border-color: #0ea5e9; background-color: #f0f9ff; padding: 10px 12px;">
-                                <h5 class="adq-section-header" style="color: #0369a1; border-bottom-color: #bae6fd; margin-bottom: 8px; padding-bottom: 4px;"><i class="bi bi-file-earmark-pdf"></i> Cotizaciones / Proformas</h5>
-                                <p class="mb-2" style="font-size: 12px; color: #0c4a6e;">La etapa <strong id="lblCotizacionesEtapaNodo"></strong> permite cargar o actualizar las cotizaciones de esta solicitud.</p>
-                                <button type="button" class="btn btn-primary btn-sm" id="btnCargarCotizaciones" onclick="abrirEdicionCotizaciones(currentSolCod)"><i class="bi bi-file-earmark-pdf"></i> Cargar cotizaciones</button>
+                                <h5 class="adq-section-header" style="color: #0369a1; border-bottom-color: #bae6fd; margin-bottom: 8px; padding-bottom: 4px;"><i class="bi bi-file-earmark-pdf" id="icoCotizacionesEtapa"></i> <span id="lblCotizacionesEtapaTitulo">Cotizaciones / Proformas</span></h5>
+                                <p class="mb-2" id="lblCotizacionesEtapaAyuda" style="font-size: 12px; color: #0c4a6e;">La etapa <strong id="lblCotizacionesEtapaNodo"></strong> permite cargar o actualizar las cotizaciones de esta solicitud.</p>
+                                <button type="button" class="btn btn-primary btn-sm" id="btnCargarCotizaciones" onclick="abrirEdicionCotizaciones(currentSolCod)"><i class="bi bi-file-earmark-pdf"></i> <span id="lblBtnCargarCotizaciones">Cargar cotizaciones</span></button>
                             </div>
 
                             <!-- Panel: documentos de avance / fiscalizacion -->
@@ -2769,6 +2813,7 @@ function adqEtiquetaMiAccion($accion) {
                                         <button type="button" class="btn btn-adq-devolver" id="btnAccionDevolver" onclick="enviarAccion('DEVOLVER')"><i class="bi bi-reply"></i> Devolver</button>
                                         <button type="button" class="btn btn-danger" id="btnAccionRechazar" onclick="enviarAccion('RECHAZAR')"><i class="bi bi-x-circle"></i> Rechazar</button>
                                     </div>
+                                    <div id="lblAprobarBloqueo" class="text-danger" style="display:none; font-size: 11px; margin-top: 6px;"></div>
                                 </form>
                             </div>
                         </div>
@@ -2856,6 +2901,12 @@ let currentInsCod = null;
         let currentEsSolicitante = false;
         let isComObl = false;
         let isAdjObl = false;
+        let isCotSelObl = false;
+        let isCotEditObl = false;
+        let hasCotGanadora = false;
+        let hasCotMinimas = true;
+        let solReqCot = 0;
+        let solMinCot = 1;
         let searchTimer = null;
 
         const NODOS_RESOLUBLES = ['INICIO', 'APROBACION', 'RECEPCION', 'FACTURA', 'TAREA', 'AVANCE', 'FISCALIZACION', 'FIN'];
@@ -3028,7 +3079,97 @@ let currentInsCod = null;
                 renderPanelExpedienteFin();
             } else {
                 $('#panelExpedienteFin').hide();
-                $('#btnAccionAprobar').prop('disabled', false).attr('title', '');
+            }
+            actualizarEstadoBotonesResolucion();
+        }
+
+        function resumenCotizacionesResolucion(cotizaciones) {
+            const lista = Array.isArray(cotizaciones) ? cotizaciones : [];
+            let validas = 0;
+            let ganadora = false;
+            lista.forEach(function(c) {
+                const prv = parseInt(c.Prv_Cod, 10) || 0;
+                const val = parseFloat(c.Cot_Val) || 0;
+                const adj = (c.Cot_Adj == null) ? '' : String(c.Cot_Adj).trim();
+                if (prv > 0 && val > 0 && adj !== '') {
+                    validas++;
+                }
+                if (parseInt(c.Cot_Sel, 10) === 1) {
+                    ganadora = true;
+                }
+            });
+            return { validas: validas, ganadora: ganadora };
+        }
+
+        function motivosBloqueoAprobacion() {
+            const motivos = [];
+            if (isComObl && !$('#actionComentario').val().trim()) {
+                motivos.push('comentario obligatorio');
+            }
+            if (isAdjObl && actionAdjuntosSeleccionados.length === 0) {
+                motivos.push('adjunto de sustento obligatorio');
+            }
+            if (isCotEditObl && !hasCotMinimas) {
+                motivos.push('cotizaciones minimas incompletas');
+            }
+            if (isCotSelObl && !hasCotGanadora) {
+                motivos.push('cotizacion ganadora no seleccionada');
+            }
+            if (currentNodTip === 'FIN') {
+                const tienePdf = currentExpedienteEstado && parseInt(currentExpedienteEstado.tiene_pdf, 10) === 1;
+                if (!tienePdf) {
+                    motivos.push('expediente PDF no cargado');
+                }
+            }
+            if (currentNodTip === 'FISCALIZACION') {
+                if (!$('#actionComentario').val().trim()) {
+                    motivos.push('comentario obligatorio');
+                }
+                if (typeof contarDocsFiscalGuardados === 'function' && contarDocsFiscalGuardados() <= 0) {
+                    motivos.push('documentos de fiscalizacion pendientes');
+                }
+            }
+            return motivos;
+        }
+
+        function actualizarEstadoBotonesResolucion() {
+            const motivos = motivosBloqueoAprobacion();
+            const ok = motivos.length === 0;
+            const title = ok ? '' : ('Complete antes de continuar: ' + motivos.join(', ') + '.');
+            const $aprobar = $('#btnAccionAprobar');
+            const $completar = $('#btnAccionCompletar');
+            if ($aprobar.is(':visible')) {
+                $aprobar.prop('disabled', !ok).attr('title', title);
+            }
+            if ($completar.is(':visible')) {
+                $completar.prop('disabled', !ok).attr('title', title);
+            }
+            const $finAvance = $('#btnFinalizarAvance');
+            if ($finAvance.is(':visible') && currentNodTip === 'AVANCE') {
+                const motivosAvance = [];
+                if (!$('#actionComentario').val().trim()) {
+                    motivosAvance.push('comentario obligatorio');
+                }
+                if (typeof contarFacturasAvanceGuardadas === 'function' && contarFacturasAvanceGuardadas() <= 0) {
+                    motivosAvance.push('factura/anticipo pendiente');
+                }
+                const okAvance = motivosAvance.length === 0;
+                $finAvance.prop('disabled', !okAvance)
+                    .attr('title', okAvance ? '' : ('Complete antes de finalizar: ' + motivosAvance.join(', ') + '.'));
+            }
+            const $lbl = $('#lblAprobarBloqueo');
+            if (!ok && ($aprobar.is(':visible') || $completar.is(':visible'))) {
+                $lbl.html('<i class="bi bi-lock-fill"></i> Para habilitar Aprobar/Completar: <strong>' + motivos.join(', ') + '</strong>.').show();
+            } else {
+                $lbl.hide().text('');
+            }
+            if (currentNodTip === 'FIN') {
+                const tienePdf = currentExpedienteEstado && parseInt(currentExpedienteEstado.tiene_pdf, 10) === 1;
+                if (tienePdf) {
+                    $('#expFinAyuda').hide().text('');
+                } else {
+                    $('#expFinAyuda').show().text('Para finalizar: descargue el expediente y cargue el PDF revisado.');
+                }
             }
         }
 
@@ -3054,15 +3195,7 @@ let currentInsCod = null;
             if (currentNodTip !== 'FIN') {
                 return;
             }
-            const tienePdf = currentExpedienteEstado && parseInt(currentExpedienteEstado.tiene_pdf, 10) === 1;
-            $('#btnAccionAprobar').prop('disabled', !tienePdf);
-            if (tienePdf) {
-                $('#btnAccionAprobar').attr('title', 'Finalizar el expediente y cerrar la solicitud');
-                $('#expFinAyuda').hide().text('');
-            } else {
-                $('#btnAccionAprobar').attr('title', 'Debe cargar el expediente revisado antes de finalizar');
-                $('#expFinAyuda').show().text('Para finalizar: descargue el expediente y cargue el PDF revisado.');
-            }
+            actualizarEstadoBotonesResolucion();
         }
 
         function mostrarExpAccionMsg(texto) {
@@ -4616,10 +4749,33 @@ let currentInsCod = null;
 
                     const puedeResolver = parseInt(sol.Puede_Resolver, 10) === 1;
                     const puedeCot = parseInt(sol.Puede_Cargar_Cotizaciones, 10) === 1;
+                    const puedeSelGanadora = parseInt(sol.Puede_Seleccionar_Ganadora, 10) === 1;
                     const puedeAvance = parseInt(sol.Puede_Cargar_Avance, 10) === 1;
 
-                    if (puedeCot) {
+                    if (puedeCot || puedeSelGanadora) {
                         $('#lblCotizacionesEtapaNodo').text(sol.Nod_Nom || 'Etapa actual');
+                        if (puedeCot && puedeSelGanadora) {
+                            $('#lblCotizacionesEtapaTitulo').text('Cotizaciones / Proformas');
+                            $('#lblCotizacionesEtapaAyuda').html('La etapa <strong id="lblCotizacionesEtapaNodo"></strong> permite cargar cotizaciones y seleccionar la ganadora.');
+                            $('#lblCotizacionesEtapaNodo').text(sol.Nod_Nom || 'Etapa actual');
+                            $('#icoCotizacionesEtapa').attr('class', 'bi bi-file-earmark-pdf');
+                            $('#btnCargarCotizaciones').find('i').attr('class', 'bi bi-file-earmark-pdf');
+                            $('#lblBtnCargarCotizaciones').text('Cargar / seleccionar cotizaciones');
+                        } else if (puedeSelGanadora) {
+                            $('#lblCotizacionesEtapaTitulo').text('Seleccionar cotizacion ganadora');
+                            $('#lblCotizacionesEtapaAyuda').html('La etapa <strong id="lblCotizacionesEtapaNodo"></strong> permite marcar la cotizacion ganadora (sin cargar nuevas proformas).');
+                            $('#lblCotizacionesEtapaNodo').text(sol.Nod_Nom || 'Etapa actual');
+                            $('#icoCotizacionesEtapa').attr('class', 'bi bi-trophy');
+                            $('#btnCargarCotizaciones').find('i').attr('class', 'bi bi-trophy');
+                            $('#lblBtnCargarCotizaciones').text('Seleccionar ganadora');
+                        } else {
+                            $('#lblCotizacionesEtapaTitulo').text('Cotizaciones / Proformas');
+                            $('#lblCotizacionesEtapaAyuda').html('La etapa <strong id="lblCotizacionesEtapaNodo"></strong> permite cargar o actualizar las cotizaciones de esta solicitud.');
+                            $('#lblCotizacionesEtapaNodo').text(sol.Nod_Nom || 'Etapa actual');
+                            $('#icoCotizacionesEtapa').attr('class', 'bi bi-file-earmark-pdf');
+                            $('#btnCargarCotizaciones').find('i').attr('class', 'bi bi-file-earmark-pdf');
+                            $('#lblBtnCargarCotizaciones').text('Cargar cotizaciones');
+                        }
                         $('#panelCotizacionesEtapa').show();
                     }
 
@@ -4646,8 +4802,16 @@ let currentInsCod = null;
                             currentEsSolicitante
                         );
                     } else if (renderPanelAction && sol.Ins_Est === 'P' && puedeResolver) {
-                        isComObl = parseInt(sol.Nod_Com_Obl) === 1;
-                        isAdjObl = parseInt(sol.Nod_Adj_Obl) === 1;
+                        isComObl = parseInt(sol.Nod_Com_Obl, 10) === 1;
+                        isAdjObl = parseInt(sol.Nod_Adj_Obl, 10) === 1;
+                        solReqCot = parseInt(sol.Sol_Req_Cot, 10) === 1 ? 1 : 0;
+                        solMinCot = Math.max(1, parseInt(sol.Sol_Min_Cot, 10) || 1);
+                        // Si el nodo permite/requiere seleccionar ganadora, no se aprueba sin ella.
+                        isCotSelObl = parseInt(sol.Nod_Cot_Sel, 10) === 1;
+                        isCotEditObl = (parseInt(sol.Nod_Cot_Edit, 10) === 1) && solReqCot === 1;
+                        const resumenCot = resumenCotizacionesResolucion(res.cotizaciones || []);
+                        hasCotGanadora = !!resumenCot.ganadora;
+                        hasCotMinimas = resumenCot.validas >= solMinCot;
 
                         $('#lblNodeActionName').text(sol.Nod_Nom || 'Etapa actual');
                         $('#actionInsCod').val(sol.Ins_Cod);
@@ -4659,7 +4823,8 @@ let currentInsCod = null;
 
                         configurarPanelResolucion(sol.Nod_Tip, res.expediente_pdfs, res.expediente, parseInt(res.tiene_llave_empresa, 10) === 1);
                         $('#panelDecision').show();
-                    } else if (sol.Ins_Est === 'P' && !puedeResolver && !puedeCot && !puedeAvance && (sol.Sol_Est === 'E' || sol.Sol_Est === 'P')) {
+                        actualizarEstadoBotonesResolucion();
+                    } else if (sol.Ins_Est === 'P' && !puedeResolver && !puedeCot && !puedeSelGanadora && !puedeAvance && (sol.Sol_Est === 'E' || sol.Sol_Est === 'P')) {
                         mostrarPanelEsperaCorreccion(
                             'Decisi\u00f3n no disponible',
                             sol.Motivo_Bloqueo || 'La solicitud esta en otra etapa o asignada a otro responsable.',
@@ -4906,6 +5071,7 @@ let currentInsCod = null;
             sincronizarInputSustentos();
             mostrarSustentosSeleccionados();
             $('#adqDropzone').removeClass('adq-dropzone-invalid');
+            actualizarEstadoBotonesResolucion();
         }
 
         function procesarSustentoArchivos(files) {
@@ -4929,7 +5095,12 @@ let currentInsCod = null;
             if (excedidos.length) {
                 alert('Estos archivos superan el limite de 10 MB y no fueron agregados: ' + excedidos.join(', '));
             }
+            actualizarEstadoBotonesResolucion();
         }
+
+        $(document).on('input change', '#actionComentario', function() {
+            actualizarEstadoBotonesResolucion();
+        });
 
         $(document).on('change', '#actionAdjunto', function() {
             if (this.files && this.files.length > 0) {
@@ -5001,6 +5172,11 @@ let currentInsCod = null;
                 }
             }
             if (accion === 'APROBAR' || accion === 'COMPLETAR') {
+                const motivos = motivosBloqueoAprobacion();
+                if (motivos.length) {
+                    alert('No puede continuar. Falta: ' + motivos.join(', ') + '.');
+                    return;
+                }
                 if (isComObl && !$('#actionComentario').val().trim()) {
                     alert(accion === 'COMPLETAR'
                         ? 'El comentario es obligatorio para completar esta tarea.'
@@ -5009,6 +5185,14 @@ let currentInsCod = null;
                 }
                 if (isAdjObl && actionAdjuntosSeleccionados.length === 0) {
                     alert('Cargar un archivo adjunto de soporte es obligatorio en esta etapa.');
+                    return;
+                }
+                if (isCotSelObl && !hasCotGanadora) {
+                    alert('Debe seleccionar la cotizacion ganadora antes de aprobar esta etapa.');
+                    return;
+                }
+                if (isCotEditObl && !hasCotMinimas) {
+                    alert('Debe completar las cotizaciones minimas requeridas antes de aprobar esta etapa.');
                     return;
                 }
             }
@@ -5222,7 +5406,7 @@ let currentInsCod = null;
                 } else {
                     $.getScript('../../framework/plugins/cedulaRuc.js')
                         .done(function() {
-                            return $.getScript('../VALIDACIONES/adq_solicitud.js?v=20260727e');
+                            return $.getScript('../VALIDACIONES/adq_solicitud.js?v=20260727h');
                         })
                         .done(function() {
                             if (requestId !== formLoadRequestId) {

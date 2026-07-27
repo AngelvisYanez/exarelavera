@@ -708,6 +708,9 @@ class wf_manager_log {
             if ($this->puedeUsuarioCargarCotizaciones($sol, $usu_cod, $dep_cod, $perfiles_ids)) {
                 return true;
             }
+            if ($this->puedeUsuarioSeleccionarGanadora($sol, $usu_cod, $dep_cod, $perfiles_ids)) {
+                return true;
+            }
             if ($this->puedeUsuarioCargarAvance($sol, $usu_cod, $dep_cod, $perfiles_ids)) {
                 return true;
             }
@@ -772,6 +775,52 @@ class wf_manager_log {
     }
 
     /**
+     * Indica si la etapa activa permite seleccionar la cotizacion ganadora.
+     * Independiente de Nod_Cot_Edit (cargar proformas).
+     */
+    public function resolverNodCotSelInstancia($ins_cod) {
+        $this->ensureNotificationSchema();
+        $ins_cod = intval($ins_cod);
+        if ($ins_cod <= 0) {
+            return 0;
+        }
+        $row = $this->obBD_datos->getRowConsultaSql(
+            "SELECT IFNULL(n.Nod_Cot_Sel, 0) AS Nod_Cot_Sel
+             FROM wf_instancias i
+             INNER JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act
+             WHERE i.Ins_Cod = $ins_cod AND i.Ins_Est = 'P'
+             LIMIT 1;",
+            $this->obBD_conexion
+        );
+        if (empty($row)) {
+            return 0;
+        }
+        return (intval($row['Nod_Cot_Sel']) === 1) ? 1 : 0;
+    }
+
+    /**
+     * Indica si un nodo concreto permite seleccionar cotizacion ganadora.
+     */
+    public function resolverNodCotSelNodo($nod_cod) {
+        $this->ensureNotificationSchema();
+        $nod_cod = intval($nod_cod);
+        if ($nod_cod <= 0) {
+            return 0;
+        }
+        $row = $this->obBD_datos->getRowConsultaSql(
+            "SELECT IFNULL(n.Nod_Cot_Sel, 0) AS Nod_Cot_Sel
+             FROM wf_nodos n
+             WHERE n.Nod_Cod = $nod_cod
+             LIMIT 1;",
+            $this->obBD_conexion
+        );
+        if (empty($row)) {
+            return 0;
+        }
+        return (intval($row['Nod_Cot_Sel']) === 1) ? 1 : 0;
+    }
+
+    /**
      * Ultima etapa humana previa (por historial) con carga de proformas habilitada.
      */
     private function resolverNodoEtapaAnteriorConProformas($Ins_Cod, $nod_actual_cod) {
@@ -820,6 +869,23 @@ class wf_manager_log {
             return false;
         }
         if ($this->resolverNodCotEditInstancia(intval($sol['Ins_Cod'])) !== 1) {
+            return false;
+        }
+        return $this->puedeResolverInstancia(intval($sol['Ins_Cod']), $usu_cod, $dep_cod, $perfiles_ids);
+    }
+
+    /**
+     * Indica si el usuario puede seleccionar cotizacion ganadora en la etapa actual.
+     * Independiente de Nod_Cot_Edit.
+     */
+    public function puedeUsuarioSeleccionarGanadora($sol, $usu_cod, $dep_cod, $perfiles_ids) {
+        if (empty($sol['Ins_Cod']) || $sol['Ins_Est'] !== 'P') {
+            return false;
+        }
+        if (in_array($sol['Sol_Est'], array('A', 'R'), true)) {
+            return false;
+        }
+        if ($this->resolverNodCotSelInstancia(intval($sol['Ins_Cod'])) !== 1) {
             return false;
         }
         return $this->puedeResolverInstancia(intval($sol['Ins_Cod']), $usu_cod, $dep_cod, $perfiles_ids);
@@ -941,9 +1007,13 @@ class wf_manager_log {
         if (self::$versioningReadyStatic) {
             return;
         }
-        if (!empty($_SESSION['wf_schema_versioning_ok'])) {
+        // Versionar el flag de sesión: al agregar columnas nuevas (p.ej. Nod_Cot_Sel)
+        // hay que volver a correr ensures aunque la sesión diga "ok".
+        $schema_ver = 3;
+        if (!empty($_SESSION['wf_schema_versioning_ok']) && intval($_SESSION['wf_schema_versioning_ok']) >= $schema_ver) {
             self::$versioningReadyStatic = true;
-            self::$notificationSchemaReadyStatic = true;
+            // Aun con cache, revalidar notificaciones/columnas nuevas (barato: SHOW COLUMNS).
+            $this->ensureNotificationSchema();
             return;
         }
         $cols = $this->obBD_datos->getArrayConsultaSql(
@@ -964,7 +1034,7 @@ class wf_manager_log {
         $this->ensureNotificationSchema();
         $this->ensureConnectionPortsSchema();
         if (isset($_SESSION)) {
-            $_SESSION['wf_schema_versioning_ok'] = 1;
+            $_SESSION['wf_schema_versioning_ok'] = $schema_ver;
         }
     }
 
@@ -1037,6 +1107,20 @@ class wf_manager_log {
             $this->ejecutarSql(
                 "ALTER TABLE wf_nodos
                  ADD COLUMN Nod_Cot_Edit TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Permite cargar cotizaciones en esta etapa';"
+            );
+        }
+        $col_cot_sel = $this->obBD_datos->getArrayConsultaSql(
+            "SHOW COLUMNS FROM wf_nodos LIKE 'Nod_Cot_Sel';",
+            $this->obBD_conexion
+        );
+        if (empty($col_cot_sel)) {
+            $this->ejecutarSql(
+                "ALTER TABLE wf_nodos
+                 ADD COLUMN Nod_Cot_Sel TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Permite seleccionar cotizacion ganadora en esta etapa';"
+            );
+            // Compatibilidad: etapas que ya cargaban cotizaciones tambien podian marcar ganadora.
+            $this->ejecutarSql(
+                "UPDATE wf_nodos SET Nod_Cot_Sel = 1 WHERE IFNULL(Nod_Cot_Edit, 0) = 1;"
             );
         }
         $col_cre = $this->obBD_datos->getArrayConsultaSql(
@@ -1363,6 +1447,7 @@ class wf_manager_log {
             $com = !empty($nodo['Nod_Com_Obl']) ? 1 : 0;
             $adj = !empty($nodo['Nod_Adj_Obl']) ? 1 : 0;
             $cot = !empty($nodo['Nod_Cot_Edit']) ? 1 : 0;
+            $cot_sel = !empty($nodo['Nod_Cot_Sel']) ? 1 : 0;
             $cre = !empty($nodo['Nod_Cre_Sol']) ? 1 : 0;
             $not_wa = !empty($nodo['Nod_Not_Wa']) ? 1 : 0;
             $not_em = !empty($nodo['Nod_Not_Em']) ? 1 : 0;
@@ -1376,12 +1461,12 @@ class wf_manager_log {
             $this->ejecutarSql(
                 "INSERT INTO wf_nodos
                     (Wfm_Cod, Nod_Tip, Nod_Nom, Nod_Des, Dep_Cod, Per_Cod, Nod_Sla,
-                     Nod_Com_Obl, Nod_Adj_Obl, Nod_Cot_Edit, Nod_Cre_Sol,
+                     Nod_Com_Obl, Nod_Adj_Obl, Nod_Cot_Edit, Nod_Cot_Sel, Nod_Cre_Sol,
                      Nod_Not_Wa, Nod_Not_Em, Nod_Not_Mom, Nod_Not_Asunto, Nod_Not_Texto,
                      Nod_Vis_X, Nod_Vis_Y, Nod_Est, Nod_Usu_Asig)
                  VALUES
                     ($nuevo_wfm, '$tip', '$nombre', '$nodo_des', $dep, $per, $sla,
-                     $com, $adj, $cot, $cre,
+                     $com, $adj, $cot, $cot_sel, $cre,
                      $not_wa, $not_em, '$not_mom', $not_asunto, $not_texto,
                      $x, $y, 'A', $usu);"
             );
@@ -1423,6 +1508,7 @@ class wf_manager_log {
 
     public function guardarFlujoDisenador($data, $emp_cod) {
         $this->ensureVersioningSchema();
+        $this->ensureNotificationSchema();
         $this->ensureWfDepartamentosTable();
         $emp_cod = intval($emp_cod);
         if (!is_array($data) || empty($data['nodos']) || !is_array($data['nodos'])) {
@@ -1500,6 +1586,7 @@ class wf_manager_log {
             $com_obl = !empty($nodo['com_obl']) ? 1 : 0;
             $adj_obl = !empty($nodo['adj_obl']) ? 1 : 0;
             $cot_edit = !empty($nodo['cot_edit']) ? 1 : 0;
+            $cot_sel = !empty($nodo['cot_sel']) ? 1 : 0;
             $cre_sol = !empty($nodo['cre_sol']) ? 1 : 0;
             $not_wa = !empty($nodo['not_wa']) ? 1 : 0;
             $not_em = !empty($nodo['not_em']) ? 1 : 0;
@@ -1511,6 +1598,11 @@ class wf_manager_log {
                 $not_asunto = 'NULL';
                 $not_texto = 'NULL';
                 $cot_edit = 0;
+                $cot_sel = 0;
+            }
+            if ($nod_tip === 'FIN') {
+                $cot_edit = 0;
+                $cot_sel = 0;
             }
             // Solo INICIO usa Nod_Cre_Sol; otros nodos lo dejan en 0
             if ($nod_tip !== 'INICIO') {
@@ -1538,7 +1630,7 @@ class wf_manager_log {
                         Nod_Tip = '$nod_tip', Nod_Nom = '$nod_nom', Nod_Des = '$nod_des',
                         Dep_Cod = $dep_cod, Per_Cod = $per_cod, Nod_Sla = $sla,
                         Nod_Com_Obl = $com_obl, Nod_Adj_Obl = $adj_obl, Nod_Cot_Edit = $cot_edit,
-                        Nod_Cre_Sol = $cre_sol,
+                        Nod_Cot_Sel = $cot_sel, Nod_Cre_Sol = $cre_sol,
                         Nod_Not_Wa = $not_wa, Nod_Not_Em = $not_em, Nod_Not_Mom = 'S',
                         Nod_Not_Asunto = $not_asunto, Nod_Not_Texto = $not_texto,
                         Nod_Vis_X = $vis_x, Nod_Vis_Y = $vis_y, Nod_Usu_Asig = $usu_asig, Nod_Est = 'A'
@@ -1546,10 +1638,10 @@ class wf_manager_log {
                 );
             } else {
                 $this->ejecutarSql(
-                    "INSERT INTO wf_nodos (Wfm_Cod, Nod_Tip, Nod_Nom, Nod_Des, Dep_Cod, Per_Cod, Nod_Sla, Nod_Com_Obl, Nod_Adj_Obl, Nod_Cot_Edit, Nod_Cre_Sol,
+                    "INSERT INTO wf_nodos (Wfm_Cod, Nod_Tip, Nod_Nom, Nod_Des, Dep_Cod, Per_Cod, Nod_Sla, Nod_Com_Obl, Nod_Adj_Obl, Nod_Cot_Edit, Nod_Cot_Sel, Nod_Cre_Sol,
                         Nod_Not_Wa, Nod_Not_Em, Nod_Not_Mom, Nod_Not_Asunto, Nod_Not_Texto,
                         Nod_Vis_X, Nod_Vis_Y, Nod_Est, Nod_Usu_Asig)
-                     VALUES ($wfm_cod, '$nod_tip', '$nod_nom', '$nod_des', $dep_cod, $per_cod, $sla, $com_obl, $adj_obl, $cot_edit, $cre_sol,
+                     VALUES ($wfm_cod, '$nod_tip', '$nod_nom', '$nod_des', $dep_cod, $per_cod, $sla, $com_obl, $adj_obl, $cot_edit, $cot_sel, $cre_sol,
                         $not_wa, $not_em, 'S', $not_asunto, $not_texto, $vis_x, $vis_y, 'A', $usu_asig);"
                 );
                 $nod_cod = intval($this->obBD_datos->insercionid($this->obBD_conexion));
@@ -2258,6 +2350,34 @@ class wf_manager_log {
                 }
                 if ($nodoActual['Nod_Adj_Obl'] == 1 && empty($Adjuntos)) {
                     throw new Exception("Se requiere cargar al menos un archivo adjunto como sustento de esta etapa.");
+                }
+                // Cotizaciones / ganadora segun flags del nodo (adquisiciones).
+                if (isset($instancia['Ins_Ent_Typ']) && $instancia['Ins_Ent_Typ'] === 'adq_solicitudes') {
+                    $exige_cot = !empty($nodoActual['Nod_Cot_Edit']) && intval($nodoActual['Nod_Cot_Edit']) === 1;
+                    $exige_sel = !empty($nodoActual['Nod_Cot_Sel']) && intval($nodoActual['Nod_Cot_Sel']) === 1;
+                    $sol_cod_acc = intval($instancia['Ins_Ent_Cod']);
+                    if ($exige_sel) {
+                        $ganadora = $this->obBD_datos->getRowConsultaSql(
+                            "SELECT Sco_Cod
+                             FROM adq_solicitudes_cotizaciones
+                             WHERE Sol_Cod = $sol_cod_acc AND Cot_Sel = 1
+                             LIMIT 1;",
+                            $this->obBD_conexion
+                        );
+                        if (empty($ganadora['Sco_Cod'])) {
+                            throw new Exception('Debe seleccionar la cotizacion ganadora antes de aprobar esta etapa.');
+                        }
+                    }
+                    if ($exige_cot) {
+                        require_once(dirname(__FILE__) . '/adq_adquisiciones_log.php');
+                        $adq_val = new adq_adquisiciones_log($this->obBD_conexion);
+                        $validacion_cot = $adq_val->validarRequisitosParaEnvio($sol_cod_acc, true, false);
+                        if (empty($validacion_cot['success'])) {
+                            throw new Exception(isset($validacion_cot['message'])
+                                ? $validacion_cot['message']
+                                : 'Faltan cotizaciones requeridas para aprobar esta etapa.');
+                        }
+                    }
                 }
                 if ($Accion === 'APROBAR' && isset($nodoActual['Nod_Tip']) && in_array($nodoActual['Nod_Tip'], array('AVANCE', 'FISCALIZACION'), true)) {
                     // En estos nodos Guardar solo persiste; avanzar exige justificacion (docs) + comentario.
