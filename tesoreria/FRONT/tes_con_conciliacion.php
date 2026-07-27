@@ -15,6 +15,54 @@ $obBD_conexion_get = new Class_Log_Conexion_Global($Ses_Dat_Dis);
 $obBD_con_get = new Class_Log_Datos_Conciliacion();
 $obBD_con_get->setConnection($obBD_conexion_get);
 
+/**
+ * Calcula saldo acumulado Cob_Disp y deja solo columnas usadas por el grid.
+ * Reduce JSON y evita recalcular fila a fila con setCell en el cliente.
+ */
+function tes_con_prepare_asientos_grid($asientos) {
+    if (!is_array($asientos)) {
+        return array(array(), 0);
+    }
+    $keep = array(
+        'conc_select', 'Com_Cod', 'Asi_Cod', 'pago_tipo', 'Com_Codigo', 'Com_Fec',
+        'Doc_Num', 'Num_Doc', 'FormasPago', 'Inv_Nom', 'Asi_Glo', 'Asi_Sald',
+        'Cob_Disp', 'Che_Num', 'Vet_Che', 'Com_Con'
+    );
+    $acum = 0.0;
+    $out = array();
+    foreach ($asientos as $row) {
+        if (!is_array($row)) {
+            continue;
+        }
+        $select = isset($row['conc_select']) ? $row['conc_select'] : 'N';
+        $isInit = (isset($row['Asi_Cod']) && (string) $row['Asi_Cod'] === 'no_id');
+        $sald = isset($row['Asi_Sald']) ? floatval($row['Asi_Sald']) : 0.0;
+        if ($select === 'S' || $isInit) {
+            $acum += $sald;
+            $row['Cob_Disp'] = round($acum, 2);
+        } else {
+            $row['Cob_Disp'] = null;
+        }
+        // Etiqueta visible de tipo (sin prefijo de ordenamiento de grouping)
+        if ($isInit) {
+            $label = !empty($row['Com_Con']) ? $row['Com_Con'] : 'Saldo Anterior';
+            $row['pago_tipo'] = ltrim((string) $label, " \t\n\r\0\x0B!");
+        } elseif (!isset($row['pago_tipo']) || $row['pago_tipo'] === null || trim((string) $row['pago_tipo']) === '') {
+            $row['pago_tipo'] = 'Sin tipo';
+        } else {
+            $row['pago_tipo'] = ltrim((string) $row['pago_tipo'], '!');
+        }
+        $slim = array();
+        foreach ($keep as $k) {
+            if (array_key_exists($k, $row)) {
+                $slim[$k] = $row[$k];
+            }
+        }
+        $out[] = $slim;
+    }
+    return array($out, round($acum, 2));
+}
+
 /* Informacion de Representante y Contador */
 $infoFirmas = $obBD_con_get->getRowConsultaSql("SELECT Emp_Ren, Emp_Rre, Emp_Con, Emp_Rco FROM empresas WHERE Emp_Cod='$Ses_Emp_Cod'", $obBD_conexion_get);
 /* Informacion del Usuario logeado */
@@ -35,6 +83,99 @@ if (isset($conciliaAjax)) {
     }
     unset($p);
     $obBD_con_get->echoJson($page);
+}
+
+if (isset($buscarDiarioConc)) {
+    $diario = isset($Com_Codigo) ? trim((string) $Com_Codigo) : '';
+    $diario = strtoupper(preg_replace('/\s+/', '', $diario));
+    $comCod = isset($Com_Cod) ? trim((string) $Com_Cod) : '';
+    $comCod = preg_replace('/\D+/', '', $comCod); // solo dígitos del Id
+
+    $tieneDiario = ($diario !== '' && preg_match('/^[A-Z0-9\-]{3,40}$/', $diario));
+    $tieneComCod = ($comCod !== '' && ctype_digit($comCod));
+
+    if (!$tieneDiario && !$tieneComCod) {
+        $obBD_con_get->echoJson(array(
+            'success' => false,
+            'message' => 'Ingrese Nro. Diario (Ej: RL-06-20) y/o Id Comprobante (Com_Cod).'
+        ));
+    }
+    if (empty($Pec_Cod)) {
+        $obBD_con_get->echoJson(array(
+            'success' => false,
+            'message' => 'Seleccione el <b>Periodo</b> en la b&uacute;squeda principal.'
+        ));
+    }
+
+    $emp = intval($Ses_Emp_Cod);
+    $extra = ' AND cb.Pec_Cod=' . intval($Pec_Cod) . ' AND c.Pec_Cod=' . intval($Pec_Cod);
+    if (!empty($Ban_Cod)) {
+        $extra .= ' AND cb.Ban_Cod=' . intval($Ban_Cod);
+    }
+
+    $exprCodigo = "CONCAT(ta.Tia_Abr, '-', LPAD(MONTH(c.Com_Fec), 2, '0'), '-', c.Com_Num)";
+    $whereParts = array();
+    $labelBusqueda = array();
+    if ($tieneDiario) {
+        $diarioEsc = addslashes($diario);
+        $whereParts[] = "UPPER(REPLACE({$exprCodigo}, ' ', '')) = '{$diarioEsc}'";
+        $labelBusqueda[] = 'diario <b>' . htmlspecialchars($diario) . '</b>';
+    }
+    if ($tieneComCod) {
+        $whereParts[] = 'c.Com_Cod=' . intval($comCod);
+        $labelBusqueda[] = 'Com_Cod <b>' . htmlspecialchars($comCod) . '</b>';
+    }
+    if ($tieneDiario && $tieneComCod) {
+        $whereSql = '(' . implode(' AND ', $whereParts) . ')';
+    } else {
+        $whereSql = '(' . implode(' OR ', $whereParts) . ')';
+    }
+    $labelTxt = implode(' / ', $labelBusqueda);
+
+    $sql = "
+        SELECT
+            cb.Cob_Cod, cb.Cob_Fec, cb.Cob_Obs, cb.Cob_Dis, cb.Cob_Est, cb.Ban_Cod, cb.Pec_Cod,
+            p.Prs_Nom, det_plan.Pld_Des, banco.Ban_Cue,
+            {$exprCodigo} AS Com_Codigo,
+            c.Com_Cod, c.Com_Fec AS Com_Fec_Diario, a.Asi_Cod, a.Asi_Glo
+        FROM conciliacion_banc_asientos cba
+        INNER JOIN conciliacion_bancaria cb ON cb.Cob_Cod = cba.Cob_Cod AND cb.Cob_Est = 'A'
+        INNER JOIN asientos a ON a.Asi_Cod = cba.Asi_Cod
+        INNER JOIN comprobantes c ON c.Com_Cod = a.Com_Cod AND c.Com_Est = 'A'
+        INNER JOIN tipo_asien ta ON ta.Tia_Cod = c.Tia_Cod
+        INNER JOIN perio_cont ON perio_cont.Pec_Cod = cb.Pec_Cod
+        INNER JOIN plan_cuenta ON plan_cuenta.Pla_Cod = perio_cont.Pla_Cod AND plan_cuenta.Emp_Cod = {$emp}
+        INNER JOIN banco ON banco.Ban_Cod = cb.Ban_Cod
+        INNER JOIN det_plan ON det_plan.Pld_Cod = banco.Pld_Cod
+        LEFT JOIN usuarios ON usuarios.Usu_Cod = cb.Usu_Cod
+        LEFT JOIN persona p ON p.Prs_Cod = usuarios.Prs_Cod
+        WHERE {$whereSql}
+        {$extra}
+        ORDER BY cb.Cob_Fec DESC
+    ";
+    $rows = $obBD_con_get->getArrayConsultaSql($sql, $obBD_conexion_get);
+    if (!is_array($rows)) {
+        $rows = array();
+    }
+    $byCob = array();
+    foreach ($rows as $r) {
+        $cod = $r['Cob_Cod'];
+        if (!isset($byCob[$cod])) {
+            $byCob[$cod] = $r;
+            $byCob[$cod]['Cob_Last'] = '';
+        }
+    }
+    $conciliaciones = array_values($byCob);
+    $obBD_con_get->echoJson(array(
+        'success' => true,
+        'Com_Codigo' => $tieneDiario ? $diario : (isset($conciliaciones[0]['Com_Codigo']) ? $conciliaciones[0]['Com_Codigo'] : ''),
+        'Com_Cod' => $tieneComCod ? $comCod : (isset($conciliaciones[0]['Com_Cod']) ? $conciliaciones[0]['Com_Cod'] : ''),
+        'records' => count($conciliaciones),
+        'rows' => $conciliaciones,
+        'message' => count($conciliaciones)
+            ? ('La b&uacute;squeda por ' . $labelTxt . ' encontr&oacute; ' . count($conciliaciones) . ' conciliaci&oacute;n(es).')
+            : ('No se encontr&oacute; ' . $labelTxt . ' en conciliaciones activas.')
+    ));
 }
 
 if (isset($newConciliacion)) {
@@ -126,7 +267,8 @@ if (isset($newConciliacion)) {
     );
 
     array_unshift($asientos, $last);
-    $obBD_con_get->echoJson(array('success' => true, 'Cob_Last' => $last, 'Ban' => $banco, 'asientos' => $asientos));
+    list($asientos, $cobDispTotal) = tes_con_prepare_asientos_grid($asientos);
+    $obBD_con_get->echoJson(array('success' => true, 'Cob_Last' => $last, 'Ban' => $banco, 'asientos' => $asientos, 'Cob_Disp_Total' => $cobDispTotal));
 }
 
 
@@ -138,9 +280,27 @@ if (isset($editConciliacion)) {
         $last = array('Asi_Cod' => 'no_id', 'Asi_Sald' => '0.00', 'Com_Con' => 'Sin Conciliacion Anterior', 'Cob_Dis' => '0.00', 'pago_tipo' => ' ');
     else
         $last = array_merge($last, array('Asi_Cod' => 'no_id', 'Asi_Sald' => $last['Cob_Dis'], 'Com_Fec' => $last['Cob_Fec'], 'Com_Con' => 'Ultima Conciliación', 'pago_tipo' => ' '));
-    $asientos = $obBD_con_get->getArray('asientos', array('where' => array("Com_Fec<='{$conc['Cob_Fec']}'", "(Cob_Cod IS NULL OR Cob_Cod={$conc['Cob_Cod']})", 'Pec_Cod' => $conc['Pec_Cod'], 'Pld_Cod' => $banco['Pld_Cod']), 'setWhere' => array('comprobante', "saldo", "conciliacion", "tipo_pago", 'isActive'), 'order' => 'pago_tipo,Com_Fec ASC', 'addCols' => array('' => array($obBD_con_get->expr("IF(Cob_Cod IS NULL,'N','S')AS conc_select")))));
+    $asientos = $obBD_con_get->getArray('asientos', array(
+        'where' => array(
+            "Com_Fec<='{$conc['Cob_Fec']}'",
+            "(Cob_Cod IS NULL OR Cob_Cod={$conc['Cob_Cod']})",
+            'Pec_Cod' => $conc['Pec_Cod'],
+            'asientos.Pld_Cod' => $banco['Pld_Cod']
+        ),
+        'setWhere' => array('comprobante', "saldo", "conciliacion", "tipo_pago", 'isActive'),
+        'order' => 'pago_tipo,Com_Fec ASC',
+        'addCols' => array('' => array($obBD_con_get->expr("IF(Cob_Cod IS NULL,'N','S')AS conc_select")))
+    ));
     array_unshift($asientos, $last);
-    $obBD_con_get->echoJson(array('success' => true, 'Cob' => $conc, 'Cob_Last' => $last, 'Ban' => $banco, 'asientos' => $asientos));
+    list($asientos, $cobDispTotal) = tes_con_prepare_asientos_grid($asientos);
+    $obBD_con_get->echoJson(array(
+        'success' => true,
+        'Cob' => $conc,
+        'Cob_Last' => $last,
+        'Ban' => $banco,
+        'asientos' => $asientos,
+        'Cob_Disp_Total' => $cobDispTotal
+    ));
 }
 if (isset($viewConciliacion)) {
     require_once('../../contabilidad/LOGICA/con_log_planc_2.php');
@@ -238,8 +398,320 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
             -o-transform: scale(1.6);
             transform: scale(1.6);
         }
+        .conc-grid-wrap {
+            position: relative;
+            min-height: 500px;
+        }
+        #concGridProgress {
+            margin: 0 0 8px 0;
+            padding: 8px 10px;
+            background: #f5f7fa;
+            border: 1px solid #d0d7de;
+            border-radius: 3px;
+        }
+        #concGridProgress .conc-prog-label {
+            font-size: 12px;
+            color: #333;
+            margin-bottom: 6px;
+        }
+        #concGridProgress .conc-prog-track {
+            height: 10px;
+            background: #e6ebf0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        #concGridProgress .conc-prog-bar {
+            height: 100%;
+            width: 0%;
+            background: #0f766e;
+            border-radius: 5px;
+            transition: width .12s linear;
+        }
+        #concGridProgress .conc-prog-bar.is-wait {
+            width: 35% !important;
+            background: #1d4ed8;
+            animation: none;
+        }
+        #concGridProgress .conc-prog-spin {
+            margin-right: 4px;
+            animation: concProgSpin .8s linear infinite;
+        }
+        #concGridBusy {
+            display: none;
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 42px;
+            bottom: 0;
+            z-index: 5;
+            background: rgba(255,255,255,.35);
+            cursor: wait;
+        }
+        @keyframes concProgSlide {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+        }
+        @keyframes concProgSpin {
+            to { transform: rotate(360deg); }
+        }
+        .conc-tipo-legend {
+            margin: 0 0 6px 0;
+            font-size: 12px;
+            color: #444;
+        }
+        .conc-tipo-legend .conc-tipo-item {
+            display: inline-block;
+            margin-right: 14px;
+            white-space: nowrap;
+        }
+        .conc-tipo-ico {
+            font-size: 14px;
+            line-height: 1;
+        }
+        #gview_conciliacionForm .ui-jqgrid-htable th[id$="_pago_tipo"] {
+            text-align: center;
+        }
+        /* Filas título (separadores de tipo) */
+        #conciliacionForm tr.conc-group-hdr td {
+            background: #e8eaf6 !important;
+            border-top: 2px solid #5c6bc0 !important;
+            border-bottom: 1px solid #9fa8da !important;
+            font-weight: bold;
+            color: #283593;
+            height: 28px;
+            vertical-align: middle;
+        }
+        #conciliacionForm tr.conc-group-hdr td input,
+        #conciliacionForm tr.conc-group-hdr td button,
+        #conciliacionForm tr.conc-group-hdr .glyphicon-list-alt {
+            display: none !important;
+        }
+        #conciliacionForm tr.conc-group-hdr td[aria-describedby="conciliacionForm_Com_Codigo"] {
+            text-align: left !important;
+            font-size: 13px;
+            overflow: visible !important;
+            position: relative;
+            z-index: 2;
+        }
+        #conciliacionForm tr.conc-group-hdr td[aria-describedby="conciliacionForm_Com_Codigo"] .conc-hdr-wrap {
+            display: inline-block;
+            white-space: nowrap;
+            min-width: 280px;
+        }
+        #conciliacionForm tr.conc-group-hdr td[aria-describedby="conciliacionForm_Com_Codigo"] .conc-hdr-title {
+            margin-left: 2px;
+            letter-spacing: .3px;
+        }
+        #conciliacionForm tr.conc-group-hdr td[aria-describedby="conciliacionForm_Com_Codigo"] .conc-hdr-count {
+            margin-left: 8px;
+            color: #3949ab;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        #conciliacionForm tr.conc-group-hdr td[aria-describedby="conciliacionForm_pago_tipo"] {
+            text-align: center;
+        }
+        .conc-tipo-ico.fa {
+            font-size: 15px;
+        }
+
+        /* ===== Filtros compactos (Búsqueda + Nueva/Editar) ===== */
+        #buscaDiv .filtros-row,
+        #editDiv .filtros-row {
+            margin-left: -6px;
+            margin-right: -6px;
+            margin-bottom: 8px;
+        }
+        #buscaDiv .filtros-row > [class*="col-"],
+        #editDiv .filtros-row > [class*="col-"] {
+            padding-left: 6px;
+            padding-right: 6px;
+        }
+        #buscaDiv .filtros-section,
+        #editDiv .filtros-section {
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 6px 10px 6px;
+            margin-bottom: 0;
+            background: #fff;
+            min-height: 72px;
+        }
+        #buscaDiv .filtros-section > legend.Titulos2,
+        #editDiv .filtros-section > legend.Titulos2 {
+            width: auto;
+            margin-bottom: 4px;
+            font-size: 12px;
+            border: 0;
+            padding: 0 4px;
+            line-height: 1.2;
+        }
+        #buscaDiv .filtros-section .form-group,
+        #editDiv .filtros-section .form-group {
+            margin-bottom: 0;
+        }
+        #buscaDiv .filtros-section .form-control.input-xs,
+        #editDiv .filtros-section .form-control.input-xs {
+            height: 26px;
+            padding: 2px 6px;
+        }
+        #buscaDiv .filtros-section .input-group-addon,
+        #editDiv .filtros-section .input-group-addon,
+        #buscaDiv .filtros-section .input-group-btn > .btn,
+        #editDiv .filtros-section .input-group-btn > .btn {
+            padding: 3px 6px;
+            font-size: 11px;
+            height: 26px;
+            line-height: 1.4;
+        }
+        #buscaDiv .filtros-section .btn-xs,
+        #editDiv .filtros-section .btn-xs {
+            height: 26px;
+            padding: 2px 8px;
+            line-height: 1.4;
+        }
+        #buscaDiv .filtros-inline,
+        #editDiv .filtros-inline {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+        }
+        #buscaDiv .filtros-inline + .filtros-inline,
+        #editDiv .filtros-inline + .filtros-inline {
+            margin-top: 6px;
+        }
+        #buscaDiv .filtros-inline .fi-label,
+        #editDiv .filtros-inline .fi-label {
+            flex: 0 0 auto;
+            margin: 0;
+            font-size: 11px;
+            font-weight: 600;
+            color: #555;
+            white-space: nowrap;
+        }
+        #buscaDiv .filtros-inline .fi-period,
+        #editDiv .filtros-inline .fi-period {
+            flex: 0 0 90px;
+        }
+        #buscaDiv .filtros-inline .fi-bank,
+        #editDiv .filtros-inline .fi-bank {
+            flex: 1 1 160px;
+            min-width: 140px;
+        }
+        #buscaDiv .filtros-inline .fi-diario {
+            flex: 1 1 150px;
+            min-width: 140px;
+        }
+        #buscaDiv .filtros-inline .fi-id {
+            flex: 0 0 110px;
+        }
+        #buscaDiv .filtros-inline .fi-btn,
+        #editDiv .filtros-inline .fi-btn {
+            flex: 0 0 auto;
+        }
+        #editDiv .filtros-inline .fi-date {
+            flex: 0 0 120px;
+        }
+        #editDiv .filtros-inline .fi-saldo {
+            flex: 0 0 110px;
+            max-width: 110px;
+        }
+        #editDiv .dato-banco-align {
+            display: grid;
+            grid-template-columns: auto 90px auto minmax(0, 1fr);
+            column-gap: 6px;
+            row-gap: 6px;
+            align-items: center;
+        }
+        #editDiv .dato-banco-align > .fi-label {
+            margin: 0;
+        }
+        #editDiv .dato-banco-align .fi-period {
+            width: 90px;
+            max-width: 90px;
+        }
+        #editDiv .dato-banco-align .fi-bank {
+            min-width: 0;
+        }
+        #editDiv .dato-banco-align .fi-last-spacer {
+            grid-column: 1 / 4;
+        }
+        #editDiv .dato-banco-align .fi-last-row {
+            grid-column: 4;
+            width: 100%;
+            margin-top: 0;
+        }
+        #editDiv .fi-last-eq {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+        #editDiv .fi-last-eq .fi-ro {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        #editDiv .filtros-inline .fi-obs {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        #editDiv .filtros-inline .fi-obs textarea {
+            width: 100%;
+            height: 26px;
+            min-height: 26px;
+            resize: vertical;
+            padding: 2px 6px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        #editDiv .filtros-inline .fi-ro {
+            display: block;
+            height: 26px;
+            padding: 3px 6px;
+            font-size: 12px;
+            line-height: 1.4;
+            background: #f5f5f5;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        #buscaDiv #ubicarPeriodoBadge {
+            min-width: 44px;
+            font-weight: 700;
+            background: #d9edf7;
+            color: #31708f;
+            border-color: #bce8f1;
+        }
+        #buscaDiv #buscarDiarioMsg {
+            display: block;
+            margin: 4px 0 0;
+            font-size: 11px;
+            line-height: 1.25;
+            min-height: 14px;
+        }
+        #buscaDiv .conc-grid-shell {
+            margin-top: 4px;
+        }
+        #buscaDiv .conc-actions,
+        #editDiv .conc-actions {
+            margin-top: 8px;
+        }
+        #editDiv .conc-form-actions {
+            margin-top: 0px;
+            padding-top: 8px;
+            clear: both;
+        }
+        #editDiv .conc-form-actions .btn {
+            margin-right: 8px;
+        }
+        @media (max-width: 767px) {
+            #buscaDiv .filtros-section,
+            #editDiv .filtros-section {
+                margin-bottom: 8px;
+            }
+        }
     </style>
-    <script>var Usu_Adm="<?php echo isset($Ses_Prs_Cod) ? $Ses_Prs_Cod : ''; ?>";</script>
+    <script>var Usu_Adm=<? echo $Ses_Prs_Cod;?></script>
     <BODY>
         <div id="buscaDiv" class="panel panel-main" style="display:none">
             <div class="panel-heading exa-header">
@@ -248,42 +720,74 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
             <div class="panel-body ui-widget-content ui-corner-bottom exa-body">
                 <div class="row">
                     <div class="col-sm-12">
-                        <form name="searchConcilia" id="searchConcilia" method="get" class="form-horizontal normal" action="javascript:$('#conciliacion').Search('#searchConcilia','conciliaAjax');">
-                            <fieldset class="exa-fieldset">
-                                <legend class="Titulos2">B&uacute;squeda</legend>
-                                <div class="form-group">
-                                    <label class="col-xs-2 control-label label-xs required">Periodo:</label>
-                                    <div class="col-xs-3">
-                                        <select name="Pec_Cod" class="form-control input-xs" required="" onchange="loadBancos($(this).val())">
-                                            <option value="">Periodo..</option>
-                                            <?php foreach ($periodos as $p) {
-                                                echo "<option data--year='$p[Year]' data--pec_-cod='$p[Pec_Cod]' value='$p[Pec_Cod]' " . (count($periodos) == 1 ? 'selected=""' : '') . ">$p[Year]</option>";
-                                            } ?>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-xs-2 control-label label-xs required">Banco:</label>
-                                    <div class="col-xs-4">
-                                        <div class="input-group">
-                                            <select name="Ban_Cod" class="form-control input-xs" required="" onchange="">
-                                                <option value="">Banco..</option>
-                                                <?php foreach ($bancos as $b) {
-                                                    echo "<option pec='$b[Pec_Cod]' data--pld_-cod='$b[Pld_Cod]' data--ban_-cod='$b[Ban_Cod]' value='$b[Ban_Cod]' style='display:none;' " . (count($bancos) == 1 ? 'selected=""' : '') . ">$b[Pld_Des]</option>";
-                                                } ?>
-                                            </select>
-                                            <span class="input-group-btn"><button type="submit" class="btn btn-success btn-xs" title="Mostrar Conciliaciones"><span class="glyphicon glyphicon-search"></span> <span>Buscar</span></button></span>
+                        <div class="row filtros-row">
+                            <!-- Sección 1: Búsqueda de conciliaciones -->
+                            <div class="col-sm-6">
+                                <fieldset class="exa-fieldset filtros-section">
+                                    <legend class="Titulos2">B&uacute;squeda</legend>
+                                    <form name="searchConcilia" id="searchConcilia" method="get" class="form-horizontal normal" action="javascript:$('#conciliacion').Search('#searchConcilia','conciliaAjax');">
+                                        <div class="filtros-inline">
+                                            <label class="fi-label required">Periodo:</label>
+                                            <div class="fi-period">
+                                                <select name="Pec_Cod" class="form-control input-xs" required="" style="text-align:center;" onchange="loadBancos($(this).val()); syncUbicarPeriodoBadge();">
+                                                    <option value="">..</option>
+                                                    <?php foreach ($periodos as $p) {
+                                                        echo "<option data--year='$p[Year]' data--pec_-cod='$p[Pec_Cod]' value='$p[Pec_Cod]' " . (count($periodos) == 1 ? 'selected=""' : '') . ">$p[Year]</option>";
+                                                    } ?>
+                                                </select>
+                                            </div>
+                                            <label class="fi-label required">Banco:</label>
+                                            <div class="fi-bank">
+                                                <select name="Ban_Cod" class="form-control input-xs" required="">
+                                                    <option value="">Banco..</option>
+                                                    <?php foreach ($bancos as $b) {
+                                                        echo "<option pec='$b[Pec_Cod]' data--pld_-cod='$b[Pld_Cod]' data--ban_-cod='$b[Ban_Cod]' value='$b[Ban_Cod]' style='display:none;' " . (count($bancos) == 1 ? 'selected=""' : '') . ">$b[Pld_Des]</option>";
+                                                    } ?>
+                                                </select>
+                                            </div>
+                                            <div class="fi-btn">
+                                                <button type="submit" class="btn btn-success btn-xs" title="Mostrar Conciliaciones">
+                                                    <span class="glyphicon glyphicon-search"></span> Buscar
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                            </fieldset>
-                        </form>
-                        <div class="" style="min-height: 300px;">
+                                    </form>
+                                </fieldset>
+                            </div>
+                            <!-- Sección 2: Ubicar comprobante -->
+                            <div class="col-sm-6">
+                                <fieldset class="exa-fieldset filtros-section">
+                                    <legend class="Titulos2">Ubicar Comprobante</legend>
+                                    <form name="searchDiarioConc" id="searchDiarioConc" method="get" class="form-horizontal normal" action="javascript:buscarDiarioConciliacion();">
+                                        <div class="filtros-inline">
+                                            <label class="fi-label">Diario:</label>
+                                            <div class="fi-diario">
+                                                <div class="input-group input-group-xs" style="width:100%;">
+                                                    <span class="input-group-addon alert-info" id="ubicarPeriodoBadge" title="Periodo seleccionado">—</span>
+                                                    <input type="text" name="Com_Codigo" id="buscarDiarioInput" class="form-control input-xs" placeholder="RL-06-20" maxlength="40" style="text-align:center;" />
+                                                </div>
+                                            </div>
+                                            <label class="fi-label">Id:</label>
+                                            <div class="fi-id">
+                                                <input type="text" name="Com_Cod" id="buscarComCodInput" class="form-control input-xs" placeholder="Com_Cod" maxlength="12" />
+                                            </div>
+                                            <div class="fi-btn">
+                                                <button type="submit" class="btn btn-info btn-xs" title="Ubicar en qu&eacute; conciliaci&oacute;n est&aacute;">
+                                                    <span class="glyphicon glyphicon-filter"></span> Ubicar
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <span id="buscarDiarioMsg"></span>
+                                    </form>
+                                </fieldset>
+                            </div>
+                        </div>
+                        <div class="conc-grid-shell" style="min-height:300px;">
                             <table id="conciliacion"></table>
                             <div id="conciliacionPager"></div>
                         </div>
                     </div>
-                    <div class="col-xs-12" style="padding-top: 8px;">
+                    <div class="col-xs-12 conc-actions">
                         <button class="btn btn-sm btn-primary" onclick="nuevaConciliacion();"><i class="glyphicon glyphicon-plus"></i> Nueva Conciliaci&oacute;n</button>
                     </div>
                 </div>
@@ -292,74 +796,76 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
 
         <div id="editDiv" class="panel panel-main" style="display:none">
             <div class="panel-heading exa-header">
-                <h3 class="panel-title">&raquo; Editar Conciliaci&oacute;n</h3>
+                <h3 class="panel-title" id="editDivTitle">&raquo; Editar Conciliaci&oacute;n</h3>
             </div>
             <div class="panel-body ui-widget-content ui-corner-bottom exa-body">
                 <div class="row">
                     <div class="col-xs-12">
                         <form name="formConcilia" id="formConcilia" method="get" class="form-horizontal normal" action="javascript:validarForm();">
-                            <div class="row">
-                                <div class="col-xs-6">
-                                    <fieldset class="exa-fieldset">
+                            <div class="row filtros-row">
+                                <!-- Sección 1: Dato Banco + Última -->
+                                <div class="col-sm-6">
+                                    <fieldset class="exa-fieldset filtros-section">
                                         <legend class="Titulos2">Dato Banco</legend>
-                                        <div class="form-group">
-                                            <label class="col-xs-2 control-label label-xs required">Periodo:</label>
-                                            <div class="col-xs-3">
-                                                <select name="Pec_Cod" class="form-control input-xs readOnly" required="" onchange="loadBancos2($(this).val())">
-                                                    <option value="">Periodo..</option>
+                                        <div class="dato-banco-align">
+                                            <label class="fi-label required">Periodo:</label>
+                                            <div class="fi-period">
+                                                <select name="Pec_Cod" class="form-control input-xs readOnly" required="" onchange="loadBancos2($(this).val()); syncCobFecDateLimits();">
+                                                    <option value="">..</option>
                                                     <?php foreach ($periodos as $p) {
-                                                        echo "<option data--year='$p[Year]' data--pec_-cod='$p[Pec_Cod]' value='$p[Pec_Cod]' " . (count($periodos) == 1 ? 'selected="" default=""' : '') . ">$p[Year]</option>";
+                                                        echo "<option data--year='$p[Year]' data--pec_-cod='$p[Pec_Cod]' data-inicio='$p[Pec_Fei]' data-fin='$p[Pec_Fef]' value='$p[Pec_Cod]' " . (count($periodos) == 1 ? 'selected="" default=""' : '') . ">$p[Year]</option>";
                                                     } ?>
                                                 </select>
                                             </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="col-xs-2 control-label label-xs required">Banco:</label>
-                                            <div class="col-xs-8">
-                                                <div class="input-group">
+                                            <label class="fi-label required">Banco:</label>
+                                            <div class="fi-bank">
+                                                <div class="input-group input-group-xs" style="width:100%;">
                                                     <select name="Ban_Cod" class="form-control input-xs readOnly" required="" onchange="">
                                                         <option value="">Banco..</option>
                                                         <?php foreach ($bancos as $b) {
                                                             echo "<option pec='$b[Pec_Cod]' data--pld_-cod='$b[Pld_Cod]' data--ban_-cod='$b[Ban_Cod]' value='$b[Ban_Cod]' " . (count($bancos) == 1 ? 'selected=""' : '') . ">$b[Pld_Des]</option>";
                                                         } ?>
                                                     </select>
-                                                    <span class="input-group-btn"><button id="loadAsientosBtn" type="button" onclick="loadAsientos();" class="btn btn-success btn-xs" title="Cargar Asientos"><span class="glyphicon glyphicon-refresh"></span> </button></span>
+                                                    <span class="input-group-btn">
+                                                        <button id="loadAsientosBtn" type="button" onclick="loadAsientos();" class="btn btn-success btn-xs" title="Cargar Asientos">
+                                                            <span class="glyphicon glyphicon-refresh"></span>
+                                                        </button>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="fi-last-spacer" aria-hidden="true"></div>
+                                            <div class="filtros-inline fi-last-row">
+                                                <label class="fi-label">Última:</label>
+                                                <div class="fi-last-eq">
+                                                    <span data-last="Cob_Fec" class="fi-ro" title="Fecha última conciliación"></span>
+                                                </div>
+                                                <label class="fi-label">Saldo:</label>
+                                                <div class="fi-last-eq">
+                                                    <span data-last="Cob_Dis" class="fi-ro" title="Saldo última conciliación"></span>
                                                 </div>
                                             </div>
                                         </div>
                                     </fieldset>
-                                    <fieldset class="exa-fieldset">
-                                        <legend class="Titulos2">&Uacute;ltima</legend>
-                                        <div class="form-group">
-                                            <label class="col-xs-2 control-label label-xs required">Fecha:</label>
-                                            <div class="col-xs-4">
-                                                <span data-last="Cob_Fec" class="form-control input-xs"></span>
-                                            </div>
-                                            <label class="col-xs-2 control-label label-xs required">Saldo:</label>
-                                            <div class="col-xs-4">
-                                                <span data-last="Cob_Dis" class="form-control input-xs"></span>
-                                            </div>
-                                        </div>
-                                    </fieldset>
                                 </div>
-                                <div class="col-xs-6">
-                                    <fieldset class="exa-fieldset">
+                                <!-- Sección 2: Conciliación -->
+                                <div class="col-sm-6">
+                                    <fieldset class="exa-fieldset filtros-section">
                                         <legend class="Titulos2">Conciliaci&oacute;n</legend>
                                         <input type="hidden" name="Cob_Cod" data-cob="Cob_Cod" />
-                                        <div class="form-group">
-                                            <label class="col-xs-2 control-label label-xs required">Fecha:</label>
-                                            <div class="col-xs-4">
-                                                <input id="Cob_Fec" name="Cob_Fec" data-cob="Cob_Fec" type="text" class="form-control input-xs readOnly" required="" />
+                                        <div class="filtros-inline">
+                                            <label class="fi-label required">Fecha:</label>
+                                            <div class="fi-date">
+                                                <input id="Cob_Fec" name="Cob_Fec" data-cob="Cob_Fec" type="text" class="form-control input-xs readOnly" required="" placeholder="yyyy-mm-dd" />
                                             </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="col-xs-2 control-label label-xs required">Saldo&nbsp;Banco:</label>
-                                            <div class="col-xs-4">
+                                            <label class="fi-label required">Saldo Banco:</label>
+                                            <div class="fi-saldo">
                                                 <input id="Cob_Dis" name="Cob_Dis" data-cob="Cob_Dis" type="number" class="form-control input-xs nospin readOnly" required="" />
                                             </div>
-                                            <label class="col-xs-2 control-label label-xs required">Observación:</label>
-                                            <div class="col-xs-4">
-                                                <textarea name="Cob_Obs" data-cob="Cob_Obs" class="form-control input-xs"></textarea>
+                                        </div>
+                                        <div class="filtros-inline">
+                                            <label class="fi-label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Obs.:</label>
+                                            <div class="fi-obs">
+                                                <textarea name="Cob_Obs" data-cob="Cob_Obs" class="form-control input-xs" rows="1"></textarea>
                                             </div>
                                         </div>
                                     </fieldset>
@@ -368,12 +874,27 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
                         </form>
                     </div>
 
-                    <div class="col-xs-12" style="min-height: 500px;">
+                    <div class="col-xs-12 conc-grid-wrap">
+                        <div id="concGridProgress" style="display:none;">
+                            <div class="conc-prog-label">
+                                <span class="glyphicon glyphicon-refresh conc-prog-spin"></span>
+                                <span class="conc-prog-text">Cargando asientos...</span>
+                            </div>
+                            <div class="conc-prog-track">
+                                <div class="conc-prog-bar"></div>
+                            </div>
+                        </div>
+                        <div class="conc-tipo-legend">
+                            <span class="conc-tipo-item"><i class="fa fa-history conc-tipo-ico" style="color:#1565c0;"></i> Conciliación Anterior</span>
+                            <span class="conc-tipo-item"><i class="fa fa-hand-o-up conc-tipo-ico" style="color:#ef6c00;"></i> Manuales</span>
+                            <span class="conc-tipo-item"><i class="fa fa-money conc-tipo-ico" style="color:#2e7d32;"></i> Cheques</span>
+                        </div>
+                        <div id="concGridBusy"></div>
                         <table id="conciliacionForm"></table>
                         <div id="conciliacionFormPager"></div>
-                    </div>
-
-                    <div class="col-xs-12">
+                    </div>                 
+                    
+                    <div class="col-xs-12 conc-form-actions">
                         <button class="btn btn-sm btn-inverse" onclick="$('#editDiv').moveComp('#buscaDiv').updateGridsSizes();"><i class="glyphicon glyphicon-arrow-left"></i> Atr&aacute;s</button>
                         <button class="btn btn-sm btn-primary" onclick="$('#formConcilia').formSubmit();"><i class="glyphicon glyphicon-floppy-disk"></i> Guardar</button>
                     </div>
@@ -623,31 +1144,69 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
                             local: true,
                             height: 450,
                             postData: $('#formConcilia').getData(),
-                            rowNum: 1000000,
+                            // Paginación local: solo se pintan ~100 filas (carga rápida)
+                            rowNum: 100,
+                            rowList: [50, 100, 250, 500],
+                            viewrecords: true,
+                            pgbuttons: true,
+                            pginput: true,
+                            pgtext: 'Pág. {0} de {1}',
                             footerrow: true,
                             userDataOnFooter: true,
                             datatype: 'local',
+                            gridview: true,
                             caption: 'Asientos No Conciliados',
                             stateCol: 'conc_select',
                             stateConfig: {
                                 S: 'cellGreen2'
                             },
+                            stateCondition: function(v) {
+                                if (isConcHeaderRow(v)) return '__hdr__';
+                            },
                             totalCols: ['Asi_Sald'],
+                            rowattr: function(rd) {
+                                if (isConcHeaderRow(rd)) {
+                                    return { 'class': 'conc-group-hdr' };
+                                }
+                            },
                             colModel: [
                                 { label: ' ', name: 'conc_select', width: 20, align: 'center', title: false, sortable: false, formatter: 'checkboxExa',
                                     formatoptions: {
                                         defaultChecked: false,
                                         dataEvents: { change: 'updateTotal($(this).data("rowId"));' },
-                                        conditional: o => o.Asi_Cod !== 'no_id'
+                                        conditional: o => !isConcHeaderRow(o) && o.Asi_Cod !== 'no_id'
                                     }
                                 },
-                                { label: 'Id', name: 'Com_Cod', width: 20 },
-                                { label: 'Id', name: 'Asi_Cod', key: true, width: 20 },
-                                { label: 'Tipo', name: 'pago_tipo', width: 1, hidden: true },
-                                { label: 'Codigo', name: 'Com_Codigo', width: 40, align: 'center' },
-                                { label: 'Fecha', name: 'Com_Fec', width: 40, align: 'center' },
+                                { label: 'Id', name: 'Com_Cod', width: 20, hidden: true },
+                                { label: 'Id', name: 'Asi_Cod', key: true, width: 20, hidden: true },
+                                { label: '<i class="fa fa-tags" title="Tipo"></i>', name: 'pago_tipo', width: 8, align: 'center', sortable: false, title: false,
+                                    formatter: function(cellValue, options, rowObject) {
+                                        if (isConcHeaderRow(rowObject)) {
+                                            var m = getConcTipoMeta(rowObject.hdr_title || cellValue, rowObject);
+                                            return '<i class="fa ' + m.icon + ' conc-tipo-ico" style="color:' + m.color + ';" title="' + m.title + '"></i>';
+                                        }
+                                        return formatConcTipoIcon(cellValue, rowObject);
+                                    }
+                                },
+                                { label: 'Codigo', name: 'Com_Codigo', width: 55, align: 'center',
+                                    formatter: function(cellValue, options, rowObject) {
+                                        if (isConcHeaderRow(rowObject)) {
+                                            var title = rowObject.hdr_title || 'Grupo',
+                                                cnt = rowObject.hdr_count || 0;
+                                            return '<span class="conc-hdr-wrap"><span class="conc-hdr-title">' + title.toUpperCase() + '</span>' +
+                                                '<span class="conc-hdr-count">' + cnt + ' Operacion(es)</span></span>';
+                                        }
+                                        return cellValue == null ? '' : cellValue;
+                                    }
+                                },
+                                { label: 'Fecha', name: 'Com_Fec', width: 40, align: 'center',
+                                    formatter: function(cellValue, options, rowObject) {
+                                        return isConcHeaderRow(rowObject) ? '' : (cellValue == null ? '' : cellValue);
+                                    }
+                                },
                                 { label: 'Doc.', name: 'Doc_Num', width: 40, align: 'center',
                                     formatter: function(cellValue, options, rowObject) {
+                                        if (isConcHeaderRow(rowObject)) return '';
                                         return cellValue ? 'Che: ' + cellValue : '';
                                     }
                                 },
@@ -656,6 +1215,7 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
 
                                 { label: 'Nro. Documento.', name: 'Num_Doc', width: 50, align: 'center',
                                     formatter: function(cellValue, options, rowObject) {
+                                        if (isConcHeaderRow(rowObject)) return '';
                                         let doc = cellValue ? cellValue : '';
                                         let vet = rowObject.FormasPago ? rowObject.FormasPago : '';
                                         // Si FormasPago ya incluye el prefijo (Trf: / Dps: / Pago X:), solo mostrar ese campo
@@ -668,47 +1228,70 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
                                         }
                                     }
                                 },
-                                { label: 'Clie./Provee.', name: 'Inv_Nom', width: 75 },
-                                { label: 'Observación', name: 'Asi_Glo', width: 100 },
+                                { label: 'Clie./Provee.', name: 'Inv_Nom', width: 75,
+                                    formatter: function(cellValue, options, rowObject) {
+                                        return isConcHeaderRow(rowObject) ? '' : (cellValue == null ? '' : cellValue);
+                                    }
+                                },
+                                { label: 'Observación', name: 'Asi_Glo', width: 100,
+                                    formatter: function(cellValue, options, rowObject) {
+                                        if (isConcHeaderRow(rowObject)) return '';
+                                        return cellValue == null ? '' : cellValue;
+                                    }
+                                },
 
                                 //{ label: 'Debe', name: 'cmpd_debe', width: 45, formatter:'number', formatoptions:{defaultValue:''}, summaryType:'sum' },
                                 //{ label: 'Haber', name: 'cmpd_habe', width: 45, formatter:'number', formatoptions:{defaultValue:''}, summaryType:'sum' },
 
-                                { label: 'Sumas', name: 'Asi_Sald', width: 45, formatter: 'number',
-                                    formatoptions: { defaultValue: '0.00' },
+                                { label: 'Sumas', name: 'Asi_Sald', width: 45, align: 'right',
+                                    formatter: function(cellValue, options, rowObject) {
+                                        if (isConcHeaderRow(rowObject) || cellValue == null || cellValue === '') return '';
+                                        var n = parseFloat(cellValue);
+                                        return isNaN(n) ? '' : n.toFixed(2);
+                                    },
                                     summaryType: 'sumNotInit', hidden: false
                                 },
-                                { label: 'Saldo', name: 'Cob_Disp', width: 45, formatter: 'number',
-                                    formatoptions: { defaultValue: '--' },
+                                { label: 'Saldo', name: 'Cob_Disp', width: 45, align: 'right',
+                                    formatter: function(cellValue, options, rowObject) {
+                                        if (isConcHeaderRow(rowObject)) return '';
+                                        if (cellValue == null || cellValue === '') return '--';
+                                        var n = parseFloat(cellValue);
+                                        return isNaN(n) ? '--' : n.toFixed(2);
+                                    },
                                     classes: 'columnHighlight3'
                                 },
                                 { label: 'Info.', name: 'view', width: 20, formatter: 'gridButton',
                                     formatoptions: {
                                         action: 'viewInfo', data: 'Com_Cod', type: 'primary', title: 'Ver Comprobante', icon: 'list-alt',
-                                        conditional: o => $.vv(o.Asi_Cod) && o.Asi_Cod !== '' && o.Asi_Cod !== 'no_id'
+                                        conditional: o => !isConcHeaderRow(o) && $.vv(o.Asi_Cod) && o.Asi_Cod !== '' && o.Asi_Cod !== 'no_id'
                                     }
                                 }
                             ],
                             notStriped: true,
                             loadonce: true,
-                            grouping: true,
-                            groupingView: {
-                                groupField: ['pago_tipo'],
-                                groupColumnShow: [false],
-                                groupText: ["<div class='txtLeft'><b>{0}</b><span class='green pull-right'>{1} Operacion(es)</span></div>"],
-                                groupCollapse: false,
-                                groupSummary: [true],
-                                showSummaryOnHide: [true]
-                            },
+                            grouping: false,
                             gridComplete: function() {
+                                styleConcHeaderRows();
                                 injectConcSelectHeader();
                                 syncConcSelectHeader();
                             }
                         }, true, '#conciliacionFormPager');
+                        // createGrid(local:true) desactiva el pager; lo reactivamos
+                        $("#conciliacionForm").jqGrid('setGridParam', {
+                            grouping: false,
+                            rowNum: 100,
+                            rowList: [50, 100, 250, 500],
+                            pgbuttons: true,
+                            pginput: true,
+                            pgtext: 'Pág. {0} de {1}',
+                            viewrecords: true
+                        });
+                        $('#conciliacionFormPager_center, #conciliacionFormPager td[id$=Pager_center]').show();
                         $("#conciliacionForm").jqGrid('footerData', 'set', {
                             cmpd_glos: '<div class="txtRight">TOTAL:</div>'
                         }, false);
                         $("#conciliacionForm").on('jqGridAfterLoadComplete', function() {
+                            styleConcHeaderRows();
                             injectConcSelectHeader();
                             syncConcSelectHeader();
                         });
@@ -856,18 +1439,97 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
                 $('#buscaDiv').show();
                 selBan1 = $('<select></select>');
                 selBan2 = $('<select></select>');
-                $('#Cob_Fec').createDatePickers();
+                $('#Cob_Fec').createDatePickers({ clean: true, checkAvailability: true });
+                syncCobFecDateLimits();
                 /*<?php if (count($periodos) == 1) { ?>*/
                 loadBancos($('#searchConcilia').find('select[name="Pec_Cod"]').val());
+                syncUbicarPeriodoBadge();
                 /*<?php } ?>*/
             });
 
+            /** Limita el calendario de Cob_Fec al rango Pec_Fei–Pec_Fef del periodo. */
+            function syncCobFecDateLimits() {
+                var $opt = $('#formConcilia').find('select[name="Pec_Cod"] option:selected'),
+                    ini = $opt.data('inicio') || $opt.attr('data-inicio') || '',
+                    fin = $opt.data('fin') || $opt.attr('data-fin') || '',
+                    $fec = $('#Cob_Fec'),
+                    val;
+                if (!$fec.length || !$fec.data('datepicker')) return;
+                if (ini && fin) {
+                    $fec.dateLimits(ini, fin);
+                    val = $fec.val();
+                    if (val && (val < ini || val > fin)) {
+                        $fec.val('');
+                    }
+                } else {
+                    $fec.datepicker('option', 'minDate', null);
+                    $fec.datepicker('option', 'maxDate', null);
+                }
+            }
+
             function sumNotInit(v, n, obj) {
+                if (isConcHeaderRow(obj)) return 0;
                 return isNaN(v) ? 0 : (obj['cmpd_id'] === 'no_id' || obj['conc_select'] === 'N' ? 0 : v);
             }
 
             function getConcSelectableRows() {
-                return $("#conciliacionForm").getGridBatch().filter(r => r.Asi_Cod !== 'no_id');
+                return $("#conciliacionForm").getGridBatch().filter(r => !isConcHeaderRow(r) && r.Asi_Cod !== 'no_id');
+            }
+
+            function isConcHeaderRow(row) {
+                if (!row) return false;
+                return row.conc_hdr === 'S' || String(row.Asi_Cod || '').indexOf('hdr_') === 0;
+            }
+            window.isConcHeaderRow = isConcHeaderRow;
+
+            function styleConcHeaderRows() {
+                var $g = $('#conciliacionForm'),
+                    data = $g.jqGrid('getGridParam', 'data') || [],
+                    i, row;
+                for (i = 0; i < data.length; i++) {
+                    row = data[i];
+                    if (isConcHeaderRow(row)) {
+                        $g.find('tr#' + $.jgrid.jqID(row.Asi_Cod)).addClass('conc-group-hdr');
+                    }
+                }
+            }
+
+            function buildConcRowsWithHeaders(rows) {
+                var out = [],
+                    counts = {},
+                    inserted = {},
+                    i, row, meta;
+                for (i = 0; i < rows.length; i++) {
+                    meta = getConcTipoMeta(rows[i].pago_tipo, rows[i]);
+                    counts[meta.ord] = (counts[meta.ord] || 0) + 1;
+                }
+                for (i = 0; i < rows.length; i++) {
+                    row = rows[i];
+                    meta = getConcTipoMeta(row.pago_tipo, row);
+                    if (!inserted[meta.ord]) {
+                        inserted[meta.ord] = true;
+                        out.push({
+                            Asi_Cod: 'hdr_' + meta.ord,
+                            conc_hdr: 'S',
+                            conc_select: 'N',
+                            pago_tipo: meta.title,
+                            hdr_title: meta.title,
+                            hdr_count: counts[meta.ord] || 0,
+                            Com_Cod: '',
+                            Com_Codigo: '',
+                            Com_Fec: '',
+                            Doc_Num: '',
+                            Num_Doc: '',
+                            FormasPago: '',
+                            Inv_Nom: '',
+                            Asi_Glo: meta.title,
+                            Asi_Sald: null,
+                            Cob_Disp: null
+                        });
+                    }
+                    out.push(row);
+                }
+                return out;
             }
 
             function setConcSelectValue(rowId, val) {
@@ -912,28 +1574,179 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
             }
 
             function nuevaConciliacion() {
+                concFillToken++;
+                showConcGridProgress(false);
+                setConcGridBusy(false);
                 $('#conciliacionForm').clearGrid(true);
                 let form = $('#formConcilia');
                 form.setData({}, 'last');
                 form.setData({}, 'cob');
                 form.find('select[name=Pec_Cod]').trigger('change').prop('disabled', false);
                 form.find('select[name=Ban_Cod]').add($('#loadAsientosBtn')).add($('#Cob_Fec')).prop('disabled', false);
+                syncCobFecDateLimits();
+                $('#editDivTitle').html('&raquo; Nueva Conciliaci&oacute;n');
                 $('#buscaDiv').moveComp('#editDiv').updateGridsSizes();
             }
 
+            function applyConcTotal(total) {
+                let tot = (total != null && total !== '') ? parseFloat(total) : 0;
+                if (isNaN(tot)) tot = 0;
+                totConc = tot.toFixed(2);
+                $("#conciliacionForm").footerData('set', {
+                    Cob_Disp: totConc
+                });
+                $('#Cob_Dis').attr('max', totConc).attr('min', totConc);
+            }
+
+            /** Icono por tipo (simula grouping sin cabeceras). */
+            function getConcTipoMeta(cellValue, rowObject) {
+                var raw = String(cellValue == null ? '' : cellValue).replace(/^!+/, '').replace(/^\-\s*/, '').trim();
+                var tipo = raw.toLowerCase();
+                var isInit = rowObject && String(rowObject.Asi_Cod) === 'no_id';
+                if (isInit || /conciliaci[oó]n|saldo anterior|sin conciliacion/i.test(tipo)) {
+                    return { icon: 'fa-history', color: '#1565c0', title: 'Conciliación Anterior', ord: 0 };
+                }
+                if (/manual/i.test(tipo)) {
+                    return { icon: 'fa-hand-o-up', color: '#ef6c00', title: 'Manuales', ord: 1 };
+                }
+                if (/cheque/i.test(tipo)) {
+                    return { icon: 'fa-money', color: '#2e7d32', title: 'Cheques', ord: 2 };
+                }
+                return { icon: 'fa-tag', color: '#757575', title: raw || 'Otro', ord: 3 };
+            }
+
+            function formatConcTipoIcon(cellValue, rowObject) {
+                if (isConcHeaderRow(rowObject)) return '';
+                var m = getConcTipoMeta(cellValue, rowObject);
+                return '<i class="fa ' + m.icon + ' conc-tipo-ico" style="color:' + m.color + ';" title="' + m.title + '"></i>';
+            }
+            window.formatConcTipoIcon = formatConcTipoIcon;
+
+            var concFillToken = 0;
+
+            function setConcGridBusy(busy) {
+                $('#concGridBusy').toggle(!!busy);
+                if (busy) {
+                    $('#editDiv .btn-primary, #editDiv .btn-inverse, #loadAsientosBtn').prop('disabled', true);
+                } else {
+                    $('#editDiv .btn-primary, #editDiv .btn-inverse').prop('disabled', false);
+                    if (!$('#formConcilia').find('[name=Cob_Cod]').val()) {
+                        $('#loadAsientosBtn').prop('disabled', false);
+                    }
+                }
+            }
+
+            function showConcGridProgress(show, loaded, total, phase, waiting) {
+                var $box = $('#concGridProgress'),
+                    $bar = $box.find('.conc-prog-bar'),
+                    pct = 0;
+                if (!show) {
+                    $box.hide();
+                    $bar.removeClass('is-wait').css('width', '0%');
+                    return;
+                }
+                $box.show();
+                if (waiting) {
+                    $bar.addClass('is-wait');
+                    $box.find('.conc-prog-text').text(phase || 'Consultando asientos...');
+                    return;
+                }
+                $bar.removeClass('is-wait');
+                pct = total > 0 ? Math.min(100, Math.round((loaded * 100) / total)) : 100;
+                $bar.css('width', pct + '%');
+                $box.find('.conc-prog-text').text(
+                    (phase || 'Cargando') + (total ? (': ' + loaded + ' / ' + total + ' (' + pct + '%)') : '')
+                );
+            }
+
+            /**
+             * Carga rápida sin grouping: todos los datos en memoria, solo se pinta la página actual.
+             */
+            function fillConciliacionGrid(asientos, options) {
+                options = options || {};
+                var token = ++concFillToken,
+                    $g = $('#conciliacionForm'),
+                    rows = $.isArray(asientos) ? asientos.slice() : [],
+                    total = rows.length,
+                    rowNum = parseInt($g.jqGrid('getGridParam', 'rowNum'), 10) || 100,
+                    pages = Math.max(1, Math.ceil(total / rowNum) || 1),
+                    i;
+
+                // Orden: Conciliación Anterior → Manuales → Cheques (al final) → otros
+                for (i = 0; i < rows.length; i++) {
+                    if (rows[i] && String(rows[i].Asi_Cod) === 'no_id') {
+                        rows[i].pago_tipo = String(rows[i].pago_tipo || rows[i].Com_Con || 'Ultima Conciliación').replace(/^!+/, '');
+                    }
+                }
+                rows.sort(function(a, b) {
+                    var oa = getConcTipoMeta(a.pago_tipo, a).ord,
+                        ob = getConcTipoMeta(b.pago_tipo, b).ord;
+                    if (oa !== ob) return oa - ob;
+                    var fa = String(a.Com_Fec || ''),
+                        fb = String(b.Com_Fec || '');
+                    if (fa < fb) return -1;
+                    if (fa > fb) return 1;
+                    return 0;
+                });
+                // Recalcular saldo acumulado en el nuevo orden visual
+                var acumDisp = 0;
+                for (i = 0; i < rows.length; i++) {
+                    if (rows[i].conc_select === 'S' || String(rows[i].Asi_Cod) === 'no_id') {
+                        acumDisp += parseFloat(rows[i].Asi_Sald) || 0;
+                        rows[i].Cob_Disp = Math.round(acumDisp * 100) / 100;
+                    } else {
+                        rows[i].Cob_Disp = null;
+                    }
+                }
+                if (options.total == null) options.total = Math.round(acumDisp * 100) / 100;
+                rows = buildConcRowsWithHeaders(rows);
+                total = rows.length;
+                pages = Math.max(1, Math.ceil(total / rowNum) || 1);
+
+                setConcGridBusy(true);
+                showConcGridProgress(true, total, total, 'Preparando ' + total + ' registros', false);
+
+                setTimeout(function() {
+                    if (token !== concFillToken) return;
+                    $g.jqGrid('clearGridData', true);
+                    $g.jqGrid('setGridParam', {
+                        datatype: 'local',
+                        grouping: false,
+                        data: rows,
+                        records: total,
+                        page: 1,
+                        lastpage: pages,
+                        total: pages
+                    });
+                    $g.trigger('reloadGrid', [{ page: 1 }]);
+                    applyConcTotal(options.total);
+                    syncConcSelectHeader();
+                    showConcGridProgress(false);
+                    setConcGridBusy(false);
+                    if (typeof options.onDone === 'function') options.onDone();
+                }, 20);
+            }
+
             function editItem(Cob_Cod) {
+                let $grid = $('#conciliacionForm');
+                concFillToken++;
+                $('#editDivTitle').html('&raquo; Editar Conciliaci&oacute;n');
+                $('#buscaDiv').moveComp('#editDiv').updateGridsSizes();
+                $grid.clearGrid(true);
+                setConcGridBusy(true);
+                showConcGridProgress(true, 0, 1, 'Consultando asientos...', true);
                 $.getDataJson('', {
                     Cob_Cod: Cob_Cod,
                     editConciliacion: true
                 }, function(r) {
-                    $('#conciliacionForm').setRows(r.asientos);
                     let form = $('#formConcilia');
                     form.find('select[name=Pec_Cod]').val(r.Cob.Pec_Cod).trigger('change').prop('disabled', true);
                     form.find('select[name=Ban_Cod]').val(r.Cob.Ban_Cod).add($('#loadAsientosBtn')).add($('#Cob_Fec')).prop('disabled', true);
                     form.setData(r.Cob_Last, 'last');
                     form.setData(r.Cob, 'cob');
-                    $('#buscaDiv').moveComp('#editDiv').updateGridsSizes();
-                    updateTotal();
+                    fillConciliacionGrid(r.asientos, {
+                        total: r.Cob_Disp_Total
+                    });
                 });
             }
 
@@ -943,63 +1756,81 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
                 if (conc.Pec_Cod === '') return $.alert('Seleccione Periodo Contable!');
                 if (conc.Ban_Cod === '') return $.alert('Seleccione Cuenta Bancaria!');
                 if (conc.Cob_Fec === '') return $.alert('Seleccione Fecha de Conciliaci&oacute;n!');
+                concFillToken++;
+                $('#conciliacionForm').clearGrid(true);
+                setConcGridBusy(true);
+                showConcGridProgress(true, 0, 1, 'Consultando asientos...', true);
                 $.getDataJson('', {
                     conc: conc,
                     newConciliacion: true
                 }, function(r) {
                     if (r['success'] === true) {
-                        $('#conciliacionForm').setRows(r.asientos);
                         form.setData(r.Cob_Last, 'last');
-                        updateTotal();
+                        fillConciliacionGrid(r.asientos, {
+                            total: r.Cob_Disp_Total
+                        });
+                    } else {
+                        showConcGridProgress(false);
+                        setConcGridBusy(false);
                     }
                 });
             }
 
+            /**
+             * Recalcula saldo acumulado sin setCell (muy lento con miles de filas).
+             * Actualiza data local + texto DOM de Cob_Disp en un solo pase.
+             */
             function updateTotal(rowId) {
-                var t0 = performance.now();
-                let gridConc = $("#conciliacionForm"),
+                let gridConc = $("#conciliacionForm");
+                if (!gridConc[0] || !gridConc[0].grid) return;
+
+                let data = gridConc.jqGrid('getGridParam', 'data') || [],
                     acum = 0,
                     valMove = {},
-                    rows = gridConc.getRowData(); //.getGridBatch(['conc_select','Asi_Cod','Asi_Sald','Com_Cod']);
-                //console.log("Declaracion " + ((performance.now() - t0) / 1000) + " seconds.");
-                t0 = performance.now();
-                for (let i = 0, z = rows.length; i < z; i++) {
-                    let addVal = rows[i].conc_select === 'S' || rows[i].Asi_Cod === 'no_id';
-                    let val = (rows[i].Asi_Sald * (addVal ? 1 : -1));
-                    if (rows[i].Asi_Cod * 1 === rowId) valMove = {
-                        val: val,
-                        tipo: rows[i].pago_tipo
-                    };
+                    colAttr = 'conciliacionForm_Cob_Disp',
+                    rowIdStr = (rowId == null || rowId === '') ? null : String(rowId),
+                    trMap = {},
+                    rowsDom = gridConc[0].rows,
+                    i, z, r, rl, c, cl, tr, cells, row, addVal, sald, disp;
+
+                for (r = 0, rl = rowsDom.length; r < rl; r++) {
+                    tr = rowsDom[r];
+                    if (tr.className && tr.className.indexOf('jqgrow') >= 0) {
+                        trMap[tr.id] = tr;
+                    }
+                }
+
+                for (i = 0, z = data.length; i < z; i++) {
+                    row = data[i];
+                    if (isConcHeaderRow(row)) continue;
+                    addVal = row.conc_select === 'S' || row.Asi_Cod === 'no_id';
+                    sald = parseFloat(row.Asi_Sald) || 0;
+                    if (rowIdStr !== null && String(row.Asi_Cod) === rowIdStr) {
+                        valMove = {
+                            val: sald * (addVal ? 1 : -1),
+                            tipo: row.pago_tipo
+                        };
+                    }
                     if (addVal) {
-                        acum += val;
-                        rows[i].Cob_Disp = acum;
+                        acum += sald;
+                        disp = Math.round(acum * 100) / 100;
+                    } else {
+                        disp = null;
                     }
-                    //gridConc.changeRowData(rows[i].Asi_Cod,{Cob_Disp:addVal?acum:null,Cod_Dat:addVal?rows[i].Cod_Dat:''},{trigger:false,excludeChangeCols:['conc_select','view']});
-                    gridConc.setCell(rows[i].Asi_Cod, 'Cob_Disp', addVal ? acum : null);
-                }
-                console.log("Calculos " + ((performance.now() - t0) / 1000) + " seconds.");
-                t0 = performance.now();
-                totConc = acum.toFixed(2);
-                gridConc.footerData('set', {
-                    Cob_Disp: totConc
-                });
-
-                $('#Cob_Dis').attr('max', totConc).attr('min', totConc);
-                console.log("Valores " + ((performance.now() - t0) / 1000) + " seconds.");
-                t0 = performance.now();
-                var i, groups = gridConc.jqGrid("getGridParam", "groupingView").groups,
-                    l = groups.length,
-                    idSelectorPrefix = "#" + gridConc[0].id + "ghead_0_";
-                for (i = 0; i < l; i++) {
-                    if (groups[i].value === valMove.tipo) { //console.log(groups[i].value,valMove.tipo,groups[i].summary[0].v,valMove.val);
-                        groups[i].summary[0].v += valMove.val;
-                        $(idSelectorPrefix + i + " ~ tr.jqfoot").first().find(">td[aria-describedby=conciliacionForm_Asi_Sald]").text(groups[i].summary[0].v.toFixed(2));
-
+                    row.Cob_Disp = disp;
+                    tr = trMap[row.Asi_Cod];
+                    if (tr) {
+                        cells = tr.cells;
+                        for (c = 0, cl = cells.length; c < cl; c++) {
+                            if (cells[c].getAttribute('aria-describedby') === colAttr) {
+                                cells[c].textContent = disp == null ? '--' : disp.toFixed(2);
+                                break;
+                            }
+                        }
                     }
                 }
-                //console.log("Totales " + ((performance.now() - t0)/1000) + " seconds.");t0=performance.now();
-                //gridConc.triggerHandler('jqGridAfterLoadComplete');
-                //console.log("Trigger " + ((performance.now() - t0)/1000) + " seconds.");t0=performance.now();
+
+                applyConcTotal(acum);
                 syncConcSelectHeader();
             }
 
@@ -1035,20 +1866,101 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
                 });
             }
 
+            function syncUbicarPeriodoBadge() {
+                var $opt = $('#searchConcilia').find('select[name="Pec_Cod"] option:selected'),
+                    year = $opt.attr('data--year') || $opt.data('year') || $opt.text() || '',
+                    $badge = $('#ubicarPeriodoBadge');
+                if (!$opt.val()) {
+                    $badge.text('—').attr('title', 'Seleccione un periodo');
+                    return;
+                }
+                year = String(year).replace(/Periodo\.\./i, '').trim() || $.trim($opt.text());
+                $badge.text(year).attr('title', 'Periodo ' + year);
+            }
+            window.syncUbicarPeriodoBadge = syncUbicarPeriodoBadge;
+
             function loadBancos(val) {
                 let select = $('#searchConcilia').find('select[name="Ban_Cod"]');
                 select.find('option[pec]').hide().detach().appendTo(selBan1);
-                if (val === '') return;
+                if (val === '') {
+                    syncUbicarPeriodoBadge();
+                    return;
+                }
                 selBan1.find('option[pec="' + val + '"]').show().detach().appendTo(select);
                 select.val('');
+                syncUbicarPeriodoBadge();
             }
+
+            function buscarDiarioConciliacion() {
+                var $main = $('#searchConcilia'),
+                    $form = $('#searchDiarioConc'),
+                    diario = $.trim($form.find('[name="Com_Codigo"]').val() || ''),
+                    comCod = $.trim($form.find('[name="Com_Cod"]').val() || ''),
+                    pec = $main.find('[name="Pec_Cod"]').val(),
+                    ban = $main.find('[name="Ban_Cod"]').val(),
+                    pecTxt = $('#ubicarPeriodoBadge').text(),
+                    $msg = $('#buscarDiarioMsg');
+                $msg.html('').css('color', '#333');
+                if (!pec) {
+                    $msg.css('color', '#c62828').html('Seleccione el <b>Periodo</b> en la b&uacute;squeda principal.');
+                    $main.find('[name="Pec_Cod"]').focus();
+                    return;
+                }
+                if (diario === '' && comCod === '') {
+                    $msg.css('color', '#c62828').html('Ingrese <b>Nro. Diario</b> y/o <b>Id Comprobante (Com_Cod)</b>.');
+                    $form.find('[name="Com_Codigo"]').focus();
+                    return;
+                }
+                $msg.html('<i class="fa fa-spinner fa-spin"></i> Buscando en periodo <b>' + pecTxt + '</b>...');
+                $.getDataJson('', {
+                    buscarDiarioConc: true,
+                    Com_Codigo: diario,
+                    Com_Cod: comCod,
+                    Pec_Cod: pec,
+                    Ban_Cod: ban || ''
+                }, function(r) {
+                    if (!r || r.success !== true) {
+                        $msg.css('color', '#c62828').html((r && r.message) ? r.message : 'No se pudo completar la b&uacute;squeda.');
+                        return;
+                    }
+                    if (!r.rows || !r.rows.length) {
+                        $('#conciliacion').clearGrid(true);
+                        $msg.css('color', '#c62828').html(r.message || 'Sin resultados.');
+                        return;
+                    }
+                    if (r.rows[0].Ban_Cod) {
+                        $main.find('[name="Ban_Cod"]').val(r.rows[0].Ban_Cod);
+                    }
+                    $('#conciliacion').setRows(r.rows);
+                    var cap = ['Periodo ' + pecTxt];
+                    if (r.Com_Codigo) cap.push('Diario ' + r.Com_Codigo);
+                    if (r.Com_Cod) cap.push('Com_Cod ' + r.Com_Cod);
+                    $("#conciliacion").setCaption(cap.join(' / ') + ' — ' + r.rows.length + ' conciliaci&oacute;n(es)');
+                    $msg.css('color', '#2e7d32').html(r.message);
+                    try {
+                        $('#conciliacion').jqGrid('setSelection', r.rows[0].Cob_Cod, true);
+                    } catch (e) {}
+                });
+            }
+            window.buscarDiarioConciliacion = buscarDiarioConciliacion;
+
+            $(document).on('keydown', '#buscarDiarioInput, #buscarComCodInput', function(e) {
+                if (e.keyCode === 13) {
+                    e.preventDefault();
+                    buscarDiarioConciliacion();
+                }
+            });
 
             function loadBancos2(val) {
                 let select = $('#formConcilia').find('select[name="Ban_Cod"]');
                 select.find('option[pec]').hide().detach().appendTo(selBan2);
-                if (val === '') return;
+                if (val === '') {
+                    syncCobFecDateLimits();
+                    return;
+                }
                 selBan2.find('option[pec="' + val + '"]').show().detach().appendTo(select);
                 select.val('');
+                syncCobFecDateLimits();
             }
 
             function viewInfo(doc) {
