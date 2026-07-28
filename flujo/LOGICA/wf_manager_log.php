@@ -2571,7 +2571,7 @@ class wf_manager_log {
                     $this->obBD_conexion
                 );
                 if (!$ok_hist) {
-                    throw new Exception('No se pudo registrar el rechazo en el Historial de Firmas.');
+                    throw new Exception('No se pudo registrar el rechazo en el Historial de tareas.');
                 }
             }
 

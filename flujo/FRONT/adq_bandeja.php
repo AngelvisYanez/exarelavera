@@ -2838,7 +2838,7 @@ function adqEtiquetaMiAccion($accion) {
                         <div class="col-md-5 col-sm-12">
                             <div class="adq-detail-card">
                                 <div class="adq-wf-progress-header">
-                                    <h5 class="adq-section-header m-0" style="border: none; padding: 0; margin: 0;"><i class="bi bi-pen"></i> Historial de Firmas</h5>
+                                    <h5 class="adq-section-header m-0" style="border: none; padding: 0; margin: 0;"><i class="bi bi-pen"></i> Historial de tareas</h5>
                                     <button class="btn btn-xs btn-primary" type="button" onclick="abrirSeguimientoDetallado()"><i class="bi bi-clock-history"></i> Ver linea de tiempo</button>
                                 </div>
                                 <div class="adq-scroll-historial">
