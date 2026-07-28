@@ -1296,7 +1296,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         $emp_cod = isset($data['Emp_Cod']) ? intval($data['Emp_Cod']) : (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0);
         $wf_mgr = new wf_manager_log(isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null, $this->conexion);
         if (!$wf_mgr->puedeUsuarioCrearTipoRequerimiento($trq_cod, $emp_cod, $usu_sol)) {
-            throw new Exception('No tiene permiso para crear solicitudes de este tipo. Verifique la asignacion del nodo Inicio del flujo.');
+            throw new Exception('No tiene permiso para crear solicitudes de este tipo. Verifique la asignacion del proceso Inicio del flujo.');
         }
 
         $sol_num = $this->generarSiguienteSolNum($data['Emp_Cod'], $data['Suc_Cod']);
@@ -3637,7 +3637,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         }
 
         $historial = $this->getArrayConsultaSql(
-            "SELECT h.*, COALESCE(n.Nod_Nom, CONCAT('Nodo #', h.Nod_Cod)) AS Nod_Nom,
+            "SELECT h.*, COALESCE(n.Nod_Nom, CONCAT('Proceso #', h.Nod_Cod)) AS Nod_Nom,
                     n.Nod_Tip
              FROM wf_instancias_nodos h
              LEFT JOIN wf_nodos n ON n.Nod_Cod = h.Nod_Cod
@@ -4009,7 +4009,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         // Incluir archivos no-PDF u omitidos: historial enriquecido + soportes iniciales.
         if ($ins_cod > 0) {
             $historial = $this->getArrayConsultaSql(
-                "SELECT h.*, COALESCE(n.Nod_Nom, CONCAT('Nodo #', h.Nod_Cod)) AS Nod_Nom
+                "SELECT h.*, COALESCE(n.Nod_Nom, CONCAT('Proceso #', h.Nod_Cod)) AS Nod_Nom
                  FROM wf_instancias_nodos h
                  LEFT JOIN wf_nodos n ON n.Nod_Cod = h.Nod_Cod
                  WHERE h.Ins_Cod = $ins_cod

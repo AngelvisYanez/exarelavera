@@ -782,7 +782,7 @@ if (isset($ajax_get_solicitud_detail)) {
     if ($ins_cod_hist > 0) {
         $historial = $obBD_con1->getArrayConsultaSql("
             SELECT h.*,
-                   COALESCE(n.Nod_Nom, CONCAT('Nodo #', h.Nod_Cod)) AS Nod_Nom,
+                   COALESCE(n.Nod_Nom, CONCAT('Proceso #', h.Nod_Cod)) AS Nod_Nom,
                    COALESCE(n.Nod_Tip, 'PASO') AS Nod_Tip,
                    n.Dep_Cod AS Nodo_Dep_Cod,
                    n.Per_Cod AS Nodo_Per_Cod,
@@ -1705,17 +1705,31 @@ function adqEtiquetaMiAccion($accion) {
             line-height: 1;
         }
         .adq-msg-box.is-error .adq-msg-icon { color: #ef4444; }
+        .adq-msg-box.is-danger .adq-msg-icon { color: #dc2626; }
         .adq-msg-box.is-warning .adq-msg-icon { color: #f59e0b; }
         .adq-msg-box.is-info .adq-msg-icon { color: #0ea5e9; }
         .adq-msg-box.is-success .adq-msg-icon { color: #10b981; }
-        .adq-msg-box .adq-msg-text {
-            margin: 18px 0 22px;
-            font-size: 16px;
+        .adq-msg-box .adq-msg-title {
+            margin: 14px 0 8px;
+            font-size: 18px;
             font-weight: 700;
             color: #0f172a;
-            line-height: 1.45;
+            line-height: 1.3;
+        }
+        .adq-msg-box .adq-msg-text {
+            margin: 8px 0 22px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #475569;
+            line-height: 1.55;
             white-space: pre-wrap;
             word-break: break-word;
+        }
+        .adq-msg-box.is-danger {
+            border-top: 4px solid #dc2626;
+        }
+        .adq-msg-box.is-warning {
+            border-top: 4px solid #f59e0b;
         }
         .adq-msg-actions {
             display: flex;
@@ -2809,7 +2823,7 @@ function adqEtiquetaMiAccion($accion) {
                                         <button type="button" class="btn btn-success" id="btnFinalizarAvance" style="display: none;" onclick="finalizarAvanceProceso()"><i class="bi bi-check-circle"></i> Finalizar proceso</button>
                                         <button type="button" class="btn btn-success" id="btnAccionAprobar" onclick="enviarAccion('APROBAR')"><i class="bi bi-check-circle"></i> Aprobar</button>
                                         <button type="button" class="btn btn-success" id="btnAccionCompletar" style="display: none;" onclick="enviarAccion('COMPLETAR')"><i class="bi bi-card-checklist"></i> Completar tarea</button>
-                                        <button type="button" class="btn btn-warning text-dark" id="btnAccionObservar" style="background-color: #f59e0b; border-color: #f59e0b; color: #ffffff;" onclick="enviarAccion('OBSERVAR')"><i class="bi bi-exclamation-triangle"></i> Observar</button>
+                                        <button type="button" class="btn btn-warning text-dark" id="btnAccionObservar" style="display: none; background-color: #f59e0b; border-color: #f59e0b; color: #ffffff;" onclick="enviarAccion('OBSERVAR')"><i class="bi bi-exclamation-triangle"></i> Observar</button>
                                         <button type="button" class="btn btn-adq-devolver" id="btnAccionDevolver" onclick="enviarAccion('DEVOLVER')"><i class="bi bi-reply"></i> Devolver</button>
                                         <button type="button" class="btn btn-danger" id="btnAccionRechazar" onclick="enviarAccion('RECHAZAR')"><i class="bi bi-x-circle"></i> Rechazar</button>
                                     </div>
@@ -2881,9 +2895,10 @@ function adqEtiquetaMiAccion($accion) {
         </div>
     </div>
 
-    <div id="mdlAccionOkOverlay" class="adq-msg-overlay" role="alertdialog" aria-modal="true" aria-labelledby="mdlAccionOkText">
+    <div id="mdlAccionOkOverlay" class="adq-msg-overlay" role="alertdialog" aria-modal="true" aria-labelledby="mdlAccionOkTitle" aria-describedby="mdlAccionOkText">
         <div class="adq-msg-box is-success" id="mdlAccionOkBox">
             <div class="adq-msg-icon" id="mdlAccionOkIcon"><i class="bi bi-check-circle-fill"></i></div>
+            <h3 class="adq-msg-title" id="mdlAccionOkTitle" style="display:none;"></h3>
             <p class="adq-msg-text" id="mdlAccionOkText">Accion Aprobada correctamente</p>
             <div class="adq-msg-actions" id="mdlAccionOkActions">
                 <button type="button" class="btn btn-default" id="btnMdlAccionCancel" style="display:none;">Cancelar</button>
@@ -3073,7 +3088,7 @@ let currentInsCod = null;
                     : '<i class="bi bi-check-circle"></i> Aprobar'));
             $('#btnAccionCompletar').toggle(esTarea);
             $('#btnAccionRechazar').toggle(!esTarea && !esInicio);
-            $('#btnAccionObservar').toggle(!esTarea && !esInicio && !esFin);
+            $('#btnAccionObservar').hide(); // Oculto por ahora (usar Devolver)
             $('#btnAccionDevolver').toggle(!esTarea && !esInicio && !esFin);
             if (esFin) {
                 renderPanelExpedienteFin();
@@ -3178,13 +3193,13 @@ let currentInsCod = null;
             if (esFiscal) {
                 $('#lblAvanceEtapaTitulo').text('Facturas, anticipos y archivos de fiscalizaci\u00f3n');
                 $('#icoAvanceEtapa').attr('class', 'bi bi-shield-check');
-                $('#lblAvanceEtapaAyuda').html('Etapa <strong id="lblAvanceEtapaNodo"></strong>: vincule facturas EXA, anticipos de proveedores y/o cargue PDF con t\u00edtulo. <strong>Guardar</strong> solo registra (no avanza de nodo). Para avanzar: documentos guardados + comentario, luego <strong>Aprobar</strong>.');
+                $('#lblAvanceEtapaAyuda').html('Etapa <strong id="lblAvanceEtapaNodo"></strong>: vincule facturas EXA, anticipos de proveedores y/o cargue PDF con t\u00edtulo. <strong>Guardar</strong> solo registra (no avanza de proceso). Para avanzar: documentos guardados + comentario, luego <strong>Aprobar</strong>.');
                 $('#secFiscalArchivos').show();
                 $('#panelAvanceEtapa').css({ 'border-color': '#6c757d', 'background-color': '#f8f9fa' });
             } else {
                 $('#lblAvanceEtapaTitulo').text('Facturas y anticipos de Avance');
                 $('#icoAvanceEtapa').attr('class', 'bi bi-receipt-cutoff');
-                $('#lblAvanceEtapaAyuda').html('Etapa <strong id="lblAvanceEtapaNodo"></strong>: seleccione facturas de compra o anticipos de proveedores del sistema EXA. <strong>Guardar</strong> solo registra (no avanza de nodo). Para avanzar: registros guardados + comentario, luego <strong>Finalizar proceso</strong>.');
+                $('#lblAvanceEtapaAyuda').html('Etapa <strong id="lblAvanceEtapaNodo"></strong>: seleccione facturas de compra o anticipos de proveedores del sistema EXA. <strong>Guardar</strong> solo registra (no avanza de proceso). Para avanzar: registros guardados + comentario, luego <strong>Finalizar proceso</strong>.');
                 $('#secFiscalArchivos').hide();
                 $('#lstFiscalDocsNuevos').empty();
                 $('#panelAvanceEtapa').css({ 'border-color': '#0dcaf0', 'background-color': '#f0fcff' });
@@ -4191,8 +4206,8 @@ let currentInsCod = null;
                         adqOcultarLoaderAccion();
                         const $msg = $('#avanceGuardadoMsg');
                         const msgOk = (currentNodTip === 'FISCALIZACION')
-                            ? 'Documentos guardados. La solicitud permanece en este nodo; para avanzar complete el comentario y pulse Aprobar.'
-                            : 'Facturas/anticipos guardados. La solicitud permanece en este nodo; para avanzar complete el comentario y pulse Finalizar proceso.';
+                            ? 'Documentos guardados. La solicitud permanece en este proceso; para avanzar complete el comentario y pulse Aprobar.'
+                            : 'Facturas/anticipos guardados. La solicitud permanece en este proceso; para avanzar complete el comentario y pulse Finalizar proceso.';
                         $msg.stop(true, true).text(msgOk).fadeIn(180).delay(5500).fadeOut(350);
                     }
                 } else {
@@ -4931,20 +4946,23 @@ let currentInsCod = null;
             const iconos = {
                 success: 'bi bi-check-circle-fill',
                 error: 'bi bi-x-circle-fill',
+                danger: 'bi bi-x-octagon-fill',
                 warning: 'bi bi-exclamation-triangle-fill',
                 info: 'bi bi-info-circle-fill'
             };
             const btnClass = {
                 success: 'btn btn-success',
                 error: 'btn btn-danger',
+                danger: 'btn btn-danger',
                 warning: 'btn btn-warning',
                 info: 'btn btn-primary'
             };
             const $overlay = $('#mdlAccionOkOverlay');
             const $box = $('#mdlAccionOkBox');
-            $box.removeClass('is-success is-error is-warning is-info').addClass('is-' + tipoFinal);
+            $box.removeClass('is-success is-error is-danger is-warning is-info').addClass('is-' + tipoFinal);
             $('#mdlAccionOkIcon').html('<i class="' + (iconos[tipoFinal] || iconos.info) + '"></i>');
-            $('#mdlAccionOkText').text(String(mensaje == null ? '' : mensaje));
+            $('#mdlAccionOkTitle').hide().text('');
+            $('#mdlAccionOkText').css('font-weight', '700').css('color', '#0f172a').text(String(mensaje == null ? '' : mensaje));
             $('#btnMdlAccionCancel').hide().off('click.accOk');
             $('#btnMdlAccionOk')
                 .attr('class', btnClass[tipoFinal] || btnClass.info)
@@ -4970,14 +4988,55 @@ let currentInsCod = null;
             });
         }
 
-        function confirmarCentrado(mensaje, onConfirm, onCancel) {
+        /**
+         * Modal de confirmacion centrado (profesional).
+         * opciones: { titulo, mensaje, tipo, okText, cancelText }
+         */
+        function confirmarCentrado(mensajeOpciones, onConfirm, onCancel) {
+            let opts = {
+                titulo: '',
+                mensaje: '',
+                tipo: 'warning',
+                okText: 'Continuar',
+                cancelText: 'Cancelar'
+            };
+            if (mensajeOpciones && typeof mensajeOpciones === 'object') {
+                opts.titulo = mensajeOpciones.titulo || '';
+                opts.mensaje = mensajeOpciones.mensaje || '';
+                opts.tipo = mensajeOpciones.tipo || 'warning';
+                opts.okText = mensajeOpciones.okText || 'Continuar';
+                opts.cancelText = mensajeOpciones.cancelText || 'Cancelar';
+            } else {
+                opts.mensaje = String(mensajeOpciones == null ? '' : mensajeOpciones);
+            }
+
+            const iconos = {
+                warning: 'bi bi-exclamation-triangle-fill',
+                danger: 'bi bi-exclamation-octagon-fill',
+                error: 'bi bi-x-circle-fill',
+                info: 'bi bi-question-circle-fill'
+            };
+            const btnClass = {
+                warning: 'btn btn-warning',
+                danger: 'btn btn-danger',
+                error: 'btn btn-danger',
+                info: 'btn btn-primary'
+            };
+
             const $overlay = $('#mdlAccionOkOverlay');
             const $box = $('#mdlAccionOkBox');
-            $box.removeClass('is-success is-error is-warning is-info').addClass('is-warning');
-            $('#mdlAccionOkIcon').html('<i class="bi bi-question-circle-fill"></i>');
-            $('#mdlAccionOkText').text(String(mensaje == null ? '' : mensaje));
-            $('#btnMdlAccionOk').attr('class', 'btn btn-primary').text('Continuar').off('click.accOk');
-            $('#btnMdlAccionCancel').show().text('Cancelar').off('click.accOk');
+            $box.removeClass('is-success is-error is-danger is-warning is-info').addClass('is-' + opts.tipo);
+            $('#mdlAccionOkIcon').html('<i class="' + (iconos[opts.tipo] || iconos.warning) + '"></i>');
+            if (opts.titulo) {
+                $('#mdlAccionOkTitle').text(opts.titulo).show();
+                $('#mdlAccionOkText').css('font-weight', '500').css('color', '#475569');
+            } else {
+                $('#mdlAccionOkTitle').hide().text('');
+                $('#mdlAccionOkText').css('font-weight', '700').css('color', '#0f172a');
+            }
+            $('#mdlAccionOkText').text(opts.mensaje);
+            $('#btnMdlAccionOk').attr('class', btnClass[opts.tipo] || btnClass.warning).text(opts.okText).off('click.accOk');
+            $('#btnMdlAccionCancel').show().text(opts.cancelText).off('click.accOk');
 
             $overlay.stop(true, true).css({ display: 'flex', opacity: 0 }).animate({ opacity: 1 }, 150);
 
@@ -4985,6 +5044,7 @@ let currentInsCod = null;
                 $overlay.animate({ opacity: 0 }, 150, function() {
                     $overlay.css('display', 'none');
                     $('#btnMdlAccionCancel').hide();
+                    $('#mdlAccionOkTitle').hide().text('');
                     if (ok) {
                         if (typeof onConfirm === 'function') onConfirm();
                     } else if (typeof onCancel === 'function') {
@@ -5196,12 +5256,45 @@ let currentInsCod = null;
                     return;
                 }
             }
-            if (accion === 'RECHAZAR' && !$('#actionComentario').val().trim()) {
-                alert('Debe indicar el motivo del rechazo en el comentario.');
-                $('#actionComentario').focus();
+            if (accion === 'RECHAZAR') {
+                if (!$('#actionComentario').val().trim()) {
+                    alert('Debe indicar el motivo del rechazo en el comentario.');
+                    $('#actionComentario').focus();
+                    return;
+                }
+                confirmarCentrado({
+                    titulo: 'Confirmar rechazo',
+                    mensaje: 'Esta accion no se puede revertir.\n\nEste proceso quedara suspendido permanentemente.',
+                    tipo: 'danger',
+                    okText: 'Si, rechazar',
+                    cancelText: 'Cancelar'
+                }, function() {
+                    ejecutarAccionWorkflow(accion);
+                });
+                return;
+            }
+            if (accion === 'DEVOLVER') {
+                if (!$('#actionComentario').val().trim()) {
+                    alert('Debe indicar el motivo de la devolucion en el comentario.');
+                    $('#actionComentario').focus();
+                    return;
+                }
+                confirmarCentrado({
+                    titulo: 'Confirmar devolucion',
+                    mensaje: 'La solicitud regresara al proceso anterior del flujo.\n\nSe activara para los responsables de ese proceso (no para el solicitante).',
+                    tipo: 'warning',
+                    okText: 'Si, devolver',
+                    cancelText: 'Cancelar'
+                }, function() {
+                    ejecutarAccionWorkflow(accion);
+                });
                 return;
             }
 
+            ejecutarAccionWorkflow(accion);
+        }
+
+        function ejecutarAccionWorkflow(accion) {
             $('#actionName').val(accion);
             const formData = new FormData($('#frmWorkflowAction')[0]);
             const textosLoader = {
@@ -5235,7 +5328,7 @@ let currentInsCod = null;
                                 : (accion === 'OBSERVAR')
                                     ? 'Observacion registrada correctamente'
                                     : (accion === 'DEVOLVER')
-                                        ? 'Solicitud devuelta correctamente'
+                                        ? (res.message || 'Solicitud devuelta al proceso anterior. Queda activa para sus responsables.')
                                         : (accion === 'COMPLETAR')
                                             ? 'Tarea completada correctamente'
                                             : ('Accion "' + accion + '" procesada correctamente');

@@ -2339,7 +2339,7 @@ class wf_manager_log {
             }
 
             if ($Accion === 'COMPLETAR' && $nodoActual['Nod_Tip'] !== 'TAREA') {
-                throw new Exception("La accion completar solo aplica a nodos de tipo Tarea.");
+                throw new Exception("La accion completar solo aplica a procesos de tipo Tarea.");
             }
 
             // Validar requerimientos obligatorios al aprobar o completar tarea
@@ -2438,10 +2438,14 @@ class wf_manager_log {
             $usu_cod = $fk_acc['usu'];
             $dep_cod = $fk_acc['dep'];
 
-            // Manejar acci�n DEVOLVER: retroceder al nodo anterior en el historial
+            // Manejar accion DEVOLVER: retroceder al nodo anterior en el historial
+            // Activa a los responsables de ese nodo (NO al solicitante / no Observada).
             if ($Accion == 'DEVOLVER') {
                 $nodoAnterior = $this->obBD_datos->getRowConsultaSql("
-                    SELECT DISTINCT h.Nod_Cod 
+                    SELECT n.Nod_Cod, n.Nod_Nom, n.Nod_Tip, n.Dep_Cod, n.Per_Cod, n.Nod_Usu_Asig,
+                           IFNULL(n.Nod_Not_Wa, 0) AS Nod_Not_Wa, IFNULL(n.Nod_Not_Em, 0) AS Nod_Not_Em,
+                           IFNULL(n.Nod_Not_Mom, 'S') AS Nod_Not_Mom,
+                           n.Nod_Not_Asunto, n.Nod_Not_Texto
                     FROM wf_instancias_nodos h 
                     INNER JOIN wf_nodos n ON n.Nod_Cod = h.Nod_Cod
                     WHERE h.Ins_Cod = $Ins_Cod 
@@ -2450,12 +2454,12 @@ class wf_manager_log {
                     ORDER BY h.Isn_Fec DESC LIMIT 1;", $this->obBD_conexion);
 
                 if (empty($nodoAnterior)) {
-                    throw new Exception("No existe un paso anterior al cual devolver esta solicitud.");
+                    throw new Exception("No existe un proceso anterior al cual devolver esta solicitud.");
                 }
 
-                $nod_devolver = $nodoAnterior['Nod_Cod'];
+                $nod_devolver = intval($nodoAnterior['Nod_Cod']);
 
-                // Registrar en historial la acci�n DEVOLVER en el nodo actual
+                // Registrar en historial la accion DEVOLVER en el nodo actual
                 $com_esc = mysqli_real_escape_string($this->obBD_conexion->conexion, $Comentario);
                 $adjunto_str = $Adjuntos !== null ? "'" . $Adjuntos . "'" : "NULL";
                 $this->obBD_datos->grabarv_registros("INSERT INTO wf_instancias_nodos (Ins_Cod, Nod_Cod, Usu_Cod, Dep_Cod, Isn_Acc, Isn_Com, Isn_Adj, Isn_Fec, Isn_Ip, Isn_Ses) 
@@ -2464,13 +2468,31 @@ class wf_manager_log {
                 // Mover instancia al nodo anterior
                 $this->obBD_datos->grabarv_registros("UPDATE wf_instancias SET Nod_Act = $nod_devolver WHERE Ins_Cod = $Ins_Cod;", $this->obBD_conexion);
 
-                // Actualizar estado de solicitud a Observado
+                // En proceso (E): queda pendiente para los responsables del nodo anterior.
+                // No marcar Observada (O): eso activaria al solicitante.
                 if ($instancia['Ins_Ent_Typ'] == 'adq_solicitudes') {
-                    $this->obBD_datos->grabarv_registros("UPDATE adq_solicitudes SET Sol_Est = 'O' WHERE Sol_Cod = $instancia[Ins_Ent_Cod];", $this->obBD_conexion);
+                    $this->obBD_datos->grabarv_registros(
+                        "UPDATE adq_solicitudes SET Sol_Est = 'E' WHERE Sol_Cod = " . intval($instancia['Ins_Ent_Cod']) . ";",
+                        $this->obBD_conexion
+                    );
                 }
 
                 $this->obBD_datos->commit_nomsn($this->obBD_conexion);
-                return array('success' => true);
+
+                // Notificar estado DEVUELTO por WhatsApp/correo a encargados del nodo anterior.
+                $this->notificarDevolucionEtapaAnterior(
+                    $Ins_Cod,
+                    $nodoActual,
+                    $Comentario,
+                    $instancia,
+                    $nod_devolver
+                );
+
+                return array(
+                    'success' => true,
+                    'nodo_destino' => isset($nodoAnterior['Nod_Nom']) ? $nodoAnterior['Nod_Nom'] : '',
+                    'message' => 'Solicitud devuelta al proceso "' . (isset($nodoAnterior['Nod_Nom']) ? $nodoAnterior['Nod_Nom'] : 'anterior') . '".'
+                );
             }
 
             if ($Accion == 'OBSERVAR') {
@@ -2541,6 +2563,12 @@ class wf_manager_log {
             }
 
             $this->obBD_datos->commit_nomsn($this->obBD_conexion);
+
+            if ($Accion === 'RECHAZAR'
+                && isset($instancia['Ins_Ent_Typ']) && $instancia['Ins_Ent_Typ'] === 'adq_solicitudes'
+            ) {
+                $this->notificarRechazoEsquema($Ins_Cod, $nodoActual, $Comentario, $instancia);
+            }
 
             if ($Accion === 'APROBAR'
                 && $this->debeNotificarCierreNodo($nodoActual)
@@ -3191,7 +3219,7 @@ class wf_manager_log {
             'Isn_Acc' => 'RECHAZAR',
             'Nod_Cod' => $nod_act,
             'Etapa_Nod_Cod' => $nod_act,
-            'Nod_Nom' => !empty($nodo['Nod_Nom']) ? $nodo['Nod_Nom'] : ('Nodo #' . $nod_act),
+            'Nod_Nom' => !empty($nodo['Nod_Nom']) ? $nodo['Nod_Nom'] : ('Proceso #' . $nod_act),
             'Nod_Tip' => !empty($nodo['Nod_Tip']) ? $nodo['Nod_Tip'] : '',
             'Isn_Fec' => $fecha,
             'Isn_Com' => $comentario,
@@ -3583,6 +3611,163 @@ class wf_manager_log {
     }
 
     /**
+     * Al rechazar: notifica por WhatsApp/correo a los responsables de TODOS los nodos
+     * del esquema que tengan notificaciones activas, incluyendo la justificacion.
+     */
+    public function notificarRechazoEsquema($Ins_Cod, $nodoRechazo, $comentario, $instancia = null) {
+        try {
+            $this->ensureNotificationSchema();
+            $Ins_Cod = intval($Ins_Cod);
+            if ($Ins_Cod <= 0 || empty($nodoRechazo)) {
+                return;
+            }
+            if (empty($instancia)) {
+                $instancia = $this->obBD_datos->getRowConsultaSql(
+                    "SELECT * FROM wf_instancias WHERE Ins_Cod = $Ins_Cod LIMIT 1;",
+                    $this->obBD_conexion
+                );
+            }
+            if (empty($instancia) || empty($instancia['Wfm_Cod'])) {
+                return;
+            }
+
+            $emp_cod = isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0;
+            if ($emp_cod <= 0 && $instancia['Ins_Ent_Typ'] === 'adq_solicitudes') {
+                $emp_row = $this->obBD_datos->getRowConsultaSql(
+                    "SELECT Emp_Cod FROM adq_solicitudes WHERE Sol_Cod = " . intval($instancia['Ins_Ent_Cod']) . " LIMIT 1;",
+                    $this->obBD_conexion
+                );
+                $emp_cod = !empty($emp_row['Emp_Cod']) ? intval($emp_row['Emp_Cod']) : 0;
+            }
+            if ($emp_cod <= 0) {
+                return;
+            }
+
+            $wfm_cod = intval($instancia['Wfm_Cod']);
+            $nodos = $this->obBD_datos->getArrayConsultaSql(
+                "SELECT *
+                 FROM wf_nodos
+                 WHERE Wfm_Cod = $wfm_cod
+                   AND Nod_Est = 'A'
+                   AND (IFNULL(Nod_Not_Wa, 0) = 1 OR IFNULL(Nod_Not_Em, 0) = 1)
+                   AND Nod_Tip IN ('INICIO', 'APROBACION', 'RECEPCION', 'FACTURA', 'TAREA', 'AVANCE', 'FISCALIZACION', 'FIN')
+                 ORDER BY Nod_Cod ASC;",
+                $this->obBD_conexion
+            );
+            if (empty($nodos)) {
+                return;
+            }
+
+            // Destinatarios unicos por canal (WA / EM).
+            $dest_wa = array();
+            $dest_em = array();
+            $vistos_wa = array();
+            $vistos_em = array();
+            foreach ($nodos as $nodo) {
+                $dests = $this->listarDestinatariosNotificacionEtapa(intval($nodo['Nod_Cod']), $emp_cod, 0);
+                if (empty($dests)) {
+                    continue;
+                }
+                foreach ($dests as $d) {
+                    $usu = intval(isset($d['Usu_Cod']) ? $d['Usu_Cod'] : 0);
+                    if ($usu <= 0) {
+                        continue;
+                    }
+                    if (!empty($nodo['Nod_Not_Wa']) && !empty($d['Telefono']) && empty($vistos_wa[$usu])) {
+                        $vistos_wa[$usu] = true;
+                        $dest_wa[] = $d;
+                    }
+                    if (!empty($nodo['Nod_Not_Em']) && !empty($d['Correo']) && empty($vistos_em[$usu])) {
+                        $vistos_em[$usu] = true;
+                        $dest_em[] = $d;
+                    }
+                }
+            }
+            if (empty($dest_wa) && empty($dest_em)) {
+                return;
+            }
+
+            $mensaje_data = $this->construirMensajeNotificacionAdq(
+                $instancia,
+                $nodoRechazo,
+                $emp_cod,
+                'rechazar',
+                array(
+                    'comentario' => $comentario,
+                    'nodo_rechazo' => $nodoRechazo
+                )
+            );
+            if (empty($mensaje_data)) {
+                return;
+            }
+
+            $mensaje = $mensaje_data['mensaje'];
+            if (!empty($nodoRechazo['Nod_Not_Texto']) && trim($nodoRechazo['Nod_Not_Texto']) !== '') {
+                $mensaje .= "\n\n" . trim($nodoRechazo['Nod_Not_Texto']);
+            }
+            $asunto = !empty($nodoRechazo['Nod_Not_Asunto'])
+                ? trim($nodoRechazo['Nod_Not_Asunto'])
+                : $mensaje_data['asunto'];
+            $nod_cod = intval($nodoRechazo['Nod_Cod']);
+            $fecha = date('Y-m-d H:i:s');
+
+            if (!empty($dest_wa)) {
+                $wa_path = dirname(__FILE__) . '/../../MODELS/send_whatsapp.php';
+                if (file_exists($wa_path)) {
+                    require_once($wa_path);
+                }
+                if (function_exists('enviarNotificacionWhatsapp')) {
+                    $numeros = array();
+                    foreach ($dest_wa as $d) {
+                        if (!empty($d['Telefono'])) {
+                            $numeros[] = $d['Telefono'];
+                        }
+                    }
+                    $numeros = array_values(array_unique($numeros));
+                    if (!empty($numeros)) {
+                        $ok = enviarNotificacionWhatsapp($mensaje, $numeros);
+                        foreach ($dest_wa as $d) {
+                            if (empty($d['Telefono'])) {
+                                continue;
+                            }
+                            $this->registrarNotificacionInstancia(
+                                $Ins_Cod, $nod_cod, $d['Usu_Cod'], 'WA', $d['Telefono'],
+                                $ok ? 'O' : 'E', $fecha, $mensaje, $ok ? '' : 'Error al enviar WhatsApp'
+                            );
+                        }
+                    }
+                }
+            }
+
+            if (!empty($dest_em)) {
+                $mail_utils = dirname(__FILE__) . '/../../relavera/LOGICA/relavera_notif_mail_utils.php';
+                if (file_exists($mail_utils)) {
+                    require_once($mail_utils);
+                }
+                if (function_exists('relavera_notif_enviar_correo_notif')) {
+                    foreach ($dest_em as $d) {
+                        if (empty($d['Correo']) || !filter_var($d['Correo'], FILTER_VALIDATE_EMAIL)) {
+                            continue;
+                        }
+                        $ok_mail = relavera_notif_enviar_correo_notif(
+                            $d['Correo'],
+                            isset($d['Nombre']) ? $d['Nombre'] : '',
+                            $asunto,
+                            $mensaje
+                        );
+                        $this->registrarNotificacionInstancia(
+                            $Ins_Cod, $nod_cod, $d['Usu_Cod'], 'EM', $d['Correo'],
+                            $ok_mail ? 'O' : 'E', $fecha, $mensaje, $ok_mail ? '' : 'Error al enviar correo'
+                        );
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            // No interrumpir el rechazo por fallos de notificacion
+        }
+    }
+
+    /**
      * Devuelve la ruta absoluta segura del expediente: firmado primero,
      * cargado/revisado como alternativa.
      */
@@ -3667,7 +3852,7 @@ class wf_manager_log {
                 . "Solicitud: " . ($numero !== '' ? $numero : ('#' . $sol_cod)) . "\n"
                 . ($titulo !== '' ? "Nombre: $titulo\n" : '')
                 . ($tipo !== '' ? "Tipo: $tipo\n" : '')
-                . "Etapa final: " . (isset($nodo_fin['Nod_Nom']) ? $nodo_fin['Nod_Nom'] : 'FIN') . "\n\n"
+                . "Proceso final: " . (isset($nodo_fin['Nod_Nom']) ? $nodo_fin['Nod_Nom'] : 'FIN') . "\n\n"
                 . "Comentario de cierre:\n" . $comentario_limpio;
             if (!empty($nodo_fin['Nod_Not_Texto']) && trim($nodo_fin['Nod_Not_Texto']) !== '') {
                 $mensaje .= "\n\n" . trim($nodo_fin['Nod_Not_Texto']);
@@ -4149,7 +4334,7 @@ class wf_manager_log {
 
         $historial_actores = $this->obBD_datos->getArrayConsultaSql(
             "SELECT h.Isn_Cod, h.Nod_Cod, h.Isn_Acc, h.Isn_Fec,
-                    COALESCE(n.Nod_Nom, CONCAT('Nodo #', h.Nod_Cod)) AS Nod_Nom,
+                    COALESCE(n.Nod_Nom, CONCAT('Proceso #', h.Nod_Cod)) AS Nod_Nom,
                     TRIM(CONCAT(IFNULL(p.Prs_Nom, ''), ' ', IFNULL(p.Prs_Ape, ''))) AS Usuario_Nom,
                     COALESCE(wd.Wde_Des, dep.Dep_Des) AS Dep_Des
              FROM wf_instancias_nodos h
@@ -4999,6 +5184,167 @@ class wf_manager_log {
     }
 
     /**
+     * Al devolver una solicitud, notifica por WhatsApp/correo a los responsables
+     * del nodo anterior (estado DEVUELTO). Usa flags de notificacion del nodo
+     * que devolvio y, si no tiene, los del nodo destino.
+     */
+    public function notificarDevolucionEtapaAnterior($Ins_Cod, $nodoDevolvedor, $comentario, $instancia = null, $nod_retorno_cod = 0) {
+        try {
+            $this->ensureNotificationSchema();
+            $Ins_Cod = intval($Ins_Cod);
+            if ($Ins_Cod <= 0 || empty($nodoDevolvedor)) {
+                return;
+            }
+
+            if (empty($instancia)) {
+                $instancia = $this->obBD_datos->getRowConsultaSql(
+                    "SELECT * FROM wf_instancias WHERE Ins_Cod = $Ins_Cod LIMIT 1;",
+                    $this->obBD_conexion
+                );
+            }
+            if (empty($instancia)) {
+                return;
+            }
+
+            $emp_cod = isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0;
+            if ($emp_cod <= 0 && $instancia['Ins_Ent_Typ'] === 'adq_solicitudes') {
+                $emp_row = $this->obBD_datos->getRowConsultaSql(
+                    "SELECT Emp_Cod FROM adq_solicitudes WHERE Sol_Cod = " . intval($instancia['Ins_Ent_Cod']) . " LIMIT 1;",
+                    $this->obBD_conexion
+                );
+                $emp_cod = !empty($emp_row['Emp_Cod']) ? intval($emp_row['Emp_Cod']) : 0;
+            }
+            if ($emp_cod <= 0) {
+                return;
+            }
+
+            $nod_retorno_cod = intval($nod_retorno_cod);
+            if ($nod_retorno_cod <= 0) {
+                $nod_retorno_cod = $this->resolverNodoEtapaAnteriorInstancia($Ins_Cod, intval($nodoDevolvedor['Nod_Cod']));
+            }
+            if ($nod_retorno_cod <= 0) {
+                return;
+            }
+
+            $nodo_anterior = $this->obBD_datos->getRowConsultaSql(
+                "SELECT * FROM wf_nodos WHERE Nod_Cod = $nod_retorno_cod LIMIT 1;",
+                $this->obBD_conexion
+            );
+            if (empty($nodo_anterior)) {
+                return;
+            }
+
+            // Canales: nodo que devolvio, o el destino si el origen no tiene notificacion.
+            $not_wa = !empty($nodoDevolvedor['Nod_Not_Wa']) || !empty($nodo_anterior['Nod_Not_Wa']);
+            $not_em = !empty($nodoDevolvedor['Nod_Not_Em']) || !empty($nodo_anterior['Nod_Not_Em']);
+            if (!$not_wa && !$not_em) {
+                return;
+            }
+
+            $destinatarios = $this->resolverDestinatariosEtapaAnteriorObservacion(
+                $Ins_Cod,
+                $nodo_anterior,
+                $emp_cod,
+                $instancia
+            );
+            if (empty($destinatarios)) {
+                // Fallback: todos los asignados al nodo destino.
+                $destinatarios = $this->listarDestinatariosNodoAsignado($nodo_anterior, $emp_cod, 0);
+            }
+            if (empty($destinatarios)) {
+                return;
+            }
+
+            $mensaje_data = $this->construirMensajeNotificacionAdq(
+                $instancia,
+                $nodo_anterior,
+                $emp_cod,
+                'devolver',
+                array(
+                    'comentario' => $comentario,
+                    'nodo_devolvedor' => $nodoDevolvedor
+                )
+            );
+            if (empty($mensaje_data)) {
+                return;
+            }
+
+            $mensaje = $mensaje_data['mensaje'];
+            $extra_txt = '';
+            if (!empty($nodoDevolvedor['Nod_Not_Texto'])) {
+                $extra_txt = trim($nodoDevolvedor['Nod_Not_Texto']);
+            } elseif (!empty($nodo_anterior['Nod_Not_Texto'])) {
+                $extra_txt = trim($nodo_anterior['Nod_Not_Texto']);
+            }
+            if ($extra_txt !== '') {
+                $mensaje .= "\n\n" . $extra_txt;
+            }
+
+            $asunto = '';
+            if (!empty($nodoDevolvedor['Nod_Not_Asunto'])) {
+                $asunto = trim($nodoDevolvedor['Nod_Not_Asunto']);
+            } elseif (!empty($nodo_anterior['Nod_Not_Asunto'])) {
+                $asunto = trim($nodo_anterior['Nod_Not_Asunto']);
+            }
+            if ($asunto === '') {
+                $asunto = $mensaje_data['asunto'];
+            }
+
+            $nod_cod = $nod_retorno_cod;
+            $fecha = date('Y-m-d H:i:s');
+
+            if ($not_wa) {
+                $wa_path = dirname(__FILE__) . '/../../MODELS/send_whatsapp.php';
+                if (file_exists($wa_path)) {
+                    require_once($wa_path);
+                }
+                if (function_exists('enviarNotificacionWhatsapp')) {
+                    $numeros = array();
+                    foreach ($destinatarios as $d) {
+                        if (!empty($d['Telefono'])) {
+                            $numeros[] = $d['Telefono'];
+                        }
+                    }
+                    $numeros = array_values(array_unique($numeros));
+                    if (!empty($numeros)) {
+                        $ok = enviarNotificacionWhatsapp($mensaje, $numeros);
+                        foreach ($destinatarios as $d) {
+                            if (empty($d['Telefono'])) {
+                                continue;
+                            }
+                            $this->registrarNotificacionInstancia(
+                                $Ins_Cod, $nod_cod, $d['Usu_Cod'], 'WA', $d['Telefono'],
+                                $ok ? 'O' : 'E', $fecha, $mensaje, $ok ? '' : 'Error al enviar WhatsApp'
+                            );
+                        }
+                    }
+                }
+            }
+
+            if ($not_em) {
+                $mail_utils = dirname(__FILE__) . '/../../relavera/LOGICA/relavera_notif_mail_utils.php';
+                if (file_exists($mail_utils)) {
+                    require_once($mail_utils);
+                }
+                if (function_exists('relavera_notif_enviar_correo_notif')) {
+                    foreach ($destinatarios as $d) {
+                        if (empty($d['Correo']) || !filter_var($d['Correo'], FILTER_VALIDATE_EMAIL)) {
+                            continue;
+                        }
+                        $ok_mail = relavera_notif_enviar_correo_notif($d['Correo'], $d['Nombre'], $asunto, $mensaje);
+                        $this->registrarNotificacionInstancia(
+                            $Ins_Cod, $nod_cod, $d['Usu_Cod'], 'EM', $d['Correo'],
+                            $ok_mail ? 'O' : 'E', $fecha, $mensaje, $ok_mail ? '' : 'Error al enviar correo'
+                        );
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            // No interrumpir el flujo por fallos de notificacion
+        }
+    }
+
+    /**
      * Ultimo nodo humano distinto al actual en el historial de la instancia.
      */
     private function resolverNodoEtapaAnteriorInstancia($Ins_Cod, $nod_actual_cod) {
@@ -5356,6 +5702,10 @@ class wf_manager_log {
 
         if ($evento === 'observar') {
             $titulo = 'Solicitud observada - requiere su atencion';
+        } elseif ($evento === 'devolver') {
+            $titulo = 'Solicitud DEVUELTA - requiere su atencion';
+        } elseif ($evento === 'rechazar') {
+            $titulo = 'Solicitud RECHAZADA - proceso suspendido';
         } elseif ($evento === 'reenvio') {
             $titulo = 'Solicitud corregida - requiere su aprobacion';
         } else {
@@ -5371,8 +5721,13 @@ class wf_manager_log {
         }
 
         $mensaje = "*Verificar procesos de Adquisiciones*\n"
-            . "*" . $titulo . "*\n\n"
-            . "Solicitud: #" . $info['Sol_Num'] . "\n"
+            . "*" . $titulo . "*\n\n";
+        if ($evento === 'devolver') {
+            $mensaje .= "Estado: DEVUELTO\n";
+        } elseif ($evento === 'rechazar') {
+            $mensaje .= "Estado: RECHAZADO\n";
+        }
+        $mensaje .= "Solicitud: #" . $info['Sol_Num'] . "\n"
             . "Flujo: " . $info['Wfm_Nom'] . "\n"
             . "Tipo: " . $info['Trq_Des'] . "\n"
             . "Solicitante: " . trim($info['Solicitante_Nom']) . "\n";
@@ -5383,18 +5738,37 @@ class wf_manager_log {
                 $mensaje .= " [" . $opciones['nodo_observador']['Nod_Tip'] . "]";
             }
             $mensaje .= "\n";
-            $mensaje .= "Etapa anterior: " . $nodo['Nod_Nom'] . " [" . $nodo['Nod_Tip'] . "]\n";
+            $mensaje .= "Proceso anterior: " . $nodo['Nod_Nom'] . " [" . $nodo['Nod_Tip'] . "]\n";
+        } elseif ($evento === 'devolver') {
+            if (!empty($opciones['nodo_devolvedor']['Nod_Nom'])) {
+                $mensaje .= "Devuelta desde: " . $opciones['nodo_devolvedor']['Nod_Nom'];
+                if (!empty($opciones['nodo_devolvedor']['Nod_Tip'])) {
+                    $mensaje .= " [" . $opciones['nodo_devolvedor']['Nod_Tip'] . "]";
+                }
+                $mensaje .= "\n";
+            }
+            $mensaje .= "Proceso destino: " . $nodo['Nod_Nom'] . " [" . $nodo['Nod_Tip'] . "]\n";
+        } elseif ($evento === 'rechazar') {
+            $mensaje .= "Rechazada en: " . $nodo['Nod_Nom'] . " [" . $nodo['Nod_Tip'] . "]\n";
+            $mensaje .= "El proceso quedo suspendido permanentemente.\n";
         } else {
-            $mensaje .= "Etapa: " . $nodo['Nod_Nom'] . " [" . $nodo['Nod_Tip'] . "]\n";
+            $mensaje .= "Proceso: " . $nodo['Nod_Nom'] . " [" . $nodo['Nod_Tip'] . "]\n";
         }
 
-        if ($evento === 'observar') {
+        if ($evento === 'observar' || $evento === 'devolver' || $evento === 'rechazar') {
             $comentario = trim(isset($opciones['comentario']) ? $opciones['comentario'] : '');
             if ($comentario !== '') {
                 if (strlen($comentario) > 500) {
                     $comentario = substr($comentario, 0, 497) . '...';
                 }
-                $mensaje .= "\n*Observacion:*\n" . $comentario;
+                if ($evento === 'rechazar') {
+                    $etiqueta = 'Justificacion del rechazo';
+                } elseif ($evento === 'devolver') {
+                    $etiqueta = 'Motivo de devolucion';
+                } else {
+                    $etiqueta = 'Observacion';
+                }
+                $mensaje .= "\n*" . $etiqueta . ":*\n" . $comentario;
             }
         } elseif ($justificacion !== '') {
             $mensaje .= "\n*Justificacion:*\n" . $justificacion;
