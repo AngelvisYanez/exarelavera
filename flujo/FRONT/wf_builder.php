@@ -399,6 +399,18 @@ if (isset($ajax_get_builder)) {
             z-index: 10;
             font-size: 12px;
         }
+        .wf-node.is-selected {
+            border-width: 3px;
+            border-color: #f59e0b !important;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.4), 0 8px 18px rgba(15, 23, 42, 0.18);
+            z-index: 40;
+        }
+        .wf-node.node-INICIO.is-selected,
+        .wf-node.node-FIN.is-selected,
+        .node-INICIO.is-selected,
+        .node-FIN.is-selected {
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.45), 0 8px 18px rgba(15, 23, 42, 0.18);
+        }
         .wf-node-header {
             padding: 6px 10px;
             background-color: #f8f9fa;
@@ -1158,6 +1170,16 @@ if (function_exists('utf8_encode_deep')) {
             cursor: move;
             z-index: 10;
         }
+        .wf-node.is-selected {
+            border-width: 3px;
+            border-color: #f59e0b !important;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.4), 0 8px 18px rgba(15, 23, 42, 0.18);
+            z-index: 40;
+        }
+        .wf-node.node-INICIO.is-selected,
+        .wf-node.node-FIN.is-selected {
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.45), 0 8px 18px rgba(15, 23, 42, 0.18);
+        }
         .wf-node.node-INICIO,
         .wf-node.node-FIN {
             width: 150px;
@@ -1754,6 +1776,6 @@ if (function_exists('utf8_encode_deep')) {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../VALIDACIONES/wf_builder.js?v=50"></script>
+    <script src="../VALIDACIONES/wf_builder.js?v=51"></script>
 </body>
 </html>

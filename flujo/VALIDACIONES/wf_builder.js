@@ -14,6 +14,19 @@ let activeConnection = null; // Conexión actualmente seleccionada
 let isDraggingNode = false;
 let draggedElement = null;
 let dragPointerOffset = { x: 0, y: 0 };
+let dragMoved = false;
+let dragSelectNodeId = null;
+
+function highlightActiveNode(nodeId) {
+    $('.wf-node').removeClass('is-selected');
+    if (nodeId === undefined || nodeId === null || nodeId === '') {
+        return;
+    }
+    const $el = wfNodeEl(nodeId);
+    if ($el && $el.length) {
+        $el.addClass('is-selected');
+    }
+}
 
 function wfPointInCanvas(pageX, pageY) {
     const $canvas = $('#canvas');
@@ -36,7 +49,10 @@ function setupNodeDrag() {
             return;
         }
         isDraggingNode = true;
+        dragMoved = false;
         draggedElement = $(this);
+        dragSelectNodeId = draggedElement.attr('id');
+        highlightActiveNode(dragSelectNodeId);
         wfHideNodeTip();
         const pt = wfPointInCanvas(e.pageX, e.pageY);
         const nodeLeft = parseFloat(draggedElement.css('left')) || 0;
@@ -56,6 +72,11 @@ function setupNodeDrag() {
         const pt = wfPointInCanvas(e.pageX, e.pageY);
         const x = Math.max(0, pt.x - dragPointerOffset.x);
         const y = Math.max(0, pt.y - dragPointerOffset.y);
+        const prevLeft = parseFloat(draggedElement.css('left')) || 0;
+        const prevTop = parseFloat(draggedElement.css('top')) || 0;
+        if (Math.abs(x - prevLeft) > 3 || Math.abs(y - prevTop) > 3) {
+            dragMoved = true;
+        }
         draggedElement.css({ left: x + 'px', top: y + 'px' });
 
         const nId = draggedElement.attr('id');
@@ -69,10 +90,19 @@ function setupNodeDrag() {
     });
 
     $(document).on('mouseup.wfBuilderDrag', function() {
-        if (isDraggingNode) {
-            isDraggingNode = false;
-            draggedElement = null;
-            updateCanvasBounds();
+        if (!isDraggingNode) {
+            return;
+        }
+        const nodeId = dragSelectNodeId;
+        const wasClick = !dragMoved && !!nodeId;
+        isDraggingNode = false;
+        draggedElement = null;
+        dragSelectNodeId = null;
+        updateCanvasBounds();
+        if (wasClick) {
+            openNodeProperties(nodeId);
+        } else if (nodeId) {
+            highlightActiveNode(nodeId);
         }
     });
 }
@@ -773,6 +803,9 @@ function openNodeProperties(id) {
     }
     activeNode = nodes.find(item => sameId(item.id, id));
     if (!activeNode) return;
+    activeConnection = null;
+    highlightActiveNode(activeNode.id);
+    redrawConnections();
 
     refreshNodeDepartments(function() {
         fillNodePropertiesForm();
@@ -1154,10 +1187,18 @@ function guardarUsuariosDepartamento() {
 }
 
 function closeDrawer() {
+    if (activeNode) {
+        syncFormToActiveNode();
+    }
     $('#propertiesDrawer').removeClass('open');
+    $('.properties-drawer').removeClass('open');
     $('#nodeProps').hide();
+    $('[id="nodeProps"]').hide();
     $('#flujoProps').show();
+    $('.flujoProps, [id="flujoProps"]').show();
+    activeNode = null;
     activeConnection = null;
+    highlightActiveNode(null);
     redrawConnections();
 }
 
@@ -1558,8 +1599,13 @@ function redrawConnections() {
 
         $(hit).add(path).on('click', function(e) {
             e.stopPropagation();
+            if (activeNode) {
+                syncFormToActiveNode();
+            }
             $('#propertiesDrawer').removeClass('open');
+            $('.properties-drawer').removeClass('open');
             activeNode = null;
+            highlightActiveNode(null);
             activeConnection = con;
             redrawConnections();
         });

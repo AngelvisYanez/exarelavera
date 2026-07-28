@@ -5406,7 +5406,7 @@ let currentInsCod = null;
                 } else {
                     $.getScript('../../framework/plugins/cedulaRuc.js')
                         .done(function() {
-                            return $.getScript('../VALIDACIONES/adq_solicitud.js?v=20260727h');
+                            return $.getScript('../VALIDACIONES/adq_solicitud.js?v=20260728a');
                         })
                         .done(function() {
                             if (requestId !== formLoadRequestId) {
@@ -5449,6 +5449,29 @@ let currentInsCod = null;
                 $('#create-panel-content').data('pending-sol-cod', targetSol);
                 $tab.tab('show');
             }
+        }
+
+        function volverAMisPendientes() {
+            formModo = 'borrador';
+            formLoaded = false;
+            formSolCod = null;
+            if (typeof setModoEdicionFormulario === 'function') {
+                setModoEdicionFormulario('', null, null);
+            }
+            // Vaciar el panel sin llamar a limpiarFormulario() (ese pide confirmacion).
+            $('#create-panel-content').empty().removeData('sol-cod').removeData('pending-sol-cod');
+            const $tab = $('a[href="#pending-panel"], #pending-tab');
+            if ($tab.length) {
+                $tab.tab('show');
+            }
+            setTimeout(function() {
+                const el = document.getElementById('pending-panel');
+                if (el && el.scrollIntoView) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+                $('.exa-body').scrollTop(0);
+                $(window).scrollTop(0);
+            }, 100);
         }
 
         function abrirEdicionCotizaciones(solCod) {

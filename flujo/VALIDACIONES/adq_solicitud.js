@@ -744,6 +744,13 @@ function cargarSolicitudParaCotizaciones(solCod) {
         setModoEdicionFormulario('cotizaciones', s.Sol_Num, null, s.Trq_Cod);
         adqSetEtapaPermiteCotizaciones(parseInt(res.puede_cargar_cotizaciones, 10) === 1);
         adqSetEtapaPermiteSeleccionarGanadora(parseInt(res.puede_seleccionar_ganadora, 10) === 1);
+        const soloGanadora = !adqEtapaPermiteCotizaciones && adqEtapaPermiteSeleccionarGanadora;
+        const $btnGuardarCot = $('#btnGuardarCotizacionesEtapa');
+        if ($btnGuardarCot.length) {
+            $btnGuardarCot.html(soloGanadora
+                ? '<i class="bi bi-trophy"></i> Guardar cotización ganadora'
+                : '<i class="bi bi-save"></i> Guardar Cotizaciones');
+        }
         $('#lblCotizacionesEtapa').text(res.etapa_nombre ? ('Etapa actual: ' + res.etapa_nombre + '. ') : '');
 
         // Reaplicar titulo/tipo tras setModo (bloqueo/Select2).

@@ -964,7 +964,7 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
         </div>
     </div>
 
-    <script src="../VALIDACIONES/wf_builder.js?v=50"></script>
+    <script src="../VALIDACIONES/wf_builder.js?v=51"></script>
     <script>
         function limpiarBackdropModal() {
             $('body').removeClass('modal-open');

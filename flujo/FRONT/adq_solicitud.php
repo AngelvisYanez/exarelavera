@@ -1889,7 +1889,8 @@ if (isset($ajax_get_form)) {
                 <button type="button" class="btn btn-success fw-bold p-3 py-2" style="font-size: 14px;" onclick="reenviarCorreccionObservada()"><i class="bi bi-send-check"></i> Reenviar Corrección</button>
             </div>
             <div class="d-flex justify-content-end gap-2 mt-4 mb-3" id="adqFormActionsCotizaciones" style="display: none;">
-                <button type="button" class="btn btn-primary fw-bold p-3 py-2" style="font-size: 14px;" onclick="guardarCotizacionesEtapa()"><i class="bi bi-save"></i> Guardar Cotizaciones</button>
+                <button type="button" class="btn btn-outline-secondary fw-bold p-3 py-2" style="font-size: 14px;" onclick="volverAMisPendientes()"><i class="bi bi-arrow-left"></i> Volver</button>
+                <button type="button" class="btn btn-primary fw-bold p-3 py-2" style="font-size: 14px;" id="btnGuardarCotizacionesEtapa" onclick="guardarCotizacionesEtapa()"><i class="bi bi-save"></i> Guardar Cotizaciones</button>
             </div>
         </form>
 
@@ -1940,7 +1941,7 @@ if (isset($ajax_get_form)) {
         </div>
     </div>
     <script src="../../framework/plugins/cedulaRuc.js" charset="UTF-8"></script>
-    <script src="../VALIDACIONES/adq_solicitud.js?v=20260727g" charset="UTF-8"></script>
+    <script src="../VALIDACIONES/adq_solicitud.js?v=20260728a" charset="UTF-8"></script>
     <?php
     exit;
 }
@@ -1970,6 +1971,6 @@ if (isset($ajax_get_form)) {
 
     <!-- Script del validador de adquisición -->
     <script src="../../framework/plugins/cedulaRuc.js" charset="UTF-8"></script>
-    <script src="../VALIDACIONES/adq_solicitud.js?v=20260727g" charset="UTF-8"></script>
+    <script src="../VALIDACIONES/adq_solicitud.js?v=20260728a" charset="UTF-8"></script>
 </body>
 </html>
