@@ -4336,13 +4336,12 @@ class wf_manager_log {
             "SELECT h.Isn_Cod, h.Nod_Cod, h.Isn_Acc, h.Isn_Fec,
                     COALESCE(n.Nod_Nom, CONCAT('Proceso #', h.Nod_Cod)) AS Nod_Nom,
                     TRIM(CONCAT(IFNULL(p.Prs_Nom, ''), ' ', IFNULL(p.Prs_Ape, ''))) AS Usuario_Nom,
-                    COALESCE(wd.Wde_Des, dep.Dep_Des) AS Dep_Des
+                    wd.Wde_Des AS Dep_Des
              FROM wf_instancias_nodos h
              LEFT JOIN wf_nodos n ON n.Nod_Cod = h.Nod_Cod
              LEFT JOIN usuarios u ON u.Usu_Cod = h.Usu_Cod
              LEFT JOIN persona p ON p.Prs_Cod = u.Prs_Cod
              LEFT JOIN wf_departamentos wd ON wd.Wde_Cod = h.Dep_Cod
-             LEFT JOIN departamen dep ON dep.Dep_Cod = h.Dep_Cod
              WHERE h.Ins_Cod = $Ins_Cod
              ORDER BY h.Isn_Fec ASC, h.Isn_Cod ASC;",
             $this->obBD_conexion

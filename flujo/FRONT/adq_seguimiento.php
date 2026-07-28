@@ -28,7 +28,7 @@ if ($sol_cod <= 0) {
 
 $sol = $obBD_con1->getRowConsultaSql("
     SELECT s.*, tr.Trq_Des, tr.Trq_Req_Fac, tr.Trq_Req_Cot, tr.Trq_Min_Cot, tr.Trq_Req_Pre, tr.Trq_Req_Adj, tr.Trq_Req_Pro, tr.Trq_Tiempo_Est, tr.Trq_Per_Cie,
-           IFNULL(u.Usu_Ced, '') as Usu_Nom, IFNULL(d.Dep_Des, '') as Dep_Des,
+           IFNULL(u.Usu_Ced, '') as Usu_Nom, IFNULL(d.Wde_Des, '') as Dep_Des,
            IFNULL(p.Prs_Nom, '') as Sol_Nom, IFNULL(p.Prs_Ape, '') as Sol_Ape,
            i.Ins_Cod, i.Nod_Act, i.Ins_Est, i.Ins_Fec_Ini, i.Ins_Fec_Fin,
            n.Nod_Nom, n.Nod_Tip
@@ -36,7 +36,7 @@ $sol = $obBD_con1->getRowConsultaSql("
     INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
     LEFT JOIN usuarios u ON u.Usu_Cod = s.Usu_Sol
     LEFT JOIN persona p ON p.Prs_Cod = u.Prs_Cod
-    LEFT JOIN departamen d ON d.Dep_Cod = s.Dep_Sol
+    LEFT JOIN wf_departamentos d ON d.Wde_Cod = s.Dep_Sol
     LEFT JOIN wf_instancias i ON i.Ins_Cod = (
         SELECT MAX(i2.Ins_Cod)
         FROM wf_instancias i2

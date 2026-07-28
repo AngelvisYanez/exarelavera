@@ -666,7 +666,7 @@ if (isset($ajax_get_solicitud_detail)) {
                tr.Trq_Req_Fac, tr.Trq_Per_Cie, tr.Trq_Req_Cot, tr.Trq_Min_Cot,
                tr.Trq_Req_Pre, tr.Trq_Req_Adj, tr.Trq_Req_Pro, tr.Trq_Tiempo_Est,
                IFNULL(u.Usu_Ced, '') as Usu_Nom,
-               IFNULL(d.Dep_Des, '') as Dep_Des,
+               IFNULL(d.Wde_Des, '') as Dep_Des,
                IFNULL(p.Prs_Nom, '') as Sol_Nom, IFNULL(p.Prs_Ape, '') as Sol_Ape,
                i.Ins_Cod, i.Nod_Act, i.Ins_Est,
                n.Nod_Nom, n.Nod_Tip, n.Nod_Com_Obl, n.Nod_Adj_Obl,
@@ -676,7 +676,7 @@ if (isset($ajax_get_solicitud_detail)) {
         INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
         LEFT JOIN usuarios u ON u.Usu_Cod = s.Usu_Sol
         LEFT JOIN persona p ON p.Prs_Cod = u.Prs_Cod
-        LEFT JOIN departamen d ON d.Dep_Cod = s.Dep_Sol
+        LEFT JOIN wf_departamentos d ON d.Wde_Cod = s.Dep_Sol
         LEFT JOIN wf_instancias i ON i.Ins_Cod = (
             SELECT MAX(i2.Ins_Cod)
             FROM wf_instancias i2
@@ -878,14 +878,14 @@ $pendientes = $obBD_con1->getArrayConsultaSql("
            IFNULL(wfm.Wfm_Nom, 'Sin flujo') AS Wfm_Nom,
            COALESCE(wfm.Wfm_Fam_Cod, wfm.Wfm_Cod, tr.Wfm_Cod) AS Wfm_Fam_Cod,
            CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) AS Solicitante_Nom,
-           d.Dep_Des,
+           d.Wde_Des AS Dep_Des,
            i.Ins_Cod,
            n.Nod_Nom, n.Nod_Sla, n.Nod_Tip, IFNULL(n.Nod_Cot_Edit, 0) AS Nod_Cot_Edit
     FROM adq_solicitudes s
     INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
     INNER JOIN usuarios u ON u.Usu_Cod = s.Usu_Sol
     INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
-    LEFT JOIN departamen d ON d.Dep_Cod = s.Dep_Sol
+    LEFT JOIN wf_departamentos d ON d.Wde_Cod = s.Dep_Sol
     INNER JOIN wf_instancias i ON i.Ins_Ent_Typ = 'adq_solicitudes' AND i.Ins_Ent_Cod = s.Sol_Cod AND i.Ins_Est = 'P'
     INNER JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act
     LEFT JOIN wf_flujos_modelos wfm ON wfm.Wfm_Cod = COALESCE(i.Wfm_Cod, tr.Wfm_Cod)
@@ -939,7 +939,7 @@ $gestionadas = $obBD_con1->getArrayConsultaSql("
            IFNULL(wfm.Wfm_Nom, 'Sin flujo') AS Wfm_Nom,
            COALESCE(wfm.Wfm_Fam_Cod, wfm.Wfm_Cod, tr.Wfm_Cod) AS Wfm_Fam_Cod,
            CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) AS Solicitante_Nom,
-           d.Dep_Des,
+           d.Wde_Des AS Dep_Des,
            i.Ins_Cod, i.Ins_Est AS Ins_Est_Act,
            n.Nod_Nom AS Etapa_Actual,
            h_last.Isn_Acc AS Mi_Accion,
@@ -969,7 +969,7 @@ $gestionadas = $obBD_con1->getArrayConsultaSql("
     INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
     INNER JOIN usuarios u ON u.Usu_Cod = s.Usu_Sol
     INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
-    LEFT JOIN departamen d ON d.Dep_Cod = s.Dep_Sol
+    LEFT JOIN wf_departamentos d ON d.Wde_Cod = s.Dep_Sol
     INNER JOIN wf_instancias i ON i.Ins_Ent_Typ = 'adq_solicitudes' AND i.Ins_Ent_Cod = s.Sol_Cod AND i.Ins_Est = 'P'
     LEFT JOIN wf_flujos_modelos wfm ON wfm.Wfm_Cod = COALESCE(i.Wfm_Cod, tr.Wfm_Cod)
     INNER JOIN (
@@ -1015,12 +1015,12 @@ $historico = $obBD_con1->getArrayConsultaSql("
            IFNULL(wfm.Wfm_Nom, 'Sin flujo') AS Wfm_Nom,
            COALESCE(wfm.Wfm_Fam_Cod, wfm.Wfm_Cod, tr.Wfm_Cod) AS Wfm_Fam_Cod,
            CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) AS Solicitante_Nom,
-           d.Dep_Des
+           d.Wde_Des AS Dep_Des
     FROM adq_solicitudes s
     INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
     INNER JOIN usuarios u ON u.Usu_Cod = s.Usu_Sol
     INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
-    LEFT JOIN departamen d ON d.Dep_Cod = s.Dep_Sol
+    LEFT JOIN wf_departamentos d ON d.Wde_Cod = s.Dep_Sol
     LEFT JOIN wf_flujos_modelos wfm ON wfm.Wfm_Cod = tr.Wfm_Cod
     WHERE s.Emp_Cod = $emp_cod AND s.Sol_Est IN ('A', 'R') $historico_filtro_usuario
     ORDER BY s.Sol_Fec DESC, s.Sol_Cod DESC

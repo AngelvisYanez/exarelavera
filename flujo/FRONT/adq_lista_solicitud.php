@@ -208,13 +208,13 @@ if (isset($ajax_get_solicitud_flow)) {
         SELECT s.*, tr.Trq_Des,
                IFNULL(wfm.Wfm_Nom, 'Sin flujo') AS Wfm_Nom,
                CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) AS Solicitante_Nom,
-               d.Dep_Des,
+               d.Wde_Des AS Dep_Des,
                i.Ins_Cod, n.Nod_Nom AS Etapa_Actual
         FROM adq_solicitudes s
         INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
         INNER JOIN usuarios u ON u.Usu_Cod = s.Usu_Sol
         INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
-        LEFT JOIN departamen d ON d.Dep_Cod = s.Dep_Sol
+        LEFT JOIN wf_departamentos d ON d.Wde_Cod = s.Dep_Sol
         LEFT JOIN wf_instancias i ON i.Ins_Cod = (
             SELECT MAX(i2.Ins_Cod)
             FROM wf_instancias i2
@@ -265,14 +265,14 @@ $todas_solicitudes = $obBD_con1->getArrayConsultaSql("
            IFNULL(wfm.Wfm_Nom, 'Sin flujo') AS Wfm_Nom,
            COALESCE(wfm.Wfm_Fam_Cod, wfm.Wfm_Cod, tr.Wfm_Cod) AS Wfm_Fam_Cod,
            CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) AS Solicitante_Nom,
-           d.Dep_Des,
+           d.Wde_Des AS Dep_Des,
            i.Ins_Cod, i.Ins_Est AS Ins_Est_Act,
            n.Nod_Nom AS Etapa_Actual
     FROM adq_solicitudes s
     INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
     INNER JOIN usuarios u ON u.Usu_Cod = s.Usu_Sol
     INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
-    LEFT JOIN departamen d ON d.Dep_Cod = s.Dep_Sol
+    LEFT JOIN wf_departamentos d ON d.Wde_Cod = s.Dep_Sol
     LEFT JOIN wf_instancias i ON i.Ins_Cod = (
         SELECT MAX(i2.Ins_Cod)
         FROM wf_instancias i2

@@ -1222,29 +1222,31 @@ class adq_adquisiciones_log extends MysqlDatosContab {
     private function resolverDepSolicitante($emp_cod, $usu_cod) {
         $emp_cod = intval($emp_cod);
         $usu_cod = intval($usu_cod);
+        // Dep_Sol = Wde_Cod de wf_departamentos (ya no se usa departamen/RRHH).
         $dep_sol = isset($_SESSION['Ses_Dep_Cod']) ? intval($_SESSION['Ses_Dep_Cod']) : 0;
         if ($dep_sol > 0) {
             $dep = $this->getRowConsultaSql(
-                "SELECT Dep_Cod FROM departamen WHERE Dep_Cod = $dep_sol AND Emp_Cod = $emp_cod AND Dep_Est = 'A' LIMIT 1;",
+                "SELECT Wde_Cod FROM wf_departamentos WHERE Wde_Cod = $dep_sol AND Emp_Cod = $emp_cod AND Wde_Est = 'A' LIMIT 1;",
                 $this->conexion
             );
-            if (!empty($dep)) {
-                return intval($dep['Dep_Cod']);
+            if (!empty($dep['Wde_Cod'])) {
+                return intval($dep['Wde_Cod']);
             }
         }
         if ($usu_cod > 0) {
             $dep = $this->getRowConsultaSql(
                 "SELECT MIN(w.Wde_Cod) AS Dep_Cod
                  FROM wf_departamento_usuarios du
-                 INNER JOIN wf_departamentos w ON w.Wde_Cod = du.Wde_Cod AND w.Emp_Cod = $emp_cod AND w.Wde_Est = 'A'
-                 WHERE du.Usu_Cod = $usu_cod AND du.Wde_Cod IS NOT NULL;",
+                 INNER JOIN wf_departamentos w ON w.Wde_Cod = COALESCE(NULLIF(du.Wde_Cod, 0), du.Dep_Cod)
+                      AND w.Emp_Cod = $emp_cod AND w.Wde_Est = 'A'
+                 WHERE du.Usu_Cod = $usu_cod;",
                 $this->conexion
             );
             if (!empty($dep['Dep_Cod'])) {
                 return intval($dep['Dep_Cod']);
             }
         }
-        // Sin asignación de departamento: no inventar uno de la empresa
+        // Sin asignación de departamento workflow: no inventar uno de la empresa
         return 0;
     }
 
@@ -3559,14 +3561,14 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             "SELECT s.Sol_Cod, s.Sol_Num, s.Sol_Tit, s.Sol_Fec, s.Sol_Pri, s.Sol_Val_Est, s.Sol_Jus, s.Sol_Est,
                     s.Emp_Cod, e.Emp_Nom, e.Emp_Log, t.Trq_Des,
                     TRIM(CONCAT(IFNULL(p.Prs_Nom, ''), ' ', IFNULL(p.Prs_Ape, ''))) AS Solicitante_Nom,
-                    d.Dep_Des AS Dep_Nom,
+                    d.Wde_Des AS Dep_Nom,
                     f.Wfm_Nom
              FROM adq_solicitudes s
              LEFT JOIN empresas e ON e.Emp_Cod = s.Emp_Cod
              LEFT JOIN adq_tipos_requerimientos t ON t.Trq_Cod = s.Trq_Cod
              LEFT JOIN usuarios u ON u.Usu_Cod = s.Usu_Sol
              LEFT JOIN persona p ON p.Prs_Cod = u.Prs_Cod
-             LEFT JOIN departamen d ON d.Dep_Cod = s.Dep_Sol
+             LEFT JOIN wf_departamentos d ON d.Wde_Cod = s.Dep_Sol
              LEFT JOIN wf_instancias i ON i.Ins_Cod = $ins_cod
              LEFT JOIN wf_flujos_modelos f ON f.Wfm_Cod = i.Wfm_Cod
              WHERE s.Sol_Cod = $sol_cod
