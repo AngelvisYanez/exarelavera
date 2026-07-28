@@ -1173,7 +1173,9 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
                                 { label: ' ', name: 'conc_select', width: 20, align: 'center', title: false, sortable: false, formatter: 'checkboxExa',
                                     formatoptions: {
                                         defaultChecked: false,
-                                        dataEvents: { change: 'updateTotal($(this).data("rowId"));' },
+                                        dataEvents: {
+                                            change: 'var _id=$(this).data("rowId"); var _v=$(this).is(":checked")?"S":"N"; setConcSelectValue(_id,_v); updateTotal(_id);'
+                                        },
                                         conditional: o => !isConcHeaderRow(o) && o.Asi_Cod !== 'no_id'
                                     }
                                 },
@@ -1473,7 +1475,11 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
             }
 
             function getConcSelectableRows() {
-                return $("#conciliacionForm").getGridBatch().filter(r => !isConcHeaderRow(r) && r.Asi_Cod !== 'no_id');
+                // Usar data local completa (no getGridBatch: solo trae la página actual)
+                var data = $("#conciliacionForm").jqGrid('getGridParam', 'data') || [];
+                return data.filter(function(r) {
+                    return !isConcHeaderRow(r) && String(r.Asi_Cod) !== 'no_id';
+                });
             }
 
             function isConcHeaderRow(row) {
@@ -1535,11 +1541,25 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
             function setConcSelectValue(rowId, val) {
                 let gridConc = $("#conciliacionForm"),
                     checked = val === 'S',
-                    localRow = gridConc.jqGrid('getLocalRow', rowId);
+                    idStr = String(rowId),
+                    localRow = gridConc.jqGrid('getLocalRow', rowId),
+                    data = gridConc.jqGrid('getGridParam', 'data') || [],
+                    i, z;
                 if (localRow) localRow.conc_select = val;
-                gridConc.find('tr#' + rowId + ' input[type=checkbox][data-name="conc_select"]').prop('checked', checked);
-                gridConc.find('tr#' + rowId + ' td').toggleClass('cellGreen2', checked);
+                for (i = 0, z = data.length; i < z; i++) {
+                    if (String(data[i].Asi_Cod) === idStr) {
+                        data[i].conc_select = val;
+                        break;
+                    }
+                }
+                var $ck = $('#' + $.jgrid.jqID(idStr + '_conc_select'));
+                if (!$ck.length) {
+                    $ck = gridConc.find('tr#' + $.jgrid.jqID(idStr) + ' input[type=checkbox][data-name="conc_select"]');
+                }
+                $ck.prop('checked', checked);
+                gridConc.find('tr#' + $.jgrid.jqID(idStr) + ' td').toggleClass('cellGreen2', checked);
             }
+            window.setConcSelectValue = setConcSelectValue;
 
             function injectConcSelectHeader() {
                 let $th = $('#gview_conciliacionForm .ui-jqgrid-htable th[id$="_conc_select"]');
@@ -1549,24 +1569,63 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
                 );
             }
 
+            /**
+             * Marca/desmarca TODOS los registros del grid (todas las páginas),
+             * no solo los visibles en la página actual.
+             */
             function toggleConcSelectAll(checkbox) {
-                let rows = getConcSelectableRows(),
-                    checkedCount = rows.filter(r => r.conc_select === 'S').length,
-                    newState = checkedCount < rows.length,
-                    val = newState ? 'S' : 'N';
-                if (checkbox) checkbox.checked = newState;
-                for (let i = 0, z = rows.length; i < z; i++) {
-                    setConcSelectValue(rows[i].Asi_Cod, val);
+                let gridConc = $("#conciliacionForm"),
+                    data = gridConc.jqGrid('getGridParam', 'data') || [],
+                    rows = getConcSelectableRows(),
+                    checkedCount = 0,
+                    newState, val, i, z, row, idStr, $ck;
+
+                for (i = 0, z = rows.length; i < z; i++) {
+                    if (rows[i].conc_select === 'S') checkedCount++;
                 }
+                newState = checkedCount < rows.length;
+                val = newState ? 'S' : 'N';
+                if (checkbox) {
+                    checkbox.checked = newState;
+                    checkbox.indeterminate = false;
+                }
+
+                // 1) Actualizar data local completa
+                for (i = 0, z = data.length; i < z; i++) {
+                    row = data[i];
+                    if (isConcHeaderRow(row) || String(row.Asi_Cod) === 'no_id') continue;
+                    row.conc_select = val;
+                }
+
+                // 2) Actualizar checkboxes visibles en el DOM
+                gridConc.find('tbody tr.jqgrow input[type="checkbox"]').each(function() {
+                    var $el = $(this),
+                        name = $el.data('name') || $el.attr('data-name') || '',
+                        rid = $el.data('rowId');
+                    if (!rid && this.id && this.id.indexOf('_conc_select') > 0) {
+                        rid = this.id.replace(/_conc_select$/, '');
+                    }
+                    if (name && name !== 'conc_select') return;
+                    if (!rid || String(rid).indexOf('hdr_') === 0 || String(rid) === 'no_id') return;
+                    idStr = String(rid);
+                    $el.prop('checked', newState);
+                    gridConc.find('tr#' + $.jgrid.jqID(idStr) + ' td').toggleClass('cellGreen2', newState);
+                });
+
                 updateTotal();
+                syncConcSelectHeader();
             }
             window.toggleConcSelectAll = toggleConcSelectAll;
 
             function syncConcSelectHeader() {
                 let rows = getConcSelectableRows(),
                     total = rows.length,
-                    checked = rows.filter(r => r.conc_select === 'S').length,
-                    $all = $('#conc_select_all');
+                    checked = 0,
+                    $all = $('#conc_select_all'),
+                    i;
+                for (i = 0; i < rows.length; i++) {
+                    if (rows[i].conc_select === 'S') checked++;
+                }
                 if ($all.length) {
                     $all.prop('checked', total > 0 && checked === total);
                     $all.prop('indeterminate', checked > 0 && checked < total);
@@ -1791,7 +1850,28 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
                     rowIdStr = (rowId == null || rowId === '') ? null : String(rowId),
                     trMap = {},
                     rowsDom = gridConc[0].rows,
-                    i, z, r, rl, c, cl, tr, cells, row, addVal, sald, disp;
+                    i, z, r, rl, c, cl, tr, cells, row, addVal, sald, disp, $ck, localRow, selVal;
+
+                // checkboxExa no escribe conc_select en data local: sincronizar desde el DOM
+                if (rowIdStr !== null) {
+                    $ck = $('#' + $.jgrid.jqID(rowIdStr + '_conc_select'));
+                    if (!$ck.length) {
+                        $ck = gridConc.find('tr#' + $.jgrid.jqID(rowIdStr) + ' input[type=checkbox][data-name="conc_select"]');
+                    }
+                    if ($ck.length) {
+                        selVal = $ck.is(':checked') ? 'S' : 'N';
+                        localRow = gridConc.jqGrid('getLocalRow', rowIdStr);
+                        if (localRow) localRow.conc_select = selVal;
+                        // También actualizar en el array data (misma referencia normalmente)
+                        for (i = 0, z = data.length; i < z; i++) {
+                            if (String(data[i].Asi_Cod) === rowIdStr) {
+                                data[i].conc_select = selVal;
+                                break;
+                            }
+                        }
+                        gridConc.find('tr#' + $.jgrid.jqID(rowIdStr) + ' td').toggleClass('cellGreen2', selVal === 'S');
+                    }
+                }
 
                 for (r = 0, rl = rowsDom.length; r < rl; r++) {
                     tr = rowsDom[r];
@@ -1803,7 +1883,7 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
                 for (i = 0, z = data.length; i < z; i++) {
                     row = data[i];
                     if (isConcHeaderRow(row)) continue;
-                    addVal = row.conc_select === 'S' || row.Asi_Cod === 'no_id';
+                    addVal = row.conc_select === 'S' || String(row.Asi_Cod) === 'no_id';
                     sald = parseFloat(row.Asi_Sald) || 0;
                     if (rowIdStr !== null && String(row.Asi_Cod) === rowIdStr) {
                         valMove = {
@@ -1818,7 +1898,7 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
                         disp = null;
                     }
                     row.Cob_Disp = disp;
-                    tr = trMap[row.Asi_Cod];
+                    tr = trMap[String(row.Asi_Cod)] || trMap[row.Asi_Cod];
                     if (tr) {
                         cells = tr.cells;
                         for (c = 0, cl = cells.length; c < cl; c++) {
@@ -1833,12 +1913,17 @@ $bancos = $obBD_con_get->getArrayConsulta('banco', array('setWhere' => array('se
                 applyConcTotal(acum);
                 syncConcSelectHeader();
             }
+            window.updateTotal = updateTotal;
 
             function validarForm(newItem) {
                 var data = {
                     form: $('#formConcilia').getData(),
                     updateConcilia: true,
-                    asientos: $.map($("#conciliacionForm").getGridBatch(o => o.conc_select === 'S'), o => o.Asi_Cod)
+                    asientos: $.map(getConcSelectableRows().filter(function(o) {
+                        return o.conc_select === 'S';
+                    }), function(o) {
+                        return o.Asi_Cod;
+                    })
                 };
                 /* aqui puedo poner validaciones */
                 //console.log(data);
