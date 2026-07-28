@@ -1135,7 +1135,7 @@ function adqEtiquetaMiAccion($accion) {
             color: #3c8dbc !important;
         }
         .adq-bandj-page .exa-ui-tab-content.panels-area {
-            padding: 20px;
+            padding: 12px 14px;
             border: 1px solid #ddd;
             border-top: none;
             border-radius: 0 0 5px 5px;
@@ -1149,13 +1149,13 @@ function adqEtiquetaMiAccion($accion) {
         }
         .adq-bandj-page .exa-adq-table-wrap {
             border: 1px solid #64748b;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
             background: #ffffff;
             overflow: auto;
         }
         .adq-bandj-page .adq-table-panel .exa-adq-table-wrap {
-            border-radius: 10px 10px 0 0;
+            border-radius: 8px 8px 0 0;
             box-shadow: none;
         }
         .adq-bandj-page .adq-table-pager {
@@ -1163,16 +1163,16 @@ function adqEtiquetaMiAccion($accion) {
             flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
-            gap: 10px;
-            padding: 10px 12px;
+            gap: 8px;
+            padding: 6px 10px;
             margin-top: -1px;
             background: #f8fafc;
             border: 1px solid #64748b;
             border-top: 1px solid #cbd5e1;
-            border-radius: 0 0 10px 10px;
+            border-radius: 0 0 8px 8px;
         }
         .adq-bandj-page .adq-table-pager-info {
-            font-size: 12px;
+            font-size: 11px;
             color: #475569;
             font-weight: 600;
         }
@@ -1180,20 +1180,20 @@ function adqEtiquetaMiAccion($accion) {
             display: inline-flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
         .adq-bandj-page .adq-table-pager-pages {
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
         }
         .adq-bandj-page .adq-table-pager .btn {
-            min-width: 34px;
-            height: 32px;
-            padding: 4px 10px;
-            font-size: 12px;
+            min-width: 28px;
+            height: 26px;
+            padding: 2px 7px;
+            font-size: 11px;
             font-weight: 700;
-            border-radius: 6px;
+            border-radius: 5px;
             border: 1px solid #64748b;
             background: #ffffff;
             color: #334155;
@@ -1216,17 +1216,17 @@ function adqEtiquetaMiAccion($accion) {
         .adq-bandj-page .adq-table-pager-size {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            font-size: 12px;
+            gap: 5px;
+            font-size: 11px;
             color: #64748b;
             font-weight: 600;
         }
         .adq-bandj-page .adq-table-pager-size select {
-            height: 32px;
-            font-size: 12px;
-            border-radius: 6px;
+            height: 26px;
+            font-size: 11px;
+            border-radius: 5px;
             border: 1px solid #64748b;
-            padding: 2px 8px;
+            padding: 1px 6px;
             background: #ffffff;
             color: #1e293b;
         }
@@ -1234,12 +1234,13 @@ function adqEtiquetaMiAccion($accion) {
             display: none !important;
         }
         .adq-bandj-page .exa-adq-table {
-            font-size: 13px;
+            font-size: 12px;
             width: 100%;
             margin: 0;
             border-collapse: separate;
             border-spacing: 0;
             background: #ffffff;
+            line-height: 1.25;
         }
         .adq-bandj-page .exa-adq-table > thead > tr > th {
             position: sticky;
@@ -1248,20 +1249,20 @@ function adqEtiquetaMiAccion($accion) {
             background: linear-gradient(180deg, #5f7ea3 0%, #4b678a 100%) !important;
             background-color: #4b678a !important;
             color: #ffffff !important;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            padding: 12px 12px !important;
+            letter-spacing: 0.03em;
+            padding: 6px 8px !important;
             border: none !important;
-            border-bottom: 2px solid #3a516e !important;
+            border-bottom: 1px solid #3a516e !important;
             text-align: center;
             white-space: nowrap;
             vertical-align: middle;
         }
         .adq-bandj-page .exa-adq-table > tbody > tr > td {
-            font-size: 13px;
-            padding: 11px 12px !important;
+            font-size: 12px;
+            padding: 5px 8px !important;
             border-color: #cbd5e1 !important;
             border-left: none !important;
             border-right: none !important;
@@ -1281,21 +1282,21 @@ function adqEtiquetaMiAccion($accion) {
         }
         .adq-bandj-page .exa-adq-table tbody tr.text-center td.text-muted,
         .adq-bandj-page .exa-adq-table tbody td.text-muted {
-            font-size: 13px !important;
+            font-size: 12px !important;
             font-style: italic;
             color: #64748b !important;
-            padding: 28px 16px !important;
+            padding: 14px 12px !important;
             background: #f8fafc !important;
         }
         .adq-bandj-page .exa-adq-table .badge {
             display: inline-flex;
             align-items: center;
-            gap: 4px;
-            font-size: 11px;
+            gap: 3px;
+            font-size: 10px;
             font-weight: 700;
-            padding: 4px 9px;
+            padding: 2px 6px;
             border-radius: 999px;
-            letter-spacing: 0.02em;
+            letter-spacing: 0.01em;
             border: 1px solid transparent;
             line-height: 1.2;
         }
@@ -1356,8 +1357,8 @@ function adqEtiquetaMiAccion($accion) {
             color: #0f172a;
         }
         .adq-bandj-page .btn-sm {
-            font-size: 13px;
-            padding: 6px 12px;
+            font-size: 11px;
+            padding: 3px 8px;
         }
         .adq-bandj-page .exa-adq-table td.adq-col-acciones {
             white-space: nowrap;
@@ -1368,21 +1369,21 @@ function adqEtiquetaMiAccion($accion) {
             flex-wrap: nowrap;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 4px;
         }
         .adq-bandj-page .adq-btn-icon-only {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 7px 9px;
-            min-width: 36px;
-            min-height: 36px;
+            padding: 3px 5px;
+            min-width: 28px;
+            min-height: 28px;
             line-height: 1;
-            border-radius: 8px;
-            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+            border-radius: 6px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
         }
         .adq-bandj-page .adq-btn-icon-only i {
-            font-size: 16px;
+            font-size: 13px;
             line-height: 1;
         }
         .adq-bandj-page .adq-btn-icon-only.btn-primary {

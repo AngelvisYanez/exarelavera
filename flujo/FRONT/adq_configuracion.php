@@ -51,7 +51,7 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
     if (isset($ajax_save_tipo_req)) {
         $trq_cod = !empty($_POST['Trq_Cod']) ? intval($_POST['Trq_Cod']) : null;
         $wfm_cod = intval($_POST['Wfm_Cod']);
-        $trq_des = mysqli_real_escape_string($obBD_conexion->conexion, $_POST['Trq_Des']);
+        $trq_des = mysqli_real_escape_string($obBD_conexion->conexion, strtoupper(trim($_POST['Trq_Des'])));
         $trq_req_fac = !empty($_POST['Trq_Req_Fac']) ? 1 : 0;
         $trq_per_cie = !empty($_POST['Trq_Per_Cie']) ? 1 : 0;
         $trq_req_cot = !empty($_POST['Trq_Req_Cot']) ? 1 : 0;
@@ -266,7 +266,7 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
                             
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">Nombre / Descripción *</label>
-                                <input type="text" class="form-control" id="Trq_Des" name="Trq_Des" required placeholder="Ej. Compra de Tecnología">
+                                <input type="text" class="form-control" id="Trq_Des" name="Trq_Des" required placeholder="Ej. COMPRA DE TECNOLOGÍA" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();" autocomplete="off">
                             </div>
 
                             <div class="mb-3">
@@ -354,7 +354,7 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
                     if (res.success) {
                         const d = res.data;
                         $('#Trq_Cod').val(d.Trq_Cod);
-                        $('#Trq_Des').val(d.Trq_Des);
+                        $('#Trq_Des').val(String(d.Trq_Des || '').toUpperCase());
                         $('#Wfm_Cod').val(d.Wfm_Cod);
 
                         $('#Trq_Req_Fac').prop('checked', parseInt(d.Trq_Req_Fac) === 1);
@@ -387,6 +387,8 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
 
             function guardarTipo(e) {
                 e.preventDefault();
+                const $des = $('#Trq_Des');
+                $des.val($.trim($des.val() || '').toUpperCase());
                 const data = $('#frmTipoReq').serialize();
                 $.post('adq_configuracion.php?ajax_save_tipo_req=1', data, function(res) {
                     if (res.success) {
@@ -964,7 +966,7 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
         </div>
     </div>
 
-    <script src="../VALIDACIONES/wf_builder.js?v=51"></script>
+    <script src="../VALIDACIONES/wf_builder.js?v=52"></script>
     <script>
         function limpiarBackdropModal() {
             $('body').removeClass('modal-open');

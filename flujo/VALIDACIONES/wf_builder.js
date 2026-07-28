@@ -1774,7 +1774,7 @@ function abrirModalDuplicarFlujo() {
     } else {
         $('#modalFlowDesc').val('');
     }
-    $('#modalFlowName').val('Copia de ' + nombreBase);
+    $('#modalFlowName').val(('Copia de ' + nombreBase).toUpperCase());
     $('#modalWorkflowDataLabel').text('Duplicar Esquema');
     $('#modalWorkflowData').modal('show');
 }
@@ -1822,7 +1822,8 @@ function duplicarFlujoServidor(selectorId, nombre, descripcion) {
 }
 
 function aceptarDatosFlujo() {
-    const nombre = $('#modalFlowName').val().trim();
+    const nombre = $.trim($('#modalFlowName').val() || '').toUpperCase();
+    $('#modalFlowName').val(nombre);
     if (!nombre) {
         wfNotify('danger', 'Por favor ingrese el nombre del flujo.');
         return;

@@ -969,7 +969,7 @@ if (isset($ajax_get_builder)) {
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nombre del Flujo *</label>
-                        <input type="text" id="modalFlowName" class="form-control" placeholder="Ej. Aprobación de Compras de Tecnología" required>
+                        <input type="text" id="modalFlowName" class="form-control" placeholder="Ej. APROBACIÓN DE COMPRAS DE TECNOLOGÍA" required style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();" autocomplete="off">
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Descripción / Notas</label>
@@ -1703,7 +1703,7 @@ if (function_exists('utf8_encode_deep')) {
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nombre del Flujo *</label>
-                        <input type="text" id="modalFlowName" class="form-control" placeholder="Ej. Aprobación de Compras de Tecnología" required>
+                        <input type="text" id="modalFlowName" class="form-control" placeholder="Ej. APROBACIÓN DE COMPRAS DE TECNOLOGÍA" required style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();" autocomplete="off">
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Descripción / Notas</label>
@@ -1776,6 +1776,6 @@ if (function_exists('utf8_encode_deep')) {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../VALIDACIONES/wf_builder.js?v=51"></script>
+    <script src="../VALIDACIONES/wf_builder.js?v=52"></script>
 </body>
 </html>
