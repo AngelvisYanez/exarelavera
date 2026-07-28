@@ -1930,23 +1930,41 @@ class wf_manager_log {
         // Comentario de historial: el detalle de la rama queda SOLO en el nodo DECISION
         // (no repetir en el nodo destino al salir de la decisión).
         // Si aun hubiera un avance automatico con CREAR desde INICIO, no escribir historial
-        // en el destino (evita un segundo "Inicio"). Al APROBAR desde INICIO si se registra.
+        // en el destino (evita un segundo "Inicio").
+        // APROBAR/COMPLETAR: el movimiento (comentario + PDF de justificacion) pertenece al
+        // proceso que se esta resolviendo (origen), NO al destino.
         $comentarioHist = $Comentario;
         $nodoActualTip = !empty($nodoSaliente['Nod_Tip']) ? $nodoSaliente['Nod_Tip'] : '';
         $omitirHistorialDestino = false;
+        $registrarEnOrigen = in_array($Accion, array('APROBAR', 'COMPLETAR'), true);
+
         if ($nodoActualTip === 'INICIO' && $Accion === 'CREAR') {
             $omitirHistorialDestino = true;
         } elseif ($Accion === 'CONDICIONAL' && $nodoActualTip === 'DECISION') {
             $comentarioHist = '';
             $omitirHistorialDestino = true;
+        } elseif ($registrarEnOrigen) {
+            $omitirHistorialDestino = true;
         }
 
-        // 6. Actualizar instancia de flujo al nuevo nodo actual
+        // 6a. APROBAR/COMPLETAR: registrar en el proceso actual (origen) con su PDF/comentario.
+        if ($registrarEnOrigen) {
+            $adjunto_esc = ($Adjuntos !== null && $Adjuntos !== '')
+                ? "'" . mysqli_real_escape_string($this->obBD_conexion->conexion, $Adjuntos) . "'"
+                : 'NULL';
+            $com_esc_ori = mysqli_real_escape_string($this->obBD_conexion->conexion, $Comentario);
+            $this->ejecutarSql(
+                "INSERT INTO wf_instancias_nodos (Ins_Cod, Nod_Cod, Usu_Cod, Dep_Cod, Isn_Acc, Isn_Com, Isn_Adj, Isn_Fec, Isn_Ip, Isn_Ses)
+                 VALUES ($Ins_Cod, " . intval($Nod_Actual_Cod) . ", $usu_cod, $dep_cod, '$Accion', '$com_esc_ori', $adjunto_esc, '$fecha_actual', '$ip_usuario', '$session_id');"
+            );
+        }
+
+        // 6b. Actualizar instancia de flujo al nuevo nodo actual
         $this->ejecutarSql("UPDATE wf_instancias SET Nod_Act = $nodoDestino_Cod WHERE Ins_Cod = $Ins_Cod;");
 
-        // 7. Escribir en el historial del nodo destino
+        // 7. Escribir en el historial del nodo destino (llegada), sin adjuntos de la etapa anterior.
         if (!$omitirHistorialDestino) {
-            $adjunto_str = $Adjuntos !== null ? "'" . $Adjuntos . "'" : "NULL";
+            $adjunto_str = 'NULL';
             $com_esc_hist = mysqli_real_escape_string($this->obBD_conexion->conexion, $comentarioHist);
             $sqlInsertHistorialDest = "INSERT INTO wf_instancias_nodos (Ins_Cod, Nod_Cod, Usu_Cod, Dep_Cod, Isn_Acc, Isn_Com, Isn_Adj, Isn_Fec, Isn_Sla_Ven, Isn_Ip, Isn_Ses)
                                        VALUES ($Ins_Cod, $nodoDestino_Cod, $usu_cod, $dep_cod, '$Accion', '$com_esc_hist', $adjunto_str, '$fecha_actual', $sla_vencimiento, '$ip_usuario', '$session_id');";
@@ -2995,7 +3013,6 @@ class wf_manager_log {
         });
 
         $conteo_avance_nodo = array();
-        $ultimo_avance = null;
         $correcciones = array();
         $ocultar_isn = array();
 
@@ -3034,41 +3051,17 @@ class wf_manager_log {
             $prev_en_mismo = isset($conteo_avance_nodo[$nod]) ? intval($conteo_avance_nodo[$nod]) : 0;
             $conteo_avance_nodo[$nod] = $prev_en_mismo + 1;
 
-            $es_completar_mismo = ($prev_en_mismo > 0);
-
-            // Nota: la entrada "pendiente" del nodo FIN la agrega agregarNodoPendienteHistorial();
-            // aqui la firma registrada al entrar a FIN se atribuye a la etapa anterior completada.
-            if ($es_completar_mismo) {
-                $correcciones[$isn] = array(
-                    'Nod_Nom' => isset($h['Nod_Nom']) ? $h['Nod_Nom'] : '',
-                    'Nod_Tip' => isset($h['Nod_Tip']) ? $h['Nod_Tip'] : '',
-                    'Etapa_Nod_Cod' => $nod,
-                    'Actor_Nom' => $this->resolverNombreActorHistorial($h),
-                    'Actor_Modo' => 'Por',
-                    'Fin_Pendiente' => 0
-                );
-            } elseif ($ultimo_avance !== null) {
-                $etapa_cod = intval(isset($ultimo_avance['Nod_Cod']) ? $ultimo_avance['Nod_Cod'] : 0);
-                $correcciones[$isn] = array(
-                    'Nod_Nom' => isset($ultimo_avance['Nod_Nom']) ? $ultimo_avance['Nod_Nom'] : '',
-                    'Nod_Tip' => isset($ultimo_avance['Nod_Tip']) ? $ultimo_avance['Nod_Tip'] : '',
-                    'Etapa_Nod_Cod' => $etapa_cod > 0 ? $etapa_cod : $nod,
-                    'Actor_Nom' => $this->resolverNombreActorHistorial($h),
-                    'Actor_Modo' => 'Por',
-                    'Fin_Pendiente' => 0
-                );
-            } else {
-                $correcciones[$isn] = array(
-                    'Nod_Nom' => isset($h['Nod_Nom']) ? $h['Nod_Nom'] : '',
-                    'Nod_Tip' => isset($h['Nod_Tip']) ? $h['Nod_Tip'] : '',
-                    'Etapa_Nod_Cod' => $nod,
-                    'Actor_Nom' => $this->resolverNombreActorHistorial($h),
-                    'Actor_Modo' => 'Por',
-                    'Fin_Pendiente' => 0
-                );
-            }
-
-            $ultimo_avance = $h;
+            // APROBAR/COMPLETAR (y su PDF de justificacion) deben conservar el nombre del
+            // proceso donde se registro el movimiento. Ya no se remapea al proceso anterior
+            // (eso hacia que la ganadora/justificacion apareciera en "cargar cotizaciones").
+            $correcciones[$isn] = array(
+                'Nod_Nom' => isset($h['Nod_Nom']) ? $h['Nod_Nom'] : '',
+                'Nod_Tip' => isset($h['Nod_Tip']) ? $h['Nod_Tip'] : '',
+                'Etapa_Nod_Cod' => $nod,
+                'Actor_Nom' => $this->resolverNombreActorHistorial($h),
+                'Actor_Modo' => 'Por',
+                'Fin_Pendiente' => 0
+            );
         }
 
         foreach ($historial as $idx => $h) {

@@ -784,6 +784,7 @@ if (isset($ajax_get_solicitud_detail)) {
             SELECT h.*,
                    COALESCE(n.Nod_Nom, CONCAT('Proceso #', h.Nod_Cod)) AS Nod_Nom,
                    COALESCE(n.Nod_Tip, 'PASO') AS Nod_Tip,
+                   IFNULL(n.Nod_Cot_Edit, 0) AS Nod_Cot_Edit,
                    n.Dep_Cod AS Nodo_Dep_Cod,
                    n.Per_Cod AS Nodo_Per_Cod,
                    n.Nod_Usu_Asig AS Nodo_Usu_Asig,

@@ -319,8 +319,9 @@ class adq_adquisiciones_log extends MysqlDatosContab {
 
     /**
      * Archivos PDF/imagen de una cotizacion/proforma.
+     * $nod_nom opcional: se antepone al label para identificar el proceso.
      */
-    private function archivosDesdeCotizacionRow($cot) {
+    private function archivosDesdeCotizacionRow($cot, $nod_nom = '') {
         $archivos = array();
         $proveedor = '';
         if (!empty($cot['Prv_Com'])) {
@@ -331,6 +332,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         if ($proveedor === '') {
             $proveedor = 'Proveedor';
         }
+        $prefijo = trim((string)$nod_nom);
         $adjuntos = $this->parseCotAdjuntos(isset($cot['Cot_Adj']) ? $cot['Cot_Adj'] : '');
         foreach ($adjuntos as $i => $path) {
             $label = 'Proforma';
@@ -340,6 +342,9 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $label .= ' - ' . $proveedor;
             if (!empty($cot['Cot_Sel']) && intval($cot['Cot_Sel']) === 1) {
                 $label .= ' (ganadora)';
+            }
+            if ($prefijo !== '') {
+                $label = $prefijo . ': ' . $label;
             }
             $archivos[] = array('path' => $path, 'label' => $label);
         }
@@ -354,6 +359,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         if ($sol_cod <= 0) {
             return array();
         }
+        $this->ensureCotizacionesEtapaColumns();
         $rows = $this->getArrayConsultaSql(
             "SELECT c.*, p.Prs_Nom, p.Prs_Ape, pr.Prv_Com
              FROM adq_solicitudes_cotizaciones c
@@ -368,9 +374,58 @@ class adq_adquisiciones_log extends MysqlDatosContab {
     }
 
     /**
-     * Asigna todas las proformas al movimiento del nodo INICIO.
-     * Las proformas pertenecen a la edición inicial de la solicitud, aunque
-     * hayan sido agregadas o modificadas posteriormente.
+     * Columnas para vincular cotizaciones al proceso/movimiento donde se registraron.
+     */
+    private function ensureCotizacionesEtapaColumns() {
+        static $ready = false;
+        if ($ready) {
+            return;
+        }
+        $cols = array(
+            'Nod_Cod' => "ALTER TABLE adq_solicitudes_cotizaciones ADD COLUMN Nod_Cod BIGINT NULL COMMENT 'Proceso donde se registro' AFTER Sol_Cod;",
+            'Sco_Isn_Cod' => "ALTER TABLE adq_solicitudes_cotizaciones ADD COLUMN Sco_Isn_Cod BIGINT NULL COMMENT 'Movimiento historial de carga' AFTER Nod_Cod;"
+        );
+        foreach ($cols as $col => $sqlAlt) {
+            $row = $this->getRowConsultaSql(
+                "SELECT COUNT(*) AS cnt
+                 FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE()
+                   AND TABLE_NAME = 'adq_solicitudes_cotizaciones'
+                   AND COLUMN_NAME = '$col';",
+                $this->conexion
+            );
+            if (empty($row['cnt'])) {
+                $this->grabarv_registros($sqlAlt, $this->conexion);
+            }
+        }
+        $ready = true;
+    }
+
+    /**
+     * Marca cotizaciones de la solicitud con el proceso y movimiento de carga.
+     * Si $solo_sin_nodo, no mueve las que ya tienen Nod_Cod (datos historicos).
+     */
+    private function marcarCotizacionesEtapa($sol_cod, $nod_cod, $isn_cod = 0, $solo_sin_nodo = false) {
+        $this->ensureCotizacionesEtapaColumns();
+        $sol_cod = intval($sol_cod);
+        $nod_cod = intval($nod_cod);
+        $isn_cod = intval($isn_cod);
+        if ($sol_cod <= 0 || $nod_cod <= 0) {
+            return;
+        }
+        $set_isn = $isn_cod > 0 ? (", Sco_Isn_Cod = $isn_cod") : '';
+        $where_extra = $solo_sin_nodo ? ' AND (Nod_Cod IS NULL OR Nod_Cod = 0)' : '';
+        $this->grabarv_registros(
+            "UPDATE adq_solicitudes_cotizaciones
+             SET Nod_Cod = $nod_cod$set_isn
+             WHERE Sol_Cod = $sol_cod$where_extra;",
+            $this->conexion
+        );
+    }
+
+    /**
+     * Asigna proformas al movimiento del historial del proceso donde se cargaron.
+     * Prioridad: Sco_Isn_Cod → Nod_Cod (COTIZAR/ACTUALIZAR) → ultimo COTIZAR → Cot_Edit → INICIO/CREAR.
      */
     private function resolverArchivosCotizacionPorHistorial($historial, $cotizaciones) {
         $mapa = array();
@@ -378,40 +433,356 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             return $mapa;
         }
 
-        $isn_inicio = 0;
+        $por_isn = array();
+        $por_nod = array();
+        $isn_cotizar_ultimo = 0;
+        $isn_cot_edit = 0;
+        $noms_por_isn = array();
+        $noms_por_nod = array();
+
         foreach ($historial as $h) {
-            if (empty($h['Isn_Cod'])) {
+            $isn = intval(isset($h['Isn_Cod']) ? $h['Isn_Cod'] : 0);
+            $nod = intval(isset($h['Nod_Cod']) ? $h['Nod_Cod'] : 0);
+            if ($isn <= 0) {
                 continue;
             }
-            if (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'INICIO') {
-                $isn_inicio = intval($h['Isn_Cod']);
-                break;
+            $tip = isset($h['Nod_Tip']) ? $h['Nod_Tip'] : '';
+            // Incluir INICIO en el mapa (para PDF del formulario), pero no usarlo como fallback de otras etapas.
+            $por_isn[$isn] = $h;
+            $noms_por_isn[$isn] = !empty($h['Nod_Nom']) ? trim($h['Nod_Nom']) : '';
+            if ($nod > 0) {
+                if (!isset($por_nod[$nod])) {
+                    $por_nod[$nod] = array();
+                }
+                $por_nod[$nod][] = $h;
+                if ($noms_por_isn[$isn] !== '') {
+                    $noms_por_nod[$nod] = $noms_por_isn[$isn];
+                }
+            }
+            $acc = isset($h['Isn_Acc']) ? $h['Isn_Acc'] : '';
+            if ($acc === 'COTIZAR' && $tip !== 'INICIO') {
+                $isn_cotizar_ultimo = $isn;
+            }
+            if (!empty($h['Nod_Cot_Edit']) && intval($h['Nod_Cot_Edit']) === 1 && $tip !== 'INICIO') {
+                $isn_cot_edit = $isn;
             }
         }
 
-        // Compatibilidad con historiales que no incluyen Nod_Tip.
-        if ($isn_inicio <= 0) {
+        // Si el historial no trae Nod_Cot_Edit, resolver nodos Cot_Edit del esquema.
+        if ($isn_cot_edit <= 0) {
+            $nods_hist = array();
             foreach ($historial as $h) {
-                if (!empty($h['Isn_Cod']) && isset($h['Isn_Acc']) && $h['Isn_Acc'] === 'CREAR') {
-                    $isn_inicio = intval($h['Isn_Cod']);
-                    break;
+                $n = intval(isset($h['Nod_Cod']) ? $h['Nod_Cod'] : 0);
+                if ($n > 0) {
+                    $nods_hist[$n] = true;
+                }
+            }
+            if (!empty($nods_hist)) {
+                $ids = implode(',', array_map('intval', array_keys($nods_hist)));
+                $rows = $this->getArrayConsultaSql(
+                    "SELECT Nod_Cod FROM wf_nodos WHERE Nod_Cod IN ($ids) AND IFNULL(Nod_Cot_Edit, 0) = 1;",
+                    $this->conexion
+                );
+                if (!empty($rows)) {
+                    foreach ($rows as $r) {
+                        $nc = intval($r['Nod_Cod']);
+                        if (!empty($por_nod[$nc])) {
+                            $candidato = 0;
+                            $candidato_cotizar = 0;
+                            foreach ($por_nod[$nc] as $hh) {
+                                $isn_h = intval($hh['Isn_Cod']);
+                                $candidato = $isn_h;
+                                if (isset($hh['Isn_Acc']) && $hh['Isn_Acc'] === 'COTIZAR') {
+                                    $candidato_cotizar = $isn_h;
+                                }
+                            }
+                            if ($candidato_cotizar > 0) {
+                                $isn_cot_edit = $candidato_cotizar;
+                            } elseif ($candidato > 0) {
+                                $isn_cot_edit = $candidato;
+                            }
+                        }
+                    }
                 }
             }
         }
-        if ($isn_inicio <= 0) {
+
+        $resolverIsnParaNodo = function ($nod_cod) use ($por_nod) {
+            $nod_cod = intval($nod_cod);
+            if ($nod_cod <= 0 || empty($por_nod[$nod_cod])) {
+                return 0;
+            }
+            $fallback = 0;
+            $preferido = 0;
+            $cotizar = 0;
+            foreach ($por_nod[$nod_cod] as $hh) {
+                $isn_h = intval($hh['Isn_Cod']);
+                $fallback = $isn_h;
+                $acc = isset($hh['Isn_Acc']) ? $hh['Isn_Acc'] : '';
+                if ($acc === 'COTIZAR') {
+                    $cotizar = $isn_h;
+                } elseif (in_array($acc, array('ACTUALIZAR', 'CREAR'), true)) {
+                    $preferido = $isn_h;
+                }
+            }
+            if ($cotizar > 0) {
+                return $cotizar;
+            }
+            return $preferido > 0 ? $preferido : $fallback;
+        };
+
+        foreach ($cotizaciones as $cot) {
+            $isn_target = 0;
+            $nod_nom = '';
+
+            $sco_isn = intval(isset($cot['Sco_Isn_Cod']) ? $cot['Sco_Isn_Cod'] : 0);
+            $cot_nod = intval(isset($cot['Nod_Cod']) ? $cot['Nod_Cod'] : 0);
+
+            if ($sco_isn > 0 && isset($por_isn[$sco_isn])) {
+                $isn_target = $sco_isn;
+                $nod_nom = $noms_por_isn[$sco_isn];
+            } elseif ($cot_nod > 0) {
+                $isn_target = $resolverIsnParaNodo($cot_nod);
+                if ($isn_target > 0) {
+                    $nod_nom = !empty($noms_por_nod[$cot_nod]) ? $noms_por_nod[$cot_nod] : (isset($noms_por_isn[$isn_target]) ? $noms_por_isn[$isn_target] : '');
+                }
+            }
+
+            if ($isn_target <= 0 && $isn_cotizar_ultimo > 0) {
+                $isn_target = $isn_cotizar_ultimo;
+                $nod_nom = isset($noms_por_isn[$isn_target]) ? $noms_por_isn[$isn_target] : '';
+            }
+            if ($isn_target <= 0 && $isn_cot_edit > 0) {
+                $isn_target = $isn_cot_edit;
+                $nod_nom = isset($noms_por_isn[$isn_target]) ? $noms_por_isn[$isn_target] : '';
+            }
+            // Sin proceso de cotizacion conocido: no colgar en INICIO ni inventar ubicacion.
+            if ($isn_target <= 0) {
+                continue;
+            }
+
+            if (!isset($mapa[$isn_target])) {
+                $mapa[$isn_target] = array();
+            }
+            foreach ($this->archivosDesdeCotizacionRow($cot, $nod_nom) as $arch) {
+                $mapa[$isn_target][] = $arch;
+            }
+        }
+
+        return $mapa;
+    }
+
+    /**
+     * Asigna PDF de soporte del formulario (Paso 2B) al movimiento donde se registraron.
+     * Preferencia: Sad_Isn_Cod → Nod_Cod (CREAR/ACTUALIZAR) → CREAR/INICIO → ACTUALIZAR.
+     */
+    private function resolverArchivosAdjuntoFormularioPorHistorial($historial, $adjuntos) {
+        $mapa = array();
+        if (empty($historial) || empty($adjuntos)) {
             return $mapa;
         }
 
-        $archivos = array();
-        foreach ($cotizaciones as $cot) {
-            foreach ($this->archivosDesdeCotizacionRow($cot) as $arch) {
-                $archivos[] = $arch;
+        $por_isn = array();
+        $por_nod = array();
+        $noms_por_isn = array();
+        $noms_por_nod = array();
+        $isn_crear = 0;
+        $isn_actualizar = 0;
+
+        foreach ($historial as $h) {
+            $isn = intval(isset($h['Isn_Cod']) ? $h['Isn_Cod'] : 0);
+            $nod = intval(isset($h['Nod_Cod']) ? $h['Nod_Cod'] : 0);
+            if ($isn <= 0) {
+                continue;
+            }
+            $por_isn[$isn] = $h;
+            $noms_por_isn[$isn] = !empty($h['Nod_Nom']) ? trim($h['Nod_Nom']) : '';
+            if ($nod > 0) {
+                if (!isset($por_nod[$nod])) {
+                    $por_nod[$nod] = array();
+                }
+                $por_nod[$nod][] = $h;
+                if ($noms_por_isn[$isn] !== '') {
+                    $noms_por_nod[$nod] = $noms_por_isn[$isn];
+                }
+            }
+            $acc = isset($h['Isn_Acc']) ? $h['Isn_Acc'] : '';
+            $tip = isset($h['Nod_Tip']) ? $h['Nod_Tip'] : '';
+            if (($acc === 'CREAR' || $tip === 'INICIO') && $isn_crear <= 0) {
+                $isn_crear = $isn;
+            }
+            if ($acc === 'ACTUALIZAR') {
+                $isn_actualizar = $isn;
             }
         }
-        if (!empty($archivos)) {
-            $mapa[$isn_inicio] = $archivos;
+
+        $resolverIsnParaNodo = function ($nod_cod) use ($por_nod) {
+            $nod_cod = intval($nod_cod);
+            if ($nod_cod <= 0 || empty($por_nod[$nod_cod])) {
+                return 0;
+            }
+            $fallback = 0;
+            $preferido = 0;
+            foreach ($por_nod[$nod_cod] as $hh) {
+                $isn_h = intval($hh['Isn_Cod']);
+                $fallback = $isn_h;
+                $acc = isset($hh['Isn_Acc']) ? $hh['Isn_Acc'] : '';
+                if (in_array($acc, array('CREAR', 'ACTUALIZAR', 'APROBAR'), true)) {
+                    $preferido = $isn_h;
+                }
+            }
+            return $preferido > 0 ? $preferido : $fallback;
+        };
+
+        foreach ($adjuntos as $adj) {
+            $path = isset($adj['Sad_Adj']) ? trim((string)$adj['Sad_Adj']) : '';
+            if ($path === '') {
+                continue;
+            }
+            $isn_target = 0;
+            $nod_nom = '';
+            $sad_isn = intval(isset($adj['Sad_Isn_Cod']) ? $adj['Sad_Isn_Cod'] : 0);
+            $adj_nod = intval(isset($adj['Nod_Cod']) ? $adj['Nod_Cod'] : 0);
+
+            if ($sad_isn > 0 && isset($por_isn[$sad_isn])) {
+                $isn_target = $sad_isn;
+                $nod_nom = $noms_por_isn[$sad_isn];
+            } elseif ($adj_nod > 0) {
+                $isn_target = $resolverIsnParaNodo($adj_nod);
+                if ($isn_target > 0) {
+                    $nod_nom = !empty($noms_por_nod[$adj_nod]) ? $noms_por_nod[$adj_nod] : (isset($noms_por_isn[$isn_target]) ? $noms_por_isn[$isn_target] : '');
+                }
+            }
+            if ($isn_target <= 0 && $isn_crear > 0) {
+                $isn_target = $isn_crear;
+                $nod_nom = isset($noms_por_isn[$isn_target]) ? $noms_por_isn[$isn_target] : '';
+            }
+            if ($isn_target <= 0 && $isn_actualizar > 0) {
+                $isn_target = $isn_actualizar;
+                $nod_nom = isset($noms_por_isn[$isn_target]) ? $noms_por_isn[$isn_target] : '';
+            }
+            if ($isn_target <= 0) {
+                continue;
+            }
+
+            $des = !empty($adj['Sad_Des']) ? trim($adj['Sad_Des']) : 'Soporte PDF';
+            $lbl = $des;
+            if ($nod_nom !== '') {
+                $lbl = $nod_nom . ': ' . $des;
+            }
+            if (!isset($mapa[$isn_target])) {
+                $mapa[$isn_target] = array();
+            }
+            $mapa[$isn_target][] = array('path' => $path, 'label' => $lbl);
         }
+
         return $mapa;
+    }
+
+    /**
+     * Persiste Nod_Cod/Sco_Isn_Cod en cotizaciones legacy segun el movimiento
+     * donde se mostraran en la linea de tiempo (solo si aun no tienen nodo).
+     */
+    private function backfillCotizacionesDesdeHistorial($historial, $cotizaciones, $mapa_por_isn) {
+        if (empty($cotizaciones) || empty($mapa_por_isn) || empty($historial)) {
+            return;
+        }
+        $nod_por_isn = array();
+        foreach ($historial as $h) {
+            $isn = intval(isset($h['Isn_Cod']) ? $h['Isn_Cod'] : 0);
+            $nod = intval(isset($h['Nod_Cod']) ? $h['Nod_Cod'] : 0);
+            if ($isn > 0 && $nod > 0) {
+                $nod_por_isn[$isn] = $nod;
+            }
+        }
+        $this->ensureCotizacionesEtapaColumns();
+        foreach ($cotizaciones as $cot) {
+            $sco = intval(isset($cot['Sco_Cod']) ? $cot['Sco_Cod'] : 0);
+            if ($sco <= 0) {
+                continue;
+            }
+            $ya_nod = intval(isset($cot['Nod_Cod']) ? $cot['Nod_Cod'] : 0);
+            if ($ya_nod > 0) {
+                continue;
+            }
+            $path_set = array();
+            foreach ($this->parseCotAdjuntos(isset($cot['Cot_Adj']) ? $cot['Cot_Adj'] : '') as $p) {
+                $path_set[$p] = true;
+            }
+            if (empty($path_set)) {
+                continue;
+            }
+            $isn_found = 0;
+            foreach ($mapa_por_isn as $isn => $archivos) {
+                foreach ($archivos as $arch) {
+                    if (!empty($arch['path']) && isset($path_set[$arch['path']])) {
+                        $isn_found = intval($isn);
+                        break 2;
+                    }
+                }
+            }
+            if ($isn_found <= 0 || empty($nod_por_isn[$isn_found])) {
+                continue;
+            }
+            $nod = intval($nod_por_isn[$isn_found]);
+            $this->grabarv_registros(
+                "UPDATE adq_solicitudes_cotizaciones
+                 SET Nod_Cod = $nod, Sco_Isn_Cod = $isn_found
+                 WHERE Sco_Cod = $sco AND (Nod_Cod IS NULL OR Nod_Cod = 0);",
+                $this->conexion
+            );
+        }
+    }
+
+    /**
+     * Persiste Nod_Cod/Sad_Isn_Cod en adjuntos del formulario legacy.
+     */
+    private function backfillAdjuntosDesdeHistorial($historial, $adjuntos, $mapa_por_isn) {
+        if (empty($adjuntos) || empty($mapa_por_isn) || empty($historial)) {
+            return;
+        }
+        $nod_por_isn = array();
+        foreach ($historial as $h) {
+            $isn = intval(isset($h['Isn_Cod']) ? $h['Isn_Cod'] : 0);
+            $nod = intval(isset($h['Nod_Cod']) ? $h['Nod_Cod'] : 0);
+            if ($isn > 0 && $nod > 0) {
+                $nod_por_isn[$isn] = $nod;
+            }
+        }
+        $this->ensureSolicitudAdjuntosTable();
+        foreach ($adjuntos as $adj) {
+            $sad = intval(isset($adj['Sad_Cod']) ? $adj['Sad_Cod'] : 0);
+            if ($sad <= 0) {
+                continue;
+            }
+            $ya_nod = intval(isset($adj['Nod_Cod']) ? $adj['Nod_Cod'] : 0);
+            if ($ya_nod > 0) {
+                continue;
+            }
+            $path = isset($adj['Sad_Adj']) ? trim((string)$adj['Sad_Adj']) : '';
+            if ($path === '') {
+                continue;
+            }
+            $isn_found = 0;
+            foreach ($mapa_por_isn as $isn => $archivos) {
+                foreach ($archivos as $arch) {
+                    if (!empty($arch['path']) && $arch['path'] === $path) {
+                        $isn_found = intval($isn);
+                        break 2;
+                    }
+                }
+            }
+            if ($isn_found <= 0 || empty($nod_por_isn[$isn_found])) {
+                continue;
+            }
+            $nod = intval($nod_por_isn[$isn_found]);
+            $this->grabarv_registros(
+                "UPDATE adq_solicitudes_adjuntos
+                 SET Nod_Cod = $nod, Sad_Isn_Cod = $isn_found
+                 WHERE Sad_Cod = $sad AND (Nod_Cod IS NULL OR Nod_Cod = 0);",
+                $this->conexion
+            );
+        }
     }
 
     /**
@@ -599,6 +970,10 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         $mapa_avance_por_isn = $this->resolverFacturasAvancePorHistorial($historial, $avances);
         $cotizaciones = $this->listarCotizacionesConProveedor($sol_cod);
         $cot_archivos_por_isn = $this->resolverArchivosCotizacionPorHistorial($historial, $cotizaciones);
+        $this->backfillCotizacionesDesdeHistorial($historial, $cotizaciones, $cot_archivos_por_isn);
+        $adjuntos_form = $this->listarAdjuntosSolicitud($sol_cod);
+        $adj_form_por_isn = $this->resolverArchivosAdjuntoFormularioPorHistorial($historial, $adjuntos_form);
+        $this->backfillAdjuntosDesdeHistorial($historial, $adjuntos_form, $adj_form_por_isn);
 
         foreach ($historial as $idx => $h) {
             $archivos = array();
@@ -606,14 +981,19 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $vistos = array();
 
             $adjuntos = $this->parseCotAdjuntos(isset($h['Isn_Adj']) ? $h['Isn_Adj'] : '');
+            $nod_nom_lbl = !empty($h['Nod_Nom']) ? trim($h['Nod_Nom']) : '';
             foreach ($adjuntos as $i => $path) {
                 if (isset($vistos[$path])) {
                     continue;
                 }
                 $vistos[$path] = true;
+                $lbl = count($adjuntos) > 1 ? ('Justificacion / sustento ' . ($i + 1)) : 'Justificacion / sustento';
+                if ($nod_nom_lbl !== '') {
+                    $lbl = $nod_nom_lbl . ': ' . $lbl;
+                }
                 $archivos[] = array(
                     'path' => $path,
-                    'label' => count($adjuntos) > 1 ? ('Sustento ' . ($i + 1)) : 'Sustento adjunto'
+                    'label' => $lbl
                 );
             }
 
@@ -627,6 +1007,16 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             if ($isn_cod > 0 && isset($cot_archivos_por_isn[$isn_cod])) {
                 $lista_cot = $cot_archivos_por_isn[$isn_cod];
                 foreach ($lista_cot as $arch) {
+                    if (isset($vistos[$arch['path']])) {
+                        continue;
+                    }
+                    $vistos[$arch['path']] = true;
+                    $archivos[] = $arch;
+                }
+            }
+
+            if ($isn_cod > 0 && isset($adj_form_por_isn[$isn_cod])) {
+                foreach ($adj_form_por_isn[$isn_cod] as $arch) {
                     if (isset($vistos[$arch['path']])) {
                         continue;
                     }
@@ -888,6 +1278,23 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         if (!$this->grabarv_registros($sql, $this->conexion)) {
             throw new Exception('No se pudo preparar la tabla de adjuntos de solicitud: ' . $this->getMsgError());
         }
+        $cols = array(
+            'Nod_Cod' => "ALTER TABLE adq_solicitudes_adjuntos ADD COLUMN Nod_Cod BIGINT NULL COMMENT 'Proceso donde se registro' AFTER Sol_Cod;",
+            'Sad_Isn_Cod' => "ALTER TABLE adq_solicitudes_adjuntos ADD COLUMN Sad_Isn_Cod BIGINT NULL COMMENT 'Movimiento historial de carga' AFTER Nod_Cod;"
+        );
+        foreach ($cols as $col => $sqlAlt) {
+            $row = $this->getRowConsultaSql(
+                "SELECT COUNT(*) AS cnt
+                 FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE()
+                   AND TABLE_NAME = 'adq_solicitudes_adjuntos'
+                   AND COLUMN_NAME = '$col';",
+                $this->conexion
+            );
+            if (empty($row['cnt'])) {
+                $this->grabarv_registros($sqlAlt, $this->conexion);
+            }
+        }
         $ready = true;
     }
 
@@ -1054,7 +1461,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         $this->ensureSolicitudAdjuntosTable();
         $sol_cod = intval($sol_cod);
         $rows = $this->getArrayConsultaSql(
-            "SELECT Sad_Cod, Sol_Cod, Sad_Des, Sad_Adj, Sad_Fec, Usu_Cod
+            "SELECT Sad_Cod, Sol_Cod, Nod_Cod, Sad_Isn_Cod, Sad_Des, Sad_Adj, Sad_Fec, Usu_Cod
              FROM adq_solicitudes_adjuntos
              WHERE Sol_Cod = $sol_cod
              ORDER BY Sad_Cod ASC;",
@@ -1063,9 +1470,32 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         return ($rows === false || $rows === null) ? array() : $rows;
     }
 
-    public function sincronizarAdjuntosSolicitud($sol_cod, $adjuntos_nuevos = array(), $adjuntos_existentes = array(), $adj_eliminar = array()) {
+    /**
+     * Marca adjuntos del formulario con el proceso/movimiento donde se cargaron.
+     */
+    private function marcarAdjuntosEtapa($sol_cod, $nod_cod, $isn_cod = 0, $solo_sin_nodo = false) {
         $this->ensureSolicitudAdjuntosTable();
         $sol_cod = intval($sol_cod);
+        $nod_cod = intval($nod_cod);
+        $isn_cod = intval($isn_cod);
+        if ($sol_cod <= 0 || $nod_cod <= 0) {
+            return;
+        }
+        $set_isn = $isn_cod > 0 ? (", Sad_Isn_Cod = $isn_cod") : '';
+        $where_extra = $solo_sin_nodo ? ' AND (Nod_Cod IS NULL OR Nod_Cod = 0)' : '';
+        $this->grabarv_registros(
+            "UPDATE adq_solicitudes_adjuntos
+             SET Nod_Cod = $nod_cod$set_isn
+             WHERE Sol_Cod = $sol_cod$where_extra;",
+            $this->conexion
+        );
+    }
+
+    public function sincronizarAdjuntosSolicitud($sol_cod, $adjuntos_nuevos = array(), $adjuntos_existentes = array(), $adj_eliminar = array(), $nod_cod = 0, $isn_cod = 0) {
+        $this->ensureSolicitudAdjuntosTable();
+        $sol_cod = intval($sol_cod);
+        $nod_cod = intval($nod_cod);
+        $isn_cod = intval($isn_cod);
         $usu_cod = isset($_SESSION['Ses_Usu_Cod']) ? intval($_SESSION['Ses_Usu_Cod']) : 0;
         $fecha = date('Y-m-d H:i:s');
 
@@ -1102,9 +1532,16 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 continue;
             }
             $path_sql = $this->escapeSql($path);
+            $set_nodo = '';
+            if ($nod_cod > 0) {
+                $set_nodo = ", Nod_Cod = $nod_cod";
+                if ($isn_cod > 0) {
+                    $set_nodo .= ", Sad_Isn_Cod = $isn_cod";
+                }
+            }
             $this->grabarv_registros(
                 "UPDATE adq_solicitudes_adjuntos
-                 SET Sad_Des = '$des', Sad_Adj = '$path_sql'
+                 SET Sad_Des = '$des', Sad_Adj = '$path_sql'$set_nodo
                  WHERE Sad_Cod = $sad_cod AND Sol_Cod = $sol_cod;",
                 $this->conexion
             );
@@ -1121,9 +1558,11 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $des = $this->escapeSql(isset($adj['Sad_Des']) ? trim($adj['Sad_Des']) : '');
             $path_sql = $this->escapeSql($path);
             $usu_sql = $usu_cod > 0 ? $usu_cod : 'NULL';
+            $nod_sql = $nod_cod > 0 ? $nod_cod : 'NULL';
+            $isn_sql = $isn_cod > 0 ? $isn_cod : 'NULL';
             if (!$this->grabarv_registros(
-                "INSERT INTO adq_solicitudes_adjuntos (Sol_Cod, Sad_Des, Sad_Adj, Sad_Fec, Usu_Cod)
-                 VALUES ($sol_cod, '$des', '$path_sql', '$fecha', $usu_sql);",
+                "INSERT INTO adq_solicitudes_adjuntos (Sol_Cod, Nod_Cod, Sad_Isn_Cod, Sad_Des, Sad_Adj, Sad_Fec, Usu_Cod)
+                 VALUES ($sol_cod, $nod_sql, $isn_sql, '$des', '$path_sql', '$fecha', $usu_sql);",
                 $this->conexion
             )) {
                 throw new Exception('No se pudo guardar un adjunto PDF: ' . $this->getMsgError());
@@ -1450,8 +1889,11 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         }
     }
 
-    private function insertarCotizacionesNuevas($sol_cod, $cotizaciones) {
+    private function insertarCotizacionesNuevas($sol_cod, $cotizaciones, $nod_cod = 0, $isn_cod = 0) {
+        $this->ensureCotizacionesEtapaColumns();
         $sol_cod = intval($sol_cod);
+        $nod_cod = intval($nod_cod);
+        $isn_cod = intval($isn_cod);
         foreach ($cotizaciones as $cot) {
             if (empty($cot['Prv_Cod']) && empty($cot['Cot_Val']) && !$this->cotizacionTieneAdjunto(isset($cot['Cot_Adj']) ? $cot['Cot_Adj'] : '')) {
                 continue;
@@ -1461,16 +1903,20 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $cot_adj = $this->escapeSql(isset($cot['Cot_Adj']) ? $cot['Cot_Adj'] : '');
             $cot_sel = !empty($cot['Cot_Sel']) ? 1 : 0;
             $cot_jus = $this->escapeSql(isset($cot['Cot_Jus']) ? $cot['Cot_Jus'] : '');
-            $sqlCot = "INSERT INTO adq_solicitudes_cotizaciones (Sol_Cod, Prv_Cod, Cot_Fec, Cot_Val, Cot_Adj, Cot_Sel, Cot_Jus)
-                       VALUES ($sol_cod, $prv_cod, '" . date('Y-m-d') . "', $cot_val, '$cot_adj', $cot_sel, '$cot_jus');";
+            $nod_sql = $nod_cod > 0 ? $nod_cod : 'NULL';
+            $isn_sql = $isn_cod > 0 ? $isn_cod : 'NULL';
+            $sqlCot = "INSERT INTO adq_solicitudes_cotizaciones (Sol_Cod, Nod_Cod, Sco_Isn_Cod, Prv_Cod, Cot_Fec, Cot_Val, Cot_Adj, Cot_Sel, Cot_Jus)
+                       VALUES ($sol_cod, $nod_sql, $isn_sql, $prv_cod, '" . date('Y-m-d') . "', $cot_val, '$cot_adj', $cot_sel, '$cot_jus');";
             if (!$this->grabarv_registros($sqlCot, $this->conexion)) {
                 throw new Exception('No se pudo guardar una cotizacion: ' . $this->getMsgError());
             }
         }
     }
 
-    private function sincronizarCotizacionesBorrador($sol_cod, $cotizaciones_nuevas, $cotizaciones_existentes, $cot_eliminar, $actualizar_sel = true) {
+    private function sincronizarCotizacionesBorrador($sol_cod, $cotizaciones_nuevas, $cotizaciones_existentes, $cot_eliminar, $actualizar_sel = true, $nod_cod = 0, $isn_cod = 0) {
         $sol_cod = intval($sol_cod);
+        $nod_cod = intval($nod_cod);
+        $isn_cod = intval($isn_cod);
         if (!empty($cot_eliminar)) {
             foreach ($cot_eliminar as $sco_cod) {
                 $sco_cod = intval($sco_cod);
@@ -1483,6 +1929,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             }
         }
         if (!empty($cotizaciones_existentes)) {
+            $this->ensureCotizacionesEtapaColumns();
             foreach ($cotizaciones_existentes as $sco_cod => $cot) {
                 $sco_cod = intval($sco_cod);
                 if ($sco_cod <= 0) {
@@ -1492,17 +1939,26 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 $cot_val = floatval($cot['Cot_Val']);
                 $cot_jus = $this->escapeSql(isset($cot['Cot_Jus']) ? $cot['Cot_Jus'] : '');
                 $set_adj = '';
+                $toco_adjunto = false;
                 if (array_key_exists('Cot_Adj', $cot)) {
                     $cot_adj = $this->escapeSql($cot['Cot_Adj']);
                     $set_adj = ", Cot_Adj = '$cot_adj'";
+                    $toco_adjunto = (trim((string)$cot['Cot_Adj']) !== '');
                 }
                 $set_sel = '';
                 if ($actualizar_sel) {
                     $cot_sel = !empty($cot['Cot_Sel']) ? 1 : 0;
                     $set_sel = ", Cot_Sel = $cot_sel, Cot_Jus = '$cot_jus'";
                 }
+                $set_nodo = '';
+                if ($nod_cod > 0 && $toco_adjunto) {
+                    $set_nodo = ", Nod_Cod = $nod_cod";
+                    if ($isn_cod > 0) {
+                        $set_nodo .= ", Sco_Isn_Cod = $isn_cod";
+                    }
+                }
                 $sqlUpd = "UPDATE adq_solicitudes_cotizaciones
-                           SET Prv_Cod = $prv_cod, Cot_Val = $cot_val$set_sel $set_adj
+                           SET Prv_Cod = $prv_cod, Cot_Val = $cot_val$set_sel $set_adj$set_nodo
                            WHERE Sco_Cod = $sco_cod AND Sol_Cod = $sol_cod;";
                 if (!$this->grabarv_registros($sqlUpd, $this->conexion)) {
                     throw new Exception('No se pudo actualizar una cotizacion: ' . $this->getMsgError());
@@ -1510,7 +1966,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             }
         }
         if ($actualizar_sel) {
-            $this->insertarCotizacionesNuevas($sol_cod, $cotizaciones_nuevas);
+            $this->insertarCotizacionesNuevas($sol_cod, $cotizaciones_nuevas, $nod_cod, $isn_cod);
         } else {
             // Al insertar sin permiso de ganadora, forzar Cot_Sel = 0.
             $nuevas = array();
@@ -1524,7 +1980,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                     $nuevas[] = $cot;
                 }
             }
-            $this->insertarCotizacionesNuevas($sol_cod, $nuevas);
+            $this->insertarCotizacionesNuevas($sol_cod, $nuevas, $nod_cod, $isn_cod);
         }
     }
 
@@ -1707,11 +2163,20 @@ class adq_adquisiciones_log extends MysqlDatosContab {
 
         $puede_edit = !empty($auth['puede_cargar_cotizaciones']);
         $actualizar_sel = !empty($auth['puede_seleccionar_ganadora']);
+        $nod_cod = intval($auth['Nod_Cod']);
 
         $this->inicio_transaccion($this->conexion);
         try {
             if ($puede_edit) {
-                $this->sincronizarCotizacionesBorrador($sol_cod, $cotizaciones_nuevas, $cotizaciones_existentes, $cot_eliminar, $actualizar_sel);
+                $this->sincronizarCotizacionesBorrador(
+                    $sol_cod,
+                    $cotizaciones_nuevas,
+                    $cotizaciones_existentes,
+                    $cot_eliminar,
+                    $actualizar_sel,
+                    $nod_cod,
+                    0
+                );
             } elseif ($actualizar_sel) {
                 $this->sincronizarSeleccionGanadora($sol_cod, $cotizaciones_existentes);
             }
@@ -1721,6 +2186,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             return array('success' => false, 'message' => $e->getMessage());
         }
 
+        $isn_cod = 0;
         try {
             $fecha = date('Y-m-d H:i:s');
             $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '127.0.0.1';
@@ -1729,11 +2195,17 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $comentario = $this->escapeSql('Carga/actualizacion de cotizaciones en la etapa.');
             $this->grabarv_registros(
                 "INSERT INTO wf_instancias_nodos (Ins_Cod, Nod_Cod, Usu_Cod, Dep_Cod, Isn_Acc, Isn_Com, Isn_Fec, Isn_Ip, Isn_Ses)
-                 VALUES ({$auth['Ins_Cod']}, {$auth['Nod_Cod']}, $usu_cod, $dep_cod_sql, 'COTIZAR', '$comentario', '$fecha', '$ip', '$ses');",
+                 VALUES ({$auth['Ins_Cod']}, $nod_cod, $usu_cod, $dep_cod_sql, 'COTIZAR', '$comentario', '$fecha', '$ip', '$ses');",
                 $this->conexion
             );
+            $isn_cod = intval($this->insercionid($this->conexion));
         } catch (Exception $e) {
             // El historial es informativo; no bloquea el guardado.
+        }
+
+        // Vincular proformas al proceso donde se cargaron (para la linea de tiempo).
+        if ($puede_edit && $nod_cod > 0) {
+            $this->marcarCotizacionesEtapa($sol_cod, $nod_cod, $isn_cod, false);
         }
 
         return array('success' => true, 'Sol_Cod' => $sol_cod, 'Num' => $sol['Sol_Num']);
@@ -3056,8 +3528,35 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         );
         if (empty($instancia)) {
             $this->iniciarWorkflowSolicitud($trq_cod, $sol_cod, $wf_mgr);
+            $instancia = $this->getRowConsultaSql(
+                "SELECT i.*, n.Nod_Tip
+                 FROM wf_instancias i
+                 LEFT JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act
+                 WHERE i.Ins_Ent_Typ = 'adq_solicitudes' AND i.Ins_Ent_Cod = $sol_cod AND i.Ins_Est = 'P'
+                 ORDER BY i.Ins_Cod DESC LIMIT 1;",
+                $this->conexion
+            );
         }
-        // Si ya esta en INICIO, se deja ahi: el primer usuario completa esa etapa.
+        // PDF/proformas del formulario quedan en el proceso INICIO (movimiento CREAR).
+        if (!empty($instancia['Ins_Cod'])) {
+            $ins_cod = intval($instancia['Ins_Cod']);
+            $crear = $this->getRowConsultaSql(
+                "SELECT h.Isn_Cod, h.Nod_Cod
+                 FROM wf_instancias_nodos h
+                 LEFT JOIN wf_nodos n ON n.Nod_Cod = h.Nod_Cod
+                 WHERE h.Ins_Cod = $ins_cod
+                   AND (h.Isn_Acc = 'CREAR' OR n.Nod_Tip = 'INICIO')
+                 ORDER BY h.Isn_Fec ASC, h.Isn_Cod ASC
+                 LIMIT 1;",
+                $this->conexion
+            );
+            $nod_ini = !empty($crear['Nod_Cod']) ? intval($crear['Nod_Cod']) : intval($instancia['Nod_Act']);
+            $isn_ini = !empty($crear['Isn_Cod']) ? intval($crear['Isn_Cod']) : 0;
+            if ($nod_ini > 0) {
+                $this->marcarAdjuntosEtapa($sol_cod, $nod_ini, $isn_ini, true);
+                $this->marcarCotizacionesEtapa($sol_cod, $nod_ini, $isn_ini, true);
+            }
+        }
     }
 
     private function iniciarWorkflowBorrador($sol_cod, $trq_cod) {
@@ -3183,6 +3682,10 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                  VALUES (" . intval($inst['Ins_Cod']) . ", " . intval($inst['Nod_Act']) . ", $usu_cod, $dep_cod_sql, 'ACTUALIZAR', '$com', '$fecha', '$ip', '$ses');",
                 $this->conexion
             );
+            $isn_act = intval($this->insercionid($this->conexion));
+            // Cotizaciones y PDF de soporte del formulario quedan en este proceso.
+            $this->marcarCotizacionesEtapa($sol_cod, intval($inst['Nod_Act']), $isn_act, true);
+            $this->marcarAdjuntosEtapa($sol_cod, intval($inst['Nod_Act']), $isn_act, true);
             $this->commit_nomsn($this->conexion);
             return array('success' => true, 'Sol_Cod' => $sol_cod, 'Num' => $upd['Num']);
         } catch (Exception $e) {
@@ -3660,17 +4163,17 @@ class adq_adquisiciones_log extends MysqlDatosContab {
 
         foreach ($nodos as $nodo) {
             $nod_tip = isset($nodo['Nod_Tip']) ? $nodo['Nod_Tip'] : '';
-            if ($nod_tip === 'INICIO') {
-                continue;
-            }
-
             $nod_cod = intval($nodo['Nod_Cod']);
             $titulo = !empty($nodo['Nod_Nom']) ? $nodo['Nod_Nom'] : ('Proceso #' . $nod_cod);
             $documentos = array();
             $vistos = array();
 
             foreach ($historial as $h) {
-                if (intval($h['Nod_Cod']) !== $nod_cod) {
+                $nod_hist = intval(isset($h['Etapa_Nod_Cod']) ? $h['Etapa_Nod_Cod'] : 0);
+                if ($nod_hist <= 0) {
+                    $nod_hist = intval(isset($h['Nod_Cod']) ? $h['Nod_Cod'] : 0);
+                }
+                if ($nod_hist !== $nod_cod) {
                     continue;
                 }
                 $adjuntos = $this->parseCotAdjuntos(isset($h['Isn_Adj']) ? $h['Isn_Adj'] : '');
@@ -3748,19 +4251,35 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             );
         }
 
-        // Soportes PDF del formulario (Paso 2B) → nodo ACTUALIZAR o primera etapa.
-        $idx_soportes = ($idx_formulario >= 0) ? $idx_formulario : $idx_primera;
-        if ($idx_soportes >= 0 && isset($secciones[$idx_soportes])) {
-            $vistos_sop = array();
-            $adjuntos_sol = $this->listarAdjuntosSolicitud($sol_cod);
+        // Soportes PDF del formulario (Paso 2B): repartir por proceso donde se registraron.
+        $adjuntos_sol = $this->listarAdjuntosSolicitud($sol_cod);
+        if (!empty($adjuntos_sol) && !empty($secciones)) {
+            $idx_por_nod = array();
+            foreach ($secciones as $i => $sec) {
+                $idx_por_nod[intval($sec['nod_cod'])] = $i;
+            }
+            $idx_soportes_fb = ($idx_formulario >= 0) ? $idx_formulario : $idx_primera;
+            $vistos_sop_por_sec = array();
             foreach ($adjuntos_sol as $adj) {
                 if (empty($adj['Sad_Adj'])) {
                     continue;
                 }
+                $adj_nod = intval(isset($adj['Nod_Cod']) ? $adj['Nod_Cod'] : 0);
+                $idx_sop = ($adj_nod > 0 && isset($idx_por_nod[$adj_nod])) ? $idx_por_nod[$adj_nod] : $idx_soportes_fb;
+                if ($idx_sop < 0 || !isset($secciones[$idx_sop])) {
+                    continue;
+                }
+                if (!isset($vistos_sop_por_sec[$idx_sop])) {
+                    $vistos_sop_por_sec[$idx_sop] = array();
+                }
                 $eti = !empty($adj['Sad_Des']) ? $adj['Sad_Des'] : 'Soporte';
+                $titulo_sec = isset($secciones[$idx_sop]['titulo']) ? $secciones[$idx_sop]['titulo'] : '';
+                if ($titulo_sec !== '') {
+                    $eti = $titulo_sec . ': ' . $eti;
+                }
                 $this->agregarPdfSeccionExpediente(
-                    $secciones[$idx_soportes]['documentos'],
-                    $vistos_sop,
+                    $secciones[$idx_sop]['documentos'],
+                    $vistos_sop_por_sec[$idx_sop],
                     $vistos_global,
                     $adj['Sad_Adj'],
                     $eti
@@ -3768,22 +4287,39 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             }
         }
 
-        // Cotizaciones/proformas: siempre (dedupe global). Preferir nodo Cot_Edit, luego formulario, luego primera etapa.
-        $idx_cots = ($idx_cot_edit >= 0) ? $idx_cot_edit : (($idx_formulario >= 0) ? $idx_formulario : $idx_primera);
-        if ($idx_cots >= 0 && isset($secciones[$idx_cots])) {
-            $vistos_cot = array();
-            $cotizaciones = $this->listarCotizacionesConProveedor(intval($sol_cod));
+        // Cotizaciones/proformas: repartir por proceso donde se registraron (Nod_Cod).
+        // Sin Nod_Cod: nodo Cot_Edit, luego formulario, luego primera etapa.
+        $cotizaciones = $this->listarCotizacionesConProveedor(intval($sol_cod));
+        if (!empty($cotizaciones) && !empty($secciones)) {
+            $idx_por_nod = array();
+            foreach ($secciones as $i => $sec) {
+                $idx_por_nod[intval($sec['nod_cod'])] = $i;
+            }
+            $idx_fallback = ($idx_cot_edit >= 0) ? $idx_cot_edit : (($idx_formulario >= 0) ? $idx_formulario : $idx_primera);
+            $vistos_cot_por_sec = array();
             foreach ($cotizaciones as $cot) {
+                $cot_nod = intval(isset($cot['Nod_Cod']) ? $cot['Nod_Cod'] : 0);
+                $idx_cots = ($cot_nod > 0 && isset($idx_por_nod[$cot_nod])) ? $idx_por_nod[$cot_nod] : $idx_fallback;
+                if ($idx_cots < 0 || !isset($secciones[$idx_cots])) {
+                    continue;
+                }
+                if (!isset($vistos_cot_por_sec[$idx_cots])) {
+                    $vistos_cot_por_sec[$idx_cots] = array();
+                }
                 $adjuntos = $this->parseCotAdjuntos(isset($cot['Cot_Adj']) ? $cot['Cot_Adj'] : '');
                 $prv = !empty($cot['Prv_Com']) ? $cot['Prv_Com'] : 'Proveedor';
+                $titulo_sec = isset($secciones[$idx_cots]['titulo']) ? $secciones[$idx_cots]['titulo'] : '';
                 foreach ($adjuntos as $i => $path) {
-                    $lbl = 'Cotizacion - ' . $prv;
+                    $lbl = 'Proforma - ' . $prv;
                     if (count($adjuntos) > 1) {
                         $lbl .= ' (' . ($i + 1) . ')';
                     }
+                    if ($titulo_sec !== '') {
+                        $lbl = $titulo_sec . ': ' . $lbl;
+                    }
                     $this->agregarPdfSeccionExpediente(
                         $secciones[$idx_cots]['documentos'],
-                        $vistos_cot,
+                        $vistos_cot_por_sec[$idx_cots],
                         $vistos_global,
                         $path,
                         $lbl
