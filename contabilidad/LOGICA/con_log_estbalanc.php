@@ -29,6 +29,83 @@ class Class_Log_Conexion_Con extends MysqlConexion {} //Fin de clase Class_Log_C
  */
 
 class Class_Log_Datos_Con extends MysqlDatos {
+
+	/**
+	 * Obtiene el archivo de mayorización activo según los procesos asignados al usuario o sistema.
+	 * Si hay múltiples activos (ej. 1.1, 1.2, 2.0), prioriza la versión más alta.
+	 */
+	function getMayorizacionActiva($obBD_conexion)
+	{
+		$mayorizacion_file = 'con_con_mayorizacion_1.1.php';
+
+		if (isset($_SESSION['Ses_Lis_Per']) && is_array($_SESSION['Ses_Lis_Per']) && count($_SESSION['Ses_Lis_Per']) > 0) {
+			$perfiles_arr = array_map('intval', $_SESSION['Ses_Lis_Per']);
+			$perfiles = implode(",", $perfiles_arr);
+			$sql_may = "SELECT DISTINCT procesos.Pcs_Nom 
+						FROM procesos 
+						INNER JOIN perfiorgan ON (procesos.Pcs_Cod = perfiorgan.Pcs_Cod) 
+						WHERE procesos.Pcs_Nom LIKE 'con_con_mayorizacion_%.php' 
+						AND procesos.Pcs_Est = 'A' 
+						AND perfiorgan.Per_Cod IN ($perfiles)";
+			$rs_may = $this->consulta($sql_may, $obBD_conexion->conexion);
+			if ($rs_may) {
+				$candidatos = array();
+				while ($row_may = $this->fetch_assoc($rs_may)) {
+					if (!empty($row_may['Pcs_Nom'])) {
+						$candidatos[] = $row_may['Pcs_Nom'];
+					}
+				}
+				@$this->free_result($rs_may);
+
+				if (!empty($candidatos)) {
+					usort($candidatos, function($a, $b) {
+						$verA = preg_replace('/[^0-9.]/', '', $a);
+						$verB = preg_replace('/[^0-9.]/', '', $b);
+						return version_compare($verB, $verA);
+					});
+					return $candidatos[0];
+				}
+			}
+		}
+
+		$sql_may_gen = "SELECT DISTINCT procesos.Pcs_Nom 
+						FROM procesos 
+						WHERE procesos.Pcs_Nom LIKE 'con_con_mayorizacion_%.php' 
+						AND procesos.Pcs_Est = 'A'";
+		$rs_may_gen = $this->consulta($sql_may_gen, $obBD_conexion->conexion);
+		if ($rs_may_gen) {
+			$candidatos_gen = array();
+			while ($row_may_gen = $this->fetch_assoc($rs_may_gen)) {
+				if (!empty($row_may_gen['Pcs_Nom'])) {
+					$candidatos_gen[] = $row_may_gen['Pcs_Nom'];
+				}
+			}
+			@$this->free_result($rs_may_gen);
+
+			if (!empty($candidatos_gen)) {
+				usort($candidatos_gen, function($a, $b) {
+					$verA = preg_replace('/[^0-9.]/', '', $a);
+					$verB = preg_replace('/[^0-9.]/', '', $b);
+					return version_compare($verB, $verA);
+				});
+				return $candidatos_gen[0];
+			}
+		}
+
+		$archivos_posibles = array(
+			'con_con_mayorizacion_2.0.php',
+			'con_con_mayorizacion_1.2.php',
+			'con_con_mayorizacion_1.1.php',
+			'con_con_mayorizacion_1.0.php'
+		);
+		foreach ($archivos_posibles as $archivo) {
+			if (file_exists('../FRONT/' . $archivo) || file_exists($archivo) || file_exists(__DIR__ . '/../FRONT/' . $archivo)) {
+				return $archivo;
+			}
+		}
+
+		return $mayorizacion_file;
+	}
 	/**
 	 * Realiza una consulta en la base de datos -  STARDARD
 	 *
@@ -123,7 +200,9 @@ class Class_Log_Datos_Con extends MysqlDatos {
 		/**
 		 * Consulta la provicia y pais de la sucursal 
 		 */
-		$row_provincia = $this->getRowConsulta(3, $row_institucion['Ciu_Cod'], $obBD); ?>
+		$row_provincia = $this->getRowConsulta(3, $row_institucion['Ciu_Cod'], $obBD);
+
+?>
 		<table width="98%" border="0" cellpadding="0" cellspacing="0">
 			<tr align="center">
 				<td width="12%" rowspan="5" valign="top"><img src="<?php echo $row_institucion['Emp_Log']; ?>" width="83" height="67" /></td>
@@ -416,6 +495,8 @@ class Class_Log_Datos_Con extends MysqlDatos {
 	 */
 	function cargarNodosBalance($cod, $np, $ini, $fin, $obBD_conexion, $tipo, $Pec_Cod, $util, $cod_util, $nivel, $max_nivel, $format, $Pec_Cod2_completo = null, $Pec_Fei_periodo = null, $Pec_Fef_periodo = null, $sucursal = '')
 	{
+		/* Obtener el archivo activo de mayorización */
+		$mayorizacion_file = $this->getMayorizacionActiva($obBD_conexion);
 
 		/* consulto los valores del mayor - OPTIMIZADO: una sola consulta para todos los datos */
 		$filtro_sucursal = ($sucursal != '') ? "usuarios.Suc_Cod = '$sucursal'" : "";
@@ -518,7 +599,7 @@ class Class_Log_Datos_Con extends MysqlDatos {
 						}
 						
 						// Construir el enlace a mayorización con Pec_Cod2, código de cuenta y fechas
-						$urlMayorizacion = 'con_con_mayorizacion_1.1.php?hdd_save2=1&txt_busqueda=' . urlencode($codigoCuentaLimpio) . '&Pec_Cod2=' . urlencode($Pec_Cod2_completo) . '&txt_fec_ini=' . urlencode($ini) . '&txt_fec_fin=' . urlencode($fin) . '&op=1';
+						$urlMayorizacion = $mayorizacion_file . '?hdd_save2=1&txt_busqueda=' . urlencode($codigoCuentaLimpio) . '&Pec_Cod2=' . urlencode($Pec_Cod2_completo) . '&txt_fec_ini=' . urlencode($ini) . '&txt_fec_fin=' . urlencode($fin) . '&op=1';
 						// Si las fechas son personalizadas, agregar Chk_Fec=1 para activar el checkbox
 						if ($fechasPersonalizadas) {
 							$urlMayorizacion .= '&Chk_Fec=1';
@@ -614,7 +695,27 @@ class Class_Log_Datos_Con extends MysqlDatos {
 	function cargarDiarioDesdeBalance($cod, $np, $ini, $fin, $obBD_conexion, $tipo, $Pec_Cod, $util, $cod_util, $nivel, $max_nivel, $format)
 	{
 		$valores = $this->getArrayConsulta(240, $Pec_Cod . '*' . $ini . '*' . $fin, $obBD_conexion);
-		$utilidades = $this->cargarTotalEstados($cod, $np, $ini, $fin, $obBD_conexion, 2);
+		
+		/* OPTIMIZACIÓN: Crear índice en memoria para acceso rápido */
+		$valoresIndex = array();
+		foreach($valores as $valor) {
+			$valoresIndex[$valor['Pld_Cod']] = $valor;
+		}
+		
+		/* OPTIMIZACIÓN: Cargar plan de cuentas completo una sola vez para evitar consultas recursivas */
+		$gruposSQL_temp = "1=1"; // Cargar todas las cuentas activas
+		$planCompleto = $this->getArrayConsulta(243, $cod.'*'.$gruposSQL_temp, $obBD_conexion);
+		$planIndex = array();
+		$planIndexPorPadre = array(); // Índice adicional por padre para búsqueda rápida
+		foreach($planCompleto as $cuenta) {
+			$planIndex[$cuenta['Pld_Cod']] = $cuenta;
+			if (!isset($planIndexPorPadre[$cuenta['Pld_Rec']])) {
+				$planIndexPorPadre[$cuenta['Pld_Rec']] = array();
+			}
+			$planIndexPorPadre[$cuenta['Pld_Rec']][] = $cuenta;
+		}
+		
+		$utilidades = $this->cargarTotalEstadosOptimizado($cod, $np, $ini, $fin, $obBD_conexion, 2, $valoresIndex, $planIndex, $planIndexPorPadre);
 		$util = $utilidades[1] - ($utilidades[2] + $utilidades[3]);
 
 		if ($tipo == 1) {  // Aqui cargo la cuenta utilidad o perdida solo para balance general
@@ -1350,10 +1451,6 @@ class Class_Log_Datos_Con extends MysqlDatos {
 						$g++;
 						$grupo[$g] = $total;
 					} //Fin del if ($np == 0)
-					/**
-					 * Recursividad del cargado de los nodos 
-					 */
-					$this->cargarTotalEstados($cod, $row_rs_nodosrep['Pld_Cod'], $ini, $fin, $obBD_conexion, $tipo, $sucursal);
 				}
 			} //if ($total_rs_nodosrep > 0)			
 
@@ -1387,11 +1484,6 @@ class Class_Log_Datos_Con extends MysqlDatos {
 					$g++;								
 					$grupo[$g]=$total;
 				}//Fin del if ($np == 0)
-				/* Recursividad del cargado de los nodos - OPTIMIZADO */
-				$subgrupos = $this->cargarTotalEstadosOptimizado($cod,$row_rs_nodosrep['Pld_Cod'], $ini, $fin, $obBD_conexion, $tipo, $valoresIndex, $planIndex, $planIndexPorPadre);
-				if ($np == 0 && is_array($subgrupos)) {
-					// Combinar subgrupos si es necesario
-				}
 			} 
 		}//if ($total_rs_nodosrep > 0)			
 			

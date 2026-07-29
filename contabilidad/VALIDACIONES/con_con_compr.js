@@ -97,7 +97,9 @@ $(function () {
                         if ((data.rows[i]['Com_Gen'] === 'A' || data.rows[i]['Com_Gen'] === 'B' || data.rows[i]['Doc'] !== '') && noEdit === true) $("#listsearch #" + data.rows[i].Com_Cod + ' td[aria-describedby=listsearch_act1] button').addClass('btn-warning').removeClass('btn-success');
                     }
             }
-        } : {}), false, "#listsearchPager");
+        } : {}), false, "#listsearchPager").gridButtonsAdd([
+            { id: 'btnExcel', caption: ' Descargar Excel', buttonicon: 'glyphicon glyphicon-download-alt', title: 'Exportar a Excel', onClickButton: exportExcelComprobantes }
+        ]);
         $('#OrderBy').on('change', function () { $('input[name=order]').val($(this).val()); $('#tabs-' + ($("#tabsSearch").tabs("option", "active") + 1) + ' form').formSubmit(); });
     }
     if ($('#compAsien').length === 1) {
@@ -554,4 +556,83 @@ function activarComp() {
         }, function () {
 
         });
+}
+
+function exportExcelComprobantes() {
+    var $grid = $("#listsearch");
+    var totalRecords = $grid.jqGrid('getGridParam', 'records') || 0;
+
+    if (totalRecords === 0) {
+        if (typeof $ !== 'undefined' && $.varValid && $.isFunc($.alert)) {
+            $.alert("No hay datos en la grilla para exportar.");
+        } else {
+            alert("No hay datos en la grilla para exportar.");
+        }
+        return;
+    }
+
+    var activeTab = $("#tabsSearch").length ? $("#tabsSearch").tabs("option", "active") : 0;
+    var nombre = "Comprobantes";
+    if (activeTab === 0) nombre = "Comprobantes_Por_Comprobante";
+    else if (activeTab === 1) nombre = "Comprobantes_Por_Compras";
+    else if (activeTab === 2) nombre = "Comprobantes_Por_Ventas";
+
+    var oldRowNum = $grid.jqGrid('getGridParam', 'rowNum');
+    var oldPage = $grid.jqGrid('getGridParam', 'page');
+
+    function performExport() {
+        var gridTable = $grid.getTable({
+            caption: true,
+            generated: true,
+            footer: true,
+            print: true,
+            removeHiddens: true,
+            removeCols: [15, 16]
+        });
+
+        var cedColIndexes = [];
+        gridTable.find('thead tr th').each(function (idx) {
+            var thText = $(this).text();
+            if (thText.indexOf('Cédula') !== -1 || thText.indexOf('RUC') !== -1 || thText.indexOf('Cedula') !== -1) {
+                cedColIndexes.push(idx);
+            }
+        });
+
+        gridTable.find('tbody tr').each(function () {
+            $(this).find('td').each(function (cellIdx) {
+                var $td = $(this);
+                var text = $td.text().trim();
+                if (cedColIndexes.indexOf(cellIdx) !== -1 || /^\d{8,}$/.test(text)) {
+                    var curStyle = $td.attr('style') || '';
+                    $td.attr('style', curStyle + ";mso-number-format:'\\@';");
+                }
+            });
+        });
+
+        gridTable.exportarExcelPhp(nombre + "-" + $.getDate() + ".xls", undefined, undefined, nombre);
+    }
+
+    var visibleRows = $grid.find("tr.jqgrow").length;
+    if (totalRecords > visibleRows) {
+        if ($("#loader").length) $("#loader").show();
+
+        $grid.one("jqGridGridComplete.exportExcel", function () {
+            setTimeout(function () {
+                try {
+                    performExport();
+                } catch (e) {
+                    console.error(e);
+                } finally {
+                    $grid.one("jqGridGridComplete.restoreExcel", function () {
+                        if ($("#loader").length) $("#loader").fadeOut("slow");
+                    });
+                    $grid.jqGrid('setGridParam', { rowNum: oldRowNum, page: oldPage }).trigger('reloadGrid');
+                }
+            }, 50);
+        });
+
+        $grid.jqGrid('setGridParam', { rowNum: totalRecords, page: 1 }).trigger('reloadGrid');
+    } else {
+        performExport();
+    }
 }

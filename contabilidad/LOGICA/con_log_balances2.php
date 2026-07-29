@@ -30,6 +30,83 @@ class Class_Log_Conexion_Con extends MysqlConexion{
  */
 
 class Class_Log_Datos_Con extends MysqlDatos{
+
+	/**
+	 * Obtiene el archivo de mayorización activo según los procesos asignados al usuario o sistema.
+	 * Si hay múltiples activos (ej. 1.1, 1.2, 2.0), prioriza la versión más alta.
+	 */
+	function getMayorizacionActiva($obBD_conexion)
+	{
+		$mayorizacion_file = 'con_con_mayorizacion_1.1.php';
+
+		if (isset($_SESSION['Ses_Lis_Per']) && is_array($_SESSION['Ses_Lis_Per']) && count($_SESSION['Ses_Lis_Per']) > 0) {
+			$perfiles_arr = array_map('intval', $_SESSION['Ses_Lis_Per']);
+			$perfiles = implode(",", $perfiles_arr);
+			$sql_may = "SELECT DISTINCT procesos.Pcs_Nom 
+						FROM procesos 
+						INNER JOIN perfiorgan ON (procesos.Pcs_Cod = perfiorgan.Pcs_Cod) 
+						WHERE procesos.Pcs_Nom LIKE 'con_con_mayorizacion_%.php' 
+						AND procesos.Pcs_Est = 'A' 
+						AND perfiorgan.Per_Cod IN ($perfiles)";
+			$rs_may = $this->consulta($sql_may, $obBD_conexion->conexion);
+			if ($rs_may) {
+				$candidatos = array();
+				while ($row_may = $this->fetch_assoc($rs_may)) {
+					if (!empty($row_may['Pcs_Nom'])) {
+						$candidatos[] = $row_may['Pcs_Nom'];
+					}
+				}
+				@$this->free_result($rs_may);
+
+				if (!empty($candidatos)) {
+					usort($candidatos, function($a, $b) {
+						$verA = preg_replace('/[^0-9.]/', '', $a);
+						$verB = preg_replace('/[^0-9.]/', '', $b);
+						return version_compare($verB, $verA);
+					});
+					return $candidatos[0];
+				}
+			}
+		}
+
+		$sql_may_gen = "SELECT DISTINCT procesos.Pcs_Nom 
+						FROM procesos 
+						WHERE procesos.Pcs_Nom LIKE 'con_con_mayorizacion_%.php' 
+						AND procesos.Pcs_Est = 'A'";
+		$rs_may_gen = $this->consulta($sql_may_gen, $obBD_conexion->conexion);
+		if ($rs_may_gen) {
+			$candidatos_gen = array();
+			while ($row_may_gen = $this->fetch_assoc($rs_may_gen)) {
+				if (!empty($row_may_gen['Pcs_Nom'])) {
+					$candidatos_gen[] = $row_may_gen['Pcs_Nom'];
+				}
+			}
+			@$this->free_result($rs_may_gen);
+
+			if (!empty($candidatos_gen)) {
+				usort($candidatos_gen, function($a, $b) {
+					$verA = preg_replace('/[^0-9.]/', '', $a);
+					$verB = preg_replace('/[^0-9.]/', '', $b);
+					return version_compare($verB, $verA);
+				});
+				return $candidatos_gen[0];
+			}
+		}
+
+		$archivos_posibles = array(
+			'con_con_mayorizacion_2.0.php',
+			'con_con_mayorizacion_1.2.php',
+			'con_con_mayorizacion_1.1.php',
+			'con_con_mayorizacion_1.0.php'
+		);
+		foreach ($archivos_posibles as $archivo) {
+			if (file_exists('../FRONT/' . $archivo) || file_exists($archivo) || file_exists(__DIR__ . '/../FRONT/' . $archivo)) {
+				return $archivo;
+			}
+		}
+
+		return $mayorizacion_file;
+	}
 	
 	/* Variables para la optimización de balances */
 	private $lastValoresKey = null;
@@ -355,6 +432,9 @@ function formatCuentaDiario($cuenta,$cant_cuent,$total,$format){
   */ 
  function cargarNodosBalance($cod, $np, $ini, $fin, $obBD_conexion, $tipo, $Pec_Cod, $util, $cod_util, $nivel, $max_nivel, $format, $utilidadSiNo, $Pec_Cod2_completo = null, $Pec_Fei_periodo = null, $Pec_Fef_periodo = null){
 
+    /* Obtener el archivo activo de mayorización */
+    $mayorizacion_file = $this->getMayorizacionActiva($obBD_conexion);
+
     $cta = $this->getRowConsulta(244, $cod, $obBD_conexion);
     $ctaUtilidad = $cta['Pld_Cdc'];
     $grupoUtilidad = substr($ctaUtilidad,0,1);
@@ -457,7 +537,7 @@ function formatCuentaDiario($cuenta,$cant_cuent,$total,$format){
                     }
                     
                     // Construir el enlace a mayorización con Pec_Cod2, código de cuenta y fechas
-                    $urlMayorizacion = 'con_con_mayorizacion_1.1.php?hdd_save2=1&txt_busqueda=' . urlencode($codigoCuentaLimpio) . '&Pec_Cod2=' . urlencode($Pec_Cod2_completo) . '&txt_fec_ini=' . urlencode($ini) . '&txt_fec_fin=' . urlencode($fin) . '&op=1';
+                    $urlMayorizacion = $mayorizacion_file . '?hdd_save2=1&txt_busqueda=' . urlencode($codigoCuentaLimpio) . '&Pec_Cod2=' . urlencode($Pec_Cod2_completo) . '&txt_fec_ini=' . urlencode($ini) . '&txt_fec_fin=' . urlencode($fin) . '&op=1';
                     // Si las fechas son personalizadas, agregar Chk_Fec=1 para activar el checkbox
                     if ($fechasPersonalizadas) {
                         $urlMayorizacion .= '&Chk_Fec=1';
@@ -569,7 +649,7 @@ function formatCuentaDiario($cuenta,$cant_cuent,$total,$format){
                     }
                     
                     // Construir el enlace a mayorización con Pec_Cod2, código de cuenta y fechas
-                    $urlMayorizacion2 = 'con_con_mayorizacion_1.1.php?hdd_save2=1&txt_busqueda=' . urlencode($codigoCuentaLimpio2) . '&Pec_Cod2=' . urlencode($Pec_Cod2_completo) . '&txt_fec_ini=' . urlencode($ini) . '&txt_fec_fin=' . urlencode($fin) . '&op=1';
+                    $urlMayorizacion2 = $mayorizacion_file . '?hdd_save2=1&txt_busqueda=' . urlencode($codigoCuentaLimpio2) . '&Pec_Cod2=' . urlencode($Pec_Cod2_completo) . '&txt_fec_ini=' . urlencode($ini) . '&txt_fec_fin=' . urlencode($fin) . '&op=1';
                     // Si las fechas son personalizadas, agregar Chk_Fec=1 para activar el checkbox
                     if ($fechasPersonalizadas2) {
                         $urlMayorizacion2 .= '&Chk_Fec=1';

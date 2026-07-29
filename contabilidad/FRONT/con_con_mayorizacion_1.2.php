@@ -171,10 +171,42 @@ if (isset($ajax_detalle)) {
 	include("../COMPONENTES/con_con_detalleCompr.php");
 	exit();
 }
+/* Inicializar variables del período si se viene desde el balance (con hdd_save2 y Pec_Cod2) */
+if (isset($hdd_save2) && isset($Pec_Cod2) && !isset($Pec_Cod)) {
+	/* Divide la cadena del periodo contable que viene desde el balance */
+	$arreglo_periodo = explode("~", $Pec_Cod2);
+	$Pec_Cod = $arreglo_periodo[0];
+	$Pec_Fei = isset($arreglo_periodo[1]) ? $arreglo_periodo[1] : '';
+	$Pec_Fef = isset($arreglo_periodo[2]) ? $arreglo_periodo[2] : '';
+	$Pla_Cod = isset($arreglo_periodo[3]) ? $arreglo_periodo[3] : '';
+	
+	/* Si viene desde el balance con txt_busqueda, establecer fechas */
+	if (isset($txt_busqueda) && $txt_busqueda != "") {
+		/* Usar fechas de la URL si vienen, si no, usar fechas del período */
+		if (!isset($txt_fec_ini) || $txt_fec_ini == "") {
+			$txt_fec_ini = $Pec_Fei;
+		}
+		if (!isset($txt_fec_fin) || $txt_fec_fin == "") {
+			$txt_fec_fin = $Pec_Fef;
+		}
+		/* Asegurar que op esté establecido */
+		if (!isset($op)) {
+			$op = 1;
+		}
+		/* Establecer variables por defecto para la consulta */
+		if (!isset($ordenar)) {
+			$ordenar = 'ORDER BY Com_Fec ASC';
+		}
+		if (!isset($Com_Aut)) {
+			$Com_Aut = '';
+		}
+	}
+}
+
 /**
  * Descripcion del periodo contable 
  */
-$periodo = "del periodo contable " . substr($Pec_Fei, 0, 4);
+$periodo = "del periodo contable " . (isset($Pec_Fei) && $Pec_Fei != '' ? substr($Pec_Fei, 0, 4) : '');
 
 if (isset($hdd_save2) or isset($hdd_save3)) {
 	$hoy = date("Y-m-d");
@@ -236,16 +268,22 @@ if (isset($hdd_save2) or isset($hdd_save3)) {
 				else //Nuevo
 				{ //Nuevo			
 					$saldos = $debe - $haber;
-				} //Nuevo		
+				} //Nuevo
+				if (!isset($ordenar)) {
+					$ordenar = 'ORDER BY Com_Fec ASC';
+				}
+				if (!isset($Com_Aut)) {
+					$Com_Aut = '';
+				}
 				/**
 				 * Consulta del detalle de la mayorizacin 
 				 */
 				$rs_cuenta = $obBD_con1->getArrayConsulta(201, $txt_fec_ini . '*' . $txt_fec_fin . '*' . $Pld_Cod . '*' . $ordenar . '*' . $Pec_Cod . '*' . $Com_Aut, $obBD_conexion);
 				$total_rs_cuenta = count($rs_cuenta);
 				/**
-				 * Carga el a�o de la fecha incial 
+				 * Carga el ao de la fecha incial 
 				 */
-				list($annn, $mess, $dia) = split('[/.-]', $fech_fut);
+				list($annn, $mess, $dia) = preg_split('/[\/.-]/', $fech_fut);
 				$anio = date("Y", mktime(0, 0, 0, $mess, $dia, $annn));
 			} //Fin del if ($txt_busqueda != "")
 			break;
@@ -551,6 +589,8 @@ else {
 														</tr>
 														<?
 														$i = 0;
+														$total_debe = 0;
+														$total_haber = 0;
 														foreach ($rs_cuenta as $row) {
 															/**
 															 * Consulta del cliente o proveedor 
@@ -569,7 +609,7 @@ else {
 															$total_rs_proveedore = count($rs_proveedore);
 
 															$i++;
-															list($ann, $mes, $dia) = split('[/.-]', $row['Com_Fec']);
+															list($ann, $mes, $dia) = preg_split('/[\/.-]/', $row['Com_Fec']);
 														?>
 															<tr>
 																<td align="center"><? echo $row['Com_Cod']; ?></td>
@@ -739,7 +779,7 @@ else {
 														/**
 														 * Carga el a�o de la fecha incial 
 														 */
-														list($ann, $mes, $dia) = split('[/.-]', $fech_fut);
+														list($ann, $mes, $dia) = preg_split('/[\/.-]/', $fech_fut);
 														$anio = date("Y", mktime(0, 0, 0, $mes, $dia, $ann));
 
 														if ($total_rs_cuenta > 0 or $total_rs_saldos > 0) {
@@ -795,8 +835,10 @@ else {
 																		<td align="right">&nbsp;</td>
 																	</tr>
 																	<?
+																	$total_debe = 0;
+																	$total_haber = 0;
 																	foreach ($rs_cuenta as $row_rs_cuenta) {
-																		list($ann, $mes, $dia) = split('[/.-]', $row_rs_cuenta['Com_Fec']);
+																		list($ann, $mes, $dia) = preg_split('/[\/.-]/', $row_rs_cuenta['Com_Fec']);
 																		/**
 																		 * Consulta del cliente o proveedor 
 																		 */
