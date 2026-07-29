@@ -23,7 +23,9 @@ $ajax_get_borrador = isset($_GET['ajax_get_borrador']) ? $_GET['ajax_get_borrado
 $ajax_get_solicitud_cot = isset($_GET['ajax_get_solicitud_cot']) ? $_GET['ajax_get_solicitud_cot'] : null;
 $ajax_search_proveedores = isset($_GET['ajax_search_proveedores']) ? $_GET['ajax_search_proveedores'] : null;
 $ajax_lookup_proveedor = isset($_GET['ajax_lookup_proveedor']) ? $_GET['ajax_lookup_proveedor'] : null;
-$ajax_save_proveedor = isset($_POST['ajax_save_proveedor']) ? $_POST['ajax_save_proveedor'] : null;
+$ajax_save_proveedor = isset($_GET['ajax_save_proveedor'])
+    ? $_GET['ajax_save_proveedor']
+    : (isset($_POST['ajax_save_proveedor']) ? $_POST['ajax_save_proveedor'] : null);
 $ajax_get_form = isset($_GET['ajax_get_form']) ? $_GET['ajax_get_form'] : null;
 
 // Ensures solo cuando hacen falta (escritura o render del formulario).
