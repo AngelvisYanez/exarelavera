@@ -1291,6 +1291,7 @@ class wf_manager_log {
             $resultado[] = array(
                 'Wfm_Cod' => intval($activo['Wfm_Cod']),
                 'Wfm_Nom' => $activo['Wfm_Nom'],
+                'Wfm_Des' => isset($activo['Wfm_Des']) ? $activo['Wfm_Des'] : '',
                 'Wfm_Version' => intval($activo['Wfm_Version']),
                 'Wfm_Fam_Cod' => $fam,
                 'Wfm_Est' => $activo['Wfm_Est'],

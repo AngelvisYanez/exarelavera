@@ -755,29 +755,72 @@ if (isset($ajax_get_builder)) {
             padding-top: 0.65rem;
             border-top: 1px solid #e2e8f0;
         }
+        .wf-flow-name-edit {
+            display: inline-flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            gap: 0.35rem;
+            max-width: 100%;
+        }
+        .wf-flow-name-edit .wf-flow-name-field {
+            display: inline-flex;
+            flex-wrap: nowrap;
+            align-items: stretch;
+            flex: 1 1 auto;
+            min-width: 230px;
+            max-width: 518px;
+            width: min(518px, 41vw);
+        }
+        .wf-flow-name-edit #flowName {
+            width: 100%;
+            min-width: 0;
+            flex: 1 1 auto;
+            height: 30px;
+            margin: 0;
+            text-transform: uppercase;
+        }
+        .wf-flow-name-edit .btn-edit-flow {
+            flex: 0 0 auto;
+            height: 30px;
+            width: 34px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+            margin-left: -1px;
+        }
     </style>
     <div class="wf-builder-header">
         <div class="d-flex flex-wrap gap-2 align-items-center">
             <label class="fw-bold m-0 small text-dark"><i class="bi bi-funnel"></i> Seleccionar Flujo:</label>
-            <select id="selWorkflow" class="form-control form-control-sm" style="width: 200px; display: inline-block;">
+            <button type="button" class="btn btn-sm btn-info text-white fw-bold" onclick="abrirModalBuscarFlujo()" title="Buscar y cargar un flujo"><i class="bi bi-folder-2-open"></i> Cargar flujo</button>
+            <select id="selWorkflow" style="display: none;" aria-hidden="true" tabindex="-1">
                 <option value="">-- Seleccionar un Flujo --</option>
                 <?php foreach ($flujos_existentes as $flow) { ?>
-                    <option value="<?php echo intval($flow['Wfm_Fam_Cod']); ?>"><?php echo htmlspecialchars($wf_mgr->etiquetaFlujoListado($flow), ENT_QUOTES, 'UTF-8'); ?></option>
+                    <option value="<?php echo intval($flow['Wfm_Fam_Cod']); ?>" data-descripcion="<?php echo htmlspecialchars(isset($flow['Wfm_Des']) ? $flow['Wfm_Des'] : '', ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($wf_mgr->etiquetaFlujoListado($flow), ENT_QUOTES, 'UTF-8'); ?></option>
                 <?php } ?>
             </select>
-            <button class="btn btn-sm btn-info text-white fw-bold" onclick="cargarFlujo()"><i class="bi bi-folder-2-open"></i> Abrir</button>
             <button class="btn btn-sm btn-primary fw-bold" onclick="abrirModalNuevoFlujo()"><i class="bi bi-plus-lg"></i> Nuevo</button>
             <button class="btn btn-sm btn-secondary fw-bold" onclick="abrirModalDuplicarFlujo()"><i class="bi bi-copy"></i> Duplicar</button>
             <button class="btn btn-sm btn-success fw-bold" onclick="guardarFlujo()"><i class="bi bi-save"></i> Guardar borrador</button>
             <button class="btn btn-sm btn-warning fw-bold text-dark" onclick="publicarFlujo()"><i class="bi bi-cloud-upload"></i> Publicar</button>
         </div>
         <div class="wf-builder-status-bar" style="display: none;">
-            <span class="badge bg-primary p-2" id="lblFlowActiveName" style="font-size: 12px; display: none;"><i class="bi bi-diagram-3-fill"></i> Flujo Activo: <span></span></span>
+            <span class="wf-flow-name-edit" id="lblFlowActiveName" style="font-size: 12px; display: none;">
+                <span class="badge bg-primary p-2"><i class="bi bi-diagram-3-fill"></i> Flujo Activo:</span>
+                <span class="wf-flow-name-field input-group input-group-sm">
+                    <input type="text" id="flowName" class="form-control form-control-sm fw-bold" placeholder="Nombre del flujo" autocomplete="off" title="Cambie el nombre aquí; se aplica al Guardar borrador o Publicar" oninput="onFlowNameInput(this)">
+                    <button type="button" class="btn btn-default btn-edit-flow" onclick="abrirModalEditarDatosFlujo()" title="Editar nombre y descripción"><i class="bi bi-pencil"></i></button>
+                </span>
+            </span>
             <span class="badge bg-secondary p-2" id="lblFlowVersion" style="font-size: 11px; display: none;"></span>
             <span class="badge bg-warning text-dark p-2" id="lblFlowDraft" style="font-size: 11px; display: none;"><i class="bi bi-pencil-square"></i> Borrador</span>
             <span class="badge bg-info text-dark p-2" id="lblFlowActiveInstances" style="font-size: 11px; display: none;"></span>
-            <!-- Inputs ocultos para mantener compatibilidad con el JS -->
-            <input type="hidden" id="flowName">
+            <span class="text-muted small" id="lblFlowSaveHint" style="display: none; font-size: 11px;">
+                <i class="bi bi-info-circle"></i> No olvide guardar o publicar para aplicar los cambios.
+            </span>
             <input type="hidden" id="flowDesc">
         </div>
     </div>
@@ -969,7 +1012,7 @@ if (isset($ajax_get_builder)) {
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nombre del Flujo *</label>
-                        <input type="text" id="modalFlowName" class="form-control" placeholder="Ej. APROBACIÓN DE COMPRAS DE TECNOLOGÍA" required style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();" autocomplete="off">
+                        <input type="text" id="modalFlowName" class="form-control" placeholder="Ej. APROBACIÓN DE COMPRAS DE TECNOLOGÍA" required style="text-transform: uppercase;" oninput="wfUppercaseInputPreserveCaret(this)" autocomplete="off">
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Descripción / Notas</label>
@@ -979,6 +1022,40 @@ if (isset($ajax_get_builder)) {
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-success" onclick="aceptarDatosFlujo()"><i class="bi bi-check-lg"></i> Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal buscar / seleccionar flujo -->
+    <div class="modal fade" id="modalBuscarFlujo" tabindex="-1" role="dialog" aria-labelledby="modalBuscarFlujoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title fw-bold" id="modalBuscarFlujoLabel"><i class="bi bi-folder-2-open"></i> Seleccionar flujo</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="txtBuscarFlujoNombre">Buscar por nombre o descripción</label>
+                        <input type="text" id="txtBuscarFlujoNombre" class="form-control" placeholder="Escriba parte del nombre o descripción..." autocomplete="off" onkeyup="filtrarTablaBuscarFlujo()" oninput="filtrarTablaBuscarFlujo()">
+                    </div>
+                    <div class="table-responsive" style="max-height: 360px; overflow-y: auto;">
+                        <table class="table table-striped table-hover table-condensed mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 32%;">Nombre</th>
+                                    <th>Descripción</th>
+                                    <th style="width: 120px;" class="text-center">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tblBuscarFlujoBody"></tbody>
+                        </table>
+                    </div>
+                    <p class="text-muted small mb-0 mt-2" id="lblBuscarFlujoVacio" style="display: none;">No se encontraron flujos con ese nombre.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
@@ -1485,6 +1562,42 @@ if (function_exists('utf8_encode_deep')) {
             padding: 20px;
             overflow-y: auto;
         }
+        .wf-flow-name-edit {
+            display: inline-flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            gap: 0.35rem;
+            max-width: 100%;
+        }
+        .wf-flow-name-edit .wf-flow-name-field {
+            display: inline-flex;
+            flex-wrap: nowrap;
+            align-items: stretch;
+            flex: 1 1 auto;
+            min-width: 230px;
+            max-width: 518px;
+            width: min(518px, 41vw);
+        }
+        .wf-flow-name-edit #flowName {
+            width: 100%;
+            min-width: 0;
+            flex: 1 1 auto;
+            height: 30px;
+            margin: 0;
+            text-transform: uppercase;
+        }
+        .wf-flow-name-edit .btn-edit-flow {
+            flex: 0 0 auto;
+            height: 30px;
+            width: 34px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+            margin-left: -1px;
+        }
         .properties-drawer.open { right: 0; }
     </style>
 </head>
@@ -1495,21 +1608,28 @@ if (function_exists('utf8_encode_deep')) {
             <span class="navbar-brand fw-bold"><i class="bi bi-diagram-3"></i> EXA Workflow Builder</span>
             <div class="d-flex flex-wrap gap-2 align-items-center">
                 <label class="text-white fw-bold m-0 small">Seleccionar Flujo:</label>
-                <select id="selWorkflow" class="form-control form-control-sm" style="width: 180px; display: inline-block;">
+                <button type="button" class="btn btn-sm btn-info text-white fw-bold" onclick="abrirModalBuscarFlujo()" title="Buscar y cargar un flujo"><i class="bi bi-folder-2-open"></i> Cargar flujo</button>
+                <select id="selWorkflow" style="display: none;" aria-hidden="true" tabindex="-1">
                     <option value="">-- Seleccionar un Flujo --</option>
                     <?php foreach ($flujos_existentes as $flow) { ?>
-                        <option value="<?php echo intval($flow['Wfm_Fam_Cod']); ?>"><?php echo htmlspecialchars($wf_mgr->etiquetaFlujoListado($flow), ENT_QUOTES, 'UTF-8'); ?></option>
+                        <option value="<?php echo intval($flow['Wfm_Fam_Cod']); ?>" data-descripcion="<?php echo htmlspecialchars(isset($flow['Wfm_Des']) ? $flow['Wfm_Des'] : '', ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($wf_mgr->etiquetaFlujoListado($flow), ENT_QUOTES, 'UTF-8'); ?></option>
                     <?php } ?>
                 </select>
-                <button class="btn btn-sm btn-info text-white fw-bold" onclick="cargarFlujo()"><i class="bi bi-folder-2-open"></i> Abrir</button>
                 <button class="btn btn-sm btn-primary fw-bold" onclick="abrirModalNuevoFlujo()"><i class="bi bi-plus-lg"></i> Nuevo</button>
                 <button class="btn btn-sm btn-secondary fw-bold" onclick="abrirModalDuplicarFlujo()"><i class="bi bi-copy"></i> Duplicar</button>
                 <button class="btn btn-sm btn-success fw-bold" onclick="guardarFlujo()"><i class="bi bi-save"></i> Guardar borrador</button>
             <button class="btn btn-sm btn-warning fw-bold text-dark" onclick="publicarFlujo()"><i class="bi bi-cloud-upload"></i> Publicar</button>
 
-                <span class="badge bg-primary p-2 ms-3" id="lblFlowActiveName" style="font-size: 12px; display: none;"><i class="bi bi-diagram-3-fill"></i> Flujo Activo: <span></span></span>
-                <!-- Inputs ocultos para mantener compatibilidad con el JS -->
-                <input type="hidden" id="flowName">
+                <span class="wf-flow-name-edit ms-3" id="lblFlowActiveName" style="font-size: 12px; display: none;">
+                    <span class="badge bg-primary p-2"><i class="bi bi-diagram-3-fill"></i> Flujo Activo:</span>
+                    <span class="wf-flow-name-field input-group input-group-sm">
+                        <input type="text" id="flowName" class="form-control form-control-sm fw-bold" placeholder="Nombre del flujo" autocomplete="off" title="Cambie el nombre aquí; se aplica al Guardar borrador o Publicar" oninput="onFlowNameInput(this)">
+                        <button type="button" class="btn btn-light btn-edit-flow" onclick="abrirModalEditarDatosFlujo()" title="Editar nombre y descripción"><i class="bi bi-pencil"></i></button>
+                    </span>
+                    <span class="text-white-50 small ms-2" id="lblFlowSaveHint" style="display: none; font-size: 11px;">
+                        <i class="bi bi-info-circle"></i> No olvide guardar o publicar para aplicar los cambios.
+                    </span>
+                </span>
                 <input type="hidden" id="flowDesc">
             </div>
         </div>
@@ -1703,7 +1823,7 @@ if (function_exists('utf8_encode_deep')) {
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nombre del Flujo *</label>
-                        <input type="text" id="modalFlowName" class="form-control" placeholder="Ej. APROBACIÓN DE COMPRAS DE TECNOLOGÍA" required style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();" autocomplete="off">
+                        <input type="text" id="modalFlowName" class="form-control" placeholder="Ej. APROBACIÓN DE COMPRAS DE TECNOLOGÍA" required style="text-transform: uppercase;" oninput="wfUppercaseInputPreserveCaret(this)" autocomplete="off">
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Descripción / Notas</label>
@@ -1713,6 +1833,40 @@ if (function_exists('utf8_encode_deep')) {
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-success" onclick="aceptarDatosFlujo()"><i class="bi bi-check-lg"></i> Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal buscar / seleccionar flujo -->
+    <div class="modal fade" id="modalBuscarFlujo" tabindex="-1" role="dialog" aria-labelledby="modalBuscarFlujoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title fw-bold" id="modalBuscarFlujoLabel"><i class="bi bi-folder-2-open"></i> Seleccionar flujo</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="txtBuscarFlujoNombre">Buscar por nombre o descripción</label>
+                        <input type="text" id="txtBuscarFlujoNombre" class="form-control" placeholder="Escriba parte del nombre o descripción..." autocomplete="off" onkeyup="filtrarTablaBuscarFlujo()" oninput="filtrarTablaBuscarFlujo()">
+                    </div>
+                    <div class="table-responsive" style="max-height: 360px; overflow-y: auto;">
+                        <table class="table table-striped table-hover table-condensed mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 32%;">Nombre</th>
+                                    <th>Descripción</th>
+                                    <th style="width: 120px;" class="text-center">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tblBuscarFlujoBody"></tbody>
+                        </table>
+                    </div>
+                    <p class="text-muted small mb-0 mt-2" id="lblBuscarFlujoVacio" style="display: none;">No se encontraron flujos con ese nombre.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
@@ -1776,6 +1930,6 @@ if (function_exists('utf8_encode_deep')) {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../VALIDACIONES/wf_builder.js?v=52"></script>
+    <script src="../VALIDACIONES/wf_builder.js?v=59"></script>
 </body>
 </html>

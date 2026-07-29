@@ -1634,11 +1634,14 @@ function actualizarEstadoFlujoUI(flujo) {
         $('#lblFlowVersion').hide();
         $('#lblFlowDraft').hide();
         $('#lblFlowActiveInstances').hide();
+        $('#lblFlowSaveHint').hide();
         $('.wf-builder-status-bar').hide();
         return;
     }
     $('.wf-builder-status-bar').show();
-    $('#lblFlowActiveName').show().find('span').text(flujo.nombre);
+    $('#lblFlowActiveName').css('display', 'inline-flex');
+    $('#lblFlowSaveHint').show();
+    $('#flowName').val(String(flujo.nombre || '').toUpperCase());
     if (flujo.version) {
         $('#lblFlowVersion').show().text('v' + flujo.version + (flujo.es_borrador ? ' (borrador)' : ' (publicada)'));
     } else {
@@ -1654,6 +1657,55 @@ function actualizarEstadoFlujoUI(flujo) {
     } else {
         $('#lblFlowActiveInstances').hide();
     }
+}
+
+function wfUppercaseInputPreserveCaret(input) {
+    if (!input) {
+        return '';
+    }
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const upper = String(input.value || '').toUpperCase();
+    if (input.value !== upper) {
+        input.value = upper;
+        try {
+            if (typeof start === 'number' && typeof end === 'number') {
+                input.setSelectionRange(start, end);
+            }
+        } catch (e) { /* ignore */ }
+    }
+    return input.value;
+}
+
+function onFlowNameInput(el) {
+    const input = el || document.getElementById('flowName');
+    const nombre = $.trim(wfUppercaseInputPreserveCaret(input) || '');
+    if (workflowMeta) {
+        workflowMeta.nombre = nombre;
+    }
+}
+
+function abrirModalEditarDatosFlujo() {
+    pendingSaveAfterModal = false;
+    pendingDuplicateFlowId = null;
+    $('#modalFlowName').val($.trim($('#flowName').val() || '').toUpperCase());
+    $('#modalFlowDesc').val($('#flowDesc').val() || '');
+    $('#modalWorkflowDataLabel').text('Editar datos del flujo');
+    $('#modalWorkflowData').modal('show');
+}
+
+function wfActualizarOpcionFlujoSelect(famId, nombre, version, esBorrador) {
+    if (!famId) {
+        return;
+    }
+    const label = wfFlowOptionLabel(nombre, version || 1, !!esBorrador);
+    let $option = $('#selWorkflow option[value="' + famId + '"]');
+    if ($option.length === 0) {
+        $option = $('<option></option>').val(String(famId)).appendTo('#selWorkflow');
+    }
+    $option.text(label);
+    $option.attr('data-descripcion', String($('#flowDesc').val() || '').trim());
+    $('#selWorkflow').val(String(famId));
 }
 
 function cargarFlujo() {
@@ -1749,6 +1801,69 @@ function cargarFlujo() {
     });
 }
 
+function abrirModalBuscarFlujo() {
+    const $tbody = $('#tblBuscarFlujoBody');
+    $tbody.empty();
+    let total = 0;
+    $('#selWorkflow option').each(function() {
+        const id = String($(this).val() || '').trim();
+        if (!id) {
+            return;
+        }
+        const nombre = String($(this).text() || '').trim();
+        const descripcion = String($(this).attr('data-descripcion') || '').trim();
+        const busqueda = (nombre + ' ' + descripcion).toLowerCase();
+        const idEsc = id.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        const nombreHtml = $('<div>').text(nombre).html();
+        const descHtml = descripcion
+            ? $('<div>').text(descripcion).html()
+            : '<span class="text-muted">—</span>';
+        total++;
+        $tbody.append(
+            '<tr data-busqueda="' + $('<div>').text(busqueda).html() + '">' +
+            '<td>' + nombreHtml + '</td>' +
+            '<td class="small">' + descHtml + '</td>' +
+            '<td class="text-center">' +
+            '<button type="button" class="btn btn-xs btn-primary" onclick="seleccionarFlujoDesdeTabla(\'' + idEsc + '\')">' +
+            '<i class="bi bi-check-lg"></i> Seleccionar</button>' +
+            '</td></tr>'
+        );
+    });
+    $('#txtBuscarFlujoNombre').val('');
+    $('#lblBuscarFlujoVacio').toggle(total === 0).text(
+        total === 0 ? 'No hay flujos disponibles.' : 'No se encontraron flujos con ese criterio.'
+    );
+    filtrarTablaBuscarFlujo();
+    $('#modalBuscarFlujo').modal('show');
+    setTimeout(function() {
+        $('#txtBuscarFlujoNombre').focus();
+    }, 250);
+}
+
+function filtrarTablaBuscarFlujo() {
+    const q = String($('#txtBuscarFlujoNombre').val() || '').toLowerCase().trim();
+    let visible = 0;
+    const total = $('#tblBuscarFlujoBody tr').length;
+    $('#tblBuscarFlujoBody tr').each(function() {
+        const texto = String($(this).attr('data-busqueda') || '');
+        const match = !q || texto.indexOf(q) !== -1;
+        $(this).toggle(match);
+        if (match) {
+            visible++;
+        }
+    });
+    $('#lblBuscarFlujoVacio').toggle(total === 0 || visible === 0);
+}
+
+function seleccionarFlujoDesdeTabla(id) {
+    if (!id) {
+        return;
+    }
+    $('#selWorkflow').val(String(id));
+    $('#modalBuscarFlujo').modal('hide');
+    cargarFlujo();
+}
+
 function abrirModalNuevoFlujo() {
     pendingSaveAfterModal = false;
     pendingDuplicateFlowId = null;
@@ -1811,6 +1926,7 @@ function duplicarFlujoServidor(selectorId, nombre, descripcion) {
             $option = $('<option></option>').val(String(famId)).appendTo('#selWorkflow');
         }
         $option.text(label);
+        $option.attr('data-descripcion', String(descripcion || '').trim());
         $('#selWorkflow').val(String(famId));
         wfNotify('success', res.message || 'Esquema duplicado correctamente.', function() {
             cargarFlujo();
@@ -1845,14 +1961,23 @@ function aceptarDatosFlujo() {
     $('#flowDesc').val($('#modalFlowDesc').val());
     $('#modalWorkflowData').modal('hide');
 
-    actualizarEstadoFlujoUI({
-        nombre: nombre,
-        es_borrador: true,
-        instancias_activas: 0
-    });
+    const metaBase = workflowMeta ? Object.assign({}, workflowMeta) : {};
+    metaBase.nombre = nombre;
+    if (metaBase.es_borrador === undefined) {
+        metaBase.es_borrador = true;
+    }
+    if (metaBase.instancias_activas === undefined) {
+        metaBase.instancias_activas = 0;
+    }
+    actualizarEstadoFlujoUI(metaBase);
 
     if (esGuardadoPendiente) {
         guardarFlujo();
+        return;
+    }
+
+    // Si ya hay un flujo abierto, solo renombra en UI (se persiste al guardar/publicar)
+    if (workflowId || workflowFamilyId) {
         return;
     }
 
@@ -1915,7 +2040,8 @@ function guardarFlujo() {
     if (activeNode) {
         syncFormToActiveNode();
     }
-    const nombre = $('#flowName').val().trim();
+    const nombre = $.trim($('#flowName').val() || '').toUpperCase();
+    $('#flowName').val(nombre);
     if (!nombre) {
         pendingSaveAfterModal = true;
         $('#modalFlowName').val('');
@@ -1959,7 +2085,6 @@ function guardarFlujo() {
     })
     .then(function(res) {
         if (res.success) {
-            const eraNuevo = !payload.id;
             workflowId = res.id;
             workflowFamilyId = res.familia_cod || workflowFamilyId;
             let msg = 'Borrador guardado correctamente.';
@@ -1967,16 +2092,8 @@ function guardarFlujo() {
                 msg += ' Hay ' + res.instancias_activas + ' solicitud(es) en curso que seguiran con la version publicada hasta que publique.';
             }
             wfNotify('success', msg, function() {
-                if (eraNuevo) {
-                    const famId = res.familia_cod || res.id;
-                    const nombre = $('#flowName').val();
-                    if ($('#selWorkflow option[value="' + famId + '"]').length === 0) {
-                        $('#selWorkflow').append('<option value="' + famId + '">' + wfFlowOptionLabel(nombre, res.version || 1, true) + '</option>');
-                    } else {
-                        $('#selWorkflow option[value="' + famId + '"]').text(wfFlowOptionLabel(nombre, res.version || 1, true));
-                    }
-                    $('#selWorkflow').val(String(famId));
-                }
+                const famId = res.familia_cod || workflowFamilyId || res.id;
+                wfActualizarOpcionFlujoSelect(famId, nombre, res.version || 1, true);
                 cargarFlujo();
             });
         } else {
@@ -1989,7 +2106,8 @@ function guardarFlujo() {
 }
 
 function publicarFlujo() {
-    const nombre = $('#flowName').val().trim();
+    const nombre = $.trim($('#flowName').val() || '').toUpperCase();
+    $('#flowName').val(nombre);
     if (!nombre || !nodes.length) {
         wfNotify('danger', 'Guarde un borrador con al menos un nodo antes de publicar.');
         return;
@@ -2021,11 +2139,7 @@ function publicarFlujo() {
             if (res.success) {
                 wfNotify('success', res.message || 'Flujo publicado.', function() {
                     const famId = res.familia_cod || workflowFamilyId;
-                    const label = wfFlowOptionLabel($('#flowName').val(), res.version || '', false);
-                    if (famId && $('#selWorkflow option[value="' + famId + '"]').length) {
-                        $('#selWorkflow option[value="' + famId + '"]').text(label);
-                        $('#selWorkflow').val(String(famId));
-                    }
+                    wfActualizarOpcionFlujoSelect(famId, $('#flowName').val(), res.version || '', false);
                     cargarFlujo();
                 });
             } else {
@@ -2037,28 +2151,22 @@ function publicarFlujo() {
         });
     };
 
-    if (!workflowId) {
-        guardarFlujoInterno(function(res) {
-            if (res && res.success) {
-                publicarAhora(res.id);
-            }
-        });
-        return;
-    }
-
-    if (workflowMeta && !workflowMeta.es_borrador) {
-        wfNotify('info', 'Primero guarde los cambios como borrador y luego publique.');
-        return;
-    }
-
-    publicarAhora(workflowId);
+    // Guardar primero para persistir cambios de nombre/descripcion/lienzo
+    guardarFlujoInterno(function(res) {
+        if (res && res.success) {
+            publicarAhora(res.id);
+        } else {
+            wfNotify('danger', 'Error al guardar antes de publicar: ' + ((res && res.message) || 'Error desconocido'));
+        }
+    });
 }
 
 function guardarFlujoInterno(onDone) {
     if (activeNode) {
         syncFormToActiveNode();
     }
-    const nombre = $('#flowName').val().trim();
+    const nombre = $.trim($('#flowName').val() || '').toUpperCase();
+    $('#flowName').val(nombre);
     const payload = {
         id: workflowId,
         nombre: nombre,
