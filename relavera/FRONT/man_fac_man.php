@@ -768,7 +768,7 @@ if (isset($_GET['manifiestosFactura'])) {
                     {
                         name: 'certificado',
                         label: 'Certificado',
-                        width: 85,
+                        width: 110,
                         align: 'center',
                         sortable: false,
                         formatter: function(cellvalue, options, rowObject) {
@@ -778,7 +778,9 @@ if (isset($_GET['manifiestosFactura'])) {
                             var clienteC = (rowObject.cliente || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
                             var plantaC = (rowObject.Pla_Nom || rowObject.pla_nom || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
                             var fechaC = rowObject.Vet_Fec || '';
-                            return '<button type="button" class="btn btn-primary btn-xs btn-certificado-factura" title="Imprimir certificado (PDF)" data-vet-cod="' + rowObject.Vet_Cod + '" data-vet-num="' + (numShow + '').replace(/"/g, '&quot;') + '" data-cliente="' + clienteC + '" data-planta="' + plantaC + '" data-fecha="' + fechaC + '"><span class="glyphicon glyphicon-print"></span></button>';
+                            var btnPrint = '<button type="button" class="btn btn-primary btn-xs btn-certificado-factura" title="Imprimir certificado (PDF)" data-vet-cod="' + rowObject.Vet_Cod + '" data-vet-num="' + (numShow + '').replace(/"/g, '&quot;') + '" data-cliente="' + clienteC + '" data-planta="' + plantaC + '" data-fecha="' + fechaC + '"><span class="glyphicon glyphicon-print"></span></button>';
+                            var btnVehiculo = '<button type="button" class="btn btn-info btn-xs btn-vehiculo-factura" title="Certificado por vehículo" data-vet-cod="' + rowObject.Vet_Cod + '" data-vet-num="' + (numShow + '').replace(/"/g, '&quot;') + '" data-cliente="' + clienteC + '" data-planta="' + plantaC + '" data-fecha="' + fechaC + '" style="margin-left:4px;"><i class="fa fa-truck"></i></button>';
+                            return btnPrint + btnVehiculo;
                         }
                     }
                 ],
@@ -898,6 +900,7 @@ if (isset($_GET['manifiestosFactura'])) {
                         var vetCod = $btn.data('vet-cod');
                         if (!vetCod) return;
                         window._certFacBtn = $btn;
+                        window._certFacTipo = 'factura';
                         window._certFacData = {
                             vetCod: vetCod,
                             vetNum: $btn.data('vet-num') || '',
@@ -906,6 +909,37 @@ if (isset($_GET['manifiestosFactura'])) {
                             fecha: $btn.data('fecha') || ''
                         };
                         $('#certFacNum').text(window._certFacData.vetNum || vetCod);
+                        $('#modalCertificadoFirma .modal-title').text('Certificado de manifiestos');
+                        $('#btnCertFacGenerar').html('<span class="glyphicon glyphicon-print"></span> Generar certificado');
+                        if (MAN_FAC_FIRMAR_SOLO_SI) {
+                            $('#Cert_Fac_Firmar').prop('checked', true);
+                            $('#btnCertFacSi').addClass('btn-primary active').removeClass('btn-default');
+                            $('#btnCertFacNo').addClass('btn-default').removeClass('btn-primary active');
+                        } else if (MAN_FAC_FIRMAR_SOLO_NO) {
+                            $('#Cert_Fac_Firmar').prop('checked', false);
+                            $('#btnCertFacNo').addClass('btn-primary active').removeClass('btn-default');
+                            $('#btnCertFacSi').addClass('btn-default').removeClass('btn-primary active');
+                        }
+                        $('#modalCertificadoFirma').modal('show');
+                    });
+                    $g.find('.btn-vehiculo-factura').off('click').on('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        var $btn = $(this);
+                        var vetCod = $btn.data('vet-cod');
+                        if (!vetCod) return;
+                        window._certFacBtn = $btn;
+                        window._certFacTipo = 'vehiculo';
+                        window._certFacData = {
+                            vetCod: vetCod,
+                            vetNum: $btn.data('vet-num') || '',
+                            cliente: $btn.data('cliente') || '',
+                            planta: $btn.data('planta') || '',
+                            fecha: $btn.data('fecha') || ''
+                        };
+                        $('#certFacNum').text(window._certFacData.vetNum || vetCod);
+                        $('#modalCertificadoFirma .modal-title').text('Certificado por vehículo');
+                        $('#btnCertFacGenerar').html('<span class="fa fa-truck"></span> Generar reporte');
                         if (MAN_FAC_FIRMAR_SOLO_SI) {
                             $('#Cert_Fac_Firmar').prop('checked', true);
                             $('#btnCertFacSi').addClass('btn-primary active').removeClass('btn-default');
@@ -1380,6 +1414,7 @@ if (isset($_GET['manifiestosFactura'])) {
             function impCertificadoFactura() {
                 var data = window._certFacData;
                 var $btn = window._certFacBtn;
+                var tipo = window._certFacTipo || 'factura';
                 if (!data || !data.vetCod || !$btn || !$btn.length) return;
                 if ($btn.data('printing')) return;
 
@@ -1398,17 +1433,24 @@ if (isset($_GET['manifiestosFactura'])) {
 
                 $btn.data('printing', true).prop('disabled', true).addClass('disabled');
 
-                /* Igual que impCertificadoRango: firmar=Sí → PDF con setSignature (TCPDF); No → HTML sin firma */
+                var urlPdf = (tipo === 'vehiculo')
+                    ? 'man_rep_certificado_factura_vehiculo_pdf.php?'
+                    : 'man_rep_certificado_factura_pdf.php?';
+                var urlHtml = (tipo === 'vehiculo')
+                    ? 'man_rep_certificado_factura_vehiculo.php?embed=1&firmar=0&'
+                    : 'man_rep_certificado_factura.php?embed=1&firmar=0&';
+
+                /* Firmar=Sí → PDF con setSignature (TCPDF); No → HTML sin firma */
                 if (firmar) {
-                    showCertFacLoader('Generando certificado firmado...');
+                    showCertFacLoader(tipo === 'vehiculo' ? 'Generando reporte por vehículo firmado...' : 'Generando certificado firmado...');
                     unlock();
                     hideCertFacLoader();
-                    window.location.href = 'man_rep_certificado_factura_pdf.php?' + qs;
+                    window.location.href = urlPdf + qs;
                     return;
                 }
 
-                showCertFacLoader('Generando certificado...');
-                var url = 'man_rep_certificado_factura.php?embed=1&firmar=0&' + qs;
+                showCertFacLoader(tipo === 'vehiculo' ? 'Generando reporte por vehículo...' : 'Generando certificado...');
+                var url = urlHtml + qs;
 
                 var iframe = manFacCreatePrintIframe();
 
