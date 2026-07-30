@@ -277,6 +277,7 @@ $pdf->SetFont('helvetica', 'B', 10);
 $pdf->Cell(100, 0, '', 'T', 1, 'C');
 $pdf->SetX($anchor_x);
 $pdf->Cell(100, 5, 'ECOPARKMINING S.A.', 0, 1, 'C');
+$y_ecopark = $pdf->GetY();
 
 if ($firma_fue_leida && !empty($certs['cert'])) {
     $cert_data = openssl_x509_parse($certs['cert']);
@@ -314,12 +315,8 @@ if ($firma_fue_leida && !empty($certs['cert'])) {
 }
 
 $emp_cod_verf = isset($Ses_Emp_Cod) ? (int)$Ses_Emp_Cod : 0;
-$page_h = $pdf->getPageHeight();
-$verf_qr_y = $page_h - 40;
-if ($pdf->GetY() > $verf_qr_y - 8) {
-    $pdf->AddPage();
-    $verf_qr_y = $page_h - 40;
-}
+// QR de verificacion: 1 cm debajo de ECOPARKMINING S.A. (no en el pie)
+$verf_qr_y = $y_ecopark + 10;
 man_cert_verificacion_qr_tcpdf($pdf, $Vet_Cod, $emp_cod_verf, null, $verf_qr_y, 32);
 
 $pdf->SetY(-15);
