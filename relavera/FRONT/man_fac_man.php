@@ -1445,7 +1445,7 @@ if (isset($_GET['manifiestosFactura'])) {
                     showCertFacLoader(tipo === 'vehiculo' ? 'Generando reporte por vehículo firmado...' : 'Generando certificado firmado...');
                     unlock();
                     hideCertFacLoader();
-                    window.location.href = urlPdf + qs;
+                    window.open(urlPdf + qs, '_blank');
                     return;
                 }
 

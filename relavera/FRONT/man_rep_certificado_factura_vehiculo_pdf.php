@@ -35,28 +35,32 @@ if (!$cabecera || count($listado) === 0) {
     die('No hay datos para imprimir');
 }
 
-/** Normaliza texto a UTF-8 para TCPDF (Ã‘, tildes, etc.) */
-function man_cert_veh_pdf_utf8($text) {
+/** Normaliza texto a Latin-1 para Helvetica (Ñ, tildes). Evita fuentes TTF externas. */
+function man_cert_veh_pdf_txt($text) {
     $text = trim((string)$text);
     if ($text === '') {
         return '';
     }
-    if (function_exists('mb_check_encoding') && mb_check_encoding($text, 'UTF-8')) {
-        return $text;
-    }
-    if (function_exists('mb_convert_encoding')) {
-        $enc = function_exists('mb_detect_encoding')
-            ? mb_detect_encoding($text, array('UTF-8', 'ISO-8859-1', 'Windows-1252'), true)
-            : false;
-        if ($enc && strtoupper($enc) !== 'UTF-8') {
-            return mb_convert_encoding($text, 'UTF-8', $enc);
+    if (!(function_exists('mb_check_encoding') && mb_check_encoding($text, 'UTF-8'))) {
+        if (function_exists('mb_convert_encoding')) {
+            $detected = function_exists('mb_detect_encoding')
+                ? mb_detect_encoding($text, array('UTF-8', 'ISO-8859-1', 'Windows-1252'), true)
+                : 'ISO-8859-1';
+            $text = mb_convert_encoding($text, 'UTF-8', $detected ? $detected : 'ISO-8859-1');
+        } else {
+            $text = utf8_encode($text);
         }
-        return mb_convert_encoding($text, 'UTF-8', 'ISO-8859-1');
     }
-    return utf8_encode($text);
+    if (function_exists('iconv')) {
+        $out = @iconv('UTF-8', 'ISO-8859-1//TRANSLIT', $text);
+        if ($out !== false) {
+            return $out;
+        }
+    }
+    return utf8_decode($text);
 }
 
-/* Agrupar manifiestos por placa de vehÃ­culo */
+/* Agrupar manifiestos por placa de vehiculo */
 $grupos_vehiculo = array();
 foreach ($listado as $l) {
     $placa = isset($l['Veh_Pla']) ? trim((string)$l['Veh_Pla']) : '';
@@ -92,27 +96,11 @@ foreach ($listado as $l) {
     }
 }
 
-$pdf = new MYPDF('P', 'mm', 'A4', true, 'UTF-8', false);
+$pdf = new MYPDF('P', 'mm', 'A4', false, 'ISO-8859-1', false);
 $firma_fue_leida = false;
 $certs = array();
-
-// Fuente Unicode (Ã‘, tildes): Arial de Windows o DejaVu de mPDF. Helvetica no soporta UTF-8.
+// Helvetica core + ISO-8859-1 (soporta Ñ sin archivos TTF externos)
 $man_cert_veh_font = 'helvetica';
-$ttf_regular = 'C:/Windows/Fonts/arial.ttf';
-$ttf_bold = 'C:/Windows/Fonts/arialbd.ttf';
-if (!file_exists($ttf_regular)) {
-    $ttf_regular = realpath(__DIR__ . '/../../Librerias/MPDF57/ttfonts/DejaVuSansCondensed.ttf');
-    $ttf_bold = realpath(__DIR__ . '/../../Librerias/MPDF57/ttfonts/DejaVuSansCondensed-BoldOblique.ttf');
-}
-if ($ttf_regular && file_exists($ttf_regular)) {
-    $added = TCPDF_FONTS::addTTFfont($ttf_regular, 'TrueTypeUnicode', '', 32);
-    if ($added) {
-        $man_cert_veh_font = $added;
-    }
-    if ($ttf_bold && file_exists($ttf_bold)) {
-        TCPDF_FONTS::addTTFfont($ttf_bold, 'TrueTypeUnicode', '', 32);
-    }
-}
 
 $sql_llave = "SELECT Lla_Rut, Lla_Cla, Lla_Cad FROM llave_elect WHERE Lla_Est = 'A' AND Emp_Cod = $Ses_Emp_Cod";
 $res_llave = $obBD_con1->consulta($sql_llave, $obBD_conexion->conexion);
@@ -152,7 +140,6 @@ $pdf->SetCreator('EXA Software');
 $pdf->SetAuthor('EXA');
 $pdf->SetTitle('Certificado de Manifiestos por Vehiculo');
 $pdf->setPrintHeader(false);
-$pdf->setFontSubsetting(true);
 $pdf->AddPage();
 
 $logo_path = "../../imagenes/$Ses_Emp_Cod/relavera.png";
@@ -161,11 +148,11 @@ if (!file_exists($logo_path)) {
 }
 
 $pdf->SetFont($man_cert_veh_font, 'B', 14);
-$pdf->Cell(0, 7, man_cert_veh_pdf_utf8('Proyecto ambiental asociativo Relavera Comunitaria "EL TABLON"'), 0, 1, 'C');
+$pdf->Cell(0, 7, man_cert_veh_pdf_txt('Proyecto ambiental asociativo Relavera Comunitaria "EL TABLON"'), 0, 1, 'C');
 $pdf->SetFont($man_cert_veh_font, 'B', 11);
-$pdf->MultiCell(0, 6, man_cert_veh_pdf_utf8("CERTIFICADO DE MANIFIESTOS POR VEHÃCULO\nFASE DE DISPOSICIÃ“N FINAL DE DESECHOS PELIGROSOS Y/O ESPECIALES B.07.01"), 0, 'C');
+$pdf->MultiCell(0, 6, man_cert_veh_pdf_txt("CERTIFICADO DE MANIFIESTOS POR VEHICULO\nFASE DE DISPOSICION FINAL DE DESECHOS PELIGROSOS Y/O ESPECIALES B.07.01"), 0, 'C');
 $pdf->SetFont($man_cert_veh_font, 'B', 9);
-$pdf->Cell(0, 6, man_cert_veh_pdf_utf8('ECOPARKMINING S.A. operador asociado del Gobierno AutÃ³nomo Provincial de El Oro'), 0, 1, 'C');
+$pdf->Cell(0, 6, man_cert_veh_pdf_txt('ECOPARKMINING S.A. operador asociado del Gobierno Autonomo Provincial de El Oro'), 0, 1, 'C');
 
 if (file_exists($logo_path)) {
     $pdf->Image($logo_path, 160, 28, 35);
@@ -179,39 +166,39 @@ $vet_num = isset($factura['Vet_Num_Completo']) ? $factura['Vet_Num_Completo'] : 
 $vet_fec = isset($factura['Vet_Fec']) ? $factura['Vet_Fec'] : '';
 $pdf->Cell(45, 5, 'No. factura:', 0, 0);
 $pdf->SetFont($man_cert_veh_font, 'B', 9);
-$pdf->Cell(0, 5, man_cert_veh_pdf_utf8($vet_num), 0, 1);
+$pdf->Cell(0, 5, man_cert_veh_pdf_txt($vet_num), 0, 1);
 $pdf->SetFont($man_cert_veh_font, '', 9);
 $pdf->Cell(45, 5, 'Fecha factura:', 0, 0);
 $pdf->SetFont($man_cert_veh_font, 'B', 9);
-$pdf->Cell(0, 5, man_cert_veh_pdf_utf8($vet_fec), 0, 1);
+$pdf->Cell(0, 5, man_cert_veh_pdf_txt($vet_fec), 0, 1);
 
 $pdf->Ln(2);
 $pdf->SetFont($man_cert_veh_font, '', 9);
 $pdf->Cell(40, 5, 'RUC:', 0, 0);
 $pdf->SetFont($man_cert_veh_font, 'B', 9);
-$pdf->Cell(0, 5, man_cert_veh_pdf_utf8($cabecera['Prs_Ced']), 0, 1);
+$pdf->Cell(0, 5, man_cert_veh_pdf_txt($cabecera['Prs_Ced']), 0, 1);
 $pdf->SetFont($man_cert_veh_font, '', 9);
 $pdf->Cell(40, 5, 'REPRESENTANTE:', 0, 0);
 $pdf->SetFont($man_cert_veh_font, 'B', 9);
-$pdf->Cell(0, 5, man_cert_veh_pdf_utf8($cabecera['Representante']), 0, 1);
+$pdf->Cell(0, 5, man_cert_veh_pdf_txt($cabecera['Representante']), 0, 1);
 $pdf->SetFont($man_cert_veh_font, '', 9);
 $pdf->Cell(40, 5, 'NOMBRE DE PLANTA:', 0, 0);
 $pdf->SetFont($man_cert_veh_font, 'B', 9);
-$pdf->Cell(0, 5, man_cert_veh_pdf_utf8($cabecera['Pla_Nom']), 0, 1);
+$pdf->Cell(0, 5, man_cert_veh_pdf_txt($cabecera['Pla_Nom']), 0, 1);
 $pdf->SetFont($man_cert_veh_font, '', 9);
 $pdf->Cell(40, 5, 'CODIGO DE PLANTA:', 0, 0);
 $pdf->SetFont($man_cert_veh_font, 'B', 9);
-$pdf->Cell(0, 5, man_cert_veh_pdf_utf8($cabecera['Pla_Car']), 0, 1);
+$pdf->Cell(0, 5, man_cert_veh_pdf_txt($cabecera['Pla_Car']), 0, 1);
 
 $pdf->Ln(3);
 $fec_des_txt = $Fec_Des ? date('d/m/Y', strtotime($Fec_Des)) : '-';
 $fec_has_txt = $Fec_Has ? date('d/m/Y', strtotime($Fec_Has)) : '-';
 $pdf->SetFont($man_cert_veh_font, 'B', 9);
-$pdf->Cell(0, 6, man_cert_veh_pdf_utf8('RANGO DE FECHA DE MANIFIESTOS FACTURADOS: Desde ' . $fec_des_txt . '  Hasta ' . $fec_has_txt), 0, 1);
+$pdf->Cell(0, 6, man_cert_veh_pdf_txt('RANGO DE FECHA DE MANIFIESTOS FACTURADOS: Desde ' . $fec_des_txt . '  Hasta ' . $fec_has_txt), 0, 1);
 
 $pdf->Ln(2);
 $pdf->SetFont($man_cert_veh_font, 'B', 9);
-$pdf->Cell(100, 5, man_cert_veh_pdf_utf8('FECHA DE EMISIÃ“N DEL CERTIFICADO:'), 'B', 0);
+$pdf->Cell(100, 5, man_cert_veh_pdf_txt('FECHA DE EMISION DEL CERTIFICADO:'), 'B', 0);
 $pdf->Cell(30, 5, date('d/m/Y'), 'B', 1, 'R');
 $pdf->Cell(100, 5, 'CANTIDAD DE MANIFIESTOS FACTURADOS:', 'B', 0);
 $pdf->Cell(30, 5, (string)(int)$facturados, 'B', 1, 'R');
@@ -219,7 +206,7 @@ $pdf->Cell(30, 5, (string)(int)$facturados, 'B', 1, 'R');
 $pdf->Ln(2);
 $pdf->SetFont($man_cert_veh_font, '', 8);
 $txt_cert = 'EL presente certificado detalla los manifiestos emitidos por la entrega de Desechos Peligrosos B.07.01 al proyecto ambiental asociativo "EL TABLON", por parte del generador de Desechos Peligrosos.';
-$pdf->MultiCell(0, 4, man_cert_veh_pdf_utf8($txt_cert), 0, 'L');
+$pdf->MultiCell(0, 4, man_cert_veh_pdf_txt($txt_cert), 0, 'L');
 $pdf->Ln(2);
 
 // Anchos: Fecha con mÃ­nimo para que dd/mm/yyyy no se parta ni se encoja; Chofer amplia; GuÃ­a razonable
@@ -276,7 +263,7 @@ $header_tabla = function ($pdf) use ($cert_col_widths, $cert_margins, $man_cert_
     $pdf->Cell($cert_col_widths[1], 7, 'Fecha', 1, 0, 'C', true);
     $pdf->Cell($cert_col_widths[2], 7, 'Chofer', 1, 0, 'C', true);
     $pdf->Cell($cert_col_widths[3], 7, 'No Manif.', 1, 0, 'C', true);
-    $pdf->Cell($cert_col_widths[4], 7, man_cert_veh_pdf_utf8('GuÃ­a'), 1, 0, 'C', true);
+    $pdf->Cell($cert_col_widths[4], 7, man_cert_veh_pdf_txt('Guia'), 1, 0, 'C', true);
     $pdf->Cell($cert_col_widths[5], 7, 'Peso KG', 1, 0, 'C', true);
     $pdf->Cell($cert_col_widths[6], 7, 'Valor', 1, 1, 'C', true);
     $pdf->SetFont($man_cert_veh_font, '', 7);
@@ -301,17 +288,17 @@ foreach ($grupos_vehiculo as $placa => $items) {
     $pdf->SetX($cert_margins['left']);
     $pdf->SetFont($man_cert_veh_font, 'B', 8);
     $pdf->SetFillColor(203, 213, 225);
-    $pdf->Cell($cert_table_w, 6, man_cert_veh_pdf_utf8('VEHÃCULO: ' . $placa . '  -  ' . $cant_placa . ' manifiesto(s)'), 1, 1, 'L', true);
+    $pdf->Cell($cert_table_w, 6, man_cert_veh_pdf_txt('VEHICULO: ' . $placa . '  -  ' . $cant_placa . ' manifiesto(s)'), 1, 1, 'L', true);
     $pdf->SetFont($man_cert_veh_font, '', 7);
 
     foreach ($items as $item) {
-        $chofer_txt = isset($item['chofer']) ? man_cert_veh_pdf_utf8($item['chofer']) : '';
+        $chofer_txt = isset($item['chofer']) ? man_cert_veh_pdf_txt($item['chofer']) : '';
         $cells = array(
             (string)$count++,
             date('d/m/Y', strtotime($item['Fecha'])),
             $chofer_txt,
-            man_cert_veh_pdf_utf8(isset($item['Man_Num_Full']) ? $item['Man_Num_Full'] : ''),
-            man_cert_veh_pdf_utf8(isset($item['Man_Gui']) ? $item['Man_Gui'] : ''),
+            man_cert_veh_pdf_txt(isset($item['Man_Num_Full']) ? $item['Man_Num_Full'] : ''),
+            man_cert_veh_pdf_txt(isset($item['Man_Gui']) ? $item['Man_Gui'] : ''),
             number_format((float)$item['Man_Pes'], 2, '.', ','),
             '$ ' . number_format((float)$item['Valor'], 2, '.', ',')
         );
@@ -336,7 +323,7 @@ foreach ($grupos_vehiculo as $placa => $items) {
     $pdf->SetFont($man_cert_veh_font, 'B', 7);
     $pdf->SetFillColor(241, 245, 249);
     $pdf->SetX($cert_margins['left']);
-    $pdf->Cell(array_sum(array_slice($cert_col_widths, 0, 5)), 6, man_cert_veh_pdf_utf8('Subtotal (Placa: ' . $placa . ')'), 1, 0, 'R', true);
+    $pdf->Cell(array_sum(array_slice($cert_col_widths, 0, 5)), 6, man_cert_veh_pdf_txt('Subtotal (Placa: ' . $placa . ')'), 1, 0, 'R', true);
     $pdf->Cell($cert_col_widths[5], 6, number_format($sub_peso, 2, '.', ','), 1, 0, 'R', true);
     $pdf->Cell($cert_col_widths[6], 6, '$ ' . number_format($sub_valor, 2, '.', ','), 1, 1, 'R', true);
     $pdf->SetFont($man_cert_veh_font, '', 7);
@@ -367,7 +354,7 @@ $pdf->Cell(100, 5, 'ECOPARKMINING S.A.', 0, 1, 'C');
 
 if ($firma_fue_leida && !empty($certs['cert'])) {
     $cert_data = openssl_x509_parse($certs['cert']);
-    $nombre_firmante = isset($cert_data['subject']['CN']) ? man_cert_veh_pdf_utf8($cert_data['subject']['CN']) : 'Firmante';
+    $nombre_firmante = isset($cert_data['subject']['CN']) ? man_cert_veh_pdf_txt($cert_data['subject']['CN']) : 'Firmante';
     $pdf->setSignatureAppearance($anchor_x, $anchor_y - ($firma_qr_size + 4), 110, $firma_qr_size + 4);
     $qr_data = "Firmado por: $nombre_firmante\nFecha: " . date('Y-m-d H:i:s') . "\nEntidad: " . (isset($cert_data['issuer']['O']) ? $cert_data['issuer']['O'] : '') . "\nValidar en: www.firmadigital.gob.ec";
     require_once('../../Librerias/TCPDF/include/barcodes/qrcode.php');
@@ -391,7 +378,7 @@ if ($firma_fue_leida && !empty($certs['cert'])) {
     $txt_x = $anchor_x + $firma_qr_size + 4;
     $pdf->SetXY($txt_x, $anchor_y - ($firma_qr_size + 2));
     $pdf->SetFont($man_cert_veh_font, '', 6);
-    $pdf->Cell(80, 4, man_cert_veh_pdf_utf8('Firmado electrÃ³nicamente por:'), 0, 1, 'L');
+    $pdf->Cell(80, 4, man_cert_veh_pdf_txt('Firmado electronicamente por:'), 0, 1, 'L');
     $pdf->SetX($txt_x);
     $pdf->SetFont($man_cert_veh_font, 'B', 9);
     $pdf->MultiCell(75, 4, strtoupper($nombre_firmante), 0, 'L');
@@ -411,7 +398,7 @@ man_cert_verificacion_qr_tcpdf($pdf, $Vet_Cod, $emp_cod_verf, null, $verf_qr_y, 
 
 $pdf->SetY(-15);
 $pdf->SetFont($man_cert_veh_font, '', 7);
-$nombre_usuario = man_cert_veh_pdf_utf8($_SESSION['Ses_Prs_Nom'] . ' ' . $_SESSION['Ses_Prs_Ape']);
+$nombre_usuario = man_cert_veh_pdf_txt($_SESSION['Ses_Prs_Nom'] . ' ' . $_SESSION['Ses_Prs_Ape']);
 $pdf->Cell(95, 10, 'Generado por: ' . $nombre_usuario, 0, 0, 'L');
 $pdf->Cell(95, 10, 'Generado el ' . date('d-m-Y') . ' en EXA [Software Contable]', 0, 0, 'R');
 
