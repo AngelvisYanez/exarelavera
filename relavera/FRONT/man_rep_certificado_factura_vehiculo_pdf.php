@@ -35,29 +35,9 @@ if (!$cabecera || count($listado) === 0) {
     die('No hay datos para imprimir');
 }
 
-/** Normaliza texto a Latin-1 para Helvetica (Ñ, tildes). Evita fuentes TTF externas. */
+/** Alias local: convierte a Latin-1 (Ñ, tildes) para Helvetica. */
 function man_cert_veh_pdf_txt($text) {
-    $text = trim((string)$text);
-    if ($text === '') {
-        return '';
-    }
-    if (!(function_exists('mb_check_encoding') && mb_check_encoding($text, 'UTF-8'))) {
-        if (function_exists('mb_convert_encoding')) {
-            $detected = function_exists('mb_detect_encoding')
-                ? mb_detect_encoding($text, array('UTF-8', 'ISO-8859-1', 'Windows-1252'), true)
-                : 'ISO-8859-1';
-            $text = mb_convert_encoding($text, 'UTF-8', $detected ? $detected : 'ISO-8859-1');
-        } else {
-            $text = utf8_encode($text);
-        }
-    }
-    if (function_exists('iconv')) {
-        $out = @iconv('UTF-8', 'ISO-8859-1//TRANSLIT', $text);
-        if ($out !== false) {
-            return $out;
-        }
-    }
-    return utf8_decode($text);
+    return man_cert_pdf_latin1($text);
 }
 
 /* Agrupar manifiestos por placa de vehiculo */
@@ -389,10 +369,11 @@ if ($firma_fue_leida && !empty($certs['cert'])) {
 
 $emp_cod_verf = isset($Ses_Emp_Cod) ? (int)$Ses_Emp_Cod : 0;
 $page_h = $pdf->getPageHeight();
-$verf_qr_y = $page_h - 58;
+// Mas abajo en la pagina (cerca del pie), sin solapar la firma
+$verf_qr_y = $page_h - 40;
 if ($pdf->GetY() > $verf_qr_y - 8) {
     $pdf->AddPage();
-    $verf_qr_y = $page_h - 58;
+    $verf_qr_y = $page_h - 40;
 }
 man_cert_verificacion_qr_tcpdf($pdf, $Vet_Cod, $emp_cod_verf, null, $verf_qr_y, 32);
 

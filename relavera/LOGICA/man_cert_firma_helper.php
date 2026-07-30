@@ -25,6 +25,33 @@ function man_cert_url_token_suffix() {
 }
 
 /**
+ * Convierte texto a ISO-8859-1 para TCPDF con Helvetica (soporta Ñ, tildes).
+ */
+function man_cert_pdf_latin1($text) {
+    $text = trim((string)$text);
+    if ($text === '') {
+        return '';
+    }
+    if (!(function_exists('mb_check_encoding') && mb_check_encoding($text, 'UTF-8'))) {
+        if (function_exists('mb_convert_encoding')) {
+            $detected = function_exists('mb_detect_encoding')
+                ? mb_detect_encoding($text, array('UTF-8', 'ISO-8859-1', 'Windows-1252'), true)
+                : 'ISO-8859-1';
+            $text = mb_convert_encoding($text, 'UTF-8', $detected ? $detected : 'ISO-8859-1');
+        } else {
+            $text = utf8_encode($text);
+        }
+    }
+    if (function_exists('iconv')) {
+        $out = @iconv('UTF-8', 'ISO-8859-1//TRANSLIT', $text);
+        if ($out !== false) {
+            return $out;
+        }
+    }
+    return utf8_decode($text);
+}
+
+/**
  * Codigo numerico + sufijo (ej. 181 + X + 10 chars = 181X7K2M9A4P1Q).
  */
 function man_cert_obfuscate_code($numeric_code) {
