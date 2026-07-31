@@ -1,10 +1,4 @@
 <?php
-// ob_start();
-// function _suppress_free_result_warning($errno, $errstr) {
-//     if ($errno === E_WARNING && strpos($errstr, 'mysqli_free_result') !== false) return true;
-//     return false;
-// }
-// set_error_handler('_suppress_free_result_warning', E_WARNING);
 
 /**
  * Formulario: Datos de Choferes y Vehículos

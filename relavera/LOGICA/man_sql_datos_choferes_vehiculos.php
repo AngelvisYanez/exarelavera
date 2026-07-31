@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Lógica SQL para Datos de Choferes y Vehículos
  * Ubicación: relavera/LOGICA/man_sql_datos_choferes_vehiculos.php
@@ -6,7 +7,8 @@
  * @version 1.6
  */
 
-function sentencias_datos_choferes_vehiculos($Nro_Sql, $Par_Sql) {
+function sentencias_datos_choferes_vehiculos($Nro_Sql, $Par_Sql)
+{
     $sql = "";
     switch ($Nro_Sql) {
 
@@ -27,7 +29,7 @@ function sentencias_datos_choferes_vehiculos($Nro_Sql, $Par_Sql) {
             break;
 
         case 3:
-            // Listar Choferes con información completa de Persona y Capacitaciones (Sin duplicados por Planta)
+            // Listar Choferes por Emp_Cod (Agrupando por Cédula para mostrar el menor Cho_Cod en caso de duplicados)
             $search = "";
             if (!empty($Par_Sql['search']) && !empty($Par_Sql['op_opciones'])) {
                 $searchTerm = addslashes($Par_Sql['search']);
@@ -35,39 +37,30 @@ function sentencias_datos_choferes_vehiculos($Nro_Sql, $Par_Sql) {
                     $search = " AND persona.Prs_Ced LIKE '%$searchTerm%'";
                 } else if ($Par_Sql['op_opciones'] == 'd') {
                     $search = " AND (CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) LIKE '%$searchTerm%' OR persona.Prs_Nom LIKE '%$searchTerm%' OR persona.Prs_Ape LIKE '%$searchTerm%')";
-                } else if ($Par_Sql['op_opciones'] == 'pn') {
-                    $search = " AND 1=1 ";
-                } else if ($Par_Sql['op_opciones'] == 'pl') {
-                    $search = " AND 1=1 ";
                 }
             }
 
             if (empty($Par_Sql['limits'])) {
-                $sql = "SELECT COUNT(DISTINCT chofer.Cho_Cod) as total 
+                $sql = "SELECT COUNT(DISTINCT persona.Prs_Ced) as total 
                         FROM chofer
                         INNER JOIN persona ON persona.Prs_Cod = chofer.Prs_Cod
-                        /* LEFT JOIN manifiesto_chofer ON manifiesto_chofer.Cho_Cod = chofer.Cho_Cod */
-                        /* LEFT JOIN manifiesto_plantas ON manifiesto_plantas.Pla_Cod = manifiesto_chofer.Pla_Cod */
                         WHERE chofer.Emp_Cod = '$Par_Sql[0]' 
                           AND chofer.Cho_Est != 'I' $search";
             } else {
                 $sql = "SELECT chofer.*, 
                                persona.Prs_Cod, persona.Prs_Nom, persona.Prs_Ape, persona.Prs_Ced, persona.Prs_Fec,
-                               /* manifiesto_plantas.Pla_Nom, manifiesto_plantas.Pla_Cod, */
-                               manifiesto_chofer_capaci.Cap_Cod, manifiesto_chofer_capaci.Cap_Bas_Obli, 
-                               manifiesto_chofer_capaci.Cap_Bas_Fec, manifiesto_chofer_capaci.Cap_Bas_Vig, 
-                               manifiesto_chofer_capaci.Cap_Bas_Adj, manifiesto_chofer_capaci.Cap_Mat_Peli, 
-                               manifiesto_chofer_capaci.Cap_Mat_Fec, manifiesto_chofer_capaci.Cap_Mat_Vig, 
-                               manifiesto_chofer_capaci.Cap_Mat_Adj, manifiesto_chofer_capaci.Cap_Otr_Adj,
-                               CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape) as nombre
+                               CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) as nombre
                         FROM chofer
                         INNER JOIN persona ON persona.Prs_Cod = chofer.Prs_Cod
-                        /* LEFT JOIN manifiesto_chofer ON manifiesto_chofer.Cho_Cod = chofer.Cho_Cod */
-                        /* LEFT JOIN manifiesto_plantas ON manifiesto_plantas.Pla_Cod = manifiesto_chofer.Pla_Cod */
-                        LEFT JOIN manifiesto_chofer_capaci ON manifiesto_chofer_capaci.Cho_Cod = chofer.Cho_Cod
+                        INNER JOIN (
+                            SELECT MIN(c.Cho_Cod) as min_cho_cod
+                            FROM chofer c
+                            INNER JOIN persona p ON p.Prs_Cod = c.Prs_Cod
+                            WHERE c.Emp_Cod = '$Par_Sql[0]' AND c.Cho_Est != 'I'
+                            GROUP BY p.Prs_Ced
+                        ) min_c ON min_c.min_cho_cod = chofer.Cho_Cod
                         WHERE chofer.Emp_Cod = '$Par_Sql[0]' 
                           AND chofer.Cho_Est != 'I' $search
-                        GROUP BY chofer.Cho_Cod
                         ORDER BY persona.Prs_Ape ASC, persona.Prs_Nom ASC " . $Par_Sql['limits'];
             }
             break;
@@ -147,21 +140,12 @@ function sentencias_datos_choferes_vehiculos($Nro_Sql, $Par_Sql) {
             break;
 
         case 8:
-            // Obtener Chofer Completo por ID con todos sus campos y capacitaciones (Sin manifiesto_chofer)
+            // Obtener Chofer Completo por ID directamente de chofer y persona
             $sql = "SELECT chofer.*, 
                            persona.Prs_Cod, persona.Prs_Nom, persona.Prs_Ape, persona.Prs_Ced, persona.Prs_Fec,
-                           /* manifiesto_plantas.Pla_Nom, manifiesto_plantas.Pla_Cod, */
-                           manifiesto_chofer_capaci.Cap_Cod, manifiesto_chofer_capaci.Cap_Bas_Obli, 
-                           manifiesto_chofer_capaci.Cap_Bas_Fec, manifiesto_chofer_capaci.Cap_Bas_Vig, 
-                           manifiesto_chofer_capaci.Cap_Bas_Adj, manifiesto_chofer_capaci.Cap_Mat_Peli, 
-                           manifiesto_chofer_capaci.Cap_Mat_Fec, manifiesto_chofer_capaci.Cap_Mat_Vig, 
-                           manifiesto_chofer_capaci.Cap_Mat_Adj, manifiesto_chofer_capaci.Cap_Otr_Adj,
-                           CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape) as nombre
+                           CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) as nombre
                     FROM chofer
                     INNER JOIN persona ON persona.Prs_Cod = chofer.Prs_Cod
-                    /* LEFT JOIN manifiesto_chofer ON manifiesto_chofer.Cho_Cod = chofer.Cho_Cod */
-                    /* LEFT JOIN manifiesto_plantas ON manifiesto_plantas.Pla_Cod = manifiesto_chofer.Pla_Cod */
-                    LEFT JOIN manifiesto_chofer_capaci ON manifiesto_chofer_capaci.Cho_Cod = chofer.Cho_Cod
                     WHERE chofer.Cho_Cod = '$Par_Sql[0]' LIMIT 1";
             break;
 
