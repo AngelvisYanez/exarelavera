@@ -1108,7 +1108,7 @@ function initGridChoferes() {
       {
         name: "acciones",
         index: "acciones",
-        width: 110,
+        width: 160,
         align: "center",
         sortable: false,
         formatter: function (cellvalue, options, rowObject) {
@@ -1116,11 +1116,15 @@ function initGridChoferes() {
             '<button type="button" class="btn btn-primary btn-xs" onclick="abrirModalChofer(' +
             options.rowId +
             ')" title="Editar"><i class="glyphicon glyphicon-pencil"></i></button> ';
+          var sendBtn =
+            '<button type="button" class="btn btn-success btn-xs" onclick="enviarNotifCapacitacionChofer(' +
+            options.rowId +
+            ')" title="Enviar WhatsApp y correo"><i class="glyphicon glyphicon-send"></i> Enviar</button> ';
           var deleteBtn =
             '<button type="button" class="btn btn-danger btn-xs" onclick="anularChoferGrid(' +
             options.rowId +
             ')" title="Anular"><i class="glyphicon glyphicon-trash"></i></button>';
-          return editBtn + deleteBtn;
+          return editBtn + sendBtn + deleteBtn;
         },
       },
     ],
@@ -1703,6 +1707,52 @@ function anularChoferGrid(Cho_Cod) {
           "json",
         );
       }
+    },
+  );
+}
+
+function enviarNotifCapacitacionChofer(Cho_Cod) {
+  if (!Cho_Cod) {
+    mostrarAlertaUI("Error", "No se identificó el chofer.", "error");
+    return;
+  }
+  swal(
+    {
+      title: "Enviar notificación",
+      text: "¿Enviar por WhatsApp y correo el mensaje de registro de capacitación a este chofer?",
+      type: "info",
+      showCancelButton: true,
+      confirmButtonText: "Enviar",
+      cancelButtonText: "Cancelar",
+    },
+    function (isConfirm) {
+      if (!isConfirm) return;
+      $.post(
+        "",
+        { enviarNotifCapacitacionChoferAjax: true, Cho_Cod: Cho_Cod },
+        function (r) {
+          if (r && r.success) {
+            mostrarAlertaUI(
+              "Éxito",
+              r.message || "Notificación enviada correctamente.",
+              "success",
+            );
+          } else {
+            mostrarAlertaUI(
+              "Error",
+              (r && r.message) || "No se pudo enviar la notificación.",
+              "error",
+            );
+          }
+        },
+        "json",
+      ).fail(function () {
+        mostrarAlertaUI(
+          "Error",
+          "Ocurrió un error de comunicación con el servidor.",
+          "error",
+        );
+      });
     },
   );
 }

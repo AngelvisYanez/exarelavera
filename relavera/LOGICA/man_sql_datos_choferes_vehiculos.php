@@ -143,6 +143,7 @@ function sentencias_datos_choferes_vehiculos($Nro_Sql, $Par_Sql)
             // Obtener Chofer Completo por ID directamente de chofer y persona
             $sql = "SELECT chofer.*, 
                            persona.Prs_Cod, persona.Prs_Nom, persona.Prs_Ape, persona.Prs_Ced, persona.Prs_Fec,
+                           persona.Prs_Tel, persona.Prs_Cor, persona.Prs_Dir,
                            CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) as nombre
                     FROM chofer
                     INNER JOIN persona ON persona.Prs_Cod = chofer.Prs_Cod
@@ -202,6 +203,11 @@ function sentencias_datos_choferes_vehiculos($Nro_Sql, $Par_Sql)
         case 13:
             // Obtener relación manifiesto_matricula_vehiculo por Veh_Cod
             $sql = "SELECT * FROM manifiesto_matricula_vehiculo WHERE Veh_Cod = '$Par_Sql[0]' LIMIT 1";
+            break;
+
+        case 14:
+            // Obtener nombre de planta por Pla_Cod
+            $sql = "SELECT Pla_Cod, Pla_Nom FROM manifiesto_plantas WHERE Pla_Cod = '$Par_Sql[0]' LIMIT 1";
             break;
     }
     return $sql;

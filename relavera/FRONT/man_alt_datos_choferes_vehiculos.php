@@ -11,6 +11,8 @@
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/man_log_datos_choferes_vehiculos.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
+require_once(__DIR__ . '/../LOGICA/relavera_whatsapp_utils.php');
+require_once(__DIR__ . '/../LOGICA/relavera_notif_mail_utils.php');
 
 $obBD_conexion = new Class_Log_Conexion_Datos_Choferes_Vehiculos($Ses_Dat_Dis);
 $obBD_con1 = new Class_Log_Datos_Choferes_Vehiculos;
@@ -552,6 +554,135 @@ if (isset($_POST['anularChoferAjax'])) {
     if (!empty($Cho_Cod)) {
         $obBD_con1->operacionobBD('chofer.update', array('Cho_Est' => 'I', 'where' => array('Cho_Cod' => $Cho_Cod)), $obBD_conexion);
         $resp['success'] = ($obBD_con1->Error == 0);
+    }
+    responderJsonLimpio($resp);
+}
+
+// 7.5. Enviar notificación de capacitación al chofer (WhatsApp + correo Relavera)
+if (isset($_POST['enviarNotifCapacitacionChoferAjax'])) {
+    $resp = array(
+        'success' => false,
+        'message' => '',
+        'whatsapp' => false,
+        'correo' => false,
+        'omitido_whatsapp' => false,
+        'omitido_correo' => false
+    );
+
+    $Cho_Cod = isset($_POST['Cho_Cod']) ? trim((string) $_POST['Cho_Cod']) : '';
+    if ($Cho_Cod === '') {
+        $resp['message'] = 'No se recibió el código del chofer.';
+        responderJsonLimpio($resp);
+    }
+
+    $chofer = $obBD_con1->getRowConsulta(8, array($Cho_Cod), $obBD_conexion);
+    if (empty($chofer)) {
+        $resp['message'] = 'No se encontró el chofer indicado.';
+        responderJsonLimpio($resp);
+    }
+    $obBD_con1->utf8_change_param($chofer);
+
+    $nombre = isset($chofer['nombre']) ? trim((string) $chofer['nombre']) : '';
+    if ($nombre === '') {
+        $nombre = trim(
+            (isset($chofer['Prs_Nom']) ? (string) $chofer['Prs_Nom'] : '') . ' ' .
+            (isset($chofer['Prs_Ape']) ? (string) $chofer['Prs_Ape'] : '')
+        );
+    }
+    $cedula = isset($chofer['Prs_Ced']) ? trim((string) $chofer['Prs_Ced']) : '';
+    $telefono = isset($chofer['Cho_Tel']) ? trim((string) $chofer['Cho_Tel']) : '';
+    if ($telefono === '' && isset($chofer['Prs_Tel'])) {
+        $telefono = trim((string) $chofer['Prs_Tel']);
+    }
+    $correo = isset($chofer['Cho_Cor']) ? trim((string) $chofer['Cho_Cor']) : '';
+    if ($correo === '' && isset($chofer['Prs_Cor'])) {
+        $correo = trim((string) $chofer['Prs_Cor']);
+    }
+    if ($correo !== '' && !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+        $correo = '';
+    }
+    $licencia = trim(
+        (isset($chofer['Cho_Tli']) ? (string) $chofer['Cho_Tli'] : '') .
+        (isset($chofer['Cho_Nli']) && trim((string) $chofer['Cho_Nli']) !== ''
+            ? ' / ' . trim((string) $chofer['Cho_Nli'])
+            : '')
+    );
+    $tipoSangre = isset($chofer['Cho_Tsa']) ? trim((string) $chofer['Cho_Tsa']) : '';
+    $cargo = isset($chofer['Cho_Car']) ? trim((string) $chofer['Cho_Car']) : '';
+    $cadLic = isset($chofer['Cho_Cli']) ? trim((string) $chofer['Cho_Cli']) : '';
+
+    $plantaNom = '';
+    $relPla = $obBD_con1->getRowConsulta(9, array($Cho_Cod), $obBD_conexion);
+    if (!empty($relPla['Pla_Cod'])) {
+        $plaRow = $obBD_con1->getRowConsulta(14, array($relPla['Pla_Cod']), $obBD_conexion);
+        if (!empty($plaRow)) {
+            $obBD_con1->utf8_change_param($plaRow);
+            if (!empty($plaRow['Pla_Nom'])) {
+                $plantaNom = trim((string) $plaRow['Pla_Nom']);
+            }
+        }
+    }
+
+    $lineas = array();
+    $lineas[] = 'Gracias por asistir a la capacitación, tus datos se han registrado con éxito al sistema.';
+    $lineas[] = '';
+    $lineas[] = 'Datos registrados:';
+    if ($nombre !== '') {
+        $lineas[] = '- Nombre: ' . $nombre;
+    }
+    if ($cedula !== '') {
+        $lineas[] = '- Cédula: ' . $cedula;
+    }
+    if ($telefono !== '') {
+        $lineas[] = '- Teléfono: ' . $telefono;
+    }
+    if ($correo !== '') {
+        $lineas[] = '- Correo: ' . $correo;
+    }
+    if ($cargo !== '') {
+        $lineas[] = '- Cargo: ' . $cargo;
+    }
+    if ($licencia !== '') {
+        $lineas[] = '- Licencia: ' . $licencia;
+    }
+    if ($cadLic !== '') {
+        $lineas[] = '- Caducidad licencia: ' . $cadLic;
+    }
+    if ($tipoSangre !== '') {
+        $lineas[] = '- Tipo de sangre: ' . $tipoSangre;
+    }
+    if ($plantaNom !== '') {
+        $lineas[] = '- Planta: ' . $plantaNom;
+    }
+    $mensaje = implode("\n", $lineas);
+    $asunto = 'Registro de capacitación - Relavera';
+
+    $detalle = array();
+
+    $telWa = relavera_whatsapp_normalizar_numero_ec($telefono);
+    if ($telWa === '') {
+        $resp['omitido_whatsapp'] = true;
+        $detalle[] = 'WhatsApp omitido (sin teléfono válido)';
+    } else {
+        $okWa = relavera_enviar_whatsapp_notif($telWa, $mensaje);
+        $resp['whatsapp'] = (bool) $okWa;
+        $detalle[] = $okWa ? 'WhatsApp enviado' : 'WhatsApp falló';
+    }
+
+    if ($correo === '') {
+        $resp['omitido_correo'] = true;
+        $detalle[] = 'Correo omitido (sin email válido)';
+    } else {
+        $okMail = relavera_notif_enviar_correo_notif($correo, $nombre, $asunto, $mensaje, null);
+        $resp['correo'] = (bool) $okMail;
+        $detalle[] = $okMail ? 'Correo enviado' : 'Correo falló';
+    }
+
+    $resp['success'] = ($resp['whatsapp'] || $resp['correo']);
+    if ($resp['success']) {
+        $resp['message'] = 'Notificación procesada: ' . implode('. ', $detalle) . '.';
+    } else {
+        $resp['message'] = 'No se pudo enviar la notificación. ' . implode('. ', $detalle) . '.';
     }
     responderJsonLimpio($resp);
 }
