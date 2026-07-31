@@ -529,8 +529,8 @@ function bloquearModalYMostrarLoader(modalId, textoLoader) {
   var $modal = $(modalId);
   if (!$modal.length) return;
 
-  // Deshabilitar campos y botones dentro del modal
-  $modal.find("input, select, textarea, button").prop("disabled", true);
+  // Deshabilitar únicamente botones para prevenir múltiples envíos
+  $modal.find("button").prop("disabled", true);
   var $widget = $modal.dialog("widget");
   if ($widget && $widget.length) {
     $widget.find(".ui-dialog-titlebar-close").hide();
@@ -1309,9 +1309,9 @@ function abrirModalChofer(id) {
           $("#Cap_Mat_Vig").val(row.Cap_Mat_Vig || "");
 
           $("#Cho_Tsa").val(row.Cho_Tsa || "");
-          $("#Cho_Tel").val(row.Cho_Tel || "");
-          $("#Cho_Cor").val(row.Cho_Cor || "");
-          $("#Cho_Dir").val(row.Cho_Dir || "");
+          $("#Cho_Tel").val(row.Cho_Tel || row.Prs_Tel_Base || "");
+          $("#Cho_Cor").val(row.Cho_Cor || row.Prs_Cor || "");
+          $("#Cho_Dir").val(row.Cho_Dir || row.Prs_Dir_Base || "");
           $("#Cho_Nem").val(row.Cho_Nem || "");
           $("#Cho_Tem").val(row.Cho_Tem || "");
 
@@ -1476,6 +1476,9 @@ function optimizarImagenCliente(file, maxDim, quality) {
 }
 
 function guardarChofer() {
+  var formEl = $("#choferForm")[0];
+  var formData = new FormData(formEl); // Capturar FormData antes de bloquear
+
   var ced = $("#Cho_Ced").val().trim();
   var nom = $("#Prs_Nom").val().trim();
   var ape = $("#Prs_Ape").val().trim();
@@ -1503,7 +1506,6 @@ function guardarChofer() {
   );
 
   // Recolectar insumos y procesar imágenes en cliente
-  var formEl = $("#choferForm")[0];
   var inputs = $(formEl).find('input[type="file"]');
   var promises = [];
   var fileFieldsMeta = [];
@@ -1520,7 +1522,6 @@ function guardarChofer() {
 
   Promise.all(promises)
     .then(function (processedFiles) {
-      var formData = new FormData(formEl);
       formData.append("saveChoferAjax", "true");
 
       // Reemplazar archivos procesados en FormData y calcular diagnósticos de tamaño

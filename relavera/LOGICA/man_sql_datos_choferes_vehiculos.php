@@ -140,13 +140,20 @@ function sentencias_datos_choferes_vehiculos($Nro_Sql, $Par_Sql)
             break;
 
         case 8:
-            // Obtener Chofer Completo por ID directamente de chofer y persona
+            // Obtener Chofer Completo por ID para Edición en Modal (Con capacitaciones y planta)
             $sql = "SELECT chofer.*, 
-                           persona.Prs_Cod, persona.Prs_Nom, persona.Prs_Ape, persona.Prs_Ced, persona.Prs_Fec,
-                           persona.Prs_Tel, persona.Prs_Cor, persona.Prs_Dir,
+                           persona.Prs_Cod, persona.Prs_Nom, persona.Prs_Ape, persona.Prs_Ced, persona.Prs_Fec, persona.Prs_Cor, persona.Prs_Tel as Prs_Tel_Base, persona.Prs_Dir as Prs_Dir_Base,
+                           manifiesto_chofer.Pla_Cod,
+                           manifiesto_chofer_capaci.Cap_Cod, manifiesto_chofer_capaci.Cap_Bas_Obli, 
+                           manifiesto_chofer_capaci.Cap_Bas_Fec, manifiesto_chofer_capaci.Cap_Bas_Vig, 
+                           manifiesto_chofer_capaci.Cap_Bas_Adj, manifiesto_chofer_capaci.Cap_Mat_Peli, 
+                           manifiesto_chofer_capaci.Cap_Mat_Fec, manifiesto_chofer_capaci.Cap_Mat_Vig, 
+                           manifiesto_chofer_capaci.Cap_Mat_Adj, manifiesto_chofer_capaci.Cap_Otr_Adj,
                            CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) as nombre
                     FROM chofer
                     INNER JOIN persona ON persona.Prs_Cod = chofer.Prs_Cod
+                    LEFT JOIN manifiesto_chofer ON manifiesto_chofer.Cho_Cod = chofer.Cho_Cod
+                    LEFT JOIN manifiesto_chofer_capaci ON manifiesto_chofer_capaci.Cho_Cod = chofer.Cho_Cod
                     WHERE chofer.Cho_Cod = '$Par_Sql[0]' LIMIT 1";
             break;
 

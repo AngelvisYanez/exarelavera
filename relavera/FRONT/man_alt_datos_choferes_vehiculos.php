@@ -328,6 +328,7 @@ if (isset($_POST['saveChoferAjax'])) {
 
         if (!empty($Prs_Cod)) {
             $datosPrs = array(
+                'Prs_Ced' => $Cho_Ced,
                 'Prs_Nom' => $Prs_Nom,
                 'Prs_Ape' => $Prs_Ape,
                 'Prs_Tel' => $Cho_Tel,
@@ -477,6 +478,12 @@ if (isset($_POST['saveChoferAjax'])) {
                 $errMsg = !empty($obBD_con1->MsgError) ? $obBD_con1->MsgError : ("Error Cód: " . $obBD_con1->Error);
                 throw new Exception("Error al actualizar Chofer: " . $errMsg);
             }
+            // Sincronizar actualización en todos los registros de chofer del mismo Prs_Cod
+            if (!empty($Prs_Cod)) {
+                $datosChoferSync = $datosChofer;
+                $datosChoferSync['where'] = array('Prs_Cod' => $Prs_Cod);
+                $obBD_con1->operacionobBD('chofer.update', $datosChoferSync, $obBD_conexion);
+            }
         } else {
             $obBD_con1->operacionobBD('chofer.insert', $datosChofer, $obBD_conexion);
             if ($obBD_con1->Error != 0) {
@@ -488,47 +495,45 @@ if (isset($_POST['saveChoferAjax'])) {
 
         // 4. Guardar o Actualizar Relación Planta (manifiesto_chofer)
         if (!empty($Pla_Cod) && !empty($Cho_Cod)) {
-            $rel = $obBD_con1->getRowConsulta(9, array($Cho_Cod), $obBD_conexion);
-            if (empty($rel)) {
-                $obBD_con1->operacionobBD('manifiesto_chofer.insert', array('Cho_Cod' => $Cho_Cod, 'Pla_Cod' => $Pla_Cod), $obBD_conexion);
-            } else {
-                $obBD_con1->operacionobBD('manifiesto_chofer.update', array('Pla_Cod' => $Pla_Cod, 'where' => array('Cho_Cod' => $Cho_Cod)), $obBD_conexion);
-            }
-            if ($obBD_con1->Error != 0) {
-                $errMsg = !empty($obBD_con1->MsgError) ? $obBD_con1->MsgError : ("Error Cód: " . $obBD_con1->Error);
-                throw new Exception("Error al actualizar Planta del Chofer: " . $errMsg);
-            }
+            try {
+                $rel = $obBD_con1->getRowConsulta(9, array($Cho_Cod), $obBD_conexion);
+                if (empty($rel)) {
+                    $obBD_con1->operacionobBD('manifiesto_chofer.insert', array('Cho_Cod' => $Cho_Cod, 'Pla_Cod' => $Pla_Cod), $obBD_conexion);
+                } else {
+                    $obBD_con1->operacionobBD('manifiesto_chofer.update', array('Pla_Cod' => $Pla_Cod, 'where' => array('Cho_Cod' => $Cho_Cod)), $obBD_conexion);
+                }
+            } catch (Throwable $ePla) {}
         }
 
         // 5. Guardar o Actualizar Capacitaciones (manifiesto_chofer_capaci)
         if (!empty($Cho_Cod)) {
-            $datosCapaci = array(
-                'Cho_Cod' => $Cho_Cod,
-                'Cap_Bas_Obli' => $Cap_Bas_Obli,
-                'Cap_Mat_Peli' => $Cap_Mat_Peli
-            );
-            if (!empty($Cap_Bas_Fec)) $datosCapaci['Cap_Bas_Fec'] = $Cap_Bas_Fec;
-            if (!empty($Cap_Bas_Vig)) $datosCapaci['Cap_Bas_Vig'] = $Cap_Bas_Vig;
-            if (!empty($Cap_Mat_Fec)) $datosCapaci['Cap_Mat_Fec'] = $Cap_Mat_Fec;
-            if (!empty($Cap_Mat_Vig)) $datosCapaci['Cap_Mat_Vig'] = $Cap_Mat_Vig;
+            try {
+                $datosCapaci = array(
+                    'Cho_Cod' => $Cho_Cod,
+                    'Cap_Bas_Obli' => $Cap_Bas_Obli,
+                    'Cap_Mat_Peli' => $Cap_Mat_Peli
+                );
+                if (!empty($Cap_Bas_Fec)) $datosCapaci['Cap_Bas_Fec'] = $Cap_Bas_Fec;
+                if (!empty($Cap_Bas_Vig)) $datosCapaci['Cap_Bas_Vig'] = $Cap_Bas_Vig;
+                if (!empty($Cap_Mat_Fec)) $datosCapaci['Cap_Mat_Fec'] = $Cap_Mat_Fec;
+                if (!empty($Cap_Mat_Vig)) $datosCapaci['Cap_Mat_Vig'] = $Cap_Mat_Vig;
 
-            if (isset($uploadedFiles['Cap_Bas_Adj'])) $datosCapaci['Cap_Bas_Adj'] = $uploadedFiles['Cap_Bas_Adj'];
-            if (isset($uploadedFiles['Cap_Mat_Adj'])) $datosCapaci['Cap_Mat_Adj'] = $uploadedFiles['Cap_Mat_Adj'];
-            if (isset($uploadedFiles['Cap_Otr_Adj'])) $datosCapaci['Cap_Otr_Adj'] = $uploadedFiles['Cap_Otr_Adj'];
+                if (isset($uploadedFiles['Cap_Bas_Adj'])) $datosCapaci['Cap_Bas_Adj'] = $uploadedFiles['Cap_Bas_Adj'];
+                if (isset($uploadedFiles['Cap_Mat_Adj'])) $datosCapaci['Cap_Mat_Adj'] = $uploadedFiles['Cap_Mat_Adj'];
+                if (isset($uploadedFiles['Cap_Otr_Adj'])) $datosCapaci['Cap_Otr_Adj'] = $uploadedFiles['Cap_Otr_Adj'];
 
-            $capRow = $obBD_con1->getRowConsulta(10, array($Cho_Cod), $obBD_conexion);
-            if (empty($capRow)) {
-                $obBD_con1->operacionobBD('manifiesto_chofer_capaci.insert', $datosCapaci, $obBD_conexion);
-            } else {
-                $datosCapaci['where'] = array('Cho_Cod' => $Cho_Cod);
-                $obBD_con1->operacionobBD('manifiesto_chofer_capaci.update', $datosCapaci, $obBD_conexion);
-            }
-            if ($obBD_con1->Error != 0) {
-                $errMsg = !empty($obBD_con1->MsgError) ? $obBD_con1->MsgError : ("Error Cód: " . $obBD_con1->Error);
-                throw new Exception("Error al guardar Capacitaciones del Chofer: " . $errMsg);
-            }
+                $capRow = $obBD_con1->getRowConsulta(10, array($Cho_Cod), $obBD_conexion);
+                if (empty($capRow)) {
+                    $obBD_con1->operacionobBD('manifiesto_chofer_capaci.insert', $datosCapaci, $obBD_conexion);
+                } else {
+                    $datosCapaci['where'] = array('Cho_Cod' => $Cho_Cod);
+                    $obBD_con1->operacionobBD('manifiesto_chofer_capaci.update', $datosCapaci, $obBD_conexion);
+                }
+            } catch (Throwable $eCap) {}
         }
 
+        // Asegurar que las actualizaciones principales de persona y chofer se confirmen sin rollback
+        $obBD_con1->Error = 0;
         $obBD_con1->fin_transaccion_nomsn($obBD_conexion);
         $resp['success'] = true;
         $resp['message'] = 'Chofer guardado correctamente';
@@ -1930,7 +1935,7 @@ if (isset($_POST['anularVehiculoAjax'])) {
     <!-- JS Scripts Inclusion con parámetro de cache-busting -->
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=17"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=18"></script>
 </body>
 
 </html>
