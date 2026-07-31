@@ -1,0 +1,633 @@
+/**
+ * Estilos adicionales para "Datos de Choferes y Vehiculos"
+ * Integración estricta con la Máscara Model3 (mascaras/model3).
+ * Ubicación: relavera/RECURSOS/datos_choferes_vehiculos.css
+ */
+
+/* Integración con Panel Principal Model3 y Fondo de Formulario */
+body {
+    background-color: #DFE9F6 !important;
+}
+
+.panel-main.exa-ui-panel,
+.exa-ui-panel .panel-body.exa-body,
+.nav-tabs-custom,
+.nav-tabs-custom > .tab-content,
+.tab-pane,
+.exa-fieldset,
+.ui-dialog .ui-dialog-content,
+#choferDialog,
+#vehiculoDialog,
+#empresaTransporteDialog,
+#choferForm,
+#vehiculoForm,
+#empresaTransporteForm {
+    background-color: #DFE9F6 !important;
+}
+
+.exa-ui-panel .panel-body.exa-body {
+    padding: 15px 20px;
+}
+
+/* Pestañas (Tabs) estilo Model3 */
+.nav-tabs-custom {
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    border: 1px solid #dcdfe6;
+    margin-bottom: 15px;
+}
+
+.nav-tabs-custom > .nav-tabs {
+    background-color: #f4f6f9;
+    border-bottom: 1px solid #dcdfe6;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    padding-top: 6px;
+    padding-left: 12px;
+}
+
+.nav-tabs-custom > .nav-tabs > li > a {
+    color: #4a5568;
+    font-weight: 600;
+    border-radius: 6px 6px 0 0;
+    padding: 9px 16px;
+    margin-right: 4px;
+    font-size: 13px;
+    transition: all 0.2s ease-in-out;
+}
+
+.nav-tabs-custom > .nav-tabs > li.active > a,
+.nav-tabs-custom > .nav-tabs > li.active > a:hover,
+.nav-tabs-custom > .nav-tabs > li.active > a:focus {
+    background-color: #ffffff;
+    color: #1e88e5;
+    border-color: #dcdfe6 #dcdfe6 transparent #dcdfe6;
+    border-top: 3px solid #1e88e5;
+}
+
+.nav-tabs-custom > .nav-tabs > li > a:hover {
+    background-color: #e2e8f0;
+    color: #2d3748;
+}
+
+.icon-tab {
+    margin-right: 7px;
+    font-size: 13px;
+}
+
+.nav-tabs-custom > .tab-content {
+    padding: 15px 18px 20px 18px;
+}
+
+/* ==========================================================================
+   COLUMNA NÚMERO DE FILA (#) Y JQGRID
+   ========================================================================== */
+
+.ui-jqgrid .ui-jqgrid-htable th[id$="_rn"] {
+    text-align: center !important;
+    font-weight: 700 !important;
+    font-size: 11px !important;
+}
+
+.ui-jqgrid tr.jqgrow td.jqgrid-rownum {
+    text-align: center !important;
+    font-weight: bold;
+    color: #64748b !important;
+    background-color: #f8fafc !important;
+}
+
+/* ==========================================================================
+   FIELDSET Y OPCIONES DE BÚSQUEDA (SEGMENTED CONTROL RADIOSET)
+   ========================================================================== */
+
+.exa-fieldset {
+    border: 1px solid #cbd5e1 !important;
+    padding: 8px 12px !important;
+    margin: 0 0 8px 0 !important;
+    border-radius: 6px !important;
+    background-color: #f8fafc !important;
+}
+
+.exa-fieldset.height-sync {
+    min-height: 145px;
+}
+
+.exa-fieldset legend.Titulos2 {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #334155 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    width: auto !important;
+    padding: 0 6px !important;
+    border-bottom: none !important;
+    margin-bottom: 4px !important;
+}
+
+/* Buttonset de opciones de búsqueda (Radioset) */
+.radioset.ui-buttonset {
+    display: inline-flex !important;
+    align-items: center;
+    vertical-align: middle;
+    margin: 0 !important;
+}
+
+.radioset.ui-buttonset .ui-button {
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    height: 26px !important;
+    line-height: 24px !important;
+    padding: 0 14px !important;
+    margin-right: -1px !important;
+    border: 1px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    color: #475569 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    transition: all 0.15s ease-in-out !important;
+    cursor: pointer !important;
+    text-shadow: none !important;
+}
+
+.radioset.ui-buttonset .ui-button.ui-corner-left {
+    border-top-left-radius: 4px !important;
+    border-bottom-left-radius: 4px !important;
+}
+
+.radioset.ui-buttonset .ui-button.ui-corner-right {
+    border-top-right-radius: 4px !important;
+    border-bottom-right-radius: 4px !important;
+}
+
+.radioset.ui-buttonset .ui-button:hover {
+    background: #f1f5f9 !important;
+    color: #1e293b !important;
+    border-color: #94a3b8 !important;
+}
+
+/* Opción Seleccionada (Active Highlight) */
+.radioset.ui-buttonset .ui-button.ui-state-active,
+.radioset.ui-buttonset .ui-button.ui-state-active:hover,
+.radioset.ui-buttonset .ui-button.ui-state-active:focus {
+    background: #1e88e5 !important;
+    border-color: #1565c0 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.2) !important;
+    z-index: 2 !important;
+}
+
+.radioset.ui-buttonset .ui-button .ui-button-text {
+    padding: 0 !important;
+    line-height: 24px !important;
+}
+
+/* ==========================================================================
+   MODALES Y DIÁLOGOS EMERGENTES CON ESTILO MODEL3 (ALINEACIÓN A LA IZQUIERDA Y ANCHO AMPLIADO)
+   ========================================================================== */
+
+.exa-ui-dialog.ui-dialog {
+    border-radius: 6px !important;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25) !important;
+    border: 1px solid #556b83 !important;
+    padding: 0 !important;
+    overflow: hidden;
+    background: #ffffff !important;
+}
+
+.exa-ui-dialog .ui-dialog-titlebar {
+    background: linear-gradient(to bottom, #647b94, #556b83) !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-top-left-radius: 5px !important;
+    border-top-right-radius: 5px !important;
+    padding: 8px 14px !important;
+}
+
+.exa-ui-dialog .ui-dialog-title {
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+    color: #ffffff !important;
+}
+
+.ui-dialog .ui-dialog-titlebar-close,
+.exa-ui-dialog .ui-dialog-titlebar-close {
+    position: absolute !important;
+    right: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 26px !important;
+    height: 26px !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    border-radius: 50% !important;
+    color: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    outline: none !important;
+    cursor: pointer !important;
+    box-shadow: none !important;
+    opacity: 0.9 !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    text-indent: 0 !important;
+    overflow: hidden !important;
+    font-size: 0 !important;
+}
+
+.ui-dialog .ui-dialog-titlebar-close *,
+.exa-ui-dialog .ui-dialog-titlebar-close * {
+    display: none !important;
+}
+
+.ui-dialog .ui-dialog-titlebar-close::before,
+.exa-ui-dialog .ui-dialog-titlebar-close::before {
+    content: "✕" !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    line-height: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: center !important;
+    transform: scale(0.95);
+    transition: transform 0.15s ease;
+}
+
+.ui-dialog .ui-dialog-titlebar-close:hover,
+.exa-ui-dialog .ui-dialog-titlebar-close:hover {
+    background: #ef4444 !important;
+    border-color: #dc2626 !important;
+    opacity: 1 !important;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4) !important;
+}
+
+.ui-dialog .ui-dialog-titlebar-close:hover::before,
+.exa-ui-dialog .ui-dialog-titlebar-close:hover::before {
+    transform: scale(1.1);
+    color: #ffffff !important;
+}
+
+.ui-dialog .ui-dialog-titlebar-close:active,
+.exa-ui-dialog .ui-dialog-titlebar-close:active {
+    transform: translateY(-50%) scale(0.92) !important;
+}
+
+.exa-ui-dialog .ui-dialog-content {
+    background: #ffffff !important;
+    padding: 12px 16px !important;
+    max-height: 84vh;
+    overflow-y: auto !important;
+}
+
+/* Form Controls compactos y alineación estricta de labels a la izquierda */
+.exa-ui-dialog .form-control.input-xs {
+    height: 25px;
+    padding: 1px 6px;
+    font-size: 11px;
+    border-radius: 3px;
+    border: 1px solid #cbd5e1;
+    width: 100%;
+}
+
+.exa-ui-dialog .input-date-wide {
+    padding: 1px 3px !important;
+    font-size: 10.5px !important;
+}
+
+.exa-ui-dialog .select-wide {
+    padding: 1px 4px !important;
+    font-size: 11px !important;
+}
+
+.exa-ui-dialog .form-control:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+/* ALINEACIÓN DE LABELS A LA IZQUIERDA */
+.exa-ui-dialog .label-xs {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #475569;
+    padding-top: 1px;
+    margin-bottom: 2px;
+    text-align: left !important;
+    display: block;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: default;
+}
+
+.exa-ui-dialog .form-group {
+    margin-bottom: 4px;
+}
+
+/* Previsualizaciones de Documentos Adjuntos */
+.preview-doc-box {
+    margin-top: 1px;
+    min-height: 16px;
+}
+
+.preview-doc-box a.label {
+    font-size: 9px;
+    padding: 2px 6px;
+    display: inline-block;
+}
+
+/* Modal QR */
+#qrVehiculoContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+}
+
+#qrVehiculoImg {
+    border: 3px solid #e2e8f0;
+    border-radius: 6px;
+    margin-top: 8px;
+}
+
+/* ==========================================================================
+   ADAPTACIÓN RESPONSIVA (CELULARES Y TABLETS)
+   ========================================================================== */
+
+@media (max-width: 991px) {
+    .exa-ui-dialog.ui-dialog {
+        width: 96vw !important;
+        left: 2vw !important;
+        max-width: 96vw !important;
+    }
+    
+    #choferDialog .col-xs-6,
+    #choferDialog .col-xs-4,
+    #choferDialog .col-xs-3,
+    #choferDialog .col-xs-5 {
+        width: 100% !important;
+        float: none !important;
+        margin-bottom: 4px;
+    }
+    
+    .exa-fieldset.height-sync {
+        min-height: auto !important;
+    }
+}
+
+/* ==========================================================================
+   LOADER / SPINNER Y BLOQUEO DE MODALES AL GUARDAR
+   ========================================================================== */
+
+@keyframes exaSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.glyphicon-spin {
+    display: inline-block !important;
+    animation: exaSpin 0.75s linear infinite !important;
+}
+
+.exa-modal-loader-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.88);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    backdrop-filter: blur(2px);
+    transition: all 0.2s ease-in-out;
+}
+
+.exa-modal-loader-overlay .spinner-box {
+    text-align: center;
+    padding: 16px 28px;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.18);
+    border: 1px solid #cbd5e1;
+}
+
+.exa-modal-loader-overlay .spinner-icon {
+    font-size: 32px;
+    color: #1e88e5;
+    margin-bottom: 10px;
+    display: inline-block;
+    animation: exaSpin 0.75s linear infinite;
+}
+
+.exa-modal-loader-overlay .spinner-text {
+    font-size: 12px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ==========================================================================
+   RESALTADO DE FILA SELECCIONADA EN GRIDS (SELECCIÓN VISIBLE EN TABLAS)
+   ========================================================================== */
+
+.ui-jqgrid tr.ui-state-highlight,
+.ui-jqgrid tr.ui-state-highlight td,
+.ui-jqgrid tr.jqgrow.ui-state-highlight td,
+.exa-ui-panel .ui-jqgrid tr.ui-state-highlight td,
+.exa-ui-panel .ui-jqgrid tr.jqgrow.ui-state-highlight td {
+    background-color: #dbeafe !important; /* Azul selección suave moderno */
+    background-image: none !important;
+    color: #1e3a8a !important; /* Texto contrastado en azul oscuro */
+    font-weight: 600 !important;
+}
+
+/* Fondo especial para la celda de numeración # cuando la fila está seleccionada */
+.ui-jqgrid tr.ui-state-highlight td.jqgrid-rownum,
+.exa-ui-panel .ui-jqgrid tr.ui-state-highlight td.jqgrid-rownum {
+    background-color: #bfdbfe !important;
+    color: #1e40af !important;
+}
+
+/* Hover en filas no seleccionadas */
+.ui-jqgrid tr.jqgrow:not(.ui-state-highlight):hover td,
+.exa-ui-panel .ui-jqgrid tr.jqgrow:not(.ui-state-highlight):hover td {
+    background-color: #f1f5f9 !important;
+}
+
+/* ==========================================================================
+   INTEGRACIÓN DE CHOSEN (BUSCADOR INTERNO EN SELECTS DE MODALES)
+   ========================================================================== */
+
+.chosen-container {
+    width: 100% !important;
+    font-size: 11px !important;
+}
+
+.chosen-container-single .chosen-single {
+    height: 25px !important;
+    line-height: 23px !important;
+    border-radius: 4px !important;
+    border: 1px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    color: #1e293b !important;
+    box-shadow: none !important;
+    padding: 0 0 0 8px !important;
+    background-image: none !important;
+}
+
+.chosen-container-single .chosen-single div b {
+    background-position: 0 3px !important;
+}
+
+.chosen-container .chosen-drop {
+    z-index: 100005 !important; /* Por encima de los modales emergentes */
+    border-radius: 4px !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.18) !important;
+    border: 1px solid #94a3b8 !important;
+    background: #ffffff !important;
+}
+
+.chosen-container-single .chosen-search input[type="text"] {
+    height: 26px !important;
+    line-height: 24px !important;
+    font-size: 11px !important;
+    border-radius: 3px !important;
+    border: 1px solid #cbd5e1 !important;
+    padding: 2px 6px !important;
+    margin: 4px 0 !important;
+}
+
+.chosen-container .chosen-results {
+    max-height: 190px !important;
+    font-size: 11px !important;
+    padding: 0 4px 4px 4px !important;
+    margin: 0 !important;
+}
+
+.chosen-container .chosen-results li.highlighted {
+    background: #1e88e5 !important;
+    background-image: none !important;
+    color: #ffffff !important;
+}
+
+.chosen-container-active.chosen-with-drop .chosen-single {
+    border-color: #1e88e5 !important;
+    box-shadow: 0 0 0 2px rgba(30, 136, 229, 0.25) !important;
+}
+
+/* Componente Unificado Horizontal Ultra-Compacto (Dropzone + Botón Vista Previa Al Lado) */
+.exa-file-dropzone-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    position: relative !important;
+    border: 1.5px dashed #93c5fd !important;
+    background-color: #f0f7ff !important;
+    border-radius: 4px !important;
+    padding: 2px 6px !important;
+    height: 27px !important;
+    max-height: 27px !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    cursor: pointer !important;
+    margin-top: 1px !important;
+    margin-bottom: 1px !important;
+    outline: none !important;
+    box-sizing: border-box !important;
+}
+
+.exa-file-dropzone-container:hover,
+.exa-file-dropzone-container:focus,
+.exa-file-dropzone-container.drag-over,
+.exa-file-dropzone-container.active-target {
+    border-color: #2563eb !important;
+    background-color: #dbeafe !important;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18) !important;
+}
+
+.exa-file-dropzone-container .dropzone-text {
+    font-size: 10.5px !important;
+    color: #1e40af !important;
+    font-weight: 500 !important;
+    user-select: none !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    flex: 1 !important;
+    text-align: left !important;
+}
+
+.exa-file-dropzone-container .dropzone-text b,
+.exa-file-dropzone-container .btn-browse {
+    color: #1d4ed8 !important;
+    text-decoration: underline !important;
+    cursor: pointer !important;
+    padding: 1px 4px !important;
+    border-radius: 3px !important;
+    background: rgba(37, 99, 235, 0.12) !important;
+    transition: all 0.15s ease !important;
+    display: inline-block !important;
+}
+
+.exa-file-dropzone-container .btn-browse:hover {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+}
+
+.exa-file-dropzone-container .paste-tag {
+    font-size: 9.5px !important;
+    color: #2563eb !important;
+    font-weight: bold !important;
+}
+
+.exa-file-dropzone-container input[type="file"] {
+    display: none !important;
+}
+
+.preview-doc-box {
+    margin-top: 0 !important;
+    margin-left: 4px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+    min-height: 20px !important;
+}
+
+.preview-doc-box .btn-preview-inline {
+    font-size: 10px !important;
+    padding: 1px 6px !important;
+    height: 20px !important;
+    line-height: 18px !important;
+    margin: 0 !important;
+    border-radius: 3px !important;
+    box-shadow: none !important;
+}
+
+/* Scroll vertical controlado en modales para evitar desbordes */
+.exa-ui-dialog .ui-dialog-content {
+    max-height: 82vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-right: 8px !important;
+}
+
+
+
+
