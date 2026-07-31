@@ -1117,9 +1117,11 @@ function initGridChoferes() {
             options.rowId +
             ')" title="Editar"><i class="glyphicon glyphicon-pencil"></i></button> ';
           var sendBtn =
-            '<button type="button" class="btn btn-success btn-xs" onclick="enviarNotifCapacitacionChofer(' +
+            '<button type="button" class="btn btn-success btn-xs btn-enviar-notif-chofer" id="btnEnviarChofer_' +
             options.rowId +
-            ')" title="Enviar WhatsApp y correo"><i class="glyphicon glyphicon-send"></i> Enviar</button> ';
+            '" onclick="enviarNotifCapacitacionChofer(' +
+            options.rowId +
+            ', this)" title="Enviar WhatsApp y correo"><i class="glyphicon glyphicon-send"></i> Enviar</button> ';
           var deleteBtn =
             '<button type="button" class="btn btn-danger btn-xs" onclick="anularChoferGrid(' +
             options.rowId +
@@ -1711,11 +1713,39 @@ function anularChoferGrid(Cho_Cod) {
   );
 }
 
-function enviarNotifCapacitacionChofer(Cho_Cod) {
+var _enviandoNotifChofer = {};
+
+function setEstadoBtnEnviarChofer($btn, enviando) {
+  if (!$btn || !$btn.length) return;
+  if (enviando) {
+    $btn
+      .prop("disabled", true)
+      .addClass("disabled")
+      .html('<i class="glyphicon glyphicon-refresh"></i> Enviando...');
+  } else {
+    $btn
+      .prop("disabled", false)
+      .removeClass("disabled")
+      .html('<i class="glyphicon glyphicon-send"></i> Enviar');
+  }
+}
+
+function enviarNotifCapacitacionChofer(Cho_Cod, btnEl) {
   if (!Cho_Cod) {
     mostrarAlertaUI("Error", "No se identificó el chofer.", "error");
     return;
   }
+  if (_enviandoNotifChofer[Cho_Cod]) {
+    return;
+  }
+
+  var $btn = btnEl
+    ? $(btnEl)
+    : $("#btnEnviarChofer_" + Cho_Cod);
+  if ($btn.length && $btn.prop("disabled")) {
+    return;
+  }
+
   swal(
     {
       title: "Enviar notificación",
@@ -1727,6 +1757,11 @@ function enviarNotifCapacitacionChofer(Cho_Cod) {
     },
     function (isConfirm) {
       if (!isConfirm) return;
+      if (_enviandoNotifChofer[Cho_Cod]) return;
+
+      _enviandoNotifChofer[Cho_Cod] = true;
+      setEstadoBtnEnviarChofer($btn, true);
+
       $.post(
         "",
         { enviarNotifCapacitacionChoferAjax: true, Cho_Cod: Cho_Cod },
@@ -1746,13 +1781,18 @@ function enviarNotifCapacitacionChofer(Cho_Cod) {
           }
         },
         "json",
-      ).fail(function () {
-        mostrarAlertaUI(
-          "Error",
-          "Ocurrió un error de comunicación con el servidor.",
-          "error",
-        );
-      });
+      )
+        .fail(function () {
+          mostrarAlertaUI(
+            "Error",
+            "Ocurrió un error de comunicación con el servidor.",
+            "error",
+          );
+        })
+        .always(function () {
+          _enviandoNotifChofer[Cho_Cod] = false;
+          setEstadoBtnEnviarChofer($btn, false);
+        });
     },
   );
 }
