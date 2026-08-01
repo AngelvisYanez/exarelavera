@@ -2,6 +2,8 @@
 
 /**
  * Formulario: Datos de Choferes y Vehículos
+ * Agrupa la gestión completa de Empresas de Transporte, Choferes y Vehículos con Máscara Model3.
+ * Ubicación: relavera/FRONT/man_alt_datos_choferes_vehiculos.php
  * @author Sistema EXA
  * @version 2.8
  */
@@ -23,8 +25,8 @@ $plantas = $obBD_con1->getArrayConsulta(2, array(), $obBD_conexion);
 $obBD_con1->utf8_change_param($plantas);
 
 /* ==========================================================================
-    FUNCIÓN AUXILIAR DE COMPRESIÓN DE IMÁGENES EN SERVIDOR (PHP GD)
-============================================================================ */
+   FUNCIÓN AUXILIAR DE COMPRESIÓN DE IMÁGENES EN SERVIDOR (PHP GD)
+   ========================================================================== */
 function optimizarYComprimirImagen($sourcePath, $targetPath, $maxDim = 1920, $quality = 85)
 {
     list($width, $height, $type) = @getimagesize($sourcePath);
@@ -210,16 +212,38 @@ if (isset($_REQUEST['listChoferesGridAjax'])) {
     responderJsonLimpio($response);
 }
 
-// 5. Buscar persona por Cédula / Identificación
+// 5. Buscar persona / chofer por Cédula / Identificación
 if (isset($_GET['buscarPersonaCedulaAjax'])) {
-    $resp = array('success' => true, 'existe' => false);
-    $ced = isset($_GET['Prs_Ced']) ? trim($_GET['Prs_Ced']) : '';
+    $resp = array('success' => true, 'existe' => false, 'esChofer' => false);
+    $ced = isset($_GET['Prs_Ced']) ? preg_replace('/[^a-zA-Z0-9]/', '', trim($_GET['Prs_Ced'])) : '';
     if (!empty($ced)) {
-        $persona = $obBD_con1->getRowConsulta(6, array($ced), $obBD_conexion);
-        if (!empty($persona)) {
+        // 1. Verificar si ya existe como chofer en la empresa
+        $chofer = $obBD_con1->getRowConsulta(15, array($Ses_Emp_Cod, $ced), $obBD_conexion);
+        if (!empty($chofer)) {
             $resp['existe'] = true;
-            $resp['persona'] = $persona;
+            $resp['esChofer'] = true;
+            $resp['chofer'] = $chofer;
+            $resp['persona'] = array(
+                'Prs_Cod' => $chofer['Prs_Cod'],
+                'Prs_Ced' => $chofer['Prs_Ced'],
+                'Prs_Nom' => $chofer['Prs_Nom'],
+                'Prs_Ape' => $chofer['Prs_Ape'],
+                'Prs_Tel' => !empty($chofer['Prs_Tel_Base']) ? $chofer['Prs_Tel_Base'] : $chofer['Cho_Tel'],
+                'Prs_Cor' => !empty($chofer['Prs_Cor']) ? $chofer['Prs_Cor'] : $chofer['Cho_Cor'],
+                'Prs_Dir' => !empty($chofer['Prs_Dir_Base']) ? $chofer['Prs_Dir_Base'] : $chofer['Cho_Dir'],
+                'Prs_Fec' => $chofer['Prs_Fec']
+            );
+            $obBD_con1->utf8_change_param($resp['chofer']);
             $obBD_con1->utf8_change_param($resp['persona']);
+        } else {
+            // 2. Si no es chofer, verificar si existe en tabla persona
+            $persona = $obBD_con1->getRowConsulta(6, array($ced), $obBD_conexion);
+            if (!empty($persona)) {
+                $resp['existe'] = true;
+                $resp['esChofer'] = false;
+                $resp['persona'] = $persona;
+                $obBD_con1->utf8_change_param($resp['persona']);
+            }
         }
     }
     responderJsonLimpio($resp);
@@ -1936,7 +1960,7 @@ if (isset($_POST['anularVehiculoAjax'])) {
     <!-- JS Scripts Inclusion con parámetro de cache-busting -->
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=18"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=19"></script>
 </body>
 
 </html>

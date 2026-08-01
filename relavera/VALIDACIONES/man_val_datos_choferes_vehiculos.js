@@ -1,8 +1,3 @@
-/**
- * JS Validaciones y comportamiento del módulo "Datos de Choferes y Vehiculos"
- * Integración con Máscara Model3 (exaUiAfterViewChange / dialogs / radioset / Excel Export / Modal Chofer 1250px Responsivo / Compresión y Previsualización de Documentos / Edición AJAX Completa / Formato Estricto de Fechas AAAA / Bloqueo con Spinner en Guardado / Filtro Alfanumérico Licencia).
- * Ubicación: relavera/VALIDACIONES/man_val_datos_choferes_vehiculos.js
- */
 
 // Función de alerta estética UI con jQuery UI (Sustituye popups nativos del navegador de forma segura)
 function mostrarAlertaUI(titulo, mensaje, tipo, callback) {
@@ -1204,16 +1199,29 @@ function buscarPersonaCedula(cedula) {
     { buscarPersonaCedulaAjax: true, Prs_Ced: cedula },
     function (r) {
       if (r.success && r.existe) {
-        $("#Prs_Nom").val(r.persona.Prs_Nom || "");
-        $("#Prs_Ape").val(r.persona.Prs_Ape || "");
-        $("#Cho_Tel").val(r.persona.Prs_Tel || "");
-        $("#Cho_Cor").val(r.persona.Prs_Cor || "");
-        $("#Cho_Dir").val(r.persona.Prs_Dir || "");
-        if (r.persona.Prs_Fec) {
-          $("#Prs_Fec").val(r.persona.Prs_Fec);
-          calcularEdad(r.persona.Prs_Fec);
+        if (r.esChofer && r.chofer) {
+          poblarFormularioChofer(r.chofer);
+          var nomComp = r.chofer.nombre || ((r.chofer.Prs_Nom || "") + " " + (r.chofer.Prs_Ape || "")).trim();
+          $("#choferDialog").dialog("option", "title", "Editar Chofer - " + nomComp);
+          mostrarAlertaUI(
+            "Chofer Ya Registrado",
+            "El chofer con Cédula <b>" +
+              cedula +
+              "</b> ya se encuentra registrado en el sistema.<br><br>Se han cargado sus datos completos para su consulta o modificación.",
+            "warning",
+          );
+        } else if (r.persona) {
+          $("#Prs_Nom").val(r.persona.Prs_Nom || "");
+          $("#Prs_Ape").val(r.persona.Prs_Ape || "");
+          $("#Cho_Tel").val(r.persona.Prs_Tel || "");
+          $("#Cho_Cor").val(r.persona.Prs_Cor || "");
+          $("#Cho_Dir").val(r.persona.Prs_Dir || "");
+          if (r.persona.Prs_Fec) {
+            $("#Prs_Fec").val(r.persona.Prs_Fec);
+            calcularEdad(r.persona.Prs_Fec);
+          }
+          $("#Prs_Cod").val(r.persona.Prs_Cod || "");
         }
-        $("#Prs_Cod").val(r.persona.Prs_Cod || "");
       }
     },
     "json",
@@ -1276,109 +1284,11 @@ function abrirModalChofer(id) {
       { getChoferByIdAjax: true, Cho_Cod: id },
       function (r) {
         if (r.success && r.chofer) {
-          var row = r.chofer;
-          $("#Cho_Cod").val(row.Cho_Cod);
-          $("#Prs_Cod").val(row.Prs_Cod);
-          $("#Cho_Ced").val(row.Prs_Ced);
-          $("#Prs_Nom").val(row.Prs_Nom || "");
-          $("#Prs_Ape").val(row.Prs_Ape || "");
-          if (row.Prs_Fec) {
-            $("#Prs_Fec").val(row.Prs_Fec);
-            calcularEdad(row.Prs_Fec);
-          }
-
-          $("#Cho_Nac").val(row.Cho_Nac || "Ecuatoriana");
-          $("#Cho_Eci").val(row.Cho_Eci || "Soltero/a");
-          $("#Cho_Pla_Cod").val(row.Pla_Cod || "");
-          $("#Cho_Car").val(row.Cho_Car || "Chofer");
-          $("#Cho_Est").val(row.Cho_Est || "A");
-          $("#Cho_Tco").val(row.Cho_Tco || "Indefinido");
-
-          $("#Cho_Tli").val(row.Cho_Tli || "");
-          $("#Cho_Nli").val(row.Cho_Nli || "");
-          $("#Cho_Fei").val(row.Cho_Fei || "");
-          $("#Cho_Cli").val(row.Cho_Cli || "");
-          evaluarEstadoLicencia();
-
-          $("#Cap_Bas_Obli").val(row.Cap_Bas_Obli || "N");
-          $("#Cap_Bas_Fec").val(row.Cap_Bas_Fec || "");
-          $("#Cap_Bas_Vig").val(row.Cap_Bas_Vig || "");
-
-          $("#Cap_Mat_Peli").val(row.Cap_Mat_Peli || "N");
-          $("#Cap_Mat_Fec").val(row.Cap_Mat_Fec || "");
-          $("#Cap_Mat_Vig").val(row.Cap_Mat_Vig || "");
-
-          $("#Cho_Tsa").val(row.Cho_Tsa || "");
-          $("#Cho_Tel").val(row.Cho_Tel || row.Prs_Tel_Base || "");
-          $("#Cho_Cor").val(row.Cho_Cor || row.Prs_Cor || "");
-          $("#Cho_Dir").val(row.Cho_Dir || row.Prs_Dir_Base || "");
-          $("#Cho_Nem").val(row.Cho_Nem || "");
-          $("#Cho_Tem").val(row.Cho_Tem || "");
-
-          // Actualizar Chosen (Buscador interno) en selects del modal
-          $("#choferForm select.chosen-select").trigger("chosen:updated");
-
-          // Renderizar previews de todos los documentos adjuntos
-          renderDocPreview(
-            "preview_Cho_Img_Lic_Anv",
-            row.Cho_Img_Lic_Anv,
-            "Licencia Anverso",
-          );
-          renderDocPreview(
-            "preview_Cho_Img_Lic_Rev",
-            row.Cho_Img_Lic_Rev,
-            "Licencia Reverso",
-          );
-          renderDocPreview(
-            "preview_Cap_Bas_Adj",
-            row.Cap_Bas_Adj,
-            "Cert. Básico",
-          );
-          renderDocPreview(
-            "preview_Cap_Mat_Adj",
-            row.Cap_Mat_Adj,
-            "Cert. Mat. Pelig",
-          );
-          renderDocPreview(
-            "preview_Cho_Doc_Ced",
-            row.Cho_Doc_Ced,
-            "Cédula Anverso",
-          );
-          renderDocPreview(
-            "preview_Cho_Doc_Ced_Rev",
-            row.Cho_Doc_Ced_Rev,
-            "Cédula Reverso",
-          );
-          renderDocPreview(
-            "preview_Cho_Doc_Vot",
-            row.Cho_Doc_Vot,
-            "Certif. Votación",
-          );
-          renderDocPreview(
-            "preview_Cho_Doc_Fot",
-            row.Cho_Doc_Fot,
-            "Foto Carnet",
-          );
-          renderDocPreview(
-            "preview_Cho_Doc_Ldi",
-            row.Cho_Doc_Ldi,
-            "Licencia Digital",
-          );
-          renderDocPreview(
-            "preview_Cho_Doc_Ant",
-            row.Cho_Doc_Ant,
-            "Antecedentes Penales",
-          );
-          renderDocPreview(
-            "preview_Cho_Doc_San",
-            row.Cho_Doc_San,
-            "Carnet Sangre",
-          );
-
+          poblarFormularioChofer(r.chofer);
           $("#choferDialog").dialog(
             "option",
             "title",
-            "Editar Chofer - " + row.nombre,
+            "Editar Chofer - " + r.chofer.nombre,
           );
           $("#choferDialog").dialog("open");
         } else {
@@ -1401,6 +1311,66 @@ function abrirModalChofer(id) {
     $("#choferDialog").dialog("option", "title", "Registrar Chofer");
     $("#choferDialog").dialog("open");
   }
+}
+
+/**
+  * Poblar datos de chofer y documentos adjuntos en el formulario modal
+  */
+function poblarFormularioChofer(row) {
+  if (!row) return;
+  $("#Cho_Cod").val(row.Cho_Cod || "");
+  $("#Prs_Cod").val(row.Prs_Cod || "");
+  $("#Cho_Ced").val(row.Prs_Ced || "");
+  $("#Prs_Nom").val(row.Prs_Nom || "");
+  $("#Prs_Ape").val(row.Prs_Ape || "");
+  if (row.Prs_Fec) {
+    $("#Prs_Fec").val(row.Prs_Fec);
+    calcularEdad(row.Prs_Fec);
+  }
+
+  $("#Cho_Nac").val(row.Cho_Nac || "Ecuatoriana");
+  $("#Cho_Eci").val(row.Cho_Eci || "Soltero/a");
+  $("#Cho_Pla_Cod").val(row.Pla_Cod || "");
+  $("#Cho_Car").val(row.Cho_Car || "Chofer");
+  $("#Cho_Est").val(row.Cho_Est || "A");
+  $("#Cho_Tco").val(row.Cho_Tco || "Indefinido");
+
+  $("#Cho_Tli").val(row.Cho_Tli || "");
+  $("#Cho_Nli").val(row.Cho_Nli || "");
+  $("#Cho_Fei").val(row.Cho_Fei || "");
+  $("#Cho_Cli").val(row.Cho_Cli || "");
+  evaluarEstadoLicencia();
+
+  $("#Cap_Bas_Obli").val(row.Cap_Bas_Obli || "N");
+  $("#Cap_Bas_Fec").val(row.Cap_Bas_Fec || "");
+  $("#Cap_Bas_Vig").val(row.Cap_Bas_Vig || "");
+
+  $("#Cap_Mat_Peli").val(row.Cap_Mat_Peli || "N");
+  $("#Cap_Mat_Fec").val(row.Cap_Mat_Fec || "");
+  $("#Cap_Mat_Vig").val(row.Cap_Mat_Vig || "");
+
+  $("#Cho_Tsa").val(row.Cho_Tsa || "");
+  $("#Cho_Tel").val(row.Cho_Tel || row.Prs_Tel_Base || "");
+  $("#Cho_Cor").val(row.Cho_Cor || row.Prs_Cor || "");
+  $("#Cho_Dir").val(row.Cho_Dir || row.Prs_Dir_Base || "");
+  $("#Cho_Nem").val(row.Cho_Nem || "");
+  $("#Cho_Tem").val(row.Cho_Tem || "");
+
+  // Actualizar Chosen en selects del modal
+  $("#choferForm select.chosen-select").trigger("chosen:updated");
+
+  // Previews de documentos adjuntos
+  renderDocPreview("preview_Cho_Img_Lic_Anv", row.Cho_Img_Lic_Anv, "Licencia Anverso");
+  renderDocPreview("preview_Cho_Img_Lic_Rev", row.Cho_Img_Lic_Rev, "Licencia Reverso");
+  renderDocPreview("preview_Cap_Bas_Adj", row.Cap_Bas_Adj, "Cert. Básico");
+  renderDocPreview("preview_Cap_Mat_Adj", row.Cap_Mat_Adj, "Cert. Mat. Pelig");
+  renderDocPreview("preview_Cho_Doc_Ced", row.Cho_Doc_Ced, "Cédula Anverso");
+  renderDocPreview("preview_Cho_Doc_Ced_Rev", row.Cho_Doc_Ced_Rev, "Cédula Reverso");
+  renderDocPreview("preview_Cho_Doc_Vot", row.Cho_Doc_Vot, "Certif. Votación");
+  renderDocPreview("preview_Cho_Doc_Fot", row.Cho_Doc_Fot, "Foto Carnet");
+  renderDocPreview("preview_Cho_Doc_Ldi", row.Cho_Doc_Ldi, "Licencia Digital");
+  renderDocPreview("preview_Cho_Doc_Ant", row.Cho_Doc_Ant, "Antecedentes Penales");
+  renderDocPreview("preview_Cho_Doc_San", row.Cho_Doc_San, "Carnet Sangre");
 }
 
 /**
