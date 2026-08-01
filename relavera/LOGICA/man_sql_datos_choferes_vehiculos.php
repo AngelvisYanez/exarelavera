@@ -230,6 +230,29 @@ function sentencias_datos_choferes_vehiculos($Nro_Sql, $Par_Sql)
                       AND chofer.Cho_Est != 'I' 
                     ORDER BY chofer.Cho_Cod ASC LIMIT 1";
             break;
+
+        case 16:
+            // Buscar si existe Visitante activo por cédula y empresa
+            $sql = "SELECT visitante.*, 
+                           persona.Prs_Cod, persona.Prs_Nom, persona.Prs_Ape, persona.Prs_Ced, persona.Prs_Fec, persona.Prs_Cor, persona.Prs_Tel as Prs_Tel_Base, persona.Prs_Dir as Prs_Dir_Base,
+                           CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) as nombre
+                    FROM manifiesto_visitante visitante
+                    INNER JOIN persona ON persona.Prs_Cod = visitante.Prs_Cod
+                    WHERE visitante.Emp_Cod = '$Par_Sql[0]' 
+                      AND persona.Prs_Ced = '$Par_Sql[1]'
+                      AND visitante.MVis_Est != 'I' 
+                    ORDER BY visitante.MVis_Cod ASC LIMIT 1";
+            break;
+
+        case 17:
+            // Obtener Visitante Completo por ID
+            $sql = "SELECT visitante.*, 
+                           persona.Prs_Cod, persona.Prs_Nom, persona.Prs_Ape, persona.Prs_Ced, persona.Prs_Fec, persona.Prs_Cor, persona.Prs_Tel as Prs_Tel_Base, persona.Prs_Dir as Prs_Dir_Base,
+                           CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) as nombre
+                    FROM manifiesto_visitante visitante
+                    INNER JOIN persona ON persona.Prs_Cod = visitante.Prs_Cod
+                    WHERE visitante.MVis_Cod = '$Par_Sql[0]' LIMIT 1";
+            break;
     }
     return $sql;
 }

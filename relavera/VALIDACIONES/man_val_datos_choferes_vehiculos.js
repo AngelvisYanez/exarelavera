@@ -1192,6 +1192,70 @@ function actualizarGridChoferes() {
     .trigger("reloadGrid");
 }
 
+function toggleModoVisitante(isVisitante) {
+  var $secLicencia = $("#sec_licencia_conducir");
+  var $docLdi = $("#box_doc_ldi");
+  var $docAnt = $("#box_doc_ant");
+  var $selectTli = $("#Cho_Tli");
+  var $btnGuardar = $("#btnGuardarChofer");
+
+  if (isVisitante) {
+    $secLicencia.slideUp(200);
+    $docLdi.slideUp(200);
+    $docAnt.slideUp(200);
+
+    $selectTli.prop("required", false).removeClass("required");
+    $secLicencia.find("input, select").prop("required", false);
+
+    $btnGuardar.html('<i class="glyphicon glyphicon-floppy-disk"></i> Guardar Visitante');
+    if ($("#choferDialog").hasClass("ui-dialog-content")) {
+      var currentTitle = $("#choferDialog").dialog("option", "title");
+      if (typeof currentTitle === "string" && currentTitle.length > 0) {
+        $("#choferDialog").dialog("option", "title", currentTitle.replace("Chofer", "Visitante"));
+      } else {
+        $("#choferDialog").dialog("option", "title", "Registrar Visitante");
+      }
+    }
+  } else {
+    $secLicencia.slideDown(200);
+    $docLdi.slideDown(200);
+    $docAnt.slideDown(200);
+
+    $selectTli.prop("required", true).addClass("required");
+
+    $btnGuardar.html('<i class="glyphicon glyphicon-floppy-disk"></i> Guardar Chofer');
+    if ($("#choferDialog").hasClass("ui-dialog-content")) {
+      var currentTitle = $("#choferDialog").dialog("option", "title");
+      if (typeof currentTitle === "string" && currentTitle.length > 0) {
+        $("#choferDialog").dialog("option", "title", currentTitle.replace("Visitante", "Chofer"));
+      } else {
+        $("#choferDialog").dialog("option", "title", "Registrar Chofer");
+      }
+    }
+  }
+
+  if (typeof exaUiAfterViewChange === "function") {
+    exaUiAfterViewChange("#choferDialog");
+  }
+}
+
+function limpiarFormularioChofer() {
+  $("#choferForm")[0].reset();
+  $("#Cho_Cod").val("");
+  $("#MVis_Cod").val("");
+  $("#Vis_Cod").val("");
+  $("#Prs_Cod").val("");
+  $("#Man_Eve").val("");
+  $("#MVis_Obs").val("");
+  $("#Vis_Obs").val("");
+  $("#Cho_Edad").val("");
+  $("#badgeLicencia").hide().text("").removeClass("label-success label-danger");
+  $("#choferForm .preview-doc-box").empty();
+  $("#choferForm select.chosen-select").val("").trigger("chosen:updated");
+  $("#chk_es_visitante").prop("checked", false);
+  toggleModoVisitante(false);
+}
+
 function buscarPersonaCedula(cedula) {
   if (!cedula || cedula.length < 10) return;
   $.get(
@@ -1200,6 +1264,8 @@ function buscarPersonaCedula(cedula) {
     function (r) {
       if (r.success && r.existe) {
         if (r.esChofer && r.chofer) {
+          $("#chk_es_visitante").prop("checked", false);
+          toggleModoVisitante(false);
           poblarFormularioChofer(r.chofer);
           var nomComp = r.chofer.nombre || ((r.chofer.Prs_Nom || "") + " " + (r.chofer.Prs_Ape || "")).trim();
           $("#choferDialog").dialog("option", "title", "Editar Chofer - " + nomComp);
@@ -1209,6 +1275,17 @@ function buscarPersonaCedula(cedula) {
               cedula +
               "</b> ya se encuentra registrado en el sistema.<br><br>Se han cargado sus datos completos para su consulta o modificación.",
             "warning",
+          );
+        } else if (r.esVisitante && r.visitante) {
+          poblarFormularioVisitante(r.visitante);
+          var nomCompV = r.visitante.nombre || ((r.visitante.Prs_Nom || "") + " " + (r.visitante.Prs_Ape || "")).trim();
+          $("#choferDialog").dialog("option", "title", "Editar Visitante - " + nomCompV);
+          mostrarAlertaUI(
+            "Visitante Ya Registrado",
+            "El visitante con Cédula <b>" +
+              cedula +
+              "</b> ya se encuentra registrado en el sistema.<br><br>Se han cargado sus datos completos.",
+            "info",
           );
         } else if (r.persona) {
           $("#Prs_Nom").val(r.persona.Prs_Nom || "");
@@ -1265,13 +1342,7 @@ function buscarPersonaPropietario(cedula) {
 }
 
 function abrirModalChofer(id) {
-  $("#choferForm")[0].reset();
-  $("#Cho_Cod").val("");
-  $("#Prs_Cod").val("");
-  $(".preview-doc-box").empty();
-  $("#badgeLicencia").hide().text("").removeClass("label-success label-danger");
-  $("#Cho_Edad").val("");
-  $("#choferForm select.chosen-select").trigger("chosen:updated");
+  limpiarFormularioChofer();
 
   var winWidth = $(window).width();
   var modalW = winWidth < 1250 ? Math.floor(winWidth * 0.96) : 1250;
@@ -1318,6 +1389,9 @@ function abrirModalChofer(id) {
   */
 function poblarFormularioChofer(row) {
   if (!row) return;
+  $("#chk_es_visitante").prop("checked", false);
+  toggleModoVisitante(false);
+
   $("#Cho_Cod").val(row.Cho_Cod || "");
   $("#Prs_Cod").val(row.Prs_Cod || "");
   $("#Cho_Ced").val(row.Prs_Ced || "");
@@ -1371,6 +1445,43 @@ function poblarFormularioChofer(row) {
   renderDocPreview("preview_Cho_Doc_Ldi", row.Cho_Doc_Ldi, "Licencia Digital");
   renderDocPreview("preview_Cho_Doc_Ant", row.Cho_Doc_Ant, "Antecedentes Penales");
   renderDocPreview("preview_Cho_Doc_San", row.Cho_Doc_San, "Carnet Sangre");
+}
+
+function poblarFormularioVisitante(row) {
+  if (!row) return;
+  $("#chk_es_visitante").prop("checked", true);
+  toggleModoVisitante(true);
+
+  var codVis = row.MVis_Cod || row.Vis_Cod || "";
+  $("#MVis_Cod").val(codVis);
+  $("#Vis_Cod").val(codVis);
+  $("#Prs_Cod").val(row.Prs_Cod || "");
+  $("#Cho_Ced").val(row.Prs_Ced || "");
+  $("#Prs_Nom").val(row.Prs_Nom || "");
+  $("#Prs_Ape").val(row.Prs_Ape || "");
+  if (row.Prs_Fec) {
+    $("#Prs_Fec").val(row.Prs_Fec);
+    calcularEdad(row.Prs_Fec);
+  }
+
+  $("#Man_Eve").val(row.Man_Eve || "");
+  $("#Cho_Nac").val(row.MVis_Nac || row.Vis_Nac || "Ecuatoriana");
+  $("#Cho_Eci").val(row.MVis_Eci || row.Vis_Eci || "Soltero/a");
+  $("#Cho_Tsa").val(row.MVis_Tsa || row.Vis_Tsa || "");
+  $("#Cho_Tel").val(row.Prs_Tel_Base || row.Prs_Tel || row.MVis_Tel || row.Vis_Tel || "");
+  $("#Cho_Cor").val(row.Prs_Cor || row.MVis_Cor || row.Vis_Cor || "");
+  $("#Cho_Dir").val(row.Prs_Dir_Base || row.Prs_Dir || row.MVis_Dir || row.Vis_Dir || "");
+  $("#Cho_Nem").val(row.MVis_Nem || row.Vis_Nem || "");
+  $("#Cho_Tem").val(row.MVis_Tem || row.Vis_Tem || "");
+  $("#MVis_Obs").val(row.MVis_Obs || row.Vis_Obs || "");
+  $("#Vis_Obs").val(row.MVis_Obs || row.Vis_Obs || "");
+
+  $("#choferForm select.chosen-select").trigger("chosen:updated");
+
+  renderDocPreview("preview_Cho_Doc_Ced", row.MVis_Doc_Ced || row.Vis_Doc_Ced, "Cédula Anverso");
+  renderDocPreview("preview_Cho_Doc_Ced_Rev", row.MVis_Doc_Ced_Rev || row.Vis_Doc_Ced_Rev, "Cédula Reverso");
+  renderDocPreview("preview_Cho_Doc_Vot", row.MVis_Doc_Vot || row.Vis_Doc_Vot, "Certif. Votación");
+  renderDocPreview("preview_Cho_Doc_Fot", row.MVis_Doc_Fot || row.Vis_Doc_Fot, "Foto Carnet");
 }
 
 /**
@@ -1449,16 +1560,19 @@ function guardarChofer() {
   var formEl = $("#choferForm")[0];
   var formData = new FormData(formEl); // Capturar FormData antes de bloquear
 
+  var esVisitante = $("#chk_es_visitante").is(":checked");
   var ced = $("#Cho_Ced").val().trim();
   var nom = $("#Prs_Nom").val().trim();
   var ape = $("#Prs_Ape").val().trim();
   var tel = $("#Cho_Tel").val().trim();
   var tli = $("#Cho_Tli").val();
 
-  if (!ced || !nom || !ape || !tel || !tli) {
+  if (!ced || !nom || !ape || !tel || (!esVisitante && !tli)) {
     mostrarAlertaUI(
       "Atención",
-      "Complete la Cédula/Identificación, Nombres, Apellidos, Teléfono Celular y Tipo de Licencia",
+      esVisitante
+        ? "Complete la Cédula/Identificación, Nombres, Apellidos y Teléfono Celular"
+        : "Complete la Cédula/Identificación, Nombres, Apellidos, Teléfono Celular y Tipo de Licencia",
       "warning",
     );
     return;
