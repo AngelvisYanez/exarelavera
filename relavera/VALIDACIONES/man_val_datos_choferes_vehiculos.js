@@ -1034,8 +1034,9 @@ function initGridChoferes() {
     datatype: "json",
     colNames: [
       "Código",
+      "Tipo",
       "Cédula",
-      "Chofer / Nombres",
+      "Nombres",
       "Licencia",
       "Estado Lic.",
       "Tipo Sangre",
@@ -1048,22 +1049,47 @@ function initGridChoferes() {
     ],
     colModel: [
       {
-        name: "Cho_Cod",
-        index: "Cho_Cod",
+        name: "grid_id",
+        index: "grid_id",
         width: 60,
         align: "center",
         key: true,
+        hidden: true,
       },
-      { name: "Prs_Ced", index: "Prs_Ced", width: 100, align: "center" },
-      { name: "nombre", index: "nombre", width: 200, align: "left" },
-      { name: "Cho_Tli", index: "Cho_Tli", width: 70, align: "center" },
+      {
+        name: "tipo_registro",
+        index: "tipo_registro",
+        width: 85,
+        align: "center",
+        formatter: function (cellvalue) {
+          if (cellvalue === "VISITANTE") {
+            return '<span class="label label-info" style="background-color: #17a2b8;"><i class="glyphicon glyphicon-user"></i> VISITANTE</span>';
+          }
+          return '<span class="label label-primary" style="background-color: #007bff;"><i class="glyphicon glyphicon-piggy-bank"></i> CHOFER</span>';
+        },
+      },
+      { name: "Prs_Ced", index: "Prs_Ced", width: 95, align: "center" },
+      { name: "nombre", index: "nombre", width: 190, align: "left" },
+      {
+        name: "Cho_Tli",
+        index: "Cho_Tli",
+        width: 75,
+        align: "center",
+        formatter: function (cellvalue, options, rowObject) {
+          if (rowObject.tipo_registro === "VISITANTE") {
+            return '<span class="text-muted">N/A</span>';
+          }
+          return cellvalue || "";
+        },
+      },
       {
         name: "Cho_Lic_Est",
         index: "Cho_Lic_Est",
-        width: 100,
+        width: 95,
         align: "center",
         sortable: false,
         formatter: function (cellvalue, options, rowObject) {
+          if (rowObject.tipo_registro === "VISITANTE") return '<span class="text-muted">-</span>';
           if (!rowObject.Cho_Cli) return "";
           var hoy = new Date();
           hoy.setHours(0, 0, 0, 0);
@@ -1077,7 +1103,16 @@ function initGridChoferes() {
         },
       },
       { name: "Cho_Tsa", index: "Cho_Tsa", width: 75, align: "center" },
-      { name: "Cho_Cli", index: "Cho_Cli", width: 95, align: "center" },
+      {
+        name: "Cho_Cli",
+        index: "Cho_Cli",
+        width: 90,
+        align: "center",
+        formatter: function (cellvalue, options, rowObject) {
+          if (rowObject.tipo_registro === "VISITANTE") return '<span class="text-muted">-</span>';
+          return cellvalue || "";
+        },
+      },
       {
         name: "Pla_Nom",
         index: "Pla_Nom",
@@ -1086,11 +1121,11 @@ function initGridChoferes() {
         hidden: true,
       },
       { name: "Pla_Cod", index: "Pla_Cod", hidden: true },
-      { name: "Cho_Tel", index: "Cho_Tel", width: 100, align: "center" },
+      { name: "Cho_Tel", index: "Cho_Tel", width: 95, align: "center" },
       {
         name: "Cho_Est",
         index: "Cho_Est",
-        width: 90,
+        width: 85,
         align: "center",
         formatter: function (cellvalue) {
           if (cellvalue === "A")
@@ -1103,25 +1138,37 @@ function initGridChoferes() {
       {
         name: "acciones",
         index: "acciones",
-        width: 160,
+        width: 150,
         align: "center",
         sortable: false,
         formatter: function (cellvalue, options, rowObject) {
-          var editBtn =
-            '<button type="button" class="btn btn-primary btn-xs" onclick="abrirModalChofer(' +
-            options.rowId +
-            ')" title="Editar"><i class="glyphicon glyphicon-pencil"></i></button> ';
-          var sendBtn =
-            '<button type="button" class="btn btn-success btn-xs btn-enviar-notif-chofer" id="btnEnviarChofer_' +
-            options.rowId +
-            '" onclick="enviarNotifCapacitacionChofer(' +
-            options.rowId +
-            ', this)" title="Enviar WhatsApp y correo"><i class="glyphicon glyphicon-send"></i> Enviar</button> ';
-          var deleteBtn =
-            '<button type="button" class="btn btn-danger btn-xs" onclick="anularChoferGrid(' +
-            options.rowId +
-            ')" title="Anular"><i class="glyphicon glyphicon-trash"></i></button>';
-          return editBtn + sendBtn + deleteBtn;
+          if (rowObject.tipo_registro === "VISITANTE") {
+            var editBtn =
+              '<button type="button" class="btn btn-info btn-xs" onclick="abrirModalVisitante(' +
+              rowObject.MVis_Cod +
+              ')" title="Editar Visitante"><i class="glyphicon glyphicon-pencil"></i></button> ';
+            var deleteBtn =
+              '<button type="button" class="btn btn-danger btn-xs" onclick="anularVisitanteGrid(' +
+              rowObject.MVis_Cod +
+              ')" title="Anular Visitante"><i class="glyphicon glyphicon-trash"></i></button>';
+            return editBtn + deleteBtn;
+          } else {
+            var editBtn =
+              '<button type="button" class="btn btn-primary btn-xs" onclick="abrirModalChofer(' +
+              rowObject.Cho_Cod +
+              ')" title="Editar Chofer"><i class="glyphicon glyphicon-pencil"></i></button> ';
+            var sendBtn =
+              '<button type="button" class="btn btn-success btn-xs btn-enviar-notif-chofer" id="btnEnviarChofer_' +
+              rowObject.Cho_Cod +
+              '" onclick="enviarNotifCapacitacionChofer(' +
+              rowObject.Cho_Cod +
+              ', this)" title="Enviar WhatsApp y correo"><i class="glyphicon glyphicon-send"></i> Enviar</button> ';
+            var deleteBtn =
+              '<button type="button" class="btn btn-danger btn-xs" onclick="anularChoferGrid(' +
+              rowObject.Cho_Cod +
+              ')" title="Anular Chofer"><i class="glyphicon glyphicon-trash"></i></button>';
+            return editBtn + sendBtn + deleteBtn;
+          }
         },
       },
     ],
@@ -1136,7 +1183,7 @@ function initGridChoferes() {
     viewrecords: true,
     autowidth: true,
     height: 350,
-    emptyrecords: "No se encontraron choferes",
+    emptyrecords: "No se encontraron registros",
     loadComplete: function () {
       $grid.jqGrid("setLabel", "rn", "#");
       $('.ui-pg-selbox option[value="999999"]').text("Todos");
@@ -1382,6 +1429,89 @@ function abrirModalChofer(id) {
     $("#choferDialog").dialog("option", "title", "Registrar Chofer");
     $("#choferDialog").dialog("open");
   }
+}
+
+function abrirModalVisitante(id) {
+  limpiarFormularioChofer();
+
+  var winWidth = $(window).width();
+  var modalW = winWidth < 1250 ? Math.floor(winWidth * 0.96) : 1250;
+  $("#choferDialog").dialog("option", "width", modalW);
+
+  if (id) {
+    $.get(
+      "",
+      { getVisitanteByIdAjax: true, MVis_Cod: id },
+      function (r) {
+        if (r.success && r.visitante) {
+          poblarFormularioVisitante(r.visitante);
+          var nomV = r.visitante.nombre || ((r.visitante.Prs_Nom || "") + " " + (r.visitante.Prs_Ape || "")).trim();
+          $("#choferDialog").dialog(
+            "option",
+            "title",
+            "Editar Visitante - " + nomV,
+          );
+          $("#choferDialog").dialog("open");
+        } else {
+          mostrarAlertaUI(
+            "Error",
+            "No se pudo cargar la información completa del visitante",
+            "error",
+          );
+        }
+      },
+      "json",
+    ).fail(function () {
+      mostrarAlertaUI(
+        "Error",
+        "Error de conexión al obtener los datos del visitante",
+        "error",
+      );
+    });
+  } else {
+    $("#chk_es_visitante").prop("checked", true);
+    toggleModoVisitante(true);
+    $("#choferDialog").dialog("option", "title", "Registrar Visitante");
+    $("#choferDialog").dialog("open");
+  }
+}
+
+function anularVisitanteGrid(MVis_Cod) {
+  swal(
+    {
+      title: "¿Está seguro?",
+      text: "¿Desea anular este visitante?",
+      type: "warning",
+      showCancelButton: true,
+    },
+    function (isConfirm) {
+      if (isConfirm) {
+        $.post(
+          "",
+          { anularVisitanteAjax: true, MVis_Cod: MVis_Cod },
+          function (r) {
+            if (r.success) {
+              mostrarAlertaUI(
+                "Éxito",
+                "Visitante anulado correctamente",
+                "success",
+                function () {
+                  actualizarGridChoferes();
+                },
+              );
+            } else {
+              mostrarAlertaUI(
+                "Error",
+                r.message || "No se pudo anular el registro",
+                "error",
+              );
+            }
+          },
+          "json",
+        );
+      }
+    },
+  );
 }
 
 /**

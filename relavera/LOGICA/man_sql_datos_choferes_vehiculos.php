@@ -22,39 +22,85 @@ function sentencias_datos_choferes_vehiculos($Nro_Sql, $Par_Sql)
             break;
 
         case 3:
-            // Listar Choferes por Emp_Cod (Agrupando por Cédula para mostrar el menor Cho_Cod en caso de duplicados)
-            $search = "";
+            // Listar Choferes y Visitantes por Emp_Cod
+            $searchChofer = "";
+            $searchVisitante = "";
+            $whereUnion = "";
+
             if (!empty($Par_Sql['search']) && !empty($Par_Sql['op_opciones'])) {
                 $searchTerm = addslashes($Par_Sql['search']);
                 if ($Par_Sql['op_opciones'] == 'c') {
-                    $search = " AND persona.Prs_Ced LIKE '%$searchTerm%'";
+                    $searchChofer = " AND persona.Prs_Ced LIKE '%$searchTerm%'";
+                    $searchVisitante = " AND persona.Prs_Ced LIKE '%$searchTerm%'";
                 } else if ($Par_Sql['op_opciones'] == 'd') {
-                    $search = " AND (CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) LIKE '%$searchTerm%' OR persona.Prs_Nom LIKE '%$searchTerm%' OR persona.Prs_Ape LIKE '%$searchTerm%')";
+                    $searchChofer = " AND (CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) LIKE '%$searchTerm%' OR persona.Prs_Nom LIKE '%$searchTerm%' OR persona.Prs_Ape LIKE '%$searchTerm%')";
+                    $searchVisitante = " AND (CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) LIKE '%$searchTerm%' OR persona.Prs_Nom LIKE '%$searchTerm%' OR persona.Prs_Ape LIKE '%$searchTerm%')";
                 }
             }
 
+            if (!empty($Par_Sql['op_opciones'])) {
+                if ($Par_Sql['op_opciones'] == 'v') {
+                    $whereUnion = " WHERE tipo_registro = 'VISITANTE' ";
+                } else if ($Par_Sql['op_opciones'] == 'ch') {
+                    $whereUnion = " WHERE tipo_registro = 'CHOFER' ";
+                }
+            }
+
+            $baseUnion = "
+                SELECT 
+                    'CHOFER' as tipo_registro,
+                    CONCAT('C_', chofer.Cho_Cod) as grid_id,
+                    chofer.Cho_Cod,
+                    NULL as MVis_Cod,
+                    persona.Prs_Cod, 
+                    persona.Prs_Nom, 
+                    persona.Prs_Ape, 
+                    persona.Prs_Ced, 
+                    persona.Prs_Fec,
+                    CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) as nombre,
+                    chofer.Cho_Tli,
+                    chofer.Cho_Cli,
+                    chofer.Cho_Tsa,
+                    IFNULL(chofer.Cho_Tel, persona.Prs_Tel) as Cho_Tel,
+                    chofer.Cho_Est
+                FROM chofer
+                INNER JOIN persona ON persona.Prs_Cod = chofer.Prs_Cod
+                INNER JOIN (
+                    SELECT MIN(c.Cho_Cod) as min_cho_cod
+                    FROM chofer c
+                    INNER JOIN persona p ON p.Prs_Cod = c.Prs_Cod
+                    WHERE c.Emp_Cod = '$Par_Sql[0]' AND c.Cho_Est != 'I'
+                    GROUP BY p.Prs_Ced
+                ) min_c ON min_c.min_cho_cod = chofer.Cho_Cod
+                WHERE chofer.Emp_Cod = '$Par_Sql[0]' AND chofer.Cho_Est != 'I' $searchChofer
+
+                UNION ALL
+
+                SELECT 
+                    'VISITANTE' as tipo_registro,
+                    CONCAT('V_', mv.MVis_Cod) as grid_id,
+                    NULL as Cho_Cod,
+                    mv.MVis_Cod,
+                    persona.Prs_Cod, 
+                    persona.Prs_Nom, 
+                    persona.Prs_Ape, 
+                    persona.Prs_Ced, 
+                    persona.Prs_Fec,
+                    CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) as nombre,
+                    'VISITANTE' as Cho_Tli,
+                    NULL as Cho_Cli,
+                    mv.MVis_Tsa as Cho_Tsa,
+                    IFNULL(persona.Prs_Tel, mv.MVis_Tem) as Cho_Tel,
+                    mv.MVis_Est as Cho_Est
+                FROM manifiesto_visitante mv
+                INNER JOIN persona ON persona.Prs_Cod = mv.Prs_Cod
+                WHERE mv.Emp_Cod = '$Par_Sql[0]' AND mv.MVis_Est != 'I' $searchVisitante
+            ";
+
             if (empty($Par_Sql['limits'])) {
-                $sql = "SELECT COUNT(DISTINCT persona.Prs_Ced) as total 
-                        FROM chofer
-                        INNER JOIN persona ON persona.Prs_Cod = chofer.Prs_Cod
-                        WHERE chofer.Emp_Cod = '$Par_Sql[0]' 
-                          AND chofer.Cho_Est != 'I' $search";
+                $sql = "SELECT COUNT(*) as total FROM ($baseUnion) u $whereUnion";
             } else {
-                $sql = "SELECT chofer.*, 
-                               persona.Prs_Cod, persona.Prs_Nom, persona.Prs_Ape, persona.Prs_Ced, persona.Prs_Fec,
-                               CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) as nombre
-                        FROM chofer
-                        INNER JOIN persona ON persona.Prs_Cod = chofer.Prs_Cod
-                        INNER JOIN (
-                            SELECT MIN(c.Cho_Cod) as min_cho_cod
-                            FROM chofer c
-                            INNER JOIN persona p ON p.Prs_Cod = c.Prs_Cod
-                            WHERE c.Emp_Cod = '$Par_Sql[0]' AND c.Cho_Est != 'I'
-                            GROUP BY p.Prs_Ced
-                        ) min_c ON min_c.min_cho_cod = chofer.Cho_Cod
-                        WHERE chofer.Emp_Cod = '$Par_Sql[0]' 
-                          AND chofer.Cho_Est != 'I' $search
-                        ORDER BY persona.Prs_Ape ASC, persona.Prs_Nom ASC " . $Par_Sql['limits'];
+                $sql = "SELECT u.* FROM ($baseUnion) u $whereUnion ORDER BY u.nombre ASC " . $Par_Sql['limits'];
             }
             break;
 

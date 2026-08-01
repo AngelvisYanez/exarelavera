@@ -677,6 +677,17 @@ if (isset($_POST['anularChoferAjax'])) {
     responderJsonLimpio($resp);
 }
 
+// 7.1. Anular Visitante
+if (isset($_POST['anularVisitanteAjax'])) {
+    $resp = array('success' => false);
+    $MVis_Cod = isset($_POST['MVis_Cod']) ? $_POST['MVis_Cod'] : (isset($_POST['Vis_Cod']) ? $_POST['Vis_Cod'] : '');
+    if (!empty($MVis_Cod)) {
+        $obBD_con1->operacionobBD('manifiesto_visitante.update', array('MVis_Est' => 'I', 'where' => array('MVis_Cod' => $MVis_Cod)), $obBD_conexion);
+        $resp['success'] = ($obBD_con1->Error == 0);
+    }
+    responderJsonLimpio($resp);
+}
+
 // 7.5. Enviar notificación de capacitación al chofer (WhatsApp + correo Relavera)
 if (isset($_POST['enviarNotifCapacitacionChoferAjax'])) {
     $resp = array(
@@ -1164,6 +1175,10 @@ if (isset($_POST['anularVehiculoAjax'])) {
                                                 <label for="radChofer1">Nombre Chofer</label>
                                                 <input id="radChofer2" name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" />
                                                 <label for="radChofer2">Cédula</label>
+                                                <input id="radChofer3" name="op_opciones" type="radio" value="v" onclick="setfocus(this.form.search)" />
+                                                <label for="radChofer3">Solo Visitantes</label>
+                                                <input id="radChofer4" name="op_opciones" type="radio" value="ch" onclick="setfocus(this.form.search)" />
+                                                <label for="radChofer4">Solo Choferes</label>
                                             </div>
                                         </div>
                                         <div class="form-group">
@@ -2065,7 +2080,7 @@ if (isset($_POST['anularVehiculoAjax'])) {
     <!-- JS Scripts Inclusion con parámetro de cache-busting -->
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=20"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=21"></script>
 </body>
 
 </html>
