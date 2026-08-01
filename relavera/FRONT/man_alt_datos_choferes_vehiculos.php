@@ -2,8 +2,6 @@
 
 /**
  * Formulario: Datos de Choferes y Vehículos
- * Agrupa la gestión completa de Empresas de Transporte, Choferes y Vehículos con Máscara Model3.
- * Ubicación: relavera/FRONT/man_alt_datos_choferes_vehiculos.php
  * @author Sistema EXA
  * @version 2.8
  */
@@ -25,8 +23,8 @@ $plantas = $obBD_con1->getArrayConsulta(2, array(), $obBD_conexion);
 $obBD_con1->utf8_change_param($plantas);
 
 /* ==========================================================================
-   FUNCIÓN AUXILIAR DE COMPRESIÓN DE IMÁGENES EN SERVIDOR (PHP GD)
-   ========================================================================== */
+    FUNCIÓN AUXILIAR DE COMPRESIÓN DE IMÁGENES EN SERVIDOR (PHP GD)
+============================================================================ */
 function optimizarYComprimirImagen($sourcePath, $targetPath, $maxDim = 1920, $quality = 85)
 {
     list($width, $height, $type) = @getimagesize($sourcePath);
@@ -82,6 +80,9 @@ function optimizarYComprimirImagen($sourcePath, $targetPath, $maxDim = 1920, $qu
 // Función auxiliar para responder JSON limpio sin interferencia de buffers o advertencias de PHP
 function responderJsonLimpio($response)
 {
+    if (class_exists('DebugBar')) {
+        @DebugBar::sendDataInHeaders(true);
+    }
     while (ob_get_level() > 0) {
         @ob_end_clean();
     }
