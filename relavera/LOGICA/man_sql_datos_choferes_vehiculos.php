@@ -38,12 +38,17 @@ function sentencias_datos_choferes_vehiculos($Nro_Sql, $Par_Sql)
                 }
             }
 
-            if (!empty($Par_Sql['op_opciones'])) {
-                if ($Par_Sql['op_opciones'] == 'v') {
-                    $whereUnion = " WHERE tipo_registro = 'VISITANTE' ";
-                } else if ($Par_Sql['op_opciones'] == 'ch') {
-                    $whereUnion = " WHERE tipo_registro = 'CHOFER' ";
+            $tipoFiltro = !empty($Par_Sql['mostrar_datos']) ? $Par_Sql['mostrar_datos'] : '';
+            if (empty($tipoFiltro) && !empty($Par_Sql['op_opciones'])) {
+                if ($Par_Sql['op_opciones'] == 'v' || $Par_Sql['op_opciones'] == 'ch') {
+                    $tipoFiltro = $Par_Sql['op_opciones'];
                 }
+            }
+
+            if ($tipoFiltro == 'v') {
+                $whereUnion = " WHERE tipo_registro = 'VISITANTE' ";
+            } else if ($tipoFiltro == 'ch') {
+                $whereUnion = " WHERE tipo_registro = 'CHOFER' ";
             }
 
             $baseUnion = "

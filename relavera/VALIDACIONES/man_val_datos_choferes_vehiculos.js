@@ -1,9 +1,9 @@
 
 // Función de alerta estética UI con jQuery UI (Sustituye popups nativos del navegador de forma segura)
+// Función de alerta estética UI con jQuery UI (Sustituye popups nativos del navegador de forma profesional)
 function mostrarAlertaUI(titulo, mensaje, tipo, callback) {
   var $dlg = $("#alertCustomDialog");
 
-  // Inicializar diálogo si aún no ha sido creado en el DOM
   if (!$dlg.hasClass("ui-dialog-content")) {
     $dlg.dialog({
       autoOpen: false,
@@ -11,34 +11,61 @@ function mostrarAlertaUI(titulo, mensaje, tipo, callback) {
       resizable: false,
       width: 440,
       appendTo: ".exa-ui-panel",
-      dialogClass: "exa-ui-panel exa-ui-dialog",
+      dialogClass: "exa-ui-panel exa-ui-dialog exa-alert-modal-pro",
+      show: { effect: "fade", duration: 150 },
+      hide: { effect: "fade", duration: 120 },
     });
   }
 
-  $dlg.dialog("option", "title", titulo || "Notificación");
-  $("#alertCustomMessage").html(mensaje || "");
-
-  var $icon = $("#alertCustomIcon");
-  $icon.removeClass(
-    "glyphicon-info-sign glyphicon-ok-sign glyphicon-warning-sign glyphicon-remove-sign text-primary text-success text-warning text-danger",
-  );
+  var titleText = titulo || "Notificación";
+  var typeClass = "info";
+  var iconClass = "glyphicon-info-sign";
+  var bgIconColor = "#eff6ff";
+  var iconColor = "#2563eb";
 
   if (tipo === "success") {
-    $icon.addClass("glyphicon-ok-sign text-success");
+    typeClass = "success";
+    iconClass = "glyphicon-ok-circle";
+    bgIconColor = "#ecfdf5";
+    iconColor = "#059669";
   } else if (tipo === "warning") {
-    $icon.addClass("glyphicon-warning-sign text-warning");
+    typeClass = "warning";
+    iconClass = "glyphicon-exclamation-sign";
+    bgIconColor = "#fffbeb";
+    iconColor = "#d97706";
   } else if (tipo === "error" || tipo === "danger") {
-    $icon.addClass("glyphicon-remove-sign text-danger");
-  } else {
-    $icon.addClass("glyphicon-info-sign text-primary");
+    typeClass = "error";
+    iconClass = "glyphicon-remove-circle";
+    bgIconColor = "#fef2f2";
+    iconColor = "#dc2626";
   }
 
-  $dlg.dialog("option", "buttons", {
-    Aceptar: function () {
-      $(this).dialog("close");
-      if (typeof callback === "function") callback();
+  $dlg.dialog("option", "title", titleText);
+
+  var htmlContent =
+    '<div class="exa-alert-card exa-alert-' + typeClass + '" style="display: flex; align-items: flex-start; gap: 14px; padding: 14px 10px 10px 10px;">' +
+    '  <div class="exa-alert-icon-box" style="flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; background: ' + bgIconColor + '; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);">' +
+    '    <i class="glyphicon ' + iconClass + '" style="font-size: 24px; color: ' + iconColor + ';"></i>' +
+    "  </div>" +
+    '  <div class="exa-alert-text-box" style="flex-grow: 1;">' +
+    '    <h4 style="margin: 0 0 6px 0; font-size: 14px; font-weight: 700; color: #1e293b; line-height: 1.3;">' + titleText + '</h4>' +
+    '    <div style="font-size: 12.5px; line-height: 1.5; color: #475569;">' + (mensaje || "") + '</div>' +
+    "  </div>" +
+    "</div>";
+
+  $dlg.html(htmlContent);
+
+  $dlg.dialog("option", "buttons", [
+    {
+      text: "Aceptar",
+      class: "btn btn-sm btn-primary exa-alert-btn-confirm",
+      click: function () {
+        $(this).dialog("close");
+        if (typeof callback === "function") callback();
+      },
     },
-  });
+  ]);
+
   $dlg.dialog("open");
 }
 
@@ -56,25 +83,47 @@ if (typeof window.swal !== "function") {
             resizable: false,
             width: 440,
             appendTo: ".exa-ui-panel",
-            dialogClass: "exa-ui-panel exa-ui-dialog",
+            dialogClass: "exa-ui-panel exa-ui-dialog exa-alert-modal-pro",
+            show: { effect: "fade", duration: 150 },
+            hide: { effect: "fade", duration: 120 },
           });
         }
-        $dlg.dialog("option", "title", titleOrOptions.title || "Confirmación");
-        $("#alertCustomMessage").html(titleOrOptions.text || "");
-        $("#alertCustomIcon").attr(
-          "class",
-          "glyphicon glyphicon-question-sign text-warning",
-        );
-        $dlg.dialog("option", "buttons", {
-          Aceptar: function () {
-            $(this).dialog("close");
-            if (typeof cb === "function") cb(true);
+
+        var titleText = titleOrOptions.title || "Confirmación";
+        var msgText = titleOrOptions.text || "";
+        $dlg.dialog("option", "title", titleText);
+
+        var htmlContent =
+          '<div class="exa-alert-card exa-alert-warning" style="display: flex; align-items: flex-start; gap: 14px; padding: 14px 10px 10px 10px;">' +
+          '  <div class="exa-alert-icon-box" style="flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; background: #fffbeb; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);">' +
+          '    <i class="glyphicon glyphicon-question-sign" style="font-size: 24px; color: #d97706;"></i>' +
+          "  </div>" +
+          '  <div class="exa-alert-text-box" style="flex-grow: 1;">' +
+          '    <h4 style="margin: 0 0 6px 0; font-size: 14px; font-weight: 700; color: #1e293b; line-height: 1.3;">' + titleText + '</h4>' +
+          '    <div style="font-size: 12.5px; line-height: 1.5; color: #475569;">' + msgText + '</div>' +
+          "  </div>" +
+          "</div>";
+
+        $dlg.html(htmlContent);
+
+        $dlg.dialog("option", "buttons", [
+          {
+            text: "Aceptar",
+            class: "btn btn-sm btn-primary exa-alert-btn-confirm",
+            click: function () {
+              $(this).dialog("close");
+              if (typeof cb === "function") cb(true);
+            },
           },
-          Cancelar: function () {
-            $(this).dialog("close");
-            if (typeof cb === "function") cb(false);
+          {
+            text: "Cancelar",
+            class: "btn btn-sm btn-default exa-alert-btn-cancel",
+            click: function () {
+              $(this).dialog("close");
+              if (typeof cb === "function") cb(false);
+            },
           },
-        });
+        ]);
         $dlg.dialog("open");
       } else {
         mostrarAlertaUI(
@@ -91,6 +140,11 @@ if (typeof window.swal !== "function") {
 }
 
 $(document).ready(function () {
+  // Desactivar autocompletado nativo del navegador para prevenir pérdida accidental de datos por autorrelleno (autofill)
+  $("form").attr("autocomplete", "off");
+  $("input, select, textarea").attr("autocomplete", "off");
+  $("#choferForm input, #vehiculoForm input, #empresaTransporteForm input").attr("autocomplete", "nope");
+
   // Inicialización de Segmented Control (Radio Buttonsets)
   if ($.fn.buttonset) {
     $(".radioset").buttonset();
@@ -684,6 +738,16 @@ function limpiarArchivoAdjunto(fieldId) {
   }
 }
 
+function normalizarRutaArchivo(filePath) {
+  if (!filePath || filePath === "null" || filePath === "undefined" || filePath === "") return "";
+  var path = filePath.trim();
+  path = path.replace(/^(\.\.\/)+/, "../");
+  if (!path.startsWith("../") && !path.startsWith("/") && !path.startsWith("http")) {
+    path = "../" + path;
+  }
+  return path;
+}
+
 function renderDocPreview(containerId, filePath, labelTitulo) {
   var $box = $("#" + containerId);
   if (!$box.length) return;
@@ -696,8 +760,8 @@ function renderDocPreview(containerId, filePath, labelTitulo) {
     filePath !== "undefined"
   ) {
     var fieldId = containerId.replace("preview_", "");
-    var cleanPath = "../../" + filePath;
-    var ext = filePath
+    var cleanPath = normalizarRutaArchivo(filePath);
+    var ext = cleanPath
       .split("?")[0]
       .split("#")[0]
       .split(".")
@@ -706,25 +770,27 @@ function renderDocPreview(containerId, filePath, labelTitulo) {
     var isPdf = ext === "pdf";
     var icon = isPdf ? "glyphicon-file" : "glyphicon-picture";
     var tagLabel = isPdf ? "Ver PDF" : "Ver Foto";
+    var displayTitle = labelTitulo ? labelTitulo : tagLabel;
 
-    var html = '<div class="btn-group btn-group-xs" style="margin:0;">';
+    // Carga Bajo Demanda (Lazy Loading): 0 peticiones HTTP al abrir el modal para velocidad ultra rápida
+    var html = '<div class="btn-group btn-group-xs" style="margin-top: 4px;">';
     html +=
-      '<button type="button" class="btn btn-info btn-xs btn-preview-inline" onclick="abrirModalDocumento(\'' +
+      '  <button type="button" class="btn btn-info btn-xs btn-preview-inline" onclick="abrirModalDocumento(\'' +
       cleanPath +
       "', '" +
-      tagLabel +
+      displayTitle +
       "', " +
       isPdf +
-      ');"><i class="glyphicon ' +
+      ');" title="Ver ' + displayTitle + '"><i class="glyphicon ' +
       icon +
       '"></i> ' +
-      tagLabel +
-      "</button>";
+      displayTitle +
+      '</button>';
     html +=
-      '<button type="button" class="btn btn-danger btn-xs btn-preview-inline" onclick="limpiarArchivoAdjunto(\'' +
+      '  <button type="button" class="btn btn-danger btn-xs btn-preview-inline" onclick="limpiarArchivoAdjunto(\'' +
       fieldId +
       '\');" title="Quitar este archivo adjunto"><i class="glyphicon glyphicon-remove"></i></button>';
-    html += "</div>";
+    html += '</div>';
     $box.html(html);
   }
 }
@@ -744,12 +810,13 @@ function abrirModalDocumento(filePath, titulo, isPdf) {
     return;
   }
 
+  var cleanPath = normalizarRutaArchivo(filePath);
+
   var isPdfDoc = false;
   if (typeof isPdf === "boolean") {
     isPdfDoc = isPdf;
   } else {
-    var cleanPath = filePath.split("?")[0].split("#")[0];
-    var ext = cleanPath.split(".").pop().toLowerCase();
+    var ext = cleanPath.split("?")[0].split("#")[0].split(".").pop().toLowerCase();
     isPdfDoc = ext === "pdf";
   }
 
@@ -761,10 +828,10 @@ function abrirModalDocumento(filePath, titulo, isPdf) {
 
   if (isPdfDoc) {
     $("#previewDocImg").hide().attr("src", "");
-    $("#previewDocPdf").attr("src", filePath).show();
+    $("#previewDocPdf").attr("src", cleanPath).show();
   } else {
     $("#previewDocPdf").hide().attr("src", "about:blank");
-    $("#previewDocImg").attr("src", filePath).show();
+    $("#previewDocImg").attr("src", cleanPath).show();
   }
   $("#previewDocModal").dialog("open");
 }
@@ -1034,16 +1101,16 @@ function initGridChoferes() {
     datatype: "json",
     colNames: [
       "Código",
-      "Tipo",
+      "Tipo Registro",
       "Cédula",
       "Nombres",
-      "Licencia",
-      "Estado Lic.",
+      "Teléfono",
       "Tipo Sangre",
+      "Tipo",
       "Caducidad",
+      "Estado Lic.",
       "Planta",
       "Pla_Cod",
-      "Teléfono",
       "Estado",
       "Acciones",
     ],
@@ -1059,7 +1126,7 @@ function initGridChoferes() {
       {
         name: "tipo_registro",
         index: "tipo_registro",
-        width: 85,
+        width: 95,
         align: "center",
         formatter: function (cellvalue) {
           if (cellvalue === "VISITANTE") {
@@ -1070,15 +1137,33 @@ function initGridChoferes() {
       },
       { name: "Prs_Ced", index: "Prs_Ced", width: 95, align: "center" },
       { name: "nombre", index: "nombre", width: 190, align: "left" },
+      { name: "Cho_Tel", index: "Cho_Tel", width: 95, align: "center" },
+      { name: "Cho_Tsa", index: "Cho_Tsa", width: 80, align: "center" },
       {
         name: "Cho_Tli",
         index: "Cho_Tli",
-        width: 75,
+        width: 85,
         align: "center",
         formatter: function (cellvalue, options, rowObject) {
           if (rowObject.tipo_registro === "VISITANTE") {
             return '<span class="text-muted">N/A</span>';
           }
+          if (!cellvalue || cellvalue === "" || cellvalue === "null") return "";
+          var val = String(cellvalue).trim().toUpperCase();
+          if (val === "NP" || val === "NOP" || val === "NO POSEE") {
+            return "No Posee";
+          }
+          if (/^tipo/i.test(val)) return val;
+          return "Tipo " + val;
+        },
+      },
+      {
+        name: "Cho_Cli",
+        index: "Cho_Cli",
+        width: 90,
+        align: "center",
+        formatter: function (cellvalue, options, rowObject) {
+          if (rowObject.tipo_registro === "VISITANTE") return '<span class="text-muted">-</span>';
           return cellvalue || "";
         },
       },
@@ -1102,17 +1187,6 @@ function initGridChoferes() {
           }
         },
       },
-      { name: "Cho_Tsa", index: "Cho_Tsa", width: 75, align: "center" },
-      {
-        name: "Cho_Cli",
-        index: "Cho_Cli",
-        width: 90,
-        align: "center",
-        formatter: function (cellvalue, options, rowObject) {
-          if (rowObject.tipo_registro === "VISITANTE") return '<span class="text-muted">-</span>';
-          return cellvalue || "";
-        },
-      },
       {
         name: "Pla_Nom",
         index: "Pla_Nom",
@@ -1121,7 +1195,6 @@ function initGridChoferes() {
         hidden: true,
       },
       { name: "Pla_Cod", index: "Pla_Cod", hidden: true },
-      { name: "Cho_Tel", index: "Cho_Tel", width: 95, align: "center" },
       {
         name: "Cho_Est",
         index: "Cho_Est",
@@ -1177,6 +1250,7 @@ function initGridChoferes() {
     cmTemplate: { sortable: false },
     rowNum: 50,
     rowList: [50, 100, 200, 500, 999999],
+    caption: "Historial de Registro",
     pager: "#gridChoferesPager",
     sortname: "nombre",
     sortorder: "asc",
@@ -1239,6 +1313,47 @@ function actualizarGridChoferes() {
     .trigger("reloadGrid");
 }
 
+$(document).on("change", 'input[name="mostrar_datos"], input[name="op_opciones"]', function () {
+  actualizarGridChoferes();
+});
+
+// Recargar grid automáticamente cuando la caja de búsqueda quede vacía (por borrado manual o por botón X)
+$(document).on("input keyup search change", '#filtroChoferesForm input[name="search"]', function () {
+  var val = $(this).val();
+  if (val === "" || val === null || val.trim() === "") {
+    if ($(this).data("lastSearchVal") !== "") {
+      $(this).data("lastSearchVal", "");
+      actualizarGridChoferes();
+    }
+  } else {
+    $(this).data("lastSearchVal", val.trim());
+  }
+});
+
+$(document).on("click", "#filtroChoferesForm .clearable-x, #filtroChoferesForm .clearable + span, #filtroChoferesForm .clear_button", function () {
+  setTimeout(function () {
+    var $input = $('#filtroChoferesForm input[name="search"]');
+    if ($input.length && ($input.val() === "" || $input.val() === null || $input.val().trim() === "")) {
+      $input.data("lastSearchVal", "");
+      actualizarGridChoferes();
+    }
+  }, 50);
+});
+
+// Listener para desvincular IDs de Chofer/Visitante si el usuario corrige la cédula en Registro Nuevo
+$(document).on("input change", "#Cho_Ced", function () {
+  if (!window.esEdicionDirectaGrid) {
+    var cedActual = $(this).val().trim();
+    var prevCed = $(this).data("prevLoadedCed");
+    if (prevCed && prevCed !== cedActual) {
+      $("#Cho_Cod").val("");
+      $("#MVis_Cod").val("");
+      $("#Vis_Cod").val("");
+      $(this).removeData("prevLoadedCed");
+    }
+  }
+});
+
 function toggleModoVisitante(isVisitante) {
   var $secLicencia = $("#sec_licencia_conducir");
   var $docLdi = $("#box_doc_ldi");
@@ -1286,7 +1401,51 @@ function toggleModoVisitante(isVisitante) {
   }
 }
 
+function setModoEdicionCedula(isEdit) {
+  var $ced = $("#Cho_Ced");
+  if (isEdit) {
+    $ced.prop("readonly", true).css("background-color", "#e9ecef").attr("title", "No se permite modificar la Cédula de un registro existente.");
+  } else {
+    $ced.prop("readonly", false).css("background-color", "#ffffff").attr("title", "");
+  }
+}
+
+function evaluarLicenciaNoPosee(val) {
+  var tli = (val || $("#Cho_Tli").val() || "").trim().toUpperCase();
+  var esNoPosee = (tli === "NO POSEE" || tli === "NOP");
+
+  var $nli = $("#Cho_Nli");
+  var $fei = $("#Cho_Fei");
+  var $cli = $("#Cho_Cli");
+  var $imgAnv = $("#Cho_Img_Lic_Anv");
+  var $imgRev = $("#Cho_Img_Lic_Rev");
+  var $badge = $("#badgeLicencia");
+
+  if (esNoPosee) {
+    $nli.val("").prop("readonly", true).prop("disabled", true).css("background-color", "#e9ecef");
+    $fei.val("").prop("readonly", true).prop("disabled", true).css("background-color", "#e9ecef");
+    $cli.val("").prop("readonly", true).prop("disabled", true).css("background-color", "#e9ecef");
+    $imgAnv.val("").prop("disabled", true);
+    $imgRev.val("").prop("disabled", true);
+
+    $("#preview_Cho_Img_Lic_Anv").empty();
+    $("#preview_Cho_Img_Lic_Rev").empty();
+
+    $badge.removeClass("label-success label-danger").addClass("label-default")
+          .html('<i class="glyphicon glyphicon-remove-circle"></i> NO POSEE').show();
+  } else {
+    $nli.prop("readonly", false).prop("disabled", false).css("background-color", "#ffffff");
+    $fei.prop("readonly", false).prop("disabled", false).css("background-color", "#ffffff");
+    $cli.prop("readonly", false).prop("disabled", false).css("background-color", "#ffffff");
+    $imgAnv.prop("disabled", false);
+    $imgRev.prop("disabled", false);
+
+    evaluarEstadoLicencia();
+  }
+}
+
 function limpiarFormularioChofer() {
+  window.esEdicionDirectaGrid = false;
   $("#choferForm")[0].reset();
   $("#Cho_Cod").val("");
   $("#MVis_Cod").val("");
@@ -1296,11 +1455,14 @@ function limpiarFormularioChofer() {
   $("#MVis_Obs").val("");
   $("#Vis_Obs").val("");
   $("#Cho_Edad").val("");
-  $("#badgeLicencia").hide().text("").removeClass("label-success label-danger");
+  $("#Cho_Ced").removeData("prevLoadedCed");
+  $("#badgeLicencia").hide().text("").removeClass("label-success label-danger label-default");
   $("#choferForm .preview-doc-box").empty();
   $("#choferForm select.chosen-select").val("").trigger("chosen:updated");
   $("#chk_es_visitante").prop("checked", false);
   toggleModoVisitante(false);
+  setModoEdicionCedula(false);
+  evaluarLicenciaNoPosee("");
 }
 
 function buscarPersonaCedula(cedula) {
@@ -1310,7 +1472,9 @@ function buscarPersonaCedula(cedula) {
     { buscarPersonaCedulaAjax: true, Prs_Ced: cedula },
     function (r) {
       if (r.success && r.existe) {
+        $("#Cho_Ced").data("prevLoadedCed", cedula);
         if (r.esChofer && r.chofer) {
+          setModoEdicionCedula(Boolean(window.esEdicionDirectaGrid));
           $("#chk_es_visitante").prop("checked", false);
           toggleModoVisitante(false);
           poblarFormularioChofer(r.chofer);
@@ -1320,10 +1484,11 @@ function buscarPersonaCedula(cedula) {
             "Chofer Ya Registrado",
             "El chofer con Cédula <b>" +
               cedula +
-              "</b> ya se encuentra registrado en el sistema.<br><br>Se han cargado sus datos completos para su consulta o modificación.",
+              "</b> ya se encuentra registrado en el sistema.<br><br>Se han cargado sus datos completos. Si cometió un error al digitar la Cédula, puede corregirla libremente.",
             "warning",
           );
         } else if (r.esVisitante && r.visitante) {
+          setModoEdicionCedula(Boolean(window.esEdicionDirectaGrid));
           poblarFormularioVisitante(r.visitante);
           var nomCompV = r.visitante.nombre || ((r.visitante.Prs_Nom || "") + " " + (r.visitante.Prs_Ape || "")).trim();
           $("#choferDialog").dialog("option", "title", "Editar Visitante - " + nomCompV);
@@ -1335,6 +1500,7 @@ function buscarPersonaCedula(cedula) {
             "info",
           );
         } else if (r.persona) {
+          setModoEdicionCedula(Boolean(window.esEdicionDirectaGrid));
           $("#Prs_Nom").val(r.persona.Prs_Nom || "");
           $("#Prs_Ape").val(r.persona.Prs_Ape || "");
           $("#Cho_Tel").val(r.persona.Prs_Tel || "");
@@ -1390,6 +1556,8 @@ function buscarPersonaPropietario(cedula) {
 
 function abrirModalChofer(id) {
   limpiarFormularioChofer();
+  window.esEdicionDirectaGrid = Boolean(id);
+  setModoEdicionCedula(Boolean(id));
 
   var winWidth = $(window).width();
   var modalW = winWidth < 1250 ? Math.floor(winWidth * 0.96) : 1250;
@@ -1433,6 +1601,8 @@ function abrirModalChofer(id) {
 
 function abrirModalVisitante(id) {
   limpiarFormularioChofer();
+  window.esEdicionDirectaGrid = Boolean(id);
+  setModoEdicionCedula(Boolean(id));
 
   var winWidth = $(window).width();
   var modalW = winWidth < 1250 ? Math.floor(winWidth * 0.96) : 1250;
@@ -1539,11 +1709,11 @@ function poblarFormularioChofer(row) {
   $("#Cho_Est").val(row.Cho_Est || "A");
   $("#Cho_Tco").val(row.Cho_Tco || "Indefinido");
 
-  $("#Cho_Tli").val(row.Cho_Tli || "");
+  $("#Cho_Tli").val(row.Cho_Tli || "").trigger("chosen:updated");
   $("#Cho_Nli").val(row.Cho_Nli || "");
   $("#Cho_Fei").val(row.Cho_Fei || "");
   $("#Cho_Cli").val(row.Cho_Cli || "");
-  evaluarEstadoLicencia();
+  evaluarLicenciaNoPosee(row.Cho_Tli);
 
   $("#Cap_Bas_Obli").val(row.Cap_Bas_Obli || "N");
   $("#Cap_Bas_Fec").val(row.Cap_Bas_Fec || "");

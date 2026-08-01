@@ -194,8 +194,13 @@ if (isset($_REQUEST['listChoferesGridAjax'])) {
     }
 
     $params = array($Ses_Emp_Cod);
-    if (isset($req['op_opciones']) && isset($req['search']) && !empty($req['search'])) {
+    if (isset($req['op_opciones'])) {
         $params['op_opciones'] = $req['op_opciones'];
+    }
+    if (isset($req['mostrar_datos'])) {
+        $params['mostrar_datos'] = $req['mostrar_datos'];
+    }
+    if (isset($req['search']) && !empty($req['search'])) {
         $params['search'] = $req['search'];
     }
 
@@ -1158,40 +1163,46 @@ if (isset($_POST['anularVehiculoAjax'])) {
 
                     <!-- ==================== TAB 2: CHOFERES (ACTIVO) ==================== -->
                     <div role="tabpanel" class="tab-pane active" id="tabChoferes">
-                        <div class="btn-toolbar" style="margin-bottom: 10px;">
-                            <button class="btn btn-success" onclick="abrirModalChofer();">
-                                <i class="glyphicon glyphicon-plus"></i> Nuevo Chofer
-                            </button>
-                        </div>
-                        <div class="row" style="margin-top: 10px; margin-bottom: 10px;">
+                        <div class="row" style="margin-top: 5px; margin-bottom: 10px;">
                             <div class="col-xs-12">
                                 <fieldset class="exa-fieldset">
                                     <legend class="Titulos2">Filtro de Búsqueda</legend>
                                     <form id="filtroChoferesForm" class="form-horizontal normal" onsubmit="event.preventDefault(); actualizarGridChoferes();">
-                                        <div class="form-group">
-                                            <label class="col-xs-2 control-label label-xs">Filtrar Por:</label>
-                                            <div class="col-xs-10 radioset opt_search">
+                                        <div class="form-group" style="margin-bottom: 8px;">
+                                            <label class="control-label label-xs" style="float: left; width: 100px; text-align: right; padding-right: 8px;">Filtrar Por:</label>
+                                            <div class="radioset opt_search" style="float: left;">
                                                 <input id="radChofer1" name="op_opciones" type="radio" value="d" checked="" onclick="setfocus(this.form.search)" />
-                                                <label for="radChofer1">Nombre Chofer</label>
+                                                <label for="radChofer1">Nombre</label>
                                                 <input id="radChofer2" name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" />
                                                 <label for="radChofer2">Cédula</label>
-                                                <input id="radChofer3" name="op_opciones" type="radio" value="v" onclick="setfocus(this.form.search)" />
-                                                <label for="radChofer3">Solo Visitantes</label>
-                                                <input id="radChofer4" name="op_opciones" type="radio" value="ch" onclick="setfocus(this.form.search)" />
-                                                <label for="radChofer4">Solo Choferes</label>
+                                            </div>
+
+                                            <label class="control-label label-xs" style="float: left; width: 110px; text-align: right; padding-right: 8px; margin-left: 70px; line-height: 28px;">Mostrar Datos:</label>
+                                            <div class="radioset opt_mostrar_datos" style="float: left;">
+                                                <input id="radMostrarTodos" name="mostrar_datos" type="radio" value="t" checked="" onclick="actualizarGridChoferes();" />
+                                                <label for="radMostrarTodos">Todos</label>
+                                                <input id="radMostrarChoferes" name="mostrar_datos" type="radio" value="ch" onclick="actualizarGridChoferes();" />
+                                                <label for="radMostrarChoferes">Solo Choferes</label>
+                                                <input id="radMostrarVisitantes" name="mostrar_datos" type="radio" value="v" onclick="actualizarGridChoferes();" />
+                                                <label for="radMostrarVisitantes">Solo Visitantes</label>
                                             </div>
                                         </div>
-                                        <div class="form-group">
-                                            <label class="col-xs-2 control-label label-xs">Búsqueda:</label>
-                                            <div class="col-xs-8">
-                                                <div class="input-group input-group-xs">
-                                                    <input name="search" type="text" size="50" maxlength="50" placeholder="Ingrese búsqueda..." class="form-control input-xs clearable" onkeydown="if (event.keyCode === 13) { event.preventDefault(); actualizarGridChoferes(); }" />
+                                        <div class="form-group" style="margin-bottom: 4px; display: flex; align-items: center; flex-wrap: wrap;">
+                                            <label class="control-label label-xs" style="float: left; width: 100px; text-align: right; padding-right: 8px; line-height: 32px; margin-bottom: 0; padding-top: 0;">Búsqueda:</label>
+                                            <div style="float: left; width: 650px; max-width: 90%;">
+                                                <div class="input-group">
+                                                    <input name="search" type="text" maxlength="50" placeholder="Ingrese búsqueda..." class="form-control clearable" style="height: 32px; font-size: 12px;" onkeydown="if (event.keyCode === 13) { event.preventDefault(); actualizarGridChoferes(); }" />
                                                     <span class="input-group-btn">
-                                                        <button type="button" onclick="actualizarGridChoferes();" class="btn btn-success btn-xs" title="Buscar">
+                                                        <button type="button" onclick="actualizarGridChoferes();" class="btn btn-success" style="height: 32px; font-size: 12px;" title="Buscar">
                                                             <span class="glyphicon glyphicon-search"></span> Buscar
                                                         </button>
                                                     </span>
                                                 </div>
+                                            </div>
+                                            <div style="float: left; margin-left: 15px;">
+                                                <button class="btn btn-success" type="button" onclick="abrirModalChofer();" style="height: 32px; font-size: 12px; font-weight: 600; padding: 0 16px;">
+                                                    <i class="glyphicon glyphicon-plus"></i> Nuevo Chofer
+                                                </button>
                                             </div>
                                         </div>
                                     </form>
@@ -1303,7 +1314,7 @@ if (isset($_POST['anularVehiculoAjax'])) {
 
     <!-- Modal Chofer / Visitante Completo (Layout Vertical Apilado 920px) -->
     <div id="choferDialog" title="Registrar Chofer" style="display: none;">
-        <form id="choferForm" class="form-horizontal normal" enctype="multipart/form-data">
+        <form id="choferForm" class="form-horizontal normal" enctype="multipart/form-data" autocomplete="off">
             <input type="hidden" id="Cho_Cod" name="Cho_Cod">
             <input type="hidden" id="MVis_Cod" name="MVis_Cod">
             <input type="hidden" id="Vis_Cod" name="Vis_Cod">
@@ -1418,8 +1429,9 @@ if (isset($_POST['anularVehiculoAjax'])) {
                                 <div class="form-group">
                                     <label class="col-xs-12 control-label label-xs required" title="Tipo o Categoría de Licencia">Tipo Licencia:</label>
                                     <div class="col-xs-12">
-                                        <select id="Cho_Tli" name="Cho_Tli" class="form-control input-xs select-wide chosen-select" required>
+                                        <select id="Cho_Tli" name="Cho_Tli" class="form-control input-xs select-wide chosen-select" required onchange="evaluarLicenciaNoPosee(this.value);">
                                             <option value="">Licencia...</option>
+                                            <option value="NP">NO POSEE</option>
                                             <option value="A">A</option>
                                             <option value="A1">A1</option>
                                             <option value="B">B</option>
@@ -2080,7 +2092,7 @@ if (isset($_POST['anularVehiculoAjax'])) {
     <!-- JS Scripts Inclusion con parámetro de cache-busting -->
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=21"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=22"></script>
 </body>
 
 </html>

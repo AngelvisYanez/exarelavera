@@ -96,6 +96,24 @@ body {
     background-color: #f8fafc !important;
 }
 
+/* Barra de Título del Grid (Historial de Registro) */
+.ui-jqgrid .ui-jqgrid-titlebar {
+    background: linear-gradient(135deg, #1e293b, #0f172a) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+    padding: 8px 14px !important;
+    border-top-left-radius: 6px !important;
+    border-top-right-radius: 6px !important;
+    border: none !important;
+}
+
+.ui-jqgrid .ui-jqgrid-titlebar .ui-jqgrid-title {
+    color: #f8fafc !important;
+}
+
 /* ==========================================================================
    FIELDSET Y OPCIONES DE BÚSQUEDA (SEGMENTED CONTROL RADIOSET)
    ========================================================================== */
@@ -626,6 +644,152 @@ body {
     overflow-y: auto !important;
     overflow-x: hidden !important;
     padding-right: 8px !important;
+}
+
+/* ==========================================================================
+   ALERTAS Y DIÁLOGOS EMERGENTES ULTRA ELEGANTES Y PROFESIONALES
+   ========================================================================== */
+
+div.ui-dialog.exa-alert-modal-pro,
+div.ui-dialog.exa-ui-dialog {
+    border-radius: 10px !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.3) !important;
+    overflow: hidden !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+}
+
+div.ui-dialog.exa-alert-modal-pro .ui-dialog-titlebar,
+div.ui-dialog.exa-ui-dialog .ui-dialog-titlebar {
+    background: linear-gradient(135deg, #1e293b, #0f172a) !important;
+    color: #ffffff !important;
+    border: none !important;
+    padding: 10px 16px !important;
+    border-top-left-radius: 9px !important;
+    border-top-right-radius: 9px !important;
+}
+
+div.ui-dialog.exa-alert-modal-pro .ui-dialog-title,
+div.ui-dialog.exa-ui-dialog .ui-dialog-title {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: #f8fafc !important;
+    letter-spacing: 0.03em !important;
+    text-transform: uppercase !important;
+}
+
+div.ui-dialog.exa-alert-modal-pro .ui-dialog-titlebar-close,
+div.ui-dialog.exa-ui-dialog .ui-dialog-titlebar-close {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    border-radius: 50% !important;
+    width: 24px !important;
+    height: 24px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    right: 12px !important;
+}
+
+div.ui-dialog.exa-alert-modal-pro .ui-dialog-titlebar-close:hover,
+div.ui-dialog.exa-ui-dialog .ui-dialog-titlebar-close:hover {
+    background: #ef4444 !important;
+    border-color: #dc2626 !important;
+}
+
+div.ui-dialog.exa-alert-modal-pro .ui-dialog-content {
+    background: #ffffff !important;
+    padding: 18px 20px 14px 20px !important;
+    color: #334155 !important;
+    font-size: 13px !important;
+    max-height: none !important;
+}
+
+div.ui-dialog.exa-alert-modal-pro .ui-dialog-buttonpane,
+div.ui-dialog.exa-ui-dialog .ui-dialog-buttonpane {
+    background: #f8fafc !important;
+    border-top: 1px solid #e2e8f0 !important;
+    padding: 10px 16px !important;
+    margin: 0 !important;
+    text-align: right !important;
+}
+
+div.ui-dialog.exa-alert-modal-pro .ui-dialog-buttonpane button,
+div.ui-dialog.exa-alert-modal-pro .ui-dialog-buttonpane .ui-button,
+div.ui-dialog.exa-ui-dialog .ui-dialog-buttonpane button {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    padding: 7px 22px !important;
+    border-radius: 6px !important;
+    border: none !important;
+    outline: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease-in-out !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important;
+    text-shadow: none !important;
+    margin-left: 8px !important;
+}
+
+div.ui-dialog.exa-alert-modal-pro .ui-dialog-buttonpane button.exa-alert-btn-confirm,
+div.ui-dialog.exa-alert-modal-pro .ui-dialog-buttonpane button:first-child {
+    background: linear-gradient(135deg, #007bff, #0056b3) !important;
+    color: #ffffff !important;
+    border: 1px solid #0056b3 !important;
+}
+
+div.ui-dialog.exa-alert-modal-pro .ui-dialog-buttonpane button.exa-alert-btn-confirm:hover,
+div.ui-dialog.exa-alert-modal-pro .ui-dialog-buttonpane button:first-child:hover {
+    background: linear-gradient(135deg, #0056b3, #003d80) !important;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.35) !important;
+}
+
+div.ui-dialog.exa-alert-modal-pro .ui-dialog-buttonpane button.exa-alert-btn-cancel,
+div.ui-dialog.exa-alert-modal-pro .ui-dialog-buttonpane button:nth-child(2) {
+    background: #ffffff !important;
+    color: #475569 !important;
+    border: 1px solid #cbd5e1 !important;
+}
+
+div.ui-dialog.exa-alert-modal-pro .ui-dialog-buttonpane button.exa-alert-btn-cancel:hover,
+div.ui-dialog.exa-alert-modal-pro .ui-dialog-buttonpane button:nth-child(2):hover {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+    border-color: #94a3b8 !important;
+}
+
+.exa-alert-card {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+    padding: 4px 2px !important;
+}
+
+.exa-alert-icon-box {
+    flex-shrink: 0 !important;
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+}
+
+.exa-alert-icon-box i {
+    font-size: 26px !important;
+}
+
+.exa-alert-text-box h4 {
+    margin: 0 0 6px 0 !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+}
+
+.exa-alert-text-box div {
+    font-size: 12.5px !important;
+    line-height: 1.55 !important;
+    color: #334155 !important;
 }
 
 
