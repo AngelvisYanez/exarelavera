@@ -1251,6 +1251,7 @@ function initGridChoferes() {
     rowNum: 50,
     rowList: [50, 100, 200, 500, 999999],
     caption: "Historial de Registro",
+    hidegrid: false,
     pager: "#gridChoferesPager",
     sortname: "nombre",
     sortorder: "asc",

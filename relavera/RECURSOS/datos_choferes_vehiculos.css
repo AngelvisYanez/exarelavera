@@ -96,22 +96,63 @@ body {
     background-color: #f8fafc !important;
 }
 
-/* Barra de Título del Grid (Historial de Registro) */
-.ui-jqgrid .ui-jqgrid-titlebar {
-    background: linear-gradient(135deg, #1e293b, #0f172a) !important;
+/* Barra de Título del Grid (Historial de Registro) - Altura Aumentada y Alineación Vertical */
+#gbox_gridChoferes .ui-jqgrid-titlebar,
+#gview_gridChoferes .ui-jqgrid-titlebar,
+div.ui-jqgrid-titlebar,
+div.ui-jqgrid .ui-jqgrid-titlebar,
+.ui-jqgrid-titlebar.ui-widget-header,
+.ui-jqgrid .ui-widget-header {
+    height: 34px !important;
+    min-height: 34px !important;
+    line-height: 34px !important;
+    padding: 0 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    background: #2b3e50 !important;
+    background-image: linear-gradient(to bottom, #3a536b, #2b3e50) !important;
+    background-color: #2b3e50 !important;
     color: #ffffff !important;
     font-weight: 700 !important;
     font-size: 12px !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.04em !important;
-    padding: 8px 14px !important;
-    border-top-left-radius: 6px !important;
-    border-top-right-radius: 6px !important;
-    border: none !important;
+    letter-spacing: 0.05em !important;
+    border-top-left-radius: 5px !important;
+    border-top-right-radius: 5px !important;
+    border: 1px solid #2b3e50 !important;
+    box-sizing: border-box !important;
 }
 
-.ui-jqgrid .ui-jqgrid-titlebar .ui-jqgrid-title {
-    color: #f8fafc !important;
+#gbox_gridChoferes .ui-jqgrid-titlebar *,
+#gview_gridChoferes .ui-jqgrid-titlebar *,
+div.ui-jqgrid-titlebar *,
+div.ui-jqgrid .ui-jqgrid-titlebar *,
+.ui-jqgrid-titlebar .ui-jqgrid-title,
+.ui-jqgrid-title,
+#gbox_gridChoferes .ui-jqgrid-title,
+#gview_gridChoferes .ui-jqgrid-title {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    line-height: 34px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    float: none !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
+    opacity: 1 !important;
+}
+
+/* Ocultar botón de contraer/plegar a la derecha */
+.ui-jqgrid-titlebar-close,
+.ui-jqgrid .ui-jqgrid-titlebar-close {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 /* ==========================================================================

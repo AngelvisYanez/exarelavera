@@ -1083,7 +1083,7 @@ if (isset($_POST['anularVehiculoAjax'])) {
     <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
     <?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
     <?php require_once("../../mascaras/model3/estilos/estilos.php") ?>
-    <link rel="stylesheet" type="text/css" href="../RECURSOS/datos_choferes_vehiculos.css">
+    <link rel="stylesheet" type="text/css" href="../RECURSOS/datos_choferes_vehiculos.css?v=<?php echo time(); ?>">
 </head>
 
 <body>
@@ -1187,20 +1187,22 @@ if (isset($_POST['anularVehiculoAjax'])) {
                                                 <label for="radMostrarVisitantes">Solo Visitantes</label>
                                             </div>
                                         </div>
-                                        <div class="form-group" style="margin-bottom: 4px; display: flex; align-items: center; flex-wrap: wrap;">
-                                            <label class="control-label label-xs" style="float: left; width: 100px; text-align: right; padding-right: 8px; line-height: 32px; margin-bottom: 0; padding-top: 0;">Búsqueda:</label>
-                                            <div style="float: left; width: 650px; max-width: 90%;">
-                                                <div class="input-group">
-                                                    <input name="search" type="text" maxlength="50" placeholder="Ingrese búsqueda..." class="form-control clearable" style="height: 32px; font-size: 12px;" onkeydown="if (event.keyCode === 13) { event.preventDefault(); actualizarGridChoferes(); }" />
-                                                    <span class="input-group-btn">
-                                                        <button type="button" onclick="actualizarGridChoferes();" class="btn btn-success" style="height: 32px; font-size: 12px;" title="Buscar">
-                                                            <span class="glyphicon glyphicon-search"></span> Buscar
-                                                        </button>
-                                                    </span>
+                                        <div style="margin-top: 6px; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                                            <div style="display: flex; align-items: center; flex-grow: 1;">
+                                                <label class="control-label label-xs" style="width: 100px; text-align: right; padding-right: 8px; margin-bottom: 0; line-height: 32px; padding-top: 0; flex-shrink: 0;">Búsqueda:</label>
+                                                <div style="width: 650px; max-width: 100%;">
+                                                    <div class="input-group">
+                                                        <input name="search" type="text" maxlength="50" placeholder="Ingrese búsqueda..." class="form-control clearable" style="height: 32px; font-size: 12px;" onkeydown="if (event.keyCode === 13) { event.preventDefault(); actualizarGridChoferes(); }" />
+                                                        <span class="input-group-btn">
+                                                            <button type="button" onclick="actualizarGridChoferes();" class="btn btn-success" style="height: 32px; font-size: 12px;" title="Buscar">
+                                                                <span class="glyphicon glyphicon-search"></span> Buscar
+                                                            </button>
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div style="float: left; margin-left: 15px;">
-                                                <button class="btn btn-success" type="button" onclick="abrirModalChofer();" style="height: 32px; font-size: 12px; font-weight: 600; padding: 0 16px;">
+                                            <div style="flex-shrink: 0; margin-left: 15px;">
+                                                <button class="btn btn-success" type="button" onclick="abrirModalChofer();" style="height: 32px; font-size: 12px; font-weight: 600; padding: 0 18px;">
                                                     <i class="glyphicon glyphicon-plus"></i> Nuevo Chofer
                                                 </button>
                                             </div>
@@ -2092,7 +2094,7 @@ if (isset($_POST['anularVehiculoAjax'])) {
     <!-- JS Scripts Inclusion con parámetro de cache-busting -->
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=22"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=23"></script>
 </body>
 
 </html>
