@@ -18,6 +18,7 @@ $ajax_save_cotizaciones = isset($_GET['ajax_save_cotizaciones']) ? $_GET['ajax_s
 $ajax_save_solicitud_corta = isset($_GET['ajax_save_solicitud_corta']) ? $_GET['ajax_save_solicitud_corta'] : (isset($_POST['ajax_save_solicitud_corta']) ? $_POST['ajax_save_solicitud_corta'] : null);
 $ajax_completar_solicitud = isset($_GET['ajax_completar_solicitud']) ? $_GET['ajax_completar_solicitud'] : (isset($_POST['ajax_completar_solicitud']) ? $_POST['ajax_completar_solicitud'] : null);
 $ajax_get_decisiones_flujo = isset($_GET['ajax_get_decisiones_flujo']) ? $_GET['ajax_get_decisiones_flujo'] : null;
+$ajax_get_seleccion_usuarios_flujo = isset($_GET['ajax_get_seleccion_usuarios_flujo']) ? $_GET['ajax_get_seleccion_usuarios_flujo'] : null;
 $ajax_get_trq_details = isset($_GET['ajax_get_trq_details']) ? $_GET['ajax_get_trq_details'] : null;
 $ajax_get_borrador = isset($_GET['ajax_get_borrador']) ? $_GET['ajax_get_borrador'] : null;
 $ajax_get_solicitud_cot = isset($_GET['ajax_get_solicitud_cot']) ? $_GET['ajax_get_solicitud_cot'] : null;
@@ -33,10 +34,13 @@ $necesita_ensure_schema = (
     isset($ajax_save_solicitud) || isset($ajax_save_borrador) || isset($ajax_save_cotizaciones)
     || isset($ajax_save_solicitud_corta) || isset($ajax_completar_solicitud) || isset($ajax_get_form)
     || isset($ajax_get_borrador) || isset($ajax_get_solicitud_cot) || isset($ajax_save_proveedor)
+    || isset($ajax_get_seleccion_usuarios_flujo)
 );
 if ($necesita_ensure_schema) {
     $obBD_con1->ensureSolicitudTituloColumn();
     $obBD_con1->ensureDecisionValsTable();
+    $obBD_con1->ensureCotizacionesSchema();
+    $wf_mgr->ensureNotificationSchema();
 }
 
 function adq_validar_y_guardar_pdf_cot($tmp_name, $original_name, $target_dir, $rel_dir) {
@@ -125,7 +129,7 @@ function adq_normalizar_cot_adjuntos_existentes(&$cotizaciones_existentes, $file
 
 // Verificar acceso a la ventana 'bandeja' y pestaña 'crear_solicitud'
 if (!$wf_mgr->verificarAccesoVentana('bandeja', 'crear_solicitud')) {
-    if (isset($ajax_save_solicitud) || isset($ajax_save_borrador) || isset($ajax_save_cotizaciones) || isset($ajax_save_solicitud_corta) || isset($ajax_completar_solicitud) || isset($ajax_get_trq_details) || isset($ajax_get_borrador) || isset($ajax_get_solicitud_cot) || isset($ajax_search_proveedores) || isset($ajax_lookup_proveedor) || isset($ajax_save_proveedor) || isset($ajax_get_decisiones_flujo)) {
+    if (isset($ajax_save_solicitud) || isset($ajax_save_borrador) || isset($ajax_save_cotizaciones) || isset($ajax_save_solicitud_corta) || isset($ajax_completar_solicitud) || isset($ajax_get_trq_details) || isset($ajax_get_borrador) || isset($ajax_get_solicitud_cot) || isset($ajax_search_proveedores) || isset($ajax_lookup_proveedor) || isset($ajax_save_proveedor) || isset($ajax_get_decisiones_flujo) || isset($ajax_get_seleccion_usuarios_flujo)) {
         $obBD_con1->echoJson(array('success' => false, 'message' => 'Acceso denegado. No tiene permisos para realizar esta acción.'));
         exit;
     } else {
@@ -135,7 +139,7 @@ if (!$wf_mgr->verificarAccesoVentana('bandeja', 'crear_solicitud')) {
 }
 
 // Redirección segura para navegación directa del navegador (no AJAX)
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['ajax_get_form']) && !isset($_GET['ajax_get_trq_details']) && !isset($_GET['ajax_get_borrador']) && !isset($_GET['ajax_get_solicitud_cot']) && !isset($_GET['ajax_search_proveedores']) && !isset($_GET['ajax_lookup_proveedor']) && !isset($_GET['ajax_save_proveedor']) && !isset($_GET['ajax_save_solicitud']) && !isset($_GET['ajax_save_borrador']) && !isset($_GET['ajax_save_cotizaciones']) && !isset($_GET['ajax_save_solicitud_corta']) && !isset($_GET['ajax_completar_solicitud']) && !isset($_GET['ajax_get_decisiones_flujo'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['ajax_get_form']) && !isset($_GET['ajax_get_trq_details']) && !isset($_GET['ajax_get_borrador']) && !isset($_GET['ajax_get_solicitud_cot']) && !isset($_GET['ajax_search_proveedores']) && !isset($_GET['ajax_lookup_proveedor']) && !isset($_GET['ajax_save_proveedor']) && !isset($_GET['ajax_save_solicitud']) && !isset($_GET['ajax_save_borrador']) && !isset($_GET['ajax_save_cotizaciones']) && !isset($_GET['ajax_save_solicitud_corta']) && !isset($_GET['ajax_completar_solicitud']) && !isset($_GET['ajax_get_decisiones_flujo']) && !isset($_GET['ajax_get_seleccion_usuarios_flujo'])) {
     header("Location: adq_bandeja.php?tab=crear_solicitud");
     exit;
 }
@@ -144,6 +148,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['ajax_get_form']) && !i
 if (isset($ajax_get_decisiones_flujo)) {
     $trq_cod = intval(isset($_GET['trq_cod']) ? $_GET['trq_cod'] : 0);
     $obBD_con1->echoJson($wf_mgr->obtenerDecisionesFlujoPorTipo($trq_cod, intval($Ses_Emp_Cod)));
+    exit;
+}
+
+if (isset($ajax_get_seleccion_usuarios_flujo)) {
+    $trq_cod = intval(isset($_GET['trq_cod']) ? $_GET['trq_cod'] : 0);
+    $sol_cod = intval(isset($_GET['sol_cod']) ? $_GET['sol_cod'] : 0);
+    $obBD_con1->echoJson($wf_mgr->obtenerSeleccionUsuariosFlujoPorTipo($trq_cod, intval($Ses_Emp_Cod), $sol_cod));
     exit;
 }
 
@@ -162,8 +173,16 @@ if (isset($ajax_save_solicitud_corta)) {
         @flush();
     }
     if (!empty($resCorta['success']) && class_exists('wf_manager_log') && wf_manager_log::hayNotificacionesPendientes()) {
+        if (function_exists('fastcgi_finish_request')) {
+            @fastcgi_finish_request();
+        }
         ignore_user_abort(true);
-        $wf_mgr->flushPendingNotificaciones();
+        ob_start();
+        try {
+            $wf_mgr->flushPendingNotificaciones();
+        } catch (Exception $e) {
+        }
+        @ob_end_clean();
     }
     exit;
 }
@@ -276,6 +295,32 @@ if (isset($ajax_save_solicitud) || isset($ajax_save_borrador) || isset($ajax_sav
         $resp = $obBD_con1->guardarBorrador($_POST, $items, $cotizaciones, $cotizaciones_existentes, $cot_eliminar, $adjuntos_nuevos, $adjuntos_existentes, $adj_eliminar);
     } else {
         $resp = $obBD_con1->guardarSolicitud($_POST, $items, $cotizaciones, $cotizaciones_existentes, $cot_eliminar, $adjuntos_nuevos, $adjuntos_existentes, $adj_eliminar);
+    }
+    // Responder al navegador; notificaciones (WhatsApp/correo) van despues sin contaminar el JSON.
+    if (!empty($resp['success']) && class_exists('wf_manager_log') && wf_manager_log::hayNotificacionesPendientes()) {
+        if (session_id() !== '') {
+            session_write_close();
+        }
+        while (ob_get_level() > 0) {
+            @ob_end_clean();
+        }
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($resp);
+        if (function_exists('flush')) {
+            @flush();
+        }
+        if (function_exists('fastcgi_finish_request')) {
+            @fastcgi_finish_request();
+        }
+        ignore_user_abort(true);
+        ob_start();
+        try {
+            $wf_mgr->flushPendingNotificaciones();
+        } catch (Exception $e) {
+            // No contaminar la respuesta ya enviada.
+        }
+        @ob_end_clean();
+        exit;
     }
     $obBD_con1->echoJson($resp);
     exit;
@@ -560,7 +605,7 @@ if (isset($ajax_get_form)) {
                 </div>
                 <div id="panelValorEstimadoCorta" class="mb-4" style="display:none;">
                     <label class="form-label fw-bold" for="Sol_Val_Est_Corto">Valor estimado *</label>
-                    <input type="number" class="form-control" id="Sol_Val_Est_Corto" min="0.01" step="0.01" placeholder="0.00">
+                    <input type="number" class="form-control" id="Sol_Val_Est_Corto" min="0.01" step="0.01" placeholder="00.00">
                     <small class="text-muted">Ingrese el monto estimado de la solicitud.</small>
                 </div>
                 <div id="panelDecisionesCorta" class="mb-4" style="display:none;">
@@ -690,6 +735,7 @@ if (isset($ajax_get_form)) {
                             $input.attr({ step: '0.01', min: '0' });
                             if (c.campo === 'Sol_Val_Est') {
                                 $input.attr('min', '0.01');
+                                $input.attr('placeholder', '00.00');
                             }
                         }
                     }
@@ -881,6 +927,202 @@ if (isset($ajax_get_form)) {
         .adq-step-card > .row > [class*="col-"] {
             padding-left: 14px;
             padding-right: 14px;
+        }
+        .adq-resp-summary {
+            margin-top: 22px;
+            border: 1px solid #c7d7ea;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f8fbff 0%, #eef5ff 100%);
+            overflow: hidden;
+        }
+        .adq-resp-summary-inner {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+        }
+        .adq-resp-summary-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: #1e40af;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .adq-resp-summary-text {
+            flex: 1;
+            min-width: 0;
+        }
+        .adq-resp-summary-text strong {
+            display: block;
+            color: #0f172a;
+            font-size: 13px;
+        }
+        .adq-resp-summary-text span {
+            color: #475569;
+            font-size: 12px;
+            line-height: 1.35;
+        }
+        .adq-resp-modal {
+            border: none;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 18px 48px rgba(15, 23, 42, 0.22);
+        }
+        .adq-resp-modal-header {
+            background: linear-gradient(135deg, #0f2b46 0%, #1e40af 100%);
+            color: #fff;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .adq-resp-modal-kicker {
+            font-size: 10px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            opacity: 0.8;
+            margin: 0;
+        }
+        .adq-resp-modal-header .modal-title {
+            font-size: 16px;
+            color: #fff;
+        }
+        .adq-resp-modal-sub {
+            margin-top: 3px;
+            font-size: 11px;
+            opacity: 0.9;
+            max-width: 540px;
+        }
+        .adq-resp-close {
+            background: rgba(255,255,255,0.12);
+            border: none;
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            font-size: 20px;
+            line-height: 1;
+            opacity: 0.95;
+        }
+        .adq-resp-modal-body {
+            background: #f8fafc;
+            padding: 10px 12px;
+            max-height: 58vh;
+            overflow-y: auto;
+        }
+        .adq-resp-modal-footer {
+            background: #fff;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+        }
+        .adq-nodo-usu-card {
+            background: #fff;
+            border: 1px solid #dbe4ee;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+        .adq-nodo-usu-card.is-complete {
+            border-color: #86efac;
+            box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.15);
+        }
+        .adq-nodo-usu-card.is-missing {
+            border-color: #f87171;
+            box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.2);
+            background: #fff7f7;
+        }
+        .adq-nodo-usu-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 0;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #eef2f7;
+        }
+        .adq-nodo-usu-title {
+            font-weight: 700;
+            color: #0f172a;
+            font-size: 13px;
+            line-height: 1.25;
+            margin: 0;
+        }
+        .adq-nodo-usu-subtitle {
+            display: block;
+            margin-top: 1px;
+            font-size: 10px;
+            font-weight: 600;
+            color: #64748b;
+        }
+        .adq-nodo-usu-badge {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            background: #e2e8f0;
+            color: #334155;
+            border-radius: 999px;
+            padding: 2px 7px;
+            flex-shrink: 0;
+        }
+        .adq-nodo-usu-options {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 8px;
+            padding-top: 0;
+        }
+        .adq-nodo-usu-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #dbe4ee;
+            border-radius: 6px;
+            padding: 6px 10px;
+            background: #fff;
+            cursor: pointer;
+            margin: 0;
+            transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+        }
+        .adq-nodo-usu-option:hover {
+            border-color: #93c5fd;
+            background: #f8fbff;
+        }
+        .adq-nodo-usu-option.is-selected {
+            border-color: #2563eb;
+            background: #eff6ff;
+            box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.18);
+        }
+        .adq-nodo-usu-option input[type="checkbox"] {
+            margin: 0;
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        .adq-nodo-usu-option span {
+            font-size: 12px;
+            font-weight: 600;
+            color: #1e293b;
+            line-height: 1.25;
+        }
+        .adq-resp-empty {
+            text-align: center;
+            padding: 28px 16px;
+            color: #475569;
+            background: #fff;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
         }
         .adq-form-fields-stack {
             clear: both;
@@ -1353,8 +1595,36 @@ if (isset($ajax_get_form)) {
             width: 100%;
         }
         .adq-proforma-val {
-            flex: 0 0 130px;
-            min-width: 120px;
+            flex: 0 0 110px;
+            min-width: 100px;
+        }
+        .adq-proforma-iva {
+            flex: 0 0 90px;
+            min-width: 80px;
+        }
+        .adq-proforma-iva .adq-cot-iva-check {
+            margin: 0;
+            min-height: 34px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 0;
+        }
+        .adq-proforma-total {
+            flex: 0 0 110px;
+            min-width: 100px;
+        }
+        .adq-cot-total-box {
+            min-height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 4px 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            color: #166534;
+            font-size: 13px;
         }
         .adq-proforma-actions {
             display: inline-flex;
@@ -1878,6 +2148,20 @@ if (isset($ajax_get_form)) {
                         <input type="hidden" id="Sol_Val_Est" name="Sol_Val_Est" value="0.00">
                     </div>
                 </div>
+
+                <div id="panelSeleccionUsuariosNodos" class="adq-resp-summary" style="display: none;">
+                    <div class="adq-resp-summary-inner">
+                        <div class="adq-resp-summary-icon"><i class="bi bi-people-fill"></i></div>
+                        <div class="adq-resp-summary-text">
+                            <strong id="lblRespSummaryTitle">Asignación de responsables</strong>
+                            <span id="lblRespSummaryDesc" class="d-block">Defina quién atenderá cada etapa del flujo.</span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-primary fw-bold" id="btnAbrirModalResponsables" onclick="abrirModalSeleccionResponsables()">
+                            <i class="bi bi-person-check"></i> Asignar responsables
+                        </button>
+                    </div>
+                    <div id="nodoUsuariosHidden"></div>
+                </div>
             </div>
 
             <!-- Botones de Acción -->
@@ -1895,6 +2179,37 @@ if (isset($ajax_get_form)) {
                 <button type="button" class="btn btn-primary fw-bold p-3 py-2" style="font-size: 14px;" id="btnGuardarCotizacionesEtapa" onclick="guardarCotizacionesEtapa()"><i class="bi bi-save"></i> Guardar Cotizaciones</button>
             </div>
         </form>
+
+        <!-- MODAL SELECCIÓN RESPONSABLES POR NODO -->
+        <div class="modal fade" id="mdlSeleccionResponsables" tabindex="-1" role="dialog" aria-labelledby="mdlSeleccionResponsablesLabel" aria-hidden="true" style="z-index: 1070;">
+            <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+                <div class="modal-content adq-resp-modal">
+                    <div class="adq-resp-modal-header">
+                        <div>
+                            <p class="adq-resp-modal-kicker mb-1">Workflow de adquisiciones</p>
+                            <h4 class="modal-title fw-bold mb-0" id="mdlSeleccionResponsablesLabel">
+                                <i class="bi bi-diagram-3"></i> Selección de responsables
+                            </h4>
+                            <p class="adq-resp-modal-sub mb-0">Es obligatorio elegir un responsable en cada etapa. Solo se listan nodos con más de un usuario asignado.</p>
+                        </div>
+                        <button type="button" class="adq-resp-close" data-dismiss="modal" aria-label="Cerrar" onclick="$('#mdlSeleccionResponsables').modal('hide')">&times;</button>
+                    </div>
+                    <div class="modal-body adq-resp-modal-body">
+                        <div id="seleccionUsuariosNodosList"></div>
+                        <div id="seleccionUsuariosNodosEmpty" class="adq-resp-empty" style="display:none;"></div>
+                    </div>
+                    <div class="modal-footer adq-resp-modal-footer">
+                        <div class="adq-resp-progress small text-muted" id="lblRespProgress">0 / 0 etapas asignadas</div>
+                        <div>
+                            <button type="button" class="btn btn-default" onclick="$('#mdlSeleccionResponsables').modal('hide')">Cancelar</button>
+                            <button type="button" class="btn btn-success fw-bold" id="btnConfirmarResponsables" onclick="confirmarSeleccionResponsables()">
+                                <i class="bi bi-check2-circle"></i> Confirmar asignación
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- MODAL NUEVO PROVEEDOR -->
         <div class="modal fade" id="mdlNuevoProveedor" tabindex="-1" role="dialog" aria-labelledby="mdlNuevoProveedorLabel" aria-hidden="true" style="z-index: 1060;">
@@ -1943,7 +2258,7 @@ if (isset($ajax_get_form)) {
         </div>
     </div>
     <script src="../../framework/plugins/cedulaRuc.js" charset="UTF-8"></script>
-    <script src="../VALIDACIONES/adq_solicitud.js?v=20260728a" charset="UTF-8"></script>
+    <script src="../VALIDACIONES/adq_solicitud.js?v=20260803h" charset="UTF-8"></script>
     <?php
     exit;
 }
@@ -1973,6 +2288,6 @@ if (isset($ajax_get_form)) {
 
     <!-- Script del validador de adquisición -->
     <script src="../../framework/plugins/cedulaRuc.js" charset="UTF-8"></script>
-    <script src="../VALIDACIONES/adq_solicitud.js?v=20260728a" charset="UTF-8"></script>
+    <script src="../VALIDACIONES/adq_solicitud.js?v=20260803h" charset="UTF-8"></script>
 </body>
 </html>

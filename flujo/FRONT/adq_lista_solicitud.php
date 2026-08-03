@@ -37,6 +37,8 @@ function adqListaEtiquetaAccion($h) {
         $txt = 'Pendiente de aprobacion';
         if (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'TAREA') {
             $txt = 'Tarea pendiente';
+        } elseif (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'VALIDACION') {
+            $txt = 'Validaci&oacute;n pendiente';
         } elseif (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'FIN') {
             $txt = 'Pendiente cierre';
         } elseif (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'AVANCE') {
@@ -47,6 +49,9 @@ function adqListaEtiquetaAccion($h) {
         return array($txt, 'primary', 'active');
     }
     $acc = isset($h['Isn_Acc']) ? $h['Isn_Acc'] : '';
+    if ($acc === 'COMPLETAR' && isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'VALIDACION') {
+        return array('Validaci&oacute;n completada', 'success', 'success');
+    }
     $map = array(
         'CREAR' => array('Inicio pedido', 'secondary', 'active'),
         'APROBAR' => array('Aprobado', 'success', 'success'),
@@ -1117,7 +1122,7 @@ function adqListaEtiquetaEstado($sol_est)
                 let actorLine = '';
                 if (node.pendiente_meta) {
                     const pm = node.pendiente_meta;
-                    let lines = ['<span><i class="bi bi-hourglass-split"></i> ' + (node.tipo === 'TAREA' ? 'Tarea pendiente' : 'Pendiente de aprobacion') + '</span>'];
+                    let lines = ['<span><i class="bi bi-hourglass-split"></i> ' + (node.tipo === 'TAREA' ? 'Tarea pendiente' : (node.tipo === 'VALIDACION' ? 'Validaci\u00f3n pendiente' : 'Pendiente de aprobacion')) + '</span>'];
                     if (pm.depto) lines.push('<span>Depto: ' + escHtmlLista(pm.depto) + '</span>');
                     if (pm.asignados) lines.push('<span>Asignado: ' + escHtmlLista(pm.asignados) + '</span>');
                     if (pm.enviado_por) lines.push('<span>Enviado por: ' + escHtmlLista(pm.enviado_por) + '</span>');

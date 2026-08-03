@@ -346,6 +346,7 @@ function renderCamposDecisionCompleta(info, valoresPrevios) {
                 $input.attr({ step: '0.01', min: '0' });
                 if (c.campo === 'Sol_Val_Est') {
                     $input.attr('min', '0.01');
+                    $input.attr('placeholder', '00.00');
                 }
             }
         }
@@ -388,6 +389,317 @@ function cargarDecisionesFlujo(trqCod, valoresPrevios) {
     });
 }
 
+let seleccionUsuariosPack = { activo: false, nodos: [], success: false };
+let seleccionUsuariosValores = {};
+let seleccionUsuariosPendienteEnvio = false;
+
+function escHtml(str) {
+    return $('<div>').text(str == null ? '' : String(str)).html();
+}
+
+function nodosSeleccionables(pack) {
+    pack = pack || seleccionUsuariosPack;
+    if (!pack || !pack.activo || !pack.nodos || !pack.nodos.length) {
+        return [];
+    }
+    return pack.nodos
+        .filter(function(nodo) {
+            return (parseInt(nodo.Nod_Cod, 10) || 0) > 0 && nodo.usuarios && nodo.usuarios.length >= 2;
+        })
+        .slice()
+        .sort(function(a, b) {
+            return (parseInt(a.Nod_Cod, 10) || 0) - (parseInt(b.Nod_Cod, 10) || 0);
+        });
+}
+
+function syncHiddenNodoUsuarios() {
+    var $box = $('#nodoUsuariosHidden');
+    if (!$box.length) {
+        return;
+    }
+    $box.empty();
+    Object.keys(seleccionUsuariosValores || {}).forEach(function(nodCod) {
+        var usu = seleccionUsuariosValores[nodCod];
+        if (!usu) return;
+        $box.append(
+            $('<input type="hidden">').attr({
+                name: 'nodo_usuarios[' + nodCod + ']',
+                value: usu
+            })
+        );
+    });
+}
+
+function actualizarResumenSeleccionUsuarios() {
+    var $panel = $('#panelSeleccionUsuariosNodos');
+    if (!$panel.length) {
+        return;
+    }
+    var nodos = nodosSeleccionables();
+    if (!seleccionUsuariosPack.activo) {
+        if (seleccionUsuariosPack.message) {
+            $('#lblRespSummaryTitle').text('Asignación de responsables');
+            $('#lblRespSummaryDesc').text(seleccionUsuariosPack.message);
+            $('#btnAbrirModalResponsables').hide();
+            $panel.show();
+        } else {
+            $panel.hide();
+        }
+        syncHiddenNodoUsuarios();
+        return;
+    }
+    if (!nodos.length) {
+        $('#lblRespSummaryTitle').text('Asignación de responsables');
+        $('#lblRespSummaryDesc').text(
+            seleccionUsuariosPack.message || 'La opción está activa, pero ningún nodo tiene más de un usuario asignado.'
+        );
+        $('#btnAbrirModalResponsables').hide();
+        $panel.show();
+        syncHiddenNodoUsuarios();
+        return;
+    }
+    var total = nodos.length;
+    var asignados = 0;
+    nodos.forEach(function(n) {
+        var cod = String(n.Nod_Cod);
+        if (seleccionUsuariosValores[cod] || seleccionUsuariosValores[n.Nod_Cod]) {
+            asignados++;
+        }
+    });
+    $('#lblRespSummaryTitle').text('Asignación de responsables por etapa (obligatorio)');
+    $('#lblRespSummaryDesc').text(
+        asignados >= total
+            ? ('Listo: ' + asignados + ' de ' + total + ' etapas con responsable definido.')
+            : ('Debe elegir un responsable en cada etapa (' + asignados + ' / ' + total + '). Sin esto no podrá enviar la solicitud.')
+    );
+    $('#btnAbrirModalResponsables')
+        .show()
+        .html(
+            asignados >= total
+                ? '<i class="bi bi-pencil-square"></i> Revisar responsables'
+                : '<i class="bi bi-person-check"></i> Asignar responsables'
+        );
+    $panel.show();
+    syncHiddenNodoUsuarios();
+}
+
+function actualizarProgresoModalResponsables() {
+    var nodos = nodosSeleccionables();
+    var total = nodos.length;
+    var asignados = 0;
+    $('#seleccionUsuariosNodosList .adq-nodo-usu-card').each(function() {
+        var $card = $(this);
+        var checked = $card.find('.chk-nodo-usu:checked').length > 0;
+        $card.toggleClass('is-complete', checked);
+        if (checked) {
+            $card.removeClass('is-missing');
+            asignados++;
+        }
+    });
+    $('#lblRespProgress').text(
+        asignados + ' / ' + total + ' etapas asignadas' +
+        (asignados < total ? ' (obligatorio completar todas)' : '')
+    );
+}
+
+function marcarEtapasSinResponsable() {
+    var faltantes = [];
+    $('#seleccionUsuariosNodosList .adq-nodo-usu-card').each(function() {
+        var $card = $(this);
+        var checked = $card.find('.chk-nodo-usu:checked').length > 0;
+        $card.toggleClass('is-missing', !checked);
+        $card.toggleClass('is-complete', checked);
+        if (!checked) {
+            faltantes.push($.trim($card.find('.adq-nodo-usu-title').first().text()) || 'etapa');
+        }
+    });
+    return faltantes;
+}
+
+function validarSeleccionUsuariosNodos(silentOpen) {
+    var nodos = nodosSeleccionables();
+    if (!seleccionUsuariosPack.activo || !nodos.length) {
+        return true;
+    }
+    var faltantes = [];
+    nodos.forEach(function(nodo) {
+        var nodCod = String(nodo.Nod_Cod);
+        if (!seleccionUsuariosValores[nodCod] && !seleccionUsuariosValores[nodo.Nod_Cod]) {
+            faltantes.push(nodo.Nod_Nom || ('Nodo #' + nodCod));
+        }
+    });
+    if (faltantes.length) {
+        if (!silentOpen) {
+            abrirModalSeleccionResponsables(true);
+            setTimeout(function() {
+                marcarEtapasSinResponsable();
+            }, 250);
+            return false;
+        }
+        marcarEtapasSinResponsable();
+        alert(
+            'La asignación de responsable es obligatoria en cada etapa.\n\nPendiente:\n- ' +
+            faltantes.join('\n- ')
+        );
+        return false;
+    }
+    syncHiddenNodoUsuarios();
+    return true;
+}
+
+function renderSeleccionUsuariosNodos(pack, valoresPrevios) {
+    seleccionUsuariosPack = pack && typeof pack === 'object'
+        ? pack
+        : { activo: false, nodos: [], success: false };
+    if (valoresPrevios && typeof valoresPrevios === 'object') {
+        seleccionUsuariosValores = {};
+        Object.keys(valoresPrevios).forEach(function(k) {
+            if (valoresPrevios[k]) {
+                seleccionUsuariosValores[String(k)] = String(valoresPrevios[k]);
+            }
+        });
+    } else if (arguments.length >= 2) {
+        seleccionUsuariosValores = {};
+    }
+    actualizarResumenSeleccionUsuarios();
+    if ($('#mdlSeleccionResponsables').hasClass('in') || $('#mdlSeleccionResponsables').hasClass('show')) {
+        pintarModalSeleccionResponsables();
+    }
+}
+
+function pintarModalSeleccionResponsables() {
+    var $list = $('#seleccionUsuariosNodosList');
+    var $empty = $('#seleccionUsuariosNodosEmpty');
+    if (!$list.length) {
+        return;
+    }
+    $list.empty();
+    var nodos = nodosSeleccionables();
+    if (!seleccionUsuariosPack.activo) {
+        $empty
+            .html('<i class="bi bi-info-circle d-block mb-2" style="font-size:22px;"></i>' + escHtml(seleccionUsuariosPack.message || 'La selección de responsables no está habilitada para este flujo.'))
+            .show();
+        $('#btnConfirmarResponsables').prop('disabled', true);
+        $('#lblRespProgress').text('0 / 0 etapas asignadas');
+        return;
+    }
+    if (!nodos.length) {
+        $empty
+            .html('<i class="bi bi-info-circle d-block mb-2" style="font-size:22px;"></i>' + escHtml(seleccionUsuariosPack.message || 'Ningún nodo tiene más de un usuario asignado.'))
+            .show();
+        $('#btnConfirmarResponsables').prop('disabled', true);
+        $('#lblRespProgress').text('0 / 0 etapas asignadas');
+        return;
+    }
+    $empty.hide();
+    $('#btnConfirmarResponsables').prop('disabled', false);
+
+    nodos.forEach(function(nodo) {
+        var nodCod = parseInt(nodo.Nod_Cod, 10) || 0;
+        var prev = seleccionUsuariosValores[String(nodCod)] || seleccionUsuariosValores[nodCod] || '';
+        var tip = (nodo.Nod_Tip || '').toUpperCase();
+        var $card = $('<div class="adq-nodo-usu-card"></div>').attr('data-nod-cod', nodCod);
+        var $head = $('<div class="adq-nodo-usu-head"></div>');
+        var $titleWrap = $('<div></div>');
+        $titleWrap.append(
+            $('<p class="adq-nodo-usu-title"></p>').text(nodo.Nod_Nom || ('Nodo #' + nodCod))
+        );
+        $titleWrap.append(
+            $('<span class="adq-nodo-usu-subtitle"></span>').text('Obligatorio: seleccione un responsable')
+        );
+        $head.append($titleWrap);
+        if (tip) {
+            $head.append($('<span class="adq-nodo-usu-badge"></span>').text(tip));
+        }
+        $card.append($head);
+
+        var $opts = $('<div class="adq-nodo-usu-options"></div>');
+        nodo.usuarios.forEach(function(u) {
+            var usuCod = parseInt(u.Usu_Cod, 10) || 0;
+            if (!usuCod) return;
+            var id = 'nodo_usu_' + nodCod + '_' + usuCod;
+            var selected = String(prev) === String(usuCod);
+            var $lab = $('<label class="adq-nodo-usu-option"></label>')
+                .attr('for', id)
+                .toggleClass('is-selected', selected);
+            var $chk = $('<input type="checkbox" class="chk-nodo-usu form-check-input">')
+                .attr({
+                    id: id,
+                    name: 'modal_nodo_usuarios_' + nodCod,
+                    value: usuCod,
+                    'data-nod-cod': nodCod
+                })
+                .prop('checked', selected);
+            $lab.append($chk).append($('<span></span>').text(u.Nombre || ('Usuario #' + usuCod)));
+            $opts.append($lab);
+        });
+        $card.append($opts);
+        $list.append($card);
+    });
+
+    $list.off('change.adqNodoUsu', '.chk-nodo-usu').on('change.adqNodoUsu', '.chk-nodo-usu', function() {
+        var $t = $(this);
+        var nod = $t.attr('data-nod-cod');
+        var $card = $t.closest('.adq-nodo-usu-card');
+        if ($t.is(':checked')) {
+            $card.find('.chk-nodo-usu').not($t).prop('checked', false);
+            seleccionUsuariosValores[String(nod)] = String($t.val());
+        } else {
+            delete seleccionUsuariosValores[String(nod)];
+        }
+        $card.find('.adq-nodo-usu-option').each(function() {
+            var $lab = $(this);
+            $lab.toggleClass('is-selected', $lab.find('.chk-nodo-usu').is(':checked'));
+        });
+        syncHiddenNodoUsuarios();
+        actualizarProgresoModalResponsables();
+        actualizarResumenSeleccionUsuarios();
+    });
+    actualizarProgresoModalResponsables();
+}
+
+function abrirModalSeleccionResponsables(fromSubmit) {
+    seleccionUsuariosPendienteEnvio = !!fromSubmit;
+    pintarModalSeleccionResponsables();
+    var $mdl = $('#mdlSeleccionResponsables');
+    if ($mdl.length && typeof $mdl.modal === 'function') {
+        $mdl.modal('show');
+    }
+}
+
+function confirmarSeleccionResponsables() {
+    if (!validarSeleccionUsuariosNodos(true)) {
+        return;
+    }
+    syncHiddenNodoUsuarios();
+    actualizarResumenSeleccionUsuarios();
+    $('#mdlSeleccionResponsables').modal('hide');
+    if (seleccionUsuariosPendienteEnvio) {
+        seleccionUsuariosPendienteEnvio = false;
+        procesarSolicitud(false);
+    }
+}
+
+function cargarSeleccionUsuariosFlujo(trqCod, valoresPrevios) {
+    if (!trqCod && !$('#Sol_Cod').val()) {
+        renderSeleccionUsuariosNodos({ activo: false, nodos: [] });
+        return;
+    }
+    var params = {
+        ajax_get_seleccion_usuarios_flujo: 1,
+        trq_cod: trqCod || $('#Trq_Cod').val() || 0,
+        sol_cod: $('#Sol_Cod').val() || 0
+    };
+    $.getJSON('adq_solicitud.php', params, function(res) {
+        renderSeleccionUsuariosNodos(
+            res && res.success ? res : { activo: false, nodos: [] },
+            valoresPrevios || {}
+        );
+    }).fail(function() {
+        renderSeleccionUsuariosNodos({ activo: false, nodos: [] }, {});
+    });
+}
+
 function cargarConfiguracionTipo(trqCod) {
     if (!trqCod) {
         $('#divRequisitosSolicitud').hide();
@@ -399,10 +711,12 @@ function cargarConfiguracionTipo(trqCod) {
             adqSetEtapaPermiteCotizaciones(false);
         }
         renderCamposDecisionCompleta({ decisiones: [], campos: [] });
+        renderSeleccionUsuariosNodos({ activo: false, nodos: [] });
         return;
     }
 
     cargarDecisionesFlujo(trqCod);
+    cargarSeleccionUsuariosFlujo(trqCod);
 
     if ($('#Sol_Cod').val()) {
         aplicarReglasCotizaciones();
@@ -706,6 +1020,7 @@ function cargarBorradorEnFormulario(solCod, porNodo) {
         }
 
         cargarDecisionesFlujo(s.Trq_Cod, res.decision_vals || {});
+        cargarSeleccionUsuariosFlujo(s.Trq_Cod, res.nodo_usuarios || {});
     }).fail(function() {
         alert('Error de red al cargar la solicitud.');
     });
@@ -891,6 +1206,10 @@ function obtenerValorProveedorCot($box) {
 }
 
 function obtenerMontoProforma($row) {
+    const rawSub = $row.find('input[name*="[Cot_Sub]"]').val();
+    if (rawSub !== undefined && rawSub !== null && String(rawSub).trim() !== '') {
+        return parseFloat(String(rawSub || '').replace(',', '.')) || 0;
+    }
     const raw = $row.find('input[name*="[Cot_Val]"]').val();
     return parseFloat(String(raw || '').replace(',', '.')) || 0;
 }
@@ -900,8 +1219,36 @@ function obtenerMontoCot($box) {
     if ($row.length) {
         return obtenerMontoProforma($row);
     }
+    const rawSub = $box.find('input[name*="[Cot_Sub]"]').val();
+    if (rawSub !== undefined && rawSub !== null && String(rawSub).trim() !== '') {
+        return parseFloat(String(rawSub || '').replace(',', '.')) || 0;
+    }
     const raw = $box.find('input[name*="[Cot_Val]"]').val();
     return parseFloat(String(raw || '').replace(',', '.')) || 0;
+}
+
+const ADQ_COT_IVA_FACTOR = 1.15;
+
+function recalcularTotalesProformaRow($row) {
+    if (!$row || !$row.length) {
+        return;
+    }
+    const sub = parseFloat(String($row.find('input[name*="[Cot_Sub]"]').val() || '').replace(',', '.')) || 0;
+    const conIva = $row.find('.chk-cot-iva').is(':checked');
+    const total = Math.round(sub * (conIva ? ADQ_COT_IVA_FACTOR : 1) * 100) / 100;
+    $row.find('input[name*="[Cot_Val]"]').val(total > 0 ? total.toFixed(2) : '');
+    $row.find('.adq-cot-total-view').text(total.toFixed(2));
+}
+
+function setupProformaMontos($scope) {
+    const $root = $scope && $scope.length ? $scope : $(document);
+    $root.find('.adq-proforma-row').each(function() {
+        recalcularTotalesProformaRow($(this));
+    });
+    $root.find('input[name*="[Cot_Sub]"], .chk-cot-iva').off('input.adqCotMontos change.adqCotMontos')
+        .on('input.adqCotMontos change.adqCotMontos', function() {
+            recalcularTotalesProformaRow($(this).closest('.adq-proforma-row'));
+        });
 }
 
 function setupTipoRequerimientoSelect() {
@@ -1138,7 +1485,15 @@ function seleccionarProveedorEnDestino(targetIdx, id, text) {
 
 $(document).ready(function() {
     initAdqSolicitudForm();
+    $('#mdlSeleccionResponsables').on('hidden.bs.modal', function() {
+        seleccionUsuariosPendienteEnvio = false;
+    });
 });
+
+if (typeof window !== 'undefined') {
+    window.abrirModalSeleccionResponsables = abrirModalSeleccionResponsables;
+    window.confirmarSeleccionResponsables = confirmarSeleccionResponsables;
+}
 
 function setupProveedorSugeridoSelect() {
     const $el = $('#Prv_Sug');
@@ -1437,7 +1792,14 @@ function htmlAdqProformaRow(opts) {
         : ('cotizacion_archivos[' + idx + ']');
     const inputIdBase = isExisting ? ('cot_file_ex_' + scoCod) : ('cot_file_' + idx);
     const chkId = 'chk_sel_cot_' + idx;
-    const valor = (opts.valor !== undefined && opts.valor !== null) ? opts.valor : '';
+    const chkIvaId = 'chk_iva_cot_' + idx;
+    let subtotal = (opts.subtotal !== undefined && opts.subtotal !== null && opts.subtotal !== '')
+        ? opts.subtotal
+        : ((opts.valor !== undefined && opts.valor !== null) ? opts.valor : '');
+    const ivaChecked = parseInt(opts.iva, 10) === 1 ? ' checked' : '';
+    const subNum = parseFloat(String(subtotal || '').replace(',', '.')) || 0;
+    const totalNum = Math.round(subNum * (parseInt(opts.iva, 10) === 1 ? ADQ_COT_IVA_FACTOR : 1) * 100) / 100;
+    const totalStr = totalNum > 0 ? totalNum.toFixed(2) : '0.00';
     const selChecked = parseInt(opts.sel, 10) === 1 ? ' checked' : '';
     const jusShow = parseInt(opts.sel, 10) === 1 ? 'block' : 'none';
     const cotJus = adqEscHtml(opts.jus || '');
@@ -1448,14 +1810,26 @@ function htmlAdqProformaRow(opts) {
     return `
         <div class="${rowClass}" data-cot-key="${idx}"${scoAttr}>
             <input type="hidden" class="cot-prv-hidden" name="${nameBase}[Prv_Cod]" value="${adqEscHtml(opts.prvCod || '')}">
+            <input type="hidden" name="${nameBase}[Cot_Val]" value="${totalStr}">
             <div class="adq-proforma-fields">
                 <div class="adq-proforma-pdf">
                     ${pdfsGuardados}
                     ${htmlAdqFileUpload(fileBase + '[]', inputIdBase + '_0', 'PDF obligatorio', true)}
                 </div>
                 <div class="adq-proforma-val adq-cot-field">
-                    <label class="adq-cot-label">Valor ($)</label>
-                    <input type="number" class="form-control text-end form-control-adq adq-cot-control" name="${nameBase}[Cot_Val]" value="${valor}" min="0.01" step="any" placeholder="0.00">
+                    <label class="adq-cot-label">Subtotal ($)</label>
+                    <input type="number" class="form-control text-end form-control-adq adq-cot-control cot-sub-input" name="${nameBase}[Cot_Sub]" value="${adqEscHtml(subtotal)}" min="0.01" step="any" placeholder="0.00">
+                </div>
+                <div class="adq-proforma-iva adq-cot-field">
+                    <label class="adq-cot-label" for="${chkIvaId}">IVA 15%</label>
+                    <div class="form-check adq-cot-iva-check">
+                        <input type="checkbox" class="form-check-input chk-cot-iva" name="${nameBase}[Cot_Iva]" value="1" id="${chkIvaId}"${ivaChecked}>
+                        <label class="form-check-label" for="${chkIvaId}">Incluye</label>
+                    </div>
+                </div>
+                <div class="adq-proforma-total adq-cot-field">
+                    <label class="adq-cot-label">Total ($)</label>
+                    <div class="adq-cot-total-box font-monospace fw-bold">$ <span class="adq-cot-total-view">${totalStr}</span></div>
                 </div>
                 <div class="adq-proforma-actions">
                     <div class="form-check adq-cot-winner adq-cot-winner-on">
@@ -1557,17 +1931,19 @@ function agregarProformaMismoProveedor(btn) {
         idx: idx,
         isExisting: false,
         prvCod: prv,
-        valor: '',
+        subtotal: '',
+        iva: 0,
         sel: 0,
         jus: ''
     }));
     $box.find('.adq-proformas-list').append($row);
     setupAdqFileUpload($row);
+    setupProformaMontos($row);
     syncProveedorGrupo($box);
     actualizarBotonesProforma($box);
     actualizarEstadoAdjuntoCotizacion($box);
 
-    const $valor = $row.find('input[name*="[Cot_Val]"]').first();
+    const $valor = $row.find('input[name*="[Cot_Sub]"]').first();
     if ($valor.length) {
         $valor.focus();
     }
@@ -1730,7 +2106,7 @@ function agregarCotizacionHTML() {
                         </button>
                     </div>
                     <div class="adq-proformas-list">
-                        ${htmlAdqProformaRow({ idx: idx, isExisting: false, prvCod: '', valor: '', sel: 0, jus: '' })}
+                        ${htmlAdqProformaRow({ idx: idx, isExisting: false, prvCod: '', subtotal: '', iva: 0, sel: 0, jus: '' })}
                     </div>
                 </div>
             </div>
@@ -1739,6 +2115,7 @@ function agregarCotizacionHTML() {
     $list.append($cotEl);
     setupProveedorCotSelect($cotEl.find('.select2-prov-cot'));
     setupAdqFileUpload($cotEl);
+    setupProformaMontos($cotEl);
     actualizarBotonesProforma($cotEl);
     adqAplicarModoCotizacionesUi();
 }
@@ -1790,6 +2167,10 @@ function agregarCotizacionExistente(cot) {
                             isExisting: true,
                             scoCod: scoCod,
                             prvCod: cot.Prv_Cod,
+                            subtotal: (cot.Cot_Sub !== undefined && cot.Cot_Sub !== null && parseFloat(cot.Cot_Sub) > 0)
+                                ? cot.Cot_Sub
+                                : cot.Cot_Val,
+                            iva: cot.Cot_Iva,
                             valor: cot.Cot_Val,
                             sel: cot.Cot_Sel,
                             jus: cot.Cot_Jus || '',
@@ -1803,6 +2184,7 @@ function agregarCotizacionExistente(cot) {
     $('#cotizacionesList').append($cotEl);
     setupProveedorCotSelect($cotEl.find('.select2-prov-cot'));
     setupAdqFileUpload($cotEl);
+    setupProformaMontos($cotEl);
     actualizarBotonesProforma($cotEl);
     syncProveedorGrupo($cotEl);
     adqAplicarModoCotizacionesUi();
@@ -1892,6 +2274,8 @@ function limpiarFormulario() {
         $('#adjEliminarContainer').empty();
         adjIndex = 0;
         renderCamposDecisionCompleta({ decisiones: [], campos: [] });
+        renderSeleccionUsuariosNodos({ activo: false, nodos: [] }, {});
+        seleccionUsuariosPendienteEnvio = false;
         recalcularTotalGeneral();
     }
 }
@@ -1911,7 +2295,7 @@ function reenviarCorreccionObservada() {
     if ($('#Sol_Modo_Edicion').val() !== 'observada') {
         return;
     }
-    if (!validarFormularioBase() || !validarRequisitosEnvioFormulario()) {
+    if (!validarFormularioBase() || !validarSeleccionUsuariosNodos() || !validarRequisitosEnvioFormulario()) {
         return;
     }
     const solCod = parseInt($('#Sol_Cod').val(), 10);
@@ -1982,7 +2366,7 @@ function procesarSolicitud(esBorrador) {
     }
 
     if (!esBorrador) {
-        if (!validarFormularioBase() || !validarRequisitosEnvioFormulario()) {
+        if (!validarFormularioBase() || !validarSeleccionUsuariosNodos() || !validarRequisitosEnvioFormulario()) {
             return;
         }
     }
@@ -2014,8 +2398,23 @@ function procesarSolicitud(esBorrador) {
         data: formData,
         contentType: false,
         processData: false,
-        dataType: 'json',
-        success: function(res) {
+        dataType: 'text',
+        success: function(raw) {
+            var res = null;
+            try {
+                res = (typeof raw === 'string') ? JSON.parse(raw.replace(/^\uFEFF/, '').trim()) : raw;
+            } catch (e) {
+                var m = String(raw || '').match(/\{[\s\S]*\}/);
+                if (m) {
+                    try { res = JSON.parse(m[0]); } catch (e2) { res = null; }
+                }
+            }
+            if (!res || typeof res !== 'object') {
+                alert('Error critico de red al procesar la solicitud.');
+                $btnSubmit.html(originalSubmit).prop('disabled', false);
+                $btnBorrador.html(originalBorrador).prop('disabled', false);
+                return;
+            }
             if (res.success) {
                 const esObservada = $('#Sol_Modo_Edicion').val() === 'observada';
                 if (completarNodo) {
@@ -2040,13 +2439,22 @@ function procesarSolicitud(esBorrador) {
                 }
                 window.location.href = 'adq_bandeja.php?tab=mis_solicitudes';
             } else {
-                alert('Error: ' + res.message);
+                alert('Error: ' + (res.message || 'No se pudo procesar la solicitud.'));
                 $btnSubmit.html(originalSubmit).prop('disabled', false);
                 $btnBorrador.html(originalBorrador).prop('disabled', false);
             }
         },
-        error: function() {
-            alert('Error critico de red al procesar la solicitud.');
+        error: function(xhr) {
+            var msg = 'Error critico de red al procesar la solicitud.';
+            if (xhr && xhr.responseText) {
+                try {
+                    var res = JSON.parse(String(xhr.responseText).replace(/^\uFEFF/, '').trim());
+                    if (res && res.message) {
+                        msg = 'Error: ' + res.message;
+                    }
+                } catch (e) { /* ignore */ }
+            }
+            alert(msg);
             $btnSubmit.html(originalSubmit).prop('disabled', false);
             $btnBorrador.html(originalBorrador).prop('disabled', false);
         }

@@ -278,6 +278,8 @@ function adq_render_historial_badge($h) {
         $pendTxt = 'Pendiente de aprobaci&oacute;n';
         if (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'TAREA') {
             $pendTxt = 'Tarea pendiente';
+        } elseif (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'VALIDACION') {
+            $pendTxt = 'Validaci&oacute;n pendiente';
         } elseif (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'FIN') {
             $pendTxt = 'Pendiente cierre';
         } elseif (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'AVANCE') {
@@ -296,7 +298,10 @@ function adq_render_historial_badge($h) {
         $actionBadge = $mk('Aprobado', '#059669');
         $itemClass = 'success';
     } elseif ($h['Isn_Acc'] === 'COMPLETAR') {
-        $actionBadge = $mk('Tarea completada', '#059669');
+        $actionBadge = $mk(
+            (isset($h['Nod_Tip']) && $h['Nod_Tip'] === 'VALIDACION') ? 'Validaci&oacute;n completada' : 'Tarea completada',
+            '#059669'
+        );
         $itemClass = 'success';
     } elseif ($h['Isn_Acc'] === 'OBSERVAR') {
         $actionBadge = $mk('Observado', '#d97706', '#fffbeb');

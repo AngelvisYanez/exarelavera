@@ -116,6 +116,7 @@ if (isset($ajax_load_workflow)) {
                 'cot_edit' => !empty($nodo['Nod_Cot_Edit']) ? 1 : 0,
                 'cot_sel' => !empty($nodo['Nod_Cot_Sel']) ? 1 : 0,
                 'cre_sol' => !isset($nodo['Nod_Cre_Sol']) ? 1 : (!empty($nodo['Nod_Cre_Sol']) ? 1 : 0),
+                'sel_usu' => !empty($nodo['Nod_Sel_Usu']) ? 1 : 0,
                 'not_wa' => !empty($nodo['Nod_Not_Wa']) ? 1 : 0,
                 'not_em' => !empty($nodo['Nod_Not_Em']) ? 1 : 0,
                 'not_asunto' => isset($nodo['Nod_Not_Asunto']) ? (string)$nodo['Nod_Not_Asunto'] : '',
@@ -694,6 +695,15 @@ if (isset($ajax_get_builder)) {
             color: #198754;
             border-bottom: 1px solid #198754;
         }
+        .node-VALIDACION {
+            border-color: #0f766e;
+            background-color: #f0fdfa;
+        }
+        .node-VALIDACION .wf-node-header {
+            background-color: #ccfbf1;
+            color: #0f766e;
+            border-bottom: 1px solid #0f766e;
+        }
         .node-RECEPCION {
             border-color: #6f42c1;
             background-color: #faf8ff;
@@ -722,6 +732,7 @@ if (isset($ajax_get_builder)) {
             border-bottom: 1px solid #6c757d;
         }
         .text-purple { color: #6f42c1 !important; }
+        .text-teal { color: #0f766e !important; }
         
         .properties-drawer {
             position: fixed;
@@ -855,6 +866,9 @@ if (isset($ajax_get_builder)) {
             <div class="toolbox-item" draggable="true" data-type="TAREA">
                 <i class="bi bi-card-checklist text-success"></i> Tarea
             </div>
+            <div class="toolbox-item" draggable="true" data-type="VALIDACION">
+                <i class="bi bi-clipboard-check text-teal"></i> Validaci&oacute;n
+            </div>
             <div class="toolbox-item" draggable="true" data-type="AVANCE">
                 <i class="bi bi-folder-plus text-info"></i> Avance/Facturas
             </div>
@@ -952,11 +966,11 @@ if (isset($ajax_get_builder)) {
                     <label class="form-check-label" for="nodeNotEm"><i class="bi bi-envelope text-primary"></i> <span class="node-not-em-label">Correo electrónico</span></label>
                 </div>
             </div>
-            <div class="mb-3 form-check sec-checks">
+            <div class="mb-3 form-check sec-checks sec-com-adj">
                 <input type="checkbox" id="nodeComObl" class="form-check-input">
                 <label class="form-check-label">Comentario obligatorio</label>
             </div>
-            <div class="mb-3 form-check sec-checks">
+            <div class="mb-3 form-check sec-checks sec-com-adj">
                 <input type="checkbox" id="nodeAdjObl" class="form-check-input">
                 <label class="form-check-label">Archivos adjuntos obligatorios</label>
             </div>
@@ -974,6 +988,11 @@ if (isset($ajax_get_builder)) {
                 <input type="checkbox" id="nodeCreSol" class="form-check-input">
                 <label class="form-check-label" for="nodeCreSol">Permitir modificar solicitud</label>
                 <p class="text-muted small mb-0">Los usuarios asignados a este nodo Inicio podrán modificar solicitudes de los tipos ligados a este flujo.</p>
+            </div>
+            <div class="mb-3 form-check sec-inicio-crear" style="display: none;">
+                <input type="checkbox" id="nodeSelUsu" class="form-check-input">
+                <label class="form-check-label" for="nodeSelUsu">Permitir seleccionar responsable por nodo</label>
+                <p class="text-muted small mb-0">Si está activo, al crear la solicitud (Paso 3) se podrá elegir un usuario por cada nodo que tenga más de un asignado.</p>
             </div>
         </div>
     </div>
@@ -1037,14 +1056,15 @@ if (isset($ajax_get_builder)) {
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label fw-bold" for="txtBuscarFlujoNombre">Buscar por nombre o descripción</label>
-                        <input type="text" id="txtBuscarFlujoNombre" class="form-control" placeholder="Escriba parte del nombre o descripción..." autocomplete="off" onkeyup="filtrarTablaBuscarFlujo()" oninput="filtrarTablaBuscarFlujo()">
+                        <label class="form-label fw-bold" for="txtBuscarFlujoNombre">Buscar por código, nombre o descripción</label>
+                        <input type="text" id="txtBuscarFlujoNombre" class="form-control" placeholder="Escriba código, nombre o descripción..." autocomplete="off" onkeyup="filtrarTablaBuscarFlujo()" oninput="filtrarTablaBuscarFlujo()">
                     </div>
                     <div class="table-responsive" style="max-height: 360px; overflow-y: auto;">
                         <table class="table table-striped table-hover table-condensed mb-0">
                             <thead>
                                 <tr>
-                                    <th style="width: 32%;">Nombre</th>
+                                    <th style="width: 110px;" class="text-center">Código</th>
+                                    <th style="width: 30%;">Nombre</th>
                                     <th>Descripción</th>
                                     <th style="width: 120px;" class="text-center">Acción</th>
                                 </tr>
@@ -1407,7 +1427,17 @@ if (function_exists('utf8_encode_deep')) {
             color: #198754;
             border-bottom: 1px solid #198754;
         }
+        .wf-node.node-VALIDACION {
+            border-color: #0f766e;
+            background-color: #f0fdfa;
+        }
+        .wf-node.node-VALIDACION .wf-node-header {
+            background-color: #ccfbf1;
+            color: #0f766e;
+            border-bottom: 1px solid #0f766e;
+        }
         .text-purple { color: #6f42c1 !important; }
+        .text-teal { color: #0f766e !important; }
         .wf-node-header {
             padding: 8px 10px;
             border-bottom: 1px solid #dee2e6;
@@ -1666,6 +1696,9 @@ if (function_exists('utf8_encode_deep')) {
             <div class="toolbox-item" draggable="true" data-type="TAREA">
                 <i class="bi bi-card-checklist text-success"></i> Tarea
             </div>
+            <div class="toolbox-item" draggable="true" data-type="VALIDACION">
+                <i class="bi bi-clipboard-check text-teal"></i> Validaci&oacute;n
+            </div>
             <div class="toolbox-item" draggable="true" data-type="AVANCE">
                 <i class="bi bi-folder-plus text-info"></i> Avance/Facturas
             </div>
@@ -1763,11 +1796,11 @@ if (function_exists('utf8_encode_deep')) {
                     <label class="form-check-label" for="nodeNotEm"><i class="bi bi-envelope text-primary"></i> <span class="node-not-em-label">Correo electrónico</span></label>
                 </div>
             </div>
-            <div class="mb-3 form-check sec-checks">
+            <div class="mb-3 form-check sec-checks sec-com-adj">
                 <input type="checkbox" id="nodeComObl" class="form-check-input">
                 <label class="form-check-label">Comentario obligatorio</label>
             </div>
-            <div class="mb-3 form-check sec-checks">
+            <div class="mb-3 form-check sec-checks sec-com-adj">
                 <input type="checkbox" id="nodeAdjObl" class="form-check-input">
                 <label class="form-check-label">Archivos adjuntos obligatorios</label>
             </div>
@@ -1785,6 +1818,11 @@ if (function_exists('utf8_encode_deep')) {
                 <input type="checkbox" id="nodeCreSol" class="form-check-input">
                 <label class="form-check-label" for="nodeCreSol">Permitir modificar solicitud</label>
                 <p class="text-muted small mb-0">Los usuarios asignados a este nodo Inicio podrán modificar solicitudes de los tipos ligados a este flujo.</p>
+            </div>
+            <div class="mb-3 form-check sec-inicio-crear" style="display: none;">
+                <input type="checkbox" id="nodeSelUsu" class="form-check-input">
+                <label class="form-check-label" for="nodeSelUsu">Permitir seleccionar responsable por nodo</label>
+                <p class="text-muted small mb-0">Si está activo, al crear la solicitud (Paso 3) se podrá elegir un usuario por cada nodo que tenga más de un asignado.</p>
             </div>
         </div>
     </div>
@@ -1848,14 +1886,15 @@ if (function_exists('utf8_encode_deep')) {
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label fw-bold" for="txtBuscarFlujoNombre">Buscar por nombre o descripción</label>
-                        <input type="text" id="txtBuscarFlujoNombre" class="form-control" placeholder="Escriba parte del nombre o descripción..." autocomplete="off" onkeyup="filtrarTablaBuscarFlujo()" oninput="filtrarTablaBuscarFlujo()">
+                        <label class="form-label fw-bold" for="txtBuscarFlujoNombre">Buscar por código, nombre o descripción</label>
+                        <input type="text" id="txtBuscarFlujoNombre" class="form-control" placeholder="Escriba código, nombre o descripción..." autocomplete="off" onkeyup="filtrarTablaBuscarFlujo()" oninput="filtrarTablaBuscarFlujo()">
                     </div>
                     <div class="table-responsive" style="max-height: 360px; overflow-y: auto;">
                         <table class="table table-striped table-hover table-condensed mb-0">
                             <thead>
                                 <tr>
-                                    <th style="width: 32%;">Nombre</th>
+                                    <th style="width: 110px;" class="text-center">Código</th>
+                                    <th style="width: 30%;">Nombre</th>
                                     <th>Descripción</th>
                                     <th style="width: 120px;" class="text-center">Acción</th>
                                 </tr>
@@ -1930,6 +1969,6 @@ if (function_exists('utf8_encode_deep')) {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../VALIDACIONES/wf_builder.js?v=59"></script>
+    <script src="../VALIDACIONES/wf_builder.js?v=61"></script>
 </body>
 </html>

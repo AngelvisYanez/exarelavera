@@ -84,6 +84,22 @@ $obBD_con1 = new MysqlDatos($obBD_conexion);
 $wf_mgr = new wf_manager_log($Ses_Dat_Dis);
 $obBD_adq = new adq_adquisiciones_log($obBD_conexion);
 
+// Inhabilitar / rehabilitar proceso (monitor Todos los Procesos)
+if (isset($_POST['ajax_toggle_proceso_inhabilitado']) || isset($_GET['ajax_toggle_proceso_inhabilitado'])) {
+    header('Content-Type: application/json; charset=UTF-8');
+    if (!$wf_mgr->verificarAccesoVentana('dashboard', 'dashboard_general')) {
+        echo json_encode(array('success' => false, 'message' => 'Acceso denegado.'));
+        exit;
+    }
+    $sol_cod = intval(isset($_POST['sol_cod']) ? $_POST['sol_cod'] : (isset($_GET['sol_cod']) ? $_GET['sol_cod'] : 0));
+    $accion = isset($_POST['accion']) ? trim((string)$_POST['accion']) : (isset($_GET['accion']) ? trim((string)$_GET['accion']) : '');
+    $comentario = isset($_POST['comentario']) ? trim((string)$_POST['comentario']) : '';
+    $inhabilitar = ($accion !== 'habilitar');
+    $res = $obBD_adq->setProcesoInhabilitado($sol_cod, intval($Ses_Emp_Cod), $inhabilitar, $comentario);
+    echo json_encode($res);
+    exit;
+}
+
 // Descargar ZIP con todos los documentos de la solicitud (modal seguimiento)
 if (isset($_GET['ajax_descargar_docs_zip'])) {
     $sol_cod = intval(isset($_GET['sol_cod']) ? $_GET['sol_cod'] : 0);
@@ -194,6 +210,16 @@ $sla_filtros_ok = array('a_tiempo', 'en_riesgo', 'vencido', 'sin_sla');
 if (!in_array($filtro_sla, $sla_filtros_ok, true)) {
     $filtro_sla = '';
 }
+$procesos_page_size = isset($_GET['page_size']) ? intval($_GET['page_size']) : 20;
+if (!in_array($procesos_page_size, array(10, 20, 25, 50), true)) {
+    $procesos_page_size = 20;
+}
+$procesos_page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+if ($procesos_page < 1) {
+    $procesos_page = 1;
+}
+$procesos_total = 0;
+$procesos_pages = 1;
 
 if ($es_gerencial_admin) {
     // Calcular métricas de SLA generales para todos los procesos activos
@@ -202,7 +228,7 @@ if ($es_gerencial_admin) {
         FROM wf_instancias i
         INNER JOIN adq_solicitudes s ON i.Ins_Ent_Typ = 'adq_solicitudes' AND i.Ins_Ent_Cod = s.Sol_Cod
         INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
-        WHERE s.Emp_Cod = $Ses_Emp_Cod AND i.Ins_Est = 'P';";
+        WHERE s.Emp_Cod = $Ses_Emp_Cod AND i.Ins_Est = 'P' AND s.Sol_Est <> 'I';";
     $active_processes = $obBD_con1->getArrayConsultaSql($sql_metrics, $obBD_conexion);
 
     $now = time();
@@ -235,13 +261,15 @@ if ($es_gerencial_admin) {
 
     if (!empty($filtro_estado)) {
         if ($filtro_estado === 'P') {
-            $where_clauses[] = "i.Ins_Est = 'P'";
+            $where_clauses[] = "i.Ins_Est = 'P' AND s.Sol_Est <> 'I'";
         } elseif ($filtro_estado === 'F') {
             $where_clauses[] = "i.Ins_Est = 'F'";
         } elseif ($filtro_estado === 'R') {
             $where_clauses[] = "i.Ins_Est = 'R'";
         } elseif ($filtro_estado === 'O') {
             $where_clauses[] = "s.Sol_Est = 'O'";
+        } elseif ($filtro_estado === 'I') {
+            $where_clauses[] = "s.Sol_Est = 'I'";
         }
     }
 
@@ -253,12 +281,35 @@ if ($es_gerencial_admin) {
         $where_clauses[] = "s.Trq_Cod = $filtro_tipo";
     }
 
-    $sql_table = "
-        SELECT i.Ins_Cod, i.Ins_Fec_Ini, i.Ins_Fec_Fin, i.Ins_Est, i.Nod_Act,
-               s.Sol_Cod, s.Sol_Num, s.Sol_Fec, s.Sol_Val_Est, s.Sol_Est,
-               tr.Trq_Des, COALESCE(s.Sol_Tiempo_Est, tr.Trq_Tiempo_Est) AS Sla_Dias,
-               n.Nod_Nom, d.Wde_Des AS Dep_Des,
-               u.Usu_Ced as Usu_Nom, p.Prs_Nom, p.Prs_Ape
+    // Categoría SLA en SQL (misma lógica del semáforo) para filtrar/paginar en BD.
+    $sla_sql_expr = "(
+        CASE
+            WHEN COALESCE(s.Sol_Tiempo_Est, tr.Trq_Tiempo_Est) IS NULL
+              OR COALESCE(s.Sol_Tiempo_Est, tr.Trq_Tiempo_Est) <= 0
+              OR i.Ins_Fec_Ini IS NULL
+            THEN 'sin_sla'
+            WHEN (
+                TIMESTAMPDIFF(
+                    SECOND,
+                    i.Ins_Fec_Ini,
+                    CASE WHEN i.Ins_Est = 'P' THEN NOW() ELSE IFNULL(i.Ins_Fec_Fin, NOW()) END
+                ) / 86400.0
+            ) / COALESCE(s.Sol_Tiempo_Est, tr.Trq_Tiempo_Est) < 0.8 THEN 'a_tiempo'
+            WHEN (
+                TIMESTAMPDIFF(
+                    SECOND,
+                    i.Ins_Fec_Ini,
+                    CASE WHEN i.Ins_Est = 'P' THEN NOW() ELSE IFNULL(i.Ins_Fec_Fin, NOW()) END
+                ) / 86400.0
+            ) / COALESCE(s.Sol_Tiempo_Est, tr.Trq_Tiempo_Est) <= 1.0 THEN 'en_riesgo'
+            ELSE 'vencido'
+        END
+    )";
+    if ($filtro_sla !== '') {
+        $where_clauses[] = "$sla_sql_expr = '$filtro_sla'";
+    }
+
+    $sql_from = "
         FROM wf_instancias i
         INNER JOIN adq_solicitudes s ON i.Ins_Ent_Typ = 'adq_solicitudes' AND i.Ins_Ent_Cod = s.Sol_Cod
         INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
@@ -266,24 +317,55 @@ if ($es_gerencial_admin) {
         LEFT JOIN wf_departamentos d ON d.Wde_Cod = n.Dep_Cod
         LEFT JOIN usuarios u ON u.Usu_Cod = s.Usu_Sol
         LEFT JOIN persona p ON p.Prs_Cod = u.Prs_Cod
-        WHERE " . implode(" AND ", $where_clauses) . "
-        ORDER BY s.Sol_Fec DESC;";
-        
+        WHERE " . implode(" AND ", $where_clauses);
+
+    $count_row = $obBD_con1->getRowConsultaSql(
+        "SELECT COUNT(*) AS cnt $sql_from;",
+        $obBD_conexion
+    );
+    $procesos_total = !empty($count_row['cnt']) ? intval($count_row['cnt']) : 0;
+    $procesos_pages = max(1, (int)ceil($procesos_total / $procesos_page_size));
+    if ($procesos_page > $procesos_pages) {
+        $procesos_page = $procesos_pages;
+    }
+    $offset = ($procesos_page - 1) * $procesos_page_size;
+
+    $sql_select = "
+        SELECT i.Ins_Cod, i.Ins_Fec_Ini, i.Ins_Fec_Fin, i.Ins_Est, i.Nod_Act, i.Wfm_Cod,
+               s.Sol_Cod, s.Sol_Num, s.Sol_Fec, s.Sol_Val_Est, s.Sol_Est, s.Sol_Pri,
+               tr.Trq_Des, COALESCE(s.Sol_Tiempo_Est, tr.Trq_Tiempo_Est) AS Sla_Dias,
+               n.Nod_Nom, d.Wde_Des AS Dep_Des,
+               u.Usu_Ced as Usu_Nom, p.Prs_Nom, p.Prs_Ape
+        $sql_from
+        ORDER BY s.Sol_Fec DESC, s.Sol_Cod DESC";
+
+    // PDF exporta todo el resultado filtrado; la vista pagina en servidor.
+    $es_export_pdf = isset($_GET['ajax_exportar_procesos_pdf']);
+    if ($es_export_pdf) {
+        $sql_table = $sql_select . ";";
+    } else {
+        $sql_table = $sql_select . " LIMIT $procesos_page_size OFFSET $offset;";
+    }
+
     $procesos = $obBD_con1->getArrayConsultaSql($sql_table, $obBD_conexion);
     if ($procesos === false || $procesos === null) {
         $procesos = array();
     }
 
-    $procesos_filtrados = array();
-    foreach ($procesos as $p) {
+    foreach ($procesos as $idx => $p) {
         $sla = adq_dashboard_calcular_sla_proceso($p);
-        $p['_sla'] = $sla;
-        if ($filtro_sla !== '' && $sla['cat'] !== $filtro_sla) {
-            continue;
+        $procesos[$idx]['_sla'] = $sla;
+        $prog = $wf_mgr->obtenerProgresoPasosFlujo(
+            intval(isset($p['Wfm_Cod']) ? $p['Wfm_Cod'] : 0),
+            intval(isset($p['Nod_Act']) ? $p['Nod_Act'] : 0),
+            isset($p['Ins_Est']) ? $p['Ins_Est'] : 'P'
+        );
+        if (isset($p['Sol_Est']) && $p['Sol_Est'] === 'A' && $prog['total'] > 0) {
+            $prog['actual'] = $prog['total'];
+            $prog['texto'] = $prog['total'] . '/' . $prog['total'];
         }
-        $procesos_filtrados[] = $p;
+        $procesos[$idx]['Paso_Cant'] = $prog['texto'];
     }
-    $procesos = $procesos_filtrados;
 }
 
 if (isset($_GET['ajax_exportar_procesos_pdf'])) {
@@ -341,6 +423,8 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
             $est_txt = 'Aprobado';
         } elseif ($p['Ins_Est'] === 'R') {
             $est_txt = 'Rechazado';
+        } elseif (isset($p['Sol_Est']) && $p['Sol_Est'] === 'I') {
+            $est_txt = 'Inhabilitado';
         } elseif (isset($p['Sol_Est']) && $p['Sol_Est'] === 'O') {
             $est_txt = 'Observado';
         } else {
@@ -442,6 +526,257 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
     <meta charset="UTF-8">
     <title>EXA Dashboard Gerencial</title>
     <?php require_once('adq_model3_assets.php'); ?>
+    <style>
+        .adq-proceso-inhabilitado > td { opacity: 0.78; }
+        .adq-proceso-inhabilitado .badge.bg-dark {
+            background: #334155 !important;
+            color: #fff !important;
+        }
+        #all-processes-panel .exa-adq-filter-bar {
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            gap: 8px;
+        }
+        #all-processes-panel .exa-adq-kpi-row {
+            margin-bottom: 10px;
+            gap: 8px;
+        }
+        #all-processes-panel .exa-adq-kpi {
+            padding: 8px 12px;
+            min-width: 120px;
+        }
+        #all-processes-panel .exa-adq-kpi .kpi-value {
+            font-size: 20px;
+        }
+        #all-processes-panel .exa-adq-table {
+            font-size: 11px;
+        }
+        #all-processes-panel .exa-adq-table > thead > tr > th {
+            padding: 5px 6px !important;
+            font-size: 10px;
+            letter-spacing: 0.02em;
+        }
+        #all-processes-panel .exa-adq-table > tbody > tr > td {
+            padding: 3px 6px !important;
+            line-height: 1.25;
+            white-space: nowrap;
+        }
+        #all-processes-panel .exa-adq-table > tbody > tr > td.text-start {
+            white-space: normal;
+            max-width: 180px;
+        }
+        #all-processes-panel .exa-adq-table .badge {
+            font-size: 9px;
+            padding: 2px 5px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        #all-processes-panel .semaforo-dot {
+            width: 8px;
+            height: 8px;
+            margin-right: 3px;
+            vertical-align: middle;
+        }
+        #all-processes-panel .adq-proc-acciones {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+        #all-processes-panel .adq-proc-acciones .btn {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            margin: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 7px;
+            line-height: 1;
+        }
+        #all-processes-panel .adq-proc-acciones .btn i {
+            font-size: 14px;
+            line-height: 1;
+        }
+        #all-processes-panel .adq-proc-acciones .btn-anular {
+            background: #f87171 !important;
+            border-color: #f87171 !important;
+            color: #fff !important;
+        }
+        #all-processes-panel .adq-proc-acciones .btn-anular:hover,
+        #all-processes-panel .adq-proc-acciones .btn-anular:focus {
+            background: #ef4444 !important;
+            border-color: #ef4444 !important;
+            color: #fff !important;
+        }
+        #all-processes-panel .adq-sla-meta {
+            font-size: 9px !important;
+        }
+        #all-processes-panel .adq-table-panel {
+            margin-top: 0;
+        }
+        #all-processes-panel .adq-table-panel .exa-adq-table-wrap {
+            border-radius: 8px 8px 0 0;
+        }
+        #all-processes-panel .adq-table-pager {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 6px 10px;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+        }
+        #all-processes-panel .adq-table-pager-info {
+            font-size: 11px;
+            color: #475569;
+            font-weight: 600;
+        }
+        #all-processes-panel .adq-table-pager-controls {
+            display: inline-flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+        }
+        #all-processes-panel .adq-table-pager-pages {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+        #all-processes-panel .adq-table-pager .btn,
+        #all-processes-panel .adq-table-pager a.btn {
+            min-width: 28px;
+            height: 26px;
+            padding: 2px 7px;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 5px;
+            border: 1px solid #64748b;
+            background: #ffffff;
+            color: #334155;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            line-height: 1;
+        }
+        #all-processes-panel .adq-table-pager .btn:hover:not(:disabled),
+        #all-processes-panel .adq-table-pager a.btn:hover {
+            background: #eff6ff;
+            border-color: #3b82f6;
+            color: #1e3a8a;
+        }
+        #all-processes-panel .adq-table-pager .btn.active,
+        #all-processes-panel .adq-table-pager .btn.active:hover,
+        #all-processes-panel .adq-table-pager a.btn.active,
+        #all-processes-panel .adq-table-pager a.btn.active:hover {
+            background: #4b678a;
+            border-color: #3a516e;
+            color: #ffffff;
+        }
+        #all-processes-panel .adq-table-pager .btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+        #all-processes-panel .adq-table-pager-size {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 600;
+        }
+        #all-processes-panel .adq-table-pager-size select {
+            height: 26px;
+            font-size: 11px;
+            border-radius: 5px;
+            border: 1px solid #64748b;
+            padding: 1px 6px;
+            background: #ffffff;
+            color: #1e293b;
+        }
+        /* Alerta centrada en pantalla */
+        .adq-alert-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 10050;
+            background: rgba(15, 23, 42, 0.55);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .adq-alert-overlay.is-visible {
+            display: flex;
+        }
+        .adq-alert-box {
+            width: 100%;
+            max-width: 420px;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.28);
+            overflow: hidden;
+            text-align: center;
+            animation: adqAlertIn .18s ease-out;
+        }
+        @keyframes adqAlertIn {
+            from { transform: translateY(8px) scale(0.98); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        .adq-alert-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            margin: 22px auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+        .adq-alert-icon.warn {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        .adq-alert-icon.ok {
+            background: #dcfce7;
+            color: #15803d;
+        }
+        .adq-alert-icon.info {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        .adq-alert-icon.error {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+        .adq-alert-title {
+            margin: 0 20px 6px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .adq-alert-msg {
+            margin: 0 22px 18px;
+            font-size: 13px;
+            color: #475569;
+            line-height: 1.45;
+            white-space: pre-line;
+        }
+        .adq-alert-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            padding: 0 18px 18px;
+        }
+        .adq-alert-actions .btn {
+            min-width: 110px;
+            font-weight: 700;
+        }
+    </style>
 </head>
 <body class="exa-ui-fill-root">
     <div class="panel panel-main exa-ui-panel exa-ui-fill-page">
@@ -608,6 +943,8 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
             <!-- Formulario de Filtros -->
             <form method="GET" action="adq_dashboard.php" class="exa-adq-filter-bar" id="frmFiltrosProcesos">
                     <input type="hidden" name="tab" value="todos_procesos">
+                    <input type="hidden" name="page" value="1">
+                    <input type="hidden" name="page_size" id="filtroPageSizeHidden" value="<?php echo intval($procesos_page_size); ?>">
                     
                     <div class="filter-item">
                         <label>Estado del Proceso</label>
@@ -617,6 +954,7 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
                             <option value="F" <?php echo $filtro_estado === 'F' ? 'selected' : ''; ?>>Aprobados (Finalizados)</option>
                             <option value="R" <?php echo $filtro_estado === 'R' ? 'selected' : ''; ?>>Rechazados</option>
                             <option value="O" <?php echo $filtro_estado === 'O' ? 'selected' : ''; ?>>Observados</option>
+                            <option value="I" <?php echo $filtro_estado === 'I' ? 'selected' : ''; ?>>Inhabilitados</option>
                         </select>
                     </div>
 
@@ -664,13 +1002,14 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
                 <div class="alert alert-danger" style="margin:0 0 12px 0;padding:10px 14px;">
                     <i class="bi bi-exclamation-triangle-fill"></i>
                     Mostrando solo <strong>tareas vencidas</strong> (consumo de SLA mayor al 100%).
-                    <?php echo intval(count($procesos)); ?> registro(s).
+                    <?php echo intval($procesos_total); ?> registro(s).
                 </div>
             <?php } ?>
 
             <!-- Tabla de Procesos -->
+            <div class="adq-table-panel" id="panelProcesosDashboard" data-page-size="<?php echo intval($procesos_page_size); ?>" data-page="<?php echo intval($procesos_page); ?>" data-total="<?php echo intval($procesos_total); ?>" data-pages="<?php echo intval($procesos_pages); ?>">
             <div class="exa-adq-table-wrap">
-                    <table class="table table-bordered exa-adq-table">
+                    <table class="table table-bordered exa-adq-table adq-table-paginated">
                         <thead>
                             <tr>
                                 <th>Nº Sol.</th>
@@ -681,14 +1020,15 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
                                 <th>Etapa Actual</th>
                                 <th>Responsable</th>
                                 <th>Estado</th>
+                                <th style="width:70px;" title="Paso actual / total">Avance</th>
                                 <th>SLA Semáforo</th>
                                 <th>Acción</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($procesos)) { ?>
-                                <tr>
-                                    <td colspan="10" class="text-center text-muted py-4">No se encontraron procesos que coincidan con los filtros seleccionados.</td>
+                                <tr class="adq-row-empty">
+                                    <td colspan="11" class="text-center text-muted py-4">No se encontraron procesos que coincidan con los filtros seleccionados.</td>
                                 </tr>
                             <?php } else {
                                 foreach ($procesos as $p) {
@@ -708,7 +1048,12 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
                                     
                                     // Estado de la solicitud
                                     $est_badge = '';
-                                    if ($p['Ins_Est'] === 'F') {
+                                    $esta_inhabilitado = (isset($p['Sol_Est']) && $p['Sol_Est'] === 'I');
+                                    $esta_aprobado = ($p['Ins_Est'] === 'F' || (isset($p['Sol_Est']) && $p['Sol_Est'] === 'A'));
+                                    $puede_toggle = !$esta_inhabilitado && !$esta_aprobado;
+                                    if ($esta_inhabilitado) {
+                                        $est_badge = '<span class="badge bg-dark">Inhabilitado</span>';
+                                    } elseif ($p['Ins_Est'] === 'F') {
                                         $est_badge = '<span class="badge bg-success">Aprobado</span>';
                                     } elseif ($p['Ins_Est'] === 'R') {
                                         $est_badge = '<span class="badge bg-danger">Rechazado</span>';
@@ -722,7 +1067,7 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
                                     
                                     $solicitante_nom = $p['Prs_Nom'] ? ($p['Prs_Nom'] . ' ' . $p['Prs_Ape']) : $p['Usu_Nom'];
                                     ?>
-                                    <tr class="text-center<?php echo $sla['cat'] === 'vencido' ? ' table-danger' : ''; ?>">
+                                    <tr class="text-center adq-row-proceso<?php echo $sla['cat'] === 'vencido' ? ' table-danger' : ''; ?><?php echo $esta_inhabilitado ? ' adq-proceso-inhabilitado' : ''; ?>">
                                         <td class="fw-bold"><?php echo htmlspecialchars($p['Sol_Num'], ENT_QUOTES, 'UTF-8'); ?></td>
                                         <td><?php echo date('Y-m-d H:i', strtotime($p['Sol_Fec'])); ?></td>
                                         <td class="text-start"><?php echo htmlspecialchars($solicitante_nom, ENT_QUOTES, 'UTF-8'); ?></td>
@@ -731,17 +1076,29 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
                                         <td class="text-start"><?php echo $p['Nod_Nom'] ? htmlspecialchars($p['Nod_Nom'], ENT_QUOTES, 'UTF-8') : '<span class="text-muted">-</span>'; ?></td>
                                         <td><?php echo $p['Dep_Des'] ? htmlspecialchars($p['Dep_Des'], ENT_QUOTES, 'UTF-8') : '<span class="text-muted">[General]</span>'; ?></td>
                                         <td><?php echo $est_badge; ?></td>
+                                        <td><span class="badge bg-info text-dark"><?php echo htmlspecialchars(isset($p['Paso_Cant']) ? $p['Paso_Cant'] : '-', ENT_QUOTES, 'UTF-8'); ?></span></td>
                                         <td class="text-start">
                                             <span class="semaforo-dot <?php echo $semaforo_class; ?>"></span>
                                             <?php echo $sla_badge; ?>
-                                            <span class="text-muted font-monospace" style="font-size: 10px;">
+                                            <span class="text-muted font-monospace adq-sla-meta">
                                                 (<?php echo $elapsed_days_fmt; ?>/<?php echo $limit_days !== null ? $limit_days : '-'; ?>d)
                                             </span>
                                         </td>
                                         <td>
-                                            <button class="btn btn-xs btn-outline-primary py-0" onclick="abrirSeguimiento(<?php echo intval($p['Sol_Cod']); ?>, '<?php echo htmlspecialchars($p['Sol_Num'], ENT_QUOTES, 'UTF-8'); ?>')">
-                                                <i class="bi bi-clock-history"></i> Seguimiento
-                                            </button>
+                                            <div class="adq-proc-acciones">
+                                                <button type="button" class="btn btn-primary" title="Ver seguimiento" onclick="abrirSeguimiento(<?php echo intval($p['Sol_Cod']); ?>, '<?php echo htmlspecialchars($p['Sol_Num'], ENT_QUOTES, 'UTF-8'); ?>')">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                                <?php if ($esta_inhabilitado) { ?>
+                                                <button type="button" class="btn btn-success" title="Habilitar" onclick="toggleProcesoInhabilitado(<?php echo intval($p['Sol_Cod']); ?>, '<?php echo htmlspecialchars($p['Sol_Num'], ENT_QUOTES, 'UTF-8'); ?>', false)">
+                                                    <i class="bi bi-unlock-fill"></i>
+                                                </button>
+                                                <?php } elseif ($puede_toggle) { ?>
+                                                <button type="button" class="btn btn-anular" title="Anular / Inhabilitar" onclick="toggleProcesoInhabilitado(<?php echo intval($p['Sol_Cod']); ?>, '<?php echo htmlspecialchars($p['Sol_Num'], ENT_QUOTES, 'UTF-8'); ?>', true)">
+                                                    <i class="bi bi-x-circle-fill"></i>
+                                                </button>
+                                                <?php } ?>
+                                            </div>
                                         </td>
                                     </tr>
                             <?php }
@@ -749,6 +1106,7 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
                         </tbody>
                     </table>
                 </div>
+                <div class="adq-table-pager"></div>
             </div>
         <?php } ?>
     </div>
@@ -756,6 +1114,16 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
             </div>
         </div>
     </div>
+
+<!-- ALERTA CENTRADA -->
+<div class="adq-alert-overlay" id="adqAlertOverlay" aria-hidden="true">
+    <div class="adq-alert-box" role="dialog" aria-modal="true" aria-labelledby="adqAlertTitle">
+        <div class="adq-alert-icon warn" id="adqAlertIcon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <h4 class="adq-alert-title" id="adqAlertTitle">Confirmar</h4>
+        <p class="adq-alert-msg" id="adqAlertMsg"></p>
+        <div class="adq-alert-actions" id="adqAlertActions"></div>
+    </div>
+</div>
 
 <!-- MODAL SEGUIMIENTO DETALLADO (SLA) -->
 <div class="modal fade" id="mdlSeguimiento" tabindex="-1" role="dialog" aria-hidden="true">
@@ -935,6 +1303,112 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
         }
     }
 
+    function cerrarAlertaCentro() {
+        const $ov = $('#adqAlertOverlay');
+        $ov.removeClass('is-visible').attr('aria-hidden', 'true');
+        $('#adqAlertActions').empty();
+    }
+
+    function mostrarAlertaCentro(opts) {
+        opts = opts || {};
+        const tipo = opts.tipo || 'info';
+        const titulo = opts.titulo || 'Aviso';
+        const mensaje = opts.mensaje || '';
+        const iconMap = {
+            warn: 'bi-exclamation-triangle-fill',
+            ok: 'bi-check-circle-fill',
+            info: 'bi-info-circle-fill',
+            error: 'bi-x-circle-fill'
+        };
+        const $ov = $('#adqAlertOverlay');
+        const $icon = $('#adqAlertIcon');
+        $icon
+            .removeClass('warn ok info error')
+            .addClass(tipo)
+            .html('<i class="bi ' + (iconMap[tipo] || iconMap.info) + '"></i>');
+        $('#adqAlertTitle').text(titulo);
+        $('#adqAlertMsg').text(mensaje);
+
+        const $actions = $('#adqAlertActions').empty();
+        if (opts.confirmacion) {
+            const $cancel = $('<button type="button" class="btn btn-default">Cancelar</button>');
+            const $ok = $('<button type="button" class="btn btn-danger">Sí, anular</button>');
+            if (opts.confirmText) {
+                $ok.text(opts.confirmText);
+            }
+            if (opts.confirmClass) {
+                $ok.removeClass('btn-danger').addClass(opts.confirmClass);
+            }
+            $cancel.on('click', function() {
+                cerrarAlertaCentro();
+                if (typeof opts.onCancel === 'function') opts.onCancel();
+            });
+            $ok.on('click', function() {
+                cerrarAlertaCentro();
+                if (typeof opts.onConfirm === 'function') opts.onConfirm();
+            });
+            $actions.append($cancel).append($ok);
+        } else {
+            const $ok = $('<button type="button" class="btn btn-primary">Aceptar</button>');
+            $ok.on('click', function() {
+                cerrarAlertaCentro();
+                if (typeof opts.onClose === 'function') opts.onClose();
+            });
+            $actions.append($ok);
+        }
+
+        $ov.addClass('is-visible').attr('aria-hidden', 'false');
+    }
+
+    function toggleProcesoInhabilitado(solCod, solNum, inhabilitar) {
+        const accion = inhabilitar ? 'inhabilitar' : 'habilitar';
+        const titulo = inhabilitar ? 'Anular proceso' : 'Habilitar proceso';
+        const mensaje = inhabilitar
+            ? ('¿Desea anular el proceso #' + solNum + '?\n\nQuedará solo en consulta y no se podrá avanzar el workflow.')
+            : ('¿Desea habilitar nuevamente el proceso #' + solNum + '?\n\nPodrá continuar su flujo normal.');
+
+        mostrarAlertaCentro({
+            tipo: inhabilitar ? 'warn' : 'info',
+            titulo: titulo,
+            mensaje: mensaje,
+            confirmacion: true,
+            confirmText: inhabilitar ? 'Sí, anular' : 'Sí, habilitar',
+            confirmClass: inhabilitar ? 'btn-danger' : 'btn-success',
+            onConfirm: function() {
+                $.post('adq_dashboard.php', {
+                    ajax_toggle_proceso_inhabilitado: 1,
+                    sol_cod: solCod,
+                    accion: accion
+                }, function(res) {
+                    if (!res || !res.success) {
+                        mostrarAlertaCentro({
+                            tipo: 'error',
+                            titulo: 'No se pudo actualizar',
+                            mensaje: (res && res.message) ? res.message : 'No se pudo actualizar el proceso.'
+                        });
+                        return;
+                    }
+                    mostrarAlertaCentro({
+                        tipo: 'ok',
+                        titulo: 'Operación exitosa',
+                        mensaje: res.message || 'Proceso actualizado.',
+                        onClose: function() {
+                            const params = new URLSearchParams(window.location.search);
+                            params.set('tab', 'todos_procesos');
+                            window.location.search = params.toString();
+                        }
+                    });
+                }, 'json').fail(function() {
+                    mostrarAlertaCentro({
+                        tipo: 'error',
+                        titulo: 'Error de red',
+                        mensaje: 'No se pudo conectar con el servidor. Intente nuevamente.'
+                    });
+                });
+            }
+        });
+    }
+
     function abrirSeguimiento(solCod, solNum) {
         currentSolCod = solCod;
         const tituloNum = solNum || solCod;
@@ -1000,6 +1474,65 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
         });
     }
 
+    function urlPaginaProcesos(page, pageSize) {
+        const params = new URLSearchParams(window.location.search);
+        params.set('tab', 'todos_procesos');
+        params.set('page', String(page));
+        params.set('page_size', String(pageSize));
+        return window.location.pathname + '?' + params.toString();
+    }
+
+    function renderPagerProcesosServidor() {
+        const $panel = $('#panelProcesosDashboard');
+        if (!$panel.length) {
+            return;
+        }
+        const $pager = $panel.find('.adq-table-pager');
+        const total = parseInt($panel.attr('data-total'), 10) || 0;
+        const pageSize = parseInt($panel.attr('data-page-size'), 10) || 20;
+        const pages = Math.max(1, parseInt($panel.attr('data-pages'), 10) || 1);
+        let page = parseInt($panel.attr('data-page'), 10) || 1;
+        if (page < 1) page = 1;
+        if (page > pages) page = pages;
+
+        if (total <= 0) {
+            $pager.html('<div class="adq-table-pager-info">Sin registros para mostrar</div>');
+            return;
+        }
+        const from = ((page - 1) * pageSize) + 1;
+        const to = Math.min(page * pageSize, total);
+        let pagesHtml = '';
+        const maxBtns = 5;
+        let start = Math.max(1, page - Math.floor(maxBtns / 2));
+        let end = Math.min(pages, start + maxBtns - 1);
+        if (end - start < maxBtns - 1) {
+            start = Math.max(1, end - maxBtns + 1);
+        }
+        for (let i = start; i <= end; i++) {
+            pagesHtml += '<a class="btn' + (i === page ? ' active' : '') + '" href="' + urlPaginaProcesos(i, pageSize) + '">' + i + '</a>';
+        }
+        $pager.html(
+            '<div class="adq-table-pager-info">Mostrando ' + from + '-' + to + ' de ' + total + '</div>'
+            + '<div class="adq-table-pager-controls">'
+            + '<label class="adq-table-pager-size">Filas '
+            + '<select class="adq-table-page-size">'
+            + '<option value="10"' + (pageSize === 10 ? ' selected' : '') + '>10</option>'
+            + '<option value="20"' + (pageSize === 20 ? ' selected' : '') + '>20</option>'
+            + '<option value="25"' + (pageSize === 25 ? ' selected' : '') + '>25</option>'
+            + '<option value="50"' + (pageSize === 50 ? ' selected' : '') + '>50</option>'
+            + '</select></label>'
+            + '<div class="adq-table-pager-pages">'
+            + (page <= 1
+                ? '<button type="button" class="btn" disabled><i class="bi bi-chevron-left"></i></button>'
+                : '<a class="btn" href="' + urlPaginaProcesos(page - 1, pageSize) + '" title="Anterior"><i class="bi bi-chevron-left"></i></a>')
+            + pagesHtml
+            + (page >= pages
+                ? '<button type="button" class="btn" disabled><i class="bi bi-chevron-right"></i></button>'
+                : '<a class="btn" href="' + urlPaginaProcesos(page + 1, pageSize) + '" title="Siguiente"><i class="bi bi-chevron-right"></i></a>')
+            + '</div></div>'
+        );
+    }
+
     $(document).ready(function() {
         // Activar pestaña específica por URL si se solicita
         const urlParams = new URLSearchParams(window.location.search);
@@ -1007,6 +1540,23 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
         if (tab === 'todos_procesos') {
             $('a[href="#all-processes-panel"]').tab('show');
         }
+
+        renderPagerProcesosServidor();
+        $(document).on('change', '#panelProcesosDashboard .adq-table-page-size', function() {
+            const size = parseInt($(this).val(), 10) || 20;
+            window.location.href = urlPaginaProcesos(1, size);
+        });
+
+        $('#adqAlertOverlay').on('click', function(e) {
+            if (e.target === this) {
+                cerrarAlertaCentro();
+            }
+        });
+        $(document).on('keydown.adqAlert', function(e) {
+            if (e.key === 'Escape' && $('#adqAlertOverlay').hasClass('is-visible')) {
+                cerrarAlertaCentro();
+            }
+        });
 
         $('#mdlReportePdf').on('hidden.bs.modal', function() {
             liberarReportePdfBlob();

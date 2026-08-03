@@ -40,11 +40,14 @@ $es_ajax_bandeja = (
 // Ensures de esquema solo en carga HTML (o escrituras que ya los invocan internamente).
 if (!$es_ajax_bandeja) {
     $obBD_adq->ensureSolicitudTituloColumn();
+    $obBD_adq->ensureCotizacionesSchema();
     $wf_mgr->ensureVersioningSchema();
+    $wf_mgr->ensureNotificationSchema();
 }
 
 $wf_ctx = $wf_mgr->resolverContextoUsuario($Ses_Emp_Cod);
 $clausula_nodo_usuario = $wf_mgr->sqlClausulaNodoAsignadoAUsuario($wf_ctx['usu_cod'], $wf_ctx['dep_cod'], $wf_ctx['perfiles_ids']);
+$clausula_nodo_visible = $wf_mgr->sqlClausulaNodoVisibleAUsuario($wf_ctx['usu_cod'], $wf_ctx['dep_cod'], $wf_ctx['perfiles_ids']);
 
 function adq_es_utf8_valido($text) {
     if (!is_string($text) || $text === '') {
@@ -157,6 +160,20 @@ if (isset($ajax_workflow_action)) {
     $usu_cod = $wf_ctx['usu_cod'];
     $dep_cod = $wf_ctx['dep_cod'];
     $perfiles_ids = $wf_ctx['perfiles_ids'];
+
+    $sol_estado = $obBD_con1->getRowConsultaSql("
+        SELECT s.Sol_Est
+        FROM wf_instancias i
+        INNER JOIN adq_solicitudes s ON s.Sol_Cod = i.Ins_Ent_Cod AND i.Ins_Ent_Typ = 'adq_solicitudes'
+        WHERE i.Ins_Cod = $ins_cod
+        LIMIT 1;", $obBD_conexion);
+    if (!empty($sol_estado['Sol_Est']) && $sol_estado['Sol_Est'] === 'I') {
+        $obBD_con1->echoJson(array(
+            'success' => false,
+            'message' => 'El proceso esta inhabilitado. Solo se permite consultar el seguimiento.'
+        ));
+        exit;
+    }
     
     $check_perm = $obBD_con1->getRowConsultaSql("
         SELECT n.Nod_Cod 
@@ -261,6 +278,20 @@ if (isset($ajax_workflow_action)) {
     }
 
     $resp = $wf_mgr->procesarAccionUsuario($ins_cod, $accion, $comentario, $adjunto_db_path);
+    if (!empty($resp['success']) && class_exists('wf_manager_log') && wf_manager_log::hayNotificacionesPendientes()) {
+        if (session_id() !== '') {
+            session_write_close();
+        }
+        @ob_end_clean();
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($resp);
+        if (function_exists('flush')) {
+            @flush();
+        }
+        ignore_user_abort(true);
+        $wf_mgr->flushPendingNotificaciones();
+        exit;
+    }
     $obBD_con1->echoJson($resp);
     exit;
 }
@@ -268,6 +299,20 @@ if (isset($ajax_workflow_action)) {
 if (isset($ajax_enviar_borrador)) {
     $sol_cod = intval($_POST['Sol_Cod']);
     $resp = $obBD_adq->enviarBorrador($sol_cod);
+    if (!empty($resp['success']) && class_exists('wf_manager_log') && wf_manager_log::hayNotificacionesPendientes()) {
+        if (session_id() !== '') {
+            session_write_close();
+        }
+        @ob_end_clean();
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($resp);
+        if (function_exists('flush')) {
+            @flush();
+        }
+        ignore_user_abort(true);
+        $wf_mgr->flushPendingNotificaciones();
+        exit;
+    }
     $obBD_con1->echoJson($resp);
     exit;
 }
@@ -751,6 +796,7 @@ if (isset($ajax_get_solicitud_detail)) {
     if ($items === false || $items === null) {
         $items = array();
     }
+    $obBD_adq->ensureCotizacionesSchema();
     $cotizaciones = $obBD_con1->getArrayConsultaSql("SELECT c.*, p.Prs_Nom, p.Prs_Ape, pr.Prv_Com FROM adq_solicitudes_cotizaciones c INNER JOIN proveedore pr ON pr.Prv_Cod = c.Prv_Cod INNER JOIN persona p ON p.Prs_Cod = pr.Prs_Cod WHERE c.Sol_Cod = $sol_cod;", $obBD_conexion);
     if ($cotizaciones === false || $cotizaciones === null) {
         $cotizaciones = array();
@@ -874,13 +920,13 @@ $filtro_pendiente_sin_auto = $wf_mgr->sqlFiltroPendienteSinAutoaprobacion($usu_c
 
 // A. PENDIENTES DE MI APROBACION (Etapa activa asignada a mi depto o mis perfiles)
 $pendientes = $obBD_con1->getArrayConsultaSql("
-    SELECT s.Sol_Cod, s.Sol_Num, s.Sol_Tit, s.Sol_Fec, s.Sol_Est, s.Sol_Pri, s.Sol_Val_Est, s.Usu_Sol, s.Emp_Cod,
+    SELECT s.Sol_Cod, s.Sol_Num, s.Sol_Tit, s.Sol_Fec, s.Sol_Est, s.Sol_Pri, s.Sol_Val_Est, s.Usu_Sol, s.Emp_Cod, s.Dep_Sol,
            tr.Trq_Des,
            IFNULL(wfm.Wfm_Nom, 'Sin flujo') AS Wfm_Nom,
            COALESCE(wfm.Wfm_Fam_Cod, wfm.Wfm_Cod, tr.Wfm_Cod) AS Wfm_Fam_Cod,
            CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) AS Solicitante_Nom,
            d.Wde_Des AS Dep_Des,
-           i.Ins_Cod,
+           i.Ins_Cod, i.Wfm_Cod, i.Nod_Act, i.Ins_Est,
            n.Nod_Nom, n.Nod_Sla, n.Nod_Tip, IFNULL(n.Nod_Cot_Edit, 0) AS Nod_Cot_Edit
     FROM adq_solicitudes s
     INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
@@ -892,7 +938,7 @@ $pendientes = $obBD_con1->getArrayConsultaSql("
     LEFT JOIN wf_flujos_modelos wfm ON wfm.Wfm_Cod = COALESCE(i.Wfm_Cod, tr.Wfm_Cod)
     WHERE s.Emp_Cod = $emp_cod
       AND s.Sol_Est IN ('E', 'P')
-      AND $clausula_nodo_usuario
+      AND $clausula_nodo_visible
       AND $filtro_pendiente_sin_auto
     ORDER BY s.Sol_Fec DESC, s.Sol_Cod DESC
     LIMIT 200;", $obBD_conexion);
@@ -901,32 +947,47 @@ if ($pendientes === false || $pendientes === null) {
 }
 foreach ($pendientes as $idx => $p) {
     $sol_est_ok = !in_array($p['Sol_Est'], array('A', 'R'), true);
-    $cot_edit = $sol_est_ok && !empty($p['Ins_Cod'])
+    $puede_res_p = $wf_mgr->puedeUsuarioResolverSolicitud(
+        $p,
+        $wf_ctx['usu_cod'],
+        $wf_ctx['dep_cod'],
+        $wf_ctx['perfiles_ids'],
+        $es_gerencial_admin
+    );
+    $cot_edit = $sol_est_ok && $puede_res_p && !empty($p['Ins_Cod'])
         ? ($wf_mgr->resolverNodCotEditInstancia(intval($p['Ins_Cod'])) === 1)
         : false;
-    $cot_sel = $sol_est_ok && !empty($p['Ins_Cod'])
+    $cot_sel = $sol_est_ok && $puede_res_p && !empty($p['Ins_Cod'])
         ? ($wf_mgr->resolverNodCotSelInstancia(intval($p['Ins_Cod'])) === 1)
         : false;
+    $pendientes[$idx]['Puede_Resolver'] = $puede_res_p ? 1 : 0;
     $pendientes[$idx]['Nod_Cot_Edit'] = $cot_edit ? 1 : 0;
     $pendientes[$idx]['Nod_Cot_Sel'] = $cot_sel ? 1 : 0;
     $pendientes[$idx]['Puede_Cargar_Cotizaciones'] = $cot_edit ? 1 : 0;
     $pendientes[$idx]['Puede_Seleccionar_Ganadora'] = $cot_sel ? 1 : 0;
-    $pendientes[$idx]['Puede_Cargar_Avance'] = ($sol_est_ok && in_array($p['Nod_Tip'], array('AVANCE', 'FISCALIZACION'), true)) ? 1 : 0;
+    $pendientes[$idx]['Puede_Cargar_Avance'] = ($sol_est_ok && $puede_res_p && in_array($p['Nod_Tip'], array('AVANCE', 'FISCALIZACION'), true)) ? 1 : 0;
 }
 
 // B. MIS SOLICITUDES EN CURSO (Creadas por mi)
 $mis_solicitudes = $obBD_con1->getArrayConsultaSql("
-    SELECT s.Sol_Cod, s.Sol_Num, s.Sol_Tit, s.Sol_Fec, s.Sol_Est, s.Sol_Pri, s.Sol_Val_Est, s.Usu_Sol,
+    SELECT s.Sol_Cod, s.Sol_Num, s.Sol_Tit, s.Sol_Fec, s.Sol_Est, s.Sol_Pri, s.Sol_Val_Est, s.Usu_Sol, s.Dep_Sol,
            tr.Trq_Des,
            IFNULL(wfm.Wfm_Nom, 'Sin flujo') AS Wfm_Nom,
            COALESCE(wfm.Wfm_Fam_Cod, wfm.Wfm_Cod, tr.Wfm_Cod) AS Wfm_Fam_Cod,
-           i.Ins_Cod, n.Nod_Nom
+           d.Wde_Des AS Dep_Des,
+           i.Ins_Cod, i.Wfm_Cod, i.Nod_Act, i.Ins_Est,
+           n.Nod_Nom
     FROM adq_solicitudes s
     INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
-    LEFT JOIN wf_instancias i ON i.Ins_Ent_Typ = 'adq_solicitudes' AND i.Ins_Ent_Cod = s.Sol_Cod AND i.Ins_Est = 'P'
+    LEFT JOIN wf_departamentos d ON d.Wde_Cod = s.Dep_Sol
+    LEFT JOIN wf_instancias i ON i.Ins_Cod = (
+        SELECT MAX(i2.Ins_Cod)
+        FROM wf_instancias i2
+        WHERE i2.Ins_Ent_Typ = 'adq_solicitudes' AND i2.Ins_Ent_Cod = s.Sol_Cod
+    )
     LEFT JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act
     LEFT JOIN wf_flujos_modelos wfm ON wfm.Wfm_Cod = COALESCE(i.Wfm_Cod, tr.Wfm_Cod)
-    WHERE s.Emp_Cod = $emp_cod AND s.Usu_Sol = $usu_cod AND s.Sol_Est IN ('E', 'O', 'P')
+    WHERE s.Emp_Cod = $emp_cod AND s.Usu_Sol = $usu_cod AND s.Sol_Est IN ('E', 'O', 'P', 'I')
     ORDER BY s.Sol_Fec DESC, s.Sol_Cod DESC
     LIMIT 150;", $obBD_conexion);
 if ($mis_solicitudes === false || $mis_solicitudes === null) {
@@ -935,7 +996,7 @@ if ($mis_solicitudes === false || $mis_solicitudes === null) {
 
 // C. GESTIONE / PARTICIPE (solicitudes de otros en las que actue en el workflow)
 $gestionadas = $obBD_con1->getArrayConsultaSql("
-    SELECT s.Sol_Cod, s.Sol_Num, s.Sol_Tit, s.Sol_Fec, s.Sol_Est, s.Sol_Pri, s.Sol_Val_Est, s.Usu_Sol,
+    SELECT s.Sol_Cod, s.Sol_Num, s.Sol_Tit, s.Sol_Fec, s.Sol_Est, s.Sol_Pri, s.Sol_Val_Est, s.Usu_Sol, s.Dep_Sol,
            tr.Trq_Des,
            IFNULL(wfm.Wfm_Nom, 'Sin flujo') AS Wfm_Nom,
            COALESCE(wfm.Wfm_Fam_Cod, wfm.Wfm_Cod, tr.Wfm_Cod) AS Wfm_Fam_Cod,
@@ -1011,24 +1072,58 @@ if (!$es_gerencial_admin) {
 }
 
 $historico = $obBD_con1->getArrayConsultaSql("
-    SELECT s.Sol_Cod, s.Sol_Num, s.Sol_Tit, s.Sol_Fec, s.Sol_Est, s.Sol_Pri, s.Sol_Val_Est, s.Usu_Sol,
+    SELECT s.Sol_Cod, s.Sol_Num, s.Sol_Tit, s.Sol_Fec, s.Sol_Est, s.Sol_Pri, s.Sol_Val_Est, s.Usu_Sol, s.Dep_Sol,
            tr.Trq_Des,
            IFNULL(wfm.Wfm_Nom, 'Sin flujo') AS Wfm_Nom,
            COALESCE(wfm.Wfm_Fam_Cod, wfm.Wfm_Cod, tr.Wfm_Cod) AS Wfm_Fam_Cod,
            CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) AS Solicitante_Nom,
-           d.Wde_Des AS Dep_Des
+           d.Wde_Des AS Dep_Des,
+           i.Ins_Cod, i.Wfm_Cod, i.Nod_Act, i.Ins_Est
     FROM adq_solicitudes s
     INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
     INNER JOIN usuarios u ON u.Usu_Cod = s.Usu_Sol
     INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
     LEFT JOIN wf_departamentos d ON d.Wde_Cod = s.Dep_Sol
-    LEFT JOIN wf_flujos_modelos wfm ON wfm.Wfm_Cod = tr.Wfm_Cod
+    LEFT JOIN wf_instancias i ON i.Ins_Cod = (
+        SELECT MAX(i2.Ins_Cod)
+        FROM wf_instancias i2
+        WHERE i2.Ins_Ent_Typ = 'adq_solicitudes' AND i2.Ins_Ent_Cod = s.Sol_Cod
+    )
+    LEFT JOIN wf_flujos_modelos wfm ON wfm.Wfm_Cod = COALESCE(i.Wfm_Cod, tr.Wfm_Cod)
     WHERE s.Emp_Cod = $emp_cod AND s.Sol_Est IN ('A', 'R') $historico_filtro_usuario
     ORDER BY s.Sol_Fec DESC, s.Sol_Cod DESC
     LIMIT 100;", $obBD_conexion);
 if ($historico === false || $historico === null) {
     $historico = array();
 }
+
+function adqEnriquecerProgresoPasos(&$rows, $wf_mgr) {
+    if (!is_array($rows) || empty($rows)) {
+        return;
+    }
+    foreach ($rows as $idx => $row) {
+        $wfm = intval(isset($row['Wfm_Cod']) ? $row['Wfm_Cod'] : 0);
+        $nod = intval(isset($row['Nod_Act']) ? $row['Nod_Act'] : 0);
+        $ins_est = isset($row['Ins_Est']) ? $row['Ins_Est'] : (isset($row['Ins_Est_Act']) ? $row['Ins_Est_Act'] : 'P');
+        if ($wfm <= 0 && !empty($row['Wfm_Fam_Cod'])) {
+            // fallback no ideal; deja sin progreso
+        }
+        $prog = $wf_mgr->obtenerProgresoPasosFlujo($wfm, $nod, $ins_est);
+        if (!empty($row['Sol_Est']) && $row['Sol_Est'] === 'A') {
+            if ($prog['total'] > 0) {
+                $prog['actual'] = $prog['total'];
+                $prog['texto'] = $prog['total'] . '/' . $prog['total'];
+            }
+        }
+        $rows[$idx]['Paso_Actual_Num'] = $prog['actual'];
+        $rows[$idx]['Paso_Total_Num'] = $prog['total'];
+        $rows[$idx]['Paso_Cant'] = $prog['texto'];
+    }
+}
+
+adqEnriquecerProgresoPasos($pendientes, $wf_mgr);
+adqEnriquecerProgresoPasos($mis_solicitudes, $wf_mgr);
+adqEnriquecerProgresoPasos($historico, $wf_mgr);
 
 $flujos_opciones = array();
 foreach ($wf_mgr->listarFlujosPublicados($emp_cod) as $f) {
@@ -1043,6 +1138,28 @@ foreach (array_merge($pendientes, $mis_solicitudes, $gestionadas, $historico) as
 asort($flujos_opciones, SORT_NATURAL | SORT_FLAG_CASE);
 $filtro_wfm_fam = isset($_GET['filtro_wfm']) ? intval($_GET['filtro_wfm']) : 0;
 
+$deptos_opciones = array();
+$deptos_lista = $wf_mgr->listarDepartamentosDisenador($emp_cod);
+if (!is_array($deptos_lista)) {
+    $deptos_lista = array();
+}
+foreach ($deptos_lista as $dep) {
+    $dep_cod = isset($dep['Dep_Cod']) ? intval($dep['Dep_Cod']) : 0;
+    $dep_des = isset($dep['Dep_Des']) ? trim((string)$dep['Dep_Des']) : '';
+    if ($dep_cod > 0 && $dep_des !== '') {
+        $deptos_opciones[$dep_cod] = $dep_des;
+    }
+}
+foreach (array_merge($pendientes, $mis_solicitudes, $gestionadas, $historico) as $row) {
+    $dep_cod = isset($row['Dep_Sol']) ? intval($row['Dep_Sol']) : 0;
+    $dep_des = isset($row['Dep_Des']) ? trim((string)$row['Dep_Des']) : '';
+    if ($dep_cod > 0 && $dep_des !== '' && !isset($deptos_opciones[$dep_cod])) {
+        $deptos_opciones[$dep_cod] = $dep_des;
+    }
+}
+asort($deptos_opciones, SORT_NATURAL | SORT_FLAG_CASE);
+$filtro_dep = isset($_GET['filtro_dep']) ? intval($_GET['filtro_dep']) : 0;
+
 function adqEtiquetaEstadoSolicitud($sol_est) {
     switch ($sol_est) {
         case 'P': return array('Borrador', 'secondary');
@@ -1050,6 +1167,7 @@ function adqEtiquetaEstadoSolicitud($sol_est) {
         case 'A': return array('Aprobada', 'success');
         case 'R': return array('Rechazada', 'danger');
         case 'O': return array('Observada', 'warning text-dark');
+        case 'I': return array('Inhabilitado', 'dark');
         default:  return array('Desconocido', 'secondary');
     }
 }
@@ -1575,8 +1693,36 @@ function adqEtiquetaMiAccion($accion) {
             width: 100%;
         }
         #create-panel-content .adq-proforma-val {
-            flex: 0 0 130px;
-            min-width: 120px;
+            flex: 0 0 110px;
+            min-width: 100px;
+        }
+        #create-panel-content .adq-proforma-iva {
+            flex: 0 0 90px;
+            min-width: 80px;
+        }
+        #create-panel-content .adq-proforma-iva .adq-cot-iva-check {
+            margin: 0;
+            min-height: 34px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 0;
+        }
+        #create-panel-content .adq-proforma-total {
+            flex: 0 0 110px;
+            min-width: 100px;
+        }
+        #create-panel-content .adq-cot-total-box {
+            min-height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 4px 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            color: #166534;
+            font-size: 13px;
         }
         #create-panel-content .adq-proforma-actions {
             display: inline-flex;
@@ -1745,7 +1891,7 @@ function adqEtiquetaMiAccion($accion) {
         .adq-bandj-filters {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 10px 18px;
             padding: 12px 14px;
             flex-wrap: wrap;
             margin: 0;
@@ -1753,6 +1899,12 @@ function adqEtiquetaMiAccion($accion) {
             border-left: 1px solid #ddd;
             border-right: 1px solid #ddd;
             border-bottom: 1px solid #ddd;
+        }
+        .adq-bandj-filters .adq-bandj-filter-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
         }
         .adq-bandj-filters label {
             margin: 0;
@@ -1764,8 +1916,8 @@ function adqEtiquetaMiAccion($accion) {
             white-space: nowrap;
         }
         .adq-bandj-filters select {
-            max-width: 320px;
-            min-width: 200px;
+            max-width: 280px;
+            min-width: 180px;
             font-size: 13px;
             height: 34px;
             border-radius: 8px;
@@ -2277,13 +2429,24 @@ function adqEtiquetaMiAccion($accion) {
         </div>
 
         <div class="adq-bandj-filters" id="adqBandjFiltersFlujo">
-            <label for="filtroFlujo"><i class="bi bi-diagram-3"></i> Filtrar por flujo:</label>
-            <select id="filtroFlujo" class="form-control input-sm">
-                <option value="">Todos los flujos</option>
-                <?php foreach ($flujos_opciones as $fam_cod => $wfm_nom) { ?>
-                    <option value="<?php echo intval($fam_cod); ?>"<?php echo ($filtro_wfm_fam === intval($fam_cod)) ? ' selected' : ''; ?>><?php echo htmlspecialchars($wfm_nom); ?></option>
-                <?php } ?>
-            </select>
+            <div class="adq-bandj-filter-item">
+                <label for="filtroFlujo"><i class="bi bi-diagram-3"></i> Filtrar por flujo:</label>
+                <select id="filtroFlujo" class="form-control input-sm">
+                    <option value="">Todos los flujos</option>
+                    <?php foreach ($flujos_opciones as $fam_cod => $wfm_nom) { ?>
+                        <option value="<?php echo intval($fam_cod); ?>"<?php echo ($filtro_wfm_fam === intval($fam_cod)) ? ' selected' : ''; ?>><?php echo htmlspecialchars($wfm_nom); ?></option>
+                    <?php } ?>
+                </select>
+            </div>
+            <div class="adq-bandj-filter-item">
+                <label for="filtroDepartamento"><i class="bi bi-building"></i> Filtrar por departamento:</label>
+                <select id="filtroDepartamento" class="form-control input-sm">
+                    <option value="">Todos los departamentos</option>
+                    <?php foreach ($deptos_opciones as $dep_cod => $dep_des) { ?>
+                        <option value="<?php echo intval($dep_cod); ?>"<?php echo ($filtro_dep === intval($dep_cod)) ? ' selected' : ''; ?>><?php echo htmlspecialchars($dep_des); ?></option>
+                    <?php } ?>
+                </select>
+            </div>
         </div>
 
         <div class="tab-content exa-ui-tab-content panels-area" id="inboxTabsContent">
@@ -2302,6 +2465,7 @@ function adqEtiquetaMiAccion($accion) {
                                 <th>Departamento</th>
                                 <th>Tipo Pedido</th>
                                 <th style="width: 100px;">Prioridad</th>
+                                <th style="width: 70px;" title="Paso actual / total de etapas">Avance</th>
                                 <th style="width: 150px;">Valor Est.</th>
                                 <th>Paso Actual Workflow</th>
                                 <th style="width: 110px;">Acci&oacute;n</th>
@@ -2309,10 +2473,10 @@ function adqEtiquetaMiAccion($accion) {
                         </thead>
                         <tbody>
                             <?php if (empty($pendientes)) { ?>
-                                <tr class="text-center"><td colspan="11" class="text-muted py-4">No posee requerimientos de adquisiciones pendientes de aprobaci&oacute;n en este momento.</td></tr>
+                                <tr class="text-center"><td colspan="12" class="text-muted py-4">No posee requerimientos de adquisiciones pendientes de aprobaci&oacute;n en este momento.</td></tr>
                             <?php } else { 
                                 foreach ($pendientes as $p) { ?>
-                                    <tr class="text-center adq-row-solicitud" data-wfm-fam="<?php echo intval($p['Wfm_Fam_Cod']); ?>">
+                                    <tr class="text-center adq-row-solicitud" data-wfm-fam="<?php echo intval($p['Wfm_Fam_Cod']); ?>" data-dep-sol="<?php echo intval(isset($p['Dep_Sol']) ? $p['Dep_Sol'] : 0); ?>">
                                         <td class="fw-bold"><?php echo $p['Sol_Num']; ?></td>
                                         <td class="text-start"><?php echo htmlspecialchars(isset($p['Sol_Tit']) ? $p['Sol_Tit'] : '', ENT_QUOTES, 'UTF-8'); ?></td>
                                         <td class="text-start"><?php echo htmlspecialchars($p['Wfm_Nom']); ?></td>
@@ -2321,14 +2485,17 @@ function adqEtiquetaMiAccion($accion) {
                                         <td><?php echo htmlspecialchars(adqTextoDepartamentoSolicitante(isset($p['Dep_Des']) ? $p['Dep_Des'] : ''), ENT_QUOTES, 'UTF-8'); ?></td>
                                         <td class="text-start"><?php echo $p['Trq_Des']; ?></td>
                                         <td><span class="badge badge-<?php echo strtolower($p['Sol_Pri']); ?>"><?php echo $p['Sol_Pri']; ?></span></td>
+                                        <td><span class="badge bg-info text-dark adq-paso-cant"><?php echo htmlspecialchars(isset($p['Paso_Cant']) ? $p['Paso_Cant'] : '-', ENT_QUOTES, 'UTF-8'); ?></span></td>
                                         <td class="text-end fw-bold font-monospace">$ <?php echo number_format($p['Sol_Val_Est'], 2); ?></td>
                                         <td><span class="badge bg-primary fs-6"><i class="bi bi-clock"></i> <?php echo $p['Nod_Nom']; ?></span></td>
                                         <td class="adq-col-acciones">
                                             <div class="adq-acciones-row">
                                                 <?php if ($p['Sol_Est'] === 'P') { ?>
                                                 <button type="button" class="btn btn-sm btn-warning text-dark adq-btn-icon-only" title="Completar solicitud" onclick="abrirCompletarSolicitud(<?php echo $p['Sol_Cod']; ?>)"><i class="bi bi-clipboard-check"></i></button>
-                                                <?php } else { ?>
+                                                <?php } elseif (!empty($p['Puede_Resolver'])) { ?>
                                                 <button type="button" class="btn btn-sm btn-primary adq-btn-icon-only" title="Resolver" onclick="abrirResolucion(<?php echo $p['Sol_Cod']; ?>, true)"><i class="bi bi-shield-check"></i></button>
+                                                <?php } else { ?>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary adq-btn-icon-only" title="Solo consulta" onclick="abrirResolucion(<?php echo $p['Sol_Cod']; ?>, false)"><i class="bi bi-eye"></i></button>
                                                 <?php } ?>
                                                 <?php if (!empty($p['Puede_Cargar_Cotizaciones']) || !empty($p['Puede_Seleccionar_Ganadora'])) {
                                                     $titulo_cot = !empty($p['Puede_Cargar_Cotizaciones'])
@@ -2366,8 +2533,10 @@ function adqEtiquetaMiAccion($accion) {
                                 <th>Nombre</th>
                                 <th>Flujo</th>
                                 <th style="width: 150px;">Fecha</th>
+                                <th>Departamento</th>
                                 <th>Tipo Pedido</th>
                                 <th style="width: 100px;">Prioridad</th>
+                                <th style="width: 70px;" title="Paso actual / total de etapas">Avance</th>
                                 <th style="width: 150px;">Valor Est.</th>
                                 <th>Estado Solicitud</th>
                                 <th>Etapa Workflow</th>
@@ -2376,7 +2545,7 @@ function adqEtiquetaMiAccion($accion) {
                         </thead>
                         <tbody>
                             <?php if (empty($mis_solicitudes)) { ?>
-                                <tr class="text-center"><td colspan="10" class="text-muted py-4">No ha iniciado requerimientos de adquisici&oacute;n a&uacute;n.</td></tr>
+                                <tr class="text-center"><td colspan="12" class="text-muted py-4">No ha iniciado requerimientos de adquisici&oacute;n a&uacute;n.</td></tr>
                             <?php } else { 
                                 foreach ($mis_solicitudes as $ms) { 
                                     $est = 'En espera de completar'; $badge = 'secondary';
@@ -2384,15 +2553,18 @@ function adqEtiquetaMiAccion($accion) {
                                     elseif ($ms['Sol_Est'] == 'A') { $est = 'Aprobada'; $badge = 'success'; }
                                     elseif ($ms['Sol_Est'] == 'R') { $est = 'Rechazada'; $badge = 'danger'; }
                                     elseif ($ms['Sol_Est'] == 'O') { $est = 'Observada'; $badge = 'warning text-dark'; }
+                                    elseif ($ms['Sol_Est'] == 'I') { $est = 'Inhabilitado'; $badge = 'dark'; }
                                     $etapa = !empty($ms['Nod_Nom']) ? $ms['Nod_Nom'] : (($ms['Sol_Est'] == 'P') ? 'Pendiente de completar' : '[Inactivo]');
                                     ?>
-                                    <tr class="text-center adq-row-solicitud" data-wfm-fam="<?php echo intval($ms['Wfm_Fam_Cod']); ?>">
+                                    <tr class="text-center adq-row-solicitud" data-wfm-fam="<?php echo intval($ms['Wfm_Fam_Cod']); ?>" data-dep-sol="<?php echo intval(isset($ms['Dep_Sol']) ? $ms['Dep_Sol'] : 0); ?>">
                                         <td class="fw-bold"><?php echo $ms['Sol_Num']; ?></td>
                                         <td class="text-start"><?php echo htmlspecialchars(isset($ms['Sol_Tit']) ? $ms['Sol_Tit'] : '', ENT_QUOTES, 'UTF-8'); ?></td>
                                         <td class="text-start"><?php echo htmlspecialchars($ms['Wfm_Nom']); ?></td>
                                         <td><?php echo date('Y-m-d H:i', strtotime($ms['Sol_Fec'])); ?></td>
+                                        <td><?php echo htmlspecialchars(adqTextoDepartamentoSolicitante(isset($ms['Dep_Des']) ? $ms['Dep_Des'] : ''), ENT_QUOTES, 'UTF-8'); ?></td>
                                         <td class="text-start"><?php echo $ms['Trq_Des']; ?></td>
                                         <td><span class="badge badge-<?php echo strtolower($ms['Sol_Pri']); ?>"><?php echo $ms['Sol_Pri']; ?></span></td>
+                                        <td><span class="badge bg-info text-dark adq-paso-cant"><?php echo htmlspecialchars(isset($ms['Paso_Cant']) ? $ms['Paso_Cant'] : '-', ENT_QUOTES, 'UTF-8'); ?></span></td>
                                         <td class="text-end fw-bold font-monospace">$ <?php echo number_format($ms['Sol_Val_Est'], 2); ?></td>
                                         <td><span class="badge bg-<?php echo $badge; ?>"><?php echo $est; ?></span></td>
                                         <td><span class="text-dark fw-bold"><?php echo htmlspecialchars($etapa); ?></span></td>
@@ -2428,6 +2600,7 @@ function adqEtiquetaMiAccion($accion) {
                                 <th style="width: 130px;">Mi gestion</th>
                                 <th style="width: 130px;">Fecha gestion</th>
                                 <th>Solicitante</th>
+                                <th>Departamento</th>
                                 <th>Tipo Pedido</th>
                                 <th style="width: 130px;">Valor Est.</th>
                                 <th>Estado actual</th>
@@ -2437,7 +2610,7 @@ function adqEtiquetaMiAccion($accion) {
                         </thead>
                         <tbody>
                             <?php if (empty($gestionadas)) { ?>
-                                <tr class="text-center"><td colspan="10" class="text-muted py-4">Aun no ha gestionado solicitudes de otros usuarios.</td></tr>
+                                <tr class="text-center"><td colspan="11" class="text-muted py-4">Aun no ha gestionado solicitudes de otros usuarios.</td></tr>
                             <?php } else {
                                 foreach ($gestionadas as $g) {
                                     list($est, $badge) = adqEtiquetaEstadoSolicitud($g['Sol_Est']);
@@ -2447,12 +2620,13 @@ function adqEtiquetaMiAccion($accion) {
                                         $etapa_actual = 'Cerrado';
                                     }
                                     ?>
-                                    <tr class="text-center adq-row-solicitud" data-wfm-fam="<?php echo intval($g['Wfm_Fam_Cod']); ?>">
+                                    <tr class="text-center adq-row-solicitud" data-wfm-fam="<?php echo intval($g['Wfm_Fam_Cod']); ?>" data-dep-sol="<?php echo intval(isset($g['Dep_Sol']) ? $g['Dep_Sol'] : 0); ?>">
                                         <td class="fw-bold"><?php echo $g['Sol_Num']; ?></td>
                                         <td class="text-start"><?php echo htmlspecialchars($g['Wfm_Nom']); ?></td>
                                         <td><span class="badge bg-<?php echo $mi_badge; ?>"><?php echo $mi_acc; ?></span><div class="text-muted" style="font-size:10px;"><?php echo htmlspecialchars($g['Mi_Etapa']); ?></div></td>
                                         <td><?php echo date('Y-m-d H:i', strtotime($g['Mi_Fecha'])); ?></td>
                                         <td class="text-start"><?php echo htmlspecialchars($g['Solicitante_Nom']); ?></td>
+                                        <td><?php echo htmlspecialchars(adqTextoDepartamentoSolicitante(isset($g['Dep_Des']) ? $g['Dep_Des'] : ''), ENT_QUOTES, 'UTF-8'); ?></td>
                                         <td class="text-start"><?php echo htmlspecialchars($g['Trq_Des']); ?></td>
                                         <td class="text-end fw-bold font-monospace">$ <?php echo number_format($g['Sol_Val_Est'], 2); ?></td>
                                         <td><span class="badge bg-<?php echo $badge; ?>"><?php echo $est; ?></span></td>
@@ -2490,6 +2664,7 @@ function adqEtiquetaMiAccion($accion) {
                                 <th>Departamento</th>
                                 <th>Tipo Pedido</th>
                                 <th style="width: 100px;">Prioridad</th>
+                                <th style="width: 70px;" title="Paso actual / total de etapas">Avance</th>
                                 <th style="width: 150px;">Valor Est.</th>
                                 <th>Estado</th>
                                 <th style="width: 100px;">Accion</th>
@@ -2497,12 +2672,12 @@ function adqEtiquetaMiAccion($accion) {
                         </thead>
                         <tbody>
                             <?php if (empty($historico)) { ?>
-                                <tr class="text-center"><td colspan="10" class="text-muted py-4"><?php echo $es_gerencial_admin ? 'No hay solicitudes cerradas registradas.' : 'No tiene solicitudes cerradas propias ni en las que haya participado.'; ?></td></tr>
+                                <tr class="text-center"><td colspan="11" class="text-muted py-4"><?php echo $es_gerencial_admin ? 'No hay solicitudes cerradas registradas.' : 'No tiene solicitudes cerradas propias ni en las que haya participado.'; ?></td></tr>
                             <?php } else {
                             foreach ($historico as $h) {
                                 list($est, $badge) = adqEtiquetaEstadoSolicitud($h['Sol_Est']);
                                 ?>
-                                <tr class="text-center adq-row-solicitud" data-wfm-fam="<?php echo intval($h['Wfm_Fam_Cod']); ?>">
+                                <tr class="text-center adq-row-solicitud" data-wfm-fam="<?php echo intval($h['Wfm_Fam_Cod']); ?>" data-dep-sol="<?php echo intval(isset($h['Dep_Sol']) ? $h['Dep_Sol'] : 0); ?>">
                                     <td class="fw-bold"><?php echo $h['Sol_Num']; ?></td>
                                     <td class="text-start"><?php echo htmlspecialchars($h['Wfm_Nom']); ?></td>
                                     <td><?php echo date('Y-m-d H:i', strtotime($h['Sol_Fec'])); ?></td>
@@ -2510,6 +2685,7 @@ function adqEtiquetaMiAccion($accion) {
                                     <td><?php echo htmlspecialchars(adqTextoDepartamentoSolicitante(isset($h['Dep_Des']) ? $h['Dep_Des'] : ''), ENT_QUOTES, 'UTF-8'); ?></td>
                                     <td class="text-start"><?php echo $h['Trq_Des']; ?></td>
                                     <td><span class="badge badge-<?php echo strtolower($h['Sol_Pri']); ?>"><?php echo $h['Sol_Pri']; ?></span></td>
+                                    <td><span class="badge bg-info text-dark adq-paso-cant"><?php echo htmlspecialchars(isset($h['Paso_Cant']) ? $h['Paso_Cant'] : '-', ENT_QUOTES, 'UTF-8'); ?></span></td>
                                     <td class="text-end fw-bold font-monospace">$ <?php echo number_format($h['Sol_Val_Est'], 2); ?></td>
                                     <td><span class="badge bg-<?php echo $badge; ?>"><?php echo $est; ?></span></td>
                                     <td class="adq-col-acciones">
@@ -2608,7 +2784,9 @@ function adqEtiquetaMiAccion($accion) {
                                         <thead>
                                             <tr>
                                                 <th>Proveedor</th>
-                                                <th class="text-end" style="width: 110px;">Valor</th>
+                                                <th class="text-end" style="width: 100px;">Subtotal</th>
+                                                <th class="text-center" style="width: 70px;">IVA</th>
+                                                <th class="text-end" style="width: 100px;">Total</th>
                                                 <th class="text-center" style="width: 100px;">PDF</th>
                                                 <th>Justificacion</th>
                                             </tr>
@@ -2683,8 +2861,8 @@ function adqEtiquetaMiAccion($accion) {
                                 <h5 class="adq-section-header" style="color: #087990; border-bottom-color: #9eeaf9; margin-bottom: 8px; padding-bottom: 4px;"><i class="bi bi-receipt-cutoff" id="icoAvanceEtapa"></i> <span id="lblAvanceEtapaTitulo">Facturas de Avance</span></h5>
                                 <p class="mb-2" id="lblAvanceEtapaAyuda" style="font-size: 12px; color: #055160;">Etapa <strong id="lblAvanceEtapaNodo"></strong>: seleccione facturas de compra o anticipos de proveedores del sistema EXA. Use <strong>Guardar</strong> para registrar. Cuando termine, pulse <strong>Finalizar proceso</strong>.</p>
                                 <div id="avanceTotalesResumen" class="mb-2" style="display:none;font-size:12px;padding:8px 10px;border-radius:6px;background:#e0f2fe;border:1px solid #7dd3fc;color:#0c4a6e;">
-                                    <span class="me-3"><strong>Proforma/solicitud:</strong> $ <span id="avanceTotRef">0.00</span></span>
-                                    <span class="me-3"><strong>Facturas:</strong> $ <span id="avanceTotSum">0.00</span></span>
+                                    <span class="me-3"><strong>Subtotal proforma:</strong> $ <span id="avanceTotRef">0.00</span></span>
+                                    <span class="me-3"><strong>Subtotal facturas:</strong> $ <span id="avanceTotSum">0.00</span></span>
                                     <span><strong>Diferencia:</strong> $ <span id="avanceTotDif">0.00</span></span>
                                 </div>
                                 <div class="row" style="margin-left:0;margin-right:0;margin-bottom:8px;">
@@ -2801,13 +2979,13 @@ function adqEtiquetaMiAccion($accion) {
                                 <form id="frmWorkflowAction" method="POST" enctype="multipart/form-data">
                                     <input type="hidden" name="Ins_Cod" id="actionInsCod">
                                     <input type="hidden" name="Action" id="actionName">
-                                    <div style="margin-bottom: 8px;">
+                                    <div id="secActionComentario" style="margin-bottom: 8px;">
                                         <label class="form-label fw-semibold" style="font-size: 11px; color: #1d4ed8; margin: 0 0 4px 0; display: block;">
                                             Comentario / justificaci&oacute;n <span id="lblComReq" class="text-danger" style="display: none;">*</span>
                                         </label>
                                         <textarea class="form-control" name="Comentario" id="actionComentario" rows="3" placeholder="Redacte el motivo de su decision..."></textarea>
                                     </div>
-                                    <div style="margin-bottom: 10px;">
+                                    <div id="secActionAdjuntos" style="margin-bottom: 10px;">
                                         <label class="form-label fw-semibold" style="font-size: 11px; color: #1d4ed8; margin: 0 0 4px 0; display: block;"><i class="bi bi-paperclip"></i> Sustentos adjuntos <span id="lblAdjReq" class="text-danger" style="display: none;">*</span></label>
                                         <input type="file" name="adjuntos[]" id="actionAdjunto" class="adq-file-native" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx" multiple>
                                         <div class="adq-dropzone" id="adqDropzone" role="button" tabindex="0" onclick="document.getElementById('actionAdjunto').click();" onkeypress="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('actionAdjunto').click();}">
@@ -2926,7 +3104,7 @@ let currentInsCod = null;
         let solMinCot = 1;
         let searchTimer = null;
 
-        const NODOS_RESOLUBLES = ['INICIO', 'APROBACION', 'RECEPCION', 'FACTURA', 'TAREA', 'AVANCE', 'FISCALIZACION', 'FIN'];
+        const NODOS_RESOLUBLES = ['INICIO', 'APROBACION', 'RECEPCION', 'FACTURA', 'TAREA', 'VALIDACION', 'AVANCE', 'FISCALIZACION', 'FIN'];
         let currentNodTip = null;
         let currentExpedienteEstado = null;
         let currentTieneLlaveEmpresa = false;
@@ -3019,7 +3197,7 @@ let currentInsCod = null;
                 if (!inline) {
                     if (node.pendiente_meta) {
                         const pm = node.pendiente_meta;
-                        let lines = [`<span><i class="bi bi-hourglass-split"></i> ${node.tipo === 'TAREA' ? 'Tarea pendiente' : 'Pendiente de aprobacion'}</span>`];
+                        let lines = [`<span><i class="bi bi-hourglass-split"></i> ${node.tipo === 'TAREA' ? 'Tarea pendiente' : (node.tipo === 'VALIDACION' ? 'Validaci\u00f3n pendiente' : 'Pendiente de aprobacion')}</span>`];
                         if (pm.depto) lines.push(`<span>Depto: ${pm.depto}</span>`);
                         if (pm.asignados) lines.push(`<span>Asignado: ${pm.asignados}</span>`);
                         if (pm.enviado_por) lines.push(`<span>Enviado por: ${pm.enviado_por}</span>`);
@@ -3060,24 +3238,35 @@ let currentInsCod = null;
             currentTieneLlaveEmpresa = !!tieneLlaveEmpresa;
             currentExpedientePdfsCount = parseInt(expedientePdfs, 10) || 0;
             const esInicio = currentNodTip === 'INICIO';
-            const esTarea = currentNodTip === 'TAREA';
+            const esTarea = currentNodTip === 'TAREA' || currentNodTip === 'VALIDACION';
+            const esValidacion = currentNodTip === 'VALIDACION';
             const esFin = currentNodTip === 'FIN';
             const esAvance = currentNodTip === 'AVANCE';
             const esFiscal = currentNodTip === 'FISCALIZACION';
+            // En INICIO solo se completa/continúa la solicitud: sin justificación ni adjuntos de resolución.
+            $('#secActionComentario, #secActionAdjuntos').toggle(!esInicio);
+            if (esInicio) {
+                $('#actionComentario').val('');
+                isComObl = false;
+                isAdjObl = false;
+                $('#lblComReq, #lblAdjReq').hide();
+            }
             $('#btnGuardarAvance').toggle(esAvance || esFiscal);
-            $('#lblPanelDecisionTitulo').text(esFin ? 'Cierre del expediente' : (esInicio ? 'Completar etapa Inicio' : (esTarea ? 'Tarea pendiente' : (esAvance ? 'Otras acciones' : (esFiscal ? 'Fiscalizaci\u00f3n' : 'Decisi\u00f3n en esta Etapa')))));
-            $('#icoPanelDecision').attr('class', esFin ? 'bi bi-file-earmark-pdf' : (esInicio ? 'bi bi-play-circle' : (esTarea ? 'bi bi-card-checklist' : (esAvance ? 'bi bi-sliders' : (esFiscal ? 'bi bi-shield-check' : 'bi bi-check2-all')))));
+            $('#lblPanelDecisionTitulo').text(esFin ? 'Cierre del expediente' : (esInicio ? 'Completar solicitud' : (esValidacion ? 'Validaci\u00f3n pendiente' : (esTarea ? 'Tarea pendiente' : (esAvance ? 'Otras acciones' : (esFiscal ? 'Fiscalizaci\u00f3n' : 'Decisi\u00f3n en esta Etapa'))))));
+            $('#icoPanelDecision').attr('class', esFin ? 'bi bi-file-earmark-pdf' : (esInicio ? 'bi bi-play-circle' : (esValidacion ? 'bi bi-clipboard-check' : (esTarea ? 'bi bi-card-checklist' : (esAvance ? 'bi bi-sliders' : (esFiscal ? 'bi bi-shield-check' : 'bi bi-check2-all'))))));
             $('#actionComentario').attr('placeholder', esFin
                 ? 'Comentario de cierre del expediente...'
                 : (esInicio
-                    ? 'Comentario de la etapa Inicio...'
+                    ? ''
+                    : (esValidacion
+                    ? 'Describa el resultado de la validaci\u00f3n realizada...'
                     : (esTarea
                     ? 'Describa el resultado de la tarea o el trabajo realizado...'
                     : (esAvance
                         ? 'Comentario obligatorio para finalizar el avance (Guardar solo registra facturas)...'
                         : (esFiscal
                             ? 'Comentario obligatorio de fiscalizaci\u00f3n (Guardar solo registra archivos)...'
-                            : 'Redacte el motivo de su decisi\u00f3n...')))));
+                            : 'Redacte el motivo de su decisi\u00f3n...'))))));
             // En AVANCE/FISCALIZACION el comentario es obligatorio para avanzar (no al Guardar).
             if (esAvance || esFiscal) {
                 $('#lblComReq').show();
@@ -3088,7 +3277,9 @@ let currentInsCod = null;
                 : (esInicio
                     ? '<i class="bi bi-check-circle"></i> Continuar proceso'
                     : '<i class="bi bi-check-circle"></i> Aprobar'));
-            $('#btnAccionCompletar').toggle(esTarea);
+            $('#btnAccionCompletar').toggle(esTarea).html(esValidacion
+                ? '<i class="bi bi-clipboard-check"></i> Completar validaci\u00f3n'
+                : '<i class="bi bi-card-checklist"></i> Completar tarea');
             $('#btnAccionRechazar').toggle(!esTarea && !esInicio);
             $('#btnAccionObservar').hide(); // Oculto por ahora (usar Devolver)
             $('#btnAccionDevolver').toggle(!esTarea && !esInicio && !esFin);
@@ -3106,7 +3297,7 @@ let currentInsCod = null;
             let ganadora = false;
             lista.forEach(function(c) {
                 const prv = parseInt(c.Prv_Cod, 10) || 0;
-                const val = parseFloat(c.Cot_Val) || 0;
+                const val = parseFloat(c.Cot_Sub) > 0 ? parseFloat(c.Cot_Sub) : (parseFloat(c.Cot_Val) || 0);
                 const adj = (c.Cot_Adj == null) ? '' : String(c.Cot_Adj).trim();
                 if (prv > 0 && val > 0 && adj !== '') {
                     validas++;
@@ -3512,14 +3703,15 @@ let currentInsCod = null;
         }
 
         function configurarValorReferenciaAvance(sol, cotizaciones) {
-            let proforma = 0;
+            let proformaSub = 0;
             (cotizaciones || []).forEach(function(c) {
                 if (parseInt(c.Cot_Sel, 10) === 1) {
-                    proforma = roundMoney(c.Cot_Val);
+                    const sub = roundMoney(c.Cot_Sub);
+                    proformaSub = sub > 0 ? sub : roundMoney(c.Cot_Val);
                 }
             });
             const solVal = roundMoney(sol && sol.Sol_Val_Est !== undefined ? sol.Sol_Val_Est : 0);
-            avanceValorReferencia = proforma > 0 ? proforma : solVal;
+            avanceValorReferencia = proformaSub > 0 ? proformaSub : solVal;
             actualizarResumenTotalesAvance();
         }
 
@@ -3529,10 +3721,10 @@ let currentInsCod = null;
                 if ($(this).attr('data-eliminado') === '1' || $(this).hasClass('adq-avance-eliminado')) {
                     return;
                 }
-                sum += roundMoney($(this).attr('data-factura-total'));
+                sum += roundMoney($(this).attr('data-factura-subtotal'));
             });
             $('#lstAvanceDocsNuevos .adq-avance-factura-card').each(function() {
-                sum += roundMoney($(this).attr('data-factura-total'));
+                sum += roundMoney($(this).attr('data-factura-subtotal'));
             });
             return roundMoney(sum);
         }
@@ -3563,16 +3755,16 @@ let currentInsCod = null;
             const ref = roundMoney(avanceValorReferencia);
             const tot = roundMoney(totalFactura);
             if (ref <= 0) {
-                return { ok: false, message: 'La solicitud no tiene un valor de proforma/solicitud de referencia.' };
+                return { ok: false, message: 'La solicitud no tiene un subtotal de proforma/solicitud de referencia.' };
             }
             if (tot > ref + 0.01) {
-                return { ok: false, message: 'El valor de la factura es mayor al valor de la solicitud.' };
+                return { ok: false, message: 'El subtotal de la factura es mayor al subtotal de la proforma.' };
             }
             const suma = obtenerTotalFacturasAvanceSeleccionadas();
             if (roundMoney(suma + tot) > ref + 0.01) {
                 return {
                     ok: false,
-                    message: 'El valor de la factura es mayor al valor de la solicitud. Suma actual $ '
+                    message: 'El subtotal de la factura supera el subtotal de la proforma. Suma actual $ '
                         + suma.toFixed(2) + ' + factura $ ' + tot.toFixed(2)
                         + ' supera $ ' + ref.toFixed(2) + '.'
                 };
@@ -3584,20 +3776,20 @@ let currentInsCod = null;
             const ref = roundMoney(avanceValorReferencia);
             const suma = obtenerTotalFacturasAvanceSeleccionadas();
             if (ref <= 0) {
-                return { ok: false, message: 'No se puede finalizar: falta el valor de la proforma/solicitud.' };
+                return { ok: false, message: 'No se puede finalizar: falta el subtotal de la proforma/solicitud.' };
             }
             if (suma <= 0) {
                 return { ok: false, message: 'Debe registrar al menos una factura antes de finalizar el proceso.' };
             }
             const dif = roundMoney(suma - ref);
             if (dif > 0.01) {
-                return { ok: false, message: 'El valor de la factura es mayor al valor de la solicitud.' };
+                return { ok: false, message: 'El subtotal de las facturas es mayor al subtotal de la proforma.' };
             }
             if (Math.abs(dif) > 0.01) {
                 return {
                     ok: false,
-                    message: 'La suma de las facturas debe ser igual al valor de la proforma. Proforma: $ '
-                        + ref.toFixed(2) + '. Facturas: $ ' + suma.toFixed(2) + '.'
+                    message: 'La suma de subtotales de facturas debe ser igual al subtotal de la proforma. Proforma (subtotal): $ '
+                        + ref.toFixed(2) + '. Facturas (subtotal): $ ' + suma.toFixed(2) + '.'
                 };
             }
             return { ok: true };
@@ -3848,8 +4040,8 @@ let currentInsCod = null;
             const usuario = opts.usuario || '';
             const esNuevo = !!opts.esNuevo;
             const dataAttr = esNuevo
-                ? `data-avance-nuevo="${idx}" data-factura-total="${roundMoney(compra && compra.Total !== undefined ? compra.Total : 0).toFixed(2)}"`
-                : `data-sav-cod="${savCod}" data-sav-cop-cod="${copCod}" data-factura-total="${roundMoney(compra && compra.Total !== undefined ? compra.Total : 0).toFixed(2)}"`;
+                ? `data-avance-nuevo="${idx}" data-factura-subtotal="${roundMoney(compra && compra.Subtotal !== undefined ? compra.Subtotal : 0).toFixed(2)}" data-factura-total="${roundMoney(compra && compra.Total !== undefined ? compra.Total : 0).toFixed(2)}"`
+                : `data-sav-cod="${savCod}" data-sav-cop-cod="${copCod}" data-factura-subtotal="${roundMoney(compra && compra.Subtotal !== undefined ? compra.Subtotal : 0).toFixed(2)}" data-factura-total="${roundMoney(compra && compra.Total !== undefined ? compra.Total : 0).toFixed(2)}"`;
             const namePrefix = esNuevo ? `avance_docs_nuevos[${idx}]` : `avance_docs_existentes[${savCod}]`;
             const legacy = opts.legacy || null;
             let legacyHtml = '';
@@ -4048,8 +4240,8 @@ let currentInsCod = null;
                     alert(res.message || 'No se pudo obtener el detalle de la factura.');
                     return;
                 }
-                const totalFactura = roundMoney(res.compra && res.compra.Total !== undefined ? res.compra.Total : 0);
-                const check = validarAgregarFacturaAvance(totalFactura);
+                const subtotalFactura = roundMoney(res.compra && res.compra.Subtotal !== undefined ? res.compra.Subtotal : 0);
+                const check = validarAgregarFacturaAvance(subtotalFactura);
                 if (!check.ok) {
                     alert(check.message);
                     return;
@@ -4460,6 +4652,8 @@ let currentInsCod = null;
                     let pendTxt = 'Pendiente de aprobaci&oacute;n';
                     if (h.Nod_Tip === 'TAREA') {
                         pendTxt = 'Tarea pendiente';
+                    } else if (h.Nod_Tip === 'VALIDACION') {
+                        pendTxt = 'Validaci&oacute;n pendiente';
                     } else if (h.Nod_Tip === 'FIN') {
                         pendTxt = 'Pendiente cierre';
                     } else if (h.Nod_Tip === 'AVANCE') {
@@ -4481,7 +4675,10 @@ let currentInsCod = null;
                     actionBadge = badgeHistorialHtml('Aprobado', '#059669');
                     itemClass = 'success';
                 } else if (h.Isn_Acc === 'COMPLETAR') {
-                    actionBadge = badgeHistorialHtml('Tarea completada', '#059669');
+                    actionBadge = badgeHistorialHtml(
+                        (h.Nod_Tip === 'VALIDACION') ? 'Validaci&oacute;n completada' : 'Tarea completada',
+                        '#059669'
+                    );
                     itemClass = 'success';
                 } else if (h.Isn_Acc === 'OBSERVAR') {
                     actionBadge = '<span class="badge adq-hist-badge" style="background-color:#d97706 !important;color:#fffbeb !important;">Observado</span>';
@@ -4687,10 +4884,18 @@ let currentInsCod = null;
                             const jusTexto = c.Cot_Jus
                                 ? $('<div>').text(c.Cot_Jus).html()
                                 : (c.Cot_Sel == 1 ? '<span class="text-warning">Sin justificacion</span>' : '<span class="text-muted">?</span>');
+                            const subCot = parseFloat(c.Cot_Sub || 0) > 0 ? parseFloat(c.Cot_Sub) : parseFloat(c.Cot_Val || 0);
+                            const ivaCot = parseInt(c.Cot_Iva, 10) === 1;
+                            const totCot = parseFloat(c.Cot_Val || 0);
+                            const ivaBadgeCot = ivaCot
+                                ? '<span class="badge bg-success" style="background-color:#10b981!important;color:#fff!important;">SI</span>'
+                                : '<span class="badge bg-secondary" style="background-color:#6b7280!important;color:#fff!important;">NO</span>';
                             $cotList.append(`
                                 <tr class="${ganadorClass}">
                                     <td class="align-middle"><span class="fw-bold text-dark">${$('<div>').text(proveedor).html()}</span>${badgeGanador}</td>
-                                    <td class="text-end align-middle font-monospace text-success fw-bold">$ ${parseFloat(c.Cot_Val || 0).toFixed(2)}</td>
+                                    <td class="text-end align-middle font-monospace">$ ${subCot.toFixed(2)}</td>
+                                    <td class="text-center align-middle">${ivaBadgeCot}</td>
+                                    <td class="text-end align-middle font-monospace text-success fw-bold">$ ${totCot.toFixed(2)}</td>
                                     <td class="text-center align-middle adq-cot-pdf-cell">${pdfLinks}</td>
                                     <td class="align-middle adq-cot-jus-cell" style="font-size:12px;">${jusTexto}</td>
                                 </tr>
@@ -4811,7 +5016,13 @@ let currentInsCod = null;
                         $('#lstFiscalDocsNuevos').empty();
                     }
 
-                    if (sol.Sol_Est === 'O') {
+                    if (sol.Sol_Est === 'I') {
+                        mostrarPanelEsperaCorreccion(
+                            'Proceso inhabilitado',
+                            sol.Motivo_Bloqueo || 'Este proceso fue inhabilitado. Solo se permite consultar el detalle y el seguimiento; no se puede avanzar.',
+                            false
+                        );
+                    } else if (sol.Sol_Est === 'O') {
                         const detalleObs = (sol.Motivo_Bloqueo || 'Corrija lo solicitado y pulse Reenviar correccion desde Mis Solicitudes.');
                         mostrarPanelEsperaCorreccion(
                             currentEsSolicitante ? 'Debe corregir esta solicitud' : 'Esperando correccion del solicitante',
@@ -4819,8 +5030,8 @@ let currentInsCod = null;
                             currentEsSolicitante
                         );
                     } else if (renderPanelAction && sol.Ins_Est === 'P' && puedeResolver) {
-                        isComObl = parseInt(sol.Nod_Com_Obl, 10) === 1;
-                        isAdjObl = parseInt(sol.Nod_Adj_Obl, 10) === 1;
+                        isComObl = (sol.Nod_Tip === 'INICIO') ? false : (parseInt(sol.Nod_Com_Obl, 10) === 1);
+                        isAdjObl = (sol.Nod_Tip === 'INICIO') ? false : (parseInt(sol.Nod_Adj_Obl, 10) === 1);
                         solReqCot = parseInt(sol.Sol_Req_Cot, 10) === 1 ? 1 : 0;
                         solMinCot = Math.max(1, parseInt(sol.Sol_Min_Cot, 10) || 1);
                         // Si el nodo permite/requiere seleccionar ganadora, no se aprueba sin ella.
@@ -4843,8 +5054,8 @@ let currentInsCod = null;
                         actualizarEstadoBotonesResolucion();
                     } else if (sol.Ins_Est === 'P' && !puedeResolver && !puedeCot && !puedeSelGanadora && !puedeAvance && (sol.Sol_Est === 'E' || sol.Sol_Est === 'P')) {
                         mostrarPanelEsperaCorreccion(
-                            'Decisi\u00f3n no disponible',
-                            sol.Motivo_Bloqueo || 'La solicitud esta en otra etapa o asignada a otro responsable.',
+                            'Solo consulta',
+                            sol.Motivo_Bloqueo || 'Solo el responsable asignado puede editar o completar esta etapa. Usted puede consultar el detalle.',
                             false
                         );
                     }
@@ -5241,7 +5452,9 @@ let currentInsCod = null;
                 }
                 if (isComObl && !$('#actionComentario').val().trim()) {
                     alert(accion === 'COMPLETAR'
-                        ? 'El comentario es obligatorio para completar esta tarea.'
+                        ? (currentNodTip === 'VALIDACION'
+                            ? 'El comentario es obligatorio para completar esta validaci\u00f3n.'
+                            : 'El comentario es obligatorio para completar esta tarea.')
                         : 'El comentario es obligatorio para aprobar en esta etapa.');
                     return;
                 }
@@ -5301,7 +5514,9 @@ let currentInsCod = null;
             const formData = new FormData($('#frmWorkflowAction')[0]);
             const textosLoader = {
                 APROBAR: { titulo: 'Finalizando...', detalle: 'Registrando la aprobacion. Espere un momento.' },
-                COMPLETAR: { titulo: 'Completando tarea...', detalle: 'Registrando la tarea. Espere un momento.' },
+                COMPLETAR: currentNodTip === 'VALIDACION'
+                    ? { titulo: 'Completando validaci\u00f3n...', detalle: 'Registrando la validaci\u00f3n. Espere un momento.' }
+                    : { titulo: 'Completando tarea...', detalle: 'Registrando la tarea. Espere un momento.' },
                 OBSERVAR: { titulo: 'Registrando observacion...', detalle: 'Guardando la observacion. Espere un momento.' },
                 DEVOLVER: { titulo: 'Devolviendo...', detalle: 'Registrando la devolucion. Espere un momento.' },
                 RECHAZAR: { titulo: 'Rechazando...', detalle: 'Registrando el rechazo. Espere un momento.' }
@@ -5501,7 +5716,7 @@ let currentInsCod = null;
                 } else {
                     $.getScript('../../framework/plugins/cedulaRuc.js')
                         .done(function() {
-                            return $.getScript('../VALIDACIONES/adq_solicitud.js?v=20260728a');
+                            return $.getScript('../VALIDACIONES/adq_solicitud.js?v=20260803h');
                         })
                         .done(function() {
                             if (requestId !== formLoadRequestId) {
@@ -5615,12 +5830,16 @@ let currentInsCod = null;
             $('a[href="#create-panel"]').tab('show');
         }
 
-        function aplicarFiltroFlujo() {
+        function aplicarFiltrosBandeja() {
             const fam = $('#filtroFlujo').val();
+            const dep = $('#filtroDepartamento').val();
             $('.adq-row-solicitud').each(function() {
-                const rowFam = String($(this).data('wfm-fam') || '');
-                const match = !fam || rowFam === fam;
-                $(this).toggleClass('adq-filtro-oculto', !match);
+                const $row = $(this);
+                const rowFam = String($row.data('wfm-fam') || '');
+                const rowDep = String($row.attr('data-dep-sol') || '0');
+                const matchFam = !fam || rowFam === fam;
+                const matchDep = !dep || rowDep === dep;
+                $row.toggleClass('adq-filtro-oculto', !(matchFam && matchDep));
             });
             const params = new URLSearchParams(window.location.search);
             if (fam) {
@@ -5628,10 +5847,19 @@ let currentInsCod = null;
             } else {
                 params.delete('filtro_wfm');
             }
+            if (dep) {
+                params.set('filtro_dep', dep);
+            } else {
+                params.delete('filtro_dep');
+            }
             const qs = params.toString();
             const nuevaUrl = window.location.pathname + (qs ? '?' + qs : '') + window.location.hash;
             window.history.replaceState({}, '', nuevaUrl);
             inicializarPaginacionTablas(1);
+        }
+
+        function aplicarFiltroFlujo() {
+            aplicarFiltrosBandeja();
         }
 
         function getVisibleRowsTabla($panel) {
@@ -5755,9 +5983,9 @@ let currentInsCod = null;
                 paginarTablaPanel($panel, 1);
             });
 
-            $('#filtroFlujo').on('change', aplicarFiltroFlujo);
-            if ($('#filtroFlujo').val()) {
-                aplicarFiltroFlujo();
+            $('#filtroFlujo, #filtroDepartamento').on('change', aplicarFiltrosBandeja);
+            if ($('#filtroFlujo').val() || $('#filtroDepartamento').val()) {
+                aplicarFiltrosBandeja();
             } else {
                 inicializarPaginacionTablas(1);
             }

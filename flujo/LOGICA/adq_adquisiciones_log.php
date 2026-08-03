@@ -376,6 +376,10 @@ class adq_adquisiciones_log extends MysqlDatosContab {
     /**
      * Columnas para vincular cotizaciones al proceso/movimiento donde se registraron.
      */
+    public function ensureCotizacionesSchema() {
+        $this->ensureCotizacionesEtapaColumns();
+    }
+
     private function ensureCotizacionesEtapaColumns() {
         static $ready = false;
         if ($ready) {
@@ -383,7 +387,9 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         }
         $cols = array(
             'Nod_Cod' => "ALTER TABLE adq_solicitudes_cotizaciones ADD COLUMN Nod_Cod BIGINT NULL COMMENT 'Proceso donde se registro' AFTER Sol_Cod;",
-            'Sco_Isn_Cod' => "ALTER TABLE adq_solicitudes_cotizaciones ADD COLUMN Sco_Isn_Cod BIGINT NULL COMMENT 'Movimiento historial de carga' AFTER Nod_Cod;"
+            'Sco_Isn_Cod' => "ALTER TABLE adq_solicitudes_cotizaciones ADD COLUMN Sco_Isn_Cod BIGINT NULL COMMENT 'Movimiento historial de carga' AFTER Nod_Cod;",
+            'Cot_Sub' => "ALTER TABLE adq_solicitudes_cotizaciones ADD COLUMN Cot_Sub DECIMAL(18,2) NOT NULL DEFAULT 0 COMMENT 'Subtotal de la proforma' AFTER Cot_Val;",
+            'Cot_Iva' => "ALTER TABLE adq_solicitudes_cotizaciones ADD COLUMN Cot_Iva TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1=incluye IVA 15% sobre subtotal' AFTER Cot_Sub;"
         );
         foreach ($cols as $col => $sqlAlt) {
             $row = $this->getRowConsultaSql(
@@ -398,7 +404,44 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 $this->grabarv_registros($sqlAlt, $this->conexion);
             }
         }
+        // Migracion suave: cotizaciones antiguas sin subtotal usan Cot_Val como subtotal.
+        $this->grabarv_registros(
+            "UPDATE adq_solicitudes_cotizaciones
+             SET Cot_Sub = Cot_Val
+             WHERE IFNULL(Cot_Sub, 0) <= 0 AND IFNULL(Cot_Val, 0) > 0;",
+            $this->conexion
+        );
         $ready = true;
+    }
+
+    /**
+     * Normaliza montos de cotizacion: se captura subtotal + flag IVA; Cot_Val = total.
+     * Misma tasa 15% usada en items de la solicitud.
+     */
+    private function normalizarMontosCotizacion($cot) {
+        $sub = isset($cot['Cot_Sub']) ? floatval($cot['Cot_Sub']) : 0;
+        $iva = !empty($cot['Cot_Iva']) ? 1 : 0;
+        if ($sub <= 0 && isset($cot['Cot_Val'])) {
+            $sub = floatval($cot['Cot_Val']);
+        }
+        $sub = round($sub, 2);
+        $total = round($sub * ($iva ? 1.15 : 1.0), 2);
+        return array(
+            'Cot_Sub' => $sub,
+            'Cot_Iva' => $iva,
+            'Cot_Val' => $total
+        );
+    }
+
+    /**
+     * Subtotal efectivo de una cotizacion (legado: Cot_Val si Cot_Sub vacio).
+     */
+    private function subtotalCotizacion($cot) {
+        $sub = round(floatval(isset($cot['Cot_Sub']) ? $cot['Cot_Sub'] : 0), 2);
+        if ($sub > 0) {
+            return $sub;
+        }
+        return round(floatval(isset($cot['Cot_Val']) ? $cot['Cot_Val'] : 0), 2);
     }
 
     /**
@@ -1364,6 +1407,33 @@ class adq_adquisiciones_log extends MysqlDatosContab {
     /**
      * Persiste variables de nodos DECISION y sincroniza columnas conocidas de adq_solicitudes.
      */
+    public function extraerNodoUsuariosDesdePost($data) {
+        $vals = array();
+        if (empty($data['nodo_usuarios']) || !is_array($data['nodo_usuarios'])) {
+            return $vals;
+        }
+        foreach ($data['nodo_usuarios'] as $nod_cod => $usu_cod) {
+            $nod_cod = intval($nod_cod);
+            $usu_cod = intval($usu_cod);
+            if ($nod_cod > 0 && $usu_cod > 0) {
+                $vals[$nod_cod] = $usu_cod;
+            }
+        }
+        return $vals;
+    }
+
+    public function persistirNodoUsuariosSolicitud($sol_cod, $data, $emp_cod, $validar_obligatorios = false) {
+        $sol_cod = intval($sol_cod);
+        $emp_cod = intval($emp_cod);
+        $trq_cod = intval(isset($data['Trq_Cod']) ? $data['Trq_Cod'] : 0);
+        $selecciones = $this->extraerNodoUsuariosDesdePost($data);
+        $wf_mgr = new wf_manager_log(isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null, $this->conexion);
+        if ($validar_obligatorios && $trq_cod > 0) {
+            $wf_mgr->validarNodoUsuariosObligatorios($trq_cod, $emp_cod, $selecciones, $sol_cod);
+        }
+        $wf_mgr->guardarNodoUsuariosSolicitud($sol_cod, $selecciones);
+    }
+
     public function guardarDecisionVals($sol_cod, $vals) {
         $this->ensureDecisionValsTable();
         $sol_cod = intval($sol_cod);
@@ -1793,17 +1863,21 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         }
 
         foreach ($cotizaciones as $cot) {
-            if (empty($cot['Prv_Cod']) && empty($cot['Cot_Val']) && !$this->cotizacionTieneAdjunto(isset($cot['Cot_Adj']) ? $cot['Cot_Adj'] : '')) {
+            $montos = $this->normalizarMontosCotizacion($cot);
+            if (empty($cot['Prv_Cod']) && $montos['Cot_Sub'] <= 0 && !$this->cotizacionTieneAdjunto(isset($cot['Cot_Adj']) ? $cot['Cot_Adj'] : '')) {
                 continue;
             }
             $prv_cod = intval($cot['Prv_Cod']);
-            $cot_val = floatval($cot['Cot_Val']);
+            $cot_val = $montos['Cot_Val'];
+            $cot_sub = $montos['Cot_Sub'];
+            $cot_iva = $montos['Cot_Iva'];
             $cot_adj = $this->escapeSql(isset($cot['Cot_Adj']) ? $cot['Cot_Adj'] : '');
             $cot_sel = !empty($cot['Cot_Sel']) ? 1 : 0;
             $cot_jus = $this->escapeSql(isset($cot['Cot_Jus']) ? $cot['Cot_Jus'] : '');
 
-            $sqlCot = "INSERT INTO adq_solicitudes_cotizaciones (Sol_Cod, Prv_Cod, Cot_Fec, Cot_Val, Cot_Adj, Cot_Sel, Cot_Jus)
-                       VALUES ($sol_cod, $prv_cod, '" . date('Y-m-d') . "', $cot_val, '$cot_adj', $cot_sel, '$cot_jus');";
+            $this->ensureCotizacionesEtapaColumns();
+            $sqlCot = "INSERT INTO adq_solicitudes_cotizaciones (Sol_Cod, Prv_Cod, Cot_Fec, Cot_Val, Cot_Sub, Cot_Iva, Cot_Adj, Cot_Sel, Cot_Jus)
+                       VALUES ($sol_cod, $prv_cod, '" . date('Y-m-d') . "', $cot_val, $cot_sub, $cot_iva, '$cot_adj', $cot_sel, '$cot_jus');";
             if (!$this->grabarv_registros($sqlCot, $this->conexion)) {
                 throw new Exception('No se pudo guardar una cotizacion: ' . $this->getMsgError());
             }
@@ -1895,18 +1969,21 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         $nod_cod = intval($nod_cod);
         $isn_cod = intval($isn_cod);
         foreach ($cotizaciones as $cot) {
-            if (empty($cot['Prv_Cod']) && empty($cot['Cot_Val']) && !$this->cotizacionTieneAdjunto(isset($cot['Cot_Adj']) ? $cot['Cot_Adj'] : '')) {
+            $montos = $this->normalizarMontosCotizacion($cot);
+            if (empty($cot['Prv_Cod']) && $montos['Cot_Sub'] <= 0 && !$this->cotizacionTieneAdjunto(isset($cot['Cot_Adj']) ? $cot['Cot_Adj'] : '')) {
                 continue;
             }
             $prv_cod = intval($cot['Prv_Cod']);
-            $cot_val = floatval($cot['Cot_Val']);
+            $cot_val = $montos['Cot_Val'];
+            $cot_sub = $montos['Cot_Sub'];
+            $cot_iva = $montos['Cot_Iva'];
             $cot_adj = $this->escapeSql(isset($cot['Cot_Adj']) ? $cot['Cot_Adj'] : '');
             $cot_sel = !empty($cot['Cot_Sel']) ? 1 : 0;
             $cot_jus = $this->escapeSql(isset($cot['Cot_Jus']) ? $cot['Cot_Jus'] : '');
             $nod_sql = $nod_cod > 0 ? $nod_cod : 'NULL';
             $isn_sql = $isn_cod > 0 ? $isn_cod : 'NULL';
-            $sqlCot = "INSERT INTO adq_solicitudes_cotizaciones (Sol_Cod, Nod_Cod, Sco_Isn_Cod, Prv_Cod, Cot_Fec, Cot_Val, Cot_Adj, Cot_Sel, Cot_Jus)
-                       VALUES ($sol_cod, $nod_sql, $isn_sql, $prv_cod, '" . date('Y-m-d') . "', $cot_val, '$cot_adj', $cot_sel, '$cot_jus');";
+            $sqlCot = "INSERT INTO adq_solicitudes_cotizaciones (Sol_Cod, Nod_Cod, Sco_Isn_Cod, Prv_Cod, Cot_Fec, Cot_Val, Cot_Sub, Cot_Iva, Cot_Adj, Cot_Sel, Cot_Jus)
+                       VALUES ($sol_cod, $nod_sql, $isn_sql, $prv_cod, '" . date('Y-m-d') . "', $cot_val, $cot_sub, $cot_iva, '$cot_adj', $cot_sel, '$cot_jus');";
             if (!$this->grabarv_registros($sqlCot, $this->conexion)) {
                 throw new Exception('No se pudo guardar una cotizacion: ' . $this->getMsgError());
             }
@@ -1936,7 +2013,10 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                     continue;
                 }
                 $prv_cod = intval($cot['Prv_Cod']);
-                $cot_val = floatval($cot['Cot_Val']);
+                $montos = $this->normalizarMontosCotizacion($cot);
+                $cot_val = $montos['Cot_Val'];
+                $cot_sub = $montos['Cot_Sub'];
+                $cot_iva = $montos['Cot_Iva'];
                 $cot_jus = $this->escapeSql(isset($cot['Cot_Jus']) ? $cot['Cot_Jus'] : '');
                 $set_adj = '';
                 $toco_adjunto = false;
@@ -1958,7 +2038,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                     }
                 }
                 $sqlUpd = "UPDATE adq_solicitudes_cotizaciones
-                           SET Prv_Cod = $prv_cod, Cot_Val = $cot_val$set_sel $set_adj$set_nodo
+                           SET Prv_Cod = $prv_cod, Cot_Val = $cot_val, Cot_Sub = $cot_sub, Cot_Iva = $cot_iva$set_sel $set_adj$set_nodo
                            WHERE Sco_Cod = $sco_cod AND Sol_Cod = $sol_cod;";
                 if (!$this->grabarv_registros($sqlUpd, $this->conexion)) {
                     throw new Exception('No se pudo actualizar una cotizacion: ' . $this->getMsgError());
@@ -2057,8 +2137,10 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         if ($puede_edit !== 1 && $puede_sel !== 1) {
             return array('success' => false, 'message' => 'La etapa actual no permite cargar cotizaciones ni seleccionar ganadora.');
         }
-        if (in_array($row['Sol_Est'], array('A', 'R'), true)) {
-            return array('success' => false, 'message' => 'La solicitud ya fue finalizada.');
+        if (in_array($row['Sol_Est'], array('A', 'R', 'I'), true)) {
+            return array('success' => false, 'message' => $row['Sol_Est'] === 'I'
+                ? 'El proceso esta inhabilitado. Solo se permite consultar el seguimiento.'
+                : 'La solicitud ya fue finalizada.');
         }
         $ctx = $wf_mgr->resolverContextoUsuario($emp_cod);
         if (!$wf_mgr->puedeResolverInstancia(intval($row['Ins_Cod']), $ctx['usu_cod'], $ctx['dep_cod'], $ctx['perfiles_ids'])) {
@@ -2291,8 +2373,10 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         if ($row['Nod_Tip'] !== 'AVANCE' && $row['Nod_Tip'] !== 'FISCALIZACION') {
             return array('success' => false, 'message' => 'La etapa actual no permite cargar facturas, anticipos ni archivos.');
         }
-        if (in_array($row['Sol_Est'], array('A', 'R'), true)) {
-            return array('success' => false, 'message' => 'La solicitud ya fue finalizada.');
+        if (in_array($row['Sol_Est'], array('A', 'R', 'I'), true)) {
+            return array('success' => false, 'message' => $row['Sol_Est'] === 'I'
+                ? 'El proceso esta inhabilitado. Solo se permite consultar el seguimiento.'
+                : 'La solicitud ya fue finalizada.');
         }
         $ctx = $wf_mgr->resolverContextoUsuario($emp_cod);
         if (!$wf_mgr->puedeResolverInstancia(intval($row['Ins_Cod']), $ctx['usu_cod'], $ctx['dep_cod'], $ctx['perfiles_ids'])) {
@@ -2415,8 +2499,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
     }
 
     /**
-     * Valida que la proforma ganadora, el valor del Paso 3 y la suma de las
-     * facturas registradas para la solicitud coincidan a nivel de centavos.
+     * Valida que el subtotal de la proforma ganadora coincida con la suma de
+     * subtotales de las facturas registradas (tolerancia de centavos).
      */
     public function validarCoincidenciaTotalesFacturas($sol_cod) {
         $this->ensureAvancesTable();
@@ -2447,7 +2531,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $this->conexion
         );
         $cot = $this->getRowConsultaSql(
-            "SELECT Sco_Cod, Cot_Val
+            "SELECT Sco_Cod, Cot_Val, Cot_Sub, Cot_Iva
              FROM adq_solicitudes_cotizaciones
              WHERE Sol_Cod = $sol_cod AND Cot_Sel = 1
              ORDER BY Sco_Cod ASC
@@ -2462,17 +2546,19 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         }
 
         $valor_paso3 = round(floatval(isset($sol['Sol_Val_Est']) ? $sol['Sol_Val_Est'] : 0), 2);
-        $valor_proforma = round(floatval($cot['Cot_Val']), 2);
-        if ($valor_paso3 <= 0 || $valor_proforma <= 0) {
+        $valor_proforma_total = round(floatval($cot['Cot_Val']), 2);
+        $valor_proforma_sub = $this->subtotalCotizacion($cot);
+        if ($valor_paso3 <= 0 || $valor_proforma_sub <= 0) {
             return array(
                 'success' => false,
                 'message' => 'No se puede finalizar: la proforma ganadora y el valor estimado del Paso 3 deben ser mayores que cero.'
             );
         }
-        if (abs($valor_proforma - $valor_paso3) > 0.01) {
+        // Paso 3 (estimado) vs total de proforma (subtotal + IVA si aplica).
+        if ($valor_proforma_total > 0 && abs($valor_proforma_total - $valor_paso3) > 0.01) {
             return array(
                 'success' => false,
-                'message' => 'Los valores no coinciden: la proforma ganadora es $ ' . number_format($valor_proforma, 2)
+                'message' => 'Los valores no coinciden: el total de la proforma ganadora es $ ' . number_format($valor_proforma_total, 2)
                     . ' y el valor registrado en el Paso 3 es $ ' . number_format($valor_paso3, 2)
                     . '. Corrija la solicitud antes de finalizar.'
             );
@@ -2486,18 +2572,18 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 continue;
             }
             $totales = $this->calcularTotalesCompraExa($cop_cod);
-            $suma_facturas += floatval($totales['Total']);
+            $suma_facturas += floatval($totales['Subtotal']);
             $facturas_contadas++;
         }
         $suma_facturas = round($suma_facturas, 2);
-        $diferencia = round($suma_facturas - $valor_proforma, 2);
+        $diferencia = round($suma_facturas - $valor_proforma_sub, 2);
         if ($diferencia > 0.01) {
             return array(
                 'success' => false,
-                'message' => 'El valor de la factura es mayor al valor de la solicitud. Total de facturas: $ '
+                'message' => 'El subtotal de las facturas es mayor al subtotal de la proforma. Subtotal facturas: $ '
                     . number_format($suma_facturas, 2)
-                    . '. Valor de la solicitud/proforma: $ ' . number_format($valor_proforma, 2) . '.',
-                'valor_esperado' => $valor_proforma,
+                    . '. Subtotal proforma: $ ' . number_format($valor_proforma_sub, 2) . '.',
+                'valor_esperado' => $valor_proforma_sub,
                 'suma_facturas' => $suma_facturas,
                 'diferencia' => $diferencia,
                 'facturas' => $facturas_contadas
@@ -2506,11 +2592,11 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         if (abs($diferencia) > 0.01) {
             return array(
                 'success' => false,
-                'message' => 'La suma de las facturas debe ser igual al valor de la proforma. Proforma: $ '
-                    . number_format($valor_proforma, 2)
-                    . '. Suma de facturas: $ ' . number_format($suma_facturas, 2)
+                'message' => 'La suma de subtotales de facturas debe ser igual al subtotal de la proforma. Proforma (subtotal): $ '
+                    . number_format($valor_proforma_sub, 2)
+                    . '. Facturas (subtotal): $ ' . number_format($suma_facturas, 2)
                     . '. Diferencia: $ ' . number_format(abs($diferencia), 2) . '.',
-                'valor_esperado' => $valor_proforma,
+                'valor_esperado' => $valor_proforma_sub,
                 'suma_facturas' => $suma_facturas,
                 'diferencia' => $diferencia,
                 'facturas' => $facturas_contadas
@@ -2519,7 +2605,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
 
         return array(
             'success' => true,
-            'valor_esperado' => $valor_proforma,
+            'valor_esperado' => $valor_proforma_sub,
             'suma_facturas' => $suma_facturas,
             'diferencia' => 0,
             'facturas' => $facturas_contadas
@@ -3229,7 +3315,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $min_cot = max(1, intval($sol['Sol_Min_Cot']));
             $validas = 0;
             foreach ($cots as $c) {
-                if (!empty($c['Prv_Cod']) && floatval($c['Cot_Val']) > 0 && $this->cotizacionTieneAdjunto(isset($c['Cot_Adj']) ? $c['Cot_Adj'] : '')) {
+                if (!empty($c['Prv_Cod']) && $this->subtotalCotizacion($c) > 0 && $this->cotizacionTieneAdjunto(isset($c['Cot_Adj']) ? $c['Cot_Adj'] : '')) {
                     $validas++;
                 }
             }
@@ -3275,7 +3361,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 if (!is_array($cot)) {
                     continue;
                 }
-                if (!empty($cot['Prv_Cod']) && floatval($cot['Cot_Val']) > 0
+                if (!empty($cot['Prv_Cod']) && $this->subtotalCotizacion($cot) > 0
                     && $this->cotizacionTieneAdjunto(isset($cot['Cot_Adj']) ? $cot['Cot_Adj'] : '')) {
                     $validas++;
                 }
@@ -3394,6 +3480,9 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $puede_cot = ($wf_mgr->resolverNodCotEditInstancia($ins_cod_activo) === 1) ? 1 : 0;
             $puede_sel = ($wf_mgr->resolverNodCotSelInstancia($ins_cod_activo) === 1) ? 1 : 0;
         }
+        if ($wf_mgr === null) {
+            $wf_mgr = new wf_manager_log(isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null, $this->conexion);
+        }
         return array(
             'success' => true,
             'solicitud' => $sol,
@@ -3401,6 +3490,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             'cotizaciones' => ($cotizaciones === false || $cotizaciones === null) ? array() : $cotizaciones,
             'adjuntos' => $this->listarAdjuntosSolicitud($sol_cod),
             'decision_vals' => $this->listarDecisionVals($sol_cod),
+            'nodo_usuarios' => $wf_mgr->listarNodoUsuariosSolicitud($sol_cod),
             'prv_sug_text' => $prv_sug_text,
             'modo_edicion' => $por_nodo ? 'completar_nodo' : (($sol['Sol_Est'] === 'O') ? 'observada' : 'borrador'),
             'puede_cargar_cotizaciones' => $puede_cot,
@@ -3492,6 +3582,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             if (!empty($decision_vals)) {
                 $this->guardarDecisionVals($sol_cod, $decision_vals);
             }
+            $this->persistirNodoUsuariosSolicitud($sol_cod, $data, $emp_cod, false);
 
             if (!$es_observada && !$completar_nodo && $trq_cod > 0) {
                 $this->activarWorkflowEnBorrador($sol_cod, $trq_cod);
@@ -3563,6 +3654,22 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         $this->activarWorkflowEnBorrador($sol_cod, $trq_cod, 'Envio de solicitud desde borrador.');
         if (!$this->grabarv_registros("UPDATE adq_solicitudes SET Sol_Est = 'E' WHERE Sol_Cod = " . intval($sol_cod) . ";", $this->conexion)) {
             throw new Exception('No se pudo actualizar el estado de la solicitud: ' . $this->getMsgError());
+        }
+        // Al enviar (llenar INICIO), saltar a la siguiente tarea y encolar email/WhatsApp.
+        $inst = $this->getRowConsultaSql(
+            "SELECT i.Ins_Cod
+             FROM wf_instancias i
+             INNER JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act AND n.Nod_Tip = 'INICIO'
+             WHERE i.Ins_Ent_Typ = 'adq_solicitudes' AND i.Ins_Ent_Cod = " . intval($sol_cod) . " AND i.Ins_Est = 'P'
+             ORDER BY i.Ins_Cod DESC LIMIT 1;",
+            $this->conexion
+        );
+        if (!empty($inst['Ins_Cod'])) {
+            $wf_mgr = new wf_manager_log(isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null, $this->conexion);
+            $wf_mgr->avanzarSiEstaEnInicio(
+                intval($inst['Ins_Cod']),
+                ''
+            );
         }
     }
 
@@ -3638,6 +3745,108 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         }
     }
 
+    /**
+     * Inhabilita o rehabilita un proceso de adquisicion.
+     * Inhabilitado (Sol_Est = 'I'): no permite avanzar el workflow; solo consulta/seguimiento.
+     */
+    public function setProcesoInhabilitado($sol_cod, $emp_cod, $inhabilitar = true, $comentario = '') {
+        $sol_cod = intval($sol_cod);
+        $emp_cod = intval($emp_cod);
+        $inhabilitar = !!$inhabilitar;
+        $comentario = trim((string)$comentario);
+        if ($sol_cod <= 0 || $emp_cod <= 0) {
+            return array('success' => false, 'message' => 'Parametros invalidos.');
+        }
+
+        $sol = $this->getRowConsultaSql(
+            "SELECT s.Sol_Cod, s.Sol_Est, s.Sol_Num, s.Emp_Cod,
+                    i.Ins_Cod, i.Ins_Est, i.Nod_Act
+             FROM adq_solicitudes s
+             LEFT JOIN wf_instancias i
+               ON i.Ins_Ent_Typ = 'adq_solicitudes'
+              AND i.Ins_Ent_Cod = s.Sol_Cod
+              AND i.Ins_Est IN ('P', 'F', 'R')
+             WHERE s.Sol_Cod = $sol_cod AND s.Emp_Cod = $emp_cod
+             ORDER BY i.Ins_Cod DESC
+             LIMIT 1;",
+            $this->conexion
+        );
+        if (empty($sol['Sol_Cod'])) {
+            return array('success' => false, 'message' => 'Solicitud no encontrada.');
+        }
+
+        $sol_est = isset($sol['Sol_Est']) ? $sol['Sol_Est'] : '';
+        $ins_est = isset($sol['Ins_Est']) ? $sol['Ins_Est'] : '';
+        $ins_cod = isset($sol['Ins_Cod']) ? intval($sol['Ins_Cod']) : 0;
+        $nod_act = isset($sol['Nod_Act']) ? intval($sol['Nod_Act']) : 0;
+
+        if ($inhabilitar) {
+            if ($sol_est === 'I') {
+                return array('success' => true, 'message' => 'El proceso ya estaba inhabilitado.', 'Sol_Est' => 'I');
+            }
+            // Solo los ya aprobados no se pueden anular/inhabilitar.
+            if ($sol_est === 'A' || $ins_est === 'F') {
+                return array('success' => false, 'message' => 'No se puede inhabilitar un proceso ya aprobado.');
+            }
+            $nuevo_est = 'I';
+            $accion_hist = 'INHABILITAR';
+            $msg_ok = 'Proceso inhabilitado. Solo se permite consulta.';
+            $com_def = 'Proceso inhabilitado desde el monitor de gerencia.';
+        } else {
+            if ($sol_est !== 'I') {
+                return array('success' => false, 'message' => 'El proceso no esta inhabilitado.');
+            }
+            if ($ins_est === 'F') {
+                $nuevo_est = 'A';
+            } elseif ($ins_est === 'R') {
+                $nuevo_est = 'R';
+            } elseif ($ins_est === 'P') {
+                $nuevo_est = 'E';
+            } else {
+                // Sin instancia activa (p. ej. borrador): vuelve a borrador.
+                $nuevo_est = 'P';
+            }
+            $accion_hist = 'HABILITAR';
+            $msg_ok = 'Proceso rehabilitado.';
+            $com_def = 'Proceso rehabilitado desde el monitor de gerencia.';
+        }
+
+        $com_sql = $this->escapeSql($comentario !== '' ? $comentario : $com_def);
+        $usu_cod = isset($_SESSION['Ses_Usu_Cod']) ? intval($_SESSION['Ses_Usu_Cod']) : 0;
+        $fecha = date('Y-m-d H:i:s');
+        $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '127.0.0.1';
+        $ses = session_id() ?: 'CLI-SESSION';
+
+        try {
+            $this->inicio_transaccion($this->conexion);
+            if (!$this->grabarv_registros(
+                "UPDATE adq_solicitudes SET Sol_Est = '$nuevo_est' WHERE Sol_Cod = $sol_cod AND Emp_Cod = $emp_cod;",
+                $this->conexion
+            )) {
+                throw new Exception('No se pudo actualizar el estado del proceso.');
+            }
+            if ($ins_cod > 0 && $nod_act > 0) {
+                $dep_sql = $this->resolverDepCodHistorialSql($usu_cod);
+                $this->grabarv_registros(
+                    "INSERT INTO wf_instancias_nodos (Ins_Cod, Nod_Cod, Usu_Cod, Dep_Cod, Isn_Acc, Isn_Com, Isn_Fec, Isn_Ip, Isn_Ses)
+                     VALUES ($ins_cod, $nod_act, $usu_cod, $dep_sql, '$accion_hist', '$com_sql', '$fecha', '$ip', '$ses');",
+                    $this->conexion
+                );
+            }
+            $this->commit_nomsn($this->conexion);
+            return array(
+                'success' => true,
+                'message' => $msg_ok,
+                'Sol_Cod' => $sol_cod,
+                'Sol_Est' => $nuevo_est,
+                'Sol_Num' => isset($sol['Sol_Num']) ? $sol['Sol_Num'] : ''
+            );
+        } catch (Exception $e) {
+            $this->rollBack_nomsn($this->conexion);
+            return array('success' => false, 'message' => $e->getMessage());
+        }
+    }
+
     public function completarSolicitudNodo($data, $items, $cotizaciones = array(), $cotizaciones_existentes = array(), $cot_eliminar = array(), $adjuntos_nuevos = array(), $adjuntos_existentes = array(), $adj_eliminar = array()) {
         $sol_cod = intval(isset($data['Sol_Cod']) ? $data['Sol_Cod'] : 0);
         if ($sol_cod <= 0) {
@@ -3666,8 +3875,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             if (empty($validacion['success'])) {
                 return $validacion;
             }
+            $this->persistirNodoUsuariosSolicitud($sol_cod, $data, isset($data['Emp_Cod']) ? intval($data['Emp_Cod']) : (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0), true);
             $this->inicio_transaccion($this->conexion);
-            // Completar el formulario es una tarea del nodo actual: no avanza el workflow.
             if (!$this->grabarv_registros("UPDATE adq_solicitudes SET Sol_Est = 'E' WHERE Sol_Cod = $sol_cod;", $this->conexion)) {
                 throw new Exception('No se pudo activar la solicitud.');
             }
@@ -3675,17 +3884,30 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '127.0.0.1';
             $ses = session_id() ?: 'CLI-SESSION';
             $usu_cod = isset($_SESSION['Ses_Usu_Cod']) ? intval($_SESSION['Ses_Usu_Cod']) : 0;
-            $dep_cod_sql = $this->resolverDepCodHistorialSql($usu_cod);
-            $com = $this->escapeSql('Formulario de solicitud completado. La etapa permanece pendiente de resolucion.');
-            $this->grabarv_registros(
-                "INSERT INTO wf_instancias_nodos (Ins_Cod, Nod_Cod, Usu_Cod, Dep_Cod, Isn_Acc, Isn_Com, Isn_Fec, Isn_Ip, Isn_Ses)
-                 VALUES (" . intval($inst['Ins_Cod']) . ", " . intval($inst['Nod_Act']) . ", $usu_cod, $dep_cod_sql, 'ACTUALIZAR', '$com', '$fecha', '$ip', '$ses');",
+            // Cotizaciones/PDF del formulario quedan en el CREAR de INICIO;
+            // al avanzar ese movimiento se convierte en APROBAR (un solo item en historial).
+            $crearIni = $this->getRowConsultaSql(
+                "SELECT Isn_Cod FROM wf_instancias_nodos
+                 WHERE Ins_Cod = " . intval($inst['Ins_Cod']) . "
+                   AND Nod_Cod = " . intval($inst['Nod_Act']) . "
+                   AND Isn_Acc = 'CREAR'
+                 ORDER BY Isn_Cod ASC LIMIT 1;",
                 $this->conexion
             );
-            $isn_act = intval($this->insercionid($this->conexion));
-            // Cotizaciones y PDF de soporte del formulario quedan en este proceso.
+            $isn_act = !empty($crearIni['Isn_Cod']) ? intval($crearIni['Isn_Cod']) : 0;
+            if ($isn_act <= 0) {
+                $dep_cod_sql = $this->resolverDepCodHistorialSql($usu_cod);
+                $this->grabarv_registros(
+                    "INSERT INTO wf_instancias_nodos (Ins_Cod, Nod_Cod, Usu_Cod, Dep_Cod, Isn_Acc, Isn_Com, Isn_Fec, Isn_Ip, Isn_Ses)
+                     VALUES (" . intval($inst['Ins_Cod']) . ", " . intval($inst['Nod_Act']) . ", $usu_cod, $dep_cod_sql, 'CREAR', '', '$fecha', '$ip', '$ses');",
+                    $this->conexion
+                );
+                $isn_act = intval($this->insercionid($this->conexion));
+            }
             $this->marcarCotizacionesEtapa($sol_cod, intval($inst['Nod_Act']), $isn_act, true);
             $this->marcarAdjuntosEtapa($sol_cod, intval($inst['Nod_Act']), $isn_act, true);
+            // Al completar INICIO: Aprobado inmediato, sin comentario de avance automático.
+            $wf_mgr->avanzarSiEstaEnInicio(intval($inst['Ins_Cod']), '');
             $this->commit_nomsn($this->conexion);
             return array('success' => true, 'Sol_Cod' => $sol_cod, 'Num' => $upd['Num']);
         } catch (Exception $e) {
@@ -3707,6 +3929,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         $this->inicio_transaccion($this->conexion);
         try {
             $resultado = $this->persistirSolicitudNueva($data, $items, $cotizaciones, $adjuntos_nuevos);
+            $emp_cod = isset($data['Emp_Cod']) ? intval($data['Emp_Cod']) : (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0);
+            $this->persistirNodoUsuariosSolicitud($resultado['Sol_Cod'], $data, $emp_cod, false);
             if (!empty($resultado['Trq_Cod'])) {
                 $this->activarWorkflowEnBorrador($resultado['Sol_Cod'], intval($resultado['Trq_Cod']));
             }
@@ -3742,6 +3966,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                         'faltantes' => isset($validacion['faltantes']) ? $validacion['faltantes'] : array()
                     );
                 }
+                $this->persistirNodoUsuariosSolicitud($sol_cod_edit, $data, intval($data['Emp_Cod']), true);
                 $borrador = $this->assertBorradorEditable($sol_cod_edit, intval($data['Emp_Cod']), intval($_SESSION['Ses_Usu_Cod']));
                 $wf_pre = new wf_manager_log(isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null, $this->conexion);
                 $wf_pre->ensureWfDepCodSinFkRrhh();
@@ -3759,6 +3984,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $this->inicio_transaccion($this->conexion);
             $resultado = $this->persistirSolicitudNueva($data, $items, $cotizaciones, $adjuntos_nuevos);
             $sol_cod = $resultado['Sol_Cod'];
+            $this->persistirNodoUsuariosSolicitud($sol_cod, $data, intval($data['Emp_Cod']), true);
             $this->iniciarWorkflowBorrador($sol_cod, $resultado['Trq_Cod']);
             $this->commit_nomsn($this->conexion);
             return array('success' => true, 'Sol_Cod' => $sol_cod, 'Num' => $resultado['Num']);
@@ -3793,6 +4019,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 'requiere_completar' => true
             );
         }
+        $wf_check = new wf_manager_log(isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null, $this->conexion);
+        $wf_check->validarNodoUsuariosObligatorios(intval($sol['Trq_Cod']), $emp_cod, $wf_check->listarNodoUsuariosSolicitud($sol_cod));
 
         $wf_pre = new wf_manager_log(isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null, $this->conexion);
         $wf_pre->ensureWfDepCodSinFkRrhh();
@@ -4198,8 +4426,10 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                         $this->agregarPdfsFacturaExpediente($documentos, $vistos, $vistos_global, $fac);
                     }
                 }
-                if (isset($h['Isn_Acc']) && $h['Isn_Acc'] === 'ACTUALIZAR' && $idx_formulario < 0) {
-                    $idx_formulario = count($secciones);
+                if (isset($h['Isn_Acc']) && in_array($h['Isn_Acc'], array('ACTUALIZAR', 'APROBAR', 'CREAR'), true) && $idx_formulario < 0) {
+                    if ($nod_tip === 'INICIO' || $h['Isn_Acc'] === 'ACTUALIZAR') {
+                        $idx_formulario = count($secciones);
+                    }
                 }
             }
 
