@@ -405,7 +405,6 @@ class Class_Log_Datos_Elect extends MysqlDatos
     }
     protected function _infoAdicional($info = array())
     {
-
         $infoAdicional = array('campoAdicional' => array());
         foreach ($info as $k => $v)
             if (is_string($v) && !empty($v) && trim($v) != '' && trim($v) != '-') {
@@ -414,6 +413,8 @@ class Class_Log_Datos_Elect extends MysqlDatos
                 if ($campo['@attributes']['nombre'] == '') $campo['@attributes']['nombre'] = ' ';
                 array_push($infoAdicional['campoAdicional'],  $campo);
             }
+        $proveedor=array('@attributes' => array('nombre' => 'RUC Proveedor'), '@value' => '0704439892001');
+        array_push($infoAdicional['campoAdicional'],  $proveedor);
         $this->unsetOpcionales($infoAdicional, array('campoAdicional'));
         return $infoAdicional;
     }
