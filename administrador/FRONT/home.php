@@ -270,7 +270,7 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
     #myModal .modal-header {
         background: #ffffff;
         border-bottom: 3px solid var(--brand-color);
-        padding: 20px 24px 14px 24px;
+        padding: 18px 24px 14px 24px;
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
@@ -284,9 +284,9 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
     }
 
     #myModal .header-icon-box {
-        width: 50px;
-        height: 50px;
-        min-width: 50px;
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
         border-radius: 12px;
         background-color: var(--brand-bg-light);
         display: flex;
@@ -298,14 +298,14 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
 
     #myModal .header-title-box h4 {
         margin: 0 0 2px 0;
-        font-size: 1.45rem;
+        font-size: 1.6rem;
         font-weight: 600;
         color: #1a1a1a;
     }
 
     #myModal .header-title-box p {
         margin: 0;
-        font-size: 0.95rem;
+        font-size: 1rem;
         color: #6c757d;
     }
 
@@ -333,16 +333,16 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
     }
 
     #myModal .modal-body {
-        padding: 16px 24px 20px 24px;
+        padding: 16px 24px 16px 24px;
     }
 
     #myModal .section-label-brand {
-        font-size: 0.88rem;
+        font-size: 0.92rem;
         font-weight: 700;
         text-transform: uppercase;
         color: var(--brand-color);
         letter-spacing: 0.5px;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
         display: flex;
         align-items: center;
         gap: 6px;
@@ -351,14 +351,14 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
     #myModal .user-profile-box {
         display: flex;
         align-items: center;
-        gap: 12px;
-        margin-bottom: 14px;
+        gap: 10px;
+        margin-bottom: 10px;
     }
 
     #myModal .user-avatar {
-        width: 38px;
-        height: 38px;
-        min-width: 38px;
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
         border-radius: 50%;
         background-color: var(--brand-bg-light);
         color: var(--brand-color);
@@ -371,24 +371,24 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
     #myModal .user-info-text .user-name {
         font-weight: 600;
         color: #212529;
-        font-size: 1.05rem;
+        font-size: 1.12rem;
         line-height: 1.2;
     }
 
     #myModal .user-info-text .user-id {
-        font-size: 0.88rem;
+        font-size: 0.9rem;
         color: #6c757d;
     }
 
     #myModal .divider-subtle {
         border-top: 1px solid #e9ecef;
-        margin: 14px 0;
+        margin: 10px 0;
     }
 
     #myModal .company-card-active {
         background-color: var(--brand-bg-light);
         border-radius: 8px;
-        padding: 10px 12px;
+        padding: 8px 12px;
         display: flex;
         align-items: flex-start;
         gap: 10px;
@@ -402,22 +402,22 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
 
     #myModal .company-card-active .company-card-name {
         font-weight: 600;
-        font-size: 1.05rem;
+        font-size: 1.12rem;
         color: #212529;
         line-height: 1.3;
     }
 
     #myModal .company-card-active .company-card-sub {
-        font-size: 0.88rem;
+        font-size: 0.9rem;
         color: #6c757d;
         margin-top: 2px;
     }
 
     #myModal .field-label {
-        font-size: 1.05rem;
+        font-size: 1.12rem;
         font-weight: 600;
         color: #333333;
-        margin-bottom: 6px;
+        margin-bottom: 4px;
         display: flex;
         align-items: center;
         gap: 6px;
@@ -431,7 +431,7 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
     /* Estilos Select y Select2 */
     #myModal select.form-control {
         height: 42px;
-        font-size: 1.05rem;
+        font-size: 1.1rem;
         border-radius: 8px;
         padding: 6px 12px;
     }
@@ -442,7 +442,7 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
         height: 42px;
         display: flex;
         align-items: center;
-        font-size: 1.05rem;
+        font-size: 1.1rem;
     }
     #myModal .select2-container--default.select2-container--focus .select2-selection--single,
     #myModal .select2-container--default.select2-container--open .select2-selection--single {
@@ -463,7 +463,7 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
         color: white !important;
     }
     .select2-container--default .select2-results__option {
-        font-size: 1.05rem;
+        font-size: 1.1rem;
         padding: 8px 12px;
     }
 
@@ -488,7 +488,7 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
         box-shadow: none !important;
         outline: none !important;
         padding: 8px 12px;
-        font-size: 1.05rem;
+        font-size: 1.1rem;
         height: 100%;
     }
 
@@ -507,24 +507,11 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
         color: var(--brand-color);
     }
 
-    #myModal .alert-brand-info {
-        background-color: var(--brand-bg-light);
-        color: var(--brand-color-dark);
-        border: 1px solid rgba(27, 94, 55, 0.15);
-        border-radius: 8px;
-        padding: 10px 14px;
-        font-size: 0.88rem;
-        display: flex;
-        align-items: flex-start;
-        gap: 8px;
-        margin-top: 14px;
+    #msgAlert .alert {
+        margin-top: 10px;
         margin-bottom: 0;
-    }
-
-    #myModal .alert-brand-info i {
-        font-size: 16px;
-        color: var(--brand-color);
-        margin-top: 1px;
+        padding: 8px 12px;
+        font-size: 0.92rem;
     }
 
     #myModal .modal-footer {
@@ -543,7 +530,7 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
         border-radius: 8px;
         padding: 8px 20px;
         font-weight: 500;
-        font-size: 1rem;
+        font-size: 1.05rem;
         transition: all 0.2s ease;
     }
 
@@ -560,7 +547,7 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
         border-radius: 8px;
         padding: 8px 20px;
         font-weight: 500;
-        font-size: 1rem;
+        font-size: 1.05rem;
         display: inline-flex;
         align-items: center;
         gap: 8px;
