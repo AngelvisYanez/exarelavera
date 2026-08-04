@@ -208,6 +208,7 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
     <link rel="stylesheet" href="../../framework/jquery/bootstrap/bootstrap-3.3.5/css/bootstrap.min.css" />
     <link rel="stylesheet" href="../../framework/jquery/bootstrap/bootstrap-3.3.5/css/tooltip.min.css" />
     <link rel="stylesheet" href="../../framework/plugins/fonts/font-awesome/font-awesome-4.4.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="../../skins/fonts/fontelo/fontello.css?x=0" />
     <!-- text fonts -->
     <link rel="stylesheet" href="../../skins/css/ace-fonts.css" />
@@ -237,6 +238,340 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
 
     .modal_documentos {
         display: none;
+    }
+
+    /* Variables y Estilos del Modal Cambiar Empresa - Tema Relavera (Verde) */
+    :root {
+        --brand-color: #1b5e37;
+        --brand-bg-light: #eaf4ee;
+        --brand-color-dark: #124328;
+        --brand-border-color: #1b5e37;
+    }
+
+    #myModal .modal-dialog {
+        max-width: 640px;
+        width: 95%;
+        margin: 30px auto;
+    }
+
+    #myModal .modal-content {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+        position: relative;
+        background-color: #ffffff;
+    }
+
+    #myModal .brand-top-bar {
+        display: none;
+    }
+
+    #myModal .modal-header {
+        background: #ffffff;
+        border-bottom: 3px solid var(--brand-color);
+        padding: 20px 24px 14px 24px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        position: relative;
+    }
+
+    #myModal .header-left-content {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    #myModal .header-icon-box {
+        width: 50px;
+        height: 50px;
+        min-width: 50px;
+        border-radius: 12px;
+        background-color: var(--brand-bg-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--brand-color);
+        font-size: 24px;
+    }
+
+    #myModal .header-title-box h4 {
+        margin: 0 0 2px 0;
+        font-size: 1.45rem;
+        font-weight: 600;
+        color: #1a1a1a;
+    }
+
+    #myModal .header-title-box p {
+        margin: 0;
+        font-size: 0.95rem;
+        color: #6c757d;
+    }
+
+    #myModal .btn-close-custom {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: #f4f2ee;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #555;
+        font-size: 18px;
+        cursor: pointer;
+        transition: background-color 0.2s ease, color 0.2s ease;
+        padding: 0;
+        outline: none;
+        margin-top: -4px;
+    }
+
+    #myModal .btn-close-custom:hover {
+        background-color: #e5e2dc;
+        color: #000;
+    }
+
+    #myModal .modal-body {
+        padding: 16px 24px 20px 24px;
+    }
+
+    #myModal .section-label-brand {
+        font-size: 0.88rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--brand-color);
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    #myModal .user-profile-box {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    #myModal .user-avatar {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        border-radius: 50%;
+        background-color: var(--brand-bg-light);
+        color: var(--brand-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+
+    #myModal .user-info-text .user-name {
+        font-weight: 600;
+        color: #212529;
+        font-size: 1.05rem;
+        line-height: 1.2;
+    }
+
+    #myModal .user-info-text .user-id {
+        font-size: 0.88rem;
+        color: #6c757d;
+    }
+
+    #myModal .divider-subtle {
+        border-top: 1px solid #e9ecef;
+        margin: 14px 0;
+    }
+
+    #myModal .company-card-active {
+        background-color: var(--brand-bg-light);
+        border-radius: 8px;
+        padding: 10px 12px;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    #myModal .company-card-active i {
+        color: var(--brand-color);
+        font-size: 20px;
+        margin-top: 2px;
+    }
+
+    #myModal .company-card-active .company-card-name {
+        font-weight: 600;
+        font-size: 1.05rem;
+        color: #212529;
+        line-height: 1.3;
+    }
+
+    #myModal .company-card-active .company-card-sub {
+        font-size: 0.88rem;
+        color: #6c757d;
+        margin-top: 2px;
+    }
+
+    #myModal .field-label {
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #333333;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    #myModal .field-label i {
+        color: #6c757d;
+        font-size: 18px;
+    }
+
+    /* Estilos Select y Select2 */
+    #myModal select.form-control {
+        height: 42px;
+        font-size: 1.05rem;
+        border-radius: 8px;
+        padding: 6px 12px;
+    }
+
+    #myModal .select2-container--default .select2-selection--single {
+        border: 1px solid #ced4da;
+        border-radius: 8px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        font-size: 1.05rem;
+    }
+    #myModal .select2-container--default.select2-container--focus .select2-selection--single,
+    #myModal .select2-container--default.select2-container--open .select2-selection--single {
+        border-color: var(--brand-color);
+        box-shadow: 0 0 0 3px rgba(27, 94, 55, 0.2);
+    }
+    #myModal .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #212529;
+        line-height: normal;
+        padding-left: 12px;
+    }
+    #myModal .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 40px;
+        right: 8px;
+    }
+    .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+        background-color: var(--brand-color) !important;
+        color: white !important;
+    }
+    .select2-container--default .select2-results__option {
+        font-size: 1.05rem;
+        padding: 8px 12px;
+    }
+
+    #myModal .password-group {
+        border: 1px solid #ced4da;
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        background: #fff;
+        height: 42px;
+    }
+
+    #myModal .password-group:focus-within {
+        border-color: var(--brand-color) !important;
+        box-shadow: 0 0 0 3px rgba(27, 94, 55, 0.2) !important;
+    }
+
+    #myModal .password-group .form-control {
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        padding: 8px 12px;
+        font-size: 1.05rem;
+        height: 100%;
+    }
+
+    #myModal .password-group .btn-toggle-pwd {
+        background: transparent;
+        border: none;
+        padding: 8px 12px;
+        color: #6c757d;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        font-size: 18px;
+    }
+
+    #myModal .password-group .btn-toggle-pwd:hover {
+        color: var(--brand-color);
+    }
+
+    #myModal .alert-brand-info {
+        background-color: var(--brand-bg-light);
+        color: var(--brand-color-dark);
+        border: 1px solid rgba(27, 94, 55, 0.15);
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 0.88rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin-top: 14px;
+        margin-bottom: 0;
+    }
+
+    #myModal .alert-brand-info i {
+        font-size: 16px;
+        color: var(--brand-color);
+        margin-top: 1px;
+    }
+
+    #myModal .modal-footer {
+        border-top: 1px solid #f0f0f0;
+        padding: 12px 24px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        background-color: #ffffff;
+    }
+
+    #myModal .btn-brand-cancel {
+        background-color: #6c757d !important;
+        border: 1px solid #6c757d !important;
+        color: #ffffff !important;
+        border-radius: 8px;
+        padding: 8px 20px;
+        font-weight: 500;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+    }
+
+    #myModal .btn-brand-cancel:hover {
+        background-color: #5a6268 !important;
+        border-color: #545b62 !important;
+        color: #ffffff !important;
+    }
+
+    #myModal .btn-brand-submit {
+        background-color: var(--brand-color) !important;
+        border: 1px solid var(--brand-color) !important;
+        color: #ffffff !important;
+        border-radius: 8px;
+        padding: 8px 20px;
+        font-weight: 500;
+        font-size: 1rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: background-color 0.2s ease;
+    }
+
+    #myModal .btn-brand-submit:hover, #myModal .btn-brand-submit:focus {
+        background-color: #124328 !important;
+        border-color: #124328 !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 0 3px rgba(27, 94, 55, 0.3) !important;
     }
 </style>
 
@@ -808,62 +1143,110 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
             </div>
         </div>
     </div>
-    <div id="myModal" class="modal fade" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
-                <div class="modal-header" style="color: white;background: #a02525;border-top-left-radius: 12px; border-top-right-radius: 12px;">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" 
-                        style="background: #fff; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: none; padding: 0;">
-                        <span aria-hidden="true" style="color: #fff; background: #000; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold;">&times;</span>
+    <div id="myModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <!-- ENCABEZADO -->
+                <div class="modal-header">
+                    <div class="header-left-content">
+                        <div class="header-icon-box">
+                            <i class="bi bi-building"></i>
+                        </div>
+                        <div class="header-title-box">
+                            <h4>Cambiar empresa</h4>
+                            <p>Seleccione la empresa con la que desea trabajar.</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close-custom" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="bi bi-x"></i>
                     </button>
-                    <h4 class="modal-title">Cambiar Empresa</h4>
                 </div>
+
+                <!-- CUERPO -->
                 <div class="modal-body">
-                    <form class="form-horizontal" id="loginChange">
-                        <!-- Prepended text-->
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label" for="Usu_Ced">C&eacute;dula:</label>
-                            <div class="col-sm-5">
-                                <div class="input-group">
-                                    <span class="input-group-addon"><i class="fa fa-user"></i></span>
-                                    <input id="Usu_Ced" name="user_name" value="<?php echo $Ses_Usu_Ced; ?>" class="form-control" placeholder="" type="text" readonly="readonly">
+                    <form id="loginChange" autocomplete="off">
+                        <!-- Campo oculto Cédula -->
+                        <input type="hidden" id="Usu_Ced" name="user_name" value="<?php echo $Ses_Usu_Ced; ?>" />
+                        <!-- Campo oculto Sucursal -->
+                        <input type="hidden" id="Suc_Cod" name="Suc_Cod" value="<?php echo $Ses_Suc_Cod; ?>" />
+
+                        <div class="row">
+                            <!-- COLUMNA IZQUIERDA -->
+                            <div class="col-12 col-md-4 mb-3 mb-md-0" style="padding-right: 15px;">
+                                <!-- 1. Label Usuario actual -->
+                                <div class="section-label-brand">
+                                    <i class="bi bi-person"></i> Usuario actual
+                                </div>
+                                <!-- 2. Avatar + Nombre + Cédula -->
+                                <div class="user-profile-box">
+                                    <div class="user-avatar">
+                                        <i class="bi bi-person"></i>
+                                    </div>
+                                    <div class="user-info-text">
+                                        <div class="user-name"><?php echo (isset($nombre[0]) ? $nombre[0] : '') . ' ' . (isset($apellido[0]) ? $apellido[0] : ''); ?></div>
+                                        <div class="user-id"><?php echo $Ses_Usu_Ced; ?></div>
+                                    </div>
+                                </div>
+
+                                <!-- 3. Separador -->
+                                <div class="divider-subtle"></div>
+
+                                <!-- 4. Label Empresa actual -->
+                                <div class="section-label-brand">
+                                    <i class="bi bi-building"></i> Empresa actual
+                                </div>
+                                <!-- 5. Card Empresa Actual -->
+                                <div class="company-card-active">
+                                    <i class="bi bi-building-fill"></i>
+                                    <div>
+                                        <div class="company-card-name"><?php echo $Ses_Emp_Nom; ?></div>
+                                        <div class="company-card-sub"><?php echo isset($Ses_Suc_Nom) ? strtoupper($Ses_Suc_Nom) : 'Matriz'; ?></div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <!-- Prepended text-->
-                        <div class="form-group">
-                            <!--<input type="hidden" id="Emp_Cod" name="Emp_Cod" />-->
-                            <input type="hidden" id="Suc_Cod" name="Suc_Cod" />
-                            <label class="col-sm-2 control-label" for="Emp_Des">Empresa:</label>
-                            <div class="col-sm-10">
-                                <div class="input-group">
-                                    <span class="input-group-addon"><i class="fa fa-home"></i></span>
-                                    <select id="Emp_Cod" name="Emp_Cod" class="form-control" data-placeholder="Seleccione Empresa...">
-                                        <option value=""></option>
-                                        <?php foreach ($rs_empresas as $row_rs_empresas) {
-                                            if ($row_rs_empresas['Emp_Cod'] !== $Ses_Emp_Cod) echo '<option value="' . $row_rs_empresas['Emp_Cod'] . '" data-Emp_Nom="' . $row_rs_empresas['Emp_Nom'] . '"  data--suc_-cod="' . $row_rs_empresas['Suc_Cod'] . '">' . $row_rs_empresas['Emp_Cor'] . ' (' . utf8_encode($row_rs_empresas['Suc_Des']) . ")" . '</option>';
-                                        } ?>
-                                    </select>
-                                    <!--<input id="Emp_Des" name="Emp_Des" class="form-control" placeholder="" type="text" readonly="readonly">                                -->
+
+                            <!-- COLUMNA DERECHA -->
+                            <div class="col-12 col-md-8" style="padding-left: 15px;">
+                                <!-- 1. form-label Empresa -->
+                                <div class="field-label mb-1">
+                                    <i class="bi bi-building"></i> Empresa
                                 </div>
+                                <!-- Select con select2 -->
+                                <select id="Emp_Cod" name="Emp_Cod" class="form-control" style="width: 100%;">
+                                    <option value="" disabled selected>Seleccione la empresa...</option>
+                                    <?php foreach ($rs_empresas as $row_rs_empresas) {
+                                        $isCurrent = ($row_rs_empresas['Emp_Cod'] == $Ses_Emp_Cod && $row_rs_empresas['Suc_Cod'] == $Ses_Suc_Cod);
+                                        if ($isCurrent) {
+                                            continue; // Excluir la empresa actualmente logueada
+                                        }
+                                        echo '<option value="' . $row_rs_empresas['Emp_Cod'] . '" data-suc_cod="' . $row_rs_empresas['Suc_Cod'] . '">' . htmlspecialchars($row_rs_empresas['Emp_Cor']) . ' (' . utf8_encode($row_rs_empresas['Suc_Des']) . ')</option>';
+                                    } ?>
+                                </select>
+
+                                <!-- 4. form-label Contraseña -->
+                                <div class="field-label mb-1 mt-3" style="margin-top: 14px;">
+                                    <i class="bi bi-lock"></i> Contrase&ntilde;a
+                                </div>
+                                <!-- 5. input-group contraseña + ojo toggle -->
+                                <div class="password-group">
+                                    <input id="Usu_Pas" name="encryptor" class="form-control" type="password" placeholder="••••••••" required="true" autofocus="true" onkeypress="if (event.keyCode===13){loginAjax();return false;}">
+                                    <button type="button" class="btn-toggle-pwd" id="toggle_password_btn" title="Mostrar/ocultar contraseña">
+                                        <i class="bi bi-eye" id="toggle_password_icon"></i>
+                                    </button>
+                                </div>
+
+                                <div id="msgAlert" style="margin-top: 8px; min-height: 20px;"></div>
                             </div>
                         </div>
-                        <!-- Prepended text-->
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label" for="Usu_Pas">Contrase&ntilde;a:</label>
-                            <div class="col-sm-5">
-                                <div class="input-group">
-                                    <span class="input-group-addon"><i class="fa fa-key"></i></span>
-                                    <input id="Usu_Pas" onkeypress="if (event.keyCode===13){loginAjax();return false;}" name="encryptor" class="form-control" placeholder="" type="password" required="true" autofocus="true">
-                                </div>
-                            </div>
-                        </div>
-                        <div id="msgAlert" style="height: 38px;"></div>
                     </form>
                 </div>
+
+                <!-- FOOTER -->
                 <div class="modal-footer">
-                    <button type="button" onclick="loginAjax()" class="btn btn-xs btn-primary">Cambiar Empresa</button>
-                    <button type="button" class="btn btn-xs btn-danger" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-brand-cancel" data-dismiss="modal" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" onclick="loginAjax()" class="btn btn-brand-submit">
+                        <i class="bi bi-arrow-repeat"></i> Cambiar empresa
+                    </button>
                 </div>
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->
@@ -1067,14 +1450,24 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
         //     }, 1000); */
         // });
         function loginAjax() {
+            var empCod = $('#Emp_Cod').val();
             var $msg;
+            if (!empCod) {
+                $msg = '<div class="alert alert-warning fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[ADVERTENCIA]</strong> &nbsp;&nbsp;Por favor seleccione la empresa a la que desea cambiar.</div>';
+                $('#msgAlert').html($msg);
+                $('#msgAlert .alert').hide().fadeIn();
+                setTimeout(function() {
+                    $('#msgAlert .alert').removeClass('in').addClass('out');
+                }, 4000);
+                return;
+            }
             $.post("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", {
-            loginAjax: true,
-            Emp_Cod: $('#Emp_Cod').val(),
-            Suc_Cod: $('#Emp_Cod option:selected').data('Suc_Cod'),
-            user_name: $('#Usu_Ced').val(),
-            encryptor: md5($('#Usu_Pas').val())
-            }, function(response) {
+                    loginAjax: true,
+                    Emp_Cod: empCod,
+                    Suc_Cod: $('#Emp_Cod option:selected').data('suc_cod') || $('#Emp_Cod option:selected').data('Suc_Cod'),
+                    user_name: $('#Usu_Ced').val(),
+                    encryptor: md5($('#Usu_Pas').val())
+                }, function(response) {
             if (response['success'] === true) {
                 $msg =
                 '<div class="alert alert-success fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[SISTEMA]</strong> &nbsp;&nbsp;Login Correcto. Direccionando....</div>';
