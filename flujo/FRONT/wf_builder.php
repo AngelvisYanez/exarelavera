@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * EXA Workflow Builder - Diseñador Visual de Flujos
  * @author Oz <oz-agent@warp.dev>
@@ -10,6 +10,10 @@ require_once('../LOGICA/wf_manager_log.php');
 $obBD_conexion = new Class_Log_Conexion_Global($Ses_Dat_Dis);
 $obBD_con1 = new MysqlDatos($obBD_conexion);
 $wf_mgr = new wf_manager_log($Ses_Dat_Dis);
+$wf_mgr->ensureUtf8Charset();
+if (!empty($obBD_conexion->conexion) && function_exists('mysqli_set_charset')) {
+    @mysqli_set_charset($obBD_conexion->conexion, 'utf8mb4');
+}
 
 // Verificar acceso a la ventana 'configuracion' y pestaña 'disenador_flujos'
 if (!$wf_mgr->verificarAccesoVentana('configuracion', 'disenador_flujos')) {
@@ -71,7 +75,7 @@ if (isset($ajax_publish_workflow)) {
     $wfm_cod = !empty($data['id']) ? intval($data['id']) : 0;
     $obBD_con1->inicio_transaccion($obBD_conexion);
     try {
-        $result = $wf_mgr->publicarFlujoDisenador($wfm_cod, $Ses_Emp_Cod);
+        $result = $wf_mgr->publicarFlujoDisenador($wfm_cod, $Ses_Emp_Cod, $data);
         $obBD_con1->commit_nomsn($obBD_conexion);
         $obBD_con1->echoJson(array_merge(array('success' => true, 'message' => 'Flujo publicado correctamente.'), $result));
     } catch (Exception $e) {
@@ -85,9 +89,10 @@ if (isset($ajax_duplicate_workflow)) {
     $selector_cod = !empty($data['id']) ? intval($data['id']) : 0;
     $nombre = isset($data['nombre']) ? trim($data['nombre']) : '';
     $descripcion = array_key_exists('descripcion', $data) ? $data['descripcion'] : null;
+    $wde_cod = !empty($data['wde_cod']) ? intval($data['wde_cod']) : null;
     $obBD_con1->inicio_transaccion($obBD_conexion);
     try {
-        $result = $wf_mgr->duplicarFlujoDisenador($selector_cod, $Ses_Emp_Cod, $nombre, $descripcion);
+        $result = $wf_mgr->duplicarFlujoDisenador($selector_cod, $Ses_Emp_Cod, $nombre, $descripcion, $wde_cod);
         $obBD_con1->commit_nomsn($obBD_conexion);
         $obBD_con1->echoJson(array_merge(array('success' => true, 'message' => 'Esquema duplicado correctamente.'), $result));
     } catch (Exception $e) {
@@ -177,14 +182,19 @@ if (isset($ajax_load_workflow)) {
                 'estado' => $estado,
                 'es_borrador' => ($estado === 'B'),
                 'instancias_activas' => $pack['instancias_activas'],
-                'version_publicada' => !empty($pack['publicado']) ? intval($pack['publicado']['Wfm_Version']) : null
+                'version_publicada' => !empty($pack['publicado']) ? intval($pack['publicado']['Wfm_Version']) : null,
+                'Wde_Cod' => !empty($flujo['Wde_Cod']) ? intval($flujo['Wde_Cod']) : 0,
+                'wde_cod' => !empty($flujo['Wde_Cod']) ? intval($flujo['Wde_Cod']) : 0,
+                'Dep_Des' => isset($flujo['Dep_Des']) ? $flujo['Dep_Des'] : '',
+                'puede_editar' => $wf_mgr->usuarioPuedeEditarFlujoPorDepto(
+                    !empty($flujo['Wde_Cod']) ? intval($flujo['Wde_Cod']) : 0,
+                    $Ses_Emp_Cod
+                )
             ),
             'nodos' => $payload_nodos,
             'conexiones' => $payload_conexiones
         );
-        if (function_exists('utf8_encode_deep')) {
-            utf8_encode_deep($payload);
-        }
+        wf_manager_log::utf8EnsureDeep($payload);
         $obBD_con1->echoJson($payload);
     } catch (Exception $e) {
         $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
@@ -223,8 +233,8 @@ if (isset($ajax_get_department_users)) {
                 GROUP BY u.Usu_Ced, p.Prs_Nom, p.Prs_Ape
             ) base
             ORDER BY asignado DESC, Usuario_Nom;", $obBD_conexion);
-        if (function_exists('utf8_encode_deep') && $usuarios) {
-            utf8_encode_deep($usuarios);
+        if ($usuarios) {
+            wf_manager_log::utf8EnsureDeep($usuarios);
         }
         $obBD_con1->echoJson(array('success' => true, 'usuarios' => $usuarios));
     } catch (Exception $e) {
@@ -255,8 +265,8 @@ if (isset($ajax_get_users_by_department)) {
     }
     try {
         $usuarios = $wf_mgr->listarUsuariosAsignacionDepartamento($wde_cod, $Ses_Emp_Cod);
-        if (function_exists('utf8_encode_deep') && $usuarios) {
-            utf8_encode_deep($usuarios);
+        if (true && $usuarios) {
+            wf_manager_log::utf8EnsureDeep($usuarios);
         }
         $obBD_con1->echoJson(array('success' => true, 'usuarios' => $usuarios));
     } catch (Exception $e) {
@@ -272,8 +282,8 @@ if (isset($ajax_get_departamentos_disenador)) {
         if (!is_array($departamentos)) {
             $departamentos = array();
         }
-        if (function_exists('utf8_encode_deep') && $departamentos) {
-            utf8_encode_deep($departamentos);
+        if (true && $departamentos) {
+            wf_manager_log::utf8EnsureDeep($departamentos);
         }
         $obBD_con1->echoJson(array('success' => true, 'departamentos' => $departamentos));
     } catch (Exception $e) {
@@ -287,17 +297,21 @@ $departamentos = $wf_mgr->listarDepartamentosDisenador($Ses_Emp_Cod);
 $perfiles = $obBD_con1->getArrayConsultaSql("SELECT Per_Cod, Per_Des FROM perfiles WHERE Emp_Cod = $Ses_Emp_Cod AND Per_Est = 'A' ORDER BY Per_Des;", $obBD_conexion);
 $wf_mgr->ensureVersioningSchema();
 $flujos_existentes = $wf_mgr->listarFlujosDisenador($Ses_Emp_Cod);
-if (function_exists('utf8_encode_deep')) {
-    if ($departamentos) {
-        utf8_encode_deep($departamentos);
-    }
-    if ($perfiles) {
-        utf8_encode_deep($perfiles);
-    }
-    if ($flujos_existentes) {
-        utf8_encode_deep($flujos_existentes);
-    }
+$usu_ses = isset($Ses_Usu_Cod) ? intval($Ses_Usu_Cod) : (isset($_SESSION['Ses_Usu_Cod']) ? intval($_SESSION['Ses_Usu_Cod']) : 0);
+$deptos_encargado = $wf_mgr->listarDepartamentosEncargadoUsuario($usu_ses, $Ses_Emp_Cod);
+if ($departamentos) {
+    wf_manager_log::utf8EnsureDeep($departamentos);
 }
+if ($perfiles) {
+    wf_manager_log::utf8EnsureDeep($perfiles);
+}
+if ($flujos_existentes) {
+    wf_manager_log::utf8EnsureDeep($flujos_existentes);
+}
+if ($deptos_encargado) {
+    wf_manager_log::utf8EnsureDeep($deptos_encargado);
+}
+$wf_deptos_encargado_json = json_encode(array_values($deptos_encargado ? $deptos_encargado : array()));
 
 if (!isset($wf_builder_nodos_ocultos) || !is_array($wf_builder_nodos_ocultos)) {
     $wf_builder_nodos_ocultos = array();
@@ -810,13 +824,36 @@ if (isset($ajax_get_builder)) {
             <select id="selWorkflow" style="display: none;" aria-hidden="true" tabindex="-1">
                 <option value="">-- Seleccionar un Flujo --</option>
                 <?php foreach ($flujos_existentes as $flow) { ?>
-                    <option value="<?php echo intval($flow['Wfm_Fam_Cod']); ?>" data-descripcion="<?php echo htmlspecialchars(isset($flow['Wfm_Des']) ? $flow['Wfm_Des'] : '', ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($wf_mgr->etiquetaFlujoListado($flow), ENT_QUOTES, 'UTF-8'); ?></option>
+                    <option value="<?php echo intval($flow['Wfm_Fam_Cod']); ?>" data-descripcion="<?php echo htmlspecialchars(isset($flow['Wfm_Des']) ? $flow['Wfm_Des'] : '', ENT_QUOTES, 'UTF-8'); ?>" data-departamento="<?php echo htmlspecialchars(isset($flow['Dep_Des']) ? $flow['Dep_Des'] : '', ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($wf_mgr->etiquetaFlujoListado($flow), ENT_QUOTES, 'UTF-8'); ?></option>
                 <?php } ?>
             </select>
-            <button class="btn btn-sm btn-primary fw-bold" onclick="abrirModalNuevoFlujo()"><i class="bi bi-plus-lg"></i> Nuevo</button>
-            <button class="btn btn-sm btn-secondary fw-bold" onclick="abrirModalDuplicarFlujo()"><i class="bi bi-copy"></i> Duplicar</button>
-            <button class="btn btn-sm btn-success fw-bold" onclick="guardarFlujo()"><i class="bi bi-save"></i> Guardar borrador</button>
-            <button class="btn btn-sm btn-warning fw-bold text-dark" onclick="publicarFlujo()"><i class="bi bi-cloud-upload"></i> Publicar</button>
+            <button class="btn btn-sm btn-primary fw-bold" id="btnNuevoFlujo" onclick="abrirModalNuevoFlujo()"><i class="bi bi-plus-lg"></i> Nuevo</button>
+            <button class="btn btn-sm btn-secondary fw-bold" id="btnDuplicarFlujo" onclick="abrirModalDuplicarFlujo()"><i class="bi bi-copy"></i> Duplicar</button>
+            <button class="btn btn-sm btn-success fw-bold" id="btnGuardarFlujo" onclick="guardarFlujo()"><i class="bi bi-save"></i> Guardar borrador</button>
+            <button class="btn btn-sm btn-warning fw-bold text-dark" id="btnPublicarFlujo" onclick="publicarFlujo()"><i class="bi bi-cloud-upload"></i> Publicar</button>
+            <span class="wf-flow-dept-wrap d-inline-flex align-items-center ms-2" id="lblFlowDeptWrap" style="font-size: 13px; color: #334155; white-space: nowrap;">
+                <?php
+                $cant_deptos_enc = is_array($deptos_encargado) ? count($deptos_encargado) : 0;
+                if ($cant_deptos_enc === 1) {
+                    $dep_unico = $deptos_encargado[0];
+                    ?>
+                    <span id="lblFlowDeptNom">Departamento: <?php echo htmlspecialchars($dep_unico['Dep_Des'], ENT_QUOTES, 'UTF-8'); ?></span>
+                    <select id="flowWdeCod" class="form-control form-control-sm" style="width: 220px; display: none; margin-left: 6px;">
+                        <option value="<?php echo intval($dep_unico['Dep_Cod']); ?>" selected><?php echo htmlspecialchars($dep_unico['Dep_Des'], ENT_QUOTES, 'UTF-8'); ?></option>
+                    </select>
+                <?php } elseif ($cant_deptos_enc > 1) { ?>
+                    <span id="lblFlowDeptNom">Departamento:</span>
+                    <select id="flowWdeCod" class="form-control form-control-sm" style="width: 240px; margin-left: 6px;">
+                        <option value="">Seleccione...</option>
+                        <?php foreach ($deptos_encargado as $de) { ?>
+                            <option value="<?php echo intval($de['Dep_Cod']); ?>"><?php echo htmlspecialchars($de['Dep_Des'], ENT_QUOTES, 'UTF-8'); ?></option>
+                        <?php } ?>
+                    </select>
+                <?php } else { ?>
+                    <span id="lblFlowDeptNom" class="text-danger">Departamento: Sin departamento asignado</span>
+                    <select id="flowWdeCod" class="form-control form-control-sm" style="width: 220px; display: none; margin-left: 6px;"></select>
+                <?php } ?>
+            </span>
         </div>
         <div class="wf-builder-status-bar" style="display: none;">
             <span class="wf-flow-name-edit" id="lblFlowActiveName" style="font-size: 12px; display: none;">
@@ -829,10 +866,15 @@ if (isset($ajax_get_builder)) {
             <span class="badge bg-secondary p-2" id="lblFlowVersion" style="font-size: 11px; display: none;"></span>
             <span class="badge bg-warning text-dark p-2" id="lblFlowDraft" style="font-size: 11px; display: none;"><i class="bi bi-pencil-square"></i> Borrador</span>
             <span class="badge bg-info text-dark p-2" id="lblFlowActiveInstances" style="font-size: 11px; display: none;"></span>
+            <span class="badge bg-secondary p-2" id="lblFlowSoloLectura" style="font-size: 11px; display: none;"><i class="bi bi-eye"></i> Solo lectura â€” duplique para editar</span>
             <span class="text-muted small" id="lblFlowSaveHint" style="display: none; font-size: 11px;">
                 <i class="bi bi-info-circle"></i> No olvide guardar o publicar para aplicar los cambios.
             </span>
             <input type="hidden" id="flowDesc">
+        </div>
+        <div class="alert alert-warning py-2 px-3 mb-0 mt-2" id="alertSinDepartamentoEncargado" style="display: none;">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            No tiene departamento asignado como encargado. Asignese en <strong>Configuraci&oacute;n &gt; Departamentos</strong> para poder crear o guardar flujos.
         </div>
     </div>
     <div class="builder-container">
@@ -1031,7 +1073,13 @@ if (isset($ajax_get_builder)) {
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nombre del Flujo *</label>
-                        <input type="text" id="modalFlowName" class="form-control" placeholder="Ej. APROBACIÓN DE COMPRAS DE TECNOLOGÍA" required style="text-transform: uppercase;" oninput="wfUppercaseInputPreserveCaret(this)" autocomplete="off">
+                        <input type="text" id="modalFlowName" class="form-control" placeholder="Ej. APROBACION DE COMPRAS DE TECNOLOGIA" required style="text-transform: uppercase;" oninput="wfUppercaseInputPreserveCaret(this)" autocomplete="off">
+                    </div>
+                    <div class="mb-3" id="wrapModalFlowDept">
+                        <label class="form-label fw-bold" for="modalFlowWdeCod">Departamento *</label>
+                        <select id="modalFlowWdeCod" class="form-control"></select>
+                        <input type="text" id="modalFlowWdeNom" class="form-control" readonly style="display: none;">
+                        <p class="text-danger small mb-0 mt-1" id="lblModalFlowDeptHint" style="display: none;"></p>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Descripción / Notas</label>
@@ -1056,17 +1104,18 @@ if (isset($ajax_get_builder)) {
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label fw-bold" for="txtBuscarFlujoNombre">Buscar por código, nombre o descripción</label>
-                        <input type="text" id="txtBuscarFlujoNombre" class="form-control" placeholder="Escriba código, nombre o descripción..." autocomplete="off" onkeyup="filtrarTablaBuscarFlujo()" oninput="filtrarTablaBuscarFlujo()">
+                        <label class="form-label fw-bold" for="txtBuscarFlujoNombre">Buscar por código, nombre, descripción o departamento</label>
+                        <input type="text" id="txtBuscarFlujoNombre" class="form-control" placeholder="Escriba código, nombre, descripción o departamento..." autocomplete="off" onkeyup="filtrarTablaBuscarFlujo()" oninput="filtrarTablaBuscarFlujo()">
                     </div>
                     <div class="table-responsive" style="max-height: 360px; overflow-y: auto;">
                         <table class="table table-striped table-hover table-condensed mb-0">
                             <thead>
                                 <tr>
-                                    <th style="width: 110px;" class="text-center">Código</th>
-                                    <th style="width: 30%;">Nombre</th>
+                                    <th style="width: 90px;" class="text-center">Código</th>
+                                    <th style="width: 26%;">Nombre</th>
+                                    <th style="width: 22%;">Departamento</th>
                                     <th>Descripción</th>
-                                    <th style="width: 120px;" class="text-center">Acción</th>
+                                    <th style="width: 110px;" class="text-center">Acción</th>
                                 </tr>
                             </thead>
                             <tbody id="tblBuscarFlujoBody"></tbody>
@@ -1137,27 +1186,37 @@ if (isset($ajax_get_builder)) {
             </div>
         </div>
     </div>
+    <script>
+        window.WF_DEPTOS_ENCARGADO = <?php echo $wf_deptos_encargado_json ? $wf_deptos_encargado_json : '[]'; ?>;
+        if (typeof wfInitDepartamentoFlujo === 'function') {
+            wfInitDepartamentoFlujo();
+        }
+    </script>
 
     <?php
     exit;
 }
 
-// Cargar catálogos para configuración de nodos
+// Cargar catálogos para configuración de nodos (vista directa)
 $departamentos = $wf_mgr->listarDepartamentosDisenador($Ses_Emp_Cod);
 $perfiles = $obBD_con1->getArrayConsultaSql("SELECT Per_Cod, Per_Des FROM perfiles WHERE Emp_Cod = $Ses_Emp_Cod AND Per_Est = 'A' ORDER BY Per_Des;", $obBD_conexion);
 $wf_mgr->ensureVersioningSchema();
 $flujos_existentes = $wf_mgr->listarFlujosDisenador($Ses_Emp_Cod);
-if (function_exists('utf8_encode_deep')) {
-    if ($departamentos) {
-        utf8_encode_deep($departamentos);
-    }
-    if ($perfiles) {
-        utf8_encode_deep($perfiles);
-    }
-    if ($flujos_existentes) {
-        utf8_encode_deep($flujos_existentes);
-    }
+$usu_ses = isset($Ses_Usu_Cod) ? intval($Ses_Usu_Cod) : (isset($_SESSION['Ses_Usu_Cod']) ? intval($_SESSION['Ses_Usu_Cod']) : 0);
+$deptos_encargado = $wf_mgr->listarDepartamentosEncargadoUsuario($usu_ses, $Ses_Emp_Cod);
+if ($departamentos) {
+    wf_manager_log::utf8EnsureDeep($departamentos);
 }
+if ($perfiles) {
+    wf_manager_log::utf8EnsureDeep($perfiles);
+}
+if ($flujos_existentes) {
+    wf_manager_log::utf8EnsureDeep($flujos_existentes);
+}
+if ($deptos_encargado) {
+    wf_manager_log::utf8EnsureDeep($deptos_encargado);
+}
+$wf_deptos_encargado_json = json_encode(array_values($deptos_encargado ? $deptos_encargado : array()));
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -1642,13 +1701,36 @@ if (function_exists('utf8_encode_deep')) {
                 <select id="selWorkflow" style="display: none;" aria-hidden="true" tabindex="-1">
                     <option value="">-- Seleccionar un Flujo --</option>
                     <?php foreach ($flujos_existentes as $flow) { ?>
-                        <option value="<?php echo intval($flow['Wfm_Fam_Cod']); ?>" data-descripcion="<?php echo htmlspecialchars(isset($flow['Wfm_Des']) ? $flow['Wfm_Des'] : '', ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($wf_mgr->etiquetaFlujoListado($flow), ENT_QUOTES, 'UTF-8'); ?></option>
+                        <option value="<?php echo intval($flow['Wfm_Fam_Cod']); ?>" data-descripcion="<?php echo htmlspecialchars(isset($flow['Wfm_Des']) ? $flow['Wfm_Des'] : '', ENT_QUOTES, 'UTF-8'); ?>" data-departamento="<?php echo htmlspecialchars(isset($flow['Dep_Des']) ? $flow['Dep_Des'] : '', ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($wf_mgr->etiquetaFlujoListado($flow), ENT_QUOTES, 'UTF-8'); ?></option>
                     <?php } ?>
                 </select>
-                <button class="btn btn-sm btn-primary fw-bold" onclick="abrirModalNuevoFlujo()"><i class="bi bi-plus-lg"></i> Nuevo</button>
-                <button class="btn btn-sm btn-secondary fw-bold" onclick="abrirModalDuplicarFlujo()"><i class="bi bi-copy"></i> Duplicar</button>
-                <button class="btn btn-sm btn-success fw-bold" onclick="guardarFlujo()"><i class="bi bi-save"></i> Guardar borrador</button>
-            <button class="btn btn-sm btn-warning fw-bold text-dark" onclick="publicarFlujo()"><i class="bi bi-cloud-upload"></i> Publicar</button>
+                <button class="btn btn-sm btn-primary fw-bold" id="btnNuevoFlujo" onclick="abrirModalNuevoFlujo()"><i class="bi bi-plus-lg"></i> Nuevo</button>
+                <button class="btn btn-sm btn-secondary fw-bold" id="btnDuplicarFlujo" onclick="abrirModalDuplicarFlujo()"><i class="bi bi-copy"></i> Duplicar</button>
+                <button class="btn btn-sm btn-success fw-bold" id="btnGuardarFlujo" onclick="guardarFlujo()"><i class="bi bi-save"></i> Guardar borrador</button>
+                <button class="btn btn-sm btn-warning fw-bold text-dark" id="btnPublicarFlujo" onclick="publicarFlujo()"><i class="bi bi-cloud-upload"></i> Publicar</button>
+                <span class="wf-flow-dept-wrap d-inline-flex align-items-center ms-2" id="lblFlowDeptWrap" style="font-size: 13px; color: #e2e8f0; white-space: nowrap;">
+                    <?php
+                    $cant_deptos_enc = is_array($deptos_encargado) ? count($deptos_encargado) : 0;
+                    if ($cant_deptos_enc === 1) {
+                        $dep_unico = $deptos_encargado[0];
+                        ?>
+                        <span id="lblFlowDeptNom">Departamento: <?php echo htmlspecialchars($dep_unico['Dep_Des'], ENT_QUOTES, 'UTF-8'); ?></span>
+                        <select id="flowWdeCod" class="form-control form-control-sm" style="width: 220px; display: none; margin-left: 6px;">
+                            <option value="<?php echo intval($dep_unico['Dep_Cod']); ?>" selected><?php echo htmlspecialchars($dep_unico['Dep_Des'], ENT_QUOTES, 'UTF-8'); ?></option>
+                        </select>
+                    <?php } elseif ($cant_deptos_enc > 1) { ?>
+                        <span id="lblFlowDeptNom">Departamento:</span>
+                        <select id="flowWdeCod" class="form-control form-control-sm" style="width: 240px; margin-left: 6px;">
+                            <option value="">Seleccione...</option>
+                            <?php foreach ($deptos_encargado as $de) { ?>
+                                <option value="<?php echo intval($de['Dep_Cod']); ?>"><?php echo htmlspecialchars($de['Dep_Des'], ENT_QUOTES, 'UTF-8'); ?></option>
+                            <?php } ?>
+                        </select>
+                    <?php } else { ?>
+                        <span id="lblFlowDeptNom" class="text-warning">Departamento: Sin departamento asignado</span>
+                        <select id="flowWdeCod" class="form-control form-control-sm" style="width: 220px; display: none; margin-left: 6px;"></select>
+                    <?php } ?>
+                </span>
 
                 <span class="wf-flow-name-edit ms-3" id="lblFlowActiveName" style="font-size: 12px; display: none;">
                     <span class="badge bg-primary p-2"><i class="bi bi-diagram-3-fill"></i> Flujo Activo:</span>
@@ -1659,8 +1741,13 @@ if (function_exists('utf8_encode_deep')) {
                     <span class="text-white-50 small ms-2" id="lblFlowSaveHint" style="display: none; font-size: 11px;">
                         <i class="bi bi-info-circle"></i> No olvide guardar o publicar para aplicar los cambios.
                     </span>
+                    <span class="badge bg-warning text-dark p-2 ms-2" id="lblFlowSoloLectura" style="font-size: 11px; display: none;"><i class="bi bi-eye"></i> Solo lectura â€” duplique para editar</span>
                 </span>
                 <input type="hidden" id="flowDesc">
+            </div>
+            <div class="alert alert-warning py-2 px-3 mb-0 mt-2" id="alertSinDepartamentoEncargado" style="display: none;">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                No tiene departamento asignado como encargado. Asignese en <strong>Configuraci&oacute;n &gt; Departamentos</strong> para poder crear o guardar flujos.
             </div>
         </div>
     </nav>
@@ -1861,7 +1948,13 @@ if (function_exists('utf8_encode_deep')) {
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nombre del Flujo *</label>
-                        <input type="text" id="modalFlowName" class="form-control" placeholder="Ej. APROBACIÓN DE COMPRAS DE TECNOLOGÍA" required style="text-transform: uppercase;" oninput="wfUppercaseInputPreserveCaret(this)" autocomplete="off">
+                        <input type="text" id="modalFlowName" class="form-control" placeholder="Ej. APROBACION DE COMPRAS DE TECNOLOGIA" required style="text-transform: uppercase;" oninput="wfUppercaseInputPreserveCaret(this)" autocomplete="off">
+                    </div>
+                    <div class="mb-3" id="wrapModalFlowDept">
+                        <label class="form-label fw-bold" for="modalFlowWdeCod">Departamento *</label>
+                        <select id="modalFlowWdeCod" class="form-control"></select>
+                        <input type="text" id="modalFlowWdeNom" class="form-control" readonly style="display: none;">
+                        <p class="text-danger small mb-0 mt-1" id="lblModalFlowDeptHint" style="display: none;"></p>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Descripción / Notas</label>
@@ -1886,17 +1979,18 @@ if (function_exists('utf8_encode_deep')) {
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label fw-bold" for="txtBuscarFlujoNombre">Buscar por código, nombre o descripción</label>
-                        <input type="text" id="txtBuscarFlujoNombre" class="form-control" placeholder="Escriba código, nombre o descripción..." autocomplete="off" onkeyup="filtrarTablaBuscarFlujo()" oninput="filtrarTablaBuscarFlujo()">
+                        <label class="form-label fw-bold" for="txtBuscarFlujoNombre">Buscar por código, nombre, descripción o departamento</label>
+                        <input type="text" id="txtBuscarFlujoNombre" class="form-control" placeholder="Escriba código, nombre, descripción o departamento..." autocomplete="off" onkeyup="filtrarTablaBuscarFlujo()" oninput="filtrarTablaBuscarFlujo()">
                     </div>
                     <div class="table-responsive" style="max-height: 360px; overflow-y: auto;">
                         <table class="table table-striped table-hover table-condensed mb-0">
                             <thead>
                                 <tr>
-                                    <th style="width: 110px;" class="text-center">Código</th>
-                                    <th style="width: 30%;">Nombre</th>
+                                    <th style="width: 90px;" class="text-center">Código</th>
+                                    <th style="width: 26%;">Nombre</th>
+                                    <th style="width: 22%;">Departamento</th>
                                     <th>Descripción</th>
-                                    <th style="width: 120px;" class="text-center">Acción</th>
+                                    <th style="width: 110px;" class="text-center">Acción</th>
                                 </tr>
                             </thead>
                             <tbody id="tblBuscarFlujoBody"></tbody>
@@ -1969,6 +2063,11 @@ if (function_exists('utf8_encode_deep')) {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../VALIDACIONES/wf_builder.js?v=61"></script>
+    <script>
+        window.WF_DEPTOS_ENCARGADO = <?php echo $wf_deptos_encargado_json ? $wf_deptos_encargado_json : '[]'; ?>;
+    </script>
+    <script src="../VALIDACIONES/wf_builder.js?v=67"></script>
 </body>
 </html>
+
+

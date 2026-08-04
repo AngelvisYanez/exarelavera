@@ -713,7 +713,7 @@ if (isset($ajax_get_solicitud_detail)) {
                IFNULL(u.Usu_Ced, '') as Usu_Nom,
                IFNULL(d.Wde_Des, '') as Dep_Des,
                IFNULL(p.Prs_Nom, '') as Sol_Nom, IFNULL(p.Prs_Ape, '') as Sol_Ape,
-               i.Ins_Cod, i.Nod_Act, i.Ins_Est,
+               i.Ins_Cod, i.Nod_Act, i.Ins_Est, i.Wfm_Cod,
                n.Nod_Nom, n.Nod_Tip, n.Nod_Com_Obl, n.Nod_Adj_Obl,
                IFNULL(n.Nod_Cot_Edit, 0) AS Nod_Cot_Edit,
                IFNULL(n.Nod_Cot_Sel, 0) AS Nod_Cot_Sel
@@ -785,6 +785,19 @@ if (isset($ajax_get_solicitud_detail)) {
         $avances = $obBD_adq->listarAvancesSolicitud($sol_cod);
     }
     $avances = $obBD_adq->enriquecerAvancesConCompras($avances, intval($Ses_Emp_Cod));
+
+    // AVANCE: unico/ultimo exige totales completos; intermedios permiten parcial.
+    $sol['Avance_Exige_Totales'] = 1;
+    $sol['Avance_Cant_Nodos'] = 0;
+    $sol['Avance_Suma_Facturas_Previas'] = 0;
+    if (!empty($sol['Nod_Tip']) && $sol['Nod_Tip'] === 'AVANCE') {
+        $wfm_det = intval(isset($sol['Wfm_Cod']) ? $sol['Wfm_Cod'] : 0);
+        $nod_det = intval(isset($sol['Nod_Act']) ? $sol['Nod_Act'] : 0);
+        $info_av = $wf_mgr->avanceExigeTotalesCompletos($wfm_det, $nod_det);
+        $sol['Avance_Exige_Totales'] = !empty($info_av['exige']) ? 1 : 0;
+        $sol['Avance_Cant_Nodos'] = isset($info_av['total']) ? intval($info_av['total']) : 0;
+        $sol['Avance_Suma_Facturas_Previas'] = $obBD_adq->sumaSubtotalesFacturasAvance($sol_cod, $nod_det);
+    }
 
     $items = $obBD_con1->getArrayConsultaSql("
         SELECT d.*, i.Ite_Lar AS Pro_Nom
@@ -2861,7 +2874,7 @@ function adqEtiquetaMiAccion($accion) {
                                 <h5 class="adq-section-header" style="color: #087990; border-bottom-color: #9eeaf9; margin-bottom: 8px; padding-bottom: 4px;"><i class="bi bi-receipt-cutoff" id="icoAvanceEtapa"></i> <span id="lblAvanceEtapaTitulo">Facturas de Avance</span></h5>
                                 <p class="mb-2" id="lblAvanceEtapaAyuda" style="font-size: 12px; color: #055160;">Etapa <strong id="lblAvanceEtapaNodo"></strong>: seleccione facturas de compra o anticipos de proveedores del sistema EXA. Use <strong>Guardar</strong> para registrar. Cuando termine, pulse <strong>Finalizar proceso</strong>.</p>
                                 <div id="avanceTotalesResumen" class="mb-2" style="display:none;font-size:12px;padding:8px 10px;border-radius:6px;background:#e0f2fe;border:1px solid #7dd3fc;color:#0c4a6e;">
-                                    <span class="me-3"><strong>Subtotal proforma:</strong> $ <span id="avanceTotRef">0.00</span></span>
+                                    <span class="me-3"><strong id="lblAvanceTotRef">Subtotal proforma:</strong> $ <span id="avanceTotRef">0.00</span></span>
                                     <span class="me-3"><strong>Subtotal facturas:</strong> $ <span id="avanceTotSum">0.00</span></span>
                                     <span><strong>Diferencia:</strong> $ <span id="avanceTotDif">0.00</span></span>
                                 </div>
@@ -3358,8 +3371,17 @@ let currentInsCod = null;
                 if (!$('#actionComentario').val().trim()) {
                     motivosAvance.push('comentario obligatorio');
                 }
-                if (typeof contarFacturasAvanceGuardadas === 'function' && contarFacturasAvanceGuardadas() <= 0) {
-                    motivosAvance.push('factura/anticipo pendiente');
+                const nFac = typeof contarFacturasAvanceActivas === 'function' ? contarFacturasAvanceActivas() : 0;
+                const nAnt = typeof contarAnticiposAvanceActivos === 'function' ? contarAnticiposAvanceActivos() : 0;
+                if (nFac <= 0 && nAnt <= 0) {
+                    motivosAvance.push('debe registrar factura o anticipo (al menos uno)');
+                } else if (typeof validarTotalesAvanceParaFinalizar === 'function') {
+                    const checkTotBtn = validarTotalesAvanceParaFinalizar();
+                    if (!checkTotBtn.ok) {
+                        motivosAvance.push(avanceExigeTotalesCompletos
+                            ? 'facturas incompletas vs cotizacion ganadora'
+                            : 'totales de factura invalidos');
+                    }
                 }
                 const okAvance = motivosAvance.length === 0;
                 $finAvance.prop('disabled', !okAvance)
@@ -3392,7 +3414,13 @@ let currentInsCod = null;
             } else {
                 $('#lblAvanceEtapaTitulo').text('Facturas y anticipos de Avance');
                 $('#icoAvanceEtapa').attr('class', 'bi bi-receipt-cutoff');
-                $('#lblAvanceEtapaAyuda').html('Etapa <strong id="lblAvanceEtapaNodo"></strong>: seleccione facturas de compra o anticipos de proveedores del sistema EXA. <strong>Guardar</strong> solo registra (no avanza de proceso). Para avanzar: registros guardados + comentario, luego <strong>Finalizar proceso</strong>.');
+                $('#lblAvanceEtapaAyuda').html('Etapa <strong id="lblAvanceEtapaNodo"></strong>: registre factura(s) y/o anticipo(s) (al menos uno). '
+                    + (avanceExigeTotalesCompletos
+                        ? (avanceCantNodosAvance <= 1
+                            ? '<strong>Nodo unico de Avance:</strong> las facturas deben completar el subtotal de la cotizacion ganadora. '
+                            : '<strong>Ultimo nodo de Avance:</strong> las facturas (todas las etapas) deben completar el subtotal de la cotizacion ganadora. ')
+                        : '<strong>Nodo intermedio:</strong> puede avanzar con facturas parciales. ')
+                    + '<strong>Guardar</strong> solo registra. Con comentario y documentos, pulse <strong>Finalizar proceso</strong>.');
                 $('#secFiscalArchivos').hide();
                 $('#lstFiscalDocsNuevos').empty();
                 $('#panelAvanceEtapa').css({ 'border-color': '#0dcaf0', 'background-color': '#f0fcff' });
@@ -3697,25 +3725,76 @@ let currentInsCod = null;
         const avanceCopCodSeleccionados = new Set();
         const avanceAtpCodSeleccionados = new Set();
         let avanceValorReferencia = 0;
+        let avanceExigeTotalesCompletos = true;
+        let avanceCantNodosAvance = 0;
+        let avanceSumaFacturasPrevias = 0;
+        let avanceTieneProformas = false;
 
         function roundMoney(v) {
             return Math.round((parseFloat(v) || 0) * 100) / 100;
         }
 
+        function configurarContextoTotalesAvance(sol, flowVisual) {
+            avanceExigeTotalesCompletos = true;
+            avanceCantNodosAvance = 0;
+            avanceSumaFacturasPrevias = roundMoney(sol && sol.Avance_Suma_Facturas_Previas !== undefined
+                ? sol.Avance_Suma_Facturas_Previas : 0);
+            if (sol && sol.Avance_Exige_Totales !== undefined && sol.Avance_Exige_Totales !== null && sol.Avance_Exige_Totales !== '') {
+                avanceExigeTotalesCompletos = parseInt(sol.Avance_Exige_Totales, 10) === 1;
+                avanceCantNodosAvance = parseInt(sol.Avance_Cant_Nodos || 0, 10) || 0;
+                return;
+            }
+            // Fallback: calcular desde el esquema visual.
+            const ordenados = ordenarNodosPorConexionesFlujo(flowVisual || { nodos: [], conexiones: [] });
+            const avances = ordenados.filter(function(n) { return (n.tipo || '') === 'AVANCE'; });
+            avanceCantNodosAvance = avances.length;
+            const nodAct = sol && sol.Nod_Act !== undefined ? String(sol.Nod_Act) : '';
+            if (!avances.length) {
+                avanceExigeTotalesCompletos = true;
+                return;
+            }
+            const ultimoId = String(avances[avances.length - 1].id);
+            avanceExigeTotalesCompletos = (avances.length === 1) || (ultimoId === nodAct);
+        }
+
         function configurarValorReferenciaAvance(sol, cotizaciones) {
+            const lista = Array.isArray(cotizaciones) ? cotizaciones : [];
+            avanceTieneProformas = lista.length > 0;
             let proformaSub = 0;
-            (cotizaciones || []).forEach(function(c) {
+            lista.forEach(function(c) {
                 if (parseInt(c.Cot_Sel, 10) === 1) {
                     const sub = roundMoney(c.Cot_Sub);
                     proformaSub = sub > 0 ? sub : roundMoney(c.Cot_Val);
                 }
             });
             const solVal = roundMoney(sol && sol.Sol_Val_Est !== undefined ? sol.Sol_Val_Est : 0);
-            avanceValorReferencia = proformaSub > 0 ? proformaSub : solVal;
+            // Con proformas: cotizacion ganadora. Sin proformas: valor de la solicitud (detTotal).
+            avanceValorReferencia = avanceTieneProformas
+                ? (proformaSub > 0 ? proformaSub : solVal)
+                : solVal;
+            $('#lblAvanceTotRef').text(avanceTieneProformas ? 'Subtotal proforma:' : 'Valor solicitud:');
             actualizarResumenTotalesAvance();
         }
 
+        function etiquetaRefAvance() {
+            return avanceTieneProformas ? 'proforma' : 'solicitud';
+        }
+
         function obtenerTotalFacturasAvanceSeleccionadas() {
+            let sum = avanceSumaFacturasPrevias;
+            $('#lstAvanceDocsExistentes .adq-avance-factura-card').each(function() {
+                if ($(this).attr('data-eliminado') === '1' || $(this).hasClass('adq-avance-eliminado')) {
+                    return;
+                }
+                sum += roundMoney($(this).attr('data-factura-subtotal'));
+            });
+            $('#lstAvanceDocsNuevos .adq-avance-factura-card').each(function() {
+                sum += roundMoney($(this).attr('data-factura-subtotal'));
+            });
+            return roundMoney(sum);
+        }
+
+        function obtenerTotalFacturasAvanceNodoActual() {
             let sum = 0;
             $('#lstAvanceDocsExistentes .adq-avance-factura-card').each(function() {
                 if ($(this).attr('data-eliminado') === '1' || $(this).hasClass('adq-avance-eliminado')) {
@@ -3754,17 +3833,23 @@ let currentInsCod = null;
         function validarAgregarFacturaAvance(totalFactura) {
             const ref = roundMoney(avanceValorReferencia);
             const tot = roundMoney(totalFactura);
+            const lbl = etiquetaRefAvance();
             if (ref <= 0) {
-                return { ok: false, message: 'La solicitud no tiene un subtotal de proforma/solicitud de referencia.' };
+                return {
+                    ok: false,
+                    message: avanceTieneProformas
+                        ? 'La solicitud no tiene una proforma ganadora con subtotal de referencia.'
+                        : 'La solicitud no tiene un valor total (detTotal) de referencia.'
+                };
             }
             if (tot > ref + 0.01) {
-                return { ok: false, message: 'El subtotal de la factura es mayor al subtotal de la proforma.' };
+                return { ok: false, message: 'El subtotal de la factura es mayor al valor de la ' + lbl + '.' };
             }
             const suma = obtenerTotalFacturasAvanceSeleccionadas();
             if (roundMoney(suma + tot) > ref + 0.01) {
                 return {
                     ok: false,
-                    message: 'El subtotal de la factura supera el subtotal de la proforma. Suma actual $ '
+                    message: 'El subtotal de la factura supera el valor de la ' + lbl + '. Suma actual $ '
                         + suma.toFixed(2) + ' + factura $ ' + tot.toFixed(2)
                         + ' supera $ ' + ref.toFixed(2) + '.'
                 };
@@ -3772,25 +3857,80 @@ let currentInsCod = null;
             return { ok: true };
         }
 
+        function contarFacturasAvanceActivas() {
+            return $('#lstAvanceDocsExistentes .adq-avance-factura-card').filter(function() {
+                    return $(this).attr('data-eliminado') !== '1' && !$(this).hasClass('adq-avance-eliminado');
+                }).length
+                + $('#lstAvanceDocsNuevos .adq-avance-factura-card').length;
+        }
+
+        function contarAnticiposAvanceActivos() {
+            return $('#lstAvanceDocsExistentes .adq-avance-anticipo-card').filter(function() {
+                    return $(this).attr('data-eliminado') !== '1' && !$(this).hasClass('adq-avance-eliminado');
+                }).length
+                + $('#lstAvanceDocsNuevos .adq-avance-anticipo-card').length;
+        }
+
+        /**
+         * Finalizar AVANCE:
+         * - Siempre: al menos factura o anticipo (nunca ambos vacios).
+         * - Con proformas: compara vs cotizacion ganadora (no exige ganadora solo si no hay proformas).
+         * - Sin proformas: compara vs valor de la solicitud (detTotal / Sol_Val_Est).
+         * - Nodo unico/ultimo: igualdad completa. Intermedios: parcial OK (solo no superar).
+         */
         function validarTotalesAvanceParaFinalizar() {
-            const ref = roundMoney(avanceValorReferencia);
-            const suma = obtenerTotalFacturasAvanceSeleccionadas();
-            if (ref <= 0) {
-                return { ok: false, message: 'No se puede finalizar: falta el subtotal de la proforma/solicitud.' };
-            }
-            if (suma <= 0) {
-                return { ok: false, message: 'Debe registrar al menos una factura antes de finalizar el proceso.' };
-            }
-            const dif = roundMoney(suma - ref);
-            if (dif > 0.01) {
-                return { ok: false, message: 'El subtotal de las facturas es mayor al subtotal de la proforma.' };
-            }
-            if (Math.abs(dif) > 0.01) {
+            const nFac = contarFacturasAvanceActivas();
+            const nAnt = contarAnticiposAvanceActivos();
+            if (nFac <= 0 && nAnt <= 0) {
                 return {
                     ok: false,
-                    message: 'La suma de subtotales de facturas debe ser igual al subtotal de la proforma. Proforma (subtotal): $ '
-                        + ref.toFixed(2) + '. Facturas (subtotal): $ ' + suma.toFixed(2) + '.'
+                    message: 'Debe registrar al menos una factura o un anticipo antes de finalizar el proceso. Puede tener uno o ambos, pero no puede dejar los dos vacíos.'
                 };
+            }
+
+            const ref = roundMoney(avanceValorReferencia);
+            const suma = obtenerTotalFacturasAvanceSeleccionadas();
+            const sumaNodo = obtenerTotalFacturasAvanceNodoActual();
+            const exigeCompletos = !!avanceExigeTotalesCompletos;
+            const lbl = etiquetaRefAvance();
+            const lblCompleto = avanceTieneProformas ? 'cotizacion ganadora' : 'valor de la solicitud';
+
+            // Sin facturas en ninguna etapa (solo anticipos en este nodo).
+            if (suma <= 0 && sumaNodo <= 0 && nFac <= 0) {
+                if (exigeCompletos) {
+                    return {
+                        ok: false,
+                        message: (avanceCantNodosAvance <= 1
+                            ? 'Este es el unico nodo de Avance/Facturas: debe cargar las facturas hasta igualar el ' + lblCompleto + '.'
+                            : 'Este es el ultimo nodo de Avance/Facturas: debe completar las facturas hasta igualar el ' + lblCompleto + '.')
+                    };
+                }
+                return { ok: true, solo_anticipos: true };
+            }
+
+            if (ref <= 0) {
+                return {
+                    ok: false,
+                    message: avanceTieneProformas
+                        ? 'No se puede finalizar: falta el subtotal de la proforma ganadora.'
+                        : 'No se puede finalizar: falta el valor total de la solicitud.'
+                };
+            }
+            if (suma > ref + 0.01) {
+                return { ok: false, message: 'El subtotal de las facturas es mayor al valor de la ' + lbl + '.' };
+            }
+            if (exigeCompletos) {
+                const dif = roundMoney(suma - ref);
+                if (Math.abs(dif) > 0.01) {
+                    return {
+                        ok: false,
+                        message: (avanceCantNodosAvance <= 1
+                            ? 'Nodo unico de Avance/Facturas: '
+                            : 'Ultimo nodo de Avance/Facturas: ')
+                            + 'la suma de subtotales de facturas debe ser igual al ' + lblCompleto + '. Referencia: $ '
+                            + ref.toFixed(2) + '. Facturas (subtotal): $ ' + suma.toFixed(2) + '.'
+                    };
+                }
             }
             return { ok: true };
         }
@@ -4419,12 +4559,12 @@ let currentInsCod = null;
         }
 
         function contarFacturasAvanceGuardadas() {
-            return $('#lstAvanceDocsExistentes [data-sav-cod]').length
-                + $('#lstAvanceDocsNuevos [data-avance-nuevo]').length;
+            // Facturas + anticipos activos (cualquiera de los dos habilita finalizar).
+            return contarFacturasAvanceActivas() + contarAnticiposAvanceActivos();
         }
 
         function finalizarAvanceProceso() {
-            // Validar montos ANTES de guardar/mostrar loader, incluyendo facturas recien agregadas.
+            // Validar docs/totales ANTES de guardar/mostrar loader.
             const checkTot = validarTotalesAvanceParaFinalizar();
             if (!checkTot.ok) {
                 adqOcultarLoaderAccion();
@@ -4443,10 +4583,6 @@ let currentInsCod = null;
 
         function finalizarAvanceProcesoConfirmado() {
             adqOcultarLoaderAccion();
-            if (contarFacturasAvanceGuardadas() <= 0) {
-                alert('Debe registrar al menos una factura o anticipo antes de finalizar el proceso.');
-                return;
-            }
             const checkTot = validarTotalesAvanceParaFinalizar();
             if (!checkTot.ok) {
                 alert(checkTot.message);
@@ -5002,6 +5138,7 @@ let currentInsCod = null;
                     }
 
                     if (puedeAvance) {
+                        configurarContextoTotalesAvance(sol, res.flow_visual || {});
                         configurarTextosPanelAvance(sol.Nod_Tip);
                         configurarValorReferenciaAvance(sol, res.cotizaciones || []);
                         $('#lblAvanceEtapaNodo').text(sol.Nod_Nom || 'Etapa actual');
@@ -5423,10 +5560,6 @@ let currentInsCod = null;
                 }
                 if (currentNodTip === 'FISCALIZACION' && contarDocsFiscalGuardados() <= 0) {
                     alert('Debe guardar al menos un archivo, factura o anticipo de fiscalizacion antes de aprobar.');
-                    return;
-                }
-                if (currentNodTip === 'AVANCE' && contarFacturasAvanceGuardadas() <= 0) {
-                    alert('Debe registrar al menos una factura o anticipo antes de finalizar el proceso de avance.');
                     return;
                 }
                 if (currentNodTip === 'AVANCE') {
