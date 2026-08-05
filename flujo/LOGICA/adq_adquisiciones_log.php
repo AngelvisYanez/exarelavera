@@ -2415,6 +2415,37 @@ class adq_adquisiciones_log extends MysqlDatosContab {
     }
 
     /**
+     * Facturas registradas en otros nodos de la misma instancia.
+     * Se usan como consulta en AVANCE; no deben editarse desde el nodo actual.
+     */
+    public function listarFacturasOtrosNodosSolicitud($sol_cod, $ins_cod, $nod_cod) {
+        $this->ensureAvancesTable();
+        $sol_cod = intval($sol_cod);
+        $ins_cod = intval($ins_cod);
+        $nod_cod = intval($nod_cod);
+        if ($sol_cod <= 0 || $ins_cod <= 0 || $nod_cod <= 0) {
+            return array();
+        }
+        $rows = $this->getArrayConsultaSql(
+            "SELECT a.*,
+                    n.Nod_Nom,
+                    TRIM(CONCAT(IFNULL(p.Prs_Nom, ''), ' ', IFNULL(p.Prs_Ape, ''))) AS Usuario_Nom
+             FROM adq_solicitudes_avances a
+             LEFT JOIN wf_nodos n ON n.Nod_Cod = a.Nod_Cod
+             LEFT JOIN usuarios u ON u.Usu_Cod = a.Usu_Cod
+             LEFT JOIN persona p ON p.Prs_Cod = u.Prs_Cod
+             WHERE a.Sol_Cod = $sol_cod
+               AND a.Ins_Cod = $ins_cod
+               AND a.Nod_Cod <> $nod_cod
+               AND a.Sav_Cop_Cod IS NOT NULL
+               AND a.Sav_Cop_Cod > 0
+             ORDER BY a.Sav_Fec DESC, a.Sav_Cod DESC;",
+            $this->conexion
+        );
+        return ($rows === false || $rows === null) ? array() : $rows;
+    }
+
+    /**
      * Calcula subtotal, IVA y total de una compra (misma logica que fac_log_compras::calculosCompraIce).
      */
     private function calcularTotalesCompraExa($cop_cod) {

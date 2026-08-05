@@ -779,12 +779,21 @@ if (isset($ajax_get_solicitud_detail)) {
     ) ? 1 : 0;
 
     $avances = array();
+    $facturas_otros_nodos = array();
     if (!empty($sol['Ins_Cod']) && !empty($sol['Nod_Act']) && in_array($sol['Nod_Tip'], array('AVANCE', 'FISCALIZACION'), true)) {
         $avances = $obBD_adq->listarAvancesSolicitud($sol_cod, intval($sol['Ins_Cod']), intval($sol['Nod_Act']));
+        if ($sol['Nod_Tip'] === 'AVANCE') {
+            $facturas_otros_nodos = $obBD_adq->listarFacturasOtrosNodosSolicitud(
+                $sol_cod,
+                intval($sol['Ins_Cod']),
+                intval($sol['Nod_Act'])
+            );
+        }
     } elseif (!empty($sol['Ins_Cod'])) {
         $avances = $obBD_adq->listarAvancesSolicitud($sol_cod);
     }
     $avances = $obBD_adq->enriquecerAvancesConCompras($avances, intval($Ses_Emp_Cod));
+    $facturas_otros_nodos = $obBD_adq->enriquecerAvancesConCompras($facturas_otros_nodos, intval($Ses_Emp_Cod));
 
     // AVANCE: unico/ultimo exige totales completos; intermedios permiten parcial.
     $sol['Avance_Exige_Totales'] = 1;
@@ -909,6 +918,7 @@ if (isset($ajax_get_solicitud_detail)) {
         'cotizaciones' => $cotizaciones,
         'adjuntos' => $adjuntos,
         'avances' => $avances,
+        'facturas_otros_nodos' => $facturas_otros_nodos,
         'historial' => $historial,
         'flow_visual' => $flow_visual,
         'compras_vinculadas' => $compras_vinculadas,
@@ -2920,6 +2930,13 @@ function adqEtiquetaMiAccion($accion) {
                                         <tbody id="tblBuscarAnticiposAvance"></tbody>
                                     </table>
                                 </div>
+                                <div id="secAvanceFacturasOtrosNodos" class="mb-2" style="display:none;border:1px solid #bfdbfe;border-radius:6px;background:#eff6ff;padding:8px 10px;">
+                                    <div class="fw-semibold mb-2" style="color:#1d4ed8;font-size:12px;">
+                                        <i class="bi bi-clock-history"></i> Facturas registradas en otros nodos
+                                        <span class="text-muted fw-normal">(solo lectura)</span>
+                                    </div>
+                                    <div id="lstAvanceFacturasOtrosNodos"></div>
+                                </div>
                                 <form id="frmAvanceDocs" enctype="multipart/form-data">
                                     <input type="hidden" name="Sol_Cod" id="avanceSolCod" value="">
                                     <div id="avanceDocsEliminar"></div>
@@ -4171,6 +4188,38 @@ let currentInsCod = null;
             `;
         }
 
+        function renderFacturasOtrosNodos(avances, nodTip) {
+            const $seccion = $('#secAvanceFacturasOtrosNodos');
+            const $lista = $('#lstAvanceFacturasOtrosNodos').empty();
+            // currentNodTip aun no esta asignado al renderizar el panel: usar el tipo recibido.
+            const tipo = nodTip || currentNodTip;
+            if (tipo !== 'AVANCE' || !Array.isArray(avances) || avances.length === 0) {
+                $seccion.hide();
+                return;
+            }
+            avances.forEach(function(doc) {
+                const nodo = doc.Nod_Nom || ('Nodo #' + (doc.Nod_Cod || ''));
+                const usuario = doc.Usuario_Nom ? String(doc.Usuario_Nom).trim() : '';
+                const fecha = doc.Sav_Fec || '';
+                const descripcion = doc.Sav_Des || '';
+                const detalle = doc.compra
+                    ? renderAvanceCompraDetalle(doc.compra, '')
+                    : '<div class="text-muted small">No se pudo cargar el detalle de esta factura.</div>';
+                $lista.append(`
+                    <div class="border rounded p-2 mb-2 bg-white adq-avance-factura-previa-card" style="border-left:3px solid #2563eb !important;">
+                        <div class="mb-2" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+                            <span class="badge bg-primary"><i class="bi bi-diagram-3"></i> ${avanceEsc(nodo)}</span>
+                            ${fecha ? `<span class="text-muted small">${avanceEsc(fecha)}</span>` : ''}
+                        </div>
+                        ${detalle}
+                        ${descripcion ? `<div class="text-muted small mt-1">Observación: ${avanceEsc(descripcion)}</div>` : ''}
+                        ${usuario ? `<div class="text-muted small mt-1">Registrado por: ${avanceEsc(usuario)}</div>` : ''}
+                    </div>
+                `);
+            });
+            $seccion.show();
+        }
+
         function htmlTarjetaAvanceCompra(opts) {
             const savCod = opts.savCod || '';
             const idx = opts.idx;
@@ -4350,8 +4399,9 @@ let currentInsCod = null;
                     } else {
                         res.compras.forEach(function(c) {
                             const ya = seleccionados.has(parseInt(c.Cop_Cod, 10));
-                            const tot = roundMoney(c.Total);
-                            const check = validarAgregarFacturaAvance(tot);
+                            // La comparacion contra proforma/solicitud siempre es por subtotal (sin IVA).
+                            const sub = roundMoney(c.Subtotal);
+                            const check = validarAgregarFacturaAvance(sub);
                             let btn;
                             if (ya) {
                                 btn = '<span class="badge bg-secondary">Agregada</span>';
@@ -5144,6 +5194,7 @@ let currentInsCod = null;
                         $('#lblAvanceEtapaNodo').text(sol.Nod_Nom || 'Etapa actual');
                         $('#avanceSolCod').val(sol.Sol_Cod);
                         renderAvanceDocs(res.avances || []);
+                        renderFacturasOtrosNodos(res.facturas_otros_nodos || [], sol.Nod_Tip);
                         // En Fiscalizacion se aprueba desde el panel de decision (no Finalizar proceso)
                         $('#btnFinalizarAvance').toggle(puedeResolver && sol.Nod_Tip === 'AVANCE');
                         $('#avanceGuardadoMsg').hide().text('');
@@ -5151,6 +5202,8 @@ let currentInsCod = null;
                     } else {
                         $('#secFiscalArchivos').hide();
                         $('#lstFiscalDocsNuevos').empty();
+                        $('#secAvanceFacturasOtrosNodos').hide();
+                        $('#lstAvanceFacturasOtrosNodos').empty();
                     }
 
                     if (sol.Sol_Est === 'I') {

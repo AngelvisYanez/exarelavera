@@ -159,9 +159,22 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
         header('Content-Type: text/html; charset=UTF-8');
         $filtro_wfm = isset($_GET['filtro_wfm']) ? intval($_GET['filtro_wfm']) : 0;
         $filtro_dep = isset($_GET['filtro_dep']) ? intval($_GET['filtro_dep']) : 0;
+        // Estado: A = activos (por defecto), I = inactivos, T = todos.
+        $filtro_est = isset($_GET['filtro_est']) ? strtoupper(trim($_GET['filtro_est'])) : 'A';
+        if (!in_array($filtro_est, array('A', 'I', 'T'), true)) {
+            $filtro_est = 'A';
+        }
+        $buscar_tipo = isset($_GET['buscar']) ? trim($_GET['buscar']) : '';
+        if (strlen($buscar_tipo) > 120) {
+            $buscar_tipo = substr($buscar_tipo, 0, 120);
+        }
+        $pagina = isset($_GET['pagina']) ? max(1, intval($_GET['pagina'])) : 1;
+        $por_pagina = 30;
         $filtro_fam = 0;
         $where_flujo = '';
         $where_dep = '';
+        $where_est = '';
+        $where_buscar = '';
         if ($filtro_wfm > 0) {
             $filtro_fam = $wf_mgr->resolverFamiliaCod($filtro_wfm);
             if ($filtro_fam > 0) {
@@ -171,6 +184,32 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
         if ($filtro_dep > 0) {
             $where_dep = " AND w.Wde_Cod = $filtro_dep ";
         }
+        if ($filtro_est === 'I') {
+            $where_est = " AND UPPER(IFNULL(t.Trq_Est, 'A')) = 'I' ";
+        } elseif ($filtro_est === 'A') {
+            $where_est = " AND UPPER(IFNULL(t.Trq_Est, 'A')) <> 'I' ";
+        }
+        if ($buscar_tipo !== '') {
+            /** @var mysqli $conexion_mysqli */
+            $conexion_mysqli = $obBD_conexion->conexion;
+            $buscar_esc = mysqli_real_escape_string($conexion_mysqli, $buscar_tipo);
+            $where_buscar = " AND t.Trq_Des LIKE '%$buscar_esc%' ";
+        }
+
+        $row_total = $obBD_con1->getRowConsultaSql("
+            SELECT COUNT(*) AS total
+            FROM adq_tipos_requerimientos t
+            INNER JOIN wf_flujos_modelos w ON w.Wfm_Cod = t.Wfm_Cod
+            LEFT JOIN wf_departamentos d ON d.Wde_Cod = w.Wde_Cod
+            WHERE t.Emp_Cod = $Ses_Emp_Cod $where_flujo $where_dep $where_est $where_buscar;",
+            $obBD_conexion
+        );
+        $total_tipos = !empty($row_total['total']) ? intval($row_total['total']) : 0;
+        $total_paginas = max(1, intval(ceil($total_tipos / $por_pagina)));
+        if ($pagina > $total_paginas) {
+            $pagina = $total_paginas;
+        }
+        $offset = ($pagina - 1) * $por_pagina;
 
         $tipos = $obBD_con1->getArrayConsultaSql("
             SELECT t.*,
@@ -181,8 +220,9 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
             FROM adq_tipos_requerimientos t 
             INNER JOIN wf_flujos_modelos w ON w.Wfm_Cod = t.Wfm_Cod
             LEFT JOIN wf_departamentos d ON d.Wde_Cod = w.Wde_Cod
-            WHERE t.Emp_Cod = $Ses_Emp_Cod $where_flujo $where_dep
-            ORDER BY t.Trq_Cod DESC;", $obBD_conexion);
+            WHERE t.Emp_Cod = $Ses_Emp_Cod $where_flujo $where_dep $where_est $where_buscar
+            ORDER BY t.Trq_Cod DESC
+            LIMIT $offset, $por_pagina;", $obBD_conexion);
 
         $flujos = $wf_mgr->listarFlujosDisenador($Ses_Emp_Cod);
         $departamentos = $wf_mgr->listarDepartamentosDisenador($Ses_Emp_Cod);
@@ -196,7 +236,16 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
             $msg_vacio = 'No hay tipos de requerimientos asociados a este flujo modelo.';
         } elseif ($filtro_dep > 0) {
             $msg_vacio = 'No hay tipos de requerimientos asociados a este departamento.';
+        } elseif ($filtro_est === 'A') {
+            $msg_vacio = 'No hay tipos de requerimientos activos.';
+        } elseif ($filtro_est === 'I') {
+            $msg_vacio = 'No hay tipos de requerimientos inactivos.';
         }
+        if ($buscar_tipo !== '') {
+            $msg_vacio = 'No se encontraron tipos cuya descripción coincida con la búsqueda.';
+        }
+        $registro_desde = $total_tipos > 0 ? $offset + 1 : 0;
+        $registro_hasta = min($offset + $por_pagina, $total_tipos);
         ?>
         <div class="p-1">
             <div class="adq-tipos-toolbar">
@@ -223,7 +272,29 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
                             <option value="<?php echo $wfm_opt; ?>" <?php echo $sel; ?>><?php echo htmlspecialchars($wf_mgr->etiquetaFlujoListado($f), ENT_QUOTES, 'UTF-8'); ?></option>
                         <?php } ?>
                     </select>
-                    <span class="text-muted small adq-tipos-toolbar-count"><?php echo count($tipos); ?> tipo(s)</span>
+                    <label class="form-label fw-semibold small" for="filtroEstadoTipo">Estado:</label>
+                    <select class="form-control form-control-sm adq-tipos-filtro-est" id="filtroEstadoTipo" onchange="filtrarTiposConfiguracion()">
+                        <option value="A" <?php echo $filtro_est === 'A' ? 'selected' : ''; ?>>Solo activos</option>
+                        <option value="I" <?php echo $filtro_est === 'I' ? 'selected' : ''; ?>>Solo inactivos</option>
+                        <option value="T" <?php echo $filtro_est === 'T' ? 'selected' : ''; ?>>Activos e inactivos</option>
+                    </select>
+                    <div class="input-group input-group-sm adq-tipos-busqueda">
+                        <input type="text"
+                               class="form-control"
+                               id="buscarDescripcionTipo"
+                               maxlength="120"
+                               value="<?php echo htmlspecialchars($buscar_tipo, ENT_QUOTES, 'UTF-8'); ?>"
+                               placeholder="Buscar descripción"
+                               onkeydown="if (event.keyCode === 13) { event.preventDefault(); buscarTiposConfiguracion(); }">
+                        <span class="input-group-btn">
+                            <button type="button" class="btn btn-primary" onclick="buscarTiposConfiguracion()">
+                                <i class="bi bi-search"></i> Buscar
+                            </button>
+                        </span>
+                    </div>
+                    <span class="text-muted small adq-tipos-toolbar-count">
+                        <?php echo $registro_desde; ?>-<?php echo $registro_hasta; ?> de <?php echo $total_tipos; ?>
+                    </span>
                     <button type="button" class="btn btn-sm btn-success" onclick="abrirFormulario()"><i class="bi bi-plus-lg"></i> Nuevo Tipo</button>
                 </div>
             </div>
@@ -297,6 +368,27 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
                     </tbody>
                 </table>
             </div>
+            <?php if ($total_paginas > 1) {
+                $pag_ini = max(1, $pagina - 2);
+                $pag_fin = min($total_paginas, $pagina + 2);
+                ?>
+                <div class="adq-tipos-paginacion">
+                    <span class="text-muted small">Página <?php echo $pagina; ?> de <?php echo $total_paginas; ?></span>
+                    <ul class="pagination pagination-sm">
+                        <li class="<?php echo $pagina <= 1 ? 'disabled' : ''; ?>">
+                            <a href="javascript:void(0)" onclick="<?php echo $pagina > 1 ? 'irPaginaTipos(' . ($pagina - 1) . ')' : 'return false'; ?>" aria-label="Anterior">&laquo;</a>
+                        </li>
+                        <?php for ($pag = $pag_ini; $pag <= $pag_fin; $pag++) { ?>
+                            <li class="<?php echo $pag === $pagina ? 'active' : ''; ?>">
+                                <a href="javascript:void(0)" onclick="irPaginaTipos(<?php echo $pag; ?>)"><?php echo $pag; ?></a>
+                            </li>
+                        <?php } ?>
+                        <li class="<?php echo $pagina >= $total_paginas ? 'disabled' : ''; ?>">
+                            <a href="javascript:void(0)" onclick="<?php echo $pagina < $total_paginas ? 'irPaginaTipos(' . ($pagina + 1) . ')' : 'return false'; ?>" aria-label="Siguiente">&raquo;</a>
+                        </li>
+                    </ul>
+                </div>
+            <?php } ?>
         </div>
 
         <!-- MODAL FORMULARIO -->
@@ -497,6 +589,12 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
                                 mostrarNotificacion('success', 'Tipo inactivado (estado I).');
                             } else {
                                 mostrarNotificacion('success', 'Tipo activado (estado A).');
+                            }
+                            // Si el filtro de estado excluye el nuevo estado, refrescar el listado.
+                            const filtroEst = ($('#filtroEstadoTipo').val() || 'A');
+                            if (filtroEst !== 'T' && filtroEst !== res.nuevo_estado
+                                && typeof cargarTiposConfiguracion === 'function') {
+                                cargarTiposConfiguracion();
                             }
                         } else {
                             mostrarNotificacion('danger', 'Error al cambiar estado: ' + ((res && res.message) || ''));
@@ -751,6 +849,19 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
             flex: 0 0 auto;
             display: inline-block;
         }
+        .adq-tipos-filtro-est {
+            width: 170px !important;
+            min-width: 140px;
+            max-width: 200px;
+            flex: 0 0 auto;
+            display: inline-block;
+        }
+        .adq-tipos-busqueda {
+            width: 280px;
+            min-width: 220px;
+            max-width: 340px;
+            flex: 0 0 auto;
+        }
         .adq-tipos-toolbar-count {
             white-space: nowrap;
             flex: 0 0 auto;
@@ -758,6 +869,17 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
         .adq-tipos-toolbar-actions .btn {
             flex: 0 0 auto;
             white-space: nowrap;
+        }
+        .adq-tipos-paginacion {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding-top: 10px;
+        }
+        .adq-tipos-paginacion .pagination {
+            margin: 0;
         }
         .adq-usuarios-toolbar {
             display: flex;
@@ -1166,15 +1288,33 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
             return $filtro.length ? ($filtro.val() || '') : '';
         }
 
-        function cargarTiposConfiguracion(filtroWfm, filtroDep) {
+        function obtenerFiltroEstadoTipos() {
+            const $filtro = $('#filtroEstadoTipo');
+            return $filtro.length ? ($filtro.val() || 'A') : 'A';
+        }
+
+        function obtenerBusquedaTipos() {
+            const $buscar = $('#buscarDescripcionTipo');
+            return $buscar.length ? $.trim($buscar.val() || '') : '';
+        }
+
+        function cargarTiposConfiguracion(filtroWfm, filtroDep, filtroEst, pagina, buscar) {
             const params = { ajax_get_tipos: 1 };
             const filtro = typeof filtroWfm !== 'undefined' ? filtroWfm : obtenerFiltroFlujoTipos();
             const dep = typeof filtroDep !== 'undefined' ? filtroDep : obtenerFiltroDepartamentoTipos();
+            const est = typeof filtroEst !== 'undefined' ? filtroEst : obtenerFiltroEstadoTipos();
+            const pag = Math.max(1, parseInt(pagina, 10) || 1);
+            const texto = typeof buscar !== 'undefined' ? $.trim(buscar || '') : obtenerBusquedaTipos();
             if (filtro) {
                 params.filtro_wfm = filtro;
             }
             if (dep) {
                 params.filtro_dep = dep;
+            }
+            params.filtro_est = est || 'A';
+            params.pagina = pag;
+            if (texto) {
+                params.buscar = texto;
             }
             $.get('adq_configuracion.php', params, function(html) {
                 $('#tipos-panel-content').html(html);
@@ -1185,7 +1325,27 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
         }
 
         function filtrarTiposConfiguracion() {
-            cargarTiposConfiguracion(obtenerFiltroFlujoTipos(), obtenerFiltroDepartamentoTipos());
+            cargarTiposConfiguracion(
+                obtenerFiltroFlujoTipos(),
+                obtenerFiltroDepartamentoTipos(),
+                obtenerFiltroEstadoTipos(),
+                1,
+                obtenerBusquedaTipos()
+            );
+        }
+
+        function buscarTiposConfiguracion() {
+            filtrarTiposConfiguracion();
+        }
+
+        function irPaginaTipos(pagina) {
+            cargarTiposConfiguracion(
+                obtenerFiltroFlujoTipos(),
+                obtenerFiltroDepartamentoTipos(),
+                obtenerFiltroEstadoTipos(),
+                pagina,
+                obtenerBusquedaTipos()
+            );
         }
 
         function filtrarTiposPorFlujo() {
