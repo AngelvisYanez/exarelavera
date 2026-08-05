@@ -200,6 +200,12 @@ if (isset($_REQUEST['listChoferesGridAjax'])) {
     if (isset($req['mostrar_datos'])) {
         $params['mostrar_datos'] = $req['mostrar_datos'];
     }
+    if (isset($req['foto_cedula'])) {
+        $params['foto_cedula'] = $req['foto_cedula'];
+    }
+    if (isset($req['foto_licencia'])) {
+        $params['foto_licencia'] = $req['foto_licencia'];
+    }
     if (isset($req['search']) && !empty($req['search'])) {
         $params['search'] = $req['search'];
     }
@@ -620,7 +626,8 @@ if (isset($_POST['saveChoferAjax'])) {
                     } else {
                         $obBD_con1->operacionobBD('manifiesto_chofer.update', array('Pla_Cod' => $Pla_Cod, 'where' => array('Cho_Cod' => $Cho_Cod)), $obBD_conexion);
                     }
-                } catch (Throwable $ePla) {}
+                } catch (Throwable $ePla) {
+                }
             }
 
             // 5. Guardar o Actualizar Capacitaciones (manifiesto_chofer_capaci)
@@ -647,7 +654,8 @@ if (isset($_POST['saveChoferAjax'])) {
                         $datosCapaci['where'] = array('Cho_Cod' => $Cho_Cod);
                         $obBD_con1->operacionobBD('manifiesto_chofer_capaci.update', $datosCapaci, $obBD_conexion);
                     }
-                } catch (Throwable $eCap) {}
+                } catch (Throwable $eCap) {
+                }
             }
 
             // Asegurar que las actualizaciones principales de persona y chofer se confirmen sin rollback
@@ -721,7 +729,7 @@ if (isset($_POST['enviarNotifCapacitacionChoferAjax'])) {
     if ($nombre === '') {
         $nombre = trim(
             (isset($chofer['Prs_Nom']) ? (string) $chofer['Prs_Nom'] : '') . ' ' .
-            (isset($chofer['Prs_Ape']) ? (string) $chofer['Prs_Ape'] : '')
+                (isset($chofer['Prs_Ape']) ? (string) $chofer['Prs_Ape'] : '')
         );
     }
     $cedula = isset($chofer['Prs_Ced']) ? trim((string) $chofer['Prs_Ced']) : '';
@@ -738,9 +746,9 @@ if (isset($_POST['enviarNotifCapacitacionChoferAjax'])) {
     }
     $licencia = trim(
         (isset($chofer['Cho_Tli']) ? (string) $chofer['Cho_Tli'] : '') .
-        (isset($chofer['Cho_Nli']) && trim((string) $chofer['Cho_Nli']) !== ''
-            ? ' / ' . trim((string) $chofer['Cho_Nli'])
-            : '')
+            (isset($chofer['Cho_Nli']) && trim((string) $chofer['Cho_Nli']) !== ''
+                ? ' / ' . trim((string) $chofer['Cho_Nli'])
+                : '')
     );
     $tipoSangre = isset($chofer['Cho_Tsa']) ? trim((string) $chofer['Cho_Tsa']) : '';
     $cargo = isset($chofer['Cho_Car']) ? trim((string) $chofer['Cho_Car']) : '';
@@ -1177,14 +1185,17 @@ if (isset($_POST['anularVehiculoAjax'])) {
                                                 <label for="radChofer2">Cédula</label>
                                             </div>
 
-                                            <label class="control-label label-xs" style="float: left; width: 110px; text-align: right; padding-right: 8px; margin-left: 70px; line-height: 28px;">Mostrar Datos:</label>
-                                            <div class="radioset opt_mostrar_datos" style="float: left;">
-                                                <input id="radMostrarTodos" name="mostrar_datos" type="radio" value="t" checked="" onclick="actualizarGridChoferes();" />
-                                                <label for="radMostrarTodos">Todos</label>
-                                                <input id="radMostrarChoferes" name="mostrar_datos" type="radio" value="ch" onclick="actualizarGridChoferes();" />
-                                                <label for="radMostrarChoferes">Solo Choferes</label>
-                                                <input id="radMostrarVisitantes" name="mostrar_datos" type="radio" value="v" onclick="actualizarGridChoferes();" />
-                                                <label for="radMostrarVisitantes">Solo Visitantes</label>
+                                            <label class="control-label label-xs" style="float: left; width: 110px; text-align: right; padding-right: 8px; margin-left: 30px; line-height: 28px;">MOSTRAR DATOS:</label>
+                                            <div style="float: left; width: 320px;">
+                                                <select id="selMostrarDatos" name="mostrar_datos[]" class="form-control input-xs select-wide chosen-select" multiple data-placeholder="<< TODOS >>">
+                                                    <option value="incompletos">Datos / Fotos Incompletos</option>
+                                                    <option value="sin_foto_cedula">Sin Foto Cédula</option>
+                                                    <option value="con_foto_cedula">Con Foto Cédula</option>
+                                                    <option value="sin_foto_licencia">Sin Foto Licencia</option>
+                                                    <option value="con_foto_licencia">Con Foto Licencia</option>
+                                                    <option value="licencia_vencida">Licencia Vencida</option>
+                                                    <option value="sin_cedula">Sin N° Cédula</option>
+                                                </select>
                                             </div>
                                         </div>
                                         <div style="margin-top: 6px; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; width: 100%;">
@@ -2094,7 +2105,7 @@ if (isset($_POST['anularVehiculoAjax'])) {
     <!-- JS Scripts Inclusion con parámetro de cache-busting -->
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=23"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=28"></script>
 </body>
 
 </html>

@@ -150,6 +150,16 @@ $(document).ready(function () {
     $(".radioset").buttonset();
   }
 
+  // Inicialización de Chosen en select de filtros
+  if ($("#filtroChoferesForm .chosen-select").length && $.fn.chosen) {
+    $("#filtroChoferesForm .chosen-select").chosen({
+      width: "100%",
+      search_contains: true,
+      no_results_text: "No se encontraron resultados: ",
+      placeholder_text_multiple: "<< TODOS >>"
+    });
+  }
+
   // Inicialización de Grids si existen en el DOM
   if ($("#gridEmpresasTransporte").length) initGridEmpresasTransporte();
   if ($("#gridChoferes").length) initGridChoferes();
@@ -857,13 +867,7 @@ function initGridEmpresasTransporte() {
       "Acciones",
     ],
     colModel: [
-      {
-        name: "Mat_Cod",
-        index: "Mat_Cod",
-        width: 60,
-        align: "center",
-        key: true,
-      },
+      { name: "Mat_Cod", index: "Mat_Cod", width: 60, align: "center", key: true, },
       { name: "Mat_Des", index: "Mat_Des", width: 220, align: "left" },
       { name: "Mat_Mae", index: "Mat_Mae", width: 140, align: "center" },
       { name: "Mat_Tel", index: "Mat_Tel", width: 90, align: "center" },
@@ -930,6 +934,7 @@ function initGridEmpresasTransporte() {
       buttonicon: "glyphicon glyphicon-download-alt",
       title: "Exportar a Excel",
       onClickButton: function () {
+        if ($("#loader").length) $("#loader").show();
         if (
           $.fn.jqGrid &&
           typeof $grid.jqGrid("exportGridExcel") === "function"
@@ -941,12 +946,6 @@ function initGridEmpresasTransporte() {
             removeHiddens: true,
             removeCols: ["acciones"],
           });
-        } else {
-          mostrarAlertaUI(
-            "Información",
-            "Preparando exportación a Excel...",
-            "info",
-          );
         }
       },
     });
@@ -1089,6 +1088,33 @@ function anularEmpresaTransporte(Mat_Cod) {
   );
 }
 
+function renderFotoDobleCell(pathAnv, pathRev, tituloAnv, tituloRev, esNoAplica) {
+  if (esNoAplica) {
+    return '<span class="text-muted">N/A</span>';
+  }
+  var anv = pathAnv && String(pathAnv).trim() !== "" && String(pathAnv).trim() !== "null" && String(pathAnv).trim() !== "undefined";
+  var rev = pathRev && String(pathRev).trim() !== "" && String(pathRev).trim() !== "null" && String(pathRev).trim() !== "undefined";
+
+  var htmlAnv = "";
+  if (anv) {
+    htmlAnv = '<i class="glyphicon glyphicon-ok" style="color: #28a745; font-size: 15px; margin-right: 4px;" title="' + tituloAnv + ': Registrada"></i>';
+  } else {
+    htmlAnv = '<i class="glyphicon glyphicon-remove" style="color: #dc3545; font-size: 13px; margin-right: 4px; opacity: 0.4;" title="' + tituloAnv + ': No registrada"></i>';
+  }
+
+  var htmlRev = "";
+  if (rev) {
+    htmlRev = '<i class="glyphicon glyphicon-ok" style="color: #28a745; font-size: 15px;" title="' + tituloRev + ': Registrada"></i>';
+  } else {
+    htmlRev = '<i class="glyphicon glyphicon-remove" style="color: #dc3545; font-size: 13px; opacity: 0.4;" title="' + tituloRev + ': No registrada"></i>';
+  }
+
+  var excelTexto = (anv && rev) ? "SI" : "NO";
+  var htmlExcel = '<span style="display:none !important;">' + excelTexto + '</span>';
+
+  return '<div style="text-align:center;">' + htmlAnv + htmlRev + htmlExcel + '</div>';
+}
+
 /* ==========================================================================
    TAB 2: CHOFERES
    ========================================================================== */
@@ -1103,12 +1129,14 @@ function initGridChoferes() {
       "Código",
       "Tipo Registro",
       "Cédula",
+      "Foto Cédula",
       "Nombres",
       "Teléfono",
       "Tipo Sangre",
       "Tipo",
       "Caducidad",
       "Estado Lic.",
+      "Foto Licencia",
       "Planta",
       "Pla_Cod",
       "Estado",
@@ -1121,13 +1149,13 @@ function initGridChoferes() {
         width: 60,
         align: "center",
         key: true,
-        hidden: true,
+        formatter: function (cellvalue, options, rowObject) {
+          if (rowObject && rowObject.Cho_Cod) return rowObject.Cho_Cod;
+          if (rowObject && rowObject.MVis_Cod) return rowObject.MVis_Cod;
+          return cellvalue ? String(cellvalue).replace(/^[A-Za-z]_/, "") : "";
+        }
       },
-      {
-        name: "tipo_registro",
-        index: "tipo_registro",
-        width: 95,
-        align: "center",
+      { name: "tipo_registro", index: "tipo_registro", width: 95, align: "center",
         formatter: function (cellvalue) {
           if (cellvalue === "VISITANTE") {
             return '<span class="label label-info" style="background-color: #17a2b8;"><i class="glyphicon glyphicon-user"></i> VISITANTE</span>';
@@ -1136,6 +1164,12 @@ function initGridChoferes() {
         },
       },
       { name: "Prs_Ced", index: "Prs_Ced", width: 95, align: "center" },
+      { name: "foto_cedula", index: "foto_cedula", width: 105, align: "center",
+        sortable: false,
+        formatter: function (cellvalue, options, rowObject) {
+          return renderFotoDobleCell(rowObject.Cho_Doc_Ced, rowObject.Cho_Doc_Ced_Rev, "Cédula Anverso", "Cédula Reverso", false);
+        },
+      },
       { name: "nombre", index: "nombre", width: 190, align: "left" },
       { name: "Cho_Tel", index: "Cho_Tel", width: 95, align: "center" },
       { name: "Cho_Tsa", index: "Cho_Tsa", width: 80, align: "center" },
@@ -1185,6 +1219,23 @@ function initGridChoferes() {
           } else {
             return '<span class="label label-danger">CADUCADA</span>';
           }
+        },
+      },
+      {
+        name: "foto_licencia",
+        index: "foto_licencia",
+        width: 105,
+        align: "center",
+        sortable: false,
+        formatter: function (cellvalue, options, rowObject) {
+          if (rowObject.tipo_registro === "VISITANTE") {
+            return '<span class="text-muted">N/A</span>';
+          }
+          var tli = String(rowObject.Cho_Tli || "").trim().toUpperCase();
+          if (tli === "NP" || tli === "NOP" || tli === "NO POSEE") {
+            return '<span class="text-muted" title="No Posee Licencia">N/A</span>';
+          }
+          return renderFotoDobleCell(rowObject.Cho_Img_Lic_Anv, rowObject.Cho_Img_Lic_Rev, "Licencia Anverso", "Licencia Reverso", false);
         },
       },
       {
@@ -1278,6 +1329,7 @@ function initGridChoferes() {
       buttonicon: "glyphicon glyphicon-download-alt",
       title: "Exportar a Excel",
       onClickButton: function () {
+        if ($("#loader").length) $("#loader").show();
         if (
           $.fn.jqGrid &&
           typeof $grid.jqGrid("exportGridExcel") === "function"
@@ -1289,12 +1341,6 @@ function initGridChoferes() {
             removeHiddens: true,
             removeCols: ["acciones"],
           });
-        } else {
-          mostrarAlertaUI(
-            "Información",
-            "Preparando exportación a Excel...",
-            "info",
-          );
         }
       },
     });
@@ -1304,8 +1350,21 @@ function actualizarGridChoferes() {
   var formData = $("#filtroChoferesForm").serializeArray();
   var postData = {};
   $.each(formData, function (i, field) {
-    postData[field.name] = field.value;
+    if (postData[field.name] !== undefined) {
+      if (!Array.isArray(postData[field.name])) {
+        postData[field.name] = [postData[field.name]];
+      }
+      postData[field.name].push(field.value);
+    } else {
+      postData[field.name] = field.value;
+    }
   });
+
+  if ($("#selMostrarDatos").length) {
+    var mostrarVals = $("#selMostrarDatos").val() || [];
+    postData["mostrar_datos"] = mostrarVals;
+  }
+
   $("#gridChoferes")
     .jqGrid("setGridParam", {
       postData: postData,
@@ -1314,7 +1373,7 @@ function actualizarGridChoferes() {
     .trigger("reloadGrid");
 }
 
-$(document).on("change", 'input[name="mostrar_datos"], input[name="op_opciones"]', function () {
+$(document).on("change", '#selMostrarDatos, input[name="foto_cedula"], input[name="foto_licencia"], input[name="op_opciones"]', function () {
   actualizarGridChoferes();
 });
 
@@ -2300,6 +2359,7 @@ function initGridVehiculos() {
       buttonicon: "glyphicon glyphicon-download-alt",
       title: "Exportar a Excel",
       onClickButton: function () {
+        if ($("#loader").length) $("#loader").show();
         if (
           $.fn.jqGrid &&
           typeof $grid.jqGrid("exportGridExcel") === "function"
@@ -2311,12 +2371,6 @@ function initGridVehiculos() {
             removeHiddens: true,
             removeCols: ["acciones"],
           });
-        } else {
-          mostrarAlertaUI(
-            "Información",
-            "Preparando exportación a Excel...",
-            "info",
-          );
         }
       },
     });

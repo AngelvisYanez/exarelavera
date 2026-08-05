@@ -833,6 +833,53 @@ div.ui-dialog.exa-alert-modal-pro .ui-dialog-buttonpane button:nth-child(2):hove
     color: #334155 !important;
 }
 
+/* ==========================================================================
+   ESTILOS PARA MULTISELECT CHOSEN EN FILTROS (CHIPS / TAGS MULTI-OPCIÓN)
+   ========================================================================== */
 
+.chosen-container-multi .chosen-choices {
+    min-height: 28px !important;
+    height: auto !important;
+    border-radius: 4px !important;
+    border: 1px solid #cbd5e1 !important;
+    background-image: none !important;
+    background-color: #ffffff !important;
+    padding: 1px 4px !important;
+    box-shadow: none !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+}
 
+.chosen-container-multi.chosen-container-active .chosen-choices {
+    border-color: #1e88e5 !important;
+    box-shadow: 0 0 0 2px rgba(30, 136, 229, 0.25) !important;
+}
 
+.chosen-container-multi .chosen-choices li.search-choice {
+    background: #f1f5f9 !important;
+    background-image: none !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 3px !important;
+    color: #1e293b !important;
+    font-size: 11px !important;
+    line-height: 16px !important;
+    padding: 3px 20px 3px 7px !important;
+    margin: 2px 4px 2px 0 !important;
+    box-shadow: none !important;
+    font-weight: 600 !important;
+    position: relative !important;
+}
+
+.chosen-container-multi .chosen-choices li.search-choice .search-choice-close {
+    top: 5px !important;
+    right: 4px !important;
+}
+
+.chosen-container-multi .chosen-choices li.search-field input[type="text"] {
+    font-size: 11px !important;
+    color: #64748b !important;
+    height: 22px !important;
+    font-family: inherit !important;
+    margin: 1px 0 !important;
+}

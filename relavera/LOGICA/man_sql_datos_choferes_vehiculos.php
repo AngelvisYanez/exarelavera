@@ -22,33 +22,61 @@ function sentencias_datos_choferes_vehiculos($Nro_Sql, $Par_Sql)
             break;
 
         case 3:
-            // Listar Choferes y Visitantes por Emp_Cod
+            // Listar Choferes por Emp_Cod
             $searchChofer = "";
-            $searchVisitante = "";
-            $whereUnion = "";
 
             if (!empty($Par_Sql['search']) && !empty($Par_Sql['op_opciones'])) {
                 $searchTerm = addslashes($Par_Sql['search']);
                 if ($Par_Sql['op_opciones'] == 'c') {
-                    $searchChofer = " AND persona.Prs_Ced LIKE '%$searchTerm%'";
-                    $searchVisitante = " AND persona.Prs_Ced LIKE '%$searchTerm%'";
+                    $searchChofer .= " AND persona.Prs_Ced LIKE '%$searchTerm%'";
                 } else if ($Par_Sql['op_opciones'] == 'd') {
-                    $searchChofer = " AND (CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) LIKE '%$searchTerm%' OR persona.Prs_Nom LIKE '%$searchTerm%' OR persona.Prs_Ape LIKE '%$searchTerm%')";
-                    $searchVisitante = " AND (CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) LIKE '%$searchTerm%' OR persona.Prs_Nom LIKE '%$searchTerm%' OR persona.Prs_Ape LIKE '%$searchTerm%')";
+                    $searchChofer .= " AND (CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) LIKE '%$searchTerm%' OR persona.Prs_Nom LIKE '%$searchTerm%' OR persona.Prs_Ape LIKE '%$searchTerm%')";
                 }
             }
 
-            $tipoFiltro = !empty($Par_Sql['mostrar_datos']) ? $Par_Sql['mostrar_datos'] : '';
-            if (empty($tipoFiltro) && !empty($Par_Sql['op_opciones'])) {
-                if ($Par_Sql['op_opciones'] == 'v' || $Par_Sql['op_opciones'] == 'ch') {
-                    $tipoFiltro = $Par_Sql['op_opciones'];
+            // Filtros opcionales múltiples por datos de Cédula, Licencia e Incompletud
+            $mostrarDatos = array();
+            if (!empty($Par_Sql['mostrar_datos'])) {
+                if (is_array($Par_Sql['mostrar_datos'])) {
+                    $mostrarDatos = $Par_Sql['mostrar_datos'];
+                } else if (is_string($Par_Sql['mostrar_datos'])) {
+                    $mostrarDatos = array_filter(array_map('trim', explode(',', $Par_Sql['mostrar_datos'])));
                 }
             }
 
-            if ($tipoFiltro == 'v') {
-                $whereUnion = " WHERE tipo_registro = 'VISITANTE' ";
-            } else if ($tipoFiltro == 'ch') {
-                $whereUnion = " WHERE tipo_registro = 'CHOFER' ";
+            if (!empty($Par_Sql['foto_cedula']) && $Par_Sql['foto_cedula'] == '1' && !in_array('con_foto_cedula', $mostrarDatos) && !in_array('foto_cedula', $mostrarDatos)) {
+                $mostrarDatos[] = 'con_foto_cedula';
+            }
+            if (!empty($Par_Sql['foto_licencia']) && $Par_Sql['foto_licencia'] == '1' && !in_array('con_foto_licencia', $mostrarDatos) && !in_array('foto_licencia', $mostrarDatos)) {
+                $mostrarDatos[] = 'con_foto_licencia';
+            }
+
+            foreach ($mostrarDatos as $filtro) {
+                switch ($filtro) {
+                    case 'incompletos':
+                        $searchChofer .= " AND (IFNULL(chofer.Cho_Doc_Ced,'') = '' OR IFNULL(chofer.Cho_Doc_Ced_Rev,'') = '' OR (IFNULL(chofer.Cho_Tli,'') != 'NP' AND (IFNULL(chofer.Cho_Img_Lic_Anv,'') = '' OR IFNULL(chofer.Cho_Img_Lic_Rev,'') = '')) OR IFNULL(chofer.Cho_Tel,'') = '' OR IFNULL(persona.Prs_Ced,'') = '')";
+                        break;
+                    case 'sin_foto_cedula':
+                        $searchChofer .= " AND (IFNULL(chofer.Cho_Doc_Ced,'') = '' OR IFNULL(chofer.Cho_Doc_Ced_Rev,'') = '')";
+                        break;
+                    case 'con_foto_cedula':
+                    case 'foto_cedula':
+                        $searchChofer .= " AND (IFNULL(chofer.Cho_Doc_Ced,'') != '' AND IFNULL(chofer.Cho_Doc_Ced_Rev,'') != '')";
+                        break;
+                    case 'sin_foto_licencia':
+                        $searchChofer .= " AND (IFNULL(chofer.Cho_Img_Lic_Anv,'') = '' OR IFNULL(chofer.Cho_Img_Lic_Rev,'') = '')";
+                        break;
+                    case 'con_foto_licencia':
+                    case 'foto_licencia':
+                        $searchChofer .= " AND (IFNULL(chofer.Cho_Img_Lic_Anv,'') != '' AND IFNULL(chofer.Cho_Img_Lic_Rev,'') != '')";
+                        break;
+                    case 'licencia_vencida':
+                        $searchChofer .= " AND (chofer.Cho_Cli IS NOT NULL AND chofer.Cho_Cli < CURDATE() AND IFNULL(chofer.Cho_Tli,'') != 'NP')";
+                        break;
+                    case 'sin_cedula':
+                        $searchChofer .= " AND (IFNULL(persona.Prs_Ced,'') = '')";
+                        break;
+                }
             }
 
             $baseUnion = "
@@ -67,7 +95,11 @@ function sentencias_datos_choferes_vehiculos($Nro_Sql, $Par_Sql)
                     chofer.Cho_Cli,
                     chofer.Cho_Tsa,
                     IFNULL(chofer.Cho_Tel, persona.Prs_Tel) as Cho_Tel,
-                    chofer.Cho_Est
+                    chofer.Cho_Est,
+                    chofer.Cho_Doc_Ced,
+                    chofer.Cho_Doc_Ced_Rev,
+                    chofer.Cho_Img_Lic_Anv,
+                    chofer.Cho_Img_Lic_Rev
                 FROM chofer
                 INNER JOIN persona ON persona.Prs_Cod = chofer.Prs_Cod
                 INNER JOIN (
@@ -79,6 +111,8 @@ function sentencias_datos_choferes_vehiculos($Nro_Sql, $Par_Sql)
                 ) min_c ON min_c.min_cho_cod = chofer.Cho_Cod
                 WHERE chofer.Emp_Cod = '$Par_Sql[0]' AND chofer.Cho_Est != 'I' $searchChofer
 
+                /* 
+                -- TABLA DE VISITANTES COMENTADA (SOLO CHOFERES)
                 UNION ALL
 
                 SELECT 
@@ -96,16 +130,21 @@ function sentencias_datos_choferes_vehiculos($Nro_Sql, $Par_Sql)
                     NULL as Cho_Cli,
                     mv.MVis_Tsa as Cho_Tsa,
                     IFNULL(persona.Prs_Tel, mv.MVis_Tem) as Cho_Tel,
-                    mv.MVis_Est as Cho_Est
+                    mv.MVis_Est as Cho_Est,
+                    mv.MVis_Doc_Ced as Cho_Doc_Ced,
+                    mv.MVis_Doc_Ced_Rev as Cho_Doc_Ced_Rev,
+                    NULL as Cho_Img_Lic_Anv,
+                    NULL as Cho_Img_Lic_Rev
                 FROM manifiesto_visitante mv
                 INNER JOIN persona ON persona.Prs_Cod = mv.Prs_Cod
-                WHERE mv.Emp_Cod = '$Par_Sql[0]' AND mv.MVis_Est != 'I' $searchVisitante
+                WHERE mv.Emp_Cod = '$Par_Sql[0]' AND mv.MVis_Est != 'I'
+                */
             ";
 
             if (empty($Par_Sql['limits'])) {
-                $sql = "SELECT COUNT(*) as total FROM ($baseUnion) u $whereUnion";
+                $sql = "SELECT COUNT(*) as total FROM ($baseUnion) u";
             } else {
-                $sql = "SELECT u.* FROM ($baseUnion) u $whereUnion ORDER BY u.nombre ASC " . $Par_Sql['limits'];
+                $sql = "SELECT u.* FROM ($baseUnion) u ORDER BY u.nombre ASC " . $Par_Sql['limits'];
             }
             break;
 
