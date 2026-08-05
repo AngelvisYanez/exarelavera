@@ -2499,12 +2499,15 @@ class adq_adquisiciones_log extends MysqlDatosContab {
     }
 
     /**
-     * Valida que el subtotal de la proforma ganadora coincida con la suma de
-     * subtotales de las facturas registradas (tolerancia de centavos).
+     * Valida subtotales de facturas vs cotizacion ganadora.
+     * @param int  $sol_cod
+     * @param bool $exige_igualdad true = ultimo/unico AVANCE (suma debe ser igual);
+     *                             false = AVANCE intermedio (solo no superar; parcial OK).
      */
-    public function validarCoincidenciaTotalesFacturas($sol_cod) {
+    public function validarCoincidenciaTotalesFacturas($sol_cod, $exige_igualdad = true) {
         $this->ensureAvancesTable();
         $sol_cod = intval($sol_cod);
+        $exige_igualdad = !!$exige_igualdad;
         if ($sol_cod <= 0) {
             return array('success' => false, 'message' => 'Solicitud invalida para validar los totales.');
         }
@@ -2519,6 +2522,19 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $this->conexion
         );
         if (empty($facturas)) {
+            if ($exige_igualdad) {
+                $cnt_cot_prev = $this->getRowConsultaSql(
+                    "SELECT COUNT(*) AS cnt FROM adq_solicitudes_cotizaciones WHERE Sol_Cod = $sol_cod;",
+                    $this->conexion
+                );
+                $tiene_cot = !empty($cnt_cot_prev['cnt']) && intval($cnt_cot_prev['cnt']) > 0;
+                return array(
+                    'success' => false,
+                    'message' => $tiene_cot
+                        ? 'En esta etapa debe cargar las facturas hasta completar el subtotal de la cotizacion ganadora.'
+                        : 'En esta etapa debe cargar las facturas hasta completar el valor total de la solicitud.'
+                );
+            }
             return array(
                 'success' => true,
                 'omitida' => true,
@@ -2530,6 +2546,85 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             "SELECT Sol_Val_Est FROM adq_solicitudes WHERE Sol_Cod = $sol_cod LIMIT 1;",
             $this->conexion
         );
+        $valor_solicitud = round(floatval(isset($sol['Sol_Val_Est']) ? $sol['Sol_Val_Est'] : 0), 2);
+
+        $cnt_cot = $this->getRowConsultaSql(
+            "SELECT COUNT(*) AS cnt FROM adq_solicitudes_cotizaciones WHERE Sol_Cod = $sol_cod;",
+            $this->conexion
+        );
+        $tiene_proformas = !empty($cnt_cot['cnt']) && intval($cnt_cot['cnt']) > 0;
+
+        // Sin proformas: comparar facturas vs valor de la solicitud (detTotal / Sol_Val_Est).
+        if (!$tiene_proformas) {
+            if ($valor_solicitud <= 0) {
+                return array(
+                    'success' => false,
+                    'message' => 'No se puede finalizar: el valor total de la solicitud debe ser mayor que cero.'
+                );
+            }
+
+            $suma_facturas = 0;
+            $facturas_contadas = 0;
+            foreach ($facturas as $factura) {
+                $cop_cod = intval($factura['Sav_Cop_Cod']);
+                if ($cop_cod <= 0) {
+                    continue;
+                }
+                $totales = $this->calcularTotalesCompraExa($cop_cod);
+                $suma_facturas += floatval($totales['Subtotal']);
+                $facturas_contadas++;
+            }
+            $suma_facturas = round($suma_facturas, 2);
+            $diferencia = round($suma_facturas - $valor_solicitud, 2);
+            if ($diferencia > 0.01) {
+                return array(
+                    'success' => false,
+                    'message' => 'El subtotal de las facturas es mayor al valor de la solicitud. Subtotal facturas: $ '
+                        . number_format($suma_facturas, 2)
+                        . '. Valor solicitud: $ ' . number_format($valor_solicitud, 2) . '.',
+                    'valor_esperado' => $valor_solicitud,
+                    'suma_facturas' => $suma_facturas,
+                    'diferencia' => $diferencia,
+                    'facturas' => $facturas_contadas,
+                    'sin_proformas' => true
+                );
+            }
+            if (abs($diferencia) > 0.01) {
+                if (!$exige_igualdad) {
+                    return array(
+                        'success' => true,
+                        'parcial' => true,
+                        'valor_esperado' => $valor_solicitud,
+                        'suma_facturas' => $suma_facturas,
+                        'diferencia' => $diferencia,
+                        'facturas' => $facturas_contadas,
+                        'sin_proformas' => true
+                    );
+                }
+                return array(
+                    'success' => false,
+                    'message' => 'La suma de subtotales de facturas debe ser igual al valor de la solicitud. Valor solicitud: $ '
+                        . number_format($valor_solicitud, 2)
+                        . '. Facturas (subtotal): $ ' . number_format($suma_facturas, 2)
+                        . '. Diferencia: $ ' . number_format(abs($diferencia), 2) . '.',
+                    'valor_esperado' => $valor_solicitud,
+                    'suma_facturas' => $suma_facturas,
+                    'diferencia' => $diferencia,
+                    'facturas' => $facturas_contadas,
+                    'sin_proformas' => true
+                );
+            }
+
+            return array(
+                'success' => true,
+                'valor_esperado' => $valor_solicitud,
+                'suma_facturas' => $suma_facturas,
+                'diferencia' => 0,
+                'facturas' => $facturas_contadas,
+                'sin_proformas' => true
+            );
+        }
+
         $cot = $this->getRowConsultaSql(
             "SELECT Sco_Cod, Cot_Val, Cot_Sub, Cot_Iva
              FROM adq_solicitudes_cotizaciones
@@ -2545,7 +2640,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             );
         }
 
-        $valor_paso3 = round(floatval(isset($sol['Sol_Val_Est']) ? $sol['Sol_Val_Est'] : 0), 2);
+        $valor_paso3 = $valor_solicitud;
         $valor_proforma_total = round(floatval($cot['Cot_Val']), 2);
         $valor_proforma_sub = $this->subtotalCotizacion($cot);
         if ($valor_paso3 <= 0 || $valor_proforma_sub <= 0) {
@@ -2590,6 +2685,17 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             );
         }
         if (abs($diferencia) > 0.01) {
+            // Intermedio: factura parcial OK (solo no superar).
+            if (!$exige_igualdad) {
+                return array(
+                    'success' => true,
+                    'parcial' => true,
+                    'valor_esperado' => $valor_proforma_sub,
+                    'suma_facturas' => $suma_facturas,
+                    'diferencia' => $diferencia,
+                    'facturas' => $facturas_contadas
+                );
+            }
             return array(
                 'success' => false,
                 'message' => 'La suma de subtotales de facturas debe ser igual al subtotal de la proforma. Proforma (subtotal): $ '
@@ -2610,6 +2716,42 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             'diferencia' => 0,
             'facturas' => $facturas_contadas
         );
+    }
+
+    /**
+     * Suma subtotales de facturas de avance, opcionalmente excluyendo un nodo.
+     */
+    public function sumaSubtotalesFacturasAvance($sol_cod, $excluir_nod_cod = 0) {
+        $this->ensureAvancesTable();
+        $sol_cod = intval($sol_cod);
+        $excluir_nod_cod = intval($excluir_nod_cod);
+        if ($sol_cod <= 0) {
+            return 0;
+        }
+        $filtro_nod = $excluir_nod_cod > 0 ? (" AND Nod_Cod <> $excluir_nod_cod") : '';
+        $facturas = $this->getArrayConsultaSql(
+            "SELECT DISTINCT Sav_Cop_Cod
+             FROM adq_solicitudes_avances
+             WHERE Sol_Cod = $sol_cod
+               AND Sav_Cop_Cod IS NOT NULL
+               AND Sav_Cop_Cod > 0
+               $filtro_nod
+             ORDER BY Sav_Cop_Cod ASC;",
+            $this->conexion
+        );
+        if (empty($facturas)) {
+            return 0;
+        }
+        $suma = 0;
+        foreach ($facturas as $factura) {
+            $cop_cod = intval($factura['Sav_Cop_Cod']);
+            if ($cop_cod <= 0) {
+                continue;
+            }
+            $totales = $this->calcularTotalesCompraExa($cop_cod);
+            $suma += floatval($totales['Subtotal']);
+        }
+        return round($suma, 2);
     }
 
     /**
@@ -3179,8 +3321,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 $sav_eliminar,
                 $fecha
             );
-            // Al guardar no exige igualdad exacta, pero no permite superar el valor de la solicitud/proforma.
-            $validacion = $this->validarCoincidenciaTotalesFacturas($sol_cod);
+            // Al guardar: solo bloquear si las facturas superan la proforma (parcial OK).
+            $validacion = $this->validarCoincidenciaTotalesFacturas($sol_cod, false);
             if (empty($validacion['success']) && empty($validacion['omitida'])) {
                 $dif = isset($validacion['diferencia']) ? floatval($validacion['diferencia']) : 0;
                 if ($dif > 0.01) {

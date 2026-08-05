@@ -12,13 +12,28 @@ $db_param = isset($Ses_Dis_Dis) ? $Ses_Dis_Dis : (isset($_SESSION['Ses_Dis_Dis']
 $obBD_conexion = new Class_Log_Conexion_Global($db_param);
 $obBD_con1 = new MysqlDatos($obBD_conexion);
 $wf_mgr = new wf_manager_log($db_param);
+$wf_mgr->ensureUtf8Charset();
+if (!empty($obBD_conexion->conexion) && function_exists('mysqli_set_charset')) {
+    @mysqli_set_charset($obBD_conexion->conexion, 'utf8mb4');
+}
 
 function adq_cfg_h($text) {
     return htmlspecialchars((string)$text, ENT_QUOTES, 'UTF-8');
 }
 
 function adq_cfg_utf8_deep(&$data) {
-    if ($data !== null && $data !== false && function_exists('utf8_encode_deep')) {
+    if ($data === null || $data === false) {
+        return;
+    }
+    if (class_exists('wf_manager_log') && method_exists('wf_manager_log', 'utf8EnsureDeep')) {
+        wf_manager_log::utf8EnsureDeep($data);
+        return;
+    }
+    if (function_exists('utf8_encode_deep')) {
+        // Fallback legacy: solo si no es UTF-8 (evitar doble encode).
+        if (is_string($data) && function_exists('mb_check_encoding') && mb_check_encoding($data, 'UTF-8')) {
+            return;
+        }
         utf8_encode_deep($data);
     }
 }
@@ -143,32 +158,62 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
     if (isset($ajax_get_tipos)) {
         header('Content-Type: text/html; charset=UTF-8');
         $filtro_wfm = isset($_GET['filtro_wfm']) ? intval($_GET['filtro_wfm']) : 0;
+        $filtro_dep = isset($_GET['filtro_dep']) ? intval($_GET['filtro_dep']) : 0;
         $filtro_fam = 0;
         $where_flujo = '';
+        $where_dep = '';
         if ($filtro_wfm > 0) {
             $filtro_fam = $wf_mgr->resolverFamiliaCod($filtro_wfm);
             if ($filtro_fam > 0) {
                 $where_flujo = " AND COALESCE(w.Wfm_Fam_Cod, w.Wfm_Cod) = $filtro_fam ";
             }
         }
+        if ($filtro_dep > 0) {
+            $where_dep = " AND w.Wde_Cod = $filtro_dep ";
+        }
 
         $tipos = $obBD_con1->getArrayConsultaSql("
-            SELECT t.*, w.Wfm_Nom, COALESCE(w.Wfm_Fam_Cod, w.Wfm_Cod) AS Wfm_Fam_Cod
+            SELECT t.*,
+                   w.Wfm_Nom,
+                   COALESCE(w.Wfm_Fam_Cod, w.Wfm_Cod) AS Wfm_Fam_Cod,
+                   w.Wde_Cod AS Flujo_Wde_Cod,
+                   d.Wde_Des AS Dep_Des
             FROM adq_tipos_requerimientos t 
-            INNER JOIN wf_flujos_modelos w ON w.Wfm_Cod = t.Wfm_Cod 
-            WHERE t.Emp_Cod = $Ses_Emp_Cod $where_flujo
+            INNER JOIN wf_flujos_modelos w ON w.Wfm_Cod = t.Wfm_Cod
+            LEFT JOIN wf_departamentos d ON d.Wde_Cod = w.Wde_Cod
+            WHERE t.Emp_Cod = $Ses_Emp_Cod $where_flujo $where_dep
             ORDER BY t.Trq_Cod DESC;", $obBD_conexion);
 
         $flujos = $wf_mgr->listarFlujosDisenador($Ses_Emp_Cod);
+        $departamentos = $wf_mgr->listarDepartamentosDisenador($Ses_Emp_Cod);
         adq_cfg_utf8_deep($tipos);
         adq_cfg_utf8_deep($flujos);
+        adq_cfg_utf8_deep($departamentos);
+        $msg_vacio = 'No hay tipos de requerimientos configurados.';
+        if ($filtro_fam > 0 && $filtro_dep > 0) {
+            $msg_vacio = 'No hay tipos asociados a este flujo modelo y departamento.';
+        } elseif ($filtro_fam > 0) {
+            $msg_vacio = 'No hay tipos de requerimientos asociados a este flujo modelo.';
+        } elseif ($filtro_dep > 0) {
+            $msg_vacio = 'No hay tipos de requerimientos asociados a este departamento.';
+        }
         ?>
         <div class="p-1">
             <div class="adq-tipos-toolbar">
                 <h4 class="fw-bold text-primary adq-tipos-toolbar-title"><i class="bi bi-tags"></i> Tipos de Requerimientos</h4>
                 <div class="adq-tipos-toolbar-actions">
+                    <label class="form-label fw-semibold small" for="filtroDepartamentoTipo">Departamento:</label>
+                    <select class="form-control form-control-sm adq-tipos-filtro-dep" id="filtroDepartamentoTipo" onchange="filtrarTiposConfiguracion()">
+                        <option value="" <?php echo $filtro_dep <= 0 ? 'selected' : ''; ?>>Todos los departamentos</option>
+                        <?php foreach ($departamentos as $d) {
+                            $dep_opt = intval($d['Dep_Cod']);
+                            $sel = ($filtro_dep > 0 && $dep_opt === $filtro_dep) ? 'selected' : '';
+                            ?>
+                            <option value="<?php echo $dep_opt; ?>" <?php echo $sel; ?>><?php echo htmlspecialchars($d['Dep_Des'], ENT_QUOTES, 'UTF-8'); ?></option>
+                        <?php } ?>
+                    </select>
                     <label class="form-label fw-semibold small" for="filtroFlujoModelo">Flujo modelo:</label>
-                    <select class="form-control form-control-sm adq-tipos-filtro-flujo" id="filtroFlujoModelo" onchange="filtrarTiposPorFlujo()">
+                    <select class="form-control form-control-sm adq-tipos-filtro-flujo" id="filtroFlujoModelo" onchange="filtrarTiposConfiguracion()">
                         <option value="" <?php echo $filtro_fam <= 0 ? 'selected' : ''; ?>>Todos los flujos</option>
                         <?php foreach ($flujos as $f) {
                             $wfm_opt = intval($f['Wfm_Cod']);
@@ -191,6 +236,7 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
                             <th style="width: 60px;">ID</th>
                             <th>Descripción</th>
                             <th>Flujo Modelo</th>
+                            <th>Departamento</th>
                             <th style="width: 80px;">Factura</th>
                             <th style="width: 80px;">Cotiz.</th>
                             <th style="width: 60px;">Mín.</th>
@@ -204,7 +250,7 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
                     </thead>
                     <tbody>
                         <?php if (empty($tipos)) { ?>
-                            <tr class="text-center"><td colspan="12" class="text-muted py-3"><?php echo $filtro_fam > 0 ? 'No hay tipos de requerimientos asociados a este flujo modelo.' : 'No hay tipos de requerimientos configurados.'; ?></td></tr>
+                            <tr class="text-center"><td colspan="13" class="text-muted py-3"><?php echo htmlspecialchars($msg_vacio, ENT_QUOTES, 'UTF-8'); ?></td></tr>
                         <?php } else { 
                             foreach ($tipos as $t) {
                                 $est = isset($t['Trq_Est']) ? $t['Trq_Est'] : 'A';
@@ -220,6 +266,7 @@ if (isset($_GET['ajax_get_tipos']) || isset($_GET['ajax_get_tipo_req']) || isset
                                     <td class="fw-bold"><?php echo $t['Trq_Cod']; ?></td>
                                     <td class="text-start"><?php echo adq_cfg_h($t['Trq_Des']); ?></td>
                                     <td class="text-start fw-semibold text-primary"><?php echo adq_cfg_h($t['Wfm_Nom']); ?></td>
+                                    <td class="text-start"><?php echo !empty($t['Dep_Des']) ? adq_cfg_h($t['Dep_Des']) : '<span class="text-muted">Sin departamento</span>'; ?></td>
                                     <td><?php echo $t['Trq_Req_Fac'] ? '<i class="bi bi-check-lg text-success"></i>' : '<i class="bi bi-x-lg text-danger"></i>'; ?></td>
                                     <td><?php echo $t['Trq_Req_Cot'] ? '<i class="bi bi-check-lg text-success"></i>' : '<i class="bi bi-x-lg text-danger"></i>'; ?></td>
                                     <td class="fw-bold"><?php echo $t['Trq_Min_Cot']; ?></td>
@@ -494,7 +541,7 @@ if (isset($_GET['ajax_load_workflow']) || isset($_GET['ajax_save_workflow']) || 
     exit;
 }
 
-if (isset($_GET['ajax_get_deptos']) || isset($_GET['ajax_get_depto_req']) || isset($_GET['ajax_save_depto_req']) || isset($_POST['ajax_save_depto_req']) || isset($_GET['ajax_toggle_depto_req']) || isset($_POST['ajax_toggle_depto_req']) || isset($_GET['ajax_get_depto_users']) || isset($_POST['ajax_save_depto_users'])) {
+if (isset($_GET['ajax_get_deptos']) || isset($_GET['ajax_get_depto_req']) || isset($_GET['ajax_save_depto_req']) || isset($_POST['ajax_save_depto_req']) || isset($_GET['ajax_toggle_depto_req']) || isset($_POST['ajax_toggle_depto_req']) || isset($_GET['ajax_get_depto_users']) || isset($_POST['ajax_save_depto_users']) || isset($_GET['ajax_get_usuarios_encargado'])) {
     if (isset($_GET['ajax_get_deptos'])) {
         header('Content-Type: text/html; charset=UTF-8');
     }
@@ -504,6 +551,7 @@ if (isset($_GET['ajax_get_deptos']) || isset($_GET['ajax_get_depto_req']) || iss
     $ajax_toggle_depto_req = isset($_GET['ajax_toggle_depto_req']) ? $_GET['ajax_toggle_depto_req'] : (isset($_POST['ajax_toggle_depto_req']) ? $_POST['ajax_toggle_depto_req'] : null);
     $ajax_get_depto_users = isset($_GET['ajax_get_depto_users']) ? $_GET['ajax_get_depto_users'] : null;
     $ajax_save_depto_users = isset($_POST['ajax_save_depto_users']) ? $_POST['ajax_save_depto_users'] : null;
+    $ajax_get_usuarios_encargado = isset($_GET['ajax_get_usuarios_encargado']) ? $_GET['ajax_get_usuarios_encargado'] : null;
     include('adq_departamentos.php');
     exit;
 }
@@ -685,19 +733,21 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
         .adq-tipos-toolbar-actions {
             display: flex;
             align-items: center;
-            flex-wrap: nowrap;
+            flex-wrap: wrap;
             gap: 10px;
             margin-left: auto;
             flex: 0 0 auto;
+            justify-content: flex-end;
         }
         .adq-tipos-toolbar-actions label {
             margin: 0;
             white-space: nowrap;
         }
-        .adq-tipos-filtro-flujo {
-            width: 260px !important;
-            min-width: 200px;
-            max-width: 320px;
+        .adq-tipos-filtro-flujo,
+        .adq-tipos-filtro-dep {
+            width: 220px !important;
+            min-width: 160px;
+            max-width: 280px;
             flex: 0 0 auto;
             display: inline-block;
         }
@@ -885,9 +935,16 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
                         <div class="adq-detail-card">
                             <input type="hidden" id="Dep_Cod" name="Dep_Cod">
                             <h5 class="adq-section-header"><i class="bi bi-pencil-square"></i> Datos del departamento</h5>
-                            <div class="form-group" style="margin-bottom: 0;">
+                            <div class="form-group">
                                 <label for="Dep_Des" class="control-label">Nombre del Departamento *</label>
                                 <input type="text" class="form-control" id="Dep_Des" name="Dep_Des" placeholder="EJ. DEPARTAMENTO DE COMPRAS, SISTEMAS, ETC." autocomplete="off" required maxlength="150" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="Dep_Usu_Cod" class="control-label">Usuario encargado *</label>
+                                <select class="form-control" id="Dep_Usu_Cod" name="Usu_Cod" required>
+                                    <option value="">Seleccione un usuario...</option>
+                                </select>
+                                <p class="text-muted small" style="margin: 6px 0 0;">Solo usuarios activos habilitados para workflow (<strong>Usu_Wf = S</strong>), los mismos disponibles en nodos.</p>
                             </div>
                         </div>
                     </div>
@@ -966,7 +1023,7 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
         </div>
     </div>
 
-    <script src="../VALIDACIONES/wf_builder.js?v=61"></script>
+    <script src="../VALIDACIONES/wf_builder.js?v=67"></script>
     <script>
         function limpiarBackdropModal() {
             $('body').removeClass('modal-open');
@@ -1104,11 +1161,20 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
             return $filtro.length ? ($filtro.val() || '') : '';
         }
 
-        function cargarTiposConfiguracion(filtroWfm) {
+        function obtenerFiltroDepartamentoTipos() {
+            const $filtro = $('#filtroDepartamentoTipo');
+            return $filtro.length ? ($filtro.val() || '') : '';
+        }
+
+        function cargarTiposConfiguracion(filtroWfm, filtroDep) {
             const params = { ajax_get_tipos: 1 };
             const filtro = typeof filtroWfm !== 'undefined' ? filtroWfm : obtenerFiltroFlujoTipos();
+            const dep = typeof filtroDep !== 'undefined' ? filtroDep : obtenerFiltroDepartamentoTipos();
             if (filtro) {
                 params.filtro_wfm = filtro;
+            }
+            if (dep) {
+                params.filtro_dep = dep;
             }
             $.get('adq_configuracion.php', params, function(html) {
                 $('#tipos-panel-content').html(html);
@@ -1118,8 +1184,12 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
             });
         }
 
+        function filtrarTiposConfiguracion() {
+            cargarTiposConfiguracion(obtenerFiltroFlujoTipos(), obtenerFiltroDepartamentoTipos());
+        }
+
         function filtrarTiposPorFlujo() {
-            cargarTiposConfiguracion(obtenerFiltroFlujoTipos());
+            filtrarTiposConfiguracion();
         }
 
         let builderLoaded = false;
@@ -1128,6 +1198,9 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
                 if (typeof refreshNodeDepartments === 'function') {
                     refreshNodeDepartments();
                 }
+                if (typeof wfInitDepartamentoFlujo === 'function') {
+                    wfInitDepartamentoFlujo();
+                }
                 return;
             }
             $.get('adq_configuracion.php', { ajax_get_builder: 1 }, function(html) {
@@ -1135,6 +1208,9 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
                 builderLoaded = true;
                 if (typeof initWorkflowBuilder === 'function') {
                     initWorkflowBuilder();
+                }
+                if (typeof wfInitDepartamentoFlujo === 'function') {
+                    wfInitDepartamentoFlujo();
                 }
             }).fail(function(xhr, status, error) {
                 mostrarNotificacion('danger', 'Error al cargar diseñador de flujos: ' + error + ' (Status: ' + xhr.status + ')');
@@ -1180,15 +1256,67 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
             }, 200);
         }
 
+        function cargarOpcionesUsuariosEncargado(selectedUsuCod, selectedUsuNom, onDone) {
+            const $sel = $('#Dep_Usu_Cod');
+            const selected = selectedUsuCod ? String(selectedUsuCod) : '';
+            const selectedNom = selectedUsuNom || '';
+            if (typeof selectedUsuNom === 'function') {
+                onDone = selectedUsuNom;
+            }
+            $sel.prop('disabled', true).html('<option value="">Cargando usuarios...</option>');
+            $.getJSON('adq_configuracion.php', { ajax_get_usuarios_encargado: 1 }, function(res) {
+                $sel.empty().append($('<option>').val('').text('Seleccione un usuario...'));
+                if (!res.success) {
+                    msgExaDepto('danger', res.message || 'No se pudieron cargar los usuarios.');
+                    $sel.prop('disabled', false);
+                    if (typeof onDone === 'function') onDone(false);
+                    return;
+                }
+                const usuarios = res.usuarios || [];
+                let found = false;
+                if (!usuarios.length) {
+                    $sel.append($('<option>').val('').text('No hay usuarios workflow activos'));
+                } else {
+                    usuarios.forEach(function(u) {
+                        const cod = String(u.Usu_Cod || '');
+                        if (selected && cod === selected) {
+                            found = true;
+                        }
+                        $sel.append(
+                            $('<option>').val(cod).text(u.Usuario_Nom || ('Usuario #' + cod))
+                        );
+                    });
+                }
+                if (selected && !found) {
+                    $sel.append(
+                        $('<option>').val(selected).text((selectedNom || ('Usuario #' + selected)) + ' (no activo WF)')
+                    );
+                }
+                if (selected) {
+                    $sel.val(selected);
+                }
+                $sel.prop('disabled', false);
+                if (typeof onDone === 'function') onDone(true);
+            }).fail(function() {
+                $sel.empty().append($('<option>').val('').text('Error al cargar usuarios'));
+                $sel.prop('disabled', false);
+                msgExaDepto('danger', 'Error de red al cargar usuarios encargados.');
+                if (typeof onDone === 'function') onDone(false);
+            });
+        }
+
         function abrirFormularioDepto() {
             $('#frmDepto')[0].reset();
             $('#Dep_Cod').val('');
             $('#Dep_Des').val('').prop('required', true);
+            $('#Dep_Usu_Cod').val('').prop('required', true);
             $('#mdlDeptoTitle').html('<i class="bi bi-building"></i> Nuevo Departamento');
-            $('#mdlDepto').modal('show');
-            setTimeout(function() {
-                $('#Dep_Des').focus();
-            }, 300);
+            cargarOpcionesUsuariosEncargado('', '', function() {
+                $('#mdlDepto').modal('show');
+                setTimeout(function() {
+                    $('#Dep_Des').focus();
+                }, 300);
+            });
         }
 
         function editarDepto(id) {
@@ -1198,10 +1326,12 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
                     $('#Dep_Cod').val(d.Dep_Cod);
                     $('#Dep_Des').val(String(d.Dep_Des || '').toUpperCase()).prop('required', true);
                     $('#mdlDeptoTitle').html('<i class="bi bi-pencil-square"></i> Editar Departamento');
-                    $('#mdlDepto').modal('show');
-                    setTimeout(function() {
-                        $('#Dep_Des').focus().select();
-                    }, 300);
+                    cargarOpcionesUsuariosEncargado(d.Usu_Cod || '', d.Encargado_Nom || '', function() {
+                        $('#mdlDepto').modal('show');
+                        setTimeout(function() {
+                            $('#Dep_Des').focus().select();
+                        }, 300);
+                    });
                 } else {
                     msgExaDepto('danger', 'Error al cargar datos: ' + (res.message || ''));
                 }
@@ -1211,10 +1341,16 @@ if (isset($_GET['ajax_get_usuarios_wf']) || isset($_POST['ajax_save_usuario_wf']
         function guardarDepto(e) {
             e.preventDefault();
             const nombre = $.trim($('#Dep_Des').val() || '').toUpperCase();
+            const usuCod = $.trim($('#Dep_Usu_Cod').val() || '');
             $('#Dep_Des').val(nombre);
             if (!nombre) {
                 msgExaDepto('danger', 'Debe ingresar el nombre del departamento.');
                 $('#Dep_Des').focus();
+                return;
+            }
+            if (!usuCod) {
+                msgExaDepto('danger', 'Debe seleccionar el usuario encargado del departamento.');
+                $('#Dep_Usu_Cod').focus();
                 return;
             }
             $.post('adq_configuracion.php?ajax_save_depto_req=1', $('#frmDepto').serialize(), function(res) {

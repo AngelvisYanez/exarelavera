@@ -16,6 +16,186 @@ let draggedElement = null;
 let dragPointerOffset = { x: 0, y: 0 };
 let dragMoved = false;
 let dragSelectNodeId = null;
+let workflowWdeCod = null;
+let workflowPuedeEditar = true;
+
+function wfDeptosEncargado() {
+    return Array.isArray(window.WF_DEPTOS_ENCARGADO) ? window.WF_DEPTOS_ENCARGADO : [];
+}
+
+function wfInitDepartamentoFlujo(selectedWde) {
+    const deptos = wfDeptosEncargado();
+    const $alert = $('#alertSinDepartamentoEncargado');
+    const sinDepto = deptos.length === 0;
+    if ($alert.length) {
+        $alert.toggle(sinDepto);
+    }
+
+    const selected = selectedWde || workflowWdeCod || (deptos.length === 1 ? deptos[0].Dep_Cod : '');
+    wfRellenarSelectDepartamento('#flowWdeCod', selected);
+    wfRellenarSelectDepartamento('#modalFlowWdeCod', selected);
+    wfActualizarUiDepartamentoFlujo(selected);
+
+    $('#flowWdeCod').off('change.wfDept').on('change.wfDept', function() {
+        workflowWdeCod = $(this).val() || null;
+        $('#modalFlowWdeCod').val(workflowWdeCod || '');
+        if (workflowMeta) {
+            workflowMeta.Wde_Cod = workflowWdeCod;
+        }
+    });
+    $('#modalFlowWdeCod').off('change.wfDept').on('change.wfDept', function() {
+        workflowWdeCod = $(this).val() || null;
+        $('#flowWdeCod').val(workflowWdeCod || '');
+    });
+}
+
+function wfRellenarSelectDepartamento(selector, selected) {
+    const $sel = $(selector);
+    if (!$sel.length) {
+        return;
+    }
+    const deptos = wfDeptosEncargado();
+    const selVal = selected ? String(selected) : '';
+    $sel.empty();
+    if (deptos.length === 0) {
+        $sel.append($('<option>').val('').text('Sin departamento asignado'));
+        return;
+    }
+    if (deptos.length > 1) {
+        $sel.append($('<option>').val('').text('Seleccione departamento...'));
+    }
+    deptos.forEach(function(d) {
+        const cod = String(d.Dep_Cod || '');
+        $sel.append($('<option>').val(cod).text(d.Dep_Des || ('Depto #' + cod)));
+    });
+    if (selVal) {
+        $sel.val(selVal);
+    } else if (deptos.length === 1) {
+        $sel.val(String(deptos[0].Dep_Cod));
+    }
+}
+
+function wfActualizarUiDepartamentoFlujo(selected) {
+    const deptos = wfDeptosEncargado();
+    const $wrap = $('#lblFlowDeptWrap');
+    const $nom = $('#lblFlowDeptNom');
+    const $sel = $('#flowWdeCod');
+    const $modalSel = $('#modalFlowWdeCod');
+    const $modalNom = $('#modalFlowWdeNom');
+    const $hint = $('#lblModalFlowDeptHint');
+
+    $wrap.css('display', 'inline-flex').show();
+
+    if (deptos.length === 0) {
+        $sel.hide();
+        $nom.show().text('Departamento: Sin departamento asignado').addClass('text-danger');
+        $modalSel.hide();
+        $modalNom.show().val('Sin departamento asignado');
+        $hint.show().text('Debe asignarse como encargado de un departamento en Configuración > Departamentos.');
+        workflowWdeCod = null;
+        return;
+    }
+
+    $hint.hide().text('');
+    $nom.removeClass('text-danger');
+    const sel = selected ? String(selected) : String($sel.val() || $modalSel.val() || '');
+    workflowWdeCod = sel || null;
+
+    if (deptos.length === 1) {
+        const d = deptos[0];
+        const nom = d.Dep_Des || '';
+        workflowWdeCod = String(d.Dep_Cod);
+        $sel.hide().val(workflowWdeCod);
+        $nom.show().text('Departamento: ' + nom);
+        $modalSel.hide().val(workflowWdeCod);
+        $modalNom.show().val(nom);
+        return;
+    }
+
+    $nom.show().text('Departamento:');
+    $sel.css('display', 'inline-block').show();
+    $modalNom.hide();
+    $modalSel.show();
+    if (sel) {
+        $sel.val(sel);
+        $modalSel.val(sel);
+    }
+}
+
+function wfObtenerWdeCodFlujo() {
+    const deptos = wfDeptosEncargado();
+    if (deptos.length === 1) {
+        return String(deptos[0].Dep_Cod);
+    }
+    const fromFlow = $.trim($('#flowWdeCod').val() || '');
+    const fromModal = $.trim($('#modalFlowWdeCod').val() || '');
+    return fromFlow || fromModal || (workflowWdeCod ? String(workflowWdeCod) : '');
+}
+
+function wfEsFlujoEditable(flujo) {
+    if (!flujo) {
+        return true;
+    }
+    if (flujo.puede_editar === false || flujo.puede_editar === 0 || flujo.puede_editar === '0') {
+        return false;
+    }
+    if (flujo.puede_editar === true || flujo.puede_editar === 1 || flujo.puede_editar === '1') {
+        return true;
+    }
+    const wde = parseInt(flujo.Wde_Cod || flujo.wde_cod || 0, 10);
+    if (!wde) {
+        return false;
+    }
+    return wfDeptosEncargado().some(function(d) {
+        return parseInt(d.Dep_Cod, 10) === wde;
+    });
+}
+
+function wfAplicarModoEdicionFlujo(puedeEditar) {
+    workflowPuedeEditar = !!puedeEditar;
+    const $guardar = $('#btnGuardarFlujo');
+    const $publicar = $('#btnPublicarFlujo');
+    const $flowName = $('#flowName');
+    const $btnEdit = $('.btn-edit-flow');
+    const $soloLectura = $('#lblFlowSoloLectura');
+
+    if (workflowPuedeEditar) {
+        $guardar.prop('disabled', false).removeClass('disabled').attr('title', '');
+        $publicar.prop('disabled', false).removeClass('disabled').attr('title', '');
+        $flowName.prop('readonly', false);
+        $btnEdit.prop('disabled', false).show();
+        $soloLectura.hide();
+        $('#canvas').removeClass('wf-readonly');
+    } else {
+        $guardar.prop('disabled', true).addClass('disabled').attr('title', 'Solo puede editar flujos de su departamento. Duplique para crear una copia.');
+        $publicar.prop('disabled', true).addClass('disabled').attr('title', 'Solo puede publicar flujos de su departamento.');
+        $flowName.prop('readonly', true);
+        $btnEdit.prop('disabled', true).hide();
+        $soloLectura.show();
+        $('#canvas').addClass('wf-readonly');
+    }
+}
+
+function wfExigirFlujoEditable() {
+    if (workflowPuedeEditar) {
+        return true;
+    }
+    wfNotify('warning', 'Este flujo es de otro departamento. Puede verlo o duplicarlo, pero no editarlo ni publicarlo.');
+    return false;
+}
+
+function wfExigirDepartamentoEncargado() {
+    const deptos = wfDeptosEncargado();
+    if (deptos.length === 0) {
+        wfNotify('danger', 'No tiene un departamento asignado como encargado. Asignese en Configuración > Departamentos.');
+        return false;
+    }
+    if (deptos.length > 1 && !wfObtenerWdeCodFlujo()) {
+        wfNotify('danger', 'Seleccione el departamento del flujo.');
+        return false;
+    }
+    return true;
+}
 
 function highlightActiveNode(nodeId) {
     $('.wf-node').removeClass('is-selected');
@@ -46,6 +226,12 @@ function setupNodeDrag() {
             return;
         }
         if ($(e.target).closest('button').length) {
+            return;
+        }
+        if (!workflowPuedeEditar) {
+            // Solo lectura: permite seleccionar para ver propiedades, no arrastrar
+            dragSelectNodeId = $(this).attr('id');
+            highlightActiveNode(dragSelectNodeId);
             return;
         }
         isDraggingNode = true;
@@ -354,6 +540,7 @@ function initWorkflowBuilder() {
     updateCanvasBounds();
     workflowBuilderReady = true;
     wfSetUserAsigControls(false);
+    wfInitDepartamentoFlujo();
     $(document).off('change.wfCondDefault', '#modalConnectionCondition #condDefault')
         .on('change.wfCondDefault', '#modalConnectionCondition #condDefault', function() {
             wfModalCondicionCampo('#condFields').toggle(!this.checked);
@@ -373,6 +560,10 @@ function setupCanvas() {
 
     $canvas.on('drop', function(e) {
         e.preventDefault();
+        if (!workflowPuedeEditar) {
+            wfExigirFlujoEditable();
+            return;
+        }
         const type = e.originalEvent.dataTransfer.getData('node-type');
         if (!type) return;
 
@@ -516,13 +707,20 @@ function isNodoNotificable(tipo) {
 }
 
 function wfNodeTipoLabel(tipo) {
-    if (tipo === 'AVANCE') {
-        return 'Avance/Facturas';
-    }
-    if (tipo === 'VALIDACION') {
-        return 'Validación';
-    }
-    return tipo || '';
+    const labels = {
+        INICIO: 'Inicio',
+        APROBACION: 'Aprobación',
+        DECISION: 'Decisión',
+        RECEPCION: 'Recepción',
+        FACTURA: 'Factura',
+        NOTIFICACION: 'Notificación',
+        TAREA: 'Tarea',
+        VALIDACION: 'Validación',
+        AVANCE: 'Avance/Facturas',
+        FISCALIZACION: 'Fiscalización',
+        FIN: 'Fin'
+    };
+    return labels[tipo] || tipo || '';
 }
 
 function createNode(type, name, x, y, id = null, props = null) {
@@ -729,6 +927,9 @@ function renderNode(node) {
 
     // Cualquier punto puede iniciar o recibir la conexion (salvo reglas de INICIO/FIN)
     $nodeEl.find('.node-port').on('mousedown', function(e) {
+        if (!workflowPuedeEditar) {
+            return;
+        }
         if (node.tipo === 'FIN') {
             return;
         }
@@ -811,7 +1012,7 @@ function refreshNodeDepartments(done, preferredValue) {
 
 function openNodeProperties(id) {
     // Persistir el nodo actual antes de cambiar (evita que Cot_Sel/Cot_Edit se "peguen" al siguiente).
-    if (activeNode) {
+    if (activeNode && workflowPuedeEditar) {
         syncFormToActiveNode();
     }
     activeNode = nodes.find(item => sameId(item.id, id));
@@ -822,6 +1023,9 @@ function openNodeProperties(id) {
 
     refreshNodeDepartments(function() {
         fillNodePropertiesForm();
+        const $drawer = $('#propertiesDrawer');
+        $drawer.find('input, select, textarea, button').prop('disabled', !workflowPuedeEditar);
+        $drawer.find('.close, [data-dismiss="modal"]').prop('disabled', false);
     }, activeNode.dep_cod);
 }
 
@@ -1656,7 +1860,10 @@ function actualizarEstadoFlujoUI(flujo) {
         $('#lblFlowDraft').hide();
         $('#lblFlowActiveInstances').hide();
         $('#lblFlowSaveHint').hide();
+        $('#lblFlowSoloLectura').hide();
         $('.wf-builder-status-bar').hide();
+        wfInitDepartamentoFlujo(workflowWdeCod);
+        wfAplicarModoEdicionFlujo(true);
         return;
     }
     $('.wf-builder-status-bar').show();
@@ -1677,6 +1884,19 @@ function actualizarEstadoFlujoUI(flujo) {
         $('#lblFlowActiveInstances').show().html('<i class="bi bi-hourglass-split"></i> ' + flujo.instancias_activas + ' solicitud(es) en curso con version anterior');
     } else {
         $('#lblFlowActiveInstances').hide();
+    }
+    const wde = flujo.Wde_Cod || flujo.wde_cod || null;
+    workflowWdeCod = wde ? String(wde) : workflowWdeCod;
+    wfInitDepartamentoFlujo(workflowWdeCod);
+    const puedeEditar = wfEsFlujoEditable(flujo);
+    wfAplicarModoEdicionFlujo(puedeEditar);
+    if (!puedeEditar) {
+        const depNom = flujo.Dep_Des || $('#flowWdeCod option:selected').text() || '';
+        if (depNom) {
+            const texto = depNom.indexOf('Departamento:') === 0 ? depNom : ('Departamento: ' + depNom);
+            $('#lblFlowDeptNom').show().text(texto);
+            $('#flowWdeCod').hide();
+        }
     }
 }
 
@@ -1707,10 +1927,14 @@ function onFlowNameInput(el) {
 }
 
 function abrirModalEditarDatosFlujo() {
+    if (!wfExigirFlujoEditable()) {
+        return;
+    }
     pendingSaveAfterModal = false;
     pendingDuplicateFlowId = null;
     $('#modalFlowName').val($.trim($('#flowName').val() || '').toUpperCase());
     $('#modalFlowDesc').val($('#flowDesc').val() || '');
+    wfInitDepartamentoFlujo(wfObtenerWdeCodFlujo());
     $('#modalWorkflowDataLabel').text('Editar datos del flujo');
     $('#modalWorkflowData').modal('show');
 }
@@ -1726,6 +1950,17 @@ function wfActualizarOpcionFlujoSelect(famId, nombre, version, esBorrador) {
     }
     $option.text(label);
     $option.attr('data-descripcion', String($('#flowDesc').val() || '').trim());
+    const depNom = String($('#lblFlowDeptNom').text() || '')
+        .replace(/^Departamento:\s*/i, '')
+        .trim();
+    if (depNom && depNom.toLowerCase().indexOf('sin departamento') === -1) {
+        $option.attr('data-departamento', depNom);
+    } else {
+        const selDep = String($('#flowWdeCod option:selected').text() || '').trim();
+        if (selDep && selDep.toLowerCase().indexOf('seleccione') === -1) {
+            $option.attr('data-departamento', selDep);
+        }
+    }
     $('#selWorkflow').val(String(famId));
 }
 
@@ -1834,10 +2069,14 @@ function abrirModalBuscarFlujo() {
         }
         const nombre = String($(this).text() || '').trim();
         const descripcion = String($(this).attr('data-descripcion') || '').trim();
-        const busqueda = (id + ' ' + nombre + ' ' + descripcion).toLowerCase();
+        const departamento = String($(this).attr('data-departamento') || '').trim();
+        const busqueda = (id + ' ' + nombre + ' ' + descripcion + ' ' + departamento).toLowerCase();
         const idEsc = id.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         const nombreHtml = $('<div>').text(nombre).html();
         const codigoHtml = $('<div>').text(id).html();
+        const depHtml = departamento
+            ? $('<div>').text(departamento).html()
+            : '<span class="text-muted">Sin departamento</span>';
         const descHtml = descripcion
             ? $('<div>').text(descripcion).html()
             : '<span class="text-muted">—</span>';
@@ -1847,6 +2086,7 @@ function abrirModalBuscarFlujo() {
                 '<tr data-busqueda="' + $('<div>').text(busqueda).html() + '">' +
                 '<td class="text-center fw-bold">' + codigoHtml + '</td>' +
                 '<td>' + nombreHtml + '</td>' +
+                '<td class="small">' + depHtml + '</td>' +
                 '<td class="small">' + descHtml + '</td>' +
                 '<td class="text-center">' +
                 '<button type="button" class="btn btn-xs btn-primary" onclick="seleccionarFlujoDesdeTabla(\'' + idEsc + '\')">' +
@@ -1897,15 +2137,24 @@ function seleccionarFlujoDesdeTabla(id) {
 }
 
 function abrirModalNuevoFlujo() {
+    if (wfDeptosEncargado().length === 0) {
+        wfExigirDepartamentoEncargado();
+        return;
+    }
     pendingSaveAfterModal = false;
     pendingDuplicateFlowId = null;
     $('#modalFlowName').val('');
     $('#modalFlowDesc').val('');
+    wfInitDepartamentoFlujo(wfDeptosEncargado().length === 1 ? wfDeptosEncargado()[0].Dep_Cod : '');
     $('#modalWorkflowDataLabel').text('Crear Nuevo Flujo Modelo');
     $('#modalWorkflowData').modal('show');
 }
 
 function abrirModalDuplicarFlujo() {
+    if (wfDeptosEncargado().length === 0) {
+        wfExigirDepartamentoEncargado();
+        return;
+    }
     const selectorId = $('#selWorkflow').val();
     if (!selectorId) {
         wfNotify('warning', 'Seleccione el esquema que desea duplicar.');
@@ -1922,6 +2171,7 @@ function abrirModalDuplicarFlujo() {
         $('#modalFlowDesc').val('');
     }
     $('#modalFlowName').val(('Copia de ' + nombreBase).toUpperCase());
+    wfInitDepartamentoFlujo(wfObtenerWdeCodFlujo());
     $('#modalWorkflowDataLabel').text('Duplicar Esquema');
     $('#modalWorkflowData').modal('show');
 }
@@ -1933,7 +2183,8 @@ function duplicarFlujoServidor(selectorId, nombre, descripcion) {
         body: JSON.stringify({
             id: selectorId,
             nombre: nombre,
-            descripcion: descripcion
+            descripcion: descripcion,
+            wde_cod: wfObtenerWdeCodFlujo()
         })
     })
     .then(function(r) {
@@ -1959,6 +2210,18 @@ function duplicarFlujoServidor(selectorId, nombre, descripcion) {
         }
         $option.text(label);
         $option.attr('data-descripcion', String(descripcion || '').trim());
+        const depDup = String($('#flowWdeCod option:selected').text() || '')
+            .replace(/^Departamento:\s*/i, '')
+            .trim();
+        const depDupLbl = String($('#lblFlowDeptNom').text() || '')
+            .replace(/^Departamento:\s*/i, '')
+            .trim();
+        const depFinal = (depDup && depDup.toLowerCase().indexOf('seleccione') === -1)
+            ? depDup
+            : depDupLbl;
+        if (depFinal && depFinal.toLowerCase().indexOf('sin departamento') === -1) {
+            $option.attr('data-departamento', depFinal);
+        }
         $('#selWorkflow').val(String(famId));
         wfNotify('success', res.message || 'Esquema duplicado correctamente.', function() {
             cargarFlujo();
@@ -1999,6 +2262,11 @@ function aceptarDatosFlujo() {
         wfNotify('danger', 'Por favor ingrese el nombre del flujo.');
         return;
     }
+    if (!wfExigirDepartamentoEncargado()) {
+        return;
+    }
+    const wdeCod = wfObtenerWdeCodFlujo();
+    workflowWdeCod = wdeCod || null;
 
     const esGuardadoPendiente = pendingSaveAfterModal;
     const duplicarId = pendingDuplicateFlowId;
@@ -2020,6 +2288,8 @@ function aceptarDatosFlujo() {
 
         const metaBase = workflowMeta ? Object.assign({}, workflowMeta) : {};
         metaBase.nombre = nombre;
+        metaBase.Wde_Cod = wdeCod;
+        metaBase.wde_cod = wdeCod;
         if (metaBase.es_borrador === undefined) {
             metaBase.es_borrador = true;
         }
@@ -2043,7 +2313,10 @@ function aceptarDatosFlujo() {
         nombre: nombre,
         es_borrador: true,
         instancias_activas: 0,
-        version: 1
+        version: 1,
+        Wde_Cod: wdeCod,
+        wde_cod: wdeCod,
+        puede_editar: true
     });
 }
 
@@ -2100,12 +2373,19 @@ function guardarFlujo() {
     if (activeNode) {
         syncFormToActiveNode();
     }
+    if (!wfExigirFlujoEditable()) {
+        return;
+    }
+    if (!wfExigirDepartamentoEncargado()) {
+        return;
+    }
     const nombre = $.trim($('#flowName').val() || '').toUpperCase();
     $('#flowName').val(nombre);
     if (!nombre) {
         pendingSaveAfterModal = true;
         $('#modalFlowName').val('');
         $('#modalFlowDesc').val($('#flowDesc').val());
+        wfInitDepartamentoFlujo(wfObtenerWdeCodFlujo());
         $('#modalWorkflowDataLabel').text('Definir Datos del Flujo para Guardar');
         $('#modalWorkflowData').modal('show');
         return;
@@ -2120,6 +2400,7 @@ function guardarFlujo() {
         id: workflowId,
         nombre: nombre,
         descripcion: $('#flowDesc').val() || '',
+        wde_cod: wfObtenerWdeCodFlujo(),
         nodos: wfNodosPayloadParaGuardar(),
         conexiones: wfConexionesPayloadParaGuardar()
     };
@@ -2166,6 +2447,12 @@ function guardarFlujo() {
 }
 
 function publicarFlujo() {
+    if (!wfExigirFlujoEditable()) {
+        return;
+    }
+    if (!wfExigirDepartamentoEncargado()) {
+        return;
+    }
     const nombre = $.trim($('#flowName').val() || '').toUpperCase();
     $('#flowName').val(nombre);
     if (!nombre || !nodes.length) {
@@ -2186,7 +2473,7 @@ function publicarFlujo() {
         fetch('adq_configuracion.php?ajax_publish_workflow=1', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: wfmId })
+            body: JSON.stringify({ id: wfmId, wde_cod: wfObtenerWdeCodFlujo() })
         })
         .then(function(r) {
             return r.text().then(function(text) {
@@ -2225,12 +2512,25 @@ function guardarFlujoInterno(onDone) {
     if (activeNode) {
         syncFormToActiveNode();
     }
+    if (!wfExigirFlujoEditable()) {
+        if (typeof onDone === 'function') {
+            onDone({ success: false, message: 'No puede editar este flujo.' });
+        }
+        return;
+    }
+    if (!wfExigirDepartamentoEncargado()) {
+        if (typeof onDone === 'function') {
+            onDone({ success: false, message: 'Debe seleccionar o asignarse un departamento.' });
+        }
+        return;
+    }
     const nombre = $.trim($('#flowName').val() || '').toUpperCase();
     $('#flowName').val(nombre);
     const payload = {
         id: workflowId,
         nombre: nombre,
         descripcion: $('#flowDesc').val() || '',
+        wde_cod: wfObtenerWdeCodFlujo(),
         nodos: wfNodosPayloadParaGuardar(),
         conexiones: wfConexionesPayloadParaGuardar()
     };

@@ -27,6 +27,82 @@ class wf_manager_log {
             $this->obBD_conexion = new Class_Log_Conexion_Global($Ses_Dat_Dis);
         }
         $this->obBD_datos = new MysqlDatos($this->obBD_conexion);
+        $this->ensureUtf8Charset();
+    }
+
+    /**
+     * Fuerza charset UTF-8 en la conexion MySQL para tildes/nombres de nodos.
+     */
+    public function ensureUtf8Charset() {
+        if (empty($this->obBD_conexion) || empty($this->obBD_conexion->conexion)) {
+            return;
+        }
+        if (function_exists('mysqli_set_charset')) {
+            @mysqli_set_charset($this->obBD_conexion->conexion, 'utf8mb4');
+        }
+        @$this->obBD_datos->grabarv_registros("SET NAMES utf8mb4;", $this->obBD_conexion);
+    }
+
+    /**
+     * Detecta mojibake tipico de utf8_encode sobre texto ya UTF-8 ("Ã³", "Ã±").
+     */
+    public static function pareceUtf8Doble($text) {
+        return is_string($text)
+            && $text !== ''
+            && (strpos($text, "\xC3\x83") !== false || strpos($text, "\xC3\x82") !== false);
+    }
+
+    /**
+     * Normaliza a UTF-8 sin doble-encoding (utf8_encode rompe texto ya UTF-8).
+     * Tambien recupera mojibake ya guardado (nombres de nodos con tildes rotas).
+     */
+    public static function utf8EnsureDeep(&$input) {
+        if (is_string($input)) {
+            if ($input === '') {
+                return;
+            }
+            $isUtf8 = !function_exists('mb_check_encoding') || mb_check_encoding($input, 'UTF-8');
+            if ($isUtf8 && self::pareceUtf8Doble($input)) {
+                $recovered = null;
+                if (function_exists('mb_convert_encoding')) {
+                    $recovered = @mb_convert_encoding($input, 'ISO-8859-1', 'UTF-8');
+                }
+                if (!is_string($recovered) || $recovered === '') {
+                    $recovered = @utf8_decode($input);
+                }
+                if (is_string($recovered) && $recovered !== ''
+                    && (!function_exists('mb_check_encoding') || mb_check_encoding($recovered, 'UTF-8'))
+                    && !self::pareceUtf8Doble($recovered)) {
+                    $input = $recovered;
+                    return;
+                }
+            }
+            if ($isUtf8) {
+                return;
+            }
+            if (function_exists('mb_convert_encoding')) {
+                $conv = @mb_convert_encoding($input, 'UTF-8', 'ISO-8859-1,Windows-1252,UTF-8');
+                if ($conv !== false && $conv !== null) {
+                    $input = $conv;
+                    return;
+                }
+            }
+            $input = utf8_encode($input);
+            return;
+        }
+        if (is_array($input)) {
+            foreach ($input as &$value) {
+                self::utf8EnsureDeep($value);
+            }
+            unset($value);
+            return;
+        }
+        if (is_object($input)) {
+            $vars = array_keys(get_object_vars($input));
+            foreach ($vars as $var) {
+                self::utf8EnsureDeep($input->$var);
+            }
+        }
     }
 
     private function ejecutarSql($sql) {
@@ -1220,7 +1296,7 @@ class wf_manager_log {
         }
         // Versionar el flag de sesión: al agregar columnas nuevas (p.ej. Nod_Cot_Sel)
         // hay que volver a correr ensures aunque la sesión diga "ok".
-        $schema_ver = 3;
+        $schema_ver = 5;
         if (!empty($_SESSION['wf_schema_versioning_ok']) && intval($_SESSION['wf_schema_versioning_ok']) >= $schema_ver) {
             self::$versioningReadyStatic = true;
             // Aun con cache, revalidar notificaciones/columnas nuevas (barato: SHOW COLUMNS).
@@ -1241,11 +1317,130 @@ class wf_manager_log {
             $this->ejecutarSql("UPDATE wf_flujos_modelos SET Wfm_Fam_Cod = Wfm_Cod WHERE Wfm_Fam_Cod IS NULL;");
             $this->ejecutarSql("UPDATE wf_flujos_modelos SET Wfm_Est = 'P' WHERE Wfm_Est = 'A';");
         }
+        $cols_wde = $this->obBD_datos->getArrayConsultaSql(
+            "SHOW COLUMNS FROM wf_flujos_modelos LIKE 'Wde_Cod';",
+            $this->obBD_conexion
+        );
+        $cols_usu_flujo = $this->obBD_datos->getArrayConsultaSql(
+            "SHOW COLUMNS FROM wf_flujos_modelos LIKE 'Usu_Cod';",
+            $this->obBD_conexion
+        );
+        if (empty($cols_wde) && !empty($cols_usu_flujo)) {
+            $this->ejecutarSql(
+                "ALTER TABLE wf_flujos_modelos
+                 CHANGE COLUMN Usu_Cod Wde_Cod BIGINT NULL COMMENT 'Departamento del flujo (wf_departamentos.Wde_Cod)';"
+            );
+        } elseif (empty($cols_wde)) {
+            $this->ejecutarSql(
+                "ALTER TABLE wf_flujos_modelos
+                 ADD COLUMN Wde_Cod BIGINT NULL COMMENT 'Departamento del flujo (wf_departamentos.Wde_Cod)' AFTER Emp_Cod;"
+            );
+        } elseif (!empty($cols_usu_flujo)) {
+            // Ya existe Wde_Cod (renombrado manualmente); eliminar Usu_Cod residual si queda.
+            @$this->ejecutarSql("ALTER TABLE wf_flujos_modelos DROP COLUMN Usu_Cod;");
+        }
         self::$versioningReadyStatic = true;
         $this->ensureNotificationSchema();
         $this->ensureConnectionPortsSchema();
         if (isset($_SESSION)) {
             $_SESSION['wf_schema_versioning_ok'] = $schema_ver;
+        }
+    }
+
+    /**
+     * Departamentos donde el usuario es encargado (wf_departamentos.Usu_Cod).
+     */
+    public function listarDepartamentosEncargadoUsuario($usu_cod = null, $emp_cod = null) {
+        $this->ensureWfDepartamentosTable();
+        $usu_cod = $usu_cod === null
+            ? (isset($_SESSION['Ses_Usu_Cod']) ? intval($_SESSION['Ses_Usu_Cod']) : 0)
+            : intval($usu_cod);
+        $emp_cod = $emp_cod === null
+            ? (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0)
+            : intval($emp_cod);
+        if ($usu_cod <= 0 || $emp_cod <= 0) {
+            return array();
+        }
+        $rows = $this->obBD_datos->getArrayConsultaSql(
+            "SELECT w.Wde_Cod AS Dep_Cod,
+                    w.Wde_Des AS Dep_Des
+             FROM wf_departamentos w
+             WHERE w.Emp_Cod = $emp_cod
+               AND w.Usu_Cod = $usu_cod
+               AND w.Wde_Est = 'A'
+             ORDER BY w.Wde_Des ASC, w.Wde_Cod ASC;",
+            $this->obBD_conexion
+        );
+        return ($rows === false || $rows === null) ? array() : $rows;
+    }
+
+    /**
+     * Resuelve Wde_Cod obligatorio para crear/guardar/publicar flujo.
+     * - 0 deptos encargado: exige asignarse departamento
+     * - 1 depto: lo usa automaticamente
+     * - N deptos: exige wde_cod del payload y que pertenezca al usuario
+     */
+    public function resolverWdeCodFlujoModelo($data, $emp_cod) {
+        $emp_cod = intval($emp_cod);
+        $deptos = $this->listarDepartamentosEncargadoUsuario(null, $emp_cod);
+        if (empty($deptos)) {
+            throw new Exception('No tiene un departamento asignado como encargado. Asignese en Configuracion > Departamentos antes de crear o guardar flujos.');
+        }
+
+        $solicitado = 0;
+        if (is_array($data) && !empty($data['wde_cod'])) {
+            $solicitado = intval($data['wde_cod']);
+        }
+
+        if (count($deptos) === 1) {
+            $unico = intval($deptos[0]['Dep_Cod']);
+            if ($solicitado > 0 && $solicitado !== $unico) {
+                throw new Exception('El departamento seleccionado no corresponde al usuario encargado.');
+            }
+            return $unico;
+        }
+
+        if ($solicitado <= 0) {
+            throw new Exception('Seleccione el departamento del flujo. Usted es encargado de mas de un departamento.');
+        }
+
+        foreach ($deptos as $d) {
+            if (intval($d['Dep_Cod']) === $solicitado) {
+                return $solicitado;
+            }
+        }
+        throw new Exception('El departamento seleccionado no esta entre los que usted tiene a cargo.');
+    }
+
+    private function sqlWdeCodFlujoModelo($wde_cod) {
+        $wde_cod = intval($wde_cod);
+        return $wde_cod > 0 ? $wde_cod : 'NULL';
+    }
+
+    /**
+     * True si el usuario de sesion es encargado del departamento del flujo.
+     */
+    public function usuarioPuedeEditarFlujoPorDepto($wde_cod, $emp_cod = null) {
+        $wde_cod = intval($wde_cod);
+        if ($wde_cod <= 0) {
+            return false;
+        }
+        $deptos = $this->listarDepartamentosEncargadoUsuario(null, $emp_cod);
+        foreach ($deptos as $d) {
+            if (intval($d['Dep_Cod']) === $wde_cod) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Exige propiedad del flujo (Wde_Cod del encargado) para guardar/publicar.
+     */
+    public function assertPuedeEditarFlujoModelo($flujo_row, $emp_cod) {
+        $wde = is_array($flujo_row) && !empty($flujo_row['Wde_Cod']) ? intval($flujo_row['Wde_Cod']) : 0;
+        if (!$this->usuarioPuedeEditarFlujoPorDepto($wde, $emp_cod)) {
+            throw new Exception('No puede editar ni publicar este flujo porque no pertenece a su departamento. Puede verlo o duplicarlo para crear una copia propia.');
         }
     }
 
@@ -1535,9 +1730,21 @@ class wf_manager_log {
                 'Wfm_Version' => intval($activo['Wfm_Version']),
                 'Wfm_Fam_Cod' => $fam,
                 'Wfm_Est' => $activo['Wfm_Est'],
+                'Wde_Cod' => !empty($activo['Wde_Cod']) ? intval($activo['Wde_Cod']) : 0,
+                'Dep_Des' => '',
                 'es_borrador' => ($activo['Wfm_Est'] === 'B'),
                 'tiene_publicado' => !empty($publicado),
             );
+            $idx = count($resultado) - 1;
+            if (!empty($resultado[$idx]['Wde_Cod'])) {
+                $depRow = $this->obBD_datos->getRowConsultaSql(
+                    "SELECT Wde_Des FROM wf_departamentos WHERE Wde_Cod = " . intval($resultado[$idx]['Wde_Cod']) . " LIMIT 1;",
+                    $this->obBD_conexion
+                );
+                if (!empty($depRow['Wde_Des'])) {
+                    $resultado[$idx]['Dep_Des'] = $depRow['Wde_Des'];
+                }
+            }
         }
 
         usort($resultado, function ($a, $b) {
@@ -1573,6 +1780,15 @@ class wf_manager_log {
             throw new Exception('Flujo no encontrado.');
         }
         $wfm_cod = intval($activo['Wfm_Cod']);
+        if (!empty($activo['Wde_Cod'])) {
+            $depRow = $this->obBD_datos->getRowConsultaSql(
+                "SELECT Wde_Des FROM wf_departamentos WHERE Wde_Cod = " . intval($activo['Wde_Cod']) . " LIMIT 1;",
+                $this->obBD_conexion
+            );
+            $activo['Dep_Des'] = !empty($depRow['Wde_Des']) ? $depRow['Wde_Des'] : '';
+        } else {
+            $activo['Dep_Des'] = '';
+        }
         $nodos = $this->obBD_datos->getArrayConsultaSql(
             "SELECT * FROM wf_nodos WHERE Wfm_Cod = $wfm_cod AND Nod_Est = 'A' ORDER BY Nod_Cod ASC;",
             $this->obBD_conexion
@@ -1596,7 +1812,10 @@ class wf_manager_log {
         if ($value === null) {
             return '';
         }
-        return mysqli_real_escape_string($this->obBD_conexion->conexion, (string)$value);
+        $text = (string)$value;
+        // Asegurar UTF-8 / recuperar mojibake antes de escapar (nombres con tildes).
+        self::utf8EnsureDeep($text);
+        return mysqli_real_escape_string($this->obBD_conexion->conexion, $text);
     }
 
     private function resolverNodoIdDisenador($frontend_id) {
@@ -1616,21 +1835,22 @@ class wf_manager_log {
         return 0;
     }
 
-    private function crearCabeceraBorrador($base_flujo, $fam_cod) {
+    private function crearCabeceraBorrador($base_flujo, $fam_cod, $wde_cod = 0) {
         $emp_cod = intval($base_flujo['Emp_Cod']);
         $nom = $this->escapeWf($base_flujo['Wfm_Nom']);
         $des = $this->escapeWf(isset($base_flujo['Wfm_Des']) ? $base_flujo['Wfm_Des'] : '');
         $version = intval($base_flujo['Wfm_Version']) + 1;
         $padre = intval($base_flujo['Wfm_Cod']);
         $fam_cod = intval($fam_cod);
+        $wde_sql = $this->sqlWdeCodFlujoModelo($wde_cod);
         $this->ejecutarSql(
-            "INSERT INTO wf_flujos_modelos (Emp_Cod, Wfm_Nom, Wfm_Des, Wfm_Est, Wfm_Fam_Cod, Wfm_Version, Wfm_Padre)
-             VALUES ($emp_cod, '$nom', '$des', 'B', $fam_cod, $version, $padre);"
+            "INSERT INTO wf_flujos_modelos (Emp_Cod, Wde_Cod, Wfm_Nom, Wfm_Des, Wfm_Est, Wfm_Fam_Cod, Wfm_Version, Wfm_Padre)
+             VALUES ($emp_cod, $wde_sql, '$nom', '$des', 'B', $fam_cod, $version, $padre);"
         );
         return intval($this->obBD_datos->insercionid($this->obBD_conexion));
     }
 
-    public function duplicarFlujoDisenador($selector_cod, $emp_cod, $nuevo_nombre, $nueva_descripcion = null) {
+    public function duplicarFlujoDisenador($selector_cod, $emp_cod, $nuevo_nombre, $nueva_descripcion = null, $wde_cod = null) {
         $this->ensureVersioningSchema();
         $this->ensureNotificationSchema();
         $this->ensureConnectionPortsSchema();
@@ -1656,10 +1876,12 @@ class wf_manager_log {
             : (isset($origen['Wfm_Des']) ? $origen['Wfm_Des'] : '');
         $des = $this->escapeWf($descripcion);
 
+        $wde_resuelto = $this->resolverWdeCodFlujoModelo(array('wde_cod' => $wde_cod), $emp_cod);
+        $wde_sql = $this->sqlWdeCodFlujoModelo($wde_resuelto);
         $this->ejecutarSql(
             "INSERT INTO wf_flujos_modelos
-                (Emp_Cod, Wfm_Nom, Wfm_Des, Wfm_Est, Wfm_Fam_Cod, Wfm_Version, Wfm_Padre)
-             VALUES ($emp_cod, '$nom', '$des', 'B', NULL, 1, NULL);"
+                (Emp_Cod, Wde_Cod, Wfm_Nom, Wfm_Des, Wfm_Est, Wfm_Fam_Cod, Wfm_Version, Wfm_Padre)
+             VALUES ($emp_cod, $wde_sql, '$nom', '$des', 'B', NULL, 1, NULL);"
         );
         $nuevo_wfm = intval($this->obBD_datos->insercionid($this->obBD_conexion));
         if ($nuevo_wfm <= 0) {
@@ -1749,10 +1971,15 @@ class wf_manager_log {
     }
 
     public function guardarFlujoDisenador($data, $emp_cod) {
+        $this->ensureUtf8Charset();
         $this->ensureVersioningSchema();
         $this->ensureNotificationSchema();
         $this->ensureWfDepartamentosTable();
+        $this->ensureWfNodosPerCodSinFkPersonal();
         $emp_cod = intval($emp_cod);
+        if (is_array($data)) {
+            self::utf8EnsureDeep($data);
+        }
         if (!is_array($data) || empty($data['nodos']) || !is_array($data['nodos'])) {
             throw new Exception('Datos de flujo incompletos o invalidos.');
         }
@@ -1764,10 +1991,12 @@ class wf_manager_log {
 
         $wfm_cod = 0;
         $es_nuevo = empty($data['id']);
+        $wde_cod = $this->resolverWdeCodFlujoModelo($data, $emp_cod);
+        $wde_sql = $this->sqlWdeCodFlujoModelo($wde_cod);
         if ($es_nuevo) {
             $this->ejecutarSql(
-                "INSERT INTO wf_flujos_modelos (Emp_Cod, Wfm_Nom, Wfm_Des, Wfm_Est, Wfm_Version)
-                 VALUES ($emp_cod, '$wfm_nom', '$wfm_des', 'B', 1);"
+                "INSERT INTO wf_flujos_modelos (Emp_Cod, Wde_Cod, Wfm_Nom, Wfm_Des, Wfm_Est, Wfm_Version)
+                 VALUES ($emp_cod, $wde_sql, '$wfm_nom', '$wfm_des', 'B', 1);"
             );
             $wfm_cod = intval($this->obBD_datos->insercionid($this->obBD_conexion));
             $this->ejecutarSql("UPDATE wf_flujos_modelos SET Wfm_Fam_Cod = $wfm_cod WHERE Wfm_Cod = $wfm_cod;");
@@ -1780,23 +2009,25 @@ class wf_manager_log {
             if (empty($src)) {
                 throw new Exception('Flujo no encontrado.');
             }
+            $this->assertPuedeEditarFlujoModelo($src, $emp_cod);
             $fam = $this->resolverFamiliaCod($src_cod);
             if ($src['Wfm_Est'] === 'B') {
                 $wfm_cod = $src_cod;
                 $this->ejecutarSql(
-                    "UPDATE wf_flujos_modelos SET Wfm_Nom = '$wfm_nom', Wfm_Des = '$wfm_des' WHERE Wfm_Cod = $wfm_cod;"
+                    "UPDATE wf_flujos_modelos SET Wfm_Nom = '$wfm_nom', Wfm_Des = '$wfm_des', Wde_Cod = $wde_sql WHERE Wfm_Cod = $wfm_cod;"
                 );
             } elseif ($this->esEstadoPublicado($src['Wfm_Est'])) {
                 $borrador = $this->obtenerBorradorFamilia($fam, $emp_cod);
                 if (!empty($borrador)) {
+                    $this->assertPuedeEditarFlujoModelo($borrador, $emp_cod);
                     $wfm_cod = intval($borrador['Wfm_Cod']);
                     $this->ejecutarSql(
-                        "UPDATE wf_flujos_modelos SET Wfm_Nom = '$wfm_nom', Wfm_Des = '$wfm_des' WHERE Wfm_Cod = $wfm_cod;"
+                        "UPDATE wf_flujos_modelos SET Wfm_Nom = '$wfm_nom', Wfm_Des = '$wfm_des', Wde_Cod = $wde_sql WHERE Wfm_Cod = $wfm_cod;"
                     );
                 } else {
                     $src['Wfm_Nom'] = $wfm_nom;
                     $src['Wfm_Des'] = $wfm_des;
-                    $wfm_cod = $this->crearCabeceraBorrador($src, $fam);
+                    $wfm_cod = $this->crearCabeceraBorrador($src, $fam, $wde_cod);
                 }
             } else {
                 throw new Exception('No se puede editar una version historica del flujo.');
@@ -1953,17 +2184,18 @@ class wf_manager_log {
         }
 
         $fam = $this->resolverFamiliaCod($wfm_cod);
-        $ver_row = $this->obBD_datos->getRowConsultaSql("SELECT Wfm_Version FROM wf_flujos_modelos WHERE Wfm_Cod = $wfm_cod;", $this->obBD_conexion);
+        $ver_row = $this->obBD_datos->getRowConsultaSql("SELECT Wfm_Version, Wde_Cod FROM wf_flujos_modelos WHERE Wfm_Cod = $wfm_cod;", $this->obBD_conexion);
         return array(
             'id' => $wfm_cod,
             'familia_cod' => $fam,
             'es_borrador' => true,
             'instancias_activas' => $this->contarInstanciasActivasFamilia($fam),
-            'version' => !empty($ver_row['Wfm_Version']) ? intval($ver_row['Wfm_Version']) : 1
+            'version' => !empty($ver_row['Wfm_Version']) ? intval($ver_row['Wfm_Version']) : 1,
+            'wde_cod' => !empty($ver_row['Wde_Cod']) ? intval($ver_row['Wde_Cod']) : $wde_cod
         );
     }
 
-    public function publicarFlujoDisenador($wfm_cod, $emp_cod) {
+    public function publicarFlujoDisenador($wfm_cod, $emp_cod, $data = null) {
         $this->ensureVersioningSchema();
         $wfm_cod = intval($wfm_cod);
         $emp_cod = intval($emp_cod);
@@ -1974,6 +2206,7 @@ class wf_manager_log {
         if (empty($borrador)) {
             throw new Exception('Solo se puede publicar un borrador del flujo.');
         }
+        $this->assertPuedeEditarFlujoModelo($borrador, $emp_cod);
         $fam = $this->resolverFamiliaCod($wfm_cod);
         $instancias_activas = $this->contarInstanciasActivasFamilia($fam);
         $publicado = $this->obtenerFlujoPublicadoFamilia($fam, $emp_cod);
@@ -1981,7 +2214,13 @@ class wf_manager_log {
             $old_cod = intval($publicado['Wfm_Cod']);
             $this->ejecutarSql("UPDATE wf_flujos_modelos SET Wfm_Est = 'H' WHERE Wfm_Cod = $old_cod;");
         }
-        $this->ejecutarSql("UPDATE wf_flujos_modelos SET Wfm_Est = 'P' WHERE Wfm_Cod = $wfm_cod;");
+        $payload = is_array($data) ? $data : array();
+        if (empty($payload['wde_cod']) && !empty($borrador['Wde_Cod'])) {
+            $payload['wde_cod'] = intval($borrador['Wde_Cod']);
+        }
+        $wde_cod = $this->resolverWdeCodFlujoModelo($payload, $emp_cod);
+        $wde_sql = $this->sqlWdeCodFlujoModelo($wde_cod);
+        $this->ejecutarSql("UPDATE wf_flujos_modelos SET Wfm_Est = 'P', Wde_Cod = $wde_sql WHERE Wfm_Cod = $wfm_cod;");
         $this->ejecutarSql(
             "UPDATE adq_tipos_requerimientos t
              INNER JOIN wf_flujos_modelos w ON w.Wfm_Cod = t.Wfm_Cod
@@ -1993,7 +2232,8 @@ class wf_manager_log {
             'familia_cod' => $fam,
             'version' => intval($borrador['Wfm_Version']),
             'instancias_activas' => $instancias_activas,
-            'publicado' => true
+            'publicado' => true,
+            'wde_cod' => $wde_cod
         );
     }
 
@@ -3014,26 +3254,54 @@ class wf_manager_log {
                             : 'Debe ingresar el comentario/justificacion antes de finalizar el avance.';
                         throw new Exception($msg_com);
                     }
-                    $cnt_av = $this->obBD_datos->getRowConsultaSql(
-                        "SELECT COUNT(*) AS cnt
-                         FROM adq_solicitudes_avances
-                         WHERE Sol_Cod = " . intval($instancia['Ins_Ent_Cod']) . "
-                           AND Ins_Cod = $Ins_Cod
-                           AND Nod_Cod = $nod_actual_cod;",
-                        $this->obBD_conexion
-                    );
-                    if (empty($cnt_av['cnt'])) {
-                        $msg_req = ($nodoActual['Nod_Tip'] === 'FISCALIZACION')
-                            ? 'Debe registrar al menos una factura, anticipo o archivo de fiscalizacion antes de aprobar.'
-                            : 'Debe registrar al menos una factura o anticipo antes de finalizar el proceso de avance.';
-                        throw new Exception($msg_req);
+                    $sol_ent = intval($instancia['Ins_Ent_Cod']);
+                    if ($nodoActual['Nod_Tip'] === 'AVANCE') {
+                        // AVANCE: factura y anticipo no son obligatorios por separado;
+                        // se exige al menos uno de los dos (puede haber ambos).
+                        $cnt_av = $this->obBD_datos->getRowConsultaSql(
+                            "SELECT
+                                SUM(CASE WHEN Sav_Cop_Cod IS NOT NULL AND Sav_Cop_Cod > 0 THEN 1 ELSE 0 END) AS cnt_fac,
+                                SUM(CASE WHEN Sav_Atp_Cod IS NOT NULL AND Sav_Atp_Cod > 0 THEN 1 ELSE 0 END) AS cnt_ant
+                             FROM adq_solicitudes_avances
+                             WHERE Sol_Cod = $sol_ent
+                               AND Ins_Cod = $Ins_Cod
+                               AND Nod_Cod = $nod_actual_cod;",
+                            $this->obBD_conexion
+                        );
+                        $cnt_fac = !empty($cnt_av['cnt_fac']) ? intval($cnt_av['cnt_fac']) : 0;
+                        $cnt_ant = !empty($cnt_av['cnt_ant']) ? intval($cnt_av['cnt_ant']) : 0;
+                        if ($cnt_fac <= 0 && $cnt_ant <= 0) {
+                            throw new Exception(
+                                'Debe registrar al menos una factura o un anticipo antes de finalizar el proceso de avance. Puede tener uno o ambos, pero no puede dejar los dos vacios.'
+                            );
+                        }
+                    } else {
+                        $cnt_av = $this->obBD_datos->getRowConsultaSql(
+                            "SELECT COUNT(*) AS cnt
+                             FROM adq_solicitudes_avances
+                             WHERE Sol_Cod = $sol_ent
+                               AND Ins_Cod = $Ins_Cod
+                               AND Nod_Cod = $nod_actual_cod;",
+                            $this->obBD_conexion
+                        );
+                        if (empty($cnt_av['cnt'])) {
+                            throw new Exception(
+                                'Debe registrar al menos una factura, anticipo o archivo de fiscalizacion antes de aprobar.'
+                            );
+                        }
                     }
 
                     require_once(dirname(__FILE__) . '/adq_adquisiciones_log.php');
                     $adq_totales = new adq_adquisiciones_log($this->obBD_conexion);
-                    $validacion_totales = $adq_totales->validarCoincidenciaTotalesFacturas(
-                        intval($instancia['Ins_Ent_Cod'])
-                    );
+                    // AVANCE unico/ultimo: exige facturas completas (= cotizacion).
+                    // AVANCE intermedio / FISCALIZACION: parcial OK (solo no superar).
+                    $exige_totales = false;
+                    if ($nodoActual['Nod_Tip'] === 'AVANCE') {
+                        $wfm_ins = intval(isset($instancia['Wfm_Cod']) ? $instancia['Wfm_Cod'] : 0);
+                        $info_av = $this->avanceExigeTotalesCompletos($wfm_ins, $nod_actual_cod);
+                        $exige_totales = !empty($info_av['exige']);
+                    }
+                    $validacion_totales = $adq_totales->validarCoincidenciaTotalesFacturas($sol_ent, $exige_totales);
                     if (empty($validacion_totales['success'])) {
                         throw new Exception(isset($validacion_totales['message'])
                             ? $validacion_totales['message']
@@ -5012,6 +5280,77 @@ class wf_manager_log {
     }
 
     /**
+     * Nodos AVANCE del esquema en orden de flujo (por conexiones).
+     * @return array lista de Nod_Cod
+     */
+    public function listarNodosAvanceFlujo($wfm_cod) {
+        $wfm_cod = intval($wfm_cod);
+        if ($wfm_cod <= 0) {
+            return array();
+        }
+        $nodos = $this->obBD_datos->getArrayConsultaSql(
+            "SELECT Nod_Cod, Nod_Nom, Nod_Tip, Nod_Vis_X, Nod_Vis_Y
+             FROM wf_nodos
+             WHERE Wfm_Cod = $wfm_cod AND Nod_Est = 'A'
+             ORDER BY Nod_Vis_X ASC, Nod_Vis_Y ASC, Nod_Cod ASC;",
+            $this->obBD_conexion
+        );
+        if (!is_array($nodos)) {
+            $nodos = array();
+        }
+        $conexiones = $this->obBD_datos->getArrayConsultaSql(
+            "SELECT Nod_Ori, Nod_Des, Con_Acc
+             FROM wf_conexiones
+             WHERE Wfm_Cod = $wfm_cod
+             ORDER BY Con_Cod ASC;",
+            $this->obBD_conexion
+        );
+        if (!is_array($conexiones)) {
+            $conexiones = array();
+        }
+        $nodos = $this->ordenarNodosPorConexiones($nodos, $conexiones);
+        $ids = array();
+        foreach ($nodos as $n) {
+            $tip = isset($n['Nod_Tip']) ? $n['Nod_Tip'] : '';
+            if ($tip !== 'AVANCE') {
+                continue;
+            }
+            $id = intval(isset($n['Nod_Cod']) ? $n['Nod_Cod'] : 0);
+            if ($id > 0) {
+                $ids[] = $id;
+            }
+        }
+        return $ids;
+    }
+
+    /**
+     * Indica si el nodo actual es el unico o el ultimo AVANCE del esquema.
+     * En esos casos se exige que la suma de subtotales de facturas = cotizacion ganadora.
+     */
+    public function avanceExigeTotalesCompletos($wfm_cod, $nod_act) {
+        $ids = $this->listarNodosAvanceFlujo($wfm_cod);
+        $total = count($ids);
+        $nod_act = intval($nod_act);
+        if ($total <= 0 || $nod_act <= 0) {
+            return array(
+                'exige' => true,
+                'total' => $total,
+                'es_unico' => ($total === 1),
+                'es_ultimo' => false
+            );
+        }
+        $ultimo = intval($ids[$total - 1]);
+        $es_unico = ($total === 1);
+        $es_ultimo = ($ultimo === $nod_act);
+        return array(
+            'exige' => ($es_unico || $es_ultimo),
+            'total' => $total,
+            'es_unico' => $es_unico,
+            'es_ultimo' => $es_ultimo
+        );
+    }
+
+    /**
      * Progreso de etapa: actual/total (ej. 1/10).
      * Si la instancia esta finalizada (F), actual = total.
      */
@@ -5190,8 +5529,133 @@ class wf_manager_log {
             KEY idx_wf_dep_emp (Emp_Cod)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
         $this->obBD_datos->grabarv_registros($sql, $this->obBD_conexion);
+
+        $cols_usu = $this->obBD_datos->getArrayConsultaSql(
+            "SHOW COLUMNS FROM wf_departamentos LIKE 'Usu_Cod';",
+            $this->obBD_conexion
+        );
+        if (empty($cols_usu)) {
+            $this->ejecutarSql(
+                "ALTER TABLE wf_departamentos
+                 ADD COLUMN Usu_Cod BIGINT NULL COMMENT 'Usuario encargado del departamento' AFTER Emp_Cod;"
+            );
+        }
+
         $this->ensureWfDepartamentoUsuariosWdeCod();
         $this->ensureWfDepCodSinFkRrhh();
+        $this->ensureWfNodosPerCodSinFkPersonal();
+    }
+
+    /**
+     * Per_Cod en wf_nodos guarda perfiles.Per_Cod (asignacion por perfil),
+     * NO personal.Per_Cod. Quita FK legacy wf_nodos_personal_FK.
+     */
+    public function ensureWfNodosPerCodSinFkPersonal() {
+        static $ready = false;
+        if ($ready) {
+            return;
+        }
+        if (!empty($_SESSION['wf_nodos_per_fk_ok'])) {
+            $ready = true;
+            return;
+        }
+
+        $chk = $this->obBD_datos->getRowConsultaSql(
+            "SELECT COUNT(*) AS cnt
+             FROM information_schema.KEY_COLUMN_USAGE
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = 'wf_nodos'
+               AND COLUMN_NAME = 'Per_Cod'
+               AND REFERENCED_TABLE_NAME = 'personal';",
+            $this->obBD_conexion
+        );
+        if (empty($chk) || intval($chk['cnt']) === 0) {
+            $ready = true;
+            if (isset($_SESSION)) {
+                $_SESSION['wf_nodos_per_fk_ok'] = 1;
+            }
+            return;
+        }
+
+        $mysqli = null;
+        if (isset($this->obBD_conexion->conexion) && $this->obBD_conexion->conexion) {
+            $mysqli = $this->obBD_conexion->conexion;
+        }
+
+        $fks = $this->obBD_datos->getArrayConsultaSql(
+            "SELECT CONSTRAINT_NAME
+             FROM information_schema.KEY_COLUMN_USAGE
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = 'wf_nodos'
+               AND COLUMN_NAME = 'Per_Cod'
+               AND REFERENCED_TABLE_NAME = 'personal'
+             GROUP BY CONSTRAINT_NAME;",
+            $this->obBD_conexion
+        );
+        if (!empty($fks)) {
+            foreach ($fks as $fk) {
+                $nombre = isset($fk['CONSTRAINT_NAME']) ? $fk['CONSTRAINT_NAME'] : '';
+                if ($nombre === '') {
+                    continue;
+                }
+                $sqlDrop = "ALTER TABLE `wf_nodos` DROP FOREIGN KEY `" . str_replace('`', '', $nombre) . "`";
+                if ($mysqli) {
+                    @mysqli_query($mysqli, $sqlDrop);
+                } else {
+                    @$this->obBD_datos->grabarv_registros($sqlDrop . ';', $this->obBD_conexion);
+                }
+            }
+        }
+
+        $ready = true;
+        if (isset($_SESSION)) {
+            $_SESSION['wf_nodos_per_fk_ok'] = 1;
+        }
+    }
+
+    /**
+     * Valida que Usu_Cod sea un usuario activo habilitado para workflow (Usu_Wf = S).
+     */
+    public function validarUsuarioWfActivo($usu_cod, $emp_cod) {
+        $usu_cod = intval($usu_cod);
+        $emp_cod = intval($emp_cod);
+        if ($usu_cod <= 0 || $emp_cod <= 0) {
+            return false;
+        }
+        $row = $this->obBD_datos->getRowConsultaSql(
+            "SELECT u.Usu_Cod
+             FROM usuarios u
+             INNER JOIN sucursal s ON s.Suc_Cod = u.Suc_Cod
+             WHERE u.Usu_Cod = $usu_cod
+               AND s.Emp_Cod = $emp_cod
+               AND u.Usu_Est = 'A'
+               AND u.Usu_Wf = 'S'
+             LIMIT 1;",
+            $this->obBD_conexion
+        );
+        return !empty($row['Usu_Cod']);
+    }
+
+    /**
+     * Lista usuarios activos de workflow (mismos que se usan en nodos / asignacion a deptos).
+     */
+    public function listarUsuariosWfActivos($emp_cod) {
+        $emp_cod = intval($emp_cod);
+        if ($emp_cod <= 0) {
+            return array();
+        }
+        $rows = $this->obBD_datos->getArrayConsultaSql(
+            "SELECT MIN(u.Usu_Cod) AS Usu_Cod,
+                    TRIM(CONCAT(p.Prs_Nom, ' ', p.Prs_Ape)) AS Usuario_Nom
+             FROM usuarios u
+             INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
+             INNER JOIN sucursal s ON s.Suc_Cod = u.Suc_Cod
+             WHERE s.Emp_Cod = $emp_cod AND u.Usu_Est = 'A' AND u.Usu_Wf = 'S'
+             GROUP BY u.Usu_Ced, p.Prs_Nom, p.Prs_Ape
+             ORDER BY Usuario_Nom ASC;",
+            $this->obBD_conexion
+        );
+        return ($rows === false || $rows === null) ? array() : $rows;
     }
 
     /**
@@ -5534,18 +5998,25 @@ class wf_manager_log {
     }
 
     /**
-     * Crea o actualiza un departamento de workflow (solo nombre, sin vinculo a RRHH).
+     * Crea o actualiza un departamento de workflow (nombre + encargado obligatorio).
      */
-    public function guardarDepartamentoWorkflow($emp_cod, $dep_cod, $dep_des, $dep_rrhh_cod = null) {
+    public function guardarDepartamentoWorkflow($emp_cod, $dep_cod, $dep_des, $dep_rrhh_cod = null, $usu_cod = null) {
         $this->ensureWfDepartamentosTable();
         $emp_cod = intval($emp_cod);
         $dep_des_norm = strtoupper(trim($dep_des));
         $dep_des_esc = $this->escapeWf($dep_des_norm);
+        $usu_cod = intval($usu_cod);
         if ($dep_des_esc === '') {
             throw new Exception('El nombre del departamento es obligatorio.');
         }
         if ($emp_cod <= 0) {
             throw new Exception('Empresa no valida.');
+        }
+        if ($usu_cod <= 0) {
+            throw new Exception('Debe seleccionar el usuario encargado del departamento.');
+        }
+        if (!$this->validarUsuarioWfActivo($usu_cod, $emp_cod)) {
+            throw new Exception('El usuario encargado debe estar activo y habilitado para workflow.');
         }
 
         $wde = !empty($dep_cod) ? intval($dep_cod) : 0;
@@ -5566,13 +6037,16 @@ class wf_manager_log {
                 throw new Exception('Departamento no encontrado.');
             }
             $this->ejecutarSql(
-                "UPDATE wf_departamentos SET Wde_Des = '$dep_des_esc' WHERE Wde_Cod = $wde AND Emp_Cod = $emp_cod;"
+                "UPDATE wf_departamentos
+                 SET Wde_Des = '$dep_des_esc', Usu_Cod = $usu_cod
+                 WHERE Wde_Cod = $wde AND Emp_Cod = $emp_cod;"
             );
             return $wde;
         }
 
         $this->ejecutarSql(
-            "INSERT INTO wf_departamentos (Emp_Cod, Wde_Des, Wde_Est) VALUES ($emp_cod, '$dep_des_esc', 'A');"
+            "INSERT INTO wf_departamentos (Emp_Cod, Usu_Cod, Wde_Des, Wde_Est)
+             VALUES ($emp_cod, $usu_cod, '$dep_des_esc', 'A');"
         );
         $nuevo = $this->obBD_datos->getRowConsultaSql(
             "SELECT Wde_Cod FROM wf_departamentos

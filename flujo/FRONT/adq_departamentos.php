@@ -12,6 +12,10 @@ $db_param = isset($Ses_Dis_Dis) ? $Ses_Dis_Dis : (isset($_SESSION['Ses_Dis_Dis']
 $obBD_conexion = new Class_Log_Conexion_Global($db_param);
 $obBD_con1 = new MysqlDatos($obBD_conexion);
 $wf_mgr = new wf_manager_log($db_param);
+$wf_mgr->ensureUtf8Charset();
+if (!empty($obBD_conexion->conexion) && function_exists('mysqli_set_charset')) {
+    @mysqli_set_charset($obBD_conexion->conexion, 'utf8mb4');
+}
 
 // Definir variables AJAX si se solicita directamente
 $ajax_get_deptos = isset($_GET['ajax_get_deptos']) ? $_GET['ajax_get_deptos'] : (isset($ajax_get_deptos) ? $ajax_get_deptos : null);
@@ -20,10 +24,11 @@ $ajax_save_depto_req = isset($_GET['ajax_save_depto_req']) ? $_GET['ajax_save_de
 $ajax_toggle_depto_req = isset($_GET['ajax_toggle_depto_req']) ? $_GET['ajax_toggle_depto_req'] : (isset($_POST['ajax_toggle_depto_req']) ? $_POST['ajax_toggle_depto_req'] : (isset($ajax_toggle_depto_req) ? $ajax_toggle_depto_req : null));
 $ajax_get_depto_users = isset($_GET['ajax_get_depto_users']) ? $_GET['ajax_get_depto_users'] : (isset($ajax_get_depto_users) ? $ajax_get_depto_users : null);
 $ajax_save_depto_users = isset($_POST['ajax_save_depto_users']) ? $_POST['ajax_save_depto_users'] : (isset($ajax_save_depto_users) ? $ajax_save_depto_users : null);
+$ajax_get_usuarios_encargado = isset($_GET['ajax_get_usuarios_encargado']) ? $_GET['ajax_get_usuarios_encargado'] : (isset($ajax_get_usuarios_encargado) ? $ajax_get_usuarios_encargado : null);
 
 // Verificar acceso a la ventana 'configuracion'
 if (!$wf_mgr->verificarAccesoVentana('configuracion')) {
-    if (isset($ajax_save_depto_req) || isset($ajax_toggle_depto_req) || isset($ajax_get_depto_req) || isset($ajax_get_depto_users) || isset($ajax_save_depto_users)) {
+    if (isset($ajax_save_depto_req) || isset($ajax_toggle_depto_req) || isset($ajax_get_depto_req) || isset($ajax_get_depto_users) || isset($ajax_save_depto_users) || isset($ajax_get_usuarios_encargado)) {
         $obBD_con1->echoJson(array('success' => false, 'message' => 'Acceso denegado. No tiene permisos para realizar esta acci�n.'));
         exit;
     } else {
@@ -34,9 +39,22 @@ if (!$wf_mgr->verificarAccesoVentana('configuracion')) {
 
 // Redirecci�n segura para navegaci�n directa del navegador (no AJAX)
 $request_method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : '';
-$is_ajax_get = isset($_GET['ajax_get_deptos']) || isset($_GET['ajax_get_depto_req']) || isset($_GET['ajax_get_depto_users']);
+$is_ajax_get = isset($_GET['ajax_get_deptos']) || isset($_GET['ajax_get_depto_req']) || isset($_GET['ajax_get_depto_users']) || isset($_GET['ajax_get_usuarios_encargado']);
 if ($request_method === 'GET' && !$is_ajax_get) {
     header("Location: adq_configuracion.php?tab=departamentos");
+    exit;
+}
+
+// --- AJAX: Usuarios activos de workflow (para encargado de departamento) ---
+if (isset($ajax_get_usuarios_encargado)) {
+    $emp_id = isset($Ses_Emp_Cod) ? intval($Ses_Emp_Cod) : (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0);
+    try {
+        $usuarios = $wf_mgr->listarUsuariosWfActivos($emp_id);
+        wf_manager_log::utf8EnsureDeep($usuarios);
+        $obBD_con1->echoJson(array('success' => true, 'usuarios' => $usuarios));
+    } catch (Exception $e) {
+        $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
+    }
     exit;
 }
 
@@ -44,15 +62,20 @@ if ($request_method === 'GET' && !$is_ajax_get) {
 if (isset($ajax_save_depto_req)) {
     $dep_cod = !empty($_POST['Dep_Cod']) ? intval($_POST['Dep_Cod']) : null;
     $dep_des = isset($_POST['Dep_Des']) ? strtoupper(trim($_POST['Dep_Des'])) : '';
+    $usu_cod = !empty($_POST['Usu_Cod']) ? intval($_POST['Usu_Cod']) : 0;
 
     if ($dep_des === '') {
         $obBD_con1->echoJson(array('success' => false, 'message' => 'El nombre del departamento es obligatorio.'));
         exit;
     }
+    if ($usu_cod <= 0) {
+        $obBD_con1->echoJson(array('success' => false, 'message' => 'Debe seleccionar el usuario encargado del departamento.'));
+        exit;
+    }
 
     try {
         $emp_id = isset($Ses_Emp_Cod) ? intval($Ses_Emp_Cod) : (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0);
-        $wf_mgr->guardarDepartamentoWorkflow($emp_id, $dep_cod, $dep_des);
+        $wf_mgr->guardarDepartamentoWorkflow($emp_id, $dep_cod, $dep_des, null, $usu_cod);
         $obBD_con1->echoJson(array('success' => true));
     } catch (Exception $e) {
         $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
@@ -79,12 +102,18 @@ if (isset($ajax_toggle_depto_req)) {
 if (isset($ajax_get_depto_req)) {
     $dep_cod = intval($_GET['Dep_Cod']);
     $emp_id = isset($Ses_Emp_Cod) ? intval($Ses_Emp_Cod) : (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0);
+    $wf_mgr->ensureWfDepartamentosTable();
     $row = $obBD_con1->getRowConsultaSql("
-        SELECT w.Wde_Cod AS Dep_Cod, w.Wde_Des AS Dep_Des, w.Wde_Est AS Dep_Est
+        SELECT w.Wde_Cod AS Dep_Cod, w.Wde_Des AS Dep_Des, w.Wde_Est AS Dep_Est, w.Usu_Cod,
+               (SELECT TRIM(CONCAT(p.Prs_Nom, ' ', p.Prs_Ape))
+                FROM usuarios u
+                INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
+                WHERE u.Usu_Cod = w.Usu_Cod
+                LIMIT 1) AS Encargado_Nom
         FROM wf_departamentos w
         WHERE w.Wde_Cod = $dep_cod AND w.Emp_Cod = $emp_id;", $obBD_conexion);
-    if (!empty($row) && function_exists('utf8_encode_deep')) {
-        utf8_encode_deep($row);
+    if (!empty($row)) {
+        wf_manager_log::utf8EnsureDeep($row);
     }
     $obBD_con1->echoJson(array('success' => true, 'data' => $row));
     exit;
@@ -128,9 +157,7 @@ if (isset($ajax_get_depto_users) || isset($_GET['ajax_get_depto_users'])) {
         if ($usuarios === false || $usuarios === null) {
             $usuarios = array();
         }
-        if (function_exists('utf8_encode_deep')) {
-            utf8_encode_deep($usuarios);
-        }
+        wf_manager_log::utf8EnsureDeep($usuarios);
         $obBD_con1->echoJson(array('success' => true, 'usuarios' => $usuarios));
     } catch (Exception $e) {
         $obBD_con1->echoJson(array('success' => false, 'message' => $e->getMessage()));
@@ -157,10 +184,17 @@ if (isset($ajax_save_depto_users)) {
 
 // Cargar datos para la vista
 $emp_id = isset($Ses_Emp_Cod) ? intval($Ses_Emp_Cod) : (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0);
+$wf_mgr->ensureWfDepartamentosTable();
 $deptos = $obBD_con1->getArrayConsultaSql("
     SELECT d.Wde_Cod AS Dep_Cod,
            d.Wde_Des AS Dep_Des,
            d.Wde_Est AS Dep_Est, d.Wde_Est AS Wfd_Est,
+           d.Usu_Cod,
+           (SELECT TRIM(CONCAT(p.Prs_Nom, ' ', p.Prs_Ape))
+            FROM usuarios u
+            INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
+            WHERE u.Usu_Cod = d.Usu_Cod
+            LIMIT 1) AS Encargado_Nom,
            (SELECT COUNT(DISTINCT u.Usu_Ced)
             FROM wf_departamento_usuarios du
             INNER JOIN usuarios u ON u.Usu_Cod = du.Usu_Cod
@@ -175,9 +209,7 @@ if ($deptos === false || $deptos === null) {
 }
 
 if (isset($ajax_get_deptos)) {
-    if (function_exists('utf8_encode_deep')) {
-        utf8_encode_deep($deptos);
-    }
+    wf_manager_log::utf8EnsureDeep($deptos);
     ?>
     <style>
         #tblDeptos tr.wf-depto-inactivo {
@@ -207,6 +239,7 @@ if (isset($ajax_get_deptos)) {
                     <tr class="text-center font-monospace" style="font-size: 13px;">
                         <th style="width: 80px;">ID</th>
                         <th>Nombre del Departamento</th>
+                        <th>Encargado</th>
                         <th style="width: 150px;">Usuarios Asignados</th>
                         <th style="width: 140px;">Estado</th>
                         <th style="width: 180px;">Acciones</th>
@@ -214,12 +247,13 @@ if (isset($ajax_get_deptos)) {
                 </thead>
                 <tbody>
                     <?php if (empty($deptos)) { ?>
-                        <tr class="text-center"><td colspan="5" class="text-muted py-3">No hay departamentos registrados. Use <strong>Nuevo Departamento</strong> para crear uno.</td></tr>
+                        <tr class="text-center"><td colspan="6" class="text-muted py-3">No hay departamentos registrados. Use <strong>Nuevo Departamento</strong> para crear uno.</td></tr>
                     <?php } else { 
                         foreach ($deptos as $d) { ?>
                             <tr class="text-center <?php echo $d['Wfd_Est'] === 'I' ? 'wf-depto-inactivo' : ''; ?>" id="row_dep_<?php echo $d['Dep_Cod']; ?>" data-wfd-est="<?php echo $d['Wfd_Est']; ?>">
                                 <td class="fw-bold"><?php echo $d['Dep_Cod']; ?></td>
                                 <td class="text-start"><?php echo htmlspecialchars($d['Dep_Des'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                <td class="text-start"><?php echo !empty($d['Encargado_Nom']) ? htmlspecialchars($d['Encargado_Nom'], ENT_QUOTES, 'UTF-8') : '<span class="text-muted">Sin encargado</span>'; ?></td>
                                 <td class="fw-bold text-primary">
                                     <span class="badge bg-info text-dark" id="cant_usu_<?php echo $d['Dep_Cod']; ?>">
                                         <?php echo $d['Cant_Usuarios']; ?> usuarios
