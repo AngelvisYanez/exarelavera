@@ -55,15 +55,23 @@ if (isset($ajax)) {
 if (isset($anula)) {
 	$responce = array('success' => false, 'message' => '');
 	/**
-	 * Si el cheque proviene de un anticipo a proveedores activo,
-	 * primero debe anularse el anticipo desde su modulo.
+	 * Si el cheque proviene de un anticipo a proveedores (A/U/C),
+	 * no se permite anularlo desde este modulo.
 	 */
 	$row_anticipo = $obBD_con1->getRowConsulta(397, $asi_cod, $obBD_conexion);
 	if (isset($row_anticipo['Atp_Cod']) && $row_anticipo['Atp_Cod'] != '') {
-		$responce['message'] = 'Este cheque pertenece al anticipo a proveedores <b>' .
-			$row_anticipo['codigo_compro'] . '</b> (c&oacute;d. ' . $row_anticipo['Atp_Cod'] .
-			'). Debe <b>anular primero el anticipo</b> desde Modificar Anticipos a Proveedores.';
+		$est_atp = isset($row_anticipo['Atp_Est']) ? $row_anticipo['Atp_Est'] : '';
+		if ($est_atp === 'C') {
+			$responce['message'] = 'Este cheque pertenece al anticipo a proveedores <b>' .
+				$row_anticipo['codigo_compro'] . '</b> (c&oacute;d. ' . $row_anticipo['Atp_Cod'] .
+				'), que se encuentra <b>consumido</b>. No se puede anular el cheque.';
+		} else {
+			$responce['message'] = 'Este cheque pertenece al anticipo a proveedores <b>' .
+				$row_anticipo['codigo_compro'] . '</b> (c&oacute;d. ' . $row_anticipo['Atp_Cod'] .
+				'). Debe <b>anular primero el anticipo</b> desde Modificar Anticipos a Proveedores.';
+		}
 		$responce['anticipo'] = true;
+		$responce['atp_est'] = $est_atp;
 		echo json_encode($responce);
 		exit();
 	}
@@ -669,13 +677,21 @@ if ($total_rs_periodos > 0) {
 														<?php
 														echo trim($row_rs_carcheq['Che_Obs']) != '' ? $row_rs_carcheq['Che_Obs'] : '&mdash;';
 														if (!empty($row_rs_carcheq['Atp_Cod'])) {
-															echo ' <span class="label label-warning" title="Anticipo a proveedores #' . $row_rs_carcheq['Atp_Cod'] . '">Anticipo</span>';
+															$lbl_atp = (!empty($row_rs_carcheq['Atp_Est']) && $row_rs_carcheq['Atp_Est'] === 'C') ? 'Anticipo consumido' : 'Anticipo';
+															echo ' <span class="label label-warning" title="Anticipo a proveedores #' . $row_rs_carcheq['Atp_Cod'] . '">' . $lbl_atp . '</span>';
 														}
 														?>
 													</td>
 													<td class="text-center no-line anulaChe" id="<?php echo $row_rs_carcheq['Asi_Cod'] . '-CH' . $row_rs_carcheq['Che_Cod']; ?>">
-														<?php if ($row_rs_carcheq['Che_Est'] == 'A') { ?>
-															<button type="button" class="btn btn-danger btn-xs" title="<?php echo !empty($row_rs_carcheq['Atp_Cod']) ? 'Anular (requiere anular anticipo primero)' : 'Anular Cheque'; ?>" onclick="anulaCheque('<?php echo $row_rs_carcheq['Asi_Cod']; ?>','<?php echo $row_rs_carcheq['Che_Cod']; ?>',<?php echo !empty($row_rs_carcheq['Atp_Cod']) ? "'" . $row_rs_carcheq['Atp_Cod'] . "'" : 'null'; ?>)">
+														<?php if ($row_rs_carcheq['Che_Est'] == 'A') {
+															$atp_est_js = !empty($row_rs_carcheq['Atp_Est']) ? "'" . $row_rs_carcheq['Atp_Est'] . "'" : 'null';
+															$tit_anula = !empty($row_rs_carcheq['Atp_Cod'])
+																? ((!empty($row_rs_carcheq['Atp_Est']) && $row_rs_carcheq['Atp_Est'] === 'C')
+																	? 'No se puede anular: anticipo consumido'
+																	: 'Anular (requiere anular anticipo primero)')
+																: 'Anular Cheque';
+														?>
+															<button type="button" class="btn btn-danger btn-xs" title="<?php echo $tit_anula; ?>" onclick="anulaCheque('<?php echo $row_rs_carcheq['Asi_Cod']; ?>','<?php echo $row_rs_carcheq['Che_Cod']; ?>',<?php echo !empty($row_rs_carcheq['Atp_Cod']) ? "'" . $row_rs_carcheq['Atp_Cod'] . "'" : 'null'; ?>,<?php echo $atp_est_js; ?>)">
 																<span class="glyphicon glyphicon-ban-circle"></span> <span>Anular</span>
 															</button>
 														<?php } else { ?>
@@ -769,11 +785,15 @@ if ($total_rs_periodos > 0) {
 
 		/**
 		 * Anula el cheque junto con su comprobante de egreso.
-		 * Si proviene de un anticipo activo, se bloquea y se indica anular primero el anticipo.
+		 * Si proviene de un anticipo A/U/C, se bloquea la anulacion.
 		 */
-		function anulaCheque(asi, che, atp) {
+		function anulaCheque(asi, che, atp, atpEst) {
 			if (atp) {
-				$.alert('Este cheque pertenece al anticipo a proveedores <b>#' + atp + '</b>. Debe <b>anular primero el anticipo</b> desde Modificar Anticipos a Proveedores.', null, 'remove');
+				if (atpEst === 'C') {
+					$.alert('Este cheque pertenece al anticipo a proveedores <b>#' + atp + '</b>, que se encuentra <b>consumido</b>. No se puede anular el cheque.', null, 'remove');
+				} else {
+					$.alert('Este cheque pertenece al anticipo a proveedores <b>#' + atp + '</b>. Debe <b>anular primero el anticipo</b> desde Modificar Anticipos a Proveedores.', null, 'remove');
+				}
 				return;
 			}
 			$.createDialogConfirm('Est&aacute; seguro que desea <b>anular</b> este cheque y su comprobante?', null, function() {

@@ -220,7 +220,10 @@ ORDER BY
 		$car_cheques="SELECT Ban_Cod, cheques.Asi_Cod, persona.Prs_Ape, persona.Prs_Nom, cheques.Prv_Cod, Che_Num, Che_Val, Che_Fec, Che_Cob, Che_Obs, Che_Cod, Che_Est, det_plan.Pld_Des,
 			(SELECT ant.Atp_Cod FROM pago_anticipo_proveedores AS pga
 				INNER JOIN anticipos_proveedores AS ant ON ant.Atp_Cod = pga.Atp_Cod
-				WHERE pga.Asi_Cod = cheques.Asi_Cod AND ant.Atp_Est IN ('A','U') LIMIT 1) AS Atp_Cod
+				WHERE pga.Asi_Cod = cheques.Asi_Cod AND ant.Atp_Est IN ('A','U','C') LIMIT 1) AS Atp_Cod,
+			(SELECT ant.Atp_Est FROM pago_anticipo_proveedores AS pga
+				INNER JOIN anticipos_proveedores AS ant ON ant.Atp_Cod = pga.Atp_Cod
+				WHERE pga.Asi_Cod = cheques.Asi_Cod AND ant.Atp_Est IN ('A','U','C') LIMIT 1) AS Atp_Est
 			FROM asientos,cheques,proveedore,persona, det_plan WHERE asientos.Asi_Cod=cheques.Asi_Cod AND asientos.Com_Cod=$Par_Sql[0] AND cheques.Prv_Cod=proveedore.Prv_Cod AND proveedore.Prs_Cod=persona.Prs_Cod AND asientos.Pld_Cod = det_plan.Pld_Cod ORDER BY cheques.Che_Num";
 		return $car_cheques;
 		
@@ -826,8 +829,8 @@ ORDER BY
 		return $ins_asie;
 
 		/**
-		 * Verifica si el asiento del cheque pertenece a un anticipo a proveedores activo (A/U).
-		 * Usado antes de anular el cheque: primero debe anularse el anticipo.
+		 * Verifica si el asiento del cheque pertenece a un anticipo a proveedores
+		 * activo (A), usado (U) o consumido (C). En esos casos no se puede anular el cheque.
 		 */
 		case 397:
 		$sql="SELECT ant.Atp_Cod, ant.Atp_Est, ant.Com_Cod, ant.Atp_Fec, ant.Atp_Val,
@@ -837,7 +840,7 @@ ORDER BY
 			INNER JOIN comprobantes AS com ON com.Com_Cod = ant.Com_Cod
 			INNER JOIN tipo_asien AS tas ON tas.Tia_Cod = com.Tia_Cod
 			WHERE pga.Asi_Cod = $Par_Sql[0]
-				AND ant.Atp_Est IN ('A','U')
+				AND ant.Atp_Est IN ('A','U','C')
 			LIMIT 1";
 		return $sql;
 	
