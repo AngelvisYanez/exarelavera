@@ -1,9 +1,10 @@
-﻿<?php
+<?php
 /***************************************/
 /* Inicializa la Sesion en las paginas */
 if(session_id() === '') session_start();
 /***************************************/
 /***************************************/
+#[AllowDynamicProperties]
 class base_mysql{
 /* P R O P I E D A D E S */
 /*************************/
@@ -72,14 +73,17 @@ function parametros($param){
 }
 /* Devuelve el numero de campos de una consulta */
 function numcampos() {
+	if (!($this->rs_cargar instanceof mysqli_result)) return 0;
 	return mysqli_num_fields($this->rs_cargar);
 }
 /* Devuelve el numero de registros de una consulta */
 function numregistros(){
+	if (!($this->rs_cargar instanceof mysqli_result)) return 0;
 	return @mysqli_num_rows($this->rs_cargar);
 }
 /* Devuelve una matriz con los datos consultados */
 function arregloregistros(){
+	if (!($this->rs_cargar instanceof mysqli_result)) return false;
 	return @mysqli_fetch_assoc($this->rs_cargar);
 }
 /* Devuelve el ultimo codigo generado en una conexion */
@@ -88,7 +92,9 @@ function insercionid(){
 }
 /* Devuelve el nombre de un campo de una consulta */
 function nombrecampo($numcampo) {
-	return mysqli_field_name($this->rs_cargar, $numcampo);
+	if (!($this->rs_cargar instanceof mysqli_result)) return null;
+	$finfo = mysqli_fetch_field_direct($this->rs_cargar, $numcampo);
+	return $finfo ? $finfo->name : null;
 }
 /* Muestra los datos de una consulta */
 function verconsulta() {
@@ -118,7 +124,7 @@ function grabaru($sql = "")
 		if (mysqli_errno($this->conexion) == 0) {
 			mysqli_commit($this->conexion);
 		?>
-			<script LANGUAGE="JavaScript">
+			<script type="text/javascript">
 				alert ("La transaccion se ha realizado con exito");
 			</script>
 		<?php
@@ -127,7 +133,7 @@ function grabaru($sql = "")
 		{
 		    mysqli_rollback($this->conexion);
 		?>
-			<script LANGUAGE="JavaScript">
+			<script type="text/javascript">
 			alert ("< < < A l e r ta !!!: NO se ha podido completar con exito la transaccion > > >");
 			</script>
 		<?php
@@ -152,7 +158,7 @@ function fin_trans($conectar2)
 		if ($_SESSION['Error']!=1) {
 			mysqli_commit($conectar2);
 ?>
-			<script LANGUAGE="JavaScript">
+			<script type="text/javascript">
 				alert ("La transaccion se ha realizado con exito");
 			</script>
 <?php
@@ -161,7 +167,7 @@ function fin_trans($conectar2)
 		{
 			mysqli_rollback($conectar2);
 ?>
-			<script LANGUAGE="JavaScript">
+			<script type="text/javascript">
 			alert ("< < < A l e r ta !!!: NO se ha podido completar con exito la transaccion > > >");
 			</script>
 <?php
@@ -192,7 +198,7 @@ function fin_transaccion()
 		{
 			mysqli_commit($this->conexion);
 			?>
-			<script LANGUAGE="JavaScript">
+			<script type="text/javascript">
 				alert ("La transaccion se ha realizado con exito");
 			</script>
 			<?php
@@ -201,7 +207,7 @@ function fin_transaccion()
 		{
 			mysqli_rollback($this->conexion);
 			?>
-			<script LANGUAGE="JavaScript">
+			<script type="text/javascript">
 			alert ("< < < A l e r ta !!!: NO se ha podido completar con exito la transaccion > > >");
 			</script>
 			<?php
@@ -308,14 +314,17 @@ function parametros($param){
 }
 /* Devuelve el numero de campos de una consulta */
 function numcampos() {
+	if (!($this->rs_cargar instanceof mysqli_result)) return 0;
 	return mysqli_num_fields($this->rs_cargar);
 }
 /* Devuelve el numero de registros de una consulta */
 function numregistros(){
+	if (!($this->rs_cargar instanceof mysqli_result)) return 0;
 	return @mysqli_num_rows($this->rs_cargar);
 }
 /* Devuelve una matriz con los datos consultados */
 function registros(){
+	if (!($this->rs_cargar instanceof mysqli_result)) return false;
 	return @mysqli_fetch_assoc($this->rs_cargar);
 }
 /* Devuelve el ultimo codigo generado en una conexion */
@@ -324,7 +333,9 @@ function insercionid($conexion){
 }
 /* Devuelve el nombre de un campo de una consulta */
 function nombrecampo($numcampo) {
-	return mysqli_field_name($this->rs_cargar, $numcampo);
+	if (!($this->rs_cargar instanceof mysqli_result)) return null;
+	$finfo = mysqli_fetch_field_direct($this->rs_cargar, $numcampo);
+	return $finfo ? $finfo->name : null;
 }
 /* Muestra los datos de una consulta */
 function verconsulta() {
@@ -354,7 +365,7 @@ function grabaru($sql = "")
 		if (mysqli_errno($conexion) == 0) {
 			mysqli_commit($conexion);
 		?>
-			<script LANGUAGE="JavaScript">
+			<script type="text/javascript">
 				alert ("La transaccion se ha realizado con exito");
 			</script>
 		<?php
@@ -363,7 +374,7 @@ function grabaru($sql = "")
 		{
 		    mysqli_rollback($conexion);
 		?>
-			<script LANGUAGE="JavaScript">
+			<script type="text/javascript">
 			alert ("< < < A l e r ta !!!: NO se ha podido completar con exito la transaccion > > >");
 			</script>
 		<?php
@@ -392,7 +403,7 @@ function fin_transaccion($conexion)
 		{
 			mysqli_commit($conexion);
 			?>
-			<script LANGUAGE="JavaScript">
+			<script type="text/javascript">
 				alert ("La transaccion se ha realizado con exito");
 			</script>
 			<?php
@@ -401,7 +412,7 @@ function fin_transaccion($conexion)
 		{
 			mysqli_rollback($conexion);
 			?>
-			<script LANGUAGE="JavaScript">
+			<script type="text/javascript">
 			alert ("< < < A l e r ta !!!: NO se ha podido completar con exito la transaccion > > >");
 			</script>
 			<?php
@@ -421,14 +432,17 @@ function fin_transaccion_nomsn($conexion)
 	}
 /* Devuelve una matriz con los datos consultados en base a un rs */
 function fetch_assoc($rs_consulta){
+	if (!($rs_consulta instanceof mysqli_result)) return false;
 	return @mysqli_fetch_assoc($rs_consulta);
 }
 /* Devuelve el total de datos consultados en base a un rs */
 function num_rows($rs_consulta){
+	if (!($rs_consulta instanceof mysqli_result)) return 0;
 	return @mysqli_num_rows($rs_consulta);
 }
 /* libera un rs */
 function free_result($rs_consulta){
+	if (!($rs_consulta instanceof mysqli_result)) return false;
 	return @mysqli_free_result($rs_consulta);
 }
 /* Mueve el apuntador de la consulta */
@@ -437,6 +451,7 @@ function data_seek($rs_consulta, $puntero){
 }
 /* Devuelve un arreglo de una consulta */
 function fetch_array($rs_consulta){
+	if (!($rs_consulta instanceof mysqli_result)) return false;
 	return @mysqli_fetch_array ($rs_consulta);
 }
 /******************************************/
@@ -548,7 +563,7 @@ function grabaru($sql = "")
 		if ($this->rs_save) {
 			pg_commit($conexion);
 		?>
-			<script LANGUAGE="JavaScript">
+			<script type="text/javascript">
 				alert ("La transaccion se ha realizado con exito");
 			</script>
 		<?php
@@ -557,7 +572,7 @@ function grabaru($sql = "")
 		{
 		    pg_rollback($conexion);
 		?>
-			<script LANGUAGE="JavaScript">
+			<script type="text/javascript">
 			alert ("< < < A l e r ta !!!: NO se ha podido completar con exito la transaccion > > >");
 			</script>
 		<?php
@@ -580,7 +595,7 @@ function fin_transaccion($conexion)
 	{
 		pg_query($conexion,'COMMIT;');
 		?>
-		<script LANGUAGE="JavaScript">
+		<script type="text/javascript">
 			alert ("La transaccion se ha realizado con exito");
 		</script>
 		<?php
@@ -589,7 +604,7 @@ function fin_transaccion($conexion)
 	{
 		pg_query($conexion,'ROLLBACK;');
 		?>
-		<script LANGUAGE="JavaScript">
+		<script type="text/javascript">
 			alert ("< < < A l e r ta !!!: NO se ha podido completar con exito la transaccion > > >");
 		</script>
 		<?php

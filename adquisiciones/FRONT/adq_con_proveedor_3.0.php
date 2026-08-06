@@ -43,12 +43,12 @@
     
 	<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
     
-	<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-	<script language="javascript" src="../VALIDACIONES/adq_val_proveedor.js"></script>
+	<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+	<script type="text/javascript" src="../VALIDACIONES/adq_val_proveedor.js"></script>
     
     <script type="text/javascript" src="../../Librerias/exportar/jquery-1.3.2.min.js"></script>
     
-    <script language="javascript">
+    <script type="text/javascript">
 			$(document).ready(function() {
 				/* LLamado a la class del boton exportar */
 				$("#Boton_Excel").click(function(event) {

@@ -2,13 +2,33 @@ ErrorDocument 404     /administrador/FRONT/not_found.html
 ErrorDocument 403     /administrador/FRONT/forbidden.html
 ErrorDocument 500     /administrador/FRONT/fatalerror.html
 
-
+# Deny access to sensitive files
 <FilesMatch "^\.env(\.example)?$">
     Require all denied
 </FilesMatch>
 
+<FilesMatch "^(phpinfo|composer)\.php$">
+    Require all denied
+</FilesMatch>
 
-#RewriteEngine On
-#RewriteCond %{HTTPS} off
-#RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-#RewriteRule ^(.*)$ /index.php [L,R=302]
+# Deny access to QUARANTINE directory (potential security risk)
+RewriteEngine On
+RewriteRule ^QUARANTINE(/|$) - [F,L]
+
+# Security headers
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options SAMEORIGIN
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    # HSTS (uncomment when HTTPS is confirmed working)
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</IfModule>
+
+# HTTPS redirect (uncomment when SSL certificate is configured)
+# RewriteEngine On
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Disable directory listing
+Options -Indexes

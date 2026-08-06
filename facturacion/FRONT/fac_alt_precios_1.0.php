@@ -4,9 +4,9 @@
 * pagina de ingreso de precios (fac_alt_precios_1.0.php) :)
 *
 * @author Jose Cumbicos
-* Ultima Actualización: 28-05-2014
+* Ultima Actualizaciï¿½n: 28-05-2014
 * @author Lewis Chimarro
-* Ultima Actualización: 30-01-2015
+* Ultima Actualizaciï¿½n: 30-01-2015
 *
 * Permite buscar y visualizar los datos de un producto
 * Permite ver todo el listado de precios del producto
@@ -83,9 +83,9 @@ if (isset($codigo))
 		<!--<script type="text/javascript" src="../../Librerias/jscalendar/calendar.js"></script>
 		<script type="text/javascript" src="../../Librerias/jscalendar/lang/calendar-es.js"></script>
 		<script type="text/javascript" src="../../Librerias/jscalendar/calendar-setup.js"></script>-->
-		<!--<script language="javascript" src="../../Librerias/java.js"></script>-->
-		<script language="javascript" src="../VALIDACIONES/fac_val_precios.js"></script>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<!--<script type="text/javascript" src="../../Librerias/java.js"></script>-->
+		<script type="text/javascript" src="../VALIDACIONES/fac_val_precios.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
         
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script> 
 	    <script type="text/javascript">$(function() {$('#set1 *').tooltip({showURL: false});});</script>
@@ -144,7 +144,7 @@ if (isset($codigo))
 		            <td width="205"><input name="op_opciones" type="radio" value="d" checked>
 		                <span class="LetraNegra">Descripci&oacute;n</span></td>
 		            <td width="266"><input type="radio" name="op_opciones" value="r">
-		                <span class="LetraNegra">Código</span></td>
+		                <span class="LetraNegra">Cï¿½digo</span></td>
 		          </tr>
 		        </table>
 		        <table width="534" border="0" cellspacing="0">
@@ -392,7 +392,7 @@ if (isset($codigo))
         <table width="461" border="1" cellpadding="0" cellspacing="0" class="fixedHeader01">
         <thead>
 	      <tr>
-	        <th>Cód. Int.</th>
+	        <th>Cï¿½d. Int.</th>
 		    <th >Precio</th>
 		    <th >Tipo</th>
 		    <th >F.Inicio</th>

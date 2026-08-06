@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
 * @abstract Permite listar los cheques postfechados
 * @author Erik Niebla

@@ -719,8 +719,8 @@ if($total_rs_maxGuiaRemi!=0)
 <HTML><HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>	
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-    	<script language="javascript" src="../VALIDACIONES/fac_val_guia_remi.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    	<script type="text/javascript" src="../VALIDACIONES/fac_val_guia_remi.js"></script>
         <!--Librerias para interfaz -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script> 
         <!--Librerias para modal -->       
@@ -782,7 +782,7 @@ if($total_rs_maxGuiaRemi!=0)
 		$pagina = $_SERVER['PHP_SELF'];
 		$reportes = $obBD_con1->reportes($pagina, $Ses_Emp_Cod, $obBD_conexion);
 ?>
-<script language="javascript">windows('<?php echo $reportes[1];?>?Gui_Cod=<?Php echo $Gui_Cod;?>','', 800,600,'yes', 'yes', 'yes', 'no');</script>
+<script type="text/javascript">windows('<?php echo $reportes[1];?>?Gui_Cod=<?Php echo $Gui_Cod;?>','', 800,600,'yes', 'yes', 'yes', 'no');</script>
 <?php }//Fin del if (isset($hdd_save) && !isset($hdd_volver))?>
 
 <?php 
@@ -992,7 +992,7 @@ $thisPost->startPost();
         </tr> 
        </table>
     
-       <script language="javascript">ShowHide('tr_total');</script>  	
+       <script type="text/javascript">ShowHide('tr_total');</script>  	
         
       <input id="nfilas" name="nfilas" type="hidden" value="<?php echo $fila; ?>">
       <input id="nfilas_elim" name="nfilas_elim" type="hidden" value="">

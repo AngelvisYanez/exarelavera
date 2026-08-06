@@ -95,7 +95,7 @@ $mperf = '';
 foreach($_SESSION['Ses_Lis_Per'] as $item) {
     $mperf .= " perfiorgan.Per_Cod=" . $item . " OR";
 }
-$mperf = trim(substr($mperf, 1, count($mperf) - 3));
+$mperf = trim(substr($mperf, 1, strlen($mperf) - 3));
 
 $rs = $obDT->consulta(sentencias_adm(16, $obDT->parametros($mperf)), $obBD_conexion->conexion);
 $total = $obDT->numregistros();

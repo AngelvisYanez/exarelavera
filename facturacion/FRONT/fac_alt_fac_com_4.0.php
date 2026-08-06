@@ -9,7 +9,7 @@ require_once('../../Librerias/config.php/register_globals.php');
 require_once($APP_REAL_PATH.'/DATA/GestorErrores.php');
 require_once($APP_REAL_PATH.'/administrador/LOGICA/logica.php');
 require_once('../LOGICA/fac_log_factu.php');
-require_once('../../Librerias/procedimientods/almacenados_standar.php');
+require_once('../../Librerias/procedimientos/almacenados_standar.php');
 	
 $tipo_compr=6; //Tipo de comprobante de la retencion 
 $cod_banano=338; //Codigo de Retencion del Banano
@@ -45,7 +45,7 @@ if(isset($guardaProvAjax)){
         $data['Prv_Cod'] = $obBD_con1->insercionid ($obBD_conexion->conexion);
         $data['proveedor'] = trim($data['Prs_Ape'].' '.$data['Prs_Nom']);
     $obBD_con1->fin_transaccion_nomsn($obBD_conexion->conexion);
-    if($obBD_con1->Error==0) {$responce=array('success'=>true,'prov'=>$data);} else {$responce=array('success'=>false,'message'=>'No se pudo realizar la transacción!',error=>$obBD_con1->MsgError);}
+    if($obBD_con1->Error==0) {$responce=array('success'=>true,'prov'=>$data);} else {$responce=array('success'=>false,'message'=>'No se pudo realizar la transacciï¿½n!',error=>$obBD_con1->MsgError);}
     utf8_encode_deep($responce); echo json_encode($responce);exit();
 }
 /* Consulta datos del documento si existe */
@@ -165,8 +165,8 @@ if(isset($saveDocument)){
     $Ret_Num=($Retencion&&(($Ren_Tot)*1>0)?$Ret_Num:0);
     if(/*$configs['Cof_Gce']=='S'*/$Aut_Tem=='E'&&$Retencion&&$Ret_Num!==0){
         $claveAcceso=$obBD_con1->getRetClaveAcceso($Ses_Emp_Cod, $Ses_Suc_Cod, $Aut_Cod, $Ret_Fec, $Ret_Num, $obBD_conexion);
-        if(empty($claveAcceso)) $responce['message']="Error al generar <u>Clave de Acceso</u> del <i>Comprobante Electrónico</i>!";
-        if(!$obBD_con1->createUsuCliente($Ses_Emp_Cod, $Ses_Suc_Cod, $Prs_Cod, $Prs_Ced, $obBD_conexion)) $responce['message']='Error al crear usuario de <u>Comprobantes Electrónicos</u>!'; 
+        if(empty($claveAcceso)) $responce['message']="Error al generar <u>Clave de Acceso</u> del <i>Comprobante Electrï¿½nico</i>!";
+        if(!$obBD_con1->createUsuCliente($Ses_Emp_Cod, $Ses_Suc_Cod, $Prs_Cod, $Prs_Ced, $obBD_conexion)) $responce['message']='Error al crear usuario de <u>Comprobantes Electrï¿½nicos</u>!'; 
     }
     $rise=($Tic_Sri*1==2||$Tic_Sri*1==9); // rise, nota de venta
     if($rise) $iva_cero=$obBD_con1->getRowConsulta(68,'0',$obBD_conexion);
@@ -183,7 +183,7 @@ if(isset($saveDocument)){
         $obBD_ins1->operacionobBD(11, $Tic_Cod.'*'.$Prv_Cod.'*'.$Ciu_Cod.'*'.trim($Cop_Num).'*'.trim($Cop_Aut).'*'.$Cop_Fec.'*'.$hoy.'*'.trim($Cop_Obs).'*'.$Cop_Cad.'*'.$Cop_Imf.'*'.$Tri_Cod.'*'.$Cop_Des.'*'.$Pec_Cod.'*'.(empty($Tpc_Cod)?1:$Tpc_Cod).'*'.(isset($Cop_Ntd)?$Cop_Ntd:'').'*'.(isset($Cop_Nns)?$Cop_Nns:'').'*'.(isset($Cop_Nna)?$Cop_Nna:'').'*'.$Vnd_Cod.'*'.$Cop_Sec, $obBD_conexionIns);  
         $Cop_Cod = $obBD_ins1->insercionid ($obBD_conexionIns->conexion);
         
-        /* Cabecera de la Retención */
+        /* Cabecera de la Retenciï¿½n */
         if($Retencion){  
             $Ret_Fec=(!empty($Ret_Fec)?$Ret_Fec:$Cop_Fec);
             $obBD_ins1->operacionobBD(53, $Cop_Cod.'*'.$Ret_Num.'*'.$Ret_Fec.'*'.trim($Cop_Obs).'*'.$tipo_compr.'*'.$Vnd_Cod.'*'.$Aut_Cod.'*'.(isset($claveAcceso)?$claveAcceso:'').'*'.(!empty($Ret_Asu)?$Ret_Asu:'N').'*'.$Ret_Uca.'*'.$Ret_Pca, $obBD_conexionIns);
@@ -218,7 +218,7 @@ if(isset($saveDocument)){
                 $item['Pld_Cod']=$cuenta['Pld_Cod'];
                 $obBD_ins1->operacionobBD(17, $Com_Cod.'*'.'D'.'*'.($item['Cop_Imp']+$addIva).'*'.$cuenta['Pld_Des'].'*'.$item['Ite_Lar'].'*'.$cuenta['Pld_Cod'], $obBD_conexionIns);  // inserta asiento // Item                
             } unset($item); 
-            /* Inserta datos en el detalle del asiento (por codigo retención) */    
+            /* Inserta datos en el detalle del asiento (por codigo retenciï¿½n) */    
             if($Ret_Asu=='S')  $cuenta_ret_asu = $obBD_con1->getRowConsulta(28, $Pec_Cop['Pla_Cod'].'*'.'RA', $obBD_conexion);            
             if($Retencion&&$Ret_Num>0)
             foreach ($rets as $ret){ 
@@ -314,7 +314,7 @@ if(isset($saveDocument)){
 
     echo json_encode($responce);exit();
 }
-/* Valida numero de retención */	
+/* Valida numero de retenciï¿½n */	
 if(isset($validaRetNum)){    
     $autoriz=$obBD_con1->getRowConsulta(48, $vendedor['Pun_Cod'].'*'.$tipo_compr, $obBD_conexion); //Consulta las autorizaciones de las retenciones
     //$rs_infEmpFacElec = $obBD_con1->getRowConsulta(49, $Ses_Suc_Cod, $obBD_conexion);
@@ -327,7 +327,7 @@ if(isset($validaRetNum)){
         if(!empty($Ret_Num)){            
             $num_existe_gencod=$obBD_con1->getRowConsulta(50, $Ses_Suc_Cod.'*'.$autoriz['Aut_Sri'].'*'.$Ret_Num, $obBD_conexion); //Consulto si ya existe un codigo generado en las retenciones basado en una autorizacion otorgada por el SRI 
             if($num_existe_gencod['total']*1>0){
-                $resp['success']=false; $resp['message']="La Retención Número $Ret_Num ya Existe en el Sistema!";
+                $resp['success']=false; $resp['message']="La Retenciï¿½n Nï¿½mero $Ret_Num ya Existe en el Sistema!";
             }
         }else $resp['success']=false; 
         $resp['Aut_Sri']=($electronica?'Electronica':$autoriz['Aut_Sri']);
@@ -372,7 +372,7 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
                             <fieldset class="exa-fieldset" id="provFormTemp">
                                 <legend class="Titulos2">Datos del Proveedor</legend>
                                     <div class="form-group">
-                                        <label class="col-xs-2 control-label label-xs">Cédula/RUC:</label>  
+                                        <label class="col-xs-2 control-label label-xs">Cï¿½dula/RUC:</label>  
                                         <div class="col-xs-6" >
                                           <input name="Prs_Cod" type="text" style="display:none;" />  
                                           <input name="Prs_Cor" type="text" style="display:none;" />  
@@ -394,7 +394,7 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
                                         <label class="col-xs-4 control-label label-xs">Contr.Especial:&nbsp;<i  id="Prv_Esp" class="blue glyphicon glyphicon-remove" style="font-size: 12px;"></i></label> 
                                     </div>
                                     <div class="form-group">
-                                        <label class="col-xs-2 control-label label-xs">Dirección:</label>  
+                                        <label class="col-xs-2 control-label label-xs">Direcciï¿½n:</label>  
                                         <div class="col-xs-10" ><span name="Prs_Dir" type="text" class="form-control input-xs datatitle"></span></div>                    
                                     </div>
                             </fieldset>                             
@@ -433,12 +433,12 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
                                         <div class="col-xs-3">
                                           <div class="input-group">                                          
                                               <input id="Cop_Fec" name="Cop_Fec" type="text" class="form-control input-xs datepickers" tabindex="8" readonly="" required="" value="<?php echo $hoy; ?>" />
-                                              <span class="input-group-addon input-xs" title="Fecha de Emisión del Proveedor"><i class="glyphicon glyphicon-info-sign blue"></i></span>
+                                              <span class="input-group-addon input-xs" title="Fecha de Emisiï¿½n del Proveedor"><i class="glyphicon glyphicon-info-sign blue"></i></span>
                                           </div>
                                         </div>    
                                     </div>
                                     <div class="form-group">
-                                        <label class="col-xs-2 control-label label-xs required">Número:</label>                                     
+                                        <label class="col-xs-2 control-label label-xs required">Nï¿½mero:</label>                                     
                                         <div class="col-xs-5" >
                                             <div class="input-group input-group-xs">                                          
                                                 <input type="text" id="Cop_Num" name="Cop_Num" onchange="validaCopNum()" class="form-control input-xs secuencia" tabindex="5" readonly="" required="" />
@@ -446,11 +446,11 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
                                             </div>
                                         </div>
 
-                                        <label class="col-xs-2 control-label label-xs required">Impresión:</label>  
+                                        <label class="col-xs-2 control-label label-xs required">Impresiï¿½n:</label>  
                                         <div class="col-xs-3">
                                           <div class="input-group">                                          
                                               <input id="Cop_Imf" name="Cop_Imf" type="text" class="form-control input-xs datepickers empty" tabindex="9" readonly="" required="" value="<?php echo $hoy; ?>" />
-                                              <span class="input-group-addon input-xs" title="Fecha de Creación en Imprenta"><i class="glyphicon glyphicon-info-sign blue"></i></span>
+                                              <span class="input-group-addon input-xs" title="Fecha de Creaciï¿½n en Imprenta"><i class="glyphicon glyphicon-info-sign blue"></i></span>
                                           </div>
                                         </div>  
                                     </div>
@@ -514,7 +514,7 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
                         <fieldset class="exa-fieldset">
                             <form id="reteFormTemp" action="javascript:" class="formDatos">
                             <input name="Aut_Cod"  class="hidden" />
-                            <legend class="Titulos2">Datos de la Retención</legend>
+                            <legend class="Titulos2">Datos de la Retenciï¿½n</legend>
                             <div class="form-group">
                                 <label class="col-xs-2 control-label label-xs required">Numero:</label> 
                                 <div class="col-xs-4" >
@@ -529,11 +529,11 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
                                     <?php $row_rs_RetPld = $obBD_con1->getArrayConsulta(67, $Ses_Emp_Cod.'*'.'RA',$obBD_conexion); ?>
                                     <div id="asumirRet" style="display:none;" > 
                                         <input type="text" name="Ret_Pld_Cod" value="<?php if(count($row_rs_RetPld)>0) echo $row_rs_RetPld[0]['Pld_Cod']; ?>" style="display: none" />
-                                        <input id="Ret_Asu" name="Ret_Asu" type="checkbox" value="S" offval="N" <?php if(count($row_rs_RetPld)===0) echo 'disabled="disabled" title="No se ha parametrizado una cuenta contable."'; ?>><label class="control-label label-xs">&nbsp;&nbsp;Asumir Retención <i class="glyphicon glyphicon-info-sign blue" title="<?php if(count($row_rs_RetPld)===0) echo 'No se ha parametrizado una cuenta contable.'; else echo 'Asumir el Valor de la Retención Contablemente'; ?>"></i></label>
+                                        <input id="Ret_Asu" name="Ret_Asu" type="checkbox" value="S" offval="N" <?php if(count($row_rs_RetPld)===0) echo 'disabled="disabled" title="No se ha parametrizado una cuenta contable."'; ?>><label class="control-label label-xs">&nbsp;&nbsp;Asumir Retenciï¿½n <i class="glyphicon glyphicon-info-sign blue" title="<?php if(count($row_rs_RetPld)===0) echo 'No se ha parametrizado una cuenta contable.'; else echo 'Asumir el Valor de la Retenciï¿½n Contablemente'; ?>"></i></label>
                                     </div>
                                     <?php } ?> 
                                 </div>
-                                <label class="col-xs-2 control-label label-xs">Cód.Int.:&nbsp;<span id="Aut_Cod" class="blue"></span></label> 
+                                <label class="col-xs-2 control-label label-xs">Cï¿½d.Int.:&nbsp;<span id="Aut_Cod" class="blue"></span></label> 
                                 
                             </div>
                             <div class="form-group">
@@ -544,7 +544,7 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
                                 <div class="col-xs-4">
                                   <div class="input-group">                                          
                                       <input id="Ret_Fec" name="Ret_Fec" type="text" class="form-control input-xs readOnly datepickers ret_field"  required=""  pattern="[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|1[0-9]|2[0-9]|3[01])" />
-                                      <span class="input-group-addon input-xs" title="Fecha de la Retención"><i class="glyphicon glyphicon-info-sign blue"></i></span>
+                                      <span class="input-group-addon input-xs" title="Fecha de la Retenciï¿½n"><i class="glyphicon glyphicon-info-sign blue"></i></span>
                                   </div>
                                 </div>  
                             </div>
@@ -582,7 +582,7 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
                                         <input id="Val_Pcc" name="Val_Pcc" type="text" class="form-control bold span" style="text-align: right;font-size: 15px; background-color: white;" readonly="" />
                                         <span id="infoLiquida" class="input-group-addon validate" style="display:none;"><i></i></span>
                                         <span class="input-group-btn">
-                                            <button type="button" onclick="$('#retDetaDialog').dialog('open')" class="btn btn-info" title="Ver Detalle Retención" tabindex="-1"><span class="glyphicon glyphicon-eye-open"></span></button>    
+                                            <button type="button" onclick="$('#retDetaDialog').dialog('open')" class="btn btn-info" title="Ver Detalle Retenciï¿½n" tabindex="-1"><span class="glyphicon glyphicon-eye-open"></span></button>    
                                         </span>
                                     </div>
                                 </div>
@@ -630,7 +630,7 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
                                 <div class="col-xs-3">                                    
                                     <input id="Cpp_Ven" name="Cpp_Ven" type="text" class="form-control input-xs datepickers" />
                                 </div> 
-                                <label class="col-xs-2 control-label label-xs">Observación:</label>  
+                                <label class="col-xs-2 control-label label-xs">Observaciï¿½n:</label>  
                                 <div class="col-xs-5">                                    
                                     <textarea name="Cpp_Obs" class="form-control input-xs"></textarea>
                                 </div> 
@@ -648,9 +648,9 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
                 <div class="row">
                     <div class="col-xs-6" id="resultContent">
                         <fieldset class="exa-fieldset">
-                            <legend class="Titulos2">Resultado De la Transacción</legend>
+                            <legend class="Titulos2">Resultado De la Transacciï¿½n</legend>
                             <div>
-                                <h4 style="text-align: center; font-weight: 900;">El Documento se guardo con Éxito!</h4>
+                                <h4 style="text-align: center; font-weight: 900;">El Documento se guardo con ï¿½xito!</h4>
                                 <p class="form-control-static resp" name="Tic_Des"></p>
                                 <p class="resp"><span>&raquo;Mes:</span><span style="color:coral;" class="databind" name="Mes"></span></p>
                                 <p class="resp"><span>&raquo;Sec:</span><span style="color:teal;" class="databind" name="Cop_Sec"></span></p>
@@ -673,7 +673,7 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
                             <div class="form-group">
                                 <label class="col-xs-3 control-label label-xs">Numero:</label>  
                                 <div class="col-xs-4"><span name="Cop_Num" type="text" class="form-control input-xs "></span></div>  
-                                <label class="col-xs-2 control-label label-xs">Autorización:</label>  
+                                <label class="col-xs-2 control-label label-xs">Autorizaciï¿½n:</label>  
                                 <div class="col-xs-3"><span name="Cop_Aut" type="text" class="form-control input-xs "></span></div>
                             </div>
                             <div class="form-group">
@@ -687,7 +687,7 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
                                 height:75, postData: {CheListAjax:true},caption:'Detalle Compra <button id="btnCopPrint" onclick="$.imprimirUrl($(this).data(\'url\'))" class="btn btn-success btn-xs pull-right" style="margin-top: -2px;"><i class="glyphicon glyphicon-print"></i> Imprimir</button>',
                                 rowNum: 10000,
                                 colModel: [
-                                    { label: 'Cód.Int.', name: 'Cop_Int', key: true, width: 15,align:"center", hidden:true },                                     
+                                    { label: 'Cï¿½d.Int.', name: 'Cop_Int', key: true, width: 15,align:"center", hidden:true },                                     
                                     { label: 'Cantidad ', name: 'Cop_Can', width: 45, align: 'right' },                      
                                     { label: 'Item', name: 'Ite_Lar', width: 130  },
                                     { label: 'P. Unit.', name: 'Cop_Pru', width: 130, align: 'right'},
@@ -701,7 +701,7 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
                 <div class="row">
                     <div class="col-xs-6">
                         <fieldset class="exa-fieldset" id="retForm">
-                            <legend class="Titulos2">Datos de la Retención</legend>
+                            <legend class="Titulos2">Datos de la Retenciï¿½n</legend>
                             <div class="form-group">
                                 <label class="col-xs-2 control-label label-xs">Numero:</label> 
                                 <div class="col-xs-4" ><span name="Ret_Num"  class="form-control input-xs" ></span></div>                                
@@ -734,7 +734,7 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
                         <fieldset class="exa-fieldset" >
                             <legend class="Titulos2">Datos del Comprobante</legend>
                             <div class="form-group">
-                                <label class="col-xs-3 control-label label-xs">Cód. Comp.:</label>  
+                                <label class="col-xs-3 control-label label-xs">Cï¿½d. Comp.:</label>  
                                 <div class="col-xs-3"><span name="Codigo" type="text" class="form-control input-xs "></span></div>                                        
                                 <label class="col-xs-3 control-label label-xs">Fecha:</label>  
                                 <div class="col-xs-3"><span name="Com_Fec" type="text" class="form-control input-xs "></span></div>
@@ -746,7 +746,7 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
                                 <div class="col-xs-3"><span name="Com_Val" type="text" class="form-control input-xs "></span></div>
                             </div>
                             <div class="form-group">
-                                <label class="col-xs-3 control-label label-xs">Observación:</label>  
+                                <label class="col-xs-3 control-label label-xs">Observaciï¿½n:</label>  
                                 <div class="col-xs-9"><span name="Com_Con" type="text" class="form-control input-xs "></span></div>  
                             </div>    
                             <table id="asiento"></table>
@@ -756,9 +756,9 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
                                 height:75,postData: {CheListAjax:true},caption:'Asiento Contable <button id="btnComPrint" onclick="$.imprimirUrl($(this).data(\'url\'))" class="btn btn-success btn-xs pull-right" style="margin-top: -2px;"><i class="glyphicon glyphicon-print"></i> Imprimir</button>',
                                 rowNum: 10000, footerrow: true, userDataOnFooter: true,
                                 colModel: [
-                                    { label: 'Cód.Int.', name: 'Asi_Cod', key: true, width: 15,align:"center", hidden:true },  
+                                    { label: 'Cï¿½d.Int.', name: 'Asi_Cod', key: true, width: 15,align:"center", hidden:true },  
                                     { label: 'Tipo', name: 'Asi_Deh', hidden:true },
-                                    { label: 'Código', name: 'Pld_Cdc', width: 45 },                      
+                                    { label: 'Cï¿½digo', name: 'Pld_Cdc', width: 45 },                      
                                     { label: 'Cuenta', name: 'Pld_Des', width: 130  },
                                     { label: 'Glosa', name: 'Glosa', width: 130},
                                     { label: 'Debe', name: 'Debe', width: 65, align: 'right', formatter:'currency', formatoptions: {prefix:'$ ', thousandsSeparator:',',decimalSeparator:'.',defaultValue:''},summaryType: "sum"},                                         
@@ -789,7 +789,7 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
         // DIALOG BUSCAR Producto            
         $.createSearchDialog('proDialog',[
             { label: 'C&oacute;d.Int.', name: 'Pro_Cod', key: true, width: 20,align:"center",hidden:false },                                
-            { label: 'Descripción', name: 'Ite_Lar', width: 110 },                      
+            { label: 'Descripciï¿½n', name: 'Ite_Lar', width: 110 },                      
             { label: 'Marca', name: 'Mar_Des', width: 40},            
             { label: 'Categoria', name: 'Cat_Des', width: 90,align:"center" },
             { label: 'IVA', name: 'Iva_Por', width: 20, align:"center",formatter:'truefalse', formatoptions:{yesMsg:'Grava IVA',noMsg:'No Grava IVA'}, title:false }, 
@@ -804,7 +804,7 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
         // DIALOG BUSCAR proveedor            
         $.createSearchDialog('provDialog',[
             { label: 'C&oacute;d.Int.', name: 'Prv_Cod', key: true, width: 15,align:"center",hidden:true },                                
-            { label: 'Cédula/RUC', name: 'Prs_Ced', width: 50 },                      
+            { label: 'Cï¿½dula/RUC', name: 'Prs_Ced', width: 50 },                      
             { label: 'Proveedor', name: 'proveedor', width: 100},
             { label: 'Cont.', name: 'Prv_Con', width: 20,align:"center", labelLong:'Obligado a Llevar Contabilidad', formatter:'truefalse', formatoptions:{msg:false}  }, 
             { label: 'Espe.', name: 'Prv_Esp', width: 20,align:"center", labelLong:'Contribuyente Especial', formatter:'truefalse', formatoptions:{msg:false} }, 
@@ -841,7 +841,7 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
         }
     </script> 
     <!--INICIO DEL DIALOGO BUSCAR CUENTA--> 
-    <div id="codiDialog" title="B&uacute;squeda de Códigos Retención">  
+    <div id="codiDialog" title="B&uacute;squeda de Cï¿½digos Retenciï¿½n">  
         <form class="form-horizontal normal"><input type="text" name="Cop_Fec" class="Cop_Fec" value="<?php echo $hoy; ?>" style="display: none;" /> 
         <fieldset class="exa-fieldset">
 		<legend class="Titulos2">Filtros</legend>
@@ -865,14 +865,14 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
     </div> 
     <script>
         $.createSearchDialog('codiDialog',[
-            { label: 'Cód.Int.', name: 'Ren_Cod', key: true, width: 25,align:"center" },                                
-            { label: 'Código', name: 'Ren_Sri', width: 25, align:"center" },                      
-            { label: 'Descripción', name: 'Ren_Con', width: 100 },
+            { label: 'Cï¿½d.Int.', name: 'Ren_Cod', key: true, width: 25,align:"center" },                                
+            { label: 'Cï¿½digo', name: 'Ren_Sri', width: 25, align:"center" },                      
+            { label: 'Descripciï¿½n', name: 'Ren_Con', width: 100 },
             { label: 'Porc.(%)', name: 'Ren_Por', width: 25,align:"center" },
             { label: 'Adq.', name: 'Ren_Tipo', width: 30,align:"center" },
             { label: 'Tipo', name: 'Ren_Rete', width: 30,align:"center"}, 
             { label:'&nbsp;', name: 'act1', width: 20, align: 'center',viewable: false, formatter:'gridButton', formatoptions:{action:agregaRetencion, conditional:function(o){ return ((o['Ren_Por']*1===0)||!(Cof_Con==='S'&&(!$.varValid(o['Pld_Cod'])||o['Pld_Cod']===''))); }, caseFalse:function(){ return '<i class="glyphicon glyphicon-lock orange" title="No se ha Parametrizado una Cuenta Contable!"></i>'; } } }
-        ],null,null,null,null,{ title:'Búsqueda', options:[] });
+        ],null,null,null,null,{ title:'Bï¿½squeda', options:[] });
     </script>    
     <div id="provCreateDialog" title="Registrar Proveedor" style="display:none;">        
         <form class="form-horizontal normal" id="provCreateForm" action="javascript:if(validaNoIdentif($('#Prs_Ced').val())['success']){ guardaProvee(); }else{ $('#Prs_Ced').flyout('show').focus() }">
@@ -880,7 +880,7 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
             <fieldset class="exa-fieldset" >
                 <legend class="Titulos2">Datos del Proveedor</legend>
                 <div class="form-group">
-                    <label class="col-xs-3 control-label label-xs required">Cédula/RUC:</label>  
+                    <label class="col-xs-3 control-label label-xs required">Cï¿½dula/RUC:</label>  
                     <div class="col-xs-5" >
                         <div class="input-group input-group-xs">                                          
                             <input id="Prs_Ced" name="Prs_Ced" type="text" class="form-control input-xs" onchange="if(validaNoIdentif(this.value)['success']){ $('#Ide_Cod').val(this.value.length===10?2:1); $('#Prv_Tic').val(validaNoIdentif(this.value)['tipo_abrev']==='NA'?'N':'J').trigger('change'); $(this).fieldValid(true); searchProvee(this.value); }else{ $('#Ide_Cod').val(''); $('#Prv_Tic').val(''); $(this).fieldValid(false,validaNoIdentif(this.value)['message']); };" required="" />
@@ -914,7 +914,7 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
                     </div>
                 </div>                
                 <div class="form-group">
-                    <label class="col-xs-3 control-label label-xs required"><span class='natural'>Apellidos:</span><span class='juridico' style="display: none;">Razón Social:</span></label>  
+                    <label class="col-xs-3 control-label label-xs required"><span class='natural'>Apellidos:</span><span class='juridico' style="display: none;">Razï¿½n Social:</span></label>  
                     <div class="col-xs-9" ><input name="Prs_Ape" type="text" class="form-control input-xs" required="" /></div>
                 </div>
                 <div class="form-group natural">
@@ -936,7 +936,7 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
                 </div>
             </fieldset>
             <fieldset class="exa-fieldset" >
-                <legend class="Titulos2">Datos de Ubicación</legend>
+                <legend class="Titulos2">Datos de Ubicaciï¿½n</legend>
                 <div class="form-group">
                     <label class="col-xs-3 control-label label-xs required">Ciudad:</label>  
                     <div class="col-xs-4" >
@@ -947,11 +947,11 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-xs-3 control-label label-xs required">Dirección:</label>  
+                    <label class="col-xs-3 control-label label-xs required">Direcciï¿½n:</label>  
                     <div class="col-xs-9" ><input name="Prs_Dir" type="text" class="form-control input-xs" required="" /></div>
                 </div>
                 <div class="form-group">
-                    <label class="col-xs-3 control-label label-xs required">Teléfono:</label>  
+                    <label class="col-xs-3 control-label label-xs required">Telï¿½fono:</label>  
                     <div class="col-xs-4" ><input name="Prs_Tel" type="text" class="form-control input-xs" required="" pattern="\d*" /></div>
                 </div>
                 <div class="form-group">
@@ -968,26 +968,26 @@ if(!empty($Pec_Cop['Pec_Fei'])) $hoy=substr($Pec_Cop['Pec_Fei'], 0, 4).substr($h
     </div>    
     <!-- FIN DEL DIALOGO PROVEEDOR--> 
      <!-- DIALOGO DETALLE RETENCION --> 
-    <div id="retDetaDialog" title="Retención"><div class="condensed-header"><table id="retencion"></table></div></div>
+    <div id="retDetaDialog" title="Retenciï¿½n"><div class="condensed-header"><table id="retencion"></table></div></div>
     <script>
         $(function() { 
             var opts={                                                        
-                height:75,caption:'Detalle Retención', sortable:true, sortname: 'Ren_Rete', sortorder: "desc", footerrow:true,
+                height:75,caption:'Detalle Retenciï¿½n', sortable:true, sortname: 'Ren_Rete', sortorder: "desc", footerrow:true,
                 colModel: [
-                    { label: 'Cód.Int.', name: 'Ren_Cod', key: true, width: 15, align:"center", hidden:true },
-                    { label: 'Cód.Int.', name: 'Ren_Ret', width: 15, align:"center", hidden:true },
+                    { label: 'Cï¿½d.Int.', name: 'Ren_Cod', key: true, width: 15, align:"center", hidden:true },
+                    { label: 'Cï¿½d.Int.', name: 'Ren_Ret', width: 15, align:"center", hidden:true },
                     { label: 'Ret.', name: 'Ren_Rete', width: 15, align: 'center' },
-                    { label: 'Código ', name: 'Ren_Sri', width: 15, align: 'center' },
-                    { label: 'Descripción ', name: 'Ren_Con', width: 50 },
+                    { label: 'Cï¿½digo ', name: 'Ren_Sri', width: 15, align: 'center' },
+                    { label: 'Descripciï¿½n ', name: 'Ren_Con', width: 50 },
                     { label: 'Importe', name: 'Ren_Imp', width: 30, align: 'right', formatter:'currency', formatoptions: {prefix:'$ ', thousandsSeparator:',',decimalSeparator:'.',defaultValue:''},summaryType: "sum"},
                     { label: 'Porc.(%)', name: 'Ren_Por', width: 20, align: 'right' },
-                    { label: 'Retención.', name: 'Ren_Val', width: 30, align: 'right', formatter:'currency', formatoptions: {prefix:'$ ', thousandsSeparator:',',decimalSeparator:'.',defaultValue:''},summaryType: "sum"}
+                    { label: 'Retenciï¿½n.', name: 'Ren_Val', width: 30, align: 'right', formatter:'currency', formatoptions: {prefix:'$ ', thousandsSeparator:',',decimalSeparator:'.',defaultValue:''},summaryType: "sum"}
                 ],
                 loadComplete: function (){ $(this).setGridSummary(['Ren_Val'],{Ren_Por:"<div style='text-align:right;'>TOTAL:</div>"}); }
             };
-            $('#reteresult').createGrid($.extend(opts,{caption:'Detalle Retención <button id="btnRetPrint" onclick="$.imprimirUrl($(this).data(\'url\'))" class="btn btn-success btn-xs pull-right" style="margin-top: -2px;"><i class="glyphicon glyphicon-print"></i> Imprimir</button><button id="btnRetXml" onclick="window.open($(this).data(\'url\'));" class="btn btn-success btn-xs pull-right" style="margin-top: -2px; display:none; margin-right:2px; "><i class="glyphicon glyphicon-download-alt"></i> Descargar XML</button>'}),true); 
+            $('#reteresult').createGrid($.extend(opts,{caption:'Detalle Retenciï¿½n <button id="btnRetPrint" onclick="$.imprimirUrl($(this).data(\'url\'))" class="btn btn-success btn-xs pull-right" style="margin-top: -2px;"><i class="glyphicon glyphicon-print"></i> Imprimir</button><button id="btnRetXml" onclick="window.open($(this).data(\'url\'));" class="btn btn-success btn-xs pull-right" style="margin-top: -2px; display:none; margin-right:2px; "><i class="glyphicon glyphicon-download-alt"></i> Descargar XML</button>'}),true); 
             $('#reteresult').getFootRow(true);
-            $('#retencion').createGrid($.extend(opts,{height:219,width:593,responsive:false,caption:'Detalle Retención <button type="button" role="button" tabindex="-1" class="ui-button ui-widget ui-state-default ui-corner-all pull-right" title="Cerrar Ventana" onclick="$(\'#retDetaDialog\').dialog(\'close\')"><span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span></button>'}),true); 
+            $('#retencion').createGrid($.extend(opts,{height:219,width:593,responsive:false,caption:'Detalle Retenciï¿½n <button type="button" role="button" tabindex="-1" class="ui-button ui-widget ui-state-default ui-corner-all pull-right" title="Cerrar Ventana" onclick="$(\'#retDetaDialog\').dialog(\'close\')"><span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span></button>'}),true); 
             $('#retencion').getFootRow(true); 
             $('#retDetaDialog').createDialog({height:293,width:600,noTitleStuff:false,noBorder:true,noOverflow:true,extraClass:'noMargin'});
         });

@@ -230,14 +230,14 @@ if (isset($hdd_save2) or isset($hdd_save3)) {
 		<TITLE><?php echo "Informe Mayor [EXA]"; ?></TITLE>
         <meta charset= "UTF-8"> 
 		<?php require_once("../../mascaras/model1/estilos/estilos.php"); ?>  
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/con_val_mayorizacion.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/con_val_mayorizacion.js"></script>
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
 		<script type="text/javascript"> 
             $(function() { $('#set1 [title]').tooltip({showURL: false}); });              			
 		</script>
         <!--Librerias para exportar a excel --> 
-        <script language="javascript">
+        <script type="text/javascript">
 			$(document).ready(function() {
 				/* LLamado a la class del boton exportar */
 				$("#Boton_Excel").click(function(event) {

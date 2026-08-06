@@ -1,4 +1,4 @@
-﻿<?php   
+<?php   
 /**
 * @abstract Pantalla unificada de Parametrizaciones Iniciales del Sistema
 * @author Sistema EXA

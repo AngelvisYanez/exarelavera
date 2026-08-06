@@ -408,8 +408,8 @@ if (isset($_POST['saveVehiculoAjax'])) {
     <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
     <?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
-    <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-    <script language="javascript" src="../../framework/plugins/cedulaRuc.js"></script>
+    <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    <script type="text/javascript" src="../../framework/plugins/cedulaRuc.js"></script>
     <link rel="stylesheet" type="text/css" href="../RECURSOS/vehiculos_choferes.css" />
 </HEAD>
 

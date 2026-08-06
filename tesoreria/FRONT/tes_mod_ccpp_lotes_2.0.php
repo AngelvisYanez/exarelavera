@@ -928,7 +928,7 @@ if (isset($migrado)) {
 	<script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
 	<script src="../VALIDACIONES/tes_val_mod_ccpp_lotes.js?a=39"></script>
 	<script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js"></script>
-	<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+	<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
 	<script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>
 	<style>
 		.txt-green {

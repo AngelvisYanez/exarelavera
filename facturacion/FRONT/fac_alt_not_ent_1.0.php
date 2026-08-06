@@ -677,7 +677,7 @@ if(isset($comprasReembolsoAjax)){
         <link rel="stylesheet" href="../../framework/jquery/bootstrap/popover/jquery.flyout.css">
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
         <script src="../../framework/jquery/bootstrap/popover/jquery.flyout.js"></script>
-        <script language="javascript" src="../VALIDACIONES/fac_val_not_ent.js?x=0"></script>
+        <script type="text/javascript" src="../VALIDACIONES/fac_val_not_ent.js?x=0"></script>
 
         <script>
         $('.panel-main').hide();

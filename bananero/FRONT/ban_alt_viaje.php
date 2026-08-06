@@ -111,9 +111,9 @@ $cur_periodo = current($periodos);
 <HEAD>
     <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
     <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
-    <script language="javascript" src="../VALIDACIONES/ban_val_viaje.js?x=1"></script>
+    <script type="text/javascript" src="../VALIDACIONES/ban_val_viaje.js?x=1"></script>
     <link rel="stylesheet" href="../../framework/jquery/bootstrap/tagsinput/bootstrap-tagsinput.min.css">
-    <script language="javascript" src="../../framework/jquery/bootstrap/tagsinput/bootstrap-tagsinput.min.js"></script>
+    <script type="text/javascript" src="../../framework/jquery/bootstrap/tagsinput/bootstrap-tagsinput.min.js"></script>
     <style></style>
 </HEAD>
 

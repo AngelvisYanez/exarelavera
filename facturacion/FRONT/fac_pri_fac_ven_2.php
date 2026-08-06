@@ -4,7 +4,7 @@
 	  require_once('../LOGICA/fac_log_deudas.php');
 	  require_once('../../Librerias/procedimientos/almacenados_standar.php');	  
   	  require_once('../../Librerias/procedimientos/almacenados_matricula.php');	
-	  require_once('../../Librerias/procedimientos/almacenados_academico.php');	
+ 	  require_once('../../Librerias/procedimientos/almacenados_academico.php');
 
 	/* Creacion del Objeto de conexion */
 	$obBD_conexion = new Class_Log_Conexion_Tes($Ses_Dat_Dis);
@@ -55,7 +55,7 @@
 <title>Ginus</title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <link href="../../Estilos/Estilo1.css" rel="stylesheet" type="text/css">
-<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
 <style type="text/css">
 <!--
 .style2 {color: #000099}
@@ -186,7 +186,7 @@
 	$total = ($subtotal - $des) + $iva;
 	
 	/*  Retorno los calculos de las facturas */
-	$resultados = explode('*',calculos($Vet_Cod));	
+	$resultados = explode('*',$obBD_con1->calculos($Vet_Cod, $obBD_conexion));	
 
 	?></td>
                  </tr>

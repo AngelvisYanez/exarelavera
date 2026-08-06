@@ -193,7 +193,7 @@ function codigoRentaCont($cod) {
 <html>
 <head>
     <title>ATS Agrupado por Cuenta</title>
-    <?Php require_once("../../mascaras/model1/estilos/print.php"); ?>
+    <?php require_once("../../mascaras/model1/estilos/print.php"); ?>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
     <style type="text/css">
         .totales { font-size: 10px; font-weight: bold; font: 8pt verdana; }
@@ -210,7 +210,7 @@ function codigoRentaCont($cod) {
                 <table width="100%" border="0" cellpadding="0" cellspacing="0">
                     <tr align="center">
                         <td width="10%" rowspan="5" valign="top"><img src="../../mascaras/model2/imagenes/32x32/sri.png" width="100" height="70" /></td>
-                        <td width="80%" height="24" class="titEmp"><strong><?Php echo $row_institucion['Emp_Nom']; ?></strong></td>
+                        <td width="80%" height="24" class="titEmp"><strong><?php echo $row_institucion['Emp_Nom']; ?></strong></td>
                         <td width="10%" rowspan="5" valign="top" class="TITULO_REPORTE_2"><img src="<? echo $row_institucion['Emp_Log'] ?>" width="115" height="83" /></td>
                     </tr>
                     <tr align="center">
@@ -230,7 +230,7 @@ function codigoRentaCont($cod) {
                     </tr>
                     <tr align="center">
                         <td align="center" valign="top" class="Texto_Reporte">
-                            <div align="center"><?Php
+                            <div align="center"><?php 
                                 if (count($row_provincia) > 0) {
                                     $provincia = " - " . $row_provincia['Pro_Nom'] . ' - ' . $row_provincia['Pas_Nom'];
                                 } else {

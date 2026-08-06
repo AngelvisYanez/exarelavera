@@ -1,4 +1,4 @@
-﻿<?php	
+<?php	
 /**
 * @abstract Permite registrar los cheques 
 * @author Erik Niebla

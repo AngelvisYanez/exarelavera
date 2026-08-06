@@ -1,4 +1,5 @@
 <?Php
+if (!is_object($obBD_con1)) return;
 
 /* Componente para la busqueda de la modalidad-etapa-periodo-carrera-curso para inscripciones
 Se puede utiliza 2 componentes Ajax ==> ajax_suc_mod_eta_per_car_all.php | ajax_suc_mod_eta_per_car.php

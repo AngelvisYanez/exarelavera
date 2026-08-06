@@ -9,10 +9,10 @@
 		<link href="../../Estilos/Interfaz1.css" rel="stylesheet" type="text/css">
 		<link href="../../mascaras/model1/estilos/interfaz.css" rel="stylesheet" type="text/css">
 		<link href="../../mascaras/model1/estilos/estilo1.css" rel="stylesheet" type="text/css">
-		<script language="javascript" src="../Librerias/java.js"></script>
-		<script language="javascript" src="../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../../Librerias/validaciones/matricula.js"></script>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../Librerias/java.js"></script>
+		<script type="text/javascript" src="../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/matricula.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 	</HEAD>
 <BODY>

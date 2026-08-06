@@ -254,9 +254,9 @@ function visualizarCampos(form, id){
 				    		<table cellpadding="0" cellspacing="0">
 				    			<tr>
 				    				<td class="Etiqueta1">&nbsp;<span class="Asterisco">*</span>Desde:</td>
-				    				<td class="LetraNegra">&nbsp;<input name="from" type="text" id="from" value="<?php echo strlen($_POST['from'])>0?$_POST['from']:date('Y-m-d');?>" size="10" onKeyUp="mascara(this,'-',patron, true)" ></td>
+				    				<td class="LetraNegra">&nbsp;<input name="from" type="text" id="from" value="<?php echo !empty($_POST['from']) ? htmlspecialchars($_POST['from'], ENT_QUOTES, 'UTF-8') : date('Y-m-d');?>" size="10" onKeyUp="mascara(this,'-',patron, true)" ></td>
 				    				<td class="Etiqueta1">&nbsp;&nbsp;<span class="Asterisco">*</span>Hasta:</td>
-				    				<td class="LetraNegra">&nbsp;<input name="to" type="text" id="to" value="<?php echo strlen($_POST['to'])>0?$_POST['to']:date('Y-m-d');?>" size="10" onKeyUp="mascara(this,'-',patron, true)" ></td>
+				    				<td class="LetraNegra">&nbsp;<input name="to" type="text" id="to" value="<?php echo !empty($_POST['to']) ? htmlspecialchars($_POST['to'], ENT_QUOTES, 'UTF-8') : date('Y-m-d');?>" size="10" onKeyUp="mascara(this,'-',patron, true)" ></td>
 				    				<td class="LetraNegra"><button type="button" class="btn btn-success btn-mini" title="Buscar" onclick="validar_requeridos(this.form,'from*to',2)" ><i class="icon-search icon-white"></i><span>&nbsp;&nbsp;Buscar&nbsp;&nbsp;</span></button>
 				    					<input type="hidden" name="pag" value="2">
 				    			<input type="hidden" name="usuCodigo" value="<?php echo htmlspecialchars($_POST['usuCodigo'], ENT_QUOTES, 'UTF-8');?>" >

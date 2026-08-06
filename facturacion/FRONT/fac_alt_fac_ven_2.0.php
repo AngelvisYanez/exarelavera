@@ -181,10 +181,10 @@ if($ajax_con_numVenta==1)
 			*/
 	    	?><span class="Alertas3">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/cancel.gif" width="16" height="16" type="image"/><?php 
 			echo "&iexcl;Ya existe!"; ?></span>
-            <script language="javascript">document.getElementById("btnguarda").style.visibility="hidden"</script>    
+            <script type="text/javascript">document.getElementById("btnguarda").style.visibility="hidden"</script>    
 	<?php  }else{ /* visto correcto del numero de retencion*/
 			?>&nbsp;<img src="../../mascaras/model1/imagenes/ok-s.gif">
-			<script language="javascript">document.getElementById("btnguarda").style.visibility="visible"</script> 
+			<script type="text/javascript">document.getElementById("btnguarda").style.visibility="visible"</script> 
 			<?php
 		}
 	}else{   
@@ -192,7 +192,7 @@ if($ajax_con_numVenta==1)
 			* muestra el mesaje de error 
 			*/
 		    ?><span class="Alertas3">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/cancel.gif" width="16" height="16" type="image"/><?php echo "&iexcl;fuera de rango!";?></span>
-          <script language="javascript">document.getElementById("btnguarda").style.visibility="hidden"</script>  
+          <script type="text/javascript">document.getElementById("btnguarda").style.visibility="hidden"</script>  
  <?php }?>
 	
 <?php
@@ -236,7 +236,7 @@ if (isset($cmb))
 		} //Fin del $row_rs_facttipo  ?>
     </select>
 	<?php //echo $div_banco; ?>
-	<script language="javascript">
+	<script type="text/javascript">
 		ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?cmb_tipo=1&Pag_Cod=<?Php echo $Pag; ?>', '<?php echo $div_banco; ?>');
 	</script>	
 	<?Php
@@ -807,8 +807,8 @@ else
 <HTML><HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>	
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-    	<script language="javascript" src="../VALIDACIONES/fac_val_fac_ven.js?xx=1"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    	<script type="text/javascript" src="../VALIDACIONES/fac_val_fac_ven.js?xx=1"></script>
         <!--Librerias para interfaz -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script> 
         <!--Librerias para modal -->       
@@ -843,7 +843,7 @@ else
 if (isset($hdd_save) && !isset($hdd_volver))
 { 
 ?>
-<script language="javascript">windows('<?Php echo $reportes[1];  ?>?Vet_Cod=<?Php echo $Vet_Cod; ?>','', 800,600,'yes', 'yes', 'yes', 'no');
+<script type="text/javascript">windows('<?Php echo $reportes[1];  ?>?Vet_Cod=<?Php echo $Vet_Cod; ?>','', 800,600,'yes', 'yes', 'yes', 'no');
 </script> 
 <?Php
 }//Fin del if (isset($hdd_save))
@@ -1431,7 +1431,7 @@ if(isset($txt_busqueda))
                   </span></td>
               </tr>
               </table>
-			  <script language="javascript">
+			  <script type="text/javascript">
                    ShowHide('NotasCredito');		  
               </script>                                            
          </FIELDSET>
@@ -1468,7 +1468,7 @@ if(isset($txt_busqueda))
 	if (!(isset($cheque)))
 	{
 	?>
-	<script language="javascript">
+	<script type="text/javascript">
 	 ShowHide('cheque');		  	 
 	</script>
 	<?Php

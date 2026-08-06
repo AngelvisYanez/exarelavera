@@ -5,7 +5,7 @@ Alias:
 Descripcion:			Componente que pemite visualizar las personas segun el tipo de Rol con sus respectivos Ingresos y Egresos
 						del registrar y modificar
 Fecha de Actualizacion:	20/07/2010
-Desarrollador:			Angelica Gálvez
+Desarrollador:			Angelica Gï¿½lvez
 Fecha de Actualizacion:	24/01/2011
 Desarrollador:			Lewis Chimarro
 */
@@ -47,7 +47,7 @@ if(isset($Com_Are_Cod))
 		<?Php		
 		if ($vis[$i] == "N")
 		{ //Control para ocultar los rubros q poseen "Cam_Vis=N" de la tabla Campo_rol?> 
-			<script language="javascript">
+			<script type="text/javascript">
   			fila = document.getElementById("td[<?php echo $i;?>]");
     		fila.style.display = "none"; //ocultar fila 
             </script>
@@ -81,7 +81,7 @@ if(isset($Com_Are_Cod))
  <tr>
    	<td align="center"><?php echo $cont; ?></td>
     <td align="left" title="<?php echo $row_rs_per_rol['Tic_Des'];?>" width="40%">
-	<input name="hdd_nombre" type="text" value="<?php echo "Cód.: ".$row_rs_per_rol['Dis_Cod']." ".$row_rs_per_rol['Prs_Ape'].' '.$row_rs_per_rol['Prs_Nom']; ?>"size="50"  readonly="readonly" style=" border:none;text-align:left;background:none">
+	<input name="hdd_nombre" type="text" value="<?php echo "Cï¿½d.: ".$row_rs_per_rol['Dis_Cod']." ".$row_rs_per_rol['Prs_Ape'].' '.$row_rs_per_rol['Prs_Nom']; ?>"size="50"  readonly="readonly" style=" border:none;text-align:left;background:none">
 	
 	<?php 
 	/* CALCULO CAMPOS INGRESOS */
@@ -178,7 +178,7 @@ if(isset($Com_Are_Cod))
 			echo $cont;}?>"/>
 		<input type="hidden" name="hdd_ingreso_egreso[<?php echo $cont;?>,<?php echo $cod; ?>]" id="hdd_ingreso_egreso[<?php echo $cont;?>,<?php echo $cod; ?>]" value="<?php echo $cod;?>"/>		</td>
 		<?php if ($vis[$cont_caja_ingre] == "N"){ //Control para ocultar los rubros q poseen "Cam_Vis=N" de la tabla Campo_rol ?> 		
-			<script language="javascript">
+			<script type="text/javascript">
 			fila = document.getElementById("det[<?php echo $td_cont;?>]");
     		fila.style.display = "none"; //ocultar col
 			</script>
@@ -265,6 +265,6 @@ else
 }
 else
 {
-	echo error_alerta("<< Error de componente: tes_com_det_rolpagos.php >> <br>Descripción: No se ha definido la Propiedad: 	
+	echo error_alerta("<< Error de componente: tes_com_det_rolpagos.php >> <br>Descripciï¿½n: No se ha definido la Propiedad: 	
 		Com_Are_Cod<br> Hoy: Variable que contiene el Tipo de Rol de Pagos", 2); 
 }?>

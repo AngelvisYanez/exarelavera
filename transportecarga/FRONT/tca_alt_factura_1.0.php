@@ -294,7 +294,7 @@ if(isset($cargarAsiento)){
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
         <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
         <script type="text/javascript" src="../../framework/jquery/chosen/chosenDesc/chosenDesc.js"></script>
-        <script language="javascript" src="../VALIDACIONES/tca_factura.js"></script>
+        <script type="text/javascript" src="../VALIDACIONES/tca_factura.js"></script>
         <style>
             .footrow td[aria-describedby="documento_Cop_Imp"],.footrow td[aria-describedby="documento_Cop_Pru"]{padding: 0 !important;}
             .footerFact{ text-align:right;width: 100%; }

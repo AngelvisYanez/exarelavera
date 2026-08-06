@@ -147,7 +147,7 @@ if(isset($elimina)){
     <HEAD>
         <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
-        <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+        <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
         <script>
             <?php $ciudades=$obBD_con1->getArrayConsulta(12,"",$obBD_conexion); ?>
         </script>

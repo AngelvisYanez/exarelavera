@@ -63,7 +63,7 @@ if ($thisPost->postBlock($_POST['postID']))
 					
 				if ($count['count'] > 0)
 				{ ?>
-				    <script language="javascript">
+				    <script type="text/javascript">
 						alert('El c&oacute;digo de cuenta <?Php echo $cod_cuenta; ?> ya existe');
 					</script>
 				<?Php
@@ -181,7 +181,7 @@ if (isset($ajax_codigo))
  <title><?Php echo $Ses_Sys_Nom; ?></title>
  <?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
  <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
- <script language="javascript" src="../VALIDACIONES/con_val_planc.js"></script>
+ <script type="text/javascript" src="../VALIDACIONES/con_val_planc.js"></script>
  <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
  <script type="text/javascript">$(function() { $('#set1 *').tooltip({showURL: false}); });</script>
  <script type="text/javascript" src="../../Librerias/validaciones/interfaz.modals.js"></script>

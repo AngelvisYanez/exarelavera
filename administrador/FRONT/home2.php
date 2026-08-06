@@ -179,7 +179,7 @@ if(isset($loginAjax)){
 	<script src="../../mascaras/model1/js/libs/modernizr-2.5.3.min.js"></script>
 	<script src="../LOGICA/TreeMenu.js" language="JavaScript" type="text/javascript"></script>
 	<script src="../../Librerias/validaciones/validacion.js" language="javascript" type="text/javascript"></script>
-    <script language="javascript" type="text/javascript">
+    <script type="text/javascript" type="text/javascript">
 	/**
 	* Funci�n para amplicar el alto de un IFRAME
 	*/

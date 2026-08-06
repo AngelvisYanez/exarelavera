@@ -41,7 +41,7 @@ function enviarRespuestaJSON($data) {
 }
 
 date_default_timezone_set('America/Guayaquil');
-error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE & ~E_DEPRECATED);
+error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
 ini_set('display_errors', 0);
 
 // Configurar manejador de errores para peticiones AJAX
@@ -1299,7 +1299,7 @@ if (!isset($_POST['action'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro de Apertura - EXA</title>
     <?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
-    <script language="javascript" src="../VALIDACIONES/adm_val_gestion_periodos.js?x=4"></script>
+    <script type="text/javascript" src="../VALIDACIONES/adm_val_gestion_periodos.js?x=4"></script>
     <!-- LINEAS DE CSS PARA LA VISTA -->
     <style>
         .exa-header { background-color: #0797D8; color: #FFFFFF; font-weight: bold; padding: 10px 15px; }

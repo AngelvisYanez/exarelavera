@@ -52,14 +52,14 @@ echo $Pun_Cod;
 		<link href="../../mascaras/model1/estilos/interfaz.css" rel="stylesheet" type="text/css">
 		<link href="../../mascaras/model1/estilos/estilo1.css" rel="stylesheet" type="text/css">
 		<link href="../../Estilos/Interfaz1.css" rel="stylesheet" type="text/css">	
-		<script language="javascript" src="../Librerias/java.js"></script>
-		<script language="javascript" src="../VALIDACIONES/Validaciones.js"></script>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../Librerias/java.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/Validaciones.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 	<?php 
 if (isset($hdd_save)) 
 { ?>
-	<script language="javascript">
+	<script type="text/javascript">
 	ir('tes_mod_vendedor.php');
 	</script>
 <?Php 
@@ -118,7 +118,7 @@ if (isset($hdd_save))
 	  <tr class="Fondo">
 		<td><?Php echo $row_rs_buscar['Prs_Ced']; ?></td>
 		<td><?Php echo $row_rs_buscar['Prs_Ape'];?>  <?Php echo $row_rs_buscar['Prs_Nom']; ?></td>
-		<td align="center"><a href="<?Php echo $_POST['form2'];?>?codigo=<?Php echo $row_rs_buscar['Prs_Cod'];?>" title="Editar"><img src="../../imagenes/editar.jpg" height="18" width="18" border="0"></a></td>		
+		<td align="center"><a href="<?Php echo htmlspecialchars($_POST['form2'], ENT_QUOTES, 'UTF-8');?>?codigo=<?Php echo $row_rs_buscar['Prs_Cod'];?>" title="Editar"><img src="../../imagenes/editar.jpg" height="18" width="18" border="0"></a></td>		
 	  </tr>
 	  <?Php } while ($row_rs_buscar = mysqli_fetch_assoc($rs_buscar)); ?>
   </table>
@@ -217,11 +217,11 @@ if (isset($codigo) && !(isset($txt_busqueda)))
        <fieldset>
        <br>
 	   <LEGEND>
-       <label class="Titulos2">Punto de Impresión</label>
+       <label class="Titulos2">Punto de Impresiï¿½n</label>
        </LEGEND>
 	   <table width="556">
 	     <tr>
-        <td width="134" class="Etiqueta1"><span class="Asterisco">*</span> Ubicación:</td>
+        <td width="134" class="Etiqueta1"><span class="Asterisco">*</span> Ubicaciï¿½n:</td>
         <td width="410">
 				 <select name="Pun_Cod" id="Pun_Cod">
 				 <option></option>

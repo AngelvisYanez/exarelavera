@@ -1,9 +1,9 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php	
 /**
-* Descripción: Permite dar de baja un retencion
-* Fecha de actualización:	2013-05-13 
-* Moificado: José Cumbicos
+* Descripciï¿½n: Permite dar de baja un retencion
+* Fecha de actualizaciï¿½n:	2013-05-13 
+* Moificado: Josï¿½ Cumbicos
 */
 	require_once('../../administrador/LOGICA/seguridad.php');
 	require_once('../LOGICA/fac_log_retencion.php');
@@ -22,7 +22,7 @@
 	$obBD_con1 =  new Class_Log_Datos_Ret; 	
 	
 	/*
-	* Creación del objeto para evitar el reenvio 
+	* Creaciï¿½n del objeto para evitar el reenvio 
 	*/
 	$thisPost = new Post_Block;
 	
@@ -51,7 +51,7 @@ if (isset($_POST['postID'])&&$thisPost->postBlock($_POST['postID']))
 		$obBD_ins1->inicio_transaccion($obBD_conexion->conexion);	
 		
 		/*
-		* Dara de baja a la retención 
+		* Dara de baja a la retenciï¿½n 
 		*/
 		$obBD_ins1->operacionobBD(508,$Ret_Cod.'*'.'I',$obBD_conexion);			
 		
@@ -118,8 +118,8 @@ if (isset($txt_busqueda))
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?php require_once("../../mascaras/model1/estilos/estilos.php");?>
-		<script language="javascript" src="../VALIDACIONES/fac_val_compras.js"></script>
-        <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/fac_val_compras.js"></script>
+        <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
         <!--Librerias para interfaz -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>         
         <!--Librerias para modal -->       
@@ -127,7 +127,7 @@ if (isset($txt_busqueda))
 	    <!--Librerias para calendario -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.datepicker.js"></script>  
         
-        <script language="javascript" src="../VALIDACIONES/XML.js"></script>		
+        <script type="text/javascript" src="../VALIDACIONES/XML.js"></script>		
                        
         <script type="text/javascript"> 
         $(function() {
@@ -230,7 +230,7 @@ if (isset($txt_busqueda))
 
   <table width="591" height="36" border="0" cellpadding="0" cellspacing="0">
     <tr>
-      <td width="91" height="28" class="BarraBusqueda"><div align="right"><span class="Asterisco">* </span>Búsqueda:</div></td>
+      <td width="91" height="28" class="BarraBusqueda"><div align="right"><span class="Asterisco">* </span>Bï¿½squeda:</div></td>
       <td width="500" class="BarraBusqueda"><div align="center"><input name="txt_busqueda" type="text" id="txt_busqueda" value="" size="50" maxlength="50" style="text-transform:uppercase ">&nbsp;&nbsp;&nbsp;<button name="btn_buscar" type="button" class="btn btn-success fileinput-button" title="Buscar" id="btn_buscar" onClick="validar_requeridos(this.form, 'txt_busqueda', 0)"> <i class="icon-search icon-white"></i><span>Buscar</span></button>     </div></td>      
     </tr>
   </table>
@@ -264,7 +264,7 @@ if (isset($txt_busqueda))
 	  {
 		$i=0;  
 		/*
-		* inicializo un contador para saber si en la búsqueda se encuentran facturas con pagos
+		* inicializo un contador para saber si en la bï¿½squeda se encuentran facturas con pagos
 		*/
 		$existe_pagos=0;
 	    
@@ -280,7 +280,7 @@ if (isset($txt_busqueda))
 		$i++;
 		
 	  	/*
-		*  Consultar si la factura se registro de forma automática 
+		*  Consultar si la factura se registro de forma automï¿½tica 
 		*/
 		$row_rs_compra_manual_automatica=$obBD_con1->getRowConsulta(380,$row_rs_buscar['Cop_Cod'],$obBD_conexion);		
 		$num_row_rs_compra_manual_automatica=$row_rs_compra_manual_automatica['Com_Cod'] > 0? 1 : 0;
@@ -298,7 +298,7 @@ if (isset($txt_busqueda))
 	      <?Php
 		
 		if($num_row_rs_compra_manual_automatica>0)
-		{ echo "Automático";
+		{ echo "Automï¿½tico";
 		}else{ echo "Manual";}?>
         </FONT>	
         </td>

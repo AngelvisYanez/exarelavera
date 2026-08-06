@@ -5,7 +5,7 @@
  * 
  * @author juanpuxito
  * @version 1.0
- * Fecha de actualización:	27-05-2014
+ * Fecha de actualizaciï¿½n:	27-05-2014
  *
  * @package Exa.Facturacion - OFSERCONT
  * 
@@ -48,7 +48,7 @@ if (isset($hdd_save))
 	   $obBD_con1->operacionobBD(6,$Tia_Des.'*'.$Tia_Ini.'*'.$Tip_Abrev.'*'.$codigo,$obBD_conexion);
 	
 		/**
-		* fin de la transacción 
+		* fin de la transacciï¿½n 
 		*/
 		$obBD_con1->fin_transaccion($obBD_conexion->conexion);
 	}
@@ -87,7 +87,7 @@ if (isset($ajax_mod))
 			
 		<?php
 			}else{ ?>
-			<input name="Tia_Des" type="text" id="Tia_Des" value="<?php echo $Tia_Des?>" size="30" maxlength="30" style="text-transform:uppercase" onblur="if (trim(this.value) != '')ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mar=1&ajax_mod=1&des_orig=<?php echo $des_orig?>&Tia_Des='+this.value+'&Tia_Ini=<?Php echo $Tia_Ini; ?>','div_tiaDes')">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/gtk-no.gif" width="22" height="22" />	¡La marca: <?php echo strtoupper($Tia_Des); ?> ya existe!  	
+			<input name="Tia_Des" type="text" id="Tia_Des" value="<?php echo $Tia_Des?>" size="30" maxlength="30" style="text-transform:uppercase" onblur="if (trim(this.value) != '')ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mar=1&ajax_mod=1&des_orig=<?php echo $des_orig?>&Tia_Des='+this.value+'&Tia_Ini=<?Php echo $Tia_Ini; ?>','div_tiaDes')">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/gtk-no.gif" width="22" height="22" />	ï¿½La marca: <?php echo strtoupper($Tia_Des); ?> ya existe!  	
 			<?php	
 			}
 	    }else{		
@@ -102,8 +102,8 @@ exit();
 <HTML>
 	<HEAD>		
     	<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>   
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/tes_par_tip_asient.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/tes_par_tip_asient.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
 		<script type="text/javascript"> 
           $(function() {
@@ -154,7 +154,7 @@ exit();
 	  <tr>
           <th width="4%">C&oacute;d. Int.</th>
           <th width="4%">Abrev.</th>
-          <th width="82%">Descripción</th>
+          <th width="82%">Descripciï¿½n</th>
            <th width="4%">Tipo</th>            
 		  <th width="4%">&nbsp;</th>
       </tr>

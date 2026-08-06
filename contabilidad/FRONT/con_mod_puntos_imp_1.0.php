@@ -1,8 +1,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php 
 /** 
-* Descripción: Modificar puntos de impresión
-* Fecha de creación:	2012-05-11
+* Descripciï¿½n: Modificar puntos de impresiï¿½n
+* Fecha de creaciï¿½n:	2012-05-11
 * Desarrollador:	Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -10,7 +10,7 @@ require_once('../LOGICA/con_log_puntos_imp.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
 require_once('../../Librerias/postclass.php');	
 
-/* Creación del objeto para evitar el reenvio */
+/* Creaciï¿½n del objeto para evitar el reenvio */
 $thisPost = new Post_Block;
 /* Creacion del Objeto de conexion */
 $obBD_conexion = new Class_Log_Conexion_Con($Ses_Dat_Dis);
@@ -21,7 +21,7 @@ $obBD_con1 =  new Class_Log_Datos_Con;
 if(isset($ajax_emb))
 {
 	/**
-	* Consulta datos de los puntos de impresión 
+	* Consulta datos de los puntos de impresiï¿½n 
 	*/
 	$row_puntos_imp = $obBD_con1->getRowConsulta(6, trim($Pun_Des).'*'.$Ses_Suc_Cod.'*'.$Pun_Cod, $obBD_conexion);
 	
@@ -32,7 +32,7 @@ if(isset($ajax_emb))
 	}
 	else
 	{ ?>
-		<input name="Pun_Des" type="text" id="Pun_Des" size="30" maxlength="30" onblur="if (trim(this.value) != '')ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_emb=1&amp;Pun_Des=' + this.value + '&Pun_Cod=<?php echo $row_punto['Pun_Cod']?>','div_emb')" />&nbsp;<img src="../../mascaras/model1/imagenes/32x32/gtk-no.gif" width="22" height="22" />	¡Punto de impresión <?php echo "<font style='text-transform:uppercase'>".$Pun_Des."</font>"; ?> ya existe!        
+		<input name="Pun_Des" type="text" id="Pun_Des" size="30" maxlength="30" onblur="if (trim(this.value) != '')ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_emb=1&amp;Pun_Des=' + this.value + '&Pun_Cod=<?php echo $row_punto['Pun_Cod']?>','div_emb')" />&nbsp;<img src="../../mascaras/model1/imagenes/32x32/gtk-no.gif" width="22" height="22" />	ï¿½Punto de impresiï¿½n <?php echo "<font style='text-transform:uppercase'>".$Pun_Des."</font>"; ?> ya existe!        
 <?Php	}
 exit();
 }
@@ -50,6 +50,8 @@ exit();
 }
 
 /* Busqueda de los datos del cliente */
+$row_rs_buscar = array();
+$row_punto = array();
 if ($txt_busqueda != "")
 {
    /**
@@ -62,7 +64,7 @@ else
 	if (isset($codigo))
 	{		
 		/**
-		* Consulta el punto de impresión
+		* Consulta el punto de impresiï¿½n
 		*/
 		$row_punto = $obBD_con1->getRowConsulta(5, $codigo, $obBD_conexion);		
 	}//Fin del if (isset($codigo))
@@ -73,7 +75,7 @@ else
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>    
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
 		<script type="text/javascript"> 
           $(function() {
@@ -121,7 +123,7 @@ if(isset($txt_busqueda))
     <table class="fixedHeader01" width="100%" border="1" cellpadding="0" cellspacing="0">
     <thead>
       <tr>
-        <th width="8%">Cód. Int. </th>
+        <th width="8%">Cï¿½d. Int. </th>
         <th>Descripci&oacute;n</th>
         <th>Ubicaci&oacute;n</th>
         <th width="4%">&nbsp;</th>

@@ -990,9 +990,9 @@ if (isset($saldoCCxPP)) {
         var array_documentos = <?php echo json_encode($array_documentos); ?>;
     </script>
 
-    <script language="javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
+    <script type="text/javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
     <script type="text/javascript" src="../VALIDACIONES/fac_val_factu.js?gh=99"></script>
-    <script language="javascript" src="../../framework/plugins/cedulaRuc.js"></script>
+    <script type="text/javascript" src="../../framework/plugins/cedulaRuc.js"></script>
 </HEAD>
 
 <BODY>

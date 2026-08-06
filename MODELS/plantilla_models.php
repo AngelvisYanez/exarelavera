@@ -1,5 +1,4 @@
 <?php
-use \Exception;
 require_once(dirname(__file__)."/../DATA/libs/AbstractModel.php");
 class perio_cont extends AbstractModel{
     protected $_name = 'NOMBRE_TABLA';

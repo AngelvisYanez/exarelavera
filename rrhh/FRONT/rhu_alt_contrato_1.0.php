@@ -118,7 +118,7 @@ $bancos = $obBD_con1->getArrayConsulta(19,"", $obBD_conexion);
         <script src="../../framework/jquery/bootstrap/popover/jquery.flyout.js"></script>
         <script type="text/javascript" src="../../framework/jquery/summernote/summernote.min.js"></script>
         <script src="../../framework/jquery/summernote/lang/summernote-es-ES.js"></script>
-        <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+        <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
         <style>
             th.ui-th-column div{
                 white-space:normal !important;

@@ -76,8 +76,8 @@ elseif (isset($codigo))
  <TITLE><?Php echo "Producto Anular [EXA]"; ?></TITLE>
   <meta charset="UTF-8">
 	<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-    <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-    <script language="javascript" src="../VALIDACIONES/fac_val_producto.js"></script>        
+    <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    <script type="text/javascript" src="../VALIDACIONES/fac_val_producto.js"></script>        
     <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
     <script type="text/javascript"> 
         $(function() {

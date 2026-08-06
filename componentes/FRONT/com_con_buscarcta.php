@@ -1,4 +1,5 @@
 <?Php
+if (!function_exists('error_alerta')) return;
 /* Componente buscador para las cuentas contables */
 /* Variable de la forma de pago */
 if (isset($tipo_busc))

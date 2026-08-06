@@ -142,7 +142,7 @@ $confi = $obBD_con1->getRowConsulta(520, $Ses_Emp_Cod, $obBD_conexion);
     <TITLE><?Php echo "Autorización Registrar [EXA]"; ?></TITLE>
     <meta charset="UTF-8">
     <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
-    <script language="javascript" src="../VALIDACIONES/con_val_autorizaci_2.0.js?a=a17"></script>
+    <script type="text/javascript" src="../VALIDACIONES/con_val_autorizaci_2.0.js?a=a17"></script>
 </HEAD>
 
 <BODY>

@@ -41,7 +41,7 @@ $hoy = date("Y-m-d");
         <TITLE><?Php echo "Comp. Promedio Productos [EXA]"; ?></TITLE>
         <meta charset= "UTF-8">
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>       
-        <script language="javascript" src="../VALIDACIONES/fac_val_reporteproducto_1.0.js"></script>
+        <script type="text/javascript" src="../VALIDACIONES/fac_val_reporteproducto_1.0.js"></script>
         	<script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=1"></script>
     </HEAD>
     <BODY>

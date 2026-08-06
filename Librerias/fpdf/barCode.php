@@ -34,9 +34,9 @@ public $tablewidths;   // VARIABLE PARA LAS TABLAS
 public $footerset;     // VARIABLE PARA LAS TABLAS
 
 //____________________________ Extension du constructeur _______________________
-function PDF_Code128($orientation='P', $unit='mm', $format='A4') {
+function __construct($orientation='P', $unit='mm', $format='A4') {
 
-    parent::FPDF($orientation,$unit,$format);
+    parent::__construct($orientation,$unit,$format);
 
     $this->T128[] = array(2, 1, 2, 2, 2, 2);           //0 : [ ]               // composition des caractères
     $this->T128[] = array(2, 2, 2, 1, 2, 2);           //1 : [!]

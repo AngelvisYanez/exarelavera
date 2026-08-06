@@ -1,10 +1,10 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php	
 /**
-* Descripción: Permite registrar la relacion entre los productos y el plan de cuentas
-* Fecha de actualización:	2009-12-11
+* Descripciï¿½n: Permite registrar la relacion entre los productos y el plan de cuentas
+* Fecha de actualizaciï¿½n:	2009-12-11
 * Desarrollador:	Lewis Chimarro 
-* Fecha de actualización:	2012-06-15
+* Fecha de actualizaciï¿½n:	2012-06-15
 * Desarrollador:	Lewis Chimarro 
 */
 
@@ -14,7 +14,7 @@ require_once('../../Librerias/procedimientos/almacenados_standar.php');
 require_once('../../Librerias/postclass.php');	
 
 /** 
-* Creación del objeto para evitar el reenvio 
+* Creaciï¿½n del objeto para evitar el reenvio 
 */
 $thisPost = new Post_Block;
 /** 
@@ -22,7 +22,7 @@ $thisPost = new Post_Block;
 */  
 $obBD_conexion = new Class_Log_Conexion_Con($Ses_Dat_Dis);
 /**
-* Creación del Objeto para consultas
+* Creaciï¿½n del Objeto para consultas
 */
 $obBD_con1 =  new Class_Log_Datos_Con; 
 
@@ -102,7 +102,7 @@ if(isset($ajax_plan_cta))
 				{
 				  ?>	
 				  <tr>
-					<td colspan="6"><?php echo error_alerta("¡No hay resultados que mostrar!", 2)?><td>
+					<td colspan="6"><?php echo error_alerta("ï¿½No hay resultados que mostrar!", 2)?><td>
 				  </tr>
 	  			<?Php
 				} //Fin del else if($total_rs_buscar != 0)	?>				
@@ -181,7 +181,7 @@ if(isset($ajax_verRelaciones))
                 <?php
 				} ?>
 			    <td align="center">
-                                <button type="button" class="btn btn-danger delete" title="Eliminar Relación" onClick="if(confirmacion3(this.form)){ ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_verRelaciones=1&Pro_Cod=<?php echo $Pro_Cod?>&Pld_Cod=<?php echo $row_rs_relacion['Pld_Cod'];?>&tot_car=<?php echo $tot_car; ?>&Car_Int=<?php echo $row_rs_carrera['Car_Int'];?>&Mod_Cod=<?php echo $row_rs_modalidad['Mod_Cod'];?>','div_relacion')}">
+                                <button type="button" class="btn btn-danger delete" title="Eliminar Relaciï¿½n" onClick="if(confirmacion3(this.form)){ ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_verRelaciones=1&Pro_Cod=<?php echo $Pro_Cod?>&Pld_Cod=<?php echo $row_rs_relacion['Pld_Cod'];?>&tot_car=<?php echo $tot_car; ?>&Car_Int=<?php echo $row_rs_carrera['Car_Int'];?>&Mod_Cod=<?php echo $row_rs_modalidad['Mod_Cod'];?>','div_relacion')}">
                     <i class="icon-trash icon-white"></i>
                     <span>Eliminar</span>
                 </button>
@@ -193,7 +193,7 @@ if(isset($ajax_verRelaciones))
           <tr>
             <td height="36%">&nbsp;</td>
             <td height="36%">&nbsp;</td>
-            <td height="36%"><?Php echo error_alerta("¡No hay resultados que mostrar!", 1); ?></td>            
+            <td height="36%"><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1); ?></td>            
          <?Php
 			if ($tot_car >0)
 			{
@@ -241,7 +241,7 @@ if (!(isset($op)))
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?php require_once "../../mascaras/model1/estilos/estilos.php"; ?>								
         <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/con_val_relacion_cta.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/con_val_relacion_cta.js"></script>
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
         <script type="text/javascript"> 
               $(function() {
@@ -276,7 +276,7 @@ switch ($op)
 	 
       <FIELDSET>
 	  <LEGEND>
-			<label class="Titulos2">Selección Periodo Contable</label>
+			<label class="Titulos2">Selecciï¿½n Periodo Contable</label>
 	  </LEGEND>				
 	  <table width="30%" border="0" cellspacing="0" cellpadding="0">
 	  	<tr>
@@ -425,7 +425,7 @@ switch ($op)
 		 		<td>&nbsp;</td>
 		 		<td>&nbsp;</td>
 		 		<td>&nbsp;</td>
-		 		<td><?php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
+		 		<td><?php echo error_alerta("ï¿½No hay resultados que mostrar!", 1) ?></td>
 		 		<td>&nbsp;</td>
 		 	</tr>
 			<?php }?>
@@ -562,7 +562,7 @@ switch ($op)
                   <?php
 				} ?>
                   <td align="center">
-                    <button type="button" class="btn btn-danger btn-mini" title="Eliminar Relación" onClick="if(confirmacion3(this.form)){ ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_verRelaciones=1&Pro_Cod=<?php echo $Pro_Cod?>&Pld_Cod=<?php echo $row_rs_relacion['Pld_Cod'];?>&Car_Int=<?php echo $row_rs_carrera_pro['Car_Int'];?>&tot_car=<?php echo $total_rs_carrera; ?>&Mod_Cod=<?php echo $row_rs_modalidad_pro['Mod_Cod'];?>','div_relacion')}">
+                    <button type="button" class="btn btn-danger btn-mini" title="Eliminar Relaciï¿½n" onClick="if(confirmacion3(this.form)){ ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_verRelaciones=1&Pro_Cod=<?php echo $Pro_Cod?>&Pld_Cod=<?php echo $row_rs_relacion['Pld_Cod'];?>&Car_Int=<?php echo $row_rs_carrera_pro['Car_Int'];?>&tot_car=<?php echo $total_rs_carrera; ?>&Mod_Cod=<?php echo $row_rs_modalidad_pro['Mod_Cod'];?>','div_relacion')}">
                       <i class="icon-trash icon-white"></i>
                       <span>Eliminar</span>
                       </button>              
@@ -574,7 +574,7 @@ switch ($op)
                 <tr>
                   <td>&nbsp;</td>
                   <td>&nbsp;</td>
-                  <td><?Php echo error_alerta("¡No hay resultados que mostrar!", 1); ?></td>
+                  <td><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1); ?></td>
                   <?Php
 			if ($total_rs_carrera >0)
 			{
@@ -794,7 +794,7 @@ switch ($op)
 			<tr >
 		 		<td>&nbsp;</td>
 		 		<td>&nbsp;</td>
-		 		<td><?php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
+		 		<td><?php echo error_alerta("ï¿½No hay resultados que mostrar!", 1) ?></td>
 		 		<td>&nbsp;</td>
 		 		<td>&nbsp;</td>		 		
 		 	</tr>

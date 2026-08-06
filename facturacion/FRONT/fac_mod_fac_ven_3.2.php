@@ -1290,7 +1290,7 @@ if (isset($saldoCCxCC)) {
         var array_vendedor = <?php echo json_encode($rs_Punto); ?>;
     </script>
 
-    <script language="javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
+    <script type="text/javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
     <!-- <script type="text/ecmascript" src="../VALIDACIONES/fac_val_factura.js?x=0"></script> -->
     <script type="text/ecmascript" src="../VALIDACIONES/fac_val_factura2.js?x=105"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>

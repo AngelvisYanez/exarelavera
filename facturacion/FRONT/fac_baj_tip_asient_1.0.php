@@ -2,10 +2,10 @@
 <?php     
 /* 
 * Alias:					Eliminar
-* Descripción: 				Permite dar de baja a los tipos de asiento
-* Fecha de actualización:	2014-05-30
+* Descripciï¿½n: 				Permite dar de baja a los tipos de asiento
+* Fecha de actualizaciï¿½n:	2014-05-30
 * Desarrollador:			juanpuxito
-* Fecha de actualización:	2014-06-30
+* Fecha de actualizaciï¿½n:	2014-06-30
 * Desarrollador:			Juan Morales R.
 */
 
@@ -25,9 +25,15 @@ $obBD_conexion = new Class_Log_Conexion_Tip($Ses_Dat_Dis);
 $obBD_con1 =  new Class_Log_Datos_Tip; 	  
 
 /*
-* Creación del objeto para evitar el reenvio
+* Creaciï¿½n del objeto para evitar el reenvio
 */
 $thisPost = new Post_Block;
+
+if (!defined('INGRESO')) define('INGRESO', 'INGRESO');
+if (!defined('EGRESO')) define('EGRESO', 'EGRESO');
+if (!defined('DIARIO')) define('DIARIO', 'DIARIO');
+if (!defined('ACTIVO')) define('ACTIVO', 'ACTIVO');
+if (!defined('INACTIVO')) define('INACTIVO', 'INACTIVO');
 
 if (isset($ajax_op))
 { 
@@ -49,7 +55,7 @@ if (isset($ajax_op))
           <td width="87%" class="LetraNegra"><?Php echo $row_rs_tip['Tia_Abr']; ?></td>
         </tr>
         <tr>
-          <td width="13%" class="Etiqueta1">Descripción:</td>
+          <td width="13%" class="Etiqueta1">Descripciï¿½n:</td>
           <td width="87%" class="LetraNegra"><?Php echo $row_rs_tip['Tia_Des']; ?></td>
         </tr>
         <tr>
@@ -120,7 +126,7 @@ if ($thisPost->postBlock($_POST['postID']) && isset($hdd_save))
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php")?>        
 		<!--<script src="../LOGICA/TreeMenu.js" language="JavaScript" type="text/javascript"></script>
-		<script language="javascript" src="../VALIDACIONES/adm_val_usuarios.js"></script>	-->
+		<script type="text/javascript" src="../VALIDACIONES/adm_val_usuarios.js"></script>	-->
 		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>	
         <!--Librerias para interfaz -->               
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
@@ -153,7 +159,7 @@ if ($thisPost->postBlock($_POST['postID']) && isset($hdd_save))
 <table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader03">
 	<thead>
 	 <tr>	
-        <th width="4%">Cód. Int. </th>        
+        <th width="4%">Cï¿½d. Int. </th>        
   		<th width="4%">Abrev. </th>               
 		<th>Descripci&oacute;n</th>       
    		<th width="6%">Tipo </th>    

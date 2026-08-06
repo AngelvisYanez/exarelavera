@@ -42,9 +42,9 @@ $row_rs_vendedor = mysqli_fetch_assoc ($rs_vendedor);
 		<TITLE>Ginus</TITLE>
 		<link href="../../Estilos/Interfaz1.css" rel="stylesheet" type="text/css">
 		<link href="../../Estilos/Estilo1.css" rel="stylesheet" type="text/css">
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-    	<script language="javascript" src="../validaciones/validaciones.js"></script>
-		<script language="javascript" src="../../Librerias/fecha.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    	<script type="text/javascript" src="../validaciones/validaciones.js"></script>
+		<script type="text/javascript" src="../../Librerias/fecha.js"></script>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 	</HEAD>
 <BODY>

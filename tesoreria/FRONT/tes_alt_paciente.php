@@ -5,10 +5,10 @@
  *
  * @author car.87cod :)
  * @version 1.0
- * Fecha de actualización:	2012-04-16
+ * Fecha de actualizaciï¿½n:	2012-04-16
  * @author lewis.chimarro
  * @version 1.0
- * Fecha de actualización:	2014-05-21
+ * Fecha de actualizaciï¿½n:	2014-05-21
  *
  * @package tesoreria.FRONT
  */
@@ -131,7 +131,7 @@ if(isset($guardarCliente)){
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
         <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
         <script type="text/javascript" src="../../framework/jquery/chosen/chosenDesc/chosenDesc.js"></script>
-        <script language="javascript" src="../VALIDACIONES/tes_val_paciente.js?a=786"></script>
+        <script type="text/javascript" src="../VALIDACIONES/tes_val_paciente.js?a=786"></script>
     </HEAD>
     <BODY>
         <div class="panel panel-main">

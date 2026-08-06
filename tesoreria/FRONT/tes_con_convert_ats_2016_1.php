@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 if(isset($_FILES)&&!empty($_FILES)){
     require_once('../../Librerias/Xml/XML.php');	
     $responce=array('success'=>false,'message'=>"No se ha encontrado ningun archivo!");

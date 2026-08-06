@@ -1,5 +1,6 @@
-﻿<?php
+<?php
 require_once dirname(__file__).'/Expr.php';
+#[AllowDynamicProperties]
 class AbstractModel {
     //protected $_debug=true; //protected $_db; //protected $_schema = '';
     protected $_primary = null;

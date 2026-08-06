@@ -1,10 +1,10 @@
 <?php	require_once('../../administrador/LOGICA/seguridad.php');
 	require_once('../LOGICA/logica.php');
     require_once('../../Librerias/procedimientos/almacenados_standar.php');	
-/** Actualizacion de datos de la retención ********************************************************/
+/** Actualizacion de datos de la retenciï¿½n ********************************************************/
 if(isset($hdd_save))
 {
-    /** Inicio de la transacción *************/
+    /** Inicio de la transacciï¿½n *************/
 	   	$conexion=open_trans_tes();
 		insercionesv_tes(502,$Ret_Cod.'*'.$Ret_Fec.'*'.trim($Ret_Con).'*'.$Ret_Num,$conexion);
 		$cont=0;	
@@ -42,10 +42,10 @@ if(isset($hdd_save))
 		close_trans_tes($conexion);
 	    /** Fin de la transaccion **********************************************************************************************************/
 }
-/** Cargado de los porcentajes d retención *******************************************************************************************/
+/** Cargado de los porcentajes d retenciï¿½n *******************************************************************************************/
 if(isset($Ret_Cod))
 {
-	/** Consulta los datos de la retención a modificar ***********************************************/
+	/** Consulta los datos de la retenciï¿½n a modificar ***********************************************/
 	$rs_inf_retencion=consultas_tes(501,$Ret_Cod);
 	$row_car_detalle=mysqli_fetch_assoc($rs_inf_retencion);	
 }
@@ -54,7 +54,7 @@ if (!(isset($op)))
 {
 	$op = 1;
 }	    
-/** Cargado de Iva Renta através de AJAX ********************/	
+/** Cargado de Iva Renta atravï¿½s de AJAX ********************/	
 	if (isset($codigoret))
  {
 		$rs_xml = consultas_tes(490,$codigoret);
@@ -106,11 +106,11 @@ switch ($op){
 		<link href="../../mascaras/model1/estilos/estilo1.css" rel="stylesheet" type="text/css">
 		<link href="../../Estilos/Interfaz1.css" rel="stylesheet" type="text/css">	
 	<link rel="stylesheet" type="text/css" media="all" href="../../Librerias/jscalendar/calendar-win2k-cold-1.css" title="win2k-cold-1" />
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/Validaciones.js"></script>	
-		<script language="javascript" src="../../contabilidad/VALIDACIONES/Validaciones.js"></script>
-		<script language="javascript" src="../../contabilidad/VALIDACIONES/XML.js"></script>
-		<script language="javascript" src="../VALIDACIONES/XML.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/Validaciones.js"></script>	
+		<script type="text/javascript" src="../../contabilidad/VALIDACIONES/Validaciones.js"></script>
+		<script type="text/javascript" src="../../contabilidad/VALIDACIONES/XML.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/XML.js"></script>
 		<script type="text/javascript" src="../../Librerias/jscalendar/calendar.js"></script>
 		<script type="text/javascript" src="../../Librerias/jscalendar/lang/calendar-es.js"></script>
 		<script type="text/javascript" src="../../Librerias/jscalendar/calendar-setup.js"></script>
@@ -120,7 +120,7 @@ switch ($op){
 <?Php
 if(isset($hdd_save)){
 ?>
-<script language="javascript">
+<script type="text/javascript">
  ir('<?Php echo $_SERVER['PHP_SELF']; ?>');
 </script>
 <?Php
@@ -153,7 +153,7 @@ switch ($op){
   </table>
   <table width="495" height="36" border="0" cellpadding="0" cellspacing="0">
     <tr>
-      <td width="90" height="28" class="BarraBusqueda"><div align="right"><span class="Asterisco">* </span>Búsqueda:</div></td>
+      <td width="90" height="28" class="BarraBusqueda"><div align="right"><span class="Asterisco">* </span>Bï¿½squeda:</div></td>
       <td width="371" class="BarraBusqueda"><input name="txt_busqueda" type="text" id="txt_busqueda" value="" size="50" maxlength="50" style="text-transform:uppercase "></td>
       <td width="113"><div align="center">
         <input name="btn_buscar" type="button" class="Boton_Buscar" title="Buscar" id="btn_buscar" onClick="validar_buscar()" value="Buscar">
@@ -208,7 +208,7 @@ switch ($op){
 		  unset($Imp_Com);
 		   ?></td>
 		<td align="center">
-		<a href="<?Php echo $_POST['form1'];?>?Ret_Cod=<?Php echo $row_rs_buscar['Ret_Cod'];?>" 
+		<a href="<?Php echo htmlspecialchars($_POST['form1'], ENT_QUOTES, 'UTF-8');?>?Ret_Cod=<?Php echo $row_rs_buscar['Ret_Cod'];?>" 
 		title="Editar"><img src="../../imagenes/editar.jpg" width="20" height="20" border="0">        </a>		    </td>
 	  </tr>
 	  <?Php } while ($row_rs_buscar = mysqli_fetch_assoc($rs_buscar)); ?>
@@ -241,7 +241,7 @@ switch ($op){
 </table>
 <table width="561" border="0">
   <tr>
-    <td width="57" class="Etiqueta1">Cédula:</td>
+    <td width="57" class="Etiqueta1">Cï¿½dula:</td>
     <td width="99" class="LetraNegra"><?Php echo $row_car_detalle['Prs_Ced'] ?></td>
 	<td width="55" class="Etiqueta1">Nombres:</td>
     <td width="110" class="LetraNegra"><?Php echo $row_car_detalle['Prs_Nom'] ?></td>
@@ -249,7 +249,7 @@ switch ($op){
     <td width="126" class="LetraNegra"><?Php echo $row_car_detalle['Prs_Ape'] ?></td>
   </tr>
   <tr>
-    <td width="57" class="Etiqueta1">Dirección:</td>
+    <td width="57" class="Etiqueta1">Direcciï¿½n:</td>
     <td colspan="3" class="LetraNegra"><?php echo $row_car_detalle['Prs_Dir']?></td>
 	</tr>
 </table>
@@ -257,7 +257,7 @@ switch ($op){
 <br>
 <FIELDSET>
 <LEGEND>
-<label class="Titulos2">Datos de la Retención </label>
+<label class="Titulos2">Datos de la Retenciï¿½n </label>
 </LEGEND>
  <?Php //echo mensaje_requerido(); ?>
 <FIELDSET>
@@ -321,7 +321,7 @@ switch ($op){
 </FIELDSET>
 <FIELDSET>
 <LEGEND>
-<label class="Titulos2">Detalle de la retención </label>
+<label class="Titulos2">Detalle de la retenciï¿½n </label>
 </LEGEND>
   <table width="539" border="0">
 	<tbody id="c_contenido">
@@ -338,7 +338,7 @@ switch ($op){
   <table width="539" border="0">
 	<tbody id="c_contenido">
 	<?Php 
-	/* Año fiscal actual */	
+	/* Aï¿½o fiscal actual */	
 	$total_retenido=0;
 	$ic=1;
 	do

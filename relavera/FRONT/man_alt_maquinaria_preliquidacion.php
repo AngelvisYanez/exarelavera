@@ -477,8 +477,8 @@ if (isset($_GET['getDetalleHistoricoAjax'])) {
     </div>
 
     <!-- Script de Validaciones de la Pantalla -->
-    <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-    <script language="javascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
+    <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    <script type="text/javascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
 
     <!-- Módulo CSS -->
     <link rel="stylesheet" type="text/css" href="../RECURSOS/maquinaria_preliquidacion.css?v=1">

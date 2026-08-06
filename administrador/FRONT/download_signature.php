@@ -15,8 +15,7 @@ $file_path = "../../facturacion/FRONT/" . $emp_cod . "/" . $file_name;
 
 // Check if file exists
 if (!file_exists($file_path)) {
-    die("El archivo no existe en la ruta: " . $file_path); // Debugging
-    // die("El archivo de firma no fue encontrado.");
+    die("El archivo de firma no fue encontrado.");
 }
 
 // Get file extension

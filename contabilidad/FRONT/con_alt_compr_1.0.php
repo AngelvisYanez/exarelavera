@@ -361,9 +361,9 @@ else
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/XML.js"></script>
-		<script language="javascript" src="../VALIDACIONES/con_val_compr.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/XML.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/con_val_compr.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
 		<script type="text/javascript"> 
           $(function() {
@@ -397,16 +397,16 @@ if (isset($bt_save) && isset($ultimo) && !isset($hdd_volver))
 		
 	if ($op==1 ) 
 	{ ?>
-	<script language="javascript">
+	<script type="text/javascript">
 		windows('<?Php echo $hdd_comprobante; ?>?Com_Num=<?php echo $Com_Num; ?>&codigo=<?php echo $ultimo; ?>&tabla=<?php echo $tabla; ?>&tipo=<?php echo $op; ?>&campo=<?php echo $campo; ?>&Pec_Cod=<?php echo $Pec_Cod;?>','',800,600,'yes','yes', 'yes'); 
 	</script>
     <?php } else if ($op==2 ) 
 	{ ?>	   
-	<script language="javascript">
+	<script type="text/javascript">
 		windows('<?Php echo $hdd_comprobante; ?>?Com_Num=<?php echo $Com_Num; ?>&codigo=<?php echo $ultimo; ?>&tabla=<?php echo $tabla; ?>&tipo=<?php echo $op; ?>&campo=<?php echo $campo; ?>&Pec_Cod=<?php echo $Pec_Cod;?>','',800,600,'yes','yes', 'yes'); 	
 	</script>
 	<?php } else { ?>
-	<script language="javascript">
+	<script type="text/javascript">
 	windows('<?Php echo $hdd_comprobante; ?>?Com_Num=<?php echo $Com_Num; ?>&codigo=<?php echo $ultimo; ?>&tabla=<?php echo $tabla; ?>&tipo=<?php echo $op; ?>&campo=<?php echo $campo; ?>&Pec_Cod=<?php echo $Pec_Cod;?>','',800,600,'yes','yes', 'yes'); 
     </script>
     <?php 
@@ -524,7 +524,7 @@ else
           <td width="345"><div id="div_caja"></div></td>
         </tr>
       </table>
-	  	<script language="javascript">
+	  	<script type="text/javascript">
 		ShowHide('tbl_caja');
 		</script>
 	  <table width="574" border="0" cellpadding="0" cellspacing="0">
@@ -682,7 +682,7 @@ else
 if ((isset($Cli_Cod) && ($op==1)) || (isset($Prv_Cod) && ($op==2 || $op==3)))
 {
 ?>
-	<script language="javascript">
+	<script type="text/javascript">
 	/* Evita el sumbit */
 	document.onkeypress = stopRKey; 
 	</script>
@@ -961,7 +961,7 @@ if ((isset($Cli_Cod) && ($op==1)) || (isset($Prv_Cod) && ($op==2 || $op==3)))
 		  if (count($row_rs_codigos) == 1)
 		  { 
 		  ?>
-		  <script language="javascript">
+		  <script type="text/javascript">
 			/* Asigna los valores cuando se trata de un solo registro */
 		  document.getElementById('datos[<?php echo $fila; ?>,3]').selectedIndex = 1;
 	 	  document.getElementById('datos[<?php echo $fila; ?>,1]').value = '<?Php echo $Pld_Cod; ?>'; 

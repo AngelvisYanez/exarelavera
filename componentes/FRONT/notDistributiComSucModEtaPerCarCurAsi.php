@@ -1,4 +1,5 @@
 <?Php
+if (!is_object($obBD_con1)) return;
 require_once('../../componentes/LOGICA/logica.php');
 
 /* Componente para la busqueda de la Sucursal, Modalidad, Etapa, Periodo, Carrera, Curso, Asignatura con enfoque en los Distributivos

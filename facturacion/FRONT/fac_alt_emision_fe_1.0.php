@@ -1,7 +1,7 @@
 <?Php 
 /*Alias:	Registar 
-Descripción: Permite registrar las configuracion de facturacion
-Fecha de actualización:	2015-03-30
+Descripciï¿½n: Permite registrar las configuracion de facturacion
+Fecha de actualizaciï¿½n:	2015-03-30
 Desarrollador:	Lewis CHimarro
 MULTIEMPRESA : SI
 */	
@@ -14,7 +14,7 @@ require_once('../../Librerias/postclass.php');
 $obBD_conexion = new Class_Log_Conexion_Cfg($Ses_Dat_Dis);
 /* Creacion del Objeto de datos */  
 $obBD_con1 =  new Class_Log_Datos_Cfg; 
-/* Creación del objeto para evitar el reenvio */
+/* Creaciï¿½n del objeto para evitar el reenvio */
 $thisPost = new Post_Block;
 
 
@@ -42,7 +42,7 @@ if(isset($hdd_save))
 						/*actualizamos el registro*/
 						$obBD_ins1->operacionobBD(2, $opt_1.'*'.$name.'*'.$Ses_Emp_Cod,$obBD_conexion); 					
 					}else{
-						?><script language="javascript">alert("AVISO:\n¡No se pudo subir el archivo!");</script><?php
+						?><script type="text/javascript">alert("AVISO:\nï¿½No se pudo subir el archivo!");</script><?php
 					}
 				}else{
 					/*actualizamos el registro*/
@@ -53,7 +53,7 @@ if(isset($hdd_save))
 			/* Fin de la transaccion */
 			$obBD_ins1->fin_transaccion($obBD_conexion->conexion);		 
 		 }else{
-			?><script language="javascript">alert("AVISO:\n¡El archivo no es compatible, (solo .txt)!");</script><?php	 
+			?><script type="text/javascript">alert("AVISO:\nï¿½El archivo no es compatible, (solo .txt)!");</script><?php	 
 		 }
 	}
 }
@@ -71,7 +71,7 @@ if ($total_rs_buscaConfig!=0)
 <head>
 <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>		  	
 	<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-    <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">		
 </head>
 <body>

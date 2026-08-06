@@ -78,7 +78,7 @@ if(isset($getDetalleFactura)){
     </head>
 <body>
     <div class="panel panel-main">
-        <div class="panel-heading exa-header"><h3 class="panel-title">&raquo; Devolución de IVA a proveedores de exportadores</h3></div>        
+        <div class="panel-heading exa-header"><h3 class="panel-title">&raquo; Devoluciï¿½n de IVA a proveedores de exportadores</h3></div>        
         <div class="panel-body ui-widget-content ui-corner-bottom exa-body">
             <div id="documentoSearch">
                 <form id="formFiltros" class="form-horizontal normal" action="javascript:$('#tableResult').Search('#formFiltros','searchDocument');" >
@@ -126,7 +126,7 @@ if(isset($getDetalleFactura)){
 	</div>
 
   <div id="exportar" style="display: none;">
-        <?php php //echo $obBD_datos->getReportHeader($Ses_Suc_Cod, 'Devolucion de IVA', '', $obBD_conexion, false, 12,true) ?>
+        <?php //echo $obBD_datos->getReportHeader($Ses_Suc_Cod, 'Devolucion de IVA', '', $obBD_conexion, false, 12,true) ?>
         <table id="tablaExporta" cellspacing="0" cellpadding="0" style="width: 1030px; border-collapse: collapse;table-layout: fixed;"></table>
   </div>
 

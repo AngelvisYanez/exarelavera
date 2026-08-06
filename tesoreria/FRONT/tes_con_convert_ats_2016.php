@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once('../../Librerias/procedimientos/almacenados_standar.php');	
 //var_dump($uploadXML);    
 if(isset($_FILES)&&!empty($_FILES)){
@@ -174,7 +174,7 @@ if(isset($_FILES)&&!empty($_FILES)){
                 <script src="../../framework/plugins/ace-editor/ace-1.2/ace.js"></script>
                 <script src="../../framework/plugins/ace-editor/vkbeautify-0.99.js"></script>
                 <!--<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />-->
-                <script language="JavaScript">
+                <script type="text/javascript">
 		
 		</script>
 	</HEAD>

@@ -1,9 +1,9 @@
 <?php
 /* 
 Alias:	componente
-Descripción: Componente que permite elegir la fecha en meses y tambien en un determinado 
+Descripciï¿½n: Componente que permite elegir la fecha en meses y tambien en un determinado 
 				rango de fechas 
-Fecha de actualización:	2009-09-09
+Fecha de actualizaciï¿½n:	2009-09-09
 Desarrollador:	Lewis Chimarro
 */
 /* Variable de la forma de pago */
@@ -113,7 +113,7 @@ if (isset($For_Cod))
 			</tr>
 			</table>
 			</FIELDSET>
-			<script language="javascript" type="text/javascript">
+			<script type="text/javascript" type="text/javascript">
 				ShowHide('Tbl_Pagos'); 
 				ShowHide('Tbl_BusCtas'); 
 			</script> 
@@ -123,19 +123,19 @@ if (isset($For_Cod))
 		}//Fin del if (isset($Hdd_Fecha))
 		else
 		{
-			 echo error_alerta("<< Error de componente: tes_com_cheques.php >> <br>Descripción: No se ha definido la Propiedad: Hdd_Fecha<br>
+			 echo error_alerta("<< Error de componente: tes_com_cheques.php >> <br>Descripciï¿½n: No se ha definido la Propiedad: Hdd_Fecha<br>
 								Hdd_Fecha: Variable que contiene el nombre del texto que posse la fecha del documento", 2); 				
 		}//Fin del else if (isset($Hdd_Fecha))
 	}//Fin del if (isset($Hdd_Valor))
 	else
 	{
-		 echo error_alerta("<< Error de componente: tes_com_cheques.php >> <br>Descripción: No se ha definido la Propiedad: Hdd_Valor<br>
+		 echo error_alerta("<< Error de componente: tes_com_cheques.php >> <br>Descripciï¿½n: No se ha definido la Propiedad: Hdd_Valor<br>
 								Hdd_Valor: Variable que contiene el nombre del texto que posse el valor del documento", 2); 
 	}
 }//Fin del if (isset($For_Cod))
 else
 {
-	 echo error_alerta("<< Error de componente: tes_com_cheques.php >> <br>Descripción: No se ha definido la Propiedad: For_Cod<br>
+	 echo error_alerta("<< Error de componente: tes_com_cheques.php >> <br>Descripciï¿½n: No se ha definido la Propiedad: For_Cod<br>
 							For_Cod: Variable que contiene la forma de pago ", 2); 
 }//Fin del else if (isset($For_Cod))
 ?>

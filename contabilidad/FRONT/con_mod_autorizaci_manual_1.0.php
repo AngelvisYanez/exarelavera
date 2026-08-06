@@ -1,12 +1,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php 
 /**
-* Descripción: Modificación de las Autorizaciones
-* Fecha de creación:	Julio 2010
+* Descripciï¿½n: Modificaciï¿½n de las Autorizaciones
+* Fecha de creaciï¿½n:	Julio 2010
 * Desarrollador:	Jose Cumbicos
-* Fecha de actualización: 2011-Jun-06
+* Fecha de actualizaciï¿½n: 2011-Jun-06
 * Desarrollador: Lewis Chimarro
-* Fecha de actualización: 2012-05-10
+* Fecha de actualizaciï¿½n: 2012-05-10
 * Desarrollador: Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -23,7 +23,7 @@ $obBD_conexion = new Class_Log_Conexion_Con($Ses_Dat_Dis);
 */
 $obBD_con1 =  new Class_Log_Datos_Con;
 /**
-* Creación del objeto para evitar el reenvio 
+* Creaciï¿½n del objeto para evitar el reenvio 
 */
 $thisPost = new Post_Block;
 
@@ -99,7 +99,7 @@ if ($thisPost->postBlock($_POST['postID']))
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
         <!--Librerias para interfaz -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
         <!--Librerias para modal -->       

@@ -187,7 +187,7 @@ if(isset($ajax_notif))
 	{		
 	?>
     	<img src='../../mascaras/model1/imagenes/32x32/cancel.gif' width='16' height='16' type='image'/>
-        <script language="javascript">alert("�Ya ex�ste el n�mero "+ <?php echo $NumFact;?> +"!"); document.getElementById("Vet_Num").selectionStart = 0;</script>
+        <script type="text/javascript">alert("�Ya ex�ste el n�mero "+ <?php echo $NumFact;?> +"!"); document.getElementById("Vet_Num").selectionStart = 0;</script>
 	<?php		
 	}else{
 		if($SecIni<=$NumFact && $SecFin>=$NumFact)
@@ -196,7 +196,7 @@ if(isset($ajax_notif))
 		}else{
 			?>
               <img src='../../mascaras/model1/imagenes/32x32/cancel.gif' width='16' height='16' type='image'/>
-              <script language="javascript">alert("�N�mero fuera de rango (Rango valido: "+ <?php echo $SecIni;?> +" al "+ <?php echo $SecFin;?> +")!"); 
+              <script type="text/javascript">alert("�N�mero fuera de rango (Rango valido: "+ <?php echo $SecIni;?> +" al "+ <?php echo $SecFin;?> +")!"); 
 			  document.getElementById("Vet_Num").selectionStart = 0;</script>
             <?php		
 		}	
@@ -240,7 +240,7 @@ if (isset($cmb))
 		} //Fin del $row_rs_facttipo  ?>
     </select>
 	<?php //echo $div_banco; ?>
-	<script language="javascript">
+	<script type="text/javascript">
 		ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?cmb_tipo=1&Pag_Cod=<?Php echo $Pag; ?>', '<?php echo $div_banco; ?>');
 	</script>	
 	<?Php
@@ -370,7 +370,7 @@ if(isset($CajFec))
 		}	
 	}else{
 		$correcto=0;
-		?><script language="javascript">alert("�No hay Autorizaci�n para la fecha ingresada!");</script> <?php
+		?><script type="text/javascript">alert("�No hay Autorizaci�n para la fecha ingresada!");</script> <?php
 	}
 }
 
@@ -716,11 +716,11 @@ else
 <HTML><HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>	
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
                  <?php if($rs_infoEmpresa['Cof_Con']=="S") { ?>
-    	<script language="javascript" src="../VALIDACIONES/fac_val_fac_ven_new.js?xx=1"></script>
+    	<script type="text/javascript" src="../VALIDACIONES/fac_val_fac_ven_new.js?xx=1"></script>
                  <?php }else{ ?>
-        <script language="javascript" src="../VALIDACIONES/fac_val_fac_ven.js?xx=1"></script>
+        <script type="text/javascript" src="../VALIDACIONES/fac_val_fac_ven.js?xx=1"></script>
                  <?php } ?>
         <!--Librerias para interfaz -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script> 
@@ -763,7 +763,7 @@ if (isset($hdd_save) && !isset($hdd_volver))
 { 
         $tabla='cliente'
 	?>
-	<script language="javascript">
+	<script type="text/javascript">
 		<?php if(isset($hdd_comprobante)){?>			
 		windows('<?php echo $hdd_comprobante;?>?Com_Num=<?php echo $Com_Num; ?>&codigo=<?php echo $Com_Cod; ?>&tabla=<?php echo $tabla; ?>&tipo=<?php echo $op; ?>&campo=<?php echo $campo; ?>&Pec_Cod=<?php echo $Pec_Cod;?>','',800,800,'no','yes','yes','yes'); 	
 		<?Php } ?>
@@ -772,7 +772,7 @@ if (isset($hdd_save) && !isset($hdd_volver))
     if($Ses_Dat_Dis!='exa')
     {
 ?>		
-        <script language="javascript">
+        <script type="text/javascript">
             //windows('<?Php //echo $reportes[1];  ?>?Vet_Cod=<?Php //echo $Vet_Cod; ?>','', 800,600,'yes', 'yes', 'yes', 'no');
         </script>      
 <?Php
@@ -1096,7 +1096,7 @@ if(isset($txt_busqueda))
                   </span></td>
               </tr>
               </table>
-			  <script language="javascript">
+			  <script type="text/javascript">
                    ShowHide('NotasCredito');		  
               </script>                                            
          </FIELDSET>    
@@ -1545,7 +1545,7 @@ if(isset($txt_busqueda))
 	if (!(isset($cheque)))
 	{
 	?>
-	<script language="javascript">
+	<script type="text/javascript">
 	 ShowHide('cheque');		  	 
 	</script>
 	<?Php

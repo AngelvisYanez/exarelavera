@@ -5,7 +5,7 @@
  * 
  * @author juanpuxito
  * @version 1.0
- * Fecha de actualización:	27-05-2014
+ * Fecha de actualizaciï¿½n:	27-05-2014
  *
  * @package Exa.Facturacion - OFSERCONT
  * 
@@ -48,7 +48,7 @@ if (isset($hdd_save))
 		$obBD_con1->operacionobBD(2, $Tip_Des.'*'.$Tia_Ini.'*'.$Tip_Abrev, $obBD_conexion);
 		
 		/**
-		* fin de la transacción 
+		* fin de la transacciï¿½n 
 		*/
 		$obBD_con1->fin_transaccion($obBD_conexion->conexion);
 	}
@@ -63,7 +63,7 @@ if (isset($ajax_nuevo))
 		if (count($row_rs_con_tip) != 0)		
 		{ 			
 		?>        
-		<input name="Tip_Des" type="text" id="Tip_Des" value="<?php echo $Tip_Des?>" size="30" maxlength="30" style="text-transform:uppercase" onblur="if (trim(this.value) != '')ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_nuevo=1&Tip_Des='+this.value+'&Tia_Ini='+ document.getElementById('Tia_Ini').value,'div_tipdes')">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/gtk-no.gif" width="22" height="22" />	<span class="Alertas3">¡La marca: <?php echo strtoupper($Tip_Des); ?> ya existe!</span>  	
+		<input name="Tip_Des" type="text" id="Tip_Des" value="<?php echo $Tip_Des?>" size="30" maxlength="30" style="text-transform:uppercase" onblur="if (trim(this.value) != '')ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_nuevo=1&Tip_Des='+this.value+'&Tia_Ini='+ document.getElementById('Tia_Ini').value,'div_tipdes')">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/gtk-no.gif" width="22" height="22" />	<span class="Alertas3">ï¿½La marca: <?php echo strtoupper($Tip_Des); ?> ya existe!</span>  	
 		<?php }else{ ?>
 		<input name="Tip_Des" type="text" id="Tip_Des" value="<?Php echo $Tip_Des; ?>" size="30" maxlength="30" style="text-transform:uppercase" onblur="if (trim(this.value) != '')ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_nuevo=1&Tip_Des='+this.value+'&Tia_Ini='+document.getElementById('Tia_Ini').value,'div_tipdes')">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/aceptar.jpg" width="22" height="22" />	
 		<?php
@@ -74,8 +74,8 @@ exit();
 <HTML>
 	<HEAD>
     	<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/fac_par_tip_asient.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/fac_par_tip_asient.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
 		<script type="text/javascript"> 
           $(function() {

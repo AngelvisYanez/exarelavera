@@ -1,9 +1,9 @@
 <?php
 /* 
 Alias:	componente
-Descripción: Componente que permite elegir la fecha en meses y tambien en un determinado 
+Descripciï¿½n: Componente que permite elegir la fecha en meses y tambien en un determinado 
 				rango de fechas 
-Fecha de actualización:	2009-09-09
+Fecha de actualizaciï¿½n:	2009-09-09
 Desarrollador:	Lewis Chimarro
 */
 /* Variable de la forma de pago */
@@ -40,7 +40,7 @@ if (isset($For_Cod))
 				<td width="226" class="Cabecera1">Observaci&oacute;n</td>
 				<td width="33">&nbsp;</td>
 			  </tr>
-	  <?Php //Consulto la informacion del cheke Cop_Bus=> es el código interno de la fatura de compra 
+	  <?Php //Consulto la informacion del cheke Cop_Bus=> es el cï¿½digo interno de la fatura de compra 
 	        //echo "Codigo ===>".$Cop_Bus;
 	  		$rs_informacion_cheque=$obBD_con1->consulta(sentencias_tes(346, $obBD_con1->parametros($Cop_Bus)), $obBD_conexion->conexion); 
 			$row_rs_informacion_cheque=$obBD_con1->registros();
@@ -50,7 +50,7 @@ if (isset($For_Cod))
  		<tr>
 		<td width="135">
 		<?Php
-		/* Consultar la información del cheque */
+		/* Consultar la informaciï¿½n del cheque */
 			$rs_cheque_compras=$obBD_con1->consulta(sentencias_tes(372, $obBD_con1->parametros($row_rs_informacion_cheque['Pld_Cod'])), $obBD_conexion->conexion); 
 			$row_rs_cheque_compra_mod=$obBD_con1->registros();
 			$num_row_rs_cheque_compra_mod=$obBD_con1->numregistros();	
@@ -61,7 +61,7 @@ if (isset($For_Cod))
 			{
 			   $Ban_Tipo=$row_rs_cheque_compra_mod['Ban_Tip'];
 			}
-			/* Fin consultar la información del cheque */	
+			/* Fin consultar la informaciï¿½n del cheque */	
 		
 		 			$rs_cuentas_cheque=$obBD_con1->consulta(sentencias_tes(347, $obBD_con1->parametros($row_rs_cheque_compra_mod['Ban_Tip'])), $obBD_conexion->conexion);  		
 					$row_rs_cuenta_cheque=$obBD_con1->registros();		?>
@@ -237,7 +237,7 @@ if (isset($For_Cod))
 			  ?>
             </table>
 			</FIELDSET>
-			<script language="javascript" type="text/javascript">
+			<script type="text/javascript" type="text/javascript">
 				ShowHide('Tbl_Pagos'); 
 				ShowHide('Tbl_BusCtas'); 
 				ShowHide('Tbl_Anticipos'); 
@@ -248,19 +248,19 @@ if (isset($For_Cod))
 		}//Fin del if (isset($Hdd_Fecha))
 		else
 		{
-			 echo error_alerta("<< Error de componente: tes_com_cheques.php >> <br>Descripción: No se ha definido la Propiedad: Hdd_Fecha<br>
+			 echo error_alerta("<< Error de componente: tes_com_cheques.php >> <br>Descripciï¿½n: No se ha definido la Propiedad: Hdd_Fecha<br>
 								Hdd_Fecha: Variable que contiene el nombre del texto que posse la fecha del documento", 2); 				
 		}//Fin del else if (isset($Hdd_Fecha))
 	}//Fin del if (isset($Hdd_Valor))
 	else
 	{
-		 echo error_alerta("<< Error de componente: tes_com_cheques.php >> <br>Descripción: No se ha definido la Propiedad: Hdd_Valor<br>
+		 echo error_alerta("<< Error de componente: tes_com_cheques.php >> <br>Descripciï¿½n: No se ha definido la Propiedad: Hdd_Valor<br>
 								Hdd_Valor: Variable que contiene el nombre del texto que posse el valor del documento", 2); 
 	}
 }//Fin del if (isset($For_Cod))
 else
 {
-	 echo error_alerta("<< Error de componente: tes_com_cheques.php >> <br>Descripción: No se ha definido la Propiedad: For_Cod<br>
+	 echo error_alerta("<< Error de componente: tes_com_cheques.php >> <br>Descripciï¿½n: No se ha definido la Propiedad: For_Cod<br>
 							For_Cod: Variable que contiene la forma de pago ", 2); 
 }//Fin del else if (isset($For_Cod))
 ?>

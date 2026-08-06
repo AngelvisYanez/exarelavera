@@ -220,7 +220,7 @@ $Ses_Suc_Cod = isset($_SESSION['Ses_Suc_Cod']) ? $_SESSION['Ses_Suc_Cod'] : '';
     <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js"></script>
-    <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
     <script type="text/javascript" src="../../framework/jquery/jquery.plugins/MaskedInput/jquery.maskedinput.1.4.1.min.js"></script>
     <script src="../VALIDACIONES/tes_val_estado_cuenta.js?e=1"></script>
     <style>

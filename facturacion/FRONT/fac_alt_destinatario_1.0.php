@@ -119,8 +119,8 @@ else
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/fac_val_transporte.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/fac_val_transporte.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
 		<script type="text/javascript"> 
           $(function() {
@@ -187,7 +187,7 @@ else
 		   {
 		    	if ($event == 0) 
 		  		{ 
-		  			echo "El Destinatario con c&eacute;dula/R.U.C.: ".$_POST['Prs_Ced'].", ya se encuentra registrado";
+		  			echo "El Destinatario con c&eacute;dula/R.U.C.: ".htmlspecialchars($_POST['Prs_Ced'], ENT_QUOTES, 'UTF-8').", ya se encuentra registrado";
 				}	   
 		   }
 		   ?>
@@ -219,7 +219,7 @@ else
         <td width="17%" class="Etiqueta1"><span class="Asterisco">*</span> C&eacute;dula/R.U.C.:</td>
 	    <td width="83%" class="LetraNegra">&nbsp;
 			<?Php echo htmlspecialchars($_POST['Prs_Ced'], ENT_QUOTES, 'UTF-8'); ?>
-			<input name="Prs_Ced" type="hidden" id="Prs_Ced" value="<?php echo $_POST['Prs_Ced']; ?>">
+			<input name="Prs_Ced" type="hidden" id="Prs_Ced" value="<?php echo htmlspecialchars($_POST['Prs_Ced'], ENT_QUOTES, 'UTF-8'); ?>">
 		</td>
 	    </tr>
 	  <tr>

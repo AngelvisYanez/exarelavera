@@ -1,5 +1,4 @@
 <?php
-use \Exception;
 require_once(dirname(__file__)."/../DATA/libs/AbstractModel.php");
 
 class comprobantes extends AbstractModel{
@@ -101,48 +100,43 @@ class comprobantes extends AbstractModel{
                 $sql="INSERT INTO ventas_costo VALUES ($Par_Sql[Vet_Cod], $Par_Sql[Com_Cod]);";
             break;
             case 4:
-                $sql="SELECT Tia_Ini,
-                SUM(IF(Asi_Deh='D',Asi_Val,0))-SUM(IF(Asi_Deh='H',Asi_Val,0)) AS Diferencia,
-                IF(Tia_Ini='D','Diario',IF(Tia_Ini='I','Ingreso','Egreso'))AS Tipo,
-                CAST(CONCAT(Tia_Abr,'-',LPAD(MONTH(Com_Fec),2,'0'),'-',Com_Num)AS char)AS Codigo,
-                'Ventas' AS Doc,
-                Caj_Fec AS Doc_Fec,
-                IF(ventas_costo.Com_Cod IS NOT NULL,CONCAT(Suc_Sri,'-',Pun_Sri,'-',CAST(LPAD(Vet_Num,9,'0')AS char)),IF(compr_auto.Cop_Cod IS NOT NULL,Cop_Num,''))AS Doc_Num,
-                compras.Cop_Cod,
-                ventas.Vet_Cod,
-                comprobantes.*,
-                Tia_Des, 
-                IF(comprobantes.Prv_Cod IS NOT NULL,prs_prv.Prs_Ced,prs_cli.Prs_Ced)AS Prs_Ced, 
-                IF(comprobantes.Prv_Cod IS NOT NULL,CONCAT(prs_prv.Prs_Ape,' ',prs_prv.Prs_Nom),CONCAT(prs_cli.Prs_Ape,' ',prs_cli.Prs_Nom))AS Persona
-                    FROM comprobantes
-                    INNER JOIN asientos ON comprobantes.Com_Cod = asientos.Com_Cod
-                    INNER JOIN tipo_asien ON tipo_asien.Tia_Cod=comprobantes.Tia_Cod
-                    INNER JOIN perio_cont ON perio_cont.Pec_Cod=comprobantes.Pec_Cod
-                    INNER JOIN plan_cuenta ON perio_cont.Pla_Cod=plan_cuenta.Pla_Cod
-                    INNER JOIN ventas_costo ON comprobantes.Com_Cod=ventas_costo.Com_Cod
-                    LEFT JOIN ventas_compr ON comprobantes.Com_Cod=ventas_compr.Com_Cod
-                    LEFT JOIN ventas ON ventas.Vet_Cod=ventas_costo.Vet_Cod
-                    LEFT JOIN caja_aper ON (ventas.Caj_Cod = caja_aper.Caj_Cod) 
-                    LEFT JOIN puntos_imp ON caja_aper.Pun_Cod=puntos_imp.Pun_Cod
-                    LEFT JOIN autorizaci ON autorizaci.Aut_Cod=ventas.Aut_Cod 
-                    LEFT JOIN sucursal ON sucursal.Suc_Cod=puntos_imp.Suc_Cod
-                    LEFT JOIN compr_auto ON comprobantes.Com_Cod=compr_auto.Com_Cod
-                    LEFT JOIN compras ON compras.Cop_Cod=compr_auto.Cop_Cod
-                    LEFT JOIN tipo_compr AS tip_com_cop ON tip_com_cop.Tic_Cod=compras.Tic_Cod
-                    LEFT JOIN tipo_compr AS tip_com_vet ON tip_com_vet.Tic_Cod=ventas.Tic_Cod
-                    LEFT JOIN proveedore ON comprobantes.Prv_Cod=proveedore.Prv_Cod   
-                    LEFT JOIN persona AS prs_prv ON prs_prv.Prs_Cod=proveedore.Prs_Cod 
-                    LEFT JOIN cliente ON comprobantes.Cli_Cod=cliente.Cli_Cod
-                    LEFT JOIN persona AS prs_cli ON prs_cli.Prs_Cod=cliente.Prs_Cod 
-                    WHERE Com_Est<>'E' 
-                    AND plan_cuenta.Emp_Cod=$Par_Sql[Emp_Cod]
-                    AND sucursal.Suc_Cod = $Par_Sql[Suc_Cod]
-                    AND Com_Fec BETWEEN '$Par_Sql[Fec_Ini] 00:00:00' AND '$Par_Sql[Fec_Fin] 23:59:59'
-                    AND tipo_asien.Tia_Abr='CV'
-                    AND ventas.Vet_Cod IS NOT NULL
-                    GROUP BY comprobantes.Com_Cod
-                    ORDER BY Com_Fec";
-            break;
+                $sql = $this->select(false)
+                    ->from('comprobantes', array('*'))
+                    ->join('asientos', "comprobantes.Com_Cod = asientos.Com_Cod", array())
+                    ->join('tipo_asien', "tipo_asien.Tia_Cod=comprobantes.Tia_Cod", array('Tia_Ini','Tia_Des'))
+                    ->join('perio_cont', "perio_cont.Pec_Cod=comprobantes.Pec_Cod", array())
+                    ->join('plan_cuenta', "perio_cont.Pla_Cod=plan_cuenta.Pla_Cod", array())
+                    ->join('ventas_costo', "comprobantes.Com_Cod=ventas_costo.Com_Cod", array())
+                    ->joinLeft('ventas', "ventas.Vet_Cod=ventas_costo.Vet_Cod", array('Vet_Cod'))
+                    ->joinLeft('caja_aper', "ventas.Caj_Cod = caja_aper.Caj_Cod", array())
+                    ->joinLeft('puntos_imp', "caja_aper.Pun_Cod=puntos_imp.Pun_Cod", array())
+                    ->joinLeft('autorizaci', "autorizaci.Aut_Cod=ventas.Aut_Cod", array())
+                    ->joinLeft('sucursal', "sucursal.Suc_Cod=puntos_imp.Suc_Cod", array())
+                    ->joinLeft('compr_auto', "comprobantes.Com_Cod=compr_auto.Com_Cod", array())
+                    ->joinLeft('compras', "compras.Cop_Cod=compr_auto.Cop_Cod", array('Cop_Cod'))
+                    ->joinLeft('proveedore', "comprobantes.Prv_Cod=proveedore.Prv_Cod", array())
+                    ->joinLeft(array('prs_prv'=>'persona'), "prs_prv.Prs_Cod=proveedore.Prs_Cod", array())
+                    ->joinLeft('cliente', "comprobantes.Cli_Cod=cliente.Cli_Cod", array())
+                    ->joinLeft(array('prs_cli'=>'persona'), "prs_cli.Prs_Cod=cliente.Prs_Cod", array())
+                    ->where("Com_Est<>'E'")
+                    ->where("plan_cuenta.Emp_Cod=$Par_Sql[Emp_Cod]")
+                    ->where("sucursal.Suc_Cod = $Par_Sql[Suc_Cod]")
+                    ->where("Com_Fec BETWEEN '$Par_Sql[Fec_Ini] 00:00:00' AND '$Par_Sql[Fec_Fin] 23:59:59'")
+                    ->where("tipo_asien.Tia_Abr='CV'")
+                    ->where('ventas.Vet_Cod IS NOT NULL')
+                    ->group('comprobantes.Com_Cod')
+                    ->order('Com_Fec');
+                $sql->addCols(null, array(
+                    $this->expr("SUM(IF(Asi_Deh='D',Asi_Val,0))-SUM(IF(Asi_Deh='H',Asi_Val,0)) AS Diferencia"),
+                    $this->expr("IF(Tia_Ini='D','Diario',IF(Tia_Ini='I','Ingreso','Egreso')) AS Tipo"),
+                    $this->expr("CAST(CONCAT(Tia_Abr,'-',LPAD(MONTH(Com_Fec),2,'0'),'-',Com_Num)AS char) AS Codigo"),
+                    $this->expr("'Ventas' AS Doc"),
+                    $this->expr("Caj_Fec AS Doc_Fec"),
+                    $this->expr("IF(ventas_costo.Com_Cod IS NOT NULL,CONCAT(Suc_Sri,'-',Pun_Sri,'-',CAST(LPAD(Vet_Num,9,'0')AS char)),IF(compr_auto.Cop_Cod IS NOT NULL,Cop_Num,'')) AS Doc_Num"),
+                    $this->expr("IF(comprobantes.Prv_Cod IS NOT NULL,prs_prv.Prs_Ced,prs_cli.Prs_Ced) AS Prs_Ced"),
+                    $this->expr("IF(comprobantes.Prv_Cod IS NOT NULL,CONCAT(prs_prv.Prs_Ape,' ',prs_prv.Prs_Nom),CONCAT(prs_cli.Prs_Ape,' ',prs_cli.Prs_Nom)) AS Persona"),
+                ));
+                break;
             case 5:
                 $sql="DELETE FROM comprobantes WHERE Com_Cod = $Par_Sql[0];";
             break;

@@ -18,12 +18,12 @@ require_once '../../Librerias/postclass.php';
 /**
  * Creacion del Objeto de conexion
  */ 
-$obBD_conexion = new Class_Log_Conexion_Con($Ses_Dat_Sis);
+$obBD_conexion = new Class_Log_Conexion_Mantenimiento($Ses_Dat_Sis);
 	
 /**
  * Cracion del objeto mysql para las consultas
  */ 
-$obBD_con1 =  new Class_Log_Datos_Con;
+$obBD_con1 =  new Class_Log_Datos_Mantenimiento;
 	
 /**
  * Llamado de la libreria para evitar el reenvio de datos

@@ -126,7 +126,7 @@ $cur_periodo=current($periodos);
     <HEAD>
         <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
-        <script language="javascript" src="../VALIDACIONES/ban_val_productor.js"></script>
+        <script type="text/javascript" src="../VALIDACIONES/ban_val_productor.js"></script>
     </HEAD>
     <BODY>
         <div class="panel panel-main">

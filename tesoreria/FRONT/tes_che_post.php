@@ -1,4 +1,4 @@
-﻿<?php	
+<?php	
 /**
 * @abstract Permite realizar movimientos de inventario
 * @author Erik Niebla

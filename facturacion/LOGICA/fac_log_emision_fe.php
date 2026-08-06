@@ -1,4 +1,4 @@
-﻿<?Php 
+<?Php 
 /**
  * Logica de las paginas que tienen que ver con configuracion de facturacion
  *
@@ -76,7 +76,7 @@ class Class_Log_Datos_Cfg extends MysqlDatos{
 		
 		$this->free_result($result);
 		
-		return $row;
+		return is_array($row) ? $row : array();
 	}
 
 	/**

@@ -810,8 +810,8 @@ if (isset($detelteExtAjax)) {
     <link rel="stylesheet" href="../../framework/jquery/bootstrap/popover/jquery.flyout.css">
     <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
     <script src="../../framework/jquery/bootstrap/popover/jquery.flyout.js"></script>
-    <script language="javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
-    <script language="javascript" src="../VALIDACIONES/fac_val_factura.js?x=29"></script>
+    <script type="text/javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
+    <script type="text/javascript" src="../VALIDACIONES/fac_val_factura.js?x=29"></script>
 
 
     <script>

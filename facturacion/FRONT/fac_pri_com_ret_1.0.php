@@ -1,7 +1,7 @@
 <?php
 /**
-* Descripción: Permite consultar las retenciones
-* Fecha de actualización:	2013-05-17
+* Descripciï¿½n: Permite consultar las retenciones
+* Fecha de actualizaciï¿½n:	2013-05-17
 * Desarrollador: Jose Cumbicos
 */
 require_once('../../administrador/LOGICA/seguridad.php');	  
@@ -39,7 +39,7 @@ $obBD_con1 =  new Class_Log_Datos_Ret;
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <link href="../../Estilos/Estilo1.css" rel="stylesheet" type="text/css">
 <link href="../../css_teso.css" rel="stylesheet" type="text/css">
- <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+ <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
 <style type="text/css">
 <!--
 .style2 {color: #000099}

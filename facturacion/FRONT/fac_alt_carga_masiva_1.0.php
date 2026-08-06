@@ -1,8 +1,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php
 /**
-* Descripción: Consulta de facturas electronicas
-* Fecha de actualización:	16-11-2014 
+* Descripciï¿½n: Consulta de facturas electronicas
+* Fecha de actualizaciï¿½n:	16-11-2014 
 * Desarrollador:	Jose Cumbicos
 */	  
 
@@ -100,7 +100,7 @@ if ($thisPost->postBlock($_POST['postID']))
 		<TITLE><?Php echo $Ses_Sys_Nom;?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>				
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>              
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>              
 		<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">       
 	</HEAD>
 <BODY>

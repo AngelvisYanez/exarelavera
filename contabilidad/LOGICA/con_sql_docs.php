@@ -497,44 +497,38 @@ function sentencias_doc($id, $Par_Sql)
 
 
         case 38:
-            $sql = "SELECT  retencion.Aut_Cod, renta_iva.Ren_Sri,  Pld_Des, 
-                SUM(det_retenc.Ret_Bas) AS Ret_Bas, 
-                ROUND(( (renta_iva.Ren_Por/100) * SUM(det_retenc.Ret_Bas) ), 4) AS Debe,  NULL AS Haber,  'D' AS Det_Tip,
-                 renta_iva.Ren_Cod,  renta_iva.Ren_Ret  , det_plan.Pld_Cdc  , det_plan.Pld_Cod  
-                FROM retencion
-                    INNER JOIN compras ON compras.Cop_Cod = retencion.Cop_Cod
-                    INNER JOIN proveedore ON proveedore.Prv_Cod = compras.Prv_Cod
-                    INNER JOIN det_retenc ON retencion.Ret_Cod = det_retenc.Ret_Cod
-                    INNER JOIN renta_iva  ON det_retenc.Ren_Cod = renta_iva.Ren_Cod
-                    INNER JOIN reniva_pla ON reniva_pla.Ren_Cod = renta_iva.Ren_Cod
-                    INNER JOIN det_plan ON det_plan.Pld_Cod = reniva_pla.Pld_Cod                      
-                    INNER JOIN plan_cuenta ON plan_cuenta.Pla_Cod = det_plan.Pla_Cod
-                WHERE 
-                retencion.Ret_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
-                AND proveedore.Emp_Cod = '$Par_Sql[0]' AND renta_iva.Ren_Est = 'A' AND retencion.Ret_Est='A'
-                AND plan_cuenta.Emp_Cod = '$Par_Sql[0]' AND reniva_pla.Ren_Tip='C'
-                GROUP BY  renta_iva.Ren_Sri, renta_iva.Ren_Cod, renta_iva.Ren_Ret
-            UNION ALL
-
-            SELECT  
-                renta_iva.Ren_Ret, NULL,NULL, SUM(det_retenc.Ret_Bas) AS Ret_Bas,  NULL AS Haber, 
-                ROUND(SUM( (renta_iva.Ren_Por/100) * det_retenc.Ret_Bas), 4) AS Debe, 'H' AS Det_Tip , NULL , NULL, NULL, NULL
-            FROM retencion
-                INNER JOIN compras ON compras.Cop_Cod = retencion.Cop_Cod
-                INNER JOIN proveedore ON proveedore.Prv_Cod = compras.Prv_Cod
-                INNER JOIN det_retenc ON retencion.Ret_Cod = det_retenc.Ret_Cod
-                INNER JOIN renta_iva  ON det_retenc.Ren_Cod = renta_iva.Ren_Cod
-                INNER JOIN reniva_pla ON reniva_pla.Ren_Cod = renta_iva.Ren_Cod
-                INNER JOIN det_plan ON det_plan.Pld_Cod = reniva_pla.Pld_Cod                      
-                INNER JOIN plan_cuenta ON plan_cuenta.Pla_Cod = det_plan.Pla_Cod
-            WHERE 
-                retencion.Ret_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]'
-                AND proveedore.Emp_Cod = '$Par_Sql[0]'  
-                AND renta_iva.Ren_Est = 'A' 
-                AND retencion.Ret_Est = 'A'
-                AND plan_cuenta.Emp_Cod = '$Par_Sql[0]' 
-                AND reniva_pla.Ren_Tip='C'
-            GROUP BY renta_iva.Ren_Ret;";
+            $sql = "SELECT " .
+                "CASE WHEN Ren_Sri IS NULL THEN Ren_Ret ELSE Aut_Cod END AS Aut_Cod, " .
+                "Ren_Sri, Pld_Des, Ret_Bas, " .
+                "CASE WHEN Ren_Sri IS NULL THEN NULL ELSE Debe END AS Debe, " .
+                "CASE WHEN Ren_Sri IS NULL THEN Haber ELSE NULL END AS Haber, " .
+                "CASE WHEN Ren_Sri IS NULL THEN 'H' ELSE 'D' END AS Det_Tip, " .
+                "CASE WHEN Ren_Sri IS NULL THEN NULL ELSE Ren_Cod END AS Ren_Cod, " .
+                "Ren_Ret, " .
+                "CASE WHEN Ren_Sri IS NULL THEN NULL ELSE Pld_Cdc END AS Pld_Cdc, " .
+                "CASE WHEN Ren_Sri IS NULL THEN NULL ELSE Pld_Cod END AS Pld_Cod " .
+                "FROM ( " .
+                    "SELECT retencion.Aut_Cod, renta_iva.Ren_Sri, det_plan.Pld_Des, " .
+                        "SUM(det_retenc.Ret_Bas) AS Ret_Bas, " .
+                        "ROUND((renta_iva.Ren_Por / 100) * SUM(det_retenc.Ret_Bas), 4) AS Debe, " .
+                        "ROUND(SUM((renta_iva.Ren_Por / 100) * det_retenc.Ret_Bas), 4) AS Haber, " .
+                        "renta_iva.Ren_Cod, renta_iva.Ren_Ret, det_plan.Pld_Cdc, det_plan.Pld_Cod " .
+                    "FROM retencion " .
+                        "INNER JOIN compras ON compras.Cop_Cod = retencion.Cop_Cod " .
+                        "INNER JOIN proveedore ON proveedore.Prv_Cod = compras.Prv_Cod " .
+                        "INNER JOIN det_retenc ON retencion.Ret_Cod = det_retenc.Ret_Cod " .
+                        "INNER JOIN renta_iva ON det_retenc.Ren_Cod = renta_iva.Ren_Cod " .
+                        "INNER JOIN reniva_pla ON reniva_pla.Ren_Cod = renta_iva.Ren_Cod " .
+                        "INNER JOIN det_plan ON det_plan.Pld_Cod = reniva_pla.Pld_Cod " .
+                        "INNER JOIN plan_cuenta ON plan_cuenta.Pla_Cod = det_plan.Pla_Cod " .
+                    "WHERE retencion.Ret_Fec BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]' " .
+                        "AND proveedore.Emp_Cod = '$Par_Sql[0]' AND renta_iva.Ren_Est = 'A' AND retencion.Ret_Est = 'A' " .
+                        "AND plan_cuenta.Emp_Cod = '$Par_Sql[0]' AND reniva_pla.Ren_Tip = 'C' " .
+                    "GROUP BY renta_iva.Ren_Sri, renta_iva.Ren_Cod, renta_iva.Ren_Ret WITH ROLLUP " .
+                ") t " .
+                "WHERE (Ren_Sri IS NOT NULL AND Ren_Cod IS NOT NULL) " .
+                "OR (Ren_Sri IS NULL AND Ren_Cod IS NULL AND Ren_Ret IS NOT NULL) " .
+                "ORDER BY Det_Tip ASC, Ren_Ret ASC, Ren_Sri ASC, Ren_Cod ASC";
             break;
         case 39:
             $sql = " SELECT det_plan.* from det_plan

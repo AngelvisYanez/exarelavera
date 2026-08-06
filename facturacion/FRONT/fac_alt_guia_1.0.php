@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php	  
 /*Alias:Ingreso de Guia.
-Fecha de actualización:	30-10-2013 
+Fecha de actualizaciï¿½n:	30-10-2013 
 Desarrollador:	Jose Cumbicos Ortiz*/
 	
 require_once('../../administrador/LOGICA/seguridad.php');	  
@@ -16,7 +16,7 @@ $obBD_con1 =  new Class_Log_Datos_Gui;
 /* Llamado de la libreria para evitar el reenvio de datos */
 $thisPost = new Post_Block;
 /* Llamado a componente ajax */
-require_once("../COMPONENTES/ajax_con_ctaguia.php");
+if (file_exists("../COMPONENTES/ajax_con_ctaguia.php")) require_once("../COMPONENTES/ajax_con_ctaguia.php");
 $hoy = date("Y-m-d");
 
 
@@ -84,7 +84,7 @@ if($ajax_cargar==1)
               <td>&nbsp;</td>
               <td>&nbsp;</td>
               <td>&nbsp;</td>
-              <td><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
+              <td><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1) ?></td>
               <td>&nbsp;</td>
             </tr>
      	  <?php }?>
@@ -163,7 +163,7 @@ if($ajax_detalle==1)
               <td>&nbsp;</td>
               <td>&nbsp;</td>
               <td>&nbsp;</td>
-              <td><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
+              <td><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1) ?></td>
               <td>&nbsp;</td>
             </tr>
      	  <?php }?>
@@ -294,8 +294,8 @@ if (isset($txt_busqueda))
 <head>
 <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>		  	
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>        
-		<script language="javascript" src="../VALIDACIONES/fac_val_guias.js"></script>        
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>        
+		<script type="text/javascript" src="../VALIDACIONES/fac_val_guias.js"></script>        
 		<link rel="stylesheet" type="text/css" href="../../Librerias/jquery/modal/css/modal.css">
         <script type="text/javascript" src="../../Librerias/jquery/modal/js/jquery.js"></script>
         <script type="text/javascript" src="../../Librerias/jquery/modal/js/modal.js"></script>
@@ -317,7 +317,7 @@ if (isset($txt_busqueda))
 ///if ($thisPost->postBlock($_POST['postID'])) 
 if (isset($Rcb_Cod))
 { 
-?><script language="javascript">windows('fac_pri_guiaremision_1.0.php?Gia_Cod=<?Php echo $Rcb_Cod;?>','', 800,600,'yes', 'yes', 'yes', 'no');</script><?php
+?><script type="text/javascript">windows('fac_pri_guiaremision_1.0.php?Gia_Cod=<?Php echo $Rcb_Cod;?>','', 800,600,'yes', 'yes', 'yes', 'no');</script><?php
 }//Fin del if (isset($hdd_save) && !isset($hdd_volver))
 ?>
 
@@ -375,7 +375,7 @@ if (isset($Rcb_Cod))
             <tr>
               <td>&nbsp;</td>
               <td>&nbsp;</td>
-              <td><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
+              <td><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1) ?></td>
               <td>&nbsp;</td>
             </tr>
      	  <?php }?>
@@ -412,7 +412,7 @@ if (isset($codigo) && !isset($hdd_volver))
 </LEGEND>
 <table width="95%" border="0" cellpadding="0" cellspacing="0">
 <tr>
-	<td width="12%" class="Etiqueta1">Cédula/R.U.C.:</td>
+	<td width="12%" class="Etiqueta1">Cï¿½dula/R.U.C.:</td>
 	<td width="88%" class="LetraNegra">&nbsp;<?php echo $row_rs_personal['Prs_Ced']?>
 	  <input name="Con_Cod" id="Con_Cod" type="hidden" value="<?Php echo $Con_Cod;?>">      
       <input name="Usu_Cod" id="Usu_Cod" type="hidden" value="<?Php echo $Ses_Usu_Cod;?>" /></td>

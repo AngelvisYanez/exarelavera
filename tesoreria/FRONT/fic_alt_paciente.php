@@ -228,7 +228,7 @@ if(isset($ajaxCertificado)){
         <link rel="stylesheet" href="../../framework/jquery/bootstrap/popover/jquery.flyout.css">
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
         <script src="../../framework/jquery/bootstrap/popover/jquery.flyout.js"></script>
-        <script language="javascript" src="../VALIDACIONES/fic_val_paciente.js?x=0"></script>
+        <script type="text/javascript" src="../VALIDACIONES/fic_val_paciente.js?x=0"></script>
 
         <script>
         $('.panel-main').hide();

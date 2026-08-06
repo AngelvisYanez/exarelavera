@@ -1,10 +1,10 @@
 <?php 
 /** 
  @Alias:		 Imprimir :) drzm_12@
- @Descripción:   Permite la mimprimir los controles de auditoria por Custodio
+ @Descripciï¿½n:   Permite la mimprimir los controles de auditoria por Custodio
  @Desarrollador: Didimo Zamora.
 ***********************************
- @Fecha de actualización:	2013-07-25
+ @Fecha de actualizaciï¿½n:	2013-07-25
 */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/act_log_activo_aud.php');	  
@@ -22,12 +22,12 @@ $obBD_conexion = new Class_Log_Conexion_Cch($Ses_Dat_Dis);
  */
 $obBD_con1 =  new Class_Log_Datos_ActAu;
 /** 
- * Creación del objeto para evitar el reenvio 
+ * Creaciï¿½n del objeto para evitar el reenvio 
  */
 $thisPost = new Post_Block;  
  
 /**
- * Consulta de la institución del usuario. 
+ * Consulta de la instituciï¿½n del usuario. 
  */
 $rs_institucion = $obBD_con1->getRowConsulta(12, $Ses_Suc_Cod,$obBD_conexion);
 $row_rs_institucion = $rs_institucion;
@@ -50,8 +50,8 @@ $hoy = date("Y-m-d");
 <head>
 <title><?Php echo $Ses_Sys_Nom; ?></title>
 	<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-	<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-	<script language="javascript" src="../VALIDACIONES/Validaciones.js"></script>
+	<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+	<script type="text/javascript" src="../VALIDACIONES/Validaciones.js"></script>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 </head>
 <body>
@@ -75,7 +75,7 @@ $hoy = date("Y-m-d");
 </table>
 <table width="80%" border="0" align="center" cellpadding="0" cellspacing="0">
   <tr>
-		<td width="12%" align="right" ><span class="LetraNegra">Institución :</span></td>
+		<td width="12%" align="right" ><span class="LetraNegra">Instituciï¿½n :</span></td>
 <td width="32%"><span class="LetraNegra">&nbsp;<?Php echo $row_rs_institucion['Emp_Nom'].' - '.$row_rs_institucion['Suc_Des']; ?></span></td>
 		<td width="7%">&nbsp;</td>
 		<td width="49%">&nbsp;</td>
@@ -89,7 +89,7 @@ $hoy = date("Y-m-d");
   <tr>
 		<td align="right"><span class="LetraNegra">Custodio :</span></td>
 		<td><span class="LetraNegra">&nbsp;<?php echo $rs_ControlAud['Custodio']; ?></span></td>
-		<td align="right"><span class="LetraNegra">Cédula :</span></td>
+		<td align="right"><span class="LetraNegra">Cï¿½dula :</span></td>
 		<td><span class="LetraNegra">&nbsp;<?php echo $rs_ControlAud['Prs_Ced'] ?></span></td>
   </tr>
 </table>
@@ -128,7 +128,7 @@ foreach($rs_consultar as $row_rs_consultar){
 		<td align="center" class="LetraNegra">
 <?Php
 		/**
-		 * Consulta el estado  lógico del activo.
+		 * Consulta el estado  lï¿½gico del activo.
 		 */
           $rs_Estado1 = $obBD_con1->getRowConsulta(14,$row_rs_consultar['Est_Act'], $obBD_conexion);
 		  echo $rs_Estado1['Est_Des'];

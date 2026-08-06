@@ -101,8 +101,8 @@ if (isset($savePersonal)) {
         <script type="text/javascript" src="/framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
         <script type="text/javascript" src="/framework/jquery/chosen/chosenDesc/chosenDesc.js"></script>
         <script src="/framework/jquery/bootstrap/bootstrap-fileinput/js/fileinput.js" type="text/javascript"></script>
-        <script language="javascript" src="/Librerias/validaciones/validacion.js"></script>
-        <script language="javascript" src="/framework/plugins/cedulaRuc.js"></script>
+        <script type="text/javascript" src="/Librerias/validaciones/validacion.js"></script>
+        <script type="text/javascript" src="/framework/plugins/cedulaRuc.js"></script>
         <style>
             .kv-avatar .file-preview-frame,.kv-avatar .file-preview-frame:hover {
                 margin: 0;

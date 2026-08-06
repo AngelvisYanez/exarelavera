@@ -1,10 +1,10 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php 
 /**
-* Descripción: Permite modificar productos
-* Fecha de actualización:	2014-05-28 
+* Descripciï¿½n: Permite modificar productos
+* Fecha de actualizaciï¿½n:	2014-05-28 
 * Desarrollador:	Jose Cumbicos
-* Fecha de actualización:	2015-01-30
+* Fecha de actualizaciï¿½n:	2015-01-30
 * Desarrollador:	Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');	 
@@ -89,7 +89,7 @@ if(isset($hdd_save) && !isset($hdd_volver))
 	  */
 	  $obBD_con1->operacionobBD(1038,$Adq_Cod.'*'.$Ite_Cod.'*'.$Mar_Cod.'*'.$Iva_Cod.'*'. $Pro_Obs.'*'.$Pro_Bar.'*'.$Ubi_Cod.'*'.$Uni_Cod.'*'.$Pro_Cod.'*'.$Pro_Cdc.'*'.$Pro_Sec.'*'.$Pro_Uni,$obBD_conexion);	
 	  /**
-	  * Actualiza la categoria, descripción corta y larga
+	  * Actualiza la categoria, descripciï¿½n corta y larga
 	  */
 	  //$obBD_con1->operacionobBD(1012,$Ite_Cod.'*'.$Cat_Cod.'*'.$Ite_Cor.'*'.$Ite_Lar,$obBD_conexion);				
 	  /**
@@ -102,7 +102,7 @@ if(isset($hdd_save) && !isset($hdd_volver))
           if(!empty($Pre_Cod))
             $obBD_con1->operacionobBD(1210,$Ses_Suc_Cod.'*'.$Pre_Cod.'*'.$Pro_Cod.'*'.$Pre_Pvp,$obBD_conexion);
 	  /**
-	  * Fin de la transacción
+	  * Fin de la transacciï¿½n
 	  */
 	  $obBD_con1->fin_transaccion($obBD_conexion->conexion);			  
 	}	
@@ -125,7 +125,7 @@ if (isset($txt_busqueda))
 elseif (isset($codigo))
 {	
 	/**
-	* Consulta la información del producto
+	* Consulta la informaciï¿½n del producto
 	*/
 	$row_rs_consulta = $obBD_con1->getRowConsulta(1010,$codigo,$obBD_conexion);	
 	$total_rs_consulta = $row_rs_consulta['Ite_Cod'] > 0? 1 : 0;
@@ -172,8 +172,8 @@ elseif (isset($codigo))
 <HEAD>		
  <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 	<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-    <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-    <script language="javascript" src="../VALIDACIONES/fac_val_producto.js"></script>        
+    <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    <script type="text/javascript" src="../VALIDACIONES/fac_val_producto.js"></script>        
     <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
     <script type="text/javascript"> 
         $(function() {
@@ -220,10 +220,10 @@ elseif (isset($codigo))
             <table width="100%" border="0" cellpadding="0" cellspacing="0" class="fixedHeader01">
               <thead>
                 <tr>
-                 <th width="9%">Cód. Int.</th>
+                 <th width="9%">Cï¿½d. Int.</th>
                  <th width="19%">Categoria</th>
                  <th width="38%">Descripci&oacute;n Larga</th>
-                 <th width="19%">Descripción Corta </th>
+                 <th width="19%">Descripciï¿½n Corta </th>
                  <th width="11%">Marca</th>
                  <th width="4%">&nbsp;</th>                 
                 </tr>
@@ -261,7 +261,7 @@ elseif (isset($codigo))
                   <tr>
                       <td align="center">&nbsp;</td>
             <td align="center">&nbsp;</td>
-                        <td align="center"><?php echo error_alerta("¡No hay resultados que mostrar!", 1); ?></td>
+                        <td align="center"><?php echo error_alerta("ï¿½No hay resultados que mostrar!", 1); ?></td>
                         <td align="center">&nbsp;</td>
                         <td align="center">&nbsp;</td>
                         <td align="center">&nbsp;</td>		
@@ -414,7 +414,7 @@ if (isset($codigo))
         <tr>
           <td width="22%"><input <?Php if($row_rs_consulta['Pro_Gen']=="G"){echo "disabled='disabled'"; } ?> name="Pro_Bar" type="text" id="Pro_Bar" size="15" maxlength="15" value="<?php echo $row_rs_consulta['Pro_Bar']; ?>" /></td>
           <td width="4%"><input name="Pro_Gen" type="checkbox" id="Pro_Gen" onClick="check_generar()"  value="<?Php  if($row_rs_consulta['Pro_Gen']=="G"){ echo $Pro_Gen=1;}else{ echo $Pro_Gen=0;} ?>"  <?Php if($row_rs_consulta['Pro_Gen']=="G"){echo "checked"; } ?>>          </td>
-          <td width="74%"><div class="LetraNegra" id='contenedorcheck'><?Php  if($row_rs_consulta['Pro_Gen']=="G"){ echo "Genera el código del producto";}else{ echo "Ingrese el código de barra del producto";} ?></div></td>
+          <td width="74%"><div class="LetraNegra" id='contenedorcheck'><?Php  if($row_rs_consulta['Pro_Gen']=="G"){ echo "Genera el cï¿½digo del producto";}else{ echo "Ingrese el cï¿½digo de barra del producto";} ?></div></td>
         </tr>
       </table></td>
   </tr>
@@ -438,7 +438,7 @@ document.getElementById('Pro_Uni').value = ''; }">
         <?php 		echo $row_rs_unidad['Uni_Des'];	  ?>
         </option>
         <?php }?>
-    </select>&nbsp;&nbsp;&nbsp;&nbsp;Medida:<input name="Pro_Uni" type="text" id="Pro_Uni" onBlur="if (document.getElementById('Uni_Cod').value!=1 && this.value==1){ alert ('¡Ingresar valores iguales a uno, ó seleccione el elemento UNIDAD! ');this.focus(); } "  onKeyPress="return validar_decimal(event)"  size="8" maxlength="8" readonly="readonly"  border="0" value="<?Php echo $row_rs_consulta['Pro_Uni']; ?>" /></td>
+    </select>&nbsp;&nbsp;&nbsp;&nbsp;Medida:<input name="Pro_Uni" type="text" id="Pro_Uni" onBlur="if (document.getElementById('Uni_Cod').value!=1 && this.value==1){ alert ('ï¿½Ingresar valores iguales a uno, ï¿½ seleccione el elemento UNIDAD! ');this.focus(); } "  onKeyPress="return validar_decimal(event)"  size="8" maxlength="8" readonly="readonly"  border="0" value="<?Php echo $row_rs_consulta['Pro_Uni']; ?>" /></td>
   </tr>
     <tr>
       <td class="Etiqueta1">Precio por unidad:</td>
@@ -462,7 +462,7 @@ document.getElementById('Pro_Uni').value = ''; }">
   <table width="258" border="0" cellpadding="0" cellspacing="0">
     <tr>
       <td width="110" align="left">
-  <button type="button" class="btn btn-inverse fileinput-button" title="Atrás" onclick="campos_hide(this.form, '<?Php echo "txt_busqueda*hdd_volver"; ?>', '<?Php echo $volver_busqueda.'*1'; ?>')"> <i class=" icon-arrow-left icon-white"></i> <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span></button>
+  <button type="button" class="btn btn-inverse fileinput-button" title="Atrï¿½s" onclick="campos_hide(this.form, '<?Php echo "txt_busqueda*hdd_volver"; ?>', '<?Php echo $volver_busqueda.'*1'; ?>')"> <i class=" icon-arrow-left icon-white"></i> <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span></button>
   </td>
       <td width="148" align="left"> 
       <button type="button" class="btn btn-primary start" title="Guardar" onclick="validar_requeridos(this.form, 'Cat_Cod*Mar_Cod*Ite_Cor*Ite_Cod*Adq_Cod*Iva_Cod*Uni_Cod*Ubi_Cod', 1)"> <i class="icon-book icon-white"></i> <span>Guardar</span></button>

@@ -1,9 +1,9 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <?php	
 /**
-* Descripción: Reporte de codigo de barras de Activos
-* Fecha de actualización:	2011-08-02
-* Fecha de actualización:	2013-05-028
+* Descripciï¿½n: Reporte de codigo de barras de Activos
+* Fecha de actualizaciï¿½n:	2011-08-02
+* Fecha de actualizaciï¿½n:	2013-05-028
 * Desarrollador:	Zamora Didimo
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -174,8 +174,8 @@ if (isset($cadena))
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
-        <script language="javascript" src="../VALIDACIONES/act_val_campos_det.js"></script> 
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script> 
+        <script type="text/javascript" src="../VALIDACIONES/act_val_campos_det.js"></script> 
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script> 
         <script type="text/javascript">
           $(function() {
                 $('#set1 *').tooltip({showURL: false});
@@ -227,12 +227,12 @@ if (isset($cadena))
                 	<input name="op_opciones" type="radio" value="d" <?Php if($op_opciones=="d" || !isset($op_opciones)){ ?> checked <?Php }?>  onClick="document.getElementById('op_cam').value=this.value;setfocus(this.form.txt_busqueda2);document.getElementById('Tia_Cod').disabled=true;document.getElementById('txt_busqueda2').disabled=false">
                     <span class="LetraNegra"></span>
                     	<input class="oculta" name="op_cam" id="op_cam" type="hidden" value="d">
-                <span class="LetraNegra">Descripción</span></td>
+                <span class="LetraNegra">Descripciï¿½n</span></td>
                 
                 <td width="153" class="LetraNegra">
                 	<input  type="radio" name="op_opciones" value="cs" <?Php if($op_opciones=="cs"){ ?> checked <?Php }?> onClick="document.getElementById('op_cam').value=this.value;setfocus(this.form.txt_busqueda2);document.getElementById('Tia_Cod').disabled=true;document.getElementById('txt_busqueda2').disabled=false">
                     <span class="LetraNegra"></span>
-                <span class="LetraNegra">Código secuencial</span>
+                <span class="LetraNegra">Cï¿½digo secuencial</span>
                 </td>
                 
                 <td width="98" class="LetraNegra"><input  type="radio" name="op_opciones" value="ta" <?Php if($op_opciones=="ta"){?> checked <?Php }?> onClick="document.getElementById('op_cam').value=this.value;setfocus(this.form.Tia_Cod);document.getElementById('Tia_Cod').disabled=false;document.getElementById('txt_busqueda2').disabled=true">
@@ -395,7 +395,7 @@ if(isset($txt_busqueda2) || isset($Tia_Cod))
                     <td width="205"><input name="op_opciones" type="radio" value="1" onClick="setfocus(this.form.txt_busqueda)" checked >
                         <span class="LetraNegra">Apellidos</span></td>
                     <td width="199"><input type="radio" name="op_opciones" value="2" onClick="setfocus(this.form.txt_busqueda)">
-                        <span class="LetraNegra">Cédula</span></td>
+                        <span class="LetraNegra">Cï¿½dula</span></td>
                     </tr>
                 </table>
             </td>
@@ -429,7 +429,7 @@ if (isset($txt_busqueda))
 	<table class="fixedHeader01" width="100%"  cellpadding="0" cellspacing="0">
      <thead>
 	  <tr>
-		  <th width="11%">Cód. Int.</th>
+		  <th width="11%">Cï¿½d. Int.</th>
           <th width="18%">C&eacute;dula</th>
 		  <th width="67%">Custodio</th>
 		  <th width="4%">&nbsp;</th>
@@ -475,7 +475,7 @@ if (isset($txt_busqueda))
   	  ?>
       	<tr><td>&nbsp;</td>
       	  <td>&nbsp;</td>
-      	  <td><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
+      	  <td><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1) ?></td>
       	  <td>&nbsp;</td>
       	</tr>
       <?php } // fin del if ($total_rs_buscar > 0)?>

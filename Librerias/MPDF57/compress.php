@@ -27,7 +27,7 @@ if (!file_exists('mpdf_source.php')) {
 
 echo '<html>
 <head>
-<script language=javascript>
+<script type="text/javascript">
 checked=false;
 function checkedAll (frm1) {
 	var aa= document.getElementById("frm1");
@@ -94,6 +94,10 @@ if (!defined('PHP_VERSION_ID')) {
 if (PHP_VERSION_ID < 50300 && function_exists('get_magic_quotes_runtime')) { $mqr = @get_magic_quotes_runtime(); }
 	else { $mqr=0; }
 if ($mqr && function_exists('set_magic_quotes_runtime')) { @set_magic_quotes_runtime(0); }
+```
+
+Wait, that's already guarded. Let me check the slider copy:
+
 
 $l = file('mpdf_source.php');
 if (!count($l)) { die("ERROR - Could not find mpdf_source.php file in current directory"); }

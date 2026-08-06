@@ -1,10 +1,10 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php 
 /** 
- * Descripción: Permite el ingreso de los campos de los tipos de activos
+ * Descripciï¿½n: Permite el ingreso de los campos de los tipos de activos
  * Desarrollador:	Fabian Gallardo
   					Didimo Zamora
- * Fecha de actualización:	2011-03-24, 16-04-2013
+ * Fecha de actualizaciï¿½n:	2011-03-24, 16-04-2013
  */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/act_log_campos_det.php');	
@@ -20,7 +20,7 @@ $obBD_conexion = new Class_Log_Conexion_Con($Ses_Dat_Dis);
  */
 $obBD_con1 =  new Class_Log_Datos_Con;
 /** 
- * Creación del objeto para evitar el reenvio 
+ * Creaciï¿½n del objeto para evitar el reenvio 
  */
 $thisPost = new Post_Block;  
 /**
@@ -69,7 +69,7 @@ if ($thisPost->postBlock($_POST['postID']))
 			 */
 	  	$obBD_con1->inicio_transaccion($obBD_conexion->conexion);
 			/**
-			 * Ingreso del campo si no se encuentra otra con la misma descripción
+			 * Ingreso del campo si no se encuentra otra con la misma descripciï¿½n
 			 */
 	  	$obBD_con1->operacionobBD(408, trim($Cam_Lar).'*'.trim($Cam_Cor).'*'.$Cam_Tip.'*'.trim($Cam_Obs), $obBD_conexion);
 			/**
@@ -87,7 +87,7 @@ if ($thisPost->postBlock($_POST['postID']))
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
         <script type="text/javascript"> 
           $(function() {
@@ -119,7 +119,7 @@ $thisPost->startPost();?>
 <?Php echo mensaje_requerido(); ?>
  <table width="100%" cellpadding="0" cellspacing="0" border="0">
     	<tr>
-         <td width="16%" class="Etiqueta1"><span class="Asterisco">*</span> Descripción Larga:</td>
+         <td width="16%" class="Etiqueta1"><span class="Asterisco">*</span> Descripciï¿½n Larga:</td>
           <td colspan="2"><div id="div_existe">
             <table width="70%" border="0" cellpadding="0" cellspacing="0">
               <tr>
@@ -130,7 +130,7 @@ $thisPost->startPost();?>
           </div></td>
           </tr>
 		<tr>
-		  <td class="Etiqueta1"><span class="Asterisco">*</span> Descripción Corta:</td>
+		  <td class="Etiqueta1"><span class="Asterisco">*</span> Descripciï¿½n Corta:</td>
 		  <td><input name="Cam_Cor" type="text" id="Cam_Cor" size="10" maxlength="10" style="text-transform:uppercase"></td>
 		  <td width="70%" colspan="-1">&nbsp;</td>
 		</tr>
@@ -140,8 +140,8 @@ $thisPost->startPost();?>
             <?php 
 				//$row_rs_cod = array ("NE","ND","CA","TX");
 				$row_rs_cod = array ("NE","ND","TX","TC","BL");
-				//$row_rs_des = array ("Número entero", "Número decimal","Caracter","Texto");				
-				$row_rs_des = array ("Número entero", "Número decimal", "Texto Simple", "Texto Multilinea","SI / NO");
+				//$row_rs_des = array ("Nï¿½mero entero", "Nï¿½mero decimal","Caracter","Texto");				
+				$row_rs_des = array ("Nï¿½mero entero", "Nï¿½mero decimal", "Texto Simple", "Texto Multilinea","SI / NO");
 				for ($i=0;$i<count($row_rs_cod);$i++) 
 			 	{  
 	  			?>

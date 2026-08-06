@@ -154,8 +154,8 @@ if (isset($guardarCliente)) {
     <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/javascript" src="../../framework/jquery/chosen/chosenDesc/chosenDesc.js"></script>
-    <script language="javascript" src="../VALIDACIONES/tes_val_cliente_2.0.js?a=786"></script>
-    <script language="javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
+    <script type="text/javascript" src="../VALIDACIONES/tes_val_cliente_2.0.js?a=786"></script>
+    <script type="text/javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
 </HEAD>
 
 <BODY>
@@ -322,7 +322,7 @@ if (isset($guardarCliente)) {
                                     <select id="Ciu_Cod" name="Ciu_Cod" class="form-control input-xs" data-placeholder="Seleccione una ciudad" required="">
                                         <option value=""></option>
                                         <?php foreach ($rs_ciudad as $row) {
-                                            echo "<option value='$row[Ciu_Cod]' data-prov='" . mb_convert_encoding($row[Pro_Nom], 'UTF-8', 'ISO-8859-1'). "' data-pais='" . mb_convert_encoding($row[Pas_Nom], 'UTF-8', 'ISO-8859-1') . "'>" . mb_convert_encoding($row['Ciu_Des'], 'UTF-8', 'ISO-8859-1') . "</option>";
+                                            echo "<option value='$row[Ciu_Cod]' data-prov='" . mb_convert_encoding($row['Pro_Nom'], 'UTF-8', 'ISO-8859-1'). "' data-pais='" . mb_convert_encoding($row['Pas_Nom'], 'UTF-8', 'ISO-8859-1') . "'>" . mb_convert_encoding($row['Ciu_Des'], 'UTF-8', 'ISO-8859-1') . "</option>";
                                         } ?>
                                     </select>
                                 </div>

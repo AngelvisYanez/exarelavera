@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
 * Descripci�n: Permite generar archivo XML del formulario 104
 * Fecha de creaci�n:	2015-05-21

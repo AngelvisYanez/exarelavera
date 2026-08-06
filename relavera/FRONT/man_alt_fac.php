@@ -986,7 +986,7 @@ if (isset($generarFacturasAjax)) {
         var autorizacionInfo = <?php echo json_encode($autorizaci_info); ?>;
     </script>
 
-    <script language="javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
+    <script type="text/javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
     <script type="text/ecmascript" src="../VALIDACIONES/man_fac_mas.js?x=3"></script>
     </script>
 
@@ -1212,9 +1212,9 @@ if (isset($generarFacturasAjax)) {
                                     <div class="col-sm-10">
                                         <div class="input-group input-group-sm dateRangeInputs">
                                             <span class="range input-group-addon alert-info">Desde</span>
-                                            <input type="text" id="Fec_Ini" name="Fec_Ini" class="form-control range" required="" value="<?php echo isset($_GET['Fec_Ini']) ? $_GET['Fec_Ini'] : date('Y-01-01'); ?>" />
+                                            <input type="text" id="Fec_Ini" name="Fec_Ini" class="form-control range" required="" value="<?php echo isset($_GET['Fec_Ini']) ? htmlspecialchars($_GET['Fec_Ini'], ENT_QUOTES, 'UTF-8') : date('Y-01-01'); ?>" />
                                             <span class="range input-group-addon alert-info">Hasta</span>
-                                            <input type="text" id="Fec_Fin" name="Fec_Fin" class="form-control range" required="" value="<?php echo isset($_GET['Fec_Fin']) ? $_GET['Fec_Fin'] : ''; ?>" />
+                                            <input type="text" id="Fec_Fin" name="Fec_Fin" class="form-control range" required="" value="<?php echo isset($_GET['Fec_Fin']) ? htmlspecialchars($_GET['Fec_Fin'], ENT_QUOTES, 'UTF-8') : ''; ?>" />
                                         </div>
                                     </div>
                                 </div>

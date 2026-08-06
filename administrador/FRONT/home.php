@@ -1188,7 +1188,7 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
     </script>
     <script src="../../skins/js/ace/ace.settings.js"></script>
     <script src="../../skins/js/ace/ace.settings-skin.js"></script>
-    <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
     <!-- <script src="../../framework/php/ventanasSocket/socketExaVentanas.js"></script> -->
     <?php //var_dump($rs_sucursales); 
     ?>

@@ -141,7 +141,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta('perio_cont.selectWhere', array('setW
     <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
     <script>var Cof_Con=<?php echo json_encode($cof['Cof_Con']); ?>, hoy=<?php echo json_encode($hoy); ?>;</script> 
     <script>var extraSearch=[{ label: $.createIcon('pencil'), name: 'act01', width: 15, viewable: false, formatter: 'gridButton', formatoptions:{action:'editRetencion', data:'Ret_Cod', title:'Editar Retenci�n', conditional: function(o){ return o.Ret_Est !== 'I' && o.Ret_Aut !== 'S'; }, caseFalse:/*[{col:'Ret_Est',eval:"==='I'",icon:'remove red',title:'Anulado/Inactivo'},{col:'Ret_Aut',eval:"==='S'"}]*/function(o){ if(o.Ret_Est==='I') return '<i class="glyphicon glyphicon-remove red" title="Anulado/Inactivo"></i>'; if(o.Ret_Aut==='S') return '<i class="fa fa-globe green" title="Retenci�n Electronica Validada"></i>'; return ''; } } }];</script>   
-    <script language="javascript" src="../VALIDACIONES/fac_val_rete_finan.js"></script>
+    <script type="text/javascript" src="../VALIDACIONES/fac_val_rete_finan.js"></script>
     <style></style>
 </HEAD>
 <BODY>

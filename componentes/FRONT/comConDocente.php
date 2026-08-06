@@ -39,6 +39,6 @@
 <div id="div_busDocente"></div>
 </FIELDSET>
 </div>
-<script language="javascript">
+<script type="text/javascript">
 //ShowHide('div_marco');
 </script>

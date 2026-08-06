@@ -1,8 +1,9 @@
-<?Php 
-/* Componente para mostrar el mes y el año y poder elegir un rango de fechas */
+<?Php
+if (!function_exists('mes')) return; 
+/* Componente para mostrar el mes y el aï¿½o y poder elegir un rango de fechas */
 ?>
-<script language="javascript">
-/* Asigna el dia inicial y final del mes y año seleccionado */ 
+<script type="text/javascript">
+/* Asigna el dia inicial y final del mes y aï¿½o seleccionado */ 
 function set_dia_mes()
 {
 	if (document.getElementById('Chk_Fec').checked)
@@ -107,6 +108,6 @@ function set_dia_mes()
   </tr>
 	  </table>
 </FIELDSET>
-<script language="javascript">
+<script type="text/javascript">
  ShowHide('capa_rango_fec');
 </script>

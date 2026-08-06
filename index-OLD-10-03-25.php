@@ -222,7 +222,7 @@ if(isset($_SESSION) && !( !isset($_SESSION['Ses_Lis_Per'])||!isset($_SESSION['Se
 <script src="mascaras/model2/js/signin.js"></script>
 
 
-	<script language="javascript" src="Librerias/validaciones/validacion.js"></script>
+	<script type="text/javascript" src="Librerias/validaciones/validacion.js"></script>
 		<script type="text/javascript">
                     $(document).ready(function() { 
                         $('#browser *').tooltip({showURL: false});

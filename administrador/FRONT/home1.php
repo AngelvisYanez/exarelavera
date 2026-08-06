@@ -394,7 +394,7 @@ $rs_sucursales = $obBD_con1->getArrayConsulta(214, $Ses_Emp_Cod.'*'.$Ses_Usu_Ced
              </script>   
              <script src="../../skins/js/ace/ace.settings.js"></script>
              <script src="../../skins/js/ace/ace.settings-skin.js"></script>
-             <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+             <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
             <?php //var_dump($rs_sucursales); ?>
 	</body>
 </html>

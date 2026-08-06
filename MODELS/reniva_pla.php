@@ -1,5 +1,4 @@
 <?php
-use \Exception;
 require_once(dirname(__file__)."/../DATA/libs/AbstractModel.php");
 class reniva_pla extends AbstractModel{
     protected $_name = 'reniva_pla';

@@ -1,7 +1,7 @@
 <?php 
 /**
-Descripción: Página de inicio del sistema informático
-Fecha de creación:	2013-01-19
+Descripciï¿½n: Pï¿½gina de inicio del sistema informï¿½tico
+Fecha de creaciï¿½n:	2013-01-19
 Desarrollador:	Lewis Chimarro 
 */
 require_once('../../Librerias/procedimientos/almacenados_standar.php'); 
@@ -48,7 +48,7 @@ if (isset($ajaxOnline))
 	<script src="../../mascaras/model1/js/libs/modernizr-2.5.3.min.js"></script>
 	<script src="../LOGICA/TreeMenu.js" language="JavaScript" type="text/javascript"></script>
 	<script src="../../Librerias/validaciones/validacion.js" language="javascript" type="text/javascript"></script>
-	<script language="javascript" type="text/javascript">
+	<script type="text/javascript" type="text/javascript">
         /**
 		* Funcion para mantener la sesion activa 
 		*/
@@ -110,7 +110,7 @@ if (isset($ajaxOnline))
         <?php 
 		}//Fin del if ($_SESSION['Ses_Usu_Cad'] == 'N') 
 		?> 			
-			  <li><a href="../LOGICA/logout.php">Cerrar Sesión</a></li>
+			  <li><a href="../LOGICA/logout.php">Cerrar Sesiï¿½n</a></li>
 			</ul>
 			
 		</div> <!-- /#top-nav -->

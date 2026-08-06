@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * @abstract Permite actualizar comprobantes automaticos con cuentas de banco. 
  * @author Erick Cordova

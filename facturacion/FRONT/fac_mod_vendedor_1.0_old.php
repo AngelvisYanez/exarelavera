@@ -60,8 +60,8 @@ if (isset($hdd_save) && !isset($hdd_volver))
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>        
-		<script language="javascript" src="../VALIDACIONES/fac_val_guias.js"></script>        
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>        
+		<script type="text/javascript" src="../VALIDACIONES/fac_val_guias.js"></script>        
 		<link rel="stylesheet" type="text/css" href="../../Librerias/jquery/modal/css/modal.css">
         <script type="text/javascript" src="../../Librerias/jquery/modal/js/jquery.js"></script>
         <script type="text/javascript" src="../../Librerias/jquery/modal/js/modal.js"></script>

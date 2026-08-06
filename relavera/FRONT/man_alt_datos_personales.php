@@ -269,8 +269,8 @@ if (isset($_POST['savePersonal'])) {
         <?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
         <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
         <script type="text/javascript" src="../../framework/jquery/chosen/chosenDesc/chosenDesc.js"></script>
-        <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-        <script language="javascript" src="../../framework/plugins/cedulaRuc.js"></script>
+        <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+        <script type="text/javascript" src="../../framework/plugins/cedulaRuc.js"></script>
         <style>
             .photo-container { border: 1px solid #ddd; border-radius: 8px; padding: 10px; display: inline-block; margin-bottom: 10px; }
             .photo-preview { width: 160px; height: 160px; object-fit: cover; border-radius: 4px; }

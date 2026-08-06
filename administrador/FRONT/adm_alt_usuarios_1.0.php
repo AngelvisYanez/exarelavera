@@ -127,7 +127,7 @@ if (isset($_POST['hdd_save']))
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php")?>        
-		<script language="javascript" src="../VALIDACIONES/adm_val_usuarios.js"></script>	
+		<script type="text/javascript" src="../VALIDACIONES/adm_val_usuarios.js"></script>	
 		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>	
         <!--Librerias para interfaz -->               
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
@@ -223,7 +223,7 @@ if(isset($_POST['txt_busqueda']) && !isset($_POST['Prs_Cod']))
 		           		<i class=" icon-arrow-right icon-white"></i>
 		           	</button>					
 		            <input type="hidden" name="Prs_Cod" id="Prs_Cod" value="<?Php echo $row['Prs_Cod'];?>">
-					<input type="hidden" name="txt_busqueda" id="txt_busqueda" value="<?Php echo $_POST['txt_busqueda'];?>"/>
+					<input type="hidden" name="txt_busqueda" id="txt_busqueda" value="<?Php echo htmlspecialchars($_POST['txt_busqueda'], ENT_QUOTES, 'UTF-8');?>"/>
 					<input type="hidden" name="op_opciones" id="op_opciones" value="<?php echo htmlspecialchars($_POST['op_opciones'], ENT_QUOTES, 'UTF-8')?>">
 					<input type="hidden" name="id_tabla" id="id_tabla" value="<?php echo $obBD_con1->id_tabla?>">
 				</form>
@@ -373,7 +373,7 @@ if (isset($_POST['Prs_Cod']))
    <table width="300" border="0" cellpadding="0" cellspacing="0">
    <tr>
      <td width="34%">
-  <button type="button" class="btn btn-inverse fileinput-button" title="Atras" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*hdd_volver', '<?php echo $_POST['txt_busqueda'].'*'.$_POST['op_opciones'].'*'.'1';?>')">
+  <button type="button" class="btn btn-inverse fileinput-button" title="Atras" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*hdd_volver', '<?php echo htmlspecialchars($_POST['txt_busqueda'], ENT_QUOTES, 'UTF-8').'*'.htmlspecialchars($_POST['op_opciones'], ENT_QUOTES, 'UTF-8').'*'.'1';?>')">
                <i class=" icon-arrow-left icon-white"></i>
                <span>&nbsp;&nbsp;Atras&nbsp;&nbsp;</span>
        		 </button>

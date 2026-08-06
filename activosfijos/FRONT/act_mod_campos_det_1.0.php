@@ -1,10 +1,10 @@
 <?php 
 /* 
- @Descripción: Permite el ingreso del detalle de los tipos de activos
+ @Descripciï¿½n: Permite el ingreso del detalle de los tipos de activos
  @Desarrollador:	Fabian Gallardo
- @Fecha de actualización:	2011-11-08
+ @Fecha de actualizaciï¿½n:	2011-11-08
  @Desarrollador:	Didimo Zamora
- @Fecha de actualización:	2013/04/26
+ @Fecha de actualizaciï¿½n:	2013/04/26
 */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/act_log_campos_det.php');	  
@@ -20,7 +20,7 @@ $obBD_conexion = new Class_Log_Conexion_Con($Ses_Dat_Dis);
  */
 $obBD_con1 =  new Class_Log_Datos_Con;
 /**
- * Creación del objeto para evitar el reenvio 
+ * Creaciï¿½n del objeto para evitar el reenvio 
  */
 $thisPost = new Post_Block;  
 
@@ -59,7 +59,7 @@ $total_rs_pri_act = count($rs_pri_act);
  * Consulta las Sucursales 
  */
 $rs_suc_act = $obBD_con1->getArrayConsulta(422,$Ses_Emp_Cod, $obBD_conexion); 
-$total_rs_suc_act =  count(rs_suc_act);
+$total_rs_suc_act =  count($rs_suc_act);
 /**
  * Consulta los Estados 
  */
@@ -168,12 +168,12 @@ $rs_Max_act = $obBD_con1->getRowConsulta(659,'', $obBD_conexion);
 					$total_rs_con_camp = count($rs_con_camp);
 					if($total_rs_con_camp > 0){
 					/**
-					 * Inserción de cada campo
+					 * Inserciï¿½n de cada campo
 					 */					
 						$obBD_con1->operacionobBD(434,$cam_r[$j].'*'.$cam_rc[$j].'*'.$Act_Cod, $obBD_conexion);
 					}else{
 						/**
-						 * Inserción de cada campo
+						 * Inserciï¿½n de cada campo
 						 */
 						$obBD_con1->operacionobBD(420,$Act_Cod.'*'.$cam_rc[$j].'*'.trim($cam_r[$j]), $obBD_conexion);
 					}
@@ -187,12 +187,12 @@ $rs_Max_act = $obBD_con1->getRowConsulta(659,'', $obBD_conexion);
 					$total_rs_con_camp = count($rs_con_camp);
 					if($total_rs_con_camp > 0){
 					  /** 
-					   * Inserción de cada campo
+					   * Inserciï¿½n de cada campo
 					   */
 						$obBD_con1->operacionobBD(434,$cam[$k].'*'.$cam_c[$k].'*'.$Act_Cod, $obBD_conexion);
 					}else{
 						/** 
-						 * Inserción de cada campo
+						 * Inserciï¿½n de cada campo
 						 */
 						$obBD_con1->operacionobBD(420,$Act_Cod.'*'.$cam_c[$k].'*'.trim($cam[$k]), $obBD_conexion);
 					}
@@ -247,7 +247,7 @@ $rs_Max_act = $obBD_con1->getRowConsulta(659,'', $obBD_conexion);
 	 }else
 		{
 		/**
-		 * Consulta realizada en base al código seleccionado 
+		 * Consulta realizada en base al cï¿½digo seleccionado 
 		 */
 			if (isset($codigo))
 			{
@@ -265,9 +265,9 @@ $rs_Max_act = $obBD_con1->getRowConsulta(659,'', $obBD_conexion);
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
-        <script language="javascript" src="../VALIDACIONES/act_val_campos_det.js"></script>  
+        <script type="text/javascript" src="../VALIDACIONES/act_val_campos_det.js"></script>  
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.modals.js"></script>
 		<script type="text/javascript"> 
           $(function() {
@@ -306,14 +306,14 @@ $rs_Max_act = $obBD_con1->getRowConsulta(659,'', $obBD_conexion);
 		<table width="630" border="0">
              <tr>
                 <td width="130"><input name="op_opciones" type="radio" value="d" checked   onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.txt_busqueda);">
-                    <span class="LetraNegra">Descripción</span>
+                    <span class="LetraNegra">Descripciï¿½n</span>
                     	<input name="op_cam" id="op_cam" type="hidden" value="d">
                     </td>
                 <td width="141"><input type="radio" name="op_opciones" value="cb" onClick="document.getElementById('op_cam').value=this.value;setfocus(this.form.txt_busqueda); busquedaCampos();">
                 
-                    <span class="LetraNegra">Código de Barra</span></td>
+                    <span class="LetraNegra">Cï¿½digo de Barra</span></td>
 				<td width="148"><input type="radio" name="op_opciones" value="cs" onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.txt_busqueda);">
-                    <span class="LetraNegra">Código Secuencial</span></td>
+                    <span class="LetraNegra">Cï¿½digo Secuencial</span></td>
              
               <td width="305"><input type="radio" name="op_opciones" value="ns" onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.Cam_Cod);">
                     <span class="LetraNegra">Por Campos</span>
@@ -363,7 +363,7 @@ $rs_Max_act = $obBD_con1->getRowConsulta(659,'', $obBD_conexion);
 	<table class="fixedHeader01" cellpadding="0" cellspacing="0" width="100%">
     <thead>
 	  <tr>
-		  <th width="11%">Cód. Int.</th>
+		  <th width="11%">Cï¿½d. Int.</th>
           <th width="23%">Tipo de Activo  </th>
 		  <th width="31%">Descripci&oacute;n </th>
 		  <th width="30%">Secuencial</th>
@@ -412,7 +412,7 @@ $rs_Max_act = $obBD_con1->getRowConsulta(659,'', $obBD_conexion);
   	  ?>
       	<tr><td>&nbsp;</td>
       	  <td>&nbsp;</td>
-      	  <td><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
+      	  <td><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1) ?></td>
       	  <td>&nbsp;</td>
       	  <td>&nbsp;</td>
       	</tr>
@@ -444,7 +444,7 @@ if ($hdd_aux==1) { ?>
 		<td colspan="3"><?Php echo mensaje_requerido(); ?></td>
 	</tr>
 	<tr>
-		<td width="20%" class="Etiqueta1"><span class="Asterisco">*</span> Código Activo:</td>
+		<td width="20%" class="Etiqueta1"><span class="Asterisco">*</span> Cï¿½digo Activo:</td>
 		<td>&nbsp;<input name="Act_Cdc" type="text" id="Act_Cdc" value="<?php echo $row_rs_consultar["Act_Cdc"]?>" size="40"></td>
 		<td></td>
 	</tr>
@@ -455,7 +455,7 @@ if ($hdd_aux==1) { ?>
 	  <td></td>
 	  </tr>
 	<tr>
-	  <td width="20%" class="Etiqueta1"><span class="Asterisco">*</span> Descripción:</td>
+	  <td width="20%" class="Etiqueta1"><span class="Asterisco">*</span> Descripciï¿½n:</td>
 	  <td>&nbsp;<input name="Act_Des" size="50" type="text" id="Act_Des" value="<?php echo $row_rs_consultar["Act_Des"]?>"></td>
 	  <td></td>
 	  </tr>
@@ -538,7 +538,7 @@ if ($hdd_aux==1) { ?>
 	  <td></td>
   </tr>
   <tr>
-        <td width="16%" align="right" class="Etiqueta1"><span class="Asterisco">*</span> Sección:</td>
+        <td width="16%" align="right" class="Etiqueta1"><span class="Asterisco">*</span> Secciï¿½n:</td>
         <td colspan="2" class="LetraNegra">&nbsp;<?php 
         if($row_rs_asig['Asg_Con'] == 'N' or 1==1){ ?>
           <select name="Sec_Cod" id="Sec_Cod">
@@ -590,7 +590,7 @@ if ($hdd_aux==1) { ?>
         <tr>
           <td width="123">&nbsp;<input <?Php if($row_rs_consultar['Act_Gen']=="G"){echo "disabled='disabled'"; } ?> name="Act_Bar" type="text" id="Act_Bar" size="12" maxlength="12" value="<?php echo $row_rs_consultar['Act_Bar']; ?>" /></td>
           <td width="22"><input name="Act_Gen" type="checkbox" id="Act_Gen" onClick="check_generar()"  value="<?Php  if($row_rs_consultar['Act_Gen']=="G"){ echo $Act_Gen=1;}else{ echo $Act_Gen=0;} ?>"  <?Php if($row_rs_consultar['Act_Gen']=="G"){echo "checked"; } ?>>          </td>
-          <td width="414"><div class="Cuerpo_ajax" id='contenedorcheck'><?Php  if($row_rs_consultar['Act_Gen']=="G"){ echo "Genera el código del producto";}else{ echo "Ingrese el código de barra del producto";} ?></div></td>
+          <td width="414"><div class="Cuerpo_ajax" id='contenedorcheck'><?Php  if($row_rs_consultar['Act_Gen']=="G"){ echo "Genera el cï¿½digo del producto";}else{ echo "Ingrese el cï¿½digo de barra del producto";} ?></div></td>
         </tr>
 		
       </table></td>
@@ -608,7 +608,7 @@ if ($hdd_aux==1) { ?>
    </LEGEND>
 	<table width="100%" border="0" cellpadding="0" cellspacing="0">
       <tr>
-        <td width="16%" align="right" class="Etiqueta1">Fecha adquisición :</td>
+        <td width="16%" align="right" class="Etiqueta1">Fecha adquisiciï¿½n :</td>
         <td width="84%" colspan="2">&nbsp;<input name="Act_Fec" type="text" id="Act_Fec" value="<?php echo $row_rs_consultar["Act_Fec"];?>" size="10" onKeyUp="mascara(this,'-',patron,true)" onBlur="validar_fecha2(this);">  
         </td>
         </tr>
@@ -635,8 +635,8 @@ if ($hdd_aux==1) { ?>
         <td width="84%" colspan="2">&nbsp;<input name="Act_Res" type="text" id="Act_Res" value="<?php echo $row_rs_consultar["Act_Res"]; ?>" size="10" onKeyPress = "return validar_decimal(event)"></td>
         </tr>
 		 <tr>
-        <td width="16%" align="right" class="Etiqueta1"><span class="Asterisco">*</span> Vida Útil :</td>
-        <td width="84%" colspan="2">&nbsp;<input name="Act_Ann" type="text" id="Act_Ann" value="<?php echo $row_rs_consultar["Act_Ann"]; ?>" size="10" maxlength="3" onKeyPress="return validar_numeric(event)" ><span class="Etiqueta1"> Años </span></td>
+        <td width="16%" align="right" class="Etiqueta1"><span class="Asterisco">*</span> Vida ï¿½til :</td>
+        <td width="84%" colspan="2">&nbsp;<input name="Act_Ann" type="text" id="Act_Ann" value="<?php echo $row_rs_consultar["Act_Ann"]; ?>" size="10" maxlength="3" onKeyPress="return validar_numeric(event)" ><span class="Etiqueta1"> Aï¿½os </span></td>
         </tr>
 	</table>
 	</fieldset>
@@ -664,7 +664,7 @@ if ($hdd_aux==1) { ?>
     
  <fieldset>
   <LEGEND>
-    <label class="Titulos2">Técnicos</label>
+    <label class="Titulos2">Tï¿½cnicos</label>
 	</LEGEND>
   <table width="100%" cellpadding="0" cellspacing="0" border="0">
     	<tr>

@@ -48,7 +48,7 @@ class Class_Log_datos_Cam extends MysqlDatosContab
 
         $this->free_result($result);
 
-        return $row;
+        return is_array($row) ? $row : array();
     }
     function getArrayConsulta($sen_sql, $param, $obBD = null)
     {

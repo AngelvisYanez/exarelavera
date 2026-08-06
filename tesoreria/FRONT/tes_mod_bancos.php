@@ -6,7 +6,7 @@
 	if (isset($hdd_save))
 	{
 		//$modbancos = $row_rs_consultar['Bak_Des'];
-		//************************ Modificación de los datos del banco *****************************************************************
+		//************************ Modificaciï¿½n de los datos del banco *****************************************************************
 			insercionesu_tes(103, $Bak_Des.'*'.$codigo);
 		//***************************************************************
 		unset($codigo); 	
@@ -20,7 +20,7 @@
 	}
 	else
 	{
-//*********************Consulta realizada en base al código seleccionada***********************************************************************
+//*********************Consulta realizada en base al cï¿½digo seleccionada***********************************************************************
 		if (isset($codigo))
 		    {
 			$rs_consultar = consultas_tes(105, $codigo);
@@ -36,9 +36,9 @@
 		<link href="../../Estilos/Interfaz1.css" rel="stylesheet" type="text/css">
 		<link href="../../mascaras/model1/estilos/estilo1.css" rel="stylesheet" type="text/css">
 		<link href="../../mascaras/model1/estilos/interfaz.css" rel="stylesheet" type="text/css">
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/Validaciones.js"></script>
-		<script language="javascript" src="../../Librerias/fecha.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/Validaciones.js"></script>
+		<script type="text/javascript" src="../../Librerias/fecha.js"></script>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 	</HEAD>
 <BODY>
@@ -80,7 +80,7 @@
 	  <?Php do { ?>
 	  <tr class="Fondo">
 	  <td height="20"><?php echo $row_rs_buscar['Bak_Des']; ?></td>
-	  <td align="center"><a href="<?Php echo $_POST['form2'];?>?codigo=<?Php echo $row_rs_buscar['Bak_Cod'];?>" title="Editar"><img src="../../imagenes/editar.jpg" width="18" height="18" border="0"></a> 
+	  <td align="center"><a href="<?Php echo htmlspecialchars($_POST['form2'], ENT_QUOTES, 'UTF-8');?>?codigo=<?Php echo $row_rs_buscar['Bak_Cod'];?>" title="Editar"><img src="../../imagenes/editar.jpg" width="18" height="18" border="0"></a> 
   </td>
 	  </tr>
 	  <?Php } while ($row_rs_buscar = mysqli_fetch_assoc($rs_buscar));?>

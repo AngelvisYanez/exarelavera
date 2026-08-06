@@ -103,9 +103,9 @@ switch($op){
     <TITLE><?Php echo "Ajustes Consultar [EXA]"; ?></TITLE>
     <meta charset="UTF-8">
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>		
-		<script language="javascript" src="../VALIDACIONES/fac_val_aju.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/fac_val_aju.js"></script>
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.modals.js"></script>
 	    <!--Librerias para calendario -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.datepicker.js"></script>         

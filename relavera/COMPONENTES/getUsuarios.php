@@ -21,11 +21,11 @@ if (is_array($data)) {
             // Si el JSON falla con caracteres especiales, aseguramos UTF-8
             if (function_exists('mb_detect_encoding')) {
                 if (!mb_detect_encoding($row['nombre'], 'UTF-8', true)) {
-                    $row['nombre'] = utf8_encode($row['nombre']);
+                    $row['nombre'] = mb_convert_encoding($row['nombre'], 'UTF-8', 'ISO-8859-1');
                 }
             } else {
                 // Fallback para servidores sin mbstring
-                $row['nombre'] = utf8_encode($row['nombre']);
+                $row['nombre'] = mb_convert_encoding($row['nombre'], 'UTF-8', 'ISO-8859-1');
             }
         }
     }

@@ -1,4 +1,5 @@
 <?Php
+if (!is_object($obBD_con1)) return;
 /* Componente para la busqueda de la modalidad-etapa-periodo-carrera 
 Modalidad = todas
 Etapa = todas

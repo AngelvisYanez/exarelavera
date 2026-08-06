@@ -5,10 +5,10 @@
  *
  * @author car.87cod :)
  * @version 1.0
- * Fecha de actualización:	2012-04-16
+ * Fecha de actualizaciï¿½n:	2012-04-16
  * @author lewis.chimarro
  * @version 1.0
- * Fecha de actualización:	2014-05-21
+ * Fecha de actualizaciï¿½n:	2014-05-21
  *
  * @package tesoreria.FRONT
  */
@@ -337,7 +337,7 @@ $obBD_con1 =  new Class_Log_Datos_Cli;
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
         <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
         <script type="text/javascript" src="../../framework/jquery/chosen/chosenDesc/chosenDesc.js"></script>
-        <script language="javascript" src="../VALIDACIONES/adm_val_user_2.1.js?A=23"></script>
+        <script type="text/javascript" src="../VALIDACIONES/adm_val_user_2.1.js?A=23"></script>
     </HEAD>
     <BODY>
         <div class="panel panel-main">
@@ -379,7 +379,7 @@ $obBD_con1 =  new Class_Log_Datos_Cli;
 
                                                     <!-- Apellido -->
                                                     <div class="form-group">
-                                                        <label class="col-xs-3 control-label label-xs required"><span class='natural'>Apellidos:</span><span class='juridico' style="display: none;">Razón Social:</span></label>
+                                                        <label class="col-xs-3 control-label label-xs required"><span class='natural'>Apellidos:</span><span class='juridico' style="display: none;">Razï¿½n Social:</span></label>
                                                         <div class="col-xs-6" ><input id="Prs_Ape" name="Prs_Ape" type="text" class="form-control input-xs" required="" /></div>
                                                     </div>
 

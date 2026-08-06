@@ -25,7 +25,7 @@ class productor extends AbstractModel{
             'Prv_Cod'=>$data['Prv_Cod'], 'Prd_Est'=>'A'
         ):$data;
     }
-    public function sqlByNombre($id,$Par_Sql){
+    public function sqlByNombre($id,$Par_Sql,$cond=null){
         $sql="";
         switch($id){
             case "":
@@ -41,7 +41,7 @@ class productor extends AbstractModel{
         //echo $sql."<br/>";
         return $sql;
     }
-    public function sqlByNumero($id,$Par_Sql){
+    public function sqlByNumero($id,$Par_Sql,$cond=null){
         $sql="";
         switch($id){
             case 0:

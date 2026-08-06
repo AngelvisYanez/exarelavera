@@ -1,4 +1,4 @@
-﻿<?php	
+<?php	
 /**
 * @abstract Permite CONSULTAR de comprobantes por abonos
 * @author Erik Niebla

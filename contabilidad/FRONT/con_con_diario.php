@@ -17,7 +17,7 @@ $periodo = "del periodo contable ".substr($Pec_Fei, 0,4);
 /* Cargado ajax de la busqueda de la cuenta */
 if (isset($buscod))
 {
-	/*En esta consulta debe botar un solo registro ya en un año contable normalmente se utiliza un plan de cuentas */
+	/*En esta consulta debe botar un solo registro ya en un aï¿½o contable normalmente se utiliza un plan de cuentas */
 	$row_rs_cuenta_manual = $obBD_con1->getRowConsulta(215,$Pec_Cod, $obBD_conexion);	
 	$Pla_Cod = $row_rs_cuenta_manual['Pla_Cod'];	
 	
@@ -133,8 +133,8 @@ else
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/con_val_diario.js"></script>       
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/con_val_diario.js"></script>       
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
         <script type="text/javascript" src="../../Librerias/jquery/modal/js/modal.js"></script>
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.modals.js"></script>
@@ -161,7 +161,7 @@ if (!isset($hdd_save) && !isset($hdd_save2))
 ?>
 <FIELDSET>
 	<LEGEND>
-		<label class="Titulos2">Selección Periodo Contable</label>
+		<label class="Titulos2">Selecciï¿½n Periodo Contable</label>
 	</LEGEND>
 
     <table width="225" border="0" cellspacing="0" cellpadding="0">
@@ -273,7 +273,7 @@ if (isset($hdd_save) or isset($hdd_save2))
         </table>
         
 		</form>
-	<script language="javascript">
+	<script type="text/javascript">
 		 ShowHide('field_buscador'); 	
 		 ShowHide('buscador'); 
  		 //ShowHide('tbl_libros'); 		 

@@ -127,7 +127,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta('perio_cont.selectWhere', array('setW
     <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
     <script>var Cof_Con=<?php echo json_encode($cof['Cof_Con']); ?>, hoy=<?php echo json_encode($hoy); ?>;</script>      
     <style></style>
-    <script language="javascript" src="../VALIDACIONES/fac_val_rete_finan.js"></script> 
+    <script type="text/javascript" src="../VALIDACIONES/fac_val_rete_finan.js"></script> 
 </HEAD>
 <BODY>
     <div class="panel panel-main">

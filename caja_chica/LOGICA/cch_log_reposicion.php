@@ -1,4 +1,4 @@
-﻿<?Php 
+<?Php 
 /**
  * Autor: Asael Tello Septiembre 6, 2017
  */
@@ -68,7 +68,7 @@ class Class_Log_Datos_Cch extends MysqlDatos{
 		
 		$this->free_result($result);
 		
-		return $row;
+		return is_array($row) ? $row : array();
 	}
 
 	/**

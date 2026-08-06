@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 if (php_sapi_name() !== 'cli') { http_response_code(403); exit('CLI only'); }
 /**
  * Script de Migración a UTF-8

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 /**
  * @abstract Permite realizar la cancelacion de comprobantes por lotes

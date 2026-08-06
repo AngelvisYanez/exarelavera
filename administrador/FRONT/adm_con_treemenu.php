@@ -6,7 +6,7 @@ Fecha de actualización:	2010-10-19
 Desarrollador:	Lewis Chimarro 
 */
 
-require_once('../LOGICA/adm_log_menu.php');
+require_once('../LOGICA/logica.php');
 require_once('../../Librerias/config.php/register_globals.php'); 
 require_once('../LOGICA/TreeMenu.php');
 
@@ -25,7 +25,7 @@ foreach($_SESSION['Ses_Lis_Per'] as $item)
 }			
 	//echo $mperf;
 ///Cargado de Menús Principales. Ej: Gestión Administrativa, Gestión de Periodos los que tiene Org_Niv=0
-$rs_organizado_cero = $obBD_con1->consulta(sentencias_adm(16, $obBD_con1->parametros(trim(substr($mperf,1,count($mperf)-3)))), $obBD_conexion->conexion);
+$rs_organizado_cero = $obBD_con1->consulta(sentencias_adm(16, $obBD_con1->parametros(trim(substr($mperf,1,strlen($mperf)-3)))), $obBD_conexion->conexion);
 $total_rs_organizado_cero = $obBD_con1->numregistros();
 ///Recorrido de los nodos de nivel cero
 while($v0 = $obBD_con1->fetch_array($rs_organizado_cero))
@@ -61,7 +61,7 @@ echo "</font>";
 				while($v3 = $obBD_con1->fetch_array($rs_organizado_dos))
 				{					
 					/* Consulta los procesos del usuario */
-					$rs_procesos = $obBD_con1->consulta(sentencias_adm(18, $obBD_con1->parametros(trim($v3["Org_Cod"]).'*'.trim(substr($mperf,1,count($mperf)-3)).'*P')), $obBD_conexion->conexion);
+					$rs_procesos = $obBD_con1->consulta(sentencias_adm(18, $obBD_con1->parametros(trim($v3["Org_Cod"]).'*'.trim(substr($mperf,1,strlen($mperf)-3)).'*P')), $obBD_conexion->conexion);
 					$total_rs_procesos = $obBD_con1->numregistros();
 					
 					if($total_rs_procesos > 0)
@@ -135,7 +135,7 @@ echo "</font>";
 //				$node1_1[$c] = &$node1[$c]->addItem(new HTML_TreeNode(array('text' => $band, 'icon' => $icon, 'expandedIcon' => $expandedIcon)));
 //				
 //				 Consulta los procesos del usuario */
-//				$rs_procesos = $obBD_con1->consulta(sentencias_adm(18, $obBD_con1->parametros(trim($v3["Org_Cod"]).'*'.trim(substr($mperf,1,count($mperf)-3)).'*P')), $obBD_conexion->conexion);
+//				$rs_procesos = $obBD_con1->consulta(sentencias_adm(18, $obBD_con1->parametros(trim($v3["Org_Cod"]).'*'.trim(substr($mperf,1,strlen($mperf)-3)).'*P')), $obBD_conexion->conexion);
 //				$total_rs_procesos = $obBD_con1->numregistros();
 //				
 //				if($total_rs_procesos > 0)

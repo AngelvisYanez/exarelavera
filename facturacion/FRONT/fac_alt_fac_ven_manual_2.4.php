@@ -191,7 +191,7 @@ if(isset($ajax_notif))
 	{		
 	?>
     	<img src='../../mascaras/model1/imagenes/32x32/cancel.gif' width='16' height='16' type='image'/>
-        <script language="javascript">alert("�Ya existe el numero "+ <?php echo $NumFact;?> +"!"); document.getElementById("Vet_Num").selectionStart = 0;document.getElementById("Vet_Num").value='<?php echo $Vet_Num; ?>';</script>
+        <script type="text/javascript">alert("�Ya existe el numero "+ <?php echo $NumFact;?> +"!"); document.getElementById("Vet_Num").selectionStart = 0;document.getElementById("Vet_Num").value='<?php echo $Vet_Num; ?>';</script>
 	<?php		
 	}else{
 		if($SecIni<=$NumFact && $SecFin>=$NumFact)
@@ -204,7 +204,7 @@ if(isset($ajax_notif))
 		}else{
 			?>
               <img src='../../mascaras/model1/imagenes/32x32/cancel.gif' width='16' height='16' type='image'/>
-              <script language="javascript">alert("�N&uacute;mero fuera de rango (Rango valido: "+ <?php echo $SecIni;?> +" al "+ <?php echo $SecFin;?> +")!"); document.getElementById("Vet_Num").value='';
+              <script type="text/javascript">alert("�N&uacute;mero fuera de rango (Rango valido: "+ <?php echo $SecIni;?> +" al "+ <?php echo $SecFin;?> +")!"); document.getElementById("Vet_Num").value='';
 			  document.getElementById("Vet_Num").selectionStart = 0;document.getElementById("Vet_Num").value='<?php echo $Vet_Num; ?>'; 
               $('#bt_guardar').attr('disabled',true);
               </script>
@@ -250,7 +250,7 @@ if (isset($cmb))
 		} //Fin del $row_rs_facttipo  ?>
     <!--</select>-->
 	<?php //echo $div_banco; ?>
-	<script language="javascript">
+	<script type="text/javascript">
 		ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?cmb_tipo=1&Pag_Cod=<?Php echo $Pag; ?>', '<?php echo $div_banco; ?>');
 	</script>	
 	<?Php
@@ -363,11 +363,11 @@ if($total_rs_apercaja!=0)
 		$Pec_Cod=$row_rs_codPlaPeri['Pec_Cod'];
 	}else{
 		$correcto=0;
-		?><script language="javascript">alert("�La fecha de Caja, no esta dentro del rango de la Autorizaci�n de ventas!");</script> <?php
+		?><script type="text/javascript">alert("�La fecha de Caja, no esta dentro del rango de la Autorizaci�n de ventas!");</script> <?php
 	}
 }else{
 	$correcto=0;
-	?><script language="javascript">alert("�No existe apertura de Caja!");</script><?php
+	?><script type="text/javascript">alert("�No existe apertura de Caja!");</script><?php
 }
 
 
@@ -1316,12 +1316,12 @@ if($Ses_Prs_Cod==1){
 <HTML><HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>	
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
                 <script>var Cod_Banano='<?php echo $Cod_Banano; ?>',ban_pru_disabled=false;</script>
                  <?php if($rs_infoEmpresa['Cof_Con']=="S") { ?>
-    	<script language="javascript" src="../VALIDACIONES/fac_val_fac_ven_cont_1.0.js?xx=3"></script>
+    	<script type="text/javascript" src="../VALIDACIONES/fac_val_fac_ven_cont_1.0.js?xx=3"></script>
                  <?php }else{ ?>
-        <script language="javascript" src="../VALIDACIONES/fac_val_fac_ven_1.0.js?xy=31"></script>
+        <script type="text/javascript" src="../VALIDACIONES/fac_val_fac_ven_1.0.js?xy=31"></script>
                  <?php } ?>
         <!--Librerias para interfaz -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script> 
@@ -1373,18 +1373,18 @@ if (isset($hdd_save) && !isset($hdd_volver))
         $tabla='cliente';
         $campo="Cli_Cod";
 	?>
-	<script language="javascript">
+	<script type="text/javascript">
 		<?php if(isset($hdd_comprobante)){?>					
 		windows('<?php echo $hdd_comprobante;?>?Com_Num=<?php echo $Com_Num; ?>&Com_Cod=<?php echo $Com_Cod; ?>&codigo=<?php echo $Com_Cod; ?>&tabla=<?php echo $tabla; ?>&tipo=<?php echo $op; ?>&campo=<?php echo $campo; ?>&Pec_Cod=<?php echo $Pec;?>','',800,800,'no','yes','yes','yes'); 					
 		<?Php } ?>
 	</script>
-	<script language="javascript">
+	<script type="text/javascript">
         windows('<?Php echo $hdd_documento;  ?>?Vet_Cod=<?Php echo $Vet_Cod; ?>','', 800,600,'yes', 'yes', 'yes', 'no');			
     </script>            
     
 	<?php	
 	if($Ses_Prs_Cod==1){?>
-    	<script language="javascript"> //windows('/facturacion/chompipa/fac_pri_fac_chompipa_detalle_1.2.php?Vet_Cod=<?Php //echo $Vet_Cod; ?>','', 800,600,'yes', 'yes', 'yes', 'no');</script>            
+    	<script type="text/javascript"> //windows('/facturacion/chompipa/fac_pri_fac_chompipa_detalle_1.2.php?Vet_Cod=<?Php //echo $Vet_Cod; ?>','', 800,600,'yes', 'yes', 'yes', 'no');</script>            
     <?php }
 		 
 }//Fin del if (isset($hdd_save))
@@ -1628,7 +1628,7 @@ if (count($row_rs_vendedor) > 0)
                   </span></td>
               </tr>
               </table>
-			  <script language="javascript">
+			  <script type="text/javascript">
                    ShowHide('NotasCredito');		  
               </script>                                            
          </FIELDSET>    
@@ -2141,7 +2141,7 @@ if (count($row_rs_vendedor) > 0)
 	if (!(isset($cheque)))
 	{
 	?>
-	<script language="javascript">
+	<script type="text/javascript">
 	 ShowHide('cheque');		  	 
 	</script>
 	<?Php

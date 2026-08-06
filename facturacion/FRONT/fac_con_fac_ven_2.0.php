@@ -1,10 +1,10 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php	
 /*
-* Descripción: Consulta las ventas individual, total y detallada, de cada vendedor y punto de impresión
-* Fecha de actualización: 2012-05-25
+* Descripciï¿½n: Consulta las ventas individual, total y detallada, de cada vendedor y punto de impresiï¿½n
+* Fecha de actualizaciï¿½n: 2012-05-25
 * Desarrollador: Lewis Chimarro
-* Fecha de actualización: 2013-03-22
+* Fecha de actualizaciï¿½n: 2013-03-22
 * Desarrollador: Lewis Chimarro
 * Descripcion: Se agrego 2 columnas, donde se muestra el descuento y el valor neto pagado
 */	
@@ -229,12 +229,12 @@ switch ($op){
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
         <?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>	
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-    	<script language="javascript" src="../VALIDACIONES/fac_val_fac_ven.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    	<script type="text/javascript" src="../VALIDACIONES/fac_val_fac_ven.js"></script>
    		<script type="text/javascript" src="../../Librerias/exportar/jquery-1.3.2.min.js"></script>
         <!--Librerias para modal -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.modals.js"></script> 
-	    <script language="javascript">
+	    <script type="text/javascript">
 			$(document).ready(function() {
 				/* LLamado a la class del boton exportar */
 				$("#Boton_Excel").click(function(event) {
@@ -271,7 +271,7 @@ if ($total_rs_vendedor >0)
 		$pag2= $_SERVER['PHP_SELF']."?op=2";
 		$pag3= $_SERVER['PHP_SELF']."?op=3";
 		$pag4= $_SERVER['PHP_SELF']."?op=4";
-		tabs(3,'Individual*Totales*Detalle*Puntos de Impresión', $pag1.'*'.$pag2.'*'.$pag3.'*'.$pag4, $op);
+		tabs(3,'Individual*Totales*Detalle*Puntos de Impresiï¿½n', $pag1.'*'.$pag2.'*'.$pag3.'*'.$pag4, $op);
 		?>		
 <div id="ContTabul">		
 <?Php
@@ -563,7 +563,7 @@ if (isset ($hdd))
 		<?Php
 		if (isset($escu)){ 
 	  		/* 
-			* Consulta la descripción de la etapa 
+			* Consulta la descripciï¿½n de la etapa 
 			*/
 			$rs_etapa = $obBD_con1->consulta(sentencias_tes(176, $obBD_con1->parametros($Eta_Cod)), 
 										$obBD_conexion->conexion);	
@@ -601,7 +601,7 @@ if (!(isset($escu)))
 $boton_imp=false;
 for ($x=0; $x<=count($carrera_cod)-1; $x++)
 {
-		/* Evalua si se encuentra seteada la opción de carrera */
+		/* Evalua si se encuentra seteada la opciï¿½n de carrera */
 		if (isset($escu))
 		{ 
 			if (isset($rubros))
@@ -845,7 +845,7 @@ for ($x=0; $x<=count($carrera_cod)-1; $x++)
 		*/
 		if (!(isset($escu)))
 		{
-			echo error_alerta(" ¡No hay resultados que mostrar1!", 2);
+			echo error_alerta(" ï¿½No hay resultados que mostrar1!", 2);
 		}//Fin del if (!(isset($escu)))
 	}//Fin del if ($total_rs_buscarcarrera != 0)
 } //Fin del for ($x=0; $x<=count($carreras_cod)-1; $x++)
@@ -855,7 +855,7 @@ for ($x=0; $x<=count($carrera_cod)-1; $x++)
 	*/
 	if (isset($escu) && $boton_imp == false)
 	{
-			echo error_alerta(" ¡No hay resultados que mostrar!", 2);
+			echo error_alerta(" ï¿½No hay resultados que mostrar!", 2);
 	}//Fin del if (isset($escu) && $boton_imp == false)	
 ?>
 </FIELDSET>
@@ -917,7 +917,7 @@ if ($boton_imp == true)
 if (isset($escu))
 {
 	/* 
-	* Consultas la inconsistencia de las facturas que no tienen relación con matriculas 
+	* Consultas la inconsistencia de las facturas que no tienen relaciï¿½n con matriculas 
 	*/
    $rs_buscar = $obBD_con1->consulta(sentencias_tes(225, $obBD_con1->parametros($txt_fec_ini.'*'.$txt_fec_fin.'*'.$optest.'*'.$Tic_Cod)), $obBD_conexion->conexion);
    $row_rs_buscar= $obBD_con1->registros();
@@ -969,7 +969,7 @@ if (isset($escu))
 			<td colspan="5"><?Php include("../COMPONENTES/tes_com_detalle_ven.php");  ?></td>		
 			<td>&nbsp;</td>			
 		  </tr>
-			<script language="javascript">
+			<script type="text/javascript">
 			ShowHide('detalle[<?Php echo $i; ?>]');
 			ShowHide('menos[<?Php echo $i; ?>]');		 
 			</script>				
@@ -1227,7 +1227,7 @@ if (isset($hdd))
 	}//Fin del if ($total_rs_buscarcarrera != 0)
 	else
 	{
-		echo error_alerta(" ¡No hay resultados que mostrar!", 2);
+		echo error_alerta(" ï¿½No hay resultados que mostrar!", 2);
 	}//Fin del if ($total_rs_buscarcarrera != 0)		
 }//Fin del if (isset($hdd))
 break; //Fin del case 3	
@@ -1367,7 +1367,7 @@ if (isset ($hdd))
 		<?Php
 		if (isset($escu)){ 
 	  		/* 
-			* Consulta la descripción de la etapa 
+			* Consulta la descripciï¿½n de la etapa 
 			*/
 			$rs_etapa = $obBD_con1->consulta(sentencias_tes(176, $obBD_con1->parametros($Eta_Cod)), 
 										$obBD_conexion->conexion);	
@@ -1404,7 +1404,7 @@ $boton_imp=false;
 for ($x=0; $x<=count($carrera_cod)-1; $x++)
 {
 		/* 
-		* Evalua si se encuentra seteada la opción de carrera
+		* Evalua si se encuentra seteada la opciï¿½n de carrera
 		*/
 		if (isset($escu))
 		{ 
@@ -1604,7 +1604,7 @@ for ($x=0; $x<=count($carrera_cod)-1; $x++)
 		*/
 		if (!(isset($escu)))
 		{
-			echo error_alerta(" ¡No hay resultados que mostrar!", 2);
+			echo error_alerta(" ï¿½No hay resultados que mostrar!", 2);
 		}//Fin del if (!(isset($escu)))
 	}//Fin del if ($total_rs_buscarcarrera != 0)
 } //Fin del for ($x=0; $x<=count($carreras_cod)-1; $x++)
@@ -1614,7 +1614,7 @@ for ($x=0; $x<=count($carrera_cod)-1; $x++)
 	*/
 	if (isset($escu) && $boton_imp == false)
 	{
-			echo error_alerta(" ¡No hay resultados que mostrar!", 2);
+			echo error_alerta(" ï¿½No hay resultados que mostrar!", 2);
 	}//Fin del if (isset($escu) && $boton_imp == false)	
 ?>
 </FIELDSET>
@@ -1665,7 +1665,7 @@ if ($boton_imp == true)
 if (isset($escu))
 {
 	/* 
-	* Consultas la inconsistencia de las facturas que no tienen relación con matriculas 
+	* Consultas la inconsistencia de las facturas que no tienen relaciï¿½n con matriculas 
 	*/
    $rs_buscar = $obBD_con1->consulta(sentencias_tes(225, $obBD_con1->parametros($txt_fec_ini.'*'.$txt_fec_fin.'*'.$optest.'*'.$Tic_Cod)), $obBD_conexion->conexion);
    $row_rs_buscar= $obBD_con1->registros();
@@ -1717,7 +1717,7 @@ if (isset($escu))
 			<td colspan="5"><?Php include("../COMPONENTES/tes_com_detalle_ven.php");  ?></td>		
 			<td>&nbsp;</td>			
 		  </tr>
-			<script language="javascript">
+			<script type="text/javascript">
 			ShowHide('detalle[<?Php echo $i; ?>]');
 			ShowHide('menos[<?Php echo $i; ?>]');		 
 			</script>				
@@ -1976,7 +1976,7 @@ if ($codigo > 0 && !(isset($txt_busqueda))) { ?>
   <thead>
 	<tr>
 		<th width="8%">Cant.</th>
-		<th width="34%">Descripción</th>
+		<th width="34%">Descripciï¿½n</th>
 		<th width="15%">P. Unitario</th>
 		<th width="15%">Importe</th>
 		<th width="8%">Desc.</th>
@@ -2114,7 +2114,7 @@ if ($codigo > 0 && !(isset($txt_busqueda))) { ?>
 	if (!(isset($carreras)) && ($op==4 || $op == 2))
 	{
 	?>
-	<script language="javascript">
+	<script type="text/javascript">
 	 ShowHide('carreras');  		 
 	 </script>
 	<?Php

@@ -107,8 +107,8 @@ if (isset($savePersonal)) {
         <script type="text/javascript" src="../../framework/jquery/chosen/chosenDesc/chosenDesc.js"></script>
         <script src="../../framework/jquery/bootstrap/bootstrap-fileinput/js/fileinput.js" type="text/javascript"></script>
         <script src="../../framework/jquery/bootstrap/popover/jquery.flyout.js"></script>
-        <script language="javascript" src="../../framework/jquery/validate/jquery-validation-1.15.0/dist/jquery.validate.min.js"></script>
-        <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+        <script type="text/javascript" src="../../framework/jquery/validate/jquery-validation-1.15.0/dist/jquery.validate.min.js"></script>
+        <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
 
     </HEAD>
     <BODY>

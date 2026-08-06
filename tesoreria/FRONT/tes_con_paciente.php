@@ -4,10 +4,10 @@
  *
  * @author car.87cod :)
  * @version 1.0
- * Fecha de actualización:	2012-04-26
+ * Fecha de actualizaciï¿½n:	2012-04-26
  * @author lewis.chimarro
  * @version 1.0
- * Fecha de actualización:	2014-05-29 
+ * Fecha de actualizaciï¿½n:	2014-05-29 
  *
  * @package tesoreria.FRONT
  */
@@ -28,7 +28,7 @@ $obBD_conexion = new Class_Log_Conexion_Cli($Ses_Dat_Dis);
  */
 $obBD_con1 =  new Class_Log_Datos_Cli;
 
-/*Sección para listar los clientes registrados dentro de la empresa*/
+/*Secciï¿½n para listar los clientes registrados dentro de la empresa*/
 if (isset($pacientesAjax)) {  
 	$obBD_con1->getPageGridJson(28, $_GET, $obBD_conexion);    
 }
@@ -42,7 +42,7 @@ if (isset($pacientesAjax)) {
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
         <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
         <script type="text/javascript" src="../../framework/jquery/chosen/chosenDesc/chosenDesc.js"></script>
-        <script language="javascript" src="../VALIDACIONES/tes_val_cliente.js?a=12"></script>
+        <script type="text/javascript" src="../VALIDACIONES/tes_val_cliente.js?a=12"></script>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 	</HEAD>
 <BODY>

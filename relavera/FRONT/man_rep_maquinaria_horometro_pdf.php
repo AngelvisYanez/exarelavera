@@ -1,4 +1,5 @@
 <?php
+if (!is_object($obBD_con1)) return;
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/man_log_maquinaria_horometro.php');
 require_once('../../Librerias/TCPDF/MYPDF.php');

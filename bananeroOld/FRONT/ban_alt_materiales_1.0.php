@@ -1,4 +1,4 @@
-﻿<?php	
+<?php	
 /**
 * @abstract Permite realizar la cancelacion de comprobantes por abonos
 * @author Erik Niebla
@@ -26,6 +26,9 @@ $hoy = date("Y-m-d");
 $mes = date("m");
 
 /* Seleccionar El Producto a Producir */
+if(isset($proAjax) || isset($matAjax) || isset($ajaxProd) || isset($saveForm)){
+    header('Content-Type: application/json; charset=utf-8');
+}
 if(isset($proAjax)){
     $contar = $obBD_con1->getRowConsulta(1, $search.'*'.$Ses_Emp_Cod.'*'.$op_opciones.'*', $obBD_conexion);	      
     $pagination= pages($contar['total'], $page, $rows);

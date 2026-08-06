@@ -1,9 +1,9 @@
 <?Php
 /************************************************************************************
  * Alias: Consulta de Control de Custodia de Activos Fijos                          *
- * Descripción: Permite consultar los controles de custodia de activos fijos.       *
+ * Descripciï¿½n: Permite consultar los controles de custodia de activos fijos.       *
  * Desarrollador: Didimo Zamora                                                     *
- * Fecha de actualización:	2013/07/24                                              *
+ * Fecha de actualizaciï¿½n:	2013/07/24                                              *
  ************************************************************************************/
 
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -21,7 +21,7 @@ $obBD_conexion = new Class_Log_Conexion_Cch($Ses_Dat_Dis);
  */
 $obBD_con1 = new Class_Log_Datos_ActAu;
 /**
- * Creación del objeto para evitar el reenvio 
+ * Creaciï¿½n del objeto para evitar el reenvio 
  */
 $thisPost = new Post_Block; 
 
@@ -62,7 +62,7 @@ $FecF = date('Y-m-d');
 <head>
 <title><?Php echo $Ses_Sys_Nom;?></title>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-        <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+        <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>     
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.datepicker.js"></script> 
 		<script>
@@ -181,7 +181,7 @@ if(count($rs_auditore)>0){
 						<tr>
 							<td></td>
 							<td>&nbsp;</td>
-							<td align="center"><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
+							<td align="center"><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1) ?></td>
 							<td>&nbsp;</td>
 							<td>&nbsp;</td>
 						</tr>
@@ -231,7 +231,7 @@ $rs_auditore = $obBD_con1->getRowConsulta(11,$Aud_Cod,$obBD_conexion);
 			<tr>
 				<td width="8%" class="Etiqueta1">Custodio:</td>
 				<td width="18%" align="left" >&nbsp;<span class="LetraNegra"><?Php echo $custodio;?></span></td>  
-				<td width="2%" align="left" class="Etiqueta1" >Cédula:</td>   	
+				<td width="2%" align="left" class="Etiqueta1" >Cï¿½dula:</td>   	
 				<td width="72%" align="left">&nbsp;<span class="LetraNegra"><?Php echo $ci;?></span></td>    
 			</tr> 
 		</table>

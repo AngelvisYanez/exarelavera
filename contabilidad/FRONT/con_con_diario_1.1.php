@@ -177,8 +177,8 @@ else
 		<TITLE><?php echo "Libro Diario [EXA]"; ?></TITLE>
         <meta charset= "UTF-8">
 		<?php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/con_val_diario.js?a=2"></script>       
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/con_val_diario.js?a=2"></script>       
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
         <script type="text/javascript" src="../../Librerias/jquery/modal/js/modal.js"></script>
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.modals.js"></script>
@@ -189,7 +189,7 @@ else
           });              			
 		</script>
         <!--Librerias para exportar a excel --> 
-	    <script language="javascript">
+	    <script type="text/javascript">
 			$(document).ready(function() {
 				/* LLamado a la class del boton exportar */
 				$("#Boton_Excel").click(function(event) {
@@ -345,7 +345,7 @@ if (isset($hdd_save) or isset($hdd_save2))
         </table>
         
 		</form>
-	<script language="javascript">
+	<script type="text/javascript">
 		 ShowHide('field_buscador'); 	
 		 ShowHide('buscador'); 
  		 //ShowHide('tbl_libros'); 		 

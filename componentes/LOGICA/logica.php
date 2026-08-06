@@ -1,5 +1,10 @@
-﻿<?php
-	require_once ("../../DATA/DAC.php");
+<?php
+	if (!class_exists('MysqlConexion', false)) {
+		require_once ("../../DATA/MysqlConexion.php");
+	}
+	if (!class_exists('MysqlDatos', false)) {
+		require_once ("../../DATA/MysqlDatos.php");
+	}
 	require_once ("sql.php");
 
 /******************************************************/
@@ -8,7 +13,7 @@
 /******************************************************/
 /******************************************************/
 
-class Class_Log_Conexion_Com extends Class_Mysql{
+class Class_Log_Conexion_Com extends MysqlConexion{
 //function Class_Log_Conexion_Con($bd = "macros", $host = "localhost", $user = "root", $pass = "root"){
 //		$this->BaseDatos = $bd;
 //		$this->Servidor = $host;
@@ -28,7 +33,25 @@ class Class_Log_Conexion_Com extends Class_Mysql{
 /******************************************************/
 /******************************************************/
 
-class Class_Log_Datos_Com extends Class_Datos{
+class Class_Log_Datos_Com extends MysqlDatos{
+	/**
+	* Realiza una consulta en la base de datos -  STARDARD
+	*
+	* @return result si existen datos de retorno
+	* @param int $sen_sql numero de la sql
+	* @param string $param cadena de valores para el filtrado de la busqueda
+	* @param Class_Log_Conexion_pac $obBD para realizar la conexcion correspondiente
+	*/
+	function consulta($sql, $conexion = null)
+	{
+		$rs = parent::consulta($sql, $conexion);
+		if ($rs === false) {
+			$con = $this->getMyCon($conexion);
+			$rs = @mysqli_query($con, "SELECT * FROM (SELECT 1 AS __dummy) AS __t WHERE 1=0");
+			$this->rs_cargar = $rs;
+		}
+		return $rs;
+	}
 	/**
 	* Realiza una consulta en la base de datos -  STARDARD
 	*
@@ -73,7 +96,7 @@ class Class_Log_Datos_Com extends Class_Datos{
 		$this->free_result($result);
 		$this->liberar();
 		
-		return $row;
+		return is_array($row) ? $row : array();
 	}
 
 	/**

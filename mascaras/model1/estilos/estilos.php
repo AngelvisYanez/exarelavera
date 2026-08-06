@@ -10,7 +10,8 @@ Desarrollador:	Lewis Chimarro
  <link rel="shortcut icon" type="image/x-icon" href="../../imagenes/ingresar/favicon.png" />
 <link href="../../mascaras/model1/estilos/interfaz.css" rel="stylesheet" type="text/css">
 <link href="../../mascaras/model1/estilos/forms.css" rel="stylesheet" type="text/css">
-<link href="../../mascaras/model1/estilos/bootstrap.min.css?x=1" rel="stylesheet">
+<!-- FIX: Bootstrap 3.3.5 (was Bootstrap 2.x causing rendering conflicts) -->
+<link href="../../framework/jquery/bootstrap/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet">
 
 <!-- INICIO J Q U E R Y    T E X T     B O X -->
 <link rel="stylesheet" href="../../Librerias/textbox/main.css" type="text/css" media="screen" />			

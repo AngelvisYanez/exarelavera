@@ -1,4 +1,5 @@
 <?Php
+if (!is_object($obBD_con1)) return;
 require_once('../../componentes/LOGICA/logica.php');
 /* Consulta los periodos actuales en base a la Etapa-Modalidad y fechas de inicio y fin de matricula */
  $rs_costo = $obBD_con1->consulta(sentencias_com(201, $obBD_con1->parametros('')), $obBD_conexion->conexion);

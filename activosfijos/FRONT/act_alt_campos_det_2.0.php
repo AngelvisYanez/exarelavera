@@ -211,9 +211,9 @@ $total_rs_seccion = count($rs_seccion);
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-        <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+        <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
-		<script language="javascript" src="../VALIDACIONES/act_val_campos_det.js"></script>        
+		<script type="text/javascript" src="../VALIDACIONES/act_val_campos_det.js"></script>        
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.datepicker.js"></script> 
         <script>
 		$(function() { 

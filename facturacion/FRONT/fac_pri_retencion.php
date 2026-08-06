@@ -24,9 +24,9 @@ $obBD_con1 =  new Class_Log_Datos_Ret;
 		<link href="../../css_teso.css" rel="stylesheet" type="text/css">
 	<link rel="stylesheet" type="text/css" media="all" href="../../Librerias/jscalendar/calendar-win2k-cold-1.css" title="win2k-cold-1" />
 		<link href="../../mascaras/model1/estilos/estilo1.css" rel="stylesheet" type="text/css">
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/Validaciones.js"></script>
-        <script language="javascript" src="../VALIDACIONES/formexp.js"></script> 
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/Validaciones.js"></script>
+        <script type="text/javascript" src="../VALIDACIONES/formexp.js"></script> 
 		<script type="text/javascript" src="../../Librerias/jscalendar/calendar.js"></script>
 		<script type="text/javascript" src="../../Librerias/jscalendar/lang/calendar-es.js"></script>
 		<script type="text/javascript" src="../../Librerias/jscalendar/calendar-setup.js"></script>
@@ -48,14 +48,14 @@ $obBD_con1 =  new Class_Log_Datos_Ret;
 		{
 			
 			/**
-			*  R E S U M E N  Consulta de totales de códigos de formularios por fecha de comprobante de compra 
+			*  R E S U M E N  Consulta de totales de cï¿½digos de formularios por fecha de comprobante de compra 
 			*/
 			$rs_buscar=$obBD_con1->getArrayConsulta(548,$ini.'*'.$fin.'*'.'6'.'*'.$optest,$obBD_conexion);
         }//Fin del if($Chk_For==1) 
 		else 
 		{
  	        /**
-			*  Consultar comprobantes de retención por fecha de comprobante de compra 
+			*  Consultar comprobantes de retenciï¿½n por fecha de comprobante de compra 
 			*/
            	$rs_buscar = $obBD_con1->getArrayConsulta(543,$ini.'*'.$fin.'*'.'6'.'*'.$optest.'*'.$Ren_Cod,$obBD_conexion);
 		}//Fin del else if($Chk_For==1) 
@@ -65,7 +65,7 @@ $obBD_con1 =  new Class_Log_Datos_Ret;
 		if($Chk_For==1) 
 		{ 
 			/**
-			*  Consulta de totales de códigos de formularios por fecha de comprobante de retención 
+			*  Consulta de totales de cï¿½digos de formularios por fecha de comprobante de retenciï¿½n 
 			*/
 			$rs_buscar=$obBD_con1->getArrayConsulta(549,$ini.'*'.$fin.'*'.'6'.'*'.$optest,$obBD_conexion);
          }//Fin del if($Chk_For==1)
@@ -95,7 +95,7 @@ if($total_rs_buscar != 0)
 	  
 	  <table width="528" border="0" cellpadding="0" cellspacing="0">
 		<tr>
-		  <td width="170" class="Etiquetas"><div align="left">Comprobantes de retención: </div></td>
+		  <td width="170" class="Etiquetas"><div align="left">Comprobantes de retenciï¿½n: </div></td>
 		  <td width="52" align="left" class="LetraNegra">
 		  <?php  
 		  if ($optest == "A")
@@ -110,11 +110,11 @@ if($total_rs_buscar != 0)
 		  <?Php 
 		  	if($Ren_Por!="")
 			{ 
-				echo 'Porcentaje de retención:';
+				echo 'Porcentaje de retenciï¿½n:';
 			}  
 			if(!empty($Ren_Cod))
 			{ 
-				echo 'Código de formulario:';
+				echo 'Cï¿½digo de formulario:';
 			}?>
           </td>
 		  <td width="129" class="LetraNegra">&nbsp;&nbsp;<?Php if(($Ren_Por!="")) { if ($Ren_Por == "T"){ echo "Todos los %"; }
@@ -167,7 +167,7 @@ if(!isset($Chk_For))
 			
 		<td align="left" <?Php if ($row_rs_buscar['Ret_Est'] == 'I') { echo "bgcolor='#FF0000'"; } ?>>
 		<?Php echo $row_rs_buscar['Prs_Nom'];  if(empty($row_rs_buscar['Prs_Nom'])){ echo "&nbsp"; }   ?></td>
-		<?Php /** Base de retención de las facturas *****************/ 
+		<?Php /** Base de retenciï¿½n de las facturas *****************/ 
        if(isset($hdd)){
 	    /* Control para la opcion 2 */
         if(!isset($bcheck))
@@ -237,7 +237,7 @@ if($op==1)
 		?>
         </td>
 		<td align="center">
-		<a href="<?Php echo $_POST['form1'];?>?Ret_Cod=<?Php echo $row_rs_buscar['Ret_Cod'];?>" 
+		<a href="<?Php echo htmlspecialchars($_POST['form1'], ENT_QUOTES, 'UTF-8');?>?Ret_Cod=<?Php echo $row_rs_buscar['Ret_Cod'];?>" 
 		title="Mostra"><img src="../../imagenes/vista.jpg" width="20" height="20" border="0">        </a>		    </td>
 	  </tr>
 	  <tr class="Fondo" id="detalle[<?Php echo $i; ?>]">
@@ -267,7 +267,7 @@ if($op==1)
 	    <td align="center">&nbsp;</td>
 	    </tr>
 		<!-- Control para ocultar las filas de detalle -->
-		<script language="javascript">
+		<script type="text/javascript">
 		ShowHide('detalle[<?Php echo $i; ?>]');
 		ShowHide('menos[<?Php echo $i; ?>]');		 
 		 </script>		

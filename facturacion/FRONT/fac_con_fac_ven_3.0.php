@@ -452,7 +452,10 @@ if (isset($ajaxDetalleVentas)) {
     <!-- <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE> -->
     <TITLE><?Php echo "Ventas Consultar [EXA]"; ?></TITLE>
     <meta charset="UTF-8">
-    <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
+    <?php
+    $mask_model = 'model1';
+    require_once("../../mascaras/unified-loader.php");
+    ?>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
     <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
@@ -1702,9 +1705,9 @@ if (isset($ajaxDetalleVentas)) {
                                         <div class="col-sm-10">
                                             <div class="input-group input-group-sm dateRangeInputs">
                                                 <span class="range input-group-addon alert-info">Desde</span>
-                                                <input type="text" name="Fec_Ini" class="form-control range" required="" value="<?php echo isset($_GET['Fec_Ini']) ? $_GET['Fec_Ini'] : date('Y-01-01'); ?>" />
+                                                <input type="text" name="Fec_Ini" class="form-control range" required="" value="<?php echo isset($_GET['Fec_Ini']) ? htmlspecialchars($_GET['Fec_Ini'], ENT_QUOTES, 'UTF-8') : date('Y-01-01'); ?>" />
                                                 <span class="range input-group-addon alert-info">Hasta</span>
-                                                <input type="text" name="Fec_Fin" class="form-control range" required="" value="<?php echo isset($_GET['Fec_Fin']) ? $_GET['Fec_Fin'] : ''; ?>" />
+                                                <input type="text" name="Fec_Fin" class="form-control range" required="" value="<?php echo isset($_GET['Fec_Fin']) ? htmlspecialchars($_GET['Fec_Fin'], ENT_QUOTES, 'UTF-8') : ''; ?>" />
                                             </div>
                                         </div>
                                     </div>

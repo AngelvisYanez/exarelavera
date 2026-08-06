@@ -5,7 +5,7 @@ Alias:
 Descripcion:			Componente que pemite visualizar las personas segun el tipo de Rol con sus respectivos Ingresos y Egresos
 						del registrar y modificar
 Fecha de Actualizacion:	20/07/2010
-Desarrollador:			Angelica Gálvez
+Desarrollador:			Angelica Gï¿½lvez
 Fecha de Actualizacion:	24/01/2011
 Desarrollador:			Lewis Chimarro
 Fecha de Actualizacion:	02/05/2011
@@ -27,9 +27,9 @@ if(isset($Com_Are_Cod))
 	define(estilo_body_left, "border:none;text-align:left;background:none;font-size:10px");	
 ?>
 <!--
-TAMAÑO DIV 1:
+TAMAï¿½O DIV 1:
     width:1024px
-TAMAÑO DIV 2:
+TAMAï¿½O DIV 2:
     width:1280px
 -->
 <div style="width:1280px; overflow-x:scroll; overflow-y:hidden">
@@ -68,7 +68,7 @@ TAMAÑO DIV 2:
 		<?Php		
 		if ($vis[$i] == "N")
 		{ //Control para ocultar los rubros q poseen "Cam_Vis=N" de la tabla Campo_rol?> 
-			<script language="javascript">
+			<script type="text/javascript">
   			fila = document.getElementById("td[<?php echo $i;?>]");
     		fila.style.display = "none"; //ocultar fila 
             </script>
@@ -84,10 +84,10 @@ TAMAÑO DIV 2:
  </tr>
  </table>
 <!--
-TAMAÑO DIV 1:
+TAMAï¿½O DIV 1:
     width:1520px
     height:300px
-TAMAÑO DIV 2:
+TAMAï¿½O DIV 2:
     width:1520px
     height:300px    
 -->
@@ -115,7 +115,7 @@ TAMAÑO DIV 2:
    	<td style="width: 10px;" align="center"><input type="text" name="txt_campos4" id="txt_campos4" value="<?php echo $cont; ?>" size="1" 
             readonly="readonly" style=" <?Php echo estilo_body_center; ?>" <?Php echo focus_row_select_id('tbody_fila['.$cont.']',"resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo"); ?> /></td>
     <td style="width: 200px;" align="left" title="<?php echo $row_rs_per_rol['Tic_Des'];?>">
-	<input name="hdd_nombre" type="text" value="<?php echo "Cód.: ".$row_rs_per_rol['Dis_Cod']." ".$row_rs_per_rol['Prs_Ape'].' '.$row_rs_per_rol['Prs_Nom']; ?>"size="60"  readonly="readonly" style=" <?Php echo estilo_body_left; ?>" <?Php echo focus_row_select_id('tbody_fila['.$cont.']',"resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo"); ?>></td>
+	<input name="hdd_nombre" type="text" value="<?php echo "Cï¿½d.: ".$row_rs_per_rol['Dis_Cod']." ".$row_rs_per_rol['Prs_Ape'].' '.$row_rs_per_rol['Prs_Nom']; ?>"size="60"  readonly="readonly" style=" <?Php echo estilo_body_left; ?>" <?Php echo focus_row_select_id('tbody_fila['.$cont.']',"resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo"); ?>></td>
 	
 	<?php 
 	/* CALCULO CAMPOS INGRESOS */
@@ -239,7 +239,7 @@ TAMAÑO DIV 2:
 			echo $cont;}?>" <?Php echo focus_row_select_id('tbody_fila['.$cont.']',"resaltar_text", "resaltar_back", "undo_resaltar_text", "Fondo"); ?> />
 		<input type="hidden" name="hdd_ingreso_egreso[<?php echo $cont;?>,<?php echo $cod; ?>]" id="hdd_ingreso_egreso[<?php echo $cont;?>,<?php echo $cod; ?>]" value="<?php echo $cod;?>"/>		</td>
 		<?php if ($vis[$cont_caja_ingre] == "N"){ //Control para ocultar los rubros q poseen "Cam_Vis=N" de la tabla Campo_rol ?> 		
-	<script language="javascript">
+	<script type="text/javascript">
 			fila = document.getElementById("det[<?php echo $td_cont;?>]");
     		fila.style.display = "none"; //ocultar col
 			</script>
@@ -337,6 +337,6 @@ else
 }
 else
 {
-	echo error_alerta("<< Error de componente: tes_com_det_rolpagos.php >> <br>Descripción: No se ha definido la Propiedad: 	
+	echo error_alerta("<< Error de componente: tes_com_det_rolpagos.php >> <br>Descripciï¿½n: No se ha definido la Propiedad: 	
 		Com_Are_Cod<br> Hoy: Variable que contiene el Tipo de Rol de Pagos", 2); 
 }?>

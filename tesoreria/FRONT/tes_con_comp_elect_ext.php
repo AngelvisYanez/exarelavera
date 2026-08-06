@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/tes_log_anexo.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');	
@@ -86,7 +86,7 @@ if(isset($uploadXML)){
 		<?Php require_once("../../mascaras/model1/estilos/basic.php"); ?>
                 <?Php require_once("../../mascaras/model1/estilos/jqgrid.php")?> 
                 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-                <script language="JavaScript">
+                <script type="text/javascript">
 		
 		</script>
 	</HEAD>

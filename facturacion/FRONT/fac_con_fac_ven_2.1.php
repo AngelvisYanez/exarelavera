@@ -255,12 +255,12 @@ switch ($op) {
 	<TITLE><?Php echo "Ventas Consultas [EXA]"; ?></TITLE>
 	<meta charset="UTF-8">
 	<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-	<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-	<script language="javascript" src="../VALIDACIONES/fac_val_fac_ven.js"></script>
+	<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+	<script type="text/javascript" src="../VALIDACIONES/fac_val_fac_ven.js"></script>
 	<script type="text/javascript" src="../../Librerias/exportar/jquery-1.3.2.min.js"></script>
 	<!--Librerias para modal -->
 	<script type="text/javascript" src="../../Librerias/validaciones/interfaz.modals.js"></script>
-	<script language="javascript">
+	<script type="text/javascript">
 		$(document).ready(function() {
 			/* LLamado a la class del boton exportar */
 			$("#Boton_Excel").click(function(event) {
@@ -1199,7 +1199,7 @@ switch ($op) {
 																<td colspan="5"><?Php include("../COMPONENTES/tes_com_detalle_ven.php");  ?></td>
 																<td>&nbsp;</td>
 															</tr>
-															<script language="javascript">
+															<script type="text/javascript">
 																ShowHide('detalle[<?Php echo $i; ?>]');
 																ShowHide('menos[<?Php echo $i; ?>]');
 															</script>
@@ -2032,7 +2032,7 @@ switch ($op) {
 															<td colspan="5"><?Php include("../COMPONENTES/tes_com_detalle_ven.php");  ?></td>
 															<td>&nbsp;</td>
 														</tr>
-														<script language="javascript">
+														<script type="text/javascript">
 															ShowHide('detalle[<?Php echo $i; ?>]');
 															ShowHide('menos[<?Php echo $i; ?>]');
 														</script>
@@ -2430,7 +2430,7 @@ switch ($op) {
 
 					if (!(isset($carreras)) && ($op == 4 || $op == 2)) {
 					?>
-						<script language="javascript">
+						<script type="text/javascript">
 							ShowHide('carreras');
 						</script>
 					<?Php

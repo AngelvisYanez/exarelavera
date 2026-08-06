@@ -1,5 +1,4 @@
 <?php
-use \Exception;
 require_once(dirname(__file__)."/../DATA/libs/AbstractModel.php");
 class ali_pagos extends AbstractModel{
     protected $_name = 'ali_pagos';

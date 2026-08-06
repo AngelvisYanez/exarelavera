@@ -1,0 +1,189 @@
+/**
+ * Model3 - Default Theme Configuration
+ * Unified color scheme and design tokens for all modules
+ * 
+ * This file defines the standard CSS custom properties that should be used
+ * across all modules in the system. It provides a consistent look and feel
+ * while allowing for easy customization through variable overrides.
+ * 
+ * Usage:
+ * - Include this file in all modules
+ * - Override variables as needed for specific modules
+ * - Use the defined variables throughout your CSS
+ */
+
+:root {
+  /* ============================================
+     PRIMARY COLOR PALETTE
+     ============================================ */
+  
+  /* Brand Colors */
+  --v2-brand-primary: #4a88b5;        /* Primary blue */
+  --v2-brand-primary-dark: #2f6f96;   /* Darker blue */
+  --v2-brand-primary-light: #6ba3cc;  /* Lighter blue */
+  --v2-brand-secondary: #5d7289;      /* Secondary gray-blue */
+  
+  /* Semantic Colors */
+  --v2-color-success: #87B87F;        /* Green for success/paid */
+  --v2-color-success-light: #DDFAE2;  /* Light green */
+  --v2-color-danger: #D15B47;         /* Red for danger/overdue */
+  --v2-color-danger-light: #FADDDD;   /* Light red */
+  --v2-color-warning: #FFB752;        /* Orange for warnings */
+  --v2-color-warning-light: #FFAA55;  /* Light orange */
+  --v2-color-info: #6FB3E0;           /* Blue for info */
+  --v2-color-info-light: #bcd8f4;     /* Light blue */
+  --v2-color-purple: #9063a7;         /* Purple for special states */
+  --v2-color-gray: #a9a9a9;           /* Gray for disabled/readonly */
+  
+  /* ============================================
+     BACKGROUND COLORS
+     ============================================ */
+  
+  /* Page and Container Backgrounds */
+  --v2-bg-page: #dbe5f1;             /* Main page background */
+  --v2-bg-panel: #eef3f8;            /* Panel/card background */
+  --v2-bg-grid: #f8fafc;             /* Grid/table background */
+  --v2-bg-input: #ffffff;            /* Input field background */
+  --v2-bg-readonly: #e4e8ee;         /* Readonly field background */
+  
+  /* Surface Colors */
+  --v2-surface: var(--v2-bg-panel);
+  --v2-surface-alt: #eef1f6;
+  --v2-surface-hover: #f0f4f8;
+  --v2-surface-input: var(--v2-bg-input);
+  
+  /* ============================================
+     TEXT COLORS
+     ============================================ */
+  
+  --v2-text-primary: #1e293b;        /* Primary text */
+  --v2-text-secondary: #475569;      /* Secondary text */
+  --v2-text-muted: #64748b;          /* Muted/placeholder text */
+  --v2-text-light: #94a3b8;          /* Light text */
+  --v2-text-on-brand: #ffffff;       /* Text on brand color */
+  
+  /* ============================================
+     BORDER COLORS
+     ============================================ */
+  
+  --v2-border-primary: #d9e3ea;      /* Primary borders */
+  --v2-border-light: #e2e8f0;        /* Light borders */
+  --v2-border-focus: #4a88b5;        /* Focus state border */
+  
+  /* ============================================
+     GRID-SPECIFIC COLORS
+     ============================================ */
+  
+  /* Grid Header */
+  --v2-grid-header-bg: #5d7289;      /* Header background */
+  --v2-grid-header-gradient: linear-gradient(to bottom, #647b94, #556b83);
+  --v2-grid-header-text: #ffffff;    /* Header text */
+  --v2-grid-header-border: #556b83;  /* Header border */
+  
+  /* Grid Rows */
+  --v2-grid-row-even: #ffffff;       /* Even row background */
+  --v2-grid-row-odd: #f8fafc;        /* Odd row background */
+  --v2-grid-row-hover: #f0f4f8;      /* Row hover state */
+  --v2-grid-row-selected: #e4edf6;   /* Selected row */
+  
+  /* Grid Status Rows */
+  --v2-grid-row-pagado-bg: #dcefe2;  /* Paid row (green) */
+  --v2-grid-row-vencido-bg: #f3dede; /* Overdue row (red) */
+  --v2-grid-row-dirty-bg: #fff9c4;   /* Modified row (yellow) */
+  
+  /* ============================================
+     TYPOGRAPHY
+     ============================================ */
+  
+  --v2-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --v2-font-size-xs: 11px;
+  --v2-font-size-sm: 12px;
+  --v2-font-size-base: 13px;
+  --v2-font-size-md: 14px;
+  --v2-font-size-lg: 16px;
+  --v2-font-size-xl: 18px;
+  
+  /* ============================================
+     SPACING AND SIZING
+     ============================================ */
+  
+  --v2-spacing-xs: 2px;
+  --v2-spacing-sm: 4px;
+  --v2-spacing-md: 8px;
+  --v2-spacing-lg: 12px;
+  --v2-spacing-xl: 16px;
+  
+  /* ============================================
+     BORDERS AND RADII
+     ============================================ */
+  
+  --v2-border-radius: 10px;
+  --v2-border-radius-sm: 6px;
+  --v2-border-radius-lg: 12px;
+  --v2-border-radius-full: 9999px;
+  
+  /* ============================================
+     SHADOWS
+     ============================================ */
+  
+  --v2-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --v2-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+  --v2-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  
+  /* ============================================
+     ELEVATION
+     ============================================ */
+  
+  --v2-elev-border: 1px solid #d6e0ea;
+  --v2-elev-shadow: var(--v2-shadow-sm);
+  
+  /* ============================================
+     COMPONENT-SPECIFIC
+     ============================================ */
+  
+  /* Buttons */
+  --v2-btn-primary-bg: #4a88b5;
+  --v2-btn-primary-text: #ffffff;
+  --v2-btn-secondary-bg: #6c757d;
+  --v2-btn-secondary-text: #ffffff;
+  --v2-btn-success-bg: #28a745;
+  --v2-btn-danger-bg: #dc3545;
+  --v2-btn-warning-bg: #ffc107;
+  --v2-btn-info-bg: #17a2b8;
+  
+  /* Forms */
+  --v2-input-border: #ced4da;
+  --v2-input-border-focus: #80bdff;
+  --v2-input-bg: #ffffff;
+  --v2-input-bg-disabled: #e9ecef;
+  
+  /* Alerts */
+  --v2-alert-success-bg: #d4edda;
+  --v2-alert-success-border: #c3e6cb;
+  --v2-alert-danger-bg: #f8d7da;
+  --v2-alert-danger-border: #f5c6cb;
+  --v2-alert-warning-bg: #fff3cd;
+  --v2-alert-warning-border: #ffeeba;
+  --v2-alert-info-bg: #d1ecf1;
+  --v2-alert-info-border: #bee5eb;
+}
+
+/* ============================================
+   GLOBAL STYLES
+   ============================================ */
+
+/* Apply font family globally */
+body {
+  font-family: var(--v2-font-family);
+}
+
+/* Focus states */
+*:focus {
+  outline-color: var(--v2-border-focus);
+}
+
+/* Selection color */
+::selection {
+  background-color: var(--v2-brand-primary);
+  color: var(--v2-text-on-brand);
+}

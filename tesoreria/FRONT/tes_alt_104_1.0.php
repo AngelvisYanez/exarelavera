@@ -1,4 +1,4 @@
-﻿<?Php
+<?Php
 /**
  * Descripción: Permite generar archivo XML del formulario 104
  * Fecha de creación:   2015-05-21

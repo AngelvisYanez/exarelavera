@@ -190,7 +190,7 @@ $rs_TipAsiento = $obBD_con1->getArrayConsulta(5, 'E', $obBD_conexion);
 		});              			
 		</script>		
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-        <script language="javascript" src="../VALIDACIONES/cch_par_reposicion.js?a=6"></script>
+        <script type="text/javascript" src="../VALIDACIONES/cch_par_reposicion.js?a=6"></script>
 		<script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js"></script>
 	</HEAD>
 <BODY>

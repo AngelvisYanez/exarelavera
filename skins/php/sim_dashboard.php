@@ -1,1 +1,0 @@
-<?php session_start(); $_POST['getDashboardData'] = true; $_POST['periodo'] = 'personalizado'; $_POST['fechaInicio'] = '2015-01-01'; $_POST['fechaFin'] = '2026-12-31'; $_SESSION['Ses_Dat_Dis'] = 'exa'; $_SESSION['Ses_Emp_Cod'] = 1; $_SESSION['Ses_Suc_Cod'] = 1; require_once('dashboard.php'); ?>

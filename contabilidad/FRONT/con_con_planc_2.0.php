@@ -38,10 +38,10 @@ if(isset($excel)){ ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <HTML>
 	<HEAD>
-		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
-		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/con_val_planc.js"></script>
+		<TITLE><?php echo $Ses_Sys_Nom; ?></TITLE>
+		<?php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/con_val_planc.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
 		<script type="text/javascript"> 
           $(function() {
@@ -78,7 +78,7 @@ switch($op){
 			<LEGEND>
 				<label class="Titulos2">Buscar por:</label>
 			</LEGEND>
-			<?Php
+			<?php 
 			mensaje_requerido(); 
 			?>
 			<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name="form" id="form">
@@ -145,7 +145,7 @@ switch($op){
 							<td align="center" <?php echo $color_d; ?>><?php echo $row['Pld_Cod']; ?></td>
 							<td <?php echo $color_d; ?>><?php echo $row['Pla_Obs']; ?></td>
 							<td <?php echo $color_d; ?>><?php echo $row['Pld_Cdc']; ?></td>
-							<td <?php echo $color_d; ?>><?Php echo marcar_cadena($_POST['txt_busqueda'], $row['Pld_Des'], '#FFFF00', 1); ?></td>
+							<td <?php echo $color_d; ?>><?php echo marcar_cadena($_POST['txt_busqueda'], $row['Pld_Des'], '#FFFF00', 1); ?></td>
 							<td <?php echo $color_d; ?> align="center"><?php echo $row['Pld_Tip']; ?></td>
 							<td <?php echo $color_d; ?> align="center"><?php echo $row['Pld_Deb']; ?></td>
 							<td <?php echo $color_d; ?> align="center"><?php echo $row['Pld_Cre']; ?></td>
@@ -157,7 +157,7 @@ switch($op){
 	  					<tr><td>&nbsp;</td>
 					  	  <td>&nbsp;</td>
 					  	  <td>&nbsp;</td>
-					  	  <td><?Php echo error_alerta("No hay ninguna cuenta creada", 1) ?></td>
+					  	  <td><?php echo error_alerta("No hay ninguna cuenta creada", 1) ?></td>
 					  	  <td>&nbsp;</td>
 					  	  <td>&nbsp;</td>
 					  	  <td>&nbsp;</td>
@@ -193,7 +193,7 @@ switch($op){
       					</tr>
 					</thead>
     				<tbody>
-      				<?foreach($row_rs_planes as $row){
+      				<?php foreach($row_rs_planes as $row){
 	 		 			if($row['Pla_Est']=='Inactivo'){ 
 							$rojo='#FF0000';
 							if(!isset($com_leyenda[1]))$com_leyenda[1]=1;
@@ -232,7 +232,7 @@ switch($op){
 						?>
 							<tr>
 								<td>&nbsp;</td>
-					  	  		<td><?Php echo error_alerta("�No hay resultados que mostrar!", 1) ?></td>
+					  	  		<td><?php echo error_alerta("�No hay resultados que mostrar!", 1) ?></td>
 					  	  		<td>&nbsp;</td>
 					  		</tr>
 						<?php
@@ -259,7 +259,7 @@ switch($op){
 <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js"></script>
 <script type="text/javascript">
 function exportExcel(Pla_Cod,Pla_Obs){
-    $.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',{'excel':true,'codigo':Pla_Cod,'descrip':Pla_Obs}, function(response){
+    $.get('<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',{'excel':true,'codigo':Pla_Cod,'descrip':Pla_Obs}, function(response){
         $.downloadFile($.exportarExcelBlob(response,'Plan de Cuentas'),'PlanCuentas.xls');
     }).fail(function(error) { $.alert("El Servidor ha fallado en responder!");});
     

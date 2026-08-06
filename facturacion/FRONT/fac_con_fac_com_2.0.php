@@ -152,8 +152,8 @@ exit();
     <meta charset= "UTF-8">
         <?php require_once("../../mascaras/model1/estilos/estilos.php");?>
 
-		<script language="javascript" src="../VALIDACIONES/fac_val_compras.js"></script>
-        <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/fac_val_compras.js"></script>
+        <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
          <?php if($op!=3){ ?>
         <!--Librerias para interfaz -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>  
@@ -177,8 +177,8 @@ exit();
         
         <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js"></script>
        
-        <!--<script language="javascript" src="../VALIDACIONES/XML.js"></script>		-->
-        <script language="javascript">
+        <!--<script type="text/javascript" src="../VALIDACIONES/XML.js"></script>		-->
+        <script type="text/javascript">
 			$(document).ready(function() {
 				/* LLamado a la class del boton exportar */
 				$("#Boton_Excel").click(function(event) {
@@ -571,7 +571,7 @@ Compras no sujetas a retenci&oacute;n</span></td>
                <td><?php include("../../componentes/FRONT/com_con_fecha.php"); ?></td>
 		   </tr>   
            </table>               
-           <script language="javascript">ShowHide('Bus_ci');</script>
+           <script type="text/javascript">ShowHide('Bus_ci');</script>
        </td>
        <td width="46%" valign="top">
 	   <?php include("../../componentes/FRONT/com_con_estado.php"); ?>
@@ -1177,7 +1177,7 @@ else
 					*/		
 					$total_fac=$total_fac+$iva_factura+($row_rs_buscar['Importe']-($row_rs_buscar['Importe']*$row_rs_buscar['Cop_Des']/100));				   
 					?></FONT></td>
-			<td align="center"><button type="button" class="btn btn-info btn-mini" title="Detalle del registro" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_detalle=1&amp;com_codigo=<?php echo $row_rs_buscar['Cop_Cod'];?>&amp;Ses_Emp_Cod=<?php echo $$Ses_Emp_Cod;?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>
+			<td align="center"><button type="button" class="btn btn-info btn-mini" title="Detalle del registro" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_detalle=1&amp;com_codigo=<?php echo $row_rs_buscar['Cop_Cod'];?>&amp;Ses_Emp_Cod=<?php echo $Ses_Emp_Cod;?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>
 			<td colspan="5" align="center"><?Php 
 				if ($row_rs_buscar['Cop_Est'] == 'A') 
 				{ ?>
@@ -1365,7 +1365,7 @@ else
                <td><?php include("../../componentes/FRONT/com_con_fecha.php"); ?></td>
 		   </tr>  
            </table>               
-           <script language="javascript">ShowHide('Bus_ci');</script>
+           <script type="text/javascript">ShowHide('Bus_ci');</script>
        </td>
        <td width="46%" valign="top">
 	   <?php include("../../componentes/FRONT/com_con_estado.php"); ?>
@@ -1734,7 +1734,7 @@ break;
                    </td>
                </tr>
                </table>               
-               <script language="javascript">ShowHide('Bus_ci');</script>
+               <script type="text/javascript">ShowHide('Bus_ci');</script>
            </td>
            <td width="46%" valign="top">
            <?php include("../../componentes/FRONT/com_con_estado.php"); ?>

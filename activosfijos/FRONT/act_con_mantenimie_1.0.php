@@ -1,14 +1,14 @@
 <?php 
 /** 
  * Alias:	Insertar
- * Descripci髇: Permite la consulta de mantenimiento del activo.
- * por Descripci髇, C骴iog de Barra, C骴igo Secuencial, y por Campos e impresi髇 de la consulta.
+ * Descripci贸n: Permite la consulta de mantenimiento del activo.
+ * por Descripci贸n, C贸diog de Barra, C贸digo Secuencial, y por Campos e impresi贸n de la consulta.
  * Desarrollador:	Didimo Zamora
  *
  ***************************************
- * Fecha de actualizaci髇:	2011-04-21 *
- * Desarrollador: D韉imo Zamora M.     *
- * Fecha de actualizaci髇:	2013-05-28 *
+ * Fecha de actualizaci贸n:	2011-04-21 *
+ * Desarrollador: D铆dimo Zamora M.     *
+ * Fecha de actualizaci贸n:	2013-05-28 *
  ***************************************/
   
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -18,7 +18,7 @@ require_once('../../Librerias/postclass.php');
 
 
 /**
- *Configuraci髇 de inicio de pesta馻 posicion 1
+ *Configuraci贸n de inicio de pesta帽a posicion 1
  */
 if(!isset($op))
 {	
@@ -28,13 +28,13 @@ if(!isset($op))
 /** 
  *Creacion del Objeto de conexion 
  */
-$obBD_conexion = new Class_Log_Conexion_Con($Ses_Dat_Dis);
+$obBD_conexion = new Class_Log_Conexion_Mantenimiento($Ses_Dat_Dis);
 /**
  * Cracion del objeto mysql para las consultas 
  */
-$obBD_con1 =  new Class_Log_Datos_Con;
+$obBD_con1 =  new Class_Log_Datos_Mantenimiento;
 /**
- * Creaci髇 del objeto para evitar el reenvio 
+ * Creaci贸n del objeto para evitar el reenvio 
  */
 $thisPost = new Post_Block;  
 	
@@ -74,7 +74,7 @@ $thisPost = new Post_Block;
 	 }else
 		{
 			/** 
-			 * Consulta realizada en base al c骴igo seleccionado 
+			 * Consulta realizada en base al c贸digo seleccionado 
 			 */
 			if (isset($codigo))
 			{
@@ -147,12 +147,12 @@ $thisPost = new Post_Block;
 			<table width="633" border="0">
 				<tr>
 					<td width="105"><input name="op_opciones" type="radio" value="d"   checked  onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.txt_busqueda);">              
-                    <span class="LetraNegra">Descripci髇</span> <input name="op_cam" id="op_cam" type="hidden" value="d"></td>
+                    <span class="LetraNegra">Descripci贸n</span> <input name="op_cam" id="op_cam" type="hidden" value="d"></td>
                     	
 					<td width="125"><input type="radio" name="op_opciones" value="cb" <?Php if($op_opciones== 'cb'){?> checked <?php } ?> onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.txt_busqueda);">
-                    <span class="LetraNegra">C骴igo de Barra</span></td>
+                    <span class="LetraNegra">C贸digo de Barra</span></td>
 					<td width="122"><input type="radio" name="op_opciones" value="cs" <?Php if($op_opciones== 'cs'){?> checked <?php } ?> onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.txt_busqueda);" >
-                    <span class="LetraNegra">C骴igo Secuencial</span></td>
+                    <span class="LetraNegra">C贸digo Secuencial</span></td>
                     <td width="263"><input type="radio" name="op_opciones" value="ns" <?Php if($op_opciones== 'ns'){  ?> checked <?php } ?> onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.Cam_Cod);">
                     <span class="LetraNegra">Por Campo</span>
 <?Php
@@ -205,7 +205,7 @@ $thisPost = new Post_Block;
 				<table width="100%" border="0" cellpadding="0" cellspacing="0" class="fixedHeader01">
 				<thead>
 				<tr>
-					<th width="5%">C骴. Int.</th>
+					<th width="5%">C贸d. Int.</th>
 					<th>SubGrupo</th>
 					<th>Descripci&oacute;n </th>
 					<th>Secuencial</th>
@@ -254,7 +254,7 @@ $thisPost = new Post_Block;
             <tr>
                 <td> </td>
                 <td> </td>
-                <td align="center"><?Php echo error_alerta("o hay resultados que mostrar!", 1) ?></td>
+                <td align="center"><?Php echo error_alerta("隆No hay resultados que mostrar!", 1) ?></td>
                 <td> </td>
                 <td> </td>
             </tr>
@@ -289,7 +289,7 @@ if ($hdd_aux==1){
             </LEGEND>
             <table width="100%" border="0" cellpadding="0" cellspacing="0">
             <tr>
-                <td class="Etiqueta1"> C骴igo Activo:</td>
+                <td class="Etiqueta1"> C贸digo Activo:</td>
                 <td width="23%" class="LetraNegra">&nbsp;<?php echo $row_rs_consultar["Act_Cdc"]?></td>
                 <td width="7%" class="Etiqueta1">Descripci&oacute;n:</td>
                 <td width="61%" class="LetraNegra">&nbsp;<?php echo $row_rs_consultar["Act_Des"]?> </td>
@@ -382,7 +382,7 @@ if ($hdd_aux==1){
             	<td align="center" class="LetraNegra">&nbsp;</td>
             	<td align="center" class="LetraNegra">&nbsp;</td>
             	<td align="center" class="LetraNegra">&nbsp;</td>
-                <td align="center" class="LetraNegra"><?Php echo error_alerta("o hay resultados que mostrar!", 1) ?></td>
+                <td align="center" class="LetraNegra"><?Php echo error_alerta("隆No hay resultados que mostrar!", 1) ?></td>
                 <td align="center" class="LetraNegra">&nbsp;</td>
                 <td align="center" class="LetraNegra">&nbsp;</td>
                 <td align="center" class="LetraNegra">&nbsp;</td>
@@ -544,7 +544,7 @@ require_once('../../componentes/FRONT/com_con_leyenda.php');
             	<td align="center" class="LetraNegra">&nbsp;</td>
             	<td align="center" class="LetraNegra">&nbsp;</td>
                 <td align="center" class="LetraNegra">&nbsp;</td>
-            	<td align="center" class="LetraNegra"><?Php echo error_alerta("o hay resultados que mostrar!", 1) ?></td>
+            	<td align="center" class="LetraNegra"><?Php echo error_alerta("隆No hay resultados que mostrar!", 1) ?></td>
                 <td align="center" class="LetraNegra">&nbsp;</td>
                 <td align="center" class="LetraNegra">&nbsp;</td>
                 <td align="center" class="LetraNegra">&nbsp;</td>

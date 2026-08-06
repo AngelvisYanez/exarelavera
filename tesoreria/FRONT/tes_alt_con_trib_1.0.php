@@ -1,4 +1,4 @@
-﻿<?php	
+<?php	
 /**
 * @abstract Permite realizar el control tributario
 * @author Erik Niebla

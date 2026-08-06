@@ -10,9 +10,9 @@
         <?Php require_once("../../../mascaras/model1/estilos/jqgrid5.php") ?>
         <script type="text/javascript" src="/framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
         <script type="text/javascript" src="/framework/jquery/chosen/chosenDesc/chosenDesc.js"></script>
-        <!--<script language="javascript" src="../VALIDACIONES/tes_val_cliente.js?a=12"></script>-->
-		<script language="javascript" src="/framework/plugins/cedulaRuc.js"></script>
-        <script language="javascript" src="../../scripts/clientes/tes_mod_cliente_1.0.js"></script>
+        <!--<script type="text/javascript" src="../VALIDACIONES/tes_val_cliente.js?a=12"></script>-->
+		<script type="text/javascript" src="/framework/plugins/cedulaRuc.js"></script>
+        <script type="text/javascript" src="../../scripts/clientes/tes_mod_cliente_1.0.js"></script>
     </HEAD>
     <BODY>
         <div class="panel panel-main">

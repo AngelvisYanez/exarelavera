@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/tes_log_anexo.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');

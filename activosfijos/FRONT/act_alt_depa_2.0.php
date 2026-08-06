@@ -94,7 +94,7 @@ if (isset($saveAsignacion)) {
 		<?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
         <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
         <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
-        <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+        <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
         <style>
             #pager_activo_center{ display: none; }
         </style>

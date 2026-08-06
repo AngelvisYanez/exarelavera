@@ -9,11 +9,11 @@
 // Usage: $master=new WebphpWebSocketSocket("localhost",12345);
 
 class phpWebSocket{
-  var $master;
-  var $sockets = array(); //create an array of socket objects 
-  var $users   = array(); //create an array of users objects to handle discussions with users
-  var $debug   = false;
-  var $ip   = false;
+  public $master;
+  public $sockets = array(); //create an array of socket objects 
+  public $users   = array(); //create an array of users objects to handle discussions with users
+  public $debug   = false;
+  public $ip   = false;
   
   function ascii_banner() //just for old-skool fun...
   {
@@ -270,14 +270,14 @@ function frame_encode($message) {
 
 //User class holds basic user identifying information
 class User{
-    var $id;
-    var $socket;
-    var $main=false;
-    var $cookie;
-    var $Emp_Cod;
-    var $Usu_Cod;
-    var $session;
-    var $handshake;
+    public $id;
+    public $socket;
+    public $main=false;
+    public $cookie;
+    public $Emp_Cod;
+    public $Usu_Cod;
+    public $session;
+    public $handshake;
 
     function __construct(){    //do stuff to initialize each user  
         $this->main=false;

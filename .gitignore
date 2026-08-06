@@ -8,7 +8,10 @@
 *.p12
 *.pdf
 .env
+.phpunit.result.cache
 
+# Credenciales de base de datos
+conexion-produccion/
 
 cgi-bin/*
 cgi-bin/*.*
@@ -88,3 +91,8 @@ $RECYCLE.BIN/
 /vercel/
 db/
 scripts/
+
+# Dumps de base de datos (grandes / datos de produccion)
+sql_dumps/
+convertir-a-md/build/
+convertir-a-md/dist/

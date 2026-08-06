@@ -90,7 +90,7 @@ if (isset($ajax_mar))
 	<?php	
 		}					
 		?>
-        <script language="javascript">
+        <script type="text/javascript">
 			document.getElementById('btnGuardar').disabled=false;
 		</script>
         <?php
@@ -115,7 +115,7 @@ if (isset($ajax_con))
 	<?php	
 		}					
 		?>
-        <script language="javascript">
+        <script type="text/javascript">
 			document.getElementById('btnGuardar').disabled=false;
 		</script>
         <?php
@@ -204,8 +204,8 @@ if ($ajax_buscador=="F")
 <HTML>
 	<HEAD>
     	<?php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/tes_val_codigos_sri.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/tes_val_codigos_sri.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
          <!--Librerias para modal -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.modals.js"></script> 

@@ -73,7 +73,7 @@ require_once('../../Librerias/procedimientos/almacenados_standar.php');
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
         <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
         <script type="text/javascript" src="../../framework/jquery/chosen/chosenDesc/chosenDesc.js"></script>        
-        <script language="javascript" src="../VALIDACIONES/adm_val_usuarios_2.0.js"></script>
+        <script type="text/javascript" src="../VALIDACIONES/adm_val_usuarios_2.0.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/zxcvbn/4.2.0/zxcvbn.js"></script>
     </HEAD>
     <BODY>

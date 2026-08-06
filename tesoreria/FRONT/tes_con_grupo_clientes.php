@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 /**
  * Permite registrar un grupo de clientes de una empresa especifica

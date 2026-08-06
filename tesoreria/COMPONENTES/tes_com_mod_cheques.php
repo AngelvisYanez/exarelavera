@@ -1,7 +1,7 @@
 <?php
 /* Alias: [--]
-   Descripción: Componente que permite mostrar los datos del cheque a modificar.
-   Fecha de actualización: 07-08-2009
+   Descripciï¿½n: Componente que permite mostrar los datos del cheque a modificar.
+   Fecha de actualizaciï¿½n: 07-08-2009
    Desarrollador: Freddy Jumbo
 */
 if(isset($For_Cod)){ /* inicio if(isset($For_Cod)){ */
@@ -25,7 +25,7 @@ if(isset($For_Cod)){ /* inicio if(isset($For_Cod)){ */
 	  		<td width="180" class="Cabecera1">Observaci&oacute;n</td>
 	  		<td width="24">&nbsp;</td> 
 		</tr>
-	  <?Php //Consulto la informacion del cheke Cop_Bus=> es el código interno de la fatura de compra 
+	  <?Php //Consulto la informacion del cheke Cop_Bus=> es el cï¿½digo interno de la fatura de compra 
 	        //echo "Codigo ===>".$Cop_Bus;
 	  		$rs_informacion_cheque=$obBD_con1->consulta(sentencias_tes(346, $obBD_con1->parametros($Cop_Bus)), $obBD_conexion->conexion); 
 			$row_rs_informacion_cheque=$obBD_con1->registros();
@@ -35,7 +35,7 @@ if(isset($For_Cod)){ /* inicio if(isset($For_Cod)){ */
  		<tr>
 		<td width="135">
 		<?Php
-		/* Consultar la información del cheque */
+		/* Consultar la informaciï¿½n del cheque */
 			$rs_cheque_compras=$obBD_con1->consulta(sentencias_tes(372, $obBD_con1->parametros($row_rs_informacion_cheque['Pld_Cod'])), $obBD_conexion->conexion); 
 			$row_rs_cheque_compra_mod=$obBD_con1->registros();
 			$num_row_rs_cheque_compra_mod=$obBD_con1->numregistros();	
@@ -46,7 +46,7 @@ if(isset($For_Cod)){ /* inicio if(isset($For_Cod)){ */
 			{
 			   $Ban_Tipo=$row_rs_cheque_compra_mod['Ban_Tip'];
 			}
-			/* Fin consultar la información del cheque */	
+			/* Fin consultar la informaciï¿½n del cheque */	
 		
 		 			$rs_cuentas_cheque=$obBD_con1->consulta(sentencias_tes(347, $obBD_con1->parametros($row_rs_cheque_compra_mod['Ban_Tip'])), $obBD_conexion->conexion);  		
 					$row_rs_cuenta_cheque=$obBD_con1->registros();		?>
@@ -167,7 +167,7 @@ if(isset($For_Cod)){ /* inicio if(isset($For_Cod)){ */
 </tr>
 </table>
 </FIELDSET>
-<script language="javascript" type="text/javascript">
+<script type="text/javascript" type="text/javascript">
 	ShowHide('Tbl_Pagos'); 
 	ShowHide('Tbl_BusCtas'); 
 </script> 
@@ -177,16 +177,16 @@ $obBD_con1->free_result($rs_combo);
 $obBD_con1->free_result($rs_informacion_cheque);
 $obBD_con1->free_result($rs_cuentas_cheque);
 	}else{  /* else  if(isset($Pec_Cod)){ */
-		 		echo error_alerta("<< Error de componente: tes_com_mod_cheque.php >> <br>Descripción: No se ha definido la Propiedad: Pec_Cod<br>
+		 		echo error_alerta("<< Error de componente: tes_com_mod_cheque.php >> <br>Descripciï¿½n: No se ha definido la Propiedad: Pec_Cod<br>
     	    	Pec_Cod: Variable que contiene el nombre del texto que posse el codigo de la compra", 2);
 		 }
 	  }else{ /* else if(isset($Cop_Bus)){ */
   			
-      			echo error_alerta("<< Error de componente: tes_com_mod_cheque.php >> <br>Descripción: No se ha definido la Propiedad: Cop_Bus<br>
+      			echo error_alerta("<< Error de componente: tes_com_mod_cheque.php >> <br>Descripciï¿½n: No se ha definido la Propiedad: Cop_Bus<br>
     	    	Cop_Bus: Variable que contiene el nombre del texto que posse el codigo de la compra", 2);
   			}
 		 }else{ /* else if(isset($For_Cod)){ */    
-				echo error_alerta("<< Error de componente: tes_com_mod_cheque.php >> <br>Descripción: No se ha definido la Propiedad: For_Cod<br>
+				echo error_alerta("<< Error de componente: tes_com_mod_cheque.php >> <br>Descripciï¿½n: No se ha definido la Propiedad: For_Cod<br>
     	    	For_Cod: Variable que contiene el nombre del texto que posse la forma de pago", 2);
 		
 		} /* fin if(isset($Pec_Cod)){ */

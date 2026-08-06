@@ -62,7 +62,7 @@ if ($thisPost->postBlock($_POST['postID']))
 		<TITLE><?Php echo "Usuario Anular [EXA]"; ?></TITLE>
         <meta charset= "UTF-8">
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php")?>        
-		<script language="javascript" src="../VALIDACIONES/adm_val_usuarios.js"></script>	
+		<script type="text/javascript" src="../VALIDACIONES/adm_val_usuarios.js"></script>	
 		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
 		<script type="text/javascript">$(function() {$('#set1 *').tooltip({showURL: false});});</script>

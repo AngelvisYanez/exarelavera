@@ -143,7 +143,7 @@ $confi = $obBD_con1->getRowConsulta(520, $Ses_Emp_Cod, $obBD_conexion);
     <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
     <meta charset="UTF-8">
     <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
-    <script language="javascript" src="../VALIDACIONES/con_val_autorizaci_2.0.js?x=x11"></script>
+    <script type="text/javascript" src="../VALIDACIONES/con_val_autorizaci_2.0.js?x=x11"></script>
 </HEAD>
 
 <BODY>

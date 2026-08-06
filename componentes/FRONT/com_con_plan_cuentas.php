@@ -1,4 +1,5 @@
 <?php
+if (!is_object($obBD_con1)) return;
 $hoy=date("Y-m-d");
 /* Carga el periodos contable actual */
 $rs_plancuentas = $obBD_con1->consulta(sentencias_com(203,''), $obBD_conexion->conexion);

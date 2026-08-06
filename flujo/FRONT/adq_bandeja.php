@@ -51,7 +51,7 @@ function adq_ensure_utf8_string($text) {
             $recovered = @mb_convert_encoding($text, 'ISO-8859-1', 'UTF-8');
         }
         if (!is_string($recovered) || $recovered === '') {
-            $recovered = @utf8_decode($text);
+            $recovered = @mb_convert_encoding($text, 'UTF-8', 'ISO-8859-1');
         }
         if (is_string($recovered) && adq_es_utf8_valido($recovered) && !adq_parece_utf8_doble($recovered)) {
             return $recovered;
@@ -69,7 +69,7 @@ function adq_ensure_utf8_string($text) {
         }
     }
 
-    return function_exists('utf8_encode') ? utf8_encode($text) : $text;
+    return function_exists('utf8_encode') ? mb_convert_encoding($text, 'UTF-8', 'ISO-8859-1') : $text;
 }
 
 function adq_utf8_deep(&$data) {

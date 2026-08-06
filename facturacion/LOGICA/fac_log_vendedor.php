@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once('../../auditoria/LOGICA/aud_log_auditoria.php');
 require("fac_sql_vendedor.php");
 /**
@@ -60,7 +60,7 @@ class Class_Log_Datos_Pro extends MysqlDatos
 		$result = $this->consultasobBD($sen_sql, $param, $obBD);
 		$row =  $this->fetch_assoc($result);
 		$this->free_result($result);
-		return $row;
+		return is_array($row) ? $row : array();
 	}
 
 	/**

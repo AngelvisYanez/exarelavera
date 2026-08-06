@@ -1,0 +1,8 @@
+markitdown
+openai
+python-dotenv
+streamlit
+customtkinter
+Pillow
+pytest
+pytest-mock

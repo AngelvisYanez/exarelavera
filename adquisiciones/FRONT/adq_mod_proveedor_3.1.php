@@ -109,7 +109,7 @@ $rs_tip_compr = $obBD_con1->getArrayConsulta('tipo_compr.selectWhere', array('cl
 
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/javascript" src="../../framework/jquery/chosen/chosenDesc/chosenDesc.js"></script>
-    <script language="javascript" src="../../framework/plugins/cedulaRuc.js"></script>
+    <script type="text/javascript" src="../../framework/plugins/cedulaRuc.js"></script>
     <script type="text/javascript" src="../VALIDACIONES/adq_val_proveedor.js"></script>
     <script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>
     <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />

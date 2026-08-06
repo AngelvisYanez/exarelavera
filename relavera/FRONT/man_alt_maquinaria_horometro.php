@@ -609,8 +609,8 @@ if (isset($_GET['getEvidenciasAjax'])) {
     <?php require_once("../../mascaras/model1/estilos/jqgrid5.php"); ?>
     <?php require_once('../../mascaras/model3/estilos/estilos.php'); ?>
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
-    <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-    <script language="javascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
+    <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    <script type="text/javascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
     <link rel="stylesheet" type="text/css" href="../RECURSOS/maquinaria_horometro.css" />
     <script>
         var user_role = <?php echo json_encode($user_role); ?>;

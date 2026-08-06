@@ -7,7 +7,7 @@
                 <?Php require_once("../../mascaras/model1/estilos/jqgrid.php")?>                 
                 <script src="../../framework/plugins/ace-editor/ace-1.2/ace.js"></script>
                 <script src="../../framework/plugins/ace-editor/vkbeautify-0.99.js"></script>
-                <script language="JavaScript">
+                <script type="text/javascript">
 		</script>
 	</HEAD>
 <BODY>

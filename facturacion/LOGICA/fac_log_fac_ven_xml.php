@@ -161,7 +161,7 @@ class Class_Log_Datos_Tes extends MysqlDatos{
 		
 		$this->free_result($result);
 		
-		return $row;
+		return is_array($row) ? $row : array();
 	}
 
 	/**

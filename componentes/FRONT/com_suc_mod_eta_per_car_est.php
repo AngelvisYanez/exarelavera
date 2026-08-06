@@ -1,4 +1,5 @@
 <?Php
+if (!is_object($obBD_con1)) return;
 
 /* Componente para la busqueda de la modalidad-etapa-periodo-carrera en base al estudiante
 Se puede utiliza 1 componentes Ajax ==> ajax_suc_mod_eta_per_car_est.php 

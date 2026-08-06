@@ -1,7 +1,7 @@
 <?php 
 /**
-* Descripción: Modificacion de Periodos Contables
-* Fecha de actualización: 2015-Feb-25
+* Descripciï¿½n: Modificacion de Periodos Contables
+* Fecha de actualizaciï¿½n: 2015-Feb-25
 * Desarrollador: Jose Cumbicos
 */
 
@@ -19,7 +19,7 @@ $obBD_conexion = new Class_Log_Conexion_Con($Ses_Dat_Dis);
 */
 $obBD_con1 =  new Class_Log_Datos_Con;
 /**
-* Creación del objeto para evitar el reenvio 
+* Creaciï¿½n del objeto para evitar el reenvio 
 */
 $thisPost = new Post_Block;
 
@@ -41,7 +41,7 @@ if (isset($hdd_save))
 		   $obBD_ins1->operacionobBD(115, $Pec_Fei.'*'.$Pec_Fef.'*'.$codigo,$obBD_conexion);
 	       
 		   /**
-		   * fin de la transacción 
+		   * fin de la transacciï¿½n 
 		   */
 		   $obBD_ins1->fin_transaccion($obBD_conexion->conexion);		  
 	
@@ -68,8 +68,8 @@ else
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-        <script language="javascript" src="../VALIDACIONES/con_val_perio_cont.js"></script>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script> 				         
+        <script type="text/javascript" src="../VALIDACIONES/con_val_perio_cont.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script> 				         
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.modals.js"></script>          
         <script type="text/javascript"> 
@@ -98,7 +98,7 @@ else
 <BODY>
 <table width="560" border="0" cellpadding="0" cellspacing="0" class="table">
 	<tr class="BarraTitulo">
-	  <td height="10"><span class="Titulos1">&raquo;</span> modificación de periodo contable</td>
+	  <td height="10"><span class="Titulos1">&raquo;</span> modificaciï¿½n de periodo contable</td>
   </tr>
   <tr>
            <td width="758"><?Php echo mensaje_requerido(); ?></td>

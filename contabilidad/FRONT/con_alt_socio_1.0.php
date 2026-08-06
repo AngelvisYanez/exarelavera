@@ -550,13 +550,13 @@ if (isset($verificarParametrizada)) {
 <HTML>
   <HEAD>
     <TITLE> <?php echo "APORT. SOCIOS GESTIONAR [EXA]"; ?></TITLE>
-    <?Php require_once("../../mascaras/model1/estilos/basic.php"); ?>
-    <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php"); ?>
+    <?php require_once("../../mascaras/model1/estilos/basic.php"); ?>
+    <?php require_once("../../mascaras/model1/estilos/jqgrid5.php"); ?>
     <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/javascript" src="../../framework/jquery/chosen/chosenDesc/chosenDesc.js"></script>
-    <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-    <script language="javascript" src="../VALIDACIONES/con_val_aportacion.js?a=2"></script>
+    <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    <script type="text/javascript" src="../VALIDACIONES/con_val_aportacion.js?a=2"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js"></script>
     <style media="screen">
     .esp_fields{
@@ -640,9 +640,9 @@ if (isset($verificarParametrizada)) {
                             <?php $rows_ciudad = $obBD_con1->getArrayConsulta(1, "", $obBD_conexion); ?>
                             <select name="Ciu_Cod" id="Ciu_Cod" data-placeholder="Seleccione una ciudad" class="chzn-select-template-example">
                               <option value="" data-provincia="" data-pais=""></option>
-                              <?Php foreach ($rows_ciudad as $row) {?>
-                                <option value="<?Php echo $row['Ciu_Cod']; ?>" data-provincia="<?Php echo $row['Pro_Nom']; ?>" data-pais="<?Php echo $row['Pas_Nom']; ?>"><?Php echo $row['Ciu_Des']; ?></option>
-                                <?Php } ?>
+                              <?php foreach ($rows_ciudad as $row) {?>
+                                <option value="<?php echo $row['Ciu_Cod']; ?>" data-provincia="<?php echo $row['Pro_Nom']; ?>" data-pais="<?php echo $row['Pas_Nom']; ?>"><?php echo $row['Ciu_Des']; ?></option>
+                                <?php } ?>
                               </select>
                             </div>
                           </div>
@@ -774,7 +774,7 @@ if (isset($verificarParametrizada)) {
                                         {
                                           foreach($rows_periodos as $row){
                                             ?>
-                                            <?echo "<option value='$row[Pec_Cod]' data--pec_-cod='$row[Pec_Cod]' data--pla_-cod='$row[Pla_Cod]' data--pec_-fei='$row[Pec_Fei]' data--pec_-fef='$row[Pec_Fef]'  data-periodo='$row[priodo_m]'>$row[priodo_m]</option>";?>
+                                            <?php echo "<option value='$row[Pec_Cod]' data--pec_-cod='$row[Pec_Cod]' data--pla_-cod='$row[Pla_Cod]' data--pec_-fei='$row[Pec_Fei]' data--pec_-fef='$row[Pec_Fef]'  data-periodo='$row[priodo_m]'>$row[priodo_m]</option>";?>
 
                                           <?php }
                                         }?>
@@ -825,10 +825,10 @@ if (isset($verificarParametrizada)) {
                                 <div class="col-sm-4">
                                   <select id="Pag_Cod" name="Pag_Cod" class="form-control input-xs" required="" onchange="load_plan_to_document($('#Pag_Cod option:selected').attr('pagabr'))">
                                     <option value="nada" pagabr="nada">Seleccione...</option>
-                                    <?$tipos_pago_apo = $obBD_con1->getArrayConsulta(46, "", $obBD_conexion);
+                                    <?php $tipos_pago_apo = $obBD_con1->getArrayConsulta(46, "", $obBD_conexion);
                                     foreach($tipos_pago_apo as $row){?>
 
-                                      <option value="<?Php echo $row['Pag_Cod']; ?>" pagabr="<?Php echo $row['Pag_Abr']; ?>"><?Php echo $row['Pag_Des']; ?></option>
+                                      <option value="<?php echo $row['Pag_Cod']; ?>" pagabr="<?php echo $row['Pag_Abr']; ?>"><?php echo $row['Pag_Des']; ?></option>
                                     <?php } ?>
                                   </select>
                                 </div>
@@ -869,7 +869,7 @@ if (isset($verificarParametrizada)) {
                                   {
                                     foreach($rows_banks as $row){
                                       ?>
-                                      <option value="<?Php echo $row['Bak_Cod']; ?>"><?Php echo $row['Bak_Des']; ?></option>
+                                      <option value="<?php echo $row['Bak_Cod']; ?>"><?php echo $row['Bak_Des']; ?></option>
                                     <?php }
                                   }?>
                                 </select>
@@ -958,8 +958,8 @@ if (isset($verificarParametrizada)) {
                   <div class"col-sm-12">
                   </div>
                   <form name="formModAport" id="formModAport" method="post" action="javascript:$.createDialogConfirm('�Est&aacute; seguro que desea guardar los datos?',null,guardarModAportacion)">
-                    <?$ctaParametrizada=$obBD_con1->getRowConsulta(48, "", $obBD_conexion);?>
-                    <input type="text" name="Pld_Cdc_mod" id="Pld_Cdc_mod" value="<?echo $ctaParametrizada['Pld_Cdc'];?>" style="display:none;">
+                    <?php $ctaParametrizada=$obBD_con1->getRowConsulta(48, "", $obBD_conexion);?>
+                    <input type="text" name="Pld_Cdc_mod" id="Pld_Cdc_mod" value="<?php echo $ctaParametrizada['Pld_Cdc'];?>" style="display:none;">
                     <input type="text" name="tsg_id" id="tsg_id" value="" style="display:none;">
                     <input type="text" name="Che_Num_mod_ori" id="Che_Num_mod_ori" value="" style="display:none;">
                     <input type="text" name="Prs_Cod_mod" id="Prs_Cod_mod" value="" style="display:none;">
@@ -984,7 +984,7 @@ if (isset($verificarParametrizada)) {
                                       {
                                         foreach($rows_periodos as $row){
                                           ?>
-                                          <?echo "<option value='$row[Pec_Cod]' data--pec_-cod='$row[Pec_Cod]' data--pla_-cod='$row[Pla_Cod]' data--pec_-fei='$row[Pec_Fei]' data--pec_-fef='$row[Pec_Fef]'  data-periodo='$row[priodo_m]'>$row[priodo_m]</option>";?>
+                                          <?php echo "<option value='$row[Pec_Cod]' data--pec_-cod='$row[Pec_Cod]' data--pla_-cod='$row[Pla_Cod]' data--pec_-fei='$row[Pec_Fei]' data--pec_-fef='$row[Pec_Fef]'  data-periodo='$row[priodo_m]'>$row[priodo_m]</option>";?>
 
                                         <?php }
                                       }?>
@@ -1035,10 +1035,10 @@ if (isset($verificarParametrizada)) {
                               <div class="col-sm-4">
                                 <select id="Pag_Cod_mod" name="Pag_Cod_mod" class="form-control input-xs" required="" onchange="load_plan_to_document_mod($('#Pag_Cod_mod option:selected').attr('pagabr'))">
                                   <option value="nada">Seleccione...</option>
-                                  <?$tipos_pago_apo = $obBD_con1->getArrayConsulta(46, "", $obBD_conexion);
+                                  <?php $tipos_pago_apo = $obBD_con1->getArrayConsulta(46, "", $obBD_conexion);
                                   foreach($tipos_pago_apo as $row){?>
 
-                                    <option value="<?Php echo $row['Pag_Cod']; ?>" pagabr="<?Php echo $row['Pag_Abr']; ?>"><?Php echo $row['Pag_Des']; ?></option>
+                                    <option value="<?php echo $row['Pag_Cod']; ?>" pagabr="<?php echo $row['Pag_Abr']; ?>"><?php echo $row['Pag_Des']; ?></option>
                                   <?php } ?>
                                 </select>
                               </div>
@@ -1079,7 +1079,7 @@ if (isset($verificarParametrizada)) {
                                 {
                                   foreach($rows_banks as $row){
                                     ?>
-                                    <option value="<?Php echo $row['Bak_Cod']; ?>"><?Php echo $row['Bak_Des']; ?></option>
+                                    <option value="<?php echo $row['Bak_Cod']; ?>"><?php echo $row['Bak_Des']; ?></option>
                                   <?php }
                                 }?>
                               </select>
@@ -1180,9 +1180,9 @@ if (isset($verificarParametrizada)) {
                       <div class="col-sm-8">
                         <select name="Ciu_Cod_m" id="Ciu_Cod_m" data-placeholder="Seleccione una ciudad" class="chzn-select-template-example">
                           <option value="" data-provincia="" data-pais=""></option>
-                          <?Php foreach ($rows_ciudad as $row) {?>
-                            <option value="<?Php echo $row['Ciu_Cod']; ?>" data-provincia="<?Php echo $row['Pro_Nom']; ?>" data-pais="<?Php echo $row['Pas_Nom']; ?>"><?Php echo $row['Ciu_Des']; ?></option>
-                            <?Php } ?>
+                          <?php foreach ($rows_ciudad as $row) {?>
+                            <option value="<?php echo $row['Ciu_Cod']; ?>" data-provincia="<?php echo $row['Pro_Nom']; ?>" data-pais="<?php echo $row['Pas_Nom']; ?>"><?php echo $row['Ciu_Des']; ?></option>
+                            <?php } ?>
                           </select>
                         </div>
                       </div>
@@ -1450,7 +1450,7 @@ if (isset($verificarParametrizada)) {
       //verifica si el numero un cheque esta repetido excepto e numero que se cargo para la modificacion
       function verificarNoCheque2(valor){
         datach ={"verificarCheNum2":true,"Che_Num_mod":valor, "Che_Num_mod_ori":$("#Che_Num_mod_ori").val(), "Bak_Cod_mod":$("#Bak_Cod_mod").val(),"Prs_Cod_mod":$("#Prs_Cod_mod").val(),"Che_Cod_mod":$("#Che_Cod_mod").val()};
-        $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",datach, function( response ) {
+        $.post( "<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",datach, function( response ) {
           if (response['numero_che'] === true) {
             $("#indicadorChe2").removeClass("green glyphicon glyphicon-ok");
             $("#indicadorChe2").removeClass("red glyphicon glyphicon-remove");
@@ -1487,7 +1487,7 @@ if (isset($verificarParametrizada)) {
                     var data=$('#formModAport').serializeObject();
                     data["modificarAportacionSoc"]=true;
                     data["savemod"]=batch;
-                    $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( responce ) {
+                    $.post( "<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( responce ) {
                       if(responce['success']===true){
                         $("#mod_aport_soc").addClass("hidden");
                         $("#tot_soc_apo").removeClass("hidden");
@@ -1548,7 +1548,7 @@ if (isset($verificarParametrizada)) {
         }
 
         if(valor === 'D'){
-          <?Php
+          <?php 
           $row_rs_tipo_asien2 = $obBD_con1->getArrayConsulta(12, "D", $obBD_conexion);
           foreach ($row_rs_tipo_asien2 as $row)
           { ?>
@@ -1556,7 +1556,7 @@ if (isset($verificarParametrizada)) {
             <?php } ?>
           }
           if(valor === 'I'){
-            <?Php
+            <?php 
             $row_rs_tipo_asien2 = $obBD_con1->getArrayConsulta(12, "I", $obBD_conexion);
             foreach ($row_rs_tipo_asien2 as $row)
             { ?>
@@ -1568,7 +1568,7 @@ if (isset($verificarParametrizada)) {
       //genera un reporte detallado de las aportaciones de los socios
       function exportarAportacionDet(){
         $('#tablaExportaApo').html("");
-        $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{reporteDetalladoAporte:true}, function( response ) {
+        $.post( "<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{reporteDetalladoAporte:true}, function( response ) {
           if(response['success']===true){
             $('#tablaExportaApo').html(""+response['tablereport']);
             $.downloadFile($.exportarExcelBlob($('#exportar').html(), 'Aportaciones'), 'Aportaciones_' + $.getDate() + '.xls');
@@ -1579,7 +1579,7 @@ if (isset($verificarParametrizada)) {
       //genera unja vista de del reporte detallado de las aportaciones de los socios
       function imprimirAportacionDet(){
         $('#tablaimpaApo').html("");
-        $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{reporteDetalladoAporte:true}, function( response ) {
+        $.post( "<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{reporteDetalladoAporte:true}, function( response ) {
           if(response['success']===true){
             $('#tablaimpaApo').html(""+response['tablereport']);
             $('#imprimir').printElement();
@@ -1590,7 +1590,7 @@ if (isset($verificarParametrizada)) {
       //verifica si el numero de un cheque ya se encuentra registrado
       function verificarNoCheque(valor){
         datach ={"verificarCheNum":true,"Che_Num":valor, "Bak_Cod":$("#Bak_Cod").val(),"Prs_Cod_apo":$("#Prs_Cod_apo").val()};
-        $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",datach, function( response ) {
+        $.post( "<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",datach, function( response ) {
           if (response['numero_che'] === true) {
             $("#indicadorChe").removeClass("green glyphicon glyphicon-ok");
             $("#indicadorChe").removeClass("red glyphicon glyphicon-remove");
@@ -1629,14 +1629,14 @@ if (isset($verificarParametrizada)) {
 
         $("#verAsidat").trigger("click");
 
-        $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{obtenerTipoPago:true, Pag_Cod:""+aportedata.Pag_Cod}, function( responce ) {
+        $.post( "<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{obtenerTipoPago:true, Pag_Cod:""+aportedata.Pag_Cod}, function( responce ) {
           if(responce['success']===true){
 
             if(responce['tipoPago']['Pag_Abr']==="CHE"){
 
               $("#verChedat").removeClass("hidden");
               $("#det_apo_cheval").val("$ "+aportedata.Apo_Val);
-              $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{detApoCheAjax:true,Com:aportedata.Che_Cod}, function( response ) {
+              $.post( "<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{detApoCheAjax:true,Com:aportedata.Che_Cod}, function( response ) {
                 if(response['success']===true){
                   $("#det_apo_no_che").val(""+response['Cheban']['Che_Num']);
                   $("#det_apo_no_cta").val(""+response['Cheban']['Che_Cta']);
@@ -1652,7 +1652,7 @@ if (isset($verificarParametrizada)) {
           }
         },'json').fail(function(error) { $.alert("El Servidor ha fallado en responder!");});
 
-        $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{detApoAjax:true,Com:aportedata.Com_Cod}, function( response ) {
+        $.post( "<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{detApoAjax:true,Com:aportedata.Com_Cod}, function( response ) {
           if(response['success']===true){
 
             $('#pagoDialog').dialog('open');
@@ -1669,7 +1669,7 @@ if (isset($verificarParametrizada)) {
 
       //verifica si se encuentra parametrizada la cuenta de aportaciones de los socios
       function aportaciones(row){
-        $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{verificarParametrizada:true}, function( responce ) {
+        $.post( "<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{verificarParametrizada:true}, function( responce ) {
           if(responce['success']===true){
             if (responce['verifica']==="si"){
               agg_aportaciones(row);
@@ -1693,7 +1693,7 @@ if (isset($verificarParametrizada)) {
         dataanu["Che_Cod"]=compro.Che_Cod;
         dataanu["Pag_Cod"]=compro.Pag_Cod;
 
-        $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",dataanu, function( responce ) {
+        $.post( "<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",dataanu, function( responce ) {
           if(responce['success']===true){
             $.alert("Aportaci&oacute;n anulada!");
             $("#tableResultApo").trigger('reloadGrid',[]);
@@ -1710,7 +1710,7 @@ if (isset($verificarParametrizada)) {
 
         tipo_de_pago_abr="";
 
-        $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{obtenerTipoPago:true, Pag_Cod:""+aporte_comp[1].Pag_Cod}, function( responce ) {
+        $.post( "<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{obtenerTipoPago:true, Pag_Cod:""+aporte_comp[1].Pag_Cod}, function( responce ) {
           if(responce['success']===true){
             tipo_de_pago_abr=""+responce['tipoPago']['Pag_Abr'];
             if(tipo_de_pago_abr==="EFE"){
@@ -1759,7 +1759,7 @@ if (isset($verificarParametrizada)) {
               $("#Che_Num_mod").removeAttr("disabled");
               $("#Che_Cta_mod").removeAttr("disabled");
 
-              $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{extCheBan:true,Che_Cod:aporte_comp[1].Che_Cod}, function( responce ) {
+              $.post( "<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{extCheBan:true,Che_Cod:aporte_comp[1].Che_Cod}, function( responce ) {
                 if(responce['success']===true){
                   //accion aqui
                   bancosel=responce['rowCheban']['Bak_Cod'];
@@ -1780,7 +1780,7 @@ if (isset($verificarParametrizada)) {
 
               $('#Tia_Cod_mod option').remove();
 
-              <?Php
+              <?php 
               $row_rs_tipo_asien2 = $obBD_con1->getArrayConsulta(12, "I", $obBD_conexion);
               foreach ($row_rs_tipo_asien2 as $row)
               { ?>
@@ -1792,7 +1792,7 @@ if (isset($verificarParametrizada)) {
 
               $('#Tia_Cod_mod option').remove();
 
-              <?Php
+              <?php 
               $row_rs_tipo_asien2 = $obBD_con1->getArrayConsulta(12, "D", $obBD_conexion);
               foreach ($row_rs_tipo_asien2 as $row)
               { ?>
@@ -1829,7 +1829,7 @@ if (isset($verificarParametrizada)) {
         $("#Prs_Ced_ap_mod").val(sociodata.Prs_Ced);
         $("#Che_Cod_mod").val("no");
 
-        $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{detApoAjax:true,Com:aporte_comp[1].Com_Cod}, function( response ) {
+        $.post( "<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{detApoAjax:true,Com:aporte_comp[1].Com_Cod}, function( response ) {
           if(response['success']===true){
             for (var i = 0; i < response['asi']['rows'].length; i++) {
               if (response['asi']['rows'][i]['Pld_Cdc']===$("#Pld_Cdc_mod").val()) {
@@ -1906,7 +1906,7 @@ if (isset($verificarParametrizada)) {
           var socioid = jQuery('#tableResultApo').jqGrid('getRowData', row_id);
           $("#"+subgrid_id).html("<table id='"+subgrid_table_id+"' class='scroll'></table>");
           $("#"+subgrid_table_id).jqGrid({
-            url:"<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?ajaxSubgrid="+socioid.Soc_Cod,datatype: "json",regional : 'es',
+            url:"<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?ajaxSubgrid="+socioid.Soc_Cod,datatype: "json",regional : 'es',
             autowidth : true, shrinkToFit: true,cmTemplate: {sortable:false},//colNames: ['No','Item','Qty','Unit','Line Total'],
             colModel: [
                   {label:'Cod.Int.',name:"Com_Cod",width:50,key:true,align:"center"},
@@ -1935,7 +1935,7 @@ if (isset($verificarParametrizada)) {
               ],beforeSelectRow: function(rowid, e) {return false;},
               rowNum:10000000, pager: "",height: '100%',
               loadComplete: function(){
-                $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{aportIni:true,socio:row_id}, function( responce ) {
+                $.post( "<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{aportIni:true,socio:row_id}, function( responce ) {
                   if(responce['success']===true){
                     if (responce['rowsini']===null) {
                       // alert("nulo");
@@ -1979,7 +1979,7 @@ if (isset($verificarParametrizada)) {
                     var data=$('#formAport').serializeObject();
                     data["saveAportacion"]=true;
                     data["save"]=batch;
-                    $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( responseaport ) {
+                    $.post( "<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( responseaport ) {
                       if(responseaport['success']===true){
                         totalSocios();
                         limpiarFormComp();
@@ -2037,7 +2037,7 @@ if (isset($verificarParametrizada)) {
         //Consultamos los tipos de asiento que en el campo "Tia_Ini" sean igual al "valor" enviado, pudiendo ser D, I, E  para
         // posteriormente asignar los valores consultados como elementos al select de tipos de asientos
         if(valor === 'D'){
-          <?Php
+          <?php 
           $row_rs_tipo_asien2 = $obBD_con1->getArrayConsulta(12, "D", $obBD_conexion);
           foreach ($row_rs_tipo_asien2 as $row)
           { ?>
@@ -2045,7 +2045,7 @@ if (isset($verificarParametrizada)) {
             <?php } ?>
           }
         if(valor === 'I'){
-          <?Php
+          <?php 
           $row_rs_tipo_asien2 = $obBD_con1->getArrayConsulta(12, "I", $obBD_conexion);
           foreach ($row_rs_tipo_asien2 as $row)
           { ?>
@@ -2324,7 +2324,7 @@ if (isset($verificarParametrizada)) {
         var formData = new FormData(document.getElementById("formDialog"));
         formData.append("modSocio", true);
         $.ajax({
-          url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
+          url: '<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
           type: "post",dataType: "json",data: formData,cache: false,contentType: false,processData: false
         })
         .done(function (responsemod) {
@@ -2381,7 +2381,7 @@ if (isset($verificarParametrizada)) {
         }
         formData.append("saveSocio", true);
         $.ajax({
-          url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
+          url: '<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
           type: "post",dataType: "json",data: formData,cache: false,contentType: false,processData: false
         })
         .done(function (response) {

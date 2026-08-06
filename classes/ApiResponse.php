@@ -4,6 +4,9 @@ class ApiResponse
 {
     public static function success($data = null, $message = 'OK', $code = 200)
     {
+        if (!headers_sent()) {
+            header('Content-Type: application/json; charset=utf-8');
+        }
         http_response_code($code);
         $response = ['success' => true, 'message' => $message];
         if ($data !== null) {
@@ -14,6 +17,9 @@ class ApiResponse
 
     public static function error($error, $code = 400)
     {
+        if (!headers_sent()) {
+            header('Content-Type: application/json; charset=utf-8');
+        }
         http_response_code($code);
         echo json_encode(['success' => false, 'error' => $error]);
     }

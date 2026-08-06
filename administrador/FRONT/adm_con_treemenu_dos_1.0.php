@@ -4,6 +4,7 @@
 /* ESTE CONTROL ES EN CASO DE EXISTIR SOLO Y UNICAMENTE DOS NIVELES */
 /********************************************************************/
 /* Consulta los organizados de nivel 2 */
+if (!is_object($obBD_con1)) return;
 $rs_organizado_dos = $obBD_con1->consulta(sentencias_adm(31, $obBD_con1->parametros(trim($v0["Org_Cod"]))), $obBD_conexion->conexion);
 $total_rs_organizado_dos = $obBD_con1->numregistros();
 	
@@ -12,7 +13,7 @@ if($total_rs_organizado_dos > 0)
 	while($v3 = $obBD_con1->fetch_array($rs_organizado_dos))
 	{							
 		/* Consulta los procesos del usuario */
-		$rs_procesos = $obBD_con1->consulta(sentencias_adm(18, $obBD_con1->parametros(trim($v3["Org_Cod"]).'*'.trim(substr($mperf,1,count($mperf)-3)).'*P')), $obBD_conexion->conexion);
+		$rs_procesos = $obBD_con1->consulta(sentencias_adm(18, $obBD_con1->parametros(trim($v3["Org_Cod"]).'*'.trim(substr($mperf,1,strlen($mperf)-3)).'*P')), $obBD_conexion->conexion);
 		$total_rs_procesos = $obBD_con1->numregistros();
 		
 		if($total_rs_procesos > 0)
@@ -40,7 +41,7 @@ if($total_rs_organizado_dos > 0)
 }//Fin del if($total_rs_organizado_dos > 0)
 else
 {
-	$rs_procesos_directo = $obBD_con1->consulta(sentencias_adm(18, $obBD_con1->parametros(trim($v0["Org_Cod"]).'*'.trim(substr($mperf,1,count($mperf)-3)).'*P')), $obBD_conexion->conexion);
+	$rs_procesos_directo = $obBD_con1->consulta(sentencias_adm(18, $obBD_con1->parametros(trim($v0["Org_Cod"]).'*'.trim(substr($mperf,1,strlen($mperf)-3)).'*P')), $obBD_conexion->conexion);
 	$total_rs_procesos_directo = $obBD_con1->numregistros();
 
 	if($total_rs_procesos_directo > 0)

@@ -1,5 +1,4 @@
 <?php
-use \Exception;
 require_once(dirname(__file__)."/../DATA/libs/AbstractModel.php");
 class finca_actividad extends AbstractModel{
     protected $_name = 'finca_actividad';

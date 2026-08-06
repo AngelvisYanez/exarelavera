@@ -1,6 +1,7 @@
 <?php
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Content-Type, origin");
+header('Content-Type: application/json; charset=utf-8');
 try{
     include("./printerTemplate.php"); 
     include("./printers.php");

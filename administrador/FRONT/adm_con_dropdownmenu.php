@@ -9,7 +9,7 @@ require_once('../LOGICA/logica.php');
 
 
 /* Creacion del Objeto de conexion */
-$obBD_conexion = new Class_Log_Conexion_Adm;
+$obBD_conexion = new Class_Log_Conexion_Adm($_SESSION['Ses_Dat_Dis']);
 /* Cracion del objeto mysql para las consultas */
 $obBD_con1 =  new Class_Log_Datos_Adm; 	  
 

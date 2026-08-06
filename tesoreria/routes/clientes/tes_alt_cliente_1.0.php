@@ -10,8 +10,8 @@
         <?Php require_once(__DIR__."/../../../mascaras/model1/estilos/jqgrid5.php") ?>
         <script type="text/javascript" src="/framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
         <script type="text/javascript" src="/framework/jquery/chosen/chosenDesc/chosenDesc.js"></script>
-        <script language="javascript" src="../../VALIDACIONES/tes_val_cliente_2.0.js?a=786"></script>
-        <script language="javascript" src="../../scripts/clientes/tes_alt_cliente_1.0.js"></script>
+        <script type="text/javascript" src="../../VALIDACIONES/tes_val_cliente_2.0.js?a=786"></script>
+        <script type="text/javascript" src="../../scripts/clientes/tes_alt_cliente_1.0.js"></script>
     </HEAD>
     <BODY>
         <div class="panel panel-main">

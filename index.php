@@ -25,12 +25,13 @@ if ($Browser == "WML") {
     exit;
 } //Fin del if($Browser == "WML") 
 /* Ajax para identificar el numero de empresas */
-if (isset($ajax_empresas2)) {
+if (isset($_POST['ajax_empresas2'])) {
     /* Creacion del Objeto de conexion */
     $obBD_conexion = new Class_Log_Conexion_Log;
     /* Creacion del objeto mysql para las consultas */
     $obBD_con1 =  new Class_Log_Datos_Log;
-    $rs_empresas = $obBD_con1->getArrayConsulta(1, trim($ajax_username), $obBD_conexion);
+    $ajax_username = trim($_POST['ajax_username'] ?? '');
+    $rs_empresas = $obBD_con1->getArrayConsulta(1, $ajax_username, $obBD_conexion);
     utf8_encode_deep($rs_empresas);
     $conteo = count($rs_empresas);
     $html = '';
@@ -39,32 +40,72 @@ if (isset($ajax_empresas2)) {
             $html = $html . "<option value=''></option>";
             foreach ($rs_empresas as $row_rs_empresas) {
                 $sucBr = isset($row_rs_empresas['Suc_Cod']) ? (int) $row_rs_empresas['Suc_Cod'] : 0;
-                $html = $html . "<option value='" . (int) $row_rs_empresas['Emp_Cod'] . "' data-Emp_Nom='" . ($row_rs_empresas['Emp_Nom']) . "' data-suc-cod='" . $sucBr . "'> " . ($row_rs_empresas['Emp_Cor']) . ' (' . ($row_rs_empresas['Suc_Des']) . ") </option>";
+                $empNom = htmlspecialchars($row_rs_empresas['Emp_Nom'], ENT_QUOTES, 'UTF-8');
+                $empCor = htmlspecialchars($row_rs_empresas['Emp_Cor'], ENT_QUOTES, 'UTF-8');
+                $sucDes = htmlspecialchars($row_rs_empresas['Suc_Des'], ENT_QUOTES, 'UTF-8');
+                $html = $html . "<option value='" . (int) $row_rs_empresas['Emp_Cod'] . "' data-Emp_Nom='" . $empNom . "' data-suc-cod='" . $sucBr . "'> " . $empCor . ' (' . $sucDes . ") </option>";
             }
         } else {
             $sucBr0 = isset($rs_empresas[0]['Suc_Cod']) ? (int) $rs_empresas[0]['Suc_Cod'] : 0;
-            $html = $html . "<option value='" . (int) $rs_empresas[0]['Emp_Cod'] . "' selected='selected' data-Emp_Nom='" . ($rs_empresas[0]['Emp_Nom']) . "' data-suc-cod='" . $sucBr0 . "'>" . $rs_empresas[0]['Emp_Cor'] . "</option>";
-        } //Fin del if ($total_rs_empresas > 1)
+            $empNom0 = htmlspecialchars($rs_empresas[0]['Emp_Nom'], ENT_QUOTES, 'UTF-8');
+            $empCor0 = htmlspecialchars($rs_empresas[0]['Emp_Cor'], ENT_QUOTES, 'UTF-8');
+            $html = $html . "<option value='" . (int) $rs_empresas[0]['Emp_Cod'] . "' selected='selected' data-Emp_Nom='" . $empNom0 . "' data-suc-cod='" . $sucBr0 . "'>" . $empCor0 . "</option>";
+        }
     }
     $obBD_conexion->cerrar();
+    header('Content-Type: application/json; charset=utf-8');
     $res = array('success' => true, 'conteo' => $conteo, 'html' => $html);
     echo json_encode($res);
     exit();
-} //Fin del if (isset($ajax_empresas))
+}
 // if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['Ses_Emp_Cod']) || !isset($_SESSION['Ses_Usu_Ced']))) header('Location: ' . './administrador/FRONT/home.php');
 
 /* AJAX para cambio de contraseña obligatorio */
-if (isset($ajax_change_pass)) {
+if (isset($_POST['ajax_change_pass'])) {
+    header('Content-Type: application/json; charset=utf-8');
     $obBD_conexion = new Class_Log_Conexion_Log($_SESSION['Ses_Dat_Dis']);
     $obBD_con1 = new Class_Log_Datos_Log;
     $res = array('success' => false);
     
-    // Validar clave actual
-    $check = $obBD_con1->getRowConsultaSql("SELECT COUNT(Usu_Cod) as contador FROM usuarios WHERE Usu_Pal = MD5('$old_pass') AND Usu_Cod = " . $_SESSION['Ses_Usu_Cod'], $obBD_conexion);
+    $old_pass = trim($_POST['old_pass'] ?? '');
+    $new_pass = trim($_POST['new_pass'] ?? '');
     
-    if ($check['contador'] > 0) {
+    // Validar que existan los campos requeridos
+    if (empty($old_pass) || empty($new_pass)) {
+        $res['message'] = "Complete todos los campos.";
+        echo json_encode($res);
+        exit();
+    }
+    
+    // Sanitizar inputs
+    $old_pass_safe = mysqli_real_escape_string($obBD_conexion->conexion, $old_pass);
+    $new_pass_safe = mysqli_real_escape_string($obBD_conexion->conexion, $new_pass);
+    $usu_cod = (int) $_SESSION['Ses_Usu_Cod'];
+    
+    // Validar clave actual (soporte dual: MD5 legacy + password_hash moderno)
+    $check = $obBD_con1->getRowConsultaSql(
+        "SELECT Usu_Cod, Usu_Pal FROM usuarios WHERE Usu_Cod = $usu_cod AND Usu_Est = 'A'",
+        $obBD_conexion
+    );
+    
+    $passwordValid = false;
+    if ($check) {
+        $storedHash = $check['Usu_Pal'];
+        // Verificar si es hash moderno (starts with $2y$)
+        if (strpos($storedHash, '$2y$') === 0) {
+            $passwordValid = password_verify($old_pass, $storedHash);
+        } else {
+            // Legacy MD5
+            $passwordValid = ($storedHash === md5($old_pass));
+        }
+    }
+    
+    if ($passwordValid) {
         $obBD_con1->inicio_transaccion($obBD_conexion);
-        $obBD_con1->consulta("UPDATE usuarios SET Usu_Pal = MD5('$new_pass') WHERE Usu_Cod = " . $_SESSION['Ses_Usu_Cod'], $obBD_conexion);
+        // Usar password_hash para la nueva contraseña
+        $new_hash = password_hash($new_pass, PASSWORD_BCRYPT, ['cost' => 12]);
+        $new_hash_safe = mysqli_real_escape_string($obBD_conexion->conexion, $new_hash);
+        $obBD_con1->consulta("UPDATE usuarios SET Usu_Pal = '$new_hash_safe' WHERE Usu_Cod = $usu_cod", $obBD_conexion);
         if ($obBD_con1->fin_transaccion_nomsn($obBD_conexion)) {
             $res['success'] = true;
             $res['message'] = "¡Contraseña actualizada! Por favor, inicie sesión con su nueva clave.";
@@ -84,9 +125,16 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
     if (isset($_SESSION['Ses_Usu_Cod']) && isset($_SESSION['Ses_Dat_Dis'])) {
         $obBD_conexion_check = new Class_Log_Conexion_Log($_SESSION['Ses_Dat_Dis']);
         $obBD_con_check = new Class_Log_Datos_Log;
-        $checkPass = $obBD_con_check->getRowConsultaSql("SELECT Usu_Cod FROM usuarios WHERE Usu_Cod = " . $_SESSION['Ses_Usu_Cod'] . " AND Usu_Pal = MD5('123456')", $obBD_conexion_check);
+        $usu_cod_check = (int) $_SESSION['Ses_Usu_Cod'];
+        $checkPass = $obBD_con_check->getRowConsultaSql("SELECT Usu_Cod, Usu_Pal FROM usuarios WHERE Usu_Cod = $usu_cod_check", $obBD_conexion_check);
         if ($checkPass) {
-            $isDefaultPass = true;
+            $storedHash = $checkPass['Usu_Pal'];
+            // Verificar si es hash moderno
+            if (strpos($storedHash, '$2y$') === 0) {
+                $isDefaultPass = password_verify('123456', $storedHash);
+            } else {
+                $isDefaultPass = ($storedHash === md5('123456'));
+            }
         }
     }
     
@@ -123,7 +171,7 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Saira:wght@400;600&display=swap" rel="stylesheet">
     <!-- Bootstrap CSS & Icons with Local Fallback -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" 
-          onerror="this.onerror=null;this.href='framework/jquery/bootstrap/bootstrap-3.3.5/css/bootstrap.min.css';">
+          onerror="this.onerror=null;this.href='framework/jquery/bootstrap/bootstrap-5.3.0/css/bootstrap.min.css';">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="framework/plugins/fonts/font-awesome/font-awesome-4.4.0/css/font-awesome.min.css" />
     <!--Agregar items-->
@@ -1017,7 +1065,7 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
                             <div class="login-fields">
                                 <div class="form-group position-relative mb-3">
                                     <input class="form-control" type="text" id="user_name" name="user_name" value="" placeholder="Usuario" class="login username-field"
-                                        onBlur="if(trim(this.value) !== ''){ loadEmp(this.value); }" />
+                                        onBlur="if(this.value.trim() !== ''){ loadEmp(this.value); }" />
                                     <i class="bi bi-person-fill form-control-icon"></i>
                                 </div>
 
@@ -1111,12 +1159,12 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
     <script>window.jQuery || document.write('<script src="skins/js/jquery.js"><\/script>')</script>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>window.bootstrap || document.write('<script src="mascaras/model1/js/bootstrap.min.js"><\/script>')</script>
+    <script>window.bootstrap || document.write('<script src="framework/jquery/bootstrap/bootstrap-5.3.0/js/bootstrap.bundle.min.js"><\/script>')</script>
 
     <script src="mascaras/model1/js/libs/modernizr-2.5.3.min.js"></script>
     <script src="framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script src="mascaras/model2/js/signin.js"></script>
-    <script language="javascript" src="Librerias/validaciones/validacion.js"></script>
+    <script type="text/javascript" src="Librerias/validaciones/validacion.js"></script>
     
     <!-- Select2 CSS & JS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />

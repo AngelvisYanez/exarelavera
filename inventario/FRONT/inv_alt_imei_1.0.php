@@ -423,7 +423,7 @@ if (isset($_POST["import"])) {
     <TITLE><?php echo "Control de IMEI [EXA]"; ?></TITLE>
     <meta charset="UTF-8">
     <?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
-    <script language="javascript" src="../VALIDACIONES/inv_val_imei.js?x=3"></script>
+    <script type="text/javascript" src="../VALIDACIONES/inv_val_imei.js?x=3"></script>
     <style>
         .imei-grid {
             margin-top: 20px;

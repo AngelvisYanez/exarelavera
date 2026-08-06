@@ -95,8 +95,8 @@ exit();
 	<HEAD>		
   <TITLE><?Php echo "Marca Modificar [EXA]"; ?></TITLE>
     <meta charset="UTF-8">
-    	<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    	<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/tes_val_marca.js"></script>
+    	<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    	<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/tes_val_marca.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
 		<script type="text/javascript"> 
           $(function() {

@@ -423,8 +423,8 @@ if (isset($cargarAsiento)) {
     <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/javascript" src="../../framework/jquery/chosen/chosenDesc/chosenDesc.js"></script>
-    <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-    <script language="javascript" src="../VALIDACIONES/tca_factura.js?e=1"></script>
+    <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    <script type="text/javascript" src="../VALIDACIONES/tca_factura.js?e=1"></script>
     <style>
         .footrow td[aria-describedby="documento_Cop_Imp"],
         .footrow td[aria-describedby="documento_Cop_Pru"] {
@@ -527,9 +527,9 @@ if (isset($cargarAsiento)) {
                                 <div class="col-sm-4">
                                     <div class="input-group input-group-sm dateRangeInputs" style="width: 400px;">
                                         <span class="range input-group-addon alert-info">Desde</span>
-                                        <input type="text" name="Fec_Ini" class="form-control range datepicker" style="text-align: center;" required="" value="<?php echo isset($_GET['Fec_Ini']) ? $_GET['Fec_Ini'] : date('Y-m-01'); ?>" />
+                                        <input type="text" name="Fec_Ini" class="form-control range datepicker" style="text-align: center;" required="" value="<?php echo isset($_GET['Fec_Ini']) ? htmlspecialchars($_GET['Fec_Ini'], ENT_QUOTES, 'UTF-8') : date('Y-m-01'); ?>" />
                                         <span class="range input-group-addon alert-info">Hasta</span>
-                                        <input type="text" name="Fec_Fin" class="form-control range datepicker" style="text-align: center;" required="" value="<?php echo isset($_GET['Fec_Fin']) ? $_GET['Fec_Fin'] : date('Y-m-d'); ?>" />
+                                        <input type="text" name="Fec_Fin" class="form-control range datepicker" style="text-align: center;" required="" value="<?php echo isset($_GET['Fec_Fin']) ? htmlspecialchars($_GET['Fec_Fin'], ENT_QUOTES, 'UTF-8') : date('Y-m-d'); ?>" />
                                     </div>
                                 </div>
                             </div>

@@ -1,5 +1,4 @@
 <?php
-use \Exception;
 require_once(dirname(__file__)."/../DATA/libs/AbstractModel.php");
 class tipo_compr extends AbstractModel{
     protected $_name = 'tipo_compr';

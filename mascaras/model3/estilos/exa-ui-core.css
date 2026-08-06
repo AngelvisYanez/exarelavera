@@ -1,7 +1,15 @@
 /**
- * Model3 - solo capa visual comun (sin layout maestro-detalle de labores v2).
- * Para pantallas de consulta, catalogos o formularios simples.
+ * Model3 - Core UI (without master-detail layout)
+ * 
+ * For consultation screens, catalogs, or simple forms.
+ * Use this instead of exa-ui.css when you don't need
+ * the master-detail layout functionality.
+ * 
+ * Usage:
+ *   $m3_ui_core_only = true;
+ *   require_once('../../mascaras/model3/estilos/estilos.php');
  */
+@import url('modules/00-default-theme.css');
 @import url('modules/01-variables.css');
 @import url('modules/02-shell.css');
 @import url('modules/03-tabs.css');

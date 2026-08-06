@@ -3,7 +3,15 @@ require_once __DIR__ . "/../../../administrador/LOGICA/adm_log_login.php";
 require_once __DIR__ . "/../../../DATA/MysqlConexion.php";
 require_once __DIR__ . "/../../../DATA/MysqlDatos.php";
 
-define('AUTH_TOKEN_SECRET', getenv('AUTH_TOKEN_SECRET') ?: 'CHANGE_THIS_TO_A_RANDOM_SECRET_KEY_IN_PRODUCTION');
+// Seguridad: El secret DEBE configurarse via variable de entorno
+// Si no esta configurado, generar uno aleatorio por instancia (no predecible)
+$envSecret = getenv('AUTH_TOKEN_SECRET');
+if (empty($envSecret) || $envSecret === 'CHANGE_THIS_TO_A_RANDOM_SECRET_KEY_IN_PRODUCTION') {
+    // Generar secret aleatorio si no esta configurado (pero advertir)
+    error_log('SECURITY WARNING: AUTH_TOKEN_SECRET no esta configurado. Se genero un secret aleatorio. Configure AUTH_TOKEN_SECRET en .env para persistencia.');
+    $envSecret = bin2hex(random_bytes(32));
+}
+define('AUTH_TOKEN_SECRET', $envSecret);
 
 // Clases locales para evitar requerir adm_log_control.php que tiene rutas relativas rotas (../../)
 class Class_Log_Conexion_Auth extends MysqlConexion {}

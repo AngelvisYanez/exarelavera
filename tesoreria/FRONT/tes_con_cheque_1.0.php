@@ -131,11 +131,11 @@ else
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-		<script language="javascript" src="../VALIDACIONES/tes_val_cheque.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/tes_val_cheque.js"></script>
                 <link rel="stylesheet" type="text/css" href="../../Librerias/jquery/modal/css/modal.css" />
    		<script type="text/javascript" src="../../Librerias/exportar/jquery-1.3.2.min.js"></script>
                 <script type="text/javascript" src="../../Librerias/jquery/modal/js/modal.js"></script>
-	    <script language="javascript">
+	    <script type="text/javascript">
 			$(document).ready(function() {
 				/* LLamado a la class del boton exportar */
 				$("#Boton_Excel").click(function(event) {
@@ -144,7 +144,7 @@ else
 			});
 			});
 		</script>                
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
   	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
 		<script type="text/javascript"> 
           $(function() {

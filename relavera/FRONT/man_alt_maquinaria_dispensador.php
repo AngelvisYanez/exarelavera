@@ -199,7 +199,7 @@ if (isset($_POST['saveCierreAjax'])) {
             8 => $_POST['Cie_Fis'],
             9 => $_POST['Cie_Dif'],
             10 => $_POST['Cie_Estado'],
-            11 => utf8_decode(isset($_POST['Cie_Obs']) ? $_POST['Cie_Obs'] : '')
+            11 => mb_convert_encoding(isset($_POST['Cie_Obs']) ? $_POST['Cie_Obs'] : '', 'ISO-8859-1', 'UTF-8')
         );
 
         $obBD_con1->operacionobBD(20, $params, $obBD_conexion);
@@ -795,7 +795,7 @@ $obBD_con1->utf8_change_param($vehiculos);
     <title>Administracion de Dispensadores</title>
     <?php require_once("../../mascaras/model1/estilos/jqgrid5.php"); ?>
     <?php require_once('../../mascaras/model3/estilos/estilos.php'); ?>
-    <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
     <link rel="stylesheet" type="text/css" href="../RECURSOS/maquinaria_dispensador.css" />
 
 </HEAD>
@@ -1823,7 +1823,7 @@ $obBD_con1->utf8_change_param($vehiculos);
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
 
     <!-- Carga de JS -->
-    <script language="javascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
+    <script type="text/javascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
     <script src="../VALIDACIONES/man_val_maquinaria_dispensador.js?v=10"></script>
 
     <!-- Liberacion y cierre de conexiones -->

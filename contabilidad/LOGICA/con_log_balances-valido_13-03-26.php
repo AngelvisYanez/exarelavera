@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 /**
  * Logica de las paginas de balances
@@ -73,7 +73,7 @@ class Class_Log_Datos_Con extends MysqlDatos
 
 		$this->free_result($result);
 
-		return $row;
+		return is_array($row) ? $row : array();
 	}
 
 	/**

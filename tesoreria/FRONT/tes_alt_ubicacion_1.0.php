@@ -1,7 +1,7 @@
 <?Php 
 /*Alias:	Registar 
-Descripción: Permite registrar las ubicaciones
-Fecha de actualización:	2011-06-12
+Descripciï¿½n: Permite registrar las ubicaciones
+Fecha de actualizaciï¿½n:	2011-06-12
 Desarrollador:	Lewis CHimarro
 MULTIEMPRESA : SI
 */	
@@ -14,7 +14,7 @@ require_once('../../Librerias/postclass.php');
 $obBD_conexion = new Class_Log_Conexion_Tes;
 /* Creacion del Objeto de datos */  
 $obBD_con1 =  new Class_Log_Datos_Tes; 
-/* Creación del objeto para evitar el reenvio */
+/* Creaciï¿½n del objeto para evitar el reenvio */
 $thisPost = new Post_Block;
 
 if(isset($hdd_save))
@@ -37,7 +37,7 @@ if(isset($hdd_save))
    		}
 		else
 		{
-			echo "<script>alert('Descripción ya Existe!!')</script>";
+			echo "<script>alert('Descripciï¿½n ya Existe!!')</script>";
 		}			
 	}
 }
@@ -46,7 +46,7 @@ if(isset($hdd_save))
 <head>
 <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>		  	
 	<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-    <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">		
 </head>
 <body>
