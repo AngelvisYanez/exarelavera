@@ -1,16 +1,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php	
 /**
-* Descripción: Permite la modificación de facturas de ventas
-* Fecha de actualización:	2010-07-04 
+* Descripciï¿½n: Permite la modificaciï¿½n de facturas de ventas
+* Fecha de actualizaciï¿½n:	2010-07-04 
 * Desarrollador:	Jose Cumbicos 
-* Fecha de actualización:	2012-02-19 
+* Fecha de actualizaciï¿½n:	2012-02-19 
 * Desarrollador:	Lewis Chimarro
-* Fecha de actualización:	2012-05-12
+* Fecha de actualizaciï¿½n:	2012-05-12
 * Desarrollador:	Lewis Chimarro
-* Fecha de actualización:	2012-11-26
+* Fecha de actualizaciï¿½n:	2012-11-26
 * Desarrollador:	Lewis Chimarro
-* Fecha de actualización:	2015-02-06
+* Fecha de actualizaciï¿½n:	2015-02-06
 * Desarrollador:	Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -19,11 +19,11 @@ require_once('../LOGICA/fac_log_deudas.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');	
 
 /** 
-* Creacion del Objeto de conexión 
+* Creacion del Objeto de conexiï¿½n 
 */
 $obBD_conexion = new Class_Log_Conexion_Tes($Ses_Dat_Dis);
 /* 
-* Creación del objeto mysql para las consultas 
+* Creaciï¿½n del objeto mysql para las consultas 
 */
 $obBD_con1 =  new Class_Log_Datos_Tes;
 
@@ -70,7 +70,7 @@ if(isset($CajFec))
 		}	
 	}else{
 		$correcto=0;
-		?><script language="javascript">alert("¡No hay Autorización para la fecha ingresada!");</script> <?php
+		?><script type="text/javascript">alert("ï¿½No hay Autorizaciï¿½n para la fecha ingresada!");</script> <?php
 	}
 }
 
@@ -259,7 +259,7 @@ if (isset($cmb_tipo))
 }//Fin del if (isset($cmb))
 
 /**
-* Cargado AJAX de los resultados de la búsqueda del semestre 
+* Cargado AJAX de los resultados de la bï¿½squeda del semestre 
 */
 if (isset($sem))
 {
@@ -271,7 +271,7 @@ if (isset($sem))
 }//Fin del if (isset($sem))
 
 /**
-* Cargado AJAX de los resultados de la búsqueda
+* Cargado AJAX de los resultados de la bï¿½squeda
 */
 if (isset($deudas))
 {
@@ -284,7 +284,7 @@ if (isset($deudas))
 }
 
 /** 
-* Cargado AJAX de los resultados de la búsqueda del rubro 
+* Cargado AJAX de los resultados de la bï¿½squeda del rubro 
 */	
 if (isset($buscod))
 {
@@ -332,7 +332,7 @@ if (isset($ajax_detalle))
 */
 require_once('../../Librerias/postclass.php');	
 /** 
-* Creación del objeto para evitar el reenvio 
+* Creaciï¿½n del objeto para evitar el reenvio 
 */
 $thisPost = new Post_Block;
 
@@ -521,8 +521,8 @@ else
 <HTML><HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>	
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-    	<script language="javascript" src="../VALIDACIONES/fac_val_fac_ven.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    	<script type="text/javascript" src="../VALIDACIONES/fac_val_fac_ven.js"></script>
         <!--Librerias para interfaz -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script> 
         <script type="text/javascript" src="../../Librerias/masked/jquery.maskedinput-1.2.2.js"></script>
@@ -1016,7 +1016,7 @@ require_once('../../componentes/FRONT/com_con_leyenda.php');
 	<tr class="Cabecera1" height="35">
 	    <th width="8%">C&oacute;d.</th>	  
 		<th width="8%">Cant.</th>
-		<th width="34%">Descripción</th>
+		<th width="34%">Descripciï¿½n</th>
 		<th width="15%">P. Unitario </th>
 		<th width="15%">Importe</th>
 		<th width="8%">Desc.</th>
@@ -1116,7 +1116,7 @@ require_once('../../componentes/FRONT/com_con_leyenda.php');
         <?Php 
 		
 		
-		/* Consulta los c&oacute;digos de retención  */	
+		/* Consulta los c&oacute;digos de retenciï¿½n  */	
 		$row_rs_retencion_compra_renta=$obBD_con1->getRowConsulta(344,$row_rs_cliente['Vet_Cod'].'*'.$row_rs_cliente['Pro_Cod'].'*'.$row_rs_cliente['Ren_Cod'],$obBD_conexion);
 		$num_row_rs_retencion_compra_renta=$row_rs_retencion_compra_renta['Ren_Cod'] > 0? 1 : 0;
 		
@@ -1456,7 +1456,7 @@ foreach($rs_interes as $row_rs_interes)
 <table width="303" border="0" cellpadding="0" cellspacing="0">
   <tr>
     <td width="106">
-    <button type="button" class="btn btn-inverse fileinput-button" title="Atrás" onClick="campos_hide(this.form, '<?Php echo "txt_busqueda*op_opciones*hdd_volver*cmb_anio*cmb_mes*Tic_Cod"; ?>', '<?Php echo $volver_busqueda.'*'.$volver_op.'*1*'.$volver_anio.'*'.$volver_mes.'*'.$volver_Tic_Cod; ?>')">
+    <button type="button" class="btn btn-inverse fileinput-button" title="Atrï¿½s" onClick="campos_hide(this.form, '<?Php echo "txt_busqueda*op_opciones*hdd_volver*cmb_anio*cmb_mes*Tic_Cod"; ?>', '<?Php echo $volver_busqueda.'*'.$volver_op.'*1*'.$volver_anio.'*'.$volver_mes.'*'.$volver_Tic_Cod; ?>')">
                     <i class=" icon-arrow-left icon-white"></i>
                     <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
        </button>
@@ -1485,13 +1485,13 @@ foreach($rs_interes as $row_rs_interes)
 	*/
 	if (count($rs_pago_fac) == 1)
 	{ ?>
-     <script language="javascript">
+     <script type="text/javascript">
 		 ShowHide('cheque'); //Utilizado para el segundo pago
 	 </script>
 	<?php
 	}//Fin del if ($total_rs_pago_fac)
 }//Fin del if ($codigo > 0 && !(isset($hdd_save))) 
-$cant_modal = 2 + count($rs_buscar);
+$cant_modal = 2 + count((array)$rs_buscar);
 ?><input name="cantmodal" id="cantmodal" type="hidden" value="<?php echo $cant_modal; ?>">
 <div id="bgtransparent" class="bgtransparent" style="display:none" onclick="closeModal()">
 </div>

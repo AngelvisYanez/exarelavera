@@ -1,10 +1,10 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php 
 /**
-* Descripción: Permite registrar los tipos de categorias
-* Fecha de actualización:	2011-04-01
+* Descripciï¿½n: Permite registrar los tipos de categorias
+* Fecha de actualizaciï¿½n:	2011-04-01
 * Desarrollador:	Mauricio Fierro
-* Fecha de actualización:	2012-06-11
+* Fecha de actualizaciï¿½n:	2012-06-11
 * Desarrollador:	Lewis Chimarro
 */	
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -13,7 +13,7 @@ require_once('../../Librerias/procedimientos/almacenados_standar.php');
 require_once('../../Librerias/postclass.php');
 
 /** 
-* Creación del objeto para evitar el reenvio 
+* Creaciï¿½n del objeto para evitar el reenvio 
 */
 $thisPost = new Post_Block;
 /** 
@@ -21,7 +21,7 @@ $thisPost = new Post_Block;
 */  
 $obBD_conexion = new Class_Log_Conexion_Tes;
 /**
-* Creación del Objeto para consultas
+* Creaciï¿½n del Objeto para consultas
 */
 $obBD_con1 =  new Class_Log_Datos_Tes; 
 
@@ -65,7 +65,7 @@ if(isset($_POST['cdc_nivel']))
 		
 		$nivel_superior = $row['Cat_Rec'];
 		/**
-		* Devuelve la descripción de un directorio superior
+		* Devuelve la descripciï¿½n de un directorio superior
 		*/
 		$rs_nivel_s = $obBD_con1->consulta(sentencias_tes(1025,$obBD_con1->parametros("".$nivel_superior)),$obBD_conexion->conexion);
 		$row = $obBD_con1->fetch_assoc($rs_nivel_s);
@@ -240,7 +240,7 @@ if(isset($_POST['cdc_nivel']))
 							<input type='hidden' name='nivel_actual' value='<?Php //echo $row_nivel['Cat_Cod']; ?>'/>
 							<input type='hidden' name='nombre_nivel' value='<?Php //echo $row_nivel['Cat_Des']; ?>'/>
 							<input type='hidden' name='cdc_nivel' value='<?Php //echo $row_nivel['Cat_Cdc']; ?>'/>
-							<input type='hidden' name='nivel_superior' value'<?Php// echo $row_nivel['Cat_Rec']; ?>'/>
+							<input type='hidden' name='nivel_superior' value'<?Php //echo $row_nivel['Cat_Rec']; ?>'/>
 							<input type='image' name='imageField' src='../../mascaras/model1/imagenes/32x32/forward.png' width='22' height='22' title='Editar'>
 							</form>-->
 					<?Php

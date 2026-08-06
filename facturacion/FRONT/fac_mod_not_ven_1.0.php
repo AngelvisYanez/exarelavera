@@ -546,7 +546,7 @@ if(isset($get_documentos)){
         <link rel="stylesheet" href="../../framework/jquery/bootstrap/popover/jquery.flyout.css">
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
         <script src="../../framework/jquery/bootstrap/popover/jquery.flyout.js"></script>
-        <script language="javascript" src="../VALIDACIONES/fac_val_factura.js?a=9"></script>
+        <script type="text/javascript" src="../VALIDACIONES/fac_val_factura.js?a=9"></script>
         
         <script>
             var Nota_CreDeb=true,Mod_Nota_CreDeb=true;
@@ -1200,10 +1200,10 @@ if(isset($get_documentos)){
                                                     <option value="">Seleccione...</option>
                                                    <?php foreach($rs_pag_sri as $row){
                                                      $selected='';
-                                                      if ($row[Tpc_Sri]==1) {
-                                                        $selected='Selected';
-                                                      }
-                                                       echo "<option value='$row[Tpc_Cod]' ".$selected."  >$row[Tpc_Sri] - $row[Tpc_Des]</option>";
+                                                       if ($row['Tpc_Sri']==1) {
+                                                         $selected='Selected';
+                                                       }
+                                                        echo "<option value='{$row['Tpc_Cod']}' ".$selected."  >{$row['Tpc_Sri']} - {$row['Tpc_Des']}</option>";
                                                     } ?>
                                                 </select>
                                             </div>
@@ -1488,7 +1488,7 @@ if(isset($get_documentos)){
                     <div class="form-group">
                         <label class="col-xs-3 control-label label-xs required">Ciudad:</label>
                         <div class="col-xs-4" >
-                            <?php $rs_ciudad = $obBD_con1->getArrayConsulta(81, '', $obBD_conexion); var_dfum?>
+                            <?php $rs_ciudad = $obBD_con1->getArrayConsulta(81, '', $obBD_conexion); ?>
                             <select name="Ciu_Cod" class="form-control input-xs" required="" >
                                 <option value=""></option>
                                 <?php  foreach($rs_ciudad as $row){ echo "<option value='$row[Ciu_Cod]' data-prov='$row[Pro_Nom]'>$row[Ciu_Des]</option>"; } ?>

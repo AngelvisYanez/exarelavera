@@ -169,8 +169,8 @@ else
 <TITLE><?Php echo "Categoria Registrar [EXA]"; ?></TITLE>
     <meta charset="UTF-8">
 	<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>        
-		<script language="javascript" src="../VALIDACIONES/fac_val_guias.js"></script>        
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>        
+		<script type="text/javascript" src="../VALIDACIONES/fac_val_guias.js"></script>        
 		<link rel="stylesheet" type="text/css" href="../../Librerias/jquery/modal/css/modal.css">
         <script type="text/javascript" src="../../Librerias/jquery/modal/js/jquery.js"></script>
         <script type="text/javascript" src="../../Librerias/jquery/modal/js/modal.js"></script>
@@ -254,7 +254,7 @@ else
 							<input type='hidden' name='nivel_actual' value='<?Php //echo $row_nivel['Cat_Cod']; ?>'/>
 							<input type='hidden' name='nombre_nivel' value='<?Php //echo $row_nivel['Cat_Des']; ?>'/>
 							<input type='hidden' name='cdc_nivel' value='<?Php //echo $row_nivel['Cat_Cdc']; ?>'/>
-							<input type='hidden' name='nivel_superior' value'<?Php// echo $row_nivel['Cat_Rec']; ?>'/>
+							<input type='hidden' name='nivel_superior' value'<?Php //echo $row_nivel['Cat_Rec']; ?>'/>
 							<input type='image' name='imageField' src='../../mascaras/model1/imagenes/32x32/forward.png' width='22' height='22' title='Editar'>
 							</form>-->
 					<?Php

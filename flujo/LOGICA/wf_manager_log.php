@@ -694,10 +694,108 @@ class wf_manager_log {
     private $versioningReady = false;
     private $notificationSchemaReady = false;
 
+    /**
+     * Crea las tablas base del workflow si aun no existen (instalacion limpia).
+     */
+    private function ensureBaseWorkflowSchema() {
+        $this->obBD_datos->grabarv_registros(
+            "CREATE TABLE IF NOT EXISTS wf_flujos_modelos (
+                Wfm_Cod BIGINT NOT NULL AUTO_INCREMENT,
+                Emp_Cod INT NOT NULL,
+                Wfm_Nom VARCHAR(200) NOT NULL,
+                Wfm_Des TEXT NULL,
+                Wfm_Est CHAR(1) NOT NULL DEFAULT 'B',
+                PRIMARY KEY (Wfm_Cod),
+                KEY idx_wf_flujo_emp (Emp_Cod)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8;",
+            $this->obBD_conexion
+        );
+        $this->obBD_datos->grabarv_registros(
+            "CREATE TABLE IF NOT EXISTS wf_nodos (
+                Nod_Cod BIGINT NOT NULL AUTO_INCREMENT,
+                Wfm_Cod BIGINT NOT NULL,
+                Nod_Tip VARCHAR(30) NOT NULL,
+                Nod_Nom VARCHAR(200) NOT NULL,
+                Nod_Des TEXT NULL,
+                Dep_Cod BIGINT NULL,
+                Per_Cod BIGINT NULL,
+                Nod_Sla INT NULL,
+                Nod_Com_Obl TINYINT(1) NOT NULL DEFAULT 0,
+                Nod_Adj_Obl TINYINT(1) NOT NULL DEFAULT 0,
+                Nod_Vis_X INT NULL,
+                Nod_Vis_Y INT NULL,
+                Nod_Usu_Asig VARCHAR(120) NOT NULL DEFAULT 'TODOS',
+                Nod_Est CHAR(1) NOT NULL DEFAULT 'A',
+                PRIMARY KEY (Nod_Cod),
+                KEY idx_wf_nodo_flujo (Wfm_Cod)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8;",
+            $this->obBD_conexion
+        );
+        $this->obBD_datos->grabarv_registros(
+            "CREATE TABLE IF NOT EXISTS wf_conexiones (
+                Con_Cod BIGINT NOT NULL AUTO_INCREMENT,
+                Wfm_Cod BIGINT NOT NULL,
+                Nod_Ori BIGINT NOT NULL,
+                Nod_Des BIGINT NOT NULL,
+                Con_Acc VARCHAR(30) NOT NULL DEFAULT 'APROBAR',
+                Con_Con_Exp TEXT NULL,
+                PRIMARY KEY (Con_Cod),
+                KEY idx_wf_con_flujo (Wfm_Cod)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8;",
+            $this->obBD_conexion
+        );
+        $this->obBD_datos->grabarv_registros(
+            "CREATE TABLE IF NOT EXISTS wf_instancias (
+                Ins_Cod BIGINT NOT NULL AUTO_INCREMENT,
+                Wfm_Cod BIGINT NOT NULL,
+                Ins_Ent_Typ VARCHAR(50) NOT NULL,
+                Ins_Ent_Cod BIGINT NOT NULL,
+                Nod_Act BIGINT NULL,
+                Ins_Est CHAR(1) NOT NULL DEFAULT 'P',
+                Ins_Fec_Ini DATETIME NOT NULL,
+                Ins_Fec_Fin DATETIME NULL,
+                PRIMARY KEY (Ins_Cod),
+                KEY idx_wf_ins_ent (Ins_Ent_Typ, Ins_Ent_Cod)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8;",
+            $this->obBD_conexion
+        );
+        $this->obBD_datos->grabarv_registros(
+            "CREATE TABLE IF NOT EXISTS wf_instancias_nodos (
+                Isn_Cod BIGINT NOT NULL AUTO_INCREMENT,
+                Ins_Cod BIGINT NOT NULL,
+                Nod_Cod BIGINT NOT NULL,
+                Usu_Cod INT NULL,
+                Dep_Cod BIGINT NULL,
+                Isn_Acc VARCHAR(30) NOT NULL,
+                Isn_Com TEXT NULL,
+                Isn_Adj TEXT NULL,
+                Isn_Fec DATETIME NOT NULL,
+                Isn_Ip VARCHAR(50) NULL,
+                Isn_Ses VARCHAR(100) NULL,
+                Isn_Sla_Ven DATETIME NULL,
+                PRIMARY KEY (Isn_Cod),
+                KEY idx_wf_isn_inst (Ins_Cod),
+                KEY idx_wf_isn_nodo (Nod_Cod)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8;",
+            $this->obBD_conexion
+        );
+        $this->obBD_datos->grabarv_registros(
+            "CREATE TABLE IF NOT EXISTS wf_departamento_usuarios (
+                Dep_Cod BIGINT NOT NULL,
+                Usu_Cod INT NOT NULL,
+                Wde_Cod BIGINT NULL,
+                PRIMARY KEY (Dep_Cod, Usu_Cod),
+                KEY idx_wf_dpu_wde (Wde_Cod)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8;",
+            $this->obBD_conexion
+        );
+    }
+
     public function ensureVersioningSchema() {
         if ($this->versioningReady) {
             return;
         }
+        $this->ensureBaseWorkflowSchema();
         $cols = $this->obBD_datos->getArrayConsultaSql(
             "SHOW COLUMNS FROM wf_flujos_modelos LIKE 'Wfm_Fam_Cod';",
             $this->obBD_conexion

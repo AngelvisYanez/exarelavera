@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 /**
  * @abstract Permite realizar la cancelacion de comprobantes por abonos
@@ -64,7 +64,8 @@ if (isset($save)) {
   exit();
 }
 $row_rs_periodo = $obBD_con1->getRowConsulta(39, $Ses_Emp_Cod, $obBD_conexion);
-$PecIni = explode('-', $row_rs_periodo['Pec_Fei']);
+$Pec_Fei = (isset($row_rs_periodo['Pec_Fei']) && $row_rs_periodo['Pec_Fei']) ? $row_rs_periodo['Pec_Fei'] : date('Y-m-d');
+$PecIni = explode('-', $Pec_Fei);
 $maximo = ($PecIni[0] * 1 - 1) . '-12-' . ultimoDia(12, ($PecIni[0] * 1 - 1));
 
 ?>

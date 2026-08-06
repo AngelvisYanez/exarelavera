@@ -1,8 +1,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php 
 /**
-* Descripción: Permite modificar las ubicaciones
-* Fecha de actualización:	2013-09-10
+* Descripciï¿½n: Permite modificar las ubicaciones
+* Fecha de actualizaciï¿½n:	2013-09-10
 * Desarrollador:	Fabian Gallardo G.
 */	
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -11,7 +11,7 @@ require_once('../../Librerias/procedimientos/almacenados_standar.php');
 require_once('../../Librerias/postclass.php');
 
 /** 
-* Creación del objeto para evitar el reenvio 
+* Creaciï¿½n del objeto para evitar el reenvio 
 */
 $thisPost = new Post_Block;
 /** 
@@ -19,7 +19,7 @@ $thisPost = new Post_Block;
 */  
 $obBD_conexion = new Class_Log_Conexion_Ubi($Ses_Dat_Dis);
 /**
-* Creación del Objeto para consultas
+* Creaciï¿½n del Objeto para consultas
 */
 $obBD_con1 =  new Class_Log_Datos_Ubi; 
 
@@ -56,7 +56,7 @@ $cadena_codigo = "";
 		$nivel_superior = $row['Ubi_Rec'];
 		
 		/**
-		* Devuelve la descripción de un directorio superior
+		* Devuelve la descripciï¿½n de un directorio superior
 		*/
 		$row = $obBD_con1->getRowConsulta(20,"".$nivel_superior,$obBD_conexion);
 		$nombre_nivel = $row['Ubi_Des'];
@@ -261,7 +261,7 @@ if(isset($_POST['edit']))
 							<input type='hidden' name='nivel_actual' value='<?Php //echo $row_nivel['Cat_Cod']; ?>'/>
 							<input type='hidden' name='nombre_nivel' value='<?Php //echo $row_nivel['Cat_Des']; ?>'/>
 							<input type='hidden' name='cdc_nivel' value='<?Php //echo $row_nivel['Cat_Cdc']; ?>'/>
-							<input type='hidden' name='nivel_superior' value'<?Php// echo $row_nivel['Cat_Rec']; ?>'/>
+							<input type='hidden' name='nivel_superior' value'<?Php //echo $row_nivel['Cat_Rec']; ?>'/>
 							<input type='image' name='imageField' src='../../mascaras/model1/imagenes/32x32/forward.png' width='22' height='22' title='Editar'>
 							</form>-->
 					<?Php

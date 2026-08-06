@@ -168,7 +168,8 @@
 
             </fieldset><!-- FIN DEL BLOQUE DE DATOS DEL CLIENTE -->
 
-            <?php $bodegas = $obBD_con1->getArrayConsulta('bodega.1', array('Suc_Cod' => $Ses_Suc_Cod, 'Usu_Cod' => $Ses_Usu_Cod), $obBD_conexion); ?>
+            <?php $bodegas = $obBD_con1->getArrayConsulta('bodega.1', array('Suc_Cod' => $Ses_Suc_Cod, 'Usu_Cod' => $Ses_Usu_Cod), $obBD_conexion);
+            $cen_cons = array(); ?>
 
             <fieldset class="exa-fieldset" <?php if (count($cen_cons) == 0 and count($bodegas) == 0) echo 'style="display:none; "'; ?>>
                 <legend class="Titulos2"></legend>

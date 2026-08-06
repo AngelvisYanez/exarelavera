@@ -109,7 +109,7 @@ class MysqlDatos
     }
     function getRowCount($result, $sql='', $con = null)
     {
-        if(!$result || stripos($sql, 'SELECT COUNT('))
+        if (!$result || !($result instanceof \mysqli_result) || stripos($sql, 'SELECT COUNT('))
             return array();
         if ($con && preg_match('/^\s*(INSERT|UPDATE|DELETE)/i', $sql))
             return array('row_count'=>@mysqli_affected_rows($con)); // Devuelve las filas afectadas
@@ -182,6 +182,9 @@ class MysqlDatos
         $this->utf8_change_param($a);
         $c = json_encode($a);
         if ($b == true) {
+            if (!headers_sent()) {
+                header('Content-Type: application/json; charset=utf-8');
+            }
             echo $c;
             exit();
         }
@@ -263,17 +266,42 @@ class MysqlDatos
      * @param string/array $param
      * @return array
      */
+    function escapeSqlParam(&$input)
+    {
+        $con = $this->getMyCon();
+        if (!($con instanceof \mysqli)) return;
+        if (is_string($input)) {
+            $input = $con->real_escape_string($input);
+        } else if (is_array($input)) {
+            foreach ($input as $k => &$value) {
+                if ($k === 'db') {
+                    if (is_string($value)) $value = preg_replace('/[^a-zA-Z0-9_]/', '', $value);
+                } else {
+                    $this->escapeSqlParam($value);
+                }
+            }
+            unset($value);
+        } else if (is_object($input)) {
+            $vars = array_keys(get_object_vars($input));
+            foreach ($vars as $var) {
+                $this->escapeSqlParam($input->$var);
+            }
+        }
+    }
     function parametros($param, $encoding = 'latin1')
     {
+        if ($param === null) $param = '';
         if (!is_object($param)) {
             $Par_Sql = is_array($param) ? $param : explode('*', $param);
             $this->stripTags($Par_Sql)->utf8_change_param($Par_Sql, $encoding != 'utf8');
+            $this->escapeSqlParam($Par_Sql);
         } else {
             if (!is_a($param, "Zend_Db_Select")) {
                 $this->utf8_change_param($param, $encoding != 'utf8');
             } else {
                 $d = $param->getDataSelect();
                 $this->stripTags($d)->utf8_change_param($d, $encoding != 'utf8');
+                $this->escapeSqlParam($d);
                 $param->setDataSelect($d);
             }
             $Par_Sql = $param;
@@ -314,7 +342,7 @@ class MysqlDatos
             $result = @mysqli_query($con, $sql);
             $this->setError(@mysqli_errno($con), @mysqli_error($con));
         } else $result = false;
-        DebugBar::addQuery($sql, $this->getDB($conexion) + $this->getErrorData() + $this->getRowCount($this->rs_cargar, $sql, $con));
+        DebugBar::addQuery($sql, $this->getDB($conexion) + $this->getErrorData() + $this->getRowCount($result, $sql, $con));
         return $result;
     }
     /* Load model */
@@ -401,7 +429,7 @@ class MysqlDatos
         $result = $this->consultasobBD($sen_sql, $param, $obBD);
         $r = $this->fetch_assoc($result);
         $this->free_result($result);
-        return $r;
+        return $r ?? array();
     }
     function getRow($sen_sql, $param, $echo = 0, $obBD = null)
     {
@@ -416,7 +444,7 @@ class MysqlDatos
         $result = $this->consulta($sql, $obBD);
         $r = $this->fetch_assoc($result);
         $this->free_result($result);
-        return $r;
+        return $r ?? array();
     }
     /**
      * Ejecuta consulta a la bd -  STARDARD
@@ -630,22 +658,27 @@ class MysqlDatos
     /* Devuelve el numero de campos de una consulta - @return number|object */
     function numcampos()
     {
+        if (!($this->rs_cargar instanceof mysqli_result)) return 0;
         return mysqli_num_fields($this->rs_cargar);
     }
     /* Devuelve el numero de registros de una consulta - @return number|object */
     function numregistros()
     {
+        if (!($this->rs_cargar instanceof mysqli_result)) return 0;
         return @mysqli_num_rows($this->rs_cargar);
     }
     /* Devuelve una matriz con los datos consultados - @return number|object */
     function registros()
     {
+        if (!($this->rs_cargar instanceof mysqli_result)) return false;
         return @mysqli_fetch_assoc($this->rs_cargar);
     }
     /* Devuelve el nombre de un campo de una consulta - @param number $numcampo */
     function nombrecampo($numcampo)
     {
-        return mysqli_field_name($this->rs_cargar, $numcampo);
+        if (!($this->rs_cargar instanceof mysqli_result)) return null;
+        $finfo = mysqli_fetch_field_direct($this->rs_cargar, $numcampo);
+        return $finfo ? $finfo->name : null;
     }
     /* Desvuelve una matriz con los datos consultados en base a un rs */
     function fetch_assoc($rs_consulta)
@@ -658,6 +691,11 @@ class MysqlDatos
     {
         if (!($rs_consulta instanceof mysqli_result)) return 0;
         return @mysqli_num_rows($rs_consulta);
+    }
+    /* alias de liberacion de un resultset (compatibilidad) */
+    function result(&$rs_consulta = null)
+    {
+        return $this->free_result($rs_consulta);
     }
     /* libera un rs */
     function free_result(&$rs_consulta)
@@ -744,11 +782,16 @@ class MysqlDatos
     function reportesExa($pagina, $Emp_Cod, $obBD)
     {
         $pag = explode("/", $pagina);
+        $pageName = basename(end($pag));
+        $pageName = preg_replace('/[^a-zA-Z0-9_.]/', '', $pageName);
         $report = array();
-        $proceso = $this->getRowConsultaSql("SELECT Pcs_Cod FROM procesos WHERE Pcs_Nom LIKE '" . ($pag[count($pag) - 1]) . "' ORDER BY Pcs_Nom DESC;", $obBD);
+        $con = $this->getMyCon();
+        $safePage = ($con instanceof \mysqli) ? $con->real_escape_string($pageName) : $pageName;
+        $safeEmp = ($con instanceof \mysqli) ? $con->real_escape_string($Emp_Cod) : $Emp_Cod;
+        $proceso = $this->getRowConsultaSql("SELECT Pcs_Cod FROM procesos WHERE Pcs_Nom LIKE '" . $safePage . "' ORDER BY Pcs_Nom DESC;", $obBD);
         $reportes = $this->getArrayConsultaSql("SELECT reportes.Rep_Cod,procesos.Pcs_Nom,reportes.Rep_Ord,rutas.Rut_Des FROM procesos
 INNER JOIN reportes ON (procesos.Pcs_Cod = reportes.Rep_Req) INNER JOIN rutas ON (procesos.Rut_Cod = rutas.Rut_Cod)
-WHERE reportes.Pcs_Cod = '{$proceso['Pcs_Cod']}' AND reportes.Emp_Cod = '$Emp_Cod' ORDER BY reportes.Rep_Ord;", $obBD);
+WHERE reportes.Pcs_Cod = '" . (($con instanceof \mysqli) ? $con->real_escape_string($proceso['Pcs_Cod']) : $proceso['Pcs_Cod']) . "' AND reportes.Emp_Cod = '$safeEmp' ORDER BY reportes.Rep_Ord;", $obBD);
         foreach ($reportes as $r) $report[$r['Rep_Ord']] = $r['Rut_Des'] . $r['Pcs_Nom'];
         return $report;
     }

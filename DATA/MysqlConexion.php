@@ -124,7 +124,12 @@ class MysqlConexion{
     /* Cierra la conexion */
     function cerrar() {
         DebugBar::addTransactionEvent('Close Connection', $this->getDB());
-        return (!$this->conexion) ? NULL : @mysqli_close($this->conexion);
+        if (!($this->conexion instanceof \mysqli)) return NULL;
+        try {
+            return @mysqli_close($this->conexion);
+        } catch (\Throwable $e) {
+            return NULL;
+        }
     }
     function getDB() {
         return array('db' => $this->BaseDatos) +

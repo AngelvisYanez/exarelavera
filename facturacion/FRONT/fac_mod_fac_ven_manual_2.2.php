@@ -669,8 +669,8 @@ else
 <HTML><HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>	
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-    	<script language="javascript" src="../VALIDACIONES/fac_val_fac_ven_new.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    	<script type="text/javascript" src="../VALIDACIONES/fac_val_fac_ven_new.js"></script>
         <!--Librerias para interfaz -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script> 
         <script type="text/javascript" src="../../Librerias/masked/jquery.maskedinput-1.2.2.js"></script>
@@ -1698,13 +1698,13 @@ foreach($rs_interes as $row_rs_interes)
 	*/
 	if (count($rs_pago_fac) == 1)
 	{ ?>
-     <script language="javascript">
+     <script type="text/javascript">
 		 ShowHide('cheque'); //Utilizado para el segundo pago
 	 </script>
 	<?php
 	}//Fin del if ($total_rs_pago_fac)
 }//Fin del if ($codigo > 0 && !(isset($hdd_save))) 
-$cant_modal = 2 + count($rs_buscar);
+$cant_modal = 2 + count((array)$rs_buscar);
 ?><input name="cantmodal" id="cantmodal" type="hidden" value="<?php echo $cant_modal; ?>">
 <div id="bgtransparent" class="bgtransparent" style="display:none" onClick="closeModal()">
 </div>
