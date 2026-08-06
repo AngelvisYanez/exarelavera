@@ -165,7 +165,7 @@ class Class_Log_Datos_Con extends MysqlDatos{
 	* @param Class_Log_Conexion_Con $obBD para realizar la conexcion correspondiente
 	* @return result si existen datos de retorno
 	*/
-	function consultasobBD($sen_sql,$param, $obBD)
+	function consultasobBD($sen_sql,$param, $obBD=null)
 	{
 		$Par_Sql= $this->parametros($param);
 		return $this->consulta(sentencias_con($sen_sql,$Par_Sql), $obBD->conexion);
@@ -179,7 +179,7 @@ class Class_Log_Datos_Con extends MysqlDatos{
 	* @param Class_Log_Conexion_Con $obBD para realizar la conexcion correspondiente
 	* @return result si existen datos de retorno
 	*/
-	function operacionobBD($sen_sql,$param, $obBD)
+	function operacionobBD($sen_sql,$param, $obBD=null)
 	{
 		$Par_Sql= $this->parametros($param);
 		return $this->grabarv_registros(sentencias_con($sen_sql,$Par_Sql), $obBD->conexion);
@@ -192,7 +192,7 @@ class Class_Log_Datos_Con extends MysqlDatos{
 	 * @param Class_Log_Conexion_Con $obBD para realizar la conexcion correspondiente
 	 * @return array $row fila de datos
 	 */
-	function getRowConsulta($sen_sql,$param,$obBD)
+	function getRowConsulta($sen_sql,$param,$obBD=null)
 	{
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);
 		
@@ -211,7 +211,7 @@ class Class_Log_Datos_Con extends MysqlDatos{
 	 * @param Class_Log_Datos_Con $obDT para la abtraccion de los datos
 	 * @return array $array arreglo de datos asociados
 	 */ 
-	function getArrayConsulta($sen_sql,$param,$obBD)
+	function getArrayConsulta($sen_sql,$param,$obBD=null)
 	{
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);
 		
@@ -233,7 +233,7 @@ class Class_Log_Datos_Con extends MysqlDatos{
 	 * @param string $param cadena de datos
 	 * @param Class_Log_Datos_Con $obBD objeto de conexion
 	 */
-	function insertUpdateDelete($sen_sql,$param, $obBD)
+	function insertUpdateDelete($sen_sql,$param, $obBD=null)
 	{		
 		$this->inicio_transaccion($obBD->conexion);
 		
