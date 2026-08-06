@@ -4544,9 +4544,12 @@ class adq_adquisiciones_log extends MysqlDatosContab {
 
         $historial = $this->getArrayConsultaSql(
             "SELECT h.*, COALESCE(n.Nod_Nom, CONCAT('Proceso #', h.Nod_Cod)) AS Nod_Nom,
-                    n.Nod_Tip
+                    n.Nod_Tip,
+                    TRIM(CONCAT(IFNULL(p.Prs_Nom, ''), ' ', IFNULL(p.Prs_Ape, ''))) AS Usuario_Nom
              FROM wf_instancias_nodos h
              LEFT JOIN wf_nodos n ON n.Nod_Cod = h.Nod_Cod
+             LEFT JOIN usuarios u ON u.Usu_Cod = h.Usu_Cod
+             LEFT JOIN persona p ON p.Prs_Cod = u.Prs_Cod
              WHERE h.Ins_Cod = $ins_cod
              ORDER BY h.Isn_Fec ASC, h.Isn_Cod ASC;",
             $this->conexion
@@ -4555,6 +4558,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $historial = array();
         }
         $historial = $this->enriquecerHistorialConArchivos($historial, intval($sol_cod));
+        $aprobacion_por_nodo = $this->resolverAprobacionPorNodoExpediente($historial);
 
         $this->ensureAvancesTable();
         $vistos_global = array();
@@ -4568,6 +4572,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $titulo = !empty($nodo['Nod_Nom']) ? $nodo['Nod_Nom'] : ('Proceso #' . $nod_cod);
             $documentos = array();
             $vistos = array();
+            $aprob = isset($aprobacion_por_nodo[$nod_cod]) ? $aprobacion_por_nodo[$nod_cod] : array('fecha' => '', 'fecha_fmt' => '', 'usuario' => '');
 
             foreach ($historial as $h) {
                 $nod_hist = intval(isset($h['Etapa_Nod_Cod']) ? $h['Etapa_Nod_Cod'] : 0);
@@ -4650,7 +4655,10 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 'nod_cod' => $nod_cod,
                 'titulo' => $titulo,
                 'tipo' => $nod_tip,
-                'documentos' => $documentos
+                'documentos' => $documentos,
+                'fecha_aprobacion' => isset($aprob['fecha']) ? $aprob['fecha'] : '',
+                'fecha_aprobacion_fmt' => isset($aprob['fecha_fmt']) ? $aprob['fecha_fmt'] : '',
+                'usuario_aprobacion' => isset($aprob['usuario']) ? $aprob['usuario'] : ''
             );
         }
 
@@ -4731,7 +4739,114 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             }
         }
 
+        // FIN siempre al final del indice; por defecto aprobado con fecha de descarga
+        // y el responsable a cargo del nodo (no depende del historial).
+        $secciones = $this->normalizarSeccionFinExpediente($secciones, $meta);
+
         return array('meta' => $meta, 'secciones' => $secciones);
+    }
+
+    /**
+     * Deja el nodo FIN al final del indice y lo marca como aprobado
+     * con la fecha de generacion/descarga y el responsable del nodo.
+     */
+    private function normalizarSeccionFinExpediente($secciones, $meta) {
+        if (empty($secciones) || !is_array($secciones)) {
+            return array();
+        }
+
+        $otros = array();
+        $fins = array();
+        foreach ($secciones as $sec) {
+            $tipo = isset($sec['tipo']) ? strtoupper(trim((string)$sec['tipo'])) : '';
+            if ($tipo === 'FIN') {
+                $fins[] = $sec;
+            } else {
+                $otros[] = $sec;
+            }
+        }
+
+        $fecha = !empty($meta['fecha']) ? $meta['fecha'] : date('Y-m-d H:i:s');
+        $fecha_fmt = !empty($meta['fecha_fmt']) ? $meta['fecha_fmt'] : date('d/m/Y H:i');
+        $responsable = !empty($meta['aprobador_fin']) ? trim((string)$meta['aprobador_fin']) : '';
+        if ($responsable === '') {
+            $responsable = $this->nombreUsuarioSesionExpediente();
+        }
+
+        foreach ($fins as $i => $fin) {
+            $fins[$i]['fecha_aprobacion'] = $fecha;
+            $fins[$i]['fecha_aprobacion_fmt'] = $fecha_fmt;
+            $fins[$i]['usuario_aprobacion'] = $responsable !== '' ? $responsable : 'Responsable de cierre';
+        }
+
+        return array_merge($otros, $fins);
+    }
+
+    /**
+     * Nombre del usuario de sesion actual (quien descarga el expediente).
+     */
+    private function nombreUsuarioSesionExpediente() {
+        $usu_cod = isset($_SESSION['Ses_Usu_Cod']) ? intval($_SESSION['Ses_Usu_Cod']) : 0;
+        if ($usu_cod <= 0) {
+            return '';
+        }
+        $row = $this->getRowConsultaSql(
+            "SELECT TRIM(CONCAT(IFNULL(p.Prs_Nom, ''), ' ', IFNULL(p.Prs_Ape, ''))) AS Usuario_Nom
+             FROM usuarios u
+             INNER JOIN persona p ON p.Prs_Cod = u.Prs_Cod
+             WHERE u.Usu_Cod = $usu_cod
+             LIMIT 1;",
+            $this->conexion
+        );
+        return !empty($row['Usuario_Nom']) ? trim($row['Usuario_Nom']) : '';
+    }
+
+    /**
+     * Por cada nodo del historial, obtiene la ultima fecha/usuario que aprobo o completo la tarea.
+     * Acciones consideradas: APROBAR, COMPLETAR, CREAR (inicio).
+     * El nodo FIN se resuelve aparte al generar el expediente.
+     */
+    private function resolverAprobacionPorNodoExpediente($historial) {
+        $mapa = array();
+        if (empty($historial) || !is_array($historial)) {
+            return $mapa;
+        }
+        $acciones = array('APROBAR', 'COMPLETAR', 'CREAR');
+        foreach ($historial as $h) {
+            $acc = isset($h['Isn_Acc']) ? strtoupper(trim((string)$h['Isn_Acc'])) : '';
+            if (!in_array($acc, $acciones, true)) {
+                continue;
+            }
+            $tip = isset($h['Nod_Tip']) ? strtoupper(trim((string)$h['Nod_Tip'])) : '';
+            // FIN: se fuerza al descargar (fecha de descarga + responsable del nodo).
+            if ($tip === 'FIN') {
+                continue;
+            }
+            $nod = intval(isset($h['Etapa_Nod_Cod']) ? $h['Etapa_Nod_Cod'] : 0);
+            if ($nod <= 0) {
+                $nod = intval(isset($h['Nod_Cod']) ? $h['Nod_Cod'] : 0);
+            }
+            if ($nod <= 0) {
+                continue;
+            }
+            $usuario = isset($h['Usuario_Nom']) ? trim((string)$h['Usuario_Nom']) : '';
+            if ($usuario === '' && !empty($h['Prs_Nom'])) {
+                $usuario = trim($h['Prs_Nom'] . ' ' . (isset($h['Prs_Ape']) ? $h['Prs_Ape'] : ''));
+            }
+            $fecha = isset($h['Isn_Fec']) ? trim((string)$h['Isn_Fec']) : '';
+            $fecha_fmt = '';
+            if ($fecha !== '') {
+                $ts = strtotime($fecha);
+                $fecha_fmt = $ts ? date('d/m/Y H:i', $ts) : $fecha;
+            }
+            // Ultimo movimiento valido por nodo (historial viene ASC).
+            $mapa[$nod] = array(
+                'fecha' => $fecha,
+                'fecha_fmt' => $fecha_fmt,
+                'usuario' => $usuario
+            );
+        }
+        return $mapa;
     }
 
     /**
@@ -5101,17 +5216,25 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $n_docs = count($sec['documentos']);
             $total_docs += $n_docs;
             $bg = ($num % 2 === 0) ? $c['fondo'] : $c['blanco'];
+            $fecha_apr = !empty($sec['fecha_aprobacion_fmt'])
+                ? $this->htmlEscExpediente($sec['fecha_aprobacion_fmt'])
+                : '<span style="color:' . $c['suave'] . ';">Pendiente</span>';
+            $usuario_apr = !empty($sec['usuario_aprobacion'])
+                ? $this->htmlEscExpediente($sec['usuario_aprobacion'])
+                : '<span style="color:' . $c['suave'] . ';">Pendiente</span>';
             $lista .= '<tr>
-                <td width="10%" style="padding:8px 6px;background:' . $bg . ';border-bottom:1px solid ' . $c['linea'] . ';text-align:center;">
-                    <div style="display:inline-block;width:22px;height:22px;line-height:22px;background:' . $c['primario'] . ';color:' . $c['blanco'] . ';font-size:10px;font-weight:bold;text-align:center;">' . $num . '</div>
+                <td width="8%" style="padding:7px 4px;background:' . $bg . ';border-bottom:1px solid ' . $c['linea'] . ';text-align:center;">
+                    <div style="display:inline-block;width:20px;height:20px;line-height:20px;background:' . $c['primario'] . ';color:' . $c['blanco'] . ';font-size:9px;font-weight:bold;text-align:center;">' . $num . '</div>
                 </td>
-                <td width="70%" style="padding:8px 8px;background:' . $bg . ';border-bottom:1px solid ' . $c['linea'] . ';font-size:11px;color:' . $c['titulo'] . ';font-weight:bold;">' . $this->htmlEscExpediente($sec['titulo']) . '</td>
-                <td width="20%" style="padding:8px 8px;background:' . $bg . ';border-bottom:1px solid ' . $c['linea'] . ';text-align:right;font-size:10px;color:' . $c['suave'] . ';">' . $n_docs . ' documento' . ($n_docs === 1 ? '' : 's') . '</td>
+                <td width="34%" style="padding:7px 6px;background:' . $bg . ';border-bottom:1px solid ' . $c['linea'] . ';font-size:10px;color:' . $c['titulo'] . ';font-weight:bold;">' . $this->htmlEscExpediente($sec['titulo']) . '</td>
+                <td width="16%" style="padding:7px 6px;background:' . $bg . ';border-bottom:1px solid ' . $c['linea'] . ';font-size:9px;color:' . $c['texto'] . ';text-align:center;">' . $fecha_apr . '</td>
+                <td width="28%" style="padding:7px 6px;background:' . $bg . ';border-bottom:1px solid ' . $c['linea'] . ';font-size:9px;color:' . $c['texto'] . ';">' . $usuario_apr . '</td>
+                <td width="14%" style="padding:7px 6px;background:' . $bg . ';border-bottom:1px solid ' . $c['linea'] . ';text-align:right;font-size:9px;color:' . $c['suave'] . ';">' . $n_docs . ' doc' . ($n_docs === 1 ? '' : 's') . '</td>
             </tr>';
             $num++;
         }
         if ($lista === '') {
-            $lista = '<tr><td colspan="3" style="padding:12px;color:' . $c['suave'] . ';font-size:11px;">Sin procesos registrados.</td></tr>';
+            $lista = '<tr><td colspan="5" style="padding:12px;color:' . $c['suave'] . ';font-size:11px;">Sin procesos registrados.</td></tr>';
         }
 
         $jus = isset($meta['sol_jus']) ? trim((string)$meta['sol_jus']) : '';
@@ -5186,9 +5309,11 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             </div>
             <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ' . $c['borde'] . ';border-collapse:collapse;">
                 <tr>
-                    <td width="10%" style="padding:7px 6px;background:' . $c['primario'] . ';color:' . $c['blanco'] . ';font-size:8px;text-transform:uppercase;letter-spacing:.4px;text-align:center;font-weight:bold;">No.</td>
-                    <td width="70%" style="padding:7px 8px;background:' . $c['primario'] . ';color:' . $c['blanco'] . ';font-size:8px;text-transform:uppercase;letter-spacing:.4px;font-weight:bold;">Proceso / etapa</td>
-                    <td width="20%" style="padding:7px 8px;background:' . $c['primario'] . ';color:' . $c['blanco'] . ';font-size:8px;text-transform:uppercase;letter-spacing:.4px;text-align:right;font-weight:bold;">Anexos</td>
+                    <td width="8%" style="padding:7px 4px;background:' . $c['primario'] . ';color:' . $c['blanco'] . ';font-size:8px;text-transform:uppercase;letter-spacing:.4px;text-align:center;font-weight:bold;">No.</td>
+                    <td width="34%" style="padding:7px 6px;background:' . $c['primario'] . ';color:' . $c['blanco'] . ';font-size:8px;text-transform:uppercase;letter-spacing:.4px;font-weight:bold;">Proceso / etapa</td>
+                    <td width="16%" style="padding:7px 6px;background:' . $c['primario'] . ';color:' . $c['blanco'] . ';font-size:8px;text-transform:uppercase;letter-spacing:.4px;text-align:center;font-weight:bold;">Fecha aprobaci&oacute;n</td>
+                    <td width="28%" style="padding:7px 6px;background:' . $c['primario'] . ';color:' . $c['blanco'] . ';font-size:8px;text-transform:uppercase;letter-spacing:.4px;font-weight:bold;">Responsable</td>
+                    <td width="14%" style="padding:7px 6px;background:' . $c['primario'] . ';color:' . $c['blanco'] . ';font-size:8px;text-transform:uppercase;letter-spacing:.4px;text-align:right;font-weight:bold;">Anexos</td>
                 </tr>
                 ' . $lista . '
             </table>
