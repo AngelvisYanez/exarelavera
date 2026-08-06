@@ -1,736 +1,815 @@
-<?php	
+<?php
+
 /**
-* @abstract Permite anular los cheques 
-* @author Lewis Chimarro
-* @version 1.0
-* Fecha de creaci�n  2012-07-19
-* Fecha de actualizaci�n  2012-07-29
-* @author Lewis Chimarro
-*/
+ * @abstract Permite anular los cheques
+ * @author Lewis Chimarro
+ * @version 1.0
+ * Fecha de creacion  2012-07-19
+ * Fecha de actualizacion  2026-08-05
+ * @author Wilson Belduma
+ */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/tes_log_cheque.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
-require_once('../../Librerias/postclass.php');	
+require_once('../../Librerias/postclass.php');
+
 
 /**
-* Creacion del Objeto de conexion
-*/
+ * Creacion del Objeto de conexion
+ */
 $obBD_conexion = new Class_Log_Conexion_Che($Ses_Dat_Dis);
 /** 
-* Creacion del objeto mysql para las consultas 
-*/
+ * Creacion del objeto mysql para las consultas 
+ */
 $obBD_con1 =  new Class_Log_Datos_Che;
 /**
-* Evita el reenvio 
-*/
+ * Evita el reenvio 
+ */
 $thisPost = new Post_Block;
 
 $hoy = date("Y-m-d");
-$mes = date("m");	
+$mes = date("m");
+$periodo = "";
+$anulada = 0;
+$fila = 0;
+$asientos = "";
+/**
+ * Tope de filas del listado, para no generar una pagina inmanejable
+ * en periodos con mucho movimiento (hay periodos con mas de 4.500 comprobantes)
+ */
+$max_filas = 500;
+$truncado = 0;
+$buscado = false;
 
-if(isset($ajax)){
-        $com_codigo = $ComCod;
-	include('../COMPONENTES/con_con_detalleCompr.php'); 
-        exit();
+/**
+ * Detalle contable del comprobante (ventana modal)
+ */
+if (isset($ajax)) {
+	$com_codigo = $ComCod;
+	include('../COMPONENTES/tesComDetalleCompr.php');
+	exit();
 }
 /**
-* Consulta para la eleccion del periodo contable
-*/
-if(isset($anula)){         
-        $row_rs_compro = $obBD_con1->getRowConsulta(367, $asi_cod, $obBD_conexion);
-        $obBD_con1->inicio_transaccion($obBD_conexion->conexion);        
-        $obBD_con1->grabarv_registros(sentencias_che(346,$obBD_con1->parametros($asi_cod)), $obBD_conexion->conexion);
-        $obBD_con1->grabarv_registros(sentencias_che(366,$obBD_con1->parametros($row_rs_compro['Com_Cod'])), $obBD_conexion->conexion);
-        $obBD_con1->fin_transaccion_nomsn($obBD_conexion->conexion);
-        if($obBD_con1->Error==0) $responce['success']=true; else $responce['success']=false;$responce['message']=$obBD_con1->MsgError;
-	echo json_encode($responce); exit();
-}
-if (!isset($hdd_save) && !isset($hdd_save2) && !isset($codigo))
-{
+ * Anulacion del cheque y de su comprobante
+ */
+if (isset($anula)) {
+	$responce = array('success' => false, 'message' => '');
 	/**
-	* Carga el periodos contable actual 
-	*/
-	$row_rs_periodos = $obBD_con1->getArrayConsulta(214, $Ses_Emp_Cod, $obBD_conexion);
-}//Fin del if ($Pec_Cod)
-else
-{
-	/**
-	* Guardado del cheque 
-	*/
-	//if ($thisPost->postBlock($_POST['postID']))
-	{
-		if (isset($bt_save) && !isset($hdd_volver))
-		{
-			/**
-			* Inicio de la transaccion
-			*/
-			$obBD_con1->inicio_transaccion($obBD_conexion->conexion);
-	
-			foreach ($datos as $puntero => $item)
-			{
-				$cant++;
-				$param[]=$item;
-				if ($cant==10)
-				{
-					$cant=0;
-					/**
-					* Anulaci�n de cheques 
-					*/
-					$obBD_con1->grabarv_registros(sentencias_che(191,$obBD_con1->parametros($param[3].'*'.$param[0].'*'.$param[1].'*'.$param[9])), $obBD_conexion->conexion);				
-					unset($param);
-				}
-			}
-			$obBD_con1->fin_transaccion($obBD_conexion->conexion);
-		}//Fin del if (isset($bt_save))
-	} //fin del POSTH
-
-	/**
-	* Cargado de los datos de la cabecera 
-	*/
-	if (trim($txt_busqueda) !="") 
-	{
-//		if ($op_opciones == "d")
-//		{	
-//			$rs_cabcompr = $obBD_con1->consulta(sentencias_che(312,$obBD_con1->parametros('proveedore'.'*'.trim($txt_busqueda).'*'.'D'.'*'.
-//									$Pec_Cod.'*'.'Prv_Cod'.'*'.$cmb_mes)), $obBD_conexion->conexion);
-//		}//Fin del if ($op_opciones == "d")
-//		else 
-//		{			
-//			/**
-//			*  Control para busqueda mensual  
-//			*/
-//			$mes_array = explode('-', $txt_busqueda);
-//			if (count($mes_array)==2)
-//			{
-//				$Par_Fec = "AND MONTH(Com_Fec)=$mes_array[0]";
-//				$txt_busqueda = $mes_array[1];//$mes[1] es el numero del comprobante
-//			}
-//
-//			$rs_cabcompr = $obBD_con1->consulta(sentencias_che(313,$obBD_con1->parametros('proveedore'.'*'.trim($txt_busqueda).'*'.'D'.'*'.
-//									$Pec_Cod.'*'.'Prv_Cod'.'*'.$Par_Fec)), $obBD_conexion->conexion);
-//		}//Fin del else if ($op_opciones == "d")					
-		$rs_cabcompr = $obBD_con1->getArrayConsulta(345,trim($txt_busqueda).'*'.$Ses_Emp_Cod.'*'.$Pec_Cod.'*'.$op_opciones.'*'.$bancos, $obBD_conexion);
-                $row_rs_cabcompr = $rs_cabcompr;
-		$total_rs_cabcompr = count($rs_cabcompr);
+	 * Si el cheque proviene de un anticipo a proveedores activo,
+	 * primero debe anularse el anticipo desde su modulo.
+	 */
+	$row_anticipo = $obBD_con1->getRowConsulta(397, $asi_cod, $obBD_conexion);
+	if (isset($row_anticipo['Atp_Cod']) && $row_anticipo['Atp_Cod'] != '') {
+		$responce['message'] = 'Este cheque pertenece al anticipo a proveedores <b>' .
+			$row_anticipo['codigo_compro'] . '</b> (c&oacute;d. ' . $row_anticipo['Atp_Cod'] .
+			'). Debe <b>anular primero el anticipo</b> desde Modificar Anticipos a Proveedores.';
+		$responce['anticipo'] = true;
+		echo json_encode($responce);
+		exit();
 	}
-	else
-	{
-		if (isset($codigo))
-		{
-			/**
-			* Consulta los datos del comprobante 
-			*/				
-			$rs_cabcomp = $obBD_con1->consulta(sentencias_che(149,$obBD_con1->parametros('proveedore'.'*'.$codigo.'*'.'D'.'*'.
-									$Pec_Cod.'*'.'Prv_Cod')), $obBD_conexion->conexion);
-			$row_rs_cabcomp = $obBD_con1->registros();
-			$total_rs_cabcomp = $obBD_con1->numregistros();						
+
+	$row_rs_compro = $obBD_con1->getRowConsulta(367, $asi_cod, $obBD_conexion);
+	$obBD_con1->inicio_transaccion($obBD_conexion->conexion);
+	$obBD_con1->grabarv_registros(sentencias_che(346, $obBD_con1->parametros($asi_cod)), $obBD_conexion->conexion);
+	$obBD_con1->grabarv_registros(sentencias_che(366, $obBD_con1->parametros($row_rs_compro['Com_Cod'])), $obBD_conexion->conexion);
+	$obBD_con1->fin_transaccion_nomsn($obBD_conexion->conexion);
+	if ($obBD_con1->Error == 0) $responce['success'] = true;
+	else $responce['success'] = false;
+	$responce['message'] = $obBD_con1->MsgError;
+	echo json_encode($responce);
+	exit();
+}
+/**
+ * Guardado del cheque 
+ */
+//if ($thisPost->postBlock($_POST['postID']))
+{
+	if (isset($bt_save) && !isset($hdd_volver)) {
+		/**
+		 * Inicio de la transaccion
+		 */
+		$obBD_con1->inicio_transaccion($obBD_conexion->conexion);
+
+		foreach ($datos as $puntero => $item) {
+			$cant++;
+			$param[] = $item;
+			if ($cant == 10) {
+				$cant = 0;
+				/**
+				 * Anulacion de cheques 
+				 */
+				$obBD_con1->grabarv_registros(sentencias_che(191, $obBD_con1->parametros($param[3] . '*' . $param[0] . '*' . $param[1] . '*' . $param[9])), $obBD_conexion->conexion);
+				unset($param);
+			}
 		}
-	}//FIn del else if (trim($txt_busqueda) !="") 
-		
+		$obBD_con1->fin_transaccion($obBD_conexion->conexion);
+	} //Fin del if (isset($bt_save))
+} //fin del POSTH
+
+/**
+ * Periodos contables activos. Al ingresar desde el menu no llega el periodo,
+ * por lo que se asume el mas reciente y se muestra directamente el formulario de filtros.
+ */
+$row_rs_periodos = $obBD_con1->getArrayConsulta(214, $Ses_Emp_Cod, $obBD_conexion);
+$total_rs_periodos = count($row_rs_periodos);
+/**
+ * Ordena del anio mayor al menor, asi el periodo mas reciente queda como opcion inicial
+ */
+if ($total_rs_periodos > 0) {
+	usort($row_rs_periodos, function ($a, $b) {
+		return strcmp($b['Pec_Fei'], $a['Pec_Fei']);
+	});
+}
+$periodo_actual = ($total_rs_periodos > 0) ? $row_rs_periodos[0] : array();
+
+if (!isset($Pec_Cod) || trim($Pec_Cod) == "") {
+	$Pec_Cod = isset($periodo_actual['Pec_Cod']) ? $periodo_actual['Pec_Cod'] : "";
+}
+/**
+ * Divide la cadena del periodo contable 
+ */
+$arreglo = explode("*", $Pec_Cod);
+$Pec_Cod = $arreglo[0];
+
+if ($total_rs_periodos > 0) {
 	/**
-	* Divide la cadena del periodo contable 
-	*/
-	$arreglo = explode("*",$Pec_Cod); 		
-	$Pec_Cod = $arreglo[0];
-	/**
-	* Consulta del periodo contable 
-	*/
+	 * Consulta del periodo contable 
+	 */
 	$rs_periodo = $obBD_con1->consulta(sentencias_che(113, $obBD_con1->parametros($Pec_Cod)), $obBD_conexion->conexion);
 	$row_rs_periodo = $obBD_con1->registros();
 	$total_rs_periodo = $obBD_con1->numregistros();
 
 	/**
-	* Descripcion del periodo contable 
-	*/
-	$periodo = "en el periodo contable ".substr($row_rs_periodo['Pec_Fei'], 0,4);				
-}//Fin del if (!isset($hdd_save))
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<HTML>
-	<HEAD>
-		<!--TITLE><?php echo $Ses_Sys_Nom; ?></TITLE-->
-		<TITLE><?php echo "Cheques Anular [EXA]"; ?></TITLE>
-        <meta charset= "UTF-8">
-		<?php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-		<script language="javascript" src="../VALIDACIONES/tes_val_cheque.js"></script>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-  	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
-            <script type="text/javascript" src="../../Librerias/validaciones/interfaz.modals.js"></script>
-		<script type="text/javascript"> 
-          $(function() {
-                $('#set1 *').tooltip({showURL: false});
-          });              			
-		</script>		
-	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-	</script>
-	</HEAD>
-<BODY>
-<div id="set1">
-<table width="100%" border="0" cellpadding="0" cellspacing="0" class="table">
-	<tr class="BarraTitulo">
-	  <td height="10">&raquo; Anular  cheques <?php echo $periodo; ?></td>
-  </tr>
-	<tr>
-      <td align="left" valign="top" height="400">
-    <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" name= "form1">
-<?php 
-if (!isset($hdd_save) && !isset($hdd_save2) && !isset($codigo)) 
-{ ?>
-	<FIELDSET>
-	<LEGEND>
-		<label class="Titulos2">Selecci&#243;n Periodo Contable</label>
-	</LEGEND>
-	<table width="280" border="0" cellspacing="0" cellpadding="0">
-	  <tr>
-	    <td width="53" class="Etiqueta1">Periodos:&nbsp; </td>
-	    <td width="88"><?php
-		$periodo = current($row_rs_periodos); 
-		?>
-	      <input name="Pec_Fei" id="Pec_Fei" type="hidden" value="<?php echo $periodo['Pec_Fei']; ?>" />
-	      <input name="Pec_Fef" id="Pec_Fef" type="hidden" value="<?php echo $periodo['Pec_Fef']; ?>" />
-	      <select name="Pec_Cod" id="Pec_Cod" onchange="javascript: asignar_fechas(this.value)">
-	        <?php 
-	if (count($row_rs_periodos) > 0)
-	{
-		foreach ($row_rs_periodos as $row)
-		{
-		?>
-	        <option value="<?php echo $row['Pec_Cod'].'*'.$row['Pec_Fei'].'*'.$row['Pec_Fef']; ?>"><?php echo $row['Periodo']; ?></option>
-	        <?php		
-		}//Fin del foreach ($row_rs_periodos as $row)
-	}//Fin del if ($row_rs_periodos > 0)
-	else
-	{ ?>
-	        <option value=""></option>
-	        <?php
-	}//Fin del else if ($row_rs_periodos > 0)
-	?>
-	        </select></td>
-	    <td width="84" align="center"><button type="button" class="btn btn-success" title="Buscar" onclick="validar_requeridos(this.form, 'Pec_Cod', 0)"> <i class="icon-search icon-white"></i> <span>Buscar</span></button>
-	      <input name="hdd_save" type="hidden" id="hdd_save" /></td>
-	    </tr>
-	  </table>
-	</FIELDSET>			 	  	  
-<?php 
-}//Fin del if (!isset($hdd_save))      
-else
-{
- ?>
-		<FIELDSET>
-		<LEGEND>
-		<label class="Titulos2">Buscar  Comprobante de Egreso</label>
-		</LEGEND>
-		<table width="605" height="27" border="0">
-		  <tr>
-		    <td width="124" height="23" class="LetraNegra"><input name="op_opciones" type="radio" value="d"  <?php if(!isset($op_opciones)) {echo "checked";} if($op_opciones=="d") {echo "checked";} ?>  onclick="document.getElementById('cmb_mes').disabled=false; setfocus(this.form.txt_busqueda)" />
-		      Apellidos</td>
-		    <td width="167" class="LetraNegra"><input type="radio" name="op_opciones" value="n"  <?php if($op_opciones=="n") {echo "checked";} ?>  onclick=                  "document.getElementById('cmb_mes').disabled=true; setfocus(this.form.txt_busqueda)" />
-		      No. de Cheque </td>
-		    <td width="300" class="LetraNegra"><input type="radio" name="op_opciones" value="r"  <?php if($op_opciones=="r") {echo "checked";} ?>  onclick=                  "document.getElementById('cmb_mes').disabled=true; setfocus(this.form.txt_busqueda)" />
-		      No. de Comprobante</td>
-		    </tr>
-		  <tr>
-		    <td>Seleccione Banco:&nbsp;</td>
-		    <td colspan="2" class="LetraNegra"><select style="display: none;" name="cmb_mes2" id="cmb_mes2" <?php if($op_opciones=="r") {echo "disabled";} ?>>
-		      <option value="">&lt;&lt; TODOS &gt;&gt;</option>
-		      <?php
-                          for ($i=1;$i<=12;$i++)
-                          { ?>
-		      <option <?php if ($cmb_mes == ("AND MONTH(Com_Fec)=".$i)){ echo "selected"; } ?><?php //if ($i == $mes){ echo "selected"; } ?>  value="<?php echo "AND MONTH(Com_Fec)=$i"; ?>">
-		        <?php 
-                                    echo mes($i, 1) ?>
-		        </option>
-		      <?php
-                          } ?>
-		      </select>
-		      <select name="bancos" id="bancos" style=" width:300px">
-		        <option value="">&lt;&lt; TODOS &gt;&gt;</option>
-		        <?php
-    $rs_bancos = $obBD_con1->getArrayConsulta(339,$Ses_Emp_Cod, $obBD_conexion);
-    if (count($rs_bancos) > 0) 
-    { 
-        foreach ($rs_bancos as $row){  
-?>
-		        <option  <?php if($bancos==$row['Pld_Cod']) {echo "selected";} ?> value="<?php echo $row['Pld_Cod']; ?>"><?php echo $row['Pld_Des']." (Cta.#: ".$row['Ban_Cue'].")"; ?></option>
-		        <?php
-        }
-    }
-?>
-		        </select></td>
-		    </tr>
-		  </table>
-		<table width="545" height="36" border="0" cellpadding="0" cellspacing="0" >
-		  <tr>
-		    <td width="77" class="BarraBusqueda"><div align="right" >Busqueda:</div></td>
-		    <td width="350" class="BarraBusqueda"><input name="txt_busqueda" type="text" id="txt_busqueda" value="<?php echo $txt_busqueda; ?>" size="50" maxlength="50" /></td>
-		    <td width="118"><div align="center">
-		      <input name="Pec_Cod" id="Pec_Cod" type="hidden" value="<?php  echo $Pec_Cod; ?>" />
-		      <input name="Pec_Fei" id="Pec_Fei" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fei']; ?>" />
-		      <input name="Pec_Fef" id="Pec_Fef" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fef']; ?>" />
-		      <input name="hdd_save2" type="hidden" id="hdd_save2" />
-		      <button type="button" class="btn btn-success" title="Buscar" onclick="validar_requeridos(this.form, 'txt_busqueda', 0)"> <i class="icon-search icon-white"></i> <span>Buscar</span></button>
-		      </div></td>
-		    </tr>
-		  </table>
-		</FIELDSET>
-	</form>
-<?php 
-if(isset($txt_busqueda))
-	{
-	  ?>	
-	<FIELDSET>
-		<LEGEND>
-			<label class="Titulos2">Resultados de la busqueda</label>
-		</LEGEND>
-		<table width="100%" border="0" cellpadding="1" cellspacing="0" class="fixedHeader01">
-		  <thead>
-		    <tr>		    
-		      <th width="6%">Cod. Int.</th>
-                      <th width="5%">Num.</th>
-		      <th width="9%">Generaci&oacute;n</th>
-		      <th width="11%">No. Compr </th>
-		      <th width="10%">C&eacute;dula/R.U.C.</th>
-		      <th width="29%">Proveedor</th>
-		      <th width="9%">Fecha</th>
-		      <th width="9%">Valor</th>
-		      <th width="5%">&nbsp;</th>
-                      <th width="5%">&nbsp;</th>
-	        </tr>
-	      </thead>
-		  <tbody>
-	<?php
-	if ($total_rs_cabcompr > 0) 
-	{		 
-		$i=0; 				
-		foreach ($row_rs_cabcompr as $row) //do 
-		{
-			$i++;
-		  	if($row['Com_Est']=='I')
-	  		  { $rojo='#FF0000'; $anulada++; }else{$rojo='';}  ?>
-		    <tr>		      
-		      <td align="center"><font color="<?php echo $rojo;?>"><?php echo $row['Com_Cod']; ?></font></td>
-                       <td align="center"><font color="<?php echo $rojo;?>"><?php echo $row['Che_Num']; ?></font></td>
-		      <td align="center"><font color="<?php echo $rojo; ?>">
-		        <?php  if ($row['Com_Gen'] == 'M') echo "Manual"; else echo "Autom&aacute;tico";
-		  ?>
-		        </font></td>
-		      <td align="center"><font color="<?php echo $rojo; ?>">
-		        <?php 
-	  	list($ann, $mes, $dia) = split('[/.-]', $row['Com_Fec']);
-		  echo $row['Tia_Abr'].'-'.$mes.'-'.$row['Com_Num']; ?>
-		        </font></td>
-		      <td><font color="<?php echo $rojo;?>"><?php echo $row['Prs_Ced']; ?></font></td>
-		      <td><font color="<?php echo $rojo;?>"><?php echo $row['Prs_Ape']." ".$row['Prs_Nom']; ?></font></td>
-		      <td align="center"><font color="<?php echo $rojo;?>"><?php echo $row['Com_Fec']; ?></font></td>
-		      <td align="right"><font color="<?php echo $rojo;?>"><?php echo $row['Com_Val']; ?></font></td>
-                      <td align="center"> <button type="button" class="btn btn-info btn-mini" onclick="Muestra_Aparecer();ajax_datos('<?php echo $_SERVER['PHP_SELF']; ?>?ajax=true&ComCod=<?php echo $row['Com_Cod']; ?>','ajax_modal')"><i class="icon-info-sign icon-white"></i></button>
-                  </td>
-		      <td align="center"><?php if ($row['Com_Est']=='A') { ?>
-		        <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" name="form2" id="form2">
-		          <input name="codigo" id="codigo" type="hidden"  value="<?php echo $row['Com_Cod']; ?>" />
-		          <input name="Pec_Cod" id="Pec_Cod" type="hidden"  value="<?php echo $Pec_Cod; ?>" />
-		          <input name="volver_busqueda" id="volver_busqueda" type="hidden"  value="<?php echo $txt_busqueda; ?>" />
-                          <input name="volver_bancos" id="volver_bancos" type="hidden"  value="<?php echo $bancos; ?>" />
-		          <input name="volver_opciones" id="volver_opciones" type="hidden"  value="<?php echo $op_opciones; ?>" />
-		          <input name="volver_mes" id="volver_mes" type="hidden"  value="<?php echo $cmb_mes; ?>" />
-		          <button type="button" class="btn btn-success btn-mini" title="Elegir" onclick="this.form.submit()"> <i class="icon-arrow-right icon-white"></i> </button>
-	            </form>
-		        <?php
-		  }else { echo "&nbsp;"; } ?></td>
-	        </tr>
-		    <tr id="detalle[<?php echo $i; ?>]">
-		      <?php
+	 * Descripcion del periodo contable 
+	 */
+	$periodo = "&mdash; Periodo contable " . substr($row_rs_periodo['Pec_Fei'], 0, 4);
+
+	/**
+	 * Cargado de los datos de la cabecera 
+	 */
+	if (isset($codigo)) {
+		/**
+		 * Consulta los datos del comprobante 
+		 */
+		$rs_cabcomp = $obBD_con1->consulta(sentencias_che(149, $obBD_con1->parametros('proveedore' . '*' . $codigo . '*' . 'D' . '*' .
+			$Pec_Cod . '*' . 'Prv_Cod')), $obBD_conexion->conexion);
+		$row_rs_cabcomp = $obBD_con1->registros();
+		$total_rs_cabcomp = $obBD_con1->numregistros();
+	} else {
+		if (!isset($txt_busqueda)) $txt_busqueda = "";
+		if (!isset($op_opciones)) $op_opciones = "d";
+		if (!isset($bancos)) $bancos = "";
+		/**
+		 * La consulta se ejecuta unicamente cuando el usuario presiona Buscar,
+		 * al abrir la pantalla solo se muestran los filtros.
+		 */
+		$buscado = isset($bt_buscar);
+
+		if ($buscado) {
 			/**
-			* Propiedad Codigo del comprobante 
-			*/
-			$com_codigo = $row_rs_cabcompr['Com_Cod']; ?>
-		      <td align="center">&nbsp;</td>
-		      <td colspan="7"><?php //include('../../contabilidad/COMPONENTES/con_con_detalleCompr.php'); ?></td>
-		      <td align="center">&nbsp;</td>
-	        </tr>
-		    <?php	  		
-	  	}//while ($row_rs_cabcompr = $obBD_con1->fetch_assoc($rs_cabcompr));  ?>
-		    <?php 
-	}//Fin del if ($total_rs_cabcompr > 0)
-	else
-	{ ?>
-		    <tr>
-		      <td>&nbsp;</td>
-		      <td>&nbsp;</td>
-		      <td>&nbsp;</td>
-		      <td>&nbsp;</td>
-		      <td>&nbsp;</td>
-		      <td><?php echo error_alerta("No hay resultados que mostrar", 1); ?></td>
-		      <td>&nbsp;</td>
-		      <td>&nbsp;</td>
-		      <td>&nbsp;</td><td>&nbsp;</td>
-	        </tr>
-		    <?php
-	}//Fin del else if(isset($txt_busqueda))
-	  ?>
-	      </tbody>
-	    </table>
-		<?php 
-		echo barra_estado($total_rs_cabcompr); ?>	  	  
-  	<?php
-    if ($anulada > 0)
-        {		
-            $com_leyenda[1]=$anulada;
-        }//Fin del if ($anulada > 0)
-        ?>
-        <br/>
-    <?php
-    require_once('../../componentes/FRONT/com_con_leyenda.php');?>         
-	</FIELDSET>
-<?php }
-if ($total_rs_cabcomp >0)
-{
-	/**
-	* Consulta las cuentas de un comprobante de egreso 
-	*/
-	$rs_cuentas = $obBD_con1->consulta(sentencias_che(306,$obBD_con1->parametros($codigo)),$obBD_conexion->conexion);
-	$row_rs_cuentas = $obBD_con1->registros();
-	$total_rs_cuentas = $obBD_con1->numregistros();
-	/**
-	* Consulta los bancos 
-	*/
-	$rs_combo = $obBD_con1->consulta(sentencias_che(304,$obBD_con1->parametros($codigo)),$obBD_conexion->conexion);
-	$row_rs_combo = $obBD_con1->registros();
-	$total_rs_combo = $obBD_con1->numregistros();
-	/**
-	* Consulta los proveedores a los cuales se les hace varios cheques 
-	*/
-	$rs_prov_cheques = $obBD_con1->consulta(sentencias_che(314,$obBD_con1->parametros($Ses_Emp_Cod)),$obBD_conexion->conexion);
-	$row_rs_prov_cheques = $obBD_con1->registros();
-	$total_rs_prov_cheques = $obBD_con1->numregistros();
-	
-	if ($total_rs_prov_cheques > 0)
-	{
-		do{
-			$varios_prov = $varios_prov.'*'.$row_rs_prov_cheques['Prv_Cod'];
-		}while($row_rs_prov_cheques = $obBD_con1->fetch_assoc($rs_prov_cheques));	
-	}//FIn del if ($total_rs_prov_cheques > 0)		
+			 * Busqueda de comprobantes de egreso. Sin texto se listan todos los del periodo.
+			 * El ultimo parametro ('S') incluye tambien los comprobantes anulados.
+			 */
+			$rs_cabcompr = $obBD_con1->getArrayConsulta(345, trim($txt_busqueda) . '*' . $Ses_Emp_Cod . '*' . $Pec_Cod . '*' .
+				$op_opciones . '*' . $bancos . '*' . 'S', $obBD_conexion);
+			$total_rs_cabcompr = count($rs_cabcompr);
 
-	/**
-	* Control para emitir varios cheques a un proveedor 
-	*/
-	$variosprv =  explode('*', $varios_prov);
-	$cheques = false;
-	for ($i=1; $i<=count($variosprv)-1;$i++)
-	{
-		if ($row_rs_cabcomp['Prv_Cod']==$variosprv[$i])
-		{
-			$cheques = true;
-			break;
+			if ($total_rs_cabcompr > $max_filas) {
+				$truncado = $total_rs_cabcompr;
+				$row_rs_cabcompr = array_slice($rs_cabcompr, 0, $max_filas);
+			} else {
+				$row_rs_cabcompr = $rs_cabcompr;
+			}
+		} //Fin del if ($buscado)
+		else {
+			$total_rs_cabcompr = 0;
+			$row_rs_cabcompr = array();
 		}
-	}//Fin de for (i=1; i<=variosprv.length-1;i++)
-	?>
-	<form action="<?php  echo $_SERVER['PHP_SELF']?>" method="post" name= "form2"> 
-        <?php
-    	/**
-	* Creacion del campo REPOST
-	*/
-	$thisPost->startPost();
-	?>
-	<FIELDSET>
-	<LEGEND>
-	<label class="Titulos2">Datos del Comprobante</label>
-	</LEGEND>
-	<table width="100%" border="0">  
-  <tr>
-    <td width="15%" class="Etiqueta1"><input name="Pec_Cod" id="Pec_Cod" type="hidden"  value="<?php echo $Pec_Cod; ?>">
-    <input name="Pec_Fei" id="Pec_Fei" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fei']; ?>">
-    <input name="Pec_Fef" id="Pec_Fef" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fef']; ?>">C&oacute;d. Compr: </td>
-    <td width="38%" class="LetraNegra">&nbsp;<?php list($ann, $mes, $dia) = split('[/.-]', $row_rs_cabcomp['Com_Fec']);
-		  echo $row_rs_cabcomp['Tia_Abr'].'-'.$mes.'-'.$row_rs_cabcomp['Com_Num']; ?></td>
-    <td width="11%" class="Etiqueta1">Fecha:</td>
-    <td width="36%" class="LetraNegra">&nbsp;<?php echo $row_rs_cabcomp['Com_Fec']; ?></td>
-  </tr>
-  <tr>
-    <td class="Etiqueta1">Nombre:</td>
-    <td class="LetraNegra">&nbsp;<?php echo $row_rs_cabcomp['Prs_Ape'].' '.$row_rs_cabcomp['Prs_Nom']; ?></td>
-    <td class="Etiqueta1">Valor:</td>
-    <td class="LetraNegra">&nbsp;<?php echo $row_rs_cabcomp['Com_Val']; ?></td>
-  </tr>
-  <tr>
-    <td class="Etiqueta1">Concepto:</td>
-    <td colspan="3" class="LetraNegra">&nbsp;<?php echo $row_rs_cabcomp['Com_Con']; ?></td>
-    </tr>
-  <tr>
-    <td valign="top" class="Etiqueta1">Observaci&oacute;n:</td>
-    <td colspan="3" valign="top" class="LetraNegra">&nbsp;<?php echo $row_rs_cabcomp['Com_Obs']; ?><input name="codigo" type="hidden" id="codigo" value="<?php echo $codigo;  ?>"></td>
-    </tr>
-	</table>
-	</FIELDSET>
-	<FIELDSET>
-	<LEGEND>
-	<label class="Titulos2">Cuentas</label>
-	</LEGEND>		
-	<table width="100%" border="0" cellpadding="0" cellspacing="0" class="fixedHeader01">
-    <thead>
-	<tr>
-	  <th width="10%">C&oacute;digo</th>
-		<th>Descripci&oacute;n</th>
-		<th>Glosa</th>
-		<th width="10%">Debe</th>
-		<th width="10%">Haber</th>
-		</tr>
-    </thead>
-    <tbody>    
-	<?php 
-	if ($total_rs_cuentas > 0)
-	{ 
-		do {   
-	?>
-	<tr>
-	  <td><?php echo $row_rs_cuentas['Pld_Cdc']; ?></td>
-		<td><?php echo $row_rs_cuentas['Pld_Des']; ?></td>
-		<td><?php echo $row_rs_cuentas['Asi_Glo']; ?></td>
-		<td align="right">
-	  <?php if ($row_rs_cuentas['Asi_Deh']=='D') { echo $row_rs_cuentas['Asi_Val']; $total=$total + $row_rs_cuentas['Asi_Val']; } ?>
-	  	</td>
-		<td align="right">
-		  <?php if ($row_rs_cuentas['Asi_Deh']=='H') { echo $row_rs_cuentas['Asi_Val']; } ?>
-		  </td>
-		</tr>
-	<?php } while($row_rs_cuentas=$obBD_con1->fetch_assoc($rs_cuentas)); } ?>
-	<tr>
-	  <td class="LetraNegra">&nbsp;</td>
-	  <td class="LetraNegra">&nbsp;</td>
-	  <td class="LetraNegra"><strong>Totales</strong></td>
-	  <td class="LetraNegra" align="right"><strong><?php echo number_format($total,2); ?></strong></td>
-	  <td class="LetraNegra" align="right"><strong><?php echo number_format($total,2); ?></strong></td>
-	  </tr>	
-	</table>
-    <?php  echo barra_estado($total_rs_cuentas);  ?>
-	</FIELDSET>
-	<FIELDSET>
-	<LEGEND>
-	<label class="Titulos2">Cheques emitidos</label>
-	</LEGEND>		
-	<table width="100%" border="0" cellpadding="0" cellspacing="0" class="fixedHeader03">
-	<thead>	  
-	  <tr>
-	    <th width="22%">Banco</th>
-		<th width="20%">Proveedor</th>
-		<th width="8%">N&ordm; Ch.</th>
-		<th width="8%">Valor</th>
-		<th width="8%">Fec. Elab</th>
-		<th width="8%">Fec. Cobro</th>
-		<th width="10%">Observaci&oacute;n</th>
-		<th width="16%">&nbsp;</th>
-	  </tr>      
-	 </thead>	
-     <tbody id="contenido">
-	 <?php
-	/**
-	* Cargado de los cheques del comprobante 
-	*/
-	$rs_carcheq = $obBD_con1->consulta(sentencias_che(309,$obBD_con1->parametros($row_rs_cabcomp['Com_Cod'])), 
-					$obBD_conexion->conexion);
-	$row_rs_carcheq = $obBD_con1->registros();
-	$total_rs_carcheq = $obBD_con1->numregistros();
-	/**
-	* Cargado del array que contiene lo valores maximos de los cheques x asiento.
-	*/
-	$rs_arrmax = $obBD_con1->consulta(sentencias_che(304,$obBD_con1->parametros($row_rs_cabcomp['Com_Cod'])), $obBD_conexion->conexion);
-	$row_rs_arrmax = $obBD_con1->registros();
-	$total_rs_arrmax = $obBD_con1->numregistros();
-	/**
-	* Creacion del Array para luego ser procesado
-	*/
-	do { 
-		$codigo_array=explode("*",$row_rs_arrmax['Banasi']);
-		$asi_cod[]=$codigo_array[1];
-		$asi_val[]=$row_rs_arrmax['Asi_Val'];
-		$asientos=$asientos.'*'.$codigo_array[1];					
-	} while ($row_rs_arrmax = $obBD_con1->fetch_assoc($rs_arrmax));
-
-	$asi_cod='Array(\'' . implode('\', \'', $asi_cod) . '\')';
-	$asi_val='Array(\'' . implode('\', \'', $asi_val) . '\')';
-	
-	$total = 0;
-	 do 
-	 {
-		if($row_rs_carcheq['Che_Est']=='I')
-		  { $rojo='#FF0000'; $anulada++; }else{$rojo='';}
-		$fila++;
-		 $total = $total + $row_rs_carcheq['Che_Val'];
-	 ?>
-	  <tr>
-	    <td>
-        <input name="datos[<?php echo $fila; ?>,1]" id="datos[<?php echo $fila; ?>,1]" type="hidden" value="<?php echo $row_rs_carcheq['Ban_Cod']; ?>"><input name="datos[<?php echo $fila; ?>,2]" id="datos[<?php echo $fila; ?>,2]" type="hidden" value="<?php echo $row_rs_carcheq['Asi_Cod']; ?>">		
-	      <input name="datos[<?php echo $fila; ?>,10]" id="datos[<?php echo $fila; ?>,10]" type="hidden" value="<?php echo $row_rs_carcheq['Ban_Cod']; ?>" />
-	      <font color="<?php echo $rojo;?>"><?php echo $row_rs_carcheq['Pld_Des']; ?></font></td>
-	    <td><font color="<?php echo $rojo;?>"><input name="datos[<?php echo $fila; ?>,3]" id="datos[<?php echo $fila; ?>,3]" type="hidden" value="<?php echo $row_rs_carcheq['Prv_Cod']; ?>"><?php echo $row_rs_carcheq['Prs_Ape'].' '.$row_rs_carcheq['Prs_Nom']; ?></font></td>
-	    <td align="right"><font color="<?php echo $rojo;?>"><?php echo $row_rs_carcheq['Che_Num']; ?></font>	      <input name="datos[<?php echo $fila; ?>,4]" type="hidden" id="datos[<?php echo $fila; ?>,4]" value="<?php echo $row_rs_carcheq['Che_Num']; ?>" size="5" maxlength="10"></td>
-	    <td align="right"><font color="<?php echo $rojo;?>"><?php echo round($row_rs_carcheq['Che_Val'],2); ?></font>	      <input name="datos[<?php echo $fila; ?>,5]" type="hidden" id="datos[<?php echo $fila; ?>,5]" value="<?php echo round($row_rs_carcheq['Che_Val'],2); ?>" size="6" maxlength="7"></td>
-		<td><input name="datos[<?php echo $fila; ?>,8]" type="hidden" id="datos[<?php echo $fila; ?>,8]"  value="<?php if ($row_rs_carcheq['Che_Fec'] != 0){ echo $row_rs_carcheq['Che_Fec']; }?>" size="7" maxlength="10">
-		  <font color="<?php echo $rojo;?>">
-		  <?php if ($row_rs_carcheq['Che_Fec'] != 0){ echo $row_rs_carcheq['Che_Fec']; }?>
-		  </font></td>
-	    <td><input name="datos[<?php echo $fila; ?>,6]" type="hidden" id="datos[<?php echo $fila; ?>,6]" value="<?php if ($row_rs_carcheq['Che_Cob'] != 0){ echo $row_rs_carcheq['Che_Cob']; }?>" size="7" maxlength="10">
-	      <font color="<?php echo $rojo;?>">
-	      <?php if ($row_rs_carcheq['Che_Cob'] != 0){ echo $row_rs_carcheq['Che_Cob']; }?>
-	      </font></td>
-	    <td><input name="datos[<?php echo $fila; ?>,7]" type="hidden" id="datos[<?php echo $fila; ?>,7]" value="<?php echo $row_rs_carcheq['Che_Obs']; ?>" size="7" maxlength="20">
-	      <input name="datos[<?php echo $fila; ?>,9]" type="hidden" id="datos[<?php echo $fila; ?>,9]" value="<?php echo $row_rs_carcheq['Che_Cod']; ?>">
-	      <font color="<?php echo $rojo;?>"><?php echo $row_rs_carcheq['Che_Obs']; ?></font></td>		
-	    <td class="anulaChe" align="center" id="<?php echo $row_rs_carcheq['Asi_Cod'].'-CH'.$row_rs_carcheq['Che_Cod']; ?>">
-        <?php
-		if($row_rs_carcheq['Che_Est']=='A')
-		{
-		?>
-        <button  type="button" class="btn btn-danger delete" title="Anular Cheque" onclick="anulaCheque('<?php echo $row_rs_carcheq['Asi_Cod']; ?>','<?php echo $row_rs_carcheq['Che_Cod']; ?>','<?php echo $row_rs_carcheq['Asi_Cod'].'-CH'.$row_rs_carcheq['Che_Cod']; ?>');//confirmacion2(this.form)">
-                    <i class="icon-ban-circle  icon-white"></i>
-                    <span>Anular</span>
-        </button>
-        <?php
-		}
-		?>
-        </td>
-	    </tr>
-      <?php
-	} while ($row_rs_carcheq = $obBD_con1->fetch_assoc($rs_carcheq)); ?>
-	</tbody>
-    <tfoot>
-      <tr>
-        <td>&nbsp;</td>
-        <td class="LetraNegra">&nbsp;</td>
-        <td class="LetraNegra"><strong>TOTAL</strong></td>
-        <td class="LetraNegra" align="right"><input name="txt_total" type="text" id="txt_total" size="6" readonly="true" style="text-align:right" value="<?php echo number_format($total,2,'.','');?>" /></td>
-        <td class="LetraNegra">&nbsp;</td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-      </tr>
-    </tfoot>  
-    </table>
-    <?php  echo barra_estado($total_rs_carcheq);  ?>
-    <br />
-    <?php	   
-    if ($anulada > 0)
-        {		
-            $com_leyenda[4]=$anulada;
-        }//Fin del if ($anulada > 0)
-        ?>
-        <br/>
-    <?php
-    require_once('../../componentes/FRONT/com_con_leyenda.php');?> 
-	</FIELDSET>
-	<br>	
-	<table width="312" border="0" cellpadding="0" cellspacing="0">
-	  <tr>
-		    <td width="110"><button type="button" class="btn btn-inverse fileinput-button" title="Atrás" onclick="campos_hide(this.form, 'txt_busqueda*op_opciones*cmb_mes*Pec_Cod*hdd_volver*bancos', '<?php echo $volver_busqueda.'*'.$volver_opciones.'*'.$volver_mes.'*'.$Pec_Cod.'*1*'.$volver_bancos;?>')"> <i class=" icon-arrow-left icon-white"></i> <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span></button>
-            <input id="nfilas" name="nfilas" type="hidden" value="<?php echo $fila; ?>">
-			  <input id="asientos" name="asientos" type="hidden" value="<?php echo $asientos; ?>">
-			  <input id="bt_save" name="bt_save" type="hidden" value="Grabar">
-            <!-- <input id="hdd_save" name="hdd_save" type="hidden" value="oculto">-->
-            <input name="cantmodal" id="cantmodal" type="hidden" value="2">
-            </td>
-		    <td width="202">
-             <input name="Pec_Cod" id="Pec_Cod" type="hidden"  value="<?php echo $Pec_Cod; ?>" />
-		          <input name="txt_busqueda" id="txt_busqueda" type="hidden"  value="<?php echo $volver_busqueda; ?>" />
-		          <input name="op_opciones" id="op_opciones" type="hidden"  value="<?php echo $volver_opciones; ?>" />
-		          <input name="cmb_mes" id="cmb_mes" type="hidden"  value="<?php echo $volver_mes; ?>" />
-            </td>
-		    </tr>
-		  </table>
-<br>	                       
-	</form>
-    
-<div id="bgtransparent" class="bgtransparent" style="display:none" onClick="closeModal()">
-</div>
-<div id="bgmodal"  class="bgmodal"   style="display:none">	
-<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name="form2">
-<?php noEnterSubmit(); ?>
-<table width="100%" border="0" cellspacing="0" cellpadding="0">
-  <tr>
-    <td>			
-    <FIELDSET>
-    <LEGEND>
-    <label class="Titulos2">Búsqueda de Proveedor</label>
-    </LEGEND>
-    <table width="450" border="0">
-        <tr>
-          <td width="205"><input id="op_opciones" name="op_opciones" type="radio" value="d" checked onClick="setfocus(this.form.buscta)">
-          <span class="LetraNegra"><strong>Apellido</strong></span></td>
-          <td width="266"><input id="op_opciones" name="op_opciones" type="radio" value="c" onClick="setfocus(this.form.buscta)">
-            <span class="LetraNegra"><strong>C&eacute;dula/R.U.C.</strong></span></td>
-        </tr>
-</table>
-<table width="554" height="36" border="0" cellpadding="0" cellspacing="0" >
-    <tbody id="tbusqueda">
-      <tr>
-        <td width="85" height="28" class="BarraBusqueda"><div align="right"><strong>B&uacute;squeda</strong>:</div></td>
-        <td width="359" class="BarraBusqueda"><input name="buscta" type="text" id="buscta" size="50" maxlength="50" onKeyPress="if (trim(document.getElementById('buscta').value) != ''){ enter_ajax('<?php echo $_SERVER['PHP_SELF']; ?>?buscod='+document.getElementById('buscta').value+'&op_opciones='+document.getElementById('op_opciones').value+'&cod_num='+<?php echo $row_rs_cabcomp['Com_Cod']; ?>+'&cod_prv='+<?php echo $row_rs_cabcomp['Prv_Cod']; ?>+'&com_fec=<?php echo $row_rs_cabcomp['Com_Fec']; ?>&varios_prov=<?php echo $varios_prov; ?>','busqueda') }"></td>
-        <td width="110" align="center">
-        <button type="button" class="btn btn-success" title="Buscar" onClick="ajax_datos('<?php echo $_SERVER['PHP_SELF']; ?>?buscod='+document.getElementById('buscta').value+'&op_opciones='+document.getElementById('op_opciones').value+'&cod_num='+<?php echo $row_rs_cabcomp['Com_Cod']; ?>+'&cod_prv='+<?php echo $row_rs_cabcomp['Prv_Cod']; ?>+'&com_fec=<?php echo $row_rs_cabcomp['Com_Fec']; ?>&varios_prov=<?php echo $varios_prov; ?>','busqueda')"> <i class="icon-search icon-white"></i> <span>Buscar</span> </button>
-        </td>
-      </tr>
-    </tbody>
-</table>
-    <div id="busqueda">
-    </div>
-	</FIELDSET>
-    </td>
-</tr>
-</table>
-</form>    	
-</div>    
-    
-<?php }  
-}//FIn else
-	?></td>
-  </tr>
-</table>
-</div>
-<script type="text/javascript" src="../VALIDACIONES/tes_par_cheque.js"></script>
-<script type="text/javascript" src="../../Librerias/textbox/main.js"></script>	
-<?php
-	/* 
-	* Control para ocultar el detalle de las filas 
-	*/
-	if($total_rs_cabcompr != 0)
-	{
-		ocultarDetalle($total_rs_cabcompr);
-	}
+	} //FIn del else if (isset($codigo)) 
+} //Fin del if ($total_rs_periodos > 0)
 ?>
-<script>
-    function anulaCheque(asi,che,content)
-    {
-            var op= confirm("Est\u00E1 seguro de realizar esta operaci\u00F3n?");
+<!DOCTYPE html>
+<HTML>
 
-            if (op === true)
-            {
-                   //alert(asi+" "+che);
-                   $.post( "<?php echo $_SERVER['PHP_SELF']; ?>",{anula:true,asi_cod:asi,che_cod:che}, function( response ) {
-                         if(response['success']===true){
-                            alert("Transaccion Realizada con Éxito!");
-                            $(".anulaChe").html("ANULADO");                       
-                            $(".anulaChe").closest('tr').find('td').each(function(){$(this).css('color','red');});
-                         }else{alert(response['message']);}
-                   },'json').fail(function(error) { alert("El Servidor ha fallado en responder!"); });
-            }
-    }
-</script>
-    <div id="bgtransparent" class="bgtransparent" style="display:none" onclick="closeModal()">
-    </div>
-    <div id="bgmodal"  class="bgmodal"  style="display:none">  
-     <div id="ajax_modal"></div>
-    </div>
-</BODY></HTML>
+<HEAD>
+	<TITLE><?php echo "Cheques Anular [EXA]"; ?></TITLE>
+	<meta charset="UTF-8">
+	<?php require_once("../../mascaras/model1/estilos/jqgrid5.php"); ?>
+	<link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/bootstrap/info.tabs.css" />
+	<style>
+		.table-exa {
+			margin-bottom: 0;
+			background: #fff;
+		}
+
+		.table-exa>thead>tr>th {
+			background-color: #254463;
+			color: #fff;
+			font-weight: 600;
+			font-size: 11px;
+			text-transform: uppercase;
+			letter-spacing: .3px;
+			border-bottom: 0;
+			vertical-align: middle;
+			white-space: nowrap;
+		}
+
+		.table-exa>tbody>tr>td,
+		.table-exa>tfoot>tr>th {
+			font-size: 12px;
+			padding: 4px 6px;
+			vertical-align: middle;
+		}
+
+		.table-exa>tbody>tr.row-anulada>td {
+			color: #a94442;
+			background-color: #fdf0f0;
+			text-decoration: line-through;
+		}
+
+		.table-exa>tbody>tr.row-anulada>td.no-line {
+			text-decoration: none;
+		}
+
+		.static-value {
+			margin: 0;
+			padding-top: 5px;
+			font-weight: 600;
+			color: #254463;
+			font-size: 12px;
+			word-break: break-word;
+		}
+
+		.leyenda-exa {
+			font-size: 11px;
+			color: #555;
+			padding-top: 4px;
+		}
+
+		.leyenda-exa .box {
+			display: inline-block;
+			width: 26px;
+			height: 12px;
+			border: 1px solid #bbb;
+			vertical-align: middle;
+			margin-right: 4px;
+		}
+
+		.leyenda-exa .box-anulado {
+			background-color: #fdf0f0;
+			border-color: #a94442;
+		}
+
+		.radioset .ui-button .ui-button-text {
+			font-size: 12px;
+			padding: 3px 10px;
+		}
+
+		.detalle-compr dt {
+			width: 120px;
+			color: #254463;
+		}
+
+		.detalle-compr dd {
+			margin-left: 135px;
+			font-size: 12px;
+		}
+
+		#detalleDialog {
+			font-size: 12px;
+		}
+	</style>
+</HEAD>
+
+<BODY>
+	<div class="panel panel-main">
+		<div class="panel-heading exa-header">
+			<h3 class="panel-title">&raquo; Anular Cheques <small style="color:#cddcf0;"><?php echo $periodo; ?></small></h3>
+		</div>
+		<div class="panel-body ui-widget-content ui-corner-bottom exa-body">
+			<?php
+			if ($total_rs_periodos == 0) {
+				echo error_alerta("La empresa no tiene periodos contables activos, no es posible localizar comprobantes de egreso.", 2, true);
+			} //Fin del if ($total_rs_periodos == 0)
+			else {
+			?>
+				<?php
+				if (!isset($codigo)) {
+					/**
+					 * PASO 1: Busqueda de comprobantes de egreso
+					 */
+				?>
+					<form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" name="form1" id="form1" class="form-horizontal normal" onsubmit="return mostrarLoaderForm(this, '#form1 button[type=submit]')">
+						<input name="Pec_Fei" id="Pec_Fei" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fei']; ?>" />
+						<input name="Pec_Fef" id="Pec_Fef" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fef']; ?>" />
+						<input name="cmb_mes" id="cmb_mes" type="hidden" value="<?php echo $cmb_mes; ?>" />
+						<input name="bt_buscar" type="hidden" value="1" />
+						<fieldset class="exa-fieldset">
+							<legend class="Titulos2">Buscar Comprobante de Egreso</legend>
+							<div class="row">
+								<div class="col-sm-8 col-md-7">
+									<div class="form-group">
+										<label class="col-sm-3 control-label label-sm required" for="Pec_Cod">Periodo:</label>
+										<div class="col-sm-3">
+											<select name="Pec_Cod" id="Pec_Cod" class="form-control input-sm" style="text-align: center;" required onchange="asignar_fechas(this.value)">
+												<?php
+												if (count($row_rs_periodos) > 0) {
+													foreach ($row_rs_periodos as $row) {
+												?>
+														<option <?php if ($row['Pec_Cod'] == $Pec_Cod) echo "selected"; ?> value="<?php echo $row['Pec_Cod'] . '*' . $row['Pec_Fei'] . '*' . $row['Pec_Fef']; ?>"><?php echo $row['Periodo']; ?></option>
+													<?php
+													} //Fin del foreach ($row_rs_periodos as $row)
+												} //Fin del if (count($row_rs_periodos) > 0)
+												else { ?>
+													<option value="">&lt;&lt; SIN PERIODOS &gt;&gt;</option>
+												<?php
+												} //Fin del else if (count($row_rs_periodos) > 0)
+												?>
+											</select>
+										</div>
+									</div>
+									<div class="form-group">
+										<label class="col-sm-3 control-label label-xs">Filtrar Por:</label>
+										<div class="col-sm-9 radioset opt_search">
+											<input id="radsc1" name="op_opciones" type="radio" value="d" <?php if (!isset($op_opciones) || $op_opciones == "d") echo 'checked=""'; ?> onclick="setfocusBusqueda()" alt="" />
+											<label for="radsc1">Apellidos</label>
+											<input id="radsc2" name="op_opciones" type="radio" value="n" <?php if (isset($op_opciones) && $op_opciones == "n") echo 'checked=""'; ?> onclick="setfocusBusqueda()" alt="" />
+											<label for="radsc2">No. de Cheque</label>
+											<input id="radsc3" name="op_opciones" type="radio" value="r" <?php if (isset($op_opciones) && $op_opciones == "r") echo 'checked=""'; ?> onclick="setfocusBusqueda()" alt="" />
+											<label for="radsc3">No. de Comprobante</label>
+										</div>
+									</div>
+									<div class="form-group">
+										<label class="col-sm-3 control-label label-sm" for="bancos">Banco:</label>
+										<div class="col-sm-9">
+											<select name="bancos" id="bancos" class="form-control input-sm">
+												<option value="">&lt;&lt; TODOS &gt;&gt;</option>
+												<?php
+												$rs_bancos = $obBD_con1->getArrayConsulta(339, $Ses_Emp_Cod, $obBD_conexion);
+												if (count($rs_bancos) > 0) {
+													foreach ($rs_bancos as $row) {
+												?>
+														<option <?php if ($bancos == $row['Pld_Cod']) echo "selected"; ?> value="<?php echo $row['Pld_Cod']; ?>"><?php echo $row['Pld_Des'] . " (Cta.#: " . $row['Ban_Cue'] . ")"; ?></option>
+												<?php
+													}
+												}
+												?>
+											</select>
+										</div>
+									</div>
+									<div class="form-group">
+										<label class="col-sm-3 control-label label-sm" for="txt_busqueda">B&uacute;squeda:</label>
+										<div class="col-sm-9">
+											<div class="input-group input-group-sm">
+												<input name="txt_busqueda" type="text" id="txt_busqueda" class="form-control input-sm" value="<?php echo $txt_busqueda; ?>" maxlength="50" placeholder="Vac&iacute;o = todos los comprobantes del periodo" autofocus />
+												<span class="input-group-btn">
+													<button type="submit" class="btn btn-success btn-sm" title="Buscar">
+														<span class="glyphicon glyphicon-search"></span> <span>Buscar</span>
+													</button>
+												</span>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</fieldset>
+					</form>
+
+					<?php if (!$buscado) { ?>
+						<?php echo error_alerta("Defina los filtros y presione <strong>Buscar</strong> para listar los comprobantes de egreso del periodo.", 1, true); ?>
+					<?php } //Fin del if (!$buscado)
+					else { ?>
+					<fieldset class="exa-fieldset">
+						<legend class="Titulos2"><?php echo trim($txt_busqueda) != "" ? 'Resultados de la B&uacute;squeda' : 'Comprobantes del Periodo'; ?> <span class="badge" style="background-color:#254463;"><?php echo (int)$total_rs_cabcompr; ?></span></legend>
+						<?php
+							if ($truncado > 0) {
+								echo error_alerta("Se muestran los primeros <strong>" . $max_filas . "</strong> de <strong>" . $truncado . "</strong> comprobantes. Refine la b&uacute;squeda o filtre por banco para ver el resto.", 2, true);
+							}
+							if ($total_rs_cabcompr > 0) { ?>
+								<div class="table-responsive">
+									<table class="table table-condensed table-hover table-exa">
+										<thead>
+											<tr>
+												<th width="6%" class="text-center">Cod. Int.</th>
+												<th width="6%" class="text-center">No. Ch.</th>
+												<th width="9%" class="text-center">Generaci&oacute;n</th>
+												<th width="11%" class="text-center">No. Compr.</th>
+												<th width="10%">C&eacute;dula/R.U.C.</th>
+												<th width="28%">Proveedor</th>
+												<th width="9%" class="text-center">Fecha</th>
+												<th width="9%" class="text-right">Valor</th>
+												<th width="6%" class="text-center">&nbsp;</th>
+												<th width="6%" class="text-center">&nbsp;</th>
+											</tr>
+										</thead>
+										<tbody>
+											<?php
+											foreach ($row_rs_cabcompr as $row) {
+												$anulado = ($row['Com_Est'] != 'A');
+												if ($anulado) $anulada++;
+												$fecha_compr = explode('-', $row['Com_Fec']);
+											?>
+												<tr<?php echo $anulado ? ' class="row-anulada"' : ''; ?>>
+													<td class="text-center"><?php echo $row['Com_Cod']; ?></td>
+													<td class="text-center"><?php echo $row['Che_Num']; ?></td>
+													<td class="text-center"><?php echo ($row['Com_Gen'] == 'M') ? 'Manual' : 'Autom&aacute;tico'; ?></td>
+													<td class="text-center"><?php echo $row['Tia_Abr'] . '-' . $fecha_compr[1] . '-' . $row['Com_Num']; ?></td>
+													<td><?php echo $row['Prs_Ced']; ?></td>
+													<td><?php echo $row['Prs_Ape'] . " " . $row['Prs_Nom']; ?></td>
+													<td class="text-center"><?php echo $row['Com_Fec']; ?></td>
+													<td class="text-right"><?php echo number_format($row['Com_Val'], 2); ?></td>
+													<td class="text-center no-line">
+														<button type="button" class="btn btn-info btn-xs" title="Ver detalle del comprobante" onclick="verDetalle('<?php echo $row['Com_Cod']; ?>')">
+															<span class="glyphicon glyphicon-info-sign"></span>
+														</button>
+													</td>
+													<td class="text-center no-line">
+														<?php if (!$anulado) { ?>
+															<form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" style="margin:0;" onsubmit="return mostrarLoaderForm(this, '.btn-elegir-compr')">
+																<input name="codigo" type="hidden" value="<?php echo $row['Com_Cod']; ?>" />
+																<input name="Pec_Cod" type="hidden" value="<?php echo $Pec_Cod; ?>" />
+																<input name="volver_busqueda" type="hidden" value="<?php echo $txt_busqueda; ?>" />
+																<input name="volver_bancos" type="hidden" value="<?php echo $bancos; ?>" />
+																<input name="volver_opciones" type="hidden" value="<?php echo $op_opciones; ?>" />
+																<input name="volver_mes" type="hidden" value="<?php echo $cmb_mes; ?>" />
+																<button type="submit" class="btn btn-success btn-xs btn-elegir-compr" title="Elegir comprobante">
+																	<span class="glyphicon glyphicon-arrow-right"></span>
+																</button>
+															</form>
+														<?php } else { ?>
+															<span class="label label-danger">Anulado</span>
+														<?php } ?>
+													</td>
+												</tr>
+											<?php } //Fin del foreach ($row_rs_cabcompr as $row) 
+											?>
+										</tbody>
+									</table>
+								</div>
+								<div class="leyenda-exa" <?php echo $anulada > 0 ? '' : 'style="display:none;"'; ?>><span class="box box-anulado"></span> Registro anulado</div>
+							<?php } else {
+								if (trim($txt_busqueda) != "") {
+									echo error_alerta("No se encontraron comprobantes con el criterio de b&uacute;squeda ingresado.", 1, true);
+								} else {
+									echo error_alerta("El periodo contable seleccionado no registra comprobantes de egreso con cheques.", 1, true);
+								}
+							} //Fin del else if ($total_rs_cabcompr > 0) 
+							?>
+					</fieldset>
+					<?php } //Fin del else if (!$buscado) ?>
+				<?php
+				} //Fin del if (!isset($codigo))
+				elseif ($total_rs_cabcomp > 0) {
+					/**
+					 * PASO 2: Detalle del comprobante y anulacion de sus cheques
+					 */
+					/**
+					 * Consulta las cuentas de un comprobante de egreso 
+					 */
+					$rs_cuentas = $obBD_con1->consulta(sentencias_che(306, $obBD_con1->parametros($codigo)), $obBD_conexion->conexion);
+					$row_rs_cuentas = $obBD_con1->registros();
+					$total_rs_cuentas = $obBD_con1->numregistros();
+					/**
+					 * Consulta los bancos 
+					 */
+					$rs_combo = $obBD_con1->consulta(sentencias_che(304, $obBD_con1->parametros($codigo)), $obBD_conexion->conexion);
+					$row_rs_combo = $obBD_con1->registros();
+					$total_rs_combo = $obBD_con1->numregistros();
+
+					$fecha_compr = explode('-', $row_rs_cabcomp['Com_Fec']);
+				?>
+					<form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" name="form2" id="form2" class="form-horizontal normal">
+						<?php
+						/**
+						 * Creacion del campo REPOST
+						 */
+						$thisPost->startPost();
+						?>
+						<input name="Pec_Cod" type="hidden" value="<?php echo $Pec_Cod; ?>" />
+						<input name="Pec_Fei" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fei']; ?>" />
+						<input name="Pec_Fef" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fef']; ?>" />
+						<input name="codigo" type="hidden" value="<?php echo $codigo; ?>" />
+						<input name="cantmodal" type="hidden" value="2" />
+
+						<fieldset class="exa-fieldset">
+							<legend class="Titulos2">Datos del Comprobante</legend>
+							<div class="row">
+								<div class="col-sm-6">
+									<div class="form-group">
+										<label class="col-sm-4 control-label label-sm">C&oacute;d. Compr:</label>
+										<div class="col-sm-8">
+											<p class="static-value"><?php echo $row_rs_cabcomp['Tia_Abr'] . '-' . $fecha_compr[1] . '-' . $row_rs_cabcomp['Com_Num']; ?></p>
+										</div>
+									</div>
+									<div class="form-group">
+										<label class="col-sm-4 control-label label-sm">Nombre:</label>
+										<div class="col-sm-8">
+											<p class="static-value"><?php echo $row_rs_cabcomp['Prs_Ape'] . ' ' . $row_rs_cabcomp['Prs_Nom']; ?></p>
+										</div>
+									</div>
+								</div>
+								<div class="col-sm-6">
+									<div class="form-group">
+										<label class="col-sm-4 control-label label-sm">Fecha:</label>
+										<div class="col-sm-8">
+											<p class="static-value"><?php echo $row_rs_cabcomp['Com_Fec']; ?></p>
+										</div>
+									</div>
+									<div class="form-group">
+										<label class="col-sm-4 control-label label-sm">Valor:</label>
+										<div class="col-sm-8">
+											<p class="static-value">$ <?php echo number_format($row_rs_cabcomp['Com_Val'], 2); ?></p>
+										</div>
+									</div>
+								</div>
+								<div class="col-sm-12">
+									<div class="form-group">
+										<label class="col-sm-2 control-label label-sm">Concepto:</label>
+										<div class="col-sm-10">
+											<p class="static-value"><?php echo trim($row_rs_cabcomp['Com_Con']) != '' ? $row_rs_cabcomp['Com_Con'] : '&mdash;'; ?></p>
+										</div>
+									</div>
+									<div class="form-group">
+										<label class="col-sm-2 control-label label-sm">Observaci&oacute;n:</label>
+										<div class="col-sm-10">
+											<p class="static-value"><?php echo trim($row_rs_cabcomp['Com_Obs']) != '' ? $row_rs_cabcomp['Com_Obs'] : '&mdash;'; ?></p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</fieldset>
+
+						<fieldset class="exa-fieldset">
+							<legend class="Titulos2">Cuentas <span class="badge" style="background-color:#254463;"><?php echo (int)$total_rs_cuentas; ?></span></legend>
+							<div class="table-responsive">
+								<table class="table table-condensed table-hover table-exa">
+									<thead>
+										<tr>
+											<th width="12%">C&oacute;digo</th>
+											<th>Descripci&oacute;n</th>
+											<th>Glosa</th>
+											<th width="11%" class="text-right">Debe</th>
+											<th width="11%" class="text-right">Haber</th>
+										</tr>
+									</thead>
+									<tbody>
+										<?php
+										$total = 0;
+										if ($total_rs_cuentas > 0) {
+											do {
+												$es_debe = ($row_rs_cuentas['Asi_Deh'] == 'D');
+												if ($es_debe) $total = $total + $row_rs_cuentas['Asi_Val'];
+										?>
+												<tr>
+													<td><?php echo $row_rs_cuentas['Pld_Cdc']; ?></td>
+													<td><?php echo $row_rs_cuentas['Pld_Des']; ?></td>
+													<td><?php echo $row_rs_cuentas['Asi_Glo']; ?></td>
+													<td class="text-right"><?php echo $es_debe ? number_format($row_rs_cuentas['Asi_Val'], 2) : '&nbsp;'; ?></td>
+													<td class="text-right"><?php echo $es_debe ? '&nbsp;' : number_format($row_rs_cuentas['Asi_Val'], 2); ?></td>
+												</tr>
+										<?php
+											} while ($row_rs_cuentas = $obBD_con1->fetch_assoc($rs_cuentas));
+										} //Fin del if ($total_rs_cuentas > 0)
+										?>
+									</tbody>
+									<tfoot>
+										<tr class="active">
+											<th colspan="3" class="text-right">TOTALES</th>
+											<th class="text-right"><?php echo number_format($total, 2); ?></th>
+											<th class="text-right"><?php echo number_format($total, 2); ?></th>
+										</tr>
+									</tfoot>
+								</table>
+							</div>
+						</fieldset>
+
+						<?php
+						/**
+						 * Cargado de los cheques del comprobante 
+						 */
+						$rs_carcheq = $obBD_con1->consulta(
+							sentencias_che(309, $obBD_con1->parametros($row_rs_cabcomp['Com_Cod'])),
+							$obBD_conexion->conexion
+						);
+						$row_rs_carcheq = $obBD_con1->registros();
+						$total_rs_carcheq = $obBD_con1->numregistros();
+						/**
+						 * Cargado del array que contiene lo valores maximos de los cheques x asiento.
+						 */
+						$rs_arrmax = $obBD_con1->consulta(sentencias_che(304, $obBD_con1->parametros($row_rs_cabcomp['Com_Cod'])), $obBD_conexion->conexion);
+						$row_rs_arrmax = $obBD_con1->registros();
+						$total_rs_arrmax = $obBD_con1->numregistros();
+						/**
+						 * Creacion del Array para luego ser procesado
+						 */
+						if ($total_rs_arrmax > 0) {
+							do {
+								$codigo_array = explode("*", $row_rs_arrmax['Banasi']);
+								$asientos = $asientos . '*' . $codigo_array[1];
+							} while ($row_rs_arrmax = $obBD_con1->fetch_assoc($rs_arrmax));
+						}
+						$anulada = 0;
+						?>
+						<fieldset class="exa-fieldset">
+							<legend class="Titulos2">Cheques Emitidos <span class="badge" style="background-color:#254463;"><?php echo (int)$total_rs_carcheq; ?></span></legend>
+							<div class="table-responsive">
+								<table class="table table-condensed table-hover table-exa">
+									<thead>
+										<tr>
+											<th width="22%">Banco</th>
+											<th width="20%">Proveedor</th>
+											<th width="8%" class="text-center">No. Ch.</th>
+											<th width="9%" class="text-right">Valor</th>
+											<th width="9%" class="text-center">Fec. Elab.</th>
+											<th width="9%" class="text-center">Fec. Cobro</th>
+											<th width="12%">Observaci&oacute;n</th>
+											<th width="11%" class="text-center">&nbsp;</th>
+										</tr>
+									</thead>
+									<tbody id="contenido">
+										<?php
+										$total = 0;
+										if ($total_rs_carcheq > 0) {
+											do {
+												$anulado = ($row_rs_carcheq['Che_Est'] == 'I');
+												if ($anulado) $anulada++;
+												$fila++;
+												$total = $total + $row_rs_carcheq['Che_Val'];
+										?>
+												<tr class="fila-cheque<?php echo $anulado ? ' row-anulada' : ''; ?>">
+													<td>
+														<input name="datos[<?php echo $fila; ?>,1]" type="hidden" value="<?php echo $row_rs_carcheq['Ban_Cod']; ?>" />
+														<input name="datos[<?php echo $fila; ?>,2]" type="hidden" value="<?php echo $row_rs_carcheq['Asi_Cod']; ?>" />
+														<input name="datos[<?php echo $fila; ?>,10]" type="hidden" value="<?php echo $row_rs_carcheq['Ban_Cod']; ?>" />
+														<?php echo $row_rs_carcheq['Pld_Des']; ?>
+													</td>
+													<td>
+														<input name="datos[<?php echo $fila; ?>,3]" type="hidden" value="<?php echo $row_rs_carcheq['Prv_Cod']; ?>" />
+														<?php echo $row_rs_carcheq['Prs_Ape'] . ' ' . $row_rs_carcheq['Prs_Nom']; ?>
+													</td>
+													<td class="text-center">
+														<input name="datos[<?php echo $fila; ?>,4]" type="hidden" value="<?php echo $row_rs_carcheq['Che_Num']; ?>" />
+														<?php echo $row_rs_carcheq['Che_Num']; ?>
+													</td>
+													<td class="text-right">
+														<input name="datos[<?php echo $fila; ?>,5]" type="hidden" value="<?php echo round($row_rs_carcheq['Che_Val'], 2); ?>" />
+														<?php echo number_format($row_rs_carcheq['Che_Val'], 2); ?>
+													</td>
+													<td class="text-center">
+														<input name="datos[<?php echo $fila; ?>,8]" type="hidden" value="<?php echo ($row_rs_carcheq['Che_Fec'] != 0) ? $row_rs_carcheq['Che_Fec'] : ''; ?>" />
+														<?php echo ($row_rs_carcheq['Che_Fec'] != 0) ? $row_rs_carcheq['Che_Fec'] : '&mdash;'; ?>
+													</td>
+													<td class="text-center">
+														<input name="datos[<?php echo $fila; ?>,6]" type="hidden" value="<?php echo ($row_rs_carcheq['Che_Cob'] != 0) ? $row_rs_carcheq['Che_Cob'] : ''; ?>" />
+														<?php echo ($row_rs_carcheq['Che_Cob'] != 0) ? $row_rs_carcheq['Che_Cob'] : '&mdash;'; ?>
+													</td>
+													<td>
+														<input name="datos[<?php echo $fila; ?>,7]" type="hidden" value="<?php echo $row_rs_carcheq['Che_Obs']; ?>" />
+														<input name="datos[<?php echo $fila; ?>,9]" type="hidden" value="<?php echo $row_rs_carcheq['Che_Cod']; ?>" />
+														<?php
+														echo trim($row_rs_carcheq['Che_Obs']) != '' ? $row_rs_carcheq['Che_Obs'] : '&mdash;';
+														if (!empty($row_rs_carcheq['Atp_Cod'])) {
+															echo ' <span class="label label-warning" title="Anticipo a proveedores #' . $row_rs_carcheq['Atp_Cod'] . '">Anticipo</span>';
+														}
+														?>
+													</td>
+													<td class="text-center no-line anulaChe" id="<?php echo $row_rs_carcheq['Asi_Cod'] . '-CH' . $row_rs_carcheq['Che_Cod']; ?>">
+														<?php if ($row_rs_carcheq['Che_Est'] == 'A') { ?>
+															<button type="button" class="btn btn-danger btn-xs" title="<?php echo !empty($row_rs_carcheq['Atp_Cod']) ? 'Anular (requiere anular anticipo primero)' : 'Anular Cheque'; ?>" onclick="anulaCheque('<?php echo $row_rs_carcheq['Asi_Cod']; ?>','<?php echo $row_rs_carcheq['Che_Cod']; ?>',<?php echo !empty($row_rs_carcheq['Atp_Cod']) ? "'" . $row_rs_carcheq['Atp_Cod'] . "'" : 'null'; ?>)">
+																<span class="glyphicon glyphicon-ban-circle"></span> <span>Anular</span>
+															</button>
+														<?php } else { ?>
+															<span class="label label-danger">Anulado</span>
+														<?php } ?>
+													</td>
+												</tr>
+										<?php
+											} while ($row_rs_carcheq = $obBD_con1->fetch_assoc($rs_carcheq));
+										} //Fin del if ($total_rs_carcheq > 0)
+										?>
+									</tbody>
+									<tfoot>
+										<tr class="active">
+											<th colspan="3" class="text-right">TOTAL</th>
+											<th class="text-right"><?php echo number_format($total, 2); ?></th>
+											<th colspan="4">&nbsp;</th>
+										</tr>
+									</tfoot>
+								</table>
+							</div>
+							<input name="txt_total" type="hidden" id="txt_total" value="<?php echo number_format($total, 2, '.', ''); ?>" />
+							<input id="nfilas" name="nfilas" type="hidden" value="<?php echo $fila; ?>" />
+							<input id="asientos" name="asientos" type="hidden" value="<?php echo $asientos; ?>" />
+							<input id="bt_save" name="bt_save" type="hidden" value="Grabar" />
+							<div id="leyendaAnulado" class="leyenda-exa" <?php echo $anulada > 0 ? '' : 'style="display:none;"'; ?>><span class="box box-anulado"></span> Cheque anulado</div>
+						</fieldset>
+					</form>
+
+					<form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" name="formVolver" id="formVolver" class="text-center">
+						<input name="bt_buscar" type="hidden" value="1" />
+						<input name="Pec_Cod" type="hidden" value="<?php echo $Pec_Cod; ?>" />
+						<input name="Pec_Fei" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fei']; ?>" />
+						<input name="Pec_Fef" type="hidden" value="<?php echo $row_rs_periodo['Pec_Fef']; ?>" />
+						<input name="txt_busqueda" type="hidden" value="<?php echo $volver_busqueda; ?>" />
+						<input name="op_opciones" type="hidden" value="<?php echo $volver_opciones; ?>" />
+						<input name="cmb_mes" type="hidden" value="<?php echo $volver_mes; ?>" />
+						<input name="bancos" type="hidden" value="<?php echo $volver_bancos; ?>" />
+						<button type="submit" class="btn btn-inverse btn-sm" title="Regresar a los resultados">
+							<span class="glyphicon glyphicon-arrow-left"></span> <span>Atr&aacute;s</span>
+						</button>
+					</form>
+				<?php
+				} //Fin del elseif ($total_rs_cabcomp > 0)
+				else {
+					echo error_alerta("No se pudo cargar el comprobante seleccionado.", 2, true);
+				}
+				?>
+			<?php
+			} //FIn else
+			?>
+		</div>
+	</div>
+
+	<div id="detalleDialog" title="Detalle del Comprobante" style="display:none;"></div>
+
+	<script type="text/javascript">
+		/**
+		 * Sincroniza las fechas del periodo contable seleccionado
+		 */
+		function asignar_fechas(valor) {
+			var datos = valor.split('*');
+			if (document.getElementById('Pec_Fei')) document.getElementById('Pec_Fei').value = datos[1];
+			if (document.getElementById('Pec_Fef')) document.getElementById('Pec_Fef').value = datos[2];
+		}
+
+		function setfocusBusqueda() {
+			var campo = document.getElementById('txt_busqueda');
+			if (campo) campo.focus();
+		}
+
+		/**
+		 * Muestra el loader y bloquea reenvios del formulario
+		 */
+		function mostrarLoaderForm(form, botones) {
+			if (form.getAttribute('data-enviando') === '1') return false;
+			form.setAttribute('data-enviando', '1');
+			if (botones) $(botones).prop('disabled', true);
+			$('#loader').show();
+			return true;
+		}
+
+		/**
+		 * Carga el detalle contable del comprobante en la ventana modal
+		 */
+		function verDetalle(comCod) {
+			var dialog = $('#detalleDialog');
+			dialog.html('<div class="text-center" style="padding:30px;"><i class="fa fa-spinner fa-spin fa-2x"></i></div>').dialog('open');
+			dialog.load('<?php echo $_SERVER['PHP_SELF']; ?>?ajax=true&ComCod=' + comCod);
+		}
+
+		/**
+		 * Anula el cheque junto con su comprobante de egreso.
+		 * Si proviene de un anticipo activo, se bloquea y se indica anular primero el anticipo.
+		 */
+		function anulaCheque(asi, che, atp) {
+			if (atp) {
+				$.alert('Este cheque pertenece al anticipo a proveedores <b>#' + atp + '</b>. Debe <b>anular primero el anticipo</b> desde Modificar Anticipos a Proveedores.', null, 'remove');
+				return;
+			}
+			$.createDialogConfirm('Est&aacute; seguro que desea <b>anular</b> este cheque y su comprobante?', null, function() {
+				$.saveDataJson('<?php echo $_SERVER['PHP_SELF']; ?>', {
+					anula: true,
+					asi_cod: asi,
+					che_cod: che
+				}, function() {
+					$('.fila-cheque').addClass('row-anulada');
+					$('.anulaChe').html('<span class="label label-danger">Anulado</span>');
+					$('#leyendaAnulado').show();
+				});
+			});
+		}
+
+		$(document).ready(function() {
+			$('#detalleDialog').createDialog({
+				height: 480,
+				width: 780,
+				icon: 'info-sign'
+			});
+		});
+	</script>
+</BODY>
+
+</HTML>
 <?php
 /**
-* Cierra conexiones y libera consultas
-*/
+ * Cierra conexiones y libera consultas
+ */
 @$obBD_con1->free_result($rs_periodos);
 @$obBD_con1->free_result($rs_cabcompr);
 @$obBD_con1->free_result($rs_cabcomp);
 @$obBD_con1->free_result($rs_periodo);
 @$obBD_con1->free_result($rs_cuentas);
 @$obBD_con1->free_result($rs_combo);
-@$obBD_con1->free_result($rs_prov_cheques);
 @$obBD_con1->free_result($rs_carcheq);
 @$obBD_con1->free_result($rs_arrmax);
 @$obBD_conexion->cerrar();

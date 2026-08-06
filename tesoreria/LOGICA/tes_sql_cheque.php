@@ -217,7 +217,11 @@ ORDER BY
 		* Carga de los cheques de un comprobante determinado 
 		*/
 		case 309:
-		$car_cheques="SELECT Ban_Cod, cheques.Asi_Cod, persona.Prs_Ape, persona.Prs_Nom, cheques.Prv_Cod, Che_Num, Che_Val, Che_Fec, Che_Cob, Che_Obs, Che_Cod, Che_Est, det_plan.Pld_Des FROM asientos,cheques,proveedore,persona, det_plan WHERE asientos.Asi_Cod=cheques.Asi_Cod AND asientos.Com_Cod=$Par_Sql[0] AND cheques.Prv_Cod=proveedore.Prv_Cod AND proveedore.Prs_Cod=persona.Prs_Cod AND asientos.Pld_Cod = det_plan.Pld_Cod ORDER BY cheques.Che_Num"; 
+		$car_cheques="SELECT Ban_Cod, cheques.Asi_Cod, persona.Prs_Ape, persona.Prs_Nom, cheques.Prv_Cod, Che_Num, Che_Val, Che_Fec, Che_Cob, Che_Obs, Che_Cod, Che_Est, det_plan.Pld_Des,
+			(SELECT ant.Atp_Cod FROM pago_anticipo_proveedores AS pga
+				INNER JOIN anticipos_proveedores AS ant ON ant.Atp_Cod = pga.Atp_Cod
+				WHERE pga.Asi_Cod = cheques.Asi_Cod AND ant.Atp_Est IN ('A','U') LIMIT 1) AS Atp_Cod
+			FROM asientos,cheques,proveedore,persona, det_plan WHERE asientos.Asi_Cod=cheques.Asi_Cod AND asientos.Com_Cod=$Par_Sql[0] AND cheques.Prv_Cod=proveedore.Prv_Cod AND proveedore.Prs_Cod=persona.Prs_Cod AND asientos.Pld_Cod = det_plan.Pld_Cod ORDER BY cheques.Che_Num";
 		return $car_cheques;
 		
 
@@ -356,21 +360,42 @@ ORDER BY
 		//echo $ins_cheques_191;
 		return $ins_cheques_191;
                 case 345:
-                    if($Par_Sql[3]=='d')
+					/* 
+					* d=Apellidos, n=No. de Cheque, r=No. de Comprobante 
+					* Sin texto de busqueda se listan todos los comprobantes del periodo.
+					* En 'd' se busca sobre el nombre completo en los dos ordenes posibles y sobre el 
+					* beneficiario del cheque, que es el dato que se muestra en la columna Proveedor.
+					*/
+					if(trim($Par_Sql[0])=='')
 					{
-						$Par_Sql[3]="(Prs_Ape like '%$Par_Sql[0]%' OR Prs_Nom like '%$Par_Sql[0]%')";
+						$Par_Sql[3]="1=1";
 					}
-					if($Par_Sql[3]=='d')
+					elseif($Par_Sql[3]=='d')
+					{
+						$Par_Sql[3]="(CONCAT_WS(' ',persona.Prs_Ape,persona.Prs_Nom) like '%$Par_Sql[0]%'
+								OR CONCAT_WS(' ',persona.Prs_Nom,persona.Prs_Ape) like '%$Par_Sql[0]%'
+								OR cheques.Che_Ben like '%$Par_Sql[0]%')";
+					}
+					elseif($Par_Sql[3]=='n')
+					{
+						$Par_Sql[3]="Che_Num like '%$Par_Sql[0]%'";
+					}
+					elseif($Par_Sql[3]=='r')
 					{
 						$Par_Sql[3]="Com_Num='$Par_Sql[0]'";
 					}
-					if($Par_Sql[3]=='n')
+					else
 					{
-						$Par_Sql[3]="Che_Num like '%$Par_Sql[0]%'";
+						$Par_Sql[3]="1=0";
 					}
                     if($Par_Sql[4]!=""){
 						$Par_Sql[4]="AND asientos.Pld_Cod=".$Par_Sql[4];
 					}
+					/* 
+					* Par_Sql[5]='S' incluye tambien los comprobantes anulados. 
+					* Si no se envia el parametro se mantiene el comportamiento historico: solo activos.
+					*/
+					$Par_Sql[5]=(isset($Par_Sql[5])&&$Par_Sql[5]=='S')?"":"AND comprobantes.Com_Est='A'";
                     $sql="SELECT Tia_Abr,comprobantes.Com_Cod,Che_Num, Com_Num, proveedore.Prv_Cod, Prs_Ced, IF(Che_Ben IS NULL OR TRIM(Che_Ben)='',Prs_Ape,Che_Ben) AS Prs_Ape, IF(Che_Ben IS NULL OR TRIM(Che_Ben)='',Prs_Nom,'') AS Prs_Nom, Che_Ben, Com_Con, Com_Obs, Com_Fec, ROUND(Com_Val,2) as Com_Val, Com_Est 
                                 FROM comprobantes, proveedore, persona, asientos, cheques, det_plan,plan_cuenta,tipo_asien
                                 WHERE $Par_Sql[3]
@@ -379,7 +404,7 @@ ORDER BY
                                 AND plan_cuenta.Emp_Cod=$Par_Sql[1]
                                 AND comprobantes.Prv_Cod=proveedore.Prv_Cod AND comprobantes.Tia_Cod=tipo_asien.Tia_Cod 
                                 AND proveedore.Prs_Cod=persona.Prs_Cod 
-                                AND comprobantes.Com_Est='A'  
+                                $Par_Sql[5]
                                 AND comprobantes.Com_Cod = asientos.Com_Cod 
                                 AND asientos.Asi_Cod = cheques.Asi_Cod 
                                 AND det_plan.Pld_Cod=asientos.Pld_Cod
@@ -799,6 +824,22 @@ ORDER BY
 										ORDER BY Che_Fec";
 		//echo $ins_asie."<br>";
 		return $ins_asie;
+
+		/**
+		 * Verifica si el asiento del cheque pertenece a un anticipo a proveedores activo (A/U).
+		 * Usado antes de anular el cheque: primero debe anularse el anticipo.
+		 */
+		case 397:
+		$sql="SELECT ant.Atp_Cod, ant.Atp_Est, ant.Com_Cod, ant.Atp_Fec, ant.Atp_Val,
+				CONCAT(tas.Tia_Abr,'-',IF(CHAR_LENGTH(MONTH(com.Com_Fec))=1,CONCAT('0',CAST(MONTH(com.Com_Fec) AS CHAR)),CAST(MONTH(com.Com_Fec) AS CHAR)),'-',CAST(com.Com_Num AS CHAR)) AS codigo_compro
+			FROM pago_anticipo_proveedores AS pga
+			INNER JOIN anticipos_proveedores AS ant ON ant.Atp_Cod = pga.Atp_Cod
+			INNER JOIN comprobantes AS com ON com.Com_Cod = ant.Com_Cod
+			INNER JOIN tipo_asien AS tas ON tas.Tia_Cod = com.Tia_Cod
+			WHERE pga.Asi_Cod = $Par_Sql[0]
+				AND ant.Atp_Est IN ('A','U')
+			LIMIT 1";
+		return $sql;
 	
     }
 }
