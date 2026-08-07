@@ -724,6 +724,167 @@ function imprimirPlantas() {
     $('#imprimirPlantas').printElement();
 }
 
+function abrirModalEventos() {
+    limpiarFormEvento();
+    $('#eventosDialog').dialog('open');
+    cargarHistorialEventos();
+}
+
+function cargarHistorialEventos() {
+    var postUrl = (window.location.href || '').split('#')[0];
+    $('#bodyHistorialEventos').html('<tr><td colspan="6" class="text-center" style="color: #9ca3af; padding: 15px;"><i class="glyphicon glyphicon-refresh spin"></i> Cargando historial...</td></tr>');
+    
+    $.post(postUrl, { getHistorialEventosAjax: 1 }, function (r) {
+        var $body = $('#bodyHistorialEventos');
+        $body.empty();
+        
+        if (r && r.success && r.data && r.data.length > 0) {
+            $.each(r.data, function (i, evt) {
+                var isInactive = (evt.Man_EEst === 'I');
+                var rowStyle = isInactive ? ' style="background-color: #FADDDD !important;"' : '';
+
+                var estBadge = (!isInactive) 
+                    ? '<span class="label label-success" style="font-size: 10px;">ACTIVO</span>' 
+                    : '<span class="label label-danger" style="font-size: 10px;">INACTIVO</span>';
+                
+                var btnToggle = (!isInactive)
+                    ? '<button type="button" class="btn btn-warning btn-xs" onclick="toggleEstadoEvento(' + evt.Man_Eve + ', \'I\');" title="Inactivar Evento"><i class="glyphicon glyphicon-eye-close"></i></button>'
+                    : '<button type="button" class="btn btn-success btn-xs" onclick="toggleEstadoEvento(' + evt.Man_Eve + ', \'A\');" title="Activar Evento"><i class="glyphicon glyphicon-eye-open"></i></button>';
+
+                var isEditable = (evt.Man_EFef === evt.Hoy_YMD);
+                var btnEdit = isEditable
+                    ? "<button type=\"button\" class=\"btn btn-info btn-xs\" onclick=\"editarEvento(" + evt.Man_Eve + ", '" + escapeHtml(evt.Man_ENom) + "', '" + evt.Man_EFei + "', '" + evt.Man_EFef + "', '" + evt.Man_EEst + "', '" + evt.Hoy_YMD + "');\" title=\"Editar Evento\" style=\"margin-right: 4px;\"><i class=\"glyphicon glyphicon-pencil\"></i></button>"
+                    : "<button type=\"button\" class=\"btn btn-default btn-xs\" disabled title=\"Solo editable si la fecha fin es hoy\" style=\"margin-right: 4px; opacity: 0.5;\"><i class=\"glyphicon glyphicon-lock\"></i></button>";
+
+                var tr = '<tr' + rowStyle + '>' +
+                    '<td class="text-center"><b>' + evt.Man_Eve + '</b></td>' +
+                    '<td>' + escapeHtml(evt.Man_ENom) + '</td>' +
+                    '<td class="text-center">' + evt.Man_EFei_Fmt + '</td>' +
+                    '<td class="text-center">' + evt.Man_EFef_Fmt + '</td>' +
+                    '<td class="text-center">' + estBadge + '</td>' +
+                    '<td class="text-center">' + btnEdit + btnToggle + '</td>' +
+                '</tr>';
+
+                $body.append(tr);
+            });
+        } else {
+            $body.html('<tr><td colspan="6" class="text-center" style="color: #6b7280; padding: 15px;">No se encontraron eventos registrados.</td></tr>');
+        }
+    }, 'json').fail(function () {
+        $('#bodyHistorialEventos').html('<tr><td colspan="6" class="text-center text-danger" style="padding: 15px;">Error al cargar el historial.</td></tr>');
+    });
+}
+
+function limpiarFormEvento() {
+    $('#evt_Man_Eve').val('0');
+    $('#evt_Man_ENom').val('');
+    $('#evt_Man_EFei').val('');
+    $('#evt_Man_EFef').val('');
+    $('#evt_Man_EEst').val('A');
+}
+
+function editarEvento(id, nom, fei, fef, est, hoyYmd) {
+    if (hoyYmd && fef !== hoyYmd) {
+        $.alert('No se puede editar este evento ya que su fecha fin no corresponde al día de hoy.');
+        return;
+    }
+    $('#evt_Man_Eve').val(id);
+    $('#evt_Man_ENom').val(nom);
+    $('#evt_Man_EFei').val(fei);
+    $('#evt_Man_EFef').val(fef);
+    $('#evt_Man_EEst').val(est);
+}
+
+function guardarEvento() {
+    var id = $('#evt_Man_Eve').val();
+    var nom = $.trim($('#evt_Man_ENom').val());
+    var fei = $.trim($('#evt_Man_EFei').val());
+    var fef = $.trim($('#evt_Man_EFef').val());
+    var est = $('#evt_Man_EEst').val();
+
+    if (!nom) {
+        $.alert('Por favor ingrese el nombre del evento.');
+        return;
+    }
+    if (!fei || !fef) {
+        $.alert('Por favor ingrese las fechas de inicio y fin.');
+        return;
+    }
+
+    var feiYear = fei.split('-')[0];
+    var fefYear = fef.split('-')[0];
+    if (!feiYear || feiYear.length !== 4 || isNaN(feiYear)) {
+        $.alert('El año en la fecha de inicio debe tener exactamente 4 dígitos (AAAA).');
+        return;
+    }
+    if (!fefYear || fefYear.length !== 4 || isNaN(fefYear)) {
+        $.alert('El año en la fecha de fin debe tener exactamente 4 dígitos (AAAA).');
+        return;
+    }
+
+    var postUrl = (window.location.href || '').split('#')[0];
+    var payload = {
+        saveEventoAjax: 1,
+        Man_Eve: id,
+        Man_ENom: nom,
+        Man_EFei: fei,
+        Man_EFef: fef,
+        Man_EEst: est
+    };
+
+    $('#loader').show();
+    $.post(postUrl, payload, function (r) {
+        $('#loader').fadeOut('slow');
+        if (r && r.success) {
+            $.alert(r.message || 'Evento guardado correctamente.');
+            limpiarFormEvento();
+            cargarHistorialEventos();
+        } else {
+            $.alert((r && r.message) ? r.message : 'Error al guardar evento.');
+        }
+    }, 'json').fail(function () {
+        $('#loader').fadeOut('slow');
+        $.alert('Error de comunicación al guardar el evento.');
+    });
+}
+
+function toggleEstadoEvento(id, nuevoEstado) {
+    var accion = (nuevoEstado === 'A') ? 'activar' : 'inactivar';
+    var msg = '¿Está seguro de que desea ' + accion + ' este evento?';
+    
+    $.createDialogConfirm(msg, {
+        toggleEstadoEventoAjax: 1,
+        Man_Eve: id,
+        Man_EEst: nuevoEstado
+    }, function (data) {
+        $('#loader').show();
+        var postUrl = (window.location.href || '').split('#')[0];
+        $.post(postUrl, data, function (r) {
+            $('#loader').fadeOut('slow');
+            if (r && r.success) {
+                $.alert(r.message || 'Estado actualizado.');
+                cargarHistorialEventos();
+            } else {
+                $.alert((r && r.message) ? r.message : 'Error al cambiar estado.');
+            }
+        }, 'json').fail(function () {
+            $('#loader').fadeOut('slow');
+            $.alert('Error de comunicación.');
+        });
+    });
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+
 function actualizarGridPlantas() {
     var op_opciones = $('input[name="op_opciones"]:checked', '#filtroPlantasForm').val() || 'd';
     var search = $('input[name="search"]', '#filtroPlantasForm').val() || '';
