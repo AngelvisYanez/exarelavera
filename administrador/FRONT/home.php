@@ -55,6 +55,10 @@ if (isset($loginAjax)) {
     $obBD_conexionMaster = new Class_Log_Conexion_Cnt; // Creacion del Objeto de Conexion
     $obBD_con =  new Class_Log_Datos_Cnt; // Creacion del Objeto de Datos
     $row_data = $obBD_con->getRowConsulta(2, $Emp_Cod . '*' . trim($user_name), $obBD_conexionMaster); //Consulta que realiza la autenticacion del usuario
+    if (empty($row_data) || empty($row_data['Dat_Dis'])) {
+        echo json_encode(array('success' => false, 'ver' => null));
+        exit();
+    }
     $obBD_conexion = new Class_Log_Conexion_Cnt($row_data['Dat_Dis']); // Conexion a la base de datos distribuida, dinamica
     $row_rs_control = $obBD_con->getArrayConsulta(16, trim($user_name) . '*' . trim($encryptor) . '*' . $Emp_Cod . '*' . "$Suc_Cod", $obBD_conexion); //Consulta que realiza la autenticacion del usuario
     //var_dump($row_rs_control);
@@ -271,7 +275,12 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
                     <!--Ace Admin-->
                     <small id="Empr" style="font-size: 16px; color: #000; text-align: center;">
                         <i id="icoEmp" class="fa fa-building" style="color: #000;"></i>
-                        <?php echo '<span style="margin-top: 10px;">' . ucwords(strtolower($Ses_Emp_Nom)) . '</span>' . (count($rs_sucursales) == 1 ? ' <b>[' . strtoupper($Ses_Suc_Nom) . ']</b>' : ''); ?>
+                        <?php if (count($rs_empresas) > 1) { ?>
+                            <a href="javascript:changeEmpresa();" title="Cambiar empresa" style="color: #000; text-decoration: none;"><?php echo ucwords(strtolower($Ses_Emp_Nom)); ?><span class="caret"></span></a>
+                        <?php } else { ?>
+                            <span style="margin-top: 10px;"><?php echo ucwords(strtolower($Ses_Emp_Nom)); ?></span>
+                        <?php } ?>
+                        <?php echo (count($rs_sucursales) == 1 ? ' <b>[' . strtoupper($Ses_Suc_Nom) . ']</b>' : ''); ?>
                     </small>
                     <?php if (count($rs_sucursales) > 1) { ?>
                         <div class="dropdown" style="display: inline">
@@ -439,7 +448,7 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
                             <li><a href="./adm_pas_usuarios_2.0.php" target="contenido">
                                 <i class="ace-icon fa fa-key"></i>Cambiar clave
                             </a></li>
-                            <?php if ($Ses_Usu_Tip == 'A' && count($rs_empresas) > 1) { ?>
+                            <?php if (count($rs_empresas) > 1) { ?>
                                 <li><a data-toggle="modal" data-target="#myModal">
                                     <i class="ace-icon fa fa-user"></i>Cambiar empresa
                                 </a></li><?php } ?>
@@ -474,7 +483,7 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
             <div class="sidebar-shortcuts" id="sidebar-shortcuts">
                 <div class="sidebar-shortcuts-large" id="sidebar-shortcuts-large">
                     <button class="btn btn-success" style="display:none;"><i class="ace-icon fa fa-signal"></i></button>
-                    <button class="btn btn-info" <?php if ($Ses_Usu_Tip != 'A' || count($rs_empresas) == 1) { ?>style="display:none;" <?php } ?> data-toggle="modal" data-target="#myModal" data-tooltip="tooltip" data-placement="right" title="Cambiar Empresa"><i class="ace-icon fa fa-sign-in"></i></button>
+                    <button class="btn btn-info" <?php if (count($rs_empresas) == 1) { ?>style="display:none;" <?php } ?> data-toggle="modal" data-target="#myModal" data-tooltip="tooltip" data-placement="right" title="Cambiar Empresa"><i class="ace-icon fa fa-sign-in"></i></button>
                     <a href="./adm_pas_usuarios_1.0.php" style="display:none;" target="contenido" class="btn btn-warning" data-tooltip="tooltip" data-placement="right" title="Cambiar Clave"><i class="ace-icon fa fa-key"></i></a>
                     <a href="../LOGICA/logout.php" class="btn btn-danger" data-tooltip="tooltip" data-placement="right" title="Cerrar Sesion"><i class="ace-icon fa fa-sign-out"></i></a>
                 </div>
@@ -1060,6 +1069,13 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
         //         socketVentanas.send('login');
         //     }, 1000); */
         // });
+        function changeEmpresa() {
+            $('#Usu_Pas').val('');
+            $('#msgAlert').empty();
+            $('#Emp_Cod').val('').trigger('change');
+            $('#myModal').modal('show');
+        }
+
         function loginAjax() {
             var msg;
             $.post("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_FULL_SPECIAL_CHARS); ?>", {
