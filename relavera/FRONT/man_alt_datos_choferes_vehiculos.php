@@ -13,7 +13,7 @@ require_once('../LOGICA/man_log_datos_choferes_vehiculos.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
 require_once(__DIR__ . '/../LOGICA/relavera_whatsapp_utils.php');
 require_once(__DIR__ . '/../LOGICA/relavera_notif_mail_utils.php');
-
+require_once(__DIR__ . '/../LOGICA/man_cert_asistencia_helper.php');
 
 $obBD_conexion = new Class_Log_Conexion_Datos_Choferes_Vehiculos($Ses_Dat_Dis);
 $obBD_con1 = new Class_Log_Datos_Choferes_Vehiculos;
