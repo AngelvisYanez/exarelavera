@@ -517,11 +517,110 @@ if (isset($listEmpresasTransporteGridAjax)) {
     } else {
         $response['rows'] = array();
     }
-    $obBD_con1->echoJson($response);
+    // Obtener historial completo de eventos
+if (isset($_POST['getHistorialEventosAjax'])) {
+    $resp = array('success' => true, 'data' => array());
+    try {
+        $sql = "SELECT Man_Eve, Man_ENom, Man_EFei, Man_EFef, Man_EEst,
+                       DATE_FORMAT(Man_EFei, '%d/%m/%Y') AS Man_EFei_Fmt, 
+                       DATE_FORMAT(Man_EFef, '%d/%m/%Y') AS Man_EFef_Fmt,
+                       DATE_FORMAT(NOW(), '%Y-%m-%d') AS Hoy_YMD
+                FROM manifiesto_evento 
+                ORDER BY Man_Eve DESC";
+        $res = $obBD_con1->consulta($sql, $obBD_conexion->conexion);
+        $data = array();
+        if ($res) {
+            while ($row = $obBD_con1->fetch_assoc($res)) {
+                $data[] = $row;
+            }
+        }
+        $resp['data'] = $data;
+    } catch (Exception $e) {
+        $resp['success'] = false;
+        $resp['message'] = $e->getMessage();
+    }
+    $obBD_con1->echoJson($resp);
+}
+
+// Guardar / Editar Evento
+if (isset($_POST['saveEventoAjax'])) {
+    $resp = array('success' => false);
+    try {
+        $manEve = isset($_POST['Man_Eve']) ? (int)$_POST['Man_Eve'] : 0;
+        $manENom = isset($_POST['Man_ENom']) ? trim((string)$_POST['Man_ENom']) : '';
+        $manEFei = isset($_POST['Man_EFei']) ? trim((string)$_POST['Man_EFei']) : '';
+        $manEFef = isset($_POST['Man_EFef']) ? trim((string)$_POST['Man_EFef']) : '';
+        $manEEst = (isset($_POST['Man_EEst']) && $_POST['Man_EEst'] == 'I') ? 'I' : 'A';
+
+        if (empty($manENom)) {
+            throw new Exception('El nombre del evento es obligatorio.');
+        }
+        if (empty($manEFei) || empty($manEFef)) {
+            throw new Exception('Las fechas de inicio y fin son obligatorias.');
+        }
+
+        $feiParts = explode('-', $manEFei);
+        $fefParts = explode('-', $manEFef);
+        if (strlen($feiParts[0]) !== 4 || !ctype_digit($feiParts[0]) || strlen($fefParts[0]) !== 4 || !ctype_digit($fefParts[0])) {
+            throw new Exception('El año en las fechas debe contener exactamente 4 dígitos (AAAA).');
+        }
+
+        $con = $obBD_con1->getMyCon($obBD_conexion);
+        $nomSql = mysqli_real_escape_string($con, $manENom);
+        $feiSql = mysqli_real_escape_string($con, $manEFei);
+        $fefSql = mysqli_real_escape_string($con, $manEFef);
+
+        if ($manEve > 0) {
+            $sqlCheck = "SELECT Man_EFef, DATE_FORMAT(NOW(), '%Y-%m-%d') AS Hoy FROM manifiesto_evento WHERE Man_Eve = $manEve";
+            $resCheck = $obBD_con1->consulta($sqlCheck, $obBD_conexion->conexion);
+            $rowCheck = $obBD_con1->fetch_assoc($resCheck);
+            if ($rowCheck) {
+                $fechaFinBD = $rowCheck['Man_EFef'];
+                $hoyBD = $rowCheck['Hoy'];
+                if ($fechaFinBD !== $hoyBD) {
+                    throw new Exception("No se puede editar este evento ya que su fecha fin (" . date('d/m/Y', strtotime($fechaFinBD)) . ") no corresponde a la fecha actual.");
+                }
+            }
+
+            $sql = "UPDATE manifiesto_evento 
+                    SET Man_ENom = '$nomSql', Man_EFei = '$feiSql', Man_EFef = '$fefSql', Man_EEst = '$manEEst' 
+                    WHERE Man_Eve = $manEve";
+        } else {
+            $sql = "INSERT INTO manifiesto_evento (Man_ENom, Man_EFei, Man_EFef, Man_EEst, Man_Vig) 
+                    VALUES ('$nomSql', '$feiSql', '$fefSql', '$manEEst', 'S')";
+        }
+
+        $obBD_con1->consulta($sql, $obBD_conexion);
+        $resp['success'] = true;
+        $resp['message'] = ($manEve > 0) ? 'Evento actualizado correctamente.' : 'Evento registrado correctamente.';
+    } catch (Exception $e) {
+        $resp['message'] = $e->getMessage();
+    }
+    $obBD_con1->echoJson($resp);
+}
+
+// Cambiar estado / Anular Evento
+if (isset($_POST['toggleEstadoEventoAjax'])) {
+    $resp = array('success' => false);
+    try {
+        $manEve = isset($_POST['Man_Eve']) ? (int)$_POST['Man_Eve'] : 0;
+        $nuevoEst = (isset($_POST['Man_EEst']) && $_POST['Man_EEst'] == 'A') ? 'A' : 'I';
+        if ($manEve <= 0) {
+            throw new Exception('ID de evento no válido.');
+        }
+        $sql = "UPDATE manifiesto_evento SET Man_EEst = '$nuevoEst' WHERE Man_Eve = $manEve";
+        $obBD_con1->consulta($sql, $obBD_conexion);
+        $resp['success'] = true;
+        $resp['message'] = 'Estado del evento actualizado correctamente.';
+    } catch (Exception $e) {
+        $resp['message'] = $e->getMessage();
+    }
+    $obBD_con1->echoJson($resp);
 }
 
 // Guardar Empresa de Transporte
 if (isset($saveEmpresaTransporteAjax)) {
+
     $obBD_con1->inicio_transaccion($obBD_conexion);
     $resp = array('success' => false);
     try {

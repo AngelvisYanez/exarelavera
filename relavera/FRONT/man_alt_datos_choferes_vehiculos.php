@@ -36,10 +36,10 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
     $fechaEventoTexto = 'sábado 08 de agosto de 2026';
 
     try {
-        $resEv = $obBD_con1->consulta("SELECT Man_ENom, COALESCE(Man_EHor, 6) AS Man_EHor, Man_EFei FROM manifiesto_evento WHERE Man_Vig = 'S' AND Man_EEst = 'A' LIMIT 1", $obBD_conexion->conexion);
+        $resEv = $obBD_con1->consulta("SELECT Man_ENom, Man_EFei FROM manifiesto_evento WHERE UPPER(Man_Vig) = 'S' AND UPPER(Man_EEst) = 'A' LIMIT 1", $obBD_conexion->conexion);
         if ($resEv && ($rowEv = $obBD_con1->fetch_assoc($resEv))) {
             if (!empty($rowEv['Man_ENom'])) $nombreEvento = trim($rowEv['Man_ENom']);
-            if (!empty($rowEv['Man_EHor'])) $horasEvento = trim($rowEv['Man_EHor']);
+            if (isset($rowEv['Man_EHor']) && !empty($rowEv['Man_EHor'])) $horasEvento = trim($rowEv['Man_EHor']);
             if (!empty($rowEv['Man_EFei'])) {
                 $tsEv = strtotime($rowEv['Man_EFei']);
                 $diasSemana = array('domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado');
@@ -52,6 +52,7 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
             }
         }
     } catch (Exception $e) {}
+
 
     $mesesAct = array('enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre');
     $fechaEmisionStr = 'Portovelo, El Oro, ' . date('d') . ' de ' . $mesesAct[(int)date('m') - 1] . ' de ' . date('Y') . '.';
@@ -85,12 +86,18 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
             .corner-bottom-left { bottom: 18px; left: 18px; border-right: none; border-top: none; }
             .corner-bottom-right { bottom: 18px; right: 18px; border-left: none; border-top: none; }
 
-            /* MARCA DE AGUA COMPLETA SIN BORDES BLANCOS */
-            .cert-watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 680px; max-width: 85%; max-height: 80%; object-fit: contain; opacity: 0.14; mix-blend-mode: multiply; pointer-events: none; z-index: 1; filter: contrast(110%); }
+            /* MARCA DE AGUA ADAPTADA 100% A ANCHO Y ALTO DEL CERTIFICADO */
+            .cert-watermark { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; opacity: 0.85; mix-blend-mode: multiply; pointer-events: none; z-index: 1; }
 
-            /* SELLO TINTA RUBBER STAMP AUTÉNTICO */
-            .cert-sello-box { position: absolute; left: 140px; bottom: 42px; z-index: 10; pointer-events: none; }
-            .cert-sello-img { width: 135px; height: 135px; object-fit: contain; mix-blend-mode: multiply; filter: contrast(130%) brightness(95%); transform: rotate(-13deg); opacity: 0.90; }
+
+
+
+            /* SELLO TINTA RUBBER STAMP RECAUTELADO Y REUBICADO MÁS ARRIBA */
+            .cert-sello-box { position: absolute; left: 185px; bottom: 68px; z-index: 10; pointer-events: none; }
+            .cert-sello-img { width: 115px; height: 115px; object-fit: contain; transform: rotate(-12deg); opacity: 0.92; filter: drop-shadow(0px 2px 5px rgba(0,0,0,0.15)); }
+
+
+
 
             /* CONTENIDO RELATIVO CON Z-INDEX SUPERIOR */
             .cert-content { position: relative; z-index: 5; height: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
@@ -160,8 +167,10 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
 
             <!-- SELLO RUBBER STAMP TINTA REALISTA -->
             <div class="cert-sello-box">
-                <img src="../../imagenes/620/sello.jpg" class="cert-sello-img" alt="Sello Oficial" onerror="this.src='/imagenes/620/sello.jpg';">
+                <img src="../../imagenes/620/sello.png" class="cert-sello-img" alt="Sello Oficial" onerror="this.src='/imagenes/620/sello.png';">
             </div>
+
+
 
             <div class="cert-content">
                 <div>
@@ -189,8 +198,10 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
 
                     <!-- PÁRRAFO DE CERTIFICACIÓN EXACTO -->
                     <div class="cert-paragraph">
+
                         Que el Sr. <strong><?php echo htmlspecialchars($nombrePersona); ?></strong> asistió a la capacitación de <strong>Proyecto Ambiental Asociativo Relavera Comunitaria "El Tablón"</strong> el día <strong><?php echo $fechaEventoTexto; ?></strong> con una duración de <strong><?php echo htmlspecialchars($horasEvento); ?> horas</strong> con el tema <strong>"<?php echo htmlspecialchars($nombreEvento); ?>"</strong>.
                     </div>
+
                 </div>
 
                 <div class="bottom-section">
@@ -231,22 +242,20 @@ $obBD_con1->utf8_change_param($transportes);
 $plantas = $obBD_con1->getArrayConsulta(2, array(), $obBD_conexion);
 $obBD_con1->utf8_change_param($plantas);
 
-// Consultar evento actualmente en vigencia (Man_Vig = 'S') y sus tipos de certificado
+// Consultar evento actualmente en vigencia (Man_Vig = 'S')
 $nombreEventoVigente = '';
 $idEventoVigente = '';
-$certChoEventoVigente = 'IND_CHO';
-$certVisEventoVigente = 'IND_VIS';
 try {
-    $resEv = $obBD_con1->consulta("SELECT Man_Eve, Man_ENom, COALESCE(Man_ECer_Cho, 'IND_CHO') AS Man_ECer_Cho, COALESCE(Man_ECer_Vis, 'IND_VIS') AS Man_ECer_Vis FROM manifiesto_evento WHERE Man_Vig = 'S' AND Man_EEst = 'A' LIMIT 1", $obBD_conexion->conexion);
+    $resEv = $obBD_con1->consulta("SELECT Man_Eve, Man_ENom FROM manifiesto_evento WHERE UPPER(Man_Vig) = 'S' AND UPPER(Man_EEst) = 'A' LIMIT 1", $obBD_conexion->conexion);
     if ($resEv && ($rowEv = $obBD_con1->fetch_assoc($resEv))) {
         $nombreEventoVigente = trim($rowEv['Man_ENom']);
         $idEventoVigente = $rowEv['Man_Eve'];
-        $certChoEventoVigente = $rowEv['Man_ECer_Cho'];
-        $certVisEventoVigente = $rowEv['Man_ECer_Vis'];
     }
 } catch (Exception $e) {
-    // Si no existe la columna o tabla aún, se ignora silenciosamente
+    // Si no existe el registro o tabla, se ignora silenciosamente
 }
+
+
 
 
 
@@ -1581,16 +1590,13 @@ if (isset($_POST['anularVehiculoAjax'])) {
                             <i class="glyphicon glyphicon-bullhorn"></i> Evento "<strong><?php echo htmlspecialchars($nombreEventoVigente); ?></strong>" En Vigencia
                         </span>
                         <input type="hidden" id="hdn_man_eve_vigente" value="<?php echo $idEventoVigente; ?>">
-                        <input type="hidden" id="hdn_cert_cho_vigente" value="<?php echo htmlspecialchars($certChoEventoVigente); ?>">
-                        <input type="hidden" id="hdn_cert_vis_vigente" value="<?php echo htmlspecialchars($certVisEventoVigente); ?>">
                     <?php } else { ?>
                         <span id="lbl_evento_vigente" class="label label-default" style="font-size: 11px; padding: 5px 10px; border-radius: 4px; display: inline-block; background-color: #64748b; color: #fff;">
                             <i class="glyphicon glyphicon-calendar"></i> Sin Evento En Vigencia
                         </span>
                         <input type="hidden" id="hdn_man_eve_vigente" value="">
-                        <input type="hidden" id="hdn_cert_cho_vigente" value="IND_CHO">
-                        <input type="hidden" id="hdn_cert_vis_vigente" value="IND_VIS">
                     <?php } ?>
+
 
                 </div>
                 <div class="col-xs-5 text-right" style="padding-left: 0;">
