@@ -132,3 +132,65 @@ if (!function_exists('relavera_enviar_whatsapp_imagen_notif')) {
         return (is_array($data) && isset($data['id'])) ? $data['id'] : null;
     }
 }
+
+if (!function_exists('relavera_enviar_whatsapp_documento_notif')) {
+    /**
+     * Envía un documento (PDF, etc.) por WhatsApp (UltraMsg messages/document).
+     *
+     * @param string $numero Destino
+     * @param string $documentBase64 Base64 del archivo (sin prefijo data:)
+     * @param string $filename Nombre visible del archivo (ej. certificado.pdf)
+     * @param string $caption Leyenda opcional
+     * @return bool|string
+     */
+    function relavera_enviar_whatsapp_documento_notif($numero, $documentBase64, $filename, $caption = '')
+    {
+        $numero = preg_replace('/\s+/', '', (string) $numero);
+        if ($numero === '' || $documentBase64 === '') {
+            return false;
+        }
+        $filename = trim((string) $filename);
+        if ($filename === '') {
+            $filename = 'documento.pdf';
+        }
+        $caption = (string) $caption;
+        if (function_exists('mb_strlen') && function_exists('mb_substr')) {
+            if (mb_strlen($caption, 'UTF-8') > 1024) {
+                $caption = mb_substr($caption, 0, 1021, 'UTF-8') . '...';
+            }
+        } else {
+            $caption = substr($caption, 0, 1024);
+        }
+        $params = array(
+            'token' => 'ao5aoi2f77trfaxc',
+            'to' => $numero,
+            'filename' => $filename,
+            'document' => (strpos($documentBase64, 'data:') === 0)
+                ? $documentBase64
+                : ('data:application/pdf;base64,' . $documentBase64),
+            'caption' => $caption,
+        );
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://api.ultramsg.com/instance164295/messages/document',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 120,
+            CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_SSL_VERIFYPEER => 0,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => json_encode($params),
+            CURLOPT_HTTPHEADER => array('Content-Type: application/json'),
+        ));
+        $response = curl_exec($curl);
+        $err = curl_error($curl);
+        curl_close($curl);
+        if ($err) {
+            return false;
+        }
+        $data = json_decode((string) $response, true);
+        return (is_array($data) && isset($data['id'])) ? $data['id'] : null;
+    }
+}

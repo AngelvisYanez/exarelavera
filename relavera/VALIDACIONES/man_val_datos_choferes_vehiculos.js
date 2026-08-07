@@ -163,12 +163,37 @@ $(document).ready(function () {
   // Inicialización de Grids si existen en el DOM
   if ($("#gridEmpresasTransporte").length) initGridEmpresasTransporte();
   if ($("#gridChoferes").length) initGridChoferes();
+  if ($("#gridVisitantesEvento").length) initGridVisitantesEvento();
   if ($("#gridVehiculos").length) initGridVehiculos();
+
+  if ($("#selMan_Eve").length && $.fn.chosen) {
+    $("#selMan_Eve").chosen({
+      width: "100%",
+      search_contains: true,
+      no_results_text: "No se encontraron eventos: ",
+      placeholder_text_single: "Seleccione un evento..."
+    });
+  }
+  if ($("#selMan_Eve").length && $("#selMan_Eve").val()) {
+    actualizarGridVisitantesEvento();
+  }
 
   // Listener para pestañas
   $('a[data-toggle="tab"]').on("shown.bs.tab", function (e) {
     if ($.fn.buttonset) {
       $(".radioset").buttonset("refresh");
+    }
+    var target = $(e.target).attr("href");
+    if (target === "#tabEventos") {
+      if ($("#selMan_Eve").length && $.fn.chosen) {
+        $("#selMan_Eve").trigger("chosen:updated");
+      }
+      if ($("#gridVisitantesEvento").length) {
+        $("#gridVisitantesEvento").jqGrid("setGridWidth", $("#gridVisitantesEvento").closest(".exa-ui-grid-host").width());
+        if ($("#selMan_Eve").val()) {
+          actualizarGridVisitantesEvento();
+        }
+      }
     }
     if (typeof exaUiAfterViewChange === "function") {
       exaUiAfterViewChange(".exa-ui-panel");
@@ -1573,6 +1598,255 @@ $(document).on("click", "#filtroChoferesForm .clearable-x, #filtroChoferesForm .
   }, 50);
 });
 
+/* ==========================================================================
+   TAB EVENTOS
+   ========================================================================== */
+
+function initGridVisitantesEvento() {
+  var $grid = $("#gridVisitantesEvento");
+  if (!$grid.length) return;
+  $grid.jqGrid({
+    url: "?listVisitantesEventoGridAjax=true",
+    datatype: "json",
+    mtype: "POST",
+    postData: { Man_Eve: $("#selMan_Eve").val() || "" },
+    colNames: [
+      "Código",
+      "Cédula",
+      "Nombres",
+      "Apellidos",
+      "Teléfono",
+      "Correo",
+      "Dirección",
+      "Nacionalidad",
+      "Estado Civil",
+      "Tipo Sangre",
+      "Empresa",
+      "Observación",
+      "Estado",
+      "Acciones",
+    ],
+    colModel: [
+      { name: "MVis_Cod", index: "MVis_Cod", width: 70, align: "center", key: true },
+      { name: "Prs_Ced", index: "Prs_Ced", width: 100, align: "center" },
+      { name: "Prs_Nom", index: "Prs_Nom", width: 140, align: "left" },
+      { name: "Prs_Ape", index: "Prs_Ape", width: 140, align: "left" },
+      { name: "Prs_Tel", index: "Prs_Tel", width: 100, align: "center",
+        formatter: function (cellvalue, options, rowObject) {
+          if (cellvalue) return cellvalue;
+          return rowObject.MVis_Tem || "";
+        },
+      },
+      { name: "Prs_Cor", index: "Prs_Cor", width: 150, align: "left" },
+      { name: "Prs_Dir", index: "Prs_Dir", width: 180, align: "left" },
+      { name: "MVis_Nac", index: "MVis_Nac", width: 100, align: "center" },
+      { name: "MVis_Eci", index: "MVis_Eci", width: 100, align: "center" },
+      { name: "MVis_Tsa", index: "MVis_Tsa", width: 80, align: "center" },
+      { name: "MVis_Nem", index: "MVis_Nem", width: 140, align: "left" },
+      { name: "MVis_Obs", index: "MVis_Obs", width: 160, align: "left" },
+      {
+        name: "MVis_Est",
+        index: "MVis_Est",
+        width: 80,
+        align: "center",
+        formatter: function (cellvalue) {
+          if (String(cellvalue).toUpperCase() === "A") {
+            return '<span class="label label-success">ACTIVO</span>';
+          }
+          return '<span class="label label-danger">INACTIVO</span>';
+        },
+      },
+      {
+        name: "acciones",
+        index: "acciones",
+        width: 170,
+        align: "center",
+        sortable: false,
+        formatter: function (cellvalue, options, rowObject) {
+          var mvis = rowObject.MVis_Cod || "";
+          var prsNom = (rowObject.Prs_Nom || "").replace(/'/g, "\\'");
+          var prsApe = (rowObject.Prs_Ape || "").replace(/'/g, "\\'");
+          var prsCed = (rowObject.Prs_Ced || "").replace(/'/g, "\\'");
+          var html = "";
+          html +=
+            '<button type="button" class="btn btn-warning btn-xs" onclick="visualizarCertificadoPDF(\'' +
+            prsNom +
+            "', '" +
+            prsApe +
+            "', '" +
+            prsCed +
+            "', 1)\" title=\"Ver Certificado PDF\"><i class=\"glyphicon glyphicon-certificate\"></i></button> ";
+          html +=
+            '<button type="button" class="btn btn-success btn-xs btn-enviar-cert-vis" id="btnWaVis_' +
+            mvis +
+            '" onclick="enviarCertificadoVisitanteEvento(' +
+            mvis +
+            ", 'whatsapp', this)\" title=\"Enviar certificado por WhatsApp\"><i class=\"glyphicon glyphicon-phone\"></i></button> ";
+          html +=
+            '<button type="button" class="btn btn-info btn-xs btn-enviar-cert-vis" id="btnMailVis_' +
+            mvis +
+            '" onclick="enviarCertificadoVisitanteEvento(' +
+            mvis +
+            ", 'correo', this)\" title=\"Enviar certificado por Email\"><i class=\"glyphicon glyphicon-envelope\"></i></button>";
+          return '<div style="white-space:nowrap;">' + html + "</div>";
+        },
+      },
+    ],
+    pager: "#gridVisitantesEventoPager",
+    rowNum: 50,
+    rowList: [20, 50, 100, 200],
+    sortname: "nombre",
+    sortorder: "asc",
+    viewrecords: true,
+    height: 280,
+    width: "100%",
+    shrinkToFit: true,
+    autowidth: true,
+    loadonce: false,
+    jsonReader: { repeatitems: false, id: "MVis_Cod" },
+  }).jqGrid("navGrid", "#gridVisitantesEventoPager", {
+    edit: false,
+    add: false,
+    del: false,
+    search: false,
+    refresh: true,
+  });
+}
+
+function actualizarGridVisitantesEvento() {
+  var manEve = $("#selMan_Eve").val() || "";
+  var formData = $("#filtroVisitantesEventoForm").serializeArray();
+  var postData = { listVisitantesEventoGridAjax: true, Man_Eve: manEve };
+  $.each(formData, function (i, field) {
+    if (field.name === "Man_Eve") return;
+    postData[field.name] = field.value;
+  });
+  $("#gridVisitantesEvento")
+    .jqGrid("setGridParam", {
+      postData: postData,
+      page: 1,
+    })
+    .trigger("reloadGrid");
+}
+
+var _enviandoCertVis = {};
+
+function setEstadoBtnCertVis($btn, enviando, canal) {
+  if (!$btn || !$btn.length) return;
+  var icon =
+    canal === "correo"
+      ? "glyphicon-envelope"
+      : canal === "whatsapp"
+        ? "glyphicon-phone"
+        : "glyphicon-send";
+  if (enviando) {
+    $btn
+      .prop("disabled", true)
+      .addClass("disabled")
+      .html('<i class="glyphicon glyphicon-refresh"></i>');
+  } else {
+    $btn
+      .prop("disabled", false)
+      .removeClass("disabled")
+      .html('<i class="glyphicon ' + icon + '"></i>');
+  }
+}
+
+function enviarCertificadoVisitanteEvento(MVis_Cod, canal, btnEl) {
+  if (!MVis_Cod) {
+    mostrarAlertaUI("Error", "No se identificó el visitante.", "error");
+    return;
+  }
+  canal = canal || "ambos";
+  var key = String(MVis_Cod) + "_" + canal;
+  if (_enviandoCertVis[key]) return;
+
+  var $btn = btnEl ? $(btnEl) : null;
+  if ($btn && $btn.length && $btn.prop("disabled")) return;
+
+  var textoCanal =
+    canal === "whatsapp"
+      ? "WhatsApp"
+      : canal === "correo"
+        ? "Email"
+        : "WhatsApp y Email";
+
+  swal(
+    {
+      title: "Enviar certificado PDF",
+      text: "¿Enviar el PDF del certificado de asistencia por " + textoCanal + " a este visitante?",
+      type: "info",
+      showCancelButton: true,
+      confirmButtonText: "Enviar",
+      cancelButtonText: "Cancelar",
+    },
+    function (isConfirm) {
+      if (!isConfirm) return;
+      if (_enviandoCertVis[key]) return;
+
+      _enviandoCertVis[key] = true;
+      setEstadoBtnCertVis($btn, true, canal);
+
+      $.post(
+        "",
+        {
+          enviarCertificadoVisitanteEventoAjax: true,
+          MVis_Cod: MVis_Cod,
+          canal: canal,
+          Man_Eve: $("#selMan_Eve").val() || "",
+        },
+        function (r) {
+          if (r && r.success) {
+            mostrarAlertaUI(
+              "Éxito",
+              r.message || "Certificado PDF enviado correctamente.",
+              "success",
+            );
+          } else {
+            mostrarAlertaUI(
+              "Error",
+              (r && r.message) || "No se pudo enviar el certificado PDF.",
+              "error",
+            );
+          }
+        },
+        "json",
+      )
+        .fail(function () {
+          mostrarAlertaUI(
+            "Error",
+            "Ocurrió un error de comunicación con el servidor.",
+            "error",
+          );
+        })
+        .always(function () {
+          _enviandoCertVis[key] = false;
+          setEstadoBtnCertVis($btn, false, canal);
+        });
+    },
+  );
+}
+
+$(document).on("change", "#selMan_Eve", function () {
+  actualizarGridVisitantesEvento();
+});
+
+$(document).on("change", '#filtroVisitantesEventoForm input[name="op_opciones"]', function () {
+  actualizarGridVisitantesEvento();
+});
+
+$(document).on("input keyup search change", '#filtroVisitantesEventoForm input[name="search"]', function () {
+  var val = $(this).val();
+  if (val === "" || val === null || String(val).trim() === "") {
+    if ($(this).data("lastSearchVal") !== "") {
+      $(this).data("lastSearchVal", "");
+      actualizarGridVisitantesEvento();
+    }
+  } else {
+    $(this).data("lastSearchVal", String(val).trim());
+  }
+});
+
 // Listener para desvincular IDs de Chofer/Visitante si el usuario corrige la cédula en Registro Nuevo
 $(document).on("input change", "#Cho_Ced", function () {
   if (!window.esEdicionDirectaGrid) {
@@ -2805,9 +3079,13 @@ function visualizarCertificadoPDF(rowNom, rowApe, rowCed, rowIsVis) {
   var ape = rowApe || $.trim($("#Prs_Ape").val()) || "Apellido Ejemplo";
   var ced = rowCed || $.trim($("#Cho_Ced").val()) || "1100000000";
   var isVis = (rowIsVis !== undefined) ? (rowIsVis ? 1 : 0) : ($("#chk_es_visitante").is(":checked") ? 1 : 0);
+  var manEve = $("#selMan_Eve").length ? ($("#selMan_Eve").val() || "") : ($("#Man_Eve").val() || $("#hdn_man_eve_vigente").val() || "");
 
   var baseUrl = (window.location.href || "").split("#")[0].split("?")[0];
   var url = baseUrl + "?verCertificadoPdfAjax=1&Prs_Nom=" + encodeURIComponent(nom) + "&Prs_Ape=" + encodeURIComponent(ape) + "&Prs_Ced=" + encodeURIComponent(ced) + "&es_visitante=" + isVis;
+  if (manEve) {
+    url += "&Man_Eve=" + encodeURIComponent(manEve);
+  }
 
   window.open(url, "_blank", "width=1100,height=800,scrollbars=yes,resizable=yes");
 }

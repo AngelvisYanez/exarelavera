@@ -13,224 +13,50 @@ require_once('../LOGICA/man_log_datos_choferes_vehiculos.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
 require_once(__DIR__ . '/../LOGICA/relavera_whatsapp_utils.php');
 require_once(__DIR__ . '/../LOGICA/relavera_notif_mail_utils.php');
+require_once(__DIR__ . '/../LOGICA/man_cert_asistencia_helper.php');
 
 $obBD_conexion = new Class_Log_Conexion_Datos_Choferes_Vehiculos($Ses_Dat_Dis);
 $obBD_con1 = new Class_Log_Datos_Choferes_Vehiculos;
 
 /* ==========================================================================
-   VISUALIZADOR / IMPRESOR DE CERTIFICADO EN PDF (PLANTILLA ECOPARK MINING)
+   CERTIFICADO PDF (mismo archivo para visualizar y enviar)
    ========================================================================== */
 if (isset($_GET['verCertificadoPdfAjax'])) {
     $prsNom = isset($_GET['Prs_Nom']) ? trim($_GET['Prs_Nom']) : 'Nombres';
     $prsApe = isset($_GET['Prs_Ape']) ? trim($_GET['Prs_Ape']) : 'Apellidos';
     $prsCed = isset($_GET['Prs_Ced']) ? trim($_GET['Prs_Ced']) : '1100000000';
-    $esVis = isset($_GET['es_visitante']) && $_GET['es_visitante'] == '1';
-    
-    $nombrePersona = trim($prsNom . ' ' . $prsApe);
-    if (empty($nombrePersona) || $nombrePersona === 'Nombres Apellidos') {
-        $nombrePersona = 'Juan Carlos Pérez';
+    $manEveGet = isset($_GET['Man_Eve']) ? trim((string) $_GET['Man_Eve']) : '';
+
+    $evData = man_cert_asistencia_resolver_evento(
+        $obBD_con1,
+        $obBD_conexion,
+        $manEveGet !== '' ? $manEveGet : null
+    );
+    $pdfParams = man_cert_asistencia_armar_params($prsNom, $prsApe, $prsCed, $evData);
+    $pdfPath = man_cert_asistencia_generar_pdf($pdfParams);
+
+    if ($pdfPath === false || !is_file($pdfPath)) {
+        header('HTTP/1.1 500 Internal Server Error');
+        echo 'No se pudo generar el certificado PDF.';
+        exit();
     }
 
-    $nombreEvento = 'Capacitación en Seguridad Industrial y Ambiental';
-    $horasEvento = '6';
-    $fechaEventoTexto = 'sábado 08 de agosto de 2026';
+    $safeCed = preg_replace('/[^a-zA-Z0-9_-]/', '', $prsCed);
+    if ($safeCed === '') {
+        $safeCed = 'certificado';
+    }
+    $fileName = 'Certificado_Asistencia_' . $safeCed . '.pdf';
 
-    try {
-        $resEv = $obBD_con1->consulta("SELECT Man_ENom, Man_EFei FROM manifiesto_evento WHERE UPPER(Man_Vig) = 'S' AND UPPER(Man_EEst) = 'A' LIMIT 1", $obBD_conexion->conexion);
-        if ($resEv && ($rowEv = $obBD_con1->fetch_assoc($resEv))) {
-            if (!empty($rowEv['Man_ENom'])) $nombreEvento = trim($rowEv['Man_ENom']);
-            if (isset($rowEv['Man_EHor']) && !empty($rowEv['Man_EHor'])) $horasEvento = trim($rowEv['Man_EHor']);
-            if (!empty($rowEv['Man_EFei'])) {
-                $tsEv = strtotime($rowEv['Man_EFei']);
-                $diasSemana = array('domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado');
-                $mesesNom = array('enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre');
-                $diaSem = $diasSemana[date('w', $tsEv)];
-                $numDia = date('d', $tsEv);
-                $mesNom = $mesesNom[(int)date('m', $tsEv) - 1];
-                $anioNum = date('Y', $tsEv);
-                $fechaEventoTexto = "$diaSem $numDia de $mesNom de $anioNum";
-            }
-        }
-    } catch (Exception $e) {}
-
-
-    $mesesAct = array('enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre');
-    $fechaEmisionStr = 'Portovelo, El Oro, ' . date('d') . ' de ' . $mesesAct[(int)date('m') - 1] . ' de ' . date('Y') . '.';
-    ?>
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <title>Certificado de Asistencia - <?php echo htmlspecialchars($nombrePersona); ?></title>
-        <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-        <style>
-            * { box-sizing: border-box; margin: 0; padding: 0; }
-            body { background: #e2e8f0; font-family: 'Montserrat', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; color: #0f172a; }
-            
-            .no-print-bar { width: 1020px; max-width: 100%; display: flex; justify-content: space-between; align-items: center; background: #0f172a; color: #fff; padding: 12px 24px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-            .no-print-bar h3 { font-size: 15px; font-weight: 600; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
-            .no-print-bar .btns { display: flex; gap: 10px; }
-            .btn-action { padding: 8px 18px; border: none; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
-            .btn-print { background: #0284c7; color: #fff; }
-            .btn-print:hover { background: #0369a1; }
-            .btn-close { background: #475569; color: #fff; }
-            .btn-close:hover { background: #334155; }
-
-            /* CONTENEDOR CERTIFICADO HORIZONTAL LANDSCAPE (A4: 1020px x 720px) */
-            .cert-canvas { width: 1020px; height: 720px; background: #ffffff; position: relative; border-radius: 4px; box-shadow: 0 14px 40px rgba(0,0,0,0.15); overflow: hidden; padding: 40px 60px; border: 12px solid #0b2545; outline: 3px solid #c5a059; outline-offset: -8px; display: flex; flex-direction: column; justify-content: space-between; text-align: center; }
-
-            /* MARCOS Y CORNER ORNAMENTS */
-            .corner-ornament { position: absolute; width: 45px; height: 45px; border: 2px solid #c5a059; z-index: 4; }
-            .corner-top-left { top: 18px; left: 18px; border-right: none; border-bottom: none; }
-            .corner-top-right { top: 18px; right: 18px; border-left: none; border-bottom: none; }
-            .corner-bottom-left { bottom: 18px; left: 18px; border-right: none; border-top: none; }
-            .corner-bottom-right { bottom: 18px; right: 18px; border-left: none; border-top: none; }
-
-            /* MARCA DE AGUA ADAPTADA 100% A ANCHO Y ALTO DEL CERTIFICADO */
-            .cert-watermark { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; opacity: 0.85; mix-blend-mode: multiply; pointer-events: none; z-index: 1; }
-
-
-
-
-            /* SELLO TINTA RUBBER STAMP RECAUTELADO Y REUBICADO MÁS ARRIBA */
-            .cert-sello-box { position: absolute; left: 185px; bottom: 68px; z-index: 10; pointer-events: none; }
-            .cert-sello-img { width: 115px; height: 115px; object-fit: contain; transform: rotate(-12deg); opacity: 0.92; filter: drop-shadow(0px 2px 5px rgba(0,0,0,0.15)); }
-
-
-
-
-            /* CONTENIDO RELATIVO CON Z-INDEX SUPERIOR */
-            .cert-content { position: relative; z-index: 5; height: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
-
-            /* CABECERA ECOPARKMINING */
-            .company-title { font-family: 'Cinzel', serif; font-size: 26px; font-weight: 900; color: #0b2545; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 2px; }
-            .company-subtitle { font-size: 11px; font-weight: 700; color: #1e3a8a; letter-spacing: 1.5px; text-transform: uppercase; line-height: 1.4; max-width: 650px; margin: 0 auto; }
-
-            .green-divider { margin: 12px auto; width: 75%; display: flex; align-items: center; justify-content: center; gap: 12px; }
-            .green-divider .line { flex: 1; height: 1px; background: #86efac; }
-            .green-divider .leaf-icon { color: #16a34a; font-size: 15px; }
-
-            /* SECCIÓN OTORGA CERTIFICADO */
-            .grant-header { font-size: 12px; font-weight: 700; color: #1e3a8a; letter-spacing: 3px; text-transform: uppercase; margin-top: 4px; margin-bottom: 4px; }
-            .main-cert-title { font-family: 'Cinzel', serif; font-size: 38px; font-weight: 900; color: #0b2545; letter-spacing: 5px; text-transform: uppercase; margin-bottom: 2px; }
-            .sub-cert-title { font-size: 18px; font-weight: 800; color: #16a34a; letter-spacing: 4px; text-transform: uppercase; }
-
-            .dots-divider { color: #16a34a; font-size: 14px; margin: 8px 0 12px 0; letter-spacing: 4px; }
-
-            /* RECEPTOR */
-            .grant-to { font-size: 15px; font-weight: 800; color: #0b2545; margin-bottom: 6px; }
-            .recipient-name { font-size: 26px; font-weight: 900; color: #0b2545; padding-bottom: 4px; border-bottom: 2px solid #0b2545; display: inline-block; min-width: 500px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
-            .recipient-cedula { font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 16px; }
-
-            /* PÁRRAFO DE TEXTO EXACTO */
-            .cert-paragraph { font-size: 14px; color: #334155; line-height: 1.75; max-width: 780px; margin: 0 auto 16px auto; text-align: center; }
-            .cert-paragraph strong { color: #0f172a; font-weight: 800; }
-
-            /* UBICACIÓN Y FIRMAS */
-            .bottom-section { width: 100%; display: flex; flex-direction: column; align-items: center; }
-            .location-tag { font-size: 13px; font-weight: 600; color: #334155; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 15px; }
-            .location-tag span { color: #16a34a; }
-
-            /* FIRMAS */
-            .cert-footer { width: 100%; display: flex; justify-content: space-around; align-items: flex-end; padding-bottom: 5px; }
-            .signature-block { width: 260px; text-align: center; }
-            .signature-line { width: 100%; border-top: 2px solid #0b2545; height: 35px; }
-            .signature-role { font-size: 11px; font-weight: 800; color: #0b2545; text-transform: uppercase; }
-            .signature-company { font-size: 10px; color: #64748b; font-weight: 600; }
-
-            @media print {
-                body { background: #fff; padding: 0; }
-                .no-print-bar { display: none !important; }
-                .cert-canvas { box-shadow: none; border-width: 10px; width: 100vw; height: 100vh; padding: 25px; }
-                @page { size: landscape; margin: 0; }
-            }
-        </style>
-    </head>
-    <body>
-        <div class="no-print-bar">
-            <h3><i class="glyphicon glyphicon-certificate"></i> Vista Previa del Certificado (ECOPARKMINING S.A.)</h3>
-            <div class="btns">
-                <button class="btn-action btn-print" onclick="window.print();"><i class="glyphicon glyphicon-print"></i> Imprimir / PDF</button>
-                <button class="btn-action btn-close" onclick="window.close();"><i class="glyphicon glyphicon-remove"></i> Cerrar</button>
-            </div>
-        </div>
-
-        <div class="cert-canvas">
-            <!-- MARCOS DE ESQUINA -->
-            <div class="corner-ornament corner-top-left"></div>
-            <div class="corner-ornament corner-top-right"></div>
-            <div class="corner-ornament corner-bottom-left"></div>
-            <div class="corner-ornament corner-bottom-right"></div>
-
-            <!-- MARCA DE AGUA EN EL FONDO CON MIX-BLEND-MODE MULTIPLY (SIN RECUADROS BLANCOS) -->
-            <img src="../../imagenes/620/marca_agua.png" class="cert-watermark" alt="Marca de Agua" onerror="this.src='/imagenes/620/marca_agua.png';">
-
-            <!-- SELLO RUBBER STAMP TINTA REALISTA -->
-            <div class="cert-sello-box">
-                <img src="../../imagenes/620/sello.png" class="cert-sello-img" alt="Sello Oficial" onerror="this.src='/imagenes/620/sello.png';">
-            </div>
-
-
-
-            <div class="cert-content">
-                <div>
-                    <!-- CABECERA DE LOGO / EMPRESA -->
-                    <div class="company-title">ECOPARKMINING S.A.</div>
-                    <div class="company-subtitle">PROYECTO AMBIENTAL ASOCIATIVO RELAVERA COMUNITARIA "EL TABLÓN"</div>
-
-                    <div class="green-divider">
-                        <div class="line"></div>
-                        <div class="leaf-icon">🍃</div>
-                        <div class="line"></div>
-                    </div>
-
-                    <!-- TÍTULOS PRINCIPALES -->
-                    <div class="grant-header">OTORGA EL PRESENTE</div>
-                    <div class="main-cert-title">CERTIFICADO</div>
-                    <div class="sub-cert-title">DE ASISTENCIA</div>
-
-                    <div class="dots-divider">• • •</div>
-
-                    <!-- RECEPTOR -->
-                    <div class="grant-to">A:</div>
-                    <div class="recipient-name"><?php echo htmlspecialchars($nombrePersona); ?></div>
-                    <div class="recipient-cedula">C.I.: <strong><?php echo htmlspecialchars($prsCed); ?></strong></div>
-
-                    <!-- PÁRRAFO DE CERTIFICACIÓN EXACTO -->
-                    <div class="cert-paragraph">
-
-                        Que el Sr. <strong><?php echo htmlspecialchars($nombrePersona); ?></strong> asistió a la capacitación de <strong>Proyecto Ambiental Asociativo Relavera Comunitaria "El Tablón"</strong> el día <strong><?php echo $fechaEventoTexto; ?></strong> con una duración de <strong><?php echo htmlspecialchars($horasEvento); ?> horas</strong> con el tema <strong>"<?php echo htmlspecialchars($nombreEvento); ?>"</strong>.
-                    </div>
-
-                </div>
-
-                <div class="bottom-section">
-                    <!-- UBICACIÓN Y FECHA DE EMISIÓN -->
-                    <div class="location-tag">
-                        <span>📍</span> <?php echo $fechaEmisionStr; ?>
-                    </div>
-
-                    <!-- FIRMAS EN BLANCO -->
-                    <div class="cert-footer">
-                        <div class="signature-block">
-                            <div class="signature-line"></div>
-                            <div class="signature-role">Gerencia General</div>
-                            <div class="signature-company">ECOPARKMINING S.A.</div>
-                        </div>
-                        <div class="signature-block">
-                            <div class="signature-line"></div>
-                            <div class="signature-role">Área de Capacitación</div>
-                            <div class="signature-company">ECOPARKMINING S.A.</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </body>
-    </html>
-    <?php
+    header('Content-Type: application/pdf');
+    header('Content-Disposition: inline; filename="' . $fileName . '"');
+    header('Content-Length: ' . filesize($pdfPath));
+    header('Cache-Control: private, max-age=0, must-revalidate');
+    header('Pragma: public');
+    readfile($pdfPath);
+    @unlink($pdfPath);
     exit();
 }
+
 
 
 
@@ -242,7 +68,21 @@ $obBD_con1->utf8_change_param($transportes);
 $plantas = $obBD_con1->getArrayConsulta(2, array(), $obBD_conexion);
 $obBD_con1->utf8_change_param($plantas);
 
-// Consultar evento actualmente en vigencia (Man_Vig = 'S')
+// Catálogo de eventos para el tab Eventos (lista desplegable)
+$eventosCatalogo = array();
+try {
+    $paramsEvCat = array($Ses_Emp_Cod);
+    $paramsEvCat['limits'] = 'LIMIT 500';
+    $eventosCatalogo = $obBD_con1->getArrayConsulta(18, $paramsEvCat, $obBD_conexion);
+    if (!is_array($eventosCatalogo)) {
+        $eventosCatalogo = array();
+    }
+    $obBD_con1->utf8_change_param($eventosCatalogo);
+} catch (Exception $e) {
+    $eventosCatalogo = array();
+}
+
+// Consultar evento actualmente en vigencia (Man_Vig = 'S') y sus tipos de certificado
 $nombreEventoVigente = '';
 $idEventoVigente = '';
 try {
@@ -413,6 +253,72 @@ if (isset($_POST['anularEmpresaTransporteAjax'])) {
         $resp['success'] = ($obBD_con1->Error == 0);
     }
     responderJsonLimpio($resp);
+}
+
+// 4.0 Listar Eventos
+if (isset($_REQUEST['listEventosGridAjax'])) {
+    $req = array_merge($_GET, $_POST);
+    $page = isset($req['page']) ? intval($req['page']) : 1;
+    $rows = isset($req['rows']) ? intval($req['rows']) : 50;
+    if ($rows <= 0 || $rows >= 99999) {
+        $rows = 999999;
+    }
+    if ($page < 1) {
+        $page = 1;
+    }
+    $params = array($Ses_Emp_Cod);
+    if (!empty($req['search'])) {
+        $params['search'] = $req['search'];
+    }
+    if (!empty($req['Man_Eve'])) {
+        $params['Man_Eve'] = $req['Man_Eve'];
+    }
+    $contar = $obBD_con1->getRowConsulta(18, $params, $obBD_conexion);
+    $pagination = pages($contar['total'], $page, $rows);
+    $response = $pagination['data'];
+    if ($contar['total'] > 0) {
+        $params['limits'] = $pagination['limits'];
+        $response['rows'] = $obBD_con1->getArrayConsulta(18, $params, $obBD_conexion);
+        $obBD_con1->utf8_change_param($response['rows']);
+    } else {
+        $response['rows'] = array();
+    }
+    responderJsonLimpio($response);
+}
+
+// 4.0.1 Listar Visitantes / Personas por Evento
+if (isset($_REQUEST['listVisitantesEventoGridAjax'])) {
+    $req = array_merge($_GET, $_POST);
+    $page = isset($req['page']) ? intval($req['page']) : 1;
+    $rows = isset($req['rows']) ? intval($req['rows']) : 50;
+    if ($rows <= 0 || $rows >= 99999) {
+        $rows = 999999;
+    }
+    if ($page < 1) {
+        $page = 1;
+    }
+    $params = array($Ses_Emp_Cod);
+    if (!empty($req['Man_Eve'])) {
+        $params['Man_Eve'] = $req['Man_Eve'];
+    }
+    if (isset($req['op_opciones'])) {
+        $params['op_opciones'] = $req['op_opciones'];
+    }
+    if (!empty($req['search'])) {
+        $params['search'] = $req['search'];
+    }
+    $contar = $obBD_con1->getRowConsulta(19, $params, $obBD_conexion);
+    $total = isset($contar['total']) ? intval($contar['total']) : 0;
+    $pagination = pages($total, $page, $rows);
+    $response = $pagination['data'];
+    if ($total > 0) {
+        $params['limits'] = $pagination['limits'];
+        $response['rows'] = $obBD_con1->getArrayConsulta(19, $params, $obBD_conexion);
+        $obBD_con1->utf8_change_param($response['rows']);
+    } else {
+        $response['rows'] = array();
+    }
+    responderJsonLimpio($response);
 }
 
 // 4. Listar Choferes
@@ -1078,6 +984,131 @@ if (isset($_POST['enviarNotifCapacitacionChoferAjax'])) {
     responderJsonLimpio($resp);
 }
 
+// 7.6. Enviar certificado PDF a visitante del evento (WhatsApp y/o correo)
+if (isset($_POST['enviarCertificadoVisitanteEventoAjax'])) {
+    $resp = array(
+        'success' => false,
+        'message' => '',
+        'whatsapp' => false,
+        'correo' => false,
+        'omitido_whatsapp' => false,
+        'omitido_correo' => false
+    );
+
+    $MVis_Cod = isset($_POST['MVis_Cod']) ? trim((string) $_POST['MVis_Cod']) : '';
+    $canal = isset($_POST['canal']) ? strtolower(trim((string) $_POST['canal'])) : 'ambos';
+    if (!in_array($canal, array('whatsapp', 'correo', 'ambos'), true)) {
+        $canal = 'ambos';
+    }
+
+    if ($MVis_Cod === '') {
+        $resp['message'] = 'No se recibió el código del visitante.';
+        responderJsonLimpio($resp);
+    }
+
+    $visitante = $obBD_con1->getRowConsulta(17, array($MVis_Cod), $obBD_conexion);
+    if (empty($visitante)) {
+        $resp['message'] = 'No se encontró el visitante indicado.';
+        responderJsonLimpio($resp);
+    }
+    $obBD_con1->utf8_change_param($visitante);
+
+    $prsNom = isset($visitante['Prs_Nom']) ? trim((string) $visitante['Prs_Nom']) : '';
+    $prsApe = isset($visitante['Prs_Ape']) ? trim((string) $visitante['Prs_Ape']) : '';
+    $nombre = isset($visitante['nombre']) ? trim((string) $visitante['nombre']) : '';
+    if ($nombre === '') {
+        $nombre = trim($prsNom . ' ' . $prsApe);
+    }
+    $cedula = isset($visitante['Prs_Ced']) ? trim((string) $visitante['Prs_Ced']) : '';
+    $telefono = '';
+    if (!empty($visitante['Prs_Tel_Base'])) {
+        $telefono = trim((string) $visitante['Prs_Tel_Base']);
+    } elseif (!empty($visitante['MVis_Tem'])) {
+        $telefono = trim((string) $visitante['MVis_Tem']);
+    }
+    $correo = isset($visitante['Prs_Cor']) ? trim((string) $visitante['Prs_Cor']) : '';
+    if ($correo !== '' && !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+        $correo = '';
+    }
+
+    $manEve = isset($visitante['Man_Eve']) ? trim((string) $visitante['Man_Eve']) : '';
+    if ($manEve === '' && !empty($_POST['Man_Eve'])) {
+        $manEve = trim((string) $_POST['Man_Eve']);
+    }
+    $evData = man_cert_asistencia_resolver_evento($obBD_con1, $obBD_conexion, $manEve !== '' ? $manEve : null);
+    $nombreEvento = $evData['nombre'];
+
+    $pdfParams = man_cert_asistencia_armar_params($prsNom, $prsApe, $cedula, $evData);
+    $pdfPath = man_cert_asistencia_generar_pdf($pdfParams);
+    if ($pdfPath === false || !is_file($pdfPath)) {
+        $resp['message'] = 'No se pudo generar el PDF del certificado.';
+        responderJsonLimpio($resp);
+    }
+
+    $pdfBase64 = base64_encode(file_get_contents($pdfPath));
+    $pdfNombre = 'Certificado_Asistencia_' . preg_replace('/[^a-zA-Z0-9_-]/', '', $cedula !== '' ? $cedula : 'visitante') . '.pdf';
+
+    $lineas = array();
+    $lineas[] = 'Gracias por su asistencia. Adjuntamos su certificado de participación en PDF.';
+    $lineas[] = '';
+    $lineas[] = 'Datos registrados:';
+    if ($nombre !== '') {
+        $lineas[] = '- Nombre: ' . $nombre;
+    }
+    if ($cedula !== '') {
+        $lineas[] = '- Cédula: ' . $cedula;
+    }
+    if ($nombreEvento !== '') {
+        $lineas[] = '- Evento: ' . $nombreEvento;
+    }
+    $mensaje = implode("\n", $lineas);
+    $asunto = 'Certificado de asistencia' . ($nombreEvento !== '' ? ' - ' . $nombreEvento : ' - Relavera');
+
+    $detalle = array();
+    $enviarWa = ($canal === 'whatsapp' || $canal === 'ambos');
+    $enviarMail = ($canal === 'correo' || $canal === 'ambos');
+
+    if ($enviarWa) {
+        $telWa = relavera_whatsapp_normalizar_numero_ec($telefono);
+        if ($telWa === '') {
+            $resp['omitido_whatsapp'] = true;
+            $detalle[] = 'WhatsApp omitido (sin teléfono válido)';
+        } else {
+            $okWa = relavera_enviar_whatsapp_documento_notif($telWa, $pdfBase64, $pdfNombre, $mensaje);
+            $resp['whatsapp'] = (bool) $okWa;
+            $detalle[] = $okWa ? 'WhatsApp enviado (PDF)' : 'WhatsApp falló';
+        }
+    }
+
+    if ($enviarMail) {
+        if ($correo === '') {
+            $resp['omitido_correo'] = true;
+            $detalle[] = 'Correo omitido (sin email válido)';
+        } else {
+            $okMail = relavera_notif_enviar_correo_notif(
+                $correo,
+                $nombre,
+                $asunto,
+                $mensaje,
+                null,
+                array('ruta' => $pdfPath, 'nombre' => $pdfNombre)
+            );
+            $resp['correo'] = (bool) $okMail;
+            $detalle[] = $okMail ? 'Correo enviado (PDF adjunto)' : 'Correo falló';
+        }
+    }
+
+    @unlink($pdfPath);
+
+    $resp['success'] = ($resp['whatsapp'] || $resp['correo']);
+    if ($resp['success']) {
+        $resp['message'] = 'Certificado PDF notificado: ' . implode('. ', $detalle) . '.';
+    } else {
+        $resp['message'] = 'No se pudo enviar el PDF. ' . implode('. ', $detalle) . '.';
+    }
+    responderJsonLimpio($resp);
+}
+
 // 8. Listar Vehículos
 if (isset($_REQUEST['listVehiculosGridAjax'])) {
     $req = array_merge($_GET, $_POST);
@@ -1363,6 +1394,11 @@ if (isset($_POST['anularVehiculoAjax'])) {
                             <i class="glyphicon glyphicon-user icon-tab"></i>Choferes
                         </a>
                     </li>
+                    <li role="presentation">
+                        <a href="#tabEventos" aria-controls="tabEventos" role="tab" data-toggle="tab">
+                            <i class="glyphicon glyphicon-calendar icon-tab"></i>Eventos
+                        </a>
+                    </li>
                     <!-- <li role="presentation">
                         <a href="#tabVehiculos" aria-controls="tabVehiculos" role="tab" data-toggle="tab">
                             <i class="glyphicon glyphicon-road icon-tab"></i>Vehículos
@@ -1473,6 +1509,70 @@ if (isset($_POST['anularVehiculoAjax'])) {
                         <div class="exa-ui-grid-host">
                             <table id="gridChoferes"></table>
                             <div id="gridChoferesPager"></div>
+                        </div>
+                    </div>
+
+                    <!-- ==================== TAB EVENTOS ==================== -->
+                    <div role="tabpanel" class="tab-pane" id="tabEventos">
+                        <div class="row" style="margin-top: 5px; margin-bottom: 10px;">
+                            <div class="col-xs-12">
+                                <fieldset class="exa-fieldset">
+                                    <legend class="Titulos2">Personas / Visitantes del evento</legend>
+                                    <form id="filtroVisitantesEventoForm" class="form-horizontal normal" onsubmit="event.preventDefault(); actualizarGridVisitantesEvento();">
+                                        <div class="form-group" style="margin-bottom: 8px;">
+                                            <label class="control-label label-xs" style="float: left; width: 100px; text-align: right; padding-right: 8px; line-height: 32px;">Evento:</label>
+                                            <div style="float: left; width: 420px; max-width: 100%;">
+                                                <select id="selMan_Eve" name="Man_Eve" class="form-control input-xs select-wide chosen-select" data-placeholder="Seleccione un evento..." style="height: 32px; font-size: 12px;">
+                                                    <option value="">Seleccione un evento...</option>
+                                                    <?php
+                                                    $eventoPreseleccionado = !empty($idEventoVigente) ? $idEventoVigente : '';
+                                                    foreach ($eventosCatalogo as $evRow) {
+                                                        $evId = isset($evRow['Man_Eve']) ? $evRow['Man_Eve'] : '';
+                                                        if ($evId === '' || $evId === null) {
+                                                            continue;
+                                                        }
+                                                        $evNom = isset($evRow['Man_ENom']) ? $evRow['Man_ENom'] : ('Evento #' . $evId);
+                                                        $evFei = !empty($evRow['Man_EFei']) ? $evRow['Man_EFei'] : '';
+                                                        $evVig = (isset($evRow['Man_Vig']) && strtoupper($evRow['Man_Vig']) === 'S') ? ' [VIGENTE]' : '';
+                                                        $label = $evNom;
+                                                        if ($evFei !== '') {
+                                                            $label .= ' (' . $evFei . ')';
+                                                        }
+                                                        $label .= $evVig;
+                                                        $sel = ((string)$eventoPreseleccionado !== '' && (string)$eventoPreseleccionado === (string)$evId) ? ' selected' : '';
+                                                        echo '<option value="' . htmlspecialchars($evId, ENT_QUOTES, 'UTF-8') . '"' . $sel . '>' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</option>';
+                                                    }
+                                                    ?>
+                                                </select>
+                                            </div>
+                                            <label class="control-label label-xs" style="float: left; width: 90px; text-align: right; padding-right: 8px; margin-left: 20px; line-height: 32px;">Filtrar Por:</label>
+                                            <div class="radioset opt_search" style="float: left;">
+                                                <input id="radVisEve1" name="op_opciones" type="radio" value="d" checked="" onclick="setfocus(this.form.search)" />
+                                                <label for="radVisEve1">Nombre</label>
+                                                <input id="radVisEve2" name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" />
+                                                <label for="radVisEve2">Cédula</label>
+                                            </div>
+                                        </div>
+                                        <div style="margin-top: 6px; margin-bottom: 4px; display: flex; align-items: center; width: 100%; clear: both;">
+                                            <label class="control-label label-xs" style="width: 100px; text-align: right; padding-right: 8px; margin-bottom: 0; line-height: 32px; flex-shrink: 0;">Búsqueda:</label>
+                                            <div style="width: 450px; max-width: 100%;">
+                                                <div class="input-group">
+                                                    <input name="search" type="text" maxlength="50" placeholder="Ingrese búsqueda..." class="form-control clearable" style="height: 32px; font-size: 12px;" onkeydown="if (event.keyCode === 13) { event.preventDefault(); actualizarGridVisitantesEvento(); }" />
+                                                    <span class="input-group-btn">
+                                                        <button type="button" onclick="actualizarGridVisitantesEvento();" class="btn btn-success" style="height: 32px; font-size: 12px;" title="Buscar personas">
+                                                            <span class="glyphicon glyphicon-search"></span> Buscar
+                                                        </button>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </fieldset>
+                            </div>
+                        </div>
+                        <div class="exa-ui-grid-host">
+                            <table id="gridVisitantesEvento"></table>
+                            <div id="gridVisitantesEventoPager"></div>
                         </div>
                     </div>
 
@@ -2371,7 +2471,7 @@ if (isset($_POST['anularVehiculoAjax'])) {
     <!-- JS Scripts Inclusion con parámetro de cache-busting -->
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=32"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=38"></script>
 </body>
 
 </html>

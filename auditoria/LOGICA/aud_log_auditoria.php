@@ -325,21 +325,16 @@ class Class_Log_Datos_Aud extends MysqlDatos{
 	 * @param Class_Log_Conexion $obBD_conexion
 	 * @return number
 	 */
-	function guardarInicioSesion($Ses_Int, $Ses_Usu_Cod,$obBD_conexion){
-		
+	
+	 function guardarInicioSesion($Ses_Int, $Ses_Usu_Cod,$obBD_conexion){
 		$this->inicio_transaccion($obBD_conexion->conexion);
-		
 		/**
 		 * Obtener la ultima secuencia
 		 */
 		$row = $this->getRowConsulta($this->sentencias(6, $this->parametros($Ses_Usu_Cod)), $obBD_conexion);
-		
 		$Ses_Cod = $row['Ses_Cod'] > 0 ? $row['Ses_Cod'] : 1; 
-		
 		$this->grabarv_registros($this->sentencias(7, $this->parametros($Ses_Cod.'*'.$Ses_Usu_Cod.'*'.$Ses_Int)),$obBD_conexion->conexion);
-		
 		$this->fin_transaccion_nomsn($obBD_conexion->conexion);
-		
 		return $Ses_Cod;
 	}
 	
