@@ -94,23 +94,37 @@ echo "Base URL: $baseUrl\n\n";
 
 // 1. Login
 echo "--- 1. Login ---\n";
-testCase('Login', '/', 'ajax_empresas2=true&ajax_username=22600781');
-testCase('Login (no data)', '/', '');
-testCase('Login (partial)', '/', 'ajax_empresas2=true');
+testCase('Login (con usuario)', '/', 'ajax_empresas2=true&ajax_username=22600781');
+testCase('Login (sin AJAX = pagina HTML)', '/', '', 200, false);
+testCase('Login (AJAX parcial)', '/', 'ajax_empresas2=true');
 
 // 2. Router check
 echo "\n--- 2. Server ---\n";
 testCase('Home GET', '/', null, 200, false);
 
-// Now the API
+// 3. API Auth (endpoints reales de api/v1/auth/auth.php)
 echo "\n--- 3. API Auth ---\n";
-testCase('API auth/login', '/api/v1/auth/auth.php/login', json_encode([
-    'usu_username' => '22600781',
-    'usu_password' => 'test123*'
+$empresas = testCase('API auth/empresas', '/api/v1/auth/empresas', json_encode([
+    'username' => '22600781',
 ]), 200, true);
+$empresaName = '';
+if (is_array($empresas) && !empty($empresas['empresas']) && isset($empresas['success']) && $empresas['success']) {
+    $empresaName = $empresas['empresas'][0]['Emp_Nom'] ?? '';
+}
+if ($empresaName !== '') {
+    testCase('API auth/login (credenciales de prueba)', '/api/v1/auth/login', json_encode([
+        'username' => '22600781',
+        'password' => 'test123*',
+        'empresa' => $empresaName,
+    ]), 200, true);
+} else {
+    testCase('API auth/login (parametros incompletos)', '/api/v1/auth/login', json_encode([
+        'username' => '22600781',
+    ]), 400, true);
+}
 
 echo "\n--- 4. Admin ---\n";
-testCase('Admin check session', '/administrador/FRONT/adm_con_control_1.2.php', 'ajax_check=true');
+testCase('Admin check session (sin sesion redirige a login)', '/administrador/FRONT/adm_con_control_1.2.php', 'ajax_check=true', 302, false);
 
 echo "\n\n=== Results ===\n";
 echo "Passed: $passed\nFailed: $failed\n\n";
