@@ -82,6 +82,7 @@ function adq_dashboard_esc($text) {
 $obBD_conexion = new Class_Log_Conexion_Global($Ses_Dat_Dis);
 $obBD_con1 = new MysqlDatos($obBD_conexion);
 $wf_mgr = new wf_manager_log($Ses_Dat_Dis);
+$wf_mgr->ensureUtf8Charset();
 $obBD_adq = new adq_adquisiciones_log($obBD_conexion);
 
 // Inhabilitar / rehabilitar proceso (monitor Todos los Procesos)
@@ -96,6 +97,19 @@ if (isset($_POST['ajax_toggle_proceso_inhabilitado']) || isset($_GET['ajax_toggl
     $comentario = isset($_POST['comentario']) ? trim((string)$_POST['comentario']) : '';
     $inhabilitar = ($accion !== 'habilitar');
     $res = $obBD_adq->setProcesoInhabilitado($sol_cod, intval($Ses_Emp_Cod), $inhabilitar, $comentario);
+    echo json_encode($res);
+    exit;
+}
+
+// Anular flujo modelo (nodos Nod_Est = I)
+if (isset($_POST['ajax_anular_flujo']) || isset($_GET['ajax_anular_flujo'])) {
+    header('Content-Type: application/json; charset=UTF-8');
+    if (!$wf_mgr->verificarAccesoVentana('dashboard', 'dashboard_general')) {
+        echo json_encode(array('success' => false, 'message' => 'Acceso denegado.'));
+        exit;
+    }
+    $wfm_cod = intval(isset($_POST['wfm_cod']) ? $_POST['wfm_cod'] : (isset($_GET['wfm_cod']) ? $_GET['wfm_cod'] : 0));
+    $res = $wf_mgr->anularFlujoModelo($wfm_cod, intval($Ses_Emp_Cod));
     echo json_encode($res);
     exit;
 }
@@ -143,13 +157,13 @@ if (isset($_GET['ajax_descargar_docs_zip'])) {
     exit;
 }
 
-// Verificar acceso a la ventana 'dashboard' y pestaña 'dashboard_general'
+// Verificar acceso a la ventana 'dashboard' y pesta?a 'dashboard_general'
 if (!$wf_mgr->verificarAccesoVentana('dashboard', 'dashboard_general')) {
     echo "<div class='alert alert-danger m-3'>Acceso denegado. No tiene permisos para ver esta ventana.</div>";
     exit;
 }
 
-// 1. Estadísticas de Resumen
+// 1. Estad?sticas de Resumen
 $stats = $obBD_con1->getRowConsultaSql("
     SELECT 
         COUNT(CASE WHEN Sol_Est = 'E' THEN 1 END) as Activos,
@@ -170,7 +184,7 @@ $cuellos = $obBD_con1->getArrayConsultaSql("
     GROUP BY n.Nod_Nom, d.Wde_Des
     ORDER BY Total DESC;", $obBD_conexion);
 
-// 3. Ranking de Departamentos por SLA de atención
+// 3. Ranking de Departamentos por SLA de atenci?n
 $departamentos_ranking = $obBD_con1->getArrayConsultaSql("
     SELECT d.Wde_Des AS Dep_Des,
            COUNT(h.Isn_Cod) as Resoluciones,
@@ -182,7 +196,7 @@ $departamentos_ranking = $obBD_con1->getArrayConsultaSql("
     GROUP BY d.Wde_Des
     ORDER BY Tiempo_Atencion ASC;", $obBD_conexion);
 
-// 4. Volúmenes Mensuales de Solicitudes
+// 4. Vol?menes Mensuales de Solicitudes
 $volumenes = $obBD_con1->getArrayConsultaSql("
     SELECT DATE_FORMAT(Sol_Fec, '%Y-%m') as Mes, COUNT(Sol_Cod) as Total, SUM(Sol_Val_Est) as Monto
     FROM adq_solicitudes
@@ -222,7 +236,7 @@ $procesos_total = 0;
 $procesos_pages = 1;
 
 if ($es_gerencial_admin) {
-    // Calcular métricas de SLA generales para todos los procesos activos
+    // Calcular m?tricas de SLA generales para todos los procesos activos
     $sql_metrics = "
         SELECT i.Ins_Fec_Ini, COALESCE(s.Sol_Tiempo_Est, tr.Trq_Tiempo_Est) AS Sla_Dias
         FROM wf_instancias i
@@ -281,7 +295,7 @@ if ($es_gerencial_admin) {
         $where_clauses[] = "s.Trq_Cod = $filtro_tipo";
     }
 
-    // Categoría SLA en SQL (misma lógica del semáforo) para filtrar/paginar en BD.
+    // Categor?a SLA en SQL (misma l?gica del sem?foro) para filtrar/paginar en BD.
     $sla_sql_expr = "(
         CASE
             WHEN COALESCE(s.Sol_Tiempo_Est, tr.Trq_Tiempo_Est) IS NULL
@@ -366,6 +380,36 @@ if ($es_gerencial_admin) {
         }
         $procesos[$idx]['Paso_Cant'] = $prog['texto'];
     }
+}
+
+// Flujos modelo para tab Flujos
+$filtro_flujo_est = isset($_GET['filtro_flujo_est']) ? trim((string)$_GET['filtro_flujo_est']) : 'A';
+if (!in_array($filtro_flujo_est, array('A', 'I', 'T'), true)) {
+    $filtro_flujo_est = 'A';
+}
+$buscar_flujo = isset($_GET['buscar_flujo']) ? trim((string)$_GET['buscar_flujo']) : '';
+$flujos_dashboard_all = $wf_mgr->listarFlujosDashboard(intval($Ses_Emp_Cod));
+wf_manager_log::utf8EnsureDeep($buscar_flujo);
+$flujos_dashboard = array();
+foreach ($flujos_dashboard_all as $f) {
+    $anulado = !empty($f['anulado']);
+    if ($filtro_flujo_est === 'A' && $anulado) {
+        continue;
+    }
+    if ($filtro_flujo_est === 'I' && !$anulado) {
+        continue;
+    }
+    if ($buscar_flujo !== '') {
+        $nom = isset($f['Wfm_Nom']) ? (string)$f['Wfm_Nom'] : '';
+        $des = isset($f['Wfm_Des']) ? (string)$f['Wfm_Des'] : '';
+        $hay = (function_exists('mb_stripos')
+            ? (mb_stripos($nom, $buscar_flujo, 0, 'UTF-8') !== false || mb_stripos($des, $buscar_flujo, 0, 'UTF-8') !== false)
+            : (stripos($nom, $buscar_flujo) !== false || stripos($des, $buscar_flujo) !== false));
+        if (!$hay) {
+            continue;
+        }
+    }
+    $flujos_dashboard[] = $f;
 }
 
 if (isset($_GET['ajax_exportar_procesos_pdf'])) {
@@ -787,19 +831,22 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
             <div class="exa-ui-page-view">
         <ul class="nav nav-tabs exa-ui-nav-tabs" id="dashboardTabs" role="tablist">
             <li role="presentation" class="active">
-                <a href="#metrics-panel" id="metrics-tab" role="tab" data-toggle="tab"><i class="bi bi-bar-chart-line"></i> Métricas Generales</a>
+                <a href="#metrics-panel" id="metrics-tab" role="tab" data-toggle="tab"><i class="bi bi-bar-chart-line"></i> M?tricas Generales</a>
             </li>
             <li role="presentation">
                 <a href="#all-processes-panel" id="all-processes-tab" role="tab" data-toggle="tab"><i class="bi bi-collection-play"></i> Todos los Procesos</a>
             </li>
+            <li role="presentation">
+                <a href="#flujos-panel" id="flujos-tab" role="tab" data-toggle="tab"><i class="bi bi-diagram-3"></i> Flujos</a>
+            </li>
         </ul>
 
         <div class="tab-content exa-ui-tab-content panels-area" id="dashboardTabsContent">
-            <!-- 1. MÉTRICAS GENERALES -->
+            <!-- 1. M?TRICAS GENERALES -->
             <div class="tab-pane active" id="metrics-panel" role="tabpanel">
                 <div class="exa-adq-kpi-row">
                     <div class="exa-adq-kpi kpi-primary">
-                        <span class="kpi-label">Procesos en ejecución</span>
+                        <span class="kpi-label">Procesos en ejecuci?n</span>
                         <span class="kpi-value"><?php echo $stats['Activos']; ?></span>
                     </div>
                     <div class="exa-adq-kpi kpi-success">
@@ -812,7 +859,7 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
                     </div>
                     <div class="exa-adq-kpi kpi-danger">
                         <span class="kpi-label">Tiempo promedio ciclo</span>
-                        <span class="kpi-value"><?php echo number_format($stats['Tiempo_Promedio'], 1); ?> <small>Días</small></span>
+                        <span class="kpi-value"><?php echo number_format($stats['Tiempo_Promedio'], 1); ?> <small>D?as</small></span>
                     </div>
                 </div>
 
@@ -863,7 +910,7 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
                             </thead>
                             <tbody>
                                 <?php if (empty($departamentos_ranking)) { ?>
-                                    <tr class="text-center"><td colspan="3" class="text-muted py-3">No se han registrado transacciones de workflow aprobadas aún.</td></tr>
+                                    <tr class="text-center"><td colspan="3" class="text-muted py-3">No se han registrado transacciones de workflow aprobadas a?n.</td></tr>
                                 <?php } else {
                                     foreach ($departamentos_ranking as $r) { ?>
                                         <tr class="text-center">
@@ -879,16 +926,16 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
                 </div>
             </div>
 
-            <!-- 3. Evolución del Gasto -->
+            <!-- 3. Evoluci?n del Gasto -->
             <div class="col-12">
                 <div class="exa-adq-section">
-                    <h5 class="exa-adq-section-title"><i class="bi bi-calendar-event text-primary"></i> Volúmenes de Gasto de los Últimos 6 Meses</h5>
+                    <h5 class="exa-adq-section-title"><i class="bi bi-calendar-event text-primary"></i> Vol?menes de Gasto de los ?ltimos 6 Meses</h5>
                     <div class="exa-adq-table-wrap">
                         <table class="table table-bordered exa-adq-table">
                             <thead>
                                 <tr>
                                     <th>Mes Calendario</th>
-                                    <th>Total Requerimientos de Adquisición</th>
+                                    <th>Total Requerimientos de Adquisici?n</th>
                                     <th>Presupuesto Total Estimado</th>
                                 </tr>
                             </thead>
@@ -918,7 +965,7 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
             <div class="alert alert-warning m-4 text-center">
                 <i class="bi bi-shield-slash fs-1 d-block mb-2"></i>
                 <h5 class="fw-bold">Acceso Restringido</h5>
-                <p class="mb-0">Esta sección es de uso exclusivo para perfiles gerenciales, directores o administradores del sistema.</p>
+                <p class="mb-0">Esta secci?n es de uso exclusivo para perfiles gerenciales, directores o administradores del sistema.</p>
             </div>
         <?php } else { ?>
             <!-- Tarjetas de Resumen SLA -->
@@ -1012,8 +1059,8 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
                     <table class="table table-bordered exa-adq-table adq-table-paginated">
                         <thead>
                             <tr>
-                                <th>Nº Sol.</th>
-                                <th>Fecha Emisión</th>
+                                <th>N? Sol.</th>
+                                <th>Fecha Emisi?n</th>
                                 <th>Solicitante</th>
                                 <th>Tipo Requerimiento</th>
                                 <th>Monto Est.</th>
@@ -1021,8 +1068,8 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
                                 <th>Responsable</th>
                                 <th>Estado</th>
                                 <th style="width:70px;" title="Paso actual / total">Avance</th>
-                                <th>SLA Semáforo</th>
-                                <th>Acción</th>
+                                <th>SLA Sem?foro</th>
+                                <th>Acci?n</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1110,6 +1157,100 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
             </div>
         <?php } ?>
     </div>
+
+            <!-- 3. FLUJOS MODELO -->
+            <div class="tab-pane" id="flujos-panel" role="tabpanel">
+                <div class="exa-adq-section">
+                    <h5 class="exa-adq-section-title"><i class="bi bi-diagram-3 text-primary"></i> Flujos de trabajo</h5>
+                    <p class="text-muted" style="margin:0 0 12px 0;font-size:12px;">
+                        Lista de flujos modelo. Al anular, todos los nodos del flujo quedan con <strong>Nod_Est = I</strong> (inactivo) y el flujo deja de estar disponible para nuevas solicitudes.
+                    </p>
+                    <form method="GET" action="adq_dashboard.php" class="exa-adq-filter-bar" id="frmFiltrosFlujos" style="margin-bottom:14px;">
+                        <input type="hidden" name="tab" value="flujos">
+                        <div class="filter-item">
+                            <label>Estado</label>
+                            <select class="form-control input-sm" name="filtro_flujo_est" id="filtroFlujoEst">
+                                <option value="A" <?php echo $filtro_flujo_est === 'A' ? 'selected' : ''; ?>>Activos</option>
+                                <option value="I" <?php echo $filtro_flujo_est === 'I' ? 'selected' : ''; ?>>Inactivos (anulados)</option>
+                                <option value="T" <?php echo $filtro_flujo_est === 'T' ? 'selected' : ''; ?>>Todos</option>
+                            </select>
+                        </div>
+                        <div class="filter-item" style="flex:1 1 240px;min-width:200px;">
+                            <label>Buscar por nombre</label>
+                            <input type="text" class="form-control input-sm" name="buscar_flujo" id="buscarFlujo"
+                                   value="<?php echo adq_dashboard_esc($buscar_flujo); ?>"
+                                   placeholder="Nombre o descripci&oacute;n del flujo">
+                        </div>
+                        <div class="filter-item" style="align-self:flex-end;">
+                            <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-search"></i> Buscar</button>
+                            <a href="adq_dashboard.php?tab=flujos" class="btn btn-default btn-sm"><i class="bi bi-x-circle"></i> Limpiar</a>
+                        </div>
+                    </form>
+                    <div class="text-muted" style="font-size:11px;margin-bottom:8px;">
+                        Mostrando <?php echo count($flujos_dashboard); ?> de <?php echo count($flujos_dashboard_all); ?> flujo(s)
+                    </div>
+                    <div class="exa-adq-table-wrap">
+                        <table class="table table-bordered exa-adq-table" id="tblFlujosDashboard">
+                            <thead>
+                                <tr>
+                                    <th style="width:70px;">C&oacute;d.</th>
+                                    <th>Nombre</th>
+                                    <th>Descripci&oacute;n</th>
+                                    <th>Departamento</th>
+                                    <th style="width:80px;">Versi&oacute;n</th>
+                                    <th style="width:110px;">Nodos activos</th>
+                                    <th style="width:120px;">Estado</th>
+                                    <th style="width:130px;">Acci&oacute;n</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($flujos_dashboard)) { ?>
+                                    <tr class="exa-adq-empty text-center"><td colspan="8">No hay flujos con los filtros seleccionados.</td></tr>
+                                <?php } else {
+                                    foreach ($flujos_dashboard as $f) {
+                                        $anulado = !empty($f['anulado']);
+                                        $inst_act = intval(isset($f['instancias_activas']) ? $f['instancias_activas'] : 0);
+                                        $nom_esc = adq_dashboard_esc($f['Wfm_Nom']);
+                                        $des_txt = isset($f['Wfm_Des']) ? trim((string)$f['Wfm_Des']) : '';
+                                        ?>
+                                        <tr class="text-center<?php echo $anulado ? ' adq-proceso-inhabilitado' : ''; ?>" data-wfm="<?php echo intval($f['Wfm_Cod']); ?>">
+                                            <td class="font-monospace"><?php echo intval($f['Wfm_Cod']); ?></td>
+                                            <td class="text-start"><strong><?php echo $nom_esc; ?></strong></td>
+                                            <td class="text-start"><?php echo $des_txt !== '' ? adq_dashboard_esc($des_txt) : '<span class="text-muted">&mdash;</span>'; ?></td>
+                                            <td><?php echo adq_dashboard_esc($f['Dep_Des'] !== '' ? $f['Dep_Des'] : '[General]'); ?></td>
+                                            <td>v<?php echo intval($f['Wfm_Version']); ?></td>
+                                            <td><?php echo intval($f['Nodos_Activos']); ?> / <?php echo intval($f['Nodos_Total']); ?></td>
+                                            <td>
+                                                <?php if ($anulado) { ?>
+                                                    <span class="badge bg-danger">Inactivo</span>
+                                                <?php } else { ?>
+                                                    <span class="badge bg-success">Activo</span>
+                                                    <?php if ($inst_act > 0) { ?>
+                                                        <div class="text-muted" style="font-size:10px;margin-top:3px;"><?php echo $inst_act; ?> en ejecuci&oacute;n</div>
+                                                    <?php } ?>
+                                                <?php } ?>
+                                            </td>
+                                            <td>
+                                                <?php if ($anulado) { ?>
+                                                    <span class="text-muted" style="font-size:11px;">Sin acci&oacute;n</span>
+                                                <?php } else { ?>
+                                                    <button type="button" class="btn btn-danger btn-xs btn-anular-flujo"
+                                                        title="<?php echo $inst_act > 0 ? 'Hay procesos en ejecucion; no se puede anular' : 'Anular flujo (Nod_Est = I)'; ?>"
+                                                        data-wfm-cod="<?php echo intval($f['Wfm_Cod']); ?>"
+                                                        data-wfm-nom="<?php echo adq_dashboard_esc($f['Wfm_Nom']); ?>"
+                                                        data-inst="<?php echo $inst_act; ?>">
+                                                        <i class="bi bi-ban"></i> Anular
+                                                    </button>
+                                                <?php } ?>
+                                            </td>
+                                        </tr>
+                                    <?php }
+                                } ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
             </div>
         </div>
@@ -1140,7 +1281,7 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
                 </div>
             </div>
             <div class="modal-body adq-seg-modal-body" id="seguimientoModalBody">
-                <!-- Contenido AJAX se inyecta aquí -->
+                <!-- Contenido AJAX se inyecta aqu? -->
             </div>
             <div class="modal-footer adq-seg-modal-footer">
                 <span class="adq-seg-modal-hint text-muted"><i class="bi bi-info-circle"></i> Clic en un nodo de la l&iacute;nea de tiempo para ver sus tareas</span>
@@ -1332,7 +1473,7 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
         const $actions = $('#adqAlertActions').empty();
         if (opts.confirmacion) {
             const $cancel = $('<button type="button" class="btn btn-default">Cancelar</button>');
-            const $ok = $('<button type="button" class="btn btn-danger">Sí, anular</button>');
+            const $ok = $('<button type="button" class="btn btn-danger">S?, anular</button>');
             if (opts.confirmText) {
                 $ok.text(opts.confirmText);
             }
@@ -1360,19 +1501,77 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
         $ov.addClass('is-visible').attr('aria-hidden', 'false');
     }
 
+
+    function anularFlujoDashboard(wfmCod, wfmNom, instActivas) {
+        wfmCod = parseInt(wfmCod, 10) || 0;
+        instActivas = parseInt(instActivas, 10) || 0;
+        if (wfmCod <= 0) {
+            return;
+        }
+        if (instActivas > 0) {
+            mostrarAlertaCentro({
+                tipo: 'error',
+                titulo: 'No se puede anular',
+                mensaje: 'El flujo "' + wfmNom + '" tiene ' + instActivas + ' proceso(s) en ejecucion. Finalice o anule esos procesos primero.'
+            });
+            return;
+        }
+        mostrarAlertaCentro({
+            tipo: 'warn',
+            titulo: 'Anular flujo',
+            mensaje: '?Desea anular el flujo "' + wfmNom + '"?\n\nTodos sus nodos quedar?n con Nod_Est = I (inactivo) y el flujo no estar? disponible para nuevas solicitudes.',
+            confirmacion: true,
+            confirmText: 'S?, anular',
+            confirmClass: 'btn-danger',
+            onConfirm: function() {
+                $.post('adq_dashboard.php', {
+                    ajax_anular_flujo: 1,
+                    wfm_cod: wfmCod
+                }, function(res) {
+                    if (!res || !res.success) {
+                        mostrarAlertaCentro({
+                            tipo: 'error',
+                            titulo: 'No se pudo anular',
+                            mensaje: (res && res.message) ? res.message : 'No se pudo anular el flujo.'
+                        });
+                        return;
+                    }
+                    mostrarAlertaCentro({
+                        tipo: 'ok',
+                        titulo: 'Flujo anulado',
+                        mensaje: res.message || 'Flujo anulado correctamente.',
+                        onClose: function() {
+                            const params = new URLSearchParams(window.location.search);
+                            params.set('tab', 'flujos');
+                            if (!params.has('filtro_flujo_est')) {
+                                params.set('filtro_flujo_est', 'A');
+                            }
+                            window.location.search = params.toString();
+                        }
+                    });
+                }, 'json').fail(function() {
+                    mostrarAlertaCentro({
+                        tipo: 'error',
+                        titulo: 'Error de red',
+                        mensaje: 'No se pudo conectar con el servidor. Intente nuevamente.'
+                    });
+                });
+            }
+        });
+    }
     function toggleProcesoInhabilitado(solCod, solNum, inhabilitar) {
         const accion = inhabilitar ? 'inhabilitar' : 'habilitar';
         const titulo = inhabilitar ? 'Anular proceso' : 'Habilitar proceso';
         const mensaje = inhabilitar
-            ? ('¿Desea anular el proceso #' + solNum + '?\n\nQuedará solo en consulta y no se podrá avanzar el workflow.')
-            : ('¿Desea habilitar nuevamente el proceso #' + solNum + '?\n\nPodrá continuar su flujo normal.');
+            ? ('?Desea anular el proceso #' + solNum + '?\n\nQuedar? solo en consulta y no se podr? avanzar el workflow.')
+            : ('?Desea habilitar nuevamente el proceso #' + solNum + '?\n\nPodr? continuar su flujo normal.');
 
         mostrarAlertaCentro({
             tipo: inhabilitar ? 'warn' : 'info',
             titulo: titulo,
             mensaje: mensaje,
             confirmacion: true,
-            confirmText: inhabilitar ? 'Sí, anular' : 'Sí, habilitar',
+            confirmText: inhabilitar ? 'S?, anular' : 'S?, habilitar',
             confirmClass: inhabilitar ? 'btn-danger' : 'btn-success',
             onConfirm: function() {
                 $.post('adq_dashboard.php', {
@@ -1390,7 +1589,7 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
                     }
                     mostrarAlertaCentro({
                         tipo: 'ok',
-                        titulo: 'Operación exitosa',
+                        titulo: 'Operaci?n exitosa',
                         mensaje: res.message || 'Proceso actualizado.',
                         onClose: function() {
                             const params = new URLSearchParams(window.location.search);
@@ -1413,7 +1612,7 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
         currentSolCod = solCod;
         const tituloNum = solNum || solCod;
         $('#lblSeguimientoTitle').text('Requerimiento #' + tituloNum);
-        $('#lblSeguimientoSub').text('Seguimiento operativo · SLA · Documentos del proceso');
+        $('#lblSeguimientoSub').text('Seguimiento operativo ? SLA ? Documentos del proceso');
         $('#seguimientoModalBody').html(
             '<div class="adq-seg-loading">'
             + '<div class="adq-seg-loading-spinner"></div>'
@@ -1534,12 +1733,27 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
     }
 
     $(document).ready(function() {
-        // Activar pestaña específica por URL si se solicita
+        // Activar pesta?a espec?fica por URL si se solicita
         const urlParams = new URLSearchParams(window.location.search);
         const tab = urlParams.get('tab');
         if (tab === 'todos_procesos') {
             $('a[href="#all-processes-panel"]').tab('show');
+        } else if (tab === 'flujos') {
+            $('a[href="#flujos-panel"]').tab('show');
         }
+
+        $(document).on('click', '.btn-anular-flujo', function() {
+            const $btn = $(this);
+            anularFlujoDashboard(
+                $btn.attr('data-wfm-cod'),
+                $btn.attr('data-wfm-nom') || '',
+                $btn.attr('data-inst')
+            );
+        });
+
+        $(document).on('change', '#filtroFlujoEst', function() {
+            $('#frmFiltrosFlujos').submit();
+        });
 
         renderPagerProcesosServidor();
         $(document).on('change', '#panelProcesosDashboard .adq-table-page-size', function() {

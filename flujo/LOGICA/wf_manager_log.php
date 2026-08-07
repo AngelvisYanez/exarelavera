@@ -1754,6 +1754,114 @@ class wf_manager_log {
         return $resultado;
     }
 
+    /**
+     * Lista flujos de la empresa para el dashboard (activos y anulados).
+     * Estado operativo segun nodos: Activo si hay Nod_Est='A'; Anulado si todos estan en 'I'.
+     */
+    public function listarFlujosDashboard($emp_cod) {
+        $this->ensureVersioningSchema();
+        $emp_cod = intval($emp_cod);
+        if ($emp_cod <= 0) {
+            return array();
+        }
+
+        $rows = $this->obBD_datos->getArrayConsultaSql(
+            "SELECT w.Wfm_Cod, w.Wfm_Nom, w.Wfm_Des, w.Wfm_Est, w.Wfm_Version,
+                    COALESCE(w.Wfm_Fam_Cod, w.Wfm_Cod) AS Wfm_Fam_Cod,
+                    IFNULL(d.Wde_Des, '') AS Dep_Des,
+                    SUM(CASE WHEN n.Nod_Est = 'A' THEN 1 ELSE 0 END) AS Nodos_Activos,
+                    COUNT(n.Nod_Cod) AS Nodos_Total
+             FROM wf_flujos_modelos w
+             LEFT JOIN wf_departamentos d ON d.Wde_Cod = w.Wde_Cod
+             LEFT JOIN wf_nodos n ON n.Wfm_Cod = w.Wfm_Cod
+             WHERE w.Emp_Cod = $emp_cod
+               AND w.Wfm_Est IN ('P', 'A', 'B', 'I')
+             GROUP BY w.Wfm_Cod, w.Wfm_Nom, w.Wfm_Des, w.Wfm_Est, w.Wfm_Version,
+                      COALESCE(w.Wfm_Fam_Cod, w.Wfm_Cod), d.Wde_Des
+             ORDER BY w.Wfm_Nom ASC, w.Wfm_Version DESC;",
+            $this->obBD_conexion
+        );
+        if (empty($rows)) {
+            return array();
+        }
+
+        $resultado = array();
+        foreach ($rows as $r) {
+            $nodos_act = intval(isset($r['Nodos_Activos']) ? $r['Nodos_Activos'] : 0);
+            $wfm_est = isset($r['Wfm_Est']) ? $r['Wfm_Est'] : '';
+            $anulado = ($wfm_est === 'I') || ($nodos_act <= 0 && intval($r['Nodos_Total']) > 0);
+            // Sin nodos y no marcado I: tratar como activo vacio (recien creado).
+            if (intval($r['Nodos_Total']) <= 0 && $wfm_est !== 'I') {
+                $anulado = false;
+            }
+            $resultado[] = array(
+                'Wfm_Cod' => intval($r['Wfm_Cod']),
+                'Wfm_Nom' => isset($r['Wfm_Nom']) ? $r['Wfm_Nom'] : '',
+                'Wfm_Des' => isset($r['Wfm_Des']) ? $r['Wfm_Des'] : '',
+                'Wfm_Est' => $wfm_est,
+                'Wfm_Version' => intval(isset($r['Wfm_Version']) ? $r['Wfm_Version'] : 1),
+                'Wfm_Fam_Cod' => intval($r['Wfm_Fam_Cod']),
+                'Dep_Des' => isset($r['Dep_Des']) ? $r['Dep_Des'] : '',
+                'Nodos_Activos' => $nodos_act,
+                'Nodos_Total' => intval($r['Nodos_Total']),
+                'anulado' => $anulado,
+                'instancias_activas' => $this->contarInstanciasActivasFamilia(intval($r['Wfm_Fam_Cod']))
+            );
+        }
+        self::utf8EnsureDeep($resultado);
+        return $resultado;
+    }
+
+    /**
+     * Anula un flujo modelo: deja todos sus nodos con Nod_Est = 'I'
+     * y marca el modelo como inactivo (Wfm_Est = 'I') para que no se use.
+     */
+    public function anularFlujoModelo($wfm_cod, $emp_cod) {
+        $this->ensureVersioningSchema();
+        $wfm_cod = intval($wfm_cod);
+        $emp_cod = intval($emp_cod);
+        if ($wfm_cod <= 0 || $emp_cod <= 0) {
+            return array('success' => false, 'message' => 'Flujo invalido.');
+        }
+
+        $flujo = $this->obBD_datos->getRowConsultaSql(
+            "SELECT Wfm_Cod, Wfm_Nom, Wfm_Est, COALESCE(Wfm_Fam_Cod, Wfm_Cod) AS Wfm_Fam_Cod
+             FROM wf_flujos_modelos
+             WHERE Wfm_Cod = $wfm_cod AND Emp_Cod = $emp_cod
+             LIMIT 1;",
+            $this->obBD_conexion
+        );
+        if (empty($flujo['Wfm_Cod'])) {
+            return array('success' => false, 'message' => 'No se encontro el flujo o no pertenece a su empresa.');
+        }
+
+        $activos = $this->contarInstanciasActivasFamilia(intval($flujo['Wfm_Fam_Cod']));
+        if ($activos > 0) {
+            return array(
+                'success' => false,
+                'message' => 'No se puede anular: hay ' . $activos . ' proceso(s) en ejecucion usando este flujo. Finalice o anule esos procesos primero.'
+            );
+        }
+
+        $cnt_act = $this->obBD_datos->getRowConsultaSql(
+            "SELECT COUNT(*) AS Q FROM wf_nodos WHERE Wfm_Cod = $wfm_cod AND Nod_Est = 'A';",
+            $this->obBD_conexion
+        );
+        $ya_sin_activos = empty($cnt_act['Q']) || intval($cnt_act['Q']) <= 0;
+        if ($ya_sin_activos && isset($flujo['Wfm_Est']) && $flujo['Wfm_Est'] === 'I') {
+            return array('success' => false, 'message' => 'Este flujo ya esta anulado.');
+        }
+
+        $this->ejecutarSql("UPDATE wf_nodos SET Nod_Est = 'I' WHERE Wfm_Cod = $wfm_cod AND Nod_Est = 'A';");
+        $this->ejecutarSql("UPDATE wf_flujos_modelos SET Wfm_Est = 'I' WHERE Wfm_Cod = $wfm_cod AND Emp_Cod = $emp_cod;");
+
+        $nom = isset($flujo['Wfm_Nom']) ? $flujo['Wfm_Nom'] : ('#' . $wfm_cod);
+        return array(
+            'success' => true,
+            'message' => 'Flujo "' . $nom . '" anulado. Los nodos quedaron con estado I (inactivo).'
+        );
+    }
+
     public function etiquetaFlujoListado($flow) {
         $etiqueta = $flow['Wfm_Nom'] . ' (v' . intval($flow['Wfm_Version']) . ')';
         if (!empty($flow['es_borrador'])) {
