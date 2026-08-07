@@ -514,11 +514,13 @@ if (isset($listEmpresasTransporteGridAjax)) {
         $data['limits'] = $pagination['limits'];
         $response['rows'] = $obBD_con1->getArrayConsulta(4, $data, $obBD_conexion);
         $obBD_con1->utf8_change_param($response['rows']);
-    } else {
-        $response['rows'] = array();
     }
-    // Obtener historial completo de eventos
+    $obBD_con1->echoJson($response);
+}
+
+// Obtener historial completo de eventos
 if (isset($_POST['getHistorialEventosAjax'])) {
+
     $resp = array('success' => true, 'data' => array());
     try {
         $sql = "SELECT Man_Eve, Man_ENom, Man_EFei, Man_EFef, Man_EEst,
