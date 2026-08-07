@@ -1110,7 +1110,7 @@ function renderFotoDobleCell(pathAnv, pathRev, tituloAnv, tituloRev, esNoAplica)
   }
 
   var excelTexto = (anv && rev) ? "SI" : "NO";
-  var htmlExcel = '<span style="display:none !important;">' + excelTexto + '</span>';
+  var htmlExcel = '<span class="excel-val" style="font-size: 0px; line-height: 0; opacity: 0; display: inline-block; width: 0; height: 0; overflow: hidden;">' + excelTexto + '</span>';
 
   return '<div style="text-align:center;">' + htmlAnv + htmlRev + htmlExcel + '</div>';
 }
@@ -1130,6 +1130,10 @@ function initGridChoferes() {
       "Tipo Registro",
       "Cédula",
       "Foto Cédula",
+      "Cédula Anverso",
+      "Cédula Reverso",
+      "Papeleta Votación",
+      "Foto Perfil",
       "Nombres",
       "Teléfono",
       "Tipo Sangre",
@@ -1137,6 +1141,14 @@ function initGridChoferes() {
       "Caducidad",
       "Estado Lic.",
       "Foto Licencia",
+      "Licencia Anverso",
+      "Licencia Reverso",
+      "Licencia Digital",
+      "Antecedentes Penales",
+      "Certificado Sangre",
+      "Adjunto Cap. Básica",
+      "Adjunto Cap. Mat. Peligrosas",
+      "Adjunto Cap. Otra",
       "Planta",
       "Pla_Cod",
       "Estado",
@@ -1168,6 +1180,50 @@ function initGridChoferes() {
         sortable: false,
         formatter: function (cellvalue, options, rowObject) {
           return renderFotoDobleCell(rowObject.Cho_Doc_Ced, rowObject.Cho_Doc_Ced_Rev, "Cédula Anverso", "Cédula Reverso", false);
+        },
+      },
+      {
+        name: "cho_doc_ced_anv_val",
+        index: "cho_doc_ced_anv_val",
+        width: 100,
+        align: "center",
+        hidden: true,
+        formatter: function (cellvalue, options, rowObject) {
+          var val = rowObject.Cho_Doc_Ced;
+          return (val && String(val).trim() !== "" && String(val).trim() !== "null" && String(val).trim() !== "undefined") ? "SI" : "NO";
+        },
+      },
+      {
+        name: "cho_doc_ced_rev_val",
+        index: "cho_doc_ced_rev_val",
+        width: 100,
+        align: "center",
+        hidden: true,
+        formatter: function (cellvalue, options, rowObject) {
+          var val = rowObject.Cho_Doc_Ced_Rev;
+          return (val && String(val).trim() !== "" && String(val).trim() !== "null" && String(val).trim() !== "undefined") ? "SI" : "NO";
+        },
+      },
+      {
+        name: "cho_doc_vot_val",
+        index: "cho_doc_vot_val",
+        width: 100,
+        align: "center",
+        hidden: true,
+        formatter: function (cellvalue, options, rowObject) {
+          var val = rowObject.Cho_Doc_Vot;
+          return (val && String(val).trim() !== "" && String(val).trim() !== "null" && String(val).trim() !== "undefined") ? "SI" : "NO";
+        },
+      },
+      {
+        name: "cho_doc_fot_val",
+        index: "cho_doc_fot_val",
+        width: 100,
+        align: "center",
+        hidden: true,
+        formatter: function (cellvalue, options, rowObject) {
+          var val = rowObject.Cho_Doc_Fot;
+          return (val && String(val).trim() !== "" && String(val).trim() !== "null" && String(val).trim() !== "undefined") ? "SI" : "NO";
         },
       },
       { name: "nombre", index: "nombre", width: 190, align: "left" },
@@ -1239,6 +1295,103 @@ function initGridChoferes() {
         },
       },
       {
+        name: "cho_img_lic_anv_val",
+        index: "cho_img_lic_anv_val",
+        width: 100,
+        align: "center",
+        hidden: true,
+        formatter: function (cellvalue, options, rowObject) {
+          if (rowObject.tipo_registro === "VISITANTE") return "N/A";
+          var tli = String(rowObject.Cho_Tli || "").trim().toUpperCase();
+          if (tli === "NP" || tli === "NOP" || tli === "NO POSEE") return "N/A";
+          var val = rowObject.Cho_Img_Lic_Anv;
+          return (val && String(val).trim() !== "" && String(val).trim() !== "null" && String(val).trim() !== "undefined") ? "SI" : "NO";
+        },
+      },
+      {
+        name: "cho_img_lic_rev_val",
+        index: "cho_img_lic_rev_val",
+        width: 100,
+        align: "center",
+        hidden: true,
+        formatter: function (cellvalue, options, rowObject) {
+          if (rowObject.tipo_registro === "VISITANTE") return "N/A";
+          var tli = String(rowObject.Cho_Tli || "").trim().toUpperCase();
+          if (tli === "NP" || tli === "NOP" || tli === "NO POSEE") return "N/A";
+          var val = rowObject.Cho_Img_Lic_Rev;
+          return (val && String(val).trim() !== "" && String(val).trim() !== "null" && String(val).trim() !== "undefined") ? "SI" : "NO";
+        },
+      },
+      {
+        name: "cho_doc_ldi_val",
+        index: "cho_doc_ldi_val",
+        width: 100,
+        align: "center",
+        hidden: true,
+        formatter: function (cellvalue, options, rowObject) {
+          if (rowObject.tipo_registro === "VISITANTE") return "N/A";
+          var tli = String(rowObject.Cho_Tli || "").trim().toUpperCase();
+          if (tli === "NP" || tli === "NOP" || tli === "NO POSEE") return "N/A";
+          var val = rowObject.Cho_Doc_Ldi;
+          return (val && String(val).trim() !== "" && String(val).trim() !== "null" && String(val).trim() !== "undefined") ? "SI" : "NO";
+        },
+      },
+      {
+        name: "cho_doc_ant_val",
+        index: "cho_doc_ant_val",
+        width: 100,
+        align: "center",
+        hidden: true,
+        formatter: function (cellvalue, options, rowObject) {
+          var val = rowObject.Cho_Doc_Ant;
+          return (val && String(val).trim() !== "" && String(val).trim() !== "null" && String(val).trim() !== "undefined") ? "SI" : "NO";
+        },
+      },
+      {
+        name: "cho_doc_san_val",
+        index: "cho_doc_san_val",
+        width: 100,
+        align: "center",
+        hidden: true,
+        formatter: function (cellvalue, options, rowObject) {
+          var val = rowObject.Cho_Doc_San;
+          return (val && String(val).trim() !== "" && String(val).trim() !== "null" && String(val).trim() !== "undefined") ? "SI" : "NO";
+        },
+      },
+      {
+        name: "cap_bas_adj_val",
+        index: "cap_bas_adj_val",
+        width: 100,
+        align: "center",
+        hidden: true,
+        formatter: function (cellvalue, options, rowObject) {
+          var val = rowObject.Cap_Bas_Adj;
+          return (val && String(val).trim() !== "" && String(val).trim() !== "null" && String(val).trim() !== "undefined") ? "SI" : "NO";
+        },
+      },
+      {
+        name: "cap_mat_adj_val",
+        index: "cap_mat_adj_val",
+        width: 100,
+        align: "center",
+        hidden: true,
+        formatter: function (cellvalue, options, rowObject) {
+          var val = rowObject.Cap_Mat_Adj;
+          return (val && String(val).trim() !== "" && String(val).trim() !== "null" && String(val).trim() !== "undefined") ? "SI" : "NO";
+        },
+      },
+      {
+        name: "cap_otr_adj_val",
+        index: "cap_otr_adj_val",
+        width: 100,
+        align: "center",
+        hidden: true,
+        formatter: function (cellvalue, options, rowObject) {
+          var val = rowObject.Cap_Otr_Adj;
+          return (val && String(val).trim() !== "" && String(val).trim() !== "null" && String(val).trim() !== "undefined") ? "SI" : "NO";
+        },
+      },
+      {
         name: "Pla_Nom",
         index: "Pla_Nom",
         width: 140,
@@ -1262,25 +1415,35 @@ function initGridChoferes() {
       {
         name: "acciones",
         index: "acciones",
-        width: 150,
+        width: 175,
         align: "center",
         sortable: false,
         formatter: function (cellvalue, options, rowObject) {
+          var prsNom = String(rowObject.Prs_Nom || "").replace(/'/g, "\\'");
+          var prsApe = String(rowObject.Prs_Ape || "").replace(/'/g, "\\'");
+          var prsCed = String(rowObject.Prs_Ced || "").replace(/'/g, "\\'");
+
           if (rowObject.tipo_registro === "VISITANTE") {
             var editBtn =
               '<button type="button" class="btn btn-info btn-xs" onclick="abrirModalVisitante(' +
               rowObject.MVis_Cod +
               ')" title="Editar Visitante"><i class="glyphicon glyphicon-pencil"></i></button> ';
+            var certBtn =
+              '<button type="button" class="btn btn-warning btn-xs" onclick="visualizarCertificadoPDF(\'' +
+              prsNom + '\', \'' + prsApe + '\', \'' + prsCed + '\', 1)" title="Ver Certificado PDF"><i class="glyphicon glyphicon-certificate"></i></button> ';
             var deleteBtn =
               '<button type="button" class="btn btn-danger btn-xs" onclick="anularVisitanteGrid(' +
               rowObject.MVis_Cod +
               ')" title="Anular Visitante"><i class="glyphicon glyphicon-trash"></i></button>';
-            return editBtn + deleteBtn;
+            return editBtn + certBtn + deleteBtn;
           } else {
             var editBtn =
               '<button type="button" class="btn btn-primary btn-xs" onclick="abrirModalChofer(' +
               rowObject.Cho_Cod +
               ')" title="Editar Chofer"><i class="glyphicon glyphicon-pencil"></i></button> ';
+            var certBtn =
+              '<button type="button" class="btn btn-warning btn-xs" onclick="visualizarCertificadoPDF(\'' +
+              prsNom + '\', \'' + prsApe + '\', \'' + prsCed + '\', 0)" title="Ver Certificado PDF"><i class="glyphicon glyphicon-certificate"></i></button> ';
             var sendBtn =
               '<button type="button" class="btn btn-success btn-xs btn-enviar-notif-chofer" id="btnEnviarChofer_' +
               rowObject.Cho_Cod +
@@ -1291,10 +1454,11 @@ function initGridChoferes() {
               '<button type="button" class="btn btn-danger btn-xs" onclick="anularChoferGrid(' +
               rowObject.Cho_Cod +
               ')" title="Anular Chofer"><i class="glyphicon glyphicon-trash"></i></button>';
-            return editBtn + sendBtn + deleteBtn;
+            return editBtn + certBtn + sendBtn + deleteBtn;
           }
         },
       },
+
     ],
     rownumbers: true,
     rownumWidth: 40,
@@ -1330,6 +1494,13 @@ function initGridChoferes() {
       title: "Exportar a Excel",
       onClickButton: function () {
         if ($("#loader").length) $("#loader").show();
+        var colsOcultas = [
+          "cho_doc_ced_anv_val", "cho_doc_ced_rev_val", "cho_doc_vot_val", "cho_doc_fot_val",
+          "cho_img_lic_anv_val", "cho_img_lic_rev_val", "cho_doc_ldi_val", "cho_doc_ant_val",
+          "cho_doc_san_val", "cap_bas_adj_val", "cap_mat_adj_val", "cap_otr_adj_val"
+        ];
+        $grid.jqGrid("showCol", colsOcultas);
+
         if (
           $.fn.jqGrid &&
           typeof $grid.jqGrid("exportGridExcel") === "function"
@@ -1342,6 +1513,8 @@ function initGridChoferes() {
             removeCols: ["acciones"],
           });
         }
+
+        $grid.jqGrid("hideCol", colsOcultas);
       },
     });
 }
@@ -1511,8 +1684,10 @@ function limpiarFormularioChofer() {
   $("#MVis_Cod").val("");
   $("#Vis_Cod").val("");
   $("#Prs_Cod").val("");
-  $("#Man_Eve").val("");
+  var eveVig = $("#hdn_man_eve_vigente").val() || "";
+  $("#Man_Eve").val(eveVig);
   $("#MVis_Obs").val("");
+
   $("#Vis_Obs").val("");
   $("#Cho_Edad").val("");
   $("#Cho_Ced").removeData("prevLoadedCed");
@@ -1824,7 +1999,8 @@ function poblarFormularioVisitante(row) {
     calcularEdad(row.Prs_Fec);
   }
 
-  $("#Man_Eve").val(row.Man_Eve || "");
+  $("#Man_Eve").val(row.Man_Eve || $("#hdn_man_eve_vigente").val() || "");
+
   $("#Cho_Nac").val(row.MVis_Nac || row.Vis_Nac || "Ecuatoriana");
   $("#Cho_Eci").val(row.MVis_Eci || row.Vis_Eci || "Soltero/a");
   $("#Cho_Tsa").val(row.MVis_Tsa || row.Vis_Tsa || "");
@@ -2623,3 +2799,16 @@ function verQrVehiculo(Veh_Cod, Veh_Pla) {
 function setfocus(elem) {
   if (elem) elem.focus();
 }
+
+function visualizarCertificadoPDF(rowNom, rowApe, rowCed, rowIsVis) {
+  var nom = rowNom || $.trim($("#Prs_Nom").val()) || "Nombre Ejemplo";
+  var ape = rowApe || $.trim($("#Prs_Ape").val()) || "Apellido Ejemplo";
+  var ced = rowCed || $.trim($("#Cho_Ced").val()) || "1100000000";
+  var isVis = (rowIsVis !== undefined) ? (rowIsVis ? 1 : 0) : ($("#chk_es_visitante").is(":checked") ? 1 : 0);
+
+  var baseUrl = (window.location.href || "").split("#")[0].split("?")[0];
+  var url = baseUrl + "?verCertificadoPdfAjax=1&Prs_Nom=" + encodeURIComponent(nom) + "&Prs_Ape=" + encodeURIComponent(ape) + "&Prs_Ced=" + encodeURIComponent(ced) + "&es_visitante=" + isVis;
+
+  window.open(url, "_blank", "width=1100,height=800,scrollbars=yes,resizable=yes");
+}
+

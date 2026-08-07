@@ -17,12 +17,238 @@ require_once(__DIR__ . '/../LOGICA/relavera_notif_mail_utils.php');
 $obBD_conexion = new Class_Log_Conexion_Datos_Choferes_Vehiculos($Ses_Dat_Dis);
 $obBD_con1 = new Class_Log_Datos_Choferes_Vehiculos;
 
+/* ==========================================================================
+   VISUALIZADOR / IMPRESOR DE CERTIFICADO EN PDF (PLANTILLA ECOPARK MINING)
+   ========================================================================== */
+if (isset($_GET['verCertificadoPdfAjax'])) {
+    $prsNom = isset($_GET['Prs_Nom']) ? trim($_GET['Prs_Nom']) : 'Nombres';
+    $prsApe = isset($_GET['Prs_Ape']) ? trim($_GET['Prs_Ape']) : 'Apellidos';
+    $prsCed = isset($_GET['Prs_Ced']) ? trim($_GET['Prs_Ced']) : '1100000000';
+    $esVis = isset($_GET['es_visitante']) && $_GET['es_visitante'] == '1';
+    
+    $nombrePersona = trim($prsNom . ' ' . $prsApe);
+    if (empty($nombrePersona) || $nombrePersona === 'Nombres Apellidos') {
+        $nombrePersona = 'Juan Carlos Pérez';
+    }
+
+    $nombreEvento = 'Capacitación en Seguridad Industrial y Ambiental';
+    $horasEvento = '6';
+    $fechaEventoTexto = 'sábado 08 de agosto de 2026';
+
+    try {
+        $resEv = $obBD_con1->consulta("SELECT Man_ENom, COALESCE(Man_EHor, 6) AS Man_EHor, Man_EFei FROM manifiesto_evento WHERE Man_Vig = 'S' AND Man_EEst = 'A' LIMIT 1", $obBD_conexion->conexion);
+        if ($resEv && ($rowEv = $obBD_con1->fetch_assoc($resEv))) {
+            if (!empty($rowEv['Man_ENom'])) $nombreEvento = trim($rowEv['Man_ENom']);
+            if (!empty($rowEv['Man_EHor'])) $horasEvento = trim($rowEv['Man_EHor']);
+            if (!empty($rowEv['Man_EFei'])) {
+                $tsEv = strtotime($rowEv['Man_EFei']);
+                $diasSemana = array('domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado');
+                $mesesNom = array('enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre');
+                $diaSem = $diasSemana[date('w', $tsEv)];
+                $numDia = date('d', $tsEv);
+                $mesNom = $mesesNom[(int)date('m', $tsEv) - 1];
+                $anioNum = date('Y', $tsEv);
+                $fechaEventoTexto = "$diaSem $numDia de $mesNom de $anioNum";
+            }
+        }
+    } catch (Exception $e) {}
+
+    $mesesAct = array('enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre');
+    $fechaEmisionStr = 'Portovelo, El Oro, ' . date('d') . ' de ' . $mesesAct[(int)date('m') - 1] . ' de ' . date('Y') . '.';
+    ?>
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>Certificado de Asistencia - <?php echo htmlspecialchars($nombrePersona); ?></title>
+        <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+        <style>
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            body { background: #e2e8f0; font-family: 'Montserrat', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; color: #0f172a; }
+            
+            .no-print-bar { width: 1020px; max-width: 100%; display: flex; justify-content: space-between; align-items: center; background: #0f172a; color: #fff; padding: 12px 24px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+            .no-print-bar h3 { font-size: 15px; font-weight: 600; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
+            .no-print-bar .btns { display: flex; gap: 10px; }
+            .btn-action { padding: 8px 18px; border: none; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
+            .btn-print { background: #0284c7; color: #fff; }
+            .btn-print:hover { background: #0369a1; }
+            .btn-close { background: #475569; color: #fff; }
+            .btn-close:hover { background: #334155; }
+
+            /* CONTENEDOR CERTIFICADO HORIZONTAL LANDSCAPE (A4: 1020px x 720px) */
+            .cert-canvas { width: 1020px; height: 720px; background: #ffffff; position: relative; border-radius: 4px; box-shadow: 0 14px 40px rgba(0,0,0,0.15); overflow: hidden; padding: 40px 60px; border: 12px solid #0b2545; outline: 3px solid #c5a059; outline-offset: -8px; display: flex; flex-direction: column; justify-content: space-between; text-align: center; }
+
+            /* MARCOS Y CORNER ORNAMENTS */
+            .corner-ornament { position: absolute; width: 45px; height: 45px; border: 2px solid #c5a059; z-index: 4; }
+            .corner-top-left { top: 18px; left: 18px; border-right: none; border-bottom: none; }
+            .corner-top-right { top: 18px; right: 18px; border-left: none; border-bottom: none; }
+            .corner-bottom-left { bottom: 18px; left: 18px; border-right: none; border-top: none; }
+            .corner-bottom-right { bottom: 18px; right: 18px; border-left: none; border-top: none; }
+
+            /* MARCA DE AGUA COMPLETA SIN BORDES BLANCOS */
+            .cert-watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 680px; max-width: 85%; max-height: 80%; object-fit: contain; opacity: 0.14; mix-blend-mode: multiply; pointer-events: none; z-index: 1; filter: contrast(110%); }
+
+            /* SELLO TINTA RUBBER STAMP AUTÉNTICO */
+            .cert-sello-box { position: absolute; left: 140px; bottom: 42px; z-index: 10; pointer-events: none; }
+            .cert-sello-img { width: 135px; height: 135px; object-fit: contain; mix-blend-mode: multiply; filter: contrast(130%) brightness(95%); transform: rotate(-13deg); opacity: 0.90; }
+
+            /* CONTENIDO RELATIVO CON Z-INDEX SUPERIOR */
+            .cert-content { position: relative; z-index: 5; height: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
+
+            /* CABECERA ECOPARKMINING */
+            .company-title { font-family: 'Cinzel', serif; font-size: 26px; font-weight: 900; color: #0b2545; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 2px; }
+            .company-subtitle { font-size: 11px; font-weight: 700; color: #1e3a8a; letter-spacing: 1.5px; text-transform: uppercase; line-height: 1.4; max-width: 650px; margin: 0 auto; }
+
+            .green-divider { margin: 12px auto; width: 75%; display: flex; align-items: center; justify-content: center; gap: 12px; }
+            .green-divider .line { flex: 1; height: 1px; background: #86efac; }
+            .green-divider .leaf-icon { color: #16a34a; font-size: 15px; }
+
+            /* SECCIÓN OTORGA CERTIFICADO */
+            .grant-header { font-size: 12px; font-weight: 700; color: #1e3a8a; letter-spacing: 3px; text-transform: uppercase; margin-top: 4px; margin-bottom: 4px; }
+            .main-cert-title { font-family: 'Cinzel', serif; font-size: 38px; font-weight: 900; color: #0b2545; letter-spacing: 5px; text-transform: uppercase; margin-bottom: 2px; }
+            .sub-cert-title { font-size: 18px; font-weight: 800; color: #16a34a; letter-spacing: 4px; text-transform: uppercase; }
+
+            .dots-divider { color: #16a34a; font-size: 14px; margin: 8px 0 12px 0; letter-spacing: 4px; }
+
+            /* RECEPTOR */
+            .grant-to { font-size: 15px; font-weight: 800; color: #0b2545; margin-bottom: 6px; }
+            .recipient-name { font-size: 26px; font-weight: 900; color: #0b2545; padding-bottom: 4px; border-bottom: 2px solid #0b2545; display: inline-block; min-width: 500px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+            .recipient-cedula { font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 16px; }
+
+            /* PÁRRAFO DE TEXTO EXACTO */
+            .cert-paragraph { font-size: 14px; color: #334155; line-height: 1.75; max-width: 780px; margin: 0 auto 16px auto; text-align: center; }
+            .cert-paragraph strong { color: #0f172a; font-weight: 800; }
+
+            /* UBICACIÓN Y FIRMAS */
+            .bottom-section { width: 100%; display: flex; flex-direction: column; align-items: center; }
+            .location-tag { font-size: 13px; font-weight: 600; color: #334155; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 15px; }
+            .location-tag span { color: #16a34a; }
+
+            /* FIRMAS */
+            .cert-footer { width: 100%; display: flex; justify-content: space-around; align-items: flex-end; padding-bottom: 5px; }
+            .signature-block { width: 260px; text-align: center; }
+            .signature-line { width: 100%; border-top: 2px solid #0b2545; height: 35px; }
+            .signature-role { font-size: 11px; font-weight: 800; color: #0b2545; text-transform: uppercase; }
+            .signature-company { font-size: 10px; color: #64748b; font-weight: 600; }
+
+            @media print {
+                body { background: #fff; padding: 0; }
+                .no-print-bar { display: none !important; }
+                .cert-canvas { box-shadow: none; border-width: 10px; width: 100vw; height: 100vh; padding: 25px; }
+                @page { size: landscape; margin: 0; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="no-print-bar">
+            <h3><i class="glyphicon glyphicon-certificate"></i> Vista Previa del Certificado (ECOPARKMINING S.A.)</h3>
+            <div class="btns">
+                <button class="btn-action btn-print" onclick="window.print();"><i class="glyphicon glyphicon-print"></i> Imprimir / PDF</button>
+                <button class="btn-action btn-close" onclick="window.close();"><i class="glyphicon glyphicon-remove"></i> Cerrar</button>
+            </div>
+        </div>
+
+        <div class="cert-canvas">
+            <!-- MARCOS DE ESQUINA -->
+            <div class="corner-ornament corner-top-left"></div>
+            <div class="corner-ornament corner-top-right"></div>
+            <div class="corner-ornament corner-bottom-left"></div>
+            <div class="corner-ornament corner-bottom-right"></div>
+
+            <!-- MARCA DE AGUA EN EL FONDO CON MIX-BLEND-MODE MULTIPLY (SIN RECUADROS BLANCOS) -->
+            <img src="../../imagenes/620/marca_agua.png" class="cert-watermark" alt="Marca de Agua" onerror="this.src='/imagenes/620/marca_agua.png';">
+
+            <!-- SELLO RUBBER STAMP TINTA REALISTA -->
+            <div class="cert-sello-box">
+                <img src="../../imagenes/620/sello.jpg" class="cert-sello-img" alt="Sello Oficial" onerror="this.src='/imagenes/620/sello.jpg';">
+            </div>
+
+            <div class="cert-content">
+                <div>
+                    <!-- CABECERA DE LOGO / EMPRESA -->
+                    <div class="company-title">ECOPARKMINING S.A.</div>
+                    <div class="company-subtitle">PROYECTO AMBIENTAL ASOCIATIVO RELAVERA COMUNITARIA "EL TABLÓN"</div>
+
+                    <div class="green-divider">
+                        <div class="line"></div>
+                        <div class="leaf-icon">🍃</div>
+                        <div class="line"></div>
+                    </div>
+
+                    <!-- TÍTULOS PRINCIPALES -->
+                    <div class="grant-header">OTORGA EL PRESENTE</div>
+                    <div class="main-cert-title">CERTIFICADO</div>
+                    <div class="sub-cert-title">DE ASISTENCIA</div>
+
+                    <div class="dots-divider">• • •</div>
+
+                    <!-- RECEPTOR -->
+                    <div class="grant-to">A:</div>
+                    <div class="recipient-name"><?php echo htmlspecialchars($nombrePersona); ?></div>
+                    <div class="recipient-cedula">C.I.: <strong><?php echo htmlspecialchars($prsCed); ?></strong></div>
+
+                    <!-- PÁRRAFO DE CERTIFICACIÓN EXACTO -->
+                    <div class="cert-paragraph">
+                        Que el Sr. <strong><?php echo htmlspecialchars($nombrePersona); ?></strong> asistió a la capacitación de <strong>Proyecto Ambiental Asociativo Relavera Comunitaria "El Tablón"</strong> el día <strong><?php echo $fechaEventoTexto; ?></strong> con una duración de <strong><?php echo htmlspecialchars($horasEvento); ?> horas</strong> con el tema <strong>"<?php echo htmlspecialchars($nombreEvento); ?>"</strong>.
+                    </div>
+                </div>
+
+                <div class="bottom-section">
+                    <!-- UBICACIÓN Y FECHA DE EMISIÓN -->
+                    <div class="location-tag">
+                        <span>📍</span> <?php echo $fechaEmisionStr; ?>
+                    </div>
+
+                    <!-- FIRMAS EN BLANCO -->
+                    <div class="cert-footer">
+                        <div class="signature-block">
+                            <div class="signature-line"></div>
+                            <div class="signature-role">Gerencia General</div>
+                            <div class="signature-company">ECOPARKMINING S.A.</div>
+                        </div>
+                        <div class="signature-block">
+                            <div class="signature-line"></div>
+                            <div class="signature-role">Área de Capacitación</div>
+                            <div class="signature-company">ECOPARKMINING S.A.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    <?php
+    exit();
+}
+
+
+
+
 // Cargar catálogos iniciales
 $transportes = $obBD_con1->getArrayConsulta(1, array($Ses_Emp_Cod), $obBD_conexion);
 $obBD_con1->utf8_change_param($transportes);
 
 $plantas = $obBD_con1->getArrayConsulta(2, array(), $obBD_conexion);
 $obBD_con1->utf8_change_param($plantas);
+
+// Consultar evento actualmente en vigencia (Man_Vig = 'S') y sus tipos de certificado
+$nombreEventoVigente = '';
+$idEventoVigente = '';
+$certChoEventoVigente = 'IND_CHO';
+$certVisEventoVigente = 'IND_VIS';
+try {
+    $resEv = $obBD_con1->consulta("SELECT Man_Eve, Man_ENom, COALESCE(Man_ECer_Cho, 'IND_CHO') AS Man_ECer_Cho, COALESCE(Man_ECer_Vis, 'IND_VIS') AS Man_ECer_Vis FROM manifiesto_evento WHERE Man_Vig = 'S' AND Man_EEst = 'A' LIMIT 1", $obBD_conexion->conexion);
+    if ($resEv && ($rowEv = $obBD_con1->fetch_assoc($resEv))) {
+        $nombreEventoVigente = trim($rowEv['Man_ENom']);
+        $idEventoVigente = $rowEv['Man_Eve'];
+        $certChoEventoVigente = $rowEv['Man_ECer_Cho'];
+        $certVisEventoVigente = $rowEv['Man_ECer_Vis'];
+    }
+} catch (Exception $e) {
+    // Si no existe la columna o tabla aún, se ignora silenciosamente
+}
+
+
 
 /* ==========================================================================
    FUNCIÓN AUXILIAR DE COMPRESIÓN DE IMÁGENES EN SERVIDOR (PHP GD)
@@ -533,7 +759,20 @@ if (isset($_POST['saveChoferAjax'])) {
                 'MVis_Obs' => $Vis_Obs,
                 'MVis_Est' => 'A'
             );
-            if (!is_null($Man_Eve)) $datosVisitante['Man_Eve'] = $Man_Eve;
+            if (empty($Man_Eve)) {
+                try {
+                    $resEv = $obBD_con1->consulta("SELECT Man_Eve FROM manifiesto_evento WHERE Man_Vig = 'S' AND Man_EEst = 'A' LIMIT 1", $obBD_conexion->conexion);
+                    if ($resEv && ($rowEv = $obBD_con1->fetch_assoc($resEv))) {
+                        $Man_Eve = $rowEv['Man_Eve'];
+                    }
+                } catch (Exception $e) {
+                    // Ignorar silenciosamente
+                }
+            }
+            if (!empty($Man_Eve)) {
+                $datosVisitante['Man_Eve'] = $Man_Eve;
+            }
+
 
             if (isset($uploadedFiles['Cho_Doc_Ced'])) $datosVisitante['MVis_Doc_Ced'] = $uploadedFiles['Cho_Doc_Ced'];
             if (isset($uploadedFiles['Cho_Doc_Ced_Rev'])) $datosVisitante['MVis_Doc_Ced_Rev'] = $uploadedFiles['Cho_Doc_Ced_Rev'];
@@ -1334,15 +1573,34 @@ if (isset($_POST['anularVehiculoAjax'])) {
             <input type="hidden" id="Prs_Cod" name="Prs_Cod">
             <input type="hidden" id="Man_Eve" name="Man_Eve">
 
-            <!-- BANNER SWITCH VISITANTE -->
-            <div class="row" style="margin-bottom: 6px;">
-                <div class="col-xs-12 text-right">
+            <!-- BANNER SWITCH VISITANTE & EVENTO EN VIGENCIA -->
+            <div class="row" style="margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+                <div class="col-xs-7 text-left" style="padding-right: 0;">
+                    <?php if (!empty($nombreEventoVigente)) { ?>
+                        <span id="lbl_evento_vigente" class="label label-info" style="font-size: 11px; padding: 5px 10px; border-radius: 4px; display: inline-block; background-color: #0284c7; color: #fff;" title="Evento en vigencia activo">
+                            <i class="glyphicon glyphicon-bullhorn"></i> Evento "<strong><?php echo htmlspecialchars($nombreEventoVigente); ?></strong>" En Vigencia
+                        </span>
+                        <input type="hidden" id="hdn_man_eve_vigente" value="<?php echo $idEventoVigente; ?>">
+                        <input type="hidden" id="hdn_cert_cho_vigente" value="<?php echo htmlspecialchars($certChoEventoVigente); ?>">
+                        <input type="hidden" id="hdn_cert_vis_vigente" value="<?php echo htmlspecialchars($certVisEventoVigente); ?>">
+                    <?php } else { ?>
+                        <span id="lbl_evento_vigente" class="label label-default" style="font-size: 11px; padding: 5px 10px; border-radius: 4px; display: inline-block; background-color: #64748b; color: #fff;">
+                            <i class="glyphicon glyphicon-calendar"></i> Sin Evento En Vigencia
+                        </span>
+                        <input type="hidden" id="hdn_man_eve_vigente" value="">
+                        <input type="hidden" id="hdn_cert_cho_vigente" value="IND_CHO">
+                        <input type="hidden" id="hdn_cert_vis_vigente" value="IND_VIS">
+                    <?php } ?>
+
+                </div>
+                <div class="col-xs-5 text-right" style="padding-left: 0;">
                     <label class="checkbox-inline" style="font-weight: bold; font-size: 12px; color: #155724; background: #d4edda; padding: 5px 12px; border-radius: 4px; border: 1px solid #c3e6cb; cursor: pointer;">
                         <input type="checkbox" id="chk_es_visitante" name="es_visitante" value="1" onchange="toggleModoVisitante(this.checked);" style="margin-top: 1px;">
                         <i class="glyphicon glyphicon-user"></i> Registrar como Visitante
                     </label>
                 </div>
             </div>
+
 
             <!-- BLOQUE 1: IDENTIFICACIÓN PERSONAL -->
             <div class="row">
@@ -1657,8 +1915,10 @@ if (isset($_POST['anularVehiculoAjax'])) {
 
         <div style="text-align: center; margin-top: 10px; margin-bottom: 5px;">
             <button id="btnGuardarChofer" class="btn btn-primary" type="button" onclick="guardarChofer();"><i class="glyphicon glyphicon-floppy-disk"></i> Guardar Chofer</button>
-            <button class="btn btn-danger" type="button" onclick="$('#choferDialog').dialog('close');"><i class="glyphicon glyphicon-remove"></i> Cancelar</button>
+            <button class="btn btn-danger" type="button" onclick="$('#choferDialog').dialog('close');" style="margin-left: 5px;"><i class="glyphicon glyphicon-remove"></i> Cancelar</button>
         </div>
+
+
     </div>
 
     <!-- Modal Vehículo Completo (Layout Multicolumna 1250px con 6 Fieldsets) -->
@@ -2105,7 +2365,7 @@ if (isset($_POST['anularVehiculoAjax'])) {
     <!-- JS Scripts Inclusion con parámetro de cache-busting -->
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=28"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=32"></script>
 </body>
 
 </html>

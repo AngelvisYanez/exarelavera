@@ -98,10 +98,19 @@ function sentencias_datos_choferes_vehiculos($Nro_Sql, $Par_Sql)
                     chofer.Cho_Est,
                     chofer.Cho_Doc_Ced,
                     chofer.Cho_Doc_Ced_Rev,
+                    chofer.Cho_Doc_Vot,
+                    chofer.Cho_Doc_Fot,
                     chofer.Cho_Img_Lic_Anv,
-                    chofer.Cho_Img_Lic_Rev
+                    chofer.Cho_Img_Lic_Rev,
+                    chofer.Cho_Doc_Ldi,
+                    chofer.Cho_Doc_Ant,
+                    chofer.Cho_Doc_San,
+                    capaci.Cap_Bas_Adj,
+                    capaci.Cap_Mat_Adj,
+                    capaci.Cap_Otr_Adj
                 FROM chofer
                 INNER JOIN persona ON persona.Prs_Cod = chofer.Prs_Cod
+                LEFT JOIN manifiesto_chofer_capaci capaci ON capaci.Cho_Cod = chofer.Cho_Cod
                 INNER JOIN (
                     SELECT MIN(c.Cho_Cod) as min_cho_cod
                     FROM chofer c
