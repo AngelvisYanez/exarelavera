@@ -837,7 +837,7 @@ if (isset($_GET['ajax_exportar_procesos_pdf'])) {
                 <a href="#all-processes-panel" id="all-processes-tab" role="tab" data-toggle="tab"><i class="bi bi-collection-play"></i> Todos los Procesos</a>
             </li>
             <li role="presentation">
-                <a href="#flujos-panel" id="flujos-tab" role="tab" data-toggle="tab"><i class="bi bi-diagram-3"></i> Flujos</a>
+                <a href="#flujos-panel" id="flujos-tab" role="tab" data-toggle="tab"><i class="bi bi-diagram-3"></i> Anular Flujos</a>
             </li>
         </ul>
 
