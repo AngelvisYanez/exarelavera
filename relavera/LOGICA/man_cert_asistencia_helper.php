@@ -80,6 +80,24 @@ if (!function_exists('man_cert_asistencia_normalizar_horas')) {
     }
 }
 
+if (!function_exists('man_cert_resolver_imagen')) {
+    function man_cert_resolver_imagen($nombreArchivo, $empCod = '620')
+    {
+        $docRoot = isset($_SERVER['DOCUMENT_ROOT']) ? rtrim(str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']), '/') : '';
+        $candidatos = array(
+            __DIR__ . '/../../imagenes/' . $empCod . '/' . $nombreArchivo,
+            __DIR__ . '/../imagenes/' . $empCod . '/' . $nombreArchivo,
+            $docRoot ? $docRoot . '/imagenes/' . $empCod . '/' . $nombreArchivo : '',
+        );
+        foreach ($candidatos as $c) {
+            if (!empty($c) && file_exists($c) && is_file($c)) {
+                return $c;
+            }
+        }
+        return false;
+    }
+}
+
 if (!function_exists('man_cert_asistencia_resolver_evento')) {
     function man_cert_asistencia_resolver_evento($obBD, $obConexion, $manEve = null)
     {
@@ -239,10 +257,19 @@ if (!function_exists('man_cert_asistencia_generar_pdf')) {
         $pdf->Line($pageW - $c, $pageH - $c, $pageW - $c - $L, $pageH - $c);
         $pdf->Line($pageW - $c, $pageH - $c, $pageW - $c, $pageH - $c - $L);
 
-        // Marca de agua (sin SetAlpha)
-        $rutaMarca = realpath(__DIR__ . '/../../imagenes/620/marca_agua.png');
-        if ($rutaMarca && is_file($rutaMarca)) {
-            $pdf->Image($rutaMarca, ($pageW / 2) - 35, ($pageH / 2) - 35, 70, 70, '', '', '', false, 150, '', false, false, 0, false, false, false);
+        // Marca de agua tenue en el centro con SetAlpha (no tapa texto)
+        $empCod = isset($params['Emp_Cod']) ? (string)$params['Emp_Cod'] : '620';
+        $rutaMarca = man_cert_resolver_imagen('marca_agua.png', $empCod);
+        if (!$rutaMarca) {
+            $rutaMarca = man_cert_resolver_imagen('relavera.png', $empCod);
+        }
+        if (!$rutaMarca) {
+            $rutaMarca = man_cert_resolver_imagen('logo-completo.png', $empCod);
+        }
+        if ($rutaMarca) {
+            $pdf->SetAlpha(0.12);
+            $pdf->Image($rutaMarca, ($pageW / 2) - 45, ($pageH / 2) - 45, 90, 90, '', '', '', false, 300, '', false, false, 0);
+            $pdf->SetAlpha(1.0);
         }
 
         // === CONTENIDO (mismo orden/texto que el HTML) ===
@@ -331,6 +358,26 @@ if (!function_exists('man_cert_asistencia_generar_pdf')) {
         $pdf->SetLineWidth(0.6);
         $x1 = 55;
         $x2 = $pageW - 125;
+
+        // Firma 1: Gerencia General (firma1.png / firma1.jpg)
+        $rutaFirma1 = man_cert_resolver_imagen('firma1.png', $empCod);
+        if (!$rutaFirma1) {
+            $rutaFirma1 = man_cert_resolver_imagen('firma1.jpg', $empCod);
+        }
+        if ($rutaFirma1) {
+            $pdf->Image($rutaFirma1, $x1 + 12, $yFirmas - 22, 45, 22, '', '', '', false, 300, '', false, false, 0);
+        }
+
+        // Firma 2: Área de Capacitación (firma2.png / firma2.jpg)
+        $rutaFirma2 = man_cert_resolver_imagen('firma2.png', $empCod);
+        if (!$rutaFirma2) {
+            $rutaFirma2 = man_cert_resolver_imagen('firma2.jpg', $empCod);
+        }
+        if ($rutaFirma2) {
+            $pdf->Image($rutaFirma2, $x2 + 12, $yFirmas - 22, 45, 22, '', '', '', false, 300, '', false, false, 0);
+        }
+
+        // Líneas de firma
         $pdf->Line($x1, $yFirmas, $x1 + 70, $yFirmas);
         $pdf->Line($x2, $yFirmas, $x2 + 70, $yFirmas);
 
@@ -349,9 +396,13 @@ if (!function_exists('man_cert_asistencia_generar_pdf')) {
         $pdf->SetX($x2);
         $pdf->Cell(70, 4, 'ECOPARKMINING S.A.', 0, 1, 'C');
 
-        $rutaSello = realpath(__DIR__ . '/../../imagenes/620/sello.jpg');
-        if ($rutaSello && is_file($rutaSello)) {
-            $pdf->Image($rutaSello, 40, $pageH - 55, 28, 28, '', '', '', false, 300, '', false, false, 0);
+        // Sello (sello.png / sello.jpg) en esquina inferior izquierda
+        $rutaSello = man_cert_resolver_imagen('sello.png', $empCod);
+        if (!$rutaSello) {
+            $rutaSello = man_cert_resolver_imagen('sello.jpg', $empCod);
+        }
+        if ($rutaSello) {
+            $pdf->Image($rutaSello, 45, $pageH - 54, 28, 28, '', '', '', false, 300, '', false, false, 0);
         }
 
         $safeCed = preg_replace('/[^a-zA-Z0-9_-]/', '', $prsCed);

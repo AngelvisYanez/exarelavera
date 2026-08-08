@@ -8,12 +8,33 @@
  * @version 2.8
  */
 
+if (!isset($_SESSION)) {
+    @session_start();
+}
+// Fallbacks por defecto si no se ha iniciado sesión (desarrollo local o acceso directo)
+if (empty($_SESSION['Ses_Emp_Cod'])) {
+    $_SESSION['Ses_Emp_Cod'] = '620';
+}
+if (empty($_SESSION['Ses_Dat_Dis'])) {
+    $_SESSION['Ses_Dat_Dis'] = 'ecoparkmining';
+}
+if (empty($_SESSION['Ses_Lis_Per'])) {
+    $_SESSION['Ses_Lis_Per'] = array('2009', '2011', '2017', '2019');
+}
+
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/man_log_datos_choferes_vehiculos.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
 require_once(__DIR__ . '/../LOGICA/relavera_whatsapp_utils.php');
 require_once(__DIR__ . '/../LOGICA/relavera_notif_mail_utils.php');
 require_once(__DIR__ . '/../LOGICA/man_cert_asistencia_helper.php');
+
+if (empty($Ses_Emp_Cod)) {
+    $Ses_Emp_Cod = isset($_SESSION['Ses_Emp_Cod']) ? $_SESSION['Ses_Emp_Cod'] : '620';
+}
+if (empty($Ses_Dat_Dis)) {
+    $Ses_Dat_Dis = isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : 'ecoparkmining';
+}
 
 $obBD_conexion = new Class_Log_Conexion_Datos_Choferes_Vehiculos($Ses_Dat_Dis);
 $obBD_con1 = new Class_Log_Datos_Choferes_Vehiculos;
@@ -59,46 +80,44 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
     $fechaEmisionStr = 'Portovelo, El Oro, ' . date('d') . ' de ' . $mesesAct[(int)date('m') - 1] . ' de ' . date('Y') . '.';
 
     // Carga robusta de imágenes en Base64 para marca de agua, sello, firma1 y firma2
-    $srcWatermark = '../../imagenes/620/marca_agua.png';
-    $pathWM1 = __DIR__ . '/../../imagenes/620/marca_agua.png';
-    $pathWM2 = isset($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] . '/imagenes/620/marca_agua.png' : '';
-    if (file_exists($pathWM1)) {
-        $srcWatermark = 'data:image/png;base64,' . base64_encode(file_get_contents($pathWM1));
-    } elseif (!empty($pathWM2) && file_exists($pathWM2)) {
-        $srcWatermark = 'data:image/png;base64,' . base64_encode(file_get_contents($pathWM2));
+    $fnGetImgData = function($nombreArchivo) {
+        $docRoot = isset($_SERVER['DOCUMENT_ROOT']) ? rtrim(str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']), '/') : '';
+        $paths = array(
+            __DIR__ . '/../../imagenes/620/' . $nombreArchivo,
+            __DIR__ . '/../imagenes/620/' . $nombreArchivo,
+            $docRoot ? $docRoot . '/imagenes/620/' . $nombreArchivo : '',
+        );
+        foreach ($paths as $p) {
+            if (!empty($p) && file_exists($p) && is_file($p)) {
+                $ext = pathinfo($p, PATHINFO_EXTENSION);
+                $mime = ($ext === 'jpg' || $ext === 'jpeg') ? 'image/jpeg' : 'image/png';
+                return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($p));
+            }
+        }
+        return false;
+    };
+
+    $srcWatermark = $fnGetImgData('marca_agua.png');
+    if (!$srcWatermark) {
+        $srcWatermark = $fnGetImgData('relavera.png');
+    }
+    if (!$srcWatermark) {
+        $srcWatermark = '../../imagenes/620/relavera.png';
     }
 
-    $srcSello = '../../imagenes/620/sello.png';
-    $pathSello1 = __DIR__ . '/../../imagenes/620/sello.png';
-    $pathSello2 = isset($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] . '/imagenes/620/sello.png' : '';
-    if (file_exists($pathSello1)) {
-        $srcSello = 'data:image/png;base64,' . base64_encode(file_get_contents($pathSello1));
-    } elseif (!empty($pathSello2) && file_exists($pathSello2)) {
-        $srcSello = 'data:image/png;base64,' . base64_encode(file_get_contents($pathSello2));
+    $srcSello = $fnGetImgData('sello.png');
+    if (!$srcSello) {
+        $srcSello = $fnGetImgData('sello.jpg');
     }
 
-    // Firma 1 (Gerencia General)
-    $srcFirma1 = '../../imagenes/620/firma1.png';
-    $pathFirma1_1 = __DIR__ . '/../../imagenes/620/firma1.png';
-    $pathFirma1_2 = isset($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] . '/imagenes/620/firma1.png' : '';
-    if (file_exists($pathFirma1_1)) {
-        $srcFirma1 = 'data:image/png;base64,' . base64_encode(file_get_contents($pathFirma1_1));
-    } elseif (!empty($pathFirma1_2) && file_exists($pathFirma1_2)) {
-        $srcFirma1 = 'data:image/png;base64,' . base64_encode(file_get_contents($pathFirma1_2));
-    } else {
-        $srcFirma1 = $srcSello;
+    $srcFirma1 = $fnGetImgData('firma1.png');
+    if (!$srcFirma1) {
+        $srcFirma1 = $fnGetImgData('firma1.jpg');
     }
 
-    // Firma 2 (Área de Capacitación)
-    $srcFirma2 = '../../imagenes/620/firma2.png';
-    $pathFirma2_1 = __DIR__ . '/../../imagenes/620/firma2.png';
-    $pathFirma2_2 = isset($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] . '/imagenes/620/firma2.png' : '';
-    if (file_exists($pathFirma2_1)) {
-        $srcFirma2 = 'data:image/png;base64,' . base64_encode(file_get_contents($pathFirma2_1));
-    } elseif (!empty($pathFirma2_2) && file_exists($pathFirma2_2)) {
-        $srcFirma2 = 'data:image/png;base64,' . base64_encode(file_get_contents($pathFirma2_2));
-    } else {
-        $srcFirma2 = $srcSello;
+    $srcFirma2 = $fnGetImgData('firma2.png');
+    if (!$srcFirma2) {
+        $srcFirma2 = $fnGetImgData('firma2.jpg');
     }
     ?>
 
@@ -145,11 +164,6 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
 
             .cert-sello-box-right { position: absolute; right: 185px; bottom: 68px; z-index: 10; pointer-events: none; }
             .cert-sello-img-right { width: 115px; height: 115px; object-fit: contain; transform: rotate(12deg); opacity: 0.92; filter: drop-shadow(0px 2px 5px rgba(0,0,0,0.15)); }
-
-
-
-
-
 
             /* CONTENIDO RELATIVO CON Z-INDEX SUPERIOR */
             .cert-content { position: relative; z-index: 5; height: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
@@ -394,8 +408,10 @@ function optimizarYComprimirImagen($sourcePath, $targetPath, $maxDim = 1920, $qu
 // Función auxiliar para responder JSON limpio sin interferencia de buffers o advertencias de PHP
 function responderJsonLimpio($response)
 {
+    @ini_set('display_errors', '0');
+    @error_reporting(0);
     if (class_exists('DebugBar')) {
-        @DebugBar::sendDataInHeaders(true);
+        @DebugBar::sendDataInHeaders(false);
     }
     while (ob_get_level() > 0) {
         @ob_end_clean();
@@ -1680,7 +1696,7 @@ if (isset($_POST['anularVehiculoAjax'])) {
     <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
     <?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
     <?php require_once("../../mascaras/model3/estilos/estilos.php") ?>
-    <link rel="stylesheet" type="text/css" href="../RECURSOS/datos_choferes_vehiculos.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" type="text/css" href="../RECURSOS/datos_choferes_vehiculos.css?v=1">
 </head>
 
 <body>
@@ -2781,7 +2797,7 @@ if (isset($_POST['anularVehiculoAjax'])) {
     <!-- JS Scripts Inclusion con parámetro de cache-busting -->
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=39"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=38"></script>
 </body>
 
 </html>
