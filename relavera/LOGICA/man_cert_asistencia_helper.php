@@ -349,9 +349,33 @@ if (!function_exists('man_cert_asistencia_generar_pdf')) {
         $pdf->SetX($x2);
         $pdf->Cell(70, 4, 'ECOPARKMINING S.A.', 0, 1, 'C');
 
-        $rutaSello = realpath(__DIR__ . '/../../imagenes/620/sello.jpg');
+        // --- Imagen del Sello y Firmas (igual al HTML) ---
+        $rutaSello = realpath(__DIR__ . '/../../imagenes/620/sello.png');
+        if (!$rutaSello || !is_file($rutaSello)) {
+            $rutaSello = realpath(__DIR__ . '/../../imagenes/620/sello.jpg');
+        }
+
+        // 1. Sello en la esquina inferior izquierda
         if ($rutaSello && is_file($rutaSello)) {
-            $pdf->Image($rutaSello, 40, $pageH - 55, 28, 28, '', '', '', false, 300, '', false, false, 0);
+            $pdf->Image($rutaSello, 15, $pageH - 50, 32, 32, '', '', '', false, 300, '', false, false, 0, false, false, false);
+        }
+
+        // 2. Firma 1 sobre la línea de Gerencia General (Firma del Gerente)
+        $rutaFirma1 = realpath(__DIR__ . '/../../imagenes/620/firma1.png');
+        if (!$rutaFirma1 || !is_file($rutaFirma1)) {
+            $rutaFirma1 = $rutaSello; // Fallback al sello si no hay firma
+        }
+        if ($rutaFirma1 && is_file($rutaFirma1)) {
+            $pdf->Image($rutaFirma1, 72.5, $yFirmas - 23, 35, 25, '', '', '', false, 300, '', false, false, 0, false, false, false);
+        }
+
+        // 3. Firma 2 sobre la línea de Área de Capacitación
+        $rutaFirma2 = realpath(__DIR__ . '/../../imagenes/620/firma2.png');
+        if (!$rutaFirma2 || !is_file($rutaFirma2)) {
+            $rutaFirma2 = $rutaSello; // Fallback al sello si no hay firma
+        }
+        if ($rutaFirma2 && is_file($rutaFirma2)) {
+            $pdf->Image($rutaFirma2, 189.5, $yFirmas - 23, 35, 25, '', '', '', false, 300, '', false, false, 0, false, false, false);
         }
 
         $safeCed = preg_replace('/[^a-zA-Z0-9_-]/', '', $prsCed);
