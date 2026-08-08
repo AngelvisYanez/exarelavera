@@ -59,12 +59,22 @@ if (!function_exists('man_cert_asistencia_normalizar_horas')) {
         if ($valor === '') {
             return '6';
         }
-        if (preg_match('/^(\d{1,2}):\d{2}(:\d{2})?$/', $valor, $m)) {
+        if (preg_match('/^(\d{1,2}):(\d{2})(:\d{2})?$/', $valor, $m)) {
             $h = (int) $m[1];
+            $min = (int) $m[2];
+            if ($min > 0) {
+                return sprintf('%d:%02d', $h, $min);
+            }
             return $h > 0 ? (string) $h : '6';
         }
-        if (is_numeric($valor)) {
-            return (string) (0 + $valor);
+        if (is_numeric(str_replace(',', '.', $valor))) {
+            $v = floatval(str_replace(',', '.', $valor));
+            $h = floor($v);
+            $min = round(($v - $h) * 60);
+            if ($min > 0) {
+                return sprintf('%d:%02d', (int)$h, (int)$min);
+            }
+            return (string) (int)$h;
         }
         return $valor;
     }

@@ -113,6 +113,12 @@ $(function () {
         icon: 'plus-sign'
     });
 
+    $("#eventosDialog").createDialog({
+        width: 700,
+        height: 415,
+        icon: 'calendar'
+    });
+
     // Actualizar nivel de tipo de sanción cuando cambia el select
     $('#Tsa_Cod').on('change', function () {
         var nivel = $(this).find('option:selected').data('nivel');
@@ -574,6 +580,9 @@ function cargarGeneralManifiesto() {
             
             // Cargar estado de la campaña (Select)
             $('#cfg_pla_act_general').val(r.pla_act_general === 'S' ? 'S' : 'N').trigger('change');
+            
+            // Cargar combo de eventos activos y preseleccionar el vigente
+            cargarComboEventosGeneral(r.man_eve_vigente || 0);
         } else {
             $.alert((r && r.message) ? r.message : 'No se pudo cargar la configuración general.');
         }
@@ -590,12 +599,14 @@ function guardarGeneralManifiesto() {
         return;
     }
     var plaAct = $('#cfg_pla_act_general').val();
+    var manEve = $('#cfg_man_eve_general').val() || '0';
     
     var msg = 'Se modificara la configuracion general de manifiestos. ¿Desea continuar?';
     $.createDialogConfirm(msg, {
         saveGeneralManifiestoAjax: 1,
         Pla_Smi_general: v.toFixed(2),
-        Pla_Act_general: plaAct
+        Pla_Act_general: plaAct,
+        Man_Eve_general: manEve
     }, function (data) {
         $('#loader').show();
         var postUrl = (window.location.href || '').split('#')[0];
@@ -618,7 +629,7 @@ function guardarGeneralManifiesto() {
     });
 }
 
-// Inicializar colores del select de campaña
+// Inicializar colores del select de campaña y cargar combo de eventos
 $(document).ready(function() {
     $(document).on('change', '#cfg_pla_act_general', function() {
         var val = $(this).val();
@@ -628,7 +639,216 @@ $(document).ready(function() {
             $(this).css({ 'color': '#ef4444', 'border-color': '#ef4444' });
         }
     });
+
+    // Cargar combo de eventos en tab general
+    if ($('#cfg_man_eve_general').length) {
+        cargarComboEventosGeneral();
+    }
+
+    // Restringir el año en campos de fecha a máximo 4 dígitos (AAAA)
+    $(document).on('input blur change', '#evt_Man_EFei, #evt_Man_EFef, input[type="date"]', function () {
+        var val = $(this).val();
+        if (val) {
+            var parts = val.split('-');
+            if (parts[0] && parts[0].length > 4) {
+                parts[0] = parts[0].substring(0, 4);
+                $(this).val(parts.join('-'));
+            }
+        }
+    });
 });
+
+// ==================== GESTIÓN DE EVENTOS (manifiesto_evento) ====================
+
+function cargarComboEventosGeneral(selectedId) {
+    var postUrl = (window.location.href || '').split('#')[0];
+    $.post(postUrl, { getComboEventosAjax: 1 }, function (r) {
+        if (r && r.success) {
+            var $sel = $('#cfg_man_eve_general');
+            var currVal = selectedId || $sel.val() || '0';
+            $sel.empty();
+            $sel.append('<option value="0">-- Ning&uacute;n Evento Seleccionado --</option>');
+            if (r.data && r.data.length > 0) {
+                $.each(r.data, function (i, evt) {
+                    var label = evt.Man_ENom + ' (' + (evt.Man_EHor || 6) + 'h - ' + evt.Man_EFei + ' - ' + evt.Man_EFef + ')';
+                    $sel.append('<option value="' + evt.Man_Eve + '">' + label + '</option>');
+                });
+            }
+            $sel.val(currVal);
+        }
+    }, 'json');
+}
+
+function abrirModalEventos() {
+    limpiarFormEvento();
+    $('#eventosDialog').dialog('open');
+    cargarHistorialEventos();
+}
+
+function cargarHistorialEventos() {
+    var postUrl = (window.location.href || '').split('#')[0];
+    $('#bodyHistorialEventos').html('<tr><td colspan="7" class="text-center" style="color: #9ca3af; padding: 15px;"><i class="glyphicon glyphicon-refresh spin"></i> Cargando historial...</td></tr>');
+    
+    $.post(postUrl, { getHistorialEventosAjax: 1 }, function (r) {
+        var $body = $('#bodyHistorialEventos');
+        $body.empty();
+        
+        if (r && r.success && r.data && r.data.length > 0) {
+            $.each(r.data, function (i, evt) {
+                var isInactive = (evt.Man_EEst === 'I');
+                var rowStyle = isInactive ? ' style="background-color: #FADDDD !important;"' : '';
+
+                var estBadge = (!isInactive) 
+                    ? '<span class="label label-success" style="font-size: 10px;">ACTIVO</span>' 
+                    : '<span class="label label-danger" style="font-size: 10px;">INACTIVO</span>';
+                
+                var btnToggle = (!isInactive)
+                    ? '<button type="button" class="btn btn-warning btn-xs" onclick="toggleEstadoEvento(' + evt.Man_Eve + ', \'I\');" title="Inactivar Evento"><i class="glyphicon glyphicon-eye-close"></i></button>'
+                    : '<button type="button" class="btn btn-success btn-xs" onclick="toggleEstadoEvento(' + evt.Man_Eve + ', \'A\');" title="Activar Evento"><i class="glyphicon glyphicon-eye-open"></i></button>';
+
+                var isEditable = (evt.Man_EFef === evt.Hoy_YMD);
+                var btnEdit = isEditable
+                    ? "<button type=\"button\" class=\"btn btn-info btn-xs\" onclick=\"editarEvento(" + evt.Man_Eve + ", '" + escapeHtml(evt.Man_ENom) + "', '" + (evt.Man_EHor || 6) + "', '" + evt.Man_EFei + "', '" + evt.Man_EFef + "', '" + evt.Man_EEst + "', '" + evt.Hoy_YMD + "');\" title=\"Editar Evento\" style=\"margin-right: 4px;\"><i class=\"glyphicon glyphicon-pencil\"></i></button>"
+                    : "<button type=\"button\" class=\"btn btn-default btn-xs\" disabled title=\"Solo editable si la fecha fin es hoy\" style=\"margin-right: 4px; opacity: 0.5;\"><i class=\"glyphicon glyphicon-lock\"></i></button>";
+
+                var tr = '<tr' + rowStyle + '>' +
+                    '<td class="text-center"><b>' + evt.Man_Eve + '</b></td>' +
+                    '<td>' + escapeHtml(evt.Man_ENom) + '</td>' +
+                    '<td class="text-center">' + (evt.Man_EHor || 6) + ' hrs</td>' +
+                    '<td class="text-center">' + evt.Man_EFei_Fmt + '</td>' +
+                    '<td class="text-center">' + evt.Man_EFef_Fmt + '</td>' +
+                    '<td class="text-center">' + estBadge + '</td>' +
+                    '<td class="text-center">' + btnEdit + btnToggle + '</td>' +
+                '</tr>';
+
+                $body.append(tr);
+            });
+        } else {
+            $body.html('<tr><td colspan="7" class="text-center" style="color: #6b7280; padding: 15px;">No se encontraron eventos registrados.</td></tr>');
+        }
+    }, 'json').fail(function () {
+        $('#bodyHistorialEventos').html('<tr><td colspan="7" class="text-center text-danger" style="padding: 15px;">Error al cargar el historial.</td></tr>');
+    });
+}
+
+function limpiarFormEvento() {
+    $('#evt_Man_Eve').val('0');
+    $('#evt_Man_ENom').val('');
+    $('#evt_Man_EHor').val('6');
+    $('#evt_Man_EFei').val('');
+    $('#evt_Man_EFef').val('');
+    $('#evt_Man_EEst').val('A');
+}
+
+function editarEvento(id, nom, hor, fei, fef, est, hoyYmd) {
+    if (hoyYmd && fef !== hoyYmd) {
+        $.alert('No se puede editar este evento ya que su fecha fin no corresponde al día de hoy.');
+        return;
+    }
+    $('#evt_Man_Eve').val(id);
+    $('#evt_Man_ENom').val(nom);
+    $('#evt_Man_EHor').val(hor || '6');
+    $('#evt_Man_EFei').val(fei);
+    $('#evt_Man_EFef').val(fef);
+    $('#evt_Man_EEst').val(est);
+}
+
+function guardarEvento() {
+    var id = $('#evt_Man_Eve').val();
+    var nom = $.trim($('#evt_Man_ENom').val());
+    var hor = $.trim($('#evt_Man_EHor').val()) || '6';
+    var fei = $.trim($('#evt_Man_EFei').val());
+    var fef = $.trim($('#evt_Man_EFef').val());
+    var est = $('#evt_Man_EEst').val();
+
+    if (!nom) {
+        $.alert('Por favor ingrese el nombre del evento.');
+        return;
+    }
+    if (!hor || isNaN(hor) || parseInt(hor) <= 0) {
+        $.alert('Por favor ingrese una duración válida en horas.');
+        return;
+    }
+    if (!fei || !fef) {
+        $.alert('Por favor ingrese las fechas de inicio y fin.');
+        return;
+    }
+
+    var feiYear = fei.split('-')[0];
+    var fefYear = fef.split('-')[0];
+    if (!feiYear || feiYear.length !== 4 || isNaN(feiYear)) {
+        $.alert('El año en la fecha de inicio debe tener exactamente 4 dígitos (AAAA).');
+        return;
+    }
+    if (!fefYear || fefYear.length !== 4 || isNaN(fefYear)) {
+        $.alert('El año en la fecha de fin debe tener exactamente 4 dígitos (AAAA).');
+        return;
+    }
+
+    var postUrl = (window.location.href || '').split('#')[0];
+    var payload = {
+        saveEventoAjax: 1,
+        Man_Eve: id,
+        Man_ENom: nom,
+        Man_EHor: hor,
+        Man_EFei: fei,
+        Man_EFef: fef,
+        Man_EEst: est
+    };
+
+    $('#loader').show();
+    $.post(postUrl, payload, function (r) {
+        $('#loader').fadeOut('slow');
+        if (r && r.success) {
+            $.alert(r.message || 'Evento guardado correctamente.');
+            limpiarFormEvento();
+            cargarHistorialEventos();
+            cargarComboEventosGeneral();
+        } else {
+            $.alert((r && r.message) ? r.message : 'Error al guardar evento.');
+        }
+    }, 'json').fail(function () {
+        $('#loader').fadeOut('slow');
+        $.alert('Error de comunicación al guardar el evento.');
+    });
+}
+
+function toggleEstadoEvento(id, nuevoEstado) {
+    var accion = (nuevoEstado === 'A') ? 'activar' : 'inactivar';
+    var msg = '¿Está seguro de que desea ' + accion + ' este evento?';
+    
+    $.createDialogConfirm(msg, {
+        toggleEstadoEventoAjax: 1,
+        Man_Eve: id,
+        Man_EEst: nuevoEstado
+    }, function (data) {
+        $('#loader').show();
+        var postUrl = (window.location.href || '').split('#')[0];
+        $.post(postUrl, data, function (r) {
+            $('#loader').fadeOut('slow');
+            if (r && r.success) {
+                $.alert(r.message || 'Estado actualizado.');
+                cargarHistorialEventos();
+                cargarComboEventosGeneral();
+            } else {
+                $.alert((r && r.message) ? r.message : 'Error al cambiar estado.');
+            }
+        }, 'json').fail(function () {
+            $('#loader').fadeOut('slow');
+            $.alert('Error de comunicación.');
+        });
+    });
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
 
 // ==================== GRID PLANTAS ====================
 function createGridPlantas() {
@@ -724,155 +944,6 @@ function imprimirPlantas() {
     $('#imprimirPlantas').printElement();
 }
 
-function abrirModalEventos() {
-    limpiarFormEvento();
-    $('#eventosDialog').dialog('open');
-    cargarHistorialEventos();
-}
-
-function cargarHistorialEventos() {
-    var postUrl = (window.location.href || '').split('#')[0];
-    $('#bodyHistorialEventos').html('<tr><td colspan="6" class="text-center" style="color: #9ca3af; padding: 15px;"><i class="glyphicon glyphicon-refresh spin"></i> Cargando historial...</td></tr>');
-    
-    $.post(postUrl, { getHistorialEventosAjax: 1 }, function (r) {
-        var $body = $('#bodyHistorialEventos');
-        $body.empty();
-        
-        if (r && r.success && r.data && r.data.length > 0) {
-            $.each(r.data, function (i, evt) {
-                var isInactive = (evt.Man_EEst === 'I');
-                var rowStyle = isInactive ? ' style="background-color: #FADDDD !important;"' : '';
-
-                var estBadge = (!isInactive) 
-                    ? '<span class="label label-success" style="font-size: 10px;">ACTIVO</span>' 
-                    : '<span class="label label-danger" style="font-size: 10px;">INACTIVO</span>';
-                
-                var btnToggle = (!isInactive)
-                    ? '<button type="button" class="btn btn-warning btn-xs" onclick="toggleEstadoEvento(' + evt.Man_Eve + ', \'I\');" title="Inactivar Evento"><i class="glyphicon glyphicon-eye-close"></i></button>'
-                    : '<button type="button" class="btn btn-success btn-xs" onclick="toggleEstadoEvento(' + evt.Man_Eve + ', \'A\');" title="Activar Evento"><i class="glyphicon glyphicon-eye-open"></i></button>';
-
-                var isEditable = (evt.Man_EFef === evt.Hoy_YMD);
-                var btnEdit = isEditable
-                    ? "<button type=\"button\" class=\"btn btn-info btn-xs\" onclick=\"editarEvento(" + evt.Man_Eve + ", '" + escapeHtml(evt.Man_ENom) + "', '" + evt.Man_EFei + "', '" + evt.Man_EFef + "', '" + evt.Man_EEst + "', '" + evt.Hoy_YMD + "');\" title=\"Editar Evento\" style=\"margin-right: 4px;\"><i class=\"glyphicon glyphicon-pencil\"></i></button>"
-                    : "<button type=\"button\" class=\"btn btn-default btn-xs\" disabled title=\"Solo editable si la fecha fin es hoy\" style=\"margin-right: 4px; opacity: 0.5;\"><i class=\"glyphicon glyphicon-lock\"></i></button>";
-
-                var tr = '<tr' + rowStyle + '>' +
-                    '<td class="text-center"><b>' + evt.Man_Eve + '</b></td>' +
-                    '<td>' + escapeHtml(evt.Man_ENom) + '</td>' +
-                    '<td class="text-center">' + evt.Man_EFei_Fmt + '</td>' +
-                    '<td class="text-center">' + evt.Man_EFef_Fmt + '</td>' +
-                    '<td class="text-center">' + estBadge + '</td>' +
-                    '<td class="text-center">' + btnEdit + btnToggle + '</td>' +
-                '</tr>';
-
-                $body.append(tr);
-            });
-        } else {
-            $body.html('<tr><td colspan="6" class="text-center" style="color: #6b7280; padding: 15px;">No se encontraron eventos registrados.</td></tr>');
-        }
-    }, 'json').fail(function () {
-        $('#bodyHistorialEventos').html('<tr><td colspan="6" class="text-center text-danger" style="padding: 15px;">Error al cargar el historial.</td></tr>');
-    });
-}
-
-function limpiarFormEvento() {
-    $('#evt_Man_Eve').val('0');
-    $('#evt_Man_ENom').val('');
-    $('#evt_Man_EFei').val('');
-    $('#evt_Man_EFef').val('');
-    $('#evt_Man_EEst').val('A');
-}
-
-function editarEvento(id, nom, fei, fef, est, hoyYmd) {
-    if (hoyYmd && fef !== hoyYmd) {
-        $.alert('No se puede editar este evento ya que su fecha fin no corresponde al día de hoy.');
-        return;
-    }
-    $('#evt_Man_Eve').val(id);
-    $('#evt_Man_ENom').val(nom);
-    $('#evt_Man_EFei').val(fei);
-    $('#evt_Man_EFef').val(fef);
-    $('#evt_Man_EEst').val(est);
-}
-
-function guardarEvento() {
-    var id = $('#evt_Man_Eve').val();
-    var nom = $.trim($('#evt_Man_ENom').val());
-    var fei = $.trim($('#evt_Man_EFei').val());
-    var fef = $.trim($('#evt_Man_EFef').val());
-    var est = $('#evt_Man_EEst').val();
-
-    if (!nom) {
-        $.alert('Por favor ingrese el nombre del evento.');
-        return;
-    }
-    if (!fei || !fef) {
-        $.alert('Por favor ingrese las fechas de inicio y fin.');
-        return;
-    }
-
-    var feiYear = fei.split('-')[0];
-    var fefYear = fef.split('-')[0];
-    if (!feiYear || feiYear.length !== 4 || isNaN(feiYear)) {
-        $.alert('El año en la fecha de inicio debe tener exactamente 4 dígitos (AAAA).');
-        return;
-    }
-    if (!fefYear || fefYear.length !== 4 || isNaN(fefYear)) {
-        $.alert('El año en la fecha de fin debe tener exactamente 4 dígitos (AAAA).');
-        return;
-    }
-
-    var postUrl = (window.location.href || '').split('#')[0];
-    var payload = {
-        saveEventoAjax: 1,
-        Man_Eve: id,
-        Man_ENom: nom,
-        Man_EFei: fei,
-        Man_EFef: fef,
-        Man_EEst: est
-    };
-
-    $('#loader').show();
-    $.post(postUrl, payload, function (r) {
-        $('#loader').fadeOut('slow');
-        if (r && r.success) {
-            $.alert(r.message || 'Evento guardado correctamente.');
-            limpiarFormEvento();
-            cargarHistorialEventos();
-        } else {
-            $.alert((r && r.message) ? r.message : 'Error al guardar evento.');
-        }
-    }, 'json').fail(function () {
-        $('#loader').fadeOut('slow');
-        $.alert('Error de comunicación al guardar el evento.');
-    });
-}
-
-function toggleEstadoEvento(id, nuevoEstado) {
-    var accion = (nuevoEstado === 'A') ? 'activar' : 'inactivar';
-    var msg = '¿Está seguro de que desea ' + accion + ' este evento?';
-    
-    $.createDialogConfirm(msg, {
-        toggleEstadoEventoAjax: 1,
-        Man_Eve: id,
-        Man_EEst: nuevoEstado
-    }, function (data) {
-        $('#loader').show();
-        var postUrl = (window.location.href || '').split('#')[0];
-        $.post(postUrl, data, function (r) {
-            $('#loader').fadeOut('slow');
-            if (r && r.success) {
-                $.alert(r.message || 'Estado actualizado.');
-                cargarHistorialEventos();
-            } else {
-                $.alert((r && r.message) ? r.message : 'Error al cambiar estado.');
-            }
-        }, 'json').fail(function () {
-            $('#loader').fadeOut('slow');
-            $.alert('Error de comunicación.');
-        });
-    });
-}
 
 function escapeHtml(text) {
     if (!text) return '';

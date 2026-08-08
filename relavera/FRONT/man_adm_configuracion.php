@@ -61,7 +61,7 @@ if (isset($cliAjax)) {
 
 // Tab GENERAL: saldo mínimo de anticipo (manifiesto_plantas.Pla_Smi) y Campaña (Pla_Act)
 if (isset($_POST['getGeneralManifiestoAjax'])) {
-    $resp = array('success' => true, 'pla_smi_sugerido' => 0, 'plantas_activas' => 0, 'pla_act_general' => 'N');
+    $resp = array('success' => true, 'pla_smi_sugerido' => 0, 'plantas_activas' => 0, 'pla_act_general' => 'N', 'man_eve_vigente' => 0);
     $emp = (int) $Ses_Emp_Cod;
     try {
         $row = $obBD_con1->fetch_assoc($obBD_con1->consulta(
@@ -78,6 +78,13 @@ if (isset($_POST['getGeneralManifiestoAjax'])) {
         $resp['plantas_activas'] = isset($row['n']) ? (int) $row['n'] : 0;
         $resp['pla_smi_sugerido'] = isset($row['prom']) ? round((float) $row['prom'], 2) : 0;
         $resp['pla_act_general'] = (isset($row['act']) && $row['act'] == 'S') ? 'S' : 'N';
+
+        // Obtener el evento que actualmente se encuentra vigente (Man_Vig = 'S')
+        $rowEve = $obBD_con1->fetch_assoc($obBD_con1->consulta(
+            "SELECT Man_Eve FROM manifiesto_evento WHERE Man_Vig = 'S' LIMIT 1",
+            $obBD_conexion->conexion
+        ));
+        $resp['man_eve_vigente'] = (isset($rowEve['Man_Eve']) && $rowEve['Man_Eve'] > 0) ? (int)$rowEve['Man_Eve'] : 0;
     } catch (Exception $e) {
         $resp['success'] = false;
         $resp['message'] = $e->getMessage();
@@ -101,6 +108,7 @@ if (isset($_POST['saveGeneralManifiestoAjax'])) {
         $emp = (int) $Ses_Emp_Cod;
         $valSql = number_format($val, 2, '.', '');
         $plaAct = (isset($_POST['Pla_Act_general']) && $_POST['Pla_Act_general'] == 'S') ? 'S' : 'N';
+        $manEveGeneral = isset($_POST['Man_Eve_general']) ? (int)$_POST['Man_Eve_general'] : 0;
         
         // Aplicar con una sola sentencia SQL.
         $sqlUpd = "UPDATE manifiesto_plantas mp
@@ -112,13 +120,176 @@ if (isset($_POST['saveGeneralManifiestoAjax'])) {
 			AND (c.Cli_Est = 'A' OR mp.Cli_Cod IS NULL)";
         $obBD_con1->consulta($sqlUpd, $obBD_conexion);
         if ((int) $obBD_con1->Error !== 0) {
-            throw new Exception($obBD_con1->MsgError ? $obBD_con1->MsgError : 'Error al actualizar Pla_Smi (¿existe la columna en manifiesto_plantas?).');
+            throw new Exception($obBD_con1->MsgError ? $obBD_con1->MsgError : 'Error al actualizar Pla_Smi.');
         }
+
+        // Manejar vigencia en manifiesto_evento: El evento anterior cambia a 'N' y el nuevo evento seleccionado pasa a 'S'
+        if ($manEveGeneral > 0) {
+            $obBD_con1->consulta("UPDATE manifiesto_evento SET Man_Vig = 'N' WHERE Man_Eve != $manEveGeneral", $obBD_conexion);
+            $obBD_con1->consulta("UPDATE manifiesto_evento SET Man_EEst = 'A', Man_Vig = 'S' WHERE Man_Eve = $manEveGeneral", $obBD_conexion);
+        } else {
+            $obBD_con1->consulta("UPDATE manifiesto_evento SET Man_Vig = 'N'", $obBD_conexion);
+        }
+
         $con = $obBD_con1->getMyCon($obBD_conexion);
         $cnt = ($con ? (int)mysqli_affected_rows($con) : 0);
         $resp['success'] = true;
         $resp['filas_afectadas'] = $cnt;
         $resp['message'] = 'Se guardo correctamente.';
+    } catch (Exception $e) {
+        $resp['message'] = $e->getMessage();
+    }
+    $obBD_con1->echoJson($resp);
+}
+
+/* ==================== HANDLERS EVENTOS (manifiesto_evento) ==================== */
+
+function man_adm_cfg_formatear_duracion($manEHor) {
+    $v = trim((string)$manEHor);
+    if ($v === '') return '6';
+    if (preg_match('/^(\d{1,2}):(\d{2})(:\d{2})?$/', $v, $m)) {
+        $h = (int)$m[1];
+        $min = (int)$m[2];
+        if ($min > 0) {
+            return sprintf('%d:%02d', $h, $min);
+        }
+        return (string)$h;
+    }
+    return $v;
+}
+
+// Obtener combo de eventos activos
+if (isset($_POST['getComboEventosAjax'])) {
+    $resp = array('success' => true, 'data' => array());
+    try {
+        $sql = "SELECT Man_Eve, Man_ENom, Man_Ehor AS Man_EHor, DATE_FORMAT(Man_EFei, '%d/%m/%Y') AS Man_EFei, DATE_FORMAT(Man_EFef, '%d/%m/%Y') AS Man_EFef 
+                FROM manifiesto_evento 
+                WHERE Man_EEst = 'A' 
+                ORDER BY Man_Eve DESC";
+        $res = $obBD_con1->consulta($sql, $obBD_conexion->conexion);
+        $data = array();
+        if ($res) {
+            while ($row = $obBD_con1->fetch_assoc($res)) {
+                $row['Man_EHor'] = man_adm_cfg_formatear_duracion(isset($row['Man_EHor']) ? $row['Man_EHor'] : '6');
+                $data[] = $row;
+            }
+        }
+        $resp['data'] = $data;
+    } catch (Exception $e) {
+        $resp['success'] = false;
+        $resp['message'] = $e->getMessage();
+    }
+    $obBD_con1->echoJson($resp);
+}
+
+// Obtener historial completo de eventos
+if (isset($_POST['getHistorialEventosAjax'])) {
+    $resp = array('success' => true, 'data' => array());
+    try {
+        $sql = "SELECT Man_Eve, Man_ENom, Man_Ehor AS Man_EHor, Man_EFei, Man_EFef, Man_EEst,
+                       DATE_FORMAT(Man_EFei, '%d/%m/%Y') AS Man_EFei_Fmt, 
+                       DATE_FORMAT(Man_EFef, '%d/%m/%Y') AS Man_EFef_Fmt,
+                       DATE_FORMAT(NOW(), '%Y-%m-%d') AS Hoy_YMD
+                FROM manifiesto_evento 
+                ORDER BY Man_Eve DESC";
+        $res = $obBD_con1->consulta($sql, $obBD_conexion->conexion);
+        $data = array();
+        if ($res) {
+            while ($row = $obBD_con1->fetch_assoc($res)) {
+                $row['Man_EHor'] = man_adm_cfg_formatear_duracion(isset($row['Man_EHor']) ? $row['Man_EHor'] : '6');
+                $data[] = $row;
+            }
+        }
+        $resp['data'] = $data;
+    } catch (Exception $e) {
+        $resp['success'] = false;
+        $resp['message'] = $e->getMessage();
+    }
+    $obBD_con1->echoJson($resp);
+}
+
+// Guardar / Editar Evento
+if (isset($_POST['saveEventoAjax'])) {
+    $resp = array('success' => false);
+    try {
+        $manEve = isset($_POST['Man_Eve']) ? (int)$_POST['Man_Eve'] : 0;
+        $manENom = isset($_POST['Man_ENom']) ? trim((string)$_POST['Man_ENom']) : '';
+        $rawHor = isset($_POST['Man_EHor']) ? trim((string)$_POST['Man_EHor']) : '6';
+        $manEFei = isset($_POST['Man_EFei']) ? trim((string)$_POST['Man_EFei']) : '';
+        $manEFef = isset($_POST['Man_EFef']) ? trim((string)$_POST['Man_EFef']) : '';
+        $manEEst = (isset($_POST['Man_EEst']) && $_POST['Man_EEst'] == 'I') ? 'I' : 'A';
+
+        if (empty($manENom)) {
+            throw new Exception('El nombre del evento es obligatorio.');
+        }
+        if (empty($manEFei) || empty($manEFef)) {
+            throw new Exception('Las fechas de inicio y fin son obligatorias.');
+        }
+
+        $manEHorSql = '06:00:00';
+        if (preg_match('/^(\d{1,2}):(\d{2})(:\d{2})?$/', $rawHor, $m)) {
+            $manEHorSql = sprintf('%02d:%02d:00', (int)$m[1], (int)$m[2]);
+        } elseif (is_numeric(str_replace(',', '.', $rawHor))) {
+            $val = floatval(str_replace(',', '.', $rawHor));
+            $h = floor($val);
+            $min = round(($val - $h) * 60);
+            $manEHorSql = sprintf('%02d:%02d:00', (int)$h, (int)$min);
+        }
+
+        $feiParts = explode('-', $manEFei);
+        $fefParts = explode('-', $manEFef);
+        if (strlen($feiParts[0]) !== 4 || !ctype_digit($feiParts[0]) || strlen($fefParts[0]) !== 4 || !ctype_digit($fefParts[0])) {
+            throw new Exception('El año en las fechas debe contener exactamente 4 dígitos (AAAA).');
+        }
+
+        $con = $obBD_con1->getMyCon($obBD_conexion);
+        $nomSql = mysqli_real_escape_string($con, $manENom);
+        $feiSql = mysqli_real_escape_string($con, $manEFei);
+        $fefSql = mysqli_real_escape_string($con, $manEFef);
+
+        if ($manEve > 0) {
+            // Verificar si la fecha fin en la BD coincide con la fecha actual
+            $sqlCheck = "SELECT Man_EFef, DATE_FORMAT(NOW(), '%Y-%m-%d') AS Hoy FROM manifiesto_evento WHERE Man_Eve = $manEve";
+            $resCheck = $obBD_con1->consulta($sqlCheck, $obBD_conexion->conexion);
+            $rowCheck = $obBD_con1->fetch_assoc($resCheck);
+            if ($rowCheck) {
+                $fechaFinBD = $rowCheck['Man_EFef'];
+                $hoyBD = $rowCheck['Hoy'];
+                if ($fechaFinBD !== $hoyBD) {
+                    throw new Exception("No se puede editar este evento ya que su fecha fin (" . date('d/m/Y', strtotime($fechaFinBD)) . ") no corresponde a la fecha actual.");
+                }
+            }
+
+            $sql = "UPDATE manifiesto_evento 
+                    SET Man_ENom = '$nomSql', Man_Ehor = '$manEHorSql', Man_EFei = '$feiSql', Man_EFef = '$fefSql', Man_EEst = '$manEEst' 
+                    WHERE Man_Eve = $manEve";
+        } else {
+            $sql = "INSERT INTO manifiesto_evento (Man_ENom, Man_Ehor, Man_EFei, Man_EFef, Man_EEst, Man_Vig) 
+                    VALUES ('$nomSql', '$manEHorSql', '$feiSql', '$fefSql', '$manEEst', 'S')";
+        }
+
+        $obBD_con1->consulta($sql, $obBD_conexion);
+        $resp['success'] = true;
+        $resp['message'] = ($manEve > 0) ? 'Evento actualizado correctamente.' : 'Evento registrado correctamente.';
+    } catch (Exception $e) {
+        $resp['message'] = $e->getMessage();
+    }
+    $obBD_con1->echoJson($resp);
+}
+
+// Cambiar estado / Anular Evento
+if (isset($_POST['toggleEstadoEventoAjax'])) {
+    $resp = array('success' => false);
+    try {
+        $manEve = isset($_POST['Man_Eve']) ? (int)$_POST['Man_Eve'] : 0;
+        $nuevoEst = (isset($_POST['Man_EEst']) && $_POST['Man_EEst'] == 'A') ? 'A' : 'I';
+        if ($manEve <= 0) {
+            throw new Exception('ID de evento no válido.');
+        }
+        $sql = "UPDATE manifiesto_evento SET Man_EEst = '$nuevoEst' WHERE Man_Eve = $manEve";
+        $obBD_con1->consulta($sql, $obBD_conexion);
+        $resp['success'] = true;
+        $resp['message'] = 'Estado del evento actualizado correctamente.';
     } catch (Exception $e) {
         $resp['message'] = $e->getMessage();
     }
@@ -2245,6 +2416,33 @@ $obBD_con1->utf8_change_param($transportes);
                                             </div>
                                         </div>
 
+                                        <div class="row" style="margin-top: 15px;">
+                                            <!-- Columna Eventos -->
+                                            <div class="col-md-12">
+                                                <div class="form-group" style="margin-bottom: 20px;">
+                                                    <label class="col-xs-12 control-label" style="text-align: left; color: #475569; font-weight: 600; margin-bottom: 8px; font-size: 13px;">
+                                                        <i class="glyphicon glyphicon-calendar" style="color: #6366f1; margin-right: 5px;"></i>
+                                                        Configuraci&oacute;n de Eventos / Capacitaciones Activos
+                                                    </label>
+                                                    <div class="col-xs-12">
+                                                        <div style="display: flex; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 18px; gap: 15px;">
+                                                            <div style="flex-grow: 1;">
+                                                                <select id="cfg_man_eve_general" name="cfg_man_eve_general" class="form-control" style="font-weight: 600; border-radius: 6px; height: 42px; border-color: #cbd5e1; cursor: pointer; font-size: 14px; color: #1e293b;">
+                                                                    <option value="0">-- Ning&uacute;n Evento Seleccionado --</option>
+                                                                </select>
+                                                            </div>
+                                                            <button type="button" class="btn btn-default" onclick="abrirModalEventos();" style="border-radius: 6px; height: 42px; font-weight: 600; color: #334155; border-color: #cbd5e1; white-space: nowrap;">
+                                                                <i class="glyphicon glyphicon-list-alt" style="color: #6366f1; margin-right: 4px;"></i> Historial / Gestionar Eventos
+                                                            </button>
+                                                        </div>
+                                                        <p class="help-block" style="font-size: 11px; font-style: italic; color: #64748b; line-height: 1.4; margin-top: 5px;">
+                                                            Seleccione el evento activo para los manifiestos o use el bot&oacute;n de Historial para ingresar nuevos eventos.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
                                         <!-- Actions -->
                                         <div style="margin-top: 30px; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 25px;">
                                             <button type="button" class="btn btn-primary btn-lg" onclick="guardarGeneralManifiesto();" style="border-radius: 6px; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2); transition: all 0.2s;">
@@ -2260,6 +2458,102 @@ $obBD_con1->utf8_change_param($transportes);
                 </div>
             </div>
 
+        </div>
+    </div>
+
+    <!-- Modal Eventos (Gestión e Historial) -->
+    <div id="eventosDialog" title="Gestión e Historial de Eventos" style="display: none;">
+        <div style="padding: 5px 0;">
+            <!-- Formulario Crear/Editar Evento -->
+            <fieldset class="exa-fieldset" style="margin-bottom: 10px; background: #fafafa; border-radius: 8px; border: 1px solid #e5e7eb; padding: 10px 15px;">
+                <legend class="Titulos2" style="font-size: 13px; font-weight: bold; color: #1f2937;"><i class="glyphicon glyphicon-plus-sign" style="color: #10b981;"></i> Crear / Editar Evento</legend>
+                <form id="formEvento" class="form-horizontal normal" onsubmit="return false;">
+                    <input type="hidden" id="evt_Man_Eve" name="evt_Man_Eve" value="0">
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-6">
+                            <div class="form-group" style="margin-bottom: 6px;">
+                                <label class="col-xs-4 control-label label-xs required">Nombre Evento:</label>
+                                <div class="col-xs-8">
+                                    <input type="text" id="evt_Man_ENom" name="evt_Man_ENom" class="form-control input-xs" placeholder="Ej: Evento Verano 2026" maxlength="100" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-6">
+                            <div class="form-group" style="margin-bottom: 6px;">
+                                <label class="col-xs-4 control-label label-xs required">Estado:</label>
+                                <div class="col-xs-8">
+                                    <select id="evt_Man_EEst" name="evt_Man_EEst" class="form-control input-xs">
+                                        <option value="A">ACTIVO</option>
+                                        <option value="I">INACTIVO</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-6">
+                            <div class="form-group" style="margin-bottom: 6px;">
+                                <label class="col-xs-4 control-label label-xs required">Fecha Inicio:</label>
+                                <div class="col-xs-8">
+                                    <input type="date" id="evt_Man_EFei" name="evt_Man_EFei" class="form-control input-xs" max="9999-12-31" min="1900-01-01" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-6">
+                            <div class="form-group" style="margin-bottom: 6px;">
+                                <label class="col-xs-4 control-label label-xs required">Fecha Fin:</label>
+                                <div class="col-xs-8">
+                                    <input type="date" id="evt_Man_EFef" name="evt_Man_EFef" class="form-control input-xs" max="9999-12-31" min="1900-01-01" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-6">
+                            <div class="form-group" style="margin-bottom: 6px;">
+                                <label class="col-xs-4 control-label label-xs required">Duración (Horas):</label>
+                                <div class="col-xs-8">
+                                    <input type="text" id="evt_Man_EHor" name="evt_Man_EHor" class="form-control input-xs" placeholder="Ej: 2:30 o 6" value="6" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: right; margin-top: 5px;">
+                        <button type="button" class="btn btn-default btn-xs" onclick="limpiarFormEvento();">
+                            <i class="glyphicon glyphicon-erase"></i> Limpiar
+                        </button>
+                        <button type="button" class="btn btn-primary btn-xs" onclick="guardarEvento();">
+                            <i class="glyphicon glyphicon-floppy-disk"></i> Guardar Evento
+                        </button>
+                    </div>
+                </form>
+            </fieldset>
+
+            <!-- Tabla Historial de Eventos -->
+            <fieldset class="exa-fieldset" style="background: #fff; border-radius: 8px; border: 1px solid #e5e7eb; padding: 10px 15px;">
+                <legend class="Titulos2" style="font-size: 13px; font-weight: bold; color: #1f2937;"><i class="glyphicon glyphicon-list" style="color: #3b82f6;"></i> Historial de Eventos Registrados</legend>
+                <div style="max-height: 130px; overflow-y: auto;">
+                    <table class="table table-bordered table-striped table-hover table-condensed" id="tablaHistorialEventos" style="font-size: 12px; margin-bottom: 0;">
+                        <thead>
+                            <tr style="background: #f3f4f6; color: #374151;">
+                                <th style="width: 40px; text-align: center;">ID</th>
+                                <th>Nombre del Evento</th>
+                                <th style="width: 60px; text-align: center;">Horas</th>
+                                <th style="width: 85px; text-align: center;">F. Inicio</th>
+                                <th style="width: 85px; text-align: center;">F. Fin</th>
+                                <th style="width: 70px; text-align: center;">Estado</th>
+                                <th style="width: 90px; text-align: center;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bodyHistorialEventos">
+                            <tr>
+                                <td colspan="6" class="text-center" style="color: #9ca3af; padding: 15px;">Cargando historial...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </fieldset>
         </div>
     </div>
 
@@ -3517,7 +3811,7 @@ $obBD_con1->utf8_change_param($transportes);
 <script>
     var esPerfilLectura = <?php echo (isset($esPerfilLectura) && $esPerfilLectura) ? 'true' : 'false'; ?>;
 </script>
-<script type="text/javascript" src="../VALIDACIONES/man_adm_configuracion.js?x=53"></script>
+<script type="text/javascript" src="../VALIDACIONES/man_adm_configuracion.js?x=54"></script>
 
 
 </script>
