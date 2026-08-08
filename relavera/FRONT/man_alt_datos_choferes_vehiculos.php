@@ -80,44 +80,46 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
     $fechaEmisionStr = 'Portovelo, El Oro, ' . date('d') . ' de ' . $mesesAct[(int)date('m') - 1] . ' de ' . date('Y') . '.';
 
     // Carga robusta de imágenes en Base64 para marca de agua, sello, firma1 y firma2
-    $fnGetImgData = function($nombreArchivo) {
-        $docRoot = isset($_SERVER['DOCUMENT_ROOT']) ? rtrim(str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']), '/') : '';
-        $paths = array(
-            __DIR__ . '/../../imagenes/620/' . $nombreArchivo,
-            __DIR__ . '/../imagenes/620/' . $nombreArchivo,
-            $docRoot ? $docRoot . '/imagenes/620/' . $nombreArchivo : '',
-        );
-        foreach ($paths as $p) {
-            if (!empty($p) && file_exists($p) && is_file($p)) {
-                $ext = pathinfo($p, PATHINFO_EXTENSION);
-                $mime = ($ext === 'jpg' || $ext === 'jpeg') ? 'image/jpeg' : 'image/png';
-                return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($p));
+    if (!function_exists('man_alt_get_img_data')) {
+        function man_alt_get_img_data($nombreArchivo) {
+            $docRoot = isset($_SERVER['DOCUMENT_ROOT']) ? rtrim(str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']), '/') : '';
+            $paths = array(
+                __DIR__ . '/../../imagenes/620/' . $nombreArchivo,
+                __DIR__ . '/../imagenes/620/' . $nombreArchivo,
+                $docRoot ? $docRoot . '/imagenes/620/' . $nombreArchivo : '',
+            );
+            foreach ($paths as $p) {
+                if (!empty($p) && file_exists($p) && is_file($p)) {
+                    $ext = pathinfo($p, PATHINFO_EXTENSION);
+                    $mime = ($ext === 'jpg' || $ext === 'jpeg') ? 'image/jpeg' : 'image/png';
+                    return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($p));
+                }
             }
+            return false;
         }
-        return false;
-    };
+    }
 
-    $srcWatermark = $fnGetImgData('marca_agua.png');
+    $srcWatermark = man_alt_get_img_data('marca_agua.png');
     if (!$srcWatermark) {
-        $srcWatermark = $fnGetImgData('relavera.png');
+        $srcWatermark = man_alt_get_img_data('relavera.png');
     }
     if (!$srcWatermark) {
         $srcWatermark = '../../imagenes/620/relavera.png';
     }
 
-    $srcSello = $fnGetImgData('sello.png');
+    $srcSello = man_alt_get_img_data('sello.png');
     if (!$srcSello) {
-        $srcSello = $fnGetImgData('sello.jpg');
+        $srcSello = man_alt_get_img_data('sello.jpg');
     }
 
-    $srcFirma1 = $fnGetImgData('firma1.png');
+    $srcFirma1 = man_alt_get_img_data('firma1.png');
     if (!$srcFirma1) {
-        $srcFirma1 = $fnGetImgData('firma1.jpg');
+        $srcFirma1 = man_alt_get_img_data('firma1.jpg');
     }
 
-    $srcFirma2 = $fnGetImgData('firma2.png');
+    $srcFirma2 = man_alt_get_img_data('firma2.png');
     if (!$srcFirma2) {
-        $srcFirma2 = $fnGetImgData('firma2.jpg');
+        $srcFirma2 = man_alt_get_img_data('firma2.jpg');
     }
     ?>
 

@@ -160,21 +160,6 @@ if (!function_exists('man_cert_asistencia_armar_params')) {
     }
 }
 
-if (!class_exists('CertAsistenciaPDF', false)) {
-    if (!class_exists('TCPDF', false)) {
-        require_once __DIR__ . '/../../Librerias/TCPDF/tcpdf.php';
-    }
-    class CertAsistenciaPDF extends TCPDF
-    {
-        public function Header()
-        {
-        }
-        public function Footer()
-        {
-        }
-    }
-}
-
 if (!function_exists('man_cert_asistencia_generar_pdf')) {
     /**
      * Genera el PDF unico del certificado (vista previa = envio).
@@ -185,8 +170,31 @@ if (!function_exists('man_cert_asistencia_generar_pdf')) {
      */
     function man_cert_asistencia_generar_pdf(array $params)
     {
-        if (!class_exists('TCPDF', false)) {
-            require_once __DIR__ . '/../../Librerias/TCPDF/tcpdf.php';
+        if (!class_exists('CertAsistenciaPDF', false)) {
+            if (!class_exists('TCPDF', false)) {
+                $docRoot = isset($_SERVER['DOCUMENT_ROOT']) ? rtrim(str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']), '/') : '';
+                $tcpdfPaths = array(
+                    __DIR__ . '/../../Librerias/TCPDF/tcpdf.php',
+                    __DIR__ . '/../Librerias/TCPDF/tcpdf.php',
+                    $docRoot ? $docRoot . '/Librerias/TCPDF/tcpdf.php' : '',
+                    $docRoot ? $docRoot . '/relavera/Librerias/TCPDF/tcpdf.php' : '',
+                );
+                foreach ($tcpdfPaths as $tPath) {
+                    if (!empty($tPath) && file_exists($tPath) && is_file($tPath)) {
+                        require_once $tPath;
+                        break;
+                    }
+                }
+            }
+            if (class_exists('TCPDF', false)) {
+                class CertAsistenciaPDF extends TCPDF
+                {
+                    public function Header() {}
+                    public function Footer() {}
+                }
+            } else {
+                return false;
+            }
         }
 
         $prsNom = isset($params['Prs_Nom']) ? trim((string) $params['Prs_Nom']) : '';
