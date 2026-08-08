@@ -8,12 +8,12 @@
  * @version 2.8
  */
 
-
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/man_log_datos_choferes_vehiculos.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
-
-
+require_once(__DIR__ . '/../LOGICA/relavera_whatsapp_utils.php');
+require_once(__DIR__ . '/../LOGICA/relavera_notif_mail_utils.php');
+require_once(__DIR__ . '/../LOGICA/man_cert_asistencia_helper.php');
 
 $obBD_conexion = new Class_Log_Conexion_Datos_Choferes_Vehiculos($Ses_Dat_Dis);
 $obBD_con1 = new Class_Log_Datos_Choferes_Vehiculos;
@@ -22,7 +22,6 @@ $obBD_con1 = new Class_Log_Datos_Choferes_Vehiculos;
    VISUALIZADOR / IMPRESOR DE CERTIFICADO EN PDF (PLANTILLA ECOPARK MINING)
    ========================================================================== */
 if (isset($_GET['verCertificadoPdfAjax'])) {
-    require_once(__DIR__ . '/../LOGICA/man_cert_asistencia_helper.php');
     $prsNom = isset($_GET['Prs_Nom']) ? trim($_GET['Prs_Nom']) : 'Nombres';
     $prsApe = isset($_GET['Prs_Ape']) ? trim($_GET['Prs_Ape']) : 'Apellidos';
     $prsCed = isset($_GET['Prs_Ced']) ? trim($_GET['Prs_Ced']) : '1100000000';
@@ -146,6 +145,11 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
 
             .cert-sello-box-right { position: absolute; right: 185px; bottom: 68px; z-index: 10; pointer-events: none; }
             .cert-sello-img-right { width: 115px; height: 115px; object-fit: contain; transform: rotate(12deg); opacity: 0.92; filter: drop-shadow(0px 2px 5px rgba(0,0,0,0.15)); }
+
+
+
+
+
 
             /* CONTENIDO RELATIVO CON Z-INDEX SUPERIOR */
             .cert-content { position: relative; z-index: 5; height: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
@@ -293,76 +297,39 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
 
 
 
-/* ==========================================================================
-   DETECCIÓN DE PETICIÓN AJAX: Si es AJAX, saltar la carga de catálogos
-   para evitar errores fatales (502 Bad Gateway) en el servidor de producción.
-   Los catálogos solo se necesitan para renderizar el HTML de la página.
-   ========================================================================== */
-$_esAjax = false;
-$_ajaxKeys = array(
-    'verCertificadoPdfAjax',
-    'listEmpresasTransporteGridAjax', 'saveEmpresaTransporteAjax', 'anularEmpresaTransporteAjax',
-    'listEventosGridAjax', 'listVisitantesEventoGridAjax',
-    'listChoferesGridAjax', 'buscarPersonaCedulaAjax', 'getChoferByIdAjax', 'getVisitanteByIdAjax',
-    'saveChoferAjax', 'anularChoferAjax', 'anularVisitanteAjax',
-    'enviarNotifCapacitacionChoferAjax', 'enviarCertificadoVisitanteEventoAjax',
-    'listVehiculosGridAjax', 'validarPlacaVehiculoAjax', 'getVehiculoByIdAjax',
-    'saveVehiculoAjax', 'anularVehiculoAjax',
-    'saveEventoAjax', 'anularEventoAjax', 'toggleVigenciaEventoAjax'
-);
-foreach ($_ajaxKeys as $_ak) {
-    if (isset($_REQUEST[$_ak])) {
-        $_esAjax = true;
-        break;
-    }
-}
 
-// Inicialización de variables (se cargan con datos solo si NO es AJAX)
-$transportes = array();
-$plantas = array();
+// Cargar catálogos iniciales
+$transportes = $obBD_con1->getArrayConsulta(1, array($Ses_Emp_Cod), $obBD_conexion);
+$obBD_con1->utf8_change_param($transportes);
+
+$plantas = $obBD_con1->getArrayConsulta(2, array(), $obBD_conexion);
+$obBD_con1->utf8_change_param($plantas);
+
+// Catálogo de eventos para el tab Eventos (lista desplegable)
 $eventosCatalogo = array();
-$nombreEventoVigente = '';
-$idEventoVigente = '';
-
-if (!$_esAjax) {
-    // Cargar catálogos iniciales (solo para renderizar la página HTML)
-    try {
-        $transportes = $obBD_con1->getArrayConsulta(1, array($Ses_Emp_Cod), $obBD_conexion);
-        $obBD_con1->utf8_change_param($transportes);
-    } catch (Exception $e) {
-        $transportes = array();
-    }
-
-    try {
-        $plantas = $obBD_con1->getArrayConsulta(2, array(), $obBD_conexion);
-        $obBD_con1->utf8_change_param($plantas);
-    } catch (Exception $e) {
-        $plantas = array();
-    }
-
-    // Catálogo de eventos para el tab Eventos (lista desplegable)
-    try {
-        $paramsEvCat = array($Ses_Emp_Cod);
-        $paramsEvCat['limits'] = 'LIMIT 500';
-        $eventosCatalogo = $obBD_con1->getArrayConsulta(18, $paramsEvCat, $obBD_conexion);
-        if (!is_array($eventosCatalogo)) {
-            $eventosCatalogo = array();
-        }
-        $obBD_con1->utf8_change_param($eventosCatalogo);
-    } catch (Exception $e) {
+try {
+    $paramsEvCat = array($Ses_Emp_Cod);
+    $paramsEvCat['limits'] = 'LIMIT 500';
+    $eventosCatalogo = $obBD_con1->getArrayConsulta(18, $paramsEvCat, $obBD_conexion);
+    if (!is_array($eventosCatalogo)) {
         $eventosCatalogo = array();
     }
+    $obBD_con1->utf8_change_param($eventosCatalogo);
+} catch (Exception $e) {
+    $eventosCatalogo = array();
+}
 
-    // Consultar evento actualmente en vigencia (Man_Vig = 'S') y sus tipos de certificado
-    try {
-        $resEv = $obBD_con1->consulta("SELECT Man_Eve, Man_ENom FROM manifiesto_evento WHERE UPPER(Man_Vig) = 'S' AND UPPER(Man_EEst) = 'A' LIMIT 1", $obBD_conexion->conexion);
-        if ($resEv && ($rowEv = $obBD_con1->fetch_assoc($resEv))) {
-            $nombreEventoVigente = trim($rowEv['Man_ENom']);
-            $idEventoVigente = $rowEv['Man_Eve'];
-        }
-    } catch (Exception $e) {
-        // Si no existe el registro o tabla, se ignora silenciosamente
+// Consultar evento actualmente en vigencia (Man_Vig = 'S') y sus tipos de certificado
+$nombreEventoVigente = '';
+$idEventoVigente = '';
+try {
+    $resEv = $obBD_con1->consulta("SELECT Man_Eve, Man_ENom FROM manifiesto_evento WHERE UPPER(Man_Vig) = 'S' AND UPPER(Man_EEst) = 'A' LIMIT 1", $obBD_conexion->conexion);
+    if ($resEv && ($rowEv = $obBD_con1->fetch_assoc($resEv))) {
+        $nombreEventoVigente = trim($rowEv['Man_ENom']);
+        $idEventoVigente = $rowEv['Man_Eve'];
     }
+} catch (Exception $e) {
+    // Si no existe el registro o tabla, se ignora silenciosamente
 }
 
 
@@ -372,78 +339,70 @@ if (!$_esAjax) {
 /* ==========================================================================
    FUNCIÓN AUXILIAR DE COMPRESIÓN DE IMÁGENES EN SERVIDOR (PHP GD)
    ========================================================================== */
-if (!function_exists('optimizarYComprimirImagen')) {
-    function optimizarYComprimirImagen($sourcePath, $targetPath, $maxDim = 1920, $quality = 85)
-    {
-        list($width, $height, $type) = @getimagesize($sourcePath);
-        if (!$width || !$height) return false;
+function optimizarYComprimirImagen($sourcePath, $targetPath, $maxDim = 1920, $quality = 85)
+{
+    list($width, $height, $type) = @getimagesize($sourcePath);
+    if (!$width || !$height) return false;
 
-        switch ($type) {
-            case IMAGETYPE_JPEG:
-                $srcImg = @imagecreatefromjpeg($sourcePath);
-                break;
-            case IMAGETYPE_PNG:
-                $srcImg = @imagecreatefrompng($sourcePath);
-                break;
-            case IMAGETYPE_WEBP:
-                $srcImg = @imagecreatefromwebp($sourcePath);
-                break;
-            default:
-                return move_uploaded_file($sourcePath, $targetPath);
-        }
-
-        if (!$srcImg) return move_uploaded_file($sourcePath, $targetPath);
-
-        // Calcular nuevas dimensiones conservando la relación de aspecto
-        $ratio = $width / $height;
-        if ($width > $maxDim || $height > $maxDim) {
-            if ($ratio > 1) {
-                $newWidth = $maxDim;
-                $newHeight = round($maxDim / $ratio);
-            } else {
-                $newHeight = $maxDim;
-                $newWidth = round($maxDim * $ratio);
-            }
-        } else {
-            $newWidth = $width;
-            $newHeight = $height;
-        }
-
-        $dstImg = imagecreatetruecolor($newWidth, $newHeight);
-
-        if ($type == IMAGETYPE_PNG || $type == IMAGETYPE_WEBP) {
-            imagealphablending($dstImg, false);
-            imagesavealpha($dstImg, true);
-        }
-
-        imagecopyresampled($dstImg, $srcImg, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-        $res = imagejpeg($dstImg, $targetPath, $quality);
-
-        imagedestroy($srcImg);
-        imagedestroy($dstImg);
-
-        return $res && file_exists($targetPath);
+    switch ($type) {
+        case IMAGETYPE_JPEG:
+            $srcImg = @imagecreatefromjpeg($sourcePath);
+            break;
+        case IMAGETYPE_PNG:
+            $srcImg = @imagecreatefrompng($sourcePath);
+            break;
+        case IMAGETYPE_WEBP:
+            $srcImg = @imagecreatefromwebp($sourcePath);
+            break;
+        default:
+            return move_uploaded_file($sourcePath, $targetPath);
     }
+
+    if (!$srcImg) return move_uploaded_file($sourcePath, $targetPath);
+
+    // Calcular nuevas dimensiones conservando la relación de aspecto
+    $ratio = $width / $height;
+    if ($width > $maxDim || $height > $maxDim) {
+        if ($ratio > 1) {
+            $newWidth = $maxDim;
+            $newHeight = round($maxDim / $ratio);
+        } else {
+            $newHeight = $maxDim;
+            $newWidth = round($maxDim * $ratio);
+        }
+    } else {
+        $newWidth = $width;
+        $newHeight = $height;
+    }
+
+    $dstImg = imagecreatetruecolor($newWidth, $newHeight);
+
+    if ($type == IMAGETYPE_PNG || $type == IMAGETYPE_WEBP) {
+        imagealphablending($dstImg, false);
+        imagesavealpha($dstImg, true);
+    }
+
+    imagecopyresampled($dstImg, $srcImg, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+    $res = imagejpeg($dstImg, $targetPath, $quality);
+
+    imagedestroy($srcImg);
+    imagedestroy($dstImg);
+
+    return $res && file_exists($targetPath);
 }
 
 // Función auxiliar para responder JSON limpio sin interferencia de buffers o advertencias de PHP
-if (!function_exists('responderJsonLimpio')) {
-    function responderJsonLimpio($response)
-    {
-        @ini_set('display_errors', '0');
-        @error_reporting(0);
-        if (class_exists('DebugBar')) {
-            @DebugBar::sendDataInHeaders(false);
-        }
-        while (ob_get_level() > 0) {
-            if (!@ob_end_clean()) {
-                break; // Break the loop if the buffer cannot be cleaned (e.g. zlib compression)
-            }
-        }
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode($response);
-        exit;
+function responderJsonLimpio($response)
+{
+    if (class_exists('DebugBar')) {
+        @DebugBar::sendDataInHeaders(true);
     }
+    while (ob_get_level() > 0) {
+        @ob_end_clean();
+    }
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($response);
+    exit;
 }
 
 /* ==========================================================================
@@ -1208,8 +1167,6 @@ if (isset($_POST['anularVisitanteAjax'])) {
 
 // 7.5. Enviar notificación de capacitación al chofer (WhatsApp + correo Relavera)
 if (isset($_POST['enviarNotifCapacitacionChoferAjax'])) {
-    require_once(__DIR__ . '/../LOGICA/relavera_whatsapp_utils.php');
-    require_once(__DIR__ . '/../LOGICA/relavera_notif_mail_utils.php');
     $resp = array(
         'success' => false,
         'message' => '',
@@ -1339,9 +1296,6 @@ if (isset($_POST['enviarNotifCapacitacionChoferAjax'])) {
 
 // 7.6. Enviar certificado PDF a visitante del evento (WhatsApp y/o correo)
 if (isset($_POST['enviarCertificadoVisitanteEventoAjax'])) {
-    require_once(__DIR__ . '/../LOGICA/relavera_whatsapp_utils.php');
-    require_once(__DIR__ . '/../LOGICA/relavera_notif_mail_utils.php');
-    require_once(__DIR__ . '/../LOGICA/man_cert_asistencia_helper.php');
     $resp = array(
         'success' => false,
         'message' => '',
@@ -1726,7 +1680,7 @@ if (isset($_POST['anularVehiculoAjax'])) {
     <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
     <?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
     <?php require_once("../../mascaras/model3/estilos/estilos.php") ?>
-    <link rel="stylesheet" type="text/css" href="../RECURSOS/datos_choferes_vehiculos.css?v=1">
+    <link rel="stylesheet" type="text/css" href="../RECURSOS/datos_choferes_vehiculos.css?v=<?php echo time(); ?>">
 </head>
 
 <body>
@@ -2827,7 +2781,7 @@ if (isset($_POST['anularVehiculoAjax'])) {
     <!-- JS Scripts Inclusion con parámetro de cache-busting -->
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=38"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=39"></script>
 </body>
 
 </html>
