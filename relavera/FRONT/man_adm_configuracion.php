@@ -248,15 +248,15 @@ if (isset($_POST['saveEventoAjax'])) {
         $fefSql = mysqli_real_escape_string($con, $manEFef);
 
         if ($manEve > 0) {
-            // Verificar si la fecha fin en la BD coincide con la fecha actual
+            // Verificar si la fecha fin en la BD aún no ha expirado
             $sqlCheck = "SELECT Man_EFef, DATE_FORMAT(NOW(), '%Y-%m-%d') AS Hoy FROM manifiesto_evento WHERE Man_Eve = $manEve";
             $resCheck = $obBD_con1->consulta($sqlCheck, $obBD_conexion->conexion);
             $rowCheck = $obBD_con1->fetch_assoc($resCheck);
             if ($rowCheck) {
                 $fechaFinBD = $rowCheck['Man_EFef'];
                 $hoyBD = $rowCheck['Hoy'];
-                if ($fechaFinBD !== $hoyBD) {
-                    throw new Exception("No se puede editar este evento ya que su fecha fin (" . date('d/m/Y', strtotime($fechaFinBD)) . ") no corresponde a la fecha actual.");
+                if ($hoyBD > $fechaFinBD) {
+                    throw new Exception("No se puede editar este evento ya que su fecha fin (" . date('d/m/Y', strtotime($fechaFinBD)) . ") ya ha expirado.");
                 }
             }
 
@@ -2428,7 +2428,7 @@ $obBD_con1->utf8_change_param($transportes);
                                                         <div style="display: flex; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 18px; gap: 15px;">
                                                             <div style="flex-grow: 1;">
                                                                 <select id="cfg_man_eve_general" name="cfg_man_eve_general" class="form-control" style="font-weight: 600; border-radius: 6px; height: 42px; border-color: #cbd5e1; cursor: pointer; font-size: 14px; color: #1e293b;">
-                                                                    <option value="0">-- Ning&uacute;n Evento Seleccionado --</option>
+                                                                    <option value="0">-- Sin Eventos --</option>
                                                                 </select>
                                                             </div>
                                                             <button type="button" class="btn btn-default" onclick="abrirModalEventos();" style="border-radius: 6px; height: 42px; font-weight: 600; color: #334155; border-color: #cbd5e1; white-space: nowrap;">
@@ -3811,7 +3811,7 @@ $obBD_con1->utf8_change_param($transportes);
 <script>
     var esPerfilLectura = <?php echo (isset($esPerfilLectura) && $esPerfilLectura) ? 'true' : 'false'; ?>;
 </script>
-<script type="text/javascript" src="../VALIDACIONES/man_adm_configuracion.js?x=54"></script>
+<script type="text/javascript" src="../VALIDACIONES/man_adm_configuracion.js?x=55"></script>
 
 
 </script>

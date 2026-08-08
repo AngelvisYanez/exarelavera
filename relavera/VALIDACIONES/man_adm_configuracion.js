@@ -667,7 +667,7 @@ function cargarComboEventosGeneral(selectedId) {
             var $sel = $('#cfg_man_eve_general');
             var currVal = selectedId || $sel.val() || '0';
             $sel.empty();
-            $sel.append('<option value="0">-- Ning&uacute;n Evento Seleccionado --</option>');
+            $sel.append('<option value="0">-- Sin Eventos --</option>');
             if (r.data && r.data.length > 0) {
                 $.each(r.data, function (i, evt) {
                     var label = evt.Man_ENom + ' (' + (evt.Man_EHor || 6) + 'h - ' + evt.Man_EFei + ' - ' + evt.Man_EFef + ')';
@@ -706,10 +706,10 @@ function cargarHistorialEventos() {
                     ? '<button type="button" class="btn btn-warning btn-xs" onclick="toggleEstadoEvento(' + evt.Man_Eve + ', \'I\');" title="Inactivar Evento"><i class="glyphicon glyphicon-eye-close"></i></button>'
                     : '<button type="button" class="btn btn-success btn-xs" onclick="toggleEstadoEvento(' + evt.Man_Eve + ', \'A\');" title="Activar Evento"><i class="glyphicon glyphicon-eye-open"></i></button>';
 
-                var isEditable = (evt.Man_EFef === evt.Hoy_YMD);
+                var isEditable = (evt.Hoy_YMD <= evt.Man_EFef);
                 var btnEdit = isEditable
                     ? "<button type=\"button\" class=\"btn btn-info btn-xs\" onclick=\"editarEvento(" + evt.Man_Eve + ", '" + escapeHtml(evt.Man_ENom) + "', '" + (evt.Man_EHor || 6) + "', '" + evt.Man_EFei + "', '" + evt.Man_EFef + "', '" + evt.Man_EEst + "', '" + evt.Hoy_YMD + "');\" title=\"Editar Evento\" style=\"margin-right: 4px;\"><i class=\"glyphicon glyphicon-pencil\"></i></button>"
-                    : "<button type=\"button\" class=\"btn btn-default btn-xs\" disabled title=\"Solo editable si la fecha fin es hoy\" style=\"margin-right: 4px; opacity: 0.5;\"><i class=\"glyphicon glyphicon-lock\"></i></button>";
+                    : "<button type=\"button\" class=\"btn btn-default btn-xs\" disabled title=\"Solo editable hasta la fecha fin del evento\" style=\"margin-right: 4px; opacity: 0.5;\"><i class=\"glyphicon glyphicon-lock\"></i></button>";
 
                 var tr = '<tr' + rowStyle + '>' +
                     '<td class="text-center"><b>' + evt.Man_Eve + '</b></td>' +
@@ -741,8 +741,8 @@ function limpiarFormEvento() {
 }
 
 function editarEvento(id, nom, hor, fei, fef, est, hoyYmd) {
-    if (hoyYmd && fef !== hoyYmd) {
-        $.alert('No se puede editar este evento ya que su fecha fin no corresponde al día de hoy.');
+    if (hoyYmd && hoyYmd > fef) {
+        $.alert('No se puede editar este evento ya que su fecha fin ha expirado.');
         return;
     }
     $('#evt_Man_Eve').val(id);
