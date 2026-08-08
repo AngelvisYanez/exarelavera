@@ -1440,7 +1440,7 @@ function initGridChoferes() {
       {
         name: "acciones",
         index: "acciones",
-        width: 175,
+        width: 200,
         align: "center",
         sortable: false,
         formatter: function (cellvalue, options, rowObject) {

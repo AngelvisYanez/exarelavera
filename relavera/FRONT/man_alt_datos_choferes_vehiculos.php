@@ -606,11 +606,48 @@ if (isset($_GET['buscarPersonaCedulaAjax'])) {
     $resp = array('success' => true, 'existe' => false, 'esChofer' => false, 'esVisitante' => false);
     $ced = isset($_GET['Prs_Ced']) ? preg_replace('/[^a-zA-Z0-9]/', '', trim($_GET['Prs_Ced'])) : '';
     if (!empty($ced)) {
+        // Consolidación de fotos de todos los registros históricos (de cualquier evento o rol)
+        $fotosVisitante = array('MVis_Doc_Ced' => '', 'MVis_Doc_Ced_Rev' => '', 'MVis_Doc_Vot' => '', 'MVis_Doc_Fot' => '');
+        try {
+            $resFV = $obBD_con1->consulta("SELECT MVis_Doc_Ced, MVis_Doc_Ced_Rev, MVis_Doc_Vot, MVis_Doc_Fot FROM manifiesto_visitante mv INNER JOIN persona p ON p.Prs_Cod = mv.Prs_Cod WHERE p.Prs_Ced = '$ced' AND mv.Emp_Cod = '$Ses_Emp_Cod' ORDER BY mv.MVis_Cod DESC", $obBD_conexion->conexion);
+            if ($resFV) {
+                while ($rowFV = $obBD_con1->fetch_assoc($resFV)) {
+                    if (empty($fotosVisitante['MVis_Doc_Ced']) && !empty($rowFV['MVis_Doc_Ced'])) $fotosVisitante['MVis_Doc_Ced'] = $rowFV['MVis_Doc_Ced'];
+                    if (empty($fotosVisitante['MVis_Doc_Ced_Rev']) && !empty($rowFV['MVis_Doc_Ced_Rev'])) $fotosVisitante['MVis_Doc_Ced_Rev'] = $rowFV['MVis_Doc_Ced_Rev'];
+                    if (empty($fotosVisitante['MVis_Doc_Vot']) && !empty($rowFV['MVis_Doc_Vot'])) $fotosVisitante['MVis_Doc_Vot'] = $rowFV['MVis_Doc_Vot'];
+                    if (empty($fotosVisitante['MVis_Doc_Fot']) && !empty($rowFV['MVis_Doc_Fot'])) $fotosVisitante['MVis_Doc_Fot'] = $rowFV['MVis_Doc_Fot'];
+                }
+            }
+        } catch (Exception $eFV) {}
+
+        $fotosChofer = array('Cho_Doc_Ced' => '', 'Cho_Doc_Ced_Rev' => '', 'Cho_Doc_Vot' => '', 'Cho_Doc_Fot' => '');
+        try {
+            $resFC = $obBD_con1->consulta("SELECT Cho_Doc_Ced, Cho_Doc_Ced_Rev, Cho_Doc_Vot, Cho_Doc_Fot FROM chofer c INNER JOIN persona p ON p.Prs_Cod = c.Prs_Cod WHERE p.Prs_Ced = '$ced' AND c.Emp_Cod = '$Ses_Emp_Cod' ORDER BY c.Cho_Cod DESC", $obBD_conexion->conexion);
+            if ($resFC) {
+                while ($rowFC = $obBD_con1->fetch_assoc($resFC)) {
+                    if (empty($fotosChofer['Cho_Doc_Ced']) && !empty($rowFC['Cho_Doc_Ced'])) $fotosChofer['Cho_Doc_Ced'] = $rowFC['Cho_Doc_Ced'];
+                    if (empty($fotosChofer['Cho_Doc_Ced_Rev']) && !empty($rowFC['Cho_Doc_Ced_Rev'])) $fotosChofer['Cho_Doc_Ced_Rev'] = $rowFC['Cho_Doc_Ced_Rev'];
+                    if (empty($fotosChofer['Cho_Doc_Vot']) && !empty($rowFC['Cho_Doc_Vot'])) $fotosChofer['Cho_Doc_Vot'] = $rowFC['Cho_Doc_Vot'];
+                    if (empty($fotosChofer['Cho_Doc_Fot']) && !empty($rowFC['Cho_Doc_Fot'])) $fotosChofer['Cho_Doc_Fot'] = $rowFC['Cho_Doc_Fot'];
+                }
+            }
+        } catch (Exception $eFC) {}
+
+        // Combinar fotos encontradas para entregar la información completa al formulario
+        $docCed = !empty($fotosVisitante['MVis_Doc_Ced']) ? $fotosVisitante['MVis_Doc_Ced'] : $fotosChofer['Cho_Doc_Ced'];
+        $docCedRev = !empty($fotosVisitante['MVis_Doc_Ced_Rev']) ? $fotosVisitante['MVis_Doc_Ced_Rev'] : $fotosChofer['Cho_Doc_Ced_Rev'];
+        $docVot = !empty($fotosVisitante['MVis_Doc_Vot']) ? $fotosVisitante['MVis_Doc_Vot'] : $fotosChofer['Cho_Doc_Vot'];
+        $docFot = !empty($fotosVisitante['MVis_Doc_Fot']) ? $fotosVisitante['MVis_Doc_Fot'] : $fotosChofer['Cho_Doc_Fot'];
+
         // 1. Verificar si ya existe como chofer en la empresa
         $chofer = $obBD_con1->getRowConsulta(15, array($Ses_Emp_Cod, $ced), $obBD_conexion);
         if (!empty($chofer)) {
             $resp['existe'] = true;
             $resp['esChofer'] = true;
+            if (empty($chofer['Cho_Doc_Ced']) && !empty($docCed)) $chofer['Cho_Doc_Ced'] = $docCed;
+            if (empty($chofer['Cho_Doc_Ced_Rev']) && !empty($docCedRev)) $chofer['Cho_Doc_Ced_Rev'] = $docCedRev;
+            if (empty($chofer['Cho_Doc_Vot']) && !empty($docVot)) $chofer['Cho_Doc_Vot'] = $docVot;
+            if (empty($chofer['Cho_Doc_Fot']) && !empty($docFot)) $chofer['Cho_Doc_Fot'] = $docFot;
             $resp['chofer'] = $chofer;
             $resp['persona'] = array(
                 'Prs_Cod' => $chofer['Prs_Cod'],
@@ -630,6 +667,10 @@ if (isset($_GET['buscarPersonaCedulaAjax'])) {
             if (!empty($visitante)) {
                 $resp['existe'] = true;
                 $resp['esVisitante'] = true;
+                if (empty($visitante['MVis_Doc_Ced']) && !empty($docCed)) $visitante['MVis_Doc_Ced'] = $docCed;
+                if (empty($visitante['MVis_Doc_Ced_Rev']) && !empty($docCedRev)) $visitante['MVis_Doc_Ced_Rev'] = $docCedRev;
+                if (empty($visitante['MVis_Doc_Vot']) && !empty($docVot)) $visitante['MVis_Doc_Vot'] = $docVot;
+                if (empty($visitante['MVis_Doc_Fot']) && !empty($docFot)) $visitante['MVis_Doc_Fot'] = $docFot;
                 $resp['visitante'] = $visitante;
                 $resp['persona'] = array(
                     'Prs_Cod' => $visitante['Prs_Cod'],
@@ -931,7 +972,32 @@ if (isset($_POST['saveChoferAjax'])) {
             if (isset($uploadedFiles['Cho_Doc_Vot'])) $datosVisitante['MVis_Doc_Vot'] = $uploadedFiles['Cho_Doc_Vot'];
             if (isset($uploadedFiles['Cho_Doc_Fot'])) $datosVisitante['MVis_Doc_Fot'] = $uploadedFiles['Cho_Doc_Fot'];
 
+            // Herencia automática de fotos existentes (reutiliza rutas de archivo sin duplicar ni resubir en disco)
+            $visExistGlobal = $obBD_con1->getRowConsulta(16, array($Ses_Emp_Cod, $Cho_Ced), $obBD_conexion);
+            $choferExistGlobal = $obBD_con1->getRowConsulta(15, array($Ses_Emp_Cod, $Cho_Ced), $obBD_conexion);
+
+            $camposFotos = array(
+                'MVis_Doc_Ced'     => array('MVis_Doc_Ced', 'Cho_Doc_Ced'),
+                'MVis_Doc_Ced_Rev' => array('MVis_Doc_Ced_Rev', 'Cho_Doc_Ced_Rev'),
+                'MVis_Doc_Vot'     => array('MVis_Doc_Vot', 'Cho_Doc_Vot'),
+                'MVis_Doc_Fot'     => array('MVis_Doc_Fot', 'Cho_Doc_Fot')
+            );
+
+            foreach ($camposFotos as $targetKey => $sourceKeys) {
+                if (!isset($datosVisitante[$targetKey]) || empty($datosVisitante[$targetKey])) {
+                    // 1. Buscar en visitante anterior si existe
+                    if (!empty($visExistGlobal) && !empty($visExistGlobal[$sourceKeys[0]])) {
+                        $datosVisitante[$targetKey] = $visExistGlobal[$sourceKeys[0]];
+                    }
+                    // 2. Si no hay en visitante, buscar en chofer si existe
+                    elseif (!empty($choferExistGlobal) && !empty($choferExistGlobal[$sourceKeys[1]])) {
+                        $datosVisitante[$targetKey] = $choferExistGlobal[$sourceKeys[1]];
+                    }
+                }
+            }
+
             if (!empty($MVis_Cod)) {
+                // Edición directa de una fila de visitante por su ID MVis_Cod
                 $datosVisitante['where'] = array('MVis_Cod' => $MVis_Cod);
                 $obBD_con1->operacionobBD('manifiesto_visitante.update', $datosVisitante, $obBD_conexion);
                 if ($obBD_con1->Error != 0) {
@@ -939,11 +1005,18 @@ if (isset($_POST['saveChoferAjax'])) {
                     throw new Exception("Error al actualizar Visitante: " . $errMsg);
                 }
             } else {
-                $visExist = $obBD_con1->getRowConsulta(16, array($Ses_Emp_Cod, $Cho_Ced), $obBD_conexion);
-                if (!empty($visExist)) {
-                    $datosVisitante['where'] = array('MVis_Cod' => $visExist['MVis_Cod']);
+                // Verificar si la persona ya está registrada ESPECÍFICAMENTE en este evento ($Man_Eve)
+                $visExistEnEvento = null;
+                if (!empty($Man_Eve)) {
+                    $visExistEnEvento = $obBD_con1->getRowConsulta(20, array($Ses_Emp_Cod, $Cho_Ced, $Man_Eve), $obBD_conexion);
+                }
+
+                if (!empty($visExistEnEvento)) {
+                    // Ya está registrada en este mismo evento -> UPDATE de esa fila MVis_Cod
+                    $datosVisitante['where'] = array('MVis_Cod' => $visExistEnEvento['MVis_Cod']);
                     $obBD_con1->operacionobBD('manifiesto_visitante.update', $datosVisitante, $obBD_conexion);
                 } else {
+                    // Es un evento nuevo para esta persona -> INSERT (SE GUARDA UN NUEVO REGISTRO PARA ESTE EVENTO)
                     $obBD_con1->operacionobBD('manifiesto_visitante.insert', $datosVisitante, $obBD_conexion);
                 }
                 if ($obBD_con1->Error != 0) {
@@ -2708,7 +2781,7 @@ if (isset($_POST['anularVehiculoAjax'])) {
     <!-- JS Scripts Inclusion con parámetro de cache-busting -->
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=38"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=39"></script>
 </body>
 
 </html>
