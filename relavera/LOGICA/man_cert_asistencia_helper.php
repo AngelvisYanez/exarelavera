@@ -239,10 +239,10 @@ if (!function_exists('man_cert_asistencia_generar_pdf')) {
         $pdf->Line($pageW - $c, $pageH - $c, $pageW - $c - $L, $pageH - $c);
         $pdf->Line($pageW - $c, $pageH - $c, $pageW - $c, $pageH - $c - $L);
 
-        // Marca de agua (sin SetAlpha)
+        // Marca de agua cubriendo todo el fondo (igual que vista HTML: width:100% height:100%)
         $rutaMarca = realpath(__DIR__ . '/../../imagenes/620/marca_agua.png');
         if ($rutaMarca && is_file($rutaMarca)) {
-            $pdf->Image($rutaMarca, ($pageW / 2) - 35, ($pageH / 2) - 35, 70, 70, '', '', '', false, 150, '', false, false, 0, false, false, false);
+            $pdf->Image($rutaMarca, 7, 7, $pageW - 14, $pageH - 14, '', '', '', false, 150, '', false, false, 0, false, false, false);
         }
 
         // === CONTENIDO (mismo orden/texto que el HTML) ===
