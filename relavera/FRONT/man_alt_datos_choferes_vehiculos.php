@@ -8,30 +8,12 @@
  * @version 2.8
  */
 
-if (!isset($_SESSION)) {
-    @session_start();
-}
-// Fallbacks por defecto si no se ha iniciado sesión (desarrollo local o acceso directo)
-if (empty($_SESSION['Ses_Emp_Cod'])) {
-    $_SESSION['Ses_Emp_Cod'] = '620';
-}
-if (empty($_SESSION['Ses_Dat_Dis'])) {
-    $_SESSION['Ses_Dat_Dis'] = 'ecoparkmining';
-}
-if (empty($_SESSION['Ses_Lis_Per'])) {
-    $_SESSION['Ses_Lis_Per'] = array('2009', '2011', '2017', '2019');
-}
 
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/man_log_datos_choferes_vehiculos.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
 
-if (empty($Ses_Emp_Cod)) {
-    $Ses_Emp_Cod = isset($_SESSION['Ses_Emp_Cod']) ? $_SESSION['Ses_Emp_Cod'] : '620';
-}
-if (empty($Ses_Dat_Dis)) {
-    $Ses_Dat_Dis = isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : 'ecoparkmining';
-}
+
 
 $obBD_conexion = new Class_Log_Conexion_Datos_Choferes_Vehiculos($Ses_Dat_Dis);
 $obBD_con1 = new Class_Log_Datos_Choferes_Vehiculos;
@@ -40,6 +22,7 @@ $obBD_con1 = new Class_Log_Datos_Choferes_Vehiculos;
    VISUALIZADOR / IMPRESOR DE CERTIFICADO EN PDF (PLANTILLA ECOPARK MINING)
    ========================================================================== */
 if (isset($_GET['verCertificadoPdfAjax'])) {
+    require_once(__DIR__ . '/../LOGICA/man_cert_asistencia_helper.php');
     $prsNom = isset($_GET['Prs_Nom']) ? trim($_GET['Prs_Nom']) : 'Nombres';
     $prsApe = isset($_GET['Prs_Ape']) ? trim($_GET['Prs_Ape']) : 'Apellidos';
     $prsCed = isset($_GET['Prs_Ced']) ? trim($_GET['Prs_Ced']) : '1100000000';
@@ -352,72 +335,78 @@ try {
 /* ==========================================================================
    FUNCIÓN AUXILIAR DE COMPRESIÓN DE IMÁGENES EN SERVIDOR (PHP GD)
    ========================================================================== */
-function optimizarYComprimirImagen($sourcePath, $targetPath, $maxDim = 1920, $quality = 85)
-{
-    list($width, $height, $type) = @getimagesize($sourcePath);
-    if (!$width || !$height) return false;
+if (!function_exists('optimizarYComprimirImagen')) {
+    function optimizarYComprimirImagen($sourcePath, $targetPath, $maxDim = 1920, $quality = 85)
+    {
+        list($width, $height, $type) = @getimagesize($sourcePath);
+        if (!$width || !$height) return false;
 
-    switch ($type) {
-        case IMAGETYPE_JPEG:
-            $srcImg = @imagecreatefromjpeg($sourcePath);
-            break;
-        case IMAGETYPE_PNG:
-            $srcImg = @imagecreatefrompng($sourcePath);
-            break;
-        case IMAGETYPE_WEBP:
-            $srcImg = @imagecreatefromwebp($sourcePath);
-            break;
-        default:
-            return move_uploaded_file($sourcePath, $targetPath);
-    }
-
-    if (!$srcImg) return move_uploaded_file($sourcePath, $targetPath);
-
-    // Calcular nuevas dimensiones conservando la relación de aspecto
-    $ratio = $width / $height;
-    if ($width > $maxDim || $height > $maxDim) {
-        if ($ratio > 1) {
-            $newWidth = $maxDim;
-            $newHeight = round($maxDim / $ratio);
-        } else {
-            $newHeight = $maxDim;
-            $newWidth = round($maxDim * $ratio);
+        switch ($type) {
+            case IMAGETYPE_JPEG:
+                $srcImg = @imagecreatefromjpeg($sourcePath);
+                break;
+            case IMAGETYPE_PNG:
+                $srcImg = @imagecreatefrompng($sourcePath);
+                break;
+            case IMAGETYPE_WEBP:
+                $srcImg = @imagecreatefromwebp($sourcePath);
+                break;
+            default:
+                return move_uploaded_file($sourcePath, $targetPath);
         }
-    } else {
-        $newWidth = $width;
-        $newHeight = $height;
+
+        if (!$srcImg) return move_uploaded_file($sourcePath, $targetPath);
+
+        // Calcular nuevas dimensiones conservando la relación de aspecto
+        $ratio = $width / $height;
+        if ($width > $maxDim || $height > $maxDim) {
+            if ($ratio > 1) {
+                $newWidth = $maxDim;
+                $newHeight = round($maxDim / $ratio);
+            } else {
+                $newHeight = $maxDim;
+                $newWidth = round($maxDim * $ratio);
+            }
+        } else {
+            $newWidth = $width;
+            $newHeight = $height;
+        }
+
+        $dstImg = imagecreatetruecolor($newWidth, $newHeight);
+
+        if ($type == IMAGETYPE_PNG || $type == IMAGETYPE_WEBP) {
+            imagealphablending($dstImg, false);
+            imagesavealpha($dstImg, true);
+        }
+
+        imagecopyresampled($dstImg, $srcImg, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+        $res = imagejpeg($dstImg, $targetPath, $quality);
+
+        imagedestroy($srcImg);
+        imagedestroy($dstImg);
+
+        return $res && file_exists($targetPath);
     }
-
-    $dstImg = imagecreatetruecolor($newWidth, $newHeight);
-
-    if ($type == IMAGETYPE_PNG || $type == IMAGETYPE_WEBP) {
-        imagealphablending($dstImg, false);
-        imagesavealpha($dstImg, true);
-    }
-
-    imagecopyresampled($dstImg, $srcImg, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-    $res = imagejpeg($dstImg, $targetPath, $quality);
-
-    imagedestroy($srcImg);
-    imagedestroy($dstImg);
-
-    return $res && file_exists($targetPath);
 }
 
 // Función auxiliar para responder JSON limpio sin interferencia de buffers o advertencias de PHP
-function responderJsonLimpio($response)
-{
-    @ini_set('display_errors', '0');
-    @error_reporting(0);
-    if (class_exists('DebugBar')) {
-        @DebugBar::sendDataInHeaders(false);
+if (!function_exists('responderJsonLimpio')) {
+    function responderJsonLimpio($response)
+    {
+        @ini_set('display_errors', '0');
+        @error_reporting(0);
+        if (class_exists('DebugBar')) {
+            @DebugBar::sendDataInHeaders(false);
+        }
+        while (ob_get_level() > 0) {
+            if (!@ob_end_clean()) {
+                break; // Break the loop if the buffer cannot be cleaned (e.g. zlib compression)
+            }
+        }
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($response);
+        exit;
     }
-    while (ob_get_level() > 0) {
-        @ob_end_clean();
-    }
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode($response);
-    exit;
 }
 
 /* ==========================================================================
@@ -1182,6 +1171,8 @@ if (isset($_POST['anularVisitanteAjax'])) {
 
 // 7.5. Enviar notificación de capacitación al chofer (WhatsApp + correo Relavera)
 if (isset($_POST['enviarNotifCapacitacionChoferAjax'])) {
+    require_once(__DIR__ . '/../LOGICA/relavera_whatsapp_utils.php');
+    require_once(__DIR__ . '/../LOGICA/relavera_notif_mail_utils.php');
     $resp = array(
         'success' => false,
         'message' => '',
@@ -1311,6 +1302,9 @@ if (isset($_POST['enviarNotifCapacitacionChoferAjax'])) {
 
 // 7.6. Enviar certificado PDF a visitante del evento (WhatsApp y/o correo)
 if (isset($_POST['enviarCertificadoVisitanteEventoAjax'])) {
+    require_once(__DIR__ . '/../LOGICA/relavera_whatsapp_utils.php');
+    require_once(__DIR__ . '/../LOGICA/relavera_notif_mail_utils.php');
+    require_once(__DIR__ . '/../LOGICA/man_cert_asistencia_helper.php');
     $resp = array(
         'success' => false,
         'message' => '',
