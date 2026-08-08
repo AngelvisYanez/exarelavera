@@ -417,7 +417,6 @@ function sentencias_datos_choferes_vehiculos($Nro_Sql, $Par_Sql)
                        mv.MVis_Tem,
                        mv.MVis_Obs,
                        mv.MVis_Est,
-                       mv.MVis_Feg,
                        persona.Prs_Cod,
                        persona.Prs_Ced,
                        persona.Prs_Nom,

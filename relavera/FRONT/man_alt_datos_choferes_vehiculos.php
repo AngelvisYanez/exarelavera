@@ -293,39 +293,76 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
 
 
 
-
-// Cargar catálogos iniciales
-$transportes = $obBD_con1->getArrayConsulta(1, array($Ses_Emp_Cod), $obBD_conexion);
-$obBD_con1->utf8_change_param($transportes);
-
-$plantas = $obBD_con1->getArrayConsulta(2, array(), $obBD_conexion);
-$obBD_con1->utf8_change_param($plantas);
-
-// Catálogo de eventos para el tab Eventos (lista desplegable)
-$eventosCatalogo = array();
-try {
-    $paramsEvCat = array($Ses_Emp_Cod);
-    $paramsEvCat['limits'] = 'LIMIT 500';
-    $eventosCatalogo = $obBD_con1->getArrayConsulta(18, $paramsEvCat, $obBD_conexion);
-    if (!is_array($eventosCatalogo)) {
-        $eventosCatalogo = array();
+/* ==========================================================================
+   DETECCIÓN DE PETICIÓN AJAX: Si es AJAX, saltar la carga de catálogos
+   para evitar errores fatales (502 Bad Gateway) en el servidor de producción.
+   Los catálogos solo se necesitan para renderizar el HTML de la página.
+   ========================================================================== */
+$_esAjax = false;
+$_ajaxKeys = array(
+    'verCertificadoPdfAjax',
+    'listEmpresasTransporteGridAjax', 'saveEmpresaTransporteAjax', 'anularEmpresaTransporteAjax',
+    'listEventosGridAjax', 'listVisitantesEventoGridAjax',
+    'listChoferesGridAjax', 'buscarPersonaCedulaAjax', 'getChoferByIdAjax', 'getVisitanteByIdAjax',
+    'saveChoferAjax', 'anularChoferAjax', 'anularVisitanteAjax',
+    'enviarNotifCapacitacionChoferAjax', 'enviarCertificadoVisitanteEventoAjax',
+    'listVehiculosGridAjax', 'validarPlacaVehiculoAjax', 'getVehiculoByIdAjax',
+    'saveVehiculoAjax', 'anularVehiculoAjax',
+    'saveEventoAjax', 'anularEventoAjax', 'toggleVigenciaEventoAjax'
+);
+foreach ($_ajaxKeys as $_ak) {
+    if (isset($_REQUEST[$_ak])) {
+        $_esAjax = true;
+        break;
     }
-    $obBD_con1->utf8_change_param($eventosCatalogo);
-} catch (Exception $e) {
-    $eventosCatalogo = array();
 }
 
-// Consultar evento actualmente en vigencia (Man_Vig = 'S') y sus tipos de certificado
+// Inicialización de variables (se cargan con datos solo si NO es AJAX)
+$transportes = array();
+$plantas = array();
+$eventosCatalogo = array();
 $nombreEventoVigente = '';
 $idEventoVigente = '';
-try {
-    $resEv = $obBD_con1->consulta("SELECT Man_Eve, Man_ENom FROM manifiesto_evento WHERE UPPER(Man_Vig) = 'S' AND UPPER(Man_EEst) = 'A' LIMIT 1", $obBD_conexion->conexion);
-    if ($resEv && ($rowEv = $obBD_con1->fetch_assoc($resEv))) {
-        $nombreEventoVigente = trim($rowEv['Man_ENom']);
-        $idEventoVigente = $rowEv['Man_Eve'];
+
+if (!$_esAjax) {
+    // Cargar catálogos iniciales (solo para renderizar la página HTML)
+    try {
+        $transportes = $obBD_con1->getArrayConsulta(1, array($Ses_Emp_Cod), $obBD_conexion);
+        $obBD_con1->utf8_change_param($transportes);
+    } catch (Exception $e) {
+        $transportes = array();
     }
-} catch (Exception $e) {
-    // Si no existe el registro o tabla, se ignora silenciosamente
+
+    try {
+        $plantas = $obBD_con1->getArrayConsulta(2, array(), $obBD_conexion);
+        $obBD_con1->utf8_change_param($plantas);
+    } catch (Exception $e) {
+        $plantas = array();
+    }
+
+    // Catálogo de eventos para el tab Eventos (lista desplegable)
+    try {
+        $paramsEvCat = array($Ses_Emp_Cod);
+        $paramsEvCat['limits'] = 'LIMIT 500';
+        $eventosCatalogo = $obBD_con1->getArrayConsulta(18, $paramsEvCat, $obBD_conexion);
+        if (!is_array($eventosCatalogo)) {
+            $eventosCatalogo = array();
+        }
+        $obBD_con1->utf8_change_param($eventosCatalogo);
+    } catch (Exception $e) {
+        $eventosCatalogo = array();
+    }
+
+    // Consultar evento actualmente en vigencia (Man_Vig = 'S') y sus tipos de certificado
+    try {
+        $resEv = $obBD_con1->consulta("SELECT Man_Eve, Man_ENom FROM manifiesto_evento WHERE UPPER(Man_Vig) = 'S' AND UPPER(Man_EEst) = 'A' LIMIT 1", $obBD_conexion->conexion);
+        if ($resEv && ($rowEv = $obBD_con1->fetch_assoc($resEv))) {
+            $nombreEventoVigente = trim($rowEv['Man_ENom']);
+            $idEventoVigente = $rowEv['Man_Eve'];
+        }
+    } catch (Exception $e) {
+        // Si no existe el registro o tabla, se ignora silenciosamente
+    }
 }
 
 
