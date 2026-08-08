@@ -58,7 +58,7 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
     $mesesAct = array('enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre');
     $fechaEmisionStr = 'Portovelo, El Oro, ' . date('d') . ' de ' . $mesesAct[(int)date('m') - 1] . ' de ' . date('Y') . '.';
 
-    // Carga robusta de imágenes en Base64 para garantizar visualización sin fallos de ruta en servidor
+    // Carga robusta de imágenes en Base64 para marca de agua, sello, firma1 y firma2
     $srcWatermark = '../../imagenes/620/marca_agua.png';
     $pathWM1 = __DIR__ . '/../../imagenes/620/marca_agua.png';
     $pathWM2 = isset($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] . '/imagenes/620/marca_agua.png' : '';
@@ -76,7 +76,32 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
     } elseif (!empty($pathSello2) && file_exists($pathSello2)) {
         $srcSello = 'data:image/png;base64,' . base64_encode(file_get_contents($pathSello2));
     }
+
+    // Firma 1 (Gerencia General)
+    $srcFirma1 = '../../imagenes/620/firma1.png';
+    $pathFirma1_1 = __DIR__ . '/../../imagenes/620/firma1.png';
+    $pathFirma1_2 = isset($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] . '/imagenes/620/firma1.png' : '';
+    if (file_exists($pathFirma1_1)) {
+        $srcFirma1 = 'data:image/png;base64,' . base64_encode(file_get_contents($pathFirma1_1));
+    } elseif (!empty($pathFirma1_2) && file_exists($pathFirma1_2)) {
+        $srcFirma1 = 'data:image/png;base64,' . base64_encode(file_get_contents($pathFirma1_2));
+    } else {
+        $srcFirma1 = $srcSello;
+    }
+
+    // Firma 2 (Área de Capacitación)
+    $srcFirma2 = '../../imagenes/620/firma2.png';
+    $pathFirma2_1 = __DIR__ . '/../../imagenes/620/firma2.png';
+    $pathFirma2_2 = isset($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] . '/imagenes/620/firma2.png' : '';
+    if (file_exists($pathFirma2_1)) {
+        $srcFirma2 = 'data:image/png;base64,' . base64_encode(file_get_contents($pathFirma2_1));
+    } elseif (!empty($pathFirma2_2) && file_exists($pathFirma2_2)) {
+        $srcFirma2 = 'data:image/png;base64,' . base64_encode(file_get_contents($pathFirma2_2));
+    } else {
+        $srcFirma2 = $srcSello;
+    }
     ?>
+
 
     <!DOCTYPE html>
     <html lang="es">
@@ -110,9 +135,21 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
             /* MARCA DE AGUA ADAPTADA 100% A ANCHO Y ALTO DEL CERTIFICADO */
             .cert-watermark { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; opacity: 0.85; mix-blend-mode: multiply; pointer-events: none; z-index: 1; }
 
-            /* SELLO TINTA RUBBER STAMP RECAUTELADO Y REUBICADO MÁS ARRIBA */
-            .cert-sello-box { position: absolute; left: 185px; bottom: 68px; z-index: 10; pointer-events: none; }
-            .cert-sello-img { width: 115px; height: 115px; object-fit: contain; transform: rotate(-12deg); opacity: 0.92; filter: drop-shadow(0px 2px 5px rgba(0,0,0,0.15)); }
+            /* SELLO TINTA RUBBER STAMP ESQUINA INFERIOR IZQUIERDA (MÁS A LA IZQUIERDA) */
+            .cert-sello-box-corner { position: absolute; left: 45px; bottom: 30px; z-index: 10; pointer-events: none; }
+            .cert-sello-img-corner { width: 120px; height: 120px; object-fit: contain; transform: rotate(-15deg); opacity: 0.92; filter: drop-shadow(0px 2px 5px rgba(0,0,0,0.15)); }
+
+            /* SELLOS TINTA RUBBER STAMP SOBRE FIRMAS (BAJADOS SOBRE LAS LÍNEAS DE FIRMA) */
+            .cert-sello-box-left { position: absolute; left: 185px; bottom: 68px; z-index: 10; pointer-events: none; }
+            .cert-sello-img-left { width: 115px; height: 115px; object-fit: contain; transform: rotate(-12deg); opacity: 0.92; filter: drop-shadow(0px 2px 5px rgba(0,0,0,0.15)); }
+
+            .cert-sello-box-right { position: absolute; right: 185px; bottom: 68px; z-index: 10; pointer-events: none; }
+            .cert-sello-img-right { width: 115px; height: 115px; object-fit: contain; transform: rotate(12deg); opacity: 0.92; filter: drop-shadow(0px 2px 5px rgba(0,0,0,0.15)); }
+
+
+
+
+
 
             /* CONTENIDO RELATIVO CON Z-INDEX SUPERIOR */
             .cert-content { position: relative; z-index: 5; height: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
@@ -180,10 +217,23 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
             <!-- MARCA DE AGUA EN EL FONDO -->
             <img src="<?php echo $srcWatermark; ?>" class="cert-watermark" alt="Marca de Agua" onerror="this.src='/imagenes/620/marca_agua.png';">
 
-            <!-- SELLO RUBBER STAMP TINTA REALISTA -->
-            <div class="cert-sello-box">
-                <img src="<?php echo $srcSello; ?>" class="cert-sello-img" alt="Sello Oficial" onerror="this.src='/imagenes/620/sello.png';">
+            <!-- SELLO RUBBER STAMP EN ESQUINA INFERIOR IZQUIERDA (SEÑALADO EN ROJO) -->
+            <div class="cert-sello-box-corner">
+                <img src="<?php echo $srcSello; ?>" class="cert-sello-img-corner" alt="Sello Esquina" onerror="this.src='/imagenes/620/sello.png';">
             </div>
+
+            <!-- FIRMA 1 SOBRE GERENCIA GENERAL (firma1.png) -->
+            <div class="cert-sello-box-left">
+                <img src="<?php echo $srcFirma1; ?>" class="cert-sello-img-left" alt="Firma Gerencia General" onerror="this.src='/imagenes/620/firma1.png';">
+            </div>
+
+            <!-- FIRMA 2 SOBRE ÁREA DE CAPACITACIÓN (firma2.png) -->
+            <div class="cert-sello-box-right">
+                <img src="<?php echo $srcFirma2; ?>" class="cert-sello-img-right" alt="Firma Área de Capacitación" onerror="this.src='/imagenes/620/firma2.png';">
+            </div>
+
+
+
 
             <div class="cert-content">
                 <div>
