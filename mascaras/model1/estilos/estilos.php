@@ -6,6 +6,8 @@ Fecha de actualización:	2011-03-24
 Desarrollador:	Lewis Chimarro 
 */
 ?>
+<meta charset="iso-8859-1" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <!-- <link rel="shortcut icon" type="image/x-icon" href="../../mascaras/model1/img/logo/exa-ico-2.png" /> -->
  <link rel="shortcut icon" type="image/x-icon" href="../../imagenes/ingresar/favicon.png" />
 <link href="../../mascaras/model1/estilos/interfaz.css" rel="stylesheet" type="text/css">

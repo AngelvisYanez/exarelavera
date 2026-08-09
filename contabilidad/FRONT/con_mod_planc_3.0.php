@@ -294,7 +294,7 @@ if (isset($delete)) {
     </div>
 
     <script type="text/javascript">
-        public $treeview = $('#using_json_2'),
+        var $treeview = $('#using_json_2'),
             gridComp = $("#comp"),
             Pld_Cdc_Aux = '';
 

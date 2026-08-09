@@ -186,7 +186,7 @@ if(isset($deletePorcentaje)){
                     buttonicon:"glyphicon glyphicon-plus", 
                     title:'Agregar',
                     onClickButton: function(){ 
-                        public $this=$(this),id=($this.jqGrid('getCol','Apr_Cod',false,'max')+1)||0; 
+                        var $this=$(this),id=($this.jqGrid('getCol','Apr_Cod',false,'max')+1)||0; 
                         $this.jqGrid('addRowData',id,{'Apr_Cod':id});     
                         $this.jqGrid('editRow',id);
                     }, 

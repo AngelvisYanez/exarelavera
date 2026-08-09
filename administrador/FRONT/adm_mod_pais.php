@@ -289,7 +289,7 @@ if(isset($anula)){
         </div>
     </div>       
    <script type="text/javascript">      
-       public $treeview=$('#using_json_2'),gridComp=$("#comp"),ciudad='',ciu_cod='';   
+       var $treeview=$('#using_json_2'),gridComp=$("#comp"),ciudad='',ciu_cod='';   
        function savePais(form){
             var data=$('#'+form).getData('save');
             $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( response ) {

@@ -136,7 +136,7 @@ if(isset($cuentas)){
                             },'json').fail(function(error) { $.alert("El Servidor ha fallado en responder!"); });
                         }
                     $(document).ready(function () {   
-                        public $grid=$("#list");
+                        var $grid=$("#list");
                         $grid.jqGrid({
                             url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                             mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },

@@ -281,7 +281,7 @@ if(isset($save)){
         </div>
     </div>       
    <script type="text/javascript">
-       public $treeview=$('#using_json_2'),gridComp=$("#comp");
+       var $treeview=$('#using_json_2'),gridComp=$("#comp");
 
        // Función para procesar y validar los datos del árbol antes de que jsTree los use
        function procesarDatosArbol(data) {

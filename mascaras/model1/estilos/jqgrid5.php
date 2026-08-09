@@ -21,7 +21,8 @@ Desarrollador:	Erik Niebla
     <script src="../../framework/plugins/compatibility/html5shiv/html5shiv-3.7.3.js"></script>
     <script src="../../framework/plugins/compatibility/respond/respond-1.4.2.js"></script>
     <![endif]-->
-    <script type="text/ecmascript" src="../../framework/jquery/jquery.min/jquery-2.1.4.min.js"></script>
+    <script type="text/ecmascript" src="../../framework/jquery/jquery.min/jquery-3.7.1.min.js"></script>
+    <script type="text/ecmascript" src="../../framework/jquery/jquery.min/jquery-migrate-3.4.1.min.js"></script>
     <script type="text/ecmascript" src="../../framework/jquery/bootstrap/bootstrap-3.3.5/js/bootstrap.custom.min.js"></script>
     <script type="text/ecmascript" src="../../framework/jquery/jquery.ui/jquery-ui-1.11.4/jquery-ui.min.js"></script>
     <script type="text/ecmascript" src="../../framework/jquery/jquery.ui/jquery-ui-1.11.4/datepicker-es.js"></script>

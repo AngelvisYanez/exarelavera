@@ -748,7 +748,7 @@ if (isset($_POST['getMaterials'])) {
               dataType: 'json', // <-- muy importante
               success: function(materials) {
                 // Limpiar y actualizar el select Cod_Const
-                public $codConst = $('#Cod_Const');
+                var $codConst = $('#Cod_Const');
                 $codConst.empty().append('<option value="">-- NO APLICA --</option>');
 
                 $.each(materials, function(i, material) {

@@ -119,7 +119,7 @@ if(isset($delete)){
                 buttonicon:"glyphicon glyphicon-plus", 
                 title:'Agregar',
                 onClickButton: function(){ 
-                    public $this=$(this),id=($this.jqGrid('getCol','Ded_Cod',false,'max')+1)||0; 
+                    var $this=$(this),id=($this.jqGrid('getCol','Ded_Cod',false,'max')+1)||0; 
                     $this.jqGrid('addRowData',id,{'Ded_Cod':id});     
                     $this.jqGrid('editRow',id);
                     $('#eli'+id).show();

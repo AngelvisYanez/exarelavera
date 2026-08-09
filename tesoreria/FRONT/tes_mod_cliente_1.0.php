@@ -476,7 +476,7 @@ if (isset($guardarCliente)) {
         }
 
         function setTipoDoc() {
-            public $Prs_Ced = $('#Prs_Ced'),
+            var $Prs_Ced = $('#Prs_Ced'),
                 Prs_Ced = $Prs_Ced.val(),
                 isRuc = $('#isRuc').is(':checked');
 

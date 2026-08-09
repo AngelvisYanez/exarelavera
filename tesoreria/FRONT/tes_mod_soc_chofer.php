@@ -379,7 +379,7 @@ if (isset($guardarChofer)) {
         }
 
         function setTipoDoc() {
-            public $Ext_Ruc = $('#Ext_Ruc'),
+            var $Ext_Ruc = $('#Ext_Ruc'),
                 Ext_Ruc = $Ext_Ruc.val(),
                 isRuc = $('#isRuc').is(':checked');
             if (Ext_Ruc.length >= 10 && $.isNum(Ext_Ruc)) {

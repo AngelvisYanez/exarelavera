@@ -777,7 +777,7 @@ $obBD_con1->echoLog($busqueda);
 
         // Funcion para activar de cédula a RUC
         function setTipoDoc() {
-            public $Prs_Ced = $('#Prs_Ced'),
+            var $Prs_Ced = $('#Prs_Ced'),
                 Prs_Ced = $Prs_Ced.val(),
                 isRuc = $('#isRuc').is(':checked');
 

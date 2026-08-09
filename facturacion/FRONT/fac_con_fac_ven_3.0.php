@@ -2479,7 +2479,7 @@ if (isset($ajaxDetalleVentas)) {
                         };
                         
                         // Crear un formulario temporal para enviar por POST al nuevo reporte 3.0
-                        public $form = $('<form>', {
+                        var $form = $('<form>', {
                             action: 'fac_pri_fac_total_3.0.php',
                             method: 'POST',
                             target: '_blank'
@@ -2614,7 +2614,7 @@ if (isset($ajaxDetalleVentas)) {
                     }
                 ],
                 loadComplete: function() {
-                    public $grid = $(this);
+                    var $grid = $(this);
                     var ids = $grid.jqGrid('getDataIDs');
                     ids.forEach(function(id) {
                         var rowData = $grid.jqGrid('getRowData', id);

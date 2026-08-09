@@ -2895,7 +2895,7 @@ if (isset($saldoCCxCC)) {
         function ocultarCamposBusquedaImei() {
             // Ocultar todos los fieldsets que NO contengan "Tipo:"
             $('#imeiForm fieldset').each(function() {
-                public $fieldset = $(this);
+                var $fieldset = $(this);
                 var tieneTipo = $fieldset.find('label:contains("Tipo:")').length > 0;
                 var legend = $fieldset.find('legend').text().trim();
                 // Si NO tiene "Tipo:" Y el legend NO es "Filtros", ocultarlo
@@ -2910,7 +2910,7 @@ if (isset($saldoCCxCC)) {
             $('#imeiForm button:contains("Buscar")').closest('.form-group, fieldset').css('display', 'none !important').hide();
             // Ocultar radiosets que contengan "Apellido/Nombre" o "Cédula/R.U.C"
             $('#imeiForm .radioset').each(function() {
-                public $radioset = $(this);
+                var $radioset = $(this);
                 var html = $radioset.html();
                 if (html.indexOf('Apellido/Nombre') !== -1 || html.indexOf('Cédula/R.U.C') !== -1) {
                     $radioset.closest('.form-group, fieldset').css('display', 'none !important').hide();
@@ -2952,7 +2952,7 @@ if (isset($saldoCCxCC)) {
         
         // Agregar evento para recargar grid cuando cambie el filtro
         $('#imeiForm input[name="imei_tipo"]').on('change', function() {
-            public $grid = $('#imeiGrid');
+            var $grid = $('#imeiGrid');
             var Pro_Cod = $('#imeiForm input[name="Pro_Cod"]').val() || '';
             var Ime_Tip = $(this).val() || '';
             // Actualizar postData antes de recargar

@@ -1083,7 +1083,7 @@ if(isset($uploadfoto)){
         });
         $("#tabs").tabs({
             activate:function (event, ui) {
-                public $activeTab = $('#tabs').tabs('option','active');
+                var $activeTab = $('#tabs').tabs('option','active');
                 if($activeTab === 4){calcula_depreciacion();}
             }
         });

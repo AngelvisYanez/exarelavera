@@ -138,7 +138,7 @@ if(isset($save)){
                     }
                     $(document).ready(function () { 
                         $.datepicker.setDefaults($.datepicker.regional["es"]);
-                        public $list=$("#list");
+                        var $list=$("#list");
                         $list.jqGrid({
                             url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                             mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },

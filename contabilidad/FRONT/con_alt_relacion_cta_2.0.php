@@ -209,7 +209,7 @@ if(isset($deleteCuenta)){
                                         $('#list').navGrid('#listPager',{ edit: false, add: false, del: false, search: false, refresh: true, view: true, position: "left", cloneToTop: false });
                                         $("#list").jqGrid('bindKeys'); 
                                         
-                                    public $tabs=$( "#tabs" );
+                                    var $tabs=$( "#tabs" );
                                     $tabs.tabs({ selected: 0}); 
                                     $("#inventar").jqGrid({
                                         url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',

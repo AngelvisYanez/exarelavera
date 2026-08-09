@@ -114,7 +114,7 @@ EOF;
             
         </style>
         <script>    
-            public $tabs;
+            var $tabs;
             $(function() {  
                 $tabs=$( "#tabs" );
                 $tabs.createTabs();
@@ -293,7 +293,7 @@ EOF;
                                 $.createDialogConfirm('¿Está seguro que desea eliminar esta relación?',data,function (){$.saveDataJson("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data,function (){ $("#prodCuentas").jqGrid('setGridParam',{datatype:'json'}).trigger("reloadGrid", [{ page: 1 }]); } /*success*/);});
                             }                            
                             $(function() {  
-                                public $listProds=$("#listProds");
+                                var $listProds=$("#listProds");
                                 $listProds.createGrid({                                   
                                     height:295,postData: $("#prodForm").getData("productoAjax"),caption:'Listado de Productos',
                                     colModel: [
@@ -459,7 +459,7 @@ EOF;
                             $(function() {
                                 //$tabs.tabs( "option", "active", 1 );
                                 $("#Cat_Cod").createChosen('input-sm').on('change', function(e) { $("#listProdCat").Search('#catForm','categAjax'); $("#Cat_Cod_Cta").val(this.value);$("#Cat_Des").val($(this).find('option:selected').text());$("#listTipoCat").val('');$("#consumosCat").val('');updateCuentasCat(); });                                
-                                public $listProds=$("#listProdCat");
+                                var $listProds=$("#listProdCat");
                                 $listProds.createGrid({
                                     height: 295,caption:'Listado de Productos en la Categoria',
                                     colModel: [

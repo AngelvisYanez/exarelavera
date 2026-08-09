@@ -355,7 +355,7 @@ if(isset($guardarCliente)){
                 $.saveDataJson("",$('#formCliente').getData('guardarCliente'), function( resp ){ $('#Lis_Cli').trigger('reloadGrid');});
             }
 			function setTipoDoc(){
-				public $Prs_Ced=$('#Prs_Ced'), Prs_Ced=$Prs_Ced.val(), isRuc=$('#isRuc').is(':checked');
+				var $Prs_Ced=$('#Prs_Ced'), Prs_Ced=$Prs_Ced.val(), isRuc=$('#isRuc').is(':checked');
 				
 				if(Prs_Ced.length>=10 && $.isNum(Prs_Ced)){
 					Prs_Ced=Prs_Ced.substring(0,10);

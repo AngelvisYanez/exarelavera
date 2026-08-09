@@ -493,7 +493,7 @@ if(isset($elimina)){
             //Funci�n que agrega una fila al grid
             function agregarFila(indice,grid,cod,aux){
                 $('#'+grid).jqGrid('resizeGrid');
-                public $this=$('#'+grid),id,nuevo;
+                var $this=$('#'+grid),id,nuevo;
                 if(indice<1){
                     id=($this.jqGrid('getCol',cod,false,'max')+1)||0;
                     nuevo='N';

@@ -768,7 +768,7 @@ $rs_tip_compr = $obBD_con1->getArrayConsulta('tipo_compr.selectWhere', array('cl
         }
 
         function setTipoDoc() {
-            public $Prs_Ced = $('#Prs_Ced'),
+            var $Prs_Ced = $('#Prs_Ced'),
                 Prs_Ced = $Prs_Ced.val(),
                 isRuc = $('#isRuc').is(':checked');
 

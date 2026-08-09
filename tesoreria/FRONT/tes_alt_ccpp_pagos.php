@@ -275,8 +275,8 @@ if(isset($cuenAjax)){
                             }
                         }
                         function clearFooter(){ 
-                            public $footRow = $("#grillaComp .ui-jqgrid-sdiv .footrow");
-                            public $name = $footRow.find('>td[aria-describedby="list_Cop_Num"]'),
+                            var $footRow = $("#grillaComp .ui-jqgrid-sdiv .footrow");
+                            var $name = $footRow.find('>td[aria-describedby="list_Cop_Num"]'),
                             $invdate = $footRow.find('>td[aria-describedby="list_act"]'),
                             width2 = $name.width()  + $invdate.outerWidth();
                             $invdate.css("display", "none");

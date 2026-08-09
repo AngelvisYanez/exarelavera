@@ -201,7 +201,7 @@ $periodo = $periodos[0];
             },true,"#listPager_1",{refresh: true,view: true});
 
             //Variable para manejo del arbol jstree
-            public $treeview=$('#using_json_2');     
+            var $treeview=$('#using_json_2');     
             var Dep_Cod=0,
             Dep_Des='';
 

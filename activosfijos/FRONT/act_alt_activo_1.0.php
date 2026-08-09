@@ -1052,7 +1052,7 @@ if(isset($uploadfoto))
         });
         $("#tabs").tabs({
             activate:function (event, ui) {
-                public $activeTab = $('#tabs').tabs('option','active');
+                var $activeTab = $('#tabs').tabs('option','active');
                 if($activeTab === 4){calcula_depreciacion();}
             }
         });
@@ -1073,7 +1073,7 @@ if(isset($uploadfoto))
             {label:'<center><i class="ui-icon ui-icon-circle-check"></i></center>', name: 'act', width: 18, align: 'center',viewable: false, 
                 formatter: function(cellvalue, options, rowObject)
                 {
-                    public $input=$('<input id="Chk_'+rowObject.llave+'" type="checkbox"'+(cellvalue?'checked="checked"':'')+' onclick="cargar($(this).data(\'orig\'))" />');                    
+                    var $input=$('<input id="Chk_'+rowObject.llave+'" type="checkbox"'+(cellvalue?'checked="checked"':'')+' onclick="cargar($(this).data(\'orig\'))" />');                    
                     return $('<div/>').append($input.attr('data-orig',$.jsonParser(rowObject))).html();
                 }   
             }
