@@ -17,6 +17,7 @@ class MysqlDatos
     public $ek = 1, $con = null, $conDB = null, $_sentencias_func = null;
     /* @var object */
     public $rs_cargar = 0; // iden. de consulta
+    public $rs_save = 0; // resultados de grabacion en transacciones
     /* @var number */
     public $ErrorDebugged = true; // Error enviado
     public $Error = 0; // Cod. de error
@@ -158,7 +159,7 @@ class MysqlDatos
     }
     function getConn($c = null)
     {
-        return $this->getMyCon(c);
+        return $this->getMyCon($c);
     }
     function mensajes($param)
     {
@@ -262,9 +263,9 @@ class MysqlDatos
         }
     }
     /**
-     * retorna array en base a los parametros
+     * escapa los parametros por referencia (utiliza la conexion mysqli)
      * @param string/array $param
-     * @return array
+     * @return void
      */
     function escapeSqlParam(&$input)
     {
@@ -533,7 +534,7 @@ class MysqlDatos
     }
     function getPageGridFormat($sql, $data, $obBD = null, $log = false)
     {
-        $r = $this->getArrayConsulta($sql, $data, $obBD, $log);
+        $r = $this->getArrayConsulta($sql, $data, $obBD);
         $this->utf8_change_param($r);
         return array('rows' => $r, 'page' => 1, 'total' => 1, 'records' => count($r), 'success' => true);
     }
@@ -704,7 +705,7 @@ class MysqlDatos
         if ($rs_consulta instanceof mysqli_result) {
             // Si es un recurso vï¿½lido, lo liberamos
             try{
-                $ban = @mysqli_free_result($rs_consulta);
+                @mysqli_free_result($rs_consulta);
             } catch (\Throwable $e){}
             $rs_consulta = null; // Evita reutilizaciï¿½n accidental
         }
@@ -765,7 +766,7 @@ class MysqlDatos
      * @param string $Request_Uri pagina donde se estan modificando valores
      * @param int $Ses_Usu_Cod codigo del usuario
      * @param MysqlConexion $obBD
-     * @return int codigo de error mysql [0='No Error']
+     * @return int|void codigo de error mysql [0='No Error']
      */
     function saveAuditoria($Ses_Dat_Dis, $Request_Uri, $Ses_Usu_Cod, $obBD)
     {
@@ -860,7 +861,7 @@ class MysqlDatosContab extends MysqlDatos
         //ChromePhp::log($sql);
         return $result1[$Campo];
     }
-    function getProveeCliente($Emp_Cod, $Campo, $obBD = null)
+    function getProveeCliente($Emp_Cod, $Campo, $obBD = null, $Che_Cod = 0)
     {
         $sql = "";
         if ($Campo == 'Prv_Cod') $sql = "SELECT compra_prov.Prv_Cod FROM compra_prov INNER JOIN proveedore ON proveedore.Prv_Cod= compra_prov.Prv_Cod WHERE Emp_Cod=$Emp_Cod";

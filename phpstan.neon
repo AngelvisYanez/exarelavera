@@ -1,0 +1,46 @@
+parameters:
+    level: 1
+    paths:
+        - MODELS
+        - DATA
+        - classes
+    tmpDir: .phpstan-cache
+    bootstrapFiles:
+        - vendor/autoload.php
+    scanDirectories:
+        - MODELS
+        - DATA
+        - classes
+        - Librerias/debugbar/src
+        - Librerias/procedimientos
+        - auditoria/LOGICA
+    parallel:
+        maximumNumberOfProcesses: 4
+    ignoreErrors:
+        # Ruido estructural legacy (no son bugs funcionales)
+        - identifier: parameter.requiredAfterOptional
+        # Zend Framework no empaquetado en el proyecto
+        - message: '#Zend_[A-Za-z_]+#'
+        # Clases de infraestructura resueltas por autoload dinámico
+        - message: '#DebugBar[ab]*#i'
+        # Stubs vacios intencionales de la clase Auxiliar (Zend_Db_Adapter_Abstract)
+        - identifier: return.missing
+          paths:
+            - DATA/libs/Adapter/Abstract.php
+        # Libreria Zend no empaquetada: profiler/loader inexistentes (codigo muerto)
+        - identifier: requireOnce.fileNotFound
+          paths:
+            - DATA/libs/Adapter/Abstract.php
+        # DAC.php: clase legacy con propiedades dinamicas y extension PostgreSQL (no usada)
+        - identifier: property.notFound
+          paths:
+            - DATA/DAC.php
+        - identifier: function.void
+          paths:
+            - DATA/DAC.php
+        - identifier: function.notFound
+          paths:
+            - DATA/DAC.php
+        - identifier: variable.undefined
+          paths:
+            - DATA/DAC.php

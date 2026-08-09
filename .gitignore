@@ -9,6 +9,7 @@
 *.pdf
 .env
 .phpunit.result.cache
+.phpstan-cache/
 
 # Credenciales de base de datos
 conexion-produccion/

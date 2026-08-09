@@ -3,7 +3,7 @@
         'name' => 'ismaa/contable',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '60c4c50db5edb31fea48e9f61fe2f8687c454e34',
+        'reference' => 'c9fe05b44c69c9efca789955206232a126644eaa',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -31,7 +31,7 @@
         'ismaa/contable' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '60c4c50db5edb31fea48e9f61fe2f8687c454e34',
+            'reference' => 'c9fe05b44c69c9efca789955206232a126644eaa',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -144,6 +144,15 @@
             'install_path' => __DIR__ . '/../phpmailer/phpmailer',
             'aliases' => array(),
             'dev_requirement' => false,
+        ),
+        'phpstan/phpstan' => array(
+            'pretty_version' => '2.2.8',
+            'version' => '2.2.8.0',
+            'reference' => 'e285254e60f33c21902efef4a926ca0987c06804',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../phpstan/phpstan',
+            'aliases' => array(),
+            'dev_requirement' => true,
         ),
         'phpunit/php-code-coverage' => array(
             'pretty_version' => '10.1.16',

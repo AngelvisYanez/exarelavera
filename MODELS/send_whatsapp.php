@@ -67,9 +67,9 @@ function send_whatsapp_api_respuesta_ok($response)
     if (isset($data['error'])) {
         return false;
     }
+    $id = $data['id'] ?? null;
     if (array_key_exists('sent', $data)) {
         $sent = $data['sent'];
-        $id = $data['id'];
         if ($sent !== true && $sent !== 'true' && $sent !== 1 && $sent !== '1') {
             return false;
         }
