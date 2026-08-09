@@ -15,7 +15,7 @@ class labores extends AbstractModel{
         $sel=$this->_selectBasic();
         //$this->sqlByNombre("setEmpCod", $sel);
         if(isset($cond['op_opciones']))
-            $sel->where($cond['op_opciones']=="c"?"Tpg_Des=?":"Lab_Des LIKE '%{$cond['search']}%'", $cond['search']);
+            $sel->where($cond['op_opciones']=="c"?"Tpg_Des=?":"Lab_Des LIKE ?", $cond['op_opciones']=="c"?$cond['search']:"%{$cond['search']}%");
         return $sel;
     }
     /* formatea el array para insert o update */

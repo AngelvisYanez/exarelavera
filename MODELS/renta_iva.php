@@ -20,7 +20,7 @@ class renta_iva extends AbstractModel{
         $sel=$this->_selectBasic();
         $this->sqlByNombre("setEmpCod", $sel);
         if(isset($cond['op_opciones']))
-            $sel->where($cond['op_opciones']=="c"?"Ren_Sri LIKE '%{$cond['search']}%'":"Ren_Con LIKE '%{$cond['search']}%'", $cond['search']);
+            $sel->where($cond['op_opciones']=="c"?"Ren_Sri LIKE ?":"Ren_Con LIKE ?", "%{$cond['search']}%");
         return $sel;
     }
     /* formatea el array para insert o update */

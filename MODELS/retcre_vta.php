@@ -16,7 +16,7 @@ class retcre_vta extends AbstractModel{
         $this->sqlByNombre("setEmpCod", $sel);
         if($cond['op_opciones']){
             if($cond['op_opciones']=="c"){
-                $sel->where("CONCAT(pers.Prs_Nom,' ',pers.Prs_Ape)LIKE '%{$cond['search']}%'");
+                $sel->where("CONCAT(pers.Prs_Nom,' ',pers.Prs_Ape)LIKE ?", "%{$cond['search']}%");
                 $sel->where("Rvt_Est='A'");
             }elseif($cond['op_opciones']=="d"){
                 $sel->where("Rvt_Num=?",$cond['search']);
@@ -24,8 +24,8 @@ class retcre_vta extends AbstractModel{
                 $sel->where("Rvt_Est='I'");
                 //$sel->where("Rvt_Est=?",$cond['search']);
             }elseif ($cond['op_opciones']=='f'){
-                $sel->where("Rvt_Fec BETWEEN '$cond[Fec_Ini] 00:00:00' AND '$cond[Fec_Fin] 23:59:59'",null);
-                $sel->where("CONCAT(pers.Prs_Nom,' ',pers.Prs_Ape)LIKE '%{$cond['search']}%'");
+                $sel->where("Rvt_Fec BETWEEN ? AND ?", array("{$cond['Fec_Ini']} 00:00:00", "{$cond['Fec_Fin']} 23:59:59"));
+                $sel->where("CONCAT(pers.Prs_Nom,' ',pers.Prs_Ape)LIKE ?", "%{$cond['search']}%");
             }else{
                 $sel->where("(UPPER(CONCAT(persona.Prs_Ape,' ',persona.Prs_Nom)) LIKE UPPER(?)) OR UPPER(Cli_Fac) LIKE UPPER(?)","%$cond[search]%");
             }

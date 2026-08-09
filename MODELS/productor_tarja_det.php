@@ -28,7 +28,7 @@ class productor_tarja_det extends AbstractModel{
         switch($id){
             case "byTarjas":  
                 $Par_Sql->unsetColsbyTable($this->_name)->addCols($this->_name,array('Prt_Cod','Pro_Cod','Total'=>"SUM($this->_name.Ptd_Can)"));
-                $Par_Sql->where('Prt_Cod='.implode(' OR Prt_Cod=',$cond['Prt_Cod']),null);                
+                $Par_Sql->where('Prt_Cod=?', $cond['Prt_Cod']);                
                 $Par_Sql->group ( "$this->_name.Pro_Cod" );                
                 //echo $sql.'<br/>';
                 break;

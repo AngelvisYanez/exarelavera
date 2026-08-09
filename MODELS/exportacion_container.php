@@ -12,7 +12,7 @@ class exportacion_container extends AbstractModel{
         $sel=$this->select(true,array("*","IF(COALESCE((SELECT COUNT(productor_tarja.Exc_Cod) AS total FROM productor_tarja WHERE exportacion_container.Exc_Cod=productor_tarja.Exc_Cod GROUP BY productor_tarja.Exc_Cod),0)>0,'s','n')AS tarja"));
         $this->sqlByNombre("setEmpCod", $sel);  
         if(isset($cond['op_opciones']))
-            $sel->where($cond['op_opciones']=="b"?"(Exc_Vap LIKE '%$cond[search]%')":"Exc_Sem= '$cond[search]'", null);
+            $sel->where($cond['op_opciones']=="b"?"(Exc_Vap LIKE ?)":"Exc_Sem= ?", $cond['op_opciones']=="b"?"%{$cond['search']}%":$cond['search']);
         $sel->group("$this->_name.Exc_Cod");
         return $sel; 
     }

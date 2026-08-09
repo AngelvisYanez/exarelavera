@@ -25,7 +25,7 @@ class det_plan extends AbstractModel{
         $this->sqlByNombre("setEmpCod", $sel);
         if(isset($cond['Pec_Cod'])||isset($cond['perio_cont.Pec_Cod']))$this->sqlByNombre("setPerioCont", $sel,$cond);
         if(isset($cond['op_opciones']))
-            $sel->where($cond['op_opciones']=="c"?"det_plan.Pld_Cdc LIKE '{$cond['search']}%'":"det_plan.Pld_Des LIKE '%{$cond['search']}%'", null);
+            $sel->where($cond['op_opciones']=="c"?"det_plan.Pld_Cdc LIKE ?":"det_plan.Pld_Des LIKE ?", $cond['op_opciones']=="c"?"{$cond['search']}%":"%{$cond['search']}%");
         return $sel;
     }
     public function formatData($data, $type, $allData=null){
