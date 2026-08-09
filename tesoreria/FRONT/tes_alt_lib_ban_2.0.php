@@ -186,8 +186,8 @@ if(isset($save)){
                         gridComp.clearGrid().updateGridDiario();
                         if(banco["Pld_Cod"]!==null){ if(tipo==="Ingresos") addFilaCuenta(banco,"D"); else addFilaCuenta(banco,"H"); } //resetForm();
                     }
-                    function getBanco(){ return $('#bancos').val()===''?{Pld_Cod:null}:$('#bancos option:selected').data(); }        
-                    function getPeriodo(){ return $('#perio_cont').val()===''?{Pec_Cod:null}:$('#perio_cont option:selected').data(); }        
+                    function getBanco(){ var opt=$('#bancos option:selected'); return (!opt.length||opt.val()===''||opt.val()===null)?{Pld_Cod:null}:opt.data(); }        
+                    function getPeriodo(){ var opt=$('#perio_cont option:selected'); return (!opt.length||opt.val()===''||opt.val()===null)?{Pec_Cod:null}:opt.data(); }        
                     var chequeHtml='';
                 </script> 
                 <form id="periodoForm" class="hidden">
