@@ -16,11 +16,11 @@ class actividad_labor extends AbstractModel{
         //$this->sqlByNombre("setEmpCod", $sel);
         if($cond['op_opciones']){
             if($cond['op_opciones']=="fnc"){
-                 $sel->where("Fnc_Des LIKE '%{$cond['Cod_Bus']}%'");
+                 $sel->where("Fnc_Des LIKE ?", "%{$cond['Cod_Bus']}%");
             }elseif ($cond['op_opciones']=='lbr'){
-                 $sel->where("CONCAT(prsn.Prs_Nom,' ',prsn.Prs_Ape)LIKE '%{$cond['Cod_Bus']}%'");
+                 $sel->where("CONCAT(prsn.Prs_Nom,' ',prsn.Prs_Ape)LIKE ?", "%{$cond['Cod_Bus']}%");
             }elseif ($cond['op_opciones']=='fch'){
-                $sel->where("Act_Fec BETWEEN '$cond[Fec_Ini] 00:00:00' AND '$cond[Fec_Fin] 23:59:59'",null);
+                $sel->where("Act_Fec BETWEEN ? AND ?", array("{$cond['Fec_Ini']} 00:00:00", "{$cond['Fec_Fin']} 23:59:59"));
             }else{
 
             }
@@ -88,7 +88,7 @@ class actividad_labor extends AbstractModel{
                 //echo $this->getSqlString($sql)."<br/>";
                 break;
             case "xFecha":
-                $sql->where("Act_Fec BETWEEN '$cond[Fec_Fin] 00:00:00' AND '$cond[Fec_Ini] 23:59:59'",null);
+                $sql->where("Act_Fec BETWEEN ? AND ?", array("{$cond['Fec_Fin']} 00:00:00", "{$cond['Fec_Ini']} 23:59:59"));
                 break;
             case "byTipoPagoLabor":
                 $sql->join(array('tpg'=>'tipo_pago_labor'),"tpg.Tpg_Cod = lbr.Tpg_Cod");

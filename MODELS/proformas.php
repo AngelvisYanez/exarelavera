@@ -23,16 +23,16 @@ class proformas extends AbstractModel{
         $this->sqlByNombre("setEmpCod", $sel);
         if(isset($cond['op_opciones'])){
             if($cond['op_opciones']=="h"){
-                $sel->where("CONCAT(persona.Prs_Nom,' ',persona.Prs_Ape)LIKE '%{$cond['search']}%'");
+                $sel->where("CONCAT(persona.Prs_Nom,' ',persona.Prs_Ape)LIKE ?", "%{$cond['search']}%");
             }elseif($cond['op_opciones']=="c"){
                 $sel->where("Prf_Num=?",$cond['search']);
             }elseif($cond['op_opciones']=="d"){
-                $sel->where("CONCAT(persona.Prs_Nom,' ',persona.Prs_Ape)LIKE '%{$cond['search']}%'");
+                $sel->where("CONCAT(persona.Prs_Nom,' ',persona.Prs_Ape)LIKE ?", "%{$cond['search']}%");
             }else{
                 if(empty($cond['desde'])&& empty($cond['hasta'])){
-                    $sel->where("Prf_Fec >= '{$cond['desdeT']}' AND  Prf_Fec <= '{$cond['hastaT']}'");
+                    $sel->where("Prf_Fec >= ? AND  Prf_Fec <= ?", array($cond['desdeT']??'', $cond['hastaT']??''));
                 }else{
-                    $sel->where("Prf_Fec >= '{$cond['desde']}' AND  Prf_Fec <= '{$cond['hasta']}'");
+                    $sel->where("Prf_Fec >= ? AND  Prf_Fec <= ?", array($cond['desde'], $cond['hasta']));
                 }
             }
         }

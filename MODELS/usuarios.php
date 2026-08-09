@@ -21,7 +21,7 @@ class usuarios extends AbstractModel{
             if($cond['op_opciones']=="c"){
                 $sel->where("Usu_Ced=?",$cond['search']);
             }elseif($cond['op_opciones']=="d"){
-                $sel->where("CONCAT(Prs_Nom,' ',Prs_Ape)LIKE '%{$cond['search']}%'");
+                $sel->where("CONCAT(Prs_Nom,' ',Prs_Ape)LIKE ?", "%{$cond['search']}%");
             } 
         }    
         return $sel; 
