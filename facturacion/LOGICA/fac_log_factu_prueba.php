@@ -504,7 +504,7 @@ class Class_Log_Datos_Factu extends MysqlDatos{
     function sendMailRet($data,$body){ 
         $ban=true;        
         try{
-            require '../../Librerias/PHPMail/class.phpmailer.php';            
+            require_once '../../Librerias/PHPMailer_compat.php';
             $mail = new PHPMailer(true); // Crear una nueva  instancia de PHPMailer habilitando el tratamiento de excepciones
             // Configuramos el protocolo SMTP con autenticación
             $mail->IsSMTP();

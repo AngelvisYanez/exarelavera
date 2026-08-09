@@ -8,7 +8,7 @@
         "monolog/monolog": "^1.25",
         "filp/whoops": "^2.1",
         "nuovo/spreadsheet-reader": "^0.5.11",
-        "phpmailer/phpmailer": ">=6.0 <6.5",
+        "phpmailer/phpmailer": "^6.9",
         "econea/nusoap": "^0.9.14",
         "tecnickcom/tcpdf": "^6.7",
         "mpdf/mpdf": "^8.0"
@@ -20,8 +20,6 @@
         "policy": {
             "advisories": {
                 "ignore-id": [
-                    "PKSA-35kn-2ddp-d3p4",
-                    "PKSA-m8by-bb7v-7qt5",
                     "PKSA-1pdn-z57v-5nzg",
                     "PKSA-8sw7-9x88-c8bx",
                     "PKSA-dn5d-4vy3-wsfy",

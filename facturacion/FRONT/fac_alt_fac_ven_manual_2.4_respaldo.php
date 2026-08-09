@@ -872,7 +872,7 @@ if ($thisPost->postBlock($_POST['postID']))
 				</html>';
 				if(trim($PrsCorCli)!='')//control si existe el correo
 				{   
-					require '../../Librerias/PHPMail/class.phpmailer.php';
+					require_once '../../Librerias/PHPMailer_compat.php';
 					// Crear una nueva  instancia de PHPMailer habilitando el tratamiento de excepciones
 					$mail = new PHPMailer(true); 
 					// Configuramos el protocolo SMTP con autenticaci�n

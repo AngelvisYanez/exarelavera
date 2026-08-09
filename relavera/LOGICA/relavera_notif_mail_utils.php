@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Envío de correo para notificaciones Relavera (SMTP dedicado en relavera_notif_mail_config.php).
+ * Envï¿½o de correo para notificaciones Relavera (SMTP dedicado en relavera_notif_mail_config.php).
  */
 
 if (!function_exists('relavera_notif_enviar_correo_notif')) {
@@ -9,7 +9,7 @@ if (!function_exists('relavera_notif_enviar_correo_notif')) {
      * @param string $para
      * @param string $nombreDestinatario
      * @param string $asunto
-     * @param string $mensajePlano Mismo texto plano que se envía por WhatsApp
+     * @param string $mensajePlano Mismo texto plano que se envï¿½a por WhatsApp
      * @param array|null $imagenAdj
      * @return bool
      */
@@ -27,9 +27,7 @@ if (!function_exists('relavera_notif_enviar_correo_notif')) {
             require_once $cfgPath;
         }
         if (defined('RELAVERA_NOTIF_SMTP_ENABLED') && RELAVERA_NOTIF_SMTP_ENABLED) {
-            require_once __DIR__ . '/../../Librerias/PHPMailer/PHPMailer.php';
-            require_once __DIR__ . '/../../Librerias/PHPMailer/SMTP.php';
-            require_once __DIR__ . '/../../Librerias/PHPMailer/Exception.php';
+            require_once __DIR__ . '/../../Librerias/PHPMailer_compat.php';
 
             $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
             $mail->CharSet = 'UTF-8';
@@ -48,7 +46,7 @@ if (!function_exists('relavera_notif_enviar_correo_notif')) {
 
             $mail->addAddress(trim((string) $para), strtoupper($nombre));
             $mail->isHTML(true);
-            $mail->Subject = ($asuntoLinea !== '') ? $asuntoLinea : (defined('RELAVERA_NOTIF_SMTP_SUBJECT_DEFAULT') ? RELAVERA_NOTIF_SMTP_SUBJECT_DEFAULT : 'Notificación Relavera');
+            $mail->Subject = ($asuntoLinea !== '') ? $asuntoLinea : (defined('RELAVERA_NOTIF_SMTP_SUBJECT_DEFAULT') ? RELAVERA_NOTIF_SMTP_SUBJECT_DEFAULT : 'Notificaciï¿½n Relavera');
             $mail->Body = $html;
 
             if (is_array($imagenAdj) && !empty($imagenAdj['base64'])) {

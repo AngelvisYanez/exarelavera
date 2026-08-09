@@ -1127,7 +1127,7 @@ if (isset($hdd_Pec_Cod))
 					</form>
 					</body>
 					</html>';							
-					require '../../Librerias/PHPMail/class.phpmailer.php';
+					require_once '../../Librerias/PHPMailer_compat.php';
 					// Crear una nueva  instancia de PHPMailer habilitando el tratamiento de excepciones
 					$mail = new PHPMailer(true); 
 					// Configuramos el protocolo SMTP con autenticaciï¿½n

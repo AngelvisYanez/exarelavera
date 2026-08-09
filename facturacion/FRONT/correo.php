@@ -3,7 +3,7 @@
 
 if (isset($_POST['save']))
 {   
-    	include '../../Librerias/PHPMail/PHPMail.php';
+    	require_once '../../Librerias/PHPMailer_compat.php';
 		
 			
 		$obj = new PHPMail();

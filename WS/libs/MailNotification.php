@@ -10,9 +10,7 @@
 */
 use PHPMailer\PHPMailer\PHPMailer;
 
-require_once dirname(__FILE__)."/PHPMailer/PHPMailer.php"; // Libreria para envio de mails
-require_once dirname(__FILE__)."/PHPMailer/SMTP.php"; // Libreria para envio de mails
-require_once dirname(__FILE__)."/PHPMailer/Exception.php"; // Libreria para envio de mails
+require_once dirname(__FILE__)."/../../Librerias/PHPMailer_compat.php";
 require_once dirname(__FILE__)."/RideSRI.php";
 
 class MailNotification

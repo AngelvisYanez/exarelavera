@@ -13,9 +13,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception as PHPMailerException;
 
 require_once __DIR__ . '/config_correo.php';
-require_once __DIR__ . '/../Librerias/PHPMailer/PHPMailer.php';
-require_once __DIR__ . '/../Librerias/PHPMailer/SMTP.php';
-require_once __DIR__ . '/../Librerias/PHPMailer/Exception.php';
+require_once __DIR__ . '/../Librerias/PHPMailer_compat.php';
 
 class ClaseEnviarCorreo
 {

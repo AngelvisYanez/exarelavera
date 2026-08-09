@@ -565,7 +565,7 @@ if ($thisPost->postBlock($_POST['postID']))
 			if ($rs_infoEmpresa['Cof_Gce']=="S") /* Verifico si tiene autorizacion para generar F.E.*/
 			{				
 				/* Envio Notificacion por Correo Electronico al cliente */				
-				include '../../Librerias/PHPMail/PHPMail.php';
+				require_once '../../Librerias/PHPMailer_compat.php';
 				$obj = new PHPMail();		
 				$dest = array();
 				$dest[] = array('Correo'=>trim($PrsCorCli),'Nombre'=>strtoupper($PrsNomCli));				

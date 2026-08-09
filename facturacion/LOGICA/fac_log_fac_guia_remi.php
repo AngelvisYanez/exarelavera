@@ -708,7 +708,7 @@ class Class_Log_Datos_Tes extends MysqlDatos{
 
 	function enviarMail($Dest, $Subject, $MsgHTML)
 	{
-		require_once('../../Librerias/PHPMail/class.phpmailer.php');	
+		require_once('../../Librerias/PHPMailer_compat.php');
 		$mail = new PHPMailer(true);	
 		$mail->IsSMTP();
 	
