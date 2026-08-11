@@ -396,7 +396,12 @@ if (isset($saveDocument)) {
     if ($Retencion) {
         foreach ($items as $i => $item) { //Verificar si tiene el codigo 332.. del sri
             $cod_sri =  $item['Ret_Ren_Sri'];
+            $porc_ret = isset($item['Ret_Ren_Por']) ? ($item['Ret_Ren_Por'] * 1) : 0;
             if (!empty($Aut_Cod)  &&  ($cod_sri == "332" || $cod_sri == "332B" || $cod_sri == "332C" || $cod_sri == "332D" || $cod_sri == "332G" || $cod_sri == "332H" || $cod_sri == "332I")) {
+                $Retencion = false;
+            }
+            // 332E: solo bloquear si el porcentaje es 0%; con 1% sí generar retención
+            if (!empty($Aut_Cod) && $cod_sri == "332E" && $porc_ret <= 0) {
                 $Retencion = false;
             }
             if ($Tic_Cod == 2  &&  !empty($Aut_Cod)) {
