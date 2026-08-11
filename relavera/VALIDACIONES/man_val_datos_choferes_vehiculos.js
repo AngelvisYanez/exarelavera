@@ -10,7 +10,7 @@ function mostrarAlertaUI(titulo, mensaje, tipo, callback) {
       modal: true,
       resizable: false,
       width: 440,
-      appendTo: ".exa-ui-panel",
+      appendTo: "body",
       dialogClass: "exa-ui-panel exa-ui-dialog exa-alert-modal-pro",
       show: { effect: "fade", duration: 150 },
       hide: { effect: "fade", duration: 120 },
@@ -82,7 +82,7 @@ if (typeof window.swal !== "function") {
             modal: true,
             resizable: false,
             width: 440,
-            appendTo: ".exa-ui-panel",
+            appendTo: "body",
             dialogClass: "exa-ui-panel exa-ui-dialog exa-alert-modal-pro",
             show: { effect: "fade", duration: 150 },
             hide: { effect: "fade", duration: 120 },
@@ -163,37 +163,12 @@ $(document).ready(function () {
   // Inicialización de Grids si existen en el DOM
   if ($("#gridEmpresasTransporte").length) initGridEmpresasTransporte();
   if ($("#gridChoferes").length) initGridChoferes();
-  if ($("#gridVisitantesEvento").length) initGridVisitantesEvento();
   if ($("#gridVehiculos").length) initGridVehiculos();
-
-  if ($("#selMan_Eve").length && $.fn.chosen) {
-    $("#selMan_Eve").chosen({
-      width: "100%",
-      search_contains: true,
-      no_results_text: "No se encontraron eventos: ",
-      placeholder_text_single: "Seleccione un evento..."
-    });
-  }
-  if ($("#selMan_Eve").length && $("#selMan_Eve").val()) {
-    actualizarGridVisitantesEvento();
-  }
 
   // Listener para pestañas
   $('a[data-toggle="tab"]').on("shown.bs.tab", function (e) {
     if ($.fn.buttonset) {
       $(".radioset").buttonset("refresh");
-    }
-    var target = $(e.target).attr("href");
-    if (target === "#tabEventos") {
-      if ($("#selMan_Eve").length && $.fn.chosen) {
-        $("#selMan_Eve").trigger("chosen:updated");
-      }
-      if ($("#gridVisitantesEvento").length) {
-        $("#gridVisitantesEvento").jqGrid("setGridWidth", $("#gridVisitantesEvento").closest(".exa-ui-grid-host").width());
-        if ($("#selMan_Eve").val()) {
-          actualizarGridVisitantesEvento();
-        }
-      }
     }
     if (typeof exaUiAfterViewChange === "function") {
       exaUiAfterViewChange(".exa-ui-panel");
@@ -1152,7 +1127,6 @@ function initGridChoferes() {
     datatype: "json",
     colNames: [
       "Código",
-      "Tipo Registro",
       "Cédula",
       "Foto Cédula",
       "Cédula Anverso",
@@ -1188,17 +1162,8 @@ function initGridChoferes() {
         key: true,
         formatter: function (cellvalue, options, rowObject) {
           if (rowObject && rowObject.Cho_Cod) return rowObject.Cho_Cod;
-          if (rowObject && rowObject.MVis_Cod) return rowObject.MVis_Cod;
           return cellvalue ? String(cellvalue).replace(/^[A-Za-z]_/, "") : "";
         }
-      },
-      { name: "tipo_registro", index: "tipo_registro", width: 95, align: "center",
-        formatter: function (cellvalue) {
-          if (cellvalue === "VISITANTE") {
-            return '<span class="label label-info" style="background-color: #17a2b8;"><i class="glyphicon glyphicon-user"></i> VISITANTE</span>';
-          }
-          return '<span class="label label-primary" style="background-color: #007bff;"><i class="glyphicon glyphicon-piggy-bank"></i> CHOFER</span>';
-        },
       },
       { name: "Prs_Ced", index: "Prs_Ced", width: 95, align: "center" },
       { name: "foto_cedula", index: "foto_cedula", width: 105, align: "center",
@@ -1260,9 +1225,6 @@ function initGridChoferes() {
         width: 85,
         align: "center",
         formatter: function (cellvalue, options, rowObject) {
-          if (rowObject.tipo_registro === "VISITANTE") {
-            return '<span class="text-muted">N/A</span>';
-          }
           if (!cellvalue || cellvalue === "" || cellvalue === "null") return "";
           var val = String(cellvalue).trim().toUpperCase();
           if (val === "NP" || val === "NOP" || val === "NO POSEE") {
@@ -1278,7 +1240,6 @@ function initGridChoferes() {
         width: 90,
         align: "center",
         formatter: function (cellvalue, options, rowObject) {
-          if (rowObject.tipo_registro === "VISITANTE") return '<span class="text-muted">-</span>';
           return cellvalue || "";
         },
       },
@@ -1289,7 +1250,6 @@ function initGridChoferes() {
         align: "center",
         sortable: false,
         formatter: function (cellvalue, options, rowObject) {
-          if (rowObject.tipo_registro === "VISITANTE") return '<span class="text-muted">-</span>';
           if (!rowObject.Cho_Cli) return "";
           var hoy = new Date();
           hoy.setHours(0, 0, 0, 0);
@@ -1309,9 +1269,6 @@ function initGridChoferes() {
         align: "center",
         sortable: false,
         formatter: function (cellvalue, options, rowObject) {
-          if (rowObject.tipo_registro === "VISITANTE") {
-            return '<span class="text-muted">N/A</span>';
-          }
           var tli = String(rowObject.Cho_Tli || "").trim().toUpperCase();
           if (tli === "NP" || tli === "NOP" || tli === "NO POSEE") {
             return '<span class="text-muted" title="No Posee Licencia">N/A</span>';
@@ -1326,7 +1283,6 @@ function initGridChoferes() {
         align: "center",
         hidden: true,
         formatter: function (cellvalue, options, rowObject) {
-          if (rowObject.tipo_registro === "VISITANTE") return "N/A";
           var tli = String(rowObject.Cho_Tli || "").trim().toUpperCase();
           if (tli === "NP" || tli === "NOP" || tli === "NO POSEE") return "N/A";
           var val = rowObject.Cho_Img_Lic_Anv;
@@ -1340,7 +1296,6 @@ function initGridChoferes() {
         align: "center",
         hidden: true,
         formatter: function (cellvalue, options, rowObject) {
-          if (rowObject.tipo_registro === "VISITANTE") return "N/A";
           var tli = String(rowObject.Cho_Tli || "").trim().toUpperCase();
           if (tli === "NP" || tli === "NOP" || tli === "NO POSEE") return "N/A";
           var val = rowObject.Cho_Img_Lic_Rev;
@@ -1354,7 +1309,6 @@ function initGridChoferes() {
         align: "center",
         hidden: true,
         formatter: function (cellvalue, options, rowObject) {
-          if (rowObject.tipo_registro === "VISITANTE") return "N/A";
           var tli = String(rowObject.Cho_Tli || "").trim().toUpperCase();
           if (tli === "NP" || tli === "NOP" || tli === "NO POSEE") return "N/A";
           var val = rowObject.Cho_Doc_Ldi;
@@ -1440,47 +1394,25 @@ function initGridChoferes() {
       {
         name: "acciones",
         index: "acciones",
-        width: 200,
+        width: 160,
         align: "center",
         sortable: false,
         formatter: function (cellvalue, options, rowObject) {
-          var prsNom = String(rowObject.Prs_Nom || "").replace(/'/g, "\\'");
-          var prsApe = String(rowObject.Prs_Ape || "").replace(/'/g, "\\'");
-          var prsCed = String(rowObject.Prs_Ced || "").replace(/'/g, "\\'");
-
-          if (rowObject.tipo_registro === "VISITANTE") {
-            var editBtn =
-              '<button type="button" class="btn btn-info btn-xs" onclick="abrirModalVisitante(' +
-              rowObject.MVis_Cod +
-              ')" title="Editar Visitante"><i class="glyphicon glyphicon-pencil"></i></button> ';
-            var certBtn =
-              '<button type="button" class="btn btn-warning btn-xs" onclick="visualizarCertificadoPDF(\'' +
-              prsNom + '\', \'' + prsApe + '\', \'' + prsCed + '\', 1)" title="Ver Certificado PDF"><i class="glyphicon glyphicon-certificate"></i></button> ';
-            var deleteBtn =
-              '<button type="button" class="btn btn-danger btn-xs" onclick="anularVisitanteGrid(' +
-              rowObject.MVis_Cod +
-              ')" title="Anular Visitante"><i class="glyphicon glyphicon-trash"></i></button>';
-            return editBtn + certBtn + deleteBtn;
-          } else {
-            var editBtn =
-              '<button type="button" class="btn btn-primary btn-xs" onclick="abrirModalChofer(' +
-              rowObject.Cho_Cod +
-              ')" title="Editar Chofer"><i class="glyphicon glyphicon-pencil"></i></button> ';
-            var certBtn =
-              '<button type="button" class="btn btn-warning btn-xs" onclick="visualizarCertificadoPDF(\'' +
-              prsNom + '\', \'' + prsApe + '\', \'' + prsCed + '\', 0)" title="Ver Certificado PDF"><i class="glyphicon glyphicon-certificate"></i></button> ';
-            var sendBtn =
-              '<button type="button" class="btn btn-success btn-xs btn-enviar-notif-chofer" id="btnEnviarChofer_' +
-              rowObject.Cho_Cod +
-              '" onclick="enviarNotifCapacitacionChofer(' +
-              rowObject.Cho_Cod +
-              ', this)" title="Enviar WhatsApp y correo"><i class="glyphicon glyphicon-send"></i> Enviar</button> ';
-            var deleteBtn =
-              '<button type="button" class="btn btn-danger btn-xs" onclick="anularChoferGrid(' +
-              rowObject.Cho_Cod +
-              ')" title="Anular Chofer"><i class="glyphicon glyphicon-trash"></i></button>';
-            return editBtn + certBtn + sendBtn + deleteBtn;
-          }
+          var editBtn =
+            '<button type="button" class="btn btn-primary btn-xs" onclick="abrirModalChofer(' +
+            rowObject.Cho_Cod +
+            ')" title="Editar Chofer"><i class="glyphicon glyphicon-pencil"></i></button> ';
+          var sendBtn =
+            '<button type="button" class="btn btn-success btn-xs btn-enviar-notif-chofer" id="btnEnviarChofer_' +
+            rowObject.Cho_Cod +
+            '" onclick="enviarNotifCapacitacionChofer(' +
+            rowObject.Cho_Cod +
+            ', this)" title="Enviar WhatsApp y correo"><i class="glyphicon glyphicon-send"></i> Enviar</button> ';
+          var deleteBtn =
+            '<button type="button" class="btn btn-danger btn-xs" onclick="anularChoferGrid(' +
+            rowObject.Cho_Cod +
+            ')" title="Anular Chofer"><i class="glyphicon glyphicon-trash"></i></button>';
+          return editBtn + sendBtn + deleteBtn;
         },
       },
 
@@ -1598,315 +1530,17 @@ $(document).on("click", "#filtroChoferesForm .clearable-x, #filtroChoferesForm .
   }, 50);
 });
 
-/* ==========================================================================
-   TAB EVENTOS
-   ========================================================================== */
-
-function initGridVisitantesEvento() {
-  var $grid = $("#gridVisitantesEvento");
-  if (!$grid.length) return;
-  $grid.jqGrid({
-    url: "?listVisitantesEventoGridAjax=true",
-    datatype: "json",
-    mtype: "POST",
-    postData: { Man_Eve: $("#selMan_Eve").val() || "" },
-    colNames: [
-      "Código",
-      "Cédula",
-      "Nombres",
-      "Apellidos",
-      "Teléfono",
-      "Correo",
-      "Dirección",
-      "Nacionalidad",
-      "Estado Civil",
-      "Tipo Sangre",
-      "Empresa",
-      "Observación",
-      "Estado",
-      "Acciones",
-    ],
-    colModel: [
-      { name: "MVis_Cod", index: "MVis_Cod", width: 70, align: "center", key: true },
-      { name: "Prs_Ced", index: "Prs_Ced", width: 100, align: "center" },
-      { name: "Prs_Nom", index: "Prs_Nom", width: 140, align: "left" },
-      { name: "Prs_Ape", index: "Prs_Ape", width: 140, align: "left" },
-      { name: "Prs_Tel", index: "Prs_Tel", width: 100, align: "center",
-        formatter: function (cellvalue, options, rowObject) {
-          if (cellvalue) return cellvalue;
-          return rowObject.MVis_Tem || "";
-        },
-      },
-      { name: "Prs_Cor", index: "Prs_Cor", width: 150, align: "left" },
-      { name: "Prs_Dir", index: "Prs_Dir", width: 180, align: "left" },
-      { name: "MVis_Nac", index: "MVis_Nac", width: 100, align: "center" },
-      { name: "MVis_Eci", index: "MVis_Eci", width: 100, align: "center" },
-      { name: "MVis_Tsa", index: "MVis_Tsa", width: 80, align: "center" },
-      { name: "MVis_Nem", index: "MVis_Nem", width: 140, align: "left" },
-      { name: "MVis_Obs", index: "MVis_Obs", width: 160, align: "left" },
-      {
-        name: "MVis_Est",
-        index: "MVis_Est",
-        width: 80,
-        align: "center",
-        formatter: function (cellvalue) {
-          if (String(cellvalue).toUpperCase() === "A") {
-            return '<span class="label label-success">ACTIVO</span>';
-          }
-          return '<span class="label label-danger">INACTIVO</span>';
-        },
-      },
-      {
-        name: "acciones",
-        index: "acciones",
-        width: 170,
-        align: "center",
-        sortable: false,
-        formatter: function (cellvalue, options, rowObject) {
-          var mvis = rowObject.MVis_Cod || "";
-          var prsNom = (rowObject.Prs_Nom || "").replace(/'/g, "\\'");
-          var prsApe = (rowObject.Prs_Ape || "").replace(/'/g, "\\'");
-          var prsCed = (rowObject.Prs_Ced || "").replace(/'/g, "\\'");
-          var html = "";
-          html +=
-            '<button type="button" class="btn btn-warning btn-xs" onclick="visualizarCertificadoPDF(\'' +
-            prsNom +
-            "', '" +
-            prsApe +
-            "', '" +
-            prsCed +
-            "', 1)\" title=\"Ver Certificado PDF\"><i class=\"glyphicon glyphicon-certificate\"></i></button> ";
-          html +=
-            '<button type="button" class="btn btn-success btn-xs btn-enviar-cert-vis" id="btnWaVis_' +
-            mvis +
-            '" onclick="enviarCertificadoVisitanteEvento(' +
-            mvis +
-            ", 'whatsapp', this)\" title=\"Enviar certificado por WhatsApp\"><i class=\"glyphicon glyphicon-phone\"></i></button> ";
-          html +=
-            '<button type="button" class="btn btn-info btn-xs btn-enviar-cert-vis" id="btnMailVis_' +
-            mvis +
-            '" onclick="enviarCertificadoVisitanteEvento(' +
-            mvis +
-            ", 'correo', this)\" title=\"Enviar certificado por Email\"><i class=\"glyphicon glyphicon-envelope\"></i></button>";
-          return '<div style="white-space:nowrap;">' + html + "</div>";
-        },
-      },
-    ],
-    pager: "#gridVisitantesEventoPager",
-    rowNum: 50,
-    rowList: [20, 50, 100, 200],
-    sortname: "nombre",
-    sortorder: "asc",
-    viewrecords: true,
-    height: 280,
-    width: "100%",
-    shrinkToFit: true,
-    autowidth: true,
-    loadonce: false,
-    jsonReader: { repeatitems: false, id: "MVis_Cod" },
-  }).jqGrid("navGrid", "#gridVisitantesEventoPager", {
-    edit: false,
-    add: false,
-    del: false,
-    search: false,
-    refresh: true,
-  });
-}
-
-function actualizarGridVisitantesEvento() {
-  var manEve = $("#selMan_Eve").val() || "";
-  var formData = $("#filtroVisitantesEventoForm").serializeArray();
-  var postData = { listVisitantesEventoGridAjax: true, Man_Eve: manEve };
-  $.each(formData, function (i, field) {
-    if (field.name === "Man_Eve") return;
-    postData[field.name] = field.value;
-  });
-  $("#gridVisitantesEvento")
-    .jqGrid("setGridParam", {
-      postData: postData,
-      page: 1,
-    })
-    .trigger("reloadGrid");
-}
-
-var _enviandoCertVis = {};
-
-function setEstadoBtnCertVis($btn, enviando, canal) {
-  if (!$btn || !$btn.length) return;
-  var icon =
-    canal === "correo"
-      ? "glyphicon-envelope"
-      : canal === "whatsapp"
-        ? "glyphicon-phone"
-        : "glyphicon-send";
-  if (enviando) {
-    $btn
-      .prop("disabled", true)
-      .addClass("disabled")
-      .html('<i class="glyphicon glyphicon-refresh"></i>');
-  } else {
-    $btn
-      .prop("disabled", false)
-      .removeClass("disabled")
-      .html('<i class="glyphicon ' + icon + '"></i>');
-  }
-}
-
-function enviarCertificadoVisitanteEvento(MVis_Cod, canal, btnEl) {
-  if (!MVis_Cod) {
-    mostrarAlertaUI("Error", "No se identificó el visitante.", "error");
-    return;
-  }
-  canal = canal || "ambos";
-  var key = String(MVis_Cod) + "_" + canal;
-  if (_enviandoCertVis[key]) return;
-
-  var $btn = btnEl ? $(btnEl) : null;
-  if ($btn && $btn.length && $btn.prop("disabled")) return;
-
-  var textoCanal =
-    canal === "whatsapp"
-      ? "WhatsApp"
-      : canal === "correo"
-        ? "Email"
-        : "WhatsApp y Email";
-
-  swal(
-    {
-      title: "Enviar certificado PDF",
-      text: "¿Enviar el PDF del certificado de asistencia por " + textoCanal + " a este visitante?",
-      type: "info",
-      showCancelButton: true,
-      confirmButtonText: "Enviar",
-      cancelButtonText: "Cancelar",
-    },
-    function (isConfirm) {
-      if (!isConfirm) return;
-      if (_enviandoCertVis[key]) return;
-
-      _enviandoCertVis[key] = true;
-      setEstadoBtnCertVis($btn, true, canal);
-
-      $.post(
-        "",
-        {
-          enviarCertificadoVisitanteEventoAjax: true,
-          MVis_Cod: MVis_Cod,
-          canal: canal,
-          Man_Eve: $("#selMan_Eve").val() || "",
-        },
-        function (r) {
-          if (r && r.success) {
-            mostrarAlertaUI(
-              "Éxito",
-              r.message || "Certificado PDF enviado correctamente.",
-              "success",
-            );
-          } else {
-            mostrarAlertaUI(
-              "Error",
-              (r && r.message) || "No se pudo enviar el certificado PDF.",
-              "error",
-            );
-          }
-        },
-        "json",
-      )
-        .fail(function () {
-          mostrarAlertaUI(
-            "Error",
-            "Ocurrió un error de comunicación con el servidor.",
-            "error",
-          );
-        })
-        .always(function () {
-          _enviandoCertVis[key] = false;
-          setEstadoBtnCertVis($btn, false, canal);
-        });
-    },
-  );
-}
-
-$(document).on("change", "#selMan_Eve", function () {
-  actualizarGridVisitantesEvento();
-});
-
-$(document).on("change", '#filtroVisitantesEventoForm input[name="op_opciones"]', function () {
-  actualizarGridVisitantesEvento();
-});
-
-$(document).on("input keyup search change", '#filtroVisitantesEventoForm input[name="search"]', function () {
-  var val = $(this).val();
-  if (val === "" || val === null || String(val).trim() === "") {
-    if ($(this).data("lastSearchVal") !== "") {
-      $(this).data("lastSearchVal", "");
-      actualizarGridVisitantesEvento();
-    }
-  } else {
-    $(this).data("lastSearchVal", String(val).trim());
-  }
-});
-
-// Listener para desvincular IDs de Chofer/Visitante si el usuario corrige la cédula en Registro Nuevo
+// Listener para desvincular IDs de Chofer si el usuario corrige la cédula en Registro Nuevo
 $(document).on("input change", "#Cho_Ced", function () {
   if (!window.esEdicionDirectaGrid) {
     var cedActual = $(this).val().trim();
     var prevCed = $(this).data("prevLoadedCed");
     if (prevCed && prevCed !== cedActual) {
       $("#Cho_Cod").val("");
-      $("#MVis_Cod").val("");
-      $("#Vis_Cod").val("");
       $(this).removeData("prevLoadedCed");
     }
   }
 });
-
-function toggleModoVisitante(isVisitante) {
-  var $secLicencia = $("#sec_licencia_conducir");
-  var $docLdi = $("#box_doc_ldi");
-  var $docAnt = $("#box_doc_ant");
-  var $selectTli = $("#Cho_Tli");
-  var $btnGuardar = $("#btnGuardarChofer");
-
-  if (isVisitante) {
-    $secLicencia.slideUp(200);
-    $docLdi.slideUp(200);
-    $docAnt.slideUp(200);
-
-    $selectTli.prop("required", false).removeClass("required");
-    $secLicencia.find("input, select").prop("required", false);
-
-    $btnGuardar.html('<i class="glyphicon glyphicon-floppy-disk"></i> Guardar Visitante');
-    if ($("#choferDialog").hasClass("ui-dialog-content")) {
-      var currentTitle = $("#choferDialog").dialog("option", "title");
-      if (typeof currentTitle === "string" && currentTitle.length > 0) {
-        $("#choferDialog").dialog("option", "title", currentTitle.replace("Chofer", "Visitante"));
-      } else {
-        $("#choferDialog").dialog("option", "title", "Registrar Visitante");
-      }
-    }
-  } else {
-    $secLicencia.slideDown(200);
-    $docLdi.slideDown(200);
-    $docAnt.slideDown(200);
-
-    $selectTli.prop("required", true).addClass("required");
-
-    $btnGuardar.html('<i class="glyphicon glyphicon-floppy-disk"></i> Guardar Chofer');
-    if ($("#choferDialog").hasClass("ui-dialog-content")) {
-      var currentTitle = $("#choferDialog").dialog("option", "title");
-      if (typeof currentTitle === "string" && currentTitle.length > 0) {
-        $("#choferDialog").dialog("option", "title", currentTitle.replace("Visitante", "Chofer"));
-      } else {
-        $("#choferDialog").dialog("option", "title", "Registrar Chofer");
-      }
-    }
-  }
-
-  if (typeof exaUiAfterViewChange === "function") {
-    exaUiAfterViewChange("#choferDialog");
-  }
-}
 
 function setModoEdicionCedula(isEdit) {
   var $ced = $("#Cho_Ced");
@@ -1955,21 +1589,12 @@ function limpiarFormularioChofer() {
   window.esEdicionDirectaGrid = false;
   $("#choferForm")[0].reset();
   $("#Cho_Cod").val("");
-  $("#MVis_Cod").val("");
-  $("#Vis_Cod").val("");
   $("#Prs_Cod").val("");
-  var eveVig = $("#hdn_man_eve_vigente").val() || "";
-  $("#Man_Eve").val(eveVig);
-  $("#MVis_Obs").val("");
-
-  $("#Vis_Obs").val("");
   $("#Cho_Edad").val("");
   $("#Cho_Ced").removeData("prevLoadedCed");
   $("#badgeLicencia").hide().text("").removeClass("label-success label-danger label-default");
   $("#choferForm .preview-doc-box").empty();
   $("#choferForm select.chosen-select").val("").trigger("chosen:updated");
-  $("#chk_es_visitante").prop("checked", false);
-  toggleModoVisitante(false);
   setModoEdicionCedula(false);
   evaluarLicenciaNoPosee("");
 }
@@ -1984,8 +1609,6 @@ function buscarPersonaCedula(cedula) {
         $("#Cho_Ced").data("prevLoadedCed", cedula);
         if (r.esChofer && r.chofer) {
           setModoEdicionCedula(Boolean(window.esEdicionDirectaGrid));
-          $("#chk_es_visitante").prop("checked", false);
-          toggleModoVisitante(false);
           poblarFormularioChofer(r.chofer);
           var nomComp = r.chofer.nombre || ((r.chofer.Prs_Nom || "") + " " + (r.chofer.Prs_Ape || "")).trim();
           $("#choferDialog").dialog("option", "title", "Editar Chofer - " + nomComp);
@@ -1995,18 +1618,6 @@ function buscarPersonaCedula(cedula) {
               cedula +
               "</b> ya se encuentra registrado en el sistema.<br><br>Se han cargado sus datos completos. Si cometió un error al digitar la Cédula, puede corregirla libremente.",
             "warning",
-          );
-        } else if (r.esVisitante && r.visitante) {
-          setModoEdicionCedula(Boolean(window.esEdicionDirectaGrid));
-          poblarFormularioVisitante(r.visitante);
-          var nomCompV = r.visitante.nombre || ((r.visitante.Prs_Nom || "") + " " + (r.visitante.Prs_Ape || "")).trim();
-          $("#choferDialog").dialog("option", "title", "Editar Visitante - " + nomCompV);
-          mostrarAlertaUI(
-            "Visitante Ya Registrado",
-            "El visitante con Cédula <b>" +
-              cedula +
-              "</b> ya se encuentra registrado en el sistema.<br><br>Se han cargado sus datos completos.",
-            "info",
           );
         } else if (r.persona) {
           setModoEdicionCedula(Boolean(window.esEdicionDirectaGrid));
@@ -2108,98 +1719,8 @@ function abrirModalChofer(id) {
   }
 }
 
-function abrirModalVisitante(id) {
-  limpiarFormularioChofer();
-  window.esEdicionDirectaGrid = Boolean(id);
-  setModoEdicionCedula(Boolean(id));
-
-  var winWidth = $(window).width();
-  var modalW = winWidth < 1250 ? Math.floor(winWidth * 0.96) : 1250;
-  $("#choferDialog").dialog("option", "width", modalW);
-
-  if (id) {
-    $.get(
-      "",
-      { getVisitanteByIdAjax: true, MVis_Cod: id },
-      function (r) {
-        if (r.success && r.visitante) {
-          poblarFormularioVisitante(r.visitante);
-          var nomV = r.visitante.nombre || ((r.visitante.Prs_Nom || "") + " " + (r.visitante.Prs_Ape || "")).trim();
-          $("#choferDialog").dialog(
-            "option",
-            "title",
-            "Editar Visitante - " + nomV,
-          );
-          $("#choferDialog").dialog("open");
-        } else {
-          mostrarAlertaUI(
-            "Error",
-            "No se pudo cargar la información completa del visitante",
-            "error",
-          );
-        }
-      },
-      "json",
-    ).fail(function () {
-      mostrarAlertaUI(
-        "Error",
-        "Error de conexión al obtener los datos del visitante",
-        "error",
-      );
-    });
-  } else {
-    $("#chk_es_visitante").prop("checked", true);
-    toggleModoVisitante(true);
-    $("#choferDialog").dialog("option", "title", "Registrar Visitante");
-    $("#choferDialog").dialog("open");
-  }
-}
-
-function anularVisitanteGrid(MVis_Cod) {
-  swal(
-    {
-      title: "¿Está seguro?",
-      text: "¿Desea anular este visitante?",
-      type: "warning",
-      showCancelButton: true,
-    },
-    function (isConfirm) {
-      if (isConfirm) {
-        $.post(
-          "",
-          { anularVisitanteAjax: true, MVis_Cod: MVis_Cod },
-          function (r) {
-            if (r.success) {
-              mostrarAlertaUI(
-                "Éxito",
-                "Visitante anulado correctamente",
-                "success",
-                function () {
-                  actualizarGridChoferes();
-                },
-              );
-            } else {
-              mostrarAlertaUI(
-                "Error",
-                r.message || "No se pudo anular el registro",
-                "error",
-              );
-            }
-          },
-          "json",
-        );
-      }
-    },
-  );
-}
-
-/**
-  * Poblar datos de chofer y documentos adjuntos en el formulario modal
-  */
 function poblarFormularioChofer(row) {
   if (!row) return;
-  $("#chk_es_visitante").prop("checked", false);
-  toggleModoVisitante(false);
 
   $("#Cho_Cod").val(row.Cho_Cod || "");
   $("#Prs_Cod").val(row.Prs_Cod || "");
@@ -2254,44 +1775,6 @@ function poblarFormularioChofer(row) {
   renderDocPreview("preview_Cho_Doc_Ldi", row.Cho_Doc_Ldi, "Licencia Digital");
   renderDocPreview("preview_Cho_Doc_Ant", row.Cho_Doc_Ant, "Antecedentes Penales");
   renderDocPreview("preview_Cho_Doc_San", row.Cho_Doc_San, "Carnet Sangre");
-}
-
-function poblarFormularioVisitante(row) {
-  if (!row) return;
-  $("#chk_es_visitante").prop("checked", true);
-  toggleModoVisitante(true);
-
-  var codVis = row.MVis_Cod || row.Vis_Cod || "";
-  $("#MVis_Cod").val(codVis);
-  $("#Vis_Cod").val(codVis);
-  $("#Prs_Cod").val(row.Prs_Cod || "");
-  $("#Cho_Ced").val(row.Prs_Ced || "");
-  $("#Prs_Nom").val(row.Prs_Nom || "");
-  $("#Prs_Ape").val(row.Prs_Ape || "");
-  if (row.Prs_Fec) {
-    $("#Prs_Fec").val(row.Prs_Fec);
-    calcularEdad(row.Prs_Fec);
-  }
-
-  $("#Man_Eve").val(row.Man_Eve || $("#hdn_man_eve_vigente").val() || "");
-
-  $("#Cho_Nac").val(row.MVis_Nac || row.Vis_Nac || "Ecuatoriana");
-  $("#Cho_Eci").val(row.MVis_Eci || row.Vis_Eci || "Soltero/a");
-  $("#Cho_Tsa").val(row.MVis_Tsa || row.Vis_Tsa || "");
-  $("#Cho_Tel").val(row.Prs_Tel_Base || row.Prs_Tel || row.MVis_Tel || row.Vis_Tel || "");
-  $("#Cho_Cor").val(row.Prs_Cor || row.MVis_Cor || row.Vis_Cor || "");
-  $("#Cho_Dir").val(row.Prs_Dir_Base || row.Prs_Dir || row.MVis_Dir || row.Vis_Dir || "");
-  $("#Cho_Nem").val(row.MVis_Nem || row.Vis_Nem || "");
-  $("#Cho_Tem").val(row.MVis_Tem || row.Vis_Tem || "");
-  $("#MVis_Obs").val(row.MVis_Obs || row.Vis_Obs || "");
-  $("#Vis_Obs").val(row.MVis_Obs || row.Vis_Obs || "");
-
-  $("#choferForm select.chosen-select").trigger("chosen:updated");
-
-  renderDocPreview("preview_Cho_Doc_Ced", row.MVis_Doc_Ced || row.Vis_Doc_Ced, "Cédula Anverso");
-  renderDocPreview("preview_Cho_Doc_Ced_Rev", row.MVis_Doc_Ced_Rev || row.Vis_Doc_Ced_Rev, "Cédula Reverso");
-  renderDocPreview("preview_Cho_Doc_Vot", row.MVis_Doc_Vot || row.Vis_Doc_Vot, "Certif. Votación");
-  renderDocPreview("preview_Cho_Doc_Fot", row.MVis_Doc_Fot || row.Vis_Doc_Fot, "Foto Carnet");
 }
 
 /**
@@ -2368,206 +1851,221 @@ function optimizarImagenCliente(file, maxDim, quality) {
 
 function guardarChofer() {
   var formEl = $("#choferForm")[0];
-  var formData = new FormData(formEl); // Capturar FormData antes de bloquear
 
-  var esVisitante = $("#chk_es_visitante").is(":checked");
   var ced = $("#Cho_Ced").val().trim();
   var nom = $("#Prs_Nom").val().trim();
   var ape = $("#Prs_Ape").val().trim();
   var tel = $("#Cho_Tel").val().trim();
   var tli = $("#Cho_Tli").val();
+  var pla = $("#Cho_Pla_Cod").val();
 
-  if (!ced || !nom || !ape || !tel || (!esVisitante && !tli)) {
-    mostrarAlertaUI(
-      "Atención",
-      esVisitante
-        ? "Complete la Cédula/Identificación, Nombres, Apellidos y Teléfono Celular"
-        : "Complete la Cédula/Identificación, Nombres, Apellidos, Teléfono Celular y Tipo de Licencia",
-      "warning",
-    );
+  if (!ced || !nom || !ape || !tel || !tli || !pla) {
+    var msg = "Complete la Cédula/Identificación, Nombres, Apellidos, Teléfono Celular, Tipo de Licencia y seleccione la Planta de Beneficio.";
+    if (!tli && !pla) {
+      msg = "Complete la Cédula, Nombres, Apellidos, Teléfono, Tipo de Licencia y seleccione la Planta de Beneficio.";
+    } else if (!tli) {
+      msg = "Seleccione el Tipo de Licencia del Chofer.";
+    } else if (!pla) {
+      msg = "Seleccione la Planta de Beneficio para el Chofer.";
+    }
+    mostrarAlertaUI("Atención", msg, "warning");
     return;
   }
 
-  var $btnSave = $("#btnGuardarChofer");
-  $btnSave
-    .prop("disabled", true)
-    .html(
-      '<i class="glyphicon glyphicon-refresh glyphicon-spin"></i> Comprimiendo y Guardando...',
-    );
-  bloquearModalYMostrarLoader(
-    "#choferDialog",
-    "Comprimiendo y Guardando Chofer...",
-  );
+  swal(
+    {
+      title: "Confirmar Registro",
+      text: "¿Está seguro que desea guardar los datos del chofer?",
+      type: "info",
+      showCancelButton: true,
+      confirmButtonText: "Guardar",
+      cancelButtonText: "Cancelar",
+    },
+    function (isConfirm) {
+      if (!isConfirm) return;
 
-  // Recolectar insumos y procesar imágenes en cliente
-  var inputs = $(formEl).find('input[type="file"]');
-  var promises = [];
-  var fileFieldsMeta = [];
-
-  inputs.each(function () {
-    var fieldName = $(this).attr("name");
-    var files = this.files;
-    if (files && files.length > 0) {
-      var f = files[0];
-      fileFieldsMeta.push({ field: fieldName, originalFile: f });
-      promises.push(optimizarImagenCliente(f, 1920, 0.85));
-    }
-  });
-
-  Promise.all(promises)
-    .then(function (processedFiles) {
-      formData.append("saveChoferAjax", "true");
-
-      // Reemplazar archivos procesados en FormData y calcular diagnósticos de tamaño
-      var diagFiles = [];
-      var totalBytes = 0;
-
-      for (var i = 0; i < fileFieldsMeta.length; i++) {
-        var meta = fileFieldsMeta[i];
-        var procFile = processedFiles[i];
-        formData.set(meta.field, procFile);
-
-        var origKB = (meta.originalFile.size / 1024).toFixed(1);
-        var procKB = (procFile.size / 1024).toFixed(1);
-        totalBytes += procFile.size;
-
-        diagFiles.push({
-          Campo: meta.field,
-          Nombre: meta.originalFile.name,
-          "Orig KB": origKB,
-          "Enviado KB": procKB,
-          Tipo: procFile.type,
-        });
-      }
-
-      var totalMB = (totalBytes / (1024 * 1024)).toFixed(2);
-
-      // IMPRIMIR DIAGNÓSTICO EN CONSOLA NAVEGADOR ("Imprimir en pantalla lo que está subiéndose")
-      console.group(
-        "================ DIAGNÓSTICO DE ENVÍO CHOFER ================",
+      var formData = new FormData(formEl);
+      var $btnSave = $("#btnGuardarChofer");
+      $btnSave
+        .prop("disabled", true)
+        .html(
+          '<i class="glyphicon glyphicon-refresh glyphicon-spin"></i> Comprimiendo y Guardando...',
+        );
+      bloquearModalYMostrarLoader(
+        "#choferDialog",
+        "Comprimiendo y Guardando Chofer...",
       );
-      console.log("Cédula:", ced);
-      console.log("Nombres:", nom, ape);
-      console.log("Teléfono:", tel);
-      console.log("Licencia:", tli);
-      console.log(
-        "Total peso archivos a enviar:",
-        totalMB + " MB (" + totalBytes + " bytes)",
-      );
-      if (diagFiles.length > 0) {
-        console.table(diagFiles);
-      } else {
-        console.log("No se adjuntaron nuevos archivos.");
-      }
-      console.groupEnd();
 
-      // Ejecutar AJAX con manejo exhaustivo de errores
-      $.ajax({
-        url: "",
-        type: "POST",
-        data: formData,
-        contentType: false,
-        processData: false,
-        dataType: "json",
-        success: function (r) {
-          if (r.success) {
-            var successMsg = "Chofer guardado correctamente.";
-            if (r.debug_info && r.debug_info.archivos_recibidos) {
-              console.log("=== CONFIRMACIÓN SERVIDOR ===", r.debug_info);
-            }
-            mostrarAlertaUI("Éxito", successMsg, "success", function () {
-              $("#choferDialog").dialog("close");
-              actualizarGridChoferes();
+      // Recolectar insumos y procesar imágenes en cliente
+      var inputs = $(formEl).find('input[type="file"]');
+      var promises = [];
+      var fileFieldsMeta = [];
+
+      inputs.each(function () {
+        var fieldName = $(this).attr("name");
+        var files = this.files;
+        if (files && files.length > 0) {
+          var f = files[0];
+          fileFieldsMeta.push({ field: fieldName, originalFile: f });
+          promises.push(optimizarImagenCliente(f, 1920, 0.85));
+        }
+      });
+
+      Promise.all(promises)
+        .then(function (processedFiles) {
+          formData.append("saveChoferAjax", "true");
+
+          // Reemplazar archivos procesados en FormData y calcular diagnósticos de tamaño
+          var diagFiles = [];
+          var totalBytes = 0;
+
+          for (var i = 0; i < fileFieldsMeta.length; i++) {
+            var meta = fileFieldsMeta[i];
+            var procFile = processedFiles[i];
+            formData.set(meta.field, procFile);
+
+            var origKB = (meta.originalFile.size / 1024).toFixed(1);
+            var procKB = (procFile.size / 1024).toFixed(1);
+            totalBytes += procFile.size;
+
+            diagFiles.push({
+              Campo: meta.field,
+              Nombre: meta.originalFile.name,
+              "Orig KB": origKB,
+              "Enviado KB": procKB,
+              Tipo: procFile.type,
             });
-          } else {
-            var errContent =
-              "<b>" +
-              (r.message || "No se pudo guardar la información") +
-              "</b>";
-
-            // Si el servidor incluyó información de diagnóstico, mostrarla en pantalla
-            if (r.debug_info) {
-              errContent +=
-                "<br><br><small><b>Resumen del envío (Diagnóstico):</b><br>";
-              errContent +=
-                "• Archivos procesados: " +
-                Object.keys(r.debug_info.archivos_recibidos || {}).length +
-                "<br>";
-              errContent += "• Peso total archivos: " + totalMB + " MB</small>";
-            }
-
-            mostrarAlertaUI(
-              "Atención - No se pudo guardar",
-              errContent,
-              "warning",
-            );
-          }
-        },
-        error: function (xhr, status, error) {
-          var msgError =
-            "Ocurrió un error en el servidor al enviar los datos (Código HTTP: " +
-            xhr.status +
-            ").";
-
-          if (xhr.responseJSON && xhr.responseJSON.message) {
-            msgError = xhr.responseJSON.message;
-          } else if (xhr.responseText) {
-            var rawText = xhr.responseText
-              .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-              .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-              .replace(/<[^>]*>?/gm, " ")
-              .replace(/\s+/g, " ")
-              .trim();
-            if (rawText.length > 0) {
-              msgError +=
-                "<br><br><b>Respuesta del Servidor (Diagnóstico):</b><br>";
-              msgError +=
-                '<div style="max-height: 140px; overflow-y: auto; background: #fff3f3; padding: 6px; border: 1px solid #f5c6cb; font-family: monospace; font-size: 11px; word-break: break-word;">';
-              msgError += rawText.substring(0, 450) + "...</div>";
-            }
           }
 
+          var totalMB = (totalBytes / (1024 * 1024)).toFixed(2);
+
+          // IMPRIMIR DIAGNÓSTICO EN CONSOLA NAVEGADOR
+          console.group(
+            "================ DIAGNÓSTICO DE ENVÍO CHOFER ================",
+          );
+          console.log("Cédula:", ced);
+          console.log("Nombres:", nom, ape);
+          console.log("Teléfono:", tel);
+          console.log("Licencia:", tli);
+          console.log(
+            "Total peso archivos a enviar:",
+            totalMB + " MB (" + totalBytes + " bytes)",
+          );
           if (diagFiles.length > 0) {
-            msgError +=
-              "<br><small><b>Archivos que intentaban subirse (" +
-              totalMB +
-              " MB):</b><br>";
-            $.each(diagFiles, function (idx, df) {
-              msgError +=
-                "• " +
-                df.Campo +
-                ": " +
-                df.Nombre +
-                " (" +
-                df["Enviado KB"] +
-                " KB)<br>";
-            });
-            msgError += "</small>";
+            console.table(diagFiles);
+          } else {
+            console.log("No se adjuntaron nuevos archivos.");
           }
+          console.groupEnd();
 
-          mostrarAlertaUI("Error de Servidor", msgError, "error");
-        },
-        complete: function () {
+          // Ejecutar AJAX con manejo exhaustivo de errores
+          $.ajax({
+            url: "",
+            type: "POST",
+            data: formData,
+            contentType: false,
+            processData: false,
+            dataType: "json",
+            success: function (r) {
+              if (r.success) {
+                var successMsg = r.message || "Chofer guardado correctamente.";
+                if (r.debug_info && r.debug_info.archivos_recibidos) {
+                  console.log("=== CONFIRMACIÓN SERVIDOR ===", r.debug_info);
+                }
+                mostrarAlertaUI("Éxito", successMsg, "success", function () {
+                  $("#choferDialog").dialog("close");
+                  actualizarGridChoferes();
+                });
+              } else {
+                var errContent =
+                  "<b>" +
+                  (r.message || "No se pudo guardar la información") +
+                  "</b>";
+
+                if (r.debug_info) {
+                  errContent +=
+                    "<br><br><small><b>Resumen del envío (Diagnóstico):</b><br>";
+                  errContent +=
+                    "• Archivos procesados: " +
+                    Object.keys(r.debug_info.archivos_recibidos || {}).length +
+                    "<br>";
+                  errContent += "• Peso total archivos: " + totalMB + " MB</small>";
+                }
+
+                mostrarAlertaUI(
+                  "Atención - No se pudo guardar",
+                  errContent,
+                  "warning",
+                );
+              }
+            },
+            error: function (xhr, status, error) {
+              var msgError =
+                "Ocurrió un error en el servidor al enviar los datos (Código HTTP: " +
+                xhr.status +
+                ").";
+
+              if (xhr.responseJSON && xhr.responseJSON.message) {
+                msgError = xhr.responseJSON.message;
+              } else if (xhr.responseText) {
+                var rawText = xhr.responseText
+                  .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+                  .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+                  .replace(/<[^>]*>?/gm, " ")
+                  .replace(/\s+/g, " ")
+                  .trim();
+                if (rawText.length > 0) {
+                  msgError +=
+                    "<br><br><b>Respuesta del Servidor (Diagnóstico):</b><br>";
+                  msgError +=
+                    '<div style="max-height: 140px; overflow-y: auto; background: #fff3f3; padding: 6px; border: 1px solid #f5c6cb; font-family: monospace; font-size: 11px; word-break: break-word;">';
+                  msgError += rawText.substring(0, 450) + "...</div>";
+                }
+              }
+
+              if (diagFiles.length > 0) {
+                msgError +=
+                  "<br><small><b>Archivos que intentaban subirse (" +
+                  totalMB +
+                  " MB):</b><br>";
+                $.each(diagFiles, function (idx, df) {
+                  msgError +=
+                    "• " +
+                    df.Campo +
+                    ": " +
+                    df.Nombre +
+                    " (" +
+                    df["Enviado KB"] +
+                    " KB)<br>";
+                });
+                msgError += "</small>";
+              }
+
+              mostrarAlertaUI("Error de Servidor", msgError, "error");
+            },
+            complete: function () {
+              desbloquearModalYOcultarLoader("#choferDialog");
+              $btnSave
+                .prop("disabled", false)
+                .html(
+                  '<i class="glyphicon glyphicon-floppy-disk"></i> Guardar Chofer',
+                );
+            },
+          });
+        })
+        .catch(function (err) {
           desbloquearModalYOcultarLoader("#choferDialog");
           $btnSave
             .prop("disabled", false)
-            .html(
-              '<i class="glyphicon glyphicon-floppy-disk"></i> Guardar Chofer',
-            );
-        },
-      });
-    })
-    .catch(function (err) {
-      desbloquearModalYOcultarLoader("#choferDialog");
-      $btnSave
-        .prop("disabled", false)
-        .html('<i class="glyphicon glyphicon-floppy-disk"></i> Guardar Chofer');
-      mostrarAlertaUI(
-        "Error de Optimización",
-        "Ocurrió un problema al procesar las imágenes en el navegador: " + err,
-        "error",
-      );
-    });
+            .html('<i class="glyphicon glyphicon-floppy-disk"></i> Guardar Chofer');
+          mostrarAlertaUI(
+            "Error",
+            "Ocurrió un error al procesar las imágenes antes del envío: " + err,
+            "error",
+          );
+        });
+    },
+  );
 }
 
 function anularChoferGrid(Cho_Cod) {
@@ -3074,19 +2572,5 @@ function setfocus(elem) {
   if (elem) elem.focus();
 }
 
-function visualizarCertificadoPDF(rowNom, rowApe, rowCed, rowIsVis) {
-  var nom = rowNom || $.trim($("#Prs_Nom").val()) || "Nombre Ejemplo";
-  var ape = rowApe || $.trim($("#Prs_Ape").val()) || "Apellido Ejemplo";
-  var ced = rowCed || $.trim($("#Cho_Ced").val()) || "1100000000";
-  var isVis = (rowIsVis !== undefined) ? (rowIsVis ? 1 : 0) : ($("#chk_es_visitante").is(":checked") ? 1 : 0);
-  var manEve = $("#selMan_Eve").length ? ($("#selMan_Eve").val() || "") : ($("#Man_Eve").val() || $("#hdn_man_eve_vigente").val() || "");
 
-  var baseUrl = (window.location.href || "").split("#")[0].split("?")[0];
-  var url = baseUrl + "?verCertificadoPdfAjax=1&Prs_Nom=" + encodeURIComponent(nom) + "&Prs_Ape=" + encodeURIComponent(ape) + "&Prs_Ced=" + encodeURIComponent(ced) + "&es_visitante=" + isVis;
-  if (manEve) {
-    url += "&Man_Eve=" + encodeURIComponent(manEve);
-  }
-
-  window.open(url, "_blank", "width=1100,height=800,scrollbars=yes,resizable=yes");
-}
 

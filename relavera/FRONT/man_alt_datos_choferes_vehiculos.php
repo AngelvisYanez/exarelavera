@@ -13,285 +13,23 @@ require_once('../LOGICA/man_log_datos_choferes_vehiculos.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
 require_once(__DIR__ . '/../LOGICA/relavera_whatsapp_utils.php');
 require_once(__DIR__ . '/../LOGICA/relavera_notif_mail_utils.php');
-require_once(__DIR__ . '/../LOGICA/man_cert_asistencia_helper.php');
 
 $obBD_conexion = new Class_Log_Conexion_Datos_Choferes_Vehiculos($Ses_Dat_Dis);
 $obBD_con1 = new Class_Log_Datos_Choferes_Vehiculos;
 
-/* ==========================================================================
-   VISUALIZADOR / IMPRESOR DE CERTIFICADO EN PDF (PLANTILLA ECOPARK MINING)
-   ========================================================================== */
-if (isset($_GET['verCertificadoPdfAjax'])) {
-    $prsNom = isset($_GET['Prs_Nom']) ? trim($_GET['Prs_Nom']) : 'Nombres';
-    $prsApe = isset($_GET['Prs_Ape']) ? trim($_GET['Prs_Ape']) : 'Apellidos';
-    $prsCed = isset($_GET['Prs_Ced']) ? trim($_GET['Prs_Ced']) : '1100000000';
-    $esVis = isset($_GET['es_visitante']) && $_GET['es_visitante'] == '1';
-    
-    $nombrePersona = trim($prsNom . ' ' . $prsApe);
-    if (empty($nombrePersona) || $nombrePersona === 'Nombres Apellidos') {
-        $nombrePersona = 'Juan Carlos Pérez';
-    }
+// Cargar catálogos iniciales
+$transportes = $obBD_con1->getArrayConsulta(1, array($Ses_Emp_Cod), $obBD_conexion);
+$obBD_con1->utf8_change_param($transportes);
 
-    $nombreEvento = 'Capacitación en Seguridad Industrial y Ambiental';
-    $horasEvento = '6';
-    $fechaEventoTexto = 'sábado 08 de agosto de 2026';
-
-    try {
-        $resEv = $obBD_con1->consulta("SELECT Man_ENom, Man_EFei FROM manifiesto_evento WHERE UPPER(Man_Vig) = 'S' AND UPPER(Man_EEst) = 'A' LIMIT 1", $obBD_conexion->conexion);
-        if ($resEv && ($rowEv = $obBD_con1->fetch_assoc($resEv))) {
-            if (!empty($rowEv['Man_ENom'])) $nombreEvento = trim($rowEv['Man_ENom']);
-            if (isset($rowEv['Man_EHor']) && !empty($rowEv['Man_EHor'])) $horasEvento = trim($rowEv['Man_EHor']);
-            if (!empty($rowEv['Man_EFei'])) {
-                $tsEv = strtotime($rowEv['Man_EFei']);
-                $diasSemana = array('domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado');
-                $mesesNom = array('enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre');
-                $diaSem = $diasSemana[date('w', $tsEv)];
-                $numDia = date('d', $tsEv);
-                $mesNom = $mesesNom[(int)date('m', $tsEv) - 1];
-                $anioNum = date('Y', $tsEv);
-                $fechaEventoTexto = "$diaSem $numDia de $mesNom de $anioNum";
-            }
-        }
-    } catch (Exception $e) {}
-
-
-    $mesesAct = array('enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre');
-    $fechaEmisionStr = 'Portovelo, El Oro, ' . date('d') . ' de ' . $mesesAct[(int)date('m') - 1] . ' de ' . date('Y') . '.';
-
-    // Carga robusta de imágenes en Base64 para marca de agua, sello, firma1 y firma2
-    $srcWatermark = '../../imagenes/620/marca_agua.png';
-    $pathWM1 = __DIR__ . '/../../imagenes/620/marca_agua.png';
-    $pathWM2 = isset($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] . '/imagenes/620/marca_agua.png' : '';
-    if (file_exists($pathWM1)) {
-        $srcWatermark = 'data:image/png;base64,' . base64_encode(file_get_contents($pathWM1));
-    } elseif (!empty($pathWM2) && file_exists($pathWM2)) {
-        $srcWatermark = 'data:image/png;base64,' . base64_encode(file_get_contents($pathWM2));
-    }
-
-    $srcSello = '../../imagenes/620/sello.png';
-    $pathSello1 = __DIR__ . '/../../imagenes/620/sello.png';
-    $pathSello2 = isset($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] . '/imagenes/620/sello.png' : '';
-    if (file_exists($pathSello1)) {
-        $srcSello = 'data:image/png;base64,' . base64_encode(file_get_contents($pathSello1));
-    } elseif (!empty($pathSello2) && file_exists($pathSello2)) {
-        $srcSello = 'data:image/png;base64,' . base64_encode(file_get_contents($pathSello2));
-    }
-
-    // Firma 1 (Gerencia General)
-    $srcFirma1 = '../../imagenes/620/firma1.png';
-    $pathFirma1_1 = __DIR__ . '/../../imagenes/620/firma1.png';
-    $pathFirma1_2 = isset($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] . '/imagenes/620/firma1.png' : '';
-    if (file_exists($pathFirma1_1)) {
-        $srcFirma1 = 'data:image/png;base64,' . base64_encode(file_get_contents($pathFirma1_1));
-    } elseif (!empty($pathFirma1_2) && file_exists($pathFirma1_2)) {
-        $srcFirma1 = 'data:image/png;base64,' . base64_encode(file_get_contents($pathFirma1_2));
-    } else {
-        $srcFirma1 = $srcSello;
-    }
-
-    // Firma 2 (Área de Capacitación)
-    $srcFirma2 = '../../imagenes/620/firma2.png';
-    $pathFirma2_1 = __DIR__ . '/../../imagenes/620/firma2.png';
-    $pathFirma2_2 = isset($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] . '/imagenes/620/firma2.png' : '';
-    if (file_exists($pathFirma2_1)) {
-        $srcFirma2 = 'data:image/png;base64,' . base64_encode(file_get_contents($pathFirma2_1));
-    } elseif (!empty($pathFirma2_2) && file_exists($pathFirma2_2)) {
-        $srcFirma2 = 'data:image/png;base64,' . base64_encode(file_get_contents($pathFirma2_2));
-    } else {
-        $srcFirma2 = $srcSello;
-    }
-    ?>
-
-
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <title>Certificado de Asistencia - <?php echo htmlspecialchars($nombrePersona); ?></title>
-        <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-        <style>
-            * { box-sizing: border-box; margin: 0; padding: 0; }
-            body { background: #e2e8f0; font-family: 'Montserrat', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; color: #0f172a; }
-            
-            .no-print-bar { width: 1020px; max-width: 100%; display: flex; justify-content: space-between; align-items: center; background: #0f172a; color: #fff; padding: 12px 24px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-            .no-print-bar h3 { font-size: 15px; font-weight: 600; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
-            .no-print-bar .btns { display: flex; gap: 10px; }
-            .btn-action { padding: 8px 18px; border: none; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
-            .btn-print { background: #0284c7; color: #fff; }
-            .btn-print:hover { background: #0369a1; }
-            .btn-close { background: #475569; color: #fff; }
-            .btn-close:hover { background: #334155; }
-
-            /* CONTENEDOR CERTIFICADO HORIZONTAL LANDSCAPE (A4: 1020px x 720px) */
-            .cert-canvas { width: 1020px; height: 720px; background: #ffffff; position: relative; border-radius: 4px; box-shadow: 0 14px 40px rgba(0,0,0,0.15); overflow: hidden; padding: 40px 60px; border: 12px solid #0b2545; outline: 3px solid #c5a059; outline-offset: -8px; display: flex; flex-direction: column; justify-content: space-between; text-align: center; }
-
-            /* MARCOS Y CORNER ORNAMENTS */
-            .corner-ornament { position: absolute; width: 45px; height: 45px; border: 2px solid #c5a059; z-index: 4; }
-            .corner-top-left { top: 18px; left: 18px; border-right: none; border-bottom: none; }
-            .corner-top-right { top: 18px; right: 18px; border-left: none; border-bottom: none; }
-            .corner-bottom-left { bottom: 18px; left: 18px; border-right: none; border-top: none; }
-            .corner-bottom-right { bottom: 18px; right: 18px; border-left: none; border-top: none; }
-
-            /* MARCA DE AGUA ADAPTADA 100% A ANCHO Y ALTO DEL CERTIFICADO */
-            .cert-watermark { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; opacity: 0.85; mix-blend-mode: multiply; pointer-events: none; z-index: 1; }
-
-            /* SELLO TINTA RUBBER STAMP ESQUINA INFERIOR IZQUIERDA (MÁS A LA IZQUIERDA) */
-            .cert-sello-box-corner { position: absolute; left: 45px; bottom: 30px; z-index: 10; pointer-events: none; }
-            .cert-sello-img-corner { width: 120px; height: 120px; object-fit: contain; transform: rotate(-15deg); opacity: 0.92; filter: drop-shadow(0px 2px 5px rgba(0,0,0,0.15)); }
-
-            /* SELLOS TINTA RUBBER STAMP SOBRE FIRMAS (BAJADOS SOBRE LAS LÍNEAS DE FIRMA) */
-            .cert-sello-box-left { position: absolute; left: 185px; bottom: 68px; z-index: 10; pointer-events: none; }
-            .cert-sello-img-left { width: 115px; height: 115px; object-fit: contain; transform: rotate(-12deg); opacity: 0.92; filter: drop-shadow(0px 2px 5px rgba(0,0,0,0.15)); }
-
-            .cert-sello-box-right { position: absolute; right: 185px; bottom: 68px; z-index: 10; pointer-events: none; }
-            .cert-sello-img-right { width: 115px; height: 115px; object-fit: contain; transform: rotate(12deg); opacity: 0.92; filter: drop-shadow(0px 2px 5px rgba(0,0,0,0.15)); }
+$plantas = $obBD_con1->getArrayConsulta(2, array(), $obBD_conexion);
 
 
 
 
 
 
-            /* CONTENIDO RELATIVO CON Z-INDEX SUPERIOR */
-            .cert-content { position: relative; z-index: 5; height: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
-
-            /* CABECERA ECOPARKMINING */
-            .company-title { font-family: 'Cinzel', serif; font-size: 26px; font-weight: 900; color: #0b2545; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 2px; }
-            .company-subtitle { font-size: 11px; font-weight: 700; color: #1e3a8a; letter-spacing: 1.5px; text-transform: uppercase; line-height: 1.4; max-width: 650px; margin: 0 auto; }
-
-            .green-divider { margin: 12px auto; width: 75%; display: flex; align-items: center; justify-content: center; gap: 12px; }
-            .green-divider .line { flex: 1; height: 1px; background: #86efac; }
-            .green-divider .leaf-icon { color: #16a34a; font-size: 15px; }
-
-            /* SECCIÓN OTORGA CERTIFICADO */
-            .grant-header { font-size: 12px; font-weight: 700; color: #1e3a8a; letter-spacing: 3px; text-transform: uppercase; margin-top: 4px; margin-bottom: 4px; }
-            .main-cert-title { font-family: 'Cinzel', serif; font-size: 38px; font-weight: 900; color: #0b2545; letter-spacing: 5px; text-transform: uppercase; margin-bottom: 2px; }
-            .sub-cert-title { font-size: 18px; font-weight: 800; color: #16a34a; letter-spacing: 4px; text-transform: uppercase; }
-
-            .dots-divider { color: #16a34a; font-size: 14px; margin: 8px 0 12px 0; letter-spacing: 4px; }
-
-            /* RECEPTOR */
-            .grant-to { font-size: 15px; font-weight: 800; color: #0b2545; margin-bottom: 6px; }
-            .recipient-name { font-size: 26px; font-weight: 900; color: #0b2545; padding-bottom: 4px; border-bottom: 2px solid #0b2545; display: inline-block; min-width: 500px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
-            .recipient-cedula { font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 16px; }
-
-            /* PÁRRAFO DE TEXTO EXACTO */
-            .cert-paragraph { font-size: 14px; color: #334155; line-height: 1.75; max-width: 780px; margin: 0 auto 16px auto; text-align: center; }
-            .cert-paragraph strong { color: #0f172a; font-weight: 800; }
-
-            /* UBICACIÓN Y FIRMAS */
-            .bottom-section { width: 100%; display: flex; flex-direction: column; align-items: center; }
-            .location-tag { font-size: 13px; font-weight: 600; color: #334155; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 15px; }
-            .location-tag span { color: #16a34a; }
-
-            /* FIRMAS */
-            .cert-footer { width: 100%; display: flex; justify-content: space-around; align-items: flex-end; padding-bottom: 5px; }
-            .signature-block { width: 260px; text-align: center; }
-            .signature-line { width: 100%; border-top: 2px solid #0b2545; height: 35px; }
-            .signature-role { font-size: 11px; font-weight: 800; color: #0b2545; text-transform: uppercase; }
-            .signature-company { font-size: 10px; color: #64748b; font-weight: 600; }
-
-            @media print {
-                body { background: #fff; padding: 0; }
-                .no-print-bar { display: none !important; }
-                .cert-canvas { box-shadow: none; border-width: 10px; width: 100vw; height: 100vh; padding: 25px; }
-                @page { size: landscape; margin: 0; }
-            }
-        </style>
-    </head>
-    <body>
-        <div class="no-print-bar">
-            <h3><i class="glyphicon glyphicon-certificate"></i> Vista Previa del Certificado (ECOPARKMINING S.A.)</h3>
-            <div class="btns">
-                <button class="btn-action btn-print" onclick="window.print();"><i class="glyphicon glyphicon-print"></i> Imprimir / PDF</button>
-                <button class="btn-action btn-close" onclick="window.close();"><i class="glyphicon glyphicon-remove"></i> Cerrar</button>
-            </div>
-        </div>
-
-        <div class="cert-canvas">
-            <!-- MARCOS DE ESQUINA -->
-            <div class="corner-ornament corner-top-left"></div>
-            <div class="corner-ornament corner-top-right"></div>
-            <div class="corner-ornament corner-bottom-left"></div>
-            <div class="corner-ornament corner-bottom-right"></div>
-
-            <!-- MARCA DE AGUA EN EL FONDO -->
-            <img src="<?php echo $srcWatermark; ?>" class="cert-watermark" alt="Marca de Agua" onerror="this.src='/imagenes/620/marca_agua.png';">
-
-            <!-- SELLO RUBBER STAMP EN ESQUINA INFERIOR IZQUIERDA (SEÑALADO EN ROJO) -->
-            <div class="cert-sello-box-corner">
-                <img src="<?php echo $srcSello; ?>" class="cert-sello-img-corner" alt="Sello Esquina" onerror="this.src='/imagenes/620/sello.png';">
-            </div>
-
-            <!-- FIRMA 1 SOBRE GERENCIA GENERAL (firma1.png) -->
-            <div class="cert-sello-box-left">
-                <img src="<?php echo $srcFirma1; ?>" class="cert-sello-img-left" alt="Firma Gerencia General" onerror="this.src='/imagenes/620/firma1.png';">
-            </div>
-
-            <!-- FIRMA 2 SOBRE ÁREA DE CAPACITACIÓN (firma2.png) -->
-            <div class="cert-sello-box-right">
-                <img src="<?php echo $srcFirma2; ?>" class="cert-sello-img-right" alt="Firma Área de Capacitación" onerror="this.src='/imagenes/620/firma2.png';">
-            </div>
 
 
-
-
-            <div class="cert-content">
-                <div>
-                    <!-- CABECERA DE LOGO / EMPRESA -->
-                    <div class="company-title">ECOPARKMINING S.A.</div>
-                    <div class="company-subtitle">PROYECTO AMBIENTAL ASOCIATIVO RELAVERA COMUNITARIA "EL TABLÓN"</div>
-
-                    <div class="green-divider">
-                        <div class="line"></div>
-                        <div class="leaf-icon">🍃</div>
-                        <div class="line"></div>
-                    </div>
-
-                    <!-- TÍTULOS PRINCIPALES -->
-                    <div class="grant-header">OTORGA EL PRESENTE</div>
-                    <div class="main-cert-title">CERTIFICADO</div>
-                    <div class="sub-cert-title">DE ASISTENCIA</div>
-
-                    <div class="dots-divider">• • •</div>
-
-                    <!-- RECEPTOR -->
-                    <div class="grant-to">A:</div>
-                    <div class="recipient-name"><?php echo htmlspecialchars($nombrePersona); ?></div>
-                    <div class="recipient-cedula">C.I.: <strong><?php echo htmlspecialchars($prsCed); ?></strong></div>
-
-                    <!-- PÁRRAFO DE CERTIFICACIÓN EXACTO -->
-                    <div class="cert-paragraph">
-                        Que el Sr. <strong><?php echo htmlspecialchars($nombrePersona); ?></strong> asistió a la capacitación de <strong>Proyecto Ambiental Asociativo Relavera Comunitaria "El Tablón"</strong> el día <strong><?php echo $fechaEventoTexto; ?></strong> con una duración de <strong><?php echo htmlspecialchars($horasEvento); ?> horas</strong> con el tema <strong>"<?php echo htmlspecialchars($nombreEvento); ?>"</strong>.
-                    </div>
-                </div>
-
-                <div class="bottom-section">
-                    <!-- UBICACIÓN Y FECHA DE EMISIÓN -->
-                    <div class="location-tag">
-                        <span>📍</span> <?php echo $fechaEmisionStr; ?>
-                    </div>
-
-                    <!-- FIRMAS EN BLANCO -->
-                    <div class="cert-footer">
-                        <div class="signature-block">
-                            <div class="signature-line"></div>
-                            <div class="signature-role">Gerencia General</div>
-                            <div class="signature-company">ECOPARKMINING S.A.</div>
-                        </div>
-                        <div class="signature-block">
-                            <div class="signature-line"></div>
-                            <div class="signature-role">Área de Capacitación</div>
-                            <div class="signature-company">ECOPARKMINING S.A.</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </body>
-    </html>
-    <?php
-    exit();
-}
 
 
 
@@ -305,32 +43,7 @@ $obBD_con1->utf8_change_param($transportes);
 $plantas = $obBD_con1->getArrayConsulta(2, array(), $obBD_conexion);
 $obBD_con1->utf8_change_param($plantas);
 
-// Catálogo de eventos para el tab Eventos (lista desplegable)
-$eventosCatalogo = array();
-try {
-    $paramsEvCat = array($Ses_Emp_Cod);
-    $paramsEvCat['limits'] = 'LIMIT 500';
-    $eventosCatalogo = $obBD_con1->getArrayConsulta(18, $paramsEvCat, $obBD_conexion);
-    if (!is_array($eventosCatalogo)) {
-        $eventosCatalogo = array();
-    }
-    $obBD_con1->utf8_change_param($eventosCatalogo);
-} catch (Exception $e) {
-    $eventosCatalogo = array();
-}
 
-// Consultar evento actualmente en vigencia (Man_Vig = 'S') y sus tipos de certificado
-$nombreEventoVigente = '';
-$idEventoVigente = '';
-try {
-    $resEv = $obBD_con1->consulta("SELECT Man_Eve, Man_ENom FROM manifiesto_evento WHERE UPPER(Man_Vig) = 'S' AND UPPER(Man_EEst) = 'A' LIMIT 1", $obBD_conexion->conexion);
-    if ($resEv && ($rowEv = $obBD_con1->fetch_assoc($resEv))) {
-        $nombreEventoVigente = trim($rowEv['Man_ENom']);
-        $idEventoVigente = $rowEv['Man_Eve'];
-    }
-} catch (Exception $e) {
-    // Si no existe el registro o tabla, se ignora silenciosamente
-}
 
 
 
@@ -492,71 +205,7 @@ if (isset($_POST['anularEmpresaTransporteAjax'])) {
     responderJsonLimpio($resp);
 }
 
-// 4.0 Listar Eventos
-if (isset($_REQUEST['listEventosGridAjax'])) {
-    $req = array_merge($_GET, $_POST);
-    $page = isset($req['page']) ? intval($req['page']) : 1;
-    $rows = isset($req['rows']) ? intval($req['rows']) : 50;
-    if ($rows <= 0 || $rows >= 99999) {
-        $rows = 999999;
-    }
-    if ($page < 1) {
-        $page = 1;
-    }
-    $params = array($Ses_Emp_Cod);
-    if (!empty($req['search'])) {
-        $params['search'] = $req['search'];
-    }
-    if (!empty($req['Man_Eve'])) {
-        $params['Man_Eve'] = $req['Man_Eve'];
-    }
-    $contar = $obBD_con1->getRowConsulta(18, $params, $obBD_conexion);
-    $pagination = pages($contar['total'], $page, $rows);
-    $response = $pagination['data'];
-    if ($contar['total'] > 0) {
-        $params['limits'] = $pagination['limits'];
-        $response['rows'] = $obBD_con1->getArrayConsulta(18, $params, $obBD_conexion);
-        $obBD_con1->utf8_change_param($response['rows']);
-    } else {
-        $response['rows'] = array();
-    }
-    responderJsonLimpio($response);
-}
 
-// 4.0.1 Listar Visitantes / Personas por Evento
-if (isset($_REQUEST['listVisitantesEventoGridAjax'])) {
-    $req = array_merge($_GET, $_POST);
-    $page = isset($req['page']) ? intval($req['page']) : 1;
-    $rows = isset($req['rows']) ? intval($req['rows']) : 50;
-    if ($rows <= 0 || $rows >= 99999) {
-        $rows = 999999;
-    }
-    if ($page < 1) {
-        $page = 1;
-    }
-    $params = array($Ses_Emp_Cod);
-    if (!empty($req['Man_Eve'])) {
-        $params['Man_Eve'] = $req['Man_Eve'];
-    }
-    if (isset($req['op_opciones'])) {
-        $params['op_opciones'] = $req['op_opciones'];
-    }
-    if (!empty($req['search'])) {
-        $params['search'] = $req['search'];
-    }
-    $contar = $obBD_con1->getRowConsulta(19, $params, $obBD_conexion);
-    $total = isset($contar['total']) ? intval($contar['total']) : 0;
-    $pagination = pages($total, $page, $rows);
-    $response = $pagination['data'];
-    if ($total > 0) {
-        $params['limits'] = $pagination['limits'];
-        $response['rows'] = $obBD_con1->getArrayConsulta(19, $params, $obBD_conexion);
-        $obBD_con1->utf8_change_param($response['rows']);
-    } else {
-        $response['rows'] = array();
-    }
-    responderJsonLimpio($response);
-}
 
 // 4. Listar Choferes
 if (isset($_REQUEST['listChoferesGridAjax'])) {
@@ -601,53 +250,16 @@ if (isset($_REQUEST['listChoferesGridAjax'])) {
     responderJsonLimpio($response);
 }
 
-// 5. Buscar persona / chofer / visitante por Cédula / Identificación
+// 5. Buscar persona / chofer por Cédula / Identificación
 if (isset($_GET['buscarPersonaCedulaAjax'])) {
-    $resp = array('success' => true, 'existe' => false, 'esChofer' => false, 'esVisitante' => false);
+    $resp = array('success' => true, 'existe' => false, 'esChofer' => false);
     $ced = isset($_GET['Prs_Ced']) ? preg_replace('/[^a-zA-Z0-9]/', '', trim($_GET['Prs_Ced'])) : '';
     if (!empty($ced)) {
-        // Consolidación de fotos de todos los registros históricos (de cualquier evento o rol)
-        $fotosVisitante = array('MVis_Doc_Ced' => '', 'MVis_Doc_Ced_Rev' => '', 'MVis_Doc_Vot' => '', 'MVis_Doc_Fot' => '');
-        try {
-            $resFV = $obBD_con1->consulta("SELECT MVis_Doc_Ced, MVis_Doc_Ced_Rev, MVis_Doc_Vot, MVis_Doc_Fot FROM manifiesto_visitante mv INNER JOIN persona p ON p.Prs_Cod = mv.Prs_Cod WHERE p.Prs_Ced = '$ced' AND mv.Emp_Cod = '$Ses_Emp_Cod' ORDER BY mv.MVis_Cod DESC", $obBD_conexion->conexion);
-            if ($resFV) {
-                while ($rowFV = $obBD_con1->fetch_assoc($resFV)) {
-                    if (empty($fotosVisitante['MVis_Doc_Ced']) && !empty($rowFV['MVis_Doc_Ced'])) $fotosVisitante['MVis_Doc_Ced'] = $rowFV['MVis_Doc_Ced'];
-                    if (empty($fotosVisitante['MVis_Doc_Ced_Rev']) && !empty($rowFV['MVis_Doc_Ced_Rev'])) $fotosVisitante['MVis_Doc_Ced_Rev'] = $rowFV['MVis_Doc_Ced_Rev'];
-                    if (empty($fotosVisitante['MVis_Doc_Vot']) && !empty($rowFV['MVis_Doc_Vot'])) $fotosVisitante['MVis_Doc_Vot'] = $rowFV['MVis_Doc_Vot'];
-                    if (empty($fotosVisitante['MVis_Doc_Fot']) && !empty($rowFV['MVis_Doc_Fot'])) $fotosVisitante['MVis_Doc_Fot'] = $rowFV['MVis_Doc_Fot'];
-                }
-            }
-        } catch (Exception $eFV) {}
-
-        $fotosChofer = array('Cho_Doc_Ced' => '', 'Cho_Doc_Ced_Rev' => '', 'Cho_Doc_Vot' => '', 'Cho_Doc_Fot' => '');
-        try {
-            $resFC = $obBD_con1->consulta("SELECT Cho_Doc_Ced, Cho_Doc_Ced_Rev, Cho_Doc_Vot, Cho_Doc_Fot FROM chofer c INNER JOIN persona p ON p.Prs_Cod = c.Prs_Cod WHERE p.Prs_Ced = '$ced' AND c.Emp_Cod = '$Ses_Emp_Cod' ORDER BY c.Cho_Cod DESC", $obBD_conexion->conexion);
-            if ($resFC) {
-                while ($rowFC = $obBD_con1->fetch_assoc($resFC)) {
-                    if (empty($fotosChofer['Cho_Doc_Ced']) && !empty($rowFC['Cho_Doc_Ced'])) $fotosChofer['Cho_Doc_Ced'] = $rowFC['Cho_Doc_Ced'];
-                    if (empty($fotosChofer['Cho_Doc_Ced_Rev']) && !empty($rowFC['Cho_Doc_Ced_Rev'])) $fotosChofer['Cho_Doc_Ced_Rev'] = $rowFC['Cho_Doc_Ced_Rev'];
-                    if (empty($fotosChofer['Cho_Doc_Vot']) && !empty($rowFC['Cho_Doc_Vot'])) $fotosChofer['Cho_Doc_Vot'] = $rowFC['Cho_Doc_Vot'];
-                    if (empty($fotosChofer['Cho_Doc_Fot']) && !empty($rowFC['Cho_Doc_Fot'])) $fotosChofer['Cho_Doc_Fot'] = $rowFC['Cho_Doc_Fot'];
-                }
-            }
-        } catch (Exception $eFC) {}
-
-        // Combinar fotos encontradas para entregar la información completa al formulario
-        $docCed = !empty($fotosVisitante['MVis_Doc_Ced']) ? $fotosVisitante['MVis_Doc_Ced'] : $fotosChofer['Cho_Doc_Ced'];
-        $docCedRev = !empty($fotosVisitante['MVis_Doc_Ced_Rev']) ? $fotosVisitante['MVis_Doc_Ced_Rev'] : $fotosChofer['Cho_Doc_Ced_Rev'];
-        $docVot = !empty($fotosVisitante['MVis_Doc_Vot']) ? $fotosVisitante['MVis_Doc_Vot'] : $fotosChofer['Cho_Doc_Vot'];
-        $docFot = !empty($fotosVisitante['MVis_Doc_Fot']) ? $fotosVisitante['MVis_Doc_Fot'] : $fotosChofer['Cho_Doc_Fot'];
-
-        // 1. Verificar si ya existe como chofer en la empresa
+        // Verificar si ya existe como chofer en la empresa
         $chofer = $obBD_con1->getRowConsulta(15, array($Ses_Emp_Cod, $ced), $obBD_conexion);
         if (!empty($chofer)) {
             $resp['existe'] = true;
             $resp['esChofer'] = true;
-            if (empty($chofer['Cho_Doc_Ced']) && !empty($docCed)) $chofer['Cho_Doc_Ced'] = $docCed;
-            if (empty($chofer['Cho_Doc_Ced_Rev']) && !empty($docCedRev)) $chofer['Cho_Doc_Ced_Rev'] = $docCedRev;
-            if (empty($chofer['Cho_Doc_Vot']) && !empty($docVot)) $chofer['Cho_Doc_Vot'] = $docVot;
-            if (empty($chofer['Cho_Doc_Fot']) && !empty($docFot)) $chofer['Cho_Doc_Fot'] = $docFot;
             $resp['chofer'] = $chofer;
             $resp['persona'] = array(
                 'Prs_Cod' => $chofer['Prs_Cod'],
@@ -662,38 +274,13 @@ if (isset($_GET['buscarPersonaCedulaAjax'])) {
             $obBD_con1->utf8_change_param($resp['chofer']);
             $obBD_con1->utf8_change_param($resp['persona']);
         } else {
-            // 2. Verificar si ya existe como visitante en la empresa
-            $visitante = $obBD_con1->getRowConsulta(16, array($Ses_Emp_Cod, $ced), $obBD_conexion);
-            if (!empty($visitante)) {
+            // Verificar si existe en tabla persona
+            $persona = $obBD_con1->getRowConsulta(6, array($ced), $obBD_conexion);
+            if (!empty($persona)) {
                 $resp['existe'] = true;
-                $resp['esVisitante'] = true;
-                if (empty($visitante['MVis_Doc_Ced']) && !empty($docCed)) $visitante['MVis_Doc_Ced'] = $docCed;
-                if (empty($visitante['MVis_Doc_Ced_Rev']) && !empty($docCedRev)) $visitante['MVis_Doc_Ced_Rev'] = $docCedRev;
-                if (empty($visitante['MVis_Doc_Vot']) && !empty($docVot)) $visitante['MVis_Doc_Vot'] = $docVot;
-                if (empty($visitante['MVis_Doc_Fot']) && !empty($docFot)) $visitante['MVis_Doc_Fot'] = $docFot;
-                $resp['visitante'] = $visitante;
-                $resp['persona'] = array(
-                    'Prs_Cod' => $visitante['Prs_Cod'],
-                    'Prs_Ced' => $visitante['Prs_Ced'],
-                    'Prs_Nom' => $visitante['Prs_Nom'],
-                    'Prs_Ape' => $visitante['Prs_Ape'],
-                    'Prs_Tel' => !empty($visitante['Prs_Tel_Base']) ? $visitante['Prs_Tel_Base'] : (isset($visitante['MVis_Tel']) ? $visitante['MVis_Tel'] : ''),
-                    'Prs_Cor' => !empty($visitante['Prs_Cor']) ? $visitante['Prs_Cor'] : '',
-                    'Prs_Dir' => !empty($visitante['Prs_Dir_Base']) ? $visitante['Prs_Dir_Base'] : '',
-                    'Prs_Fec' => $visitante['Prs_Fec']
-                );
-                $obBD_con1->utf8_change_param($resp['visitante']);
+                $resp['esChofer'] = false;
+                $resp['persona'] = $persona;
                 $obBD_con1->utf8_change_param($resp['persona']);
-            } else {
-                // 3. Si no es chofer ni visitante, verificar si existe en tabla persona
-                $persona = $obBD_con1->getRowConsulta(6, array($ced), $obBD_conexion);
-                if (!empty($persona)) {
-                    $resp['existe'] = true;
-                    $resp['esChofer'] = false;
-                    $resp['esVisitante'] = false;
-                    $resp['persona'] = $persona;
-                    $obBD_con1->utf8_change_param($resp['persona']);
-                }
             }
         }
     }
@@ -715,29 +302,12 @@ if (isset($_GET['getChoferByIdAjax'])) {
     responderJsonLimpio($resp);
 }
 
-// 5.6. Obtener Visitante Completo por ID para Edición
-if (isset($_GET['getVisitanteByIdAjax'])) {
-    $resp = array('success' => false);
-    $MVis_Cod = isset($_GET['MVis_Cod']) ? $_GET['MVis_Cod'] : (isset($_GET['Vis_Cod']) ? $_GET['Vis_Cod'] : '');
-    if (!empty($MVis_Cod)) {
-        $visitante = $obBD_con1->getRowConsulta(17, array($MVis_Cod), $obBD_conexion);
-        if (!empty($visitante)) {
-            $resp['success'] = true;
-            $resp['visitante'] = $visitante;
-            $obBD_con1->utf8_change_param($resp['visitante']);
-        }
-    }
-    responderJsonLimpio($resp);
-}
 
-// 6. Guardar Chofer o Visitante Completo: Comprime la Imagen y Verifica que el Resultado sea <= 5 MB
+
+// 6. Guardar Chofer Completo
 if (isset($_POST['saveChoferAjax'])) {
     $resp = array('success' => false);
-    $es_visitante = isset($_POST['es_visitante']) && $_POST['es_visitante'] == '1' ? 1 : 0;
     $Cho_Cod = isset($_POST['Cho_Cod']) ? trim($_POST['Cho_Cod']) : '';
-    $MVis_Cod = isset($_POST['MVis_Cod']) ? trim($_POST['MVis_Cod']) : (isset($_POST['Vis_Cod']) ? trim($_POST['Vis_Cod']) : '');
-    $Vis_Cod = $MVis_Cod;
-    $Man_Eve = isset($_POST['Man_Eve']) && $_POST['Man_Eve'] !== '' ? trim($_POST['Man_Eve']) : null;
     $Prs_Cod = isset($_POST['Prs_Cod']) ? trim($_POST['Prs_Cod']) : '';
     $Cho_Ced = isset($_POST['Cho_Ced']) ? preg_replace('/[^a-zA-Z0-9]/', '', trim($_POST['Cho_Ced'])) : '';
     $Prs_Nom = isset($_POST['Prs_Nom']) ? addslashes($_POST['Prs_Nom']) : '';
@@ -752,7 +322,6 @@ if (isset($_POST['saveChoferAjax'])) {
     $Cho_Tco = isset($_POST['Cho_Tco']) ? $_POST['Cho_Tco'] : 'Indefinido';
 
     $Cho_Tli = isset($_POST['Cho_Tli']) ? $_POST['Cho_Tli'] : '';
-    // Limpiar caracteres especiales del número de licencia (solo alfanumérico)
     $Cho_Nli = isset($_POST['Cho_Nli']) ? preg_replace('/[^a-zA-Z0-9]/', '', trim($_POST['Cho_Nli'])) : '';
     $Cho_Fei = !empty($_POST['Cho_Fei']) ? $_POST['Cho_Fei'] : null;
     $Cho_Cli = !empty($_POST['Cho_Cli']) ? $_POST['Cho_Cli'] : null;
@@ -763,7 +332,6 @@ if (isset($_POST['saveChoferAjax'])) {
     $Cho_Dir = isset($_POST['Cho_Dir']) ? addslashes($_POST['Cho_Dir']) : '';
     $Cho_Nem = isset($_POST['Cho_Nem']) ? addslashes($_POST['Cho_Nem']) : '';
     $Cho_Tem = isset($_POST['Cho_Tem']) ? trim($_POST['Cho_Tem']) : '';
-    $Vis_Obs = isset($_POST['MVis_Obs']) ? addslashes($_POST['MVis_Obs']) : (isset($_POST['Vis_Obs']) ? addslashes($_POST['Vis_Obs']) : '');
 
     // Datos de Capacitaciones
     $Cap_Bas_Obli = isset($_POST['Cap_Bas_Obli']) ? $_POST['Cap_Bas_Obli'] : 'N';
@@ -774,7 +342,6 @@ if (isset($_POST['saveChoferAjax'])) {
     $Cap_Mat_Fec = !empty($_POST['Cap_Mat_Fec']) ? $_POST['Cap_Mat_Fec'] : null;
     $Cap_Mat_Vig = !empty($_POST['Cap_Mat_Vig']) ? $_POST['Cap_Mat_Vig'] : null;
 
-    // Directorio Especificado: relavera/RECURSOS/archivos_adjuntos/choferes/{Cho_Ced}/
     $baseDir = dirname(__DIR__) . '/RECURSOS/archivos_adjuntos/choferes/';
     if (!file_exists($baseDir)) {
         @mkdir($baseDir, 0777, true);
@@ -840,7 +407,7 @@ if (isset($_POST['saveChoferAjax'])) {
             }
         }
 
-        // 2. Procesar Archivos Adjuntos: Se comprime la imagen y se evalúa el resultado final (< 5 MB)
+        // 2. Procesar Archivos Adjuntos
         $uploadedFiles = array();
         $fileFields = array(
             'Cho_Img_Lic_Anv' => 'Licencia Anverso',
@@ -893,16 +460,14 @@ if (isset($_POST['saveChoferAjax'])) {
                     $targetPath = $uploadDir . $filename;
 
                     if (in_array($ext, array('jpg', 'jpeg', 'png', 'webp'))) {
-                        // Intenta comprimir la imagen
                         $compSuccess = optimizarYComprimirImagen($tmpPath, $targetPath, 1920, 85);
                         if (!$compSuccess || !file_exists($targetPath)) {
                             throw new Exception("No se pudo procesar la imagen para '$fieldLabel'. Verifique que el archivo sea una imagen válida.");
                         }
 
-                        // Verificar el peso FINAL de la imagen optimizada resultante
                         $finalSize = filesize($targetPath);
                         if ($finalSize > $maxAllowedBytes) {
-                            @unlink($targetPath); // Elimina el archivo resultante pesado
+                            @unlink($targetPath);
                             $finalMB = number_format($finalSize / (1024 * 1024), 2);
                             throw new Exception("La imagen de '$fieldLabel', aun después de ser optimizada, pesa $finalMB MB y supera el límite máximo de 5.00 MB.");
                         }
@@ -933,202 +498,106 @@ if (isset($_POST['saveChoferAjax'])) {
                         throw new Exception("Formato no válido para '$fieldLabel'. Solo se permiten imágenes (JPG, PNG, WEBP) o documentos PDF.");
                     }
 
-                    // Guardar la ruta relativa estandarizada
                     $uploadedFiles[$field] = '../RECURSOS/archivos_adjuntos/choferes/' . $Cho_Ced . '/' . $filename;
                 }
             }
         }
 
-        // 3. Guardar o Actualizar Chofer o Visitante
-        if ($es_visitante == 1) {
-            $datosVisitante = array(
-                'Prs_Cod' => $Prs_Cod,
-                'Emp_Cod' => $Ses_Emp_Cod,
-                'MVis_Nac' => $Cho_Nac,
-                'MVis_Eci' => $Cho_Eci,
-                'MVis_Tsa' => $Cho_Tsa,
-                'MVis_Nem' => $Cho_Nem,
-                'MVis_Tem' => $Cho_Tem,
-                'MVis_Obs' => $Vis_Obs,
-                'MVis_Est' => 'A'
-            );
-            if (empty($Man_Eve)) {
-                try {
-                    $resEv = $obBD_con1->consulta("SELECT Man_Eve FROM manifiesto_evento WHERE Man_Vig = 'S' AND Man_EEst = 'A' LIMIT 1", $obBD_conexion->conexion);
-                    if ($resEv && ($rowEv = $obBD_con1->fetch_assoc($resEv))) {
-                        $Man_Eve = $rowEv['Man_Eve'];
-                    }
-                } catch (Exception $e) {
-                    // Ignorar silenciosamente
-                }
+        // 3. Guardar en chofer
+        $datosChofer = array(
+            'Prs_Cod' => $Prs_Cod,
+            'Emp_Cod' => $Ses_Emp_Cod,
+            'Cho_Nac' => $Cho_Nac,
+            'Cho_Eci' => $Cho_Eci,
+            'Cho_Car' => $Cho_Car,
+            'Cho_Est' => $Cho_Est,
+            'Cho_Tco' => $Cho_Tco,
+            'Cho_Tli' => $Cho_Tli,
+            'Cho_Nli' => $Cho_Nli,
+            'Cho_Tsa' => $Cho_Tsa,
+            'Cho_Tel' => $Cho_Tel,
+            'Cho_Cor' => $Cho_Cor,
+            'Cho_Dir' => $Cho_Dir,
+            'Cho_Nem' => $Cho_Nem,
+            'Cho_Tem' => $Cho_Tem
+        );
+
+        if (!empty($Cho_Fei)) $datosChofer['Cho_Fei'] = $Cho_Fei;
+        if (!empty($Cho_Cli)) $datosChofer['Cho_Cli'] = $Cho_Cli;
+
+        foreach (array('Cho_Img_Lic_Anv', 'Cho_Img_Lic_Rev', 'Cho_Doc_Ced', 'Cho_Doc_Ced_Rev', 'Cho_Doc_Vot', 'Cho_Doc_Fot', 'Cho_Doc_Ldi', 'Cho_Doc_Ant', 'Cho_Doc_San') as $f) {
+            if (isset($uploadedFiles[$f])) {
+                $datosChofer[$f] = $uploadedFiles[$f];
             }
-            if (!empty($Man_Eve)) {
-                $datosVisitante['Man_Eve'] = $Man_Eve;
-            }
-
-
-            if (isset($uploadedFiles['Cho_Doc_Ced'])) $datosVisitante['MVis_Doc_Ced'] = $uploadedFiles['Cho_Doc_Ced'];
-            if (isset($uploadedFiles['Cho_Doc_Ced_Rev'])) $datosVisitante['MVis_Doc_Ced_Rev'] = $uploadedFiles['Cho_Doc_Ced_Rev'];
-            if (isset($uploadedFiles['Cho_Doc_Vot'])) $datosVisitante['MVis_Doc_Vot'] = $uploadedFiles['Cho_Doc_Vot'];
-            if (isset($uploadedFiles['Cho_Doc_Fot'])) $datosVisitante['MVis_Doc_Fot'] = $uploadedFiles['Cho_Doc_Fot'];
-
-            // Herencia automática de fotos existentes (reutiliza rutas de archivo sin duplicar ni resubir en disco)
-            $visExistGlobal = $obBD_con1->getRowConsulta(16, array($Ses_Emp_Cod, $Cho_Ced), $obBD_conexion);
-            $choferExistGlobal = $obBD_con1->getRowConsulta(15, array($Ses_Emp_Cod, $Cho_Ced), $obBD_conexion);
-
-            $camposFotos = array(
-                'MVis_Doc_Ced'     => array('MVis_Doc_Ced', 'Cho_Doc_Ced'),
-                'MVis_Doc_Ced_Rev' => array('MVis_Doc_Ced_Rev', 'Cho_Doc_Ced_Rev'),
-                'MVis_Doc_Vot'     => array('MVis_Doc_Vot', 'Cho_Doc_Vot'),
-                'MVis_Doc_Fot'     => array('MVis_Doc_Fot', 'Cho_Doc_Fot')
-            );
-
-            foreach ($camposFotos as $targetKey => $sourceKeys) {
-                if (!isset($datosVisitante[$targetKey]) || empty($datosVisitante[$targetKey])) {
-                    // 1. Buscar en visitante anterior si existe
-                    if (!empty($visExistGlobal) && !empty($visExistGlobal[$sourceKeys[0]])) {
-                        $datosVisitante[$targetKey] = $visExistGlobal[$sourceKeys[0]];
-                    }
-                    // 2. Si no hay en visitante, buscar en chofer si existe
-                    elseif (!empty($choferExistGlobal) && !empty($choferExistGlobal[$sourceKeys[1]])) {
-                        $datosVisitante[$targetKey] = $choferExistGlobal[$sourceKeys[1]];
-                    }
-                }
-            }
-
-            if (!empty($MVis_Cod)) {
-                // Edición directa de una fila de visitante por su ID MVis_Cod
-                $datosVisitante['where'] = array('MVis_Cod' => $MVis_Cod);
-                $obBD_con1->operacionobBD('manifiesto_visitante.update', $datosVisitante, $obBD_conexion);
-                if ($obBD_con1->Error != 0) {
-                    $errMsg = !empty($obBD_con1->MsgError) ? $obBD_con1->MsgError : ("Error Cód: " . $obBD_con1->Error);
-                    throw new Exception("Error al actualizar Visitante: " . $errMsg);
-                }
-            } else {
-                // Verificar si la persona ya está registrada ESPECÍFICAMENTE en este evento ($Man_Eve)
-                $visExistEnEvento = null;
-                if (!empty($Man_Eve)) {
-                    $visExistEnEvento = $obBD_con1->getRowConsulta(20, array($Ses_Emp_Cod, $Cho_Ced, $Man_Eve), $obBD_conexion);
-                }
-
-                if (!empty($visExistEnEvento)) {
-                    // Ya está registrada en este mismo evento -> UPDATE de esa fila MVis_Cod
-                    $datosVisitante['where'] = array('MVis_Cod' => $visExistEnEvento['MVis_Cod']);
-                    $obBD_con1->operacionobBD('manifiesto_visitante.update', $datosVisitante, $obBD_conexion);
-                } else {
-                    // Es un evento nuevo para esta persona -> INSERT (SE GUARDA UN NUEVO REGISTRO PARA ESTE EVENTO)
-                    $obBD_con1->operacionobBD('manifiesto_visitante.insert', $datosVisitante, $obBD_conexion);
-                }
-                if ($obBD_con1->Error != 0) {
-                    $errMsg = !empty($obBD_con1->MsgError) ? $obBD_con1->MsgError : ("Error Cód: " . $obBD_con1->Error);
-                    throw new Exception("Error al guardar Visitante: " . $errMsg);
-                }
-            }
-
-            $obBD_con1->Error = 0;
-            $obBD_con1->fin_transaccion_nomsn($obBD_conexion);
-            $resp['success'] = true;
-            $resp['message'] = 'Visitante guardado correctamente';
-            $resp['debug_info'] = $debugDetails;
-        } else {
-            // Guardar en chofer
-            $datosChofer = array(
-                'Prs_Cod' => $Prs_Cod,
-                'Emp_Cod' => $Ses_Emp_Cod,
-                'Cho_Nac' => $Cho_Nac,
-                'Cho_Eci' => $Cho_Eci,
-                'Cho_Car' => $Cho_Car,
-                'Cho_Est' => $Cho_Est,
-                'Cho_Tco' => $Cho_Tco,
-                'Cho_Tli' => $Cho_Tli,
-                'Cho_Nli' => $Cho_Nli,
-                'Cho_Tsa' => $Cho_Tsa,
-                'Cho_Tel' => $Cho_Tel,
-                'Cho_Cor' => $Cho_Cor,
-                'Cho_Dir' => $Cho_Dir,
-                'Cho_Nem' => $Cho_Nem,
-                'Cho_Tem' => $Cho_Tem
-            );
-
-            if (!empty($Cho_Fei)) $datosChofer['Cho_Fei'] = $Cho_Fei;
-            if (!empty($Cho_Cli)) $datosChofer['Cho_Cli'] = $Cho_Cli;
-
-            foreach (array('Cho_Img_Lic_Anv', 'Cho_Img_Lic_Rev', 'Cho_Doc_Ced', 'Cho_Doc_Ced_Rev', 'Cho_Doc_Vot', 'Cho_Doc_Fot', 'Cho_Doc_Ldi', 'Cho_Doc_Ant', 'Cho_Doc_San') as $f) {
-                if (isset($uploadedFiles[$f])) {
-                    $datosChofer[$f] = $uploadedFiles[$f];
-                }
-            }
-
-            if (!empty($Cho_Cod)) {
-                $datosChofer['where'] = array('Cho_Cod' => $Cho_Cod);
-                $obBD_con1->operacionobBD('chofer.update', $datosChofer, $obBD_conexion);
-                if ($obBD_con1->Error != 0) {
-                    $errMsg = !empty($obBD_con1->MsgError) ? $obBD_con1->MsgError : ("Error Cód: " . $obBD_con1->Error);
-                    throw new Exception("Error al actualizar Chofer: " . $errMsg);
-                }
-                // Sincronizar actualización en todos los registros de chofer del mismo Prs_Cod
-                if (!empty($Prs_Cod)) {
-                    $datosChoferSync = $datosChofer;
-                    $datosChoferSync['where'] = array('Prs_Cod' => $Prs_Cod);
-                    $obBD_con1->operacionobBD('chofer.update', $datosChoferSync, $obBD_conexion);
-                }
-            } else {
-                $obBD_con1->operacionobBD('chofer.insert', $datosChofer, $obBD_conexion);
-                if ($obBD_con1->Error != 0) {
-                    $errMsg = !empty($obBD_con1->MsgError) ? $obBD_con1->MsgError : ("Error Cód: " . $obBD_con1->Error);
-                    throw new Exception("Error al guardar Chofer: " . $errMsg);
-                }
-                $Cho_Cod = $obBD_con1->insercionid($obBD_conexion);
-            }
-
-            // 4. Guardar o Actualizar Relación Planta (manifiesto_chofer)
-            if (!empty($Pla_Cod) && !empty($Cho_Cod)) {
-                try {
-                    $rel = $obBD_con1->getRowConsulta(9, array($Cho_Cod), $obBD_conexion);
-                    if (empty($rel)) {
-                        $obBD_con1->operacionobBD('manifiesto_chofer.insert', array('Cho_Cod' => $Cho_Cod, 'Pla_Cod' => $Pla_Cod), $obBD_conexion);
-                    } else {
-                        $obBD_con1->operacionobBD('manifiesto_chofer.update', array('Pla_Cod' => $Pla_Cod, 'where' => array('Cho_Cod' => $Cho_Cod)), $obBD_conexion);
-                    }
-                } catch (Throwable $ePla) {
-                }
-            }
-
-            // 5. Guardar o Actualizar Capacitaciones (manifiesto_chofer_capaci)
-            if (!empty($Cho_Cod)) {
-                try {
-                    $datosCapaci = array(
-                        'Cho_Cod' => $Cho_Cod,
-                        'Cap_Bas_Obli' => $Cap_Bas_Obli,
-                        'Cap_Mat_Peli' => $Cap_Mat_Peli
-                    );
-                    if (!empty($Cap_Bas_Fec)) $datosCapaci['Cap_Bas_Fec'] = $Cap_Bas_Fec;
-                    if (!empty($Cap_Bas_Vig)) $datosCapaci['Cap_Bas_Vig'] = $Cap_Bas_Vig;
-                    if (!empty($Cap_Mat_Fec)) $datosCapaci['Cap_Mat_Fec'] = $Cap_Mat_Fec;
-                    if (!empty($Cap_Mat_Vig)) $datosCapaci['Cap_Mat_Vig'] = $Cap_Mat_Vig;
-
-                    if (isset($uploadedFiles['Cap_Bas_Adj'])) $datosCapaci['Cap_Bas_Adj'] = $uploadedFiles['Cap_Bas_Adj'];
-                    if (isset($uploadedFiles['Cap_Mat_Adj'])) $datosCapaci['Cap_Mat_Adj'] = $uploadedFiles['Cap_Mat_Adj'];
-                    if (isset($uploadedFiles['Cap_Otr_Adj'])) $datosCapaci['Cap_Otr_Adj'] = $uploadedFiles['Cap_Otr_Adj'];
-
-                    $capRow = $obBD_con1->getRowConsulta(10, array($Cho_Cod), $obBD_conexion);
-                    if (empty($capRow)) {
-                        $obBD_con1->operacionobBD('manifiesto_chofer_capaci.insert', $datosCapaci, $obBD_conexion);
-                    } else {
-                        $datosCapaci['where'] = array('Cho_Cod' => $Cho_Cod);
-                        $obBD_con1->operacionobBD('manifiesto_chofer_capaci.update', $datosCapaci, $obBD_conexion);
-                    }
-                } catch (Throwable $eCap) {
-                }
-            }
-
-            // Asegurar que las actualizaciones principales de persona y chofer se confirmen sin rollback
-            $obBD_con1->Error = 0;
-            $obBD_con1->fin_transaccion_nomsn($obBD_conexion);
-            $resp['success'] = true;
-            $resp['message'] = 'Chofer guardado correctamente';
-            $resp['debug_info'] = $debugDetails;
         }
+
+        if (!empty($Cho_Cod)) {
+            $datosChofer['where'] = array('Cho_Cod' => $Cho_Cod);
+            $obBD_con1->operacionobBD('chofer.update', $datosChofer, $obBD_conexion);
+            if ($obBD_con1->Error != 0) {
+                $errMsg = !empty($obBD_con1->MsgError) ? $obBD_con1->MsgError : ("Error Cód: " . $obBD_con1->Error);
+                throw new Exception("Error al actualizar Chofer: " . $errMsg);
+            }
+            if (!empty($Prs_Cod)) {
+                $datosChoferSync = $datosChofer;
+                $datosChoferSync['where'] = array('Prs_Cod' => $Prs_Cod);
+                $obBD_con1->operacionobBD('chofer.update', $datosChoferSync, $obBD_conexion);
+            }
+        } else {
+            $obBD_con1->operacionobBD('chofer.insert', $datosChofer, $obBD_conexion);
+            if ($obBD_con1->Error != 0) {
+                $errMsg = !empty($obBD_con1->MsgError) ? $obBD_con1->MsgError : ("Error Cód: " . $obBD_con1->Error);
+                throw new Exception("Error al guardar Chofer: " . $errMsg);
+            }
+            $Cho_Cod = $obBD_con1->insercionid($obBD_conexion);
+        }
+
+        // 4. Guardar o Actualizar Relación Planta (manifiesto_chofer)
+        if (!empty($Pla_Cod) && !empty($Cho_Cod)) {
+            try {
+                $rel = $obBD_con1->getRowConsulta(9, array($Cho_Cod), $obBD_conexion);
+                if (empty($rel)) {
+                    $obBD_con1->operacionobBD('manifiesto_chofer.insert', array('Cho_Cod' => $Cho_Cod, 'Pla_Cod' => $Pla_Cod), $obBD_conexion);
+                } else {
+                    $obBD_con1->operacionobBD('manifiesto_chofer.update', array('Pla_Cod' => $Pla_Cod, 'where' => array('Cho_Cod' => $Cho_Cod)), $obBD_conexion);
+                }
+            } catch (Throwable $ePla) {
+            }
+        }
+
+        // 5. Guardar o Actualizar Capacitaciones (manifiesto_chofer_capaci)
+        if (!empty($Cho_Cod)) {
+            try {
+                $datosCapaci = array(
+                    'Cho_Cod' => $Cho_Cod,
+                    'Cap_Bas_Obli' => $Cap_Bas_Obli,
+                    'Cap_Mat_Peli' => $Cap_Mat_Peli
+                );
+                if (!empty($Cap_Bas_Fec)) $datosCapaci['Cap_Bas_Fec'] = $Cap_Bas_Fec;
+                if (!empty($Cap_Bas_Vig)) $datosCapaci['Cap_Bas_Vig'] = $Cap_Bas_Vig;
+                if (!empty($Cap_Mat_Fec)) $datosCapaci['Cap_Mat_Fec'] = $Cap_Mat_Fec;
+                if (!empty($Cap_Mat_Vig)) $datosCapaci['Cap_Mat_Vig'] = $Cap_Mat_Vig;
+
+                if (isset($uploadedFiles['Cap_Bas_Adj'])) $datosCapaci['Cap_Bas_Adj'] = $uploadedFiles['Cap_Bas_Adj'];
+                if (isset($uploadedFiles['Cap_Mat_Adj'])) $datosCapaci['Cap_Mat_Adj'] = $uploadedFiles['Cap_Mat_Adj'];
+                if (isset($uploadedFiles['Cap_Otr_Adj'])) $datosCapaci['Cap_Otr_Adj'] = $uploadedFiles['Cap_Otr_Adj'];
+
+                $capRow = $obBD_con1->getRowConsulta(10, array($Cho_Cod), $obBD_conexion);
+                if (empty($capRow)) {
+                    $obBD_con1->operacionobBD('manifiesto_chofer_capaci.insert', $datosCapaci, $obBD_conexion);
+                } else {
+                    $datosCapaci['where'] = array('Cho_Cod' => $Cho_Cod);
+                    $obBD_con1->operacionobBD('manifiesto_chofer_capaci.update', $datosCapaci, $obBD_conexion);
+                }
+            } catch (Throwable $eCap) {
+            }
+        }
+
+        $obBD_con1->Error = 0;
+        $obBD_con1->fin_transaccion_nomsn($obBD_conexion);
+        $resp['success'] = true;
+        $resp['message'] = 'Chofer guardado correctamente';
+        $resp['debug_info'] = $debugDetails;
     } catch (Exception $e) {
         $obBD_con1->rollBack_nomsn($obBD_conexion);
         $resp['success'] = false;
@@ -1154,16 +623,7 @@ if (isset($_POST['anularChoferAjax'])) {
     responderJsonLimpio($resp);
 }
 
-// 7.1. Anular Visitante
-if (isset($_POST['anularVisitanteAjax'])) {
-    $resp = array('success' => false);
-    $MVis_Cod = isset($_POST['MVis_Cod']) ? $_POST['MVis_Cod'] : (isset($_POST['Vis_Cod']) ? $_POST['Vis_Cod'] : '');
-    if (!empty($MVis_Cod)) {
-        $obBD_con1->operacionobBD('manifiesto_visitante.update', array('MVis_Est' => 'I', 'where' => array('MVis_Cod' => $MVis_Cod)), $obBD_conexion);
-        $resp['success'] = ($obBD_con1->Error == 0);
-    }
-    responderJsonLimpio($resp);
-}
+
 
 // 7.5. Enviar notificación de capacitación al chofer (WhatsApp + correo Relavera)
 if (isset($_POST['enviarNotifCapacitacionChoferAjax'])) {
@@ -1294,130 +754,7 @@ if (isset($_POST['enviarNotifCapacitacionChoferAjax'])) {
     responderJsonLimpio($resp);
 }
 
-// 7.6. Enviar certificado PDF a visitante del evento (WhatsApp y/o correo)
-if (isset($_POST['enviarCertificadoVisitanteEventoAjax'])) {
-    $resp = array(
-        'success' => false,
-        'message' => '',
-        'whatsapp' => false,
-        'correo' => false,
-        'omitido_whatsapp' => false,
-        'omitido_correo' => false
-    );
 
-    $MVis_Cod = isset($_POST['MVis_Cod']) ? trim((string) $_POST['MVis_Cod']) : '';
-    $canal = isset($_POST['canal']) ? strtolower(trim((string) $_POST['canal'])) : 'ambos';
-    if (!in_array($canal, array('whatsapp', 'correo', 'ambos'), true)) {
-        $canal = 'ambos';
-    }
-
-    if ($MVis_Cod === '') {
-        $resp['message'] = 'No se recibió el código del visitante.';
-        responderJsonLimpio($resp);
-    }
-
-    $visitante = $obBD_con1->getRowConsulta(17, array($MVis_Cod), $obBD_conexion);
-    if (empty($visitante)) {
-        $resp['message'] = 'No se encontró el visitante indicado.';
-        responderJsonLimpio($resp);
-    }
-    $obBD_con1->utf8_change_param($visitante);
-
-    $prsNom = isset($visitante['Prs_Nom']) ? trim((string) $visitante['Prs_Nom']) : '';
-    $prsApe = isset($visitante['Prs_Ape']) ? trim((string) $visitante['Prs_Ape']) : '';
-    $nombre = isset($visitante['nombre']) ? trim((string) $visitante['nombre']) : '';
-    if ($nombre === '') {
-        $nombre = trim($prsNom . ' ' . $prsApe);
-    }
-    $cedula = isset($visitante['Prs_Ced']) ? trim((string) $visitante['Prs_Ced']) : '';
-    $telefono = '';
-    if (!empty($visitante['Prs_Tel_Base'])) {
-        $telefono = trim((string) $visitante['Prs_Tel_Base']);
-    } elseif (!empty($visitante['MVis_Tem'])) {
-        $telefono = trim((string) $visitante['MVis_Tem']);
-    }
-    $correo = isset($visitante['Prs_Cor']) ? trim((string) $visitante['Prs_Cor']) : '';
-    if ($correo !== '' && !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
-        $correo = '';
-    }
-
-    $manEve = isset($visitante['Man_Eve']) ? trim((string) $visitante['Man_Eve']) : '';
-    if ($manEve === '' && !empty($_POST['Man_Eve'])) {
-        $manEve = trim((string) $_POST['Man_Eve']);
-    }
-    $evData = man_cert_asistencia_resolver_evento($obBD_con1, $obBD_conexion, $manEve !== '' ? $manEve : null);
-    $nombreEvento = $evData['nombre'];
-
-    $pdfParams = man_cert_asistencia_armar_params($prsNom, $prsApe, $cedula, $evData);
-    $pdfPath = man_cert_asistencia_generar_pdf($pdfParams);
-    if ($pdfPath === false || !is_file($pdfPath)) {
-        $resp['message'] = 'No se pudo generar el PDF del certificado.';
-        responderJsonLimpio($resp);
-    }
-
-    $pdfBase64 = base64_encode(file_get_contents($pdfPath));
-    $pdfNombre = 'Certificado_Asistencia_' . preg_replace('/[^a-zA-Z0-9_-]/', '', $cedula !== '' ? $cedula : 'visitante') . '.pdf';
-
-    $lineas = array();
-    $lineas[] = 'Gracias por su asistencia. Adjuntamos su certificado de participación en PDF.';
-    $lineas[] = '';
-    $lineas[] = 'Datos registrados:';
-    if ($nombre !== '') {
-        $lineas[] = '- Nombre: ' . $nombre;
-    }
-    if ($cedula !== '') {
-        $lineas[] = '- Cédula: ' . $cedula;
-    }
-    if ($nombreEvento !== '') {
-        $lineas[] = '- Evento: ' . $nombreEvento;
-    }
-    $mensaje = implode("\n", $lineas);
-    $asunto = 'Certificado de asistencia' . ($nombreEvento !== '' ? ' - ' . $nombreEvento : ' - Relavera');
-
-    $detalle = array();
-    $enviarWa = ($canal === 'whatsapp' || $canal === 'ambos');
-    $enviarMail = ($canal === 'correo' || $canal === 'ambos');
-
-    if ($enviarWa) {
-        $telWa = relavera_whatsapp_normalizar_numero_ec($telefono);
-        if ($telWa === '') {
-            $resp['omitido_whatsapp'] = true;
-            $detalle[] = 'WhatsApp omitido (sin teléfono válido)';
-        } else {
-            $okWa = relavera_enviar_whatsapp_documento_notif($telWa, $pdfBase64, $pdfNombre, $mensaje);
-            $resp['whatsapp'] = (bool) $okWa;
-            $detalle[] = $okWa ? 'WhatsApp enviado (PDF)' : 'WhatsApp falló';
-        }
-    }
-
-    if ($enviarMail) {
-        if ($correo === '') {
-            $resp['omitido_correo'] = true;
-            $detalle[] = 'Correo omitido (sin email válido)';
-        } else {
-            $okMail = relavera_notif_enviar_correo_notif(
-                $correo,
-                $nombre,
-                $asunto,
-                $mensaje,
-                null,
-                array('ruta' => $pdfPath, 'nombre' => $pdfNombre)
-            );
-            $resp['correo'] = (bool) $okMail;
-            $detalle[] = $okMail ? 'Correo enviado (PDF adjunto)' : 'Correo falló';
-        }
-    }
-
-    @unlink($pdfPath);
-
-    $resp['success'] = ($resp['whatsapp'] || $resp['correo']);
-    if ($resp['success']) {
-        $resp['message'] = 'Certificado PDF notificado: ' . implode('. ', $detalle) . '.';
-    } else {
-        $resp['message'] = 'No se pudo enviar el PDF. ' . implode('. ', $detalle) . '.';
-    }
-    responderJsonLimpio($resp);
-}
 
 // 8. Listar Vehículos
 if (isset($_REQUEST['listVehiculosGridAjax'])) {
@@ -1675,7 +1012,7 @@ if (isset($_POST['anularVehiculoAjax'])) {
 
 <head>
     <meta charset="UTF-8">
-    <title>Datos de Choferes y Vehículos</title>
+    <title>Gestion de Choferes y Vehículo</title>
     <!-- Framework & CSS Requirements -->
     <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
     <?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
@@ -1687,7 +1024,7 @@ if (isset($_POST['anularVehiculoAjax'])) {
     <div class="panel panel-default panel-main exa-ui-panel">
         <!-- Encabezado Estilo Model3 -->
         <div class="panel-heading exa-header">
-            <h3 class="panel-title"><span class="glyphicon glyphicon-list-alt"></span> Datos de Choferes y Vehículos</h3>
+            <h3 class="panel-title"><span class="glyphicon glyphicon-list-alt"></span> Datos de Choferes</h3>
         </div>
 
         <div class="panel-body exa-body">
@@ -1702,11 +1039,6 @@ if (isset($_POST['anularVehiculoAjax'])) {
                     <li role="presentation" class="active">
                         <a href="#tabChoferes" aria-controls="tabChoferes" role="tab" data-toggle="tab">
                             <i class="glyphicon glyphicon-user icon-tab"></i>Choferes
-                        </a>
-                    </li>
-                    <li role="presentation">
-                        <a href="#tabEventos" aria-controls="tabEventos" role="tab" data-toggle="tab">
-                            <i class="glyphicon glyphicon-calendar icon-tab"></i>Eventos
                         </a>
                     </li>
                     <!-- <li role="presentation">
@@ -1822,69 +1154,7 @@ if (isset($_POST['anularVehiculoAjax'])) {
                         </div>
                     </div>
 
-                    <!-- ==================== TAB EVENTOS ==================== -->
-                    <div role="tabpanel" class="tab-pane" id="tabEventos">
-                        <div class="row" style="margin-top: 5px; margin-bottom: 10px;">
-                            <div class="col-xs-12">
-                                <fieldset class="exa-fieldset">
-                                    <legend class="Titulos2">Personas / Visitantes del evento</legend>
-                                    <form id="filtroVisitantesEventoForm" class="form-horizontal normal" onsubmit="event.preventDefault(); actualizarGridVisitantesEvento();">
-                                        <div class="form-group" style="margin-bottom: 8px;">
-                                            <label class="control-label label-xs" style="float: left; width: 100px; text-align: right; padding-right: 8px; line-height: 32px;">Evento:</label>
-                                            <div style="float: left; width: 420px; max-width: 100%;">
-                                                <select id="selMan_Eve" name="Man_Eve" class="form-control input-xs select-wide chosen-select" data-placeholder="Seleccione un evento..." style="height: 32px; font-size: 12px;">
-                                                    <option value="">Seleccione un evento...</option>
-                                                    <?php
-                                                    $eventoPreseleccionado = !empty($idEventoVigente) ? $idEventoVigente : '';
-                                                    foreach ($eventosCatalogo as $evRow) {
-                                                        $evId = isset($evRow['Man_Eve']) ? $evRow['Man_Eve'] : '';
-                                                        if ($evId === '' || $evId === null) {
-                                                            continue;
-                                                        }
-                                                        $evNom = isset($evRow['Man_ENom']) ? $evRow['Man_ENom'] : ('Evento #' . $evId);
-                                                        $evFei = !empty($evRow['Man_EFei']) ? $evRow['Man_EFei'] : '';
-                                                        $evVig = (isset($evRow['Man_Vig']) && strtoupper($evRow['Man_Vig']) === 'S') ? ' [VIGENTE]' : '';
-                                                        $label = $evNom;
-                                                        if ($evFei !== '') {
-                                                            $label .= ' (' . $evFei . ')';
-                                                        }
-                                                        $label .= $evVig;
-                                                        $sel = ((string)$eventoPreseleccionado !== '' && (string)$eventoPreseleccionado === (string)$evId) ? ' selected' : '';
-                                                        echo '<option value="' . htmlspecialchars($evId, ENT_QUOTES, 'UTF-8') . '"' . $sel . '>' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</option>';
-                                                    }
-                                                    ?>
-                                                </select>
-                                            </div>
-                                            <label class="control-label label-xs" style="float: left; width: 90px; text-align: right; padding-right: 8px; margin-left: 20px; line-height: 32px;">Filtrar Por:</label>
-                                            <div class="radioset opt_search" style="float: left;">
-                                                <input id="radVisEve1" name="op_opciones" type="radio" value="d" checked="" onclick="setfocus(this.form.search)" />
-                                                <label for="radVisEve1">Nombre</label>
-                                                <input id="radVisEve2" name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" />
-                                                <label for="radVisEve2">Cédula</label>
-                                            </div>
-                                        </div>
-                                        <div style="margin-top: 6px; margin-bottom: 4px; display: flex; align-items: center; width: 100%; clear: both;">
-                                            <label class="control-label label-xs" style="width: 100px; text-align: right; padding-right: 8px; margin-bottom: 0; line-height: 32px; flex-shrink: 0;">Búsqueda:</label>
-                                            <div style="width: 450px; max-width: 100%;">
-                                                <div class="input-group">
-                                                    <input name="search" type="text" maxlength="50" placeholder="Ingrese búsqueda..." class="form-control clearable" style="height: 32px; font-size: 12px;" onkeydown="if (event.keyCode === 13) { event.preventDefault(); actualizarGridVisitantesEvento(); }" />
-                                                    <span class="input-group-btn">
-                                                        <button type="button" onclick="actualizarGridVisitantesEvento();" class="btn btn-success" style="height: 32px; font-size: 12px;" title="Buscar personas">
-                                                            <span class="glyphicon glyphicon-search"></span> Buscar
-                                                        </button>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </form>
-                                </fieldset>
-                            </div>
-                        </div>
-                        <div class="exa-ui-grid-host">
-                            <table id="gridVisitantesEvento"></table>
-                            <div id="gridVisitantesEventoPager"></div>
-                        </div>
-                    </div>
+
 
                     <!-- ==================== TAB 3: VEHÍCULOS (COMENTADO) ==================== -->
                     <!--
@@ -1983,40 +1253,11 @@ if (isset($_POST['anularVehiculoAjax'])) {
         </div>
     </div>
 
-    <!-- Modal Chofer / Visitante Completo (Layout Vertical Apilado 920px) -->
+    <!-- Modal Chofer Completo (Layout Vertical Apilado 920px) -->
     <div id="choferDialog" title="Registrar Chofer" style="display: none;">
         <form id="choferForm" class="form-horizontal normal" enctype="multipart/form-data" autocomplete="off">
             <input type="hidden" id="Cho_Cod" name="Cho_Cod">
-            <input type="hidden" id="MVis_Cod" name="MVis_Cod">
-            <input type="hidden" id="Vis_Cod" name="Vis_Cod">
             <input type="hidden" id="Prs_Cod" name="Prs_Cod">
-            <input type="hidden" id="Man_Eve" name="Man_Eve">
-
-            <!-- BANNER SWITCH VISITANTE & EVENTO EN VIGENCIA -->
-            <div class="row" style="margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
-                <div class="col-xs-7 text-left" style="padding-right: 0;">
-                    <?php if (!empty($nombreEventoVigente)) { ?>
-                        <span id="lbl_evento_vigente" class="label label-info" style="font-size: 11px; padding: 5px 10px; border-radius: 4px; display: inline-block; background-color: #0284c7; color: #fff;" title="Evento en vigencia activo">
-                            <i class="glyphicon glyphicon-bullhorn"></i> Evento "<strong><?php echo htmlspecialchars($nombreEventoVigente); ?></strong>" En Vigencia
-                        </span>
-                        <input type="hidden" id="hdn_man_eve_vigente" value="<?php echo $idEventoVigente; ?>">
-                    <?php } else { ?>
-                        <span id="lbl_evento_vigente" class="label label-default" style="font-size: 11px; padding: 5px 10px; border-radius: 4px; display: inline-block; background-color: #64748b; color: #fff;">
-                            <i class="glyphicon glyphicon-calendar"></i> Sin Evento En Vigencia
-                        </span>
-                        <input type="hidden" id="hdn_man_eve_vigente" value="">
-                    <?php } ?>
-
-
-                </div>
-                <div class="col-xs-5 text-right" style="padding-left: 0;">
-                    <label class="checkbox-inline" style="font-weight: bold; font-size: 12px; color: #155724; background: #d4edda; padding: 5px 12px; border-radius: 4px; border: 1px solid #c3e6cb; cursor: pointer;">
-                        <input type="checkbox" id="chk_es_visitante" name="es_visitante" value="1" onchange="toggleModoVisitante(this.checked);" style="margin-top: 1px;">
-                        <i class="glyphicon glyphicon-user"></i> Registrar como Visitante
-                    </label>
-                </div>
-            </div>
-
 
             <!-- BLOQUE 1: IDENTIFICACIÓN PERSONAL -->
             <div class="row">
@@ -2026,7 +1267,6 @@ if (isset($_POST['anularVehiculoAjax'])) {
                         <input type="hidden" id="Cho_Est" name="Cho_Est" value="A">
                         <input type="hidden" id="Cho_Car" name="Cho_Car" value="Chofer">
                         <input type="hidden" id="Cho_Tco" name="Cho_Tco" value="Indefinido">
-                        <input type="hidden" id="Cho_Pla_Cod" name="Pla_Cod" value="">
 
                         <div class="row">
                             <div class="col-xs-3">
@@ -2098,6 +1338,19 @@ if (isset($_POST['anularVehiculoAjax'])) {
                                     <label class="col-xs-12 control-label label-xs required" title="Teléfono Celular Personal">Celular Personal:</label>
                                     <div class="col-xs-12">
                                         <input type="text" id="Cho_Tel" name="Cho_Tel" class="form-control input-xs" required placeholder="0991234567" maxlength="20">
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="box_cho_planta" class="col-xs-3">
+                                <div class="form-group">
+                                    <label id="lbl_cho_planta" class="col-xs-12 control-label label-xs required" title="Planta de Beneficio">Planta de Beneficio:</label>
+                                    <div class="col-xs-12">
+                                        <select id="Cho_Pla_Cod" name="Pla_Cod" class="form-control input-xs select-wide chosen-select" required>
+                                            <option value="">Seleccione Planta...</option>
+                                            <?php foreach ($plantas as $pla) {
+                                                echo '<option value="' . htmlspecialchars($pla['Pla_Cod'], ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($pla['Pla_Nom'], ENT_QUOTES, 'UTF-8') . '</option>';
+                                            } ?>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -2252,7 +1505,7 @@ if (isset($_POST['anularVehiculoAjax'])) {
                                 <div class="form-group">
                                     <label class="col-xs-12 control-label label-xs" title="Observaciones Adicionales">Observaciones:</label>
                                     <div class="col-xs-12">
-                                        <input type="text" id="MVis_Obs" name="MVis_Obs" class="form-control input-xs" placeholder="Observaciones generales o motivo de la visita">
+                                        <input type="text" id="Cho_Obs" name="Cho_Obs" class="form-control input-xs" placeholder="Observaciones generales del chofer">
                                     </div>
                                 </div>
                             </div>
@@ -2401,9 +1654,9 @@ if (isset($_POST['anularVehiculoAjax'])) {
                         <div class="row">
                             <div class="col-xs-6">
                                 <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Planta de Beneficio">Planta Beneficio:</label>
+                                    <label class="col-xs-12 control-label label-xs required" title="Planta de Beneficio">Planta Beneficio:</label>
                                     <div class="col-xs-12">
-                                        <select id="Veh_Pla_Cod" name="Pla_Cod" class="form-control input-xs select-wide chosen-select">
+                                        <select id="Veh_Pla_Cod" name="Pla_Cod" class="form-control input-xs select-wide chosen-select" required>
                                             <option value="">Seleccione Planta...</option>
                                             <?php foreach ($plantas as $row) { ?>
                                                 <option value="<?php echo $row['Pla_Cod']; ?>"><?php echo $row['Pla_Nom']; ?></option>
@@ -2781,7 +2034,7 @@ if (isset($_POST['anularVehiculoAjax'])) {
     <!-- JS Scripts Inclusion con parámetro de cache-busting -->
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=39"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=41"></script>
 </body>
 
 </html>
