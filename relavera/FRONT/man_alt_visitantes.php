@@ -1254,15 +1254,15 @@ if (isset($_POST['enviarCertificadoVisitanteEventoAjax'])) {
                 <div class="tab-content">
                     <!-- ==================== TAB EVENTOS ==================== -->
                     <div role="tabpanel" class="tab-pane active" id="tabEventos">
-                        <div class="row" style="margin-top: 5px; margin-bottom: 10px;">
+                        <div class="row vis-tab-row">
                             <div class="col-xs-12">
                                 <fieldset class="exa-fieldset">
                                     <legend class="Titulos2">Personas / Visitantes del evento</legend>
                                     <form id="filtroVisitantesEventoForm" class="form-horizontal normal" onsubmit="event.preventDefault(); actualizarGridVisitantesEvento();">
                                         <!-- Fila Superior: Filtrar Por a la izquierda (encima de Búsqueda) y Evento a la derecha -->
-                                        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 8px;">
-                                            <div style="display: flex; align-items: center;">
-                                                <label class="control-label label-xs" style="width: 100px; text-align: right; padding-right: 8px; margin-bottom: 0; line-height: 32px; flex-shrink: 0;">Filtrar Por:</label>
+                                        <div class="vis-filter-row">
+                                            <div class="vis-filter-group">
+                                                <label class="control-label label-xs vis-filter-label">Filtrar Por:</label>
                                                 <div class="radioset opt_search">
                                                     <input id="radVisEve1" name="op_opciones" type="radio" value="d" checked="" onclick="setfocus(this.form.search)" />
                                                     <label for="radVisEve1">Nombre</label>
@@ -1270,11 +1270,11 @@ if (isset($_POST['enviarCertificadoVisitanteEventoAjax'])) {
                                                     <label for="radVisEve2">Cédula</label>
                                                 </div>
                                             </div>
-                                            <div style="display: flex; align-items: center;">
-                                                <label class="control-label label-xs" style="text-align: right; padding-right: 8px; margin-bottom: 0; line-height: 32px; flex-shrink: 0;">Evento:</label>
-                                                <div style="width: 420px; max-width: 100%;">
-                                                    <select id="selMan_Eve" name="Man_Eve" class="form-control input-xs select-wide chosen-select" data-placeholder="Seleccione un evento..." style="height: 32px; font-size: 12px;" onchange="actualizarGridVisitantesEvento();">
-                                                        <option value="">Seleccione un evento...</option>
+                                            <div class="vis-filter-group">
+                                                <label class="control-label label-xs vis-filter-label-inline">Evento:</label>
+                                                <div class="vis-evento-select-wrap">
+                                                    <select id="selMan_Eve" name="Man_Eve" class="form-control input-xs select-wide chosen-select vis-input-sm" data-placeholder="Todos los eventos..." onchange="actualizarGridVisitantesEvento();">
+                                                        <option value="">— Todos los eventos —</option>
                                                         <?php
                                                         $eventoPreseleccionado = !empty($idEventoVigente) ? $idEventoVigente : '';
                                                         foreach ($eventosCatalogo as $evRow) {
@@ -1300,22 +1300,22 @@ if (isset($_POST['enviarCertificadoVisitanteEventoAjax'])) {
                                         </div>
 
                                         <!-- Fila Inferior: Búsqueda a la izquierda y Registrar Visitante a la derecha -->
-                                        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: 4px; margin-bottom: 4px;">
-                                            <div style="display: flex; align-items: center; flex-grow: 1;">
-                                                <label class="control-label label-xs" style="width: 100px; text-align: right; padding-right: 8px; margin-bottom: 0; line-height: 32px; flex-shrink: 0;">Búsqueda:</label>
-                                                <div style="width: 450px; max-width: 100%;">
+                                        <div class="vis-filter-row-bottom">
+                                            <div class="vis-filter-group-grow">
+                                                <label class="control-label label-xs vis-filter-label">Búsqueda:</label>
+                                                <div class="vis-busqueda-wrap">
                                                     <div class="input-group">
-                                                        <input name="search" type="text" maxlength="50" placeholder="Ingrese búsqueda..." class="form-control clearable" style="height: 32px; font-size: 12px;" onkeydown="if (event.keyCode === 13) { event.preventDefault(); actualizarGridVisitantesEvento(); }" />
+                                                        <input name="search" type="text" maxlength="50" placeholder="Ingrese búsqueda..." class="form-control clearable vis-input-sm" onkeydown="if (event.keyCode === 13) { event.preventDefault(); actualizarGridVisitantesEvento(); }" />
                                                         <span class="input-group-btn">
-                                                            <button type="button" onclick="actualizarGridVisitantesEvento();" class="btn btn-success" style="height: 32px; font-size: 12px;" title="Buscar personas">
+                                                            <button type="button" onclick="actualizarGridVisitantesEvento();" class="btn btn-success vis-btn-sm" title="Buscar personas">
                                                                 <span class="glyphicon glyphicon-search"></span> Buscar
                                                             </button>
                                                         </span>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div style="flex-shrink: 0; margin-left: 15px;">
-                                                <button class="btn btn-success" type="button" onclick="abrirModalVisitante();" style="height: 32px; font-size: 12px; font-weight: 600; padding: 0 18px;">
+                                            <div class="vis-btn-registrar-wrap">
+                                                <button class="btn btn-success vis-btn-registrar" type="button" onclick="abrirModalVisitante();">
                                                     <i class="glyphicon glyphicon-plus"></i> Registrar Visitante
                                                 </button>
                                             </div>
@@ -1344,15 +1344,15 @@ if (isset($_POST['enviarCertificadoVisitanteEventoAjax'])) {
             <input type="hidden" id="chk_es_visitante" name="es_visitante" value="1">
 
             <!-- BANNER EVENTO EN VIGENCIA -->
-            <div class="row" style="margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+            <div class="row vis-modal-header-row">
                 <div class="col-xs-12 text-left">
                     <?php if (!empty($nombreEventoVigente)) { ?>
-                        <span id="lbl_evento_vigente" class="label label-info" style="font-size: 11px; padding: 5px 10px; border-radius: 4px; display: inline-block; background-color: #0284c7; color: #fff;" title="Evento en vigencia activo">
+                        <span id="lbl_evento_vigente" class="label label-info vis-label-evento" style="display:inline-block; background-color:#0284c7; color:#fff;" title="Evento en vigencia activo">
                             <i class="glyphicon glyphicon-bullhorn"></i> Evento "<strong><?php echo htmlspecialchars($nombreEventoVigente); ?></strong>" En Vigencia
                         </span>
                         <input type="hidden" id="hdn_man_eve_vigente" value="<?php echo $idEventoVigente; ?>">
                     <?php } else { ?>
-                        <span id="lbl_evento_vigente" class="label label-default" style="font-size: 11px; padding: 5px 10px; border-radius: 4px; display: inline-block; background-color: #64748b; color: #fff;">
+                        <span id="lbl_evento_vigente" class="label label-default vis-label-evento" style="display:inline-block; background-color:#64748b; color:#fff;">
                             <i class="glyphicon glyphicon-calendar"></i> Sin Evento En Vigencia
                         </span>
                         <input type="hidden" id="hdn_man_eve_vigente" value="">
@@ -1399,7 +1399,7 @@ if (isset($_POST['enviarCertificadoVisitanteEventoAjax'])) {
                                 </div>
                             </div>
                         </div>
-                        <div class="row" style="margin-top: 4px;">
+                        <div class="row vis-row-mt">
                             <div class="col-xs-2">
                                 <div class="form-group">
                                     <label class="col-xs-12 control-label label-xs" title="Edad calculada">Edad:</label>
@@ -1444,7 +1444,7 @@ if (isset($_POST['enviarCertificadoVisitanteEventoAjax'])) {
             </div>
 
             <!-- BLOQUE 2: CONTACTOS E INFORMACIÓN MÉDICA -->
-            <div class="row" style="margin-top: 6px;">
+            <div class="row vis-row-mt-6">
                 <div class="col-xs-12">
                     <fieldset class="exa-fieldset">
                         <legend class="Titulos2"><i class="glyphicon glyphicon-phone"></i> 2. Contactos e Información Médica</legend>
@@ -1484,7 +1484,7 @@ if (isset($_POST['enviarCertificadoVisitanteEventoAjax'])) {
                                 </div>
                             </div>
                         </div>
-                        <div class="row" style="margin-top: 4px;">
+                        <div class="row vis-row-mt">
                             <div class="col-xs-6">
                                 <div class="form-group">
                                     <label class="col-xs-12 control-label label-xs" title="Nombre del Contacto de Emergencia">Contacto Emergencia:</label>
@@ -1502,7 +1502,7 @@ if (isset($_POST['enviarCertificadoVisitanteEventoAjax'])) {
                                 </div>
                             </div>
                         </div>
-                        <div class="row" style="margin-top: 4px;">
+                        <div class="row vis-row-mt">
                             <div class="col-xs-12">
                                 <div class="form-group">
                                     <label class="col-xs-12 control-label label-xs" title="Observaciones Adicionales">Observaciones:</label>
@@ -1518,35 +1518,35 @@ if (isset($_POST['enviarCertificadoVisitanteEventoAjax'])) {
 
         </form>
 
-        <div style="text-align: center; margin-top: 10px; margin-bottom: 5px;">
+        <div class="vis-modal-footer">
             <button id="btnGuardarVisitante" class="btn btn-primary" type="button" onclick="guardarVisitante();"><i class="glyphicon glyphicon-floppy-disk"></i> Guardar Visitante</button>
-            <button class="btn btn-danger" type="button" onclick="$('#visitanteDialog').dialog('close');" style="margin-left: 5px;"><i class="glyphicon glyphicon-remove"></i> Cancelar</button>
+            <button class="btn btn-danger" type="button" onclick="$('#visitanteDialog').dialog('close');" style="margin-left:5px;"><i class="glyphicon glyphicon-remove"></i> Cancelar</button>
         </div>
     </div>
 
     <!-- Modal Previsualizador de Documentos y Fotos -->
     <div id="previewDocModal" title="Previsualización de Documento" style="display: none;">
-        <div id="previewDocContent" style="text-align: center; padding: 5px;">
-            <img id="previewDocImg" src="" alt="Vista previa de foto" style="max-width: 100%; max-height: 72vh; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: none;" />
-            <iframe id="previewDocPdf" src="" style="width: 100%; height: 72vh; border: none; display: none;"></iframe>
+        <div id="previewDocContent" class="vis-preview-content">
+            <img id="previewDocImg" src="" alt="Vista previa de foto" class="vis-preview-img" />
+            <iframe id="previewDocPdf" src="" class="vis-preview-iframe"></iframe>
         </div>
-        <div style="text-align: center; margin-top: 10px;">
+        <div class="vis-preview-footer">
             <button class="btn btn-sm btn-danger" type="button" onclick="$('#previewDocModal').dialog('close');"><i class="glyphicon glyphicon-remove"></i> Cerrar</button>
         </div>
     </div>
 
     <!-- Diálogo de Alerta UI Model3 -->
     <div id="alertCustomDialog" title="Notificación" style="display: none;">
-        <div style="margin-top: 10px; display: flex; align-items: flex-start;">
-            <span id="alertCustomIcon" class="glyphicon glyphicon-info-sign" style="font-size: 24px; margin-right: 12px;"></span>
-            <div id="alertCustomMessage" style="font-size: 12px; line-height: 1.5; color: #333;"></div>
+        <div class="vis-alert-body">
+            <span id="alertCustomIcon" class="glyphicon glyphicon-info-sign vis-alert-icon"></span>
+            <div id="alertCustomMessage" class="vis-alert-message"></div>
         </div>
     </div>
 
     <!-- JS Scripts -->
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/man_val_visitantes.js?e=3"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_visitantes.js?e=4"></script>
 </body>
 
 </html>

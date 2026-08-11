@@ -386,15 +386,11 @@ function sentencias_visitantes($Nro_Sql, $Par_Sql)
             break;
 
         case 19:
-            // Listar visitantes/personas por evento
+            // Listar visitantes/personas — si hay evento seleccionado filtra por él,
+            // si no hay evento seleccionado muestra todos los visitantes de la empresa
             $searchVis = "";
             $manEve = !empty($Par_Sql['Man_Eve']) ? addslashes($Par_Sql['Man_Eve']) : '';
-            if ($manEve === '') {
-                $sql = empty($Par_Sql['limits'])
-                    ? "SELECT 0 as total"
-                    : "SELECT * FROM manifiesto_visitante WHERE 1=0";
-                break;
-            }
+
             if (!empty($Par_Sql['search']) && !empty($Par_Sql['op_opciones'])) {
                 $searchTerm = addslashes($Par_Sql['search']);
                 if ($Par_Sql['op_opciones'] == 'c') {
@@ -406,6 +402,9 @@ function sentencias_visitantes($Nro_Sql, $Par_Sql)
                 $searchTerm = addslashes($Par_Sql['search']);
                 $searchVis .= " AND (persona.Prs_Ced LIKE '%$searchTerm%' OR CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) LIKE '%$searchTerm%')";
             }
+
+            // Filtro por evento: si hay evento seleccionado aplica el filtro, sino muestra todos
+            $filtroEvento = ($manEve !== '') ? "AND mv.Man_Eve = '$manEve'" : "";
 
             $baseVis = "
                 SELECT mv.MVis_Cod,
@@ -426,12 +425,12 @@ function sentencias_visitantes($Nro_Sql, $Par_Sql)
                        persona.Prs_Dir,
                        persona.Prs_Fec,
                        CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) as nombre,
-                       me.Man_ENom
+                       IFNULL(me.Man_ENom, 'Sin evento') as Man_ENom
                 FROM manifiesto_visitante mv
                 INNER JOIN persona ON persona.Prs_Cod = mv.Prs_Cod
                 LEFT JOIN manifiesto_evento me ON me.Man_Eve = mv.Man_Eve
                 WHERE mv.Emp_Cod = '$Par_Sql[0]'
-                  AND mv.Man_Eve = '$manEve'
+                  $filtroEvento
                   AND IFNULL(mv.MVis_Est, 'A') != 'I'
                   $searchVis
             ";
