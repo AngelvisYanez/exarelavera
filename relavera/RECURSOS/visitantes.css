@@ -883,3 +883,157 @@ div.ui-dialog.exa-alert-modal-pro .ui-dialog-buttonpane button:nth-child(2):hove
     font-family: inherit !important;
     margin: 1px 0 !important;
 }
+
+/* ==========================================================================
+   FILTROS Y BARRA DE ACCIONES - VISITANTES
+   ========================================================================== */
+
+.vis-filter-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.vis-filter-row-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.vis-filter-group {
+    display: flex;
+    align-items: center;
+}
+
+.vis-filter-group-grow {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.vis-filter-label {
+    width: 100px;
+    text-align: right;
+    padding-right: 8px;
+    margin-bottom: 0;
+    line-height: 32px;
+    flex-shrink: 0;
+}
+
+.vis-filter-label-inline {
+    text-align: right;
+    padding-right: 8px;
+    margin-bottom: 0;
+    line-height: 32px;
+    flex-shrink: 0;
+}
+
+.vis-evento-select-wrap {
+    width: 420px;
+    max-width: 100%;
+}
+
+.vis-busqueda-wrap {
+    width: 450px;
+    max-width: 100%;
+}
+
+.vis-btn-registrar-wrap {
+    flex-shrink: 0;
+    margin-left: 15px;
+}
+
+.vis-input-sm {
+    height: 32px;
+    font-size: 12px;
+}
+
+.vis-btn-sm {
+    height: 32px;
+    font-size: 12px;
+}
+
+.vis-btn-registrar {
+    height: 32px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 0 18px;
+}
+
+.vis-tab-row {
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+
+/* Modal: etiqueta de evento vigente */
+.vis-modal-header-row {
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.vis-label-evento {
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+/* Modal: botones footer */
+.vis-modal-footer {
+    text-align: center;
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+/* Preview modal */
+.vis-preview-content {
+    text-align: center;
+    padding: 5px;
+}
+
+.vis-preview-img {
+    max-width: 100%;
+    max-height: 72vh;
+    border-radius: 4px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    display: none;
+}
+
+.vis-preview-iframe {
+    width: 100%;
+    height: 72vh;
+    border: none;
+    display: none;
+}
+
+.vis-preview-footer {
+    text-align: center;
+    margin-top: 10px;
+}
+
+/* Alert dialog */
+.vis-alert-body {
+    margin-top: 10px;
+    display: flex;
+    align-items: flex-start;
+}
+
+.vis-alert-icon {
+    font-size: 24px;
+    margin-right: 12px;
+}
+
+.vis-alert-message {
+    font-size: 12px;
+    line-height: 1.5;
+    color: #333;
+}
+
+.vis-row-mt   { margin-top: 4px; }
+.vis-row-mt-6 { margin-top: 6px; }
