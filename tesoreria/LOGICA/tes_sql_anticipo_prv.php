@@ -85,8 +85,8 @@ function sentencias_anticipo_prv($id, $Par_Sql)
 			return $sql;
 			//insertar un registro en la tabla pagos_anticipo_proveedores
 		case 8:
-			$sql = "INSERT INTO pago_anticipo_proveedores (Pap_Cto, Pap_Ctd, Pap_Val, Atp_Cod, Pag_Cod, Asi_Cod, Pap_img)
-							VALUES('$Par_Sql[Pap_Cto]', '$Par_Sql[Pap_Ctd]', '$Par_Sql[Pap_Val]', $Par_Sql[Atp_Cod], $Par_Sql[Pag_Cod], '$Par_Sql[Asi_Cod]', '$Par_Sql[Pap_img]');";
+			$sql = "INSERT INTO pago_anticipo_proveedores (Pap_Cto, Pap_Ctd, Pap_Val, Atp_Cod, Pag_Cod, Asi_Cod)
+							VALUES('$Par_Sql[Pap_Cto]', '$Par_Sql[Pap_Ctd]', '$Par_Sql[Pap_Val]', $Par_Sql[Atp_Cod], $Par_Sql[Pag_Cod], '$Par_Sql[Asi_Cod]');";
 			// echo $sql;
 			return $sql;
 			//insertar un registro en la tabla asientos
@@ -421,6 +421,79 @@ function sentencias_anticipo_prv($id, $Par_Sql)
 		case  38:
 			$sql = "DELETE FROM nego_documentos WHERE  Cod_Nd = $Par_Sql[0] AND  Abr_Doc = '$Par_Sql[1]'";
 			break;
+
+		/* Búsqueda de comprobantes de referencia (por proveedor y texto). */
+		case 40:
+			$Prv_Cod = isset($Par_Sql['Prv_Cod']) ? (int)$Par_Sql['Prv_Cod'] : 0;
+			$search = isset($Par_Sql['search']) ? trim($Par_Sql['search']) : '';
+			$searchEsc = addslashes($search);
+			$wherePrv = $Prv_Cod > 0 ? " AND comprobantes.Prv_Cod = $Prv_Cod " : '';
+			$whereTxt = $search !== ''
+				? " AND (CAST(comprobantes.Com_Num AS CHAR) LIKE '%$searchEsc%'
+					OR comprobantes.Com_Con LIKE '%$searchEsc%'
+					OR comprobantes.Com_Obs LIKE '%$searchEsc%'
+					OR CONCAT(tipo_asien.Tia_Abr,'-',comprobantes.Com_Num) LIKE '%$searchEsc%') "
+				: '';
+			$campos = empty($Par_Sql['limits'])
+				? " COUNT(comprobantes.Com_Cod) AS total"
+				: " comprobantes.Com_Cod,
+					CONCAT(tipo_asien.Tia_Abr,'-',
+						IF(CHAR_LENGTH(MONTH(comprobantes.Com_Fec))=1, CONCAT('0', MONTH(comprobantes.Com_Fec)), MONTH(comprobantes.Com_Fec)),
+						'-', comprobantes.Com_Num) AS Com_Num_Fmt,
+					comprobantes.Com_Num,
+					comprobantes.Com_Fec,
+					ROUND(comprobantes.Com_Val, 2) AS Com_Val,
+					comprobantes.Com_Con,
+					tipo_asien.Tia_Abr,
+					tipo_asien.Tia_Des,
+					comprobantes.Prv_Cod ";
+			$sql = "SELECT $campos
+				FROM comprobantes
+				INNER JOIN tipo_asien ON tipo_asien.Tia_Cod = comprobantes.Tia_Cod
+				INNER JOIN perio_cont ON perio_cont.Pec_Cod = comprobantes.Pec_Cod
+				INNER JOIN plan_cuenta ON plan_cuenta.Pla_Cod = perio_cont.Pla_Cod
+				WHERE comprobantes.Com_Est = 'A'
+					AND plan_cuenta.Emp_Cod = '$_SESSION[Ses_Emp_Cod]'
+					$wherePrv
+					$whereTxt
+				ORDER BY comprobantes.Com_Fec DESC, comprobantes.Com_Cod DESC
+				$Par_Sql[limits];";
+			return $sql;
+
+		/* Comprobante ficticio de anticipo inicial (Com_Est=E). */
+		case 41:
+			$sql = "INSERT INTO comprobantes(Pec_Cod,Prv_Cod,Cli_Cod,Com_Num,Com_Fec,Com_Con,Com_Tip,Com_Val,Com_Obs,Com_Tipo,Tia_Cod,Com_Est,Usu_Cod,Com_Gen)
+							VALUES($Par_Sql[Pec_Cod], $Par_Sql[Prv_Cod], null, '$Par_Sql[Com_Num]', '$Par_Sql[Com_Fec]', '$Par_Sql[Com_Con]', 'E', '$Par_Sql[Com_Val]',
+						 'ANTICIPO INICIAL FICTICIO', null, $Par_Sql[Tia_Cod], 'E', '$_SESSION[Ses_Usu_Cod]','A');";
+			return $sql;
+
+		/* Asiento ficticio de anticipo inicial. */
+		case 42:
+			$sql = "INSERT INTO asientos (Com_Cod, Asi_Deh, Asi_Val, Asi_Con, Pld_Cod, Asi_Glo)
+							VALUES($Par_Sql[Com_Cod], '$Par_Sql[Asi_Deh]', '$Par_Sql[Asi_Val]', 'FICTICIO', $Par_Sql[Pld_Cod], '$Par_Sql[Asi_Glo]');";
+			return $sql;
+
+		/* Tipo de pago Inicial (Pag_Abr=INI o descripcion Inicial). */
+		case 43:
+			$sql = "SELECT Pag_Cod, Pag_Des, Pag_Abr FROM tipos_pago
+						WHERE Pag_Abr='INI'
+							OR UPPER(Pag_Des) LIKE '%INICIAL%'
+						ORDER BY CASE WHEN Pag_Abr='INI' THEN 0 ELSE 1 END, Pag_Cod
+						LIMIT 1;";
+			return $sql;
+
+		/* Proveedor activo por RUC/CI exacto (normalizado). */
+		case 44:
+			$ced = addslashes(trim($Par_Sql['Prs_Ced']));
+			$sql = "SELECT proveedore.Prv_Cod, persona.Prs_Cod, persona.Prs_Ced,
+					IF(persona.Prs_Nom=persona.Prs_Ape, persona.Prs_Nom, CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape)) AS nombre
+				FROM persona
+				INNER JOIN proveedore ON proveedore.Prs_Cod = persona.Prs_Cod
+				WHERE proveedore.Emp_Cod = '$_SESSION[Ses_Emp_Cod]'
+					AND proveedore.Prv_Est = 'A'
+					AND REPLACE(REPLACE(TRIM(persona.Prs_Ced), '-', ''), ' ', '') = '$ced'
+				LIMIT 1;";
+			return $sql;
 
 	}
 	return $sql;

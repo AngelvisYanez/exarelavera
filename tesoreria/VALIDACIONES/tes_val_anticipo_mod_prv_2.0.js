@@ -34,6 +34,23 @@ $(function () {
     gridCuentasCruce();
     changeCuentaCod();
 
+    $('#editInicialDialog').createDialog({
+        width: 620,
+        height: 300,
+        icon: 'pencil',
+        modal: true,
+        resizable: false,
+        dialogClass: 'ini-edit-dialog'
+    });
+    $('#provIniDialog').createDialog({ width: 560, height: 450, modal: true });
+    $.createSearchDialog('provIniDialog', [
+        { label: 'C&oacute;d.Int.', name: 'Prv_Cod', key: true, width: 15, align: 'center', hidden: true },
+        { label: 'C&eacute;dula/RUC', name: 'Prs_Ced', width: 50 },
+        { label: 'Proveedor', name: 'nombre', width: 100 },
+        { label: 'Direcc.', name: 'Prs_Dir', width: 60 },
+        { label: '&nbsp;', name: 'act1', width: 20, align: 'center', viewable: false, formatter: 'gridButton', formatoptions: { action: selectProveedorIniMod } }
+    ], null, null, null, { headertitles: true }, { title: 'Proveedor', text: 'searchPrv' });
+
      $.createSearchDialog('proveedoresDialog',[
        	{ label: 'C&oacute;d.Int.', name: 'Prv_Cod', key: true, width: 15,align:"center",hidden:true },
        	{ label: 'C&eacute;dula/RUC', name: 'Prs_Ced', width: 50 },
@@ -57,6 +74,7 @@ function createGrid() {
             { label: ' ', name: 'Com_Cod', hidden: true },
             { label: '', name: 'Atp_Est', hidden: true },
             { label: '', name: 'Pag_Des', hidden: true },
+            { label: '', name: 'Com_Est', hidden: true },
             { label: 'C&eacute;dula', name: 'cedProv', width: 40, align: "left", cellattr: function () { return 'style="' + excelFormats.text + '"'; } },
             { label: 'Proveedor', name: 'nombre', width: 100, align: "left" },
             { label: 'Direci&oacute;n', name: 'Prs_Dir', hidden: true, width: 100, align: "left" },
@@ -72,23 +90,23 @@ function createGrid() {
                 formatter: function (cellvalue, options, rowObject) {
                     var parm_anu = [rowObject];
                     var parm_getdet = [rowObject];
-                    //console.log(rowObject);
                     if (rowObject.Atp_Est === "I") {
                         return $.createIcon('remove red');
-                    } else if (rowObject.Atp_Est !== "A" || rowObject.Pag_Des == "Anticipos") {
-                        return $.getGridButton(verAnticipo, parm_getdet, 'ver anticipo', 'info-sign', '', 'info');
-                    } else {
-                        //console.log(prf[0]['Per_Des']);
-                        if (prf[0]['Per_Des'] === 'Administrador de Sistemas') {
-                            return $.getGridButton(verAnticipo, parm_getdet, 'ver anticipo', 'info-sign', '', 'info') + "&nbsp;" +
-                                $.getGridButton(modificarAnticipo, parm_getdet, 'Modificar anticipo', 'pencil', '', 'success') + "&nbsp;" +
-                                $.getGridButton(preanularAnticipo, parm_anu, 'Anular anticipo', 'remove', '', 'danger');
-                        } else {
-                            return $.getGridButton(verAnticipo, parm_getdet, 'ver anticipo', 'info-sign', '', 'info') + "&nbsp;" +
-                                $.getGridButton(modificarAnticipo, parm_getdet, 'Modificar anticipo', 'pencil', '', 'success') + "&nbsp;" +
-                                $.getGridButton(preanularAnticipo, parm_anu, 'Anular anticipo', 'remove', '', 'danger');
-                        }
                     }
+                    var btns = $.getGridButton(verAnticipo, parm_getdet, 'ver anticipo', 'info-sign', '', 'info');
+                    if (esAnticipoInicial(rowObject)) {
+                        if (!tieneConsumos(rowObject)) {
+                            btns += "&nbsp;" + $.getGridButton(modificarAnticipoInicial, parm_getdet, 'Editar anticipo inicial', 'pencil', '', 'success');
+                            btns += "&nbsp;" + $.getGridButton(preanularAnticipo, parm_anu, 'Anular anticipo', 'remove', '', 'danger');
+                        }
+                        return btns;
+                    }
+                    if (rowObject.Atp_Est !== "A" || rowObject.Pag_Des == "Anticipos") {
+                        return btns;
+                    }
+                    btns += "&nbsp;" + $.getGridButton(modificarAnticipo, parm_getdet, 'Modificar anticipo', 'pencil', '', 'success');
+                    btns += "&nbsp;" + $.getGridButton(preanularAnticipo, parm_anu, 'Anular anticipo', 'remove', '', 'danger');
+                    return btns;
                 }
             }
 
@@ -703,6 +721,77 @@ function verMovimiento(params) {
     });
 
     $('#verAsientoDialogMod').dialog('open');
+}
+
+function esAnticipoInicial(row) {
+    if (!row) return false;
+    if (row.codigoCompra === 'INICIAL' || row.Com_Est === 'E') return true;
+    var pagDes = $.trim(row.Pag_Des || '').toUpperCase();
+    return pagDes.indexOf('INICIAL') >= 0;
+}
+
+function tieneConsumos(row) {
+    if (!row) return false;
+    if (row.Atp_Est === 'U' || row.Atp_Est === 'C') return true;
+    var consumo = parseFloat(String(row.sumaDacVal || '0').replace(/[^0-9.-]/g, ''));
+    return !isNaN(consumo) && consumo > 0;
+}
+
+function modificarAnticipoInicial(params) {
+    var row = params[0];
+    if (tieneConsumos(row)) {
+        $.alert('El anticipo tiene consumos registrados y no puede editarse.');
+        return;
+    }
+    if (row.Atp_Est !== 'A') {
+        $.alert('Solo se pueden editar anticipos iniciales activos sin consumos.');
+        return;
+    }
+    var valor = row.Atp_Val || row.sumaAtpVal || '0';
+    $('#ini_Atp_Cod').val(row.Atp_Cod);
+    $('#ini_Com_Cod').val(row.Com_Cod);
+    $('#ini_Prv_Cod').val(row.Prv_Cod);
+    $('#ini_Prs_Cod').val(row.Prs_Cod || '');
+    $('#ini_Prs_Ced').val(row.cedProv || row.Prs_Ced || '');
+    $('#ini_nombre').val(row.nombre || '');
+    $('#ini_Atp_Fec').val(row.Atp_Fec || '');
+    $('#ini_Atp_Val').val(parseFloat(String(valor).replace(/[^0-9.-]/g, '')) || 0);
+    var fAct = $('#ini_Atp_Fec').val();
+    if (typeof peridodo !== 'undefined' && peridodo.length) {
+        peridodo.forEach(function (per) {
+            if (fAct >= per.Pec_Fei && fAct <= per.Pec_Fef) {
+                $('#ini_Atp_Fec').dateLimits(per.Pec_Fei, per.Pec_Fef);
+            }
+        });
+    }
+    $('#editInicialDialog').dialog('open');
+}
+
+function selectProveedorIniMod(proveedor) {
+    $('#ini_Prv_Cod').val(proveedor.Prv_Cod);
+    $('#ini_Prs_Cod').val(proveedor.Prs_Cod || '');
+    $('#ini_Prs_Ced').val(proveedor.Prs_Ced || '');
+    $('#ini_nombre').val(proveedor.nombre || '');
+    $('#provIniDialog').dialog('close');
+}
+
+function guardarEditInicial() {
+    var data = $('#editInicialForm').getData('save');
+    var valor = parseFloat(String(data.Atp_Val || '0').replace(/,/g, ''));
+    if (!data.Atp_Fec || !data.Prv_Cod || isNaN(valor) || valor <= 0) {
+        $.alert('Complete fecha, proveedor y valor mayor a cero.');
+        return;
+    }
+    data.Atp_Val = valor;
+    data.saveEditInicialAjax = true;
+    $.createDialogConfirm('&iquest;Guardar los cambios del anticipo inicial?', null, function () {
+        $.saveDataJson('', data, function (resp) {
+            if (resp.success) {
+                $('#editInicialDialog').dialog('close');
+                busquedaAjax();
+            }
+        });
+    });
 }
 
 function verAnticipo(params) {

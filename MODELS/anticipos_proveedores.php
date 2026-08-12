@@ -18,7 +18,7 @@ class anticipos_proveedores extends AbstractModel{
             // anticipos_proveedores fields (campos más relevantes, puedes agregar/quitar según necesidad)
             'Atp_Cod',  'Prv_Cod', 'Com_Cod', 'Atp_Fec', 'Atp_Val', 'Atp_Est',  'Atp_Obs',
             // Incluye otros campos de anticipos_proveedores según los requieras
-            'codigoCompra' => "CONCAT(tpAst.Tia_Abr, '-', MONTH(cprbnt.Com_Fec), '-', cprbnt.Com_Num)"
+            'codigoCompra' => "IF(cprbnt.Com_Est='E' OR EXISTS (SELECT 1 FROM pago_anticipo_proveedores _pap INNER JOIN tipos_pago _tp ON _tp.Pag_Cod = _pap.Pag_Cod WHERE _pap.Atp_Cod = $this->_name.Atp_Cod AND _pap.Pap_Est <> 'I' AND (_tp.Pag_Abr='INI' OR UPPER(_tp.Pag_Des) LIKE '%INICIAL%')), 'INICIAL', CONCAT(tpAst.Tia_Abr, '-', MONTH(cprbnt.Com_Fec), '-', cprbnt.Com_Num))"
         );
         return $this->select(true, $colsMain)
             ->join( array('prv' => 'proveedore'), "prv.Prv_Cod = $this->_name.Prv_Cod", array('Prv_Cod', 'Emp_Cod', 'Prs_Cod'))
@@ -288,7 +288,7 @@ class anticipos_proveedores extends AbstractModel{
                                 $Par_Sql[limits];";
                 return $sql;
             case 2:
-                $sql="SELECT anticipos_proveedores.Atp_Cod,Atp_Fec,CONCAT(Tia_Abr,'-',month(comprobantes.Com_Fec),'-',comprobantes.Com_Num)as Com_Num,CAST(Atp_Val-coalesce(SUM(Dac_Val),0) as decimal(10,2))as Atp_Val,
+                $sql="SELECT anticipos_proveedores.Atp_Cod,Atp_Fec,IF(comprobantes.Com_Est='E' OR EXISTS (SELECT 1 FROM pago_anticipo_proveedores _pap INNER JOIN tipos_pago _tp ON _tp.Pag_Cod = _pap.Pag_Cod WHERE _pap.Atp_Cod = anticipos_proveedores.Atp_Cod AND _pap.Pap_Est <> 'I' AND (_tp.Pag_Abr='INI' OR UPPER(_tp.Pag_Des) LIKE '%INICIAL%')), 'INICIAL', CONCAT(Tia_Abr,'-',month(comprobantes.Com_Fec),'-',comprobantes.Com_Num)) as Com_Num,CAST(Atp_Val-coalesce(SUM(Dac_Val),0) as decimal(10,2))as Atp_Val,
                 coalesce(SUM(Dac_Val),0)as cruces, CAST(Atp_Val-coalesce(SUM(Dac_Val),0) as decimal(10,2))as pendiente
                 FROM anticipos_proveedores
                     INNER JOIN comprobantes ON (anticipos_proveedores.Com_Cod = comprobantes.Com_Cod)
@@ -299,7 +299,7 @@ class anticipos_proveedores extends AbstractModel{
                 return $sql;
             case 3:
                 $sql="SELECT anticipos_proveedores.Atp_Cod,Atp_Fec,if(SUM(if(comp.Com_Cod=$Par_Sql[Com_Cod],Dac_Val,0))>0,'S','N')as chkAnt,
-                        CONCAT(Tia_Abr, '-', month(comprobantes.Com_Fec), '-', comprobantes.Com_Num)as Com_Num,
+                        IF(comprobantes.Com_Est='E' OR EXISTS (SELECT 1 FROM pago_anticipo_proveedores _pap INNER JOIN tipos_pago _tp ON _tp.Pag_Cod = _pap.Pag_Cod WHERE _pap.Atp_Cod = anticipos_proveedores.Atp_Cod AND _pap.Pap_Est <> 'I' AND (_tp.Pag_Abr='INI' OR UPPER(_tp.Pag_Des) LIKE '%INICIAL%')), 'INICIAL', CONCAT(Tia_Abr, '-', month(comprobantes.Com_Fec), '-', comprobantes.Com_Num)) as Com_Num,
                         cast(Atp_Val-coalesce(SUM(Dac_Val), 0) as decimal(10,2)) + coalesce(SUM(if(comp.Com_Cod=$Par_Sql[Com_Cod],Dac_Val,0)), 0)as Atp_Val,
                         coalesce(SUM(if(comp.Com_Cod=$Par_Sql[Com_Cod],Dac_Val,0)), 0)as cruce,
                         cast(Atp_Val-coalesce(SUM(Dac_Val), 0) as decimal(10, 2))as pendiente	

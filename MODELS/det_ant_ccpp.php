@@ -9,7 +9,7 @@ class det_ant_ccpp extends AbstractModel{
 
     /* crea una sql basica global para la tabla */
     public function _selectBasic($cond=null){
-        return $this->select(true, array('*','codigoCompra'=>"CONCAT(tpAst.Tia_Abr, '-', MONTH(cprbnt.Com_Fec), '-', cprbnt.Com_Num)"))
+        return $this->select(true, array('*','codigoCompra'=>"IF(cprbnt.Com_Est='E' OR EXISTS (SELECT 1 FROM pago_anticipo_proveedores _pap INNER JOIN tipos_pago _tp ON _tp.Pag_Cod = _pap.Pag_Cod WHERE _pap.Atp_Cod = atp.Atp_Cod AND _pap.Pap_Est <> 'I' AND (_tp.Pag_Abr='INI' OR UPPER(_tp.Pag_Des) LIKE '%INICIAL%')), 'INICIAL', CONCAT(tpAst.Tia_Abr, '-', MONTH(cprbnt.Com_Fec), '-', cprbnt.Com_Num))"))
             ->join(array('atp'=>'anticipos_proveedores'), "atp.Atp_Cod = $this->_name.Atp_Cod", array('*','det_ant_ccpp.Com_Cod','cprbnt.Com_Fec','cprbnt.Com_Val'))
             ->join(array('prv' =>'proveedore'), "prv.Prv_Cod = atp.Prv_Cod",array('prv.Prv_Cod as prvCod'))
             ->join(array('pap' =>'pago_anticipo_proveedores'), "$this->_name.Pap_Cod = pap.Pap_Cod AND pap.Pap_Est!='I'",array('*'))

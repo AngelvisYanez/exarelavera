@@ -215,6 +215,148 @@ if (isset($proveedoresAjax)) {
 	$obBD_con1->getPageGridJson('anticipos_proveedores.1', $_GET, $obBD_conexion);
 }
 
+/**
+ * Guardar edición simple de anticipo inicial (fecha, valor, proveedor).
+ * Solo si Com_Est=E y no tiene consumos activos.
+ */
+if (isset($saveEditInicialAjax)) {
+	$resp = array('success' => false);
+	$Atp_Cod = isset($Atp_Cod) ? intval($Atp_Cod) : 0;
+	$Prv_Cod = isset($Prv_Cod) ? intval($Prv_Cod) : 0;
+	$Atp_Fec = isset($Atp_Fec) ? trim($Atp_Fec) : '';
+	$Atp_Val = isset($Atp_Val) ? floatval(str_replace(',', '', $Atp_Val)) : 0;
+
+	if ($Atp_Cod <= 0 || $Prv_Cod <= 0 || $Atp_Fec === '' || $Atp_Val <= 0) {
+		$resp['message'] = 'Complete fecha, proveedor y valor mayor a cero.';
+		$obBD_con1->echoJson($resp);
+	}
+
+	$ant = $obBD_con1->getRowConsulta('anticipos_proveedores.selectWhere', array(
+		'where' => array('anticipos_proveedores.Atp_Cod' => $Atp_Cod),
+		'setWhere' => array('setEmpCod')
+	), $obBD_conexion, true);
+
+	if (empty($ant['Atp_Cod'])) {
+		$resp['message'] = 'Anticipo no encontrado.';
+		$obBD_con1->echoJson($resp);
+	}
+	if ($ant['Atp_Est'] !== 'A') {
+		$resp['message'] = 'Solo se pueden editar anticipos activos sin consumos.';
+		$obBD_con1->echoJson($resp);
+	}
+
+	$com = $obBD_con1->getRowConsulta('comprobantes.selectWhere', array(
+		'where' => array('Com_Cod' => $ant['Com_Cod'])
+	), $obBD_conexion, true);
+
+	if (empty($com['Com_Cod']) || $com['Com_Est'] !== 'E') {
+		$resp['message'] = 'Solo se pueden editar anticipos iniciales (comprobante ficticio).';
+		$obBD_con1->echoJson($resp);
+	}
+
+	$consumos = $obBD_con1->getRowConsultaSql(
+		"SELECT COUNT(*) AS n FROM det_ant_ccpp dac
+			INNER JOIN comprobantes c ON c.Com_Cod = dac.Com_Cod
+		 WHERE dac.Atp_Cod = " . intval($Atp_Cod) . " AND IFNULL(c.Com_Est,'A') <> 'I'",
+		$obBD_conexion,
+		true
+	);
+	if (!empty($consumos['n']) && intval($consumos['n']) > 0) {
+		$resp['message'] = 'El anticipo tiene consumos registrados y no puede editarse.';
+		$obBD_con1->echoJson($resp);
+	}
+
+	$prvRow = $obBD_con1->getRowConsultaSql(
+		"SELECT proveedore.Prv_Cod, persona.Prs_Cod, persona.Prs_Ced,
+			IF(persona.Prs_Nom = persona.Prs_Ape, persona.Prs_Nom, CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape)) AS nombre
+		 FROM proveedore
+		 INNER JOIN persona ON persona.Prs_Cod = proveedore.Prs_Cod
+		 WHERE proveedore.Prv_Cod = " . intval($Prv_Cod) . "
+		   AND proveedore.Emp_Cod = " . intval($Ses_Emp_Cod) . "
+		   AND proveedore.Prv_Est = 'A'
+		 LIMIT 1",
+		$obBD_conexion,
+		true
+	);
+	if (empty($prvRow['Prv_Cod'])) {
+		$resp['message'] = 'Proveedor no válido o inactivo.';
+		$obBD_con1->echoJson($resp);
+	}
+
+	$Pec_Cod = $obBD_con1->getRowConsulta('perio_cont.selectWhere', array(
+		'Date' => $Atp_Fec,
+		'where' => array(),
+		'setWhere' => array('getByDate', 'getPerioByFec')
+	), $obBD_conexion, true);
+	if (empty($Pec_Cod['Pec_Cod'])) {
+		$resp['message'] = 'No hay periodo contable para la fecha indicada.';
+		$obBD_con1->echoJson($resp);
+	}
+
+	$Atp_Obs = 'ANTICIPO INICIAL';
+	if (!empty($prvRow['nombre'])) {
+		$Atp_Obs .= ' - ' . $prvRow['nombre'];
+	}
+
+	$obBD_ins1 = new Class_Log_Datos_Ant_Prv;
+	$obBD_conexionIns = new Class_Log_Conexion_Global($Ses_Dat_Dis);
+	$obBD_ins1->debugLogs(false);
+	$obBD_ins1->inicio_transaccion($obBD_conexionIns);
+	try {
+		$obBD_ins1->operacionobBD('anticipos_proveedores.update', array(
+			'Atp_Cod' => $Atp_Cod,
+			'Atp_Fec' => $Atp_Fec,
+			'Atp_Val' => $Atp_Val,
+			'Prv_Cod' => $Prv_Cod,
+			'Atp_Obs' => $Atp_Obs
+		), $obBD_conexionIns, true);
+
+		$obBD_ins1->operacionobBD('comprobantes.update', array(
+			'Com_Cod' => $ant['Com_Cod'],
+			'Pec_Cod' => $Pec_Cod['Pec_Cod'],
+			'Prv_Cod' => $Prv_Cod,
+			'Com_Fec' => $Atp_Fec,
+			'Com_Val' => $Atp_Val,
+			'Com_Con' => $Atp_Obs
+		), $obBD_conexionIns, true);
+
+		$asientos = $obBD_con1->getArrayConsulta('asientos.selectWhere', array(
+			'where' => array('Com_Cod' => $ant['Com_Cod'])
+		), $obBD_conexion, true);
+		foreach ($asientos as $asi) {
+			$obBD_ins1->operacionobBD('asientos.update', array(
+				'Asi_Cod' => $asi['Asi_Cod'],
+				'Asi_Val' => $Atp_Val
+			), $obBD_conexionIns, true);
+		}
+
+		$pagosAnt = $obBD_con1->getArrayConsulta('pago_anticipo_proveedores.selectWhere', array(
+			'where' => array('Atp_Cod' => $Atp_Cod)
+		), $obBD_conexion, true);
+		foreach ($pagosAnt as $pap) {
+			if (isset($pap['Pap_Est']) && $pap['Pap_Est'] === 'I') {
+				continue;
+			}
+			$obBD_ins1->operacionobBD('pago_anticipo_proveedores.update', array(
+				'Pap_Cod' => $pap['Pap_Cod'],
+				'Pap_Val' => $Atp_Val
+			), $obBD_conexionIns, true);
+		}
+	} catch (Exception $e) {
+		$obBD_ins1->rollBack_nomsn($obBD_conexionIns);
+		$resp['message'] = $e->getMessage();
+		$obBD_con1->echoJson($resp);
+	}
+
+	$resp['success'] = $obBD_ins1->fin_transaccion_nomsn($obBD_conexionIns);
+	if (!$resp['success']) {
+		$resp['error'] = $obBD_ins1->MsgError;
+	} else {
+		$resp['message'] = 'Anticipo inicial actualizado correctamente.';
+	}
+	$obBD_con1->echoJson($resp);
+}
+
 /* SubGrid */
 if (isset($movAnticipo)) {
 	$obBD_con1->debugLogs(false);
@@ -504,7 +646,7 @@ if (isset($impAsiento)) {
 	$obBD_con1->echoJson($resp);
 }
 /* GET Proveedores */
-if (isset($provAjax)) {
+if (isset($provAjax) || isset($provIniAjax)) {
 	$dataProv = $obBD_con1->getPageGridJson(1, $_GET, $obBD_conexion, false);
 	$obBD_con1->echoJson($dataProv);
 }
@@ -562,6 +704,226 @@ if (isset($searchNegAntAjax)) {
 
 		.chosen-single span {
 			padding-left: 5px;
+		}
+
+		/* Modal editar anticipo inicial (compacto) */
+		:root {
+			--ini-ink: #1e2a32;
+			--ini-muted: #5f7380;
+			--ini-line: #d5e0e7;
+			--ini-accent: #0f6e8c;
+			--ini-accent-soft: #e6f3f7;
+			--ini-warn: #b45309;
+		}
+
+		#editInicialDialog.ui-dialog-content {
+			padding: 0 !important;
+			overflow: hidden;
+			background: #fff;
+		}
+
+		.ini-edit-shell {
+			padding: 12px 14px 10px;
+			font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+			color: var(--ini-ink);
+		}
+
+		.ini-edit-grid {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 8px 12px;
+			margin-bottom: 8px;
+		}
+
+		.ini-edit-field {
+			padding: 0;
+			background: transparent;
+			border: none;
+			box-shadow: none;
+		}
+
+		.ini-edit-field.ini-span-2 {
+			grid-column: 1 / -1;
+		}
+
+		.ini-edit-field label {
+			display: block;
+			margin: 0 0 4px;
+			font-size: 10px;
+			font-weight: 700;
+			letter-spacing: 0.04em;
+			text-transform: uppercase;
+			color: var(--ini-muted);
+		}
+
+		.ini-edit-field label .req {
+			color: #c0392b;
+			margin-left: 2px;
+		}
+
+		.ini-edit-field .form-control,
+		.ini-edit-field .input-group-addon,
+		.ini-edit-field .btn {
+			height: 30px;
+			border-radius: 0;
+			border-color: var(--ini-line);
+			font-size: 12px;
+			box-shadow: none !important;
+		}
+
+		.ini-edit-field .form-control {
+			padding: 4px 9px;
+			color: var(--ini-ink);
+			background: #fff;
+		}
+
+		.ini-edit-field .form-control:focus {
+			border-color: var(--ini-accent);
+		}
+
+		.ini-edit-field .form-control[readonly] {
+			background: #f5f8fa;
+			color: #334155;
+			cursor: default;
+		}
+
+		.ini-edit-field .input-group {
+			width: 100%;
+		}
+
+		.ini-edit-field .input-group-addon {
+			background: var(--ini-accent-soft);
+			color: var(--ini-accent);
+			min-width: 32px;
+			padding: 0 8px;
+			border-radius: 0 !important;
+		}
+
+		.ini-edit-field .input-group-btn .btn {
+			background: var(--ini-accent);
+			border-color: var(--ini-accent);
+			color: #fff;
+			padding: 0 10px;
+			border-radius: 0 !important;
+		}
+
+		.ini-edit-field .input-group-btn .btn:hover {
+			background: #0c5a72;
+			border-color: #0c5a72;
+		}
+
+		.ini-edit-field .input-group .form-control {
+			border-radius: 0 !important;
+		}
+
+		.ini-edit-field .input-group > :first-child,
+		.ini-edit-field .input-group > :last-child,
+		.ini-edit-field .input-group-btn:last-child .btn {
+			border-radius: 0 !important;
+		}
+
+		.ini-prv-group .ini-ruc {
+			width: 34%;
+		}
+
+		.ini-prv-group .ini-nombre {
+			width: 66%;
+		}
+
+		.ini-edit-hint {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			margin: 0 0 8px;
+			padding: 6px 9px;
+			border-radius: 6px;
+			background: #fff7ed;
+			border: 1px solid #fed7aa;
+			color: var(--ini-warn);
+			font-size: 11px;
+			line-height: 1.3;
+		}
+
+		.ini-edit-actions {
+			display: flex;
+			justify-content: flex-end;
+			gap: 8px;
+			border-top: 1px solid var(--ini-line);
+			margin-top: 2px;
+			padding-top: 8px;
+		}
+
+		.ini-edit-actions .btn {
+			min-width: 96px;
+			height: 30px;
+			border-radius: 6px;
+			font-weight: 600;
+			font-size: 12px;
+			padding: 4px 12px;
+		}
+
+		.ini-edit-actions .btn-default {
+			background: #fff;
+			border-color: var(--ini-line);
+			color: var(--ini-muted);
+		}
+
+		.ini-edit-actions .btn-default:hover {
+			background: #f8fafc;
+			border-color: #b8c7d1;
+			color: var(--ini-ink);
+		}
+
+		.ini-edit-actions .btn-primary {
+			background: var(--ini-accent);
+			border-color: var(--ini-accent);
+		}
+
+		.ini-edit-actions .btn-primary:hover {
+			background: #0c5a72;
+			border-color: #0c5a72;
+		}
+
+		@media (max-width: 640px) {
+			.ini-edit-grid {
+				grid-template-columns: 1fr;
+			}
+
+			.ini-prv-group .ini-ruc,
+			.ini-prv-group .ini-nombre {
+				width: 50%;
+			}
+		}
+
+		.ui-dialog.ini-edit-dialog {
+			border: none !important;
+			border-radius: 10px !important;
+			overflow: hidden;
+			box-shadow: 0 14px 36px rgba(15, 40, 55, 0.25) !important;
+			padding: 0 !important;
+		}
+
+		.ui-dialog.ini-edit-dialog .ui-dialog-titlebar {
+			background: #0f4c5c !important;
+			border: none !important;
+			color: #fff !important;
+			padding: 8px 12px !important;
+			border-radius: 0 !important;
+			font-weight: 600;
+			font-size: 13px;
+		}
+
+		.ui-dialog.ini-edit-dialog .ui-dialog-titlebar .ui-dialog-title {
+			color: #fff !important;
+		}
+
+		.ui-dialog.ini-edit-dialog .ui-dialog-titlebar-close {
+			right: 8px !important;
+			top: 50% !important;
+			margin-top: -9px !important;
+			background: rgba(255, 255, 255, 0.12) !important;
+			border: none !important;
+			border-radius: 5px !important;
 		}
 	</style>
 </HEAD>
@@ -857,6 +1219,60 @@ if (isset($searchNegAntAjax)) {
 			</div>
 		</div>
 	</div>
+	<!-- Modal edición anticipo inicial -->
+	<div id="editInicialDialog" title="Editar Anticipo Inicial" style="display:none;">
+		<form id="editInicialForm" class="ini-edit-shell">
+			<input type="hidden" name="Atp_Cod" id="ini_Atp_Cod">
+			<input type="hidden" name="Com_Cod" id="ini_Com_Cod">
+			<input type="hidden" name="Prv_Cod" id="ini_Prv_Cod">
+			<input type="hidden" name="Prs_Cod" id="ini_Prs_Cod">
+
+			<div class="ini-edit-grid">
+				<div class="ini-edit-field">
+					<label for="ini_Atp_Fec">Fecha <span class="req">*</span></label>
+					<div class="input-group">
+						<input type="text" name="Atp_Fec" id="ini_Atp_Fec" class="form-control datepicker" required placeholder="AAAA-MM-DD">
+						<span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+					</div>
+				</div>
+
+				<div class="ini-edit-field">
+					<label for="ini_Atp_Val">Valor <span class="req">*</span></label>
+					<div class="input-group">
+						<span class="input-group-addon">$</span>
+						<input type="text" name="Atp_Val" id="ini_Atp_Val" class="form-control" required placeholder="0.00">
+					</div>
+				</div>
+
+				<div class="ini-edit-field ini-span-2">
+					<label>Proveedor <span class="req">*</span></label>
+					<div class="input-group ini-prv-group">
+						<input type="text" name="Prs_Ced" id="ini_Prs_Ced" class="form-control ini-ruc" readonly required placeholder="RUC / CI">
+						<input type="text" name="nombre" id="ini_nombre" class="form-control ini-nombre" readonly placeholder="Nombre del proveedor">
+						<span class="input-group-btn">
+							<button type="button" class="btn btn-sm" title="Buscar proveedor" onclick="$('#provIniDialog').dialog('open');">
+								<span class="glyphicon glyphicon-search"></span>
+							</button>
+						</span>
+					</div>
+				</div>
+			</div>
+
+			<div class="ini-edit-hint">
+				<span class="glyphicon glyphicon-info-sign"></span>
+				<span>Actualiza los Anticipo de tipo inicial.</span>
+			</div>
+
+			<div class="ini-edit-actions">
+				<button type="button" class="btn btn-default" onclick="$('#editInicialDialog').dialog('close');">Cancelar</button>
+				<button type="button" class="btn btn-primary" onclick="guardarEditInicial();">
+					<span class="glyphicon glyphicon-floppy-disk"></span> Guardar
+				</button>
+			</div>
+		</form>
+	</div>
+	<div id="provIniDialog" title="Buscar Proveedor" style="display:none;"></div>
+
 	<div id="verPagosDialogMod" title="Pago">
 		<div class="row">
 			<div class="col-sm-12">
@@ -1393,7 +1809,7 @@ if (isset($searchNegAntAjax)) {
 			$('#negDialog').dialog('close');
 		}
 	</script>
-	<script src="../VALIDACIONES/tes_val_anticipo_mod_prv_2.0.js?a=25"></script>
+	<script src="../VALIDACIONES/tes_val_anticipo_mod_prv_2.0.js?a=31"></script>
 	<script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>
 	<script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=2"></script>
 	<script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>

@@ -12,7 +12,6 @@ $(function () {
     $("#successDialog").createDialog({ width: 500, height: 200, icon: 'print' });
     $("#verPagosDialog").createDialog({ width: 400, height: 290, icon: 'info-sign' });
     $("#verPagosDialogMod").createDialog({ width: 700, height: 450, icon: 'info-sign' });
-    $("#comprobantePagoDialog").createDialog({ width: 760, height: 540, icon: 'picture' });
     $("#verAsientoDialogMod").createDialog({ width: 700, height: 350, icon: 'info-data' });
     $("#cruceDialog").createDialog({ width: 900, height: 485, icon: 'info-sign' });
     $('#pagosDialog').createDialog({ height: 325, icon: 'usd' });
@@ -56,6 +55,23 @@ $(function () {
     gridCuentasCruce();
     changeCuentaCod();
 
+    $('#editInicialDialog').createDialog({
+        width: 620,
+        height: 300,
+        icon: 'pencil',
+        modal: true,
+        resizable: false,
+        dialogClass: 'ini-edit-dialog'
+    });
+    $('#provIniDialog').createDialog({ width: 560, height: 450, modal: true });
+    $.createSearchDialog('provIniDialog', [
+        { label: 'C&oacute;d.Int.', name: 'Prv_Cod', key: true, width: 15, align: 'center', hidden: true },
+        { label: 'C&eacute;dula/RUC', name: 'Prs_Ced', width: 50 },
+        { label: 'Proveedor', name: 'nombre', width: 100 },
+        { label: 'Direcc.', name: 'Prs_Dir', width: 60 },
+        { label: '&nbsp;', name: 'act1', width: 20, align: 'center', viewable: false, formatter: 'gridButton', formatoptions: { action: selectProveedorIniMod } }
+    ], null, null, null, { headertitles: true }, { title: 'Proveedor', text: 'searchPrv' });
+
     $.createSearchDialog('proveedoresDialog', [
         { label: 'C&oacute;d.Int.', name: 'Prv_Cod', key: true, width: 15, align: "center", hidden: true },
         { label: 'C&eacute;dula/RUC', name: 'Prs_Ced', width: 50 },
@@ -82,6 +98,7 @@ function createGrid() {
             { label: ' ', name: 'Com_Cod', hidden: true },
             { label: '', name: 'Atp_Est', hidden: true },
             { label: '', name: 'Pag_Des', hidden: true },
+            { label: '', name: 'Com_Est', hidden: true },
             { label: 'C&eacute;dula', name: 'cedProv', width: 40, align: "left", cellattr: function () { return 'style="' + excelFormats.text + '"'; } },
             { label: 'Proveedor', name: 'nombre', width: 100, align: "left" },
             { label: 'Direci&oacute;n', name: 'Prs_Dir', hidden: true, width: 100, align: "left" },
@@ -93,22 +110,23 @@ function createGrid() {
                 formatter: function (cellvalue, options, rowObject) {
                     var parm_anu = [rowObject];
                     var parm_getdet = [rowObject];
-                    //console.log(rowObject);
                     if (rowObject.Atp_Est === "I") {
                         return $.createIcon('remove red');
-                    } else if (rowObject.Atp_Est !== "A" || rowObject.Pag_Des == "Anticipos") {
-                        return $.getGridButton(verAnticipo, parm_getdet, 'ver anticipo', 'info-sign', '', 'info');
-                    } else {
-                        if (prf[0]['Per_Des'] === 'Administrador de Sistemas') {
-                            return $.getGridButton(verAnticipo, parm_getdet, 'ver anticipo', 'info-sign', '', 'info') + "&nbsp;" +
-                                $.getGridButton(modificarAnticipo, parm_getdet, 'Modificar anticipo', 'pencil', '', 'success') + "&nbsp;" +
-                                $.getGridButton(preanularAnticipo, parm_anu, 'Anular anticipo', 'remove', '', 'danger');
-                        } else {
-                            return $.getGridButton(verAnticipo, parm_getdet, 'ver anticipo', 'info-sign', '', 'info') + "&nbsp;" +
-                                $.getGridButton(modificarAnticipo, parm_getdet, 'Modificar anticipo', 'pencil', '', 'success') + "&nbsp;" +
-                                $.getGridButton(preanularAnticipo, parm_anu, 'Anular anticipo', 'remove', '', 'danger');
-                        }
                     }
+                    var btns = $.getGridButton(verAnticipo, parm_getdet, 'ver anticipo', 'info-sign', '', 'info');
+                    if (esAnticipoInicial(rowObject)) {
+                        if (!tieneConsumos(rowObject)) {
+                            btns += "&nbsp;" + $.getGridButton(modificarAnticipoInicial, parm_getdet, 'Editar anticipo inicial', 'pencil', '', 'success');
+                            btns += "&nbsp;" + $.getGridButton(preanularAnticipo, parm_anu, 'Anular anticipo', 'remove', '', 'danger');
+                        }
+                        return btns;
+                    }
+                    if (rowObject.Atp_Est !== "A" || rowObject.Pag_Des == "Anticipos") {
+                        return btns;
+                    }
+                    btns += "&nbsp;" + $.getGridButton(modificarAnticipo, parm_getdet, 'Modificar anticipo', 'pencil', '', 'success');
+                    btns += "&nbsp;" + $.getGridButton(preanularAnticipo, parm_anu, 'Anular anticipo', 'remove', '', 'danger');
+                    return btns;
                 }
             }
 
@@ -860,6 +878,77 @@ function verMovimiento(params) {
     $('#verAsientoDialogMod').dialog('open');
 }
 
+function esAnticipoInicial(row) {
+    if (!row) return false;
+    if (row.codigoCompra === 'INICIAL' || row.Com_Est === 'E') return true;
+    var pagDes = $.trim(row.Pag_Des || '').toUpperCase();
+    return pagDes.indexOf('INICIAL') >= 0;
+}
+
+function tieneConsumos(row) {
+    if (!row) return false;
+    if (row.Atp_Est === 'U' || row.Atp_Est === 'C') return true;
+    var consumo = parseFloat(String(row.sumaDacVal || '0').replace(/[^0-9.-]/g, ''));
+    return !isNaN(consumo) && consumo > 0;
+}
+
+function modificarAnticipoInicial(params) {
+    var row = params[0];
+    if (tieneConsumos(row)) {
+        $.alert('El anticipo tiene consumos registrados y no puede editarse.');
+        return;
+    }
+    if (row.Atp_Est !== 'A') {
+        $.alert('Solo se pueden editar anticipos iniciales activos sin consumos.');
+        return;
+    }
+    var valor = row.Atp_Val || row.sumaAtpVal || '0';
+    $('#ini_Atp_Cod').val(row.Atp_Cod);
+    $('#ini_Com_Cod').val(row.Com_Cod);
+    $('#ini_Prv_Cod').val(row.Prv_Cod);
+    $('#ini_Prs_Cod').val(row.Prs_Cod || '');
+    $('#ini_Prs_Ced').val(row.cedProv || row.Prs_Ced || '');
+    $('#ini_nombre').val(row.nombre || '');
+    $('#ini_Atp_Fec').val(row.Atp_Fec || '');
+    $('#ini_Atp_Val').val(parseFloat(String(valor).replace(/[^0-9.-]/g, '')) || 0);
+    var fAct = $('#ini_Atp_Fec').val();
+    if (typeof peridodo !== 'undefined' && peridodo.length) {
+        peridodo.forEach(function (per) {
+            if (fAct >= per.Pec_Fei && fAct <= per.Pec_Fef) {
+                $('#ini_Atp_Fec').dateLimits(per.Pec_Fei, per.Pec_Fef);
+            }
+        });
+    }
+    $('#editInicialDialog').dialog('open');
+}
+
+function selectProveedorIniMod(proveedor) {
+    $('#ini_Prv_Cod').val(proveedor.Prv_Cod);
+    $('#ini_Prs_Cod').val(proveedor.Prs_Cod || '');
+    $('#ini_Prs_Ced').val(proveedor.Prs_Ced || '');
+    $('#ini_nombre').val(proveedor.nombre || '');
+    $('#provIniDialog').dialog('close');
+}
+
+function guardarEditInicial() {
+    var data = $('#editInicialForm').getData('save');
+    var valor = parseFloat(String(data.Atp_Val || '0').replace(/,/g, ''));
+    if (!data.Atp_Fec || !data.Prv_Cod || isNaN(valor) || valor <= 0) {
+        $.alert('Complete fecha, proveedor y valor mayor a cero.');
+        return;
+    }
+    data.Atp_Val = valor;
+    data.saveEditInicialAjax = true;
+    $.createDialogConfirm('&iquest;Guardar los cambios del anticipo inicial?', null, function () {
+        $.saveDataJson('', data, function (resp) {
+            if (resp.success) {
+                $('#editInicialDialog').dialog('close');
+                busquedaAjax();
+            }
+        });
+    });
+}
+
 function verAnticipo(params) {
     $("#showPagosAsi").updateGridsSizes();
     $("#showPagosChe").updateGridsSizes();
@@ -1114,8 +1203,6 @@ function crearGridShowPagosAsi() {
         colModel: [
             { label: 'index', name: 'index', hidden: true, classes: 'bgNoRight' },
             { label: '', name: 'Pap_Est', hidden: true },
-            { label: '', name: 'Pag_Abr', hidden: true },
-            { label: '', name: 'Pap_img', hidden: true },
             { label: 'Codigo', name: 'Pld_Cdc', width: 10, align: "left" },
             { label: 'Cuenta', name: 'Pld_Des', width: 30, align: "left" },
             { label: 'Glosa', name: 'Asi_Glo', width: 25, align: "left" },
@@ -1126,39 +1213,9 @@ function crearGridShowPagosAsi() {
             {
                 label: 'Haber', name: 'Haber', width: 10, align: 'right', formatter: 'currency', editable: true,
                 formatoptions: { prefix: '$ ', thousandsSeparator: ',', decimalSeparator: '.', defaultValue: '' }
-            },
-            {
-                label: '<center><i class="glyphicon glyphicon-picture"></i></center>',
-                name: 'Pap_img_accion',
-                width: 8,
-                align: 'center',
-                viewable: false,
-                formatter: function (cellvalue, options, rowObject) {
-                    if (rowObject.Pag_Abr === 'TRF' && rowObject.Pap_img && String(rowObject.Pap_img).trim() !== '') {
-                        return $.getGridButton(verComprobantePago, rowObject, 'Visualizar comprobante', 'eye-open', '', 'info');
-                    }
-                    return '-';
-                },
-                title: false
             }
         ]
     }, true, '', { view: false });
-}
-
-function verComprobantePago(row) {
-    var ruta = row && row.Pap_img ? String(row.Pap_img).trim().replace(/\\/g, '/') : '';
-    if (!ruta) {
-        return $.alert('Este pago no tiene un comprobante registrado.');
-    }
-    if (!/^(https?:\/\/|\/)/i.test(ruta) && ruta.indexOf('../../') !== 0) {
-        ruta = '../../' + ruta.replace(/^\.?\//, '');
-    }
-    $('#comprobantePagoImagen').attr('src', ruta);
-    $('#comprobantePagoDescargar').attr({
-        href: ruta,
-        download: ruta.split('/').pop() || 'comprobante_transferencia'
-    });
-    $('#comprobantePagoDialog').dialog('open');
 }
 
 function crearGridshowPagosChe() {
