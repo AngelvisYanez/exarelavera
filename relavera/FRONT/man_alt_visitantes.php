@@ -611,11 +611,13 @@ try {
 // Consultar evento actualmente en vigencia (Man_Vig = 'S')
 $nombreEventoVigente = '';
 $idEventoVigente = '';
+$fefEventoVigente = '';
 try {
-    $resEv = $obBD_con1->consulta("SELECT Man_Eve, Man_ENom FROM manifiesto_evento WHERE UPPER(Man_Vig) = 'S' AND UPPER(Man_EEst) = 'A' LIMIT 1", $obBD_conexion->conexion);
+    $resEv = $obBD_con1->consulta("SELECT Man_Eve, Man_ENom, Man_EFef FROM manifiesto_evento WHERE UPPER(Man_Vig) = 'S' AND UPPER(Man_EEst) = 'A' LIMIT 1", $obBD_conexion->conexion);
     if ($resEv && ($rowEv = $obBD_con1->fetch_assoc($resEv))) {
         $nombreEventoVigente = trim($rowEv['Man_ENom']);
         $idEventoVigente = $rowEv['Man_Eve'];
+        $fefEventoVigente = !empty($rowEv['Man_EFef']) ? trim($rowEv['Man_EFef']) : '';
     }
 } catch (Exception $e) {
 }
@@ -999,7 +1001,7 @@ if (isset($_POST['saveVisitanteAjax']) || isset($_POST['saveChoferAjax'])) {
 
         if (empty($Man_Eve)) {
             try {
-                $resEv = $obBD_con1->consulta("SELECT Man_Eve FROM manifiesto_evento WHERE Man_Vig = 'S' AND Man_EEst = 'A' LIMIT 1", $obBD_conexion->conexion);
+                $resEv = $obBD_con1->consulta("SELECT Man_Eve FROM manifiesto_evento WHERE UPPER(Man_Vig) = 'S' AND UPPER(Man_EEst) = 'A' LIMIT 1", $obBD_conexion->conexion);
                 if ($resEv && ($rowEv = $obBD_con1->fetch_assoc($resEv))) {
                     $Man_Eve = $rowEv['Man_Eve'];
                 }
@@ -1007,6 +1009,15 @@ if (isset($_POST['saveVisitanteAjax']) || isset($_POST['saveChoferAjax'])) {
         }
         if (!empty($Man_Eve)) {
             $datosVisitante['Man_Eve'] = $Man_Eve;
+
+            // Validar que la fecha fin del evento no haya expirado (Permitido solo hasta el mismo día Man_EFef)
+            $resEF = $obBD_con1->consulta("SELECT Man_ENom, Man_EFef, DATE_FORMAT(NOW(), '%Y-%m-%d') AS Hoy FROM manifiesto_evento WHERE Man_Eve = '$Man_Eve' LIMIT 1", $obBD_conexion->conexion);
+            if ($resEF && ($rowEF = $obBD_con1->fetch_assoc($resEF))) {
+                if (!empty($rowEF['Man_EFef']) && $rowEF['Hoy'] > $rowEF['Man_EFef']) {
+                    $fefFmt = date('d/m/Y', strtotime($rowEF['Man_EFef']));
+                    throw new Exception("No se pueden registrar visitantes en el evento '" . $rowEF['Man_ENom'] . "' debido a que su fecha fin (" . $fefFmt . ") ya ha expirado.");
+                }
+            }
         }
 
         if (isset($uploadedFiles['Vis_Doc_Ced']))     $datosVisitante['MVis_Doc_Ced']     = $uploadedFiles['Vis_Doc_Ced'];
@@ -1284,6 +1295,7 @@ if (isset($_POST['enviarCertificadoVisitanteEventoAjax'])) {
                                                             }
                                                             $evNom = isset($evRow['Man_ENom']) ? $evRow['Man_ENom'] : ('Evento #' . $evId);
                                                             $evFei = !empty($evRow['Man_EFei']) ? $evRow['Man_EFei'] : '';
+                                                            $evFef = !empty($evRow['Man_EFef']) ? $evRow['Man_EFef'] : '';
                                                             $evVig = (isset($evRow['Man_Vig']) && strtoupper($evRow['Man_Vig']) === 'S') ? ' [VIGENTE]' : '';
                                                             $label = $evNom;
                                                             if ($evFei !== '') {
@@ -1291,7 +1303,7 @@ if (isset($_POST['enviarCertificadoVisitanteEventoAjax'])) {
                                                             }
                                                             $label .= $evVig;
                                                             $sel = ((string)$eventoPreseleccionado !== '' && (string)$eventoPreseleccionado === (string)$evId) ? ' selected' : '';
-                                                            echo '<option value="' . htmlspecialchars($evId, ENT_QUOTES, 'UTF-8') . '"' . $sel . '>' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</option>';
+                                                            echo '<option value="' . htmlspecialchars($evId, ENT_QUOTES, 'UTF-8') . '" data-fef="' . htmlspecialchars($evFef, ENT_QUOTES, 'UTF-8') . '"' . $sel . '>' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</option>';
                                                         }
                                                         ?>
                                                     </select>
@@ -1315,7 +1327,7 @@ if (isset($_POST['enviarCertificadoVisitanteEventoAjax'])) {
                                                 </div>
                                             </div>
                                             <div class="vis-btn-registrar-wrap">
-                                                <button class="btn btn-success vis-btn-registrar" type="button" onclick="abrirModalVisitante();">
+                                                <button id="btnAbrirModalRegistrar" class="btn btn-success vis-btn-registrar" type="button" onclick="abrirModalVisitante();">
                                                     <i class="glyphicon glyphicon-plus"></i> Registrar Visitante
                                                 </button>
                                             </div>
@@ -1351,11 +1363,13 @@ if (isset($_POST['enviarCertificadoVisitanteEventoAjax'])) {
                             <i class="glyphicon glyphicon-bullhorn"></i> Evento "<strong><?php echo htmlspecialchars($nombreEventoVigente); ?></strong>" En Vigencia
                         </span>
                         <input type="hidden" id="hdn_man_eve_vigente" value="<?php echo $idEventoVigente; ?>">
+                        <input type="hidden" id="hdn_man_eve_vigente_fef" value="<?php echo htmlspecialchars($fefEventoVigente, ENT_QUOTES, 'UTF-8'); ?>">
                     <?php } else { ?>
                         <span id="lbl_evento_vigente" class="label label-default vis-label-evento" style="display:inline-block; background-color:#64748b; color:#fff;">
                             <i class="glyphicon glyphicon-calendar"></i> Sin Evento En Vigencia
                         </span>
                         <input type="hidden" id="hdn_man_eve_vigente" value="">
+                        <input type="hidden" id="hdn_man_eve_vigente_fef" value="">
                     <?php } ?>
                 </div>
             </div>

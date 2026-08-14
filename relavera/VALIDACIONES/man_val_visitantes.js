@@ -536,12 +536,54 @@ $(document).ready(function () {
     if (typeof exaUiAfterViewChange === "function") {
       exaUiAfterViewChange(".exa-ui-panel");
     }
+    verificarVigenciaBotonRegistrar();
   }, 200);
 });
 
 /* ==========================================================================
    TAB EVENTOS Y VISITANTES
    ========================================================================== */
+
+function obtenerFechaHoyYMD() {
+  var d = new Date();
+  var month = "" + (d.getMonth() + 1);
+  var day = "" + d.getDate();
+  var year = d.getFullYear();
+  if (month.length < 2) month = "0" + month;
+  if (day.length < 2) day = "0" + day;
+  return [year, month, day].join("-");
+}
+
+function verificarVigenciaBotonRegistrar() {
+  var $btn = $("#btnAbrirModalRegistrar");
+  if (!$btn.length) return true;
+
+  var $sel = $("#selMan_Eve");
+  var fefStr = "";
+
+  if ($sel.length && $sel.val()) {
+    var $opt = $sel.find("option:selected");
+    fefStr = $opt.attr("data-fef") || "";
+  } else {
+    fefStr = $("#hdn_man_eve_vigente_fef").val() || "";
+  }
+
+  if (!fefStr) {
+    $btn.show();
+    return true;
+  }
+
+  var hoyStr = obtenerFechaHoyYMD();
+  // Permitido si hoy <= fefStr (hasta el mismo día de la fecha fin).
+  // Si hoyStr > fefStr (pasó al día siguiente o después), ya expiró y se oculta el botón.
+  if (hoyStr > fefStr) {
+    $btn.hide();
+    return false;
+  } else {
+    $btn.show();
+    return true;
+  }
+}
 
 function initGridVisitantesEvento() {
   var $grid = $("#gridVisitantesEvento");
@@ -612,6 +654,7 @@ function initGridVisitantesEvento() {
     loadComplete: function () {
       $grid.jqGrid("setLabel", "rn", "#");
       $('.ui-pg-selbox option[value="999999"]').text("Todos");
+      verificarVigenciaBotonRegistrar();
     }
   });
 
@@ -635,6 +678,8 @@ function initGridVisitantesEvento() {
 }
 
 function actualizarGridVisitantesEvento() {
+  verificarVigenciaBotonRegistrar();
+
   var formData = $("#filtroVisitantesEventoForm").serializeArray();
   var postData = {};
   $.each(formData, function (i, field) {
@@ -654,6 +699,17 @@ function actualizarGridVisitantesEvento() {
 }
 
 function abrirModalVisitante(MVis_Cod) {
+  if (!MVis_Cod) {
+    if (!verificarVigenciaBotonRegistrar()) {
+      mostrarAlertaUI(
+        "Evento Concluido",
+        "La fecha fin de este evento ya ha concluido. No se pueden registrar nuevos visitantes.",
+        "warning"
+      );
+      return;
+    }
+  }
+
   limpiarFormularioVisitante();
   var winWidth = $(window).width();
   var modalW = winWidth < 960 ? Math.floor(winWidth * 0.96) : 960;
@@ -668,7 +724,7 @@ function abrirModalVisitante(MVis_Cod) {
       { getVisitanteByIdAjax: true, MVis_Cod: MVis_Cod },
       function (r) {
         if (r.success && r.visitante) {
-          poblarFormularioVisitante(r.visitante);
+          poblarFormularioVisitante(r.visitante, true);
           $("#visitanteDialog").dialog("option", "title", "Editar Visitante - " + (r.visitante.nombre || ""));
           $("#visitanteDialog").dialog("open");
         } else {
@@ -714,7 +770,7 @@ function buscarPersonaCedula(cedula) {
     function (r) {
       if (r.success && r.existe) {
         if (r.esVisitante && r.visitante) {
-          poblarFormularioVisitante(r.visitante);
+          poblarFormularioVisitante(r.visitante, false);
         } else if (r.persona) {
           $("#Prs_Nom").val(r.persona.Prs_Nom || "");
           $("#Prs_Ape").val(r.persona.Prs_Ape || "");
@@ -733,10 +789,25 @@ function buscarPersonaCedula(cedula) {
   );
 }
 
-function poblarFormularioVisitante(row) {
+function poblarFormularioVisitante(row, esEdicion) {
   if (!row) return;
-  $("#MVis_Cod").val(row.MVis_Cod || "");
-  $("#Vis_Cod").val(row.MVis_Cod || "");
+
+  if (esEdicion) {
+    $("#MVis_Cod").val(row.MVis_Cod || "");
+    $("#Vis_Cod").val(row.MVis_Cod || "");
+    if (row.Man_Eve) $("#Man_Eve").val(row.Man_Eve);
+    setModoEdicionCedula(true);
+  } else {
+    // Al auto-completar datos de una persona existente para un NUEVO registro:
+    // MVis_Cod debe quedar VACÍO para que PHP realice INSERT (nuevo código de visita)
+    $("#MVis_Cod").val("");
+    $("#Vis_Cod").val("");
+    // Man_Eve se mantiene en el evento actualmente seleccionado o el evento en vigencia
+    var eveActual = $("#selMan_Eve").val() || $("#hdn_man_eve_vigente").val() || "";
+    $("#Man_Eve").val(eveActual);
+    setModoEdicionCedula(false);
+  }
+
   $("#Prs_Cod").val(row.Prs_Cod || "");
   $("#Vis_Ced").val(row.Prs_Ced || "");
   $("#Prs_Nom").val(row.Prs_Nom || "");
@@ -754,7 +825,6 @@ function poblarFormularioVisitante(row) {
   $("#Vis_Nem").val(row.MVis_Nem || "");
   $("#Vis_Tem").val(row.MVis_Tem || "");
   $("#MVis_Obs").val(row.MVis_Obs || "");
-  if (row.Man_Eve) $("#Man_Eve").val(row.Man_Eve);
 
   $("#visitanteForm select.chosen-select").trigger("chosen:updated");
 
