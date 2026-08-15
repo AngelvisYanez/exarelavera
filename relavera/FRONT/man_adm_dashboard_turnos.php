@@ -237,87 +237,57 @@ if (isset($getDashboardTurnosAjax)) {
 
     // Consultar eventos Garita IN (GE) agrupados por la franja horaria real de llegada
     $garitaMap = array();
-    $sqlGarita = "SELECT 
-                    manifiesto.Tud_Cod,
-                    manifiesto.Man_Fes,
-                    manifiesto.Man_Fec,
-                    manifiesto.Man_Usu,
-                    manifiesto.Man_Tes
+    $sqlGarita = "SELECT manifiesto.Tud_Cod, manifiesto.Man_Fes, manifiesto.Man_Fec, manifiesto.Man_Usu, manifiesto.Man_Tes
                   FROM manifiesto
                   INNER JOIN manifiesto_turnos_det ON manifiesto_turnos_det.Tud_Cod = manifiesto.Tud_Cod
                   INNER JOIN manifiesto_turnos_cab ON manifiesto_turnos_cab.Tur_Cod = manifiesto_turnos_det.Tur_Cod
-                  WHERE $whereCab
-                  AND manifiesto.Man_Est = 'A'
-                  AND (manifiesto.Man_Usu LIKE '%GE%' OR manifiesto.Man_Tes LIKE '%GE%')";
+                  WHERE $whereCab AND manifiesto.Man_Est = 'A' AND (manifiesto.Man_Usu LIKE '%GE%' OR manifiesto.Man_Tes LIKE '%GE%')";
     $resGarita = $obBD_con1->consulta($sqlGarita, $obBD_conexion->conexion);
     if ($resGarita !== false) {
         while ($gRow = $obBD_con1->fetch_assoc($resGarita)) {
             $obBD_con1->utf8_change_param($gRow);
-            $tudOriginal = intval($gRow['Tud_Cod']);
             $fes = !empty($gRow['Man_Fes']) ? $gRow['Man_Fes'] : (!empty($gRow['Man_Fec']) ? $gRow['Man_Fec'] : '');
-
+            $rawUsu = !empty($gRow['Man_Usu']) ? stripslashes(str_replace('&quot;', '"', $gRow['Man_Usu'])) : '';
             $fecha_ge = null;
-            if (!empty($gRow['Man_Usu'])) {
-                $rawUsu = stripslashes(str_replace('&quot;', '"', $gRow['Man_Usu']));
+
+            if ($rawUsu && strpos($rawUsu, 'GE') !== false) {
                 $usu_data = @json_decode($rawUsu, true);
-                if (!is_array($usu_data)) {
-                    $usu_data = @json_decode($gRow['Man_Usu'], true);
-                }
                 if (is_array($usu_data)) {
                     $eventos = isset($usu_data[0]) && is_array($usu_data[0]) ? $usu_data : array($usu_data);
                     foreach ($eventos as $ev) {
                         $ev_tip = isset($ev['Man_Tip']) ? $ev['Man_Tip'] : (isset($ev['man_tip']) ? $ev['man_tip'] : '');
                         $ev_fec = isset($ev['Fecha']) ? $ev['Fecha'] : (isset($ev['fecha']) ? $ev['fecha'] : '');
-                        if ($ev_tip === 'GE' && (!$fecha_ge || $ev_fec < $fecha_ge)) {
-                            $fecha_ge = $ev_fec;
-                        }
+                        if ($ev_tip === 'GE' && $ev_fec && (!$fecha_ge || $ev_fec < $fecha_ge)) $fecha_ge = $ev_fec;
                     }
                 }
-                if (!$fecha_ge) {
-                    if (preg_match('/GE["\']\s*,\s*["\']Fecha["\']\s*:\s*["\']([^"\']+)["\']/i', $rawUsu, $m)) {
-                        $fecha_ge = $m[1];
-                    } elseif (preg_match('/["\']Man_Tip["\']\s*:\s*["\']GE["\'].*?["\']Fecha["\']\s*:\s*["\']([^"\']+)["\']/i', $rawUsu, $m)) {
-                        $fecha_ge = $m[1];
-                    } elseif (preg_match('/["\']Fecha["\']\s*:\s*["\']([^"\']+)["\'].*?["\']Man_Tip["\']\s*:\s*["\']GE["\']/i', $rawUsu, $m)) {
-                        $fecha_ge = $m[1];
-                    }
+                if (!$fecha_ge && preg_match('/(?:GE.*?Fecha|Fecha.*?GE)["\']\s*:\s*["\']([^"\']+)/i', $rawUsu, $m)) {
+                    $fecha_ge = $m[1];
                 }
             }
-
-            // Fallback si la traza contiene GE pero Man_Usu no tiene la fecha explicita
             if (!$fecha_ge && !empty($gRow['Man_Tes']) && strpos($gRow['Man_Tes'], 'GE') !== false) {
                 $fecha_ge = $fes;
             }
 
             if ($fecha_ge) {
-                $targetTud = $tudOriginal;
+                $targetTud = intval($gRow['Tud_Cod']);
                 $fecGeOnly = date('Y-m-d', strtotime($fecha_ge));
                 $horaGeOnly = date('H:i:s', strtotime($fecha_ge));
 
                 foreach ($filasTurnos as $ft) {
-                    $tFec = isset($ft['Tud_Fec']) ? $ft['Tud_Fec'] : '';
-                    $tHin = isset($ft['hora_inicio']) ? $ft['hora_inicio'] : '';
-                    $tHfi = isset($ft['hora_fin']) ? $ft['hora_fin'] : '';
-                    if ($tFec && $tFec == $fecGeOnly && $tHin && $tHfi) {
-                        $tHinFmt = date('H:i:s', strtotime($tHin));
-                        $tHfiFmt = date('H:i:s', strtotime($tHfi));
-                        if ($horaGeOnly >= $tHinFmt && $horaGeOnly < $tHfiFmt) {
+                    if (!empty($ft['Tud_Fec']) && $ft['Tud_Fec'] == $fecGeOnly && !empty($ft['hora_inicio']) && !empty($ft['hora_fin'])) {
+                        $hin = date('H:i:s', strtotime($ft['hora_inicio']));
+                        $hfi = date('H:i:s', strtotime($ft['hora_fin']));
+                        if ($horaGeOnly >= $hin && $horaGeOnly < $hfi) {
                             $targetTud = intval($ft['Tud_Cod']);
                             break;
                         }
                     }
                 }
 
-                if (!isset($garitaMap[$targetTud])) {
-                    $garitaMap[$targetTud] = array('conteo' => 0, 'suma_minutos' => 0);
-                }
+                if (!isset($garitaMap[$targetTud])) $garitaMap[$targetTud] = array('conteo' => 0, 'suma_minutos' => 0);
                 $garitaMap[$targetTud]['conteo']++;
-                if ($fes) {
-                    $ts_fes = strtotime($fes);
-                    $ts_ge = strtotime($fecha_ge);
-                    if ($ts_ge > $ts_fes) {
-                        $garitaMap[$targetTud]['suma_minutos'] += round(($ts_ge - $ts_fes) / 60);
-                    }
+                if ($fes && strtotime($fecha_ge) > strtotime($fes)) {
+                    $garitaMap[$targetTud]['suma_minutos'] += round((strtotime($fecha_ge) - strtotime($fes)) / 60);
                 }
             }
         }
@@ -2037,57 +2007,19 @@ if (isset($_GET['getInactivosDetallePlantaAjax']) || isset($getInactivosDetalleP
 }
 
 /**
- * Tab Control de Tiempos y Arribos (SLA de Tránsito y Retrasos)
- * Parámetros: fecha_inicio, fecha_fin, Pla_Cod (opcional), estado_filtro (opcional)
+ * Función compartida para procesar el Control de Tiempos y Arribos (SLA y Retrasos)
  */
-if (isset($_GET['getDashboardTiemposArribosAjax']) || isset($getDashboardTiemposArribosAjax)) {
-    @set_time_limit(300);
-    @ini_set('memory_limit', '512M');
-    $resultado = array('success' => true);
-    $fecha_inicio = isset($_GET['fecha_inicio']) ? trim($_GET['fecha_inicio']) : '';
-    $fecha_fin = isset($_GET['fecha_fin']) ? trim($_GET['fecha_fin']) : '';
-    $Pla_Cod = isset($_GET['Pla_Cod']) ? intval($_GET['Pla_Cod']) : 0;
-    $estado_filtro = isset($_GET['estado_filtro']) ? trim($_GET['estado_filtro']) : 'todos';
-
-    if (!$fecha_inicio || !$fecha_fin) {
-        $obBD_con1->echoJson(array('success' => false, 'message' => 'Rango de fechas requerido'));
-        exit;
-    }
-    if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $fecha_inicio, $m)) {
-        $fecha_inicio = $m[3] . '-' . str_pad($m[2], 2, '0', STR_PAD_LEFT) . '-' . str_pad($m[1], 2, '0', STR_PAD_LEFT);
-    }
-    if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $fecha_fin, $m)) {
-        $fecha_fin = $m[3] . '-' . str_pad($m[2], 2, '0', STR_PAD_LEFT) . '-' . str_pad($m[1], 2, '0', STR_PAD_LEFT);
-    }
-    $conexion = isset($obBD_conexion->conexion) ? $obBD_conexion->conexion : null;
-    if (!$conexion) {
-        $obBD_con1->echoJson(array('success' => false, 'message' => 'Sin conexión'));
-        exit;
-    }
-    $Emp_Cod = isset($Ses_Emp_Cod) ? intval($Ses_Emp_Cod) : 0;
-    if (!$Emp_Cod) {
-        $obBD_con1->echoJson(array('success' => false, 'message' => 'Empresa no definida'));
-        exit;
-    }
+function obtenerDatosControlTiemposArribos($obBD_con1, $conexion, $Emp_Cod, $fecha_inicio, $fecha_fin, $Pla_Cod = 0, $estado_filtro = 'todos') {
     $fecha_inicio_esc = mysqli_real_escape_string($conexion, $fecha_inicio);
     $fecha_fin_esc = mysqli_real_escape_string($conexion, $fecha_fin);
     $condPla = ($Pla_Cod > 0) ? "AND manifiesto.Pla_Cod = " . intval($Pla_Cod) : "";
 
     $sql = "SELECT 
-                manifiesto.Man_Cod,
-                manifiesto.Man_Num,
-                manifiesto.Man_Fec,
-                manifiesto.Man_Fes,
-                manifiesto.Man_Fea,
-                manifiesto.Man_Usu,
-                manifiesto.Pla_Cod,
-                manifiesto_plantas.Pla_Nom,
-                manifiesto_plantas.Pla_Dis,
+                manifiesto.Man_Cod, manifiesto.Man_Num, manifiesto.Man_Fec, manifiesto.Man_Fes, manifiesto.Man_Fea,
+                manifiesto.Man_Usu, manifiesto.Pla_Cod, manifiesto_plantas.Pla_Nom, manifiesto_plantas.Pla_Dis,
                 COALESCE(CONCAT(persona_chofer.Prs_Nom, ' ', persona_chofer.Prs_Ape), 'Sin asignar') as chofer_nombre,
                 COALESCE(vehiculo.Veh_Pla, 'Sin placa') as Veh_Pla,
-                manifiesto_turnos_det.Tud_Fec,
-                manifiesto_turnos_det.Tud_Hin,
-                manifiesto_turnos_det.Tud_Hfi,
+                manifiesto_turnos_det.Tud_Fec, manifiesto_turnos_det.Tud_Hin, manifiesto_turnos_det.Tud_Hfi,
                 CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, 4, 0)) as ManNum
             FROM manifiesto
             INNER JOIN manifiesto_turnos_det ON manifiesto_turnos_det.Tud_Cod = manifiesto.Tud_Cod
@@ -2109,30 +2041,20 @@ if (isset($_GET['getDashboardTiemposArribosAjax']) || isset($getDashboardTiempos
     $res = $obBD_con1->consulta($sql, $conexion);
     $listado = array();
     $totales = array(
-        'total' => 0,
-        'cumplidos' => 0,
-        'anticipados' => 0,
-        'excedidos' => 0,
-        'modificados' => 0,
-        'en_transito' => 0,
-        'suma_duracion_real' => 0,
-        'conteo_duracion_real' => 0,
-        'suma_retraso_min' => 0,
-        'conteo_retrasos' => 0,
-        'suma_holgura_min' => 0,
-        'conteo_holguras' => 0
+        'total' => 0, 'cumplidos' => 0, 'anticipados' => 0, 'excedidos' => 0, 'modificados' => 0,
+        'en_transito' => 0, 'suma_duracion_real' => 0, 'conteo_duracion_real' => 0,
+        'suma_retraso_min' => 0, 'conteo_retrasos' => 0, 'suma_holgura_min' => 0, 'conteo_holguras' => 0
     );
+    $plantasMap = array();
     $tendenciaMap = array();
 
     if ($res !== false) {
         while ($row = $obBD_con1->fetch_assoc($res)) {
             $obBD_con1->utf8_change_param($row);
-
             $fes = !empty($row['Man_Fes']) ? $row['Man_Fes'] : (!empty($row['Man_Fec']) ? $row['Man_Fec'] : '');
             $fea = !empty($row['Man_Fea']) ? $row['Man_Fea'] : '';
             $pla_dis = !empty($row['Pla_Dis']) ? $row['Pla_Dis'] : '02:00';
 
-            // Convertir Pla_Dis a minutos
             $minutos_pla_dis = 120;
             if (preg_match('/^(\d{1,2}):(\d{1,2})(:(\d{1,2}))?$/', $pla_dis, $pm)) {
                 $minutos_pla_dis = (intval($pm[1]) * 60) + intval($pm[2]);
@@ -2142,30 +2064,26 @@ if (isset($_GET['getDashboardTiemposArribosAjax']) || isset($getDashboardTiempos
             $ts_arribo_teorico = ($ts_salida && $ts_salida > 0) ? ($ts_salida + ($minutos_pla_dis * 60)) : null;
             $fecha_arribo_teorico = $ts_arribo_teorico ? date('Y-m-d H:i:s', $ts_arribo_teorico) : '';
 
-            // Detectar si la fecha de arribo asignada (Man_Fea) fue modificada/difiere del calculo teóricamente previsto
-            $es_modificado = false;
             $ts_fea = !empty($fea) ? strtotime($fea) : null;
-            if ($ts_fea && $ts_arribo_teorico && abs($ts_fea - $ts_arribo_teorico) > 120) {
-                $es_modificado = true;
-            }
+            $es_modificado = ($ts_fea && $ts_arribo_teorico && abs($ts_fea - $ts_arribo_teorico) > 120);
 
-            // Buscar fecha real de entrada (GE) y salida (GS) en el JSON Man_Usu
+            // Extraer GE de Man_Usu
             $fecha_entrada_real = null;
-            $fecha_salida_real = null;
-            if (!empty($row['Man_Usu'])) {
-                $usu_data = json_decode($row['Man_Usu'], true);
+            if (!empty($row['Man_Usu']) && strpos($row['Man_Usu'], 'GE') !== false) {
+                $rawUsu = stripslashes(str_replace('&quot;', '"', $row['Man_Usu']));
+                $usu_data = @json_decode($rawUsu, true);
                 if (is_array($usu_data)) {
                     $eventos = isset($usu_data[0]) && is_array($usu_data[0]) ? $usu_data : array($usu_data);
                     foreach ($eventos as $ev) {
                         $ev_tip = isset($ev['Man_Tip']) ? $ev['Man_Tip'] : (isset($ev['man_tip']) ? $ev['man_tip'] : '');
                         $ev_fec = isset($ev['Fecha']) ? $ev['Fecha'] : (isset($ev['fecha']) ? $ev['fecha'] : '');
-                        if ($ev_tip === 'GE' && (!$fecha_entrada_real || $ev_fec < $fecha_entrada_real)) {
+                        if ($ev_tip === 'GE' && $ev_fec && (!$fecha_entrada_real || $ev_fec < $fecha_entrada_real)) {
                             $fecha_entrada_real = $ev_fec;
                         }
-                        if ($ev_tip === 'GS' && (!$fecha_salida_real || $ev_fec > $fecha_salida_real)) {
-                            $fecha_salida_real = $ev_fec;
-                        }
                     }
+                }
+                if (!$fecha_entrada_real && preg_match('/(?:GE.*?Fecha|Fecha.*?GE)["\']\s*:\s*["\']([^"\']+)/i', $rawUsu, $m)) {
+                    $fecha_entrada_real = $m[1];
                 }
             }
 
@@ -2178,48 +2096,29 @@ if (isset($_GET['getDashboardTiemposArribosAjax']) || isset($getDashboardTiempos
                 if ($ts_salida && $ts_ge > $ts_salida) {
                     $duracion_real_min = round(($ts_ge - $ts_salida) / 60);
                 }
-
                 $ts_target_arribo = $ts_fea ? $ts_fea : $ts_arribo_teorico;
                 if ($ts_target_arribo) {
                     $retraso_min = round(($ts_ge - $ts_target_arribo) / 60);
-                    if ($retraso_min > 5) {
-                        $estado = 'excedido';
-                    } elseif ($retraso_min < -5) {
-                        $estado = 'anticipado';
-                    } else {
-                        $estado = 'cumplido';
-                    }
+                    $estado = ($retraso_min > 5) ? 'excedido' : (($retraso_min < -5) ? 'anticipado' : 'cumplido');
                 } else {
                     $estado = 'cumplido';
                 }
             }
 
             if ($estado_filtro !== 'todos') {
-                if ($estado_filtro === 'modificado' && !$es_modificado) {
-                    continue;
-                }
-                if ($estado_filtro !== 'modificado' && $estado !== $estado_filtro) {
-                    continue;
-                }
+                if ($estado_filtro === 'modificado' && !$es_modificado) continue;
+                if ($estado_filtro !== 'modificado' && $estado !== $estado_filtro) continue;
             }
 
             $totales['total']++;
             if ($es_modificado) $totales['modificados']++;
-
-            if ($estado === 'cumplido') {
-                $totales['cumplidos']++;
-            } elseif ($estado === 'anticipado') {
+            if ($estado === 'cumplido') $totales['cumplidos']++;
+            elseif ($estado === 'anticipado') {
                 $totales['anticipados']++;
-                if ($retraso_min < 0) {
-                    $totales['suma_holgura_min'] += abs($retraso_min);
-                    $totales['conteo_holguras']++;
-                }
+                if ($retraso_min < 0) { $totales['suma_holgura_min'] += abs($retraso_min); $totales['conteo_holguras']++; }
             } elseif ($estado === 'excedido') {
                 $totales['excedidos']++;
-                if ($retraso_min > 0) {
-                    $totales['suma_retraso_min'] += $retraso_min;
-                    $totales['conteo_retrasos']++;
-                }
+                if ($retraso_min > 0) { $totales['suma_retraso_min'] += $retraso_min; $totales['conteo_retrasos']++; }
             } elseif ($estado === 'en_transito') {
                 $totales['en_transito']++;
             }
@@ -2233,19 +2132,9 @@ if (isset($_GET['getDashboardTiemposArribosAjax']) || isset($getDashboardTiempos
             $plaNom = $row['Pla_Nom'];
             if (!isset($plantasMap[$plaCod])) {
                 $plantasMap[$plaCod] = array(
-                    'Pla_Cod' => $plaCod,
-                    'Pla_Nom' => $plaNom,
-                    'tiempo_configurado_min' => $minutos_pla_dis,
-                    'total' => 0,
-                    'cumplidos' => 0,
-                    'anticipados' => 0,
-                    'excedidos' => 0,
-                    'modificados' => 0,
-                    'en_transito' => 0,
-                    'suma_duracion' => 0,
-                    'conteo_duracion' => 0,
-                    'suma_holgura' => 0,
-                    'conteo_holgura' => 0
+                    'Pla_Cod' => $plaCod, 'Pla_Nom' => $plaNom, 'tiempo_configurado_min' => $minutos_pla_dis,
+                    'total' => 0, 'cumplidos' => 0, 'anticipados' => 0, 'excedidos' => 0, 'modificados' => 0,
+                    'en_transito' => 0, 'suma_duracion' => 0, 'conteo_duracion' => 0, 'suma_holgura' => 0, 'conteo_holgura' => 0
                 );
             }
             $plantasMap[$plaCod]['total']++;
@@ -2253,10 +2142,7 @@ if (isset($_GET['getDashboardTiemposArribosAjax']) || isset($getDashboardTiempos
             if ($estado === 'cumplido') $plantasMap[$plaCod]['cumplidos']++;
             if ($estado === 'anticipado') {
                 $plantasMap[$plaCod]['anticipados']++;
-                if ($retraso_min < 0) {
-                    $plantasMap[$plaCod]['suma_holgura'] += abs($retraso_min);
-                    $plantasMap[$plaCod]['conteo_holgura']++;
-                }
+                if ($retraso_min < 0) { $plantasMap[$plaCod]['suma_holgura'] += abs($retraso_min); $plantasMap[$plaCod]['conteo_holgura']++; }
             }
             if ($estado === 'excedido') $plantasMap[$plaCod]['excedidos']++;
             if ($estado === 'en_transito') $plantasMap[$plaCod]['en_transito']++;
@@ -2265,19 +2151,12 @@ if (isset($_GET['getDashboardTiemposArribosAjax']) || isset($getDashboardTiempos
                 $plantasMap[$plaCod]['conteo_duracion']++;
             }
 
-            // Acumular tendencia diaria
             $fecha_dia = !empty($fes) ? date('Y-m-d', strtotime($fes)) : (!empty($row['Tud_Fec']) ? $row['Tud_Fec'] : '');
             if (!empty($fecha_dia)) {
                 if (!isset($tendenciaMap[$fecha_dia])) {
                     $tendenciaMap[$fecha_dia] = array(
-                        'fecha' => date('d/m/Y', strtotime($fecha_dia)),
-                        'fecha_sql' => $fecha_dia,
-                        'total' => 0,
-                        'cumplidos' => 0,
-                        'anticipados' => 0,
-                        'excedidos' => 0,
-                        'modificados' => 0,
-                        'en_transito' => 0
+                        'fecha' => date('d/m/Y', strtotime($fecha_dia)), 'fecha_sql' => $fecha_dia,
+                        'total' => 0, 'cumplidos' => 0, 'anticipados' => 0, 'excedidos' => 0, 'modificados' => 0, 'en_transito' => 0
                     );
                 }
                 $tendenciaMap[$fecha_dia]['total']++;
@@ -2307,15 +2186,8 @@ if (isset($_GET['getDashboardTiemposArribosAjax']) || isset($getDashboardTiempos
         }
     }
 
-    $promedio_duracion_real_min = $totales['conteo_duracion_real'] > 0 ? round($totales['suma_duracion_real'] / $totales['conteo_duracion_real']) : 0;
-    $promedio_retraso_min = $totales['conteo_retrasos'] > 0 ? round($totales['suma_retraso_min'] / $totales['conteo_retrasos']) : 0;
-    $promedio_holgura_min = $totales['conteo_holguras'] > 0 ? round($totales['suma_holgura_min'] / $totales['conteo_holguras']) : 0;
-
     $finalizados = $totales['cumplidos'] + $totales['anticipados'] + $totales['excedidos'];
     $a_tiempo_total = $totales['cumplidos'] + $totales['anticipados'];
-    $pct_cumplimiento = $finalizados > 0 ? round(($a_tiempo_total / $finalizados) * 100, 1) : 0;
-    $pct_excedidos = $finalizados > 0 ? round(($totales['excedidos'] / $finalizados) * 100, 1) : 0;
-    $pct_anticipados = $finalizados > 0 ? round(($totales['anticipados'] / $finalizados) * 100, 1) : 0;
 
     $plantas_resumen = array();
     foreach ($plantasMap as $p) {
@@ -2337,106 +2209,66 @@ if (isset($_GET['getDashboardTiemposArribosAjax']) || isset($getDashboardTiempos
         $tendencia_diaria[] = $t;
     }
 
-    $resultado['kpis'] = array(
-        'total' => $totales['total'],
-        'cumplidos' => $totales['cumplidos'],
-        'anticipados' => $totales['anticipados'],
-        'excedidos' => $totales['excedidos'],
-        'modificados' => $totales['modificados'],
-        'en_transito' => $totales['en_transito'],
-        'pct_cumplimiento' => $pct_cumplimiento,
-        'pct_excedidos' => $pct_excedidos,
-        'pct_anticipados' => $pct_anticipados,
-        'promedio_duracion_real_min' => $promedio_duracion_real_min,
-        'promedio_retraso_min' => $promedio_retraso_min,
-        'promedio_holgura_min' => $promedio_holgura_min
+    return array(
+        'success' => true,
+        'kpis' => array(
+            'total' => $totales['total'],
+            'cumplidos' => $totales['cumplidos'],
+            'anticipados' => $totales['anticipados'],
+            'excedidos' => $totales['excedidos'],
+            'modificados' => $totales['modificados'],
+            'en_transito' => $totales['en_transito'],
+            'pct_cumplimiento' => $finalizados > 0 ? round(($a_tiempo_total / $finalizados) * 100, 1) : 0,
+            'pct_excedidos' => $finalizados > 0 ? round(($totales['excedidos'] / $finalizados) * 100, 1) : 0,
+            'pct_anticipados' => $finalizados > 0 ? round(($totales['anticipados'] / $finalizados) * 100, 1) : 0,
+            'promedio_duracion_real_min' => $totales['conteo_duracion_real'] > 0 ? round($totales['suma_duracion_real'] / $totales['conteo_duracion_real']) : 0,
+            'promedio_retraso_min' => $totales['conteo_retrasos'] > 0 ? round($totales['suma_retraso_min'] / $totales['conteo_retrasos']) : 0,
+            'promedio_holgura_min' => $totales['conteo_holguras'] > 0 ? round($totales['suma_holgura_min'] / $totales['conteo_holguras']) : 0
+        ),
+        'listado' => $listado,
+        'plantas_resumen' => $plantas_resumen,
+        'tendencia_diaria' => $tendencia_diaria
     );
-    $resultado['listado'] = $listado;
-    $resultado['plantas_resumen'] = $plantas_resumen;
-    $resultado['tendencia_diaria'] = $tendencia_diaria;
-    $resultado['plantas_resumen'] = $plantas_resumen;
+}
 
-    $obBD_con1->echoJson($resultado);
+/**
+ * Tab Control de Tiempos y Arribos (Endpoint AJAX JSON)
+ */
+if (isset($_GET['getDashboardTiemposArribosAjax']) || isset($getDashboardTiemposArribosAjax)) {
+    @set_time_limit(300);
+    @ini_set('memory_limit', '512M');
+    $fi = isset($_GET['fecha_inicio']) ? trim($_GET['fecha_inicio']) : '';
+    $ff = isset($_GET['fecha_fin']) ? trim($_GET['fecha_fin']) : '';
+    if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $fi, $m)) $fi = "$m[3]-$m[2]-$m[1]";
+    if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $ff, $m)) $ff = "$m[3]-$m[2]-$m[1]";
+    if (!$fi || !$ff) { $obBD_con1->echoJson(array('success' => false, 'message' => 'Rango de fechas requerido')); exit; }
+    $data = obtenerDatosControlTiemposArribos($obBD_con1, $obBD_conexion->conexion, intval(isset($Ses_Emp_Cod) ? $Ses_Emp_Cod : 0), $fi, $ff, intval(isset($_GET['Pla_Cod']) ? $_GET['Pla_Cod'] : 0), isset($_GET['estado_filtro']) ? trim($_GET['estado_filtro']) : 'todos');
+    $obBD_con1->echoJson($data);
     exit;
 }
 
 /**
- * Direct High-Speed Excel Export for Control de Tiempos y Arribos
+ * Exportación Directa a Excel para Control de Tiempos y Arribos
  */
 if (isset($_GET['exportarExcelTiemposAjax']) || isset($exportarExcelTiemposAjax)) {
     @set_time_limit(300);
     @ini_set('memory_limit', '512M');
     @ini_set('display_errors', '0');
-    if (function_exists('error_reporting')) {
-        @error_reporting(0);
-    }
-
-    // Desactivar DebugBar para prevenir que inyecte etiquetas <link> y <script> al HTML del Excel
-    if (class_exists('DebugBar', false) && method_exists('DebugBar', 'setDebugBar')) {
-        @DebugBar::setDebugBar(null);
-    }
-    if (class_exists('\\DebugBar\\DebugHelper', false) && method_exists('\\DebugBar\\DebugHelper', 'disable')) {
-        @\DebugBar\DebugHelper::disable();
-    }
-
-    // Limpiar cualquier búfer de salida previo acumulado
-    while (ob_get_level() > 0) {
-        @ob_end_clean();
-    }
+    if (class_exists('DebugBar', false) && method_exists('DebugBar', 'setDebugBar')) @DebugBar::setDebugBar(null);
+    if (class_exists('\\DebugBar\\DebugHelper', false) && method_exists('\\DebugBar\\DebugHelper', 'disable')) @\DebugBar\DebugHelper::disable();
+    while (ob_get_level() > 0) { @ob_end_clean(); }
     ob_start();
 
-    $fecha_inicio = isset($_GET['fecha_inicio']) ? trim($_GET['fecha_inicio']) : '';
-    $fecha_fin = isset($_GET['fecha_fin']) ? trim($_GET['fecha_fin']) : '';
-    $Pla_Cod = isset($_GET['Pla_Cod']) ? intval($_GET['Pla_Cod']) : 0;
+    $fi = isset($_GET['fecha_inicio']) ? trim($_GET['fecha_inicio']) : '';
+    $ff = isset($_GET['fecha_fin']) ? trim($_GET['fecha_fin']) : '';
+    if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $fi, $m)) $fi = "$m[3]-$m[2]-$m[1]";
+    if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $ff, $m)) $ff = "$m[3]-$m[2]-$m[1]";
+    $Pla_Cod = intval(isset($_GET['Pla_Cod']) ? $_GET['Pla_Cod'] : 0);
     $estado_filtro = isset($_GET['estado_filtro']) ? trim($_GET['estado_filtro']) : 'todos';
 
-    if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $fecha_inicio, $m)) {
-        $fecha_inicio = $m[3] . '-' . str_pad($m[2], 2, '0', STR_PAD_LEFT) . '-' . str_pad($m[1], 2, '0', STR_PAD_LEFT);
-    }
-    if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $fecha_fin, $m)) {
-        $fecha_fin = $m[3] . '-' . str_pad($m[2], 2, '0', STR_PAD_LEFT) . '-' . str_pad($m[1], 2, '0', STR_PAD_LEFT);
-    }
-    $conexion = isset($obBD_conexion->conexion) ? $obBD_conexion->conexion : null;
-    $Emp_Cod = isset($Ses_Emp_Cod) ? intval($Ses_Emp_Cod) : 0;
+    $data = obtenerDatosControlTiemposArribos($obBD_con1, $obBD_conexion->conexion, intval(isset($Ses_Emp_Cod) ? $Ses_Emp_Cod : 0), $fi, $ff, $Pla_Cod, $estado_filtro);
 
-    $fecha_inicio_esc = mysqli_real_escape_string($conexion, $fecha_inicio);
-    $fecha_fin_esc = mysqli_real_escape_string($conexion, $fecha_fin);
-    $condPla = ($Pla_Cod > 0) ? "AND manifiesto.Pla_Cod = " . intval($Pla_Cod) : "";
-
-    $sql = "SELECT 
-                manifiesto.Man_Cod,
-                manifiesto.Man_Num,
-                manifiesto.Man_Fec,
-                manifiesto.Man_Fes,
-                manifiesto.Man_Fea,
-                manifiesto.Man_Usu,
-                manifiesto.Pla_Cod,
-                manifiesto_plantas.Pla_Nom,
-                manifiesto_plantas.Pla_Dis,
-                COALESCE(CONCAT(persona_chofer.Prs_Nom, ' ', persona_chofer.Prs_Ape), 'Sin asignar') as chofer_nombre,
-                COALESCE(vehiculo.Veh_Pla, 'Sin placa') as Veh_Pla,
-                CONCAT('M', manifiesto_plantas.Pla_Cod, '-', LPAD(manifiesto.Man_Num, 4, 0)) as ManNum
-            FROM manifiesto
-            INNER JOIN manifiesto_turnos_det ON manifiesto_turnos_det.Tud_Cod = manifiesto.Tud_Cod
-            INNER JOIN manifiesto_turnos_cab ON manifiesto_turnos_cab.Tur_Cod = manifiesto_turnos_det.Tur_Cod
-            INNER JOIN cliente ON cliente.Cli_Cod = manifiesto.Cli_Cod
-            INNER JOIN manifiesto_plantas ON manifiesto_plantas.Pla_Cod = manifiesto.Pla_Cod
-            LEFT JOIN chofer ON chofer.Cho_Cod = manifiesto.Cho_Cod
-            LEFT JOIN persona AS persona_chofer ON persona_chofer.Prs_Cod = chofer.Prs_Cod
-            LEFT JOIN vehiculo ON vehiculo.Veh_Cod = manifiesto.Veh_Cod
-            WHERE manifiesto_turnos_det.Tud_Fec BETWEEN '$fecha_inicio_esc' AND '$fecha_fin_esc'
-            AND manifiesto_turnos_cab.Emp_Cod = $Emp_Cod 
-            AND manifiesto_turnos_cab.Tur_Est != 'I'
-            AND manifiesto_turnos_det.Tud_Est IN ('A', 'S')
-            AND manifiesto.Man_Est = 'A' 
-            AND (manifiesto.Man_Tes IS NULL OR LOCATE('R', manifiesto.Man_Tes) = 0)
-            AND cliente.Emp_Cod = $Emp_Cod $condPla
-            ORDER BY manifiesto_turnos_det.Tud_Fec DESC, manifiesto.Man_Fes DESC, manifiesto.Man_Num DESC";
-
-    $res = $obBD_con1->consulta($sql, $conexion);
-
-    $filename = "control_tiempos_arribos_" . ($Pla_Cod > 0 ? "planta_{$Pla_Cod}_" : "resumen_plantas_") . str_replace('-', '_', $fecha_inicio) . "_" . str_replace('-', '_', $fecha_fin) . ".xls";
-
+    $filename = "control_tiempos_arribos_" . ($Pla_Cod > 0 ? "planta_{$Pla_Cod}_" : "resumen_plantas_") . str_replace('-', '_', $fi) . "_" . str_replace('-', '_', $ff) . ".xls";
     header("Content-Type: application/vnd.ms-excel; charset=UTF-8");
     header("Content-Disposition: attachment; filename=\"$filename\"");
     header("Pragma: no-cache");
@@ -2444,247 +2276,38 @@ if (isset($_GET['exportarExcelTiemposAjax']) || isset($exportarExcelTiemposAjax)
 
     echo '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
     echo '<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">';
-    echo '<style>table { border-collapse: collapse; } td, th { border: 1px solid #2C5D94; padding: 4px 8px; font-size: 11px; } th { background-color: #2C5D94; color: #ffffff; font-weight: bold; }</style>';
-    echo '</head><body>';
+    echo '<style>table { border-collapse: collapse; } td, th { border: 1px solid #2C5D94; padding: 4px 8px; font-size: 11px; } th { background-color: #2C5D94; color: #ffffff; font-weight: bold; }</style></head><body>';
     echo '<h3>Reporte Control de Tiempos y Arribos (Acuerdo de Nivel de Servicio de Tránsito)</h3>';
-    echo '<p><strong>Rango:</strong> ' . htmlspecialchars($fecha_inicio) . ' al ' . htmlspecialchars($fecha_fin) . ' | <strong>Filtro:</strong> ' . ($Pla_Cod > 0 ? 'Planta Específica' : 'Todas las plantas (Resumen por Planta)') . '</p>';
+    echo '<p><strong>Rango:</strong> ' . htmlspecialchars($fi) . ' al ' . htmlspecialchars($ff) . ' | <strong>Filtro:</strong> ' . ($Pla_Cod > 0 ? 'Planta Específica' : 'Todas las plantas (Resumen por Planta)') . '</p>';
 
     if ($Pla_Cod == 0) {
-        // CASO 1: TODAS LAS PLANTAS -> Exportar Resumen por Planta
-        $plantasMap = array();
-        if ($res !== false) {
-            while ($row = $obBD_con1->fetch_assoc($res)) {
-                $obBD_con1->utf8_change_param($row);
-                $fes = !empty($row['Man_Fes']) ? $row['Man_Fes'] : (!empty($row['Man_Fec']) ? $row['Man_Fec'] : '');
-                $fea = !empty($row['Man_Fea']) ? $row['Man_Fea'] : '';
-                $pla_dis = !empty($row['Pla_Dis']) ? $row['Pla_Dis'] : '02:00';
+        echo '<table><thead><tr><th>Planta</th><th>Total Viajes</th><th>Viajes a Tiempo</th><th>Con Holgura</th><th>Con Retraso</th><th>En Tránsito</th><th>% Puntualidad SLA</th><th>Tiempo Configurado</th><th>Tiempo Prom. Real</th><th>% Consumido</th><th>Diferencia Promedio</th></tr></thead><tbody>';
+        foreach ($data['plantas_resumen'] as $p) {
+            $hReal = floor($p['tiempo_promedio_min'] / 60);
+            $mReal = $p['tiempo_promedio_min'] % 60;
+            $tStr = ($p['conteo_duracion'] > 0) ? (($hReal > 0 ? $hReal . 'h ' : '') . $mReal . 'm') : '-';
+            $cfgMin = $p['tiempo_configurado_min'];
+            $hCfg = floor($cfgMin / 60);
+            $mCfg = $cfgMin % 60;
+            $cfgStr = ($cfgMin > 0) ? (($hCfg > 0 ? $hCfg . 'h ' : '') . $mCfg . 'm') : '-';
+            $pctConsumido = $cfgMin > 0 ? round(($p['tiempo_promedio_min'] / $cfgMin) * 100) : 0;
+            $difMin = $p['tiempo_promedio_min'] - $cfgMin;
+            $hDif = floor(abs($difMin) / 60);
+            $mDif = abs($difMin) % 60;
+            $difStr = ($difMin > 0 ? '+' : ($difMin < 0 ? '-' : '')) . ($hDif > 0 ? $hDif . 'h ' : '') . $mDif . 'm';
 
-                $minutos_pla_dis = 120;
-                if (preg_match('/^(\d{1,2}):(\d{1,2})(:(\d{1,2}))?$/', $pla_dis, $pm)) {
-                    $minutos_pla_dis = (intval($pm[1]) * 60) + intval($pm[2]);
-                }
-
-                $ts_salida = strtotime($fes);
-                $ts_arribo_teorico = ($ts_salida && $ts_salida > 0) ? ($ts_salida + ($minutos_pla_dis * 60)) : null;
-
-                $es_modificado = false;
-                $ts_fea = !empty($fea) ? strtotime($fea) : null;
-                if ($ts_fea && $ts_arribo_teorico && abs($ts_fea - $ts_arribo_teorico) > 120) {
-                    $es_modificado = true;
-                }
-
-                $fecha_entrada_real = null;
-                if (!empty($row['Man_Usu'])) {
-                    $usu_data = json_decode($row['Man_Usu'], true);
-                    if (is_array($usu_data)) {
-                        $eventos = isset($usu_data[0]) && is_array($usu_data[0]) ? $usu_data : array($usu_data);
-                        foreach ($eventos as $ev) {
-                            $ev_tip = isset($ev['Man_Tip']) ? $ev['Man_Tip'] : (isset($ev['man_tip']) ? $ev['man_tip'] : '');
-                            $ev_fec = isset($ev['Fecha']) ? $ev['Fecha'] : (isset($ev['fecha']) ? $ev['fecha'] : '');
-                            if ($ev_tip === 'GE' && (!$fecha_entrada_real || $ev_fec < $fecha_entrada_real)) {
-                                $fecha_entrada_real = $ev_fec;
-                            }
-                        }
-                    }
-                }
-
-                $duracion_real_min = 0;
-                $retraso_min = 0;
-                $estado = 'en_transito';
-
-                if ($fecha_entrada_real) {
-                    $ts_ge = strtotime($fecha_entrada_real);
-                    if ($ts_salida && $ts_ge > $ts_salida) {
-                        $duracion_real_min = round(($ts_ge - $ts_salida) / 60);
-                    }
-
-                    $ts_target_arribo = $ts_fea ? $ts_fea : $ts_arribo_teorico;
-                    if ($ts_target_arribo) {
-                        $retraso_min = round(($ts_ge - $ts_target_arribo) / 60);
-                        if ($retraso_min > 5) {
-                            $estado = 'excedido';
-                        } elseif ($retraso_min < -5) {
-                            $estado = 'anticipado';
-                        } else {
-                            $estado = 'cumplido';
-                        }
-                    } else {
-                        $estado = 'cumplido';
-                    }
-                }
-
-                if ($estado_filtro !== 'todos') {
-                    if ($estado_filtro === 'modificado' && !$es_modificado) continue;
-                    if ($estado_filtro !== 'modificado' && $estado !== $estado_filtro) continue;
-                }
-
-                $plaCod = intval($row['Pla_Cod']);
-                $plaNom = $row['Pla_Nom'];
-                if (!isset($plantasMap[$plaCod])) {
-                    $plantasMap[$plaCod] = array(
-                        'Pla_Nom' => $plaNom,
-                        'total' => 0,
-                        'cumplidos' => 0,
-                        'anticipados' => 0,
-                        'excedidos' => 0,
-                        'modificados' => 0,
-                        'en_transito' => 0,
-                        'suma_duracion' => 0,
-                        'conteo_duracion' => 0,
-                        'suma_holgura' => 0,
-                        'conteo_holgura' => 0
-                    );
-                }
-                $plantasMap[$plaCod]['total']++;
-                if ($es_modificado) $plantasMap[$plaCod]['modificados']++;
-                if ($estado === 'cumplido') $plantasMap[$plaCod]['cumplidos']++;
-                if ($estado === 'anticipado') {
-                    $plantasMap[$plaCod]['anticipados']++;
-                    if ($retraso_min < 0) {
-                        $plantasMap[$plaCod]['suma_holgura'] += abs($retraso_min);
-                        $plantasMap[$plaCod]['conteo_holgura']++;
-                    }
-                }
-                if ($estado === 'excedido') $plantasMap[$plaCod]['excedidos']++;
-                if ($estado === 'en_transito') $plantasMap[$plaCod]['en_transito']++;
-                if ($duracion_real_min > 0) {
-                    $plantasMap[$plaCod]['suma_duracion'] += $duracion_real_min;
-                    $plantasMap[$plaCod]['conteo_duracion']++;
-                }
-            }
-        }
-
-        echo '<table>';
-        echo '<thead><tr>';
-        echo '<th>Planta</th><th>Total Viajes</th><th>Cumplieron SLA</th><th>Tiempo Sobrante (Anticipados)</th><th>Tiempo Excedidos (Retrasos)</th><th>Tiempo Modificado</th><th>En Tránsito</th><th>% Puntualidad</th><th>Tiempo Prom. Real</th><th>Diferencia de Tiempo</th>';
-        echo '</tr></thead><tbody>';
-
-        foreach ($plantasMap as $p) {
-            $p_fin = $p['cumplidos'] + $p['anticipados'] + $p['excedidos'];
-            $p_a_tiempo = $p['cumplidos'] + $p['anticipados'];
-            $pct_cumplimiento = $p_fin > 0 ? round(($p_a_tiempo / $p_fin) * 100, 1) : 0;
-            $t_prom_min = $p['conteo_duracion'] > 0 ? round($p['suma_duracion'] / $p['conteo_duracion']) : 0;
-            $h_prom_min = $p['conteo_holgura'] > 0 ? round($p['suma_holgura'] / $p['conteo_holgura']) : 0;
-
-            $hReal = floor($t_prom_min / 60);
-            $mReal = $t_prom_min % 60;
-            $tStr = ($hReal > 0 ? $hReal . 'h ' : '') . $mReal . 'm';
-
-            $hHolg = floor($h_prom_min / 60);
-            $mHolg = $h_prom_min % 60;
-            $holgStr = ($h_prom_min > 0) ? ('-' . ($hHolg > 0 ? $hHolg . 'h ' : '') . $mHolg . 'm') : '-';
-
-            echo '<tr>';
-            echo '<td>' . htmlspecialchars($p['Pla_Nom']) . '</td>';
-            echo '<td style="text-align:center;">' . $p['total'] . '</td>';
-            echo '<td style="text-align:center; color:#198754; font-weight:bold;">' . $p_a_tiempo . '</td>';
-            echo '<td style="text-align:center; color:#0284c7; font-weight:bold;">' . $p['anticipados'] . '</td>';
-            echo '<td style="text-align:center; color:#dc3545; font-weight:bold;">' . $p['excedidos'] . '</td>';
-            echo '<td style="text-align:center; color:#d97706; font-weight:bold;">' . $p['modificados'] . '</td>';
-            echo '<td style="text-align:center; color:#6c757d;">' . $p['en_transito'] . '</td>';
-            echo '<td style="text-align:center; font-weight:bold;">' . $pct_cumplimiento . '%</td>';
-            echo '<td style="text-align:center;">' . ($p['conteo_duracion'] > 0 ? $tStr : '-') . '</td>';
-            echo '<td style="text-align:center; color:#0891b2; font-weight:bold;">' . $holgStr . '</td>';
-            echo '</tr>';
+            echo '<tr><td>' . htmlspecialchars($p['Pla_Nom']) . '</td><td style="text-align:center;">' . $p['total'] . '</td><td style="text-align:center; color:#198754; font-weight:bold;">' . $p['cumplieron_sla'] . '</td><td style="text-align:center; color:#0284c7; font-weight:bold;">' . $p['anticipados'] . '</td><td style="text-align:center; color:#dc3545; font-weight:bold;">' . $p['excedidos'] . '</td><td style="text-align:center; color:#6c757d;">' . $p['en_transito'] . '</td><td style="text-align:center; font-weight:bold;">' . $p['pct_cumplimiento'] . '%</td><td style="text-align:center; color:#2C5D94; font-weight:bold;">' . $cfgStr . '</td><td style="text-align:center;">' . $tStr . '</td><td style="text-align:center;">' . $pctConsumido . '%</td><td style="text-align:center; font-weight:bold;">' . $difStr . '</td></tr>';
         }
         echo '</tbody></table>';
     } else {
-        // CASO 2: PLANTA ESPECÍFICA -> Exportar Detalle de Viajes
-        echo '<table>';
-        echo '<thead><tr>';
-        echo '<th>N° Manifiesto</th><th>Planta</th><th>Chofer</th><th>Placa</th><th>Hora Salida</th><th>Hora Arribo Planificada</th><th>Hora Arribo Real (GE)</th><th>Tiempo Configurado (min)</th><th>Tiempo Real (min)</th><th>Diferencia de Tiempo (min)</th><th>Arribo Modificado</th><th>Estado SLA</th>';
-        echo '</tr></thead><tbody>';
-
-        if ($res !== false) {
-            while ($row = $obBD_con1->fetch_assoc($res)) {
-                $obBD_con1->utf8_change_param($row);
-                $fes = !empty($row['Man_Fes']) ? $row['Man_Fes'] : (!empty($row['Man_Fec']) ? $row['Man_Fec'] : '');
-                $fea = !empty($row['Man_Fea']) ? $row['Man_Fea'] : '';
-                $pla_dis = !empty($row['Pla_Dis']) ? $row['Pla_Dis'] : '02:00';
-
-                $minutos_pla_dis = 120;
-                if (preg_match('/^(\d{1,2}):(\d{1,2})(:(\d{1,2}))?$/', $pla_dis, $pm)) {
-                    $minutos_pla_dis = (intval($pm[1]) * 60) + intval($pm[2]);
-                }
-
-                $ts_salida = strtotime($fes);
-                $ts_arribo_teorico = ($ts_salida && $ts_salida > 0) ? ($ts_salida + ($minutos_pla_dis * 60)) : null;
-
-                $es_modificado = false;
-                $ts_fea = !empty($fea) ? strtotime($fea) : null;
-                if ($ts_fea && $ts_arribo_teorico && abs($ts_fea - $ts_arribo_teorico) > 120) {
-                    $es_modificado = true;
-                }
-
-                $fecha_entrada_real = null;
-                if (!empty($row['Man_Usu'])) {
-                    $usu_data = json_decode($row['Man_Usu'], true);
-                    if (is_array($usu_data)) {
-                        $eventos = isset($usu_data[0]) && is_array($usu_data[0]) ? $usu_data : array($usu_data);
-                        foreach ($eventos as $ev) {
-                            $ev_tip = isset($ev['Man_Tip']) ? $ev['Man_Tip'] : (isset($ev['man_tip']) ? $ev['man_tip'] : '');
-                            $ev_fec = isset($ev['Fecha']) ? $ev['Fecha'] : (isset($ev['fecha']) ? $ev['fecha'] : '');
-                            if ($ev_tip === 'GE' && (!$fecha_entrada_real || $ev_fec < $fecha_entrada_real)) {
-                                $fecha_entrada_real = $ev_fec;
-                            }
-                        }
-                    }
-                }
-
-                $duracion_real_min = 0;
-                $retraso_min = 0;
-                $estado = 'en_transito';
-
-                if ($fecha_entrada_real) {
-                    $ts_ge = strtotime($fecha_entrada_real);
-                    if ($ts_salida && $ts_ge > $ts_salida) {
-                        $duracion_real_min = round(($ts_ge - $ts_salida) / 60);
-                    }
-
-                    $ts_target_arribo = $ts_fea ? $ts_fea : $ts_arribo_teorico;
-                    if ($ts_target_arribo) {
-                        $retraso_min = round(($ts_ge - $ts_target_arribo) / 60);
-                        if ($retraso_min > 5) {
-                            $estado = 'excedido';
-                        } elseif ($retraso_min < -5) {
-                            $estado = 'anticipado';
-                        } else {
-                            $estado = 'cumplido';
-                        }
-                    } else {
-                        $estado = 'cumplido';
-                    }
-                }
-
-                if ($estado_filtro !== 'todos') {
-                    if ($estado_filtro === 'modificado' && !$es_modificado) continue;
-                    if ($estado_filtro !== 'modificado' && $estado !== $estado_filtro) continue;
-                }
-
-                $txtEstado = 'A TIEMPO';
-                if ($estado === 'anticipado') $txtEstado = 'ANTICIPADO';
-                if ($estado === 'excedido') $txtEstado = 'EXCEDIDO';
-                if ($estado === 'en_transito') $txtEstado = 'EN TRÁNSITO';
-
-                echo '<tr>';
-                echo '<td>' . htmlspecialchars($row['ManNum']) . '</td>';
-                echo '<td>' . htmlspecialchars($row['Pla_Nom']) . '</td>';
-                echo '<td>' . htmlspecialchars($row['chofer_nombre']) . '</td>';
-                echo '<td>' . htmlspecialchars($row['Veh_Pla']) . '</td>';
-                echo '<td>' . ($fes ? date('d/m/Y H:i', strtotime($fes)) : '-') . '</td>';
-                echo '<td>' . ($fea ? date('d/m/Y H:i', strtotime($fea)) : '-') . '</td>';
-                echo '<td>' . ($fecha_entrada_real ? date('d/m/Y H:i', strtotime($fecha_entrada_real)) : 'En tránsito') . '</td>';
-                echo '<td style="text-align:center;">' . $minutos_pla_dis . '</td>';
-                echo '<td style="text-align:center;">' . $duracion_real_min . '</td>';
-                echo '<td style="text-align:center;">' . $retraso_min . '</td>';
-                echo '<td style="text-align:center;">' . ($es_modificado ? 'SI' : 'NO') . '</td>';
-                echo '<td style="text-align:center;">' . $txtEstado . '</td>';
-                echo '</tr>';
-            }
+        echo '<table><thead><tr><th>N° Manifiesto</th><th>Planta</th><th>Chofer</th><th>Placa</th><th>Hora Salida</th><th>Hora Arribo Planificada</th><th>Hora Arribo Real (GE)</th><th>Tiempo Configurado (min)</th><th>Tiempo Real (min)</th><th>Diferencia de Tiempo (min)</th><th>Arribo Modificado</th><th>Estado SLA</th></tr></thead><tbody>';
+        $labelsEstado = array('cumplido' => 'A TIEMPO', 'anticipado' => 'ANTICIPADO', 'excedido' => 'EXCEDIDO', 'en_transito' => 'EN TRÁNSITO');
+        foreach ($data['listado'] as $v) {
+            $txtEstado = isset($labelsEstado[$v['estado']]) ? $labelsEstado[$v['estado']] : strtoupper($v['estado']);
+            echo '<tr><td>' . htmlspecialchars($v['ManNum']) . '</td><td>' . htmlspecialchars($v['Pla_Nom']) . '</td><td>' . htmlspecialchars($v['chofer_nombre']) . '</td><td>' . htmlspecialchars($v['Veh_Pla']) . '</td><td>' . $v['fecha_salida'] . '</td><td>' . $v['fecha_arribo_planificada'] . '</td><td>' . $v['fecha_arribo_real'] . '</td><td style="text-align:center;">' . $v['tiempo_configurado_min'] . '</td><td style="text-align:center;">' . $v['tiempo_real_min'] . '</td><td style="text-align:center;">' . $v['retraso_min'] . '</td><td style="text-align:center;">' . ($v['es_modificado'] ? 'SI' : 'NO') . '</td><td style="text-align:center;">' . $txtEstado . '</td></tr>';
         }
         echo '</tbody></table>';
     }
-
     echo '</body></html>';
     @ob_end_flush();
     exit;
@@ -4757,7 +4380,7 @@ if (isset($_GET['exportarExcelTiemposAjax']) || isset($exportarExcelTiemposAjax)
             soloTabChoferPlaca: <?php echo (!empty($soloTabChoferPlaca)) ? 'true' : 'false'; ?>
         };
     </script>
-    <script src="../VALIDACIONES/man_val_dashboard_turnos.js?a=93"></script>
+    <script src="../VALIDACIONES/man_val_dashboard_turnos.js?a=102"></script>
 </BODY>
 
 </HTML>

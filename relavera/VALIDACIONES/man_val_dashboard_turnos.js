@@ -186,18 +186,6 @@ $(function () {
   });
 });
 
-function sincronizarFechasDesdeMesTiempos(mesVal) {
-  if (!mesVal) return;
-  var parts = mesVal.split("-");
-  var year = parseInt(parts[0], 10);
-  var month = parseInt(parts[1], 10);
-  var mesStr = String(month).padStart(2, "0");
-  var lastDay = new Date(year, month, 0).getDate();
-  $("#fecha_inicio_tiempos").val(year + "-" + mesStr + "-01");
-  $("#fecha_fin_tiempos").val(
-    year + "-" + mesStr + "-" + String(lastDay).padStart(2, "0"),
-  );
-}
 
 function sincronizarFechasDesdeMesEjecutivo(mesVal) {
   if (!mesVal) return;
@@ -742,8 +730,7 @@ function crearChartTendenciaDia(fechaId, ignoreVisibility) {
   $("#promTendencia_" + fechaId).text(prom);
 
   var vsGarita = $("#chk_vs_garita_in_config").is(":checked");
-
-  var datasets = [];
+  var datasets = obtenerDatasetsTendenciaConfig(turnosData, vsGarita);
   var scalesObj = {
     y: {
       type: "linear",
@@ -752,68 +739,6 @@ function crearChartTendenciaDia(fechaId, ignoreVisibility) {
       title: { display: true, text: "Cantidad" },
     },
   };
-
-  if (vsGarita) {
-    var datosGarita = turnosData.map(function (t) {
-      return t.garita_in || 0;
-    });
-
-    datasets = [
-      {
-        label: "Llegadas Garita IN",
-        data: datosGarita,
-        borderColor: "#10b981",
-        borderWidth: 3,
-        backgroundColor: "rgba(16, 185, 129, 0.15)",
-        fill: true,
-        tension: 0.2,
-        yAxisID: "y",
-      },
-      {
-        label: "Manifiestos Creados",
-        data: datos,
-        borderColor: "#94a3b8",
-        borderWidth: 2,
-        borderDash: [4, 3],
-        fill: false,
-        tension: 0.2,
-        yAxisID: "y",
-      },
-      {
-        label: "Prom. Creados",
-        data: datos.map(function () {
-          return prom;
-        }),
-        borderColor: "#cbd5e1",
-        borderDash: [2, 2],
-        fill: false,
-        yAxisID: "y",
-      },
-    ];
-  } else {
-    datasets = [
-      {
-        label: "Manifiestos Creados",
-        data: datos,
-        borderColor: "#2C5D94",
-        borderWidth: 2,
-        backgroundColor: "rgba(44, 93, 148, 0.1)",
-        fill: true,
-        tension: 0.2,
-        yAxisID: "y",
-      },
-      {
-        label: "Prom. Creados",
-        data: datos.map(function () {
-          return prom;
-        }),
-        borderColor: "#94a3b8",
-        borderDash: [4, 2],
-        fill: false,
-        yAxisID: "y",
-      },
-    ];
-  }
 
   if (typeof Chart !== "undefined") {
     var ctx = document.getElementById(canvasId);
@@ -3240,25 +3165,8 @@ function imprimirReporte() {
             var labels = turnosData.map(function (t) {
               return (t.horario || "").replace(/\s*-\s*/g, "–");
             });
-            var datos = turnosData.map(function (t) { return t.ocupados || 0; });
-            var prom = datos.length > 0
-              ? (datos.reduce(function (a, b) { return a + b; }, 0) / datos.length).toFixed(1)
-              : 0;
             var vsGarita = $("#chk_vs_garita_in_config").is(":checked");
-            var tmpDatasets;
-            if (vsGarita) {
-              var datosGarita = turnosData.map(function (t) { return t.garita_in || 0; });
-              tmpDatasets = [
-                { label: "Llegadas Garita IN", data: datosGarita, borderColor: "#10b981", borderWidth: 3, backgroundColor: "rgba(16,185,129,0.15)", fill: true, tension: 0.2 },
-                { label: "Manifiestos Creados", data: datos, borderColor: "#94a3b8", borderWidth: 2, borderDash: [4, 3], fill: false, tension: 0.2 },
-                { label: "Prom. Creados", data: datos.map(function () { return prom; }), borderColor: "#cbd5e1", borderDash: [2, 2], fill: false }
-              ];
-            } else {
-              tmpDatasets = [
-                { label: "Manifiestos Creados", data: datos, borderColor: "#2C5D94", borderWidth: 2, backgroundColor: "rgba(44,93,148,0.1)", fill: true, tension: 0.2 },
-                { label: "Prom. Creados", data: datos.map(function () { return prom; }), borderColor: "#94a3b8", borderDash: [4, 2], fill: false }
-              ];
-            }
+            var tmpDatasets = obtenerDatasetsTendenciaConfig(turnosData, vsGarita);
             var tmpChart = new Chart(offCanvas, {
               type: "line",
               data: { labels: labels, datasets: tmpDatasets },
@@ -8017,22 +7925,49 @@ function cargarPlantasTiempos() {
   });
 }
 
+function obtenerDatasetsTendenciaConfig(turnosData, vsGarita) {
+  var datos = turnosData.map(function (t) { return t.ocupados || 0; });
+  var prom = datos.length > 0 ? (datos.reduce(function (a, b) { return a + b; }, 0) / datos.length).toFixed(1) : 0;
+  if (vsGarita) {
+    return [
+      { label: "Llegadas Garita IN", data: turnosData.map(function (t) { return t.garita_in || 0; }), borderColor: "#10b981", borderWidth: 3, backgroundColor: "rgba(16, 185, 129, 0.15)", fill: true, tension: 0.2, yAxisID: "y" },
+      { label: "Manifiestos Creados", data: datos, borderColor: "#94a3b8", borderWidth: 2, borderDash: [4, 3], fill: false, tension: 0.2, yAxisID: "y" },
+      { label: "Prom. Creados", data: datos.map(function () { return prom; }), borderColor: "#cbd5e1", borderDash: [2, 2], fill: false, yAxisID: "y" }
+    ];
+  }
+  return [
+    { label: "Manifiestos Creados", data: datos, borderColor: "#2C5D94", borderWidth: 2, backgroundColor: "rgba(44, 93, 148, 0.1)", fill: true, tension: 0.2, yAxisID: "y" },
+    { label: "Prom. Creados", data: datos.map(function () { return prom; }), borderColor: "#94a3b8", borderDash: [4, 2], fill: false, yAxisID: "y" }
+  ];
+}
+
+function formatoMinutosSla(min, conSigno) {
+  if (!min && min !== 0) return "-";
+  var abs = Math.abs(min);
+  var h = Math.floor(abs / 60);
+  var m = abs % 60;
+  var txt = (h > 0 ? h + "h " : "") + m + "m";
+  return conSigno ? (min > 0 ? "+" + txt : (min < 0 ? "-" + txt : txt)) : txt;
+}
+
+function formatoHoraHHMM(min) {
+  if (!min && min !== 0) return "00:00 H";
+  var abs = Math.abs(min);
+  var h = Math.floor(abs / 60);
+  var m = abs % 60;
+  return (h < 10 ? "0" + h : h) + ":" + (m < 10 ? "0" + m : m) + " H";
+}
+
 function sincronizarFechasDesdeMesTiempos(mesVal) {
   if (!mesVal) return;
-  var parts = mesVal.split("-");
-  var year = parseInt(parts[0], 10);
-  var month = parseInt(parts[1], 10);
-  var lastDay = new Date(year, month, 0).getDate();
-  var mesStr = String(month).padStart(2, "0");
-  $("#fecha_inicio_tiempos").val(year + "-" + mesStr + "-01");
-  $("#fecha_fin_tiempos").val(
-    year + "-" + mesStr + "-" + String(lastDay).padStart(2, "0"),
-  );
+  var p = mesVal.split("-"), y = parseInt(p[0], 10), m = parseInt(p[1], 10);
+  var lastDay = new Date(y, m, 0).getDate(), mStr = String(m).padStart(2, "0");
+  $("#fecha_inicio_tiempos").val(y + "-" + mStr + "-01");
+  $("#fecha_fin_tiempos").val(y + "-" + mStr + "-" + String(lastDay).padStart(2, "0"));
 }
 
 function cargarDashboardTiempos() {
-  var fi = $("#fecha_inicio_tiempos").val();
-  var ff = $("#fecha_fin_tiempos").val();
+  var fi = $("#fecha_inicio_tiempos").val(), ff = $("#fecha_fin_tiempos").val();
   var plaCod = $("#select_planta_tiempos").val() || 0;
   var estadoFiltro = $("#select_estado_tiempos").val() || "todos";
 
@@ -8042,881 +7977,189 @@ function cargarDashboardTiempos() {
   }
 
   var $btn = $("#btnBuscarTiempos");
-  $btn
-    .prop("disabled", true)
-    .html('<i class="fa fa-spinner fa-spin"></i> Buscando...');
-
-  $("#dashboardContentTiempos").html(
-    '<div class="loading"><i class="fa fa-spinner fa-spin"></i><p>Cargando análisis de tiempos y arribos...</p></div>',
-  );
+  $btn.prop("disabled", true).html('<i class="fa fa-spinner fa-spin"></i> Buscando...');
+  $("#dashboardContentTiempos").html('<div class="loading"><i class="fa fa-spinner fa-spin"></i><p>Cargando análisis de tiempos y arribos...</p></div>');
 
   $.ajax({
     url: "",
-    data: {
-      getDashboardTiemposArribosAjax: true,
-      fecha_inicio: fi,
-      fecha_fin: ff,
-      Pla_Cod: plaCod,
-      estado_filtro: estadoFiltro,
-    },
+    data: { getDashboardTiemposArribosAjax: true, fecha_inicio: fi, fecha_fin: ff, Pla_Cod: plaCod, estado_filtro: estadoFiltro },
     dataType: "json",
-    timeout: 120000, // 2 minutos para el procesamiento de rangos extensos
+    timeout: 120000,
     success: function (res) {
       if (!res.success) {
-        $("#dashboardContentTiempos").html(
-          '<div class="alert alert-danger"><i class="fa fa-exclamation-triangle"></i> ' +
-            (res.message || "Error al cargar los datos.") +
-            "</div>",
-        );
+        $("#dashboardContentTiempos").html('<div class="alert alert-danger"><i class="fa fa-exclamation-triangle"></i> ' + (res.message || "Error al cargar los datos.") + '</div>');
         return;
       }
       datosDashboardTiempos = res;
       mostrarDashboardTiempos(res);
     },
-    error: function (xhr, status, error) {
-      var msg = "Error de comunicación con el servidor.";
-      if (status === "timeout") {
-        msg =
-          "La consulta excedió el tiempo límite debido al volumen de datos. Intente consultar por un rango más corto o filtrar por una Planta en específico.";
-      }
-      $("#dashboardContentTiempos").html(
-        '<div class="alert alert-danger"><i class="fa fa-exclamation-triangle"></i> ' +
-          msg +
-          "</div>",
-      );
+    error: function (xhr, status) {
+      var msg = (status === "timeout") ? "La consulta excedió el tiempo límite. Intente un rango más corto o filtrar por Planta." : "Error de comunicación con el servidor.";
+      $("#dashboardContentTiempos").html('<div class="alert alert-danger"><i class="fa fa-exclamation-triangle"></i> ' + msg + '</div>');
     },
     complete: function () {
-      $btn
-        .prop("disabled", false)
-        .html('<span class="glyphicon glyphicon-search"></span> Buscar');
-    },
+      $btn.prop("disabled", false).html('<span class="glyphicon glyphicon-search"></span> Buscar');
+    }
   });
 }
 
 function mostrarDashboardTiempos(datos) {
-  var kpis = datos.kpis || {};
-  var listado = datos.listado || [];
-  var plantas = datos.plantas_resumen || [];
-
-  // Ordenar plantas: Mayor a menor por Tiempo Configurado Total, luego por Tiempo Consumido Real
-  if (plantas && plantas.length > 0) {
-    plantas.sort(function (a, b) {
-      var configA =
-        (a.tiempo_promedio_min || 0) +
-        (a.holgura_promedio_min > 0 ? a.holgura_promedio_min : 0);
-      var configB =
-        (b.tiempo_promedio_min || 0) +
-        (b.holgura_promedio_min > 0 ? b.holgura_promedio_min : 0);
-      if (configB !== configA) {
-        return configB - configA; // De mayor a menor horas configuradas
-      }
-      var realA = a.tiempo_promedio_min || 0;
-      var realB = b.tiempo_promedio_min || 0;
-      return realB - realA; // De mayor a menor horas consumidas
-    });
-  }
-
-  var html = "";
-
-  // Franja de Tarjetas KPI
-  html += '<div class="dashboard-kpi-strip" style="margin-bottom: 20px;">';
-
-  // KPI 1: Total Viajes
-  html += '<div class="dashboard-kpi-item">';
-  html += '<div class="dashboard-kpi-label">Total Manifiestos</div>';
-  html += '<div class="dashboard-kpi-value">' + (kpis.total || 0) + "</div>";
-  html += '<div style="font-size: 11px; color: #6c757d;">En el período</div>';
-  html += "</div>";
-
-  // KPI 2: % Cumplimiento SLA
-  var colorPctSla =
-    kpis.pct_cumplimiento >= 90
-      ? "#198754"
-      : kpis.pct_cumplimiento >= 75
-        ? "#fd7e14"
-        : "#dc3545";
-  html +=
-    '<div class="dashboard-kpi-item" style="border-left-color: ' +
-    colorPctSla +
-    ';">';
-  html += '<div class="dashboard-kpi-label">Puntualidad (SLA)</div>';
-  html +=
-    '<div class="dashboard-kpi-value" style="color: ' +
-    colorPctSla +
-    ';">' +
-    (kpis.pct_cumplimiento || 0) +
-    "%</div>";
-  html +=
-    '<div style="font-size: 11px; color: #6c757d;">' +
-    (kpis.cumplidos || 0) +
-    " viajes a tiempo</div>";
-  html += "</div>";
-
-  // KPI 3: Alertas de Tiempo Excedido
-  html +=
-    '<div class="dashboard-kpi-item" style="border-left-color: #dc3545;">';
-  html += '<div class="dashboard-kpi-label">Tiempo Excedido 🔴</div>';
-  html +=
-    '<div class="dashboard-kpi-value" style="color: #dc3545;">' +
-    (kpis.excedidos || 0) +
-    ' <span style="font-size: 12px; font-weight: normal;">(' +
-    (kpis.pct_excedidos || 0) +
-    "%)</span></div>";
-  html +=
-    '<div style="font-size: 11px; color: #6c757d;">Retraso prom: +' +
-    (kpis.promedio_retraso_min || 0) +
-    " min</div>";
-  html += "</div>";
-
-  // KPI 3.5: Con Holgura / Anticipados (Excedente de tiempo configurado)
-  var absHolgura = Math.abs(kpis.promedio_holgura_min || 0);
-  var hHolg = Math.floor(absHolgura / 60);
-  var mHolg = absHolgura % 60;
-  var textoHolguraProm = (hHolg > 0 ? hHolg + "h " : "") + mHolg + "m";
-  html +=
-    '<div class="dashboard-kpi-item" style="border-left-color: #0284c7;">';
-  html += '<div class="dashboard-kpi-label">Con Holgura 🔵</div>';
-  html +=
-    '<div class="dashboard-kpi-value" style="color: #0284c7;">' +
-    (kpis.anticipados || 0) +
-    ' <span style="font-size: 12px; font-weight: normal;">(' +
-    (kpis.pct_anticipados || 0) +
-    "%)</span></div>";
-  html +=
-    '<div style="font-size: 11px; color: #6c757d;">Holgura prom: -' +
-    (kpis.promedio_holgura_min || 0) +
-    " min (" +
-    textoHolguraProm +
-    ")</div>";
-  html += "</div>";
-
-  // KPI 4: Arribos Modificados
-  html +=
-    '<div class="dashboard-kpi-item" style="border-left-color: #ffc107;">';
-  html += '<div class="dashboard-kpi-label">Arribos Modificados 🟡</div>';
-  html +=
-    '<div class="dashboard-kpi-value" style="color: #d97706;">' +
-    (kpis.modificados || 0) +
-    "</div>";
-  html +=
-    '<div style="font-size: 11px; color: #6c757d;">Reprogramaciones</div>';
-  html += "</div>";
-
-  // KPI 5: Tiempo Promedio Real de Tránsito
-  var hrsReal = Math.floor((kpis.promedio_duracion_real_min || 0) / 60);
-  var minReal = (kpis.promedio_duracion_real_min || 0) % 60;
-  var textoTiempoProm = (hrsReal > 0 ? hrsReal + "h " : "") + minReal + "m";
-  html +=
-    '<div class="dashboard-kpi-item" style="border-left-color: #0dcaf0;">';
-  html += '<div class="dashboard-kpi-label">Tiempo Prom. Tránsito</div>';
-  html +=
-    '<div class="dashboard-kpi-value" style="color: #0891b2;">' +
-    textoTiempoProm +
-    "</div>";
-  html +=
-    '<div style="font-size: 11px; color: #6c757d;">' +
-    (kpis.en_transito || 0) +
-    " en tránsito</div>";
-  html += "</div>";
-
-  html += "</div>"; // Cierra franja de KPIs
-
+  var kpis = datos.kpis || {}, listado = datos.listado || [], plantas = datos.plantas_resumen || [];
   var plaCodFiltro = parseInt($("#select_planta_tiempos").val(), 10) || 0;
 
-  // Gráfico Estadístico Comparativo por Planta (Solo para "Todas las plantas")
+  if (plantas && plantas.length > 0) {
+    plantas.sort(function (a, b) {
+      return (b.tiempo_promedio_min || 0) - (a.tiempo_promedio_min || 0);
+    });
+  }
+
+  var colorPctSla = (kpis.pct_cumplimiento >= 90) ? "#198754" : (kpis.pct_cumplimiento >= 75 ? "#fd7e14" : "#dc3545");
+  var kpiCards = [
+    { label: "Total Manifiestos", val: kpis.total || 0, sub: "En el período", color: "#2C5D94" },
+    { label: "Puntualidad (SLA)", val: (kpis.pct_cumplimiento || 0) + "%", sub: (kpis.cumplidos || 0) + " viajes a tiempo", color: colorPctSla },
+    { label: "Tiempo Excedido 🔴", val: (kpis.excedidos || 0) + ' <span style="font-size:12px;font-weight:normal;">(' + (kpis.pct_excedidos || 0) + '%)</span>', sub: "Retraso prom: +" + (kpis.promedio_retraso_min || 0) + " min", color: "#dc3545" },
+    { label: "Con Holgura 🔵", val: (kpis.anticipados || 0) + ' <span style="font-size:12px;font-weight:normal;">(' + (kpis.pct_anticipados || 0) + '%)</span>', sub: "Holgura prom: -" + Math.abs(kpis.promedio_holgura_min || 0) + " min (" + formatoMinutosSla(kpis.promedio_holgura_min) + ")", color: "#0284c7" },
+    { label: "Tiempo Prom. Tránsito", val: formatoMinutosSla(kpis.promedio_duracion_real_min), sub: (kpis.en_transito || 0) + " en tránsito", color: "#0dcaf0", valColor: "#0891b2" }
+  ];
+
+  var html = '<div class="dashboard-kpi-strip" style="margin-bottom: 20px;">' + kpiCards.map(function (c) {
+    return '<div class="dashboard-kpi-item" style="border-left-color: ' + c.color + ';"><div class="dashboard-kpi-label">' + c.label + '</div><div class="dashboard-kpi-value" style="color: ' + (c.valColor || c.color) + ';">' + c.val + '</div><div style="font-size: 11px; color: #6c757d;">' + c.sub + '</div></div>';
+  }).join('') + '</div>';
+
   if (plaCodFiltro === 0 && plantas.length > 0) {
     var chartHeightPx = Math.max(180, plantas.length * 45 + 50);
-    html +=
-      '<div class="panel panel-default panel-chart-tiempos-print" style="margin-bottom: 20px;">';
-    html +=
-      '<div class="panel-heading" style="background: #f8f9fa; font-weight: 600; color: #2C5D94;"><i class="fa fa-bar-chart"></i> Evaluación de Tiempos por Planta de Beneficio (Tiempo Consumido vs Rango Configurado)</div>';
-    html += '<div class="panel-body">';
-
-    // Contenedor Pantalla: Chart.js Canvas
-    html +=
-      '<div class="chart-trend-container" style="position: relative; height: ' +
-      chartHeightPx +
-      'px; width: 100%;">';
-    html += '<canvas id="chartTendenciaTiempos"></canvas>';
-    html += "</div>";
-
-    // Contenedor Impresión: Filas HTML independientes que se dividen por página exactamente como una tabla
-    html += '<div class="chart-print-rows-container" style="display: none;">';
-    plantas.forEach(function (p) {
+    html += '<div class="panel panel-default panel-chart-tiempos-print" style="margin-bottom: 20px;"><div class="panel-heading" style="background: #f8f9fa; font-weight: 600; color: #2C5D94;"><i class="fa fa-bar-chart"></i> Evaluación de Tiempos por Planta de Beneficio (Tiempo Consumido vs Rango Configurado)</div><div class="panel-body"><div class="chart-trend-container" style="position: relative; height: ' + chartHeightPx + 'px; width: 100%;"><canvas id="chartTendenciaTiempos"></canvas></div><div class="chart-print-rows-container" style="display: none;">' + plantas.map(function (p) {
       var realMin = p.tiempo_promedio_min || 0;
-      var configMin =
-        p.tiempo_configurado_min ||
-        realMin + (p.holgura_promedio_min > 0 ? p.holgura_promedio_min : 0);
-      if (configMin <= 0) return;
+      var configMin = p.tiempo_configurado_min || (realMin + (p.holgura_promedio_min > 0 ? p.holgura_promedio_min : 0));
+      if (configMin <= 0) return '';
+      var holgMin = Math.max(0, configMin - realMin), excesoMin = Math.max(0, realMin - configMin);
+      var pctC = Math.round((realMin / configMin) * 100), pctS = Math.round((holgMin / configMin) * 100), pctE = Math.round((excesoMin / configMin) * 100);
+      var txtR = formatoMinutosSla(realMin), txtH = formatoMinutosSla(holgMin), txtE = formatoMinutosSla(excesoMin), txtC = formatoMinutosSla(configMin), txtHoraConfig = formatoHoraHHMM(configMin);
+      var txtSummary = (excesoMin > 0) ? (txtHoraConfig + " (Ext: +" + txtE + " 🔴)") : txtHoraConfig;
+      var barContent = (realMin <= configMin)
+        ? (pctC > 0 ? '<div style="width:' + pctC + '%;background:#2C5D94;color:white;font-weight:bold;font-size:8px;text-align:center;line-height:16px;overflow:hidden;">' + (pctC >= 15 ? pctC + "% (" + txtR + ")" : "") + '</div>' : '') + (pctS > 0 ? '<div style="width:' + pctS + '%;background:#0284c7;color:white;font-weight:bold;font-size:8px;text-align:center;line-height:16px;overflow:hidden;">' + (pctS >= 15 ? pctS + "% (" + txtH + ")" : "") + '</div>' : '')
+        : '<div style="width:' + Math.round((configMin / realMin) * 100) + '%;background:#2C5D94;color:white;font-weight:bold;font-size:8px;text-align:center;line-height:16px;overflow:hidden;">100% Config (' + txtC + ')</div><div style="width:' + (100 - Math.round((configMin / realMin) * 100)) + '%;background:#dc3545;color:white;font-weight:bold;font-size:8px;text-align:center;line-height:16px;overflow:hidden;">+' + pctE + "% (+" + txtE + ")</div>";
+      return '<div class="chart-print-row" style="display:flex;align-items:center;margin-bottom:6px;font-size:10px;"><div style="width:210px;font-weight:bold;color:#2C5D94;text-align:right;padding-right:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (p.Pla_Nom || "") + '</div><div style="flex:1;display:flex;height:16px;background:#e9ecef;border-radius:3px;overflow:hidden;min-width:140px;">' + barContent + '</div><div style="width:200px;padding-left:10px;font-weight:bold;color:' + (excesoMin > 0 ? "#dc3545" : "#2C5D94") + ';white-space:nowrap;">' + txtSummary + '</div></div>';
+    }).join('') + '</div></div></div>';
 
-      var holgMin = Math.max(0, configMin - realMin);
-      var excesoMin = Math.max(0, realMin - configMin);
-
-      var pctConsumido = Math.round((realMin / configMin) * 100);
-      var pctSobra = Math.round((holgMin / configMin) * 100);
-      var pctExceso = Math.round((excesoMin / configMin) * 100);
-
-      var hrsR = Math.floor(realMin / 60);
-      var minsR = realMin % 60;
-      var txtR = (hrsR > 0 ? hrsR + "h " : "") + minsR + "m";
-
-      var hrsH = Math.floor(holgMin / 60);
-      var minsH = holgMin % 60;
-      var txtH = (hrsH > 0 ? hrsH + "h " : "") + minsH + "m";
-
-      var hrsE = Math.floor(excesoMin / 60);
-      var minsE = excesoMin % 60;
-      var txtE = (hrsE > 0 ? hrsE + "h " : "") + minsE + "m";
-
-      var hrsC = Math.floor(configMin / 60);
-      var minsC = configMin % 60;
-      var txtC = (hrsC > 0 ? hrsC + "h " : "") + minsC + "m";
-
-      var txtSummary =
-        excesoMin > 0
-          ? txtR +
-            " real (" +
-            pctConsumido +
-            "% de " +
-            txtC +
-            " 100% config — Extensión: +" +
-            txtE +
-            " 🔴)"
-          : txtR + " real (" + pctConsumido + "% de " + txtC + " 100% config)";
-
-      var colorSummary = excesoMin > 0 ? "#dc3545" : "#2C5D94";
-
-      html +=
-        '<div class="chart-print-row" style="display: flex; align-items: center; margin-bottom: 6px; font-size: 10px;">';
-      html +=
-        '<div style="width: 210px; font-weight: bold; color: #2C5D94; text-align: right; padding-right: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' +
-        (p.Pla_Nom || "") +
-        "</div>";
-
-      html +=
-        '<div style="flex: 1; display: flex; height: 16px; background: #e9ecef; border-radius: 3px; overflow: hidden; min-width: 140px;">';
-      if (realMin <= configMin) {
-        if (pctConsumido > 0) {
-          html +=
-            '<div style="width: ' +
-            pctConsumido +
-            '%; background: #2C5D94; color: white; font-weight: bold; font-size: 8px; text-align: center; line-height: 16px; overflow: hidden;">' +
-            (pctConsumido >= 15 ? pctConsumido + "% (" + txtR + ")" : "") +
-            "</div>";
-        }
-        if (pctSobra > 0) {
-          html +=
-            '<div style="width: ' +
-            pctSobra +
-            '%; background: #0284c7; color: white; font-weight: bold; font-size: 8px; text-align: center; line-height: 16px; overflow: hidden;">' +
-            (pctSobra >= 15 ? pctSobra + "% (" + txtH + ")" : "") +
-            "</div>";
-        }
-      } else {
-        var pctBase = Math.round((configMin / realMin) * 100);
-        var pctExc = 100 - pctBase;
-        html +=
-          '<div style="width: ' +
-          pctBase +
-          '%; background: #2C5D94; color: white; font-weight: bold; font-size: 8px; text-align: center; line-height: 16px; overflow: hidden;">100% Config (' +
-          txtC +
-          ")</div>";
-        html +=
-          '<div style="width: ' +
-          pctExc +
-          '%; background: #dc3545; color: white; font-weight: bold; font-size: 8px; text-align: center; line-height: 16px; overflow: hidden;">+' +
-          pctExceso +
-          "% (+" +
-          txtE +
-          ")</div>";
-      }
-      html += "</div>";
-
-      html +=
-        '<div style="width: 290px; padding-left: 10px; font-weight: bold; color: ' +
-        colorSummary +
-        '; white-space: nowrap;">' +
-        txtSummary +
-        "</div>";
-      html += "</div>";
-    });
-    html += "</div>";
-
-    html += "</div></div>";
+    html += '<div class="panel panel-default" style="margin-bottom: 20px;"><div class="panel-heading" style="background: #f8f9fa; font-weight: 600; color: #2C5D94;"><i class="fa fa-building-o"></i> Resumen de Cumplimiento de Arribo por Planta</div><div class="panel-body" style="padding: 0;"><div class="table-responsive"><table class="table table-hover table-striped" style="margin-bottom: 0;"><thead><tr style="background: #2C5D94; color: white;"><th>Planta</th><th class="text-center">Total Viajes</th><th class="text-center" title="Viajes que llegaron dentro del horario permitido">🟢 Viajes a Tiempo</th><th class="text-center" title="Viajes que llegaron antes del tiempo máximo">🔵 Con Holgura</th><th class="text-center" title="Viajes que superaron el tiempo máximo configurado">🔴 Con Retraso</th><th class="text-center" title="Viajes actualmente en ruta">⚪ En Tránsito</th><th class="text-center">% Puntualidad SLA</th><th class="text-center">Tiempo Configurado</th><th class="text-center">Tiempo Prom. Real</th><th class="text-center">% Consumido</th><th class="text-center">Diferencia Prom.</th></tr></thead><tbody>' + plantas.map(function (p) {
+      var realMin = p.tiempo_promedio_min || 0;
+      var configMin = p.tiempo_configurado_min || (realMin + (p.holgura_promedio_min > 0 ? p.holgura_promedio_min : 0));
+      var pctC = configMin > 0 ? Math.round((realMin / configMin) * 100) : 0;
+      var pctColor = (p.pct_cumplimiento >= 90) ? "label-success" : (p.pct_cumplimiento >= 75 ? "label-warning" : "label-danger");
+      var pctBadge = (pctC > 100) ? "label-danger" : (pctC >= 85 ? "label-warning" : "label-info");
+      var difMin = realMin - configMin;
+      var difTexto = (difMin > 0) ? ("+" + formatoMinutosSla(difMin)) : (difMin < 0 ? ("-" + formatoMinutosSla(Math.abs(difMin))) : "0m");
+      var difColor = (difMin > 0) ? "#dc3545" : (difMin < 0 ? "#0284c7" : "#198754");
+      return '<tr><td><strong>' + (p.Pla_Nom || "") + '</strong></td><td class="text-center">' + p.total + '</td><td class="text-center" style="color:#198754;font-weight:bold;">' + (p.cumplieron_sla !== undefined ? p.cumplieron_sla : ((p.cumplidos || 0) + (p.anticipados || 0))) + '</td><td class="text-center" style="color:#0284c7;font-weight:bold;">' + (p.anticipados || 0) + '</td><td class="text-center" style="color:#dc3545;font-weight:bold;">' + p.excedidos + '</td><td class="text-center" style="color:#6c757d;">' + p.en_transito + '</td><td class="text-center"><span class="label ' + pctColor + '">' + p.pct_cumplimiento + '%</span></td><td class="text-center" style="color:#2C5D94;font-weight:bold;">' + formatoMinutosSla(configMin) + '</td><td class="text-center" style="color:#0891b2;font-weight:bold;">' + formatoMinutosSla(realMin) + '</td><td class="text-center"><span class="label ' + pctBadge + '">' + pctC + '%</span></td><td class="text-center" style="color:' + difColor + ';font-weight:bold;">' + difTexto + '</td></tr>';
+    }).join('') + '</tbody></table></div></div></div>';
   }
 
-  // Resumen por Planta (Solo para filtrado "Todas las plantas")
-  if (plaCodFiltro === 0 && plantas.length > 0) {
-    html += '<div class="panel panel-default" style="margin-bottom: 20px;">';
-    html +=
-      '<div class="panel-heading" style="background: #f8f9fa; font-weight: 600; color: #2C5D94;"><i class="fa fa-building-o"></i> Resumen de Cumplimiento de Arribo por Planta</div>';
-    html += '<div class="panel-body" style="padding: 0;">';
-    html += '<div class="table-responsive">';
-    html +=
-      '<table class="table table-hover table-striped" style="margin-bottom: 0;">';
-    html += '<thead><tr style="background: #2C5D94; color: white;">';
-    html += "<th>Planta</th>";
-    html += '<th class="text-center">Total Viajes</th>';
-    html +=
-      '<th class="text-center" title="Viajes que llegaron a tiempo o antes del horario planificado">🟢 Cumplieron SLA</th>';
-    html +=
-      '<th class="text-center" title="Viajes con arribo anticipado (tiempo configurado sobrante)">🔵 Tiempo Sobrante</th>';
-    html +=
-      '<th class="text-center" title="Viajes que excedieron el tiempo planificado">🔴 Tiempo Excedido</th>';
-    html += '<th class="text-center">🟡 Tiempo Modificado</th>';
-    html += '<th class="text-center">⚪ En Tránsito</th>';
-    html += '<th class="text-center">% Puntualidad</th>';
-    html +=
-      '<th class="text-center" title="Límite máximo de tiempo asignado por configuración (100%)">Tiempo Configurado (100%)</th>';
-    html +=
-      '<th class="text-center" title="Tiempo promedio real tomado en tránsito">Tiempo Prom. Real</th>';
-    html +=
-      '<th class="text-center" title="Porcentaje del tiempo configurado utilizado">% Consumido</th>';
-    html +=
-      '<th class="text-center" title="Promedio de tiempo excedente configurado por viaje">Diferencia de Tiempo</th>';
-    html += "</tr></thead><tbody>";
-
-    plantas.forEach(function (p) {
-      var realMin = p.tiempo_promedio_min || 0;
-      var holgMin = p.holgura_promedio_min > 0 ? p.holgura_promedio_min : 0;
-      var configMin = realMin + holgMin;
-      var pctConsumido =
-        configMin > 0 ? Math.round((realMin / configMin) * 100) : 0;
-
-      var hC = Math.floor(configMin / 60);
-      var mC = configMin % 60;
-      var configStr = (hC > 0 ? hC + "h " : "") + mC + "m";
-
-      var hR = Math.floor(realMin / 60);
-      var mR = realMin % 60;
-      var realStr = (hR > 0 ? hR + "h " : "") + mR + "m";
-
-      var hH = Math.floor(holgMin / 60);
-      var mH = holgMin % 60;
-      var holgStr =
-        holgMin > 0 ? "-" + (hH > 0 ? hH + "h " : "") + mH + "m" : "-";
-
-      var pctColor =
-        p.pct_cumplimiento >= 90
-          ? "label-success"
-          : p.pct_cumplimiento >= 75
-            ? "label-warning"
-            : "label-danger";
-      var pctConsumidoBadge =
-        pctConsumido > 100
-          ? "label-danger"
-          : pctConsumido >= 85
-            ? "label-warning"
-            : "label-info";
-      var totalCumplieron =
-        p.cumplieron_sla !== undefined
-          ? p.cumplieron_sla
-          : (p.cumplidos || 0) + (p.anticipados || 0);
-
-      html += "<tr>";
-      html += "<td><strong>" + (p.Pla_Nom || "") + "</strong></td>";
-      html += '<td class="text-center">' + p.total + "</td>";
-      html +=
-        '<td class="text-center" style="color: #198754; font-weight: bold;">' +
-        totalCumplieron +
-        "</td>";
-      html +=
-        '<td class="text-center" style="color: #0284c7; font-weight: bold;">' +
-        (p.anticipados || 0) +
-        "</td>";
-      html +=
-        '<td class="text-center" style="color: #dc3545; font-weight: bold;">' +
-        p.excedidos +
-        "</td>";
-      html +=
-        '<td class="text-center" style="color: #d97706; font-weight: bold;">' +
-        p.modificados +
-        "</td>";
-      html +=
-        '<td class="text-center" style="color: #6c757d;">' +
-        p.en_transito +
-        "</td>";
-      html +=
-        '<td class="text-center"><span class="label ' +
-        pctColor +
-        '">' +
-        p.pct_cumplimiento +
-        "%</span></td>";
-      html +=
-        '<td class="text-center" style="color: #2C5D94; font-weight: bold;">' +
-        configStr +
-        "</td>";
-      html +=
-        '<td class="text-center" style="color: #0891b2; font-weight: bold;">' +
-        realStr +
-        "</td>";
-      html +=
-        '<td class="text-center"><span class="label ' +
-        pctConsumidoBadge +
-        '">' +
-        pctConsumido +
-        "%</span></td>";
-      html +=
-        '<td class="text-center" style="color: #0284c7; font-weight: bold;">' +
-        holgStr +
-        "</td>";
-      html += "</tr>";
-    });
-
-    html += "</tbody></table></div></div></div>";
-  }
-
-  // Detalle de Viajes (Solo para filtrado por Planta Específica)
   if (plaCodFiltro > 0 && listado.length > 0) {
-    html += '<div class="panel panel-default" style="margin-bottom: 20px;">';
-    html +=
-      '<div class="panel-heading" style="background: #f8f9fa; font-weight: 600; color: #2C5D94; display: flex; justify-content: space-between; align-items: center;">';
-    html +=
-      '<span><i class="fa fa-list"></i> Detalle de Viajes y Evaluación de Arribo</span>';
-    html +=
-      '<input type="text" id="filtro_tabla_tiempos" class="form-control input-sm" style="width: 220px; display: inline-block;" placeholder="🔍 Buscar en tabla...">';
-    html += "</div>";
-    html += '<div class="panel-body" style="padding: 0;">';
-    html +=
-      '<div class="table-responsive" style="max-height: 500px; overflow-y: auto;">';
-    html +=
-      '<table class="table table-hover table-striped" id="tabla_tiempos_detalle" style="margin-bottom: 0;">';
-    html += '<thead><tr style="background: #2C5D94; color: white;">';
-    html += "<th>Manifiesto</th>";
-    html += "<th>Planta</th>";
-    html += "<th>Chofer</th>";
-    html += "<th>Vehículo</th>";
-    html += "<th>Salida</th>";
-    html += "<th>Arribo Planificado</th>";
-    html += "<th>Arribo Real</th>";
-    html += '<th class="text-center">Tiempo Configurado</th>';
-    html += '<th class="text-center">Tiempo Real</th>';
-    html += '<th class="text-center">Diferencia de Tiempo (+/-)</th>';
-    html += '<th class="text-center">Estado SLA</th>';
-    html += "</tr></thead><tbody>";
-
-    listado.forEach(function (m) {
-      var badgeSla = "";
-      if (m.estado === "cumplido") {
-        badgeSla =
-          '<span class="badge-sla badge-sla-cumplido"><i class="fa fa-check-circle"></i> A Tiempo</span>';
-      } else if (m.estado === "anticipado") {
-        var absRet = Math.abs(m.retraso_min || 0);
-        badgeSla =
-          '<span class="badge-sla badge-sla-anticipado" title="Arribó ' +
-          absRet +
-          ' minutos antes de la hora planificada. Tiempo configurado sobredimensionado."><i class="fa fa-clock-o"></i> Anticipado (-' +
-          absRet +
-          " min)</span>";
-      } else if (m.estado === "excedido") {
-        badgeSla =
-          '<span class="badge-sla badge-sla-excedido"><i class="fa fa-warning"></i> Excedido (+' +
-          m.retraso_min +
-          " min)</span>";
-      } else {
-        badgeSla =
-          '<span class="badge-sla badge-sla-transito"><i class="fa fa-truck"></i> En Tránsito</span>';
-      }
-
-      var badgeModif = "";
-      if (m.es_modificado) {
-        badgeModif =
-          ' <span class="badge-sla badge-sla-modificado" title="La fecha de arribo fue reprogramada o difiere del tiempo estándar"><i class="fa fa-edit"></i> Modificado</span>';
-      }
-
-      var tConfigStr =
-        Math.floor(m.tiempo_configurado_min / 60) +
-        "h " +
-        (m.tiempo_configurado_min % 60) +
-        "m";
-      var tRealStr =
-        m.tiempo_real_min > 0
-          ? Math.floor(m.tiempo_real_min / 60) +
-            "h " +
-            (m.tiempo_real_min % 60) +
-            "m"
-          : "-";
-
-      html += "<tr>";
-      html += "<td><strong>" + (m.ManNum || "") + "</strong></td>";
-      html += "<td>" + (m.Pla_Nom || "") + "</td>";
-      html += "<td>" + (m.chofer_nombre || "") + "</td>";
-      html += "<td><code>" + (m.Veh_Pla || "") + "</code></td>";
-      html += "<td>" + m.fecha_salida + "</td>";
-      html += "<td>" + m.fecha_arribo_planificada + badgeModif + "</td>";
-      html +=
-        "<td>" +
-        (m.fecha_arribo_real !== "En tránsito"
-          ? "<strong>" + m.fecha_arribo_real + "</strong>"
-          : '<em style="color:#6c757d;">En tránsito</em>') +
-        "</td>";
-      html += '<td class="text-center">' + tConfigStr + "</td>";
-      html += '<td class="text-center">' + tRealStr + "</td>";
-
-      if (m.retraso_min > 0) {
-        var hRet = Math.floor(m.retraso_min / 60);
-        var mRet = m.retraso_min % 60;
-        var txtRet = (hRet > 0 ? hRet + "h " : "") + mRet + "m";
-        html +=
-          '<td class="text-center" style="color: #dc3545; font-weight: bold;" title="Llegó ' +
-          txtRet +
-          ' después de lo planificado">+' +
-          m.retraso_min +
-          " min" +
-          (hRet > 0 ? " (+" + txtRet + ")" : "") +
-          "</td>";
-      } else if (m.retraso_min < 0 && m.estado !== "en_transito") {
-        var absRet = Math.abs(m.retraso_min);
-        var hAnt = Math.floor(absRet / 60);
-        var mAnt = absRet % 60;
-        var txtAnt = (hAnt > 0 ? hAnt + "h " : "") + mAnt + "m";
-        html +=
-          '<td class="text-center" style="color: #0891b2; font-weight: bold;" title="Llegó ' +
-          txtAnt +
-          ' antes de lo planificado (Excedente de tiempo configurado)">-' +
-          absRet +
-          ' min <span style="font-size: 11px; font-weight: normal; color: #0284c7;">(-' +
-          txtAnt +
-          ")</span></td>";
-      } else if (m.estado !== "en_transito") {
-        html += '<td class="text-center" style="color: #198754;">0 min</td>';
-      } else {
-        html += '<td class="text-center" style="color: #6c757d;">-</td>';
-      }
-
-      html += '<td class="text-center">' + badgeSla + "</td>";
-      html += "</tr>";
-    });
-
-    html += "</tbody></table></div></div></div>";
+    html += '<div class="panel panel-default" style="margin-bottom: 20px;"><div class="panel-heading" style="background: #f8f9fa; font-weight: 600; color: #2C5D94; display: flex; justify-content: space-between; align-items: center;"><span><i class="fa fa-list"></i> Detalle de Viajes y Evaluación de Arribo</span><input type="text" id="filtro_tabla_tiempos" class="form-control input-sm" style="width: 220px; display: inline-block;" placeholder="🔍 Buscar en tabla..."></div><div class="panel-body" style="padding: 0;"><div class="table-responsive" style="max-height: 500px; overflow-y: auto;"><table class="table table-hover table-striped" id="tabla_tiempos_detalle" style="margin-bottom: 0;"><thead><tr style="background: #2C5D94; color: white;"><th>Manifiesto</th><th>Planta</th><th>Chofer</th><th>Vehículo</th><th>Salida</th><th>Arribo Planificado</th><th>Arribo Real</th><th class="text-center">Tiempo Configurado</th><th class="text-center">Tiempo Real</th><th class="text-center">Diferencia de Tiempo (+/-)</th><th class="text-center">Estado SLA</th></tr></thead><tbody>' + listado.map(function (m) {
+      var badgeSla = (m.estado === "cumplido") ? '<span class="badge-sla badge-sla-cumplido"><i class="fa fa-check-circle"></i> A Tiempo</span>'
+        : (m.estado === "anticipado" ? '<span class="badge-sla badge-sla-anticipado" title="Anticipado"><i class="fa fa-clock-o"></i> Anticipado (-' + Math.abs(m.retraso_min || 0) + ' min)</span>'
+        : (m.estado === "excedido" ? '<span class="badge-sla badge-sla-excedido"><i class="fa fa-warning"></i> Excedido (+' + m.retraso_min + ' min)</span>'
+        : '<span class="badge-sla badge-sla-transito"><i class="fa fa-truck"></i> En Tránsito</span>'));
+      var badgeModif = m.es_modificado ? ' <span class="badge-sla badge-sla-modificado" title="Modificado"><i class="fa fa-edit"></i> Modificado</span>' : '';
+      var difTexto = (m.retraso_min > 0) ? '<td class="text-center" style="color:#dc3545;font-weight:bold;">+' + m.retraso_min + ' min (+' + formatoMinutosSla(m.retraso_min) + ')</td>'
+        : (m.retraso_min < 0 && m.estado !== "en_transito" ? '<td class="text-center" style="color:#0891b2;font-weight:bold;">-' + Math.abs(m.retraso_min) + ' min <span style="font-size:11px;color:#0284c7;">(-' + formatoMinutosSla(m.retraso_min) + ')</span></td>'
+        : (m.estado !== "en_transito" ? '<td class="text-center" style="color:#198754;">0 min</td>' : '<td class="text-center" style="color:#6c757d;">-</td>'));
+      return '<tr><td><strong>' + (m.ManNum || "") + '</strong></td><td>' + (m.Pla_Nom || "") + '</td><td>' + (m.chofer_nombre || "") + '</td><td><code>' + (m.Veh_Pla || "") + '</code></td><td>' + m.fecha_salida + '</td><td>' + m.fecha_arribo_planificada + badgeModif + '</td><td>' + (m.fecha_arribo_real !== "En tránsito" ? '<strong>' + m.fecha_arribo_real + '</strong>' : '<em style="color:#6c757d;">En tránsito</em>') + '</td><td class="text-center">' + formatoMinutosSla(m.tiempo_configurado_min) + '</td><td class="text-center">' + (m.tiempo_real_min > 0 ? formatoMinutosSla(m.tiempo_real_min) : '-') + '</td>' + difTexto + '<td class="text-center">' + badgeSla + '</td></tr>';
+    }).join('') + '</tbody></table></div></div></div>';
   }
 
   $("#dashboardContentTiempos").html(html);
 
-  // Inicializar Gráfico de Barras Horizontales por Planta de Beneficio Chart.js (Solo para "Todas las plantas")
-  if (
-    plaCodFiltro === 0 &&
-    plantas.length > 0 &&
-    typeof Chart !== "undefined"
-  ) {
+  if (plaCodFiltro === 0 && plantas.length > 0 && typeof Chart !== "undefined") {
     setTimeout(function () {
       var ctxTrend = document.getElementById("chartTendenciaTiempos");
       if (ctxTrend) {
-        if (chartTendenciaTiemposInstance) {
-          chartTendenciaTiemposInstance.destroy();
-        }
-        var labelsPlantas = plantas.map(function (p) {
-          return p.Pla_Nom || "Sin Nombre";
-        });
-
-        var dataConsumidoBase = [];
-        var dataHolguraSobrante = [];
-        var dataExcesoRetraso = [];
-
+        if (chartTendenciaTiemposInstance) chartTendenciaTiemposInstance.destroy();
+        var dBase = [], dHolg = [], dExc = [];
         plantas.forEach(function (p) {
-          var configMin =
-            p.tiempo_configurado_min ||
-            p.tiempo_promedio_min +
-              (p.holgura_promedio_min > 0 ? p.holgura_promedio_min : 0);
-          var realMin = p.tiempo_promedio_min || 0;
-
-          if (realMin <= configMin) {
-            dataConsumidoBase.push(realMin);
-            dataHolguraSobrante.push(Math.max(0, configMin - realMin));
-            dataExcesoRetraso.push(0);
-          } else {
-            dataConsumidoBase.push(configMin);
-            dataHolguraSobrante.push(0);
-            dataExcesoRetraso.push(realMin - configMin);
-          }
+          var cfg = p.tiempo_configurado_min || (p.tiempo_promedio_min + (p.holgura_promedio_min > 0 ? p.holgura_promedio_min : 0));
+          var real = p.tiempo_promedio_min || 0;
+          if (real <= cfg) { dBase.push(real); dHolg.push(Math.max(0, cfg - real)); dExc.push(0); }
+          else { dBase.push(cfg); dHolg.push(0); dExc.push(real - cfg); }
         });
 
         chartTendenciaTiemposInstance = new Chart(ctxTrend, {
           type: "bar",
           data: {
-            labels: labelsPlantas,
+            labels: plantas.map(function (p) { return p.Pla_Nom || "Sin Nombre"; }),
             datasets: [
-              {
-                label: "⏱️ Tiempo Real Consumido (100% Config Base)",
-                data: dataConsumidoBase,
-                backgroundColor: "#2C5D94",
-                borderColor: "#1d416b",
-                borderWidth: 1,
-                barThickness: 18,
-                maxBarThickness: 22,
-                barPercentage: 0.6,
-                categoryPercentage: 0.65,
-                stack: "tiempo",
-              },
-              {
-                label: "🔵 Holgura Configurada Sobrante",
-                data: dataHolguraSobrante,
-                backgroundColor: "#0284c7",
-                borderColor: "#0369a1",
-                borderWidth: 1,
-                barThickness: 18,
-                maxBarThickness: 22,
-                barPercentage: 0.6,
-                categoryPercentage: 0.65,
-                stack: "tiempo",
-              },
-              {
-                label: "🔴 Extensión de Horario / Retraso Excedido",
-                data: dataExcesoRetraso,
-                backgroundColor: "#dc3545",
-                borderColor: "#991b1b",
-                borderWidth: 1,
-                barThickness: 18,
-                maxBarThickness: 22,
-                barPercentage: 0.6,
-                categoryPercentage: 0.65,
-                stack: "tiempo",
-              },
-            ],
+              { label: "⏱️ Tiempo Real Consumido (100% Config Base)", data: dBase, backgroundColor: "#2C5D94", borderColor: "#1d416b", borderWidth: 1, barThickness: 18, maxBarThickness: 22, barPercentage: 0.6, categoryPercentage: 0.65, stack: "tiempo" },
+              { label: "🔵 Holgura Configurada Sobrante", data: dHolg, backgroundColor: "#0284c7", borderColor: "#0369a1", borderWidth: 1, barThickness: 18, maxBarThickness: 22, barPercentage: 0.6, categoryPercentage: 0.65, stack: "tiempo" },
+              { label: "🔴 Extensión de Horario / Retraso Excedido", data: dExc, backgroundColor: "#dc3545", borderColor: "#991b1b", borderWidth: 1, barThickness: 18, maxBarThickness: 22, barPercentage: 0.6, categoryPercentage: 0.65, stack: "tiempo" }
+            ]
           },
           options: {
-            indexAxis: "y",
-            responsive: true,
-            maintainAspectRatio: false,
-            layout: {
-              padding: { right: 360, top: 10 },
-            },
+            indexAxis: "y", responsive: true, maintainAspectRatio: false,
+            layout: { padding: { right: 230, top: 10 } },
             scales: {
-              x: {
-                stacked: true,
-                beginAtZero: true,
-                grace: "35%",
-                title: {
-                  display: true,
-                  text: "Minutos (Tiempo Configurado SLA vs Consumido / Extensión)",
-                },
-              },
-              y: {
-                stacked: true,
-                ticks: { font: { weight: "bold", size: 11 } },
-              },
+              x: { stacked: true, beginAtZero: true, grace: "35%", title: { display: true, text: "Minutos (Tiempo Configurado SLA vs Consumido / Extensión)" } },
+              y: { stacked: true, ticks: { font: { weight: "bold", size: 11 } } }
             },
             plugins: {
               legend: { position: "top" },
               tooltip: {
                 callbacks: {
-                  label: function (context) {
-                    var pIndex = context.dataIndex;
-                    var p = plantas[pIndex];
-                    var label = context.dataset.label || "";
-                    var val = context.raw || 0;
-                    var hrs = Math.floor(val / 60);
-                    var mins = val % 60;
-                    var fmtTime = (hrs > 0 ? hrs + "h " : "") + mins + "m";
-
-                    var realMin = p.tiempo_promedio_min || 0;
-                    var configMin =
-                      p.tiempo_configurado_min ||
-                      realMin +
-                        (p.holgura_promedio_min > 0
-                          ? p.holgura_promedio_min
-                          : 0);
-                    var pctConsumido =
-                      configMin > 0
-                        ? ((realMin / configMin) * 100).toFixed(1)
-                        : 0;
-                    var txtConfig =
-                      Math.floor(configMin / 60) +
-                      "h " +
-                      (configMin % 60) +
-                      "m";
-
-                    if (context.datasetIndex === 0) {
-                      return (
-                        label +
-                        ": " +
-                        val +
-                        " min (" +
-                        fmtTime +
-                        ") — " +
-                        pctConsumido +
-                        "% consumido de " +
-                        txtConfig +
-                        " 100% config"
-                      );
-                    } else if (context.datasetIndex === 1) {
-                      return (
-                        label + ": " + val + " min (" + fmtTime + ") sobrantes"
-                      );
-                    } else {
-                      return (
-                        label +
-                        ": +" +
-                        val +
-                        " min (+" +
-                        fmtTime +
-                        ") extensión de tiempo 🔴"
-                      );
-                    }
+                  label: function (ctx) {
+                    var p = plantas[ctx.dataIndex], val = ctx.raw || 0, fmt = formatoMinutosSla(val);
+                    var cfg = p.tiempo_configurado_min || (p.tiempo_promedio_min + (p.holgura_promedio_min > 0 ? p.holgura_promedio_min : 0));
+                    var pct = cfg > 0 ? ((p.tiempo_promedio_min / cfg) * 100).toFixed(1) : 0;
+                    if (ctx.datasetIndex === 0) return ctx.dataset.label + ": " + val + " min (" + fmt + ") — " + pct + "% de " + formatoHoraHHMM(cfg);
+                    if (ctx.datasetIndex === 1) return ctx.dataset.label + ": " + val + " min (" + fmt + ") sobrantes";
+                    return ctx.dataset.label + ": +" + val + " min (+" + fmt + ") Ext: 🔴";
                   },
-                  afterBody: function (tooltipItems) {
-                    if (!tooltipItems.length) return [];
-                    var pIndex = tooltipItems[0].dataIndex;
-                    var p = plantas[pIndex];
-                    var totalCumplieron =
-                      p.cumplieron_sla !== undefined
-                        ? p.cumplieron_sla
-                        : (p.cumplidos || 0) + (p.anticipados || 0);
-                    return [
-                      "-----------------------------------",
-                      "📊 Total Viajes: " + (p.total || 0),
-                      "🟢 Puntualidad SLA: " +
-                        (p.pct_cumplimiento || 0) +
-                        "% (" +
-                        totalCumplieron +
-                        " viajes a tiempo)",
-                      "🔴 Excedidos (Retrasos): " + (p.excedidos || 0),
-                      "🟡 Modificados: " + (p.modificados || 0),
-                    ];
-                  },
-                },
-              },
-            },
-          },
-          plugins: [
-            {
-              id: "horizontalBarPctLabels",
-              afterDatasetsDraw: function (chart) {
-                var ctx = chart.ctx;
-                var meta0 = chart.getDatasetMeta(0);
-                var meta1 = chart.getDatasetMeta(1);
-                var meta2 = chart.getDatasetMeta(2);
-                if (!meta0 || !meta0.data) return;
-
-                ctx.save();
-
-                // X fija a la derecha del área del gráfico para alinear el resumen en una columna recta perfecta
-                var colX = chart.chartArea.right + 15;
-
-                for (var i = 0; i < meta0.data.length; i++) {
-                  var p = plantas[i];
-                  if (!p) continue;
-                  var bar0 = meta0.data[i];
-                  var bar1 = meta1 ? meta1.data[i] : null;
-                  var bar2 = meta2 ? meta2.data[i] : null;
-
-                  var realMin = p.tiempo_promedio_min || 0;
-                  var configMin =
-                    p.tiempo_configurado_min ||
-                    realMin +
-                      (p.holgura_promedio_min > 0 ? p.holgura_promedio_min : 0);
-                  if (configMin <= 0) continue;
-
-                  var holgMin = Math.max(0, configMin - realMin);
-                  var excesoMin = Math.max(0, realMin - configMin);
-                  var pctConsumido = Math.round((realMin / configMin) * 100);
-
-                  var hrsR = Math.floor(realMin / 60);
-                  var minsR = realMin % 60;
-                  var txtR = (hrsR > 0 ? hrsR + "h " : "") + minsR + "m";
-
-                  var hrsH = Math.floor(holgMin / 60);
-                  var minsH = holgMin % 60;
-                  var txtH = (hrsH > 0 ? hrsH + "h " : "") + minsH + "m";
-
-                  var hrsE = Math.floor(excesoMin / 60);
-                  var minsE = excesoMin % 60;
-                  var txtE = (hrsE > 0 ? hrsE + "h " : "") + minsE + "m";
-
-                  var hrsC = Math.floor(configMin / 60);
-                  var minsC = configMin % 60;
-                  var txtC = (hrsC > 0 ? hrsC + "h " : "") + minsC + "m";
-
-                  // A. DENTRO DE LAS BARRAS (Valores en blanco)
-                  ctx.font = "bold 10px sans-serif";
-                  ctx.textAlign = "center";
-                  ctx.textBaseline = "middle";
-
-                  // 1. Dentro de Barra 0 (Consumido Base - Azul)
-                  if (bar0 && bar0.x - bar0.base > 35) {
-                    var xCenter0 = (bar0.base + bar0.x) / 2;
-                    ctx.fillStyle = "#ffffff";
-                    var txtInside0 =
-                      realMin > configMin
-                        ? "100% Config (" + txtC + ")"
-                        : pctConsumido + "% (" + txtR + ")";
-                    ctx.fillText(txtInside0, xCenter0, bar0.y);
-                  }
-
-                  // 2. Dentro de Barra 1 (Holgura Sobrante - Celeste)
-                  if (bar1 && bar1.x - bar1.base > 35 && holgMin > 0) {
-                    var xCenter1 = (bar1.base + bar1.x) / 2;
-                    ctx.fillStyle = "#ffffff";
-                    var pctSobra = Math.round((holgMin / configMin) * 100);
-                    ctx.fillText(
-                      pctSobra + "% (" + txtH + ")",
-                      xCenter1,
-                      bar1.y,
-                    );
-                  }
-
-                  // 3. Dentro de Barra 2 (Extensión de Horario / Retraso Excedido - Rojo)
-                  if (bar2 && bar2.x - bar2.base > 28 && excesoMin > 0) {
-                    var xCenter2 = (bar2.base + bar2.x) / 2;
-                    ctx.fillStyle = "#ffffff";
-                    var pctExceso = Math.round((excesoMin / configMin) * 100);
-                    ctx.fillText(
-                      "+" + pctExceso + "% (+" + txtE + ")",
-                      xCenter2,
-                      bar2.y,
-                    );
-                  }
-
-                  // B. FUERA A LA DERECHA (Alineado uniformemente en columna recta vertical)
-                  ctx.font = "bold 11px sans-serif";
-                  ctx.fillStyle = excesoMin > 0 ? "#dc3545" : "#2C5D94";
-                  ctx.textAlign = "left";
-                  ctx.textBaseline = "middle";
-
-                  if (excesoMin > 0) {
-                    ctx.fillText(
-                      txtR +
-                        " real (" +
-                        pctConsumido +
-                        "% de " +
-                        txtC +
-                        " 100% config — Extensión: +" +
-                        txtE +
-                        " 🔴)",
-                      colX,
-                      bar0.y,
-                    );
-                  } else {
-                    ctx.fillText(
-                      txtR +
-                        " real (" +
-                        pctConsumido +
-                        "% de " +
-                        txtC +
-                        " 100% config)",
-                      colX,
-                      bar0.y,
-                    );
+                  afterBody: function (tItems) {
+                    if (!tItems.length) return [];
+                    var p = plantas[tItems[0].dataIndex];
+                    return ["-----------------------------------", "📊 Total Viajes: " + (p.total || 0), "🟢 Puntualidad SLA: " + (p.pct_cumplimiento || 0) + "% (" + (p.cumplieron_sla || ((p.cumplidos || 0) + (p.anticipados || 0))) + " a tiempo)", "🔴 Excedidos: " + (p.excedidos || 0)];
                   }
                 }
-                ctx.restore();
-              },
-            },
-          ],
+              }
+            }
+          },
+          plugins: [{
+            id: "horizontalBarPctLabels",
+            afterDatasetsDraw: function (chart) {
+              var ctx = chart.ctx, m0 = chart.getDatasetMeta(0), m1 = chart.getDatasetMeta(1), m2 = chart.getDatasetMeta(2);
+              if (!m0 || !m0.data) return;
+              ctx.save();
+              var colX = chart.chartArea.right + 15;
+              for (var i = 0; i < m0.data.length; i++) {
+                var p = plantas[i]; if (!p) continue;
+                var b0 = m0.data[i], b1 = m1 ? m1.data[i] : null, b2 = m2 ? m2.data[i] : null;
+                var real = p.tiempo_promedio_min || 0, cfg = p.tiempo_configurado_min || (real + (p.holgura_promedio_min > 0 ? p.holgura_promedio_min : 0));
+                if (cfg <= 0) continue;
+                var holg = Math.max(0, cfg - real), exc = Math.max(0, real - cfg), pctC = Math.round((real / cfg) * 100);
+                var txtR = formatoMinutosSla(real), txtH = formatoMinutosSla(holg), txtE = formatoMinutosSla(exc), txtC = formatoMinutosSla(cfg), txtHoraConfig = formatoHoraHHMM(cfg);
+
+                ctx.font = "bold 11px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillStyle = "#ffffff";
+                if (b0 && b0.x - b0.base > 35) ctx.fillText(real > cfg ? "100% (" + txtHoraConfig + ")" : pctC + "% (" + txtR + ")", (b0.base + b0.x) / 2, b0.y);
+                if (b1 && b1.x - b1.base > 35 && holg > 0) ctx.fillText(Math.round((holg / cfg) * 100) + "% (" + txtH + ")", (b1.base + b1.x) / 2, b1.y);
+                if (b2 && b2.x - b2.base > 28 && exc > 0) ctx.fillText("+" + Math.round((exc / cfg) * 100) + "% (+" + txtE + ")", (b2.base + b2.x) / 2, b2.y);
+
+                ctx.font = "bold 13px sans-serif"; ctx.fillStyle = exc > 0 ? "#dc3545" : "#2C5D94"; ctx.textAlign = "left";
+                var summary = (exc > 0) ? (txtHoraConfig + " (Ext: +" + txtE + " 🔴)") : txtHoraConfig;
+                ctx.fillText(summary, colX, b0.y);
+              }
+              ctx.restore();
+            }
+          }]
         });
       }
     }, 100);
   }
 
-  // Filtro rápido de tabla
-  $(document)
-    .off("keyup.filtroTiempos")
-    .on("keyup.filtroTiempos", "#filtro_tabla_tiempos", function () {
-      var val = $(this).val().toLowerCase();
-      $("#tabla_tiempos_detalle tbody tr").filter(function () {
-        $(this).toggle($(this).text().toLowerCase().indexOf(val) > -1);
-      });
+  $(document).off("keyup.filtroTiempos").on("keyup.filtroTiempos", "#filtro_tabla_tiempos", function () {
+    var val = $(this).val().toLowerCase();
+    $("#tabla_tiempos_detalle tbody tr").filter(function () {
+      $(this).toggle($(this).text().toLowerCase().indexOf(val) > -1);
     });
+  });
 }
 
 function imprimirReporteTiempos() {
@@ -8924,59 +8167,26 @@ function imprimirReporteTiempos() {
     alert("Cargue el reporte primero antes de imprimir.");
     return;
   }
-  var fi = $("#fecha_inicio_tiempos").val() || "";
-  var ff = $("#fecha_fin_tiempos").val() || "";
-  var plaNom =
-    $("#select_planta_tiempos option:selected").text() || "Todas las plantas";
-  var estNom =
-    $("#select_estado_tiempos option:selected").text() || "Todos los viajes";
+  var fi = $("#fecha_inicio_tiempos").val() || "", ff = $("#fecha_fin_tiempos").val() || "";
+  var plaNom = $("#select_planta_tiempos option:selected").text() || "Todas las plantas";
+  var estNom = $("#select_estado_tiempos option:selected").text() || "Todos los viajes";
 
-  var headerHtml =
-    '<div style="border-bottom: 2px solid #2C5D94; padding-bottom: 5px;">';
-  headerHtml +=
-    '<h3 style="margin: 0 0 4px 0; color: #2C5D94; font-weight: bold;"><i class="fa fa-clock-o"></i> Reporte Control de Tiempos y Arribos (Acuerdo de Nivel de Servicio de Tránsito)</h3>';
-  headerHtml += '<p style="margin: 0; font-size: 11px; color: #444;">';
-  headerHtml +=
-    "<strong>Rango:</strong> " + fi + " al " + ff + " &nbsp;|&nbsp; ";
-  headerHtml += "<strong>Planta:</strong> " + plaNom + " &nbsp;|&nbsp; ";
-  headerHtml += "<strong>Estado:</strong> " + estNom;
-  headerHtml += "</p></div>";
-
-  $("#header_print_tiempos").html(headerHtml);
+  $("#header_print_tiempos").html('<div style="border-bottom: 2px solid #2C5D94; padding-bottom: 5px;"><h3 style="margin: 0 0 4px 0; color: #2C5D94; font-weight: bold;"><i class="fa fa-clock-o"></i> Reporte Control de Tiempos y Arribos (Acuerdo de Nivel de Servicio de Tránsito)</h3><p style="margin: 0; font-size: 11px; color: #444;"><strong>Rango:</strong> ' + fi + ' al ' + ff + ' &nbsp;|&nbsp; <strong>Planta:</strong> ' + plaNom + ' &nbsp;|&nbsp; <strong>Estado:</strong> ' + estNom + '</p></div>');
 
   var plaCod = $("#select_planta_tiempos").val() || 0;
-  if (!plaCod || plaCod == 0 || plaCod == "0") {
-    $("body").addClass("print-solo-resumen");
-  } else {
-    $("body").removeClass("print-solo-resumen");
-  }
+  if (!plaCod || plaCod == 0 || plaCod == "0") $("body").addClass("print-solo-resumen");
+  else $("body").removeClass("print-solo-resumen");
 
   window.print();
-
-  setTimeout(function () {
-    $("body").removeClass("print-solo-resumen");
-  }, 1000);
+  setTimeout(function () { $("body").removeClass("print-solo-resumen"); }, 1000);
 }
 
 function exportarExcelTiempos() {
-  var fi = $("#fecha_inicio_tiempos").val();
-  var ff = $("#fecha_fin_tiempos").val();
-  var plaCod = $("#select_planta_tiempos").val() || 0;
-  var estadoFiltro = $("#select_estado_tiempos").val() || "todos";
-
+  var fi = $("#fecha_inicio_tiempos").val(), ff = $("#fecha_fin_tiempos").val();
+  var plaCod = $("#select_planta_tiempos").val() || 0, estadoFiltro = $("#select_estado_tiempos").val() || "todos";
   if (!fi || !ff) {
     alert("Por favor seleccione un rango de fechas (Desde y Hasta).");
     return;
   }
-
-  var url =
-    "man_adm_dashboard_turnos.php?exportarExcelTiemposAjax=1&fecha_inicio=" +
-    encodeURIComponent(fi) +
-    "&fecha_fin=" +
-    encodeURIComponent(ff) +
-    "&Pla_Cod=" +
-    encodeURIComponent(plaCod) +
-    "&estado_filtro=" +
-    encodeURIComponent(estadoFiltro);
-  window.open(url, "_blank");
+  window.open("man_adm_dashboard_turnos.php?exportarExcelTiemposAjax=1&fecha_inicio=" + encodeURIComponent(fi) + "&fecha_fin=" + encodeURIComponent(ff) + "&Pla_Cod=" + encodeURIComponent(plaCod) + "&estado_filtro=" + encodeURIComponent(estadoFiltro), "_blank");
 }
