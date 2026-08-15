@@ -581,8 +581,9 @@ function cargarGeneralManifiesto() {
             // Cargar estado de la campaña (Select)
             $('#cfg_pla_act_general').val(r.pla_act_general === 'S' ? 'S' : 'N').trigger('change');
             
-            // Cargar combo de eventos activos y preseleccionar el vigente
-            cargarComboEventosGeneral(r.man_eve_vigente || 0);
+            // Cargar combo de eventos activos y preseleccionar los vigentes
+            var evesVigentes = r.man_eves_vigentes || (r.man_eve_vigente ? [r.man_eve_vigente] : []);
+            cargarComboEventosGeneral(evesVigentes);
         } else {
             $.alert((r && r.message) ? r.message : 'No se pudo cargar la configuración general.');
         }
@@ -599,7 +600,7 @@ function guardarGeneralManifiesto() {
         return;
     }
     var plaAct = $('#cfg_pla_act_general').val();
-    var manEve = $('#cfg_man_eve_general').val() || '0';
+    var manEve = $('#cfg_man_eve_general').val() || [];
     
     var msg = 'Se modificara la configuracion general de manifiestos. ¿Desea continuar?';
     $.createDialogConfirm(msg, {
@@ -660,21 +661,26 @@ $(document).ready(function() {
 
 // ==================== GESTIÓN DE EVENTOS (manifiesto_evento) ====================
 
-function cargarComboEventosGeneral(selectedId) {
+function cargarComboEventosGeneral(selectedIds) {
     var postUrl = (window.location.href || '').split('#')[0];
     $.post(postUrl, { getComboEventosAjax: 1 }, function (r) {
         if (r && r.success) {
             var $sel = $('#cfg_man_eve_general');
-            var currVal = selectedId || $sel.val() || '0';
+            var currVals = selectedIds || $sel.val() || [];
+            if (!Array.isArray(currVals)) {
+                currVals = [currVals];
+            }
             $sel.empty();
-            $sel.append('<option value="0">-- Sin Eventos --</option>');
             if (r.data && r.data.length > 0) {
                 $.each(r.data, function (i, evt) {
                     var label = evt.Man_ENom + ' (' + (evt.Man_EHor || 6) + 'h - ' + evt.Man_EFei + ' - ' + evt.Man_EFef + ')';
                     $sel.append('<option value="' + evt.Man_Eve + '">' + label + '</option>');
                 });
             }
-            $sel.val(currVal);
+            $sel.val(currVals);
+            if ($.fn.chosen) {
+                $sel.trigger('chosen:updated');
+            }
         }
     }, 'json');
 }
@@ -687,7 +693,7 @@ function abrirModalEventos() {
 
 function cargarHistorialEventos() {
     var postUrl = (window.location.href || '').split('#')[0];
-    $('#bodyHistorialEventos').html('<tr><td colspan="7" class="text-center" style="color: #9ca3af; padding: 15px;"><i class="glyphicon glyphicon-refresh spin"></i> Cargando historial...</td></tr>');
+    $('#bodyHistorialEventos').html('<tr><td colspan="8" class="text-center" style="color: #9ca3af; padding: 15px;"><i class="glyphicon glyphicon-refresh spin"></i> Cargando historial...</td></tr>');
     
     $.post(postUrl, { getHistorialEventosAjax: 1 }, function (r) {
         var $body = $('#bodyHistorialEventos');
@@ -696,20 +702,29 @@ function cargarHistorialEventos() {
         if (r && r.success && r.data && r.data.length > 0) {
             $.each(r.data, function (i, evt) {
                 var isInactive = (evt.Man_EEst === 'I');
+                var isVigente = (evt.Man_Vig === 'S');
                 var rowStyle = isInactive ? ' style="background-color: #FADDDD !important;"' : '';
 
                 var estBadge = (!isInactive) 
                     ? '<span class="label label-success" style="font-size: 10px;">ACTIVO</span>' 
                     : '<span class="label label-danger" style="font-size: 10px;">INACTIVO</span>';
                 
+                var vigBadge = isVigente 
+                    ? '<span class="label label-info" style="font-size: 10px; background-color: #0284c7;">VIGENTE</span>' 
+                    : '<span class="label label-default" style="font-size: 10px; background-color: #64748b;">NO VIGENTE</span>';
+
                 var btnToggle = (!isInactive)
-                    ? '<button type="button" class="btn btn-warning btn-xs" onclick="toggleEstadoEvento(' + evt.Man_Eve + ', \'I\');" title="Inactivar Evento"><i class="glyphicon glyphicon-eye-close"></i></button>'
-                    : '<button type="button" class="btn btn-success btn-xs" onclick="toggleEstadoEvento(' + evt.Man_Eve + ', \'A\');" title="Activar Evento"><i class="glyphicon glyphicon-eye-open"></i></button>';
+                    ? '<button type="button" class="btn btn-warning btn-xs" onclick="toggleEstadoEvento(' + evt.Man_Eve + ', \'I\');" title="Inactivar Evento" style="margin-right: 2px;"><i class="glyphicon glyphicon-eye-close"></i></button>'
+                    : '<button type="button" class="btn btn-success btn-xs" onclick="toggleEstadoEvento(' + evt.Man_Eve + ', \'A\');" title="Activar Evento" style="margin-right: 2px;"><i class="glyphicon glyphicon-eye-open"></i></button>';
+
+                var btnVig = isVigente
+                    ? '<button type="button" class="btn btn-primary btn-xs" onclick="toggleVigenciaEvento(' + evt.Man_Eve + ', \'N\');" title="Quitar Vigencia" style="margin-right: 2px;"><i class="glyphicon glyphicon-star"></i></button>'
+                    : '<button type="button" class="btn btn-default btn-xs" onclick="toggleVigenciaEvento(' + evt.Man_Eve + ', \'S\');" title="Marcar como Vigente" style="margin-right: 2px;"><i class="glyphicon glyphicon-star-empty"></i></button>';
 
                 var isEditable = (evt.Hoy_YMD <= evt.Man_EFef);
                 var btnEdit = isEditable
-                    ? "<button type=\"button\" class=\"btn btn-info btn-xs\" onclick=\"editarEvento(" + evt.Man_Eve + ", '" + escapeHtml(evt.Man_ENom) + "', '" + (evt.Man_EHor || 6) + "', '" + evt.Man_EFei + "', '" + evt.Man_EFef + "', '" + evt.Man_EEst + "', '" + evt.Hoy_YMD + "');\" title=\"Editar Evento\" style=\"margin-right: 4px;\"><i class=\"glyphicon glyphicon-pencil\"></i></button>"
-                    : "<button type=\"button\" class=\"btn btn-default btn-xs\" disabled title=\"Solo editable hasta la fecha fin del evento\" style=\"margin-right: 4px; opacity: 0.5;\"><i class=\"glyphicon glyphicon-lock\"></i></button>";
+                    ? "<button type=\"button\" class=\"btn btn-info btn-xs\" onclick=\"editarEvento(" + evt.Man_Eve + ", '" + escapeHtml(evt.Man_ENom) + "', '" + (evt.Man_EHor || 6) + "', '" + evt.Man_EFei + "', '" + evt.Man_EFef + "', '" + evt.Man_EEst + "', '" + evt.Hoy_YMD + "');\" title=\"Editar Evento\" style=\"margin-right: 2px;\"><i class=\"glyphicon glyphicon-pencil\"></i></button>"
+                    : "<button type=\"button\" class=\"btn btn-default btn-xs\" disabled title=\"Solo editable hasta la fecha fin del evento\" style=\"margin-right: 2px; opacity: 0.5;\"><i class=\"glyphicon glyphicon-lock\"></i></button>";
 
                 var tr = '<tr' + rowStyle + '>' +
                     '<td class="text-center"><b>' + evt.Man_Eve + '</b></td>' +
@@ -718,17 +733,30 @@ function cargarHistorialEventos() {
                     '<td class="text-center">' + evt.Man_EFei_Fmt + '</td>' +
                     '<td class="text-center">' + evt.Man_EFef_Fmt + '</td>' +
                     '<td class="text-center">' + estBadge + '</td>' +
-                    '<td class="text-center">' + btnEdit + btnToggle + '</td>' +
+                    '<td class="text-center">' + vigBadge + '</td>' +
+                    '<td class="text-center">' + btnEdit + btnVig + btnToggle + '</td>' +
                 '</tr>';
 
                 $body.append(tr);
             });
         } else {
-            $body.html('<tr><td colspan="7" class="text-center" style="color: #6b7280; padding: 15px;">No se encontraron eventos registrados.</td></tr>');
+            $body.html('<tr><td colspan="8" class="text-center" style="color: #6b7280; padding: 15px;">No se encontraron eventos registrados.</td></tr>');
         }
     }, 'json').fail(function () {
-        $('#bodyHistorialEventos').html('<tr><td colspan="7" class="text-center text-danger" style="padding: 15px;">Error al cargar el historial.</td></tr>');
+        $('#bodyHistorialEventos').html('<tr><td colspan="8" class="text-center text-danger" style="padding: 15px;">Error al cargar el historial.</td></tr>');
     });
+}
+
+function toggleVigenciaEvento(id, nuevaVig) {
+    var postUrl = (window.location.href || '').split('#')[0];
+    $.post(postUrl, { toggleVigenciaEventoAjax: 1, Man_Eve: id, Man_Vig: nuevaVig }, function (r) {
+        if (r && r.success) {
+            cargarHistorialEventos();
+            cargarGeneralManifiesto();
+        } else {
+            $.alert((r && r.message) ? r.message : 'No se pudo cambiar la vigencia.');
+        }
+    }, 'json');
 }
 
 function limpiarFormEvento() {
@@ -750,7 +778,7 @@ function editarEvento(id, nom, hor, fei, fef, est, hoyYmd) {
     $('#evt_Man_EHor').val(hor || '6');
     $('#evt_Man_EFei').val(fei);
     $('#evt_Man_EFef').val(fef);
-    $('#evt_Man_EEst').val(est);
+    $('#evt_Man_EEst').val(est || 'A');
 }
 
 function guardarEvento() {
@@ -759,7 +787,7 @@ function guardarEvento() {
     var hor = $.trim($('#evt_Man_EHor').val()) || '6';
     var fei = $.trim($('#evt_Man_EFei').val());
     var fef = $.trim($('#evt_Man_EFef').val());
-    var est = $('#evt_Man_EEst').val();
+    var est = 'A';
 
     if (!nom) {
         $.alert('Por favor ingrese el nombre del evento.');
