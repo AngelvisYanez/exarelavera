@@ -640,9 +640,12 @@ function renderConsolidadoTecHTML(rows, response) {
         var egreso = parseFloat(row.Abono || 0);
         if (ingreso === 0 && egreso === 0) return;
 
-        saldoAcumulado = parseFloat((saldoAcumulado + ingreso - egreso).toFixed(2));
-        totalIngresos += ingreso;
-        totalEgresos += egreso;
+        var esPendienteAuth = String(row.Estado || '').toUpperCase() === 'P';
+        if (!esPendienteAuth) {
+            saldoAcumulado = parseFloat((saldoAcumulado + ingreso - egreso).toFixed(2));
+            totalIngresos += ingreso;
+            totalEgresos += egreso;
+        }
 
         var noCompr = row.codigoAnti || row.Documento || '';
         var detalle = '';
@@ -658,14 +661,32 @@ function renderConsolidadoTecHTML(rows, response) {
             detalle = (row.FormaPago || 'Transferencia') + ' / Doc,Num: ' + (row.Documento || '');
         }
 
-        html += '<tr>';
+        var detalleHtml = $('<div/>').text(detalle).html();
+        var trBg = '';
+        var colorIng = ingreso > 0 ? '#28a745' : '#000';
+        var colorEgr = egreso > 0 ? '#1f5fbf' : '#000';
+        var colorSaldo = '#000';
+        if (esPendienteAuth) {
+            detalleHtml += ' <span title="Pendiente por Autorizar — no afecta saldo" style="color:#e67e22; font-weight:bold; white-space:nowrap;"><i class="glyphicon glyphicon-time"></i> Pendiente por Autorizar</span>';
+            trBg = ' background-color: #fff8e6;';
+            colorIng = '#e67e22';
+            colorSaldo = '#e67e22';
+        }
+
+        html += '<tr' + (trBg ? ' style="' + trBg.trim() + '"' : '') + '>';
         html += '<td class="text-center" style="border: 1px solid #ccc; padding: 5px;">' + (contador++) + '</td>';
         html += '<td class="text-center" style="border: 1px solid #ccc; padding: 5px;">' + $('<div/>').text(noCompr).html() + '</td>';
         html += '<td class="text-center" style="border: 1px solid #ccc; padding: 5px;">' + $('<div/>').text(fecIsoADMY((row.Fecha || '').toString().substring(0, 10))).html() + '</td>';
-        html += '<td style="border: 1px solid #ccc; padding: 5px;">' + $('<div/>').text(detalle).html() + '</td>';
-        html += '<td style="text-align: right; color: ' + (ingreso > 0 ? '#28a745' : '#000') + '; font-weight: ' + (ingreso > 0 ? 'bold' : 'normal') + '; border: 1px solid #ccc; padding: 5px;">' + (ingreso > 0 ? '$ ' + formatNumber(ingreso, 2) : '0.00') + '</td>';
-        html += '<td style="text-align: right; color: ' + (egreso > 0 ? '#1f5fbf' : '#000') + '; font-weight: ' + (egreso > 0 ? 'bold' : 'normal') + '; border: 1px solid #ccc; padding: 5px;">' + (egreso > 0 ? '$ ' + formatNumber(egreso, 2) : '0.00') + '</td>';
-        html += '<td style="text-align: right; font-weight: bold; border: 1px solid #ccc; padding: 5px;">$ ' + formatNumber(saldoAcumulado, 2) + '</td>';
+        html += '<td style="border: 1px solid #ccc; padding: 5px;">' + detalleHtml + '</td>';
+        html += '<td style="text-align: right; color: ' + colorIng + '; font-weight: ' + (ingreso > 0 ? 'bold' : 'normal') + '; border: 1px solid #ccc; padding: 5px;">' + (ingreso > 0 ? '$ ' + formatNumber(ingreso, 2) : '0.00') + '</td>';
+        html += '<td style="text-align: right; color: ' + colorEgr + '; font-weight: ' + (egreso > 0 ? 'bold' : 'normal') + '; border: 1px solid #ccc; padding: 5px;">' + (egreso > 0 ? '$ ' + formatNumber(egreso, 2) : '0.00') + '</td>';
+        html += '<td style="text-align: right; font-weight: bold; color: ' + colorSaldo + '; border: 1px solid #ccc; padding: 5px;">';
+        if (esPendienteAuth) {
+            html += '<i class="glyphicon glyphicon-time" title="Pendiente por Autorizar — no afecta saldo"></i> $ ' + formatNumber(saldoAcumulado, 2);
+        } else {
+            html += '$ ' + formatNumber(saldoAcumulado, 2);
+        }
+        html += '</td>';
         html += '</tr>';
     });
 

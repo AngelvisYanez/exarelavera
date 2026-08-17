@@ -239,6 +239,7 @@ function sentencias_estado_cuenta($id, $Par_Sql) {
                                       FROM manifiesto_anticipo ma
                                       WHERE ma.Cli_Cod = '$Cli_Cod'
                                         AND ma.Ama_Est = 'A'
+                                        AND ma.Ama_Tip = 'A'
                                         AND ma.Ama_Fec < '$Fec_Ini'
                                         $where_pla_ma_prev), 0)
                             -
@@ -269,14 +270,14 @@ function sentencias_estado_cuenta($id, $Par_Sql) {
                         0 as Saldo_Inicial_Hidden
                     FROM manifiesto_anticipo ma
                         LEFT JOIN banco b ON ma.Ban_Cod = b.Ban_Cod
-                        LEFT JOIN tipos_pago tp ON ma.Ama_Tde = tp.Pag_Cod
+                        LEFT JOIN tipos_pago tp ON tp.Pag_Cod = IFNULL(NULLIF(ma.Ama_Tde, 0), ma.Pag_Cod)
                         LEFT JOIN usuarios u ON ma.Usu_Cod = u.Usu_Cod
                         LEFT JOIN persona AS pu ON u.Prs_Cod = pu.Prs_Cod
                         LEFT JOIN anticipos_clientes ac ON ac.Ama_Cod = ma.Ama_Cod AND ac.Ant_Est = 'A'
                         LEFT JOIN comprobantes c ON c.Com_Cod = ac.Com_Cod
                         LEFT JOIN tipo_asien ta ON ta.Tia_Cod = c.Tia_Cod
                     WHERE ma.Cli_Cod = '$Cli_Cod'
-                      AND ma.Ama_Est = 'A'
+                      AND ma.Ama_Est = 'A' AND ma.Ama_Tip IN ('A', 'P')
                       $wherefecha_ma
                       $where_pla_ma)
                     UNION ALL

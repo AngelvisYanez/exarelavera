@@ -1614,7 +1614,7 @@ if ($puede_comparar_saldos) {
             </form>
         </div>
 
-        <script src="../VALIDACIONES/man_est_cuenta_1.0.js?e=41"></script>
+        <script src="../VALIDACIONES/man_est_cuenta_1.0.js?e=42"></script>
         <script type="text/javascript" src="../../framework/jquery/jquery.plugins/MaskedInput/jquery.maskedinput.1.4.1.min.js"></script>
         <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=1"></script>
         <script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>
