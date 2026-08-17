@@ -667,7 +667,7 @@ function renderConsolidadoTecHTML(rows, response) {
         var colorEgr = egreso > 0 ? '#1f5fbf' : '#000';
         var colorSaldo = '#000';
         if (esPendienteAuth) {
-            detalleHtml += ' <span title="Pendiente por Autorizar — no afecta saldo" style="color:#e67e22; font-weight:bold; white-space:nowrap;"><i class="glyphicon glyphicon-time"></i> Pendiente por Autorizar</span>';
+            detalleHtml += ' <span title="Pendiente por Aprobar — no afecta saldo" style="color:#e67e22; font-weight:bold; white-space:nowrap;"><i class="glyphicon glyphicon-time"></i> Pendiente por Aprobar</span>';
             trBg = ' background-color: #fff8e6;';
             colorIng = '#e67e22';
             colorSaldo = '#e67e22';
