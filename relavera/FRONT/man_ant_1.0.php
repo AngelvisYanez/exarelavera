@@ -1238,10 +1238,12 @@ if (isset($saveComprobanteAjax)) {
                 exit();
             }
 
-            // Actualizar el estado del anticipo a Acreditado y guardar la ruta del estado de cuenta
+            // Actualizar el estado del anticipo a Acreditado y guardar la ruta del estado de cuenta con fecha y hora de aprobacion
+            $fecha_hora_aprobacion = (isset($_POST['Ama_Fha']) && trim((string)$_POST['Ama_Fha']) !== '') ? trim((string)$_POST['Ama_Fha']) : date("Y-m-d H:i:s");
             $params_update = array(
                 'Ama_Cod' => $_POST['Ama_Cod'],
-                'Ama_IgV' => $rutaRelativaImgEst
+                'Ama_IgV' => $rutaRelativaImgEst,
+                'Ama_Fha' => $fecha_hora_aprobacion
             );
             $obBD_con1->operacionobBD(19, $params_update, $obBD_conexion);
 
@@ -1955,7 +1957,7 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
         // Esta variable será utilizada por la función toggleBotonesCliente() en man_ant_1.0.js
         var tieneClienteManifiesto = <?php echo (isset($cliente_manifiesto) && !empty($cliente_manifiesto) && isset($cliente_manifiesto['Cli_Cod'])) ? 'true' : 'false'; ?>;
     </script>
-    <script src="../VALIDACIONES/man_ant_1.0.js?x=59"></script>
+    <script src="../VALIDACIONES/man_ant_1.0.js?x=60"></script>
     <script type="text/javascript" src="../../framework/jquery/jquery.plugins/MaskedInput/jquery.maskedinput.1.4.1.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=1"></script>
     <script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>
@@ -2188,20 +2190,24 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
                 <legend class="Titulos2" style="font-size: 12px; margin-bottom: 6px;">Datos del Anticipo a Aprobar</legend>
                 <div class="form-horizontal" style="font-size: 12px;">
                     <div class="form-group" style="margin-bottom: 4px;">
-                        <label class="col-xs-3 control-label text-muted" style="padding-top: 0;">Cliente:</label>
-                        <div class="col-xs-9" id="aprob_cliente_txt" style="font-weight: bold; color: #333;">-</div>
+                        <label class="col-xs-4 control-label text-muted" style="padding-top: 0;">Cliente:</label>
+                        <div class="col-xs-8" id="aprob_cliente_txt" style="font-weight: bold; color: #333;">-</div>
                     </div>
                     <div class="form-group" style="margin-bottom: 4px;">
-                        <label class="col-xs-3 control-label text-muted" style="padding-top: 0;">Fecha:</label>
-                        <div class="col-xs-9" id="aprob_fecha_txt">-</div>
+                        <label class="col-xs-4 control-label text-muted" style="padding-top: 0;">Fecha Anticipo:</label>
+                        <div class="col-xs-8" id="aprob_fecha_txt">-</div>
                     </div>
                     <div class="form-group" style="margin-bottom: 4px;">
-                        <label class="col-xs-3 control-label text-muted" style="padding-top: 0;">Valor:</label>
-                        <div class="col-xs-9" id="aprob_valor_txt" style="font-weight: bold; color: #2e6da4;">-</div>
+                        <label class="col-xs-4 control-label text-muted" style="padding-top: 0;">Aprobación:</label>
+                        <div class="col-xs-8" id="aprob_fecha_hora_txt" style="font-weight: bold; color: #2e6da4;">-</div>
                     </div>
                     <div class="form-group" style="margin-bottom: 4px;">
-                        <label class="col-xs-3 control-label text-muted" style="padding-top: 0;">No. Doc.:</label>
-                        <div class="col-xs-9" id="aprob_doc_txt">-</div>
+                        <label class="col-xs-4 control-label text-muted" style="padding-top: 0;">Valor:</label>
+                        <div class="col-xs-8" id="aprob_valor_txt" style="font-weight: bold; color: #2e6da4;">-</div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 4px;">
+                        <label class="col-xs-4 control-label text-muted" style="padding-top: 0;">No. Doc.:</label>
+                        <div class="col-xs-8" id="aprob_doc_txt">-</div>
                     </div>
                 </div>
             </fieldset>

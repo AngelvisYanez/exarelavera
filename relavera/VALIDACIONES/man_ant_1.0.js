@@ -952,7 +952,13 @@ $(function () {
         $('#pagosDialog').createDialog({ height: 'auto', width: 620, icon: 'usd' });
 
     if ($('#aprobarAnticipoDialog').length === 1) {
-        $('#aprobarAnticipoDialog').createDialog({ width: 540, height: 'auto', icon: 'ok' });
+        $('#aprobarAnticipoDialog').createDialog({ width: 540, height: 'auto', icon: 'ok',
+            close: function () {
+                if (typeof detenerRelojAprobacion === 'function') {
+                    detenerRelojAprobacion();
+                }
+            }
+        });
     }
 
     // Listener para previsualización de la foto del estado de cuenta en el modal de aprobación
@@ -2035,6 +2041,34 @@ function generarComprobanteAnticipo(rowObject) {
  * Función principal para confirmar/aprobar el anticipo.
  * Valida condiciones previas y abre el modal para adjuntar la foto del estado de cuenta (obligatorio).
  */
+var timerRelojAprobacion = null;
+
+function actualizarRelojAprobacion() {
+    var ahora = new Date();
+    var yyyy = ahora.getFullYear();
+    var mm = String(ahora.getMonth() + 1).padStart(2, '0');
+    var dd = String(ahora.getDate()).padStart(2, '0');
+    var hh = String(ahora.getHours()).padStart(2, '0');
+    var min = String(ahora.getMinutes()).padStart(2, '0');
+    var ss = String(ahora.getSeconds()).padStart(2, '0');
+    var fechaHoraActual = yyyy + '-' + mm + '-' + dd + ' ' + hh + ':' + min + ':' + ss;
+    $('#aprob_fecha_hora_txt').text(fechaHoraActual);
+    return fechaHoraActual;
+}
+
+function iniciarRelojAprobacion() {
+    detenerRelojAprobacion();
+    actualizarRelojAprobacion();
+    timerRelojAprobacion = setInterval(actualizarRelojAprobacion, 1000);
+}
+
+function detenerRelojAprobacion() {
+    if (timerRelojAprobacion !== null) {
+        clearInterval(timerRelojAprobacion);
+        timerRelojAprobacion = null;
+    }
+}
+
 function confirmAnticipo(row) {
     // Si te pasan un array (como [row, idGrid]), recupera el objeto correcto
     var rowObject = Array.isArray(row) ? row[0] : row;
@@ -2065,10 +2099,14 @@ function confirmAnticipo(row) {
     $('#aprob_valor_txt').text(valTxt);
     $('#aprob_fecha_txt').text(rowObject.Ama_Fec || '—');
 
+    // Iniciar reloj dinámico en tiempo real para Fecha/Hora Validación
+    iniciarRelojAprobacion();
+
     // Abrir el diálogo de aprobación
     if ($('#aprobarAnticipoDialog').length) {
         $('#aprobarAnticipoDialog').dialog('open');
     } else {
+        detenerRelojAprobacion();
         $.alert('Error: No se encontró el modal de aprobación de anticipo.');
     }
 }
@@ -2106,10 +2144,14 @@ function ejecutarAprobacionAnticipo() {
         return;
     }
 
+    // Capturar fecha y hora exacta al momento de la aprobación
+    var fechaHoraExacta = actualizarRelojAprobacion();
+
     // Crear FormData para enviar multipart
     var formData = new FormData();
     formData.append('saveComprobanteAjax', '1');
     formData.append('Ama_Cod', amaCod);
+    formData.append('Ama_Fha', fechaHoraExacta);
     formData.append('foto_estado_cuenta', file);
 
     $('#btnConfirmarAprobacion').prop('disabled', true);

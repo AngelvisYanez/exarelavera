@@ -214,6 +214,7 @@ function sentencias_manifiesto($id, $Par_Sql)
             // ORDER BY manifiesto_anticipo.Ama_Cod DESC;";
             $sql = "SELECT 
                             manifiesto_anticipo.Ama_Cod, manifiesto_anticipo.Ama_Fec,
+                            manifiesto_anticipo.Ama_Fha,
                             manifiesto_anticipo.Ama_Val, manifiesto_anticipo.Ama_Doc,
                             manifiesto_anticipo.Ama_Est,
                             manifiesto_anticipo.Ama_Tip, manifiesto_anticipo.Cli_Cod,
@@ -310,8 +311,9 @@ function sentencias_manifiesto($id, $Par_Sql)
             return $sql;
             // break;
         case 19:
-            // Actualizar el estado del anticipo a Acreditado cuando se genera el comprobante
-            $sql = "UPDATE manifiesto_anticipo SET Ama_Tip = 'A', Ama_IgV = '$Par_Sql[Ama_IgV]' WHERE Ama_Cod = '" . $Par_Sql['Ama_Cod'] . "';";
+            // Actualizar el estado del anticipo a Acreditado cuando se genera el comprobante y guardar fecha/hora
+            $ama_fha_sql = (isset($Par_Sql['Ama_Fha']) && !empty($Par_Sql['Ama_Fha'])) ? "'" . addslashes($Par_Sql['Ama_Fha']) . "'" : "NOW()";
+            $sql = "UPDATE manifiesto_anticipo SET Ama_Tip = 'A', Ama_IgV = '$Par_Sql[Ama_IgV]', Ama_Fha = $ama_fha_sql WHERE Ama_Cod = '" . $Par_Sql['Ama_Cod'] . "';";
             return $sql;
             // break;
         case 16:
