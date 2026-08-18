@@ -21,6 +21,65 @@ let adqEtapaPermiteCotizaciones = true;
 /** false = etapa actual NO permite marcar cotizacion ganadora (Nod_Cot_Sel = 0). */
 let adqEtapaPermiteSeleccionarGanadora = true;
 
+function adqCollectRubros() {
+    const ids = [];
+    const seen = {};
+    $('.chk-rubro-ppto:checked, #rubrosHidden input[name="rubros[]"]').each(function() {
+        const v = parseInt($(this).val(), 10);
+        if (v > 0 && !seen[v]) {
+            seen[v] = true;
+            ids.push(v);
+        }
+    });
+    return ids;
+}
+
+function adqSyncRubrosHidden() {
+    const $h = $('#rubrosHidden');
+    if ($h.length) {
+        $h.empty();
+        adqCollectRubros().forEach(function(id) {
+            $h.append($('<input type="hidden" name="rubros[]">').val(id));
+        });
+    }
+    const n = adqCollectRubros().length;
+    const txt = n + (n === 1 ? ' seleccionado' : ' seleccionados');
+    $('#lblRubrosSel, #lblRubrosSelModal').text(txt);
+    const $res = $('#resumenRubrosPpto');
+    if ($res.length) {
+        $res.empty();
+        $('.chk-rubro-ppto:checked').each(function() {
+            const nom = $(this).closest('tr').attr('data-rubro') || $(this).val();
+            $res.append($('<span class="adq-rubro-chip"></span>').text(nom));
+        });
+    }
+}
+
+function adqValidarRubros() {
+    if ($('#tblRubrosPpto tbody tr.adq-rubro-row').length && adqCollectRubros().length === 0) {
+        alert('Debe seleccionar al menos un tipo de rubro presupuestario.');
+        return false;
+    }
+    return true;
+}
+
+function adqAplicarRubros(ids) {
+    const set = {};
+    (ids || []).forEach(function(id) {
+        set[parseInt(id, 10)] = true;
+    });
+    $('.chk-rubro-ppto').each(function() {
+        $(this).prop('checked', !!set[parseInt($(this).val(), 10)]);
+    });
+    adqSyncRubrosHidden();
+}
+
+if (typeof window !== 'undefined') {
+    window.adqCollectRubros = adqCollectRubros;
+    window.adqValidarRubros = adqValidarRubros;
+    window.adqAplicarRubros = adqAplicarRubros;
+}
+
 function adqSetEtapaPermiteSeleccionarGanadora(permite) {
     adqEtapaPermiteSeleccionarGanadora = !!permite;
     if (typeof window !== 'undefined') {
@@ -861,6 +920,9 @@ function validarFormularioBase() {
         alert('Debe seleccionar un Tipo de Requerimiento.');
         return false;
     }
+    if (typeof window.adqValidarRubros === 'function' && !window.adqValidarRubros()) {
+        return false;
+    }
     if (!$('#Sol_Jus').val().trim()) {
         alert('Debe ingresar la justificacion de la solicitud.');
         return false;
@@ -1021,6 +1083,9 @@ function cargarBorradorEnFormulario(solCod, porNodo) {
 
         cargarDecisionesFlujo(s.Trq_Cod, res.decision_vals || {});
         cargarSeleccionUsuariosFlujo(s.Trq_Cod, res.nodo_usuarios || {});
+        if (typeof window.adqAplicarRubros === 'function') {
+            window.adqAplicarRubros(res.rubros || []);
+        }
     }).fail(function() {
         alert('Error de red al cargar la solicitud.');
     });

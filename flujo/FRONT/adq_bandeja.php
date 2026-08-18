@@ -737,6 +737,27 @@ if (isset($ajax_get_solicitud_detail)) {
 
     $sol = $obBD_adq->aplicarRequisitosEfectivos($sol);
 
+    $proy = null;
+    if (!empty($sol['Pry_Cod'])) {
+        $proy = $obBD_con1->getRowConsultaSql(
+            "SELECT Pro_Nom, Pro_Ide FROM pre_proyectos WHERE Pro_Cod = " . intval($sol['Pry_Cod']) . " LIMIT 1;",
+            $obBD_conexion
+        );
+    }
+    if (empty($proy['Pro_Nom'])) {
+        $proy = $obBD_con1->getRowConsultaSql(
+            "SELECT pr.Pro_Nom, pr.Pro_Ide
+             FROM adq_solicitudes_rubros sr
+             INNER JOIN pre_proyecto_detalles pd ON pd.Pdp_Cod = sr.Pdp_Cod
+             LEFT JOIN pre_proyectos pr ON pr.Pro_Cod = pd.Pro_Cod
+             WHERE sr.Sol_Cod = $sol_cod
+             LIMIT 1;",
+            $obBD_conexion
+        );
+    }
+    $sol['Pro_Nom'] = !empty($proy['Pro_Nom']) ? $proy['Pro_Nom'] : '';
+    $sol['Pro_Ide'] = !empty($proy['Pro_Ide']) ? $proy['Pro_Ide'] : '';
+
     $puede_resolver = $wf_mgr->puedeUsuarioResolverSolicitud(
         $sol,
         $wf_ctx['usu_cod'],
@@ -993,13 +1014,15 @@ foreach ($pendientes as $idx => $p) {
 
 // B. MIS SOLICITUDES EN CURSO (Creadas por mi)
 $mis_solicitudes = $obBD_con1->getArrayConsultaSql("
-    SELECT s.Sol_Cod, s.Sol_Num, s.Sol_Tit, s.Sol_Fec, s.Sol_Est, s.Sol_Pri, s.Sol_Val_Est, s.Usu_Sol, s.Dep_Sol,
+    SELECT s.Sol_Cod, s.Sol_Num, s.Sol_Tit, s.Sol_Fec, s.Sol_Est, s.Sol_Pri, s.Sol_Val_Est, s.Usu_Sol, s.Dep_Sol, s.Pry_Cod,
            tr.Trq_Des,
            IFNULL(wfm.Wfm_Nom, 'Sin flujo') AS Wfm_Nom,
            COALESCE(wfm.Wfm_Fam_Cod, wfm.Wfm_Cod, tr.Wfm_Cod) AS Wfm_Fam_Cod,
            d.Wde_Des AS Dep_Des,
            i.Ins_Cod, i.Wfm_Cod, i.Nod_Act, i.Ins_Est,
-           n.Nod_Nom
+           n.Nod_Nom,
+           IFNULL(pry.Pro_Nom, '') AS Pro_Nom,
+           IFNULL(pry.Pro_Ide, '') AS Pro_Ide
     FROM adq_solicitudes s
     INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
     LEFT JOIN wf_departamentos d ON d.Wde_Cod = s.Dep_Sol
@@ -1010,9 +1033,35 @@ $mis_solicitudes = $obBD_con1->getArrayConsultaSql("
     )
     LEFT JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act
     LEFT JOIN wf_flujos_modelos wfm ON wfm.Wfm_Cod = COALESCE(i.Wfm_Cod, tr.Wfm_Cod)
+    LEFT JOIN pre_proyectos pry ON pry.Pro_Cod = s.Pry_Cod
     WHERE s.Emp_Cod = $emp_cod AND s.Usu_Sol = $usu_cod AND s.Sol_Est IN ('E', 'O', 'P', 'I')
     ORDER BY s.Sol_Fec DESC, s.Sol_Cod DESC
     LIMIT 150;", $obBD_conexion);
+if ($mis_solicitudes === false || $mis_solicitudes === null) {
+    $mis_solicitudes = $obBD_con1->getArrayConsultaSql("
+        SELECT s.Sol_Cod, s.Sol_Num, s.Sol_Tit, s.Sol_Fec, s.Sol_Est, s.Sol_Pri, s.Sol_Val_Est, s.Usu_Sol, s.Dep_Sol, s.Pry_Cod,
+               tr.Trq_Des,
+               IFNULL(wfm.Wfm_Nom, 'Sin flujo') AS Wfm_Nom,
+               COALESCE(wfm.Wfm_Fam_Cod, wfm.Wfm_Cod, tr.Wfm_Cod) AS Wfm_Fam_Cod,
+               d.Wde_Des AS Dep_Des,
+               i.Ins_Cod, i.Wfm_Cod, i.Nod_Act, i.Ins_Est,
+               n.Nod_Nom,
+               '' AS Pro_Nom,
+               '' AS Pro_Ide
+        FROM adq_solicitudes s
+        INNER JOIN adq_tipos_requerimientos tr ON tr.Trq_Cod = s.Trq_Cod
+        LEFT JOIN wf_departamentos d ON d.Wde_Cod = s.Dep_Sol
+        LEFT JOIN wf_instancias i ON i.Ins_Cod = (
+            SELECT MAX(i2.Ins_Cod)
+            FROM wf_instancias i2
+            WHERE i2.Ins_Ent_Typ = 'adq_solicitudes' AND i2.Ins_Ent_Cod = s.Sol_Cod
+        )
+        LEFT JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act
+        LEFT JOIN wf_flujos_modelos wfm ON wfm.Wfm_Cod = COALESCE(i.Wfm_Cod, tr.Wfm_Cod)
+        WHERE s.Emp_Cod = $emp_cod AND s.Usu_Sol = $usu_cod AND s.Sol_Est IN ('E', 'O', 'P', 'I')
+        ORDER BY s.Sol_Fec DESC, s.Sol_Cod DESC
+        LIMIT 150;", $obBD_conexion);
+}
 if ($mis_solicitudes === false || $mis_solicitudes === null) {
     $mis_solicitudes = array();
 }
@@ -1144,9 +1193,53 @@ function adqEnriquecerProgresoPasos(&$rows, $wf_mgr) {
     }
 }
 
+function adqEnriquecerNombreProyecto(&$rows, $obBD_con1, $conexion) {
+    if (!is_array($rows) || empty($rows)) {
+        return;
+    }
+    $faltan = array();
+    foreach ($rows as $idx => $row) {
+        $nom = isset($row['Pro_Nom']) ? trim((string)$row['Pro_Nom']) : '';
+        if ($nom === '') {
+            $sol = intval(isset($row['Sol_Cod']) ? $row['Sol_Cod'] : 0);
+            if ($sol > 0) {
+                $faltan[$sol] = $idx;
+            }
+        }
+    }
+    if (empty($faltan)) {
+        return;
+    }
+    $ids = implode(',', array_map('intval', array_keys($faltan)));
+    $map = $obBD_con1->getArrayConsultaSql(
+        "SELECT sr.Sol_Cod,
+                MIN(IFNULL(pr.Pro_Nom, '')) AS Pro_Nom,
+                MIN(IFNULL(pr.Pro_Ide, '')) AS Pro_Ide
+         FROM adq_solicitudes_rubros sr
+         INNER JOIN pre_proyecto_detalles pd ON pd.Pdp_Cod = sr.Pdp_Cod
+         LEFT JOIN pre_proyectos pr ON pr.Pro_Cod = pd.Pro_Cod
+         WHERE sr.Sol_Cod IN ($ids)
+         GROUP BY sr.Sol_Cod;",
+        $conexion
+    );
+    if (!is_array($map)) {
+        return;
+    }
+    foreach ($map as $r) {
+        $sol = intval($r['Sol_Cod']);
+        if (!isset($faltan[$sol])) {
+            continue;
+        }
+        $idx = $faltan[$sol];
+        $rows[$idx]['Pro_Nom'] = isset($r['Pro_Nom']) ? $r['Pro_Nom'] : '';
+        $rows[$idx]['Pro_Ide'] = isset($r['Pro_Ide']) ? $r['Pro_Ide'] : '';
+    }
+}
+
 adqEnriquecerProgresoPasos($pendientes, $wf_mgr);
 adqEnriquecerProgresoPasos($mis_solicitudes, $wf_mgr);
 adqEnriquecerProgresoPasos($historico, $wf_mgr);
+adqEnriquecerNombreProyecto($mis_solicitudes, $obBD_con1, $obBD_conexion);
 
 $flujos_opciones = array();
 foreach ($wf_mgr->listarFlujosPublicados($emp_cod) as $f) {
@@ -2554,6 +2647,7 @@ function adqEtiquetaMiAccion($accion) {
                             <tr>
                                 <th style="width: 100px;">N&deg; Sol.</th>
                                 <th>Nombre</th>
+                                <th>Proyecto</th>
                                 <th>Flujo</th>
                                 <th style="width: 150px;">Fecha</th>
                                 <th>Departamento</th>
@@ -2568,7 +2662,7 @@ function adqEtiquetaMiAccion($accion) {
                         </thead>
                         <tbody>
                             <?php if (empty($mis_solicitudes)) { ?>
-                                <tr class="text-center"><td colspan="12" class="text-muted py-4">No ha iniciado requerimientos de adquisici&oacute;n a&uacute;n.</td></tr>
+                                <tr class="text-center"><td colspan="13" class="text-muted py-4">No ha iniciado requerimientos de adquisici&oacute;n a&uacute;n.</td></tr>
                             <?php } else { 
                                 foreach ($mis_solicitudes as $ms) { 
                                     $est = 'En espera de completar'; $badge = 'secondary';
@@ -2582,6 +2676,15 @@ function adqEtiquetaMiAccion($accion) {
                                     <tr class="text-center adq-row-solicitud" data-wfm-fam="<?php echo intval($ms['Wfm_Fam_Cod']); ?>" data-dep-sol="<?php echo intval(isset($ms['Dep_Sol']) ? $ms['Dep_Sol'] : 0); ?>">
                                         <td class="fw-bold"><?php echo $ms['Sol_Num']; ?></td>
                                         <td class="text-start"><?php echo htmlspecialchars(isset($ms['Sol_Tit']) ? $ms['Sol_Tit'] : '', ENT_QUOTES, 'UTF-8'); ?></td>
+                                        <td class="text-start"><?php
+                                            $proy_txt = trim(
+                                                (isset($ms['Pro_Ide']) && $ms['Pro_Ide'] !== '' ? $ms['Pro_Ide'] . ' — ' : '')
+                                                . (isset($ms['Pro_Nom']) ? $ms['Pro_Nom'] : '')
+                                            );
+                                            echo $proy_txt !== ''
+                                                ? htmlspecialchars(adq_ensure_utf8_string($proy_txt), ENT_QUOTES, 'UTF-8')
+                                                : '<span class="text-muted">—</span>';
+                                        ?></td>
                                         <td class="text-start"><?php echo htmlspecialchars($ms['Wfm_Nom']); ?></td>
                                         <td><?php echo date('Y-m-d H:i', strtotime($ms['Sol_Fec'])); ?></td>
                                         <td><?php echo htmlspecialchars(adqTextoDepartamentoSolicitante(isset($ms['Dep_Des']) ? $ms['Dep_Des'] : ''), ENT_QUOTES, 'UTF-8'); ?></td>
@@ -2767,6 +2870,10 @@ function adqEtiquetaMiAccion($accion) {
                                         <td id="detTipo" class="fw-semibold text-primary"></td>
                                         <td class="adq-detail-kv-label">Valor Est:</td>
                                         <td id="detTotal" class="fw-bold font-monospace text-success"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="adq-detail-kv-label">Proyecto:</td>
+                                        <td colspan="3" id="detProyecto" class="fw-semibold text-dark"></td>
                                     </tr>
                                     <tr>
                                         <td class="adq-detail-kv-label">Justificaci?n:</td>
@@ -5007,6 +5114,14 @@ let currentInsCod = null;
                     $('#detDepartamento').text((sol.Dep_Des && String(sol.Dep_Des).trim() !== '') ? sol.Dep_Des : 'Sin departamento');
                     $('#detTipo').text(sol.Trq_Des);
                     $('#detTotal').text(`$ ${parseFloat(sol.Sol_Val_Est).toFixed(2)}`);
+                    var proyTxt = '';
+                    if (sol.Pro_Ide) {
+                        proyTxt = String(sol.Pro_Ide);
+                    }
+                    if (sol.Pro_Nom) {
+                        proyTxt += (proyTxt ? ' — ' : '') + String(sol.Pro_Nom);
+                    }
+                    $('#detProyecto').text(proyTxt || '—');
                     $('#detJustificacion').text(sol.Sol_Jus);
 
                     const reqParts = [];
@@ -5902,7 +6017,7 @@ let currentInsCod = null;
                 } else {
                     $.getScript('../../framework/plugins/cedulaRuc.js')
                         .done(function() {
-                            return $.getScript('../VALIDACIONES/adq_solicitud.js?v=20260803h');
+                            return $.getScript('../VALIDACIONES/adq_solicitud.js?v=20260818a');
                         })
                         .done(function() {
                             if (requestId !== formLoadRequestId) {

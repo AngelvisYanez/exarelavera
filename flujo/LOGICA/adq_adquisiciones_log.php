@@ -1370,6 +1370,222 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         }
     }
 
+    public function ensureSolicitudRubrosTable() {
+        static $ready = false;
+        if ($ready) {
+            return;
+        }
+        if (!empty($_SESSION['adq_schema_solicitudes_rubros_ok'])) {
+            $ready = true;
+            return;
+        }
+        $sql = "CREATE TABLE IF NOT EXISTS adq_solicitudes_rubros (
+            Sol_Cod BIGINT NOT NULL DEFAULT 0 COMMENT 'Codigo de Solicitud',
+            Pdp_Cod BIGINT NOT NULL DEFAULT 0 COMMENT 'Codigo de detalle proyecto presupuesto',
+            PRIMARY KEY (Sol_Cod, Pdp_Cod),
+            KEY adq_solicitudes_rubros_pre_proyecto_detalles_FK (Pdp_Cod)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+        if (!$this->grabarv_registros($sql, $this->conexion)) {
+            throw new Exception('No se pudo preparar la tabla de rubros de solicitud: ' . $this->getMsgError());
+        }
+        $ready = true;
+        if (isset($_SESSION)) {
+            $_SESSION['adq_schema_solicitudes_rubros_ok'] = 1;
+        }
+    }
+
+    public function extraerRubrosDesdePost($data) {
+        $raw = array();
+        if (isset($data['rubros'])) {
+            $raw = is_array($data['rubros']) ? $data['rubros'] : explode(',', (string)$data['rubros']);
+        } elseif (isset($data['Pdp_Cod']) && is_array($data['Pdp_Cod'])) {
+            $raw = $data['Pdp_Cod'];
+        }
+        $out = array();
+        foreach ($raw as $v) {
+            $cod = intval($v);
+            if ($cod > 0) {
+                $out[$cod] = $cod;
+            }
+        }
+        return array_values($out);
+    }
+
+    public function listarRubrosPresupuestoDisponibles($emp_cod) {
+        $emp_cod = intval($emp_cod);
+        if ($emp_cod <= 0) {
+            return array();
+        }
+        // Ppe_Est: A=activo, B=borrador, R=revision, I=inactivo.
+        // El default de pre_presupuesto es B; no exigir solo A.
+        $sql = "SELECT
+                d.Pdp_Cod,
+                d.Pdp_Rubro,
+                d.Pdp_PreAnual,
+                d.Pro_Cod,
+                IFNULL(p.Ppa_Cla, '') AS Ppa_Cla,
+                IFNULL(p.Ppa_Des, '') AS Ppa_Des,
+                IFNULL(pr.Pro_Nom, CAST(d.Pro_Cod AS CHAR)) AS Pro_Nom,
+                IFNULL(pr.Pro_Ide, '') AS Pro_Ide,
+                IFNULL(pp.Ppe_Ani, 0) AS Ppe_Ani
+            FROM pre_proyecto_detalles d
+            LEFT JOIN pre_presupuesto pp ON pp.Ppe_Cod = d.Ppe_Cod
+            LEFT JOIN pre_partidas p ON p.Ppa_Cod = d.Ppa_Cod
+            LEFT JOIN pre_proyectos pr ON pr.Pro_Cod = d.Pro_Cod AND pr.Emp_Cod = d.Emp_Cod
+            WHERE d.Emp_Cod = $emp_cod
+              AND (pp.Ppe_Cod IS NULL OR IFNULL(pp.Ppe_Est, 'B') <> 'I')
+            ORDER BY
+                CASE WHEN IFNULL(pp.Ppe_Est, '') = 'A' THEN 0 ELSE 1 END,
+                pp.Ppe_Ani DESC,
+                pr.Pro_Nom,
+                p.Ppa_Cla,
+                d.Pdp_Rubro;";
+        $rows = $this->getArrayConsultaSql($sql, $this->conexion);
+        if (!is_array($rows) || empty($rows)) {
+            $rows = $this->getArrayConsultaSql(
+                "SELECT d.Pdp_Cod, d.Pdp_Rubro, d.Pdp_PreAnual, d.Pro_Cod,
+                        '' AS Ppa_Cla, '' AS Ppa_Des,
+                        CAST(d.Pro_Cod AS CHAR) AS Pro_Nom, '' AS Pro_Ide, 0 AS Ppe_Ani
+                 FROM pre_proyecto_detalles d
+                 WHERE d.Emp_Cod = $emp_cod
+                 ORDER BY d.Pdp_Rubro;",
+                $this->conexion
+            );
+        }
+        if (!is_array($rows) || empty($rows)) {
+            return array();
+        }
+        $mapa_rows = $this->getArrayConsultaSql(
+            "SELECT Ppa_Cla, Ppa_Des FROM pre_partidas WHERE Emp_Cod = $emp_cod;",
+            $this->conexion
+        );
+        $mapa = array();
+        if (is_array($mapa_rows)) {
+            foreach ($mapa_rows as $mp) {
+                $cla = isset($mp['Ppa_Cla']) ? trim($mp['Ppa_Cla']) : '';
+                if ($cla !== '') {
+                    $mapa[$cla] = isset($mp['Ppa_Des']) ? $mp['Ppa_Des'] : '';
+                }
+            }
+        }
+        foreach ($rows as $i => $r) {
+            $cla = isset($r['Ppa_Cla']) ? trim($r['Ppa_Cla']) : '';
+            $parts = ($cla === '') ? array() : explode('.', $cla);
+            $grupo = isset($parts[0]) ? $parts[0] : '';
+            $sub = (count($parts) >= 3) ? ($parts[0] . '.' . $parts[1]) : '';
+            $rows[$i]['grupo_cod'] = $grupo;
+            $rows[$i]['grupo_des'] = ($grupo !== '' && isset($mapa[$grupo])) ? $mapa[$grupo] : '';
+            $rows[$i]['subgrupo_cod'] = $sub;
+            $rows[$i]['subgrupo_des'] = ($sub !== '' && isset($mapa[$sub])) ? $mapa[$sub] : '';
+            foreach (array('Pdp_Rubro', 'Ppa_Des', 'Pro_Nom', 'Pro_Ide', 'grupo_des', 'subgrupo_des') as $campo) {
+                if (!isset($rows[$i][$campo]) || $rows[$i][$campo] === '') {
+                    continue;
+                }
+                $val = (string)$rows[$i][$campo];
+                if (function_exists('mb_check_encoding') && mb_check_encoding($val, 'UTF-8')) {
+                    continue;
+                }
+                $rows[$i][$campo] = utf8_encode($val);
+            }
+        }
+        return $rows;
+    }
+
+    public function listarRubrosSolicitud($sol_cod) {
+        $this->ensureSolicitudRubrosTable();
+        $sol_cod = intval($sol_cod);
+        if ($sol_cod <= 0) {
+            return array();
+        }
+        $rows = $this->getArrayConsultaSql(
+            "SELECT Pdp_Cod FROM adq_solicitudes_rubros WHERE Sol_Cod = $sol_cod;",
+            $this->conexion
+        );
+        $out = array();
+        if (is_array($rows)) {
+            foreach ($rows as $row) {
+                $cod = intval($row['Pdp_Cod']);
+                if ($cod > 0) {
+                    $out[] = $cod;
+                }
+            }
+        }
+        return $out;
+    }
+
+    public function persistirRubrosSolicitud($sol_cod, $pdp_cods, $emp_cod = 0) {
+        $this->ensureSolicitudRubrosTable();
+        $sol_cod = intval($sol_cod);
+        $emp_cod = intval($emp_cod);
+        if ($sol_cod <= 0) {
+            return;
+        }
+        if (!$this->grabarv_registros("DELETE FROM adq_solicitudes_rubros WHERE Sol_Cod = $sol_cod;", $this->conexion)) {
+            throw new Exception('No se pudieron actualizar los rubros de la solicitud: ' . $this->getMsgError());
+        }
+        if (!is_array($pdp_cods) || empty($pdp_cods)) {
+            return;
+        }
+        foreach ($pdp_cods as $pdp) {
+            $pdp = intval($pdp);
+            if ($pdp <= 0) {
+                continue;
+            }
+            $whereEmp = $emp_cod > 0 ? " AND Emp_Cod = $emp_cod" : '';
+            $ok = $this->getRowConsultaSql(
+                "SELECT Pdp_Cod, Pro_Cod FROM pre_proyecto_detalles WHERE Pdp_Cod = $pdp $whereEmp LIMIT 1;",
+                $this->conexion
+            );
+            if (empty($ok['Pdp_Cod'])) {
+                throw new Exception('Uno de los rubros presupuestarios seleccionados no es válido.');
+            }
+            if (!$this->grabarv_registros(
+                "INSERT INTO adq_solicitudes_rubros (Sol_Cod, Pdp_Cod) VALUES ($sol_cod, $pdp);",
+                $this->conexion
+            )) {
+                throw new Exception('No se pudo guardar el rubro presupuestario: ' . $this->getMsgError());
+            }
+        }
+        $this->sincronizarPryCodDesdeRubros($sol_cod, $pdp_cods);
+    }
+
+    private function validarRubrosObligatorios($emp_cod, $data) {
+        $disponibles = $this->listarRubrosPresupuestoDisponibles($emp_cod);
+        if (empty($disponibles)) {
+            return;
+        }
+        $rubros = $this->extraerRubrosDesdePost($data);
+        if (empty($rubros)) {
+            throw new Exception('Debe seleccionar al menos un tipo de rubro presupuestario.');
+        }
+    }
+
+    private function sincronizarPryCodDesdeRubros($sol_cod, $pdp_cods) {
+        $sol_cod = intval($sol_cod);
+        if ($sol_cod <= 0 || empty($pdp_cods) || !is_array($pdp_cods)) {
+            return;
+        }
+        $pdp = intval($pdp_cods[0]);
+        if ($pdp <= 0) {
+            return;
+        }
+        $row = $this->getRowConsultaSql(
+            "SELECT Pro_Cod FROM pre_proyecto_detalles WHERE Pdp_Cod = $pdp LIMIT 1;",
+            $this->conexion
+        );
+        if (empty($row['Pro_Cod']) || !ctype_digit((string)$row['Pro_Cod'])) {
+            return;
+        }
+        $pry = intval($row['Pro_Cod']);
+        if ($pry <= 0) {
+            return;
+        }
+        $this->grabarv_registros(
+            "UPDATE adq_solicitudes SET Pry_Cod = $pry WHERE Sol_Cod = $sol_cod;",
+            $this->conexion
+        );
+    }
+
     public function extraerDecisionValsDesdePost($data) {
         $vals = array();
         if (empty($data['decision_vals']) || !is_array($data['decision_vals'])) {
@@ -1795,6 +2011,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $this->ensureSolicitudAdjuntosTable();
         }
         $this->ensureDecisionValsTable();
+        $this->ensureSolicitudRubrosTable();
         $fecha_actual = date('Y-m-d H:i:s');
         $usu_sol = isset($_SESSION['Ses_Usu_Cod']) ? intval($_SESSION['Ses_Usu_Cod']) : 0;
         $dep_sol_cod = $this->resolverDepSolicitante($data['Emp_Cod'], $usu_sol);
@@ -1886,6 +2103,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         if (!empty($adjuntos_nuevos)) {
             $this->sincronizarAdjuntosSolicitud($sol_cod, $adjuntos_nuevos);
         }
+
+        $this->persistirRubrosSolicitud($sol_cod, $this->extraerRubrosDesdePost($data), $emp_cod);
 
         return array('Sol_Cod' => $sol_cod, 'Num' => $sol_num, 'Trq_Cod' => $trq_cod);
     }
@@ -3662,6 +3881,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             'items' => ($items === false || $items === null) ? array() : $items,
             'cotizaciones' => ($cotizaciones === false || $cotizaciones === null) ? array() : $cotizaciones,
             'adjuntos' => $this->listarAdjuntosSolicitud($sol_cod),
+            'rubros' => $this->listarRubrosSolicitud($sol_cod),
             'decision_vals' => $this->listarDecisionVals($sol_cod),
             'nodo_usuarios' => $wf_mgr->listarNodoUsuariosSolicitud($sol_cod),
             'prv_sug_text' => $prv_sug_text,
@@ -3726,6 +3946,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             }
 
             $this->guardarDetalleSolicitud($sol_cod, $items);
+            $this->validarRubrosObligatorios($emp_cod, $data);
+            $this->persistirRubrosSolicitud($sol_cod, $this->extraerRubrosDesdePost($data), $emp_cod);
             // Cotizaciones: cargar/editar y/o solo marcar ganadora según flags del nodo.
             $permitir_cot = true;
             $permitir_sel = true;
@@ -3876,6 +4098,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $emp_cod = isset($data['Emp_Cod']) ? intval($data['Emp_Cod']) : (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0);
             $decision_vals = $this->extraerDecisionValsDesdePost($data);
             $this->validarDecisionValsObligatorios($trq_cod, $emp_cod, $decision_vals);
+            $this->validarRubrosObligatorios($emp_cod, $data);
 
             $data['Sol_Tit'] = $titulo;
             $data['Sol_Pri'] = (!empty($decision_vals['Sol_Pri'])) ? $decision_vals['Sol_Pri'] : 'MEDIA';
@@ -4463,10 +4686,11 @@ class adq_adquisiciones_log extends MysqlDatosContab {
 
         $sol = $this->getRowConsultaSql(
             "SELECT s.Sol_Cod, s.Sol_Num, s.Sol_Tit, s.Sol_Fec, s.Sol_Pri, s.Sol_Val_Est, s.Sol_Jus, s.Sol_Est,
-                    s.Emp_Cod, e.Emp_Nom, e.Emp_Log, t.Trq_Des,
+                    s.Emp_Cod, s.Pry_Cod, e.Emp_Nom, e.Emp_Log, t.Trq_Des,
                     TRIM(CONCAT(IFNULL(p.Prs_Nom, ''), ' ', IFNULL(p.Prs_Ape, ''))) AS Solicitante_Nom,
                     d.Wde_Des AS Dep_Nom,
-                    f.Wfm_Nom
+                    f.Wfm_Nom,
+                    pr.Pro_Nom, pr.Pro_Ide
              FROM adq_solicitudes s
              LEFT JOIN empresas e ON e.Emp_Cod = s.Emp_Cod
              LEFT JOIN adq_tipos_requerimientos t ON t.Trq_Cod = s.Trq_Cod
@@ -4475,12 +4699,37 @@ class adq_adquisiciones_log extends MysqlDatosContab {
              LEFT JOIN wf_departamentos d ON d.Wde_Cod = s.Dep_Sol
              LEFT JOIN wf_instancias i ON i.Ins_Cod = $ins_cod
              LEFT JOIN wf_flujos_modelos f ON f.Wfm_Cod = i.Wfm_Cod
+             LEFT JOIN pre_proyectos pr ON pr.Pro_Cod = s.Pry_Cod
              WHERE s.Sol_Cod = $sol_cod
              LIMIT 1;",
             $this->conexion
         );
         if (empty($sol)) {
             return array();
+        }
+
+        $pro_nom = isset($sol['Pro_Nom']) ? trim((string)$sol['Pro_Nom']) : '';
+        $pro_ide = isset($sol['Pro_Ide']) ? trim((string)$sol['Pro_Ide']) : '';
+        if ($pro_nom === '') {
+            $proy_rubro = $this->getRowConsultaSql(
+                "SELECT pr.Pro_Nom, pr.Pro_Ide
+                 FROM adq_solicitudes_rubros sr
+                 INNER JOIN pre_proyecto_detalles pd ON pd.Pdp_Cod = sr.Pdp_Cod
+                 LEFT JOIN pre_proyectos pr ON pr.Pro_Cod = pd.Pro_Cod
+                 WHERE sr.Sol_Cod = $sol_cod
+                 LIMIT 1;",
+                $this->conexion
+            );
+            if (!empty($proy_rubro)) {
+                $pro_nom = isset($proy_rubro['Pro_Nom']) ? trim((string)$proy_rubro['Pro_Nom']) : '';
+                if ($pro_ide === '') {
+                    $pro_ide = isset($proy_rubro['Pro_Ide']) ? trim((string)$proy_rubro['Pro_Ide']) : '';
+                }
+            }
+        }
+        $pro_txt = $pro_ide;
+        if ($pro_nom !== '') {
+            $pro_txt .= ($pro_txt !== '' ? ' — ' : '') . $pro_nom;
         }
 
         $logo_abs = $this->resolverRutaLogoEmpresa(isset($sol['Emp_Log']) ? $sol['Emp_Log'] : '');
@@ -4491,6 +4740,9 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             'sol_cod' => $sol_cod,
             'sol_num' => isset($sol['Sol_Num']) ? $sol['Sol_Num'] : '',
             'sol_tit' => isset($sol['Sol_Tit']) ? $sol['Sol_Tit'] : '',
+            'pro_nom' => $pro_nom,
+            'pro_ide' => $pro_ide,
+            'pro_txt' => $pro_txt,
             'sol_fec' => $sol_fec,
             'sol_fec_fmt' => $sol_fec_fmt,
             'sol_pri' => isset($sol['Sol_Pri']) ? $sol['Sol_Pri'] : '',
@@ -5252,6 +5504,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
 
         $filas = '';
         $filas .= $this->htmlFilaDatoExpediente('No. solicitud', isset($meta['sol_num']) ? $meta['sol_num'] : '', $c);
+        $filas .= $this->htmlFilaDatoExpediente('Proyecto', isset($meta['pro_txt']) ? $meta['pro_txt'] : '', $c);
         $filas .= $this->htmlFilaDatoExpediente('Tipo de requerimiento', $req_nom, $c);
         $filas .= $this->htmlFilaDatoExpediente('Solicitante', isset($meta['solicitante']) ? $meta['solicitante'] : '', $c);
         $filas .= $this->htmlFilaDatoExpediente('Departamento', isset($meta['dep_nom']) ? $meta['dep_nom'] : '', $c);
@@ -5291,6 +5544,9 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                     <td width="62%" valign="top">
                         <div style="font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:' . $c['suave'] . ';font-weight:bold;">Identificaci&oacute;n del expediente</div>
                         <div style="font-size:22px;font-weight:bold;color:' . $c['primario'] . ';margin-top:4px;">' . $sol_num . '</div>
+                        ' . (!empty($meta['pro_txt'])
+                            ? '<div style="font-size:11px;color:' . $c['texto'] . ';margin-top:4px;">' . $this->htmlEscExpediente($meta['pro_txt']) . '</div>'
+                            : '') . '
                     </td>
                     <td width="38%" align="right" valign="top">
                         <div style="display:inline-block;padding:8px 12px;background:' . $c['fondo'] . ';border:1px solid ' . $c['borde'] . ';">
@@ -5903,6 +6159,10 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         $req_nom = $this->htmlEscExpediente(isset($meta['req_nom']) ? $meta['req_nom'] : '');
         $emp_nom = $this->htmlEscExpediente(isset($meta['emp_nom']) ? $meta['emp_nom'] : '');
         $fecha_gen = $this->htmlEscExpediente(isset($meta['fecha_fmt']) ? $meta['fecha_fmt'] : date('d/m/Y H:i'));
+        $pro_txt = isset($meta['pro_txt']) ? trim((string)$meta['pro_txt']) : '';
+        $bloque_proy = $pro_txt !== ''
+            ? '<div style="font-size:11px;color:' . $c['texto'] . ';margin-top:4px;"><strong>Proyecto:</strong> ' . $this->htmlEscExpediente($pro_txt) . '</div>'
+            : '';
         $bloque_req = $req_nom !== ''
             ? '<div style="font-size:11px;color:' . $c['texto'] . ';margin-top:4px;">' . $req_nom . '</div>'
             : '';
@@ -5922,6 +6182,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                     <td style="padding:16px 18px;background:' . $c['fondo'] . ';border-bottom:1px solid ' . $c['linea'] . ';">
                         <div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:' . $c['suave'] . ';font-weight:bold;">Solicitud</div>
                         <div style="font-size:16px;font-weight:bold;color:' . $c['primario'] . ';margin-top:3px;">' . $sol_num . '</div>
+                        ' . $bloque_proy . '
                         ' . $bloque_req . '
                     </td>
                 </tr>

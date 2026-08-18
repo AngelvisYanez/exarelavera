@@ -39,6 +39,7 @@ $necesita_ensure_schema = (
 if ($necesita_ensure_schema) {
     $obBD_con1->ensureSolicitudTituloColumn();
     $obBD_con1->ensureDecisionValsTable();
+    $obBD_con1->ensureSolicitudRubrosTable();
     $obBD_con1->ensureCotizacionesSchema();
     $wf_mgr->ensureNotificationSchema();
 }
@@ -125,6 +126,447 @@ function adq_normalizar_cot_adjuntos_existentes(&$cotizaciones_existentes, $file
         unset($cot['Cot_Adj_Keep']);
     }
     unset($cot);
+}
+
+function adq_to_utf8($s) {
+    $s = (string)$s;
+    if ($s === '') {
+        return '';
+    }
+    if (function_exists('mb_check_encoding') && mb_check_encoding($s, 'UTF-8')) {
+        return $s;
+    }
+    return utf8_encode($s);
+}
+
+function adq_h($s) {
+    return htmlspecialchars(adq_to_utf8($s), ENT_QUOTES, 'UTF-8');
+}
+
+function adq_cmp_cla_nat($a, $b) {
+    $pa = ($a === '') ? array() : explode('.', $a);
+    $pb = ($b === '') ? array() : explode('.', $b);
+    $n = max(count($pa), count($pb));
+    for ($i = 0; $i < $n; $i++) {
+        $va = isset($pa[$i]) ? intval($pa[$i]) : -1;
+        $vb = isset($pb[$i]) ? intval($pb[$i]) : -1;
+        if ($va !== $vb) {
+            return ($va < $vb) ? -1 : 1;
+        }
+    }
+    return 0;
+}
+
+function adq_render_tabla_rubros($rubros, $seleccionados = array()) {
+    $seleccionados = array_map('intval', is_array($seleccionados) ? $seleccionados : array());
+    $hay = is_array($rubros) && count($rubros) > 0;
+    $proyectos = array();
+    if ($hay) {
+        usort($rubros, function($a, $b) {
+            $cmp = adq_cmp_cla_nat(isset($a['Ppa_Cla']) ? $a['Ppa_Cla'] : '', isset($b['Ppa_Cla']) ? $b['Ppa_Cla'] : '');
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+            return strcasecmp(isset($a['Pdp_Rubro']) ? $a['Pdp_Rubro'] : '', isset($b['Pdp_Rubro']) ? $b['Pdp_Rubro'] : '');
+        });
+        foreach ($rubros as $rb) {
+            $pc = isset($rb['Pro_Cod']) ? (string)$rb['Pro_Cod'] : '';
+            if ($pc === '' || isset($proyectos[$pc])) {
+                continue;
+            }
+            $nom = trim((isset($rb['Pro_Ide']) && $rb['Pro_Ide'] !== '' ? $rb['Pro_Ide'] . ' — ' : '') . (isset($rb['Pro_Nom']) ? $rb['Pro_Nom'] : ''));
+            $proyectos[$pc] = ($nom !== '') ? adq_to_utf8($nom) : ('Proyecto ' . $pc);
+        }
+        natcasesort($proyectos);
+    }
+    ?>
+    <div class="adq-rubros-box">
+        <label class="form-label fw-bold mb-1">Tipo de rubro presupuestario *</label>
+        <p class="text-muted small mb-2">Abra el selector para marcar uno o más rubros del presupuesto.</p>
+        <?php if (!$hay) { ?>
+            <div class="alert alert-warning py-2 px-3 mb-0" style="font-size:13px;">No hay rubros de proyecto en <strong>pre_proyecto_detalles</strong> para esta empresa. Cárguelos en Presupuesto &gt; Proyectos (el presupuesto corporativo por partida no alcanza).</div>
+        <?php } else { ?>
+            <div class="d-flex align-items-center flex-wrap" style="gap:10px;">
+                <button type="button" class="btn btn-primary btn-sm" id="btnAbrirRubrosPpto">
+                    <i class="bi bi-ui-checks"></i> Seleccionar rubros
+                </button>
+                <span class="text-muted small text-nowrap" id="lblRubrosSel">0 seleccionados</span>
+            </div>
+            <div id="resumenRubrosPpto" class="adq-rubros-resumen"></div>
+            <div id="rubrosHidden"></div>
+            <div class="modal fade" id="mdlRubrosPpto" tabindex="-1" role="dialog" aria-labelledby="mdlRubrosPptoLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg" role="document" style="width:92%;max-width:920px;margin:30px auto;">
+                    <div class="modal-content adq-rubros-modal">
+                        <div class="modal-header adq-rubros-modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar" style="color:#fff;opacity:.9;text-shadow:none;"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="mdlRubrosPptoLabel"><i class="bi bi-list-check"></i> Seleccionar tipo de rubro</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="adq-rubros-filtros">
+                                <div class="adq-rubros-filtro">
+                                    <label for="selProyectoRubros">Proyecto</label>
+                                    <select id="selProyectoRubros" class="form-control">
+                                        <option value="">[Seleccione un proyecto]</option>
+                                        <?php foreach ($proyectos as $pc => $pnom) { ?>
+                                            <option value="<?php echo adq_h($pc); ?>"<?php echo (count($proyectos) === 1) ? ' selected' : ''; ?>><?php echo adq_h($pnom); ?></option>
+                                        <?php } ?>
+                                    </select>
+                                </div>
+                                <div class="adq-rubros-filtro">
+                                    <label for="filtroRubrosPpto">Buscar</label>
+                                    <input type="search" class="form-control input-sm" id="filtroRubrosPpto" placeholder="Clasificación, partida o rubro..." autocomplete="off">
+                                </div>
+                            </div>
+                            <div id="adqRubrosHintProyecto" class="text-muted small" style="margin-bottom:8px;">Seleccione un proyecto para ver sus rubros en árbol.</div>
+                            <div class="table-responsive adq-rubros-scroll">
+                                <table class="table table-sm table-hover mb-0" id="tblRubrosPpto">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:36px;"></th>
+                                            <th>Clasificación / detalle</th>
+                                            <th>Rubro</th>
+                                            <th class="text-end">Presup. anual</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    <?php
+                                    $last_pro = null;
+                                    $last_g = null;
+                                    $last_s = null;
+                                    foreach ($rubros as $rb) {
+                                        $pdp = intval($rb['Pdp_Cod']);
+                                        $pro = isset($rb['Pro_Cod']) ? (string)$rb['Pro_Cod'] : '';
+                                        $cla = isset($rb['Ppa_Cla']) ? trim($rb['Ppa_Cla']) : '';
+                                        $grupo = isset($rb['grupo_cod']) ? $rb['grupo_cod'] : '';
+                                        $sub = isset($rb['subgrupo_cod']) ? $rb['subgrupo_cod'] : '';
+                                        $gdes = adq_to_utf8(isset($rb['grupo_des']) ? $rb['grupo_des'] : '');
+                                        $sdes = adq_to_utf8(isset($rb['subgrupo_des']) ? $rb['subgrupo_des'] : '');
+                                        $chk = in_array($pdp, $seleccionados, true) ? ' checked' : '';
+                                        $proy_nom = adq_to_utf8(trim((isset($rb['Pro_Ide']) && $rb['Pro_Ide'] !== '' ? $rb['Pro_Ide'] . ' ' : '') . (isset($rb['Pro_Nom']) ? $rb['Pro_Nom'] : '')));
+                                        $rubro = adq_to_utf8(isset($rb['Pdp_Rubro']) ? $rb['Pdp_Rubro'] : '');
+                                        $partida = adq_to_utf8(isset($rb['Ppa_Des']) ? $rb['Ppa_Des'] : '');
+                                        $monto = isset($rb['Pdp_PreAnual']) ? floatval($rb['Pdp_PreAnual']) : 0;
+                                        if ($grupo !== '' && ($last_pro !== $pro || $last_g !== $grupo)) {
+                                            $gtxt = $grupo . ($gdes !== '' ? ' — ' . $gdes : '');
+                                            ?>
+                                        <tr class="adq-rubro-grupo" data-pro="<?php echo adq_h($pro); ?>" data-grupo="<?php echo adq_h($grupo); ?>">
+                                            <td></td>
+                                            <td colspan="3"><i class="bi bi-folder2-open"></i> <?php echo adq_h($gtxt); ?></td>
+                                        </tr>
+                                            <?php
+                                        }
+                                        if ($sub !== '' && ($last_pro !== $pro || $last_s !== $sub)) {
+                                            $stxt = $sub . ($sdes !== '' ? ' — ' . $sdes : '');
+                                            ?>
+                                        <tr class="adq-rubro-sub" data-pro="<?php echo adq_h($pro); ?>" data-grupo="<?php echo adq_h($grupo); ?>" data-sub="<?php echo adq_h($sub); ?>">
+                                            <td></td>
+                                            <td colspan="3"><i class="bi bi-diagram-3"></i> <?php echo adq_h($stxt); ?></td>
+                                        </tr>
+                                            <?php
+                                        }
+                                        $last_pro = $pro;
+                                        $last_g = $grupo;
+                                        $last_s = $sub;
+                                        $search_src = $cla . ' ' . $rubro . ' ' . $partida . ' ' . $proy_nom;
+                                        $search = function_exists('mb_strtolower') ? mb_strtolower($search_src, 'UTF-8') : strtolower($search_src);
+                                        ?>
+                                        <tr class="adq-rubro-row" data-pdp="<?php echo $pdp; ?>" data-pro="<?php echo adq_h($pro); ?>" data-grupo="<?php echo adq_h($grupo); ?>" data-sub="<?php echo adq_h($sub); ?>" data-rubro="<?php echo adq_h($rubro); ?>" data-search="<?php echo adq_h($search); ?>">
+                                            <td>
+                                                <input type="checkbox" class="form-check-input chk-rubro-ppto" value="<?php echo $pdp; ?>"<?php echo $chk; ?>>
+                                            </td>
+                                            <td>
+                                                <span class="adq-rubro-cla"><?php echo adq_h($cla); ?></span>
+                                                <?php if ($partida !== '') { ?>
+                                                    <span class="adq-rubro-part"><?php echo adq_h($partida); ?></span>
+                                                <?php } ?>
+                                            </td>
+                                            <td><?php echo adq_h($rubro); ?></td>
+                                            <td class="text-end"><?php echo number_format($monto, 2, '.', ','); ?></td>
+                                        </tr>
+                                    <?php } ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <span class="text-muted small pull-left" id="lblRubrosSelModal" style="margin-top:8px;">0 seleccionados</span>
+                            <button type="button" class="btn btn-default" id="btnCancelarRubrosPpto">Cancelar</button>
+                            <button type="button" class="btn btn-primary" id="btnConfirmarRubrosPpto"><i class="bi bi-check2"></i> Confirmar selección</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <script>
+            (function() {
+                if (typeof jQuery === 'undefined') {
+                    return;
+                }
+                var $ = jQuery;
+                var snapRubros = [];
+
+                function adqCollectRubros() {
+                    var ids = [];
+                    var seen = {};
+                    $('.chk-rubro-ppto:checked, #rubrosHidden input[name="rubros[]"]').each(function() {
+                        var v = parseInt($(this).val(), 10);
+                        if (v > 0 && !seen[v]) {
+                            seen[v] = true;
+                            ids.push(v);
+                        }
+                    });
+                    return ids;
+                }
+                function adqHayRubrosDisponibles() {
+                    return $('#tblRubrosPpto tbody tr.adq-rubro-row').length > 0;
+                }
+                function adqValidarRubros() {
+                    if (adqHayRubrosDisponibles() && adqCollectRubros().length === 0) {
+                        alert('Debe seleccionar al menos un tipo de rubro presupuestario.');
+                        return false;
+                    }
+                    return true;
+                }
+                function adqSyncRubrosHidden() {
+                    var $h = $('#rubrosHidden');
+                    if (!$h.length) {
+                        return;
+                    }
+                    $h.empty();
+                    var ids = adqCollectRubros();
+                    for (var i = 0; i < ids.length; i++) {
+                        $h.append($('<input type="hidden" name="rubros[]">').val(ids[i]));
+                    }
+                    var n = ids.length;
+                    var txt = n + (n === 1 ? ' seleccionado' : ' seleccionados');
+                    $('#lblRubrosSel, #lblRubrosSelModal').text(txt);
+                    var $res = $('#resumenRubrosPpto');
+                    $res.empty();
+                    $('.chk-rubro-ppto:checked').each(function() {
+                        var nom = $(this).closest('tr').attr('data-rubro') || $(this).val();
+                        $res.append($('<span class="adq-rubro-chip"></span>').text(nom));
+                    });
+                }
+                function adqAplicarRubros(ids) {
+                    var set = {};
+                    (ids || []).forEach(function(id) {
+                        set[parseInt(id, 10)] = true;
+                    });
+                    $('.chk-rubro-ppto').each(function() {
+                        $(this).prop('checked', !!set[parseInt($(this).val(), 10)]);
+                    });
+                    adqSyncRubrosHidden();
+                }
+                function adqCerrarModalRubros() {
+                    var $mdl = $('#mdlRubrosPpto');
+                    if ($mdl.data('bs.modal')) {
+                        $mdl.modal('hide');
+                    } else {
+                        $mdl.hide().removeClass('in');
+                        $('.modal-backdrop').remove();
+                        $('body').removeClass('modal-open');
+                    }
+                }
+                function adqFiltrarRubrosModal() {
+                    var pro = String($('#selProyectoRubros').val() || '');
+                    var q = String($('#filtroRubrosPpto').val() || '').toLowerCase();
+                    var $hint = $('#adqRubrosHintProyecto');
+                    if (!pro) {
+                        $('#tblRubrosPpto tbody tr').hide();
+                        $hint.show();
+                        return;
+                    }
+                    $hint.hide();
+                    $('#tblRubrosPpto tbody tr.adq-rubro-row').each(function() {
+                        var $tr = $(this);
+                        var okPro = String($tr.attr('data-pro') || '') === pro;
+                        var txt = String($tr.attr('data-search') || $tr.text() || '').toLowerCase();
+                        var okQ = !q || txt.indexOf(q) !== -1;
+                        $tr.toggle(okPro && okQ);
+                    });
+                    $('#tblRubrosPpto tbody tr.adq-rubro-grupo, #tblRubrosPpto tbody tr.adq-rubro-sub').each(function() {
+                        var $h = $(this);
+                        if (String($h.attr('data-pro') || '') !== pro) {
+                            $h.hide();
+                            return;
+                        }
+                        var vis = 0;
+                        if ($h.hasClass('adq-rubro-grupo')) {
+                            var g = String($h.attr('data-grupo') || '');
+                            vis = $h.nextAll('tr.adq-rubro-row').filter(function() {
+                                var $r = $(this);
+                                return $r.is(':visible') && String($r.attr('data-pro') || '') === pro && String($r.attr('data-grupo') || '') === g;
+                            }).length;
+                        } else {
+                            var s = String($h.attr('data-sub') || '');
+                            vis = $h.nextAll('tr.adq-rubro-row').filter(function() {
+                                var $r = $(this);
+                                return $r.is(':visible') && String($r.attr('data-pro') || '') === pro && String($r.attr('data-sub') || '') === s;
+                            }).length;
+                        }
+                        $h.toggle(vis > 0);
+                    });
+                }
+                window.adqCollectRubros = adqCollectRubros;
+                window.adqValidarRubros = adqValidarRubros;
+                window.adqAplicarRubros = adqAplicarRubros;
+
+                $('body > #mdlRubrosPpto').not($('.adq-rubros-box #mdlRubrosPpto')).remove();
+                var $mdl = $('#mdlRubrosPpto');
+                if ($mdl.length && $mdl.parent()[0] !== document.body) {
+                    $mdl.appendTo(document.body);
+                }
+
+                $(document).off('.adqRubrosPpto');
+                $(document).on('click.adqRubrosPpto', '#btnAbrirRubrosPpto', function(e) {
+                    e.preventDefault();
+                    snapRubros = adqCollectRubros();
+                    $('#filtroRubrosPpto').val('');
+                    adqFiltrarRubrosModal();
+                    adqSyncRubrosHidden();
+                    $mdl.appendTo(document.body);
+                    if (typeof $mdl.modal === 'function') {
+                        $mdl.modal({ backdrop: true, keyboard: true, show: true });
+                    } else {
+                        $mdl.addClass('in').css('display', 'block');
+                        if (!$('.modal-backdrop').length) {
+                            $('<div class="modal-backdrop fade in"></div>').appendTo(document.body);
+                        }
+                        $('body').addClass('modal-open');
+                    }
+                });
+                $(document).on('click.adqRubrosPpto', '#btnConfirmarRubrosPpto', function() {
+                    adqSyncRubrosHidden();
+                    adqCerrarModalRubros();
+                });
+                $(document).on('click.adqRubrosPpto', '#btnCancelarRubrosPpto, #mdlRubrosPpto [data-dismiss="modal"]', function() {
+                    adqAplicarRubros(snapRubros);
+                    adqCerrarModalRubros();
+                });
+                $(document).on('change.adqRubrosPpto', '.chk-rubro-ppto', adqSyncRubrosHidden);
+                $(document).on('click.adqRubrosPpto', '#mdlRubrosPpto tr.adq-rubro-row', function(e) {
+                    if ($(e.target).is('input, label, a, button')) {
+                        return;
+                    }
+                    var $chk = $(this).find('.chk-rubro-ppto');
+                    $chk.prop('checked', !$chk.prop('checked')).trigger('change');
+                });
+                $(document).on('change.adqRubrosPpto', '#selProyectoRubros', adqFiltrarRubrosModal);
+                $(document).on('input.adqRubrosPpto', '#filtroRubrosPpto', adqFiltrarRubrosModal);
+                $(document).on('shown.bs.modal.adqRubrosPpto', '#mdlRubrosPpto', function() {
+                    $('.modal-backdrop').last().addClass('adq-rubros-backdrop').css('z-index', 20050);
+                    adqFiltrarRubrosModal();
+                    $('#selProyectoRubros').focus();
+                });
+                adqFiltrarRubrosModal();
+                adqSyncRubrosHidden();
+            })();
+            </script>
+        <?php } ?>
+    </div>
+    <style>
+        .adq-rubros-resumen {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .adq-rubro-chip {
+            display: inline-block;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1e40af;
+            border-radius: 999px;
+            padding: 2px 10px;
+            font-size: 12px;
+        }
+        #mdlRubrosPpto {
+            z-index: 20060;
+        }
+        .modal-backdrop.adq-rubros-backdrop {
+            z-index: 20050;
+        }
+        .adq-rubros-modal {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+        }
+        .adq-rubros-modal-header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+            color: #fff;
+            border: 0;
+        }
+        .adq-rubros-modal-header .modal-title {
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .adq-rubros-filtros {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        .adq-rubros-filtro {
+            flex: 1;
+            min-width: 200px;
+        }
+        .adq-rubros-filtro label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 4px;
+        }
+        tr.adq-rubro-grupo td {
+            background: #1e3a5f;
+            color: #fff;
+            font-weight: 700;
+            font-size: 12.5px;
+        }
+        tr.adq-rubro-sub td {
+            background: #e2e8f0;
+            color: #0f172a;
+            font-weight: 600;
+            font-size: 12.5px;
+            padding-left: 22px !important;
+        }
+        tr.adq-rubro-row td:nth-child(2) {
+            padding-left: 36px;
+        }
+        .adq-rubro-cla {
+            font-family: ui-monospace, Consolas, monospace;
+            font-size: 11px;
+            color: #64748b;
+            margin-right: 8px;
+        }
+        .adq-rubro-part {
+            color: #334155;
+        }
+        .adq-rubros-scroll {
+            max-height: 52vh;
+            overflow: auto;
+            border: 1px solid #dbe4ee;
+            border-radius: 8px;
+            background: #fff;
+        }
+        #tblRubrosPpto thead th {
+            position: sticky;
+            top: 0;
+            background: #f1f5f9;
+            z-index: 1;
+            font-size: 12px;
+            white-space: nowrap;
+            color: #334155;
+        }
+        #tblRubrosPpto tbody td {
+            font-size: 12.5px;
+            vertical-align: middle;
+        }
+        tr.adq-rubro-row { cursor: pointer; }
+        tr.adq-rubro-row:has(.chk-rubro-ppto:checked) {
+            background: #eff6ff;
+        }
+    </style>
+    <?php
 }
 
 // Verificar acceso a la ventana 'bandeja' y pestaña 'crear_solicitud'
@@ -553,6 +995,7 @@ if (isset($ajax_save_proveedor)) {
 // Cargar catálogos iniciales (filtrados por permiso de crear en nodo INICIO)
 $tipos_req = $wf_mgr->listarTiposRequerimientoParaCrear($Ses_Emp_Cod);
 $centros_costo = $obBD_con1->getArrayConsultaSql("SELECT DISTINCT Dep_Cdc AS Cdc_Cod FROM departamen WHERE Emp_Cod = $Ses_Emp_Cod AND Dep_Cdc IS NOT NULL AND Dep_Cdc <> '';", $obBD_conexion);
+$rubros_ppto = $obBD_con1->listarRubrosPresupuestoDisponibles(intval($Ses_Emp_Cod));
 
 if (isset($ajax_get_form)) {
     header('Content-Type: text/html; charset=UTF-8');
@@ -579,7 +1022,7 @@ if (isset($ajax_get_form)) {
     }
     if ($modo_form !== 'completar') {
         ?>
-        <div class="adq-step-card" style="max-width:760px;margin:24px auto;background:#fff;border:1px solid #dbe4ee;border-radius:14px;padding:28px;box-shadow:0 8px 28px rgba(15,43,70,.08);">
+        <div class="adq-step-card" style="max-width:980px;margin:24px auto;background:#fff;border:1px solid #dbe4ee;border-radius:14px;padding:28px;box-shadow:0 8px 28px rgba(15,43,70,.08);">
             <div class="d-flex align-items-center mb-4" style="gap:14px;">
                 <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white" style="width:46px;height:46px;font-size:21px;"><i class="bi bi-file-earmark-plus"></i></span>
                 <div>
@@ -602,6 +1045,9 @@ if (isset($ajax_get_form)) {
                         <?php } ?>
                     </select>
                     <small class="text-muted">Se listan todos los tipos Activos. Puede escribir para buscar. El tipo determina el flujo y el responsable del primer nodo.</small>
+                </div>
+                <div class="mb-4">
+                    <?php adq_render_tabla_rubros($rubros_ppto); ?>
                 </div>
                 <div id="panelValorEstimadoCorta" class="mb-4" style="display:none;">
                     <label class="form-label fw-bold" for="Sol_Val_Est_Corto">Valor estimado *</label>
@@ -818,6 +1264,23 @@ if (isset($ajax_get_form)) {
                     alert('Debe ingresar un valor estimado mayor que cero.');
                     return;
                 }
+                var rubrosSel = [];
+                if (typeof window.adqCollectRubros === 'function') {
+                    rubrosSel = window.adqCollectRubros() || [];
+                }
+                if (!rubrosSel.length) {
+                    $('.chk-rubro-ppto:checked, #rubrosHidden input[name="rubros[]"]').each(function() {
+                        var v = parseInt($(this).val(), 10);
+                        if (v > 0 && rubrosSel.indexOf(v) === -1) {
+                            rubrosSel.push(v);
+                        }
+                    });
+                }
+                if ($('#tblRubrosPpto tbody tr.adq-rubro-row').length && !rubrosSel.length) {
+                    alert('Debe seleccionar al menos un tipo de rubro presupuestario.');
+                    return;
+                }
+                payload.rubros = rubrosSel;
                 const $btn = $('#btnCrearSolicitudCorta');
                 const $loader = $('#adqLoaderRegistro');
                 if ($loader.length && $loader.parent()[0] !== document.body) {
@@ -1962,6 +2425,10 @@ if (isset($ajax_get_form)) {
                         <span class="adq-field-hint">Determina el flujo de aprobaciones que seguirá la solicitud.</span>
                     </div>
 
+                    <div class="col-12 adq-field-block">
+                        <?php adq_render_tabla_rubros($rubros_ppto); ?>
+                    </div>
+
                     <!-- Prioridad -->
                     <div class="col-12 col-md-6 adq-field-block">
                         <label class="form-label-req" for="Sol_Pri">Prioridad de la Compra *</label>
@@ -2258,7 +2725,7 @@ if (isset($ajax_get_form)) {
         </div>
     </div>
     <script src="../../framework/plugins/cedulaRuc.js" charset="UTF-8"></script>
-    <script src="../VALIDACIONES/adq_solicitud.js?v=20260803h" charset="UTF-8"></script>
+    <script src="../VALIDACIONES/adq_solicitud.js?v=20260818a" charset="UTF-8"></script>
     <?php
     exit;
 }
@@ -2288,6 +2755,6 @@ if (isset($ajax_get_form)) {
 
     <!-- Script del validador de adquisición -->
     <script src="../../framework/plugins/cedulaRuc.js" charset="UTF-8"></script>
-    <script src="../VALIDACIONES/adq_solicitud.js?v=20260803h" charset="UTF-8"></script>
+    <script src="../VALIDACIONES/adq_solicitud.js?v=20260818a" charset="UTF-8"></script>
 </body>
 </html>
