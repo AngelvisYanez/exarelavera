@@ -6,9 +6,8 @@ var datosDashboardRango = null; // Datos del tab Por Rango de Fechas
 var datosModalManifiestos = null; // Manifiestos del modal actual para exportar a Excel
 var cargandoManifiestos = false; // Evitar múltiples peticiones concurrentes al ver manifiestos
 var datosDashboardChoferPlaca = null; // { agrupado, tipo_vista } para tab Por Chofer/Placa
-var datosModalManifiestosChoferPlaca = null; // modal Ver Manifiestos Chofer/Placa
-var chartParetoChoferPlaca = null; // instancia Chart.js Pareto
 var datosModalManifiestosChoferPlaca = null; // { manifiestos, turnoInfo, tipoVista } para modal Ver Manifiestos
+var chartParetoChoferPlaca = null; // instancia ApexCharts Pareto
 var datosRankingPlantasChoferPlaca = null; // [ { Pla_Cod, Pla_Nom, total } ] para imprimir/Excel
 var fechaInicioChoferPlaca = "";
 var fechaFinChoferPlaca = "";
@@ -17,165 +16,289 @@ var datosTurnosPorDia = {}; // { fechaId: turnosFecha[] } para gráfico tendenci
 var modoVistaConfig = "tabla"; // 'tabla' | 'barras' | 'tendencia' - aplica a todos los días
 var primeraCargaConfig = true; // true = solo día actual expandido; false = al hacer clic en Tabla/Barras/Tendencia se expande todo
 
+var COLOR_AZUL = "#2C5D94";
+var COLOR_GRIS = "#6c757d";
+var COLOR_ROJO = "#c83c3c";
+
+function mesActualYYYYMM() {
+  var now = new Date();
+  return now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
+}
+
+function sincronizarFechasDesdeMes(mesVal, inicioSel, finSel) {
+  if (!mesVal) return;
+  var parts = mesVal.split("-");
+  var year = parseInt(parts[0], 10);
+  var month = parseInt(parts[1], 10);
+  var mesStr = String(month).padStart(2, "0");
+  var lastDay = new Date(year, month, 0).getDate();
+  $(inicioSel).val(year + "-" + mesStr + "-01");
+  $(finSel).val(year + "-" + mesStr + "-" + String(lastDay).padStart(2, "0"));
+}
+
+function asegurarMesYFechas(mesSel, inicioSel, finSel) {
+  var mesVal = $(mesSel).val() || mesActualYYYYMM();
+  $(mesSel).val(mesVal);
+  sincronizarFechasDesdeMes(mesVal, inicioSel, finSel);
+  return mesVal;
+}
+
+function bindMesFechas(tabHref, mesSel, inicioSel, finSel, onShow) {
+  $('a[href="' + tabHref + '"]').on("shown.bs.tab", function () {
+    if (typeof onShow === "function") onShow();
+    asegurarMesYFechas(mesSel, inicioSel, finSel);
+  });
+  $(document).on("change", mesSel, function () {
+    sincronizarFechasDesdeMes($(this).val(), inicioSel, finSel);
+  });
+}
+
+function htmlKpiCeo(semaforo, icon, label, value, tendencia) {
+  return '<div class="ceo-kpi-card semaforo-' + semaforo + '"><div class="ceo-kpi-icon"><i class="fa ' + icon + '"></i></div><div class="ceo-kpi-label">' + label + '</div><div class="ceo-kpi-value">' + value + '</div><div class="ceo-kpi-tendencia">' + tendencia + "</div></div>";
+}
+
+function $apex(idOrEl) {
+  return typeof idOrEl === "string" ? $("#" + idOrEl) : $(idOrEl);
+}
+
+function destroyApex(idOrEl) {
+  var $el = $apex(idOrEl);
+  if (!$el.length) return;
+  var c = $el.data("apex");
+  if (c && typeof c.destroy === "function") {
+    try { c.destroy(); } catch (e) {}
+  }
+  $el.removeData("apex").empty();
+}
+
+function _apexContainerWidth(idOrEl) {
+  // Primero intentar el propio elemento
+  var own = $(idOrEl)[0];
+  if (own && own.getBoundingClientRect) {
+    var r = own.getBoundingClientRect();
+    if (r.width > 10) return Math.floor(r.width);
+  }
+  // Subir al padre directo
+  var parent = own && own.parentElement;
+  if (parent) {
+    var rp = parent.getBoundingClientRect();
+    if (rp.width > 10) return Math.floor(rp.width);
+  }
+  // Usar #dashboardContent como referencia confiable (siempre en DOM)
+  var dc = document.getElementById("dashboardContent");
+  if (dc) {
+    var rdc = dc.getBoundingClientRect();
+    if (rdc.width > 10) return Math.floor(rdc.width) - 30;
+  }
+  // Fallback absoluto: ventana menos margen
+  return Math.max(400, (window.innerWidth || 800) - 80);
+}
+
+function renderApex(idOrEl, options) {
+  var $el = $apex(idOrEl);
+  if (!$el.length || typeof ApexCharts === "undefined") return null;
+  destroyApex($el);
+  var elW = _apexContainerWidth($el[0]);
+  var h = options && options.chart && options.chart.height ? options.chart.height : 260;
+  var opts = $.extend(true, {
+    chart: { width: elW, height: h, toolbar: { show: false }, fontFamily: "inherit", zoom: { enabled: false }, animations: { enabled: false } },
+    dataLabels: { enabled: false, style: { fontSize: "11px", fontWeight: 700, colors: [COLOR_AZUL] }, background: { enabled: false } },
+    legend: { position: "top", fontSize: "12px" },
+    grid: { padding: { top: 8 } },
+    noData: { text: "Sin datos" }
+  }, options);
+  // Asegurar que el width siempre sea numérico > 0
+  if (!opts.chart.width || opts.chart.width === "100%" || isNaN(Number(opts.chart.width))) {
+    opts.chart.width = elW;
+  }
+  if (!opts.chart.height || isNaN(Number(opts.chart.height))) {
+    opts.chart.height = h;
+  }
+  var chart = new ApexCharts($el[0], opts);
+  chart.render();
+  $el.data("apex", chart);
+  return chart;
+}
+
+function apexSvgDataUrl($el) {
+  var svg = $el.find("svg").get(0);
+  if (!svg) return "";
+  try {
+    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(new XMLSerializer().serializeToString(svg));
+  } catch (e) { return ""; }
+}
+
+function apexFromLineDatasets(id, labels, datasets, extra) {
+  extra = extra || {};
+
+  // Calcular yMax con seguridad
+  var maxVal = 1;
+  datasets.forEach(function (ds) {
+    (ds.data || []).forEach(function (v) {
+      if (typeof v === "number" && !isNaN(v) && v > maxVal) maxVal = v;
+    });
+  });
+  var yMax = Math.max(5, Math.ceil(maxVal * 1.15));
+
+  var colors       = datasets.map(function (ds) { return ds.borderColor || COLOR_AZUL; });
+  var strokeWidths = datasets.map(function (ds) { return Math.max(1, Math.round(Number(ds.borderWidth) || 2)); });
+  var dashArrays   = datasets.map(function (ds) {
+    if (!ds.borderDash) return 0;
+    return typeof ds.borderDash === "number" ? ds.borderDash : (Array.isArray(ds.borderDash) ? ds.borderDash[0] : 4);
+  });
+  // fill.opacity por serie: sombreado solo donde ds.fill=true, sin sombreado donde ds.fill=false
+  var fillOpacities = datasets.map(function (ds) { return ds.fill ? 0.18 : 0; });
+  var markerSizes   = datasets.map(function (ds) { return ds.borderDash ? 0 : 4; });
+
+  // Usar chart.type="area" para que ApexCharts siempre trace el stroke de cada serie.
+  // Las series sin relleno (fill.opacity=0) se ven como líneas normales.
+  var series = datasets.map(function (ds) {
+    return { name: ds.label, data: ds.data };
+  });
+
+  return renderApex(id, {
+    chart: { type: "area", height: 260, toolbar: { show: false } },
+    colors: colors,
+    stroke: { curve: "smooth", width: strokeWidths, dashArray: dashArrays },
+    fill: { type: "solid", opacity: fillOpacities },
+    markers: { size: markerSizes, hover: { size: 6 } },
+    series: series,
+    xaxis: {
+      type: "category",
+      categories: labels,
+      labels: { rotate: -35, hideOverlappingLabels: true, style: { fontSize: "10px" } }
+    },
+    yaxis: { min: 0, max: yMax, forceNiceScale: true, title: { text: extra.yTitle || "Cantidad" }, decimalsInFloat: 0, tickAmount: 5 },
+    dataLabels: { enabled: false },
+    legend: { show: true, position: "top", fontSize: "12px" },
+    tooltip: { shared: true, intersect: false },
+    noData: { text: "Sin datos" }
+  });
+}
+
+function renderParetoApex(id, visualItems, cfg) {
+  cfg = cfg || {};
+  var total = cfg.total || 0;
+  var promedio = Number(cfg.promedio) || 0;
+  var colorTop = "rgb(" + (cfg.colorPrincipal || "44, 93, 148") + ")";
+  var labels = visualItems.map(function (i) { return i.nombre; });
+  var pctAcum = cfg.pctAcum || visualItems.map(function (i) { return Number((i.pctAcum || 0).toFixed(1)); });
+  var dataCant = visualItems.map(function (i) { return i.cantidad || 0; });
+  var annotations = {
+    yaxis: [{ y: Number(promedio.toFixed(1)), borderColor: colorTop, strokeDashArray: 4, label: { text: "Promedio", style: { color: "#fff", background: colorTop } } }]
+  };
+  if (cfg.indexMarcador >= 0 && labels[cfg.indexMarcador]) {
+    annotations.xaxis = [{ x: labels[cfg.indexMarcador], borderColor: COLOR_ROJO, strokeDashArray: 6, label: { text: cfg.textoMarcador || "", style: { color: "#fff", background: COLOR_ROJO } } }];
+  }
+  chartParetoChoferPlaca = renderApex(id, {
+    chart: { type: "line", height: 420 },
+    stroke: { width: [0, 2], curve: "smooth" },
+    dataLabels: { enabled: true, enabledOnSeries: [0] },
+    series: [
+      { name: "Cantidad", type: "column", data: dataCant },
+      { name: "% Acumulado", type: "line", data: pctAcum, color: COLOR_ROJO }
+    ],
+    colors: [colorTop, COLOR_ROJO],
+    plotOptions: {
+      bar: {
+        distributed: true,
+        columnWidth: "60%"
+      }
+    },
+    xaxis: { categories: labels, labels: { rotate: -45, rotateAlways: labels.length > 6, hideOverlappingLabels: true, style: { fontSize: "10px" } } },
+    yaxis: [
+      { title: { text: "Cantidad" }, min: 0, decimalsInFloat: 0 },
+      { opposite: true, title: { text: "% Acumulado" }, min: 0, max: 100, labels: { formatter: function (v) { return Math.round(v) + "%"; } } }
+    ],
+    annotations: annotations,
+    tooltip: {
+      shared: true,
+      y: {
+        formatter: function (val, ctx) {
+          if (ctx.seriesIndex === 1) return val + "%";
+          var item = visualItems[ctx.dataPointIndex] || {};
+          var pctInd = total > 0 ? ((item.cantidad / total) * 100).toFixed(1) : "0";
+          var pctA = pctAcum[ctx.dataPointIndex] != null ? pctAcum[ctx.dataPointIndex] : 0;
+          var diff = item.diffPromedio != null ? item.diffPromedio : ((item.cantidad || 0) - promedio);
+          return item.cantidad + " (" + pctInd + "% / acum " + pctA + "% / vs prom " + (diff > 0 ? "+" : "") + Number(diff).toFixed(0) + ")";
+        }
+      }
+    }
+  });
+  return chartParetoChoferPlaca;
+}
+
 $(function () {
   cargarConfiguraciones();
 
-  // Cargar plantas cuando se muestra el tab de rango; inicializar mes actual si no hay fechas
+  $('a[data-toggle="tab"]').on("shown.bs.tab", function () {
+    window.dispatchEvent(new Event("resize"));
+  });
+
   $('a[href="#tab_rango"]').on("shown.bs.tab", function () {
     cargarPlantasRango();
     if (!$("#fecha_inicio_rango").val() && !$("#fecha_fin_rango").val()) {
-      var now = new Date();
-      var mesVal =
-        now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
-      $("#mes_rango").val(mesVal).trigger("change");
+      $("#mes_rango").val(mesActualYYYYMM()).trigger("change");
     }
   });
-
-  // Selector de mes: al elegir un mes, autocompletar Desde/Hasta (el usuario puede modificarlas después)
   $(document).on("change", "#mes_rango", function () {
-    var val = $(this).val();
-    if (!val) return;
-    var parts = val.split("-");
-    var year = parseInt(parts[0], 10);
-    var month = parseInt(parts[1], 10);
-    var lastDay = new Date(year, month, 0).getDate();
-    var mesStr = String(month).padStart(2, "0");
-    $("#fecha_inicio_rango").val(year + "-" + mesStr + "-01");
-    $("#fecha_fin_rango").val(
-      year + "-" + mesStr + "-" + String(lastDay).padStart(2, "0"),
-    );
+    sincronizarFechasDesdeMes($(this).val(), "#fecha_inicio_rango", "#fecha_fin_rango");
   });
 
-  // Re-render al cambiar checkbox omitir días sin manifiestos (tab rango)
   $(document).on("change", "#omitir_dias_sin_manifiestos", function () {
     if (datosDashboardRango && datosDashboardRango.dias) {
       mostrarDashboardRango(datosDashboardRango);
     }
   });
-
-  // Re-render al cambiar checkbox omitir días sin manifiestos (tab configuración)
   $(document).on("change", "#omitir_dias_sin_manifiestos_config", function () {
     if (datosDashboardActual && datosDashboardActual.length > 0) {
       mostrarDashboard(datosDashboardActual);
     }
   });
-
-  // Re-render al cambiar checkbox vs Garita IN (tab configuración)
   $(document).on("change", "#chk_vs_garita_in_config", function () {
-    if (
-      modoVistaConfig === "tendencia" &&
-      datosDashboardActual &&
-      datosDashboardActual.length > 0
-    ) {
-      mostrarDashboard(datosDashboardActual);
-    }
+    if (modoVistaConfig !== "tendencia") return;
+    // Re-dibujar solo los gráficos de tendencia visibles, sin regenerar el HTML completo
+    var scrollY = window.scrollY || window.pageYOffset;
+    Object.keys(datosTurnosPorDia).forEach(function (fechaId) {
+      crearChartTendenciaDia(fechaId, true);
+    });
+    // Restaurar posición de scroll (el cambio de DOM puede desplazarla)
+    window.scrollTo(0, scrollY);
   });
 
-  // Tab Por Chofer/Placa: al mostrar, sincronizar fechas desde el mes (default: mes vigente)
-  $('a[href="#tab_chofer_placa"]').on("shown.bs.tab", function () {
-    var mesVal = $("#mes_chofer_placa").val();
-    if (!mesVal) {
-      var now = new Date();
-      mesVal =
-        now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
-      $("#mes_chofer_placa").val(mesVal);
-    }
-    sincronizarFechasDesdeMesChoferPlaca(mesVal);
-  });
-
-  // Mes Chofer/Placa: al elegir mes, autocompletar Desde y Hasta (1º al último día del mes)
-  $(document).on("change", "#mes_chofer_placa", function () {
-    var val = $(this).val();
-    if (val) sincronizarFechasDesdeMesChoferPlaca(val);
-  });
-
-  // Tab Vista Ejecutiva Global: al mostrar, sincronizar fechas desde el mes (default: mes vigente)
-  $('a[href="#tab_ejecutivo"]').on("shown.bs.tab", function () {
-    var mesVal = $("#mes_ejecutivo").val();
-    if (!mesVal) {
-      var now = new Date();
-      mesVal =
-        now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
-      $("#mes_ejecutivo").val(mesVal);
-    }
-    sincronizarFechasDesdeMesEjecutivo(mesVal);
-  });
-
-  // Mes ejecutivo: al elegir mes, autocompletar Desde y Hasta (1º al último día del mes)
-  $(document).on("change", "#mes_ejecutivo", function () {
-    var val = $(this).val();
-    if (val) sincronizarFechasDesdeMesEjecutivo(val);
-  });
-
-  // Botón Buscar del tab Por Chofer/Placa (delegación para evitar dependencia del onclick global)
-  $(document).on("click", "#btnBuscarChoferPlaca", function () {
-    cargarDashboardChoferPlaca();
-  });
-
-  // Tab Control de Tiempos y Arribos: al mostrar, sincronizar fechas desde el mes
-  $('a[href="#tab_tiempos"]').on("shown.bs.tab", function () {
-    cargarPlantasTiempos();
-    var mesVal = $("#mes_tiempos").val();
-    if (!mesVal) {
-      var now = new Date();
-      mesVal =
-        now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
-      $("#mes_tiempos").val(mesVal);
-    }
-    sincronizarFechasDesdeMesTiempos(mesVal);
-  });
-
-  // Mes tiempos: al elegir mes, autocompletar Desde y Hasta
-  $(document).on("change", "#mes_tiempos", function () {
-    var val = $(this).val();
-    if (val) sincronizarFechasDesdeMesTiempos(val);
-  });
-
-  // Auto-inicializar fechas para tab_tiempos si no están llenas
-  if ($("#mes_tiempos").length) {
-    var mesInit = $("#mes_tiempos").val();
-    if (!mesInit) {
-      var now = new Date();
-      mesInit =
-        now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
-      $("#mes_tiempos").val(mesInit);
-    }
-    if (!$("#fecha_inicio_tiempos").val() || !$("#fecha_fin_tiempos").val()) {
-      sincronizarFechasDesdeMesTiempos(mesInit);
-    }
+  bindMesFechas("#tab_chofer_placa", "#mes_chofer_placa", "#fecha_inicio_chofer_placa", "#fecha_fin_chofer_placa");
+  bindMesFechas("#tab_ejecutivo", "#mes_ejecutivo", "#fecha_inicio_ejecutivo", "#fecha_fin_ejecutivo");
+  bindMesFechas("#tab_tiempos", "#mes_tiempos", "#fecha_inicio_tiempos", "#fecha_fin_tiempos", cargarPlantasTiempos);
+  $(document).on("click", "#btnBuscarChoferPlaca", cargarDashboardChoferPlaca);
+  if ($("#mes_tiempos").length && (!$("#fecha_inicio_tiempos").val() || !$("#fecha_fin_tiempos").val())) {
+    asegurarMesYFechas("#mes_tiempos", "#fecha_inicio_tiempos", "#fecha_fin_tiempos");
   }
+  $(document).on("click", "#btnBuscarTiempos", cargarDashboardTiempos);
 
-  $(document).on("click", "#btnBuscarTiempos", function () {
-    cargarDashboardTiempos();
-  });
-
-  // Eventos de impresión global: convertir gráficos canvas de tendencia a imágenes nítidas en impresión
   window.addEventListener("beforeprint", function () {
     if (
       modoVistaConfig === "tendencia" &&
       typeof datosTurnosPorDia === "object"
     ) {
       Object.keys(datosTurnosPorDia).forEach(function (fechaId) {
-        var canvasId = "chartTendencia_" + fechaId;
-        var canvas = document.getElementById(canvasId);
-        if (canvas && typeof Chart !== "undefined") {
-          try {
-            crearChartTendenciaDia(fechaId, true);
-            var imgUrl = canvas.toDataURL("image/png");
-            if (imgUrl && imgUrl.length > 200) {
-              var $container = $("#" + fechaId + "_tendencia .ceo-chart-wrap");
-              if ($container.length) {
-                $container.find(".print-tendencia-img").remove();
-                $container.append(
-                  '<img class="print-tendencia-img" src="' +
-                    imgUrl +
-                    '" style="display:none; width:100%; height:auto;" />',
-                );
-              }
+        var $chart = $("#chartTendencia_" + fechaId);
+        if (!$chart.length) return;
+        try {
+          crearChartTendenciaDia(fechaId, true);
+          var imgUrl = apexSvgDataUrl($chart);
+          if (imgUrl) {
+            var $container = $("#" + fechaId + "_tendencia .ceo-chart-wrap");
+            if ($container.length) {
+              $container.find(".print-tendencia-img").remove();
+              $container.append(
+                '<img class="print-tendencia-img" src="' +
+                  imgUrl +
+                  '" style="display:none; width:100%; height:auto;" />',
+              );
             }
-          } catch (e) {
-            console.error("Error generando tendencia para impresión:", e);
           }
+        } catch (e) {
+          console.error("Error generando tendencia para impresión:", e);
         }
       });
     }
@@ -186,32 +309,6 @@ $(function () {
   });
 });
 
-
-function sincronizarFechasDesdeMesEjecutivo(mesVal) {
-  if (!mesVal) return;
-  var parts = mesVal.split("-");
-  var year = parseInt(parts[0], 10);
-  var month = parseInt(parts[1], 10);
-  var mesStr = String(month).padStart(2, "0");
-  var lastDay = new Date(year, month, 0).getDate();
-  $("#fecha_inicio_ejecutivo").val(year + "-" + mesStr + "-01");
-  $("#fecha_fin_ejecutivo").val(
-    year + "-" + mesStr + "-" + String(lastDay).padStart(2, "0"),
-  );
-}
-
-function sincronizarFechasDesdeMesChoferPlaca(mesVal) {
-  if (!mesVal) return;
-  var parts = mesVal.split("-");
-  var year = parseInt(parts[0], 10);
-  var month = parseInt(parts[1], 10);
-  var mesStr = String(month).padStart(2, "0");
-  var lastDay = new Date(year, month, 0).getDate();
-  $("#fecha_inicio_chofer_placa").val(year + "-" + mesStr + "-01");
-  $("#fecha_fin_chofer_placa").val(
-    year + "-" + mesStr + "-" + String(lastDay).padStart(2, "0"),
-  );
-}
 
 function formatearFechaRango(f) {
   if (!f) return "";
@@ -478,12 +575,14 @@ function mostrarDashboard(configuraciones) {
 
   // Crear gráficos de tendencia para días expandidos cuando la vista global es tendencia
   if (modoVistaConfig === "tendencia") {
-    Object.keys(datosTurnosPorDia).forEach(function (fechaId) {
-      var $content = $("#" + fechaId);
-      if ($content.length && $content.is(":visible")) {
-        crearChartTendenciaDia(fechaId);
-      }
-    });
+    setTimeout(function () {
+      Object.keys(datosTurnosPorDia).forEach(function (fechaId) {
+        var $content = $("#" + fechaId);
+        if ($content.length && $content.is(":visible")) {
+          crearChartTendenciaDia(fechaId);
+        }
+      });
+    }, 60);
   }
 }
 
@@ -645,9 +744,9 @@ function generarVistaDiasConTresOpciones(turnosDetalle, forPrint) {
       (showTendencia ? "block" : "none") +
       ';">';
     html +=
-      '<div class="ceo-chart-wrap" style="min-height: 220px;"><canvas id="chartTendencia_' +
+      '<div class="ceo-chart-wrap" style="min-height: 220px;"><div class="apex-chart" id="chartTendencia_' +
       fechaId +
-      '"></canvas></div>';
+      '"></div></div>';
     html +=
       '<p style="margin-top: 8px; font-size: 12px;">Manifiestos por franja horaria (promedio del día: <strong id="promTendencia_' +
       fechaId +
@@ -671,7 +770,11 @@ function cambiarVistaDia(fechaId, vista, btnElement) {
     .removeClass("btn-warning")
     .addClass("btn-default");
   $(btnElement).removeClass("btn-default").addClass("btn-warning");
-  if (vista === "tendencia") crearChartTendenciaDia(fechaId);
+  if (vista === "tendencia") {
+    setTimeout(function () {
+      crearChartTendenciaDia(fechaId);
+    }, 50);
+  }
 }
 
 function obtenerTiempoConfiguradoMin(turno) {
@@ -695,19 +798,11 @@ function obtenerTiempoConfiguradoMin(turno) {
 }
 
 function crearChartTendenciaDia(fechaId, ignoreVisibility) {
-  var canvasId = "chartTendencia_" + fechaId;
-  var $canvas = $("#" + canvasId);
-  if (!$canvas.length) return;
+  var chartId = "chartTendencia_" + fechaId;
+  var $el = $("#" + chartId);
+  if (!$el.length) return;
 
-  // Destruir gráfico previo si existe para permitir re-render al activar/desactivar checkbox
-  if (typeof Chart !== "undefined") {
-    var oldChart = Chart.getChart(canvasId);
-    if (oldChart) {
-      oldChart.destroy();
-    }
-  }
-
-  var $panel = $canvas.closest(".vista-dia-panel");
+  var $panel = $el.closest(".vista-dia-panel");
   if (!ignoreVisibility && $panel.length && !$panel.is(":visible")) return;
   var turnosData = datosTurnosPorDia[fechaId];
   if (!turnosData || !turnosData.length) return;
@@ -730,62 +825,7 @@ function crearChartTendenciaDia(fechaId, ignoreVisibility) {
   $("#promTendencia_" + fechaId).text(prom);
 
   var vsGarita = $("#chk_vs_garita_in_config").is(":checked");
-  var datasets = obtenerDatasetsTendenciaConfig(turnosData, vsGarita);
-  var scalesObj = {
-    y: {
-      type: "linear",
-      position: "left",
-      beginAtZero: true,
-      title: { display: true, text: "Cantidad" },
-    },
-  };
-
-  if (typeof Chart !== "undefined") {
-    var ctx = document.getElementById(canvasId);
-    if (ctx) {
-      new Chart(ctx, {
-        type: "line",
-        data: {
-          labels: labels,
-          datasets: datasets,
-        },
-        options: {
-          animation: false,
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: scalesObj,
-          plugins: {
-            legend: { display: true },
-          },
-        },
-        plugins: [
-          {
-            id: "lineDataLabelsTendencia",
-            afterDatasetsDraw: function (chart) {
-              var meta = chart.getDatasetMeta(0);
-              if (!meta || !meta.data || !datos.length) return;
-              var ctx = chart.ctx;
-              var scaleY = chart.scales.y;
-              ctx.save();
-              ctx.font = "bold 11px sans-serif";
-              ctx.textAlign = "center";
-              ctx.fillStyle = "#2C5D94";
-              for (var i = 0; i < meta.data.length; i++) {
-                var point = meta.data[i];
-                var val = datos[i];
-                if (val == null) continue;
-                var y = point.y - 10;
-                if (scaleY && y < scaleY.top) y = scaleY.top + 8;
-                ctx.fillText(String(val), point.x, y);
-              }
-              ctx.restore();
-            },
-          },
-        ],
-      });
-      $canvas.data("chart-created", true);
-    }
-  }
+  apexFromLineDatasets(chartId, labels, obtenerDatasetsTendenciaConfig(turnosData, vsGarita));
 }
 
 function generarTablaParaDia(turnosFecha) {
@@ -2071,6 +2111,67 @@ function ordenarManifiestosParaTabla(manifiestos, tipo) {
   return copia;
 }
 
+function htmlIconoOk(ok, title, color) {
+  return ok
+    ? '<i class="glyphicon glyphicon-ok" style="color: ' +
+        (color || "#28a745") +
+        '; font-size: 16px;" title="' +
+        title +
+        '"></i>'
+    : "";
+}
+
+function htmlCeldasEstadosMan(man) {
+  return (
+    "<td>" +
+    htmlIconoOk(man.Man_Tip_1 === "GE", "Entrada a Garita") +
+    "</td>" +
+    "<td>" +
+    htmlIconoOk(man.Man_Tip_2 === "A", "Aprobacion del Tecnico") +
+    "</td>" +
+    "<td>" +
+    htmlIconoOk(man.Man_Tip_3 === "GS", "Salida de Garita") +
+    "</td>" +
+    "<td>" +
+    htmlIconoOk(man.Man_Tip_4 === "F", "Facturado") +
+    "</td>" +
+    "<td>" +
+    htmlIconoOk(man.Man_Tip_5 === "R", "Rechazado", "#dc3545") +
+    "</td>"
+  );
+}
+
+function htmlCeldaHoraGarita(man) {
+  var horaGarita = obtenerHoraGaritaIngreso(man);
+  return (
+    '<td style="text-align: center;">' +
+    (horaGarita
+      ? '<span style="color: #28a745; font-weight: bold; white-space: nowrap;"><i class="glyphicon glyphicon-time" style="font-size: 11px;"></i> ' +
+        horaGarita +
+        "</span>"
+      : "-") +
+    "</td>"
+  );
+}
+
+function htmlFilaManifiestoDetalle(man, index, mostrarColumnaFechaDia, mostrarColumnaHorario) {
+  var html = "<tr>";
+  html +=
+    '<td style="text-align: center; font-weight: bold;">' +
+    (index + 1) +
+    "</td>";
+  html += "<td>" + (man.ManNum || "") + "</td>";
+  html += "<td>" + (man.Man_Fec || "") + "</td>";
+  if (mostrarColumnaFechaDia) html += "<td>" + (man.fecha_dia || "") + "</td>";
+  if (mostrarColumnaHorario) html += "<td>" + (man.horario_turno || "") + "</td>";
+  html += htmlCeldaHoraGarita(man);
+  html += "<td>" + (man.Cliente || "") + "</td>";
+  html += "<td>" + (man.Pla_Nom || "") + "</td>";
+  html += htmlCeldasEstadosMan(man);
+  html += "</tr>";
+  return html;
+}
+
 function aplicarOrdenManifiestosDetalle(tipo) {
   if (!datosModalManifiestos || !datosModalManifiestos.manifiestos) return;
   var manifiestos = datosModalManifiestos.manifiestos;
@@ -2083,57 +2184,12 @@ function aplicarOrdenManifiestosDetalle(tipo) {
   if (!$tbody.length) return;
   var html = "";
   ordenados.forEach(function (man, index) {
-    html += "<tr>";
-    html +=
-      '<td style="text-align: center; font-weight: bold;">' +
-      (index + 1) +
-      "</td>";
-    html += "<td>" + (man.ManNum || "") + "</td>";
-    html += "<td>" + (man.Man_Fec || "") + "</td>";
-    if (mostrarColumnaFechaDia)
-      html += "<td>" + (man.fecha_dia || "") + "</td>";
-    if (mostrarColumnaHorario)
-      html += "<td>" + (man.horario_turno || "") + "</td>";
-    var horaGarita = obtenerHoraGaritaIngreso(man);
-    var cellHoraGarita = horaGarita
-      ? '<span style="color: #28a745; font-weight: bold; white-space: nowrap;"><i class="glyphicon glyphicon-time" style="font-size: 11px;"></i> ' +
-        horaGarita +
-        "</span>"
-      : "-";
-    html += '<td style="text-align: center;">' + cellHoraGarita + "</td>";
-    html += "<td>" + (man.Cliente || "") + "</td>";
-    html += "<td>" + (man.Pla_Nom || "") + "</td>";
-    html +=
-      "<td>" +
-      (man.Man_Tip_1 === "GE"
-        ? '<i class="glyphicon glyphicon-ok" style="color: #28a745; font-size: 16px;" title="Entrada a Garita"></i>'
-        : "") +
-      "</td>";
-    html +=
-      "<td>" +
-      (man.Man_Tip_2 === "A"
-        ? '<i class="glyphicon glyphicon-ok" style="color: #28a745; font-size: 16px;" title="Aprobacion del Tecnico"></i>'
-        : "") +
-      "</td>";
-    html +=
-      "<td>" +
-      (man.Man_Tip_3 === "GS"
-        ? '<i class="glyphicon glyphicon-ok" style="color: #28a745; font-size: 16px;" title="Salida de Garita"></i>'
-        : "") +
-      "</td>";
-    html +=
-      "<td>" +
-      (man.Man_Tip_4 === "F"
-        ? '<i class="glyphicon glyphicon-ok" style="color: #28a745; font-size: 16px;" title="Facturado"></i>'
-        : "") +
-      "</td>";
-    html +=
-      "<td>" +
-      (man.Man_Tip_5 === "R"
-        ? '<i class="glyphicon glyphicon-ok" style="color: #dc3545; font-size: 16px;" title="Rechazado"></i>'
-        : "") +
-      "</td>";
-    html += "</tr>";
+    html += htmlFilaManifiestoDetalle(
+      man,
+      index,
+      mostrarColumnaFechaDia,
+      mostrarColumnaHorario,
+    );
   });
   $tbody.html(html);
 }
@@ -2261,58 +2317,12 @@ function mostrarManifiestosModal(manifiestos, Tud_Cod, turnoInfo) {
     html += '<tbody id="tbodyManifiestosDetalle">';
 
     manifiestosOrdenados.forEach(function (man, index) {
-      var estadoClass = man.Man_Est === "A" ? "success" : "danger";
-      html += "<tr>";
-      html +=
-        '<td style="text-align: center; font-weight: bold;">' +
-        (index + 1) +
-        "</td>";
-      html += "<td>" + (man.ManNum || "") + "</td>";
-      html += "<td>" + (man.Man_Fec || "") + "</td>";
-      if (mostrarColumnaFechaDia)
-        html += "<td>" + (man.fecha_dia || "") + "</td>";
-      if (mostrarColumnaHorario)
-        html += "<td>" + (man.horario_turno || "") + "</td>";
-      var horaGarita = obtenerHoraGaritaIngreso(man);
-      var cellHoraGarita = horaGarita
-        ? '<span style="color: #28a745; font-weight: bold; white-space: nowrap;"><i class="glyphicon glyphicon-time" style="font-size: 11px;"></i> ' +
-          horaGarita +
-          "</span>"
-        : "-";
-      html += '<td style="text-align: center;">' + cellHoraGarita + "</td>";
-      html += "<td>" + (man.Cliente || "") + "</td>";
-      html += "<td>" + (man.Pla_Nom || "") + "</td>";
-      html +=
-        "<td>" +
-        (man.Man_Tip_1 === "GE"
-          ? '<i class="glyphicon glyphicon-ok" style="color: #28a745; font-size: 16px;" title="Entrada a Garita"></i>'
-          : "") +
-        "</td>";
-      html +=
-        "<td>" +
-        (man.Man_Tip_2 === "A"
-          ? '<i class="glyphicon glyphicon-ok" style="color: #28a745; font-size: 16px;" title="Aprobacion del Tecnico"></i>'
-          : "") +
-        "</td>";
-      html +=
-        "<td>" +
-        (man.Man_Tip_3 === "GS"
-          ? '<i class="glyphicon glyphicon-ok" style="color: #28a745; font-size: 16px;" title="Salida de Garita"></i>'
-          : "") +
-        "</td>";
-      html +=
-        "<td>" +
-        (man.Man_Tip_4 === "F"
-          ? '<i class="glyphicon glyphicon-ok" style="color: #28a745; font-size: 16px;" title="Facturado"></i>'
-          : "") +
-        "</td>";
-      html +=
-        "<td>" +
-        (man.Man_Tip_5 === "R"
-          ? '<i class="glyphicon glyphicon-ok" style="color: #dc3545; font-size: 16px;" title="Rechazado"></i>'
-          : "") +
-        "</td>";
-      html += "</tr>";
+      html += htmlFilaManifiestoDetalle(
+        man,
+        index,
+        mostrarColumnaFechaDia,
+        mostrarColumnaHorario,
+      );
     });
 
     html += "</tbody>";
@@ -3131,64 +3141,17 @@ function imprimirReporte() {
     return;
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // TENDENCIA: capturar los canvas como dataURL ANTES de abrir la ventana
-  // El fechaId en datosTurnosPorDia es "fecha_" + fecha.replace(/[\/\-]/g, "_")
-  // ──────────────────────────────────────────────────────────────────────────
+  // TENDENCIA: capturar ApexCharts como SVG ANTES de abrir la ventana
   var tendenciaImgs = {};
   if (modoVistaConfig === "tendencia" && typeof datosTurnosPorDia === "object") {
     Object.keys(datosTurnosPorDia).forEach(function (fechaId) {
-      var canvasId = "chartTendencia_" + fechaId;
-      var imgUrl = null;
-
-      // 1er intento: chart ya instanciado en pantalla
-      if (typeof Chart !== "undefined") {
-        try {
-          var existingChart = Chart.getChart(canvasId);
-          if (existingChart) {
-            var canvas = document.getElementById(canvasId);
-            if (canvas) imgUrl = canvas.toDataURL("image/png");
-          }
-        } catch (e) {}
+      var $chart = $("#chartTendencia_" + fechaId);
+      if (!$chart.length) {
+        crearChartTendenciaDia(fechaId, true);
+        $chart = $("#chartTendencia_" + fechaId);
       }
-
-      // 2do intento: renderizar en canvas offscreen temporal
-      if ((!imgUrl || imgUrl.length <= 200) && typeof Chart !== "undefined") {
-        try {
-          var offCanvas = document.createElement("canvas");
-          offCanvas.width = 900;
-          offCanvas.height = 350;
-          document.body.appendChild(offCanvas);
-
-          var turnosData = datosTurnosPorDia[fechaId];
-          if (turnosData && turnosData.length) {
-            var labels = turnosData.map(function (t) {
-              return (t.horario || "").replace(/\s*-\s*/g, "–");
-            });
-            var vsGarita = $("#chk_vs_garita_in_config").is(":checked");
-            var tmpDatasets = obtenerDatasetsTendenciaConfig(turnosData, vsGarita);
-            var tmpChart = new Chart(offCanvas, {
-              type: "line",
-              data: { labels: labels, datasets: tmpDatasets },
-              options: {
-                animation: false,
-                responsive: false,
-                plugins: { legend: { display: true, position: "top" } },
-                scales: {
-                  y: { beginAtZero: true, title: { display: true, text: "Cantidad" } }
-                }
-              }
-            });
-            imgUrl = offCanvas.toDataURL("image/png");
-            tmpChart.destroy();
-          }
-          document.body.removeChild(offCanvas);
-        } catch (e2) {}
-      }
-
-      if (imgUrl && imgUrl.length > 200) {
-        tendenciaImgs[fechaId] = imgUrl;
-      }
+      var imgUrl = apexSvgDataUrl($chart);
+      if (imgUrl) tendenciaImgs[fechaId] = imgUrl;
     });
   }
 
@@ -4503,7 +4466,7 @@ function generarHTMLParetoYTarjetas(tipoVista) {
   }
   html += '<div class="pareto-chart-scroll-wrap" id="paretoChartScrollWrap">';
   html +=
-    '<div class="pareto-chart-container" id="paretoChartContainer"><canvas id="canvasParetoChoferPlaca"></canvas></div>';
+    '<div class="pareto-chart-container" id="paretoChartContainer"><div class="apex-chart" id="canvasParetoChoferPlaca"></div></div>';
   html += "</div>";
   html += '<div class="pareto-insight" id="paretoInsightTexto"></div>';
   html += "</div></div>";
@@ -4514,7 +4477,6 @@ function generarHTMLParetoYTarjetas(tipoVista) {
 function initParetoChart(config, mode) {
   if (!config || !config.itemsCompletos || config.itemsCompletos.length === 0)
     return;
-  var canvasId = "canvasParetoChoferPlaca";
   var containerId = "paretoChartContainer";
   var insightId = "paretoInsightTexto";
   var colorPrincipal = config.colorPrincipal || "44, 93, 148";
@@ -4605,27 +4567,6 @@ function initParetoChart(config, mode) {
     container.classList.remove("pareto-chart-scroll");
   }
 
-  if (chartParetoChoferPlaca) {
-    chartParetoChoferPlaca.destroy();
-    chartParetoChoferPlaca = null;
-  }
-  var canvas = document.getElementById(canvasId);
-  if (!canvas || typeof Chart === "undefined") return;
-  canvas.width = 0;
-  canvas.height = 0;
-
-  if (window.ChartAnnotation && typeof Chart.register === "function") {
-    try {
-      Chart.register(window.ChartAnnotation);
-    } catch (e) {}
-  }
-
-  var labels = visualItems.map(function (i) {
-    return i.nombre;
-  });
-  var cantidades = visualItems.map(function (i) {
-    return i.cantidad;
-  });
   var pctAcum;
   if (mode === "hasta70" && chartItems.length > 0) {
     var acu = 0;
@@ -4647,161 +4588,14 @@ function initParetoChart(config, mode) {
       return Number(i.pctAcum.toFixed(1));
     });
   }
-  var coloresBarras = visualItems.map(function (i) {
-    return i.isTop20
-      ? "rgba(" + colorPrincipal + ", 0.9)"
-      : "rgba(108, 117, 125, 0.6)";
+  renderParetoApex("canvasParetoChoferPlaca", visualItems, {
+    total: total,
+    promedio: promedio,
+    colorPrincipal: colorPrincipal,
+    pctAcum: pctAcum,
+    indexMarcador: index80Chart,
+    textoMarcador: index80Chart >= 0 ? "Zona 70%" : ""
   });
-  var promediosData = visualItems.map(function () {
-    return Number(promedio.toFixed(1));
-  });
-
-  var annotationPlugin = window.ChartAnnotation;
-  var plugins = {
-    legend: { position: "top" },
-    tooltip: {
-      callbacks: {
-        label: function (context) {
-          var idx = context.dataIndex;
-          var item = visualItems[idx];
-          if (context.dataset.yAxisID === "y" && context.datasetIndex === 0) {
-            var pctInd = total > 0 ? (item.cantidad / total) * 100 : 0;
-            var pctAcumVal =
-              pctAcum && pctAcum[idx] != null
-                ? pctAcum[idx]
-                : item.pctAcum != null
-                  ? Number(item.pctAcum.toFixed(1))
-                  : 0;
-            var diffStr =
-              (item.diffPromedio > 0 ? "+" : "") +
-              (item.diffPromedio != null
-                ? item.diffPromedio
-                : item.cantidad - promedio
-              ).toFixed(0);
-            return [
-              "Cantidad: " + item.cantidad,
-              "% individual: " + pctInd.toFixed(1) + "%",
-              "% acumulado: " + pctAcumVal.toFixed(1) + "%",
-              "Diferencia vs promedio: " + diffStr,
-            ];
-          }
-          return "";
-        },
-      },
-    },
-  };
-  var annotations = {
-    lineaPromedio: {
-      type: "line",
-      yMin: promedio,
-      yMax: promedio,
-      borderColor: "rgba(" + colorPrincipal + ", 0.9)",
-      borderWidth: 3,
-      borderDash: [4, 4],
-      label: { display: true, content: "Promedio", position: "end" },
-    },
-  };
-  if (index80Chart >= 0) {
-    annotations.linea80 = {
-      type: "line",
-      xMin: index80Chart - 0.5,
-      xMax: index80Chart + 0.5,
-      borderColor: "rgb(200, 60, 60)",
-      borderWidth: 2,
-      borderDash: [6, 4],
-      label: { display: true, content: "Zona 70%", position: "start" },
-    };
-  }
-  if (annotationPlugin) plugins.annotation = { annotations: annotations };
-
-  var ctx = canvas.getContext("2d");
-  chartParetoChoferPlaca = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: "Cantidad",
-          data: cantidades,
-          backgroundColor: coloresBarras,
-          borderColor: visualItems.map(function (i) {
-            return i.isTop20
-              ? "rgb(" + colorPrincipal + ")"
-              : "rgb(108, 117, 125)";
-          }),
-          borderWidth: 1,
-          yAxisID: "y",
-          order: 3,
-        },
-        {
-          label: "% Acumulado",
-          data: pctAcum,
-          type: "line",
-          borderColor: "rgb(200, 60, 60)",
-          backgroundColor: "rgba(200, 60, 60, 0.1)",
-          borderWidth: 2,
-          fill: false,
-          tension: 0.4,
-          pointRadius: 4,
-          pointBackgroundColor: "rgb(200, 60, 60)",
-          yAxisID: "y1",
-          order: 1,
-        },
-        {
-          label: "Promedio",
-          data: promediosData,
-          type: "line",
-          borderColor: "rgba(" + colorPrincipal + ", 0.9)",
-          borderWidth: 3,
-          borderDash: [4, 4],
-          fill: false,
-          pointRadius: 0,
-          yAxisID: "y",
-          order: 2,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: "index", intersect: false },
-      plugins: plugins,
-      scales: {
-        x: {
-          ticks: {
-            autoSkip: true,
-            maxTicksLimit: 20,
-            maxRotation: 45,
-            minRotation: 45,
-            font: { size: 10 },
-          },
-        },
-        y: {
-          type: "linear",
-          position: "left",
-          title: { display: true, text: "Cantidad" },
-          beginAtZero: true,
-          ticks: { stepSize: 1 },
-        },
-        y1: {
-          type: "linear",
-          position: "right",
-          title: { display: true, text: "% Acumulado" },
-          min: 0,
-          max: 100,
-          grid: { drawOnChartArea: false },
-          ticks: {
-            callback: function (v) {
-              return v + "%";
-            },
-          },
-        },
-      },
-    },
-  });
-  setTimeout(function () {
-    if (chartParetoChoferPlaca) chartParetoChoferPlaca.resize();
-  }, 0);
 }
 
 function initParetoYTarjetasChoferPlaca(agrupado, tipoVista, plantasOptional) {
@@ -4938,168 +4732,13 @@ function initParetoYTarjetasChoferPlaca(agrupado, tipoVista, plantasOptional) {
       "</strong> primeras plantas concentran el <strong>80%</strong> de la operación.";
   }
 
-  if (chartParetoChoferPlaca) {
-    chartParetoChoferPlaca.destroy();
-    chartParetoChoferPlaca = null;
-  }
-  var canvas = document.getElementById("canvasParetoChoferPlaca");
-  if (!canvas || typeof Chart === "undefined" || items.length === 0) return;
-
-  if (window.ChartAnnotation && typeof Chart.register === "function") {
-    try {
-      Chart.register(window.ChartAnnotation);
-    } catch (e) {}
-  }
-
-  var labels = items.map(function (i) {
-    return i.nombre;
-  });
-  var cantidades = items.map(function (i) {
-    return i.cantidad;
-  });
-  var pctAcum = items.map(function (i) {
-    return Number(i.pctAcum.toFixed(1));
-  });
-  var coloresBarras = items.map(function (i) {
-    return i.isTop20 ? "rgba(44, 93, 148, 0.9)" : "rgba(108, 117, 125, 0.6)";
-  });
-  var promediosData = items.map(function () {
-    return Number(promedio.toFixed(1));
-  });
-
-  var annotationPlugin = window.ChartAnnotation;
-  var plugins = {
-    legend: { position: "top" },
-    tooltip: {
-      callbacks: {
-        label: function (context) {
-          var idx = context.dataIndex;
-          var item = items[idx];
-          if (context.dataset.yAxisID === "y" && context.datasetIndex === 0) {
-            var diff = item.diffPromedio;
-            var diffStr = diff > 0 ? "+" + diff.toFixed(0) : diff.toFixed(0);
-            return [
-              "Cantidad: " + item.cantidad,
-              "% individual: " + item.pct.toFixed(1) + "%",
-              "% acumulado: " + item.pctAcum.toFixed(1) + "%",
-              "Diferencia vs promedio: " + diffStr,
-            ];
-          }
-          return "";
-        },
-      },
-    },
-  };
-  if (annotationPlugin) {
-    plugins.annotation = {
-      annotations: {
-        linea80: {
-          type: "line",
-          xMin: index80Chart - 0.5,
-          xMax: index80Chart + 0.5,
-          borderColor: "rgb(200, 60, 60)",
-          borderWidth: 2,
-          borderDash: [6, 4],
-          label: {
-            display: true,
-            content: "Zona 80% productividad",
-            position: "start",
-          },
-        },
-        lineaPromedio: {
-          type: "line",
-          yMin: promedio,
-          yMax: promedio,
-          borderColor: "rgba(44, 93, 148, 0.8)",
-          borderWidth: 3,
-          borderDash: [4, 4],
-          label: { display: true, content: "Promedio", position: "end" },
-        },
-      },
-    };
-  }
-
-  var ctx = canvas.getContext("2d");
-  chartParetoChoferPlaca = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: "Cantidad",
-          data: cantidades,
-          backgroundColor: coloresBarras,
-          borderColor: items.map(function (i) {
-            return i.isTop20 ? "rgb(44, 93, 148)" : "rgb(108, 117, 125)";
-          }),
-          borderWidth: 1,
-          yAxisID: "y",
-          order: 3,
-        },
-        {
-          label: "% Acumulado",
-          data: pctAcum,
-          type: "line",
-          borderColor: "rgb(200, 60, 60)",
-          backgroundColor: "rgba(200, 60, 60, 0.1)",
-          borderWidth: 2,
-          fill: false,
-          tension: 0.2,
-          pointRadius: 3,
-          pointBackgroundColor: "rgb(200, 60, 60)",
-          yAxisID: "y1",
-          order: 1,
-        },
-        {
-          label: "Promedio",
-          data: promediosData,
-          type: "line",
-          borderColor: "rgba(44, 93, 148, 0.8)",
-          borderWidth: 3,
-          borderDash: [4, 4],
-          fill: false,
-          pointRadius: 0,
-          yAxisID: "y",
-          order: 2,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: "index", intersect: false },
-      plugins: plugins,
-      scales: {
-        x: {
-          ticks: {
-            maxRotation: 45,
-            minRotation: 25,
-            font: { size: 10 },
-            maxTicksLimit: 30,
-          },
-        },
-        y: {
-          type: "linear",
-          position: "left",
-          title: { display: true, text: "Cantidad" },
-          beginAtZero: true,
-          ticks: { stepSize: 1 },
-        },
-        y1: {
-          type: "linear",
-          position: "right",
-          title: { display: true, text: "% Acumulado" },
-          min: 0,
-          max: 100,
-          grid: { drawOnChartArea: false },
-          ticks: {
-            callback: function (v) {
-              return v + "%";
-            },
-          },
-        },
-      },
-    },
+  if (!items.length) return;
+  renderParetoApex("canvasParetoChoferPlaca", items, {
+    total: total,
+    promedio: promedio,
+    colorPrincipal: "44, 93, 148",
+    indexMarcador: index80Chart,
+    textoMarcador: "Zona 80% productividad"
   });
 }
 
@@ -5988,17 +5627,12 @@ function imprimirReporteFecha(fecha) {
       html += generarBarrasParaDia(config.turnos_detalle, true);
     } else if (modoVistaConfig === "tendencia") {
       var fechaId = "fecha_" + fecha.replace(/[\/\-]/g, "_");
-      var canvasId = "chartTendencia_" + fechaId;
-      var canvas = document.getElementById(canvasId);
-
-      // Si el gráfico de tendencia no existe o no ha sido renderizado en pantalla, crearlo inmediatamente
-      if (canvas) {
-        if (typeof Chart !== "undefined") {
-          datosTurnosPorDia[fechaId] = config.turnos_detalle;
-          crearChartTendenciaDia(fechaId, true);
-        }
+      var $chart = $("#chartTendencia_" + fechaId);
+      if ($chart.length) {
+        datosTurnosPorDia[fechaId] = config.turnos_detalle;
+        crearChartTendenciaDia(fechaId, true);
         try {
-          var imgUrl = canvas.toDataURL("image/png");
+          var imgUrl = apexSvgDataUrl($chart);
           html += '<div style="text-align: center; margin: 15px 0;">';
           html += '<h5 style="color:#2C5D94; font-weight:bold; margin-bottom: 10px;">Tendencia de Manifiestos por Franja Horaria (' + fecha + ')</h5>';
           html += '<img src="' + imgUrl + '" style="width: 100%; max-width: 750px; height: auto; display: block; margin: 0 auto; border: 1px solid #cbd6e2; border-radius: 4px; padding: 5px;" />';
@@ -6657,27 +6291,15 @@ function cargarDashboardEjecutivo() {
 function obtenerContenidoEjecutivoConGraficosParaImpresion() {
   var $cont = $("#dashboardContentEjecutivo");
   if (!$cont.length) return "";
-  var canvases = $cont.find("canvas").toArray();
-  var dataUrls = [];
-  canvases.forEach(function (canvas) {
-    try {
-      if (canvas.width > 0 && canvas.height > 0) {
-        dataUrls.push(canvas.toDataURL("image/png"));
-      } else {
-        dataUrls.push(null);
-      }
-    } catch (e) {
-      dataUrls.push(null);
-    }
-  });
   var $clone = $cont.clone();
   $clone.find(".no-print, button, .btn").remove();
-  $clone.find("canvas").each(function (i) {
-    if (dataUrls[i]) {
-      var $img = $('<img alt="Gráfico"/>')
-        .attr("src", dataUrls[i])
-        .css({ maxWidth: "100%", height: "auto", display: "block" });
-      $(this).replaceWith($img);
+  $cont.find(".apex-chart").each(function (i) {
+    var src = apexSvgDataUrl($(this));
+    var $t = $clone.find(".apex-chart").eq(i);
+    if (src) {
+      $t.replaceWith(
+        $('<img alt="Gráfico"/>').attr("src", src).css({ maxWidth: "100%", height: "auto", display: "block" })
+      );
     }
   });
   $clone.find(".ceo-chart-wrap").css({ minHeight: "0", height: "auto" });
@@ -6852,76 +6474,22 @@ function renderDashboardEjecutivo(data) {
       : Math.round(tRel) + " min";
 
   var iconVar = varPct >= 0 ? "↑" : "↓";
-  var html = "";
-
-  html += '<div class="ceo-kpi-row">';
-  html +=
-    '<div class="ceo-kpi-card semaforo-verde"><div class="ceo-kpi-icon"><i class="fa fa-file-text-o"></i></div><div class="ceo-kpi-label">Total manifiestos</div><div class="ceo-kpi-value">' +
-    totalMan +
-    '</div><div class="ceo-kpi-tendencia">Período</div></div>';
-  html +=
-    '<div class="ceo-kpi-card semaforo-' +
-    sVar +
-    '"><div class="ceo-kpi-icon"><i class="fa fa-line-chart"></i></div><div class="ceo-kpi-label">Variación % vs anterior</div><div class="ceo-kpi-value">' +
-    (varPct >= 0 ? "+" : "") +
-    varPct +
-    '%</div><div class="ceo-kpi-tendencia">' +
-    iconVar +
-    "</div></div>";
-  html +=
-    '<div class="ceo-kpi-card semaforo-' +
-    sConc +
-    '"><div class="ceo-kpi-icon"><i class="fa fa-pie-chart"></i></div><div class="ceo-kpi-label">Concentración Top 3</div><div class="ceo-kpi-value">' +
-    concTop3 +
-    '%</div><div class="ceo-kpi-tendencia">Plantas</div></div>';
-  html +=
-    '<div class="ceo-kpi-card semaforo-' +
-    sDep +
-    '"><div class="ceo-kpi-icon"><i class="fa fa-exclamation-triangle"></i></div><div class="ceo-kpi-label">Dependencia Top 2</div><div class="ceo-kpi-value">' +
-    depTop2 +
-    '%</div><div class="ceo-kpi-tendencia">' +
-    (depTop2 > 50 ? "Alerta" : "Estable") +
-    "</div></div>";
-  html +=
-    '<div class="ceo-kpi-card semaforo-' +
-    sDesv +
-    '"><div class="ceo-kpi-icon"><i class="fa fa-bar-chart"></i></div><div class="ceo-kpi-label">Dispersión operativa</div><div class="ceo-kpi-value">' +
-    (typeof desv === "number" ? desv.toFixed(1) : desv) +
-    '</div><div class="ceo-kpi-tendencia">Desv. estándar</div></div>';
-  html +=
-    '<div class="ceo-kpi-card semaforo-' +
-    sUtil +
-    '"><div class="ceo-kpi-icon"><i class="fa fa-truck"></i></div><div class="ceo-kpi-label">Utilización flota</div><div class="ceo-kpi-value">' +
-    utilizacion +
-    '%</div><div class="ceo-kpi-tendencia">Placas activas</div></div>';
-  html +=
-    '<div class="ceo-kpi-card semaforo-' +
-    sInac +
-    '"><div class="ceo-kpi-icon"><i class="fa fa-pause-circle-o"></i></div><div class="ceo-kpi-label">% no realizados</div><div class="ceo-kpi-value">' +
-    tasaInac +
-    '%</div><div class="ceo-kpi-tendencia">Inactivos</div></div>';
-  html +=
-    '<div class="ceo-kpi-card semaforo-' +
-    sRel +
-    '"><div class="ceo-kpi-icon"><i class="fa fa-clock-o"></i></div><div class="ceo-kpi-label">Tiempo Prom. Relavera</div><div class="ceo-kpi-value">' +
-    tRelFmt +
-    '</div><div class="ceo-kpi-tendencia">Entrada vs Salida</div></div>';
+  var html = '<div class="ceo-kpi-row">';
+  html += htmlKpiCeo("verde", "fa-file-text-o", "Total manifiestos", totalMan, "Período");
+  html += htmlKpiCeo(sVar, "fa-line-chart", "Variación % vs anterior", (varPct >= 0 ? "+" : "") + varPct + "%", iconVar);
+  html += htmlKpiCeo(sConc, "fa-pie-chart", "Concentración Top 3", concTop3 + "%", "Plantas");
+  html += htmlKpiCeo(sDep, "fa-exclamation-triangle", "Dependencia Top 2", depTop2 + "%", depTop2 > 50 ? "Alerta" : "Estable");
+  html += htmlKpiCeo(sDesv, "fa-bar-chart", "Dispersión operativa", typeof desv === "number" ? desv.toFixed(1) : desv, "Desv. estándar");
+  html += htmlKpiCeo(sUtil, "fa-truck", "Utilización flota", utilizacion + "%", "Placas activas");
+  html += htmlKpiCeo(sInac, "fa-pause-circle-o", "% no realizados", tasaInac + "%", "Inactivos");
+  html += htmlKpiCeo(sRel, "fa-clock-o", "Tiempo Prom. Relavera", tRelFmt, "Entrada vs Salida");
   html += "</div>";
 
   var tendencia30 = data.tendencia_30 || [];
   var promDia = data.tendencia_promedio || 0;
-  function fmtFechaYMD(str) {
-    if (!str) return "";
-    var m = (str + "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    return m ? m[3] + "/" + m[2] + "/" + m[1] : str;
-  }
   var txtRango =
     data.fecha_ini && data.fecha_fin
-      ? " (" +
-        fmtFechaYMD(data.fecha_ini) +
-        " a " +
-        fmtFechaYMD(data.fecha_fin) +
-        ")"
+      ? " (" + formatearFechaRango(data.fecha_ini) + " a " + formatearFechaRango(data.fecha_fin) + ")"
       : "";
   html +=
     '<div class="ceo-bloque"><h4><i class="fa fa-calendar"></i> Tendencia temporal (período seleccionado)</h4>';
@@ -6932,7 +6500,7 @@ function renderDashboardEjecutivo(data) {
     (txtRango ? '<span class="text-muted">' + txtRango + "</span>" : "") +
     "</p>";
   html +=
-    '<div class="ceo-chart-wrap"><canvas id="chartEjecutivoTendencia"></canvas></div></div>';
+    '<div class="ceo-chart-wrap"><div class="apex-chart" id="chartEjecutivoTendencia"></div></div></div>';
 
   var tonRecibidas = Number(
     data.kpis.total_toneladas_recibidas || 0,
@@ -6947,25 +6515,12 @@ function renderDashboardEjecutivo(data) {
     data.kpis.promedio_tonelaje_diario || 0,
   ).toLocaleString("es-ES");
 
-  html +=
-    '<div class="ceo-bloque"><h4><i class="fa fa-balance-scale"></i> Resumen de Tonelaje</h4>';
+  html += '<div class="ceo-bloque"><h4><i class="fa fa-balance-scale"></i> Resumen de Tonelaje</h4>';
   html += '<div class="ceo-kpi-row">';
-  html +=
-    '<div class="ceo-kpi-card semaforo-verde"><div class="ceo-kpi-icon"><i class="fa fa-download"></i></div><div class="ceo-kpi-label">Total Recibidas</div><div class="ceo-kpi-value">' +
-    tonRecibidas +
-    ' Tn</div><div class="ceo-kpi-tendencia">Toneladas</div></div>';
-  html +=
-    '<div class="ceo-kpi-card semaforo-verde"><div class="ceo-kpi-icon"><i class="fa fa-file-text"></i></div><div class="ceo-kpi-label">Total Facturadas</div><div class="ceo-kpi-value">' +
-    tonFacturadas +
-    ' Tn</div><div class="ceo-kpi-tendencia">Toneladas</div></div>';
-  html +=
-    '<div class="ceo-kpi-card semaforo-amarillo"><div class="ceo-kpi-icon"><i class="fa fa-clock-o"></i></div><div class="ceo-kpi-label">Por Facturar</div><div class="ceo-kpi-value">' +
-    tonPorFacturar +
-    ' Tn</div><div class="ceo-kpi-tendencia">Toneladas</div></div>';
-  html +=
-    '<div class="ceo-kpi-card semaforo-verde"><div class="ceo-kpi-icon"><i class="fa fa-line-chart"></i></div><div class="ceo-kpi-label">Promedio Diario</div><div class="ceo-kpi-value">' +
-    tonPromedioDiario +
-    ' Tn</div><div class="ceo-kpi-tendencia">Toneladas / día</div></div>';
+  html += htmlKpiCeo("verde", "fa-download", "Total Recibidas", tonRecibidas + " Tn", "Toneladas");
+  html += htmlKpiCeo("verde", "fa-file-text", "Total Facturadas", tonFacturadas + " Tn", "Toneladas");
+  html += htmlKpiCeo("amarillo", "fa-clock-o", "Por Facturar", tonPorFacturar + " Tn", "Toneladas");
+  html += htmlKpiCeo("verde", "fa-line-chart", "Promedio Diario", tonPromedioDiario + " Tn", "Toneladas / día");
   html += "</div></div>";
 
   var top10 = data.top10_plantas || [];
@@ -6976,7 +6531,7 @@ function renderDashboardEjecutivo(data) {
   html +=
     '<div class="ceo-bloque"><h4><i class="fa fa-industry"></i> Concentración operativa</h4>';
   html +=
-    '<div class="ceo-chart-wrap"><canvas id="chartEjecutivoConc"></canvas></div>';
+    '<div class="ceo-chart-wrap"><div class="apex-chart" id="chartEjecutivoConc"></div></div>';
   html +=
     '<p class="ceo-insight' +
     (concPct > 65 ? " alerta-roja" : "") +
@@ -7005,7 +6560,7 @@ function renderDashboardEjecutivo(data) {
     (totalCh > 0 ? Math.round((n80 / totalCh) * 100) : 0) +
     "%</strong> de los choferes generan el 80% de los manifiestos.</p>";
   html +=
-    '<div class="ceo-chart-wrap"><canvas id="chartEjecutivoChofer"></canvas></div></div>';
+    '<div class="ceo-chart-wrap"><div class="apex-chart" id="chartEjecutivoChofer"></div></div></div>';
 
   var pctBajaPla = pl.pct_baja_actividad || 0,
     idxConcPla = pl.indice_concentracion || 0;
@@ -7106,7 +6661,7 @@ function renderDashboardEjecutivo(data) {
       html +=
         '<div style="margin-top: 10px; margin-bottom: 12px;"><button type="button" class="btn btn-info btn-sm" onclick="exportarExcelInactivos();"><i class="fa fa-file-excel-o"></i> Excel - Listado completo de manifiestos inactivos</button></div>';
       html +=
-        '<div class="ceo-chart-wrap" style="min-height: 220px;"><canvas id="chartEjecutivoInactivos"></canvas></div>';
+        '<div class="ceo-chart-wrap" style="min-height: 220px;"><div class="apex-chart" id="chartEjecutivoInactivos"></div></div>';
     }
   }
   html += "</div>";
@@ -7177,22 +6732,16 @@ function renderDashboardEjecutivo(data) {
     html += '<tr><td colspan="3">Sin datos</td></tr>';
   html += "</tbody></table></div></div></div>";
   html +=
-    '<div class="ceo-chart-wrap" style="min-height: 260px; margin-top: 14px;"><canvas id="chartEjecutivoParetoInactivos"></canvas></div>';
+    '<div class="ceo-chart-wrap" style="min-height: 260px; margin-top: 14px;"><div class="apex-chart" id="chartEjecutivoParetoInactivos"></div></div>';
   html += "</div>";
 
   $("#dashboardContentEjecutivo").html(html);
 
-  if (chartEjecutivoConcentracion) {
-    chartEjecutivoConcentracion.destroy();
-    chartEjecutivoConcentracion = null;
-  }
-  // Dividir nombre de planta en varias líneas (máx. maxLen por línea) para que no se corte
   function wrapPlantLabel(str, maxLen) {
     if (!str || !str.length) return str;
     maxLen = maxLen || 16;
     if (str.length <= maxLen) return str;
-    var lines = [];
-    var rest = str.trim();
+    var lines = [], rest = str.trim();
     while (rest.length > maxLen) {
       var idx = rest.lastIndexOf(" ", maxLen);
       if (idx <= 0) idx = rest.indexOf(" ", maxLen);
@@ -7203,388 +6752,86 @@ function renderDashboardEjecutivo(data) {
     if (rest.length) lines.push(rest);
     return lines.join("\n");
   }
-  var labelsConc = top10.map(function (p) {
-    return wrapPlantLabel(p.Pla_Nom || "", 16);
-  });
-  var totalsConc = top10.map(function (p) {
-    return p.total;
-  });
+
+  var labelsConc = top10.map(function (p) { return wrapPlantLabel(p.Pla_Nom || "", 16); });
+  var totalsConc = top10.map(function (p) { return p.total; });
   var acum = 0;
   var acumulada = totalsConc.map(function (t) {
     acum += t;
     return totalMan > 0 ? Math.round((acum / totalMan) * 100) : 0;
   });
-  var ctxConc = document.getElementById("chartEjecutivoConc");
-  if (ctxConc && typeof Chart !== "undefined") {
-    chartEjecutivoConcentracion = new Chart(ctxConc, {
-      type: "bar",
-      data: {
-        labels: labelsConc,
-        datasets: [
-          {
-            label: "Manifiestos",
-            data: totalsConc,
-            backgroundColor: "rgba(44, 93, 148, 0.7)",
-            order: 2,
-          },
-          {
-            label: "% Acumulado",
-            data: acumulada,
-            type: "line",
-            borderColor: "#2C5D94",
-            borderWidth: 2,
-            fill: false,
-            yAxisID: "y1",
-            order: 1,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        layout: { padding: { top: 20, bottom: 52 } },
-        plugins: {
-          legend: { position: "top" },
-          tooltip: {
-            callbacks: {
-              title: function (items) {
-                var idx = items && items.length ? items[0].dataIndex : 0;
-                var p = top10[idx] || {};
-                return p.Pla_Nom || "";
-              },
-            },
-          },
-        },
-        scales: {
-          x: {
-            ticks: {
-              maxRotation: 0,
-              minRotation: 0,
-              autoSkip: false,
-              font: { size: 10 },
-              callback: function (val, idx) {
-                return ""; // El plugin wrapXLabels dibuja los nombres con salto de línea
-              },
-            },
-          },
-          y: { beginAtZero: true, position: "left" },
-          y1: {
-            beginAtZero: true,
-            max: 100,
-            position: "right",
-            grid: { drawOnChartArea: false },
-          },
-        },
-      },
-      plugins: [
-        {
-          id: "wrapXLabels",
-          afterDraw: function (chart) {
-            var scale = chart.scales.x;
-            if (!scale) {
-              var keys = Object.keys(chart.scales || {});
-              for (var k = 0; k < keys.length; k++) {
-                if (chart.scales[keys[k]].position === "bottom") {
-                  scale = chart.scales[keys[k]];
-                  break;
-                }
-              }
-            }
-            if (!scale) return;
-            var count = totalsConc.length;
-            var ctx = chart.ctx;
-            var meta0 = chart.getDatasetMeta(0);
-            var tickOpts = scale.options.ticks || {};
-            var color = tickOpts.color || "rgba(0,0,0,0.87)";
-            var padding = tickOpts.padding !== undefined ? tickOpts.padding : 6;
-            var fontSize =
-              tickOpts.font && tickOpts.font.size ? tickOpts.font.size : 10;
-            var lineHeight = fontSize * 1.2;
-            ctx.save();
-            ctx.font =
-              fontSize +
-              "px " +
-              (tickOpts.font && tickOpts.font.family
-                ? tickOpts.font.family
-                : "sans-serif");
-            ctx.textAlign = "center";
-            ctx.textBaseline = "top";
-            ctx.fillStyle = color;
-            for (var i = 0; i < count; i++) {
-              var label = (labelsConc[i] || "").toString();
-              if (!label) continue;
-              var x =
-                (scale.getPixelForTick && scale.getPixelForTick(i)) ||
-                (meta0.data[i] && meta0.data[i].x);
-              if (typeof x !== "number") continue;
-              var y = scale.bottom + padding;
-              var lines = label.split("\n");
-              for (var j = 0; j < lines.length; j++) {
-                ctx.fillText(lines[j], x, y + j * lineHeight);
-              }
-            }
-            ctx.restore();
-          },
-        },
-        {
-          id: "barTotalManifiestos",
-          afterDatasetsDraw: function (chart) {
-            var meta = chart.getDatasetMeta(0);
-            if (!meta || !meta.data || !totalsConc.length) return;
-            var ctx = chart.ctx;
-            var scaleY = chart.scales.y;
-            ctx.save();
-            ctx.font = "bold 11px sans-serif";
-            ctx.textAlign = "center";
-            ctx.fillStyle = "#2C5D94";
-            for (var i = 0; i < meta.data.length; i++) {
-              var bar = meta.data[i];
-              var val = totalsConc[i];
-              if (val == null) continue;
-              var y = bar.y - 6;
-              if (scaleY && y < scaleY.top) y = scaleY.top + 10;
-              ctx.fillText(String(val), bar.x, y);
-            }
-            ctx.restore();
-          },
-        },
-      ],
-    });
-  }
+  chartEjecutivoConcentracion = renderApex("chartEjecutivoConc", {
+    chart: { type: "line" },
+    stroke: { width: [0, 2] },
+    dataLabels: { enabled: true, enabledOnSeries: [0] },
+    series: [
+      { name: "Manifiestos", type: "column", data: totalsConc },
+      { name: "% Acumulado", type: "line", data: acumulada, color: COLOR_AZUL }
+    ],
+    xaxis: { categories: labelsConc, labels: { rotate: 0, hideOverlappingLabels: false, style: { fontSize: "10px" } } },
+    yaxis: [
+      { min: 0, decimalsInFloat: 0 },
+      { opposite: true, min: 0, max: 100, labels: { formatter: function (v) { return Math.round(v) + "%"; } } }
+    ],
+    tooltip: { shared: true, x: { formatter: function (_v, opts) { var p = top10[opts.dataPointIndex] || {}; return p.Pla_Nom || ""; } } }
+  });
 
   var distCh = ch.distribucion || [];
-  var ctxCh = document.getElementById("chartEjecutivoChofer");
-  if (ctxCh && typeof Chart !== "undefined" && distCh.length) {
-    var labCh = distCh.slice(0, 15).map(function (c, i) {
-      return (c.nombre || "").substring(0, 8) || "Ch " + (i + 1);
-    });
-    var datCh = distCh.slice(0, 15).map(function (c) {
-      return c.total;
-    });
+  if (distCh.length) {
     var choferesTop15 = distCh.slice(0, 15);
-    new Chart(ctxCh, {
-      type: "bar",
-      data: {
-        labels: labCh,
-        datasets: [
-          {
-            label: "Manifiestos",
-            data: datCh,
-            backgroundColor: "rgba(44, 93, 148, 0.6)",
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: { y: { beginAtZero: true } },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              title: function (items) {
-                var idx = items && items.length ? items[0].dataIndex : 0;
-                var c = choferesTop15[idx] || {};
-                return c.nombre || labCh[idx] || "";
-              },
-            },
-          },
-        },
-      },
-      plugins: [
-        {
-          id: "barDataLabelsChofer",
-          afterDatasetsDraw: function (chart) {
-            var meta = chart.getDatasetMeta(0);
-            if (!meta || !meta.data || !datCh.length) return;
-            var ctx = chart.ctx;
-            var scaleY = chart.scales.y;
-            ctx.save();
-            ctx.font = "bold 11px sans-serif";
-            ctx.textAlign = "center";
-            ctx.fillStyle = "#2C5D94";
-            for (var i = 0; i < meta.data.length; i++) {
-              var bar = meta.data[i];
-              var val = datCh[i];
-              if (val == null) continue;
-              var y = bar.y - 6;
-              if (scaleY && y < scaleY.top) y = scaleY.top + 10;
-              ctx.fillText(String(val), bar.x, y);
-            }
-            ctx.restore();
-          },
-        },
-      ],
+    renderApex("chartEjecutivoChofer", {
+      chart: { type: "bar" },
+      colors: [COLOR_AZUL],
+      legend: { show: false },
+      series: [{ name: "Manifiestos", data: choferesTop15.map(function (c) { return c.total; }) }],
+      xaxis: { categories: choferesTop15.map(function (c, i) { return (c.nombre || "").substring(0, 8) || ("Ch " + (i + 1)); }) },
+      yaxis: { min: 0, decimalsInFloat: 0 },
+      tooltip: { x: { formatter: function (_v, opts) { var c = choferesTop15[opts.dataPointIndex] || {}; return c.nombre || ""; } } }
     });
   }
 
-  if (chartEjecutivoTendencia) {
-    chartEjecutivoTendencia.destroy();
-    chartEjecutivoTendencia = null;
-  }
-  var labT = tendencia30.map(function (d) {
-    return (d.fecha || "").substring(5);
+  var labT = tendencia30.map(function (d) { return (d.fecha || "").substring(5); });
+  var datT = tendencia30.map(function (d) { return d.total; });
+  chartEjecutivoTendencia = renderApex("chartEjecutivoTendencia", {
+    chart: { type: "area" },
+    colors: [COLOR_AZUL],
+    stroke: { curve: "smooth", width: 2 },
+    fill: { opacity: 0.12 },
+    series: [{ name: "Manifiestos por dia", data: datT }],
+    xaxis: { categories: labT, labels: { rotate: -35, hideOverlappingLabels: true } },
+    yaxis: { min: 0, decimalsInFloat: 0 },
+    annotations: { yaxis: [{ y: Number(promDia) || 0, borderColor: "#94a3b8", strokeDashArray: 4, label: { text: "Promedio" } }] }
   });
-  var datT = tendencia30.map(function (d) {
-    return d.total;
-  });
-  var ctxT = document.getElementById("chartEjecutivoTendencia");
-  if (ctxT && typeof Chart !== "undefined") {
-    chartEjecutivoTendencia = new Chart(ctxT, {
-      type: "line",
-      data: {
-        labels: labT,
-        datasets: [
-          {
-            label: "Manifiestos por día",
-            data: datT,
-            borderColor: "#2C5D94",
-            backgroundColor: "rgba(44, 93, 148, 0.1)",
-            fill: true,
-            tension: 0.2,
-          },
-          {
-            label: "Promedio",
-            data: datT.map(function () {
-              return promDia;
-            }),
-            borderColor: "#94a3b8",
-            borderDash: [4, 2],
-            fill: false,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: { y: { beginAtZero: true } },
-      },
-      plugins: [
-        {
-          id: "lineDataLabelsEjecutivoTendencia",
-          afterDatasetsDraw: function (chart) {
-            var meta = chart.getDatasetMeta(0);
-            if (!meta || !meta.data || !datT.length) return;
-            var ctx = chart.ctx;
-            var scaleY = chart.scales.y;
-            ctx.save();
-            ctx.font = "bold 11px sans-serif";
-            ctx.textAlign = "center";
-            ctx.fillStyle = "#2C5D94";
-            for (var i = 0; i < meta.data.length; i++) {
-              var point = meta.data[i];
-              var val = datT[i];
-              if (val == null) continue;
-              var y = point.y - 10;
-              if (scaleY && y < scaleY.top) y = scaleY.top + 8;
-              ctx.fillText(String(val), point.x, y);
-            }
-            ctx.restore();
-          },
-        },
-      ],
+
+  if (topPlantasInac.length > 0) {
+    chartEjecutivoInactivos = renderApex("chartEjecutivoInactivos", {
+      chart: { type: "bar" },
+      plotOptions: { bar: { horizontal: true, barHeight: "70%" } },
+      colors: ["#c85050"],
+      legend: { show: false },
+      series: [{ name: "Inactivos", data: topPlantasInac.map(function (p) { return p.total_inactivos || 0; }) }],
+      xaxis: { categories: topPlantasInac.map(function (p) { return (p.Pla_Nom || "Sin nombre").trim(); }), min: 0, decimalsInFloat: 0 }
     });
   }
 
-  if (chartEjecutivoInactivos) {
-    chartEjecutivoInactivos.destroy();
-    chartEjecutivoInactivos = null;
-  }
-  var ctxInac = document.getElementById("chartEjecutivoInactivos");
-  if (ctxInac && typeof Chart !== "undefined" && topPlantasInac.length > 0) {
-    // Usar nombre completo de la planta para que cada barra se distinga (no truncar)
-    var labInac = topPlantasInac.map(function (p) {
-      return (p.Pla_Nom || "Sin nombre").trim();
-    });
-    var datInac = topPlantasInac.map(function (p) {
-      return p.total_inactivos || 0;
-    });
-    chartEjecutivoInactivos = new Chart(ctxInac, {
-      type: "bar",
-      data: {
-        labels: labInac,
-        datasets: [
-          {
-            label: "Inactivos",
-            data: datInac,
-            backgroundColor: "rgba(200, 80, 80, 0.7)",
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        indexAxis: "y",
-        scales: {
-          x: { beginAtZero: true },
-          y: {
-            ticks: {
-              autoSkip: false,
-              maxRotation: 0,
-              minRotation: 0,
-              font: { size: 11 },
-            },
-          },
-        },
-        layout: { padding: { left: 4 } },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              title: function (items) {
-                var idx = items && items.length ? items[0].dataIndex : 0;
-                var p = topPlantasInac[idx] || {};
-                return p.Pla_Nom || "";
-              },
-            },
-          },
-        },
-      },
-    });
-  }
-
-  // Gráfico Pareto inactivos por chofer (hasta 70% acumulado)
-  if (chartEjecutivoParetoInactivos) {
-    chartEjecutivoParetoInactivos.destroy();
-    chartEjecutivoParetoInactivos = null;
-  }
-  var ctxPareto = document.getElementById("chartEjecutivoParetoInactivos");
-  if (
-    ctxPareto &&
-    typeof Chart !== "undefined" &&
-    paretoChoferesInac.length > 0 &&
-    totalInac > 0
-  ) {
+  if (paretoChoferesInac.length > 0 && totalInac > 0) {
     var totalInacPareto = 0;
-    paretoChoferesInac.forEach(function (c) {
-      totalInacPareto += c.inactivos || 0;
-    });
-    var acumPareto = 0;
-    var labelsPareto = [];
-    var labelsParetoFull = [];
-    var dataPareto = [];
-    var dataAcumPct = [];
+    paretoChoferesInac.forEach(function (c) { totalInacPareto += c.inactivos || 0; });
+    var acumPareto = 0, labelsPareto = [], labelsParetoFull = [], dataPareto = [], dataAcumPct = [];
     function nombresApellidosAbajo(nombreCompleto) {
       var s = (nombreCompleto || "").trim();
       if (!s) return "Chofer";
       var parts = s.split(/\s+/).filter(Boolean);
-      if (parts.length <= 2) return s;
-      return parts.slice(0, 2).join(" ") + "\n" + parts.slice(2).join(" ");
+      return parts.length <= 2 ? s : parts.slice(0, 2).join(" ") + "\n" + parts.slice(2).join(" ");
     }
     for (var i = 0; i < paretoChoferesInac.length; i++) {
       acumPareto += paretoChoferesInac[i].inactivos || 0;
-      var nom =
-        (paretoChoferesInac[i].chofer_nombre || "").trim() ||
-        "Chofer " + (i + 1);
+      var nom = (paretoChoferesInac[i].chofer_nombre || "").trim() || ("Chofer " + (i + 1));
       labelsParetoFull.push(nom);
       labelsPareto.push(nombresApellidosAbajo(nom));
       dataPareto.push(paretoChoferesInac[i].inactivos || 0);
-      dataAcumPct.push(
-        totalInacPareto > 0
-          ? Math.round((acumPareto / totalInacPareto) * 100)
-          : 0,
-      );
-      if (totalInacPareto > 0 && acumPareto / totalInacPareto >= 0.7) break;
+      dataAcumPct.push(totalInacPareto > 0 ? Math.round((acumPareto / totalInacPareto) * 100) : 0);
+      if (totalInacPareto > 0 && (acumPareto / totalInacPareto) >= 0.70) break;
     }
     if (labelsPareto.length > 12) {
       labelsPareto = labelsPareto.slice(0, 12);
@@ -7592,145 +6839,33 @@ function renderDashboardEjecutivo(data) {
       dataPareto = dataPareto.slice(0, 12);
       dataAcumPct = dataAcumPct.slice(0, 12);
     }
-    chartEjecutivoParetoInactivos = new Chart(ctxPareto, {
-      type: "bar",
-      data: {
-        labels: labelsPareto,
-        datasets: [
-          {
-            label: "Inactivos",
-            data: dataPareto,
-            backgroundColor: "rgba(200, 80, 80, 0.7)",
-            order: 2,
-          },
-          {
-            label: "% Acumulado",
-            data: dataAcumPct,
-            type: "line",
-            borderColor: "#2C5D94",
-            borderWidth: 2,
-            fill: false,
-            yAxisID: "y1",
-            order: 1,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        layout: { padding: { bottom: 48 } },
-        scales: {
-          x: {
-            ticks: {
-              maxRotation: 0,
-              minRotation: 0,
-              font: { size: 10 },
-              maxTicksLimit: 14,
-              callback: function () {
-                return "";
-              },
-            },
-          },
-          y: { beginAtZero: true, position: "left" },
-          y1: {
-            beginAtZero: true,
-            max: 100,
-            position: "right",
-            grid: { drawOnChartArea: false },
-          },
-        },
-        plugins: {
-          legend: { position: "top" },
-          tooltip: {
-            callbacks: {
-              title: function (items) {
-                var idx = items && items.length ? items[0].dataIndex : 0;
-                return labelsParetoFull[idx] || "";
-              },
-              afterBody: function (items) {
-                var idx = items && items.length ? items[0].dataIndex : 0;
-                var c = paretoChoferesInac[idx] || {};
-                var lineas = [];
-                var detallePlacas = c.placas_detalle || [];
-                if (detallePlacas.length) {
-                  lineas.push("Placas:");
-                  detallePlacas.forEach(function (p) {
-                    lineas.push(
-                      "  " +
-                        (p.Veh_Pla || "Sin placa") +
-                        " — " +
-                        (p.inactivos != null ? p.inactivos : 0) +
-                        " inactivo(s)",
-                    );
-                  });
-                }
-                var detalle = c.plantas_detalle || [];
-                if (detalle.length) {
-                  lineas.push("Plantas:");
-                  detalle.forEach(function (p) {
-                    lineas.push(
-                      "  " +
-                        (p.Pla_Nom || "Sin planta") +
-                        " — " +
-                        (p.inactivos != null ? p.inactivos : 0) +
-                        " inactivo(s)",
-                    );
-                  });
-                }
-                return lineas;
-              },
-              afterLabel: function (ctx) {
-                if (
-                  ctx.datasetIndex === 1 &&
-                  dataAcumPct[ctx.dataIndex] != null
-                )
-                  return "Acum: " + dataAcumPct[ctx.dataIndex] + "%";
-                return "";
-              },
-            },
-          },
-        },
-      },
-      plugins: [
-        {
-          id: "paretoXLabelsNombresApellidos",
-          afterDraw: function (chart) {
-            var scale = chart.scales.x;
-            if (!scale) return;
-            var ctx = chart.ctx;
-            var meta0 = chart.getDatasetMeta(0);
-            if (!meta0 || !meta0.data || !meta0.data.length) return;
-            var tickOpts = scale.options.ticks || {};
-            var color = tickOpts.color || "rgba(0,0,0,0.87)";
-            var padding = tickOpts.padding !== undefined ? tickOpts.padding : 6;
-            var fontSize =
-              tickOpts.font && tickOpts.font.size ? tickOpts.font.size : 10;
-            var lineHeight = fontSize * 1.2;
-            ctx.save();
-            ctx.font =
-              fontSize +
-              "px " +
-              (tickOpts.font && tickOpts.font.family
-                ? tickOpts.font.family
-                : "sans-serif");
-            ctx.textAlign = "center";
-            ctx.textBaseline = "top";
-            ctx.fillStyle = color;
-            for (var i = 0; i < labelsPareto.length; i++) {
-              var label = (labelsPareto[i] || "").toString();
-              if (!label) continue;
-              var bar = meta0.data[i];
-              if (!bar || typeof bar.x !== "number") continue;
-              var y = scale.bottom + padding;
-              var lines = label.split("\n");
-              for (var j = 0; j < lines.length; j++) {
-                ctx.fillText(lines[j].trim(), bar.x, y + j * lineHeight);
-              }
-            }
-            ctx.restore();
-          },
-        },
+    chartEjecutivoParetoInactivos = renderApex("chartEjecutivoParetoInactivos", {
+      chart: { type: "line" },
+      stroke: { width: [0, 2] },
+      dataLabels: { enabled: true, enabledOnSeries: [0] },
+      series: [
+        { name: "Inactivos", type: "column", data: dataPareto, color: "#c85050" },
+        { name: "% Acumulado", type: "line", data: dataAcumPct, color: COLOR_AZUL }
       ],
+      xaxis: { categories: labelsPareto, labels: { rotate: 0, hideOverlappingLabels: false, style: { fontSize: "10px" } } },
+      yaxis: [
+        { min: 0, decimalsInFloat: 0 },
+        { opposite: true, min: 0, max: 100, labels: { formatter: function (v) { return Math.round(v) + "%"; } } }
+      ],
+      tooltip: {
+        shared: true,
+        x: { formatter: function (_v, opts) { return labelsParetoFull[opts.dataPointIndex] || ""; } },
+        y: {
+          formatter: function (val, ctx) {
+            if (ctx.seriesIndex === 1) return val + "%";
+            var c = paretoChoferesInac[ctx.dataPointIndex] || {};
+            var extra = [];
+            (c.placas_detalle || []).forEach(function (p) { extra.push((p.Veh_Pla || "Sin placa") + " - " + (p.inactivos || 0)); });
+            (c.plantas_detalle || []).forEach(function (p) { extra.push((p.Pla_Nom || "Sin planta") + " - " + (p.inactivos || 0)); });
+            return extra.length ? val + " (" + extra.join("; ") + ")" : val;
+          }
+        }
+      }
     });
   }
 
@@ -7926,18 +7061,19 @@ function cargarPlantasTiempos() {
 }
 
 function obtenerDatasetsTendenciaConfig(turnosData, vsGarita) {
-  var datos = turnosData.map(function (t) { return t.ocupados || 0; });
-  var prom = datos.length > 0 ? (datos.reduce(function (a, b) { return a + b; }, 0) / datos.length).toFixed(1) : 0;
+  var datos = turnosData.map(function (t) { return Number(t.ocupados) || 0; });
+  var prom = datos.length > 0 ? Number((datos.reduce(function (a, b) { return a + b; }, 0) / datos.length).toFixed(1)) : 0;
   if (vsGarita) {
+    var datosGarita = turnosData.map(function (t) { return Number(t.garita_in) || 0; });
     return [
-      { label: "Llegadas Garita IN", data: turnosData.map(function (t) { return t.garita_in || 0; }), borderColor: "#10b981", borderWidth: 3, backgroundColor: "rgba(16, 185, 129, 0.15)", fill: true, tension: 0.2, yAxisID: "y" },
-      { label: "Manifiestos Creados", data: datos, borderColor: "#94a3b8", borderWidth: 2, borderDash: [4, 3], fill: false, tension: 0.2, yAxisID: "y" },
-      { label: "Prom. Creados", data: datos.map(function () { return prom; }), borderColor: "#cbd5e1", borderDash: [2, 2], fill: false, yAxisID: "y" }
+      { label: "Llegadas Garita IN",  data: datosGarita,                                 borderColor: "#10b981", borderWidth: 3, fill: true,  borderDash: null },
+      { label: "Manifiestos Creados", data: datos,                                        borderColor: "#2C5D94", borderWidth: 3, fill: false, borderDash: null },
+      { label: "Promedio Creados",    data: datos.map(function () { return prom; }),      borderColor: "#94a3b8", borderWidth: 2, fill: false, borderDash: 5 }
     ];
   }
   return [
-    { label: "Manifiestos Creados", data: datos, borderColor: "#2C5D94", borderWidth: 2, backgroundColor: "rgba(44, 93, 148, 0.1)", fill: true, tension: 0.2, yAxisID: "y" },
-    { label: "Prom. Creados", data: datos.map(function () { return prom; }), borderColor: "#94a3b8", borderDash: [4, 2], fill: false, yAxisID: "y" }
+    { label: "Manifiestos Creados", data: datos,                                   borderColor: "#2C5D94", borderWidth: 3, fill: true,  borderDash: null },
+    { label: "Promedio Creados",    data: datos.map(function () { return prom; }), borderColor: "#94a3b8", borderWidth: 2, fill: false, borderDash: 5 }
   ];
 }
 
@@ -7958,12 +7094,12 @@ function formatoHoraHHMM(min) {
   return (h < 10 ? "0" + h : h) + ":" + (m < 10 ? "0" + m : m) + " H";
 }
 
-function sincronizarFechasDesdeMesTiempos(mesVal) {
-  if (!mesVal) return;
-  var p = mesVal.split("-"), y = parseInt(p[0], 10), m = parseInt(p[1], 10);
-  var lastDay = new Date(y, m, 0).getDate(), mStr = String(m).padStart(2, "0");
-  $("#fecha_inicio_tiempos").val(y + "-" + mStr + "-01");
-  $("#fecha_fin_tiempos").val(y + "-" + mStr + "-" + String(lastDay).padStart(2, "0"));
+function formatoHoraSimple(min) {
+  if (!min && min !== 0) return "0H";
+  var h = Math.floor(min / 60);
+  var m = min % 60;
+  if (m === 0) return h + "H";
+  return h + "H " + (m < 10 ? "0" + m : m) + "m";
 }
 
 function cargarDashboardTiempos() {
@@ -8009,7 +7145,20 @@ function mostrarDashboardTiempos(datos) {
 
   if (plantas && plantas.length > 0) {
     plantas.sort(function (a, b) {
-      return (b.tiempo_promedio_min || 0) - (a.tiempo_promedio_min || 0);
+      var cfgA = a.tiempo_configurado_min || (a.tiempo_promedio_min + (a.holgura_promedio_min > 0 ? a.holgura_promedio_min : 0));
+      var cfgB = b.tiempo_configurado_min || (b.tiempo_promedio_min + (b.holgura_promedio_min > 0 ? b.holgura_promedio_min : 0));
+      // 1. Por tiempo configurado (hora programada) de mayor a menor (ej. 2H antes que 1H)
+      if (cfgB !== cfgA) {
+        return cfgB - cfgA;
+      }
+      // 2. Por tiempo promedio real consumido de mayor a menor
+      var realA = a.tiempo_promedio_min || 0;
+      var realB = b.tiempo_promedio_min || 0;
+      if (realB !== realA) {
+        return realB - realA;
+      }
+      // 3. Por orden alfabético de la planta
+      return (a.Pla_Nom || "").localeCompare(b.Pla_Nom || "");
     });
   }
 
@@ -8027,15 +7176,15 @@ function mostrarDashboardTiempos(datos) {
   }).join('') + '</div>';
 
   if (plaCodFiltro === 0 && plantas.length > 0) {
-    var chartHeightPx = Math.max(180, plantas.length * 45 + 50);
-    html += '<div class="panel panel-default panel-chart-tiempos-print" style="margin-bottom: 20px;"><div class="panel-heading" style="background: #f8f9fa; font-weight: 600; color: #2C5D94;"><i class="fa fa-bar-chart"></i> Evaluación de Tiempos por Planta de Beneficio (Tiempo Consumido vs Rango Configurado)</div><div class="panel-body"><div class="chart-trend-container" style="position: relative; height: ' + chartHeightPx + 'px; width: 100%;"><canvas id="chartTendenciaTiempos"></canvas></div><div class="chart-print-rows-container" style="display: none;">' + plantas.map(function (p) {
+    var chartHeightPx = Math.max(160, plantas.length * 32 + 50);
+    html += '<div class="panel panel-default panel-chart-tiempos-print" style="margin-bottom: 20px;"><div class="panel-heading" style="background: #f8f9fa; font-weight: 600; color: #2C5D94;"><i class="fa fa-bar-chart"></i> Evaluación de Tiempos por Planta de Beneficio (Tiempo Consumido vs Rango Configurado)</div><div class="panel-body"><div class="chart-trend-container" style="position: relative; height: ' + chartHeightPx + 'px; width: 100%;"><div class="apex-chart" id="chartTendenciaTiempos"></div></div><div class="chart-print-rows-container" style="display: none;">' + plantas.map(function (p) {
       var realMin = p.tiempo_promedio_min || 0;
       var configMin = p.tiempo_configurado_min || (realMin + (p.holgura_promedio_min > 0 ? p.holgura_promedio_min : 0));
       if (configMin <= 0) return '';
       var holgMin = Math.max(0, configMin - realMin), excesoMin = Math.max(0, realMin - configMin);
       var pctC = Math.round((realMin / configMin) * 100), pctS = Math.round((holgMin / configMin) * 100), pctE = Math.round((excesoMin / configMin) * 100);
-      var txtR = formatoMinutosSla(realMin), txtH = formatoMinutosSla(holgMin), txtE = formatoMinutosSla(excesoMin), txtC = formatoMinutosSla(configMin), txtHoraConfig = formatoHoraHHMM(configMin);
-      var txtSummary = (excesoMin > 0) ? (txtHoraConfig + " (Ext: +" + txtE + " 🔴)") : txtHoraConfig;
+      var txtR = formatoMinutosSla(realMin), txtH = formatoMinutosSla(holgMin), txtE = formatoMinutosSla(excesoMin), txtC = formatoMinutosSla(configMin), txtHoraConfig = formatoHoraSimple(configMin);
+      var txtSummary = (excesoMin > 0) ? (txtHoraConfig + " Ext. +" + txtE + " 🔴") : txtHoraConfig;
       var barContent = (realMin <= configMin)
         ? (pctC > 0 ? '<div style="width:' + pctC + '%;background:#2C5D94;color:white;font-weight:bold;font-size:8px;text-align:center;line-height:16px;overflow:hidden;">' + (pctC >= 15 ? pctC + "% (" + txtR + ")" : "") + '</div>' : '') + (pctS > 0 ? '<div style="width:' + pctS + '%;background:#0284c7;color:white;font-weight:bold;font-size:8px;text-align:center;line-height:16px;overflow:hidden;">' + (pctS >= 15 ? pctS + "% (" + txtH + ")" : "") + '</div>' : '')
         : '<div style="width:' + Math.round((configMin / realMin) * 100) + '%;background:#2C5D94;color:white;font-weight:bold;font-size:8px;text-align:center;line-height:16px;overflow:hidden;">100% Config (' + txtC + ')</div><div style="width:' + (100 - Math.round((configMin / realMin) * 100)) + '%;background:#dc3545;color:white;font-weight:bold;font-size:8px;text-align:center;line-height:16px;overflow:hidden;">+' + pctE + "% (+" + txtE + ")</div>";
@@ -8071,87 +7220,147 @@ function mostrarDashboardTiempos(datos) {
 
   $("#dashboardContentTiempos").html(html);
 
-  if (plaCodFiltro === 0 && plantas.length > 0 && typeof Chart !== "undefined") {
+  if (plaCodFiltro === 0 && plantas.length > 0 && typeof ApexCharts !== "undefined") {
     setTimeout(function () {
-      var ctxTrend = document.getElementById("chartTendenciaTiempos");
-      if (ctxTrend) {
-        if (chartTendenciaTiemposInstance) chartTendenciaTiemposInstance.destroy();
-        var dBase = [], dHolg = [], dExc = [];
-        plantas.forEach(function (p) {
-          var cfg = p.tiempo_configurado_min || (p.tiempo_promedio_min + (p.holgura_promedio_min > 0 ? p.holgura_promedio_min : 0));
-          var real = p.tiempo_promedio_min || 0;
-          if (real <= cfg) { dBase.push(real); dHolg.push(Math.max(0, cfg - real)); dExc.push(0); }
-          else { dBase.push(cfg); dHolg.push(0); dExc.push(real - cfg); }
-        });
+      destroyApex("chartTendenciaTiempos");
+      var dBase = [], dHolg = [], dExc = [];
+      var annotationsPoints = [];
 
-        chartTendenciaTiemposInstance = new Chart(ctxTrend, {
-          type: "bar",
-          data: {
-            labels: plantas.map(function (p) { return p.Pla_Nom || "Sin Nombre"; }),
-            datasets: [
-              { label: "⏱️ Tiempo Real Consumido (100% Config Base)", data: dBase, backgroundColor: "#2C5D94", borderColor: "#1d416b", borderWidth: 1, barThickness: 18, maxBarThickness: 22, barPercentage: 0.6, categoryPercentage: 0.65, stack: "tiempo" },
-              { label: "🔵 Holgura Configurada Sobrante", data: dHolg, backgroundColor: "#0284c7", borderColor: "#0369a1", borderWidth: 1, barThickness: 18, maxBarThickness: 22, barPercentage: 0.6, categoryPercentage: 0.65, stack: "tiempo" },
-              { label: "🔴 Extensión de Horario / Retraso Excedido", data: dExc, backgroundColor: "#dc3545", borderColor: "#991b1b", borderWidth: 1, barThickness: 18, maxBarThickness: 22, barPercentage: 0.6, categoryPercentage: 0.65, stack: "tiempo" }
-            ]
-          },
-          options: {
-            indexAxis: "y", responsive: true, maintainAspectRatio: false,
-            layout: { padding: { right: 230, top: 10 } },
-            scales: {
-              x: { stacked: true, beginAtZero: true, grace: "35%", title: { display: true, text: "Minutos (Tiempo Configurado SLA vs Consumido / Extensión)" } },
-              y: { stacked: true, ticks: { font: { weight: "bold", size: 11 } } }
+      var maxValAll = 60;
+      plantas.forEach(function (p) {
+        var cfg = p.tiempo_configurado_min || (p.tiempo_promedio_min + (p.holgura_promedio_min > 0 ? p.holgura_promedio_min : 0));
+        var real = p.tiempo_promedio_min || 0;
+        var totalBar = (real <= cfg) ? cfg : real;
+        if (totalBar > maxValAll) maxValAll = totalBar;
+      });
+      var xMaxFixed = Math.ceil((maxValAll * 1.05) / 10) * 10;
+
+      plantas.forEach(function (p) {
+        var cfg = p.tiempo_configurado_min || (p.tiempo_promedio_min + (p.holgura_promedio_min > 0 ? p.holgura_promedio_min : 0));
+        var real = p.tiempo_promedio_min || 0;
+        if (real <= cfg) { dBase.push(real); dHolg.push(Math.max(0, cfg - real)); dExc.push(0); }
+        else { dBase.push(cfg); dHolg.push(0); dExc.push(real - cfg); }
+
+        var excesoMin = Math.max(0, real - cfg);
+        var isExcedido = excesoMin > 0;
+        var labelText = formatoHoraSimple(cfg);
+        if (isExcedido) {
+          labelText = formatoHoraSimple(cfg) + " Ext. +" + formatoMinutosSla(excesoMin);
+        }
+
+        annotationsPoints.push({
+          x: xMaxFixed,
+          y: (p.Pla_Nom || "Sin Nombre").trim(),
+          marker: { size: 0 },
+          label: {
+            borderColor: isExcedido ? "#dc3545" : "#2C5D94",
+            offsetY: 7,
+            offsetX: 10,
+            textAnchor: "start",
+            style: {
+              color: isExcedido ? "#dc3545" : "#2C5D94",
+              background: isExcedido ? "#fee2e2" : "#f1f5f9",
+              fontSize: "11.5px",
+              fontWeight: 700,
+              padding: { left: 7, right: 7, top: 3, bottom: 3 }
             },
-            plugins: {
-              legend: { position: "top" },
-              tooltip: {
-                callbacks: {
-                  label: function (ctx) {
-                    var p = plantas[ctx.dataIndex], val = ctx.raw || 0, fmt = formatoMinutosSla(val);
-                    var cfg = p.tiempo_configurado_min || (p.tiempo_promedio_min + (p.holgura_promedio_min > 0 ? p.holgura_promedio_min : 0));
-                    var pct = cfg > 0 ? ((p.tiempo_promedio_min / cfg) * 100).toFixed(1) : 0;
-                    if (ctx.datasetIndex === 0) return ctx.dataset.label + ": " + val + " min (" + fmt + ") — " + pct + "% de " + formatoHoraHHMM(cfg);
-                    if (ctx.datasetIndex === 1) return ctx.dataset.label + ": " + val + " min (" + fmt + ") sobrantes";
-                    return ctx.dataset.label + ": +" + val + " min (+" + fmt + ") Ext: 🔴";
-                  },
-                  afterBody: function (tItems) {
-                    if (!tItems.length) return [];
-                    var p = plantas[tItems[0].dataIndex];
-                    return ["-----------------------------------", "📊 Total Viajes: " + (p.total || 0), "🟢 Puntualidad SLA: " + (p.pct_cumplimiento || 0) + "% (" + (p.cumplieron_sla || ((p.cumplidos || 0) + (p.anticipados || 0))) + " a tiempo)", "🔴 Excedidos: " + (p.excedidos || 0)];
-                  }
-                }
-              }
-            }
-          },
-          plugins: [{
-            id: "horizontalBarPctLabels",
-            afterDatasetsDraw: function (chart) {
-              var ctx = chart.ctx, m0 = chart.getDatasetMeta(0), m1 = chart.getDatasetMeta(1), m2 = chart.getDatasetMeta(2);
-              if (!m0 || !m0.data) return;
-              ctx.save();
-              var colX = chart.chartArea.right + 15;
-              for (var i = 0; i < m0.data.length; i++) {
-                var p = plantas[i]; if (!p) continue;
-                var b0 = m0.data[i], b1 = m1 ? m1.data[i] : null, b2 = m2 ? m2.data[i] : null;
-                var real = p.tiempo_promedio_min || 0, cfg = p.tiempo_configurado_min || (real + (p.holgura_promedio_min > 0 ? p.holgura_promedio_min : 0));
-                if (cfg <= 0) continue;
-                var holg = Math.max(0, cfg - real), exc = Math.max(0, real - cfg), pctC = Math.round((real / cfg) * 100);
-                var txtR = formatoMinutosSla(real), txtH = formatoMinutosSla(holg), txtE = formatoMinutosSla(exc), txtC = formatoMinutosSla(cfg), txtHoraConfig = formatoHoraHHMM(cfg);
-
-                ctx.font = "bold 11px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillStyle = "#ffffff";
-                if (b0 && b0.x - b0.base > 35) ctx.fillText(real > cfg ? "100% (" + txtHoraConfig + ")" : pctC + "% (" + txtR + ")", (b0.base + b0.x) / 2, b0.y);
-                if (b1 && b1.x - b1.base > 35 && holg > 0) ctx.fillText(Math.round((holg / cfg) * 100) + "% (" + txtH + ")", (b1.base + b1.x) / 2, b1.y);
-                if (b2 && b2.x - b2.base > 28 && exc > 0) ctx.fillText("+" + Math.round((exc / cfg) * 100) + "% (+" + txtE + ")", (b2.base + b2.x) / 2, b2.y);
-
-                ctx.font = "bold 13px sans-serif"; ctx.fillStyle = exc > 0 ? "#dc3545" : "#2C5D94"; ctx.textAlign = "left";
-                var summary = (exc > 0) ? (txtHoraConfig + " (Ext: +" + txtE + " 🔴)") : txtHoraConfig;
-                ctx.fillText(summary, colX, b0.y);
-              }
-              ctx.restore();
-            }
-          }]
+            text: labelText
+          }
         });
-      }
-    }, 100);
+      });
+
+      chartTendenciaTiemposInstance = renderApex("chartTendenciaTiempos", {
+        chart: { type: "bar", stacked: true, height: Math.max(160, plantas.length * 32 + 50), toolbar: { show: false } },
+        plotOptions: {
+          bar: {
+            horizontal: true,
+            barHeight: "75%",
+            dataLabels: {
+              position: "center",
+              hideOverflowingLabels: false
+            }
+          }
+        },
+        colors: ["#2C5D94", "#0284c7", "#dc3545"],
+        dataLabels: {
+          enabled: true,
+          hideOverflowingLabels: false,
+          formatter: function (val, opts) {
+            if (!val || val <= 0) return "";
+            var p = plantas[opts.dataPointIndex] || {};
+            var real = p.tiempo_promedio_min || 0;
+            var cfg = p.tiempo_configurado_min || (real + (p.holgura_promedio_min > 0 ? p.holgura_promedio_min : 0));
+            var fmt = formatoMinutosSla(val);
+            if (cfg <= 0) return fmt;
+            if (opts.seriesIndex === 0) {
+              if (real > cfg) {
+                return formatoMinutosSla(cfg) + " (100%)";
+              }
+              var pctC = Math.round((real / cfg) * 100);
+              return fmt + " (" + pctC + "%)";
+            }
+            if (opts.seriesIndex === 1) {
+              var pctH = Math.round((val / cfg) * 100);
+              return fmt + " (" + pctH + "%)";
+            }
+            if (opts.seriesIndex === 2) {
+              var pctE = Math.round((val / cfg) * 100);
+              return "+" + fmt + " (+" + pctE + "%)";
+            }
+            return fmt;
+          },
+          style: { colors: ["#fff"], fontSize: "10px", fontWeight: 700 }
+        },
+        series: [
+          { name: "Tiempo real consumido", data: dBase },
+          { name: "Holgura sobrante", data: dHolg },
+          { name: "Retraso excedido", data: dExc }
+        ],
+        xaxis: {
+          max: xMaxFixed * 1.25,
+          categories: plantas.map(function (p) { return (p.Pla_Nom || "Sin Nombre").trim(); }),
+          title: { text: "Minutos (SLA vs consumido / extension)" },
+          labels: {
+            formatter: function (val) {
+              return val + "m";
+            }
+          }
+        },
+        yaxis: {
+          labels: {
+            maxWidth: 240,
+            style: { fontWeight: 700, fontSize: "11px", colors: ["#2C5D94"] }
+          }
+        },
+        annotations: {
+          points: annotationsPoints
+        },
+        grid: {
+          padding: {
+            right: 90
+          }
+        },
+        legend: {
+          position: "top",
+          fontSize: "12px"
+        },
+        tooltip: {
+          y: {
+            formatter: function (val, opts) {
+              var p = plantas[opts.dataPointIndex] || {};
+              var real = p.tiempo_promedio_min || 0;
+              var cfg = p.tiempo_configurado_min || (real + (p.holgura_promedio_min > 0 ? p.holgura_promedio_min : 0));
+              var pct = cfg > 0 ? ((real / cfg) * 100).toFixed(1) : 0;
+              var fmt = formatoMinutosSla(val);
+              var txtHoraConfig = formatoHoraSimple(cfg) + " (" + formatoHoraHHMM(cfg) + ")";
+              if (opts.seriesIndex === 0) return val + " min (" + fmt + ") • " + pct + "% de " + txtHoraConfig;
+              if (opts.seriesIndex === 1) return val + " min (" + fmt + ") sobrantes de " + txtHoraConfig;
+              return "+" + val + " min (+" + fmt + ") de retraso excedido";
+            }
+          }
+        }
+      });
+    }, 80);
   }
 
   $(document).off("keyup.filtroTiempos").on("keyup.filtroTiempos", "#filtro_tabla_tiempos", function () {
