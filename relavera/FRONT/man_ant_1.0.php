@@ -2176,6 +2176,7 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
                 }
             });
         </script>
+    <?php } ?>
     <!-- Modal para Confirmar Aprobación de Anticipo con Foto de Estado de Cuenta Obligatoria -->
     <div id="aprobarAnticipoDialog" title="Aprobar Anticipo" style="display: none;">
         <div style="padding: 12px 16px;">
