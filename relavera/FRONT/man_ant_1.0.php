@@ -567,14 +567,14 @@ if (isset($LoadManifAjax)) {
     $rowsKardex[] = array(
         'row_id' => 'SALDO_INI',
         'Ama_Cod' => '—',
-        'Ama_Fec' => $parms['Fec_IniM'],
+        'Ama_Fec' => '',
         '_fec_mov' => $parms['Fec_IniM'],
         '_tipo_linea' => 'S',
         '_saldo_inicial' => $saldoIniVal,
         'Ama_Val' => 0,
         'Abono' => 0,
         'Saldo' => number_format($saldoIniVal, 2, '.', ''),
-        'cliente' => $cliSaldoIni,
+        'cliente' => '',
         'usuario' => '',
         'Pag_Des' => '',
         'Pld_Des' => 'Saldo inicial',
@@ -974,6 +974,11 @@ if (isset($getAnticipoAjax)) {
     $data = $obBD_con1->getRowConsulta(13, $valores, $obBD_conexion);
 
     if ($obBD_con1->Error == 0 && $data) {
+        if (method_exists($obBD_con1, 'utf8_change_param')) {
+            $obBD_con1->utf8_change_param($data);
+        } else {
+            utf8_encode_deep($data);
+        }
         $resp['success'] = true;
         $resp['data'] = $data;
         $resp['message'] = 'Datos cargados correctamente';
@@ -995,6 +1000,31 @@ if (isset($saveComprobanteAjax)) {
         // Validar que se reciban los datos necesarios
         if (!isset($_POST['Ama_Cod']) || empty($_POST['Ama_Cod'])) {
             $resp['message'] = 'No se proporcionó el código del anticipo';
+            $obBD_con1->echoJson($resp);
+            exit();
+        }
+
+        // Validar que se adjunte obligatoriamente la foto del estado de cuenta
+        if (!isset($_FILES['foto_estado_cuenta']) || $_FILES['foto_estado_cuenta']['error'] !== UPLOAD_ERR_OK) {
+            $resp['message'] = 'Debe adjuntar obligatoriamente la foto del estado de cuenta para poder autorizar y aprobar el anticipo.';
+            $obBD_con1->echoJson($resp);
+            exit();
+        }
+
+        $archivoFoto = $_FILES['foto_estado_cuenta'];
+
+        // Validar que el archivo sea una imagen
+        $allowed_types = array('image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp');
+        $ext = strtolower(pathinfo($archivoFoto['name'], PATHINFO_EXTENSION));
+        if (!in_array($archivoFoto['type'], $allowed_types, true) && !in_array($ext, array('jpg', 'jpeg', 'png', 'gif', 'webp'), true)) {
+            $resp['message'] = 'El archivo adjunto debe ser una imagen válida (JPG, PNG, GIF o WEBP).';
+            $obBD_con1->echoJson($resp);
+            exit();
+        }
+
+        // Validar tamaño máximo (6MB)
+        if ($archivoFoto['size'] > 6 * 1024 * 1024) {
+            $resp['message'] = 'La imagen del estado de cuenta supera el tamaño máximo permitido (6MB).';
             $obBD_con1->echoJson($resp);
             exit();
         }
@@ -1021,6 +1051,78 @@ if (isset($saveComprobanteAjax)) {
             $obBD_con1->echoJson($resp);
             exit();
         }
+
+        // Crear ruta base: relavera/RECURSOS/estado_cuenta/
+        $baseDir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'RECURSOS' . DIRECTORY_SEPARATOR . 'estado_cuenta' . DIRECTORY_SEPARATOR;
+        if (!file_exists($baseDir)) {
+            @mkdir($baseDir, 0777, true);
+            @chmod($baseDir, 0777);
+        }
+
+        // Sanitizar el nombre del cliente para crear/usar la subcarpeta
+        $nombreCliente = isset($anticipo['cliente']) && trim((string)$anticipo['cliente']) !== '' ? trim((string)$anticipo['cliente']) : ('Cliente_' . (isset($anticipo['Cli_Cod']) ? $anticipo['Cli_Cod'] : '0'));
+        $nombreCarpetaCliente = preg_replace('/[\\\\\\/\:\*\?"<>\|\r\n\t]+/', '_', $nombreCliente);
+        $nombreCarpetaCliente = trim($nombreCarpetaCliente, ' ._');
+        if ($nombreCarpetaCliente === '') {
+            $nombreCarpetaCliente = 'Cliente_' . (isset($anticipo['Cli_Cod']) ? $anticipo['Cli_Cod'] : '0');
+        }
+
+        $dirCliente = $baseDir . $nombreCarpetaCliente . DIRECTORY_SEPARATOR;
+        if (!file_exists($dirCliente)) {
+            @mkdir($dirCliente, 0777, true);
+            @chmod($dirCliente, 0777);
+        }
+
+        // Formato de nombre: est_cuent_YYYY-MM-DD_HHmmss_[Cli_Cod].[ext]
+        $cliCod = isset($anticipo['Cli_Cod']) && $anticipo['Cli_Cod'] !== '' ? $anticipo['Cli_Cod'] : '0';
+        $fechaHora = date("Y-m-d_His");
+        if (empty($ext)) {
+            $ext = 'jpg';
+        }
+        $nombreArchivo = "est_cuent_" . $fechaHora . "_" . $cliCod . "." . $ext;
+        $targetFile = $dirCliente . $nombreArchivo;
+
+        $tmp_file = $archivoFoto['tmp_name'];
+        $success_save = false;
+
+        // Compresión si pesa más de 3MB
+        if ($archivoFoto['size'] > 3 * 1024 * 1024 && ($ext == 'jpg' || $ext == 'jpeg' || $ext == 'png' || $ext == 'webp')) {
+            $image = null;
+            if ($ext == 'jpg' || $ext == 'jpeg') {
+                $image = @imagecreatefromjpeg($tmp_file);
+            } elseif ($ext == 'png') {
+                $image = @imagecreatefrompng($tmp_file);
+            } elseif ($ext == 'webp' && function_exists('imagecreatefromwebp')) {
+                $image = @imagecreatefromwebp($tmp_file);
+            }
+
+            if ($image) {
+                if ($ext == 'jpg' || $ext == 'jpeg') {
+                    $success_save = imagejpeg($image, $targetFile, 75);
+                } elseif ($ext == 'webp' && function_exists('imagewebp')) {
+                    $success_save = imagewebp($image, $targetFile, 75);
+                } else {
+                    imagealphablending($image, false);
+                    imagesavealpha($image, true);
+                    $success_save = imagepng($image, $targetFile, 8);
+                }
+                imagedestroy($image);
+            } else {
+                $success_save = move_uploaded_file($tmp_file, $targetFile);
+            }
+        } else {
+            $success_save = move_uploaded_file($tmp_file, $targetFile);
+        }
+
+        if (!$success_save) {
+            $resp['message'] = 'Error al guardar la foto del estado de cuenta en el servidor.';
+            $obBD_con1->echoJson($resp);
+            exit();
+        }
+        @chmod($targetFile, 0777);
+
+        // Ruta relativa para guardar en BD
+        $rutaRelativaImgEst = "../RECURSOS/estado_cuenta/" . $nombreCarpetaCliente . "/" . $nombreArchivo;
 
         // Obtener el tipo de asiento INGRESO (Tia_Abr='IN' y Tia_Est='A')
         $tipo_asiento = $obBD_con1->getRowConsulta(31, "", $obBD_conexion);
@@ -1136,8 +1238,11 @@ if (isset($saveComprobanteAjax)) {
                 exit();
             }
 
-            // Actualizar el estado del anticipo a Acreditado
-            $params_update = array('Ama_Cod' => $_POST['Ama_Cod']);
+            // Actualizar el estado del anticipo a Acreditado y guardar la ruta del estado de cuenta
+            $params_update = array(
+                'Ama_Cod' => $_POST['Ama_Cod'],
+                'Ama_IgV' => $rutaRelativaImgEst
+            );
             $obBD_con1->operacionobBD(19, $params_update, $obBD_conexion);
 
             if ($obBD_con1->Error == 0) {
@@ -1754,52 +1859,58 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
                         </div>
                     </div-->
 
-                    <div class="form-group Transferencia Deposito">
-                        <label class="col-xs-3 control-label label-xs required">Voucher:</label>
-                        <div class="col-xs-8">
-                            <div id="Ama_Img_Preview" style="margin-top:8px;;">
-                                <img id="Ama_Img_Visual" src="" alt="Vista previa del voucher" style="max-width:180px; max-height:180px; border:1px solid #ddd; border-radius:4px;" />
+                    <!-- Fila Imágenes: Voucher (Izquierda) y Estado de Cuenta (Derecha) en la MISMA fila -->
+                    <div class="form-group Transferencia Deposito" id="grp_imagenes_pagos" style="margin-bottom: 6px;">
+                        <label class="col-xs-3 control-label label-xs required" id="lbl_voucher_main">Voucher:</label>
+                        <div class="col-xs-8" id="col_voucher_main">
+                            <!-- En Registro: Input file estándar alineado -->
+                            <div id="wrap_voucher_file_input">
+                                <input type="file" id="Ama_Img_File" name="Ama_Img_File" class="form-control input-xs" accept="image/*" onchange="subirVoucher(this);" required="">
+                                <input type="hidden" id="Ama_Img" name="Ama_Img" value="">
                             </div>
-                            <!--small class="help-block" id="Ama_Img_Status" style="color: #5cb85c; display: none;"></small-->
-                            <small class="help-block" id="Ama_Img_Link" style="display: none;">
-                                <a href="javascript:void(0);" onclick=" return verImagenVoucher();" id="Ama_Img_Link_Href">Ampliar imagen</a> |
-                                <a href="javascript:void(0);" onclick="descargarImagenVoucher(); return false;" id="Ama_Img_Link_Descargar">Descargar imagen</a>
-                            </small>
-                            <input type="file" id="Ama_Img_File" name="Ama_Img_File" class="form-control input-xs" accept="image/*" onchange="subirVoucher(this);" required="">
-                            <input type="hidden" id="Ama_Img" name="Ama_Img" value="">
-                            <script>
-                                // Mostrar la imagen automáticamente si existe código en Ama_Img al abrir el modal
-                                $(document).ready(function() {
-                                    function mostrarPreviewVoucher() {
-                                        var imagenUrl = $('#Ama_Img').val();
-                                        if (imagenUrl && imagenUrl.trim() !== '') {
-                                            $('#Ama_Img_Visual').attr('src', imagenUrl);
-                                            $('#Ama_Img_Preview').show();
-                                        } else {
-                                            $('#Ama_Img_Visual').attr('src', '');
-                                            $('#Ama_Img_Preview').hide();
-                                        }
-                                    }
-                                    // Ejecuta al abrir el formulario/modal (puedes invocar esto donde corresponda también)
-                                    // Si usas un dialog de jquery ui:
-                                    if ($('#pagosDialog').length) {
-                                        $('#pagosDialog').on('dialogopen', function() {
-                                            mostrarPreviewVoucher();
-                                        });
-                                    }
-                                });
-                                // También al cambiar el valor por subida nueva, muestra preview instantáneo
-                                $('#Ama_Img').on('change', function() {
-                                    var imagenUrl = $(this).val();
-                                    if (imagenUrl && imagenUrl.trim() !== '') {
-                                        $('#Ama_Img_Visual').attr('src', imagenUrl);
-                                        $('#Ama_Img_Preview').show();
-                                    } else {
-                                        $('#Ama_Img_Visual').attr('src', '');
-                                        $('#Ama_Img_Preview').hide();
-                                    }
-                                });
-                            </script>
+
+                            <!-- En Consulta: Contenedor lado a lado para Voucher y Estado de Cuenta -->
+                            <div id="wrap_imagenes_lado_lado" class="row" style="margin: 0; display: none;">
+                                <!-- Voucher a la Izquierda -->
+                                <div class="col-xs-6" id="col_preview_voucher" style="padding-left: 0; padding-right: 5px;">
+                                    <div style="background: #fff; border: 1px solid #dcdcdc; border-radius: 4px; padding: 4px; text-align: center;">
+                                        <div style="font-size: 10px; font-weight: bold; color: #555; margin-bottom: 2px;">Voucher (Pago)</div>
+                                        <div id="Ama_Img_Preview" style="height: 115px; display: flex; align-items: center; justify-content: center; background: #fafafa; border: 1px solid #eee; border-radius: 3px; overflow: hidden;">
+                                            <img id="Ama_Img_Visual" src="" alt="Voucher" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+                                        </div>
+                                        <div id="Ama_Img_Link" style="margin-top: 3px; font-size: 10px;">
+                                            <a href="javascript:void(0);" onclick="return verImagenVoucher();" id="Ama_Img_Link_Href" class="btn btn-default btn-xs" style="padding: 1px 5px; font-size: 10px;">
+                                                <i class="glyphicon glyphicon-zoom-in"></i> Ampliar
+                                            </a>
+                                            <a href="javascript:void(0);" onclick="descargarImagenVoucher(); return false;" id="Ama_Img_Link_Descargar" class="btn btn-default btn-xs" style="padding: 1px 5px; font-size: 10px; margin-left: 2px;">
+                                                <i class="glyphicon glyphicon-download-alt"></i> Descargar
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Estado de Cuenta a la Derecha (en la misma fila) -->
+                                <div class="col-xs-6" id="wrap_Ama_Img_Est" style="padding-left: 5px; padding-right: 0; display: none;">
+                                    <div style="background: #fff; border: 1px solid #bce8f1; border-radius: 4px; padding: 4px; text-align: center;">
+                                        <div style="font-size: 10px; font-weight: bold; color: #2e6da4; margin-bottom: 2px;">
+                                            <i class="glyphicon glyphicon-ok-sign text-success"></i> Estado Cuenta
+                                        </div>
+                                        <div id="Ama_Img_Est_Preview" style="height: 115px; display: flex; align-items: center; justify-content: center; background: #fafafa; border: 1px solid #eee; border-radius: 3px; overflow: hidden;">
+                                            <img id="Ama_Img_Est_Visual" src="" alt="Estado de cuenta" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+                                        </div>
+                                        <div id="Ama_Img_Est_Link" style="margin-top: 3px; font-size: 10px;">
+                                            <a href="javascript:void(0);" onclick="return verImagenEstadoCuenta();" id="Ama_Img_Est_Link_Href" class="btn btn-default btn-xs" style="padding: 1px 5px; font-size: 10px;">
+                                                <i class="glyphicon glyphicon-zoom-in"></i> Ampliar
+                                            </a>
+                                            <a href="javascript:void(0);" onclick="descargarImagenEstadoCuenta(); return false;" id="Ama_Img_Est_Link_Descargar" class="btn btn-default btn-xs" style="padding: 1px 5px; font-size: 10px; margin-left: 2px;">
+                                                <i class="glyphicon glyphicon-download-alt"></i> Descargar
+                                            </a>
+                                        </div>
+                                        <input type="hidden" id="Ama_IgV" name="Ama_IgV" value="">
+                                        <input type="hidden" id="Ama_Img_Est" name="Ama_Img_Est" value="">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -1844,7 +1955,7 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
         // Esta variable será utilizada por la función toggleBotonesCliente() en man_ant_1.0.js
         var tieneClienteManifiesto = <?php echo (isset($cliente_manifiesto) && !empty($cliente_manifiesto) && isset($cliente_manifiesto['Cli_Cod'])) ? 'true' : 'false'; ?>;
     </script>
-    <script src="../VALIDACIONES/man_ant_1.0.js?x=49"></script>
+    <script src="../VALIDACIONES/man_ant_1.0.js?x=59"></script>
     <script type="text/javascript" src="../../framework/jquery/jquery.plugins/MaskedInput/jquery.maskedinput.1.4.1.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=1"></script>
     <script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>
@@ -2065,7 +2176,62 @@ $perfil = $obBD_con1->getArrayConsulta('perfiles.selectWhere', array('where' => 
                 }
             });
         </script>
-    <?php } ?>
+    <!-- Modal para Confirmar Aprobación de Anticipo con Foto de Estado de Cuenta Obligatoria -->
+    <div id="aprobarAnticipoDialog" title="Aprobar Anticipo" style="display: none;">
+        <div style="padding: 12px 16px;">
+            <div class="alert alert-info" style="margin-bottom: 12px; padding: 8px 12px; font-size: 12px;">
+                <i class="glyphicon glyphicon-info-sign"></i> Para autorizar y aprobar este anticipo, verifique los datos y adjunte la <strong>foto del estado de cuenta bancario</strong> correspondiente.
+            </div>
+
+            <fieldset class="exa-fieldset" style="margin-bottom: 12px;">
+                <legend class="Titulos2" style="font-size: 12px; margin-bottom: 6px;">Datos del Anticipo a Aprobar</legend>
+                <div class="form-horizontal" style="font-size: 12px;">
+                    <div class="form-group" style="margin-bottom: 4px;">
+                        <label class="col-xs-3 control-label text-muted" style="padding-top: 0;">Cliente:</label>
+                        <div class="col-xs-9" id="aprob_cliente_txt" style="font-weight: bold; color: #333;">-</div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 4px;">
+                        <label class="col-xs-3 control-label text-muted" style="padding-top: 0;">Fecha:</label>
+                        <div class="col-xs-9" id="aprob_fecha_txt">-</div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 4px;">
+                        <label class="col-xs-3 control-label text-muted" style="padding-top: 0;">Valor:</label>
+                        <div class="col-xs-9" id="aprob_valor_txt" style="font-weight: bold; color: #2e6da4;">-</div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 4px;">
+                        <label class="col-xs-3 control-label text-muted" style="padding-top: 0;">No. Doc.:</label>
+                        <div class="col-xs-9" id="aprob_doc_txt">-</div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <form id="formAprobarAnticipo" enctype="multipart/form-data">
+                <input type="hidden" id="aprob_Ama_Cod" name="Ama_Cod" value="">
+                <input type="hidden" name="saveComprobanteAjax" value="1">
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label class="control-label required" style="font-weight: bold; color: #c9302c;">
+                        <i class="glyphicon glyphicon-camera"></i> Foto del Estado de Cuenta Bancario (Obligatorio):
+                    </label>
+                    <input type="file" id="foto_estado_cuenta" name="foto_estado_cuenta" class="form-control input-sm" accept="image/*" required="required">
+                    <small class="help-block" style="margin-top: 4px; font-size: 11px; color: #666;">
+                        Formatos permitidos: JPG, PNG, WEBP (Máx. 6MB).
+                    </small>
+                </div>
+                <div id="aprob_preview_box" style="display: none; text-align: center; margin-bottom: 12px;">
+                    <img id="aprob_preview_img" src="" alt="Previsualización Estado de Cuenta" style="max-width: 100%; max-height: 160px; border: 1px solid #ddd; border-radius: 4px; padding: 2px;" />
+                </div>
+            </form>
+
+            <div class="text-center" style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee;">
+                <button type="button" class="btn btn-default btn-sm" onclick="$('#aprobarAnticipoDialog').dialog('close');" style="margin-right: 8px;">
+                    <i class="glyphicon glyphicon-remove"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-success btn-sm" id="btnConfirmarAprobacion" onclick="ejecutarAprobacionAnticipo();">
+                    <i class="glyphicon glyphicon-ok"></i> Aprobar Anticipo
+                </button>
+            </div>
+        </div>
+    </div>
 
     <?php
     // Cerrado y liberacion de las conexiones

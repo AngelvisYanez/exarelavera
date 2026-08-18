@@ -311,7 +311,7 @@ function sentencias_manifiesto($id, $Par_Sql)
             // break;
         case 19:
             // Actualizar el estado del anticipo a Acreditado cuando se genera el comprobante
-            $sql = "UPDATE manifiesto_anticipo SET Ama_Tip = 'A' WHERE Ama_Cod = '" . $Par_Sql['Ama_Cod'] . "';";
+            $sql = "UPDATE manifiesto_anticipo SET Ama_Tip = 'A', Ama_IgV = '$Par_Sql[Ama_IgV]' WHERE Ama_Cod = '" . $Par_Sql['Ama_Cod'] . "';";
             return $sql;
             // break;
         case 16:

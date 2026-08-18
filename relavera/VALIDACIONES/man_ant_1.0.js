@@ -140,6 +140,84 @@ function verImagenVoucher() {
     return false; // Prevenir comportamiento por defecto del enlace
 }
 
+// Helper para asegurar que cualquier formato de ruta (absoluta con C:/, con backslashes, etc.) se resuelva bien
+function normalizarRutaImagen(ruta) {
+    if (!ruta || typeof ruta !== 'string') return '';
+    var r = ruta.trim().replace(/\\/g, '/');
+    if (r.indexOf('data:image') === 0 || r.indexOf('http://') === 0 || r.indexOf('https://') === 0) {
+        return r;
+    }
+    var idxRec = r.indexOf('RECURSOS/');
+    if (idxRec !== -1) {
+        return '../' + r.substring(idxRec);
+    }
+    if (r.indexOf('../') !== 0 && r.indexOf('./') !== 0 && r.indexOf('/') !== 0) {
+        return '../' + r;
+    }
+    return r;
+}
+
+// Función para ver la imagen del estado de cuenta validado en un modal
+function verImagenEstadoCuenta() {
+    var imagenData = $("#pagosForm #Ama_IgV").val() ||
+        $("#pagosForm #Ama_Img_Est").val() ||
+        $("#Ama_IgV").val() ||
+        $("#Ama_Img_Est").val() ||
+        $("#Ama_Img_Est_Visual").attr('src') ||
+        '';
+
+    imagenData = normalizarRutaImagen(imagenData);
+
+    if (!imagenData || imagenData.trim() === '') {
+        $.alert('No hay imagen del estado de cuenta para mostrar');
+        return false;
+    }
+
+    if ($("#imagenVoucherDialog").length === 0) {
+        $.alert('Error: El modal de imagen no se encuentra en el DOM');
+        return false;
+    }
+
+    resetZoomImagenVoucher();
+    $("#imagenVoucherContent").attr('src', imagenData);
+    $("#imagenVoucherDialog").dialog({
+        title: "Estado de Cuenta (Validación)",
+        modal: true,
+        width: 700,
+        height: 550,
+        resizable: true,
+        position: { my: "center", at: "center", of: window },
+        buttons: {
+            "Cerrar": function () {
+                $(this).dialog("close");
+            }
+        }
+    });
+
+    $("#imagenVoucherContainer").off('wheel').on('wheel', function (e) {
+        e.preventDefault();
+        var delta = e.originalEvent.deltaY;
+        if (delta < 0) {
+            zoomImagenVoucher(1.1);
+        } else {
+            zoomImagenVoucher(0.9);
+        }
+    });
+
+    return false;
+}
+
+// Función para descargar la imagen del estado de cuenta
+function descargarImagenEstadoCuenta() {
+    var imagenData = $("#pagosForm #Ama_IgV").val() || $("#pagosForm #Ama_Img_Est").val() || $("#Ama_Img_Est_Visual").attr('src') || '';
+    imagenData = normalizarRutaImagen(imagenData);
+    if (!imagenData || imagenData.trim() === '') {
+        $.alert('No hay imagen para descargar');
+        return;
+    }
+    window.open(imagenData, '_blank');
+}
+
 // Funcion auxiliar para habilitar/deshabilitar campos del formulario
 function setFormReadOnly(readOnly) {
     if (readOnly) {
@@ -156,8 +234,8 @@ function setFormReadOnly(readOnly) {
         }
         // Deshabilitar botones de búsqueda de cliente
         $("#pagosForm #btnBusCLi").hide();
-        // Deshabilitar input file de imagen
-        $("#pagosForm #Ama_Img_File").prop('disabled', true);
+        // Deshabilitar y ocultar input file de imagen en modo consulta
+        $("#pagosForm #Ama_Img_File").prop('disabled', true).hide();
     } else {
         // Modo edición: habilitar todos los campos (respetando campos readonly nativos)
         $("#pagosForm input:not([type='hidden'])").each(function () {
@@ -176,8 +254,8 @@ function setFormReadOnly(readOnly) {
         }
         // Habilitar botones de búsqueda según corresponda
         toggleBotonesCliente();
-        // Habilitar input file de imagen
-        $("#pagosForm #Ama_Img_File").prop('disabled', false);
+        // Habilitar y mostrar input file de imagen
+        $("#pagosForm #Ama_Img_File").prop('disabled', false).show();
     }
 }
 
@@ -235,21 +313,46 @@ function verDetallesAnticipo(rowObject) {
                     $("#pagosForm #Pla_Lic").val(data.Pla_Lic || '');
                 }
 
+                // En modo consulta: ocultar selector de archivo y mostrar contenedor de previsualización lado a lado
+                $("#wrap_voucher_file_input").hide();
+                $("#wrap_imagenes_lado_lado").show();
+
                 // Cargar imagen del voucher si existe
                 if (data.Ama_Img && data.Ama_Img.trim() !== '' && data.Ama_Img !== 'NULL' && data.Ama_Img.toLowerCase() !== 'null') {
                     $("#pagosForm #Ama_Img").val(data.Ama_Img);
-                    // Mostrar preview de la imagen
                     $("#Ama_Img_Visual").attr('src', data.Ama_Img);
-                    $("#Ama_Img_Preview").show();
-                    // Mostrar el enlace para ver la imagen
+                    $("#Ama_Img_Preview").css('display', 'flex').show();
                     $("#Ama_Img_Link").show();
+                    $("#col_preview_voucher").show();
                     $("#Ama_Img_Status").show().text('Imagen cargada').css('color', '#5cb85c');
                 } else {
                     $("#pagosForm #Ama_Img").val('');
                     $("#Ama_Img_Visual").attr('src', '');
                     $("#Ama_Img_Preview").hide();
                     $("#Ama_Img_Link").hide();
+                    $("#col_preview_voucher").hide();
                     $("#Ama_Img_Status").hide();
+                }
+
+                // Cargar imagen del estado de cuenta (validación de aprobación) si existe
+                var imgEstData = data.Ama_IgV || data.Ama_Img_Est;
+                if (imgEstData && imgEstData.trim() !== '' && imgEstData !== 'NULL' && imgEstData.toLowerCase() !== 'null') {
+                    var imgEstSrc = normalizarRutaImagen(imgEstData.trim());
+                    $("#pagosForm #Ama_IgV").val(imgEstSrc);
+                    $("#pagosForm #Ama_Img_Est").val(imgEstSrc);
+                    $("#Ama_Img_Est_Visual").attr('src', imgEstSrc);
+                    $("#Ama_Img_Est_Preview").css('display', 'flex').show();
+                    $("#Ama_Img_Est_Link").show();
+                    $("#wrap_Ama_Img_Est").show();
+                    $("#col_preview_voucher").removeClass('col-xs-12').addClass('col-xs-6');
+                } else {
+                    $("#pagosForm #Ama_IgV").val('');
+                    $("#pagosForm #Ama_Img_Est").val('');
+                    $("#Ama_Img_Est_Visual").attr('src', '');
+                    $("#Ama_Img_Est_Preview").hide();
+                    $("#Ama_Img_Est_Link").hide();
+                    $("#wrap_Ama_Img_Est").hide();
+                    $("#col_preview_voucher").removeClass('col-xs-6').addClass('col-xs-12');
                 }
 
                 // Esperar a que se carguen los bancos después del cambio de tipo de pago
@@ -587,7 +690,7 @@ $(function () {
                     if (cellvalue === 'R') return 'Rechazado';
                     if (cellvalue === 'I') return 'Anulado';
                     if (cellvalue === 'C') return 'Consumo';
-                    if (cellvalue === 'S') return 'Saldo inicial';
+                    if (cellvalue === 'S') return '';
                     if (cellvalue === null) return '';
                     return cellvalue;
                 }
@@ -846,7 +949,28 @@ $(function () {
 
     // inicializa el dialog de registrar pagos de anticipo
     if ($('#pagosDialog').length === 1)
-        $('#pagosDialog').createDialog({ height: 400, width: 600, icon: 'usd' });
+        $('#pagosDialog').createDialog({ height: 'auto', width: 620, icon: 'usd' });
+
+    if ($('#aprobarAnticipoDialog').length === 1) {
+        $('#aprobarAnticipoDialog').createDialog({ width: 540, height: 'auto', icon: 'ok' });
+    }
+
+    // Listener para previsualización de la foto del estado de cuenta en el modal de aprobación
+    $(document).on('change', '#foto_estado_cuenta', function () {
+        var file = this.files && this.files[0];
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                $('#aprob_preview_img').attr('src', e.target.result);
+                $('#aprob_preview_box').show();
+            };
+            reader.readAsDataURL(file);
+            $('#foto_estado_cuenta').css('border-color', '');
+        } else {
+            $('#aprob_preview_img').attr('src', '');
+            $('#aprob_preview_box').hide();
+        }
+    });
 
     if ($('#verComprobanteConsumoDialog').length === 1) {
         $('#verComprobanteConsumoDialog').createDialog({ width: 720, height: 520, icon: 'info-sign' });
@@ -1281,8 +1405,10 @@ function limpiarPagosDialog() {
     $('#Ama_Doc_Est').removeClass().css('color', '');
     
     // Limpiar el campo de imagen del voucher
-    $('#pagosForm #Ama_Img_File').val('');
+    $('#pagosForm #Ama_Img_File').val('').show();
     $('#pagosForm #Ama_Img').val('');
+    $("#wrap_voucher_file_input").show();
+    $("#wrap_imagenes_lado_lado").hide();
 
     // Ocultar enlace de imagen y previsualización
     $("#Ama_Img_Link").hide();
@@ -1290,16 +1416,18 @@ function limpiarPagosDialog() {
     $("#Ama_Img_Preview").hide();
     $("#Ama_Img_Visual").attr('src', '');
 
+    // Limpiar y ocultar imagen del estado de cuenta
+    $('#pagosForm #Ama_IgV').val('');
+    $('#pagosForm #Ama_Img_Est').val('');
+    $("#Ama_Img_Est_Visual").attr('src', '');
+    $("#Ama_Img_Est_Preview").hide();
+    $("#Ama_Img_Est_Link").hide();
+    $("#wrap_Ama_Img_Est").hide();
+    $("#col_preview_voucher").removeClass('col-xs-6').addClass('col-xs-12');
+
     // Restaurar título del modal
     $("#pagosDialog").dialog("option", "title", "Agregar Pagos");
 
-    // Habilitar campos para nuevo registro
-    // setFormReadOnly(false);
-    // $("#pagosForm #Prs_Ced, #pagosForm #nombre, #pagosForm #Pla_Nom, #pagosForm #Pla_Lic").prop('readonly', true).css('background-color', '#f5f5f5');
-    // $('#Ama_Img_Status').hide().text('');
-    // $('#Ama_Img_Link').hide();
-    // Restaurar título del modal
-    // $("#pagosDialog").dialog("option", "title", "Agregar Pagos");
     // Habilitar campos para nuevo registro y resetear readonly de cliente
     setFormReadOnly(false);
     $("#pagosForm #Prs_Ced, #pagosForm #nombre, #pagosForm #Pla_Nom, #pagosForm #Pla_Lic").prop('readonly', true).css('background-color', '#f5f5f5');
@@ -1740,21 +1868,46 @@ function editAnticipo(rowObject) {
                 $("#pagosForm #Pac_Val").val(data.Ama_Val || '0.00');
                 $("#pagosForm #Ama_Obs").val(data.Ama_Obs || '');
 
+                // Mostrar selector de archivo en edición y opcionalmente previsualización
+                $("#wrap_voucher_file_input").show();
+                $("#wrap_imagenes_lado_lado").show();
+
                 // Cargar imagen del voucher si existe (puede ser data URI o URL)
                 if (data.Ama_Img && data.Ama_Img.trim() !== '') {
                     $("#pagosForm #Ama_Img").val(data.Ama_Img);
-                    // Mostrar preview de la imagen
                     $("#Ama_Img_Visual").attr('src', data.Ama_Img);
-                    $("#Ama_Img_Preview").show();
-                    // Mostrar el enlace para ver la imagen (funciona con data URI o URL)
+                    $("#Ama_Img_Preview").css('display', 'flex').show();
                     $("#Ama_Img_Link").show();
+                    $("#col_preview_voucher").show();
                     $("#Ama_Img_Status").show().text('Imagen cargada').css('color', '#5cb85c');
                 } else {
                     $("#pagosForm #Ama_Img").val('');
                     $("#Ama_Img_Visual").attr('src', '');
                     $("#Ama_Img_Preview").hide();
                     $("#Ama_Img_Link").hide();
+                    $("#col_preview_voucher").hide();
                     $("#Ama_Img_Status").hide();
+                }
+
+                // Cargar imagen del estado de cuenta si existe
+                var imgEstEditData = data.Ama_IgV || data.Ama_Img_Est;
+                if (imgEstEditData && imgEstEditData.trim() !== '' && imgEstEditData !== 'NULL' && imgEstEditData.toLowerCase() !== 'null') {
+                    var imgEstSrcEdit = normalizarRutaImagen(imgEstEditData.trim());
+                    $("#pagosForm #Ama_IgV").val(imgEstSrcEdit);
+                    $("#pagosForm #Ama_Img_Est").val(imgEstSrcEdit);
+                    $("#Ama_Img_Est_Visual").attr('src', imgEstSrcEdit);
+                    $("#Ama_Img_Est_Preview").css('display', 'flex').show();
+                    $("#Ama_Img_Est_Link").show();
+                    $("#wrap_Ama_Img_Est").show();
+                    $("#col_preview_voucher").removeClass('col-xs-12').addClass('col-xs-6');
+                } else {
+                    $("#pagosForm #Ama_IgV").val('');
+                    $("#pagosForm #Ama_Img_Est").val('');
+                    $("#Ama_Img_Est_Visual").attr('src', '');
+                    $("#Ama_Img_Est_Preview").hide();
+                    $("#Ama_Img_Est_Link").hide();
+                    $("#wrap_Ama_Img_Est").hide();
+                    $("#col_preview_voucher").removeClass('col-xs-6').addClass('col-xs-12');
                 }
 
                 // Datos adicionales
@@ -1879,8 +2032,8 @@ function generarComprobanteAnticipo(rowObject) {
 }
 
 /**
- * Función principal para confirmar/aprobar el anticipo
- * Valida y genera el comprobante
+ * Función principal para confirmar/aprobar el anticipo.
+ * Valida condiciones previas y abre el modal para adjuntar la foto del estado de cuenta (obligatorio).
  */
 function confirmAnticipo(row) {
     // Si te pasan un array (como [row, idGrid]), recupera el objeto correcto
@@ -1893,14 +2046,101 @@ function confirmAnticipo(row) {
         return;
     }
 
-    // Confirmar con el usuario
-    $.createDialogConfirm(
-        '¿Está seguro que desea aprobar este anticipo y generar el comprobante?',
-        rowObject,
-        function (confirmedRow) {
-            generarComprobanteAnticipo(confirmedRow);
+    // Resetear formulario del modal de aprobación
+    if ($('#formAprobarAnticipo').length) {
+        $('#formAprobarAnticipo')[0].reset();
+    }
+    $('#foto_estado_cuenta').val('').css('border-color', '');
+    $('#aprob_preview_img').attr('src', '');
+    $('#aprob_preview_box').hide();
+    $('#btnConfirmarAprobacion').prop('disabled', false);
+
+    // Llenar datos de resumen en el modal
+    $('#aprob_Ama_Cod').val(rowObject.Ama_Cod || '');
+    $('#aprob_cliente_txt').text(rowObject.cliente || '—');
+    $('#aprob_doc_txt').text(rowObject.Ama_Doc || '—');
+
+    var valMonto = parseFloat(rowObject.Ama_Val);
+    var valTxt = !isNaN(valMonto) ? '$ ' + valMonto.toFixed(2) : (rowObject.Ama_Val || '$ 0.00');
+    $('#aprob_valor_txt').text(valTxt);
+    $('#aprob_fecha_txt').text(rowObject.Ama_Fec || '—');
+
+    // Abrir el diálogo de aprobación
+    if ($('#aprobarAnticipoDialog').length) {
+        $('#aprobarAnticipoDialog').dialog('open');
+    } else {
+        $.alert('Error: No se encontró el modal de aprobación de anticipo.');
+    }
+}
+
+/**
+ * Valida la foto adjunta y envía la petición para autorizar/aprobar el anticipo
+ */
+function ejecutarAprobacionAnticipo() {
+    var amaCod = $('#aprob_Ama_Cod').val();
+    if (!amaCod || amaCod.trim() === '') {
+        $.alert('No se encuentra el código del anticipo a aprobar.');
+        return;
+    }
+
+    var fileInput = document.getElementById('foto_estado_cuenta');
+    var file = (fileInput && fileInput.files && fileInput.files.length > 0) ? fileInput.files[0] : null;
+
+    // Validación OBLIGATORIA: Sin foto no se puede aprobar
+    if (!file) {
+        $('#foto_estado_cuenta').css('border-color', '#d9534f').focus();
+        $.alert('Debe adjuntar obligatoriamente la foto del estado de cuenta para poder autorizar y aprobar el anticipo.');
+        return;
+    }
+
+    // Validar tipo de archivo
+    if (!file.type.match('image.*')) {
+        $('#foto_estado_cuenta').css('border-color', '#d9534f');
+        $.alert('El archivo seleccionado debe ser una imagen válida (JPG, PNG, GIF o WEBP).');
+        return;
+    }
+
+    // Validar tamaño máximo (6MB)
+    if (file.size > 6 * 1024 * 1024) {
+        $.alert('La imagen no puede superar los 6MB de tamaño.');
+        return;
+    }
+
+    // Crear FormData para enviar multipart
+    var formData = new FormData();
+    formData.append('saveComprobanteAjax', '1');
+    formData.append('Ama_Cod', amaCod);
+    formData.append('foto_estado_cuenta', file);
+
+    $('#btnConfirmarAprobacion').prop('disabled', true);
+    $("#loader").show();
+
+    $.ajax({
+        url: '../FRONT/man_ant_1.0.php',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        dataType: 'json',
+        success: function (response) {
+            $("#loader").hide();
+            $('#btnConfirmarAprobacion').prop('disabled', false);
+
+            if (response.success) {
+                $('#aprobarAnticipoDialog').dialog('close');
+                $.alert('¡Anticipo aprobado y comprobante generado correctamente!');
+                // Recargar el grid principal
+                $('#man_antGrid').trigger('reloadGrid');
+            } else {
+                $.alert('Error en la aprobación: ' + (response.message || 'Error desconocido'));
+            }
+        },
+        error: function (xhr, status, error) {
+            $("#loader").hide();
+            $('#btnConfirmarAprobacion').prop('disabled', false);
+            $.alert('Error al comunicarse con el servidor: ' + error);
         }
-    );
+    });
 }
 
 function declineAnticipo(row) {
