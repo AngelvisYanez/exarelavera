@@ -1550,14 +1550,7 @@ class adq_adquisiciones_log extends MysqlDatosContab {
     }
 
     private function validarRubrosObligatorios($emp_cod, $data) {
-        $disponibles = $this->listarRubrosPresupuestoDisponibles($emp_cod);
-        if (empty($disponibles)) {
-            return;
-        }
-        $rubros = $this->extraerRubrosDesdePost($data);
-        if (empty($rubros)) {
-            throw new Exception('Debe seleccionar al menos un tipo de rubro presupuestario.');
-        }
+        return;
     }
 
     private function sincronizarPryCodDesdeRubros($sol_cod, $pdp_cods) {

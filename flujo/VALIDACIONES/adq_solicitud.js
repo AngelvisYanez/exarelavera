@@ -56,10 +56,6 @@ function adqSyncRubrosHidden() {
 }
 
 function adqValidarRubros() {
-    if ($('#tblRubrosPpto tbody tr.adq-rubro-row').length && adqCollectRubros().length === 0) {
-        alert('Debe seleccionar al menos un tipo de rubro presupuestario.');
-        return false;
-    }
     return true;
 }
 

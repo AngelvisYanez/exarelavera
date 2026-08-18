@@ -181,8 +181,8 @@ function adq_render_tabla_rubros($rubros, $seleccionados = array()) {
     }
     ?>
     <div class="adq-rubros-box">
-        <label class="form-label fw-bold mb-1">Tipo de rubro presupuestario *</label>
-        <p class="text-muted small mb-2">Abra el selector para marcar uno o más rubros del presupuesto.</p>
+        <label class="form-label fw-bold mb-1">Tipo de rubro presupuestario</label>
+        <p class="text-muted small mb-2">Opcional. Abra el selector para marcar uno o más rubros del presupuesto.</p>
         <?php if (!$hay) { ?>
             <div class="alert alert-warning py-2 px-3 mb-0" style="font-size:13px;">No hay rubros de proyecto en <strong>pre_proyecto_detalles</strong> para esta empresa. Cárguelos en Presupuesto &gt; Proyectos (el presupuesto corporativo por partida no alcanza).</div>
         <?php } else { ?>
@@ -320,10 +320,6 @@ function adq_render_tabla_rubros($rubros, $seleccionados = array()) {
                     return $('#tblRubrosPpto tbody tr.adq-rubro-row').length > 0;
                 }
                 function adqValidarRubros() {
-                    if (adqHayRubrosDisponibles() && adqCollectRubros().length === 0) {
-                        alert('Debe seleccionar al menos un tipo de rubro presupuestario.');
-                        return false;
-                    }
                     return true;
                 }
                 function adqSyncRubrosHidden() {
@@ -1275,10 +1271,6 @@ if (isset($ajax_get_form)) {
                             rubrosSel.push(v);
                         }
                     });
-                }
-                if ($('#tblRubrosPpto tbody tr.adq-rubro-row').length && !rubrosSel.length) {
-                    alert('Debe seleccionar al menos un tipo de rubro presupuestario.');
-                    return;
                 }
                 payload.rubros = rubrosSel;
                 const $btn = $('#btnCrearSolicitudCorta');
