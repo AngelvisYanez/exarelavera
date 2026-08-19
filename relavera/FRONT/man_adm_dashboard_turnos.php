@@ -2457,7 +2457,7 @@ if (isset($_GET['exportarExcelTiemposAjax']) || isset($exportarExcelTiemposAjax)
             soloTabChoferPlaca: <?php echo (!empty($soloTabChoferPlaca)) ? 'true' : 'false'; ?>
         };
     </script>
-    <script src="../VALIDACIONES/man_val_dashboard_turnos.js?a=117"></script>
+    <script src="../VALIDACIONES/man_val_dashboard_turnos.js?a=118"></script>
 </BODY>
 
 </HTML>
