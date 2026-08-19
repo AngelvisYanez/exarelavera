@@ -1,4 +1,10 @@
-﻿var todasConfiguraciones = [];
+﻿/**
+ * ============================================================================
+ * DASHBOARD DE TURNOS Y MANIFIESTOS - VALIDACIONES Y CONTROL VISUAL
+ * Modulo: Relavera / Gestion de Manifiestos y Turnos
+ * ============================================================================
+ */
+var todasConfiguraciones = [];
 var modoVistaBarras = false; // false = tabla, true = barras (tab Por Configuración)
 var modoVistaBarrasRango = false; // false = tabla, true = barras (tab Por Rango de Fechas)
 var datosDashboardActual = null; // Almacenar datos del dashboard actual para filtrado por fecha
@@ -9,40 +15,30 @@ var datosDashboardChoferPlaca = null; // { agrupado, tipo_vista } para tab Por C
 var datosModalManifiestosChoferPlaca = null; // { manifiestos, turnoInfo, tipoVista } para modal Ver Manifiestos
 var chartParetoChoferPlaca = null; // instancia ApexCharts Pareto
 var datosRankingPlantasChoferPlaca = null; // [ { Pla_Cod, Pla_Nom, total } ] para imprimir/Excel
-var fechaInicioChoferPlaca = "";
-var fechaFinChoferPlaca = "";
+var fechaInicioChoferPlaca = "", fechaFinChoferPlaca = "";
 var datosDashboardEjecutivo = null; // Datos del tab Vista Ejecutiva (CEO) para imprimir informe gerencial
 var datosTurnosPorDia = {}; // { fechaId: turnosFecha[] } para gráfico tendencia por día
 var modoVistaConfig = "tabla"; // 'tabla' | 'barras' | 'tendencia' - aplica a todos los días
 var primeraCargaConfig = true; // true = solo día actual expandido; false = al hacer clic en Tabla/Barras/Tendencia se expande todo
-
-var COLOR_AZUL = "#2C5D94";
-var COLOR_GRIS = "#6c757d";
-var COLOR_ROJO = "#c83c3c";
-
+var COLOR_AZUL = "#2C5D94", COLOR_GRIS = "#6c757d", COLOR_ROJO = "#c83c3c";
+/**
+ * SECCION 1: UTILIDADES DE FECHAS, SEMAFOROS Y MOTOR APEXCHARTS
+ */
 function mesActualYYYYMM() {
-  var now = new Date();
-  return now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
+  var now = new Date(); return now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
 }
-
 function sincronizarFechasDesdeMes(mesVal, inicioSel, finSel) {
-  if (!mesVal) return;
-  var parts = mesVal.split("-");
-  var year = parseInt(parts[0], 10);
-  var month = parseInt(parts[1], 10);
-  var mesStr = String(month).padStart(2, "0");
-  var lastDay = new Date(year, month, 0).getDate();
+  if (!mesVal) return; var parts = mesVal.split("-");
+  var year = parseInt(parts[0], 10); var month = parseInt(parts[1], 10);
+  var mesStr = String(month).padStart(2, "0"); var lastDay = new Date(year, month, 0).getDate();
   $(inicioSel).val(year + "-" + mesStr + "-01");
   $(finSel).val(year + "-" + mesStr + "-" + String(lastDay).padStart(2, "0"));
 }
-
 function asegurarMesYFechas(mesSel, inicioSel, finSel) {
   var mesVal = $(mesSel).val() || mesActualYYYYMM();
   $(mesSel).val(mesVal);
-  sincronizarFechasDesdeMes(mesVal, inicioSel, finSel);
-  return mesVal;
+  sincronizarFechasDesdeMes(mesVal, inicioSel, finSel); return mesVal;
 }
-
 function bindMesFechas(tabHref, mesSel, inicioSel, finSel, onShow) {
   $('a[href="' + tabHref + '"]').on("shown.bs.tab", function () {
     if (typeof onShow === "function") onShow();
@@ -52,25 +48,20 @@ function bindMesFechas(tabHref, mesSel, inicioSel, finSel, onShow) {
     sincronizarFechasDesdeMes($(this).val(), inicioSel, finSel);
   });
 }
-
 function htmlKpiCeo(semaforo, icon, label, value, tendencia) {
   return '<div class="ceo-kpi-card semaforo-' + semaforo + '"><div class="ceo-kpi-icon"><i class="fa ' + icon + '"></i></div><div class="ceo-kpi-label">' + label + '</div><div class="ceo-kpi-value">' + value + '</div><div class="ceo-kpi-tendencia">' + tendencia + "</div></div>";
 }
-
 function $apex(idOrEl) {
   return typeof idOrEl === "string" ? $("#" + idOrEl) : $(idOrEl);
 }
-
 function destroyApex(idOrEl) {
   var $el = $apex(idOrEl);
-  if (!$el.length) return;
-  var c = $el.data("apex");
+  if (!$el.length) return; var c = $el.data("apex");
   if (c && typeof c.destroy === "function") {
     try { c.destroy(); } catch (e) {}
   }
   $el.removeData("apex").empty();
 }
-
 function _apexContainerWidth(idOrEl) {
   // Primero intentar el propio elemento
   var own = $(idOrEl)[0];
@@ -93,12 +84,10 @@ function _apexContainerWidth(idOrEl) {
   // Fallback absoluto: ventana menos margen
   return Math.max(400, (window.innerWidth || 800) - 80);
 }
-
 function renderApex(idOrEl, options) {
   var $el = $apex(idOrEl);
   if (!$el.length || typeof ApexCharts === "undefined") return null;
-  destroyApex($el);
-  var elW = _apexContainerWidth($el[0]);
+  destroyApex($el); var elW = _apexContainerWidth($el[0]);
   var h = options && options.chart && options.chart.height ? options.chart.height : 260;
   var opts = $.extend(true, {
     chart: { width: elW, height: h, toolbar: { show: false }, fontFamily: "inherit", zoom: { enabled: false }, animations: { enabled: false } },
@@ -116,10 +105,8 @@ function renderApex(idOrEl, options) {
   }
   var chart = new ApexCharts($el[0], opts);
   chart.render();
-  $el.data("apex", chart);
-  return chart;
+  $el.data("apex", chart); return chart;
 }
-
 function apexSvgDataUrl($el) {
   var svg = $el.find("svg").get(0);
   if (!svg) return "";
@@ -127,19 +114,15 @@ function apexSvgDataUrl($el) {
     return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(new XMLSerializer().serializeToString(svg));
   } catch (e) { return ""; }
 }
-
 function apexFromLineDatasets(id, labels, datasets, extra) {
   extra = extra || {};
-
   // Calcular yMax con seguridad
   var maxVal = 1;
   datasets.forEach(function (ds) {
     (ds.data || []).forEach(function (v) {
       if (typeof v === "number" && !isNaN(v) && v > maxVal) maxVal = v;
     });
-  });
-  var yMax = Math.max(5, Math.ceil(maxVal * 1.15));
-
+  }); var yMax = Math.max(5, Math.ceil(maxVal * 1.15));
   var colors       = datasets.map(function (ds) { return ds.borderColor || COLOR_AZUL; });
   var strokeWidths = datasets.map(function (ds) { return Math.max(1, Math.round(Number(ds.borderWidth) || 2)); });
   var dashArrays   = datasets.map(function (ds) {
@@ -149,13 +132,9 @@ function apexFromLineDatasets(id, labels, datasets, extra) {
   // fill.opacity por serie: sombreado solo donde ds.fill=true, sin sombreado donde ds.fill=false
   var fillOpacities = datasets.map(function (ds) { return ds.fill ? 0.18 : 0; });
   var markerSizes   = datasets.map(function (ds) { return ds.borderDash ? 0 : 4; });
-
   // Usar chart.type="area" para que ApexCharts siempre trace el stroke de cada serie.
   // Las series sin relleno (fill.opacity=0) se ven como líneas normales.
-  var series = datasets.map(function (ds) {
-    return { name: ds.label, data: ds.data };
-  });
-
+  var series = datasets.map(function (ds) { return { name: ds.label, data: ds.data }; });
   return renderApex(id, {
     chart: { type: "area", height: 260, toolbar: { show: false } },
     colors: colors,
@@ -164,8 +143,7 @@ function apexFromLineDatasets(id, labels, datasets, extra) {
     markers: { size: markerSizes, hover: { size: 6 } },
     series: series,
     xaxis: {
-      type: "category",
-      categories: labels,
+      type: "category", categories: labels,
       labels: { rotate: -35, hideOverlappingLabels: true, style: { fontSize: "10px" } }
     },
     yaxis: { min: 0, max: yMax, forceNiceScale: true, title: { text: extra.yTitle || "Cantidad" }, decimalsInFloat: 0, tickAmount: 5 },
@@ -175,12 +153,9 @@ function apexFromLineDatasets(id, labels, datasets, extra) {
     noData: { text: "Sin datos" }
   });
 }
-
 function renderParetoApex(id, visualItems, cfg) {
-  cfg = cfg || {};
-  var total = cfg.total || 0;
-  var promedio = Number(cfg.promedio) || 0;
-  var colorTop = "rgb(" + (cfg.colorPrincipal || "44, 93, 148") + ")";
+  cfg = cfg || {}; var total = cfg.total || 0;
+  var promedio = Number(cfg.promedio) || 0; var colorTop = "rgb(" + (cfg.colorPrincipal || "44, 93, 148") + ")";
   var labels = visualItems.map(function (i) { return i.nombre; });
   var pctAcum = cfg.pctAcum || visualItems.map(function (i) { return Number((i.pctAcum || 0).toFixed(1)); });
   var dataCant = visualItems.map(function (i) { return i.cantidad || 0; });
@@ -215,8 +190,7 @@ function renderParetoApex(id, visualItems, cfg) {
       shared: true,
       y: {
         formatter: function (val, ctx) {
-          if (ctx.seriesIndex === 1) return val + "%";
-          var item = visualItems[ctx.dataPointIndex] || {};
+          if (ctx.seriesIndex === 1) return val + "%"; var item = visualItems[ctx.dataPointIndex] || {};
           var pctInd = total > 0 ? ((item.cantidad / total) * 100).toFixed(1) : "0";
           var pctA = pctAcum[ctx.dataPointIndex] != null ? pctAcum[ctx.dataPointIndex] : 0;
           var diff = item.diffPromedio != null ? item.diffPromedio : ((item.cantidad || 0) - promedio);
@@ -224,17 +198,13 @@ function renderParetoApex(id, visualItems, cfg) {
         }
       }
     }
-  });
-  return chartParetoChoferPlaca;
+  }); return chartParetoChoferPlaca;
 }
-
 $(function () {
   cargarConfiguraciones();
-
   $('a[data-toggle="tab"]').on("shown.bs.tab", function () {
     window.dispatchEvent(new Event("resize"));
   });
-
   $('a[href="#tab_rango"]').on("shown.bs.tab", function () {
     cargarPlantasRango();
     if (!$("#fecha_inicio_rango").val() && !$("#fecha_fin_rango").val()) {
@@ -244,7 +214,6 @@ $(function () {
   $(document).on("change", "#mes_rango", function () {
     sincronizarFechasDesdeMes($(this).val(), "#fecha_inicio_rango", "#fecha_fin_rango");
   });
-
   $(document).on("change", "#omitir_dias_sin_manifiestos", function () {
     if (datosDashboardRango && datosDashboardRango.dias) {
       mostrarDashboardRango(datosDashboardRango);
@@ -265,7 +234,6 @@ $(function () {
     // Restaurar posición de scroll (el cambio de DOM puede desplazarla)
     window.scrollTo(0, scrollY);
   });
-
   bindMesFechas("#tab_chofer_placa", "#mes_chofer_placa", "#fecha_inicio_chofer_placa", "#fecha_fin_chofer_placa");
   bindMesFechas("#tab_ejecutivo", "#mes_ejecutivo", "#fecha_inicio_ejecutivo", "#fecha_fin_ejecutivo");
   bindMesFechas("#tab_tiempos", "#mes_tiempos", "#fecha_inicio_tiempos", "#fecha_fin_tiempos", cargarPlantasTiempos);
@@ -274,27 +242,21 @@ $(function () {
     asegurarMesYFechas("#mes_tiempos", "#fecha_inicio_tiempos", "#fecha_fin_tiempos");
   }
   $(document).on("click", "#btnBuscarTiempos", cargarDashboardTiempos);
-
   window.addEventListener("beforeprint", function () {
     if (
-      modoVistaConfig === "tendencia" &&
-      typeof datosTurnosPorDia === "object"
+      modoVistaConfig === "tendencia" && typeof datosTurnosPorDia === "object"
     ) {
       Object.keys(datosTurnosPorDia).forEach(function (fechaId) {
         var $chart = $("#chartTendencia_" + fechaId);
         if (!$chart.length) return;
         try {
-          crearChartTendenciaDia(fechaId, true);
-          var imgUrl = apexSvgDataUrl($chart);
+          crearChartTendenciaDia(fechaId, true); var imgUrl = apexSvgDataUrl($chart);
           if (imgUrl) {
             var $container = $("#" + fechaId + "_tendencia .ceo-chart-wrap");
             if ($container.length) {
               $container.find(".print-tendencia-img").remove();
               $container.append(
-                '<img class="print-tendencia-img" src="' +
-                  imgUrl +
-                  '" style="display:none; width:100%; height:auto;" />',
-              );
+                '<img class="print-tendencia-img" src="' + imgUrl + '" style="display:none; width:100%; height:auto;" />', );
             }
           }
         } catch (e) {
@@ -303,40 +265,27 @@ $(function () {
       });
     }
   });
-
-  window.addEventListener("afterprint", function () {
-    $(".print-tendencia-img").remove();
-  });
+  window.addEventListener("afterprint", function () { $(".print-tendencia-img").remove(); });
 });
-
-
+/**
+ * SECCION 2: MODULO POR CONFIGURACION Y TURNOS DIARIOS
+ */
 function formatearFechaRango(f) {
-  if (!f) return "";
-  var m = f.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (m) return m[3] + "/" + m[2] + "/" + m[1];
-  return f;
+  if (!f) return ""; var m = f.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) return m[3] + "/" + m[2] + "/" + m[1]; return f;
 }
-
 function parsearFecha(f) {
-  if (!f || f === "-") return null;
-  var partes = f.indexOf("-") >= 0 ? f.split("-") : f.split("/");
+  if (!f || f === "-") return null; var partes = f.indexOf("-") >= 0 ? f.split("-") : f.split("/");
   if (partes.length !== 3) return null;
   if (f.indexOf("-") >= 0) return new Date(partes[0], partes[1] - 1, partes[2]);
   return new Date(partes[2], partes[1] - 1, partes[0]);
 }
-
 function formatearFechaParaMostrar(f) {
   var d = parsearFecha(f);
   if (!d) return f;
-  return (
-    ("0" + d.getDate()).slice(-2) +
-    "/" +
-    ("0" + (d.getMonth() + 1)).slice(-2) +
-    "/" +
-    d.getFullYear()
+  return ( ("0" + d.getDate()).slice(-2) + "/" + ("0" + (d.getMonth() + 1)).slice(-2) + "/" + d.getFullYear()
   );
 }
-
 function cargarPlantasRango() {
   $.get(
     "",
@@ -361,34 +310,27 @@ function cargarPlantasRango() {
     "json",
   );
 }
-
 function cargarConfiguraciones() {
   $.get(
     "",
     { getConfiguracionesDisponiblesAjax: true },
     function (response) {
       if (response.success && response.configuraciones) {
-        todasConfiguraciones = response.configuraciones;
-
-        var $select = $("#select_configuracion");
+        todasConfiguraciones = response.configuraciones; var $select = $("#select_configuracion");
         $select.empty();
-
         response.configuraciones.forEach(function (config, index) {
           $select.append(
             $("<option>", {
-              value: config.Tur_Cod,
-              text: config.texto,
+              value: config.Tur_Cod, text: config.texto,
               selected: index === 0, // Seleccionar la primera por defecto
             }),
           );
         });
-
         // Aplicar Chosen si está disponible
         if ($.fn.chosen) {
           $select.chosen("destroy");
           $select.chosen({ width: "400px" });
         }
-
         // Cargar dashboard con la primera configuración seleccionada
         if (response.configuraciones.length > 0) {
           cargarDashboard();
@@ -400,19 +342,14 @@ function cargarConfiguraciones() {
     console.error("Error al cargar las configuraciones");
   });
 }
-
 function cargarDashboard() {
-  var Tur_Cod = $("#select_configuracion").val() || "";
-
-  var postData = { getDashboardTurnosAjax: true };
+  var Tur_Cod = $("#select_configuracion").val() || ""; var postData = { getDashboardTurnosAjax: true };
   if (Tur_Cod) {
     postData.Tur_Cod = Tur_Cod;
   }
-
   $("#dashboardContent").html(
     '<div class="loading"><i class="fa fa-spinner fa-spin"></i><p>Cargando dashboard...</p></div>',
   );
-
   $.get(
     "",
     postData,
@@ -421,10 +358,7 @@ function cargarDashboard() {
         mostrarDashboard(response.configuraciones);
       } else {
         $("#dashboardContent").html(
-          '<div class="alert alert-danger">Error al cargar el dashboard: ' +
-            (response.message || "Error desconocido") +
-            "</div>",
-        );
+          '<div class="alert alert-danger">Error al cargar el dashboard: ' + (response.message || "Error desconocido") + "</div>", );
       }
     },
     "json",
@@ -434,21 +368,15 @@ function cargarDashboard() {
     );
   });
 }
-
 function getTurnosFiltradosPorFechaConfig(turnosDetalle) {
   if (
-    !$("#omitir_dias_sin_manifiestos_config").is(":checked") ||
-    !turnosDetalle ||
-    turnosDetalle.length === 0
+    !$("#omitir_dias_sin_manifiestos_config").is(":checked") || !turnosDetalle || turnosDetalle.length === 0
   ) {
     return turnosDetalle || [];
   }
   // Suprimir del reporte todos los turnos que NO poseen manifiestos (solo mostrar turnos con al menos un manifiesto)
-  return turnosDetalle.filter(function (t) {
-    return (t.ocupados || 0) > 0;
-  });
+  return turnosDetalle.filter(function (t) { return (t.ocupados || 0) > 0; });
 }
-
 function construirTendenciaDesdeTurnos(turnosDetalle) {
   if (!turnosDetalle || turnosDetalle.length === 0)
     return { tendencia: [], promedio: 0 };
@@ -466,9 +394,7 @@ function construirTendenciaDesdeTurnos(turnosDetalle) {
   });
   var tendencia = Object.keys(porFecha)
     .sort()
-    .map(function (f) {
-      return { fecha: f, total: porFecha[f] };
-    });
+    .map(function (f) { return { fecha: f, total: porFecha[f] }; });
   var suma = tendencia.reduce(function (s, d) {
     return s + d.total;
   }, 0);
@@ -476,82 +402,25 @@ function construirTendenciaDesdeTurnos(turnosDetalle) {
     tendencia.length > 0 ? (suma / tendencia.length).toFixed(1) : 0;
   return { tendencia: tendencia, promedio: promedio };
 }
-
 function mostrarDashboard(configuraciones) {
   datosDashboardActual = configuraciones;
-  datosTurnosPorDia = {};
-
-  var html = "";
-
+  datosTurnosPorDia = {}; var html = "";
   if (configuraciones.length === 0) {
     html =
       '<div class="alert alert-info"><i class="fa fa-info-circle"></i> No se encontraron configuraciones de turnos con los filtros seleccionados.</div>';
     $("#dashboardContent").html(html);
     return;
   }
-
   configuraciones.forEach(function (config) {
-    var cardId = "config-card-" + config.Tur_Cod;
-    html += '<div class="config-card" id="' + cardId + '">';
-
+    var cardId = "config-card-" + config.Tur_Cod; html += '<div class="config-card" id="' + cardId + '">';
     // Header de configuración
-    html +=
-      '<div class="config-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">';
-    html += "<div>";
-    html += "<h4>Configuración de Turnos #" + config.Tur_Cod + "</h4>";
-    html +=
-      '<p style="margin: 5px 0 0 0; font-size: 14px;">Período: ' +
-      config.Tur_Fei +
-      " - " +
-      config.Tur_Fef +
-      "</p>";
-    html += "</div>";
-    html +=
-      '<div style="flex-shrink: 0; display: flex; align-items: center; gap: 6px;">';
-    html +=
-      '<button class="btn btn-sm btn-info" onclick="verManifiestosConfiguracion(' +
-      config.Tur_Cod +
-      ", '" +
-      config.Tur_Fei +
-      "', '" +
-      config.Tur_Fef +
-      '\');" title="Ver todos los manifiestos de la configuración" style="padding: 5px 10px; font-size: 12px;">';
-    html += '<i class="fa fa-list"></i> Ver Manifiesto';
-    html += "</button>";
-    html += "</div>";
-    html += "</div>";
-
+    html += '<div class="config-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">' + "<div>" + "<h4>Configuración de Turnos #" + config.Tur_Cod + "</h4>" + '<p style="margin: 5px 0 0 0; font-size: 14px;">Período: ' + config.Tur_Fei + " - " + config.Tur_Fef + "</p>" + "</div>" + '<div style="flex-shrink: 0; display: flex; align-items: center; gap: 6px;">' + '<button class="btn btn-sm btn-info" onclick="verManifiestosConfiguracion(' + config.Tur_Cod + ", '" + config.Tur_Fei + "', '" + config.Tur_Fef + '\');" title="Ver todos los manifiestos de la configuración" style="padding: 5px 10px; font-size: 12px;">' + '<i class="fa fa-list"></i> Ver Manifiesto' + "</button>" + "</div>" + "</div>";
     // Estadísticas generales
-    html += '<div class="config-stats">';
-    html += '<div class="stat-card total-turnos">';
-    html += '<div class="stat-label">Total Turnos</div>';
-    html += '<div class="stat-value">' + config.total_turnos_detalle + "</div>";
-    html += "</div>";
-
-    html += '<div class="stat-card total-cupos">';
-    html += '<div class="stat-label">Total Cupos</div>';
-    html += '<div class="stat-value">' + config.total_cupos + "</div>";
-    html += "</div>";
-
-    html += '<div class="stat-card cupos-ocupados">';
-    html += '<div class="stat-label">Cupos Ocupados</div>';
-    html += '<div class="stat-value">' + config.total_cupos_ocupados + "</div>";
-    html += "</div>";
-
-    html += '<div class="stat-card cupos-libres">';
-    html += '<div class="stat-label">Cupos Libres</div>';
-    html += '<div class="stat-value">' + config.total_cupos_libres + "</div>";
-    html += "</div>";
-
-    html += '<div class="stat-card ocupacion">';
-    html += '<div class="stat-label">% Ocupación</div>';
-    html +=
-      '<div class="stat-value">' +
-      config.porcentaje_ocupacion_general +
-      "%</div>";
-    html += "</div>";
-    html += "</div>";
-
+    html += '<div class="config-stats">' + '<div class="stat-card total-turnos">' + '<div class="stat-label">Total Turnos</div>' + '<div class="stat-value">' + config.total_turnos_detalle + "</div>" + "</div>";
+    html += '<div class="stat-card total-cupos">' + '<div class="stat-label">Total Cupos</div>' + '<div class="stat-value">' + config.total_cupos + "</div>" + "</div>";
+    html += '<div class="stat-card cupos-ocupados">' + '<div class="stat-label">Cupos Ocupados</div>' + '<div class="stat-value">' + config.total_cupos_ocupados + "</div>" + "</div>";
+    html += '<div class="stat-card cupos-libres">' + '<div class="stat-label">Cupos Libres</div>' + '<div class="stat-value">' + config.total_cupos_libres + "</div>" + "</div>";
+    html += '<div class="stat-card ocupacion">' + '<div class="stat-label">% Ocupación</div>' + '<div class="stat-value">' + config.porcentaje_ocupacion_general + "%</div>" + "</div>" + "</div>";
     // Detalle por día con 3 opciones: Tabla, Barras, Tendencia (cada día tiene su propio toggle)
     var turnosFiltrados = getTurnosFiltradosPorFechaConfig(
       config.turnos_detalle,
@@ -560,19 +429,14 @@ function mostrarDashboard(configuraciones) {
       html += generarVistaDiasConTresOpciones(turnosFiltrados, false);
     } else {
       var msg =
-        $("#omitir_dias_sin_manifiestos_config").is(":checked") &&
-        config.turnos_detalle &&
-        config.turnos_detalle.length > 0
+        $("#omitir_dias_sin_manifiestos_config").is(":checked") && config.turnos_detalle && config.turnos_detalle.length > 0
           ? "Ningún turno posee manifiestos en esta configuración."
           : "No hay turnos detalle para esta configuración.";
       html += '<div class="alert alert-warning">' + msg + "</div>";
     }
-
     html += "</div>"; // Cierre config-card
   });
-
   $("#dashboardContent").html(html);
-
   // Crear gráficos de tendencia para días expandidos cuando la vista global es tendencia
   if (modoVistaConfig === "tendencia") {
     setTimeout(function () {
@@ -585,7 +449,6 @@ function mostrarDashboard(configuraciones) {
     }, 60);
   }
 }
-
 function cambiarVistaGlobalConfig(vista) {
   primeraCargaConfig = false; // usuario hizo clic → expandir todo
   modoVistaConfig = vista;
@@ -598,19 +461,15 @@ function cambiarVistaGlobalConfig(vista) {
   $("#btnVistaTendenciaConfig")
     .toggleClass("btn-warning", vista === "tendencia")
     .toggleClass("btn-default", vista !== "tendencia");
-
   if (vista === "tendencia") {
     $("#wrap_chk_vs_garita_in_config").show();
   } else {
     $("#wrap_chk_vs_garita_in_config").hide();
   }
-
   cargarDashboard();
 }
-
 function generarVistaDiasConTresOpciones(turnosDetalle, forPrint) {
-  var html = "";
-  var turnosPorFecha = {};
+  var html = ""; var turnosPorFecha = {};
   turnosDetalle.forEach(function (turno) {
     var fecha = turno.Tud_Fec || "-";
     if (!turnosPorFecha[fecha]) turnosPorFecha[fecha] = [];
@@ -618,51 +477,26 @@ function generarVistaDiasConTresOpciones(turnosDetalle, forPrint) {
   });
   var fechasOrdenadas = Object.keys(turnosPorFecha).sort(function (a, b) {
     if (a === "-") return 1;
-    if (b === "-") return -1;
-    var fechaA = parsearFecha(a);
-    var fechaB = parsearFecha(b);
-    return (fechaA || 0) - (fechaB || 0);
-  });
-
-  var hoy = new Date();
+    if (b === "-") return -1; var fechaA = parsearFecha(a);
+    var fechaB = parsearFecha(b); return (fechaA || 0) - (fechaB || 0);
+  }); var hoy = new Date();
   var fechaHoyStr =
-    ("0" + hoy.getDate()).slice(-2) +
-    "/" +
-    ("0" + (hoy.getMonth() + 1)).slice(-2) +
-    "/" +
-    hoy.getFullYear();
+    ("0" + hoy.getDate()).slice(-2) + "/" + ("0" + (hoy.getMonth() + 1)).slice(-2) + "/" + hoy.getFullYear();
   var fechaHoyAlt =
-    hoy.getFullYear() +
-    "-" +
-    ("0" + (hoy.getMonth() + 1)).slice(-2) +
-    "-" +
-    ("0" + hoy.getDate()).slice(-2);
-
+    hoy.getFullYear() + "-" + ("0" + (hoy.getMonth() + 1)).slice(-2) + "-" + ("0" + hoy.getDate()).slice(-2);
   fechasOrdenadas.forEach(function (fecha) {
-    var turnosFecha = turnosPorFecha[fecha];
-    var diaSemana = "";
+    var turnosFecha = turnosPorFecha[fecha]; var diaSemana = "";
     var fechaObj = parsearFecha(fecha);
     if (fechaObj) {
-      var diasSemana = [
-        "Domingo",
-        "Lunes",
-        "Martes",
-        "Miércoles",
-        "Jueves",
-        "Viernes",
-        "Sábado",
-      ];
+      var diasSemana = [ "Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", ];
       diaSemana = diasSemana[fechaObj.getDay()];
     }
     var totalCuposOcupados = 0;
     turnosFecha.forEach(function (t) {
       totalCuposOcupados += t.ocupados || 0;
-    });
-    var esHoy = fecha === fechaHoyStr || fecha === fechaHoyAlt;
+    }); var esHoy = fecha === fechaHoyStr || fecha === fechaHoyAlt;
     var expandirTodo =
-      modoVistaConfig === "barras" ||
-      modoVistaConfig === "tendencia" ||
-      (modoVistaConfig === "tabla" && !primeraCargaConfig);
+      modoVistaConfig === "barras" || modoVistaConfig === "tendencia" || (modoVistaConfig === "tabla" && !primeraCargaConfig);
     var fechaId = "fecha_" + fecha.replace(/[\/\-]/g, "_");
     var displayStyle =
       forPrint || esHoy || expandirTodo ? "display: block;" : "display: none;";
@@ -671,95 +505,20 @@ function generarVistaDiasConTresOpciones(turnosDetalle, forPrint) {
     var fechaEsc = (fecha || "").replace(/'/g, "\\'");
     var tudCodVer =
       turnosFecha[0] && turnosFecha[0].Tud_Cod ? turnosFecha[0].Tud_Cod : 0;
-
-    html +=
-      '<div class="fecha-header" style="margin-top: 15px; margin-bottom: 10px; padding: 8px 12px; background-color: #e9ecef; border-left: 4px solid #2C5D94; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleFechaContent(\'' +
-      fechaId +
-      "', this);\">";
-    html +=
-      '<h5 style="margin: 0; font-size: 16px; font-weight: 600; color: #2C5D94; flex: 1;">';
-    html +=
-      '<i class="fa ' +
-      iconoToggle +
-      ' toggle-icon" style="margin-right: 8px;"></i>';
-    html +=
-      '<i class="fa fa-calendar"></i> ' + formatearFechaParaMostrar(fecha);
+    html += '<div class="fecha-header" style="margin-top: 15px; margin-bottom: 10px; padding: 8px 12px; background-color: #e9ecef; border-left: 4px solid #2C5D94; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleFechaContent(\'' + fechaId + "', this);\">" + '<h5 style="margin: 0; font-size: 16px; font-weight: 600; color: #2C5D94; flex: 1;">' + '<i class="fa ' + iconoToggle + ' toggle-icon" style="margin-right: 8px;"></i>' + '<i class="fa fa-calendar"></i> ' + formatearFechaParaMostrar(fecha);
     if (diaSemana) html += " - " + diaSemana;
-    html +=
-      ' <span style="margin-left: 15px; font-size: 14px; color: rgb(172, 108, 202);">Total Cupos Ocupados: <strong>' +
-      totalCuposOcupados +
-      "</strong></span>";
-    html += "</h5>";
-    html +=
-      '<div style="display: flex; gap: 5px; margin-left: 10px;" onclick="event.stopPropagation();">';
+    html += ' <span style="margin-left: 15px; font-size: 14px; color: rgb(172, 108, 202);">Total Cupos Ocupados: <strong>' + totalCuposOcupados + "</strong></span>" + "</h5>" + '<div style="display: flex; gap: 5px; margin-left: 10px;" onclick="event.stopPropagation();">';
     if (tudCodVer && !forPrint)
-      html +=
-        '<button class="btn btn-sm btn-info" onclick="verManifiestosDiaDirecto(' +
-        tudCodVer +
-        ');" title="Ver manifiestos del día" style="padding: 4px 8px; font-size: 11px;"><i class="fa fa-list"></i> Ver Manifiesto</button>';
-    html +=
-      '<button class="btn btn-sm btn-primary" onclick="imprimirReporteFecha(\'' +
-      fechaEsc +
-      '\');" title="Imprimir" style="padding: 4px 8px; font-size: 11px;"><i class="fa fa-print"></i> Imprimir</button>';
-    html +=
-      '<button class="btn btn-sm btn-success" onclick="exportarExcelFecha(\'' +
-      fechaEsc +
-      '\');" title="Excel" style="padding: 4px 8px; font-size: 11px;"><i class="fa fa-file-excel-o"></i> Excel</button>';
-    html += "</div></div>";
-
-    html +=
-      '<div id="' +
-      fechaId +
-      '" class="fecha-content" style="' +
-      displayStyle +
-      '">';
-
-    var vistaActiva = modoVistaConfig;
-    var showTabla = vistaActiva === "tabla";
-    var showBarras = vistaActiva === "barras";
-    var showTendencia = vistaActiva === "tendencia";
-
-    html +=
-      '<div id="' +
-      fechaId +
-      '_tabla" class="vista-dia-panel" style="display: ' +
-      (showTabla ? "block" : "none") +
-      ';">';
-    html += generarTablaParaDia(turnosFecha);
-    html += "</div>";
-
-    html +=
-      '<div id="' +
-      fechaId +
-      '_barras" class="vista-dia-panel" style="display: ' +
-      (showBarras ? "block" : "none") +
-      ';">';
-    html += generarBarrasParaDia(turnosFecha, forPrint);
-    html += "</div>";
-
-    html +=
-      '<div id="' +
-      fechaId +
-      '_tendencia" class="vista-dia-panel" style="display: ' +
-      (showTendencia ? "block" : "none") +
-      ';">';
-    html +=
-      '<div class="ceo-chart-wrap" style="min-height: 220px;"><div class="apex-chart" id="chartTendencia_' +
-      fechaId +
-      '"></div></div>';
-    html +=
-      '<p style="margin-top: 8px; font-size: 12px;">Manifiestos por franja horaria (promedio del día: <strong id="promTendencia_' +
-      fechaId +
-      '">0</strong>)</p>';
-    html += "</div>";
-    if (!forPrint) datosTurnosPorDia[fechaId] = turnosFecha;
-
-    html += "</div>";
-  });
-
-  return html;
+      html += '<button class="btn btn-sm btn-info" onclick="verManifiestosDiaDirecto(' + tudCodVer + ');" title="Ver manifiestos del día" style="padding: 4px 8px; font-size: 11px;"><i class="fa fa-list"></i> Ver Manifiesto</button>';
+    html += '<button class="btn btn-sm btn-primary" onclick="imprimirReporteFecha(\'' + fechaEsc + '\');" title="Imprimir" style="padding: 4px 8px; font-size: 11px;"><i class="fa fa-print"></i> Imprimir</button>' + '<button class="btn btn-sm btn-success" onclick="exportarExcelFecha(\'' + fechaEsc + '\');" title="Excel" style="padding: 4px 8px; font-size: 11px;"><i class="fa fa-file-excel-o"></i> Excel</button>' + "</div></div>";
+    html += '<div id="' + fechaId + '" class="fecha-content" style="' + displayStyle + '">';
+    var vistaActiva = modoVistaConfig, showTabla = vistaActiva === "tabla", showBarras = vistaActiva === "barras", showTendencia = vistaActiva === "tendencia";
+    html += '<div id="' + fechaId + '_tabla" class="vista-dia-panel" style="display: ' + (showTabla ? "block" : "none") + ';">' + generarTablaParaDia(turnosFecha) + "</div>";
+    html += '<div id="' + fechaId + '_barras" class="vista-dia-panel" style="display: ' + (showBarras ? "block" : "none") + ';">' + generarBarrasParaDia(turnosFecha, forPrint) + "</div>";
+    html += '<div id="' + fechaId + '_tendencia" class="vista-dia-panel" style="display: ' + (showTendencia ? "block" : "none") + ';">' + '<div class="ceo-chart-wrap" style="min-height: 220px;"><div class="apex-chart" id="chartTendencia_' + fechaId + '"></div></div>' + '<p style="margin-top: 8px; font-size: 12px;">Manifiestos por franja horaria (promedio del día: <strong id="promTendencia_' + fechaId + '">0</strong>)</p>' + "</div>";
+    if (!forPrint) datosTurnosPorDia[fechaId] = turnosFecha; html += "</div>";
+  }); return html;
 }
-
 function cambiarVistaDia(fechaId, vista, btnElement) {
   $("#" + fechaId + "_tabla").hide();
   $("#" + fechaId + "_barras").hide();
@@ -776,19 +535,14 @@ function cambiarVistaDia(fechaId, vista, btnElement) {
     }, 50);
   }
 }
-
 function obtenerTiempoConfiguradoMin(turno) {
-  if (turno && (turno.tiempo_configurado_min || turno.tiempo_estipulado)) {
-    return turno.tiempo_configurado_min || turno.tiempo_estipulado;
-  }
+  if (turno && (turno.tiempo_configurado_min || turno.tiempo_estipulado)) return turno.tiempo_configurado_min || turno.tiempo_estipulado;
   if (turno && turno.horario) {
     var partes = turno.horario.split(/\s*[-–]\s*/);
     if (partes.length === 2) {
-      var p1 = partes[0].split(":");
-      var p2 = partes[1].split(":");
+      var p1 = partes[0].split(":"); var p2 = partes[1].split(":");
       if (p1.length >= 2 && p2.length >= 2) {
-        var min1 = parseInt(p1[0], 10) * 60 + parseInt(p1[1], 10);
-        var min2 = parseInt(p2[0], 10) * 60 + parseInt(p2[1], 10);
+        var min1 = parseInt(p1[0], 10) * 60 + parseInt(p1[1], 10); var min2 = parseInt(p2[0], 10) * 60 + parseInt(p2[1], 10);
         if (min2 > min1) return min2 - min1;
         if (min2 < min1) return min2 + 1440 - min1;
       }
@@ -796,24 +550,14 @@ function obtenerTiempoConfiguradoMin(turno) {
   }
   return 60;
 }
-
 function crearChartTendenciaDia(fechaId, ignoreVisibility) {
-  var chartId = "chartTendencia_" + fechaId;
-  var $el = $("#" + chartId);
-  if (!$el.length) return;
-
-  var $panel = $el.closest(".vista-dia-panel");
-  if (!ignoreVisibility && $panel.length && !$panel.is(":visible")) return;
-  var turnosData = datosTurnosPorDia[fechaId];
+  var chartId = "chartTendencia_" + fechaId; var $el = $("#" + chartId);
+  if (!$el.length) return; var $panel = $el.closest(".vista-dia-panel");
+  if (!ignoreVisibility && $panel.length && !$panel.is(":visible")) return; var turnosData = datosTurnosPorDia[fechaId];
   if (!turnosData || !turnosData.length) return;
-
   var labels = turnosData.map(function (t) {
-    var h = t.horario || "";
-    return h.replace(/\s*-\s*/g, "–") || h;
-  });
-  var datos = turnosData.map(function (t) {
-    return t.ocupados || 0;
-  });
+    var h = t.horario || ""; return h.replace(/\s*-\s*/g, "–") || h;
+  }); var datos = turnosData.map(function (t) { return t.ocupados || 0; });
   var prom =
     datos.length > 0
       ? (
@@ -822,16 +566,12 @@ function crearChartTendenciaDia(fechaId, ignoreVisibility) {
           }, 0) / datos.length
         ).toFixed(1)
       : 0;
-  $("#promTendencia_" + fechaId).text(prom);
-
-  var vsGarita = $("#chk_vs_garita_in_config").is(":checked");
+  $("#promTendencia_" + fechaId).text(prom); var vsGarita = $("#chk_vs_garita_in_config").is(":checked");
   apexFromLineDatasets(chartId, labels, obtenerDatasetsTendenciaConfig(turnosData, vsGarita));
 }
-
 function generarTablaParaDia(turnosFecha) {
   var html = '<table class="turnos-table"><thead><tr>';
-  html +=
-    "<th>Horario</th><th>Cupos Program.</th><th>Manif. Creados</th><th>Inactivos</th><th>Cupos Libres</th><th>% Ocupación</th><th>Barra Ocupación</th><th>Acciones</th></tr></thead><tbody>";
+  html += "<th>Horario</th><th>Cupos Program.</th><th>Manif. Creados</th><th>Inactivos</th><th>Cupos Libres</th><th>% Ocupación</th><th>Barra Ocupación</th><th>Acciones</th></tr></thead><tbody>";
   turnosFecha.forEach(function (turno) {
     var ocupacionClass =
       turno.porcentaje_ocupacion >= 80
@@ -840,43 +580,10 @@ function generarTablaParaDia(turnosFecha) {
           ? "medio"
           : "alto";
     var anchoBarra = Math.min(turno.porcentaje_ocupacion, 100);
-    html += "<tr>";
-    html += "<td>" + (turno.horario || "") + "</td>";
-    html += "<td><strong>" + (turno.cupos || 0) + "</strong></td>";
-    html +=
-      '<td><strong style="color:rgb(172, 108, 202);">' +
-      (turno.ocupados || 0) +
-      "</strong></td>";
-    html +=
-      '<td><strong style="color: #dc3545;">' +
-      (turno.manifiestos_inactivos || 0) +
-      "</strong></td>";
-    html +=
-      '<td><strong style="color: #17a2b8;">' +
-      (turno.libres || 0) +
-      "</strong></td>";
-    html +=
-      '<td><span class="badge-ocupacion ' +
-      ocupacionClass +
-      '">' +
-      (turno.porcentaje_ocupacion || 0) +
-      "%</span></td>";
-    html +=
-      '<td><div class="barra-progreso-tabla"><div class="barra-progreso-fondo"><div class="barra-progreso-relleno ' +
-      ocupacionClass +
-      '" style="width: ' +
-      anchoBarra +
-      '%;"></div></div></div></td>';
-    html +=
-      '<td><button class="btn btn-primary btn-xs btn-ver-manifiestos" onclick="verManifiestos(' +
-      (turno.Tud_Cod || 0) +
-      ');"><i class="fa fa-list"></i> Ver Manifiestos</button></td>';
-    html += "</tr>";
-  });
-  html += "</tbody></table>";
+    html += "<tr>" + "<td>" + (turno.horario || "") + "</td>" + "<td><strong>" + (turno.cupos || 0) + "</strong></td>" + '<td><strong style="color:rgb(172, 108, 202);">' + (turno.ocupados || 0) + "</strong></td>" + '<td><strong style="color: #dc3545;">' + (turno.manifiestos_inactivos || 0) + "</strong></td>" + '<td><strong style="color: #17a2b8;">' + (turno.libres || 0) + "</strong></td>" + '<td><span class="badge-ocupacion ' + ocupacionClass + '">' + (turno.porcentaje_ocupacion || 0) + "%</span></td>" + '<td><div class="barra-progreso-tabla"><div class="barra-progreso-fondo"><div class="barra-progreso-relleno ' + ocupacionClass + '" style="width: ' + anchoBarra + '%;"></div></div></div></td>' + '<td><button class="btn btn-primary btn-xs btn-ver-manifiestos" onclick="verManifiestos(' + (turno.Tud_Cod || 0) + ');"><i class="fa fa-list"></i> Ver Manifiestos</button></td>' + "</tr>";
+  }); html += "</tbody></table>";
   return html;
 }
-
 function generarBarrasParaDia(turnosFecha, forPrint) {
   var globalMaxCupos = 1;
   turnosFecha.forEach(function (t) {
@@ -886,72 +593,40 @@ function generarBarrasParaDia(turnosFecha, forPrint) {
         ? t.libres
         : Math.max(0, (t.cupos || 0) - ocupados);
     globalMaxCupos = Math.max(globalMaxCupos, t.cupos || 0, ocupados + libres);
-  });
-  var yStep = 10;
-  var yMaxFijo = Math.max(10, Math.ceil(globalMaxCupos / 10) * 10) + 10;
-  var chartHeight = forPrint ? 180 : 280;
+  }); var yStep = 10;
+  var yMaxFijo = Math.max(10, Math.ceil(globalMaxCupos / 10) * 10) + 10; var chartHeight = forPrint ? 180 : 280;
   var yTicksFijos = [0];
   for (var v = yStep; v <= yMaxFijo; v += yStep) {
     yTicksFijos.push(v);
   }
   if (yTicksFijos[yTicksFijos.length - 1] !== yMaxFijo)
     yTicksFijos.push(yMaxFijo);
-
-  var totalCuposOcupados = 0,
-    totalCuposLibres = 0;
+  var totalCuposOcupados = 0, totalCuposLibres = 0;
   turnosFecha.forEach(function (t) {
     totalCuposOcupados += t.ocupados || 0;
     totalCuposLibres +=
       t.libres !== undefined
         ? t.libres
         : Math.max(0, (t.cupos || 0) - (t.ocupados || 0));
-  });
-
-  var html = '<div class="chart-dashboard-container">';
-  html +=
-    '<div class="chart-leyenda"><span class="chart-leyenda-item"><i class="chart-leyenda-color" style="background:#2C5D94;"></i> Ocupados: <strong style="color: rgb(172, 108, 202);">' +
-    totalCuposOcupados +
-    "</strong></span>";
-  html +=
-    '<span class="chart-leyenda-item"><i class="chart-leyenda-color" style="background:#fd7e14;"></i> Libres: <strong style="color: #17a2b8;">' +
-    totalCuposLibres +
-    "</strong></span></div>";
-  html +=
-    '<div class="chart-with-axes"><div class="chart-y-axis"><div class="chart-y-label">Cupos</div>';
-  html += '<div class="chart-y-ticks" style="height: ' + chartHeight + 'px;">';
+  }); var html = '<div class="chart-dashboard-container">';
+  html += '<div class="chart-leyenda"><span class="chart-leyenda-item"><i class="chart-leyenda-color" style="background:#2C5D94;"></i> Ocupados: <strong style="color: rgb(172, 108, 202);">' + totalCuposOcupados + "</strong></span>" + '<span class="chart-leyenda-item"><i class="chart-leyenda-color" style="background:#fd7e14;"></i> Libres: <strong style="color: #17a2b8;">' + totalCuposLibres + "</strong></span></div>" + '<div class="chart-with-axes"><div class="chart-y-axis"><div class="chart-y-label">Cupos</div>' + '<div class="chart-y-ticks" style="height: ' + chartHeight + 'px;">';
   for (var i = yTicksFijos.length - 1; i >= 0; i--)
     html += '<div class="chart-y-tick">' + yTicksFijos[i] + "</div>";
-  html +=
-    '</div></div><div class="chart-main-area"><div class="chart-grid" style="height: ' +
-    chartHeight +
-    'px;"><div class="chart-x-axis-line"></div>';
+  html += '</div></div><div class="chart-main-area"><div class="chart-grid" style="height: ' + chartHeight + 'px;"><div class="chart-x-axis-line"></div>';
   yTicksFijos.forEach(function (tick) {
     if (tick > 0)
-      html +=
-        '<div class="chart-grid-line" style="bottom: ' +
-        (tick / yMaxFijo) * chartHeight +
-        'px;"></div>';
-  });
-  html += "</div>";
+      html += '<div class="chart-grid-line" style="bottom: ' + (tick / yMaxFijo) * chartHeight + 'px;"></div>';
+  }); html += "</div>";
   var numBarras = turnosFecha.length;
   var barCountClass =
-    "chart-bars-n-" +
-    (numBarras <= 5 ? "pocas" : numBarras <= 10 ? "medias" : "muchas");
-  html +=
-    '<div class="chart-bars-area"><div class="chart-bars-row ' +
-    barCountClass +
-    '" style="height: ' +
-    chartHeight +
-    'px;">';
-
+    "chart-bars-n-" + (numBarras <= 5 ? "pocas" : numBarras <= 10 ? "medias" : "muchas");
+  html += '<div class="chart-bars-area"><div class="chart-bars-row ' + barCountClass + '" style="height: ' + chartHeight + 'px;">';
   turnosFecha.forEach(function (turno) {
-    var cupos = turno.cupos || 0;
-    var ocupados = turno.ocupados || 0;
+    var cupos = turno.cupos || 0, ocupados = turno.ocupados || 0;
     var libres = Math.max(
       0,
       turno.libres !== undefined ? turno.libres : cupos - ocupados,
-    );
-    var totalMostrado = ocupados + libres;
+    ); var totalMostrado = ocupados + libres;
     var barHeightPx =
       totalMostrado > 0 ? (totalMostrado / yMaxFijo) * chartHeight : 0;
     var ocupadosH =
@@ -960,8 +635,7 @@ function generarBarrasParaDia(turnosFecha, forPrint) {
       totalMostrado > 0 ? (libres / totalMostrado) * barHeightPx : 0;
     if (ocupados > 0 && ocupadosH < 18) ocupadosH = 18;
     if (libres > 0 && libresH < 18) libresH = 18;
-    if (barHeightPx < 20 && totalMostrado > 0) barHeightPx = 20;
-    var totalH = ocupadosH + libresH;
+    if (barHeightPx < 20 && totalMostrado > 0) barHeightPx = 20; var totalH = ocupadosH + libresH;
     if (totalH > barHeightPx && barHeightPx > 0) {
       var scale = barHeightPx / totalH;
       ocupadosH = Math.round(ocupadosH * scale);
@@ -970,55 +644,23 @@ function generarBarrasParaDia(turnosFecha, forPrint) {
         libresH = Math.max(1, barHeightPx - ocupadosH);
     }
     var horarioCompact = (turno.horario || "").replace(/\s*-\s*/g, "–") || turno.horario || "";
-    html +=
-      '<div class="chart-bar-wrapper" style="height: ' +
-      chartHeight +
-      'px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; position: relative;"><div class="chart-bar-total" style="font-size: 9px; font-weight: bold; color: #2C5D94; margin-bottom: 2px; text-align: center;">' +
-      (totalMostrado > 0 ? totalMostrado : "") +
-      '</div>';
-    html +=
-      '<div class="chart-bar-columna" style="height: ' +
-      Math.max(0, barHeightPx) +
-      'px; width: 100%; max-width: 45px; display: flex; flex-direction: column-reverse; background: #e9ecef !important; border-radius: 3px 3px 0 0; overflow: hidden; -webkit-print-color-adjust: exact; print-color-adjust: exact;">';
+    html += '<div class="chart-bar-wrapper" style="height: ' + chartHeight + 'px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; position: relative;"><div class="chart-bar-total" style="font-size: 9px; font-weight: bold; color: #2C5D94; margin-bottom: 2px; text-align: center;">' + (totalMostrado > 0 ? totalMostrado : "") + '</div>' + '<div class="chart-bar-columna" style="height: ' + Math.max(0, barHeightPx) + 'px; width: 100%; max-width: 45px; display: flex; flex-direction: column-reverse; background: #e9ecef !important; border-radius: 3px 3px 0 0; overflow: hidden; -webkit-print-color-adjust: exact; print-color-adjust: exact;">';
     if (ocupados > 0) {
-      html +=
-        '<div class="chart-segmento chart-segmento-ocupados' +
-        (ocupadosH < 20 ? " chart-segmento-pequeno" : "") +
-        '" style="height: ' +
-        ocupadosH +
-        'px; background-color: #2C5D94 !important; color: white !important; display: flex; align-items: center; justify-content: center; width: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact;"><span class="chart-segmento-valor" style="font-size: 9px; font-weight: bold; color: white !important;">' +
-        ocupados +
-        "</span></div>";
+      html += '<div class="chart-segmento chart-segmento-ocupados' + (ocupadosH < 20 ? " chart-segmento-pequeno" : "") + '" style="height: ' + ocupadosH + 'px; background-color: #2C5D94 !important; color: white !important; display: flex; align-items: center; justify-content: center; width: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact;"><span class="chart-segmento-valor" style="font-size: 9px; font-weight: bold; color: white !important;">' + ocupados + "</span></div>";
     }
     if (libres > 0) {
-      html +=
-        '<div class="chart-segmento chart-segmento-libres' +
-        (libresH < 20 ? " chart-segmento-pequeno" : "") +
-        '" style="height: ' +
-        libresH +
-        'px; background-color: #fd7e14 !important; color: white !important; display: flex; align-items: center; justify-content: center; width: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact;"><span class="chart-segmento-valor" style="font-size: 9px; font-weight: bold; color: white !important;">' +
-        libres +
-        "</span></div>";
+      html += '<div class="chart-segmento chart-segmento-libres' + (libresH < 20 ? " chart-segmento-pequeno" : "") + '" style="height: ' + libresH + 'px; background-color: #fd7e14 !important; color: white !important; display: flex; align-items: center; justify-content: center; width: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact;"><span class="chart-segmento-valor" style="font-size: 9px; font-weight: bold; color: white !important;">' + libres + "</span></div>";
     }
     html += "</div></div>";
-  });
-  html += '</div><div class="chart-labels-row ' + barCountClass + '">';
+  }); html += '</div><div class="chart-labels-row ' + barCountClass + '">';
   turnosFecha.forEach(function (turno) {
     var horarioCompact = (turno.horario || "").replace(/\s*-\s*/g, "–") || turno.horario || "";
-    html +=
-      '<div class="chart-label-cell"><div class="chart-bar-label chart-x-label">' +
-      horarioCompact +
-      '</div><div class="chart-bar-porcentaje">(' +
-      (turno.porcentaje_ocupacion || 0) +
-      "%)</div></div>";
-  });
-  html += "</div></div></div></div></div>";
+    html += '<div class="chart-label-cell"><div class="chart-bar-label chart-x-label">' + horarioCompact + '</div><div class="chart-bar-porcentaje">(' + (turno.porcentaje_ocupacion || 0) + "%)</div></div>";
+  }); html += "</div></div></div></div></div>";
   return html;
 }
-
 function generarVistaTabla(turnosDetalle, forPrint) {
   var html = "";
-
   // Agrupar turnos por fecha
   var turnosPorFecha = {};
   turnosDetalle.forEach(function (turno) {
@@ -1028,23 +670,17 @@ function generarVistaTabla(turnosDetalle, forPrint) {
     }
     turnosPorFecha[fecha].push(turno);
   });
-
   // Ordenar fechas (soporta DD/MM/YYYY y YYYY-MM-DD)
   var fechasOrdenadas = Object.keys(turnosPorFecha).sort(function (a, b) {
     if (a === "-") return 1;
-    if (b === "-") return -1;
-    var fechaA = parsearFecha(a);
-    var fechaB = parsearFecha(b);
-    return (fechaA || 0) - (fechaB || 0);
+    if (b === "-") return -1; var fechaA = parsearFecha(a);
+    var fechaB = parsearFecha(b); return (fechaA || 0) - (fechaB || 0);
   });
-
   // Generar HTML para cada grupo de fecha
   fechasOrdenadas.forEach(function (fecha) {
     var turnosFecha = turnosPorFecha[fecha];
-
     // Calcular día de la semana (soporta DD/MM/YYYY y YYYY-MM-DD)
-    var diaSemana = "";
-    var fechaObj = parsearFecha(fecha);
+    var diaSemana = ""; var fechaObj = parsearFecha(fecha);
     if (fechaObj) {
       var diasSemana = [
         "Domingo",
@@ -1054,103 +690,31 @@ function generarVistaTabla(turnosDetalle, forPrint) {
         "Jueves",
         "Viernes",
         "Sábado",
-      ];
-      diaSemana = diasSemana[fechaObj.getDay()];
+      ]; diaSemana = diasSemana[fechaObj.getDay()];
     }
-
     // Calcular total de cupos ocupados para esta fecha
     var totalCuposOcupados = 0;
     turnosFecha.forEach(function (turno) {
       totalCuposOcupados += turno.ocupados || 0;
     });
-
     // Verificar si es la fecha actual (o si es para impresión, siempre mostrar)
     var hoy = new Date();
     var fechaHoyStr =
-      ("0" + hoy.getDate()).slice(-2) +
-      "/" +
-      ("0" + (hoy.getMonth() + 1)).slice(-2) +
-      "/" +
-      hoy.getFullYear();
+      ("0" + hoy.getDate()).slice(-2) + "/" + ("0" + (hoy.getMonth() + 1)).slice(-2) + "/" + hoy.getFullYear();
     var fechaHoyAlt =
-      hoy.getFullYear() +
-      "-" +
-      ("0" + (hoy.getMonth() + 1)).slice(-2) +
-      "-" +
-      ("0" + hoy.getDate()).slice(-2);
-    var esHoy = fecha === fechaHoyStr || fecha === fechaHoyAlt;
-    var fechaId = "fecha_" + fecha.replace(/[\/\-]/g, "_");
-    var displayStyle = forPrint || esHoy ? "display: block;" : "display: none;";
-    var iconoToggle = esHoy ? "fa-chevron-up" : "fa-chevron-down";
-
+      hoy.getFullYear() + "-" + ("0" + (hoy.getMonth() + 1)).slice(-2) + "-" + ("0" + hoy.getDate()).slice(-2);
+    var esHoy = fecha === fechaHoyStr || fecha === fechaHoyAlt; var fechaId = "fecha_" + fecha.replace(/[\/\-]/g, "_");
+    var displayStyle = forPrint || esHoy ? "display: block;" : "display: none;", iconoToggle = esHoy ? "fa-chevron-up" : "fa-chevron-down";
     // Encabezado de fecha
-    html +=
-      '<div class="fecha-header" style="margin-top: 15px; margin-bottom: 10px; padding: 8px 12px; background-color: #e9ecef; border-left: 4px solid #2C5D94; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleFechaContent(\'' +
-      fechaId +
-      "', this);\">";
-    html +=
-      '<h5 style="margin: 0; font-size: 16px; font-weight: 600; color: #2C5D94; flex: 1;">';
-    html +=
-      '<i class="fa ' +
-      iconoToggle +
-      ' toggle-icon" style="margin-right: 8px;"></i>';
-    html +=
-      '<i class="fa fa-calendar"></i> ' + formatearFechaParaMostrar(fecha);
+    html += '<div class="fecha-header" style="margin-top: 15px; margin-bottom: 10px; padding: 8px 12px; background-color: #e9ecef; border-left: 4px solid #2C5D94; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleFechaContent(\'' + fechaId + "', this);\">" + '<h5 style="margin: 0; font-size: 16px; font-weight: 600; color: #2C5D94; flex: 1;">' + '<i class="fa ' + iconoToggle + ' toggle-icon" style="margin-right: 8px;"></i>' + '<i class="fa fa-calendar"></i> ' + formatearFechaParaMostrar(fecha);
     if (diaSemana) {
       html += " - " + diaSemana;
     }
-    html +=
-      ' <span style="margin-left: 15px; font-size: 14px; color: rgb(172, 108, 202);">Total Cupos Ocupados: <strong>' +
-      totalCuposOcupados +
-      "</strong></span>";
-    html += "</h5>";
-    html +=
-      '<div style="display: flex; gap: 5px; margin-left: 10px;" onclick="event.stopPropagation();">';
-    html +=
-      '<button class="btn btn-sm btn-info" onclick="verManifiestosDiaDirecto(' +
-      turnosFecha[0].Tud_Cod +
-      ');" title="Ver todos los manifiestos del día" style="padding: 4px 8px; font-size: 11px;">';
-    html += '<i class="fa fa-list"></i> Ver Manifiesto';
-    html += "</button>";
-    html +=
-      '<button class="btn btn-sm btn-primary" onclick="imprimirReporteFecha(\'' +
-      fecha +
-      '\');" title="Imprimir reporte de esta fecha" style="padding: 4px 8px; font-size: 11px;">';
-    html += '<i class="fa fa-print"></i> Imprimir';
-    html += "</button>";
-    html +=
-      '<button class="btn btn-sm btn-success" onclick="exportarExcelFecha(\'' +
-      fecha +
-      '\');" title="Exportar a Excel" style="padding: 4px 8px; font-size: 11px;">';
-    html += '<i class="fa fa-file-excel-o"></i> Excel';
-    html += "</button>";
-    html += "</div>";
-    html += "</div>";
-
+    html += ' <span style="margin-left: 15px; font-size: 14px; color: rgb(172, 108, 202);">Total Cupos Ocupados: <strong>' + totalCuposOcupados + "</strong></span>" + "</h5>" + '<div style="display: flex; gap: 5px; margin-left: 10px;" onclick="event.stopPropagation();">' + '<button class="btn btn-sm btn-info" onclick="verManifiestosDiaDirecto(' + turnosFecha[0].Tud_Cod + ');" title="Ver todos los manifiestos del día" style="padding: 4px 8px; font-size: 11px;">' + '<i class="fa fa-list"></i> Ver Manifiesto' + "</button>" + '<button class="btn btn-sm btn-primary" onclick="imprimirReporteFecha(\'' + fecha + '\');" title="Imprimir reporte de esta fecha" style="padding: 4px 8px; font-size: 11px;">' + '<i class="fa fa-print"></i> Imprimir' + "</button>" + '<button class="btn btn-sm btn-success" onclick="exportarExcelFecha(\'' + fecha + '\');" title="Exportar a Excel" style="padding: 4px 8px; font-size: 11px;">' + '<i class="fa fa-file-excel-o"></i> Excel' + "</button>" + "</div>" + "</div>";
     // Contenedor colapsable para la tabla
-    html +=
-      '<div id="' +
-      fechaId +
-      '" class="fecha-content" style="' +
-      displayStyle +
-      '">';
-
+    html += '<div id="' + fechaId + '" class="fecha-content" style="' + displayStyle + '">';
     // Tabla para esta fecha
-    html += '<table class="turnos-table">';
-    html += "<thead>";
-    html += "<tr>";
-    html += "<th>Horario</th>";
-    html += "<th>Cupos Program.</th>";
-    html += "<th>Manif. Creados</th>";
-    html += "<th>Inactivos</th>";
-    html += "<th>Cupos Libres</th>";
-    html += "<th>% Ocupación</th>";
-    html += "<th>Barra Ocupación</th>";
-    html += "<th>Acciones</th>";
-    html += "</tr>";
-    html += "</thead>";
-    html += "<tbody>";
-
+    html += '<table class="turnos-table">' + "<thead>" + "<tr>" + "<th>Horario</th>" + "<th>Cupos Program.</th>" + "<th>Manif. Creados</th>" + "<th>Inactivos</th>" + "<th>Cupos Libres</th>" + "<th>% Ocupación</th>" + "<th>Barra Ocupación</th>" + "<th>Acciones</th>" + "</tr>" + "</thead>" + "<tbody>";
     turnosFecha.forEach(function (turno) {
       // Invertir lógica: rojo para bajos, verde para altos
       var ocupacionClass = "alto"; // Por defecto es bajo (rojo)
@@ -1159,84 +723,30 @@ function generarVistaTabla(turnosDetalle, forPrint) {
       } else if (turno.porcentaje_ocupacion >= 50) {
         ocupacionClass = "medio";
       }
-
       var anchoBarra = Math.min(turno.porcentaje_ocupacion, 100);
-
-      html += "<tr>";
-      html += "<td>" + turno.horario + "</td>";
-      html += "<td><strong>" + turno.cupos + "</strong></td>";
-      html +=
-        '<td><strong style="color:rgb(172, 108, 202);">' +
-        turno.ocupados +
-        "</strong></td>";
-      html +=
-        '<td><strong style="color: #dc3545;">' +
-        turno.manifiestos_inactivos +
-        "</strong></td>";
-      html +=
-        '<td><strong style="color: #17a2b8;">' +
-        turno.libres +
-        "</strong></td>";
-      html +=
-        '<td><span class="badge-ocupacion ' +
-        ocupacionClass +
-        '">' +
-        turno.porcentaje_ocupacion +
-        "%</span></td>";
-      html += "<td>";
-      html += '<div class="barra-progreso-tabla">';
-      html += '<div class="barra-progreso-fondo">';
-      html +=
-        '<div class="barra-progreso-relleno ' +
-        ocupacionClass +
-        '" style="width: ' +
-        anchoBarra +
-        '%;"></div>';
-      html += "</div>";
-      html += "</div>";
-      html += "</td>";
-      html += "<td>";
-      html +=
-        '<button class="btn btn-primary btn-xs btn-ver-manifiestos" onclick="verManifiestos(' +
-        turno.Tud_Cod +
-        ');">';
-      html += '<i class="fa fa-list"></i> Ver Manifiestos';
-      html += "</button>";
-      html += "</td>";
-      html += "</tr>";
-    });
-
-    html += "</tbody>";
-    html += "</table>";
+      html += "<tr>" + "<td>" + turno.horario + "</td>" + "<td><strong>" + turno.cupos + "</strong></td>" + '<td><strong style="color:rgb(172, 108, 202);">' + turno.ocupados + "</strong></td>" + '<td><strong style="color: #dc3545;">' + turno.manifiestos_inactivos + "</strong></td>" + '<td><strong style="color: #17a2b8;">' + turno.libres + "</strong></td>" + '<td><span class="badge-ocupacion ' + ocupacionClass + '">' + turno.porcentaje_ocupacion + "%</span></td>" + "<td>" + '<div class="barra-progreso-tabla">' + '<div class="barra-progreso-fondo">' + '<div class="barra-progreso-relleno ' + ocupacionClass + '" style="width: ' + anchoBarra + '%;"></div>' + "</div>" + "</div>" + "</td>" + "<td>" + '<button class="btn btn-primary btn-xs btn-ver-manifiestos" onclick="verManifiestos(' + turno.Tud_Cod + ');">' + '<i class="fa fa-list"></i> Ver Manifiestos' + "</button>" + "</td>" + "</tr>";
+    }); html += "</tbody>" + "</table>";
     html += "</div>"; // Cerrar fecha-content
-  });
-
-  return html;
+  }); return html;
 }
-
 function generarVistaBarras(turnosDetalle, forPrint, expandAll, desdeRango) {
   var html = "";
-
   // Eje Y fijo y consistente: máximo global de TODOS los datos (cupo programado Y cupo ocupado+libres por si hay sobrecupo)
   var globalMaxCupos = 1;
   turnosDetalle.forEach(function (t) {
-    var cupos = t.cupos || 0;
-    var ocupados = t.ocupados || 0;
+    var cupos = t.cupos || 0, ocupados = t.ocupados || 0;
     var libres =
       t.libres !== undefined ? t.libres : Math.max(0, cupos - ocupados);
     var totalMostrado = ocupados + libres;
     globalMaxCupos = Math.max(globalMaxCupos, cupos, totalMostrado);
-  });
-  var yStep = 10;
-  var yMaxFijo = Math.max(10, Math.ceil(globalMaxCupos / 10) * 10) + 10;
-  var chartHeight = forPrint ? 180 : 280;
+  }); var yStep = 10;
+  var yMaxFijo = Math.max(10, Math.ceil(globalMaxCupos / 10) * 10) + 10; var chartHeight = forPrint ? 180 : 280;
   var yTicksFijos = [0];
   for (var v = yStep; v <= yMaxFijo; v += yStep) {
     yTicksFijos.push(v);
   }
   if (yTicksFijos[yTicksFijos.length - 1] !== yMaxFijo)
     yTicksFijos.push(yMaxFijo);
-
   // Agrupar turnos por fecha
   var turnosPorFecha = {};
   turnosDetalle.forEach(function (turno) {
@@ -1246,27 +756,19 @@ function generarVistaBarras(turnosDetalle, forPrint, expandAll, desdeRango) {
     }
     turnosPorFecha[fecha].push(turno);
   });
-
   var fechasOrdenadas = Object.keys(turnosPorFecha).sort(function (a, b) {
     if (a === "-") return 1;
-    if (b === "-") return -1;
-    var fechaA = parsearFecha(a);
-    var fechaB = parsearFecha(b);
-    return (fechaA || 0) - (fechaB || 0);
+    if (b === "-") return -1; var fechaA = parsearFecha(a);
+    var fechaB = parsearFecha(b); return (fechaA || 0) - (fechaB || 0);
   });
-
   // Generar HTML para cada grupo de fecha
   fechasOrdenadas.forEach(function (fecha) {
     var turnosFecha = turnosPorFecha[fecha];
-
     if (forPrint) {
-      html +=
-        '<div class="fecha-print-block" style="page-break-inside: avoid;">';
+      html += '<div class="fecha-print-block" style="page-break-inside: avoid;">';
     }
-
     // Calcular día de la semana (soporta DD/MM/YYYY y YYYY-MM-DD)
-    var diaSemana = "";
-    var fechaObj = parsearFecha(fecha);
+    var diaSemana = ""; var fechaObj = parsearFecha(fecha);
     if (fechaObj) {
       var diasSemana = [
         "Domingo",
@@ -1279,10 +781,8 @@ function generarVistaBarras(turnosDetalle, forPrint, expandAll, desdeRango) {
       ];
       diaSemana = diasSemana[fechaObj.getDay()];
     }
-
     // Calcular total de cupos ocupados y libres para esta fecha
-    var totalCuposOcupados = 0;
-    var totalCuposLibres = 0;
+    var totalCuposOcupados = 0, totalCuposLibres = 0;
     turnosFecha.forEach(function (turno) {
       totalCuposOcupados += turno.ocupados || 0;
       var libres =
@@ -1291,48 +791,19 @@ function generarVistaBarras(turnosDetalle, forPrint, expandAll, desdeRango) {
           : Math.max(0, (turno.cupos || 0) - (turno.ocupados || 0));
       totalCuposLibres += libres;
     });
-
     // Verificar si es la fecha actual (comparar como fechas)
     var hoy = new Date();
     var fechaHoyStr =
-      ("0" + hoy.getDate()).slice(-2) +
-      "/" +
-      ("0" + (hoy.getMonth() + 1)).slice(-2) +
-      "/" +
-      hoy.getFullYear();
+      ("0" + hoy.getDate()).slice(-2) + "/" + ("0" + (hoy.getMonth() + 1)).slice(-2) + "/" + hoy.getFullYear();
     var fechaHoyAlt =
-      hoy.getFullYear() +
-      "-" +
-      ("0" + (hoy.getMonth() + 1)).slice(-2) +
-      "-" +
-      ("0" + hoy.getDate()).slice(-2);
+      hoy.getFullYear() + "-" + ("0" + (hoy.getMonth() + 1)).slice(-2) + "-" + ("0" + hoy.getDate()).slice(-2);
     var esHoy = fecha === fechaHoyStr || fecha === fechaHoyAlt;
     var fechaId = "fecha_barras_" + fecha.replace(/[\/\-]/g, "_");
-    var expandido = forPrint || expandAll || esHoy;
-    var displayStyle = expandido ? "display: block;" : "display: none;";
-    var iconoToggle = expandido ? "fa-chevron-up" : "fa-chevron-down";
-
+    var expandido = forPrint || expandAll || esHoy, displayStyle = expandido ? "display: block;" : "display: none;", iconoToggle = expandido ? "fa-chevron-up" : "fa-chevron-down";
     // Encabezado de fecha (sin Ver Manifiestos)
-    html +=
-      '<div class="fecha-header chart-fecha-header" style="margin-top: 15px; margin-bottom: 10px; padding: 8px 12px; background-color: #e9ecef; border-left: 4px solid #2C5D94; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleFechaContent(\'' +
-      fechaId +
-      "', this);\">";
-    html +=
-      '<h5 style="margin: 0; font-size: 16px; font-weight: 600; color: #2C5D94; flex: 1;">';
-    html +=
-      '<i class="fa ' +
-      iconoToggle +
-      ' toggle-icon" style="margin-right: 8px;"></i>';
-    html +=
-      '<i class="fa fa-calendar"></i> ' + formatearFechaParaMostrar(fecha);
+    html += '<div class="fecha-header chart-fecha-header" style="margin-top: 15px; margin-bottom: 10px; padding: 8px 12px; background-color: #e9ecef; border-left: 4px solid #2C5D94; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleFechaContent(\'' + fechaId + "', this);\">" + '<h5 style="margin: 0; font-size: 16px; font-weight: 600; color: #2C5D94; flex: 1;">' + '<i class="fa ' + iconoToggle + ' toggle-icon" style="margin-right: 8px;"></i>' + '<i class="fa fa-calendar"></i> ' + formatearFechaParaMostrar(fecha);
     if (diaSemana) html += " - " + diaSemana;
-    html +=
-      ' <span style="margin-left: 15px; font-size: 14px; color: rgb(172, 108, 202);">Total Cupos Ocupados: <strong>' +
-      totalCuposOcupados +
-      "</strong></span>";
-    html += "</h5>";
-    html +=
-      '<div style="display: flex; gap: 5px; margin-left: 10px;" onclick="event.stopPropagation();">';
+    html += ' <span style="margin-left: 15px; font-size: 14px; color: rgb(172, 108, 202);">Total Cupos Ocupados: <strong>' + totalCuposOcupados + "</strong></span>" + "</h5>" + '<div style="display: flex; gap: 5px; margin-left: 10px;" onclick="event.stopPropagation();">';
     var fechaEsc = (fecha || "").replace(/'/g, "\\'");
     var fnImprimir = desdeRango
       ? "imprimirReporteFechaRango"
@@ -1341,95 +812,35 @@ function generarVistaBarras(turnosDetalle, forPrint, expandAll, desdeRango) {
     var tudCodVer =
       turnosFecha[0] && turnosFecha[0].Tud_Cod ? turnosFecha[0].Tud_Cod : 0;
     if (tudCodVer && !forPrint)
-      html +=
-        '<button class="btn btn-sm btn-info" onclick="verManifiestosDiaDirecto(' +
-        tudCodVer +
-        ');" title="Ver manifiestos del día" style="padding: 4px 8px; font-size: 11px;"><i class="fa fa-list"></i> Ver Manifiesto</button>';
-    html +=
-      '<button class="btn btn-sm btn-primary" onclick="' +
-      fnImprimir +
-      "('" +
-      fechaEsc +
-      '\');" title="Imprimir" style="padding: 4px 8px; font-size: 11px;"><i class="fa fa-print"></i> Imprimir</button>';
-    html +=
-      '<button class="btn btn-sm btn-success" onclick="' +
-      fnExcel +
-      "('" +
-      fechaEsc +
-      '\');" title="Excel" style="padding: 4px 8px; font-size: 11px;"><i class="fa fa-file-excel-o"></i> Excel</button>';
-    html += "</div>";
-    html += "</div>";
-
-    html +=
-      '<div id="' +
-      fechaId +
-      '" class="fecha-content chart-fecha-content" style="' +
-      displayStyle +
-      '">';
-
+      html += '<button class="btn btn-sm btn-info" onclick="verManifiestosDiaDirecto(' + tudCodVer + ');" title="Ver manifiestos del día" style="padding: 4px 8px; font-size: 11px;"><i class="fa fa-list"></i> Ver Manifiesto</button>';
+    html += '<button class="btn btn-sm btn-primary" onclick="' + fnImprimir + "('" + fechaEsc + '\');" title="Imprimir" style="padding: 4px 8px; font-size: 11px;"><i class="fa fa-print"></i> Imprimir</button>' + '<button class="btn btn-sm btn-success" onclick="' + fnExcel + "('" + fechaEsc + '\');" title="Excel" style="padding: 4px 8px; font-size: 11px;"><i class="fa fa-file-excel-o"></i> Excel</button>' + "</div>" + "</div>";
+    html += '<div id="' + fechaId + '" class="fecha-content chart-fecha-content" style="' + displayStyle + '">';
     // Usar eje Y fijo global (yMaxFijo, yTicksFijos) - mismo para todos los días
-    var yMax = yMaxFijo;
-    var yTicks = yTicksFijos;
-
-    html += '<div class="chart-dashboard-container">';
-    html += '<div class="chart-leyenda">';
-    html +=
-      '<span class="chart-leyenda-item"><i class="chart-leyenda-color" style="background:#2C5D94;"></i> Ocupados: <strong style="color: rgb(172, 108, 202);">' +
-      totalCuposOcupados +
-      "</strong></span>";
-    html +=
-      '<span class="chart-leyenda-item"><i class="chart-leyenda-color" style="background:#fd7e14;"></i> Libres: <strong style="color: #17a2b8;">' +
-      totalCuposLibres +
-      "</strong></span>";
-    html += "</div>";
-    html += '<div class="chart-with-axes">';
-    html += '<div class="chart-y-axis">';
-    html += '<div class="chart-y-label">Cupos</div>';
-    html +=
-      '<div class="chart-y-ticks" style="height: ' + chartHeight + 'px;">';
+    var yMax = yMaxFijo, yTicks = yTicksFijos;
+    html += '<div class="chart-dashboard-container">' + '<div class="chart-leyenda">' + '<span class="chart-leyenda-item"><i class="chart-leyenda-color" style="background:#2C5D94;"></i> Ocupados: <strong style="color: rgb(172, 108, 202);">' + totalCuposOcupados + "</strong></span>" + '<span class="chart-leyenda-item"><i class="chart-leyenda-color" style="background:#fd7e14;"></i> Libres: <strong style="color: #17a2b8;">' + totalCuposLibres + "</strong></span>" + "</div>" + '<div class="chart-with-axes">' + '<div class="chart-y-axis">' + '<div class="chart-y-label">Cupos</div>' + '<div class="chart-y-ticks" style="height: ' + chartHeight + 'px;">';
     for (var i = yTicks.length - 1; i >= 0; i--) {
       html += '<div class="chart-y-tick">' + yTicks[i] + "</div>";
     }
-    html += "</div>";
-    html += "</div>";
-    html += '<div class="chart-main-area">';
-    html += '<div class="chart-grid" style="height: ' + chartHeight + 'px;">';
-    html += '<div class="chart-x-axis-line"></div>';
+    html += "</div>" + "</div>" + '<div class="chart-main-area">' + '<div class="chart-grid" style="height: ' + chartHeight + 'px;">' + '<div class="chart-x-axis-line"></div>';
     yTicks.forEach(function (tick) {
       if (tick > 0) {
         var bottomPx = (tick / yMax) * chartHeight;
-        html +=
-          '<div class="chart-grid-line" style="bottom: ' +
-          bottomPx +
-          'px;"></div>';
+        html += '<div class="chart-grid-line" style="bottom: ' + bottomPx + 'px;"></div>';
       }
-    });
-    html += "</div>";
+    }); html += "</div>";
     var numBarras = turnosFecha.length;
     var barCountClass =
-      "chart-bars-n-" +
-      (numBarras <= 5 ? "pocas" : numBarras <= 10 ? "medias" : "muchas");
-    html += '<div class="chart-bars-area">';
-    html +=
-      '<div class="chart-bars-row ' +
-      barCountClass +
-      '" style="height: ' +
-      chartHeight +
-      'px;" data-bars="' +
-      numBarras +
-      '">';
-
+      "chart-bars-n-" + (numBarras <= 5 ? "pocas" : numBarras <= 10 ? "medias" : "muchas");
+    html += '<div class="chart-bars-area">' + '<div class="chart-bars-row ' + barCountClass + '" style="height: ' + chartHeight + 'px;" data-bars="' + numBarras + '">';
     turnosFecha.forEach(function (turno) {
-      var cupos = turno.cupos || 0;
-      var ocupados = turno.ocupados || 0;
+      var cupos = turno.cupos || 0, ocupados = turno.ocupados || 0;
       var libres = Math.max(
         0,
         turno.libres !== undefined ? turno.libres : cupos - ocupados,
       );
       var ocupadosPct =
         cupos > 0 ? (Math.min(ocupados, cupos) / cupos) * 100 : 0;
-      var libresPct = cupos > 0 ? (libres / cupos) * 100 : 0;
-      var totalMostrado = ocupados + libres;
+      var libresPct = cupos > 0 ? (libres / cupos) * 100 : 0; var totalMostrado = ocupados + libres;
       var barHeightPx =
         totalMostrado > 0 ? (totalMostrado / yMax) * chartHeight : 0;
       var ocupadosH =
@@ -1438,8 +849,7 @@ function generarVistaBarras(turnosDetalle, forPrint, expandAll, desdeRango) {
         totalMostrado > 0 ? (libres / totalMostrado) * barHeightPx : 0;
       if (ocupados > 0 && ocupadosH < 18) ocupadosH = 18;
       if (libres > 0 && libresH < 18) libresH = 18;
-      if (barHeightPx < 20 && totalMostrado > 0) barHeightPx = 20;
-      var totalH = ocupadosH + libresH;
+      if (barHeightPx < 20 && totalMostrado > 0) barHeightPx = 20; var totalH = ocupadosH + libresH;
       if (totalH > barHeightPx && barHeightPx > 0) {
         var scale = barHeightPx / totalH;
         ocupadosH = Math.round(ocupadosH * scale);
@@ -1449,131 +859,63 @@ function generarVistaBarras(turnosDetalle, forPrint, expandAll, desdeRango) {
         if (ocupadosH + libresH > barHeightPx)
           libresH = Math.max(1, barHeightPx - ocupadosH);
       }
-
-      var horarioRaw = turno.horario || "";
-      var horarioLabel = horarioRaw.replace(/\s*-\s*/g, "–");
+      var horarioRaw = turno.horario || ""; var horarioLabel = horarioRaw.replace(/\s*-\s*/g, "–");
       var horarioCompact =
-        horarioRaw.replace(/:\d{2}\s*[-–]\s*/g, "–").replace(/:\d{2}/g, "") ||
-        horarioLabel;
-
-      html += '<div class="chart-bar-wrapper">';
-      html +=
-        '<div class="chart-bar-total" title="Total: ' +
-        totalMostrado +
-        '">' +
-        totalMostrado +
-        "</div>";
-      html += '<div class="chart-bar-spacer"></div>';
-      html +=
-        '<div class="chart-bar-columna" style="height: ' +
-        barHeightPx +
-        'px;">';
-      html +=
-        '<div class="chart-segmento chart-segmento-ocupados' +
-        (ocupadosH < 20 ? " chart-segmento-pequeno" : "") +
-        '" style="height: ' +
-        ocupadosH +
-        'px;">';
-      html += '<span class="chart-segmento-valor">' + ocupados + "</span>";
-      html += "</div>";
-      html +=
-        '<div class="chart-segmento chart-segmento-libres' +
-        (libresH < 20 ? " chart-segmento-pequeno" : "") +
-        '" style="height: ' +
-        libresH +
-        'px;">';
-      html += '<span class="chart-segmento-valor">' + libres + "</span>";
-      html += "</div>";
-      html += "</div>";
-      html += "</div>";
-    });
-
-    html += "</div>";
-    html += '<div class="chart-labels-row ' + barCountClass + '">';
+        horarioRaw.replace(/:\d{2}\s*[-–]\s*/g, "–").replace(/:\d{2}/g, "") || horarioLabel;
+      html += '<div class="chart-bar-wrapper">' + '<div class="chart-bar-total" title="Total: ' + totalMostrado + '">' + totalMostrado + "</div>" + '<div class="chart-bar-spacer"></div>' + '<div class="chart-bar-columna" style="height: ' + barHeightPx + 'px;">' + '<div class="chart-segmento chart-segmento-ocupados' + (ocupadosH < 20 ? " chart-segmento-pequeno" : "") + '" style="height: ' + ocupadosH + 'px;">' + '<span class="chart-segmento-valor">' + ocupados + "</span>" + "</div>" + '<div class="chart-segmento chart-segmento-libres' + (libresH < 20 ? " chart-segmento-pequeno" : "") + '" style="height: ' + libresH + 'px;">' + '<span class="chart-segmento-valor">' + libres + "</span>" + "</div>" + "</div>" + "</div>";
+    }); html += "</div>" + '<div class="chart-labels-row ' + barCountClass + '">';
     turnosFecha.forEach(function (turno) {
-      var horarioRaw = turno.horario || "";
-      var horarioLabel = horarioRaw.replace(/\s*-\s*/g, "–");
+      var horarioRaw = turno.horario || ""; var horarioLabel = horarioRaw.replace(/\s*-\s*/g, "–");
       var horarioCompact =
-        horarioRaw.replace(/:\d{2}\s*[-–]\s*/g, "–").replace(/:\d{2}/g, "") ||
-        horarioLabel;
-      var cupos = turno.cupos || 0;
-      var ocupados = turno.ocupados || 0;
+        horarioRaw.replace(/:\d{2}\s*[-–]\s*/g, "–").replace(/:\d{2}/g, "") || horarioLabel;
+      var cupos = turno.cupos || 0, ocupados = turno.ocupados || 0;
       var libres = Math.max(
         0,
         turno.libres !== undefined ? turno.libres : cupos - ocupados,
-      );
-      var totalMostrado = ocupados + libres;
-      html +=
-        '<div class="chart-label-cell"><div class="chart-bar-label chart-x-label" title="' +
-        horarioLabel +
-        '">' +
-        horarioCompact +
-        '</div><div class="chart-bar-porcentaje" title="% Ocupación">(' +
-        turno.porcentaje_ocupacion +
-        "%)</div></div>";
-    });
-    html += "</div>";
-    html += "</div>";
-    html += "</div>";
-    html += "</div>";
-    html += "</div>";
-    html += "</div>";
-
+      ); var totalMostrado = ocupados + libres;
+      html += '<div class="chart-label-cell"><div class="chart-bar-label chart-x-label" title="' + horarioLabel + '">' + horarioCompact + '</div><div class="chart-bar-porcentaje" title="% Ocupación">(' + turno.porcentaje_ocupacion + "%)</div></div>";
+    }); html += "</div>" + "</div>" + "</div>" + "</div>" + "</div>" + "</div>";
     if (forPrint) {
       html += "</div>"; // cierre fecha-print-block
     }
-  });
-
-  return html;
+  }); return html;
 }
-
 /**
  * Gráfico único para Por Rango de Fechas: una sola gráfica con barras por día en el eje X.
  * Cada barra = un día, apilada (Ocupados + Libres).
  */
 function generarVistaBarrasUnicoPorDias(dias, forPrint) {
-  if (!dias || dias.length === 0) return "";
-
-  var html = "";
-  var globalMaxCupos = 1;
+  if (!dias || dias.length === 0) return ""; var html = "", globalMaxCupos = 1;
   dias.forEach(function (dia) {
-    var totalCupos = dia.total_cupos || 0;
-    var ocupados = dia.total_cupos_ocupados || 0;
+    var totalCupos = dia.total_cupos || 0, ocupados = dia.total_cupos_ocupados || 0;
     var libres = Math.max(
       0,
       dia.total_cupos_libres !== undefined
         ? dia.total_cupos_libres
         : totalCupos - ocupados,
-    );
-    var totalMostrado = ocupados + libres;
+    ); var totalMostrado = ocupados + libres;
     globalMaxCupos = Math.max(globalMaxCupos, totalCupos, totalMostrado);
-  });
-  var yStep = 50;
-  var yMaxFijo = Math.max(50, Math.ceil(globalMaxCupos / 50) * 50) + 50;
-  var chartHeight = 280;
+  }); var yStep = 50;
+  var yMaxFijo = Math.max(50, Math.ceil(globalMaxCupos / 50) * 50) + 50; var chartHeight = 280;
   var yTicksFijos = [0];
   for (var v = yStep; v <= yMaxFijo; v += yStep) {
     yTicksFijos.push(v);
   }
   if (yTicksFijos[yTicksFijos.length - 1] !== yMaxFijo)
     yTicksFijos.push(yMaxFijo);
-
   var numBarras = dias.length;
   var barCountClass =
-    "chart-bars-n-" +
-    (numBarras <= 5
+    "chart-bars-n-" + (numBarras <= 5
       ? "pocas"
       : numBarras <= 10
         ? "medias"
         : numBarras <= 20
           ? "muchas"
           : "super");
-  var totalOcupadosRango = 0;
-  var totalLibresRango = 0;
+  var totalOcupadosRango = 0, totalLibresRango = 0;
   dias.forEach(function (dia) {
     totalOcupadosRango += dia.total_cupos_ocupados || 0;
-    var totalCupos = dia.total_cupos || 0;
-    var ocupados = dia.total_cupos_ocupados || 0;
+    var totalCupos = dia.total_cupos || 0, ocupados = dia.total_cupos_ocupados || 0;
     totalLibresRango += Math.max(
       0,
       dia.total_cupos_libres !== undefined
@@ -1581,64 +923,28 @@ function generarVistaBarrasUnicoPorDias(dias, forPrint) {
         : totalCupos - ocupados,
     );
   });
-
-  html +=
-    '<div class="chart-dashboard-container chart-por-dias" style="margin-top: 15px;">';
-  html += '<div class="chart-leyenda">';
-  html +=
-    '<span class="chart-leyenda-item"><i class="chart-leyenda-color" style="background:#2C5D94;"></i> Ocupados: <strong style="color: rgb(172, 108, 202);">' +
-    totalOcupadosRango +
-    "</strong></span>";
-  html +=
-    '<span class="chart-leyenda-item"><i class="chart-leyenda-color" style="background:#fd7e14;"></i> Libres: <strong style="color: #17a2b8;">' +
-    totalLibresRango +
-    "</strong></span>";
-  html += "</div>";
-  html += '<div class="chart-with-axes">';
-  html += '<div class="chart-y-axis">';
-  html += '<div class="chart-y-label">Cupos</div>';
-  html += '<div class="chart-y-ticks" style="height: ' + chartHeight + 'px;">';
+  html += '<div class="chart-dashboard-container chart-por-dias" style="margin-top: 15px;">' + '<div class="chart-leyenda">' + '<span class="chart-leyenda-item"><i class="chart-leyenda-color" style="background:#2C5D94;"></i> Ocupados: <strong style="color: rgb(172, 108, 202);">' + totalOcupadosRango + "</strong></span>" + '<span class="chart-leyenda-item"><i class="chart-leyenda-color" style="background:#fd7e14;"></i> Libres: <strong style="color: #17a2b8;">' + totalLibresRango + "</strong></span>" + "</div>" + '<div class="chart-with-axes">' + '<div class="chart-y-axis">' + '<div class="chart-y-label">Cupos</div>' + '<div class="chart-y-ticks" style="height: ' + chartHeight + 'px;">';
   for (var i = yTicksFijos.length - 1; i >= 0; i--) {
     html += '<div class="chart-y-tick">' + yTicksFijos[i] + "</div>";
   }
-  html += "</div>";
-  html += "</div>";
-  html += '<div class="chart-main-area">';
-  html += '<div class="chart-grid" style="height: ' + chartHeight + 'px;">';
-  html += '<div class="chart-x-axis-line"></div>';
+  html += "</div>" + "</div>" + '<div class="chart-main-area">' + '<div class="chart-grid" style="height: ' + chartHeight + 'px;">' + '<div class="chart-x-axis-line"></div>';
   yTicksFijos.forEach(function (tick) {
     if (tick > 0) {
       var bottomPx = (tick / yMaxFijo) * chartHeight;
-      html +=
-        '<div class="chart-grid-line" style="bottom: ' +
-        bottomPx +
-        'px;"></div>';
+      html += '<div class="chart-grid-line" style="bottom: ' + bottomPx + 'px;"></div>';
     }
   });
-  html += "</div>";
-  html += '<div class="chart-bars-area">';
-  html +=
-    '<div class="chart-bars-row ' +
-    barCountClass +
-    '" style="height: ' +
-    chartHeight +
-    'px;" data-bars="' +
-    numBarras +
-    '">';
-
+  html += "</div>" + '<div class="chart-bars-area">' + '<div class="chart-bars-row ' + barCountClass + '" style="height: ' + chartHeight + 'px;" data-bars="' + numBarras + '">';
   dias.forEach(function (dia) {
-    var totalCupos = dia.total_cupos || 0;
-    var ocupados = dia.total_cupos_ocupados || 0;
+    var totalCupos = dia.total_cupos || 0, ocupados = dia.total_cupos_ocupados || 0;
     var libres = Math.max(
       0,
       dia.total_cupos_libres !== undefined
         ? dia.total_cupos_libres
         : totalCupos - ocupados,
-    );
-    var totalMostrado = ocupados + libres;
+    ); var totalMostrado = ocupados + libres;
     var pctOcup =
       totalCupos > 0 ? ((ocupados / totalCupos) * 100).toFixed(1) : 0;
-
     var barHeightPx =
       totalMostrado > 0 ? (totalMostrado / yMaxFijo) * chartHeight : 0;
     var ocupadosH =
@@ -1647,8 +953,7 @@ function generarVistaBarrasUnicoPorDias(dias, forPrint) {
       totalMostrado > 0 ? (libres / totalMostrado) * barHeightPx : 0;
     if (ocupados > 0 && ocupadosH < 18) ocupadosH = 18;
     if (libres > 0 && libresH < 18) libresH = 18;
-    if (barHeightPx < 20 && totalMostrado > 0) barHeightPx = 20;
-    var totalH = ocupadosH + libresH;
+    if (barHeightPx < 20 && totalMostrado > 0) barHeightPx = 20; var totalH = ocupadosH + libresH;
     if (totalH > barHeightPx && barHeightPx > 0) {
       var scale = barHeightPx / totalH;
       ocupadosH = Math.round(ocupadosH * scale);
@@ -1658,91 +963,37 @@ function generarVistaBarrasUnicoPorDias(dias, forPrint) {
       if (ocupadosH + libresH > barHeightPx)
         libresH = Math.max(1, barHeightPx - ocupadosH);
     }
-
-    html += '<div class="chart-bar-wrapper">';
-    html +=
-      '<div class="chart-bar-total" title="Total: ' +
-      totalMostrado +
-      '">' +
-      totalMostrado +
-      "</div>";
-    html += '<div class="chart-bar-spacer"></div>';
-    html +=
-      '<div class="chart-bar-columna" style="height: ' + barHeightPx + 'px;">';
-    html +=
-      '<div class="chart-segmento chart-segmento-ocupados' +
-      (ocupadosH < 20 ? " chart-segmento-pequeno" : "") +
-      '" style="height: ' +
-      ocupadosH +
-      'px;">';
-    html += '<span class="chart-segmento-valor">' + ocupados + "</span>";
-    html += "</div>";
-    html +=
-      '<div class="chart-segmento chart-segmento-libres' +
-      (libresH < 20 ? " chart-segmento-pequeno" : "") +
-      '" style="height: ' +
-      libresH +
-      'px;">';
-    html += '<span class="chart-segmento-valor">' + libres + "</span>";
-    html += "</div>";
-    html += "</div>";
-    html += "</div>";
-  });
-
-  html += "</div>";
-  html += '<div class="chart-labels-row ' + barCountClass + '">';
+    html += '<div class="chart-bar-wrapper">' + '<div class="chart-bar-total" title="Total: ' + totalMostrado + '">' + totalMostrado + "</div>" + '<div class="chart-bar-spacer"></div>' + '<div class="chart-bar-columna" style="height: ' + barHeightPx + 'px;">' + '<div class="chart-segmento chart-segmento-ocupados' + (ocupadosH < 20 ? " chart-segmento-pequeno" : "") + '" style="height: ' + ocupadosH + 'px;">' + '<span class="chart-segmento-valor">' + ocupados + "</span>" + "</div>" + '<div class="chart-segmento chart-segmento-libres' + (libresH < 20 ? " chart-segmento-pequeno" : "") + '" style="height: ' + libresH + 'px;">' + '<span class="chart-segmento-valor">' + libres + "</span>" + "</div>" + "</div>" + "</div>";
+  }); html += "</div>" + '<div class="chart-labels-row ' + barCountClass + '">';
   dias.forEach(function (dia) {
     var labelDia =
       (dia.Tud_Fec || "") + (dia.dia_semana ? " - " + dia.dia_semana : "");
-    var tudFec = dia.Tud_Fec || "";
-    var labelCorto = "";
-    var m1 = tudFec.match(/^(\d{1,2})\/(\d{1,2})\/\d{4}$/);
+    var tudFec = dia.Tud_Fec || "", labelCorto = ""; var m1 = tudFec.match(/^(\d{1,2})\/(\d{1,2})\/\d{4}$/);
     var m2 = tudFec.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
     if (m1) labelCorto = m1[1] + "/" + m1[2];
     else if (m2) labelCorto = m2[3] + "/" + m2[2];
-    else labelCorto = tudFec;
-    var totalCupos = dia.total_cupos || 0;
-    var ocupados = dia.total_cupos_ocupados || 0;
+    else labelCorto = tudFec; var totalCupos = dia.total_cupos || 0, ocupados = dia.total_cupos_ocupados || 0;
     var libres = Math.max(
       0,
       dia.total_cupos_libres !== undefined
         ? dia.total_cupos_libres
         : totalCupos - ocupados,
-    );
-    var totalMostrado = ocupados + libres;
+    ); var totalMostrado = ocupados + libres;
     var pctOcup =
       totalCupos > 0 ? ((ocupados / totalCupos) * 100).toFixed(1) : 0;
-    html +=
-      '<div class="chart-label-cell"><div class="chart-bar-label chart-x-label" title="' +
-      labelDia +
-      '">' +
-      labelCorto +
-      '</div><div class="chart-bar-porcentaje" title="% Ocupación">(' +
-      pctOcup +
-      "%)</div></div>";
-  });
-  html += "</div>";
-  html += "</div>";
-  html += "</div>";
-  html += "</div>";
-  html += "</div>";
-
+    html += '<div class="chart-label-cell"><div class="chart-bar-label chart-x-label" title="' + labelDia + '">' + labelCorto + '</div><div class="chart-bar-porcentaje" title="% Ocupación">(' + pctOcup + "%)</div></div>";
+  }); html += "</div>" + "</div>" + "</div>" + "</div>" + "</div>";
   return html;
 }
-
 function toggleFechaContent(fechaId, headerElement) {
-  var $content = $("#" + fechaId);
-  var $icon = $(headerElement).find(".toggle-icon");
-
+  var $content = $("#" + fechaId); var $icon = $(headerElement).find(".toggle-icon");
   if ($content.is(":visible")) {
     $content.slideUp(200);
     $icon.removeClass("fa-chevron-up").addClass("fa-chevron-down");
   } else {
     $content.slideDown(200, function () {
       if (
-        typeof modoVistaConfig !== "undefined" &&
-        modoVistaConfig === "tendencia" &&
-        typeof crearChartTendenciaDia === "function"
+        typeof modoVistaConfig !== "undefined" && modoVistaConfig === "tendencia" && typeof crearChartTendenciaDia === "function"
       ) {
         crearChartTendenciaDia(fechaId);
       }
@@ -1750,14 +1001,10 @@ function toggleFechaContent(fechaId, headerElement) {
     $icon.removeClass("fa-chevron-down").addClass("fa-chevron-up");
   }
 }
-
 function alternarVista() {
   modoVistaBarras = !modoVistaBarras;
-
   // Actualizar texto del botón
-  var $btn = $("#btnVistaBarras");
-  var $texto = $("#textoVista");
-
+  var $btn = $("#btnVistaBarras"); var $texto = $("#textoVista");
   if (modoVistaBarras) {
     $texto.text("Vista Tabla");
     $btn.removeClass("btn-warning").addClass("btn-default");
@@ -1765,11 +1012,12 @@ function alternarVista() {
     $texto.text("Vista Barras");
     $btn.removeClass("btn-default").addClass("btn-warning");
   }
-
   // Recargar dashboard con el nuevo modo
   cargarDashboard();
 }
-
+/**
+ * SECCION 3: MODAL DE DETALLE Y GESTION DE MANIFIESTOS
+ */
 function limpiarModalManifiestosAntesDeCargar() {
   var $modal = $("#modalManifiestos");
   if ($modal.length) {
@@ -1780,7 +1028,6 @@ function limpiarModalManifiestosAntesDeCargar() {
   $("body").removeClass("modal-open");
   $("body").css("padding-right", "");
 }
-
 function verManifiestos(Tud_Cod) {
   if (cargandoManifiestos) return;
   cargandoManifiestos = true;
@@ -1798,9 +1045,7 @@ function verManifiestos(Tud_Cod) {
         );
       } else {
         alert(
-          "Error al cargar los manifiestos: " +
-            (response.message || "Error desconocido"),
-        );
+          "Error al cargar los manifiestos: " + (response.message || "Error desconocido"), );
       }
     },
     "json",
@@ -1813,7 +1058,6 @@ function verManifiestos(Tud_Cod) {
       $("#loader").fadeOut("slow");
     });
 }
-
 function verManifiestosConfiguracion(Tur_Cod, Tur_Fei, Tur_Fef) {
   if (cargandoManifiestos) return;
   cargandoManifiestos = true;
@@ -1832,9 +1076,7 @@ function verManifiestosConfiguracion(Tur_Cod, Tur_Fei, Tur_Fef) {
         );
       } else {
         alert(
-          "Error al cargar los manifiestos: " +
-            (response.message || "Error desconocido"),
-        );
+          "Error al cargar los manifiestos: " + (response.message || "Error desconocido"), );
       }
     },
     "json",
@@ -1847,7 +1089,6 @@ function verManifiestosConfiguracion(Tur_Cod, Tur_Fei, Tur_Fef) {
       $("#loader").fadeOut("slow");
     });
 }
-
 function verManifiestosDiaDirecto(Tud_Cod) {
   if (!Tud_Cod) {
     alert("No se pudo obtener el turno.");
@@ -1869,9 +1110,7 @@ function verManifiestosDiaDirecto(Tud_Cod) {
         );
       } else {
         alert(
-          "Error al cargar los manifiestos del día: " +
-            (response.message || "Error desconocido"),
-        );
+          "Error al cargar los manifiestos del día: " + (response.message || "Error desconocido"), );
       }
     },
     "json",
@@ -1886,16 +1125,13 @@ function verManifiestosDiaDirecto(Tud_Cod) {
       $("#loader").fadeOut("slow");
     });
 }
-
 function verManifiestosRangoCompleto(fechaInicio, fechaFin) {
   if (cargandoManifiestos) return;
   cargandoManifiestos = true;
   limpiarModalManifiestosAntesDeCargar();
-  $("#loader").show();
-  var Pla_Cod = $("#select_planta_rango").val() || "";
+  $("#loader").show(); var Pla_Cod = $("#select_planta_rango").val() || "";
   var params = {
-    getManifiestosPorRangoCompletoAjax: true,
-    fecha_inicio: fechaInicio,
+    getManifiestosPorRangoCompletoAjax: true, fecha_inicio: fechaInicio,
     fecha_fin: fechaFin,
   };
   if (Pla_Cod) params.Pla_Cod = Pla_Cod;
@@ -1911,9 +1147,7 @@ function verManifiestosRangoCompleto(fechaInicio, fechaFin) {
         );
       } else {
         alert(
-          "No se encontraron manifiestos" +
-            (response.message ? ": " + response.message : ""),
-        );
+          "No se encontraron manifiestos" + (response.message ? ": " + response.message : ""), );
       }
     },
     "json",
@@ -1926,7 +1160,6 @@ function verManifiestosRangoCompleto(fechaInicio, fechaFin) {
       $("#loader").fadeOut("slow");
     });
 }
-
 function verManifiestosRangoDia(Tud_Fec) {
   if (!Tud_Fec) {
     alert("No se pudo obtener la fecha.");
@@ -1935,8 +1168,7 @@ function verManifiestosRangoDia(Tud_Fec) {
   if (cargandoManifiestos) return;
   cargandoManifiestos = true;
   limpiarModalManifiestosAntesDeCargar();
-  $("#loader").show();
-  var Pla_Cod = $("#select_planta_rango").val() || "";
+  $("#loader").show(); var Pla_Cod = $("#select_planta_rango").val() || "";
   var params = { getManifiestosPorRangoDiaAjax: true, Tud_Fec: Tud_Fec };
   if (Pla_Cod) params.Pla_Cod = Pla_Cod;
   $.get(
@@ -1951,9 +1183,7 @@ function verManifiestosRangoDia(Tud_Fec) {
         );
       } else {
         alert(
-          "No se encontraron manifiestos" +
-            (response.message ? ": " + response.message : ""),
-        );
+          "No se encontraron manifiestos" + (response.message ? ": " + response.message : ""), );
       }
     },
     "json",
@@ -1966,7 +1196,6 @@ function verManifiestosRangoDia(Tud_Fec) {
       $("#loader").fadeOut("slow");
     });
 }
-
 function verManifiestosRangoSlot(Tud_Fec, Tud_Hin, Tud_Hfi) {
   if (!Tud_Fec || !Tud_Hin || !Tud_Hfi) {
     alert("No se pudo obtener el horario.");
@@ -1975,13 +1204,10 @@ function verManifiestosRangoSlot(Tud_Fec, Tud_Hin, Tud_Hfi) {
   if (cargandoManifiestos) return;
   cargandoManifiestos = true;
   limpiarModalManifiestosAntesDeCargar();
-  $("#loader").show();
-  var Pla_Cod = $("#select_planta_rango").val() || "";
+  $("#loader").show(); var Pla_Cod = $("#select_planta_rango").val() || "";
   var params = {
-    getManifiestosPorRangoSlotAjax: true,
-    Tud_Fec: Tud_Fec,
-    Tud_Hin: Tud_Hin,
-    Tud_Hfi: Tud_Hfi,
+    getManifiestosPorRangoSlotAjax: true, Tud_Fec: Tud_Fec,
+    Tud_Hin: Tud_Hin, Tud_Hfi: Tud_Hfi,
   };
   if (Pla_Cod) params.Pla_Cod = Pla_Cod;
   $.get(
@@ -1996,9 +1222,7 @@ function verManifiestosRangoSlot(Tud_Fec, Tud_Hin, Tud_Hfi) {
         );
       } else {
         alert(
-          "No se encontraron manifiestos" +
-            (response.message ? ": " + response.message : ""),
-        );
+          "No se encontraron manifiestos" + (response.message ? ": " + response.message : ""), );
       }
     },
     "json",
@@ -2011,31 +1235,23 @@ function verManifiestosRangoSlot(Tud_Fec, Tud_Hin, Tud_Hfi) {
       $("#loader").fadeOut("slow");
     });
 }
-
 function obtenerHoraGaritaIngreso(man) {
-  if (!man) return "";
-  var rawFec = "";
-
+  if (!man) return ""; var rawFec = "";
   if (man.garita_ingreso) {
     rawFec = man.garita_ingreso;
   }
-
   if (!rawFec && man.Man_Usu) {
     var raw = typeof man.Man_Usu === "string" ? man.Man_Usu : JSON.stringify(man.Man_Usu);
-
     try {
-      var clean = raw.replace(/\\"/g, '"').replace(/&quot;/g, '"');
-      var arr = JSON.parse(clean);
+      var clean = raw.replace(/\\"/g, '"').replace(/&quot;/g, '"'); var arr = JSON.parse(clean);
       if (Array.isArray(arr)) {
         for (var i = 0; i < arr.length; i++) {
           if (arr[i] && arr[i].Man_Tip === "GE" && arr[i].Fecha) {
-            rawFec = arr[i].Fecha;
-            break;
+            rawFec = arr[i].Fecha; break;
           }
         }
       }
     } catch (e) {}
-
     if (!rawFec) {
       var m = raw.match(/GE["']\s*,\s*["']Fecha["']\s*:\s*["']([^"']+)["']/i);
       if (m && m[1]) {
@@ -2057,30 +1273,19 @@ function obtenerHoraGaritaIngreso(man) {
       }
     }
   }
-
-  if (!rawFec) return "";
-
-  var partes = rawFec.trim().split(/\s+/);
+  if (!rawFec) return ""; var partes = rawFec.trim().split(/\s+/);
   if (partes.length >= 2) {
-    var horaPart = partes[1];
-    var subH = horaPart.split(":");
-    if (subH.length >= 2) {
-      return subH[0] + ":" + subH[1];
-    }
-    return horaPart;
+    var horaPart = partes[1]; var subH = horaPart.split(":");
+    if (subH.length >= 2) return subH[0] + ":" + subH[1]; return horaPart;
   }
   if (rawFec.indexOf(":") !== -1) {
     var subH = rawFec.split(":");
-    if (subH.length >= 2) {
-      return subH[0] + ":" + subH[1];
-    }
+    if (subH.length >= 2) return subH[0] + ":" + subH[1];
   }
   return rawFec;
 }
-
 function ordenarManifiestosParaTabla(manifiestos, tipo) {
-  if (!manifiestos || manifiestos.length === 0) return manifiestos;
-  var copia = manifiestos.slice();
+  if (!manifiestos || manifiestos.length === 0) return manifiestos; var copia = manifiestos.slice();
   if (tipo === "plantero") {
     var countByPlanta = {};
     copia.forEach(function (man) {
@@ -2088,90 +1293,45 @@ function ordenarManifiestosParaTabla(manifiestos, tipo) {
       countByPlanta[planta] = (countByPlanta[planta] || 0) + 1;
     });
     copia.sort(function (a, b) {
-      var plantaA = a.Pla_Nom || "(Sin planta)";
-      var plantaB = b.Pla_Nom || "(Sin planta)";
-      var countA = countByPlanta[plantaA] || 0;
-      var countB = countByPlanta[plantaB] || 0;
-      if (countB !== countA) return countB - countA;
-      var fechaA = (a.Man_Fec || "").toString();
-      var fechaB = (b.Man_Fec || "").toString();
-      return fechaA.localeCompare(fechaB) || plantaA.localeCompare(plantaB);
+      var plantaA = a.Pla_Nom || "(Sin planta)"; var plantaB = b.Pla_Nom || "(Sin planta)";
+      var countA = countByPlanta[plantaA] || 0; var countB = countByPlanta[plantaB] || 0;
+      if (countB !== countA) return countB - countA; var fechaA = (a.Man_Fec || "").toString();
+      var fechaB = (b.Man_Fec || "").toString(); return fechaA.localeCompare(fechaB) || plantaA.localeCompare(plantaB);
     });
   } else {
     copia.sort(function (a, b) {
-      var fechaA = (a.Man_Fec || "").toString();
-      var fechaB = (b.Man_Fec || "").toString();
+      var fechaA = (a.Man_Fec || "").toString(); var fechaB = (b.Man_Fec || "").toString();
       var cmp = fechaA.localeCompare(fechaB);
-      if (cmp !== 0) return cmp;
-      var plantaA = (a.Pla_Nom || "").toString();
-      var plantaB = (b.Pla_Nom || "").toString();
-      return plantaA.localeCompare(plantaB);
+      if (cmp !== 0) return cmp; var plantaA = (a.Pla_Nom || "").toString();
+      var plantaB = (b.Pla_Nom || "").toString(); return plantaA.localeCompare(plantaB);
     });
   }
   return copia;
 }
-
 function htmlIconoOk(ok, title, color) {
   return ok
-    ? '<i class="glyphicon glyphicon-ok" style="color: ' +
-        (color || "#28a745") +
-        '; font-size: 16px;" title="' +
-        title +
-        '"></i>'
+    ? '<i class="glyphicon glyphicon-ok" style="color: ' + (color || "#28a745") + '; font-size: 16px;" title="' + title + '"></i>'
     : "";
 }
-
 function htmlCeldasEstadosMan(man) {
-  return (
-    "<td>" +
-    htmlIconoOk(man.Man_Tip_1 === "GE", "Entrada a Garita") +
-    "</td>" +
-    "<td>" +
-    htmlIconoOk(man.Man_Tip_2 === "A", "Aprobacion del Tecnico") +
-    "</td>" +
-    "<td>" +
-    htmlIconoOk(man.Man_Tip_3 === "GS", "Salida de Garita") +
-    "</td>" +
-    "<td>" +
-    htmlIconoOk(man.Man_Tip_4 === "F", "Facturado") +
-    "</td>" +
-    "<td>" +
-    htmlIconoOk(man.Man_Tip_5 === "R", "Rechazado", "#dc3545") +
-    "</td>"
+  return ( "<td>" + htmlIconoOk(man.Man_Tip_1 === "GE", "Entrada a Garita") + "</td>" + "<td>" + htmlIconoOk(man.Man_Tip_2 === "A", "Aprobacion del Tecnico") + "</td>" + "<td>" + htmlIconoOk(man.Man_Tip_3 === "GS", "Salida de Garita") + "</td>" + "<td>" + htmlIconoOk(man.Man_Tip_4 === "F", "Facturado") + "</td>" + "<td>" + htmlIconoOk(man.Man_Tip_5 === "R", "Rechazado", "#dc3545") + "</td>"
   );
 }
-
 function htmlCeldaHoraGarita(man) {
   var horaGarita = obtenerHoraGaritaIngreso(man);
-  return (
-    '<td style="text-align: center;">' +
-    (horaGarita
-      ? '<span style="color: #28a745; font-weight: bold; white-space: nowrap;"><i class="glyphicon glyphicon-time" style="font-size: 11px;"></i> ' +
-        horaGarita +
-        "</span>"
-      : "-") +
-    "</td>"
+  return ( '<td style="text-align: center;">' + (horaGarita
+      ? '<span style="color: #28a745; font-weight: bold; white-space: nowrap;"><i class="glyphicon glyphicon-time" style="font-size: 11px;"></i> ' + horaGarita + "</span>"
+      : "-") + "</td>"
   );
 }
-
 function htmlFilaManifiestoDetalle(man, index, mostrarColumnaFechaDia, mostrarColumnaHorario) {
   var html = "<tr>";
-  html +=
-    '<td style="text-align: center; font-weight: bold;">' +
-    (index + 1) +
-    "</td>";
-  html += "<td>" + (man.ManNum || "") + "</td>";
-  html += "<td>" + (man.Man_Fec || "") + "</td>";
+  html += '<td style="text-align: center; font-weight: bold;">' + (index + 1) + "</td>" + "<td>" + (man.ManNum || "") + "</td>" + "<td>" + (man.Man_Fec || "") + "</td>";
   if (mostrarColumnaFechaDia) html += "<td>" + (man.fecha_dia || "") + "</td>";
   if (mostrarColumnaHorario) html += "<td>" + (man.horario_turno || "") + "</td>";
-  html += htmlCeldaHoraGarita(man);
-  html += "<td>" + (man.Cliente || "") + "</td>";
-  html += "<td>" + (man.Pla_Nom || "") + "</td>";
-  html += htmlCeldasEstadosMan(man);
-  html += "</tr>";
+  html += htmlCeldaHoraGarita(man) + "<td>" + (man.Cliente || "") + "</td>" + "<td>" + (man.Pla_Nom || "") + "</td>" + htmlCeldasEstadosMan(man) + "</tr>";
   return html;
 }
-
 function aplicarOrdenManifiestosDetalle(tipo) {
   if (!datosModalManifiestos || !datosModalManifiestos.manifiestos) return;
   var manifiestos = datosModalManifiestos.manifiestos;
@@ -2179,10 +1339,8 @@ function aplicarOrdenManifiestosDetalle(tipo) {
     manifiestos.length > 0 && manifiestos[0].horario_turno;
   var mostrarColumnaFechaDia =
     manifiestos.length > 0 && manifiestos[0].fecha_dia;
-  var ordenados = ordenarManifiestosParaTabla(manifiestos, tipo);
-  var $tbody = $("#tbodyManifiestosDetalle");
-  if (!$tbody.length) return;
-  var html = "";
+  var ordenados = ordenarManifiestosParaTabla(manifiestos, tipo); var $tbody = $("#tbodyManifiestosDetalle");
+  if (!$tbody.length) return; var html = "";
   ordenados.forEach(function (man, index) {
     html += htmlFilaManifiestoDetalle(
       man,
@@ -2193,49 +1351,28 @@ function aplicarOrdenManifiestosDetalle(tipo) {
   });
   $tbody.html(html);
 }
-
 function mostrarManifiestosModal(manifiestos, Tud_Cod, turnoInfo) {
   var titulo;
   if (turnoInfo && turnoInfo.horario === "Acumulado de la configuración") {
     titulo =
-      '<i class="fa fa-calendar-check-o"></i> Manifiestos - Configuración completa (' +
-      (turnoInfo.fecha || "") +
-      ")";
+      '<i class="fa fa-calendar-check-o"></i> Manifiestos - Configuración completa (' + (turnoInfo.fecha || "") + ")";
   } else if (turnoInfo && turnoInfo.horario === "Acumulado del rango") {
     titulo =
-      '<i class="fa fa-calendar-check-o"></i> Manifiestos - Rango completo (' +
-      (turnoInfo.fecha || "") +
-      ")";
+      '<i class="fa fa-calendar-check-o"></i> Manifiestos - Rango completo (' + (turnoInfo.fecha || "") + ")";
   } else if (turnoInfo && turnoInfo.horario === "Acumulado del día") {
     titulo =
-      '<i class="fa fa-calendar"></i> Manifiestos del día - ' +
-      (turnoInfo.fecha || "");
+      '<i class="fa fa-calendar"></i> Manifiestos del día - ' + (turnoInfo.fecha || "");
   } else {
     titulo = '<i class="fa fa-list"></i> Manifiestos del Turno #' + Tud_Cod;
     if (turnoInfo && turnoInfo.fecha) titulo += " - " + turnoInfo.fecha;
     if (turnoInfo && turnoInfo.horario)
       titulo += " (" + turnoInfo.horario + ")";
   }
-
   var html =
     '<div class="modal fade" id="modalManifiestos" tabindex="-1" role="dialog">';
-  html += '<div class="modal-dialog modal-lg" role="document">';
-  html += '<div class="modal-content" style="font-size: 11px;">';
-  html +=
-    '<div class="modal-header" style="background: linear-gradient(135deg, #2C5D94 0%, #3d7bb8 100%); color: white; padding: 8px 15px;">';
-  html +=
-    '<button type="button" class="close" data-dismiss="modal" style="color: white; opacity: 0.8;">&times;</button>';
-  html +=
-    '<h4 class="modal-title" style="font-size: 14px; margin: 0; line-height: 1.2;">' +
-    titulo +
-    "</h4>";
-  html += "</div>";
-  html +=
-    '<div class="modal-body" style="font-size: 11px; padding-top: 10px;">';
-
+  html += '<div class="modal-dialog modal-lg" role="document">' + '<div class="modal-content" style="font-size: 11px;">' + '<div class="modal-header" style="background: linear-gradient(135deg, #2C5D94 0%, #3d7bb8 100%); color: white; padding: 8px 15px;">' + '<button type="button" class="close" data-dismiss="modal" style="color: white; opacity: 0.8;">&times;</button>' + '<h4 class="modal-title" style="font-size: 14px; margin: 0; line-height: 1.2;">' + titulo + "</h4>" + "</div>" + '<div class="modal-body" style="font-size: 11px; padding-top: 10px;">';
   if (manifiestos.length === 0) {
-    html +=
-      '<div class="alert alert-info">No hay manifiestos para este turno.</div>';
+    html += '<div class="alert alert-info">No hay manifiestos para este turno.</div>';
     datosModalManifiestos = null;
   } else {
     datosModalManifiestos = {
@@ -2243,44 +1380,10 @@ function mostrarManifiestosModal(manifiestos, Tud_Cod, turnoInfo) {
       turnoInfo: turnoInfo || {},
     };
     // Tabs
-    html +=
-      '<ul class="nav nav-tabs" role="tablist" style="margin-bottom: 12px;">';
-    html += '<li role="presentation" class="active">';
-    html +=
-      '<a href="#tabManifiestosDetalle" aria-controls="tabManifiestosDetalle" role="tab" data-toggle="tab">';
-    html += '<i class="fa fa-list-alt"></i> Detallado</a></li>';
-    html += '<li role="presentation">';
-    html +=
-      '<a href="#tabManifiestosPlanta" aria-controls="tabManifiestosPlanta" role="tab" data-toggle="tab">';
-    html += '<i class="fa fa-industry"></i> Por Planta</a></li>';
-    html += "</ul>";
-
+    html += '<ul class="nav nav-tabs" role="tablist" style="margin-bottom: 12px;">' + '<li role="presentation" class="active">' + '<a href="#tabManifiestosDetalle" aria-controls="tabManifiestosDetalle" role="tab" data-toggle="tab">' + '<i class="fa fa-list-alt"></i> Detallado</a></li>' + '<li role="presentation">' + '<a href="#tabManifiestosPlanta" aria-controls="tabManifiestosPlanta" role="tab" data-toggle="tab">' + '<i class="fa fa-industry"></i> Por Planta</a></li>' + "</ul>";
     html += '<div class="tab-content">';
-
     // Tab 1: Detallado
-    html +=
-      '<div role="tabpanel" class="tab-pane active" id="tabManifiestosDetalle">';
-    html +=
-      '<div class="no-print" style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">';
-    html += '<div style="display: flex; align-items: center; gap: 8px;">';
-    html +=
-      '<label style="margin: 0; font-weight: normal;">Ordenar por:</label>';
-    html +=
-      '<select id="ordenManifiestosDetalle" class="form-control input-sm" style="width: auto; display: inline-block;" onchange="aplicarOrdenManifiestosDetalle(this.value);">';
-    html += '<option value="fecha" selected>Por fecha</option>';
-    html += '<option value="plantero">Por plantero</option>';
-    html += "</select>";
-    html += "</div>";
-    html += "<div>";
-    html +=
-      '<button type="button" class="btn btn-primary btn-sm" onclick="imprimirModalManifiestos();" style="margin-right: 5px;"><i class="fa fa-print"></i> Imprimir</button>';
-    html +=
-      '<button type="button" class="btn btn-success btn-sm" onclick="exportModalManifiestosExcel(\'detallado\');" style="margin-right: 5px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); border-color: #1e7e34;">';
-    html += '<i class="fa fa-file-excel-o"></i> Excel</button>';
-    html +=
-      '<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cerrar</button>';
-    html += "</div>";
-    html += "</div>";
+    html += '<div role="tabpanel" class="tab-pane active" id="tabManifiestosDetalle">' + '<div class="no-print" style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">' + '<div style="display: flex; align-items: center; gap: 8px;">' + '<label style="margin: 0; font-weight: normal;">Ordenar por:</label>' + '<select id="ordenManifiestosDetalle" class="form-control input-sm" style="width: auto; display: inline-block;" onchange="aplicarOrdenManifiestosDetalle(this.value);">' + '<option value="fecha" selected>Por fecha</option>' + '<option value="plantero">Por plantero</option>' + "</select>" + "</div>" + "<div>" + '<button type="button" class="btn btn-primary btn-sm" onclick="imprimirModalManifiestos();" style="margin-right: 5px;"><i class="fa fa-print"></i> Imprimir</button>' + '<button type="button" class="btn btn-success btn-sm" onclick="exportModalManifiestosExcel(\'detallado\');" style="margin-right: 5px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); border-color: #1e7e34;">' + '<i class="fa fa-file-excel-o"></i> Excel</button>' + '<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cerrar</button>' + "</div>" + "</div>";
     var mostrarColumnaHorario =
       manifiestos.length > 0 && manifiestos[0].horario_turno;
     var mostrarColumnaFechaDia =
@@ -2289,33 +1392,10 @@ function mostrarManifiestosModal(manifiestos, Tud_Cod, turnoInfo) {
       manifiestos,
       "fecha",
     );
-    html +=
-      '<table class="table table-bordered table-striped table-condensed tabla-modal-manifiestos" style="font-size: 11px;">';
-    html += "<thead>";
-    html += "<tr>";
-    html += '<th style="width: 40px;">#</th>';
-    html += "<th>No. Manifiesto</th>";
-    html += "<th>Fecha</th>";
+    html += '<table class="table table-bordered table-striped table-condensed tabla-modal-manifiestos" style="font-size: 11px;">' + "<thead>" + "<tr>" + '<th style="width: 40px;">#</th>' + "<th>No. Manifiesto</th>" + "<th>Fecha</th>";
     if (mostrarColumnaFechaDia) html += "<th>Día</th>";
     if (mostrarColumnaHorario) html += "<th>Turno</th>";
-    html +=
-      '<th style="white-space: nowrap;"><i class="glyphicon glyphicon-time" style="color: #28a745;"></i> Garita Ing</th>';
-    html += "<th>Cliente</th>";
-    html += "<th>Planta</th>";
-    html +=
-      '<th><i class="glyphicon glyphicon-log-in" style="color: #ffc107;" title="Garita In - Ingreso a garita"></i></th>';
-    html +=
-      '<th><i class="glyphicon glyphicon-ok-circle" style="color: #28a745;" title="Aprobado - Aprobacion del Tecnico"></i></th>';
-    html +=
-      '<th><i class="glyphicon glyphicon-log-out" style="color: #17a2b8;" title="Garita Out - Salida de garita"></i></th>';
-    html +=
-      '<th><i class="glyphicon glyphicon-file" style="color: #007bff;" title="Facturado - Manifiesto Facturado"></i></th>';
-    html +=
-      '<th><i class="glyphicon glyphicon-remove-circle" style="color: #dc3545;" title="Rechazado - Manifiesto Rechazado"></i></th>';
-    html += "</tr>";
-    html += "</thead>";
-    html += '<tbody id="tbodyManifiestosDetalle">';
-
+    html += '<th style="white-space: nowrap;"><i class="glyphicon glyphicon-time" style="color: #28a745;"></i> Garita Ing</th>' + "<th>Cliente</th>" + "<th>Planta</th>" + '<th><i class="glyphicon glyphicon-log-in" style="color: #ffc107;" title="Garita In - Ingreso a garita"></i></th>' + '<th><i class="glyphicon glyphicon-ok-circle" style="color: #28a745;" title="Aprobado - Aprobacion del Tecnico"></i></th>' + '<th><i class="glyphicon glyphicon-log-out" style="color: #17a2b8;" title="Garita Out - Salida de garita"></i></th>' + '<th><i class="glyphicon glyphicon-file" style="color: #007bff;" title="Facturado - Manifiesto Facturado"></i></th>' + '<th><i class="glyphicon glyphicon-remove-circle" style="color: #dc3545;" title="Rechazado - Manifiesto Rechazado"></i></th>' + "</tr>" + "</thead>" + '<tbody id="tbodyManifiestosDetalle">';
     manifiestosOrdenados.forEach(function (man, index) {
       html += htmlFilaManifiestoDetalle(
         man,
@@ -2323,62 +1403,23 @@ function mostrarManifiestosModal(manifiestos, Tud_Cod, turnoInfo) {
         mostrarColumnaFechaDia,
         mostrarColumnaHorario,
       );
-    });
-
-    html += "</tbody>";
-    html += "</table>";
-    html += "</div>";
-
+    }); html += "</tbody>" + "</table>" + "</div>";
     // Tab 2: Por Planta (agrupado por Planta + Cliente)
-    html += '<div role="tabpanel" class="tab-pane" id="tabManifiestosPlanta">';
-    html +=
-      '<div class="no-print" style="margin-bottom: 10px; text-align: right;">';
-    html +=
-      '<button type="button" class="btn btn-primary btn-sm" onclick="imprimirModalManifiestos();" style="margin-right: 5px;"><i class="fa fa-print"></i> Imprimir</button>';
-    html +=
-      '<button type="button" class="btn btn-success btn-sm" onclick="exportModalManifiestosExcel(\'planta\');" style="margin-right: 5px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); border-color: #1e7e34;">';
-    html += '<i class="fa fa-file-excel-o"></i> Excel</button>';
-    html +=
-      '<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cerrar</button>';
-    html += "</div>";
-
+    html += '<div role="tabpanel" class="tab-pane" id="tabManifiestosPlanta">' + '<div class="no-print" style="margin-bottom: 10px; text-align: right;">' + '<button type="button" class="btn btn-primary btn-sm" onclick="imprimirModalManifiestos();" style="margin-right: 5px;"><i class="fa fa-print"></i> Imprimir</button>' + '<button type="button" class="btn btn-success btn-sm" onclick="exportModalManifiestosExcel(\'planta\');" style="margin-right: 5px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); border-color: #1e7e34;">' + '<i class="fa fa-file-excel-o"></i> Excel</button>' + '<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cerrar</button>' + "</div>";
     var porPlantaCliente = {};
     manifiestos.forEach(function (man) {
-      var planta = man.Pla_Nom || "(Sin planta)";
-      var cliente = man.Cliente || "(Sin cliente)";
+      var planta = man.Pla_Nom || "(Sin planta)"; var cliente = man.Cliente || "(Sin cliente)";
       var key = planta + "\u0001" + cliente;
       if (!porPlantaCliente[key]) {
         porPlantaCliente[key] = {
-          planta: planta,
-          cliente: cliente,
+          planta: planta, cliente: cliente,
           cantidad: 0,
         };
       }
       porPlantaCliente[key].cantidad++;
-    });
-
-    var filas = Object.keys(porPlantaCliente).map(function (k) {
-      return porPlantaCliente[k];
-    });
-    filas.sort(function (a, b) {
-      return (b.cantidad || 0) - (a.cantidad || 0);
-    });
-
-    html +=
-      '<table class="table table-bordered table-striped table-condensed tabla-modal-planta" style="font-size: 11px;">';
-    html += "<thead>";
-    html += "<tr>";
-    html += '<th style="width: 40px;">#</th>';
-    html += "<th>Planta</th>";
-    html += "<th>Cliente</th>";
-    html +=
-      '<th style="width: 120px; text-align: center;">Cantidad Manifiestos</th>';
-    html +=
-      '<th style="width: 100px; text-align: center;"><span style="display: block;">%</span><span style="display: block;">Participación</span></th>';
-    html += "</tr>";
-    html += "</thead>";
-    html += "<tbody>";
-
+    }); var filas = Object.keys(porPlantaCliente).map(function (k) { return porPlantaCliente[k]; });
+    filas.sort(function (a, b) { return (b.cantidad || 0) - (a.cantidad || 0); });
+    html += '<table class="table table-bordered table-striped table-condensed tabla-modal-planta" style="font-size: 11px;">' + "<thead>" + "<tr>" + '<th style="width: 40px;">#</th>' + "<th>Planta</th>" + "<th>Cliente</th>" + '<th style="width: 120px; text-align: center;">Cantidad Manifiestos</th>' + '<th style="width: 100px; text-align: center;"><span style="display: block;">%</span><span style="display: block;">Participación</span></th>' + "</tr>" + "</thead>" + "<tbody>";
     var totalManifiestos = filas.reduce(function (s, f) {
       return s + (f.cantidad || 0);
     }, 0);
@@ -2387,67 +1428,27 @@ function mostrarManifiestosModal(manifiestos, Tud_Cod, turnoInfo) {
         totalManifiestos > 0
           ? ((item.cantidad / totalManifiestos) * 100).toFixed(2)
           : "0.00";
-      html += "<tr>";
-      html +=
-        '<td style="text-align: center; font-weight: bold;">' +
-        (index + 1) +
-        "</td>";
-      html += "<td>" + item.planta + "</td>";
-      html += "<td>" + item.cliente + "</td>";
-      html +=
-        '<td style="text-align: center;"><strong>' +
-        item.cantidad +
-        "</strong></td>";
-      html += '<td style="text-align: center;">' + pct + "%</td>";
-      html += "</tr>";
+      html += "<tr>" + '<td style="text-align: center; font-weight: bold;">' + (index + 1) + "</td>" + "<td>" + item.planta + "</td>" + "<td>" + item.cliente + "</td>" + '<td style="text-align: center;"><strong>' + item.cantidad + "</strong></td>" + '<td style="text-align: center;">' + pct + "%</td>" + "</tr>";
     });
-
-    html += "</tbody>";
-    html += "<tfoot>";
-    html +=
-      '<tr style="background-color: #2C5D94; color: white; font-weight: bold;">';
-    html +=
-      '<td colspan="3" style="text-align: right; padding-right: 15px;">TOTAL:</td>';
-    html += '<td style="text-align: center;">' + totalManifiestos + "</td>";
-    html += '<td style="text-align: center;">100%</td>';
-    html += "</tr>";
-    html += "</tfoot>";
-    html += "</table>";
-    html += "</div>";
-
+    html += "</tbody>" + "<tfoot>" + '<tr style="background-color: #2C5D94; color: white; font-weight: bold;">' + '<td colspan="3" style="text-align: right; padding-right: 15px;">TOTAL:</td>' + '<td style="text-align: center;">' + totalManifiestos + "</td>" + '<td style="text-align: center;">100%</td>' + "</tr>" + "</tfoot>" + "</table>" + "</div>";
     html += "</div>";
   }
-
-  html += "</div>";
-  html += '<div class="modal-footer">';
-  html += "</div>";
-  html += "</div>";
-  html += "</div>";
-  html += "</div>";
-
+  html += "</div>" + '<div class="modal-footer">' + "</div>" + "</div>" + "</div>" + "</div>";
   // Remover modal anterior si existe
   $("#modalManifiestos").remove();
-
   // Agregar modal al body
   $("body").append(html);
-
   // Mostrar modal
   $("#modalManifiestos").modal("show");
-
   // Limpiar modal al cerrar
   $("#modalManifiestos").on("hidden.bs.modal", function () {
     datosModalManifiestos = null;
     $(this).remove();
   });
 }
-
 function abrirModalManifiestosChoferPlaca(manifiestos, turnoInfo, tipoVista) {
   var titulo =
-    '<i class="fa fa-list"></i> Manifiestos - ' +
-    (turnoInfo.horario || "") +
-    " (" +
-    (turnoInfo.fecha || "") +
-    ")";
+    '<i class="fa fa-list"></i> Manifiestos - ' + (turnoInfo.horario || "") + " (" + (turnoInfo.fecha || "") + ")";
   datosModalManifiestosChoferPlaca = {
     manifiestos: manifiestos || [],
     turnoInfo: turnoInfo || {},
@@ -2455,74 +1456,26 @@ function abrirModalManifiestosChoferPlaca(manifiestos, turnoInfo, tipoVista) {
   };
   var html =
     '<div class="modal fade" id="modalManifiestosChoferPlaca" tabindex="-1" role="dialog">';
-  html += '<div class="modal-dialog modal-lg" role="document">';
-  html += '<div class="modal-content" style="font-size: 11px;">';
-  html +=
-    '<div class="modal-header" style="background: linear-gradient(135deg, #2C5D94 0%, #3d7bb8 100%); color: white; padding: 8px 15px;">';
-  html +=
-    '<button type="button" class="close" data-dismiss="modal" style="color: white; opacity: 0.8;">&times;</button>';
-  html +=
-    '<h4 class="modal-title" style="font-size: 14px; margin: 0; line-height: 1.2;">' +
-    titulo +
-    "</h4>";
-  html += "</div>";
-  html +=
-    '<div class="modal-body" style="font-size: 11px; padding-top: 10px;">';
+  html += '<div class="modal-dialog modal-lg" role="document">' + '<div class="modal-content" style="font-size: 11px;">' + '<div class="modal-header" style="background: linear-gradient(135deg, #2C5D94 0%, #3d7bb8 100%); color: white; padding: 8px 15px;">' + '<button type="button" class="close" data-dismiss="modal" style="color: white; opacity: 0.8;">&times;</button>' + '<h4 class="modal-title" style="font-size: 14px; margin: 0; line-height: 1.2;">' + titulo + "</h4>" + "</div>" + '<div class="modal-body" style="font-size: 11px; padding-top: 10px;">';
   if (!manifiestos || manifiestos.length === 0) {
-    html +=
-      '<div class="alert alert-info">No hay manifiestos para mostrar.</div>';
+    html += '<div class="alert alert-info">No hay manifiestos para mostrar.</div>';
     datosModalManifiestosChoferPlaca = null;
   } else {
-    html +=
-      '<ul class="nav nav-tabs" role="tablist" style="margin-bottom: 12px;">';
-    html +=
-      '<li role="presentation" class="active"><a href="#tabManifiestosCPDetalle" aria-controls="tabManifiestosCPDetalle" role="tab" data-toggle="tab"><i class="fa fa-list-alt"></i> Detallado</a></li>';
+    html += '<ul class="nav nav-tabs" role="tablist" style="margin-bottom: 12px;">' + '<li role="presentation" class="active"><a href="#tabManifiestosCPDetalle" aria-controls="tabManifiestosCPDetalle" role="tab" data-toggle="tab"><i class="fa fa-list-alt"></i> Detallado</a></li>';
     if (tipoVista === "planta") {
-      html +=
-        '<li role="presentation"><a href="#tabManifiestosCPChofer" aria-controls="tabManifiestosCPChofer" role="tab" data-toggle="tab"><i class="fa fa-user"></i> Por Chofer</a></li>';
-      html +=
-        '<li role="presentation"><a href="#tabManifiestosCPPlaca" aria-controls="tabManifiestosCPPlaca" role="tab" data-toggle="tab"><i class="fa fa-car"></i> Por Placa</a></li>';
+      html += '<li role="presentation"><a href="#tabManifiestosCPChofer" aria-controls="tabManifiestosCPChofer" role="tab" data-toggle="tab"><i class="fa fa-user"></i> Por Chofer</a></li>' + '<li role="presentation"><a href="#tabManifiestosCPPlaca" aria-controls="tabManifiestosCPPlaca" role="tab" data-toggle="tab"><i class="fa fa-car"></i> Por Placa</a></li>';
     } else {
-      html +=
-        '<li role="presentation"><a href="#tabManifiestosCPPlanta" aria-controls="tabManifiestosCPPlanta" role="tab" data-toggle="tab"><i class="fa fa-industry"></i> Por Planta</a></li>';
+      html += '<li role="presentation"><a href="#tabManifiestosCPPlanta" aria-controls="tabManifiestosCPPlanta" role="tab" data-toggle="tab"><i class="fa fa-industry"></i> Por Planta</a></li>';
     }
-    html += "</ul>";
-    html += '<div class="tab-content">';
-    html +=
-      '<div role="tabpanel" class="tab-pane active" id="tabManifiestosCPDetalle">';
-    html +=
-      '<div class="no-print" style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">';
-    html += '<div style="display: flex; align-items: center; gap: 8px;">';
-    html +=
-      '<label style="margin: 0; font-weight: normal;">Ordenar por:</label>';
-    html +=
-      '<select id="ordenManifiestosCPDetalle" class="form-control input-sm" style="width: auto;" onchange="aplicarOrdenManifiestosChoferPlaca(this.value);">';
-    html += '<option value="fecha" selected>Por fecha</option>';
-    html += '<option value="plantero">Por plantero</option>';
-    html += "</select>";
-    html += "</div>";
-    html += "<div>";
-    html +=
-      '<button type="button" class="btn btn-primary btn-sm" onclick="imprimirModalManifiestosChoferPlaca();" style="margin-right: 5px;"><i class="fa fa-print"></i> Imprimir</button>';
-    html +=
-      '<button type="button" class="btn btn-success btn-sm" onclick="exportModalManifiestosExcelChoferPlaca();" style="margin-right: 5px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); border-color: #1e7e34;"><i class="fa fa-file-excel-o"></i> Excel</button>';
-    html +=
-      '<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cerrar</button>';
-    html += "</div>";
-    html += "</div>";
+    html += "</ul>" + '<div class="tab-content">' + '<div role="tabpanel" class="tab-pane active" id="tabManifiestosCPDetalle">' + '<div class="no-print" style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">' + '<div style="display: flex; align-items: center; gap: 8px;">' + '<label style="margin: 0; font-weight: normal;">Ordenar por:</label>' + '<select id="ordenManifiestosCPDetalle" class="form-control input-sm" style="width: auto;" onchange="aplicarOrdenManifiestosChoferPlaca(this.value);">' + '<option value="fecha" selected>Por fecha</option>' + '<option value="plantero">Por plantero</option>' + "</select>" + "</div>" + "<div>" + '<button type="button" class="btn btn-primary btn-sm" onclick="imprimirModalManifiestosChoferPlaca();" style="margin-right: 5px;"><i class="fa fa-print"></i> Imprimir</button>' + '<button type="button" class="btn btn-success btn-sm" onclick="exportModalManifiestosExcelChoferPlaca();" style="margin-right: 5px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); border-color: #1e7e34;"><i class="fa fa-file-excel-o"></i> Excel</button>' + '<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cerrar</button>' + "</div>" + "</div>";
     var ordenados = ordenarManifiestosParaTabla(manifiestos, "fecha");
-    html +=
-      '<table class="table table-bordered table-striped table-condensed" style="font-size: 11px;"><thead><tr>';
-    html +=
-      '<th style="width: 40px;">#</th><th>No. Manifiesto</th><th>Fecha</th><th>Horario</th><th>Planta</th>';
+    html += '<table class="table table-bordered table-striped table-condensed" style="font-size: 11px;"><thead><tr>' + '<th style="width: 40px;">#</th><th>No. Manifiesto</th><th>Fecha</th><th>Horario</th><th>Planta</th>';
     if (tipoVista === "chofer")
       html += '<th style="white-space: nowrap; min-width: 90px;">Placa</th>';
     else if (tipoVista === "placa") html += "<th>Chofer</th>";
     else
-      html +=
-        '<th style="white-space: nowrap; min-width: 90px;">Placa</th><th>Chofer</th>';
-    html += "<th>T. Estancia</th>";
-    html += '</tr></thead><tbody id="tbodyManifiestosChoferPlaca">';
+      html += '<th style="white-space: nowrap; min-width: 90px;">Placa</th><th>Chofer</th>';
+    html += "<th>T. Estancia</th>" + '</tr></thead><tbody id="tbodyManifiestosChoferPlaca">';
     ordenados.forEach(function (man, index) {
       var tProm = man.minutos_estancia || 0;
       var tFmt =
@@ -2531,34 +1484,16 @@ function abrirModalManifiestosChoferPlaca(manifiestos, turnoInfo, tipoVista) {
             ? Math.floor(tProm / 60) + "h " + Math.round(tProm % 60) + "m"
             : Math.round(tProm) + " min"
           : "-";
-      html += "<tr>";
-      html +=
-        '<td style="text-align: center; font-weight: bold;">' +
-        (index + 1) +
-        "</td>";
-      html += "<td>" + (man.ManNum || "") + "</td>";
-      html += "<td>" + (man.Man_Fec || "") + "</td>";
-      html += "<td>" + (man.Man_Hor || "") + "</td>";
-      html += "<td>" + (man.Pla_Nom || "") + "</td>";
+      html += "<tr>" + '<td style="text-align: center; font-weight: bold;">' + (index + 1) + "</td>" + "<td>" + (man.ManNum || "") + "</td>" + "<td>" + (man.Man_Fec || "") + "</td>" + "<td>" + (man.Man_Hor || "") + "</td>" + "<td>" + (man.Pla_Nom || "") + "</td>";
       if (tipoVista === "chofer")
-        html +=
-          '<td style="white-space: nowrap;">' + (man.Veh_Pla || "") + "</td>";
+        html += '<td style="white-space: nowrap;">' + (man.Veh_Pla || "") + "</td>";
       else if (tipoVista === "placa")
         html += "<td>" + (man.chofer_nombre || "") + "</td>";
       else {
-        html +=
-          '<td style="white-space: nowrap;">' +
-          (man.Veh_Pla || "") +
-          "</td><td>" +
-          (man.chofer_nombre || "") +
-          "</td>";
+        html += '<td style="white-space: nowrap;">' + (man.Veh_Pla || "") + "</td><td>" + (man.chofer_nombre || "") + "</td>";
       }
-
-      html += "<td>" + tFmt + "</td>";
-      html += "</tr>";
-    });
-    html += "</tbody></table>";
-    html += "</div>";
+      html += "<td>" + tFmt + "</td>" + "</tr>";
+    }); html += "</tbody></table>" + "</div>";
     if (tipoVista === "planta") {
       var porChoferPlaca = {};
       manifiestos.forEach(function (man) {
@@ -2574,56 +1509,18 @@ function abrirModalManifiestosChoferPlaca(manifiestos, turnoInfo, tipoVista) {
         if (!porChoferPlaca[key])
           porChoferPlaca[key] = { placa: placa, chofer: chofer, cantidad: 0 };
         porChoferPlaca[key].cantidad += 1;
-      });
-      var filasChofer = Object.keys(porChoferPlaca).map(function (k) {
-        return porChoferPlaca[k];
-      });
-      filasChofer.sort(function (a, b) {
-        return (b.cantidad || 0) - (a.cantidad || 0);
-      });
+      }); var filasChofer = Object.keys(porChoferPlaca).map(function (k) { return porChoferPlaca[k]; });
+      filasChofer.sort(function (a, b) { return (b.cantidad || 0) - (a.cantidad || 0); });
       var totalMan = filasChofer.reduce(function (s, f) {
         return s + (f.cantidad || 0);
       }, 0);
-      html +=
-        '<div role="tabpanel" class="tab-pane" id="tabManifiestosCPChofer">';
-      html +=
-        '<div class="no-print" style="margin-bottom: 10px; text-align: right;">';
-      html +=
-        '<button type="button" class="btn btn-primary btn-sm" onclick="imprimirModalManifiestosChoferPlaca();" style="margin-right: 5px;"><i class="fa fa-print"></i> Imprimir</button>';
-      html +=
-        '<button type="button" class="btn btn-success btn-sm" onclick="exportModalManifiestosExcelChoferPlaca();" style="margin-right: 5px;"><i class="fa fa-file-excel-o"></i> Excel</button>';
-      html +=
-        '<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cerrar</button>';
-      html += "</div>";
-      html +=
-        '<table class="table table-bordered table-striped table-condensed" style="font-size: 11px;"><thead><tr>';
-      html +=
-        '<th style="width: 40px;">#</th><th style="white-space: nowrap; min-width: 90px;">Placa</th><th>Chofer</th><th style="width: 120px; text-align: center;">Cantidad Manifiestos</th><th style="width: 100px; text-align: center;">% Participación</th></tr></thead><tbody>';
+      html += '<div role="tabpanel" class="tab-pane" id="tabManifiestosCPChofer">' + '<div class="no-print" style="margin-bottom: 10px; text-align: right;">' + '<button type="button" class="btn btn-primary btn-sm" onclick="imprimirModalManifiestosChoferPlaca();" style="margin-right: 5px;"><i class="fa fa-print"></i> Imprimir</button>' + '<button type="button" class="btn btn-success btn-sm" onclick="exportModalManifiestosExcelChoferPlaca();" style="margin-right: 5px;"><i class="fa fa-file-excel-o"></i> Excel</button>' + '<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cerrar</button>' + "</div>" + '<table class="table table-bordered table-striped table-condensed" style="font-size: 11px;"><thead><tr>' + '<th style="width: 40px;">#</th><th style="white-space: nowrap; min-width: 90px;">Placa</th><th>Chofer</th><th style="width: 120px; text-align: center;">Cantidad Manifiestos</th><th style="width: 100px; text-align: center;">% Participación</th></tr></thead><tbody>';
       filasChofer.forEach(function (item, index) {
         var pct =
           totalMan > 0 ? ((item.cantidad / totalMan) * 100).toFixed(2) : "0.00";
-        html +=
-          '<tr><td style="text-align: center; font-weight: bold;">' +
-          (index + 1) +
-          '</td><td style="white-space: nowrap;">' +
-          item.placa +
-          "</td><td>" +
-          item.chofer +
-          "</td>";
-        html +=
-          '<td style="text-align: center;"><strong>' +
-          item.cantidad +
-          '</strong></td><td style="text-align: center;">' +
-          pct +
-          "%</td></tr>";
+        html += '<tr><td style="text-align: center; font-weight: bold;">' + (index + 1) + '</td><td style="white-space: nowrap;">' + item.placa + "</td><td>" + item.chofer + "</td>" + '<td style="text-align: center;"><strong>' + item.cantidad + '</strong></td><td style="text-align: center;">' + pct + "%</td></tr>";
       });
-      html +=
-        '</tbody><tfoot><tr style="background-color: #2C5D94; color: white; font-weight: bold;">';
-      html +=
-        '<td colspan="3" style="text-align: right; padding-right: 15px;">TOTAL:</td><td style="text-align: center;">' +
-        totalMan +
-        '</td><td style="text-align: center;">100%</td></tr></tfoot></table>';
-      html += "</div>";
+      html += '</tbody><tfoot><tr style="background-color: #2C5D94; color: white; font-weight: bold;">' + '<td colspan="3" style="text-align: right; padding-right: 15px;">TOTAL:</td><td style="text-align: center;">' + totalMan + '</td><td style="text-align: center;">100%</td></tr></tfoot></table>' + "</div>";
       // Tab Por Placa (agrupado solo por placa, con choferes)
       var porPlaca = {};
       manifiestos.forEach(function (man) {
@@ -2646,107 +1543,36 @@ function abrirModalManifiestosChoferPlaca(manifiestos, turnoInfo, tipoVista) {
           choferes: Object.keys(porPlaca[p].choferes).join(", "),
         };
       });
-      filasPlaca.sort(function (a, b) {
-        return (b.cantidad || 0) - (a.cantidad || 0);
-      });
+      filasPlaca.sort(function (a, b) { return (b.cantidad || 0) - (a.cantidad || 0); });
       var totalManPlaca = filasPlaca.reduce(function (s, f) {
         return s + (f.cantidad || 0);
       }, 0);
-      html +=
-        '<div role="tabpanel" class="tab-pane" id="tabManifiestosCPPlaca">';
-      html +=
-        '<div class="no-print" style="margin-bottom: 10px; text-align: right;">';
-      html +=
-        '<button type="button" class="btn btn-primary btn-sm" onclick="imprimirModalManifiestosChoferPlaca();" style="margin-right: 5px;"><i class="fa fa-print"></i> Imprimir</button>';
-      html +=
-        '<button type="button" class="btn btn-success btn-sm" onclick="exportModalManifiestosExcelChoferPlaca();" style="margin-right: 5px;"><i class="fa fa-file-excel-o"></i> Excel</button>';
-      html +=
-        '<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cerrar</button>';
-      html += "</div>";
-      html +=
-        '<table class="table table-bordered table-striped table-condensed" style="font-size: 11px;"><thead><tr>';
-      html +=
-        '<th style="width: 40px;">#</th><th style="white-space: nowrap; min-width: 90px;">Placa</th><th>Chofer</th><th style="width: 120px; text-align: center;">Cantidad Manifiestos</th><th style="width: 100px; text-align: center;">% Participación</th></tr></thead><tbody>';
+      html += '<div role="tabpanel" class="tab-pane" id="tabManifiestosCPPlaca">' + '<div class="no-print" style="margin-bottom: 10px; text-align: right;">' + '<button type="button" class="btn btn-primary btn-sm" onclick="imprimirModalManifiestosChoferPlaca();" style="margin-right: 5px;"><i class="fa fa-print"></i> Imprimir</button>' + '<button type="button" class="btn btn-success btn-sm" onclick="exportModalManifiestosExcelChoferPlaca();" style="margin-right: 5px;"><i class="fa fa-file-excel-o"></i> Excel</button>' + '<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cerrar</button>' + "</div>" + '<table class="table table-bordered table-striped table-condensed" style="font-size: 11px;"><thead><tr>' + '<th style="width: 40px;">#</th><th style="white-space: nowrap; min-width: 90px;">Placa</th><th>Chofer</th><th style="width: 120px; text-align: center;">Cantidad Manifiestos</th><th style="width: 100px; text-align: center;">% Participación</th></tr></thead><tbody>';
       filasPlaca.forEach(function (item, index) {
         var pct =
           totalManPlaca > 0
             ? ((item.cantidad / totalManPlaca) * 100).toFixed(2)
             : "0.00";
-        html +=
-          '<tr><td style="text-align: center; font-weight: bold;">' +
-          (index + 1) +
-          '</td><td style="white-space: nowrap;">' +
-          item.placa +
-          "</td><td>" +
-          (item.choferes || "") +
-          "</td>";
-        html +=
-          '<td style="text-align: center;"><strong>' +
-          item.cantidad +
-          '</strong></td><td style="text-align: center;">' +
-          pct +
-          "%</td></tr>";
+        html += '<tr><td style="text-align: center; font-weight: bold;">' + (index + 1) + '</td><td style="white-space: nowrap;">' + item.placa + "</td><td>" + (item.choferes || "") + "</td>" + '<td style="text-align: center;"><strong>' + item.cantidad + '</strong></td><td style="text-align: center;">' + pct + "%</td></tr>";
       });
-      html +=
-        '</tbody><tfoot><tr style="background-color: #2C5D94; color: white; font-weight: bold;">';
-      html +=
-        '<td colspan="3" style="text-align: right; padding-right: 15px;">TOTAL:</td><td style="text-align: center;">' +
-        totalManPlaca +
-        '</td><td style="text-align: center;">100%</td></tr></tfoot></table>';
-      html += "</div>";
+      html += '</tbody><tfoot><tr style="background-color: #2C5D94; color: white; font-weight: bold;">' + '<td colspan="3" style="text-align: right; padding-right: 15px;">TOTAL:</td><td style="text-align: center;">' + totalManPlaca + '</td><td style="text-align: center;">100%</td></tr></tfoot></table>' + "</div>";
     } else {
       var porPlanta = {};
       manifiestos.forEach(function (man) {
         var planta = man.Pla_Nom || "(Sin planta)";
         porPlanta[planta] = (porPlanta[planta] || 0) + 1;
-      });
-      var filasPlanta = Object.keys(porPlanta).map(function (p) {
-        return { planta: p, cantidad: porPlanta[p] };
-      });
-      filasPlanta.sort(function (a, b) {
-        return (b.cantidad || 0) - (a.cantidad || 0);
-      });
+      }); var filasPlanta = Object.keys(porPlanta).map(function (p) { return { planta: p, cantidad: porPlanta[p] }; });
+      filasPlanta.sort(function (a, b) { return (b.cantidad || 0) - (a.cantidad || 0); });
       var totalMan = filasPlanta.reduce(function (s, f) {
         return s + (f.cantidad || 0);
       }, 0);
-      html +=
-        '<div role="tabpanel" class="tab-pane" id="tabManifiestosCPPlanta">';
-      html +=
-        '<div class="no-print" style="margin-bottom: 10px; text-align: right;">';
-      html +=
-        '<button type="button" class="btn btn-primary btn-sm" onclick="imprimirModalManifiestosChoferPlaca();" style="margin-right: 5px;"><i class="fa fa-print"></i> Imprimir</button>';
-      html +=
-        '<button type="button" class="btn btn-success btn-sm" onclick="exportModalManifiestosExcelChoferPlaca();" style="margin-right: 5px;"><i class="fa fa-file-excel-o"></i> Excel</button>';
-      html +=
-        '<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cerrar</button>';
-      html += "</div>";
-      html +=
-        '<table class="table table-bordered table-striped table-condensed" style="font-size: 11px;"><thead><tr>';
-      html +=
-        '<th style="width: 40px;">#</th><th>Planta</th><th style="width: 120px; text-align: center;">Cantidad Manifiestos</th><th style="width: 100px; text-align: center;">% Participación</th></tr></thead><tbody>';
+      html += '<div role="tabpanel" class="tab-pane" id="tabManifiestosCPPlanta">' + '<div class="no-print" style="margin-bottom: 10px; text-align: right;">' + '<button type="button" class="btn btn-primary btn-sm" onclick="imprimirModalManifiestosChoferPlaca();" style="margin-right: 5px;"><i class="fa fa-print"></i> Imprimir</button>' + '<button type="button" class="btn btn-success btn-sm" onclick="exportModalManifiestosExcelChoferPlaca();" style="margin-right: 5px;"><i class="fa fa-file-excel-o"></i> Excel</button>' + '<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cerrar</button>' + "</div>" + '<table class="table table-bordered table-striped table-condensed" style="font-size: 11px;"><thead><tr>' + '<th style="width: 40px;">#</th><th>Planta</th><th style="width: 120px; text-align: center;">Cantidad Manifiestos</th><th style="width: 100px; text-align: center;">% Participación</th></tr></thead><tbody>';
       filasPlanta.forEach(function (item, index) {
         var pct =
           totalMan > 0 ? ((item.cantidad / totalMan) * 100).toFixed(2) : "0.00";
-        html +=
-          '<tr><td style="text-align: center; font-weight: bold;">' +
-          (index + 1) +
-          "</td><td>" +
-          item.planta +
-          "</td>";
-        html +=
-          '<td style="text-align: center;"><strong>' +
-          item.cantidad +
-          '</strong></td><td style="text-align: center;">' +
-          pct +
-          "%</td></tr>";
+        html += '<tr><td style="text-align: center; font-weight: bold;">' + (index + 1) + "</td><td>" + item.planta + "</td>" + '<td style="text-align: center;"><strong>' + item.cantidad + '</strong></td><td style="text-align: center;">' + pct + "%</td></tr>";
       });
-      html +=
-        '</tbody><tfoot><tr style="background-color: #2C5D94; color: white; font-weight: bold;">';
-      html +=
-        '<td style="text-align: right; padding-right: 15px;">TOTAL:</td><td></td><td style="text-align: center;">' +
-        totalMan +
-        '</td><td style="text-align: center;">100%</td></tr></tfoot></table>';
-      html += "</div>";
+      html += '</tbody><tfoot><tr style="background-color: #2C5D94; color: white; font-weight: bold;">' + '<td style="text-align: right; padding-right: 15px;">TOTAL:</td><td></td><td style="text-align: center;">' + totalMan + '</td><td style="text-align: center;">100%</td></tr></tfoot></table>' + "</div>";
     }
     html += "</div>";
   }
@@ -2759,21 +1585,17 @@ function abrirModalManifiestosChoferPlaca(manifiestos, turnoInfo, tipoVista) {
     $(this).remove();
   });
 }
-
 function aplicarOrdenManifiestosChoferPlaca(tipo) {
   if (
-    !datosModalManifiestosChoferPlaca ||
-    !datosModalManifiestosChoferPlaca.manifiestos
+    !datosModalManifiestosChoferPlaca || !datosModalManifiestosChoferPlaca.manifiestos
   )
     return;
   var ordenados = ordenarManifiestosParaTabla(
     datosModalManifiestosChoferPlaca.manifiestos,
     tipo,
-  );
-  var tipoVista = datosModalManifiestosChoferPlaca.tipoVista || "chofer";
+  ); var tipoVista = datosModalManifiestosChoferPlaca.tipoVista || "chofer";
   var $tbody = $("#tbodyManifiestosChoferPlaca");
-  if (!$tbody.length) return;
-  var html = "";
+  if (!$tbody.length) return; var html = "";
   ordenados.forEach(function (man, index) {
     var tProm = man.minutos_estancia || 0;
     var tFmt =
@@ -2782,54 +1604,31 @@ function aplicarOrdenManifiestosChoferPlaca(tipo) {
           ? Math.floor(tProm / 60) + "h " + Math.round(tProm % 60) + "m"
           : Math.round(tProm) + " min"
         : "-";
-    html += "<tr>";
-    html +=
-      '<td style="text-align: center; font-weight: bold;">' +
-      (index + 1) +
-      "</td>";
-    html += "<td>" + (man.ManNum || "") + "</td>";
-    html += "<td>" + (man.Man_Fec || "") + "</td>";
-    html += "<td>" + (man.Man_Hor || "") + "</td>";
-    html += "<td>" + (man.Pla_Nom || "") + "</td>";
+    html += "<tr>" + '<td style="text-align: center; font-weight: bold;">' + (index + 1) + "</td>" + "<td>" + (man.ManNum || "") + "</td>" + "<td>" + (man.Man_Fec || "") + "</td>" + "<td>" + (man.Man_Hor || "") + "</td>" + "<td>" + (man.Pla_Nom || "") + "</td>";
     if (tipoVista === "chofer")
-      html +=
-        '<td style="white-space: nowrap;">' + (man.Veh_Pla || "") + "</td>";
+      html += '<td style="white-space: nowrap;">' + (man.Veh_Pla || "") + "</td>";
     else if (tipoVista === "placa")
       html += "<td>" + (man.chofer_nombre || "") + "</td>";
     else {
-      html +=
-        '<td style="white-space: nowrap;">' +
-        (man.Veh_Pla || "") +
-        "</td><td>" +
-        (man.chofer_nombre || "") +
-        "</td>";
+      html += '<td style="white-space: nowrap;">' + (man.Veh_Pla || "") + "</td><td>" + (man.chofer_nombre || "") + "</td>";
     }
-    html += "<td>" + tFmt + "</td>";
-    html += "</tr>";
+    html += "<td>" + tFmt + "</td>" + "</tr>";
   });
   $tbody.html(html);
 }
-
 function verManifiestosChoferPlaca(idx) {
   if (
-    !datosDashboardChoferPlaca ||
-    !datosDashboardChoferPlaca.agrupado ||
-    !datosDashboardChoferPlaca.agrupado[idx]
+    !datosDashboardChoferPlaca || !datosDashboardChoferPlaca.agrupado || !datosDashboardChoferPlaca.agrupado[idx]
   )
     return;
-  var grupo = datosDashboardChoferPlaca.agrupado[idx];
-  var tipoVista = datosDashboardChoferPlaca.tipo_vista || "chofer";
+  var grupo = datosDashboardChoferPlaca.agrupado[idx]; var tipoVista = datosDashboardChoferPlaca.tipo_vista || "chofer";
   var tituloRango =
-    formatearFechaRango(fechaInicioChoferPlaca) +
-    " - " +
-    formatearFechaRango(fechaFinChoferPlaca);
+    formatearFechaRango(fechaInicioChoferPlaca) + " - " + formatearFechaRango(fechaFinChoferPlaca);
   var turnoInfo = {
     fecha: tituloRango,
     horario:
       tipoVista === "chofer"
-        ? "Chofer: " +
-          (grupo.chofer_nombre || "Sin asignar") +
-          (grupo.Pla_Nom ? " | Planta: " + grupo.Pla_Nom : "")
+        ? "Chofer: " + (grupo.chofer_nombre || "Sin asignar") + (grupo.Pla_Nom ? " | Planta: " + grupo.Pla_Nom : "")
         : tipoVista === "planta"
           ? "Planta: " + (grupo.Pla_Nom || "Sin planta")
           : "Placa: " + (grupo.Veh_Pla || "Sin placa"),
@@ -2840,15 +1639,11 @@ function verManifiestosChoferPlaca(idx) {
     tipoVista,
   );
 }
-
 function imprimirModalManifiestosChoferPlaca() {
   var $modal = $("#modalManifiestosChoferPlaca");
-  if (!$modal.length) return;
-  var $titulo = $modal.find(".modal-title");
+  if (!$modal.length) return; var $titulo = $modal.find(".modal-title");
   var encabezado = $titulo.length
-    ? '<div class="modal-print-header" style="background:#2C5D94;color:white;padding:10px 15px;margin-bottom:12px;font-size:14px;font-weight:bold;">' +
-      ($titulo.text() || $titulo.html() || "Manifiestos").trim() +
-      "</div>"
+    ? '<div class="modal-print-header" style="background:#2C5D94;color:white;padding:10px 15px;margin-bottom:12px;font-size:14px;font-weight:bold;">' + ($titulo.text() || $titulo.html() || "Manifiestos").trim() + "</div>"
     : "";
   var $activo = $modal.find(".tab-pane.active");
   var contenido = $activo.length
@@ -2860,11 +1655,9 @@ function imprimirModalManifiestosChoferPlaca() {
     "Manifiestos - Chofer/Placa",
   );
 }
-
 function exportModalManifiestosExcelChoferPlaca() {
   if (
-    !datosModalManifiestosChoferPlaca ||
-    !datosModalManifiestosChoferPlaca.manifiestos
+    !datosModalManifiestosChoferPlaca || !datosModalManifiestosChoferPlaca.manifiestos
   ) {
     alert("No hay datos para exportar.");
     return;
@@ -2872,19 +1665,12 @@ function exportModalManifiestosExcelChoferPlaca() {
   var manifiestos = datosModalManifiestosChoferPlaca.manifiestos;
   var turnoInfo = datosModalManifiestosChoferPlaca.turnoInfo || {};
   var titulo =
-    "Manifiestos - " +
-    (turnoInfo.horario || "") +
-    (turnoInfo.fecha ? " (" + turnoInfo.fecha + ")" : "");
+    "Manifiestos - " + (turnoInfo.horario || "") + (turnoInfo.fecha ? " (" + turnoInfo.fecha + ")" : "");
   var nombre =
-    "manifiestos_chofer_placa_" +
-    (fechaInicioChoferPlaca || "").replace(/\//g, "-") +
-    "_" +
-    (fechaFinChoferPlaca || "").replace(/\//g, "-");
-  var html = "";
-  var hoja = "Manifiestos";
+    "manifiestos_chofer_placa_" + (fechaInicioChoferPlaca || "").replace(/\//g, "-") + "_" + (fechaFinChoferPlaca || "").replace(/\//g, "-");
+  var html = "", hoja = "Manifiestos";
   // Detectar pestaña activa del modal: exportar la vista que está viendo el usuario
-  var $activo = $("#modalManifiestosChoferPlaca .tab-pane.active");
-  var idActivo = $activo.attr("id") || "";
+  var $activo = $("#modalManifiestosChoferPlaca .tab-pane.active"); var idActivo = $activo.attr("id") || "";
   if (idActivo === "tabManifiestosCPChofer") {
     // Vista resumida Por Chofer (con Placa)
     var porChoferPlaca = {};
@@ -2901,45 +1687,20 @@ function exportModalManifiestosExcelChoferPlaca() {
       if (!porChoferPlaca[key])
         porChoferPlaca[key] = { placa: placa, chofer: chofer, cantidad: 0 };
       porChoferPlaca[key].cantidad += 1;
-    });
-    var filasChofer = Object.keys(porChoferPlaca).map(function (k) {
-      return porChoferPlaca[k];
-    });
-    filasChofer.sort(function (a, b) {
-      return (b.cantidad || 0) - (a.cantidad || 0);
-    });
+    }); var filasChofer = Object.keys(porChoferPlaca).map(function (k) { return porChoferPlaca[k]; });
+    filasChofer.sort(function (a, b) { return (b.cantidad || 0) - (a.cantidad || 0); });
     var totalMan = filasChofer.reduce(function (s, f) {
       return s + (f.cantidad || 0);
     }, 0);
     html =
       '<table border="1" cellpadding="3" style="border-collapse:collapse;">';
-    html +=
-      '<tr style="background:#2C5D94;color:white;font-weight:bold;"><td colspan="5" style="padding:8px;text-align:center;">' +
-      titulo +
-      " - Por Chofer</td></tr>";
-    html +=
-      '<tr style="background:#2C5D94;color:white;font-weight:bold;"><td>#</td><td>Placa</td><td>Chofer</td><td style="text-align:center;">Cantidad Manifiestos</td><td style="text-align:center;">% Participación</td></tr>';
+    html += '<tr style="background:#2C5D94;color:white;font-weight:bold;"><td colspan="5" style="padding:8px;text-align:center;">' + titulo + " - Por Chofer</td></tr>" + '<tr style="background:#2C5D94;color:white;font-weight:bold;"><td>#</td><td>Placa</td><td>Chofer</td><td style="text-align:center;">Cantidad Manifiestos</td><td style="text-align:center;">% Participación</td></tr>';
     filasChofer.forEach(function (item, index) {
       var pct =
         totalMan > 0 ? ((item.cantidad / totalMan) * 100).toFixed(2) : "0.00";
-      html +=
-        "<tr><td>" +
-        (index + 1) +
-        "</td><td>" +
-        item.placa +
-        "</td><td>" +
-        item.chofer +
-        '</td><td style="text-align:center;">' +
-        item.cantidad +
-        '</td><td style="text-align:center;">' +
-        pct +
-        "%</td></tr>";
+      html += "<tr><td>" + (index + 1) + "</td><td>" + item.placa + "</td><td>" + item.chofer + '</td><td style="text-align:center;">' + item.cantidad + '</td><td style="text-align:center;">' + pct + "%</td></tr>";
     });
-    html +=
-      '<tr style="background:#2C5D94;color:white;font-weight:bold;"><td colspan="3" style="text-align:right;padding-right:10px;">TOTAL</td><td style="text-align:center;">' +
-      totalMan +
-      '</td><td style="text-align:center;">100%</td></tr>';
-    html += "</table>";
+    html += '<tr style="background:#2C5D94;color:white;font-weight:bold;"><td colspan="3" style="text-align:right;padding-right:10px;">TOTAL</td><td style="text-align:center;">' + totalMan + '</td><td style="text-align:center;">100%</td></tr>' + "</table>";
     hoja = "Manifiestos Por Chofer";
   } else if (idActivo === "tabManifiestosCPPlaca") {
     // Vista resumida Por Placa (con choferes)
@@ -2964,43 +1725,21 @@ function exportModalManifiestosExcelChoferPlaca() {
         choferes: Object.keys(porPlaca[p].choferes).join(", "),
       };
     });
-    filasPlaca.sort(function (a, b) {
-      return (b.cantidad || 0) - (a.cantidad || 0);
-    });
+    filasPlaca.sort(function (a, b) { return (b.cantidad || 0) - (a.cantidad || 0); });
     var totalManPlaca = filasPlaca.reduce(function (s, f) {
       return s + (f.cantidad || 0);
     }, 0);
     html =
       '<table border="1" cellpadding="3" style="border-collapse:collapse;">';
-    html +=
-      '<tr style="background:#2C5D94;color:white;font-weight:bold;"><td colspan="5" style="padding:8px;text-align:center;">' +
-      titulo +
-      " - Por Placa</td></tr>";
-    html +=
-      '<tr style="background:#2C5D94;color:white;font-weight:bold;"><td>#</td><td>Placa</td><td>Chofer</td><td style="text-align:center;">Cantidad Manifiestos</td><td style="text-align:center;">% Participación</td></tr>';
+    html += '<tr style="background:#2C5D94;color:white;font-weight:bold;"><td colspan="5" style="padding:8px;text-align:center;">' + titulo + " - Por Placa</td></tr>" + '<tr style="background:#2C5D94;color:white;font-weight:bold;"><td>#</td><td>Placa</td><td>Chofer</td><td style="text-align:center;">Cantidad Manifiestos</td><td style="text-align:center;">% Participación</td></tr>';
     filasPlaca.forEach(function (item, index) {
       var pct =
         totalManPlaca > 0
           ? ((item.cantidad / totalManPlaca) * 100).toFixed(2)
           : "0.00";
-      html +=
-        "<tr><td>" +
-        (index + 1) +
-        "</td><td>" +
-        item.placa +
-        "</td><td>" +
-        (item.choferes || "") +
-        '</td><td style="text-align:center;">' +
-        item.cantidad +
-        '</td><td style="text-align:center;">' +
-        pct +
-        "%</td></tr>";
+      html += "<tr><td>" + (index + 1) + "</td><td>" + item.placa + "</td><td>" + (item.choferes || "") + '</td><td style="text-align:center;">' + item.cantidad + '</td><td style="text-align:center;">' + pct + "%</td></tr>";
     });
-    html +=
-      '<tr style="background:#2C5D94;color:white;font-weight:bold;"><td colspan="3" style="text-align:right;padding-right:10px;">TOTAL</td><td style="text-align:center;">' +
-      totalManPlaca +
-      '</td><td style="text-align:center;">100%</td></tr>';
-    html += "</table>";
+    html += '<tr style="background:#2C5D94;color:white;font-weight:bold;"><td colspan="3" style="text-align:right;padding-right:10px;">TOTAL</td><td style="text-align:center;">' + totalManPlaca + '</td><td style="text-align:center;">100%</td></tr>' + "</table>";
     hoja = "Manifiestos Por Placa";
   } else if (idActivo === "tabManifiestosCPPlanta") {
     // Vista resumida Por Planta
@@ -3008,43 +1747,20 @@ function exportModalManifiestosExcelChoferPlaca() {
     manifiestos.forEach(function (man) {
       var planta = man.Pla_Nom || "(Sin planta)";
       porPlanta[planta] = (porPlanta[planta] || 0) + 1;
-    });
-    var filasPlanta = Object.keys(porPlanta).map(function (p) {
-      return { planta: p, cantidad: porPlanta[p] };
-    });
-    filasPlanta.sort(function (a, b) {
-      return (b.cantidad || 0) - (a.cantidad || 0);
-    });
+    }); var filasPlanta = Object.keys(porPlanta).map(function (p) { return { planta: p, cantidad: porPlanta[p] }; });
+    filasPlanta.sort(function (a, b) { return (b.cantidad || 0) - (a.cantidad || 0); });
     var totalMan = filasPlanta.reduce(function (s, f) {
       return s + (f.cantidad || 0);
     }, 0);
     html =
       '<table border="1" cellpadding="3" style="border-collapse:collapse;">';
-    html +=
-      '<tr style="background:#2C5D94;color:white;font-weight:bold;"><td colspan="4" style="padding:8px;text-align:center;">' +
-      titulo +
-      " - Por Planta</td></tr>";
-    html +=
-      '<tr style="background:#2C5D94;color:white;font-weight:bold;"><td>#</td><td>Planta</td><td style="text-align:center;">Cantidad Manifiestos</td><td style="text-align:center;">% Participación</td></tr>';
+    html += '<tr style="background:#2C5D94;color:white;font-weight:bold;"><td colspan="4" style="padding:8px;text-align:center;">' + titulo + " - Por Planta</td></tr>" + '<tr style="background:#2C5D94;color:white;font-weight:bold;"><td>#</td><td>Planta</td><td style="text-align:center;">Cantidad Manifiestos</td><td style="text-align:center;">% Participación</td></tr>';
     filasPlanta.forEach(function (item, index) {
       var pct =
         totalMan > 0 ? ((item.cantidad / totalMan) * 100).toFixed(2) : "0.00";
-      html +=
-        "<tr><td>" +
-        (index + 1) +
-        "</td><td>" +
-        item.planta +
-        '</td><td style="text-align:center;">' +
-        item.cantidad +
-        '</td><td style="text-align:center;">' +
-        pct +
-        "%</td></tr>";
+      html += "<tr><td>" + (index + 1) + "</td><td>" + item.planta + '</td><td style="text-align:center;">' + item.cantidad + '</td><td style="text-align:center;">' + pct + "%</td></tr>";
     });
-    html +=
-      '<tr style="background:#2C5D94;color:white;font-weight:bold;"><td colspan="2" style="text-align:right;padding-right:10px;">TOTAL</td><td style="text-align:center;">' +
-      totalMan +
-      '</td><td style="text-align:center;">100%</td></tr>';
-    html += "</table>";
+    html += '<tr style="background:#2C5D94;color:white;font-weight:bold;"><td colspan="2" style="text-align:right;padding-right:10px;">TOTAL</td><td style="text-align:center;">' + totalMan + '</td><td style="text-align:center;">100%</td></tr>' + "</table>";
     hoja = "Manifiestos Por Planta";
   } else {
     // Vista Detallado (lista completa)
@@ -3053,20 +1769,10 @@ function exportModalManifiestosExcelChoferPlaca() {
     var numCols = tipoVista === "chofer" || tipoVista === "placa" ? 6 : 7;
     html =
       '<table border="1" cellpadding="3" style="border-collapse:collapse;">';
-    html +=
-      '<tr style="background:#2C5D94;color:white;font-weight:bold;"><td colspan="' +
-      numCols +
-      '" style="padding:8px;text-align:center;">' +
-      titulo +
-      "</td></tr>";
-    html += '<tr style="background:#2C5D94;color:white;font-weight:bold;">';
-    html +=
-      "<td>#</td><td>No. Manifiesto</td><td>Fecha</td><td>Horario</td><td>Planta</td>";
+    html += '<tr style="background:#2C5D94;color:white;font-weight:bold;"><td colspan="' + numCols + '" style="padding:8px;text-align:center;">' + titulo + "</td></tr>" + '<tr style="background:#2C5D94;color:white;font-weight:bold;">' + "<td>#</td><td>No. Manifiesto</td><td>Fecha</td><td>Horario</td><td>Planta</td>";
     if (tipoVista === "chofer") html += "<td>Placa</td>";
     else if (tipoVista === "placa") html += "<td>Chofer</td>";
-    else html += "<td>Placa</td><td>Chofer</td>";
-    html += "<td>T. Estancia</td>";
-    html += "</tr>";
+    else html += "<td>Placa</td><td>Chofer</td>"; html += "<td>T. Estancia</td>" + "</tr>";
     ordenados.forEach(function (man, i) {
       var tProm = man.minutos_estancia || 0;
       var tFmt =
@@ -3075,44 +1781,23 @@ function exportModalManifiestosExcelChoferPlaca() {
             ? Math.floor(tProm / 60) + "h " + Math.round(tProm % 60) + "m"
             : Math.round(tProm) + " min"
           : "-";
-      html += "<tr>";
-      html +=
-        "<td>" +
-        (i + 1) +
-        "</td><td>" +
-        (man.ManNum || "") +
-        "</td><td>" +
-        (man.Man_Fec || "") +
-        "</td><td>" +
-        (man.Man_Hor || "") +
-        "</td><td>" +
-        (man.Pla_Nom || "") +
-        "</td>";
+      html += "<tr>" + "<td>" + (i + 1) + "</td><td>" + (man.ManNum || "") + "</td><td>" + (man.Man_Fec || "") + "</td><td>" + (man.Man_Hor || "") + "</td><td>" + (man.Pla_Nom || "") + "</td>";
       if (tipoVista === "chofer")
         html += "<td>" + (man.Veh_Pla || "") + "</td>";
       else if (tipoVista === "placa")
         html += "<td>" + (man.chofer_nombre || "") + "</td>";
       else {
-        html +=
-          "<td>" +
-          (man.Veh_Pla || "") +
-          "</td><td>" +
-          (man.chofer_nombre || "") +
-          "</td>";
+        html += "<td>" + (man.Veh_Pla || "") + "</td><td>" + (man.chofer_nombre || "") + "</td>";
       }
-      html += "<td>" + tFmt + "</td>";
-      html += "</tr>";
-    });
-    html += "</table>";
+      html += "<td>" + tFmt + "</td>" + "</tr>";
+    }); html += "</table>";
   }
   exportarTablaAExcel(html, nombre, hoja);
 }
-
 function exportarTablaAExcel(htmlTabla, nombreArchivo, nombreHoja) {
   if (!htmlTabla || !nombreArchivo) return;
   var form = $("<form>", {
-    method: "POST",
-    action: "../../Librerias/exportar/ficheroExcel.php",
+    method: "POST", action: "../../Librerias/exportar/ficheroExcel.php",
     target: "_blank",
   });
   form.append(
@@ -3123,8 +1808,7 @@ function exportarTablaAExcel(htmlTabla, nombreArchivo, nombreHoja) {
   );
   form.append(
     $("<input>", {
-      type: "hidden",
-      name: "hoja",
+      type: "hidden", name: "hoja",
       value: nombreHoja || "Manifiestos",
     }),
   );
@@ -3132,7 +1816,6 @@ function exportarTablaAExcel(htmlTabla, nombreArchivo, nombreHoja) {
   form.submit();
   form.remove();
 }
-
 function imprimirReporte() {
   if (!datosDashboardActual || datosDashboardActual.length === 0) {
     alert(
@@ -3140,7 +1823,6 @@ function imprimirReporte() {
     );
     return;
   }
-
   // TENDENCIA: capturar ApexCharts como SVG ANTES de abrir la ventana
   var tendenciaImgs = {};
   if (modoVistaConfig === "tendencia" && typeof datosTurnosPorDia === "object") {
@@ -3154,27 +1836,13 @@ function imprimirReporte() {
       if (imgUrl) tendenciaImgs[fechaId] = imgUrl;
     });
   }
-
   // ──────────────────────────────────────────────────────────────────────────
   // Construir HTML de impresión
   // ──────────────────────────────────────────────────────────────────────────
   var html = "";
   datosDashboardActual.forEach(function (config) {
-    html += '<div class="config-card">';
-    html += '<div class="config-header">';
-    html += "<h4>Configuración de Turnos #" + config.Tur_Cod + "</h4>";
-    html += '<p style="margin: 5px 0 0 0; font-size: 14px;">Período: ' + config.Tur_Fei + " - " + config.Tur_Fef + "</p>";
-    html += "</div>";
-    html += '<div class="config-stats">';
-    html += '<div class="stat-card total-turnos"><div class="stat-label">Total Turnos</div><div class="stat-value">' + (config.total_turnos_detalle || 0) + "</div></div>";
-    html += '<div class="stat-card total-cupos"><div class="stat-label">Total Cupos</div><div class="stat-value">' + (config.total_cupos || 0) + "</div></div>";
-    html += '<div class="stat-card cupos-ocupados"><div class="stat-label">Cupos Ocupados</div><div class="stat-value">' + (config.total_cupos_ocupados || 0) + "</div></div>";
-    html += '<div class="stat-card cupos-libres"><div class="stat-label">Cupos Libres</div><div class="stat-value">' + (config.total_cupos_libres || 0) + "</div></div>";
-    html += '<div class="stat-card ocupacion"><div class="stat-label">% Ocupación</div><div class="stat-value">' + (config.porcentaje_ocupacion_general || 0) + "%</div></div>";
-    html += "</div>";
-
+    html += '<div class="config-card">' + '<div class="config-header">' + "<h4>Configuración de Turnos #" + config.Tur_Cod + "</h4>" + '<p style="margin: 5px 0 0 0; font-size: 14px;">Período: ' + config.Tur_Fei + " - " + config.Tur_Fef + "</p>" + "</div>" + '<div class="config-stats">' + '<div class="stat-card total-turnos"><div class="stat-label">Total Turnos</div><div class="stat-value">' + (config.total_turnos_detalle || 0) + "</div></div>" + '<div class="stat-card total-cupos"><div class="stat-label">Total Cupos</div><div class="stat-value">' + (config.total_cupos || 0) + "</div></div>" + '<div class="stat-card cupos-ocupados"><div class="stat-label">Cupos Ocupados</div><div class="stat-value">' + (config.total_cupos_ocupados || 0) + "</div></div>" + '<div class="stat-card cupos-libres"><div class="stat-label">Cupos Libres</div><div class="stat-value">' + (config.total_cupos_libres || 0) + "</div></div>" + '<div class="stat-card ocupacion"><div class="stat-label">% Ocupación</div><div class="stat-value">' + (config.porcentaje_ocupacion_general || 0) + "%</div></div>" + "</div>";
     var turnosPrint = getTurnosFiltradosPorFechaConfig(config.turnos_detalle);
-
     if (modoVistaConfig === "tendencia" && Object.keys(tendenciaImgs).length > 0) {
       // ── TENDENCIA: inyectar imagen capturada del canvas por día ──
       // Agrupar turnos por fecha para mostrar el encabezado del día
@@ -3183,26 +1851,19 @@ function imprimirReporte() {
         var fec = t.Tud_Fec || "";
         if (!turnosPorFechaT[fec]) turnosPorFechaT[fec] = [];
         turnosPorFechaT[fec].push(t);
-      });
-
-      var fechasSorted = Object.keys(turnosPorFechaT).sort();
+      }); var fechasSorted = Object.keys(turnosPorFechaT).sort();
       fechasSorted.forEach(function (fec) {
         // Construir el mismo fechaId que usa generarVistaDiasConTresOpciones
-        var fechaId = "fecha_" + fec.replace(/[\/\-]/g, "_");
-        var imgUrl = tendenciaImgs[fechaId];
-        html += '<div class="fecha-print-block" style="margin-bottom:16px; page-break-inside:avoid;">';
-        html += '<div class="fecha-header"><h5>' + fec + '</h5></div>';
+        var fechaId = "fecha_" + fec.replace(/[\/\-]/g, "_"); var imgUrl = tendenciaImgs[fechaId];
+        html += '<div class="fecha-print-block" style="margin-bottom:16px; page-break-inside:avoid;">' + '<div class="fecha-header"><h5>' + fec + '</h5></div>';
         if (imgUrl) {
-          html += '<div style="padding:8px 0;">';
-          html += '<img src="' + imgUrl + '" style="width:100%; height:auto; max-width:100%; display:block;" />';
-          html += '</div>';
+          html += '<div style="padding:8px 0;">' + '<img src="' + imgUrl + '" style="width:100%; height:auto; max-width:100%; display:block;" />' + '</div>';
         } else {
           // fallback: tabla cuando no se pudo capturar imagen
           html += generarTablaParaDia(turnosPorFechaT[fec]);
         }
         html += '</div>';
       });
-
     } else if (modoVistaConfig === "barras") {
       // ── BARRAS: generar HTML de barras por día directamente ──
       var turnosPorFechaB = {};
@@ -3210,27 +1871,18 @@ function imprimirReporte() {
         var fec = t.Tud_Fec || "";
         if (!turnosPorFechaB[fec]) turnosPorFechaB[fec] = [];
         turnosPorFechaB[fec].push(t);
-      });
-
-      var fechasSortedB = Object.keys(turnosPorFechaB).sort();
+      }); var fechasSortedB = Object.keys(turnosPorFechaB).sort();
       fechasSortedB.forEach(function (fec) {
-        html += '<div class="fecha-print-block" style="margin-bottom:16px; page-break-inside:avoid;">';
-        html += '<div class="fecha-header"><h5>' + fec + '</h5></div>';
-        html += generarBarrasParaDia(turnosPorFechaB[fec], true);
-        html += '</div>';
+        html += '<div class="fecha-print-block" style="margin-bottom:16px; page-break-inside:avoid;">' + '<div class="fecha-header"><h5>' + fec + '</h5></div>' + generarBarrasParaDia(turnosPorFechaB[fec], true) + '</div>';
       });
-
     } else {
       // ── TABLA: comportamiento original ──
       html += generarVistaDiasConTresOpciones(turnosPrint || [], true);
     }
-
     html += "</div>";
   });
-
   abrirVentanaImpresion(html, "Dashboard de Turnos");
 }
-
 function exportarExcel() {
   if (!datosDashboardActual || datosDashboardActual.length === 0) {
     alert(
@@ -3238,15 +1890,11 @@ function exportarExcel() {
     );
     return;
   }
-
-  var Tur_Cod = $("#select_configuracion").val() || "";
-  var nombreConfig = "Todas";
+  var Tur_Cod = $("#select_configuracion").val() || ""; var nombreConfig = "Todas";
   if (Tur_Cod) {
-    var $select = $("#select_configuracion");
-    var textoSeleccionado = $select.find("option:selected").text();
+    var $select = $("#select_configuracion"); var textoSeleccionado = $select.find("option:selected").text();
     nombreConfig = textoSeleccionado.replace(/[^a-zA-Z0-9]/g, "_");
   }
-
   // Crear tabla HTML con formato para Excel (estilos inline + style block para compatibilidad en producción)
   // table-layout:fixed y colgroup limitan a 7 columnas para evitar que Excel extienda colores a columnas vacías
   var htmlExcel = '<style type="text/css">';
@@ -3267,61 +1915,35 @@ function exportarExcel() {
   htmlExcel +=
     '<table class="xl-dashboard" border="1" cellpadding="3" cellspacing="0" style="border-collapse: collapse; table-layout: fixed; width: 600px;">';
   htmlExcel += "<colgroup><col><col><col><col><col><col><col></colgroup>";
-
   datosDashboardActual.forEach(function (config) {
-    var configHeader = "Configuración de Turnos #" + config.Tur_Cod;
-    var configPeriodo = "Período: " + config.Tur_Fei + " - " + config.Tur_Fef;
-
+    var configHeader = "Configuración de Turnos #" + config.Tur_Cod, configPeriodo = "Período: " + config.Tur_Fei + " - " + config.Tur_Fef;
     htmlExcel +=
       '<tr class="xl-header" bgcolor="#2C5D94" style="background-color: #2C5D94; color: white; font-weight: bold;">';
     htmlExcel +=
-      '<td colspan="7" bgcolor="#2C5D94" style="text-align: center; font-size: 12px; padding: 8px; color: white;">' +
-      configHeader +
-      " - " +
-      configPeriodo +
-      "</td>";
+      '<td colspan="7" bgcolor="#2C5D94" style="text-align: center; font-size: 12px; padding: 8px; color: white;">' + configHeader + " - " + configPeriodo + "</td>";
     htmlExcel += "</tr>";
-
     htmlExcel +=
       '<tr class="xl-stats" bgcolor="#f0f0f0" style="background-color: #f0f0f0; font-weight: bold;">';
     htmlExcel +=
-      '<td colspan="7" bgcolor="#f0f0f0" style="padding: 5px;">Total Turnos: ' +
-      (config.total_turnos_detalle || 0) +
-      " | Total Cupos: " +
-      (config.total_cupos || 0) +
-      " | Cupos Ocupados: " +
-      (config.total_cupos_ocupados || 0) +
-      " | Cupos Libres: " +
-      (config.total_cupos_libres || 0) +
-      " | % Ocupación: " +
-      (config.porcentaje_ocupacion_general || 0) +
-      "%</td>";
+      '<td colspan="7" bgcolor="#f0f0f0" style="padding: 5px;">Total Turnos: ' + (config.total_turnos_detalle || 0) + " | Total Cupos: " + (config.total_cupos || 0) + " | Cupos Ocupados: " + (config.total_cupos_ocupados || 0) + " | Cupos Libres: " + (config.total_cupos_libres || 0) + " | % Ocupación: " + (config.porcentaje_ocupacion_general || 0) + "%</td>";
     htmlExcel += "</tr>";
-
     // Agrupar turnos por fecha (aplicar filtro omitir días sin manifiestos)
     var turnosParaExcel = getTurnosFiltradosPorFechaConfig(
       config.turnos_detalle,
-    );
-    var turnosPorFecha = {};
+    ); var turnosPorFecha = {};
     (turnosParaExcel || []).forEach(function (turno) {
       var fecha = turno.Tud_Fec || "-";
       if (!turnosPorFecha[fecha]) turnosPorFecha[fecha] = [];
       turnosPorFecha[fecha].push(turno);
     });
-
     var fechasOrdenadas = Object.keys(turnosPorFecha).sort(function (a, b) {
       if (a === "-") return 1;
-      if (b === "-") return -1;
-      var partesA = a.split("/"),
-        partesB = b.split("/");
+      if (b === "-") return -1; var partesA = a.split("/"), partesB = b.split("/");
       var fechaA = new Date(partesA[2], partesA[1] - 1, partesA[0]);
-      var fechaB = new Date(partesB[2], partesB[1] - 1, partesB[0]);
-      return fechaA - fechaB;
+      var fechaB = new Date(partesB[2], partesB[1] - 1, partesB[0]); return fechaA - fechaB;
     });
-
     fechasOrdenadas.forEach(function (fecha) {
-      var turnosFecha = turnosPorFecha[fecha];
-      var diaSemana = "";
+      var turnosFecha = turnosPorFecha[fecha]; var diaSemana = "";
       if (fecha !== "-") {
         var partes = fecha.split("/");
         if (partes.length === 3) {
@@ -3335,25 +1957,17 @@ function exportarExcel() {
             "Sábado",
           ];
           diaSemana =
-            " - " +
-            dias[new Date(partes[2], partes[1] - 1, partes[0]).getDay()];
+            " - " + dias[new Date(partes[2], partes[1] - 1, partes[0]).getDay()];
         }
       }
       var totalOcupados = turnosFecha.reduce(function (s, t) {
         return s + (t.ocupados || 0);
       }, 0);
-
       htmlExcel +=
         '<tr class="xl-fecha" bgcolor="#d1ecf1" style="background-color: #d1ecf1; color: #0c5460; font-weight: bold;">';
       htmlExcel +=
-        '<td colspan="7" bgcolor="#d1ecf1" style="text-align: left; font-size: 13px; padding: 8px; color: #0c5460;">Fecha: ' +
-        fecha +
-        diaSemana +
-        " Total Cupos Ocupados: " +
-        totalOcupados +
-        "</td>";
+        '<td colspan="7" bgcolor="#d1ecf1" style="text-align: left; font-size: 13px; padding: 8px; color: #0c5460;">Fecha: ' + fecha + diaSemana + " Total Cupos Ocupados: " + totalOcupados + "</td>";
       htmlExcel += "</tr>";
-
       htmlExcel +=
         '<tr class="xl-col-header" bgcolor="#e0e0e0" style="background-color: #e0e0e0; font-weight: bold;">';
       htmlExcel +=
@@ -3371,97 +1985,70 @@ function exportarExcel() {
       htmlExcel +=
         '<td bgcolor="#e0e0e0" style="padding: 5px; text-align: center;">Barra Ocupación</td>';
       htmlExcel += "</tr>";
-
       turnosFecha.forEach(function (turno) {
         var porcentaje = turno.porcentaje_ocupacion || 0;
         htmlExcel += "<tr>";
         htmlExcel +=
-          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'@\'; background-color: #ffffff;">' +
-          (turno.horario || "") +
-          "</td>";
+          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'@\'; background-color: #ffffff;">' + (turno.horario || "") + "</td>";
         htmlExcel +=
-          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' +
-          (turno.cupos || 0) +
-          "</td>";
+          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' + (turno.cupos || 0) + "</td>";
         htmlExcel +=
-          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' +
-          (turno.ocupados || 0) +
-          "</td>";
+          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' + (turno.ocupados || 0) + "</td>";
         htmlExcel +=
-          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' +
-          (turno.manifiestos_inactivos || 0) +
-          "</td>";
+          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' + (turno.manifiestos_inactivos || 0) + "</td>";
         htmlExcel +=
-          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' +
-          (turno.libres || 0) +
-          "</td>";
+          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' + (turno.libres || 0) + "</td>";
         htmlExcel +=
-          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'@\'; background-color: #ffffff;">' +
-          porcentaje +
-          "%</td>";
+          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'@\'; background-color: #ffffff;">' + porcentaje + "%</td>";
         htmlExcel +=
-          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'@\'; background-color: #ffffff;">' +
-          porcentaje +
-          "%</td>";
+          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'@\'; background-color: #ffffff;">' + porcentaje + "%</td>";
         htmlExcel += "</tr>";
       });
-
       htmlExcel +=
         '<tr><td colspan="7" style="height: 5px; border: none;"></td></tr>';
     });
-
     htmlExcel +=
       '<tr><td colspan="7" style="height: 5px; border: none;"></td></tr>';
   });
-
   htmlExcel += "</table>";
-
   // Usar el método de exportación del proyecto
   var fecha = new Date();
   var fechaStr =
     fecha.getDate() + "-" + (fecha.getMonth() + 1) + "-" + fecha.getFullYear();
   var nombreArchivo = "reportes_manifiestos_" + fechaStr;
-
   // Crear formulario para enviar a ficheroExcel.php
   var form = $("<form>", {
-    method: "POST",
-    action: "../../Librerias/exportar/ficheroExcel.php",
+    method: "POST", action: "../../Librerias/exportar/ficheroExcel.php",
     target: "_blank",
   });
-
   form.append(
     $("<input>", {
-      type: "hidden",
-      name: "datos_a_enviar",
+      type: "hidden", name: "datos_a_enviar",
       value: htmlExcel,
     }),
   );
-
   form.append(
     $("<input>", {
-      type: "hidden",
-      name: "nombre",
+      type: "hidden", name: "nombre",
       value: nombreArchivo,
     }),
   );
-
   form.append(
     $("<input>", {
-      type: "hidden",
-      name: "hoja",
+      type: "hidden", name: "hoja",
       value: "Dashboard Turnos",
     }),
   );
-
   $("body").append(form);
   form.submit();
   form.remove();
 }
-
 // ========== TAB POR RANGO DE FECHAS ==========
+/**
+ * SECCION 4: MODULO POR RANGO DE FECHAS
+ */
 function cargarDashboardRango() {
-  var fechaIni = $("#fecha_inicio_rango").val() || "";
-  var fechaFin = $("#fecha_fin_rango").val() || "";
+  var fechaIni = $("#fecha_inicio_rango").val() || ""; var fechaFin = $("#fecha_fin_rango").val() || "";
   if (!fechaIni || !fechaFin) {
     alert("Por favor seleccione el rango de fechas (desde y hasta).");
     return;
@@ -3470,19 +2057,14 @@ function cargarDashboardRango() {
     alert("La fecha de inicio no puede ser mayor que la fecha fin.");
     return;
   }
-
   var postData = {
-    getDashboardPorRangoAjax: true,
-    fecha_inicio: fechaIni,
+    getDashboardPorRangoAjax: true, fecha_inicio: fechaIni,
     fecha_fin: fechaFin,
-  };
-  var Pla_Cod = $("#select_planta_rango").val() || "";
+  }; var Pla_Cod = $("#select_planta_rango").val() || "";
   if (Pla_Cod) postData.Pla_Cod = Pla_Cod;
-
   $("#dashboardContentRango").html(
     '<div class="loading"><i class="fa fa-spinner fa-spin"></i><p>Cargando reporte...</p></div>',
   );
-
   $.get(
     "",
     postData,
@@ -3492,11 +2074,7 @@ function cargarDashboardRango() {
         mostrarDashboardRango(response);
       } else {
         $("#dashboardContentRango").html(
-          '<div class="alert alert-warning"><i class="fa fa-exclamation-triangle"></i> ' +
-            (response.message ||
-              "No se encontraron datos para el rango seleccionado.") +
-            "</div>",
-        );
+          '<div class="alert alert-warning"><i class="fa fa-exclamation-triangle"></i> ' + (response.message || "No se encontraron datos para el rango seleccionado.") + "</div>", );
         datosDashboardRango = null;
       }
     },
@@ -3508,33 +2086,22 @@ function cargarDashboardRango() {
     datosDashboardRango = null;
   });
 }
-
 function getDiasFiltradosRango(dias) {
-  if (!$("#omitir_dias_sin_manifiestos").is(":checked")) {
-    return dias || [];
-  }
+  if (!$("#omitir_dias_sin_manifiestos").is(":checked")) return dias || [];
   // Suprimir del reporte días sin manifiestos: solo mostrar días que tienen al menos un cupo ocupado
-  var diasConManifiestos = (dias || []).filter(function (d) {
-    return (d.total_cupos_ocupados || 0) > 0;
-  });
+  var diasConManifiestos = (dias || []).filter(function (d) { return (d.total_cupos_ocupados || 0) > 0; });
   // Dentro de cada día, suprimir turnos que no poseen manifiestos
   return diasConManifiestos.map(function (d) {
-    var turnosConManifiestos = (d.turnos_detalle || []).filter(function (t) {
-      return (t.ocupados || 0) > 0;
-    });
-    var totalCupos = 0,
-      totalOcupados = 0;
+    var turnosConManifiestos = (d.turnos_detalle || []).filter(function (t) { return (t.ocupados || 0) > 0; });
+    var totalCupos = 0, totalOcupados = 0;
     turnosConManifiestos.forEach(function (t) {
       totalCupos += t.cupos || 0;
       totalOcupados += t.ocupados || 0;
     });
     return {
-      Tud_Fec: d.Tud_Fec,
-      Tud_Fec_SQL: d.Tud_Fec_SQL,
-      dia_semana: d.dia_semana,
-      turnos_detalle: turnosConManifiestos,
-      total_cupos: totalCupos,
-      total_cupos_ocupados: totalOcupados,
+      Tud_Fec: d.Tud_Fec, Tud_Fec_SQL: d.Tud_Fec_SQL,
+      dia_semana: d.dia_semana, turnos_detalle: turnosConManifiestos,
+      total_cupos: totalCupos, total_cupos_ocupados: totalOcupados,
       total_cupos_libres: Math.max(0, totalCupos - totalOcupados),
       porcentaje_ocupacion_general:
         totalCupos > 0
@@ -3543,10 +2110,8 @@ function getDiasFiltradosRango(dias) {
     };
   });
 }
-
 function alternarVistaRango() {
-  modoVistaBarrasRango = !modoVistaBarrasRango;
-  var $btn = $("#btnVistaBarrasRango");
+  modoVistaBarrasRango = !modoVistaBarrasRango; var $btn = $("#btnVistaBarrasRango");
   var $texto = $("#textoVistaRango");
   if (modoVistaBarrasRango) {
     $texto.text("Vista Tabla");
@@ -3559,180 +2124,50 @@ function alternarVistaRango() {
     mostrarDashboardRango(datosDashboardRango);
   }
 }
-
 function mostrarDashboardRango(response) {
-  var dias = getDiasFiltradosRango(response.dias);
-  var html = "";
-
+  var dias = getDiasFiltradosRango(response.dias); var html = "";
   if (dias.length === 0) {
     var msg =
-      $("#omitir_dias_sin_manifiestos").is(":checked") &&
-      (response.dias || []).length > 0
+      $("#omitir_dias_sin_manifiestos").is(":checked") && (response.dias || []).length > 0
         ? "Ningún día posee manifiestos en el rango seleccionado."
         : "No se encontraron turnos en el rango de fechas seleccionado.";
     html = '<div class="alert alert-info">' + msg + "</div>";
   } else {
-    var fmtIni = formatearFechaRango(response.fecha_inicio);
-    var fmtFin = formatearFechaRango(response.fecha_fin);
-    html += '<div class="config-card" style="margin-bottom: 15px;">';
-    html +=
-      '<div class="config-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">';
-    html += "<div>";
-    html +=
-      '<h4 style="margin: 0;">Reporte por Rango: ' +
-      fmtIni +
-      " - " +
-      fmtFin +
-      "</h4>";
-    html +=
-      '<p style="margin: 5px 0 0 0; font-size: 14px;">' +
-      dias.length +
-      " día(s) | Planta: " +
-      ($("#select_planta_rango option:selected").text() || "Todas") +
-      "</p>";
-    html += "</div>";
-    html += '<div style="flex-shrink: 0;">';
-    html +=
-      '<button class="btn btn-sm btn-info" onclick="verManifiestosRangoCompleto(\'' +
-      (response.fecha_inicio || "") +
-      "', '" +
-      (response.fecha_fin || "") +
-      '\');" title="Ver todos los manifiestos del rango" style="padding: 5px 10px; font-size: 12px;">';
-    html += '<i class="fa fa-list"></i> Ver Manifiestos';
-    html += "</button>";
-    html += "</div>";
-    html += "</div>";
-
-    var totalCupos = 0,
-      totalOcupados = 0;
+    var fmtIni = formatearFechaRango(response.fecha_inicio); var fmtFin = formatearFechaRango(response.fecha_fin);
+    html += '<div class="config-card" style="margin-bottom: 15px;">' + '<div class="config-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">' + "<div>" + '<h4 style="margin: 0;">Reporte por Rango: ' + fmtIni + " - " + fmtFin + "</h4>" + '<p style="margin: 5px 0 0 0; font-size: 14px;">' + dias.length + " día(s) | Planta: " + ($("#select_planta_rango option:selected").text() || "Todas") + "</p>" + "</div>" + '<div style="flex-shrink: 0;">' + '<button class="btn btn-sm btn-info" onclick="verManifiestosRangoCompleto(\'' + (response.fecha_inicio || "") + "', '" + (response.fecha_fin || "") + '\');" title="Ver todos los manifiestos del rango" style="padding: 5px 10px; font-size: 12px;">' + '<i class="fa fa-list"></i> Ver Manifiestos' + "</button>" + "</div>" + "</div>";
+    var totalCupos = 0, totalOcupados = 0;
     dias.forEach(function (d) {
       totalCupos += d.total_cupos || 0;
       totalOcupados += d.total_cupos_ocupados || 0;
-    });
-    var totalLibres = Math.max(0, totalCupos - totalOcupados);
+    }); var totalLibres = Math.max(0, totalCupos - totalOcupados);
     var pctTotal =
       totalCupos > 0 ? ((totalOcupados / totalCupos) * 100).toFixed(2) : 0;
-
-    html += '<div class="config-stats">';
-    html +=
-      '<div class="stat-card total-turnos"><div class="stat-label">Total Días</div><div class="stat-value">' +
-      dias.length +
-      "</div></div>";
-    html +=
-      '<div class="stat-card total-cupos"><div class="stat-label">Total Cupos</div><div class="stat-value">' +
-      totalCupos +
-      "</div></div>";
-    html +=
-      '<div class="stat-card cupos-ocupados"><div class="stat-label">Cupos Ocupados</div><div class="stat-value">' +
-      totalOcupados +
-      "</div></div>";
-    html +=
-      '<div class="stat-card cupos-libres"><div class="stat-label">Cupos Libres</div><div class="stat-value">' +
-      totalLibres +
-      "</div></div>";
-    html +=
-      '<div class="stat-card ocupacion"><div class="stat-label">% Ocupación</div><div class="stat-value">' +
-      pctTotal +
-      "%</div></div>";
-    html += "</div>";
-    html += "</div>";
-
+    html += '<div class="config-stats">' + '<div class="stat-card total-turnos"><div class="stat-label">Total Días</div><div class="stat-value">' + dias.length + "</div></div>" + '<div class="stat-card total-cupos"><div class="stat-label">Total Cupos</div><div class="stat-value">' + totalCupos + "</div></div>" + '<div class="stat-card cupos-ocupados"><div class="stat-label">Cupos Ocupados</div><div class="stat-value">' + totalOcupados + "</div></div>" + '<div class="stat-card cupos-libres"><div class="stat-label">Cupos Libres</div><div class="stat-value">' + totalLibres + "</div></div>" + '<div class="stat-card ocupacion"><div class="stat-label">% Ocupación</div><div class="stat-value">' + pctTotal + "%</div></div>" + "</div>" + "</div>";
     if (modoVistaBarrasRango) {
-      html += '<div class="config-card">';
-      html += generarVistaBarrasUnicoPorDias(dias, false);
-      html += "</div>";
+      html += '<div class="config-card">' + generarVistaBarrasUnicoPorDias(dias, false) + "</div>";
     } else {
       dias.forEach(function (dia) {
         var tudFecSql =
-          dia.Tud_Fec_SQL ||
-          (dia.Tud_Fec
+          dia.Tud_Fec_SQL || (dia.Tud_Fec
             ? dia.Tud_Fec.replace(/(\d{2})\/(\d{2})\/(\d{4})/, "$3-$2-$1")
             : "");
-        html += '<div class="config-card">';
-        html +=
-          '<div class="fecha-header" style="margin-top: 15px; margin-bottom: 10px; padding: 8px 12px; background-color: #e9ecef; border-left: 4px solid #2C5D94; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">';
-        html +=
-          '<h5 style="margin: 0; font-size: 16px; font-weight: 600; color: #2C5D94; flex: 1;">';
-        html +=
-          '<i class="fa fa-calendar"></i> ' +
-          dia.Tud_Fec +
-          " - " +
-          dia.dia_semana +
-          " | Total Cupos Ocupados: " +
-          (dia.total_cupos_ocupados || 0) +
-          "</h5>";
-        html += '<div style="flex-shrink: 0;">';
-        html +=
-          '<button class="btn btn-sm btn-info" onclick="verManifiestosRangoDia(\'' +
-          tudFecSql +
-          '\');" title="Ver manifiestos del día" style="padding: 4px 8px; font-size: 11px;">';
-        html += '<i class="fa fa-list"></i> Ver Manifiestos';
-        html += "</button>";
-        html += "</div>";
-        html += "</div>";
-
-        html +=
-          '<table class="table turnos-table table-bordered table-striped">';
-        html += "<thead><tr>";
-        html +=
-          "<th>Horario</th><th>Cupos Program.</th><th>Manif. Creados</th><th>Inactivos</th><th>Cupos Libres</th><th>% Ocupación</th><th>Barra Ocupación</th><th>Acciones</th>";
-        html += "</tr></thead><tbody>";
-
+        html += '<div class="config-card">' + '<div class="fecha-header" style="margin-top: 15px; margin-bottom: 10px; padding: 8px 12px; background-color: #e9ecef; border-left: 4px solid #2C5D94; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">' + '<h5 style="margin: 0; font-size: 16px; font-weight: 600; color: #2C5D94; flex: 1;">' + '<i class="fa fa-calendar"></i> ' + dia.Tud_Fec + " - " + dia.dia_semana + " | Total Cupos Ocupados: " + (dia.total_cupos_ocupados || 0) + "</h5>" + '<div style="flex-shrink: 0;">' + '<button class="btn btn-sm btn-info" onclick="verManifiestosRangoDia(\'' + tudFecSql + '\');" title="Ver manifiestos del día" style="padding: 4px 8px; font-size: 11px;">' + '<i class="fa fa-list"></i> Ver Manifiestos' + "</button>" + "</div>" + "</div>";
+        html += '<table class="table turnos-table table-bordered table-striped">' + "<thead><tr>" + "<th>Horario</th><th>Cupos Program.</th><th>Manif. Creados</th><th>Inactivos</th><th>Cupos Libres</th><th>% Ocupación</th><th>Barra Ocupación</th><th>Acciones</th>" + "</tr></thead><tbody>";
         (dia.turnos_detalle || []).forEach(function (t) {
-          var pct = t.porcentaje_ocupacion || 0;
-          var clase = pct >= 80 ? "bajo" : pct >= 50 ? "medio" : "alto";
+          var pct = t.porcentaje_ocupacion || 0, clase = pct >= 80 ? "bajo" : pct >= 50 ? "medio" : "alto";
           var anchoBarra = Math.min(pct, 100);
           var tudFec = (t.Tud_Fec || tudFecSql || "")
             .toString()
             .replace(/'/g, "\\'");
           var tudHin = (t.Tud_Hin || "").toString().replace(/'/g, "\\'");
           var tudHfi = (t.Tud_Hfi || "").toString().replace(/'/g, "\\'");
-          html += "<tr>";
-          html += "<td>" + (t.horario || "") + "</td>";
-          html += "<td>" + (t.cupos || 0) + "</td>";
-          html += "<td>" + (t.ocupados || 0) + "</td>";
-          html += "<td>" + (t.manifiestos_inactivos || 0) + "</td>";
-          html += "<td>" + (t.libres || 0) + "</td>";
-          html +=
-            '<td><span class="badge-ocupacion ' +
-            clase +
-            '">' +
-            pct +
-            "%</span></td>";
-          html += "<td>";
-          html +=
-            '<div class="barra-progreso-tabla"><div class="barra-progreso-fondo">';
-          html +=
-            '<div class="barra-progreso-relleno ' +
-            clase +
-            '" style="width: ' +
-            anchoBarra +
-            '%;"></div>';
-          html += "</div></div>";
-          html += "</td>";
-          html += "<td>";
-          html +=
-            '<button class="btn btn-primary btn-xs btn-ver-manifiestos" onclick="verManifiestosRangoSlot(\'' +
-            tudFec +
-            "', '" +
-            tudHin +
-            "', '" +
-            tudHfi +
-            '\');" title="Ver manifiestos de este horario">';
-          html += '<i class="fa fa-list"></i> Ver Manifiestos';
-          html += "</button>";
-          html += "</td>";
-          html += "</tr>";
-        });
-        html += "</tbody></table>";
-        html += "</div>";
+          html += "<tr>" + "<td>" + (t.horario || "") + "</td>" + "<td>" + (t.cupos || 0) + "</td>" + "<td>" + (t.ocupados || 0) + "</td>" + "<td>" + (t.manifiestos_inactivos || 0) + "</td>" + "<td>" + (t.libres || 0) + "</td>" + '<td><span class="badge-ocupacion ' + clase + '">' + pct + "%</span></td>" + "<td>" + '<div class="barra-progreso-tabla"><div class="barra-progreso-fondo">' + '<div class="barra-progreso-relleno ' + clase + '" style="width: ' + anchoBarra + '%;"></div>' + "</div></div>" + "</td>" + "<td>" + '<button class="btn btn-primary btn-xs btn-ver-manifiestos" onclick="verManifiestosRangoSlot(\'' + tudFec + "', '" + tudHin + "', '" + tudHfi + '\');" title="Ver manifiestos de este horario">' + '<i class="fa fa-list"></i> Ver Manifiestos' + "</button>" + "</td>" + "</tr>";
+        }); html += "</tbody></table>" + "</div>";
       });
     }
   }
-
   $("#dashboardContentRango").html(html);
 }
-
 function imprimirReporteRango() {
   var dias = datosDashboardRango
     ? getDiasFiltradosRango(datosDashboardRango.dias)
@@ -3743,108 +2178,30 @@ function imprimirReporteRango() {
     );
     return;
   }
-
-  var totalCupos = 0,
-    totalOcupados = 0;
+  var totalCupos = 0, totalOcupados = 0;
   dias.forEach(function (d) {
     totalCupos += d.total_cupos || 0;
     totalOcupados += d.total_cupos_ocupados || 0;
-  });
-  var totalLibres = Math.max(0, totalCupos - totalOcupados);
+  }); var totalLibres = Math.max(0, totalCupos - totalOcupados);
   var pctTotal =
     totalCupos > 0 ? ((totalOcupados / totalCupos) * 100).toFixed(2) : 0;
   var plantaNombre =
     $("#select_planta_rango option:selected").text() || "Todas";
-
   var html = '<div class="config-card">';
-  html += '<div class="config-header">';
-  html +=
-    "<h4>Reporte por Rango: " +
-    formatearFechaRango(datosDashboardRango.fecha_inicio) +
-    " - " +
-    formatearFechaRango(datosDashboardRango.fecha_fin) +
-    "</h4>";
-  html +=
-    '<p style="margin: 5px 0 0 0; font-size: 14px;">' +
-    dias.length +
-    " día(s) | Planta: " +
-    plantaNombre +
-    "</p>";
-  html += "</div>";
-  html += '<div class="config-stats">';
-  html +=
-    '<div class="stat-card total-turnos"><div class="stat-label">Total Días</div><div class="stat-value">' +
-    dias.length +
-    "</div></div>";
-  html +=
-    '<div class="stat-card total-cupos"><div class="stat-label">Total Cupos</div><div class="stat-value">' +
-    totalCupos +
-    "</div></div>";
-  html +=
-    '<div class="stat-card cupos-ocupados"><div class="stat-label">Cupos Ocupados</div><div class="stat-value">' +
-    totalOcupados +
-    "</div></div>";
-  html +=
-    '<div class="stat-card cupos-libres"><div class="stat-label">Cupos Libres</div><div class="stat-value">' +
-    totalLibres +
-    "</div></div>";
-  html +=
-    '<div class="stat-card ocupacion"><div class="stat-label">% Ocupación</div><div class="stat-value">' +
-    pctTotal +
-    "%</div></div>";
-  html += "</div>";
-
+  html += '<div class="config-header">' + "<h4>Reporte por Rango: " + formatearFechaRango(datosDashboardRango.fecha_inicio) + " - " + formatearFechaRango(datosDashboardRango.fecha_fin) + "</h4>" + '<p style="margin: 5px 0 0 0; font-size: 14px;">' + dias.length + " día(s) | Planta: " + plantaNombre + "</p>" + "</div>" + '<div class="config-stats">' + '<div class="stat-card total-turnos"><div class="stat-label">Total Días</div><div class="stat-value">' + dias.length + "</div></div>" + '<div class="stat-card total-cupos"><div class="stat-label">Total Cupos</div><div class="stat-value">' + totalCupos + "</div></div>" + '<div class="stat-card cupos-ocupados"><div class="stat-label">Cupos Ocupados</div><div class="stat-value">' + totalOcupados + "</div></div>" + '<div class="stat-card cupos-libres"><div class="stat-label">Cupos Libres</div><div class="stat-value">' + totalLibres + "</div></div>" + '<div class="stat-card ocupacion"><div class="stat-label">% Ocupación</div><div class="stat-value">' + pctTotal + "%</div></div>" + "</div>";
   if (modoVistaBarrasRango) {
     html += generarVistaBarrasUnicoPorDias(dias, true);
   } else {
     dias.forEach(function (dia) {
-      html +=
-        '<div class="fecha-header" style="margin-top: 10px; margin-bottom: 5px; padding: 5px 8px; background-color: #e9ecef; border-left: 4px solid #2C5D94; border-radius: 4px;">';
-      html +=
-        '<h5 style="margin: 0; font-size: 12px; font-weight: 600; color: #2C5D94;">' +
-        dia.Tud_Fec +
-        " - " +
-        dia.dia_semana +
-        " | Total Cupos Ocupados: " +
-        (dia.total_cupos_ocupados || 0) +
-        "</h5>";
-      html += "</div>";
-      html += '<table class="turnos-table"><thead><tr>';
-      html +=
-        "<th>Horario</th><th>Cupos Program.</th><th>Manif. Creados</th><th>Inactivos</th><th>Cupos Libres</th><th>% Ocupación</th><th>Barra Ocupación</th>";
-      html += "</tr></thead><tbody>";
+      html += '<div class="fecha-header" style="margin-top: 10px; margin-bottom: 5px; padding: 5px 8px; background-color: #e9ecef; border-left: 4px solid #2C5D94; border-radius: 4px;">' + '<h5 style="margin: 0; font-size: 12px; font-weight: 600; color: #2C5D94;">' + dia.Tud_Fec + " - " + dia.dia_semana + " | Total Cupos Ocupados: " + (dia.total_cupos_ocupados || 0) + "</h5>" + "</div>" + '<table class="turnos-table"><thead><tr>' + "<th>Horario</th><th>Cupos Program.</th><th>Manif. Creados</th><th>Inactivos</th><th>Cupos Libres</th><th>% Ocupación</th><th>Barra Ocupación</th>" + "</tr></thead><tbody>";
       (dia.turnos_detalle || []).forEach(function (t) {
-        var pct = t.porcentaje_ocupacion || 0;
-        var clase = pct >= 80 ? "bajo" : pct >= 50 ? "medio" : "alto";
+        var pct = t.porcentaje_ocupacion || 0, clase = pct >= 80 ? "bajo" : pct >= 50 ? "medio" : "alto";
         var anchoBarra = Math.min(pct, 100);
-        html += "<tr>";
-        html += "<td>" + (t.horario || "") + "</td>";
-        html += "<td>" + (t.cupos || 0) + "</td>";
-        html += "<td>" + (t.ocupados || 0) + "</td>";
-        html += "<td>" + (t.manifiestos_inactivos || 0) + "</td>";
-        html += "<td>" + (t.libres || 0) + "</td>";
-        html +=
-          '<td><span class="badge-ocupacion ' +
-          clase +
-          '">' +
-          pct +
-          "%</span></td>";
-        html +=
-          '<td><div class="barra-progreso-tabla"><div class="barra-progreso-fondo">';
-        html +=
-          '<div class="barra-progreso-relleno ' +
-          clase +
-          '" style="width: ' +
-          anchoBarra +
-          '%;"></div>';
-        html += "</div></div></td>";
-        html += "</tr>";
-      });
-      html += "</tbody></table>";
+        html += "<tr>" + "<td>" + (t.horario || "") + "</td>" + "<td>" + (t.cupos || 0) + "</td>" + "<td>" + (t.ocupados || 0) + "</td>" + "<td>" + (t.manifiestos_inactivos || 0) + "</td>" + "<td>" + (t.libres || 0) + "</td>" + '<td><span class="badge-ocupacion ' + clase + '">' + pct + "%</span></td>" + '<td><div class="barra-progreso-tabla"><div class="barra-progreso-fondo">' + '<div class="barra-progreso-relleno ' + clase + '" style="width: ' + anchoBarra + '%;"></div>' + "</div></div></td>" + "</tr>";
+      }); html += "</tbody></table>";
     });
   }
   html += "</div>";
-
   var estilosImpresion = `
         <style>
             @page { margin: 1.2cm; size: A4 landscape; }
@@ -3954,13 +2311,9 @@ function imprimirReporteRango() {
             }
         </style>
     `;
-
   var ventanaImpresion = window.open("", "_blank", "width=1200,height=800");
   ventanaImpresion.document.write(
-    "<html><head><title>Reporte por Rango de Fechas</title>" +
-      estilosImpresion +
-      "</head><body>",
-  );
+    "<html><head><title>Reporte por Rango de Fechas</title>" + estilosImpresion + "</head><body>", );
   ventanaImpresion.document.write(html);
   ventanaImpresion.document.write("</body></html>");
   ventanaImpresion.document.close();
@@ -3974,7 +2327,6 @@ function imprimirReporteRango() {
     }, 500);
   };
 }
-
 function exportarExcelRango() {
   var dias = datosDashboardRango
     ? getDiasFiltradosRango(datosDashboardRango.dias)
@@ -3985,17 +2337,13 @@ function exportarExcelRango() {
     );
     return;
   }
-
-  var totalCupos = 0,
-    totalOcupados = 0;
+  var totalCupos = 0, totalOcupados = 0;
   dias.forEach(function (d) {
     totalCupos += d.total_cupos || 0;
     totalOcupados += d.total_cupos_ocupados || 0;
-  });
-  var totalLibres = Math.max(0, totalCupos - totalOcupados);
+  }); var totalLibres = Math.max(0, totalCupos - totalOcupados);
   var pctTotal =
     totalCupos > 0 ? ((totalOcupados / totalCupos) * 100).toFixed(2) : 0;
-
   // table-layout:fixed y colgroup limitan a 7 columnas para evitar que Excel extienda colores a columnas vacías
   var htmlExcel = '<style type="text/css">';
   htmlExcel +=
@@ -4015,58 +2363,27 @@ function exportarExcelRango() {
   htmlExcel +=
     '<table class="xl-dashboard" border="1" cellpadding="3" cellspacing="0" style="border-collapse: collapse; table-layout: fixed; width: 600px;">';
   htmlExcel += "<colgroup><col><col><col><col><col><col><col></colgroup>";
-
   var configHeader =
-    "Reporte por Rango: " +
-    formatearFechaRango(datosDashboardRango.fecha_inicio) +
-    " - " +
-    formatearFechaRango(datosDashboardRango.fecha_fin);
+    "Reporte por Rango: " + formatearFechaRango(datosDashboardRango.fecha_inicio) + " - " + formatearFechaRango(datosDashboardRango.fecha_fin);
   var plantaNombre =
     $("#select_planta_rango option:selected").text() || "Todas";
-
   htmlExcel +=
     '<tr class="xl-header" bgcolor="#2C5D94" style="background-color: #2C5D94; color: white; font-weight: bold;">';
   htmlExcel +=
-    '<td colspan="7" bgcolor="#2C5D94" style="text-align: center; font-size: 12px; padding: 8px; color: white;">' +
-    configHeader +
-    " - " +
-    dias.length +
-    " día(s) | Planta: " +
-    plantaNombre +
-    "</td>";
+    '<td colspan="7" bgcolor="#2C5D94" style="text-align: center; font-size: 12px; padding: 8px; color: white;">' + configHeader + " - " + dias.length + " día(s) | Planta: " + plantaNombre + "</td>";
   htmlExcel += "</tr>";
-
   htmlExcel +=
     '<tr class="xl-stats" bgcolor="#f0f0f0" style="background-color: #f0f0f0; font-weight: bold;">';
   htmlExcel +=
-    '<td colspan="7" bgcolor="#f0f0f0" style="padding: 5px;">Total Días: ' +
-    dias.length +
-    " | Total Cupos: " +
-    totalCupos +
-    " | Cupos Ocupados: " +
-    totalOcupados +
-    " | Cupos Libres: " +
-    totalLibres +
-    " | % Ocupación: " +
-    pctTotal +
-    "%</td>";
+    '<td colspan="7" bgcolor="#f0f0f0" style="padding: 5px;">Total Días: ' + dias.length + " | Total Cupos: " + totalCupos + " | Cupos Ocupados: " + totalOcupados + " | Cupos Libres: " + totalLibres + " | % Ocupación: " + pctTotal + "%</td>";
   htmlExcel += "</tr>";
-
   dias.forEach(function (dia) {
     var turnosFecha = dia.turnos_detalle || [];
-
     htmlExcel +=
       '<tr class="xl-fecha" bgcolor="#d1ecf1" style="background-color: #d1ecf1; color: #0c5460; font-weight: bold;">';
     htmlExcel +=
-      '<td colspan="7" bgcolor="#d1ecf1" style="text-align: left; font-size: 13px; padding: 8px; color: #0c5460;">Fecha: ' +
-      dia.Tud_Fec +
-      " - " +
-      dia.dia_semana +
-      " | Total Cupos Ocupados: " +
-      (dia.total_cupos_ocupados || 0) +
-      "</td>";
+      '<td colspan="7" bgcolor="#d1ecf1" style="text-align: left; font-size: 13px; padding: 8px; color: #0c5460;">Fecha: ' + dia.Tud_Fec + " - " + dia.dia_semana + " | Total Cupos Ocupados: " + (dia.total_cupos_ocupados || 0) + "</td>";
     htmlExcel += "</tr>";
-
     htmlExcel +=
       '<tr class="xl-col-header" bgcolor="#e0e0e0" style="background-color: #e0e0e0; font-weight: bold;">';
     htmlExcel +=
@@ -4084,55 +2401,33 @@ function exportarExcelRango() {
     htmlExcel +=
       '<td bgcolor="#e0e0e0" style="padding: 5px; text-align: center;">Barra Ocupación</td>';
     htmlExcel += "</tr>";
-
     turnosFecha.forEach(function (t) {
       var pct = t.porcentaje_ocupacion || 0;
       htmlExcel += "<tr>";
       htmlExcel +=
-        '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'@\'; background-color: #ffffff;">' +
-        (t.horario || "") +
-        "</td>";
+        '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'@\'; background-color: #ffffff;">' + (t.horario || "") + "</td>";
       htmlExcel +=
-        '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' +
-        (t.cupos || 0) +
-        "</td>";
+        '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' + (t.cupos || 0) + "</td>";
       htmlExcel +=
-        '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' +
-        (t.ocupados || 0) +
-        "</td>";
+        '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' + (t.ocupados || 0) + "</td>";
       htmlExcel +=
-        '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' +
-        (t.manifiestos_inactivos || 0) +
-        "</td>";
+        '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' + (t.manifiestos_inactivos || 0) + "</td>";
       htmlExcel +=
-        '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' +
-        (t.libres || 0) +
-        "</td>";
+        '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' + (t.libres || 0) + "</td>";
       htmlExcel +=
-        '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'@\'; background-color: #ffffff;">' +
-        pct +
-        "%</td>";
+        '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'@\'; background-color: #ffffff;">' + pct + "%</td>";
       htmlExcel +=
-        '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'@\'; background-color: #ffffff;">' +
-        pct +
-        "%</td>";
+        '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'@\'; background-color: #ffffff;">' + pct + "%</td>";
       htmlExcel += "</tr>";
     });
-
     htmlExcel +=
       '<tr><td colspan="7" style="height: 5px; border: none;"></td></tr>';
   });
-
   htmlExcel += "</table>";
-
   var nombreArchivo =
-    "reporte_rango_" +
-    (datosDashboardRango.fecha_inicio || "").replace(/-/g, "_") +
-    "_" +
-    (datosDashboardRango.fecha_fin || "").replace(/-/g, "_");
+    "reporte_rango_" + (datosDashboardRango.fecha_inicio || "").replace(/-/g, "_") + "_" + (datosDashboardRango.fecha_fin || "").replace(/-/g, "_");
   var form = $("<form>", {
-    method: "POST",
-    action: "../../Librerias/exportar/ficheroExcel.php",
+    method: "POST", action: "../../Librerias/exportar/ficheroExcel.php",
     target: "_blank",
   });
   form.append(
@@ -4148,30 +2443,26 @@ function exportarExcelRango() {
   form.submit();
   form.remove();
 }
-
 // --- Dashboard Por Chofer / Placa ---
 // Calcula KPIs estratégicos por vista.
+/**
+ * SECCION 5: MODULO ANALISIS POR CHOFER / PLACA Y DIAGRAMA DE PARETO
+ * MODULO VISTA EJECUTIVA Y CONTROL DE TIEMPOS
+ */
 function agruparDatosChoferParaGraficos(agrupado) {
   var map = {};
   (agrupado || []).forEach(function (g) {
-    var cedula = (g.chofer_cedula || "").trim();
-    var nombre = (g.chofer_nombre || "").trim() || "Sin asignar";
+    var cedula = (g.chofer_cedula || "").trim(); var nombre = (g.chofer_nombre || "").trim() || "Sin asignar";
     var key = cedula !== "" ? "cedula_" + cedula : "nombre_" + nombre;
     if (!map[key]) {
       map[key] = {
-        Cho_Cod: g.Cho_Cod,
-        chofer_nombre: nombre,
-        chofer_cedula: cedula,
-        total_manifiestos: 0,
+        Cho_Cod: g.Cho_Cod, chofer_nombre: nombre,
+        chofer_cedula: cedula, total_manifiestos: 0,
       };
     }
     map[key].total_manifiestos += g.total_manifiestos || 0;
-  });
-  return Object.keys(map).map(function (k) {
-    return map[k];
-  });
+  }); return Object.keys(map).map(function (k) { return map[k]; });
 }
-
 function calcularKPIsEstrategicos(agrupado, tipoVista, plantasOptional) {
   var src =
     agrupado && agrupado.length > 0
@@ -4186,30 +2477,19 @@ function calcularKPIsEstrategicos(agrupado, tipoVista, plantasOptional) {
     if (tipoVista === "planta")
       return g.total_manifiestos != null ? g.total_manifiestos : g.total || 0;
     return g.total_manifiestos || 0;
-  };
-  var valores = src.map(function (g) {
-    return getVal(g);
-  });
+  }; var valores = src.map(function (g) { return getVal(g); });
   var totalManifiestos = valores.reduce(function (s, v) {
     return s + v;
-  }, 0);
-  var n = valores.length;
-  var promedio = n > 0 ? totalManifiestos / n : 0;
+  }, 0); var n = valores.length, promedio = n > 0 ? totalManifiestos / n : 0;
   var out = {
-    totalManifiestos: totalManifiestos,
-    totalActivos: n,
-    promedio: promedio,
-    valores: valores,
+    totalManifiestos: totalManifiestos, totalActivos: n,
+    promedio: promedio, valores: valores,
   };
   if (tipoVista === "planta") {
-    var ordenado = valores.slice().sort(function (a, b) {
-      return b - a;
-    });
-    var top2 = (ordenado[0] || 0) + (ordenado[1] || 0);
-    var top3 = top2 + (ordenado[2] || 0);
+    var ordenado = valores.slice().sort(function (a, b) { return b - a; });
+    var top2 = (ordenado[0] || 0) + (ordenado[1] || 0); var top3 = top2 + (ordenado[2] || 0);
     out.pctTop2 = totalManifiestos > 0 ? (top2 / totalManifiestos) * 100 : 0;
-    out.pctTop3 = totalManifiestos > 0 ? (top3 / totalManifiestos) * 100 : 0;
-    return out;
+    out.pctTop3 = totalManifiestos > 0 ? (top3 / totalManifiestos) * 100 : 0; return out;
   }
   if (tipoVista === "chofer") {
     var sumaCuadrados = valores.reduce(function (s, v) {
@@ -4219,13 +2499,9 @@ function calcularKPIsEstrategicos(agrupado, tipoVista, plantasOptional) {
     var bajoPromedio = valores.filter(function (v) {
       return v < promedio;
     }).length;
-    out.pctBajoPromedio = n > 0 ? (bajoPromedio / n) * 100 : 0;
-    return out;
+    out.pctBajoPromedio = n > 0 ? (bajoPromedio / n) * 100 : 0; return out;
   }
-  var ordenadoPlaca = valores.slice().sort(function (a, b) {
-    return b - a;
-  });
-  var n20 = Math.max(1, Math.floor(n * 0.2));
+  var ordenadoPlaca = valores.slice().sort(function (a, b) { return b - a; }); var n20 = Math.max(1, Math.floor(n * 0.2));
   var sumaTop20 = ordenadoPlaca.slice(0, n20).reduce(function (s, v) {
     return s + v;
   }, 0);
@@ -4242,66 +2518,17 @@ function calcularKPIsEstrategicos(agrupado, tipoVista, plantasOptional) {
       : 0;
   return out;
 }
-
 function generarHTMLKPIStrip(kpis, tipoVista) {
-  if (!kpis || kpis.totalActivos === 0) return "";
-  var html = '<div class="dashboard-kpi-strip">';
+  if (!kpis || kpis.totalActivos === 0) return ""; var html = '<div class="dashboard-kpi-strip">';
   if (tipoVista === "planta") {
-    html +=
-      '<div class="dashboard-kpi-item"><span class="dashboard-kpi-label">Total manifiestos</span><span class="dashboard-kpi-value">' +
-      kpis.totalManifiestos +
-      "</span></div>";
-    html +=
-      '<div class="dashboard-kpi-item"><span class="dashboard-kpi-label">Plantas activas</span><span class="dashboard-kpi-value">' +
-      kpis.totalActivos +
-      "</span></div>";
-    html +=
-      '<div class="dashboard-kpi-item"><span class="dashboard-kpi-label">Promedio por planta</span><span class="dashboard-kpi-value">' +
-      (kpis.promedio || 0).toFixed(1) +
-      "</span></div>";
-    html +=
-      '<div class="dashboard-kpi-item"><span class="dashboard-kpi-label">% concentración Top 3</span><span class="dashboard-kpi-value">' +
-      (kpis.pctTop3 || 0).toFixed(1) +
-      "%</span></div>";
+    html += '<div class="dashboard-kpi-item"><span class="dashboard-kpi-label">Total manifiestos</span><span class="dashboard-kpi-value">' + kpis.totalManifiestos + "</span></div>" + '<div class="dashboard-kpi-item"><span class="dashboard-kpi-label">Plantas activas</span><span class="dashboard-kpi-value">' + kpis.totalActivos + "</span></div>" + '<div class="dashboard-kpi-item"><span class="dashboard-kpi-label">Promedio por planta</span><span class="dashboard-kpi-value">' + (kpis.promedio || 0).toFixed(1) + "</span></div>" + '<div class="dashboard-kpi-item"><span class="dashboard-kpi-label">% concentración Top 3</span><span class="dashboard-kpi-value">' + (kpis.pctTop3 || 0).toFixed(1) + "%</span></div>";
   } else if (tipoVista === "chofer") {
-    html +=
-      '<div class="dashboard-kpi-item"><span class="dashboard-kpi-label">Choferes activos</span><span class="dashboard-kpi-value">' +
-      kpis.totalActivos +
-      "</span></div>";
-    html +=
-      '<div class="dashboard-kpi-item"><span class="dashboard-kpi-label">Promedio por chofer</span><span class="dashboard-kpi-value">' +
-      (kpis.promedio || 0).toFixed(1) +
-      "</span></div>";
-    html +=
-      '<div class="dashboard-kpi-item"><span class="dashboard-kpi-label">Desv. estándar</span><span class="dashboard-kpi-value">' +
-      (kpis.desvEst || 0).toFixed(1) +
-      "</span></div>";
-    html +=
-      '<div class="dashboard-kpi-item"><span class="dashboard-kpi-label">% bajo promedio</span><span class="dashboard-kpi-value">' +
-      (kpis.pctBajoPromedio || 0).toFixed(1) +
-      "%</span></div>";
+    html += '<div class="dashboard-kpi-item"><span class="dashboard-kpi-label">Choferes activos</span><span class="dashboard-kpi-value">' + kpis.totalActivos + "</span></div>" + '<div class="dashboard-kpi-item"><span class="dashboard-kpi-label">Promedio por chofer</span><span class="dashboard-kpi-value">' + (kpis.promedio || 0).toFixed(1) + "</span></div>" + '<div class="dashboard-kpi-item"><span class="dashboard-kpi-label">Desv. estándar</span><span class="dashboard-kpi-value">' + (kpis.desvEst || 0).toFixed(1) + "</span></div>" + '<div class="dashboard-kpi-item"><span class="dashboard-kpi-label">% bajo promedio</span><span class="dashboard-kpi-value">' + (kpis.pctBajoPromedio || 0).toFixed(1) + "%</span></div>";
   } else {
-    html +=
-      '<div class="dashboard-kpi-item"><span class="dashboard-kpi-label">Placas activas</span><span class="dashboard-kpi-value">' +
-      kpis.totalActivos +
-      "</span></div>";
-    html +=
-      '<div class="dashboard-kpi-item"><span class="dashboard-kpi-label">Promedio por placa</span><span class="dashboard-kpi-value">' +
-      (kpis.promedio || 0).toFixed(1) +
-      "</span></div>";
-    html +=
-      '<div class="dashboard-kpi-item"><span class="dashboard-kpi-label">Índice concentración</span><span class="dashboard-kpi-value">' +
-      (kpis.indiceConcentracion || 0).toFixed(1) +
-      "%</span></div>";
-    html +=
-      '<div class="dashboard-kpi-item"><span class="dashboard-kpi-label">% baja actividad</span><span class="dashboard-kpi-value">' +
-      (kpis.pctBajaActividad || 0).toFixed(1) +
-      "%</span></div>";
+    html += '<div class="dashboard-kpi-item"><span class="dashboard-kpi-label">Placas activas</span><span class="dashboard-kpi-value">' + kpis.totalActivos + "</span></div>" + '<div class="dashboard-kpi-item"><span class="dashboard-kpi-label">Promedio por placa</span><span class="dashboard-kpi-value">' + (kpis.promedio || 0).toFixed(1) + "</span></div>" + '<div class="dashboard-kpi-item"><span class="dashboard-kpi-label">Índice concentración</span><span class="dashboard-kpi-value">' + (kpis.indiceConcentracion || 0).toFixed(1) + "%</span></div>" + '<div class="dashboard-kpi-item"><span class="dashboard-kpi-label">% baja actividad</span><span class="dashboard-kpi-value">' + (kpis.pctBajaActividad || 0).toFixed(1) + "%</span></div>";
   }
-  html += "</div>";
-  return html;
+  html += "</div>"; return html;
 }
-
 function generarAlertaRiesgoPlanta(pctTop2) {
   if (pctTop2 == null || pctTop2 < 50) return "";
   var clase =
@@ -4312,15 +2539,9 @@ function generarAlertaRiesgoPlanta(pctTop2) {
     pctTop2 >= 65
       ? "Alta concentración: las 2 primeras plantas superan el 65% de la operación. Considere diversificar."
       : "Concentración moderada: las 2 primeras plantas superan el 50% de la operación.";
-  return (
-    '<div class="' +
-    clase +
-    '"><i class="fa fa-exclamation-triangle"></i> ' +
-    texto +
-    "</div>"
+  return ( '<div class="' + clase + '"><i class="fa fa-exclamation-triangle"></i> ' + texto + "</div>"
   );
 }
-
 // Prepara datos para Pareto. Chofer/Placa: devuelve lista completa (itemsCompletos) para componente con switch. Planta: Top 25 + Otros.
 function prepararDatosPareto(agrupado, tipoVista, plantasOptional) {
   var items = [];
@@ -4348,42 +2569,31 @@ function prepararDatosPareto(agrupado, tipoVista, plantasOptional) {
   src.forEach(function (g) {
     items.push({ nombre: getNombre(g), cantidad: getCantidad(g) });
   });
-  items.sort(function (a, b) {
-    return b.cantidad - a.cantidad;
-  });
+  items.sort(function (a, b) { return b.cantidad - a.cantidad; });
   var total = items.reduce(function (s, i) {
     return s + i.cantidad;
   }, 0);
-  var totalChoferes = items.length;
-  var promedio = totalChoferes > 0 ? total / totalChoferes : 0;
-  var acu = 0;
-  var index80 = -1;
+  var totalChoferes = items.length, promedio = totalChoferes > 0 ? total / totalChoferes : 0, acu = 0, index80 = -1;
   items.forEach(function (i) {
     i.pct = total > 0 ? (i.cantidad / total) * 100 : 0;
     acu += i.pct;
     i.pctAcum = acu;
     if (index80 < 0 && acu >= 80) index80 = items.indexOf(i);
   });
-  if (index80 < 0) index80 = items.length - 1;
-  var numTop20Full = Math.max(1, Math.floor(items.length * 0.2));
+  if (index80 < 0) index80 = items.length - 1; var numTop20Full = Math.max(1, Math.floor(items.length * 0.2));
   items.forEach(function (i, idx) {
     i.diffPromedio = i.cantidad - promedio;
     i.isTop20 = idx < numTop20Full;
   });
-
   if (tipoVista === "chofer" || tipoVista === "placa") {
     return {
-      itemsCompletos: items,
-      total: total,
-      promedio: promedio,
-      totalChoferes: totalChoferes,
+      itemsCompletos: items, total: total,
+      promedio: promedio, totalChoferes: totalChoferes,
       index80Original: index80 + 1,
       entityName: tipoVista,
     };
   }
-
-  var chartItems = [];
-  var TOP_N = 25;
+  var chartItems = []; var TOP_N = 25;
   if (items.length <= TOP_N) {
     chartItems = items.slice();
   } else {
@@ -4406,25 +2616,20 @@ function prepararDatosPareto(agrupado, tipoVista, plantasOptional) {
   numTop20Full = Math.max(1, Math.floor(chartItems.length * 0.2));
   chartItems.forEach(function (i, idx) {
     i.isTop20 = idx < numTop20Full && !i.esOtros;
-  });
-  var index80Chart = -1;
+  }); var index80Chart = -1;
   for (var j = 0; j < chartItems.length; j++) {
     if (chartItems[j].pctAcum >= 80) {
-      index80Chart = j;
-      break;
+      index80Chart = j; break;
     }
   }
   if (index80Chart < 0) index80Chart = chartItems.length - 1;
   return {
-    items: chartItems,
-    total: total,
-    promedio: promedio,
-    totalChoferes: totalChoferes,
+    items: chartItems, total: total,
+    promedio: promedio, totalChoferes: totalChoferes,
     index80Original: index80 + 1,
     index80Chart: index80Chart,
   };
 }
-
 function generarHTMLParetoYTarjetas(tipoVista) {
   var etiquetaTitulo =
     tipoVista === "chofer"
@@ -4432,65 +2637,25 @@ function generarHTMLParetoYTarjetas(tipoVista) {
       : tipoVista === "planta"
         ? "planta"
         : "placa";
-  var html = '<div class="pareto-kpi-wrap">';
-  html += '<div class="pareto-kpi-cards" id="paretoKpiCardsChoferPlaca">';
+  var html = '<div class="pareto-kpi-wrap">'; html += '<div class="pareto-kpi-cards" id="paretoKpiCardsChoferPlaca">';
   for (var i = 0; i < 5; i++) {
-    html += '<div class="pareto-kpi-card" id="paretoKpiCard' + i + '">';
-    html += '<div class="kpi-medal" id="kpiMedal' + i + '"></div>';
-    html +=
-      '<div class="kpi-icon"><i class="fa ' +
-      (tipoVista === "planta" ? "fa-industry" : "fa-truck") +
-      '"></i></div>';
-    html += '<div class="kpi-name" id="kpiName' + i + '">—</div>';
-    html += '<div class="kpi-cantidad" id="kpiCant' + i + '">0</div>';
-    html += '<div class="kpi-pct" id="kpiPct' + i + '">0%</div>';
-    html +=
-      '<div class="kpi-progress-wrap"><div class="kpi-progress-bar" id="kpiProgress' +
-      i +
-      '" style="width: 0%; background: #2C5D94;"></div></div>';
-    html += '<div class="kpi-indicator" id="kpiIndicator' + i + '"></div>';
-    html += "</div>";
+    html += '<div class="pareto-kpi-card" id="paretoKpiCard' + i + '">' + '<div class="kpi-medal" id="kpiMedal' + i + '"></div>' + '<div class="kpi-icon"><i class="fa ' + (tipoVista === "planta" ? "fa-industry" : "fa-truck") + '"></i></div>' + '<div class="kpi-name" id="kpiName' + i + '">—</div>' + '<div class="kpi-cantidad" id="kpiCant' + i + '">0</div>' + '<div class="kpi-pct" id="kpiPct' + i + '">0%</div>' + '<div class="kpi-progress-wrap"><div class="kpi-progress-bar" id="kpiProgress' + i + '" style="width: 0%; background: #2C5D94;"></div></div>' + '<div class="kpi-indicator" id="kpiIndicator' + i + '"></div>' + "</div>";
   }
-  html += "</div>";
-  html +=
-    '<div class="pareto-chart-wrap"><h5><i class="fa fa-line-chart"></i> Gráfico Pareto - Manifiestos por ' +
-    etiquetaTitulo +
-    "</h5>";
+  html += "</div>" + '<div class="pareto-chart-wrap"><h5><i class="fa fa-line-chart"></i> Gráfico Pareto - Manifiestos por ' + etiquetaTitulo + "</h5>";
   if (tipoVista === "chofer" || tipoVista === "placa") {
-    html += '<div class="pareto-mode-switch" id="paretoModeSwitch">';
-    html +=
-      '<button type="button" class="pareto-mode-btn active" data-mode="top20">Top 20</button>';
-    html +=
-      '<button type="button" class="pareto-mode-btn" data-mode="hasta70">Hasta 70%</button>';
-    html += "</div>";
+    html += '<div class="pareto-mode-switch" id="paretoModeSwitch">' + '<button type="button" class="pareto-mode-btn active" data-mode="top20">Top 20</button>' + '<button type="button" class="pareto-mode-btn" data-mode="hasta70">Hasta 70%</button>' + "</div>";
   }
-  html += '<div class="pareto-chart-scroll-wrap" id="paretoChartScrollWrap">';
-  html +=
-    '<div class="pareto-chart-container" id="paretoChartContainer"><div class="apex-chart" id="canvasParetoChoferPlaca"></div></div>';
-  html += "</div>";
-  html += '<div class="pareto-insight" id="paretoInsightTexto"></div>';
-  html += "</div></div>";
+  html += '<div class="pareto-chart-scroll-wrap" id="paretoChartScrollWrap">' + '<div class="pareto-chart-container" id="paretoChartContainer"><div class="apex-chart" id="canvasParetoChoferPlaca"></div></div>' + "</div>" + '<div class="pareto-insight" id="paretoInsightTexto"></div>' + "</div></div>";
   return html;
 }
-
 /** Componente Pareto reutilizable para Chofer/Placa. config: { itemsCompletos, total, promedio, entityName }. mode: 'top20' | 'hasta70'. */
 function initParetoChart(config, mode) {
   if (!config || !config.itemsCompletos || config.itemsCompletos.length === 0)
     return;
-  var containerId = "paretoChartContainer";
-  var insightId = "paretoInsightTexto";
-  var colorPrincipal = config.colorPrincipal || "44, 93, 148";
-  var itemsCompletos = config.itemsCompletos;
-  var total = config.total;
-  var promedio = config.promedio;
-  var entityName = config.entityName || "chofer";
-  var chartItems = [];
-  var index80Chart = -1;
-  var insightText = "";
-
+  var containerId = "paretoChartContainer", insightId = "paretoInsightTexto", colorPrincipal = config.colorPrincipal || "44, 93, 148", itemsCompletos = config.itemsCompletos, total = config.total, promedio = config.promedio, entityName = config.entityName || "chofer";
+  var chartItems = []; var index80Chart = -1, insightText = "";
   if (mode === "top20") {
-    chartItems = itemsCompletos.slice(0, 20);
-    var numTop20 = Math.max(1, Math.floor(chartItems.length * 0.2));
+    chartItems = itemsCompletos.slice(0, 20); var numTop20 = Math.max(1, Math.floor(chartItems.length * 0.2));
     chartItems.forEach(function (i, idx) {
       i.isTop20 = idx < numTop20;
     });
@@ -4498,27 +2663,15 @@ function initParetoChart(config, mode) {
       chartItems.length > 0
         ? Number(chartItems[chartItems.length - 1].pctAcum.toFixed(1))
         : 0;
-    var primero = entityName === "chofer" ? "primeros" : "primeras";
-    var entidad = entityName === "chofer" ? "choferes" : "placas";
-    var articulo = entityName === "chofer" ? "Los" : "Las";
+    var primero = entityName === "chofer" ? "primeros" : "primeras", entidad = entityName === "chofer" ? "choferes" : "placas", articulo = entityName === "chofer" ? "Los" : "Las";
     insightText =
-      articulo +
-      " <strong>20</strong> " +
-      primero +
-      " " +
-      entidad +
-      " representan el <strong>" +
-      pctDelTotal +
-      "%</strong> del total.";
+      articulo + " <strong>20</strong> " + primero + " " + entidad + " representan el <strong>" + pctDelTotal + "%</strong> del total.";
   } else {
-    var totalGlobal = total;
-    var acumulado = 0;
-    var idx80 = -1;
+    var totalGlobal = total, acumulado = 0, idx80 = -1;
     for (var k = 0; k < itemsCompletos.length; k++) {
       acumulado += itemsCompletos[k].cantidad;
       if (totalGlobal > 0 && acumulado / totalGlobal >= 0.7) {
-        idx80 = k;
-        break;
+        idx80 = k; break;
       }
     }
     if (idx80 < 0) idx80 = itemsCompletos.length - 1;
@@ -4527,50 +2680,32 @@ function initParetoChart(config, mode) {
     chartItems.forEach(function (i, idx) {
       i.isTop20 = idx < Math.max(1, Math.floor(chartItems.length * 0.2));
     });
-    var primero = entityName === "chofer" ? "primeros" : "primeras";
-    var entidad = entityName === "chofer" ? "choferes" : "placas";
-    var articulo = entityName === "chofer" ? "Los" : "Las";
+    var primero = entityName === "chofer" ? "primeros" : "primeras", entidad = entityName === "chofer" ? "choferes" : "placas", articulo = entityName === "chofer" ? "Los" : "Las";
     insightText =
-      articulo +
-      " <strong>" +
-      chartItems.length +
-      "</strong> " +
-      primero +
-      " " +
-      entidad +
-      " representan el <strong>70%</strong> del total.";
+      articulo + " <strong>" + chartItems.length + "</strong> " + primero + " " + entidad + " representan el <strong>70%</strong> del total.";
   }
-
   var visualItems = chartItems;
   if (mode === "hasta70" && chartItems.length > 40) {
     visualItems = chartItems.slice(0, 39);
     var otrosCant = chartItems.slice(39).reduce(function (s, i) {
       return s + i.cantidad;
-    }, 0);
-    var otrosRestantes = chartItems.length - 39;
+    }, 0); var otrosRestantes = chartItems.length - 39;
     visualItems.push({
       nombre: "Otros (" + otrosRestantes + " restantes)",
-      cantidad: otrosCant,
-      isTop20: false,
-      diffPromedio: otrosCant - promedio,
-      esOtros: true,
+      cantidad: otrosCant, isTop20: false,
+      diffPromedio: otrosCant - promedio, esOtros: true,
     });
     index80Chart = 39;
   }
-
   var insightEl = document.getElementById(insightId);
-  if (insightEl) insightEl.innerHTML = insightText;
-
-  var container = document.getElementById(containerId);
+  if (insightEl) insightEl.innerHTML = insightText; var container = document.getElementById(containerId);
   if (container) {
     container.style.minWidth = "";
     container.classList.remove("pareto-chart-scroll");
   }
-
   var pctAcum;
   if (mode === "hasta70" && chartItems.length > 0) {
-    var acu = 0;
-    var pctAcumFull = [];
+    var acu = 0; var pctAcumFull = [];
     for (var i = 0; i < chartItems.length; i++) {
       acu += (chartItems[i].cantidad / total) * 100;
       pctAcumFull.push(Number(acu.toFixed(1)));
@@ -4584,30 +2719,21 @@ function initParetoChart(config, mode) {
       pctAcum.push(pctAcumFull[pctAcumFull.length - 1]);
     }
   } else {
-    pctAcum = visualItems.map(function (i) {
-      return Number(i.pctAcum.toFixed(1));
-    });
+    pctAcum = visualItems.map(function (i) { return Number(i.pctAcum.toFixed(1)); });
   }
   renderParetoApex("canvasParetoChoferPlaca", visualItems, {
-    total: total,
-    promedio: promedio,
-    colorPrincipal: colorPrincipal,
-    pctAcum: pctAcum,
+    total: total, promedio: promedio,
+    colorPrincipal: colorPrincipal, pctAcum: pctAcum,
     indexMarcador: index80Chart,
     textoMarcador: index80Chart >= 0 ? "Zona 70%" : ""
   });
 }
-
 function initParetoYTarjetasChoferPlaca(agrupado, tipoVista, plantasOptional) {
   var datos = prepararDatosPareto(agrupado, tipoVista, plantasOptional);
-  var total = datos.total;
-  var promedio = datos.promedio;
-  var totalChoferes = datos.totalChoferes;
+  var total = datos.total, promedio = datos.promedio, totalChoferes = datos.totalChoferes;
   var medallas = ["\uD83E\uDD47", "\uD83E\uDD48", "\uD83E\uDD49", "", ""];
-
   if (datos.itemsCompletos) {
-    var itemsCompletos = datos.itemsCompletos;
-    var top5 = itemsCompletos.slice(0, 5);
+    var itemsCompletos = datos.itemsCompletos; var top5 = itemsCompletos.slice(0, 5);
     var maxCant =
       Math.max.apply(
         null,
@@ -4616,12 +2742,9 @@ function initParetoYTarjetasChoferPlaca(agrupado, tipoVista, plantasOptional) {
         }),
       ) || 1;
     for (var i = 0; i < 5; i++) {
-      var card = document.getElementById("paretoKpiCard" + i);
-      var nameEl = document.getElementById("kpiName" + i);
-      var cantEl = document.getElementById("kpiCant" + i);
-      var pctEl = document.getElementById("kpiPct" + i);
-      var medalEl = document.getElementById("kpiMedal" + i);
-      var progressEl = document.getElementById("kpiProgress" + i);
+      var card = document.getElementById("paretoKpiCard" + i); var nameEl = document.getElementById("kpiName" + i);
+      var cantEl = document.getElementById("kpiCant" + i); var pctEl = document.getElementById("kpiPct" + i);
+      var medalEl = document.getElementById("kpiMedal" + i); var progressEl = document.getElementById("kpiProgress" + i);
       var indEl = document.getElementById("kpiIndicator" + i);
       if (card) card.classList.add("animate-in");
       if (medalEl) medalEl.textContent = medallas[i] || "";
@@ -4652,15 +2775,12 @@ function initParetoYTarjetasChoferPlaca(agrupado, tipoVista, plantasOptional) {
       }
     }
     var config = {
-      itemsCompletos: itemsCompletos,
-      total: total,
-      promedio: promedio,
-      entityName: tipoVista,
+      itemsCompletos: itemsCompletos, total: total,
+      promedio: promedio, entityName: tipoVista,
       colorPrincipal: "44, 93, 148",
     };
     window.paretoDatasetChoferPlaca = config;
-    initParetoChart(config, "top20");
-    var switchEl = document.getElementById("paretoModeSwitch");
+    initParetoChart(config, "top20"); var switchEl = document.getElementById("paretoModeSwitch");
     if (switchEl) {
       switchEl.querySelectorAll(".pareto-mode-btn").forEach(function (btn) {
         btn.addEventListener("click", function () {
@@ -4675,10 +2795,7 @@ function initParetoYTarjetasChoferPlaca(agrupado, tipoVista, plantasOptional) {
     }
     return;
   }
-
-  var items = datos.items;
-  var index80Original = datos.index80Original;
-  var index80Chart = datos.index80Chart;
+  var items = datos.items, index80Original = datos.index80Original, index80Chart = datos.index80Chart;
   var top5 = items.slice(0, 5);
   var maxCant =
     Math.max.apply(
@@ -4687,14 +2804,10 @@ function initParetoYTarjetasChoferPlaca(agrupado, tipoVista, plantasOptional) {
         return i.cantidad;
       }),
     ) || 1;
-
   for (var i = 0; i < 5; i++) {
-    var card = document.getElementById("paretoKpiCard" + i);
-    var nameEl = document.getElementById("kpiName" + i);
-    var cantEl = document.getElementById("kpiCant" + i);
-    var pctEl = document.getElementById("kpiPct" + i);
-    var medalEl = document.getElementById("kpiMedal" + i);
-    var progressEl = document.getElementById("kpiProgress" + i);
+    var card = document.getElementById("paretoKpiCard" + i); var nameEl = document.getElementById("kpiName" + i);
+    var cantEl = document.getElementById("kpiCant" + i); var pctEl = document.getElementById("kpiPct" + i);
+    var medalEl = document.getElementById("kpiMedal" + i); var progressEl = document.getElementById("kpiProgress" + i);
     var indEl = document.getElementById("kpiIndicator" + i);
     if (card) card.classList.add("animate-in");
     if (medalEl) medalEl.textContent = medallas[i] || "";
@@ -4723,31 +2836,23 @@ function initParetoYTarjetasChoferPlaca(agrupado, tipoVista, plantasOptional) {
       }
     }
   }
-
   var insightEl = document.getElementById("paretoInsightTexto");
   if (insightEl && totalChoferes > 0) {
     insightEl.innerHTML =
-      "Las <strong>" +
-      index80Original +
-      "</strong> primeras plantas concentran el <strong>80%</strong> de la operación.";
+      "Las <strong>" + index80Original + "</strong> primeras plantas concentran el <strong>80%</strong> de la operación.";
   }
-
   if (!items.length) return;
   renderParetoApex("canvasParetoChoferPlaca", items, {
-    total: total,
-    promedio: promedio,
+    total: total, promedio: promedio,
     colorPrincipal: "44, 93, 148",
     indexMarcador: index80Chart,
     textoMarcador: "Zona 80% productividad"
   });
 }
-
 function generarGraficoChoferPlaca(tipoVista, agrupado, plantas) {
-  var items = [];
-  var titulo = "";
+  var items = []; var titulo = "";
   if (tipoVista === "planta") {
-    titulo = "Manifiestos por planta";
-    var src = agrupado && agrupado.length > 0 ? agrupado : plantas || [];
+    titulo = "Manifiestos por planta"; var src = agrupado && agrupado.length > 0 ? agrupado : plantas || [];
     src.forEach(function (g) {
       items.push({
         label: (g.Pla_Nom || "").trim() || "(Sin planta)",
@@ -4762,9 +2867,7 @@ function generarGraficoChoferPlaca(tipoVista, agrupado, plantas) {
         value: g.total_manifiestos || 0,
       });
     });
-    items.sort(function (a, b) {
-      return b.value - a.value;
-    });
+    items.sort(function (a, b) { return b.value - a.value; });
   } else {
     titulo = "Manifiestos por placa";
     (agrupado || []).forEach(function (g) {
@@ -4777,30 +2880,19 @@ function generarGraficoChoferPlaca(tipoVista, agrupado, plantas) {
   if (items.length === 0) return "";
   var total = items.reduce(function (s, i) {
     return s + i.value;
-  }, 0);
-  var promedio = items.length > 0 ? total / items.length : 0;
+  }, 0); var promedio = items.length > 0 ? total / items.length : 0;
   var maxVal = Math.max.apply(
     null,
     items.map(function (i) {
       return i.value;
     }),
   );
-  if (maxVal <= 0) maxVal = 1;
-  var maxBars = 18;
+  if (maxVal <= 0) maxVal = 1; var maxBars = 18;
   var showItems = items.length > maxBars ? items.slice(0, maxBars) : items;
-  var hayMas = items.length > maxBars;
-  var html = '<div class="chart-cp-wrap">';
-  html +=
-    '<h5 class="chart-cp-title"><i class="fa fa-bar-chart"></i> ' +
-    titulo +
-    "</h5>";
+  var hayMas = items.length > maxBars, html = '<div class="chart-cp-wrap">';
+  html += '<h5 class="chart-cp-title"><i class="fa fa-bar-chart"></i> ' + titulo + "</h5>";
   if (hayMas)
-    html +=
-      '<p class="chart-cp-subtitle">Mostrando los ' +
-      maxBars +
-      " con más manifiestos (de " +
-      items.length +
-      ")</p>";
+    html += '<p class="chart-cp-subtitle">Mostrando los ' + maxBars + " con más manifiestos (de " + items.length + ")</p>";
   html += '<div class="chart-cp-horizontal">';
   showItems.forEach(function (item) {
     var pct = total > 0 ? ((item.value / total) * 100).toFixed(1) : "0";
@@ -4818,41 +2910,16 @@ function generarGraficoChoferPlaca(tipoVista, agrupado, plantas) {
     } else if (tipoVista === "placa" && item.value < promedio * 0.7) {
       rowClass += " chart-cp-baja-actividad";
     }
-    html +=
-      '<div class="' +
-      rowClass +
-      '" title="' +
-      labelEsc +
-      ": " +
-      item.value +
-      " (" +
-      pct +
-      '%)">';
-    html += '<div class="chart-cp-label">' + item.label + "</div>";
-    html +=
-      '<div class="chart-cp-bar-track"><div class="chart-cp-bar-fill" style="width: ' +
-      widthPct +
-      '%;"></div></div>';
-    html += '<div class="chart-cp-val">' + item.value + "</div>";
-    html += '<div class="chart-cp-pct">' + pct + "%</div>";
-    html += "</div>";
+    html += '<div class="' + rowClass + '" title="' + labelEsc + ": " + item.value + " (" + pct + '%)">' + '<div class="chart-cp-label">' + item.label + "</div>" + '<div class="chart-cp-bar-track"><div class="chart-cp-bar-fill" style="width: ' + widthPct + '%;"></div></div>' + '<div class="chart-cp-val">' + item.value + "</div>" + '<div class="chart-cp-pct">' + pct + "%</div>" + "</div>";
   });
-  html += "</div>";
-  html +=
-    '<div class="chart-cp-leyenda"><span class="chart-cp-leyenda-item"><i class="chart-cp-dot"></i> Total manifiestos en el rango</span><strong>' +
-    total +
-    "</strong></div>";
+  html += "</div>" + '<div class="chart-cp-leyenda"><span class="chart-cp-leyenda-item"><i class="chart-cp-dot"></i> Total manifiestos en el rango</span><strong>' + total + "</strong></div>";
   if (tipoVista === "chofer") {
-    html +=
-      '<p class="chart-cp-leyenda-colores"><span class="leyenda-color leyenda-verde"></span> Sobre promedio &nbsp; <span class="leyenda-color leyenda-gris"></span> En promedio &nbsp; <span class="leyenda-color leyenda-naranja"></span> Bajo promedio</p>';
+    html += '<p class="chart-cp-leyenda-colores"><span class="leyenda-color leyenda-verde"></span> Sobre promedio &nbsp; <span class="leyenda-color leyenda-gris"></span> En promedio &nbsp; <span class="leyenda-color leyenda-naranja"></span> Bajo promedio</p>';
   } else if (tipoVista === "placa") {
-    html +=
-      '<p class="chart-cp-leyenda-colores"><span class="leyenda-color leyenda-naranja"></span> Placas con baja actividad (&lt;70% del promedio)</p>';
+    html += '<p class="chart-cp-leyenda-colores"><span class="leyenda-color leyenda-naranja"></span> Placas con baja actividad (&lt;70% del promedio)</p>';
   }
-  html += "</div>";
-  return html;
+  html += "</div>"; return html;
 }
-
 function cargarDashboardChoferPlaca() {
   var fi = $("#fecha_inicio_chofer_placa").val();
   var ff = $("#fecha_fin_chofer_placa").val();
@@ -4873,32 +2940,22 @@ function cargarDashboardChoferPlaca() {
     function (resPlantas) {
       if (!resPlantas.success) {
         $("#dashboardContentChoferPlaca").html(
-          '<div class="alert alert-danger">' +
-            (resPlantas.message || "Error al cargar ranking de plantas") +
-            "</div>",
-        );
+          '<div class="alert alert-danger">' + (resPlantas.message || "Error al cargar ranking de plantas") + "</div>", );
         return;
       }
       datosRankingPlantasChoferPlaca = resPlantas.plantas || [];
       var paramsMan = {
-        getDashboardManifiestosAjax: true,
-        fecha_inicio: fi,
-        fecha_fin: ff,
-        tipo_vista: tipoVista,
+        getDashboardManifiestosAjax: true, fecha_inicio: fi,
+        fecha_fin: ff, tipo_vista: tipoVista,
       };
       $.ajax({
-        url: "",
-        type: "GET",
-        data: paramsMan,
-        dataType: "json",
+        url: "", type: "GET",
+        data: paramsMan, dataType: "json",
         cache: false,
         success: function (resMan) {
           if (!resMan.success) {
             $("#dashboardContentChoferPlaca").html(
-              '<div class="alert alert-danger">' +
-                (resMan.message || "Error al cargar datos") +
-                "</div>",
-            );
+              '<div class="alert alert-danger">' + (resMan.message || "Error al cargar datos") + "</div>", );
             return;
           }
           datosDashboardChoferPlaca = {
@@ -4919,10 +2976,7 @@ function cargarDashboardChoferPlaca() {
         },
         error: function () {
           $("#dashboardContentChoferPlaca").html(
-            '<div class="alert alert-danger">Error al cargar manifiestos por ' +
-              tipoVista +
-              ".</div>",
-          );
+            '<div class="alert alert-danger">Error al cargar manifiestos por ' + tipoVista + ".</div>", );
         },
       });
     },
@@ -4933,41 +2987,27 @@ function cargarDashboardChoferPlaca() {
     );
   });
 }
-
 function formatearCeldaPlantasChoferPlaca(g) {
-  if (g && g.Pla_Nom && String(g.Pla_Nom).trim() !== "") {
-    return String(g.Pla_Nom).trim();
-  }
+  if (g && g.Pla_Nom && String(g.Pla_Nom).trim() !== "") return String(g.Pla_Nom).trim();
   var nombres = g && g.plantas_nombres ? String(g.plantas_nombres).trim() : "";
   return nombres !== "" ? nombres : "-";
 }
-
 function formatearTextoPlantasChoferPlaca(g) {
-  if (g && g.Pla_Nom && String(g.Pla_Nom).trim() !== "") {
-    return String(g.Pla_Nom).trim();
-  }
+  if (g && g.Pla_Nom && String(g.Pla_Nom).trim() !== "") return String(g.Pla_Nom).trim();
   var nombres = g && g.plantas_nombres ? String(g.plantas_nombres).trim() : "";
   return nombres !== "" ? nombres : "-";
 }
-
 function renderDashboardChoferPlaca(plantas, agrupado, tipoVista) {
   var tv = (tipoVista || "").toLowerCase().trim();
   if (tv !== "planta" && tv !== "placa") tv = "chofer";
   tipoVista = tv;
   var html = "";
   var tituloRango =
-    formatearFechaRango(fechaInicioChoferPlaca) +
-    " - " +
-    formatearFechaRango(fechaFinChoferPlaca);
+    formatearFechaRango(fechaInicioChoferPlaca) + " - " + formatearFechaRango(fechaFinChoferPlaca);
   // Una sola sección según la vista elegida en el combobox
   if (tipoVista === "planta") {
     // Por planta: primero gráficos (Pareto + Top 5 + ranking), después el cuadro (tabla)
-    html += '<div class="config-card">';
-    html +=
-      '<div class="config-header"><h4>Plantas que más manifiestos generan</h4><p>Rango: ' +
-      tituloRango +
-      "</p></div>";
-    html += "</div>";
+    html += '<div class="config-card">' + '<div class="config-header"><h4>Plantas que más manifiestos generan</h4><p>Rango: ' + tituloRango + "</p></div>" + "</div>";
     var datosParaKpiPlanta =
       agrupado && agrupado.length > 0 ? agrupado : plantas;
     var kpisPlanta = calcularKPIsEstrategicos(
@@ -4975,43 +3015,20 @@ function renderDashboardChoferPlaca(plantas, agrupado, tipoVista) {
       "planta",
       plantas,
     );
-    html += generarHTMLKPIStrip(kpisPlanta, "planta");
-    html += generarAlertaRiesgoPlanta(kpisPlanta.pctTop2);
-    html += generarHTMLParetoYTarjetas("planta");
-    html += generarGraficoChoferPlaca("planta", agrupado, plantas);
-    html += '<div class="config-card" style="margin-top: 24px;">';
-    html +=
-      '<div class="config-header"><h4>Listado por planta</h4><p>Rango: ' +
-      tituloRango +
-      "</p></div>";
+    html += generarHTMLKPIStrip(kpisPlanta, "planta") + generarAlertaRiesgoPlanta(kpisPlanta.pctTop2) + generarHTMLParetoYTarjetas("planta") + generarGraficoChoferPlaca("planta", agrupado, plantas) + '<div class="config-card" style="margin-top: 24px;">' + '<div class="config-header"><h4>Listado por planta</h4><p>Rango: ' + tituloRango + "</p></div>";
     if (agrupado && agrupado.length > 0) {
-      html +=
-        '<table class="turnos-table"><thead><tr><th>#</th><th>Planta</th><th>Total manifiestos</th><th>Tiempo Prom.</th><th></th></tr></thead><tbody>';
+      html += '<table class="turnos-table"><thead><tr><th>#</th><th>Planta</th><th>Total manifiestos</th><th>Tiempo Prom.</th><th></th></tr></thead><tbody>';
       agrupado.forEach(function (g, idx) {
         var tProm = g.tiempo_promedio || 0;
         var tFmt =
           tProm >= 60
             ? Math.floor(tProm / 60) + "h " + Math.round(tProm % 60) + "m"
             : Math.round(tProm) + " min";
-        html +=
-          "<tr><td>" +
-          (idx + 1) +
-          "</td><td>" +
-          (g.Pla_Nom || "") +
-          "</td><td>" +
-          (g.total_manifiestos || 0) +
-          "</td><td>" +
-          tFmt +
-          "</td>";
-        html +=
-          '<td><button type="button" class="btn btn-xs btn-default btn-ver-manifiestos" onclick="verManifiestosChoferPlaca(' +
-          idx +
-          ');"><span class="glyphicon glyphicon-list"></span> Ver manifiestos</button></td></tr>';
+        html += "<tr><td>" + (idx + 1) + "</td><td>" + (g.Pla_Nom || "") + "</td><td>" + (g.total_manifiestos || 0) + "</td><td>" + tFmt + "</td>" + '<td><button type="button" class="btn btn-xs btn-default btn-ver-manifiestos" onclick="verManifiestosChoferPlaca(' + idx + ');"><span class="glyphicon glyphicon-list"></span> Ver manifiestos</button></td></tr>';
       });
       html += "</tbody></table>";
     } else if (plantas && plantas.length > 0) {
-      html +=
-        '<table class="turnos-table"><thead><tr><th>#</th><th>Planta</th><th>Total manifiestos</th><th>Tiempo Prom.</th></tr></thead><tbody>';
+      html += '<table class="turnos-table"><thead><tr><th>#</th><th>Planta</th><th>Total manifiestos</th><th>Tiempo Prom.</th></tr></thead><tbody>';
       plantas.forEach(function (p, idx) {
         var tProm = p.tiempo_promedio || 0;
         var tFmt =
@@ -5020,54 +3037,24 @@ function renderDashboardChoferPlaca(plantas, agrupado, tipoVista) {
               ? Math.floor(tProm / 60) + "h " + Math.round(tProm % 60) + "m"
               : Math.round(tProm) + " min"
             : "-";
-        html +=
-          "<tr><td>" +
-          (idx + 1) +
-          "</td><td>" +
-          (p.Pla_Nom || "") +
-          "</td><td>" +
-          (p.total || 0) +
-          "</td><td>" +
-          tFmt +
-          "</td></tr>";
+        html += "<tr><td>" + (idx + 1) + "</td><td>" + (p.Pla_Nom || "") + "</td><td>" + (p.total || 0) + "</td><td>" + tFmt + "</td></tr>";
       });
       html += "</tbody></table>";
     } else {
-      html +=
-        '<p class="alert alert-warning" style="margin: 10px 0 0 0;">No hay datos de plantas en el rango seleccionado.</p>';
+      html += '<p class="alert alert-warning" style="margin: 10px 0 0 0;">No hay datos de plantas en el rango seleccionado.</p>';
     }
     html += "</div>";
   } else {
     // Manifiestos por chofer o por placa: primero gráficos, después el cuadro (tabla)
-    html += '<div class="config-card">';
-    html +=
-      '<div class="config-header"><h4>Manifiestos por ' +
-      (tipoVista === "chofer" ? "chofer" : "placa") +
-      "</h4><p>Rango: " +
-      tituloRango +
-      "</p></div>";
-    html += "</div>";
+    html += '<div class="config-card">' + '<div class="config-header"><h4>Manifiestos por ' + (tipoVista === "chofer" ? "chofer" : "placa") + "</h4><p>Rango: " + tituloRango + "</p></div>" + "</div>";
     var kpisChoferPlaca = calcularKPIsEstrategicos(agrupado, tipoVista, null);
-    html += generarHTMLKPIStrip(kpisChoferPlaca, tipoVista);
-    html += generarHTMLParetoYTarjetas(tipoVista);
-    html += generarGraficoChoferPlaca(tipoVista, agrupado, null);
-    html += '<div class="config-card" style="margin-top: 24px;">';
-    html +=
-      '<div class="config-header"><h4>Listado por ' +
-      (tipoVista === "chofer" ? "chofer" : "placa") +
-      "</h4><p>Rango: " +
-      tituloRango +
-      "</p></div>";
+    html += generarHTMLKPIStrip(kpisChoferPlaca, tipoVista) + generarHTMLParetoYTarjetas(tipoVista) + generarGraficoChoferPlaca(tipoVista, agrupado, null) + '<div class="config-card" style="margin-top: 24px;">' + '<div class="config-header"><h4>Listado por ' + (tipoVista === "chofer" ? "chofer" : "placa") + "</h4><p>Rango: " + tituloRango + "</p></div>";
     if (agrupado && agrupado.length > 0) {
-      html +=
-        '<table class="turnos-table" id="tablaAgrupadoChoferPlaca"><thead><tr>';
-      html += "<th>#</th>";
+      html += '<table class="turnos-table" id="tablaAgrupadoChoferPlaca"><thead><tr>' + "<th>#</th>";
       if (tipoVista === "chofer") {
-        html +=
-          "<th>Chofer</th><th>Cédula</th><th>Total manifiestos</th><th>Planta</th><th>Tiempo Prom.</th><th></th></tr></thead><tbody>";
+        html += "<th>Chofer</th><th>Cédula</th><th>Total manifiestos</th><th>Planta</th><th>Tiempo Prom.</th><th></th></tr></thead><tbody>";
       } else {
-        html +=
-          "<th>Placa</th><th>Total manifiestos</th><th>Plantas</th><th>Tiempo Prom.</th><th></th></tr></thead><tbody>";
+        html += "<th>Placa</th><th>Total manifiestos</th><th>Plantas</th><th>Tiempo Prom.</th><th></th></tr></thead><tbody>";
       }
       agrupado.forEach(function (g, idx) {
         var tProm = g.tiempo_promedio || 0;
@@ -5076,7 +3063,6 @@ function renderDashboardChoferPlaca(plantas, agrupado, tipoVista) {
             ? Math.floor(tProm / 60) + "h " + Math.round(tProm % 60) + "m"
             : Math.round(tProm) + " min";
         html += "<tr><td>" + (idx + 1) + "</td>";
-
         var tooltipText = "";
         if (g.nombres_plantas) {
           var arrayPlantas = g.nombres_plantas.split(", ");
@@ -5086,51 +3072,22 @@ function renderDashboardChoferPlaca(plantas, agrupado, tipoVista) {
         var tooltipPlantas = tooltipText ? ' title="' + tooltipText + '"' : "";
         var stylePlantas =
           ' style="cursor: help; color: #2C5D94; font-weight: bold; text-decoration: underline dotted #2C5D94; text-decoration-thickness: 2px; text-underline-offset: 3px;"';
-
         if (tipoVista === "chofer") {
-          html +=
-            "<td>" +
-            (g.chofer_nombre || "Sin asignar") +
-            "</td><td>" +
-            (g.chofer_cedula || "") +
-            "</td><td>" +
-            (g.total_manifiestos || 0) +
-            "</td><td>" +
-            formatearCeldaPlantasChoferPlaca(g) +
-            "</td><td>" +
-            tFmt +
-            "</td>";
+          html += "<td>" + (g.chofer_nombre || "Sin asignar") + "</td><td>" + (g.chofer_cedula || "") + "</td><td>" + (g.total_manifiestos || 0) + "</td><td>" + formatearCeldaPlantasChoferPlaca(g) + "</td><td>" + tFmt + "</td>";
         } else {
-          html +=
-            "<td>" +
-            (g.Veh_Pla || "Sin placa") +
-            "</td><td>" +
-            (g.total_manifiestos || 0) +
-            "</td><td>" +
-            formatearCeldaPlantasChoferPlaca(g) +
-            "</td><td>" +
-            tFmt +
-            "</td>";
+          html += "<td>" + (g.Veh_Pla || "Sin placa") + "</td><td>" + (g.total_manifiestos || 0) + "</td><td>" + formatearCeldaPlantasChoferPlaca(g) + "</td><td>" + tFmt + "</td>";
         }
-        html +=
-          '<td><button type="button" class="btn btn-xs btn-default btn-ver-manifiestos" onclick="verManifiestosChoferPlaca(' +
-          idx +
-          ');"><span class="glyphicon glyphicon-list"></span> Ver manifiestos</button></td></tr>';
+        html += '<td><button type="button" class="btn btn-xs btn-default btn-ver-manifiestos" onclick="verManifiestosChoferPlaca(' + idx + ');"><span class="glyphicon glyphicon-list"></span> Ver manifiestos</button></td></tr>';
       });
       html += "</tbody></table>";
     } else {
-      html +=
-        '<p class="alert alert-warning" style="margin: 10px 0 0 0;">No hay manifiestos en el rango seleccionado.</p>';
+      html += '<p class="alert alert-warning" style="margin: 10px 0 0 0;">No hay manifiestos en el rango seleccionado.</p>';
     }
     html += "</div>";
   }
   $("#dashboardContentChoferPlaca").html(html);
   var tieneDatos =
-    (tipoVista === "planta" &&
-      ((agrupado && agrupado.length > 0) || (plantas && plantas.length > 0))) ||
-    ((tipoVista === "chofer" || tipoVista === "placa") &&
-      agrupado &&
-      agrupado.length > 0);
+    (tipoVista === "planta" && ((agrupado && agrupado.length > 0) || (plantas && plantas.length > 0))) || ((tipoVista === "chofer" || tipoVista === "placa") && agrupado && agrupado.length > 0);
   if (tieneDatos) {
     var datosParaPareto =
       tipoVista === "planta"
@@ -5144,7 +3101,6 @@ function renderDashboardChoferPlaca(plantas, agrupado, tipoVista) {
     }, 0);
   }
 }
-
 function imprimirReporteChoferPlaca() {
   if (!datosRankingPlantasChoferPlaca && !datosDashboardChoferPlaca) {
     alert(
@@ -5153,82 +3109,50 @@ function imprimirReporteChoferPlaca() {
     return;
   }
   var tituloRango =
-    formatearFechaRango(fechaInicioChoferPlaca) +
-    " - " +
-    formatearFechaRango(fechaFinChoferPlaca);
+    formatearFechaRango(fechaInicioChoferPlaca) + " - " + formatearFechaRango(fechaFinChoferPlaca);
   var tipoVista = datosDashboardChoferPlaca
     ? datosDashboardChoferPlaca.tipo_vista
     : "chofer";
   var html = '<div class="config-card">';
-  html +=
-    '<div class="config-header"><h4>Reporte Por Chofer / Placa / Planta</h4><p>Rango: ' +
-    tituloRango +
-    " | Vista: " +
-    (tipoVista === "chofer"
+  html += '<div class="config-header"><h4>Reporte Por Chofer / Placa / Planta</h4><p>Rango: ' + tituloRango + " | Vista: " + (tipoVista === "chofer"
       ? "Por chofer"
       : tipoVista === "placa"
         ? "Por placa"
-        : "Por planta") +
-    "</p></div>";
+        : "Por planta") + "</p></div>";
   if (tipoVista === "planta") {
     // Solo sección Plantas que más manifiestos generan
     if (
-      datosDashboardChoferPlaca &&
-      datosDashboardChoferPlaca.agrupado &&
-      datosDashboardChoferPlaca.agrupado.length > 0
+      datosDashboardChoferPlaca && datosDashboardChoferPlaca.agrupado && datosDashboardChoferPlaca.agrupado.length > 0
     ) {
-      html +=
-        '<table class="turnos-table"><thead><tr><th>#</th><th>Planta</th><th>Total</th><th>Tiempo Prom.</th></tr></thead><tbody>';
+      html += '<table class="turnos-table"><thead><tr><th>#</th><th>Planta</th><th>Total</th><th>Tiempo Prom.</th></tr></thead><tbody>';
       datosDashboardChoferPlaca.agrupado.forEach(function (g, i) {
         var tProm = g.tiempo_promedio || 0;
         var tFmt =
           tProm >= 60
             ? Math.floor(tProm / 60) + "h " + Math.round(tProm % 60) + "m"
             : Math.round(tProm) + " min";
-        html +=
-          "<tr><td>" +
-          (i + 1) +
-          "</td><td>" +
-          (g.Pla_Nom || "") +
-          "</td><td>" +
-          (g.total_manifiestos || 0) +
-          "</td><td>" +
-          tFmt +
-          "</td></tr>";
+        html += "<tr><td>" + (i + 1) + "</td><td>" + (g.Pla_Nom || "") + "</td><td>" + (g.total_manifiestos || 0) + "</td><td>" + tFmt + "</td></tr>";
       });
       html += "</tbody></table>";
     } else if (
-      datosRankingPlantasChoferPlaca &&
-      datosRankingPlantasChoferPlaca.length > 0
+      datosRankingPlantasChoferPlaca && datosRankingPlantasChoferPlaca.length > 0
     ) {
-      html +=
-        '<table class="turnos-table"><thead><tr><th>#</th><th>Planta</th><th>Total</th></tr></thead><tbody>';
+      html += '<table class="turnos-table"><thead><tr><th>#</th><th>Planta</th><th>Total</th></tr></thead><tbody>';
       datosRankingPlantasChoferPlaca.forEach(function (p, i) {
-        html +=
-          "<tr><td>" +
-          (i + 1) +
-          "</td><td>" +
-          (p.Pla_Nom || "") +
-          "</td><td>" +
-          (p.total || 0) +
-          "</td></tr>";
+        html += "<tr><td>" + (i + 1) + "</td><td>" + (p.Pla_Nom || "") + "</td><td>" + (p.total || 0) + "</td></tr>";
       });
       html += "</tbody></table>";
     }
   } else {
     // Solo sección Manifiestos por chofer o por placa
     if (
-      datosDashboardChoferPlaca &&
-      datosDashboardChoferPlaca.agrupado &&
-      datosDashboardChoferPlaca.agrupado.length > 0
+      datosDashboardChoferPlaca && datosDashboardChoferPlaca.agrupado && datosDashboardChoferPlaca.agrupado.length > 0
     ) {
       html += '<table class="turnos-table"><thead><tr>';
       if (tipoVista === "chofer")
-        html +=
-          "<th>Chofer</th><th>Cédula</th><th>Total</th><th>Planta</th><th>Tiempo Prom.</th></tr></thead><tbody>";
+        html += "<th>Chofer</th><th>Cédula</th><th>Total</th><th>Planta</th><th>Tiempo Prom.</th></tr></thead><tbody>";
       else
-        html +=
-          "<th>Placa</th><th>Total</th><th>Plantas</th><th>Tiempo Prom.</th></tr></thead><tbody>";
+        html += "<th>Placa</th><th>Total</th><th>Plantas</th><th>Tiempo Prom.</th></tr></thead><tbody>";
       datosDashboardChoferPlaca.agrupado.forEach(function (g) {
         var tProm = g.tiempo_promedio || 0;
         var tFmt =
@@ -5236,29 +3160,9 @@ function imprimirReporteChoferPlaca() {
             ? Math.floor(tProm / 60) + "h " + Math.round(tProm % 60) + "m"
             : Math.round(tProm) + " min";
         if (tipoVista === "chofer")
-          html +=
-            "<tr><td>" +
-            (g.chofer_nombre || "") +
-            "</td><td>" +
-            (g.chofer_cedula || "") +
-            "</td><td>" +
-            (g.total_manifiestos || 0) +
-            "</td><td>" +
-            formatearTextoPlantasChoferPlaca(g) +
-            "</td><td>" +
-            tFmt +
-            "</td></tr>";
+          html += "<tr><td>" + (g.chofer_nombre || "") + "</td><td>" + (g.chofer_cedula || "") + "</td><td>" + (g.total_manifiestos || 0) + "</td><td>" + formatearTextoPlantasChoferPlaca(g) + "</td><td>" + tFmt + "</td></tr>";
         else
-          html +=
-            "<tr><td>" +
-            (g.Veh_Pla || "") +
-            "</td><td>" +
-            (g.total_manifiestos || 0) +
-            "</td><td>" +
-            formatearTextoPlantasChoferPlaca(g) +
-            "</td><td>" +
-            tFmt +
-            "</td></tr>";
+          html += "<tr><td>" + (g.Veh_Pla || "") + "</td><td>" + (g.total_manifiestos || 0) + "</td><td>" + formatearTextoPlantasChoferPlaca(g) + "</td><td>" + tFmt + "</td></tr>";
       });
       html += "</tbody></table>";
     }
@@ -5268,7 +3172,6 @@ function imprimirReporteChoferPlaca() {
     "<style>body{font-family:Arial;margin:10px}.config-card{border:1px solid #2C5D94;padding:10px}.config-header{background:#2C5D94;color:white;padding:8px;margin:-10px -10px 10px -10px}.turnos-table{width:100%;border-collapse:collapse}.turnos-table th,.turnos-table td{border:1px solid #ddd;padding:6px}.turnos-table th{background:#2C5D94;color:white}</style>";
   abrirVentanaImpresion(estilos + html, "Reporte Chofer/Placa");
 }
-
 function exportarExcelChoferPlaca() {
   if (!datosRankingPlantasChoferPlaca && !datosDashboardChoferPlaca) {
     alert(
@@ -5277,30 +3180,22 @@ function exportarExcelChoferPlaca() {
     return;
   }
   var tituloRango =
-    formatearFechaRango(fechaInicioChoferPlaca) +
-    " - " +
-    formatearFechaRango(fechaFinChoferPlaca);
+    formatearFechaRango(fechaInicioChoferPlaca) + " - " + formatearFechaRango(fechaFinChoferPlaca);
   var tipoVista = datosDashboardChoferPlaca
     ? datosDashboardChoferPlaca.tipo_vista
     : "chofer";
   var htmlExcel =
     "<style>table.xl-cp{ border-collapse:collapse } table.xl-cp td, table.xl-cp th{ border:1px solid #2C5D94; padding:4px 8px } .xl-cp-header{ background:#2C5D94; color:white; font-weight:bold }</style>";
   htmlExcel +=
-    '<table class="xl-cp"><tr class="xl-cp-header"><td colspan="6">Reporte Por Chofer/Placa/Planta - ' +
-    tituloRango +
-    " - Vista: " +
-    (tipoVista === "chofer"
+    '<table class="xl-cp"><tr class="xl-cp-header"><td colspan="6">Reporte Por Chofer/Placa/Planta - ' + tituloRango + " - Vista: " + (tipoVista === "chofer"
       ? "Por chofer"
       : tipoVista === "placa"
         ? "Por placa"
-        : "Por planta") +
-    "</td></tr>";
+        : "Por planta") + "</td></tr>";
   if (tipoVista === "planta") {
     // Solo sección Plantas que más manifiestos generan
     if (
-      datosDashboardChoferPlaca &&
-      datosDashboardChoferPlaca.agrupado &&
-      datosDashboardChoferPlaca.agrupado.length > 0
+      datosDashboardChoferPlaca && datosDashboardChoferPlaca.agrupado && datosDashboardChoferPlaca.agrupado.length > 0
     ) {
       htmlExcel +=
         '<tr class="xl-cp-header"><td>#</td><td>Planta</td><td>Total manifiestos</td><td>Tiempo Prom.</td></tr>';
@@ -5311,46 +3206,25 @@ function exportarExcelChoferPlaca() {
             ? Math.floor(tProm / 60) + "h " + Math.round(tProm % 60) + "m"
             : Math.round(tProm) + " min";
         htmlExcel +=
-          "<tr><td>" +
-          (i + 1) +
-          "</td><td>" +
-          (g.Pla_Nom || "") +
-          "</td><td>" +
-          (g.total_manifiestos || 0) +
-          "</td><td>" +
-          tFmt +
-          "</td></tr>";
+          "<tr><td>" + (i + 1) + "</td><td>" + (g.Pla_Nom || "") + "</td><td>" + (g.total_manifiestos || 0) + "</td><td>" + tFmt + "</td></tr>";
       });
     } else if (
-      datosRankingPlantasChoferPlaca &&
-      datosRankingPlantasChoferPlaca.length > 0
+      datosRankingPlantasChoferPlaca && datosRankingPlantasChoferPlaca.length > 0
     ) {
       htmlExcel +=
         '<tr class="xl-cp-header"><td>#</td><td>Planta</td><td>Total manifiestos</td></tr>';
       datosRankingPlantasChoferPlaca.forEach(function (p, i) {
         htmlExcel +=
-          "<tr><td>" +
-          (i + 1) +
-          "</td><td>" +
-          (p.Pla_Nom || "") +
-          "</td><td>" +
-          (p.total || 0) +
-          "</td></tr>";
+          "<tr><td>" + (i + 1) + "</td><td>" + (p.Pla_Nom || "") + "</td><td>" + (p.total || 0) + "</td></tr>";
       });
     }
   } else {
     // Solo sección Manifiestos por chofer o por placa — igual que el cuadro en pantalla (sin listados de manifiestos ni fechas/plantas)
     if (
-      datosDashboardChoferPlaca &&
-      datosDashboardChoferPlaca.agrupado &&
-      datosDashboardChoferPlaca.agrupado.length > 0
+      datosDashboardChoferPlaca && datosDashboardChoferPlaca.agrupado && datosDashboardChoferPlaca.agrupado.length > 0
     ) {
       htmlExcel +=
-        '<tr class="xl-cp-header"><td colspan="' +
-        (tipoVista === "chofer" ? 6 : 5) +
-        '">Manifiestos por ' +
-        (tipoVista === "chofer" ? "chofer" : "placa") +
-        "</td></tr>";
+        '<tr class="xl-cp-header"><td colspan="' + (tipoVista === "chofer" ? 6 : 5) + '">Manifiestos por ' + (tipoVista === "chofer" ? "chofer" : "placa") + "</td></tr>";
       if (tipoVista === "chofer")
         htmlExcel +=
           '<tr class="xl-cp-header"><td>#</td><td>Chofer</td><td>Cédula</td><td>Total manifiestos</td><td>Planta</td><td>Tiempo Prom.</td></tr>';
@@ -5366,45 +3240,19 @@ function exportarExcelChoferPlaca() {
             : Math.round(tProm) + " min";
         if (tipoVista === "chofer") {
           htmlExcel +=
-            "<tr><td>" +
-            (i + 1) +
-            "</td><td>" +
-            (g.chofer_nombre || "") +
-            "</td><td>" +
-            (g.chofer_cedula || "") +
-            "</td><td>" +
-            (g.total_manifiestos || 0) +
-            "</td><td>" +
-            totalPlantasTxt +
-            "</td><td>" +
-            tFmt +
-            "</td></tr>";
+            "<tr><td>" + (i + 1) + "</td><td>" + (g.chofer_nombre || "") + "</td><td>" + (g.chofer_cedula || "") + "</td><td>" + (g.total_manifiestos || 0) + "</td><td>" + totalPlantasTxt + "</td><td>" + tFmt + "</td></tr>";
         } else {
           htmlExcel +=
-            "<tr><td>" +
-            (i + 1) +
-            "</td><td>" +
-            (g.Veh_Pla || "") +
-            "</td><td>" +
-            (g.total_manifiestos || 0) +
-            "</td><td>" +
-            totalPlantasTxt +
-            "</td><td>" +
-            tFmt +
-            "</td></tr>";
+            "<tr><td>" + (i + 1) + "</td><td>" + (g.Veh_Pla || "") + "</td><td>" + (g.total_manifiestos || 0) + "</td><td>" + totalPlantasTxt + "</td><td>" + tFmt + "</td></tr>";
         }
       });
     }
   }
   htmlExcel += "</table>";
   var nombreArchivo =
-    "reporte_chofer_placa_" +
-    (fechaInicioChoferPlaca || "").replace(/-/g, "_") +
-    "_" +
-    (fechaFinChoferPlaca || "").replace(/-/g, "_");
+    "reporte_chofer_placa_" + (fechaInicioChoferPlaca || "").replace(/-/g, "_") + "_" + (fechaFinChoferPlaca || "").replace(/-/g, "_");
   var form = $("<form>", {
-    method: "POST",
-    action: "../../Librerias/exportar/ficheroExcel.php",
+    method: "POST", action: "../../Librerias/exportar/ficheroExcel.php",
     target: "_blank",
   });
   form.append(
@@ -5420,7 +3268,6 @@ function exportarExcelChoferPlaca() {
   form.submit();
   form.remove();
 }
-
 function abrirVentanaImpresion(html, titulo) {
   var ventanaImpresion = window.open("", "_blank", "width=800,height=1000");
   if (!ventanaImpresion) {
@@ -5519,12 +3366,7 @@ function abrirVentanaImpresion(html, titulo) {
         </style>
     `;
   ventanaImpresion.document.write(
-    "<html><head><title>" +
-      (titulo || "Reporte") +
-      "</title>" +
-      estilosImpresion +
-      "</head><body>",
-  );
+    "<html><head><title>" + (titulo || "Reporte") + "</title>" + estilosImpresion + "</head><body>", );
   ventanaImpresion.document.write(html);
   ventanaImpresion.document.write("</body></html>");
   ventanaImpresion.document.close();
@@ -5538,7 +3380,6 @@ function abrirVentanaImpresion(html, titulo) {
     } catch (e) {}
   }, 400);
 }
-
 function imprimirReporteFechaRango(fecha) {
   var dias = datosDashboardRango
     ? getDiasFiltradosRango(datosDashboardRango.dias)
@@ -5553,9 +3394,7 @@ function imprimirReporteFechaRango(fecha) {
     return d.Tud_Fec_SQL === fecha || d.Tud_Fec === fecha;
   })[0];
   if (
-    !diaFiltrado ||
-    !diaFiltrado.turnos_detalle ||
-    diaFiltrado.turnos_detalle.length === 0
+    !diaFiltrado || !diaFiltrado.turnos_detalle || diaFiltrado.turnos_detalle.length === 0
   ) {
     alert("No se encontraron datos para la fecha seleccionada.");
     return;
@@ -5569,18 +3408,9 @@ function imprimirReporteFechaRango(fecha) {
     turnosDetalle.push(tCopy);
   });
   var html = '<div class="config-card">';
-  html += '<div class="config-header">';
-  html +=
-    "<h4>Reporte por Fecha: " +
-    (diaFiltrado.Tud_Fec || fecha) +
-    (diaFiltrado.dia_semana ? " - " + diaFiltrado.dia_semana : "") +
-    "</h4>";
-  html += "</div>";
-  html += generarVistaBarras(turnosDetalle, true, false, false);
-  html += "</div>";
+  html += '<div class="config-header">' + "<h4>Reporte por Fecha: " + (diaFiltrado.Tud_Fec || fecha) + (diaFiltrado.dia_semana ? " - " + diaFiltrado.dia_semana : "") + "</h4>" + "</div>" + generarVistaBarras(turnosDetalle, true, false, false) + "</div>";
   abrirVentanaImpresion(html, "Reporte Turnos - " + fecha);
 }
-
 function imprimirReporteFecha(fecha) {
   if (!datosDashboardActual || datosDashboardActual.length === 0) {
     alert(
@@ -5588,41 +3418,25 @@ function imprimirReporteFecha(fecha) {
     );
     return;
   }
-
   // Filtrar datos por fecha
   var configuracionesFiltradas = [];
   datosDashboardActual.forEach(function (config) {
     var configFiltrada = JSON.parse(JSON.stringify(config)); // Clonar
     configFiltrada.turnos_detalle = config.turnos_detalle.filter(
-      function (turno) {
-        return turno.Tud_Fec === fecha;
-      },
+      function (turno) { return turno.Tud_Fec === fecha; },
     );
-
     if (configFiltrada.turnos_detalle.length > 0) {
       configuracionesFiltradas.push(configFiltrada);
     }
   });
-
   if (configuracionesFiltradas.length === 0) {
     alert("No se encontraron datos para la fecha seleccionada.");
     return;
   }
-
   // Generar HTML solo para la fecha seleccionada
   var html = "";
   configuracionesFiltradas.forEach(function (config) {
-    html += '<div class="config-card">';
-    html += '<div class="config-header">';
-    html += "<h4>Configuración de Turnos #" + config.Tur_Cod + "</h4>";
-    html +=
-      '<p style="margin: 5px 0 0 0; font-size: 14px;">Período: ' +
-      config.Tur_Fei +
-      " - " +
-      config.Tur_Fef +
-      "</p>";
-    html += "</div>";
-
+    html += '<div class="config-card">' + '<div class="config-header">' + "<h4>Configuración de Turnos #" + config.Tur_Cod + "</h4>" + '<p style="margin: 5px 0 0 0; font-size: 14px;">Período: ' + config.Tur_Fei + " - " + config.Tur_Fef + "</p>" + "</div>";
     if (modoVistaConfig === "barras") {
       html += generarBarrasParaDia(config.turnos_detalle, true);
     } else if (modoVistaConfig === "tendencia") {
@@ -5633,10 +3447,7 @@ function imprimirReporteFecha(fecha) {
         crearChartTendenciaDia(fechaId, true);
         try {
           var imgUrl = apexSvgDataUrl($chart);
-          html += '<div style="text-align: center; margin: 15px 0;">';
-          html += '<h5 style="color:#2C5D94; font-weight:bold; margin-bottom: 10px;">Tendencia de Manifiestos por Franja Horaria (' + fecha + ')</h5>';
-          html += '<img src="' + imgUrl + '" style="width: 100%; max-width: 750px; height: auto; display: block; margin: 0 auto; border: 1px solid #cbd6e2; border-radius: 4px; padding: 5px;" />';
-          html += '</div>';
+          html += '<div style="text-align: center; margin: 15px 0;">' + '<h5 style="color:#2C5D94; font-weight:bold; margin-bottom: 10px;">Tendencia de Manifiestos por Franja Horaria (' + fecha + ')</h5>' + '<img src="' + imgUrl + '" style="width: 100%; max-width: 750px; height: auto; display: block; margin: 0 auto; border: 1px solid #cbd6e2; border-radius: 4px; padding: 5px;" />' + '</div>';
         } catch (e) {
           html += generarTablaParaDia(config.turnos_detalle);
         }
@@ -5646,13 +3457,10 @@ function imprimirReporteFecha(fecha) {
     } else {
       html += generarTablaParaDia(config.turnos_detalle);
     }
-
     html += "</div>";
   });
-
   abrirVentanaImpresion(html, "Reporte de Turnos - " + fecha);
 }
-
 function exportarExcelFechaRango(fecha) {
   var dias = datosDashboardRango
     ? getDiasFiltradosRango(datosDashboardRango.dias)
@@ -5667,15 +3475,12 @@ function exportarExcelFechaRango(fecha) {
     return d.Tud_Fec_SQL === fecha || d.Tud_Fec === fecha;
   })[0];
   if (
-    !diaFiltrado ||
-    !diaFiltrado.turnos_detalle ||
-    diaFiltrado.turnos_detalle.length === 0
+    !diaFiltrado || !diaFiltrado.turnos_detalle || diaFiltrado.turnos_detalle.length === 0
   ) {
     alert("No se encontraron datos para la fecha seleccionada.");
     return;
   }
-  var turnosFecha = diaFiltrado.turnos_detalle;
-  var htmlExcel = '<style type="text/css">';
+  var turnosFecha = diaFiltrado.turnos_detalle, htmlExcel = '<style type="text/css">';
   htmlExcel +=
     "table.xl-dashboard-fecha { border-collapse: collapse; table-layout: fixed; width: 600px; }";
   htmlExcel +=
@@ -5688,10 +3493,7 @@ function exportarExcelFechaRango(fecha) {
   htmlExcel +=
     '<tr bgcolor="#2C5D94" style="background-color: #2C5D94; color: white; font-weight: bold;">';
   htmlExcel +=
-    '<td colspan="7" bgcolor="#2C5D94" style="text-align: center; font-size: 12px; padding: 8px; color: white;">Reporte por Fecha: ' +
-    (diaFiltrado.Tud_Fec || fecha) +
-    (diaFiltrado.dia_semana ? " - " + diaFiltrado.dia_semana : "") +
-    "</td>";
+    '<td colspan="7" bgcolor="#2C5D94" style="text-align: center; font-size: 12px; padding: 8px; color: white;">Reporte por Fecha: ' + (diaFiltrado.Tud_Fec || fecha) + (diaFiltrado.dia_semana ? " - " + diaFiltrado.dia_semana : "") + "</td>";
   htmlExcel += "</tr>";
   htmlExcel +=
     '<tr bgcolor="#e0e0e0" style="background-color: #e0e0e0; font-weight: bold;">';
@@ -5714,45 +3516,26 @@ function exportarExcelFechaRango(fecha) {
     var pct = t.porcentaje_ocupacion || 0;
     htmlExcel += "<tr>";
     htmlExcel +=
-      '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'@\'; background-color: #ffffff;">' +
-      (t.horario || "") +
-      "</td>";
+      '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'@\'; background-color: #ffffff;">' + (t.horario || "") + "</td>";
     htmlExcel +=
-      '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' +
-      (t.cupos || 0) +
-      "</td>";
+      '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' + (t.cupos || 0) + "</td>";
     htmlExcel +=
-      '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' +
-      (t.ocupados || 0) +
-      "</td>";
+      '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' + (t.ocupados || 0) + "</td>";
     htmlExcel +=
-      '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' +
-      (t.manifiestos_inactivos || 0) +
-      "</td>";
+      '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' + (t.manifiestos_inactivos || 0) + "</td>";
     htmlExcel +=
-      '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' +
-      (t.libres || 0) +
-      "</td>";
+      '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' + (t.libres || 0) + "</td>";
     htmlExcel +=
-      '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'@\'; background-color: #ffffff;">' +
-      pct +
-      "%</td>";
+      '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'@\'; background-color: #ffffff;">' + pct + "%</td>";
     htmlExcel +=
-      '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'@\'; background-color: #ffffff;">' +
-      pct +
-      "%</td>";
+      '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'@\'; background-color: #ffffff;">' + pct + "%</td>";
     htmlExcel += "</tr>";
   });
   htmlExcel += "</table>";
   var nombreArchivo =
-    "Reporte_Turnos_" +
-    (fecha || "").replace(/[\/\-]/g, "_") +
-    "_" +
-    new Date().getTime() +
-    ".xls";
+    "Reporte_Turnos_" + (fecha || "").replace(/[\/\-]/g, "_") + "_" + new Date().getTime() + ".xls";
   var form = $("<form>", {
-    method: "POST",
-    action: "../../Librerias/exportar/ficheroExcel.php",
+    method: "POST", action: "../../Librerias/exportar/ficheroExcel.php",
     target: "_blank",
   });
   form.append(
@@ -5768,7 +3551,6 @@ function exportarExcelFechaRango(fecha) {
   form.submit();
   form.remove();
 }
-
 function exportarExcelFecha(fecha) {
   if (!datosDashboardActual || datosDashboardActual.length === 0) {
     alert(
@@ -5776,27 +3558,21 @@ function exportarExcelFecha(fecha) {
     );
     return;
   }
-
   // Filtrar datos por fecha
   var configuracionesFiltradas = [];
   datosDashboardActual.forEach(function (config) {
     var configFiltrada = JSON.parse(JSON.stringify(config)); // Clonar
     configFiltrada.turnos_detalle = config.turnos_detalle.filter(
-      function (turno) {
-        return turno.Tud_Fec === fecha;
-      },
+      function (turno) { return turno.Tud_Fec === fecha; },
     );
-
     if (configFiltrada.turnos_detalle.length > 0) {
       configuracionesFiltradas.push(configFiltrada);
     }
   });
-
   if (configuracionesFiltradas.length === 0) {
     alert("No se encontraron datos para la fecha seleccionada.");
     return;
   }
-
   // Crear tabla HTML para Excel (table-layout:fixed y colgroup limitan columnas para evitar que Excel extienda colores)
   var htmlExcel = '<style type="text/css">';
   htmlExcel +=
@@ -5808,21 +3584,13 @@ function exportarExcelFecha(fecha) {
   htmlExcel +=
     '<table class="xl-dashboard-fecha" border="1" cellpadding="3" cellspacing="0" style="border-collapse: collapse; table-layout: fixed; width: 600px;">';
   htmlExcel += "<colgroup><col><col><col><col><col><col><col></colgroup>";
-
   configuracionesFiltradas.forEach(function (config) {
-    var configHeader = "Configuración de Turnos #" + config.Tur_Cod;
-    var configPeriodo = "Período: " + config.Tur_Fei + " - " + config.Tur_Fef;
-
+    var configHeader = "Configuración de Turnos #" + config.Tur_Cod, configPeriodo = "Período: " + config.Tur_Fei + " - " + config.Tur_Fef;
     htmlExcel +=
       '<tr bgcolor="#2C5D94" style="background-color: #2C5D94; color: white; font-weight: bold;">';
     htmlExcel +=
-      '<td colspan="7" bgcolor="#2C5D94" style="text-align: center; font-size: 12px; padding: 8px; color: white;">' +
-      configHeader +
-      " - " +
-      configPeriodo +
-      "</td>";
+      '<td colspan="7" bgcolor="#2C5D94" style="text-align: center; font-size: 12px; padding: 8px; color: white;">' + configHeader + " - " + configPeriodo + "</td>";
     htmlExcel += "</tr>";
-
     // Agrupar turnos por fecha (solo debería haber una fecha)
     var turnosPorFecha = {};
     config.turnos_detalle.forEach(function (turno) {
@@ -5832,18 +3600,13 @@ function exportarExcelFecha(fecha) {
       }
       turnosPorFecha[fechaTurno].push(turno);
     });
-
     Object.keys(turnosPorFecha).forEach(function (fechaTurno) {
       var turnosFecha = turnosPorFecha[fechaTurno];
-
       htmlExcel +=
         '<tr bgcolor="#d1ecf1" style="background-color: #d1ecf1; color: #0c5460; font-weight: bold;">';
       htmlExcel +=
-        '<td colspan="7" bgcolor="#d1ecf1" style="text-align: left; font-size: 13px; padding: 8px; color: #0c5460;">Fecha: ' +
-        fechaTurno +
-        "</td>";
+        '<td colspan="7" bgcolor="#d1ecf1" style="text-align: left; font-size: 13px; padding: 8px; color: #0c5460;">Fecha: ' + fechaTurno + "</td>";
       htmlExcel += "</tr>";
-
       htmlExcel +=
         '<tr bgcolor="#e0e0e0" style="background-color: #e0e0e0; font-weight: bold;">';
       htmlExcel +=
@@ -5861,139 +3624,92 @@ function exportarExcelFecha(fecha) {
       htmlExcel +=
         '<td bgcolor="#e0e0e0" style="padding: 5px; text-align: center;">Barra Ocupación</td>';
       htmlExcel += "</tr>";
-
       turnosFecha.forEach(function (turno) {
         var porcentaje = turno.porcentaje_ocupacion || 0;
         htmlExcel += "<tr>";
         htmlExcel +=
-          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'@\'; background-color: #ffffff;">' +
-          (turno.horario || "") +
-          "</td>";
+          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'@\'; background-color: #ffffff;">' + (turno.horario || "") + "</td>";
         htmlExcel +=
-          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' +
-          (turno.cupos || 0) +
-          "</td>";
+          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' + (turno.cupos || 0) + "</td>";
         htmlExcel +=
-          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' +
-          (turno.ocupados || 0) +
-          "</td>";
+          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' + (turno.ocupados || 0) + "</td>";
         htmlExcel +=
-          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' +
-          (turno.manifiestos_inactivos || 0) +
-          "</td>";
+          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' + (turno.manifiestos_inactivos || 0) + "</td>";
         htmlExcel +=
-          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' +
-          (turno.libres || 0) +
-          "</td>";
+          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'0\'; background-color: #ffffff;">' + (turno.libres || 0) + "</td>";
         htmlExcel +=
-          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'@\'; background-color: #ffffff;">' +
-          porcentaje +
-          "%</td>";
+          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'@\'; background-color: #ffffff;">' + porcentaje + "%</td>";
         htmlExcel +=
-          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'@\'; background-color: #ffffff;">' +
-          porcentaje +
-          "%</td>";
+          '<td class="xl-data" bgcolor="#ffffff" style="padding: 4px; text-align: center; mso-number-format:\'@\'; background-color: #ffffff;">' + porcentaje + "%</td>";
         htmlExcel += "</tr>";
       });
     });
   });
-
   htmlExcel += "</table>";
-
   var nombreArchivo =
-    "Reporte_Turnos_" +
-    fecha.replace(/\//g, "_") +
-    "_" +
-    new Date().getTime() +
-    ".xls";
-
+    "Reporte_Turnos_" + fecha.replace(/\//g, "_") + "_" + new Date().getTime() + ".xls";
   var form = $("<form>", {
-    method: "POST",
-    action: "../../Librerias/exportar/ficheroExcel.php",
+    method: "POST", action: "../../Librerias/exportar/ficheroExcel.php",
     target: "_blank",
   });
-
   form.append(
     $("<input>", {
-      type: "hidden",
-      name: "datos_a_enviar",
+      type: "hidden", name: "datos_a_enviar",
       value: htmlExcel,
     }),
   );
-
   form.append(
     $("<input>", {
-      type: "hidden",
-      name: "nombre",
+      type: "hidden", name: "nombre",
       value: nombreArchivo,
     }),
   );
-
   form.append(
     $("<input>", {
-      type: "hidden",
-      name: "hoja",
+      type: "hidden", name: "hoja",
       value: "Reporte Turnos " + fecha,
     }),
   );
-
   $("body").append(form);
   form.submit();
   form.remove();
 }
-
 function imprimirModalManifiestos() {
   var $modal = $("#modalManifiestos");
   if ($modal.length === 0) {
     alert("No hay modal abierto para imprimir.");
     return;
   }
-
   var titulo = $modal.find(".modal-title").text();
   var $body = $modal.find(".modal-body");
-  var contenido = "";
-  var tabLabel = "";
-  var esDetallado = false;
-
+  var contenido = "", tabLabel = "", esDetallado = false;
   var $tabs = $body.find(".nav-tabs");
   var $tabContent = $body.find(".tab-content");
-
   if ($tabContent.length > 0) {
     var $activePane = $tabContent.find(".tab-pane.active");
     tabLabel = $tabs.find("li.active a").text().trim() || "Reporte";
     esDetallado = $activePane.attr("id") === "tabManifiestosDetalle";
     contenido =
-      '<div class="print-tab-label" style="font-size: 12px; color: #6c757d; margin-bottom: 10px;">Vista: ' +
-      tabLabel +
-      "</div>";
+      '<div class="print-tab-label" style="font-size: 12px; color: #6c757d; margin-bottom: 10px;">Vista: ' + tabLabel + "</div>";
     contenido += $activePane.length ? $activePane.html() : $tabContent.html();
   } else {
     contenido = $body.html();
   }
-
   if (!contenido || contenido.trim() === "") {
     alert("No hay contenido para imprimir.");
     return;
   }
-
   var ventanaImpresion = window.open("", "_blank", "width=1000,height=700");
-
   var pageStyle = esDetallado
     ? "@page { margin: 1cm; size: landscape; }"
     : "@page { margin: 1cm; }";
-
   var bootstrapLink = "";
   if (esDetallado) {
     var baseUrl =
-      (window.location.origin || "") +
-      (window.location.pathname || "").replace(/\/[^/]*$/, "");
+      (window.location.origin || "") + (window.location.pathname || "").replace(/\/[^/]*$/, "");
     bootstrapLink =
-      '<base href="' +
-      baseUrl +
-      '/">' +
-      '<link rel="stylesheet" href="../../framework/jquery/bootstrap/bootstrap-3.3.5/css/bootstrap.min.css">';
+      '<base href="' + baseUrl + '/">' + '<link rel="stylesheet" href="../../framework/jquery/bootstrap/bootstrap-3.3.5/css/bootstrap.min.css">';
   }
-
   var estilosImpresion = `
         <style>
             ${pageStyle}
@@ -6065,22 +3781,14 @@ function imprimirModalManifiestos() {
             }
         </style>
     `;
-
   ventanaImpresion.document.write(
-    "<html><head><title>" +
-      titulo +
-      "</title>" +
-      bootstrapLink +
-      estilosImpresion +
-      "</head><body>",
-  );
+    "<html><head><title>" + titulo + "</title>" + bootstrapLink + estilosImpresion + "</head><body>", );
   ventanaImpresion.document.write(
     '<div class="modal-title-print">' + titulo + "</div>",
   );
   ventanaImpresion.document.write(contenido);
   ventanaImpresion.document.write("</body></html>");
   ventanaImpresion.document.close();
-
   ventanaImpresion.onload = function () {
     setTimeout(function () {
       ventanaImpresion.print();
@@ -6090,7 +3798,6 @@ function imprimirModalManifiestos() {
     }, 250);
   };
 }
-
 function exportModalManifiestosExcel(tipo) {
   if (!datosModalManifiestos || !datosModalManifiestos.manifiestos) {
     alert("No hay datos para exportar.");
@@ -6099,9 +3806,7 @@ function exportModalManifiestosExcel(tipo) {
   var manifiestos = datosModalManifiestos.manifiestos;
   var turnoInfo = datosModalManifiestos.turnoInfo || {};
   var titulo =
-    (turnoInfo.fecha || "Manifiestos") +
-    (turnoInfo.horario ? " - " + turnoInfo.horario : "");
-
+    (turnoInfo.fecha || "Manifiestos") + (turnoInfo.horario ? " - " + turnoInfo.horario : "");
   var htmlExcel = '<style type="text/css">';
   htmlExcel +=
     "table.xl-modal { border-collapse: collapse; table-layout: fixed; width: 100%; }";
@@ -6114,29 +3819,21 @@ function exportModalManifiestosExcel(tipo) {
   htmlExcel += "</style>";
   htmlExcel +=
     '<table class="xl-modal" border="1" cellpadding="3" cellspacing="0">';
-
   if (tipo === "detallado") {
     var mostrarColumnaHorario =
       manifiestos.length > 0 && manifiestos[0].horario_turno;
     var mostrarColumnaFechaDia =
       manifiestos.length > 0 && manifiestos[0].fecha_dia;
     var ordenActual =
-      ($("#ordenManifiestosDetalle").length &&
-        $("#ordenManifiestosDetalle").val()) ||
-      "fecha";
+      ($("#ordenManifiestosDetalle").length && $("#ordenManifiestosDetalle").val()) || "fecha";
     var manifiestosParaExport = ordenarManifiestosParaTabla(
       manifiestos,
       ordenActual,
     );
-
     var numCols =
       10 + (mostrarColumnaHorario ? 1 : 0) + (mostrarColumnaFechaDia ? 1 : 0);
     htmlExcel +=
-      '<tr class="xl-modal-header"><td colspan="' +
-      numCols +
-      '" style="text-align: center; padding: 8px; color: white;">' +
-      titulo +
-      " - Vista Detallada</td></tr>";
+      '<tr class="xl-modal-header"><td colspan="' + numCols + '" style="text-align: center; padding: 8px; color: white;">' + titulo + " - Vista Detallada</td></tr>";
     htmlExcel += '<tr class="xl-modal-header">';
     htmlExcel += "<td>#</td><td>No. Manifiesto</td><td>Fecha</td>";
     if (mostrarColumnaFechaDia) htmlExcel += "<td>Día</td>";
@@ -6144,7 +3841,6 @@ function exportModalManifiestosExcel(tipo) {
     htmlExcel +=
       "<td>Cliente</td><td>Planta</td><td>GE</td><td>A</td><td>GS</td><td>F</td><td>R</td>";
     htmlExcel += "</tr>";
-
     manifiestosParaExport.forEach(function (man, index) {
       htmlExcel += "<tr>";
       htmlExcel += "<td>" + (index + 1) + "</td>";
@@ -6171,31 +3867,21 @@ function exportModalManifiestosExcel(tipo) {
       var key = planta + "\u0001" + cliente;
       if (!porPlantaCliente[key]) {
         porPlantaCliente[key] = {
-          planta: planta,
-          cliente: cliente,
+          planta: planta, cliente: cliente,
           cantidad: 0,
         };
       }
       porPlantaCliente[key].cantidad++;
     });
-    var filas = Object.keys(porPlantaCliente).map(function (k) {
-      return porPlantaCliente[k];
-    });
-    filas.sort(function (a, b) {
-      return (b.cantidad || 0) - (a.cantidad || 0);
-    });
-
+    var filas = Object.keys(porPlantaCliente).map(function (k) { return porPlantaCliente[k]; });
+    filas.sort(function (a, b) { return (b.cantidad || 0) - (a.cantidad || 0); });
     var totalManifiestos = filas.reduce(function (s, f) {
       return s + (f.cantidad || 0);
     }, 0);
-
     htmlExcel +=
-      '<tr class="xl-modal-header"><td colspan="5" style="text-align: center; padding: 8px; color: white;">' +
-      titulo +
-      " - Vista Por Planta</td></tr>";
+      '<tr class="xl-modal-header"><td colspan="5" style="text-align: center; padding: 8px; color: white;">' + titulo + " - Vista Por Planta</td></tr>";
     htmlExcel +=
       '<tr class="xl-modal-header"><td>#</td><td>Planta</td><td>Cliente</td><td style="text-align: center;">Cantidad Manifiestos</td><td style="text-align: center;"><span style="display: block;">%</span><span style="display: block;">Participación</span></td></tr>';
-
     filas.forEach(function (item, index) {
       var pct =
         totalManifiestos > 0
@@ -6211,21 +3897,13 @@ function exportModalManifiestosExcel(tipo) {
       htmlExcel += "</tr>";
     });
     htmlExcel +=
-      '<tr class="xl-modal-total"><td colspan="3" style="text-align: right; padding-right: 15px;">TOTAL:</td><td style="text-align: center;">' +
-      totalManifiestos +
-      '</td><td style="text-align: center;">100%</td></tr>';
+      '<tr class="xl-modal-total"><td colspan="3" style="text-align: right; padding-right: 15px;">TOTAL:</td><td style="text-align: center;">' + totalManifiestos + '</td><td style="text-align: center;">100%</td></tr>';
   }
-
   htmlExcel += "</table>";
-
   var nombreArchivo =
-    "manifiestos_" +
-    (tipo === "detallado" ? "detallado" : "por_planta") +
-    "_" +
-    new Date().getTime();
+    "manifiestos_" + (tipo === "detallado" ? "detallado" : "por_planta") + "_" + new Date().getTime();
   var form = $("<form>", {
-    method: "POST",
-    action: "../../Librerias/exportar/ficheroExcel.php",
+    method: "POST", action: "../../Librerias/exportar/ficheroExcel.php",
     target: "_blank",
   });
   form.append(
@@ -6236,8 +3914,7 @@ function exportModalManifiestosExcel(tipo) {
   );
   form.append(
     $("<input>", {
-      type: "hidden",
-      name: "hoja",
+      type: "hidden", name: "hoja",
       value:
         tipo === "detallado"
           ? "Manifiestos Detallado"
@@ -6248,13 +3925,8 @@ function exportModalManifiestosExcel(tipo) {
   form.submit();
   form.remove();
 }
-
 // ==================== Vista Ejecutiva Global (CEO) ====================
-var chartEjecutivoConcentracion = null;
-var chartEjecutivoTendencia = null;
-var chartEjecutivoInactivos = null;
-var chartEjecutivoParetoInactivos = null;
-
+var chartEjecutivoConcentracion = null, chartEjecutivoTendencia = null, chartEjecutivoInactivos = null, chartEjecutivoParetoInactivos = null;
 function cargarDashboardEjecutivo() {
   var fi = $("#fecha_inicio_ejecutivo").val();
   var ff = $("#fecha_fin_ejecutivo").val();
@@ -6274,10 +3946,7 @@ function cargarDashboardEjecutivo() {
         renderDashboardEjecutivo(data);
       } else {
         $("#dashboardContentEjecutivo").html(
-          '<div class="alert alert-danger">' +
-            (data.message || "Error al cargar datos.") +
-            "</div>",
-        );
+          '<div class="alert alert-danger">' + (data.message || "Error al cargar datos.") + "</div>", );
       }
     },
     error: function () {
@@ -6287,7 +3956,6 @@ function cargarDashboardEjecutivo() {
     },
   });
 }
-
 function obtenerContenidoEjecutivoConGraficosParaImpresion() {
   var $cont = $("#dashboardContentEjecutivo");
   if (!$cont.length) return "";
@@ -6305,7 +3973,6 @@ function obtenerContenidoEjecutivoConGraficosParaImpresion() {
   $clone.find(".ceo-chart-wrap").css({ minHeight: "0", height: "auto" });
   return $clone.html();
 }
-
 function imprimirReporteEjecutivo() {
   if (!datosDashboardEjecutivo) {
     alert(
@@ -6319,11 +3986,9 @@ function imprimirReporteEjecutivo() {
     var m = (str + "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
     return m ? m[3] + "/" + m[2] + "/" + m[1] : str;
   }
-  var fechaIni = fmtF(d.fecha_ini),
-    fechaFin = fmtF(d.fecha_fin);
+  var fechaIni = fmtF(d.fecha_ini), fechaFin = fmtF(d.fecha_fin);
   var rangoTexto =
     fechaIni && fechaFin ? fechaIni + " a " + fechaFin : "Período seleccionado";
-
   var contenidoConGraficos =
     obtenerContenidoEjecutivoConGraficosParaImpresion();
   if (!contenidoConGraficos) {
@@ -6332,7 +3997,6 @@ function imprimirReporteEjecutivo() {
     );
     return;
   }
-
   var estilos = [
     "@page { margin: 1.2cm; size: A4 portrait; }",
     'body { margin: 0; padding: 0 8px 12px; font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; color: #1a1a1a; font-size: 12px; line-height: 1.35; -webkit-print-color-adjust: exact; print-color-adjust: exact; }',
@@ -6380,36 +4044,21 @@ function imprimirReporteEjecutivo() {
     "  .ceo-bloque .table tr { page-break-inside: avoid; }",
     "}",
   ].join("\n");
-
   var html = '<div class="ceo-print-wrap">';
-  html += '<div class="ceo-print-header">';
-  html += '<h1 class="ceo-print-title">Reporte de Manifiestos</h1>';
-  html += '<p class="ceo-print-subtitle">Informe gerencial</p>';
-  html += '<p class="ceo-print-period">' + rangoTexto + "</p>";
-  html += "</div>";
-  html += '<div class="ceo-print-body">' + contenidoConGraficos + "</div>";
-  html +=
-    '<div class="ceo-print-footer">Documento generado el ' +
-    new Date().toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
+  html += '<div class="ceo-print-header">' + '<h1 class="ceo-print-title">Reporte de Manifiestos</h1>' + '<p class="ceo-print-subtitle">Informe gerencial</p>' + '<p class="ceo-print-period">' + rangoTexto + "</p>" + "</div>" + '<div class="ceo-print-body">' + contenidoConGraficos + "</div>";
+  html += '<div class="ceo-print-footer">Documento generado el ' + new Date().toLocaleDateString("es-ES", {
+      day: "2-digit", month: "2-digit",
+      year: "numeric", hour: "2-digit",
       minute: "2-digit",
-    }) +
-    " &nbsp;|&nbsp; Reporte de Manifiestos</div>";
+    }) + " &nbsp;|&nbsp; Reporte de Manifiestos</div>";
   html += "</div>";
-
   var ventanaImpresion = window.open("", "_blank", "width=950,height=900");
   if (!ventanaImpresion) {
     alert("Por favor, permita ventanas emergentes para imprimir.");
     return;
   }
   ventanaImpresion.document.write(
-    '<html><head><meta charset="UTF-8"><title>Informe gerencial - Reporte de Manifiestos</title><style>' +
-      estilos +
-      "</style></head><body>",
-  );
+    '<html><head><meta charset="UTF-8"><title>Informe gerencial - Reporte de Manifiestos</title><style>' + estilos + "</style></head><body>", );
   ventanaImpresion.document.write(html);
   ventanaImpresion.document.write("</body></html>");
   ventanaImpresion.document.close();
@@ -6423,12 +4072,8 @@ function imprimirReporteEjecutivo() {
     }, 600);
   };
 }
-
 function semaforoKPI(opciones) {
-  var v = opciones.valor;
-  var verde = opciones.verde,
-    amarillo = opciones.amarillo,
-    rojo = opciones.rojo;
+  var v = opciones.valor, verde = opciones.verde, amarillo = opciones.amarillo, rojo = opciones.rojo;
   if (rojo !== undefined && v <= rojo) return "rojo";
   if (amarillo !== undefined && v <= amarillo) return "amarillo";
   if (verde !== undefined) return "verde";
@@ -6439,69 +4084,35 @@ function semaforoKPI(opciones) {
   }
   return "verde";
 }
-
 function renderDashboardEjecutivo(data) {
   datosDashboardEjecutivo = data;
   var k = data.kpis || {};
   var ch = data.choferes || {};
   var pl = data.placas || {};
-  var totalMan = k.total_manifiestos || 0;
-  var varPct = k.variacion_pct || 0;
-  var concTop3 = k.indice_concentracion_top3 || 0;
-  var depTop2 = k.indice_dependencia_top2 || 0;
-  var desv = k.desviacion_estandar || 0;
-  var promChofer = ch.promedio || 0;
-  var utilizacion = k.utilizacion_flota || 0;
+  var totalMan = k.total_manifiestos || 0, varPct = k.variacion_pct || 0, concTop3 = k.indice_concentracion_top3 || 0, depTop2 = k.indice_dependencia_top2 || 0, desv = k.desviacion_estandar || 0, promChofer = ch.promedio || 0, utilizacion = k.utilizacion_flota || 0;
   var cocienteDesv =
     promChofer > 0 && desv !== undefined ? desv / promChofer : 0;
-
-  var sVar = varPct >= 0 ? "verde" : varPct > -15 ? "amarillo" : "rojo";
-  var sConc = concTop3 < 50 ? "verde" : concTop3 <= 65 ? "amarillo" : "rojo";
-  var sDep = depTop2 < 50 ? "verde" : depTop2 <= 65 ? "amarillo" : "rojo";
+  var sVar = varPct >= 0 ? "verde" : varPct > -15 ? "amarillo" : "rojo", sConc = concTop3 < 50 ? "verde" : concTop3 <= 65 ? "amarillo" : "rojo", sDep = depTop2 < 50 ? "verde" : depTop2 <= 65 ? "amarillo" : "rojo";
   var sDesv =
     cocienteDesv < 0.6 ? "verde" : cocienteDesv <= 1.2 ? "amarillo" : "rojo";
   var sUtil =
     utilizacion >= 60 ? "verde" : utilizacion >= 30 ? "amarillo" : "rojo";
   var inc = data.inactivos || {};
-  var tasaInac = inc.tasa_pct != null ? inc.tasa_pct : 0;
-  var sInac = tasaInac < 5 ? "verde" : tasaInac <= 15 ? "amarillo" : "rojo";
-
-  var tRel = k.tiempo_relavera_prom || 0;
-  var sRel = tRel < 60 ? "verde" : tRel <= 120 ? "amarillo" : "rojo";
+  var tasaInac = inc.tasa_pct != null ? inc.tasa_pct : 0, sInac = tasaInac < 5 ? "verde" : tasaInac <= 15 ? "amarillo" : "rojo";
+  var tRel = k.tiempo_relavera_prom || 0, sRel = tRel < 60 ? "verde" : tRel <= 120 ? "amarillo" : "rojo";
   var tRelFmt =
     tRel >= 60
       ? Math.floor(tRel / 60) + "h " + Math.round(tRel % 60) + "m"
       : Math.round(tRel) + " min";
-
-  var iconVar = varPct >= 0 ? "↑" : "↓";
-  var html = '<div class="ceo-kpi-row">';
-  html += htmlKpiCeo("verde", "fa-file-text-o", "Total manifiestos", totalMan, "Período");
-  html += htmlKpiCeo(sVar, "fa-line-chart", "Variación % vs anterior", (varPct >= 0 ? "+" : "") + varPct + "%", iconVar);
-  html += htmlKpiCeo(sConc, "fa-pie-chart", "Concentración Top 3", concTop3 + "%", "Plantas");
-  html += htmlKpiCeo(sDep, "fa-exclamation-triangle", "Dependencia Top 2", depTop2 + "%", depTop2 > 50 ? "Alerta" : "Estable");
-  html += htmlKpiCeo(sDesv, "fa-bar-chart", "Dispersión operativa", typeof desv === "number" ? desv.toFixed(1) : desv, "Desv. estándar");
-  html += htmlKpiCeo(sUtil, "fa-truck", "Utilización flota", utilizacion + "%", "Placas activas");
-  html += htmlKpiCeo(sInac, "fa-pause-circle-o", "% no realizados", tasaInac + "%", "Inactivos");
-  html += htmlKpiCeo(sRel, "fa-clock-o", "Tiempo Prom. Relavera", tRelFmt, "Entrada vs Salida");
-  html += "</div>";
-
+  var iconVar = varPct >= 0 ? "↑" : "↓", html = '<div class="ceo-kpi-row">';
+  html += htmlKpiCeo("verde", "fa-file-text-o", "Total manifiestos", totalMan, "Período") + htmlKpiCeo(sVar, "fa-line-chart", "Variación % vs anterior", (varPct >= 0 ? "+" : "") + varPct + "%", iconVar) + htmlKpiCeo(sConc, "fa-pie-chart", "Concentración Top 3", concTop3 + "%", "Plantas") + htmlKpiCeo(sDep, "fa-exclamation-triangle", "Dependencia Top 2", depTop2 + "%", depTop2 > 50 ? "Alerta" : "Estable") + htmlKpiCeo(sDesv, "fa-bar-chart", "Dispersión operativa", typeof desv === "number" ? desv.toFixed(1) : desv, "Desv. estándar") + htmlKpiCeo(sUtil, "fa-truck", "Utilización flota", utilizacion + "%", "Placas activas") + htmlKpiCeo(sInac, "fa-pause-circle-o", "% no realizados", tasaInac + "%", "Inactivos") + htmlKpiCeo(sRel, "fa-clock-o", "Tiempo Prom. Relavera", tRelFmt, "Entrada vs Salida") + "</div>";
   var tendencia30 = data.tendencia_30 || [];
   var promDia = data.tendencia_promedio || 0;
   var txtRango =
     data.fecha_ini && data.fecha_fin
       ? " (" + formatearFechaRango(data.fecha_ini) + " a " + formatearFechaRango(data.fecha_fin) + ")"
       : "";
-  html +=
-    '<div class="ceo-bloque"><h4><i class="fa fa-calendar"></i> Tendencia temporal (período seleccionado)</h4>';
-  html +=
-    "<p>Promedio diario en el rango: <strong>" +
-    promDia +
-    "</strong> manifiestos" +
-    (txtRango ? '<span class="text-muted">' + txtRango + "</span>" : "") +
-    "</p>";
-  html +=
-    '<div class="ceo-chart-wrap"><div class="apex-chart" id="chartEjecutivoTendencia"></div></div></div>';
-
+  html += '<div class="ceo-bloque"><h4><i class="fa fa-calendar"></i> Tendencia temporal (período seleccionado)</h4>' + "<p>Promedio diario en el rango: <strong>" + promDia + "</strong> manifiestos" + (txtRango ? '<span class="text-muted">' + txtRango + "</span>" : "") + "</p>" + '<div class="ceo-chart-wrap"><div class="apex-chart" id="chartEjecutivoTendencia"></div></div></div>';
   var tonRecibidas = Number(
     data.kpis.total_toneladas_recibidas || 0,
   ).toLocaleString("es-ES");
@@ -6514,75 +4125,18 @@ function renderDashboardEjecutivo(data) {
   var tonPromedioDiario = Number(
     data.kpis.promedio_tonelaje_diario || 0,
   ).toLocaleString("es-ES");
-
-  html += '<div class="ceo-bloque"><h4><i class="fa fa-balance-scale"></i> Resumen de Tonelaje</h4>';
-  html += '<div class="ceo-kpi-row">';
-  html += htmlKpiCeo("verde", "fa-download", "Total Recibidas", tonRecibidas + " Tn", "Toneladas");
-  html += htmlKpiCeo("verde", "fa-file-text", "Total Facturadas", tonFacturadas + " Tn", "Toneladas");
-  html += htmlKpiCeo("amarillo", "fa-clock-o", "Por Facturar", tonPorFacturar + " Tn", "Toneladas");
-  html += htmlKpiCeo("verde", "fa-line-chart", "Promedio Diario", tonPromedioDiario + " Tn", "Toneladas / día");
-  html += "</div></div>";
-
+  html += '<div class="ceo-bloque"><h4><i class="fa fa-balance-scale"></i> Resumen de Tonelaje</h4>' + '<div class="ceo-kpi-row">' + htmlKpiCeo("verde", "fa-download", "Total Recibidas", tonRecibidas + " Tn", "Toneladas") + htmlKpiCeo("verde", "fa-file-text", "Total Facturadas", tonFacturadas + " Tn", "Toneladas") + htmlKpiCeo("amarillo", "fa-clock-o", "Por Facturar", tonPorFacturar + " Tn", "Toneladas") + htmlKpiCeo("verde", "fa-line-chart", "Promedio Diario", tonPromedioDiario + " Tn", "Toneladas / día") + "</div></div>";
   var top10 = data.top10_plantas || [];
   var concPct =
     data.concentracion_top10_pct != null
       ? data.concentracion_top10_pct
       : data.concentracion_pct || 0;
-  html +=
-    '<div class="ceo-bloque"><h4><i class="fa fa-industry"></i> Concentración operativa</h4>';
-  html +=
-    '<div class="ceo-chart-wrap"><div class="apex-chart" id="chartEjecutivoConc"></div></div>';
-  html +=
-    '<p class="ceo-insight' +
-    (concPct > 65 ? " alerta-roja" : "") +
-    '">Las ' +
-    (top10.length >= 10 ? "10" : top10.length) +
-    " primeras plantas concentran el " +
-    concPct +
-    "% de la operación." +
-    (concPct > 65 ? " <strong>Riesgo estructural.</strong>" : "") +
-    "</p></div>";
-
-  var pctSobre = ch.pct_sobre_promedio || 0,
-    pctBajo = ch.pct_bajo_promedio || 0,
-    n80 = ch.n_choferes_80 || 0,
-    totalCh = ch.total_choferes || 0;
-  html +=
-    '<div class="ceo-bloque"><h4><i class="fa fa-users"></i> Rendimiento de capital humano</h4>';
-  html +=
-    "<p><strong>" +
-    pctSobre +
-    "%</strong> choferes sobre promedio &nbsp;|&nbsp; <strong>" +
-    pctBajo +
-    "%</strong> choferes bajo promedio</p>";
-  html +=
-    '<p class="ceo-insight">El <strong>' +
-    (totalCh > 0 ? Math.round((n80 / totalCh) * 100) : 0) +
-    "%</strong> de los choferes generan el 80% de los manifiestos.</p>";
-  html +=
-    '<div class="ceo-chart-wrap"><div class="apex-chart" id="chartEjecutivoChofer"></div></div></div>';
-
-  var pctBajaPla = pl.pct_baja_actividad || 0,
-    idxConcPla = pl.indice_concentracion || 0;
-  html +=
-    '<div class="ceo-bloque"><h4><i class="fa fa-truck"></i> Utilización de activos</h4>';
-  html +=
-    "<p><strong>" +
-    pctBajaPla +
-    "%</strong> placas con baja actividad &nbsp;|&nbsp; Índice concentración flota: <strong>" +
-    idxConcPla +
-    "%</strong></p>";
-  html +=
-    '<p class="ceo-insight' +
-    (idxConcPla > 70 ? " alerta-roja" : "") +
-    '">El 20% de la flota concentra el ' +
-    idxConcPla +
-    "% de la operación." +
-    (idxConcPla > 70 ? " <strong>Riesgo por sobreuso.</strong>" : "") +
-    "</p></div>";
-
-  html +=
-    '<div class="ceo-bloque"><h4><i class="fa fa-bell"></i> Alertas automáticas</h4><ul class="ceo-alertas-list">';
+  html += '<div class="ceo-bloque"><h4><i class="fa fa-industry"></i> Concentración operativa</h4>' + '<div class="ceo-chart-wrap"><div class="apex-chart" id="chartEjecutivoConc"></div></div>' + '<p class="ceo-insight' + (concPct > 65 ? " alerta-roja" : "") + '">Las ' + (top10.length >= 10 ? "10" : top10.length) + " primeras plantas concentran el " + concPct + "% de la operación." + (concPct > 65 ? " <strong>Riesgo estructural.</strong>" : "") + "</p></div>";
+  var pctSobre = ch.pct_sobre_promedio || 0, pctBajo = ch.pct_bajo_promedio || 0, n80 = ch.n_choferes_80 || 0, totalCh = ch.total_choferes || 0;
+  html += '<div class="ceo-bloque"><h4><i class="fa fa-users"></i> Rendimiento de capital humano</h4>' + "<p><strong>" + pctSobre + "%</strong> choferes sobre promedio &nbsp;|&nbsp; <strong>" + pctBajo + "%</strong> choferes bajo promedio</p>" + '<p class="ceo-insight">El <strong>' + (totalCh > 0 ? Math.round((n80 / totalCh) * 100) : 0) + "%</strong> de los choferes generan el 80% de los manifiestos.</p>" + '<div class="ceo-chart-wrap"><div class="apex-chart" id="chartEjecutivoChofer"></div></div></div>';
+  var pctBajaPla = pl.pct_baja_actividad || 0, idxConcPla = pl.indice_concentracion || 0;
+  html += '<div class="ceo-bloque"><h4><i class="fa fa-truck"></i> Utilización de activos</h4>' + "<p><strong>" + pctBajaPla + "%</strong> placas con baja actividad &nbsp;|&nbsp; Índice concentración flota: <strong>" + idxConcPla + "%</strong></p>" + '<p class="ceo-insight' + (idxConcPla > 70 ? " alerta-roja" : "") + '">El 20% de la flota concentra el ' + idxConcPla + "% de la operación." + (idxConcPla > 70 ? " <strong>Riesgo por sobreuso.</strong>" : "") + "</p></div>";
+  html += '<div class="ceo-bloque"><h4><i class="fa fa-bell"></i> Alertas automáticas</h4><ul class="ceo-alertas-list">';
   (data.alertas || []).forEach(function (a) {
     var icono =
       a.nivel === "alto" ? "🔴" : a.nivel === "atencion" ? "🟡" : "🟢";
@@ -6592,32 +4146,20 @@ function renderDashboardEjecutivo(data) {
         : a.nivel === "atencion"
           ? "nivel-atencion"
           : "nivel-estable";
-    html +=
-      '<li class="' + cls + '">' + icono + " " + (a.texto || "") + "</li>";
+    html += '<li class="' + cls + '">' + icono + " " + (a.texto || "") + "</li>";
   });
   html += "</ul></div>";
-
   var inc = data.inactivos || {};
-  var totalInac = inc.total_inactivos != null ? inc.total_inactivos : 0;
-  var totalAct = inc.total_activos != null ? inc.total_activos : totalMan;
+  var totalInac = inc.total_inactivos != null ? inc.total_inactivos : 0, totalAct = inc.total_activos != null ? inc.total_activos : totalMan;
   var totalGen =
     inc.total_generados != null ? inc.total_generados : totalMan + totalInac;
   var tasaPct = inc.tasa_pct != null ? inc.tasa_pct : 0;
   var topPlantasInac = inc.top_plantas || [];
-  html +=
-    '<div class="ceo-bloque"><h4><i class="fa fa-pause-circle-o"></i> Manifiestos inactivos (turnos no realizados)</h4>';
+  html += '<div class="ceo-bloque"><h4><i class="fa fa-pause-circle-o"></i> Manifiestos inactivos (turnos no realizados)</h4>';
   if (totalInac === 0 && totalAct === 0) {
-    html +=
-      '<p class="ceo-insight">No hay manifiestos inactivos en el período.</p>';
+    html += '<p class="ceo-insight">No hay manifiestos inactivos en el período.</p>';
   } else {
-    html +=
-      "<p>En el período hay <strong>" +
-      totalInac +
-      "</strong> manifiestos inactivos sobre <strong>" +
-      totalAct +
-      "</strong> manifiestos realizados (<strong>" +
-      tasaPct +
-      "%</strong> no realizados respecto a realizados).</p>";
+    html += "<p>En el período hay <strong>" + totalInac + "</strong> manifiestos inactivos sobre <strong>" + totalAct + "</strong> manifiestos realizados (<strong>" + tasaPct + "%</strong> no realizados respecto a realizados).</p>";
     if (topPlantasInac.length > 0) {
       var sumTopInac = 0;
       topPlantasInac.forEach(function (p) {
@@ -6625,14 +4167,7 @@ function renderDashboardEjecutivo(data) {
       });
       var pctConc =
         totalInac > 0 ? Math.round((sumTopInac / totalInac) * 100) : 0;
-      html +=
-        '<p class="ceo-insight">Las ' +
-        topPlantasInac.length +
-        " plantas con mayor tasa (inactivos/realizados) concentran el " +
-        pctConc +
-        "% de los no realizados. <strong>Recomendación:</strong> revisar causas (logística, cliente, capacidad) en esas plantas.</p>";
-      html +=
-        '<div class="table-responsive"><table class="table table-condensed table-bordered" style="max-width: 600px;"><thead><tr><th>Planta</th><th>Activos</th><th>Inactivos</th><th>Tasa %</th></tr></thead><tbody>';
+      html += '<p class="ceo-insight">Las ' + topPlantasInac.length + " plantas con mayor tasa (inactivos/realizados) concentran el " + pctConc + "% de los no realizados. <strong>Recomendación:</strong> revisar causas (logística, cliente, capacidad) en esas plantas.</p>" + '<div class="table-responsive"><table class="table table-condensed table-bordered" style="max-width: 600px;"><thead><tr><th>Planta</th><th>Activos</th><th>Inactivos</th><th>Tasa %</th></tr></thead><tbody>';
       topPlantasInac.forEach(function (p) {
         var tasaPlanta =
           p.tasa_pct != null
@@ -6642,47 +4177,19 @@ function renderDashboardEjecutivo(data) {
               : p.total_inactivos > 0
                 ? "100"
                 : "0";
-        html +=
-          '<tr><td><a href="#" class="ceo-planta-inactivos-link" data-pla-cod="' +
-          (p.Pla_Cod || "") +
-          '" data-pla-nom="' +
-          (p.Pla_Nom || "").replace(/"/g, "&quot;") +
-          '" title="Ver vehículos y choferes">' +
-          (p.Pla_Nom || "") +
-          ' <i class="fa fa-external-link" style="font-size: 10px;"></i></a></td><td>' +
-          (p.total_activos != null ? p.total_activos : "-") +
-          "</td><td>" +
-          (p.total_inactivos || 0) +
-          "</td><td>" +
-          tasaPlanta +
-          "%</td></tr>";
+        html += '<tr><td><a href="#" class="ceo-planta-inactivos-link" data-pla-cod="' + (p.Pla_Cod || "") + '" data-pla-nom="' + (p.Pla_Nom || "").replace(/"/g, "&quot;") + '" title="Ver vehículos y choferes">' + (p.Pla_Nom || "") + ' <i class="fa fa-external-link" style="font-size: 10px;"></i></a></td><td>' + (p.total_activos != null ? p.total_activos : "-") + "</td><td>" + (p.total_inactivos || 0) + "</td><td>" + tasaPlanta + "%</td></tr>";
       });
-      html += "</tbody></table></div>";
-      html +=
-        '<div style="margin-top: 10px; margin-bottom: 12px;"><button type="button" class="btn btn-info btn-sm" onclick="exportarExcelInactivos();"><i class="fa fa-file-excel-o"></i> Excel - Listado completo de manifiestos inactivos</button></div>';
-      html +=
-        '<div class="ceo-chart-wrap" style="min-height: 220px;"><div class="apex-chart" id="chartEjecutivoInactivos"></div></div>';
+      html += "</tbody></table></div>" + '<div style="margin-top: 10px; margin-bottom: 12px;"><button type="button" class="btn btn-info btn-sm" onclick="exportarExcelInactivos();"><i class="fa fa-file-excel-o"></i> Excel - Listado completo de manifiestos inactivos</button></div>' + '<div class="ceo-chart-wrap" style="min-height: 220px;"><div class="apex-chart" id="chartEjecutivoInactivos"></div></div>';
     }
   }
   html += "</div>";
-
   // Bloque RESPONSABILIDAD OPERATIVA (debajo de Manifiestos inactivos)
   var resp = data.responsabilidad || {};
   var topChoferesInac = resp.top_choferes || [];
   var topPlacasInac = resp.top_placas || [];
   var paretoChoferesInac = resp.pareto_choferes || [];
   var insightResp = resp.insight || "";
-  html +=
-    '<div class="ceo-bloque"><h4><i class="fa fa-user-circle-o"></i> RESPONSABILIDAD OPERATIVA</h4>';
-  html +=
-    '<p class="ceo-insight">' +
-    (insightResp || "Sin datos de concentración de inactivos por chofer.") +
-    "</p>";
-  html += '<div class="row">';
-  html +=
-    '<div class="col-md-6"><h5 style="margin-top:0; font-size:13px; color:#2C5D94;">Top 5 Choferes con más inactivos</h5>';
-  html +=
-    '<div class="table-responsive"><table class="table table-condensed table-bordered" style="max-width:100%;"><thead><tr><th>Chofer</th><th>Inactivos</th><th>Total turnos</th><th>%</th><th>Riesgo</th></tr></thead><tbody>';
+  html += '<div class="ceo-bloque"><h4><i class="fa fa-user-circle-o"></i> RESPONSABILIDAD OPERATIVA</h4>' + '<p class="ceo-insight">' + (insightResp || "Sin datos de concentración de inactivos por chofer.") + "</p>" + '<div class="row">' + '<div class="col-md-6"><h5 style="margin-top:0; font-size:13px; color:#2C5D94;">Top 5 Choferes con más inactivos</h5>' + '<div class="table-responsive"><table class="table table-condensed table-bordered" style="max-width:100%;"><thead><tr><th>Chofer</th><th>Inactivos</th><th>Total turnos</th><th>%</th><th>Riesgo</th></tr></thead><tbody>';
   topChoferesInac.forEach(function (c) {
     var riesgoCls =
       c.riesgo === "verde"
@@ -6696,47 +4203,18 @@ function renderDashboardEjecutivo(data) {
         : c.riesgo === "amarillo"
           ? '<span style="color:#eab308;">&#9679;</span>'
           : '<span style="color:#dc2626;">&#9679;</span>';
-    html +=
-      "<tr><td>" +
-      (c.chofer_nombre || "") +
-      "</td><td>" +
-      (c.inactivos || 0) +
-      "</td><td>" +
-      (c.total_turnos || 0) +
-      "</td><td>" +
-      (c.tasa_pct != null ? c.tasa_pct : "-") +
-      '%</td><td class="' +
-      riesgoCls +
-      '">' +
-      riesgoIcon +
-      "</td></tr>";
+    html += "<tr><td>" + (c.chofer_nombre || "") + "</td><td>" + (c.inactivos || 0) + "</td><td>" + (c.total_turnos || 0) + "</td><td>" + (c.tasa_pct != null ? c.tasa_pct : "-") + '%</td><td class="' + riesgoCls + '">' + riesgoIcon + "</td></tr>";
   });
   if (topChoferesInac.length === 0)
     html += '<tr><td colspan="5">Sin datos</td></tr>';
-  html += "</tbody></table></div></div>";
-  html +=
-    '<div class="col-md-6"><h5 style="margin-top:0; font-size:13px; color:#2C5D94;">Top 5 Placas con más inactivos</h5>';
-  html +=
-    '<div class="table-responsive"><table class="table table-condensed table-bordered" style="max-width:100%;"><thead><tr><th>Placa</th><th>Inactivos</th><th>% sobre turnos</th></tr></thead><tbody>';
+  html += "</tbody></table></div></div>" + '<div class="col-md-6"><h5 style="margin-top:0; font-size:13px; color:#2C5D94;">Top 5 Placas con más inactivos</h5>' + '<div class="table-responsive"><table class="table table-condensed table-bordered" style="max-width:100%;"><thead><tr><th>Placa</th><th>Inactivos</th><th>% sobre turnos</th></tr></thead><tbody>';
   topPlacasInac.forEach(function (pl) {
-    html +=
-      "<tr><td>" +
-      (pl.placa || "") +
-      "</td><td>" +
-      (pl.inactivos || 0) +
-      "</td><td>" +
-      (pl.tasa_pct != null ? pl.tasa_pct : "-") +
-      "%</td></tr>";
+    html += "<tr><td>" + (pl.placa || "") + "</td><td>" + (pl.inactivos || 0) + "</td><td>" + (pl.tasa_pct != null ? pl.tasa_pct : "-") + "%</td></tr>";
   });
   if (topPlacasInac.length === 0)
     html += '<tr><td colspan="3">Sin datos</td></tr>';
-  html += "</tbody></table></div></div></div>";
-  html +=
-    '<div class="ceo-chart-wrap" style="min-height: 260px; margin-top: 14px;"><div class="apex-chart" id="chartEjecutivoParetoInactivos"></div></div>';
-  html += "</div>";
-
+  html += "</tbody></table></div></div></div>" + '<div class="ceo-chart-wrap" style="min-height: 260px; margin-top: 14px;"><div class="apex-chart" id="chartEjecutivoParetoInactivos"></div></div>' + "</div>";
   $("#dashboardContentEjecutivo").html(html);
-
   function wrapPlantLabel(str, maxLen) {
     if (!str || !str.length) return str;
     maxLen = maxLen || 16;
@@ -6752,7 +4230,6 @@ function renderDashboardEjecutivo(data) {
     if (rest.length) lines.push(rest);
     return lines.join("\n");
   }
-
   var labelsConc = top10.map(function (p) { return wrapPlantLabel(p.Pla_Nom || "", 16); });
   var totalsConc = top10.map(function (p) { return p.total; });
   var acum = 0;
@@ -6775,7 +4252,6 @@ function renderDashboardEjecutivo(data) {
     ],
     tooltip: { shared: true, x: { formatter: function (_v, opts) { var p = top10[opts.dataPointIndex] || {}; return p.Pla_Nom || ""; } } }
   });
-
   var distCh = ch.distribucion || [];
   if (distCh.length) {
     var choferesTop15 = distCh.slice(0, 15);
@@ -6789,7 +4265,6 @@ function renderDashboardEjecutivo(data) {
       tooltip: { x: { formatter: function (_v, opts) { var c = choferesTop15[opts.dataPointIndex] || {}; return c.nombre || ""; } } }
     });
   }
-
   var labT = tendencia30.map(function (d) { return (d.fecha || "").substring(5); });
   var datT = tendencia30.map(function (d) { return d.total; });
   chartEjecutivoTendencia = renderApex("chartEjecutivoTendencia", {
@@ -6802,7 +4277,6 @@ function renderDashboardEjecutivo(data) {
     yaxis: { min: 0, decimalsInFloat: 0 },
     annotations: { yaxis: [{ y: Number(promDia) || 0, borderColor: "#94a3b8", strokeDashArray: 4, label: { text: "Promedio" } }] }
   });
-
   if (topPlantasInac.length > 0) {
     chartEjecutivoInactivos = renderApex("chartEjecutivoInactivos", {
       chart: { type: "bar" },
@@ -6813,7 +4287,6 @@ function renderDashboardEjecutivo(data) {
       xaxis: { categories: topPlantasInac.map(function (p) { return (p.Pla_Nom || "Sin nombre").trim(); }), min: 0, decimalsInFloat: 0 }
     });
   }
-
   if (paretoChoferesInac.length > 0 && totalInac > 0) {
     var totalInacPareto = 0;
     paretoChoferesInac.forEach(function (c) { totalInacPareto += c.inactivos || 0; });
@@ -6868,7 +4341,6 @@ function renderDashboardEjecutivo(data) {
       }
     });
   }
-
   // Delegado: clic en planta del bloque inactivos -> modal drill-down
   $(document)
     .off("click.ceoPlantaInactivos")
@@ -6889,49 +4361,31 @@ function renderDashboardEjecutivo(data) {
       $.ajax({
         url: "",
         data: {
-          getInactivosDetallePlantaAjax: true,
-          Pla_Cod: plaCod,
-          fecha_inicio: fi,
-          fecha_fin: ff,
+          getInactivosDetallePlantaAjax: true, Pla_Cod: plaCod,
+          fecha_inicio: fi, fecha_fin: ff,
         },
         dataType: "json",
         success: function (res) {
           if (res.success && res.detalle && res.detalle.length) {
             var tbl =
-              "<p>Total inactivos en esta planta: <strong>" +
-              (res.total_inactivos || 0) +
-              "</strong></p>";
+              "<p>Total inactivos en esta planta: <strong>" + (res.total_inactivos || 0) + "</strong></p>";
             tbl +=
               '<div class="table-responsive"><table class="table table-condensed table-bordered modal-inactivos-detalle-tabla"><thead><tr><th class="col-num-manifiesto-inac">N° Manifiesto</th><th>Vehículo (placa)</th><th class="col-chofer-ancho">Chofer</th><th>Inactivos</th><th>%</th></tr></thead><tbody>';
             res.detalle.forEach(function (d) {
               tbl +=
-                '<tr><td class="col-num-manifiesto-inac">' +
-                (d.numeros_manifiesto || "-") +
-                "</td><td>" +
-                (d.placa || "") +
-                '</td><td class="col-chofer-ancho">' +
-                (d.chofer_nombre || "") +
-                "</td><td>" +
-                (d.inactivos || 0) +
-                "</td><td>" +
-                (d.pct != null ? d.pct : "-") +
-                "%</td></tr>";
+                '<tr><td class="col-num-manifiesto-inac">' + (d.numeros_manifiesto || "-") + "</td><td>" + (d.placa || "") + '</td><td class="col-chofer-ancho">' + (d.chofer_nombre || "") + "</td><td>" + (d.inactivos || 0) + "</td><td>" + (d.pct != null ? d.pct : "-") + "%</td></tr>";
             });
             tbl += "</tbody></table></div>";
             $("#modalInactivosDetallePlantaCuerpo").html(tbl);
           } else if (
-            res.success &&
-            (!res.detalle || res.detalle.length === 0)
+            res.success && (!res.detalle || res.detalle.length === 0)
           ) {
             $("#modalInactivosDetallePlantaCuerpo").html(
               '<p class="text-muted">No hay detalle de vehículos/choferes para esta planta en el período.</p>',
             );
           } else {
             $("#modalInactivosDetallePlantaCuerpo").html(
-              '<p class="text-danger">' +
-                (res.message || "Error al cargar.") +
-                "</p>",
-            );
+              '<p class="text-danger">' + (res.message || "Error al cargar.") + "</p>", );
           }
         },
         error: function () {
@@ -6942,7 +4396,6 @@ function renderDashboardEjecutivo(data) {
       });
     });
 }
-
 function exportarExcelInactivos() {
   var fi = $("#fecha_inicio_ejecutivo").val();
   var ff = $("#fecha_fin_ejecutivo").val();
@@ -6955,8 +4408,7 @@ function exportarExcelInactivos() {
   $.ajax({
     url: "",
     data: {
-      getListadoInactivosExcelAjax: true,
-      fecha_inicio: fi,
+      getListadoInactivosExcelAjax: true, fecha_inicio: fi,
       fecha_fin: ff,
     },
     dataType: "json",
@@ -6968,49 +4420,22 @@ function exportarExcelInactivos() {
       var listado = res.listado || [];
       var totalInac =
         res.total_inactivos != null ? res.total_inactivos : listado.length;
-      var totalAct = res.total_activos != null ? res.total_activos : 0;
-      var tasaPct = res.tasa_pct != null ? res.tasa_pct : 0;
-      var fechaIni = res.fecha_ini || "";
-      var fechaFin = res.fecha_fin || "";
-      var rangoFechas = fechaIni && fechaFin ? fechaIni + " - " + fechaFin : "";
+      var totalAct = res.total_activos != null ? res.total_activos : 0, tasaPct = res.tasa_pct != null ? res.tasa_pct : 0, fechaIni = res.fecha_ini || "", fechaFin = res.fecha_fin || "", rangoFechas = fechaIni && fechaFin ? fechaIni + " - " + fechaFin : "";
       var estilo =
         "table.xl-inac { border-collapse: collapse; } table.xl-inac td, table.xl-inac th { border: 1px solid #2C5D94; padding: 4px 8px; } .xl-inac-header { background: #2C5D94; color: white; font-weight: bold; } .xl-inac-enc { font-weight: bold; color: #2C5D94; padding: 6px 0 4px 0; } .xl-inac-resumen { padding: 2px 0 8px 0; } .xl-inac-rango { padding: 2px 0 10px 0; color: #555; }";
       var html = '<style type="text/css">' + estilo + "</style>";
-      html +=
-        '<div class="xl-inac-enc">Manifiestos inactivos (turnos no realizados)</div>';
-      html +=
-        '<div class="xl-inac-resumen">En el período hay <strong>' +
-        totalInac +
-        "</strong> manifiestos inactivos sobre <strong>" +
-        totalAct +
-        "</strong> manifiestos realizados (<strong>" +
-        tasaPct +
-        "%</strong> no realizados respecto a realizados).</div>";
+      html += '<div class="xl-inac-enc">Manifiestos inactivos (turnos no realizados)</div>' + '<div class="xl-inac-resumen">En el período hay <strong>' + totalInac + "</strong> manifiestos inactivos sobre <strong>" + totalAct + "</strong> manifiestos realizados (<strong>" + tasaPct + "%</strong> no realizados respecto a realizados).</div>";
       if (rangoFechas)
-        html +=
-          '<div class="xl-inac-rango">Rango de fechas: ' +
-          rangoFechas +
-          "</div>";
-      html +=
-        '<table class="xl-inac"><tr class="xl-inac-header"><th>PLANTA</th><th>N° Manifiesto</th><th>Vehículo (placa)</th><th>Chofer</th><th>Inactivos</th></tr>';
+        html += '<div class="xl-inac-rango">Rango de fechas: ' + rangoFechas + "</div>";
+      html += '<table class="xl-inac"><tr class="xl-inac-header"><th>PLANTA</th><th>N° Manifiesto</th><th>Vehículo (placa)</th><th>Chofer</th><th>Inactivos</th></tr>';
       listado.forEach(function (r) {
-        html += "<tr>";
-        html += "<td>" + (r.Pla_Nom || "") + "</td>";
-        html += "<td>" + (r.ManNum || "") + "</td>";
-        html += "<td>" + (r.placa || "") + "</td>";
-        html += "<td>" + (r.chofer_nombre || "") + "</td>";
-        html += "<td>1</td>";
-        html += "</tr>";
+        html += "<tr>" + "<td>" + (r.Pla_Nom || "") + "</td>" + "<td>" + (r.ManNum || "") + "</td>" + "<td>" + (r.placa || "") + "</td>" + "<td>" + (r.chofer_nombre || "") + "</td>" + "<td>1</td>" + "</tr>";
       });
       html += "</table>";
       var nombre =
-        "manifiestos_inactivos_" +
-        (fi || "").replace(/-/g, "_") +
-        "_" +
-        (ff || "").replace(/-/g, "_");
+        "manifiestos_inactivos_" + (fi || "").replace(/-/g, "_") + "_" + (ff || "").replace(/-/g, "_");
       var form = $("<form>", {
-        method: "POST",
-        action: "../../Librerias/exportar/ficheroExcel.php",
+        method: "POST", action: "../../Librerias/exportar/ficheroExcel.php",
         target: "_blank",
       });
       form.append(
@@ -7021,8 +4446,7 @@ function exportarExcelInactivos() {
       );
       form.append(
         $("<input>", {
-          type: "hidden",
-          name: "hoja",
+          type: "hidden", name: "hoja",
           value: "Manifiestos inactivos",
         }),
       );
@@ -7035,11 +4459,8 @@ function exportarExcelInactivos() {
     },
   });
 }
-
 /* ==================== TAB CONTROL DE TIEMPOS Y ARRIBOS ==================== */
-var datosDashboardTiempos = null;
-var chartTendenciaTiemposInstance = null;
-
+var datosDashboardTiempos = null, chartTendenciaTiemposInstance = null;
 function cargarPlantasTiempos() {
   if ($("#select_planta_tiempos option").length > 1) return;
   $.ajax({
@@ -7059,7 +4480,6 @@ function cargarPlantasTiempos() {
     },
   });
 }
-
 function obtenerDatasetsTendenciaConfig(turnosData, vsGarita) {
   var datos = turnosData.map(function (t) { return Number(t.ocupados) || 0; });
   var prom = datos.length > 0 ? Number((datos.reduce(function (a, b) { return a + b; }, 0) / datos.length).toFixed(1)) : 0;
@@ -7076,7 +4496,6 @@ function obtenerDatasetsTendenciaConfig(turnosData, vsGarita) {
     { label: "Promedio Creados",    data: datos.map(function () { return prom; }), borderColor: "#94a3b8", borderWidth: 2, fill: false, borderDash: 5 }
   ];
 }
-
 function formatoMinutosSla(min, conSigno) {
   if (!min && min !== 0) return "-";
   var abs = Math.abs(min);
@@ -7085,7 +4504,6 @@ function formatoMinutosSla(min, conSigno) {
   var txt = (h > 0 ? h + "h " : "") + m + "m";
   return conSigno ? (min > 0 ? "+" + txt : (min < 0 ? "-" + txt : txt)) : txt;
 }
-
 function formatoHoraHHMM(min) {
   if (!min && min !== 0) return "00:00 H";
   var abs = Math.abs(min);
@@ -7093,7 +4511,6 @@ function formatoHoraHHMM(min) {
   var m = abs % 60;
   return (h < 10 ? "0" + h : h) + ":" + (m < 10 ? "0" + m : m) + " H";
 }
-
 function formatoHoraSimple(min) {
   if (!min && min !== 0) return "0H";
   var h = Math.floor(min / 60);
@@ -7101,26 +4518,21 @@ function formatoHoraSimple(min) {
   if (m === 0) return h + "H";
   return h + "H " + (m < 10 ? "0" + m : m) + "m";
 }
-
 function cargarDashboardTiempos() {
   var fi = $("#fecha_inicio_tiempos").val(), ff = $("#fecha_fin_tiempos").val();
   var plaCod = $("#select_planta_tiempos").val() || 0;
   var estadoFiltro = $("#select_estado_tiempos").val() || "todos";
-
   if (!fi || !ff) {
     alert("Por favor seleccione un rango de fechas (Desde y Hasta).");
     return;
   }
-
   var $btn = $("#btnBuscarTiempos");
   $btn.prop("disabled", true).html('<i class="fa fa-spinner fa-spin"></i> Buscando...');
   $("#dashboardContentTiempos").html('<div class="loading"><i class="fa fa-spinner fa-spin"></i><p>Cargando análisis de tiempos y arribos...</p></div>');
-
   $.ajax({
     url: "",
     data: { getDashboardTiemposArribosAjax: true, fecha_inicio: fi, fecha_fin: ff, Pla_Cod: plaCod, estado_filtro: estadoFiltro },
-    dataType: "json",
-    timeout: 120000,
+    dataType: "json", timeout: 120000,
     success: function (res) {
       if (!res.success) {
         $("#dashboardContentTiempos").html('<div class="alert alert-danger"><i class="fa fa-exclamation-triangle"></i> ' + (res.message || "Error al cargar los datos.") + '</div>');
@@ -7138,30 +4550,22 @@ function cargarDashboardTiempos() {
     }
   });
 }
-
 function mostrarDashboardTiempos(datos) {
   var kpis = datos.kpis || {}, listado = datos.listado || [], plantas = datos.plantas_resumen || [];
   var plaCodFiltro = parseInt($("#select_planta_tiempos").val(), 10) || 0;
-
   if (plantas && plantas.length > 0) {
     plantas.sort(function (a, b) {
       var cfgA = a.tiempo_configurado_min || (a.tiempo_promedio_min + (a.holgura_promedio_min > 0 ? a.holgura_promedio_min : 0));
       var cfgB = b.tiempo_configurado_min || (b.tiempo_promedio_min + (b.holgura_promedio_min > 0 ? b.holgura_promedio_min : 0));
       // 1. Por tiempo configurado (hora programada) de mayor a menor (ej. 2H antes que 1H)
-      if (cfgB !== cfgA) {
-        return cfgB - cfgA;
-      }
+      if (cfgB !== cfgA) return cfgB - cfgA;
       // 2. Por tiempo promedio real consumido de mayor a menor
-      var realA = a.tiempo_promedio_min || 0;
-      var realB = b.tiempo_promedio_min || 0;
-      if (realB !== realA) {
-        return realB - realA;
-      }
+      var realA = a.tiempo_promedio_min || 0, realB = b.tiempo_promedio_min || 0;
+      if (realB !== realA) return realB - realA;
       // 3. Por orden alfabético de la planta
       return (a.Pla_Nom || "").localeCompare(b.Pla_Nom || "");
     });
   }
-
   var colorPctSla = (kpis.pct_cumplimiento >= 90) ? "#198754" : (kpis.pct_cumplimiento >= 75 ? "#fd7e14" : "#dc3545");
   var kpiCards = [
     { label: "Total Manifiestos", val: kpis.total || 0, sub: "En el período", color: "#2C5D94" },
@@ -7170,11 +4574,9 @@ function mostrarDashboardTiempos(datos) {
     { label: "Con Holgura 🔵", val: (kpis.anticipados || 0) + ' <span style="font-size:12px;font-weight:normal;">(' + (kpis.pct_anticipados || 0) + '%)</span>', sub: "Holgura prom: -" + Math.abs(kpis.promedio_holgura_min || 0) + " min (" + formatoMinutosSla(kpis.promedio_holgura_min) + ")", color: "#0284c7" },
     { label: "Tiempo Prom. Tránsito", val: formatoMinutosSla(kpis.promedio_duracion_real_min), sub: (kpis.en_transito || 0) + " en tránsito", color: "#0dcaf0", valColor: "#0891b2" }
   ];
-
   var html = '<div class="dashboard-kpi-strip" style="margin-bottom: 20px;">' + kpiCards.map(function (c) {
     return '<div class="dashboard-kpi-item" style="border-left-color: ' + c.color + ';"><div class="dashboard-kpi-label">' + c.label + '</div><div class="dashboard-kpi-value" style="color: ' + (c.valColor || c.color) + ';">' + c.val + '</div><div style="font-size: 11px; color: #6c757d;">' + c.sub + '</div></div>';
   }).join('') + '</div>';
-
   if (plaCodFiltro === 0 && plantas.length > 0) {
     var chartHeightPx = Math.max(160, plantas.length * 32 + 50);
     html += '<div class="panel panel-default panel-chart-tiempos-print" style="margin-bottom: 20px;"><div class="panel-heading" style="background: #f8f9fa; font-weight: 600; color: #2C5D94;"><i class="fa fa-bar-chart"></i> Evaluación de Tiempos por Planta de Beneficio (Tiempo Consumido vs Rango Configurado)</div><div class="panel-body"><div class="chart-trend-container" style="position: relative; height: ' + chartHeightPx + 'px; width: 100%;"><div class="apex-chart" id="chartTendenciaTiempos"></div></div><div class="chart-print-rows-container" style="display: none;">' + plantas.map(function (p) {
@@ -7190,7 +4592,6 @@ function mostrarDashboardTiempos(datos) {
         : '<div style="width:' + Math.round((configMin / realMin) * 100) + '%;background:#2C5D94;color:white;font-weight:bold;font-size:8px;text-align:center;line-height:16px;overflow:hidden;">100% Config (' + txtC + ')</div><div style="width:' + (100 - Math.round((configMin / realMin) * 100)) + '%;background:#dc3545;color:white;font-weight:bold;font-size:8px;text-align:center;line-height:16px;overflow:hidden;">+' + pctE + "% (+" + txtE + ")</div>";
       return '<div class="chart-print-row" style="display:flex;align-items:center;margin-bottom:6px;font-size:10px;"><div style="width:210px;font-weight:bold;color:#2C5D94;text-align:right;padding-right:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (p.Pla_Nom || "") + '</div><div style="flex:1;display:flex;height:16px;background:#e9ecef;border-radius:3px;overflow:hidden;min-width:140px;">' + barContent + '</div><div style="width:200px;padding-left:10px;font-weight:bold;color:' + (excesoMin > 0 ? "#dc3545" : "#2C5D94") + ';white-space:nowrap;">' + txtSummary + '</div></div>';
     }).join('') + '</div></div></div>';
-
     html += '<div class="panel panel-default" style="margin-bottom: 20px;"><div class="panel-heading" style="background: #f8f9fa; font-weight: 600; color: #2C5D94;"><i class="fa fa-building-o"></i> Resumen de Cumplimiento de Arribo por Planta</div><div class="panel-body" style="padding: 0;"><div class="table-responsive"><table class="table table-hover table-striped" style="margin-bottom: 0;"><thead><tr style="background: #2C5D94; color: white;"><th>Planta</th><th class="text-center">Total Viajes</th><th class="text-center" title="Viajes que llegaron dentro del horario permitido">🟢 Viajes a Tiempo</th><th class="text-center" title="Viajes que llegaron antes del tiempo máximo">🔵 Con Holgura</th><th class="text-center" title="Viajes que superaron el tiempo máximo configurado">🔴 Con Retraso</th><th class="text-center" title="Viajes actualmente en ruta">⚪ En Tránsito</th><th class="text-center">% Puntualidad SLA</th><th class="text-center">Tiempo Configurado</th><th class="text-center">Tiempo Prom. Real</th><th class="text-center">% Consumido</th><th class="text-center">Diferencia Prom.</th></tr></thead><tbody>' + plantas.map(function (p) {
       var realMin = p.tiempo_promedio_min || 0;
       var configMin = p.tiempo_configurado_min || (realMin + (p.holgura_promedio_min > 0 ? p.holgura_promedio_min : 0));
@@ -7203,7 +4604,6 @@ function mostrarDashboardTiempos(datos) {
       return '<tr><td><strong>' + (p.Pla_Nom || "") + '</strong></td><td class="text-center">' + p.total + '</td><td class="text-center" style="color:#198754;font-weight:bold;">' + (p.cumplieron_sla !== undefined ? p.cumplieron_sla : ((p.cumplidos || 0) + (p.anticipados || 0))) + '</td><td class="text-center" style="color:#0284c7;font-weight:bold;">' + (p.anticipados || 0) + '</td><td class="text-center" style="color:#dc3545;font-weight:bold;">' + p.excedidos + '</td><td class="text-center" style="color:#6c757d;">' + p.en_transito + '</td><td class="text-center"><span class="label ' + pctColor + '">' + p.pct_cumplimiento + '%</span></td><td class="text-center" style="color:#2C5D94;font-weight:bold;">' + formatoMinutosSla(configMin) + '</td><td class="text-center" style="color:#0891b2;font-weight:bold;">' + formatoMinutosSla(realMin) + '</td><td class="text-center"><span class="label ' + pctBadge + '">' + pctC + '%</span></td><td class="text-center" style="color:' + difColor + ';font-weight:bold;">' + difTexto + '</td></tr>';
     }).join('') + '</tbody></table></div></div></div>';
   }
-
   if (plaCodFiltro > 0 && listado.length > 0) {
     html += '<div class="panel panel-default" style="margin-bottom: 20px;"><div class="panel-heading" style="background: #f8f9fa; font-weight: 600; color: #2C5D94; display: flex; justify-content: space-between; align-items: center;"><span><i class="fa fa-list"></i> Detalle de Viajes y Evaluación de Arribo</span><input type="text" id="filtro_tabla_tiempos" class="form-control input-sm" style="width: 220px; display: inline-block;" placeholder="🔍 Buscar en tabla..."></div><div class="panel-body" style="padding: 0;"><div class="table-responsive" style="max-height: 500px; overflow-y: auto;"><table class="table table-hover table-striped" id="tabla_tiempos_detalle" style="margin-bottom: 0;"><thead><tr style="background: #2C5D94; color: white;"><th>Manifiesto</th><th>Planta</th><th>Chofer</th><th>Vehículo</th><th>Salida</th><th>Arribo Planificado</th><th>Arribo Real</th><th class="text-center">Tiempo Configurado</th><th class="text-center">Tiempo Real</th><th class="text-center">Diferencia de Tiempo (+/-)</th><th class="text-center">Estado SLA</th></tr></thead><tbody>' + listado.map(function (m) {
       var badgeSla = (m.estado === "cumplido") ? '<span class="badge-sla badge-sla-cumplido"><i class="fa fa-check-circle"></i> A Tiempo</span>'
@@ -7217,15 +4617,12 @@ function mostrarDashboardTiempos(datos) {
       return '<tr><td><strong>' + (m.ManNum || "") + '</strong></td><td>' + (m.Pla_Nom || "") + '</td><td>' + (m.chofer_nombre || "") + '</td><td><code>' + (m.Veh_Pla || "") + '</code></td><td>' + m.fecha_salida + '</td><td>' + m.fecha_arribo_planificada + badgeModif + '</td><td>' + (m.fecha_arribo_real !== "En tránsito" ? '<strong>' + m.fecha_arribo_real + '</strong>' : '<em style="color:#6c757d;">En tránsito</em>') + '</td><td class="text-center">' + formatoMinutosSla(m.tiempo_configurado_min) + '</td><td class="text-center">' + (m.tiempo_real_min > 0 ? formatoMinutosSla(m.tiempo_real_min) : '-') + '</td>' + difTexto + '<td class="text-center">' + badgeSla + '</td></tr>';
     }).join('') + '</tbody></table></div></div></div>';
   }
-
   $("#dashboardContentTiempos").html(html);
-
   if (plaCodFiltro === 0 && plantas.length > 0 && typeof ApexCharts !== "undefined") {
     setTimeout(function () {
       destroyApex("chartTendenciaTiempos");
       var dBase = [], dHolg = [], dExc = [];
       var annotationsPoints = [];
-
       var maxValAll = 60;
       plantas.forEach(function (p) {
         var cfg = p.tiempo_configurado_min || (p.tiempo_promedio_min + (p.holgura_promedio_min > 0 ? p.holgura_promedio_min : 0));
@@ -7234,41 +4631,35 @@ function mostrarDashboardTiempos(datos) {
         if (totalBar > maxValAll) maxValAll = totalBar;
       });
       var xMaxFixed = Math.ceil((maxValAll * 1.05) / 10) * 10;
-
       plantas.forEach(function (p) {
         var cfg = p.tiempo_configurado_min || (p.tiempo_promedio_min + (p.holgura_promedio_min > 0 ? p.holgura_promedio_min : 0));
         var real = p.tiempo_promedio_min || 0;
         if (real <= cfg) { dBase.push(real); dHolg.push(Math.max(0, cfg - real)); dExc.push(0); }
         else { dBase.push(cfg); dHolg.push(0); dExc.push(real - cfg); }
-
         var excesoMin = Math.max(0, real - cfg);
         var isExcedido = excesoMin > 0;
         var labelText = formatoHoraSimple(cfg);
         if (isExcedido) {
           labelText = formatoHoraSimple(cfg) + " Ext. +" + formatoMinutosSla(excesoMin);
         }
-
         annotationsPoints.push({
           x: xMaxFixed,
           y: (p.Pla_Nom || "Sin Nombre").trim(),
           marker: { size: 0 },
           label: {
             borderColor: isExcedido ? "#dc3545" : "#2C5D94",
-            offsetY: 7,
-            offsetX: 10,
+            offsetY: 7, offsetX: 10,
             textAnchor: "start",
             style: {
               color: isExcedido ? "#dc3545" : "#2C5D94",
               background: isExcedido ? "#fee2e2" : "#f1f5f9",
-              fontSize: "11.5px",
-              fontWeight: 700,
+              fontSize: "11.5px", fontWeight: 700,
               padding: { left: 7, right: 7, top: 3, bottom: 3 }
             },
             text: labelText
           }
         });
       });
-
       chartTendenciaTiemposInstance = renderApex("chartTendenciaTiempos", {
         chart: { type: "bar", stacked: true, height: Math.max(160, plantas.length * 32 + 50), toolbar: { show: false } },
         plotOptions: {
@@ -7276,15 +4667,13 @@ function mostrarDashboardTiempos(datos) {
             horizontal: true,
             barHeight: "75%",
             dataLabels: {
-              position: "center",
-              hideOverflowingLabels: false
+              position: "center", hideOverflowingLabels: false
             }
           }
         },
         colors: ["#2C5D94", "#0284c7", "#dc3545"],
         dataLabels: {
-          enabled: true,
-          hideOverflowingLabels: false,
+          enabled: true, hideOverflowingLabels: false,
           formatter: function (val, opts) {
             if (!val || val <= 0) return "";
             var p = plantas[opts.dataPointIndex] || {};
@@ -7293,9 +4682,7 @@ function mostrarDashboardTiempos(datos) {
             var fmt = formatoMinutosSla(val);
             if (cfg <= 0) return fmt;
             if (opts.seriesIndex === 0) {
-              if (real > cfg) {
-                return formatoMinutosSla(cfg) + " (100%)";
-              }
+              if (real > cfg) return formatoMinutosSla(cfg) + " (100%)";
               var pctC = Math.round((real / cfg) * 100);
               return fmt + " (" + pctC + "%)";
             }
@@ -7321,29 +4708,13 @@ function mostrarDashboardTiempos(datos) {
           categories: plantas.map(function (p) { return (p.Pla_Nom || "Sin Nombre").trim(); }),
           title: { text: "Minutos (SLA vs consumido / extension)" },
           labels: {
-            formatter: function (val) {
-              return val + "m";
-            }
+            formatter: function (val) { return val + "m"; }
           }
         },
-        yaxis: {
-          labels: {
-            maxWidth: 240,
-            style: { fontWeight: 700, fontSize: "11px", colors: ["#2C5D94"] }
-          }
-        },
-        annotations: {
-          points: annotationsPoints
-        },
-        grid: {
-          padding: {
-            right: 90
-          }
-        },
-        legend: {
-          position: "top",
-          fontSize: "12px"
-        },
+        yaxis: { labels: { maxWidth: 240, style: { fontWeight: 700, fontSize: "11px", colors: ["#2C5D94"] } } },
+        annotations: { points: annotationsPoints },
+        grid: { padding: { right: 90 } },
+        legend: { position: "top", fontSize: "12px" },
         tooltip: {
           y: {
             formatter: function (val, opts) {
@@ -7362,15 +4733,11 @@ function mostrarDashboardTiempos(datos) {
       });
     }, 80);
   }
-
   $(document).off("keyup.filtroTiempos").on("keyup.filtroTiempos", "#filtro_tabla_tiempos", function () {
     var val = $(this).val().toLowerCase();
-    $("#tabla_tiempos_detalle tbody tr").filter(function () {
-      $(this).toggle($(this).text().toLowerCase().indexOf(val) > -1);
-    });
+    $("#tabla_tiempos_detalle tbody tr").filter(function () { $(this).toggle($(this).text().toLowerCase().indexOf(val) > -1); });
   });
 }
-
 function imprimirReporteTiempos() {
   if (!datosDashboardTiempos) {
     alert("Cargue el reporte primero antes de imprimir.");
@@ -7379,17 +4746,13 @@ function imprimirReporteTiempos() {
   var fi = $("#fecha_inicio_tiempos").val() || "", ff = $("#fecha_fin_tiempos").val() || "";
   var plaNom = $("#select_planta_tiempos option:selected").text() || "Todas las plantas";
   var estNom = $("#select_estado_tiempos option:selected").text() || "Todos los viajes";
-
   $("#header_print_tiempos").html('<div style="border-bottom: 2px solid #2C5D94; padding-bottom: 5px;"><h3 style="margin: 0 0 4px 0; color: #2C5D94; font-weight: bold;"><i class="fa fa-clock-o"></i> Reporte Control de Tiempos y Arribos (Acuerdo de Nivel de Servicio de Tránsito)</h3><p style="margin: 0; font-size: 11px; color: #444;"><strong>Rango:</strong> ' + fi + ' al ' + ff + ' &nbsp;|&nbsp; <strong>Planta:</strong> ' + plaNom + ' &nbsp;|&nbsp; <strong>Estado:</strong> ' + estNom + '</p></div>');
-
   var plaCod = $("#select_planta_tiempos").val() || 0;
   if (!plaCod || plaCod == 0 || plaCod == "0") $("body").addClass("print-solo-resumen");
   else $("body").removeClass("print-solo-resumen");
-
   window.print();
   setTimeout(function () { $("body").removeClass("print-solo-resumen"); }, 1000);
 }
-
 function exportarExcelTiempos() {
   var fi = $("#fecha_inicio_tiempos").val(), ff = $("#fecha_fin_tiempos").val();
   var plaCod = $("#select_planta_tiempos").val() || 0, estadoFiltro = $("#select_estado_tiempos").val() || "todos";
