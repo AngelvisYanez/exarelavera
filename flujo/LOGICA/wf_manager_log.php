@@ -576,8 +576,17 @@ class wf_manager_log {
 
     public function resolverContextoUsuario($emp_cod = null) {
         $usu_cod = isset($_SESSION['Ses_Usu_Cod']) ? intval($_SESSION['Ses_Usu_Cod']) : 0;
+        if ($usu_cod <= 0 && !empty($GLOBALS['Ses_Usu_Cod'])) {
+            $usu_cod = intval($GLOBALS['Ses_Usu_Cod']);
+            if ($usu_cod > 0) {
+                $_SESSION['Ses_Usu_Cod'] = $usu_cod;
+            }
+        }
         $dep_cod = isset($_SESSION['Ses_Dep_Cod']) ? intval($_SESSION['Ses_Dep_Cod']) : 0;
         $emp_cod = $emp_cod !== null ? intval($emp_cod) : (isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0);
+        if ($emp_cod <= 0 && !empty($GLOBALS['Ses_Emp_Cod'])) {
+            $emp_cod = intval($GLOBALS['Ses_Emp_Cod']);
+        }
 
         if ($dep_cod <= 0 && $usu_cod > 0 && $emp_cod > 0) {
             $dep_row = $this->obBD_datos->getRowConsultaSql(

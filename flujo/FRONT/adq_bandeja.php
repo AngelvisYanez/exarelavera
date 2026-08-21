@@ -28,6 +28,7 @@ $ajax_descargar_expediente = isset($_GET['ajax_descargar_expediente']) ? $_GET['
 $ajax_descargar_docs_zip = isset($_GET['ajax_descargar_docs_zip']) ? $_GET['ajax_descargar_docs_zip'] : null;
 $ajax_subir_expediente = isset($_POST['ajax_subir_expediente']) ? $_POST['ajax_subir_expediente'] : null;
 $ajax_firmar_expediente = isset($_POST['ajax_firmar_expediente']) ? $_POST['ajax_firmar_expediente'] : null;
+$ajax_get_archivos_proveedor = isset($_GET['ajax_get_archivos_proveedor']) ? $_GET['ajax_get_archivos_proveedor'] : null;
 
 $es_ajax_bandeja = (
     isset($ajax_workflow_action) || isset($ajax_enviar_borrador) || isset($ajax_reenviar_observada)
@@ -35,6 +36,7 @@ $es_ajax_bandeja = (
     || isset($ajax_get_solicitud_detail) || isset($ajax_save_avance_docs) || isset($ajax_get_compra_avance)
     || isset($ajax_buscar_anticipos) || isset($ajax_get_anticipo_avance) || isset($ajax_descargar_expediente)
     || isset($ajax_descargar_docs_zip) || isset($ajax_subir_expediente) || isset($ajax_firmar_expediente)
+    || isset($ajax_get_archivos_proveedor)
 );
 
 // Ensures de esquema solo en carga HTML (o escrituras que ya los invocan internamente).
@@ -60,7 +62,7 @@ function adq_es_utf8_valido($text) {
 }
 
 /**
- * Detecta mojibake tipico de utf8_encode sobre texto ya UTF-8 ("Ã³", "Ã±", "Â").
+ * Detecta mojibake tipico de utf8_encode sobre texto ya UTF-8 ("?", "?", "?").
  * Marcadores en bytes (no literales) para no depender del encoding del .php.
  */
 function adq_parece_utf8_doble($text) {
@@ -70,7 +72,7 @@ function adq_parece_utf8_doble($text) {
 }
 
 /**
- * Normaliza texto a UTF-8 sin doble codificacion (evita "InstanciaciÃ³n").
+ * Normaliza texto a UTF-8 sin doble codificacion (evita "Instanciaci?n").
  */
 function adq_ensure_utf8_string($text) {
     if (!is_string($text) || $text === '') {
@@ -139,10 +141,35 @@ function adq_preparar_payload_utf8(&$payload) {
     }
 }
 
+/**
+ * Conserva el nombre original del documento al guardar en disco.
+ * Solo sanitiza caracteres peligrosos; si ya existe, agrega (2), (3), ...
+ */
+function adq_nombre_archivo_original_seguro($original_name, $target_dir) {
+    $original_name = basename(str_replace('\\', '/', (string)$original_name));
+    $original_name = preg_replace('/[\x00-\x1F\x7F<>:"\/\\\\|?*]+/', '_', $original_name);
+    $original_name = trim(preg_replace('/\s+/', ' ', $original_name));
+    if ($original_name === '' || $original_name === '.' || $original_name === '..') {
+        $original_name = 'documento.bin';
+    }
+    $target_dir = rtrim(str_replace('\\', '/', (string)$target_dir), '/') . '/';
+    if (!is_file($target_dir . $original_name)) {
+        return $original_name;
+    }
+    $base = pathinfo($original_name, PATHINFO_FILENAME);
+    $ext = pathinfo($original_name, PATHINFO_EXTENSION);
+    $n = 2;
+    do {
+        $candidate = $base . ' (' . $n . ')' . ($ext !== '' ? ('.' . $ext) : '');
+        $n++;
+    } while (is_file($target_dir . $candidate));
+    return $candidate;
+}
+
 // Verificar acceso a la ventana 'bandeja'
 if (!$wf_mgr->verificarAccesoVentana('bandeja')) {
-    if (isset($ajax_workflow_action) || isset($ajax_buscar_compras) || isset($ajax_vincular_compra) || isset($ajax_desvincular_compra) || isset($ajax_get_solicitud_detail) || isset($ajax_enviar_borrador) || isset($ajax_reenviar_observada) || isset($ajax_save_avance_docs) || isset($ajax_get_compra_avance) || isset($ajax_buscar_anticipos) || isset($ajax_get_anticipo_avance) || isset($ajax_descargar_expediente) || isset($ajax_descargar_docs_zip) || isset($ajax_subir_expediente) || isset($ajax_firmar_expediente)) {
-        $obBD_con1->echoJson(array('success' => false, 'message' => 'Acceso denegado. No tiene permisos para realizar esta acci?n.'));
+    if (isset($ajax_workflow_action) || isset($ajax_buscar_compras) || isset($ajax_vincular_compra) || isset($ajax_desvincular_compra) || isset($ajax_get_solicitud_detail) || isset($ajax_enviar_borrador) || isset($ajax_reenviar_observada) || isset($ajax_save_avance_docs) || isset($ajax_get_compra_avance) || isset($ajax_buscar_anticipos) || isset($ajax_get_anticipo_avance) || isset($ajax_descargar_expediente) || isset($ajax_descargar_docs_zip) || isset($ajax_subir_expediente) || isset($ajax_firmar_expediente) || isset($ajax_get_archivos_proveedor)) {
+        $obBD_con1->echoJson(array('success' => false, 'message' => 'Acceso denegado. No tiene permisos para realizar esta accion.'));
         exit;
     } else {
         echo "<div class='alert alert-danger m-3'>Acceso denegado. No tiene permisos para ver esta ventana.</div>";
@@ -265,12 +292,12 @@ if (isset($ajax_workflow_action)) {
                 continue;
             }
             $ext = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
-            $unique_name = "action_" . uniqid('', true) . "." . $ext;
-            if (!move_uploaded_file($archivo['tmp_name'], $target_dir . $unique_name)) {
+            $safe_name = adq_nombre_archivo_original_seguro($archivo['name'], $target_dir);
+            if (!move_uploaded_file($archivo['tmp_name'], $target_dir . $safe_name)) {
                 $obBD_con1->echoJson(array('success' => false, 'message' => 'No se pudo guardar el archivo ' . $archivo['name'] . '.'));
                 exit;
             }
-            $paths_adjuntos[] = $rel_dir . '/' . $unique_name;
+            $paths_adjuntos[] = $rel_dir . '/' . $safe_name;
         }
         if (!empty($paths_adjuntos)) {
             $adjunto_db_path = json_encode($paths_adjuntos);
@@ -326,7 +353,11 @@ if (isset($ajax_reenviar_observada)) {
 
 // Guardar documentos de etapa AVANCE
 if (isset($ajax_save_avance_docs)) {
-    $sol_cod = intval($_POST['Sol_Cod']);
+    $sol_cod = isset($_POST['Sol_Cod']) ? intval($_POST['Sol_Cod']) : 0;
+    if ($sol_cod <= 0) {
+        $obBD_con1->echoJson(array('success' => false, 'message' => 'Datos invalidos: no se identifico la solicitud (Sol_Cod).'));
+        exit;
+    }
     $docs_nuevos = array();
     $docs_existentes = array();
     $sav_eliminar = array();
@@ -364,13 +395,12 @@ if (isset($ajax_save_avance_docs)) {
         if (isset($_FILES[$input_name]) && is_array($_FILES[$input_name]['name'])) {
             foreach ($_FILES[$input_name]['name'] as $idx => $name) {
                 if ($_FILES[$input_name]['error'][$idx] == 0 && $name !== '') {
-                    $ext = pathinfo($name, PATHINFO_EXTENSION);
-                    $unique_name = "avance_" . uniqid() . "." . $ext;
-                    if (move_uploaded_file($_FILES[$input_name]['tmp_name'][$idx], $target_dir . $unique_name)) {
+                    $safe_name = adq_nombre_archivo_original_seguro($name, $target_dir);
+                    if (move_uploaded_file($_FILES[$input_name]['tmp_name'][$idx], $target_dir . $safe_name)) {
                         if (!isset($docs_nuevos[$idx])) {
                             $docs_nuevos[$idx] = array('Sav_Des' => '');
                         }
-                        $docs_nuevos[$idx][$db_field] = $rel_dir . '/' . $unique_name;
+                        $docs_nuevos[$idx][$db_field] = $rel_dir . '/' . $safe_name;
                     }
                 }
             }
@@ -390,13 +420,12 @@ if (isset($ajax_save_avance_docs)) {
         if (isset($_FILES[$input_name]) && is_array($_FILES[$input_name]['name'])) {
             foreach ($_FILES[$input_name]['name'] as $sav_cod => $name) {
                 if ($_FILES[$input_name]['error'][$sav_cod] == 0 && $name !== '') {
-                    $ext = pathinfo($name, PATHINFO_EXTENSION);
-                    $unique_name = "avance_" . uniqid() . "." . $ext;
-                    if (move_uploaded_file($_FILES[$input_name]['tmp_name'][$sav_cod], $target_dir . $unique_name)) {
+                    $safe_name = adq_nombre_archivo_original_seguro($name, $target_dir);
+                    if (move_uploaded_file($_FILES[$input_name]['tmp_name'][$sav_cod], $target_dir . $safe_name)) {
                         if (!isset($docs_existentes[$sav_cod])) {
                             $docs_existentes[$sav_cod] = array();
                         }
-                        $docs_existentes[$sav_cod][$db_field] = $rel_dir . '/' . $unique_name;
+                        $docs_existentes[$sav_cod][$db_field] = $rel_dir . '/' . $safe_name;
                     }
                 }
             }
@@ -429,15 +458,15 @@ if (isset($ajax_save_avance_docs)) {
                 exit;
             }
 
-            $unique_name = "fiscal_" . uniqid() . ".pdf";
-            if (!move_uploaded_file($tmp_name, $target_dir . $unique_name)) {
+            $safe_name = adq_nombre_archivo_original_seguro($name, $target_dir);
+            if (!move_uploaded_file($tmp_name, $target_dir . $safe_name)) {
                 $obBD_con1->echoJson(array('success' => false, 'message' => 'No se pudo guardar el PDF "' . $name . '".'));
                 exit;
             }
             $docs_nuevos[] = array(
                 'Sav_Des' => $titulo,
                 'Sav_Cop_Cod' => 0,
-                'Sav_Fac_Adj' => $rel_dir . '/' . $unique_name
+                'Sav_Fac_Adj' => $rel_dir . '/' . $safe_name
             );
         }
     }
@@ -637,9 +666,9 @@ if (isset($ajax_descargar_docs_zip)) {
 
 // Subir expediente PDF cargado por el usuario (nodo FIN)
 if (isset($ajax_subir_expediente)) {
-    $sol_cod = intval(isset($_POST['Sol_Cod']) ? $_POST['Sol_Cod'] : 0);
+    $sol_cod = isset($_POST['Sol_Cod']) ? intval($_POST['Sol_Cod']) : 0;
     if ($sol_cod <= 0) {
-        $obBD_con1->echoJson(array('success' => false, 'message' => 'Solicitud invalida.'));
+        $obBD_con1->echoJson(array('success' => false, 'message' => 'Datos invalidos: no se identifico la solicitud (Sol_Cod).'));
         exit;
     }
     if (!isset($_FILES['expediente_pdf']) || $_FILES['expediente_pdf']['error'] !== UPLOAD_ERR_OK) {
@@ -651,9 +680,10 @@ if (isset($ajax_subir_expediente)) {
         $obBD_con1->echoJson(array('success' => false, 'message' => 'El expediente debe ser un archivo PDF.'));
         exit;
     }
+    $emp_cod_exp = intval($wf_ctx['emp_cod'] > 0 ? $wf_ctx['emp_cod'] : $Ses_Emp_Cod);
     $resp = $obBD_adq->subirExpedienteSolicitud(
         $sol_cod,
-        intval($Ses_Emp_Cod),
+        $emp_cod_exp,
         $_FILES['expediente_pdf']['tmp_name'],
         $_FILES['expediente_pdf']['name']
     );
@@ -694,6 +724,32 @@ if (isset($ajax_firmar_expediente)) {
         @unlink($p12_tmp);
     }
     $obBD_con1->echoJson($resp);
+    exit;
+}
+
+// Docs. del proveedor (RUC / cuenta / otro) para modal en tablas
+if (isset($ajax_get_archivos_proveedor)) {
+    $prv_cod = isset($_GET['Prv_Cod']) ? intval($_GET['Prv_Cod']) : 0;
+    $sol_cod = isset($_GET['Sol_Cod']) ? intval($_GET['Sol_Cod']) : 0;
+    $map = $obBD_adq->obtenerArchivosProveedor($prv_cod, $sol_cod);
+    $files = array();
+    foreach (array('RU', 'CB', 'RQ', 'FP') as $tip) {
+        $row = isset($map[$tip]) ? $map[$tip] : null;
+        $files[$tip] = array(
+            'Arc_Cod' => $row && !empty($row['Arc_Cod']) ? intval($row['Arc_Cod']) : null,
+            'Arc_Tit' => $row && isset($row['Arc_Tit']) && $row['Arc_Tit'] !== ''
+                ? $row['Arc_Tit']
+                : $obBD_adq->tituloArchivoProveedorPorTipo($tip),
+            'Arc_Url' => $row && !empty($row['Arc_Url']) ? $row['Arc_Url'] : '',
+            'Sol_Cod' => $row && !empty($row['Sol_Cod']) ? intval($row['Sol_Cod']) : null,
+            'Arc_Tip' => $tip
+        );
+    }
+    $obBD_con1->echoJson(array(
+        'success' => true,
+        'Prv_Cod' => $prv_cod,
+        'files' => $files
+    ));
     exit;
 }
 
@@ -1677,41 +1733,62 @@ function adqEtiquetaMiAccion($accion) {
             z-index: 1055;
         }
         #create-panel {
-            margin-left: -16px;
-            margin-right: -16px;
-            padding-left: 24px;
-            padding-right: 24px;
+            margin-left: -10px;
+            margin-right: -10px;
+            padding-left: 12px;
+            padding-right: 12px;
         }
         #create-panel-content {
-            font-size: 14px;
+            font-size: 13px;
             width: 100%;
             max-width: none;
-            padding: 12px 8px 32px;
+            padding: 8px 8px 16px;
             box-sizing: border-box;
+        }
+        #create-panel-content .adq-form-corta,
+        #create-panel-content .adq-step-card.adq-form-corta {
+            margin-top: 6px !important;
+            margin-bottom: 12px !important;
+            padding: 12px 14px 14px !important;
+            border-radius: 8px !important;
         }
         #create-panel-content .adq-solicitud-form {
             width: 100%;
             max-width: none;
             margin: 0;
-            padding: 8px 6px 32px;
+            padding: 6px 6px 16px;
+        }
+        #create-panel-content .adq-step-card {
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+        }
+        #create-panel-content .adq-step-title {
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            font-size: 13px;
         }
         #create-panel-content .adq-field-block {
-            margin-bottom: 22px;
+            margin-bottom: 10px;
         }
         #create-panel-content .form-label-req,
         #create-panel-content .adq-cot-label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             padding: 0;
             color: #0f172a;
             font-weight: 700;
+            font-size: 12px;
         }
         #create-panel-content .form-check-label {
             color: #1e293b;
             font-weight: 600;
+            font-size: 12px;
         }
         #create-panel-content .adq-field-hint {
             color: #334155 !important;
+            font-size: 11px;
+            margin-top: 2px;
         }
         #create-panel-content #divJustificacionComercial,
         #create-panel-content #divDescripcionDetallada {
@@ -1719,17 +1796,21 @@ function adqEtiquetaMiAccion($accion) {
         }
         #create-panel-content .adq-row-textareas textarea.form-control-adq {
             width: 100%;
-            min-height: 96px;
+            min-height: 72px;
         }
         #create-panel-content .adq-form-fields-stack .row {
             margin-left: 0;
             margin-right: 0;
         }
+        #create-panel-content .form-control-adq {
+            padding: 6px 10px;
+            font-size: 13px;
+        }
         #create-panel-content select.form-control-adq {
-            min-height: 42px;
+            min-height: 32px;
             height: auto;
-            line-height: 1.4;
-            padding: 10px 32px 10px 14px;
+            line-height: 1.35;
+            padding: 5px 28px 5px 10px;
         }
         #create-panel-content .select2-container {
             width: 100% !important;
@@ -1737,19 +1818,42 @@ function adqEtiquetaMiAccion($accion) {
             box-sizing: border-box;
         }
         #create-panel-content .select2-container--default .select2-selection--single {
-            height: 44px !important;
+            height: 32px !important;
         }
         #create-panel-content .select2-container--default .select2-selection--single .select2-selection__rendered {
-            line-height: 42px;
-            padding: 0 36px 0 14px;
+            line-height: 30px;
+            padding: 0 28px 0 10px;
             white-space: nowrap !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
             display: block;
+            font-size: 13px;
         }
         #create-panel-content .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 42px;
+            height: 30px;
             top: 1px;
+        }
+        #create-panel-content #Trq_Cod_Corto + .select2-container .select2-selection--single,
+        #create-panel-content .adq-form-corta .select2-container--default .select2-selection--single {
+            height: 32px !important;
+            border-radius: 4px;
+        }
+        #create-panel-content .adq-form-corta .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 30px;
+            font-size: 13px;
+            padding-left: 10px;
+        }
+        #create-panel-content .adq-form-corta .form-control,
+        #create-panel-content .adq-form-corta .form-control.input-sm {
+            height: 32px;
+            padding: 5px 10px;
+            font-size: 13px;
+        }
+        #create-panel-content .adq-rubros-box {
+            margin-bottom: 0;
+        }
+        #create-panel-content .adq-rubros-resumen {
+            margin-top: 6px;
         }
         #create-panel-content .adq-cot-col,
         #create-panel-content .adq-cot-provider-row .select-wrap {
@@ -1763,16 +1867,19 @@ function adqEtiquetaMiAccion($accion) {
         }
         #create-panel-content .adq-cot-pdf-section {
             width: 100%;
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid #e2e8f0;
+        }
+        #create-panel-content #divCotizaciones .adq-cot-pdf-section {
+            width: calc(50% - 6px);
+            margin-top: 0;
+            padding-top: 0;
+            border-top: none;
         }
         #create-panel-content .adq-proformas-head {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 8px;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
         #create-panel-content .adq-proformas-head .adq-cot-label {
             margin-bottom: 0;
@@ -1780,14 +1887,14 @@ function adqEtiquetaMiAccion($accion) {
         #create-panel-content .adq-proformas-list {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
             width: 100%;
         }
         #create-panel-content .adq-proforma-row {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 10px 12px;
+            border-radius: 8px;
+            padding: 8px 10px;
         }
         #create-panel-content .adq-proforma-row.adq-proforma-ganadora {
             border-color: #86efac;
@@ -1813,8 +1920,8 @@ function adqEtiquetaMiAccion($accion) {
             min-width: 100px;
         }
         #create-panel-content .adq-proforma-iva {
-            flex: 0 0 90px;
-            min-width: 80px;
+            flex: 0 0 78px;
+            min-width: 78px;
         }
         #create-panel-content .adq-proforma-iva .adq-cot-iva-check {
             margin: 0;
@@ -1851,8 +1958,34 @@ function adqEtiquetaMiAccion($accion) {
             margin-top: 8px;
         }
         #create-panel-content .adq-proforma-remove {
-            color: #dc2626;
-            padding: 4px 6px;
+            color: #ffffff !important;
+            background: #dc2626 !important;
+            border: 1px solid #b91c1c !important;
+            border-radius: 6px !important;
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            padding: 0 !important;
+            line-height: 1;
+            text-decoration: none !important;
+            box-shadow: 0 1px 3px rgba(185, 28, 28, 0.35);
+            opacity: 1 !important;
+        }
+        #create-panel-content .adq-proforma-remove i {
+            color: #ffffff !important;
+            font-size: 14px !important;
+            font-weight: 700;
+            line-height: 1;
+        }
+        #create-panel-content .adq-proforma-remove:hover,
+        #create-panel-content .adq-proforma-remove:focus {
+            color: #ffffff !important;
+            background: #b91c1c !important;
+            border-color: #991b1b !important;
+            text-decoration: none !important;
         }
         #create-panel-content .adq-cot-main-row {
             display: flex;
@@ -2085,6 +2218,677 @@ function adqEtiquetaMiAccion($accion) {
             flex-wrap: wrap;
             gap: 8px;
             align-items: center;
+        }
+        /* Compacto solo cotizaciones en bandeja */
+        #create-panel-content #divCotizaciones .adq-cot-headline {
+            margin-bottom: 8px;
+            padding: 8px 10px;
+        }
+        #create-panel-content #divCotizaciones .adq-cot-headline .headline-title { font-size: 12px; }
+        #create-panel-content #divCotizaciones .adq-cot-headline .headline-copy { font-size: 11px; }
+        #create-panel-content #divCotizaciones .adq-cot-headline .headline-icon {
+            width: 28px; height: 28px; font-size: 13px; border-radius: 6px;
+        }
+        #create-panel-content #divCotizaciones .adq-cot-card,
+        #create-panel-content #divCotizaciones .adq-cot-card-inline {
+            padding: 8px 10px;
+            border-radius: 6px;
+        }
+        #create-panel-content #divCotizaciones .adq-cot-label {
+            font-size: 11px;
+            margin-bottom: 3px;
+        }
+        #create-panel-content #divCotizaciones .adq-cot-control,
+        #create-panel-content #divCotizaciones .adq-prv-txt,
+        #create-panel-content #divCotizaciones .adq-proforma-row .form-control {
+            min-height: 28px !important;
+            height: 28px;
+            padding: 3px 8px !important;
+            font-size: 12px !important;
+            border-radius: 4px;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-row textarea.form-control {
+            height: auto;
+            min-height: 48px !important;
+        }
+        #create-panel-content #divCotizaciones .adq-cot-split-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 10px 12px;
+            width: 100%;
+        }
+        #create-panel-content #divCotizaciones .adq-cot-col-prov {
+            flex: 0 0 calc(50% - 6px);
+            max-width: calc(50% - 6px);
+            width: calc(50% - 6px);
+            min-width: 0;
+            margin-bottom: 0;
+            box-sizing: border-box;
+        }
+        #create-panel-content #divCotizaciones .adq-cot-col-proformas,
+        #create-panel-content #divCotizaciones .adq-cot-pdf-section {
+            flex: 0 0 calc(50% - 6px);
+            max-width: calc(50% - 6px);
+            width: calc(50% - 6px);
+            min-width: 0;
+            margin-top: 0;
+            padding-top: 0;
+            border-top: none;
+            box-sizing: border-box;
+        }
+        #create-panel-content #divCotizaciones .adq-cot-top-prov {
+            flex: 0 0 100%;
+            max-width: 100%;
+            min-width: 0;
+            width: 100%;
+        }
+        #create-panel-content #divCotizaciones .adq-cot-provider-row .adq-prv-picker {
+            max-width: 100%;
+            width: 100%;
+        }
+        #create-panel-content #divCotizaciones .adq-prv-picker-row .adq-prv-txt {
+            width: 100%;
+            max-width: 100%;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-fields {
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: flex-end;
+            gap: 8px;
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-fields > .adq-cot-field,
+        #create-panel-content #divCotizaciones .adq-proforma-fields > .adq-proforma-pdf,
+        #create-panel-content #divCotizaciones .adq-proforma-fields > .adq-proforma-actions {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            margin-bottom: 0;
+            min-width: 0;
+            flex: 1 1 0 !important;
+            width: auto !important;
+            max-width: none !important;
+            box-sizing: border-box;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-fields .adq-cot-label {
+            height: 14px;
+            line-height: 14px;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            font-size: 10px;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-val,
+        #create-panel-content #divCotizaciones .adq-proforma-total {
+            flex: 1 1 0 !important;
+            width: auto !important;
+            max-width: none !important;
+            min-width: 0 !important;
+            margin-left: 0 !important;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-pdf .adq-file-upload,
+        #create-panel-content #divCotizaciones .adq-proforma-pdf .adq-file-drop {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-fields > .adq-proforma-pdf,
+        #create-panel-content #divCotizaciones .adq-proforma-pdf {
+            flex: 3.24 1 0 !important;
+            min-width: 162px !important;
+            max-width: none !important;
+            width: auto !important;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-fields > .adq-proforma-iva,
+        #create-panel-content #divCotizaciones .adq-proforma-iva {
+            flex: 0 0 78px !important;
+            width: 78px !important;
+            max-width: 78px !important;
+            min-width: 78px !important;
+            align-items: center;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-fields > .adq-proforma-iva .adq-cot-label {
+            text-align: center;
+            width: 100%;
+            font-size: 10px;
+            overflow: visible;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-iva .adq-cot-iva-check {
+            width: 100%;
+            justify-content: center;
+            margin: 0;
+            padding: 0;
+            gap: 4px;
+            flex-wrap: nowrap;
+            overflow: visible;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-iva .adq-cot-iva-check .form-check-label {
+            white-space: nowrap;
+            font-size: 11px;
+            margin: 0;
+            padding: 0;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-iva .chk-cot-iva {
+            margin: 0 !important;
+            float: none;
+            flex-shrink: 0;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-fields > .adq-proforma-val,
+        #create-panel-content #divCotizaciones .adq-proforma-fields > .adq-proforma-total {
+            flex: 1 1 0 !important;
+            width: auto !important;
+            max-width: none !important;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-actions {
+            flex-direction: row !important;
+            align-items: flex-end !important;
+            justify-content: flex-end !important;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-actions-row {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+            height: 28px;
+            width: 100%;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-actions .adq-cot-winner {
+            margin: 0;
+            height: 28px !important;
+            min-height: 28px !important;
+            max-height: 28px !important;
+            padding: 0 4px !important;
+            white-space: nowrap;
+            flex: 0 0 auto;
+            min-width: 0;
+            display: inline-flex !important;
+            align-items: center;
+        }
+        #create-panel-content #divCotizaciones .adq-cot-winner-text {
+            font-size: 9px;
+        }
+        #create-panel-content #divCotizaciones .adq-file-drop {
+            height: 28px !important;
+            min-height: 28px !important;
+            max-height: 28px !important;
+            gap: 6px;
+            padding: 0 8px !important;
+            display: flex;
+            align-items: center;
+            border-width: 1px;
+            border-radius: 5px;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-pdf .adq-file-upload,
+        #create-panel-content #divCotizaciones .adq-proforma-pdf .adq-file-drop {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-fields > .adq-proforma-pdf,
+        #create-panel-content #divCotizaciones .adq-proforma-pdf {
+            flex: 3.24 1 0 !important;
+            min-width: 162px !important;
+            max-width: none !important;
+            width: auto !important;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-fields > .adq-proforma-iva,
+        #create-panel-content #divCotizaciones .adq-proforma-iva {
+            flex: 0 0 78px !important;
+            width: 78px !important;
+            max-width: 78px !important;
+            min-width: 78px !important;
+            align-items: center;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-fields > .adq-proforma-iva .adq-cot-label {
+            text-align: center;
+            width: 100%;
+            font-size: 10px;
+            overflow: visible;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-iva .adq-cot-iva-check {
+            width: 100%;
+            justify-content: center;
+            margin: 0;
+            padding: 0;
+            gap: 4px;
+            flex-wrap: nowrap;
+            overflow: visible;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-iva .chk-cot-iva {
+            margin: 0 !important;
+            float: none;
+            flex-shrink: 0;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-fields > .adq-proforma-val,
+        #create-panel-content #divCotizaciones .adq-proforma-fields > .adq-proforma-total {
+            flex: 1 1 0 !important;
+            width: auto !important;
+            max-width: none !important;
+        }
+        #create-panel-content #divCotizaciones .adq-cot-pdf-section {
+            margin-top: 0;
+            padding-top: 0;
+        }
+        @media (max-width: 767px) {
+            #create-panel-content #divCotizaciones .adq-cot-col-prov,
+            #create-panel-content #divCotizaciones .adq-cot-col-proformas,
+            #create-panel-content #divCotizaciones .adq-cot-pdf-section {
+                flex: 0 0 100%;
+                max-width: 100%;
+                width: 100%;
+            }
+        }
+        #create-panel-content #divCotizaciones .adq-prv-picker-row .btn,
+        #create-panel-content #divCotizaciones .adq-cot-add-provider,
+        #create-panel-content #divCotizaciones .adq-cot-remove,
+        #create-panel-content #divCotizaciones .adq-proforma-remove,
+        #create-panel-content #divCotizaciones .adq-btn-add-pdf-cot,
+        #create-panel-content #divCotizaciones .adq-btn-add-cot {
+            height: 28px !important;
+            min-height: 28px !important;
+            max-height: 28px !important;
+            min-width: 28px;
+            padding: 0 8px !important;
+            font-size: 11px !important;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #create-panel-content #divCotizaciones .adq-cot-add-provider,
+        #create-panel-content #divCotizaciones .adq-prv-btn-buscar,
+        #create-panel-content #divCotizaciones .adq-prv-btn-limpiar,
+        #create-panel-content #divCotizaciones .adq-cot-remove,
+        #create-panel-content #divCotizaciones .adq-proforma-remove {
+            width: 28px !important;
+            padding: 0 !important;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-row {
+            padding: 6px 8px;
+            border-radius: 6px;
+        }
+        #create-panel-content #divCotizaciones .adq-proformas-list { gap: 6px; }
+        #create-panel-content #divCotizaciones .adq-proformas-head {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+            min-height: 28px;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-fields {
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: flex-end;
+            gap: 8px;
+            width: 100%;
+            min-width: 0;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-fields > .adq-cot-field,
+        #create-panel-content #divCotizaciones .adq-proforma-fields > .adq-proforma-pdf,
+        #create-panel-content #divCotizaciones .adq-proforma-fields > .adq-proforma-actions {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            margin-bottom: 0;
+            min-width: 0;
+            flex: 1 1 0 !important;
+            width: auto !important;
+            max-width: none !important;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-fields .adq-cot-label {
+            height: 14px;
+            line-height: 14px;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            font-size: 10px;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-pdf .adq-file-upload,
+        #create-panel-content #divCotizaciones .adq-proforma-pdf .adq-file-drop {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-fields > .adq-proforma-pdf,
+        #create-panel-content #divCotizaciones .adq-proforma-pdf {
+            flex: 3.24 1 0 !important;
+            min-width: 162px !important;
+            max-width: none !important;
+            width: auto !important;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-fields > .adq-proforma-iva,
+        #create-panel-content #divCotizaciones .adq-proforma-iva {
+            flex: 0 0 78px !important;
+            width: 78px !important;
+            max-width: 78px !important;
+            min-width: 78px !important;
+            align-items: center;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-fields > .adq-proforma-iva .adq-cot-label {
+            text-align: center;
+            width: 100%;
+            font-size: 10px;
+            overflow: visible;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-iva .adq-cot-iva-check {
+            width: 100%;
+            justify-content: center;
+            margin: 0;
+            padding: 0;
+            gap: 4px;
+            flex-wrap: nowrap;
+            overflow: visible;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-iva .chk-cot-iva {
+            margin: 0 !important;
+            float: none;
+            flex-shrink: 0;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-fields > .adq-proforma-val,
+        #create-panel-content #divCotizaciones .adq-proforma-fields > .adq-proforma-total {
+            flex: 1 1 0 !important;
+            width: auto !important;
+            max-width: none !important;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-val,
+        #create-panel-content #divCotizaciones .adq-proforma-total {
+            flex: 1 1 0 !important;
+            width: auto !important;
+            max-width: none !important;
+            min-width: 0 !important;
+            margin-left: 0 !important;
+        }
+        /* Reafirmar: IVA legible (Incluye) + PDF + espacio para Ganadora/X */
+        #create-panel-content #divCotizaciones .adq-proforma-fields > .adq-proforma-pdf,
+        #create-panel-content #divCotizaciones .adq-proforma-pdf {
+            flex: 3.24 1 0 !important;
+            min-width: 162px !important;
+            max-width: none !important;
+            width: auto !important;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-fields > .adq-proforma-iva,
+        #create-panel-content #divCotizaciones .adq-proforma-iva {
+            flex: 0 0 78px !important;
+            width: 78px !important;
+            max-width: 78px !important;
+            min-width: 78px !important;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-fields > .adq-proforma-actions,
+        #create-panel-content #divCotizaciones .adq-proforma-actions {
+            flex: 0 0 auto !important;
+            min-width: 118px !important;
+            max-width: none !important;
+            width: auto !important;
+            overflow: visible !important;
+            flex-direction: row !important;
+            align-items: flex-end !important;
+            justify-content: flex-end !important;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-actions-row {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            justify-content: flex-end !important;
+            gap: 6px !important;
+            height: 28px !important;
+            width: 100% !important;
+            overflow: visible !important;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-actions .adq-cot-winner {
+            flex: 0 0 auto !important;
+            min-width: 0 !important;
+            max-width: none !important;
+            overflow: visible !important;
+            margin: 0;
+            height: 28px !important;
+            min-height: 28px !important;
+            max-height: 28px !important;
+            padding: 0 4px !important;
+            white-space: nowrap;
+            display: inline-flex !important;
+            align-items: center;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-actions .adq-cot-winner .form-check-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            max-width: none;
+            overflow: visible;
+            white-space: nowrap;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-actions .adq-proforma-remove {
+            flex: 0 0 28px !important;
+            width: 28px !important;
+            min-width: 28px !important;
+            max-width: 28px !important;
+            height: 28px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            position: relative;
+            z-index: 2;
+            flex-shrink: 0 !important;
+            color: #ffffff !important;
+            background: #dc2626 !important;
+            border: 1px solid #b91c1c !important;
+            border-radius: 6px !important;
+            box-shadow: 0 1px 3px rgba(185, 28, 28, 0.35);
+            text-decoration: none !important;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-actions .adq-proforma-remove i {
+            color: #ffffff !important;
+            font-size: 14px !important;
+            line-height: 1;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-actions .adq-proforma-remove:hover,
+        #create-panel-content #divCotizaciones .adq-proforma-actions .adq-proforma-remove:focus {
+            color: #ffffff !important;
+            background: #b91c1c !important;
+            border-color: #991b1b !important;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-iva .adq-cot-iva-check {
+            height: 28px !important;
+            min-height: 28px !important;
+            max-height: 28px !important;
+            padding: 0;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            overflow: visible;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-iva .adq-cot-iva-check .form-check-label {
+            white-space: nowrap;
+            margin: 0;
+            padding-left: 0;
+            font-size: 11px;
+            line-height: 1.2;
+        }
+        #create-panel-content #divCotizaciones .adq-cot-total-box {
+            height: 28px !important;
+            min-height: 28px !important;
+            max-height: 28px !important;
+            padding: 2px 6px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        #create-panel-content #divCotizaciones .adq-cot-control,
+        #create-panel-content #divCotizaciones .adq-prv-txt,
+        #create-panel-content #divCotizaciones .adq-proforma-row .form-control,
+        #create-panel-content #divCotizaciones .adq-file-drop {
+            height: 28px !important;
+            min-height: 28px !important;
+            max-height: 28px !important;
+            box-sizing: border-box;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-row textarea.form-control {
+            height: auto !important;
+            min-height: 48px !important;
+            max-height: none !important;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-actions {
+            flex-direction: row !important;
+            align-items: flex-end !important;
+            justify-content: flex-end !important;
+            margin-left: auto;
+            flex: 0 0 auto !important;
+            min-width: 118px !important;
+            max-width: none !important;
+            overflow: visible !important;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-actions-row {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+            height: 28px;
+            overflow: visible;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-actions .adq-proforma-remove {
+            flex: 0 0 28px !important;
+            width: 28px !important;
+            min-width: 28px !important;
+            padding: 0 !important;
+            z-index: 2;
+            color: #ffffff !important;
+            background: #dc2626 !important;
+            border: 1px solid #b91c1c !important;
+            border-radius: 6px !important;
+        }
+        #create-panel-content #divCotizaciones .adq-proforma-actions .adq-proforma-remove i {
+            color: #ffffff !important;
+            font-size: 14px !important;
+        }
+        #create-panel-content #divCotizaciones .adq-file-drop {
+            gap: 6px;
+            padding: 0 8px !important;
+            display: flex;
+            align-items: center;
+        }
+        #create-panel-content #divCotizaciones .adq-file-icon {
+            width: 18px; height: 18px; font-size: 11px;
+        }
+        #create-panel-content #divCotizaciones .adq-prv-picker-row,
+        #create-panel-content #divCotizaciones .adq-cot-provider-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        #create-panel-content #divCotizaciones .adq-prv-docs {
+            margin-top: 8px;
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: #f8fafc;
+        }
+        #create-panel-content #divCotizaciones .adq-prv-docs-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        #create-panel-content #divCotizaciones .adq-prv-docs-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        #create-panel-content #divCotizaciones .adq-prv-arc-slot {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+            width: 100%;
+        }
+        #create-panel-content #divCotizaciones .adq-prv-arc-label {
+            flex: 0 0 78px;
+            width: 78px;
+            max-width: 78px;
+            margin: 0 !important;
+            height: auto !important;
+            line-height: 1.15 !important;
+            font-size: 10px !important;
+            white-space: normal;
+            color: #475569;
+        }
+        #create-panel-content #divCotizaciones .adq-prv-arc-slot .adq-file-upload {
+            flex: 1 1 auto;
+            min-width: 0;
+            width: auto !important;
+            max-width: none !important;
+        }
+        #create-panel-content #divCotizaciones .adq-prv-arc-actions {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            min-width: 28px;
+            justify-content: flex-end;
+        }
+        #create-panel-content #divCotizaciones .adq-prv-arc-link {
+            padding: 0 6px !important;
+            height: 26px !important;
+            min-height: 26px !important;
+            max-height: 26px !important;
+            font-size: 10px !important;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+        }
+        #create-panel-content #divCotizaciones .adq-prv-docs .adq-file-upload-compact .adq-file-drop {
+            height: 26px !important;
+            min-height: 26px !important;
+            max-height: 26px !important;
+            padding: 0 6px !important;
+            width: 100%;
+        }
+        #create-panel-content #divCotizaciones .adq-prv-docs .adq-file-main {
+            font-size: 10px;
+        }
+        #create-panel-content #divCotizaciones .adq-file-max {
+            color: #64748b;
+            font-weight: 600;
+            font-size: 9px;
+            white-space: nowrap;
+        }
+        #create-panel-content #divCotizaciones .adq-file-drop {
+            height: 28px !important;
+            min-height: 28px !important;
+            max-height: 28px !important;
+            gap: 6px;
+            padding: 0 8px !important;
+            display: flex;
+            align-items: center;
+            border-width: 1px;
+            border-radius: 5px;
+        }
+        #create-panel-content #divCotizaciones .adq-file-icon {
+            width: 24px; height: 24px; font-size: 12px; border-radius: 5px;
+        }
+        #create-panel-content #divCotizaciones .adq-file-main { font-size: 11px; white-space: nowrap; }
+        #create-panel-content #divCotizaciones .adq-file-req {
+            font-weight: 600;
+            color: #b45309;
+            margin-left: 2px;
+        }
+        #create-panel-content #divCotizaciones .adq-file-name { font-size: 10px; margin-top: 0; }
+        #create-panel-content #divCotizaciones .adq-cot-winner {
+            min-height: 28px; padding: 2px 6px; font-size: 11px;
+        }
+        #create-panel-content #divCotizaciones .adq-cot-winner-text { font-size: 10px; }
+        #create-panel-content #divCotizaciones .adq-btn-add-pdf-cot {
+            height: 28px !important;
+            min-height: 28px !important;
+            padding: 0 8px !important;
+            font-size: 11px !important;
         }
         .adq-avance-factura-header {
             display: flex;
@@ -2678,12 +3482,12 @@ function adqEtiquetaMiAccion($accion) {
                                         <td class="text-start"><?php echo htmlspecialchars(isset($ms['Sol_Tit']) ? $ms['Sol_Tit'] : '', ENT_QUOTES, 'UTF-8'); ?></td>
                                         <td class="text-start"><?php
                                             $proy_txt = trim(
-                                                (isset($ms['Pro_Ide']) && $ms['Pro_Ide'] !== '' ? $ms['Pro_Ide'] . ' — ' : '')
+                                                (isset($ms['Pro_Ide']) && $ms['Pro_Ide'] !== '' ? $ms['Pro_Ide'] . ' ??? ' : '')
                                                 . (isset($ms['Pro_Nom']) ? $ms['Pro_Nom'] : '')
                                             );
                                             echo $proy_txt !== ''
                                                 ? htmlspecialchars(adq_ensure_utf8_string($proy_txt), ENT_QUOTES, 'UTF-8')
-                                                : '<span class="text-muted">—</span>';
+                                                : '<span class="text-muted">???</span>';
                                         ?></td>
                                         <td class="text-start"><?php echo htmlspecialchars($ms['Wfm_Nom']); ?></td>
                                         <td><?php echo date('Y-m-d H:i', strtotime($ms['Sol_Fec'])); ?></td>
@@ -2914,6 +3718,7 @@ function adqEtiquetaMiAccion($accion) {
                                         <thead>
                                             <tr>
                                                 <th>Proveedor</th>
+                                                <th class="text-center" style="width: 56px;">Doc</th>
                                                 <th class="text-end" style="width: 100px;">Subtotal</th>
                                                 <th class="text-center" style="width: 70px;">IVA</th>
                                                 <th class="text-end" style="width: 100px;">Total</th>
@@ -3212,6 +4017,27 @@ function adqEtiquetaMiAccion($accion) {
         </div>
     </div>
 
+    <!-- MODAL DOCUMENTOS DEL PROVEEDOR -->
+    <div class="modal fade" id="mdlDocsProveedor" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1080;">
+        <div class="modal-dialog" role="document" style="width:92%;max-width:520px;margin:40px auto;">
+            <div class="modal-content" style="border-radius:8px;overflow:hidden;box-shadow:0 8px 24px rgba(15,23,42,0.2);">
+                <div class="modal-header" style="padding:10px 14px;background:#1e40af;color:#fff;">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar" onclick="$('#mdlDocsProveedor').modal('hide')" style="color:#fff;opacity:.9;text-shadow:none;"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" style="font-size:14px;margin:0;"><i class="bi bi-folder2-open"></i> Documentos del proveedor</h4>
+                </div>
+                <div class="modal-body" style="padding:14px;background:#f8fafc;">
+                    <div id="mdlDocsProveedorNombre" class="fw-bold text-dark mb-2" style="font-size:13px;"></div>
+                    <div id="mdlDocsProveedorBody" class="adq-docs-prv-list">
+                        <div class="text-muted text-center py-3">Cargando...</div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="padding:8px 14px;">
+                    <button type="button" class="btn btn-sm btn-default" data-dismiss="modal" onclick="$('#mdlDocsProveedor').modal('hide')">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="mdlAccionOkOverlay" class="adq-msg-overlay" role="alertdialog" aria-modal="true" aria-labelledby="mdlAccionOkTitle" aria-describedby="mdlAccionOkText">
         <div class="adq-msg-box is-success" id="mdlAccionOkBox">
             <div class="adq-msg-icon" id="mdlAccionOkIcon"><i class="bi bi-check-circle-fill"></i></div>
@@ -3224,7 +4050,7 @@ function adqEtiquetaMiAccion($accion) {
         </div>
     </div>
 
-    <script src="../VALIDACIONES/adq_solicitud.js" charset="UTF-8"></script>
+    <script src="../VALIDACIONES/adq_solicitud.js?v=20260821layoutChecks" charset="UTF-8"></script>
     <script>
 let currentInsCod = null;
         let currentSolCod = null;
@@ -3240,6 +4066,16 @@ let currentInsCod = null;
         let solReqCot = 0;
         let solMinCot = 1;
         let searchTimer = null;
+
+        // Doc proveedor en tabla Cotizaciones de sustento
+        $(document).off('click.adqDocsPrvBandeja').on('click.adqDocsPrvBandeja', '#detCotizacionesList .adq-btn-docs-prv', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const $btn = $(this);
+            if (typeof abrirDocsProveedor === 'function') {
+                abrirDocsProveedor($btn.attr('data-prv-cod'), $btn.attr('data-sol-cod'), $btn.attr('data-prv-nom'));
+            }
+        });
 
         const NODOS_RESOLUBLES = ['INICIO', 'APROBACION', 'RECEPCION', 'FACTURA', 'TAREA', 'VALIDACION', 'AVANCE', 'FISCALIZACION', 'FIN'];
         let currentNodTip = null;
@@ -3380,7 +4216,7 @@ let currentInsCod = null;
             const esFin = currentNodTip === 'FIN';
             const esAvance = currentNodTip === 'AVANCE';
             const esFiscal = currentNodTip === 'FISCALIZACION';
-            // En INICIO solo se completa/continúa la solicitud: sin justificación ni adjuntos de resolución.
+            // En INICIO solo se completa/contin?a la solicitud: sin justificaci?n ni adjuntos de resoluci?n.
             $('#secActionComentario, #secActionAdjuntos').toggle(!esInicio);
             if (esInicio) {
                 $('#actionComentario').val('');
@@ -3585,7 +4421,7 @@ let currentInsCod = null;
                 badges += '<span class="adq-exp-badge adq-exp-badge-ok">Firmado</span>';
                 if (exp.firm_nom) {
                     const nom = String(exp.firm_nom);
-                    const corto = nom.length > 22 ? nom.substring(0, 20) + '…' : nom;
+                    const corto = nom.length > 22 ? nom.substring(0, 20) + '???' : nom;
                     badges += '<span class="adq-exp-badge adq-exp-badge-ok" title="' + $('<div>').text(nom).html() + '">' + $('<div>').text(corto).html() + '</span>';
                 }
             } else if (tienePdf) {
@@ -3618,9 +4454,13 @@ let currentInsCod = null;
         }
 
         function ejecutarSubirExpedienteFin(file) {
+            if (!currentSolCod) {
+                alert('No se identifico la solicitud.');
+                return;
+            }
             const fd = new FormData();
             fd.append('ajax_subir_expediente', '1');
-            fd.append('Sol_Cod', currentSolCod);
+            fd.append('Sol_Cod', parseInt(currentSolCod, 10) || 0);
             fd.append('expediente_pdf', file);
             const $btn = $('#btnSubirExpediente').prop('disabled', true);
             mostrarExpAccionMsg('');
@@ -3706,7 +4546,7 @@ let currentInsCod = null;
             }
             const fd = new FormData();
             fd.append('ajax_firmar_expediente', '1');
-            fd.append('Sol_Cod', currentSolCod);
+            fd.append('Sol_Cod', parseInt(currentSolCod, 10) || 0);
             fd.append('Lla_Cla', clave);
             fd.append('usar_llave_empresa', usarEmpresa);
             if (tieneArchivo) {
@@ -4008,7 +4848,7 @@ let currentInsCod = null;
             if (nFac <= 0 && nAnt <= 0) {
                 return {
                     ok: false,
-                    message: 'Debe registrar al menos una factura o un anticipo antes de finalizar el proceso. Puede tener uno o ambos, pero no puede dejar los dos vacíos.'
+                    message: 'Debe registrar al menos una factura o un anticipo antes de finalizar el proceso. Puede tener uno o ambos, pero no puede dejar los dos vac?os.'
                 };
             }
 
@@ -4319,7 +5159,7 @@ let currentInsCod = null;
                             ${fecha ? `<span class="text-muted small">${avanceEsc(fecha)}</span>` : ''}
                         </div>
                         ${detalle}
-                        ${descripcion ? `<div class="text-muted small mt-1">Observación: ${avanceEsc(descripcion)}</div>` : ''}
+                        ${descripcion ? `<div class="text-muted small mt-1">Observaci?n: ${avanceEsc(descripcion)}</div>` : ''}
                         ${usuario ? `<div class="text-muted small mt-1">Registrado por: ${avanceEsc(usuario)}</div>` : ''}
                     </div>
                 `);
@@ -4629,7 +5469,7 @@ let currentInsCod = null;
         }
 
         function guardarAvanceDocs(onSuccess) {
-            const solCod = $('#avanceSolCod').val() || currentSolCod;
+            const solCod = parseInt($('#avanceSolCod').val() || currentSolCod || 0, 10) || 0;
             if (!solCod) {
                 alert('No se identifico la solicitud.');
                 return;
@@ -4772,12 +5612,14 @@ let currentInsCod = null;
                 const texto = String(isnAdjFallback).trim();
                 if (texto.charAt(0) === '[') {
                     try {
-                        lista = JSON.parse(texto).filter(Boolean).map(function(p, i) {
-                            return { path: p, label: 'Sustento ' + (i + 1) };
+                        lista = JSON.parse(texto).filter(Boolean).map(function(p) {
+                            const base = String(p || '').split('/').pop().split('\\').pop();
+                            return { path: p, label: base || 'Sustento adjunto' };
                         });
                     } catch (e) { lista = []; }
                 } else {
-                    lista = [{ path: texto, label: 'Sustento adjunto' }];
+                    const base = texto.split('/').pop().split('\\').pop();
+                    lista = [{ path: texto, label: base || 'Sustento adjunto' }];
                 }
             }
             if (!lista.length) return '';
@@ -5119,9 +5961,9 @@ let currentInsCod = null;
                         proyTxt = String(sol.Pro_Ide);
                     }
                     if (sol.Pro_Nom) {
-                        proyTxt += (proyTxt ? ' — ' : '') + String(sol.Pro_Nom);
+                        proyTxt += (proyTxt ? ' ??? ' : '') + String(sol.Pro_Nom);
                     }
-                    $('#detProyecto').text(proyTxt || '—');
+                    $('#detProyecto').text(proyTxt || '???');
                     $('#detJustificacion').text(sol.Sol_Jus);
 
                     const reqParts = [];
@@ -5167,6 +6009,14 @@ let currentInsCod = null;
                             const ganadorClass = c.Cot_Sel == 1 ? 'adq-cot-row-ganadora' : '';
                             const badgeGanador = c.Cot_Sel == 1 ? ' <span class="badge bg-success ms-1" style="background-color:#10b981!important;color:#fff!important;"><i class="bi bi-trophy"></i> Seleccionada</span>' : '';
                             const proveedor = c.Prv_Com || ((c.Prs_Nom || '') + ' ' + (c.Prs_Ape || '')).trim();
+                            const prvCod = parseInt(c.Prv_Cod, 10) || 0;
+                            const docBtn = prvCod > 0
+                                ? ('<button type="button" class="btn btn-xs btn-primary adq-btn-docs-prv" title="Ver documentos del proveedor"'
+                                    + ' data-prv-cod="' + prvCod + '" data-sol-cod="' + (parseInt(sol.Sol_Cod, 10) || 0) + '"'
+                                    + ' data-prv-nom="' + $('<div>').text(proveedor).html() + '"'
+                                    + ' style="min-width:28px;">'
+                                    + '<i class="bi bi-eye-fill"></i></button>')
+                                : '<span class="text-muted">?</span>';
                             let adjuntos = [];
                             if (c.Cot_Adj) {
                                 const texto = String(c.Cot_Adj).trim();
@@ -5194,6 +6044,7 @@ let currentInsCod = null;
                             $cotList.append(`
                                 <tr class="${ganadorClass}">
                                     <td class="align-middle"><span class="fw-bold text-dark">${$('<div>').text(proveedor).html()}</span>${badgeGanador}</td>
+                                    <td class="text-center align-middle">${docBtn}</td>
                                     <td class="text-end align-middle font-monospace">$ ${subCot.toFixed(2)}</td>
                                     <td class="text-center align-middle">${ivaBadgeCot}</td>
                                     <td class="text-end align-middle font-monospace text-success fw-bold">$ ${totCot.toFixed(2)}</td>
@@ -5425,10 +6276,10 @@ let currentInsCod = null;
 
         function adqInferirTipoMensaje(mensaje) {
             const t = String(mensaje || '').toLowerCase();
-            if (t.indexOf('error') >= 0 || t.indexOf('no se pudo') >= 0 || t.indexOf('no se puede') >= 0 || t.indexOf('denegado') >= 0 || t.indexOf('critico') >= 0 || t.indexOf('crítico') >= 0) {
+            if (t.indexOf('error') >= 0 || t.indexOf('no se pudo') >= 0 || t.indexOf('no se puede') >= 0 || t.indexOf('denegado') >= 0 || t.indexOf('critico') >= 0 || t.indexOf('cr?tico') >= 0) {
                 return 'error';
             }
-            if (t.indexOf('debe ') === 0 || t.indexOf('seleccione') >= 0 || t.indexOf('indique') >= 0 || t.indexOf('obligator') >= 0 || t.indexOf('supera el limite') >= 0 || t.indexOf('aun no') >= 0 || t.indexOf('aún no') >= 0) {
+            if (t.indexOf('debe ') === 0 || t.indexOf('seleccione') >= 0 || t.indexOf('indique') >= 0 || t.indexOf('obligator') >= 0 || t.indexOf('supera el limite') >= 0 || t.indexOf('aun no') >= 0 || t.indexOf('a?n no') >= 0) {
                 return 'warning';
             }
             if (t.indexOf('correctamente') >= 0 || t.indexOf('exitos') >= 0 || t.indexOf('aprobad') >= 0 || t.indexOf('guardad') >= 0 || t.indexOf('enviad') >= 0 || t.indexOf('vinculad') >= 0 || t.indexOf('firmado') >= 0) {
@@ -6017,7 +6868,7 @@ let currentInsCod = null;
                 } else {
                     $.getScript('../../framework/plugins/cedulaRuc.js')
                         .done(function() {
-                            return $.getScript('../VALIDACIONES/adq_solicitud.js?v=20260818a');
+                            return $.getScript('../VALIDACIONES/adq_solicitud.js?v=20260821layoutChecks');
                         })
                         .done(function() {
                             if (requestId !== formLoadRequestId) {
@@ -6084,6 +6935,36 @@ let currentInsCod = null;
                 $(window).scrollTop(0);
             }, 100);
         }
+
+        // No permitir guardar cotizaciones sin los 4 PDF del proveedor.
+        (function adqWrapGuardarCotDocsObl() {
+            function tryWrap() {
+                if (typeof window.guardarCotizacionesEtapa !== 'function') {
+                    return false;
+                }
+                if (window.guardarCotizacionesEtapa._adqDocsObl) {
+                    return true;
+                }
+                var orig = window.guardarCotizacionesEtapa;
+                window.guardarCotizacionesEtapa = function() {
+                    if (typeof validarDocsProveedorFormulario === 'function' && !validarDocsProveedorFormulario(true)) {
+                        return;
+                    }
+                    return orig.apply(this, arguments);
+                };
+                window.guardarCotizacionesEtapa._adqDocsObl = true;
+                return true;
+            }
+            if (!tryWrap()) {
+                var n = 0;
+                var t = setInterval(function() {
+                    n++;
+                    if (tryWrap() || n > 40) {
+                        clearInterval(t);
+                    }
+                }, 250);
+            }
+        })();
 
         function abrirEdicionCotizaciones(solCod) {
             const targetSol = parseInt(solCod, 10);

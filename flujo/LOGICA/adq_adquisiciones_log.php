@@ -1024,16 +1024,15 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             $vistos = array();
 
             $adjuntos = $this->parseCotAdjuntos(isset($h['Isn_Adj']) ? $h['Isn_Adj'] : '');
-            $nod_nom_lbl = !empty($h['Nod_Nom']) ? trim($h['Nod_Nom']) : '';
             foreach ($adjuntos as $i => $path) {
                 if (isset($vistos[$path])) {
                     continue;
                 }
                 $vistos[$path] = true;
-                $lbl = count($adjuntos) > 1 ? ('Justificacion / sustento ' . ($i + 1)) : 'Justificacion / sustento';
-                if ($nod_nom_lbl !== '') {
-                    $lbl = $nod_nom_lbl . ': ' . $lbl;
-                }
+                $base = basename(str_replace('\\', '/', (string)$path));
+                $lbl = ($base !== '' && $base !== '.' && $base !== '..')
+                    ? $base
+                    : (count($adjuntos) > 1 ? ('Justificacion / sustento ' . ($i + 1)) : 'Justificacion / sustento');
                 $archivos[] = array(
                     'path' => $path,
                     'label' => $lbl
@@ -1391,6 +1390,195 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         $ready = true;
         if (isset($_SESSION)) {
             $_SESSION['adq_schema_solicitudes_rubros_ok'] = 1;
+        }
+    }
+
+    /**
+     * Documentos del proveedor por solicitud (RUC, cuenta bancaria, otro).
+     * Si el mismo proveedor se usa en otra solicitud, se reutilizan los PDF mas recientes.
+     */
+    public function ensureArchivoProveedoresTable() {
+        static $ready = false;
+        if ($ready) {
+            return;
+        }
+        if (!empty($_SESSION['adq_schema_archivo_proveedores_ok'])) {
+            $ready = true;
+            return;
+        }
+        $sql = "CREATE TABLE IF NOT EXISTS archivo_proveedores (
+            Arc_Cod BIGINT NOT NULL AUTO_INCREMENT,
+            Arc_Tit VARCHAR(255) NOT NULL DEFAULT '',
+            Prv_Cod BIGINT NOT NULL DEFAULT 0,
+            Arc_Url VARCHAR(500) NOT NULL DEFAULT '',
+            Sol_Cod BIGINT NOT NULL DEFAULT 0,
+            Arc_Tip CHAR(2) NOT NULL DEFAULT 'RU' COMMENT 'RU=RUC, CB=Cuenta bancaria, RQ=Requerimiento, FP=Formulario proveedor',
+            PRIMARY KEY (Arc_Cod),
+            UNIQUE KEY uk_sol_prv_tip (Sol_Cod, Prv_Cod, Arc_Tip),
+            KEY idx_arc_prv (Prv_Cod),
+            KEY idx_arc_sol (Sol_Cod),
+            KEY idx_arc_tip (Arc_Tip)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+        if (!$this->grabarv_registros($sql, $this->conexion)) {
+            throw new Exception('No se pudo preparar la tabla archivo_proveedores: ' . $this->getMsgError());
+        }
+        $ready = true;
+        if (isset($_SESSION)) {
+            $_SESSION['adq_schema_archivo_proveedores_ok'] = 1;
+        }
+    }
+
+    /**
+     * Titulos por defecto segun tipo de archivo de proveedor.
+     */
+    public function tituloArchivoProveedorPorTipo($tip) {
+        $tip = strtoupper(trim((string)$tip));
+        if ($tip === 'RU') {
+            return 'RUC';
+        }
+        if ($tip === 'CB') {
+            return 'Cuenta bancaria';
+        }
+        if ($tip === 'RQ') {
+            return 'Requerimiento';
+        }
+        if ($tip === 'FP') {
+            return 'Formulario proveedor';
+        }
+        return 'Documento';
+    }
+
+    /**
+     * Tipos validos de documento de proveedor.
+     * RU=RUC, CB=Cuenta bancaria, RQ=Requerimiento, FP=Formulario proveedor
+     */
+    public function tiposArchivoProveedor() {
+        return array('RU', 'CB', 'RQ', 'FP');
+    }
+
+    /**
+     * Obtiene RU/CB/RQ/FP del proveedor. Prioriza la solicitud actual; si falta alguno, toma el mas reciente de otras.
+     * @return array tip => row
+     */
+    public function obtenerArchivosProveedor($prv_cod, $sol_cod = 0) {
+        $this->ensureArchivoProveedoresTable();
+        $prv_cod = intval($prv_cod);
+        $sol_cod = intval($sol_cod);
+        $tips = $this->tiposArchivoProveedor();
+        $out = array();
+        foreach ($tips as $tip) {
+            $out[$tip] = null;
+        }
+        if ($prv_cod <= 0) {
+            return $out;
+        }
+
+        if ($sol_cod > 0) {
+            $rows = $this->getArrayConsultaSql(
+                "SELECT Arc_Cod, Arc_Tit, Prv_Cod, Arc_Url, Sol_Cod, Arc_Tip
+                 FROM archivo_proveedores
+                 WHERE Prv_Cod = $prv_cod AND Sol_Cod = $sol_cod
+                 ORDER BY Arc_Cod DESC;",
+                $this->conexion
+            );
+            if (is_array($rows)) {
+                foreach ($rows as $r) {
+                    $tip = strtoupper(trim(isset($r['Arc_Tip']) ? $r['Arc_Tip'] : ''));
+                    if (isset($out[$tip]) && $out[$tip] === null && !empty($r['Arc_Url'])) {
+                        $out[$tip] = $r;
+                    }
+                }
+            }
+        }
+
+        foreach ($tips as $tip) {
+            if ($out[$tip] !== null) {
+                continue;
+            }
+            $row = $this->getRowConsultaSql(
+                "SELECT Arc_Cod, Arc_Tit, Prv_Cod, Arc_Url, Sol_Cod, Arc_Tip
+                 FROM archivo_proveedores
+                 WHERE Prv_Cod = $prv_cod AND Arc_Tip = '$tip' AND Arc_Url <> ''
+                 ORDER BY Arc_Cod DESC
+                 LIMIT 1;",
+                $this->conexion
+            );
+            if (!empty($row) && !empty($row['Arc_Url'])) {
+                $out[$tip] = $row;
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Guarda/actualiza los 3 documentos por proveedor en la solicitud.
+     * $items: lista de array(Prv_Cod, Arc_Tip, Arc_Tit, Arc_Url)
+     */
+    public function guardarArchivosProveedorSolicitud($sol_cod, $items) {
+        $this->ensureArchivoProveedoresTable();
+        $sol_cod = intval($sol_cod);
+        if ($sol_cod <= 0 || !is_array($items) || empty($items)) {
+            return;
+        }
+        // Tras guardar cotizaciones la conexion suele quedar con autocommit=OFF.
+        // Sin COMMIT explicito los INSERT de esta tabla se pierden al cerrar la sesion.
+        $this->inicio_transaccion($this->conexion);
+        try {
+            $vistos = array();
+            foreach ($items as $it) {
+                if (!is_array($it)) {
+                    continue;
+                }
+                $prv_cod = isset($it['Prv_Cod']) ? intval($it['Prv_Cod']) : 0;
+                $tip = strtoupper(trim(isset($it['Arc_Tip']) ? $it['Arc_Tip'] : ''));
+                $url = trim(isset($it['Arc_Url']) ? $it['Arc_Url'] : '');
+                if ($prv_cod <= 0 || $url === '' || !in_array($tip, $this->tiposArchivoProveedor(), true)) {
+                    continue;
+                }
+                $clave = $prv_cod . '|' . $tip;
+                if (isset($vistos[$clave])) {
+                    continue;
+                }
+                $vistos[$clave] = 1;
+                $tit = trim(isset($it['Arc_Tit']) ? $it['Arc_Tit'] : '');
+                if ($tit === '') {
+                    $tit = $this->tituloArchivoProveedorPorTipo($tip);
+                }
+                $tit_sql = $this->escapeSql($tit);
+                $url_sql = $this->escapeSql($url);
+
+                $exist = $this->getRowConsultaSql(
+                    "SELECT Arc_Cod FROM archivo_proveedores
+                     WHERE Sol_Cod = $sol_cod AND Prv_Cod = $prv_cod AND Arc_Tip = '$tip'
+                     LIMIT 1;",
+                    $this->conexion
+                );
+                if (!empty($exist['Arc_Cod'])) {
+                    $arc_cod = intval($exist['Arc_Cod']);
+                    $ok = $this->grabarv_registros(
+                        "UPDATE archivo_proveedores
+                         SET Arc_Tit = '$tit_sql', Arc_Url = '$url_sql'
+                         WHERE Arc_Cod = $arc_cod;",
+                        $this->conexion
+                    );
+                } else {
+                    $ok = $this->grabarv_registros(
+                        "INSERT INTO archivo_proveedores (Arc_Tit, Prv_Cod, Arc_Url, Sol_Cod, Arc_Tip)
+                         VALUES ('$tit_sql', $prv_cod, '$url_sql', $sol_cod, '$tip')
+                         ON DUPLICATE KEY UPDATE
+                            Arc_Tit = VALUES(Arc_Tit),
+                            Arc_Url = VALUES(Arc_Url);",
+                        $this->conexion
+                    );
+                }
+                if (!$ok) {
+                    throw new Exception('No se pudo guardar archivo de proveedor: ' . $this->getMsgError());
+                }
+            }
+            $this->commit_nomsn($this->conexion);
+        } catch (Exception $e) {
+            $this->rollBack_nomsn($this->conexion);
+            throw $e;
         }
     }
 
@@ -2320,24 +2508,53 @@ class adq_adquisiciones_log extends MysqlDatosContab {
     }
 
     /**
+     * Resuelve Usu_Cod de sesion (SESSION o global de seguridad.php).
+     */
+    private function resolverUsuCodSesion($usu_cod = 0) {
+        $usu_cod = intval($usu_cod);
+        if ($usu_cod > 0) {
+            return $usu_cod;
+        }
+        if (!empty($_SESSION['Ses_Usu_Cod'])) {
+            $usu_cod = intval($_SESSION['Ses_Usu_Cod']);
+            if ($usu_cod > 0) {
+                return $usu_cod;
+            }
+        }
+        if (!empty($GLOBALS['Ses_Usu_Cod'])) {
+            $usu_cod = intval($GLOBALS['Ses_Usu_Cod']);
+            if ($usu_cod > 0) {
+                return $usu_cod;
+            }
+        }
+        return 0;
+    }
+
+    /**
      * Verifica si el usuario puede cargar cotizaciones y/o seleccionar ganadora
      * en la etapa actual (Nod_Cot_Edit y/o Nod_Cot_Sel).
      */
     public function autorizarCotizacionesEtapa($sol_cod, $emp_cod, $usu_cod) {
         $sol_cod = intval($sol_cod);
         $emp_cod = intval($emp_cod);
-        $usu_cod = intval($usu_cod);
-        if ($sol_cod <= 0 || $usu_cod <= 0) {
-            return array('success' => false, 'message' => 'Datos invalidos.');
+        $usu_cod = $this->resolverUsuCodSesion($usu_cod);
+        if ($sol_cod <= 0) {
+            return array('success' => false, 'message' => 'Datos invalidos: no se identifico la solicitud (Sol_Cod).');
+        }
+        if ($usu_cod <= 0) {
+            return array('success' => false, 'message' => 'Datos invalidos: sesion de usuario no valida. Vuelva a iniciar sesion.');
+        }
+        if ($emp_cod <= 0) {
+            $emp_cod = isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : (isset($GLOBALS['Ses_Emp_Cod']) ? intval($GLOBALS['Ses_Emp_Cod']) : 0);
         }
         $wf_mgr = new wf_manager_log(isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null, $this->conexion);
         $wf_mgr->ensureVersioningSchema();
         $row = $this->getRowConsultaSql(
-            "SELECT i.Ins_Cod, i.Nod_Act, n.Nod_Tip, n.Nod_Nom, s.Sol_Est
+            "SELECT i.Ins_Cod, i.Nod_Act, n.Nod_Tip, n.Nod_Nom, s.Sol_Est, s.Emp_Cod
              FROM adq_solicitudes s
              INNER JOIN wf_instancias i ON i.Ins_Ent_Typ = 'adq_solicitudes' AND i.Ins_Ent_Cod = s.Sol_Cod AND i.Ins_Est = 'P'
              INNER JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act
-             WHERE s.Sol_Cod = $sol_cod AND s.Emp_Cod = $emp_cod
+             WHERE s.Sol_Cod = $sol_cod" . ($emp_cod > 0 ? " AND s.Emp_Cod = $emp_cod" : '') . "
              ORDER BY i.Ins_Cod DESC LIMIT 1;",
             $this->conexion
         );
@@ -2354,7 +2571,11 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 ? 'El proceso esta inhabilitado. Solo se permite consultar el seguimiento.'
                 : 'La solicitud ya fue finalizada.');
         }
-        $ctx = $wf_mgr->resolverContextoUsuario($emp_cod);
+        $emp_ctx = $emp_cod > 0 ? $emp_cod : intval($row['Emp_Cod']);
+        $ctx = $wf_mgr->resolverContextoUsuario($emp_ctx);
+        if (intval($ctx['usu_cod']) <= 0) {
+            $ctx['usu_cod'] = $usu_cod;
+        }
         if (!$wf_mgr->puedeResolverInstancia(intval($row['Ins_Cod']), $ctx['usu_cod'], $ctx['dep_cod'], $ctx['perfiles_ids'])) {
             return array('success' => false, 'message' => 'La etapa actual no esta asignada a su usuario.');
         }
@@ -2565,17 +2786,23 @@ class adq_adquisiciones_log extends MysqlDatosContab {
     public function autorizarAvanceEtapa($sol_cod, $emp_cod, $usu_cod) {
         $sol_cod = intval($sol_cod);
         $emp_cod = intval($emp_cod);
-        $usu_cod = intval($usu_cod);
-        if ($sol_cod <= 0 || $usu_cod <= 0) {
-            return array('success' => false, 'message' => 'Datos invalidos.');
+        $usu_cod = $this->resolverUsuCodSesion($usu_cod);
+        if ($sol_cod <= 0) {
+            return array('success' => false, 'message' => 'Datos invalidos: no se identifico la solicitud (Sol_Cod).');
+        }
+        if ($usu_cod <= 0) {
+            return array('success' => false, 'message' => 'Datos invalidos: sesion de usuario no valida. Vuelva a iniciar sesion.');
+        }
+        if ($emp_cod <= 0) {
+            $emp_cod = isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : (isset($GLOBALS['Ses_Emp_Cod']) ? intval($GLOBALS['Ses_Emp_Cod']) : 0);
         }
         $wf_mgr = new wf_manager_log(isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null, $this->conexion);
         $row = $this->getRowConsultaSql(
-            "SELECT i.Ins_Cod, i.Nod_Act, n.Nod_Tip, n.Nod_Nom, s.Sol_Est
+            "SELECT i.Ins_Cod, i.Nod_Act, n.Nod_Tip, n.Nod_Nom, s.Sol_Est, s.Emp_Cod
              FROM adq_solicitudes s
              INNER JOIN wf_instancias i ON i.Ins_Ent_Typ = 'adq_solicitudes' AND i.Ins_Ent_Cod = s.Sol_Cod AND i.Ins_Est = 'P'
              INNER JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act
-             WHERE s.Sol_Cod = $sol_cod AND s.Emp_Cod = $emp_cod
+             WHERE s.Sol_Cod = $sol_cod" . ($emp_cod > 0 ? " AND s.Emp_Cod = $emp_cod" : '') . "
              ORDER BY i.Ins_Cod DESC LIMIT 1;",
             $this->conexion
         );
@@ -2590,7 +2817,11 @@ class adq_adquisiciones_log extends MysqlDatosContab {
                 ? 'El proceso esta inhabilitado. Solo se permite consultar el seguimiento.'
                 : 'La solicitud ya fue finalizada.');
         }
-        $ctx = $wf_mgr->resolverContextoUsuario($emp_cod);
+        $emp_ctx = $emp_cod > 0 ? $emp_cod : intval($row['Emp_Cod']);
+        $ctx = $wf_mgr->resolverContextoUsuario($emp_ctx);
+        if (intval($ctx['usu_cod']) <= 0) {
+            $ctx['usu_cod'] = $usu_cod;
+        }
         if (!$wf_mgr->puedeResolverInstancia(intval($row['Ins_Cod']), $ctx['usu_cod'], $ctx['dep_cod'], $ctx['perfiles_ids'])) {
             return array('success' => false, 'message' => 'La etapa actual no esta asignada a su usuario.');
         }
@@ -3544,8 +3775,8 @@ class adq_adquisiciones_log extends MysqlDatosContab {
      */
     public function guardarAvanceEtapa($sol_cod, $docs_nuevos = array(), $docs_existentes = array(), $sav_eliminar = array()) {
         $sol_cod = intval($sol_cod);
-        $emp_cod = isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : 0;
-        $usu_cod = isset($_SESSION['Ses_Usu_Cod']) ? intval($_SESSION['Ses_Usu_Cod']) : 0;
+        $emp_cod = isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : (isset($GLOBALS['Ses_Emp_Cod']) ? intval($GLOBALS['Ses_Emp_Cod']) : 0);
+        $usu_cod = $this->resolverUsuCodSesion(isset($_SESSION['Ses_Usu_Cod']) ? $_SESSION['Ses_Usu_Cod'] : 0);
 
         $auth = $this->autorizarAvanceEtapa($sol_cod, $emp_cod, $usu_cod);
         if (!$auth['success']) {
@@ -3706,6 +3937,26 @@ class adq_adquisiciones_log extends MysqlDatosContab {
             }
             if ($validas < $min_cot) {
                 $faltantes[] = "Se requieren al menos $min_cot cotizacion(es) con proveedor, monto y PDF (tiene $validas). Puede guardar borrador y completarlas antes de enviar.";
+            }
+            // Documentos obligatorios por cada proveedor de las cotizaciones (RU, CB, RQ, FP).
+            $prvs_docs = array();
+            foreach ($cots as $c) {
+                $p = intval(isset($c['Prv_Cod']) ? $c['Prv_Cod'] : 0);
+                if ($p > 0) {
+                    $prvs_docs[$p] = 1;
+                }
+            }
+            foreach ($prvs_docs as $prv_doc => $_ignore) {
+                $archs = $this->obtenerArchivosProveedor($prv_doc, $sol_cod);
+                $faltan_docs = array();
+                foreach ($this->tiposArchivoProveedor() as $tip) {
+                    if (empty($archs[$tip]) || empty($archs[$tip]['Arc_Url'])) {
+                        $faltan_docs[] = $this->tituloArchivoProveedorPorTipo($tip);
+                    }
+                }
+                if (!empty($faltan_docs)) {
+                    $faltantes[] = 'Proveedor #' . $prv_doc . ' sin documentos obligatorios: ' . implode(', ', $faltan_docs) . '.';
+                }
             }
         }
         if ($validar_ganadora && intval($sol['Sol_Req_Cot']) === 1) {
@@ -6446,24 +6697,34 @@ class adq_adquisiciones_log extends MysqlDatosContab {
     public function autorizarExpedienteFin($sol_cod, $emp_cod, $usu_cod) {
         $sol_cod = intval($sol_cod);
         $emp_cod = intval($emp_cod);
-        $usu_cod = intval($usu_cod);
-        if ($sol_cod <= 0 || $usu_cod <= 0) {
-            return array('success' => false, 'message' => 'Datos invalidos.');
+        $usu_cod = $this->resolverUsuCodSesion($usu_cod);
+        if ($sol_cod <= 0) {
+            return array('success' => false, 'message' => 'Datos invalidos: no se identifico la solicitud (Sol_Cod).');
+        }
+        if ($usu_cod <= 0) {
+            return array('success' => false, 'message' => 'Datos invalidos: sesion de usuario no valida. Vuelva a iniciar sesion.');
+        }
+        if ($emp_cod <= 0) {
+            $emp_cod = isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : (isset($GLOBALS['Ses_Emp_Cod']) ? intval($GLOBALS['Ses_Emp_Cod']) : 0);
         }
         $row = $this->getRowConsultaSql(
             "SELECT i.Ins_Cod, i.Nod_Act, n.Nod_Tip, s.Emp_Cod
              FROM adq_solicitudes s
              INNER JOIN wf_instancias i ON i.Ins_Ent_Typ = 'adq_solicitudes' AND i.Ins_Ent_Cod = s.Sol_Cod AND i.Ins_Est = 'P'
              INNER JOIN wf_nodos n ON n.Nod_Cod = i.Nod_Act
-             WHERE s.Sol_Cod = $sol_cod AND s.Emp_Cod = $emp_cod
+             WHERE s.Sol_Cod = $sol_cod" . ($emp_cod > 0 ? " AND s.Emp_Cod = $emp_cod" : '') . "
              ORDER BY i.Ins_Cod DESC LIMIT 1;",
             $this->conexion
         );
         if (empty($row) || $row['Nod_Tip'] !== 'FIN') {
             return array('success' => false, 'message' => 'La solicitud no esta en etapa de cierre (FIN).');
         }
+        $emp_ctx = $emp_cod > 0 ? $emp_cod : intval($row['Emp_Cod']);
         $wf_mgr = new wf_manager_log(isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null, $this->conexion);
-        $ctx = $wf_mgr->resolverContextoUsuario($emp_cod);
+        $ctx = $wf_mgr->resolverContextoUsuario($emp_ctx);
+        if (intval($ctx['usu_cod']) <= 0) {
+            $ctx['usu_cod'] = $usu_cod;
+        }
         if (!$wf_mgr->puedeResolverInstancia(intval($row['Ins_Cod']), $ctx['usu_cod'], $ctx['dep_cod'], $ctx['perfiles_ids'])) {
             return array('success' => false, 'message' => 'No tiene permisos para cerrar esta solicitud.');
         }
@@ -6507,7 +6768,11 @@ class adq_adquisiciones_log extends MysqlDatosContab {
         $this->ensureSolicitudExpedienteColumns();
         $sol_cod = intval($sol_cod);
         $emp_cod = intval($emp_cod);
-        $auth = $this->autorizarExpedienteFin($sol_cod, $emp_cod, isset($_SESSION['Ses_Usu_Cod']) ? intval($_SESSION['Ses_Usu_Cod']) : 0);
+        if ($emp_cod <= 0) {
+            $emp_cod = isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : (isset($GLOBALS['Ses_Emp_Cod']) ? intval($GLOBALS['Ses_Emp_Cod']) : 0);
+        }
+        $usu_cod = $this->resolverUsuCodSesion(0);
+        $auth = $this->autorizarExpedienteFin($sol_cod, $emp_cod, $usu_cod);
         if (empty($auth['success'])) {
             return $auth;
         }
@@ -6671,7 +6936,11 @@ class adq_adquisiciones_log extends MysqlDatosContab {
     public function firmarExpedienteSolicitud($sol_cod, $emp_cod, $clave, $p12_tmp = '', $usar_empresa = false) {
         $this->ensureSolicitudExpedienteColumns();
         $sol_cod = intval($sol_cod);
-        $auth = $this->autorizarExpedienteFin($sol_cod, $emp_cod, isset($_SESSION['Ses_Usu_Cod']) ? intval($_SESSION['Ses_Usu_Cod']) : 0);
+        $emp_cod = intval($emp_cod);
+        if ($emp_cod <= 0) {
+            $emp_cod = isset($_SESSION['Ses_Emp_Cod']) ? intval($_SESSION['Ses_Emp_Cod']) : (isset($GLOBALS['Ses_Emp_Cod']) ? intval($GLOBALS['Ses_Emp_Cod']) : 0);
+        }
+        $auth = $this->autorizarExpedienteFin($sol_cod, $emp_cod, $this->resolverUsuCodSesion(0));
         if (!$auth['success']) {
             return $auth;
         }

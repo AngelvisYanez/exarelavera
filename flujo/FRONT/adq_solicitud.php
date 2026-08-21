@@ -27,6 +27,7 @@ $ajax_lookup_proveedor = isset($_GET['ajax_lookup_proveedor']) ? $_GET['ajax_loo
 $ajax_save_proveedor = isset($_GET['ajax_save_proveedor'])
     ? $_GET['ajax_save_proveedor']
     : (isset($_POST['ajax_save_proveedor']) ? $_POST['ajax_save_proveedor'] : null);
+$ajax_get_archivos_proveedor = isset($_GET['ajax_get_archivos_proveedor']) ? $_GET['ajax_get_archivos_proveedor'] : null;
 $ajax_get_form = isset($_GET['ajax_get_form']) ? $_GET['ajax_get_form'] : null;
 
 // Ensures solo cuando hacen falta (escritura o render del formulario).
@@ -34,18 +35,24 @@ $necesita_ensure_schema = (
     isset($ajax_save_solicitud) || isset($ajax_save_borrador) || isset($ajax_save_cotizaciones)
     || isset($ajax_save_solicitud_corta) || isset($ajax_completar_solicitud) || isset($ajax_get_form)
     || isset($ajax_get_borrador) || isset($ajax_get_solicitud_cot) || isset($ajax_save_proveedor)
-    || isset($ajax_get_seleccion_usuarios_flujo)
+    || isset($ajax_get_seleccion_usuarios_flujo) || isset($ajax_get_archivos_proveedor)
 );
 if ($necesita_ensure_schema) {
     $obBD_con1->ensureSolicitudTituloColumn();
     $obBD_con1->ensureDecisionValsTable();
     $obBD_con1->ensureSolicitudRubrosTable();
     $obBD_con1->ensureCotizacionesSchema();
+    $obBD_con1->ensureArchivoProveedoresTable();
     $wf_mgr->ensureNotificationSchema();
 }
 
-function adq_validar_y_guardar_pdf_cot($tmp_name, $original_name, $target_dir, $rel_dir) {
+function adq_validar_y_guardar_pdf_cot($tmp_name, $original_name, $target_dir, $rel_dir, $prefijo = 'cot') {
     if (empty($tmp_name) || !is_uploaded_file($tmp_name)) {
+        return null;
+    }
+    $max_bytes = 3 * 1024 * 1024; // 3 MB
+    $size = @filesize($tmp_name);
+    if ($size === false || $size <= 0 || $size > $max_bytes) {
         return null;
     }
     $ext = strtolower(pathinfo($original_name, PATHINFO_EXTENSION));
@@ -62,12 +69,14 @@ function adq_validar_y_guardar_pdf_cot($tmp_name, $original_name, $target_dir, $
             $mime = finfo_file($finfo, $tmp_name);
             finfo_close($finfo);
             $mimes_validos = array('application/pdf', 'application/x-pdf', 'application/octet-stream', 'application/download');
-            if ($mime && !in_array($mime, $mimes_validos, true)) {
-                return null;
-            }
+            // mime no bloquea
         }
     }
-    $unique_name = 'cot_' . uniqid() . '.pdf';
+    $pref = preg_replace('/[^A-Za-z0-9_-]+/', '_', (string)$prefijo);
+    if ($pref === '') {
+        $pref = 'cot';
+    }
+    $unique_name = $pref . '_' . uniqid() . '.pdf';
     $target_file = rtrim($target_dir, '/\\') . DIRECTORY_SEPARATOR . $unique_name;
     if (!move_uploaded_file($tmp_name, $target_file)) {
         return null;
@@ -128,6 +137,230 @@ function adq_normalizar_cot_adjuntos_existentes(&$cotizaciones_existentes, $file
     unset($cot);
 }
 
+/**
+ * Resuelve Prv_Cod de una cotizacion por clave de formulario.
+ */
+function adq_resolver_prv_desde_post($post, $cot_key) {
+    $cot_key = (string)$cot_key;
+    if (isset($post['archivos_prv'][$cot_key]['Prv_Cod'])) {
+        $p = intval($post['archivos_prv'][$cot_key]['Prv_Cod']);
+        if ($p > 0) {
+            return $p;
+        }
+    }
+    if (isset($post['cotizaciones'][$cot_key]['Prv_Cod'])) {
+        $p = intval($post['cotizaciones'][$cot_key]['Prv_Cod']);
+        if ($p > 0) {
+            return $p;
+        }
+    }
+    if (preg_match('/^ex(\d+)$/', $cot_key, $m)) {
+        $sco = $m[1];
+        if (isset($post['cotizaciones_existentes'][$sco]['Prv_Cod'])) {
+            $p = intval($post['cotizaciones_existentes'][$sco]['Prv_Cod']);
+            if ($p > 0) {
+                return $p;
+            }
+        }
+    }
+    // Fallback: primer proveedor de cualquier cotizacion del POST
+    if (!empty($post['cotizaciones']) && is_array($post['cotizaciones'])) {
+        foreach ($post['cotizaciones'] as $cot) {
+            if (is_array($cot) && !empty($cot['Prv_Cod'])) {
+                $p = intval($cot['Prv_Cod']);
+                if ($p > 0) {
+                    return $p;
+                }
+            }
+        }
+    }
+    if (!empty($post['cotizaciones_existentes']) && is_array($post['cotizaciones_existentes'])) {
+        foreach ($post['cotizaciones_existentes'] as $cot) {
+            if (is_array($cot) && !empty($cot['Prv_Cod'])) {
+                $p = intval($cot['Prv_Cod']);
+                if ($p > 0) {
+                    return $p;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+/**
+ * Extrae un archivo anidado de $_FILES['archivos_prv_files'][cot][tip]
+ */
+function adq_extraer_file_prv($fileRoot, $cot_key, $tip) {
+    if (!is_array($fileRoot) || !isset($fileRoot['name'])) {
+        return null;
+    }
+    $cot_key = (string)$cot_key;
+    $tip = (string)$tip;
+    // Estructura normal: name[cot][tip]
+    if (isset($fileRoot['name'][$cot_key]) && is_array($fileRoot['name'][$cot_key])
+        && isset($fileRoot['name'][$cot_key][$tip]) && $fileRoot['name'][$cot_key][$tip] !== '') {
+        return array(
+            'name' => $fileRoot['name'][$cot_key][$tip],
+            'tmp_name' => isset($fileRoot['tmp_name'][$cot_key][$tip]) ? $fileRoot['tmp_name'][$cot_key][$tip] : '',
+            'error' => isset($fileRoot['error'][$cot_key][$tip]) ? intval($fileRoot['error'][$cot_key][$tip]) : UPLOAD_ERR_NO_FILE,
+            'size' => isset($fileRoot['size'][$cot_key][$tip]) ? intval($fileRoot['size'][$cot_key][$tip]) : 0
+        );
+    }
+    // Intentar clave numerica/string equivalente
+    if (is_numeric($cot_key)) {
+        $kInt = intval($cot_key);
+        if (isset($fileRoot['name'][$kInt]) && is_array($fileRoot['name'][$kInt])
+            && isset($fileRoot['name'][$kInt][$tip]) && $fileRoot['name'][$kInt][$tip] !== '') {
+            return array(
+                'name' => $fileRoot['name'][$kInt][$tip],
+                'tmp_name' => isset($fileRoot['tmp_name'][$kInt][$tip]) ? $fileRoot['tmp_name'][$kInt][$tip] : '',
+                'error' => isset($fileRoot['error'][$kInt][$tip]) ? intval($fileRoot['error'][$kInt][$tip]) : UPLOAD_ERR_NO_FILE,
+                'size' => isset($fileRoot['size'][$kInt][$tip]) ? intval($fileRoot['size'][$kInt][$tip]) : 0
+            );
+        }
+    }
+    return null;
+}
+
+/**
+ * Valida que cada proveedor del POST tenga los 4 PDF (archivo nuevo o Arc_Url_Keep).
+ * No escribe en disco.
+ * @return array lista de mensajes de error (vacia si OK)
+ */
+function adq_validar_docs_proveedor_obligatorios_post($post, $files, $obBD_con1) {
+    $errors = array();
+    $meta = isset($post['archivos_prv']) && is_array($post['archivos_prv']) ? $post['archivos_prv'] : array();
+    $fileRoot = isset($files['archivos_prv_files']) ? $files['archivos_prv_files'] : null;
+    if (empty($meta)) {
+        return $errors;
+    }
+    $tips = method_exists($obBD_con1, 'tiposArchivoProveedor')
+        ? $obBD_con1->tiposArchivoProveedor()
+        : array('RU', 'CB', 'RQ', 'FP');
+    foreach ($meta as $cot_key => $porTip) {
+        if (!is_array($porTip)) {
+            $porTip = array();
+        }
+        $prv_cod = adq_resolver_prv_desde_post($post, $cot_key);
+        if ($prv_cod <= 0 && isset($porTip['Prv_Cod'])) {
+            $prv_cod = intval($porTip['Prv_Cod']);
+        }
+        if ($prv_cod <= 0) {
+            continue;
+        }
+        foreach ($tips as $tip) {
+            $slot = (isset($porTip[$tip]) && is_array($porTip[$tip])) ? $porTip[$tip] : array();
+            $tit = isset($slot['Arc_Tit']) ? trim((string)$slot['Arc_Tit']) : '';
+            if ($tit === '') {
+                $tit = $obBD_con1->tituloArchivoProveedorPorTipo($tip);
+            }
+            $tiene = false;
+            $fileInfo = adq_extraer_file_prv($fileRoot, $cot_key, $tip);
+            if ($fileInfo && $fileInfo['error'] === UPLOAD_ERR_OK && !empty($fileInfo['tmp_name'])) {
+                $tiene = true;
+            } elseif (!empty($slot['Arc_Url_Keep'])) {
+                $keep = trim((string)$slot['Arc_Url_Keep']);
+                if ($keep !== '' && strpos($keep, '..') === false) {
+                    $tiene = true;
+                }
+            }
+            if (!$tiene) {
+                $errors[] = 'Debe cargar el documento obligatorio: ' . $tit . '.';
+            }
+        }
+    }
+    return $errors;
+}
+
+/**
+ * Procesa los 4 PDFs por cotizacion/proveedor (RU, CB, RQ, FP).
+ * Guarda en documentos_flujo/{solicitud}/ y arma filas para archivo_proveedores.
+ * @param bool $exigir_completos Si true, exige los 4 tipos por cada proveedor presente.
+ * @return array{items:array,errors:array}
+ */
+function adq_procesar_archivos_proveedor_post($post, $files, $target_dir, $rel_dir, $obBD_con1, $exigir_completos = true) {
+    $out = array();
+    $errors = array();
+    $meta = isset($post['archivos_prv']) && is_array($post['archivos_prv']) ? $post['archivos_prv'] : array();
+    $fileRoot = isset($files['archivos_prv_files']) ? $files['archivos_prv_files'] : null;
+
+    if (empty($meta) && is_array($fileRoot) && isset($fileRoot['name']) && is_array($fileRoot['name'])) {
+        foreach ($fileRoot['name'] as $cot_key => $tips) {
+            $meta[$cot_key] = array();
+        }
+    }
+    if (empty($meta)) {
+        return array('items' => $out, 'errors' => $errors);
+    }
+
+    $tips = method_exists($obBD_con1, 'tiposArchivoProveedor')
+        ? $obBD_con1->tiposArchivoProveedor()
+        : array('RU', 'CB', 'RQ', 'FP');
+    $max_bytes = 3 * 1024 * 1024;
+    foreach ($meta as $cot_key => $porTip) {
+        if (!is_array($porTip)) {
+            $porTip = array();
+        }
+        $prv_cod = adq_resolver_prv_desde_post($post, $cot_key);
+        if ($prv_cod <= 0 && isset($porTip['Prv_Cod'])) {
+            $prv_cod = intval($porTip['Prv_Cod']);
+        }
+        // Sin proveedor no se exigen docs de ese bloque.
+        if ($prv_cod <= 0) {
+            continue;
+        }
+        foreach ($tips as $tip) {
+            $slot = (isset($porTip[$tip]) && is_array($porTip[$tip])) ? $porTip[$tip] : array();
+            $tit = isset($slot['Arc_Tit']) ? trim((string)$slot['Arc_Tit']) : '';
+            if ($tit === '') {
+                $tit = $obBD_con1->tituloArchivoProveedorPorTipo($tip);
+            }
+            $url = '';
+            $fileInfo = adq_extraer_file_prv($fileRoot, $cot_key, $tip);
+            if ($fileInfo) {
+                if ($fileInfo['error'] === UPLOAD_ERR_INI_SIZE || $fileInfo['error'] === UPLOAD_ERR_FORM_SIZE) {
+                    $errors[] = 'El PDF de ' . $tit . ' supera el limite del servidor (revise upload_max_filesize en PHP).';
+                } elseif ($fileInfo['error'] !== UPLOAD_ERR_OK) {
+                    $errors[] = 'No se pudo subir el PDF de ' . $tit . ' (codigo ' . $fileInfo['error'] . ').';
+                } elseif ($fileInfo['size'] > $max_bytes) {
+                    $errors[] = 'El PDF de ' . $tit . ' supera 3 MB.';
+                } else {
+                    $ruta = adq_validar_y_guardar_pdf_cot(
+                        $fileInfo['tmp_name'],
+                        $fileInfo['name'],
+                        $target_dir,
+                        $rel_dir,
+                        'prv_' . strtolower($tip)
+                    );
+                    if ($ruta) {
+                        $url = $ruta;
+                    } else {
+                        $errors[] = 'El archivo de ' . $tit . ' no es un PDF valido o no se pudo guardar en disco.';
+                    }
+                }
+            }
+            if ($url === '' && !empty($slot['Arc_Url_Keep'])) {
+                $keep = trim((string)$slot['Arc_Url_Keep']);
+                if ($keep !== '' && strpos($keep, '..') === false) {
+                    $url = $keep;
+                }
+            }
+            if ($url === '') {
+                if ($exigir_completos) {
+                    $errors[] = 'Debe cargar el documento obligatorio: ' . $tit . '.';
+                }
+                continue;
+            }
+            $out[] = array(
+                'Prv_Cod' => $prv_cod,
+                'Arc_Tip' => $tip,
+                'Arc_Tit' => $tit,
+                'Arc_Url' => $url
+            );
+        }
+    }
+    return array('items' => $out, 'errors' => $errors);
+}
 function adq_to_utf8($s) {
     $s = (string)$s;
     if ($s === '') {
@@ -174,15 +407,15 @@ function adq_render_tabla_rubros($rubros, $seleccionados = array()) {
             if ($pc === '' || isset($proyectos[$pc])) {
                 continue;
             }
-            $nom = trim((isset($rb['Pro_Ide']) && $rb['Pro_Ide'] !== '' ? $rb['Pro_Ide'] . ' — ' : '') . (isset($rb['Pro_Nom']) ? $rb['Pro_Nom'] : ''));
+            $nom = trim((isset($rb['Pro_Ide']) && $rb['Pro_Ide'] !== '' ? $rb['Pro_Ide'] . ' â€” ' : '') . (isset($rb['Pro_Nom']) ? $rb['Pro_Nom'] : ''));
             $proyectos[$pc] = ($nom !== '') ? adq_to_utf8($nom) : ('Proyecto ' . $pc);
         }
         natcasesort($proyectos);
     }
     ?>
     <div class="adq-rubros-box">
-        <label class="form-label fw-bold mb-1">Tipo de rubro presupuestario</label>
-        <p class="text-muted small mb-2">Opcional. Abra el selector para marcar uno o más rubros del presupuesto.</p>
+        <label class="form-label fw-bold mb-1" style="font-size:12px;">Tipo de rubro presupuestario</label>
+        <p class="text-muted small mb-1" style="font-size:11px;line-height:1.35;">Opcional. Abra el selector para marcar uno o más rubros del presupuesto.</p>
         <?php if (!$hay) { ?>
             <div class="alert alert-warning py-2 px-3 mb-0" style="font-size:13px;">No hay rubros de proyecto en <strong>pre_proyecto_detalles</strong> para esta empresa. Cárguelos en Presupuesto &gt; Proyectos (el presupuesto corporativo por partida no alcanza).</div>
         <?php } else { ?>
@@ -247,7 +480,7 @@ function adq_render_tabla_rubros($rubros, $seleccionados = array()) {
                                         $partida = adq_to_utf8(isset($rb['Ppa_Des']) ? $rb['Ppa_Des'] : '');
                                         $monto = isset($rb['Pdp_PreAnual']) ? floatval($rb['Pdp_PreAnual']) : 0;
                                         if ($grupo !== '' && ($last_pro !== $pro || $last_g !== $grupo)) {
-                                            $gtxt = $grupo . ($gdes !== '' ? ' — ' . $gdes : '');
+                                            $gtxt = $grupo . ($gdes !== '' ? ' â€” ' . $gdes : '');
                                             ?>
                                         <tr class="adq-rubro-grupo" data-pro="<?php echo adq_h($pro); ?>" data-grupo="<?php echo adq_h($grupo); ?>">
                                             <td></td>
@@ -256,7 +489,7 @@ function adq_render_tabla_rubros($rubros, $seleccionados = array()) {
                                             <?php
                                         }
                                         if ($sub !== '' && ($last_pro !== $pro || $last_s !== $sub)) {
-                                            $stxt = $sub . ($sdes !== '' ? ' — ' . $sdes : '');
+                                            $stxt = $sub . ($sdes !== '' ? ' â€” ' . $sdes : '');
                                             ?>
                                         <tr class="adq-rubro-sub" data-pro="<?php echo adq_h($pro); ?>" data-grupo="<?php echo adq_h($grupo); ?>" data-sub="<?php echo adq_h($sub); ?>">
                                             <td></td>
@@ -567,7 +800,7 @@ function adq_render_tabla_rubros($rubros, $seleccionados = array()) {
 
 // Verificar acceso a la ventana 'bandeja' y pestaña 'crear_solicitud'
 if (!$wf_mgr->verificarAccesoVentana('bandeja', 'crear_solicitud')) {
-    if (isset($ajax_save_solicitud) || isset($ajax_save_borrador) || isset($ajax_save_cotizaciones) || isset($ajax_save_solicitud_corta) || isset($ajax_completar_solicitud) || isset($ajax_get_trq_details) || isset($ajax_get_borrador) || isset($ajax_get_solicitud_cot) || isset($ajax_search_proveedores) || isset($ajax_lookup_proveedor) || isset($ajax_save_proveedor) || isset($ajax_get_decisiones_flujo) || isset($ajax_get_seleccion_usuarios_flujo)) {
+    if (isset($ajax_save_solicitud) || isset($ajax_save_borrador) || isset($ajax_save_cotizaciones) || isset($ajax_save_solicitud_corta) || isset($ajax_completar_solicitud) || isset($ajax_get_trq_details) || isset($ajax_get_borrador) || isset($ajax_get_solicitud_cot) || isset($ajax_search_proveedores) || isset($ajax_lookup_proveedor) || isset($ajax_save_proveedor) || isset($ajax_get_decisiones_flujo) || isset($ajax_get_seleccion_usuarios_flujo) || isset($ajax_get_archivos_proveedor)) {
         $obBD_con1->echoJson(array('success' => false, 'message' => 'Acceso denegado. No tiene permisos para realizar esta acción.'));
         exit;
     } else {
@@ -577,7 +810,7 @@ if (!$wf_mgr->verificarAccesoVentana('bandeja', 'crear_solicitud')) {
 }
 
 // Redirección segura para navegación directa del navegador (no AJAX)
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['ajax_get_form']) && !isset($_GET['ajax_get_trq_details']) && !isset($_GET['ajax_get_borrador']) && !isset($_GET['ajax_get_solicitud_cot']) && !isset($_GET['ajax_search_proveedores']) && !isset($_GET['ajax_lookup_proveedor']) && !isset($_GET['ajax_save_proveedor']) && !isset($_GET['ajax_save_solicitud']) && !isset($_GET['ajax_save_borrador']) && !isset($_GET['ajax_save_cotizaciones']) && !isset($_GET['ajax_save_solicitud_corta']) && !isset($_GET['ajax_completar_solicitud']) && !isset($_GET['ajax_get_decisiones_flujo']) && !isset($_GET['ajax_get_seleccion_usuarios_flujo'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['ajax_get_form']) && !isset($_GET['ajax_get_trq_details']) && !isset($_GET['ajax_get_borrador']) && !isset($_GET['ajax_get_solicitud_cot']) && !isset($_GET['ajax_search_proveedores']) && !isset($_GET['ajax_lookup_proveedor']) && !isset($_GET['ajax_save_proveedor']) && !isset($_GET['ajax_get_archivos_proveedor']) && !isset($_GET['ajax_save_solicitud']) && !isset($_GET['ajax_save_borrador']) && !isset($_GET['ajax_save_cotizaciones']) && !isset($_GET['ajax_save_solicitud_corta']) && !isset($_GET['ajax_completar_solicitud']) && !isset($_GET['ajax_get_decisiones_flujo']) && !isset($_GET['ajax_get_seleccion_usuarios_flujo'])) {
     header("Location: adq_bandeja.php?tab=crear_solicitud");
     exit;
 }
@@ -724,6 +957,19 @@ if (isset($ajax_save_solicitud) || isset($ajax_save_borrador) || isset($ajax_sav
     $_POST['Emp_Cod'] = $Ses_Emp_Cod;
     $_POST['Suc_Cod'] = $Ses_Suc_Cod;
 
+    // Docs proveedor (RU/CB/RQ/FP) obligatorios antes de persistir cotizaciones/solicitud.
+    if (!empty($_POST['archivos_prv']) && is_array($_POST['archivos_prv'])) {
+        $docs_prv_err = adq_validar_docs_proveedor_obligatorios_post($_POST, $_FILES, $obBD_con1);
+        if (!empty($docs_prv_err)) {
+            $obBD_con1->echoJson(array(
+                'success' => false,
+                'message' => implode(' ', $docs_prv_err),
+                'archivos_prv_warnings' => $docs_prv_err
+            ));
+            exit;
+        }
+    }
+
     if (isset($ajax_save_cotizaciones)) {
         $sol_cod = intval(isset($_POST['Sol_Cod']) ? $_POST['Sol_Cod'] : 0);
         $resp = $obBD_con1->guardarCotizacionesEtapa($sol_cod, $cotizaciones, $cotizaciones_existentes, $cot_eliminar);
@@ -733,6 +979,38 @@ if (isset($ajax_save_solicitud) || isset($ajax_save_borrador) || isset($ajax_sav
         $resp = $obBD_con1->guardarBorrador($_POST, $items, $cotizaciones, $cotizaciones_existentes, $cot_eliminar, $adjuntos_nuevos, $adjuntos_existentes, $adj_eliminar);
     } else {
         $resp = $obBD_con1->guardarSolicitud($_POST, $items, $cotizaciones, $cotizaciones_existentes, $cot_eliminar, $adjuntos_nuevos, $adjuntos_existentes, $adj_eliminar);
+    }
+
+    // Guardar PDFs de proveedor en documentos_flujo/{solicitud}/ y registrar en archivo_proveedores
+    // DESPUES de conocer Sol_Cod (respeta FK a adq_solicitudes).
+    if (!empty($resp['success'])) {
+        $sol_arc = isset($resp['Sol_Cod']) ? intval($resp['Sol_Cod']) : intval(isset($_POST['Sol_Cod']) ? $_POST['Sol_Cod'] : 0);
+        if ($sol_arc > 0) {
+            try {
+                $dir_prv = $obBD_con1->asegurarDirectorioDocumentosSolicitud($sol_arc, $sol_tit_hint);
+                $proc_prv = adq_procesar_archivos_proveedor_post(
+                    $_POST,
+                    $_FILES,
+                    $dir_prv['abs'] . '/',
+                    $dir_prv['rel'],
+                    $obBD_con1,
+                    true
+                );
+                $archivos_prv_guardar = isset($proc_prv['items']) ? $proc_prv['items'] : array();
+                $archivos_prv_errors = isset($proc_prv['errors']) ? $proc_prv['errors'] : array();
+                if (!empty($archivos_prv_errors)) {
+                    $resp['success'] = false;
+                    $resp['message'] = implode(' ', $archivos_prv_errors);
+                    $resp['archivos_prv_warnings'] = $archivos_prv_errors;
+                } elseif (!empty($archivos_prv_guardar)) {
+                    $obBD_con1->guardarArchivosProveedorSolicitud($sol_arc, $archivos_prv_guardar);
+                    $resp['archivos_prv_guardados'] = count($archivos_prv_guardar);
+                }
+            } catch (Exception $e) {
+                $resp['success'] = false;
+                $resp['message'] = $e->getMessage();
+            }
+        }
     }
     // Responder al navegador; notificaciones (WhatsApp/correo) van despues sin contaminar el JSON.
     if (!empty($resp['success']) && class_exists('wf_manager_log') && wf_manager_log::hayNotificacionesPendientes()) {
@@ -778,6 +1056,31 @@ if (isset($ajax_get_solicitud_cot)) {
     $usu_cod = isset($Ses_Usu_Cod) ? intval($Ses_Usu_Cod) : 0;
     $resp = $obBD_con1->obtenerSolicitudParaCotizaciones($sol_cod, $Ses_Emp_Cod, $usu_cod);
     $obBD_con1->echoJson($resp);
+    exit;
+}
+
+if (isset($ajax_get_archivos_proveedor)) {
+    $prv_cod = isset($_GET['Prv_Cod']) ? intval($_GET['Prv_Cod']) : 0;
+    $sol_cod = isset($_GET['Sol_Cod']) ? intval($_GET['Sol_Cod']) : 0;
+    $map = $obBD_con1->obtenerArchivosProveedor($prv_cod, $sol_cod);
+    $files = array();
+    foreach (array('RU', 'CB', 'RQ', 'FP') as $tip) {
+        $row = isset($map[$tip]) ? $map[$tip] : null;
+        $files[$tip] = array(
+            'Arc_Cod' => $row && !empty($row['Arc_Cod']) ? intval($row['Arc_Cod']) : null,
+            'Arc_Tit' => $row && isset($row['Arc_Tit']) && $row['Arc_Tit'] !== ''
+                ? $row['Arc_Tit']
+                : $obBD_con1->tituloArchivoProveedorPorTipo($tip),
+            'Arc_Url' => $row && !empty($row['Arc_Url']) ? $row['Arc_Url'] : '',
+            'Sol_Cod' => $row && !empty($row['Sol_Cod']) ? intval($row['Sol_Cod']) : null,
+            'Arc_Tip' => $tip
+        );
+    }
+    $obBD_con1->echoJson(array(
+        'success' => true,
+        'Prv_Cod' => $prv_cod,
+        'files' => $files
+    ));
     exit;
 }
 
@@ -857,30 +1160,85 @@ if (isset($ajax_get_trq_details)) {
 }
 
 if (isset($ajax_search_proveedores)) {
-    $search = isset($_GET['q']) ? mysqli_real_escape_string($obBD_conexion->conexion, $_GET['q']) : '';
-    $sql = "SELECT p.Prv_Cod, per.Prs_Ced, per.Prs_Nom, per.Prs_Ape, p.Prv_Com 
+    $search = isset($_GET['q']) ? trim($_GET['q']) : '';
+    $search_sql = mysqli_real_escape_string($obBD_conexion->conexion, $search);
+    $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+    if ($page < 1) {
+        $page = 1;
+    }
+    $page_size = isset($_GET['pageSize']) ? intval($_GET['pageSize']) : 15;
+    if ($page_size < 5) {
+        $page_size = 5;
+    }
+    if ($page_size > 50) {
+        $page_size = 50;
+    }
+    $offset = ($page - 1) * $page_size;
+
+    $where = "p.Emp_Cod = $Ses_Emp_Cod AND IFNULL(p.Prv_Est, 'A') <> 'I'";
+    if ($search_sql !== '') {
+        $where .= " AND (per.Prs_Ced LIKE '%$search_sql%' OR per.Prs_Ape LIKE '%$search_sql%' OR per.Prs_Nom LIKE '%$search_sql%' OR p.Prv_Com LIKE '%$search_sql%')";
+    }
+
+    $total_row = $obBD_con1->getRowConsultaSql(
+        "SELECT COUNT(*) AS total
+         FROM proveedore p
+         INNER JOIN persona per ON per.Prs_Cod = p.Prs_Cod
+         WHERE $where;",
+        $obBD_conexion
+    );
+    $total = !empty($total_row['total']) ? intval($total_row['total']) : 0;
+
+    $sql = "SELECT p.Prv_Cod, per.Prs_Ced, per.Prs_Nom, per.Prs_Ape, p.Prv_Com
             FROM proveedore p
             INNER JOIN persona per ON per.Prs_Cod = p.Prs_Cod
-            WHERE p.Emp_Cod = $Ses_Emp_Cod 
-              AND (per.Prs_Ced LIKE '%$search%' OR per.Prs_Ape LIKE '%$search%' OR per.Prs_Nom LIKE '%$search%' OR p.Prv_Com LIKE '%$search%')
+            WHERE $where
             ORDER BY per.Prs_Ape, per.Prs_Nom
-            LIMIT 30;";
+            LIMIT $offset, $page_size;";
     $rows = $obBD_con1->getArrayConsultaSql($sql, $obBD_conexion);
-    
+    if (!is_array($rows)) {
+        $rows = array();
+    }
+
     $results = array();
     foreach ($rows as $r) {
         $nombre = trim($r['Prs_Ape'] . ' ' . $r['Prs_Nom']);
-        if (!empty($r['Prv_Com'])) {
-            $nombre .= " (" . $r['Prv_Com'] . ")";
+        $com = isset($r['Prv_Com']) ? trim($r['Prv_Com']) : '';
+        $ced = isset($r['Prs_Ced']) ? trim($r['Prs_Ced']) : '';
+        $text = $nombre;
+        if ($com !== '') {
+            $text .= ' (' . $com . ')';
         }
-        $nombre .= " - RUC: " . $r['Prs_Ced'];
-        
+        if ($ced !== '') {
+            $text .= ' - RUC: ' . $ced;
+        }
+
         $results[] = array(
             'id' => $r['Prv_Cod'],
-            'text' => $nombre
+            'text' => $text,
+            'Prv_Cod' => $r['Prv_Cod'],
+            'Prs_Ced' => $ced,
+            'Prs_Nom' => isset($r['Prs_Nom']) ? $r['Prs_Nom'] : '',
+            'Prs_Ape' => isset($r['Prs_Ape']) ? $r['Prs_Ape'] : '',
+            'Prv_Com' => $com,
+            'nombre' => $nombre
         );
     }
-    $obBD_con1->echoJson($results);
+
+    // Compatibilidad: si no piden paginado explícito, devolver solo el arreglo (Select2 legado).
+    if (!isset($_GET['page']) && !isset($_GET['pageSize']) && !isset($_GET['paged'])) {
+        $obBD_con1->echoJson($results);
+        exit;
+    }
+
+    $obBD_con1->echoJson(array(
+        'success' => true,
+        'rows' => $results,
+        'total' => $total,
+        'page' => $page,
+        'pageSize' => $page_size,
+        'pages' => $page_size > 0 ? intval(ceil($total / $page_size)) : 1
+    ));
     exit;
 }
 
@@ -1018,48 +1376,48 @@ if (isset($ajax_get_form)) {
     }
     if ($modo_form !== 'completar') {
         ?>
-        <div class="adq-step-card" style="max-width:980px;margin:24px auto;background:#fff;border:1px solid #dbe4ee;border-radius:14px;padding:28px;box-shadow:0 8px 28px rgba(15,43,70,.08);">
-            <div class="d-flex align-items-center mb-4" style="gap:14px;">
-                <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white" style="width:46px;height:46px;font-size:21px;"><i class="bi bi-file-earmark-plus"></i></span>
+        <div class="adq-step-card adq-form-corta" style="max-width:920px;margin:10px auto 16px;background:#fff;border:1px solid #dbe4ee;border-radius:10px;padding:14px 16px 16px;box-shadow:0 4px 14px rgba(15,43,70,.06);">
+            <div class="d-flex align-items-center mb-2" style="gap:10px;">
+                <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white" style="width:34px;height:34px;font-size:15px;flex-shrink:0;"><i class="bi bi-file-earmark-plus"></i></span>
                 <div>
-                    <h4 class="fw-bold text-primary mb-1">Crear solicitud</h4>
-                    <p class="text-muted mb-0">Registre los datos iniciales. El responsable de la primera etapa completará la información técnica y comercial.</p>
+                    <h4 class="fw-bold text-primary mb-0" style="font-size:16px;line-height:1.25;">Crear solicitud</h4>
+                    <p class="text-muted mb-0" style="font-size:12px;line-height:1.35;">Datos iniciales. El responsable de la primera etapa completará lo técnico y comercial.</p>
                 </div>
             </div>
             <form id="frmSolicitudCorta" autocomplete="off">
-                <div class="mb-4">
-                    <label class="form-label fw-bold" for="Sol_Tit_Corto">Nombre de la solicitud *</label>
-                    <input type="text" class="form-control" id="Sol_Tit_Corto" name="Sol_Tit" maxlength="255" required placeholder="EJ. ADQUISICIÓN DE EQUIPOS PARA LABORATORIO" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();">
-                    <small class="text-muted">Use un nombre breve y claro que identifique la necesidad. Se registra siempre en mayúsculas.</small>
+                <div class="mb-2">
+                    <label class="form-label fw-bold mb-1" for="Sol_Tit_Corto" style="font-size:12px;">Nombre de la solicitud *</label>
+                    <input type="text" class="form-control input-sm" id="Sol_Tit_Corto" name="Sol_Tit" maxlength="255" required placeholder="EJ. ADQUISICIÓN DE EQUIPOS PARA LABORATORIO" style="text-transform: uppercase; height:32px; padding:5px 10px; font-size:13px;" oninput="this.value = this.value.toUpperCase();">
+                    <small class="text-muted" style="font-size:11px;">Nombre breve en mayúsculas.</small>
                 </div>
-                <div class="mb-4">
-                    <label class="form-label fw-bold" for="Trq_Cod_Corto">Tipo de requerimiento *</label>
-                    <select class="form-control" id="Trq_Cod_Corto" name="Trq_Cod" required style="width: 100%;">
+                <div class="mb-2">
+                    <label class="form-label fw-bold mb-1" for="Trq_Cod_Corto" style="font-size:12px;">Tipo de requerimiento *</label>
+                    <select class="form-control input-sm" id="Trq_Cod_Corto" name="Trq_Cod" required style="width: 100%; height:32px; padding:4px 10px; font-size:13px;">
                         <option value="">[Seleccione un Tipo]</option>
                         <?php foreach ($tipos_req as $tr) { ?>
-                            <option value="<?php echo intval($tr['Trq_Cod']); ?>"><?php echo htmlspecialchars($tr['Trq_Des'] . ' — ' . $tr['Wfm_Nom'], ENT_QUOTES, 'UTF-8'); ?></option>
+                            <option value="<?php echo intval($tr['Trq_Cod']); ?>"><?php echo htmlspecialchars($tr['Trq_Des'] . ' â€” ' . $tr['Wfm_Nom'], ENT_QUOTES, 'UTF-8'); ?></option>
                         <?php } ?>
                     </select>
-                    <small class="text-muted">Se listan todos los tipos Activos. Puede escribir para buscar. El tipo determina el flujo y el responsable del primer nodo.</small>
+                    <small class="text-muted" style="font-size:11px;">Puede escribir para buscar. Define el flujo y el primer responsable.</small>
                 </div>
-                <div class="mb-4">
+                <div class="mb-2">
                     <?php adq_render_tabla_rubros($rubros_ppto); ?>
                 </div>
-                <div id="panelValorEstimadoCorta" class="mb-4" style="display:none;">
-                    <label class="form-label fw-bold" for="Sol_Val_Est_Corto">Valor estimado *</label>
-                    <input type="number" class="form-control" id="Sol_Val_Est_Corto" min="0.01" step="0.01" placeholder="00.00">
-                    <small class="text-muted">Ingrese el monto estimado de la solicitud.</small>
+                <div id="panelValorEstimadoCorta" class="mb-2" style="display:none;">
+                    <label class="form-label fw-bold mb-1" for="Sol_Val_Est_Corto" style="font-size:12px;">Valor estimado *</label>
+                    <input type="number" class="form-control input-sm" id="Sol_Val_Est_Corto" min="0.01" step="0.01" placeholder="00.00" style="height:32px; padding:5px 10px; font-size:13px;">
+                    <small class="text-muted" style="font-size:11px;">Monto estimado de la solicitud.</small>
                 </div>
-                <div id="panelDecisionesCorta" class="mb-4" style="display:none;">
-                    <div class="p-3 rounded border" style="background:#f8fafc; border-color:#cbd5e1 !important;">
-                        <h6 class="fw-bold text-primary mb-1" style="font-size:13px;"><i class="bi bi-signpost-split"></i> Valores para nodos de decisión</h6>
-                        <p class="text-muted small mb-3 mb-md-2">Este flujo tiene ramas condicionales. Indique los valores para determinar qué tareas se ejecutarán.</p>
+                <div id="panelDecisionesCorta" class="mb-2" style="display:none;">
+                    <div class="rounded border" style="background:#f8fafc; border-color:#cbd5e1 !important; padding:10px 12px;">
+                        <h6 class="fw-bold text-primary mb-1" style="font-size:12px;"><i class="bi bi-signpost-split"></i> Valores para nodos de decisión</h6>
+                        <p class="text-muted small mb-2" style="font-size:11px;">Indique los valores para determinar qué tareas se ejecutarán.</p>
                         <div id="camposDecisionesCorta" class="row g-2"></div>
-                        <div id="previewRamasCorta" class="mt-3"></div>
+                        <div id="previewRamasCorta" class="mt-2"></div>
                     </div>
                 </div>
-                <div class="text-end">
-                    <button type="submit" class="btn btn-primary px-4" id="btnCrearSolicitudCorta"><i class="bi bi-arrow-right-circle"></i> Registrar para iniciar los procesos</button>
+                <div class="text-end" style="margin-top:10px;">
+                    <button type="submit" class="btn btn-primary btn-sm px-3" id="btnCrearSolicitudCorta"><i class="bi bi-arrow-right-circle"></i> Registrar para iniciar los procesos</button>
                 </div>
             </form>
         </div>
@@ -1124,7 +1482,7 @@ if (isset($ajax_get_form)) {
                     var destino = rama ? (rama.Destino_Nom || ('Nodo ' + rama.Nod_Des)) : '(sin destino)';
                     var texto = rama ? rama.texto : 'Sin coincidencia';
                     html += '<li><span class="fw-bold">' + $('<div>').text(dec.Nod_Nom).html() + '</span>: ' +
-                        $('<div>').text(texto).html() + ' → <em>' + $('<div>').text(destino).html() + '</em></li>';
+                        $('<div>').text(texto).html() + ' â†' <em>' + $('<div>').text(destino).html() + '</em></li>';
                 });
                 html += '</ul></div>';
                 $box.html(html);
@@ -1309,10 +1667,10 @@ if (isset($ajax_get_form)) {
         .adq-step-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 24px 28px;
-            margin-bottom: 24px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
             position: relative;
         }
         .adq-step-badge {
@@ -1330,13 +1688,13 @@ if (isset($ajax_get_form)) {
             box-shadow: 0 2px 5px rgba(30,64,175,0.3);
         }
         .adq-step-title {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
             color: #1e293b;
-            margin-top: 8px;
-            margin-bottom: 20px;
+            margin-top: 4px;
+            margin-bottom: 10px;
             border-bottom: 1px solid #f1f5f9;
-            padding-bottom: 10px;
+            padding-bottom: 6px;
         }
         .adq-step-title i {
             color: #3b82f6;
@@ -1352,7 +1710,7 @@ if (isset($ajax_get_form)) {
             font-weight: 700;
             font-size: 12px;
             color: #0f172a;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             padding: 0;
             display: block;
         }
@@ -1377,11 +1735,11 @@ if (isset($ajax_get_form)) {
             margin-bottom: 4px;
         }
         .adq-field-block {
-            margin-bottom: 22px;
+            margin-bottom: 10px;
         }
         .adq-step-card > .row > [class*="col-"] {
-            padding-left: 14px;
-            padding-right: 14px;
+            padding-left: 8px;
+            padding-right: 8px;
         }
         .adq-resp-summary {
             margin-top: 22px;
@@ -1594,7 +1952,7 @@ if (isset($ajax_get_form)) {
         }
         .adq-row-textareas textarea.form-control-adq {
             width: 100%;
-            min-height: 96px;
+            min-height: 72px;
             resize: vertical;
         }
         #divProveedorSugerido {
@@ -1604,18 +1962,18 @@ if (isset($ajax_get_form)) {
             font-size: 13px;
         }
         .form-control-adq {
-            border-radius: 6px;
+            border-radius: 5px;
             border: 1px solid #cbd5e1;
-            padding: 10px 14px;
+            padding: 6px 10px;
             font-size: 13px;
-            line-height: 1.4;
+            line-height: 1.35;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
         select.form-control-adq {
-            min-height: 42px;
+            min-height: 32px;
             height: auto;
-            padding: 10px 32px 10px 14px;
-            line-height: 1.4;
+            padding: 5px 28px 5px 10px;
+            line-height: 1.35;
         }
         .adq-trq-select {
             width: 100%;
@@ -1630,7 +1988,7 @@ if (isset($ajax_get_form)) {
         }
         .form-control-adq:focus {
             border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+            box-shadow: 0 0 0 2px rgba(59,130,246,0.12);
             outline: none;
         }
         .table-items-adq {
@@ -1643,59 +2001,59 @@ if (isset($ajax_get_form)) {
             text-transform: uppercase;
             font-size: 11px;
             letter-spacing: 0.03em;
-            padding: 12px 14px !important;
+            padding: 6px 8px !important;
         }
         .table-items-adq td {
-            padding: 10px 14px !important;
+            padding: 5px 8px !important;
             vertical-align: middle !important;
         }
         .lbl-total-box {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 12px 20px;
+            border-radius: 6px;
+            padding: 8px 12px;
             display: inline-block;
         }
         .adq-solicitud-form {
             width: 100%;
             max-width: none;
             margin: 0;
-            padding: 8px 6px 32px;
+            padding: 6px 8px 16px;
             box-sizing: border-box;
         }
         .adq-cot-headline {
             display: flex;
             align-items: flex-start;
             justify-content: space-between;
-            gap: 14px;
-            margin-bottom: 20px;
-            padding: 16px 20px;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 10px 12px;
             background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
             border: 1px solid #bfdbfe;
-            border-radius: 10px;
+            border-radius: 8px;
         }
         .adq-cot-headline .headline-title {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
             color: #1e3a8a;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
         .adq-cot-headline .headline-copy {
-            font-size: 12px;
+            font-size: 11px;
             color: #64748b;
             margin: 0;
         }
         .adq-cot-headline .headline-icon {
-            width: 42px;
-            height: 42px;
+            width: 32px;
+            height: 32px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 12px;
+            border-radius: 8px;
             background: #1d4ed8;
             color: #ffffff;
-            font-size: 20px;
-            box-shadow: 0 8px 18px rgba(29, 78, 216, 0.2);
+            font-size: 15px;
+            box-shadow: 0 4px 10px rgba(29, 78, 216, 0.18);
             flex: 0 0 auto;
         }
         .adq-cot-card {
@@ -1760,10 +2118,38 @@ if (isset($ajax_get_form)) {
             gap: 8px;
             align-items: center;
         }
-        .adq-cot-provider-row .select-wrap {
+        .adq-cot-provider-row .select-wrap,
+        .adq-cot-provider-row .adq-prv-picker {
             flex: 1 1 auto;
             min-width: 0;
             max-width: 100%;
+        }
+        .adq-prv-picker-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            width: 100%;
+        }
+        .adq-prv-picker-row .adq-prv-txt {
+            flex: 1;
+            min-width: 0;
+            background: #fff;
+            cursor: pointer;
+        }
+        .adq-prv-picker-row .btn {
+            height: 32px;
+            min-width: 32px;
+            padding: 0 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+        }
+        #tblBuscarProveedor tbody tr.adq-prv-row {
+            cursor: pointer;
+        }
+        #tblBuscarProveedor tbody tr.adq-prv-row:hover {
+            background: #eff6ff;
         }
         .adq-cot-add-provider {
             width: 40px;
@@ -2004,7 +2390,8 @@ if (isset($ajax_get_form)) {
             align-items: center;
             gap: 8px;
         }
-        .adq-cot-provider-row .select-wrap {
+        .adq-cot-provider-row .select-wrap,
+        .adq-cot-provider-row .adq-prv-picker {
             flex: 1 1 auto;
             min-width: 0;
         }
@@ -2092,8 +2479,34 @@ if (isset($ajax_get_form)) {
             margin-top: 8px;
         }
         .adq-proforma-remove {
-            color: #dc2626;
-            padding: 4px 6px;
+            color: #ffffff !important;
+            background: #dc2626 !important;
+            border: 1px solid #b91c1c !important;
+            border-radius: 6px !important;
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            padding: 0 !important;
+            line-height: 1;
+            text-decoration: none !important;
+            box-shadow: 0 1px 3px rgba(185, 28, 28, 0.35);
+            opacity: 1 !important;
+        }
+        .adq-proforma-remove i {
+            color: #ffffff !important;
+            font-size: 14px !important;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .adq-proforma-remove:hover,
+        .adq-proforma-remove:focus {
+            color: #ffffff !important;
+            background: #b91c1c !important;
+            border-color: #991b1b !important;
+            text-decoration: none !important;
         }
         .adq-btn-add-pdf-cot {
             min-height: 34px;
@@ -2306,6 +2719,530 @@ if (isset($ajax_get_form)) {
                 min-width: 0;
             }
         }
+        /* Compacto solo en seccion cotizaciones */
+        #divCotizaciones .adq-cot-headline {
+            margin-bottom: 8px;
+            padding: 8px 10px;
+            gap: 8px;
+        }
+        #divCotizaciones .adq-cot-headline .headline-title {
+            font-size: 12px;
+            margin-bottom: 1px;
+        }
+        #divCotizaciones .adq-cot-headline .headline-copy {
+            font-size: 11px;
+            line-height: 1.3;
+        }
+        #divCotizaciones .adq-cot-headline .headline-icon {
+            width: 28px;
+            height: 28px;
+            font-size: 13px;
+            border-radius: 6px;
+        }
+        #divCotizaciones #cotizacionesAlert {
+            padding: 6px 10px !important;
+            margin-bottom: 8px !important;
+            font-size: 11px !important;
+            line-height: 1.35 !important;
+        }
+        #divCotizaciones .adq-cot-card,
+        #divCotizaciones .adq-cot-card-inline {
+            padding: 8px 10px;
+            border-radius: 6px;
+        }
+        #divCotizaciones .adq-cot-label {
+            font-size: 11px;
+            margin-bottom: 3px;
+            padding: 0;
+        }
+        #divCotizaciones .adq-cot-control,
+        #divCotizaciones .adq-prv-txt,
+        #divCotizaciones .adq-proforma-row input.form-control,
+        #divCotizaciones .adq-proforma-row textarea.form-control,
+        #divCotizaciones .adq-proforma-row .form-control {
+            min-height: 28px !important;
+            height: 28px;
+            padding: 3px 8px !important;
+            font-size: 12px !important;
+            line-height: 1.3;
+            border-radius: 4px;
+        }
+        #divCotizaciones .adq-proforma-row textarea.form-control {
+            height: auto;
+            min-height: 48px !important;
+        }
+        #divCotizaciones .adq-cot-split-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 10px 12px;
+            width: 100%;
+        }
+        #divCotizaciones .adq-cot-col-prov {
+            flex: 0 0 calc(50% - 6px);
+            max-width: calc(50% - 6px);
+            width: calc(50% - 6px);
+            min-width: 0;
+            margin-bottom: 0;
+            box-sizing: border-box;
+        }
+        #divCotizaciones .adq-cot-col-proformas,
+        #divCotizaciones .adq-cot-pdf-section {
+            flex: 0 0 calc(50% - 6px);
+            max-width: calc(50% - 6px);
+            width: calc(50% - 6px);
+            min-width: 0;
+            margin-top: 0;
+            padding-top: 0;
+            border-top: none;
+            box-sizing: border-box;
+        }
+        #divCotizaciones .adq-cot-top-prov {
+            flex: 0 0 100%;
+            max-width: 100%;
+            min-width: 0;
+            width: 100%;
+        }
+        #divCotizaciones .adq-cot-provider-row .adq-prv-picker {
+            flex: 1 1 auto;
+            max-width: 100%;
+            width: 100%;
+        }
+        #divCotizaciones .adq-prv-picker-row .adq-prv-txt {
+            flex: 1 1 auto;
+            max-width: 100%;
+            width: 100%;
+        }
+        #divCotizaciones .adq-cot-provider-row {
+            gap: 4px;
+            max-width: 100%;
+        }
+        #divCotizaciones .adq-prv-docs {
+            margin-top: 8px;
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: #f8fafc;
+        }
+        #divCotizaciones .adq-prv-docs-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        #divCotizaciones .adq-prv-docs-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        #divCotizaciones .adq-prv-arc-slot {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+            width: 100%;
+        }
+        #divCotizaciones .adq-prv-arc-label {
+            flex: 0 0 78px;
+            width: 78px;
+            max-width: 78px;
+            margin: 0 !important;
+            height: auto !important;
+            line-height: 1.15 !important;
+            font-size: 10px !important;
+            white-space: normal;
+            color: #475569;
+        }
+        #divCotizaciones .adq-prv-arc-slot .adq-file-upload {
+            flex: 1 1 auto;
+            min-width: 0;
+            width: auto !important;
+            max-width: none !important;
+        }
+        #divCotizaciones .adq-prv-arc-actions {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            min-width: 28px;
+            justify-content: flex-end;
+        }
+        #divCotizaciones .adq-prv-arc-link {
+            padding: 0 6px !important;
+            height: 26px !important;
+            min-height: 26px !important;
+            max-height: 26px !important;
+            font-size: 10px !important;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+        }
+        #divCotizaciones .adq-prv-docs .adq-file-upload-compact .adq-file-drop {
+            height: 26px !important;
+            min-height: 26px !important;
+            max-height: 26px !important;
+            padding: 0 6px !important;
+            width: 100%;
+        }
+        #divCotizaciones .adq-prv-docs .adq-file-main {
+            font-size: 10px;
+        }
+        #divCotizaciones .adq-file-max {
+            color: #64748b;
+            font-weight: 600;
+            font-size: 9px;
+            white-space: nowrap;
+        }
+        #divCotizaciones .adq-proforma-pdf {
+            /* misma proporcion igualitaria (20%) */
+        }
+        @media (max-width: 767px) {
+            #divCotizaciones .adq-cot-col-prov,
+            #divCotizaciones .adq-cot-col-proformas,
+            #divCotizaciones .adq-cot-pdf-section {
+                flex: 0 0 100%;
+                max-width: 100%;
+                width: 100%;
+            }
+            #divCotizaciones .adq-cot-col-proformas {
+                margin-top: 6px;
+                padding-top: 6px;
+                border-top: 1px solid #e2e8f0;
+            }
+        }
+        #divCotizaciones .adq-prv-picker-row {
+            gap: 4px;
+        }
+        #divCotizaciones .adq-prv-picker-row .btn,
+        #divCotizaciones .adq-cot-add-provider,
+        #divCotizaciones .adq-cot-remove,
+        #divCotizaciones .adq-proforma-remove,
+        #divCotizaciones .adq-btn-add-pdf-cot,
+        #divCotizaciones .adq-btn-add-cot {
+            height: 28px !important;
+            min-height: 28px !important;
+            min-width: 28px;
+            width: auto;
+            padding: 0 8px !important;
+            font-size: 11px !important;
+            line-height: 1;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #divCotizaciones .adq-cot-add-provider,
+        #divCotizaciones .adq-prv-btn-buscar,
+        #divCotizaciones .adq-prv-btn-limpiar {
+            width: 28px !important;
+            padding: 0 !important;
+        }
+        #divCotizaciones .adq-cot-remove,
+        #divCotizaciones .adq-proforma-remove {
+            width: 28px;
+            padding: 0 !important;
+            font-size: 12px !important;
+        }
+        #divCotizaciones .adq-proformas-head {
+            margin-bottom: 4px;
+            gap: 6px;
+        }
+        #divCotizaciones .adq-proformas-list {
+            gap: 6px;
+        }
+        #divCotizaciones .adq-proforma-row {
+            padding: 6px 8px;
+            border-radius: 6px;
+        }
+        #divCotizaciones .adq-proforma-fields {
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: flex-end;
+            gap: 8px;
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+        }
+        #divCotizaciones .adq-proforma-fields > .adq-cot-field,
+        #divCotizaciones .adq-proforma-fields > .adq-proforma-pdf,
+        #divCotizaciones .adq-proforma-fields > .adq-proforma-actions {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            margin-bottom: 0;
+            min-width: 0;
+            flex: 1 1 0 !important;
+            width: auto !important;
+            max-width: none !important;
+            box-sizing: border-box;
+        }
+        #divCotizaciones .adq-proforma-fields .adq-cot-label {
+            height: 14px;
+            line-height: 14px;
+            margin-bottom: 2px;
+            overflow: hidden;
+            white-space: nowrap;
+            font-size: 10px;
+            text-align: left;
+        }
+        #divCotizaciones .adq-proforma-pdf .adq-file-upload,
+        #divCotizaciones .adq-proforma-pdf .adq-file-drop {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        #divCotizaciones .adq-proforma-fields > .adq-proforma-pdf {
+            flex: 3.24 1 0 !important;
+            min-width: 162px !important;
+            max-width: none !important;
+        }
+        #divCotizaciones .adq-proforma-fields > .adq-proforma-iva {
+            flex: 0 0 32px !important;
+            width: 32px !important;
+            max-width: 32px !important;
+            min-width: 32px !important;
+            align-items: center;
+        }
+        #divCotizaciones .adq-proforma-fields > .adq-proforma-iva .adq-cot-label {
+            text-align: center;
+            width: 100%;
+            font-size: 9px;
+        }
+        #divCotizaciones .adq-proforma-iva .adq-cot-iva-check {
+            width: 100%;
+            justify-content: center;
+            margin: 0;
+            padding: 0;
+        }
+        #divCotizaciones .adq-proforma-iva .chk-cot-iva {
+            margin: 0 !important;
+            float: none;
+        }
+        #divCotizaciones .adq-proforma-fields > .adq-proforma-val,
+        #divCotizaciones .adq-proforma-fields > .adq-proforma-total {
+            flex: 1 1 0 !important;
+        }
+        #divCotizaciones .adq-proforma-fields > .adq-proforma-actions {
+            flex: 0 0 auto !important;
+            min-width: 118px !important;
+        }
+        #divCotizaciones .adq-proforma-actions {
+            margin-left: 0 !important;
+            flex-direction: row !important;
+            align-items: flex-end !important;
+            justify-content: flex-end !important;
+            height: auto;
+            padding-bottom: 0;
+            overflow: visible !important;
+        }
+        #divCotizaciones .adq-proforma-actions-row {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+            height: 28px;
+            width: 100%;
+            overflow: visible;
+        }
+        #divCotizaciones .adq-proforma-actions .adq-cot-winner {
+            margin: 0;
+            height: 28px;
+            min-height: 28px;
+            max-height: 28px;
+            display: inline-flex;
+            align-items: center;
+            white-space: nowrap;
+            padding: 0 4px !important;
+            flex: 0 0 auto;
+            min-width: 0;
+            max-width: none;
+            overflow: visible;
+        }
+        #divCotizaciones .adq-proforma-actions .adq-proforma-remove {
+            flex: 0 0 28px !important;
+            width: 28px !important;
+            min-width: 28px !important;
+            max-width: 28px !important;
+            height: 28px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            position: relative;
+            z-index: 2;
+            flex-shrink: 0 !important;
+            color: #ffffff !important;
+            background: #dc2626 !important;
+            border: 1px solid #b91c1c !important;
+            border-radius: 6px !important;
+            box-shadow: 0 1px 3px rgba(185, 28, 28, 0.35);
+            text-decoration: none !important;
+        }
+        #divCotizaciones .adq-proforma-actions .adq-proforma-remove i {
+            color: #ffffff !important;
+            font-size: 14px !important;
+            line-height: 1;
+        }
+        #divCotizaciones .adq-proforma-actions .adq-proforma-remove:hover,
+        #divCotizaciones .adq-proforma-actions .adq-proforma-remove:focus {
+            color: #ffffff !important;
+            background: #b91c1c !important;
+            border-color: #991b1b !important;
+        }
+        #divCotizaciones .adq-cot-winner-text {
+            font-size: 9px;
+        }
+        #divCotizaciones .adq-proforma-val input,
+        #divCotizaciones .adq-proforma-total .adq-cot-total-box,
+        #divCotizaciones .adq-proforma-iva .adq-cot-iva-check {
+            width: 100%;
+        }
+        #divCotizaciones .adq-cot-control,
+        #divCotizaciones .adq-prv-txt,
+        #divCotizaciones .adq-proforma-row input.form-control,
+        #divCotizaciones .adq-proforma-row .form-control,
+        #divCotizaciones .adq-cot-total-box,
+        #divCotizaciones .adq-file-drop,
+        #divCotizaciones .adq-proforma-iva .adq-cot-iva-check,
+        #divCotizaciones .adq-prv-picker-row .btn,
+        #divCotizaciones .adq-cot-add-provider,
+        #divCotizaciones .adq-cot-remove,
+        #divCotizaciones .adq-proforma-remove,
+        #divCotizaciones .adq-btn-add-pdf-cot,
+        #divCotizaciones .adq-cot-winner {
+            height: 28px !important;
+            min-height: 28px !important;
+            max-height: 28px !important;
+            box-sizing: border-box;
+        }
+        #divCotizaciones .adq-proforma-row textarea.form-control {
+            height: auto !important;
+            min-height: 48px !important;
+            max-height: none !important;
+        }
+        #divCotizaciones .adq-file-drop {
+            gap: 6px;
+            padding: 0 8px !important;
+            display: flex;
+            align-items: center;
+        }
+        #divCotizaciones .adq-file-icon {
+            width: 18px;
+            height: 18px;
+            font-size: 11px;
+            flex: 0 0 auto;
+        }
+        #divCotizaciones .adq-prv-picker-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            width: 100%;
+        }
+        #divCotizaciones .adq-cot-provider-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            max-width: 100%;
+        }
+        #divCotizaciones .adq-cot-col-prov .adq-cot-label,
+        #divCotizaciones .adq-proformas-head .adq-cot-label {
+            height: 16px;
+            line-height: 16px;
+            margin-bottom: 2px;
+        }
+        #divCotizaciones .adq-proformas-head {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+            gap: 6px;
+            min-height: 28px;
+        }
+        #divCotizaciones .adq-cot-split-row {
+            align-items: stretch;
+        }
+        #divCotizaciones .adq-cot-col-prov,
+        #divCotizaciones .adq-cot-col-proformas {
+            display: flex;
+            flex-direction: column;
+        }
+        #divCotizaciones .adq-proformas-list {
+            flex: 1;
+        }
+        #divCotizaciones .adq-proforma-jus {
+            margin-top: 4px;
+        }
+        #divCotizaciones .adq-cot-pdf-section {
+            margin-top: 0;
+            padding-top: 0;
+        }
+        #divCotizaciones .adq-file-drop {
+            min-height: 34px;
+            gap: 8px;
+            padding: 4px 8px;
+            border-width: 1px;
+            border-radius: 5px;
+        }
+        #divCotizaciones .adq-file-icon {
+            width: 24px;
+            height: 24px;
+            font-size: 12px;
+            border-radius: 5px;
+        }
+        #divCotizaciones .adq-file-main {
+            font-size: 11px;
+            white-space: nowrap;
+        }
+        #divCotizaciones .adq-file-req {
+            font-weight: 600;
+            color: #b45309;
+            margin-left: 2px;
+        }
+        #divCotizaciones .adq-file-texts {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        #divCotizaciones .adq-file-upload-compact .adq-file-main {
+            display: inline;
+        }
+        #divCotizaciones .adq-file-name {
+            font-size: 10px;
+            margin-top: 0;
+        }
+        #divCotizaciones .adq-pdf-guardado-item {
+            padding: 4px 6px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            font-size: 11px;
+            gap: 6px;
+        }
+        #divCotizaciones .adq-cot-winner {
+            min-height: 28px;
+            padding: 2px 6px;
+            font-size: 11px;
+            gap: 4px;
+            border-radius: 4px;
+        }
+        #divCotizaciones .adq-cot-winner .chk-cot-sel {
+            width: 14px;
+            height: 14px;
+        }
+        #divCotizaciones .adq-cot-winner-text {
+            font-size: 10px;
+        }
+        #divCotizaciones #divBtnAddCot {
+            margin-top: 8px !important;
+        }
+        #divCotizaciones .adq-btn-add-cot {
+            padding: 0 10px !important;
+        }
+        #divCotizaciones .adq-cot-main-row {
+            gap: 6px 8px;
+        }
         .adq-cot-card .select2-container--default .select2-selection--single {
             height: 44px !important;
             border-radius: 8px;
@@ -2411,18 +3348,18 @@ if (isset($ajax_get_form)) {
                                 $wfm_nom = htmlspecialchars($tr['Wfm_Nom'], ENT_QUOTES, 'UTF-8');
                                 $trq_des = htmlspecialchars($tr['Trq_Des'], ENT_QUOTES, 'UTF-8');
                                 ?>
-                                <option value="<?php echo $tr['Trq_Cod']; ?>"><?php echo $trq_des; ?> — <?php echo $wfm_nom; ?></option>
+                                <option value="<?php echo $tr['Trq_Cod']; ?>"><?php echo $trq_des; ?> â€” <?php echo $wfm_nom; ?></option>
                             <?php } ?>
                         </select>
                         <span class="adq-field-hint">Determina el flujo de aprobaciones que seguirá la solicitud.</span>
                     </div>
 
-                    <div class="col-12 adq-field-block">
+                    <div class="col-12 col-md-6 adq-field-block">
                         <?php adq_render_tabla_rubros($rubros_ppto); ?>
                     </div>
 
-                    <!-- Prioridad -->
-                    <div class="col-12 col-md-6 adq-field-block">
+                    <!-- Prioridad + checks SLA/presupuesto (columna izquierda) -->
+                    <div class="col-12 col-md-6 adq-field-block" id="divPrioridadYChecks">
                         <label class="form-label-req" for="Sol_Pri">Prioridad de la Compra *</label>
                         <select class="form-control form-control-adq" id="Sol_Pri" name="Sol_Pri" required>
                             <option value="BAJA">Baja</option>
@@ -2430,6 +3367,28 @@ if (isset($ajax_get_form)) {
                             <option value="ALTA">Alta</option>
                             <option value="URGENTE">Urgente</option>
                         </select>
+                        <div class="adq-checks-prioridad mt-3" id="divChecksSolicitudIzq" style="display: none;">
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox" id="Sol_Req_Pre" name="Sol_Req_Pre" value="1" onchange="syncReqConfigFromForm()">
+                                <label class="form-check-label small" for="Sol_Req_Pre">Verificar disponibilidad presupuestaria</label>
+                            </div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox" id="Sol_Req_Adj" name="Sol_Req_Adj" value="1" onchange="syncReqConfigFromForm()">
+                                <label class="form-check-label small" for="Sol_Req_Adj">Archivos adjuntos de soporte (opcionales)</label>
+                            </div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox" id="Sol_Req_Pro" name="Sol_Req_Pro" value="1" onchange="toggleProveedorSugerido(); syncReqConfigFromForm();">
+                                <label class="form-check-label small" for="Sol_Req_Pro">Proveedor sugerido obligatorio</label>
+                            </div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox" id="Sol_Define_Sla" name="Sol_Define_Sla" value="1" onchange="toggleSlaDias(); syncReqConfigFromForm();">
+                                <label class="form-check-label small" for="Sol_Define_Sla">Definir tiempo estimado (SLA)</label>
+                            </div>
+                            <div class="ms-4" id="divSolTiempoEst" style="display: none;">
+                                <label class="form-label-req small mb-1">Dias estimados de resolucion</label>
+                                <input type="number" class="form-control form-control-sm form-control-adq" id="Sol_Tiempo_Est" name="Sol_Tiempo_Est" min="1" style="width: 120px;" onchange="syncReqConfigFromForm()">
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Centro de costo (oculto) -->
@@ -2443,53 +3402,27 @@ if (isset($ajax_get_form)) {
                         </select>
                     </div>
 
-                    <!-- Requisitos de esta solicitud -->
-                    <div class="col-12 adq-field-block" id="divRequisitosSolicitud" style="display: none;">
-                        <div class="p-4 rounded border" style="background: #f8fafc; border-color: #e2e8f0 !important;">
+                    <!-- Requisitos de esta solicitud (factura / cotizaciones) -->
+                    <div class="col-12 col-md-6 adq-field-block" id="divRequisitosSolicitud" style="display: none;">
+                        <div class="p-3 rounded border h-100" style="background: #f8fafc; border-color: #e2e8f0 !important;">
                             <h6 class="fw-bold text-primary mb-2" style="font-size: 13px;"><i class="bi bi-sliders"></i> Requisitos de esta solicitud</h6>
                             <p class="adq-field-hint mb-3">Se precargan desde el tipo seleccionado. Puede ajustarlos para este caso sin crear otro tipo de requerimiento.</p>
-                            <div class="row g-2">
-                                <div class="col-md-6">
-                                    <div class="form-check mb-1">
-                                        <input class="form-check-input" type="checkbox" id="Sol_Req_Fac" name="Sol_Req_Fac" value="1" onchange="syncReqConfigFromForm()">
-                                        <label class="form-check-label small" for="Sol_Req_Fac">Factura de compra al cierre</label>
-                                    </div>
-                                    <div class="form-check mb-1">
-                                        <input class="form-check-input" type="checkbox" id="Sol_Per_Cie" name="Sol_Per_Cie" value="1" onchange="syncReqConfigFromForm()">
-                                        <label class="form-check-label small" for="Sol_Per_Cie">Permitir cierre parcial de items</label>
-                                    </div>
-                                    <div class="form-check mb-1">
-                                        <input class="form-check-input" type="checkbox" id="Sol_Req_Cot" name="Sol_Req_Cot" value="1" onchange="toggleMinCotizaciones(); syncReqConfigFromForm(); aplicarReglasCotizaciones();">
-                                        <label class="form-check-label small" for="Sol_Req_Cot">Cotizaciones de sustento obligatorias</label>
-                                    </div>
-                                    <div class="ms-4 mb-2" id="divSolMinCot" style="display: none;">
-                                        <label class="form-label-req small mb-1">Minimo de cotizaciones</label>
-                                        <input type="number" class="form-control form-control-sm form-control-adq" id="Sol_Min_Cot" name="Sol_Min_Cot" min="1" value="1" style="width: 100px; background-color: #ffffff; cursor: not-allowed;" readonly title="Este valor lo define el tipo de requerimiento y no puede modificarse">
-                                        <small class="text-muted d-block mt-1" style="font-size: 10px;"><i class="bi bi-lock-fill"></i> Definido por el tipo de requerimiento</small>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-check mb-1">
-                                        <input class="form-check-input" type="checkbox" id="Sol_Req_Pre" name="Sol_Req_Pre" value="1" onchange="syncReqConfigFromForm()">
-                                        <label class="form-check-label small" for="Sol_Req_Pre">Verificar disponibilidad presupuestaria</label>
-                                    </div>
-                                    <div class="form-check mb-1">
-                                        <input class="form-check-input" type="checkbox" id="Sol_Req_Adj" name="Sol_Req_Adj" value="1" onchange="syncReqConfigFromForm()">
-                                        <label class="form-check-label small" for="Sol_Req_Adj">Archivos adjuntos de soporte (opcionales)</label>
-                                    </div>
-                                    <div class="form-check mb-1">
-                                        <input class="form-check-input" type="checkbox" id="Sol_Req_Pro" name="Sol_Req_Pro" value="1" onchange="toggleProveedorSugerido(); syncReqConfigFromForm();">
-                                        <label class="form-check-label small" for="Sol_Req_Pro">Proveedor sugerido obligatorio</label>
-                                    </div>
-                                    <div class="form-check mb-1">
-                                        <input class="form-check-input" type="checkbox" id="Sol_Define_Sla" name="Sol_Define_Sla" value="1" onchange="toggleSlaDias(); syncReqConfigFromForm();">
-                                        <label class="form-check-label small" for="Sol_Define_Sla">Definir tiempo estimado (SLA)</label>
-                                    </div>
-                                    <div class="ms-4" id="divSolTiempoEst" style="display: none;">
-                                        <label class="form-label-req small mb-1">Dias estimados de resolucion</label>
-                                        <input type="number" class="form-control form-control-sm form-control-adq" id="Sol_Tiempo_Est" name="Sol_Tiempo_Est" min="1" style="width: 120px;" onchange="syncReqConfigFromForm()">
-                                    </div>
-                                </div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox" id="Sol_Req_Fac" name="Sol_Req_Fac" value="1" onchange="syncReqConfigFromForm()">
+                                <label class="form-check-label small" for="Sol_Req_Fac">Factura de compra al cierre</label>
+                            </div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox" id="Sol_Per_Cie" name="Sol_Per_Cie" value="1" onchange="syncReqConfigFromForm()">
+                                <label class="form-check-label small" for="Sol_Per_Cie">Permitir cierre parcial de items</label>
+                            </div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox" id="Sol_Req_Cot" name="Sol_Req_Cot" value="1" onchange="toggleMinCotizaciones(); syncReqConfigFromForm(); aplicarReglasCotizaciones();">
+                                <label class="form-check-label small" for="Sol_Req_Cot">Cotizaciones de sustento obligatorias</label>
+                            </div>
+                            <div class="ms-4 mb-2" id="divSolMinCot" style="display: none;">
+                                <label class="form-label-req small mb-1">Minimo de cotizaciones</label>
+                                <input type="number" class="form-control form-control-sm form-control-adq" id="Sol_Min_Cot" name="Sol_Min_Cot" min="1" value="1" style="width: 100px; background-color: #ffffff; cursor: not-allowed;" readonly title="Este valor lo define el tipo de requerimiento y no puede modificarse">
+                                <small class="text-muted d-block mt-1" style="font-size: 10px;"><i class="bi bi-lock-fill"></i> Definido por el tipo de requerimiento</small>
                             </div>
                         </div>
                     </div>
@@ -2497,14 +3430,15 @@ if (isset($ajax_get_form)) {
                     <div class="col-12 adq-form-fields-stack">
                         <div class="row">
                             <div class="col-md-6 adq-field-block" id="divProveedorSugerido" style="display: none;">
-                                <label class="form-label-req" for="Prv_Sug">Proveedor Sugerido *</label>
-                                <div style="display: flex; align-items: center; gap: 5px;">
-                                    <div style="flex: 1; min-width: 0;">
-                                        <select class="form-control select2-ajax" id="Prv_Sug" name="Prv_Sug" style="width: 100%;">
-                                            <option value=""></option>
-                                        </select>
+                                <label class="form-label-req" for="Prv_Sug_Txt">Proveedor Sugerido *</label>
+                                <div class="adq-prv-picker" data-prv-target="sugerido">
+                                    <input type="hidden" id="Prv_Sug" name="Prv_Sug" value="">
+                                    <div class="adq-prv-picker-row">
+                                        <input type="text" class="form-control form-control-adq adq-prv-txt" id="Prv_Sug_Txt" readonly placeholder="Seleccione un proveedor..." autocomplete="off">
+                                        <button type="button" class="btn btn-sm btn-primary adq-prv-btn-buscar" onclick="abrirBuscarProveedor('sugerido')" title="Buscar proveedor"><i class="bi bi-search"></i></button>
+                                        <button type="button" class="btn btn-sm btn-default adq-prv-btn-limpiar" onclick="limpiarProveedorPicker('sugerido')" title="Quitar proveedor"><i class="bi bi-x-lg"></i></button>
+                                        <button type="button" class="btn btn-sm btn-success" onclick="abrirModalNuevoProveedor('sugerido')" title="Agregar Nuevo Proveedor"><i class="bi bi-plus-lg"></i></button>
                                     </div>
-                                    <button type="button" class="btn btn-sm btn-success" onclick="abrirModalNuevoProveedor('sugerido')" title="Agregar Nuevo Proveedor" style="height: 32px; padding: 0 10px; display: flex; align-items: center; justify-content: center; background-color: #10b981; border-color: #10b981; color: white; border-radius: 6px;"><i class="bi bi-plus-lg" style="font-size: 14px; font-weight: bold;"></i></button>
                                 </div>
                             </div>
                         </div>
@@ -2670,6 +3604,57 @@ if (isset($ajax_get_form)) {
             </div>
         </div>
 
+        <!-- MODAL BUSCAR PROVEEDOR -->
+        <div class="modal fade" id="mdlBuscarProveedor" tabindex="-1" role="dialog" aria-labelledby="mdlBuscarProveedorLabel" aria-hidden="true" style="z-index: 1065;">
+            <div class="modal-dialog modal-lg" role="document" style="width:92%;max-width:820px;margin:30px auto;">
+                <div class="modal-content" style="border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                    <div class="modal-header" style="padding: 10px 14px; background:#1e40af; color:#fff;">
+                        <h5 class="modal-title fw-bold" id="mdlBuscarProveedorLabel" style="font-size: 14px; margin: 0;"><i class="bi bi-search"></i> Seleccionar proveedor</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar" onclick="$('#mdlBuscarProveedor').modal('hide')" style="color:#fff;opacity:.9;text-shadow:none;"><span aria-hidden="true">&times;</span></button>
+                    </div>
+                    <div class="modal-body" style="padding: 12px 14px; background:#f8fafc;">
+                        <input type="hidden" id="adqPrvBuscarTarget" value="">
+                        <div class="mb-2">
+                            <label class="small fw-bold" for="txtBuscarProveedorTabla" style="margin-bottom:4px;display:block;">Buscar por RUC, raz&oacute;n social o nombre comercial</label>
+                            <input type="search" class="form-control input-sm" id="txtBuscarProveedorTabla" placeholder="Filtrar proveedores..." autocomplete="off" style="height:32px;">
+                        </div>
+                        <div class="table-responsive" style="max-height:320px;overflow:auto;border:1px solid #e2e8f0;border-radius:6px;background:#fff;">
+                            <table class="table table-condensed table-hover mb-0" id="tblBuscarProveedor" style="font-size:12px;margin:0;">
+                                <thead style="background:#f1f5f9;">
+                                    <tr>
+                                        <th style="width:110px;">RUC / C&eacute;dula</th>
+                                        <th>Raz&oacute;n social</th>
+                                        <th>Nombre comercial</th>
+                                        <th class="text-center" style="width:70px;">Elegir</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="adq-prv-empty"><td colspan="4" class="text-center text-muted" style="padding:18px;">Cargando proveedores...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="adqPrvPager" class="adq-prv-pager" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:12px;">
+                            <span id="adqPrvPagerInfo" class="text-muted">â€”</span>
+                            <div style="display:flex;align-items:center;gap:4px;">
+                                <button type="button" class="btn btn-xs btn-default" id="btnPrvPagePrev" title="Anterior"><i class="bi bi-chevron-left"></i></button>
+                                <span id="adqPrvPagerPages" class="text-muted" style="min-width:70px;text-align:center;">1 / 1</span>
+                                <button type="button" class="btn btn-xs btn-default" id="btnPrvPageNext" title="Siguiente"><i class="bi bi-chevron-right"></i></button>
+                                <select id="selPrvPageSize" class="form-control input-sm" style="width:auto;height:26px;padding:1px 6px;font-size:11px;margin-left:6px;">
+                                    <option value="10">10</option>
+                                    <option value="15" selected>15</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="padding:8px 14px;">
+                        <button type="button" class="btn btn-sm btn-default" onclick="$('#mdlBuscarProveedor').modal('hide')">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- MODAL NUEVO PROVEEDOR -->
         <div class="modal fade" id="mdlNuevoProveedor" tabindex="-1" role="dialog" aria-labelledby="mdlNuevoProveedorLabel" aria-hidden="true" style="z-index: 1060;">
             <div class="modal-dialog" role="document">
@@ -2717,7 +3702,7 @@ if (isset($ajax_get_form)) {
         </div>
     </div>
     <script src="../../framework/plugins/cedulaRuc.js" charset="UTF-8"></script>
-    <script src="../VALIDACIONES/adq_solicitud.js?v=20260818a" charset="UTF-8"></script>
+    <script src="../VALIDACIONES/adq_solicitud.js?v=20260821layoutChecks" charset="UTF-8"></script>
     <?php
     exit;
 }
@@ -2747,6 +3732,6 @@ if (isset($ajax_get_form)) {
 
     <!-- Script del validador de adquisición -->
     <script src="../../framework/plugins/cedulaRuc.js" charset="UTF-8"></script>
-    <script src="../VALIDACIONES/adq_solicitud.js?v=20260818a" charset="UTF-8"></script>
+    <script src="../VALIDACIONES/adq_solicitud.js?v=20260821layoutChecks" charset="UTF-8"></script>
 </body>
 </html>
