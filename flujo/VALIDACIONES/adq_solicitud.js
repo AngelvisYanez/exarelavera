@@ -92,7 +92,7 @@ function adqSetEtapaPermiteCotizaciones(permite) {
     adqAplicarModoCotizacionesUi();
 }
 
-/** Muestra/oculta y bloquea controles según cargar cotizaciones vs seleccionar ganadora. */
+/** Muestra/oculta y bloquea controles seg?n cargar cotizaciones vs seleccionar ganadora. */
 function adqAplicarModoCotizacionesUi() {
     const verSeccion = adqEtapaPermiteCotizaciones || adqEtapaPermiteSeleccionarGanadora;
     if (!verSeccion) {
@@ -200,25 +200,10 @@ function toggleProveedorSugerido() {
     if ($('#Sol_Req_Pro').is(':checked')) {
         $('#divProveedorSugerido').show();
         $('#Prv_Sug').prop('required', true);
-        if (!$('#Prv_Sug').hasClass('select2-hidden-accessible')) {
-            const valGuardado = $('#Prv_Sug').val();
-            const txtGuardado = $('#Prv_Sug option:selected').text();
-            setupProveedorSugeridoSelect();
-            if (valGuardado) {
-                if (!$('#Prv_Sug').find('option[value="' + valGuardado + '"]').length) {
-                    $('#Prv_Sug').append(new Option(txtGuardado, valGuardado, true, true));
-                }
-                $('#Prv_Sug').val(valGuardado).trigger('change');
-            }
-        } else {
-            $('#Prv_Sug').next('.select2-container').css('width', '100%');
-        }
     } else {
         $('#divProveedorSugerido').hide();
-        $('#Prv_Sug').prop('required', false).val(null).trigger('change');
-        if ($('#Prv_Sug').hasClass('select2-hidden-accessible')) {
-            $('#Prv_Sug').select2('destroy');
-        }
+        $('#Prv_Sug').prop('required', false);
+        limpiarProveedorPicker('sugerido');
     }
     $('#divJustificacionComercial .form-label-req').css({ display: 'block', visibility: 'visible' });
 }
@@ -288,6 +273,7 @@ function asegurarCotizacionesMinimas() {
 
 function aplicarRequisitosDesdeSolicitud(s) {
     $('#divRequisitosSolicitud').show();
+    $('#divChecksSolicitudIzq').show();
     $('#Sol_Req_Fac').prop('checked', parseInt(s.Sol_Req_Fac, 10) === 1);
     $('#Sol_Per_Cie').prop('checked', parseInt(s.Sol_Per_Cie, 10) === 1);
     $('#Sol_Req_Cot').prop('checked', parseInt(s.Sol_Req_Cot, 10) === 1);
@@ -367,7 +353,7 @@ function actualizarPreviewRamasCompleta() {
         var destino = rama ? (rama.Destino_Nom || ('Nodo ' + rama.Nod_Des)) : '(sin destino)';
         var texto = rama ? rama.texto : 'Sin coincidencia';
         html += '<li><span class="fw-bold">' + $('<div>').text(dec.Nod_Nom).html() + '</span>: ' +
-            $('<div>').text(texto).html() + ' → <em>' + $('<div>').text(destino).html() + '</em></li>';
+            $('<div>').text(texto).html() + ' ? <em>' + $('<div>').text(destino).html() + '</em></li>';
     });
     html += '</ul></div>';
     $box.html(html);
@@ -493,7 +479,7 @@ function actualizarResumenSeleccionUsuarios() {
     var nodos = nodosSeleccionables();
     if (!seleccionUsuariosPack.activo) {
         if (seleccionUsuariosPack.message) {
-            $('#lblRespSummaryTitle').text('Asignación de responsables');
+            $('#lblRespSummaryTitle').text('Asignaci?n de responsables');
             $('#lblRespSummaryDesc').text(seleccionUsuariosPack.message);
             $('#btnAbrirModalResponsables').hide();
             $panel.show();
@@ -504,9 +490,9 @@ function actualizarResumenSeleccionUsuarios() {
         return;
     }
     if (!nodos.length) {
-        $('#lblRespSummaryTitle').text('Asignación de responsables');
+        $('#lblRespSummaryTitle').text('Asignaci?n de responsables');
         $('#lblRespSummaryDesc').text(
-            seleccionUsuariosPack.message || 'La opción está activa, pero ningún nodo tiene más de un usuario asignado.'
+            seleccionUsuariosPack.message || 'La opci?n est? activa, pero ning?n nodo tiene m?s de un usuario asignado.'
         );
         $('#btnAbrirModalResponsables').hide();
         $panel.show();
@@ -521,11 +507,11 @@ function actualizarResumenSeleccionUsuarios() {
             asignados++;
         }
     });
-    $('#lblRespSummaryTitle').text('Asignación de responsables por etapa (obligatorio)');
+    $('#lblRespSummaryTitle').text('Asignaci?n de responsables por etapa (obligatorio)');
     $('#lblRespSummaryDesc').text(
         asignados >= total
             ? ('Listo: ' + asignados + ' de ' + total + ' etapas con responsable definido.')
-            : ('Debe elegir un responsable en cada etapa (' + asignados + ' / ' + total + '). Sin esto no podrá enviar la solicitud.')
+            : ('Debe elegir un responsable en cada etapa (' + asignados + ' / ' + total + '). Sin esto no podr? enviar la solicitud.')
     );
     $('#btnAbrirModalResponsables')
         .show()
@@ -593,7 +579,7 @@ function validarSeleccionUsuariosNodos(silentOpen) {
         }
         marcarEtapasSinResponsable();
         alert(
-            'La asignación de responsable es obligatoria en cada etapa.\n\nPendiente:\n- ' +
+            'La asignaci?n de responsable es obligatoria en cada etapa.\n\nPendiente:\n- ' +
             faltantes.join('\n- ')
         );
         return false;
@@ -632,7 +618,7 @@ function pintarModalSeleccionResponsables() {
     var nodos = nodosSeleccionables();
     if (!seleccionUsuariosPack.activo) {
         $empty
-            .html('<i class="bi bi-info-circle d-block mb-2" style="font-size:22px;"></i>' + escHtml(seleccionUsuariosPack.message || 'La selección de responsables no está habilitada para este flujo.'))
+            .html('<i class="bi bi-info-circle d-block mb-2" style="font-size:22px;"></i>' + escHtml(seleccionUsuariosPack.message || 'La selecci?n de responsables no est? habilitada para este flujo.'))
             .show();
         $('#btnConfirmarResponsables').prop('disabled', true);
         $('#lblRespProgress').text('0 / 0 etapas asignadas');
@@ -640,7 +626,7 @@ function pintarModalSeleccionResponsables() {
     }
     if (!nodos.length) {
         $empty
-            .html('<i class="bi bi-info-circle d-block mb-2" style="font-size:22px;"></i>' + escHtml(seleccionUsuariosPack.message || 'Ningún nodo tiene más de un usuario asignado.'))
+            .html('<i class="bi bi-info-circle d-block mb-2" style="font-size:22px;"></i>' + escHtml(seleccionUsuariosPack.message || 'Ning?n nodo tiene m?s de un usuario asignado.'))
             .show();
         $('#btnConfirmarResponsables').prop('disabled', true);
         $('#lblRespProgress').text('0 / 0 etapas asignadas');
@@ -758,6 +744,7 @@ function cargarSeleccionUsuariosFlujo(trqCod, valoresPrevios) {
 function cargarConfiguracionTipo(trqCod) {
     if (!trqCod) {
         $('#divRequisitosSolicitud').hide();
+        $('#divChecksSolicitudIzq').hide();
         $('#divProveedorSugerido').hide();
         if (adqEtapaPermiteCotizaciones) {
             $('#cotizacionesStateInitial').show();
@@ -784,6 +771,7 @@ function cargarConfiguracionTipo(trqCod) {
         }
         const d = res.data;
         $('#divRequisitosSolicitud').show();
+        $('#divChecksSolicitudIzq').show();
         $('#Sol_Req_Fac').prop('checked', parseInt(d.Trq_Req_Fac, 10) === 1);
         $('#Sol_Per_Cie').prop('checked', parseInt(d.Trq_Per_Cie, 10) === 1);
         $('#Sol_Req_Cot').prop('checked', parseInt(d.Trq_Req_Cot, 10) === 1);
@@ -829,7 +817,7 @@ function setModoEdicionFormulario(modo, solNum, observacion, trqCodForzado) {
         $('#btnEnviarSolicitud').html('<i class="bi bi-check2-circle"></i> Completar solicitud');
     } else {
         $('#adqFormActionsDefault button').show();
-        $('#btnEnviarSolicitud').html('<i class="bi bi-send-check"></i> Enviar Solicitud a Aprobación');
+        $('#btnEnviarSolicitud').html('<i class="bi bi-send-check"></i> Enviar Solicitud a Aprobaci?n');
     }
     if (esCotizaciones) {
         $('#lblCotizacionesNum').text(solNum ? ('# ' + solNum) : '');
@@ -931,6 +919,9 @@ function validarRequisitosEnvioFormulario() {
     if (adqEtapaPermiteCotizaciones && !validarPdfsCotizacionesFormulario(true)) {
         return false;
     }
+    if (adqEtapaPermiteCotizaciones && !validarDocsProveedorFormulario()) {
+        return false;
+    }
     if (parseInt(reqConfig.Sol_Req_Pro, 10) === 1 && !$('#Prv_Sug').val()) {
         alert('Debe seleccionar un proveedor sugerido para enviar esta solicitud.');
         return false;
@@ -968,7 +959,32 @@ function validarRequisitosEnvioFormulario() {
 }
 
 function construirFormDataSolicitud() {
+    $('#cotizacionesList .adq-cot-col').each(function() {
+        const $box = $(this);
+        const prv = obtenerValorProveedorCot($box) || '';
+        $box.find('.adq-prv-docs-prv').val(prv);
+        $box.find('.cot-prv-hidden').val(prv);
+    });
     const formData = new FormData($('#frmSolicitud')[0]);
+    $('#cotizacionesList .adq-cot-col').each(function() {
+        const $box = $(this);
+        const idx = String($box.attr('data-group-key') || String($box.attr('id') || '').replace('cot_box_', ''));
+        if (!idx) { return; }
+        const prv = obtenerValorProveedorCot($box) || '';
+        formData.set('archivos_prv[' + idx + '][Prv_Cod]', prv);
+        $box.find('.adq-prv-arc-slot').each(function() {
+            const tip = String($(this).attr('data-arc-tip') || '');
+            if (!tip) { return; }
+            const tit = $(this).find('input[name*="[Arc_Tit]"]').val() || tip;
+            const keep = $(this).find('.adq-prv-arc-keep').val() || '';
+            formData.set('archivos_prv[' + idx + '][' + tip + '][Arc_Tit]', tit);
+            formData.set('archivos_prv[' + idx + '][' + tip + '][Arc_Url_Keep]', keep);
+            const input = $(this).find('input[type="file"]')[0];
+            if (input && input.files && input.files[0]) {
+                formData.set('archivos_prv_files[' + idx + '][' + tip + ']', input.files[0], input.files[0].name);
+            }
+        });
+    });
     formData.set('Sol_Req_Fac', reqConfig.Sol_Req_Fac);
     formData.set('Sol_Per_Cie', $('#Sol_Per_Cie').is(':checked') ? 1 : 0);
     formData.set('Sol_Req_Cot', reqConfig.Sol_Req_Cot);
@@ -1009,9 +1025,11 @@ function cargarBorradorEnFormulario(solCod, porNodo) {
         }
 
         if (s.Prv_Sug && res.prv_sug_text) {
-            $('#Prv_Sug').empty().append(new Option(res.prv_sug_text, s.Prv_Sug, true, true));
+            $('#Prv_Sug').val(s.Prv_Sug);
+            $('#Prv_Sug_Txt').val(res.prv_sug_text);
         } else {
-            $('#Prv_Sug').empty().append('<option value=""></option>');
+            $('#Prv_Sug').val('');
+            $('#Prv_Sug_Txt').val('');
         }
 
         aplicarRequisitosDesdeSolicitud(s);
@@ -1124,7 +1142,7 @@ function cargarSolicitudParaCotizaciones(solCod) {
         const $btnGuardarCot = $('#btnGuardarCotizacionesEtapa');
         if ($btnGuardarCot.length) {
             $btnGuardarCot.html(soloGanadora
-                ? '<i class="bi bi-trophy"></i> Guardar cotización ganadora'
+                ? '<i class="bi bi-trophy"></i> Guardar cotizaci?n ganadora'
                 : '<i class="bi bi-save"></i> Guardar Cotizaciones');
         }
         $('#lblCotizacionesEtapa').text(res.etapa_nombre ? ('Etapa actual: ' + res.etapa_nombre + '. ') : '');
@@ -1134,9 +1152,11 @@ function cargarSolicitudParaCotizaciones(solCod) {
         adqAsegurarTipoRequerimiento(s.Trq_Cod, s.Trq_Des);
 
         if (s.Prv_Sug && res.prv_sug_text) {
-            $('#Prv_Sug').empty().append(new Option(res.prv_sug_text, s.Prv_Sug, true, true));
+            $('#Prv_Sug').val(s.Prv_Sug);
+            $('#Prv_Sug_Txt').val(res.prv_sug_text);
         } else {
-            $('#Prv_Sug').empty().append('<option value=""></option>');
+            $('#Prv_Sug').val('');
+            $('#Prv_Sug_Txt').val('');
         }
 
         aplicarRequisitosDesdeSolicitud(s);
@@ -1189,11 +1209,15 @@ function guardarCotizacionesEtapa() {
         alert('No se encontro la solicitud.');
         return;
     }
+    // Primero: 4 PDF del proveedor (RUC, cuenta, requerimiento, formulario).
+    if (!validarDocsProveedorFormulario(true)) {
+        return;
+    }
     if (!validarPdfsCotizacionesFormulario(true)) {
         return;
     }
 
-    const formData = new FormData($('#frmSolicitud')[0]);
+    const formData = construirFormDataSolicitud();
     formData.set('Sol_Cod', solCod);
 
     const $btn = $('#adqFormActionsCotizaciones button');
@@ -1209,7 +1233,7 @@ function guardarCotizacionesEtapa() {
         dataType: 'json',
         success: function(res) {
             if (res.success) {
-                alert('Cotizaciones guardadas correctamente en la solicitud # ' + res.Num + '.');
+                var msg = 'Cotizaciones guardadas correctamente en la solicitud # ' + res.Num + '.'; if (res.archivos_prv_guardados) { msg += ' Docs proveedor: ' + res.archivos_prv_guardados + '.'; } if (res.archivos_prv_warnings && res.archivos_prv_warnings.length) { msg += ' Aviso: ' + res.archivos_prv_warnings.join(' '); } alert(msg);
                 window.location.href = 'adq_bandeja.php';
             } else {
                 alert('Error al guardar las cotizaciones: ' + (res.message || 'Error desconocido'));
@@ -1259,11 +1283,15 @@ function contarCotizacionesParaEnvio() {
 }
 
 function obtenerValorProveedorCot($box) {
+    const $hid = $box.find('.adq-prv-cod, input.cot-prv-picker-cod').first();
+    if ($hid.length && String($hid.val() || '') !== '') {
+        return String($hid.val() || '');
+    }
     const $sel = $box.find('select.select2-prov-cot');
     if ($sel.length) {
-        return $sel.val();
+        return String($sel.val() || '');
     }
-    return $box.find('.cot-prv-hidden').first().val() || '';
+    return String($box.find('.cot-prv-hidden').first().val() || '');
 }
 
 function obtenerMontoProforma($row) {
@@ -1384,6 +1412,10 @@ function initAdqSolicitudForm() {
 
     if ($('#Prv_Sug').length && $('#Prv_Sug').hasClass('select2-hidden-accessible')) {
         $('#Prv_Sug').select2('destroy');
+    }
+
+    if (typeof initBuscarProveedorModal === 'function') {
+        initBuscarProveedorModal();
     }
 
     setupTipoRequerimientoSelect();
@@ -1528,24 +1560,210 @@ function validarYBuscarProveedorPorCedula() {
 }
 
 function seleccionarProveedorEnDestino(targetIdx, id, text) {
-    const newOption = new Option(text, id, true, true);
-    if (targetIdx === 'sugerido') {
-        const $sel = $('#Prv_Sug');
-        if ($sel.find(`option[value="${id}"]`).length === 0) {
-            $sel.append(newOption);
-        }
-        $sel.val(id).trigger('change');
+    setProveedorPicker(targetIdx, id, text);
+}
+
+let adqPrvBuscarTimer = null;
+let adqPrvPage = 1;
+let adqPrvPageSize = 15;
+let adqPrvTotal = 0;
+let adqPrvPages = 1;
+
+function htmlProveedorPickerCot(opts) {
+    const idx = String(opts.idx);
+    const prvCod = opts.prvCod || '';
+    const prvTxt = opts.prvTxt || '';
+    return ''
+        + '<div class="adq-prv-picker" data-prv-target="' + adqEscHtml(idx) + '">'
+        + '<input type="hidden" class="adq-prv-cod cot-prv-picker-cod" value="' + adqEscHtml(prvCod) + '">'
+        + '<div class="adq-prv-picker-row">'
+        + '<input type="text" class="form-control adq-cot-control adq-prv-txt" readonly placeholder="Seleccione proveedor..." value="' + adqEscHtml(prvTxt) + '" autocomplete="off" onclick="abrirBuscarProveedor(\'' + adqEscHtml(idx) + '\')">'
+        + '<button type="button" class="btn btn-primary adq-prv-btn-buscar" onclick="abrirBuscarProveedor(\'' + adqEscHtml(idx) + '\')" title="Buscar proveedor"><i class="bi bi-search"></i></button>'
+        + '<button type="button" class="btn btn-default adq-prv-btn-limpiar" onclick="limpiarProveedorPicker(\'' + adqEscHtml(idx) + '\')" title="Quitar proveedor"><i class="bi bi-x-lg"></i></button>'
+        + '<button type="button" class="btn btn-success adq-cot-add-provider" onclick="abrirModalNuevoProveedor(\'' + adqEscHtml(idx) + '\')" title="Agregar proveedor"><i class="bi bi-plus-lg"></i></button>'
+        + '</div></div>';
+}
+
+function abrirBuscarProveedor(targetIdx) {
+    $('#adqPrvBuscarTarget').val(String(targetIdx));
+    $('#txtBuscarProveedorTabla').val('');
+    adqPrvPage = 1;
+    const $selSize = $('#selPrvPageSize');
+    if ($selSize.length) {
+        adqPrvPageSize = parseInt($selSize.val(), 10) || 15;
+    }
+    const $mdl = $('#mdlBuscarProveedor');
+    if ($mdl.length && $mdl.parent()[0] !== document.body) {
+        $mdl.appendTo('body');
+    }
+    $mdl.modal('show');
+    buscarProveedoresTabla('', 1);
+    setTimeout(function() {
+        $('#txtBuscarProveedorTabla').focus();
+    }, 250);
+}
+
+function limpiarProveedorPicker(targetIdx) {
+    if (String(targetIdx) === 'sugerido') {
+        $('#Prv_Sug').val('');
+        $('#Prv_Sug_Txt').val('');
         return;
     }
-    const $selCot = $(`#cot_box_${targetIdx} .select2-prov-cot`);
-    if ($selCot.find(`option[value="${id}"]`).length === 0) {
-        $selCot.append(newOption);
+    const $box = $('#cot_box_' + targetIdx);
+    if (!$box.length) {
+        return;
     }
-    $selCot.val(id).trigger('change');
+    $box.find('.adq-prv-cod, .cot-prv-picker-cod').val('');
+    $box.find('.adq-prv-txt').val('');
+    syncProveedorGrupo($box);
+    if (typeof limpiarArchivosProveedorUi === 'function') {
+        limpiarArchivosProveedorUi($box);
+    }
+}
+
+function setProveedorPicker(targetIdx, id, text) {
+    const idStr = String(id || '');
+    const txt = String(text || '');
+    if (String(targetIdx) === 'sugerido') {
+        $('#Prv_Sug').val(idStr);
+        $('#Prv_Sug_Txt').val(txt);
+        return;
+    }
+    const $box = $('#cot_box_' + targetIdx);
+    if (!$box.length) {
+        return;
+    }
+    $box.find('.adq-prv-cod, .cot-prv-picker-cod').val(idStr);
+    $box.find('.adq-prv-txt').val(txt);
+    syncProveedorGrupo($box);
+    if (typeof cargarArchivosProveedorEnBox === 'function') {
+        cargarArchivosProveedorEnBox($box, idStr);
+    }
+}
+
+function actualizarPagerProveedores() {
+    const total = adqPrvTotal || 0;
+    const page = adqPrvPage || 1;
+    const pages = Math.max(1, adqPrvPages || 1);
+    const size = adqPrvPageSize || 15;
+    const desde = total === 0 ? 0 : ((page - 1) * size) + 1;
+    const hasta = Math.min(page * size, total);
+    $('#adqPrvPagerInfo').text(total === 0 ? '0 proveedores' : (desde + '?' + hasta + ' de ' + total));
+    $('#adqPrvPagerPages').text(page + ' / ' + pages);
+    $('#btnPrvPagePrev').prop('disabled', page <= 1);
+    $('#btnPrvPageNext').prop('disabled', page >= pages || total === 0);
+}
+
+function buscarProveedoresTabla(q, page) {
+    const term = String(q !== undefined ? q : ($('#txtBuscarProveedorTabla').val() || '')).trim();
+    adqPrvPage = parseInt(page, 10) || adqPrvPage || 1;
+    if (adqPrvPage < 1) {
+        adqPrvPage = 1;
+    }
+    adqPrvPageSize = parseInt($('#selPrvPageSize').val(), 10) || adqPrvPageSize || 15;
+    const $tb = $('#tblBuscarProveedor tbody');
+    $tb.html('<tr class="adq-prv-empty"><td colspan="4" class="text-center text-muted" style="padding:18px;">Cargando...</td></tr>');
+    $.getJSON('adq_solicitud.php', {
+        ajax_search_proveedores: 1,
+        paged: 1,
+        q: term,
+        page: adqPrvPage,
+        pageSize: adqPrvPageSize
+    }, function(res) {
+        let rows = [];
+        if (res && $.isArray(res.rows)) {
+            rows = res.rows;
+            adqPrvTotal = parseInt(res.total, 10) || 0;
+            adqPrvPage = parseInt(res.page, 10) || adqPrvPage;
+            adqPrvPageSize = parseInt(res.pageSize, 10) || adqPrvPageSize;
+            adqPrvPages = parseInt(res.pages, 10) || 1;
+        } else if ($.isArray(res)) {
+            rows = res;
+            adqPrvTotal = rows.length;
+            adqPrvPages = 1;
+        } else {
+            adqPrvTotal = 0;
+            adqPrvPages = 1;
+        }
+        actualizarPagerProveedores();
+        if (!rows.length) {
+            $tb.html('<tr class="adq-prv-empty"><td colspan="4" class="text-center text-muted" style="padding:18px;">Sin proveedores' + (term ? ' para el filtro' : '') + '</td></tr>');
+            return;
+        }
+        let html = '';
+        rows.forEach(function(r) {
+            const id = r.id || r.Prv_Cod;
+            const text = r.text || '';
+            const ced = r.Prs_Ced || '';
+            const nombre = r.nombre || (((r.Prs_Ape || '') + ' ' + (r.Prs_Nom || '')).trim()) || text;
+            const com = r.Prv_Com || '';
+            html += '<tr class="adq-prv-row" data-id="' + adqEscHtml(id) + '" data-text="' + adqEscHtml(text) + '">'
+                + '<td class="font-monospace">' + adqEscHtml(ced) + '</td>'
+                + '<td class="fw-semibold">' + adqEscHtml(nombre) + '</td>'
+                + '<td>' + adqEscHtml(com) + '</td>'
+                + '<td class="text-center"><button type="button" class="btn btn-xs btn-primary"><i class="bi bi-check-lg"></i></button></td>'
+                + '</tr>';
+        });
+        $tb.html(html);
+    }).fail(function() {
+        adqPrvTotal = 0;
+        adqPrvPages = 1;
+        actualizarPagerProveedores();
+        $tb.html('<tr class="adq-prv-empty"><td colspan="4" class="text-center text-danger" style="padding:18px;">Error al cargar proveedores.</td></tr>');
+    });
+}
+
+function seleccionarProveedorDesdeTabla($tr) {
+    const id = $tr.attr('data-id');
+    const text = $tr.attr('data-text') || '';
+    const target = $('#adqPrvBuscarTarget').val();
+    if (!id || !target) {
+        return;
+    }
+    setProveedorPicker(target, id, text);
+    $('#mdlBuscarProveedor').modal('hide');
+}
+
+function initBuscarProveedorModal() {
+    $(document).off('input.adqPrvBuscar').on('input.adqPrvBuscar', '#txtBuscarProveedorTabla', function() {
+        const q = $(this).val();
+        clearTimeout(adqPrvBuscarTimer);
+        adqPrvBuscarTimer = setTimeout(function() {
+            buscarProveedoresTabla(q, 1);
+        }, 250);
+    });
+    $(document).off('click.adqPrvSel').on('click.adqPrvSel', '#tblBuscarProveedor tbody tr.adq-prv-row', function(e) {
+        e.preventDefault();
+        seleccionarProveedorDesdeTabla($(this));
+    });
+    $(document).off('click.adqDocsPrv').on('click.adqDocsPrv', '.adq-btn-docs-prv', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const $btn = $(this);
+        abrirDocsProveedor($btn.attr('data-prv-cod'), $btn.attr('data-sol-cod'), $btn.attr('data-prv-nom'));
+    });
+    $(document).off('click.adqPrvTxt').on('click.adqPrvTxt', '#Prv_Sug_Txt', function() {
+        abrirBuscarProveedor('sugerido');
+    });
+    $(document).off('click.adqPrvPrev').on('click.adqPrvPrev', '#btnPrvPagePrev', function() {
+        if (adqPrvPage > 1) {
+            buscarProveedoresTabla($('#txtBuscarProveedorTabla').val(), adqPrvPage - 1);
+        }
+    });
+    $(document).off('click.adqPrvNext').on('click.adqPrvNext', '#btnPrvPageNext', function() {
+        if (adqPrvPage < adqPrvPages) {
+            buscarProveedoresTabla($('#txtBuscarProveedorTabla').val(), adqPrvPage + 1);
+        }
+    });
+    $(document).off('change.adqPrvSize').on('change.adqPrvSize', '#selPrvPageSize', function() {
+        adqPrvPageSize = parseInt($(this).val(), 10) || 15;
+        buscarProveedoresTabla($('#txtBuscarProveedorTabla').val(), 1);
+    });
 }
 
 $(document).ready(function() {
     initAdqSolicitudForm();
+    initBuscarProveedorModal();
     $('#mdlSeleccionResponsables').on('hidden.bs.modal', function() {
         seleccionUsuariosPendienteEnvio = false;
     });
@@ -1554,35 +1772,13 @@ $(document).ready(function() {
 if (typeof window !== 'undefined') {
     window.abrirModalSeleccionResponsables = abrirModalSeleccionResponsables;
     window.confirmarSeleccionResponsables = confirmarSeleccionResponsables;
+    window.abrirBuscarProveedor = abrirBuscarProveedor;
+    window.limpiarProveedorPicker = limpiarProveedorPicker;
+    window.setProveedorPicker = setProveedorPicker;
 }
 
 function setupProveedorSugeridoSelect() {
-    const $el = $('#Prv_Sug');
-    if (!$el.length) {
-        return;
-    }
-    if ($el.hasClass('select2-hidden-accessible')) {
-        $el.select2('destroy');
-    }
-    $el.select2({
-        placeholder: "Busque un proveedor por RUC o Razon Social...",
-        allowClear: true,
-        minimumInputLength: 1,
-        width: '100%',
-        dropdownCssClass: 'adq-select2-dropdown',
-        ajax: {
-            url: 'adq_solicitud.php?ajax_search_proveedores=1',
-            dataType: 'json',
-            delay: 250,
-            data: function(params) {
-                return { q: params.term };
-            },
-            processResults: function(data) {
-                return { results: data };
-            },
-            cache: true
-        }
-    });
+    // El picker por tabla reemplaza al Select2.
 }
 
 function itemEstimadoDesdeValor(valor) {
@@ -1705,23 +1901,249 @@ function recalcularTotalGeneral() {
     actualizarPreviewRamasCompleta();
 }
 
-function htmlAdqFileUpload(name, inputId, helpText, compact) {
+function adqUrlDocumentoSafe(path) {
+    if (typeof adqUrlDocumento === 'function') {
+        return adqUrlDocumento(path);
+    }
+    return String(path || '');
+}
+
+function adqEndpointArchivosProveedor() {
+    if ($('#mdlResolution').length || $('body').hasClass('adq-bandeja-page') || window.location.pathname.indexOf('adq_bandeja') !== -1) {
+        return 'adq_bandeja.php';
+    }
+    return 'adq_solicitud.php';
+}
+
+function adqAsegurarModalDocsProveedor() {
+    if ($('#mdlDocsProveedor').length) {
+        return;
+    }
+    $('body').append(
+        '<div class="modal fade" id="mdlDocsProveedor" tabindex="-1" role="dialog" aria-hidden="true" style="z-index:1080;">'
+        + '<div class="modal-dialog" role="document" style="width:92%;max-width:520px;margin:40px auto;">'
+        + '<div class="modal-content" style="border-radius:8px;overflow:hidden;box-shadow:0 8px 24px rgba(15,23,42,0.2);">'
+        + '<div class="modal-header" style="padding:10px 14px;background:#1e40af;color:#fff;">'
+        + '<button type="button" class="close" data-dismiss="modal" aria-label="Cerrar" onclick="$(\'#mdlDocsProveedor\').modal(\'hide\')" style="color:#fff;opacity:.9;text-shadow:none;"><span aria-hidden="true">&times;</span></button>'
+        + '<h4 class="modal-title" style="font-size:14px;margin:0;"><i class="bi bi-folder2-open"></i> Documentos del proveedor</h4>'
+        + '</div>'
+        + '<div class="modal-body" style="padding:14px;background:#f8fafc;">'
+        + '<div id="mdlDocsProveedorNombre" class="fw-bold text-dark mb-2" style="font-size:13px;"></div>'
+        + '<div id="mdlDocsProveedorBody" class="adq-docs-prv-list"><div class="text-muted text-center py-3">Cargando...</div></div>'
+        + '</div>'
+        + '<div class="modal-footer" style="padding:8px 14px;">'
+        + '<button type="button" class="btn btn-sm btn-default" data-dismiss="modal" onclick="$(\'#mdlDocsProveedor\').modal(\'hide\')">Cerrar</button>'
+        + '</div></div></div></div>'
+    );
+}
+
+function abrirDocsProveedor(prvCod, solCod, nombreProveedor) {
+    const prv = parseInt(prvCod, 10) || 0;
+    const sol = parseInt(solCod, 10) || 0;
+    if (prv <= 0) {
+        alert('No se encontro el proveedor.');
+        return;
+    }
+    adqAsegurarModalDocsProveedor();
+    const nombre = nombreProveedor || ('Proveedor #' + prv);
+    $('#mdlDocsProveedorNombre').text(nombre);
+    $('#mdlDocsProveedorBody').html('<div class="text-muted text-center py-3"><span class="spinner-border spinner-border-sm"></span> Cargando...</div>');
+    $('#mdlDocsProveedor').modal('show');
+
+    $.getJSON(adqEndpointArchivosProveedor(), {
+        ajax_get_archivos_proveedor: 1,
+        Prv_Cod: prv,
+        Sol_Cod: sol
+    }, function(res) {
+        if (!res || !res.success) {
+            $('#mdlDocsProveedorBody').html('<div class="alert alert-warning mb-0 py-2" style="font-size:12px;">No se pudieron cargar los documentos.</div>');
+            return;
+        }
+        const files = res.files || {};
+        const tips = [
+            { tip: 'RU', label: 'RUC' },
+            { tip: 'CB', label: 'Cuenta bancaria' },
+            { tip: 'RQ', label: 'Requerimiento' },
+            { tip: 'FP', label: 'Formulario proveedor' }
+        ];
+        let html = '';
+        let hay = 0;
+        tips.forEach(function(t) {
+            const f = files[t.tip] || {};
+            const url = f.Arc_Url || '';
+            const tit = f.Arc_Tit || t.label;
+            if (url) {
+                hay++;
+                const href = (typeof adqUrlDocumento === 'function') ? adqUrlDocumento(url) : ('../' + String(url).replace(/^\/+/, ''));
+                html += '<div class="adq-docs-prv-item" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;margin-bottom:6px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;">'
+                    + '<div style="min-width:0;"><div class="fw-semibold" style="font-size:12px;">' + adqEscHtml(tit) + '</div>'
+                    + '<div class="text-muted" style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + adqEscHtml(String(url).split('/').pop()) + '</div></div>'
+                    + '<a href="' + href + '" target="_blank" class="btn btn-xs btn-primary" style="flex-shrink:0;"><i class="bi bi-eye"></i> Ver</a>'
+                    + '</div>';
+            } else {
+                html += '<div class="adq-docs-prv-item" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;margin-bottom:6px;background:#fff;border:1px dashed #cbd5e1;border-radius:6px;">'
+                    + '<div class="text-muted" style="font-size:12px;">' + adqEscHtml(tit) + '</div>'
+                    + '<span class="text-muted" style="font-size:11px;">Sin archivo</span>'
+                    + '</div>';
+            }
+        });
+        if (!hay) {
+            html = '<div class="alert alert-info mb-0 py-2" style="font-size:12px;"><i class="bi bi-info-circle"></i> Este proveedor no tiene documentos registrados.</div>' + html;
+        }
+        $('#mdlDocsProveedorBody').html(html);
+    }).fail(function() {
+        $('#mdlDocsProveedorBody').html('<div class="alert alert-danger mb-0 py-2" style="font-size:12px;">Error de red al cargar documentos.</div>');
+    });
+}
+
+function adqTiposArchivoProveedor() {
+    return [
+        { tip: 'RU', label: 'RUC' },
+        { tip: 'CB', label: 'Cuenta bancaria' },
+        { tip: 'RQ', label: 'Requerimiento' },
+        { tip: 'FP', label: 'Formulario proveedor' }
+    ];
+}
+
+function htmlArchivosProveedorCot(opts) {
+    const idx = String(opts.idx);
+    const prvCod = opts.prvCod || '';
+    const files = opts.files || {};
+    let slots = '';
+    adqTiposArchivoProveedor().forEach(function(t) {
+        const f = files[t.tip] || {};
+        const url = f.Arc_Url || '';
+        const tit = f.Arc_Tit || t.label;
+        const fileName = url ? String(url).split('/').pop() : '';
+        const keepHtml = url
+            ? ('<input type="hidden" class="adq-prv-arc-keep" name="archivos_prv[' + adqEscHtml(idx) + '][' + t.tip + '][Arc_Url_Keep]" value="' + adqEscHtml(url) + '">'
+                + '<a href="' + adqUrlDocumentoSafe(url) + '" target="_blank" class="btn btn-xs btn-outline-primary adq-prv-arc-link" title="' + adqEscHtml(fileName || t.label) + '">'
+                + '<i class="bi bi-file-earmark-pdf"></i> Ver</a>')
+            : ('<input type="hidden" class="adq-prv-arc-keep" name="archivos_prv[' + adqEscHtml(idx) + '][' + t.tip + '][Arc_Url_Keep]" value="">'
+                + '<span class="adq-prv-arc-link-empty"></span>');
+        slots += ''
+            + '<div class="adq-prv-arc-slot" data-arc-tip="' + t.tip + '">'
+            + '<label class="adq-cot-label adq-prv-arc-label">' + adqEscHtml(t.label) + ' <span class="text-danger">*</span></label>'
+            + '<input type="hidden" name="archivos_prv[' + adqEscHtml(idx) + '][' + t.tip + '][Arc_Tit]" value="' + adqEscHtml(tit) + '">'
+            + htmlAdqFileUpload(
+                'archivos_prv_files[' + idx + '][' + t.tip + ']',
+                'prv_arc_' + idx + '_' + t.tip,
+                'PDF ' + t.label,
+                true,
+                'Subir PDF'
+            )
+            + '<div class="adq-prv-arc-actions">' + keepHtml + '</div>'
+            + '</div>';
+    });
+    return ''
+        + '<div class="adq-prv-docs" data-cot-idx="' + adqEscHtml(idx) + '">'
+        + '<div class="adq-prv-docs-title"><i class="bi bi-folder2-open"></i> Docs. proveedor <span class="text-danger">*</span> <span class="text-muted" style="font-weight:400;font-size:10px;">(4 PDF obligatorios)</span></div>'
+        + '<input type="hidden" class="adq-prv-docs-prv" name="archivos_prv[' + adqEscHtml(idx) + '][Prv_Cod]" value="' + adqEscHtml(prvCod) + '">'
+        + '<div class="adq-prv-docs-list">' + slots + '</div>'
+        + '</div>';
+}
+
+function limpiarArchivosProveedorUi($box) {
+    if (!$box || !$box.length) { return; }
+    const $docs = $box.find('.adq-prv-docs').first();
+    if (!$docs.length) { return; }
+    $docs.find('.adq-prv-docs-prv').val('');
+    $docs.find('.adq-prv-arc-slot').each(function() {
+        const tip = $(this).attr('data-arc-tip') || 'RU';
+        const labelMap = { RU: 'RUC', CB: 'Cuenta bancaria', RQ: 'Requerimiento', FP: 'Formulario proveedor' };
+        $(this).find('.adq-prv-arc-keep').val('');
+        $(this).find('.adq-prv-arc-link').replaceWith('<span class="adq-prv-arc-link-empty"></span>');
+        $(this).find('input[type="file"]').val('');
+        const $upload = $(this).find('.adq-file-upload');
+        $upload.find('.adq-file-main').html('Subir PDF <span class="adq-file-max">(m?x. 3 MB)</span>');
+        $upload.find('.adq-file-name').text('').addClass('adq-file-name-empty').hide();
+        $(this).find('input[name*="[Arc_Tit]"]').val(labelMap[tip] || 'Otro');
+    });
+}
+
+function pintarArchivosProveedorUi($box, files) {
+    if (!$box || !$box.length) { return; }
+    const $docs = $box.find('.adq-prv-docs').first();
+    if (!$docs.length) { return; }
+    const map = files || {};
+    $docs.find('.adq-prv-arc-slot').each(function() {
+        const tip = $(this).attr('data-arc-tip');
+        const f = map[tip] || {};
+        const url = f.Arc_Url || '';
+        const tit = f.Arc_Tit || '';
+        if (tit) { $(this).find('input[name*="[Arc_Tit]"]').val(tit); }
+        $(this).find('.adq-prv-arc-keep').val(url);
+        $(this).find('.adq-prv-arc-link, .adq-prv-arc-link-empty').remove();
+        const $actions = $(this).find('.adq-prv-arc-actions');
+        if (url) {
+            const fileName = String(url).split('/').pop();
+            $actions.append('<a href="' + adqUrlDocumentoSafe(url) + '" target="_blank" class="btn btn-xs btn-outline-primary adq-prv-arc-link" title="' + adqEscHtml(fileName) + '"><i class="bi bi-file-earmark-pdf"></i> Ver</a>');
+            const $upload = $(this).find('.adq-file-upload');
+            $upload.find('.adq-file-main').html('Reemplazar PDF <span class="adq-file-max">(m?x. 3 MB)</span>');
+            $upload.find('.adq-file-name').text(fileName).removeClass('adq-file-name-empty').show();
+        } else {
+            $actions.append('<span class="adq-prv-arc-link-empty"></span>');
+            const $upload = $(this).find('.adq-file-upload');
+            $upload.find('.adq-file-main').html('Subir PDF <span class="adq-file-max">(m?x. 3 MB)</span>');
+            $upload.find('.adq-file-name').text('').addClass('adq-file-name-empty').hide();
+        }
+        $(this).find('input[type="file"]').val('');
+    });
+}
+
+function cargarArchivosProveedorEnBox($box, prvCod) {
+    if (!$box || !$box.length) { return; }
+    const $docs = $box.find('.adq-prv-docs').first();
+    if (!$docs.length) { return; }
+    const prv = parseInt(prvCod, 10) || 0;
+    $docs.find('.adq-prv-docs-prv').val(prv > 0 ? String(prv) : '');
+    if (prv <= 0) {
+        limpiarArchivosProveedorUi($box);
+        return;
+    }
+    const solCod = parseInt($('#Sol_Cod').val(), 10) || 0;
+    $.getJSON('adq_solicitud.php', {
+        ajax_get_archivos_proveedor: 1,
+        Prv_Cod: prv,
+        Sol_Cod: solCod
+    }, function(res) {
+        if (!res || !res.success) { return; }
+        const actual = parseInt(obtenerValorProveedorCot($box), 10) || 0;
+        if (actual !== prv) { return; }
+        pintarArchivosProveedorUi($box, res.files || {});
+    });
+}
+
+var ADQ_PDF_MAX_BYTES = 3 * 1024 * 1024;
+
+function adqEsArchivoPdfTamanoOk(file) {
+    return !!(file && typeof file.size === 'number' && file.size > 0 && file.size <= ADQ_PDF_MAX_BYTES);
+}
+
+
+function htmlAdqFileUpload(name, inputId, helpText, compact, mainOverride) {
     const compactClass = compact ? ' adq-file-upload-compact' : '';
-    const mainLabel = compact ? 'Subir PDF' : 'Seleccionar PDF';
+    const maxHint = ' <span class="adq-file-max">(m?x. 3 MB)</span>';
+    let mainLabel;
+    if (compact) {
+        mainLabel = (mainOverride ? mainOverride : 'Subir PDF') + maxHint;
+    } else {
+        mainLabel = mainOverride || 'Seleccionar PDF';
+    }
+    const nameTxt = compact ? '' : (helpText || 'Solo archivos PDF ? m?x. 3 MB');
     return `
         <div class="adq-file-upload${compactClass}">
             <input type="file" id="${inputId}" name="${name}" accept=".pdf,application/pdf">
             <label class="adq-file-drop" for="${inputId}">
                 <span class="adq-file-icon"><i class="bi bi-cloud-arrow-up"></i></span>
-                <span style="min-width: 0;">
+                <span class="adq-file-texts" style="min-width: 0;">
                     <span class="adq-file-main">${mainLabel}</span>
-                    <span class="adq-file-name">${helpText || 'Solo archivos PDF'}</span>
+                    <span class="adq-file-name">${nameTxt}</span>
                 </span>
             </label>
         </div>
     `;
 }
-
 function agregarAdjuntoSolicitud(datos) {
     const idx = adjIndex++;
     const des = datos && datos.Sad_Des ? datos.Sad_Des : '';
@@ -1732,8 +2154,8 @@ function agregarAdjuntoSolicitud(datos) {
                 <button type="button" class="btn btn-xs btn-outline-danger" onclick="quitarAdjuntoSolicitud(this)" title="Quitar"><i class="bi bi-trash"></i></button>
             </div>
             <div class="mb-2">
-                <label class="form-label-req small mb-1">Descripción del PDF *</label>
-                <input type="text" class="form-control form-control-adq" name="adjuntos[${idx}][Sad_Des]" value="${$('<div>').text(des).html()}" maxlength="500" placeholder="Ej. Especificaciones técnicas, memorando, orden de compra...">
+                <label class="form-label-req small mb-1">Descripci?n del PDF *</label>
+                <input type="text" class="form-control form-control-adq" name="adjuntos[${idx}][Sad_Des]" value="${$('<div>').text(des).html()}" maxlength="500" placeholder="Ej. Especificaciones t?cnicas, memorando, orden de compra...">
             </div>
             <div>
                 <label class="form-label-req small mb-1">Archivo PDF *</label>
@@ -1757,7 +2179,7 @@ function agregarAdjuntoExistente(adj) {
                 <button type="button" class="btn btn-xs btn-outline-danger" onclick="quitarAdjuntoExistente(this, ${sadCod})" title="Quitar"><i class="bi bi-trash"></i></button>
             </div>
             <div class="mb-2">
-                <label class="form-label-req small mb-1">Descripción del PDF *</label>
+                <label class="form-label-req small mb-1">Descripci?n del PDF *</label>
                 <input type="text" class="form-control form-control-adq" name="adjuntos_existentes[${sadCod}][Sad_Des]" value="${$('<div>').text(des).html()}" maxlength="500">
             </div>
             <div class="mb-2">
@@ -1766,7 +2188,7 @@ function agregarAdjuntoExistente(adj) {
             </div>
             <div>
                 <label class="form-label-req small mb-1">Reemplazar PDF (opcional)</label>
-                ${htmlAdqFileUpload('adjunto_archivos_existentes[' + sadCod + ']', 'adj_pdf_ex_' + sadCod, 'Dejar vacío para conservar el actual', false)}
+                ${htmlAdqFileUpload('adjunto_archivos_existentes[' + sadCod + ']', 'adj_pdf_ex_' + sadCod, 'Dejar vac?o para conservar el actual', false)}
             </div>
         </div>
     `;
@@ -1785,7 +2207,7 @@ function quitarAdjuntoExistente(btn, sadCod) {
 
 function validarAdjuntosSolicitudFormulario(obligatorio) {
     const $rows = $('#adjuntosList .adq-adjunto-row');
-    // Sin filas es válido: el Paso 2B es opcional.
+    // Sin filas es v?lido: el Paso 2B es opcional.
     if (!$rows.length) {
         if (obligatorio) {
             alert('Debe cargar al menos un archivo PDF de soporte con su descripcion.');
@@ -1893,13 +2315,15 @@ function htmlAdqProformaRow(opts) {
                     <div class="adq-cot-total-box font-monospace fw-bold">$ <span class="adq-cot-total-view">${totalStr}</span></div>
                 </div>
                 <div class="adq-proforma-actions">
-                    <div class="form-check adq-cot-winner adq-cot-winner-on">
-                        <input type="checkbox" class="form-check-input chk-cot-sel" name="${nameBase}[Cot_Sel]" value="1" id="${chkId}" data-cot-key="${idx}"${selChecked} onchange="seleccionarCotizacionUnica('${idx}')">
-                        <label class="form-check-label fw-bold text-success" for="${chkId}" title="Marcar cotizacion ganadora">
-                            <i class="bi bi-trophy-fill"></i> <span class="adq-cot-winner-text">Ganadora</span>
-                        </label>
+                    <div class="adq-proforma-actions-row">
+                        <div class="form-check adq-cot-winner adq-cot-winner-on">
+                            <input type="checkbox" class="form-check-input chk-cot-sel" name="${nameBase}[Cot_Sel]" value="1" id="${chkId}" data-cot-key="${idx}"${selChecked} onchange="seleccionarCotizacionUnica('${idx}')">
+                            <label class="form-check-label fw-bold text-success" for="${chkId}" title="Marcar cotizacion ganadora">
+                                <i class="bi bi-trophy-fill"></i> <span class="adq-cot-winner-text">Ganadora</span>
+                            </label>
+                        </div>
+                        <button type="button" class="btn btn-link adq-proforma-remove" title="Quitar proforma" onclick="quitarProformaFila(this)"><i class="bi bi-x-lg"></i></button>
                     </div>
-                    <button type="button" class="btn btn-link adq-proforma-remove" title="Quitar proforma" onclick="quitarProformaFila(this)"><i class="bi bi-x-lg"></i></button>
                 </div>
             </div>
             <div class="adq-proforma-jus div-just-cot adq-cot-field" style="display: ${jusShow};">
@@ -1945,6 +2369,11 @@ function setupAdqFileUpload($scope) {
             this.value = '';
             return;
         }
+        if (file && typeof adqEsArchivoPdfTamanoOk === 'function' && !adqEsArchivoPdfTamanoOk(file)) {
+            alert('El archivo no debe superar los 3 MB.');
+            this.value = '';
+            return;
+        }
         const hasFile = !!file;
         const fileName = hasFile ? file.name : 'Solo archivos PDF';
         const $upload = $(this).closest('.adq-file-upload');
@@ -1963,8 +2392,9 @@ function syncProveedorGrupo($box) {
     if (!$box || !$box.length) {
         return;
     }
-    const val = $box.find('select.select2-prov-cot').val() || '';
+    const val = obtenerValorProveedorCot($box) || '';
     $box.find('.cot-prv-hidden').val(val);
+    $box.find('.adq-prv-docs-prv').val(val);
 }
 
 /**
@@ -1980,10 +2410,7 @@ function agregarProformaMismoProveedor(btn) {
     const prv = obtenerValorProveedorCot($box);
     if (!prv) {
         alert('Seleccione primero el proveedor.');
-        const $sel = $box.find('select.select2-prov-cot');
-        if ($sel.hasClass('select2-hidden-accessible')) {
-            $sel.select2('open');
-        }
+        abrirBuscarProveedor($box.attr('data-group-key') || String($box.attr('id') || '').replace(/^cot_box_/, ''));
         return;
     }
 
@@ -2099,6 +2526,70 @@ function actualizarEstadoAdjuntoCotizacion($box) {
     $box.attr('data-has-adj', has ? 1 : 0);
 }
 
+function proveedorTieneDocSlot($slot) {
+    const keep = String($slot.find('.adq-prv-arc-keep').val() || '').trim();
+    if (keep) {
+        return true;
+    }
+    const input = $slot.find('input[type="file"]')[0];
+    return !!(input && input.files && input.files[0]);
+}
+
+function proveedorDocsFaltantes($box) {
+    const faltan = [];
+    $box.find('.adq-prv-arc-slot').each(function() {
+        const $slot = $(this);
+        if (proveedorTieneDocSlot($slot)) {
+            return;
+        }
+        const tip = String($slot.attr('data-arc-tip') || '');
+        const label = String($slot.find('.adq-prv-arc-label').clone().children().remove().end().text() || tip).replace(/\*/g, '').trim();
+        faltan.push(label || tip);
+    });
+    return faltan;
+}
+
+/**
+ * Exige los 4 PDF (RUC, Cuenta bancaria, Requerimiento, Formulario proveedor)
+ * por cada proveedor al registrar cotizaciones.
+ */
+function validarDocsProveedorFormulario(forzar) {
+    if (!forzar && !adqEtapaPermiteCotizaciones) {
+        const modoCot = String($('#Sol_Modo_Edicion').val() || '') === 'cotizaciones';
+        if (!modoCot) {
+            return true;
+        }
+    }
+    let ok = true;
+    let mensaje = '';
+    $('#cotizacionesList .adq-cot-col').each(function() {
+        const $box = $(this);
+        const prv = obtenerValorProveedorCot($box);
+        if (!prv) {
+            return;
+        }
+        const faltan = proveedorDocsFaltantes($box);
+        if (!faltan.length) {
+            return;
+        }
+        ok = false;
+        const nombre = String($box.find('.adq-prv-txt').val() || ('Proveedor #' + prv)).trim();
+        mensaje = 'No puede guardar: faltan PDF obligatorios del proveedor "' + nombre + '": '
+            + faltan.join(', ') + '.';
+        try {
+            const el = $box.find('.adq-prv-docs').get(0);
+            if (el && el.scrollIntoView) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        } catch (eScroll) { /* ignore */ }
+        return false;
+    });
+    if (!ok) {
+        alert(mensaje || 'Debe cargar RUC, Cuenta bancaria, Requerimiento y Formulario proveedor por cada proveedor.');
+    }
+    return ok;
+}
+
 function validarPdfsCotizacionesFormulario(exigirAdjunto) {
     if (!adqEtapaPermiteCotizaciones) {
         return true;
@@ -2147,34 +2638,31 @@ function agregarCotizacionHTML() {
     const $cotEl = $(`
         <div class="adq-cot-col cot-nueva" id="cot_box_${idx}" data-group-key="${idx}" data-has-adj="0">
             <div class="adq-cot-card card adq-cot-card-inline">
-                <div class="adq-cot-main-row">
-                    <div class="adq-cot-top-prov adq-cot-field">
+                <div class="adq-cot-split-row">
+                    <div class="adq-cot-col-prov adq-cot-field">
                         <label class="adq-cot-label">Proveedor</label>
                         <div class="adq-cot-provider-row">
-                            <div class="select-wrap">
-                                <select class="form-control adq-cot-control select2-prov-cot adq-cot-prov-select" style="width: 100%;"><option value=""></option></select>
-                            </div>
-                            <button type="button" class="btn btn-success adq-cot-add-provider" onclick="abrirModalNuevoProveedor('${idx}')" title="Agregar proveedor"><i class="bi bi-plus-lg"></i></button>
+                            ${htmlProveedorPickerCot({ idx: idx, prvCod: '', prvTxt: '' })}
                             <button type="button" class="btn btn-link adq-cot-remove" onclick="eliminarCotizacion('${idx}')" title="Quitar cotizacion"><i class="bi bi-x-lg"></i></button>
                         </div>
+                        ${htmlArchivosProveedorCot({ idx: idx, prvCod: '' })}
                     </div>
-                </div>
-                <div class="adq-cot-pdf-section">
-                    <div class="adq-proformas-head">
-                        <label class="adq-cot-label"><i class="bi bi-file-earmark-pdf"></i> Proformas</label>
-                        <button type="button" class="btn btn-xs btn-primary adq-btn-add-pdf-cot" onclick="agregarProformaMismoProveedor(this)" title="Agregar otra proforma del mismo proveedor">
-                            <i class="bi bi-plus-lg"></i><span class="adq-btn-add-pdf-label">Proforma</span>
-                        </button>
-                    </div>
-                    <div class="adq-proformas-list">
-                        ${htmlAdqProformaRow({ idx: idx, isExisting: false, prvCod: '', subtotal: '', iva: 0, sel: 0, jus: '' })}
+                    <div class="adq-cot-col-proformas adq-cot-pdf-section">
+                        <div class="adq-proformas-head">
+                            <label class="adq-cot-label"><i class="bi bi-file-earmark-pdf"></i> Proformas</label>
+                            <button type="button" class="btn btn-xs btn-primary adq-btn-add-pdf-cot" onclick="agregarProformaMismoProveedor(this)" title="Agregar otra proforma del mismo proveedor">
+                                <i class="bi bi-plus-lg"></i><span class="adq-btn-add-pdf-label">Proforma</span>
+                            </button>
+                        </div>
+                        <div class="adq-proformas-list">
+                            ${htmlAdqProformaRow({ idx: idx, isExisting: false, prvCod: '', subtotal: '', iva: 0, sel: 0, jus: '' })}
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     `);
     $list.append($cotEl);
-    setupProveedorCotSelect($cotEl.find('.select2-prov-cot'));
     setupAdqFileUpload($cotEl);
     setupProformaMontos($cotEl);
     actualizarBotonesProforma($cotEl);
@@ -2192,7 +2680,7 @@ function adqEscHtml(value) {
 function agregarCotizacionExistente(cot) {
     const scoCod = cot.Sco_Cod;
     const idx = 'ex' + scoCod;
-    const nombreProv = adqEscHtml(cot.Prv_Com || ((cot.Prs_Nom || '') + ' ' + (cot.Prs_Ape || '')).trim() || ('Proveedor #' + cot.Prv_Cod));
+    const nombreProv = cot.Prv_Com || ((cot.Prs_Nom || '') + ' ' + (cot.Prs_Ape || '')).trim() || ('Proveedor #' + cot.Prv_Cod);
     const adjuntos = adqParseCotAdjuntos(cot.Cot_Adj);
     const hasAdj = adjuntos.length ? 1 : 0;
     const pdfsGuardados = htmlAdqPdfsGuardados('cotizaciones_existentes[' + scoCod + '][Cot_Adj_Keep]', adjuntos, true);
@@ -2201,53 +2689,51 @@ function agregarCotizacionExistente(cot) {
     const $cotEl = $(`
         <div class="adq-cot-col cot-existente" id="cot_box_${idx}" data-group-key="${idx}" data-has-adj="${hasAdj}" data-sco-cod="${scoCod}">
             <div class="adq-cot-card card adq-cot-card-inline${isGanadora ? ' adq-cot-card-ganadora' : ''}">
-                <div class="adq-cot-main-row">
-                    <div class="adq-cot-top-prov adq-cot-field">
+                <div class="adq-cot-split-row">
+                    <div class="adq-cot-col-prov adq-cot-field">
                         <label class="adq-cot-label">Proveedor</label>
                         <div class="adq-cot-provider-row">
-                            <div class="select-wrap">
-                                <select class="form-control adq-cot-control select2-prov-cot adq-cot-prov-select" style="width: 100%;">
-                                    <option value="${cot.Prv_Cod}" selected>${nombreProv}</option>
-                                </select>
-                            </div>
-                            <button type="button" class="btn btn-success adq-cot-add-provider" onclick="abrirModalNuevoProveedor('${idx}')" title="Agregar proveedor"><i class="bi bi-plus-lg"></i></button>
+                            ${htmlProveedorPickerCot({ idx: idx, prvCod: cot.Prv_Cod || '', prvTxt: nombreProv })}
                             <button type="button" class="btn btn-link adq-cot-remove" onclick="eliminarCotizacionExistente(${scoCod}, '${idx}')" title="Quitar cotizacion"><i class="bi bi-x-lg"></i></button>
                         </div>
+                        ${htmlArchivosProveedorCot({ idx: idx, prvCod: cot.Prv_Cod || '' })}
                     </div>
-                </div>
-                <div class="adq-cot-pdf-section">
-                    <div class="adq-proformas-head">
-                        <label class="adq-cot-label"><i class="bi bi-file-earmark-pdf"></i> Proformas</label>
-                        <button type="button" class="btn btn-xs btn-primary adq-btn-add-pdf-cot" onclick="agregarProformaMismoProveedor(this)" title="Agregar otra proforma del mismo proveedor">
-                            <i class="bi bi-plus-lg"></i><span class="adq-btn-add-pdf-label">Proforma</span>
-                        </button>
-                    </div>
-                    <div class="adq-proformas-list">
-                        ${htmlAdqProformaRow({
-                            idx: idx,
-                            isExisting: true,
-                            scoCod: scoCod,
-                            prvCod: cot.Prv_Cod,
-                            subtotal: (cot.Cot_Sub !== undefined && cot.Cot_Sub !== null && parseFloat(cot.Cot_Sub) > 0)
-                                ? cot.Cot_Sub
-                                : cot.Cot_Val,
-                            iva: cot.Cot_Iva,
-                            valor: cot.Cot_Val,
-                            sel: cot.Cot_Sel,
-                            jus: cot.Cot_Jus || '',
-                            pdfsGuardadosHtml: pdfsGuardados
-                        })}
+                    <div class="adq-cot-col-proformas adq-cot-pdf-section">
+                        <div class="adq-proformas-head">
+                            <label class="adq-cot-label"><i class="bi bi-file-earmark-pdf"></i> Proformas</label>
+                            <button type="button" class="btn btn-xs btn-primary adq-btn-add-pdf-cot" onclick="agregarProformaMismoProveedor(this)" title="Agregar otra proforma del mismo proveedor">
+                                <i class="bi bi-plus-lg"></i><span class="adq-btn-add-pdf-label">Proforma</span>
+                            </button>
+                        </div>
+                        <div class="adq-proformas-list">
+                            ${htmlAdqProformaRow({
+                                idx: idx,
+                                isExisting: true,
+                                scoCod: scoCod,
+                                prvCod: cot.Prv_Cod,
+                                subtotal: (cot.Cot_Sub !== undefined && cot.Cot_Sub !== null && parseFloat(cot.Cot_Sub) > 0)
+                                    ? cot.Cot_Sub
+                                    : cot.Cot_Val,
+                                iva: cot.Cot_Iva,
+                                valor: cot.Cot_Val,
+                                sel: cot.Cot_Sel,
+                                jus: cot.Cot_Jus || '',
+                                pdfsGuardadosHtml: pdfsGuardados
+                            })}
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     `);
     $('#cotizacionesList').append($cotEl);
-    setupProveedorCotSelect($cotEl.find('.select2-prov-cot'));
     setupAdqFileUpload($cotEl);
     setupProformaMontos($cotEl);
     actualizarBotonesProforma($cotEl);
     syncProveedorGrupo($cotEl);
+    if (cot.Prv_Cod) {
+        cargarArchivosProveedorEnBox($cotEl, cot.Prv_Cod);
+    }
     adqAplicarModoCotizacionesUi();
 }
 
@@ -2267,34 +2753,7 @@ function eliminarCotizacionExistente(scoCod, idx) {
 }
 
 function setupProveedorCotSelect($el) {
-    if (!$el.length) {
-        return;
-    }
-    if ($el.hasClass('select2-hidden-accessible')) {
-        $el.select2('destroy');
-    }
-    $el.select2({
-        placeholder: "Seleccione proveedor...",
-        allowClear: true,
-        minimumInputLength: 1,
-        width: '100%',
-        dropdownCssClass: 'adq-select2-dropdown',
-        ajax: {
-            url: 'adq_solicitud.php?ajax_search_proveedores=1',
-            dataType: 'json',
-            delay: 250,
-            data: function(params) {
-                return { q: params.term };
-            },
-            processResults: function(data) {
-                return { results: data };
-            },
-            cache: true
-        }
-    });
-    $el.off('change.adqProvSync').on('change.adqProvSync', function() {
-        syncProveedorGrupo($(this).closest('.adq-cot-col'));
-    });
+    // Compatibilidad: el picker por tabla reemplaza al Select2 en cotizaciones.
 }
 
 function seleccionarCotizacionUnica(activeKey) {
@@ -2364,7 +2823,7 @@ function reenviarCorreccionObservada() {
         alert('No se encontro la solicitud observada.');
         return;
     }
-    if (!confirm('¿Desea guardar la correccion y reenviar la solicitud a aprobacion?')) {
+    if (!confirm('?Desea guardar la correccion y reenviar la solicitud a aprobacion?')) {
         return;
     }
 
@@ -2425,6 +2884,9 @@ function procesarSolicitud(esBorrador) {
     if (adqEtapaPermiteCotizaciones && !validarPdfsCotizacionesFormulario()) {
         return;
     }
+    if (adqEtapaPermiteCotizaciones && !validarDocsProveedorFormulario()) {
+        return;
+    }
 
     if (!esBorrador) {
         if (!validarFormularioBase() || !validarSeleccionUsuariosNodos() || !validarRequisitosEnvioFormulario()) {
@@ -2437,7 +2899,7 @@ function procesarSolicitud(esBorrador) {
     const $btnSubmit = $('#frmSolicitud').find('button[type="submit"]');
     const $btnBorrador = $('#adqFormActionsDefault button, #adqFormActionsObservada button').filter(function() {
         const txt = $(this).text();
-        return txt.indexOf('Guardar Borrador') !== -1 || txt.indexOf('Guardar Correccion') !== -1 || txt.indexOf('Guardar Corrección') !== -1;
+        return txt.indexOf('Guardar Borrador') !== -1 || txt.indexOf('Guardar Correccion') !== -1 || txt.indexOf('Guardar Correcci?n') !== -1;
     });
     const originalSubmit = $btnSubmit.html();
     const originalBorrador = $btnBorrador.html();
@@ -2576,4 +3038,9 @@ function guardarNuevoProveedor(e) {
             alert('Error al guardar: ' + res.message);
         }
     }, 'json');
+}
+
+
+if (typeof window !== 'undefined') {
+    window.validarDocsProveedorFormulario = validarDocsProveedorFormulario;
 }

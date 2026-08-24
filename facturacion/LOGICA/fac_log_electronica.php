@@ -128,7 +128,7 @@ class Class_Log_Datos_Elect extends MysqlDatos
             $mail->Password =  "owdjkcjdxvftwbxg";  //habilitar*/
 
             $mail->Username = "exacontable@gmail.com";
-            $mail->Password =  "pnpkutrayjdghrua";  //habilitar
+            $mail->Password =  "ckiqjkmrkvsjkzrd";  //habilitar
 
 
             $mail->SMTPSecure = 'tls';
