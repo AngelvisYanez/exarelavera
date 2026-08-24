@@ -71,7 +71,6 @@ function sentencias_vehiculos_choferes($id, $Par_Sql)
                         LEFT JOIN persona ON persona.Prs_Cod = proveedore.Prs_Cod
                         WHERE vehiculo.Veh_Est = 'A' 
                           AND vehiculo.Emp_Cod = '$Par_Sql[0]' 
-                          AND manifiesto_vehiculo.Pla_Cod = '$Par_Sql[Pla_Cod]' 
                           AND IFNULL(vehiculo.Veh_Tip, '') != 'VM' $search
                         ORDER BY vehiculo.Veh_Pla ASC " . $Par_Sql['limits'];
             }
@@ -134,8 +133,8 @@ function sentencias_vehiculos_choferes($id, $Par_Sql)
             break;
 
         case 13:
-            // Buscar nombre de proveedor por ID
-            $sql = "SELECT CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape) as Prv_Nom 
+            // Buscar nombre y cédula de proveedor por ID
+            $sql = "SELECT persona.Prs_Ced, CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape) as Prv_Nom 
                     FROM proveedore 
                     INNER JOIN persona ON persona.Prs_Cod = proveedore.Prs_Cod 
                     WHERE proveedore.Prv_Cod = '$Par_Sql[0]' LIMIT 1";

@@ -144,7 +144,16 @@ $(function () {
 
     // Reajustar jqGrid al cambiar de tab
     $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+        $('.tooltip').remove();
         $(window).trigger('resize');
+    });
+
+    // Limpieza preventiva de tooltips al hacer clic en botones de acción de grids
+    $(document).on('click', '.btn-grid-edit, #gridChoferes button, #gridVehiculos button', function () {
+        $('.tooltip').remove();
+        if ($.fn.tooltip) {
+            $(this).tooltip('hide');
+        }
     });
 });
 
@@ -193,6 +202,10 @@ function buscarVehiculoPorPlaca(placa) {
             if (res.Prv_Nom) {
                 $('#Prv_Nom').val(res.Prv_Nom);
             }
+            if (res.Prs_Ced) {
+                $('#Prv_Ced').val(res.Prs_Ced);
+                $('#iconProveedorStatus').html('<i class="glyphicon glyphicon-ok" style="color: green;"></i>');
+            }
             if (res.Veh_Val !== undefined && res.Veh_Val !== null) {
                 $('#Veh_Val').val(res.Veh_Val);
             }
@@ -226,8 +239,18 @@ function initGrids() {
                     return parts[2] + '/' + parts[1] + '/' + parts[0];
                 }
                 return v;
+            }},
+            { label: 'Acciones', name: 'acciones', width: 60, align: 'center', sortable: false, search: false, formatter: function(cellval, opts, rowObject) {
+                var ced = rowObject.Prs_Ced || '';
+                return '<button type="button" class="btn btn-xs btn-primary btn-grid-edit" onclick="editarChoferDesdeGrid(\'' + ced + '\');" title="Editar"><i class="glyphicon glyphicon-pencil"></i></button>';
             }}
         ],
+        ondblClickRow: function(rowid) {
+            var rowData = $(this).jqGrid('getRowData', rowid);
+            if (rowData && rowData.Prs_Ced) {
+                editarChoferDesdeGrid(rowData.Prs_Ced);
+            }
+        },
         viewrecords: true,
         jsonReader: { root: "rows", page: "page", total: "total", records: "records", repeatitems: false }
     }, false, '#pagerChoferes', { refresh: true, view: false });
@@ -242,9 +265,9 @@ function initGrids() {
         colModel: [
             { label: 'Código', name: 'Veh_Cod', key: true, hidden: true, width: 50, align: 'center' },
             { label: 'Placa', name: 'Veh_Pla', width: 100, align: 'center' },
-            { label: 'Marca', name: 'Veh_Mar', width: 140 },
-            { label: 'Color', name: 'Veh_Col', width: 100, align: 'center' },
-            { label: 'Tipo', name: 'Veh_Tit', width: 110, align: 'center', formatter: function(v) {
+            { label: 'Marca', name: 'Veh_Mar', width: 130 },
+            { label: 'Color', name: 'Veh_Col', width: 90, align: 'center' },
+            { label: 'Tipo', name: 'Veh_Tit', width: 100, align: 'center', formatter: function(v) {
                 if (v === 'V') return 'Volqueta';
                 if (v === 'B') return 'Bus(eta)';
                 if (v === 'C') return 'Camioneta';
@@ -252,12 +275,48 @@ function initGrids() {
                 if (v === 'M') return 'Maquinaria';
                 return v || '';
             }},
-            { label: 'Valor Hora', name: 'Veh_Val', width: 90, align: 'right', formatter: 'number', formatoptions: { decimalSeparator: ".", thousandsSeparator: "", decimalPlaces: 2 } },
-            { label: 'Empresa Transporte', name: 'empresa_transporte', width: 200 }
+            { label: 'Valor Hora', name: 'Veh_Val', width: 85, align: 'right', formatter: 'number', formatoptions: { decimalSeparator: ".", thousandsSeparator: "", decimalPlaces: 2 } },
+            { label: 'Empresa Transporte', name: 'empresa_transporte', width: 190 },
+            { label: 'Acciones', name: 'acciones', width: 60, align: 'center', sortable: false, search: false, formatter: function(cellval, opts, rowObject) {
+                var pla = rowObject.Veh_Pla || '';
+                return '<button type="button" class="btn btn-xs btn-primary btn-grid-edit" onclick="editarVehiculoDesdeGrid(\'' + pla + '\');" title="Editar"><i class="glyphicon glyphicon-pencil"></i></button>';
+            }}
         ],
+        ondblClickRow: function(rowid) {
+            var rowData = $(this).jqGrid('getRowData', rowid);
+            if (rowData && rowData.Veh_Pla) {
+                editarVehiculoDesdeGrid(rowData.Veh_Pla);
+            }
+        },
         viewrecords: true,
         jsonReader: { root: "rows", page: "page", total: "total", records: "records", repeatitems: false }
     }, false, '#pagerVehiculos', { refresh: true, view: false });
+}
+
+/**
+ * Abre el formulario en modo edición para un Chofer
+ * @param {string} cedula 
+ */
+function editarChoferDesdeGrid(cedula) {
+    if (!cedula) return;
+    $('.tooltip').remove();
+    mostrarFormulario('chofer');
+    $('.panel-main .panel-heading').html('<span class="glyphicon glyphicon-edit"></span> » Editar Operario / Chofer');
+    $('#Cho_Ced').val(cedula);
+    buscarPersonaPorCedula(cedula);
+}
+
+/**
+ * Abre el formulario en modo edición para un Vehículo
+ * @param {string} placa 
+ */
+function editarVehiculoDesdeGrid(placa) {
+    if (!placa) return;
+    $('.tooltip').remove();
+    mostrarFormulario('vehiculo');
+    $('.panel-main .panel-heading').html('<span class="glyphicon glyphicon-edit"></span> » Editar Maquinaria / Vehículo');
+    $('#Veh_Pla').val(placa);
+    buscarVehiculoPorPlaca(placa);
 }
 
 /**
@@ -296,8 +355,9 @@ function reloadGridVehiculos() {
  * Regresa al Ambiente 1 (Listado)
  */
 function mostrarListado() {
+    $('.tooltip').remove();
     // Restaurar título del panel original
-    $('.panel-main .panel-heading').html('<span class="glyphicon glyphicon-edit"></span> » Gestión de Vehículos y Choferes por Planta');
+    $('.panel-main .panel-heading').html('<span class="glyphicon glyphicon-edit"></span> » Gestión de Operador y Maquinaria');
     $('#divFormulario').hide();
     $('#divListado').fadeIn(400, function() {
         // Reajustar dimensiones de los grids una vez visible
@@ -310,6 +370,7 @@ function mostrarListado() {
  * @param {string} tipo 'chofer' o 'vehiculo'
  */
 function mostrarFormulario(tipo) {
+    $('.tooltip').remove();
     // Resetear formularios
     $('#formChofer')[0].reset();
     $('#formVehiculo')[0].reset();

@@ -278,6 +278,7 @@ if (isset($_POST['buscarVehiculoPorPlacaAjax'])) {
                 $prv = $obBD_con1->getArrayConsulta(13, array($veh[0]['Prv_Cod']), $obBD_conexion);
                 if (!empty($prv)) {
                     $resp['Prv_Nom'] = trim($prv[0]['Prv_Nom']);
+                    $resp['Prs_Ced'] = isset($prv[0]['Prs_Ced']) ? trim($prv[0]['Prs_Ced']) : '';
                 }
             }
         }
@@ -892,7 +893,7 @@ if (isset($_POST['saveVehiculoAjax'])) {
         </div>
     </div>
 
-    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_vehiculos_choferes.js?v=9"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_vehiculos_choferes.js?v=2"></script>
 </BODY>
 
 </HTML>
