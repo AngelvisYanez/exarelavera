@@ -56,6 +56,90 @@ if (isset($docsAjax)) {
 $llave = $obBD_con1->getRowConsulta(5, $Ses_Emp_Cod, $obBD_conexion);
 $config = $obBD_con1->getRowConsulta(7, $Ses_Emp_Cod, $obBD_conexion);
 //$obBD_con1->echoLog($config);
+
+if (isset($regenerarClave)) {
+    $resp = array('success' => true);
+    $d = $data[0];
+    $tabla = $d['tabla'];
+    $cod_col = $d['cod'];
+    $doc_cod = $d['Doc_Cod'];
+    $old_key = $d['Doc_Xml'];
+
+    $xml_col = '';
+    if ($tabla == 'ventas') {
+        $xml_col = 'Vet_Xml';
+    } elseif ($tabla == 'retencion') {
+        $xml_col = 'Ret_Xml';
+    } elseif ($tabla == 'guias_remis') {
+        $xml_col = 'Gui_Xml';
+    } elseif ($tabla == 'compras') {
+        $xml_col = 'Cop_Aut';
+    }
+
+    if (empty($xml_col)) {
+        $resp['success'] = false;
+        $resp['message'] = "Tabla no soportada para regeneracion de clave: $tabla";
+        $obBD_con1->echoJson($resp);
+        exit;
+    }
+
+    $old_num_code = substr($old_key, 39, 8);
+    $new_num_code = str_pad(intval($old_num_code) + 1, 8, '0', STR_PAD_LEFT);
+
+    $base_key = substr($old_key, 0, 39) . $new_num_code . substr($old_key, 47, 1);
+
+    $factor = 2;
+    $suma = 0;
+    for ($i = strlen($base_key) - 1; $i >= 0; $i--) {
+        $suma += $factor * $base_key[$i];
+        $factor = $factor % 7 == 0 ? 2 : $factor + 1;
+    }
+    $dv = 11 - $suma % 11;
+    $ds = $dv == 11 ? 0 : ($dv == 10 ? "1" : $dv);
+    $new_key = $base_key . $ds;
+
+    $old_xml_path = $ruta_xmls . $old_key . ".xml";
+    $new_xml_path = $ruta_xmls . $new_key . ".xml";
+
+    if (is_readable($old_xml_path)) {
+        $xml_content = file_get_contents($old_xml_path);
+        $xml_content = str_replace($old_key, $new_key, $xml_content);
+        $xml_content = preg_replace('#<claveAcceso>\s*([0-9]{49})\s*</claveAcceso>#i', "<claveAcceso>$new_key</claveAcceso>", $xml_content);
+
+        if (file_put_contents($new_xml_path, $xml_content) !== false) {
+            chmod($new_xml_path, 0777);
+            unlink($old_xml_path);
+
+            $old_signed_path = $ruta_xmls . $old_key . "_F.xml";
+            if (is_readable($old_signed_path)) {
+                unlink($old_signed_path);
+            }
+
+            $sql_update = "UPDATE $tabla SET $xml_col = '$new_key' WHERE $cod_col = '$doc_cod'";
+            $db_result = $obBD_con1->grabarv_registros($sql_update, $obBD_conexion);
+
+            if ($db_result) {
+                $resp['new_key'] = $new_key;
+                $resp['message'] = "Clave regenerada exitosamente a: $new_key";
+            } else {
+                $resp['success'] = false;
+                $resp['message'] = "Error al actualizar la clave en la base de datos: " . $obBD_con1->getMsgError();
+                file_put_contents($old_xml_path, $xml_content);
+                unlink($new_xml_path);
+            }
+        } else {
+            $resp['success'] = false;
+            $resp['message'] = "Error al escribir el nuevo archivo XML en: $new_xml_path";
+        }
+    } else {
+        $resp['success'] = false;
+        $resp['message'] = "No se pudo leer el archivo XML original en: $old_xml_path. Asegurese de que el archivo XML existe y esta legible.";
+    }
+
+    $obBD_con1->echoJson($resp);
+    exit;
+}
+
 if (isset($autorizaDocs)) {
     $resp = array('success' => true, 'data' => $data);
     require_once('../../Librerias/FactElect/FirmaElectronica.php');
@@ -501,6 +585,24 @@ if (isset($autorizaSriDocs)) {
                             }
                         },
                         title: false
+                    },
+                    {
+                        label: '&nbsp;',
+                        name: 'act2',
+                        width: 20,
+                        align: 'center',
+                        viewable: false,
+                        formatter: 'gridButton',
+                        formatoptions: {
+                            action: regenerarClaveUno,
+                            icon: 'refresh',
+                            type: 'warning',
+                            title: 'Regenerar Clave',
+                            conditional: function(o) {
+                                return esErrorClaveDuplicada(o);
+                            }
+                        },
+                        title: false
                     }
                 ]
             }, true, '#documentosPager').gridButtonsAdd([{
@@ -553,14 +655,94 @@ if (isset($autorizaSriDocs)) {
             confirmaAutorizacion(data);
         }
 
+        function normalizarDocFec(docFec) {
+            docFec = $.trim(docFec || '');
+            if (docFec.indexOf('/') >= 0) {
+                var p = docFec.split('/');
+                if (p.length === 3) {
+                    docFec = p[2] + '-' + (('00' + p[1]).slice(-2)) + '-' + (('00' + p[0]).slice(-2));
+                }
+            }
+            if (docFec.length > 10) {
+                docFec = docFec.substring(0, 10);
+            }
+            return docFec;
+        }
+
         function autorizarUno(data) {
-            docs.changeRow(data[docs[0].p.keyName], {
-                Selection: 'S'
-            });
-            conteoMsg = 0, msg = 1;
-            confirmaAutorizacion([$.extend({
-                Selection: 'S'
-            }, data)]);
+            var row = (typeof data === 'object' && data !== null) ? data : docs.jqGrid('getLocalRow', data);
+            if (!row) {
+                $.alert('Error: No se encontro la informacion del documento.');
+                return;
+            }
+            var esVenta = (row.Type === 'VENTAS' || row.Tipo === 'VENTAS' || row.tabla === 'ventas');
+            var docFec = normalizarDocFec(row.Doc_Fec);
+            var hoy = '<?php echo date('Y-m-d'); ?>';
+            var continuarAutorizacion = function() {
+                docs.changeRow(row[docs[0].p.keyName], {
+                    Selection: 'S'
+                });
+                conteoMsg = 0, msg = 1;
+                confirmaAutorizacion([$.extend({
+                    Selection: 'S'
+                }, row)]);
+            };
+            // SRI: ventas solo se autorizan con fecha del dia (bloqueo)
+            if (esVenta) {
+                if (docFec !== hoy) {
+                    $.alert('<i class="fa fa-times-circle" style="color:red;font-size:20px;margin-right:5px;"></i>No es posible autorizar esta factura, ya que la autorizacion debe realizarse el mismo dia de su emision.');
+                    return;
+                }
+                continuarAutorizacion();
+                return;
+            }
+            // Otros documentos: advertencia si no es del dia, pero permite continuar
+            if (docFec && docFec !== hoy) {
+                $.createDialogConfirm(
+                    '<div style="padding:6px 8px 2px;text-align:left;">' +
+                    '<div style="display:flex;align-items:flex-start;gap:12px;">' +
+                    '<i class="fa fa-times-circle" style="color:#c9302c;font-size:28px;line-height:1;margin-top:2px;"></i>' +
+                    '<div style="flex:1;">' +
+                    '<div style="font-size:13px;color:#444;line-height:1.55;">' +
+                    'La fecha de emision (<b>' + docFec + '</b>) no corresponde al dia actual (<b>' + hoy + '</b>). ' +
+                    'Segun la Resolucion <b>NAC-DGERCGC25-00000017</b> del SRI, la autorizacion debe hacerse el mismo dia de emision para evitar multas o inconsistencias.' +
+                    '</div>' +
+                    '<div style="margin-top:12px;padding-top:10px;border-top:1px solid #e5e5e5;font-size:13px;color:#333;">' +
+                    'Desea continuar con la autorizacion de todas formas?' +
+                    '</div>' +
+                    '</div></div></div>',
+                    null,
+                    continuarAutorizacion
+                );
+                return;
+            }
+            continuarAutorizacion();
+        }
+
+        function esErrorClaveDuplicada(o) {
+            if (o.Doc_Aut === 'S') return false;
+            var esAdmin = <?php echo (isset($_SESSION['Ses_Per_Des']) && in_array("Administrador de Sistemas", $_SESSION['Ses_Per_Des'])) ? 'true' : 'false'; ?>;
+            if (!esAdmin) return false;
+            var errorMsg = o.ErrorMsg || '';
+            var error = o.Error || '';
+            if (errorMsg.indexOf('<') !== -1) {
+                errorMsg = $('<div>').html(errorMsg).text();
+            }
+            if (error.indexOf('<') !== -1) {
+                error = $('<div>').html(error).text();
+            }
+            var fullMsg = (errorMsg + ' ' + error).toUpperCase();
+            return fullMsg.indexOf('CLAVE ACCESO REGISTRADA') !== -1 ||
+                fullMsg.indexOf('CLAVE DUPLICADA') !== -1 ||
+                fullMsg.indexOf('43:') !== -1 ||
+                fullMsg.indexOf('YA SE ENCUENTRA REGISTRADO') !== -1 ||
+                fullMsg.indexOf('IDENTIFICADOR: 43') !== -1 ||
+                fullMsg.indexOf('NO SE ENCONTRO LA CLAVE EN EL SRI') !== -1 ||
+                fullMsg.indexOf('NO SE ENCUENTRA AUTORIZADO') !== -1 ||
+                fullMsg.indexOf('MITE DE INTENTOS') !== -1 ||
+                fullMsg.indexOf('90') !== -1 ||
+                fullMsg.indexOf('HTTP ERROR') !== -1 ||
+                fullMsg.indexOf('SEPARAC') !== -1;
         }
 
         function esErrorSecuencialRegistrado(o) {
@@ -626,21 +808,85 @@ if (isset($autorizaSriDocs)) {
                         if (v['Doc_Aut'] !== 'S' && esErrorSecuencialRegistrado(v)) {
                             v['Doc_VerSri'] = 'S';
                         }
+                        if (esErrorClaveDuplicada(v)) {
+                            v['act2'] = $.getGridButton(regenerarClaveUno, v[docs[0].p.keyName], 'Regenerar Clave', 'refresh', '', 'warning');
+                        } else {
+                            v['act2'] = '';
+                        }
                         docs.changeRow(v[docs[0].p.keyName], v);
-                        docs.changeRow(v[docs[0].p.keyName], {
-                            act1: '',
-                            actAutSri: ''
-                        });
+                        if (v['Doc_Aut'] === 'S') {
+                            docs.changeRow(v[docs[0].p.keyName], {
+                                act1: '',
+                                actAutSri: '',
+                                act2: ''
+                            });
+                        }
                     });
                     return false;
                 }, limpiarMsgs, limpiarMsgs, msgFinal);
             });
         }
 
+        function getDocRow(data) {
+            var pk = docs[0].p.keyName;
+            if ($.isArray(data)) data = data[0];
+            if (typeof data === 'object' && data !== null) {
+                var rowId = data[pk];
+                if (rowId !== undefined && rowId !== null && rowId !== '') {
+                    var local = docs.jqGrid('getLocalRow', rowId) || docs.jqGrid('getRowData', rowId);
+                    if (local && local[pk] !== undefined && local[pk] !== '') {
+                        return $.extend({}, local, data);
+                    }
+                }
+                if (data.Doc_Cod && data.tabla && data.cod) return data;
+            } else if (data !== undefined && data !== null && data !== '') {
+                var row = docs.jqGrid('getLocalRow', data) || docs.jqGrid('getRowData', data);
+                if (row) {
+                    if (!row[pk] || row[pk] === '') row[pk] = data;
+                    return row;
+                }
+            }
+            return null;
+        }
+
+        function regenerarClaveUno(data) {
+            var row = getDocRow(data);
+            if (!row) {
+                $.alert('Error: No se encontro la informacion del documento.');
+                return;
+            }
+            $.createDialogConfirm('Esta seguro que desea regenerar la clave de acceso para este documento? Se creara una clave nueva y se actualizara el XML.', row, ejecutarRegeneracion);
+        }
+
+        function ejecutarRegeneracion(data) {
+            var row = getDocRow(data);
+            var pk = docs[0].p.keyName;
+            if (!row || row[pk] === undefined || row[pk] === null || row[pk] === '') {
+                $.alert('Error: No se encontro la informacion del documento.');
+                return;
+            }
+            docs.changeRow(row[pk], {
+                ErrorMsg: '<i class="fa fa-spin fa-pulse fa-spinner grey" style="font-size: 15px;">&nbsp;</i>'
+            });
+            $.saveDataJson('', {
+                regenerarClave: true,
+                data: [row]
+            }, function(re) {
+                if (re.success) {
+                    $.alert(re.message);
+                    setDocs();
+                } else {
+                    $.alert('Error: ' + re.message);
+                    setDocs();
+                }
+                return false;
+            }, function() {}, function() {}, function() {});
+        }
+
         function msgFinal() {
             conteoMsg++;
             if (conteoMsg === (msg))
-                $.alert('Los Documentos se enviaron para su autorización! <br><span style="color:blue">Recuerda que solo puedes tener tres intentos fallidos despues el SRI, bloqueara la opción durante 24horas </span> <br><br><u style="color:red">NOTA:</u><i> Revise el estado.</i>');
+                $.alert('Los Documentos se enviaron para su autorizacion! <br><span style="color:blue">Recuerda que solo puedes tener tres intentos fallidos despues el SRI, bloqueara la opcion durante 24horas </span> <br><br><u style="color:red">NOTA:</u><i> Revise el estado.</i>');
         }
     </script>
 </BODY>
