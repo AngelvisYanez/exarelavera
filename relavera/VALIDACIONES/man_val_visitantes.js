@@ -627,13 +627,20 @@ function initGridVisitantesEvento() {
       {
         name: "acciones",
         index: "acciones",
-        width: 170,
+        width: 175,
         align: "center",
         sortable: false,
         formatter: function (cellvalue, options, rowObject) {
+          var manEve = (rowObject && rowObject.Man_Eve) ? rowObject.Man_Eve : ($("#selMan_Eve").val() || "");
+          var yaEnviado = (rowObject && (rowObject.MVis_Cer_Env === 'S' || rowObject.MVis_Cer_Env === 's'));
+          var sendBtnClass = yaEnviado ? 'btn-warning' : 'btn-success';
+          var sendBtnIcon = yaEnviado ? 'glyphicon-repeat' : 'glyphicon-send';
+          var sendBtnText = yaEnviado ? 'Reenviar' : 'Enviar';
+          var sendBtnTitle = yaEnviado ? 'Reenviar Certificado PDF' : 'Enviar Certificado PDF';
+
           var editBtn = '<button type="button" class="btn btn-primary btn-xs" onclick="abrirModalVisitante(' + rowObject.MVis_Cod + ')" title="Editar Visitante"><i class="glyphicon glyphicon-pencil"></i></button> ';
-          var certBtn = '<button type="button" class="btn btn-warning btn-xs" onclick="verCertificadoPdf(\'' + (rowObject.Prs_Nom || '') + '\', \'' + (rowObject.Prs_Ape || '') + '\', \'' + (rowObject.Prs_Ced || '') + '\')" title="Ver Certificado PDF"><i class="glyphicon glyphicon-certificate"></i></button> ';
-          var sendBtn = '<button type="button" class="btn btn-success btn-xs" onclick="enviarCertificadoVisitanteEvento(' + rowObject.MVis_Cod + ', this)" title="Enviar Certificado PDF"><i class="glyphicon glyphicon-send"></i> Enviar</button> ';
+          var certBtn = '<button type="button" class="btn btn-default btn-xs" onclick="verCertificadoPdf(\'' + (rowObject.Prs_Nom || '') + '\', \'' + (rowObject.Prs_Ape || '') + '\', \'' + (rowObject.Prs_Ced || '') + '\', \'' + manEve + '\')" title="Ver Certificado PDF" style="color: #b45309; border-color: #f59e0b;"><i class="glyphicon glyphicon-certificate"></i></button> ';
+          var sendBtn = '<button type="button" class="btn ' + sendBtnClass + ' btn-xs" data-sent="' + (yaEnviado ? '1' : '0') + '" onclick="enviarCertificadoVisitanteEvento(' + rowObject.MVis_Cod + ', this)" title="' + sendBtnTitle + '"><i class="glyphicon ' + sendBtnIcon + '"></i> ' + sendBtnText + '</button> ';
           var deleteBtn = '<button type="button" class="btn btn-danger btn-xs" onclick="anularVisitanteGrid(' + rowObject.MVis_Cod + ')" title="Anular Visitante"><i class="glyphicon glyphicon-trash"></i></button>';
           return editBtn + certBtn + sendBtn + deleteBtn;
         }
@@ -644,6 +651,8 @@ function initGridVisitantesEvento() {
     cmTemplate: { sortable: false },
     rowNum: 50,
     rowList: [50, 100, 200, 500, 999999],
+    caption: "Historial de Registro",
+    hidegrid: false,
     pager: "#gridVisitantesEventoPager",
     sortname: "nombre",
     sortorder: "asc",
@@ -895,26 +904,31 @@ function guardarVisitante() {
   );
 }
 
-function verCertificadoPdf(prsNom, prsApe, prsCed) {
-  var url = "?verCertificadoPdfAjax=true&Prs_Nom=" + encodeURIComponent(prsNom) + "&Prs_Ape=" + encodeURIComponent(prsApe) + "&Prs_Ced=" + encodeURIComponent(prsCed) + "&es_visitante=1";
+function verCertificadoPdf(prsNom, prsApe, prsCed, manEve) {
+  var eve = manEve || $("#selMan_Eve").val() || "";
+  var url = "?verCertificadoPdfAjax=true&Prs_Nom=" + encodeURIComponent(prsNom) + "&Prs_Ape=" + encodeURIComponent(prsApe) + "&Prs_Ced=" + encodeURIComponent(prsCed) + "&Man_Eve=" + encodeURIComponent(eve) + "&es_visitante=1";
   window.open(url, "_blank");
 }
 
 function enviarCertificadoVisitanteEvento(MVis_Cod, btnEl) {
   if (!MVis_Cod) return;
   var $btn = $(btnEl);
-  $btn.prop("disabled", true).html('<i class="glyphicon glyphicon-refresh"></i>');
+  var eraEnviado = ($btn.attr("data-sent") === "1");
+  var labelOriginal = eraEnviado ? 'Reenviar' : 'Enviar';
+  var iconOriginal = eraEnviado ? 'glyphicon-repeat' : 'glyphicon-send';
+
+  $btn.prop("disabled", true).html('<i class="glyphicon glyphicon-refresh spin"></i>');
 
   swal({
-    title: "Enviar Certificado",
+    title: (eraEnviado ? "Reenviar Certificado" : "Enviar Certificado"),
     text: "¿Desea enviar el certificado PDF por WhatsApp y Correo?",
     type: "info",
     showCancelButton: true,
-    confirmButtonText: "Enviar",
+    confirmButtonText: (eraEnviado ? "Reenviar" : "Enviar"),
     cancelButtonText: "Cancelar"
   }, function (isConfirm) {
     if (!isConfirm) {
-      $btn.prop("disabled", false).html('<i class="glyphicon glyphicon-send"></i> Enviar');
+      $btn.prop("disabled", false).html('<i class="glyphicon ' + iconOriginal + '"></i> ' + labelOriginal);
       return;
     }
 
@@ -932,6 +946,11 @@ function enviarCertificadoVisitanteEvento(MVis_Cod, btnEl) {
         console.log("[EnviarCertificado] Respuesta JSON:", r);
         if (r && r.success) {
           mostrarAlertaUI("Éxito", r.message || "Certificado PDF notificado correctamente.", "success");
+          $btn.attr("data-sent", "1")
+              .removeClass("btn-success")
+              .addClass("btn-warning")
+              .attr("title", "Reenviar Certificado PDF")
+              .html('<i class="glyphicon glyphicon-repeat"></i> Reenviar');
         } else {
           console.warn("[EnviarCertificado] success=false. message:", r && r.message);
           console.warn("[EnviarCertificado] debug_info:", r && r.debug_info);
@@ -944,7 +963,13 @@ function enviarCertificadoVisitanteEvento(MVis_Cod, btnEl) {
         mostrarAlertaUI("Error", "Error de comunicación con el servidor. Ver consola.", "error");
       },
       complete: function () {
-        $btn.prop("disabled", false).html('<i class="glyphicon glyphicon-send"></i> Enviar');
+        var isNowSent = ($btn.attr("data-sent") === "1");
+        $btn.prop("disabled", false);
+        if (isNowSent) {
+          $btn.removeClass("btn-success").addClass("btn-warning").attr("title", "Reenviar Certificado PDF").html('<i class="glyphicon glyphicon-repeat"></i> Reenviar');
+        } else {
+          $btn.removeClass("btn-warning").addClass("btn-success").attr("title", "Enviar Certificado PDF").html('<i class="glyphicon glyphicon-send"></i> Enviar');
+        }
       }
     });
   });

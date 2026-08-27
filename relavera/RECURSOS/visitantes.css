@@ -97,12 +97,13 @@ body {
 }
 
 /* Barra de Título del Grid (Historial de Registro) - Altura Aumentada y Alineación Vertical */
+#gbox_gridVisitantesEvento .ui-jqgrid-titlebar,
+#gview_gridVisitantesEvento .ui-jqgrid-titlebar,
 #gbox_gridChoferes .ui-jqgrid-titlebar,
 #gview_gridChoferes .ui-jqgrid-titlebar,
 div.ui-jqgrid-titlebar,
 div.ui-jqgrid .ui-jqgrid-titlebar,
-.ui-jqgrid-titlebar.ui-widget-header,
-.ui-jqgrid .ui-widget-header {
+.ui-jqgrid-titlebar.ui-widget-header {
     height: 34px !important;
     min-height: 34px !important;
     line-height: 34px !important;
@@ -123,12 +124,16 @@ div.ui-jqgrid .ui-jqgrid-titlebar,
     box-sizing: border-box !important;
 }
 
+#gbox_gridVisitantesEvento .ui-jqgrid-titlebar *,
+#gview_gridVisitantesEvento .ui-jqgrid-titlebar *,
 #gbox_gridChoferes .ui-jqgrid-titlebar *,
 #gview_gridChoferes .ui-jqgrid-titlebar *,
 div.ui-jqgrid-titlebar *,
 div.ui-jqgrid .ui-jqgrid-titlebar *,
 .ui-jqgrid-titlebar .ui-jqgrid-title,
 .ui-jqgrid-title,
+#gbox_gridVisitantesEvento .ui-jqgrid-title,
+#gview_gridVisitantesEvento .ui-jqgrid-title,
 #gbox_gridChoferes .ui-jqgrid-title,
 #gview_gridChoferes .ui-jqgrid-title {
     color: #ffffff !important;

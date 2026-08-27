@@ -374,6 +374,9 @@ function sentencias_visitantes($Nro_Sql, $Par_Sql)
                                Man_EFef,
                                Man_Ehor,
                                Man_Vig,
+                               IFNULL(Man_Teve, 'DE ASISTENCIA') AS Man_Teve,
+                               IFNULL(Man_Tcrf, '') AS Man_Tcrf,
+                               IFNULL(Man_Wms, '') AS Man_Wms,
                                IFNULL(Man_EEst, 'A') AS Man_EEst,
                                (SELECT COUNT(*) FROM manifiesto_visitante mv
                                  WHERE mv.Man_Eve = manifiesto_evento.Man_Eve
@@ -425,7 +428,8 @@ function sentencias_visitantes($Nro_Sql, $Par_Sql)
                        persona.Prs_Dir,
                        persona.Prs_Fec,
                        CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) as nombre,
-                       IFNULL(me.Man_ENom, 'Sin evento') as Man_ENom
+                       IFNULL(me.Man_ENom, 'Sin evento') as Man_ENom,
+                       IFNULL(mv.MVis_Cer_Env, 'N') as MVis_Cer_Env
                 FROM manifiesto_visitante mv
                 INNER JOIN persona ON persona.Prs_Cod = mv.Prs_Cod
                 LEFT JOIN manifiesto_evento me ON me.Man_Eve = mv.Man_Eve

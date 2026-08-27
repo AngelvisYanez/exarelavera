@@ -26,33 +26,37 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
     $prsApe = isset($_GET['Prs_Ape']) ? trim($_GET['Prs_Ape']) : 'Apellidos';
     $prsCed = isset($_GET['Prs_Ced']) ? trim($_GET['Prs_Ced']) : '1100000000';
     $esVis = isset($_GET['es_visitante']) && $_GET['es_visitante'] == '1';
+    $manEve = isset($_GET['Man_Eve']) && trim($_GET['Man_Eve']) !== '' ? trim($_GET['Man_Eve']) : null;
 
     $nombrePersona = trim($prsNom . ' ' . $prsApe);
     if (empty($nombrePersona) || $nombrePersona === 'Nombres Apellidos') {
         $nombrePersona = 'Juan Carlos Pérez';
     }
 
-    $nombreEvento = 'Capacitación en Seguridad Industrial y Ambiental';
-    $horasEvento = '6';
-    $fechaEventoTexto = 'sábado 08 de agosto de 2026';
+    $evData = man_cert_asistencia_resolver_evento($obBD_con1, $obBD_conexion, $manEve);
+    $nombreEvento = $evData['nombre'];
+    $horasEvento = $evData['horas'];
+    $fechaEventoTexto = $evData['fecha_texto'];
+    $tipoCertificado = !empty($evData['tipo_certificado']) ? $evData['tipo_certificado'] : 'DE ASISTENCIA';
+    $textoCertificado = !empty($evData['texto_certificado']) ? trim($evData['texto_certificado']) : '';
 
-    try {
-        $resEv = $obBD_con1->consulta("SELECT Man_ENom, Man_EFei FROM manifiesto_evento WHERE UPPER(Man_Vig) = 'S' AND UPPER(Man_EEst) = 'A' LIMIT 1", $obBD_conexion->conexion);
-        if ($resEv && ($rowEv = $obBD_con1->fetch_assoc($resEv))) {
-            if (!empty($rowEv['Man_ENom'])) $nombreEvento = trim($rowEv['Man_ENom']);
-            if (isset($rowEv['Man_EHor']) && !empty($rowEv['Man_EHor'])) $horasEvento = trim($rowEv['Man_EHor']);
-            if (!empty($rowEv['Man_EFei'])) {
-                $tsEv = strtotime($rowEv['Man_EFei']);
-                $diasSemana = array('domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado');
-                $mesesNom = array('enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre');
-                $diaSem = $diasSemana[date('w', $tsEv)];
-                $numDia = date('d', $tsEv);
-                $mesNom = $mesesNom[(int)date('m', $tsEv) - 1];
-                $anioNum = date('Y', $tsEv);
-                $fechaEventoTexto = "$diaSem $numDia de $mesNom de $anioNum";
-            }
-        }
-    } catch (Exception $e) {
+    if (!empty($textoCertificado) && (strpos($textoCertificado, '{') !== false || strlen($textoCertificado) > 30)) {
+        $parrafoHtml = str_replace(
+            array('{nombre}', '{cedula}', '{fecha}', '{horas}', '{evento}', '{proyecto}'),
+            array(
+                '<strong>' . htmlspecialchars($nombrePersona) . '</strong>',
+                '<strong>' . htmlspecialchars($prsCed) . '</strong>',
+                '<strong>' . $fechaEventoTexto . '</strong>',
+                '<strong>' . htmlspecialchars($horasEvento) . ' horas</strong>',
+                '<strong>"' . htmlspecialchars($nombreEvento) . '"</strong>',
+                '<strong>Proyecto Ambiental Asociativo Relavera Comunitaria "El Tablón"</strong>'
+            ),
+            htmlspecialchars($textoCertificado)
+        );
+        $parrafoHtml = htmlspecialchars_decode($parrafoHtml);
+    } else {
+        $actividad = !empty($textoCertificado) ? htmlspecialchars($textoCertificado) : 'la capacitación';
+        $parrafoHtml = 'Que el Sr(a). <strong>' . htmlspecialchars($nombrePersona) . '</strong> asistió a ' . $actividad . ' de <strong>Proyecto Ambiental Asociativo Relavera Comunitaria "El Tablón"</strong> el día <strong>' . $fechaEventoTexto . '</strong> con una duración de <strong>' . htmlspecialchars($horasEvento) . ' horas</strong> con el tema <strong>"' . htmlspecialchars($nombreEvento) . '"</strong>.';
     }
 
     $mesesAct = array('enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre');
@@ -554,7 +558,7 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
 
                     <div class="grant-header">OTORGA EL PRESENTE</div>
                     <div class="main-cert-title">CERTIFICADO</div>
-                    <div class="sub-cert-title">DE ASISTENCIA</div>
+                    <div class="sub-cert-title"><?php echo htmlspecialchars($tipoCertificado); ?></div>
 
                     <div class="dots-divider">• • •</div>
 
@@ -563,7 +567,7 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
                     <div class="recipient-cedula">C.I.: <strong><?php echo htmlspecialchars($prsCed); ?></strong></div>
 
                     <div class="cert-paragraph">
-                        Que el Sr. <strong><?php echo htmlspecialchars($nombrePersona); ?></strong> asistió a la capacitación de <strong>Proyecto Ambiental Asociativo Relavera Comunitaria "El Tablón"</strong> el día <strong><?php echo $fechaEventoTexto; ?></strong> con una duración de <strong><?php echo htmlspecialchars($horasEvento); ?> horas</strong> con el tema <strong>"<?php echo htmlspecialchars($nombreEvento); ?>"</strong>.
+                        <?php echo $parrafoHtml; ?>
                     </div>
                 </div>
 
@@ -1070,6 +1074,45 @@ if (isset($_POST['saveVisitanteAjax']) || isset($_POST['saveChoferAjax'])) {
         $resp['success'] = true;
         $resp['message'] = 'Visitante guardado correctamente';
         $resp['debug_info'] = $debugDetails;
+
+        // Envío automático opcional de WhatsApp de Bienvenida / Confirmación de Registro
+        $telNotif = !empty($Vis_Tel) ? trim($Vis_Tel) : (!empty($Vis_Tem) ? trim($Vis_Tem) : '');
+        if (!empty($telNotif) && !empty($Man_Eve)) {
+            try {
+                $evDataNotif = man_cert_asistencia_resolver_evento($obBD_con1, $obBD_conexion, $Man_Eve);
+                $nomEv = !empty($evDataNotif['nombre']) ? $evDataNotif['nombre'] : 'Evento';
+                $nomCompleto = trim($Prs_Nom . ' ' . $Prs_Ape);
+                $telWa = relavera_whatsapp_normalizar_numero_ec($telNotif);
+
+                if (!empty($telWa)) {
+                    $msgCustom = !empty($evDataNotif['mensaje_whatsapp']) ? trim($evDataNotif['mensaje_whatsapp']) : '';
+                    if ($msgCustom !== '') {
+                        $cuerpo = str_replace(
+                            array('{nombre}', '{cedula}', '{evento}', '{proyecto}'),
+                            array($nomCompleto, $Vis_Ced, $nomEv, 'Relavera Comunitaria "El Tablón"'),
+                            $msgCustom
+                        );
+                        if (strpos($cuerpo, '👋') !== false || strpos($cuerpo, '🏢') !== false || strpos($cuerpo, "\n") !== false) {
+                            $msgWa = $cuerpo;
+                        } else {
+                            $msgWa = "¡Hola *" . $nomCompleto . "*! 👋\n\n"
+                                . $cuerpo . "\n\n"
+                                . "🏢 Proyecto: *Relavera Comunitaria \"El Tablón\"* - ECOPARKMINING S.A.\n\n"
+                                . "¡Gracias por tu participación! ✨";
+                        }
+                    } else {
+                        $msgWa = "¡Hola *" . $nomCompleto . "*! 👋\n\n"
+                            . "Te has registrado exitosamente en el evento *\"" . $nomEv . "\"*.\n"
+                            . "Esperando que sea de su agrado y que disfrute al máximo.\n\n"
+                            . "🏢 Proyecto: *Relavera Comunitaria \"El Tablón\"* - ECOPARKMINING S.A.\n\n"
+                            . "¡Gracias por tu participación! ✨";
+                    }
+                    relavera_enviar_whatsapp_notif($telWa, $msgWa);
+                }
+            } catch (Exception $eNotif) {
+                // Silencioso para no afectar la respuesta del guardado si falla el webhook
+            }
+        }
     } catch (Exception $e) {
         $obBD_con1->rollBack_nomsn($obBD_conexion);
         $resp['success'] = false;
@@ -1091,7 +1134,6 @@ if (isset($_POST['anularVisitanteAjax'])) {
 
 // 7. Enviar certificado PDF a visitante del evento (WhatsApp y/o correo)
 if (isset($_POST['enviarCertificadoVisitanteEventoAjax'])) {
-    // El envío SMTP puede tardar; ampliar tiempo de ejecución solo para esta petición
     @set_time_limit(120);
     $resp = array(
         'success'           => false,
@@ -1103,130 +1145,133 @@ if (isset($_POST['enviarCertificadoVisitanteEventoAjax'])) {
         'debug_info'        => array()
     );
 
-    $MVis_Cod = isset($_POST['MVis_Cod']) ? trim((string) $_POST['MVis_Cod']) : '';
-    $canal = isset($_POST['canal']) ? strtolower(trim((string) $_POST['canal'])) : 'ambos';
-    if (!in_array($canal, array('whatsapp', 'correo', 'ambos'), true)) {
-        $canal = 'ambos';
-    }
-
-    $resp['debug_info']['MVis_Cod_recibido'] = $MVis_Cod;
-    $resp['debug_info']['canal'] = $canal;
-
-    if ($MVis_Cod === '') {
-        $resp['message'] = 'No se recibió el código del visitante.';
-        responderJsonLimpio($resp);
-    }
-
-    $visitante = $obBD_con1->getRowConsulta(17, array($MVis_Cod), $obBD_conexion);
-    if (empty($visitante)) {
-        $resp['message'] = 'No se encontró el visitante indicado.';
-        responderJsonLimpio($resp);
-    }
-    $obBD_con1->utf8_change_param($visitante);
-
-    $prsNom = isset($visitante['Prs_Nom']) ? trim((string) $visitante['Prs_Nom']) : '';
-    $prsApe = isset($visitante['Prs_Ape']) ? trim((string) $visitante['Prs_Ape']) : '';
-    $nombre = isset($visitante['nombre']) ? trim((string) $visitante['nombre']) : '';
-    if ($nombre === '') {
-        $nombre = trim($prsNom . ' ' . $prsApe);
-    }
-    $cedula = isset($visitante['Prs_Ced']) ? trim((string) $visitante['Prs_Ced']) : '';
-
-    $telefono = '';
-    if (!empty($visitante['Prs_Tel_Base'])) {
-        $telefono = trim((string) $visitante['Prs_Tel_Base']);
-    } elseif (!empty($visitante['MVis_Tem'])) {
-        $telefono = trim((string) $visitante['MVis_Tem']);
-    }
-
-    $correo = isset($visitante['Prs_Cor']) ? trim((string) $visitante['Prs_Cor']) : '';
-    $correoValido = ($correo !== '' && filter_var($correo, FILTER_VALIDATE_EMAIL));
-    if (!$correoValido) {
-        $correo = '';
-    }
-
-    $resp['debug_info']['nombre']          = $nombre;
-    $resp['debug_info']['cedula']          = $cedula;
-    $resp['debug_info']['telefono_raw']    = $telefono;
-    $resp['debug_info']['correo_raw']      = isset($visitante['Prs_Cor']) ? trim((string) $visitante['Prs_Cor']) : '';
-    $resp['debug_info']['correo_valido']   = $correoValido;
-
-    $manEve = isset($visitante['Man_Eve']) ? trim((string) $visitante['Man_Eve']) : '';
-    if ($manEve === '' && !empty($_POST['Man_Eve'])) {
-        $manEve = trim((string) $_POST['Man_Eve']);
-    }
-    $evData = man_cert_asistencia_resolver_evento($obBD_con1, $obBD_conexion, $manEve !== '' ? $manEve : null);
-    $nombreEvento = $evData['nombre'];
-    $resp['debug_info']['Man_Eve'] = $manEve;
-    $resp['debug_info']['nombreEvento'] = $nombreEvento;
-
-    $pdfParams = man_cert_asistencia_armar_params($prsNom, $prsApe, $cedula, $evData);
-    $pdfPath = man_cert_asistencia_generar_pdf($pdfParams);
-    if ($pdfPath === false || !is_file($pdfPath)) {
-        $resp['message'] = 'No se pudo generar el PDF del certificado.';
-        $resp['debug_info']['pdf_generado'] = false;
-        responderJsonLimpio($resp);
-    }
-    $resp['debug_info']['pdf_generado'] = true;
-    $resp['debug_info']['pdf_path']     = $pdfPath;
-
-    $pdfBase64 = base64_encode(file_get_contents($pdfPath));
-    $pdfNombre = 'Certificado_Asistencia_' . preg_replace('/[^a-zA-Z0-9_-]/', '', $cedula !== '' ? $cedula : 'visitante') . '.pdf';
-
-    $lineas   = array();
-    $lineas[] = 'Gracias por su asistencia. Adjuntamos su certificado de participación en PDF.';
-    $lineas[] = '';
-    $lineas[] = 'Datos registrados:';
-    if ($nombre !== '')       $lineas[] = '- Nombre: ' . $nombre;
-    if ($cedula !== '')       $lineas[] = '- Cédula: ' . $cedula;
-    if ($nombreEvento !== '') $lineas[] = '- Evento: ' . $nombreEvento;
-    $mensaje = implode("\n", $lineas);
-    $asunto  = 'Certificado de asistencia' . ($nombreEvento !== '' ? ' - ' . $nombreEvento : ' - Relavera');
-
-    $detalle   = array();
-    $enviarWa  = ($canal === 'whatsapp' || $canal === 'ambos');
-    $enviarMail= ($canal === 'correo'   || $canal === 'ambos');
-
-    if ($enviarWa) {
-        $telWa = relavera_whatsapp_normalizar_numero_ec($telefono);
-        $resp['debug_info']['telefono_normalizado_wa'] = $telWa;
-        if ($telWa === '') {
-            $resp['omitido_whatsapp'] = true;
-            $detalle[] = 'WhatsApp omitido (sin teléfono válido)';
-        } else {
-            $okWa = relavera_enviar_whatsapp_documento_notif($telWa, $pdfBase64, $pdfNombre, $mensaje);
-            $resp['whatsapp'] = (bool) $okWa;
-            $resp['debug_info']['whatsapp_resultado'] = $okWa;
-            $detalle[] = $okWa ? 'WhatsApp enviado (PDF)' : 'WhatsApp falló';
+    try {
+        $MVis_Cod = isset($_POST['MVis_Cod']) ? (int)$_POST['MVis_Cod'] : 0;
+        $canal = isset($_POST['canal']) ? strtolower(trim((string) $_POST['canal'])) : 'ambos';
+        if (!in_array($canal, array('whatsapp', 'correo', 'ambos'), true)) {
+            $canal = 'ambos';
         }
-    }
 
-    if ($enviarMail) {
-        if ($correo === '') {
-            $resp['omitido_correo'] = true;
-            $detalle[] = 'Correo omitido (sin email válido)';
-        } else {
-            $okMail = relavera_notif_enviar_correo_notif(
-                $correo,
-                $nombre,
-                $asunto,
-                $mensaje,
-                null,
-                array('ruta' => $pdfPath, 'nombre' => $pdfNombre)
-            );
-            $resp['correo'] = (bool) $okMail;
-            $resp['debug_info']['correo_resultado'] = $okMail;
-            $detalle[] = $okMail ? 'Correo enviado (PDF adjunto)' : 'Correo falló';
+        $resp['debug_info']['MVis_Cod_recibido'] = $MVis_Cod;
+        $resp['debug_info']['canal'] = $canal;
+
+        if ($MVis_Cod <= 0) {
+            throw new Exception('No se recibió el código del visitante.');
         }
-    }
 
-    @unlink($pdfPath);
+        $visitante = $obBD_con1->getRowConsulta(17, array($MVis_Cod), $obBD_conexion);
+        if (empty($visitante)) {
+            throw new Exception('No se encontró el visitante indicado.');
+        }
+        $obBD_con1->utf8_change_param($visitante);
 
-    $resp['success'] = ($resp['whatsapp'] || $resp['correo'] || $resp['omitido_whatsapp'] || $resp['omitido_correo']);
-    if ($resp['whatsapp'] || $resp['correo']) {
-        $resp['message'] = 'Certificado PDF notificado: ' . implode('. ', $detalle) . '.';
-    } else {
-        $resp['message'] = 'No se pudo enviar el PDF. ' . implode('. ', $detalle) . '.';
+        $prsNom = isset($visitante['Prs_Nom']) ? trim((string) $visitante['Prs_Nom']) : '';
+        $prsApe = isset($visitante['Prs_Ape']) ? trim((string) $visitante['Prs_Ape']) : '';
+        $nombre = isset($visitante['nombre']) ? trim((string) $visitante['nombre']) : '';
+        if ($nombre === '') {
+            $nombre = trim($prsNom . ' ' . $prsApe);
+        }
+        $cedula = isset($visitante['Prs_Ced']) ? trim((string) $visitante['Prs_Ced']) : '';
+
+        $telefono = '';
+        if (!empty($visitante['Prs_Tel_Base'])) {
+            $telefono = trim((string) $visitante['Prs_Tel_Base']);
+        } elseif (!empty($visitante['MVis_Tem'])) {
+            $telefono = trim((string) $visitante['MVis_Tem']);
+        }
+
+        $correo = isset($visitante['Prs_Cor']) ? trim((string) $visitante['Prs_Cor']) : '';
+        $correoValido = ($correo !== '' && filter_var($correo, FILTER_VALIDATE_EMAIL));
+        if (!$correoValido) {
+            $correo = '';
+        }
+
+        $resp['debug_info']['nombre']          = $nombre;
+        $resp['debug_info']['cedula']          = $cedula;
+        $resp['debug_info']['telefono_raw']    = $telefono;
+        $resp['debug_info']['correo_raw']      = isset($visitante['Prs_Cor']) ? trim((string) $visitante['Prs_Cor']) : '';
+        $resp['debug_info']['correo_valido']   = $correoValido;
+
+        $manEve = isset($visitante['Man_Eve']) ? trim((string) $visitante['Man_Eve']) : '';
+        if ($manEve === '' && !empty($_POST['Man_Eve'])) {
+            $manEve = trim((string) $_POST['Man_Eve']);
+        }
+        $evData = man_cert_asistencia_resolver_evento($obBD_con1, $obBD_conexion, $manEve !== '' ? $manEve : null);
+        $nombreEvento = $evData['nombre'];
+        $resp['debug_info']['Man_Eve'] = $manEve;
+        $resp['debug_info']['nombreEvento'] = $nombreEvento;
+
+        $pdfParams = man_cert_asistencia_armar_params($prsNom, $prsApe, $cedula, $evData);
+        $pdfPath = man_cert_asistencia_generar_pdf($pdfParams);
+        if ($pdfPath === false || !is_file($pdfPath)) {
+            throw new Exception('No se pudo generar el PDF del certificado.');
+        }
+        $resp['debug_info']['pdf_generado'] = true;
+        $resp['debug_info']['pdf_path']     = $pdfPath;
+
+        $pdfBase64 = base64_encode(file_get_contents($pdfPath));
+        $pdfNombre = 'Certificado_Asistencia_' . preg_replace('/[^a-zA-Z0-9_-]/', '', $cedula !== '' ? $cedula : 'visitante') . '.pdf';
+
+        $lineas   = array();
+        $lineas[] = '¡Hola ' . ($nombre !== '' ? '*' . $nombre . '*' : '') . '! 👋';
+        $lineas[] = 'Gracias por su participación. Adjuntamos su certificado en formato PDF.';
+        $lineas[] = '';
+        $lineas[] = '🏢 Proyecto: *Relavera Comunitaria "El Tablón"* - ECOPARKMINING S.A.';
+        if ($nombreEvento !== '') {
+            $lineas[] = '📌 Evento: *' . $nombreEvento . '*';
+        }
+        $mensaje = implode("\n", $lineas);
+        $asunto  = 'Certificado de Asistencia' . ($nombreEvento !== '' ? ' - ' . $nombreEvento : ' - ECOPARKMINING');
+
+        $detalle   = array();
+        $enviarWa  = ($canal === 'whatsapp' || $canal === 'ambos');
+        $enviarMail= ($canal === 'correo'   || $canal === 'ambos');
+
+        if ($enviarWa) {
+            $telWa = relavera_whatsapp_normalizar_numero_ec($telefono);
+            $resp['debug_info']['telefono_normalizado_wa'] = $telWa;
+            if ($telWa === '') {
+                $resp['omitido_whatsapp'] = true;
+                $detalle[] = 'WhatsApp omitido (sin teléfono válido)';
+            } else {
+                $okWa = relavera_enviar_whatsapp_documento_notif($telWa, $pdfBase64, $pdfNombre, $mensaje);
+                $resp['whatsapp'] = (bool) $okWa;
+                $resp['debug_info']['whatsapp_resultado'] = $okWa;
+                $detalle[] = $okWa ? 'WhatsApp enviado (PDF)' : 'WhatsApp falló';
+            }
+        }
+
+        if ($enviarMail) {
+            if ($correo === '') {
+                $resp['omitido_correo'] = true;
+                $detalle[] = 'Correo omitido (sin email válido)';
+            } else {
+                $okMail = relavera_notif_enviar_correo_notif(
+                    $correo,
+                    $nombre,
+                    $asunto,
+                    $mensaje,
+                    null,
+                    array('ruta' => $pdfPath, 'nombre' => $pdfNombre)
+                );
+                $resp['correo'] = (bool) $okMail;
+                $resp['debug_info']['correo_resultado'] = $okMail;
+                $detalle[] = $okMail ? 'Correo enviado (PDF adjunto)' : 'Correo falló';
+            }
+        }
+
+        @unlink($pdfPath);
+
+        $resp['success'] = ($resp['whatsapp'] || $resp['correo'] || $resp['omitido_whatsapp'] || $resp['omitido_correo']);
+        if ($resp['whatsapp'] || $resp['correo']) {
+            @$obBD_con1->consulta("UPDATE manifiesto_visitante SET MVis_Cer_Env = 'S' WHERE MVis_Cod = $MVis_Cod", $obBD_conexion->conexion);
+            $resp['message'] = 'Certificado PDF notificado: ' . implode('. ', $detalle) . '.';
+        } else {
+            $resp['message'] = 'No se pudo enviar el PDF. ' . implode('. ', $detalle) . '.';
+        }
+    } catch (Exception $e) {
+        $resp['success'] = false;
+        $resp['message'] = $e->getMessage();
     }
     responderJsonLimpio($resp);
 }
@@ -1236,7 +1281,7 @@ if (isset($_POST['enviarCertificadoVisitanteEventoAjax'])) {
 
 <head>
     <meta charset="UTF-8">
-    <title>Gestión de Eventos y Visitantes</title>
+    <title>Gestión de Visitantes</title>
     <!-- Framework & CSS Requirements -->
     <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
     <?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
@@ -1560,7 +1605,7 @@ if (isset($_POST['enviarCertificadoVisitanteEventoAjax'])) {
     <!-- JS Scripts -->
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/man_val_visitantes.js?e=4"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_visitantes.js?e=5"></script>
 </body>
 
 </html>

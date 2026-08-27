@@ -114,8 +114,8 @@ $(function () {
     });
 
     $("#eventosDialog").createDialog({
-        width: 700,
-        height: 415,
+        width: 820,
+        height: 600,
         icon: 'calendar'
     });
 
@@ -685,6 +685,34 @@ function cargarComboEventosGeneral(selectedIds) {
     }, 'json');
 }
 
+window._historialEventosMap = {};
+
+window.insertarTagEvento = function (campoId, tag) {
+    var $el = $('#' + campoId);
+    if (!$el.length) return;
+    var el = $el[0];
+    var start = el.selectionStart || 0;
+    var end = el.selectionEnd || 0;
+    var val = $el.val();
+    $el.val(val.substring(0, start) + tag + val.substring(end));
+    el.selectionStart = el.selectionEnd = start + tag.length;
+    $el.focus();
+};
+
+window.restablecerTextoCertificado = function () {
+    $('#evt_Man_Tcrf').val('Que el Sr(a). {nombre} asistió a la capacitación de {proyecto} el día {fecha} con una duración de {horas} horas con el tema "{evento}".');
+};
+
+window.restablecerMensajeWhatsApp = function () {
+    $('#evt_Man_Wms').val(
+        "¡Hola *{nombre}*! 👋\n\n" +
+        "Te has registrado exitosamente en el evento *\"{evento}\"*.\n" +
+        "Esperando que sea de su agrado y que disfrute al máximo.\n\n" +
+        "🏢 Proyecto: *Relavera Comunitaria \"El Tablón\"* - ECOPARKMINING S.A.\n\n" +
+        "¡Gracias por tu participación! ✨"
+    );
+};
+
 function abrirModalEventos() {
     limpiarFormEvento();
     $('#eventosDialog').dialog('open');
@@ -698,9 +726,12 @@ function cargarHistorialEventos() {
     $.post(postUrl, { getHistorialEventosAjax: 1 }, function (r) {
         var $body = $('#bodyHistorialEventos');
         $body.empty();
+        window._historialEventosMap = {};
         
         if (r && r.success && r.data && r.data.length > 0) {
             $.each(r.data, function (i, evt) {
+                window._historialEventosMap[evt.Man_Eve] = evt;
+
                 var isInactive = (evt.Man_EEst === 'I');
                 var isVigente = (evt.Man_Vig === 'S');
                 var rowStyle = isInactive ? ' style="background-color: #FADDDD !important;"' : '';
@@ -723,8 +754,8 @@ function cargarHistorialEventos() {
 
                 var isEditable = (evt.Hoy_YMD <= evt.Man_EFef);
                 var btnEdit = isEditable
-                    ? "<button type=\"button\" class=\"btn btn-info btn-xs\" onclick=\"editarEvento(" + evt.Man_Eve + ", '" + escapeHtml(evt.Man_ENom) + "', '" + (evt.Man_EHor || 6) + "', '" + evt.Man_EFei + "', '" + evt.Man_EFef + "', '" + evt.Man_EEst + "', '" + evt.Hoy_YMD + "');\" title=\"Editar Evento\" style=\"margin-right: 2px;\"><i class=\"glyphicon glyphicon-pencil\"></i></button>"
-                    : "<button type=\"button\" class=\"btn btn-default btn-xs\" disabled title=\"Solo editable hasta la fecha fin del evento\" style=\"margin-right: 2px; opacity: 0.5;\"><i class=\"glyphicon glyphicon-lock\"></i></button>";
+                    ? '<button type="button" class="btn btn-info btn-xs" onclick="editarEvento(' + evt.Man_Eve + ');" title="Editar Evento" style="margin-right: 2px;"><i class="glyphicon glyphicon-pencil"></i></button>'
+                    : '<button type="button" class="btn btn-default btn-xs" disabled title="Solo editable hasta la fecha fin del evento" style="margin-right: 2px; opacity: 0.5;"><i class="glyphicon glyphicon-lock"></i></button>';
 
                 var tr = '<tr' + rowStyle + '>' +
                     '<td class="text-center"><b>' + evt.Man_Eve + '</b></td>' +
@@ -765,20 +796,29 @@ function limpiarFormEvento() {
     $('#evt_Man_EHor').val('6');
     $('#evt_Man_EFei').val('');
     $('#evt_Man_EFef').val('');
+    $('#evt_Man_Teve').val('DE ASISTENCIA');
+    $('#evt_Man_Tcrf').val('');
+    $('#evt_Man_Wms').val('');
     $('#evt_Man_EEst').val('A');
 }
 
-function editarEvento(id, nom, hor, fei, fef, est, hoyYmd) {
-    if (hoyYmd && hoyYmd > fef) {
+function editarEvento(id) {
+    var evt = window._historialEventosMap ? window._historialEventosMap[id] : null;
+    if (!evt) return;
+
+    if (evt.Hoy_YMD && evt.Hoy_YMD > evt.Man_EFef) {
         $.alert('No se puede editar este evento ya que su fecha fin ha expirado.');
         return;
     }
-    $('#evt_Man_Eve').val(id);
-    $('#evt_Man_ENom').val(nom);
-    $('#evt_Man_EHor').val(hor || '6');
-    $('#evt_Man_EFei').val(fei);
-    $('#evt_Man_EFef').val(fef);
-    $('#evt_Man_EEst').val(est || 'A');
+    $('#evt_Man_Eve').val(evt.Man_Eve);
+    $('#evt_Man_ENom').val(evt.Man_ENom || '');
+    $('#evt_Man_EHor').val(evt.Man_EHor || '6');
+    $('#evt_Man_EFei').val(evt.Man_EFei || '');
+    $('#evt_Man_EFef').val(evt.Man_EFef || '');
+    $('#evt_Man_Teve').val(evt.Man_Teve || 'DE ASISTENCIA');
+    $('#evt_Man_Tcrf').val(evt.Man_Tcrf || '');
+    $('#evt_Man_Wms').val(evt.Man_Wms || '');
+    $('#evt_Man_EEst').val(evt.Man_EEst || 'A');
 }
 
 function guardarEvento() {
@@ -787,14 +827,17 @@ function guardarEvento() {
     var hor = $.trim($('#evt_Man_EHor').val()) || '6';
     var fei = $.trim($('#evt_Man_EFei').val());
     var fef = $.trim($('#evt_Man_EFef').val());
+    var tip = $.trim($('#evt_Man_Teve').val()) || 'DE ASISTENCIA';
+    var tcrf = $.trim($('#evt_Man_Tcrf').val());
+    var msg = $.trim($('#evt_Man_Wms').val());
     var est = 'A';
 
     if (!nom) {
         $.alert('Por favor ingrese el nombre del evento.');
         return;
     }
-    if (!hor || isNaN(hor) || parseInt(hor) <= 0) {
-        $.alert('Por favor ingrese una duración válida en horas.');
+    if (!hor) {
+        $.alert('Por favor ingrese una duración válida.');
         return;
     }
     if (!fei || !fef) {
@@ -821,6 +864,9 @@ function guardarEvento() {
         Man_EHor: hor,
         Man_EFei: fei,
         Man_EFef: fef,
+        Man_Teve: tip,
+        Man_Tcrf: tcrf,
+        Man_Wms: msg,
         Man_EEst: est
     };
 
