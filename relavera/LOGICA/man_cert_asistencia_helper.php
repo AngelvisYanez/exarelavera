@@ -21,26 +21,47 @@ if (!function_exists('man_cert_asistencia_txt')) {
 }
 
 if (!function_exists('man_cert_asistencia_formatear_fecha_evento')) {
-    function man_cert_asistencia_formatear_fecha_evento($fechaYmd)
+    function man_cert_asistencia_formatear_fecha_evento($fechaInicio, $fechaFin = null)
     {
-        if (empty($fechaYmd)) {
+        if (empty($fechaInicio)) {
             return '';
         }
-        $tsEv = strtotime($fechaYmd);
-        if (!$tsEv) {
-            return (string) $fechaYmd;
+        $tsIni = strtotime($fechaInicio);
+        if (!$tsIni) {
+            return (string) $fechaInicio;
         }
-        $diasSemana = array(
-            'domingo', 'lunes', 'martes', "mi\xC3\xA9rcoles", 'jueves', 'viernes', "s\xC3\xA1bado",
-        );
-        $mesesNom = array(
-            'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-            'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
-        );
-        return $diasSemana[(int) date('w', $tsEv)]
-            . ' ' . date('d', $tsEv)
-            . ' de ' . $mesesNom[(int) date('m', $tsEv) - 1]
-            . ' de ' . date('Y', $tsEv);
+
+        $diasSemana = array('domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado');
+        $mesesNom = array('enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre');
+
+        // Si no hay fecha fin o ambas fechas son iguales (evento de 1 solo día)
+        if (empty($fechaFin) || $fechaInicio === $fechaFin) {
+            return $diasSemana[(int) date('w', $tsIni)]
+                . ' ' . date('d', $tsIni)
+                . ' de ' . $mesesNom[(int) date('m', $tsIni) - 1]
+                . ' de ' . date('Y', $tsIni);
+        }
+
+        $tsFin = strtotime($fechaFin);
+        if (!$tsFin) {
+            return $diasSemana[(int) date('w', $tsIni)]
+                . ' ' . date('d', $tsIni)
+                . ' de ' . $mesesNom[(int) date('m', $tsIni) - 1]
+                . ' de ' . date('Y', $tsIni);
+        }
+
+        // Rango dentro del mismo mes y año (ej: del 15 al 31 de agosto de 2026)
+        if (date('Y-m', $tsIni) === date('Y-m', $tsFin)) {
+            return 'del ' . date('d', $tsIni) . ' al ' . date('d', $tsFin) . ' de ' . $mesesNom[(int) date('m', $tsFin) - 1] . ' de ' . date('Y', $tsFin);
+        }
+
+        // Rango entre meses distintos del mismo año (ej: del 28 de julio al 15 de agosto de 2026)
+        if (date('Y', $tsIni) === date('Y', $tsFin)) {
+            return 'del ' . date('d', $tsIni) . ' de ' . $mesesNom[(int) date('m', $tsIni) - 1] . ' al ' . date('d', $tsFin) . ' de ' . $mesesNom[(int) date('m', $tsFin) - 1] . ' de ' . date('Y', $tsFin);
+        }
+
+        // Rango entre años distintos
+        return 'del ' . date('d', $tsIni) . ' de ' . $mesesNom[(int) date('m', $tsIni) - 1] . ' de ' . date('Y', $tsIni) . ' al ' . date('d', $tsFin) . ' de ' . $mesesNom[(int) date('m', $tsFin) - 1] . ' de ' . date('Y', $tsFin);
     }
 }
 
@@ -108,11 +129,12 @@ if (!function_exists('man_cert_asistencia_resolver_evento')) {
             'tipo_certificado' => 'DE ASISTENCIA',
             'texto_certificado' => '',
             'mensaje_whatsapp' => '',
+            'fecha_emision_texto' => 'Portovelo, El Oro, 08 de agosto de 2026.',
         );
         try {
             $manEve = $manEve !== null ? trim((string) $manEve) : '';
             if ($manEve !== '') {
-                $sql = "SELECT Man_ENom, IFNULL(Man_Ehor, '06:00:00') AS Man_EHor, Man_EFei,
+                $sql = "SELECT Man_ENom, IFNULL(Man_Ehor, '06:00:00') AS Man_EHor, Man_EFei, IFNULL(Man_EFef, Man_EFei) AS Man_EFef,
                                IFNULL(Man_Teve, 'DE ASISTENCIA') AS Man_Teve,
                                IFNULL(Man_Tcrf, '') AS Man_Tcrf,
                                IFNULL(Man_Wms, '') AS Man_Wms
@@ -120,7 +142,7 @@ if (!function_exists('man_cert_asistencia_resolver_evento')) {
                         WHERE Man_Eve = '" . addslashes($manEve) . "'
                         LIMIT 1";
             } else {
-                $sql = "SELECT Man_ENom, IFNULL(Man_Ehor, '06:00:00') AS Man_EHor, Man_EFei,
+                $sql = "SELECT Man_ENom, IFNULL(Man_Ehor, '06:00:00') AS Man_EHor, Man_EFei, IFNULL(Man_EFef, Man_EFei) AS Man_EFef,
                                IFNULL(Man_Teve, 'DE ASISTENCIA') AS Man_Teve,
                                IFNULL(Man_Tcrf, '') AS Man_Tcrf,
                                IFNULL(Man_Wms, '') AS Man_Wms
@@ -139,10 +161,21 @@ if (!function_exists('man_cert_asistencia_resolver_evento')) {
                 if (isset($rowEv['Man_EHor']) && $rowEv['Man_EHor'] !== '' && $rowEv['Man_EHor'] !== null) {
                     $out['horas'] = man_cert_asistencia_normalizar_horas($rowEv['Man_EHor']);
                 }
-                if (!empty($rowEv['Man_EFei'])) {
-                    $out['fecha_raw'] = trim((string) $rowEv['Man_EFei']);
-                    $out['fecha_texto'] = man_cert_asistencia_formatear_fecha_evento($out['fecha_raw']);
+                $fechaInicio = !empty($rowEv['Man_EFei']) ? trim((string)$rowEv['Man_EFei']) : '';
+                $fechaFin = !empty($rowEv['Man_EFef']) ? trim((string)$rowEv['Man_EFef']) : $fechaInicio;
+
+                if ($fechaInicio !== '') {
+                    $out['fecha_raw'] = $fechaInicio;
+                    $out['fecha_texto'] = man_cert_asistencia_formatear_fecha_evento($fechaInicio, $fechaFin);
                 }
+
+                $fechaRefEmision = ($fechaFin !== '') ? $fechaFin : ($fechaInicio !== '' ? $fechaInicio : date('Y-m-d'));
+                $tsEm = strtotime($fechaRefEmision);
+                $mesesNom = array('enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre');
+                if ($tsEm) {
+                    $out['fecha_emision_texto'] = 'Portovelo, El Oro, ' . date('d', $tsEm) . ' de ' . $mesesNom[(int)date('m', $tsEm) - 1] . ' de ' . date('Y', $tsEm) . '.';
+                }
+
                 if (!empty($rowEv['Man_Teve'])) {
                     $out['tipo_certificado'] = trim((string) $rowEv['Man_Teve']);
                 }
@@ -173,6 +206,7 @@ if (!function_exists('man_cert_asistencia_armar_params')) {
             'nombre_evento' => isset($evData['nombre']) ? $evData['nombre'] : '',
             'horas_evento' => isset($evData['horas']) ? $evData['horas'] : '6',
             'fecha_evento_texto' => isset($evData['fecha_texto']) ? $evData['fecha_texto'] : '',
+            'fecha_emision_texto' => isset($evData['fecha_emision_texto']) ? $evData['fecha_emision_texto'] : '',
             'tipo_certificado' => isset($evData['tipo_certificado']) ? $evData['tipo_certificado'] : 'DE ASISTENCIA',
             'texto_certificado' => isset($evData['texto_certificado']) ? $evData['texto_certificado'] : '',
             'mensaje_whatsapp' => isset($evData['mensaje_whatsapp']) ? $evData['mensaje_whatsapp'] : '',
@@ -247,8 +281,9 @@ if (!function_exists('man_cert_asistencia_generar_pdf')) {
             'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
             'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
         );
-        $fechaEmisionStr = 'Portovelo, El Oro, ' . date('d') . ' de '
-            . $mesesAct[(int) date('m') - 1] . ' de ' . date('Y') . '.';
+        $fechaEmisionStr = !empty($params['fecha_emision_texto'])
+            ? $params['fecha_emision_texto']
+            : ('Portovelo, El Oro, ' . date('d') . ' de ' . $mesesAct[(int) date('m') - 1] . ' de ' . date('Y') . '.');
 
         $nombreMayus = function_exists('mb_strtoupper')
             ? mb_strtoupper($nombrePersona, 'UTF-8')
@@ -372,7 +407,8 @@ if (!function_exists('man_cert_asistencia_generar_pdf')) {
             $parrafoHtml = htmlspecialchars_decode($parrafoHtml);
         } else {
             $actividad = !empty($textoCertificado) ? htmlspecialchars($textoCertificado, ENT_QUOTES, 'UTF-8') : 'la capacitación';
-            $parrafoHtml = 'Que el Sr(a). <b>' . htmlspecialchars($nombrePersona, ENT_QUOTES, 'UTF-8') . '</b> asistió a ' . $actividad . ' de <b>Proyecto Ambiental Asociativo Relavera Comunitaria "El Tablón"</b> el día <b>' . htmlspecialchars($fechaEventoTexto, ENT_QUOTES, 'UTF-8') . '</b> con una duración de <b>' . htmlspecialchars($horasEvento, ENT_QUOTES, 'UTF-8') . ' horas</b> con el tema <b>"' . htmlspecialchars($nombreEvento, ENT_QUOTES, 'UTF-8') . '"</b>.';
+            $conectorFecha = (strpos($fechaEventoTexto, 'del ') === 0) ? ' ' : ' el día ';
+            $parrafoHtml = 'Que el Sr(a). <b>' . htmlspecialchars($nombrePersona, ENT_QUOTES, 'UTF-8') . '</b> asistió a ' . $actividad . ' de <b>Proyecto Ambiental Asociativo Relavera Comunitaria "El Tablón"</b>' . $conectorFecha . '<b>' . htmlspecialchars($fechaEventoTexto, ENT_QUOTES, 'UTF-8') . '</b> con una duración de <b>' . htmlspecialchars($horasEvento, ENT_QUOTES, 'UTF-8') . ' horas</b> con el tema <b>"' . htmlspecialchars($nombreEvento, ENT_QUOTES, 'UTF-8') . '"</b>.';
         }
 
         // Párrafo con ancho proporcional a la vista previa HTML y formato HTML para negritas

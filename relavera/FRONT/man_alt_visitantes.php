@@ -56,11 +56,14 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
         $parrafoHtml = htmlspecialchars_decode($parrafoHtml);
     } else {
         $actividad = !empty($textoCertificado) ? htmlspecialchars($textoCertificado) : 'la capacitación';
-        $parrafoHtml = 'Que el Sr(a). <strong>' . htmlspecialchars($nombrePersona) . '</strong> asistió a ' . $actividad . ' de <strong>Proyecto Ambiental Asociativo Relavera Comunitaria "El Tablón"</strong> el día <strong>' . $fechaEventoTexto . '</strong> con una duración de <strong>' . htmlspecialchars($horasEvento) . ' horas</strong> con el tema <strong>"' . htmlspecialchars($nombreEvento) . '"</strong>.';
+        $conectorFecha = (strpos($fechaEventoTexto, 'del ') === 0) ? ' ' : ' el día ';
+        $parrafoHtml = 'Que el Sr(a). <strong>' . htmlspecialchars($nombrePersona) . '</strong> asistió a ' . $actividad . ' de <strong>Proyecto Ambiental Asociativo Relavera Comunitaria "El Tablón"</strong>' . $conectorFecha . '<strong>' . $fechaEventoTexto . '</strong> con una duración de <strong>' . htmlspecialchars($horasEvento) . ' horas</strong> con el tema <strong>"' . htmlspecialchars($nombreEvento) . '"</strong>.';
     }
 
     $mesesAct = array('enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre');
-    $fechaEmisionStr = 'Portovelo, El Oro, ' . date('d') . ' de ' . $mesesAct[(int)date('m') - 1] . ' de ' . date('Y') . '.';
+    $fechaEmisionStr = !empty($evData['fecha_emision_texto'])
+        ? $evData['fecha_emision_texto']
+        : ('Portovelo, El Oro, ' . date('d') . ' de ' . $mesesAct[(int)date('m') - 1] . ' de ' . date('Y') . '.');
 
     // Carga robusta de imágenes en Base64 para marca de agua, sello, firma1 y firma2
     $srcWatermark = '../../imagenes/620/marca_agua.png';
