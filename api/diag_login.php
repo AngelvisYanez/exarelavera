@@ -1,7 +1,7 @@
 <?php
+require_once __DIR__ . '/../Librerias/procedimientos/almacenados_standar.php';
 require_once __DIR__ . '/../DATA/MysqlConexion.php';
 require_once __DIR__ . '/../DATA/MysqlDatos.php';
-require_once __DIR__ . '/../Librerias/procedimientos/almacenados_standar.php';
 
 $con = new MysqlConexion(); // base 'exa'
 $datos = new MysqlDatos();
@@ -55,13 +55,28 @@ $response['usuarios_de_empresas_tc'] = $datos->getArrayConsultaSql(
     $con
 );
 
-// 4. Probar consulta ajax_empresas2 con 22600781 y 1676514
-require_once __DIR__ . '/../administrador/LOGICA/adm_log_login.php';
-$obBD_con1 = new Class_Log_Datos_Log;
-$obBD_conexion = new Class_Log_Conexion_Log;
+// 4. Probar la query exacta de empresas para 22600781 y 1676514
+$response['query_empresas_22600781'] = $datos->getArrayConsultaSql(
+    "SELECT sucursal.Suc_Cod, sucursal.Suc_Des, sucursal.Emp_Cod,
+            usuarios.Usu_Cod, empresas.Emp_Nom, empresas.Emp_Cor
+       FROM usuarios
+      INNER JOIN sucursal ON (usuarios.Suc_Cod = sucursal.Suc_Cod)
+      INNER JOIN empresas ON (sucursal.Emp_Cod = empresas.Emp_Cod)
+      WHERE usuarios.Usu_Ced = '22600781' AND empresas.Emp_Est = 'A' AND usuarios.Usu_Est = 'A'
+      ORDER BY empresas.Emp_Cor ASC",
+    $con
+);
 
-$response['ajax_empresas_22600781'] = $obBD_con1->getArrayConsulta(1, '22600781', $obBD_conexion);
-$response['ajax_empresas_1676514'] = $obBD_con1->getArrayConsulta(1, '1676514', $obBD_conexion);
+$response['query_empresas_1676514'] = $datos->getArrayConsultaSql(
+    "SELECT sucursal.Suc_Cod, sucursal.Suc_Des, sucursal.Emp_Cod,
+            usuarios.Usu_Cod, empresas.Emp_Nom, empresas.Emp_Cor
+       FROM usuarios
+      INNER JOIN sucursal ON (usuarios.Suc_Cod = sucursal.Suc_Cod)
+      INNER JOIN empresas ON (sucursal.Emp_Cod = empresas.Emp_Cod)
+      WHERE usuarios.Usu_Ced = '1676514' AND empresas.Emp_Est = 'A' AND usuarios.Usu_Est = 'A'
+      ORDER BY empresas.Emp_Cor ASC",
+    $con
+);
 
 utf8_encode_deep($response);
 echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
