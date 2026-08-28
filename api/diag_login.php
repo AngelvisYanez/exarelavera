@@ -8,74 +8,60 @@ $datos = new MysqlDatos();
 
 $response = [];
 
-// 1. Conteo total de usuarios y personas en 'exa'
-$response['total_usuarios'] = $datos->getArrayConsultaSql("SELECT COUNT(*) AS total FROM usuarios", $con);
-$response['total_personas'] = $datos->getArrayConsultaSql("SELECT COUNT(*) AS total FROM persona", $con);
-$response['total_sucursales'] = $datos->getArrayConsultaSql("SELECT COUNT(*) AS total FROM sucursal", $con);
-$response['total_empresas'] = $datos->getArrayConsultaSql("SELECT COUNT(*) AS total FROM empresas", $con);
-
-// 2. Buscar 22600781 y 1676514 en 'exa'
-$response['find_usuarios'] = $datos->getArrayConsultaSql(
+// 1. Coincidencias de usuarios
+$response['usuarios_22600781'] = $datos->getArrayConsultaSql(
     "SELECT u.Usu_Cod, u.Usu_Ced, u.Usu_Pal, u.Usu_Est, u.Usu_Tip, u.Suc_Cod,
-            p.Prs_Nom, p.Prs_Ape, p.Prs_Ced
+            p.Prs_Nom, p.Prs_Ape, p.Prs_Ced,
+            s.Emp_Cod, e.Emp_Nom, e.Emp_Cor, s.Suc_Des
        FROM usuarios u
        LEFT JOIN persona p ON p.Prs_Cod = u.Prs_Cod
-      WHERE u.Usu_Ced LIKE '%22600781%'
-         OR u.Usu_Ced LIKE '%1676514%'
-         OR p.Prs_Nom LIKE '%TORRES%'
-         OR p.Prs_Ape LIKE '%TORRES%'
-         OR p.Prs_Ced LIKE '%22600781%'
-         OR p.Prs_Ced LIKE '%1676514%'",
+       LEFT JOIN sucursal s ON s.Suc_Cod = u.Suc_Cod
+       LEFT JOIN empresas e ON e.Emp_Cod = s.Emp_Cod
+      WHERE u.Usu_Ced = '22600781' OR p.Prs_Ced = '22600781'",
     $con
 );
 
-// 3. Probar la consulta exacta de ajax_empresas2 para 22600781 y 1676514
-$cedulas = ['22600781', '1676514'];
-if (!empty($response['find_usuarios'])) {
-    foreach ($response['find_usuarios'] as $u) {
-        if (!in_array($u['Usu_Ced'], $cedulas)) {
-            $cedulas[] = $u['Usu_Ced'];
-        }
-    }
-}
+$response['usuarios_1676514'] = $datos->getArrayConsultaSql(
+    "SELECT u.Usu_Cod, u.Usu_Ced, u.Usu_Pal, u.Usu_Est, u.Usu_Tip, u.Suc_Cod,
+            p.Prs_Nom, p.Prs_Ape, p.Prs_Ced,
+            s.Emp_Cod, e.Emp_Nom, e.Emp_Cor, s.Suc_Des
+       FROM usuarios u
+       LEFT JOIN persona p ON p.Prs_Cod = u.Prs_Cod
+       LEFT JOIN sucursal s ON s.Suc_Cod = u.Suc_Cod
+       LEFT JOIN empresas e ON e.Emp_Cod = s.Emp_Cod
+      WHERE u.Usu_Ced = '1676514' OR p.Prs_Ced = '1676514'",
+    $con
+);
 
-$response['login_empresas_test'] = [];
-foreach ($cedulas as $ced) {
-    $rows = $datos->getArrayConsultaSql(
-        "SELECT sucursal.Suc_Cod, sucursal.Suc_Des, sucursal.Emp_Cod,
-                usuarios.Usu_Cod, usuarios.Usu_Ced, empresas.Emp_Nom, empresas.Emp_Cor,
-                usuarios.Usu_Pal, usuarios.Usu_Est, empresas.Emp_Est
-           FROM usuarios
-          INNER JOIN sucursal ON (usuarios.Suc_Cod = sucursal.Suc_Cod)
-          INNER JOIN empresas ON (sucursal.Emp_Cod = empresas.Emp_Cod)
-          WHERE usuarios.Usu_Ced = '$ced'
-            AND empresas.Emp_Est = 'A'
-            AND usuarios.Usu_Est = 'A'
-          ORDER BY empresas.Emp_Cor ASC",
-        $con
-    );
-    
-    // Probar hashes de contraseña
-    $passTests = [];
-    foreach ($rows as $r) {
-        $hash = $r['Usu_Pal'];
-        $passTests[$r['Usu_Cod']] = [
-            'hash' => $hash,
-            'is_123456_raw_md5' => ($hash === md5('123456')), // 123456 -> md5
-            'is_123456_double_md5' => ($hash === md5(md5('123456'))),
-            'is_123456_bcrypt_of_md5' => (strpos($hash, '$2y$') === 0 && password_verify(md5('123456'), $hash)),
-            'is_123456_bcrypt_of_raw' => (strpos($hash, '$2y$') === 0 && password_verify('123456', $hash)),
-            'is_pass_1676514_raw_md5' => ($hash === md5('1676514')),
-            'is_pass_22600781_raw_md5' => ($hash === md5('22600781'))
-        ];
-    }
-    
-    $response['login_empresas_test'][$ced] = [
-        'conteo' => count($rows),
-        'empresas' => $rows,
-        'pass_tests' => $passTests
-    ];
-}
+// 2. Coincidencias de empresas Torres Carrion
+$response['empresas_torres_carrion'] = $datos->getArrayConsultaSql(
+    "SELECT s.Suc_Cod, s.Suc_Des, s.Emp_Cod, e.Emp_Nom, e.Emp_Cor, e.Emp_Ruc, e.Emp_Est
+       FROM sucursal s
+       JOIN empresas e ON e.Emp_Cod = s.Emp_Cod
+      WHERE e.Emp_Nom LIKE '%TORRES%' AND e.Emp_Nom LIKE '%CARRION%'",
+    $con
+);
+
+// 3. Usuarios de esas empresas
+$response['usuarios_de_empresas_tc'] = $datos->getArrayConsultaSql(
+    "SELECT u.Usu_Cod, u.Usu_Ced, u.Usu_Pal, u.Usu_Est,
+            p.Prs_Nom, p.Prs_Ape, p.Prs_Ced,
+            s.Suc_Cod, s.Suc_Des, e.Emp_Cod, e.Emp_Nom, e.Emp_Cor
+       FROM usuarios u
+       JOIN sucursal s ON s.Suc_Cod = u.Suc_Cod
+       JOIN empresas e ON e.Emp_Cod = s.Emp_Cod
+       LEFT JOIN persona p ON p.Prs_Cod = u.Prs_Cod
+      WHERE e.Emp_Nom LIKE '%TORRES%' AND e.Emp_Nom LIKE '%CARRION%'",
+    $con
+);
+
+// 4. Probar consulta ajax_empresas2 con 22600781 y 1676514
+require_once __DIR__ . '/../administrador/LOGICA/adm_log_login.php';
+$obBD_con1 = new Class_Log_Datos_Log;
+$obBD_conexion = new Class_Log_Conexion_Log;
+
+$response['ajax_empresas_22600781'] = $obBD_con1->getArrayConsulta(1, '22600781', $obBD_conexion);
+$response['ajax_empresas_1676514'] = $obBD_con1->getArrayConsulta(1, '1676514', $obBD_conexion);
 
 utf8_encode_deep($response);
 echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
