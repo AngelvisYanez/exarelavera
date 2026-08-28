@@ -11,7 +11,8 @@ $_POST['ajax_check'] = '1';
 
 ob_start();
 try {
-    require __DIR__ . '/../administrador/FRONT/adm_con_control_1.2.php';
+    chdir(__DIR__ . '/../administrador/FRONT');
+    require './adm_con_control_1.2.php';
     $out = ob_get_clean();
     echo "SUCCESS:\n" . $out;
 } catch (Throwable $t) {
