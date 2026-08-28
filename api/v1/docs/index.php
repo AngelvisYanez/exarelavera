@@ -16,8 +16,10 @@
     <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-standalone-preset.js"></script>
     <script>
         window.onload = function() {
+            var basePath = window.location.pathname.replace(/\/$/, '');
+            var specUrl = basePath + '/openapi.json';
             SwaggerUIBundle({
-                url: 'openapi.json',
+                url: specUrl,
                 dom_id: '#swagger-ui',
                 deepLinking: true,
                 presets: [
