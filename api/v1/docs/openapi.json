@@ -62,7 +62,7 @@
         },
         {
             "name": "contactos",
-            "description": "Directorio de contactos autorizados para notificaciones (integración ERP Locator, solo lectura)"
+            "description": "Directorio de contactos autorizados para notificaciones (solo lectura)"
         },
         {
             "name": "activos-fijos",
@@ -1930,7 +1930,7 @@
                 "tags": [
                     "contactos"
                 ],
-                "summary": "Lista de contactos autorizados para notificaciones (ERP Locator)",
+                "summary": "Lista de contactos autorizados para notificaciones",
                 "description": "Solo lectura. Requiere token de integración con permiso exclusivo sobre esta ruta. Devuelve el directorio de contactos autorizados para recibir notificaciones; se puede filtrar por cliente/proyecto.",
                 "parameters": [
                     {

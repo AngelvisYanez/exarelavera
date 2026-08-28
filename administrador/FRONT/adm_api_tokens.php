@@ -289,7 +289,7 @@ $sesUsuNom = !empty($_SESSION['Ses_Usu_Nom']) ? $_SESSION['Ses_Usu_Nom'] : 'Usua
                         <div class="col-sm-6">
                             <div class="form-group">
                                 <label><i class="fa fa-tag"></i> Nombre o Identificador del Token *</label>
-                                <input type="text" id="tok_nombre" class="form-control" placeholder="Ej: Integración ERP Locator / Choferes & Plantas" required>
+                                <input type="text" id="tok_nombre" class="form-control" placeholder="Ej: Integración Choferes, Plantas & Vehículos" required>
                                 <small class="help-block text-muted">Nombre descriptivo de la aplicación o integración cliente.</small>
                             </div>
                         </div>

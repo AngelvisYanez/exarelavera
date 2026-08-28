@@ -62,7 +62,7 @@
         },
         {
             "name": "contactos",
-            "description": "Directorio de contactos autorizados para notificaciones (integración ERP Locator, solo lectura)"
+            "description": "Directorio de contactos autorizados para notificaciones (solo lectura)"
         },
         {
             "name": "activos-fijos",
@@ -102,15 +102,15 @@
         },
         {
             "name": "plantas",
-            "description": "Directorio de plantas de beneficio (ERP Locator, solo lectura)"
+            "description": "Directorio de plantas de beneficio (solo lectura)"
         },
         {
             "name": "choferes",
-            "description": "Directorio de choferes y conductores por planta (ERP Locator, solo lectura)"
+            "description": "Directorio de choferes y conductores por planta (solo lectura)"
         },
         {
             "name": "vehiculos",
-            "description": "Directorio de vehículos y volquetas mineras por planta (ERP Locator, solo lectura)"
+            "description": "Directorio de vehículos y volquetas mineras por planta (solo lectura)"
         }
     ],
     "paths": {
@@ -1942,7 +1942,7 @@
                 "tags": [
                     "contactos"
                 ],
-                "summary": "Lista de contactos autorizados para notificaciones (ERP Locator)",
+                "summary": "Lista de contactos autorizados para notificaciones",
                 "description": "Solo lectura. Requiere token de integración con permiso exclusivo sobre esta ruta. Devuelve el directorio de contactos autorizados para recibir notificaciones; se puede filtrar por cliente/proyecto.",
                 "parameters": [
                     {
@@ -10347,7 +10347,7 @@
                 "tags": [
                     "plantas"
                 ],
-                "summary": "Lista de plantas de beneficio (ERP Locator)",
+                "summary": "Lista de plantas de beneficio",
                 "description": "Solo lectura. Devuelve el directorio de plantas de beneficio registradas y sus ubicaciones operativas.",
                 "parameters": [
                     {
@@ -10446,7 +10446,7 @@
                 "tags": [
                     "choferes"
                 ],
-                "summary": "Lista de choferes y conductores por planta (ERP Locator)",
+                "summary": "Lista de choferes y conductores por planta",
                 "description": "Solo lectura. Devuelve el directorio de choferes autorizados vinculados a sus respectivas plantas de beneficio.",
                 "parameters": [
                     {
@@ -10563,7 +10563,7 @@
                 "tags": [
                     "vehiculos"
                 ],
-                "summary": "Lista de vehículos y volquetas por planta (ERP Locator)",
+                "summary": "Lista de vehículos y volquetas por planta",
                 "description": "Solo lectura. Devuelve el directorio de volquetas mineras y vehículos de carga asignados a cada planta de beneficio.",
                 "parameters": [
                     {

@@ -11,11 +11,11 @@ var APITokensModule = (function () {
         tokens: [],
         empresas: [],
         rutasDisponibles: [
-            // Directorio Operativo & ERP Locator
-            { mod: 'contactos', ruta: '/v1/contactos', nombre: 'Directorio de Contactos de Notificación', grupo: 'Directorio Operativo (ERP Locator)' },
-            { mod: 'plantas', ruta: '/v1/plantas', nombre: 'Directorio de Plantas de Beneficio', grupo: 'Directorio Operativo (ERP Locator)' },
-            { mod: 'choferes', ruta: '/v1/choferes', nombre: 'Directorio de Choferes por Planta', grupo: 'Directorio Operativo (ERP Locator)' },
-            { mod: 'vehiculos', ruta: '/v1/vehiculos', nombre: 'Directorio de Vehículos y Volquetas', grupo: 'Directorio Operativo (ERP Locator)' },
+            // Directorio Operativo
+            { mod: 'contactos', ruta: '/v1/contactos', nombre: 'Directorio de Contactos de Notificación', grupo: 'Directorio Operativo' },
+            { mod: 'plantas', ruta: '/v1/plantas', nombre: 'Directorio de Plantas de Beneficio', grupo: 'Directorio Operativo' },
+            { mod: 'choferes', ruta: '/v1/choferes', nombre: 'Directorio de Choferes por Planta', grupo: 'Directorio Operativo' },
+            { mod: 'vehiculos', ruta: '/v1/vehiculos', nombre: 'Directorio de Vehículos y Volquetas', grupo: 'Directorio Operativo' },
             // Contabilidad & Facturación
             { mod: 'contabilidad', ruta: '/v1/contabilidad/plan-cuentas', nombre: 'Plan de Cuentas Contable', grupo: 'Contabilidad & Finanzas' },
             { mod: 'contabilidad', ruta: '/v1/contabilidad/asientos', nombre: 'Asientos y Comprobantes Contables', grupo: 'Contabilidad & Finanzas' },

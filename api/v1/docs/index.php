@@ -101,11 +101,11 @@
     <header class="exa-docs-header">
         <div class="exa-docs-title">
             <span>EXA Contable API REST</span>
-            <span class="exa-docs-badge" id="mode-badge">ERP Locator / Operaciones</span>
+            <span class="exa-docs-badge" id="mode-badge">Directorio Operativo</span>
         </div>
         <div class="exa-docs-controls" id="admin-controls">
             <select id="doc-selector" class="exa-docs-select" onchange="changeDocView(this.value)">
-                <option value="default" selected>Directorio Operativo (ERP Locator)</option>
+                <option value="default" selected>Directorio Operativo</option>
                 <option value="full">Todos los Módulos (Completo)</option>
                 <optgroup label="Módulos">
                     <option value="modulo:contabilidad">Contabilidad</option>
@@ -178,7 +178,7 @@
                 var mod = viewValue.replace('modulo:', '');
                 badge.innerText = 'Módulo: ' + mod.toUpperCase();
             } else {
-                badge.innerText = 'ERP Locator / Operaciones';
+                badge.innerText = 'Directorio Operativo';
             }
         }
 
