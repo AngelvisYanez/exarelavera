@@ -13,6 +13,7 @@ class MysqlDatos
 {
     /* P R O P I E D A D E S */
     /*************************/
+    public $Error = 0;
     public $array = array();
     public $total = 0;
     public $limit = 0;
@@ -144,6 +145,17 @@ class MysqlDatos
         return explode('*', (string)$param);
     }
 
+    function insercionid($obBD = null)
+    {
+        if (is_object($obBD) && isset($obBD->conexion) && $obBD->conexion) {
+            return mysqli_insert_id($obBD->conexion);
+        }
+        if (is_object($obBD) && ($obBD instanceof mysqli)) {
+            return mysqli_insert_id($obBD);
+        }
+        return $this->ultimoId;
+    }
+
     function consulta($sql, $obBD = null)
     {
         $this->sql = $sql;
@@ -164,8 +176,14 @@ class MysqlDatos
         if (!$result) {
             $err = $link ? mysqli_error($link) : 'No connection';
             if ($dbObj) $dbObj->Error = $err;
+            $this->Error = 1;
             DebugBar::addTransactionEvent('Run Query', array('is_success'=>false, 'error_message'=>$err, 'sql_text'=>$this->sql, 'duration'=>$duration) + ($dbObj ? $dbObj->getDB() : array()));
             return false;
+        }
+        $this->Error = 0;
+        if ($link) {
+            $this->ultimoId = mysqli_insert_id($link);
+            $this->totalFilasAfectadas = mysqli_affected_rows($link);
         }
         DebugBar::addTransactionEvent('Run Query', array('is_success'=>true, 'sql_text'=>$this->sql, 'duration'=>$duration) + ($dbObj ? $dbObj->getDB() : array()));
         return $result;
@@ -232,9 +250,11 @@ class MysqlDatos
         if (!$result) {
             $err = $link ? mysqli_error($link) : 'No connection';
             if ($dbObj) $dbObj->Error = $err;
+            $this->Error = 1;
             DebugBar::addTransactionEvent('Run Query', array('is_success'=>false, 'error_message'=>$err, 'sql_text'=>$this->sentencia, 'duration'=>$duration) + ($dbObj ? $dbObj->getDB() : array()));
             return false;
         }
+        $this->Error = 0;
         $this->totalFilasAfectadas = mysqli_affected_rows($link);
         $this->ultimoId = mysqli_insert_id($link);
         DebugBar::addTransactionEvent('Run Query', array('is_success'=>true, 'sql_text'=>$this->sentencia, 'duration'=>$duration) + ($dbObj ? $dbObj->getDB() : array()));
@@ -261,9 +281,11 @@ class MysqlDatos
         if (!$result) {
             $err = $link ? mysqli_error($link) : 'No connection';
             if ($dbObj) $dbObj->Error = $err;
+            $this->Error = 1;
             DebugBar::addTransactionEvent('Run Query', array('is_success'=>false, 'error_message'=>$err, 'sql_text'=>$this->sentencia, 'duration'=>$duration) + ($dbObj ? $dbObj->getDB() : array()));
             return false;
         }
+        $this->Error = 0;
         DebugBar::addTransactionEvent('Run Query', array('is_success'=>true, 'sql_text'=>$this->sentencia, 'duration'=>$duration) + ($dbObj ? $dbObj->getDB() : array()));
         return $result;
     }

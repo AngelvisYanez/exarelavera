@@ -5,7 +5,7 @@ $app->get('/v1/admin/api-tokens', function () use ($app) {
     try {
         $mgr = new APITokenManager();
         $empCod = isset($_GET['Emp_Cod']) ? (int)$_GET['Emp_Cod'] : null;
-        $tokens = $mgr->list($empCod);
+        $tokens = $mgr->listTokens($empCod);
         utf8_encode_deep($tokens);
         echo json_encode(['success' => true, 'data' => $tokens]);
     } catch (\Throwable $e) {
@@ -40,12 +40,12 @@ $app->post('/v1/admin/api-tokens/generar', function () use ($app) {
     try {
         $mgr = new APITokenManager();
         $res = $mgr->generate(
-            $body['nombre'] ?? '',
-            $body['Emp_Cod'] ?? 0,
-            $body['cuota'] ?? 0,
-            $body['periodo'] ?? 'D',
-            $body['expira'] ?? null,
-            $body['creadoPor'] ?? null,
+            isset($body['nombre']) ? $body['nombre'] : '',
+            isset($body['Emp_Cod']) ? $body['Emp_Cod'] : 0,
+            isset($body['cuota']) ? $body['cuota'] : 0,
+            isset($body['periodo']) ? $body['periodo'] : 'D',
+            isset($body['expira']) ? $body['expira'] : null,
+            isset($body['creadoPor']) ? $body['creadoPor'] : null,
             isset($body['permisos']) && is_array($body['permisos']) ? $body['permisos'] : null
         );
         if (!$res['success']) {
@@ -65,20 +65,17 @@ $app->post('/v1/admin/api-tokens/generar', function () use ($app) {
     }
 });
 
-$app->post('/v1/admin/api-tokens/actualizar', function () use ($app) {
+$app->post('/v1/admin/api-tokens/limites', function () use ($app) {
     $body = getBody();
     try {
         $mgr = new APITokenManager();
         $res = $mgr->updateLimits(
-            $body['Tok_Id'] ?? 0,
+            isset($body['id']) ? $body['id'] : 0,
             isset($body['cuota']) ? $body['cuota'] : null,
             isset($body['periodo']) ? $body['periodo'] : null,
             isset($body['expira']) ? $body['expira'] : null,
             isset($body['estado']) ? $body['estado'] : null
         );
-        if (!$res['success']) {
-            $app->response->setStatus(400);
-        }
         echo json_encode($res);
     } catch (\Throwable $e) {
         $app->response->setStatus(500);
@@ -90,10 +87,7 @@ $app->post('/v1/admin/api-tokens/revocar', function () use ($app) {
     $body = getBody();
     try {
         $mgr = new APITokenManager();
-        $res = $mgr->revoke($body['Tok_Id'] ?? 0);
-        if (!$res['success']) {
-            $app->response->setStatus(400);
-        }
+        $res = $mgr->revoke(isset($body['id']) ? $body['id'] : 0);
         echo json_encode($res);
     } catch (\Throwable $e) {
         $app->response->setStatus(500);
@@ -101,86 +95,13 @@ $app->post('/v1/admin/api-tokens/revocar', function () use ($app) {
     }
 });
 
-$app->post('/v1/admin/api-tokens/activar', function () use ($app) {
-    $body = getBody();
-    try {
-        $mgr = new APITokenManager();
-        $res = $mgr->updateLimits($body['Tok_Id'] ?? 0, null, null, null, 'A');
-        if (!$res['success']) {
-            $app->response->setStatus(400);
-        }
-        echo json_encode($res);
-    } catch (\Throwable $e) {
-        $app->response->setStatus(500);
-        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-    }
-});
-
-$app->post('/v1/admin/api-tokens/reset-uso', function () use ($app) {
-    $body = getBody();
-    try {
-        $mgr = new APITokenManager();
-        $res = $mgr->resetUsage($body['Tok_Id'] ?? 0);
-        if (!$res['success']) {
-            $app->response->setStatus(400);
-        }
-        echo json_encode($res);
-    } catch (\Throwable $e) {
-        $app->response->setStatus(500);
-        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-    }
-});
-
-$app->post('/v1/admin/api-tokens/eliminar', function () use ($app) {
-    $body = getBody();
-    try {
-        $mgr = new APITokenManager();
-        $res = $mgr->delete($body['Tok_Id'] ?? 0);
-        if (!$res['success']) {
-            $app->response->setStatus(400);
-        }
-        echo json_encode($res);
-    } catch (\Throwable $e) {
-        $app->response->setStatus(500);
-        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-    }
-});
-
-// Catálogo de módulos/procesos de la API + permisos actuales del token (opcional)
-$app->get('/v1/admin/api-tokens/permisos', function () use ($app) {
-    try {
-        $mgr = new APITokenManager();
-        $r = $mgr->catalogo();
-        if (!$r['success']) {
-            $app->response->setStatus(500);
-            echo json_encode($r);
-            return;
-        }
-        $tokId = isset($_GET['Tok_Id']) ? (int)$_GET['Tok_Id'] : null;
-        $permisos = [];
-        if ($tokId) {
-            $permisos = $mgr->getPermisos($tokId);
-        }
-        echo json_encode([
-            'success' => true,
-            'modulos' => $r['modulos'],
-            'permisos' => $permisos,
-        ]);
-    } catch (\Throwable $e) {
-        $app->response->setStatus(500);
-        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-    }
-});
-
-// Guardar permisos (módulos/procesos) de un token existente
 $app->post('/v1/admin/api-tokens/permisos', function () use ($app) {
     $body = getBody();
     try {
         $mgr = new APITokenManager();
-        $res = $mgr->setPermisos($body['Tok_Id'] ?? 0, isset($body['permisos']) && is_array($body['permisos']) ? $body['permisos'] : []);
-        if (!$res['success']) {
-            $app->response->setStatus(400);
-        }
+        $tokenId = isset($body['id']) ? (int)$body['id'] : 0;
+        $permisos = isset($body['permisos']) && is_array($body['permisos']) ? $body['permisos'] : [];
+        $res = $mgr->setPermisos($tokenId, $permisos);
         echo json_encode($res);
     } catch (\Throwable $e) {
         $app->response->setStatus(500);
