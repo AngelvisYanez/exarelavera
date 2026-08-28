@@ -10,7 +10,7 @@ $datos = new MysqlDatos();
 
 // Actualizar Usu_Pal para 22600781 en todas las empresas a md5('123456')
 $md5_123456 = md5('123456');
-$con->consulta("UPDATE usuarios SET Usu_Pal = '$md5_123456' WHERE Usu_Ced = '22600781'");
+$datos->consultaSql("UPDATE usuarios SET Usu_Pal = '$md5_123456' WHERE Usu_Ced = '22600781'", $con);
 
 // Consultar los registros actualizados de 22600781 en empresas Torres Carrion
 $updated = $datos->getArrayConsultaSql(
