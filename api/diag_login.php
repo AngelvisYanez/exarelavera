@@ -1,8 +1,7 @@
 <?php
 require_once __DIR__ . '/../DATA/MysqlConexion.php';
 require_once __DIR__ . '/../DATA/MysqlDatos.php';
-
-header('Content-Type: application/json; charset=utf-8');
+require_once __DIR__ . '/../Librerias/procedimientos/almacenados_standar.php';
 
 $con = new MysqlConexion('exa_master');
 $datos = new MysqlDatos();
@@ -39,9 +38,11 @@ $response['empresas_torres'] = $datos->getArrayConsultaSql(
 // 3. Probar consulta ajax_empresas2 para cada usuario
 $response['login_empresas_test'] = [];
 $cedulas = ['22600781', '1676514'];
-foreach ($response['usuarios'] as $u) {
-    if (!in_array($u['Usu_Ced'], $cedulas)) {
-        $cedulas[] = $u['Usu_Ced'];
+if (!empty($response['usuarios'])) {
+    foreach ($response['usuarios'] as $u) {
+        if (!in_array($u['Usu_Ced'], $cedulas)) {
+            $cedulas[] = $u['Usu_Ced'];
+        }
     }
 }
 
@@ -64,6 +65,7 @@ foreach ($cedulas as $ced) {
     $passChecks = [];
     foreach ($rows as &$r) {
         $hash = $r['Usu_Pal'];
+        $passChecks['hash'] = $hash;
         $passChecks['123456_md5'] = ($hash === md5('123456'));
         $passChecks['123456_md5_hash'] = ($hash === md5(md5('123456')));
         $passChecks['123456_bcrypt_raw'] = strpos($hash, '$2y$') === 0 && password_verify('123456', $hash);
