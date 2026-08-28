@@ -1,26 +1,20 @@
 <?php
-require_once __DIR__ . '/../Librerias/procedimientos/almacenados_standar.php';
-require_once __DIR__ . '/../DATA/MysqlConexion.php';
-require_once __DIR__ . '/../DATA/MysqlDatos.php';
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 
-header('Content-Type: application/json; charset=utf-8');
+$_POST['user_name'] = '22600781';
+$_POST['password'] = '123456';
+$_POST['encryptor'] = md5('123456');
+$_POST['Emp_Cod'] = 96;
+$_POST['Suc_Cod'] = 99;
+$_POST['ajax_check'] = '1';
 
-$con = new MysqlConexion();
-$datos = new MysqlDatos();
-
-// Actualizar Usu_Pal para 22600781 en todas las empresas a md5('123456')
-$md5_123456 = md5('123456');
-mysqli_query($con->conexion, "UPDATE usuarios SET Usu_Pal = '$md5_123456' WHERE Usu_Ced = '22600781'");
-
-// Consultar los registros actualizados de 22600781 en empresas Torres Carrion
-$updated = $datos->getArrayConsultaSql(
-    "SELECT u.Usu_Cod, u.Usu_Ced, u.Usu_Pal, u.Usu_Est, s.Suc_Cod, s.Suc_Des, e.Emp_Cod, e.Emp_Nom, e.Emp_Cor
-       FROM usuarios u
-       JOIN sucursal s ON s.Suc_Cod = u.Suc_Cod
-       JOIN empresas e ON e.Emp_Cod = s.Emp_Cod
-      WHERE u.Usu_Ced = '22600781' AND (e.Emp_Nom LIKE '%TORRES%' OR e.Emp_Nom LIKE '%CARRION%')
-      ORDER BY e.Emp_Cod ASC",
-    $con
-);
-
-echo json_encode(['status' => 'success', 'updated_records' => $updated], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+ob_start();
+try {
+    require __DIR__ . '/../administrador/FRONT/adm_con_control_1.2.php';
+    $out = ob_get_clean();
+    echo "SUCCESS:\n" . $out;
+} catch (Throwable $t) {
+    ob_end_clean();
+    echo "ERROR: " . $t->getMessage() . " at " . $t->getFile() . ":" . $t->getLine() . "\n" . $t->getTraceAsString();
+}
