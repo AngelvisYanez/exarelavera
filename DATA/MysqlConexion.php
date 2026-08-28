@@ -146,6 +146,10 @@ class MysqlConexion{
             $this->conexion = 0;
         }
     }
+    /* Alias de compatibilidad para cerrar la conexión */
+    function cerrar() {
+        $this->close();
+    }
     /* Regresa los datos de la base de datos conectada en un arreglo */
     function getDB() {
         return array('db'=>$this->BaseDatos, 'user'=>$this->Usuario, 'pass'=>$this->Clave, 'server'=>$this->Servidor);
