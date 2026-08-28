@@ -1,4 +1,6 @@
 <?php
+chdir(__DIR__ . '/../administrador/FRONT');
+
 require_once __DIR__ . '/../Librerias/procedimientos/almacenados_standar.php';
 require_once __DIR__ . '/../DATA/MysqlConexion.php';
 require_once __DIR__ . '/../DATA/MysqlDatos.php';
@@ -46,7 +48,7 @@ $sucursal_row = $obBD_con1->getRowConsultaSql("SELECT * FROM sucursal WHERE Suc_
 $empresa_row = $obBD_con1->getRowConsultaSql("SELECT * FROM empresas WHERE Emp_Cod = $Emp_Cod", $obBD_conexion);
 $usuario_row = $obBD_con1->getRowConsultaSql("SELECT * FROM usuarios WHERE Usu_Ced = '$user_name' AND Suc_Cod = $Suc_Cod", $obBD_conexion);
 
-echo json_encode([
+$response = [
     'row_data' => $row_data,
     'bddName' => $bddName,
     'user_sql' => $user_sql,
@@ -54,4 +56,7 @@ echo json_encode([
     'sucursal_row' => $sucursal_row,
     'empresa_row' => $empresa_row,
     'usuario_row' => $usuario_row
-], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+];
+
+utf8_encode_deep($response);
+echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
