@@ -48,7 +48,7 @@ if (!function_exists('normalizar_utf8_deep')) {
 }
 
 // ── LISTA DE CONTACTOS AUTORIZADOS (solo lectura, para ERP Locator) ──────────
-$app->map('/v1/contactos', function () use ($app) {
+$handlerContactos = function () use ($app) {
     try {
         $body = getBody();
         $bdd = !empty($body['Bdd']) ? $body['Bdd'] : 'ecoparkmining';
@@ -97,4 +97,9 @@ $app->map('/v1/contactos', function () use ($app) {
         $app->response->setStatus(500);
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     }
-})->via('GET', 'POST');
+};
+
+$app->map('/v1/contactos', $handlerContactos)->via('GET', 'POST');
+$app->map('/v1/contactos/', $handlerContactos)->via('GET', 'POST');
+$app->map('/contactos', $handlerContactos)->via('GET', 'POST');
+$app->map('/contactos/', $handlerContactos)->via('GET', 'POST');
