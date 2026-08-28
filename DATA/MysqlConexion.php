@@ -63,6 +63,24 @@ class MysqlConexion{
                 return $config;
             }
         }
+        if (getenv('DB_HOST') && getenv('DB_USER')) {
+            return array(
+                'host' => getenv('DB_HOST'),
+                'user' => getenv('DB_USER'),
+                'pass' => getenv('DB_PASS') !== false ? getenv('DB_PASS') : '',
+                'port' => getenv('DB_PORT') ? intval(getenv('DB_PORT')) : 3306
+            );
+        }
+        $isLinux = DIRECTORY_SEPARATOR === '/';
+        $serverHost = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '');
+        if ($isLinux || strpos($serverHost, 'exacontable.com') !== false) {
+            return array(
+                'host' => 'localhost',
+                'user' => 'wilsonbelduma',
+                'pass' => 'Pvhn713?6',
+                'port' => 3306
+            );
+        }
         return array('host' => self::host, 'user' => self::user, 'pass' => self::pass);
     }
     /* Constructor por defecto */
@@ -118,23 +136,19 @@ class MysqlConexion{
             DebugBar::addTransactionEvent('Open Connection', array('is_success'=>false, 'error_message'=>$this->Error) + $this->getDB());
             return false;
         }
-        DebugBar::addTransactionEvent('Open Connection', $this->getDB());
-        return $this->conexion;
+        $this->Error = "";
+        return true;
     }
-    /* Cierra la conexion */
-    function cerrar() {
-        DebugBar::addTransactionEvent('Close Connection', $this->getDB());
-        if (!($this->conexion instanceof \mysqli)) return NULL;
-        try {
-            return @mysqli_close($this->conexion);
-        } catch (\Throwable $e) {
-            return NULL;
+    /* Cierra la conexión */
+    function close() {
+        if ($this->conexion) {
+            mysqli_close($this->conexion);
+            $this->conexion = 0;
         }
     }
+    /* Regresa los datos de la base de datos conectada en un arreglo */
     function getDB() {
-        return array('db' => $this->BaseDatos) +
-            (!$this->conexion ? array('is_success'=>false, 'error_message'=>'La conexion presenta problemas') : array());
+        return array('db'=>$this->BaseDatos, 'user'=>$this->Usuario, 'pass'=>$this->Clave, 'server'=>$this->Servidor);
     }
-} //Fin de clase Class_Conexion
-class Class_Log_Conexion_Global extends MysqlConexion {}
-class MyGlobalConexion extends MysqlConexion {}
+}
+?>
