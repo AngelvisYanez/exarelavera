@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EXA Contable API - Guía de consumo</title>
+<style>
+  :root{--azul:#0b5e8f;--verde:#1e8e5a;--gris:#5f6b76;--bg:#f4f6f8;--borde:#e0e5ea;}
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Segoe UI','Open Sans',Arial,sans-serif;background:var(--bg);color:#22303c;line-height:1.6;}
+  header{background:linear-gradient(120deg,#0b5e8f,#0d7fae);color:#fff;padding:28px 24px;}
+  header h1{margin:0;font-size:26px;}
+  header p{margin:6px 0 0;opacity:.9;}
+  .wrap{max-width:1000px;margin:0 auto;padding:24px;}
+  .card{background:#fff;border:1px solid var(--borde);border-radius:8px;padding:20px 24px;margin:18px 0;}
+  h2{color:var(--azul);border-bottom:2px solid var(--borde);padding-bottom:8px;font-size:20px;}
+  h3{color:#2d3e4e;}
+  code,pre{font-family:Consolas,'Courier New',monospace;}
+  code{background:#eef2f5;padding:2px 5px;border-radius:4px;font-size:14px;}
+  pre{background:#1e2a33;color:#e8f0f5;padding:14px;border-radius:6px;overflow-x:auto;}
+  pre code{background:none;color:inherit;padding:0;}
+  .tip{background:#e6f4ec;border-left:4px solid var(--verde);padding:12px 16px;border-radius:4px;}
+  .warn{background:#fff6e5;border-left:4px solid #e6a817;padding:12px 16px;border-radius:4px;}
+  table{width:100%;border-collapse:collapse;font-size:14px;}
+  th,td{border:1px solid var(--borde);padding:8px 10px;text-align:left;}
+  th{background:#eef2f5;}
+  .badge{padding:2px 8px;border-radius:10px;color:#fff;font-size:12px;}
+  .b-get{background:#2e9e6b;}.b-post{background:#2e7dce;}.b-put{background:#c08a1e;}.b-del{background:#c33;}
+  .step{background:#fbfcfe;border:1px solid var(--borde);border-radius:8px;padding:16px;margin:12px 0;}
+  .step b.num{display:inline-block;width:26px;height:26px;line-height:26px;text-align:center;border-radius:50%;background:var(--azul);color:#fff;margin-right:8px;}
+  a{color:var(--azul);}
+</style>
+</head>
+<body>
+<header>
+  <h1>EXA Contable &mdash; API REST</h1>
+  <p>Guía de consumo e integración. Documentación interactiva (Swagger) en <a href="/v1/docs" style="color:#cfe8ff">/v1/docs</a></p>
+</header>
+<div class="wrap">
+
+  <div class="card">
+    <h2>1. Cómo funciona la autenticación</h2>
+    <p>La API acepta <b>tokens de acceso</b> generados desde el panel de administración
+      (Herramientas → Tokens de Acceso a la API). Cada token está asociado a una empresa
+      y puede tener un <b>límite de consultas</b> por día o por mes.</p>
+    <p>Envía el token en el header <code>Authorization</code>:</p>
+    <pre><code>Authorization: Bearer TU_TOKEN
+Content-Type: application/json</code></pre>
+    <div class="tip">Cada petición consume una consulta de la cuota del token. Si la cuota se agota,
+    la API responde <code>401</code> con <code>{"error":"Token inválido o cuota agotada"}</code>.</div>
+  </div>
+
+  <div class="card">
+    <h2>2. Flujo de autenticación por usuario (login)</h2>
+    <p>Además del token gestionado, existe un flujo de login que devuelve un token de sesión (24&nbsp;h):</p>
+    <div class="step"><b class="num">1</b><b>Obtener empresas del usuario</b>
+      <pre><code>POST /v1/auth/empresas
+{ "username": "0704206119" }</code></pre>
+    </div>
+    <div class="step"><b class="num">2</b><b>Iniciar sesión</b>
+      <pre><code>POST /v1/auth/login
+{
+  "username": "0704206119",
+  "password": "123456",
+  "empresa": "NOMBRE DE LA EMPRESA"
+}
+→ { "success": true, "token": "base64(usuario:empresa:time:firma)" }</code></pre>
+    </div>
+    <p>El token de login también se envía como <code>Bearer</code>. Los tokens gestionados
+      (del panel) funcionan igual y son intercambiables en todas las rutas protegidas.</p>
+  </div>
+
+  <div class="card">
+    <h2>3. Ejemplos de consumo</h2>
+    <h3>curl</h3>
+    <pre><code># Listar periodos contables
+curl -X POST http://localhost:8080/v1/contabilidad/periodos \
+  -H "Authorization: Bearer TU_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+
+# Crear un cliente (tesorería)
+curl -X POST http://localhost:8080/v1/tesoreria/clientes \
+  -H "Authorization: Bearer TU_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"Cli_Nom":"Juan Pérez","Bdd":"exa"}'</code></pre>
+    <h3>JavaScript / fetch</h3>
+    <pre><code>const TOKEN = "TU_TOKEN";
+const resp = await fetch("/v1/contabilidad/periodos", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer " + TOKEN,
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({})
+});
+const data = await resp.json();
+console.log(data);</code></pre>
+    <h3>Python</h3>
+    <pre><code>import requests
+r = requests.post(
+    "http://localhost:8080/v1/contabilidad/periodos",
+    headers={"Authorization": "Bearer TU_TOKEN", "Content-Type": "application/json"},
+    json={}
+)
+print(r.status_code, r.json())</code></pre>
+  </div>
+
+  <div class="card">
+    <h2>4. Catálogo de módulos y procesos</h2>
+    <p>La API se organiza en <b>módulos</b> y cada módulo contiene sus <b>procesos</b>
+      (recursos o acciones). Esta lista se genera automáticamente desde la especificación
+      OpenAPI y coincide con los permisos que se asignan a cada token desde el panel.</p>
+    <p><input type="text" id="dirBuscar" placeholder="Filtrar módulo o proceso..." style="padding:6px 10px;border:1px solid var(--borde);border-radius:4px;max-width:360px" oninput="renderDirector()"></p>
+    <div id="directorio"></div>
+  </div>
+
+  <div class="card">
+    <h2>5. Formato de respuesta</h2>
+    <p>Todas las respuestas son JSON. Convención general:</p>
+    <pre><code>{ "success": true, "data": [...], "message": "OK" }</code></pre>
+    <table>
+      <tr><th>Código</th><th>Significado</th></tr>
+      <tr><td>200 / 201</td><td>Operación exitosa</td></tr>
+      <tr><td>400</td><td>Parámetros inválidos o faltantes</td></tr>
+      <tr><td>401</td><td>Token ausente, inválido, expirado o cuota agotada</td></tr>
+      <tr><td>403</td><td>Token sin permisos para ese módulo/proceso</td></tr>
+      <tr><td>404</td><td>Recurso no encontrado</td></tr>
+      <tr><td>500</td><td>Error interno del servidor</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>6. Convenciones y seguridad</h2>
+    <ul>
+      <li>Identificador de empresa: <code>Emp_Cod</code>. Base de datos distribuida: <code>Bdd</code>.</li>
+      <li>Paginación por <code>page</code> y <code>perPage</code> en los listados.</li>
+      <li>Para consumos por <b>agentes / IA</b>, usa las definiciones LLM (ver sección 7).</li>
+      <li>El endpoint <code>/v1/data/query</code> ejecuta SQL libre: <b>no lo expongas a terceros sin control</b>.</li>
+      <li>Revoca tokens que ya no uses desde el panel. Los tokens expiran si se les configura fecha.</li>
+      <li>Los tokens pueden restringirse a <b>módulos/procesos concretos</b>; si intentan consumir uno no autorizado se responde <code>403</code>.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>7. Definiciones para agentes / LLM</h2>
+    <p>Si un agente o LLM va a consumir la API, usa estos recursos <b>protegidos</b>
+      (requieren un token gestionado válido):</p>
+    <ul>
+      <li><code>/.well-known/ai-plugin.json</code> — manifiesto del agente (requiere Bearer).</li>
+      <li><code>/v1/llms/llms-full.txt</code> — descripción completa en Markdown (requiere Bearer).</li>
+      <li><code>llms.txt</code> (raíz) — índice público opcional que enlaza a los recursos protegidos.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var DIR=null;
+  var METH_CLS={'GET':'b-get','POST':'b-post','PUT':'b-put','DELETE':'b-del'};
+  function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function renderDirector(){
+    if(!DIR) return;
+    var q=(document.getElementById('dirBuscar').value||'').toLowerCase();
+    var html='';
+    DIR.forEach(function(m){
+      var rutas=(m.rutas||[]).filter(function(r){
+        if(!q) return true;
+        return (m.name+' '+r.ruta+' '+(r.descripcion||'')).toLowerCase().indexOf(q)>=0;
+      });
+      if(q && !rutas.length && m.name.toLowerCase().indexOf(q)===-1) return;
+      html+='<h3 style="margin-top:20px">'+esc(m.name)+' <span style="font-size:13px;color:var(--gris);font-weight:normal">('+rutas.length+' procesos)'+(m.description?' — '+esc(m.description):'')+'</span></h3>';
+      html+='<table><tr><th>Método</th><th>Ruta</th><th>Proceso</th></tr>';
+      rutas.forEach(function(r){
+        html+='<tr><td><span class="badge '+METH_CLS[r.metodo]+'">'+r.metodo+'</span></td><td><code>'+esc(r.ruta)+'</code></td><td>'+esc(r.descripcion)+'</td></tr>';
+      });
+      html+='</table>';
+    });
+    document.getElementById('directorio').innerHTML = html || '<p>Sin resultados</p>';
+  }
+  fetch('/v1/docs/openapi.json').then(function(r){return r.json();}).then(function(spec){
+    var mods={};
+    (spec.tags||[]).forEach(function(t){mods[t.name]={name:t.name,description:t.description||'',rutas:[]};});
+    Object.keys(spec.paths||{}).forEach(function(ruta){
+      var ops=spec.paths[ruta];
+      ['get','post','put','delete'].forEach(function(met){
+        if(!ops[met]) return;
+        var op=ops[met];
+        var tag=(op.tags&&op.tags[0])||'general';
+        if(!mods[tag]) mods[tag]={name:tag,description:'',rutas:[]};
+        mods[tag].rutas.push({ruta:ruta,metodo:met.toUpperCase(),descripcion:op.summary||''});
+      });
+    });
+    DIR=Object.keys(mods).sort().map(function(k){var m=mods[k];m.rutas.sort(function(a,b){return a.ruta<b.ruta?-1:1;});return m;});
+    renderDirector();
+  }).catch(function(){document.getElementById('directorio').innerHTML='<p>No se pudo cargar el catálogo.</p>';});
+})();
+</script>
+</body>
+</html>

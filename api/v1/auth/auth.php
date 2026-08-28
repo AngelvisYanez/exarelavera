@@ -6,6 +6,33 @@ require_once __DIR__ . "/../../../DATA/MysqlDatos.php";
 // Seguridad: El secret DEBE configurarse via variable de entorno
 // Si no esta configurado, generar uno aleatorio por instancia (no predecible)
 $envSecret = getenv('AUTH_TOKEN_SECRET');
+
+// Fallback: leer AUTH_TOKEN_SECRET desde el archivo .env del proyecto.
+// getenv() solo ve variables de entorno del proceso; muchos despliegues
+// cargan la config en .env sin exponerla como variable real de entorno.
+// auth.php vive en api/v1/auth/, por lo que la raíz del proyecto está 3 niveles arriba.
+if (empty($envSecret)) {
+    $envFile = __DIR__ . '/../../../.env';
+    if (!is_file($envFile)) {
+        $envFile = __DIR__ . '/../../.env';
+    }
+    if (is_file($envFile)) {
+        foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+            $line = trim($line);
+            if ($line === '' || strpos($line, '#') === 0 || strpos($line, '=') === false) continue;
+            list($key, $val) = explode('=', $line, 2);
+            if (trim($key) === 'AUTH_TOKEN_SECRET') {
+                $val = trim($val);
+                if (strlen($val) >= 2 && (($val[0] === '"' && substr($val, -1) === '"') || ($val[0] === "'" && substr($val, -1) === "'"))) {
+                    $val = substr($val, 1, -1);
+                }
+                $envSecret = $val;
+                break;
+            }
+        }
+    }
+}
+
 if (empty($envSecret) || $envSecret === 'CHANGE_THIS_TO_A_RANDOM_SECRET_KEY_IN_PRODUCTION') {
     // Generar secret aleatorio si no esta configurado (pero advertir)
     error_log('SECURITY WARNING: AUTH_TOKEN_SECRET no esta configurado. Se genero un secret aleatorio. Configure AUTH_TOKEN_SECRET en .env para persistencia.');

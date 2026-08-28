@@ -89,6 +89,7 @@ Para desplegar el ERP en un entorno de producción utilizando **Plesk Panel**:
 
 ## 📖 Documentación Adicional
 
+- [`api/README.md`](api/README.md) - Guía de la API REST, autenticación y documentación Swagger (`/v1/docs`).
 - [`docs/MIGRACION.md`](docs/MIGRACION.md) - Documento maestro de migración PHP (plan, cambios, mejoras, pendientes).
 - [`docs/optimizacion-grid-ventas-N+1.md`](docs/optimizacion-grid-ventas-N+1.md) - Eliminación de N+1 en grid de ventas.
 - [`docs/relaciones-modulos-optimizacion.md`](docs/relaciones-modulos-optimizacion.md) - Relaciones entre módulos y reglas de optimización.

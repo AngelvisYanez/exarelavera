@@ -28,6 +28,12 @@ if ($uri !== '/' && is_file($filePath)) {
     return true;
 }
 
-// Route everything else through index.php
+// Route everything else through index.php.
+// The PHP built-in server does NOT populate PATH_INFO reliably when index.php
+// acts as a fallback router. Slim 2 reads PATH_INFO via getResourceUri(), so we
+// set it explicitly here to match production (Apache/Nginx) behaviour.
+$_SERVER['PATH_INFO'] = $uri;
 $_SERVER['REQUEST_URI'] = $uri;
+$_SERVER['SCRIPT_NAME'] = '/index.php';
+$_SERVER['PHP_SELF'] = '/index.php' . $uri;
 require __DIR__ . '/index.php';

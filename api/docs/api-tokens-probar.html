@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>EXA Contable API - Probar token</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css">
+<style>
+  body{background:#f5f6f7;font-family:'Open Sans',Arial,sans-serif;padding:20px}
+  .card{background:#fff;border:1px solid #e3e6ea;border-radius:6px;padding:18px;margin-bottom:18px}
+  pre{background:#272822;color:#f8f8f2;padding:12px;border-radius:4px;max-height:360px;overflow:auto}
+  .ok{color:#1e8e5a;font-weight:bold}
+  .err{color:#c33;font-weight:bold}
+</style>
+</head>
+<body>
+<div class="container-fluid">
+  <div class="card">
+    <h3><i class="fa fa-plug"></i> Probar token de acceso</h3>
+    <p class="text-muted">Pega tu token y elige un módulo/proceso para ver si la API responde. No hace falta usuario ni contraseña.</p>
+    <div class="row">
+      <div class="col-sm-6">
+        <label>Token (Bearer)</label>
+        <input id="tok" class="form-control" placeholder="Pega aquí el token">
+      </div>
+      <div class="col-sm-4">
+        <label>Módulo / proceso (ruta)</label>
+        <input id="ruta" class="form-control" value="/v1/contabilidad/periodos">
+      </div>
+      <div class="col-sm-2">
+        <label>Método</label>
+        <select id="metodo" class="form-control"><option>POST</option><option>GET</option></select>
+      </div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <div class="col-sm-4">
+        <label>Empresa (Emp_Cod) <span class="text-muted">(opcional)</span></label>
+        <input id="emp" type="number" class="form-control" placeholder="Ej: 96">
+      </div>
+      <div class="col-sm-8 text-right" style="padding-top:25px">
+        <button class="btn btn-primary" onclick="probar()"><i class="fa fa-play"></i> Probar</button>
+        <button class="btn btn-default" onclick="testVivo()"><i class="fa fa-heartbeat"></i> Probar conectividad</button>
+        <button class="btn btn-default" onclick="cargarCatalogo()"><i class="fa fa-list"></i> Ver módulos</button>
+      </div>
+    </div>
+    <div id="estado" style="margin-top:12px"></div>
+    <pre id="resultado">// Resultado aquí...</pre>
+  </div>
+
+  <div class="card" id="catCard" style="display:none">
+    <h4><i class="fa fa-th-list"></i> Módulos y procesos disponibles</h4>
+    <input id="catBuscar" class="form-control" placeholder="Filtrar módulo o proceso..." oninput="renderCat()" style="max-width:420px;margin-bottom:8px">
+    <div id="catLista"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script src="https://use.fontawesome.com/releases/v5.15.4/js/all.js"></script>
+<script>
+var CAT=null;
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function setEstado(cls,msg){ $('#estado').html('<span class="'+cls+'">'+msg+'</span>'); }
+
+function testVivo(){
+  $.ajax({url:'/v1/test', method:'GET', timeout:10000,
+    success:function(r){ setEstado('ok','&#10003; Conectividad OK — '+JSON.stringify(r)); },
+    error:function(x){ setEstado('err','&#10007; Sin conexión a la API: HTTP '+x.status); }
+  });
+}
+
+function datosBody(){
+  var emp=$('#emp').val();
+  if(!emp) return undefined;
+  return JSON.stringify({Emp_Cod: parseInt(emp)});
+}
+
+function probar(){
+  var tok=$('#tok').val().trim();
+  var ruta=$('#ruta').val().trim();
+  var met=$('#metodo').val();
+  if(!tok){ setEstado('err','Ingresa un token'); return; }
+  if(!ruta){ setEstado('err','Ingresa una ruta'); return; }
+  $('#resultado').text('// llamando '+met+' '+ruta+' ...');
+  $.ajax({
+    url:ruta, method:met,
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},
+    data: (met==='POST') ? datosBody() : undefined,
+    timeout:30000,
+    complete:function(xhr){
+      var body;
+      try{ body=JSON.stringify(JSON.parse(xhr.responseText),null,2); }catch(e){ body=xhr.responseText||''; }
+      var cls=(xhr.status>=200 && xhr.status<400)?'ok':'err';
+      setEstado(cls,'HTTP '+xhr.status+' '+xhr.statusText);
+      $('#resultado').text((xhr.status===401?'// Token inválido, expirado o cuota agotada\n':(xhr.status===403?'// Token sin permisos para este módulo/proceso\n':''))+body);
+    }
+  });
+}
+
+function cargarCatalogo(){
+  $('#catCard').show(); $('#catCard')[0].scrollIntoView({behavior:'smooth'});
+  if(!CAT){
+    $.getJSON('/v1/docs/openapi.json',function(spec){
+      var mods={};
+      (spec.tags||[]).forEach(function(t){mods[t.name]={name:t.name,description:t.description||'',rutas:[]};});
+      Object.keys(spec.paths||{}).forEach(function(ruta){
+        var ops=spec.paths[ruta];
+        ['get','post','put','delete'].forEach(function(m){
+          if(!ops[m]) return;
+          var op=ops[m]; var tag=(op.tags&&op.tags[0])||'general';
+          if(!mods[tag]) mods[tag]={name:tag,description:'',rutas:[]};
+          mods[tag].rutas.push({ruta:ruta,metodo:m.toUpperCase(),descripcion:op.summary||''});
+        });
+      });
+      CAT=Object.keys(mods).sort().map(function(k){var m=mods[k];m.rutas.sort(function(a,b){return a.ruta<b.ruta?-1:1;});return m;});
+      renderCat();
+    }).fail(function(){ setEstado('err','No se pudo cargar el catálogo'); });
+  } else renderCat();
+}
+function renderCat(){
+  if(!CAT) return;
+  var q=($('#catBuscar').val()||'').toLowerCase();
+  var html='';
+  CAT.forEach(function(m){
+    var rutas=(m.rutas||[]).filter(function(r){
+      if(!q) return true;
+      return (m.name+' '+r.ruta+' '+(r.descripcion||'')).toLowerCase().indexOf(q)>=0;
+    });
+    if(q && !rutas.length && m.name.toLowerCase().indexOf(q)===-1) return;
+    html+='<b style="margin-top:12px;display:block">'+esc(m.name)+' <span class="text-muted">('+rutas.length+')</span></b>';
+    rutas.forEach(function(r){
+      html+='<div style="margin-left:14px"><a href="javascript:void(0)" onclick="usar(\''+r.ruta.replace(/'/g,"\\'")+'\',\''+r.metodo+'\')"><code>'+r.metodo+'</code> '+esc(r.ruta)+'</a> <span class="text-muted">— '+esc(r.descripcion)+'</span></div>';
+    });
+  });
+  $('#catLista').html(html||'<span class="text-muted">Sin resultados</span>');
+}
+function usar(ruta,metodo){ $('#ruta').val(ruta); $('#metodo').val(metodo); $('#catCard')[0].scrollIntoView({behavior:'smooth'}); }
+</script>
+</body>
+</html>

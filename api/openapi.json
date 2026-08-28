@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "EXA Contable - API REST",
-    "description": "API REST del sistema ERP contable EXA. Incluye módulos de contabilidad, facturación, tesorería, RRHH, inventario, activos fijos, bodega, caja chica, transporte, bananero, camaronera, relavera, auditoría, adquisiciones, compras, y flujo de workflows.",
+    "description": "API REST del sistema ERP contable EXA. Incluye módulos de contabilidad, facturación, tesorería, RRHH, inventario, activos fijos, bodega, caja chica, transporte, bananero, camaronera, relavera, auditoría, adquisiciones, compras, y flujo de workflows.\n\n## Autenticación\n\nLa mayoría de los endpoints requieren un token Bearer en el header `Authorization` con el formato `Bearer {token}`. El token se obtiene en dos pasos:\n\n1. **POST /v1/auth/empresas** con `{\"username\": \"...\"}` para listar las empresas del usuario.\n2. **POST /v1/auth/login** con `{\"username\": \"...\", \"password\": \"...\", \"empresa\": \"...\"}` para obtener el token.\n\nEl token es el resultado de `base64(usuario:empresa:timestamp:signature)` (firma HMAC-SHA256), y **expira a las 24 horas**.\n\n**Rutas exentas de autenticación** (no requieren token): `/v1/test`, `/v1/auth/*`, `/v1/facturacion/*` y `/v1/docs*`.\n\n## Convenciones\n\n- La mayoría de los campos se envían en el cuerpo JSON. El middleware de autenticación inyecta automáticamente `Emp_Cod` (empresa del token) en el body cuando no se envía.\n- Muchos endpoints requieren `Bdd` (nombre de la base de datos).\n- Paginación opcional con `page` y `perPage`.\n- Respuestas comunes: `success`, `data`, `error`, y `PaginatedResponse` (ver schemas).\n- Códigos HTTP: `200` éxito, `400` petición inválida, `401` no autenticado / token inválido o expirado, `500` error interno.\n\n## Seguridad\n\nEl endpoint **POST /v1/data/query** permite ejecutar SQL personalizado con privilegios de la conexión configurada. **No exponerlo** a usuarios no confiables.",
     "version": "1.0.0",
     "contact": {
       "name": "EXA Contable"
@@ -59,6 +59,10 @@
     {
       "name": "compras",
       "description": "Requisiciones"
+    },
+    {
+      "name": "contactos",
+      "description": "Directorio de contactos autorizados para notificaciones (integración ERP Locator, solo lectura)"
     },
     {
       "name": "activos-fijos",
@@ -1895,6 +1899,93 @@
         "responses": {
           "200": {
             "description": "Requisitor creado exitosamente"
+          }
+        }
+      }
+    },
+    "/v1/contactos": {
+      "get": {
+        "tags": [
+          "contactos"
+        ],
+        "summary": "Lista de contactos autorizados para notificaciones (ERP Locator)",
+        "description": "Solo lectura. Requiere token de integración con permiso exclusivo sobre esta ruta. Devuelve el directorio de contactos autorizados para recibir notificaciones; se puede filtrar por cliente/proyecto.",
+        "parameters": [
+          {
+            "name": "cliente",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filtra por cliente/proyecto (ej. ecoparkmining). Si se omite, devuelve toda la lista autorizada."
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 500,
+              "maximum": 500
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Directorio de contactos autorizados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ContactoNotificacion"
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "perPage": {
+                      "type": "integer"
+                    },
+                    "pages": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Petición inválida / no se determinó la base de datos del token"
+          },
+          "401": {
+            "description": "Token ausente, inválido, vencido o cuota agotada"
+          },
+          "403": {
+            "description": "El token no tiene permiso para consumir este recurso"
+          },
+          "500": {
+            "description": "Error interno del servidor"
           }
         }
       }
@@ -10186,6 +10277,50 @@
           },
           "pages": {
             "type": "integer"
+          }
+        }
+      },
+      "ContactoNotificacion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "C-0001",
+            "description": "Identificador único y estable del contacto en EXA"
+          },
+          "nombres": {
+            "type": "string",
+            "example": "María"
+          },
+          "apellidos": {
+            "type": "string",
+            "example": "Paz"
+          },
+          "correo": {
+            "type": "string",
+            "format": "email",
+            "example": "mpaz@empresa.com"
+          },
+          "celular": {
+            "type": "string",
+            "example": "+593991234567",
+            "description": "Móvil WhatsApp en formato internacional +5939XXXXXXXX"
+          },
+          "activo": {
+            "type": "boolean",
+            "example": true
+          },
+          "cargo": {
+            "type": "string",
+            "example": "Jefa ambiental"
+          },
+          "area": {
+            "type": "string",
+            "example": "Planta de beneficio"
+          },
+          "empresa": {
+            "type": "string",
+            "example": "ecoparkmining"
           }
         }
       }
