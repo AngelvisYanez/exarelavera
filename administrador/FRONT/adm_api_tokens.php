@@ -6,11 +6,16 @@
  * Genera y administra tokens de acceso a la API REST de EXA Contable,
  * con límite de consultas configurable por token.
  *
- * Autenticación: usa la sesión activa del panel de administración.
- * Si no hay sesión, se solicita un Bearer token (del login de la API).
+ * Autenticación: usa la sesión activa del panel de administración de EXA.
+ * Si no hay sesión, se solicita autenticarse o usar un Bearer token.
  */
 require_once('../../Librerias/config.php/register_globals.php');
 require_once('../LOGICA/seguridad.php');
+
+$hasSession = !empty($_SESSION['Ses_Usu_Cod']);
+$sesEmpCod = !empty($_SESSION['Ses_Emp_Cod']) ? (int)$_SESSION['Ses_Emp_Cod'] : 0;
+$sesEmpNom = !empty($_SESSION['Ses_Emp_Nom']) ? $_SESSION['Ses_Emp_Nom'] : (!empty($_SESSION['Ses_Emp_Cor']) ? $_SESSION['Ses_Emp_Cor'] : '');
+$sesUsuNom = !empty($_SESSION['Ses_Usu_Nom']) ? $_SESSION['Ses_Usu_Nom'] : '';
 ?>
 <!doctype html>
 <html lang="es">
@@ -25,11 +30,12 @@ require_once('../LOGICA/seguridad.php');
         .card h3 { margin-top:0; font-size:18px; color:#333; }
         .badge-quota { background:#5bc0de; }
         .badge-limit { background:#d9534f; }
-        .codebox { background:#272822; color:#f8f8f2; padding:10px; border-radius:4px; font-family:monospace; word-break:break-all; }
+        .codebox { background:#272822; color:#f8f8f2; padding:10px; border-radius:4px; font-family:monospace; word-break:break-all; font-size:14px; }
         table td { vertical-align:middle; }
         .token-muted { color:#999; font-size:12px; }
         #tokNuevo { position:relative; }
         .toast-msg { position:fixed; top:60px; right:20px; z-index:9999; }
+        .user-badge { background:#e8f4fd; color:#0d6efd; border:1px solid #b6d4fe; border-radius:4px; padding:4px 8px; font-size:12px; }
     </style>
 </head>
 <body>
@@ -37,7 +43,7 @@ require_once('../LOGICA/seguridad.php');
 
         <div class="card" id="authCard" style="display:none;">
             <h3><i class="fa fa-lock"></i> Conexión a la API</h3>
-            <p class="text-muted">Para administrar tokens ingresa tu credencial de la API (usuario, contraseña y empresa) o pega un Bearer token válido.</p>
+            <p class="text-muted">Para administrar tokens ingresa tu credencial de la API (usuario, contraseña y empresa) o inicia sesión en el sistema EXA.</p>
             <div class="row">
                 <div class="col-sm-3"><input id="inUser" class="form-control" placeholder="Usuario"></div>
                 <div class="col-sm-3"><input id="inPass" type="password" class="form-control" placeholder="Contraseña"></div>
@@ -57,27 +63,33 @@ require_once('../LOGICA/seguridad.php');
                     </span>
                 </div>
             </div>
+            <div style="margin-top:15px">
+                <a href="../../" class="btn btn-link"><i class="fa fa-arrow-left"></i> Ir a la página de inicio de sesión de EXA</a>
+            </div>
         </div>
 
         <div class="card" id="mainCard" style="display:none;">
             <div class="row">
-                <div class="col-sm-9">
-                    <h3><i class="fa fa-key"></i> Tokens de acceso a la API</h3>
+                <div class="col-sm-8">
+                    <h3><i class="fa fa-key"></i> Tokens de acceso a la API REST</h3>
+                    <?php if ($hasSession): ?>
+                        <span class="user-badge"><i class="fa fa-user"></i> Sesión activa: <?= htmlspecialchars($sesUsuNom ?: 'Usuario #' . $_SESSION['Ses_Usu_Cod']) ?> | Empresa: <?= htmlspecialchars($sesEmpNom ?: '#' . $sesEmpCod) ?></span>
+                    <?php endif; ?>
                 </div>
-                <div class="col-sm-3 text-right">
+                <div class="col-sm-4 text-right">
                     <button class="btn btn-success" onclick="nuevoToken()"><i class="fa fa-plus"></i> Generar token</button>
-                    <button class="btn btn-link" onclick="apiTokenList()"><i class="fa fa-refresh"></i></button>
+                    <button class="btn btn-default" onclick="apiTokenList()" title="Actualizar lista"><i class="fa fa-refresh"></i></button>
                 </div>
             </div>
             <hr>
-            <div id="listVacio" class="alert alert-info" style="display:none;">Aún no hay tokens.</div>
+            <div id="listVacio" class="alert alert-info" style="display:none;">Aún no hay tokens registrados. Haz clic en "Generar token" para crear uno nuevo.</div>
             <table class="table table-condensed table-hover" id="tablaTokens" style="display:none;">
                 <thead>
                     <tr>
                         <th>Nombre</th>
                         <th>Empresa</th>
                         <th>Cuota</th>
-                        <th>Uso</th>
+                        <th>Periodo</th>
                         <th>Expira</th>
                         <th>Estado</th>
                         <th>Creado</th>
@@ -93,14 +105,14 @@ require_once('../LOGICA/seguridad.php');
             <div class="row">
                 <div class="col-sm-4">
                     <label>Nombre del token</label>
-                    <input id="nNombre" class="form-control" placeholder="Ej: Integración CRM">
+                    <input id="nNombre" class="form-control" placeholder="Ej: Integración CRM / Contactos">
                 </div>
                 <div class="col-sm-4">
-                    <label>Empresa (Emp_Cod)</label>
+                    <label>Empresa</label>
                     <select id="nEmpresa" class="form-control"></select>
                 </div>
                 <div class="col-sm-2">
-                    <label>Límite de consultas</label>
+                    <label>Límite consultas</label>
                     <input id="nCuota" type="number" min="0" class="form-control" value="0" title="0 = ilimitado">
                 </div>
                 <div class="col-sm-2">
@@ -116,8 +128,8 @@ require_once('../LOGICA/seguridad.php');
                     <label>Expiración (vacío = no expira)</label>
                     <input id="nExpira" type="date" class="form-control">
                 </div>
-                <div class="col-sm-8 text-right">
-                    <button class="btn btn-primary" onclick="guardarToken()"><i class="fa fa-check"></i> Generar</button>
+                <div class="col-sm-8 text-right" style="padding-top:24px;">
+                    <button class="btn btn-primary" onclick="guardarToken()"><i class="fa fa-check"></i> Generar token</button>
                     <button class="btn btn-default" onclick="cancelarNuevo()">Cancelar</button>
                 </div>
             </div>
@@ -125,17 +137,17 @@ require_once('../LOGICA/seguridad.php');
             <div class="row">
                 <div class="col-sm-12">
                     <label class="control-label">
-                        <i class="fa fa-shield"></i> Módulos y procesos de la API que puede consumir
+                        <i class="fa fa-shield"></i> Módulos y rutas de la API que puede consumir este token
                     </label>
                     <div class="help-block" style="margin-bottom:6px">
-                        Marca los procesos a los que tendrá acceso el token. Si no marcas ninguno, el token podrá consumir <b>todos</b> los módulos (sin restricción).
+                        Marca las rutas específicas a las que tendrá acceso el token. Si marcas "Todos los módulos", el token tendrá acceso completo.
                     </div>
                     <div style="margin-bottom:8px">
-                        <label class="checkbox-inline"><input type="checkbox" id="nPermTodo" checked> <b>Todos los módulos</b></label>
+                        <label class="checkbox-inline"><input type="checkbox" id="nPermTodo" checked> <b>Todos los módulos y rutas</b></label>
                         <button type="button" class="btn btn-xs btn-link" onclick="marcarTodos()">Marcar todos</button>
                         <button type="button" class="btn btn-xs btn-link" onclick="desmarcarTodos()">Desmarcar todos</button>
                     </div>
-                    <input id="nPermBuscar" type="text" class="form-control" placeholder="Filtrar módulo o proceso..." style="max-width:420px;margin-bottom:10px" oninput="renderPermisos()">
+                    <input id="nPermBuscar" type="text" class="form-control" placeholder="Filtrar módulo o ruta..." style="max-width:420px;margin-bottom:10px" oninput="renderPermisos()">
                     <div id="nPermLista" style="max-height:360px;overflow:auto;border:1px solid #e3e6ea;border-radius:4px;padding:10px"></div>
                 </div>
             </div>
@@ -148,14 +160,20 @@ require_once('../LOGICA/seguridad.php');
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    <h4 class="modal-title"><i class="fa fa-key"></i> Token generado</h4>
+                    <h4 class="modal-title"><i class="fa fa-key"></i> Token Generado Exitosamente</h4>
                 </div>
                 <div class="modal-body">
-                    <div class="alert alert-warning">Guárdalo ahora. Por seguridad <b>no se mostrará de nuevo</b>.</div>
+                    <div class="alert alert-warning">
+                        <strong>¡Importante!</strong> Guarda tu token ahora en un lugar seguro. Por motivos de seguridad, <b>no se volverá a mostrar</b>.
+                    </div>
+                    <label>Bearer Token:</label>
                     <div class="codebox" id="tokValor"></div>
-                    <p class="token-muted">Úsalo en el header: <code>Authorization: Bearer &lt;token&gt;</code></p>
-                    <div style="margin-top:8px">
-                        <button class="btn btn-sm btn-info" onclick="copiarToken()"><i class="fa fa-copy"></i> Copiar</button>
+                    <p class="token-muted" style="margin-top:8px;">
+                        Úsalo en tus peticiones HTTP en el header:<br>
+                        <code>Authorization: Bearer &lt;tu_token&gt;</code>
+                    </p>
+                    <div style="margin-top:10px">
+                        <button class="btn btn-sm btn-info" onclick="copiarToken()"><i class="fa fa-copy"></i> Copiar al portapapeles</button>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -170,11 +188,11 @@ require_once('../LOGICA/seguridad.php');
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    <h4 class="modal-title"><i class="fa fa-shield"></i> Permisos del token: <span id="mpNombre"></span></h4>
+                    <h4 class="modal-title"><i class="fa fa-shield"></i> Configurar Permisos del Token: <span id="mpNombre"></span></h4>
                 </div>
                 <div class="modal-body">
-                    <div class="help-block">Los procesos marcados son los que este token podrá consumir. Ninguno marcado = acceso a todos los módulos.</div>
-                    <input id="mpBuscar" type="text" class="form-control" placeholder="Filtrar módulo o proceso..." oninput="renderPermisosEdicion()" style="margin-bottom:10px">
+                    <div class="help-block">Selecciona las rutas permitidas para este token. Si no seleccionas ninguna, el token podrá consumir todos los módulos.</div>
+                    <input id="mpBuscar" type="text" class="form-control" placeholder="Filtrar módulo o ruta..." oninput="renderPermisosEdicion()" style="margin-bottom:10px">
                     <div id="mpLista" style="max-height:420px;overflow:auto;border:1px solid #e3e6ea;border-radius:4px;padding:10px"></div>
                     <input type="hidden" id="mpTokId">
                 </div>
@@ -191,6 +209,8 @@ require_once('../LOGICA/seguridad.php');
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js"></script>
     <script>
+    var HAS_SESSION = <?= $hasSession ? 'true' : 'false' ?>;
+    var SES_EMP_COD = <?= $sesEmpCod ?>;
     var API_URL = '';
     var bearer = localStorage.getItem('exa_api_bearer') || '';
 
@@ -208,7 +228,7 @@ require_once('../LOGICA/seguridad.php');
                 xhrFields: { withCredentials: true },
                 success: function(res){ resolve(res); },
                 error: function(xhr){
-                    if (xhr.status === 401) { mostrarAuth(); }
+                    if (xhr.status === 401 && !HAS_SESSION) { mostrarAuth(); }
                     var msg = 'Error ' + xhr.status;
                     try { var j=JSON.parse(xhr.responseText); if(j.error) msg=j.error; } catch(e){}
                     reject({status:xhr.status, error:msg});
@@ -241,7 +261,10 @@ require_once('../LOGICA/seguridad.php');
     function cargarEmpresasSelect(){
         API('GET','/v1/admin/api-tokens/empresas').then(function(r){
             var o='<option value="">Seleccione...</option>';
-            (r.data||[]).forEach(function(e){ o += '<option value="'+e.Emp_Cod+'">['+e.Emp_Cod+'] '+e.Emp_Nom+'</option>'; });
+            (r.data||[]).forEach(function(e){
+                var sel = (SES_EMP_COD && e.Emp_Cod == SES_EMP_COD) ? ' selected' : '';
+                o += '<option value="'+e.Emp_Cod+'"'+sel+'>['+e.Emp_Cod+'] '+e.Emp_Nom+'</option>';
+            });
             $('#nEmpresa').html(o);
         }).catch(function(e){ toast(e.error); });
     }
@@ -257,7 +280,7 @@ require_once('../LOGICA/seguridad.php');
     }
 
     function apiTokenList(){
-        API('GET','/v1/admin/api-tokens?Emp_Cod='+($('#fEmp').val()||'')).then(function(r){
+        API('GET','/v1/admin/api-tokens').then(function(r){
             var d = r.data||[];
             $('#listVacio').toggle(d.length===0);
             $('#tablaTokens').toggle(d.length>0);
@@ -275,7 +298,7 @@ require_once('../LOGICA/seguridad.php');
                 if(t.Tok_Est==='A') h += '<button class="btn btn-xs btn-warning" onclick="revocar('+t.Tok_Id+')" title="Revocar"><i class="fa fa-ban"></i></button> ';
                 else h += '<button class="btn btn-xs btn-success" onclick="activar('+t.Tok_Id+')" title="Activar"><i class="fa fa-play"></i></button> ';
                 h += '<button class="btn btn-xs btn-info" onclick="resetUso('+t.Tok_Id+')" title="Resetear contador"><i class="fa fa-undo"></i></button> ';
-                h += '<button class="btn btn-xs btn-primary" onclick="editarPermisos('+t.Tok_Id+',\''+ (t.Tok_Nombre||'').replace(/'/g,"\\'") +'\')" title="Módulos/Procesos"><i class="fa fa-shield"></i></button> ';
+                h += '<button class="btn btn-xs btn-primary" onclick="editarPermisos('+t.Tok_Id+',\''+ (t.Tok_Nombre||'').replace(/'/g,"\\'") +'\')" title="Módulos/Rutas"><i class="fa fa-shield"></i></button> ';
                 h += '<button class="btn btn-xs btn-danger" onclick="eliminar('+t.Tok_Id+')" title="Eliminar"><i class="fa fa-trash"></i></button>';
                 h += '</td></tr>';
             });
@@ -315,12 +338,12 @@ require_once('../LOGICA/seguridad.php');
         API('POST','/v1/admin/api-tokens/'+act,{Tok_Id:id}).then(function(r){ toast(r.success?'Listo':'Error','ok'); apiTokenList(); }).catch(function(e){toast(e.error);});
     }
 
-    /* ===== Permisos por módulo / proceso ===== */
+    /* ===== Permisos por módulo / ruta ===== */
     var catalog = null;
-    var sel = {};      // rutas seleccionadas (form nuevo)
-    var selE = {};     // rutas seleccionadas (modal edición)
-    var todoSel = true;   // form "todos los módulos"
-    var todoSelE = false; // edición: ningún permiso = todos
+    var sel = {};
+    var selE = {};
+    var todoSel = true;
+    var todoSelE = false;
 
     function loadCatalogo(){
         API('GET','/v1/admin/api-tokens/permisos').then(function(r){
@@ -419,8 +442,12 @@ require_once('../LOGICA/seguridad.php');
     }
 
     $(function(){
-        if (bearer) cargar(); else mostrarAuth();
-        if (bearer) { loadCatalogo(); }
+        if (HAS_SESSION || bearer) {
+            cargar();
+            loadCatalogo();
+        } else {
+            mostrarAuth();
+        }
     });
     </script>
 </body>
