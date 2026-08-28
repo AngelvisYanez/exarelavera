@@ -35,6 +35,18 @@ $app->get('/v1/admin/api-tokens/empresas', function () use ($app) {
     }
 });
 
+$app->get('/v1/admin/api-tokens/:id/permisos', function ($id) use ($app) {
+    try {
+        $mgr = new APITokenManager();
+        $permisos = $mgr->getPermisos((int)$id);
+        utf8_encode_deep($permisos);
+        echo json_encode(['success' => true, 'data' => $permisos]);
+    } catch (\Throwable $e) {
+        $app->response->setStatus(500);
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+});
+
 $app->post('/v1/admin/api-tokens/generar', function () use ($app) {
     $body = getBody();
     try {
