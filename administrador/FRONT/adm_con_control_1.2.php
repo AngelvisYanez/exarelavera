@@ -48,65 +48,64 @@ $obBD_con1 = new Class_Log_Datos_Cnt;
  */
 $row_data = $obBD_con1->getRowConsulta(2, $Emp_Cod.'*'.$user_name, $obBD_conexion);
 
-if (!empty($row_data)) {
+$bddName = (!empty($row_data) && !empty($row_data['Dat_Dis'])) ? $row_data['Dat_Dis'] : 'exa';
+if (!empty($row_data) && !empty($row_data['Dat_Dis'])) {
     /**
      * Conexion a la base de datos distribuida, dinamica
      */
-    $obBD_conexion = new Class_Log_Conexion_Cnt($row_data['Dat_Dis']);
+    $obBD_conexion = new Class_Log_Conexion_Cnt($bddName);
+}
+
+/**
+ * Autenticacion con soporte dual: password_hash (modern) + MD5 (legacy)
+ * Primero buscamos el usuario para verificar la contrasena en PHP
+ */
+$user_sql = "SELECT 
+    usuarios.Usu_Ced, usuarios.Usu_Est, usuarios.Suc_Cod, sucursal.Emp_Cod,
+    usuarios.Prs_Cod, usuarios.Usu_Cod, usuarios.Usu_Tip,
+    persona.Prs_Nom, persona.Prs_Ape, persona.Prs_Ced, persona.Prs_Sex,
+    usuarios.Usu_Cad, usuarios.Usu_Pal, usuarios.Usu_Men,
+    empresas.Emp_Nom, empresas.Emp_Log, sucursal.Suc_Des,
+    empresas.Emp_Cor, sucursal.Suc_Web
+FROM usuarios
+INNER JOIN sucursal ON (usuarios.Suc_Cod = sucursal.Suc_Cod)
+INNER JOIN persona ON (usuarios.Prs_Cod = persona.Prs_Cod)
+INNER JOIN empresas ON (sucursal.Emp_Cod = empresas.Emp_Cod)
+WHERE Usu_Ced = '$user_name' AND empresas.Emp_Cod = $Emp_Cod AND usuarios.Usu_Est = 'A' AND sucursal.Suc_Est = 'A'";
+
+if ($Suc_Cod > 0) {
+    $user_sql .= " AND sucursal.Suc_Cod = $Suc_Cod";
+}
+
+$row_rs_control_query = $obBD_con1->getRowConsultaSql($user_sql, $obBD_conexion);
+
+$total_rs_control = 0;
+$row_rs_control = null;
+
+if (!empty($row_rs_control_query)) {
+    $storedHash = $row_rs_control_query['Usu_Pal'];
+    $passwordValid = false;
     
-    /**
-     * Autenticacion con soporte dual: password_hash (modern) + MD5 (legacy)
-     * Primero buscamos el usuario para verificar la contrasena en PHP
-     */
-    $user_sql = "SELECT 
-        usuarios.Usu_Ced, usuarios.Usu_Est, usuarios.Suc_Cod, sucursal.Emp_Cod,
-        usuarios.Prs_Cod, usuarios.Usu_Cod, usuarios.Usu_Tip,
-        persona.Prs_Nom, persona.Prs_Ape, persona.Prs_Ced, persona.Prs_Sex,
-        usuarios.Usu_Cad, usuarios.Usu_Pal, usuarios.Usu_Men,
-        empresas.Emp_Nom, empresas.Emp_Log, sucursal.Suc_Des,
-        empresas.Emp_Cor, sucursal.Suc_Web
-    FROM usuarios
-    INNER JOIN sucursal ON (usuarios.Suc_Cod = sucursal.Suc_Cod)
-    INNER JOIN persona ON (usuarios.Prs_Cod = persona.Prs_Cod)
-    INNER JOIN empresas ON (sucursal.Emp_Cod = empresas.Emp_Cod)
-    WHERE Usu_Ced = '$user_name' AND empresas.Emp_Cod = $Emp_Cod AND usuarios.Usu_Est = 'A' AND sucursal.Suc_Est = 'A'";
-    
-    if ($Suc_Cod > 0) {
-        $user_sql .= " AND sucursal.Suc_Cod = $Suc_Cod";
+    // Verificar contrasena: soporte dual (password_hash moderno + MD5 legacy)
+    if (strpos($storedHash, '$2y$') === 0) {
+        // Hash moderno (bcrypt)
+        $passwordValid = password_verify(trim($encryptor), $storedHash);
+    } else {
+        // Legacy MD5 - comparar directamente
+        $passwordValid = ($storedHash === trim($encryptor));
     }
     
-    $row_rs_control_query = $obBD_con1->getRowConsultaSql($user_sql, $obBD_conexion);
-    
-    $total_rs_control = 0;
-    $row_rs_control = null;
-    
-    if (!empty($row_rs_control_query)) {
-        $storedHash = $row_rs_control_query['Usu_Pal'];
-        $passwordValid = false;
+    if ($passwordValid) {
+        $total_rs_control = 1;
+        $row_rs_control = $row_rs_control_query;
         
-        // Verificar contrasena: soporte dual (password_hash moderno + MD5 legacy)
-        if (strpos($storedHash, '$2y$') === 0) {
-            // Hash moderno (bcrypt)
-            $passwordValid = password_verify(trim($encryptor), $storedHash);
-        } else {
-            // Legacy MD5 - comparar directamente
-            $passwordValid = ($storedHash === trim($encryptor));
-        }
-        
-        if ($passwordValid) {
-            $total_rs_control = 1;
-            $row_rs_control = $row_rs_control_query;
-            
-            // Si la contrasena era MD5, migrarla a bcrypt automaticamente
-            if (strpos($storedHash, '$2y$') !== 0) {
-                $newHash = password_hash(trim($encryptor), PASSWORD_BCRYPT, ['cost' => 12]);
-                $newHashSafe = mysqli_real_escape_string($obBD_conexion->conexion, $newHash);
-                $obBD_con1->consulta("UPDATE usuarios SET Usu_Pal = '$newHashSafe' WHERE Usu_Cod = " . (int)$row_rs_control['Usu_Cod'], $obBD_conexion);
-            }
+        // Si la contrasena era MD5, migrarla a bcrypt automaticamente
+        if (strpos($storedHash, '$2y$') !== 0) {
+            $newHash = password_hash(trim($encryptor), PASSWORD_BCRYPT, ['cost' => 12]);
+            $newHashSafe = mysqli_real_escape_string($obBD_conexion->conexion, $newHash);
+            $obBD_con1->consulta("UPDATE usuarios SET Usu_Pal = '$newHashSafe' WHERE Usu_Cod = " . (int)$row_rs_control['Usu_Cod'], $obBD_conexion);
         }
     }
-} else {
-    $total_rs_control = 0;
 }
 
 /**
@@ -192,20 +191,20 @@ if ($total_rs_control != 0)
     /**
      * Variables para la informacion del sistema
      */
-    $_SESSION['Ses_Sys_Sitio'] = $row_rs_system['Sys_Nom'];
-    $_SESSION['Ses_Sys_Nom'] = $row_rs_system['Sys_Nom'] . " [" . $row_rs_system['Sys_Des'] . "]";
-    $_SESSION['Ses_Sys_Ver'] = $row_rs_system['Sys_Ver'];
+    $_SESSION['Ses_Sys_Sitio'] = isset($row_rs_system['Sys_Nom']) ? $row_rs_system['Sys_Nom'] : 'EXA Contable';
+    $_SESSION['Ses_Sys_Nom'] = (isset($row_rs_system['Sys_Nom']) ? $row_rs_system['Sys_Nom'] : 'EXA') . " [" . (isset($row_rs_system['Sys_Des']) ? $row_rs_system['Sys_Des'] : 'Software Contable') . "]";
+    $_SESSION['Ses_Sys_Ver'] = isset($row_rs_system['Sys_Ver']) ? $row_rs_system['Sys_Ver'] : '2.0';
     $_SESSION['Ses_Sys_Tim'] = date("Y-m-d H:i:s");
     $_SESSION['Ses_Sys_Dat'] = date("Y-m-d");
     $_SESSION['Ses_Sys_Sit'] = "inside";
-    $_SESSION['Ses_Sys_Cor'] = $row_rs_system['Sys_Cor'];
+    $_SESSION['Ses_Sys_Cor'] = isset($row_rs_system['Sys_Cor']) ? $row_rs_system['Sys_Cor'] : '';
 
     /**
      * Variable para la base de datos del sistema local
      */
-    $_SESSION['Ses_Dat_Dis'] = $row_data['Dat_Dis'];
-    $_SESSION['Ses_Dat_Aut'] = $row_data['Dat_Aut'];
-    $_SESSION['Ses_Dat_Stg'] = $row_data['Dat_Stg'];
+    $_SESSION['Ses_Dat_Dis'] = $bddName;
+    $_SESSION['Ses_Dat_Aut'] = !empty($row_data['Dat_Aut']) ? $row_data['Dat_Aut'] : '';
+    $_SESSION['Ses_Dat_Stg'] = !empty($row_data['Dat_Stg']) ? $row_data['Dat_Stg'] : '';
 
     /**
      * Variable de sesion de auditoria
@@ -218,64 +217,58 @@ if ($total_rs_control != 0)
      * Control que almacena el tipo de acceso al sistema
      * Datos del navegador
      */
+    $objSes = new Class_Log_Datos_Aud;
     $Browser = detectar_acceso();
+    $objSes->guardarSesionSistema($_SESSION['Ses_Ses_Cod'], $Browser, $obBD_conexion);
+    $objSes->liberar();
 
     /**
-     * Verificacion para saber si el usuario cambio de clave
+     * Verificacion de clave por defecto "123456"
      */
-    if (trim($password) == trim($_SESSION['Ses_Usu_Ced']))
-    {
-        $_SESSION['Ses_Sys_Sit'] = "outside";
-        if ($ajax_check) {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => true, 'insecure' => true]);
-            exit();
-        }
-        header("Location: adm_pas_usuarios_1.0.php");
-        exit();
-    }
-
-    if ($ajax_check) {
-        header('Content-Type: application/json');
-        echo json_encode(['success' => true, 'insecure' => false]);
-        exit();
-    }
-
-    if ($Browser == "WML")
-    {
-        // Mobile redirect (currently disabled)
-    }
-    else
-    {
-        /**
-         * Verifica si existe una pagina para cargar por defecto
-         */
-        if (isset($pagina) && trim($pagina) != "") {
-            header("Location: ../../index.php?errorusuario=si");
+    $isDefaultPass = false;
+    $checkPass = $obBD_con1->getRowConsultaSql("SELECT Usu_Cod, Usu_Pal FROM usuarios WHERE Usu_Cod = " . (int)$row_rs_control['Usu_Cod'], $obBD_conexion);
+    if ($checkPass) {
+        $storedHash = $checkPass['Usu_Pal'];
+        if (strpos($storedHash, '$2y$') === 0) {
+            $isDefaultPass = password_verify('123456', $storedHash);
         } else {
-            header("Location: ../FRONT/home.php");
+            $isDefaultPass = ($storedHash === md5('123456'));
         }
     }
+
+    /**
+     * Si es una peticion AJAX (Silent Check de handleLogin)
+     */
+    if (!empty($ajax_check)) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => true,
+            'insecure' => $isDefaultPass
+        ]);
+        exit();
+    }
+
+    /**
+     * Redireccion a la pagina principal
+     */
+    header("Location: home.php");
     exit();
 }
 else
 {
     /**
-     * Auditoria
+     * Si es una peticion AJAX y falla el login
      */
-    $objAud = new Class_Log_Datos_Aud;
-    $objAud->GuardarSesionError(date("Y-m-d H:i:s"), trim($user_name), trim($password), $Emp_Cod);
-    $objAud->liberar();
-
-    if (isset($Browser) && $Browser == "WML") {
-        header("Location: ../../movil/FRONT/index_m.php?errorusuario=si");
-    } else {
-        if ($ajax_check) {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false]);
-            exit();
-        }
-        header("Location: ../../index.php?errorusuario=si");
+    if (!empty($ajax_check)) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => false,
+            'error_type' => 'user'
+        ]);
+        exit();
     }
+
+    header(isset($Browser)&&$Browser =="WML"?"Location: ../../movil/FRONT/index_m.php?errorusuario=si":"Location: ../../index.php?errorusuario=si");
     exit();
 }
+?>

@@ -20,7 +20,7 @@ class MysqlConexion{
     public $Usuario;
     public $Clave;
     /* Constantes de conexion bases de datos */
-    const bd = "exa_master"; //base de datos master
+    const bd = "exa"; //base de datos master
     const bdc = ""; //base de datos corporativa
     /*  Constantes de conexion */
     //"userExa";
@@ -150,9 +150,17 @@ class MysqlConexion{
     function cerrar() {
         $this->close();
     }
-    /* Regresa los datos de la base de datos conectada en un arreglo */
+    /* Destructor de la clase */
+    function __destruct() {
+        $this->close();
+    }
+    /* Retorna array con datos de conexion para debugbar */
     function getDB() {
-        return array('db'=>$this->BaseDatos, 'user'=>$this->Usuario, 'pass'=>$this->Clave, 'server'=>$this->Servidor);
+        return array(
+            'db_name' => $this->BaseDatos,
+            'host'    => $this->Servidor,
+            'user'    => $this->Usuario
+        );
     }
 }
 ?>
