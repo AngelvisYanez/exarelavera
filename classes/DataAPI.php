@@ -1,51 +1,78 @@
 <?php
 
+require_once __DIR__ . '/../DATA/MysqlConexion.php';
+require_once __DIR__ . '/../DATA/MysqlDatos.php';
+
 class DataAPI
 {
-    protected $conexion;
-    protected $datos;
+    public $conexion;
+    public $datos;
+    public $bdd;
 
     function __construct($bdd)
     {
+        $this->bdd = $bdd;
         $this->conexion = new MysqlConexion($bdd);
         $this->datos = new MysqlDatos();
     }
 
-    public function escape($value)
-    {
-        if (is_null($value)) return 'NULL';
-        return "'" . mysqli_real_escape_string($this->conexion->conexion, $value) . "'";
-    }
-
     public function query($sql)
     {
-        return $this->datos->getArrayConsultaSql($sql, $this->conexion);
+        $res = $this->datos->getArrayConsultaSql($sql, $this->conexion);
+        return is_array($res) ? $res : [];
     }
 
     public function queryRow($sql)
     {
-        return $this->datos->getRowConsultaSql($sql, $this->conexion);
+        $rows = $this->query($sql);
+        return !empty($rows) ? $rows[0] : null;
     }
 
-    public function list($table, $where = [], $order = '', $limit = 1000, $offset = 0)
+    public function queryScalar($sql)
+    {
+        $row = $this->queryRow($sql);
+        if ($row && is_array($row)) {
+            $vals = array_values($row);
+            return $vals[0];
+        }
+        return null;
+    }
+
+    public function listAll($table, $where = [], $orderBy = null, $limit = null, $offset = null)
     {
         $sql = "SELECT * FROM `$table`";
-        if (!empty($where)) {
-            $parts = [];
-            foreach ($where as $k => $v) {
-                $parts[] = "`$k` = " . $this->escape($v);
+        $sql .= $this->buildWhere($where);
+        if ($orderBy) {
+            $sql .= " ORDER BY $orderBy";
+        }
+        if ($limit !== null) {
+            $sql .= " LIMIT " . intval($limit);
+            if ($offset !== null) {
+                $sql .= " OFFSET " . intval($offset);
             }
-            $sql .= " WHERE " . implode(" AND ", $parts);
         }
-        if ($order) {
-            $order = preg_replace('/[^a-zA-Z0-9_.,\s]/', '', $order);
-            $sql .= " ORDER BY $order";
-        }
-        $sql .= " LIMIT $offset, $limit";
         return $this->query($sql);
     }
 
-    public function getById($table, $idField, $idValue)
+    public function listPaged($table, $where = [], $orderBy = null, $page = 1, $perPage = 50)
+    {
+        $page = max(1, intval($page));
+        $perPage = max(1, min(500, intval($perPage)));
+        $offset = ($page - 1) * $perPage;
+
+        $total = $this->count($table, $where);
+        $data = $this->listAll($table, $where, $orderBy, $perPage, $offset);
+
+        return [
+            'data' => $data,
+            'total' => $total,
+            'page' => $page,
+            'perPage' => $perPage,
+            'pages' => ceil($total / $perPage)
+        ];
+    }
+
+    public function findById($table, $idField, $idValue)
     {
         $sql = "SELECT * FROM `$table` WHERE `$idField` = " . $this->escape($idValue) . " LIMIT 1";
         return $this->queryRow($sql);
@@ -85,6 +112,13 @@ class DataAPI
         return $this->datos->Error == 0;
     }
 
+    public function tableExists($table)
+    {
+        $sql = "SHOW TABLES LIKE " . $this->escape($table);
+        $rows = $this->query($sql);
+        return !empty($rows);
+    }
+
     public function tableInfo($table)
     {
         $sql = "DESCRIBE `$table`";
@@ -99,76 +133,30 @@ class DataAPI
         }
         $rows = $this->query($sql);
         $tables = [];
-        $key = 'Tables_in_' . $this->conexion->BaseDatos;
         foreach ($rows as $r) {
-            $tables[] = $r[$key];
+            $tables[] = reset($r);
         }
         return $tables;
     }
 
     public function count($table, $where = [])
     {
-        $sql = "SELECT COUNT(*) AS total FROM `$table`";
-        if (!empty($where)) {
-            $parts = [];
-            foreach ($where as $k => $v) {
-                $parts[] = "`$k` = " . $this->escape($v);
-            }
-            $sql .= " WHERE " . implode(" AND ", $parts);
-        }
-        $row = $this->queryRow($sql);
-        return $row ? (int)$row['total'] : 0;
+        $sql = "SELECT COUNT(*) as total FROM `$table`" . $this->buildWhere($where);
+        return intval($this->queryScalar($sql));
     }
 
-    public function exists($table, $where)
+    public function exists($table, $where = [])
     {
         return $this->count($table, $where) > 0;
     }
 
-    public function listPaged($table, $where = [], $order = '', $page = 1, $perPage = 50)
+    public function escape($value)
     {
-        $page = max(1, (int)$page);
-        $perPage = max(1, min(500, (int)$perPage));
-        $offset = ($page - 1) * $perPage;
-        $total = $this->count($table, $where);
-        $data = $this->list($table, $where, $order, $perPage, $offset);
-        return ['data' => $data, 'total' => $total, 'page' => $page, 'perPage' => $perPage, 'pages' => (int)ceil($total / $perPage)];
-    }
-
-    public function listPagedSql($sql, $countSql, $page = 1, $perPage = 50)
-    {
-        $page = max(1, (int)$page);
-        $perPage = max(1, min(500, (int)$perPage));
-        $offset = ($page - 1) * $perPage;
-        $countRow = $this->queryRow($countSql);
-        $total = $countRow ? (int)$countRow['total'] : 0;
-        $sql .= " LIMIT $offset, $perPage";
-        $data = $this->query($sql);
-        return ['data' => $data, 'total' => $total, 'page' => $page, 'perPage' => $perPage, 'pages' => (int)ceil($total / $perPage)];
-    }
-
-    public function queryScalar($sql)
-    {
-        $row = $this->queryRow($sql);
-        if (!$row) return null;
-        return reset($row);
-    }
-
-    public function beginTransaction()
-    {
-        mysqli_autocommit($this->conexion->conexion, false);
-    }
-
-    public function commit()
-    {
-        mysqli_commit($this->conexion->conexion);
-        mysqli_autocommit($this->conexion->conexion, true);
-    }
-
-    public function rollback()
-    {
-        mysqli_rollback($this->conexion->conexion);
-        mysqli_autocommit($this->conexion->conexion, true);
+        if ($value === null) return 'NULL';
+        if (is_bool($value)) return $value ? '1' : '0';
+        if (is_int($value) || is_float($value)) return (string)$value;
+        $escaped = mysqli_real_escape_string($this->conexion->conexion, (string)$value);
+        return "'$escaped'";
     }
 
     public function getError()
@@ -178,28 +166,20 @@ class DataAPI
 
     public function getErrorMsg()
     {
-        return $this->datos->MsgError;
+        return $this->conexion->Error;
     }
 
-    public function softDelete($table, $idField, $idValue, $stateField, $deletedValue = 'I')
+    private function buildWhere($where)
     {
-        return $this->update($table, [$stateField => $deletedValue], $idField, $idValue);
-    }
-
-    public function insertBatch($table, $rows)
-    {
-        if (empty($rows)) return true;
-        $this->beginTransaction();
-        $ids = [];
-        foreach ($rows as $row) {
-            $id = $this->insert($table, $row);
-            if ($id === false) {
-                $this->rollback();
-                return false;
+        if (empty($where)) return "";
+        $clauses = [];
+        foreach ($where as $k => $v) {
+            if ($v === null) {
+                $clauses[] = "`$k` IS NULL";
+            } else {
+                $clauses[] = "`$k` = " . $this->escape($v);
             }
-            $ids[] = $id;
         }
-        $this->commit();
-        return $ids;
+        return " WHERE " . implode(" AND ", $clauses);
     }
 }

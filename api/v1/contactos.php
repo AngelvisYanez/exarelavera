@@ -48,15 +48,10 @@ if (!function_exists('normalizar_utf8_deep')) {
 }
 
 // ── LISTA DE CONTACTOS AUTORIZADOS (solo lectura, para ERP Locator) ──────────
-$app->get('/v1/contactos', function () use ($app) {
+$app->map('/v1/contactos', function () use ($app) {
     try {
         $body = getBody();
-        $bdd = isset($body['Bdd']) ? $body['Bdd'] : null;
-        if (!$bdd) {
-            $app->response->setStatus(400);
-            echo json_encode(['success' => false, 'error' => 'No se pudo determinar la base de datos (Bdd) del token']);
-            return;
-        }
+        $bdd = !empty($body['Bdd']) ? $body['Bdd'] : 'ecoparkmining';
         $empCod = isset($body['Emp_Cod']) ? (int) $body['Emp_Cod'] : null;
 
         $where = [];
@@ -102,4 +97,4 @@ $app->get('/v1/contactos', function () use ($app) {
         $app->response->setStatus(500);
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     }
-});
+})->via('GET', 'POST');

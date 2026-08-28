@@ -18,12 +18,25 @@ class APITokenManager
 {
     protected $api;
 
-    public function __construct()
+    public function __construct($bdd = null)
     {
-        // La tabla vive en la base MASTER central (exa_master)
-        // Nota: 'master' como nombre de BD mapea a la BD corporativa vacía en
-        // MysqlConexion, por eso se usa el nombre explícito 'exa_master'.
-        $this->api = new DataAPI('exa_master');
+        if ($bdd) {
+            $this->api = new DataAPI($bdd);
+            return;
+        }
+        $candidates = ['ecoparkmining', 'exa', 'exa_master'];
+        foreach ($candidates as $candidate) {
+            try {
+                $api = new DataAPI($candidate);
+                if ($api->tableExists('api_tokens')) {
+                    $this->api = $api;
+                    return;
+                }
+            } catch (\Throwable $e) {
+                // Siguiente candidato
+            }
+        }
+        $this->api = new DataAPI('ecoparkmining');
     }
 
     /**
@@ -40,7 +53,7 @@ class APITokenManager
         return [
             'Emp_Cod' => (int)$empCod,
             'Emp_Nom' => $emp ? $emp['Emp_Nom'] : null,
-            'Bdd' => $bdd ?: 'exa',
+            'Bdd' => $bdd ?: ($this->api->bdd ?: 'ecoparkmining'),
         ];
     }
 
@@ -53,8 +66,12 @@ class APITokenManager
         if (empty($bdd)) {
             return false;
         }
-        $con = new MysqlConexion($bdd);
-        return !empty($con->conexion);
+        try {
+            $api = new DataAPI($bdd);
+            return $api->conexion && $api->conexion->conexion && empty($api->conexion->Error);
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     /**
@@ -113,18 +130,15 @@ class APITokenManager
             return ['success' => false, 'error' => 'No se pudo crear el token: ' . $this->api->getErrorMsg()];
         }
 
-        // Asignar permisos por módulo/proceso (opcional). Si no se envían,
-        // el token queda sin restricción (permite todo).
         if (is_array($permisos) && !empty($permisos)) {
             $resPerm = $this->setPermisos((int)$id, $permisos);
             if (!$resPerm['success']) {
-                // No fallar la creación por un error de permisos, pero notificar
                 $this->api->delete('api_tokens', 'Tok_Id', (int)$id);
                 return $resPerm;
             }
         }
 
-        $resPermisos = is_array($permisos) ? $this->getPermisos((int)$id) : [];
+        $resPermisos = $this->getPermisos((int)$id);
 
         return [
             'success' => true,
@@ -173,7 +187,6 @@ class APITokenManager
             return ['valid' => false, 'reason' => 'expired'];
         }
 
-        // Actualizar periodo de cuota si aplica
         $cuota = (int)$row['Tok_Cuota'];
         $periodo = $row['Tok_Periodo'];
         if ($cuota > 0 && !empty($row['Tok_Periodo_Inicio'])) {
@@ -204,44 +217,38 @@ class APITokenManager
         return [
             'valid' => true,
             'id' => (int)$row['Tok_Id'],
-            'nombre' => $row['Tok_Nombre'],
             'Emp_Cod' => (int)$row['Emp_Cod'],
-            'Bdd' => $row['Tok_Bdd'],
-            'cuota' => $cuota,
-            'usadas' => (int)$row['Tok_Usadas'] + ($usarCuota ? 1 : 0),
-            'periodo' => $periodo,
-            'creado' => $row['Tok_Creado'],
+            'Bdd' => $row['Tok_Bdd'] ?: 'ecoparkmining',
+            'nombre' => $row['Tok_Nombre'],
         ];
     }
 
-    /**
-     * Lista los tokens, opcionalmente filtrados por empresa.
-     */
     public function list($empCod = null)
     {
         $where = [];
-        if (!empty($empCod)) {
+        if ($empCod !== null && (int)$empCod > 0) {
             $where['Emp_Cod'] = (int)$empCod;
         }
-        $rows = $this->api->list('api_tokens', $where, 'Tok_Id DESC', 500);
+        $rows = $this->api->listAll('api_tokens', $where, 'Tok_Id DESC');
         foreach ($rows as &$r) {
-            unset($r['Tok_Hash']); // Nunca exponer el hash
-            $r['Tok_Creado'] = $r['Tok_Creado'] ?? null;
-            $r['permisos'] = $this->getPermisos($r['Tok_Id']);
+            $r['permisos'] = $this->getPermisos((int)$r['Tok_Id']);
         }
         return $rows;
     }
 
-    /**
-     * Actualiza la cuota / periodo / expiración de un token.
-     */
-    public function updateLimits($tokId, $cuota = null, $periodo = null, $expira = null, $estado = null)
+    public function revoke($id)
     {
-        $tokId = (int)$tokId;
-        $row = $this->api->getById('api_tokens', 'Tok_Id', $tokId);
-        if (!$row) {
+        return $this->updateLimits($id, null, null, null, 'R');
+    }
+
+    public function updateLimits($id, $cuota = null, $periodo = null, $expira = null, $estado = null)
+    {
+        $id = (int)$id;
+        $tok = $this->api->findById('api_tokens', 'Tok_Id', $id);
+        if (!$tok) {
             return ['success' => false, 'error' => 'Token no encontrado'];
         }
+
         $data = [];
         if ($cuota !== null) {
             $data['Tok_Cuota'] = max(0, (int)$cuota);
@@ -250,252 +257,80 @@ class APITokenManager
             $data['Tok_Periodo'] = $periodo === 'M' ? 'M' : 'D';
         }
         if ($expira !== null) {
-            $data['Tok_Expira'] = $expira === '' || $expira === '0'
-                ? null
-                : date('Y-m-d H:i:s', strtotime($expira));
+            $data['Tok_Expira'] = $expira ? date('Y-m-d H:i:s', strtotime($expira)) : null;
         }
-        if ($estado !== null) {
-            $estado = strtoupper(substr($estado, 0, 1));
-            $data['Tok_Est'] = ($estado === 'I' || $estado === 'A') ? $estado : 'A';
+        if ($estado !== null && in_array($estado, ['A', 'I', 'R'])) {
+            $data['Tok_Est'] = $estado;
         }
+
         if (empty($data)) {
-            return ['success' => false, 'error' => 'No hay cambios para aplicar'];
+            return ['success' => true, 'message' => 'Sin cambios'];
         }
-        $ok = $this->api->update('api_tokens', $data, 'Tok_Id', $tokId);
-        return $ok
-            ? ['success' => true]
-            : ['success' => false, 'error' => 'No se pudo actualizar el token: ' . $this->api->getErrorMsg()];
+
+        $ok = $this->api->update('api_tokens', $data, 'Tok_Id', $id);
+        return [
+            'success' => $ok,
+            'error' => $ok ? null : 'No se pudo actualizar: ' . $this->api->getErrorMsg(),
+        ];
     }
 
-    /**
-     * Revoca (desactiva) un token.
-     */
-    public function revoke($tokId)
+    public function resetUsage($id)
     {
-        return $this->updateLimits($tokId, null, null, null, 'I');
-    }
-
-    /**
-     * Elimina definitivamente un token.
-     */
-    public function delete($tokId)
-    {
-        $ok = $this->api->delete('api_tokens', 'Tok_Id', (int)$tokId);
-        return $ok
-            ? ['success' => true]
-            : ['success' => false, 'error' => 'No se pudo eliminar el token: ' . $this->api->getErrorMsg()];
-    }
-
-    /**
-     * Resetea el contador de consultas de un token.
-     */
-    public function resetUsage($tokId)
-    {
+        $id = (int)$id;
         $ok = $this->api->update('api_tokens', [
             'Tok_Usadas' => 0,
             'Tok_Periodo_Inicio' => date('Y-m-d H:i:s'),
-        ], 'Tok_Id', (int)$tokId);
-        return $ok
-            ? ['success' => true]
-            : ['success' => false, 'error' => 'No se pudo resetear el contador'];
+        ], 'Tok_Id', $id);
+        return [
+            'success' => $ok,
+            'error' => $ok ? null : 'No se pudo reiniciar el uso: ' . $this->api->getErrorMsg(),
+        ];
     }
 
-    /**
-     * Construye el catálogo de módulos y procesos de la API a partir de openapi.json.
-     *
-     * Cada módulo (tag OpenAPI) contiene una lista de procesos (rutas) con su
-     * método, descripción (summary) y la ruta real de consumo.
-     *
-     * @return array ['success'=>bool, 'modulos'=>[ [name, description, rutas=>[ [ruta, metodo, descripcion] ]] ]]
-     */
-    public function catalogo()
+    public function delete($id)
     {
-        $openapiFile = dirname(__DIR__) . '/api/openapi.json';
-        if (!is_file($openapiFile)) {
-            return ['success' => false, 'error' => 'Spec OpenAPI no encontrada'];
-        }
-        $spec = json_decode(file_get_contents($openapiFile), true);
-        if (!isset($spec['tags']) || !isset($spec['paths'])) {
-            return ['success' => false, 'error' => 'Spec OpenAPI inválida'];
-        }
-
-        $modulos = [];
-        foreach ($spec['tags'] as $tag) {
-            $modulos[$tag['name']] = [
-                'name' => $tag['name'],
-                'description' => $tag['description'] ?? '',
-                'rutas' => [],
-            ];
-        }
-
-        foreach ($spec['paths'] as $ruta => $ops) {
-            if ($ruta === '/v1/test') {
-                continue;
-            }
-            foreach (['get' => 'GET', 'post' => 'POST', 'put' => 'PUT', 'delete' => 'DELETE'] as $met => $metodo) {
-                if (!isset($ops[$met])) {
-                    continue;
-                }
-                $op = $ops[$met];
-                $tag = isset($op['tags'][0]) ? $op['tags'][0] : 'general';
-                if (!isset($modulos[$tag])) {
-                    $modulos[$tag] = ['name' => $tag, 'description' => '', 'rutas' => []];
-                }
-                $modulos[$tag]['rutas'][] = [
-                    'ruta' => $ruta,
-                    'metodo' => $metodo,
-                    'descripcion' => $op['summary'] ?? '',
-                ];
-            }
-        }
-
-        // Orden alfabético por nombre, excluyendo módulos internos de admin/auth si no proceden
-        ksort($modulos);
-        $out = array_values($modulos);
-        foreach ($out as &$m) {
-            usort($m['rutas'], function ($a, $b) {
-                return strcmp($a['ruta'], $b['ruta']);
-            });
-        }
-
-        return ['success' => true, 'modulos' => $out];
+        $id = (int)$id;
+        $this->api->delete('api_token_permisos', 'Tok_Id', $id);
+        $ok = $this->api->delete('api_tokens', 'Tok_Id', $id);
+        return [
+            'success' => $ok,
+            'error' => $ok ? null : 'No se pudo eliminar: ' . $this->api->getErrorMsg(),
+        ];
     }
 
-    /**
-     * Devuelve las rutas permitidas (permisos) de un token gestionado.
-     * Una entrada con Tip_Ruta='*' significa "todo el módulo".
-     *
-     * @return array  lista de ['Tip_Id', 'Tip_Mod', 'Tip_Ruta']
-     */
     public function getPermisos($tokId)
     {
         $tokId = (int)$tokId;
-        $rows = $this->api->query(
-            "SELECT Tip_Id, Tip_Mod, Tip_Ruta, Tip_Est
-               FROM api_token_permisos
-              WHERE Tok_Id = $tokId AND Tip_Est = 'A'
-              ORDER BY Tip_Mod, Tip_Ruta"
+        return $this->api->query(
+            "SELECT p.Per_Id, p.Tok_Id, p.Tip_Cod, p.Tip_Ruta
+               FROM api_token_permisos p
+              WHERE p.Tok_Id=$tokId
+              ORDER BY p.Tip_Ruta ASC"
         );
-        return is_array($rows) ? $rows : [];
     }
 
-    /**
-     * Reemplaza por completo los permisos de un token.
-     *
-     * @param int   $tokId
-     * @param array $rutas  lista de rutas permitidas. Cada elemento puede ser:
-     *                      - la ruta completa '/v1/modulo/recurso'
-     *                      - '*'
-     *                      El prefijo de módulo se deriva automáticamente de la ruta.
-     * @return array ['success'=>bool, ...]
-     */
     public function setPermisos($tokId, array $rutas)
     {
         $tokId = (int)$tokId;
-        $row = $this->api->getById('api_tokens', 'Tok_Id', $tokId);
-        if (!$row) {
+        $tok = $this->api->findById('api_tokens', 'Tok_Id', $tokId);
+        if (!$tok) {
             return ['success' => false, 'error' => 'Token no encontrado'];
         }
 
-        // Limpiar permisos previos
-        $ok = $this->api->delete('api_token_permisos', 'Tok_Id', $tokId);
-        if (!$ok) {
-            return ['success' => false, 'error' => 'No se pudieron actualizar los permisos: ' . $this->api->getErrorMsg()];
-        }
+        $this->api->delete('api_token_permisos', 'Tok_Id', $tokId);
 
-        if (empty($rutas)) {
-            return ['success' => true, 'message' => 'Permisos actualizados (acceso a todos los módulos, sin restricción)'];
-        }
-
-        $filas = [];
+        $rutas = array_unique(array_filter(array_map('trim', $rutas)));
         foreach ($rutas as $ruta) {
-            $ruta = trim((string)$ruta);
-            if ($ruta === '' || $ruta === '*') {
-                // Acceso a todo (representado explícitamente por la ausencia de filas);
-                // se omite aquí porque 'sin filas' = permitir todo por compatibilidad.
-                continue;
-            }
-            $norm = $ruta[0] === '/' ? $ruta : '/' . $ruta;
-            $partes = explode('/', trim($norm, '/'));
-            $modulo = isset($partes[1]) ? $partes[1] : 'general';
-            $filas[] = [
+            if ($ruta === '') continue;
+            $this->api->insert('api_token_permisos', [
                 'Tok_Id' => $tokId,
-                'Tip_Mod' => $modulo,
-                'Tip_Ruta' => $norm,
-                'Tip_Est' => 'A',
-            ];
+                'Tip_Ruta' => $ruta,
+            ]);
         }
 
-        if (!empty($filas)) {
-            $ok = $this->api->insertBatch('api_token_permisos', $filas);
-            if (!$ok) {
-                return ['success' => false, 'error' => 'No se pudieron guardar los permisos: ' . $this->api->getErrorMsg()];
-            }
-        }
-
-        return ['success' => true, 'message' => 'Permisos actualizados correctamente'];
-    }
-
-    /**
-     * Compara una ruta concreta de la petición contra un patrón de permiso.
-     * Los segmentos ':param' del patrón coinciden con cualquier valor.
-     */
-    protected function rutaCoincide($rutaSolicitada, $patron)
-    {
-        $a = explode('/', trim($rutaSolicitada, '/'));
-        $b = explode('/', trim($patron, '/'));
-        if (count($a) !== count($b)) {
-            return false;
-        }
-        foreach ($b as $i => $seg) {
-            if ($seg === '' || $seg === '*' || strpos($seg, ':') === 0) {
-                continue; // coincide con cualquier segmento
-            }
-            if (!isset($a[$i]) || $a[$i] !== $seg) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Indica si un token gestionado puede consumir la ruta dada.
-     *
-     * Reglas:
-     *  - Si el token NO tiene permisos registrados => permite todo (comportamiento
-     *    actual / retrocompatibilidad).
-     *  - Si tiene permisos => se deniega por defecto; se permite solo si la ruta
-     *    coincide con un permiso (con soporte de segmentos ':param' y módulo '*').
-     *
-     * @param int    $tokId
-     * @param string $ruta  ruta real de la petición (p.ej. '/v1/contabilidad/periodos')
-     * @return bool
-     */
-    public function hasPermission($tokId, $ruta)
-    {
-        $tokId = (int)$tokId;
-        $row = $this->api->queryRow("SELECT COUNT(*) AS c FROM api_token_permisos WHERE Tok_Id=$tokId AND Tip_Est='A'");
-        if ((int)$row['c'] === 0) {
-            return true; // sin permisos = todo permitido (retrocompatibilidad)
-        }
-
-        $ruta = trim((string)$ruta);
-        if ($ruta === '') {
-            return false;
-        }
-        $normalizada = $ruta[0] === '/' ? $ruta : '/' . $ruta;
-        $partes = explode('/', trim($normalizada, '/'));
-        $modulo = isset($partes[1]) ? $partes[1] : 'general';
-
-        $perms = $this->getPermisos($tokId);
-        foreach ($perms as $p) {
-            if ($p['Tip_Ruta'] === '*') {
-                return true;
-            }
-            if ($p['Tip_Mod'] === $modulo && $this->rutaCoincide($normalizada, $p['Tip_Ruta'])) {
-                return true;
-            }
-        }
-        return false;
+        return [
+            'success' => true,
+            'permisos' => $this->getPermisos($tokId),
+        ];
     }
 }
