@@ -225,10 +225,7 @@ if ($total_rs_control != 0)
      * Control que almacena el tipo de acceso al sistema
      * Datos del navegador
      */
-    $objSes = new Class_Log_Datos_Aud;
     $Browser = detectar_acceso();
-    $objSes->guardarSesionSistema($_SESSION['Ses_Ses_Cod'], $Browser, $obBD_conexion);
-    $objSes->liberar();
 
     /**
      * Verificacion de clave por defecto "123456"
