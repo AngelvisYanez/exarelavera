@@ -331,7 +331,7 @@ $openapiHandler = function () use ($app) {
     
     $modulo = isset($_GET['modulo']) ? trim($_GET['modulo']) : (isset($_GET['tag']) ? trim($_GET['tag']) : '');
 
-    // Si se solicita la especificación completa
+    // Si se solicita la especificación completa (vía parámetro explícito)
     if ($isFull) {
         readfile($fullSpecPath);
         return;
@@ -369,7 +369,7 @@ $openapiHandler = function () use ($app) {
         $spec['tags'] = array_values(array_filter(isset($spec['tags']) ? $spec['tags'] : array(), function ($t) use ($modLower) {
             return strtolower(isset($t['name']) ? $t['name'] : '') === $modLower;
         }));
-        $spec['info']['description'] = "Documentación de la API REST - Módulo: **" . htmlspecialchars($modulo) . "**.\n\nPara ver otros módulos o la vista completa, utilice el selector superior.";
+        $spec['info']['description'] = "Documentación de la API REST - Módulo: **" . htmlspecialchars($modulo) . "**.";
     } else {
         // Por defecto: Solo contacto GET (/v1/contactos GET)
         $contactoPath = isset($spec['paths']['/v1/contactos']) ? $spec['paths']['/v1/contactos'] : null;
@@ -390,9 +390,9 @@ $openapiHandler = function () use ($app) {
             )
         );
 
-        $spec['info']['description'] = "## EXA Contable API - Directorio de Contactos (GET)\n\n" .
-            "Esta documentación está configurada en **modo restringido** mostrando únicamente el endpoint `GET /v1/contactos`.\n\n" .
-            "> 💡 **Nota:** Para explorar y activar la documentación de todos los demás módulos del ERP (Contabilidad, Facturación, Tesorería, Inventario, RRHH, etc.), active la vista completa en el selector superior o agregue `?full=1` a la URL.";
+        $spec['info']['description'] = "## EXA Contable API - Directorio de Contactos\n\n" .
+            "Endpoint para la consulta del directorio de contactos autorizados para notificaciones operativas (ERP Locator).\n\n" .
+            "Requiere autenticación mediante token Bearer con permisos asignados para la ruta `/v1/contactos`.";
     }
 
     echo json_encode($spec, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);

@@ -47,13 +47,12 @@
             letter-spacing: 0.05em;
         }
         .exa-docs-controls {
-            display: flex;
+            display: none; /* Oculto al público por defecto */
             align-items: center;
             gap: 10px;
         }
-        .exa-docs-label {
-            font-size: 0.85rem;
-            opacity: 0.9;
+        .exa-docs-controls.visible {
+            display: flex !important;
         }
         .exa-docs-select {
             background: #ffffff;
@@ -67,11 +66,6 @@
             outline: none;
             cursor: pointer;
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .exa-docs-select:focus {
-            border-color: #801326;
-            box-shadow: 0 0 0 3px rgba(128, 19, 38, 0.25);
         }
         .exa-docs-btn {
             background: rgba(255, 255, 255, 0.15);
@@ -107,14 +101,13 @@
     <header class="exa-docs-header">
         <div class="exa-docs-title">
             <span>EXA Contable API REST</span>
-            <span class="exa-docs-badge" id="mode-badge">Solo Contacto GET</span>
+            <span class="exa-docs-badge" id="mode-badge">Directorio Contactos</span>
         </div>
-        <div class="exa-docs-controls">
-            <label class="exa-docs-label" for="doc-selector">Vista de documentación:</label>
+        <div class="exa-docs-controls" id="admin-controls">
             <select id="doc-selector" class="exa-docs-select" onchange="changeDocView(this.value)">
-                <option value="contactos" selected>📌 Solo Contacto GET (Por Defecto)</option>
-                <option value="full">🌐 Todos los Módulos (Completo)</option>
-                <optgroup label="Filtrar por Módulo Individual">
+                <option value="contactos" selected>Contactos (GET)</option>
+                <option value="full">Todos los Módulos (Completo)</option>
+                <optgroup label="Módulos">
                     <option value="modulo:contabilidad">Contabilidad</option>
                     <option value="modulo:facturacion">Facturación</option>
                     <option value="modulo:tesoreria">Tesorería</option>
@@ -134,7 +127,6 @@
                     <option value="modulo:data">Data API</option>
                 </optgroup>
             </select>
-            <a href="guia" class="exa-docs-btn" title="Ver Guía de Consumo">📖 Guía</a>
         </div>
     </header>
 
@@ -148,6 +140,12 @@
 
         function getInitialView() {
             var urlParams = new URLSearchParams(window.location.search);
+            // Si el usuario incluye parámetros administrativos/desarrollador, mostrar los controles
+            if (urlParams.has('admin') || urlParams.has('dev') || urlParams.has('full') || urlParams.has('all') || urlParams.has('view') || urlParams.has('modulo')) {
+                var ctrl = document.getElementById('admin-controls');
+                if (ctrl) ctrl.classList.add('visible');
+            }
+
             if (urlParams.has('full') || urlParams.has('all') || urlParams.get('view') === 'all' || urlParams.get('mode') === 'full') {
                 return 'full';
             }
@@ -162,11 +160,11 @@
 
         function loadSwaggerSpec(viewKey) {
             var specUrl = basePath + '/openapi.json';
-            var badgeText = 'Solo Contacto GET';
+            var badgeText = 'Directorio Contactos';
 
             if (viewKey === 'full') {
                 specUrl += '?full=1';
-                badgeText = 'Todos los Módulos (Completo)';
+                badgeText = 'Todos los Módulos';
             } else if (viewKey && viewKey.indexOf('modulo:') === 0) {
                 var mod = viewKey.substring(7);
                 specUrl += '?modulo=' + encodeURIComponent(mod);
@@ -193,10 +191,9 @@
 
         function changeDocView(viewKey) {
             loadSwaggerSpec(viewKey);
-            // Actualizar URL sin recargar para poder compartir el enlace
             var newUrl = window.location.pathname;
             if (viewKey === 'full') {
-                newUrl += '?view=all';
+                newUrl += '?full=1';
             } else if (viewKey.indexOf('modulo:') === 0) {
                 newUrl += '?modulo=' + encodeURIComponent(viewKey.substring(7));
             }
@@ -205,7 +202,8 @@
 
         window.onload = function() {
             var initial = getInitialView();
-            document.getElementById('doc-selector').value = initial;
+            var sel = document.getElementById('doc-selector');
+            if (sel) sel.value = initial;
             loadSwaggerSpec(initial);
         };
     </script>
