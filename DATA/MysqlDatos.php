@@ -103,38 +103,56 @@ class MysqlDatos
     public $id8 = 0;
     public $id9 = 0;
     public $id10 = 0;
-    public $numeroParametros = 0;
-    public $parametros = array();
-    public $sqlParametros = array();
-    public $tipoParametros = array();
-    public $nombreParametros = array();
-    public $valorParametros = array();
-    public $tipoFiltroParametros = array();
-    public $tipoOrdenParametros = array();
-    public $cadenaParametros = array();
-    public $cadenaOrdenParametros = array();
-    public $cadenaFiltroParametros = array();
-    public $cadenaFiltroParametros2 = array();
-    public $cadenaFiltroParametros3 = array();
-    public $cadenaFiltroParametros4 = array();
-    public $cadenaFiltroParametros5 = array();
-    public $cadenaFiltroParametros6 = array();
-    public $cadenaFiltroParametros7 = array();
-    public $cadenaFiltroParametros8 = array();
-    public $cadenaFiltroParametros9 = array();
-    public $cadenaFiltroParametros10 = array();
-    public $numeroFiltroParametros = array();
-    public $numeroOrdenParametros = array();
-    public $totalFilasAfectadas = 0;
-    public $ultimoId = 0;
+    public $val = "";
+    public $val2 = "";
+    public $val3 = "";
+    public $val4 = "";
+    public $val5 = "";
+    public $val6 = "";
+    public $val7 = "";
+    public $val8 = "";
+    public $val9 = "";
+    public $val10 = "";
+    public $tipo = "";
+    public $tipo2 = "";
+    public $tipo3 = "";
+    public $tipo4 = "";
+    public $tipo5 = "";
+    public $tipo6 = "";
+    public $tipo7 = "";
+    public $tipo8 = "";
+    public $tipo9 = "";
+    public $tipo10 = "";
+    public $nombre = "";
+    public $nombre2 = "";
+    public $nombre3 = "";
+    public $nombre4 = "";
+    public $nombre5 = "";
+    public $nombre6 = "";
+    public $nombre7 = "";
+    public $nombre8 = "";
+    public $nombre9 = "";
+    public $nombre10 = "";
+    public $valor = "";
+    public $valor2 = "";
+    public $valor3 = "";
+    public $valor4 = "";
+    public $valor5 = "";
+    public $valor6 = "";
+    public $valor7 = "";
+    public $valor8 = "";
+    public $valor9 = "";
+    public $valor10 = "";
     public $sentencia = "";
-    public $sentenciasFuncion = "";
+    public $ultimoId = 0;
+    public $totalFilasAfectadas = 0;
+    protected $sentencias_fn = null;
 
     function __construct() {}
 
     function setSentencias($fn)
     {
-        $this->sentenciasFuncion = $fn;
+        $this->sentencias_fn = $fn;
     }
 
     function parametros($param)
@@ -147,18 +165,19 @@ class MysqlDatos
 
     function insercionid($obBD = null)
     {
-        if (is_object($obBD) && isset($obBD->conexion) && $obBD->conexion) {
-            return mysqli_insert_id($obBD->conexion);
+        $link = null;
+        if ($obBD === null) {
+            $link = (new MysqlConexion)->conexion;
+        } elseif (is_object($obBD) && isset($obBD->conexion)) {
+            $link = $obBD->conexion;
+        } elseif (is_object($obBD) && ($obBD instanceof mysqli)) {
+            $link = $obBD;
         }
-        if (is_object($obBD) && ($obBD instanceof mysqli)) {
-            return mysqli_insert_id($obBD);
-        }
-        return $this->ultimoId;
+        return $link ? mysqli_insert_id($link) : 0;
     }
 
     function consulta($sql, $obBD = null)
     {
-        $this->sql = $sql;
         $link = null;
         $dbObj = null;
         if ($obBD === null) {
@@ -170,13 +189,13 @@ class MysqlDatos
         } elseif (is_object($obBD) && ($obBD instanceof mysqli)) {
             $link = $obBD;
         }
+        $this->sql = $sql;
         $t_start = microtime(true);
-        $result = @mysqli_query($link, $this->sql);
+        $result = @mysqli_query($link, $sql);
         $duration = microtime(true) - $t_start;
         if (!$result) {
-            $err = $link ? mysqli_error($link) : 'No connection';
-            if ($dbObj) $dbObj->Error = $err;
-            $this->Error = 1;
+            $this->Error = $link ? mysqli_errno($link) : -1;
+            $err = $link ? mysqli_error($link) : 'No connection link';
             DebugBar::addTransactionEvent('Run Query', array('is_success'=>false, 'error_message'=>$err, 'sql_text'=>$this->sql, 'duration'=>$duration) + ($dbObj ? $dbObj->getDB() : array()));
             return false;
         }
@@ -191,7 +210,7 @@ class MysqlDatos
 
     function fetch_assoc($result)
     {
-        if ($result) {
+        if ($result && is_object($result) && $result instanceof mysqli_result) {
             return mysqli_fetch_assoc($result);
         }
         return false;
@@ -199,7 +218,7 @@ class MysqlDatos
 
     function fetch_row($result)
     {
-        if ($result) {
+        if ($result && is_object($result) && $result instanceof mysqli_result) {
             return mysqli_fetch_row($result);
         }
         return false;
@@ -207,7 +226,7 @@ class MysqlDatos
 
     function num_rows($result)
     {
-        if ($result) {
+        if ($result && is_object($result) && $result instanceof mysqli_result) {
             return mysqli_num_rows($result);
         }
         return 0;
@@ -223,6 +242,18 @@ class MysqlDatos
     function query($sql, $obBD = null)
     {
         return $this->consulta($sql, $obBD);
+    }
+
+    function grabarv_registros($sql, $obBD = null)
+    {
+        return $this->consulta($sql, $obBD);
+    }
+
+    function liberar()
+    {
+        $this->Error = 0;
+        $this->array = array();
+        return 0;
     }
 
     function getResult($sen_sql, $param, $echo = 0, $obBD = null)
@@ -248,17 +279,22 @@ class MysqlDatos
         $result = @mysqli_query($link, $this->sentencia);
         $duration = microtime(true) - $t_start;
         if (!$result) {
-            $err = $link ? mysqli_error($link) : 'No connection';
-            if ($dbObj) $dbObj->Error = $err;
-            $this->Error = 1;
+            $this->Error = $link ? mysqli_errno($link) : -1;
+            $err = $link ? mysqli_error($link) : 'No connection link';
             DebugBar::addTransactionEvent('Run Query', array('is_success'=>false, 'error_message'=>$err, 'sql_text'=>$this->sentencia, 'duration'=>$duration) + ($dbObj ? $dbObj->getDB() : array()));
+            if ($echo) {
+                echo "<p><b>Error:</b> " . htmlspecialchars($err) . "</p>";
+                echo "<p><b>SQL:</b> " . htmlspecialchars($this->sentencia) . "</p>";
+            }
             return false;
         }
         $this->Error = 0;
-        $this->totalFilasAfectadas = mysqli_affected_rows($link);
-        $this->ultimoId = mysqli_insert_id($link);
+        if ($link) {
+            $this->ultimoId = mysqli_insert_id($link);
+            $this->totalFilasAfectadas = mysqli_affected_rows($link);
+        }
         DebugBar::addTransactionEvent('Run Query', array('is_success'=>true, 'sql_text'=>$this->sentencia, 'duration'=>$duration) + ($dbObj ? $dbObj->getDB() : array()));
-        return true;
+        return $result;
     }
 
     function consultasobBD($sen_sql, $param, $obBD = null)
@@ -279,9 +315,8 @@ class MysqlDatos
         $result = @mysqli_query($link, $this->sentencia);
         $duration = microtime(true) - $t_start;
         if (!$result) {
-            $err = $link ? mysqli_error($link) : 'No connection';
-            if ($dbObj) $dbObj->Error = $err;
-            $this->Error = 1;
+            $this->Error = $link ? mysqli_errno($link) : -1;
+            $err = $link ? mysqli_error($link) : 'No connection link';
             DebugBar::addTransactionEvent('Run Query', array('is_success'=>false, 'error_message'=>$err, 'sql_text'=>$this->sentencia, 'duration'=>$duration) + ($dbObj ? $dbObj->getDB() : array()));
             return false;
         }
@@ -292,44 +327,58 @@ class MysqlDatos
 
     function sql($sen_sql, $param)
     {
-        $param_arr = is_array($param) ? $param : explode('*', (string)$param);
-        if (!empty($this->sentenciasFuncion) && function_exists($this->sentenciasFuncion)) {
-            $fn = $this->sentenciasFuncion;
-            return $fn($sen_sql, $param_arr);
+        $Par_Sql = $this->parametros($param);
+        if ($this->sentencias_fn && is_callable($this->sentencias_fn)) {
+            $fn = $this->sentencias_fn;
+            return $fn($sen_sql, $Par_Sql);
         }
-        if (function_exists('sentencias_cli')) {
-            return sentencias_cli($sen_sql, $param_arr);
-        }
-        if (function_exists('sentencias_log')) {
-            return sentencias_log($sen_sql, $param_arr);
+        if (function_exists('sentencias')) {
+            return sentencias($sen_sql, $Par_Sql);
         }
         if (function_exists('sentencias_cnt')) {
-            return sentencias_cnt($sen_sql, $param_arr);
+            return sentencias_cnt($sen_sql, $Par_Sql);
+        }
+        if (function_exists('sentencias_log')) {
+            return sentencias_log($sen_sql, $Par_Sql);
+        }
+        if (function_exists('sentencias_usr')) {
+            return sentencias_usr($sen_sql, $Par_Sql);
+        }
+        if (function_exists('sentencias_emp')) {
+            return sentencias_emp($sen_sql, $Par_Sql);
         }
         return "";
     }
 
     function operation($sen_sql, $param, $echo = 0, $obBD = null)
     {
-        $this->operacionobBD($sen_sql, $param, $obBD);
-        return $this;
+        return $this->operacionobBD($sen_sql, $param, $obBD);
     }
 
     function inicio_transaccion($obBD = null)
     {
-        $link = is_object($obBD) && isset($obBD->conexion) ? $obBD->conexion : null;
-        if ($link) {
-            mysqli_begin_transaction($link);
+        $link = null;
+        if ($obBD === null) {
+            $link = (new MysqlConexion)->conexion;
+        } elseif (is_object($obBD) && isset($obBD->conexion)) {
+            $link = $obBD->conexion;
+        } elseif (is_object($obBD) && ($obBD instanceof mysqli)) {
+            $link = $obBD;
         }
+        return $link ? mysqli_begin_transaction($link) : false;
     }
 
     function fin_transaccion($obBD = null)
     {
-        $link = is_object($obBD) && isset($obBD->conexion) ? $obBD->conexion : null;
-        if ($link) {
-            return mysqli_commit($link);
+        $link = null;
+        if ($obBD === null) {
+            $link = (new MysqlConexion)->conexion;
+        } elseif (is_object($obBD) && isset($obBD->conexion)) {
+            $link = $obBD->conexion;
+        } elseif (is_object($obBD) && ($obBD instanceof mysqli)) {
+            $link = $obBD;
         }
-        return false;
+        return $link ? mysqli_commit($link) : false;
     }
 
     function fin_transaccion_nomsn($obBD = null)
@@ -339,26 +388,23 @@ class MysqlDatos
 
     function deshacer_transaccion($obBD = null)
     {
-        $link = is_object($obBD) && isset($obBD->conexion) ? $obBD->conexion : null;
-        if ($link) {
-            return mysqli_rollback($link);
+        $link = null;
+        if ($obBD === null) {
+            $link = (new MysqlConexion)->conexion;
+        } elseif (is_object($obBD) && isset($obBD->conexion)) {
+            $link = $obBD->conexion;
+        } elseif (is_object($obBD) && ($obBD instanceof mysqli)) {
+            $link = $obBD;
         }
-        return false;
+        return $link ? mysqli_rollback($link) : false;
     }
 
-    /**
-     * Ejecuta consulta a la bd -  STARDARD
-     * @param int $sen_sql numero de la sql
-     * @param string $param cadena de parametros
-     * @param MysqlConexion $obBD para la conexion
-     * @return array fila de datos
-     */
     function getRowConsulta($sen_sql, $param, $obBD = null)
     {
         $result = $this->consultasobBD($sen_sql, $param, $obBD);
-        $r = $this->fetch_assoc($result);
+        $row = $this->fetch_assoc($result);
         $this->free_result($result);
-        return $r ? $r : array();
+        return is_array($row) ? $row : array();
     }
 
     function getRow($sen_sql, $param, $echo = 0, $obBD = null)
@@ -374,29 +420,20 @@ class MysqlDatos
     function getRowConsultaSql($sql, $obBD = null)
     {
         $result = $this->consulta($sql, $obBD);
-        $r = $this->fetch_assoc($result);
+        $row = $this->fetch_assoc($result);
         $this->free_result($result);
-        return $r ? $r : array();
+        return is_array($row) ? $row : array();
     }
 
-    /**
-     * Ejecuta consulta a la bd -  STARDARD
-     * @param int $sen_sql numero de la sql
-     * @param string $param cadena de valores para el filtrado de la busqueda
-     * @param MysqlConexion $obBD para la coneccion
-     * @return array $array arreglo de datos asociados
-     */
     function getArrayConsulta($sen_sql, $param, $obBD = null)
     {
         $result = $this->consultasobBD($sen_sql, $param, $obBD);
-        $a = array();
-        if ($result) {
-            while ($row = $this->fetch_assoc($result)) {
-                $a[] = $row;
-            }
-            $this->free_result($result);
+        $arr = array();
+        while ($row = $this->fetch_assoc($result)) {
+            $arr[] = $row;
         }
-        return $a;
+        $this->free_result($result);
+        return $arr;
     }
 
     function getArray($sen_sql, $param, $echo = 0, $obBD = null)
@@ -412,20 +449,14 @@ class MysqlDatos
     function getArrayConsultaSql($sql, $obBD = null)
     {
         $result = $this->consulta($sql, $obBD);
-        $a = array();
-        if ($result) {
-            while ($row = $this->fetch_assoc($result)) {
-                $a[] = $row;
-            }
-            $this->free_result($result);
+        $arr = array();
+        while ($row = $this->fetch_assoc($result)) {
+            $arr[] = $row;
         }
-        return $a;
+        $this->free_result($result);
+        return $arr;
     }
-}
 
-#[AllowDynamicProperties]
-class MysqlDatosContab extends MysqlDatos
-{
     function getReportHeader($sucursal, $titulo, $subtitulo, $obBD)
     {
         return "";
@@ -436,4 +467,3 @@ class MysqlDatosContab extends MysqlDatos
         return "";
     }
 }
-?>
