@@ -15,6 +15,9 @@ register_shutdown_function(function () {
         error_log("Fatal error: {$e["message"]} in {$e["file"]}:{$e["line"]}");
         echo json_encode([
             "error" => "Error interno del servidor",
+            "detail" => $e["message"],
+            "file" => basename($e["file"]),
+            "line" => $e["line"]
         ]);
     }
 });
