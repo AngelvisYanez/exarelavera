@@ -1,4 +1,4 @@
-﻿﻿<?php
+﻿<?php
 // Suprimir advertencias y noticias que puedan romper el JSON devuelto
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE & ~E_WARNING);
 ini_set("display_errors", 0);
@@ -86,7 +86,7 @@ $app->hook("slim.before.router", function () use ($app) {
     if ($requestMethod === "OPTIONS") {
         return;
     }
-    if (preg_match("#^/v1/test|^/v1/auth/|^/v1/facturacion/|^/v1/docs|^/docs|^/v1/api-tokens-demo|^/v1/api-tokens-probar#", $resourceUri)) {
+    if (preg_match("#^/v1/test|^/test|^/v1/auth/|^/v1/facturacion/|^/v1/docs|^/docs|^/v1/api-tokens-demo|^/v1/api-tokens-probar#", $resourceUri)) {
         return;
     }
 
@@ -252,6 +252,22 @@ if (!function_exists("utf8_encode_deep")) {
         }
     }
 }
+
+// Endpoint de test y diagnóstico
+$app->get('/v1/test', function () use ($app) {
+    if (!class_exists('APITokenManager')) {
+        require_once __DIR__ . "/../classes/APITokenManager.php";
+    }
+    $mgr = new APITokenManager();
+    $token = "8e316143f520292e0f3ade7c548b1918e622348df03ffb3ef6fb6d4e1aec99a8";
+    $val = $mgr->validate($token, false);
+    echo json_encode([
+        'success' => true,
+        'php_version' => PHP_VERSION,
+        'info' => $mgr->empresaInfo(620),
+        'token_validation' => $val,
+    ]);
+});
 
 // Módulos con API REST existentes
 require_once __DIR__ . "/v1/auth/auth.php";
