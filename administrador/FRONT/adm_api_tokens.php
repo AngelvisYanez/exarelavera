@@ -6,13 +6,21 @@
  * Genera y administra tokens de acceso a la API REST de EXA Contable,
  * con límite de consultas configurable por token.
  *
- * Autenticación: usa la sesión activa del panel de administración de EXA.
- * Si no hay sesión, se solicita autenticarse o usar un Bearer token.
+ * Requisito estricto: requiere inicio de sesión en el sistema legacy PHP de EXA.
  */
+if (session_status() === PHP_SESSION_NONE) {
+    @session_start();
+}
+
+// Si no ha iniciado sesión en el ERP legacy, redirigir al login
+if (empty($_SESSION['Ses_Usu_Cod'])) {
+    header("Location: ../../index.php");
+    exit();
+}
+
 require_once('../../Librerias/config.php/register_globals.php');
 require_once('../LOGICA/seguridad.php');
 
-$hasSession = !empty($_SESSION['Ses_Usu_Cod']);
 $sesEmpCod = !empty($_SESSION['Ses_Emp_Cod']) ? (int)$_SESSION['Ses_Emp_Cod'] : 0;
 $sesEmpNom = !empty($_SESSION['Ses_Emp_Nom']) ? $_SESSION['Ses_Emp_Nom'] : (!empty($_SESSION['Ses_Emp_Cor']) ? $_SESSION['Ses_Emp_Cor'] : '');
 $sesUsuNom = !empty($_SESSION['Ses_Usu_Nom']) ? $_SESSION['Ses_Usu_Nom'] : '';
@@ -41,40 +49,11 @@ $sesUsuNom = !empty($_SESSION['Ses_Usu_Nom']) ? $_SESSION['Ses_Usu_Nom'] : '';
 <body>
     <div class="container-fluid">
 
-        <div class="card" id="authCard" style="display:none;">
-            <h3><i class="fa fa-lock"></i> Conexión a la API</h3>
-            <p class="text-muted">Para administrar tokens ingresa tu credencial de la API (usuario, contraseña y empresa) o inicia sesión en el sistema EXA.</p>
-            <div class="row">
-                <div class="col-sm-3"><input id="inUser" class="form-control" placeholder="Usuario"></div>
-                <div class="col-sm-3"><input id="inPass" type="password" class="form-control" placeholder="Contraseña"></div>
-                <div class="col-sm-3">
-                    <select id="inEmpresa" class="form-control"><option value="">Empresa...</option></select>
-                </div>
-                <div class="col-sm-3">
-                    <button class="btn btn-primary" onclick="apiLogin()"><i class="fa fa-sign-in"></i> Conectar</button>
-                    <button class="btn btn-default" onclick="apiEmpresas()"><i class="fa fa-refresh"></i> Empresas</button>
-                </div>
-            </div>
-            <div style="margin-top:10px">
-                <div class="input-group">
-                    <input id="inBearer" class="form-control" placeholder="...o pega un Bearer token aquí (base64 de usuario:empresa:time:firma)">
-                    <span class="input-group-btn">
-                        <button class="btn btn-warning" onclick="useBearer()">Usar token</button>
-                    </span>
-                </div>
-            </div>
-            <div style="margin-top:15px">
-                <a href="../../" class="btn btn-link"><i class="fa fa-arrow-left"></i> Ir a la página de inicio de sesión de EXA</a>
-            </div>
-        </div>
-
-        <div class="card" id="mainCard" style="display:none;">
+        <div class="card" id="mainCard">
             <div class="row">
                 <div class="col-sm-8">
                     <h3><i class="fa fa-key"></i> Tokens de acceso a la API REST</h3>
-                    <?php if ($hasSession): ?>
-                        <span class="user-badge"><i class="fa fa-user"></i> Sesión activa: <?= htmlspecialchars($sesUsuNom ?: 'Usuario #' . $_SESSION['Ses_Usu_Cod']) ?> | Empresa: <?= htmlspecialchars($sesEmpNom ?: '#' . $sesEmpCod) ?></span>
-                    <?php endif; ?>
+                    <span class="user-badge"><i class="fa fa-user"></i> Sesión activa: <?= htmlspecialchars($sesUsuNom ?: 'Usuario #' . $_SESSION['Ses_Usu_Cod']) ?> | Empresa: <?= htmlspecialchars($sesEmpNom ?: '#' . $sesEmpCod) ?></span>
                 </div>
                 <div class="col-sm-4 text-right">
                     <button class="btn btn-success" onclick="nuevoToken()"><i class="fa fa-plus"></i> Generar token</button>
@@ -209,17 +188,14 @@ $sesUsuNom = !empty($_SESSION['Ses_Usu_Nom']) ? $_SESSION['Ses_Usu_Nom'] : '';
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js"></script>
     <script>
-    var HAS_SESSION = <?= $hasSession ? 'true' : 'false' ?>;
     var SES_EMP_COD = <?= $sesEmpCod ?>;
     var API_URL = '';
-    var bearer = localStorage.getItem('exa_api_bearer') || '';
 
     function toast(msg, ok){ var t=$('#toast'); t.text(msg).attr('class','toast-msg alert '+(ok?'alert-success':'alert-danger')).fadeIn(150).delay(2600).fadeOut(150); }
 
     function API(method, path, body){
         return new Promise(function(resolve, reject){
             var headers = {'Content-Type':'application/json'};
-            if (bearer) headers['Authorization'] = 'Bearer ' + bearer;
             $.ajax({
                 url: API_URL.replace(/\/+$/,'') + path,
                 method: method,
@@ -228,7 +204,10 @@ $sesUsuNom = !empty($_SESSION['Ses_Usu_Nom']) ? $_SESSION['Ses_Usu_Nom'] : '';
                 xhrFields: { withCredentials: true },
                 success: function(res){ resolve(res); },
                 error: function(xhr){
-                    if (xhr.status === 401 && !HAS_SESSION) { mostrarAuth(); }
+                    if (xhr.status === 401) {
+                        window.location.href = '../../index.php';
+                        return;
+                    }
                     var msg = 'Error ' + xhr.status;
                     try { var j=JSON.parse(xhr.responseText); if(j.error) msg=j.error; } catch(e){}
                     reject({status:xhr.status, error:msg});
@@ -237,23 +216,8 @@ $sesUsuNom = !empty($_SESSION['Ses_Usu_Nom']) ? $_SESSION['Ses_Usu_Nom'] : '';
         });
     }
 
-    function mostrarAuth(){ $('#authCard').show(); $('#mainCard').hide(); $('#nuevoCard').hide(); }
-    function useBearer(){ bearer = $('#inBearer').val().trim(); localStorage.setItem('exa_api_bearer', bearer); cargar(); }
-    function apiLogin(){
-        API('POST','/v1/auth/login',{username:$('#inUser').val(),password:$('#inPass').val(),empresa:$('#inEmpresa').val()})
-        .then(function(r){ if(r.success){ bearer=r.token; localStorage.setItem('exa_api_bearer', bearer); toast('Conectado','ok'); cargar(); } else toast(r.error||'Login fallido'); })
-        .catch(function(e){ toast(e.error); });
-    }
-    function apiEmpresas(){
-        API('GET','/v1/admin/api-tokens/empresas').then(function(r){
-            var o = '<option value="">Empresa...</option>';
-            (r.data||[]).forEach(function(e){ o += '<option value="'+e.Emp_Nom+'">'+e.Emp_Nom+'</option>'; });
-            $('#inEmpresa').html(o);
-        }).catch(function(e){ toast(e.error); });
-    }
-
     function cargar(){
-        $('#mainCard').show(); $('#authCard').hide();
+        $('#mainCard').show();
         apiTokenList();
         cargarEmpresasSelect();
     }
@@ -442,12 +406,8 @@ $sesUsuNom = !empty($_SESSION['Ses_Usu_Nom']) ? $_SESSION['Ses_Usu_Nom'] : '';
     }
 
     $(function(){
-        if (HAS_SESSION || bearer) {
-            cargar();
-            loadCatalogo();
-        } else {
-            mostrarAuth();
-        }
+        cargar();
+        loadCatalogo();
     });
     </script>
 </body>
