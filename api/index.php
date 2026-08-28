@@ -304,7 +304,12 @@ require_once __DIR__ . "/v1/admin/modulo-uso.php";
 require_once __DIR__ . "/v1/admin/directorio.php";
 require_once __DIR__ . "/v1/admin/api-tokens.php";
 require_once __DIR__ . "/v1/flujo/index.php";
+
+// Endpoints de Directorio Operativo (ERP Locator)
 require_once __DIR__ . "/v1/contactos.php";
+require_once __DIR__ . "/v1/plantas.php";
+require_once __DIR__ . "/v1/choferes.php";
+require_once __DIR__ . "/v1/vehiculos.php";
 
 // Swagger UI - Documentación de la API
 $docsHandler = function () use ($app) {
@@ -371,28 +376,38 @@ $openapiHandler = function () use ($app) {
         }));
         $spec['info']['description'] = "Documentación de la API REST - Módulo: **" . htmlspecialchars($modulo) . "**.";
     } else {
-        // Por defecto: Solo contacto GET (/v1/contactos GET)
-        $contactoPath = isset($spec['paths']['/v1/contactos']) ? $spec['paths']['/v1/contactos'] : null;
-        if ($contactoPath && isset($contactoPath['get'])) {
-            $spec['paths'] = array(
-                '/v1/contactos' => array(
-                    'get' => $contactoPath['get']
-                )
-            );
-        } else {
-            $spec['paths'] = new stdClass();
+        // Por defecto: Directorio Operativo (ERP Locator): Contactos, Plantas, Choferes, Vehículos
+        $publicPaths = array('/v1/contactos', '/v1/plantas', '/v1/choferes', '/v1/vehiculos');
+        $filteredPaths = array();
+        foreach ($publicPaths as $p) {
+            if (isset($spec['paths'][$p])) {
+                $filteredPaths[$p] = $spec['paths'][$p];
+            }
         }
+        $spec['paths'] = !empty($filteredPaths) ? $filteredPaths : new stdClass();
 
         $spec['tags'] = array(
             array(
                 'name' => 'contactos',
-                'description' => 'Directorio de contactos autorizados para notificaciones (integración ERP Locator, solo lectura)'
+                'description' => 'Directorio de contactos autorizados para notificaciones operativas (ERP Locator)'
+            ),
+            array(
+                'name' => 'plantas',
+                'description' => 'Directorio de plantas de beneficio y ubicaciones operativas (ERP Locator)'
+            ),
+            array(
+                'name' => 'choferes',
+                'description' => 'Directorio de choferes y conductores por planta (ERP Locator)'
+            ),
+            array(
+                'name' => 'vehiculos',
+                'description' => 'Directorio de volquetas mineras y vehículos de carga por planta (ERP Locator)'
             )
         );
 
-        $spec['info']['description'] = "## EXA Contable API - Directorio de Contactos\n\n" .
-            "Endpoint para la consulta del directorio de contactos autorizados para notificaciones operativas (ERP Locator).\n\n" .
-            "Requiere autenticación mediante token Bearer con permisos asignados para la ruta `/v1/contactos`.";
+        $spec['info']['description'] = "## EXA Contable API - Directorio Operativo & ERP Locator\n\n" .
+            "Endpoints autorizados para la integración y consulta de contactos para notificaciones, plantas de beneficio, choferes de planta y vehículos/volquetas asignadas (ERP Locator).\n\n" .
+            "Requiere autenticación mediante token Bearer con permisos habilitados sobre cada recurso.";
     }
 
     echo json_encode($spec, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);

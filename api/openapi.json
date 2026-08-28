@@ -99,6 +99,18 @@
         {
             "name": "data",
             "description": "Acceso genérico a datos"
+        },
+        {
+            "name": "plantas",
+            "description": "Directorio de plantas de beneficio (ERP Locator, solo lectura)"
+        },
+        {
+            "name": "choferes",
+            "description": "Directorio de choferes y conductores por planta (ERP Locator, solo lectura)"
+        },
+        {
+            "name": "vehiculos",
+            "description": "Directorio de vehículos y volquetas mineras por planta (ERP Locator, solo lectura)"
         }
     ],
     "paths": {
@@ -10329,6 +10341,339 @@
                     }
                 }
             }
+        },
+        "/v1/plantas": {
+            "get": {
+                "tags": [
+                    "plantas"
+                ],
+                "summary": "Lista de plantas de beneficio (ERP Locator)",
+                "description": "Solo lectura. Devuelve el directorio de plantas de beneficio registradas y sus ubicaciones operativas.",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Búsqueda por nombre, dirección o ruta de la planta"
+                    },
+                    {
+                        "name": "estado",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "A",
+                                "I",
+                                "ALL"
+                            ],
+                            "default": "A"
+                        },
+                        "description": "Filtrar por estado (A = Activo, I = Inactivo, ALL = Todos)"
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "perPage",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 100,
+                            "maximum": 500
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Directorio de plantas de beneficio",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/PlantaBeneficio"
+                                            }
+                                        },
+                                        "total": {
+                                            "type": "integer"
+                                        },
+                                        "page": {
+                                            "type": "integer"
+                                        },
+                                        "perPage": {
+                                            "type": "integer"
+                                        },
+                                        "pages": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Token ausente, inválido o expirado"
+                    },
+                    "403": {
+                        "description": "El token no tiene permiso para consultar plantas"
+                    },
+                    "500": {
+                        "description": "Error interno del servidor"
+                    }
+                }
+            }
+        },
+        "/v1/choferes": {
+            "get": {
+                "tags": [
+                    "choferes"
+                ],
+                "summary": "Lista de choferes y conductores por planta (ERP Locator)",
+                "description": "Solo lectura. Devuelve el directorio de choferes autorizados vinculados a sus respectivas plantas de beneficio.",
+                "parameters": [
+                    {
+                        "name": "planta",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Filtrar por nombre o coincidencia de la planta de beneficio"
+                    },
+                    {
+                        "name": "pla_cod",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Filtrar por ID numérico de la planta (Pla_Cod)"
+                    },
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Búsqueda por nombres, apellidos, cédula o teléfono del chofer"
+                    },
+                    {
+                        "name": "estado",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "A",
+                                "I",
+                                "ALL"
+                            ],
+                            "default": "A"
+                        },
+                        "description": "Filtrar por estado (A = Activo, I = Inactivo, ALL = Todos)"
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "perPage",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 100,
+                            "maximum": 500
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Directorio de choferes por planta",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ChoferPlanta"
+                                            }
+                                        },
+                                        "total": {
+                                            "type": "integer"
+                                        },
+                                        "page": {
+                                            "type": "integer"
+                                        },
+                                        "perPage": {
+                                            "type": "integer"
+                                        },
+                                        "pages": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Token ausente, inválido o expirado"
+                    },
+                    "403": {
+                        "description": "El token no tiene permiso para consultar choferes"
+                    },
+                    "500": {
+                        "description": "Error interno del servidor"
+                    }
+                }
+            }
+        },
+        "/v1/vehiculos": {
+            "get": {
+                "tags": [
+                    "vehiculos"
+                ],
+                "summary": "Lista de vehículos y volquetas por planta (ERP Locator)",
+                "description": "Solo lectura. Devuelve el directorio de volquetas mineras y vehículos de carga asignados a cada planta de beneficio.",
+                "parameters": [
+                    {
+                        "name": "planta",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Filtrar por nombre o coincidencia de la planta de beneficio"
+                    },
+                    {
+                        "name": "pla_cod",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Filtrar por ID numérico de la planta (Pla_Cod)"
+                    },
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Búsqueda por placa, marca o color del vehículo"
+                    },
+                    {
+                        "name": "estado",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "A",
+                                "I",
+                                "ALL"
+                            ],
+                            "default": "A"
+                        },
+                        "description": "Filtrar por estado (A = Activo, I = Inactivo, ALL = Todos)"
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "perPage",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 100,
+                            "maximum": 500
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Directorio de vehículos y volquetas mineras por planta",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/VehiculoPlanta"
+                                            }
+                                        },
+                                        "total": {
+                                            "type": "integer"
+                                        },
+                                        "page": {
+                                            "type": "integer"
+                                        },
+                                        "perPage": {
+                                            "type": "integer"
+                                        },
+                                        "pages": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Token ausente, inválido o expirado"
+                    },
+                    "403": {
+                        "description": "El token no tiene permiso para consultar vehículos"
+                    },
+                    "500": {
+                        "description": "Error interno del servidor"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -10434,6 +10779,220 @@
                     "empresa": {
                         "type": "string",
                         "example": "ecoparkmining"
+                    }
+                }
+            },
+            "PlantaBeneficio": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "codigo": {
+                        "type": "string",
+                        "example": "PLA-010"
+                    },
+                    "nombre": {
+                        "type": "string",
+                        "example": "PLANTA DE BENEFICIO OROCONCENT"
+                    },
+                    "direccion": {
+                        "type": "string",
+                        "example": "PORTOVELO"
+                    },
+                    "ruta": {
+                        "type": "string",
+                        "example": "VIA SALADO - PINDO"
+                    },
+                    "licencia": {
+                        "type": "string",
+                        "example": "NO. 426"
+                    },
+                    "capacidad": {
+                        "type": "number",
+                        "example": 655
+                    },
+                    "coordenadas": {
+                        "type": "string",
+                        "example": "654439,9588227"
+                    },
+                    "activo": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "estado": {
+                        "type": "string",
+                        "example": "A"
+                    }
+                }
+            },
+            "ChoferPlanta": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 101
+                    },
+                    "codigo": {
+                        "type": "string",
+                        "example": "CHF-0101"
+                    },
+                    "cedula": {
+                        "type": "string",
+                        "example": "0707030029"
+                    },
+                    "nombres": {
+                        "type": "string",
+                        "example": "CHRISTIAN EDUARDO"
+                    },
+                    "apellidos": {
+                        "type": "string",
+                        "example": "ARMIJOS CARNEDAS"
+                    },
+                    "nombre_completo": {
+                        "type": "string",
+                        "example": "CHRISTIAN EDUARDO ARMIJOS CARNEDAS"
+                    },
+                    "celular": {
+                        "type": "string",
+                        "example": "+593987144086"
+                    },
+                    "correo": {
+                        "type": "string",
+                        "example": "armijos@empresa.com"
+                    },
+                    "tipo_sangre": {
+                        "type": "string",
+                        "example": "O+"
+                    },
+                    "licencia": {
+                        "type": "object",
+                        "properties": {
+                            "tipo": {
+                                "type": "string",
+                                "example": "E"
+                            },
+                            "numero": {
+                                "type": "string",
+                                "example": "0707030029"
+                            },
+                            "vencimiento": {
+                                "type": "string",
+                                "example": "2026-04-20"
+                            }
+                        }
+                    },
+                    "activo": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "estado": {
+                        "type": "string",
+                        "example": "A"
+                    },
+                    "planta": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 3
+                            },
+                            "codigo": {
+                                "type": "string",
+                                "example": "PLA-003"
+                            },
+                            "nombre": {
+                                "type": "string",
+                                "example": "PLANTA DE BENEFICIO TOTIS"
+                            },
+                            "ruta": {
+                                "type": "string",
+                                "example": "VIA SALADO - PINDO"
+                            },
+                            "direccion": {
+                                "type": "string",
+                                "example": "PORTOVELO"
+                            }
+                        }
+                    }
+                }
+            },
+            "VehiculoPlanta": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 95
+                    },
+                    "codigo": {
+                        "type": "string",
+                        "example": "VEH-0095"
+                    },
+                    "placa": {
+                        "type": "string",
+                        "example": "TAA-2903"
+                    },
+                    "marca": {
+                        "type": "string",
+                        "example": "MERCEDES BENZ"
+                    },
+                    "color": {
+                        "type": "string",
+                        "example": "ROJO"
+                    },
+                    "capacidad_kg": {
+                        "type": "number",
+                        "example": 20000
+                    },
+                    "capacidad_toneladas": {
+                        "type": "number",
+                        "example": 20
+                    },
+                    "tipo": {
+                        "type": "string",
+                        "example": "VM"
+                    },
+                    "tipo_nombre": {
+                        "type": "string",
+                        "example": "Volqueta Minera"
+                    },
+                    "titularidad": {
+                        "type": "string",
+                        "example": "V"
+                    },
+                    "activo": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "estado": {
+                        "type": "string",
+                        "example": "A"
+                    },
+                    "planta": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 3
+                            },
+                            "codigo": {
+                                "type": "string",
+                                "example": "PLA-003"
+                            },
+                            "nombre": {
+                                "type": "string",
+                                "example": "PLANTA DE BENEFICIO TOTIS"
+                            },
+                            "ruta": {
+                                "type": "string",
+                                "example": "VIA SALADO - PINDO"
+                            },
+                            "direccion": {
+                                "type": "string",
+                                "example": "PORTOVELO"
+                            }
+                        }
                     }
                 }
             }

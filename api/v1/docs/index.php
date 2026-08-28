@@ -101,11 +101,11 @@
     <header class="exa-docs-header">
         <div class="exa-docs-title">
             <span>EXA Contable API REST</span>
-            <span class="exa-docs-badge" id="mode-badge">Directorio Contactos</span>
+            <span class="exa-docs-badge" id="mode-badge">ERP Locator / Operaciones</span>
         </div>
         <div class="exa-docs-controls" id="admin-controls">
             <select id="doc-selector" class="exa-docs-select" onchange="changeDocView(this.value)">
-                <option value="contactos" selected>Contactos (GET)</option>
+                <option value="default" selected>Directorio Operativo (ERP Locator)</option>
                 <option value="full">Todos los Módulos (Completo)</option>
                 <optgroup label="Módulos">
                     <option value="modulo:contabilidad">Contabilidad</option>
@@ -155,24 +155,34 @@
             if (urlParams.has('tag')) {
                 return 'modulo:' + urlParams.get('tag');
             }
-            return 'contactos';
+            return 'default';
         }
 
-        function loadSwaggerSpec(viewKey) {
-            var specUrl = basePath + '/openapi.json';
-            var badgeText = 'Directorio Contactos';
-
-            if (viewKey === 'full') {
-                specUrl += '?full=1';
-                badgeText = 'Todos los Módulos';
-            } else if (viewKey && viewKey.indexOf('modulo:') === 0) {
-                var mod = viewKey.substring(7);
-                specUrl += '?modulo=' + encodeURIComponent(mod);
-                badgeText = 'Módulo: ' + mod.toUpperCase();
+        function getSpecUrl(viewValue) {
+            var url = '/openapi.json';
+            if (viewValue === 'full') {
+                url += '?full=1';
+            } else if (viewValue.startsWith('modulo:')) {
+                var mod = viewValue.replace('modulo:', '');
+                url += '?modulo=' + encodeURIComponent(mod);
             }
+            return url;
+        }
 
-            document.getElementById('mode-badge').textContent = badgeText;
+        function updateBadge(viewValue) {
+            var badge = document.getElementById('mode-badge');
+            if (!badge) return;
+            if (viewValue === 'full') {
+                badge.innerText = 'Vista Completa (Todos los Módulos)';
+            } else if (viewValue.startsWith('modulo:')) {
+                var mod = viewValue.replace('modulo:', '');
+                badge.innerText = 'Módulo: ' + mod.toUpperCase();
+            } else {
+                badge.innerText = 'ERP Locator / Operaciones';
+            }
+        }
 
+        function initSwagger(specUrl) {
             swaggerInstance = SwaggerUIBundle({
                 url: specUrl,
                 dom_id: '#swagger-ui',
@@ -185,26 +195,26 @@
                     SwaggerUIBundle.plugins.DownloadUrl
                 ],
                 layout: "BaseLayout",
+                docExpansion: "list",
+                defaultModelsExpandDepth: 1,
+                defaultModelExpandDepth: 1,
+                displayRequestDuration: true,
                 persistAuthorization: true
             });
         }
 
-        function changeDocView(viewKey) {
-            loadSwaggerSpec(viewKey);
-            var newUrl = window.location.pathname;
-            if (viewKey === 'full') {
-                newUrl += '?full=1';
-            } else if (viewKey.indexOf('modulo:') === 0) {
-                newUrl += '?modulo=' + encodeURIComponent(viewKey.substring(7));
-            }
-            window.history.replaceState({}, '', newUrl);
+        function changeDocView(val) {
+            updateBadge(val);
+            var specUrl = getSpecUrl(val);
+            initSwagger(specUrl);
         }
 
         window.onload = function() {
-            var initial = getInitialView();
+            var initialView = getInitialView();
             var sel = document.getElementById('doc-selector');
-            if (sel) sel.value = initial;
-            loadSwaggerSpec(initial);
+            if (sel) sel.value = initialView;
+            updateBadge(initialView);
+            initSwagger(getSpecUrl(initialView));
         };
     </script>
 </body>
