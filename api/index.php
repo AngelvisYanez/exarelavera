@@ -82,11 +82,11 @@ $app->hook("slim.before.router", function () use ($app) {
     $requestMethod = $app->request->getMethod();
     $resourceUri = $app->request->getResourceUri();
 
-    // Siempre permitir OPTIONS (CORS preflight), test, docs y auth
+    // Siempre permitir OPTIONS (CORS preflight), test, docs, openapi.json y auth
     if ($requestMethod === "OPTIONS") {
         return;
     }
-    if (preg_match("#^/v1/test|^/test|^/v1/auth/|^/v1/facturacion/|^/v1/docs|^/docs|^/v1/api-tokens-demo|^/v1/api-tokens-probar#", $resourceUri)) {
+    if (preg_match("#^/v1/test|^/test|^/v1/auth/|^/v1/facturacion/|^/v1/docs|^/docs|openapi\.json|^/v1/api-tokens-demo|^/v1/api-tokens-probar#", $resourceUri)) {
         return;
     }
 
@@ -304,25 +304,25 @@ require_once __DIR__ . "/v1/flujo/index.php";
 require_once __DIR__ . "/v1/contactos.php";
 
 // Swagger UI - Documentación de la API
-$app->get('/v1/docs', function () use ($app) {
+$docsHandler = function () use ($app) {
     $app->response->headers->set('Content-Type', 'text/html; charset=utf-8');
     readfile(__DIR__ . '/v1/docs/index.php');
-});
+};
 
-$app->get('/docs', function () use ($app) {
-    $app->response->headers->set('Content-Type', 'text/html; charset=utf-8');
-    readfile(__DIR__ . '/docs/index.php');
-});
+$app->get('/v1/docs', $docsHandler);
+$app->get('/v1/docs/', $docsHandler);
+$app->get('/docs', $docsHandler);
+$app->get('/docs/', $docsHandler);
 
-$app->get('/v1/docs/openapi.json', function () use ($app) {
+$openapiHandler = function () use ($app) {
     $app->response->headers->set('Content-Type', 'application/json; charset=utf-8');
     readfile(__DIR__ . '/openapi.json');
-});
+};
 
-$app->get('/docs/openapi.json', function () use ($app) {
-    $app->response->headers->set('Content-Type', 'application/json; charset=utf-8');
-    readfile(__DIR__ . '/openapi.json');
-});
+$app->get('/v1/docs/openapi.json', $openapiHandler);
+$app->get('/docs/openapi.json', $openapiHandler);
+$app->get('/v1/openapi.json', $openapiHandler);
+$app->get('/openapi.json', $openapiHandler);
 
 // Guía de consumo en HTML (pública)
 $app->get('/v1/docs/guia', function () use ($app) {
