@@ -2,6 +2,9 @@ ErrorDocument 404     /administrador/FRONT/not_found.html
 ErrorDocument 403     /administrador/FRONT/forbidden.html
 ErrorDocument 500     /administrador/FRONT/fatalerror.html
 
+# Pass Authorization header to PHP-FPM / FastCGI
+SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+
 # Deny access to sensitive files
 <FilesMatch "^\.env(\.example)?$">
     Require all denied
@@ -16,11 +19,15 @@ RewriteEngine On
 # Deny access to QUARANTINE directory (potential security risk)
 RewriteRule ^QUARANTINE(/|$) - [F,L]
 
-# API REST Routing
-RewriteCond %{REQUEST_URI} ^/api/
+# API REST Routing for /api/...
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^api/(.*)$ api/index.php [QSA,L]
+
+# API REST Routing for direct subdomains (api.exacontable.com)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(v1|docs|openapi\.json|contactos|auth|facturacion|admin|data|contabilidad|rrhh|compras|activosfijos|bodega|caja_chica|transportecarga|bananero|camaronera|tesoreria|auditoria|flujo)(.*)$ api/index.php [QSA,L]
 
 # Security headers
 <IfModule mod_headers.c>
@@ -28,8 +35,6 @@ RewriteRule ^api/(.*)$ api/index.php [QSA,L]
     Header always set X-Frame-Options SAMEORIGIN
     Header always set X-XSS-Protection "1; mode=block"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
-    # HSTS (uncomment when HTTPS is confirmed working)
-    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 </IfModule>
 
 # Disable directory listing
