@@ -240,7 +240,7 @@ $app->post('/v1/flujo/reglas/modificar', function () use ($app) {
 // ============================================================
 // INSTANCIAS
 // ============================================================
-$app->post('/v1/flujo/instancias', function () use ($app) {
+$app->map('/v1/flujo/instancias', function () use ($app) {
     $body = getBody();
     try {
         $api = new DataAPI($body['Bdd']);
@@ -260,7 +260,7 @@ $app->post('/v1/flujo/instancias', function () use ($app) {
     } catch (\Throwable $e) {
         ApiResponse::serverError($e->getMessage());
     }
-});
+})->via('GET', 'POST')->via('GET', 'POST');
 
 $app->post('/v1/flujo/instancias/crear', function () use ($app) {
     $body = getBody();

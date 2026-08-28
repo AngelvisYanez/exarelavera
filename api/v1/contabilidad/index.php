@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../../classes/ApiResponse.php';
 // ============================================================
 // PLAN DE CUENTAS
 // ============================================================
-$app->post('/v1/contabilidad/plan-cuentas', function () use ($app) {
+$app->map('/v1/contabilidad/plan-cuentas', function () use ($app) {
     $body = getBody();
     try {
         $api = new DataAPI($body['Bdd']);
@@ -19,7 +19,7 @@ $app->post('/v1/contabilidad/plan-cuentas', function () use ($app) {
     } catch (\Throwable $e) {
         ApiResponse::serverError($e->getMessage());
     }
-});
+})->via('GET', 'POST')->via('GET', 'POST');
 
 $app->post('/v1/contabilidad/plan-cuentas/crear', function () use ($app) {
     $body = getBody();
@@ -80,7 +80,7 @@ $app->post('/v1/contabilidad/plan-cuentas/eliminar', function () use ($app) {
 // ============================================================
 // PERIODOS CONTABLES
 // ============================================================
-$app->post('/v1/contabilidad/periodos', function () use ($app) {
+$app->map('/v1/contabilidad/periodos', function () use ($app) {
     $body = getBody();
     try {
         $api = new DataAPI($body['Bdd']);
@@ -91,7 +91,7 @@ $app->post('/v1/contabilidad/periodos', function () use ($app) {
     } catch (\Throwable $e) {
         ApiResponse::serverError($e->getMessage());
     }
-});
+})->via('GET', 'POST')->via('GET', 'POST');
 
 $app->post('/v1/contabilidad/periodos/crear', function () use ($app) {
     $body = getBody();
@@ -293,7 +293,7 @@ $app->post('/v1/contabilidad/tipos-comprobante/modificar', function () use ($app
 // ============================================================
 // BALANCE COMPROBACION
 // ============================================================
-$app->post('/v1/contabilidad/balance-comprobacion', function () use ($app) {
+$app->map('/v1/contabilidad/balance-comprobacion', function () use ($app) {
     $body = getBody();
     if (!ApiResponse::validateRequired(['Pec_Cod', 'Emp_Cod'], $body)) return;
     try {
@@ -313,7 +313,7 @@ $app->post('/v1/contabilidad/balance-comprobacion', function () use ($app) {
     } catch (\Throwable $e) {
         ApiResponse::serverError($e->getMessage());
     }
-});
+})->via('GET', 'POST')->via('GET', 'POST');
 
 // ============================================================
 // MAYOR CUENTA

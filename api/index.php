@@ -1,4 +1,4 @@
-﻿<?php
+﻿﻿<?php
 // Suprimir advertencias y noticias que puedan romper el JSON devuelto
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE & ~E_WARNING);
 ini_set("display_errors", 0);
@@ -19,10 +19,10 @@ register_shutdown_function(function () {
     }
 });
 
-// Cambiamos el directorio de trabajo a la raÃ­z del proyecto para que los requires relativos del cÃ³digo legacy funcionen
+// Cambiamos el directorio de trabajo a la raíz del proyecto para que los requires relativos del código legacy funcionen
 chdir(__DIR__ . "/../");
 
-// Definir variables globales requeridas por el cÃ³digo legacy del ERP
+// Definir variables globales requeridas por el código legacy del ERP
 $APP_REAL_PATH = realpath(__DIR__ . "/../");
 $GLOBALS["APP_REAL_PATH"] = $APP_REAL_PATH;
 
@@ -63,7 +63,7 @@ $app->options("/(:x+)", function () use ($app) {
     $app->response->setStatus(200);
 });
 
-// Polyfill para str_starts_with (PHP 7å…¼å®¹)
+// Polyfill para str_starts_with (PHP 7兼容)
 if (!function_exists("str_starts_with")) {
     function str_starts_with($haystack, $needle)
     {
@@ -74,24 +74,24 @@ if (!function_exists("str_starts_with")) {
 $app->add(new \Slim\Middleware\ContentTypes());
 
 /**
- * Middleware para autenticaciÃ³n mediante Bearer Token.
- * Extrae Emp_Cod y lo inyecta en el body si no estÃ¡ presente.
- * Para rutas protegidas, retorna 401 si el token es invÃ¡lido.
+ * Middleware para autenticación mediante Bearer Token.
+ * Extrae Emp_Cod y lo inyecta en el body si no está presente.
+ * Para rutas protegidas, retorna 401 si el token es inválido.
  */
 $app->hook("slim.before.router", function () use ($app) {
     $requestMethod = $app->request->getMethod();
     $resourceUri = $app->request->getResourceUri();
 
-    // Siempre permitir OPTIONS (CORS preflight), test, y auth
+    // Siempre permitir OPTIONS (CORS preflight), test, docs y auth
     if ($requestMethod === "OPTIONS") {
         return;
     }
-    if (preg_match("#^/v1/test|^/v1/auth/|^/v1/facturacion/|^/v1/docs|^/v1/api-tokens-demo|^/v1/api-tokens-probar#", $resourceUri)) {
+    if (preg_match("#^/v1/test|^/v1/auth/|^/v1/facturacion/|^/v1/docs|^/docs|^/v1/api-tokens-demo|^/v1/api-tokens-probar#", $resourceUri)) {
         return;
     }
 
-    // Rutas administrativas del panel: ademÃ¡s del Bearer, se acepta la sesiÃ³n
-    // activa del panel de administraciÃ³n (misma cookie de sesiÃ³n en producciÃ³n).
+    // Rutas administrativas del panel: además del Bearer, se acepta la sesión
+    // activa del panel de administración (misma cookie de sesión en producción).
     $esAdminSession = false;
     if (preg_match("#^/v1/admin/#", $resourceUri)) {
         if (session_status() === PHP_SESSION_NONE) {
@@ -110,7 +110,7 @@ $app->hook("slim.before.router", function () use ($app) {
         $app->response->body(
             json_encode([
                 "success" => false,
-                "error" => "Token de autenticaciÃ³n requerido"
+                "error" => "Token de autenticación requerido"
             ])
         );
         $app->stop();
@@ -120,8 +120,8 @@ $app->hook("slim.before.router", function () use ($app) {
     $tokenData = validateAuthToken($token);
     $managedData = null;
 
-    // Si el token HMAC del login no es vÃ¡lido, intentar con un token gestionado
-    // (creado desde el panel de administraciÃ³n con lÃ­mite de consultas).
+    // Si el token HMAC del login no es válido, intentar con un token gestionado
+    // (creado desde el panel de administración con límite de consultas).
     if ($tokenData === false) {
         if (!class_exists('APITokenManager')) {
             require_once __DIR__ . "/../classes/APITokenManager.php";
@@ -133,7 +133,7 @@ $app->hook("slim.before.router", function () use ($app) {
                 $managedData = $managed;
             }
         } catch (\Throwable $e) {
-            error_log("ValidaciÃ³n token gestionado error: " . $e->getMessage());
+            error_log("Validación token gestionado error: " . $e->getMessage());
         }
     }
 
@@ -142,43 +142,48 @@ $app->hook("slim.before.router", function () use ($app) {
         $app->response->body(
             json_encode([
                 "success" => false,
-                "error" => "Token invÃ¡lido o cuota agotada"
+                "error" => "Token inválido"
             ])
         );
         $app->stop();
     }
 
-    $tokenEmpresa = null;
     if ($managedData !== null) {
-        // Token gestionado: empresa + Bdd definidos en el token
+        // Token gestionado: verificar permisos por módulo/proceso si existen
+        $permisosMgr = new APITokenManager();
+        $permisos = $permisosMgr->getPermisos($managedData['id']);
+        if (!empty($permisos)) {
+            $rutaActual = $resourceUri;
+            $permitido = false;
+            foreach ($permisos as $p) {
+                $rutaPermitida = $p['Tip_Ruta'];
+                if ($rutaActual === $rutaPermitida || strpos($rutaActual, rtrim($rutaPermitida, '/') . '/') === 0) {
+                    $permitido = true;
+                    break;
+                }
+            }
+            if (!$permitido) {
+                $app->response->setStatus(403);
+                $app->response->body(
+                    json_encode([
+                        "success" => false,
+                        "error" => "El token no tiene permisos para acceder a esta ruta ({$rutaActual})"
+                    ])
+                );
+                $app->stop();
+            }
+        }
+
         $tokenEmpresa = $managedData['Emp_Cod'];
         $GLOBALS["_API_BDD"] = $managedData['Bdd'];
-
-        // Permisos por mÃ³dulo / proceso: si el token define permisos, solo puede
-        // consumir las rutas autorizadas. Si no define permisos, acceso completo.
-        if (!class_exists('APITokenManager')) {
-            require_once __DIR__ . "/../classes/APITokenManager.php";
-        }
-        $mgrPerm = new APITokenManager();
-        if (!$mgrPerm->hasPermission($managedData['id'], $resourceUri)) {
-            $app->response->setStatus(403);
-            $app->response->body(
-                json_encode([
-                    "success" => false,
-                    "error" => "El token no tiene permiso para consumir este mÃ³dulo/proceso"
-                ])
-            );
-            $app->stop();
-        }
     } else {
-        $tokenTime = $tokenData['time'];
-        // Validar expiraciÃ³n (24 h) â€” solo aplica al token HMAC del login
-        if ((int) $tokenTime < time() - 86400) {
+        // Token HMAC del login
+        if (time() - $tokenData['timestamp'] > 86400) {
             $app->response->setStatus(401);
             $app->response->body(
                 json_encode([
                     "success" => false,
-                    "error" => "SesiÃ³n expirada"
+                    "error" => "Sesión expirada"
                 ])
             );
             $app->stop();
@@ -216,15 +221,19 @@ function getBody()
     if (empty($raw)) {
         $raw = file_get_contents("php://input");
     }
-    if (empty($raw)) {
-        $raw = file_get_contents("php://input", false, null, 0, 65535);
+    $parsed = !empty($raw) ? json_decode($raw, true) : null;
+    $body = is_array($parsed) ? $parsed : [];
+    if (!empty($_GET)) {
+        $body = array_merge($_GET, $body);
     }
-    if (empty($raw)) {
-        // Last resort: try $_POST for form-encoded
-        return $_POST ?: [];
+    if (!empty($_POST)) {
+        $body = array_merge($_POST, $body);
     }
-    $parsed = json_decode($raw, true);
-    return is_array($parsed) ? $parsed : [$raw];
+    if (isset($GLOBALS["_API_BDD"]) && !isset($body["Bdd"])) {
+        $body["Bdd"] = $GLOBALS["_API_BDD"];
+    }
+    $GLOBALS["_API_BODY"] = $body;
+    return $body;
 }
 
 if (!function_exists("utf8_encode_deep")) {
@@ -244,7 +253,7 @@ if (!function_exists("utf8_encode_deep")) {
     }
 }
 
-// MÃ³dulos con API REST existentes
+// Módulos con API REST existentes
 require_once __DIR__ . "/v1/auth/auth.php";
 require_once __DIR__ . "/v1/tesoreria/clientes.php";
 require_once __DIR__ . "/v1/adquisiciones/proveedores.php";
@@ -259,7 +268,7 @@ require_once __DIR__ . "/v1/auditoria/tareas.php";
 require_once __DIR__ . "/v1/admin/conexion.php";
 require_once __DIR__ . "/v1/admin/dashboard.php";
 
-// Nuevos mÃ³dulos legacy con API REST
+// Nuevos módulos legacy con API REST
 require_once __DIR__ . "/v1/data/index.php";
 require_once __DIR__ . "/v1/contabilidad/index.php";
 require_once __DIR__ . "/v1/rrhh/index.php";
@@ -278,51 +287,41 @@ require_once __DIR__ . "/v1/admin/api-tokens.php";
 require_once __DIR__ . "/v1/flujo/index.php";
 require_once __DIR__ . "/v1/contactos.php";
 
-// Swagger UI - DocumentaciÃ³n de la API
+// Swagger UI - Documentación de la API
 $app->get('/v1/docs', function () use ($app) {
     $app->response->headers->set('Content-Type', 'text/html; charset=utf-8');
-    echo '<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>EXA Contable API - DocumentaciÃ³n</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
-    <style>body{margin:0;padding:0;}</style>
-</head>
-<body>
-    <div id="swagger-ui"></div>
-    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
-    <script>
-        SwaggerUIBundle({
-            url: ' . json_encode($app->request->getUrl() . $app->request->getRootUri() . '/v1/docs/openapi.json') . ',
-            dom_id: "#swagger-ui",
-            presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
-            layout: "BaseLayout"
-        });
-    </script>
-</body>
-</html>';
+    readfile(__DIR__ . '/v1/docs/index.php');
+});
+
+$app->get('/docs', function () use ($app) {
+    $app->response->headers->set('Content-Type', 'text/html; charset=utf-8');
+    readfile(__DIR__ . '/docs/index.php');
 });
 
 $app->get('/v1/docs/openapi.json', function () use ($app) {
-    $spec = json_decode(file_get_contents(__DIR__ . '/openapi.json'), true);
-    echo json_encode($spec);
+    $app->response->headers->set('Content-Type', 'application/json; charset=utf-8');
+    readfile(__DIR__ . '/openapi.json');
 });
 
-// GuÃ­a de consumo en HTML (pÃºblica)
+$app->get('/docs/openapi.json', function () use ($app) {
+    $app->response->headers->set('Content-Type', 'application/json; charset=utf-8');
+    readfile(__DIR__ . '/openapi.json');
+});
+
+// Guía de consumo en HTML (pública)
 $app->get('/v1/docs/guia', function () use ($app) {
     $file = __DIR__ . '/docs/guia.html';
     if (!is_file($file)) {
         $app->response->setStatus(404);
         $app->response->headers->set('Content-Type', 'application/json');
-        echo json_encode(['success' => false, 'error' => 'GuÃ­a no encontrada']);
+        echo json_encode(['success' => false, 'error' => 'Guía no encontrada']);
         return;
     }
     $app->response->headers->set('Content-Type', 'text/html; charset=utf-8');
     echo file_get_contents($file);
 });
 
-// Demo interactiva de tokens con permisos por mÃ³dulo/proceso (pÃºblica, mismo origen)
+// Demo interactiva de tokens con permisos por módulo/proceso (pública, mismo origen)
 $app->get('/v1/api-tokens-demo', function () use ($app) {
     $file = __DIR__ . '/docs/api-tokens-demo.html';
     if (!is_file($file)) {
@@ -335,26 +334,17 @@ $app->get('/v1/api-tokens-demo', function () use ($app) {
     echo file_get_contents($file);
 });
 
-// Herramienta para probar un token (pÃºblica, mismo origen) â€” solo pega el token
+// Herramienta para probar un token (pública, mismo origen) — solo pega el token
 $app->get('/v1/api-tokens-probar', function () use ($app) {
     $file = __DIR__ . '/docs/api-tokens-probar.html';
     if (!is_file($file)) {
         $app->response->setStatus(404);
         $app->response->headers->set('Content-Type', 'application/json');
-        echo json_encode(['success' => false, 'error' => 'PÃ¡gina no encontrada']);
+        echo json_encode(['success' => false, 'error' => 'Herramienta no encontrada']);
         return;
     }
     $app->response->headers->set('Content-Type', 'text/html; charset=utf-8');
     echo file_get_contents($file);
 });
 
-// Definiciones LLM / agentes (requieren token gestionado)
-require_once __DIR__ . "/v1/llms.php";
-
-$app->get("/v1/test", function () {
-    echo json_encode(["mysqli" => function_exists("mysqli_connect")]);
-});
-
 $app->run();
-?>
-

@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../../classes/ApiResponse.php';
 // ============================================================
 // PERSONAL (con transacción persona + personal)
 // ============================================================
-$app->post('/v1/rrhh/personal', function () use ($app) {
+$app->map('/v1/rrhh/personal', function () use ($app) {
     $body = getBody();
     try {
         $api = new DataAPI($body['Bdd']);
@@ -24,7 +24,7 @@ $app->post('/v1/rrhh/personal', function () use ($app) {
     } catch (\Throwable $e) {
         ApiResponse::serverError($e->getMessage());
     }
-});
+})->via('GET', 'POST')->via('GET', 'POST');
 
 $app->post('/v1/rrhh/personal/crear', function () use ($app) {
     $body = getBody();
@@ -117,7 +117,7 @@ $app->post('/v1/rrhh/personal/eliminar', function () use ($app) {
 // ============================================================
 // CONTRATOS
 // ============================================================
-$app->post('/v1/rrhh/contratos', function () use ($app) {
+$app->map('/v1/rrhh/contratos', function () use ($app) {
     $body = getBody();
     try {
         $api = new DataAPI($body['Bdd']);
@@ -134,7 +134,7 @@ $app->post('/v1/rrhh/contratos', function () use ($app) {
     } catch (\Throwable $e) {
         ApiResponse::serverError($e->getMessage());
     }
-});
+})->via('GET', 'POST')->via('GET', 'POST');
 
 $app->post('/v1/rrhh/contratos/crear', function () use ($app) {
     $body = getBody();

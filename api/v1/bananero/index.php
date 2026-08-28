@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../../classes/ApiResponse.php';
 // ============================================================
 // PRODUCTORES
 // ============================================================
-$app->post('/v1/bananero/productores', function () use ($app) {
+$app->map('/v1/bananero/productores', function () use ($app) {
     $body = getBody();
     try {
         $api = new DataAPI($body['Bdd']);
@@ -15,7 +15,7 @@ $app->post('/v1/bananero/productores', function () use ($app) {
     } catch (\Throwable $e) {
         ApiResponse::serverError($e->getMessage());
     }
-});
+})->via('GET', 'POST')->via('GET', 'POST');
 
 $app->post('/v1/bananero/productores/crear', function () use ($app) {
     $body = getBody();
@@ -72,7 +72,7 @@ $app->post('/v1/bananero/productores/eliminar', function () use ($app) {
 // ============================================================
 // LIQUIDACIONES
 // ============================================================
-$app->post('/v1/bananero/liquidaciones', function () use ($app) {
+$app->map('/v1/bananero/liquidaciones', function () use ($app) {
     $body = getBody();
     try {
         $api = new DataAPI($body['Bdd']);
@@ -88,7 +88,7 @@ $app->post('/v1/bananero/liquidaciones', function () use ($app) {
     } catch (\Throwable $e) {
         ApiResponse::serverError($e->getMessage());
     }
-});
+})->via('GET', 'POST')->via('GET', 'POST');
 
 $app->post('/v1/bananero/liquidaciones/crear', function () use ($app) {
     $body = getBody();

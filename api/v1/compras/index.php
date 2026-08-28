@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../../classes/ApiResponse.php';
 // ============================================================
 // REQUISICIONES
 // ============================================================
-$app->post('/v1/compras/requisiciones', function () use ($app) {
+$app->map('/v1/compras/requisiciones', function () use ($app) {
     $body = getBody();
     try {
         $api = new DataAPI($body['Bdd']);
@@ -22,7 +22,7 @@ $app->post('/v1/compras/requisiciones', function () use ($app) {
     } catch (\Throwable $e) {
         ApiResponse::serverError($e->getMessage());
     }
-});
+})->via('GET', 'POST')->via('GET', 'POST');
 
 $app->post('/v1/compras/requisiciones/crear', function () use ($app) {
     $body = getBody();

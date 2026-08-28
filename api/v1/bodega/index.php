@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../../classes/ApiResponse.php';
 // ============================================================
 // BODEGAS
 // ============================================================
-$app->post('/v1/bodega/bodegas', function () use ($app) {
+$app->map('/v1/bodega/bodegas', function () use ($app) {
     $body = getBody();
     try {
         $api = new DataAPI($body['Bdd']);
@@ -16,7 +16,7 @@ $app->post('/v1/bodega/bodegas', function () use ($app) {
     } catch (\Throwable $e) {
         ApiResponse::serverError($e->getMessage());
     }
-});
+})->via('GET', 'POST')->via('GET', 'POST');
 
 $app->post('/v1/bodega/bodegas/crear', function () use ($app) {
     $body = getBody();
@@ -72,7 +72,7 @@ $app->post('/v1/bodega/bodegas/eliminar', function () use ($app) {
 // ============================================================
 // KARDEX
 // ============================================================
-$app->post('/v1/bodega/kardex', function () use ($app) {
+$app->map('/v1/bodega/kardex', function () use ($app) {
     $body = getBody();
     try {
         $api = new DataAPI($body['Bdd']);
@@ -88,12 +88,12 @@ $app->post('/v1/bodega/kardex', function () use ($app) {
     } catch (\Throwable $e) {
         ApiResponse::serverError($e->getMessage());
     }
-});
+})->via('GET', 'POST')->via('GET', 'POST');
 
 // ============================================================
 // STOCK
 // ============================================================
-$app->post('/v1/bodega/stock', function () use ($app) {
+$app->map('/v1/bodega/stock', function () use ($app) {
     $body = getBody();
     try {
         $api = new DataAPI($body['Bdd']);
@@ -109,12 +109,12 @@ $app->post('/v1/bodega/stock', function () use ($app) {
     } catch (\Throwable $e) {
         ApiResponse::serverError($e->getMessage());
     }
-});
+})->via('GET', 'POST')->via('GET', 'POST');
 
 // ============================================================
 // MOVIMIENTOS
 // ============================================================
-$app->post('/v1/bodega/movimientos', function () use ($app) {
+$app->map('/v1/bodega/movimientos', function () use ($app) {
     $body = getBody();
     try {
         $api = new DataAPI($body['Bdd']);
@@ -132,7 +132,7 @@ $app->post('/v1/bodega/movimientos', function () use ($app) {
     } catch (\Throwable $e) {
         ApiResponse::serverError($e->getMessage());
     }
-});
+})->via('GET', 'POST')->via('GET', 'POST');
 
 $app->post('/v1/bodega/movimientos/crear', function () use ($app) {
     $body = getBody();

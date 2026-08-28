@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../../classes/ApiResponse.php';
 // ============================================================
 // CAJAS CHICAS
 // ============================================================
-$app->post('/v1/caja-chica/cajas', function () use ($app) {
+$app->map('/v1/caja-chica/cajas', function () use ($app) {
     $body = getBody();
     try {
         $api = new DataAPI($body['Bdd']);
@@ -16,7 +16,7 @@ $app->post('/v1/caja-chica/cajas', function () use ($app) {
     } catch (\Throwable $e) {
         ApiResponse::serverError($e->getMessage());
     }
-});
+})->via('GET', 'POST')->via('GET', 'POST');
 
 $app->post('/v1/caja-chica/cajas/crear', function () use ($app) {
     $body = getBody();
@@ -71,7 +71,7 @@ $app->post('/v1/caja-chica/cajas/eliminar', function () use ($app) {
 // ============================================================
 // MOVIMIENTOS CAJA CHICA
 // ============================================================
-$app->post('/v1/caja-chica/movimientos', function () use ($app) {
+$app->map('/v1/caja-chica/movimientos', function () use ($app) {
     $body = getBody();
     try {
         $api = new DataAPI($body['Bdd']);
@@ -87,7 +87,7 @@ $app->post('/v1/caja-chica/movimientos', function () use ($app) {
     } catch (\Throwable $e) {
         ApiResponse::serverError($e->getMessage());
     }
-});
+})->via('GET', 'POST')->via('GET', 'POST');
 
 $app->post('/v1/caja-chica/movimientos/crear', function () use ($app) {
     $body = getBody();

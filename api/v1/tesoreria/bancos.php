@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../../../classes/DataAPI.php';
 
-$app->post('/v1/tesoreria/bancos', function () use ($app) {
+$app->map('/v1/tesoreria/bancos', function () use ($app) {
     $body = getBody();
     try {
         $api = new DataAPI($body['Bdd']);
@@ -11,7 +11,7 @@ $app->post('/v1/tesoreria/bancos', function () use ($app) {
     } catch (\Throwable $e) {
         $app->response->setStatus(500); echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     }
-});
+})->via('GET', 'POST')->via('GET', 'POST');
 
 $app->post('/v1/tesoreria/cuentas-banco', function () use ($app) {
     $body = getBody();

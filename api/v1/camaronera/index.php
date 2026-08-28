@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../../classes/ApiResponse.php';
 // ============================================================
 // PRODUCTORES CAMARONERA
 // ============================================================
-$app->post('/v1/camaronera/productores', function () use ($app) {
+$app->map('/v1/camaronera/productores', function () use ($app) {
     $body = getBody();
     try {
         $api = new DataAPI($body['Bdd']);
@@ -15,7 +15,7 @@ $app->post('/v1/camaronera/productores', function () use ($app) {
     } catch (\Throwable $e) {
         ApiResponse::serverError($e->getMessage());
     }
-});
+})->via('GET', 'POST')->via('GET', 'POST');
 
 $app->post('/v1/camaronera/productores/crear', function () use ($app) {
     $body = getBody();
@@ -133,7 +133,7 @@ $app->post('/v1/camaronera/negociaciones/modificar', function () use ($app) {
 // ============================================================
 // LIQUIDACIONES CAMARONERA
 // ============================================================
-$app->post('/v1/camaronera/liquidaciones', function () use ($app) {
+$app->map('/v1/camaronera/liquidaciones', function () use ($app) {
     $body = getBody();
     try {
         $api = new DataAPI($body['Bdd']);
@@ -149,7 +149,7 @@ $app->post('/v1/camaronera/liquidaciones', function () use ($app) {
     } catch (\Throwable $e) {
         ApiResponse::serverError($e->getMessage());
     }
-});
+})->via('GET', 'POST')->via('GET', 'POST');
 
 $app->post('/v1/camaronera/liquidaciones/crear', function () use ($app) {
     $body = getBody();

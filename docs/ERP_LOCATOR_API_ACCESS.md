@@ -1,10 +1,10 @@
-# Integración ERP Locator — Credenciales y Ejemplos de Consumo API
+# Integración ERP Locator — Guía de Integración y Ejemplos de Consumo API
 
-Documentación técnica con credenciales emitidas y ejemplos de código listos para su uso en la sincronización diaria del **directorio de contactos autorizados** entre **EXA** y **ERP Locator**.
+Documentación técnica con ejemplos de código para la sincronización diaria del **directorio de contactos autorizados** entre **EXA** y **ERP Locator**.
 
 ---
 
-## 1. Credenciales de Producción
+## 1. Configuración de Conexión
 
 | Parámetro | Valor |
 |---|---|
@@ -13,12 +13,13 @@ Documentación técnica con credenciales emitidas y ejemplos de código listos p
 | **URL Completa** | `https://exa.exacontable.com/api/v1/contactos` |
 | **Método** | `GET` |
 | **Tipo de Autenticación** | `Bearer Token` (Header `Authorization`) |
-| **Token de Acceso** | `8e316143f520292e0f3ade7c548b1918e622348df03ffb3ef6fb6d4e1aec99a8` |
+| **Formato del Header** | `Authorization: Bearer <TOKEN_BEARER_ASIGNADO>` |
 | **Empresa Asociada** | `ECOPARKMINING S.A.` (Emp_Cod: `620`, Base: `ecoparkmining`) |
-| **Permiso Asignado** | `["/v1/contactos"]` (Solo lectura de contactos autorizados) |
+| **Permiso Asignado** | `["/v1/contactos"]` (Solo lectura del directorio de contactos) |
 | **Cuota Asignada** | `100` consultas por día |
-| **Vigencia** | Hasta `2027-08-28` (1 año renovable) |
 | **Documentación Interactiva (Swagger)** | `https://exa.exacontable.com/api/v1/docs` |
+
+> **Nota de Seguridad:** El token de acceso emitido debe almacenarse de forma segura en variables de entorno del servidor de ERP Locator (`EXA_API_TOKEN`) y nunca exponerse en repositorios públicos ni en el frontend.
 
 ---
 
@@ -79,20 +80,21 @@ Todos los parámetros son opcionales:
 - **`apellidos`** (`string`): Apellidos de la persona registrada.
 - **`correo`** (`string`): Correo electrónico válido.
 - **`celular`** (`string`): Número de WhatsApp en formato internacional normalizado (`+5939XXXXXXXX`).
-- **`activo`** (`boolean`): `true` indica contacto vigente y autorizado para notificaciones; `false` indica dado de baja.
+- **`activo`** (`boolean`): `true` indica contacto vigente y autorizado para notificaciones; `false` indica inactivo.
 - **`cargo`** (`string`): Rol del contacto (Administrador(a) de planta, Responsable ambiental, etc.).
 - **`area`** (`string`): Planta de beneficio o área operativa asignada.
 - **`empresa`** (`string`): Identificador del cliente/empresa (`ecoparkmining`).
 
 ---
 
-## 4. Ejemplos de Implementación en Código
+## 4. Ejemplos de Implementación en Código (Método GET)
 
 ### 4.1. cURL (Bash / Terminal)
 
 ```bash
+# Reemplazar <TOKEN_BEARER_ASIGNADO> con el token privado entregado
 curl -X GET "https://exa.exacontable.com/api/v1/contactos?cliente=ecoparkmining" \
-  -H "Authorization: Bearer 8e316143f520292e0f3ade7c548b1918e622348df03ffb3ef6fb6d4e1aec99a8" \
+  -H "Authorization: Bearer <TOKEN_BEARER_ASIGNADO>" \
   -H "Accept: application/json"
 ```
 
@@ -102,7 +104,7 @@ curl -X GET "https://exa.exacontable.com/api/v1/contactos?cliente=ecoparkmining"
 
 ```javascript
 const API_URL = 'https://exa.exacontable.com/api/v1/contactos?cliente=ecoparkmining';
-const API_TOKEN = '8e316143f520292e0f3ade7c548b1918e622348df03ffb3ef6fb6d4e1aec99a8';
+const API_TOKEN = process.env.EXA_API_TOKEN || '<TOKEN_BEARER_ASIGNADO>';
 
 async function sincronizarContactos() {
   try {
@@ -139,15 +141,18 @@ sincronizarContactos();
 ### 4.3. Python (requests)
 
 ```python
+import os
 import requests
 
 url = "https://exa.exacontable.com/api/v1/contactos"
+api_token = os.getenv("EXA_API_TOKEN", "<TOKEN_BEARER_ASIGNADO>")
+
 params = {
     "cliente": "ecoparkmining",
     "perPage": 500
 }
 headers = {
-    "Authorization": "Bearer 8e316143f520292e0f3ade7c548b1918e622348df03ffb3ef6fb6d4e1aec99a8",
+    "Authorization": f"Bearer {api_token}",
     "Accept": "application/json"
 }
 
@@ -171,7 +176,7 @@ else:
 <?php
 
 $url = "https://exa.exacontable.com/api/v1/contactos?cliente=ecoparkmining";
-$token = "8e316143f520292e0f3ade7c548b1918e622348df03ffb3ef6fb6d4e1aec99a8";
+$token = getenv('EXA_API_TOKEN') ?: '<TOKEN_BEARER_ASIGNADO>';
 
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $url);
@@ -213,7 +218,7 @@ class Program
     static async Task Main()
     {
         string url = "https://exa.exacontable.com/api/v1/contactos?cliente=ecoparkmining";
-        string token = "8e316143f520292e0f3ade7c548b1918e622348df03ffb3ef6fb6d4e1aec99a8";
+        string token = Environment.GetEnvironmentVariable("EXA_API_TOKEN") ?? "<TOKEN_BEARER_ASIGNADO>";
 
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
