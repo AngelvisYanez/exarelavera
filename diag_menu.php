@@ -1,17 +1,17 @@
 <?php
 chdir(__DIR__ . '/administrador/FRONT');
 
-require_once __DIR__ . '/administrador/LOGICA/DATA/MysqlConexion.php';
-require_once __DIR__ . '/administrador/LOGICA/DATA/MysqlDatos.php';
-require_once __DIR__ . '/administrador/LOGICA/adm_log_control.php';
+require_once __DIR__ . '/DATA/MysqlConexion.php';
+require_once __DIR__ . '/DATA/MysqlDatos.php';
+require_once __DIR__ . '/administrador/LOGICA/logica.php';
 require_once __DIR__ . '/administrador/LOGICA/adm_log_menu_tree.php';
 require_once __DIR__ . '/administrador/LOGICA/adm_sql_menu.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
 $ced = '22600781';
-$obMaster = new Class_Log_Conexion_Cnt(); // master exa
-$obDatos = new Class_Log_Datos_Cnt();
+$obMaster = new MysqlConexion(); // master exa
+$obDatos = new MysqlDatos();
 
 // 1. Get user in master / empresas
 $empresas = $obDatos->getArrayConsultaSql("
@@ -27,7 +27,7 @@ if (!empty($empresas[0]['Dat_Dis'])) {
     $dbLocal = $empresas[0]['Dat_Dis'];
 }
 
-$obLocal = new Class_Log_Conexion_Cnt($dbLocal);
+$obLocal = new MysqlConexion($dbLocal);
 
 // 2. Get user in local DB
 $userLocal = $obDatos->getRowConsultaSql("
@@ -50,11 +50,6 @@ if ($userLocal) {
 
 // 4. Test menu generation
 $lisPer = array_map(function($p) { return $p['Per_Cod']; }, $profiles);
-$allPerfiles = $obDatos->getArrayConsultaSql("SELECT Per_Cod, Per_Des FROM perfiles LIMIT 10", $obLocal);
-$allOrganizado = $obDatos->getArrayConsultaSql("SELECT Org_Cod, Org_Des, Org_Niv, Org_Ord FROM organizado LIMIT 10", $obLocal);
-$allProcesos = $obDatos->getArrayConsultaSql("SELECT Pcs_Cod, Pcs_Lin, Org_Cod, Rut_Cod FROM procesos LIMIT 10", $obLocal);
-$allPerfiorgan = $obDatos->getArrayConsultaSql("SELECT Per_Cod, Pcs_Cod FROM perfiorgan LIMIT 10", $obLocal);
-
 $menuTree = new Class_Sys_Menu();
 $htmlMenu = '';
 if (!empty($lisPer)) {
@@ -71,8 +66,4 @@ echo json_encode([
     'lisPer' => $lisPer,
     'htmlMenuLength' => strlen($htmlMenu),
     'htmlMenuSnippet' => substr($htmlMenu, 0, 500),
-    'sampleAllPerfiles' => $allPerfiles,
-    'sampleOrganizado' => $allOrganizado,
-    'sampleProcesos' => $allProcesos,
-    'samplePerfiorgan' => $allPerfiorgan,
 ], JSON_PRETTY_PRINT);
