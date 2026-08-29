@@ -141,6 +141,25 @@ class APITokenManager
         ];
     }
 
+    public function generate($nombre, $empCod, $cuota = 0, $periodo = 'D', $expira = null, $creadoPor = null, $permisos = null)
+    {
+        try {
+            $res = $this->create($empCod, $nombre, $periodo, $cuota, $expira);
+            return [
+                'success' => true,
+                'token' => $res['raw_token'],
+                'token_prefix' => $res['token_prefix'],
+                'id' => $res['id'],
+                'nombre' => $res['nombre'],
+                'Emp_Cod' => $res['Emp_Cod'],
+                'Emp_Nom' => $res['Emp_Nom'],
+                'Bdd' => $res['Bdd']
+            ];
+        } catch (\Throwable $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
     /**
      * Lista tokens (sin exponer el hash completo ni el texto claro).
      */
@@ -171,6 +190,21 @@ class APITokenManager
             $r['modulos']         = !empty($r['modulos']) ? json_decode($r['modulos'], true) : ['*'];
         }
         return $rows;
+    }
+
+    public function listTokens($empCod = null)
+    {
+        return $this->listAll($empCod);
+    }
+
+    public function getPermisos($tokenId)
+    {
+        $tokenId = (int)$tokenId;
+        if ($this->api->tableExists('api_tokens_permisos')) {
+            $sql = "SELECT p.* FROM api_tokens_permisos p WHERE p.token_id = $tokenId";
+            return $this->api->query($sql);
+        }
+        return [];
     }
 
     /**
@@ -241,6 +275,7 @@ class APITokenManager
 
         return [
             'valid'   => true,
+            'id'      => $token['id'],
             'token'   => $token,
             'Emp_Cod' => $token['Emp_Cod'],
             'Emp_Nom' => $token['Emp_Nom'],
