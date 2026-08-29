@@ -8,11 +8,6 @@ require_once __DIR__ . '/DATA/MysqlDatos.php';
 $obMaster = new MysqlConexion();
 $obDatos = new MysqlDatos();
 
-$empresasTorres = $obDatos->getArrayConsultaSql("
-    SELECT e.Emp_Cod, e.Emp_Nom, e.Dat_Dis, s.Suc_Cod, s.Suc_Des 
-    FROM empresas e 
-    LEFT JOIN sucursal s ON e.Emp_Cod = s.Emp_Cod 
-    WHERE e.Emp_Nom LIKE '%Torres%' OR e.Emp_Nom LIKE '%Carrion%' OR e.Emp_Nom LIKE '%torres%'
-", $obMaster);
+$allEmp = $obDatos->getArrayConsultaSql("SELECT Emp_Cod, Emp_Nom, Emp_Ruc, Dat_Dis FROM empresas ORDER BY Emp_Cod ASC", $obMaster);
 
-echo json_encode($empresasTorres, JSON_PRETTY_PRINT) . "\n";
+echo json_encode($allEmp, JSON_PRETTY_PRINT) . "\n";
