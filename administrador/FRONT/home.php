@@ -472,7 +472,7 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
             } catch (e) {}
         </script>
         <!-- #section:basics/sidebar -->
-        <div id="sidebar" class="sidebar responsive sidebar-fixed sidebar-scroll <?php echo (!isset($_COOKIE['ace_compact']) || $_COOKIE['ace_compact'] == 'true' || $_SESSION['Ses_Usu_Men'] != 'T' ? 'compact' : ''); ?>">
+        <div id="sidebar" class="sidebar responsive sidebar-fixed sidebar-scroll <?php echo (isset($_COOKIE['ace_compact']) && $_COOKIE['ace_compact'] == 'true' ? 'compact' : ''); ?>">
             <script type="text/javascript">
                 try {
                     ace.settings.check('sidebar', 'fixed');
@@ -549,11 +549,11 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
                 </script>
             <?php
             } else {
-                \DebugBar::startMeasure('MenuSidebar', 'Menu Sidebar');
+                if (class_exists('\\DebugBar')) \DebugBar::startMeasure('MenuSidebar', 'Menu Sidebar');
                 require_once("../LOGICA/adm_log_menu_tree.php");
                 $obBD_con1 =  new Class_Sys_Menu;
                 echo ($obBD_con1->menuToHtml(1, $obBD_con1->getMenuContainer2($_SESSION['Ses_Lis_Per'], $obBD_conexion), 'nav nav-list', (!isset($_COOKIE['ace_hover']) || $_COOKIE['ace_hover'] == 'true' || $_COOKIE['ace_compact'] == 'true' ? 'hover' : '')));
-                \DebugBar::stopMeasure('MenuSidebar');
+                if (class_exists('\\DebugBar')) \DebugBar::stopMeasure('MenuSidebar');
             ?><script type="text/javascript">
                     if (ace.cookie.get('ace_tree') === 'true') {
                         ace.cookie.set('ace_compact', true);
