@@ -285,13 +285,12 @@ $app->get('/v1/test', function () use ($app) {
         require_once __DIR__ . "/../classes/APITokenManager.php";
     }
     $mgr = new APITokenManager();
-    $token = "8e316143f520292e0f3ade7c548b1918e622348df03ffb3ef6fb6d4e1aec99a8";
-    $val = $mgr->validate($token, false);
+    
     echo json_encode([
         'success' => true,
         'php_version' => PHP_VERSION,
         'info' => $mgr->empresaInfo(620),
-        'token_validation' => $val,
+        
     ]);
 });
 

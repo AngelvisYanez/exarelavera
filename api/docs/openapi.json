@@ -10682,7 +10682,7 @@
                 "type": "http",
                 "scheme": "bearer",
                 "bearerFormat": "Token",
-                "description": "Token API (ej. 8e316143f520292e0f3ade7c548b1918e622348df03ffb3ef6fb6d4e1aec99a8)"
+                "description": "Ingrese su token de acceso Bearer generado desde el panel"
             }
         },
         "schemas": {
