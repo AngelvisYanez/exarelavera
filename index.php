@@ -112,27 +112,9 @@ if (isset($_POST['ajax_change_pass'])) {
     exit();
 }
 
-$isDefaultPass = false;
-if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['Ses_Emp_Cod']) || !isset($_SESSION['Ses_Usu_Ced']))) {
-    if (isset($_SESSION['Ses_Usu_Cod']) && isset($_SESSION['Ses_Dat_Dis'])) {
-        $obBD_conexion_check = new Class_Log_Conexion_Log($_SESSION['Ses_Dat_Dis']);
-        $obBD_con_check = new Class_Log_Datos_Log;
-        $usu_cod_check = (int) $_SESSION['Ses_Usu_Cod'];
-        $checkPass = $obBD_con_check->getRowConsultaSql("SELECT Usu_Cod, Usu_Pal FROM usuarios WHERE Usu_Cod = $usu_cod_check", $obBD_conexion_check);
-        if ($checkPass) {
-            $storedHash = $checkPass['Usu_Pal'];
-            if (strpos($storedHash, '$2y$') === 0) {
-                $isDefaultPass = password_verify('123456', $storedHash);
-            } else {
-                $isDefaultPass = ($storedHash === md5('123456'));
-            }
-        }
-    }
-    
-    if (!$isDefaultPass) {
-        header('Location: ./administrador/FRONT/home.php');
-        exit();
-    }
+if (isset($_SESSION) && isset($_SESSION['Ses_Lis_Per']) && isset($_SESSION['Ses_Emp_Cod']) && isset($_SESSION['Ses_Usu_Ced'])) {
+    header('Location: ./administrador/FRONT/home.php');
+    exit();
 }
 
 $http_host = isset($_SERVER['HTTP_HOST']) ? strtolower($_SERVER['HTTP_HOST']) : '';
@@ -615,26 +597,7 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
 
             document.getElementById('encryptor').value = md5(pass);
             document.getElementById('Suc_Cod').value = suc;
-            
-            var formData = $('#acceso').serialize() + '&ajax_check=1';
-            
-            $.post('administrador/FRONT/adm_con_control_1.2.php', formData, function(r) {
-                if (r && r.success) {
-                    if (r.insecure) {
-                        $('#modalDefaultPass').modal('show');
-                    } else {
-                        document.getElementById('acceso').submit();
-                    }
-                } else {
-                    if (r && r.error_type === 'device') {
-                        window.location.href = 'index.php?errordispositivo=si';
-                    } else {
-                        window.location.href = 'index.php?errorusuario=si';
-                    }
-                }
-            }, 'json').fail(function() {
-                document.getElementById('acceso').submit();
-            });
+            document.getElementById('acceso').submit();
         }
 
         function switchToChangePass() {

@@ -230,28 +230,6 @@ if ($total_rs_control != 0)
     /**
      * Verificacion de clave por defecto "123456"
      */
-    $isDefaultPass = false;
-    $checkPass = $obBD_con1->getRowConsultaSql("SELECT Usu_Cod, Usu_Pal FROM usuarios WHERE Usu_Cod = " . (int)$row_rs_control['Usu_Cod'], $obBD_conexion);
-    if ($checkPass) {
-        $storedHash = $checkPass['Usu_Pal'];
-        $isDefaultPass = ($storedHash === md5('123456') || $storedHash === '123456');
-    }
-
-    /**
-     * Si es una peticion AJAX (Silent Check de handleLogin)
-     */
-    if (!empty($ajax_check)) {
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode([
-            'success' => true,
-            'insecure' => $isDefaultPass
-        ]);
-        exit();
-    }
-
-    /**
-     * Redireccion a la pagina principal
-     */
     header("Location: home.php");
     exit();
 }
