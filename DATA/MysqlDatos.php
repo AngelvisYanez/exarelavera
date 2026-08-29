@@ -173,7 +173,7 @@ class MysqlDatos
         } elseif (is_object($obBD) && ($obBD instanceof mysqli)) {
             $link = $obBD;
         }
-        return $link ? mysqli_insert_id($link) : 0;
+        return ($link && ($link instanceof mysqli)) ? mysqli_insert_id($link) : 0;
     }
 
     function consulta($sql, $obBD = null)
@@ -190,20 +190,22 @@ class MysqlDatos
             $link = $obBD;
         }
         $this->sql = $sql;
+        if (!$link || !($link instanceof mysqli)) {
+            $this->Error = -1;
+            return false;
+        }
         $t_start = microtime(true);
         $result = @mysqli_query($link, $sql);
         $duration = microtime(true) - $t_start;
         if (!$result) {
-            $this->Error = $link ? mysqli_errno($link) : -1;
-            $err = $link ? mysqli_error($link) : 'No connection link';
+            $this->Error = mysqli_errno($link);
+            $err = mysqli_error($link);
             DebugBar::addTransactionEvent('Run Query', array('is_success'=>false, 'error_message'=>$err, 'sql_text'=>$this->sql, 'duration'=>$duration) + ($dbObj ? $dbObj->getDB() : array()));
             return false;
         }
         $this->Error = 0;
-        if ($link) {
-            $this->ultimoId = mysqli_insert_id($link);
-            $this->totalFilasAfectadas = mysqli_affected_rows($link);
-        }
+        $this->ultimoId = mysqli_insert_id($link);
+        $this->totalFilasAfectadas = mysqli_affected_rows($link);
         DebugBar::addTransactionEvent('Run Query', array('is_success'=>true, 'sql_text'=>$this->sql, 'duration'=>$duration) + ($dbObj ? $dbObj->getDB() : array()));
         return $result;
     }
@@ -275,12 +277,16 @@ class MysqlDatos
         } elseif (is_object($obBD) && ($obBD instanceof mysqli)) {
             $link = $obBD;
         }
+        if (!$link || !($link instanceof mysqli)) {
+            $this->Error = -1;
+            return false;
+        }
         $t_start = microtime(true);
         $result = @mysqli_query($link, $this->sentencia);
         $duration = microtime(true) - $t_start;
         if (!$result) {
-            $this->Error = $link ? mysqli_errno($link) : -1;
-            $err = $link ? mysqli_error($link) : 'No connection link';
+            $this->Error = mysqli_errno($link);
+            $err = mysqli_error($link);
             DebugBar::addTransactionEvent('Run Query', array('is_success'=>false, 'error_message'=>$err, 'sql_text'=>$this->sentencia, 'duration'=>$duration) + ($dbObj ? $dbObj->getDB() : array()));
             if ($echo) {
                 echo "<p><b>Error:</b> " . htmlspecialchars($err) . "</p>";
@@ -289,10 +295,8 @@ class MysqlDatos
             return false;
         }
         $this->Error = 0;
-        if ($link) {
-            $this->ultimoId = mysqli_insert_id($link);
-            $this->totalFilasAfectadas = mysqli_affected_rows($link);
-        }
+        $this->ultimoId = mysqli_insert_id($link);
+        $this->totalFilasAfectadas = mysqli_affected_rows($link);
         DebugBar::addTransactionEvent('Run Query', array('is_success'=>true, 'sql_text'=>$this->sentencia, 'duration'=>$duration) + ($dbObj ? $dbObj->getDB() : array()));
         return $result;
     }
@@ -311,12 +315,16 @@ class MysqlDatos
         } elseif (is_object($obBD) && ($obBD instanceof mysqli)) {
             $link = $obBD;
         }
+        if (!$link || !($link instanceof mysqli)) {
+            $this->Error = -1;
+            return false;
+        }
         $t_start = microtime(true);
         $result = @mysqli_query($link, $this->sentencia);
         $duration = microtime(true) - $t_start;
         if (!$result) {
-            $this->Error = $link ? mysqli_errno($link) : -1;
-            $err = $link ? mysqli_error($link) : 'No connection link';
+            $this->Error = mysqli_errno($link);
+            $err = mysqli_error($link);
             DebugBar::addTransactionEvent('Run Query', array('is_success'=>false, 'error_message'=>$err, 'sql_text'=>$this->sentencia, 'duration'=>$duration) + ($dbObj ? $dbObj->getDB() : array()));
             return false;
         }
@@ -365,7 +373,7 @@ class MysqlDatos
         } elseif (is_object($obBD) && ($obBD instanceof mysqli)) {
             $link = $obBD;
         }
-        return $link ? mysqli_begin_transaction($link) : false;
+        return ($link && ($link instanceof mysqli)) ? mysqli_begin_transaction($link) : false;
     }
 
     function fin_transaccion($obBD = null)
@@ -378,7 +386,7 @@ class MysqlDatos
         } elseif (is_object($obBD) && ($obBD instanceof mysqli)) {
             $link = $obBD;
         }
-        return $link ? mysqli_commit($link) : false;
+        return ($link && ($link instanceof mysqli)) ? mysqli_commit($link) : false;
     }
 
     function fin_transaccion_nomsn($obBD = null)
@@ -396,7 +404,7 @@ class MysqlDatos
         } elseif (is_object($obBD) && ($obBD instanceof mysqli)) {
             $link = $obBD;
         }
-        return $link ? mysqli_rollback($link) : false;
+        return ($link && ($link instanceof mysqli)) ? mysqli_rollback($link) : false;
     }
 
     function getRowConsulta($sen_sql, $param, $obBD = null)

@@ -22,9 +22,6 @@ class MysqlConexion{
     /* Constantes de conexion bases de datos */
     const bd = "exa"; //base de datos master
     const bdc = ""; //base de datos corporativa
-    /*  Constantes de conexion */
-    //"userExa";
-    //"lynxsc7";
     /* credenciales LOCALES (por defecto) */
     const host = "localhost";
     const user = "root";
@@ -33,6 +30,45 @@ class MysqlConexion{
     /* Número de error y texto error */
     public $Errno = 0;
     public $Error = "";
+
+    protected function loadConfig() {
+        $prodFile = __DIR__ . '/../Librerias/config.php/db_config.prod.php';
+        if (file_exists($prodFile)) {
+            $config = require $prodFile;
+            if (is_array($config) && isset($config['host'], $config['user'], $config['pass'])) {
+                return $config;
+            }
+        }
+        $env = __DIR__ . '/../.env';
+        if (file_exists($env)) {
+            $vars = parse_ini_file($env);
+            if (!empty($vars['DB_HOST'])) {
+                return array(
+                    'host' => $vars['DB_HOST'],
+                    'user' => $vars['DB_USER'] ?? self::user,
+                    'pass' => $vars['DB_PASS'] ?? self::pass,
+                );
+            }
+        }
+        if (getenv('DB_HOST') && getenv('DB_USER')) {
+            return array(
+                'host' => getenv('DB_HOST'),
+                'user' => getenv('DB_USER'),
+                'pass' => getenv('DB_PASS') !== false ? getenv('DB_PASS') : '',
+            );
+        }
+        $isLinux = DIRECTORY_SEPARATOR === '/';
+        $serverHost = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '');
+        if ($isLinux || strpos($serverHost, 'exacontable.com') !== false) {
+            return array(
+                'host' => 'localhost',
+                'user' => 'wilsonbelduma',
+                'pass' => 'Pvhn713?6',
+            );
+        }
+        return array('host' => self::host, 'user' => self::user, 'pass' => self::pass);
+    }
+
     /* M E T O D O S */
     /*****************/
     /* Método Constructor: Cada vez que creemos una variable de esta clase, se ejecutará esta función */
@@ -59,37 +95,21 @@ class MysqlConexion{
     }
     /* Constructor por defecto */
     function __construct1() {
-        $env = __DIR__ . '/../.env';
-        if (file_exists($env)) {
-            $vars = parse_ini_file($env);
-            if (!empty($vars['DB_HOST'])) {
-                self::__construct3(
-                    $vars['DB_NAME'] ?? self::bd,
-                    $vars['DB_HOST'],
-                    $vars['DB_USER'] ?? self::user,
-                    $vars['DB_PASS'] ?? self::pass
-                );
-                return;
-            }
-        }
-        self::__construct3(self::bd, self::host, self::user, self::pass);
+        $cfg = $this->loadConfig();
+        $this->BaseDatos = self::bd;
+        $this->Servidor  = $cfg['host'];
+        $this->Usuario   = $cfg['user'];
+        $this->Clave     = $cfg['pass'];
+        $this->conectar();
     }
     /* Constructor común */
     function __construct2($bd) {
-        $env = __DIR__ . '/../.env';
-        if (file_exists($env)) {
-            $vars = parse_ini_file($env);
-            if (!empty($vars['DB_HOST'])) {
-                self::__construct3(
-                    $bd,
-                    $vars['DB_HOST'],
-                    $vars['DB_USER'] ?? self::user,
-                    $vars['DB_PASS'] ?? self::pass
-                );
-                return;
-            }
-        }
-        self::__construct3($bd, self::host, self::user, self::pass);
+        $cfg = $this->loadConfig();
+        $this->BaseDatos = $bd;
+        $this->Servidor  = $cfg['host'];
+        $this->Usuario   = $cfg['user'];
+        $this->Clave     = $cfg['pass'];
+        $this->conectar();
     }
     /* Constructor completo */
     function __construct3($bd, $host, $user, $pass) {
