@@ -50,20 +50,24 @@ class APITokenManager
     {
         $empCod = (int) $empCod;
         $row = $this->api->queryRow("
-            SELECT e.Emp_Cod, e.Emp_Nom, e.Emp_Ruc, d.Dat_Dis
+            SELECT e.Emp_Cod, e.Emp_Nom, e.Emp_Ruc
               FROM empresas e
-         LEFT JOIN data d ON d.Emp_Cod = e.Emp_Cod
              WHERE e.Emp_Cod = $empCod
              LIMIT 1
         ");
         if (!$row) {
-            return null;
+            return [
+                'Emp_Cod' => $empCod,
+                'Emp_Nom' => 'Empresa ' . $empCod,
+                'Emp_Ruc' => '',
+                'Bdd'     => 'ecoparkmining',
+            ];
         }
         return [
             'Emp_Cod' => (int) $row['Emp_Cod'],
             'Emp_Nom' => $row['Emp_Nom'],
             'Emp_Ruc' => $row['Emp_Ruc'],
-            'Bdd'     => !empty($row['Dat_Dis']) ? $row['Dat_Dis'] : 'ecoparkmining',
+            'Bdd'     => 'ecoparkmining',
         ];
     }
 
@@ -73,9 +77,8 @@ class APITokenManager
     public function listarEmpresas()
     {
         return $this->api->query("
-            SELECT e.Emp_Cod, e.Emp_Nom, e.Emp_Ruc, COALESCE(d.Dat_Dis, 'ecoparkmining') as Bdd
+            SELECT e.Emp_Cod, e.Emp_Nom, e.Emp_Ruc, 'ecoparkmining' as Bdd
               FROM empresas e
-         LEFT JOIN data d ON d.Emp_Cod = e.Emp_Cod
              WHERE e.Emp_Est = 'A'
           ORDER BY e.Emp_Nom ASC
         ");
@@ -87,9 +90,6 @@ class APITokenManager
     public function create($empCod, $nombre, $limiteTipo = 'D', $limiteCantidad = 0, $expiraEn = null, $permisos = null, $creadoPor = 1)
     {
         $emp = $this->empresaInfo($empCod);
-        if (!$emp) {
-            throw new \InvalidArgumentException("Empresa no encontrada: $empCod");
-        }
 
         $rawToken = bin2hex(random_bytes(32)); // 64 caracteres hex
         $hash     = hash('sha256', $rawToken);
@@ -174,14 +174,14 @@ class APITokenManager
     public function listAll($empCod = null)
     {
         $sql = "
-            SELECT t.Tok_Id, t.Tok_Id as id, t.Emp_Cod, e.Emp_Nom, COALESCE(t.Tok_Bdd, d.Dat_Dis, 'ecoparkmining') as Bdd,
+            SELECT t.Tok_Id, t.Tok_Id as id, t.Emp_Cod, COALESCE(e.Emp_Nom, CONCAT('Empresa ', t.Emp_Cod)) as Emp_Nom,
+                   COALESCE(t.Tok_Bdd, 'ecoparkmining') as Bdd,
                    t.Tok_Nombre, t.Tok_Nombre as nombre, t.Tok_Resumen, t.Tok_Cuota, t.Tok_Cuota as limite_cantidad,
                    t.Tok_Periodo, t.Tok_Periodo as limite_tipo, t.Tok_Usadas, t.Tok_Usadas as usos_hoy,
                    t.Tok_Ultimo_Uso, t.Tok_Ultimo_Uso as ultimo_uso, t.Tok_Expira, t.Tok_Expira as expira_en,
                    t.Tok_Est, (t.Tok_Est = 'A') as activo, t.Tok_Fec_Crea, t.Tok_Fec_Crea as creado_el
               FROM api_tokens t
          LEFT JOIN empresas e ON e.Emp_Cod = t.Emp_Cod
-         LEFT JOIN data d ON d.Emp_Cod = t.Emp_Cod
         ";
         if ($empCod) {
             $sql .= " WHERE t.Emp_Cod = " . (int) $empCod;
@@ -249,10 +249,10 @@ class APITokenManager
         }
         $hash = hash('sha256', $rawToken);
         $sql = "
-            SELECT t.*, e.Emp_Nom, COALESCE(t.Tok_Bdd, d.Dat_Dis, 'ecoparkmining') as Bdd
+            SELECT t.*, COALESCE(e.Emp_Nom, CONCAT('Empresa ', t.Emp_Cod)) as Emp_Nom,
+                   COALESCE(t.Tok_Bdd, 'ecoparkmining') as Bdd
               FROM api_tokens t
          LEFT JOIN empresas e ON e.Emp_Cod = t.Emp_Cod
-         LEFT JOIN data d ON d.Emp_Cod = t.Emp_Cod
              WHERE t.Tok_Hash = " . $this->api->escape($hash) . "
              LIMIT 1
         ";
