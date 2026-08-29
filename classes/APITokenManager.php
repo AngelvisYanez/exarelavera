@@ -31,11 +31,11 @@ class APITokenManager
             $this->api = new DataAPI($bdd);
             return;
         }
-        $candidates = array('exa_master', 'ecoparkmining', 'exa');
+        $candidates = array('exa', 'ecoparkmining');
         foreach ($candidates as $candidate) {
             try {
                 $api = new DataAPI($candidate);
-                if ($api->tableExists('api_tokens')) {
+                if ($api->isConnected() && $api->tableExists('api_tokens')) {
                     $this->api = $api;
                     return;
                 }
@@ -43,7 +43,7 @@ class APITokenManager
                 // Siguiente candidato
             }
         }
-        $this->api = new DataAPI('exa_master');
+        $this->api = new DataAPI('exa');
     }
 
     /**
@@ -51,277 +51,242 @@ class APITokenManager
      */
     public function empresaInfo($empCod)
     {
-        $emp = $this->api->queryRow(
-            "SELECT Emp_Nom FROM empresas WHERE Emp_Cod=" . ((int)$empCod) . " LIMIT 1"
-        );
-        $bdd = $this->api->queryScalar(
-            "SELECT data.Dat_Dis FROM data WHERE data.Emp_Cod=" . ((int)$empCod) . " LIMIT 1"
-        );
-        return array(
-            'Emp_Cod' => (int)$empCod,
-            'Emp_Nom' => $emp ? $emp['Emp_Nom'] : null,
-            'Bdd' => $bdd ? $bdd : ($this->api->bdd ? $this->api->bdd : 'ecoparkmining'),
-        );
+        $empCod = (int) $empCod;
+        $row = $this->api->queryRow("
+            SELECT e.Emp_Cod, e.Emp_Nom, e.Emp_Ruc, d.Dat_Dis
+              FROM empresas e
+         LEFT JOIN data d ON d.Emp_Cod = e.Emp_Cod
+             WHERE e.Emp_Cod = $empCod
+             LIMIT 1
+        ");
+        if (!$row) {
+            return null;
+        }
+        return [
+            'Emp_Cod' => (int) $row['Emp_Cod'],
+            'Emp_Nom' => $row['Emp_Nom'],
+            'Emp_Ruc' => $row['Emp_Ruc'],
+            'Bdd'     => !empty($row['Dat_Dis']) ? $row['Dat_Dis'] : 'ecoparkmining',
+        ];
     }
 
     /**
-     * Conecta a la base distribuida del token y devuelve si la conexión es válida
-     * (el Dat_Dis existe como base de datos).
+     * Lista todas las empresas activas disponibles para asignar tokens.
      */
-    public function validarBdd($bdd)
+    public function listarEmpresas()
     {
-        if (empty($bdd)) {
-            return false;
-        }
-        try {
-            $api = new DataAPI($bdd);
-            return $api->conexion && $api->conexion->conexion && empty($api->conexion->Error);
-        } catch (\Throwable $e) {
-            return false;
-        }
+        return $this->api->query("
+            SELECT e.Emp_Cod, e.Emp_Nom, e.Emp_Ruc, COALESCE(d.Dat_Dis, 'ecoparkmining') as Bdd
+              FROM empresas e
+         LEFT JOIN data d ON d.Emp_Cod = e.Emp_Cod
+             WHERE e.Emp_Est = 'A'
+          ORDER BY e.Emp_Nom ASC
+        ");
     }
 
     /**
-     * Genera un nuevo token de acceso.
-     *
-     * @return array ['success', 'token' (en claro), 'id'] o ['success'=>false,'error']
+     * Crea un nuevo token para una empresa y retorna el token en texto claro (una sola vez).
      */
-    public function generate($nombre, $empCod, $cuota = 0, $periodo = 'D', $expira = null, $creadoPor = null, array $permisos = null)
+    public function create($empCod, $nombre, $limiteTipo = 'D', $limiteCantidad = 0, $expiraEn = null, $modulos = null)
     {
-        $nombre = trim($nombre);
-        $empCod = (int)$empCod;
-        $cuota = max(0, (int)$cuota);
-        $periodo = $periodo === 'M' ? 'M' : 'D';
-
-        if ($nombre === '') {
-            return array('success' => false, 'error' => 'El nombre del token es requerido');
-        }
-        if ($empCod <= 0) {
-            return array('success' => false, 'error' => 'Emp_Cod inválido');
+        $emp = $this->empresaInfo($empCod);
+        if (!$emp) {
+            throw new \InvalidArgumentException("Empresa no encontrada: $empCod");
         }
 
-        $info = $this->empresaInfo($empCod);
-        if (empty($info['Emp_Nom'])) {
-            return array('success' => false, 'error' => 'Empresa no encontrada');
-        }
-        $bdd = $info['Bdd'];
+        $rawToken = bin2hex(random_bytes(32)); // 64 caracteres hex
+        $hash     = hash('sha256', $rawToken);
+        $prefix   = substr($rawToken, 0, 8);
 
-        for ($i = 0; $i < 5; $i++) {
-            $rawToken = bin2hex(random_bytes(32)); // 64 hex chars
-            $existe = $this->api->count('api_tokens', array('Tok_Hash' => hash('sha256', $rawToken)));
-            if ($existe === 0) {
-                break;
-            }
-        }
-        if ($this->api->count('api_tokens', array('Tok_Hash' => hash('sha256', $rawToken))) > 0) {
-            return array('success' => false, 'error' => 'No se pudo generar un token único, intente de nuevo');
+        if ($modulos === null || $modulos === '') {
+            $modulosJson = json_encode(['*']);
+        } elseif (is_array($modulos)) {
+            $modulosJson = json_encode(array_values($modulos));
+        } else {
+            $modulosJson = json_encode([$modulos]);
         }
 
-        $data = array(
-            'Tok_Nombre' => $nombre,
-            'Tok_Hash' => hash('sha256', $rawToken),
-            'Tok_Resumen' => substr($rawToken, -6),
-            'Emp_Cod' => $empCod,
-            'Tok_Bdd' => $bdd,
-            'Tok_Cuota' => $cuota,
-            'Tok_Periodo' => $periodo,
-            'Tok_Usadas' => 0,
-            'Tok_Periodo_Inicio' => date('Y-m-d H:i:s'),
-            'Tok_Expira' => $expira ? date('Y-m-d H:i:s', strtotime($expira)) : null,
-            'Tok_Est' => 'A',
-            'Tok_Creado_Por' => $creadoPor,
-        );
+        $limiteTipo = in_array(strtoupper($limiteTipo), ['D', 'M', 'NONE']) ? strtoupper($limiteTipo) : 'D';
+        $limiteCantidad = max(0, (int) $limiteCantidad);
+
+        $data = [
+            'Emp_Cod'         => (int) $empCod,
+            'nombre'          => trim($nombre),
+            'token_hash'      => $hash,
+            'token_prefix'    => $prefix,
+            'limite_tipo'     => $limiteTipo,
+            'limite_cantidad' => $limiteCantidad,
+            'modulos'         => $modulosJson,
+            'activo'          => 1,
+            'creado_el'       => date('Y-m-d H:i:s'),
+        ];
+        if (!empty($expiraEn)) {
+            $data['expira_en'] = date('Y-m-d H:i:s', strtotime($expiraEn));
+        }
 
         $id = $this->api->insert('api_tokens', $data);
         if (!$id) {
-            return array('success' => false, 'error' => 'No se pudo crear el token: ' . $this->api->getErrorMsg());
+            throw new \RuntimeException("No se pudo insertar el token: " . $this->api->getErrorMsg());
         }
 
-        if (is_array($permisos) && !empty($permisos)) {
-            $resPerm = $this->setPermisos((int)$id, $permisos);
-            if (!$resPerm['success']) {
-                $this->api->delete('api_tokens', 'Tok_Id', (int)$id);
-                return $resPerm;
-            }
-        }
-
-        $resPermisos = $this->getPermisos((int)$id);
-
-        return array(
-            'success' => true,
-            'id' => (int)$id,
-            'token' => $rawToken,
-            'nombre' => $nombre,
-            'Emp_Cod' => $empCod,
-            'Bdd' => $bdd,
-            'cuota' => $cuota,
-            'periodo' => $periodo,
-            'permisos' => $resPermisos,
-        );
+        return [
+            'id'           => $id,
+            'raw_token'    => $rawToken,
+            'token_prefix' => $prefix,
+            'Emp_Cod'      => (int) $empCod,
+            'Emp_Nom'      => $emp['Emp_Nom'],
+            'Bdd'          => $emp['Bdd'],
+            'nombre'       => $data['nombre'],
+            'modulos'      => json_decode($modulosJson, true),
+        ];
     }
 
     /**
-     * Busca un token por su valor en claro (por hash).
+     * Lista tokens (sin exponer el hash completo ni el texto claro).
      */
-    public function findByRaw($rawToken)
+    public function listAll($empCod = null)
     {
-        if (empty($rawToken)) {
-            return null;
+        $sql = "
+            SELECT t.id, t.Emp_Cod, e.Emp_Nom, COALESCE(d.Dat_Dis, 'ecoparkmining') as Bdd,
+                   t.nombre, t.token_prefix, t.limite_tipo, t.limite_cantidad,
+                   t.usos_hoy, t.usos_mes, t.ultimo_uso, t.modulos, t.activo,
+                   t.creado_el, t.expira_en
+              FROM api_tokens t
+         LEFT JOIN empresas e ON e.Emp_Cod = t.Emp_Cod
+         LEFT JOIN data d ON d.Emp_Cod = t.Emp_Cod
+        ";
+        if ($empCod) {
+            $sql .= " WHERE t.Emp_Cod = " . (int) $empCod;
         }
-        return $this->api->queryRow(
-            "SELECT * FROM api_tokens WHERE Tok_Hash=" . $this->api->escape(hash('sha256', $rawToken)) . " LIMIT 1"
-        );
-    }
+        $sql .= " ORDER BY t.id DESC";
 
-    /**
-     * Valida un token en claro para consumo de la API.
-     * Verifica: existencia, estado activo, no expirado y cuota disponible.
-     *
-     * @return array|false  array con info del token (Emp_Cod, Bdd, ...) o false si no es válido.
-     */
-    public function validate($rawToken, $usarCuota = true)
-    {
-        $row = $this->findByRaw($rawToken);
-        if (!$row) {
-            return array('valid' => false, 'reason' => 'not_found');
-        }
-
-        if ($row['Tok_Est'] !== 'A') {
-            return array('valid' => false, 'reason' => 'inactive');
-        }
-
-        if (!empty($row['Tok_Expira']) && strtotime($row['Tok_Expira']) < time()) {
-            return array('valid' => false, 'reason' => 'expired');
-        }
-
-        $cuota = (int)$row['Tok_Cuota'];
-        $periodo = $row['Tok_Periodo'];
-        if ($cuota > 0 && !empty($row['Tok_Periodo_Inicio'])) {
-            $inicio = strtotime($row['Tok_Periodo_Inicio']);
-            $limite = $periodo === 'M'
-                ? strtotime('+1 month', strtotime(date('Y-m-01', $inicio)))
-                : $inicio + 86400;
-            if (time() >= $limite) {
-                $this->api->update('api_tokens', array(
-                    'Tok_Usadas' => 0,
-                    'Tok_Periodo_Inicio' => date('Y-m-d H:i:s'),
-                ), 'Tok_Id', $row['Tok_Id']);
-                $row['Tok_Usadas'] = 0;
-            }
-        }
-
-        if ($cuota > 0 && (int)$row['Tok_Usadas'] >= $cuota) {
-            return array('valid' => false, 'reason' => 'quota_exceeded');
-        }
-
-        if ($usarCuota) {
-            $this->api->update('api_tokens', array(
-                'Tok_Usadas' => (int)$row['Tok_Usadas'] + 1,
-                'Tok_Ultimo_Uso' => date('Y-m-d H:i:s'),
-            ), 'Tok_Id', $row['Tok_Id']);
-        }
-
-        return array(
-            'valid' => true,
-            'id' => (int)$row['Tok_Id'],
-            'Emp_Cod' => (int)$row['Emp_Cod'],
-            'Bdd' => $row['Tok_Bdd'] ? $row['Tok_Bdd'] : 'ecoparkmining',
-            'nombre' => $row['Tok_Nombre'],
-        );
-    }
-
-    public function listTokens($empCod = null)
-    {
-        $where = array();
-        if ($empCod !== null && (int)$empCod > 0) {
-            $where['Emp_Cod'] = (int)$empCod;
-        }
-        $rows = $this->api->listAll('api_tokens', $where, 'Tok_Id DESC');
+        $rows = $this->api->query($sql);
         foreach ($rows as &$r) {
-            $r['permisos'] = $this->getPermisos((int)$r['Tok_Id']);
+            $r['id']              = (int) $r['id'];
+            $r['Emp_Cod']         = (int) $r['Emp_Cod'];
+            $r['limite_cantidad'] = (int) $r['limite_cantidad'];
+            $r['usos_hoy']        = (int) $r['usos_hoy'];
+            $r['usos_mes']        = (int) $r['usos_mes'];
+            $r['activo']          = (int) $r['activo'] === 1;
+            $r['modulos']         = !empty($r['modulos']) ? json_decode($r['modulos'], true) : ['*'];
         }
         return $rows;
     }
 
-    public function listar($empCod = null)
+    /**
+     * Busca un token por su valor en texto claro.
+     */
+    public function findByRaw($rawToken)
     {
-        return $this->listTokens($empCod);
-    }
-
-    public function revoke($id)
-    {
-        return $this->updateLimits($id, null, null, null, 'R');
-    }
-
-    public function updateLimits($id, $cuota = null, $periodo = null, $expira = null, $estado = null)
-    {
-        $id = (int)$id;
-        $tok = $this->api->findById('api_tokens', 'Tok_Id', $id);
-        if (!$tok) {
-            return array('success' => false, 'error' => 'Token no encontrado');
+        $rawToken = trim($rawToken);
+        if (strlen($rawToken) < 16) {
+            return null;
         }
-
-        $data = array();
-        if ($cuota !== null) {
-            $data['Tok_Cuota'] = max(0, (int)$cuota);
+        $hash = hash('sha256', $rawToken);
+        $sql = "
+            SELECT t.*, e.Emp_Nom, COALESCE(d.Dat_Dis, 'ecoparkmining') as Bdd
+              FROM api_tokens t
+         LEFT JOIN empresas e ON e.Emp_Cod = t.Emp_Cod
+         LEFT JOIN data d ON d.Emp_Cod = t.Emp_Cod
+             WHERE t.token_hash = " . $this->api->escape($hash) . "
+             LIMIT 1
+        ";
+        $row = $this->api->queryRow($sql);
+        if (!$row) {
+            return null;
         }
-        if ($periodo !== null) {
-            $data['Tok_Periodo'] = $periodo === 'M' ? 'M' : 'D';
-        }
-        if ($expira !== null) {
-            $data['Tok_Expira'] = $expira ? date('Y-m-d H:i:s', strtotime($expira)) : null;
-        }
-        if ($estado !== null && in_array($estado, array('A', 'I', 'R'), true)) {
-            $data['Tok_Est'] = $estado;
-        }
-
-        if (empty($data)) {
-            return array('success' => true, 'message' => 'Sin cambios');
-        }
-
-        $ok = $this->api->update('api_tokens', $data, 'Tok_Id', $id);
-        return array('success' => (bool)$ok);
+        $row['id']              = (int) $row['id'];
+        $row['Emp_Cod']         = (int) $row['Emp_Cod'];
+        $row['limite_cantidad'] = (int) $row['limite_cantidad'];
+        $row['usos_hoy']        = (int) $row['usos_hoy'];
+        $row['usos_mes']        = (int) $row['usos_mes'];
+        $row['activo']          = (int) $row['activo'] === 1;
+        $row['modulos']         = !empty($row['modulos']) ? json_decode($row['modulos'], true) : ['*'];
+        return $row;
     }
 
     /**
-     * Devuelve los permisos (módulos y rutas) asociados a un token.
+     * Valida un token, verifica expiración, estado activo y límites de uso.
+     * Si $incrementUse = true, incrementa el contador de consumo.
      */
-    public function getPermisos($tokenId)
+    public function validate($rawToken, $incrementUse = true, $modulo = null)
     {
-        $tokenId = (int)$tokenId;
-        if (!$this->api->tableExists('api_token_permisos')) {
-            return array();
+        $token = $this->findByRaw($rawToken);
+        if (!$token) {
+            return ['valid' => false, 'error' => 'Token inexistente'];
         }
-        return $this->api->listAll('api_token_permisos', array('Tok_Id' => $tokenId, 'Tip_Est' => 'A'), 'Tip_Id ASC');
+
+        if (!$token['activo']) {
+            return ['valid' => false, 'error' => 'Token desactivado'];
+        }
+
+        if (!empty($token['expira_en']) && strtotime($token['expira_en']) < time()) {
+            return ['valid' => false, 'error' => 'Token expirado'];
+        }
+
+        if ($modulo !== null && !empty($token['modulos'])) {
+            $allowed = $token['modulos'];
+            if (!in_array('*', $allowed, true) && !in_array($modulo, $allowed, true)) {
+                return ['valid' => false, 'error' => "Token sin permiso para el módulo: $modulo"];
+            }
+        }
+
+        if ($this->hasExceededLimit($token)) {
+            return ['valid' => false, 'error' => 'Límite de peticiones superado (' . $token['limite_tipo'] . ')'];
+        }
+
+        if ($incrementUse) {
+            $this->incrementUse($token['id']);
+        }
+
+        return [
+            'valid'   => true,
+            'token'   => $token,
+            'Emp_Cod' => $token['Emp_Cod'],
+            'Emp_Nom' => $token['Emp_Nom'],
+            'Bdd'     => $token['Bdd'],
+        ];
     }
 
-    /**
-     * Establece los permisos de un token (reemplaza los existentes).
-     *
-     * @param int   $tokenId
-     * @param array $permisos Array de ['Tip_Mod' => 'contabilidad', 'Tip_Ruta' => '/v1/contabilidad/cuentas', 'Tip_Metodo' => 'GET', 'Pro_Nom' => '...']
-     */
-    public function setPermisos($tokenId, array $permisos)
+    protected function hasExceededLimit($token)
     {
-        $tokenId = (int)$tokenId;
-        if (!$this->api->tableExists('api_token_permisos')) {
-            return array('success' => false, 'error' => 'Tabla api_token_permisos no existe');
+        $tipo = $token['limite_tipo'];
+        $max  = $token['limite_cantidad'];
+        if ($max <= 0 || $tipo === 'NONE') {
+            return false;
         }
-
-        $this->api->delete('api_token_permisos', 'Tok_Id', $tokenId);
-
-        foreach ($permisos as $p) {
-            $data = array(
-                'Tok_Id' => $tokenId,
-                'Tip_Mod' => isset($p['Tip_Mod']) ? $p['Tip_Mod'] : 'general',
-                'Tip_Ruta' => isset($p['Tip_Ruta']) ? $p['Tip_Ruta'] : '',
-                'Tip_Metodo' => isset($p['Tip_Metodo']) ? $p['Tip_Metodo'] : 'ALL',
-                'Pro_Nom' => isset($p['Pro_Nom']) ? $p['Pro_Nom'] : null,
-                'Tip_Est' => 'A',
-            );
-            $this->api->insert('api_token_permisos', $data);
+        if ($tipo === 'D' && $token['usos_hoy'] >= $max) {
+            return true;
         }
+        if ($tipo === 'M' && $token['usos_mes'] >= $max) {
+            return true;
+        }
+        return false;
+    }
 
-        return array('success' => true);
+    public function incrementUse($tokenId)
+    {
+        $tokenId = (int) $tokenId;
+        $now = date('Y-m-d H:i:s');
+        $this->api->query("
+            UPDATE api_tokens
+               SET usos_hoy = usos_hoy + 1,
+                   usos_mes = usos_mes + 1,
+                   ultimo_uso = '$now'
+             WHERE id = $tokenId
+        ");
+    }
+
+    public function toggle($id, $activo)
+    {
+        $id = (int) $id;
+        $val = $activo ? 1 : 0;
+        return $this->api->update('api_tokens', 'id', $id, ['activo' => $val]);
+    }
+
+    public function delete($id)
+    {
+        $id = (int) $id;
+        return $this->api->delete('api_tokens', 'id', $id);
     }
 }

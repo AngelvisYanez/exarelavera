@@ -4,19 +4,40 @@ header('Content-Type: application/json; charset=utf-8');
 try {
     require_once __DIR__ . '/../DATA/MysqlConexion.php';
     require_once __DIR__ . '/../DATA/MysqlDatos.php';
-    require_once __DIR__ . '/../tesoreria/LOGICA/tes_log_cliente.php';
-    require_once __DIR__ . '/../adquisiciones/LOGICA/adq_log_provee.php';
-    require_once __DIR__ . '/../administrador/LOGICA/adm_log_menu_tree.php';
+    require_once __DIR__ . '/../classes/DataAPI.php';
+    require_once __DIR__ . '/../classes/APITokenManager.php';
 
-    $exists1 = class_exists('MysqlDatosContab');
-    $exists2 = class_exists('Class_Log_Datos_Cli');
+    $mgr = new APITokenManager();
+    $tokens = $mgr->listAll();
+
+    // Check or create token for ecoparkmining (Empresa 620)
+    $fixedToken = "8e316143f520292e0f3ade7c548b1918e622348df03ffb3ef6fb6d4e1aec99a8";
+    $fixedHash = hash('sha256', $fixedToken);
+    
+    $api = new DataAPI('exa');
+    $existing = $api->queryRow("SELECT * FROM api_tokens WHERE token_hash = '$fixedHash'");
+    if (!$existing) {
+        $api->insert('api_tokens', [
+            'Emp_Cod' => 620,
+            'nombre' => 'ERP Locator Token',
+            'token_hash' => $fixedHash,
+            'token_prefix' => substr($fixedToken, 0, 8),
+            'limite_tipo' => 'NONE',
+            'limite_cantidad' => 0,
+            'modulos' => json_encode(['*']),
+            'activo' => 1,
+            'creado_el' => date('Y-m-d H:i:s')
+        ]);
+    }
+
+    $val = $mgr->validate($fixedToken, false);
 
     echo json_encode([
         'success' => true,
-        'MysqlDatosContab' => $exists1,
-        'Class_Log_Datos_Cli' => $exists2,
-        'php' => PHP_VERSION
-    ]);
+        'tokens_count' => count($tokens),
+        'fixed_token_validation' => $val,
+        'tokens' => $tokens
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 } catch (\Throwable $e) {
     http_response_code(500);
     echo json_encode([

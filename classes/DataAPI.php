@@ -16,6 +16,11 @@ class DataAPI
         $this->datos = new MysqlDatos();
     }
 
+    public function isConnected()
+    {
+        return $this->conexion && $this->conexion->conexion && ($this->conexion->conexion instanceof mysqli);
+    }
+
     public function query($sql)
     {
         $res = $this->datos->getArrayConsultaSql($sql, $this->conexion);
@@ -54,13 +59,15 @@ class DataAPI
         return $this->query($sql);
     }
 
-    public function listPaged($table, $where = [], $orderBy = null, $page = 1, $perPage = 50)
+    public function listPaged($table, $where = [], $orderBy = null, $page = 1, $perPage = 20)
     {
         $page = max(1, intval($page));
-        $perPage = max(1, min(500, intval($perPage)));
+        $perPage = max(1, intval($perPage));
         $offset = ($page - 1) * $perPage;
 
-        $total = $this->count($table, $where);
+        $totalSql = "SELECT COUNT(*) as total FROM `$table`" . $this->buildWhere($where);
+        $total = intval($this->queryScalar($totalSql));
+
         $data = $this->listAll($table, $where, $orderBy, $perPage, $offset);
 
         return [
@@ -68,13 +75,13 @@ class DataAPI
             'total' => $total,
             'page' => $page,
             'perPage' => $perPage,
-            'pages' => ceil($total / $perPage)
+            'pages' => ceil($total / $perPage),
         ];
     }
 
-    public function findById($table, $idField, $idValue)
+    public function findById($table, $primaryKey, $id)
     {
-        $sql = "SELECT * FROM `$table` WHERE `$idField` = " . $this->escape($idValue) . " LIMIT 1";
+        $sql = "SELECT * FROM `$table` WHERE `$primaryKey` = " . $this->escape($id) . " LIMIT 1";
         return $this->queryRow($sql);
     }
 
@@ -86,57 +93,43 @@ class DataAPI
             $fields[] = "`$k`";
             $values[] = $this->escape($v);
         }
-        $sql = "INSERT INTO `$table` (" . implode(", ", $fields) . ") VALUES (" . implode(", ", $values) . ")";
-        $this->datos->consulta($sql, $this->conexion);
-        if ($this->datos->Error == 0) {
-            return $this->datos->insercionid($this->conexion);
+        $sql = "INSERT INTO `$table` (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $values) . ")";
+        $res = $this->datos->consulta($sql, $this->conexion);
+        if (!$res) {
+            return false;
         }
-        return false;
+        return $this->datos->insercionid($this->conexion) ?: true;
     }
 
-    public function update($table, $data, $idField, $idValue)
+    public function update($table, $primaryKey, $id, $data)
     {
         $sets = [];
         foreach ($data as $k => $v) {
             $sets[] = "`$k` = " . $this->escape($v);
         }
-        $sql = "UPDATE `$table` SET " . implode(", ", $sets) . " WHERE `$idField` = " . $this->escape($idValue);
-        $this->datos->consulta($sql, $this->conexion);
-        return $this->datos->Error == 0;
+        $sql = "UPDATE `$table` SET " . implode(', ', $sets) . " WHERE `$primaryKey` = " . $this->escape($id);
+        return (bool)$this->datos->consulta($sql, $this->conexion);
     }
 
-    public function delete($table, $idField, $idValue)
+    public function updateWhere($table, $where, $data)
     {
-        $sql = "DELETE FROM `$table` WHERE `$idField` = " . $this->escape($idValue);
-        $this->datos->consulta($sql, $this->conexion);
-        return $this->datos->Error == 0;
-    }
-
-    public function tableExists($table)
-    {
-        $sql = "SHOW TABLES LIKE " . $this->escape($table);
-        $rows = $this->query($sql);
-        return !empty($rows);
-    }
-
-    public function tableInfo($table)
-    {
-        $sql = "DESCRIBE `$table`";
-        return $this->query($sql);
-    }
-
-    public function listTables($pattern = null)
-    {
-        $sql = "SHOW TABLES";
-        if ($pattern) {
-            $sql .= " LIKE " . $this->escape($pattern);
+        $sets = [];
+        foreach ($data as $k => $v) {
+            $sets[] = "`$k` = " . $this->escape($v);
         }
-        $rows = $this->query($sql);
-        $tables = [];
-        foreach ($rows as $r) {
-            $tables[] = reset($r);
-        }
-        return $tables;
+        $sql = "UPDATE `$table` SET " . implode(', ', $sets) . $this->buildWhere($where);
+        return (bool)$this->datos->consulta($sql, $this->conexion);
+    }
+
+    public function delete($table, $primaryKey, $id)
+    {
+        $sql = "DELETE FROM `$table` WHERE `$primaryKey` = " . $this->escape($id);
+        return (bool)$this->datos->consulta($sql, $this->conexion);
+    }
+
+    public function softDelete($table, $primaryKey, $id, $statusField = 'estado', $inactiveValue = 'I')
+    {
+        return $this->update($table, $primaryKey, $id, [$statusField => $inactiveValue]);
     }
 
     public function count($table, $where = [])
@@ -155,7 +148,11 @@ class DataAPI
         if ($value === null) return 'NULL';
         if (is_bool($value)) return $value ? '1' : '0';
         if (is_int($value) || is_float($value)) return (string)$value;
-        $escaped = mysqli_real_escape_string($this->conexion->conexion, (string)$value);
+        if ($this->isConnected()) {
+            $escaped = mysqli_real_escape_string($this->conexion->conexion, (string)$value);
+        } else {
+            $escaped = addslashes((string)$value);
+        }
         return "'$escaped'";
     }
 
@@ -181,5 +178,12 @@ class DataAPI
             }
         }
         return " WHERE " . implode(" AND ", $clauses);
+    }
+
+    public function tableExists($table)
+    {
+        $sql = "SHOW TABLES LIKE " . $this->escape($table);
+        $res = $this->query($sql);
+        return !empty($res);
     }
 }
